@@ -192,6 +192,9 @@ QString Tiled::orientationToString(Map::Orientation orientation)
     case Map::Isometric:
         return QLatin1String("isometric");
         break;
+    case Map::Staggered:
+        return QLatin1String("staggered");
+        break;
     }
 }
 
@@ -202,6 +205,8 @@ Map::Orientation Tiled::orientationFromString(const QString &string)
         orientation = Map::Orthogonal;
     } else if (string == QLatin1String("isometric")) {
         orientation = Map::Isometric;
+    } else if (string == QLatin1String("staggered")) {
+        orientation = Map::Staggered;
     }
     return orientation;
 }

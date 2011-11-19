@@ -38,7 +38,8 @@ SOURCES += compression.cpp \
     properties.cpp \
     tilelayer.cpp \
     tileset.cpp \
-    gidmapper.cpp
+    gidmapper.cpp \
+    staggeredrenderer.cpp
 HEADERS += compression.h \
     isometricrenderer.h \
     layer.h \
@@ -55,8 +56,11 @@ HEADERS += compression.h \
     tiled_global.h \
     tilelayer.h \
     tileset.h \
-    gidmapper.h
+    gidmapper.h \
+    staggeredrenderer.h
 macx {
     contains(QT_CONFIG, ppc):CONFIG += x86 \
         ppc
 }
+
+
