@@ -254,7 +254,7 @@ void LayerDock::retranslateUi()
     setWindowTitle(tr("Layers"));
     mOpacityLabel->setText(tr("Opacity:"));
 #ifdef ZOMBOID
-    mZomboidLayerLabel->setText(tr("Zomboid Layer:"));
+    mZomboidLayerLabel->setText(tr("Visibility:"));
 #endif
 }
 

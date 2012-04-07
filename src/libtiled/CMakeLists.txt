@@ -2,7 +2,7 @@ project( libtiled )
 cmake_minimum_required( VERSION 2.6 )
 set ( CMAKE_BUILD_TYPE Release )
 #add_definitions ( -Wall )
-add_definitions( -DTILED_LIBRARY )
+add_definitions( -DZOMBOID -DTILED_LIBRARY )
 find_package ( Qt4 REQUIRED )
 include ( ${QT_USE_FILE} )
 include_directories (
@@ -30,6 +30,8 @@ set ( tiled_HDRS
 	tilelayer.h
 	tileset.h
 	gidmapper.h
+
+	ztilelayergroup.h
 	)
 
 set ( tiled_SRCS
@@ -49,7 +51,9 @@ set ( tiled_SRCS
 	tilelayer.cpp
 	tileset.cpp
 	gidmapper.cpp
+
+	ztilelayergroup.cpp
 	)
 
-add_library ( libtiled SHARED ${tiled_SRCS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
+add_library ( libtiled SHARED ${tiled_SRCS} ${tiled_HDRS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
 target_link_libraries ( libtiled  ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )

@@ -54,6 +54,12 @@ public:
     void drawTileLayer(QPainter *painter, const TileLayer *layer,
                        const QRectF &exposed = QRectF()) const;
 
+#ifdef ZOMBOID
+   void drawTileLayerGroup(QPainter *painter, const ZTileLayerGroup *layerGroup,
+                               const QRectF &exposed = QRectF()) const
+   { /* NO-OP */ }
+#endif
+
     void drawTileSelection(QPainter *painter,
                            const QRegion &region,
                            const QColor &color,

@@ -107,7 +107,11 @@ void MapScene::setMapDocument(MapDocument *mapDocument)
                 this, SLOT(repaintRegion(QRegion)));
         connect(mMapDocument, SIGNAL(layerAdded(int)),
                 this, SLOT(layerAdded(int)));
-        connect(mMapDocument, SIGNAL(layerRemoved(int)),
+#ifdef ZOMBOID
+		connect(mMapDocument, SIGNAL(layerAboutToBeRemoved(int)),
+                this, SLOT(layerAboutToBeRemoved(int)));
+#endif
+		connect(mMapDocument, SIGNAL(layerRemoved(int)),
                 this, SLOT(layerRemoved(int)));
         connect(mMapDocument, SIGNAL(layerChanged(int)),
                 this, SLOT(layerChanged(int)));

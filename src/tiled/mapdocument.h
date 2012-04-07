@@ -257,6 +257,9 @@ signals:
     void mapChanged();
 
     void layerAdded(int index);
+#ifdef ZOMBOID
+    void layerAboutToBeRemoved(int index);
+#endif
     void layerRemoved(int index);
     void layerChanged(int index);
 

@@ -34,6 +34,9 @@
 #include "tilelayer.h"
 #include "tileset.h"
 #include "imagelayer.h"
+#ifdef ZOMBOID
+#include "ztilelayergroup.h"
+#endif
 
 #include <cmath>
 
@@ -278,6 +281,139 @@ void IsometricRenderer::drawTileLayer(QPainter *painter,
 
     painter->setTransform(baseTransform);
 }
+
+#ifdef ZOMBOID
+void IsometricRenderer::drawTileLayerGroup(QPainter *painter, const ZTileLayerGroup *layerGroup,
+                            const QRectF &exposed) const
+{
+    const int tileWidth = map()->tileWidth();
+    const int tileHeight = map()->tileHeight();
+
+    if (tileWidth <= 0 || tileHeight <= 1)
+        return;
+
+    QRect rect = exposed.toAlignedRect();
+    if (rect.isNull())
+        rect = boundingRect(layerGroup->bounds());
+
+    QMargins drawMargins = layerGroup->drawMargins();
+    drawMargins.setTop(drawMargins.top() - tileHeight);
+    drawMargins.setRight(drawMargins.right() - tileWidth);
+
+    rect.adjust(-drawMargins.right(),
+                -drawMargins.bottom(),
+                drawMargins.left(),
+                drawMargins.top());
+
+    // Determine the tile and pixel coordinates to start at
+    QPointF tilePos = pixelToTileCoords(rect.x(), rect.y());
+    QPoint rowItr = QPoint((int) std::floor(tilePos.x()),
+                           (int) std::floor(tilePos.y()));
+    QPointF startPos = tileToPixelCoords(rowItr);
+    startPos.rx() -= tileWidth / 2;
+    startPos.ry() += tileHeight;
+
+#if 0
+    // Compensate for the layer position
+    rowItr -= QPoint(layer->x(), layer->y());
+#endif
+
+    /* Determine in which half of the tile the top-left corner of the area we
+     * need to draw is. If we're in the upper half, we need to start one row
+     * up due to those tiles being visible as well. How we go up one row
+     * depends on whether we're in the left or right half of the tile.
+     */
+    const bool inUpperHalf = startPos.y() - rect.y() > tileHeight / 2;
+    const bool inLeftHalf = rect.x() - startPos.x() < tileWidth / 2;
+
+    if (inUpperHalf) {
+        if (inLeftHalf) {
+            --rowItr.rx();
+            startPos.rx() -= tileWidth / 2;
+        } else {
+            --rowItr.ry();
+            startPos.rx() += tileWidth / 2;
+        }
+        startPos.ry() -= tileHeight / 2;
+    }
+
+    // Determine whether the current row is shifted half a tile to the right
+    bool shifted = inUpperHalf ^ inLeftHalf;
+
+    QTransform baseTransform = painter->transform();
+
+	QVector<const Cell*> cells(10);
+
+    for (int y = startPos.y(); y - tileHeight < rect.bottom();
+         y += tileHeight / 2)
+    {
+        QPoint columnItr = rowItr;
+
+        for (int x = startPos.x(); x < rect.right(); x += tileWidth) {
+            if (layerGroup->orderedCellsAt(columnItr, cells)) {
+				foreach (const Cell *cell, cells) {
+					if (!cell->isEmpty()) {
+						const QPixmap &img = cell->tile->image();
+						const QPoint offset = cell->tile->tileset()->tileOffset();
+
+						qreal m11 = 1;      // Horizontal scaling factor
+						qreal m12 = 0;      // Vertical shearing factor
+						qreal m21 = 0;      // Horizontal shearing factor
+						qreal m22 = 1;      // Vertical scaling factor
+						qreal dx = offset.x() + x;
+						qreal dy = offset.y() + y - img.height();
+
+						if (cell->flippedAntiDiagonally) {
+							// Use shearing to swap the X/Y axis
+							m11 = 0;
+							m12 = 1;
+							m21 = 1;
+							m22 = 0;
+
+							// Compensate for the swap of image dimensions
+							dy += img.height() - img.width();
+						}
+						if (cell->flippedHorizontally) {
+							m11 = -m11;
+							m21 = -m21;
+							dx += cell->flippedAntiDiagonally ? img.height()
+															 : img.width();
+						}
+						if (cell->flippedVertically) {
+							m12 = -m12;
+							m22 = -m22;
+							dy += cell->flippedAntiDiagonally ? img.width()
+															 : img.height();
+						}
+
+						const QTransform transform(m11, m12, m21, m22, dx, dy);
+						painter->setTransform(transform * baseTransform);
+
+						painter->drawPixmap(0, 0, img);
+					}
+				}
+            }
+
+            // Advance to the next column
+            ++columnItr.rx();
+            --columnItr.ry();
+        }
+
+        // Advance to the next row
+        if (!shifted) {
+            ++rowItr.rx();
+            startPos.rx() += tileWidth / 2;
+            shifted = true;
+        } else {
+            ++rowItr.ry();
+            startPos.rx() -= tileWidth / 2;
+            shifted = false;
+        }
+    }
+
+    painter->setTransform(baseTransform);
+}
+#endif // ZOMBOID
 
 void IsometricRenderer::drawTileSelection(QPainter *painter,
                                           const QRegion &region,

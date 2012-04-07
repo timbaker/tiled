@@ -31,9 +31,28 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 
-static const qreal darkeningFactor = 0.6;
-static const qreal opacityFactor = 0.4;
+///// ///// ///// ///// /////
 
+ZomboidTileLayerGroup::ZomboidTileLayerGroup()
+	: ZTileLayerGroup()
+{
+}
+
+bool ZomboidTileLayerGroup::orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const
+{
+	cells.clear();
+	foreach (TileLayer *tl, mLayers)
+	{
+		if (!tl->isVisible())
+			continue;
+		QPoint pos = point - tl->position();
+		if (tl->contains(pos))
+			cells.append(&tl->cellAt(pos));
+	}
+	return !cells.empty();
+}
+
+///// ///// ///// ///// /////
 
 ZomboidScene::ZomboidScene(QObject *parent)
     : MapScene(parent)
@@ -47,9 +66,9 @@ ZomboidScene::~ZomboidScene()
 
 void ZomboidScene::refreshScene()
 {
-	foreach (ZomboidLayerGroupItem *grp, mLayerGroupItems)
+	foreach (ZTileLayerGroupItem *grp, mTileLayerGroupItems)
 		delete grp;
-	mLayerGroupItems.clear();
+	mTileLayerGroupItems.clear();
 
 	MapScene::refreshScene();
 }
@@ -77,20 +96,25 @@ QGraphicsItem *ZomboidScene::createLayerItem(Layer *layer)
 		if (name.at(0).isDigit() && name.at(1).toAscii() == '_')
 		{
 			int group = name.at(0).digitValue();
-			if (mLayerGroupItems[group] == 0)
+			if (mTileLayerGroupItems[group] == 0)
 			{
-				mLayerGroupItems[group] = new ZomboidLayerGroupItem(mMapDocument->renderer());
-				addItem(mLayerGroupItems[group]);
+				ZTileLayerGroup *layerGroup = new ZomboidTileLayerGroup();
+				mTileLayerGroupItems[group] = new ZTileLayerGroupItem(layerGroup, mMapDocument->renderer());
+				addItem(mTileLayerGroupItems[group]);
 			}
-			mLayerGroupItems[group]->addLayer(tl);
+			int index = mMapDocument->map()->layers().indexOf(layer);
+			mTileLayerGroupItems[group]->addTileLayer(tl, index);
+			return new DummyGraphicsItem();
 		}
-		return new DummyGraphicsItem();
 	}
 	return MapScene::createLayerItem(layer);
 }
 
 void ZomboidScene::layerAdded(int index)
 {
+#if 1
+	MapScene::layerAdded(index);
+#else
     Layer *layer = mMapDocument->map()->layerAt(index);
     QGraphicsItem *layerItem = createLayerItem(layer);
     addItem(layerItem);
@@ -99,12 +123,27 @@ void ZomboidScene::layerAdded(int index)
     int z = 0;
     foreach (QGraphicsItem *item, mLayerItems)
         item->setZValue(z++);
+#endif
+}
+
+void ZomboidScene::layerAboutToBeRemoved(int index)
+{
+	Layer *layer = mMapDocument->map()->layerAt(index);
+	if (TileLayer *tl = layer->asTileLayer())
+	{
+		foreach (ZTileLayerGroupItem *grp, mTileLayerGroupItems)
+			grp->removeTileLayer(tl);
+	}
 }
 
 void ZomboidScene::layerRemoved(int index)
 {
-    delete mLayerItems.at(index);
-    mLayerItems.remove(index);
+#if 1
+	MapScene::layerRemoved(index);
+#else
+	delete mLayerItems.at(index);
+	mLayerItems.remove(index);
+#endif
 }
 
 /**
@@ -113,6 +152,13 @@ void ZomboidScene::layerRemoved(int index)
  */
 void ZomboidScene::layerChanged(int index)
 {
+#if 1
+	MapScene::layerChanged(index);
+
+	foreach (ZTileLayerGroupItem *grp, mTileLayerGroupItems) {
+		grp->update(grp->boundingRect());
+	}
+#else
     const Layer *layer = mMapDocument->map()->layerAt(index);
     QGraphicsItem *layerItem = mLayerItems.at(index);
 
@@ -123,4 +169,5 @@ void ZomboidScene::layerChanged(int index)
         multiplier = opacityFactor;
 
     layerItem->setOpacity(layer->opacity() * multiplier);
+#endif
 }

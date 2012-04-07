@@ -20,13 +20,9 @@
 
 #include "mapscene.h"
 #include <QMap>
-#include <QSet>
 
-// TODO: move to ZomboidLayerGroupItem.h
-#include <QGraphicsItem>
-#include <QStyleOptionGraphicsItem>
-#include "maprenderer.h"
-#include "tilelayer.h"
+#include "ztilelayergroup.h"
+#include "ztilelayergroupitem.h"
 
 namespace Tiled {
 
@@ -36,72 +32,13 @@ class Tileset;
 
 namespace Internal {
 
-class AbstractTool;
-class MapDocument;
-class MapObjectItem;
-class MapScene;
-class ObjectGroupItem;
-
 ///// ///// ///// ///// /////
 
-class ZomboidLayerGroupItem : public QGraphicsItem
+class ZomboidTileLayerGroup : public ZTileLayerGroup
 {
 public:
-	ZomboidLayerGroupItem(MapRenderer *renderer)
-		: mRenderer(renderer)
-	{
-		setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
-
-		syncWithTileLayer();
-	}
-
-	void addLayer(TileLayer *layer)
-	{
-		if (mLayers.contains(layer))
-			return;
-		mLayers.append(layer);
-		syncWithTileLayer();
-	}
-
-	void removeLayer(TileLayer *layer)
-	{
-		if (mLayers.contains(layer))
-			mLayers.remove(mLayers.indexOf(layer));
-		syncWithTileLayer();
-	}
-
-	void syncWithTileLayer()
-	{
-		prepareGeometryChange();
-		mBoundingRect.setCoords(0,0,0,0);
-		foreach (TileLayer *layer, mLayers)
-			mBoundingRect |= mRenderer->boundingRect(layer->bounds());
-	}
-
-    // QGraphicsItem
-    QRectF boundingRect() const
-	{
-		return mBoundingRect;
-	}
-    void paint(QPainter *painter,
-               const QStyleOptionGraphicsItem *option,
-               QWidget *widget = 0)
-	{
-#if 1
-		foreach (TileLayer *layer, mLayers)
-		{
-			mRenderer->drawTileLayer(painter, layer, option->exposedRect);
-		}
-#else
-		// Ask the renderer to draw our TileLayerGroup
-		// TileLayerGroup::getOrderedLayers(int x, int y) <<-- this is where the Zomboid render order is calculated
-		mRenderer->drawTileLayerGroup(painter, mLayers, option->exposedRect);
-#endif
-	}
-
-	MapRenderer *mRenderer;
-	QRectF mBoundingRect;
-	QVector<TileLayer*> mLayers; // All the layers that are on this story (0 story = ground level)
+	ZomboidTileLayerGroup();
+	virtual bool orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const;
 };
 
 ///// ///// ///// ///// /////
@@ -123,20 +60,18 @@ public:
      */
     ~ZomboidScene();
 
-signals:
-    void selectedObjectItemsChanged();
-
 private slots:
     virtual void refreshScene();
 
     virtual void layerAdded(int index);
+    virtual void layerAboutToBeRemoved(int index);
     virtual void layerRemoved(int index);
     virtual void layerChanged(int index);
 
 protected:
     virtual QGraphicsItem *createLayerItem(Layer *layer);
 private:
-	QMap<int,ZomboidLayerGroupItem*> mLayerGroupItems;
+	QMap<int,ZTileLayerGroupItem*> mTileLayerGroupItems;
 };
 
 } // namespace Internal

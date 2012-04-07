@@ -18,7 +18,7 @@ set(TRS
 QT4_ADD_TRANSLATION(_qm_files ${TRS})
 
 add_custom_target(translations_target SOURCES ${_qm_files})
-add_dependencies(Tiled translations_target)
+add_dependencies(TileZed translations_target)
 
 if (NOT EXISTS ${CMAKE_BINARY_DIR}/Debug/translations)
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/Debug/translations)

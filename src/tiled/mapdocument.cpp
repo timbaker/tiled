@@ -513,6 +513,9 @@ void MapDocument::onLayerAboutToBeRemoved(int index)
     // Deselect any objects on this layer when necessary
     if (ObjectGroup *og = dynamic_cast<ObjectGroup*>(mMap->layerAt(index)))
         deselectObjects(og->objects());
+#ifdef ZOMBOID
+	emit layerAboutToBeRemoved(index);
+#endif
 }
 
 void MapDocument::onLayerRemoved(int index)

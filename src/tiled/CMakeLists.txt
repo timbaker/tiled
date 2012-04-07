@@ -1,4 +1,4 @@
-project( Tiled )
+project( TileZed )
 cmake_minimum_required( VERSION 2.6 )
 set ( CMAKE_BUILD_TYPE Release )
 #add_definitions ( -Wall )
@@ -56,6 +56,8 @@ set ( Tiled_HDRS
 	tmxmapwriter.h
 	undocommands.h
 	utils.h
+
+	ztilelayergroupitem.h
 	)
 
 set ( Tiled_SRCS
@@ -149,8 +151,10 @@ set ( Tiled_SRCS
 	toolmanager.cpp
 	undodock.cpp
 	utils.cpp
-	ZomboidScene.cpp
 	zoomable.cpp
+
+	ZomboidScene.cpp
+	ztilelayergroupitem.cpp
 	)
 
 set ( Tiled_UIS
@@ -225,8 +229,9 @@ set ( Tiled_MOCS
 	tilesetview.h
 	toolmanager.h
 	undodock.h
-	ZomboidScene.h
 	zoomable.h
+
+	ZomboidScene.h
 	)
 QT4_WRAP_CPP(MOCS ${Tiled_MOCS})
 
@@ -238,5 +243,5 @@ SET(_moc    ${CMAKE_CURRENT_BINARY_DIR}/${_current_MOC})
 QT4_CREATE_MOC_COMMAND(${_abs_FILE} ${_moc} "${_moc_INCS}" "")
 MACRO_ADD_FILE_DEPENDENCIES(${_abs_FILE} ${_moc})
 
-add_executable ( Tiled ${Tiled_SRCS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
-target_link_libraries ( Tiled libtiled ${QT_QTOPENGL_LIBRARY} ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
+add_executable ( TileZed ${Tiled_SRCS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
+target_link_libraries ( TileZed libtiled ${QT_QTOPENGL_LIBRARY} ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )

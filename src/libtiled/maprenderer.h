@@ -39,6 +39,9 @@ class Layer;
 class Map;
 class MapObject;
 class TileLayer;
+#ifdef ZOMBOID
+class ZTileLayerGroup;
+#endif
 class ImageLayer;
 
 /**
@@ -93,6 +96,11 @@ public:
      */
     virtual void drawTileLayer(QPainter *painter, const TileLayer *layer,
                                const QRectF &exposed = QRectF()) const = 0;
+
+#ifdef ZOMBOID
+    virtual void drawTileLayerGroup(QPainter *painter, const ZTileLayerGroup *layerGroup,
+                               const QRectF &exposed = QRectF()) const = 0;
+#endif
 
     /**
      * Draws the tile selection given by \a region in the specified \a color.

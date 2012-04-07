@@ -501,10 +501,31 @@ void MapReaderPrivate::decodeBinaryLayerData(TileLayer *tileLayer,
     }
 }
 
+#if defined(ZOMBOID) && defined(_DEBUG)
+void QString_split(const QChar &sep, QString::SplitBehavior behavior, Qt::CaseSensitivity cs, const QString &in, QStringList& out)
+{
+    int start = 0;
+    int end;
+    while ((end = in.indexOf(sep, start, cs)) != -1) {
+        if (start != end || behavior == QString::KeepEmptyParts)
+            out.append(in.mid(start, end - start));
+        start = end + 1;
+    }
+    if (start != in.size() || behavior == QString::KeepEmptyParts)
+        out.append(in.mid(start));
+}
+#endif
+
 void MapReaderPrivate::decodeCSVLayerData(TileLayer *tileLayer, const QString &text)
 {
     QString trimText = text.trimmed();
-    QStringList tiles = trimText.split(QLatin1Char(','));
+#if defined(ZOMBOID) && defined(_DEBUG)
+	static QStringList tiles;
+	tiles.clear();
+	QString_split(QLatin1Char(','), QString::KeepEmptyParts, Qt::CaseSensitive, trimText, tiles);
+#else
+	QStringList tiles = trimText.split(QLatin1Char(','));
+#endif
 
     if (tiles.length() != tileLayer->width() * tileLayer->height()) {
         xml.raiseError(tr("Corrupt layer data for layer '%1'")
