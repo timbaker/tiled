@@ -21,6 +21,10 @@
 
 #include "documentmanager.h"
 
+#ifdef ZOMBOID
+#include "ZomboidScene.h"
+#endif
+
 #include "abstracttool.h"
 #include "maprenderer.h"
 #include "toolmanager.h"
@@ -151,7 +155,11 @@ void DocumentManager::addDocument(MapDocument *mapDocument)
     mUndoGroup->addStack(mapDocument->undoStack());
 
     MapView *view = new MapView(mTabWidget);
+#ifdef ZOMBOID
+    MapScene *scene = new ZomboidScene(view); // scene is owned by the view
+#else
     MapScene *scene = new MapScene(view); // scene is owned by the view
+#endif
 
     scene->setMapDocument(mapDocument);
     view->setScene(scene);

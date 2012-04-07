@@ -136,11 +136,19 @@ protected:
 
     void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
 
+#ifdef ZOMBOID
+protected slots:
+#else
 private slots:
+#endif
     /**
      * Refreshes the map scene.
      */
+#ifdef ZOMBOID
+    virtual void refreshScene();
+#else
     void refreshScene();
+#endif
 
     /**
      * Repaints the specified region. The region is in tile coordinates.
@@ -152,9 +160,15 @@ private slots:
     void mapChanged();
     void tilesetChanged(Tileset *tileset);
 
+#ifdef ZOMBOID
+    virtual void layerAdded(int index);
+    virtual void layerRemoved(int index);
+    virtual void layerChanged(int index);
+#else
     void layerAdded(int index);
     void layerRemoved(int index);
     void layerChanged(int index);
+#endif
 
     void objectsAdded(const QList<MapObject*> &objects);
     void objectsRemoved(const QList<MapObject*> &objects);
@@ -163,8 +177,13 @@ private slots:
     void updateSelectedObjectItems();
     void syncAllObjectItems();
 
+#ifdef ZOMBOID
+protected:
+    virtual QGraphicsItem *createLayerItem(Layer *layer);
+#else
 private:
     QGraphicsItem *createLayerItem(Layer *layer);
+#endif
 
     void updateCurrentLayerHighlight();
 

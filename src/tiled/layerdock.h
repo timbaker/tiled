@@ -63,12 +63,21 @@ private slots:
     void updateOpacitySlider();
     void setLayerOpacity(int opacity);
 
+#ifdef ZOMBOID
+    void updateZomboidLayerSlider();
+    void setZomboidLayer(int layer);
+#endif
+
 private:
     void retranslateUi();
 
     QLabel *mOpacityLabel;
     QSlider *mOpacitySlider;
-    LayerView *mLayerView;
+#ifdef ZOMBOID
+    QLabel *mZomboidLayerLabel;
+    QSlider *mZomboidLayerSlider;
+#endif
+	LayerView *mLayerView;
     MapDocument *mMapDocument;
 };
 

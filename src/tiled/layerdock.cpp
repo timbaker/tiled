@@ -49,7 +49,11 @@ LayerDock::LayerDock(QWidget *parent):
     QDockWidget(parent),
     mOpacityLabel(new QLabel),
     mOpacitySlider(new QSlider(Qt::Horizontal)),
-    mLayerView(new LayerView),
+#ifdef ZOMBOID
+	mZomboidLayerLabel(new QLabel),
+    mZomboidLayerSlider(new QSlider(Qt::Horizontal)),
+#endif
+	mLayerView(new LayerView),
     mMapDocument(0)
 {
     setObjectName(QLatin1String("layerDock"));
@@ -64,6 +68,15 @@ LayerDock::LayerDock(QWidget *parent):
     opacityLayout->addWidget(mOpacityLabel);
     opacityLayout->addWidget(mOpacitySlider);
     mOpacityLabel->setBuddy(mOpacitySlider);
+
+#ifdef ZOMBOID
+    QHBoxLayout *zomboidLayerLayout = new QHBoxLayout;
+    mZomboidLayerSlider->setRange(0, 9);
+    mZomboidLayerSlider->setEnabled(false);
+    zomboidLayerLayout->addWidget(mZomboidLayerLabel);
+    zomboidLayerLayout->addWidget(mZomboidLayerSlider);
+    mZomboidLayerLabel->setBuddy(mZomboidLayerSlider);
+#endif
 
     MapDocumentActionHandler *handler = MapDocumentActionHandler::instance();
 
@@ -93,7 +106,10 @@ LayerDock::LayerDock(QWidget *parent):
     buttonContainer->addAction(handler->actionToggleOtherLayers());
 
     layout->addLayout(opacityLayout);
-    layout->addWidget(mLayerView);
+#ifdef ZOMBOID
+    layout->addLayout(zomboidLayerLayout);
+#endif
+	layout->addWidget(mLayerView);
     layout->addWidget(buttonContainer);
 
     setWidget(widget);
@@ -102,6 +118,12 @@ LayerDock::LayerDock(QWidget *parent):
     connect(mOpacitySlider, SIGNAL(valueChanged(int)),
             this, SLOT(setLayerOpacity(int)));
     updateOpacitySlider();
+
+#ifdef ZOMBOID
+    connect(mZomboidLayerSlider, SIGNAL(valueChanged(int)),
+            this, SLOT(setZomboidLayer(int)));
+    updateZomboidLayerSlider();
+#endif
 
     // Workaround since a tabbed dockwidget that is not currently visible still
     // returns true for isVisible()
@@ -126,6 +148,9 @@ void LayerDock::setMapDocument(MapDocument *mapDocument)
 
     mLayerView->setMapDocument(mapDocument);
     updateOpacitySlider();
+#ifdef ZOMBOID
+    updateZomboidLayerSlider();
+#endif
 }
 
 void LayerDock::changeEvent(QEvent *e)
@@ -176,10 +201,61 @@ void LayerDock::setLayerOpacity(int opacity)
     }
 }
 
+#ifdef ZOMBOID
+void LayerDock::updateZomboidLayerSlider()
+{
+    const bool enabled = mMapDocument;
+    mZomboidLayerSlider->setEnabled(enabled);
+    mZomboidLayerLabel->setEnabled(enabled);
+    if (enabled) {
+        mZomboidLayerSlider->setMaximum(mMapDocument->map()->layerCount());
+    } else {
+        mZomboidLayerSlider->setValue(mZomboidLayerSlider->maximum());
+    }
+}
+
+void LayerDock::setZomboidLayer(int number)
+{
+    if (!mMapDocument)
+        return;
+
+    LayerModel *layerModel = mMapDocument->layerModel();
+
+    int index = 0;
+    foreach (Layer *layer, mMapDocument->map()->layers()) {
+#if 1
+        bool visible = (index <= number);
+        if (visible != layer->isVisible())
+        {
+             layerModel->setData(layerModel->index(mMapDocument->map()->layerCount() - index - 1),
+                                 visible ? Qt::Checked : Qt::Unchecked,
+                                 Qt::CheckStateRole);
+         }
+#else
+        const QString& name = layer->name();
+        if (name.at(0).isDigit() && name.at(1).toAscii() == '_')
+        {
+            bool visible = (name[0].digitValue() <= number);
+            if (visible != layer->isVisible())
+            {
+                layerModel->setData(layerModel->index(mMapDocument->map()->layerCount() - index - 1),
+                                    visible ? Qt::Checked : Qt::Unchecked,
+                                    Qt::CheckStateRole);
+            }
+        }
+#endif
+        index++;
+    }
+}
+#endif // ZOMBOID
+
 void LayerDock::retranslateUi()
 {
     setWindowTitle(tr("Layers"));
     mOpacityLabel->setText(tr("Opacity:"));
+#ifdef ZOMBOID
+    mZomboidLayerLabel->setText(tr("Zomboid Layer:"));
+#endif
 }
 
 
