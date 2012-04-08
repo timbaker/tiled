@@ -31,3 +31,5 @@ QT4_WRAP_CPP(MOCS ${json_MOCS})
 
 add_library ( json SHARED ${json_SRCS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
 target_link_libraries ( json libtiled ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
+
+INSTALL(TARGETS json RUNTIME DESTINATION plugins/tiled LIBRARY DESTINATION plugins/tiled)

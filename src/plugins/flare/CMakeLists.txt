@@ -26,3 +26,4 @@ QT4_WRAP_CPP(MOCS ${flare_MOCS})
 add_library ( flare SHARED ${flare_SRCS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
 target_link_libraries ( flare libtiled ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
 
+INSTALL(TARGETS flare RUNTIME DESTINATION plugins/tiled LIBRARY DESTINATION plugins/tiled)

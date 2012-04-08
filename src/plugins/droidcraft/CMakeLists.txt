@@ -30,3 +30,5 @@ QT4_WRAP_CPP(MOCS ${droidcraft_MOCS})
 
 add_library ( droidcraft SHARED ${droidcraft_SRCS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
 target_link_libraries ( droidcraft libtiled ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
+
+INSTALL(TARGETS droidcraft RUNTIME DESTINATION plugins/tiled LIBRARY DESTINATION plugins/tiled)

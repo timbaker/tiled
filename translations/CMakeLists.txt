@@ -32,3 +32,18 @@ foreach (_qm ${_qm_files})
                           ${_qm}
                           ${CMAKE_BINARY_DIR}/Debug/translations/${_qm_name})
 endforeach ()
+
+#--------------------------------------------------------------------------------
+# install translations from build directory
+
+install(FILES ${_qm_files} DESTINATION translations)
+
+#--------------------------------------------------------------------------------
+# install translations from Qt directory
+
+set(qt_trs qt_cs.qm qt_de.qm qt_es.qm qt_fr.qm qt_he.qm qt_ja.qm qt_pt.qm qt_ru.qm qt_zh_CN.qm qt_zh_TW.qm)
+foreach(name ${qt_trs})
+	list(APPEND _qt_qm_files ${QT_TRANSLATIONS_DIR}/${name})
+endforeach()
+install(FILES ${_qt_qm_files} DESTINATION translations)
+

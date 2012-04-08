@@ -25,3 +25,5 @@ QT4_WRAP_CPP(MOCS ${tmw_MOCS})
 
 add_library ( tmw SHARED ${tmw_SRCS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
 target_link_libraries ( tmw libtiled ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
+
+INSTALL(TARGETS tmw RUNTIME DESTINATION plugins/tiled LIBRARY DESTINATION plugins/tiled)

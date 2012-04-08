@@ -26,3 +26,5 @@ QT4_WRAP_CPP(MOCS ${tmxviewer_MOCS})
 
 add_executable ( tmxviewer ${tmxviewer_SRCS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
 target_link_libraries ( tmxviewer libtiled ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
+
+INSTALL(TARGETS tmxviewer DESTINATION ".")

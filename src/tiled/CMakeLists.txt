@@ -245,3 +245,5 @@ MACRO_ADD_FILE_DEPENDENCIES(${_abs_FILE} ${_moc})
 
 add_executable ( TileZed ${Tiled_SRCS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
 target_link_libraries ( TileZed libtiled ${QT_QTOPENGL_LIBRARY} ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
+
+INSTALL(TARGETS TileZed DESTINATION ".")

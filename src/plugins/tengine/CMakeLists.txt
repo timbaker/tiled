@@ -25,3 +25,5 @@ QT4_WRAP_CPP(MOCS ${tengine_MOCS})
 
 add_library ( tengine SHARED ${tengine_SRCS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
 target_link_libraries ( tengine libtiled ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
+
+INSTALL(TARGETS tengine RUNTIME DESTINATION plugins/tiled LIBRARY DESTINATION plugins/tiled)

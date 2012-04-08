@@ -27,3 +27,5 @@ QT4_WRAP_CPP(MOCS ${lua_MOCS})
 
 add_library ( lua SHARED ${lua_SRCS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
 target_link_libraries ( lua libtiled ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
+
+INSTALL(TARGETS lua RUNTIME DESTINATION plugins/tiled LIBRARY DESTINATION plugins/tiled)

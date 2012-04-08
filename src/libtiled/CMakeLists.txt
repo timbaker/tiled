@@ -57,3 +57,5 @@ set ( tiled_SRCS
 
 add_library ( libtiled SHARED ${tiled_SRCS} ${tiled_HDRS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
 target_link_libraries ( libtiled  ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
+
+INSTALL(TARGETS libtiled RUNTIME DESTINATION "." LIBRARY DESTINATION ".")
