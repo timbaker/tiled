@@ -165,6 +165,7 @@ private slots:
 	virtual void layerAboutToBeRemoved(int index) {};
     virtual void layerRemoved(int index);
     virtual void layerChanged(int index);
+    virtual void layerRenamed(int index);
 #else
     void layerAdded(int index);
     void layerRemoved(int index);

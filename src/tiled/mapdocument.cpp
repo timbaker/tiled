@@ -79,6 +79,9 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
             SLOT(onLayerAboutToBeRemoved(int)));
     connect(mLayerModel, SIGNAL(layerRemoved(int)), SLOT(onLayerRemoved(int)));
     connect(mLayerModel, SIGNAL(layerChanged(int)), SIGNAL(layerChanged(int)));
+#ifdef ZOMBOID
+    connect(mLayerModel, SIGNAL(layerRenamed(int)), SIGNAL(layerRenamed(int)));
+#endif
 
     connect(mUndoStack, SIGNAL(cleanChanged(bool)), SIGNAL(modifiedChanged()));
 

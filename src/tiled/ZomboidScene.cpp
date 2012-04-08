@@ -76,6 +76,13 @@ void ZomboidScene::refreshScene()
 class DummyGraphicsItem : public QGraphicsItem
 {
 public:
+	DummyGraphicsItem()
+		: QGraphicsItem()
+	{
+		// Since we don't do any painting, we can spare us the call to paint()
+		setFlag(QGraphicsItem::ItemHasNoContents);
+	}
+		
     // QGraphicsItem
     QRectF boundingRect() const
 	{
@@ -90,14 +97,10 @@ public:
 
 QGraphicsItem *ZomboidScene::createLayerItem(Layer *layer)
 {
-	if (TileLayer *tl = layer->asTileLayer())
-	{
-		const QString& name = layer->name();
-		if (name.at(0).isDigit() && name.at(1).toAscii() == '_')
-		{
-			int group = name.at(0).digitValue();
-			if (mTileLayerGroupItems[group] == 0)
-			{
+	if (TileLayer *tl = layer->asTileLayer()) {
+		uint group;
+		if (groupForTileLayer(tl, &group)) {
+			if (mTileLayerGroupItems[group] == 0) {
 				ZTileLayerGroup *layerGroup = new ZomboidTileLayerGroup();
 				mTileLayerGroupItems[group] = new ZTileLayerGroupItem(layerGroup, mMapDocument->renderer());
 				addItem(mTileLayerGroupItems[group]);
@@ -108,6 +111,19 @@ QGraphicsItem *ZomboidScene::createLayerItem(Layer *layer)
 		}
 	}
 	return MapScene::createLayerItem(layer);
+}
+
+bool ZomboidScene::groupForTileLayer(TileLayer *tl, uint *group)
+{
+	// See if the layer name matches "0_foo" or "1_bar" etc.
+	const QString& name = tl->name();
+	QStringList sl = name.trimmed().split(QLatin1Char('_'));
+	if (sl.count() > 1) {
+		bool conversionOK;
+		(*group) = sl[0].toUInt(&conversionOK);
+		return (conversionOK && !sl[1].isEmpty());
+	}
+	return false;
 }
 
 void ZomboidScene::layerAdded(int index)
@@ -129,8 +145,7 @@ void ZomboidScene::layerAdded(int index)
 void ZomboidScene::layerAboutToBeRemoved(int index)
 {
 	Layer *layer = mMapDocument->map()->layerAt(index);
-	if (TileLayer *tl = layer->asTileLayer())
-	{
+	if (TileLayer *tl = layer->asTileLayer()) {
 		foreach (ZTileLayerGroupItem *grp, mTileLayerGroupItems)
 			grp->removeTileLayer(tl);
 	}
@@ -147,16 +162,19 @@ void ZomboidScene::layerRemoved(int index)
 }
 
 /**
- * A layer has changed. This can mean that the layer visibility or opacity has
- * changed.
+ * A layer has changed. This can mean that the layer visibility, opacity or
+ * name has changed.
  */
 void ZomboidScene::layerChanged(int index)
 {
 #if 1
 	MapScene::layerChanged(index);
 
-	foreach (ZTileLayerGroupItem *grp, mTileLayerGroupItems) {
-		grp->update(grp->boundingRect());
+    Layer *layer = mMapDocument->map()->layerAt(index);
+	if (TileLayer *tl = layer->asTileLayer()) {
+		foreach (ZTileLayerGroupItem *layerGroup, mTileLayerGroupItems) {
+			layerGroup->tileLayerChanged(tl);
+		}
 	}
 #else
     const Layer *layer = mMapDocument->map()->layerAt(index);
@@ -169,5 +187,61 @@ void ZomboidScene::layerChanged(int index)
         multiplier = opacityFactor;
 
     layerItem->setOpacity(layer->opacity() * multiplier);
+#endif
+}
+
+void ZomboidScene::layerRenamed(int index)
+{
+    Layer *layer = mMapDocument->map()->layerAt(index);
+	if (TileLayer *tl = layer->asTileLayer()) {
+		uint group;
+		bool hasGroup = groupForTileLayer(tl, &group);
+		ZTileLayerGroupItem *oldOwner = 0, *newOwner = 0;
+
+		// Find the old TileLayerGroup owner
+		foreach (ZTileLayerGroupItem *layerGroup, mTileLayerGroupItems) {
+			if (layerGroup->ownsTileLayer(tl)) {
+				oldOwner = layerGroup;
+				break;
+			}
+		}
+
+		// Find (or create) the new TileLayerGroup owner
+		if (hasGroup && mTileLayerGroupItems[group] == 0) {
+			ZTileLayerGroup *layerGroup = new ZomboidTileLayerGroup();
+			mTileLayerGroupItems[group] = new ZTileLayerGroupItem(layerGroup, mMapDocument->renderer());
+			addItem(mTileLayerGroupItems[group]);
+		}
+		if (hasGroup)
+			newOwner = mTileLayerGroupItems[group];
+
+		// Handle rename changing ownership
+		if (oldOwner != newOwner) {
+			if (oldOwner)
+				oldOwner->removeTileLayer(tl);
+			if (newOwner)
+				newOwner->addTileLayer(tl, index);
+
+			// If a TileLayerGroup owns a layer, then a DummyGraphicsItem is created which is
+			// managed by the base class.
+			// If no TileLayerGroup owns a layer, then a TileLayerItem is created which is
+			// managed by the base class (MapScene) See createLayerItem().
+			if (oldOwner && !newOwner) {
+				delete mLayerItems[index]; // DummyGraphicsItem
+				mLayerItems[index] = new TileLayerItem(tl, mMapDocument->renderer());
+				mLayerItems[index]->setVisible(layer->isVisible());
+				addItem(mLayerItems[index]);
+			}
+			if (!oldOwner && newOwner) {
+				delete mLayerItems[index]; // TileLayerItem
+				mLayerItems[index] = new DummyGraphicsItem();
+				addItem(mLayerItems[index]);
+			}
+		}
+	}
+#if 0
+    int z = 0;
+    foreach (QGraphicsItem *item, mLayerItems)
+        item->setZValue(z++);
 #endif
 }

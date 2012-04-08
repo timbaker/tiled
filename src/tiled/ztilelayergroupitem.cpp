@@ -52,6 +52,24 @@ void ZTileLayerGroupItem::removeTileLayer(TileLayer *layer)
     syncWithTileLayers();
 }
 
+// The opacity, visibility, or name of a layer has changed.
+void ZTileLayerGroupItem::tileLayerChanged(TileLayer *layer)
+{
+	if (mLayerGroup->mLayers.contains(layer)) {
+		update(boundingRect()); // force a redraw at the old bounds
+		syncWithTileLayers(); // update the bounds
+		update(boundingRect()); // force a redraw at the new bounds
+
+		// Set our opacity whenever the opacity of any owned layer changes
+		setOpacity(layer->opacity());
+	}
+}
+
+bool ZTileLayerGroupItem::ownsTileLayer(TileLayer *layer)
+{
+	return mLayerGroup->mLayers.contains(layer);
+}
+
 void ZTileLayerGroupItem::syncWithTileLayers()
 {
     prepareGeometryChange();

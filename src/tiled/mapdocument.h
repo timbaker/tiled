@@ -259,6 +259,7 @@ signals:
     void layerAdded(int index);
 #ifdef ZOMBOID
     void layerAboutToBeRemoved(int index);
+	void layerRenamed(int index);
 #endif
     void layerRemoved(int index);
     void layerChanged(int index);

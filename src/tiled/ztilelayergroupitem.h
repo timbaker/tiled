@@ -35,6 +35,9 @@ public:
 
     void addTileLayer(TileLayer *layer, int index);
     void removeTileLayer(TileLayer *layer);
+	void tileLayerChanged(TileLayer *layer);
+
+	bool ownsTileLayer(TileLayer *layer);
 
     void syncWithTileLayers();
 

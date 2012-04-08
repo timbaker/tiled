@@ -67,9 +67,11 @@ private slots:
     virtual void layerAboutToBeRemoved(int index);
     virtual void layerRemoved(int index);
     virtual void layerChanged(int index);
+    virtual void layerRenamed(int index);
 
 protected:
     virtual QGraphicsItem *createLayerItem(Layer *layer);
+	bool groupForTileLayer(TileLayer *tl, uint *group);
 private:
 	QMap<int,ZTileLayerGroupItem*> mTileLayerGroupItems;
 };

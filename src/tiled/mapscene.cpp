@@ -110,6 +110,8 @@ void MapScene::setMapDocument(MapDocument *mapDocument)
 #ifdef ZOMBOID
 		connect(mMapDocument, SIGNAL(layerAboutToBeRemoved(int)),
                 this, SLOT(layerAboutToBeRemoved(int)));
+		connect(mMapDocument, SIGNAL(layerRenamed(int)),
+                this, SLOT(layerRenamed(int)));
 #endif
 		connect(mMapDocument, SIGNAL(layerRemoved(int)),
                 this, SLOT(layerRemoved(int)));
@@ -349,6 +351,12 @@ void MapScene::layerChanged(int index)
 
     layerItem->setOpacity(layer->opacity() * multiplier);
 }
+
+#ifdef ZOMBOID
+void MapScene::layerRenamed(int index)
+{
+}
+#endif
 
 /**
  * Inserts map object items for the given objects.
