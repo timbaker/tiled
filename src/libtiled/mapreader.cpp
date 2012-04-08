@@ -502,17 +502,21 @@ void MapReaderPrivate::decodeBinaryLayerData(TileLayer *tileLayer,
 }
 
 #if defined(ZOMBOID) && defined(_DEBUG)
-void QString_split(const QChar &sep, QString::SplitBehavior behavior, Qt::CaseSensitivity cs, const QString &in, QStringList& out)
+void QString_split(const QChar &sep, QString::SplitBehavior behavior, Qt::CaseSensitivity cs, const QString &in, QVector<int>& out)
 {
     int start = 0;
     int end;
     while ((end = in.indexOf(sep, start, cs)) != -1) {
-        if (start != end || behavior == QString::KeepEmptyParts)
-            out.append(in.mid(start, end - start));
+        if (start != end || behavior == QString::KeepEmptyParts) {
+            out.append(start);
+			out.append(end - start);
+		}
         start = end + 1;
     }
-    if (start != in.size() || behavior == QString::KeepEmptyParts)
-        out.append(in.mid(start));
+    if (start != in.size() || behavior == QString::KeepEmptyParts) {
+        out.append(start);
+		out.append(in.size() - start);
+	}
 }
 #endif
 
@@ -520,12 +524,35 @@ void MapReaderPrivate::decodeCSVLayerData(TileLayer *tileLayer, const QString &t
 {
     QString trimText = text.trimmed();
 #if defined(ZOMBOID) && defined(_DEBUG)
-	static QStringList tiles;
+	static QVector<int> tiles;
 	tiles.clear();
 	QString_split(QLatin1Char(','), QString::KeepEmptyParts, Qt::CaseSensitive, trimText, tiles);
+
+    if (tiles.count() / 2 != tileLayer->width() * tileLayer->height()) {
+        xml.raiseError(tr("Corrupt layer data for layer '%1'")
+                       .arg(tileLayer->name()));
+        return;
+    }
+
+	QString tile;
+
+    for (int y = 0; y < tileLayer->height(); y++) {
+        for (int x = 0; x < tileLayer->width(); x++) {
+            bool conversionOk;
+			int k = (y * tileLayer->width() + x) * 2;
+			tile = trimText.mid(tiles[k], tiles[k + 1]);
+            const uint gid = tile.toUInt(&conversionOk);
+            if (!conversionOk) {
+                xml.raiseError(
+                        tr("Unable to parse tile at (%1,%2) on layer '%3'")
+                               .arg(x + 1).arg(y + 1).arg(tileLayer->name()));
+                return;
+            }
+            tileLayer->setCell(x, y, cellForGid(gid));
+        }
+    }
 #else
 	QStringList tiles = trimText.split(QLatin1Char(','));
-#endif
 
     if (tiles.length() != tileLayer->width() * tileLayer->height()) {
         xml.raiseError(tr("Corrupt layer data for layer '%1'")
@@ -547,6 +574,7 @@ void MapReaderPrivate::decodeCSVLayerData(TileLayer *tileLayer, const QString &t
             tileLayer->setCell(x, y, cellForGid(gid));
         }
     }
+#endif
 }
 
 Cell MapReaderPrivate::cellForGid(uint gid)
