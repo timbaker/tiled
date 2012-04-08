@@ -2,7 +2,7 @@ project( libtiled )
 cmake_minimum_required( VERSION 2.6 )
 set ( CMAKE_BUILD_TYPE Release )
 #add_definitions ( -Wall )
-add_definitions( -DZOMBOID -DTILED_LIBRARY )
+add_definitions( -DTILED_LIBRARY )
 find_package ( Qt4 REQUIRED )
 include ( ${QT_USE_FILE} )
 include_directories (

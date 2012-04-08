@@ -2,7 +2,7 @@ project( TileZed )
 cmake_minimum_required( VERSION 2.6 )
 set ( CMAKE_BUILD_TYPE Release )
 #add_definitions ( -Wall )
-add_definitions( -DZOMBOID -DQT_NO_CAST_FROM_ASCII -DQT_NO_CAST_TO_ASCII )
+add_definitions( -DQT_NO_CAST_FROM_ASCII -DQT_NO_CAST_TO_ASCII )
 find_package ( Qt4 REQUIRED )
 include ( ${QT_USE_FILE} )
 include_directories (
@@ -243,7 +243,7 @@ SET(_moc    ${CMAKE_CURRENT_BINARY_DIR}/${_current_MOC})
 QT4_CREATE_MOC_COMMAND(${_abs_FILE} ${_moc} "${_moc_INCS}" "")
 MACRO_ADD_FILE_DEPENDENCIES(${_abs_FILE} ${_moc})
 
-add_executable ( TileZed ${Tiled_SRCS} ${UIS} ${RSCS} ${TRS} ${MOCS} )
+add_executable ( TileZed ${Tiled_SRCS} tiled.rc ${UIS} ${RSCS} ${TRS} ${MOCS} )
 target_link_libraries ( TileZed libtiled ${QT_QTOPENGL_LIBRARY} ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
 
 INSTALL(TARGETS TileZed DESTINATION ".")
