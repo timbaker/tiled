@@ -118,10 +118,10 @@ bool ZomboidScene::groupForTileLayer(TileLayer *tl, uint *group)
 	// See if the layer name matches "0_foo" or "1_bar" etc.
 	const QString& name = tl->name();
 	QStringList sl = name.trimmed().split(QLatin1Char('_'));
-	if (sl.count() > 1) {
+	if (sl.count() > 1 && !sl[1].isEmpty()) {
 		bool conversionOK;
 		(*group) = sl[0].toUInt(&conversionOK);
-		return (conversionOK && !sl[1].isEmpty());
+		return conversionOK;
 	}
 	return false;
 }
@@ -146,8 +146,8 @@ void ZomboidScene::layerAboutToBeRemoved(int index)
 {
 	Layer *layer = mMapDocument->map()->layerAt(index);
 	if (TileLayer *tl = layer->asTileLayer()) {
-		foreach (ZTileLayerGroupItem *grp, mTileLayerGroupItems)
-			grp->removeTileLayer(tl);
+		foreach (ZTileLayerGroupItem *layerGroupItem, mTileLayerGroupItems)
+			layerGroupItem->removeTileLayer(tl); // if it owns the TileLayer
 	}
 }
 
@@ -168,12 +168,34 @@ void ZomboidScene::layerRemoved(int index)
 void ZomboidScene::layerChanged(int index)
 {
 #if 1
+	// This gateway var isn't needed since I'm not going through LayerModel when setting opacity,
+	// so no layerChanged signals are emitted, so no recursion happens here.
+	static bool changingOpacity = false;
+	if (changingOpacity)
+		return;
+
 	MapScene::layerChanged(index);
 
     Layer *layer = mMapDocument->map()->layerAt(index);
 	if (TileLayer *tl = layer->asTileLayer()) {
-		foreach (ZTileLayerGroupItem *layerGroup, mTileLayerGroupItems) {
-			layerGroup->tileLayerChanged(tl);
+		foreach (ZTileLayerGroupItem *layerGroupItem, mTileLayerGroupItems) {
+			if (layerGroupItem->ownsTileLayer(tl)) {
+				// Set the group item's opacity whenever the opacity of any owned layer changes
+				if (layer->opacity() != layerGroupItem->opacity()) {
+					layerGroupItem->setOpacity(layer->opacity());
+					// Set the opacity of all the other layers in this group so the opacity slider
+					// reflects the change when a new layer is selected.
+					changingOpacity = true; // HACK - prevent recursion (see note above)
+					foreach (TileLayer *tileLayer, layerGroupItem->getTileLayerGroup()->mLayers) {
+						if (tileLayer != tl)
+							tileLayer->setOpacity(layer->opacity()); // FIXME: should I do what LayerDock::setLayerOpacity does (which will be recursive)?
+					}
+					changingOpacity = false;
+				}
+				// Redraw
+				layerGroupItem->tileLayerChanged(tl);
+				break;
+			}
 		}
 	}
 #else
@@ -217,10 +239,14 @@ void ZomboidScene::layerRenamed(int index)
 
 		// Handle rename changing ownership
 		if (oldOwner != newOwner) {
-			if (oldOwner)
+			if (oldOwner) {
+				oldOwner->tileLayerChanged(tl); // redraw needed?
 				oldOwner->removeTileLayer(tl);
-			if (newOwner)
+			}
+			if (newOwner) {
+				layer->setOpacity(newOwner->opacity()); // FIXME: need to update the LayerDock slider
 				newOwner->addTileLayer(tl, index);
+			}
 
 			// If a TileLayerGroup owns a layer, then a DummyGraphicsItem is created which is
 			// managed by the base class.
@@ -230,16 +256,19 @@ void ZomboidScene::layerRenamed(int index)
 				delete mLayerItems[index]; // DummyGraphicsItem
 				mLayerItems[index] = new TileLayerItem(tl, mMapDocument->renderer());
 				mLayerItems[index]->setVisible(layer->isVisible());
+				mLayerItems[index]->setOpacity(layer->opacity());
 				addItem(mLayerItems[index]);
 			}
 			if (!oldOwner && newOwner) {
 				delete mLayerItems[index]; // TileLayerItem
 				mLayerItems[index] = new DummyGraphicsItem();
+				mLayerItems[index]->setVisible(layer->isVisible());
 				addItem(mLayerItems[index]);
 			}
 		}
 	}
 #if 0
+	// TODO: determine sane Z-order for layers in and out of TileLayerGroups
     int z = 0;
     foreach (QGraphicsItem *item, mLayerItems)
         item->setZValue(z++);

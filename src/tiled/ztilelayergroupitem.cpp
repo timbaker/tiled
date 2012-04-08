@@ -56,12 +56,9 @@ void ZTileLayerGroupItem::removeTileLayer(TileLayer *layer)
 void ZTileLayerGroupItem::tileLayerChanged(TileLayer *layer)
 {
 	if (mLayerGroup->mLayers.contains(layer)) {
-		update(boundingRect()); // force a redraw at the old bounds
+		update(); // force a redraw at the old bounds
 		syncWithTileLayers(); // update the bounds
-		update(boundingRect()); // force a redraw at the new bounds
-
-		// Set our opacity whenever the opacity of any owned layer changes
-		setOpacity(layer->opacity());
+		update(); // force a redraw at the new bounds
 	}
 }
 

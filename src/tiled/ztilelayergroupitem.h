@@ -41,6 +41,8 @@ public:
 
     void syncWithTileLayers();
 
+	ZTileLayerGroup *getTileLayerGroup() const { return mLayerGroup; }
+
     // QGraphicsItem
     QRectF boundingRect() const;
     void paint(QPainter *painter,
