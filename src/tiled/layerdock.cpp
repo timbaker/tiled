@@ -90,7 +90,10 @@ LayerDock::LayerDock(QWidget *parent):
     newLayerButton->setPopupMode(QToolButton::InstantPopup);
     newLayerButton->setMenu(newLayerMenu);
     newLayerButton->setIcon(newIcon);
-    Utils::setThemeIcon(newLayerButton, "document-new");
+#ifdef ZOMBOID
+	newLayerButton->setToolTip(tr("New Layer"));
+#endif
+	Utils::setThemeIcon(newLayerButton, "document-new");
 
     QToolBar *buttonContainer = new QToolBar;
     buttonContainer->setFloatable(false);
