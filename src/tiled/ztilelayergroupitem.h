@@ -39,7 +39,7 @@ public:
 
 	bool ownsTileLayer(TileLayer *layer);
 
-    void syncWithTileLayers();
+    virtual void syncWithTileLayers();
 
 	ZTileLayerGroup *getTileLayerGroup() const { return mLayerGroup; }
 
@@ -49,7 +49,7 @@ public:
                const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0);
 
-private:
+protected:
     ZTileLayerGroup *mLayerGroup;
     MapRenderer *mRenderer;
     QRectF mBoundingRect;

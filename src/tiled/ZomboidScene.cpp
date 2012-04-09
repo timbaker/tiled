@@ -25,8 +25,11 @@
 
 #include "map.h"
 #include "mapdocument.h"
+#include "mapobject.h"
 #include "tilelayer.h"
 #include "tilelayeritem.h"
+#include "zlot.hpp"
+#include "zlotmanager.hpp"
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -45,6 +48,10 @@ bool ZomboidTileLayerGroup::orderedCellsAt(const QPoint &point, QVector<const Ce
 	{
 		if (!tl->isVisible())
 			continue;
+#if 0 // DO NOT USE - VERY SLOW
+		if (tl->isEmpty())
+			continue;
+#endif
 		QPoint pos = point - tl->position();
 		if (tl->contains(pos))
 			cells.append(&tl->cellAt(pos));
@@ -57,6 +64,12 @@ bool ZomboidTileLayerGroup::orderedCellsAt(const QPoint &point, QVector<const Ce
 ZomboidScene::ZomboidScene(QObject *parent)
     : MapScene(parent)
 {
+	connect(ZLotManager::instance(), SIGNAL(lotAdded(ZLot*,Internal::MapDocument*,MapObject*)),
+		this, SLOT(onLotAdded(ZLot*,Internal::MapDocument*,MapObject*)));
+	connect(ZLotManager::instance(), SIGNAL(lotRemoved(ZLot*,Internal::MapDocument*,MapObject*)),
+		this, SLOT(onLotRemoved(ZLot*,Internal::MapDocument*,MapObject*)));
+	connect(ZLotManager::instance(), SIGNAL(lotUpdated(ZLot*,Internal::MapDocument*,MapObject*)),
+		this, SLOT(onLotUpdated(ZLot*,Internal::MapDocument*,MapObject*)));
 }
 
 ZomboidScene::~ZomboidScene()
@@ -273,4 +286,22 @@ void ZomboidScene::layerRenamed(int index)
     foreach (QGraphicsItem *item, mLayerItems)
         item->setZValue(z++);
 #endif
+}
+
+void ZomboidScene::onLotAdded(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject)
+{
+	if (mapDoc == mMapDocument)
+		lot->addToScene(this, mapObject);
+}
+
+void ZomboidScene::onLotRemoved(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject)
+{
+	if (mapDoc == mMapDocument)
+		lot->removeFromScene(this, mapObject);
+}
+
+void ZomboidScene::onLotUpdated(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject)
+{
+	if (mapDoc == mMapDocument)
+		lot->updateInScene(this, mapObject);
 }

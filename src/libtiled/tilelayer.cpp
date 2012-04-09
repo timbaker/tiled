@@ -408,6 +408,9 @@ QRegion TileLayer::computeDiffRegion(const TileLayer *other) const
 
 bool TileLayer::isEmpty() const
 {
+#ifdef ZOMBOID
+	Q_ASSERT(false); // Way too slow, don't ever call this.
+#endif
     for (int i = 0, i_end = mGrid.size(); i < i_end; ++i)
         if (!mGrid.at(i).isEmpty())
             return false;

@@ -29,6 +29,7 @@ namespace Tiled {
 class Layer;
 class MapObject;
 class Tileset;
+class ZLot;
 
 namespace Internal {
 
@@ -68,6 +69,10 @@ private slots:
     virtual void layerRemoved(int index);
     virtual void layerChanged(int index);
     virtual void layerRenamed(int index);
+
+	void onLotAdded(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject);
+	void onLotRemoved(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject);
+	void onLotUpdated(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject);
 
 protected:
     virtual QGraphicsItem *createLayerItem(Layer *layer);

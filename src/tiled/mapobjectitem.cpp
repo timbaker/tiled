@@ -31,6 +31,10 @@
 #include "preferences.h"
 #include "resizemapobject.h"
 
+#ifdef ZOMBOID
+#include "zlotmanager.hpp"
+#endif
+
 #include <QApplication>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
@@ -205,6 +209,10 @@ void MapObjectItem::syncWithMapObject()
     if (!type.isEmpty())
         toolTip += QLatin1String(" (") + type + QLatin1String(")");
     setToolTip(toolTip);
+
+#ifdef ZOMBOID
+	ZLotManager::instance()->handleMapObject(mMapDocument, mObject);
+#endif
 
     MapRenderer *renderer = mMapDocument->renderer();
     const QPointF pixelPos = renderer->tileToPixelCoords(mObject->position());

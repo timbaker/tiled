@@ -57,6 +57,7 @@ set ( Tiled_HDRS
 	undocommands.h
 	utils.h
 
+	zlot.hpp
 	ztilelayergroupitem.h
 	)
 
@@ -153,6 +154,8 @@ set ( Tiled_SRCS
 	utils.cpp
 	zoomable.cpp
 
+	zlot.cpp
+	zlotmanager.cpp
 	ZomboidScene.cpp
 	ztilelayergroupitem.cpp
 	)
@@ -232,6 +235,7 @@ set ( Tiled_MOCS
 	zoomable.h
 
 	ZomboidScene.h
+	zlotmanager.hpp
 	)
 QT4_WRAP_CPP(MOCS ${Tiled_MOCS})
 
