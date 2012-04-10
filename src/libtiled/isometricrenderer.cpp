@@ -342,7 +342,7 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, const ZTileLayerGr
 
     QTransform baseTransform = painter->transform();
 
-	QVector<const Cell*> cells(10);
+	QVector<const Cell*> cells(40);
 
     for (int y = startPos.y(); y - tileHeight < rect.bottom();
          y += tileHeight / 2)
