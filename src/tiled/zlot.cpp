@@ -28,155 +28,104 @@
 
 namespace Tiled {
 
-class LotTileLayerGroup : public ZTileLayerGroup
+///// ///// ///// ///// /////
+
+ZLotTileLayerGroup::ZLotTileLayerGroup()
 {
-public:
-	LotTileLayerGroup(MapObject *mapObject, MapRenderer *mapRenderer)
-		: mMapObject(mapObject)
-		, mMapRenderer(mapRenderer)
-	{
-	}
+}
 
-	QRect bounds() const
-	{
-		QRect r;
-		foreach (TileLayer *tl, mLayers)
-			r |= tl->bounds();
-		QPoint mapObjectPos = mMapObject->position().toPoint(); // tile coords of the map object
-		r.translate(mapObjectPos);
-		return r;
-	}
-
-	virtual bool orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const
-	{
-		QPoint mapObjectPos = mMapObject->position().toPoint(); // tile coords of the map object
-		cells.clear();
-		foreach (TileLayer *tl, mLayers)
-		{
-//			if (!tl->isVisible())
-//				continue;
+bool ZLotTileLayerGroup::orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const
+{
+	bool cleared = false;
+	foreach (TileLayer *tl, mLayers) {
+//		if (!tl->isVisible())
+//			continue;
 #if 0 // DO NOT USE - VERY SLOW
-			if (tl->isEmpty())
-				continue;
+		if (tl->isEmpty())
+			continue;
 #endif
-			QPoint pos = point - tl->position() - mapObjectPos;
-			if (tl->contains(pos))
-				cells.append(&tl->cellAt(pos));
-		}
-		return !cells.empty();
-	}
-
-	MapObject *mMapObject;
-	MapRenderer *mMapRenderer;
-};
-
-class LotTileLayerGroupItem : public Internal::ZTileLayerGroupItem
-{
-public:
-	LotTileLayerGroupItem(MapObject *mapObject, ZTileLayerGroup *layerGroup, MapRenderer *renderer)
-		: Internal::ZTileLayerGroupItem(layerGroup, renderer)
-		, mMapObject(mapObject)
-	{
-	}
-
-	virtual void syncWithTileLayers()
-	{
-		prepareGeometryChange();
-		QRect tileBounds(0,0,-1,-1);
-		foreach (TileLayer *tl, mLayerGroup->mLayers)
-			tileBounds |= tl->bounds();
-
-		QPoint mapObjectPos = mMapObject->position().toPoint(); // tile coords of the map object
-		tileBounds.translate(mapObjectPos);
-		mBoundingRect = mRenderer->boundingRect(tileBounds);
-	}
-
-	MapObject *mMapObject;
-};
-
-// Not derived from QGraphicsItem
-class ZLotSceneItem
-{
-public:
-	ZLotSceneItem(Map *map)
-		: mMap(map)
-	{
-	}
-	// FIXME: duplicated in ZomboidScene
-	bool groupForTileLayer(TileLayer *tl, uint *group)
-	{
-		// See if the layer name matches "0_foo" or "1_bar" etc.
-		const QString& name = tl->name();
-		QStringList sl = name.trimmed().split(QLatin1Char('_'));
-		if (sl.count() > 1 && !sl[1].isEmpty()) {
-			bool conversionOK;
-			(*group) = sl[0].toUInt(&conversionOK);
-			return conversionOK;
-		}
-		return false;
-	}
-	void addToScene(Internal::MapScene *mapScene, MapObject *mapObject)
-	{
-		foreach (Layer *layer, mMap->layers()) {
-			if (TileLayer *tl = layer->asTileLayer()) {
-				uint group;
-				if (groupForTileLayer(tl, &group)) {
-					if (mTileLayerGroupItems[group] == 0) {
-						ZTileLayerGroup *layerGroup = new LotTileLayerGroup(mapObject, mapScene->mapDocument()->renderer());
-						mTileLayerGroupItems[group] = new LotTileLayerGroupItem(mapObject, layerGroup, mapScene->mapDocument()->renderer());
-						mapScene->addItem(mTileLayerGroupItems[group]);
-					}
-					int index = mMap->layers().indexOf(layer);
-					mTileLayerGroupItems[group]->addTileLayer(tl, index);
+		QPoint pos = point - tl->position();
+		if (tl->contains(pos)) {
+			const Cell *cell = &tl->cellAt(pos);
+			if (!cell->isEmpty()) {
+				if (!cleared) {
+					cells.clear();
+					cleared = true;
 				}
+				cells.append(cell);
 			}
 		}
 	}
-	void removeFromScene(Internal::MapScene *mapScene, MapObject *mapObject)
-	{
-		foreach (Internal::ZTileLayerGroupItem *tlgi, mTileLayerGroupItems) {
-			delete tlgi;
-		}
-	}
-	void updateInScene(Internal::MapScene *mapScene, MapObject *mapObject)
-	{
-		foreach (Internal::ZTileLayerGroupItem *tlgi, mTileLayerGroupItems) {
-			tlgi->syncWithTileLayers(); // update bounds
-		}
-	}
-	Map *mMap;
-	QMap<int,Internal::ZTileLayerGroupItem*> mTileLayerGroupItems;
-};
+	return !cells.empty();
+}
+
+///// ///// ///// ///// /////
+
+// from map.cpp
+static void maxMargins(const QMargins &a,
+                           const QMargins &b,
+						   QMargins &out)
+{
+    out.setLeft(qMax(a.left(), b.left()));
+    out.setTop(qMax(a.top(), b.top()));
+    out.setRight(qMax(a.right(), b.right()));
+    out.setBottom(qMax(a.bottom(), b.bottom()));
+}
 
 ZLot::ZLot(Map *map)
 	: mMap(map)
 {
+	int index = 0;
+	foreach (Layer *layer, mMap->layers()) {
+		if (TileLayer *tl = layer->asTileLayer()) {
+			if (tl->name().contains(QLatin1String("NoRender")))
+				continue;
+			if (tl->isEmpty()) // SLOW - checks every cell
+				continue;
+			uint level;
+			if (groupForTileLayer(tl, &level)) {
+				if (!mLevelToTileLayers.contains(level))
+					mLevelToTileLayers[level] = new ZLotTileLayerGroup();
+				ZLotTileLayerGroup *layerGroup = mLevelToTileLayers[level];
+				layerGroup->addTileLayer(tl, index);
+				layerGroup->mBounds |= layerGroup->_bounds();
+				maxMargins(layerGroup->mMargins, layerGroup->_drawMargins(), layerGroup->mMargins);
+				++index;
+			}
+		}
+	}
 }
 
 ZLot::~ZLot()
 {
 }
 
-void ZLot::addToScene(Internal::MapScene *mapScene, MapObject *mapObject)
+// FIXME: duplicated in ZomboidScene
+bool ZLot::groupForTileLayer(TileLayer *tl, uint *group)
 {
-	Q_ASSERT(mMapObjectToSceneItem.keys().contains(mapObject) == false);
-	mMapObjectToSceneItem[mapObject] = new ZLotSceneItem(mMap);
-	mMapObjectToSceneItem[mapObject]->addToScene(mapScene, mapObject);
+	// See if the layer name matches "0_foo" or "1_bar" etc.
+	const QString& name = tl->name();
+	QStringList sl = name.trimmed().split(QLatin1Char('_'));
+	if (sl.count() > 1 && !sl[1].isEmpty()) {
+		bool conversionOK;
+		(*group) = sl[0].toUInt(&conversionOK);
+		return conversionOK;
+	}
+	return false;
 }
 
-void ZLot::removeFromScene(Internal::MapScene *mapScene, MapObject *mapObject)
+bool ZLot::orderedCellsAt(int level, const QPoint &point, QVector<const Cell*>& cells) const
 {
-	Q_ASSERT(mMapObjectToSceneItem.keys().contains(mapObject) == true);
-	mMapObjectToSceneItem[mapObject]->removeFromScene(mapScene, mapObject);
-	delete mMapObjectToSceneItem[mapObject];
-	QMap<MapObject*,ZLotSceneItem*>::iterator it = mMapObjectToSceneItem.find(mapObject);
-	mMapObjectToSceneItem.erase(it);
+	if (mLevelToTileLayers.contains(level) == false)
+		return false;
+	return mLevelToTileLayers[level]->orderedCellsAt(point, cells);
 }
 
-void ZLot::updateInScene(Internal::MapScene *mapScene, MapObject *mapObject)
+const ZTileLayerGroup *ZLot::tileLayersForLevel(int level) const
 {
-	Q_ASSERT(mMapObjectToSceneItem.keys().contains(mapObject) == true);
-	mMapObjectToSceneItem[mapObject]->updateInScene(mapScene, mapObject);
+	if (mLevelToTileLayers.contains(level))
+		return mLevelToTileLayers[level];
+	return 0;
 }
 
 } // namespace Tiled

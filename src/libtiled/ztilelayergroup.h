@@ -35,6 +35,7 @@
 namespace Tiled {
 
 class Cell;
+class MapRenderer;
 class TileLayer;
 
 class TILEDSHARED_EXPORT ZTileLayerGroup
@@ -47,12 +48,13 @@ public:
     void removeTileLayer(TileLayer *layer);
 
 	// Layer
-	QRect bounds() const;
+	virtual QRect bounds() const;
 
 	// TileLayer
-	QMargins drawMargins() const;
+	virtual QMargins drawMargins() const;
 
     virtual bool orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const = 0;
+	virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect) = 0;
 
     QVector<TileLayer*> mLayers;
 	QVector<int> mIndices;

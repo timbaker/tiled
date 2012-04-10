@@ -70,10 +70,7 @@ bool ZTileLayerGroupItem::ownsTileLayer(TileLayer *layer)
 void ZTileLayerGroupItem::syncWithTileLayers()
 {
     prepareGeometryChange();
-    QRect tileBounds(0,0,-1,-1);
-    foreach (TileLayer *tl, mLayerGroup->mLayers) {
-        tileBounds |= tl->bounds();
-	}
+    QRect tileBounds = mLayerGroup->bounds();
 	mBoundingRect = mRenderer->boundingRect(tileBounds);
 }
 

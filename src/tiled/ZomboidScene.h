@@ -35,11 +35,40 @@ namespace Internal {
 
 ///// ///// ///// ///// /////
 
+class ZomboidScene;
 class ZomboidTileLayerGroup : public ZTileLayerGroup
 {
 public:
-	ZomboidTileLayerGroup();
-	virtual bool orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const;
+	ZomboidTileLayerGroup(ZomboidScene *mapScene, int level);
+	bool orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const;
+
+	// Layer
+	virtual QRect bounds() const;
+
+	// TileLayer
+	virtual QMargins drawMargins() const;
+
+	// ZTileLayerGroup
+	virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect);
+
+	ZomboidScene *mMapScene;
+	int mLevel;
+
+	struct LotLayers
+	{
+		LotLayers()
+		{
+			mLayerGroup = 0;
+		}
+		LotLayers(const QPoint& pos, const ZTileLayerGroup *layerGroup)
+			: mMapObjectPos(pos)
+			, mLayerGroup(layerGroup)
+		{
+		}
+		QPoint mMapObjectPos;
+		const ZTileLayerGroup *mLayerGroup;
+	};
+	QVector<LotLayers> mPreparedLotLayers;
 };
 
 ///// ///// ///// ///// /////
@@ -61,6 +90,10 @@ public:
      */
     ~ZomboidScene();
 
+	// accessed by ZomboidTileLayerGroup
+	QList<MapObject*> mLotMapObjects;
+	QMap<MapObject*,ZLot*> mMapObjectToLot;
+
 private slots:
     virtual void refreshScene();
 
@@ -73,7 +106,6 @@ private slots:
 	void onLotAdded(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject);
 	void onLotRemoved(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject);
 	void onLotUpdated(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject);
-
 protected:
     virtual QGraphicsItem *createLayerItem(Layer *layer);
 	bool groupForTileLayer(TileLayer *tl, uint *group);

@@ -19,18 +19,37 @@
 #define ZLOT_H
 
 #include <QMap>
+#include <QVector>
+#include <QPoint>
+#include "ztilelayergroup.h"
 
 namespace Tiled {
 
+class Cell;
 class Map;
-class MapObject;
 class TileLayer;
-class ZLotSceneItem;
 
 namespace Internal {
-class MapScene;
-class ZTileLayerGroupItem;
 }
+
+class ZLotTileLayerGroup : public ZTileLayerGroup
+{
+public:
+	ZLotTileLayerGroup();
+
+	// ZTileLayerGroup
+	virtual QRect bounds() const { return mBounds; }
+	virtual QMargins drawMargins() const { return mMargins; }
+	virtual bool orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const;
+	virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect) {};
+
+	QRect _bounds() { return ZTileLayerGroup::bounds(); }
+	QMargins _drawMargins() { return ZTileLayerGroup::drawMargins(); }
+
+	// These never change
+	QRect mBounds;
+	QMargins mMargins;
+};
 
 class ZLot
 {
@@ -38,14 +57,14 @@ public:
 	ZLot(Map *map);
 	~ZLot();
 
-	void addToScene(Internal::MapScene *mapScene, MapObject *mapObject);
-	void removeFromScene(Internal::MapScene *mapScene, MapObject *mapObject);
-	void updateInScene(Internal::MapScene *mapScene, MapObject *mapObject);
 	bool groupForTileLayer(TileLayer *tl, uint *group);
+	bool orderedCellsAt(int level, const QPoint &point, QVector<const Cell*>& cells) const;
+	const ZTileLayerGroup *tileLayersForLevel(int level) const;
+	Map *map() const { return mMap; }
 
 private:
 	Map *mMap;
-	QMap<MapObject*,ZLotSceneItem*> mMapObjectToSceneItem;
+	QMap<int,ZLotTileLayerGroup*> mLevelToTileLayers;
 };
 
 } // namespace Tiled

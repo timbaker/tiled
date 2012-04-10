@@ -26,6 +26,7 @@
 #include "map.h"
 #include "mapdocument.h"
 #include "mapobject.h"
+#include "maprenderer.h"
 #include "tilelayer.h"
 #include "tilelayeritem.h"
 #include "zlot.hpp"
@@ -36,16 +37,46 @@ using namespace Tiled::Internal;
 
 ///// ///// ///// ///// /////
 
-ZomboidTileLayerGroup::ZomboidTileLayerGroup()
-	: ZTileLayerGroup()
+// from map.cpp
+static void maxMargins(const QMargins &a,
+                           const QMargins &b,
+						   QMargins &out)
 {
+    out.setLeft(qMax(a.left(), b.left()));
+    out.setTop(qMax(a.top(), b.top()));
+    out.setRight(qMax(a.right(), b.right()));
+    out.setBottom(qMax(a.bottom(), b.bottom()));
+}
+
+ZomboidTileLayerGroup::ZomboidTileLayerGroup(ZomboidScene *mapScene, int level)
+	: ZTileLayerGroup()
+	, mMapScene(mapScene)
+	, mLevel(level)
+{
+}
+
+void ZomboidTileLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRect &rect)
+{
+	mPreparedLotLayers.clear();
+	foreach (MapObject *mapObject, mMapScene->mLotMapObjects) {
+		QPoint mapObjectPos = mapObject->position().toPoint();
+		ZLot *lot = mMapScene->mMapObjectToLot[mapObject];
+		const ZTileLayerGroup *layerGroup = lot->tileLayersForLevel(mLevel);
+		if (layerGroup) {
+			QRect r = layerGroup->bounds().translated(mapObjectPos);
+			QMargins m = layerGroup->drawMargins();
+			QRectF bounds = renderer->boundingRect(r);
+			bounds.adjust(-m.right(), -m.bottom(), m.left(), m.top());
+			if ((bounds & rect).isValid())
+				mPreparedLotLayers.append(LotLayers(mapObjectPos, layerGroup));
+		}
+	}
 }
 
 bool ZomboidTileLayerGroup::orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const
 {
 	cells.clear();
-	foreach (TileLayer *tl, mLayers)
-	{
+	foreach (TileLayer *tl, mLayers) {
 		if (!tl->isVisible())
 			continue;
 #if 0 // DO NOT USE - VERY SLOW
@@ -53,10 +84,59 @@ bool ZomboidTileLayerGroup::orderedCellsAt(const QPoint &point, QVector<const Ce
 			continue;
 #endif
 		QPoint pos = point - tl->position();
-		if (tl->contains(pos))
-			cells.append(&tl->cellAt(pos));
+		if (tl->contains(pos)) {
+			const Cell *cell = &tl->cellAt(pos);
+			if (!cell->isEmpty())
+				cells.append(cell);
+		}
 	}
+
+	// Overwrite map cells with .lot cells at this location
+#if 1
+	foreach (const LotLayers& lotLayer, mPreparedLotLayers) {
+		lotLayer.mLayerGroup->orderedCellsAt(point - lotLayer.mMapObjectPos, cells);
+	}
+#else
+	foreach (MapObject *mapObject, mMapScene->mLotMapObjects) {
+		ZLot *lot = mMapScene->mMapObjectToLot[mapObject];
+		QPoint mapObjectPos = mapObject->position().toPoint();
+		lot->orderedCellsAt(mLevel, point - mapObjectPos, cells);
+	}
+#endif
+
 	return !cells.empty();
+}
+
+QRect ZomboidTileLayerGroup::bounds() const
+{
+	QRect r;
+	foreach (TileLayer *tl, mLayers)
+		r |= tl->bounds();
+
+	foreach (MapObject *mapObject, mMapScene->mLotMapObjects) {
+		ZLot *lot = mMapScene->mMapObjectToLot[mapObject];
+		QPoint mapObjectPos = mapObject->position().toPoint();
+		const ZTileLayerGroup *layerGroup = lot->tileLayersForLevel(mLevel);
+		if (layerGroup)
+			r |= layerGroup->bounds().translated(mapObjectPos);
+	}
+	return r;
+}
+
+QMargins ZomboidTileLayerGroup::drawMargins() const
+{
+	QMargins m;
+	foreach (TileLayer *tl, mLayers)
+		maxMargins(m, tl->drawMargins(), m);
+
+	foreach (MapObject *mapObject, mMapScene->mLotMapObjects) {
+		ZLot *lot = mMapScene->mMapObjectToLot[mapObject];
+		const ZTileLayerGroup *layerGroup = lot->tileLayersForLevel(mLevel);
+		if (layerGroup)
+			maxMargins(m, layerGroup->drawMargins(), m);
+	}
+
+	return m;
 }
 
 ///// ///// ///// ///// /////
@@ -111,15 +191,15 @@ public:
 QGraphicsItem *ZomboidScene::createLayerItem(Layer *layer)
 {
 	if (TileLayer *tl = layer->asTileLayer()) {
-		uint group;
-		if (groupForTileLayer(tl, &group)) {
-			if (mTileLayerGroupItems[group] == 0) {
-				ZTileLayerGroup *layerGroup = new ZomboidTileLayerGroup();
-				mTileLayerGroupItems[group] = new ZTileLayerGroupItem(layerGroup, mMapDocument->renderer());
-				addItem(mTileLayerGroupItems[group]);
+		uint level;
+		if (groupForTileLayer(tl, &level)) {
+			if (mTileLayerGroupItems[level] == 0) {
+				ZTileLayerGroup *layerGroup = new ZomboidTileLayerGroup(this, level);
+				mTileLayerGroupItems[level] = new ZTileLayerGroupItem(layerGroup, mMapDocument->renderer());
+				addItem(mTileLayerGroupItems[level]);
 			}
 			int index = mMapDocument->map()->layers().indexOf(layer);
-			mTileLayerGroupItems[group]->addTileLayer(tl, index);
+			mTileLayerGroupItems[level]->addTileLayer(tl, index);
 			return new DummyGraphicsItem();
 		}
 	}
@@ -243,7 +323,7 @@ void ZomboidScene::layerRenamed(int index)
 
 		// Find (or create) the new TileLayerGroup owner
 		if (hasGroup && mTileLayerGroupItems[group] == 0) {
-			ZTileLayerGroup *layerGroup = new ZomboidTileLayerGroup();
+			ZTileLayerGroup *layerGroup = new ZomboidTileLayerGroup(this, group);
 			mTileLayerGroupItems[group] = new ZTileLayerGroupItem(layerGroup, mMapDocument->renderer());
 			addItem(mTileLayerGroupItems[group]);
 		}
@@ -290,18 +370,22 @@ void ZomboidScene::layerRenamed(int index)
 
 void ZomboidScene::onLotAdded(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject)
 {
-	if (mapDoc == mMapDocument)
-		lot->addToScene(this, mapObject);
+	if (mapDoc == mMapDocument) {
+		mLotMapObjects.append(mapObject);
+		mMapObjectToLot[mapObject] = lot;
+	}
 }
 
 void ZomboidScene::onLotRemoved(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject)
 {
-	if (mapDoc == mMapDocument)
-		lot->removeFromScene(this, mapObject);
+	if (mapDoc == mMapDocument) {
+		mLotMapObjects.removeOne(mapObject);
+		mMapObjectToLot.remove(mapObject);
+	}
 }
 
 void ZomboidScene::onLotUpdated(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject)
 {
-	if (mapDoc == mMapDocument)
-		lot->updateInScene(this, mapObject);
+	if (mapDoc == mMapDocument) {
+	}		
 }

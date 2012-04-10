@@ -98,7 +98,7 @@ public:
                                const QRectF &exposed = QRectF()) const = 0;
 
 #ifdef ZOMBOID
-    virtual void drawTileLayerGroup(QPainter *painter, const ZTileLayerGroup *layerGroup,
+    virtual void drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *layerGroup,
                                const QRectF &exposed = QRectF()) const = 0;
 #endif
 

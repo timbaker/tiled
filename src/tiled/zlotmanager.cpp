@@ -79,6 +79,13 @@ void ZLotManager::handleMapObject(Internal::MapDocument *mapDoc, MapObject *mapO
 			emit lotRemoved(currLot, mapDoc, mapObject); // remove from scene
 		}
 		if (newLot) {
+#if 0 // doesn't update the MapObject polygon
+			// Resize the map object to the size of the lot
+			mapObject->setX(qRound(mapObject->x()));
+			mapObject->setY(qRound(mapObject->y()));
+			mapObject->setWidth(newLot->map()->width());
+			mapObject->setHeight(newLot->map()->height());
+#endif
 			mMapObjectToLot[mapObject] = newLot;
 			emit lotAdded(newLot, mapDoc, mapObject); // add to scene
 		}

@@ -501,7 +501,7 @@ void MapReaderPrivate::decodeBinaryLayerData(TileLayer *tileLayer,
     }
 }
 
-#if defined(ZOMBOID) && defined(_DEBUG)
+#if defined(ZOMBOID) /*&& defined(_DEBUG)*/
 void QString_split(const QChar &sep, QString::SplitBehavior behavior, Qt::CaseSensitivity cs, const QString &in, QVector<int>& out)
 {
     int start = 0;
@@ -523,7 +523,7 @@ void QString_split(const QChar &sep, QString::SplitBehavior behavior, Qt::CaseSe
 void MapReaderPrivate::decodeCSVLayerData(TileLayer *tileLayer, const QString &text)
 {
     QString trimText = text.trimmed();
-#if defined(ZOMBOID) && defined(_DEBUG)
+#if defined(ZOMBOID) /*&& defined(_DEBUG)*/
 	static QVector<int> tiles;
 	tiles.clear();
 	QString_split(QLatin1Char(','), QString::KeepEmptyParts, Qt::CaseSensitive, trimText, tiles);

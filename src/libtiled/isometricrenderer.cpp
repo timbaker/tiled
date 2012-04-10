@@ -283,7 +283,7 @@ void IsometricRenderer::drawTileLayer(QPainter *painter,
 }
 
 #ifdef ZOMBOID
-void IsometricRenderer::drawTileLayerGroup(QPainter *painter, const ZTileLayerGroup *layerGroup,
+void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *layerGroup,
                             const QRectF &exposed) const
 {
     const int tileWidth = map()->tileWidth();
@@ -343,6 +343,8 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, const ZTileLayerGr
     QTransform baseTransform = painter->transform();
 
 	QVector<const Cell*> cells(40);
+
+	layerGroup->prepareDrawing(this, rect);
 
     for (int y = startPos.y(); y - tileHeight < rect.bottom();
          y += tileHeight / 2)
