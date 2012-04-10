@@ -11,6 +11,9 @@ include_directories (
 set ( CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/Debug/plugins/tiled )
 set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/Debug/plugins/tiled )
 
+set ( CMAKE_LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL ${CMAKE_BINARY_DIR}/MinSizeRel/plugins/tiled )
+set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL ${CMAKE_BINARY_DIR}/MinSizeRel/plugins/tiled )
+
 set ( CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release/plugins/tiled )
 set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release/plugins/tiled )
 
@@ -20,7 +23,9 @@ set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_BINARY_DIR}/RelWithD
 add_subdirectory( flare )
 add_subdirectory( droidcraft )
 add_subdirectory( json )
+add_subdirectory( lot )
 add_subdirectory( lua )
 add_subdirectory( tengine )
 add_subdirectory( tmw )
 add_subdirectory( replicaisland )
+

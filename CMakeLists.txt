@@ -9,6 +9,7 @@ include_directories (
 	)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/Debug)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL ${CMAKE_BINARY_DIR}/MinSizeRel)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_BINARY_DIR}/RelWithDebInfo)
 
@@ -28,9 +29,9 @@ install(FILES README.md DESTINATION . RENAME README.txt)
 #--------------------------------------------------------------------------------
 # install Qt runtime
 
-install(FILES ${QT_BINARY_DIR}/QtCore4.dll DESTINATION . CONFIGURATIONS Release RelWithDebInfo)
-install(FILES ${QT_BINARY_DIR}/QtGui4.dll DESTINATION . CONFIGURATIONS Release RelWithDebInfo)
-install(FILES ${QT_BINARY_DIR}/QtOpenGL4.dll DESTINATION . CONFIGURATIONS Release RelWithDebInfo)
+install(FILES ${QT_BINARY_DIR}/QtCore4.dll DESTINATION . CONFIGURATIONS MinSizeRel Release RelWithDebInfo)
+install(FILES ${QT_BINARY_DIR}/QtGui4.dll DESTINATION . CONFIGURATIONS MinSizeRel Release RelWithDebInfo)
+install(FILES ${QT_BINARY_DIR}/QtOpenGL4.dll DESTINATION . CONFIGURATIONS MinSizeRel Release RelWithDebInfo)
 
 install(FILES ${QT_BINARY_DIR}/QtCore4d.dll DESTINATION . CONFIGURATIONS Debug)
 install(FILES ${QT_BINARY_DIR}/QtGui4d.dll DESTINATION . CONFIGURATIONS Debug)
@@ -47,7 +48,7 @@ install(
 	DESTINATION
 		plugins/imageformats
 	CONFIGURATIONS
-		Release RelWithDebInfo
+		MinSizeRel Release RelWithDebInfo
 )
 
 install(
@@ -73,7 +74,7 @@ install(
 	DESTINATION
 		plugins/codecs
 	CONFIGURATIONS
-		Release RelWithDebInfo
+		MinSizeRel Release RelWithDebInfo
 )
 
 install(
