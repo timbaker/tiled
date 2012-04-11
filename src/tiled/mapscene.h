@@ -68,7 +68,11 @@ public:
     /**
      * Sets the map this scene displays.
      */
+#ifdef ZOMBOID
+    virtual void setMapDocument(MapDocument *map);
+#else
     void setMapDocument(MapDocument *map);
+#endif
 
     /**
      * Returns whether the tile grid is visible.

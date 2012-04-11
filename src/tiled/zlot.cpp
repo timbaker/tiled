@@ -38,8 +38,8 @@ bool ZLotTileLayerGroup::orderedCellsAt(const QPoint &point, QVector<const Cell*
 {
 	bool cleared = false;
 	foreach (TileLayer *tl, mLayers) {
-//		if (!tl->isVisible())
-//			continue;
+		if (!tl->isVisible())
+			continue;
 #if 0 // DO NOT USE - VERY SLOW
 		if (tl->isEmpty())
 			continue;

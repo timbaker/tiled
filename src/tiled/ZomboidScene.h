@@ -81,19 +81,15 @@ class ZomboidScene : public MapScene
     Q_OBJECT
 
 public:
-    /**
-     * Constructor.
-     */
     ZomboidScene(QObject *parent);
-
-    /**
-     * Destructor.
-     */
     ~ZomboidScene();
 
 	// accessed by ZomboidTileLayerGroup
 	QList<MapObject*> mLotMapObjects;
 	QMap<MapObject*,ZLot*> mMapObjectToLot;
+
+	// MapScene
+	virtual void setMapDocument(MapDocument *map);
 
 private slots:
     virtual void refreshScene();

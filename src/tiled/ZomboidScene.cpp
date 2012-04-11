@@ -62,8 +62,19 @@ void ZomboidTileLayerGroup::prepareDrawing(const MapRenderer *renderer, const QR
 			QMargins m = layerGroup->drawMargins();
 			QRectF bounds = renderer->boundingRect(r);
 			bounds.adjust(-m.right(), -m.bottom(), m.left(), m.top());
-			if ((bounds & rect).isValid())
+			if ((bounds & rect).isValid()) {
+				// Set the visibility of lot map layers to match this layer-group's layers.
+				// NOTE: This works best when the lot map layers match the current map layers in number and order.
+				int n = 0;
+				foreach (TileLayer *layer, layerGroup->mLayers) {
+					if (n >= mLayers.count())
+						layer->setVisible(true);
+					else
+						layer->setVisible(mLayers[n]->isVisible());
+					++n;
+				}
 				mPreparedLotLayers.append(LotLayers(mapObjectPos, layerGroup));
+			}
 		}
 	}
 }
@@ -152,6 +163,12 @@ ZomboidScene::~ZomboidScene()
 	// delete mLayerGroupItems[0-10]
 }
 
+void ZomboidScene::setMapDocument(MapDocument *map)
+{
+	MapScene::setMapDocument(map);
+	mLotManager.setMapDocument(mapDocument());
+}
+
 void ZomboidScene::refreshScene()
 {
 	foreach (ZTileLayerGroupItem *grp, mTileLayerGroupItems)
@@ -159,8 +176,6 @@ void ZomboidScene::refreshScene()
 	mTileLayerGroupItems.clear();
 
 	MapScene::refreshScene();
-
-	mLotManager.setMapDocument(mapDocument());
 }
 
 class DummyGraphicsItem : public QGraphicsItem
@@ -371,7 +386,7 @@ void ZomboidScene::onLotAdded(ZLot *lot, MapObject *mapObject)
 	mMapObjectToLot[mapObject] = lot;
 
 	// Resize the map object to the size of the lot's map, and snap-to-grid
-	MapObjectItem *item = itemForObject(mapObject);
+	MapObjectItem *item = itemForObject(mapObject); // FIXME: assumes createLayerItem() was called before this
 	if (item) {
 		mapObject->setPosition(mapObject->position().toPoint());
 		item->resize(QSizeF(lot->map()->size()));
