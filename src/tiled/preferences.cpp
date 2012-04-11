@@ -90,6 +90,12 @@ Preferences::Preferences()
                                        false).toBool();
     mSettings->endGroup();
 
+#ifdef ZOMBOID
+    mSettings->beginGroup(QLatin1String("Lot"));
+    mLotDirectory = mSettings->value(QLatin1String("Directory"), QString()).toString();
+    mSettings->endGroup();
+#endif
+
     TilesetManager *tilesetManager = TilesetManager::instance();
     tilesetManager->setReloadTilesetsOnChange(mReloadTilesetsOnChange);
 }
@@ -291,3 +297,19 @@ void Preferences::setAutomappingDrawing(bool enabled)
     mAutoMapDrawing = enabled;
     mSettings->setValue(QLatin1String("Automapping/WhileDrawing"), enabled);
 }
+
+#ifdef ZOMBOID
+QString Preferences::lotDirectory() const
+{
+	return mLotDirectory;
+}
+
+void Preferences::setLotDirectory(const QString &path)
+{
+	if (mLotDirectory == path)
+		return;
+	mLotDirectory = path;
+	mSettings->setValue(QLatin1String("Lot/Directory"), path);
+	emit lotDirectoryChanged();
+}
+#endif

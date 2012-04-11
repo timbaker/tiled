@@ -210,10 +210,6 @@ void MapObjectItem::syncWithMapObject()
         toolTip += QLatin1String(" (") + type + QLatin1String(")");
     setToolTip(toolTip);
 
-#ifdef ZOMBOID
-	ZLotManager::instance()->handleMapObject(mMapDocument, mObject);
-#endif
-
     MapRenderer *renderer = mMapDocument->renderer();
     const QPointF pixelPos = renderer->tileToPixelCoords(mObject->position());
     QRectF bounds = renderer->boundingRect(mObject);

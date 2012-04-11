@@ -23,6 +23,7 @@ win32 {
 DEFINES += QT_NO_CAST_FROM_ASCII \
     QT_NO_CAST_TO_ASCII
 DEFINES += TILED_LIBRARY
+DEFINES += ZOMBOID
 contains(QT_CONFIG, reduce_exports): CONFIG += hide_symbols
 OBJECTS_DIR = .obj
 SOURCES += compression.cpp \
@@ -40,7 +41,8 @@ SOURCES += compression.cpp \
     staggeredrenderer.cpp \
     tilelayer.cpp \
     tileset.cpp \
-    gidmapper.cpp
+    gidmapper.cpp \
+    ztilelayergroup.cpp
 HEADERS += compression.h \
     imagelayer.h \
     isometricrenderer.h \
@@ -59,7 +61,8 @@ HEADERS += compression.h \
     tiled_global.h \
     tilelayer.h \
     tileset.h \
-    gidmapper.h
+    gidmapper.h \
+    ztilelayergroup.h
 macx {
     contains(QT_CONFIG, ppc):CONFIG += x86 \
         ppc

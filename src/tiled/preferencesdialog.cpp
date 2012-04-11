@@ -156,6 +156,10 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
 
     connect(mUi->autoMapWhileDrawing, SIGNAL(toggled(bool)),
             SLOT(useAutomappingDrawingToggled(bool)));
+
+#ifdef ZOMBOID
+	connect(mUi->lotBrowseButton, SIGNAL(clicked()), SLOT(lotBrowse()));
+#endif
 }
 
 PreferencesDialog::~PreferencesDialog()
@@ -285,6 +289,16 @@ void PreferencesDialog::exportObjectTypes()
     }
 }
 
+#ifdef ZOMBOID
+void PreferencesDialog::lotBrowse()
+{
+    QString f = QFileDialog::getExistingDirectory(this, tr("Directory"), mUi->lotDirectory->text());
+    if (!f.isEmpty()) {
+        mUi->lotDirectory->setText(f);
+    }
+}
+#endif
+
 void PreferencesDialog::fromPreferences()
 {
     const Preferences *prefs = Preferences::instance();
@@ -321,6 +335,10 @@ void PreferencesDialog::fromPreferences()
     mUi->languageCombo->setCurrentIndex(languageIndex);
     mUi->autoMapWhileDrawing->setChecked(prefs->automappingDrawing());
     mObjectTypesModel->setObjectTypes(prefs->objectTypes());
+
+#ifdef ZOMBOID
+	mUi->lotDirectory->setText(prefs->lotDirectory());
+#endif
 }
 
 void PreferencesDialog::toPreferences()
@@ -331,6 +349,10 @@ void PreferencesDialog::toPreferences()
     prefs->setDtdEnabled(mUi->enableDtd->isChecked());
     prefs->setLayerDataFormat(layerDataFormat());
     prefs->setAutomappingDrawing(mUi->autoMapWhileDrawing->isChecked());
+
+#ifdef ZOMBOID
+	prefs->setLotDirectory(mUi->lotDirectory->text());
+#endif
 }
 
 MapWriter::LayerDataFormat PreferencesDialog::layerDataFormat() const

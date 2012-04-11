@@ -21,6 +21,7 @@
 #include "mapscene.h"
 #include <QMap>
 
+#include "zlotmanager.hpp"
 #include "ztilelayergroup.h"
 #include "ztilelayergroupitem.h"
 
@@ -103,14 +104,15 @@ private slots:
     virtual void layerChanged(int index);
     virtual void layerRenamed(int index);
 
-	void onLotAdded(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject);
-	void onLotRemoved(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject);
-	void onLotUpdated(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject);
+	void onLotAdded(ZLot *lot, MapObject *mapObject);
+	void onLotRemoved(ZLot *lot, MapObject *mapObject);
+	void onLotUpdated(ZLot *lot, MapObject *mapObject);
 protected:
     virtual QGraphicsItem *createLayerItem(Layer *layer);
 	bool groupForTileLayer(TileLayer *tl, uint *group);
 private:
 	QMap<int,ZTileLayerGroupItem*> mTileLayerGroupItems;
+	ZLotManager mLotManager;
 };
 
 } // namespace Internal

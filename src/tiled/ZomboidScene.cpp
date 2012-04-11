@@ -1,11 +1,5 @@
 /*
  * ZomboidScene.cpp
- * Copyright 2008-2011, Thorbjørn Lindeijer <thorbjorn@lindeijer.nl>
- * Copyright 2008, Roderic Morris <roderic@ccs.neu.edu>
- * Copyright 2009, Edward Hutchins <eah1@yahoo.com>
- * Copyright 2010, Jeff Bland <jksb@member.fsf.org>
- *
- * This file is part of Tiled.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -26,6 +20,7 @@
 #include "map.h"
 #include "mapdocument.h"
 #include "mapobject.h"
+#include "mapobjectitem.h"
 #include "maprenderer.h"
 #include "tilelayer.h"
 #include "tilelayeritem.h"
@@ -144,12 +139,12 @@ QMargins ZomboidTileLayerGroup::drawMargins() const
 ZomboidScene::ZomboidScene(QObject *parent)
     : MapScene(parent)
 {
-	connect(ZLotManager::instance(), SIGNAL(lotAdded(ZLot*,Internal::MapDocument*,MapObject*)),
-		this, SLOT(onLotAdded(ZLot*,Internal::MapDocument*,MapObject*)));
-	connect(ZLotManager::instance(), SIGNAL(lotRemoved(ZLot*,Internal::MapDocument*,MapObject*)),
-		this, SLOT(onLotRemoved(ZLot*,Internal::MapDocument*,MapObject*)));
-	connect(ZLotManager::instance(), SIGNAL(lotUpdated(ZLot*,Internal::MapDocument*,MapObject*)),
-		this, SLOT(onLotUpdated(ZLot*,Internal::MapDocument*,MapObject*)));
+	connect(&mLotManager, SIGNAL(lotAdded(ZLot*,MapObject*)),
+		this, SLOT(onLotAdded(ZLot*,MapObject*)));
+	connect(&mLotManager, SIGNAL(lotRemoved(ZLot*,MapObject*)),
+		this, SLOT(onLotRemoved(ZLot*,MapObject*)));
+	connect(&mLotManager, SIGNAL(lotUpdated(ZLot*,MapObject*)),
+		this, SLOT(onLotUpdated(ZLot*,MapObject*)));
 }
 
 ZomboidScene::~ZomboidScene()
@@ -164,6 +159,8 @@ void ZomboidScene::refreshScene()
 	mTileLayerGroupItems.clear();
 
 	MapScene::refreshScene();
+
+	mLotManager.setMapDocument(mapDocument());
 }
 
 class DummyGraphicsItem : public QGraphicsItem
@@ -368,24 +365,31 @@ void ZomboidScene::layerRenamed(int index)
 #endif
 }
 
-void ZomboidScene::onLotAdded(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject)
+void ZomboidScene::onLotAdded(ZLot *lot, MapObject *mapObject)
 {
-	if (mapDoc == mMapDocument) {
-		mLotMapObjects.append(mapObject);
-		mMapObjectToLot[mapObject] = lot;
+	mLotMapObjects.append(mapObject);
+	mMapObjectToLot[mapObject] = lot;
+
+	// Resize the map object to the size of the lot's map, and snap-to-grid
+	MapObjectItem *item = itemForObject(mapObject);
+	if (item) {
+		mapObject->setPosition(mapObject->position().toPoint());
+		item->resize(QSizeF(lot->map()->size()));
 	}
 }
 
-void ZomboidScene::onLotRemoved(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject)
+void ZomboidScene::onLotRemoved(ZLot *lot, MapObject *mapObject)
 {
-	if (mapDoc == mMapDocument) {
-		mLotMapObjects.removeOne(mapObject);
-		mMapObjectToLot.remove(mapObject);
-	}
+	mLotMapObjects.removeOne(mapObject);
+	mMapObjectToLot.remove(mapObject);
 }
 
-void ZomboidScene::onLotUpdated(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject)
+void ZomboidScene::onLotUpdated(ZLot *lot, MapObject *mapObject)
 {
-	if (mapDoc == mMapDocument) {
-	}		
+	// Resize the map object to the size of the lot's map, and snap-to-grid
+	MapObjectItem *item = itemForObject(mapObject);
+	if (item) {
+		mapObject->setPosition(mapObject->position().toPoint());
+		item->resize(QSizeF(lot->map()->size()));
+	}
 }

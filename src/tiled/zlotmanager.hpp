@@ -37,24 +37,29 @@ class ZLotManager : public QObject
     Q_OBJECT
 
 public:
-    static ZLotManager *instance();
-
-    void handleMapObject(Internal::MapDocument *mapDoc, MapObject *mapObject);
-
-signals:
-	void lotAdded(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject);
-	void lotRemoved(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject);
-	void lotUpdated(ZLot *lot, Internal::MapDocument *mapDoc, MapObject *mapObject);
-
-private:
-    Q_DISABLE_COPY(ZLotManager)
-
-    ZLotManager();
+    ZLotManager::ZLotManager();
     ~ZLotManager();
 
+	void setMapDocument(Internal::MapDocument *mapDoc);
+	Internal::MapDocument *mapDocument() { return mMapDocument; }
+
+signals:
+	void lotAdded(ZLot *lot, MapObject *mapObject);
+	void lotRemoved(ZLot *lot, MapObject *mapObject);
+	void lotUpdated(ZLot *lot, MapObject *mapObject);
+
+private slots:
+	void onLotDirectoryChanged();
+	void onObjectsAdded(const QList<MapObject*> &objects);
+	void onObjectsChanged(const QList<MapObject*> &objects);
+	void onObjectsRemoved(const QList<MapObject*> &objects);
+
+private:
+    void handleMapObject(MapObject *mapObject);
+
+	Internal::MapDocument *mMapDocument;
 	QMap<QString,ZLot*> mLots; // One ZLot per different .lot file
 	QMap<MapObject*,ZLot*> mMapObjectToLot;
-    static ZLotManager *mInstance;
 };
 
 } // namespace Tiled

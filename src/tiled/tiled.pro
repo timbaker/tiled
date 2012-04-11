@@ -14,6 +14,7 @@ contains(QT_CONFIG, opengl): QT += opengl
 
 DEFINES += QT_NO_CAST_FROM_ASCII \
     QT_NO_CAST_TO_ASCII
+DEFINES += ZOMBOID
 
 macx {
     QMAKE_LIBDIR_FLAGS += -L$$OUT_PWD/../../bin/Tiled.app/Contents/Frameworks
@@ -128,7 +129,11 @@ SOURCES += aboutdialog.cpp \
     toolmanager.cpp \
     undodock.cpp \
     utils.cpp \
-    zoomable.cpp
+    zoomable.cpp \
+    zlot.cpp \
+    zlotmanager.cpp \
+    ZomboidScene.cpp \
+    ztilelayergroupitem.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -224,7 +229,11 @@ HEADERS += aboutdialog.h \
     undocommands.h \
     undodock.h \
     utils.h \
-    zoomable.h
+    zoomable.h \
+    zlot.hpp \
+    zlotmanager.hpp \
+    ZomboidScene.h \
+    ztilelayergroupitem.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

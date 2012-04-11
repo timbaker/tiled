@@ -64,6 +64,10 @@ private slots:
     void importObjectTypes();
     void exportObjectTypes();
 
+#ifdef ZOMBOID
+	void lotBrowse();
+#endif
+
 private:
     void fromPreferences();
     void toPreferences();

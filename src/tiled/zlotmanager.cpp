@@ -17,39 +17,69 @@
 
 #include "zlotmanager.hpp"
 
+#include <QDir>
+#include <QFileInfo>
+#include "map.h"
 #include "mapdocument.h"
 #include "mapobject.h"
 #include "mapreader.h"
+#include "objectgroup.h"
+#include "preferences.h"
 #include "zlot.hpp"
 
 namespace Tiled {
 
-ZLotManager *ZLotManager::mInstance = 0;
-
-ZLotManager *ZLotManager::instance()
-{
-	if (!mInstance)
-		mInstance = new ZLotManager();
-
-	return mInstance;
-}
+using namespace Internal;
 
 ZLotManager::ZLotManager()
+	: mMapDocument(0)
 {
+	Preferences *prefs = Preferences::instance();
+    connect(prefs, SIGNAL(lotDirectoryChanged()), SLOT(onLotDirectoryChanged()));
 }
 
 ZLotManager::~ZLotManager()
 {
+	Preferences *prefs = Preferences::instance();
+	prefs->disconnect(this);
+
+	if (mapDocument())
+		mapDocument()->disconnect(this);
 }
 
-void ZLotManager::handleMapObject(Internal::MapDocument *mapDoc, MapObject *mapObject)
+void ZLotManager::setMapDocument(MapDocument *mapDoc)
+{
+	if (mapDoc != mMapDocument) {
+		if (mMapDocument) {
+			mapDocument()->disconnect(this);
+		}
+		mMapDocument = mapDoc;
+		if (mMapDocument) {
+			connect(mapDocument(), SIGNAL(objectsAdded(QList<MapObject*>)),
+					this, SLOT(onObjectsAdded(QList<MapObject*>)));
+			connect(mapDocument(), SIGNAL(objectsChanged(QList<MapObject*>)),
+					this, SLOT(onObjectsChanged(QList<MapObject*>)));
+			connect(mapDocument(), SIGNAL(objectsRemoved(QList<MapObject*>)),
+				this, SLOT(onObjectsRemoved(QList<MapObject*>)));
+
+			Map *map = mapDocument()->map();
+			foreach (Layer *layer, map->layers()) {
+				if (ObjectGroup *og = layer->asObjectGroup()) {
+					onObjectsAdded(og->objects());
+				}
+			}
+		}
+	}
+}
+
+void ZLotManager::handleMapObject(MapObject *mapObject)
 {
 	const QString& name = mapObject->name();
 	const QString& type = mapObject->type();
 
 	ZLot *currLot = 0, *newLot = 0;
 
-	if (mMapObjectToLot.keys().contains(mapObject))
+	if (mMapObjectToLot.contains(mapObject))
 		currLot = mMapObjectToLot[mapObject];
 
 	if (name == QLatin1String("lot") && !type.isEmpty()) {
@@ -57,17 +87,21 @@ void ZLotManager::handleMapObject(Internal::MapDocument *mapDoc, MapObject *mapO
 		if (mLots.keys().contains(type)) {
 			newLot = mLots[type];
 		} else {
-
-			QString fileName = QLatin1String("C:\\Users\\Tim\\Desktop\\ProjectZomboid\\maptools\\") + type + QLatin1String(".tmx");
-
-			MapReader reader;
-			Map *map = reader.readMap(fileName);
-			if (map) {
-				// TODO: sanity check the lot-map tile width and height against the current map
-				mLots[type] = new ZLot(map);
-				newLot = mLots[type];
-			} else {
-				// TODO: Add error handling
+			Preferences *prefs = Preferences::instance();
+			QDir lotDirectory(prefs->lotDirectory());
+			if (lotDirectory.exists()) {
+				QFileInfo fileInfo(lotDirectory, type + QLatin1String(".tmx"));
+				if (fileInfo.exists()) {
+					MapReader reader;
+					Map *map = reader.readMap(fileInfo.absoluteFilePath());
+					if (map) {
+						// TODO: sanity check the lot-map tile width and height against the current map
+						mLots[type] = new ZLot(map);
+						newLot = mLots[type];
+					} else {
+						// TODO: Add error handling
+					}
+				}
 			}
 		}
 	}
@@ -76,7 +110,7 @@ void ZLotManager::handleMapObject(Internal::MapDocument *mapDoc, MapObject *mapO
 		if (currLot) {
 			QMap<MapObject*,ZLot*>::iterator it = mMapObjectToLot.find(mapObject);
 			mMapObjectToLot.erase(it);
-			emit lotRemoved(currLot, mapDoc, mapObject); // remove from scene
+			emit lotRemoved(currLot, mapObject); // remove from scene
 		}
 		if (newLot) {
 #if 0 // doesn't update the MapObject polygon
@@ -87,10 +121,46 @@ void ZLotManager::handleMapObject(Internal::MapDocument *mapDoc, MapObject *mapO
 			mapObject->setHeight(newLot->map()->height());
 #endif
 			mMapObjectToLot[mapObject] = newLot;
-			emit lotAdded(newLot, mapDoc, mapObject); // add to scene
+			emit lotAdded(newLot, mapObject); // add to scene
 		}
 	} else if (currLot) {
-		emit lotUpdated(currLot, mapDoc, mapObject); // position change, etc
+		emit lotUpdated(currLot, mapObject); // position change, etc
+	}
+}
+
+void ZLotManager::onLotDirectoryChanged()
+{
+	// This will try to load any lot files that couldn't be loaded from the old directory.
+	// Lot files that were already loaded won't be affected.
+	Map *map = mapDocument()->map();
+	foreach (Layer *layer, map->layers()) {
+		if (ObjectGroup *og = layer->asObjectGroup()) {
+			onObjectsChanged(og->objects());
+		}
+	}
+}
+
+void ZLotManager::onObjectsAdded(const QList<MapObject*> &objects)
+{
+	foreach (MapObject *mapObj, objects)
+		handleMapObject(mapObj);
+}
+
+void ZLotManager::onObjectsChanged(const QList<MapObject*> &objects)
+{
+	foreach (MapObject *mapObj, objects)
+		handleMapObject(mapObj);
+}
+
+void ZLotManager::onObjectsRemoved(const QList<MapObject*> &objects)
+{
+	foreach (MapObject *mapObject, objects) {
+		QMap<MapObject*,ZLot*>::iterator it = mMapObjectToLot.find(mapObject);
+		if (it != mMapObjectToLot.end()) {
+			ZLot *lot = it.value();
+			mMapObjectToLot.erase(it);
+			emit lotRemoved(lot, mapObject);
+		}
 	}
 }
 

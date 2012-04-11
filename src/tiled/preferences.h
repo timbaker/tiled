@@ -77,6 +77,11 @@ public:
     bool automappingDrawing() const { return mAutoMapDrawing; }
     void setAutomappingDrawing(bool enabled);
 
+#ifdef ZOMBOID
+	QString lotDirectory() const;
+	void setLotDirectory(const QString &path);
+#endif
+
     /**
      * Provides access to the QSettings instance to allow storing/retrieving
      * arbitrary values. The naming style for groups and keys is CamelCase.
@@ -99,6 +104,10 @@ signals:
 
     void objectTypesChanged();
 
+#ifdef ZOMBOID
+	void lotDirectoryChanged();
+#endif
+
 private:
     Preferences();
     ~Preferences();
@@ -118,6 +127,10 @@ private:
     ObjectTypes mObjectTypes;
 
     bool mAutoMapDrawing;
+
+#ifdef ZOMBOID
+	QString mLotDirectory;
+#endif
 
     static Preferences *mInstance;
 };

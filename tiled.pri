@@ -6,3 +6,6 @@ macx {
     # Do a universal build when possible
     contains(QT_CONFIG, ppc):CONFIG += x86 ppc
 }
+
+DEFINES += ZOMBOID
+
