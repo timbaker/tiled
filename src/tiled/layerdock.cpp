@@ -227,7 +227,7 @@ void LayerDock::setZomboidLayer(int number)
     int index = 0;
     foreach (Layer *layer, mMapDocument->map()->layers()) {
 #if 1
-        bool visible = (index <= number);
+        bool visible = (index + 1 <= number);
         if (visible != layer->isVisible())
         {
              layerModel->setData(layerModel->index(mMapDocument->map()->layerCount() - index - 1),
