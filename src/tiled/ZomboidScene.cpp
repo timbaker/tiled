@@ -160,7 +160,11 @@ ZomboidScene::ZomboidScene(QObject *parent)
 
 ZomboidScene::~ZomboidScene()
 {
-	// delete mLayerGroupItems[0-10]
+	mLotManager.disconnect(this);
+
+	foreach (ZTileLayerGroupItem *item, mTileLayerGroupItems) {
+		delete item->getTileLayerGroup();
+	}
 }
 
 void ZomboidScene::setMapDocument(MapDocument *map)

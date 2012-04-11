@@ -25,6 +25,9 @@
 #include "languagemanager.h"
 #include "preferences.h"
 #include "tiledapplication.h"
+#ifdef ZOMBOID
+#include "zprogress.hpp"
+#endif
 
 #include <QDebug>
 #include <QtPlugin>
@@ -153,7 +156,10 @@ int main(int argc, char *argv[])
         Preferences::instance()->setUseOpenGL(false);
 
     MainWindow w;
-    w.show();
+#ifdef ZOMBOID
+	ZProgressManager::instance()->setMainWindow(&w);
+#endif
+	w.show();
 
     QObject::connect(&a, SIGNAL(fileOpenRequest(QString)),
                      &w, SLOT(openFile(QString)));

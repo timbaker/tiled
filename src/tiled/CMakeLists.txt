@@ -157,6 +157,7 @@ set ( Tiled_SRCS
 	zlot.cpp
 	zlotmanager.cpp
 	ZomboidScene.cpp
+	zprogress.cpp
 	ztilelayergroupitem.cpp
 	)
 
@@ -236,6 +237,7 @@ set ( Tiled_MOCS
 
 	ZomboidScene.h
 	zlotmanager.hpp
+	zprogress.hpp
 	)
 QT4_WRAP_CPP(MOCS ${Tiled_MOCS})
 

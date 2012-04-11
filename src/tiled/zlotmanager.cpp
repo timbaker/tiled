@@ -16,9 +16,6 @@
  */
 
 #include "zlotmanager.hpp"
-
-#include <QDir>
-#include <QFileInfo>
 #include "map.h"
 #include "mapdocument.h"
 #include "mapobject.h"
@@ -26,6 +23,10 @@
 #include "objectgroup.h"
 #include "preferences.h"
 #include "zlot.hpp"
+#include "zprogress.hpp"
+
+#include <QDir>
+#include <QFileInfo>
 
 namespace Tiled {
 
@@ -45,6 +46,10 @@ ZLotManager::~ZLotManager()
 
 	if (mapDocument())
 		mapDocument()->disconnect(this);
+
+	foreach (ZLot *lot, mLots) {
+		delete lot;
+	}
 }
 
 void ZLotManager::setMapDocument(MapDocument *mapDoc)
@@ -82,6 +87,8 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
 	if (mMapObjectToLot.contains(mapObject))
 		currLot = mMapObjectToLot[mapObject];
 
+	bool progress = false;
+
 	if (name == QLatin1String("lot") && !type.isEmpty()) {
 
 		if (mLots.keys().contains(type)) {
@@ -92,6 +99,8 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
 			if (lotDirectory.exists()) {
 				QFileInfo fileInfo(lotDirectory, type + QLatin1String(".tmx"));
 				if (fileInfo.exists()) {
+					ZProgressManager::instance()->begin(QLatin1String("Reading ") + fileInfo.fileName());
+					progress = true;
 					MapReader reader;
 					Map *map = reader.readMap(fileInfo.absoluteFilePath());
 					if (map) {
@@ -119,6 +128,9 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
 	} else if (currLot) {
 		emit lotUpdated(currLot, mapObject); // position change, etc
 	}
+
+	if (progress)
+		ZProgressManager::instance()->end();
 }
 
 void ZLotManager::onLotDirectoryChanged()

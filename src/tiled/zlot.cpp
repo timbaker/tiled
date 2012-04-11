@@ -23,6 +23,7 @@
 #include "maprenderer.h"
 #include "mapscene.h"
 #include "tilelayer.h"
+#include "tileset.h"
 #include "ztilelayergroup.h"
 #include "ztilelayergroupitem.h"
 
@@ -98,6 +99,9 @@ ZLot::ZLot(Map *map)
 
 ZLot::~ZLot()
 {
+	qDeleteAll(mLevelToTileLayers);
+	qDeleteAll(mMap->tilesets()); // FIXME: share these
+	delete mMap;
 }
 
 // FIXME: duplicated in ZomboidScene

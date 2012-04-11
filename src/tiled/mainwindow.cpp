@@ -74,6 +74,9 @@
 #include "utils.h"
 #include "zoomable.h"
 #include "commandbutton.h"
+#ifdef ZOMBOID
+#include "zprogress.hpp"
+#endif
 
 #ifdef Q_WS_MAC
 #include "macsupport.h"
@@ -516,14 +519,25 @@ bool MainWindow::openFile(const QString &fileName,
     if (!mapReader)
         mapReader = &tmxMapReader;
 
+#ifdef ZOMBOID
+	QFileInfo fileInfo(fileName);
+	ZProgressManager::instance()->begin(QString(QLatin1String("Reading %1")).arg(fileInfo.fileName())); 
+#endif
+
     Map *map = mapReader->read(fileName);
     if (!map) {
+#ifdef ZOMBOID
+		ZProgressManager::instance()->end();
+#endif
         QMessageBox::critical(this, tr("Error Opening Map"),
                               mapReader->errorString());
         return false;
     }
 
     addMapDocument(new MapDocument(map, fileName));
+#ifdef ZOMBOID
+	ZProgressManager::instance()->end();
+#endif
     setRecentFile(fileName);
     return true;
 }
