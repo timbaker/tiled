@@ -72,6 +72,12 @@ void ZTileLayerGroupItem::syncWithTileLayers()
     prepareGeometryChange();
     QRect tileBounds = mLayerGroup->bounds();
 	mBoundingRect = mRenderer->boundingRect(tileBounds);
+
+	QMargins drawMargins = mLayerGroup->drawMargins();
+	mBoundingRect.adjust(-drawMargins.left(),
+                -drawMargins.top(),
+                drawMargins.right(),
+                drawMargins.bottom());
 }
 
 QRectF ZTileLayerGroupItem::boundingRect() const
