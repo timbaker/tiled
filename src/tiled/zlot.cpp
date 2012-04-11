@@ -100,7 +100,9 @@ ZLot::ZLot(Map *map)
 ZLot::~ZLot()
 {
 	qDeleteAll(mLevelToTileLayers);
+#if 0 // tilesets are shared, see ZLotManager
 	qDeleteAll(mMap->tilesets()); // FIXME: share these
+#endif
 	delete mMap;
 }
 

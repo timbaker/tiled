@@ -16,12 +16,14 @@
  */
 
 #include "zlotmanager.hpp"
+
 #include "map.h"
 #include "mapdocument.h"
 #include "mapobject.h"
 #include "mapreader.h"
 #include "objectgroup.h"
 #include "preferences.h"
+#include "tileset.h"
 #include "zlot.hpp"
 #include "zprogress.hpp"
 
@@ -47,9 +49,8 @@ ZLotManager::~ZLotManager()
 	if (mapDocument())
 		mapDocument()->disconnect(this);
 
-	foreach (ZLot *lot, mLots) {
-		delete lot;
-	}
+	qDeleteAll(mTilesets);
+	qDeleteAll(mLots);
 }
 
 void ZLotManager::setMapDocument(MapDocument *mapDoc)
@@ -104,6 +105,7 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
 					MapReader reader;
 					Map *map = reader.readMap(fileInfo.absoluteFilePath());
 					if (map) {
+						shareTilesets(map);
 						// TODO: sanity check the lot-map tile width and height against the current map
 						mLots[type] = new ZLot(map);
 						newLot = mLots[type];
@@ -131,6 +133,19 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
 
 	if (progress)
 		ZProgressManager::instance()->end();
+}
+
+void ZLotManager::shareTilesets(Map *map)
+{
+	foreach (Tileset *ts0, map->tilesets()) {
+		Tileset *ts1 = ts0->findSimilarTileset(mTilesets);
+		if (ts1) {
+			map->replaceTileset(ts0, ts1);
+			delete ts0;
+		} else {
+			mTilesets.append(ts0);
+		}
+	}
 }
 
 void ZLotManager::onLotDirectoryChanged()

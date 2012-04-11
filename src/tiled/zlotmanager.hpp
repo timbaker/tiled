@@ -21,12 +21,15 @@
 #include "tiled_global.h"
 
 #include <QObject>
+#include <QList>
 #include <QMap>
 
 namespace Tiled {
 
+class Map;
 class MapObject;
 class ZLot;
+class Tileset;
 
 namespace Internal {
 class MapDocument;
@@ -56,10 +59,12 @@ private slots:
 
 private:
     void handleMapObject(MapObject *mapObject);
+	void shareTilesets(Map *map);
 
 	Internal::MapDocument *mMapDocument;
 	QMap<QString,ZLot*> mLots; // One ZLot per different .lot file
 	QMap<MapObject*,ZLot*> mMapObjectToLot;
+	QList<Tileset*> mTilesets;
 };
 
 } // namespace Tiled
