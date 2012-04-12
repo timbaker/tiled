@@ -147,6 +147,10 @@ void LayerDock::setMapDocument(MapDocument *mapDocument)
     if (mMapDocument) {
         connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
                 this, SLOT(updateOpacitySlider()));
+#ifdef ZOMBOID
+        connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
+                this, SLOT(updateZomboidLayerSlider()));
+#endif
     }
 
     mLayerView->setMapDocument(mapDocument);
@@ -211,7 +215,10 @@ void LayerDock::updateZomboidLayerSlider()
     mZomboidLayerSlider->setEnabled(enabled);
     mZomboidLayerLabel->setEnabled(enabled);
     if (enabled) {
-        mZomboidLayerSlider->setMaximum(mMapDocument->map()->layerCount());
+		mZomboidLayerSlider->blockSignals(true);
+		mZomboidLayerSlider->setMaximum(mMapDocument->map()->layerCount());
+        mZomboidLayerSlider->setValue(mMapDocument->maxVisibleLayer());
+		mZomboidLayerSlider->blockSignals(false);
     } else {
         mZomboidLayerSlider->setValue(mZomboidLayerSlider->maximum());
     }
@@ -249,6 +256,8 @@ void LayerDock::setZomboidLayer(int number)
 #endif
         index++;
     }
+
+	mMapDocument->setMaxVisibleLayer(number);
 }
 #endif // ZOMBOID
 

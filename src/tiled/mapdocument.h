@@ -119,6 +119,12 @@ public:
      */
     Layer *currentLayer() const;
 
+#ifdef ZOMBOID
+	/* For the visibility slider in the LayerDock. */
+	void setMaxVisibleLayer(int index) { mMaxVisibleLayer = index; }
+	int maxVisibleLayer() const { return mMaxVisibleLayer; }
+#endif
+
     /**
      * Resize this map to the given \a size, while at the same time shifting
      * the contents by \a offset.
@@ -321,6 +327,9 @@ private:
     QList<MapObject*> mSelectedObjects;
     MapRenderer *mRenderer;
     int mCurrentLayerIndex;
+#ifdef ZOMBOID
+	int mMaxVisibleLayer;
+#endif
     QUndoStack *mUndoStack;
 };
 

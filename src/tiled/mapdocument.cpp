@@ -89,6 +89,8 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     connect(mLayerModel, SIGNAL(layerChanged(int)), SIGNAL(layerChanged(int)));
 #ifdef ZOMBOID
     connect(mLayerModel, SIGNAL(layerRenamed(int)), SIGNAL(layerRenamed(int)));
+
+	mMaxVisibleLayer = map->layerCount();
 #endif
 
     connect(mUndoStack, SIGNAL(cleanChanged(bool)), SIGNAL(modifiedChanged()));
