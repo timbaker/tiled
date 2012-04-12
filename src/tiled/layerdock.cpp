@@ -226,27 +226,14 @@ void LayerDock::setZomboidLayer(int number)
 
     int index = 0;
     foreach (Layer *layer, mMapDocument->map()->layers()) {
-#if 1
-        bool visible = (index + 1 <= number);
-        if (visible != layer->isVisible())
-        {
-             layerModel->setData(layerModel->index(mMapDocument->map()->layerCount() - index - 1),
-                                 visible ? Qt::Checked : Qt::Unchecked,
-                                 Qt::CheckStateRole);
-         }
-#else
-        const QString& name = layer->name();
-        if (name.at(0).isDigit() && name.at(1).toAscii() == '_')
-        {
-            bool visible = (name[0].digitValue() <= number);
-            if (visible != layer->isVisible())
-            {
-                layerModel->setData(layerModel->index(mMapDocument->map()->layerCount() - index - 1),
-                                    visible ? Qt::Checked : Qt::Unchecked,
-                                    Qt::CheckStateRole);
-            }
-        }
-#endif
+		if (layer->asTileLayer() ) {
+			bool visible = (index + 1 <= number);
+			if (visible != layer->isVisible()) {
+				 layerModel->setData(layerModel->index(mMapDocument->map()->layerCount() - index - 1),
+									 visible ? Qt::Checked : Qt::Unchecked,
+									 Qt::CheckStateRole);
+			}
+		}
         index++;
     }
 }
