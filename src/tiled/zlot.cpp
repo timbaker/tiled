@@ -31,7 +31,8 @@ namespace Tiled {
 
 ///// ///// ///// ///// /////
 
-ZLotTileLayerGroup::ZLotTileLayerGroup()
+ZLotTileLayerGroup::ZLotTileLayerGroup(int level)
+	: ZTileLayerGroup(level)
 {
 }
 
@@ -86,7 +87,7 @@ ZLot::ZLot(Map *map)
 			uint level;
 			if (groupForTileLayer(tl, &level)) {
 				if (!mLevelToTileLayers.contains(level))
-					mLevelToTileLayers[level] = new ZLotTileLayerGroup();
+					mLevelToTileLayers[level] = new ZLotTileLayerGroup(level);
 				ZLotTileLayerGroup *layerGroup = mLevelToTileLayers[level];
 				layerGroup->addTileLayer(tl, index);
 				layerGroup->mBounds |= layerGroup->_bounds();

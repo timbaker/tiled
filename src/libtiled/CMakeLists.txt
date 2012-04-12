@@ -31,6 +31,7 @@ set ( tiled_HDRS
 	tileset.h
 	gidmapper.h
 
+	zlevelrenderer.hpp
 	ztilelayergroup.h
 	)
 
@@ -52,6 +53,7 @@ set ( tiled_SRCS
 	tileset.cpp
 	gidmapper.cpp
 
+	zlevelrenderer.cpp
 	ztilelayergroup.cpp
 	)
 

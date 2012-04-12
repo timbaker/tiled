@@ -44,7 +44,7 @@ static void maxMargins(const QMargins &a,
 }
 
 ZomboidTileLayerGroup::ZomboidTileLayerGroup(ZomboidScene *mapScene, int level)
-	: ZTileLayerGroup()
+	: ZTileLayerGroup(level)
 	, mMapScene(mapScene)
 	, mLevel(level)
 {
@@ -178,6 +178,18 @@ void ZomboidScene::refreshScene()
 	foreach (ZTileLayerGroupItem *grp, mTileLayerGroupItems)
 		delete grp;
 	mTileLayerGroupItems.clear();
+
+	Map *map =  mapDocument()->map();
+	map->setMaxLevel(0);
+	foreach (Layer *layer, map->layers()) {
+		if (TileLayer *tl = layer->asTileLayer()) {
+			uint level;
+			if (groupForTileLayer(tl, &level)) {
+			if (level > map->maxLevel())
+				mapDocument()->map()->setMaxLevel(level);
+			}
+		}
+	}
 
 	MapScene::refreshScene();
 }

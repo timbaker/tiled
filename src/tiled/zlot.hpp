@@ -35,7 +35,7 @@ namespace Internal {
 class ZLotTileLayerGroup : public ZTileLayerGroup
 {
 public:
-	ZLotTileLayerGroup();
+	ZLotTileLayerGroup(int level);
 
 	// ZTileLayerGroup
 	virtual QRect bounds() const { return mBounds; }

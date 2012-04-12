@@ -29,7 +29,8 @@
 
 using namespace Tiled;
 
-ZTileLayerGroup::ZTileLayerGroup()
+ZTileLayerGroup::ZTileLayerGroup(int level)
+	: mLevel(level)
 {
 }
 

@@ -42,6 +42,10 @@ Map::Map(Orientation orientation,
     mOrientation(orientation),
     mWidth(width),
     mHeight(height),
+#ifdef ZOMBOID
+	mCellsPerLevel(0,3),
+	mMaxLevel(0),
+#endif
     mTileWidth(tileWidth),
     mTileHeight(tileHeight)
 {
@@ -184,7 +188,12 @@ QString Tiled::orientationToString(Map::Orientation orientation)
     case Map::Isometric:
         return QLatin1String("isometric");
         break;
-    case Map::Staggered:
+#ifdef ZOMBOID
+    case Map::LevelIsometric:
+        return QLatin1String("levelisometric");
+        break;
+#endif
+	case Map::Staggered:
         return QLatin1String("staggered");
         break;
     }
@@ -197,7 +206,11 @@ Map::Orientation Tiled::orientationFromString(const QString &string)
         orientation = Map::Orthogonal;
     } else if (string == QLatin1String("isometric")) {
         orientation = Map::Isometric;
-    } else if (string == QLatin1String("staggered")) {
+#ifdef ZOMBOID
+    } else if (string == QLatin1String("levelisometric")) {
+        orientation = Map::LevelIsometric;
+#endif
+	} else if (string == QLatin1String("staggered")) {
         orientation = Map::Staggered;
     }
     return orientation;

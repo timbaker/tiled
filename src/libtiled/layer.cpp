@@ -44,6 +44,9 @@ Layer::Layer(Type type, const QString &name, int x, int y,
     mY(y),
     mWidth(width),
     mHeight(height),
+#ifdef ZOMBOID
+	mLevel(0),
+#endif
     mOpacity(1.0f),
     mVisible(true),
     mMap(0)

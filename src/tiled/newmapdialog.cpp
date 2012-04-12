@@ -57,7 +57,10 @@ NewMapDialog::NewMapDialog(QWidget *parent) :
 
     mUi->orientation->addItem(tr("Orthogonal"), Map::Orthogonal);
     mUi->orientation->addItem(tr("Isometric"), Map::Isometric);
-    mUi->orientation->addItem(tr("Isometric (Staggered)"), Map::Staggered);
+#ifdef ZOMBOID
+	mUi->orientation->addItem(tr("Isometric (Levels)"), Map::LevelIsometric);
+#endif
+	mUi->orientation->addItem(tr("Isometric (Staggered)"), Map::Staggered);
 
     mUi->orientation->setCurrentIndex(orientation);
     mUi->mapWidth->setValue(mapWidth);

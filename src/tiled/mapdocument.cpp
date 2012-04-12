@@ -29,6 +29,9 @@
 #include "imagelayer.h"
 #include "isometricrenderer.h"
 #include "layermodel.h"
+#ifdef ZOMBOID
+#include "zlevelrenderer.hpp"
+#endif
 #include "map.h"
 #include "mapobject.h"
 #include "movelayer.h"
@@ -65,7 +68,12 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     case Map::Staggered:
         mRenderer = new StaggeredRenderer(map);
         break;
-    default:
+#ifdef ZOMBOID
+    case Map::LevelIsometric:
+        mRenderer = new ZLevelRenderer(map);
+        break;
+#endif
+	default:
         mRenderer = new OrthogonalRenderer(map);
         break;
     }
