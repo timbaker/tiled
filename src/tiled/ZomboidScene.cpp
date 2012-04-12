@@ -22,6 +22,7 @@
 #include "mapobject.h"
 #include "mapobjectitem.h"
 #include "maprenderer.h"
+#include "objectgroup.h"
 #include "tilelayer.h"
 #include "tilelayeritem.h"
 #include "zlot.hpp"
@@ -60,6 +61,8 @@ void ZomboidTileLayerGroup::prepareDrawing(const MapRenderer *renderer, const QR
 {
 	mPreparedLotLayers.clear();
 	foreach (MapObject *mapObject, mMapScene->mLotMapObjects) {
+		if (mapObject->objectGroup()->isVisible() == false)
+			continue;
 		QPoint mapObjectPos = mapObject->position().toPoint();
 		ZLot *lot = mMapScene->mMapObjectToLot[mapObject];
 		const ZTileLayerGroup *layerGroup = lot->tileLayersForLevel(mLevel);
