@@ -157,11 +157,19 @@ private slots:
     /**
      * Repaints the specified region. The region is in tile coordinates.
      */
+#ifdef ZOMBOID
+    void repaintRegion(const QRegion &region, Layer *layer);
+#else
     void repaintRegion(const QRegion &region);
+#endif
 
     void currentLayerIndexChanged();
 
+#ifdef ZOMBOID
+    virtual void mapChanged();
+#else
     void mapChanged();
+#endif
     void tilesetChanged(Tileset *tileset);
 
 #ifdef ZOMBOID

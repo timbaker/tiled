@@ -41,12 +41,12 @@ public:
 
     QSize mapSize() const;
 
-    QRect boundingRect(const QRect &rect) const;
+    QRect boundingRect(const QRect &rect, const Layer *layer = 0) const;
 
     QRectF boundingRect(const MapObject *object) const;
     QPainterPath shape(const MapObject *object) const;
 
-    void drawGrid(QPainter *painter, const QRectF &rect) const;
+    void drawGrid(QPainter *painter, const QRectF &rect, const Layer *layer = 0) const;
 
     void drawTileLayer(QPainter *painter, const TileLayer *layer,
                        const QRectF &exposed = QRectF()) const;
@@ -57,7 +57,12 @@ public:
     void drawTileSelection(QPainter *painter,
                            const QRegion &region,
                            const QColor &color,
+#ifdef ZOMBOID
+                            const QRectF &exposed,
+							const Layer *layer = 0) const;
+#else
                            const QRectF &exposed) const;
+#endif
 
     void drawMapObject(QPainter *painter,
                        const MapObject *object,
@@ -68,14 +73,14 @@ public:
                         const QRectF &exposed = QRectF()) const;
 
     using MapRenderer::pixelToTileCoords;
-    QPointF pixelToTileCoords(qreal x, qreal y) const;
+    QPointF pixelToTileCoords(qreal x, qreal y, const Layer *layer = 0) const;
 
     using MapRenderer::tileToPixelCoords;
-    QPointF tileToPixelCoords(qreal x, qreal y) const;
+    QPointF tileToPixelCoords(qreal x, qreal y, const Layer *layer = 0) const;
 
 private:
-    QPolygonF tileRectToPolygon(const QRect &rect) const;
-    QPolygonF tileRectToPolygon(const QRectF &rect) const;
+    QPolygonF tileRectToPolygon(const QRect &rect, const Layer *layer = 0) const;
+    QPolygonF tileRectToPolygon(const QRectF &rect, const Layer *layer = 0) const;
 };
 
 } // namespace Tiled

@@ -47,13 +47,20 @@ public:
 
     QSize mapSize() const;
 
+#ifdef ZOMBOID
+    QRect boundingRect(const QRect &rect, const Layer *layer = 0) const;
+#else
     QRect boundingRect(const QRect &rect) const;
+#endif
 
     QRectF boundingRect(const MapObject *object) const;
     QPainterPath shape(const MapObject *object) const;
 
+#ifdef ZOMBOID
+    void drawGrid(QPainter *painter, const QRectF &rect, const Layer *layer = 0) const;
+#else
     void drawGrid(QPainter *painter, const QRectF &rect) const;
-
+#endif
     void drawTileLayer(QPainter *painter, const TileLayer *layer,
                        const QRectF &exposed = QRectF()) const;
 
@@ -65,7 +72,12 @@ public:
     void drawTileSelection(QPainter *painter,
                            const QRegion &region,
                            const QColor &color,
+#ifdef ZOMBOID
+							const QRectF &exposed,
+							const Layer *layer = 0) const;
+#else
                            const QRectF &exposed) const;
+#endif
 
     void drawMapObject(QPainter *painter,
                        const MapObject *object,
@@ -75,15 +87,28 @@ public:
                         const ImageLayer *layer,
                         const QRectF &exposed = QRectF()) const;
 
+#ifdef ZOMBOID
     using MapRenderer::pixelToTileCoords;
-    QPointF pixelToTileCoords(qreal x, qreal y) const;
+	QPointF pixelToTileCoords(qreal x, qreal y, const Layer *layer = 0) const;
 
-    using MapRenderer::tileToPixelCoords;
+	using MapRenderer::tileToPixelCoords;
+    QPointF tileToPixelCoords(qreal x, qreal y, const Layer *layer = 0) const;
+#else
+    using MapRenderer::pixelToTileCoords;
+	QPointF pixelToTileCoords(qreal x, qreal y) const;
+
+	using MapRenderer::tileToPixelCoords;
     QPointF tileToPixelCoords(qreal x, qreal y) const;
+#endif
 
 private:
+#ifdef ZOMBOID
+    QPolygonF tileRectToPolygon(const QRect &rect, const Layer *layer = 0) const;
+    QPolygonF tileRectToPolygon(const QRectF &rect, const Layer *layer = 0) const;
+#else
     QPolygonF tileRectToPolygon(const QRect &rect) const;
     QPolygonF tileRectToPolygon(const QRectF &rect) const;
+#endif
 };
 
 } // namespace Tiled

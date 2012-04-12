@@ -94,6 +94,8 @@ public:
 private slots:
     virtual void refreshScene();
 
+    virtual void mapChanged();
+
     virtual void layerAdded(int index);
     virtual void layerAboutToBeRemoved(int index);
     virtual void layerRemoved(int index);

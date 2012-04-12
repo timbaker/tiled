@@ -55,8 +55,11 @@ void ChangeImageLayerProperties::redo()
         mImageLayer->resetImage();
     else
         mImageLayer->loadFromImage(QImage(mRedoPath), mRedoPath);
-
+#ifdef ZOMBOID
+    mMapDocument->emitRegionChanged(mImageLayer->bounds(), mImageLayer);
+#else
     mMapDocument->emitRegionChanged(mImageLayer->bounds());
+#endif
 }
 
 void ChangeImageLayerProperties::undo()
@@ -68,6 +71,10 @@ void ChangeImageLayerProperties::undo()
     else
         mImageLayer->loadFromImage(QImage(mUndoPath), mUndoPath);
 
-    mMapDocument->emitRegionChanged(mImageLayer->bounds());
+#ifdef ZOMBOID
+	mMapDocument->emitRegionChanged(mImageLayer->bounds(), mImageLayer);
+#else
+	mMapDocument->emitRegionChanged(mImageLayer->bounds());
+#endif
 }
 

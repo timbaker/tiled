@@ -37,7 +37,7 @@ ZTileLayerGroupItem::ZTileLayerGroupItem(ZTileLayerGroup *layerGroup, MapRendere
 {
     setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
 
-    syncWithTileLayers();
+//    syncWithTileLayers();
 }
 
 void ZTileLayerGroupItem::addTileLayer(TileLayer *layer, int index)
@@ -71,7 +71,7 @@ void ZTileLayerGroupItem::syncWithTileLayers()
 {
     prepareGeometryChange();
     QRect tileBounds = mLayerGroup->bounds();
-	mBoundingRect = mRenderer->boundingRect(tileBounds);
+	mBoundingRect = mRenderer->boundingRect(tileBounds, mLayerGroup->mLayers.isEmpty() ? 0 : mLayerGroup->mLayers.first());
 
 	QMargins drawMargins = mLayerGroup->drawMargins();
 	mBoundingRect.adjust(-drawMargins.left(),

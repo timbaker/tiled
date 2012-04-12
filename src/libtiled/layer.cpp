@@ -76,7 +76,10 @@ Layer *Layer::initializeClone(Layer *clone) const
     clone->mVisible = mVisible;
     clone->mMap = mMap;
     clone->setProperties(properties());
-    return clone;
+#ifdef ZOMBOID
+	clone->mLevel = mLevel;
+#endif
+	return clone;
 }
 
 TileLayer *Layer::asTileLayer()

@@ -103,9 +103,14 @@ void MapScene::setMapDocument(MapDocument *mapDocument)
     if (mMapDocument) {
         connect(mMapDocument, SIGNAL(mapChanged()),
                 this, SLOT(mapChanged()));
+#ifdef ZOMBOID
+        connect(mMapDocument, SIGNAL(regionChanged(QRegion,Layer*)),
+                this, SLOT(repaintRegion(QRegion,Layer*)));
+#else
         connect(mMapDocument, SIGNAL(regionChanged(QRegion)),
                 this, SLOT(repaintRegion(QRegion)));
-        connect(mMapDocument, SIGNAL(layerAdded(int)),
+#endif
+		connect(mMapDocument, SIGNAL(layerAdded(int)),
                 this, SLOT(layerAdded(int)));
 #ifdef ZOMBOID
 		connect(mMapDocument, SIGNAL(layerAboutToBeRemoved(int)),
@@ -245,6 +250,20 @@ void MapScene::updateCurrentLayerHighlight()
     }
 }
 
+#ifdef ZOMBOID
+void MapScene::repaintRegion(const QRegion &region, Layer *layer)
+{
+    const MapRenderer *renderer = mMapDocument->renderer();
+    const QMargins margins = mMapDocument->map()->drawMargins();
+
+    foreach (const QRect &r, region.rects()) {
+        update(renderer->boundingRect(r, layer).adjusted(-margins.left(),
+                                                  -margins.top(),
+                                                  margins.right(),
+                                                  margins.bottom()));
+    }
+}
+#else
 void MapScene::repaintRegion(const QRegion &region)
 {
     const MapRenderer *renderer = mMapDocument->renderer();
@@ -257,6 +276,7 @@ void MapScene::repaintRegion(const QRegion &region)
                                                   margins.bottom()));
     }
 }
+#endif
 
 void MapScene::enableSelectedTool()
 {
@@ -290,6 +310,12 @@ void MapScene::disableSelectedTool()
 void MapScene::currentLayerIndexChanged()
 {
     updateCurrentLayerHighlight();
+#ifdef ZOMBOID
+	if (isGridVisible()
+		&& mMapDocument && mMapDocument->renderer()
+		&& (mMapDocument->map()->orientation() == Map::LevelIsometric))
+		update();
+#endif
 }
 
 /**
@@ -468,7 +494,11 @@ void MapScene::drawForeground(QPainter *painter, const QRectF &rect)
     if (!mMapDocument || !mGridVisible)
         return;
 
+#ifdef ZOMBOID
+	mMapDocument->renderer()->drawGrid(painter, rect, mMapDocument->currentLayer());
+#else
     mMapDocument->renderer()->drawGrid(painter, rect);
+#endif
 }
 
 bool MapScene::event(QEvent *event)

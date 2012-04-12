@@ -468,10 +468,17 @@ void MapDocument::emitMapChanged()
     emit mapChanged();
 }
 
+#ifdef ZOMBOID
+void MapDocument::emitRegionChanged(const QRegion &region, Layer *layer)
+{
+    emit regionChanged(region, layer);
+}
+#else
 void MapDocument::emitRegionChanged(const QRegion &region)
 {
     emit regionChanged(region);
 }
+#endif
 
 void MapDocument::emitRegionEdited(const QRegion &region, Layer *layer)
 {

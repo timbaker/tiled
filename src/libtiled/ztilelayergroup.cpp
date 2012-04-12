@@ -52,6 +52,7 @@ void ZTileLayerGroup::addTileLayer(TileLayer *layer, int index)
 		mIndices[arrayIndex] += 1;
 		arrayIndex++;
 	}
+	layer->setLevel(mLevel);
 }
 
 void ZTileLayerGroup::removeTileLayer(TileLayer *layer)
@@ -65,6 +66,7 @@ void ZTileLayerGroup::removeTileLayer(TileLayer *layer)
 			mIndices[arrayIndex] -= 1;
 			arrayIndex++;
 		}
+		layer->setLevel(0);
 	}
 }
 

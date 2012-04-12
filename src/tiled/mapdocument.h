@@ -207,7 +207,11 @@ public:
      * Emits the region changed signal for the specified region. The region
      * should be in tile coordinates. This method is used by the TilePainter.
      */
+#ifdef ZOMBOID
+    void emitRegionChanged(const QRegion &region, Layer *layer);
+#else
     void emitRegionChanged(const QRegion &region);
+#endif
 
     /**
      * Emits the region edited signal for the specified region and tile layer.
@@ -279,7 +283,11 @@ signals:
      * Emitted when a certain region of the map changes. The region is given in
      * tile coordinates.
      */
+#ifdef ZOMBOID
+    void regionChanged(const QRegion &region, Layer *layer);
+#else
     void regionChanged(const QRegion &region);
+#endif
 
     /**
      * Emitted when a certain region of the map was edited by user input.

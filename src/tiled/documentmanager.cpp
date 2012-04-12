@@ -252,5 +252,5 @@ void DocumentManager::centerViewOn(int x, int y)
     if (!view)
         return;
 
-    view->centerOn(currentDocument()->renderer()->tileToPixelCoords(x, y));
+    view->centerOn(currentDocument()->renderer()->tileToPixelCoords(x, (qreal)y));
 }

@@ -50,7 +50,11 @@ QSize IsometricRenderer::mapSize() const
                  side * map()->tileHeight() / 2);
 }
 
+#ifdef ZOMBOID
+QRect IsometricRenderer::boundingRect(const QRect &rect, const Layer *layer) const
+#else
 QRect IsometricRenderer::boundingRect(const QRect &rect) const
+#endif
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
@@ -120,7 +124,11 @@ QPainterPath IsometricRenderer::shape(const MapObject *object) const
     return path;
 }
 
+#ifdef ZOMBOID
+void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect, const Layer *layer) const
+#else
 void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect) const
+#endif
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
@@ -144,13 +152,13 @@ void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect) const
     painter->setPen(gridPen);
 
     for (int y = startY; y <= endY; ++y) {
-        const QPointF start = tileToPixelCoords(startX, y);
-        const QPointF end = tileToPixelCoords(endX, y);
+        const QPointF start = tileToPixelCoords(startX, (qreal)y);
+        const QPointF end = tileToPixelCoords(endX, (qreal)y);
         painter->drawLine(start, end);
     }
     for (int x = startX; x <= endX; ++x) {
-        const QPointF start = tileToPixelCoords(x, startY);
-        const QPointF end = tileToPixelCoords(x, endY);
+        const QPointF start = tileToPixelCoords(x, (qreal)startY);
+        const QPointF end = tileToPixelCoords(x, (qreal)endY);
         painter->drawLine(start, end);
     }
 }
@@ -420,7 +428,12 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *l
 void IsometricRenderer::drawTileSelection(QPainter *painter,
                                           const QRegion &region,
                                           const QColor &color,
-                                          const QRectF &exposed) const
+#ifdef ZOMBOID
+										  const QRectF &exposed,
+										  const Layer *layer) const
+#else
+										  const QRectF &exposed) const
+#endif
 {
     painter->setBrush(color);
     painter->setPen(Qt::NoPen);
@@ -524,12 +537,16 @@ void IsometricRenderer::drawImageLayer(QPainter *painter,
     const QPixmap &img = imageLayer->image();
     QPointF paintOrigin(-img.width() / 2, -img.height());
 
-    paintOrigin += tileToPixelCoords(imageLayer->x(), imageLayer->y());
+    paintOrigin += tileToPixelCoords(imageLayer->x(), (qreal)imageLayer->y());
 
     painter->drawPixmap(paintOrigin, img);
 }
 
+#ifdef ZOMBOID
+QPointF IsometricRenderer::pixelToTileCoords(qreal x, qreal y, const Layer *layer) const
+#else
 QPointF IsometricRenderer::pixelToTileCoords(qreal x, qreal y) const
+#endif
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
@@ -543,7 +560,11 @@ QPointF IsometricRenderer::pixelToTileCoords(qreal x, qreal y) const
                    my / tileHeight);
 }
 
+#ifdef ZOMBOID
+QPointF IsometricRenderer::tileToPixelCoords(qreal x, qreal y, const Layer *layer) const
+#else
 QPointF IsometricRenderer::tileToPixelCoords(qreal x, qreal y) const
+#endif
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
@@ -553,7 +574,11 @@ QPointF IsometricRenderer::tileToPixelCoords(qreal x, qreal y) const
                    (x + y) * tileHeight / 2);
 }
 
+#ifdef ZOMBOID
+QPolygonF IsometricRenderer::tileRectToPolygon(const QRect &rect, const Layer *layer) const
+#else
 QPolygonF IsometricRenderer::tileRectToPolygon(const QRect &rect) const
+#endif
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
@@ -572,7 +597,11 @@ QPolygonF IsometricRenderer::tileRectToPolygon(const QRect &rect) const
     return polygon;
 }
 
+#ifdef ZOMBOID
+QPolygonF IsometricRenderer::tileRectToPolygon(const QRectF &rect, const Layer *layer) const
+#else
 QPolygonF IsometricRenderer::tileRectToPolygon(const QRectF &rect) const
+#endif
 {
     QPolygonF polygon;
     polygon << QPointF(tileToPixelCoords(rect.topLeft()));

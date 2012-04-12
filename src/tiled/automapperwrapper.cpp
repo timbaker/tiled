@@ -130,5 +130,9 @@ void AutoMapperWrapper::patchLayer(int layerIndex, TileLayer *layer)
 
     t->setCells(b.left() - t->x(), b.top() - t->y(), layer,
                 b.translated(-t->position()));
-    mMapDocument->emitRegionChanged(b);
+#ifdef ZOMBOID
+	mMapDocument->emitRegionChanged(b, layer);
+#else
+	mMapDocument->emitRegionChanged(b);
+#endif
 }

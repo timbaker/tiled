@@ -54,6 +54,9 @@ public:
 private slots:
     void selectionChanged(const QRegion &newSelection,
                           const QRegion &oldSelection);
+#ifdef ZOMBOID
+    void currentLayerIndexChanged(int index);
+#endif
 
 private:
     void updateBoundingRect();

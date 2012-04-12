@@ -45,7 +45,11 @@ QSize StaggeredRenderer::mapSize() const
                  (map()->height() + 1) * (tileHeight / 2));
 }
 
+#ifdef ZOMBOID
+QRect StaggeredRenderer::boundingRect(const QRect &rect, const Layer *layer) const
+#else
 QRect StaggeredRenderer::boundingRect(const QRect &rect) const
+#endif
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
@@ -77,7 +81,11 @@ QPainterPath StaggeredRenderer::shape(const MapObject *object) const
     return result;
 }
 
+#ifdef ZOMBOID
+void StaggeredRenderer::drawGrid(QPainter *painter, const QRectF &rect, const Layer *layer) const
+#else
 void StaggeredRenderer::drawGrid(QPainter *painter, const QRectF &rect) const
+#endif
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
@@ -241,7 +249,12 @@ void StaggeredRenderer::drawTileLayer(QPainter *painter,
 void StaggeredRenderer::drawTileSelection(QPainter *painter,
                                           const QRegion &region,
                                           const QColor &color,
+#ifdef ZOMBOID
+										  const QRectF &exposed,
+										  const Layer *layer) const
+#else
                                           const QRectF &exposed) const
+#endif
 {
     painter->setBrush(color);
     painter->setPen(Qt::NoPen);
@@ -276,7 +289,7 @@ void StaggeredRenderer::drawImageLayer(QPainter *painter,
     const QPixmap &img = imageLayer->image();
     QPointF paintOrigin(-img.width() / 2, -img.height());
 
-    paintOrigin += tileToPixelCoords(imageLayer->x(), imageLayer->y());
+    paintOrigin += tileToPixelCoords(imageLayer->x(), (qreal)imageLayer->y());
 
     painter->drawPixmap(paintOrigin, img);
 }
@@ -285,7 +298,11 @@ void StaggeredRenderer::drawImageLayer(QPainter *painter,
  * Converts pixel to tile coordinates. Sub-tile return values are not
  * supported by this renderer.
  */
+#ifdef ZOMBOID
+QPointF StaggeredRenderer::pixelToTileCoords(qreal x, qreal y, const Layer *layer) const
+#else
 QPointF StaggeredRenderer::pixelToTileCoords(qreal x, qreal y) const
+#endif
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
@@ -318,7 +335,11 @@ QPointF StaggeredRenderer::pixelToTileCoords(qreal x, qreal y) const
  * Converts tile to pixel coordinates. Sub-tile return values are not
  * supported by this renderer.
  */
+#ifdef ZOMBOID
+QPointF StaggeredRenderer::tileToPixelCoords(qreal x, qreal y, const Layer *layer) const
+#else
 QPointF StaggeredRenderer::tileToPixelCoords(qreal x, qreal y) const
+#endif
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
@@ -366,7 +387,7 @@ QPolygonF StaggeredRenderer::tileToPolygon(int x, int y) const
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
 
-    const QPointF topRight = tileToPixelCoords(x, y);
+    const QPointF topRight = tileToPixelCoords(x, (qreal)y);
 
     QPolygonF polygon;
     polygon << QPointF(topRight.x() + tileWidth / 2,

@@ -110,7 +110,19 @@ void BrushItem::paint(QPainter *painter,
     if (mTileLayer) {
         const qreal opacity = painter->opacity();
         painter->setOpacity(0.75);
-        renderer->drawTileLayer(painter, mTileLayer, option->exposedRect);
+#ifdef ZOMBOID
+		mTileLayer->setLevel(mMapDocument->currentLayer() ? mMapDocument->currentLayer()->level() : 0);
+		renderer->drawTileLayer(painter, mTileLayer, option->exposedRect);
+        painter->setOpacity(opacity);
+
+        renderer->drawTileSelection(painter, mRegion, highlight,
+                                    option->exposedRect, mTileLayer);
+    } else {
+        renderer->drawTileSelection(painter, mRegion, highlight,
+                                    option->exposedRect, mMapDocument->currentLayer());
+    }
+#else
+		renderer->drawTileLayer(painter, mTileLayer, option->exposedRect);
         painter->setOpacity(opacity);
 
         renderer->drawTileSelection(painter, mRegion, highlight,
@@ -119,6 +131,7 @@ void BrushItem::paint(QPainter *painter,
         renderer->drawTileSelection(painter, mRegion, highlight,
                                     option->exposedRect);
     }
+#endif
 }
 
 void BrushItem::updateBoundingRect()
@@ -131,8 +144,11 @@ void BrushItem::updateBoundingRect()
     }
 
     const QRect bounds = mRegion.boundingRect();
+#ifdef ZOMBOID
+	mBoundingRect = mMapDocument->renderer()->boundingRect(bounds, mMapDocument->currentLayer());
+#else
     mBoundingRect = mMapDocument->renderer()->boundingRect(bounds);
-
+#endif
     // Adjust for amount of pixels tiles extend at the top and to the right
     if (mTileLayer) {
         const Map *map = mMapDocument->map();

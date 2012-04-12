@@ -48,6 +48,12 @@ ZomboidTileLayerGroup::ZomboidTileLayerGroup(ZomboidScene *mapScene, int level)
 	, mMapScene(mapScene)
 	, mLevel(level)
 {
+	MapDocument *mapDoc = mMapScene->mapDocument();
+	Map *map = mapDoc->map();
+	if (level > map->maxLevel()) {
+		// FIXME: this never goes down if whole levels are deleted, requires reload
+		map->setMaxLevel(level);
+	}
 }
 
 void ZomboidTileLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRect &rect)
@@ -60,7 +66,7 @@ void ZomboidTileLayerGroup::prepareDrawing(const MapRenderer *renderer, const QR
 		if (layerGroup) {
 			QRect r = layerGroup->bounds().translated(mapObjectPos);
 			QMargins m = layerGroup->drawMargins();
-			QRectF bounds = renderer->boundingRect(r);
+			QRectF bounds = renderer->boundingRect(r, layerGroup->mLayers.isEmpty() ? 0 : layerGroup->mLayers.first());
 			bounds.adjust(-m.right(), -m.bottom(), m.left(), m.top());
 			if ((bounds & rect).isValid()) {
 				// Set the visibility of lot map layers to match this layer-group's layers.
@@ -181,17 +187,16 @@ void ZomboidScene::refreshScene()
 
 	Map *map =  mapDocument()->map();
 	map->setMaxLevel(0);
-	foreach (Layer *layer, map->layers()) {
-		if (TileLayer *tl = layer->asTileLayer()) {
-			uint level;
-			if (groupForTileLayer(tl, &level)) {
-			if (level > map->maxLevel())
-				mapDocument()->map()->setMaxLevel(level);
-			}
-		}
-	}
 
 	MapScene::refreshScene();
+}
+
+void ZomboidScene::mapChanged()
+{
+	MapScene::mapChanged();
+
+	foreach (ZTileLayerGroupItem *item, mTileLayerGroupItems)
+		item->syncWithTileLayers();
 }
 
 class DummyGraphicsItem : public QGraphicsItem
@@ -221,6 +226,7 @@ QGraphicsItem *ZomboidScene::createLayerItem(Layer *layer)
 	if (TileLayer *tl = layer->asTileLayer()) {
 		uint level;
 		if (groupForTileLayer(tl, &level)) {
+			int oldMaxLevel = mMapDocument->map()->maxLevel();
 			if (mTileLayerGroupItems[level] == 0) {
 				ZTileLayerGroup *layerGroup = new ZomboidTileLayerGroup(this, level);
 				mTileLayerGroupItems[level] = new ZTileLayerGroupItem(layerGroup, mMapDocument->renderer());
@@ -228,6 +234,13 @@ QGraphicsItem *ZomboidScene::createLayerItem(Layer *layer)
 			}
 			int index = mMapDocument->map()->layers().indexOf(layer);
 			mTileLayerGroupItems[level]->addTileLayer(tl, index);
+
+			// Creating a new ZomboidTileLayerGroup might update Map::maxLevel() in which case
+			// we must update the bounding rectangles of ZTileLayerGroupItems and the QGraphicsScene.
+			// FIXME: bit worried about calling this here.
+			if (oldMaxLevel != mMapDocument->map()->maxLevel())
+				mapChanged();/*mMapDocument->emitMapChanged() not hooked up when refreshScene() is called */
+
 			return new DummyGraphicsItem();
 		}
 	}
@@ -349,6 +362,8 @@ void ZomboidScene::layerRenamed(int index)
 			}
 		}
 
+		int oldMaxLevel = mMapDocument->map()->maxLevel();
+
 		// Find (or create) the new TileLayerGroup owner
 		if (hasGroup && mTileLayerGroupItems[group] == 0) {
 			ZTileLayerGroup *layerGroup = new ZomboidTileLayerGroup(this, group);
@@ -386,6 +401,12 @@ void ZomboidScene::layerRenamed(int index)
 				mLayerItems[index]->setVisible(layer->isVisible());
 				addItem(mLayerItems[index]);
 			}
+
+			// Creating a new ZomboidTileLayerGroup might update Map::maxLevel() in which case
+			// we must update the bounding rectangles of ZTileLayerGroupItems and the QGraphicsScene.
+			// FIXME: bit worried about calling this here.
+			if (oldMaxLevel != mMapDocument->map()->maxLevel())
+				mapChanged();/*mMapDocument->emitMapChanged() not hooked up when refreshScene() is called */
 		}
 	}
 #if 0
