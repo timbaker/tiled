@@ -189,6 +189,8 @@ void ZomboidScene::refreshScene()
 	map->setMaxLevel(0);
 
 	MapScene::refreshScene();
+
+	setGraphicsSceneZOrder();
 }
 
 void ZomboidScene::mapChanged()
@@ -247,6 +249,49 @@ QGraphicsItem *ZomboidScene::createLayerItem(Layer *layer)
 	return MapScene::createLayerItem(layer);
 }
 
+void ZomboidScene::updateCurrentLayerHighlight()
+{
+    if (!mMapDocument)
+        return;
+
+    const Layer *currentLayer = mMapDocument->currentLayer();
+
+    if (!mHighlightCurrentLayer || !currentLayer) {
+        mDarkRectangle->setVisible(false);
+
+        // Restore opacity for all levels
+        foreach (ZTileLayerGroupItem *item, mTileLayerGroupItems) {
+			if (item->getTileLayerGroup()->mLayers.isEmpty())
+				continue;
+			const Layer *layer = item->getTileLayerGroup()->mLayers.first();
+            item->setOpacity(layer->opacity());
+        }
+
+        return;
+    }
+
+    // Set levels above the current level to half opacity
+	ZTileLayerGroup *currentLevelGroup = 0;
+	const qreal opacityFactor = 0.4;
+    foreach (ZTileLayerGroupItem *item, mTileLayerGroupItems) {
+		if (item->getTileLayerGroup()->mLayers.isEmpty())
+			continue;
+		const Layer *layer = item->getTileLayerGroup()->mLayers.first();
+		const int index = item->getTileLayerGroup()->mIndices.first();
+        const qreal multiplier = (currentLayer->level() < layer->level()) ? opacityFactor : 1;
+        item->setOpacity(layer->opacity() * multiplier);
+		if (layer->level() == currentLayer->level())
+			currentLevelGroup = item->getTileLayerGroup();
+    }
+
+    // Darken layers below the current layer
+	if (currentLevelGroup)
+		mDarkRectangle->setZValue(levelZOrder(currentLevelGroup->level()) - 0.5);
+	else
+		mDarkRectangle->setZValue(0 - 0.5); // ObjectGroup or not-in-a-level TileLayer
+    mDarkRectangle->setVisible(true);
+}
+
 bool ZomboidScene::groupForTileLayer(TileLayer *tl, uint *group)
 {
 	// See if the layer name matches "0_foo" or "1_bar" etc.
@@ -264,6 +309,8 @@ void ZomboidScene::layerAdded(int index)
 {
 #if 1
 	MapScene::layerAdded(index);
+
+	setGraphicsSceneZOrder();
 #else
     Layer *layer = mMapDocument->map()->layerAt(index);
     QGraphicsItem *layerItem = createLayerItem(layer);
@@ -407,14 +454,62 @@ void ZomboidScene::layerRenamed(int index)
 			// FIXME: bit worried about calling this here.
 			if (oldMaxLevel != mMapDocument->map()->maxLevel())
 				mapChanged();/*mMapDocument->emitMapChanged() not hooked up when refreshScene() is called */
+
+			setGraphicsSceneZOrder();
 		}
 	}
 #if 0
-	// TODO: determine sane Z-order for layers in and out of TileLayerGroups
     int z = 0;
     foreach (QGraphicsItem *item, mLayerItems)
         item->setZValue(z++);
 #endif
+}
+
+int ZomboidScene::levelZOrder(int level)
+{
+	return (level + 1) * 100;
+}
+
+// Determine sane Z-order for layers in and out of TileLayerGroups
+void ZomboidScene::setGraphicsSceneZOrder()
+{
+	foreach (ZTileLayerGroupItem *item, mTileLayerGroupItems)
+		item->setZValue(levelZOrder(item->getTileLayerGroup()->level()));
+
+	ZTileLayerGroupItem *previousLevelItem = 0;
+	QMap<ZTileLayerGroupItem*,QVector<QGraphicsItem*>> layersAboveLevel;
+	int layerIndex = 0;
+	foreach (Layer *layer, mMapDocument->map()->layers()) {
+		if (TileLayer *tl = layer->asTileLayer()) {
+			uint group;
+			bool hasGroup = groupForTileLayer(tl, &group);
+			if (hasGroup) {
+				previousLevelItem = mTileLayerGroupItems[group];
+				++layerIndex;
+				continue;
+			}
+		}
+
+		// Handle any layers not in a TileLayerGroup.
+		// Layers between the first and last in a TileLayerGroup will be displayed above that TileLayerGroup.
+		// Layers before the first TileLayerGroup will be displayed below the first TileLayerGroup.
+		if (previousLevelItem)
+			layersAboveLevel[previousLevelItem].append(mLayerItems[layerIndex]);
+		else
+			mLayerItems[layerIndex]->setZValue(layerIndex);
+		++layerIndex;
+	}
+
+	QMap<ZTileLayerGroupItem*,QVector<QGraphicsItem*>>::const_iterator it,
+		it_start = layersAboveLevel.begin(),
+		it_end = layersAboveLevel.end();
+	for (it = it_start; it != it_end; it++) {
+		int index = 1;
+		foreach (QGraphicsItem *item, *it) {
+			item->setZValue(levelZOrder(it.key()->getTileLayerGroup()->level()) + index);
+			++index;
+		}
+	}
 }
 
 void ZomboidScene::onLotAdded(ZLot *lot, MapObject *mapObject)

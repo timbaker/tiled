@@ -170,11 +170,15 @@ void MapScene::refreshScene()
 #ifdef ZOMBOID
 	/* This stops tall tiles being cut off near the 0,0 tile at the top of the window */
     const QMargins& margins = mMapDocument->map()->drawMargins();
-    setSceneRect(-margins.left(), -margins.top(), margins.left() + mapSize.width() + margins.right(), margins.top() + mapSize.height() + margins.bottom());
+	QRect sceneRect(-margins.left(), -margins.top(),
+		margins.left() + mapSize.width() + margins.right(),
+		margins.top() + mapSize.height() + margins.bottom());
+    setSceneRect(sceneRect);
+    mDarkRectangle->setRect(sceneRect);
 #else
     setSceneRect(0, 0, mapSize.width(), mapSize.height());
-#endif
     mDarkRectangle->setRect(0, 0, mapSize.width(), mapSize.height());
+#endif
 
     const Map *map = mMapDocument->map();
     mLayerItems.resize(map->layerCount());
@@ -327,11 +331,15 @@ void MapScene::mapChanged()
 #ifdef ZOMBOID
 	/* This stops tall tiles being cut off near the 0,0 tile at the top of the window */
     const QMargins& margins = mMapDocument->map()->drawMargins();
-    setSceneRect(-margins.left(), -margins.top(), margins.left() + mapSize.width() + margins.right(), margins.top() + mapSize.height() + margins.bottom());
+	QRect sceneRect(-margins.left(), -margins.top(),
+		margins.left() + mapSize.width() + margins.right(),
+		margins.top() + mapSize.height() + margins.bottom());
+    setSceneRect(sceneRect);
+    mDarkRectangle->setRect(sceneRect);
 #else
     setSceneRect(0, 0, mapSize.width(), mapSize.height());
-#endif
     mDarkRectangle->setRect(0, 0, mapSize.width(), mapSize.height());
+#endif
 
     foreach (QGraphicsItem *item, mLayerItems) {
         if (TileLayerItem *tli = dynamic_cast<TileLayerItem*>(item))

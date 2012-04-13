@@ -107,7 +107,11 @@ private slots:
 	void onLotUpdated(ZLot *lot, MapObject *mapObject);
 protected:
     virtual QGraphicsItem *createLayerItem(Layer *layer);
+	virtual void updateCurrentLayerHighlight();
 	bool groupForTileLayer(TileLayer *tl, uint *group);
+
+	void setGraphicsSceneZOrder();
+	int levelZOrder(int level);
 private:
 	QMap<int,ZTileLayerGroupItem*> mTileLayerGroupItems;
 	ZLotManager mLotManager;

@@ -194,12 +194,14 @@ private slots:
 #ifdef ZOMBOID
 protected:
     virtual QGraphicsItem *createLayerItem(Layer *layer);
+
+	virtual void updateCurrentLayerHighlight();
 #else
 private:
     QGraphicsItem *createLayerItem(Layer *layer);
-#endif
 
     void updateCurrentLayerHighlight();
+#endif
 
     bool eventFilter(QObject *object, QEvent *event);
 
