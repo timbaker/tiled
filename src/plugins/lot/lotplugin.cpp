@@ -100,8 +100,11 @@ bool LotPlugin::write(const Map *map, const QString &fileName)
 				for (int y = 0; y < tileLayer->height(); y++) {
 					const Tiled::Cell& cell = tileLayer->cellAt(x, y);
 					if (!cell.isEmpty()) {
-						int lx = x + (level * 3);
-						int ly = y + (level * 3);
+						int lx = x, ly = y;
+						if (map->orientation() == Map::Isometric) {
+							lx = x + (level * 3);
+							ly = y + (level * 3);
+						}
 						lx -= StartX;
 						ly -= StartY;
 						if (lx >= 0 && ly >= 0 && lx < tileLayer->width() && ly < tileLayer->height()) {
