@@ -103,10 +103,19 @@ LayerDock::LayerDock(QWidget *parent):
     buttonContainer->addWidget(newLayerButton);
     buttonContainer->addAction(handler->actionMoveLayerUp());
     buttonContainer->addAction(handler->actionMoveLayerDown());
-    buttonContainer->addAction(handler->actionDuplicateLayer());
+	buttonContainer->addAction(handler->actionDuplicateLayer());
     buttonContainer->addAction(handler->actionRemoveLayer());
     buttonContainer->addSeparator();
     buttonContainer->addAction(handler->actionToggleOtherLayers());
+
+#ifdef ZOMBOID
+	QToolButton *button;
+	button = dynamic_cast<QToolButton*>(buttonContainer->widgetForAction(handler->actionMoveLayerUp()));
+	button->setAutoRepeat(true);
+	button = dynamic_cast<QToolButton*>(buttonContainer->widgetForAction(handler->actionMoveLayerDown()));
+	button->setAutoRepeat(true);
+#endif
+
 
     layout->addLayout(opacityLayout);
 #ifdef ZOMBOID
