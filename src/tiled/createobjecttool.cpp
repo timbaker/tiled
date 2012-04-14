@@ -116,8 +116,11 @@ void CreateObjectTool::mouseMoved(const QPointF &pos,
 
     switch (mMode) {
     case CreateArea: {
-        const QPointF tileCoords = renderer->pixelToTileCoords(pos);
-
+#ifdef ZOMBOID
+		const QPointF tileCoords = renderer->pixelToTileCoords(pos, currentObjectGroup());
+#else
+		const QPointF tileCoords = renderer->pixelToTileCoords(pos);
+#endif
         // Update the size of the new map object
         const QPointF objectPos = mNewMapObjectItem->mapObject()->position();
         QSizeF newSize(qMax(qreal(0), tileCoords.x() - objectPos.x()),
@@ -132,7 +135,11 @@ void CreateObjectTool::mouseMoved(const QPointF &pos,
     case CreateTile: {
         const QSize imgSize = mNewMapObjectItem->mapObject()->tile()->size();
         const QPointF diff(-imgSize.width() / 2, imgSize.height() / 2);
+#ifdef ZOMBOID
+        QPointF tileCoords = renderer->pixelToTileCoords(pos + diff, currentObjectGroup());
+#else
         QPointF tileCoords = renderer->pixelToTileCoords(pos + diff);
+#endif
 
         if (snapToGrid)
             tileCoords = tileCoords.toPoint();
@@ -143,7 +150,11 @@ void CreateObjectTool::mouseMoved(const QPointF &pos,
     }
     case CreatePolygon:
     case CreatePolyline: {
-        QPointF tileCoords = renderer->pixelToTileCoords(pos);
+ #ifdef ZOMBOID
+       QPointF tileCoords = renderer->pixelToTileCoords(pos, currentObjectGroup());
+#else
+      QPointF tileCoords = renderer->pixelToTileCoords(pos);
+#endif
 
         if (snapToGrid)
             tileCoords = tileCoords.toPoint();
@@ -215,11 +226,17 @@ void CreateObjectTool::mousePressed(QGraphicsSceneMouseEvent *event)
             return;
 
         const QPointF diff(-mTile->width() / 2, mTile->height() / 2);
-        tileCoords = renderer->pixelToTileCoords(event->scenePos() + diff);
+#ifdef ZOMBOID
+		tileCoords = renderer->pixelToTileCoords(event->scenePos() + diff, objectGroup);
+    } else {
+        tileCoords = renderer->pixelToTileCoords(event->scenePos(), objectGroup);
+    }
+#else
+		tileCoords = renderer->pixelToTileCoords(event->scenePos() + diff);
     } else {
         tileCoords = renderer->pixelToTileCoords(event->scenePos());
     }
-
+#endif
     bool snapToGrid = Preferences::instance()->snapToGrid();
     if (event->modifiers() & Qt::ControlModifier)
         snapToGrid = !snapToGrid;

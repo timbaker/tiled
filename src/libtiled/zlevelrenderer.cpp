@@ -27,6 +27,7 @@
 
 #include "map.h"
 #include "mapobject.h"
+#include "objectgroup.h"
 #include "tile.h"
 #include "tilelayer.h"
 #include "tileset.h"
@@ -74,8 +75,9 @@ QRect ZLevelRenderer::boundingRect(const QRect &rect, const Layer *layer) const
 
 QRectF ZLevelRenderer::boundingRect(const MapObject *object) const
 {
+	Layer *layer = object->objectGroup();
     if (object->tile()) {
-        const QPointF bottomCenter = tileToPixelCoords(object->position());
+        const QPointF bottomCenter = tileToPixelCoords(object->position(), layer);
         const QPixmap &img = object->tile()->image();
         return QRectF(bottomCenter.x() - img.width() / 2,
                       bottomCenter.y() - img.height(),
@@ -84,31 +86,51 @@ QRectF ZLevelRenderer::boundingRect(const MapObject *object) const
     } else if (!object->polygon().isEmpty()) {
         const QPointF &pos = object->position();
         const QPolygonF polygon = object->polygon().translated(pos);
-        const QPolygonF screenPolygon = tileToPixelCoords(polygon);
+        const QPolygonF screenPolygon = tileToPixelCoords(polygon, layer);
         return screenPolygon.boundingRect().adjusted(-2, -2, 3, 3);
     } else {
         // Take the bounding rect of the projected object, and then add a few
         // pixels on all sides to correct for the line width.
-        const QRectF base = tileRectToPolygon(object->bounds()).boundingRect();
+        const QRectF base = tileRectToPolygon(object->bounds(), layer).boundingRect();
         return base.adjusted(-2, -3, 2, 2);
     }
 }
 
 QPainterPath ZLevelRenderer::shape(const MapObject *object) const
 {
+	Layer *layer = object->objectGroup();
+#if 1
+	/*
+AddRemoveMapObject::removeObject
+    mObjectGroup->removeObject(mMapObject) <<--------- why layer==0
+    mMapDocument->emitObjectRemoved(mMapObject);
+		MapDocument::deselectObjects
+			emit selectedObjectsChanged()
+				MapScene::updateSelectedObjectItems()
+					item->setEditable(...);
+					unsetCursor()
+						MapObjectItem::shape()
+							<this function>
+	*/
+	if (layer == 0)
+		return QPainterPath();
+#else
+	Q_ASSERT(layer);
+#endif
+
     QPainterPath path;
     if (object->tile()) {
         path.addRect(boundingRect(object));
     } else {
         switch (object->shape()) {
         case MapObject::Rectangle:
-            path.addPolygon(tileRectToPolygon(object->bounds()));
+            path.addPolygon(tileRectToPolygon(object->bounds(), layer));
             break;
         case MapObject::Polygon:
         case MapObject::Polyline: {
             const QPointF &pos = object->position();
             const QPolygonF polygon = object->polygon().translated(pos);
-            const QPolygonF screenPolygon = tileToPixelCoords(polygon);
+            const QPolygonF screenPolygon = tileToPixelCoords(polygon, layer);
             if (object->shape() == MapObject::Polygon) {
                 path.addPolygon(screenPolygon);
             } else {
@@ -305,12 +327,12 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
 
-    if (tileWidth <= 0 || tileHeight <= 1)
+    if (tileWidth <= 0 || tileHeight <= 1 || layerGroup->mLayers.isEmpty())
         return;
 
     QRect rect = exposed.toAlignedRect();
     if (rect.isNull())
-        rect = boundingRect(layerGroup->bounds(), layerGroup->mLayers.isEmpty() ? 0 : layerGroup->mLayers.first());
+        rect = boundingRect(layerGroup->bounds(), layerGroup->mLayers.first());
 
     QMargins drawMargins = layerGroup->drawMargins();
     drawMargins.setTop(drawMargins.top() - tileHeight);
@@ -321,16 +343,11 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                 drawMargins.left(),
                 drawMargins.top());
 
-#if 0
-	rect.translate(map()->cellsPerLevel().x() * tileWidth * layerGroup->level(),
-		           map()->cellsPerLevel().y() * tileHeight * layerGroup->level());
-#endif
-
     // Determine the tile and pixel coordinates to start at
-	QPointF tilePos = pixelToTileCoords(rect.x(), rect.y(), layerGroup->mLayers.isEmpty() ? 0 : layerGroup->mLayers.first());
+	QPointF tilePos = pixelToTileCoords(rect.x(), rect.y(),  layerGroup->mLayers.first());
     QPoint rowItr = QPoint((int) std::floor(tilePos.x()),
                            (int) std::floor(tilePos.y()));
-    QPointF startPos = tileToPixelCoords(rowItr, layerGroup->mLayers.isEmpty() ? 0 : layerGroup->mLayers.first());
+    QPointF startPos = tileToPixelCoords(rowItr, layerGroup->mLayers.first());
     startPos.rx() -= tileWidth / 2;
     startPos.ry() += tileHeight;
 
@@ -380,8 +397,6 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
 						qreal m22 = 1;      // Vertical scaling factor
 						qreal dx = offset.x() + x;
 						qreal dy = offset.y() + y - img.height();
-
-//						dy -= layerGroup->level() * map()->cellsPerLevel().y() * tileHeight;
 
 						if (cell->flippedAntiDiagonally) {
 							// Use shearing to swap the X/Y axis
@@ -454,6 +469,8 @@ void ZLevelRenderer::drawMapObject(QPainter *painter,
                                       const MapObject *object,
                                       const QColor &color) const
 {
+	Layer *layer = object->objectGroup();
+
     painter->save();
 
     QPen pen(Qt::black);
@@ -461,7 +478,7 @@ void ZLevelRenderer::drawMapObject(QPainter *painter,
     if (object->tile()) {
         const QPixmap &img = object->tile()->image();
         QPointF paintOrigin(-img.width() / 2, -img.height());
-        paintOrigin += tileToPixelCoords(object->position()).toPoint();
+        paintOrigin += tileToPixelCoords(object->position(), layer).toPoint();
         painter->drawPixmap(paintOrigin, img);
 
         pen.setStyle(Qt::SolidLine);
@@ -488,7 +505,7 @@ void ZLevelRenderer::drawMapObject(QPainter *painter,
 
         switch (object->shape()) {
         case MapObject::Rectangle: {
-            QPolygonF polygon = tileRectToPolygon(object->bounds());
+            QPolygonF polygon = tileRectToPolygon(object->bounds(), layer);
             painter->drawPolygon(polygon);
 
             pen.setColor(color);
@@ -502,7 +519,7 @@ void ZLevelRenderer::drawMapObject(QPainter *painter,
         case MapObject::Polygon: {
             const QPointF &pos = object->position();
             const QPolygonF polygon = object->polygon().translated(pos);
-            QPolygonF screenPolygon = tileToPixelCoords(polygon);
+            QPolygonF screenPolygon = tileToPixelCoords(polygon, layer);
 
             painter->drawPolygon(screenPolygon);
 
@@ -517,7 +534,7 @@ void ZLevelRenderer::drawMapObject(QPainter *painter,
         case MapObject::Polyline: {
             const QPointF &pos = object->position();
             const QPolygonF polygon = object->polygon().translated(pos);
-            QPolygonF screenPolygon = tileToPixelCoords(polygon);
+            QPolygonF screenPolygon = tileToPixelCoords(polygon, layer);
 
             painter->drawPolyline(screenPolygon);
 
