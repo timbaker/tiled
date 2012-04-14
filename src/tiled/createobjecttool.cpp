@@ -151,7 +151,7 @@ void CreateObjectTool::mouseMoved(const QPointF &pos,
     case CreatePolygon:
     case CreatePolyline: {
  #ifdef ZOMBOID
-       QPointF tileCoords = renderer->pixelToTileCoords(pos, currentObjectGroup());
+      QPointF tileCoords = renderer->pixelToTileCoords(pos, currentObjectGroup());
 #else
       QPointF tileCoords = renderer->pixelToTileCoords(pos);
 #endif
@@ -292,6 +292,9 @@ void CreateObjectTool::startNewMapObject(const QPointF &pos,
         newMapObject->setTile(mTile);
 
     if (mMode == CreatePolygon || mMode == CreatePolyline) {
+#ifdef ZOMBOID
+		mOverlayObjectGroup->setLevel(objectGroup->level());
+#endif
         MapObject::Shape shape = mMode == CreatePolygon ? MapObject::Polygon
                                                         : MapObject::Polyline;
         QPolygonF polygon;
