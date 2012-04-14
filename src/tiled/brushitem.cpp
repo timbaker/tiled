@@ -154,9 +154,13 @@ void BrushItem::updateBoundingRect()
         const Map *map = mMapDocument->map();
 
         QMargins drawMargins = mTileLayer->drawMargins();
+#ifdef ZOMBOID
+        drawMargins.setTop(qMax(0, drawMargins.top() - map->tileHeight()));
+		drawMargins.setRight(qMax(0, drawMargins.right() - map->tileWidth()));
+#else
         drawMargins.setTop(drawMargins.top() - map->tileHeight());
-        drawMargins.setRight(drawMargins.right() - map->tileWidth());
-
+		drawMargins.setRight(drawMargins.right() - map->tileWidth());
+#endif
         mBoundingRect.adjust(-drawMargins.left(),
                              -drawMargins.top(),
                              drawMargins.right(),

@@ -35,6 +35,7 @@ ZTileLayerGroupItem::ZTileLayerGroupItem(ZTileLayerGroup *layerGroup, MapRendere
     : mLayerGroup(layerGroup)
     , mRenderer(renderer)
 {
+	Q_ASSERT(layerGroup);
     setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
 
 //    syncWithTileLayers();

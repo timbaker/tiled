@@ -330,9 +330,11 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
     if (tileWidth <= 0 || tileHeight <= 1 || layerGroup->mLayers.isEmpty())
         return;
 
+	Layer *layer = layerGroup->mLayers.first();
+
     QRect rect = exposed.toAlignedRect();
     if (rect.isNull())
-        rect = boundingRect(layerGroup->bounds(), layerGroup->mLayers.first());
+        rect = boundingRect(layerGroup->bounds(), layer);
 
     QMargins drawMargins = layerGroup->drawMargins();
     drawMargins.setTop(drawMargins.top() - tileHeight);
@@ -344,10 +346,10 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                 drawMargins.top());
 
     // Determine the tile and pixel coordinates to start at
-	QPointF tilePos = pixelToTileCoords(rect.x(), rect.y(),  layerGroup->mLayers.first());
+	QPointF tilePos = pixelToTileCoords(rect.x(), rect.y(), layer);
     QPoint rowItr = QPoint((int) std::floor(tilePos.x()),
                            (int) std::floor(tilePos.y()));
-    QPointF startPos = tileToPixelCoords(rowItr, layerGroup->mLayers.first());
+    QPointF startPos = tileToPixelCoords(rowItr, layer);
     startPos.rx() -= tileWidth / 2;
     startPos.ry() += tileHeight;
 

@@ -49,12 +49,6 @@ ZomboidTileLayerGroup::ZomboidTileLayerGroup(ZomboidScene *mapScene, int level)
 	, mMapScene(mapScene)
 	, mLevel(level)
 {
-	MapDocument *mapDoc = mMapScene->mapDocument();
-	Map *map = mapDoc->map();
-	if (level > map->maxLevel()) {
-		// FIXME: this never goes down if whole levels are deleted, requires reload
-		map->setMaxLevel(level);
-	}
 }
 
 void ZomboidTileLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRect &rect)
@@ -67,19 +61,28 @@ void ZomboidTileLayerGroup::prepareDrawing(const MapRenderer *renderer, const QR
 		ZLot *lot = mMapScene->mMapObjectToLot[mapObject];
 		const ZTileLayerGroup *layerGroup = lot->tileLayersForLevel(mLevel);
 		if (layerGroup) {
+#if 0
+			QRectF bounds = mMapScene->itemForObject(mapObject)->boundingRect();
+			bounds.translate(renderer->tileToPixelCoords(mapObject->position(), mapObject->objectGroup()));
+#else
 			QRect r = layerGroup->bounds().translated(mapObjectPos);
 			QMargins m = layerGroup->drawMargins();
-			QRectF bounds = renderer->boundingRect(r, layerGroup->mLayers.isEmpty() ? 0 : layerGroup->mLayers.first());
-			bounds.adjust(-m.right(), -m.bottom(), m.left(), m.top());
+			Layer *layer = layerGroup->mLayers.isEmpty() ? 0 : layerGroup->mLayers.first();
+//			if (layer) layer->setLevel(0);
+			QRectF bounds = renderer->boundingRect(r, layer);
+//			if (layer) layer->setLevel(layerGroup->level());
+			bounds.adjust(-m.left(), -m.top(), m.right(), m.bottom());
+#endif
 			if ((bounds & rect).isValid()) {
 				// Set the visibility of lot map layers to match this layer-group's layers.
 				// NOTE: This works best when the lot map layers match the current map layers in number and order.
+				bool visible = false;
 				int n = 0;
 				foreach (TileLayer *layer, layerGroup->mLayers) {
 					if (n >= mLayers.count())
-						layer->setVisible(true);
+						layer->setVisible(visible);
 					else
-						layer->setVisible(mLayers[n]->isVisible());
+						layer->setVisible(visible = mLayers[n]->isVisible());
 					++n;
 				}
 				mPreparedLotLayers.append(LotLayers(mapObjectPos, layerGroup));

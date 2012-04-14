@@ -91,11 +91,18 @@ ZLot::ZLot(Map *map)
 				ZLotTileLayerGroup *layerGroup = mLevelToTileLayers[level];
 				layerGroup->addTileLayer(tl, index);
 				tl->setLevel(level);
-				layerGroup->mBounds |= layerGroup->_bounds();
-				maxMargins(layerGroup->mMargins, layerGroup->_drawMargins(), layerGroup->mMargins);
 				++index;
 			}
 		}
+	}
+
+	foreach (ZLotTileLayerGroup *layerGroup, mLevelToTileLayers) {
+		int level = layerGroup->level();
+		layerGroup->mBounds = layerGroup->_bounds();
+		maxMargins(layerGroup->mMargins, layerGroup->_drawMargins(), layerGroup->mMargins);
+		if (level > map->maxLevel())
+			map->setMaxLevel(level);
+
 	}
 }
 
