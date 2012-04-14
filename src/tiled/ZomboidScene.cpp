@@ -168,9 +168,7 @@ ZomboidScene::~ZomboidScene()
 {
 	mLotManager.disconnect(this);
 
-	foreach (ZTileLayerGroupItem *item, mTileLayerGroupItems) {
-		delete item->getTileLayerGroup();
-	}
+	qDeleteAll(mTileLayerGroups);
 }
 
 void ZomboidScene::setMapDocument(MapDocument *map)
@@ -181,12 +179,29 @@ void ZomboidScene::setMapDocument(MapDocument *map)
 
 void ZomboidScene::refreshScene()
 {
-	foreach (ZTileLayerGroupItem *grp, mTileLayerGroupItems)
-		delete grp;
+	qDeleteAll(mTileLayerGroups);
+	mTileLayerGroups.clear();
+	qDeleteAll(mTileLayerGroupItems); // QGraphicsScene.clear() will delete these actually
 	mTileLayerGroupItems.clear();
 
 	Map *map =  mapDocument()->map();
 	map->setMaxLevel(0);
+	int index = 0;
+	foreach (Layer *layer, map->layers()) {
+		int level;
+		if (levelForLayer(layer, &level)) {
+			if (TileLayer *tl = layer->asTileLayer()) {
+				if (mTileLayerGroups.contains(level) == false)
+					mTileLayerGroups[level] = new ZomboidTileLayerGroup(this, level);
+				mTileLayerGroups[level]->addTileLayer(tl, index);
+			}
+			layer->setLevel(level); // for ObjectGroup,ImageLayer as well
+			if (level > map->maxLevel())
+				// FIXME: this never goes down if whole levels are deleted, requires reload
+				map->setMaxLevel(level);
+		}
+		++index;
+	}
 
 	MapScene::refreshScene();
 
@@ -226,23 +241,12 @@ public:
 QGraphicsItem *ZomboidScene::createLayerItem(Layer *layer)
 {
 	if (TileLayer *tl = layer->asTileLayer()) {
-		uint level;
-		if (groupForTileLayer(tl, &level)) {
-			int oldMaxLevel = mMapDocument->map()->maxLevel();
-			if (mTileLayerGroupItems[level] == 0) {
-				ZTileLayerGroup *layerGroup = new ZomboidTileLayerGroup(this, level);
-				mTileLayerGroupItems[level] = new ZTileLayerGroupItem(layerGroup, mMapDocument->renderer());
-				addItem(mTileLayerGroupItems[level]);
+		if (tl->group()) {
+			if (mTileLayerGroupItems[tl->level()] == 0) {
+				mTileLayerGroupItems[tl->level()] = new ZTileLayerGroupItem(tl->group(), mMapDocument->renderer());
+				addItem(mTileLayerGroupItems[tl->level()]);
 			}
-			int index = mMapDocument->map()->layers().indexOf(layer);
-			mTileLayerGroupItems[level]->addTileLayer(tl, index);
-
-			// Creating a new ZomboidTileLayerGroup might update Map::maxLevel() in which case
-			// we must update the bounding rectangles of ZTileLayerGroupItems and the QGraphicsScene.
-			// FIXME: bit worried about calling this here.
-			if (oldMaxLevel != mMapDocument->map()->maxLevel())
-				mapChanged();/*mMapDocument->emitMapChanged() not hooked up when refreshScene() is called */
-
+			mTileLayerGroupItems[tl->level()]->syncWithTileLayers();
 			return new DummyGraphicsItem();
 		}
 	}
@@ -292,14 +296,16 @@ void ZomboidScene::updateCurrentLayerHighlight()
     mDarkRectangle->setVisible(true);
 }
 
-bool ZomboidScene::groupForTileLayer(TileLayer *tl, uint *group)
+bool ZomboidScene::levelForLayer(Layer *layer, int *level)
 {
+	(*level) = 0;
+
 	// See if the layer name matches "0_foo" or "1_bar" etc.
-	const QString& name = tl->name();
+	const QString& name = layer->name();
 	QStringList sl = name.trimmed().split(QLatin1Char('_'));
 	if (sl.count() > 1 && !sl[1].isEmpty()) {
 		bool conversionOK;
-		(*group) = sl[0].toUInt(&conversionOK);
+		(*level) = sl[0].toInt(&conversionOK);
 		return conversionOK;
 	}
 	return false;
@@ -307,39 +313,40 @@ bool ZomboidScene::groupForTileLayer(TileLayer *tl, uint *group)
 
 void ZomboidScene::layerAdded(int index)
 {
-#if 1
+	Layer *layer = mMapDocument->map()->layerAt(index);
+	int level;
+	if (levelForLayer(layer, &level)) {
+		if (TileLayer *tl = layer->asTileLayer()) {
+			if (mTileLayerGroups.contains(level) == false)
+				mTileLayerGroups[level] = new ZomboidTileLayerGroup(this, level);
+			mTileLayerGroups[level]->addTileLayer(tl, index);
+		}
+		layer->setLevel(level);
+	} else {
+		// This handles duplicating layers
+		layer->setLevel(0);
+	}
+
 	MapScene::layerAdded(index);
 
 	setGraphicsSceneZOrder();
-#else
-    Layer *layer = mMapDocument->map()->layerAt(index);
-    QGraphicsItem *layerItem = createLayerItem(layer);
-    addItem(layerItem);
-    mLayerItems.insert(index, layerItem);
-
-    int z = 0;
-    foreach (QGraphicsItem *item, mLayerItems)
-        item->setZValue(z++);
-#endif
 }
 
 void ZomboidScene::layerAboutToBeRemoved(int index)
 {
 	Layer *layer = mMapDocument->map()->layerAt(index);
 	if (TileLayer *tl = layer->asTileLayer()) {
-		foreach (ZTileLayerGroupItem *layerGroupItem, mTileLayerGroupItems)
-			layerGroupItem->removeTileLayer(tl); // if it owns the TileLayer
+		if (tl->group()) {
+			tl->group()->removeTileLayer(tl); // Calls tl->setGroup(0)
+			mTileLayerGroupItems[tl->level()]->syncWithTileLayers();
+			tl->setLevel(0); // otherwise it can't be cleared
+		}
 	}
 }
 
 void ZomboidScene::layerRemoved(int index)
 {
-#if 1
 	MapScene::layerRemoved(index);
-#else
-	delete mLayerItems.at(index);
-	mLayerItems.remove(index);
-#endif
 }
 
 /**
@@ -348,7 +355,6 @@ void ZomboidScene::layerRemoved(int index)
  */
 void ZomboidScene::layerChanged(int index)
 {
-#if 1
 	// This gateway var isn't needed since I'm not going through LayerModel when setting opacity,
 	// so no layerChanged signals are emitted, so no recursion happens here.
 	static bool changingOpacity = false;
@@ -359,27 +365,25 @@ void ZomboidScene::layerChanged(int index)
 
     Layer *layer = mMapDocument->map()->layerAt(index);
 	if (TileLayer *tl = layer->asTileLayer()) {
-		foreach (ZTileLayerGroupItem *layerGroupItem, mTileLayerGroupItems) {
-			if (layerGroupItem->ownsTileLayer(tl)) {
-				// Set the group item's opacity whenever the opacity of any owned layer changes
-				if (layer->opacity() != layerGroupItem->opacity()) {
-					layerGroupItem->setOpacity(layer->opacity());
-					// Set the opacity of all the other layers in this group so the opacity slider
-					// reflects the change when a new layer is selected.
-					changingOpacity = true; // HACK - prevent recursion (see note above)
-					foreach (TileLayer *tileLayer, layerGroupItem->getTileLayerGroup()->mLayers) {
-						if (tileLayer != tl)
-							tileLayer->setOpacity(layer->opacity()); // FIXME: should I do what LayerDock::setLayerOpacity does (which will be recursive)?
-					}
-					changingOpacity = false;
+		if (tl->group() && mTileLayerGroupItems.contains(tl->level())) {
+			ZTileLayerGroupItem *layerGroupItem = mTileLayerGroupItems[tl->level()];
+			// Set the group item's opacity whenever the opacity of any owned layer changes
+			if (layer->opacity() != layerGroupItem->opacity()) {
+				layerGroupItem->setOpacity(layer->opacity());
+				// Set the opacity of all the other layers in this group so the opacity slider
+				// reflects the change when a new layer is selected.
+				changingOpacity = true; // HACK - prevent recursion (see note above)
+				foreach (TileLayer *tileLayer, layerGroupItem->getTileLayerGroup()->mLayers) {
+					if (tileLayer != tl)
+						tileLayer->setOpacity(layer->opacity()); // FIXME: should I do what LayerDock::setLayerOpacity does (which will be recursive)?
 				}
-				// Redraw
-				layerGroupItem->tileLayerChanged(tl);
-				break;
+				changingOpacity = false;
 			}
+			// Redraw
+			layerGroupItem->tileLayerChanged(tl);
 		}
 	}
-#else
+#if 0
     const Layer *layer = mMapDocument->map()->layerAt(index);
     QGraphicsItem *layerItem = mLayerItems.at(index);
 
@@ -396,73 +400,125 @@ void ZomboidScene::layerChanged(int index)
 void ZomboidScene::layerRenamed(int index)
 {
     Layer *layer = mMapDocument->map()->layerAt(index);
-	if (TileLayer *tl = layer->asTileLayer()) {
-		uint group;
-		bool hasGroup = groupForTileLayer(tl, &group);
-		ZTileLayerGroupItem *oldOwner = 0, *newOwner = 0;
+	int oldLevel = layer->level();
+	int newLevel;
+	bool hasGroup = levelForLayer(layer, &newLevel);
 
-		// Find the old TileLayerGroup owner
-		foreach (ZTileLayerGroupItem *layerGroup, mTileLayerGroupItems) {
-			if (layerGroup->ownsTileLayer(tl)) {
-				oldOwner = layerGroup;
-				break;
-			}
+	if (oldLevel != newLevel) {
+		layerLevelAboutToChange(index, newLevel);
+		layer->setLevel(newLevel);
+		layerLevelChanged(index, oldLevel);
+	}
+}
+
+void ZomboidScene::layerGroupAboutToChange(TileLayer *tl, ZTileLayerGroup *newGroup)
+{
+}
+
+void ZomboidScene::layerGroupChanged(TileLayer *tl, ZTileLayerGroup *oldGroup)
+{
+	ZTileLayerGroup *newGroup = tl->group();
+
+	int oldLevel = oldGroup ? oldGroup->level() : 0;
+	int newLevel = newGroup ? newGroup->level() : 0;
+
+	ZTileLayerGroupItem *oldOwner = 0, *newOwner = 0;
+
+	// Find the old TileLayerGroupItem owner
+	if (oldGroup && mTileLayerGroupItems.contains(oldLevel))
+		oldOwner = mTileLayerGroupItems[oldLevel];
+
+	// Find (or create) the new TileLayerGroupItem owner
+	if (newGroup) {
+		if (!mTileLayerGroupItems.contains(newLevel)) {
+			mTileLayerGroupItems[newLevel] = new ZTileLayerGroupItem(newGroup, mMapDocument->renderer());
+			addItem(mTileLayerGroupItems[newLevel]);
 		}
+		newOwner = mTileLayerGroupItems[newLevel];
+	}
 
-		int oldMaxLevel = mMapDocument->map()->maxLevel();
+	if (oldOwner) {
+		oldOwner->syncWithTileLayers();
+	}
+	if (newOwner) {
+		tl->setOpacity(newOwner->opacity()); // FIXME: need to update the LayerDock slider
+		newOwner->syncWithTileLayers();
+	}
 
-		// Find (or create) the new TileLayerGroup owner
-		if (hasGroup && mTileLayerGroupItems[group] == 0) {
-			ZTileLayerGroup *layerGroup = new ZomboidTileLayerGroup(this, group);
-			mTileLayerGroupItems[group] = new ZTileLayerGroupItem(layerGroup, mMapDocument->renderer());
-			addItem(mTileLayerGroupItems[group]);
+	// If a TileLayerGroup owns a layer, then a DummyGraphicsItem is created which is
+	// managed by the base class.
+	// If no TileLayerGroup owns a layer, then a TileLayerItem is created which is
+	// managed by the base class (MapScene) See createLayerItem().
+	int index = mMapDocument->map()->layers().indexOf(tl);
+	if (oldOwner && !newOwner) {
+		delete mLayerItems[index]; // DummyGraphicsItem
+		mLayerItems[index] = new TileLayerItem(tl, mMapDocument->renderer());
+		mLayerItems[index]->setVisible(tl->isVisible());
+		mLayerItems[index]->setOpacity(tl->opacity());
+		addItem(mLayerItems[index]);
+	}
+	if (!oldOwner && newOwner) {
+		delete mLayerItems[index]; // TileLayerItem
+		mLayerItems[index] = new DummyGraphicsItem();
+		mLayerItems[index]->setVisible(tl->isVisible());
+		addItem(mLayerItems[index]);
+	}
+
+	setGraphicsSceneZOrder();
+}
+
+void ZomboidScene::layerLevelAboutToChange(int index, int newLevel)
+{
+}
+
+void ZomboidScene::layerLevelChanged(int index, int oldLevel)
+{
+    Layer *layer = mMapDocument->map()->layerAt(index);
+
+	int newLevel;
+	bool hasGroup = levelForLayer(layer, &newLevel);
+	Q_ASSERT(newLevel == layer->level());
+
+	// Setting a new maxLevel() for a map resizes the scene, requiring all existing items to be repositioned.
+	if (newLevel > mMapDocument->map()->maxLevel()) {
+		mMapDocument->map()->setMaxLevel(newLevel);
+		mapChanged();
+	}
+
+	if (TileLayer *tl = layer->asTileLayer()) {
+		ZTileLayerGroup *oldGroup = tl->group(), *newGroup = 0;
+
+		if (hasGroup && mTileLayerGroups[newLevel] == 0) {
+			mTileLayerGroups[newLevel] = new ZomboidTileLayerGroup(this, newLevel);
 		}
 		if (hasGroup)
-			newOwner = mTileLayerGroupItems[group];
+			newGroup = mTileLayerGroups[newLevel];
 
-		// Handle rename changing ownership
-		if (oldOwner != newOwner) {
-			if (oldOwner) {
-				oldOwner->tileLayerChanged(tl); // redraw needed?
-				oldOwner->removeTileLayer(tl);
+		if (oldGroup != newGroup) {
+			layerGroupAboutToChange(tl, newGroup);
+			if (oldGroup) {
+				oldGroup->removeTileLayer(tl);
 			}
-			if (newOwner) {
-				layer->setOpacity(newOwner->opacity()); // FIXME: need to update the LayerDock slider
-				newOwner->addTileLayer(tl, index);
+			if (newGroup) {
+				newGroup->addTileLayer(tl, index);
 			}
+			layerGroupChanged(tl, oldGroup);
+		}
 
-			// If a TileLayerGroup owns a layer, then a DummyGraphicsItem is created which is
-			// managed by the base class.
-			// If no TileLayerGroup owns a layer, then a TileLayerItem is created which is
-			// managed by the base class (MapScene) See createLayerItem().
-			if (oldOwner && !newOwner) {
-				delete mLayerItems[index]; // DummyGraphicsItem
-				mLayerItems[index] = new TileLayerItem(tl, mMapDocument->renderer());
-				mLayerItems[index]->setVisible(layer->isVisible());
-				mLayerItems[index]->setOpacity(layer->opacity());
-				addItem(mLayerItems[index]);
-			}
-			if (!oldOwner && newOwner) {
-				delete mLayerItems[index]; // TileLayerItem
-				mLayerItems[index] = new DummyGraphicsItem();
-				mLayerItems[index]->setVisible(layer->isVisible());
-				addItem(mLayerItems[index]);
-			}
-
-			// Creating a new ZomboidTileLayerGroup might update Map::maxLevel() in which case
-			// we must update the bounding rectangles of ZTileLayerGroupItems and the QGraphicsScene.
-			// FIXME: bit worried about calling this here.
-			if (oldMaxLevel != mMapDocument->map()->maxLevel())
-				mapChanged();/*mMapDocument->emitMapChanged() not hooked up when refreshScene() is called */
-
-			setGraphicsSceneZOrder();
+	} else {
+		// Renaming an ObjectGroup or ImageLayer
+		if (ObjectGroup *og = layer->asObjectGroup()) {
+			foreach (MapObject *mapObject, og->objects())
+				mObjectItems[mapObject]->syncWithMapObject();
+			// An ObjectGroup with no items which changes level will not cause any redrawing.
+			// However, the grid may need to be redrawn.
+			if (isGridVisible() && !og->objectCount())
+				update();
+		} else {
+			// ImageLayer
+			mLayerItems[index]->update();
 		}
 	}
-#if 0
-    int z = 0;
-    foreach (QGraphicsItem *item, mLayerItems)
-        item->setZValue(z++);
-#endif
 }
 
 int ZomboidScene::levelZOrder(int level)
@@ -481,10 +537,9 @@ void ZomboidScene::setGraphicsSceneZOrder()
 	int layerIndex = 0;
 	foreach (Layer *layer, mMapDocument->map()->layers()) {
 		if (TileLayer *tl = layer->asTileLayer()) {
-			uint group;
-			bool hasGroup = groupForTileLayer(tl, &group);
-			if (hasGroup) {
-				previousLevelItem = mTileLayerGroupItems[group];
+			int level = tl->level();
+			if (tl->group() && mTileLayerGroupItems.contains(level)) {
+				previousLevelItem = mTileLayerGroupItems[level];
 				++layerIndex;
 				continue;
 			}

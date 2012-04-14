@@ -90,6 +90,7 @@ ZLot::ZLot(Map *map)
 					mLevelToTileLayers[level] = new ZLotTileLayerGroup(level);
 				ZLotTileLayerGroup *layerGroup = mLevelToTileLayers[level];
 				layerGroup->addTileLayer(tl, index);
+				tl->setLevel(level);
 				layerGroup->mBounds |= layerGroup->_bounds();
 				maxMargins(layerGroup->mMargins, layerGroup->_drawMargins(), layerGroup->mMargins);
 				++index;

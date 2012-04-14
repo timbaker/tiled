@@ -106,13 +106,20 @@ private slots:
 	void onLotRemoved(ZLot *lot, MapObject *mapObject);
 	void onLotUpdated(ZLot *lot, MapObject *mapObject);
 protected:
-    virtual QGraphicsItem *createLayerItem(Layer *layer);
+	void layerGroupAboutToChange(TileLayer *tl, ZTileLayerGroup *newGroup);
+	void layerGroupChanged(TileLayer *tl, ZTileLayerGroup *oldGroup);
+
+	void layerLevelAboutToChange(int index, int newLevel);
+	void layerLevelChanged(int index, int oldLevel);
+ 
+	virtual QGraphicsItem *createLayerItem(Layer *layer);
 	virtual void updateCurrentLayerHighlight();
-	bool groupForTileLayer(TileLayer *tl, uint *group);
+	bool levelForLayer(Layer *layer, int *level = 0);
 
 	void setGraphicsSceneZOrder();
 	int levelZOrder(int level);
 private:
+	QMap<int,ZTileLayerGroup*> mTileLayerGroups;
 	QMap<int,ZTileLayerGroupItem*> mTileLayerGroupItems;
 	ZLotManager mLotManager;
 };
