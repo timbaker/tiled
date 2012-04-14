@@ -619,6 +619,10 @@ void ZomboidScene::onLotAdded(ZLot *lot, MapObject *mapObject)
 
 void ZomboidScene::onLotRemoved(ZLot *lot, MapObject *mapObject)
 {
+	MapObjectItem *item = itemForObject(mapObject);
+	if (item) {
+		item->setDrawMargins(QMargins());
+	}
 	mLotMapObjects.removeOne(mapObject);
 	mMapObjectToLot.remove(mapObject);
 }
