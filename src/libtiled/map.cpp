@@ -70,11 +70,19 @@ void Map::adjustDrawMargins(const QMargins &margins)
     // The TileLayer includes the maximum tile size in its draw margins. So
     // we need to subtract the tile size of the map, since that part does not
     // contribute to additional margin.
+#ifdef ZOMBOID
+    mDrawMargins = maxMargins(QMargins(margins.left(),
+                                       qMax(0, margins.top() - mTileHeight),
+                                       qMax(0, margins.right() - mTileWidth),
+                                       margins.bottom()),
+                              mDrawMargins);
+#else
     mDrawMargins = maxMargins(QMargins(margins.left(),
                                        margins.top() - mTileHeight,
                                        margins.right() - mTileWidth,
                                        margins.bottom()),
                               mDrawMargins);
+#endif
 }
 
 int Map::layerCount(Layer::Type type) const
