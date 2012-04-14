@@ -575,6 +575,19 @@ void ZomboidScene::onLotAdded(ZLot *lot, MapObject *mapObject)
 	// Resize the map object to the size of the lot's map, and snap-to-grid
 	MapObjectItem *item = itemForObject(mapObject); // FIXME: assumes createLayerItem() was called before this
 	if (item) {
+		QRect mapBounds(0, 0, lot->map()->width(), lot->map()->height());
+		QRectF levelBoundsBottom = mMapDocument->renderer()->boundingRect(mapBounds);
+		const ZTileLayerGroup *lotGrp = lot->tileLayersForLevel(lot->map()->maxLevel());
+		QRectF levelBoundsTop = mMapDocument->renderer()->boundingRect(mapBounds, lotGrp->mLayers[0]);
+		QRectF lotBounds = levelBoundsBottom | levelBoundsTop;
+		QMargins lotMargins = lot->map()->drawMargins();
+		lotBounds.adjust(-lotMargins.left(), -lotMargins.top(), lotMargins.right(), lotMargins.bottom());
+		QRectF mapObjectBounds = levelBoundsBottom;
+		item->setDrawMargins(QMargins(mapObjectBounds.left() - lotBounds.left(),
+			mapObjectBounds.top() - lotBounds.top(),
+			lotBounds.right() - mapObjectBounds.right(),
+			lotBounds.bottom() - mapObjectBounds.bottom()));
+
 		mapObject->setPosition(mapObject->position().toPoint());
 		item->resize(QSizeF(lot->map()->size()));
 	}

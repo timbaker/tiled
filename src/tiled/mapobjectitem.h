@@ -24,6 +24,9 @@
 
 #include <QCoreApplication>
 #include <QGraphicsItem>
+#ifdef ZOMBOID
+#include <QMargins>
+#endif
 
 namespace Tiled {
 
@@ -90,6 +93,11 @@ public:
      */
     void setPolygon(const QPolygonF &polygon);
 
+#ifdef ZOMBOID
+	void setDrawMargins(const QMargins &drawMargins);
+	QMargins drawMargins() const { return mDrawMargins; }
+#endif
+
     /**
      * A helper function to determine the color of a map object. The color is
      * determined first of all by the object type, and otherwise by the group
@@ -113,6 +121,9 @@ private:
     bool mIsEditable;
     bool mSyncing;
     ResizeHandle *mResizeHandle;
+#ifdef ZOMBOID
+	QMargins mDrawMargins;
+#endif
 
     friend class Handle;
     friend class PointHandle;

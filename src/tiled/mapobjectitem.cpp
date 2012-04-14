@@ -215,6 +215,10 @@ void MapObjectItem::syncWithMapObject()
     QRectF bounds = renderer->boundingRect(mObject);
     bounds.translate(-pixelPos);
 
+#ifdef ZOMBOID
+	bounds.adjust(-mDrawMargins.left(), -mDrawMargins.top(), mDrawMargins.right(), mDrawMargins.bottom());
+#endif
+
     setPos(pixelPos);
     setZValue(pixelPos.y());
 
@@ -231,6 +235,14 @@ void MapObjectItem::syncWithMapObject()
 
     mSyncing = false;
 }
+
+#ifdef ZOMBOID
+// This is to accomodate Lot maps, should create a LotItem class
+void MapObjectItem::setDrawMargins(const QMargins &drawMargins)
+{
+	mDrawMargins = drawMargins;
+}
+#endif
 
 void MapObjectItem::setEditable(bool editable)
 {
