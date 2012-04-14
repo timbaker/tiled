@@ -258,12 +258,18 @@ void ZomboidScene::updateCurrentLayerHighlight()
     if (!mMapDocument)
         return;
 
-    const Layer *currentLayer = mMapDocument->currentLayer();
+    Layer *currentLayer = mMapDocument->currentLayer();
 
     if (!mHighlightCurrentLayer || !currentLayer) {
         mDarkRectangle->setVisible(false);
 
-        // Restore opacity for all levels
+        // Restore opacity for all non-ZTileLayerGroupItem layers
+        for (int i = 0; i < mLayerItems.size(); ++i) {
+            const Layer *layer = mMapDocument->map()->layerAt(i);
+            mLayerItems.at(i)->setOpacity(layer->opacity());
+        }
+
+        // Restore opacity for all ZTileLayerGroupItem layers
         foreach (ZTileLayerGroupItem *item, mTileLayerGroupItems) {
 			if (item->getTileLayerGroup()->mLayers.isEmpty())
 				continue;
@@ -274,25 +280,32 @@ void ZomboidScene::updateCurrentLayerHighlight()
         return;
     }
 
-    // Set levels above the current level to half opacity
-	ZTileLayerGroup *currentLevelGroup = 0;
+	QGraphicsItem *currentItem = mLayerItems[mMapDocument->currentLayerIndex()];
+	if (currentLayer->asTileLayer() && currentLayer->asTileLayer()->group()) {
+		Q_ASSERT(mTileLayerGroupItems.contains(currentLayer->level()));
+		if (mTileLayerGroupItems.contains(currentLayer->level()))
+			currentItem = mTileLayerGroupItems[currentLayer->level()];
+	}
+
+    // Set items above the current item to 40% opacity
 	const qreal opacityFactor = 0.4;
+	int index = 0;
+	foreach (QGraphicsItem *item, mLayerItems) {
+		const qreal multiplier = (item->zValue() > currentItem->zValue()) ? opacityFactor : 1;
+		Layer *layer = mMapDocument->map()->layerAt(index);
+		item->setOpacity(layer->opacity() * multiplier);
+		++index;
+	}
     foreach (ZTileLayerGroupItem *item, mTileLayerGroupItems) {
 		if (item->getTileLayerGroup()->mLayers.isEmpty())
 			continue;
+		const qreal multiplier = (item->zValue() > currentItem->zValue()) ? opacityFactor : 1;
 		const Layer *layer = item->getTileLayerGroup()->mLayers.first();
-		const int index = item->getTileLayerGroup()->mIndices.first();
-        const qreal multiplier = (currentLayer->level() < layer->level()) ? opacityFactor : 1;
         item->setOpacity(layer->opacity() * multiplier);
-		if (layer->level() == currentLayer->level())
-			currentLevelGroup = item->getTileLayerGroup();
-    }
+	}
 
     // Darken layers below the current layer
-	if (currentLevelGroup)
-		mDarkRectangle->setZValue(levelZOrder(currentLevelGroup->level()) - 0.5);
-	else
-		mDarkRectangle->setZValue(0 - 0.5); // ObjectGroup or not-in-a-level TileLayer
+	mDarkRectangle->setZValue(currentItem->zValue() - 0.5);
     mDarkRectangle->setVisible(true);
 }
 
