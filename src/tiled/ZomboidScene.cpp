@@ -421,9 +421,14 @@ void ZomboidScene::layerRenamed(int index)
     Layer *layer = mMapDocument->map()->layerAt(index);
 	int oldLevel = layer->level();
 	int newLevel;
+	bool hadGroup = false;
 	bool hasGroup = levelForLayer(layer, &newLevel);
 
-	if (oldLevel != newLevel) {
+	if (TileLayer *tl = layer->asTileLayer()) {
+		hadGroup = tl->group() != 0;
+	}
+
+	if ((oldLevel != newLevel) || (hadGroup != hasGroup)) {
 		layerLevelAboutToChange(index, newLevel);
 		layer->setLevel(newLevel);
 		layerLevelChanged(index, oldLevel);
