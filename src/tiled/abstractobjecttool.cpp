@@ -101,10 +101,21 @@ ObjectGroup *AbstractObjectTool::currentObjectGroup() const
 
 MapObjectItem *AbstractObjectTool::topMostObjectItemAt(QPointF pos) const
 {
-    foreach (QGraphicsItem *item, mMapScene->items(pos)) {
+#ifdef ZOMBOID
+	// Significant change: Only objects in the current object layer may be selected.
+	ObjectGroup *og = currentObjectGroup();
+	foreach (QGraphicsItem *item, mMapScene->items(pos)) {
+        if (MapObjectItem *objectItem = dynamic_cast<MapObjectItem*>(item)) {
+			if (objectItem->mapObject()->objectGroup() == og)
+				return objectItem;
+		}
+    }
+#else
+	foreach (QGraphicsItem *item, mMapScene->items(pos)) {
         if (MapObjectItem *objectItem = dynamic_cast<MapObjectItem*>(item))
             return objectItem;
     }
+#endif
     return 0;
 }
 

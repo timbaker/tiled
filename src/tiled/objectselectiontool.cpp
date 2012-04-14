@@ -166,8 +166,12 @@ void ObjectSelectionTool::updateSelection(const QPointF &pos,
 
     foreach (QGraphicsItem *item, mapScene()->items(rect)) {
         MapObjectItem *mapObjectItem = dynamic_cast<MapObjectItem*>(item);
+#ifdef ZOMBOID
+		if (mapObjectItem && (mapObjectItem->mapObject()->objectGroup() == currentObjectGroup()))
+#else
         if (mapObjectItem)
-            selectedItems.insert(mapObjectItem);
+#endif
+			selectedItems.insert(mapObjectItem);
     }
 
     const QSet<MapObjectItem*> oldSelection = mapScene()->selectedObjectItems();
@@ -244,6 +248,7 @@ void ObjectSelectionTool::updateMovingItems(const QPointF &pos,
 
     int i = 0;
     foreach (MapObjectItem *objectItem, mMovingItems) {
+		Q_ASSERT(objectItem->mapObject()->objectGroup() == layer);
         const QPointF newPixelPos = mOldObjectItemPositions.at(i) + diff;
         const QPointF newPos = renderer->pixelToTileCoords(newPixelPos, layer);
         objectItem->setPos(newPixelPos);

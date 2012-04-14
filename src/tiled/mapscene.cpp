@@ -319,6 +319,9 @@ void MapScene::currentLayerIndexChanged()
 		&& mMapDocument && mMapDocument->renderer()
 		&& (mMapDocument->map()->orientation() == Map::LevelIsometric))
 		update();
+
+	// Don't allow objects on different object layers to be selected at the same time.
+	setSelectedObjectItems(QSet<MapObjectItem*>());
 #endif
 }
 
