@@ -29,6 +29,9 @@
 #include "mapobjectitem.h"
 #include "maprenderer.h"
 #include "mapscene.h"
+#ifdef ZOMBOID
+#include "objectgroup.h"
+#endif
 #include "preferences.h"
 #include "rangeset.h"
 #include "selectionrectangle.h"
@@ -388,8 +391,13 @@ void EditPolygonTool::updateHandles()
         // Update the position of all handles
         for (int i = 0; i < pointHandles.size(); ++i) {
             const QPointF &point = polygon.at(i);
+#ifdef ZOMBOID
+			Layer *layer = pointHandles[i]->mapObject()->objectGroup();
+			const QPointF handlePos = renderer->tileToPixelCoords(point, layer);
+#else
             const QPointF handlePos = renderer->tileToPixelCoords(point);
-            pointHandles.at(i)->setPos(handlePos);
+#endif
+			pointHandles.at(i)->setPos(handlePos);
         }
 
         mHandles.insert(item, pointHandles);
@@ -499,6 +507,28 @@ void EditPolygonTool::updateMovingItems(const QPointF &pos,
     if (modifiers & Qt::ControlModifier)
         snapToGrid = !snapToGrid;
 
+#ifdef ZOMBOID
+    int i = 0;
+    foreach (PointHandle *handle, mSelectedHandles) {
+		Layer *layer = handle->mapObject()->objectGroup();
+		QPointF diff = pos - mStart;
+		if (snapToGrid) {
+			const QPointF alignPixelPos =
+				renderer->tileToPixelCoords(mAlignPosition, layer);
+			const QPointF newAlignPixelPos = alignPixelPos + diff;
+
+			// Snap the position to the grid
+			const QPointF newTileCoords =
+					renderer->pixelToTileCoords(newAlignPixelPos, layer).toPoint();
+			diff = renderer->tileToPixelCoords(newTileCoords, layer) - alignPixelPos;
+		}
+        const QPointF newPixelPos = mOldHandlePositions.at(i) + diff;
+        const QPointF newPos = renderer->pixelToTileCoords(newPixelPos, layer);
+        handle->setPos(newPixelPos);
+        handle->setPointPosition(newPos);
+        ++i;
+    }
+#else
     if (snapToGrid) {
         const QPointF alignPixelPos =
                 renderer->tileToPixelCoords(mAlignPosition);
@@ -518,6 +548,7 @@ void EditPolygonTool::updateMovingItems(const QPointF &pos,
         handle->setPointPosition(newPos);
         ++i;
     }
+#endif
 }
 
 void EditPolygonTool::finishMoving(const QPointF &pos)
