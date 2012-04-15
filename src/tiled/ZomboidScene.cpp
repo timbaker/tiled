@@ -528,15 +528,19 @@ void ZomboidScene::layerLevelChanged(int index, int oldLevel)
 		if (ObjectGroup *og = layer->asObjectGroup()) {
 			foreach (MapObject *mapObject, og->objects())
 				mObjectItems[mapObject]->syncWithMapObject();
+#if 0
 			// An ObjectGroup with no items which changes level will not cause any redrawing.
 			// However, the grid may need to be redrawn.
 			if (isGridVisible() && !og->objectCount())
 				update();
+#endif
 		} else {
 			// ImageLayer
 			mLayerItems[index]->update();
 		}
 	}
+
+	mGridItem->currentLayerIndexChanged(); // index didn't change, just updating the bounds
 }
 
 int ZomboidScene::levelZOrder(int level)

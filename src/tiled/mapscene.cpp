@@ -39,6 +39,9 @@
 #include "imagelayeritem.h"
 #include "toolmanager.h"
 #include "tilesetmanager.h"
+#ifdef ZOMBOID
+#include "zgriditem.hpp"
+#endif
 
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
@@ -61,7 +64,10 @@ MapScene::MapScene(QObject *parent):
     mGridVisible(true),
     mUnderMouse(false),
     mCurrentModifiers(Qt::NoModifier),
-    mDarkRectangle(new QGraphicsRectItem)
+#ifdef ZOMBOID
+	mGridItem(new ZGridItem),
+#endif
+	mDarkRectangle(new QGraphicsRectItem)
 {
     setBackgroundBrush(Qt::darkGray);
 
@@ -78,6 +84,10 @@ MapScene::MapScene(QObject *parent):
     mDarkRectangle->setBrush(Qt::black);
     mDarkRectangle->setOpacity(darkeningFactor);
     addItem(mDarkRectangle);
+
+#ifdef ZOMBOID
+	addItem(mGridItem);
+#endif
 
     mHighlightCurrentLayer = prefs->highlightCurrentLayer();
 
@@ -97,6 +107,9 @@ void MapScene::setMapDocument(MapDocument *mapDocument)
         mMapDocument->disconnect(this);
 
     mMapDocument = mapDocument;
+#ifdef ZOMBOID
+	mGridItem->setMapDocument(mapDocument);
+#endif
 
     refreshScene();
 
@@ -157,9 +170,16 @@ void MapScene::refreshScene()
     mLayerItems.clear();
     mObjectItems.clear();
 
+#ifdef ZOMBOID
+	removeItem(mGridItem);
+#endif
     removeItem(mDarkRectangle);
     clear();
     addItem(mDarkRectangle);
+#ifdef ZOMBOID
+	addItem(mGridItem);
+	mGridItem->setZValue(20000);
+#endif
 
     if (!mMapDocument) {
         setSceneRect(QRectF());
@@ -315,10 +335,15 @@ void MapScene::currentLayerIndexChanged()
 {
     updateCurrentLayerHighlight();
 #ifdef ZOMBOID
+#if 1
+	// LevelIsometric orientation may move the grid
+	mGridItem->currentLayerIndexChanged();
+#else
 	if (isGridVisible()
 		&& mMapDocument && mMapDocument->renderer()
 		&& (mMapDocument->map()->orientation() == Map::LevelIsometric))
 		update();
+#endif
 #endif
 }
 
@@ -336,6 +361,7 @@ void MapScene::mapChanged()
 		margins.top() + mapSize.height() + margins.bottom());
     setSceneRect(sceneRect);
     mDarkRectangle->setRect(sceneRect);
+	mGridItem->currentLayerIndexChanged(); // index didn't change, just updating the bounds
 #else
     setSceneRect(0, 0, mapSize.width(), mapSize.height());
     mDarkRectangle->setRect(0, 0, mapSize.width(), mapSize.height());
@@ -484,8 +510,13 @@ void MapScene::setGridVisible(bool visible)
     if (mGridVisible == visible)
         return;
 
+#ifdef ZOMBOID
+    mGridVisible = visible;
+	mGridItem->setVisible(mGridVisible);
+#else
     mGridVisible = visible;
     update();
+#endif
 }
 
 void MapScene::setHighlightCurrentLayer(bool highlightCurrentLayer)
@@ -503,7 +534,7 @@ void MapScene::drawForeground(QPainter *painter, const QRectF &rect)
         return;
 
 #ifdef ZOMBOID
-	mMapDocument->renderer()->drawGrid(painter, rect, mMapDocument->currentLayer());
+//	mMapDocument->renderer()->drawGrid(painter, rect, mMapDocument->currentLayer());
 #else
     mMapDocument->renderer()->drawGrid(painter, rect);
 #endif

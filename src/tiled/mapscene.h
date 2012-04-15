@@ -41,6 +41,9 @@ class MapDocument;
 class MapObjectItem;
 class MapScene;
 class ObjectGroupItem;
+#ifdef ZOMBOID
+class ZGridItem;
+#endif
 
 /**
  * A graphics scene that represents the contents of a map.
@@ -215,6 +218,9 @@ private:
     QPointF mLastMousePos;
     QVector<QGraphicsItem*> mLayerItems;
     QGraphicsRectItem *mDarkRectangle;
+#ifdef ZOMBOID
+	ZGridItem *mGridItem;
+#endif
 
     typedef QMap<MapObject*, MapObjectItem*> ObjectItems;
     ObjectItems mObjectItems;
