@@ -61,6 +61,10 @@ void ZLotManager::setMapDocument(MapDocument *mapDoc)
 		}
 		mMapDocument = mapDoc;
 		if (mMapDocument) {
+			connect(mapDocument(), SIGNAL(layerAdded(int)),
+					this, SLOT(onLayerAdded(int)));
+			connect(mapDocument(), SIGNAL(layerAboutToBeRemoved(int)),
+					this, SLOT(onLayerAboutToBeRemoved(int)));
 			connect(mapDocument(), SIGNAL(objectsAdded(QList<MapObject*>)),
 					this, SLOT(onObjectsAdded(QList<MapObject*>)));
 			connect(mapDocument(), SIGNAL(objectsChanged(QList<MapObject*>)),
@@ -163,6 +167,24 @@ void ZLotManager::onLotDirectoryChanged()
 	}
 
 	ZProgressManager::instance()->end();
+}
+
+void ZLotManager::onLayerAdded(int index)
+{
+	Layer *layer = mapDocument()->map()->layerAt(index);
+	// Moving a layer first removes it, then adds it again
+	if (ObjectGroup *og = layer->asObjectGroup()) {
+		onObjectsAdded(og->objects());
+	}
+}
+
+void ZLotManager::onLayerAboutToBeRemoved(int index)
+{
+	Layer *layer = mapDocument()->map()->layerAt(index);
+	// Moving a layer first removes it, then adds it again
+	if (ObjectGroup *og = layer->asObjectGroup()) {
+		onObjectsRemoved(og->objects());
+	}
 }
 
 void ZLotManager::onObjectsAdded(const QList<MapObject*> &objects)

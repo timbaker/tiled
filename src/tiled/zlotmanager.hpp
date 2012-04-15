@@ -53,6 +53,10 @@ signals:
 
 private slots:
 	void onLotDirectoryChanged();
+
+	void onLayerAdded(int index);
+	void onLayerAboutToBeRemoved(int index);
+
 	void onObjectsAdded(const QList<MapObject*> &objects);
 	void onObjectsChanged(const QList<MapObject*> &objects);
 	void onObjectsRemoved(const QList<MapObject*> &objects);
