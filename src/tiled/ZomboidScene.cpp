@@ -22,6 +22,7 @@
 #include "mapobject.h"
 #include "mapobjectitem.h"
 #include "maprenderer.h"
+#include "zgriditem.hpp"
 #include "objectgroup.h"
 #include "tilelayer.h"
 #include "tilelayeritem.h"
@@ -355,6 +356,8 @@ void ZomboidScene::layerAboutToBeRemoved(int index)
 			tl->setLevel(0); // otherwise it can't be cleared
 		}
 	}
+
+	MapScene::layerAboutToBeRemoved(index);
 }
 
 void ZomboidScene::layerRemoved(int index)

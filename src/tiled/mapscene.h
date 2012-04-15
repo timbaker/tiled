@@ -177,7 +177,7 @@ private slots:
 
 #ifdef ZOMBOID
     virtual void layerAdded(int index);
-	virtual void layerAboutToBeRemoved(int index) {};
+	virtual void layerAboutToBeRemoved(int index);
     virtual void layerRemoved(int index);
     virtual void layerChanged(int index);
     virtual void layerRenamed(int index);

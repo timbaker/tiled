@@ -370,7 +370,12 @@ void MapScene::mapChanged()
     foreach (QGraphicsItem *item, mLayerItems) {
         if (TileLayerItem *tli = dynamic_cast<TileLayerItem*>(item))
             tli->syncWithTileLayer();
-    }
+	}
+#ifdef ZOMBOID
+		// BUG: create object layer, add items, resize map much larger, try to select the objects
+	foreach (MapObjectItem *item, mObjectItems)
+		item->syncWithMapObject();
+#endif
 }
 
 void MapScene::tilesetChanged(Tileset *tileset)
@@ -393,6 +398,18 @@ void MapScene::layerAdded(int index)
     foreach (QGraphicsItem *item, mLayerItems)
         item->setZValue(z++);
 }
+
+#ifdef ZOMBOID
+void MapScene::layerAboutToBeRemoved(int index)
+{
+    Layer *layer = mMapDocument->map()->layerAt(index);
+	if (ObjectGroup *og = layer->asObjectGroup()) {
+		foreach (MapObject *o, og->objects()) {
+			mObjectItems.remove(o);
+		}
+	}			
+}
+#endif
 
 void MapScene::layerRemoved(int index)
 {
