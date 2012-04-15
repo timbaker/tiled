@@ -59,20 +59,14 @@ void ZomboidTileLayerGroup::prepareDrawing(const MapRenderer *renderer, const QR
 			continue;
 		QPoint mapObjectPos = mapObject->position().toPoint();
 		ZLot *lot = mMapScene->mMapObjectToLot[mapObject];
-		const ZTileLayerGroup *layerGroup = lot->tileLayersForLevel(mLevel);
+		int levelOffset = mapObject->objectGroup()->level();
+		const ZTileLayerGroup *layerGroup = lot->tileLayersForLevel(mLevel - levelOffset);
 		if (layerGroup) {
-#if 0
-			QRectF bounds = mMapScene->itemForObject(mapObject)->boundingRect();
-			bounds.translate(renderer->tileToPixelCoords(mapObject->position(), mapObject->objectGroup()));
-#else
 			QRect r = layerGroup->bounds().translated(mapObjectPos);
 			QMargins m = layerGroup->drawMargins();
-			Layer *layer = layerGroup->mLayers.isEmpty() ? 0 : layerGroup->mLayers.first();
-//			if (layer) layer->setLevel(0);
+			Layer *layer = /*mapObject->objectGroup();*/ layerGroup->mLayers.isEmpty() ? 0 : layerGroup->mLayers.first();
 			QRectF bounds = renderer->boundingRect(r, layer);
-//			if (layer) layer->setLevel(layerGroup->level());
 			bounds.adjust(-m.left(), -m.top(), m.right(), m.bottom());
-#endif
 			if ((bounds & rect).isValid()) {
 				// Set the visibility of lot map layers to match this layer-group's layers.
 				// NOTE: This works best when the lot map layers match the current map layers in number and order.
