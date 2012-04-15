@@ -66,21 +66,25 @@ void ZomboidTileLayerGroup::prepareDrawing(const MapRenderer *renderer, const QR
 			QRect r = layerGroup->bounds().translated(mapObjectPos);
 			QMargins m = layerGroup->drawMargins();
 			Layer *layer = /*mapObject->objectGroup();*/ layerGroup->mLayers.isEmpty() ? 0 : layerGroup->mLayers.first();
+			if (layer) layer->setLevel(layer->level() + levelOffset);
 			QRectF bounds = renderer->boundingRect(r, layer);
+			if (layer) layer->setLevel(layerGroup->level());
 			bounds.adjust(-m.left(), -m.top(), m.right(), m.bottom());
 			if ((bounds & rect).isValid()) {
 				// Set the visibility of lot map layers to match this layer-group's layers.
 				// NOTE: This works best when the lot map layers match the current map layers in number and order.
-				bool visible = false;
+				bool visible = false, anyVisible = false;
 				int n = 0;
 				foreach (TileLayer *layer, layerGroup->mLayers) {
 					if (n >= mLayers.count())
 						layer->setVisible(visible);
 					else
 						layer->setVisible(visible = mLayers[n]->isVisible());
+					anyVisible |= visible;
 					++n;
 				}
-				mPreparedLotLayers.append(LotLayers(mapObjectPos, layerGroup));
+				if (anyVisible)
+					mPreparedLotLayers.append(LotLayers(mapObject, layerGroup));
 			}
 		}
 	}
@@ -107,7 +111,7 @@ bool ZomboidTileLayerGroup::orderedCellsAt(const QPoint &point, QVector<const Ce
 	// Overwrite map cells with .lot cells at this location
 #if 1
 	foreach (const LotLayers& lotLayer, mPreparedLotLayers) {
-		lotLayer.mLayerGroup->orderedCellsAt(point - lotLayer.mMapObjectPos, cells);
+		lotLayer.mLayerGroup->orderedCellsAt(point - lotLayer.mMapObject->position().toPoint(), cells);
 	}
 #else
 	foreach (MapObject *mapObject, mMapScene->mLotMapObjects) {
@@ -129,7 +133,8 @@ QRect ZomboidTileLayerGroup::bounds() const
 	foreach (MapObject *mapObject, mMapScene->mLotMapObjects) {
 		ZLot *lot = mMapScene->mMapObjectToLot[mapObject];
 		QPoint mapObjectPos = mapObject->position().toPoint();
-		const ZTileLayerGroup *layerGroup = lot->tileLayersForLevel(mLevel);
+		int levelOffset = mapObject->objectGroup()->level();
+		const ZTileLayerGroup *layerGroup = lot->tileLayersForLevel(mLevel - levelOffset);
 		if (layerGroup)
 			r |= layerGroup->bounds().translated(mapObjectPos);
 	}

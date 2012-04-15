@@ -61,12 +61,12 @@ public:
 		{
 			mLayerGroup = 0;
 		}
-		LotLayers(const QPoint& pos, const ZTileLayerGroup *layerGroup)
-			: mMapObjectPos(pos)
+		LotLayers(const MapObject *mapObject, const ZTileLayerGroup *layerGroup)
+			: mMapObject(mapObject)
 			, mLayerGroup(layerGroup)
 		{
 		}
-		QPoint mMapObjectPos;
+		const MapObject *mMapObject;
 		const ZTileLayerGroup *mLayerGroup;
 	};
 	QVector<LotLayers> mPreparedLotLayers;
