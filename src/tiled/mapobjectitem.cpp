@@ -238,6 +238,7 @@ void MapObjectItem::syncWithMapObject()
 
 #ifdef ZOMBOID
 	bounds.adjust(-mDrawMargins.left(), -mDrawMargins.top(), mDrawMargins.right(), mDrawMargins.bottom());
+	QPointF oldPos = pos();
 #endif
 
     setPos(pixelPos);
@@ -245,8 +246,12 @@ void MapObjectItem::syncWithMapObject()
 
     mSyncing = true;
 
+#ifdef ZOMBOID
+    if (mBoundingRect != bounds || pos() != oldPos) {
+#else
     if (mBoundingRect != bounds) {
-        // Notify the graphics scene about the geometry change in advance
+#endif
+		// Notify the graphics scene about the geometry change in advance
         prepareGeometryChange();
         mBoundingRect = bounds;
         const QPointF bottomRight = mObject->bounds().bottomRight();
