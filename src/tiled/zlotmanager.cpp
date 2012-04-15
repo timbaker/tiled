@@ -150,6 +150,9 @@ void ZLotManager::shareTilesets(Map *map)
 
 void ZLotManager::onLotDirectoryChanged()
 {
+	// Put this up, otherwise the progress dialog shows and hides for each lot
+	ZProgressManager::instance()->begin(QLatin1String("Checking lots..."));
+
 	// This will try to load any lot files that couldn't be loaded from the old directory.
 	// Lot files that were already loaded won't be affected.
 	Map *map = mapDocument()->map();
@@ -158,6 +161,8 @@ void ZLotManager::onLotDirectoryChanged()
 			onObjectsChanged(og->objects());
 		}
 	}
+
+	ZProgressManager::instance()->end();
 }
 
 void ZLotManager::onObjectsAdded(const QList<MapObject*> &objects)
