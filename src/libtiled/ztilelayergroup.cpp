@@ -36,6 +36,7 @@ ZTileLayerGroup::ZTileLayerGroup(int level)
 
 void ZTileLayerGroup::addTileLayer(TileLayer *layer, int index)
 {
+	Q_ASSERT(layer->level() == mLevel);
     if (mLayers.contains(layer))
         return;
 	int arrayIndex = 0;

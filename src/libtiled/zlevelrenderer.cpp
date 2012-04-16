@@ -163,7 +163,7 @@ void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect, const Layer
     const int endY = qMin(qreal(map()->height()),
                           pixelToTileCoords(r.bottomLeft(), layer).y());
 
-    QColor gridColor(Qt::black);
+	QColor gridColor(Qt::black);
     gridColor.setAlpha(128);
 
     QPen gridPen(gridColor);
@@ -173,7 +173,7 @@ void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect, const Layer
     for (int y = startY; y <= endY; ++y) {
         const QPointF start = tileToPixelCoords(startX, (qreal)y, layer);
         const QPointF end = tileToPixelCoords(endX, (qreal)y, layer);
-        painter->drawLine(start, end);
+		painter->drawLine(start, end);
     }
     for (int x = startX; x <= endX; ++x) {
         const QPointF start = tileToPixelCoords(x, (qreal)startY, layer);

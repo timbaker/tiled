@@ -59,10 +59,12 @@ void ZGridItem::paint(QPainter *painter,
     if (!mMapDocument || !mMapDocument->renderer())
 		return;
     const MapRenderer *renderer = mMapDocument->renderer();
-#ifdef _DEBUG
+#if 1
 		const QRect bounds = QRect(0, 0, mMapDocument->map()->width(), mMapDocument->map()->height());
 		QRectF boundsF = mMapDocument->renderer()->boundingRect(bounds, mMapDocument->currentLayer());
 //		Q_ASSERT(mBoundingRect == boundsF);
+		if (mBoundingRect != boundsF)
+			return;
 #endif
     renderer->drawGrid(painter, option->exposedRect, mMapDocument->currentLayer());
 }
