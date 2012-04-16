@@ -42,10 +42,10 @@ class TILEDSHARED_EXPORT ZTileLayerGroup
 {
 public:
 
-    ZTileLayerGroup();
+    ZTileLayerGroup(int level);
 
-    void addTileLayer(TileLayer *layer, int index);
-    void removeTileLayer(TileLayer *layer);
+    virtual void addTileLayer(TileLayer *layer, int index);
+    virtual void removeTileLayer(TileLayer *layer);
 
 	// Layer
 	virtual QRect bounds() const;
@@ -56,8 +56,12 @@ public:
     virtual bool orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const = 0;
 	virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect) = 0;
 
+	void setLevel(int level) { mLevel = level; }
+	int level() const { return mLevel; }
+
     QVector<TileLayer*> mLayers;
 	QVector<int> mIndices;
+	int mLevel;
 };
 
 } // namespace Tiled

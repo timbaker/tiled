@@ -45,7 +45,11 @@ QSize OrthogonalRenderer::mapSize() const
                  map()->height() * map()->tileHeight());
 }
 
+#ifdef ZOMBOID
+QRect OrthogonalRenderer::boundingRect(const QRect &rect, const Layer *layer) const
+#else
 QRect OrthogonalRenderer::boundingRect(const QRect &rect) const
+#endif
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
@@ -139,7 +143,11 @@ QPainterPath OrthogonalRenderer::shape(const MapObject *object) const
     return path;
 }
 
+#ifdef ZOMBOID
+void OrthogonalRenderer::drawGrid(QPainter *painter, const QRectF &rect, const Layer *layer) const
+#else
 void OrthogonalRenderer::drawGrid(QPainter *painter, const QRectF &rect) const
+#endif
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
@@ -275,7 +283,12 @@ void OrthogonalRenderer::drawTileLayer(QPainter *painter,
 void OrthogonalRenderer::drawTileSelection(QPainter *painter,
                                            const QRegion &region,
                                            const QColor &color,
+#ifdef ZOMBOID
+										   const QRectF &exposed,
+										   const Layer *layer) const
+#else
                                            const QRectF &exposed) const
+#endif
 {
     foreach (const QRect &r, region.rects()) {
         const QRectF toFill = QRectF(boundingRect(r)).intersected(exposed);
@@ -372,6 +385,19 @@ void OrthogonalRenderer::drawMapObject(QPainter *painter,
     painter->restore();
 }
 
+#ifdef ZOMBOID
+QPointF OrthogonalRenderer::pixelToTileCoords(qreal x, qreal y, const Layer *layer) const
+{
+    return QPointF(x / map()->tileWidth(),
+                   y / map()->tileHeight());
+}
+
+QPointF OrthogonalRenderer::tileToPixelCoords(qreal x, qreal y, const Layer *layer) const
+{
+    return QPointF(x * map()->tileWidth(),
+                   y * map()->tileHeight());
+}
+#else
 QPointF OrthogonalRenderer::pixelToTileCoords(qreal x, qreal y) const
 {
     return QPointF(x / map()->tileWidth(),
@@ -383,3 +409,4 @@ QPointF OrthogonalRenderer::tileToPixelCoords(qreal x, qreal y) const
     return QPointF(x * map()->tileWidth(),
                    y * map()->tileHeight());
 }
+#endif

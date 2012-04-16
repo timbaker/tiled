@@ -1,8 +1,5 @@
 /*
- * isometricrenderer.h
- * Copyright 2009-2010, Thorbjørn Lindeijer <thorbjorn@lindeijer.nl>
- *
- * This file is part of libtiled.
+ * zlevelrenderer.h
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,54 +23,42 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ISOMETRICRENDERER_H
-#define ISOMETRICRENDERER_H
+#ifndef ZLEVELRENDERER_H
+#define ZLEVELRENDERER_H
 
 #include "maprenderer.h"
 
 namespace Tiled {
 
 /**
- * An isometric map renderer.
- *
- * Isometric maps have diamond shaped tiles. This map renderer renders them in
- * such a way that the map will also be diamond shaped. The X axis points to
- * the bottom right while the Y axis points to the bottom left.
+ * Modified isometric map renderer for Project Zomboid.
+ * Tile layers are arranged into groups, one group per level/story/floor of a map.
  */
-class TILEDSHARED_EXPORT IsometricRenderer : public MapRenderer
+class TILEDSHARED_EXPORT ZLevelRenderer : public MapRenderer
 {
 public:
-    IsometricRenderer(const Map *map) : MapRenderer(map) {}
+    ZLevelRenderer(const Map *map) : MapRenderer(map) {}
 
     QSize mapSize() const;
 
-#ifdef ZOMBOID
     QRect boundingRect(const QRect &rect, const Layer *layer = 0) const;
-#else
-    QRect boundingRect(const QRect &rect) const;
-#endif
 
     QRectF boundingRect(const MapObject *object) const;
     QPainterPath shape(const MapObject *object) const;
 
-#ifdef ZOMBOID
     void drawGrid(QPainter *painter, const QRectF &rect, const Layer *layer = 0) const;
-#else
-    void drawGrid(QPainter *painter, const QRectF &rect) const;
-#endif
+
     void drawTileLayer(QPainter *painter, const TileLayer *layer,
                        const QRectF &exposed = QRectF()) const;
 
-#ifdef ZOMBOID
    void drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *layerGroup,
                                const QRectF &exposed = QRectF()) const;
-#endif
 
     void drawTileSelection(QPainter *painter,
                            const QRegion &region,
                            const QColor &color,
 #ifdef ZOMBOID
-							const QRectF &exposed,
+                            const QRectF &exposed,
 							const Layer *layer = 0) const;
 #else
                            const QRectF &exposed) const;
@@ -87,30 +72,17 @@ public:
                         const ImageLayer *layer,
                         const QRectF &exposed = QRectF()) const;
 
-#ifdef ZOMBOID
     using MapRenderer::pixelToTileCoords;
-	QPointF pixelToTileCoords(qreal x, qreal y, const Layer *layer = 0) const;
+    QPointF pixelToTileCoords(qreal x, qreal y, const Layer *layer = 0) const;
 
-	using MapRenderer::tileToPixelCoords;
+    using MapRenderer::tileToPixelCoords;
     QPointF tileToPixelCoords(qreal x, qreal y, const Layer *layer = 0) const;
-#else
-    using MapRenderer::pixelToTileCoords;
-	QPointF pixelToTileCoords(qreal x, qreal y) const;
-
-	using MapRenderer::tileToPixelCoords;
-    QPointF tileToPixelCoords(qreal x, qreal y) const;
-#endif
 
 private:
-#ifdef ZOMBOID
     QPolygonF tileRectToPolygon(const QRect &rect, const Layer *layer = 0) const;
     QPolygonF tileRectToPolygon(const QRectF &rect, const Layer *layer = 0) const;
-#else
-    QPolygonF tileRectToPolygon(const QRect &rect) const;
-    QPolygonF tileRectToPolygon(const QRectF &rect) const;
-#endif
 };
 
 } // namespace Tiled
 
-#endif // ISOMETRICRENDERER_H
+#endif // ZLEVELRENDERER_H

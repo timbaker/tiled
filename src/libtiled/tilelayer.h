@@ -33,6 +33,9 @@
 #include "tiled_global.h"
 
 #include "layer.h"
+#ifdef ZOMBOID
+#include "ztilelayergroup.h"
+#endif
 
 #include <QMargins>
 #include <QString>
@@ -268,6 +271,11 @@ public:
 
     virtual Layer *clone() const;
 
+#ifdef ZOMBOID
+	void setGroup(ZTileLayerGroup *group) { mTileLayerGroup = group; }
+	ZTileLayerGroup *group() const { return mTileLayerGroup; }
+#endif
+
 protected:
     TileLayer *initializeClone(TileLayer *clone) const;
 
@@ -275,6 +283,9 @@ private:
     QSize mMaxTileSize;
     QMargins mOffsetMargins;
     QVector<Cell> mGrid;
+#ifdef ZOMBOID
+	ZTileLayerGroup *mTileLayerGroup;
+#endif
 };
 
 } // namespace Tiled

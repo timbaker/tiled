@@ -29,6 +29,9 @@
 #include "imagelayer.h"
 #include "isometricrenderer.h"
 #include "layermodel.h"
+#ifdef ZOMBOID
+#include "zlevelrenderer.hpp"
+#endif
 #include "map.h"
 #include "mapobject.h"
 #include "movelayer.h"
@@ -65,7 +68,12 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     case Map::Staggered:
         mRenderer = new StaggeredRenderer(map);
         break;
-    default:
+#ifdef ZOMBOID
+    case Map::LevelIsometric:
+        mRenderer = new ZLevelRenderer(map);
+        break;
+#endif
+	default:
         mRenderer = new OrthogonalRenderer(map);
         break;
     }
@@ -81,6 +89,8 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     connect(mLayerModel, SIGNAL(layerChanged(int)), SIGNAL(layerChanged(int)));
 #ifdef ZOMBOID
     connect(mLayerModel, SIGNAL(layerRenamed(int)), SIGNAL(layerRenamed(int)));
+
+	mMaxVisibleLayer = map->layerCount();
 #endif
 
     connect(mUndoStack, SIGNAL(cleanChanged(bool)), SIGNAL(modifiedChanged()));
@@ -460,10 +470,17 @@ void MapDocument::emitMapChanged()
     emit mapChanged();
 }
 
+#ifdef ZOMBOID
+void MapDocument::emitRegionChanged(const QRegion &region, Layer *layer)
+{
+    emit regionChanged(region, layer);
+}
+#else
 void MapDocument::emitRegionChanged(const QRegion &region)
 {
     emit regionChanged(region);
 }
+#endif
 
 void MapDocument::emitRegionEdited(const QRegion &region, Layer *layer)
 {

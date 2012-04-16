@@ -1,8 +1,5 @@
 /*
- * isometricrenderer.cpp
- * Copyright 2009-2011, Thorbjørn Lindeijer <thorbjorn@lindeijer.nl>
- *
- * This file is part of libtiled.
+ * zlevelrenderer.cpp
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,35 +23,36 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "isometricrenderer.h"
+#include "zlevelrenderer.hpp"
 
 #include "map.h"
 #include "mapobject.h"
+#include "objectgroup.h"
 #include "tile.h"
 #include "tilelayer.h"
 #include "tileset.h"
 #include "imagelayer.h"
-#ifdef ZOMBOID
 #include "ztilelayergroup.h"
-#endif
 
 #include <cmath>
 
 using namespace Tiled;
 
-QSize IsometricRenderer::mapSize() const
+QSize ZLevelRenderer::mapSize() const
 {
+#if 1
+	const int side = map()->height() + map()->width();
+    return QSize(side * map()->tileWidth() / 2 + map()->maxLevel() * map()->cellsPerLevel().x() * map()->tileWidth(),
+                 side * map()->tileHeight() / 2 + map()->maxLevel() * map()->cellsPerLevel().y() * map()->tileHeight());
+#else
     // Map width and height contribute equally in both directions
-    const int side = map()->height() + map()->width();
+	const int side = map()->height() + map()->width();
     return QSize(side * map()->tileWidth() / 2,
                  side * map()->tileHeight() / 2);
+#endif
 }
 
-#ifdef ZOMBOID
-QRect IsometricRenderer::boundingRect(const QRect &rect, const Layer *layer) const
-#else
-QRect IsometricRenderer::boundingRect(const QRect &rect) const
-#endif
+QRect ZLevelRenderer::boundingRect(const QRect &rect, const Layer *layer) const
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
@@ -62,19 +60,24 @@ QRect IsometricRenderer::boundingRect(const QRect &rect) const
     const int originX = map()->height() * tileWidth / 2;
     const QPoint pos((rect.x() - (rect.y() + rect.height()))
                      * tileWidth / 2 + originX,
+#ifdef ZOMBOID
+                     (rect.x() + rect.y()) * tileHeight / 2 + (map()->maxLevel() - (layer ? layer->level() : 0)) * map()->cellsPerLevel().y() * tileHeight);
+#else
                      (rect.x() + rect.y()) * tileHeight / 2);
+#endif
 
     const int side = rect.height() + rect.width();
     const QSize size(side * tileWidth / 2,
                      side * tileHeight / 2);
 
-    return QRect(pos, size);
+   return QRect(pos, size);
 }
 
-QRectF IsometricRenderer::boundingRect(const MapObject *object) const
+QRectF ZLevelRenderer::boundingRect(const MapObject *object) const
 {
+	Layer *layer = object->objectGroup();
     if (object->tile()) {
-        const QPointF bottomCenter = tileToPixelCoords(object->position());
+        const QPointF bottomCenter = tileToPixelCoords(object->position(), layer);
         const QPixmap &img = object->tile()->image();
         return QRectF(bottomCenter.x() - img.width() / 2,
                       bottomCenter.y() - img.height(),
@@ -83,31 +86,51 @@ QRectF IsometricRenderer::boundingRect(const MapObject *object) const
     } else if (!object->polygon().isEmpty()) {
         const QPointF &pos = object->position();
         const QPolygonF polygon = object->polygon().translated(pos);
-        const QPolygonF screenPolygon = tileToPixelCoords(polygon);
+        const QPolygonF screenPolygon = tileToPixelCoords(polygon, layer);
         return screenPolygon.boundingRect().adjusted(-2, -2, 3, 3);
     } else {
         // Take the bounding rect of the projected object, and then add a few
         // pixels on all sides to correct for the line width.
-        const QRectF base = tileRectToPolygon(object->bounds()).boundingRect();
+        const QRectF base = tileRectToPolygon(object->bounds(), layer).boundingRect();
         return base.adjusted(-2, -3, 2, 2);
     }
 }
 
-QPainterPath IsometricRenderer::shape(const MapObject *object) const
+QPainterPath ZLevelRenderer::shape(const MapObject *object) const
 {
+	Layer *layer = object->objectGroup();
+#if 1
+	/*
+AddRemoveMapObject::removeObject
+    mObjectGroup->removeObject(mMapObject) <<--------- why layer==0
+    mMapDocument->emitObjectRemoved(mMapObject);
+		MapDocument::deselectObjects
+			emit selectedObjectsChanged()
+				MapScene::updateSelectedObjectItems()
+					item->setEditable(...);
+					unsetCursor()
+						MapObjectItem::shape()
+							<this function>
+	*/
+	if (layer == 0)
+		return QPainterPath();
+#else
+	Q_ASSERT(layer);
+#endif
+
     QPainterPath path;
     if (object->tile()) {
         path.addRect(boundingRect(object));
     } else {
         switch (object->shape()) {
         case MapObject::Rectangle:
-            path.addPolygon(tileRectToPolygon(object->bounds()));
+            path.addPolygon(tileRectToPolygon(object->bounds(), layer));
             break;
         case MapObject::Polygon:
         case MapObject::Polyline: {
             const QPointF &pos = object->position();
             const QPolygonF polygon = object->polygon().translated(pos);
-            const QPolygonF screenPolygon = tileToPixelCoords(polygon);
+            const QPolygonF screenPolygon = tileToPixelCoords(polygon, layer);
             if (object->shape() == MapObject::Polygon) {
                 path.addPolygon(screenPolygon);
             } else {
@@ -124,11 +147,7 @@ QPainterPath IsometricRenderer::shape(const MapObject *object) const
     return path;
 }
 
-#ifdef ZOMBOID
-void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect, const Layer *layer) const
-#else
-void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect) const
-#endif
+void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect, const Layer *layer) const
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
@@ -137,14 +156,14 @@ void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect) const
     r.adjust(-tileWidth / 2, -tileHeight / 2,
              tileWidth / 2, tileHeight / 2);
 
-    const int startX = qMax(qreal(0), pixelToTileCoords(r.topLeft()).x());
-    const int startY = qMax(qreal(0), pixelToTileCoords(r.topRight()).y());
+    const int startX = qMax(qreal(0), pixelToTileCoords(r.topLeft(), layer).x());
+    const int startY = qMax(qreal(0), pixelToTileCoords(r.topRight(), layer).y());
     const int endX = qMin(qreal(map()->width()),
-                          pixelToTileCoords(r.bottomRight()).x());
+                          pixelToTileCoords(r.bottomRight(), layer).x());
     const int endY = qMin(qreal(map()->height()),
-                          pixelToTileCoords(r.bottomLeft()).y());
+                          pixelToTileCoords(r.bottomLeft(), layer).y());
 
-    QColor gridColor(Qt::black);
+	QColor gridColor(Qt::black);
     gridColor.setAlpha(128);
 
     QPen gridPen(gridColor);
@@ -152,18 +171,18 @@ void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect) const
     painter->setPen(gridPen);
 
     for (int y = startY; y <= endY; ++y) {
-        const QPointF start = tileToPixelCoords(startX, (qreal)y);
-        const QPointF end = tileToPixelCoords(endX, (qreal)y);
-        painter->drawLine(start, end);
+        const QPointF start = tileToPixelCoords(startX, (qreal)y, layer);
+        const QPointF end = tileToPixelCoords(endX, (qreal)y, layer);
+		painter->drawLine(start, end);
     }
     for (int x = startX; x <= endX; ++x) {
-        const QPointF start = tileToPixelCoords(x, (qreal)startY);
-        const QPointF end = tileToPixelCoords(x, (qreal)endY);
+        const QPointF start = tileToPixelCoords(x, (qreal)startY, layer);
+        const QPointF end = tileToPixelCoords(x, (qreal)endY, layer);
         painter->drawLine(start, end);
     }
 }
 
-void IsometricRenderer::drawTileLayer(QPainter *painter,
+void ZLevelRenderer::drawTileLayer(QPainter *painter,
                                       const TileLayer *layer,
                                       const QRectF &exposed) const
 {
@@ -175,7 +194,11 @@ void IsometricRenderer::drawTileLayer(QPainter *painter,
 
     QRect rect = exposed.toAlignedRect();
     if (rect.isNull())
-        rect = boundingRect(layer->bounds());
+#ifdef ZOMBOID
+		rect = boundingRect(layer->bounds(), layer);
+#else
+		rect = boundingRect(layer->bounds());
+#endif
 
     QMargins drawMargins = layer->drawMargins();
     drawMargins.setTop(drawMargins.top() - tileHeight);
@@ -187,11 +210,18 @@ void IsometricRenderer::drawTileLayer(QPainter *painter,
                 drawMargins.top());
 
     // Determine the tile and pixel coordinates to start at
+#ifdef ZOMBOID
+    QPointF tilePos = pixelToTileCoords(rect.x(), rect.y(), layer);
+    QPoint rowItr = QPoint((int) std::floor(tilePos.x()),
+                           (int) std::floor(tilePos.y()));
+    QPointF startPos = tileToPixelCoords(rowItr, layer);
+#else
     QPointF tilePos = pixelToTileCoords(rect.x(), rect.y());
     QPoint rowItr = QPoint((int) std::floor(tilePos.x()),
                            (int) std::floor(tilePos.y()));
     QPointF startPos = tileToPixelCoords(rowItr);
-    startPos.rx() -= tileWidth / 2;
+#endif
+	startPos.rx() -= tileWidth / 2;
     startPos.ry() += tileHeight;
 
     // Compensate for the layer position
@@ -291,18 +321,20 @@ void IsometricRenderer::drawTileLayer(QPainter *painter,
 }
 
 #ifdef ZOMBOID
-void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *layerGroup,
+void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *layerGroup,
                             const QRectF &exposed) const
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
 
-    if (tileWidth <= 0 || tileHeight <= 1)
+    if (tileWidth <= 0 || tileHeight <= 1 || layerGroup->mLayers.isEmpty())
         return;
+
+	Layer *layer = layerGroup->mLayers.first();
 
     QRect rect = exposed.toAlignedRect();
     if (rect.isNull())
-        rect = boundingRect(layerGroup->bounds());
+        rect = boundingRect(layerGroup->bounds(), layer);
 
     QMargins drawMargins = layerGroup->drawMargins();
     drawMargins.setTop(drawMargins.top() - tileHeight);
@@ -314,17 +346,12 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *l
                 drawMargins.top());
 
     // Determine the tile and pixel coordinates to start at
-    QPointF tilePos = pixelToTileCoords(rect.x(), rect.y());
+	QPointF tilePos = pixelToTileCoords(rect.x(), rect.y(), layer);
     QPoint rowItr = QPoint((int) std::floor(tilePos.x()),
                            (int) std::floor(tilePos.y()));
-    QPointF startPos = tileToPixelCoords(rowItr);
+    QPointF startPos = tileToPixelCoords(rowItr, layer);
     startPos.rx() -= tileWidth / 2;
     startPos.ry() += tileHeight;
-
-#if 0
-    // Compensate for the layer position
-    rowItr -= QPoint(layer->x(), layer->y());
-#endif
 
     /* Determine in which half of the tile the top-left corner of the area we
      * need to draw is. If we're in the upper half, we need to start one row
@@ -425,29 +452,27 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *l
 }
 #endif // ZOMBOID
 
-void IsometricRenderer::drawTileSelection(QPainter *painter,
+void ZLevelRenderer::drawTileSelection(QPainter *painter,
                                           const QRegion &region,
                                           const QColor &color,
-#ifdef ZOMBOID
 										  const QRectF &exposed,
 										  const Layer *layer) const
-#else
-										  const QRectF &exposed) const
-#endif
 {
     painter->setBrush(color);
     painter->setPen(Qt::NoPen);
     foreach (const QRect &r, region.rects()) {
-        QPolygonF polygon = tileRectToPolygon(r);
+        QPolygonF polygon = tileRectToPolygon(r, layer);
         if (QRectF(polygon.boundingRect()).intersects(exposed))
             painter->drawConvexPolygon(polygon);
     }
 }
 
-void IsometricRenderer::drawMapObject(QPainter *painter,
+void ZLevelRenderer::drawMapObject(QPainter *painter,
                                       const MapObject *object,
                                       const QColor &color) const
 {
+	Layer *layer = object->objectGroup();
+
     painter->save();
 
     QPen pen(Qt::black);
@@ -455,7 +480,7 @@ void IsometricRenderer::drawMapObject(QPainter *painter,
     if (object->tile()) {
         const QPixmap &img = object->tile()->image();
         QPointF paintOrigin(-img.width() / 2, -img.height());
-        paintOrigin += tileToPixelCoords(object->position()).toPoint();
+        paintOrigin += tileToPixelCoords(object->position(), layer).toPoint();
         painter->drawPixmap(paintOrigin, img);
 
         pen.setStyle(Qt::SolidLine);
@@ -482,7 +507,7 @@ void IsometricRenderer::drawMapObject(QPainter *painter,
 
         switch (object->shape()) {
         case MapObject::Rectangle: {
-            QPolygonF polygon = tileRectToPolygon(object->bounds());
+            QPolygonF polygon = tileRectToPolygon(object->bounds(), layer);
             painter->drawPolygon(polygon);
 
             pen.setColor(color);
@@ -496,7 +521,7 @@ void IsometricRenderer::drawMapObject(QPainter *painter,
         case MapObject::Polygon: {
             const QPointF &pos = object->position();
             const QPolygonF polygon = object->polygon().translated(pos);
-            QPolygonF screenPolygon = tileToPixelCoords(polygon);
+            QPolygonF screenPolygon = tileToPixelCoords(polygon, layer);
 
             painter->drawPolygon(screenPolygon);
 
@@ -511,7 +536,7 @@ void IsometricRenderer::drawMapObject(QPainter *painter,
         case MapObject::Polyline: {
             const QPointF &pos = object->position();
             const QPolygonF polygon = object->polygon().translated(pos);
-            QPolygonF screenPolygon = tileToPixelCoords(polygon);
+            QPolygonF screenPolygon = tileToPixelCoords(polygon, layer);
 
             painter->drawPolyline(screenPolygon);
 
@@ -528,7 +553,7 @@ void IsometricRenderer::drawMapObject(QPainter *painter,
     painter->restore();
 }
 
-void IsometricRenderer::drawImageLayer(QPainter *painter,
+void ZLevelRenderer::drawImageLayer(QPainter *painter,
                                        const ImageLayer *imageLayer,
                                        const QRectF &exposed) const
 {
@@ -542,53 +567,50 @@ void IsometricRenderer::drawImageLayer(QPainter *painter,
     painter->drawPixmap(paintOrigin, img);
 }
 
-#ifdef ZOMBOID
-QPointF IsometricRenderer::pixelToTileCoords(qreal x, qreal y, const Layer *layer) const
-#else
-QPointF IsometricRenderer::pixelToTileCoords(qreal x, qreal y) const
-#endif
+QPointF ZLevelRenderer::pixelToTileCoords(qreal x, qreal y, const Layer *layer) const
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
     const qreal ratio = (qreal) tileWidth / tileHeight;
 
     x -= map()->height() * tileWidth / 2;
-    const qreal mx = y + (x / ratio);
+#ifdef ZOMBOID
+	y -= map()->cellsPerLevel().y() * (map()->maxLevel() - (layer ? layer->level() : 0)) * tileHeight;
+#endif
+	const qreal mx = y + (x / ratio);
     const qreal my = y - (x / ratio);
 
     return QPointF(mx / tileHeight,
                    my / tileHeight);
 }
 
-#ifdef ZOMBOID
-QPointF IsometricRenderer::tileToPixelCoords(qreal x, qreal y, const Layer *layer) const
-#else
-QPointF IsometricRenderer::tileToPixelCoords(qreal x, qreal y) const
-#endif
+QPointF ZLevelRenderer::tileToPixelCoords(qreal x, qreal y, const Layer *layer) const
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
-    const int originX = map()->height() * tileWidth / 2;
-
+#ifdef ZOMBOID
+	const int originX = map()->height() * tileWidth / 2; // top-left corner
+	const int originY = map()->cellsPerLevel().y() * (map()->maxLevel() - (layer ? layer->level() : 0)) * tileHeight;
+    return QPointF((x - y) * tileWidth / 2 + originX,
+                   (x + y) * tileHeight / 2 + originY);
+#else
+	const int originX = map()->height() * tileWidth / 2;
     return QPointF((x - y) * tileWidth / 2 + originX,
                    (x + y) * tileHeight / 2);
+#endif
 }
 
-#ifdef ZOMBOID
-QPolygonF IsometricRenderer::tileRectToPolygon(const QRect &rect, const Layer *layer) const
-#else
-QPolygonF IsometricRenderer::tileRectToPolygon(const QRect &rect) const
-#endif
+QPolygonF ZLevelRenderer::tileRectToPolygon(const QRect &rect, const Layer *layer) const
 {
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
 
-    const QPointF topRight = tileToPixelCoords(rect.topRight());
-    const QPointF bottomRight = tileToPixelCoords(rect.bottomRight());
-    const QPointF bottomLeft = tileToPixelCoords(rect.bottomLeft());
+    const QPointF topRight = tileToPixelCoords(rect.topRight(), layer);
+    const QPointF bottomRight = tileToPixelCoords(rect.bottomRight(), layer);
+    const QPointF bottomLeft = tileToPixelCoords(rect.bottomLeft(), layer);
 
     QPolygonF polygon;
-    polygon << QPointF(tileToPixelCoords(rect.topLeft()));
+    polygon << QPointF(tileToPixelCoords(rect.topLeft(), layer));
     polygon << QPointF(topRight.x() + tileWidth / 2,
                        topRight.y() + tileHeight / 2);
     polygon << QPointF(bottomRight.x(), bottomRight.y() + tileHeight);
@@ -597,16 +619,12 @@ QPolygonF IsometricRenderer::tileRectToPolygon(const QRect &rect) const
     return polygon;
 }
 
-#ifdef ZOMBOID
-QPolygonF IsometricRenderer::tileRectToPolygon(const QRectF &rect, const Layer *layer) const
-#else
-QPolygonF IsometricRenderer::tileRectToPolygon(const QRectF &rect) const
-#endif
+QPolygonF ZLevelRenderer::tileRectToPolygon(const QRectF &rect, const Layer *layer) const
 {
     QPolygonF polygon;
-    polygon << QPointF(tileToPixelCoords(rect.topLeft()));
-    polygon << QPointF(tileToPixelCoords(rect.topRight()));
-    polygon << QPointF(tileToPixelCoords(rect.bottomRight()));
-    polygon << QPointF(tileToPixelCoords(rect.bottomLeft()));
+    polygon << QPointF(tileToPixelCoords(rect.topLeft(), layer));
+    polygon << QPointF(tileToPixelCoords(rect.topRight(), layer));
+    polygon << QPointF(tileToPixelCoords(rect.bottomRight(), layer));
+    polygon << QPointF(tileToPixelCoords(rect.bottomLeft(), layer));
     return polygon;
 }

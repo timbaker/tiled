@@ -141,6 +141,10 @@ QVariant ResizeHandle::itemChange(GraphicsItemChange change,
     if (!mMapObjectItem->mSyncing) {
         MapRenderer *renderer = mMapObjectItem->mapDocument()->renderer();
 
+#ifdef ZOMBOID
+		Layer *layer = mMapObjectItem->mapObject()->objectGroup();
+#endif
+
         if (change == ItemPositionChange) {
             bool snapToGrid = Preferences::instance()->snapToGrid();
             if (QApplication::keyboardModifiers() & Qt::ControlModifier)
@@ -151,8 +155,12 @@ QVariant ResizeHandle::itemChange(GraphicsItemChange change,
             QPointF pixelPos = value.toPointF() + itemPos;
 
             // Calculate the new coordinates in tiles
+#ifdef ZOMBOID
+            QPointF tileCoords = renderer->pixelToTileCoords(pixelPos, layer);
+#else
             QPointF tileCoords = renderer->pixelToTileCoords(pixelPos);
-            const QPointF objectPos = mMapObjectItem->mapObject()->position();
+#endif
+			const QPointF objectPos = mMapObjectItem->mapObject()->position();
             tileCoords -= objectPos;
             tileCoords.setX(qMax(tileCoords.x(), qreal(0)));
             tileCoords.setY(qMax(tileCoords.y(), qreal(0)));
@@ -160,13 +168,21 @@ QVariant ResizeHandle::itemChange(GraphicsItemChange change,
                 tileCoords = tileCoords.toPoint();
             tileCoords += objectPos;
 
+#ifdef ZOMBOID
+            return renderer->tileToPixelCoords(tileCoords, layer) - itemPos;
+#else
             return renderer->tileToPixelCoords(tileCoords) - itemPos;
+#endif
         }
         else if (change == ItemPositionHasChanged) {
             // Update the size of the map object
             const QPointF newPos = value.toPointF() + mMapObjectItem->pos();
-            QPointF tileCoords = renderer->pixelToTileCoords(newPos);
-            tileCoords -= mMapObjectItem->mapObject()->position();
+#ifdef ZOMBOID
+           QPointF tileCoords = renderer->pixelToTileCoords(newPos, layer);
+#else
+           QPointF tileCoords = renderer->pixelToTileCoords(newPos);
+#endif
+		   tileCoords -= mMapObjectItem->mapObject()->position();
             mMapObjectItem->resize(QSizeF(tileCoords.x(), tileCoords.y()));
         }
     }
@@ -211,26 +227,52 @@ void MapObjectItem::syncWithMapObject()
     setToolTip(toolTip);
 
     MapRenderer *renderer = mMapDocument->renderer();
-    const QPointF pixelPos = renderer->tileToPixelCoords(mObject->position());
-    QRectF bounds = renderer->boundingRect(mObject);
+#ifdef ZOMBOID
+	Layer *layer = mObject->objectGroup();
+	const QPointF pixelPos = renderer->tileToPixelCoords(mObject->position(), layer);
+#else
+	const QPointF pixelPos = renderer->tileToPixelCoords(mObject->position());
+#endif
+	QRectF bounds = renderer->boundingRect(mObject);
     bounds.translate(-pixelPos);
+
+#ifdef ZOMBOID
+	bounds.adjust(-mDrawMargins.left(), -mDrawMargins.top(), mDrawMargins.right(), mDrawMargins.bottom());
+	QPointF oldPos = pos();
+#endif
 
     setPos(pixelPos);
     setZValue(pixelPos.y());
 
     mSyncing = true;
 
+#ifdef ZOMBOID
+    if (mBoundingRect != bounds || pos() != oldPos) {
+#else
     if (mBoundingRect != bounds) {
-        // Notify the graphics scene about the geometry change in advance
+#endif
+		// Notify the graphics scene about the geometry change in advance
         prepareGeometryChange();
         mBoundingRect = bounds;
         const QPointF bottomRight = mObject->bounds().bottomRight();
+#ifdef ZOMBOID
+        const QPointF handlePos = renderer->tileToPixelCoords(bottomRight, layer);
+#else
         const QPointF handlePos = renderer->tileToPixelCoords(bottomRight);
-        mResizeHandle->setPos(handlePos - pixelPos);
+#endif
+		mResizeHandle->setPos(handlePos - pixelPos);
     }
 
     mSyncing = false;
 }
+
+#ifdef ZOMBOID
+// This is to accomodate Lot maps, should create a LotItem class
+void MapObjectItem::setDrawMargins(const QMargins &drawMargins)
+{
+	mDrawMargins = drawMargins;
+}
+#endif
 
 void MapObjectItem::setEditable(bool editable)
 {

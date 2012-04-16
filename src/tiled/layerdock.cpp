@@ -103,10 +103,19 @@ LayerDock::LayerDock(QWidget *parent):
     buttonContainer->addWidget(newLayerButton);
     buttonContainer->addAction(handler->actionMoveLayerUp());
     buttonContainer->addAction(handler->actionMoveLayerDown());
-    buttonContainer->addAction(handler->actionDuplicateLayer());
+	buttonContainer->addAction(handler->actionDuplicateLayer());
     buttonContainer->addAction(handler->actionRemoveLayer());
     buttonContainer->addSeparator();
     buttonContainer->addAction(handler->actionToggleOtherLayers());
+
+#ifdef ZOMBOID
+	QToolButton *button;
+	button = dynamic_cast<QToolButton*>(buttonContainer->widgetForAction(handler->actionMoveLayerUp()));
+	button->setAutoRepeat(true);
+	button = dynamic_cast<QToolButton*>(buttonContainer->widgetForAction(handler->actionMoveLayerDown()));
+	button->setAutoRepeat(true);
+#endif
+
 
     layout->addLayout(opacityLayout);
 #ifdef ZOMBOID
@@ -147,6 +156,10 @@ void LayerDock::setMapDocument(MapDocument *mapDocument)
     if (mMapDocument) {
         connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
                 this, SLOT(updateOpacitySlider()));
+#ifdef ZOMBOID
+        connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
+                this, SLOT(updateZomboidLayerSlider()));
+#endif
     }
 
     mLayerView->setMapDocument(mapDocument);
@@ -211,7 +224,10 @@ void LayerDock::updateZomboidLayerSlider()
     mZomboidLayerSlider->setEnabled(enabled);
     mZomboidLayerLabel->setEnabled(enabled);
     if (enabled) {
-        mZomboidLayerSlider->setMaximum(mMapDocument->map()->layerCount());
+		mZomboidLayerSlider->blockSignals(true);
+		mZomboidLayerSlider->setMaximum(mMapDocument->map()->layerCount());
+        mZomboidLayerSlider->setValue(mMapDocument->maxVisibleLayer());
+		mZomboidLayerSlider->blockSignals(false);
     } else {
         mZomboidLayerSlider->setValue(mZomboidLayerSlider->maximum());
     }
@@ -236,6 +252,8 @@ void LayerDock::setZomboidLayer(int number)
 		}
         index++;
     }
+
+	mMapDocument->setMaxVisibleLayer(number);
 }
 #endif // ZOMBOID
 

@@ -214,9 +214,13 @@ void BucketFillTool::makeConnections()
         return;
 
     // Overlay may need to be cleared if a region changed
+#ifdef ZOMBOID
+    connect(mapDocument(), SIGNAL(regionChanged(QRegion,Layer*)),
+            this, SLOT(clearOverlay()));
+#else
     connect(mapDocument(), SIGNAL(regionChanged(QRegion)),
             this, SLOT(clearOverlay()));
-
+#endif
     // Overlay needs to be cleared if we switch to another layer
     connect(mapDocument(), SIGNAL(currentLayerIndexChanged(int)),
             this, SLOT(clearOverlay()));
@@ -232,8 +236,13 @@ void BucketFillTool::clearConnections(MapDocument *mapDocument)
     if (!mapDocument)
         return;
 
-    disconnect(mapDocument, SIGNAL(regionChanged(QRegion)),
+#ifdef ZOMBOID
+	disconnect(mapDocument, SIGNAL(regionChanged(QRegion,Layer*)),
                this, SLOT(clearOverlay()));
+#else
+	disconnect(mapDocument, SIGNAL(regionChanged(QRegion)),
+               this, SLOT(clearOverlay()));
+#endif
 
     disconnect(mapDocument, SIGNAL(currentLayerIndexChanged(int)),
                this, SLOT(clearOverlay()));

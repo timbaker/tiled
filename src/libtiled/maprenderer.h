@@ -67,7 +67,11 @@ public:
      * This is useful for calculating the bounding rect of a tile layer or of
      * a region of tiles that was changed.
      */
+#ifdef ZOMBOID
+    virtual QRect boundingRect(const QRect &rect, const Layer *layer = 0) const = 0;
+#else
     virtual QRect boundingRect(const QRect &rect) const = 0;
+#endif
 
     /**
      * Returns the bounding rectangle in pixels of the given \a object, as it
@@ -86,8 +90,11 @@ public:
      * Draws the tile grid in the specified \a rect using the given
      * \a painter.
      */
+#ifdef ZOMBOID
+    virtual void drawGrid(QPainter *painter, const QRectF &rect, const Layer *layer = 0) const = 0;
+#else
     virtual void drawGrid(QPainter *painter, const QRectF &rect) const = 0;
-
+#endif
     /**
      * Draws the given \a layer using the given \a painter.
      *
@@ -111,8 +118,12 @@ public:
     virtual void drawTileSelection(QPainter *painter,
                                    const QRegion &region,
                                    const QColor &color,
+#ifdef ZOMBOID
+                                   const QRectF &exposed,
+								   const Layer *layer = 0) const = 0;
+#else
                                    const QRectF &exposed) const = 0;
-
+#endif
     /**
      * Draws the \a object in the given \a color using the \a painter.
      */
@@ -127,6 +138,31 @@ public:
                                 const ImageLayer *layer,
                                 const QRectF &exposed = QRectF()) const = 0;
 
+#ifdef ZOMBOID
+    /**
+     * Returns the tile coordinates matching the given pixel position.
+     */
+    virtual QPointF pixelToTileCoords(qreal x, qreal y, const Layer *layer = 0) const = 0;
+
+    inline QPointF pixelToTileCoords(const QPointF &point, const Layer *layer = 0) const
+    { return pixelToTileCoords(point.x(), point.y(), layer); }
+
+    /**
+     * Returns the pixel coordinates matching the given tile coordinates.
+     */
+    virtual QPointF tileToPixelCoords(qreal x, qreal y, const Layer *layer = 0) const = 0;
+
+    inline QPointF tileToPixelCoords(const QPointF &point, const Layer *layer = 0) const
+    { return tileToPixelCoords(point.x(), point.y(), layer); }
+
+    QPolygonF tileToPixelCoords(const QPolygonF &polygon, const Layer *layer = 0) const
+    {
+        QPolygonF screenPolygon(polygon.size());
+        for (int i = polygon.size() - 1; i >= 0; --i)
+            screenPolygon[i] = tileToPixelCoords(polygon[i], layer);
+        return screenPolygon;
+    }
+#else
     /**
      * Returns the tile coordinates matching the given pixel position.
      */
@@ -150,6 +186,7 @@ public:
             screenPolygon[i] = tileToPixelCoords(polygon[i]);
         return screenPolygon;
     }
+#endif // ZOMBOID
 
     static QPolygonF lineToPolygon(const QPointF &start, const QPointF &end);
 

@@ -119,6 +119,12 @@ public:
      */
     Layer *currentLayer() const;
 
+#ifdef ZOMBOID
+	/* For the visibility slider in the LayerDock. */
+	void setMaxVisibleLayer(int index) { mMaxVisibleLayer = index; }
+	int maxVisibleLayer() const { return mMaxVisibleLayer; }
+#endif
+
     /**
      * Resize this map to the given \a size, while at the same time shifting
      * the contents by \a offset.
@@ -207,7 +213,11 @@ public:
      * Emits the region changed signal for the specified region. The region
      * should be in tile coordinates. This method is used by the TilePainter.
      */
+#ifdef ZOMBOID
+    void emitRegionChanged(const QRegion &region, Layer *layer);
+#else
     void emitRegionChanged(const QRegion &region);
+#endif
 
     /**
      * Emits the region edited signal for the specified region and tile layer.
@@ -279,7 +289,11 @@ signals:
      * Emitted when a certain region of the map changes. The region is given in
      * tile coordinates.
      */
+#ifdef ZOMBOID
+    void regionChanged(const QRegion &region, Layer *layer);
+#else
     void regionChanged(const QRegion &region);
+#endif
 
     /**
      * Emitted when a certain region of the map was edited by user input.
@@ -313,6 +327,9 @@ private:
     QList<MapObject*> mSelectedObjects;
     MapRenderer *mRenderer;
     int mCurrentLayerIndex;
+#ifdef ZOMBOID
+	int mMaxVisibleLayer;
+#endif
     QUndoStack *mUndoStack;
 };
 

@@ -167,7 +167,7 @@ void ObjectSelectionTool::updateSelection(const QPointF &pos,
     foreach (QGraphicsItem *item, mapScene()->items(rect)) {
         MapObjectItem *mapObjectItem = dynamic_cast<MapObjectItem*>(item);
         if (mapObjectItem)
-            selectedItems.insert(mapObjectItem);
+			selectedItems.insert(mapObjectItem);
     }
 
     const QSet<MapObjectItem*> oldSelection = mapScene()->selectedObjectItems();
@@ -227,6 +227,29 @@ void ObjectSelectionTool::updateMovingItems(const QPointF &pos,
     if (modifiers & Qt::ControlModifier)
         snapToGrid = !snapToGrid;
 
+#ifdef ZOMBOID
+    int i = 0;
+    foreach (MapObjectItem *objectItem, mMovingItems) {
+		Layer *layer = objectItem->mapObject()->objectGroup();
+		QPointF diff = pos - mStart;
+		if (snapToGrid) {
+		   const QPointF alignPixelPos =
+					renderer->tileToPixelCoords(mAlignPosition, layer);
+			const QPointF newAlignPixelPos = alignPixelPos + diff;
+
+			// Snap the position to the grid
+			const QPointF newTileCoords =
+					renderer->pixelToTileCoords(newAlignPixelPos, layer).toPoint();
+			diff = renderer->tileToPixelCoords(newTileCoords, layer) - alignPixelPos;
+		}
+        const QPointF newPixelPos = mOldObjectItemPositions.at(i) + diff;
+        const QPointF newPos = renderer->pixelToTileCoords(newPixelPos, layer);
+        objectItem->setPos(newPixelPos);
+        objectItem->setZValue(newPixelPos.y());
+        objectItem->mapObject()->setPosition(newPos);
+        ++i;
+    }
+#else
     if (snapToGrid) {
         const QPointF alignPixelPos =
                 renderer->tileToPixelCoords(mAlignPosition);
@@ -247,6 +270,7 @@ void ObjectSelectionTool::updateMovingItems(const QPointF &pos,
         objectItem->mapObject()->setPosition(newPos);
         ++i;
     }
+#endif
 }
 
 void ObjectSelectionTool::finishMoving(const QPointF &pos)

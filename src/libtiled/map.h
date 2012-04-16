@@ -67,7 +67,10 @@ public:
         Unknown,
         Orthogonal,
         Isometric,
-        Staggered
+#ifdef ZOMBOID
+		LevelIsometric,
+#endif
+		Staggered
     };
 
     /**
@@ -127,6 +130,14 @@ public:
      * Returns the tile height used by this map.
      */
     int tileHeight() const { return mTileHeight; }
+
+#ifdef ZOMBOID
+	void setCellsPerLevel(const QPoint &cellsPerLevel) { mCellsPerLevel = cellsPerLevel; }
+	QPoint cellsPerLevel() const { return mCellsPerLevel; }
+
+	void setMaxLevel(int level) { mMaxLevel = level; }
+	int maxLevel() const { return mMaxLevel; }
+#endif
 
     /**
      * Adjusts the draw margins to be at least as big as the given margins.
@@ -272,6 +283,10 @@ private:
     QMargins mDrawMargins;
     QList<Layer*> mLayers;
     QList<Tileset*> mTilesets;
+#ifdef ZOMBOID
+	QPoint mCellsPerLevel;
+	int mMaxLevel;
+#endif
 };
 
 /**

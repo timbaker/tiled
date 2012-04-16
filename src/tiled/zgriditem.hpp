@@ -1,5 +1,5 @@
 /*
- * ztilelayergroup.h
+ * zgriditem.h
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -15,33 +15,29 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ZTILELAYERGROUPITEM_H
-#define ZTILELAYERGROUPITEM_H
+#ifndef ZGRIDITEM_H
+#define ZGRIDITEM_H
 
 #include <QGraphicsItem>
 
 namespace Tiled {
 
-class MapRenderer;
-class TileLayer;
-class ZTileLayerGroup;
+class Layer;
 
 namespace Internal {
 
 class MapDocument;
 
-class ZTileLayerGroupItem : public QGraphicsItem
+/**
+ * The tile grid.
+ */
+class ZGridItem : public QGraphicsItem
 {
 public:
-    ZTileLayerGroupItem(ZTileLayerGroup *layerGroup, MapDocument *mapDoc);
+    ZGridItem();
 
-	void tileLayerChanged(TileLayer *layer);
-
-	bool ownsTileLayer(TileLayer *layer);
-
-    virtual void syncWithTileLayers();
-
-	ZTileLayerGroup *getTileLayerGroup() const { return mLayerGroup; }
+    void setMapDocument(MapDocument *mapDocument);
+	void currentLayerIndexChanged();
 
     // QGraphicsItem
     QRectF boundingRect() const;
@@ -49,14 +45,14 @@ public:
                const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0);
 
-protected:
-    ZTileLayerGroup *mLayerGroup;
+private:
+    void updateBoundingRect();
+
+	QRectF mBoundingRect;
     MapDocument *mMapDocument;
-	MapRenderer *mRenderer;
-    QRectF mBoundingRect;
 };
 
 } // namespace Internal
 } // namespace Tiled
 
-#endif // ZTILELAYERGROUPITEM_H
+#endif // ZGRIDITEM_H

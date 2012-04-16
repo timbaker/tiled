@@ -29,12 +29,14 @@
 
 using namespace Tiled;
 
-ZTileLayerGroup::ZTileLayerGroup()
+ZTileLayerGroup::ZTileLayerGroup(int level)
+	: mLevel(level)
 {
 }
 
 void ZTileLayerGroup::addTileLayer(TileLayer *layer, int index)
 {
+	Q_ASSERT(layer->level() == mLevel);
     if (mLayers.contains(layer))
         return;
 	int arrayIndex = 0;
@@ -51,6 +53,8 @@ void ZTileLayerGroup::addTileLayer(TileLayer *layer, int index)
 		mIndices[arrayIndex] += 1;
 		arrayIndex++;
 	}
+	layer->setGroup(this);
+//	layer->setLevel(mLevel);
 }
 
 void ZTileLayerGroup::removeTileLayer(TileLayer *layer)
@@ -64,6 +68,8 @@ void ZTileLayerGroup::removeTileLayer(TileLayer *layer)
 			mIndices[arrayIndex] -= 1;
 			arrayIndex++;
 		}
+		layer->setGroup(0);
+//		layer->setLevel(0);
 	}
 }
 

@@ -130,8 +130,12 @@ void AutomappingManager::autoMapInternal(QRegion where, Layer *touchedLayer)
         mError += automapper->errorString();
     }
 
+#ifdef ZOMBOID
+    mMapDocument->emitRegionChanged(*passedRegion, map->layerAt(map->indexOfLayer(layer)));
+#else
     mMapDocument->emitRegionChanged(*passedRegion);
-    delete passedRegion;
+#endif
+	delete passedRegion;
     mMapDocument->setCurrentLayerIndex(map->indexOfLayer(layer));
 
     if (!mWarning.isEmpty())

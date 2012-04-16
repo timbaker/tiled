@@ -31,7 +31,8 @@ namespace Tiled {
 
 ///// ///// ///// ///// /////
 
-ZLotTileLayerGroup::ZLotTileLayerGroup()
+ZLotTileLayerGroup::ZLotTileLayerGroup(int level)
+	: ZTileLayerGroup(level)
 {
 }
 
@@ -85,15 +86,23 @@ ZLot::ZLot(Map *map)
 				continue;
 			uint level;
 			if (groupForTileLayer(tl, &level)) {
+				tl->setLevel(level);
 				if (!mLevelToTileLayers.contains(level))
-					mLevelToTileLayers[level] = new ZLotTileLayerGroup();
+					mLevelToTileLayers[level] = new ZLotTileLayerGroup(level);
 				ZLotTileLayerGroup *layerGroup = mLevelToTileLayers[level];
 				layerGroup->addTileLayer(tl, index);
-				layerGroup->mBounds |= layerGroup->_bounds();
-				maxMargins(layerGroup->mMargins, layerGroup->_drawMargins(), layerGroup->mMargins);
 				++index;
 			}
 		}
+	}
+
+	foreach (ZLotTileLayerGroup *layerGroup, mLevelToTileLayers) {
+		int level = layerGroup->level();
+		layerGroup->mBounds = layerGroup->_bounds();
+		maxMargins(layerGroup->mMargins, layerGroup->_drawMargins(), layerGroup->mMargins);
+		if (level > map->maxLevel())
+			map->setMaxLevel(level);
+
 	}
 }
 

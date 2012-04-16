@@ -57,6 +57,7 @@ set ( Tiled_HDRS
 	undocommands.h
 	utils.h
 
+	zgriditem.hpp
 	zlot.hpp
 	ztilelayergroupitem.h
 	)
@@ -154,6 +155,7 @@ set ( Tiled_SRCS
 	utils.cpp
 	zoomable.cpp
 
+	zgriditem.cpp
 	zlot.cpp
 	zlotmanager.cpp
 	ZomboidScene.cpp

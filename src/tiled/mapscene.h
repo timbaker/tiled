@@ -41,6 +41,9 @@ class MapDocument;
 class MapObjectItem;
 class MapScene;
 class ObjectGroupItem;
+#ifdef ZOMBOID
+class ZGridItem;
+#endif
 
 /**
  * A graphics scene that represents the contents of a map.
@@ -157,16 +160,24 @@ private slots:
     /**
      * Repaints the specified region. The region is in tile coordinates.
      */
+#ifdef ZOMBOID
+    virtual void regionChanged(const QRegion &region, Layer *layer);
+#else
     void repaintRegion(const QRegion &region);
+#endif
 
     void currentLayerIndexChanged();
 
+#ifdef ZOMBOID
+    virtual void mapChanged();
+#else
     void mapChanged();
+#endif
     void tilesetChanged(Tileset *tileset);
 
 #ifdef ZOMBOID
     virtual void layerAdded(int index);
-	virtual void layerAboutToBeRemoved(int index) {};
+	virtual void layerAboutToBeRemoved(int index);
     virtual void layerRemoved(int index);
     virtual void layerChanged(int index);
     virtual void layerRenamed(int index);
@@ -186,12 +197,14 @@ private slots:
 #ifdef ZOMBOID
 protected:
     virtual QGraphicsItem *createLayerItem(Layer *layer);
+
+	virtual void updateCurrentLayerHighlight();
 #else
 private:
     QGraphicsItem *createLayerItem(Layer *layer);
-#endif
 
     void updateCurrentLayerHighlight();
+#endif
 
     bool eventFilter(QObject *object, QEvent *event);
 
@@ -205,6 +218,9 @@ private:
     QPointF mLastMousePos;
     QVector<QGraphicsItem*> mLayerItems;
     QGraphicsRectItem *mDarkRectangle;
+#ifdef ZOMBOID
+	ZGridItem *mGridItem;
+#endif
 
     typedef QMap<MapObject*, MapObjectItem*> ObjectItems;
     ObjectItems mObjectItems;

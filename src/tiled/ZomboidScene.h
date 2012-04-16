@@ -50,10 +50,18 @@ public:
 	virtual QMargins drawMargins() const;
 
 	// ZTileLayerGroup
+    virtual void addTileLayer(TileLayer *layer, int index);
+    virtual void removeTileLayer(TileLayer *layer);
 	virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect);
+
+	void synch();
 
 	ZomboidScene *mMapScene;
 	int mLevel;
+
+	bool mAnyVisibleLayers;
+	QRect mTileBounds;
+	QMargins mDrawMargins;
 
 	struct LotLayers
 	{
@@ -61,12 +69,12 @@ public:
 		{
 			mLayerGroup = 0;
 		}
-		LotLayers(const QPoint& pos, const ZTileLayerGroup *layerGroup)
-			: mMapObjectPos(pos)
+		LotLayers(const MapObject *mapObject, const ZTileLayerGroup *layerGroup)
+			: mMapObject(mapObject)
 			, mLayerGroup(layerGroup)
 		{
 		}
-		QPoint mMapObjectPos;
+		const MapObject *mMapObject;
 		const ZTileLayerGroup *mLayerGroup;
 	};
 	QVector<LotLayers> mPreparedLotLayers;
@@ -94,6 +102,10 @@ public:
 private slots:
     virtual void refreshScene();
 
+    virtual void regionChanged(const QRegion &region, Layer *layer);
+
+	virtual void mapChanged();
+
     virtual void layerAdded(int index);
     virtual void layerAboutToBeRemoved(int index);
     virtual void layerRemoved(int index);
@@ -104,9 +116,24 @@ private slots:
 	void onLotRemoved(ZLot *lot, MapObject *mapObject);
 	void onLotUpdated(ZLot *lot, MapObject *mapObject);
 protected:
-    virtual QGraphicsItem *createLayerItem(Layer *layer);
-	bool groupForTileLayer(TileLayer *tl, uint *group);
+	void layerGroupAboutToChange(TileLayer *tl, ZTileLayerGroup *newGroup);
+	void layerGroupChanged(TileLayer *tl, ZTileLayerGroup *oldGroup);
+
+	void layerLevelAboutToChange(int index, int newLevel);
+	void layerLevelChanged(int index, int oldLevel);
+ 
+	// MapScene
+	virtual QGraphicsItem *createLayerItem(Layer *layer);
+	virtual void updateCurrentLayerHighlight();
+
+	bool levelForLayer(Layer *layer, int *level = 0);
+	void synchWithTileLayers();
+	void synchWithTileLayer(TileLayer *tl);
+
+	void setGraphicsSceneZOrder();
+	int levelZOrder(int level);
 private:
+	QMap<int,ZTileLayerGroup*> mTileLayerGroups;
 	QMap<int,ZTileLayerGroupItem*> mTileLayerGroupItems;
 	ZLotManager mLotManager;
 };

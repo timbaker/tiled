@@ -58,7 +58,11 @@ void TilePainter::setCell(int x, int y, const Cell &cell)
         return;
 
     mTileLayer->setCell(layerX, layerY, cell);
-    mMapDocument->emitRegionChanged(QRegion(x, y, 1, 1));
+#ifdef ZOMBOID
+	mMapDocument->emitRegionChanged(QRegion(x, y, 1, 1), mTileLayer);
+#else
+	mMapDocument->emitRegionChanged(QRegion(x, y, 1, 1));
+#endif
 }
 
 void TilePainter::setCells(int x, int y,
@@ -78,7 +82,11 @@ void TilePainter::setCells(int x, int y,
                          tileLayer,
                          region.translated(-mTileLayer->position()));
 
-    mMapDocument->emitRegionChanged(region);
+#ifdef ZOMBOID
+	mMapDocument->emitRegionChanged(region, mTileLayer);
+#else
+	mMapDocument->emitRegionChanged(region);
+#endif
 }
 
 void TilePainter::drawCells(int x, int y, TileLayer *tileLayer)
@@ -103,7 +111,11 @@ void TilePainter::drawCells(int x, int y, TileLayer *tileLayer)
         }
     }
 
+#ifdef ZOMBOID
+    mMapDocument->emitRegionChanged(region, mTileLayer);
+#else
     mMapDocument->emitRegionChanged(region);
+#endif
 }
 
 void TilePainter::drawStamp(const TileLayer *stamp,
@@ -137,7 +149,11 @@ void TilePainter::drawStamp(const TileLayer *stamp,
         }
     }
 
+#ifdef ZOMBOID
+    mMapDocument->emitRegionChanged(region, mTileLayer);
+#else
     mMapDocument->emitRegionChanged(region);
+#endif
 }
 
 void TilePainter::erase(const QRegion &region)
@@ -147,7 +163,11 @@ void TilePainter::erase(const QRegion &region)
         return;
 
     mTileLayer->erase(paintable.translated(-mTileLayer->position()));
-    mMapDocument->emitRegionChanged(paintable);
+#ifdef ZOMBOID
+	mMapDocument->emitRegionChanged(paintable, mTileLayer);
+#else
+	mMapDocument->emitRegionChanged(paintable);
+#endif
 }
 
 QRegion TilePainter::computeFillRegion(const QPoint &fillOrigin) const

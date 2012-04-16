@@ -61,6 +61,10 @@ void ZLotManager::setMapDocument(MapDocument *mapDoc)
 		}
 		mMapDocument = mapDoc;
 		if (mMapDocument) {
+			connect(mapDocument(), SIGNAL(layerAdded(int)),
+					this, SLOT(onLayerAdded(int)));
+			connect(mapDocument(), SIGNAL(layerAboutToBeRemoved(int)),
+					this, SLOT(onLayerAboutToBeRemoved(int)));
 			connect(mapDocument(), SIGNAL(objectsAdded(QList<MapObject*>)),
 					this, SLOT(onObjectsAdded(QList<MapObject*>)));
 			connect(mapDocument(), SIGNAL(objectsChanged(QList<MapObject*>)),
@@ -150,6 +154,9 @@ void ZLotManager::shareTilesets(Map *map)
 
 void ZLotManager::onLotDirectoryChanged()
 {
+	// Put this up, otherwise the progress dialog shows and hides for each lot
+	ZProgressManager::instance()->begin(QLatin1String("Checking lots..."));
+
 	// This will try to load any lot files that couldn't be loaded from the old directory.
 	// Lot files that were already loaded won't be affected.
 	Map *map = mapDocument()->map();
@@ -157,6 +164,26 @@ void ZLotManager::onLotDirectoryChanged()
 		if (ObjectGroup *og = layer->asObjectGroup()) {
 			onObjectsChanged(og->objects());
 		}
+	}
+
+	ZProgressManager::instance()->end();
+}
+
+void ZLotManager::onLayerAdded(int index)
+{
+	Layer *layer = mapDocument()->map()->layerAt(index);
+	// Moving a layer first removes it, then adds it again
+	if (ObjectGroup *og = layer->asObjectGroup()) {
+		onObjectsAdded(og->objects());
+	}
+}
+
+void ZLotManager::onLayerAboutToBeRemoved(int index)
+{
+	Layer *layer = mapDocument()->map()->layerAt(index);
+	// Moving a layer first removes it, then adds it again
+	if (ObjectGroup *og = layer->asObjectGroup()) {
+		onObjectsRemoved(og->objects());
 	}
 }
 

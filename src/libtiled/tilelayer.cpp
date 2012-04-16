@@ -39,7 +39,10 @@ using namespace Tiled;
 TileLayer::TileLayer(const QString &name, int x, int y, int width, int height):
     Layer(TileLayerType, name, x, y, width, height),
     mMaxTileSize(0, 0),
-    mGrid(width * height)
+#ifdef ZOMBOID
+	mTileLayerGroup(0),
+#endif
+	mGrid(width * height)
 {
     Q_ASSERT(width >= 0);
     Q_ASSERT(height >= 0);
@@ -431,5 +434,8 @@ TileLayer *TileLayer::initializeClone(TileLayer *clone) const
     clone->mGrid = mGrid;
     clone->mMaxTileSize = mMaxTileSize;
     clone->mOffsetMargins = mOffsetMargins;
+#ifdef ZOMBOID
+	/* don't clone the group! */
+#endif
     return clone;
 }
