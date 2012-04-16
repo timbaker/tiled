@@ -118,7 +118,7 @@ void MapScene::setMapDocument(MapDocument *mapDocument)
                 this, SLOT(mapChanged()));
 #ifdef ZOMBOID
         connect(mMapDocument, SIGNAL(regionChanged(QRegion,Layer*)),
-                this, SLOT(repaintRegion(QRegion,Layer*)));
+                this, SLOT(regionChanged(QRegion,Layer*)));
 #else
         connect(mMapDocument, SIGNAL(regionChanged(QRegion)),
                 this, SLOT(repaintRegion(QRegion)));
@@ -230,7 +230,7 @@ QGraphicsItem *MapScene::createLayerItem(Layer *layer)
         foreach (MapObject *object, og->objects()) {
             MapObjectItem *item = new MapObjectItem(object, mMapDocument,
                                                     ogItem);
-            mObjectItems.insert(object, item);
+			mObjectItems.insert(object, item);
         }
         layerItem = ogItem;
     } else if (ImageLayer *il = layer->asImageLayer()) {
@@ -275,7 +275,7 @@ void MapScene::updateCurrentLayerHighlight()
 }
 
 #ifdef ZOMBOID
-void MapScene::repaintRegion(const QRegion &region, Layer *layer)
+void MapScene::regionChanged(const QRegion &region, Layer *layer)
 {
     const MapRenderer *renderer = mMapDocument->renderer();
     const QMargins margins = mMapDocument->map()->drawMargins();

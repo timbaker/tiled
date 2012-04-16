@@ -86,11 +86,11 @@ ZLot::ZLot(Map *map)
 				continue;
 			uint level;
 			if (groupForTileLayer(tl, &level)) {
+				tl->setLevel(level);
 				if (!mLevelToTileLayers.contains(level))
 					mLevelToTileLayers[level] = new ZLotTileLayerGroup(level);
 				ZLotTileLayerGroup *layerGroup = mLevelToTileLayers[level];
 				layerGroup->addTileLayer(tl, index);
-				tl->setLevel(level);
 				++index;
 			}
 		}

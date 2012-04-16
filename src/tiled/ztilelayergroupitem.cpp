@@ -23,6 +23,7 @@
 #include "tilelayer.h"
 #include "ztilelayergroup.h"
 #include "map.h"
+#include "mapdocument.h"
 #include "maprenderer.h"
 
 #include <QPainter>
@@ -31,26 +32,15 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 
-ZTileLayerGroupItem::ZTileLayerGroupItem(ZTileLayerGroup *layerGroup, MapRenderer *renderer)
+ZTileLayerGroupItem::ZTileLayerGroupItem(ZTileLayerGroup *layerGroup, MapDocument *mapDoc)
     : mLayerGroup(layerGroup)
-    , mRenderer(renderer)
+    , mMapDocument(mapDoc)
+	, mRenderer(mapDoc->renderer())
 {
 	Q_ASSERT(layerGroup);
     setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
 
 //    syncWithTileLayers();
-}
-
-void ZTileLayerGroupItem::addTileLayer(TileLayer *layer, int index)
-{
-    mLayerGroup->addTileLayer(layer, index);
-    syncWithTileLayers();
-}
-
-void ZTileLayerGroupItem::removeTileLayer(TileLayer *layer)
-{
-    mLayerGroup->removeTileLayer(layer);
-    syncWithTileLayers();
 }
 
 // The opacity, visibility, or name of a layer has changed.
@@ -75,9 +65,14 @@ void ZTileLayerGroupItem::syncWithTileLayers()
 	mBoundingRect = mRenderer->boundingRect(tileBounds, mLayerGroup->mLayers.isEmpty() ? 0 : mLayerGroup->mLayers.first());
 
 	QMargins drawMargins = mLayerGroup->drawMargins();
+
+    // The TileLayer includes the maximum tile size in its draw margins. So
+    // we need to subtract the tile size of the map, since that part does not
+    // contribute to additional margin.
+
 	mBoundingRect.adjust(-drawMargins.left(),
-                -drawMargins.top(),
-                drawMargins.right(),
+                -qMax(0, drawMargins.top() - mMapDocument->map()->tileHeight()),
+                qMax(0, drawMargins.right() - mMapDocument->map()->tileWidth()),
                 drawMargins.bottom());
 }
 
@@ -91,4 +86,17 @@ void ZTileLayerGroupItem::paint(QPainter *painter,
                           QWidget *)
 {
     mRenderer->drawTileLayerGroup(painter, mLayerGroup, option->exposedRect);
+#ifdef _DEBUG
+#if 0
+	Layer *layer = mLayerGroup->mLayers.isEmpty() ? 0 : mLayerGroup->mLayers.first();
+	if (!layer || !layer->isVisible()) return;
+
+	qreal left = mRenderer->tileToPixelCoords(0, layer->height(), layer).x();
+	qreal top = mRenderer->tileToPixelCoords(0, 0, layer).y();
+	qreal right = mRenderer->tileToPixelCoords(layer->width(), 0, layer).x();
+	qreal bottom = mRenderer->tileToPixelCoords(layer->width(), layer->height(), layer).y();
+	painter->drawRect(left, top, right-left, bottom-top);
+#endif
+	painter->drawRect(mBoundingRect);
+#endif
 }

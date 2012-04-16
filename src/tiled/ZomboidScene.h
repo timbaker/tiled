@@ -50,10 +50,18 @@ public:
 	virtual QMargins drawMargins() const;
 
 	// ZTileLayerGroup
+    virtual void addTileLayer(TileLayer *layer, int index);
+    virtual void removeTileLayer(TileLayer *layer);
 	virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect);
+
+	void synch();
 
 	ZomboidScene *mMapScene;
 	int mLevel;
+
+	bool mAnyVisibleLayers;
+	QRect mTileBounds;
+	QMargins mDrawMargins;
 
 	struct LotLayers
 	{
@@ -94,7 +102,9 @@ public:
 private slots:
     virtual void refreshScene();
 
-    virtual void mapChanged();
+    virtual void regionChanged(const QRegion &region, Layer *layer);
+
+	virtual void mapChanged();
 
     virtual void layerAdded(int index);
     virtual void layerAboutToBeRemoved(int index);
@@ -112,9 +122,13 @@ protected:
 	void layerLevelAboutToChange(int index, int newLevel);
 	void layerLevelChanged(int index, int oldLevel);
  
+	// MapScene
 	virtual QGraphicsItem *createLayerItem(Layer *layer);
 	virtual void updateCurrentLayerHighlight();
+
 	bool levelForLayer(Layer *layer, int *level = 0);
+	void synchWithTileLayers();
+	void synchWithTileLayer(TileLayer *tl);
 
 	void setGraphicsSceneZOrder();
 	int levelZOrder(int level);

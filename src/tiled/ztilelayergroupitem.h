@@ -28,13 +28,13 @@ class ZTileLayerGroup;
 
 namespace Internal {
 
+class MapDocument;
+
 class ZTileLayerGroupItem : public QGraphicsItem
 {
 public:
-    ZTileLayerGroupItem(ZTileLayerGroup *layerGroup, MapRenderer *renderer);
+    ZTileLayerGroupItem(ZTileLayerGroup *layerGroup, MapDocument *mapDoc);
 
-    void addTileLayer(TileLayer *layer, int index);
-    void removeTileLayer(TileLayer *layer);
 	void tileLayerChanged(TileLayer *layer);
 
 	bool ownsTileLayer(TileLayer *layer);
@@ -51,7 +51,8 @@ public:
 
 protected:
     ZTileLayerGroup *mLayerGroup;
-    MapRenderer *mRenderer;
+    MapDocument *mMapDocument;
+	MapRenderer *mRenderer;
     QRectF mBoundingRect;
 };
 

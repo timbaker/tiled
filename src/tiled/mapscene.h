@@ -161,7 +161,7 @@ private slots:
      * Repaints the specified region. The region is in tile coordinates.
      */
 #ifdef ZOMBOID
-    void repaintRegion(const QRegion &region, Layer *layer);
+    virtual void regionChanged(const QRegion &region, Layer *layer);
 #else
     void repaintRegion(const QRegion &region);
 #endif

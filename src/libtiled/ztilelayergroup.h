@@ -44,8 +44,8 @@ public:
 
     ZTileLayerGroup(int level);
 
-    void addTileLayer(TileLayer *layer, int index);
-    void removeTileLayer(TileLayer *layer);
+    virtual void addTileLayer(TileLayer *layer, int index);
+    virtual void removeTileLayer(TileLayer *layer);
 
 	// Layer
 	virtual QRect bounds() const;
