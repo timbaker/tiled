@@ -350,7 +350,7 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *l
 
     QTransform baseTransform = painter->transform();
 
-	QVector<const Cell*> cells(40);
+	static QVector<const Cell*> cells(40); // or QVarLengthArray
 
 	layerGroup->prepareDrawing(this, rect);
 
