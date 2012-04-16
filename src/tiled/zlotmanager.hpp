@@ -64,6 +64,7 @@ private slots:
 private:
     void handleMapObject(MapObject *mapObject);
 	void shareTilesets(Map *map);
+	void convertOrientation(Map *map0, const Map *map1);
 
 	Internal::MapDocument *mMapDocument;
 	QMap<QString,ZLot*> mLots; // One ZLot per different .lot file

@@ -23,6 +23,7 @@
 #include "mapreader.h"
 #include "objectgroup.h"
 #include "preferences.h"
+#include "tilelayer.h"
 #include "tileset.h"
 #include "zlot.hpp"
 #include "zprogress.hpp"
@@ -110,6 +111,7 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
 					Map *map = reader.readMap(fileInfo.absoluteFilePath());
 					if (map) {
 						shareTilesets(map);
+						convertOrientation(map, mMapDocument->map());
 						// TODO: sanity check the lot-map tile width and height against the current map
 						mLots[type] = new ZLot(map);
 						newLot = mLots[type];
@@ -152,9 +154,66 @@ void ZLotManager::shareTilesets(Map *map)
 	}
 }
 
+// FIXME: Duplicated in ZomboidScene.cpp and zlot.cpp
+static bool levelForLayer(Layer *layer, int *level)
+{
+	(*level) = 0;
+
+	// See if the layer name matches "0_foo" or "1_bar" etc.
+	const QString& name = layer->name();
+	QStringList sl = name.trimmed().split(QLatin1Char('_'));
+	if (sl.count() > 1 && !sl[1].isEmpty()) {
+		bool conversionOK;
+		(*level) = sl[0].toInt(&conversionOK);
+		return conversionOK;
+	}
+	return false;
+}
+
+void ZLotManager::convertOrientation(Map *map0, const Map *map1)
+{
+	if (!map0 || !map1)
+		return;
+	if (map0->orientation() == map1->orientation())
+		return;
+	if (map0->orientation() == Map::Isometric && map1->orientation() == Map::LevelIsometric) {
+		QPoint offset(3, 3);
+		foreach (Layer *layer, map0->layers()) {
+			if (TileLayer *tl = layer->asTileLayer()) {
+				int level;
+				if (levelForLayer(tl, &level) && level > 0) {
+					tl->offset(offset * level, tl->bounds(), false, false);
+				}
+			}
+		}
+		map0->setOrientation(map1->orientation());
+		return;
+	}
+	if (map0->orientation() == Map::LevelIsometric && map1->orientation() == Map::Isometric) {
+		QPoint offset(3, 3);
+		int level, maxLevel = 0;
+		foreach (Layer *layer, map0->layers()) {
+			if (levelForLayer(layer, &level) && (level > maxLevel))
+				maxLevel = level;
+		}
+		if (maxLevel > 0) {
+			QSize size(map0->width() + maxLevel * 3, map0->height() + maxLevel * 3);
+			foreach (Layer *layer, map0->layers()) {
+				(void) levelForLayer(layer, &level);
+				layer->resize(size, offset * (maxLevel - level));
+			}
+			map0->setWidth(size.width());
+			map0->setHeight(size.height());
+		}
+		map0->setOrientation(map1->orientation());
+		return;
+	}
+}
+
 void ZLotManager::onLotDirectoryChanged()
 {
-	// Put this up, otherwise the progress dialog shows and hides for each lot
+	// Put this up, otherwise the progress dialog shows and hides for each lot.
+	// FIXME: since each open document has its own ZLotManager, this shows and hides for each document.
 	ZProgressManager::instance()->begin(QLatin1String("Checking lots..."));
 
 	// This will try to load any lot files that couldn't be loaded from the old directory.
