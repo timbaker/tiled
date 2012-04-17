@@ -86,6 +86,7 @@ ZLot::ZLot(Map *map, Map::Orientation orient)
 				continue;
 			if (tl->isEmpty()) // SLOW - checks every cell
 				continue;
+			layer->setVisible(true);
 			uint level;
 			if (groupForTileLayer(tl, &level)) {
 				tl->setLevel(level);
