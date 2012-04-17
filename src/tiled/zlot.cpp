@@ -108,11 +108,8 @@ ZLot::ZLot(Map *map, Map::Orientation orient)
 		if (level < mMinLevel)
 			mMinLevel = level;
 	}
-
-	// Converted from LevelIsometric -> Isometric
-	if (map->orientation() == Map::Isometric && mOrientation == Map::LevelIsometric) {
-		mOrientationOffset = QPoint(map->maxLevel() * 3, map->maxLevel() * 3);
-	}
+	if (mMinLevel == 10000)
+		mMinLevel = 0;
 }
 
 ZLot::~ZLot()
@@ -122,11 +119,6 @@ ZLot::~ZLot()
 	qDeleteAll(mMap->tilesets()); // FIXME: share these
 #endif
 	delete mMap;
-}
-
-QSize ZLot::unconvertedSize()
-{
-	return QSize(mMap->width()/* - mOrientationOffset.x()*/, mMap->height() /*- mOrientationOffset.y()*/);
 }
 
 // FIXME: duplicated in ZomboidScene

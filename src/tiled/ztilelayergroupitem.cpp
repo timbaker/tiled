@@ -85,6 +85,8 @@ void ZTileLayerGroupItem::paint(QPainter *painter,
                           const QStyleOptionGraphicsItem *option,
                           QWidget *)
 {
+	if (mBoundingRect.isNull())
+		return;
     mRenderer->drawTileLayerGroup(painter, mLayerGroup, option->exposedRect);
 #ifdef _DEBUG
 #if 0

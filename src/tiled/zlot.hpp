@@ -66,14 +66,11 @@ public:
 	const ZTileLayerGroup *tileLayersForLevel(int level) const;
 	Map *map() const { return mMap; }
 	int minLevel() const { return mMinLevel; }
-	QPoint orientationOffset() const { return mOrientationOffset; }
-	QSize unconvertedSize();
 
 private:
 	Map *mMap;
 	QMap<int,ZLotTileLayerGroup*> mLevelToTileLayers;
 	Map::Orientation mOrientation;
-	QPoint mOrientationOffset;
 	int mMinLevel;
 };
 

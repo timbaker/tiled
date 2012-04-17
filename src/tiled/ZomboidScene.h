@@ -61,6 +61,7 @@ public:
 
 	bool mAnyVisibleLayers;
 	QRect mTileBounds;
+	QRect mLotTileBounds;
 	QMargins mDrawMargins;
 
 	struct LotLayers
