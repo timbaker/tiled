@@ -93,6 +93,7 @@ ZLot::ZLot(Map *map, Map::Orientation orient)
 					mLevelToTileLayers[level] = new ZLotTileLayerGroup(level, this);
 				ZLotTileLayerGroup *layerGroup = mLevelToTileLayers[level];
 				layerGroup->addTileLayer(tl, index);
+				mLayersByName[layer->name()].append(layer);
 				++index;
 			}
 		}
@@ -147,6 +148,14 @@ const ZTileLayerGroup *ZLot::tileLayersForLevel(int level) const
 	if (mLevelToTileLayers.contains(level))
 		return mLevelToTileLayers[level];
 	return 0;
+}
+
+void ZLot::setLayerVisibility(const QString &name, bool visible) const
+{
+	if (!mLayersByName.contains(name))
+		return;
+	foreach (Layer *layer, mLayersByName[name])
+		layer->setVisible(visible);
 }
 
 } // namespace Tiled

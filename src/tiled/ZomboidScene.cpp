@@ -91,16 +91,9 @@ void ZomboidTileLayerGroup::prepareDrawing(const MapRenderer *renderer, const QR
 		QRectF bounds = layerGroupSceneBounds(lotLayer.mLot->map(), layerGroup, renderer, levelOffset, mapObjectPos);
 		if ((bounds & rect).isValid()) {
 			// Set the visibility of lot map layers to match this layer-group's layers.
-			// NOTE: This works best when the lot map layers match the current map layers in number and order.
-			bool visible = false;
-			int n = 0;
-			foreach (TileLayer *layer, layerGroup->mLayers) {
-				if (n >= mLayers.count())
-					layer->setVisible(visible);
-				else
-					layer->setVisible(visible = mLayers[n]->isVisible());
-				++n;
-			}
+			// Layers in the lot that don't exist in the edited map are always shown.
+			foreach (Layer *layer, mLayers)
+				lotLayer.mLot->setLayerVisibility(layer->name(), layer->isVisible());
 			mPreparedLotLayers.append(lotLayer);
 		}
 	}

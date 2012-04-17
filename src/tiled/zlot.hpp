@@ -64,12 +64,14 @@ public:
 	bool groupForTileLayer(TileLayer *tl, uint *group);
 	bool orderedCellsAt(int level, const QPoint &point, QVector<const Cell*>& cells) const;
 	const ZTileLayerGroup *tileLayersForLevel(int level) const;
+	void setLayerVisibility(const QString &name, bool visible) const;
 	Map *map() const { return mMap; }
 	int minLevel() const { return mMinLevel; }
 
 private:
 	Map *mMap;
 	QMap<int,ZLotTileLayerGroup*> mLevelToTileLayers;
+	QMap<QString,QVector<Layer*>> mLayersByName;
 	Map::Orientation mOrientation;
 	int mMinLevel;
 };
