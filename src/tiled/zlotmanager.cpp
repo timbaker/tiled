@@ -222,10 +222,6 @@ void ZLotManager::convertOrientation(Map *map0, const Map *map1)
 
 void ZLotManager::onLotDirectoryChanged()
 {
-	// Put this up, otherwise the progress dialog shows and hides for each lot.
-	// FIXME: since each open document has its own ZLotManager, this shows and hides for each document.
-	ZProgressManager::instance()->begin(QLatin1String("Checking lots..."));
-
 	// This will try to load any lot files that couldn't be loaded from the old directory.
 	// Lot files that were already loaded won't be affected.
 	Map *map = mapDocument()->map();
@@ -234,8 +230,6 @@ void ZLotManager::onLotDirectoryChanged()
 			onObjectsChanged(og->objects());
 		}
 	}
-
-	ZProgressManager::instance()->end();
 }
 
 void ZLotManager::onLayerAdded(int index)

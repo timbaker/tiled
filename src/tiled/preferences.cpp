@@ -23,6 +23,9 @@
 #include "documentmanager.h"
 #include "languagemanager.h"
 #include "tilesetmanager.h"
+#ifdef ZOMBOID
+#include "zprogress.hpp"
+#endif
 
 #include <QDesktopServices>
 #include <QFileInfo>
@@ -310,6 +313,13 @@ void Preferences::setLotDirectory(const QString &path)
 		return;
 	mLotDirectory = path;
 	mSettings->setValue(QLatin1String("Lot/Directory"), path);
+
+	// Put this up, otherwise the progress dialog shows and hides for each lot.
+	// Since each open document has its own ZLotManager, this shows and hides for each document as well.
+	ZProgressManager::instance()->begin(QLatin1String("Checking lots..."));
+
 	emit lotDirectoryChanged();
+
+	ZProgressManager::instance()->end();
 }
 #endif
