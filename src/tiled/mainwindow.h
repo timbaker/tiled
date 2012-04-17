@@ -54,6 +54,9 @@ class BucketFillTool;
 class TilesetDock;
 class MapView;
 class CommandButton;
+#ifdef ZOMBOID
+class ZMapsDock;
+#endif
 
 /**
  * The main editor window.
@@ -200,6 +203,9 @@ private:
     MapDocument *mMapDocument;
     MapDocumentActionHandler *mActionHandler;
     LayerDock *mLayerDock;
+#ifdef ZOMBOID
+	ZMapsDock *mMapsDock;
+#endif
     TilesetDock *mTilesetDock;
     QLabel *mZoomLabel;
     QLabel *mStatusInfoLabel;

@@ -75,6 +75,7 @@
 #include "zoomable.h"
 #include "commandbutton.h"
 #ifdef ZOMBOID
+#include "zmapsdock.hpp"
 #include "zprogress.hpp"
 #endif
 
@@ -106,6 +107,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     , mMapDocument(0)
     , mActionHandler(new MapDocumentActionHandler(this))
     , mLayerDock(new LayerDock(this))
+#ifdef ZOMBOID
+	, mMapsDock(new ZMapsDock())
+#endif
     , mTilesetDock(new TilesetDock(this))
     , mZoomLabel(new QLabel)
     , mStatusInfoLabel(new QLabel)
@@ -160,6 +164,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     addDockWidget(Qt::RightDockWidgetArea, mLayerDock);
     addDockWidget(Qt::RightDockWidgetArea, undoDock);
     tabifyDockWidget(undoDock, mLayerDock);
+#ifdef ZOMBOID
+    addDockWidget(Qt::RightDockWidgetArea, mMapsDock);
+    tabifyDockWidget(mLayerDock, mMapsDock);
+#endif
     addDockWidget(Qt::RightDockWidgetArea, mTilesetDock);
 
     statusBar()->addPermanentWidget(mZoomLabel);
@@ -360,6 +368,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     mUi->menuView->addAction(mTilesetDock->toggleViewAction());
     mUi->menuView->addAction(mLayerDock->toggleViewAction());
     mUi->menuView->addAction(undoDock->toggleViewAction());
+#ifdef ZOMBOID
+    mUi->menuView->addAction(mMapsDock->toggleViewAction());
+#endif
 
     connect(mClipboardManager, SIGNAL(hasMapChanged()), SLOT(updateActions()));
 

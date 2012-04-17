@@ -157,6 +157,7 @@ set ( Tiled_SRCS
 
 	zgriditem.cpp
 	zlot.cpp
+	zmapsdock.cpp
 	zlotmanager.cpp
 	ZomboidScene.cpp
 	zprogress.cpp
@@ -238,6 +239,7 @@ set ( Tiled_MOCS
 	zoomable.h
 
 	ZomboidScene.h
+	zmapsdock.hpp
 	zlotmanager.hpp
 	zprogress.hpp
 	)

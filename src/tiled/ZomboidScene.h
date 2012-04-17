@@ -126,6 +126,12 @@ protected:
 
 	void layerLevelAboutToChange(int index, int newLevel);
 	void layerLevelChanged(int index, int oldLevel);
+
+	// QGraphicsScene
+	virtual void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
+	virtual void dragMoveEvent(QGraphicsSceneDragDropEvent *event);
+	virtual void dragLeaveEvent(QGraphicsSceneDragDropEvent *event);
+	virtual void dropEvent(QGraphicsSceneDragDropEvent *event);
  
 	// MapScene
 	virtual QGraphicsItem *createLayerItem(Layer *layer);
@@ -141,6 +147,7 @@ private:
 	QMap<int,ZTileLayerGroup*> mTileLayerGroups;
 	QMap<int,ZTileLayerGroupItem*> mTileLayerGroupItems;
 	ZLotManager mLotManager;
+	MapObjectItem *mDnDMapObjectItem;
 };
 
 } // namespace Internal

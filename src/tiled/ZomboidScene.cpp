@@ -769,8 +769,106 @@ void ZomboidScene::onLotUpdated(ZLot *lot, MapObject *mapObject)
 	MapObjectItem *item = itemForObject(mapObject);
 	if (item) {
 		mapObject->setPosition(mapObject->position().toPoint());
-		item->resize(QSizeF(lot->map()->size()));
+		item->resize(lot->map()->size());
 	}
 
 	synchWithTileLayers();
+}
+
+#include "addremovemapobject.h"
+#include <QFileInfo>
+#include <QMimeData>
+#include <QStringList>
+#include <qgraphicssceneevent.h>
+#include <QUrl>
+
+void ZomboidScene::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
+{
+	Layer *layer = mMapDocument->currentLayer();
+	if (!layer) {
+		event->ignore();
+		return;
+	}
+	ObjectGroup *objectGroup = layer->asObjectGroup();
+	if (!objectGroup) {
+		event->ignore();
+		return;
+	}
+
+    foreach (const QUrl &url, event->mimeData()->urls()) {
+		QFileInfo info(url.toLocalFile());
+		if (!info.exists()) continue;
+		if (!info.isFile()) continue;
+		if (info.suffix() != QLatin1String("tmx")) continue;
+
+		MapObject *newMapObject = new MapObject;
+		newMapObject->setPosition(mMapDocument->renderer()->pixelToTileCoords(event->scenePos(), objectGroup));
+		newMapObject->setShape(MapObject::Rectangle);
+		newMapObject->setSize(4, 4);
+		objectGroup->addObject(newMapObject);
+		mDnDMapObjectItem = new MapObjectItem(newMapObject, mapDocument());
+		addItem(mDnDMapObjectItem);
+
+		event->accept();
+		return;
+	}
+
+	event->ignore();
+}
+
+void ZomboidScene::dragMoveEvent(QGraphicsSceneDragDropEvent *event)
+{
+	ObjectGroup *objectGroup = mDnDMapObjectItem->mapObject()->objectGroup();
+	mDnDMapObjectItem->mapObject()->setPosition(mMapDocument->renderer()->pixelToTileCoords(event->scenePos(), objectGroup));
+	mDnDMapObjectItem->syncWithMapObject();
+//	qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+}
+
+void ZomboidScene::dragLeaveEvent(QGraphicsSceneDragDropEvent *event)
+{
+	if (mDnDMapObjectItem) {
+		MapObject *newMapObject = mDnDMapObjectItem->mapObject();
+
+		ObjectGroup *objectGroup = newMapObject->objectGroup();
+		objectGroup->removeObject(newMapObject);
+
+		delete mDnDMapObjectItem;
+		mDnDMapObjectItem = 0;
+
+		delete newMapObject;
+	}
+}
+
+void ZomboidScene::dropEvent(QGraphicsSceneDragDropEvent *event)
+{
+	Layer *layer = mMapDocument->currentLayer();
+	if (!layer) return;
+	ObjectGroup *objectGroup = layer->asObjectGroup();
+	if (!objectGroup) return;
+
+    foreach (const QUrl &url, event->mimeData()->urls()) {
+		QFileInfo info(url.toLocalFile());
+		if (!info.exists()) continue;
+		if (!info.isFile()) continue;
+		if (info.suffix() != QLatin1String("tmx")) continue;
+
+		MapObject *newMapObject = mDnDMapObjectItem->mapObject(); // new MapObject;
+		delete mDnDMapObjectItem;
+
+		ObjectGroup *objectGroup = newMapObject->objectGroup();
+		objectGroup->removeObject(newMapObject);
+
+		newMapObject->setPosition(mMapDocument->renderer()->pixelToTileCoords(event->scenePos(), objectGroup));
+#if 0
+		newMapObject->setShape(MapObject::Rectangle);
+		newMapObject->setSize(4, 4);
+#endif
+		newMapObject->setName(QLatin1String("lot"));
+		newMapObject->setType(info.baseName());
+
+		mapDocument()->undoStack()->push(new AddMapObject(mapDocument(),
+														  objectGroup,
+														  newMapObject));
+
+	}
 }
