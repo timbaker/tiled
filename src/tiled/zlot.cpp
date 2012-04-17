@@ -31,8 +31,9 @@ namespace Tiled {
 
 ///// ///// ///// ///// /////
 
-ZLotTileLayerGroup::ZLotTileLayerGroup(int level)
+ZLotTileLayerGroup::ZLotTileLayerGroup(int level, ZLot *owner)
 	: ZTileLayerGroup(level)
+	, mLot(owner)
 {
 }
 
@@ -74,8 +75,9 @@ static void maxMargins(const QMargins &a,
     out.setBottom(qMax(a.bottom(), b.bottom()));
 }
 
-ZLot::ZLot(Map *map)
+ZLot::ZLot(Map *map, Map::Orientation orient)
 	: mMap(map)
+	, mOrientation(orient)
 {
 	int index = 0;
 	foreach (Layer *layer, mMap->layers()) {
@@ -88,7 +90,7 @@ ZLot::ZLot(Map *map)
 			if (groupForTileLayer(tl, &level)) {
 				tl->setLevel(level);
 				if (!mLevelToTileLayers.contains(level))
-					mLevelToTileLayers[level] = new ZLotTileLayerGroup(level);
+					mLevelToTileLayers[level] = new ZLotTileLayerGroup(level, this);
 				ZLotTileLayerGroup *layerGroup = mLevelToTileLayers[level];
 				layerGroup->addTileLayer(tl, index);
 				++index;
@@ -96,13 +98,20 @@ ZLot::ZLot(Map *map)
 		}
 	}
 
+	mMinLevel = 10000;
 	foreach (ZLotTileLayerGroup *layerGroup, mLevelToTileLayers) {
 		int level = layerGroup->level();
 		layerGroup->mBounds = layerGroup->_bounds();
 		maxMargins(layerGroup->mMargins, layerGroup->_drawMargins(), layerGroup->mMargins);
 		if (level > map->maxLevel())
 			map->setMaxLevel(level);
+		if (level < mMinLevel)
+			mMinLevel = level;
+	}
 
+	// Converted from LevelIsometric -> Isometric
+	if (map->orientation() == Map::Isometric && mOrientation == Map::LevelIsometric) {
+		mOrientationOffset = QPoint(map->maxLevel() * 3, map->maxLevel() * 3);
 	}
 }
 
@@ -113,6 +122,11 @@ ZLot::~ZLot()
 	qDeleteAll(mMap->tilesets()); // FIXME: share these
 #endif
 	delete mMap;
+}
+
+QSize ZLot::unconvertedSize()
+{
+	return QSize(mMap->width()/* - mOrientationOffset.x()*/, mMap->height() /*- mOrientationOffset.y()*/);
 }
 
 // FIXME: duplicated in ZomboidScene

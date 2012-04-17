@@ -32,6 +32,19 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 
+QRectF layerGroupSceneBounds(Map *map, const ZTileLayerGroup *layerGroup, const MapRenderer *renderer, int levelOffset, const QPoint &offset)
+{
+	QRect r = layerGroup->bounds().translated(offset);
+	Layer *layer = layerGroup->mLayers.first();
+	layer->setLevel(layer->level() + levelOffset);
+	QRectF bounds = renderer->boundingRect(r, layer);
+	layer->setLevel(layerGroup->level());
+
+	QMargins m = map->drawMargins(); /* layerGroup->drawMargins(); */
+	bounds.adjust(-m.left(), -m.top(), m.right(), m.bottom());
+	return bounds;
+}
+
 ///// ///// ///// ///// /////
 
 // from map.cpp
@@ -70,6 +83,15 @@ void ZomboidTileLayerGroup::prepareDrawing(const MapRenderer *renderer, const QR
 	mPreparedLotLayers.clear();
 	if (mAnyVisibleLayers == false)
 		return;
+#if 1
+	foreach (const LotLayers &lotLayer, mVisibleLotLayers) {
+		{
+		const ZTileLayerGroup *layerGroup = lotLayer.mLayerGroup;
+		const MapObject *mapObject = lotLayer.mMapObject;
+		QPoint mapObjectPos = mapObject->position().toPoint();
+		int levelOffset = mapObject->objectGroup()->level();
+		QRectF bounds = layerGroupSceneBounds(lotLayer.mLot->map(), layerGroup, renderer, levelOffset, mapObjectPos);
+#else
 	foreach (MapObject *mapObject, mMapScene->mLotMapObjects) {
 		if (mapObject->objectGroup()->isVisible() == false)
 			continue;
@@ -85,6 +107,7 @@ void ZomboidTileLayerGroup::prepareDrawing(const MapRenderer *renderer, const QR
 			QRectF bounds = renderer->boundingRect(r, layer);
 			layer->setLevel(layerGroup->level());
 			bounds.adjust(-m.left(), -m.top(), m.right(), m.bottom());
+#endif
 			if ((bounds & rect).isValid()) {
 				// Set the visibility of lot map layers to match this layer-group's layers.
 				// NOTE: This works best when the lot map layers match the current map layers in number and order.
@@ -97,7 +120,7 @@ void ZomboidTileLayerGroup::prepareDrawing(const MapRenderer *renderer, const QR
 						layer->setVisible(visible = mLayers[n]->isVisible());
 					++n;
 				}
-				mPreparedLotLayers.append(LotLayers(mapObject, layerGroup));
+				mPreparedLotLayers.append(lotLayer/*LotLayers(mapObject, layerGroup)*/);
 			}
 		}
 	}
@@ -152,6 +175,7 @@ void ZomboidTileLayerGroup::synch()
 		}
 	}
 
+	mVisibleLotLayers.clear();
 	if (mAnyVisibleLayers == true) {
 		foreach (MapObject *mapObject, mMapScene->mLotMapObjects) {
 			if (mapObject->objectGroup()->isVisible() == false)
@@ -159,9 +183,13 @@ void ZomboidTileLayerGroup::synch()
 			ZLot *lot = mMapScene->mMapObjectToLot[mapObject];
 			int levelOffset = mapObject->objectGroup()->level();
 			const ZTileLayerGroup *layerGroup = lot->tileLayersForLevel(mLevel - levelOffset);
-			if (layerGroup) {
+			if (layerGroup && !layerGroup->mLayers.isEmpty()) {
+#if 1
+				mVisibleLotLayers.append(LotLayers(mapObject, lot, layerGroup));
+#else
 				QPoint mapObjectPos = mapObject->position().toPoint();
-				r |= layerGroup->bounds().translated(mapObjectPos);
+				r |= QRect(layerGroup->bounds()/*.translated(-layerGroup->bounds().topLeft())*/).translated(mapObjectPos);
+#endif
 				maxMargins(m, layerGroup->drawMargins(), m);
 			}
 		}
@@ -214,8 +242,37 @@ QMargins ZomboidTileLayerGroup::drawMargins() const
 
 ///// ///// ///// ///// /////
 
+class ZomboidTileLayerGroupItem : public ZTileLayerGroupItem
+{
+public:
+    ZomboidTileLayerGroupItem(ZomboidTileLayerGroup *layerGroup, MapDocument *mapDoc)
+		: ZTileLayerGroupItem(layerGroup, mapDoc)
+		, mZomboidLayerGroup(layerGroup)
+	{
+	}
+
+	// ZTileLayerGroupItem
+    virtual void syncWithTileLayers()
+	{
+		ZTileLayerGroupItem::syncWithTileLayers();
+
+		foreach (const ZomboidTileLayerGroup::LotLayers &lotLayer, mZomboidLayerGroup->mVisibleLotLayers) {
+			int levelOffset = lotLayer.mMapObject->objectGroup()->level();
+			QPoint mapObjectPos = lotLayer.mMapObject->position().toPoint();
+			QRectF bounds = layerGroupSceneBounds(lotLayer.mLot->map(),
+				lotLayer.mLayerGroup, mMapDocument->renderer(), levelOffset, mapObjectPos);
+			mBoundingRect |= bounds;
+		}
+	}
+
+	ZomboidTileLayerGroup *mZomboidLayerGroup;
+};
+
+///// ///// ///// ///// /////
+
 ZomboidScene::ZomboidScene(QObject *parent)
     : MapScene(parent)
+	, mDnDMapObjectItem(0)
 {
 	connect(&mLotManager, SIGNAL(lotAdded(ZLot*,MapObject*)),
 		this, SLOT(onLotAdded(ZLot*,MapObject*)));
@@ -332,7 +389,7 @@ QGraphicsItem *ZomboidScene::createLayerItem(Layer *layer)
 	if (TileLayer *tl = layer->asTileLayer()) {
 		if (tl->group()) {
 			if (mTileLayerGroupItems[tl->level()] == 0) {
-				mTileLayerGroupItems[tl->level()] = new ZTileLayerGroupItem(tl->group(), mMapDocument);
+				mTileLayerGroupItems[tl->level()] = new ZomboidTileLayerGroupItem((ZomboidTileLayerGroup*)tl->group(), mMapDocument);
 				addItem(mTileLayerGroupItems[tl->level()]);
 			}
 			mTileLayerGroupItems[tl->level()]->syncWithTileLayers();
@@ -548,7 +605,7 @@ void ZomboidScene::layerGroupChanged(TileLayer *tl, ZTileLayerGroup *oldGroup)
 	// Find (or create) the new TileLayerGroupItem owner
 	if (newGroup) {
 		if (!mTileLayerGroupItems.contains(newLevel)) {
-			mTileLayerGroupItems[newLevel] = new ZTileLayerGroupItem(newGroup, mMapDocument);
+			mTileLayerGroupItems[newLevel] = new ZomboidTileLayerGroupItem((ZomboidTileLayerGroup*)newGroup, mMapDocument);
 			addItem(mTileLayerGroupItems[newLevel]);
 		}
 		newOwner = mTileLayerGroupItems[newLevel];
@@ -693,24 +750,39 @@ void ZomboidScene::onLotAdded(ZLot *lot, MapObject *mapObject)
 	mLotMapObjects.append(mapObject);
 	mMapObjectToLot[mapObject] = lot;
 
-	// Resize the map object to the size of the lot's map, and snap-to-grid
 	MapObjectItem *item = itemForObject(mapObject); // FIXME: assumes createLayerItem() was called before this
 	if (item) {
-		QRect mapBounds(0, 0, lot->map()->width(), lot->map()->height());
+		// Set the drawMargins of the MapObjectItem to contain the whole lot map.
+#if 1
+		const ZTileLayerGroup *lotGrp = lot->tileLayersForLevel(lot->minLevel());
+		QRectF levelBoundsBottom = layerGroupSceneBounds(lot->map(), lotGrp, mMapDocument->renderer(),
+			mapObject->objectGroup()->level(), mapObject->position().toPoint());
+		lotGrp = lot->tileLayersForLevel(lot->map()->maxLevel());
+		QRectF levelBoundsTop = layerGroupSceneBounds(lot->map(), lotGrp, mMapDocument->renderer(),
+			mapObject->objectGroup()->level(), mapObject->position().toPoint());
+		QRectF mapObjectBounds = mMapDocument->renderer()->boundingRect(QRect(mapObject->position().toPoint(), lot->unconvertedSize()));
+		QRectF lotBounds = levelBoundsTop | levelBoundsBottom;
+#else
+		QRect mapBounds = QRect(0/*-lot->orientationOffset().x()*/, 0/*-lot->orientationOffset().x()*/, lot->map()->width(), lot->map()->height());
 		QRectF levelBoundsBottom = mMapDocument->renderer()->boundingRect(mapBounds);
 		const ZTileLayerGroup *lotGrp = lot->tileLayersForLevel(lot->map()->maxLevel());
-		QRectF levelBoundsTop = mMapDocument->renderer()->boundingRect(mapBounds, lotGrp->mLayers[0]);
+		QRectF levelBoundsTop = mMapDocument->renderer()->boundingRect(lotGrp->bounds(), lotGrp->mLayers[0]);
 		QRectF lotBounds = levelBoundsBottom | levelBoundsTop;
 		QMargins lotMargins = lot->map()->drawMargins();
 		lotBounds.adjust(-lotMargins.left(), -lotMargins.top(), lotMargins.right(), lotMargins.bottom());
-		QRectF mapObjectBounds = levelBoundsBottom;
+		QRectF mapObjectBounds = mMapDocument->renderer()->boundingRect(QRect(QPoint(), lot->unconvertedSize()));
+		// Remove excess width when displaying LevelIsometric lot in an Isometric map
+//		lotBounds.setLeft(mapObjectBounds.left());
+//		lotBounds.setRight(mapObjectBounds.right());
+#endif
 		item->setDrawMargins(QMargins(mapObjectBounds.left() - lotBounds.left(),
 			mapObjectBounds.top() - lotBounds.top(),
 			lotBounds.right() - mapObjectBounds.right(),
 			lotBounds.bottom() - mapObjectBounds.bottom()));
 
+		// Resize the map object to the size of the lot's map, and snap-to-grid
 		mapObject->setPosition(mapObject->position().toPoint());
-		item->resize(QSizeF(lot->map()->size()));
+		item->resize(lot->unconvertedSize());
 	}
 
 	synchWithTileLayers();

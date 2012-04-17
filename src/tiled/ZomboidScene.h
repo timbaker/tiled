@@ -69,15 +69,19 @@ public:
 		{
 			mLayerGroup = 0;
 		}
-		LotLayers(const MapObject *mapObject, const ZTileLayerGroup *layerGroup)
+		LotLayers(const MapObject *mapObject, const ZLot *lot, const ZTileLayerGroup *layerGroup)
 			: mMapObject(mapObject)
+			, mLot(lot)
 			, mLayerGroup(layerGroup)
 		{
 		}
+		const ZLot *mLot;
 		const MapObject *mMapObject;
 		const ZTileLayerGroup *mLayerGroup;
 	};
 	QVector<LotLayers> mPreparedLotLayers;
+
+	QVector<LotLayers> mVisibleLotLayers;
 };
 
 ///// ///// ///// ///// /////

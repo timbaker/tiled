@@ -18,6 +18,8 @@
 #ifndef ZLOT_H
 #define ZLOT_H
 
+#include "map.h"
+
 #include <QMap>
 #include <QVector>
 #include <QPoint>
@@ -26,16 +28,16 @@
 namespace Tiled {
 
 class Cell;
-class Map;
 class TileLayer;
 
 namespace Internal {
 }
 
+class ZLot;
 class ZLotTileLayerGroup : public ZTileLayerGroup
 {
 public:
-	ZLotTileLayerGroup(int level);
+	ZLotTileLayerGroup(int level, ZLot *owner);
 
 	// ZTileLayerGroup
 	virtual QRect bounds() const { return mBounds; }
@@ -46,6 +48,8 @@ public:
 	QRect _bounds() { return ZTileLayerGroup::bounds(); }
 	QMargins _drawMargins() { return ZTileLayerGroup::drawMargins(); }
 
+	ZLot *mLot;
+
 	// These never change
 	QRect mBounds;
 	QMargins mMargins;
@@ -54,17 +58,23 @@ public:
 class ZLot
 {
 public:
-	ZLot(Map *map);
+	ZLot(Map *map, Map::Orientation orient);
 	~ZLot();
 
 	bool groupForTileLayer(TileLayer *tl, uint *group);
 	bool orderedCellsAt(int level, const QPoint &point, QVector<const Cell*>& cells) const;
 	const ZTileLayerGroup *tileLayersForLevel(int level) const;
 	Map *map() const { return mMap; }
+	int minLevel() const { return mMinLevel; }
+	QPoint orientationOffset() const { return mOrientationOffset; }
+	QSize unconvertedSize();
 
 private:
 	Map *mMap;
 	QMap<int,ZLotTileLayerGroup*> mLevelToTileLayers;
+	Map::Orientation mOrientation;
+	QPoint mOrientationOffset;
+	int mMinLevel;
 };
 
 } // namespace Tiled

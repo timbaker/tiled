@@ -110,10 +110,11 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
 					MapReader reader;
 					Map *map = reader.readMap(fileInfo.absoluteFilePath());
 					if (map) {
+						Map::Orientation orient = map->orientation();
 						shareTilesets(map);
 						convertOrientation(map, mMapDocument->map());
 						// TODO: sanity check the lot-map tile width and height against the current map
-						mLots[type] = new ZLot(map);
+						mLots[type] = new ZLot(map, orient);
 						newLot = mLots[type];
 					} else {
 						// TODO: Add error handling
@@ -191,6 +192,13 @@ void ZLotManager::convertOrientation(Map *map0, const Map *map1)
 	}
 	if (map0->orientation() == Map::LevelIsometric && map1->orientation() == Map::Isometric) {
 		QPoint offset(3, 3);
+#if 1
+		int level, maxLevel = 0;
+		foreach (Layer *layer, map0->layers()) {
+			if (levelForLayer(layer, &level) && level > 0)
+				layer->setPosition(-offset * level);
+		}
+#else
 		int level, maxLevel = 0;
 		foreach (Layer *layer, map0->layers()) {
 			if (levelForLayer(layer, &level) && (level > maxLevel))
@@ -201,10 +209,12 @@ void ZLotManager::convertOrientation(Map *map0, const Map *map1)
 			foreach (Layer *layer, map0->layers()) {
 				(void) levelForLayer(layer, &level);
 				layer->resize(size, offset * (maxLevel - level));
+				layer->setPosition(map0->width() - size.width(), map0->height() - size.height());
 			}
 			map0->setWidth(size.width());
 			map0->setHeight(size.height());
 		}
+#endif
 		map0->setOrientation(map1->orientation());
 		return;
 	}
