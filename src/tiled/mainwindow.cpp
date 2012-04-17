@@ -108,7 +108,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     , mActionHandler(new MapDocumentActionHandler(this))
     , mLayerDock(new LayerDock(this))
 #ifdef ZOMBOID
-	, mMapsDock(new ZMapsDock())
+	, mMapsDock(new ZMapsDock(this))
 #endif
     , mTilesetDock(new TilesetDock(this))
     , mZoomLabel(new QLabel)

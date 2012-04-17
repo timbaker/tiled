@@ -29,6 +29,7 @@ class QTreeView;
 namespace Tiled {
 namespace Internal {
 
+class MainWindow;
 class ZMapsView;
 
 class ZMapsDock : public QDockWidget
@@ -36,7 +37,7 @@ class ZMapsDock : public QDockWidget
     Q_OBJECT
 
 public:
-    ZMapsDock(QWidget *parent = 0);
+    ZMapsDock(MainWindow *mainWindow, QWidget *parent = 0);
 
 private slots:
 	void browse();
@@ -62,7 +63,7 @@ class ZMapsView : public QTreeView
     Q_OBJECT
 
 public:
-    ZMapsView(QWidget *parent = 0);
+    ZMapsView(MainWindow *mainWindow, QWidget *parent = 0);
 
     QSize sizeHint() const;
 
@@ -77,9 +78,10 @@ private slots:
     void currentRowChanged(const QModelIndex &index);
     void currentLayerIndexChanged(int index);
 	void onLotDirectoryChanged();
+	void onActivated(const QModelIndex &index);
 
 private:
-	QPoint mDragStartPosition;
+	MainWindow *mMainWindow;
 };
 
 } // namespace Internal

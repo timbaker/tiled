@@ -17,6 +17,7 @@
 
 #include "zmapsdock.hpp"
 
+#include "mainwindow.h"
 #include "preferences.h"
 #include "utils.h"
 
@@ -37,9 +38,9 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 
-ZMapsDock::ZMapsDock(QWidget *parent)
+ZMapsDock::ZMapsDock(MainWindow *mainWindow, QWidget *parent)
     : QDockWidget(parent)
-	, mMapsView(new ZMapsView)
+	, mMapsView(new ZMapsView(mainWindow))
 {
     setObjectName(QLatin1String("ZMapsDock"));
 
@@ -115,14 +116,16 @@ void ZMapsDock::retranslateUi()
 
 ///// ///// ///// ///// /////
 
-ZMapsView::ZMapsView(QWidget *parent)
+ZMapsView::ZMapsView(MainWindow *mainWindow, QWidget *parent)
     : QTreeView(parent)
+	, mMainWindow(mainWindow)
 {
     setRootIsDecorated(false);
     setHeaderHidden(false);
     setItemsExpandable(false);
     setUniformRowHeights(true);
 	setDragEnabled(true);
+	setDefaultDropAction(Qt::MoveAction);
 
 	Preferences *prefs = Preferences::instance();
 	connect(prefs, SIGNAL(lotDirectoryChanged()), this, SLOT(onLotDirectoryChanged()));
@@ -146,6 +149,8 @@ ZMapsView::ZMapsView(QWidget *parent)
 	
 	//resizeColumnToContents(0);
 	setColumnWidth(0, 200);
+
+	connect(this, SIGNAL(activated(QModelIndex)), SLOT(onActivated(QModelIndex)));
 }
 
 QSize ZMapsView::sizeHint() const
@@ -162,9 +167,6 @@ void ZMapsView::onLotDirectoryChanged()
 
 void ZMapsView::mousePressEvent(QMouseEvent *event)
 {
-	if (event->button() == Qt::LeftButton)
-         mDragStartPosition = event->pos();
-
 	QTreeView::mousePressEvent(event);
 }
 
@@ -184,6 +186,12 @@ void ZMapsView::mouseMoveEvent(QMouseEvent *event)
      Qt::DropAction dropAction = drag->exec(Qt::CopyAction | Qt::MoveAction);
 #endif
 	 QTreeView::mouseMoveEvent(event);
+}
+
+void ZMapsView::onActivated(const QModelIndex &index)
+{
+	QString path = ((QFileSystemModel*)model())->filePath(index);
+	mMainWindow->openFile(path);
 }
 
 void ZMapsView::currentRowChanged(const QModelIndex &index)
