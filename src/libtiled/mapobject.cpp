@@ -36,6 +36,9 @@ MapObject::MapObject():
     mShape(Rectangle),
     mTile(0),
     mObjectGroup(0)
+#ifdef ZOMBOID
+	, mVisible(true)
+#endif
 {
 }
 

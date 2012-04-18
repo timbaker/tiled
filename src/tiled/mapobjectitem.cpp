@@ -264,6 +264,10 @@ void MapObjectItem::syncWithMapObject()
     }
 
     mSyncing = false;
+
+#ifdef ZOMBOID
+	setVisible(mObject->isVisible());
+#endif
 }
 
 #ifdef ZOMBOID

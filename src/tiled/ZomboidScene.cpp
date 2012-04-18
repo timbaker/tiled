@@ -92,6 +92,8 @@ void ZomboidTileLayerGroup::prepareDrawing(const MapRenderer *renderer, const QR
 		if ((bounds & rect).isValid()) {
 			// Set the visibility of lot map layers to match this layer-group's layers.
 			// Layers in the lot that don't exist in the edited map are always shown.
+			foreach (Layer *layer, lotLayer.mLayerGroup->mLayers)
+				layer->setVisible(true);
 			foreach (Layer *layer, mLayers)
 				lotLayer.mLot->setLayerVisibility(layer->name(), layer->isVisible());
 			mPreparedLotLayers.append(lotLayer);
@@ -155,6 +157,8 @@ void ZomboidTileLayerGroup::synch()
 	if (mAnyVisibleLayers == true) {
 		foreach (MapObject *mapObject, mMapScene->mLotMapObjects) {
 			if (mapObject->objectGroup()->isVisible() == false)
+				continue;
+			if (mapObject->isVisible() == false)
 				continue;
 			ZLot *lot = mMapScene->mMapObjectToLot[mapObject];
 			int levelOffset = mapObject->objectGroup()->level();

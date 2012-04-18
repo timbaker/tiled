@@ -90,7 +90,7 @@ QVariant ZMapObjectModel::data(const QModelIndex &index, int role) const
 		case Qt::CheckStateRole:
 			if (index.column() > 0)
 				return QVariant();
-			return Qt::Checked; // need MapObjectItem
+			return mapObject->isVisible() ? Qt::Checked : Qt::Unchecked;
 		case OpacityRole:
 			return qreal(1);
 		default:
@@ -122,6 +122,14 @@ bool ZMapObjectModel::setData(const QModelIndex &index, const QVariant &value,
 {
 	if (MapObject *mapObject = toMapObject(index)) {
 		switch (role) {
+		case Qt::CheckStateRole:
+			{
+			Qt::CheckState c = static_cast<Qt::CheckState>(value.toInt());
+			mapObject->setVisible(c == Qt::Checked);
+			emit dataChanged(index, index);
+			emit objectsChanged(QList<MapObject*>() << mapObject);
+			return true;
+			}
 		case Qt::EditRole:
 			{
 				const QString s = value.toString();
