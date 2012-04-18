@@ -250,8 +250,19 @@ void CreateObjectTool::mousePressed(QGraphicsSceneMouseEvent *event)
 void CreateObjectTool::mouseReleased(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton && mNewMapObjectItem) {
+#ifdef ZOMBOID
+        if (mMode == CreateArea || mMode == CreateTile) {
+			QRectF r = mNewMapObjectItem->boundingRect();
+			if (r.width() < 6 && r.height() < 6)
+				cancelNewMapObject();
+			else
+				finishNewMapObject();
+		}
+				
+#else
         if (mMode == CreateArea || mMode == CreateTile)
-            finishNewMapObject();
+			finishNewMapObject();
+#endif
     }
 }
 
