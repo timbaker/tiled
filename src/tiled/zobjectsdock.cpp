@@ -327,8 +327,13 @@ void ZObjectsView::currentLayerIndexChanged(int index)
 
 void ZObjectsView::selectedObjectsChanged()
 {
-	if (mSynching)
+	if (mSynching) {
+		MapObject *o = mMapDocument->selectedObjects().first();
+		QPoint pos = o->position().toPoint();
+		QSize size = o->size().toSize();
+		DocumentManager::instance()->centerViewOn(pos.x() + size.width() / 2, pos.y() + size.height() / 2);
 		return;
+	}
 
 	clearSelection();
 
@@ -341,6 +346,8 @@ void ZObjectsView::selectedObjectsChanged()
 		QModelIndex index = model()->index(o);
 		selectionModel()->select(index, QItemSelectionModel::Select |  QItemSelectionModel::Rows);
 	}
-	if (selectedObjects.count())
-		scrollTo(model()->index(selectedObjects.first()));
+	if (selectedObjects.count() == 1) {
+		MapObject *o = selectedObjects.first();
+		scrollTo(model()->index(o));
+	}
 }
