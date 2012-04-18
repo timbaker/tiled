@@ -18,6 +18,7 @@
 #include "zobjectsdock.hpp"
 
 #include "addremovemapobject.h"
+#include "documentmanager.h"
 #include "map.h"
 #include "mapobject.h"
 #include "mapdocument.h"
@@ -103,19 +104,29 @@ ZObjectsDock::ZObjectsDock(QWidget *parent)
     connect(this, SIGNAL(visibilityChanged(bool)),
             mObjectsView, SLOT(setVisible(bool)));
 
+    connect(DocumentManager::instance(), SIGNAL(documentCloseRequested(int)),
+            SLOT(documentCloseRequested(int)));
+
 	updateActions();
 }
 
 void ZObjectsDock::setMapDocument(MapDocument *mapDoc)
 {
-	if (mMapDocument)
+	if (mMapDocument) {
+		saveExpandedGroups(mMapDocument);
 		mMapDocument->disconnect(this);
+	}
+
 	mMapDocument = mapDoc;
-	if (mMapDocument)
-        connect(mMapDocument, SIGNAL(selectedObjectsChanged()), this, SLOT(updateActions()));
-	updateActions();
 
     mObjectsView->setMapDocument(mapDoc);
+
+	if (mMapDocument) {
+		restoreExpandedGroups(mMapDocument);
+        connect(mMapDocument, SIGNAL(selectedObjectsChanged()), this, SLOT(updateActions()));
+	}
+
+	updateActions();
 }
 
 void ZObjectsDock::changeEvent(QEvent *e)
@@ -200,6 +211,31 @@ void ZObjectsDock::objectProperties()
 	MapObject *mapObject = selectedObjects.first();
     ObjectPropertiesDialog propertiesDialog(mMapDocument, mapObject, 0);
     propertiesDialog.exec();
+}
+
+void ZObjectsDock::saveExpandedGroups(MapDocument *mapDoc)
+{
+	mExpandedGroups[mapDoc].clear();
+	foreach (Layer *layer, mapDoc->map()->layers()) {
+		if (ObjectGroup *og = layer->asObjectGroup()) {
+			if (mObjectsView->isExpanded(mObjectsView->model()->index(og)))
+				mExpandedGroups[mapDoc].append(og);
+		}
+	}
+}
+
+void ZObjectsDock::restoreExpandedGroups(MapDocument *mapDoc)
+{
+	foreach (ObjectGroup *og, mExpandedGroups[mapDoc])
+		mObjectsView->setExpanded(mObjectsView->model()->index(og), true);
+	mExpandedGroups[mapDoc].clear();
+}
+
+void ZObjectsDock::documentCloseRequested(int index)
+{
+    DocumentManager *documentManager = DocumentManager::instance();
+    MapDocument *mapDoc = documentManager->documents().at(index);
+	mExpandedGroups.remove(mapDoc);
 }
 
 ///// ///// ///// ///// /////

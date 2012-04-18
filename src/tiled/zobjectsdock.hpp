@@ -24,6 +24,9 @@
 class QTreeView;
 
 namespace Tiled {
+
+class ObjectGroup;
+
 namespace Internal {
 
 class MapDocument;
@@ -47,9 +50,13 @@ private slots:
 	void duplicateObjects();
 	void removeObjects();
 	void objectProperties();
+	void documentCloseRequested(int index);
 
 private:
     void retranslateUi();
+
+	void saveExpandedGroups(MapDocument *mapDoc);
+	void restoreExpandedGroups(MapDocument *mapDoc);
 
 	QAction *mActionDuplicateObjects;
 	QAction *mActionRemoveObjects;
@@ -57,6 +64,7 @@ private:
 
 	ZObjectsView *mObjectsView;
 	MapDocument *mMapDocument;
+	QMap<MapDocument*,QList<ObjectGroup*>> mExpandedGroups;
 };
 
 class ZObjectsView : public QTreeView
