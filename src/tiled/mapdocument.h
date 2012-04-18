@@ -46,6 +46,9 @@ namespace Internal {
 
 class LayerModel;
 class TileSelectionModel;
+#ifdef ZOMBOID
+class ZMapObjectModel;
+#endif
 
 /**
  * Represents an editable map. The purpose of this class is to make sure that
@@ -161,6 +164,10 @@ public:
      */
     LayerModel *layerModel() const { return mLayerModel; }
 
+#ifdef ZOMBOID
+	ZMapObjectModel *mapObjectModel() const { return mMapObjectModel; }
+#endif
+
     /**
      * Returns the map renderer.
      */
@@ -226,7 +233,13 @@ public:
      */
     void emitRegionEdited(const QRegion &region, Layer *layer);
 
+#ifdef ZOMBOID
+private:
+#endif
     void emitObjectsAdded(const QList<MapObject*> &objects);
+#ifdef ZOMBOID
+    void emitObjectsAboutToBeRemoved(const QList<MapObject*> &objects);
+#endif
     void emitObjectsRemoved(const QList<MapObject*> &objects);
     void emitObjectsChanged(const QList<MapObject*> &objects);
 
@@ -238,6 +251,9 @@ public:
 
     inline void emitObjectChanged(MapObject *object)
     { emitObjectsChanged(QList<MapObject*>() << object); }
+#ifdef ZOMBOID
+public:
+#endif
 
     /**
      * Emits the editLayerNameRequested signal, to get renamed.
@@ -309,10 +325,19 @@ signals:
     void tilesetNameChanged(Tileset *tileset);
 
     void objectsAdded(const QList<MapObject*> &objects);
+#ifdef ZOMBOID
+    void objectsAboutToBeRemoved(const QList<MapObject*> &objects);
+#endif
     void objectsRemoved(const QList<MapObject*> &objects);
     void objectsChanged(const QList<MapObject*> &objects);
 
 private slots:
+#ifdef ZOMBOID
+    void onObjectsAdded(const QList<MapObject*> &objects);
+    void onObjectsChanged(const QList<MapObject*> &objects);
+    void onObjectsAboutToBeRemoved(const QList<MapObject*> &objects);
+    void onObjectsRemoved(const QList<MapObject*> &objects);
+#endif
     void onLayerAdded(int index);
     void onLayerAboutToBeRemoved(int index);
     void onLayerRemoved(int index);
@@ -328,6 +353,7 @@ private:
     MapRenderer *mRenderer;
     int mCurrentLayerIndex;
 #ifdef ZOMBOID
+	ZMapObjectModel *mMapObjectModel;
 	int mMaxVisibleLayer;
 #endif
     QUndoStack *mUndoStack;

@@ -23,6 +23,9 @@
 
 #include "mapdocument.h"
 #include "objectgroup.h"
+#ifdef ZOMBOID
+#include "zmapobjectmodel.hpp"
+#endif
 
 #include <QCoreApplication>
 
@@ -46,11 +49,19 @@ ChangeObjectGroupProperties::ChangeObjectGroupProperties(
 void ChangeObjectGroupProperties::redo()
 {
     mObjectGroup->setColor(mRedoColor);
+#ifdef ZOMBOID
+    mMapDocument->mapObjectModel()->emitObjectsChanged(mObjectGroup->objects());
+#else
     mMapDocument->emitObjectsChanged(mObjectGroup->objects());
+#endif
 }
 
 void ChangeObjectGroupProperties::undo()
 {
     mObjectGroup->setColor(mUndoColor);
+#ifdef ZOMBOID
+    mMapDocument->mapObjectModel()->emitObjectsChanged(mObjectGroup->objects());
+#else
     mMapDocument->emitObjectsChanged(mObjectGroup->objects());
+#endif
 }

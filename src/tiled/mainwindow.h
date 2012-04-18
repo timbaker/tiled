@@ -56,6 +56,7 @@ class MapView;
 class CommandButton;
 #ifdef ZOMBOID
 class ZMapsDock;
+class ZObjectsDock;
 #endif
 
 /**
@@ -205,6 +206,7 @@ private:
     LayerDock *mLayerDock;
 #ifdef ZOMBOID
 	ZMapsDock *mMapsDock;
+	ZObjectsDock *mObjectsDock;
 #endif
     TilesetDock *mTilesetDock;
     QLabel *mZoomLabel;

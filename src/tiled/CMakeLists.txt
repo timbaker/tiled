@@ -157,8 +157,10 @@ set ( Tiled_SRCS
 
 	zgriditem.cpp
 	zlot.cpp
-	zmapsdock.cpp
 	zlotmanager.cpp
+	zmapobjectmodel.cpp
+	zmapsdock.cpp
+	zobjectsdock.cpp
 	ZomboidScene.cpp
 	zprogress.cpp
 	ztilelayergroupitem.cpp
@@ -238,9 +240,11 @@ set ( Tiled_MOCS
 	undodock.h
 	zoomable.h
 
-	ZomboidScene.h
-	zmapsdock.hpp
 	zlotmanager.hpp
+	zmapobjectmodel.hpp
+	zmapsdock.hpp
+	ZomboidScene.h
+	zobjectsdock.hpp
 	zprogress.hpp
 	)
 QT4_WRAP_CPP(MOCS ${Tiled_MOCS})

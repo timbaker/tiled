@@ -22,6 +22,9 @@
 
 #include "mapdocument.h"
 #include "mapobject.h"
+#ifdef ZOMBOID
+#include "zmapobjectmodel.hpp"
+#endif
 
 #include <QCoreApplication>
 
@@ -56,9 +59,14 @@ void ChangeMapObject::swap()
     const QString name = mMapObject->name();
     const QString type = mMapObject->type();
 
+#ifdef ZOMBOID
+	mMapDocument->mapObjectModel()->setObjectName(mMapObject, mName);
+	mMapDocument->mapObjectModel()->setObjectType(mMapObject, mType);
+#else
     mMapObject->setName(mName);
     mMapObject->setType(mType);
     mMapDocument->emitObjectChanged(mMapObject);
+#endif
 
     mName = name;
     mType = type;

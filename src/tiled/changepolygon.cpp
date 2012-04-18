@@ -22,6 +22,9 @@
 
 #include "mapdocument.h"
 #include "mapobject.h"
+#ifdef ZOMBOID
+#include "zmapobjectmodel.hpp"
+#endif
 
 #include <QCoreApplication>
 
@@ -41,12 +44,20 @@ ChangePolygon::ChangePolygon(MapDocument *mapDocument,
 
 void ChangePolygon::undo()
 {
+#ifdef ZOMBOID
+    mMapDocument->mapObjectModel()->setObjectPolygon(mMapObject, mOldPolygon);
+#else
     mMapObject->setPolygon(mOldPolygon);
     mMapDocument->emitObjectChanged(mMapObject);
+#endif
 }
 
 void ChangePolygon::redo()
 {
+#ifdef ZOMBOID
+    mMapDocument->mapObjectModel()->setObjectPolygon(mMapObject, mNewPolygon);
+#else
     mMapObject->setPolygon(mNewPolygon);
     mMapDocument->emitObjectChanged(mMapObject);
+#endif
 }

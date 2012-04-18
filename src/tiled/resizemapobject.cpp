@@ -22,6 +22,9 @@
 
 #include "mapdocument.h"
 #include "mapobject.h"
+#ifdef ZOMBOID
+#include "zmapobjectmodel.hpp"
+#endif
 
 #include <QCoreApplication>
 
@@ -41,12 +44,20 @@ ResizeMapObject::ResizeMapObject(MapDocument *mapDocument,
 
 void ResizeMapObject::undo()
 {
+#ifdef ZOMBOID
+	mMapDocument->mapObjectModel()->setObjectSize(mMapObject, mOldSize);
+#else
     mMapObject->setSize(mOldSize);
     mMapDocument->emitObjectChanged(mMapObject);
+#endif
 }
 
 void ResizeMapObject::redo()
 {
+#ifdef ZOMBOID
+	mMapDocument->mapObjectModel()->setObjectSize(mMapObject, mNewSize);
+#else
     mMapObject->setSize(mNewSize);
     mMapDocument->emitObjectChanged(mMapObject);
+#endif
 }

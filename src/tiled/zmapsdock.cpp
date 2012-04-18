@@ -148,7 +148,11 @@ ZMapsView::ZMapsView(MainWindow *mainWindow, QWidget *parent)
 	setRootIndex(model->index(lotDirectory.absolutePath()));
 	
 	//resizeColumnToContents(0);
-	setColumnWidth(0, 200);
+	header()->setStretchLastSection(false);
+	header()->setResizeMode(0, QHeaderView::Stretch);
+	header()->setResizeMode(1, QHeaderView::ResizeToContents);
+
+//	model->setHeaderData(1, Qt::Horizontal, Qt::AlignRight, Qt::TextAlignmentRole);
 
 	connect(this, SIGNAL(activated(QModelIndex)), SLOT(onActivated(QModelIndex)));
 }

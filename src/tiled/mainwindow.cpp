@@ -76,6 +76,7 @@
 #include "commandbutton.h"
 #ifdef ZOMBOID
 #include "zmapsdock.hpp"
+#include "zobjectsdock.hpp"
 #include "zprogress.hpp"
 #endif
 
@@ -109,6 +110,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     , mLayerDock(new LayerDock(this))
 #ifdef ZOMBOID
 	, mMapsDock(new ZMapsDock(this))
+	, mObjectsDock(new ZObjectsDock())
 #endif
     , mTilesetDock(new TilesetDock(this))
     , mZoomLabel(new QLabel)
@@ -165,8 +167,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     addDockWidget(Qt::RightDockWidgetArea, undoDock);
     tabifyDockWidget(undoDock, mLayerDock);
 #ifdef ZOMBOID
+    addDockWidget(Qt::RightDockWidgetArea, mObjectsDock);
     addDockWidget(Qt::RightDockWidgetArea, mMapsDock);
-    tabifyDockWidget(mLayerDock, mMapsDock);
+    tabifyDockWidget(mLayerDock, mObjectsDock);
+    tabifyDockWidget(mObjectsDock, mMapsDock);
 #endif
     addDockWidget(Qt::RightDockWidgetArea, mTilesetDock);
 
@@ -369,6 +373,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     mUi->menuView->addAction(mLayerDock->toggleViewAction());
     mUi->menuView->addAction(undoDock->toggleViewAction());
 #ifdef ZOMBOID
+    mUi->menuView->addAction(mObjectsDock->toggleViewAction());
     mUi->menuView->addAction(mMapsDock->toggleViewAction());
 #endif
 
@@ -1429,6 +1434,9 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
 
     mActionHandler->setMapDocument(mMapDocument);
     mLayerDock->setMapDocument(mMapDocument);
+#ifdef ZOMBOID
+	mObjectsDock->setMapDocument(mMapDocument);
+#endif
     mTilesetDock->setMapDocument(mMapDocument);
     AutomappingManager::instance()->setMapDocument(mMapDocument);
     QuickStampManager::instance()->setMapDocument(mMapDocument);

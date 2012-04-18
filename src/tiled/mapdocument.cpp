@@ -31,6 +31,7 @@
 #include "layermodel.h"
 #ifdef ZOMBOID
 #include "zlevelrenderer.hpp"
+#include "zmapobjectmodel.hpp"
 #endif
 #include "map.h"
 #include "mapobject.h"
@@ -59,6 +60,9 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     mFileName(fileName),
     mMap(map),
     mLayerModel(new LayerModel(this)),
+#ifdef ZOMBOID
+	mMapObjectModel(new ZMapObjectModel(this)),
+#endif
     mUndoStack(new QUndoStack(this))
 {
     switch (map->orientation()) {
@@ -91,6 +95,14 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     connect(mLayerModel, SIGNAL(layerRenamed(int)), SIGNAL(layerRenamed(int)));
 
 	mMaxVisibleLayer = map->layerCount();
+#endif
+
+#ifdef ZOMBOID
+	mMapObjectModel->setMapDocument(this);
+	connect(mMapObjectModel, SIGNAL(objectsAdded(QList<MapObject*>)), SLOT(onObjectsAdded(QList<MapObject*>)));
+	connect(mMapObjectModel, SIGNAL(objectsChanged(QList<MapObject*>)), SLOT(onObjectsChanged(QList<MapObject*>)));
+	connect(mMapObjectModel, SIGNAL(objectsAboutToBeRemoved(QList<MapObject*>)), SLOT(onObjectsAboutToBeRemoved(QList<MapObject*>)));
+	connect(mMapObjectModel, SIGNAL(objectsRemoved(QList<MapObject*>)), SLOT(onObjectsRemoved(QList<MapObject*>)));
 #endif
 
     connect(mUndoStack, SIGNAL(cleanChanged(bool)), SIGNAL(modifiedChanged()));
@@ -496,6 +508,13 @@ void MapDocument::emitObjectsAdded(const QList<MapObject*> &objects)
     emit objectsAdded(objects);
 }
 
+#ifdef ZOMBOID
+void MapDocument::emitObjectsAboutToBeRemoved(const QList<MapObject*> &objects)
+{
+    emit objectsAboutToBeRemoved(objects);
+}
+#endif
+
 /**
  * Emits the objects removed signal with the specified list of objects.
  * This will cause the scene to remove the related items.
@@ -518,6 +537,28 @@ void MapDocument::emitObjectsChanged(const QList<MapObject*> &objects)
 {
     emit objectsChanged(objects);
 }
+
+#ifdef ZOMBOID
+void MapDocument::onObjectsAdded(const QList<MapObject*> &objects)
+{
+	emitObjectsAdded(objects);
+}
+
+void MapDocument::onObjectsChanged(const QList<MapObject*> &objects)
+{
+	emitObjectsChanged(objects);
+}
+
+void MapDocument::onObjectsAboutToBeRemoved(const QList<MapObject*> &objects)
+{
+	emitObjectsAboutToBeRemoved(objects);
+}
+
+void MapDocument::onObjectsRemoved(const QList<MapObject*> &objects)
+{
+	emitObjectsRemoved(objects);
+}
+#endif
 
 void MapDocument::onLayerAdded(int index)
 {
