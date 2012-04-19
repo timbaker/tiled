@@ -79,6 +79,9 @@ public:
     void setMapDocument(MapDocument *mapDoc);
 	ZMapObjectModel *model() const { return mMapObjectModel; }
 
+protected slots:
+	virtual void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+
 private slots:
 	void currentRowChanged(const QModelIndex &index);
 	void currentLayerIndexChanged(int index);

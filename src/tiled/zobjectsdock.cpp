@@ -158,7 +158,6 @@ void ZObjectsDock::updateActions()
 		? tr("Duplicate %n Objects", "", count) : tr("Duplicate Object"));
 	mActionRemoveObjects->setToolTip((enabled && count > 1)
 		? tr("Remove %n Objects", "", count) : tr("Remove Object"));
-
 }
 
 void ZObjectsDock::duplicateObjects()
@@ -229,6 +228,12 @@ void ZObjectsDock::restoreExpandedGroups(MapDocument *mapDoc)
 	foreach (ObjectGroup *og, mExpandedGroups[mapDoc])
 		mObjectsView->setExpanded(mObjectsView->model()->index(og), true);
 	mExpandedGroups[mapDoc].clear();
+
+	// Also restore the selection
+	foreach (MapObject *o, mapDoc->selectedObjects()) {
+		QModelIndex index = mObjectsView->model()->index(o);
+		mObjectsView->selectionModel()->select(index, QItemSelectionModel::Select |  QItemSelectionModel::Rows);
+	}
 }
 
 void ZObjectsDock::documentCloseRequested(int index)
@@ -249,6 +254,9 @@ ZObjectsView::ZObjectsView(QWidget *parent)
     setHeaderHidden(false);
     setItemsExpandable(true);
     setUniformRowHeights(true);
+
+	setSelectionBehavior(QAbstractItemView::SelectRows);
+	setSelectionMode(QAbstractItemView::ExtendedSelection);
 
 //	ZMapObjectModel *model = new ZMapObjectModel;
 //	setModel(model);
@@ -298,21 +306,56 @@ void ZObjectsView::onActivated(const QModelIndex &index)
     // show object properties, center in view
 }
 
-void ZObjectsView::currentRowChanged(const QModelIndex &index)
+void ZObjectsView::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
 {
-	if (ObjectGroup *og = model()->toLayer(index)) {
-		int index = mMapDocument->map()->layers().indexOf(og);
-		mMapDocument->setCurrentLayerIndex(index);
+	QTreeView::selectionChanged(selected, deselected);
+
+	if (!mMapDocument || mSynching)
+		return;
+
+	QModelIndexList selectedRows = selectionModel()->selectedRows();
+	int count = selectedRows.count();
+	int currentLayerIndex = -1;
+
+	QList<MapObject*> selectedObjects;
+	foreach (const QModelIndex &index, selectedRows) {
+		if (ObjectGroup *og = model()->toLayer(index)) {
+			int index = mMapDocument->map()->layers().indexOf(og);
+			if (currentLayerIndex == -1)
+				currentLayerIndex = index;
+			else if (currentLayerIndex != index)
+				currentLayerIndex = -2;
+		}
+		if (MapObject *o = model()->toMapObject(index)) {
+			selectedObjects.append(o);
+		}
 	}
-	if (MapObject *o = model()->toMapObject(index)) {
+
+	// Switch the current object layer if only one object layer (and/or its objects)
+	// are included in the current selection.
+	if (currentLayerIndex >= 0 && currentLayerIndex != mMapDocument->currentLayerIndex())
+		mMapDocument->setCurrentLayerIndex(currentLayerIndex);
+
+	if (selectedObjects != mMapDocument->selectedObjects()) {
 		mSynching = true;
-		mMapDocument->setSelectedObjects(QList<MapObject*>() << o);
+		if (selectedObjects.count() == 1) {
+			MapObject *o = selectedObjects.first();
+			QPoint pos = o->position().toPoint();
+			QSize size = o->size().toSize();
+			DocumentManager::instance()->centerViewOn(pos.x() + size.width() / 2, pos.y() + size.height() / 2);
+		}
+		mMapDocument->setSelectedObjects(selectedObjects);
 		mSynching = false;
 	}
 }
 
+void ZObjectsView::currentRowChanged(const QModelIndex &index)
+{
+}
+
 void ZObjectsView::currentLayerIndexChanged(int index)
 {
+#if 0
     if (index > -1) {
 		Layer *layer = mMapDocument->currentLayer();
 		if (ObjectGroup *og = layer->asObjectGroup()) {
@@ -323,29 +366,28 @@ void ZObjectsView::currentLayerIndexChanged(int index)
 		}
     }
     setCurrentIndex(QModelIndex());
+#endif
 }
 
 void ZObjectsView::selectedObjectsChanged()
 {
 	if (mSynching) {
-		MapObject *o = mMapDocument->selectedObjects().first();
-		QPoint pos = o->position().toPoint();
-		QSize size = o->size().toSize();
-		DocumentManager::instance()->centerViewOn(pos.x() + size.width() / 2, pos.y() + size.height() / 2);
 		return;
 	}
-
-	clearSelection();
 
 	if (!mMapDocument)
 		return;
 
 	const QList<MapObject *> &selectedObjects = mMapDocument->selectedObjects();
 
+	mSynching = true;
+	clearSelection();
 	foreach (MapObject *o, selectedObjects) {
 		QModelIndex index = model()->index(o);
 		selectionModel()->select(index, QItemSelectionModel::Select |  QItemSelectionModel::Rows);
 	}
+	mSynching = false;
+
 	if (selectedObjects.count() == 1) {
 		MapObject *o = selectedObjects.first();
 		scrollTo(model()->index(o));
