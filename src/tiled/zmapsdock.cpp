@@ -53,6 +53,7 @@ ZMapsDock::ZMapsDock(MainWindow *mainWindow, QWidget *parent)
 	QLineEdit *edit = mDirectoryEdit = new QLineEdit();
 	QToolButton *button = new QToolButton();
 	button->setIcon(QIcon(QLatin1String(":/images/16x16/document-properties.png")));
+	button->setToolTip(tr("Choose Folder"));
 	dirLayout->addWidget(label);
 	dirLayout->addWidget(edit);
 	dirLayout->addWidget(button);
@@ -116,6 +117,27 @@ void ZMapsDock::retranslateUi()
 
 ///// ///// ///// ///// /////
 
+/*
+class CustomFileSystemModel : public QFileSystemModel
+{
+public:
+	 QVariant headerData(int section, Qt::Orientation orientation, int role) const
+	 {
+		 if (role == Qt::TextAlignmentRole)
+		 {
+			 if (orientation == Qt::Horizontal) {
+				 switch (section)
+				 {
+				 case 1:
+					 return Qt::AlignRight;
+				 }
+			 }
+		 }
+		 return QFileSystemModel::headerData(section, orientation, role);
+	 }
+};
+*/
+
 ZMapsView::ZMapsView(MainWindow *mainWindow, QWidget *parent)
     : QTreeView(parent)
 	, mMainWindow(mainWindow)
@@ -132,7 +154,7 @@ ZMapsView::ZMapsView(MainWindow *mainWindow, QWidget *parent)
 
 	QDir lotDirectory(prefs->lotDirectory());
 
-	QFileSystemModel *model = new QFileSystemModel;
+	QFileSystemModel *model = new /*CustomFileSystemModel*/QFileSystemModel;
 	model->setRootPath(lotDirectory.absolutePath());
 
 	model->setFilter(QDir::Files);

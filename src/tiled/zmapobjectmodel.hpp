@@ -114,7 +114,7 @@ private:
 	QMap<MapObject*,ObjectOrGroup*> mObjects;
 	QMap<ObjectGroup*,ObjectOrGroup*> mGroups;
 
-    QIcon mObjectGroupIcon;
+	QIcon mObjectGroupIcon;
 };
 
 } // namespace Internal

@@ -25,6 +25,7 @@
 #include "objectgroup.h"
 #include "renamelayer.h"
 
+#define GROUPS_IN_DISPLAY_ORDER 1
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -49,8 +50,8 @@ QModelIndex ZMapObjectModel::index(int row, int column, const QModelIndex &paren
 	ObjectGroup *og = toObjectGroup(parent);
 	if (row >= og->objects().count())
 		return QModelIndex(); // happens when deleting the last item in a parent
-	Q_ASSERT(row < og->objects().count());
-	Q_ASSERT(mObjects.contains(og->objects().at(row)));
+	if (!mObjects.contains(og->objects().at(row)))
+		return QModelIndex(); // Paranoia: sometimes "fake" objects are in use (see createobjecttool)
 	return createIndex(row, column, mObjects[og->objects()[row]]);
 }
 
@@ -240,6 +241,8 @@ ObjectGroup *ZMapObjectModel::toLayer(const QModelIndex &index) const
 	return 0;
 }
 
+// FIXME: Each MapDocument has its own persistent MapObjectModel, so this only does anything useful
+// one time.
 void ZMapObjectModel::setMapDocument(MapDocument *mapDocument)
 {
     if (mMapDocument == mapDocument)
@@ -267,13 +270,15 @@ void ZMapObjectModel::setMapDocument(MapDocument *mapDocument)
 		connect(mMapDocument, SIGNAL(layerAboutToBeRemoved(int)),
 				this, SLOT(layerAboutToBeRemoved(int)));
 
-		foreach (Layer *layer, mMap->layers()) {
-			if (ObjectGroup *og = layer->asObjectGroup()) {
-				mObjectGroups.append(og);
-				mGroups.insert(og, new ObjectOrGroup(og));
-				foreach (MapObject *o, og->objects())
-					mObjects.insert(o, new ObjectOrGroup(o));
-			}
+		foreach (ObjectGroup *og, mMap->objectGroups()) {
+#if GROUPS_IN_DISPLAY_ORDER
+			mObjectGroups.prepend(og);
+#else
+			mObjectGroups.append(og);
+#endif
+			mGroups.insert(og, new ObjectOrGroup(og));
+			foreach (MapObject *o, og->objects())
+				mObjects.insert(o, new ObjectOrGroup(o));
 		}
 	}
 
@@ -289,7 +294,11 @@ void ZMapObjectModel::layerAdded(int index)
 			for (index = index - 1; index >= 0; --index)
 				if (prev = mMap->layerAt(index)->asObjectGroup())
 					break;
+#if GROUPS_IN_DISPLAY_ORDER
+			index = prev ? mObjectGroups.indexOf(prev) : mObjectGroups.count();
+#else
 			index = prev ? mObjectGroups.indexOf(prev) + 1 : 0;
+#endif
 			mObjectGroups.insert(index, og);
 			const int row = mObjectGroups.indexOf(og);
 			beginInsertRows(QModelIndex(), row, row);

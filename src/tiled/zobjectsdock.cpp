@@ -23,6 +23,7 @@
 #include "mapobject.h"
 #include "mapdocument.h"
 #include "mapdocumentactionhandler.h"
+#include "movemapobjecttogroup.h"
 #include "objectgroup.h"
 #include "objectpropertiesdialog.h"
 #include "utils.h"
@@ -73,6 +74,12 @@ ZObjectsDock::ZObjectsDock(QWidget *parent)
 
     MapDocumentActionHandler *handler = MapDocumentActionHandler::instance();
 
+#if 1
+	QAction *newLayerAction = new QAction(this);
+	newLayerAction->setIcon(QIcon(QLatin1String(":/images/16x16/document-new.png")));
+	newLayerAction->setToolTip(tr("Add Object Layer"));
+	connect(newLayerAction, SIGNAL(triggered()), handler->actionAddObjectGroup(), SIGNAL(triggered()));
+#else
     QMenu *newLayerMenu = new QMenu(this);
     newLayerMenu->addAction(handler->actionAddObjectGroup());
 
@@ -83,17 +90,35 @@ ZObjectsDock::ZObjectsDock(QWidget *parent)
     newLayerButton->setIcon(newIcon);
 	newLayerButton->setToolTip(tr("New Layer"));
 	Utils::setThemeIcon(newLayerButton, "document-new");
+#endif
+
+	mActionMoveToLayer = new QAction(this);
+	mActionMoveToLayer->setIcon(QIcon(QLatin1String(":/images/16x16/layer-object.png")));
+	mActionMoveToLayer->setToolTip(tr("Move Object To Layer"));
 
     QToolBar *toolbar = new QToolBar;
     toolbar->setFloatable(false);
     toolbar->setMovable(false);
     toolbar->setIconSize(QSize(16, 16));
 
+#if 1
+    toolbar->addAction(newLayerAction);
+#else
     toolbar->addWidget(newLayerButton);
+#endif
 	toolbar->addAction(mActionDuplicateObjects);
     toolbar->addAction(mActionRemoveObjects);
-//    toolbar->addSeparator();
-    toolbar->addAction(mActionObjectProperties);
+
+	toolbar->addAction(mActionMoveToLayer);
+	QToolButton *button;
+	button = dynamic_cast<QToolButton*>(toolbar->widgetForAction(mActionMoveToLayer));
+    mMoveToMenu = new QMenu(this);
+    button->setPopupMode(QToolButton::InstantPopup);
+    button->setMenu(mMoveToMenu);
+	connect(mMoveToMenu, SIGNAL(aboutToShow()), SLOT(aboutToShowMoveToMenu()));
+    connect(mMoveToMenu, SIGNAL(triggered(QAction*)), SLOT(triggeredMoveToMenu(QAction*)));
+
+	toolbar->addAction(mActionObjectProperties);
 
     layout->addWidget(toolbar);
     setWidget(widget);
@@ -158,6 +183,40 @@ void ZObjectsDock::updateActions()
 		? tr("Duplicate %n Objects", "", count) : tr("Duplicate Object"));
 	mActionRemoveObjects->setToolTip((enabled && count > 1)
 		? tr("Remove %n Objects", "", count) : tr("Remove Object"));
+
+	if (mMapDocument && (mMapDocument->map()->objectGroupCount() < 2))
+		enabled = false;
+	mActionMoveToLayer->setEnabled(enabled);
+	mActionMoveToLayer->setToolTip((enabled && count > 1)
+		? tr("Move %n Objects To Layer", "", count) : tr("Move Object To Layer"));
+}
+
+void ZObjectsDock::aboutToShowMoveToMenu()
+{
+	mMoveToMenu->clear();
+
+	foreach (ObjectGroup *objectGroup, mMapDocument->map()->objectGroups())
+		QAction *action = mMoveToMenu->addAction(objectGroup->name());
+}
+
+void ZObjectsDock::triggeredMoveToMenu(QAction *action)
+{
+	int actionIndex = mMoveToMenu->actions().indexOf(action);
+	ObjectGroup *objectGroup = mMapDocument->map()->objectGroups().at(actionIndex);
+    
+	const QList<MapObject *> &objects = mMapDocument->selectedObjects();
+
+    QUndoStack *undoStack = mMapDocument->undoStack();
+    undoStack->beginMacro(tr("Move %n Object(s) to Layer", "",
+                             objects.size()));
+    foreach (MapObject *mapObject, objects) {
+        if (mapObject->objectGroup() == objectGroup)
+            continue;
+        undoStack->push(new MoveMapObjectToGroup(mMapDocument,
+                                                 mapObject,
+                                                 objectGroup));
+    }
+    undoStack->endMacro();
 }
 
 void ZObjectsDock::duplicateObjects()
@@ -215,11 +274,9 @@ void ZObjectsDock::objectProperties()
 void ZObjectsDock::saveExpandedGroups(MapDocument *mapDoc)
 {
 	mExpandedGroups[mapDoc].clear();
-	foreach (Layer *layer, mapDoc->map()->layers()) {
-		if (ObjectGroup *og = layer->asObjectGroup()) {
-			if (mObjectsView->isExpanded(mObjectsView->model()->index(og)))
-				mExpandedGroups[mapDoc].append(og);
-		}
+	foreach (ObjectGroup *og, mapDoc->map()->objectGroups()) {
+		if (mObjectsView->isExpanded(mObjectsView->model()->index(og)))
+			mExpandedGroups[mapDoc].append(og);
 	}
 }
 

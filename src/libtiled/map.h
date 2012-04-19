@@ -186,6 +186,12 @@ public:
      */
     const QList<Layer*> &layers() const { return mLayers; }
 
+#ifdef ZOMBOID
+    QList<Layer*> layers(Layer::Type type) const;
+	QList<ObjectGroup*> objectGroups() const;
+	QList<TileLayer*> tileLayers() const;
+#endif
+
     /**
      * Adds a layer to this map.
      */

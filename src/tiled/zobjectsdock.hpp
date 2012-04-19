@@ -47,6 +47,8 @@ protected:
 
 private slots:
 	void updateActions();
+	void aboutToShowMoveToMenu();
+	void triggeredMoveToMenu(QAction *action);
 	void duplicateObjects();
 	void removeObjects();
 	void objectProperties();
@@ -61,10 +63,12 @@ private:
 	QAction *mActionDuplicateObjects;
 	QAction *mActionRemoveObjects;
 	QAction *mActionObjectProperties;
+	QAction *mActionMoveToLayer;
 
 	ZObjectsView *mObjectsView;
 	MapDocument *mMapDocument;
 	QMap<MapDocument*,QList<ObjectGroup*>> mExpandedGroups;
+	QMenu *mMoveToMenu;
 };
 
 class ZObjectsView : public QTreeView
