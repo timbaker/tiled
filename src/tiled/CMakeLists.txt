@@ -261,7 +261,9 @@ SET(_moc    ${CMAKE_CURRENT_BINARY_DIR}/${_current_MOC})
 QT4_CREATE_MOC_COMMAND(${_abs_FILE} ${_moc} "${_moc_INCS}" "")
 MACRO_ADD_FILE_DEPENDENCIES(${_abs_FILE} ${_moc})
 
-add_executable ( TileZed ${Tiled_SRCS} tiled.rc ${UIS} ${RSCS} ${TRS} ${MOCS} )
+set(ALL_HDRS ${Tiled_HDRS} ${Tiled_MOCS})
+
+add_executable ( TileZed ${Tiled_SRCS} tiled.rc ${UIS} ${RSCS} ${TRS} ${MOCS} ${ALL_HDRS})
 target_link_libraries ( TileZed libtiled ${QT_QTOPENGL_LIBRARY} ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
 
 INSTALL(TARGETS TileZed DESTINATION ".")
