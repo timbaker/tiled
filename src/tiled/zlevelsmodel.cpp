@@ -87,6 +87,7 @@ QVariant ZLevelsModel::data(const QModelIndex &index, int role) const
 	if (TileLayer *tl = toTileLayer(index)) {
 		switch (role) {
 		case Qt::DisplayRole:
+			return tl->name().split(QLatin1String("_")).at(1);
 		case Qt::EditRole:
 			return tl->name();
 		case Qt::DecorationRole:
