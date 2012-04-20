@@ -746,7 +746,11 @@ bool MainWindow::confirmSave()
 bool MainWindow::confirmAllSave()
 {
     for (int i = 0; i < mDocumentManager->documentCount(); i++) {
-        mDocumentManager->switchToDocument(i);
+#ifdef ZOMBOID
+		if (!mDocumentManager->documents().at(i)->isModified())
+			continue;
+#endif
+		mDocumentManager->switchToDocument(i);
         if (!confirmSave())
             return false;
     }
