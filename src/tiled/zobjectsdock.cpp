@@ -282,6 +282,8 @@ void ZObjectsDock::saveExpandedGroups(MapDocument *mapDoc)
 
 void ZObjectsDock::restoreExpandedGroups(MapDocument *mapDoc)
 {
+	if (!mExpandedGroups.contains(mapDoc))
+		mObjectsView->expandAll();
 	foreach (ObjectGroup *og, mExpandedGroups[mapDoc])
 		mObjectsView->setExpanded(mObjectsView->model()->index(og), true);
 	mExpandedGroups[mapDoc].clear();

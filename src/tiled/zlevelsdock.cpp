@@ -90,7 +90,6 @@ void ZLevelsDock::setMapDocument(MapDocument *mapDoc)
 
 	if (mMapDocument) {
 		restoreExpandedLevels(mMapDocument);
-        connect(mMapDocument, SIGNAL(selectedObjectsChanged()), this, SLOT(updateActions()));
 	}
 
 	updateActions();
@@ -128,6 +127,8 @@ void ZLevelsDock::saveExpandedLevels(MapDocument *mapDoc)
 
 void ZLevelsDock::restoreExpandedLevels(MapDocument *mapDoc)
 {
+	if (!mExpandedLevels.contains(mapDoc))
+		mView->expandAll();
 	foreach (ZTileLayerGroup *g, mExpandedLevels[mapDoc])
 		mView->setExpanded(mView->model()->index(g), true);
 	mExpandedLevels[mapDoc].clear();
