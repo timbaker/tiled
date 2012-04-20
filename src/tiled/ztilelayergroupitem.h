@@ -41,7 +41,7 @@ public:
 
     virtual void syncWithTileLayers();
 
-	ZTileLayerGroup *getTileLayerGroup() const { return mLayerGroup; }
+	ZTileLayerGroup *tileLayerGroup() const { return mLayerGroup; }
 
     // QGraphicsItem
     QRectF boundingRect() const;

@@ -62,9 +62,13 @@ public:
 	const QVector<TileLayer*> &layers() const { return mLayers; }
 	int layerCount() const { return mLayers.count(); }
 
+	bool isVisible() const { return mVisible; }
+	void setVisible(bool visible) { mVisible = visible; }
+
     QVector<TileLayer*> mLayers;
 	QVector<int> mIndices;
 	int mLevel;
+	bool mVisible;
 };
 
 } // namespace Tiled

@@ -107,7 +107,7 @@ QVariant ZLevelsModel::data(const QModelIndex &index, int role) const
 		case Qt::DecorationRole:
 			return QVariant();
 		case Qt::CheckStateRole:
-			return Qt::Checked;
+			return g->isVisible() ? Qt::Checked : Qt::Unchecked;
 		case OpacityRole:
 			return qreal(1);
 		default:
@@ -143,11 +143,15 @@ bool ZLevelsModel::setData(const QModelIndex &index, const QVariant &value,
 		}
 		return false;
 	}
-	if (ZTileLayerGroup *objectGroup = toTileLayerGroup(index)) {
+	if (ZTileLayerGroup *g = toTileLayerGroup(index)) {
 		switch (role) {
 		case Qt::CheckStateRole:
 			{
-			return false;
+			Qt::CheckState c = static_cast<Qt::CheckState>(value.toInt());
+			g->setVisible(c == Qt::Checked);
+			emit dataChanged(index, index);
+			emit layerGroupVisibilityChanged(g);
+			return true;
 			}
 		case Qt::EditRole:
 			{

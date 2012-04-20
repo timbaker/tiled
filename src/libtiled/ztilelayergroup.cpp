@@ -31,6 +31,7 @@ using namespace Tiled;
 
 ZTileLayerGroup::ZTileLayerGroup(int level)
 	: mLevel(level)
+	, mVisible(true)
 {
 }
 

@@ -270,10 +270,17 @@ ZomboidScene::~ZomboidScene()
 	qDeleteAll(mTileLayerGroups);
 }
 
-void ZomboidScene::setMapDocument(MapDocument *map)
+void ZomboidScene::setMapDocument(MapDocument *mapDoc)
 {
-	MapScene::setMapDocument(map);
+	if (mapDocument() && (mapDocument() != mapDoc))
+		mapDocument()->levelsModel()->disconnect(this, SLOT(layerGroupVisibilityChanged(ZTileLayerGroup*)));
+
+	MapScene::setMapDocument(mapDoc);
 	mLotManager.setMapDocument(mapDocument());
+
+	if (mapDocument())
+		connect(mapDocument()->levelsModel(), SIGNAL(layerGroupVisibilityChanged(ZTileLayerGroup*)),
+			SLOT(layerGroupVisibilityChanged(ZTileLayerGroup*)));
 }
 
 // Painting tiles may update the draw margins of a layer.
@@ -392,18 +399,15 @@ void ZomboidScene::updateCurrentLayerHighlight()
     if (!mHighlightCurrentLayer || !currentLayer) {
         mDarkRectangle->setVisible(false);
 
-        // Restore opacity for all non-ZTileLayerGroupItem layers
+        // Restore visibility for all non-ZTileLayerGroupItem layers
         for (int i = 0; i < mLayerItems.size(); ++i) {
             const Layer *layer = mMapDocument->map()->layerAt(i);
-            mLayerItems.at(i)->setOpacity(layer->opacity());
+            mLayerItems.at(i)->setVisible(layer->isVisible());
         }
 
-        // Restore opacity for all ZTileLayerGroupItem layers
+        // Restore visibility for all ZTileLayerGroupItem layers
         foreach (ZTileLayerGroupItem *item, mTileLayerGroupItems) {
-			if (item->getTileLayerGroup()->mLayers.isEmpty())
-				continue;
-			const Layer *layer = item->getTileLayerGroup()->mLayers.first();
-            item->setOpacity(layer->opacity());
+			item->setVisible(item->tileLayerGroup()->isVisible());
         }
 
         return;
@@ -416,24 +420,21 @@ void ZomboidScene::updateCurrentLayerHighlight()
 			currentItem = mTileLayerGroupItems[currentLayer->level()];
 	}
 
-    // Set items above the current item to 40% opacity
-	const qreal opacityFactor = 0.4;
+    // Hide items above the current item
 	int index = 0;
 	foreach (QGraphicsItem *item, mLayerItems) {
-		const qreal multiplier = (item->zValue() > currentItem->zValue()) ? opacityFactor : 1;
 		Layer *layer = mMapDocument->map()->layerAt(index);
-		item->setOpacity(layer->opacity() * multiplier);
+		if (!layer->isTileLayer()) continue; // leave ObjectGroups alone
+		bool visible = layer->isVisible() && (item->zValue() <= currentItem->zValue());
+		item->setVisible(visible);
 		++index;
 	}
     foreach (ZTileLayerGroupItem *item, mTileLayerGroupItems) {
-		if (item->getTileLayerGroup()->mLayers.isEmpty())
-			continue;
-		const qreal multiplier = (item->zValue() > currentItem->zValue()) ? opacityFactor : 1;
-		const Layer *layer = item->getTileLayerGroup()->mLayers.first();
-        item->setOpacity(layer->opacity() * multiplier);
+		bool visible = item->tileLayerGroup()->isVisible() && (item->zValue() <= currentItem->zValue());
+        item->setVisible(visible);
 	}
 
-    // Darken layers below the current layer
+    // Darken layers below the current item
 	mDarkRectangle->setZValue(currentItem->zValue() - 0.5);
     mDarkRectangle->setVisible(true);
 }
@@ -451,6 +452,12 @@ bool ZomboidScene::levelForLayer(Layer *layer, int *level)
 		return conversionOK;
 	}
 	return false;
+}
+
+void ZomboidScene::layerGroupVisibilityChanged(ZTileLayerGroup *g)
+{
+	if (mTileLayerGroupItems.contains(g->level()))
+		mTileLayerGroupItems[g->level()]->setVisible(g->isVisible());
 }
 
 void ZomboidScene::layerAdded(int index)
@@ -519,7 +526,7 @@ void ZomboidScene::layerChanged(int index)
 				// Set the opacity of all the other layers in this group so the opacity slider
 				// reflects the change when a new layer is selected.
 				changingOpacity = true; // HACK - prevent recursion (see note above)
-				foreach (TileLayer *tileLayer, layerGroupItem->getTileLayerGroup()->mLayers) {
+				foreach (TileLayer *tileLayer, layerGroupItem->tileLayerGroup()->mLayers) {
 					if (tileLayer != tl)
 						tileLayer->setOpacity(layer->opacity()); // FIXME: should I do what LayerDock::setLayerOpacity does (which will be recursive)?
 				}
@@ -694,7 +701,7 @@ int ZomboidScene::levelZOrder(int level)
 void ZomboidScene::setGraphicsSceneZOrder()
 {
 	foreach (ZTileLayerGroupItem *item, mTileLayerGroupItems)
-		item->setZValue(levelZOrder(item->getTileLayerGroup()->level()));
+		item->setZValue(levelZOrder(item->tileLayerGroup()->level()));
 
 	ZTileLayerGroupItem *previousLevelItem = 0;
 	QMap<ZTileLayerGroupItem*,QVector<QGraphicsItem*>> layersAboveLevel;
@@ -725,7 +732,7 @@ void ZomboidScene::setGraphicsSceneZOrder()
 	for (it = it_start; it != it_end; it++) {
 		int index = 1;
 		foreach (QGraphicsItem *item, *it) {
-			item->setZValue(levelZOrder(it.key()->getTileLayerGroup()->level()) + index);
+			item->setZValue(levelZOrder(it.key()->tileLayerGroup()->level()) + index);
 			++index;
 		}
 	}

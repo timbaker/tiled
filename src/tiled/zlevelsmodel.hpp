@@ -94,6 +94,9 @@ public:
 	void addLayerToGroup(ZTileLayerGroup *g, TileLayer *tl);
 	void removeLayerFromGroup(TileLayer *tl);
 
+signals:
+	void layerGroupVisibilityChanged(ZTileLayerGroup *g);
+
 private slots:
 	void layerAdded(int index);
 	void layerChanged(int index);

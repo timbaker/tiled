@@ -102,7 +102,7 @@ public:
 	QMap<MapObject*,ZLot*> mMapObjectToLot;
 
 	// MapScene
-	virtual void setMapDocument(MapDocument *map);
+	virtual void setMapDocument(MapDocument *mapDoc);
 
 private slots:
     virtual void refreshScene();
@@ -110,6 +110,8 @@ private slots:
     virtual void regionChanged(const QRegion &region, Layer *layer);
 
 	virtual void mapChanged();
+
+	void layerGroupVisibilityChanged(ZTileLayerGroup *g);
 
     virtual void layerAdded(int index);
     virtual void layerAboutToBeRemoved(int index);
