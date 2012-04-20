@@ -22,6 +22,7 @@
 #include "mapdocument.h"
 #include "mapdocumentactionhandler.h"
 #include "utils.h"
+#include "tilelayer.h"
 #include "zlevelsmodel.hpp"
 
 #include <QBoxLayout>
@@ -159,7 +160,7 @@ ZLevelsView::ZLevelsView(QWidget *parent)
     setUniformRowHeights(true);
 
 	setSelectionBehavior(QAbstractItemView::SelectRows);
-	setSelectionMode(QAbstractItemView::ExtendedSelection);
+//	setSelectionMode(QAbstractItemView::ExtendedSelection);
 
 	connect(this, SIGNAL(activated(QModelIndex)), SLOT(onActivated(QModelIndex)));
 }
@@ -206,21 +207,43 @@ void ZLevelsView::selectionChanged(const QItemSelection &selected, const QItemSe
 
 	if (!mMapDocument || mSynching)
 		return;
+
+	QModelIndexList selectedRows = selectionModel()->selectedRows();
+	int count = selectedRows.count();
+
+	if (count == 1) {
+		QModelIndex index = selectedRows.first();
+		if (TileLayer *tl = model()->toTileLayer(index)) {
+			int layerIndex = mMapDocument->map()->layers().indexOf(tl);
+			if (layerIndex != mMapDocument->currentLayerIndex()) {
+				mSynching = true;
+				mMapDocument->setCurrentLayerIndex(layerIndex);
+				mSynching = false;
+			}
+		}
+	}
 }
 
 void ZLevelsView::currentLayerIndexChanged(int index)
 {
-#if 0
+	if (mSynching)
+		return;
+	
     if (index > -1) {
 		Layer *layer = mMapDocument->currentLayer();
-		if (ObjectGroup *og = layer->asObjectGroup()) {
-			if (model()->toLayer(currentIndex()) != og) {
-				setCurrentIndex(model()->index(og));
+		if (TileLayer *tl = layer->asTileLayer()) {
+			if (tl->group()) {
+				mSynching = true;
+				setCurrentIndex(model()->index(tl));
+				mSynching = false;
+				return;
 			}
-			return;
 		}
     }
+
+	// Selected no layer, or a layer not in a ZTileLayerGroup
+	mSynching = true;
     setCurrentIndex(QModelIndex());
-#endif
+	mSynching = false;
 }
 
