@@ -1,5 +1,5 @@
 /*
- * zmapobjectmodel.h
+ * zlevelsmodel.h
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -15,23 +15,23 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ZOBJECTMODEL_H
-#define ZOBJECTMODEL_H
+#ifndef ZLEVELSMODEL_H
+#define ZLEVELSMODEL_H
 
 #include <QAbstractItemModel>
 #include <QIcon>
 
 namespace Tiled {
 
-class MapObject;
 class Map;
-class ObjectGroup;
+class TileLayer;
+class ZTileLayerGroup;
 
 namespace Internal {
 
 class MapDocument;
 
-class ZMapObjectModel : public QAbstractItemModel
+class ZLevelsModel : public QAbstractItemModel
 {
     Q_OBJECT
 
@@ -40,24 +40,24 @@ public:
         OpacityRole = Qt::UserRole
     };
 
-	struct ObjectOrGroup
+	struct LayerOrGroup
 	{
-		ObjectOrGroup(ObjectGroup *g)
+		LayerOrGroup(ZTileLayerGroup *g)
 			: mGroup(g)
-			, mObject(0)
+			, mLayer(0)
 		{
 		}
-		ObjectOrGroup(MapObject *o)
+		LayerOrGroup(TileLayer *tl)
 			: mGroup(0)
-			, mObject(o)
+			, mLayer(tl)
 		{
 		}
-		ObjectGroup *mGroup;
-		MapObject *mObject;
+		ZTileLayerGroup *mGroup;
+		TileLayer *mLayer;
 	};
 
-    ZMapObjectModel(QObject *parent = 0);
-    ~ZMapObjectModel();
+    ZLevelsModel(QObject *parent = 0);
+	~ZLevelsModel();
 
 	QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
 	QModelIndex parent(const QModelIndex &index) const;
@@ -72,36 +72,27 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const;
 
-	QModelIndex index(ObjectGroup *og) const;
-	QModelIndex index(MapObject *o) const;
+	QModelIndex index(ZTileLayerGroup *og) const;
+	QModelIndex index(TileLayer *o) const;
 
-	ObjectGroup *toObjectGroup(const QModelIndex &index) const;
-    MapObject *toMapObject(const QModelIndex &index) const;
-	ObjectGroup *toLayer(const QModelIndex &index) const;
+	ZTileLayerGroup *toTileLayerGroup(const QModelIndex &index) const;
+    TileLayer *toTileLayer(const QModelIndex &index) const;
 
-    int toRow(const ObjectGroup *objectGroup) const;
-    int toRow(const MapObject *mapObject) const;
+    int toRow(ZTileLayerGroup *tileLayerGroup) const;
+    int toRow(TileLayer *tileLayer) const;
+
+	int toGroupRow(int groupIndex) const;
+    int toLayerRow(ZTileLayerGroup *g, int layerIndex) const;
+
+	int toGroupIndex(int row) const;
+	int toLayerIndex(ZTileLayerGroup *g, int row) const;
 
     void setMapDocument(MapDocument *mapDocument);
     MapDocument *mapDocument() const { return mMapDocument; }
 
-	/////
-	void insertObject(ObjectGroup *og, int index, MapObject *o);
-	int removeObject(ObjectGroup *og, MapObject *o);
-	void emitObjectsChanged(const QList<MapObject *> &objects);
-
-	void setObjectName(MapObject *o, const QString &name);
-	void setObjectType(MapObject *o, const QString &type);
-	void setObjectPolygon(MapObject *o, const QPolygonF &polygon);
-	void setObjectPosition(MapObject *o, const QPointF &pos);
-	void setObjectSize(MapObject *o, const QSizeF &size);
-	/////
-
-signals:
-	void objectsAdded(const QList<MapObject *> &objects);
-	void objectsChanged(const QList<MapObject *> &objects);
-	void objectsAboutToBeRemoved(const QList<MapObject *> &objects);
-	void objectsRemoved(const QList<MapObject *> &objects);
+	void addTileLayerGroup(ZTileLayerGroup *g);
+	void addLayerToGroup(ZTileLayerGroup *g, TileLayer *tl);
+	void removeLayerFromGroup(TileLayer *tl);
 
 private slots:
 	void layerAdded(int index);
@@ -111,14 +102,11 @@ private slots:
 private:
     MapDocument *mMapDocument;
     Map *mMap;
-	QList<ObjectGroup*> mObjectGroups;
-	QMap<MapObject*,ObjectOrGroup*> mObjects;
-	QMap<ObjectGroup*,ObjectOrGroup*> mGroups;
-
-	QIcon mObjectGroupIcon;
+	QMap<ZTileLayerGroup*,LayerOrGroup*> mGroupToLOG;
+	QMap<TileLayer*,LayerOrGroup*> mLayerToLOG;
 };
 
 } // namespace Internal
 } // namespace Tiled
 
-#endif // ZOBJECTMODEL_H
+#endif // ZLEVELSMODEL_H

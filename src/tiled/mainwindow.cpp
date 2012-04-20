@@ -75,6 +75,7 @@
 #include "zoomable.h"
 #include "commandbutton.h"
 #ifdef ZOMBOID
+#include "zlevelsdock.hpp"
 #include "zmapsdock.hpp"
 #include "zobjectsdock.hpp"
 #include "zprogress.hpp"
@@ -109,6 +110,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     , mActionHandler(new MapDocumentActionHandler(this))
     , mLayerDock(new LayerDock(this))
 #ifdef ZOMBOID
+	, mLevelsDock(new ZLevelsDock(this))
 	, mMapsDock(new ZMapsDock(this))
 	, mObjectsDock(new ZObjectsDock())
 #endif
@@ -167,9 +169,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     addDockWidget(Qt::RightDockWidgetArea, undoDock);
     tabifyDockWidget(undoDock, mLayerDock);
 #ifdef ZOMBOID
+    addDockWidget(Qt::RightDockWidgetArea, mLevelsDock);
     addDockWidget(Qt::RightDockWidgetArea, mObjectsDock);
     addDockWidget(Qt::RightDockWidgetArea, mMapsDock);
-    tabifyDockWidget(mLayerDock, mObjectsDock);
+    tabifyDockWidget(mLayerDock, mLevelsDock);
+    tabifyDockWidget(mLevelsDock, mObjectsDock);
     tabifyDockWidget(mObjectsDock, mMapsDock);
 #endif
     addDockWidget(Qt::RightDockWidgetArea, mTilesetDock);
@@ -373,6 +377,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     mUi->menuView->addAction(mLayerDock->toggleViewAction());
     mUi->menuView->addAction(undoDock->toggleViewAction());
 #ifdef ZOMBOID
+    mUi->menuView->addAction(mLevelsDock->toggleViewAction());
     mUi->menuView->addAction(mObjectsDock->toggleViewAction());
     mUi->menuView->addAction(mMapsDock->toggleViewAction());
 #endif
@@ -1435,6 +1440,7 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
     mActionHandler->setMapDocument(mMapDocument);
     mLayerDock->setMapDocument(mMapDocument);
 #ifdef ZOMBOID
+	mLevelsDock->setMapDocument(mMapDocument);
 	mObjectsDock->setMapDocument(mMapDocument);
 #endif
     mTilesetDock->setMapDocument(mMapDocument);

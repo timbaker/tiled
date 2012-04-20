@@ -55,6 +55,7 @@ class TilesetDock;
 class MapView;
 class CommandButton;
 #ifdef ZOMBOID
+class ZLevelsDock;
 class ZMapsDock;
 class ZObjectsDock;
 #endif
@@ -205,6 +206,7 @@ private:
     MapDocumentActionHandler *mActionHandler;
     LayerDock *mLayerDock;
 #ifdef ZOMBOID
+	ZLevelsDock *mLevelsDock;
 	ZMapsDock *mMapsDock;
 	ZObjectsDock *mObjectsDock;
 #endif

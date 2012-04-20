@@ -31,6 +31,7 @@
 #include "layermodel.h"
 #ifdef ZOMBOID
 #include "zlevelrenderer.hpp"
+#include "zlevelsmodel.hpp"
 #include "zmapobjectmodel.hpp"
 #endif
 #include "map.h"
@@ -61,6 +62,7 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     mMap(map),
     mLayerModel(new LayerModel(this)),
 #ifdef ZOMBOID
+	mLevelsModel(new ZLevelsModel(this)),
 	mMapObjectModel(new ZMapObjectModel(this)),
 #endif
     mUndoStack(new QUndoStack(this))
@@ -98,6 +100,8 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
 #endif
 
 #ifdef ZOMBOID
+	mLevelsModel->setMapDocument(this);
+
 	mMapObjectModel->setMapDocument(this);
 	connect(mMapObjectModel, SIGNAL(objectsAdded(QList<MapObject*>)), SLOT(onObjectsAdded(QList<MapObject*>)));
 	connect(mMapObjectModel, SIGNAL(objectsChanged(QList<MapObject*>)), SLOT(onObjectsChanged(QList<MapObject*>)));
@@ -117,6 +121,12 @@ MapDocument::~MapDocument()
     // Unregister tileset references
     TilesetManager *tilesetManager = TilesetManager::instance();
     tilesetManager->removeReferences(mMap->tilesets());
+
+#ifdef ZOMBOID
+	// Paranoia
+	mLevelsModel->setMapDocument(0);
+	mMapObjectModel->setMapDocument(0);
+#endif
 
     delete mRenderer;
     delete mMap;

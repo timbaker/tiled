@@ -205,6 +205,19 @@ bool Map::isTilesetUsed(Tileset *tileset) const
     return false;
 }
 
+#ifdef ZOMBOID
+void Map::addTileLayerGroup(ZTileLayerGroup *tileLayerGroup)
+{
+	int arrayIndex = 0;
+	foreach(ZTileLayerGroup *g1, tileLayerGroups()) {
+		if (g1->level() >= tileLayerGroup->level())
+			break;
+		arrayIndex++;
+	}
+	mTileLayerGroups.insert(arrayIndex, tileLayerGroup);
+}
+#endif
+
 Map *Map::clone() const
 {
     Map *o = new Map(mOrientation, mWidth, mHeight, mTileWidth, mTileHeight);

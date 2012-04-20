@@ -26,6 +26,7 @@
 #include "objectgroup.h"
 #include "tilelayer.h"
 #include "tilelayeritem.h"
+#include "zlevelsmodel.hpp"
 #include "zlot.hpp"
 #include "zlotmanager.hpp"
 
@@ -318,9 +319,11 @@ void ZomboidScene::refreshScene()
 		if (levelForLayer(layer, &level)) {
 			layer->setLevel(level); // for ObjectGroup,ImageLayer as well
 			if (TileLayer *tl = layer->asTileLayer()) {
-				if (mTileLayerGroups.contains(level) == false)
+				if (mTileLayerGroups.contains(level) == false) {
 					mTileLayerGroups[level] = new ZomboidTileLayerGroup(this, level);
-				mTileLayerGroups[level]->addTileLayer(tl, index);
+					mapDocument()->levelsModel()->addTileLayerGroup(mTileLayerGroups[level]);
+				}
+				mapDocument()->levelsModel()->addLayerToGroup(mTileLayerGroups[level], tl); // mTileLayerGroups[level]->addTileLayer(tl, index);
 			}
 			if (level > map->maxLevel())
 				// FIXME: this never goes down if whole levels are deleted, requires reload
@@ -457,9 +460,11 @@ void ZomboidScene::layerAdded(int index)
 	if (levelForLayer(layer, &level)) {
 		layer->setLevel(level);
 		if (TileLayer *tl = layer->asTileLayer()) {
-			if (mTileLayerGroups.contains(level) == false)
+			if (mTileLayerGroups.contains(level) == false) {
 				mTileLayerGroups[level] = new ZomboidTileLayerGroup(this, level);
-			mTileLayerGroups[level]->addTileLayer(tl, index);
+				mapDocument()->levelsModel()->addTileLayerGroup(mTileLayerGroups[level]);
+			}
+			mMapDocument->levelsModel()->addLayerToGroup(mTileLayerGroups[level], tl); // mTileLayerGroups[level]->addTileLayer(tl, index);
 		}
 	} else {
 		// This handles duplicating layers
@@ -476,7 +481,7 @@ void ZomboidScene::layerAboutToBeRemoved(int index)
 	Layer *layer = mMapDocument->map()->layerAt(index);
 	if (TileLayer *tl = layer->asTileLayer()) {
 		if (tl->group()) {
-			tl->group()->removeTileLayer(tl); // Calls tl->setGroup(0)
+			mMapDocument->levelsModel()->removeLayerFromGroup(tl); // tl->group()->removeTileLayer(tl); // Calls tl->setGroup(0)
 			mTileLayerGroupItems[tl->level()]->syncWithTileLayers();
 			tl->setLevel(0); // otherwise it can't be cleared
 		}
@@ -644,6 +649,7 @@ void ZomboidScene::layerLevelChanged(int index, int oldLevel)
 
 		if (hasGroup && mTileLayerGroups[newLevel] == 0) {
 			mTileLayerGroups[newLevel] = new ZomboidTileLayerGroup(this, newLevel);
+			mapDocument()->levelsModel()->addTileLayerGroup(mTileLayerGroups[newLevel]);
 		}
 		if (hasGroup)
 			newGroup = mTileLayerGroups[newLevel];
@@ -651,10 +657,10 @@ void ZomboidScene::layerLevelChanged(int index, int oldLevel)
 		if (oldGroup != newGroup) {
 			layerGroupAboutToChange(tl, newGroup);
 			if (oldGroup) {
-				oldGroup->removeTileLayer(tl);
+				mapDocument()->levelsModel()->removeLayerFromGroup(tl); // oldGroup->removeTileLayer(tl);
 			}
 			if (newGroup) {
-				newGroup->addTileLayer(tl, index);
+				mapDocument()->levelsModel()->addLayerToGroup(newGroup, tl); // newGroup->addTileLayer(tl, index);
 			}
 			layerGroupChanged(tl, oldGroup);
 		}

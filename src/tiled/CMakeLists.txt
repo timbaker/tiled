@@ -156,6 +156,8 @@ set ( Tiled_SRCS
 	zoomable.cpp
 
 	zgriditem.cpp
+	zlevelsdock.cpp
+	zlevelsmodel.cpp
 	zlot.cpp
 	zlotmanager.cpp
 	zmapobjectmodel.cpp
@@ -240,6 +242,8 @@ set ( Tiled_MOCS
 	undodock.h
 	zoomable.h
 
+	zlevelsdock.hpp
+	zlevelsmodel.hpp
 	zlotmanager.hpp
 	zmapobjectmodel.hpp
 	zmapsdock.hpp

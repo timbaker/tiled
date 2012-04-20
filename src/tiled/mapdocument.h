@@ -47,6 +47,7 @@ namespace Internal {
 class LayerModel;
 class TileSelectionModel;
 #ifdef ZOMBOID
+class ZLevelsModel;
 class ZMapObjectModel;
 #endif
 
@@ -165,6 +166,7 @@ public:
     LayerModel *layerModel() const { return mLayerModel; }
 
 #ifdef ZOMBOID
+	ZLevelsModel *levelsModel() const { return mLevelsModel; }
 	ZMapObjectModel *mapObjectModel() const { return mMapObjectModel; }
 #endif
 
@@ -353,6 +355,7 @@ private:
     MapRenderer *mRenderer;
     int mCurrentLayerIndex;
 #ifdef ZOMBOID
+	ZLevelsModel *mLevelsModel;
 	ZMapObjectModel *mMapObjectModel;
 	int mMaxVisibleLayer;
 #endif

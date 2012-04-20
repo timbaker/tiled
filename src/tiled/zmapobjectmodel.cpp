@@ -38,6 +38,12 @@ ZMapObjectModel::ZMapObjectModel(QObject *parent):
 {
 }
 
+ZMapObjectModel::~ZMapObjectModel()
+{
+	qDeleteAll(mGroups);
+	qDeleteAll(mObjects);
+}
+
 QModelIndex ZMapObjectModel::index(int row, int column, const QModelIndex &parent) const
 {
 	if (!parent.isValid()) {

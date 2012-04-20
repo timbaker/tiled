@@ -43,6 +43,9 @@ namespace Tiled {
 class Tile;
 class Tileset;
 class ObjectGroup;
+#ifdef ZOMBOID
+class ZTileLayerGroup;
+#endif
 
 /**
  * A tile map. Consists of a stack of layers, each can be either a TileLayer
@@ -266,6 +269,12 @@ public:
      */
     bool isTilesetUsed(Tileset *tileset) const;
 
+#ifdef ZOMBOID
+	void addTileLayerGroup(ZTileLayerGroup *tileLayerGroup);
+	const QList<ZTileLayerGroup*> tileLayerGroups() const { return mTileLayerGroups; }
+	int tileLayerGroupCount() const { return mTileLayerGroups.size(); }
+#endif
+
     Map *clone() const;
 
     /**
@@ -292,6 +301,7 @@ private:
 #ifdef ZOMBOID
 	QPoint mCellsPerLevel;
 	int mMaxLevel;
+	QList<ZTileLayerGroup*> mTileLayerGroups;
 #endif
 };
 

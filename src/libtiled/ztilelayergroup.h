@@ -59,6 +59,9 @@ public:
 	void setLevel(int level) { mLevel = level; }
 	int level() const { return mLevel; }
 
+	const QVector<TileLayer*> &layers() const { return mLayers; }
+	int layerCount() const { return mLayers.count(); }
+
     QVector<TileLayer*> mLayers;
 	QVector<int> mIndices;
 	int mLevel;
