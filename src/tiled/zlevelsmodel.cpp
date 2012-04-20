@@ -298,8 +298,16 @@ void ZLevelsModel::layerAdded(int index)
 {
 }
 
-void ZLevelsModel::layerChanged(int index)
+void ZLevelsModel::layerChanged(int layerIndex)
 {
+	// Handle name, visibility changes
+	Layer *layer = mMap->layerAt(layerIndex);
+	if (TileLayer *tl = layer->asTileLayer()) {
+		if (mLayerToLOG.contains(tl)) {
+			QModelIndex index = this->index(tl);
+			emit dataChanged(index, index);
+		}
+	}
 }
 
 void ZLevelsModel::layerAboutToBeRemoved(int layerIndex)
