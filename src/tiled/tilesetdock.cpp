@@ -242,14 +242,27 @@ void TilesetDock::setMapDocument(MapDocument *mapDocument)
         return;
 
     setCurrentTiles(0);
+#ifdef ZOMBOID
+	setCurrentTile(0);
+#endif
     if (mMapDocument)
         mCurrentTilesets.insert(mMapDocument,
                                 mTabBar->tabText(mTabBar->currentIndex()));
     // Clear previous content
+#ifdef ZOMBOID
+	// BUG BUG BUG - 'delete mViewStack->currentWidget()' calls updateCurrentTiles() which
+	// calls setCurrentTiles() again, which is bad when the document is being closed.
+	mTabBar->blockSignals(true);
+	mViewStack->blockSignals(true);
+#endif
     while (mTabBar->count())
         mTabBar->removeTab(0);
     while (mViewStack->currentWidget())
         delete mViewStack->currentWidget();
+#ifdef ZOMBOID
+	mTabBar->blockSignals(false);
+	mViewStack->blockSignals(false);
+#endif
 
     // Clear all connections to the previous document
     if (mMapDocument)
