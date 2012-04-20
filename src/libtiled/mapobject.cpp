@@ -52,6 +52,9 @@ MapObject::MapObject(const QString &name, const QString &type,
     mShape(Rectangle),
     mTile(0),
     mObjectGroup(0)
+#ifdef ZOMBOID
+	, mVisible(true)
+#endif
 {
 }
 
