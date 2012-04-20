@@ -429,8 +429,10 @@ void MapScene::layerChanged(int index)
     layerItem->setVisible(layer->isVisible());
 
     qreal multiplier = 1;
+#if !defined(ZOMBOID)
     if (mHighlightCurrentLayer && mMapDocument->currentLayerIndex() < index)
         multiplier = opacityFactor;
+#endif
 
     layerItem->setOpacity(layer->opacity() * multiplier);
 }
