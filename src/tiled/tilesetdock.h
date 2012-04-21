@@ -44,6 +44,9 @@ namespace Internal {
 
 class MapDocument;
 class TilesetView;
+#ifdef ZOMBOID
+class ZTilesetThumbView;
+#endif
 
 /**
  * The dock widget that displays the tilesets. Also keeps track of the
@@ -116,6 +119,11 @@ private slots:
 
     void refreshTilesetMenu();
 
+#ifdef ZOMBOID
+	void thumbCurrentChanged();
+	void thumbSyncWithTabs();
+#endif
+
 private:
     void setCurrentTile(Tile *tile);
     void setCurrentTiles(TileLayer *tiles);
@@ -142,6 +150,10 @@ private:
     QToolButton *mTilesetMenuButton;
     QMenu *mTilesetMenu; //opens on click of mTilesetMenu
     QSignalMapper *mTilesetMenuMapper; //needed due to dynamic content
+
+#ifdef ZOMBOID
+	ZTilesetThumbView *mThumbView;
+#endif
 };
 
 } // namespace Internal

@@ -166,6 +166,8 @@ set ( Tiled_SRCS
 	ZomboidScene.cpp
 	zprogress.cpp
 	ztilelayergroupitem.cpp
+	ztilesetthumbmodel.cpp
+	ztilesetthumbview.cpp
 	)
 
 set ( Tiled_UIS
@@ -250,6 +252,8 @@ set ( Tiled_MOCS
 	ZomboidScene.h
 	zobjectsdock.hpp
 	zprogress.hpp
+	ztilesetthumbmodel.hpp
+	ztilesetthumbview.hpp
 	)
 QT4_WRAP_CPP(MOCS ${Tiled_MOCS})
 

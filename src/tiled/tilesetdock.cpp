@@ -40,6 +40,9 @@
 #include "tilesetmanager.h"
 #include "tmxmapwriter.h"
 #include "utils.h"
+#ifdef ZOMBOID
+#include "ztilesetthumbview.hpp"
+#endif
 
 #include <QAction>
 #include <QDropEvent>
@@ -225,8 +228,22 @@ TilesetDock::TilesetDock(QWidget *parent):
     mTilesetMenuButton->setAutoRaise(true);
     connect(mTilesetMenu, SIGNAL(aboutToShow()), SLOT(refreshTilesetMenu()));
 
+#ifdef ZOMBOID
+	mThumbView = new ZTilesetThumbView();
+    connect(mTabBar, SIGNAL(currentChanged(int)),
+            SLOT(thumbSyncWithTabs()));
+	connect(mThumbView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
+		SLOT(thumbCurrentChanged()));
+
+	QWidget *outer = new QWidget(this);
+    horizontal = new QHBoxLayout(outer);
+	horizontal->addWidget(mThumbView);
+	horizontal->addWidget(w);
+	setWidget(outer);
+#else
     setWidget(w);
-    retranslateUi();
+#endif
+	retranslateUi();
     setAcceptDrops(true);
     updateActions();
 }
@@ -269,6 +286,10 @@ void TilesetDock::setMapDocument(MapDocument *mapDocument)
         mMapDocument->disconnect(this);
 
     mMapDocument = mapDocument;
+
+#ifdef ZOMBOID
+	mThumbView->setMapDocument(mapDocument);
+#endif
 
     if (mMapDocument) {
         Map *map = mMapDocument->map();
@@ -682,3 +703,19 @@ void TilesetDock::refreshTilesetMenu()
         mTilesetMenuMapper->setMapping(action, i);
     }
 }
+
+#ifdef ZOMBOID
+void TilesetDock::thumbCurrentChanged()
+{
+	Tileset *ts = mThumbView->model()->tilesetAt(mThumbView->currentIndex());
+	mTabBar->setCurrentIndex(mMapDocument->map()->tilesets().indexOf(ts));
+}
+
+void TilesetDock::thumbSyncWithTabs()
+{
+	mThumbView->blockSignals(true);
+	Tileset *ts = currentTileset();
+	mThumbView->setCurrentIndex(mThumbView->model()->index(ts));
+	mThumbView->blockSignals(false);
+}
+#endif
