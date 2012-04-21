@@ -114,6 +114,7 @@ ZTilesetThumbView::ZTilesetThumbView(QWidget *parent)
     setItemDelegate(new TileDelegate(this, this));
     setShowGrid(false);
 	setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+	setSelectionMode(QAbstractItemView::SingleSelection);
 
 	setModel(mModel = new ZTilesetThumbModel(this));
 
