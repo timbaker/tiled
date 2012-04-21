@@ -59,10 +59,27 @@ private:
     ZTilesetThumbView *mView;
 };
 
+#include <QPen>
 void TileDelegate::paint(QPainter *painter,
                          const QStyleOptionViewItem &option,
                          const QModelIndex &index) const
 {
+    // Paint background highlight color when selected
+    if (option.state & QStyle::State_Selected) {
+//        const qreal opacity = painter->opacity();
+//        painter->setOpacity(0.5);
+		QBrush oldBrush = painter->brush();
+//		painter->setBrush(option.palette.highlight());
+		QPen pen, oldPen = painter->pen();
+		pen.setWidth(1);
+		pen.setBrush(option.palette.highlight());
+		painter->setPen(pen);
+        painter->drawRect(option.rect.adjusted(0, 0, -1, -1));
+//		painter->setBrush(oldBrush);
+		painter->setPen(oldPen);
+//        painter->setOpacity(opacity);
+    }
+
 	const QFontMetrics fm = painter->fontMetrics();
 //	const ZTilesetThumbModel *model = static_cast<const ZTilesetThumbModel*>(index.model());
 
@@ -79,15 +96,6 @@ void TileDelegate::paint(QPainter *painter,
 
     QString name = tilesetName; // fm.elidedText(tilesetName, Qt::ElideRight, option.rect.width());
 	painter->drawText(option.rect.left(), option.rect.bottom() - fm.lineSpacing(), option.rect.width(), fm.lineSpacing(), Qt::AlignHCenter, name);
-
-    // Overlay with highlight color when selected
-    if (option.state & QStyle::State_Selected) {
-        const qreal opacity = painter->opacity();
-        painter->setOpacity(0.5);
-        painter->fillRect(option.rect.adjusted(0, 0, 0, 0),
-                          option.palette.highlight());
-        painter->setOpacity(opacity);
-    }
 }
 
 QSize TileDelegate::sizeHint(const QStyleOptionViewItem &option,
