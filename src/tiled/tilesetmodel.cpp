@@ -63,6 +63,12 @@ QVariant TilesetModel::data(const QModelIndex &index, int role) const
         if (Tile *tile = tileAt(index))
             return tile->image();
     }
+#ifdef ZOMBOID
+    if (role == Qt::DecorationRole) {
+        if (Tile *tile = tileAt(index))
+            return tile->layerName();
+    }
+#endif
 
     return QVariant();
 }

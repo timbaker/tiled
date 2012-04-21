@@ -311,6 +311,78 @@ void ZomboidScene::synchWithTileLayer(TileLayer *tl)
 	}
 }
 
+#include <QDebug>
+#include <QFile>
+#include <QMessageBox>
+#include <QXmlStreamReader>
+#include "tile.h"
+#include "tileset.h"
+
+static Tileset *findTileset(Map *map, const QString& tilesetName)
+{
+	foreach (Tileset *ts, map->tilesets()) {
+		if (ts->name() == tilesetName)
+			return ts;
+	}
+	return 0;
+}
+
+static const QString readDefaultTileLayerNames(Map *map, const QString& fileName)
+{
+	QString mError;
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        mError = QCoreApplication::translate(
+                    "ObjectTypes", "Could not open file.");
+        return mError;
+    }
+
+    QXmlStreamReader reader(&file);
+
+    if (!reader.readNextStartElement() || reader.name() != "tilesets") {
+        mError = QCoreApplication::translate("TileLayerNames", "File doesn't contain <tilesets>.");
+        return mError;
+    }
+
+    while (reader.readNextStartElement()) {
+        if (reader.name() == "tileset") {
+            const QXmlStreamAttributes atts = reader.attributes();
+            const QString tilesetName(atts.value(QLatin1String("name")).toString());
+			if (Tileset *ts = findTileset(map, tilesetName)) {
+				while (reader.readNextStartElement()) {
+					if (reader.name() == "tile") {
+						const QXmlStreamAttributes atts = reader.attributes();
+						uint id = atts.value(QLatin1String("id")).toString().toUInt();
+						const QString layerName(atts.value(QLatin1String("layername")).toString());
+						if (Tile *t = ts->tileAt(id)) {
+//							qDebug() << tilesetName << " " << id << " " << layerName;
+							t->setLayerName(layerName);
+						}
+					}
+					reader.skipCurrentElement();
+				}
+			}
+			else
+ 				reader.skipCurrentElement(); // not using this tileset
+		}
+		else {
+//			qDebug() << "Unknown element (fixme):" << reader.name();
+			reader.skipCurrentElement(); // unknown element
+		}
+    }
+
+    if (reader.hasError()) {
+        mError = QCoreApplication::translate("TileLayerNames",
+                                             "%3\n\nLine %1, column %2")
+                .arg(reader.lineNumber())
+                .arg(reader.columnNumber())
+                .arg(reader.errorString());
+        return mError;
+    }
+	return mError;
+}
+
 void ZomboidScene::refreshScene()
 {
 	qDeleteAll(mTileLayerGroups);
@@ -343,6 +415,10 @@ void ZomboidScene::refreshScene()
 	MapScene::refreshScene();
 
 	setGraphicsSceneZOrder();
+
+	QString err = readDefaultTileLayerNames(map, QLatin1String("C:/Programming/Tiled/parse-map.xml"));
+	if (!err.isEmpty())
+		QMessageBox::critical(0, tr("Error Reading Default Tile Layer Names"), err);
 }
 
 void ZomboidScene::mapChanged()

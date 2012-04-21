@@ -78,7 +78,20 @@ void TileDelegate::paint(QPainter *painter,
     if (mTilesetView->zoomable()->smoothTransform())
         painter->setRenderHint(QPainter::SmoothPixmapTransform);
 
+#ifdef ZOMBOID
+    painter->drawPixmap(option.rect.adjusted(0, 0, -extra, -extra - 18), tileImage);
+
+    const QVariant decoration = index.model()->data(index, Qt::DecorationRole);
+	QString layerName = decoration.toString();
+	if (layerName.isEmpty())
+		layerName = QLatin1String("???");
+
+	const QFontMetrics fm = painter->fontMetrics();
+    QString name = fm.elidedText(layerName, Qt::ElideRight, option.rect.width());
+	painter->drawText(option.rect.left(), option.rect.bottom() - 18, option.rect.width(), 18, Qt::AlignHCenter, name);
+#else
     painter->drawPixmap(option.rect.adjusted(0, 0, -extra, -extra), tileImage);
+#endif
 
     // Overlay with highlight color when selected
     if (option.state & QStyle::State_Selected) {
@@ -97,9 +110,14 @@ QSize TileDelegate::sizeHint(const QStyleOptionViewItem & /* option */,
     const Tileset *tileset = m->tileset();
     const qreal zoom = mTilesetView->zoomable()->scale();
     const int extra = mTilesetView->drawGrid() ? 1 : 0;
-
+#ifdef ZOMBOID
+	const int labelHeight = 18; // need QFontMetrics
+    return QSize(tileset->tileWidth() * zoom + extra,
+                 tileset->tileHeight() * zoom + extra + labelHeight);
+#else
     return QSize(tileset->tileWidth() * zoom + extra,
                  tileset->tileHeight() * zoom + extra);
+#endif
 }
 
 
