@@ -197,7 +197,7 @@ void ZTilesetThumbView::setMapDocument(MapDocument *mapDoc)
 		QFontMetrics fm = fontMetrics(); // FIXME: same font used by QPainter?
 		int width = 64;
 		foreach (Tileset *ts, mMapDocument->map()->tilesets())
-			width = qMax(width, fm.width(ts->name()));
+			width = qMax(width, fm.width(ts->thumbName()));
 		mContentWidth = width;
 	}
 	model()->setMapDocument(mapDoc);

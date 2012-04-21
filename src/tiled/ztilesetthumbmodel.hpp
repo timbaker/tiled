@@ -59,6 +59,8 @@ private slots:
     void tilesetMoved(int from, int to);
     void tilesetNameChanged(Tileset *tileset);
 	void tilesetFileNameChanged(Tileset *tileset);
+    void tilesetThumbIndexChanged(Tileset *tileset);
+    void tilesetThumbNameChanged(Tileset *tileset);
 
 private:
 	MapDocument *mMapDocument;

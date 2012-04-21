@@ -313,15 +313,20 @@ void ZomboidScene::synchWithTileLayer(TileLayer *tl)
 
 #include <QDebug>
 #include <QFile>
+#include <QFileInfo>
 #include <QMessageBox>
 #include <QXmlStreamReader>
 #include "tile.h"
 #include "tileset.h"
 
-static Tileset *findTileset(Map *map, const QString& tilesetName)
+static Tileset *findTileset(Map *map, const QString& imageSource)
 {
+	if (imageSource.isEmpty())
+		return 0;
+	QFileInfo fileInfo0(imageSource);
 	foreach (Tileset *ts, map->tilesets()) {
-		if (ts->name() == tilesetName)
+		QFileInfo fileInfo1(ts->imageSource());
+		if (fileInfo1.completeBaseName() == fileInfo0.completeBaseName())
 			return ts;
 	}
 	return 0;
@@ -349,7 +354,12 @@ static const QString readDefaultTileLayerNames(Map *map, const QString& fileName
         if (reader.name() == "tileset") {
             const QXmlStreamAttributes atts = reader.attributes();
             const QString tilesetName(atts.value(QLatin1String("name")).toString());
-			if (Tileset *ts = findTileset(map, tilesetName)) {
+            const QString imageSource(atts.value(QLatin1String("imagesource")).toString());
+            uint thumb = atts.value(QLatin1String("thumb")).toString().toUInt();
+			if (Tileset *ts = findTileset(map, imageSource)) {
+				if (tilesetName != ts->name())
+					ts->setThumbName(tilesetName);
+				ts->setThumbIndex(thumb);
 				while (reader.readNextStartElement()) {
 					if (reader.name() == "tile") {
 						const QXmlStreamAttributes atts = reader.attributes();

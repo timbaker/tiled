@@ -236,6 +236,11 @@ public:
     void emitRegionEdited(const QRegion &region, Layer *layer);
 
 #ifdef ZOMBOID
+    void setTilesetThumbIndex(Tileset *tileset, int index);
+    void setTilesetThumbName(Tileset *tileset, const QString &name);
+#endif
+
+#ifdef ZOMBOID // make private, see ZMapObjectsModel
 private:
 #endif
     void emitObjectsAdded(const QList<MapObject*> &objects);
@@ -253,7 +258,7 @@ private:
 
     inline void emitObjectChanged(MapObject *object)
     { emitObjectsChanged(QList<MapObject*>() << object); }
-#ifdef ZOMBOID
+#ifdef ZOMBOID // Undo setting private above
 public:
 #endif
 
@@ -325,6 +330,10 @@ signals:
     void tilesetMoved(int from, int to);
     void tilesetFileNameChanged(Tileset *tileset);
     void tilesetNameChanged(Tileset *tileset);
+#ifdef ZOMBOID
+    void tilesetThumbIndexChanged(Tileset *tileset);
+    void tilesetThumbNameChanged(Tileset *tileset);
+#endif
 
     void objectsAdded(const QList<MapObject*> &objects);
 #ifdef ZOMBOID

@@ -54,7 +54,7 @@ QVariant ZTilesetThumbModel::data(const QModelIndex &index, int role) const
 
     if (role == Qt::DecorationRole) {
         if (Tileset *ts = tilesetAt(index))
-            return ts->name();
+            return ts->thumbName();
     }
 
     return QVariant();
@@ -86,7 +86,8 @@ Tile *ZTilesetThumbModel::tileAt(const QModelIndex &index) const
 
 	if (!mMapDocument)
 		return 0;
-	return mMapDocument->map()->tilesets().at(index.row())->tileAt(0); // FIXME: thumbnail tile
+	Tileset *ts = mMapDocument->map()->tilesets().at(index.row());
+	return ts->tileAt(ts->thumbIndex());
 }
 
 QModelIndex ZTilesetThumbModel::index(Tileset *ts) const
@@ -113,6 +114,10 @@ void ZTilesetThumbModel::setMapDocument(MapDocument *mapDoc)
                 SLOT(tilesetNameChanged(Tileset*)));
         connect(mMapDocument, SIGNAL(tilesetFileNameChanged(Tileset*)),
                 SLOT(tilesetFileNameChanged(Tileset*)));
+        connect(mMapDocument, SIGNAL(tilesetThumbIndexChanged(Tileset*)),
+                SLOT(tilesetThumbIndexChanged(Tileset*)));
+        connect(mMapDocument, SIGNAL(tilesetThumbNameChanged(Tileset*)),
+                SLOT(tilesetThumbNameChanged(Tileset*)));
 	}
 	reset();
 }
@@ -139,10 +144,22 @@ void ZTilesetThumbModel::tilesetMoved(int from, int to)
 
 void ZTilesetThumbModel::tilesetNameChanged(Tileset *tileset)
 {
-	reset();
+	QModelIndex index = this->index(tileset);
+	emit dataChanged(index, index);
 }
 
 void ZTilesetThumbModel::tilesetFileNameChanged(Tileset *tileset)
 {
-	reset();
+}
+
+void ZTilesetThumbModel::tilesetThumbIndexChanged(Tileset *tileset)
+{
+	QModelIndex index = this->index(tileset);
+	emit dataChanged(index, index);
+}
+
+void ZTilesetThumbModel::tilesetThumbNameChanged(Tileset *tileset)
+{
+	QModelIndex index = this->index(tileset);
+	emit dataChanged(index, index);
 }

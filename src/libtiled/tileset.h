@@ -71,6 +71,10 @@ public:
         mImageWidth(0),
         mImageHeight(0),
         mColumnCount(0)
+#ifdef ZOMBOID
+		, mThumbIndex(0)
+		, mThumbName()
+#endif
     {
         Q_ASSERT(tileSpacing >= 0);
         Q_ASSERT(margin >= 0);
@@ -213,6 +217,14 @@ public:
      */
     int columnCountForWidth(int width) const;
 
+#ifdef ZOMBOID
+	void setThumbIndex(int index);
+	int thumbIndex() const { return mThumbIndex; }
+
+	void setThumbName(const QString &name);
+	QString thumbName() const { return mThumbName.isEmpty() ? mName : mThumbName; }
+#endif
+
 private:
     QString mName;
     QString mFileName;
@@ -227,6 +239,10 @@ private:
     int mImageHeight;
     int mColumnCount;
     QList<Tile*> mTiles;
+#ifdef ZOMBOID
+	int mThumbIndex;
+	QString mThumbName;
+#endif
 };
 
 } // namespace Tiled

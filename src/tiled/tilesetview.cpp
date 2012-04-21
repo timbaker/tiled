@@ -208,8 +208,15 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
 
         connect(tileProperties, SIGNAL(triggered()),
                 SLOT(editTileProperties()));
-    }
+	}
 
+#ifdef ZOMBOID
+	QAction *actionSetThumb = 0;
+	if (tile) {
+		menu.addSeparator();
+		actionSetThumb = menu.addAction(tr("Set As &Thumbnail"));
+	}
+#endif
 
     menu.addSeparator();
     QAction *toggleGrid = menu.addAction(tr("Show &Grid"));
@@ -220,7 +227,14 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
     connect(toggleGrid, SIGNAL(toggled(bool)),
             prefs, SLOT(setShowTilesetGrid(bool)));
 
+#ifdef ZOMBOID
+    QAction *action = menu.exec(event->globalPos());
+
+	if (action && action == actionSetThumb)
+		mMapDocument->setTilesetThumbIndex(tile->tileset(), tile->id()); // FIXME: apply globally
+#else
     menu.exec(event->globalPos());
+#endif
 }
 
 void TilesetView::editTileProperties()

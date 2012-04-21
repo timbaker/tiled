@@ -89,6 +89,10 @@ bool Tileset::loadFromImage(const QImage &image, const QString &fileName)
     mImageHeight = image.height();
     mColumnCount = columnCountForWidth(mImageWidth);
     mImageSource = fileName;
+#ifdef ZOMBOID
+	if (mThumbIndex >= tileCount())
+		mThumbIndex = tileCount() - 1;
+#endif
     return true;
 }
 
@@ -112,3 +116,15 @@ int Tileset::columnCountForWidth(int width) const
     Q_ASSERT(mTileWidth > 0);
     return (width - mMargin + mTileSpacing) / (mTileWidth + mTileSpacing);
 }
+
+#ifdef ZOMBOID
+void Tileset::setThumbIndex(int index)
+{
+	mThumbIndex = qMax(0, qMin(index, tileCount() - 1));
+}
+
+void Tileset::setThumbName(const QString &name)
+{
+	mThumbName = name;
+}
+#endif
