@@ -167,8 +167,9 @@ private:
 #ifdef ZOMBOID
 	QMap<QString,ZTileLayerNames*> mTileLayerNames; // imageSource -> tile layer names
 
-	void readTileLayerNames(const QString &imageSource, int tileCount);
-	void writeTileLayerNames(const QString &imageSource, int tileCount);
+	void readTileLayerNames(Tileset *ts);
+	void writeTileLayerNames(ZTileLayerNames *tln);
+	void syncTileLayerNames(Tileset *ts);
 #endif
 
     /**

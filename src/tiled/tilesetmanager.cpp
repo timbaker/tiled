@@ -102,7 +102,7 @@ void TilesetManager::addReference(Tileset *tileset)
     }
 #ifdef ZOMBOID
 	if (!tileset->imageSource().isEmpty())
-		readTileLayerNames(tileset->imageSource(), tileset->tileCount());
+		readTileLayerNames(tileset);
 #endif
 }
 
@@ -162,14 +162,23 @@ void TilesetManager::fileChangedTimeout()
     foreach (Tileset *tileset, tilesets()) {
         QString fileName = tileset->imageSource();
         if (mChangedFiles.contains(fileName))
-            if (tileset->loadFromImage(QImage(fileName), fileName))
+			if (tileset->loadFromImage(QImage(fileName), fileName))
+#ifdef ZOMBOID
+			{
+				syncTileLayerNames(tileset);
                 emit tilesetChanged(tileset);
-    }
+			}
+#else
+                emit tilesetChanged(tileset);
+#endif
+	}
 
     mChangedFiles.clear();
 }
 
 #ifdef ZOMBOID
+#include "tile.h"
+
 #include <QApplication>
 #include <QDebug>
 #include <QDir>
@@ -177,8 +186,6 @@ void TilesetManager::fileChangedTimeout()
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QXmlStreamReader>
-#include "tile.h"
-#include "tileset.h"
 
 namespace Tiled {
 namespace Internal {
@@ -196,12 +203,46 @@ struct ZTileLayerNames
 {
 	ZTileLayerNames()
 		: mThumbIndex(-1)
+		, mColumns(0)
+		, mRows(0)
 	{}
-	ZTileLayerNames(int tileCount)
+	ZTileLayerNames(const QString& filePath, int columns, int rows)
 		: mThumbIndex(-1)
+		, mColumns(columns)
+		, mRows(rows)
+		, mFilePath(filePath)
 	{
-		mTiles.resize(tileCount);
+		mTiles.resize(columns * rows);
 	}
+	void enforceSize(int columns, int rows)
+	{
+		if (columns == mColumns && rows == mRows)
+			return;
+		if (columns == mColumns) {
+			// Number of rows changed, tile ids are still valid
+			mTiles.resize(columns * rows);
+			return;
+		}
+		// Number of columns (and maybe rows) changed.
+		// Copy over the preserved part.
+		QRect oldBounds(0, 0, mColumns, mRows);
+		QRect newBounds(0, 0, columns, rows);
+		QRect preserved = oldBounds & newBounds;
+		QVector<ZTileLayerName> tiles(columns * rows);
+		for (int y = 0; y < preserved.height(); y++) {
+			for (int x = 0; x < preserved.width(); x++) {
+				tiles[y * columns + x] = mTiles[y * mColumns + x];
+				tiles[y * columns + x].mId = y * columns + x;
+			}
+		}
+		mColumns = columns;
+		mRows = rows;
+		mTiles = tiles;
+	}
+
+	int mColumns;
+	int mRows;
+	QString mFilePath;
 	QString mDisplayName;
 	int mThumbIndex;
 	QVector<ZTileLayerName> mTiles;
@@ -254,11 +295,11 @@ QString TilesetManager::layerName(Tile *tile)
 class ZTileLayerNamesReader
 {
 public:
-    bool read(const QString &fileName)
+    bool read(const QString &filePath)
 	{
 		mError.clear();
 
-		QFile file(fileName);
+		QFile file(filePath);
 		if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 			mError = QCoreApplication::translate("TileLayerNames", "Could not open file.");
 			return false;
@@ -267,6 +308,7 @@ public:
 		xml.setDevice(&file);
 
 		if (xml.readNextStartElement() && xml.name() == "tileset") {
+			mTLN.mFilePath = filePath;
 			return readTileset();
 		} else {
 			mError = QCoreApplication::translate("TileLayerNames", "File doesn't contain <tilesets>.");
@@ -288,6 +330,8 @@ public:
 //		for (uint i = 0; i < columns * rows; i++)
 //			mTLN.mTiles[i] = ZTileLayerName();
 
+		mTLN.mColumns = columns;
+		mTLN.mRows = rows;
 		mTLN.mDisplayName = tilesetName;
 		mTLN.mThumbIndex = thumb;
 
@@ -295,9 +339,13 @@ public:
 			if (xml.name() == "tile") {
 				const QXmlStreamAttributes atts = xml.attributes();
 				uint id = atts.value(QLatin1String("id")).toString().toUInt();
-				const QString layerName(atts.value(QLatin1String("layername")).toString());
-				mTLN.mTiles[id].mId = id;
-				mTLN.mTiles[id].mLayerName = layerName;
+				if (id >= columns * rows) {
+					qDebug() << "<tile> " << id << " out-of-bounds: ignored";
+				} else {
+					const QString layerName(atts.value(QLatin1String("layername")).toString());
+					mTLN.mTiles[id].mId = id;
+					mTLN.mTiles[id].mLayerName = layerName;
+				}
 			}
 			xml.skipCurrentElement();
 		}
@@ -327,30 +375,47 @@ private:
     QString mError;
 };
 
-void TilesetManager::readTileLayerNames(const QString &imageSource, int tileCount)
+void TilesetManager::readTileLayerNames(Tileset *ts)
 {
+	QString imageSource = ts->imageSource();
 	if (mTileLayerNames.contains(imageSource))
 		return;
+
+	int columns = ts->columnCount();
+	int rows = columns ? ts->tileCount() / ts->columnCount() : 0;
 
 	QFileInfo fileInfoImgSrc(imageSource);
 	QDir dir = fileInfoImgSrc.absoluteDir();
 	QFileInfo fileInfo(dir, fileInfoImgSrc.completeBaseName() + QLatin1String(".tilelayers.xml"));
-	qDebug() << fileInfo.absoluteFilePath();
+	QString filePath = fileInfo.absoluteFilePath();
+	qDebug() << filePath;
 	if (fileInfo.exists()) {
 		ZTileLayerNamesReader reader;
-		if (reader.read(fileInfo.absoluteFilePath())) {
+		if (reader.read(filePath)) {
 			mTileLayerNames[imageSource] = new ZTileLayerNames(reader.result());
+			// Handle the source image being resized
+			mTileLayerNames[imageSource]->enforceSize(columns, rows);
 		} else {
-			mTileLayerNames[imageSource] = new ZTileLayerNames(tileCount);
+			mTileLayerNames[imageSource] = new ZTileLayerNames(filePath, columns, rows);
 			QMessageBox::critical(0, tr("Error Reading Tile Layer Names"),
-									fileInfo.absoluteFilePath() + QLatin1String("\n") + reader.errorString());
+								  filePath + QLatin1String("\n") + reader.errorString());
 		}
 	} else {
-		mTileLayerNames[imageSource] = new ZTileLayerNames(tileCount);
+		mTileLayerNames[imageSource] = new ZTileLayerNames(filePath, columns, rows);
 	}
 }
 
-void TilesetManager::writeTileLayerNames(const QString &imageSource, int tileCount)
+void TilesetManager::writeTileLayerNames(ZTileLayerNames *tln)
 {
+}
+
+void TilesetManager::syncTileLayerNames(Tileset *ts)
+{
+	if (mTileLayerNames.contains(ts->imageSource())) {
+		ZTileLayerNames *tln = mTileLayerNames[ts->imageSource()];
+		int columns = ts->columnCount();
+		int rows = columns ? ts->tileCount() / ts->columnCount() : 0;
+		tln->enforceSize(columns, rows);
+	}
 }
 #endif // ZOMBOID
