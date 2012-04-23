@@ -122,6 +122,8 @@ private slots:
 #ifdef ZOMBOID
 	void thumbCurrentChanged();
 	void thumbSyncWithTabs();
+
+	void switchLayerForTile(Tile *tile);
 #endif
 
 private:

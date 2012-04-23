@@ -229,6 +229,7 @@ TilesetDock::TilesetDock(QWidget *parent):
     connect(mTilesetMenu, SIGNAL(aboutToShow()), SLOT(refreshTilesetMenu()));
 
 #ifdef ZOMBOID
+	connect(this, SIGNAL(currentTileChanged(Tile*)), SLOT(switchLayerForTile(Tile*)));
 	mThumbView = new ZTilesetThumbView();
     connect(mTabBar, SIGNAL(currentChanged(int)),
             SLOT(thumbSyncWithTabs()));
@@ -718,4 +719,27 @@ void TilesetDock::thumbSyncWithTabs()
 	mThumbView->setCurrentIndex(mThumbView->model()->index(ts));
 	mThumbView->blockSignals(false);
 }
+
+void TilesetDock::switchLayerForTile(Tile *tile)
+{
+	if (!tile)
+		return;
+	QString layerName = TilesetManager::instance()->layerName(tile);
+	if (!layerName.isEmpty()) {
+		Layer *currentLayer = mMapDocument->currentLayer();
+		if (TileLayer *tl = currentLayer->asTileLayer()) { // FIXME: ObjectGroup too?
+			if (tl->group()) {
+				foreach (TileLayer *tl1, tl->group()->layers()) {
+					QString name = tl1->name().split(QLatin1Char('_')).at(1);
+					if (name == layerName) {
+						int layerIndex = mMapDocument->map()->layers().indexOf(tl1);
+						mMapDocument->setCurrentLayerIndex(layerIndex);
+						return;
+					}
+				}
+			}
+		}
+	}
+}
+
 #endif
