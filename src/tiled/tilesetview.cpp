@@ -28,6 +28,10 @@
 #include "tile.h"
 #include "tileset.h"
 #include "tilesetmodel.h"
+#ifdef ZOMBOID
+#include "tilelayer.h"
+#include "tilesetmanager.h"
+#endif
 #include "utils.h"
 #include "zoomable.h"
 
@@ -193,14 +197,24 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
 
     QIcon propIcon(QLatin1String(":images/16x16/document-properties.png"));
 
+#ifdef ZOMBOID
+	QAction *actionProperties = 0;
     if (tile) {
-        // Select this tile to make sure it is clear that only the properties
+		actionProperties = menu.addAction(propIcon,
+                                          tr("Tile &Properties..."));
+        actionProperties->setEnabled(!isExternal);
+        Utils::setThemeIcon(actionProperties, "document-properties");
+        menu.addSeparator();
+	}
+#else
+    if (tile) {
+       // Select this tile to make sure it is clear that only the properties
         // of a single tile are being edited.
         selectionModel()->setCurrentIndex(index,
                                           QItemSelectionModel::SelectCurrent |
                                           QItemSelectionModel::Clear);
 
-        QAction *tileProperties = menu.addAction(propIcon,
+		QAction *tileProperties = menu.addAction(propIcon,
                                                  tr("Tile &Properties..."));
         tileProperties->setEnabled(!isExternal);
         Utils::setThemeIcon(tileProperties, "document-properties");
@@ -209,12 +223,39 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
         connect(tileProperties, SIGNAL(triggered()),
                 SLOT(editTileProperties()));
 	}
+#endif
 
 #ifdef ZOMBOID
 	QAction *actionSetThumb = 0;
+	QVector<QAction*> layerActions;
+	QStringList layerNames;
 	if (tile) {
 		menu.addSeparator();
-		actionSetThumb = menu.addAction(tr("Set As &Thumbnail"));
+		actionSetThumb = menu.addAction(tr("Set As Thumbnail"));
+
+		// Get a list of layer names from the current map
+		QSet<QString> set;
+		foreach (TileLayer *tl, mMapDocument->map()->tileLayers()) {
+			if (tl->group()) {
+				set.insert(tl->name().split(QLatin1String("_")).at(1));
+			}
+		}
+
+		// Get a list of layer names for the current tileset
+		for (int i = 0; i < m->tileset()->tileCount(); i++) {
+			Tile *tile = m->tileset()->tileAt(i);
+			QString layerName = TilesetManager::instance()->layerName(tile);
+			if (!layerName.isEmpty())
+				set.insert(layerName);
+		}
+		layerNames = QStringList::fromSet(set);
+		layerNames.sort();
+
+		QMenu *layersMenu = menu.addMenu(QLatin1String("Default Layer"));
+		foreach (QString layerName, layerNames) {
+			QAction *action = layersMenu->addAction(layerName);
+			layerActions.append(action);
+		}
 	}
 #endif
 
@@ -230,8 +271,27 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
 #ifdef ZOMBOID
     QAction *action = menu.exec(event->globalPos());
 
-	if (action && action == actionSetThumb)
-		mMapDocument->setTilesetThumbIndex(tile->tileset(), tile->id()); // FIXME: apply globally
+	if (action && action == actionProperties) {
+       // Select this tile to make sure it is clear that only the properties
+        // of a single tile are being edited.
+        selectionModel()->setCurrentIndex(index,
+                                          QItemSelectionModel::SelectCurrent |
+                                          QItemSelectionModel::Clear);
+		editTileProperties();
+	}
+
+	else if (action && action == actionSetThumb)
+		mMapDocument->setTilesetThumbIndex(tile->tileset(), tile->id());
+
+	else if (action && layerActions.contains(action)) {
+		int index = layerActions.indexOf(action);
+		QString layerName = layerNames[index];
+		QModelIndexList indexes = selectionModel()->selectedIndexes();
+		foreach (QModelIndex index, indexes) {
+			tile = m->tileAt(index);
+			mMapDocument->setTileLayerName(tile, layerName);
+		}
+	}
 #else
     menu.exec(event->globalPos());
 #endif

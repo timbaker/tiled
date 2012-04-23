@@ -236,6 +236,13 @@ QString TilesetManager::thumbName(Tileset *ts)
 	return QString();
 }
 
+void TilesetManager::setLayerName(Tile *tile, const QString &name)
+{
+	Tileset *ts = tile->tileset();
+	if (mTileLayerNames.contains(ts->imageSource()))
+		mTileLayerNames[ts->imageSource()]->mTiles[tile->id()].mLayerName = name;
+}
+
 QString TilesetManager::layerName(Tile *tile)
 {
 	Tileset *ts = tile->tileset();

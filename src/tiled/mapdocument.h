@@ -41,6 +41,9 @@ class Map;
 class MapObject;
 class MapRenderer;
 class Tileset;
+#ifdef ZOMBOID
+class Tile;
+#endif
 
 namespace Internal {
 
@@ -238,6 +241,7 @@ public:
 #ifdef ZOMBOID
     void setTilesetThumbIndex(Tileset *tileset, int index);
     void setTilesetThumbName(Tileset *tileset, const QString &name);
+    void setTileLayerName(Tile *tile, const QString &name);
 #endif
 
 #ifdef ZOMBOID // make private, see ZMapObjectsModel
@@ -333,6 +337,7 @@ signals:
 #ifdef ZOMBOID
     void tilesetThumbIndexChanged(Tileset *tileset);
     void tilesetThumbNameChanged(Tileset *tileset);
+    void tileLayerNameChanged(Tile *tile);
 #endif
 
     void objectsAdded(const QList<MapObject*> &objects);

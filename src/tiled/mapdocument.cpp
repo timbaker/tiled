@@ -516,7 +516,13 @@ void MapDocument::setTilesetThumbName(Tileset *tileset, const QString &name)
 	TilesetManager::instance()->setThumbName(tileset, name);
 	emit tilesetThumbNameChanged(tileset);
 }
-#endif
+
+void MapDocument::setTileLayerName(Tile *tile, const QString &name)
+{
+	TilesetManager::instance()->setLayerName(tile, name);
+	emit tileLayerNameChanged(tile);
+}
+#endif // ZOMBOID
 
 void MapDocument::emitRegionEdited(const QRegion &region, Layer *layer)
 {
