@@ -21,6 +21,7 @@
 #include "mapdocument.h"
 #include "tile.h"
 #include "tileset.h"
+#include "tilesetmanager.h"
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -53,8 +54,10 @@ QVariant ZTilesetThumbModel::data(const QModelIndex &index, int role) const
     }
 
     if (role == Qt::DecorationRole) {
-        if (Tileset *ts = tilesetAt(index))
-            return ts->thumbName();
+        if (Tileset *ts = tilesetAt(index)) {
+            QString &thumbName = TilesetManager::instance()->thumbName(ts);
+			return thumbName.isEmpty() ? ts->name() : thumbName;
+		}
     }
 
     return QVariant();
@@ -86,8 +89,10 @@ Tile *ZTilesetThumbModel::tileAt(const QModelIndex &index) const
 
 	if (!mMapDocument)
 		return 0;
+
 	Tileset *ts = mMapDocument->map()->tilesets().at(index.row());
-	return ts->tileAt(ts->thumbIndex());
+	int thumbIndex = TilesetManager::instance()->thumbIndex(ts);
+	return ts->tileAt(thumbIndex >= 0 ? thumbIndex : 0);
 }
 
 QModelIndex ZTilesetThumbModel::index(Tileset *ts) const
@@ -102,6 +107,7 @@ void ZTilesetThumbModel::setMapDocument(MapDocument *mapDoc)
 		return;
 	if (mMapDocument)
 		mMapDocument->disconnect(this);
+	beginResetModel();
 	mMapDocument = mapDoc;
 	if (mMapDocument) {
         connect(mMapDocument, SIGNAL(tilesetAdded(int,Tileset*)),
@@ -119,7 +125,7 @@ void ZTilesetThumbModel::setMapDocument(MapDocument *mapDoc)
         connect(mMapDocument, SIGNAL(tilesetThumbNameChanged(Tileset*)),
                 SLOT(tilesetThumbNameChanged(Tileset*)));
 	}
-	reset();
+	endResetModel();
 }
 
 void ZTilesetThumbModel::tilesetAdded(int index, Tileset *tileset)

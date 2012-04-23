@@ -100,6 +100,10 @@ void TilesetManager::addReference(Tileset *tileset)
         if (!tileset->imageSource().isEmpty())
             mWatcher->addPath(tileset->imageSource());
     }
+#ifdef ZOMBOID
+	if (!tileset->imageSource().isEmpty())
+		readTileLayerNames(tileset->imageSource(), tileset->tileCount());
+#endif
 }
 
 void TilesetManager::removeReference(Tileset *tileset)
@@ -164,3 +168,182 @@ void TilesetManager::fileChangedTimeout()
 
     mChangedFiles.clear();
 }
+
+#ifdef ZOMBOID
+#include <QApplication>
+#include <QDebug>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
+#include <QMessageBox>
+#include <QXmlStreamReader>
+#include "tile.h"
+#include "tileset.h"
+
+namespace Tiled {
+namespace Internal {
+
+struct ZTileLayerName
+{
+	ZTileLayerName()
+		: mId(-1)
+	{}
+	int mId;
+	QString mLayerName;
+};
+
+struct ZTileLayerNames
+{
+	ZTileLayerNames()
+		: mThumbIndex(-1)
+	{}
+	ZTileLayerNames(int tileCount)
+		: mThumbIndex(-1)
+	{
+		mTiles.resize(tileCount);
+	}
+	QString mDisplayName;
+	int mThumbIndex;
+	QVector<ZTileLayerName> mTiles;
+};
+
+} // namespace Internal
+} // namespace Tiled
+
+void TilesetManager::setThumbIndex(Tileset *ts, int index)
+{
+	if (mTileLayerNames.contains(ts->imageSource()))
+		mTileLayerNames[ts->imageSource()]->mThumbIndex = index;
+}
+
+int TilesetManager::thumbIndex(Tileset *ts)
+{
+	if (mTileLayerNames.contains(ts->imageSource()))
+		return mTileLayerNames[ts->imageSource()]->mThumbIndex;
+	return -1;
+}
+
+void TilesetManager::setThumbName(Tileset *ts, const QString &name)
+{
+	if (mTileLayerNames.contains(ts->imageSource()))
+		mTileLayerNames[ts->imageSource()]->mDisplayName = name;
+}
+
+QString TilesetManager::thumbName(Tileset *ts)
+{
+	if (mTileLayerNames.contains(ts->imageSource()))
+		return mTileLayerNames[ts->imageSource()]->mDisplayName;
+	return QString();
+}
+
+QString TilesetManager::layerName(Tile *tile)
+{
+	Tileset *ts = tile->tileset();
+	if (mTileLayerNames.contains(ts->imageSource()))
+		return mTileLayerNames[ts->imageSource()]->mTiles[tile->id()].mLayerName;
+	return QString();
+}
+
+class ZTileLayerNamesReader
+{
+public:
+    bool read(const QString &fileName)
+	{
+		mError.clear();
+
+		QFile file(fileName);
+		if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+			mError = QCoreApplication::translate("TileLayerNames", "Could not open file.");
+			return false;
+		}
+
+		xml.setDevice(&file);
+
+		if (xml.readNextStartElement() && xml.name() == "tileset") {
+			return readTileset();
+		} else {
+			mError = QCoreApplication::translate("TileLayerNames", "File doesn't contain <tilesets>.");
+			return false;
+		}
+	}
+
+	bool readTileset()
+	{
+		Q_ASSERT(xml.isStartElement() && xml.name() == "tileset");
+
+		const QXmlStreamAttributes atts = xml.attributes();
+		const QString tilesetName = atts.value(QLatin1String("name")).toString();
+		uint columns = atts.value(QLatin1String("columns")).toString().toUInt();
+		uint rows = atts.value(QLatin1String("rows")).toString().toUInt();
+		uint thumb = atts.value(QLatin1String("thumb")).toString().toUInt();
+
+		mTLN.mTiles.resize(columns * rows);
+//		for (uint i = 0; i < columns * rows; i++)
+//			mTLN.mTiles[i] = ZTileLayerName();
+
+		mTLN.mDisplayName = tilesetName;
+		mTLN.mThumbIndex = thumb;
+
+		while (xml.readNextStartElement()) {
+			if (xml.name() == "tile") {
+				const QXmlStreamAttributes atts = xml.attributes();
+				uint id = atts.value(QLatin1String("id")).toString().toUInt();
+				const QString layerName(atts.value(QLatin1String("layername")).toString());
+				mTLN.mTiles[id].mId = id;
+				mTLN.mTiles[id].mLayerName = layerName;
+			}
+			xml.skipCurrentElement();
+		}
+
+		return true;
+	}
+
+    QString errorString() const { return mError; }
+	ZTileLayerNames &result() { return mTLN; }
+
+private:
+    QString mError;
+	QXmlStreamReader xml;
+	ZTileLayerNames mTLN;
+};
+
+class ZTileLayerNamesWriter
+{
+public:
+    ZTileLayerNames write(const QString &fileName, const ZTileLayerNames &tln)
+	{
+	}
+
+    QString errorString() const { return mError; }
+
+private:
+    QString mError;
+};
+
+void TilesetManager::readTileLayerNames(const QString &imageSource, int tileCount)
+{
+	if (mTileLayerNames.contains(imageSource))
+		return;
+
+	QFileInfo fileInfoImgSrc(imageSource);
+	QDir dir = fileInfoImgSrc.absoluteDir();
+	QFileInfo fileInfo(dir, fileInfoImgSrc.completeBaseName() + QLatin1String(".tilelayers.xml"));
+	qDebug() << fileInfo.absoluteFilePath();
+	if (fileInfo.exists()) {
+		ZTileLayerNamesReader reader;
+		if (reader.read(fileInfo.absoluteFilePath())) {
+			mTileLayerNames[imageSource] = new ZTileLayerNames(reader.result());
+		} else {
+			mTileLayerNames[imageSource] = new ZTileLayerNames(tileCount);
+			QMessageBox::critical(0, tr("Error Reading Tile Layer Names"),
+									fileInfo.absoluteFilePath() + QLatin1String("\n") + reader.errorString());
+		}
+	} else {
+		mTileLayerNames[imageSource] = new ZTileLayerNames(tileCount);
+	}
+}
+
+void TilesetManager::writeTileLayerNames(const QString &imageSource, int tileCount)
+{
+}
+#endif // ZOMBOID

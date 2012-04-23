@@ -31,11 +31,18 @@
 
 namespace Tiled {
 
+#ifdef ZOMBOID
+class Tile;
+#endif
 class Tileset;
 
 namespace Internal {
 
 class FileSystemWatcher;
+
+#ifdef ZOMBOID
+struct ZTileLayerNames;
+#endif
 
 /**
  * A tileset specification that uniquely identifies a certain tileset. Does not
@@ -121,6 +128,16 @@ public:
     bool reloadTilesetsOnChange() const
     { return mReloadTilesetsOnChange; }
 
+#ifdef ZOMBOID
+	void setThumbIndex(Tileset *ts, int index);
+	int thumbIndex(Tileset *ts);
+
+	void setThumbName(Tileset *ts, const QString &name);
+	QString thumbName(Tileset *ts);
+
+	QString layerName(Tile *tile);
+#endif
+
 signals:
     /**
      * Emitted when a tileset's images have changed and views need updating.
@@ -145,6 +162,13 @@ private:
     ~TilesetManager();
 
     static TilesetManager *mInstance;
+
+#ifdef ZOMBOID
+	QMap<QString,ZTileLayerNames*> mTileLayerNames; // imageSource -> tile layer names
+
+	void readTileLayerNames(const QString &imageSource, int tileCount);
+	void writeTileLayerNames(const QString &imageSource, int tileCount);
+#endif
 
     /**
      * Stores the tilesets and maps them to the number of references.

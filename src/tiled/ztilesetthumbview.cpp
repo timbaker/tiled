@@ -202,13 +202,15 @@ void ZTilesetThumbView::setMapDocument(MapDocument *mapDoc)
 	if (mMapDocument == mapDoc)
 		return;
 	mMapDocument = mapDoc;
+	model()->setMapDocument(mapDoc);
 	if (mMapDocument) {
 		QFontMetrics fm = fontMetrics(); // FIXME: same font used by QPainter?
 		int width = 64;
-		foreach (Tileset *ts, mMapDocument->map()->tilesets())
-			width = qMax(width, fm.width(ts->thumbName()));
+		foreach (Tileset *ts, mMapDocument->map()->tilesets()) {
+			QString thumbName = model()->data(model()->index(ts), Qt::DecorationRole).toString();
+			width = qMax(width, fm.width(thumbName));
+		}
 		mContentWidth = width;
 	}
-	model()->setMapDocument(mapDoc);
 	updateGeometry();
 }

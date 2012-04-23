@@ -24,6 +24,9 @@
 #include "map.h"
 #include "tile.h"
 #include "tileset.h"
+#ifdef ZOMBOID
+#include "tilesetmanager.h"
+#endif
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -66,7 +69,7 @@ QVariant TilesetModel::data(const QModelIndex &index, int role) const
 #ifdef ZOMBOID
     if (role == Qt::DecorationRole) {
         if (Tile *tile = tileAt(index))
-            return tile->layerName();
+            return TilesetManager::instance()->layerName(tile);
     }
 #endif
 

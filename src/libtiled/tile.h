@@ -82,18 +82,10 @@ public:
      */
     QSize size() const { return mImage.size(); }
 
-#ifdef ZOMBOID
-    const QString &layerName() const { return mLayerName; }
-    void setLayerName(const QString &name) { mLayerName = name; }
-#endif
-
 private:
     int mId;
     Tileset *mTileset;
     QPixmap mImage;
-#ifdef ZOMBOID
-	QString mLayerName;
-#endif
 };
 
 } // namespace Tiled
