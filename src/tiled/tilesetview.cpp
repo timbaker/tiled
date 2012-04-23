@@ -183,6 +183,42 @@ void TilesetView::wheelEvent(QWheelEvent *event)
     QTableView::wheelEvent(event);
 }
 
+#ifdef ZOMBOID
+class ChangeTileLayerName : public QUndoCommand
+{
+public:
+    ChangeTileLayerName(MapDocument *mapDocument,
+                  Tile *tile,
+                  const QString &oldName,
+                  const QString &newName)
+        : QUndoCommand(QCoreApplication::translate("Undo Commands",
+                                                   "Change Tile Layer Name"))
+        , mMapDocument(mapDocument)
+        , mTile(tile)
+        , mOldName(oldName)
+        , mNewName(newName)
+    {
+        redo();
+    }
+
+    void undo()
+    {
+        mMapDocument->setTileLayerName(mTile, mOldName);
+    }
+
+    void redo()
+    {
+        mMapDocument->setTileLayerName(mTile, mNewName);
+    }
+
+private:
+    MapDocument *mMapDocument;
+    Tile *mTile;
+    QString mOldName;
+    QString mNewName;
+};
+#endif // ZOMBOID
+
 /**
  * Allow changing tile properties through a context menu.
  */
@@ -287,10 +323,15 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
 		int index = layerActions.indexOf(action);
 		QString layerName = layerNames[index];
 		QModelIndexList indexes = selectionModel()->selectedIndexes();
+		QUndoStack *undoStack = mMapDocument->undoStack();
+		undoStack->beginMacro(tr("Change Tile Layer Name (x%n)", "", indexes.size()));
 		foreach (QModelIndex index, indexes) {
 			tile = m->tileAt(index);
-			mMapDocument->setTileLayerName(tile, layerName);
+			QString oldName = TilesetManager::instance()->layerName(tile);
+			ChangeTileLayerName *undo = new ChangeTileLayerName(mMapDocument, tile, oldName, layerName);
+			mMapDocument->undoStack()->push(undo);
 		}
+		undoStack->endMacro();
 	}
 #else
     menu.exec(event->globalPos());
