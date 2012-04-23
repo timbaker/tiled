@@ -20,15 +20,14 @@
 
 #include "ztilesetthumbmodel.hpp"
 
-#include <QTableView>
+#include <QListView>
 
 namespace Tiled {
 namespace Internal {
 
 class MapDocument;
-class Zoomable;
 
-class ZTilesetThumbView : public QTableView
+class ZTilesetThumbView : public QListView
 {
     Q_OBJECT
 
