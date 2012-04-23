@@ -25,6 +25,7 @@
 #include "tile.h"
 #include "tileset.h"
 #ifdef ZOMBOID
+#include "mapdocument.h"
 #include "tilesetmanager.h"
 #endif
 
@@ -36,6 +37,19 @@ TilesetModel::TilesetModel(Tileset *tileset, QObject *parent):
     mTileset(tileset)
 {
 }
+
+#ifdef ZOMBOID
+TilesetModel::~TilesetModel()
+{
+	disconnect(mMapDocument, SIGNAL(tileLayerNameChanged(Tile*)), this, SLOT(tileLayerNameChanged(Tile*)));
+}
+
+void TilesetModel::setMapDocument(MapDocument *mapDocument)
+{
+	mMapDocument = mapDocument;
+	connect(mMapDocument, SIGNAL(tileLayerNameChanged(Tile*)), SLOT(tileLayerNameChanged(Tile*)));
+}
+#endif
 
 int TilesetModel::rowCount(const QModelIndex &parent) const
 {
@@ -101,3 +115,15 @@ void TilesetModel::setTileset(Tileset *tileset)
     mTileset = tileset;
     reset();
 }
+
+#ifdef ZOMBOID
+void TilesetModel::tileLayerNameChanged(Tile *tile)
+{
+	if (tile->tileset() == mTileset) {
+		int column = tile->id() % mTileset->columnCount();
+		int row = tile->id() / mTileset->columnCount();
+		QModelIndex index = createIndex(row, column, 0);
+		emit dataChanged(index, index);
+	}
+}
+#endif

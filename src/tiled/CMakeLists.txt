@@ -51,7 +51,6 @@ set ( Tiled_HDRS
 	selectionrectangle.h
 	tilelayeritem.h
 	tilepainter.h
-	tilesetmodel.h
 	tmxmapreader.h
 	tmxmapwriter.h
 	undocommands.h
@@ -239,6 +238,7 @@ set ( Tiled_MOCS
 	tileselectiontool.h
 	tilesetdock.h
 	tilesetmanager.h
+	tilesetmodel.h
 	tilesetview.h
 	toolmanager.h
 	undodock.h

@@ -380,6 +380,9 @@ void TilesetDock::insertTilesetView(int index, Tileset *tileset)
 {
     TilesetView *view = new TilesetView(mMapDocument);
     view->setModel(new TilesetModel(tileset, view));
+#ifdef ZOMBOID
+	view->tilesetModel()->setMapDocument(mMapDocument);
+#endif
 
     connect(view->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),

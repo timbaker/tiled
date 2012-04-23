@@ -31,11 +31,18 @@ class Tileset;
 
 namespace Internal {
 
+#ifdef ZOMBOID
+class MapDocument;
+#endif
+
 /**
  * A model wrapping a tileset of a map. Used to display the tiles.
  */
 class TilesetModel : public QAbstractListModel
 {
+#ifdef ZOMBOID
+	Q_OBJECT
+#endif
 public:
     /**
      * Constructor.
@@ -87,6 +94,18 @@ public:
      * Performs a reset() on the model
      */
     void tilesetChanged() { reset(); }
+
+#ifdef ZOMBOID
+	~TilesetModel();
+
+	void setMapDocument(MapDocument *mapDocument);
+
+private:
+	MapDocument *mMapDocument;
+
+private slots:
+	void tileLayerNameChanged(Tile *tile);
+#endif
 
 private:
     Tileset *mTileset;
