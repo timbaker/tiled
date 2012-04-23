@@ -179,7 +179,11 @@ TilesetDock::TilesetDock(QWidget *parent):
 
     QVBoxLayout *vertical = new QVBoxLayout(w);
     vertical->setSpacing(5);
+#ifdef ZOMBOID
+    vertical->setMargin(0);
+#else
     vertical->setMargin(5);
+#endif
     vertical->addLayout(horizontal);
     vertical->addWidget(mViewStack);
     vertical->addWidget(mToolBar);
@@ -235,10 +239,30 @@ TilesetDock::TilesetDock(QWidget *parent):
             SLOT(thumbSyncWithTabs()));
 	connect(mThumbView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
 		SLOT(thumbCurrentChanged()));
+	connect(mThumbView, SIGNAL(activated(QModelIndex)), mThumbView, SLOT(edit(QModelIndex)));
+
+	vertical = new QVBoxLayout();
+	vertical->setSpacing(5);
+	QToolBar *toolbar = new QToolBar();
+	toolbar->setIconSize(QSize(16, 16));
+	mActionTilesetUp = toolbar->addAction(QIcon(QLatin1String(":/images/16x16/go-up.png")),
+										  tr("Move Tileset Up"), this, SLOT(moveTilesetUp()));
+	mActionTilesetDown = toolbar->addAction(QIcon(QLatin1String(":/images/16x16/go-down.png")),
+											tr("Move Tileset Down"), this, SLOT(moveTilesetDown()));
+	QToolButton *button;
+	button = dynamic_cast<QToolButton*>(toolbar->widgetForAction(mActionTilesetUp));
+	button->setAutoRepeat(true);
+	button = dynamic_cast<QToolButton*>(toolbar->widgetForAction(mActionTilesetDown));
+	button->setAutoRepeat(true);
+
+	vertical->addWidget(mThumbView);
+	vertical->addWidget(toolbar);
 
 	QWidget *outer = new QWidget(this);
     horizontal = new QHBoxLayout(outer);
-	horizontal->addWidget(mThumbView);
+	horizontal->setSpacing(5);
+	horizontal->setMargin(5);
+	horizontal->addLayout(vertical);
 	horizontal->addWidget(w);
 	setWidget(outer);
 #else
@@ -449,6 +473,7 @@ void TilesetDock::tilesetRemoved(Tileset *tileset)
             break;
         }
     }
+
 
     // Make sure we don't reference this tileset anymore
     if (mCurrentTiles) {
@@ -708,8 +733,16 @@ void TilesetDock::refreshTilesetMenu()
 #ifdef ZOMBOID
 void TilesetDock::thumbCurrentChanged()
 {
-	Tileset *ts = mThumbView->model()->tilesetAt(mThumbView->currentIndex());
-	mTabBar->setCurrentIndex(mMapDocument->map()->tilesets().indexOf(ts));
+	QModelIndex index = mThumbView->currentIndex();
+	if (index.isValid()) {
+		Tileset *ts = mThumbView->model()->tilesetAt(index);
+		mTabBar->setCurrentIndex(mMapDocument->map()->tilesets().indexOf(ts));
+		mActionTilesetUp->setEnabled(true);
+		mActionTilesetDown->setEnabled(true);
+	} else {
+		mActionTilesetUp->setEnabled(false);
+		mActionTilesetDown->setEnabled(false);
+	}
 }
 
 void TilesetDock::thumbSyncWithTabs()
@@ -742,4 +775,26 @@ void TilesetDock::switchLayerForTile(Tile *tile)
 	}
 }
 
-#endif
+void TilesetDock::moveTilesetUp()
+{
+	QModelIndex index = mThumbView->currentIndex();
+	int from = index.row();
+	if (from > 0) {
+		mTabBar->moveTab(from, from-1);
+		Tileset *ts = mMapDocument->map()->tilesets()[from-1];
+		mThumbView->setCurrentIndex(mThumbView->model()->index(ts));
+	}
+}
+
+void TilesetDock::moveTilesetDown()
+{
+	QModelIndex index = mThumbView->currentIndex();
+	int from = index.row();
+	if (from + 1 < mMapDocument->map()->tilesets().count()) {
+		mTabBar->moveTab(from, from+1);
+		Tileset *ts = mMapDocument->map()->tilesets()[from+1];
+		mThumbView->setCurrentIndex(mThumbView->model()->index(ts));
+	}
+}
+
+#endif // ZOMBOID

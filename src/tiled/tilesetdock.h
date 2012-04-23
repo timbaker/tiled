@@ -123,6 +123,9 @@ private slots:
 	void thumbCurrentChanged();
 	void thumbSyncWithTabs();
 
+	void moveTilesetUp();
+	void moveTilesetDown();
+
 	void switchLayerForTile(Tile *tile);
 #endif
 
@@ -154,6 +157,8 @@ private:
     QSignalMapper *mTilesetMenuMapper; //needed due to dynamic content
 
 #ifdef ZOMBOID
+	QAction *mActionTilesetUp;
+	QAction *mActionTilesetDown;
 	ZTilesetThumbView *mThumbView;
 #endif
 };
