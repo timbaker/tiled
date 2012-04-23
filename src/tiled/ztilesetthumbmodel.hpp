@@ -41,9 +41,12 @@ public:
 
     QVariant data(const QModelIndex &index,
                   int role = Qt::DisplayRole) const;
+	bool setData(const QModelIndex &index, const QVariant &value, int role);
 
     QVariant headerData(int section, Qt::Orientation orientation,
                         int role = Qt::DisplayRole) const;
+
+	Qt::ItemFlags flags(const QModelIndex &index) const;
 
     Tileset *tilesetAt(const QModelIndex &index) const;
     Tile *tileAt(const QModelIndex &index) const;

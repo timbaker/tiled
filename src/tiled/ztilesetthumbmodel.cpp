@@ -23,6 +23,9 @@
 #include "tileset.h"
 #include "tilesetmanager.h"
 
+#include <QApplication>
+#include <QUndoCommand>
+
 using namespace Tiled;
 using namespace Tiled::Internal;
 
@@ -48,6 +51,16 @@ int ZTilesetThumbModel::columnCount(const QModelIndex &parent) const
 
 QVariant ZTilesetThumbModel::data(const QModelIndex &index, int role) const
 {
+#if 1
+    if (role == Qt::DisplayRole) {
+        if (Tileset *ts = tilesetAt(index))
+			return ts->name();
+	}
+    if (role == Qt::EditRole) {
+        if (Tileset *ts = tilesetAt(index))
+			return ts->name();
+	}
+#else
     if (role == Qt::DisplayRole) {
         if (Tile *tile = tileAt(index))
             return tile->image();
@@ -59,8 +72,60 @@ QVariant ZTilesetThumbModel::data(const QModelIndex &index, int role) const
 			return thumbName.isEmpty() ? ts->name() : thumbName;
 		}
     }
+#endif
 
     return QVariant();
+}
+
+// FIXME: copied this from tilesetdock.cpp
+class RenameTileset : public QUndoCommand
+{
+public:
+    RenameTileset(MapDocument *mapDocument,
+                  Tileset *tileset,
+                  const QString &oldName,
+                  const QString &newName)
+        : QUndoCommand(QCoreApplication::translate("Undo Commands",
+                                                   "Change Tileset name"))
+        , mMapDocument(mapDocument)
+        , mTileset(tileset)
+        , mOldName(oldName)
+        , mNewName(newName)
+    {
+        redo();
+    }
+
+    void undo()
+    {
+        mMapDocument->setTilesetName(mTileset, mOldName);
+    }
+
+    void redo()
+    {
+        mMapDocument->setTilesetName(mTileset, mNewName);
+    }
+
+private:
+    MapDocument *mMapDocument;
+    Tileset *mTileset;
+    QString mOldName;
+    QString mNewName;
+};
+
+bool ZTilesetThumbModel::setData(const QModelIndex &index, const QVariant &value,
+                         int role)
+{
+    if (role == Qt::EditRole) {
+        if (Tileset *ts = tilesetAt(index)) {
+			QString newName = value.toString();
+			RenameTileset *rename = new RenameTileset(mMapDocument,
+													ts,
+													ts->name(), newName);
+			mMapDocument->undoStack()->push(rename);
+			return true;
+		}
+	}
+	return false;
 }
 
 QVariant ZTilesetThumbModel::headerData(int /* section */,
@@ -70,6 +135,13 @@ QVariant ZTilesetThumbModel::headerData(int /* section */,
     if (role == Qt::SizeHintRole)
         return QSize(1, 1);
     return QVariant();
+}
+
+Qt::ItemFlags ZTilesetThumbModel::flags(const QModelIndex &index) const
+{
+    Qt::ItemFlags rc = QAbstractItemModel::flags(index);
+	rc |= Qt::ItemIsEditable;
+	return rc;
 }
 
 Tileset *ZTilesetThumbModel::tilesetAt(const QModelIndex &index) const
@@ -145,7 +217,10 @@ void ZTilesetThumbModel::tilesetRemoved(Tileset *tileset)
 
 void ZTilesetThumbModel::tilesetMoved(int from, int to)
 {
-	reset();
+	int start = qMin(from, to);
+	int end = qMax(from, to);
+	// FIXME: should use beingMoveRows()/endMoveRows()
+	emit dataChanged(createIndex(start, 0, 0), createIndex(end, 0, 0));
 }
 
 void ZTilesetThumbModel::tilesetNameChanged(Tileset *tileset)
