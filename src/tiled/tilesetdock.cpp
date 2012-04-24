@@ -185,12 +185,20 @@ TilesetDock::TilesetDock(QWidget *parent):
     vertical->setSpacing(5);
 #ifdef ZOMBOID
     vertical->setMargin(0);
+	mTilesetMenuButton->setParent(0);
 #else
     vertical->setMargin(5);
-#endif
     vertical->addLayout(horizontal);
+#endif
     vertical->addWidget(mViewStack);
+#ifdef ZOMBOID
+	horizontal = new QHBoxLayout();
+    horizontal->setSpacing(5);
+	horizontal->addWidget(mToolBar, 1);
+    vertical->addLayout(horizontal);
+#else
     vertical->addWidget(mToolBar);
+#endif
 
     mImportTileset->setIcon(QIcon(QLatin1String(":images/16x16/document-import.png")));
     mExportTileset->setIcon(QIcon(QLatin1String(":images/16x16/document-export.png")));
@@ -225,10 +233,11 @@ TilesetDock::TilesetDock(QWidget *parent):
 #ifdef ZOMBOID
 	mZoomable = new Zoomable(this);
 	mZoomable->setZoomFactors(QVector<qreal>() << 0.25 << 0.5 << 0.75 << 1.0 << 1.25 << 1.5 << 1.75 << 2.0);
-	mToolBar->addSeparator();
+//	mToolBar->addSeparator();
 	mZoomComboBox = new QComboBox;
 	mZoomable->connectToComboBox(mZoomComboBox);
-	mActionZoom = mToolBar->addWidget(mZoomComboBox);
+//	mActionZoom = mToolBar->addWidget(mZoomComboBox);
+	horizontal->addWidget(mZoomComboBox);
 #endif
 
     connect(mViewStack, SIGNAL(currentChanged(int)),
@@ -428,7 +437,8 @@ void TilesetDock::updateActions()
     mPropertiesTileset->setEnabled(view && !external);
     mDeleteTileset->setEnabled(view);
 #ifdef ZOMBOID
-	mActionZoom->setEnabled(view != 0);
+//	mActionZoom->setEnabled(view != 0);
+	mZoomComboBox->setEnabled(view != 0);
 #endif
 }
 
