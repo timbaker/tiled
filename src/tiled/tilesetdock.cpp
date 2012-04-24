@@ -804,10 +804,17 @@ void TilesetDock::thumbCurrentChanged()
 
 void TilesetDock::thumbSyncWithTabs()
 {
-	mThumbView->blockSignals(true);
+	mThumbView->selectionModel()->blockSignals(true);
+#if 1
+	// FIXME: When starting up, currentTileset() is returning 0 for some reason.
+	Tileset *ts = (mTabBar->currentIndex() >= 0) ? mMapDocument->map()->tilesets().at(mTabBar->currentIndex()) : 0;
+#else
 	Tileset *ts = currentTileset();
-	mThumbView->setCurrentIndex(mThumbView->model()->index(ts));
-	mThumbView->blockSignals(false);
+#endif
+	QModelIndex index = mThumbView->model()->index(ts);
+	mThumbView->setCurrentIndex(index);
+	mThumbView->selectionModel()->select(index, QItemSelectionModel::Select |  QItemSelectionModel::Rows);
+	mThumbView->selectionModel()->blockSignals(false);
 }
 
 void TilesetDock::layerSwitchToggled()
