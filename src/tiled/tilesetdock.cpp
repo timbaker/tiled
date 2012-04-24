@@ -460,6 +460,8 @@ void TilesetDock::updateActions()
 #ifdef ZOMBOID
 //	mActionZoom->setEnabled(view != 0);
 	mActionNewTileset->setEnabled(mMapDocument != 0);
+	mActionTilesetUp->setEnabled(view && (index > 0));
+	mActionTilesetDown->setEnabled(view && (index + 1 < mTabBar->count()));
 	mZoomComboBox->setEnabled(view != 0);
 #endif
 }
@@ -792,11 +794,11 @@ void TilesetDock::thumbCurrentChanged()
 	if (index.isValid()) {
 		Tileset *ts = mThumbView->model()->tilesetAt(index);
 		mTabBar->setCurrentIndex(mMapDocument->map()->tilesets().indexOf(ts));
-		mActionTilesetUp->setEnabled(true);
-		mActionTilesetDown->setEnabled(true);
+//		mActionTilesetUp->setEnabled(true);
+//		mActionTilesetDown->setEnabled(true);
 	} else {
-		mActionTilesetUp->setEnabled(false);
-		mActionTilesetDown->setEnabled(false);
+//		mActionTilesetUp->setEnabled(false);
+//		mActionTilesetDown->setEnabled(false);
 	}
 }
 
