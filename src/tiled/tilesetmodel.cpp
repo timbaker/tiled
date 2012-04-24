@@ -85,6 +85,10 @@ QVariant TilesetModel::data(const QModelIndex &index, int role) const
         if (Tile *tile = tileAt(index))
             return TilesetManager::instance()->layerName(tile);
     }
+	if (role == Qt::ToolTipRole) {
+        if (Tile *tile = tileAt(index))
+            return TilesetManager::instance()->layerName(tile);
+    }
 #endif
 
     return QVariant();
