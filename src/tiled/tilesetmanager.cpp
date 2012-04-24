@@ -253,8 +253,8 @@ struct ZTileLayerNames
 
 void TilesetManager::setThumbIndex(Tileset *ts, int index)
 {
-	if (mTileLayerNames.contains(ts->imageSource()))
-		mTileLayerNames[ts->imageSource()]->mThumbIndex = index;
+	if (ZTileLayerNames *tln = layerNamesForTileset(ts))
+		tln->mThumbIndex = index;
 }
 
 int TilesetManager::thumbIndex(Tileset *ts)
@@ -266,8 +266,8 @@ int TilesetManager::thumbIndex(Tileset *ts)
 
 void TilesetManager::setThumbName(Tileset *ts, const QString &name)
 {
-	if (mTileLayerNames.contains(ts->imageSource()))
-		mTileLayerNames[ts->imageSource()]->mDisplayName = name;
+	if (ZTileLayerNames *tln = layerNamesForTileset(ts))
+		tln->mDisplayName = name;
 }
 
 QString TilesetManager::thumbName(Tileset *ts)
@@ -280,8 +280,8 @@ QString TilesetManager::thumbName(Tileset *ts)
 void TilesetManager::setLayerName(Tile *tile, const QString &name)
 {
 	Tileset *ts = tile->tileset();
-	if (mTileLayerNames.contains(ts->imageSource()))
-		mTileLayerNames[ts->imageSource()]->mTiles[tile->id()].mLayerName = name;
+	if (ZTileLayerNames *tln = layerNamesForTileset(ts))
+		tln->mTiles[tile->id()].mLayerName = name;
 }
 
 QString TilesetManager::layerName(Tile *tile)
@@ -375,6 +375,29 @@ private:
     QString mError;
 };
 
+QString TilesetManager::tileLayerNamesFile(Tileset *ts)
+{
+	QString imageSource = ts->imageSource();
+	QFileInfo fileInfoImgSrc(imageSource);
+	QDir dir = fileInfoImgSrc.absoluteDir();
+	QFileInfo fileInfo(dir, fileInfoImgSrc.completeBaseName() + QLatin1String(".tilelayers.xml"));
+	return fileInfo.absoluteFilePath();
+}
+
+ZTileLayerNames *TilesetManager::layerNamesForTileset(Tileset *ts)
+{
+	QString imageSource = ts->imageSource();
+	QMap<QString,ZTileLayerNames*>::iterator it = mTileLayerNames.find(imageSource);
+	if (it != mTileLayerNames.end())
+		return *it;
+
+	int columns = ts->columnCount();
+	int rows = columns ? ts->tileCount() / columns : 0;
+
+	QString filePath = tileLayerNamesFile(ts);
+	return mTileLayerNames[imageSource] = new ZTileLayerNames(filePath, columns, rows);
+}
+
 void TilesetManager::readTileLayerNames(Tileset *ts)
 {
 	QString imageSource = ts->imageSource();
@@ -382,7 +405,7 @@ void TilesetManager::readTileLayerNames(Tileset *ts)
 		return;
 
 	int columns = ts->columnCount();
-	int rows = columns ? ts->tileCount() / ts->columnCount() : 0;
+	int rows = columns ? ts->tileCount() / columns : 0;
 
 	QFileInfo fileInfoImgSrc(imageSource);
 	QDir dir = fileInfoImgSrc.absoluteDir();
@@ -396,12 +419,12 @@ void TilesetManager::readTileLayerNames(Tileset *ts)
 			// Handle the source image being resized
 			mTileLayerNames[imageSource]->enforceSize(columns, rows);
 		} else {
-			mTileLayerNames[imageSource] = new ZTileLayerNames(filePath, columns, rows);
+//			mTileLayerNames[imageSource] = new ZTileLayerNames(filePath, columns, rows);
 			QMessageBox::critical(0, tr("Error Reading Tile Layer Names"),
 								  filePath + QLatin1String("\n") + reader.errorString());
 		}
 	} else {
-		mTileLayerNames[imageSource] = new ZTileLayerNames(filePath, columns, rows);
+//		mTileLayerNames[imageSource] = new ZTileLayerNames(filePath, columns, rows);
 	}
 }
 
