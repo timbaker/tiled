@@ -117,9 +117,12 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 	, mMapsDock(new ZMapsDock(this))
 	, mObjectsDock(new ZObjectsDock())
 	, mZoomComboBox(new QComboBox)
+	, mCurrentLayerLabel(new QLabel)
 #endif
     , mTilesetDock(new TilesetDock(this))
+#ifndef ZOMBOID
     , mZoomLabel(new QLabel)
+#endif
     , mStatusInfoLabel(new QLabel)
     , mClipboardManager(new ClipboardManager(this))
     , mDocumentManager(DocumentManager::instance())
@@ -380,6 +383,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     statusBar()->addWidget(mStatusInfoLabel);
     connect(toolManager, SIGNAL(statusInfoChanged(QString)),
             this, SLOT(updateStatusInfoLabel(QString)));
+#ifdef ZOMBOID
+	statusBar()->addWidget(mCurrentLayerLabel);
+#endif
 
     mUi->menuView->addSeparator();
     mUi->menuView->addAction(mTilesetDock->toggleViewAction());
@@ -1261,6 +1267,11 @@ void MainWindow::updateActions()
     mCommandButton->setEnabled(map);
 
     updateZoomLabel(); // for the zoom actions
+
+#ifdef ZOMBOID
+	Layer *layer = mMapDocument ? mMapDocument->currentLayer() : 0;
+	mCurrentLayerLabel->setText(QString(QLatin1String("    Current layer: %1")).arg(layer ? layer->name() : QLatin1String("<none>")));
+#endif
 }
 
 void MainWindow::updateZoomLabel()

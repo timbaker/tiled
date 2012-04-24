@@ -217,7 +217,11 @@ private:
 	QComboBox *mZoomComboBox;
 #endif
     TilesetDock *mTilesetDock;
+#ifdef ZOMBOID
+	QLabel *mCurrentLayerLabel;
+#else
     QLabel *mZoomLabel;
+#endif
     QLabel *mStatusInfoLabel;
     QSettings mSettings;
     QToolButton *mRandomButton;
