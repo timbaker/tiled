@@ -128,10 +128,17 @@ QSize TileDelegate::sizeHint(const QStyleOptionViewItem & /* option */,
 
 } // anonymous namespace
 
+#ifdef ZOMBOID
+TilesetView::TilesetView(MapDocument *mapDocument, Zoomable *zoomable, QWidget *parent)
+    : QTableView(parent)
+    , mZoomable(zoomable)
+    , mMapDocument(mapDocument)
+#else
 TilesetView::TilesetView(MapDocument *mapDocument, QWidget *parent)
     : QTableView(parent)
     , mZoomable(new Zoomable(this))
     , mMapDocument(mapDocument)
+#endif
 {
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);

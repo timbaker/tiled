@@ -20,6 +20,10 @@
 
 #include "zoomable.h"
 
+#ifdef ZOMBOID
+#include <QComboBox>
+#endif
+
 using namespace Tiled::Internal;
 
 static const qreal zoomFactors[] = {
@@ -40,7 +44,14 @@ const int zoomFactorCount = sizeof(zoomFactors) / sizeof(zoomFactors[0]);
 Zoomable::Zoomable(QObject *parent)
     : QObject(parent)
     , mScale(1)
+#ifdef ZOMBOID
+	, mComboBox(0)
+#endif
 {
+#ifdef ZOMBOID
+	for (int i = 0; i < zoomFactorCount; i++)
+		mZoomFactors << zoomFactors[i];
+#endif
 }
 
 void Zoomable::setScale(qreal scale)
@@ -49,24 +60,79 @@ void Zoomable::setScale(qreal scale)
         return;
 
     mScale = scale;
+#ifdef ZOMBOID
+	if (mComboBox) {
+		int index = mComboBox->findData(scale);
+		if (index != -1)
+			mComboBox->setCurrentIndex(index);
+	}
+#endif
     emit scaleChanged(mScale);
 }
 
 bool Zoomable::canZoomIn() const
 {
-    return mScale < zoomFactors[zoomFactorCount - 1];
+#ifdef ZOMBOID
+   return mScale < mZoomFactors.back();
+#else
+   return mScale < zoomFactors[zoomFactorCount - 1];
+#endif
 }
 
 bool Zoomable::canZoomOut() const
 {
+#ifdef ZOMBOID
+	return mScale > mZoomFactors.first();
+#else
     return mScale > zoomFactors[0];
+#endif
 }
+
+#ifdef ZOMBOID
+void Zoomable::setZoomFactors(const QVector<qreal>& factors)
+{
+	mZoomFactors = factors;
+}
+
+void Zoomable::connectToComboBox(QComboBox *comboBox)
+{
+	if (mComboBox)
+		disconnect(mComboBox, SIGNAL(activated(int)), this, SLOT(comboActivated(int)));
+
+	mComboBox = comboBox;
+
+	if (mComboBox) {
+		mComboBox->clear();
+		int index = 0;
+		foreach (qreal scale, mZoomFactors) {
+			mComboBox->addItem(QString(QLatin1String("%1 %")).arg(int(scale * 100)), scale);
+			if (scale == mScale)
+				mComboBox->setCurrentIndex(index);
+			++index;
+		}
+		connect(mComboBox, SIGNAL(activated(int)), this, SLOT(comboActivated(int)));
+	}
+}
+
+void Zoomable::comboActivated(int index)
+{
+	QVariant data = mComboBox->itemData(index);
+	qreal scale = data.toReal();
+	setScale(scale);
+}
+#endif // ZOMBOID
 
 void Zoomable::zoomIn()
 {
+#ifdef ZOMBOID
+    foreach (qreal scale, mZoomFactors) {
+        if (scale > mScale) {
+            setScale(scale);
+#else
     for (int i = 0; i < zoomFactorCount; ++i) {
         if (zoomFactors[i] > mScale) {
             setScale(zoomFactors[i]);
+#endif
             break;
         }
     }
@@ -74,9 +140,15 @@ void Zoomable::zoomIn()
 
 void Zoomable::zoomOut()
 {
-    for (int i = zoomFactorCount - 1; i >= 0; --i) {
+#ifdef ZOMBOID
+    for (int i = mZoomFactors.count() - 1; i >= 0; --i) {
+        if (mZoomFactors[i] < mScale) {
+            setScale(mZoomFactors[i]);
+#else
+    for (int i = mZoomFactors.count() - 1; i >= 0; --i) {
         if (zoomFactors[i] < mScale) {
             setScale(zoomFactors[i]);
+#endif
             break;
         }
     }

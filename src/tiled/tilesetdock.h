@@ -26,6 +26,9 @@
 #include <QDockWidget>
 #include <QMap>
 
+#ifdef ZOMBOID
+class QComboBox;
+#endif
 class QStackedWidget;
 class QTabBar;
 class QToolBar;
@@ -46,6 +49,7 @@ class MapDocument;
 class TilesetView;
 #ifdef ZOMBOID
 class ZTilesetThumbView;
+class Zoomable;
 #endif
 
 /**
@@ -157,6 +161,9 @@ private:
     QSignalMapper *mTilesetMenuMapper; //needed due to dynamic content
 
 #ifdef ZOMBOID
+	Zoomable *mZoomable;
+	QComboBox *mZoomComboBox;
+	QAction *mActionZoom;
 	QAction *mActionTilesetUp;
 	QAction *mActionTilesetDown;
 	ZTilesetThumbView *mThumbView;

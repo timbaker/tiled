@@ -86,6 +86,9 @@
 #endif
 
 #include <QCloseEvent>
+#ifdef ZOMBOID
+#include <QComboBox>
+#endif
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QScrollBar>
@@ -113,6 +116,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 	, mLevelsDock(new ZLevelsDock(this))
 	, mMapsDock(new ZMapsDock(this))
 	, mObjectsDock(new ZObjectsDock())
+	, mZoomComboBox(new QComboBox)
 #endif
     , mTilesetDock(new TilesetDock(this))
     , mZoomLabel(new QLabel)
@@ -178,7 +182,12 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 #endif
     addDockWidget(Qt::RightDockWidgetArea, mTilesetDock);
 
+#ifdef ZOMBOID
+	mZoomable = 0;
+	statusBar()->addPermanentWidget(mZoomComboBox);
+#else
     statusBar()->addPermanentWidget(mZoomLabel);
+#endif
 
     mUi->actionNew->setShortcuts(QKeySequence::New);
     mUi->actionOpen->setShortcuts(QKeySequence::Open);
@@ -1257,17 +1266,31 @@ void MainWindow::updateActions()
 void MainWindow::updateZoomLabel()
 {
     MapView *mapView = mDocumentManager->currentMapView();
+#ifdef ZOMBOID
+    Zoomable *zoomable = mapView ? mapView->zoomable() : 0;
+#else
     const Zoomable *zoomable = mapView ? mapView->zoomable() : 0;
+#endif
     const qreal scale = zoomable ? zoomable->scale() : 1;
 
     mUi->actionZoomIn->setEnabled(zoomable && zoomable->canZoomIn());
     mUi->actionZoomOut->setEnabled(zoomable && zoomable->canZoomOut());
     mUi->actionZoomNormal->setEnabled(scale != 1);
 
+#ifdef ZOMBOID
+	if (zoomable) {
+		mZoomComboBox->setEnabled(true);
+	} else {
+		int index = mZoomComboBox->findData((qreal)1.0);
+		mZoomComboBox->setCurrentIndex(index);
+		mZoomComboBox->setEnabled(false);
+	}
+#else
     if (zoomable)
         mZoomLabel->setText(tr("%1%").arg(scale * 100));
     else
         mZoomLabel->setText(QString());
+#endif
 }
 
 void MainWindow::editLayerProperties()
@@ -1438,6 +1461,11 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
 {
     if (mMapDocument)
         mMapDocument->disconnect(this);
+#ifdef ZOMBOID
+	if (mZoomable)
+		mZoomable->connectToComboBox(0);
+	mZoomable = 0;
+#endif
 
     mMapDocument = mapDocument;
 
@@ -1460,6 +1488,13 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
                 SLOT(updateActions()));
         connect(mapDocument, SIGNAL(selectedObjectsChanged()),
                 SLOT(updateActions()));
+#ifdef ZOMBOID
+		if (MapView *mapView = mDocumentManager->currentMapView()) {
+			mZoomable = mapView->zoomable();
+			if (mZoomable)
+				mZoomable->connectToComboBox(mZoomComboBox);
+		}
+#endif
     }
 
     updateWindowTitle();

@@ -41,11 +41,15 @@
 #include "tmxmapwriter.h"
 #include "utils.h"
 #ifdef ZOMBOID
+#include "zoomable.h"
 #include "ztilesetthumbview.hpp"
 #endif
 
 #include <QAction>
 #include <QDropEvent>
+#ifdef ZOMBOID
+#include <QComboBox>
+#endif
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QInputDialog>
@@ -218,6 +222,15 @@ TilesetDock::TilesetDock(QWidget *parent):
     mToolBar->addAction(mDeleteTileset);
     mToolBar->addAction(mRenameTileset);
 
+#ifdef ZOMBOID
+	mZoomable = new Zoomable(this);
+	mZoomable->setZoomFactors(QVector<qreal>() << 0.25 << 0.5 << 0.75 << 1.0 << 1.25 << 1.5 << 1.75 << 2.0);
+	mToolBar->addSeparator();
+	mZoomComboBox = new QComboBox;
+	mZoomable->connectToComboBox(mZoomComboBox);
+	mActionZoom = mToolBar->addWidget(mZoomComboBox);
+#endif
+
     connect(mViewStack, SIGNAL(currentChanged(int)),
             this, SLOT(updateCurrentTiles()));
 
@@ -378,7 +391,11 @@ void TilesetDock::dropEvent(QDropEvent *e)
 
 void TilesetDock::insertTilesetView(int index, Tileset *tileset)
 {
+#ifdef ZOMBOID
+    TilesetView *view = new TilesetView(mMapDocument, mZoomable);
+#else
     TilesetView *view = new TilesetView(mMapDocument);
+#endif
     view->setModel(new TilesetModel(tileset, view));
 #ifdef ZOMBOID
 	view->tilesetModel()->setMapDocument(mMapDocument);
@@ -410,6 +427,9 @@ void TilesetDock::updateActions()
     mExportTileset->setEnabled(view && !external);
     mPropertiesTileset->setEnabled(view && !external);
     mDeleteTileset->setEnabled(view);
+#ifdef ZOMBOID
+	mActionZoom->setEnabled(view != 0);
+#endif
 }
 
 void TilesetDock::updateCurrentTiles()

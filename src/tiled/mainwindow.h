@@ -30,6 +30,9 @@
 #include <QSessionManager>
 #include <QSettings>
 
+#ifdef ZOMBOID
+class QComboBox;
+#endif
 class QLabel;
 class QToolButton;
 
@@ -55,6 +58,7 @@ class TilesetDock;
 class MapView;
 class CommandButton;
 #ifdef ZOMBOID
+class Zoomable;
 class ZLevelsDock;
 class ZMapsDock;
 class ZObjectsDock;
@@ -209,6 +213,8 @@ private:
 	ZLevelsDock *mLevelsDock;
 	ZMapsDock *mMapsDock;
 	ZObjectsDock *mObjectsDock;
+	Zoomable *mZoomable;
+	QComboBox *mZoomComboBox;
 #endif
     TilesetDock *mTilesetDock;
     QLabel *mZoomLabel;

@@ -22,6 +22,10 @@
 #define ZOOMABLE_H
 
 #include <QObject>
+#ifdef ZOMBOID
+#include <QVector>
+class QComboBox;
+#endif
 
 namespace Tiled {
 namespace Internal {
@@ -53,16 +57,30 @@ public:
     bool smoothTransform() const
     { return mScale != (int) mScale; }
 
+#ifdef ZOMBOID
+	void setZoomFactors(const QVector<qreal>& factors);
+	void connectToComboBox(QComboBox *comboBox);
+#endif
+
 public slots:
     void zoomIn();
     void zoomOut();
     void resetZoom();
+
+#ifdef ZOMBOID
+private slots:
+	void comboActivated(int index);
+#endif
 
 signals:
     void scaleChanged(qreal scale);
 
 private:
     qreal mScale;
+#ifdef ZOMBOID
+	QVector<qreal> mZoomFactors;
+	QComboBox *mComboBox;
+#endif
 };
 
 } // namespace Internal
