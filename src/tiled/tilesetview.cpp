@@ -83,16 +83,19 @@ void TileDelegate::paint(QPainter *painter,
         painter->setRenderHint(QPainter::SmoothPixmapTransform);
 
 #ifdef ZOMBOID
-    painter->drawPixmap(option.rect.adjusted(0, 0, -extra, -extra - 18), tileImage);
-
-    const QVariant decoration = index.model()->data(index, Qt::DecorationRole);
-	QString layerName = decoration.toString();
-	if (layerName.isEmpty())
-		layerName = QLatin1String("???");
-
 	const QFontMetrics fm = painter->fontMetrics();
-    QString name = fm.elidedText(layerName, Qt::ElideRight, option.rect.width());
-	painter->drawText(option.rect.left(), option.rect.bottom() - 18, option.rect.width(), 18, Qt::AlignHCenter, name);
+	const int labelHeight = mTilesetView->showLayerNames() ? fm.lineSpacing() : 0;
+	painter->drawPixmap(option.rect.adjusted(0, 0, -extra, -extra - labelHeight), tileImage);
+
+	if (mTilesetView->showLayerNames()) {
+		const QVariant decoration = index.model()->data(index, Qt::DecorationRole);
+		QString layerName = decoration.toString();
+		if (layerName.isEmpty())
+			layerName = QLatin1String("???");
+
+		QString name = fm.elidedText(layerName, Qt::ElideRight, option.rect.width());
+		painter->drawText(option.rect.left(), option.rect.bottom() - labelHeight, option.rect.width(), labelHeight, Qt::AlignHCenter, name);
+	}
 #else
     painter->drawPixmap(option.rect.adjusted(0, 0, -extra, -extra), tileImage);
 #endif
@@ -107,7 +110,7 @@ void TileDelegate::paint(QPainter *painter,
     }
 }
 
-QSize TileDelegate::sizeHint(const QStyleOptionViewItem & /* option */,
+QSize TileDelegate::sizeHint(const QStyleOptionViewItem & option,
                              const QModelIndex &index) const
 {
     const TilesetModel *m = static_cast<const TilesetModel*>(index.model());
@@ -115,7 +118,8 @@ QSize TileDelegate::sizeHint(const QStyleOptionViewItem & /* option */,
     const qreal zoom = mTilesetView->zoomable()->scale();
     const int extra = mTilesetView->drawGrid() ? 1 : 0;
 #ifdef ZOMBOID
-	const int labelHeight = 18; // need QFontMetrics
+	const QFontMetrics &fm = option.fontMetrics;
+	const int labelHeight = mTilesetView->showLayerNames() ? fm.lineSpacing() : 0;
     return QSize(tileset->tileWidth() * zoom + extra,
                  tileset->tileHeight() * zoom + extra + labelHeight);
 #else
@@ -165,6 +169,11 @@ TilesetView::TilesetView(MapDocument *mapDocument, QWidget *parent)
     connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(adjustScale()));
     connect(prefs, SIGNAL(showTilesetGridChanged(bool)),
             SLOT(setDrawGrid(bool)));
+#ifdef ZOMBOID
+	mShowLayerNames = prefs->autoSwitchLayer();
+    connect(prefs, SIGNAL(autoSwitchLayerChanged(bool)),
+            SLOT(autoSwitchLayerChanged(bool)));
+#endif
 }
 
 QSize TilesetView::sizeHint() const
@@ -370,3 +379,11 @@ void TilesetView::adjustScale()
 {
     tilesetModel()->tilesetChanged();
 }
+
+#ifdef ZOMBOID
+void TilesetView::autoSwitchLayerChanged(bool enabled)
+{
+	mShowLayerNames = enabled;
+    tilesetModel()->tilesetChanged();
+}
+#endif

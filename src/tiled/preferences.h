@@ -80,6 +80,9 @@ public:
 #ifdef ZOMBOID
 	QString lotDirectory() const;
 	void setLotDirectory(const QString &path);
+
+	bool autoSwitchLayer() const;
+	void setAutoSwitchLayer(bool enable);
 #endif
 
     /**
@@ -106,6 +109,7 @@ signals:
 
 #ifdef ZOMBOID
 	void lotDirectoryChanged();
+	void autoSwitchLayerChanged(bool enabled);
 #endif
 
 private:
@@ -130,6 +134,7 @@ private:
 
 #ifdef ZOMBOID
 	QString mLotDirectory;
+	bool mAutoSwitchLayer;
 #endif
 
     static Preferences *mInstance;

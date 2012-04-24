@@ -27,6 +27,7 @@
 #include <QMap>
 
 #ifdef ZOMBOID
+#include <QIcon>
 class QComboBox;
 #endif
 class QStackedWidget;
@@ -130,6 +131,8 @@ private slots:
 	void moveTilesetUp();
 	void moveTilesetDown();
 
+	void layerSwitchToggled();
+	void autoSwitchLayerChanged(bool enable);
 	void switchLayerForTile(Tile *tile);
 #endif
 
@@ -166,6 +169,12 @@ private:
 	QAction *mActionZoom;
 	QAction *mActionTilesetUp;
 	QAction *mActionTilesetDown;
+
+	QIcon mIconTileLayer;
+	QIcon mIconTileLayerStop;
+	QToolButton *mButtonSwitchLayer;
+	QAction *mActionSwitchLayer;
+
 	ZTilesetThumbView *mThumbView;
 #endif
 };

@@ -50,6 +50,9 @@ public:
     Zoomable *zoomable() const { return mZoomable; }
 
     bool drawGrid() const { return mDrawGrid; }
+#ifdef ZOMBOID
+    bool showLayerNames() const { return mShowLayerNames; }
+#endif
 
     /**
      * Convenience method that returns the model as a TilesetModel.
@@ -67,10 +70,18 @@ private slots:
 
     void adjustScale();
 
+#ifdef ZOMBOID
+	// Preferences signal
+	void autoSwitchLayerChanged(bool enabled);
+#endif
+
 private:
     Zoomable *mZoomable;
     MapDocument *mMapDocument;
     bool mDrawGrid;
+#ifdef ZOMBOID
+	bool mShowLayerNames;
+#endif
 };
 
 } // namespace Internal

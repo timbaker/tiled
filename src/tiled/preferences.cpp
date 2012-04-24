@@ -74,7 +74,10 @@ Preferences::Preferences()
     mLanguage = mSettings->value(QLatin1String("Language"),
                                  QString()).toString();
     mUseOpenGL = mSettings->value(QLatin1String("OpenGL"), false).toBool();
-    mSettings->endGroup();
+#ifdef ZOMBOID
+	mAutoSwitchLayer = mSettings->value(QLatin1String("AutoSwitchLayer"), true).toBool();
+#endif
+	mSettings->endGroup();
 
     // Retrieve defined object types
     mSettings->beginGroup(QLatin1String("ObjectTypes"));
@@ -322,4 +325,18 @@ void Preferences::setLotDirectory(const QString &path)
 
 	ZProgressManager::instance()->end();
 }
-#endif
+
+bool Preferences::autoSwitchLayer() const
+{
+	return mAutoSwitchLayer;
+}
+
+void Preferences::setAutoSwitchLayer(bool enabled)
+{
+	if (mAutoSwitchLayer == enabled)
+		return;
+    mAutoSwitchLayer = enabled;
+    mSettings->setValue(QLatin1String("Interface/AutoSwitchLayer"), enabled);
+	emit autoSwitchLayerChanged(mAutoSwitchLayer);
+}
+#endif // ZOMBOID
