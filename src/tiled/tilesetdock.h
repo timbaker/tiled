@@ -166,6 +166,7 @@ private:
 #ifdef ZOMBOID
 	Zoomable *mZoomable;
 	QComboBox *mZoomComboBox;
+	QAction *mActionNewTileset;
 	QAction *mActionZoom;
 	QAction *mActionTilesetUp;
 	QAction *mActionTilesetDown;

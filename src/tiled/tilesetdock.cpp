@@ -225,6 +225,10 @@ TilesetDock::TilesetDock(QWidget *parent):
             SLOT(renameTileset()));
 
     mToolBar->setIconSize(QSize(16, 16));
+#ifdef ZOMBOID
+	mActionNewTileset = mToolBar->addAction(QIcon(QLatin1String(":/images/16x16/document-new.png")),
+											tr("New Tileset"), parent, SLOT(newTileset()));
+#endif
     mToolBar->addAction(mImportTileset);
     mToolBar->addAction(mExportTileset);
     mToolBar->addAction(mPropertiesTileset);
@@ -455,6 +459,7 @@ void TilesetDock::updateActions()
     mDeleteTileset->setEnabled(view);
 #ifdef ZOMBOID
 //	mActionZoom->setEnabled(view != 0);
+	mActionNewTileset->setEnabled(mMapDocument != 0);
 	mZoomComboBox->setEnabled(view != 0);
 #endif
 }
