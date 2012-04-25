@@ -247,6 +247,7 @@ TilesetDock::TilesetDock(QWidget *parent):
 	bool enabled = Preferences::instance()->autoSwitchLayer();
 	mButtonSwitchLayer->setChecked(enabled == false);
 	mButtonSwitchLayer->setIcon(enabled ? mIconTileLayer : mIconTileLayerStop);
+	mButtonSwitchLayer->setToolTip(enabled ? tr("Layer Switch Enabled") : tr("Layer Switch Disabled"));
 	connect(mButtonSwitchLayer, SIGNAL(toggled(bool)), this, SLOT(layerSwitchToggled()));
 	connect(Preferences::instance(), SIGNAL(autoSwitchLayerChanged(bool)), SLOT(autoSwitchLayerChanged(bool)));
 	mToolBar->addWidget(mButtonSwitchLayer);
