@@ -50,6 +50,11 @@ TilesetManager::~TilesetManager()
     // Since all MapDocuments should be deleted first, we assert that there are
     // no remaining tileset references.
     Q_ASSERT(mTilesets.size() == 0);
+
+#ifdef ZOMBOID
+	foreach (ZTileLayerNames *tln, mTileLayerNames)
+		writeTileLayerNames(tln);
+#endif
 }
 
 TilesetManager *TilesetManager::instance()
@@ -205,12 +210,14 @@ struct ZTileLayerNames
 		: mThumbIndex(-1)
 		, mColumns(0)
 		, mRows(0)
+		, mModified(false)
 	{}
 	ZTileLayerNames(const QString& filePath, int columns, int rows)
 		: mThumbIndex(-1)
 		, mColumns(columns)
 		, mRows(rows)
 		, mFilePath(filePath)
+		, mModified(false)
 	{
 		mTiles.resize(columns * rows);
 	}
@@ -246,6 +253,7 @@ struct ZTileLayerNames
 	QString mDisplayName;
 	int mThumbIndex;
 	QVector<ZTileLayerName> mTiles;
+	bool mModified;
 };
 
 } // namespace Internal
@@ -253,8 +261,10 @@ struct ZTileLayerNames
 
 void TilesetManager::setThumbIndex(Tileset *ts, int index)
 {
-	if (ZTileLayerNames *tln = layerNamesForTileset(ts))
+	if (ZTileLayerNames *tln = layerNamesForTileset(ts)) {
 		tln->mThumbIndex = index;
+		tln->mModified = true;
+	}
 }
 
 int TilesetManager::thumbIndex(Tileset *ts)
@@ -266,8 +276,10 @@ int TilesetManager::thumbIndex(Tileset *ts)
 
 void TilesetManager::setThumbName(Tileset *ts, const QString &name)
 {
-	if (ZTileLayerNames *tln = layerNamesForTileset(ts))
+	if (ZTileLayerNames *tln = layerNamesForTileset(ts)) {
 		tln->mDisplayName = name;
+		tln->mModified = true;
+	}
 }
 
 QString TilesetManager::thumbName(Tileset *ts)
@@ -280,8 +292,10 @@ QString TilesetManager::thumbName(Tileset *ts)
 void TilesetManager::setLayerName(Tile *tile, const QString &name)
 {
 	Tileset *ts = tile->tileset();
-	if (ZTileLayerNames *tln = layerNamesForTileset(ts))
+	if (ZTileLayerNames *tln = layerNamesForTileset(ts)) {
 		tln->mTiles[tile->id()].mLayerName = name;
+		tln->mModified = true;
+	}
 }
 
 QString TilesetManager::layerName(Tile *tile)
@@ -365,8 +379,47 @@ private:
 class ZTileLayerNamesWriter
 {
 public:
-    ZTileLayerNames write(const QString &fileName, const ZTileLayerNames &tln)
+    bool write(const ZTileLayerNames *tln)
 	{
+		mError.clear();
+
+		QFile file(tln->mFilePath);
+		if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+			mError = QCoreApplication::translate(
+						"TileLayerNames", "Could not open file for writing.");
+			return false;
+		}
+
+		QXmlStreamWriter writer(&file);
+
+		writer.setAutoFormatting(true);
+		writer.setAutoFormattingIndent(1);
+
+		writer.writeStartDocument();
+		writer.writeStartElement(QLatin1String("tileset"));
+		writer.writeAttribute(QLatin1String("columns"), QString::number(tln->mColumns));
+		writer.writeAttribute(QLatin1String("rows"), QString::number(tln->mRows));
+
+		int id = 0;
+		foreach (const ZTileLayerName &tile, tln->mTiles) {
+			if (!tile.mLayerName.isEmpty()) {
+				writer.writeStartElement(QLatin1String("tile"));
+				writer.writeAttribute(QLatin1String("id"), QString::number(id));
+				writer.writeAttribute(QLatin1String("layername"), tile.mLayerName);
+				writer.writeEndElement();
+			}
+			++id;
+		}
+
+		writer.writeEndElement();
+		writer.writeEndDocument();
+
+		if (file.error() != QFile::NoError) {
+			mError = file.errorString();
+			return false;
+		}
+
+		return true;
 	}
 
     QString errorString() const { return mError; }
@@ -411,7 +464,7 @@ void TilesetManager::readTileLayerNames(Tileset *ts)
 	QDir dir = fileInfoImgSrc.absoluteDir();
 	QFileInfo fileInfo(dir, fileInfoImgSrc.completeBaseName() + QLatin1String(".tilelayers.xml"));
 	QString filePath = fileInfo.absoluteFilePath();
-	qDebug() << filePath;
+	qDebug() << "Reading: " << filePath;
 	if (fileInfo.exists()) {
 		ZTileLayerNamesReader reader;
 		if (reader.read(filePath)) {
@@ -430,6 +483,14 @@ void TilesetManager::readTileLayerNames(Tileset *ts)
 
 void TilesetManager::writeTileLayerNames(ZTileLayerNames *tln)
 {
+	if (tln->mModified == false)
+		return;
+	qDebug() << "Writing: " << tln->mFilePath;
+	ZTileLayerNamesWriter writer;
+	if (writer.write(tln) == false) {
+		QMessageBox::critical(0, tr("Error Writing Tile Layer Names"),
+			tln->mFilePath + QLatin1String("\n") + writer.errorString());
+	}
 }
 
 void TilesetManager::syncTileLayerNames(Tileset *ts)
@@ -437,7 +498,7 @@ void TilesetManager::syncTileLayerNames(Tileset *ts)
 	if (mTileLayerNames.contains(ts->imageSource())) {
 		ZTileLayerNames *tln = mTileLayerNames[ts->imageSource()];
 		int columns = ts->columnCount();
-		int rows = columns ? ts->tileCount() / ts->columnCount() : 0;
+		int rows = columns ? ts->tileCount() / columns : 0;
 		tln->enforceSize(columns, rows);
 	}
 }
