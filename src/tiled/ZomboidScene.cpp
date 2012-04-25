@@ -167,7 +167,7 @@ void ZomboidTileLayerGroup::synch()
 			if (layerGroup && !layerGroup->mLayers.isEmpty()) {
 				mVisibleLotLayers.append(LotLayers(mapObject, lot, layerGroup));
 				QPoint mapObjectPos = mapObject->position().toPoint();
-				r |= QRect(layerGroup->bounds()/*.translated(-layerGroup->bounds().topLeft())*/).translated(mapObjectPos);
+				r |= QRect(layerGroup->bounds()).translated(mapObjectPos);
 				maxMargins(m, layerGroup->drawMargins(), m);
 			}
 		}
@@ -179,43 +179,12 @@ void ZomboidTileLayerGroup::synch()
 
 QRect ZomboidTileLayerGroup::bounds() const
 {
-#if 1
 	return mTileBounds | mLotTileBounds;
-#else
-	QRect r;
-	foreach (TileLayer *tl, mLayers)
-		r |= tl->bounds();
-
-	foreach (MapObject *mapObject, mMapScene->mLotMapObjects) {
-		ZLot *lot = mMapScene->mMapObjectToLot[mapObject];
-		QPoint mapObjectPos = mapObject->position().toPoint();
-		int levelOffset = mapObject->objectGroup()->level();
-		const ZTileLayerGroup *layerGroup = lot->tileLayersForLevel(mLevel - levelOffset);
-		if (layerGroup)
-			r |= layerGroup->bounds().translated(mapObjectPos);
-	}
-	return r;
-#endif
 }
 
 QMargins ZomboidTileLayerGroup::drawMargins() const
 {
-#if 1
 	return mDrawMargins;
-#else
-	QMargins m;
-	foreach (TileLayer *tl, mLayers)
-		maxMargins(m, tl->drawMargins(), m);
-
-	foreach (MapObject *mapObject, mMapScene->mLotMapObjects) {
-		ZLot *lot = mMapScene->mMapObjectToLot[mapObject];
-		const ZTileLayerGroup *layerGroup = lot->tileLayersForLevel(mLevel);
-		if (layerGroup)
-			maxMargins(m, layerGroup->drawMargins(), m);
-	}
-
-	return m;
-#endif
 }
 
 ///// ///// ///// ///// /////
@@ -338,28 +307,10 @@ void ZomboidScene::refreshScene()
 		}
 		++index;
 	}
-//	synchWithTileLayers();
 
 	MapScene::refreshScene();
 
 	setGraphicsSceneZOrder();
-#if 0
-	foreach (Tileset *ts, map->tilesets()) {
-		ZTileLayerNamesReader reader;
-		QFileInfo fileInfoImgSrc(ts->imageSource());
-		QDir dir = fileInfoImgSrc.absoluteDir();
-		QFileInfo fileInfo(dir, fileInfoImgSrc.completeBaseName() + QLatin1String(".tilelayers.xml"));
-		qDebug() << fileInfo.absoluteFilePath();
-		if (fileInfo.exists()) {
-			if (reader.read(fileInfo.absoluteFilePath())) {
-				TilesetManager::instance()->addTileLayerNames(ts->imageSource(), reader.result());
-			} else {
-				QMessageBox::critical(0, tr("Error Reading Tile Layer Names"),
-									  fileInfo.absoluteFilePath() + QLatin1String("\n") + reader.errorString());
-			}
-		}
-	}
-#endif
 }
 
 void ZomboidScene::mapChanged()
@@ -388,6 +339,9 @@ public:
                const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0)
 	{
+        Q_UNUSED(painter)
+        Q_UNUSED(option)
+        Q_UNUSED(widget)
 	}
 };
 
@@ -549,8 +503,6 @@ void ZomboidScene::layerChanged(int index)
 				}
 				changingOpacity = false;
 			}
-			// Redraw
-//			layerGroupItem->tileLayerChanged(tl);
 		}
 		synchWithTileLayer(tl);
 	} else if (ObjectGroup *og = layer->asObjectGroup()) {
@@ -596,6 +548,8 @@ void ZomboidScene::layerRenamed(int index)
 
 void ZomboidScene::layerGroupAboutToChange(TileLayer *tl, ZTileLayerGroup *newGroup)
 {
+    Q_UNUSED(tl)
+    Q_UNUSED(newGroup)
 }
 
 void ZomboidScene::layerGroupChanged(TileLayer *tl, ZTileLayerGroup *oldGroup)
@@ -652,6 +606,8 @@ void ZomboidScene::layerGroupChanged(TileLayer *tl, ZTileLayerGroup *oldGroup)
 
 void ZomboidScene::layerLevelAboutToChange(int index, int newLevel)
 {
+    Q_UNUSED(index)
+    Q_UNUSED(newLevel)
 }
 
 void ZomboidScene::layerLevelChanged(int index, int oldLevel)
@@ -694,12 +650,6 @@ void ZomboidScene::layerLevelChanged(int index, int oldLevel)
 		if (ObjectGroup *og = layer->asObjectGroup()) {
 			foreach (MapObject *mapObject, og->objects())
 				mObjectItems[mapObject]->syncWithMapObject();
-#if 0
-			// An ObjectGroup with no items which changes level will not cause any redrawing.
-			// However, the grid may need to be redrawn.
-			if (isGridVisible() && !og->objectCount())
-				update();
-#endif
 		} else {
 			// ImageLayer
 			mLayerItems[index]->update();
@@ -787,6 +737,7 @@ void ZomboidScene::onLotAdded(ZLot *lot, MapObject *mapObject)
 
 void ZomboidScene::onLotRemoved(ZLot *lot, MapObject *mapObject)
 {
+    Q_UNUSED(lot)
 	MapObjectItem *item = itemForObject(mapObject);
 	if (item) {
 		item->setDrawMargins(QMargins());
@@ -860,7 +811,8 @@ void ZomboidScene::dragMoveEvent(QGraphicsSceneDragDropEvent *event)
 
 void ZomboidScene::dragLeaveEvent(QGraphicsSceneDragDropEvent *event)
 {
-	if (mDnDMapObjectItem) {
+    Q_UNUSED(event)
+    if (mDnDMapObjectItem) {
 		MapObject *newMapObject = mDnDMapObjectItem->mapObject();
 
 		ObjectGroup *objectGroup = newMapObject->objectGroup();
@@ -886,23 +838,18 @@ void ZomboidScene::dropEvent(QGraphicsSceneDragDropEvent *event)
 		if (!info.isFile()) continue;
 		if (info.suffix() != QLatin1String("tmx")) continue;
 
-		MapObject *newMapObject = mDnDMapObjectItem->mapObject(); // new MapObject;
+		MapObject *newMapObject = mDnDMapObjectItem->mapObject();
 		delete mDnDMapObjectItem;
 
 		ObjectGroup *objectGroup = newMapObject->objectGroup();
 		objectGroup->removeObject(newMapObject);
 
 		newMapObject->setPosition(mMapDocument->renderer()->pixelToTileCoords(event->scenePos(), objectGroup));
-#if 0
-		newMapObject->setShape(MapObject::Rectangle);
-		newMapObject->setSize(4, 4);
-#endif
 		newMapObject->setName(QLatin1String("lot"));
 		newMapObject->setType(info.baseName());
 
 		mapDocument()->undoStack()->push(new AddMapObject(mapDocument(),
 														  objectGroup,
 														  newMapObject));
-
 	}
 }

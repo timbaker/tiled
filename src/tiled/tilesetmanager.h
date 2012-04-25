@@ -129,12 +129,6 @@ public:
     { return mReloadTilesetsOnChange; }
 
 #ifdef ZOMBOID
-	void setThumbIndex(Tileset *ts, int index);
-	int thumbIndex(Tileset *ts);
-
-	void setThumbName(Tileset *ts, const QString &name);
-	QString thumbName(Tileset *ts);
-
 	void setLayerName(Tile *tile, const QString &name);
 	QString layerName(Tile *tile);
 #endif

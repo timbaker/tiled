@@ -50,10 +50,6 @@ ZTilesetThumbView::ZTilesetThumbView(QWidget *parent)
 	setSelectionMode(QAbstractItemView::SingleSelection);
 
 	setModel(mModel = new ZTilesetThumbModel(this));
-
-    // Hardcode this view on 'left to right' since it doesn't work properly
-    // for 'right to left' languages.
-    setLayoutDirection(Qt::LeftToRight);
 }
 
 QSize ZTilesetThumbView::sizeHint() const

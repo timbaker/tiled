@@ -505,18 +505,6 @@ void MapDocument::emitRegionChanged(const QRegion &region)
 #endif
 
 #ifdef ZOMBOID
-void MapDocument::setTilesetThumbIndex(Tileset *tileset, int index)
-{
-	TilesetManager::instance()->setThumbIndex(tileset, index);
-	emit tilesetThumbIndexChanged(tileset);
-}
-
-void MapDocument::setTilesetThumbName(Tileset *tileset, const QString &name)
-{
-	TilesetManager::instance()->setThumbName(tileset, name);
-	emit tilesetThumbNameChanged(tileset);
-}
-
 void MapDocument::setTileLayerName(Tile *tile, const QString &name)
 {
 	TilesetManager::instance()->setLayerName(tile, name);

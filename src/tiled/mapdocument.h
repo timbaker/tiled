@@ -239,8 +239,6 @@ public:
     void emitRegionEdited(const QRegion &region, Layer *layer);
 
 #ifdef ZOMBOID
-    void setTilesetThumbIndex(Tileset *tileset, int index);
-    void setTilesetThumbName(Tileset *tileset, const QString &name);
     void setTileLayerName(Tile *tile, const QString &name);
 #endif
 
@@ -335,8 +333,6 @@ signals:
     void tilesetFileNameChanged(Tileset *tileset);
     void tilesetNameChanged(Tileset *tileset);
 #ifdef ZOMBOID
-    void tilesetThumbIndexChanged(Tileset *tileset);
-    void tilesetThumbNameChanged(Tileset *tileset);
     void tileLayerNameChanged(Tile *tile);
 #endif
 

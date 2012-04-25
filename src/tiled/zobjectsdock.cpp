@@ -196,7 +196,7 @@ void ZObjectsDock::aboutToShowMoveToMenu()
 	mMoveToMenu->clear();
 
 	foreach (ObjectGroup *objectGroup, mMapDocument->map()->objectGroups())
-		QAction *action = mMoveToMenu->addAction(objectGroup->name());
+        mMoveToMenu->addAction(objectGroup->name());
 }
 
 void ZObjectsDock::triggeredMoveToMenu(QAction *action)
@@ -373,7 +373,6 @@ void ZObjectsView::selectionChanged(const QItemSelection &selected, const QItemS
 		return;
 
 	QModelIndexList selectedRows = selectionModel()->selectedRows();
-	int count = selectedRows.count();
 	int currentLayerIndex = -1;
 
 	QList<MapObject*> selectedObjects;
@@ -406,6 +405,7 @@ void ZObjectsView::selectionChanged(const QItemSelection &selected, const QItemS
 		mMapDocument->setSelectedObjects(selectedObjects);
 		mSynching = false;
 	}
+    selectedRows.clear();
 }
 
 void ZObjectsView::currentRowChanged(const QModelIndex &index)

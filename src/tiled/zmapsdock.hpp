@@ -76,7 +76,6 @@ protected:
 
 private slots:
     void currentRowChanged(const QModelIndex &index);
-    void currentLayerIndexChanged(int index);
 	void onLotDirectoryChanged();
 	void onActivated(const QModelIndex &index);
 

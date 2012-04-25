@@ -79,6 +79,7 @@ int ZLevelsModel::rowCount(const QModelIndex &parent) const
 
 int ZLevelsModel::columnCount(const QModelIndex &parent) const
 {
+    Q_UNUSED(parent)
 	return 1;
 }
 
@@ -297,6 +298,7 @@ void ZLevelsModel::setMapDocument(MapDocument *mapDocument)
 
 void ZLevelsModel::layerAdded(int index)
 {
+    Q_UNUSED(index)
 }
 
 void ZLevelsModel::layerChanged(int layerIndex)
@@ -313,6 +315,7 @@ void ZLevelsModel::layerChanged(int layerIndex)
 
 void ZLevelsModel::layerAboutToBeRemoved(int layerIndex)
 {
+    Q_UNUSED(layerIndex)
 }
 
 void ZLevelsModel::addTileLayerGroup(ZTileLayerGroup *g)

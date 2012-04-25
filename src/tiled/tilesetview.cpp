@@ -278,14 +278,11 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
 #endif
 
 #ifdef ZOMBOID
-	QAction *actionSetThumb = 0;
-	QVector<QAction*> layerActions;
+    QVector<QAction*> layerActions;
 	QStringList layerNames;
 	if (tile) {
 		menu.addSeparator();
-#if 0
-		actionSetThumb = menu.addAction(tr("Set As Thumbnail"));
-#endif
+
 		// Get a list of layer names from the current map
 		QSet<QString> set;
 		foreach (TileLayer *tl, mMapDocument->map()->tileLayers()) {
@@ -332,10 +329,7 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
                                           QItemSelectionModel::Clear);
 		editTileProperties();
 	}
-#if 0
-	else if (action && action == actionSetThumb)
-		mMapDocument->setTilesetThumbIndex(tile->tileset(), tile->id());
-#endif
+
 	else if (action && layerActions.contains(action)) {
 		int index = layerActions.indexOf(action);
 		QString layerName = layerNames[index];

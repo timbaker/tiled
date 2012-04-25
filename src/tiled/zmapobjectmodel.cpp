@@ -82,6 +82,7 @@ int ZMapObjectModel::rowCount(const QModelIndex &parent) const
 
 int ZMapObjectModel::columnCount(const QModelIndex &parent) const
 {
+    Q_UNUSED(parent)
 	return 2; // MapObject name|type
 }
 
@@ -367,7 +368,6 @@ int ZMapObjectModel::removeObject(ObjectGroup *og, MapObject *o)
 {
 	emit objectsAboutToBeRemoved(QList<MapObject*>() << o);
 	const int row = og->objects().indexOf(o);
-	int count = og->objectCount();
 	beginRemoveRows(index(og), row, row);
 	int index = og->removeObject(o);
 	delete mObjects[o];

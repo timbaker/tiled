@@ -43,7 +43,11 @@ public:
 	virtual QRect bounds() const { return mBounds; }
 	virtual QMargins drawMargins() const { return mMargins; }
 	virtual bool orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const;
-	virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect) {};
+    virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect)
+    {
+        Q_UNUSED(renderer)
+        Q_UNUSED(rect)
+    }
 
 	QRect _bounds() { return ZTileLayerGroup::bounds(); }
 	QMargins _drawMargins() { return ZTileLayerGroup::drawMargins(); }

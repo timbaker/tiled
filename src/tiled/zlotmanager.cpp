@@ -193,7 +193,7 @@ void ZLotManager::convertOrientation(Map *map0, const Map *map1)
 	if (map0->orientation() == Map::LevelIsometric && map1->orientation() == Map::Isometric) {
 		QPoint offset(3, 3);
 #if 1
-		int level, maxLevel = 0;
+        int level;
 		foreach (Layer *layer, map0->layers()) {
 			if (levelForLayer(layer, &level) && level > 0)
 				layer->setPosition(-offset * level);

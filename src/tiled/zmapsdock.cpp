@@ -222,77 +222,15 @@ void ZMapsView::onActivated(const QModelIndex &index)
 
 void ZMapsView::currentRowChanged(const QModelIndex &index)
 {
-#if 0
-    const int layer = mMapDocument->layerModel()->toLayerIndex(index);
-    mMapDocument->setCurrentLayerIndex(layer);
-#endif
-}
-
-void ZMapsView::currentLayerIndexChanged(int index)
-{
-#if 0
-    if (index > -1) {
-        const LayerModel *layerModel = mMapDocument->layerModel();
-        const int row = layerModel->layerIndexToRow(index);
-        setCurrentIndex(layerModel->index(row, 0));
-    } else {
-        setCurrentIndex(QModelIndex());
-    }
-#endif
+    Q_UNUSED(index)
 }
 
 void ZMapsView::contextMenuEvent(QContextMenuEvent *event)
 {
-#if 0
-    if (!mMapDocument)
-        return;
-
-    const QModelIndex index = indexAt(event->pos());
-    const LayerModel *m = mMapDocument->layerModel();
-    const int layerIndex = m->toLayerIndex(index);
-
-    MapDocumentActionHandler *handler = MapDocumentActionHandler::instance();
-
-    QMenu menu;
-    menu.addAction(handler->actionAddTileLayer());
-    menu.addAction(handler->actionAddObjectGroup());
-    menu.addAction(handler->actionAddImageLayer());
-
-    if (layerIndex >= 0) {
-        menu.addAction(handler->actionDuplicateLayer());
-        menu.addAction(handler->actionMergeLayerDown());
-        menu.addAction(handler->actionRemoveLayer());
-        menu.addAction(handler->actionRenameLayer());
-        menu.addSeparator();
-        menu.addAction(handler->actionMoveLayerUp());
-        menu.addAction(handler->actionMoveLayerDown());
-        menu.addSeparator();
-        menu.addAction(handler->actionToggleOtherLayers());
-        menu.addSeparator();
-        menu.addAction(handler->actionLayerProperties());
-    }
-
-    menu.exec(event->globalPos());
-#endif
+    Q_UNUSED(event)
 }
 
 void ZMapsView::keyPressEvent(QKeyEvent *event)
 {
-#if 0
-    if (!mMapDocument)
-        return;
-
-    const QModelIndex index = currentIndex();
-    if (!index.isValid())
-        return;
-
-    const LayerModel *m = mMapDocument->layerModel();
-    const int layerIndex = m->toLayerIndex(index);
-
-    if (event->key() == Qt::Key_Delete) {
-        mMapDocument->removeLayer(layerIndex);
-        return;
-    }
-#endif
     QTreeView::keyPressEvent(event);
 }

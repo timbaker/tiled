@@ -49,7 +49,6 @@ public:
 	Qt::ItemFlags flags(const QModelIndex &index) const;
 
     Tileset *tilesetAt(const QModelIndex &index) const;
-    Tile *tileAt(const QModelIndex &index) const;
 
 	QModelIndex index(Tileset *ts) const;
 
@@ -62,8 +61,6 @@ private slots:
     void tilesetMoved(int from, int to);
     void tilesetNameChanged(Tileset *tileset);
 	void tilesetFileNameChanged(Tileset *tileset);
-    void tilesetThumbIndexChanged(Tileset *tileset);
-    void tilesetThumbNameChanged(Tileset *tileset);
 
 private:
 	MapDocument *mMapDocument;

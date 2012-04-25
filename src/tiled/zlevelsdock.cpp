@@ -54,8 +54,6 @@ ZLevelsDock::ZLevelsDock(QWidget *parent)
     layout->setMargin(5);
 	layout->addWidget(mView);
 
-    MapDocumentActionHandler *handler = MapDocumentActionHandler::instance();
-
     QToolBar *toolbar = new QToolBar;
     toolbar->setFloatable(false);
     toolbar->setMovable(false);
@@ -199,6 +197,7 @@ void ZLevelsView::setMapDocument(MapDocument *mapDoc)
 
 void ZLevelsView::onActivated(const QModelIndex &index)
 {
+    Q_UNUSED(index)
     // show object properties, center in view
 }
 

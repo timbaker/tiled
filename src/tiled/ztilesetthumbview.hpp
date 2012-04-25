@@ -54,6 +54,6 @@ private:
 } // namespace Internal
 } // namespace Tiled
 
-Q_DECLARE_METATYPE(Tiled::Internal::ZTilesetThumbView *)
+//Q_DECLARE_METATYPE(Tiled::Internal::ZTilesetThumbView *)
 
 #endif // ZTILESETTHUMBVIEW_H

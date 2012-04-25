@@ -51,7 +51,6 @@ int ZTilesetThumbModel::columnCount(const QModelIndex &parent) const
 
 QVariant ZTilesetThumbModel::data(const QModelIndex &index, int role) const
 {
-#if 1
     if (role == Qt::DisplayRole) {
         if (Tileset *ts = tilesetAt(index))
 			return ts->name();
@@ -60,19 +59,6 @@ QVariant ZTilesetThumbModel::data(const QModelIndex &index, int role) const
         if (Tileset *ts = tilesetAt(index))
 			return ts->name();
 	}
-#else
-    if (role == Qt::DisplayRole) {
-        if (Tile *tile = tileAt(index))
-            return tile->image();
-    }
-
-    if (role == Qt::DecorationRole) {
-        if (Tileset *ts = tilesetAt(index)) {
-            QString &thumbName = TilesetManager::instance()->thumbName(ts);
-			return thumbName.isEmpty() ? ts->name() : thumbName;
-		}
-    }
-#endif
 
     return QVariant();
 }
@@ -151,20 +137,8 @@ Tileset *ZTilesetThumbModel::tilesetAt(const QModelIndex &index) const
 
 	if (!mMapDocument)
 		return 0;
+
 	return mMapDocument->map()->tilesets().at(index.row());
-}
-
-Tile *ZTilesetThumbModel::tileAt(const QModelIndex &index) const
-{
-    if (!index.isValid())
-        return 0;
-
-	if (!mMapDocument)
-		return 0;
-
-	Tileset *ts = mMapDocument->map()->tilesets().at(index.row());
-	int thumbIndex = TilesetManager::instance()->thumbIndex(ts);
-	return ts->tileAt(thumbIndex >= 0 ? thumbIndex : 0);
 }
 
 QModelIndex ZTilesetThumbModel::index(Tileset *ts) const
@@ -192,10 +166,6 @@ void ZTilesetThumbModel::setMapDocument(MapDocument *mapDoc)
                 SLOT(tilesetNameChanged(Tileset*)));
         connect(mMapDocument, SIGNAL(tilesetFileNameChanged(Tileset*)),
                 SLOT(tilesetFileNameChanged(Tileset*)));
-        connect(mMapDocument, SIGNAL(tilesetThumbIndexChanged(Tileset*)),
-                SLOT(tilesetThumbIndexChanged(Tileset*)));
-        connect(mMapDocument, SIGNAL(tilesetThumbNameChanged(Tileset*)),
-                SLOT(tilesetThumbNameChanged(Tileset*)));
 	}
 	endResetModel();
 }
@@ -231,16 +201,4 @@ void ZTilesetThumbModel::tilesetNameChanged(Tileset *tileset)
 
 void ZTilesetThumbModel::tilesetFileNameChanged(Tileset *tileset)
 {
-}
-
-void ZTilesetThumbModel::tilesetThumbIndexChanged(Tileset *tileset)
-{
-	QModelIndex index = this->index(tileset);
-	emit dataChanged(index, index);
-}
-
-void ZTilesetThumbModel::tilesetThumbNameChanged(Tileset *tileset)
-{
-	QModelIndex index = this->index(tileset);
-	emit dataChanged(index, index);
 }
