@@ -130,10 +130,19 @@ SOURCES += aboutdialog.cpp \
     undodock.cpp \
     utils.cpp \
     zoomable.cpp \
+    zgriditem.cpp \
+    zlevelsdock.cpp \
+    zlevelsmodel.cpp \
     zlot.cpp \
     zlotmanager.cpp \
+    zmapobjectmodel.cpp \
+    zmapsdock.cpp \
+    zobjectsdock.cpp \
     ZomboidScene.cpp \
-    ztilelayergroupitem.cpp
+    zprogress.cpp \
+    ztilelayergroupitem.cpp \
+    ztilesetthumbmodel.cpp \
+    ztilesetthumbview.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -230,10 +239,16 @@ HEADERS += aboutdialog.h \
     undodock.h \
     utils.h \
     zoomable.h \
-    zlot.hpp \
+    zlevelsdock.hpp \
+    zlevelsmodel.hpp \
     zlotmanager.hpp \
+    zmapobjectmodel.hpp \
+    zmapsdock.hpp \
     ZomboidScene.h \
-    ztilelayergroupitem.h
+    zobjectsdock.hpp \
+    zprogress.hpp \
+    ztilesetthumbmodel.hpp \
+    ztilesetthumbview.hpp
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

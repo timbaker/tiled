@@ -42,6 +42,7 @@ SOURCES += compression.cpp \
     tilelayer.cpp \
     tileset.cpp \
     gidmapper.cpp \
+    zlevelrenderer.cpp \
     ztilelayergroup.cpp
 HEADERS += compression.h \
     imagelayer.h \
@@ -62,6 +63,7 @@ HEADERS += compression.h \
     tilelayer.h \
     tileset.h \
     gidmapper.h \
+    zlevelrenderer.hpp \
     ztilelayergroup.h
 macx {
     contains(QT_CONFIG, ppc):CONFIG += x86 \
