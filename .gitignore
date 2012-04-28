@@ -24,3 +24,5 @@ tmxviewer.exe
 *.intermediate.manifest
 
 tests/test_mapreader
+
+.DS_Store
