@@ -671,7 +671,7 @@ void ZomboidScene::setGraphicsSceneZOrder()
 		item->setZValue(levelZOrder(item->tileLayerGroup()->level()));
 
 	ZTileLayerGroupItem *previousLevelItem = 0;
-	QMap<ZTileLayerGroupItem*,QVector<QGraphicsItem*>> layersAboveLevel;
+    QMap<ZTileLayerGroupItem*,QVector<QGraphicsItem*> > layersAboveLevel;
 	int layerIndex = 0;
 	foreach (Layer *layer, mMapDocument->map()->layers()) {
 		if (TileLayer *tl = layer->asTileLayer()) {
@@ -693,7 +693,7 @@ void ZomboidScene::setGraphicsSceneZOrder()
 		++layerIndex;
 	}
 
-	QMap<ZTileLayerGroupItem*,QVector<QGraphicsItem*>>::const_iterator it,
+    QMap<ZTileLayerGroupItem*,QVector<QGraphicsItem*> >::const_iterator it,
 		it_start = layersAboveLevel.begin(),
 		it_end = layersAboveLevel.end();
 	for (it = it_start; it != it_end; it++) {

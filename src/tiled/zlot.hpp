@@ -75,7 +75,7 @@ public:
 private:
 	Map *mMap;
 	QMap<int,ZLotTileLayerGroup*> mLevelToTileLayers;
-	QMap<QString,QVector<Layer*>> mLayersByName;
+    QMap<QString,QVector<Layer*> > mLayersByName;
 	Map::Orientation mOrientation;
 	int mMinLevel;
 };

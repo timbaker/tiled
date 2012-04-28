@@ -67,7 +67,7 @@ private:
 
 	ZObjectsView *mObjectsView;
 	MapDocument *mMapDocument;
-	QMap<MapDocument*,QList<ObjectGroup*>> mExpandedGroups;
+    QMap<MapDocument*,QList<ObjectGroup*> > mExpandedGroups;
 	QMenu *mMoveToMenu;
 };
 

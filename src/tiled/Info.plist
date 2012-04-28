@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>Tiled</string>
+	<string>TileZed</string>
 	<key>CFBundleGetInfoString</key>
 	<string>Tiled 0.8.0, Copyright 2008-2011 Thorbjørn Lindeijer, GNU General Public License</string>
 	<key>CFBundleIconFile</key>

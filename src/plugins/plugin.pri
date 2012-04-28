@@ -10,7 +10,7 @@ DEPENDPATH += $$PWD/../tiled
 win32 {
     DESTDIR = $$OUT_PWD/../../../plugins/tiled
 } else:macx {
-    DESTDIR = $$OUT_PWD/../../../bin/Tiled.app/Contents/PlugIns
+    DESTDIR = $$OUT_PWD/../../../bin/TileZed.app/Contents/PlugIns
 } else {
     DESTDIR = $$OUT_PWD/../../../lib/tiled/plugins
 }
@@ -21,7 +21,7 @@ INSTALLS += target
 
 include(../libtiled/libtiled.pri)
 macx {
-    QMAKE_LIBDIR_FLAGS += -L$$OUT_PWD/../../../bin/Tiled.app/Contents/Frameworks
+    QMAKE_LIBDIR_FLAGS += -L$$OUT_PWD/../../../bin/TileZed.app/Contents/Frameworks
 } else:win32 {
     LIBS += -L$$OUT_PWD/../../../lib
 } else {

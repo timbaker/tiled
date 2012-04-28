@@ -2,7 +2,7 @@ include(../../tiled.pri)
 include(../libtiled/libtiled.pri)
 
 TEMPLATE = app
-TARGET = tiled
+TARGET = TileZed
 target.path = $${PREFIX}/bin
 INSTALLS += target
 win32 {
@@ -17,7 +17,7 @@ DEFINES += QT_NO_CAST_FROM_ASCII \
 DEFINES += ZOMBOID
 
 macx {
-    QMAKE_LIBDIR_FLAGS += -L$$OUT_PWD/../../bin/Tiled.app/Contents/Frameworks
+    QMAKE_LIBDIR_FLAGS += -L$$OUT_PWD/../../bin/TileZed.app/Contents/Frameworks
     LIBS += -framework Foundation
 } else:win32 {
     LIBS += -L$$OUT_PWD/../../lib
@@ -269,7 +269,7 @@ FORMS += aboutdialog.ui \
 
 RESOURCES += tiled.qrc
 macx {
-    TARGET = Tiled
+    TARGET = TileZed
     QMAKE_INFO_PLIST = Info.plist
     ICON = images/tiled-icon-mac.icns
 }

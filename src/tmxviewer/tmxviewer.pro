@@ -13,7 +13,7 @@ win32 {
 }
 
 macx {
-    QMAKE_LIBDIR_FLAGS += -L$$OUT_PWD/../../bin/Tiled.app/Contents/Frameworks
+    QMAKE_LIBDIR_FLAGS += -L$$OUT_PWD/../../bin/TileZed.app/Contents/Frameworks
 } else:win32 {
     LIBS += -L$$OUT_PWD/../../lib
 } else {

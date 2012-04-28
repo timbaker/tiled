@@ -5,7 +5,7 @@ TARGET = tiled
 target.path = $${LIBDIR}
 INSTALLS += target
 macx {
-    DESTDIR = ../../bin/Tiled.app/Contents/Frameworks
+    DESTDIR = ../../bin/TileZed.app/Contents/Frameworks
     QMAKE_LFLAGS_SONAME = -Wl,-install_name,@executable_path/../Frameworks/
 } else {
     DESTDIR = ../../lib

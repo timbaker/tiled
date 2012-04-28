@@ -40,7 +40,7 @@ class ZLotManager : public QObject
     Q_OBJECT
 
 public:
-    ZLotManager::ZLotManager();
+    ZLotManager();
     ~ZLotManager();
 
 	void setMapDocument(Internal::MapDocument *mapDoc);

@@ -82,7 +82,7 @@ bool LotPlugin::write(const Map *map, const QString &fileName)
             handleTileLayer(file, tileLayer);
 	}
 
-	QVector<QVector<QVector<Square>>> griddata;
+    QVector<QVector<QVector<Square> > > griddata;
 	griddata.resize(EndX - StartX);
 	for (int x = 0; x < EndX - StartX; x++) {
 		griddata[x].resize(EndY - StartY);

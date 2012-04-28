@@ -10,7 +10,7 @@ if [ "$#" -eq "0" ]; then
     echo "Usage: make-dist-mac.sh <version>"
     exit 1
 fi
-name="tiled-qt-$1"
+name="TileZed-qt-$1"
 
 # Get various directories
 baseDir=`dirname $01`/..
@@ -28,19 +28,19 @@ cp "$baseDir/COPYING" "$tempDir/"
 cp "$baseDir/NEWS" "$tempDir/"
 cp "$baseDir/README.md" "$tempDir/"
 cp -R "$baseDir/examples" "$tempDir/"
-cp -R "$binDir/Tiled.app" "$tempDir/"
+cp -R "$binDir/TileZed.app" "$tempDir/"
 ln -s /Applications "$tempDir/Applications" #Symlink to Applciations for easy install
-cp "$baseDir/src/tiled/images/tmx-icon-mac.icns" "$tempDir/Tiled.app/Contents/Resources/"
+cp "$baseDir/src/tiled/images/tmx-icon-mac.icns" "$tempDir/TileZed.app/Contents/Resources/"
 echo
 
 # Get various in-bundle directories
-pluginsDir="$tempDir/Tiled.app/Contents/PlugIns"
-macOSDir="$tempDir/Tiled.app/Contents/MacOS"
-frameworksDir="$tempDir/Tiled.app/Contents/Frameworks"
+pluginsDir="$tempDir/TileZed.app/Contents/PlugIns"
+macOSDir="$tempDir/TileZed.app/Contents/MacOS"
+frameworksDir="$tempDir/TileZed.app/Contents/Frameworks"
 
 # Use macdeployqt to copy Qt frameworks to the app
 echo Running macdeployqt
-macdeployqt "$tempDir/Tiled.app"
+macdeployqt "$tempDir/TileZed.app"
 echo
 
 # Modify plugins to use Qt frameworks contained within the app bundle (is there some way to get macdeployqt to do this?)
@@ -56,7 +56,8 @@ echo
 
 # Create dmg from the temp directory
 echo Creating dmg file
-hdiutil create "$baseDir/$name.dmg" -srcfolder "$tempDir" -volname "Tiled $1"
+rm -f "$baseDir/../$name.dmg"
+hdiutil create "$baseDir/../$name.dmg" -srcfolder "$tempDir" -volname "TileZed $1"
 echo
 
 # Delete the temp directory
