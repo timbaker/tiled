@@ -859,8 +859,8 @@ void TilesetDock::moveTilesetUp()
 	QModelIndex index = mThumbView->currentIndex();
 	int from = index.row();
 	if (from > 0) {
-		mTabBar->moveTab(from, from-1);
-		Tileset *ts = mMapDocument->map()->tilesets()[from-1];
+        moveTileset(from, from-1);
+        Tileset *ts = mMapDocument->map()->tilesets()[from-1];
 		mThumbView->setCurrentIndex(mThumbView->model()->index(ts));
 	}
 }
@@ -870,8 +870,8 @@ void TilesetDock::moveTilesetDown()
 	QModelIndex index = mThumbView->currentIndex();
 	int from = index.row();
 	if (from + 1 < mMapDocument->map()->tilesets().count()) {
-		mTabBar->moveTab(from, from+1);
-		Tileset *ts = mMapDocument->map()->tilesets()[from+1];
+        moveTileset(from, from+1);
+        Tileset *ts = mMapDocument->map()->tilesets()[from+1];
 		mThumbView->setCurrentIndex(mThumbView->model()->index(ts));
 	}
 }
