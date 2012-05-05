@@ -186,16 +186,16 @@ TilesetDock::TilesetDock(QWidget *parent):
     vertical->setSpacing(5);
 #ifdef ZOMBOID
     vertical->setMargin(0);
-	mTilesetMenuButton->setParent(0);
+    mTilesetMenuButton->setParent(0);
 #else
     vertical->setMargin(5);
     vertical->addLayout(horizontal);
 #endif
     vertical->addWidget(mViewStack);
 #ifdef ZOMBOID
-	horizontal = new QHBoxLayout();
+    horizontal = new QHBoxLayout();
     horizontal->setSpacing(5);
-	horizontal->addWidget(mToolBar, 1);
+    horizontal->addWidget(mToolBar, 1);
     vertical->addLayout(horizontal);
 #else
     vertical->addWidget(mToolBar);
@@ -226,8 +226,8 @@ TilesetDock::TilesetDock(QWidget *parent):
 
     mToolBar->setIconSize(QSize(16, 16));
 #ifdef ZOMBOID
-	mActionNewTileset = mToolBar->addAction(QIcon(QLatin1String(":/images/16x16/document-new.png")),
-											tr("New Tileset"), parent, SLOT(newTileset()));
+    mActionNewTileset = mToolBar->addAction(QIcon(QLatin1String(":/images/16x16/document-new.png")),
+                                            tr("New Tileset"), parent, SLOT(newTileset()));
 #endif
     mToolBar->addAction(mImportTileset);
     mToolBar->addAction(mExportTileset);
@@ -236,30 +236,30 @@ TilesetDock::TilesetDock(QWidget *parent):
     mToolBar->addAction(mRenameTileset);
 
 #ifdef ZOMBOID
-	{
-	mIconTileLayer = QIcon(QLatin1String(":/images/16x16/layer-tile.png"));
-	mIconTileLayerStop = QIcon(QLatin1String(":/images/16x16/layer-tile-stop.png"));
-//	mActionSwitchLayer = mToolBar->addAction(mIconTileLayer, QLatin1String("Auto-switch Layers"));
-//	mButtonSwitchLayer = dynamic_cast<QToolButton*>(mToolBar->widgetForAction(mActionSwitchLayer));
-	mButtonSwitchLayer = new QToolButton();
-	mButtonSwitchLayer->setIcon(mIconTileLayer);
-	mButtonSwitchLayer->setCheckable(true);
-	bool enabled = Preferences::instance()->autoSwitchLayer();
-	mButtonSwitchLayer->setChecked(enabled == false);
-	mButtonSwitchLayer->setIcon(enabled ? mIconTileLayer : mIconTileLayerStop);
-	mButtonSwitchLayer->setToolTip(enabled ? tr("Layer Switch Enabled") : tr("Layer Switch Disabled"));
-	connect(mButtonSwitchLayer, SIGNAL(toggled(bool)), this, SLOT(layerSwitchToggled()));
-	connect(Preferences::instance(), SIGNAL(autoSwitchLayerChanged(bool)), SLOT(autoSwitchLayerChanged(bool)));
-	mToolBar->addWidget(mButtonSwitchLayer);
-	}
+    {
+    mIconTileLayer = QIcon(QLatin1String(":/images/16x16/layer-tile.png"));
+    mIconTileLayerStop = QIcon(QLatin1String(":/images/16x16/layer-tile-stop.png"));
+//    mActionSwitchLayer = mToolBar->addAction(mIconTileLayer, QLatin1String("Auto-switch Layers"));
+//    mButtonSwitchLayer = dynamic_cast<QToolButton*>(mToolBar->widgetForAction(mActionSwitchLayer));
+    mButtonSwitchLayer = new QToolButton();
+    mButtonSwitchLayer->setIcon(mIconTileLayer);
+    mButtonSwitchLayer->setCheckable(true);
+    bool enabled = Preferences::instance()->autoSwitchLayer();
+    mButtonSwitchLayer->setChecked(enabled == false);
+    mButtonSwitchLayer->setIcon(enabled ? mIconTileLayer : mIconTileLayerStop);
+    mButtonSwitchLayer->setToolTip(enabled ? tr("Layer Switch Enabled") : tr("Layer Switch Disabled"));
+    connect(mButtonSwitchLayer, SIGNAL(toggled(bool)), this, SLOT(layerSwitchToggled()));
+    connect(Preferences::instance(), SIGNAL(autoSwitchLayerChanged(bool)), SLOT(autoSwitchLayerChanged(bool)));
+    mToolBar->addWidget(mButtonSwitchLayer);
+    }
 
-	mZoomable = new Zoomable(this);
-	mZoomable->setZoomFactors(QVector<qreal>() << 0.25 << 0.5 << 0.75 << 1.0 << 1.25 << 1.5 << 1.75 << 2.0);
-//	mToolBar->addSeparator();
-	mZoomComboBox = new QComboBox;
-	mZoomable->connectToComboBox(mZoomComboBox);
-//	mActionZoom = mToolBar->addWidget(mZoomComboBox);
-	horizontal->addWidget(mZoomComboBox);
+    mZoomable = new Zoomable(this);
+    mZoomable->setZoomFactors(QVector<qreal>() << 0.25 << 0.5 << 0.75 << 1.0 << 1.25 << 1.5 << 1.75 << 2.0);
+//    mToolBar->addSeparator();
+    mZoomComboBox = new QComboBox;
+    mZoomable->connectToComboBox(mZoomComboBox);
+//    mActionZoom = mToolBar->addWidget(mZoomComboBox);
+    horizontal->addWidget(mZoomComboBox);
 #endif
 
     connect(mViewStack, SIGNAL(currentChanged(int)),
@@ -277,42 +277,42 @@ TilesetDock::TilesetDock(QWidget *parent):
     connect(mTilesetMenu, SIGNAL(aboutToShow()), SLOT(refreshTilesetMenu()));
 
 #ifdef ZOMBOID
-	connect(this, SIGNAL(currentTileChanged(Tile*)), SLOT(switchLayerForTile(Tile*)));
-	mThumbView = new ZTilesetThumbView();
+    connect(this, SIGNAL(currentTileChanged(Tile*)), SLOT(switchLayerForTile(Tile*)));
+    mThumbView = new ZTilesetThumbView();
     connect(mTabBar, SIGNAL(currentChanged(int)),
             SLOT(thumbSyncWithTabs()));
-	connect(mThumbView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
-		SLOT(thumbCurrentChanged()));
-	connect(mThumbView, SIGNAL(activated(QModelIndex)), mThumbView, SLOT(edit(QModelIndex)));
+    connect(mThumbView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
+        SLOT(thumbCurrentChanged()));
+    connect(mThumbView, SIGNAL(activated(QModelIndex)), mThumbView, SLOT(edit(QModelIndex)));
 
-	vertical = new QVBoxLayout();
-	vertical->setSpacing(5);
-	QToolBar *toolbar = new QToolBar();
-	toolbar->setIconSize(QSize(16, 16));
-	mActionTilesetUp = toolbar->addAction(QIcon(QLatin1String(":/images/16x16/go-up.png")),
-										  tr("Move Tileset Up"), this, SLOT(moveTilesetUp()));
-	mActionTilesetDown = toolbar->addAction(QIcon(QLatin1String(":/images/16x16/go-down.png")),
-											tr("Move Tileset Down"), this, SLOT(moveTilesetDown()));
-	QToolButton *button;
-	button = dynamic_cast<QToolButton*>(toolbar->widgetForAction(mActionTilesetUp));
-	button->setAutoRepeat(true);
-	button = dynamic_cast<QToolButton*>(toolbar->widgetForAction(mActionTilesetDown));
-	button->setAutoRepeat(true);
+    vertical = new QVBoxLayout();
+    vertical->setSpacing(5);
+    QToolBar *toolbar = new QToolBar();
+    toolbar->setIconSize(QSize(16, 16));
+    mActionTilesetUp = toolbar->addAction(QIcon(QLatin1String(":/images/16x16/go-up.png")),
+                                          tr("Move Tileset Up"), this, SLOT(moveTilesetUp()));
+    mActionTilesetDown = toolbar->addAction(QIcon(QLatin1String(":/images/16x16/go-down.png")),
+                                            tr("Move Tileset Down"), this, SLOT(moveTilesetDown()));
+    QToolButton *button;
+    button = dynamic_cast<QToolButton*>(toolbar->widgetForAction(mActionTilesetUp));
+    button->setAutoRepeat(true);
+    button = dynamic_cast<QToolButton*>(toolbar->widgetForAction(mActionTilesetDown));
+    button->setAutoRepeat(true);
 
-	vertical->addWidget(mThumbView);
-	vertical->addWidget(toolbar);
+    vertical->addWidget(mThumbView);
+    vertical->addWidget(toolbar);
 
-	QWidget *outer = new QWidget(this);
+    QWidget *outer = new QWidget(this);
     horizontal = new QHBoxLayout(outer);
-	horizontal->setSpacing(5);
-	horizontal->setMargin(5);
-	horizontal->addLayout(vertical);
-	horizontal->addWidget(w);
-	setWidget(outer);
+    horizontal->setSpacing(5);
+    horizontal->setMargin(5);
+    horizontal->addLayout(vertical);
+    horizontal->addWidget(w);
+    setWidget(outer);
 #else
     setWidget(w);
 #endif
-	retranslateUi();
+    retranslateUi();
     setAcceptDrops(true);
     updateActions();
 }
@@ -329,25 +329,25 @@ void TilesetDock::setMapDocument(MapDocument *mapDocument)
 
     setCurrentTiles(0);
 #ifdef ZOMBOID
-	setCurrentTile(0);
+    setCurrentTile(0);
 #endif
     if (mMapDocument)
         mCurrentTilesets.insert(mMapDocument,
                                 mTabBar->tabText(mTabBar->currentIndex()));
     // Clear previous content
 #ifdef ZOMBOID
-	// BUG BUG BUG - 'delete mViewStack->currentWidget()' calls updateCurrentTiles() which
-	// calls setCurrentTiles() again, which is bad when the document is being closed.
-	mTabBar->blockSignals(true);
-	mViewStack->blockSignals(true);
+    // BUG BUG BUG - 'delete mViewStack->currentWidget()' calls updateCurrentTiles() which
+    // calls setCurrentTiles() again, which is bad when the document is being closed.
+    mTabBar->blockSignals(true);
+    mViewStack->blockSignals(true);
 #endif
     while (mTabBar->count())
         mTabBar->removeTab(0);
     while (mViewStack->currentWidget())
         delete mViewStack->currentWidget();
 #ifdef ZOMBOID
-	mTabBar->blockSignals(false);
-	mViewStack->blockSignals(false);
+    mTabBar->blockSignals(false);
+    mViewStack->blockSignals(false);
 #endif
 
     // Clear all connections to the previous document
@@ -357,7 +357,7 @@ void TilesetDock::setMapDocument(MapDocument *mapDocument)
     mMapDocument = mapDocument;
 
 #ifdef ZOMBOID
-	mThumbView->setMapDocument(mapDocument);
+    mThumbView->setMapDocument(mapDocument);
 #endif
 
     if (mMapDocument) {
@@ -429,7 +429,7 @@ void TilesetDock::insertTilesetView(int index, Tileset *tileset)
 #endif
     view->setModel(new TilesetModel(tileset, view));
 #ifdef ZOMBOID
-	view->tilesetModel()->setMapDocument(mMapDocument);
+    view->tilesetModel()->setMapDocument(mMapDocument);
 #endif
 
     connect(view->selectionModel(),
@@ -459,11 +459,11 @@ void TilesetDock::updateActions()
     mPropertiesTileset->setEnabled(view && !external);
     mDeleteTileset->setEnabled(view);
 #ifdef ZOMBOID
-//	mActionZoom->setEnabled(view != 0);
-	mActionNewTileset->setEnabled(mMapDocument != 0);
-	mActionTilesetUp->setEnabled(view && (index > 0));
-	mActionTilesetDown->setEnabled(view && (index + 1 < mTabBar->count()));
-	mZoomComboBox->setEnabled(view != 0);
+//    mActionZoom->setEnabled(view != 0);
+    mActionNewTileset->setEnabled(mMapDocument != 0);
+    mActionTilesetUp->setEnabled(view && (index > 0));
+    mActionTilesetDown->setEnabled(view && (index + 1 < mTabBar->count()));
+    mZoomComboBox->setEnabled(view != 0);
 #endif
 }
 
@@ -791,89 +791,89 @@ void TilesetDock::refreshTilesetMenu()
 #ifdef ZOMBOID
 void TilesetDock::thumbCurrentChanged()
 {
-	QModelIndex index = mThumbView->currentIndex();
-	if (index.isValid()) {
-		Tileset *ts = mThumbView->model()->tilesetAt(index);
-		mTabBar->setCurrentIndex(mMapDocument->map()->tilesets().indexOf(ts));
-//		mActionTilesetUp->setEnabled(true);
-//		mActionTilesetDown->setEnabled(true);
-	} else {
-//		mActionTilesetUp->setEnabled(false);
-//		mActionTilesetDown->setEnabled(false);
-	}
+    QModelIndex index = mThumbView->currentIndex();
+    if (index.isValid()) {
+        Tileset *ts = mThumbView->model()->tilesetAt(index);
+        mTabBar->setCurrentIndex(mMapDocument->map()->tilesets().indexOf(ts));
+//        mActionTilesetUp->setEnabled(true);
+//        mActionTilesetDown->setEnabled(true);
+    } else {
+//        mActionTilesetUp->setEnabled(false);
+//        mActionTilesetDown->setEnabled(false);
+    }
 }
 
 void TilesetDock::thumbSyncWithTabs()
 {
-	mThumbView->selectionModel()->blockSignals(true);
+    mThumbView->selectionModel()->blockSignals(true);
 #if 1
-	// FIXME: When starting up, currentTileset() is returning 0 for some reason.
-	Tileset *ts = (mTabBar->currentIndex() >= 0) ? mMapDocument->map()->tilesets().at(mTabBar->currentIndex()) : 0;
+    // FIXME: When starting up, currentTileset() is returning 0 for some reason.
+    Tileset *ts = (mTabBar->currentIndex() >= 0) ? mMapDocument->map()->tilesets().at(mTabBar->currentIndex()) : 0;
 #else
-	Tileset *ts = currentTileset();
+    Tileset *ts = currentTileset();
 #endif
-	QModelIndex index = mThumbView->model()->index(ts);
-	mThumbView->setCurrentIndex(index);
-	mThumbView->selectionModel()->select(index, QItemSelectionModel::Select |  QItemSelectionModel::Rows);
-	mThumbView->selectionModel()->blockSignals(false);
+    QModelIndex index = mThumbView->model()->index(ts);
+    mThumbView->setCurrentIndex(index);
+    mThumbView->selectionModel()->select(index, QItemSelectionModel::Select |  QItemSelectionModel::Rows);
+    mThumbView->selectionModel()->blockSignals(false);
 }
 
 void TilesetDock::layerSwitchToggled()
 {
-	bool checked = mButtonSwitchLayer->isChecked();
-	Preferences::instance()->setAutoSwitchLayer(checked == false);
+    bool checked = mButtonSwitchLayer->isChecked();
+    Preferences::instance()->setAutoSwitchLayer(checked == false);
 }
 
 void TilesetDock::autoSwitchLayerChanged(bool enabled)
 {
-	mButtonSwitchLayer->setIcon(enabled ? mIconTileLayer : mIconTileLayerStop);
-	mButtonSwitchLayer->setToolTip(enabled ? tr("Layer Switch Enabled") : tr("Layer Switch Disabled"));
+    mButtonSwitchLayer->setIcon(enabled ? mIconTileLayer : mIconTileLayerStop);
+    mButtonSwitchLayer->setToolTip(enabled ? tr("Layer Switch Enabled") : tr("Layer Switch Disabled"));
 }
 
 void TilesetDock::switchLayerForTile(Tile *tile)
 {
-	if (!tile)
-		return;
-	if (Preferences::instance()->autoSwitchLayer() == false)
-		return;
-	QString layerName = TilesetManager::instance()->layerName(tile);
-	if (!layerName.isEmpty()) {
-		Layer *currentLayer = mMapDocument->currentLayer();
-		if (TileLayer *tl = currentLayer->asTileLayer()) { // FIXME: ObjectGroup too?
-			if (tl->group()) {
-				foreach (TileLayer *tl1, tl->group()->layers()) {
-					QString name = tl1->name().split(QLatin1Char('_')).at(1);
-					if (name == layerName) {
-						int layerIndex = mMapDocument->map()->layers().indexOf(tl1);
-						mMapDocument->setCurrentLayerIndex(layerIndex);
-						return;
-					}
-				}
-			}
-		}
-	}
+    if (!tile)
+        return;
+    if (Preferences::instance()->autoSwitchLayer() == false)
+        return;
+    QString layerName = TilesetManager::instance()->layerName(tile);
+    if (!layerName.isEmpty()) {
+        Layer *currentLayer = mMapDocument->currentLayer();
+        if (TileLayer *tl = currentLayer->asTileLayer()) { // FIXME: ObjectGroup too?
+            if (tl->group()) {
+                foreach (TileLayer *tl1, tl->group()->layers()) {
+                    QString name = tl1->name().split(QLatin1Char('_')).at(1);
+                    if (name == layerName) {
+                        int layerIndex = mMapDocument->map()->layers().indexOf(tl1);
+                        mMapDocument->setCurrentLayerIndex(layerIndex);
+                        return;
+                    }
+                }
+            }
+        }
+    }
 }
 
 void TilesetDock::moveTilesetUp()
 {
-	QModelIndex index = mThumbView->currentIndex();
-	int from = index.row();
-	if (from > 0) {
+    QModelIndex index = mThumbView->currentIndex();
+    int from = index.row();
+    if (from > 0) {
         moveTileset(from, from-1);
         Tileset *ts = mMapDocument->map()->tilesets()[from-1];
-		mThumbView->setCurrentIndex(mThumbView->model()->index(ts));
-	}
+        mThumbView->setCurrentIndex(mThumbView->model()->index(ts));
+    }
 }
 
 void TilesetDock::moveTilesetDown()
 {
-	QModelIndex index = mThumbView->currentIndex();
-	int from = index.row();
-	if (from + 1 < mMapDocument->map()->tilesets().count()) {
+    QModelIndex index = mThumbView->currentIndex();
+    int from = index.row();
+    if (from + 1 < mMapDocument->map()->tilesets().count()) {
         moveTileset(from, from+1);
         Tileset *ts = mMapDocument->map()->tilesets()[from+1];
-		mThumbView->setCurrentIndex(mThumbView->model()->index(ts));
-	}
+        mThumbView->setCurrentIndex(mThumbView->model()->index(ts));
+    }
 }
 
 #endif // ZOMBOID

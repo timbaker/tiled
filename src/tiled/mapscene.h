@@ -177,7 +177,7 @@ private slots:
 
 #ifdef ZOMBOID
     virtual void layerAdded(int index);
-	virtual void layerAboutToBeRemoved(int index);
+    virtual void layerAboutToBeRemoved(int index);
     virtual void layerRemoved(int index);
     virtual void layerChanged(int index);
     virtual void layerRenamed(int index);
@@ -198,7 +198,7 @@ private slots:
 protected:
     virtual QGraphicsItem *createLayerItem(Layer *layer);
 
-	virtual void updateCurrentLayerHighlight();
+    virtual void updateCurrentLayerHighlight();
 #else
 private:
     QGraphicsItem *createLayerItem(Layer *layer);
@@ -219,7 +219,7 @@ private:
     QVector<QGraphicsItem*> mLayerItems;
     QGraphicsRectItem *mDarkRectangle;
 #ifdef ZOMBOID
-	ZGridItem *mGridItem;
+    ZGridItem *mGridItem;
 #endif
 
     typedef QMap<MapObject*, MapObjectItem*> ObjectItems;

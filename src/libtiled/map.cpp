@@ -46,8 +46,8 @@ Map::Map(Orientation orientation,
     mWidth(width),
     mHeight(height),
 #ifdef ZOMBOID
-	mCellsPerLevel(0,3),
-	mMaxLevel(0),
+    mCellsPerLevel(0,3),
+    mMaxLevel(0),
 #endif
     mTileWidth(tileWidth),
     mTileHeight(tileHeight)
@@ -100,29 +100,29 @@ int Map::layerCount(Layer::Type type) const
 #ifdef ZOMBOID
 QList<Layer*> Map::layers(Layer::Type type) const
 {
-	QList<Layer*> layers;
-	foreach (Layer *layer, mLayers)
-		if (layer->type() == type)
-			layers.append(layer);
-	return layers;
+    QList<Layer*> layers;
+    foreach (Layer *layer, mLayers)
+        if (layer->type() == type)
+            layers.append(layer);
+    return layers;
 }
 
 QList<ObjectGroup*> Map::objectGroups() const
 {
-	QList<ObjectGroup*> layers;
-	foreach (Layer *layer, mLayers)
-		if (ObjectGroup *og = layer->asObjectGroup())
-			layers.append(og);
-	return layers;
+    QList<ObjectGroup*> layers;
+    foreach (Layer *layer, mLayers)
+        if (ObjectGroup *og = layer->asObjectGroup())
+            layers.append(og);
+    return layers;
 }
 
 QList<TileLayer*> Map::tileLayers() const
 {
-	QList<TileLayer*> layers;
-	foreach (Layer *layer, mLayers)
-		if (TileLayer *tl = layer->asTileLayer())
-			layers.append(tl);
-	return layers;
+    QList<TileLayer*> layers;
+    foreach (Layer *layer, mLayers)
+        if (TileLayer *tl = layer->asTileLayer())
+            layers.append(tl);
+    return layers;
 }
 
 
@@ -208,13 +208,13 @@ bool Map::isTilesetUsed(Tileset *tileset) const
 #ifdef ZOMBOID
 void Map::addTileLayerGroup(ZTileLayerGroup *tileLayerGroup)
 {
-	int arrayIndex = 0;
-	foreach(ZTileLayerGroup *g1, tileLayerGroups()) {
-		if (g1->level() >= tileLayerGroup->level())
-			break;
-		arrayIndex++;
-	}
-	mTileLayerGroups.insert(arrayIndex, tileLayerGroup);
+    int arrayIndex = 0;
+    foreach(ZTileLayerGroup *g1, tileLayerGroups()) {
+        if (g1->level() >= tileLayerGroup->level())
+            break;
+        arrayIndex++;
+    }
+    mTileLayerGroups.insert(arrayIndex, tileLayerGroup);
 }
 #endif
 
@@ -248,7 +248,7 @@ QString Tiled::orientationToString(Map::Orientation orientation)
         return QLatin1String("levelisometric");
         break;
 #endif
-	case Map::Staggered:
+    case Map::Staggered:
         return QLatin1String("staggered");
         break;
     }
@@ -265,7 +265,7 @@ Map::Orientation Tiled::orientationFromString(const QString &string)
     } else if (string == QLatin1String("levelisometric")) {
         orientation = Map::LevelIsometric;
 #endif
-	} else if (string == QLatin1String("staggered")) {
+    } else if (string == QLatin1String("staggered")) {
         orientation = Map::Staggered;
     }
     return orientation;

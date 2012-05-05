@@ -237,10 +237,10 @@ void BucketFillTool::clearConnections(MapDocument *mapDocument)
         return;
 
 #ifdef ZOMBOID
-	disconnect(mapDocument, SIGNAL(regionChanged(QRegion,Layer*)),
+    disconnect(mapDocument, SIGNAL(regionChanged(QRegion,Layer*)),
                this, SLOT(clearOverlay()));
 #else
-	disconnect(mapDocument, SIGNAL(regionChanged(QRegion)),
+    disconnect(mapDocument, SIGNAL(regionChanged(QRegion)),
                this, SLOT(clearOverlay()));
 #endif
 

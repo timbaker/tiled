@@ -41,24 +41,24 @@ using namespace Tiled::Internal;
 
 ZTilesetThumbView::ZTilesetThumbView(QWidget *parent)
     : QListView(parent)
-	, mMapDocument(0)
+    , mMapDocument(0)
 {
-	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
-	setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-	setSelectionMode(QAbstractItemView::SingleSelection);
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    setSelectionMode(QAbstractItemView::SingleSelection);
 
-	setModel(mModel = new ZTilesetThumbModel(this));
+    setModel(mModel = new ZTilesetThumbModel(this));
 }
 
 QSize ZTilesetThumbView::sizeHint() const
 {
-	if (mMapDocument) {
-		int sbw = verticalScrollBar()->sizeHint().width();
-		int fudge = 16;
-		return QSize(contentWidth() + sbw + fudge, 100);
-	}
+    if (mMapDocument) {
+        int sbw = verticalScrollBar()->sizeHint().width();
+        int fudge = 16;
+        return QSize(contentWidth() + sbw + fudge, 100);
+    }
     return QSize(130, 100);
 }
 
@@ -68,19 +68,19 @@ void ZTilesetThumbView::contextMenuEvent(QContextMenuEvent *event)
 
 void ZTilesetThumbView::setMapDocument(MapDocument *mapDoc)
 {
-	if (mMapDocument == mapDoc)
-		return;
-	mMapDocument = mapDoc;
-	model()->setMapDocument(mapDoc);
+    if (mMapDocument == mapDoc)
+        return;
+    mMapDocument = mapDoc;
+    model()->setMapDocument(mapDoc);
 
-	if (mMapDocument) {
-		QFontMetrics fm = fontMetrics(); // FIXME: same font used by QPainter?
-		int width = 64;
-		foreach (Tileset *ts, mMapDocument->map()->tilesets()) {
-			width = qMax(width, fm.width(ts->name()));
-		}
-		mContentWidth = width;
-	}
+    if (mMapDocument) {
+        QFontMetrics fm = fontMetrics(); // FIXME: same font used by QPainter?
+        int width = 64;
+        foreach (Tileset *ts, mMapDocument->map()->tilesets()) {
+            width = qMax(width, fm.width(ts->name()));
+        }
+        mContentWidth = width;
+    }
 
-	updateGeometry();
+    updateGeometry();
 }

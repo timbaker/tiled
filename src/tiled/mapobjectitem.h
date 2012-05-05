@@ -94,8 +94,8 @@ public:
     void setPolygon(const QPolygonF &polygon);
 
 #ifdef ZOMBOID
-	void setDrawMargins(const QMargins &drawMargins);
-	QMargins drawMargins() const { return mDrawMargins; }
+    void setDrawMargins(const QMargins &drawMargins);
+    QMargins drawMargins() const { return mDrawMargins; }
 #endif
 
     /**
@@ -122,7 +122,7 @@ private:
     bool mSyncing;
     ResizeHandle *mResizeHandle;
 #ifdef ZOMBOID
-	QMargins mDrawMargins;
+    QMargins mDrawMargins;
 #endif
 
     friend class Handle;

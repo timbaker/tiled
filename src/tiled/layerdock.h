@@ -77,7 +77,7 @@ private:
     QLabel *mZomboidLayerLabel;
     QSlider *mZomboidLayerSlider;
 #endif
-	LayerView *mLayerView;
+    LayerView *mLayerView;
     MapDocument *mMapDocument;
 };
 

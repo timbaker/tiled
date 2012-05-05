@@ -57,29 +57,29 @@ void ZGridItem::paint(QPainter *painter,
                       QWidget *)
 {
     if (!mMapDocument || !mMapDocument->renderer())
-		return;
+        return;
     const MapRenderer *renderer = mMapDocument->renderer();
 #if 1
-		const QRect bounds = QRect(0, 0, mMapDocument->map()->width(), mMapDocument->map()->height());
-		QRectF boundsF = mMapDocument->renderer()->boundingRect(bounds, mMapDocument->currentLayer());
-//		Q_ASSERT(mBoundingRect == boundsF);
-		if (mBoundingRect != boundsF)
-			return;
+        const QRect bounds = QRect(0, 0, mMapDocument->map()->width(), mMapDocument->map()->height());
+        QRectF boundsF = mMapDocument->renderer()->boundingRect(bounds, mMapDocument->currentLayer());
+//        Q_ASSERT(mBoundingRect == boundsF);
+        if (mBoundingRect != boundsF)
+            return;
 #endif
     renderer->drawGrid(painter, option->exposedRect, mMapDocument->currentLayer());
 }
 
 void ZGridItem::updateBoundingRect()
 {
-	QRectF boundsF;
+    QRectF boundsF;
 
     if (!mMapDocument || !mMapDocument->map() || !mMapDocument->renderer()) {
     } else {
-		const QRect bounds = QRect(0, 0, mMapDocument->map()->width(), mMapDocument->map()->height());
-		boundsF = mMapDocument->renderer()->boundingRect(bounds, mMapDocument->currentLayer());
-	}
-	if (boundsF != mBoundingRect) {
-		prepareGeometryChange();
-		mBoundingRect = boundsF;
-	}
+        const QRect bounds = QRect(0, 0, mMapDocument->map()->width(), mMapDocument->map()->height());
+        boundsF = mMapDocument->renderer()->boundingRect(bounds, mMapDocument->currentLayer());
+    }
+    if (boundsF != mBoundingRect) {
+        prepareGeometryChange();
+        mBoundingRect = boundsF;
+    }
 }

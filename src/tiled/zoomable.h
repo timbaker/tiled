@@ -58,8 +58,8 @@ public:
     { return mScale != (int) mScale; }
 
 #ifdef ZOMBOID
-	void setZoomFactors(const QVector<qreal>& factors);
-	void connectToComboBox(QComboBox *comboBox);
+    void setZoomFactors(const QVector<qreal>& factors);
+    void connectToComboBox(QComboBox *comboBox);
 #endif
 
 public slots:
@@ -69,7 +69,7 @@ public slots:
 
 #ifdef ZOMBOID
 private slots:
-	void comboActivated(int index);
+    void comboActivated(int index);
 #endif
 
 signals:
@@ -78,8 +78,8 @@ signals:
 private:
     qreal mScale;
 #ifdef ZOMBOID
-	QVector<qreal> mZoomFactors;
-	QComboBox *mComboBox;
+    QVector<qreal> mZoomFactors;
+    QComboBox *mComboBox;
 #endif
 };
 

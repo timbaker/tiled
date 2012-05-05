@@ -78,11 +78,11 @@ public:
     void setAutomappingDrawing(bool enabled);
 
 #ifdef ZOMBOID
-	QString lotDirectory() const;
-	void setLotDirectory(const QString &path);
+    QString lotDirectory() const;
+    void setLotDirectory(const QString &path);
 
-	bool autoSwitchLayer() const;
-	void setAutoSwitchLayer(bool enable);
+    bool autoSwitchLayer() const;
+    void setAutoSwitchLayer(bool enable);
 #endif
 
     /**
@@ -108,8 +108,8 @@ signals:
     void objectTypesChanged();
 
 #ifdef ZOMBOID
-	void lotDirectoryChanged();
-	void autoSwitchLayerChanged(bool enabled);
+    void lotDirectoryChanged();
+    void autoSwitchLayerChanged(bool enabled);
 #endif
 
 private:
@@ -133,8 +133,8 @@ private:
     bool mAutoMapDrawing;
 
 #ifdef ZOMBOID
-	QString mLotDirectory;
-	bool mAutoSwitchLayer;
+    QString mLotDirectory;
+    bool mAutoSwitchLayer;
 #endif
 
     static Preferences *mInstance;

@@ -127,9 +127,9 @@ public:
     Layer *currentLayer() const;
 
 #ifdef ZOMBOID
-	/* For the visibility slider in the LayerDock. */
-	void setMaxVisibleLayer(int index) { mMaxVisibleLayer = index; }
-	int maxVisibleLayer() const { return mMaxVisibleLayer; }
+    /* For the visibility slider in the LayerDock. */
+    void setMaxVisibleLayer(int index) { mMaxVisibleLayer = index; }
+    int maxVisibleLayer() const { return mMaxVisibleLayer; }
 #endif
 
     /**
@@ -169,8 +169,8 @@ public:
     LayerModel *layerModel() const { return mLayerModel; }
 
 #ifdef ZOMBOID
-	ZLevelsModel *levelsModel() const { return mLevelsModel; }
-	ZMapObjectModel *mapObjectModel() const { return mMapObjectModel; }
+    ZLevelsModel *levelsModel() const { return mLevelsModel; }
+    ZMapObjectModel *mapObjectModel() const { return mMapObjectModel; }
 #endif
 
     /**
@@ -294,7 +294,7 @@ signals:
     void layerAdded(int index);
 #ifdef ZOMBOID
     void layerAboutToBeRemoved(int index);
-	void layerRenamed(int index);
+    void layerRenamed(int index);
 #endif
     void layerRemoved(int index);
     void layerChanged(int index);
@@ -365,9 +365,9 @@ private:
     MapRenderer *mRenderer;
     int mCurrentLayerIndex;
 #ifdef ZOMBOID
-	ZLevelsModel *mLevelsModel;
-	ZMapObjectModel *mMapObjectModel;
-	int mMaxVisibleLayer;
+    ZLevelsModel *mLevelsModel;
+    ZMapObjectModel *mMapObjectModel;
+    int mMaxVisibleLayer;
 #endif
     QUndoStack *mUndoStack;
 };

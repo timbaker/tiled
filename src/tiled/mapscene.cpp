@@ -65,9 +65,9 @@ MapScene::MapScene(QObject *parent):
     mUnderMouse(false),
     mCurrentModifiers(Qt::NoModifier),
 #ifdef ZOMBOID
-	mGridItem(new ZGridItem),
+    mGridItem(new ZGridItem),
 #endif
-	mDarkRectangle(new QGraphicsRectItem)
+    mDarkRectangle(new QGraphicsRectItem)
 {
     setBackgroundBrush(Qt::darkGray);
 
@@ -86,7 +86,7 @@ MapScene::MapScene(QObject *parent):
     addItem(mDarkRectangle);
 
 #ifdef ZOMBOID
-	addItem(mGridItem);
+    addItem(mGridItem);
 #endif
 
     mHighlightCurrentLayer = prefs->highlightCurrentLayer();
@@ -108,7 +108,7 @@ void MapScene::setMapDocument(MapDocument *mapDocument)
 
     mMapDocument = mapDocument;
 #ifdef ZOMBOID
-	mGridItem->setMapDocument(mapDocument);
+    mGridItem->setMapDocument(mapDocument);
 #endif
 
     refreshScene();
@@ -123,15 +123,15 @@ void MapScene::setMapDocument(MapDocument *mapDocument)
         connect(mMapDocument, SIGNAL(regionChanged(QRegion)),
                 this, SLOT(repaintRegion(QRegion)));
 #endif
-		connect(mMapDocument, SIGNAL(layerAdded(int)),
+        connect(mMapDocument, SIGNAL(layerAdded(int)),
                 this, SLOT(layerAdded(int)));
 #ifdef ZOMBOID
-		connect(mMapDocument, SIGNAL(layerAboutToBeRemoved(int)),
+        connect(mMapDocument, SIGNAL(layerAboutToBeRemoved(int)),
                 this, SLOT(layerAboutToBeRemoved(int)));
-		connect(mMapDocument, SIGNAL(layerRenamed(int)),
+        connect(mMapDocument, SIGNAL(layerRenamed(int)),
                 this, SLOT(layerRenamed(int)));
 #endif
-		connect(mMapDocument, SIGNAL(layerRemoved(int)),
+        connect(mMapDocument, SIGNAL(layerRemoved(int)),
                 this, SLOT(layerRemoved(int)));
         connect(mMapDocument, SIGNAL(layerChanged(int)),
                 this, SLOT(layerChanged(int)));
@@ -171,14 +171,14 @@ void MapScene::refreshScene()
     mObjectItems.clear();
 
 #ifdef ZOMBOID
-	removeItem(mGridItem);
+    removeItem(mGridItem);
 #endif
     removeItem(mDarkRectangle);
     clear();
     addItem(mDarkRectangle);
 #ifdef ZOMBOID
-	addItem(mGridItem);
-	mGridItem->setZValue(20000);
+    addItem(mGridItem);
+    mGridItem->setZValue(20000);
 #endif
 
     if (!mMapDocument) {
@@ -188,11 +188,11 @@ void MapScene::refreshScene()
 
     const QSize mapSize = mMapDocument->renderer()->mapSize();
 #ifdef ZOMBOID
-	/* This stops tall tiles being cut off near the 0,0 tile at the top of the window */
+    /* This stops tall tiles being cut off near the 0,0 tile at the top of the window */
     const QMargins& margins = mMapDocument->map()->drawMargins();
-	QRect sceneRect(-margins.left(), -margins.top(),
-		margins.left() + mapSize.width() + margins.right(),
-		margins.top() + mapSize.height() + margins.bottom());
+    QRect sceneRect(-margins.left(), -margins.top(),
+        margins.left() + mapSize.width() + margins.right(),
+        margins.top() + mapSize.height() + margins.bottom());
     setSceneRect(sceneRect);
     mDarkRectangle->setRect(sceneRect);
 #else
@@ -230,7 +230,7 @@ QGraphicsItem *MapScene::createLayerItem(Layer *layer)
         foreach (MapObject *object, og->objects()) {
             MapObjectItem *item = new MapObjectItem(object, mMapDocument,
                                                     ogItem);
-			mObjectItems.insert(object, item);
+            mObjectItems.insert(object, item);
         }
         layerItem = ogItem;
     } else if (ImageLayer *il = layer->asImageLayer()) {
@@ -336,13 +336,13 @@ void MapScene::currentLayerIndexChanged()
     updateCurrentLayerHighlight();
 #ifdef ZOMBOID
 #if 1
-	// LevelIsometric orientation may move the grid
-	mGridItem->currentLayerIndexChanged();
+    // LevelIsometric orientation may move the grid
+    mGridItem->currentLayerIndexChanged();
 #else
-	if (isGridVisible()
-		&& mMapDocument && mMapDocument->renderer()
-		&& (mMapDocument->map()->orientation() == Map::LevelIsometric))
-		update();
+    if (isGridVisible()
+        && mMapDocument && mMapDocument->renderer()
+        && (mMapDocument->map()->orientation() == Map::LevelIsometric))
+        update();
 #endif
 #endif
 }
@@ -354,14 +354,14 @@ void MapScene::mapChanged()
 {
     const QSize mapSize = mMapDocument->renderer()->mapSize();
 #ifdef ZOMBOID
-	/* This stops tall tiles being cut off near the 0,0 tile at the top of the window */
+    /* This stops tall tiles being cut off near the 0,0 tile at the top of the window */
     const QMargins& margins = mMapDocument->map()->drawMargins();
-	QRect sceneRect(-margins.left(), -margins.top(),
-		margins.left() + mapSize.width() + margins.right(),
-		margins.top() + mapSize.height() + margins.bottom());
+    QRect sceneRect(-margins.left(), -margins.top(),
+        margins.left() + mapSize.width() + margins.right(),
+        margins.top() + mapSize.height() + margins.bottom());
     setSceneRect(sceneRect);
     mDarkRectangle->setRect(sceneRect);
-	mGridItem->currentLayerIndexChanged(); // index didn't change, just updating the bounds
+    mGridItem->currentLayerIndexChanged(); // index didn't change, just updating the bounds
 #else
     setSceneRect(0, 0, mapSize.width(), mapSize.height());
     mDarkRectangle->setRect(0, 0, mapSize.width(), mapSize.height());
@@ -370,11 +370,11 @@ void MapScene::mapChanged()
     foreach (QGraphicsItem *item, mLayerItems) {
         if (TileLayerItem *tli = dynamic_cast<TileLayerItem*>(item))
             tli->syncWithTileLayer();
-	}
+    }
 #ifdef ZOMBOID
-		// BUG: create object layer, add items, resize map much larger, try to select the objects
-	foreach (MapObjectItem *item, mObjectItems)
-		item->syncWithMapObject();
+        // BUG: create object layer, add items, resize map much larger, try to select the objects
+    foreach (MapObjectItem *item, mObjectItems)
+        item->syncWithMapObject();
 #endif
 }
 
@@ -403,11 +403,11 @@ void MapScene::layerAdded(int index)
 void MapScene::layerAboutToBeRemoved(int index)
 {
     Layer *layer = mMapDocument->map()->layerAt(index);
-	if (ObjectGroup *og = layer->asObjectGroup()) {
-		foreach (MapObject *o, og->objects()) {
-			mObjectItems.remove(o);
-		}
-	}			
+    if (ObjectGroup *og = layer->asObjectGroup()) {
+        foreach (MapObject *o, og->objects()) {
+            mObjectItems.remove(o);
+        }
+    }
 }
 #endif
 
@@ -531,7 +531,7 @@ void MapScene::setGridVisible(bool visible)
 
 #ifdef ZOMBOID
     mGridVisible = visible;
-	mGridItem->setVisible(mGridVisible);
+    mGridItem->setVisible(mGridVisible);
 #else
     mGridVisible = visible;
     update();
@@ -553,7 +553,7 @@ void MapScene::drawForeground(QPainter *painter, const QRectF &rect)
         return;
 
 #ifdef ZOMBOID
-//	mMapDocument->renderer()->drawGrid(painter, rect, mMapDocument->currentLayer());
+//    mMapDocument->renderer()->drawGrid(painter, rect, mMapDocument->currentLayer());
 #else
     mMapDocument->renderer()->drawGrid(painter, rect);
 #endif

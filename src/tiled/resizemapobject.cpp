@@ -45,7 +45,7 @@ ResizeMapObject::ResizeMapObject(MapDocument *mapDocument,
 void ResizeMapObject::undo()
 {
 #ifdef ZOMBOID
-	mMapDocument->mapObjectModel()->setObjectSize(mMapObject, mOldSize);
+    mMapDocument->mapObjectModel()->setObjectSize(mMapObject, mOldSize);
 #else
     mMapObject->setSize(mOldSize);
     mMapDocument->emitObjectChanged(mMapObject);
@@ -55,7 +55,7 @@ void ResizeMapObject::undo()
 void ResizeMapObject::redo()
 {
 #ifdef ZOMBOID
-	mMapDocument->mapObjectModel()->setObjectSize(mMapObject, mNewSize);
+    mMapDocument->mapObjectModel()->setObjectSize(mMapObject, mNewSize);
 #else
     mMapObject->setSize(mNewSize);
     mMapDocument->emitObjectChanged(mMapObject);

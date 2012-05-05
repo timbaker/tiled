@@ -40,7 +40,7 @@ using namespace Tiled::Internal;
 
 ZMapsDock::ZMapsDock(MainWindow *mainWindow, QWidget *parent)
     : QDockWidget(parent)
-	, mMapsView(new ZMapsView(mainWindow))
+    , mMapsView(new ZMapsView(mainWindow))
 {
     setObjectName(QLatin1String("ZMapsDock"));
 
@@ -49,27 +49,27 @@ ZMapsDock::ZMapsDock(MainWindow *mainWindow, QWidget *parent)
     layout->setMargin(5);
 
     QHBoxLayout *dirLayout = new QHBoxLayout;
-	QLabel *label = new QLabel(tr("Folder:"));
-	QLineEdit *edit = mDirectoryEdit = new QLineEdit();
-	QToolButton *button = new QToolButton();
-	button->setIcon(QIcon(QLatin1String(":/images/16x16/document-properties.png")));
-	button->setToolTip(tr("Choose Folder"));
-	dirLayout->addWidget(label);
-	dirLayout->addWidget(edit);
-	dirLayout->addWidget(button);
+    QLabel *label = new QLabel(tr("Folder:"));
+    QLineEdit *edit = mDirectoryEdit = new QLineEdit();
+    QToolButton *button = new QToolButton();
+    button->setIcon(QIcon(QLatin1String(":/images/16x16/document-properties.png")));
+    button->setToolTip(tr("Choose Folder"));
+    dirLayout->addWidget(label);
+    dirLayout->addWidget(edit);
+    dirLayout->addWidget(button);
 
-	layout->addWidget(mMapsView);
-	layout->addLayout(dirLayout);
+    layout->addWidget(mMapsView);
+    layout->addLayout(dirLayout);
 
     setWidget(widget);
     retranslateUi();
 
-	connect(button, SIGNAL(clicked()), this, SLOT(browse()));
+    connect(button, SIGNAL(clicked()), this, SLOT(browse()));
 
-	Preferences *prefs = Preferences::instance();
-	connect(prefs, SIGNAL(lotDirectoryChanged()), this, SLOT(onLotDirectoryChanged()));
-	edit->setText(prefs->lotDirectory());
-	connect(edit, SIGNAL(returnPressed()), this, SLOT(editedLotDirectory()));
+    Preferences *prefs = Preferences::instance();
+    connect(prefs, SIGNAL(lotDirectoryChanged()), this, SLOT(onLotDirectoryChanged()));
+    edit->setText(prefs->lotDirectory());
+    connect(edit, SIGNAL(returnPressed()), this, SLOT(editedLotDirectory()));
 
     // Workaround since a tabbed dockwidget that is not currently visible still
     // returns true for isVisible()
@@ -81,21 +81,21 @@ void ZMapsDock::browse()
 {
     QString f = QFileDialog::getExistingDirectory(this, tr("Choose the Maps Folder"), mDirectoryEdit->text());
     if (!f.isEmpty()) {
-		Preferences *prefs = Preferences::instance();
-		prefs->setLotDirectory(f);
+        Preferences *prefs = Preferences::instance();
+        prefs->setLotDirectory(f);
     }
 }
 
 void ZMapsDock::editedLotDirectory()
 {
-	Preferences *prefs = Preferences::instance();
-	prefs->setLotDirectory(mDirectoryEdit->text());
+    Preferences *prefs = Preferences::instance();
+    prefs->setLotDirectory(mDirectoryEdit->text());
 }
 
 void ZMapsDock::onLotDirectoryChanged()
 {
-	Preferences *prefs = Preferences::instance();
-	mDirectoryEdit->setText(prefs->lotDirectory());
+    Preferences *prefs = Preferences::instance();
+    mDirectoryEdit->setText(prefs->lotDirectory());
 }
 
 void ZMapsDock::changeEvent(QEvent *e)
@@ -121,62 +121,62 @@ void ZMapsDock::retranslateUi()
 class CustomFileSystemModel : public QFileSystemModel
 {
 public:
-	 QVariant headerData(int section, Qt::Orientation orientation, int role) const
-	 {
-		 if (role == Qt::TextAlignmentRole)
-		 {
-			 if (orientation == Qt::Horizontal) {
-				 switch (section)
-				 {
-				 case 1:
-					 return Qt::AlignRight;
-				 }
-			 }
-		 }
-		 return QFileSystemModel::headerData(section, orientation, role);
-	 }
+     QVariant headerData(int section, Qt::Orientation orientation, int role) const
+     {
+         if (role == Qt::TextAlignmentRole)
+         {
+             if (orientation == Qt::Horizontal) {
+                 switch (section)
+                 {
+                 case 1:
+                     return Qt::AlignRight;
+                 }
+             }
+         }
+         return QFileSystemModel::headerData(section, orientation, role);
+     }
 };
 */
 
 ZMapsView::ZMapsView(MainWindow *mainWindow, QWidget *parent)
     : QTreeView(parent)
-	, mMainWindow(mainWindow)
+    , mMainWindow(mainWindow)
 {
     setRootIsDecorated(false);
     setHeaderHidden(false);
     setItemsExpandable(false);
     setUniformRowHeights(true);
-	setDragEnabled(true);
-	setDefaultDropAction(Qt::MoveAction);
+    setDragEnabled(true);
+    setDefaultDropAction(Qt::MoveAction);
 
-	Preferences *prefs = Preferences::instance();
-	connect(prefs, SIGNAL(lotDirectoryChanged()), this, SLOT(onLotDirectoryChanged()));
+    Preferences *prefs = Preferences::instance();
+    connect(prefs, SIGNAL(lotDirectoryChanged()), this, SLOT(onLotDirectoryChanged()));
 
-	QDir lotDirectory(prefs->lotDirectory());
+    QDir lotDirectory(prefs->lotDirectory());
 
-	QFileSystemModel *model = new /*CustomFileSystemModel*/QFileSystemModel;
-	model->setRootPath(lotDirectory.absolutePath());
+    QFileSystemModel *model = new /*CustomFileSystemModel*/QFileSystemModel;
+    model->setRootPath(lotDirectory.absolutePath());
 
-	model->setFilter(QDir::Files);
-	model->setNameFilters(QStringList(QLatin1String("*.tmx")));
-	model->setNameFilterDisables(false); // hide filtered files
+    model->setFilter(QDir::Files);
+    model->setNameFilters(QStringList(QLatin1String("*.tmx")));
+    model->setNameFilterDisables(false); // hide filtered files
 
-	setModel(model);
+    setModel(model);
 
-	QHeaderView* hHeader = header();
-	hHeader->hideSection(2);
-	hHeader->hideSection(3);
+    QHeaderView* hHeader = header();
+    hHeader->hideSection(2);
+    hHeader->hideSection(3);
 
-	setRootIndex(model->index(lotDirectory.absolutePath()));
-	
-	//resizeColumnToContents(0);
-	header()->setStretchLastSection(false);
-	header()->setResizeMode(0, QHeaderView::Stretch);
-	header()->setResizeMode(1, QHeaderView::ResizeToContents);
+    setRootIndex(model->index(lotDirectory.absolutePath()));
+    
+    //resizeColumnToContents(0);
+    header()->setStretchLastSection(false);
+    header()->setResizeMode(0, QHeaderView::Stretch);
+    header()->setResizeMode(1, QHeaderView::ResizeToContents);
 
-//	model->setHeaderData(1, Qt::Horizontal, Qt::AlignRight, Qt::TextAlignmentRole);
+//    model->setHeaderData(1, Qt::Horizontal, Qt::AlignRight, Qt::TextAlignmentRole);
 
-	connect(this, SIGNAL(activated(QModelIndex)), SLOT(onActivated(QModelIndex)));
+    connect(this, SIGNAL(activated(QModelIndex)), SLOT(onActivated(QModelIndex)));
 }
 
 QSize ZMapsView::sizeHint() const
@@ -186,14 +186,14 @@ QSize ZMapsView::sizeHint() const
 
 void ZMapsView::onLotDirectoryChanged()
 {
-	Preferences *prefs = Preferences::instance();
-	QDir lotDirectory(prefs->lotDirectory());
-	setRootIndex(((QFileSystemModel*)model())->index(lotDirectory.absolutePath()));
+    Preferences *prefs = Preferences::instance();
+    QDir lotDirectory(prefs->lotDirectory());
+    setRootIndex(((QFileSystemModel*)model())->index(lotDirectory.absolutePath()));
 }
 
 void ZMapsView::mousePressEvent(QMouseEvent *event)
 {
-	QTreeView::mousePressEvent(event);
+    QTreeView::mousePressEvent(event);
 }
 
 void ZMapsView::mouseMoveEvent(QMouseEvent *event)
@@ -206,18 +206,18 @@ void ZMapsView::mouseMoveEvent(QMouseEvent *event)
 
      QDrag *drag = new QDrag(this);
      QMimeData *mimeData = new QMimeData;
-	 QUrl
-	 mimeData->setUrls(QList<QUrl>(QUrl()));
+     QUrl
+     mimeData->setUrls(QList<QUrl>(QUrl()));
      drag->setMimeData(mimeData);
      Qt::DropAction dropAction = drag->exec(Qt::CopyAction | Qt::MoveAction);
 #endif
-	 QTreeView::mouseMoveEvent(event);
+     QTreeView::mouseMoveEvent(event);
 }
 
 void ZMapsView::onActivated(const QModelIndex &index)
 {
-	QString path = ((QFileSystemModel*)model())->filePath(index);
-	mMainWindow->openFile(path);
+    QString path = ((QFileSystemModel*)model())->filePath(index);
+    mMainWindow->openFile(path);
 }
 
 void ZMapsView::currentRowChanged(const QModelIndex &index)

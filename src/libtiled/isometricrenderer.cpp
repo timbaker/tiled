@@ -350,9 +350,9 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *l
 
     QTransform baseTransform = painter->transform();
 
-	static QVector<const Cell*> cells(40); // or QVarLengthArray
+    static QVector<const Cell*> cells(40); // or QVarLengthArray
 
-	layerGroup->prepareDrawing(this, rect);
+    layerGroup->prepareDrawing(this, rect);
 
     for (int y = startPos.y(); y - tileHeight < rect.bottom();
          y += tileHeight / 2)
@@ -361,47 +361,47 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *l
 
         for (int x = startPos.x(); x < rect.right(); x += tileWidth) {
             if (layerGroup->orderedCellsAt(columnItr, cells)) {
-				foreach (const Cell *cell, cells) {
-					if (!cell->isEmpty()) {
-						const QPixmap &img = cell->tile->image();
-						const QPoint offset = cell->tile->tileset()->tileOffset();
+                foreach (const Cell *cell, cells) {
+                    if (!cell->isEmpty()) {
+                        const QPixmap &img = cell->tile->image();
+                        const QPoint offset = cell->tile->tileset()->tileOffset();
 
-						qreal m11 = 1;      // Horizontal scaling factor
-						qreal m12 = 0;      // Vertical shearing factor
-						qreal m21 = 0;      // Horizontal shearing factor
-						qreal m22 = 1;      // Vertical scaling factor
-						qreal dx = offset.x() + x;
-						qreal dy = offset.y() + y - img.height();
+                        qreal m11 = 1;      // Horizontal scaling factor
+                        qreal m12 = 0;      // Vertical shearing factor
+                        qreal m21 = 0;      // Horizontal shearing factor
+                        qreal m22 = 1;      // Vertical scaling factor
+                        qreal dx = offset.x() + x;
+                        qreal dy = offset.y() + y - img.height();
 
-						if (cell->flippedAntiDiagonally) {
-							// Use shearing to swap the X/Y axis
-							m11 = 0;
-							m12 = 1;
-							m21 = 1;
-							m22 = 0;
+                        if (cell->flippedAntiDiagonally) {
+                            // Use shearing to swap the X/Y axis
+                            m11 = 0;
+                            m12 = 1;
+                            m21 = 1;
+                            m22 = 0;
 
-							// Compensate for the swap of image dimensions
-							dy += img.height() - img.width();
-						}
-						if (cell->flippedHorizontally) {
-							m11 = -m11;
-							m21 = -m21;
-							dx += cell->flippedAntiDiagonally ? img.height()
-															 : img.width();
-						}
-						if (cell->flippedVertically) {
-							m12 = -m12;
-							m22 = -m22;
-							dy += cell->flippedAntiDiagonally ? img.width()
-															 : img.height();
-						}
+                            // Compensate for the swap of image dimensions
+                            dy += img.height() - img.width();
+                        }
+                        if (cell->flippedHorizontally) {
+                            m11 = -m11;
+                            m21 = -m21;
+                            dx += cell->flippedAntiDiagonally ? img.height()
+                                                             : img.width();
+                        }
+                        if (cell->flippedVertically) {
+                            m12 = -m12;
+                            m22 = -m22;
+                            dy += cell->flippedAntiDiagonally ? img.width()
+                                                             : img.height();
+                        }
 
-						const QTransform transform(m11, m12, m21, m22, dx, dy);
-						painter->setTransform(transform * baseTransform);
+                        const QTransform transform(m11, m12, m21, m22, dx, dy);
+                        painter->setTransform(transform * baseTransform);
 
-						painter->drawPixmap(0, 0, img);
-					}
-				}
+                        painter->drawPixmap(0, 0, img);
+                    }
+                }
             }
 
             // Advance to the next column
@@ -429,10 +429,10 @@ void IsometricRenderer::drawTileSelection(QPainter *painter,
                                           const QRegion &region,
                                           const QColor &color,
 #ifdef ZOMBOID
-										  const QRectF &exposed,
-										  const Layer *layer) const
+                                          const QRectF &exposed,
+                                          const Layer *layer) const
 #else
-										  const QRectF &exposed) const
+                                          const QRectF &exposed) const
 #endif
 {
     painter->setBrush(color);

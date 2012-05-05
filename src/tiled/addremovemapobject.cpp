@@ -55,7 +55,7 @@ AddRemoveMapObject::~AddRemoveMapObject()
 void AddRemoveMapObject::addObject()
 {
 #ifdef ZOMBOID
-	mMapDocument->mapObjectModel()->insertObject(mObjectGroup, mIndex, mMapObject);
+    mMapDocument->mapObjectModel()->insertObject(mObjectGroup, mIndex, mMapObject);
 #else
     if (mIndex == -1)
         mObjectGroup->addObject(mMapObject);
@@ -64,13 +64,13 @@ void AddRemoveMapObject::addObject()
 
     mMapDocument->emitObjectAdded(mMapObject);
 #endif
-	mOwnsObject = false;
+    mOwnsObject = false;
 }
 
 void AddRemoveMapObject::removeObject()
 {
 #ifdef ZOMBOID
-	mIndex = mMapDocument->mapObjectModel()->removeObject(mObjectGroup, mMapObject);
+    mIndex = mMapDocument->mapObjectModel()->removeObject(mObjectGroup, mMapObject);
 #else
     mIndex = mObjectGroup->removeObject(mMapObject);
     mMapDocument->emitObjectRemoved(mMapObject);

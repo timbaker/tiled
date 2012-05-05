@@ -71,9 +71,9 @@ public:
         Orthogonal,
         Isometric,
 #ifdef ZOMBOID
-		LevelIsometric,
+        LevelIsometric,
 #endif
-		Staggered
+        Staggered
     };
 
     /**
@@ -135,11 +135,11 @@ public:
     int tileHeight() const { return mTileHeight; }
 
 #ifdef ZOMBOID
-	void setCellsPerLevel(const QPoint &cellsPerLevel) { mCellsPerLevel = cellsPerLevel; }
-	QPoint cellsPerLevel() const { return mCellsPerLevel; }
+    void setCellsPerLevel(const QPoint &cellsPerLevel) { mCellsPerLevel = cellsPerLevel; }
+    QPoint cellsPerLevel() const { return mCellsPerLevel; }
 
-	void setMaxLevel(int level) { mMaxLevel = level; }
-	int maxLevel() const { return mMaxLevel; }
+    void setMaxLevel(int level) { mMaxLevel = level; }
+    int maxLevel() const { return mMaxLevel; }
 #endif
 
     /**
@@ -191,8 +191,8 @@ public:
 
 #ifdef ZOMBOID
     QList<Layer*> layers(Layer::Type type) const;
-	QList<ObjectGroup*> objectGroups() const;
-	QList<TileLayer*> tileLayers() const;
+    QList<ObjectGroup*> objectGroups() const;
+    QList<TileLayer*> tileLayers() const;
 #endif
 
     /**
@@ -270,9 +270,9 @@ public:
     bool isTilesetUsed(Tileset *tileset) const;
 
 #ifdef ZOMBOID
-	void addTileLayerGroup(ZTileLayerGroup *tileLayerGroup);
-	const QList<ZTileLayerGroup*> tileLayerGroups() const { return mTileLayerGroups; }
-	int tileLayerGroupCount() const { return mTileLayerGroups.size(); }
+    void addTileLayerGroup(ZTileLayerGroup *tileLayerGroup);
+    const QList<ZTileLayerGroup*> tileLayerGroups() const { return mTileLayerGroups; }
+    int tileLayerGroupCount() const { return mTileLayerGroups.size(); }
 #endif
 
     Map *clone() const;
@@ -299,9 +299,9 @@ private:
     QList<Layer*> mLayers;
     QList<Tileset*> mTilesets;
 #ifdef ZOMBOID
-	QPoint mCellsPerLevel;
-	int mMaxLevel;
-	QList<ZTileLayerGroup*> mTileLayerGroups;
+    QPoint mCellsPerLevel;
+    int mMaxLevel;
+    QList<ZTileLayerGroup*> mTileLayerGroups;
 #endif
 };
 

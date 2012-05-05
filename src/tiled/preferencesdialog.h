@@ -65,7 +65,7 @@ private slots:
     void exportObjectTypes();
 
 #ifdef ZOMBOID
-	void lotBrowse();
+    void lotBrowse();
 #endif
 
 private:

@@ -113,11 +113,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     , mActionHandler(new MapDocumentActionHandler(this))
     , mLayerDock(new LayerDock(this))
 #ifdef ZOMBOID
-	, mLevelsDock(new ZLevelsDock(this))
-	, mMapsDock(new ZMapsDock(this))
-	, mObjectsDock(new ZObjectsDock())
-	, mZoomComboBox(new QComboBox)
-	, mCurrentLayerLabel(new QLabel)
+    , mLevelsDock(new ZLevelsDock(this))
+    , mMapsDock(new ZMapsDock(this))
+    , mObjectsDock(new ZObjectsDock())
+    , mZoomComboBox(new QComboBox)
+    , mCurrentLayerLabel(new QLabel)
 #endif
     , mTilesetDock(new TilesetDock(this))
 #ifndef ZOMBOID
@@ -186,8 +186,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     addDockWidget(Qt::RightDockWidgetArea, mTilesetDock);
 
 #ifdef ZOMBOID
-	mZoomable = 0;
-	statusBar()->addPermanentWidget(mZoomComboBox);
+    mZoomable = 0;
+    statusBar()->addPermanentWidget(mZoomComboBox);
 #else
     statusBar()->addPermanentWidget(mZoomLabel);
 #endif
@@ -384,7 +384,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     connect(toolManager, SIGNAL(statusInfoChanged(QString)),
             this, SLOT(updateStatusInfoLabel(QString)));
 #ifdef ZOMBOID
-	statusBar()->addWidget(mCurrentLayerLabel);
+    statusBar()->addWidget(mCurrentLayerLabel);
 #endif
 
     mUi->menuView->addSeparator();
@@ -556,14 +556,14 @@ bool MainWindow::openFile(const QString &fileName,
         mapReader = &tmxMapReader;
 
 #ifdef ZOMBOID
-	QFileInfo fileInfo(fileName);
-	ZProgressManager::instance()->begin(QString(QLatin1String("Reading %1")).arg(fileInfo.fileName())); 
+    QFileInfo fileInfo(fileName);
+    ZProgressManager::instance()->begin(QString(QLatin1String("Reading %1")).arg(fileInfo.fileName())); 
 #endif
 
     Map *map = mapReader->read(fileName);
     if (!map) {
 #ifdef ZOMBOID
-		ZProgressManager::instance()->end();
+        ZProgressManager::instance()->end();
 #endif
         QMessageBox::critical(this, tr("Error Opening Map"),
                               mapReader->errorString());
@@ -572,7 +572,7 @@ bool MainWindow::openFile(const QString &fileName,
 
     addMapDocument(new MapDocument(map, fileName));
 #ifdef ZOMBOID
-	ZProgressManager::instance()->end();
+    ZProgressManager::instance()->end();
 #endif
     setRecentFile(fileName);
     return true;
@@ -762,10 +762,10 @@ bool MainWindow::confirmAllSave()
 {
     for (int i = 0; i < mDocumentManager->documentCount(); i++) {
 #ifdef ZOMBOID
-		if (!mDocumentManager->documents().at(i)->isModified())
-			continue;
+        if (!mDocumentManager->documents().at(i)->isModified())
+            continue;
 #endif
-		mDocumentManager->switchToDocument(i);
+        mDocumentManager->switchToDocument(i);
         if (!confirmSave())
             return false;
     }
@@ -1269,8 +1269,8 @@ void MainWindow::updateActions()
     updateZoomLabel(); // for the zoom actions
 
 #ifdef ZOMBOID
-	Layer *layer = mMapDocument ? mMapDocument->currentLayer() : 0;
-	mCurrentLayerLabel->setText(QString(QLatin1String("    Current layer: %1")).arg(layer ? layer->name() : QLatin1String("<none>")));
+    Layer *layer = mMapDocument ? mMapDocument->currentLayer() : 0;
+    mCurrentLayerLabel->setText(QString(QLatin1String("    Current layer: %1")).arg(layer ? layer->name() : QLatin1String("<none>")));
 #endif
 }
 
@@ -1289,13 +1289,13 @@ void MainWindow::updateZoomLabel()
     mUi->actionZoomNormal->setEnabled(scale != 1);
 
 #ifdef ZOMBOID
-	if (zoomable) {
-		mZoomComboBox->setEnabled(true);
-	} else {
-		int index = mZoomComboBox->findData((qreal)1.0);
-		mZoomComboBox->setCurrentIndex(index);
-		mZoomComboBox->setEnabled(false);
-	}
+    if (zoomable) {
+        mZoomComboBox->setEnabled(true);
+    } else {
+        int index = mZoomComboBox->findData((qreal)1.0);
+        mZoomComboBox->setCurrentIndex(index);
+        mZoomComboBox->setEnabled(false);
+    }
 #else
     if (zoomable)
         mZoomLabel->setText(tr("%1%").arg(scale * 100));
@@ -1473,9 +1473,9 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
     if (mMapDocument)
         mMapDocument->disconnect(this);
 #ifdef ZOMBOID
-	if (mZoomable)
-		mZoomable->connectToComboBox(0);
-	mZoomable = 0;
+    if (mZoomable)
+        mZoomable->connectToComboBox(0);
+    mZoomable = 0;
 #endif
 
     mMapDocument = mapDocument;
@@ -1483,8 +1483,8 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
     mActionHandler->setMapDocument(mMapDocument);
     mLayerDock->setMapDocument(mMapDocument);
 #ifdef ZOMBOID
-	mLevelsDock->setMapDocument(mMapDocument);
-	mObjectsDock->setMapDocument(mMapDocument);
+    mLevelsDock->setMapDocument(mMapDocument);
+    mObjectsDock->setMapDocument(mMapDocument);
 #endif
     mTilesetDock->setMapDocument(mMapDocument);
     AutomappingManager::instance()->setMapDocument(mMapDocument);
@@ -1500,11 +1500,11 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
         connect(mapDocument, SIGNAL(selectedObjectsChanged()),
                 SLOT(updateActions()));
 #ifdef ZOMBOID
-		if (MapView *mapView = mDocumentManager->currentMapView()) {
-			mZoomable = mapView->zoomable();
-			if (mZoomable)
-				mZoomable->connectToComboBox(mZoomComboBox);
-		}
+        if (MapView *mapView = mDocumentManager->currentMapView()) {
+            mZoomable = mapView->zoomable();
+            if (mZoomable)
+                mZoomable->connectToComboBox(mZoomComboBox);
+        }
 #endif
     }
 

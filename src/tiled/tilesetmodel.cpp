@@ -41,13 +41,13 @@ TilesetModel::TilesetModel(Tileset *tileset, QObject *parent):
 #ifdef ZOMBOID
 TilesetModel::~TilesetModel()
 {
-	disconnect(mMapDocument, SIGNAL(tileLayerNameChanged(Tile*)), this, SLOT(tileLayerNameChanged(Tile*)));
+    disconnect(mMapDocument, SIGNAL(tileLayerNameChanged(Tile*)), this, SLOT(tileLayerNameChanged(Tile*)));
 }
 
 void TilesetModel::setMapDocument(MapDocument *mapDocument)
 {
-	mMapDocument = mapDocument;
-	connect(mMapDocument, SIGNAL(tileLayerNameChanged(Tile*)), SLOT(tileLayerNameChanged(Tile*)));
+    mMapDocument = mapDocument;
+    connect(mMapDocument, SIGNAL(tileLayerNameChanged(Tile*)), SLOT(tileLayerNameChanged(Tile*)));
 }
 #endif
 
@@ -85,7 +85,7 @@ QVariant TilesetModel::data(const QModelIndex &index, int role) const
         if (Tile *tile = tileAt(index))
             return TilesetManager::instance()->layerName(tile);
     }
-	if (role == Qt::ToolTipRole) {
+    if (role == Qt::ToolTipRole) {
         if (Tile *tile = tileAt(index))
             return TilesetManager::instance()->layerName(tile);
     }
@@ -123,11 +123,11 @@ void TilesetModel::setTileset(Tileset *tileset)
 #ifdef ZOMBOID
 void TilesetModel::tileLayerNameChanged(Tile *tile)
 {
-	if (tile->tileset() == mTileset) {
-		int column = tile->id() % mTileset->columnCount();
-		int row = tile->id() / mTileset->columnCount();
-		QModelIndex index = createIndex(row, column, 0);
-		emit dataChanged(index, index);
-	}
+    if (tile->tileset() == mTileset) {
+        int column = tile->id() % mTileset->columnCount();
+        int row = tile->id() / mTileset->columnCount();
+        QModelIndex index = createIndex(row, column, 0);
+        emit dataChanged(index, index);
+    }
 }
 #endif

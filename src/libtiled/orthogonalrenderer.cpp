@@ -284,8 +284,8 @@ void OrthogonalRenderer::drawTileSelection(QPainter *painter,
                                            const QRegion &region,
                                            const QColor &color,
 #ifdef ZOMBOID
-										   const QRectF &exposed,
-										   const Layer *layer) const
+                                           const QRectF &exposed,
+                                           const Layer *layer) const
 #else
                                            const QRectF &exposed) const
 #endif

@@ -73,8 +73,8 @@ public:
                            const QRegion &region,
                            const QColor &color,
 #ifdef ZOMBOID
-							const QRectF &exposed,
-							const Layer *layer = 0) const;
+                            const QRectF &exposed,
+                            const Layer *layer = 0) const;
 #else
                            const QRectF &exposed) const;
 #endif
@@ -89,15 +89,15 @@ public:
 
 #ifdef ZOMBOID
     using MapRenderer::pixelToTileCoords;
-	QPointF pixelToTileCoords(qreal x, qreal y, const Layer *layer = 0) const;
+    QPointF pixelToTileCoords(qreal x, qreal y, const Layer *layer = 0) const;
 
-	using MapRenderer::tileToPixelCoords;
+    using MapRenderer::tileToPixelCoords;
     QPointF tileToPixelCoords(qreal x, qreal y, const Layer *layer = 0) const;
 #else
     using MapRenderer::pixelToTileCoords;
-	QPointF pixelToTileCoords(qreal x, qreal y) const;
+    QPointF pixelToTileCoords(qreal x, qreal y) const;
 
-	using MapRenderer::tileToPixelCoords;
+    using MapRenderer::tileToPixelCoords;
     QPointF tileToPixelCoords(qreal x, qreal y) const;
 #endif
 

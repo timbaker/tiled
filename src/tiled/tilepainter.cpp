@@ -59,9 +59,9 @@ void TilePainter::setCell(int x, int y, const Cell &cell)
 
     mTileLayer->setCell(layerX, layerY, cell);
 #ifdef ZOMBOID
-	mMapDocument->emitRegionChanged(QRegion(x, y, 1, 1), mTileLayer);
+    mMapDocument->emitRegionChanged(QRegion(x, y, 1, 1), mTileLayer);
 #else
-	mMapDocument->emitRegionChanged(QRegion(x, y, 1, 1));
+    mMapDocument->emitRegionChanged(QRegion(x, y, 1, 1));
 #endif
 }
 
@@ -83,9 +83,9 @@ void TilePainter::setCells(int x, int y,
                          region.translated(-mTileLayer->position()));
 
 #ifdef ZOMBOID
-	mMapDocument->emitRegionChanged(region, mTileLayer);
+    mMapDocument->emitRegionChanged(region, mTileLayer);
 #else
-	mMapDocument->emitRegionChanged(region);
+    mMapDocument->emitRegionChanged(region);
 #endif
 }
 
@@ -164,9 +164,9 @@ void TilePainter::erase(const QRegion &region)
 
     mTileLayer->erase(paintable.translated(-mTileLayer->position()));
 #ifdef ZOMBOID
-	mMapDocument->emitRegionChanged(paintable, mTileLayer);
+    mMapDocument->emitRegionChanged(paintable, mTileLayer);
 #else
-	mMapDocument->emitRegionChanged(paintable);
+    mMapDocument->emitRegionChanged(paintable);
 #endif
 }
 

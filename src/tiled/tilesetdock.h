@@ -125,15 +125,15 @@ private slots:
     void refreshTilesetMenu();
 
 #ifdef ZOMBOID
-	void thumbCurrentChanged();
-	void thumbSyncWithTabs();
+    void thumbCurrentChanged();
+    void thumbSyncWithTabs();
 
-	void moveTilesetUp();
-	void moveTilesetDown();
+    void moveTilesetUp();
+    void moveTilesetDown();
 
-	void layerSwitchToggled();
-	void autoSwitchLayerChanged(bool enable);
-	void switchLayerForTile(Tile *tile);
+    void layerSwitchToggled();
+    void autoSwitchLayerChanged(bool enable);
+    void switchLayerForTile(Tile *tile);
 #endif
 
 private:
@@ -164,19 +164,19 @@ private:
     QSignalMapper *mTilesetMenuMapper; //needed due to dynamic content
 
 #ifdef ZOMBOID
-	Zoomable *mZoomable;
-	QComboBox *mZoomComboBox;
-	QAction *mActionNewTileset;
-	QAction *mActionZoom;
-	QAction *mActionTilesetUp;
-	QAction *mActionTilesetDown;
+    Zoomable *mZoomable;
+    QComboBox *mZoomComboBox;
+    QAction *mActionNewTileset;
+    QAction *mActionZoom;
+    QAction *mActionTilesetUp;
+    QAction *mActionTilesetDown;
 
-	QIcon mIconTileLayer;
-	QIcon mIconTileLayerStop;
-	QToolButton *mButtonSwitchLayer;
-	QAction *mActionSwitchLayer;
+    QIcon mIconTileLayer;
+    QIcon mIconTileLayerStop;
+    QToolButton *mButtonSwitchLayer;
+    QAction *mActionSwitchLayer;
 
-	ZTilesetThumbView *mThumbView;
+    ZTilesetThumbView *mThumbView;
 #endif
 };
 

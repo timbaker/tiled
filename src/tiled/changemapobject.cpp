@@ -60,8 +60,8 @@ void ChangeMapObject::swap()
     const QString type = mMapObject->type();
 
 #ifdef ZOMBOID
-	mMapDocument->mapObjectModel()->setObjectName(mMapObject, mName);
-	mMapDocument->mapObjectModel()->setObjectType(mMapObject, mType);
+    mMapDocument->mapObjectModel()->setObjectName(mMapObject, mName);
+    mMapDocument->mapObjectModel()->setObjectType(mMapObject, mType);
 #else
     mMapObject->setName(mName);
     mMapObject->setType(mType);

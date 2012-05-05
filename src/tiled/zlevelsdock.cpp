@@ -45,14 +45,14 @@ using namespace Tiled::Internal;
 ZLevelsDock::ZLevelsDock(QWidget *parent)
     : QDockWidget(parent)
     , mView(new ZLevelsView())
-	, mMapDocument(0)
+    , mMapDocument(0)
 {
     setObjectName(QLatin1String("ZLevelsDock"));
 
     QWidget *widget = new QWidget(this);
     QVBoxLayout *layout = new QVBoxLayout(widget);
     layout->setMargin(5);
-	layout->addWidget(mView);
+    layout->addWidget(mView);
 
     QToolBar *toolbar = new QToolBar;
     toolbar->setFloatable(false);
@@ -72,25 +72,25 @@ ZLevelsDock::ZLevelsDock(QWidget *parent)
     connect(DocumentManager::instance(), SIGNAL(documentCloseRequested(int)),
             SLOT(documentCloseRequested(int)));
 
-	updateActions();
+    updateActions();
 }
 
 void ZLevelsDock::setMapDocument(MapDocument *mapDoc)
 {
-	if (mMapDocument) {
-		saveExpandedLevels(mMapDocument);
-		mMapDocument->disconnect(this);
-	}
+    if (mMapDocument) {
+        saveExpandedLevels(mMapDocument);
+        mMapDocument->disconnect(this);
+    }
 
-	mMapDocument = mapDoc;
+    mMapDocument = mapDoc;
 
     mView->setMapDocument(mapDoc);
 
-	if (mMapDocument) {
-		restoreExpandedLevels(mMapDocument);
-	}
+    if (mMapDocument) {
+        restoreExpandedLevels(mMapDocument);
+    }
 
-	updateActions();
+    updateActions();
 }
 
 void ZLevelsDock::changeEvent(QEvent *e)
@@ -116,26 +116,26 @@ void ZLevelsDock::updateActions()
 
 void ZLevelsDock::saveExpandedLevels(MapDocument *mapDoc)
 {
-	mExpandedLevels[mapDoc].clear();
-	foreach (ZTileLayerGroup *g, mapDoc->map()->tileLayerGroups()) {
-		if (mView->isExpanded(mView->model()->index(g)))
-			mExpandedLevels[mapDoc].append(g);
-	}
+    mExpandedLevels[mapDoc].clear();
+    foreach (ZTileLayerGroup *g, mapDoc->map()->tileLayerGroups()) {
+        if (mView->isExpanded(mView->model()->index(g)))
+            mExpandedLevels[mapDoc].append(g);
+    }
 }
 
 void ZLevelsDock::restoreExpandedLevels(MapDocument *mapDoc)
 {
-	if (!mExpandedLevels.contains(mapDoc))
-		mView->expandAll();
-	foreach (ZTileLayerGroup *g, mExpandedLevels[mapDoc])
-		mView->setExpanded(mView->model()->index(g), true);
-	mExpandedLevels[mapDoc].clear();
+    if (!mExpandedLevels.contains(mapDoc))
+        mView->expandAll();
+    foreach (ZTileLayerGroup *g, mExpandedLevels[mapDoc])
+        mView->setExpanded(mView->model()->index(g), true);
+    mExpandedLevels[mapDoc].clear();
 #if 0
-	// Also restore the selection
-	foreach (MapObject *o, mapDoc->selectedObjects()) {
-		QModelIndex index = mView->model()->index(o);
-		mView->selectionModel()->select(index, QItemSelectionModel::Select |  QItemSelectionModel::Rows);
-	}
+    // Also restore the selection
+    foreach (MapObject *o, mapDoc->selectedObjects()) {
+        QModelIndex index = mView->model()->index(o);
+        mView->selectionModel()->select(index, QItemSelectionModel::Select |  QItemSelectionModel::Rows);
+    }
 #endif
 }
 
@@ -143,25 +143,25 @@ void ZLevelsDock::documentCloseRequested(int index)
 {
     DocumentManager *documentManager = DocumentManager::instance();
     MapDocument *mapDoc = documentManager->documents().at(index);
-	mExpandedLevels.remove(mapDoc);
+    mExpandedLevels.remove(mapDoc);
 }
 
 ///// ///// ///// ///// /////
 
 ZLevelsView::ZLevelsView(QWidget *parent)
     : QTreeView(parent)
-	, mMapDocument(0)
-	, mSynching(false)
+    , mMapDocument(0)
+    , mSynching(false)
 {
     setRootIsDecorated(true);
     setHeaderHidden(true);
     setItemsExpandable(true);
     setUniformRowHeights(true);
 
-	setSelectionBehavior(QAbstractItemView::SelectRows);
-//	setSelectionMode(QAbstractItemView::ExtendedSelection);
+    setSelectionBehavior(QAbstractItemView::SelectRows);
+//    setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-	connect(this, SIGNAL(activated(QModelIndex)), SLOT(onActivated(QModelIndex)));
+    connect(this, SIGNAL(activated(QModelIndex)), SLOT(onActivated(QModelIndex)));
 }
 
 QSize ZLevelsView::sizeHint() const
@@ -171,27 +171,27 @@ QSize ZLevelsView::sizeHint() const
 
 void ZLevelsView::setMapDocument(MapDocument *mapDoc)
 {
-	if (mapDoc == mMapDocument)
-		return;
+    if (mapDoc == mMapDocument)
+        return;
 
-	if (mMapDocument) {
-		mMapDocument->disconnect(this);
-	}
+    if (mMapDocument) {
+        mMapDocument->disconnect(this);
+    }
 
-	mMapDocument = mapDoc;
+    mMapDocument = mapDoc;
 
-	if (mMapDocument) {
-		setModel(mModel = mMapDocument->levelsModel());
-		model()->setMapDocument(mapDoc);
-		header()->setResizeMode(0, QHeaderView::Stretch); // 2 equal-sized columns, user can't adjust
+    if (mMapDocument) {
+        setModel(mModel = mMapDocument->levelsModel());
+        model()->setMapDocument(mapDoc);
+        header()->setResizeMode(0, QHeaderView::Stretch); // 2 equal-sized columns, user can't adjust
 
-		connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
+        connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
                 this, SLOT(currentLayerIndexChanged(int)));
-	} else {
-		if (model())
-			model()->setMapDocument(0);
-		setModel(mModel = 0);
-	}
+    } else {
+        if (model())
+            model()->setMapDocument(0);
+        setModel(mModel = 0);
+    }
 
 }
 
@@ -203,47 +203,47 @@ void ZLevelsView::onActivated(const QModelIndex &index)
 
 void ZLevelsView::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
 {
-	QTreeView::selectionChanged(selected, deselected);
+    QTreeView::selectionChanged(selected, deselected);
 
-	if (!mMapDocument || mSynching)
-		return;
+    if (!mMapDocument || mSynching)
+        return;
 
-	QModelIndexList selectedRows = selectionModel()->selectedRows();
-	int count = selectedRows.count();
+    QModelIndexList selectedRows = selectionModel()->selectedRows();
+    int count = selectedRows.count();
 
-	if (count == 1) {
-		QModelIndex index = selectedRows.first();
-		if (TileLayer *tl = model()->toTileLayer(index)) {
-			int layerIndex = mMapDocument->map()->layers().indexOf(tl);
-			if (layerIndex != mMapDocument->currentLayerIndex()) {
-				mSynching = true;
-				mMapDocument->setCurrentLayerIndex(layerIndex);
-				mSynching = false;
-			}
-		}
-	}
+    if (count == 1) {
+        QModelIndex index = selectedRows.first();
+        if (TileLayer *tl = model()->toTileLayer(index)) {
+            int layerIndex = mMapDocument->map()->layers().indexOf(tl);
+            if (layerIndex != mMapDocument->currentLayerIndex()) {
+                mSynching = true;
+                mMapDocument->setCurrentLayerIndex(layerIndex);
+                mSynching = false;
+            }
+        }
+    }
 }
 
 void ZLevelsView::currentLayerIndexChanged(int index)
 {
-	if (mSynching)
-		return;
-	
+    if (mSynching)
+        return;
+    
     if (index > -1) {
-		Layer *layer = mMapDocument->currentLayer();
-		if (TileLayer *tl = layer->asTileLayer()) {
-			if (tl->group()) {
-				mSynching = true;
-				setCurrentIndex(model()->index(tl));
-				mSynching = false;
-				return;
-			}
-		}
+        Layer *layer = mMapDocument->currentLayer();
+        if (TileLayer *tl = layer->asTileLayer()) {
+            if (tl->group()) {
+                mSynching = true;
+                setCurrentIndex(model()->index(tl));
+                mSynching = false;
+                return;
+            }
+        }
     }
 
-	// Selected no layer, or a layer not in a ZTileLayerGroup
-	mSynching = true;
+    // Selected no layer, or a layer not in a ZTileLayerGroup
+    mSynching = true;
     setCurrentIndex(QModelIndex());
-	mSynching = false;
+    mSynching = false;
 }
 

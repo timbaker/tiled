@@ -47,8 +47,8 @@ MoveMapObjectToGroup::MoveMapObjectToGroup(MapDocument *mapDocument,
 void MoveMapObjectToGroup::undo()
 {
 #ifdef ZOMBOID
-	mMapDocument->mapObjectModel()->removeObject(mNewObjectGroup, mMapObject);
-	mMapDocument->mapObjectModel()->insertObject(mOldObjectGroup, -1, mMapObject);
+    mMapDocument->mapObjectModel()->removeObject(mNewObjectGroup, mMapObject);
+    mMapDocument->mapObjectModel()->insertObject(mOldObjectGroup, -1, mMapObject);
 #else
     mNewObjectGroup->removeObject(mMapObject);
     mMapDocument->emitObjectRemoved(mMapObject);
@@ -61,8 +61,8 @@ void MoveMapObjectToGroup::undo()
 void MoveMapObjectToGroup::redo()
 {
 #ifdef ZOMBOID
-	mMapDocument->mapObjectModel()->removeObject(mOldObjectGroup, mMapObject);
-	mMapDocument->mapObjectModel()->insertObject(mNewObjectGroup, -1, mMapObject);
+    mMapDocument->mapObjectModel()->removeObject(mOldObjectGroup, mMapObject);
+    mMapDocument->mapObjectModel()->insertObject(mNewObjectGroup, -1, mMapObject);
 #else
     mOldObjectGroup->removeObject(mMapObject);
     mMapDocument->emitObjectRemoved(mMapObject);

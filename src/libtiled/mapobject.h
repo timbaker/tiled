@@ -229,8 +229,8 @@ public:
     MapObject *clone() const;
 
 #ifdef ZOMBOID
-	bool isVisible() const { return mVisible; }
-	void setVisible(bool visible) { mVisible = visible; }
+    bool isVisible() const { return mVisible; }
+    void setVisible(bool visible) { mVisible = visible; }
 #endif
 
 private:
@@ -243,7 +243,7 @@ private:
     Tile *mTile;
     ObjectGroup *mObjectGroup;
 #ifdef ZOMBOID
-	bool mVisible;
+    bool mVisible;
 #endif
 };
 

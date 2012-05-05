@@ -40,9 +40,9 @@ class TilesetView : public QTableView
 
 public:
 #ifdef ZOMBOID
-	TilesetView(MapDocument *mapDocument, Zoomable *zoomable, QWidget *parent = 0);
+    TilesetView(MapDocument *mapDocument, Zoomable *zoomable, QWidget *parent = 0);
 #else
-	TilesetView(MapDocument *mapDocument, QWidget *parent = 0);
+    TilesetView(MapDocument *mapDocument, QWidget *parent = 0);
 #endif
 
     QSize sizeHint() const;
@@ -71,8 +71,8 @@ private slots:
     void adjustScale();
 
 #ifdef ZOMBOID
-	// Preferences signal
-	void autoSwitchLayerChanged(bool enabled);
+    // Preferences signal
+    void autoSwitchLayerChanged(bool enabled);
 #endif
 
 private:
@@ -80,7 +80,7 @@ private:
     MapDocument *mMapDocument;
     bool mDrawGrid;
 #ifdef ZOMBOID
-	bool mShowLayerNames;
+    bool mShowLayerNames;
 #endif
 };
 

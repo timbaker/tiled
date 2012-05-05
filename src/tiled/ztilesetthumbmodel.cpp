@@ -30,8 +30,8 @@ using namespace Tiled;
 using namespace Tiled::Internal;
 
 ZTilesetThumbModel::ZTilesetThumbModel(QObject *parent)
-	: QAbstractListModel(parent)
-	, mMapDocument(0)
+    : QAbstractListModel(parent)
+    , mMapDocument(0)
 {
 }
 
@@ -39,9 +39,9 @@ int ZTilesetThumbModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
         return 0;
-	if (!mMapDocument)
-		return 0;
-	return mMapDocument->map()->tilesets().count();
+    if (!mMapDocument)
+        return 0;
+    return mMapDocument->map()->tilesets().count();
 }
 
 int ZTilesetThumbModel::columnCount(const QModelIndex &parent) const
@@ -53,12 +53,12 @@ QVariant ZTilesetThumbModel::data(const QModelIndex &index, int role) const
 {
     if (role == Qt::DisplayRole) {
         if (Tileset *ts = tilesetAt(index))
-			return ts->name();
-	}
+            return ts->name();
+    }
     if (role == Qt::EditRole) {
         if (Tileset *ts = tilesetAt(index))
-			return ts->name();
-	}
+            return ts->name();
+    }
 
     return QVariant();
 }
@@ -103,15 +103,15 @@ bool ZTilesetThumbModel::setData(const QModelIndex &index, const QVariant &value
 {
     if (role == Qt::EditRole) {
         if (Tileset *ts = tilesetAt(index)) {
-			QString newName = value.toString();
-			RenameTileset *rename = new RenameTileset(mMapDocument,
-													ts,
-													ts->name(), newName);
-			mMapDocument->undoStack()->push(rename);
-			return true;
-		}
-	}
-	return false;
+            QString newName = value.toString();
+            RenameTileset *rename = new RenameTileset(mMapDocument,
+                                                    ts,
+                                                    ts->name(), newName);
+            mMapDocument->undoStack()->push(rename);
+            return true;
+        }
+    }
+    return false;
 }
 
 QVariant ZTilesetThumbModel::headerData(int /* section */,
@@ -126,8 +126,8 @@ QVariant ZTilesetThumbModel::headerData(int /* section */,
 Qt::ItemFlags ZTilesetThumbModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags rc = QAbstractItemModel::flags(index);
-	rc |= Qt::ItemIsEditable;
-	return rc;
+    rc |= Qt::ItemIsEditable;
+    return rc;
 }
 
 Tileset *ZTilesetThumbModel::tilesetAt(const QModelIndex &index) const
@@ -135,27 +135,27 @@ Tileset *ZTilesetThumbModel::tilesetAt(const QModelIndex &index) const
     if (!index.isValid())
         return 0;
 
-	if (!mMapDocument)
-		return 0;
+    if (!mMapDocument)
+        return 0;
 
-	return mMapDocument->map()->tilesets().at(index.row());
+    return mMapDocument->map()->tilesets().at(index.row());
 }
 
 QModelIndex ZTilesetThumbModel::index(Tileset *ts) const
 {
-	const int row = mMapDocument->map()->tilesets().indexOf(ts);
-	return createIndex(row, 0, 0);
+    const int row = mMapDocument->map()->tilesets().indexOf(ts);
+    return createIndex(row, 0, 0);
 }
 
 void ZTilesetThumbModel::setMapDocument(MapDocument *mapDoc)
 {
-	if (mMapDocument == mapDoc)
-		return;
-	if (mMapDocument)
-		mMapDocument->disconnect(this);
-	beginResetModel();
-	mMapDocument = mapDoc;
-	if (mMapDocument) {
+    if (mMapDocument == mapDoc)
+        return;
+    if (mMapDocument)
+        mMapDocument->disconnect(this);
+    beginResetModel();
+    mMapDocument = mapDoc;
+    if (mMapDocument) {
         connect(mMapDocument, SIGNAL(tilesetAdded(int,Tileset*)),
                 SLOT(tilesetAdded(int,Tileset*)));
         connect(mMapDocument, SIGNAL(tilesetRemoved(Tileset*)),
@@ -166,37 +166,37 @@ void ZTilesetThumbModel::setMapDocument(MapDocument *mapDoc)
                 SLOT(tilesetNameChanged(Tileset*)));
         connect(mMapDocument, SIGNAL(tilesetFileNameChanged(Tileset*)),
                 SLOT(tilesetFileNameChanged(Tileset*)));
-	}
-	endResetModel();
+    }
+    endResetModel();
 }
 
 void ZTilesetThumbModel::tilesetAdded(int index, Tileset *tileset)
 {
-	reset();
+    reset();
 }
 
 void ZTilesetThumbModel::tilesetChanged(Tileset *tileset)
 {
-	reset();
+    reset();
 }
 
 void ZTilesetThumbModel::tilesetRemoved(Tileset *tileset)
 {
-	reset();
+    reset();
 }
 
 void ZTilesetThumbModel::tilesetMoved(int from, int to)
 {
-	int start = qMin(from, to);
-	int end = qMax(from, to);
-	// FIXME: should use beingMoveRows()/endMoveRows()
-	emit dataChanged(createIndex(start, 0, 0), createIndex(end, 0, 0));
+    int start = qMin(from, to);
+    int end = qMax(from, to);
+    // FIXME: should use beingMoveRows()/endMoveRows()
+    emit dataChanged(createIndex(start, 0, 0), createIndex(end, 0, 0));
 }
 
 void ZTilesetThumbModel::tilesetNameChanged(Tileset *tileset)
 {
-	QModelIndex index = this->index(tileset);
-	emit dataChanged(index, index);
+    QModelIndex index = this->index(tileset);
+    emit dataChanged(index, index);
 }
 
 void ZTilesetThumbModel::tilesetFileNameChanged(Tileset *tileset)

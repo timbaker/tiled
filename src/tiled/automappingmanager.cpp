@@ -135,7 +135,7 @@ void AutomappingManager::autoMapInternal(QRegion where, Layer *touchedLayer)
 #else
     mMapDocument->emitRegionChanged(*passedRegion);
 #endif
-	delete passedRegion;
+    delete passedRegion;
     mMapDocument->setCurrentLayerIndex(map->indexOfLayer(layer));
 
     if (!mWarning.isEmpty())

@@ -158,8 +158,8 @@ public:
     QRect bounds() const { return QRect(mX, mY, mWidth, mHeight); }
 
 #ifdef ZOMBOID
-	void setLevel(int level) { mLevel = level; }
-	int level() const { return mLevel; }
+    void setLevel(int level) { mLevel = level; }
+    int level() const { return mLevel; }
 #endif
 
     virtual bool isEmpty() const = 0;
@@ -234,7 +234,7 @@ protected:
     int mWidth;
     int mHeight;
 #ifdef ZOMBOID
-	int mLevel;
+    int mLevel;
 #endif
     float mOpacity;
     bool mVisible;

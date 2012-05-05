@@ -210,15 +210,15 @@ private:
     MapDocumentActionHandler *mActionHandler;
     LayerDock *mLayerDock;
 #ifdef ZOMBOID
-	ZLevelsDock *mLevelsDock;
-	ZMapsDock *mMapsDock;
-	ZObjectsDock *mObjectsDock;
-	Zoomable *mZoomable;
-	QComboBox *mZoomComboBox;
+    ZLevelsDock *mLevelsDock;
+    ZMapsDock *mMapsDock;
+    ZObjectsDock *mObjectsDock;
+    Zoomable *mZoomable;
+    QComboBox *mZoomComboBox;
 #endif
     TilesetDock *mTilesetDock;
 #ifdef ZOMBOID
-	QLabel *mCurrentLayerLabel;
+    QLabel *mCurrentLayerLabel;
 #else
     QLabel *mZoomLabel;
 #endif

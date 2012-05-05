@@ -40,49 +40,49 @@ class ZomboidScene;
 class ZomboidTileLayerGroup : public ZTileLayerGroup
 {
 public:
-	ZomboidTileLayerGroup(ZomboidScene *mapScene, int level);
-	bool orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const;
+    ZomboidTileLayerGroup(ZomboidScene *mapScene, int level);
+    bool orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const;
 
-	// Layer
-	virtual QRect bounds() const;
+    // Layer
+    virtual QRect bounds() const;
 
-	// TileLayer
-	virtual QMargins drawMargins() const;
+    // TileLayer
+    virtual QMargins drawMargins() const;
 
-	// ZTileLayerGroup
+    // ZTileLayerGroup
     virtual void addTileLayer(TileLayer *layer, int index);
     virtual void removeTileLayer(TileLayer *layer);
-	virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect);
+    virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect);
 
-	void synch();
+    void synch();
 
-	ZomboidScene *mMapScene;
-	int mLevel;
+    ZomboidScene *mMapScene;
+    int mLevel;
 
-	bool mAnyVisibleLayers;
-	QRect mTileBounds;
-	QRect mLotTileBounds;
-	QMargins mDrawMargins;
+    bool mAnyVisibleLayers;
+    QRect mTileBounds;
+    QRect mLotTileBounds;
+    QMargins mDrawMargins;
 
-	struct LotLayers
-	{
-		LotLayers()
-		{
-			mLayerGroup = 0;
-		}
-		LotLayers(const MapObject *mapObject, const ZLot *lot, const ZTileLayerGroup *layerGroup)
-			: mMapObject(mapObject)
-			, mLot(lot)
-			, mLayerGroup(layerGroup)
-		{
-		}
-		const ZLot *mLot;
-		const MapObject *mMapObject;
-		const ZTileLayerGroup *mLayerGroup;
-	};
-	QVector<LotLayers> mPreparedLotLayers;
+    struct LotLayers
+    {
+        LotLayers()
+        {
+            mLayerGroup = 0;
+        }
+        LotLayers(const MapObject *mapObject, const ZLot *lot, const ZTileLayerGroup *layerGroup)
+            : mMapObject(mapObject)
+            , mLot(lot)
+            , mLayerGroup(layerGroup)
+        {
+        }
+        const ZLot *mLot;
+        const MapObject *mMapObject;
+        const ZTileLayerGroup *mLayerGroup;
+    };
+    QVector<LotLayers> mPreparedLotLayers;
 
-	QVector<LotLayers> mVisibleLotLayers;
+    QVector<LotLayers> mVisibleLotLayers;
 };
 
 ///// ///// ///// ///// /////
@@ -97,21 +97,21 @@ public:
     ZomboidScene(QObject *parent);
     ~ZomboidScene();
 
-	// accessed by ZomboidTileLayerGroup
-	QList<MapObject*> mLotMapObjects;
-	QMap<MapObject*,ZLot*> mMapObjectToLot;
+    // accessed by ZomboidTileLayerGroup
+    QList<MapObject*> mLotMapObjects;
+    QMap<MapObject*,ZLot*> mMapObjectToLot;
 
-	// MapScene
-	virtual void setMapDocument(MapDocument *mapDoc);
+    // MapScene
+    virtual void setMapDocument(MapDocument *mapDoc);
 
 private slots:
     virtual void refreshScene();
 
     virtual void regionChanged(const QRegion &region, Layer *layer);
 
-	virtual void mapChanged();
+    virtual void mapChanged();
 
-	void layerGroupVisibilityChanged(ZTileLayerGroup *g);
+    void layerGroupVisibilityChanged(ZTileLayerGroup *g);
 
     virtual void layerAdded(int index);
     virtual void layerAboutToBeRemoved(int index);
@@ -119,37 +119,37 @@ private slots:
     virtual void layerChanged(int index);
     virtual void layerRenamed(int index);
 
-	void onLotAdded(ZLot *lot, MapObject *mapObject);
-	void onLotRemoved(ZLot *lot, MapObject *mapObject);
-	void onLotUpdated(ZLot *lot, MapObject *mapObject);
+    void onLotAdded(ZLot *lot, MapObject *mapObject);
+    void onLotRemoved(ZLot *lot, MapObject *mapObject);
+    void onLotUpdated(ZLot *lot, MapObject *mapObject);
 protected:
-	void layerGroupAboutToChange(TileLayer *tl, ZTileLayerGroup *newGroup);
-	void layerGroupChanged(TileLayer *tl, ZTileLayerGroup *oldGroup);
+    void layerGroupAboutToChange(TileLayer *tl, ZTileLayerGroup *newGroup);
+    void layerGroupChanged(TileLayer *tl, ZTileLayerGroup *oldGroup);
 
-	void layerLevelAboutToChange(int index, int newLevel);
-	void layerLevelChanged(int index, int oldLevel);
+    void layerLevelAboutToChange(int index, int newLevel);
+    void layerLevelChanged(int index, int oldLevel);
 
-	// QGraphicsScene
-	virtual void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
-	virtual void dragMoveEvent(QGraphicsSceneDragDropEvent *event);
-	virtual void dragLeaveEvent(QGraphicsSceneDragDropEvent *event);
-	virtual void dropEvent(QGraphicsSceneDragDropEvent *event);
- 
-	// MapScene
-	virtual QGraphicsItem *createLayerItem(Layer *layer);
-	virtual void updateCurrentLayerHighlight();
+    // QGraphicsScene
+    virtual void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
+    virtual void dragMoveEvent(QGraphicsSceneDragDropEvent *event);
+    virtual void dragLeaveEvent(QGraphicsSceneDragDropEvent *event);
+    virtual void dropEvent(QGraphicsSceneDragDropEvent *event);
 
-	bool levelForLayer(Layer *layer, int *level = 0);
-	void synchWithTileLayers();
-	void synchWithTileLayer(TileLayer *tl);
+    // MapScene
+    virtual QGraphicsItem *createLayerItem(Layer *layer);
+    virtual void updateCurrentLayerHighlight();
 
-	void setGraphicsSceneZOrder();
-	int levelZOrder(int level);
+    bool levelForLayer(Layer *layer, int *level = 0);
+    void synchWithTileLayers();
+    void synchWithTileLayer(TileLayer *tl);
+
+    void setGraphicsSceneZOrder();
+    int levelZOrder(int level);
 private:
-	QMap<int,ZTileLayerGroup*> mTileLayerGroups;
-	QMap<int,ZTileLayerGroupItem*> mTileLayerGroupItems;
-	ZLotManager mLotManager;
-	MapObjectItem *mDnDMapObjectItem;
+    QMap<int,ZTileLayerGroup*> mTileLayerGroups;
+    QMap<int,ZTileLayerGroupItem*> mTileLayerGroupItems;
+    ZLotManager mLotManager;
+    MapObjectItem *mDnDMapObjectItem;
 };
 
 } // namespace Internal

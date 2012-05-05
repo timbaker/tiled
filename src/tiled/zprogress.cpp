@@ -25,55 +25,55 @@ ZProgressManager *ZProgressManager::mInstance = 0;
 
 ZProgressManager *ZProgressManager::instance()
 {
-	if (!mInstance)
-		mInstance = new ZProgressManager();
-	return mInstance;
+    if (!mInstance)
+        mInstance = new ZProgressManager();
+    return mInstance;
 }
 
 ZProgressManager::ZProgressManager()
-	: mMainWindow(0)
-	, mDialog(0)
-	, mDepth(0)
+    : mMainWindow(0)
+    , mDialog(0)
+    , mDepth(0)
 {
-	mInstance = this;
+    mInstance = this;
 }
 
 
 void ZProgressManager::setMainWindow(QWidget *mainWindow)
 {
-	if (mMainWindow)
-		return;
-	mMainWindow = mainWindow;
-	mDialog = new QDialog(mainWindow);
-	QVBoxLayout *layout = new QVBoxLayout();
-	mLabel = new QLabel();
-	mLabel->setMinimumSize(300, 20);
-	layout->addWidget(mLabel);
-	mDialog->setWindowModality(Qt::WindowModal);
-	mDialog->setLayout(layout);
+    if (mMainWindow)
+        return;
+    mMainWindow = mainWindow;
+    mDialog = new QDialog(mainWindow);
+    QVBoxLayout *layout = new QVBoxLayout();
+    mLabel = new QLabel();
+    mLabel->setMinimumSize(300, 20);
+    layout->addWidget(mLabel);
+    mDialog->setWindowModality(Qt::WindowModal);
+    mDialog->setLayout(layout);
 }
 
 void ZProgressManager::begin(const QString &text)
 {
-	mLabel->setText(text);
-	if (mDepth++ == 0)
-		mDialog->show();
-	qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    mLabel->setText(text);
+    if (mDepth++ == 0)
+        mDialog->show();
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
 void ZProgressManager::update(const QString &text)
 {
-	Q_ASSERT(mDepth > 0);
-	mLabel->setText(text);
-	qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    Q_ASSERT(mDepth > 0);
+    mLabel->setText(text);
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
 void ZProgressManager::end()
 {
-	Q_ASSERT(mDepth > 0);
-//	mDialog->setValue(mDialog->maximum()); // hides dialog!
-	if (--mDepth == 0)
-		mDialog->hide();
-	qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    Q_ASSERT(mDepth > 0);
+//    mDialog->setValue(mDialog->maximum()); // hides dialog!
+    if (--mDepth == 0)
+        mDialog->hide();
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 

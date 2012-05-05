@@ -509,14 +509,14 @@ void QString_split(const QChar &sep, QString::SplitBehavior behavior, Qt::CaseSe
     while ((end = in.indexOf(sep, start, cs)) != -1) {
         if (start != end || behavior == QString::KeepEmptyParts) {
             out.append(start);
-			out.append(end - start);
-		}
+            out.append(end - start);
+        }
         start = end + 1;
     }
     if (start != in.size() || behavior == QString::KeepEmptyParts) {
         out.append(start);
-		out.append(in.size() - start);
-	}
+        out.append(in.size() - start);
+    }
 }
 #endif
 
@@ -524,9 +524,9 @@ void MapReaderPrivate::decodeCSVLayerData(TileLayer *tileLayer, const QString &t
 {
     QString trimText = text.trimmed();
 #if defined(ZOMBOID) /*&& defined(_DEBUG)*/
-	static QVector<int> tiles;
-	tiles.clear();
-	QString_split(QLatin1Char(','), QString::KeepEmptyParts, Qt::CaseSensitive, trimText, tiles);
+    static QVector<int> tiles;
+    tiles.clear();
+    QString_split(QLatin1Char(','), QString::KeepEmptyParts, Qt::CaseSensitive, trimText, tiles);
 
     if (tiles.count() / 2 != tileLayer->width() * tileLayer->height()) {
         xml.raiseError(tr("Corrupt layer data for layer '%1'")
@@ -534,13 +534,13 @@ void MapReaderPrivate::decodeCSVLayerData(TileLayer *tileLayer, const QString &t
         return;
     }
 
-	QString tile;
+    QString tile;
 
     for (int y = 0; y < tileLayer->height(); y++) {
         for (int x = 0; x < tileLayer->width(); x++) {
             bool conversionOk;
-			int k = (y * tileLayer->width() + x) * 2;
-			tile = trimText.mid(tiles[k], tiles[k + 1]);
+            int k = (y * tileLayer->width() + x) * 2;
+            tile = trimText.mid(tiles[k], tiles[k + 1]);
             const uint gid = tile.toUInt(&conversionOk);
             if (!conversionOk) {
                 xml.raiseError(
@@ -552,7 +552,7 @@ void MapReaderPrivate::decodeCSVLayerData(TileLayer *tileLayer, const QString &t
         }
     }
 #else
-	QStringList tiles = trimText.split(QLatin1Char(','));
+    QStringList tiles = trimText.split(QLatin1Char(','));
 
     if (tiles.length() != tileLayer->width() * tileLayer->height()) {
         xml.raiseError(tr("Corrupt layer data for layer '%1'")

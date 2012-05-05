@@ -35,13 +35,13 @@ class ZTileLayerGroupItem : public QGraphicsItem
 public:
     ZTileLayerGroupItem(ZTileLayerGroup *layerGroup, MapDocument *mapDoc);
 
-	void tileLayerChanged(TileLayer *layer);
+    void tileLayerChanged(TileLayer *layer);
 
-	bool ownsTileLayer(TileLayer *layer);
+    bool ownsTileLayer(TileLayer *layer);
 
     virtual void syncWithTileLayers();
 
-	ZTileLayerGroup *tileLayerGroup() const { return mLayerGroup; }
+    ZTileLayerGroup *tileLayerGroup() const { return mLayerGroup; }
 
     // QGraphicsItem
     QRectF boundingRect() const;
@@ -52,7 +52,7 @@ public:
 protected:
     ZTileLayerGroup *mLayerGroup;
     MapDocument *mMapDocument;
-	MapRenderer *mRenderer;
+    MapRenderer *mRenderer;
     QRectF mBoundingRect;
 };
 

@@ -32,34 +32,34 @@ namespace Tiled {
 ///// ///// ///// ///// /////
 
 ZLotTileLayerGroup::ZLotTileLayerGroup(int level, ZLot *owner)
-	: ZTileLayerGroup(level)
-	, mLot(owner)
+    : ZTileLayerGroup(level)
+    , mLot(owner)
 {
 }
 
 bool ZLotTileLayerGroup::orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const
 {
-	bool cleared = false;
-	foreach (TileLayer *tl, mLayers) {
-		if (!tl->isVisible())
-			continue;
+    bool cleared = false;
+    foreach (TileLayer *tl, mLayers) {
+        if (!tl->isVisible())
+            continue;
 #if 0 // DO NOT USE - VERY SLOW
-		if (tl->isEmpty())
-			continue;
+        if (tl->isEmpty())
+            continue;
 #endif
-		QPoint pos = point - tl->position();
-		if (tl->contains(pos)) {
-			const Cell *cell = &tl->cellAt(pos);
-			if (!cell->isEmpty()) {
-				if (!cleared) {
-					cells.clear();
-					cleared = true;
-				}
-				cells.append(cell);
-			}
-		}
-	}
-	return !cells.empty();
+        QPoint pos = point - tl->position();
+        if (tl->contains(pos)) {
+            const Cell *cell = &tl->cellAt(pos);
+            if (!cell->isEmpty()) {
+                if (!cleared) {
+                    cells.clear();
+                    cleared = true;
+                }
+                cells.append(cell);
+            }
+        }
+    }
+    return !cells.empty();
 }
 
 ///// ///// ///// ///// /////
@@ -67,7 +67,7 @@ bool ZLotTileLayerGroup::orderedCellsAt(const QPoint &point, QVector<const Cell*
 // from map.cpp
 static void maxMargins(const QMargins &a,
                            const QMargins &b,
-						   QMargins &out)
+                           QMargins &out)
 {
     out.setLeft(qMax(a.left(), b.left()));
     out.setTop(qMax(a.top(), b.top()));
@@ -76,87 +76,87 @@ static void maxMargins(const QMargins &a,
 }
 
 ZLot::ZLot(Map *map, Map::Orientation orient)
-	: mMap(map)
-	, mOrientation(orient)
+    : mMap(map)
+    , mOrientation(orient)
 {
-	int index = 0;
-	foreach (Layer *layer, mMap->layers()) {
-		if (TileLayer *tl = layer->asTileLayer()) {
-			if (tl->name().contains(QLatin1String("NoRender")))
-				continue;
-			if (tl->isEmpty()) // SLOW - checks every cell
-				continue;
-			layer->setVisible(true);
-			uint level;
-			if (groupForTileLayer(tl, &level)) {
-				tl->setLevel(level);
-				if (!mLevelToTileLayers.contains(level))
-					mLevelToTileLayers[level] = new ZLotTileLayerGroup(level, this);
-				ZLotTileLayerGroup *layerGroup = mLevelToTileLayers[level];
-				layerGroup->addTileLayer(tl, index);
-				mLayersByName[layer->name()].append(layer);
-				++index;
-			}
-		}
-	}
+    int index = 0;
+    foreach (Layer *layer, mMap->layers()) {
+        if (TileLayer *tl = layer->asTileLayer()) {
+            if (tl->name().contains(QLatin1String("NoRender")))
+                continue;
+            if (tl->isEmpty()) // SLOW - checks every cell
+                continue;
+            layer->setVisible(true);
+            uint level;
+            if (groupForTileLayer(tl, &level)) {
+                tl->setLevel(level);
+                if (!mLevelToTileLayers.contains(level))
+                    mLevelToTileLayers[level] = new ZLotTileLayerGroup(level, this);
+                ZLotTileLayerGroup *layerGroup = mLevelToTileLayers[level];
+                layerGroup->addTileLayer(tl, index);
+                mLayersByName[layer->name()].append(layer);
+                ++index;
+            }
+        }
+    }
 
-	mMinLevel = 10000;
-	foreach (ZLotTileLayerGroup *layerGroup, mLevelToTileLayers) {
-		int level = layerGroup->level();
-		layerGroup->mBounds = layerGroup->_bounds();
-		maxMargins(layerGroup->mMargins, layerGroup->_drawMargins(), layerGroup->mMargins);
-		if (level > map->maxLevel())
-			map->setMaxLevel(level);
-		if (level < mMinLevel)
-			mMinLevel = level;
-	}
-	if (mMinLevel == 10000)
-		mMinLevel = 0;
+    mMinLevel = 10000;
+    foreach (ZLotTileLayerGroup *layerGroup, mLevelToTileLayers) {
+        int level = layerGroup->level();
+        layerGroup->mBounds = layerGroup->_bounds();
+        maxMargins(layerGroup->mMargins, layerGroup->_drawMargins(), layerGroup->mMargins);
+        if (level > map->maxLevel())
+            map->setMaxLevel(level);
+        if (level < mMinLevel)
+            mMinLevel = level;
+    }
+    if (mMinLevel == 10000)
+        mMinLevel = 0;
 }
 
 ZLot::~ZLot()
 {
-	qDeleteAll(mLevelToTileLayers);
+    qDeleteAll(mLevelToTileLayers);
 #if 0 // tilesets are shared, see ZLotManager
-	qDeleteAll(mMap->tilesets()); // FIXME: share these
+    qDeleteAll(mMap->tilesets()); // FIXME: share these
 #endif
-	delete mMap;
+    delete mMap;
 }
 
 // FIXME: duplicated in ZomboidScene
 bool ZLot::groupForTileLayer(TileLayer *tl, uint *group)
 {
-	// See if the layer name matches "0_foo" or "1_bar" etc.
-	const QString& name = tl->name();
-	QStringList sl = name.trimmed().split(QLatin1Char('_'));
-	if (sl.count() > 1 && !sl[1].isEmpty()) {
-		bool conversionOK;
-		(*group) = sl[0].toUInt(&conversionOK);
-		return conversionOK;
-	}
-	return false;
+    // See if the layer name matches "0_foo" or "1_bar" etc.
+    const QString& name = tl->name();
+    QStringList sl = name.trimmed().split(QLatin1Char('_'));
+    if (sl.count() > 1 && !sl[1].isEmpty()) {
+        bool conversionOK;
+        (*group) = sl[0].toUInt(&conversionOK);
+        return conversionOK;
+    }
+    return false;
 }
 
 bool ZLot::orderedCellsAt(int level, const QPoint &point, QVector<const Cell*>& cells) const
 {
-	if (mLevelToTileLayers.contains(level) == false)
-		return false;
-	return mLevelToTileLayers[level]->orderedCellsAt(point, cells);
+    if (mLevelToTileLayers.contains(level) == false)
+        return false;
+    return mLevelToTileLayers[level]->orderedCellsAt(point, cells);
 }
 
 const ZTileLayerGroup *ZLot::tileLayersForLevel(int level) const
 {
-	if (mLevelToTileLayers.contains(level))
-		return mLevelToTileLayers[level];
-	return 0;
+    if (mLevelToTileLayers.contains(level))
+        return mLevelToTileLayers[level];
+    return 0;
 }
 
 void ZLot::setLayerVisibility(const QString &name, bool visible) const
 {
-	if (!mLayersByName.contains(name))
-		return;
-	foreach (Layer *layer, mLayersByName[name])
-		layer->setVisible(visible);
+    if (!mLayersByName.contains(name))
+        return;
+    foreach (Layer *layer, mLayersByName[name])
+        layer->setVisible(visible);
 }
 
 } // namespace Tiled

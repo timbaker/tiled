@@ -157,9 +157,9 @@ int main(int argc, char *argv[])
 
     MainWindow w;
 #ifdef ZOMBOID
-	ZProgressManager::instance()->setMainWindow(&w);
+    ZProgressManager::instance()->setMainWindow(&w);
 #endif
-	w.show();
+    w.show();
 
     QObject::connect(&a, SIGNAL(fileOpenRequest(QString)),
                      &w, SLOT(openFile(QString)));

@@ -68,12 +68,12 @@ void AbstractObjectTool::mouseMoved(const QPointF &pos,
                                     Qt::KeyboardModifiers)
 {
 #ifdef ZOMBOID
-	Layer *layer = currentObjectGroup();
+    Layer *layer = currentObjectGroup();
     const QPointF tilePosF = mapDocument()->renderer()->pixelToTileCoords(pos, layer);
 #else
     const QPointF tilePosF = mapDocument()->renderer()->pixelToTileCoords(pos);
 #endif
-	const int x = (int) std::floor(tilePosF.x());
+    const int x = (int) std::floor(tilePosF.x());
     const int y = (int) std::floor(tilePosF.y());
     setStatusInfo(QString(QLatin1String("%1, %2")).arg(x).arg(y));
 }
@@ -101,7 +101,7 @@ ObjectGroup *AbstractObjectTool::currentObjectGroup() const
 
 MapObjectItem *AbstractObjectTool::topMostObjectItemAt(QPointF pos) const
 {
-	foreach (QGraphicsItem *item, mMapScene->items(pos)) {
+    foreach (QGraphicsItem *item, mMapScene->items(pos)) {
         if (MapObjectItem *objectItem = dynamic_cast<MapObjectItem*>(item))
             return objectItem;
     }

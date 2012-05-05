@@ -75,9 +75,9 @@ Preferences::Preferences()
                                  QString()).toString();
     mUseOpenGL = mSettings->value(QLatin1String("OpenGL"), false).toBool();
 #ifdef ZOMBOID
-	mAutoSwitchLayer = mSettings->value(QLatin1String("AutoSwitchLayer"), true).toBool();
+    mAutoSwitchLayer = mSettings->value(QLatin1String("AutoSwitchLayer"), true).toBool();
 #endif
-	mSettings->endGroup();
+    mSettings->endGroup();
 
     // Retrieve defined object types
     mSettings->beginGroup(QLatin1String("ObjectTypes"));
@@ -307,36 +307,36 @@ void Preferences::setAutomappingDrawing(bool enabled)
 #ifdef ZOMBOID
 QString Preferences::lotDirectory() const
 {
-	return mLotDirectory;
+    return mLotDirectory;
 }
 
 void Preferences::setLotDirectory(const QString &path)
 {
-	if (mLotDirectory == path)
-		return;
-	mLotDirectory = path;
-	mSettings->setValue(QLatin1String("Lot/Directory"), path);
+    if (mLotDirectory == path)
+        return;
+    mLotDirectory = path;
+    mSettings->setValue(QLatin1String("Lot/Directory"), path);
 
-	// Put this up, otherwise the progress dialog shows and hides for each lot.
-	// Since each open document has its own ZLotManager, this shows and hides for each document as well.
-	ZProgressManager::instance()->begin(QLatin1String("Checking lots..."));
+    // Put this up, otherwise the progress dialog shows and hides for each lot.
+    // Since each open document has its own ZLotManager, this shows and hides for each document as well.
+    ZProgressManager::instance()->begin(QLatin1String("Checking lots..."));
 
-	emit lotDirectoryChanged();
+    emit lotDirectoryChanged();
 
-	ZProgressManager::instance()->end();
+    ZProgressManager::instance()->end();
 }
 
 bool Preferences::autoSwitchLayer() const
 {
-	return mAutoSwitchLayer;
+    return mAutoSwitchLayer;
 }
 
 void Preferences::setAutoSwitchLayer(bool enabled)
 {
-	if (mAutoSwitchLayer == enabled)
-		return;
+    if (mAutoSwitchLayer == enabled)
+        return;
     mAutoSwitchLayer = enabled;
     mSettings->setValue(QLatin1String("Interface/AutoSwitchLayer"), enabled);
-	emit autoSwitchLayerChanged(mAutoSwitchLayer);
+    emit autoSwitchLayerChanged(mAutoSwitchLayer);
 }
 #endif // ZOMBOID

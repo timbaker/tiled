@@ -41,12 +41,12 @@ using namespace Tiled;
 QSize ZLevelRenderer::mapSize() const
 {
 #if 1
-	const int side = map()->height() + map()->width();
+    const int side = map()->height() + map()->width();
     return QSize(side * map()->tileWidth() / 2 + map()->maxLevel() * map()->cellsPerLevel().x() * map()->tileWidth(),
                  side * map()->tileHeight() / 2 + map()->maxLevel() * map()->cellsPerLevel().y() * map()->tileHeight());
 #else
     // Map width and height contribute equally in both directions
-	const int side = map()->height() + map()->width();
+    const int side = map()->height() + map()->width();
     return QSize(side * map()->tileWidth() / 2,
                  side * map()->tileHeight() / 2);
 #endif
@@ -75,7 +75,7 @@ QRect ZLevelRenderer::boundingRect(const QRect &rect, const Layer *layer) const
 
 QRectF ZLevelRenderer::boundingRect(const MapObject *object) const
 {
-	Layer *layer = object->objectGroup();
+    Layer *layer = object->objectGroup();
     if (object->tile()) {
         const QPointF bottomCenter = tileToPixelCoords(object->position(), layer);
         const QPixmap &img = object->tile()->image();
@@ -98,24 +98,24 @@ QRectF ZLevelRenderer::boundingRect(const MapObject *object) const
 
 QPainterPath ZLevelRenderer::shape(const MapObject *object) const
 {
-	Layer *layer = object->objectGroup();
+    Layer *layer = object->objectGroup();
 #if 1
-	/*
+    /*
 AddRemoveMapObject::removeObject
     mObjectGroup->removeObject(mMapObject) <<--------- why layer==0
     mMapDocument->emitObjectRemoved(mMapObject);
-		MapDocument::deselectObjects
-			emit selectedObjectsChanged()
-				MapScene::updateSelectedObjectItems()
-					item->setEditable(...);
-					unsetCursor()
-						MapObjectItem::shape()
-							<this function>
-	*/
-	if (layer == 0)
-		return QPainterPath();
+        MapDocument::deselectObjects
+            emit selectedObjectsChanged()
+                MapScene::updateSelectedObjectItems()
+                    item->setEditable(...);
+                    unsetCursor()
+                        MapObjectItem::shape()
+                            <this function>
+    */
+    if (layer == 0)
+        return QPainterPath();
 #else
-	Q_ASSERT(layer);
+    Q_ASSERT(layer);
 #endif
 
     QPainterPath path;
@@ -163,7 +163,7 @@ void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect, const Layer
     const int endY = qMin(qreal(map()->height()),
                           pixelToTileCoords(r.bottomLeft(), layer).y());
 
-	QColor gridColor(Qt::black);
+    QColor gridColor(Qt::black);
     gridColor.setAlpha(128);
 
     QPen gridPen(gridColor);
@@ -173,7 +173,7 @@ void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect, const Layer
     for (int y = startY; y <= endY; ++y) {
         const QPointF start = tileToPixelCoords(startX, (qreal)y, layer);
         const QPointF end = tileToPixelCoords(endX, (qreal)y, layer);
-		painter->drawLine(start, end);
+        painter->drawLine(start, end);
     }
     for (int x = startX; x <= endX; ++x) {
         const QPointF start = tileToPixelCoords(x, (qreal)startY, layer);
@@ -195,9 +195,9 @@ void ZLevelRenderer::drawTileLayer(QPainter *painter,
     QRect rect = exposed.toAlignedRect();
     if (rect.isNull())
 #ifdef ZOMBOID
-		rect = boundingRect(layer->bounds(), layer);
+        rect = boundingRect(layer->bounds(), layer);
 #else
-		rect = boundingRect(layer->bounds());
+        rect = boundingRect(layer->bounds());
 #endif
 
     QMargins drawMargins = layer->drawMargins();
@@ -221,7 +221,7 @@ void ZLevelRenderer::drawTileLayer(QPainter *painter,
                            (int) std::floor(tilePos.y()));
     QPointF startPos = tileToPixelCoords(rowItr);
 #endif
-	startPos.rx() -= tileWidth / 2;
+    startPos.rx() -= tileWidth / 2;
     startPos.ry() += tileHeight;
 
     // Compensate for the layer position
@@ -330,7 +330,7 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
     if (tileWidth <= 0 || tileHeight <= 1 || layerGroup->mLayers.isEmpty())
         return;
 
-	Layer *layer = layerGroup->mLayers.first();
+    Layer *layer = layerGroup->mLayers.first();
 
     QRect rect = exposed.toAlignedRect();
     if (rect.isNull())
@@ -346,7 +346,7 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                 drawMargins.top());
 
     // Determine the tile and pixel coordinates to start at
-	QPointF tilePos = pixelToTileCoords(rect.x(), rect.y(), layer);
+    QPointF tilePos = pixelToTileCoords(rect.x(), rect.y(), layer);
     QPoint rowItr = QPoint((int) std::floor(tilePos.x()),
                            (int) std::floor(tilePos.y()));
     QPointF startPos = tileToPixelCoords(rowItr, layer);
@@ -377,9 +377,9 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
 
     QTransform baseTransform = painter->transform();
 
-	static QVector<const Cell*> cells(40); // or QVarLengthArray
+    static QVector<const Cell*> cells(40); // or QVarLengthArray
 
-	layerGroup->prepareDrawing(this, rect);
+    layerGroup->prepareDrawing(this, rect);
 
     for (int y = startPos.y(); y - tileHeight < rect.bottom();
          y += tileHeight / 2)
@@ -388,47 +388,47 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
 
         for (int x = startPos.x(); x < rect.right(); x += tileWidth) {
             if (layerGroup->orderedCellsAt(columnItr, cells)) {
-				foreach (const Cell *cell, cells) {
-					if (!cell->isEmpty()) {
-						const QPixmap &img = cell->tile->image();
-						const QPoint offset = cell->tile->tileset()->tileOffset();
+                foreach (const Cell *cell, cells) {
+                    if (!cell->isEmpty()) {
+                        const QPixmap &img = cell->tile->image();
+                        const QPoint offset = cell->tile->tileset()->tileOffset();
 
-						qreal m11 = 1;      // Horizontal scaling factor
-						qreal m12 = 0;      // Vertical shearing factor
-						qreal m21 = 0;      // Horizontal shearing factor
-						qreal m22 = 1;      // Vertical scaling factor
-						qreal dx = offset.x() + x;
-						qreal dy = offset.y() + y - img.height();
+                        qreal m11 = 1;      // Horizontal scaling factor
+                        qreal m12 = 0;      // Vertical shearing factor
+                        qreal m21 = 0;      // Horizontal shearing factor
+                        qreal m22 = 1;      // Vertical scaling factor
+                        qreal dx = offset.x() + x;
+                        qreal dy = offset.y() + y - img.height();
 
-						if (cell->flippedAntiDiagonally) {
-							// Use shearing to swap the X/Y axis
-							m11 = 0;
-							m12 = 1;
-							m21 = 1;
-							m22 = 0;
+                        if (cell->flippedAntiDiagonally) {
+                            // Use shearing to swap the X/Y axis
+                            m11 = 0;
+                            m12 = 1;
+                            m21 = 1;
+                            m22 = 0;
 
-							// Compensate for the swap of image dimensions
-							dy += img.height() - img.width();
-						}
-						if (cell->flippedHorizontally) {
-							m11 = -m11;
-							m21 = -m21;
-							dx += cell->flippedAntiDiagonally ? img.height()
-															 : img.width();
-						}
-						if (cell->flippedVertically) {
-							m12 = -m12;
-							m22 = -m22;
-							dy += cell->flippedAntiDiagonally ? img.width()
-															 : img.height();
-						}
+                            // Compensate for the swap of image dimensions
+                            dy += img.height() - img.width();
+                        }
+                        if (cell->flippedHorizontally) {
+                            m11 = -m11;
+                            m21 = -m21;
+                            dx += cell->flippedAntiDiagonally ? img.height()
+                                                             : img.width();
+                        }
+                        if (cell->flippedVertically) {
+                            m12 = -m12;
+                            m22 = -m22;
+                            dy += cell->flippedAntiDiagonally ? img.width()
+                                                             : img.height();
+                        }
 
-						const QTransform transform(m11, m12, m21, m22, dx, dy);
-						painter->setTransform(transform * baseTransform);
+                        const QTransform transform(m11, m12, m21, m22, dx, dy);
+                        painter->setTransform(transform * baseTransform);
 
-						painter->drawPixmap(0, 0, img);
-					}
-				}
+                        painter->drawPixmap(0, 0, img);
+                    }
+                }
             }
 
             // Advance to the next column
@@ -455,8 +455,8 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
 void ZLevelRenderer::drawTileSelection(QPainter *painter,
                                           const QRegion &region,
                                           const QColor &color,
-										  const QRectF &exposed,
-										  const Layer *layer) const
+                                          const QRectF &exposed,
+                                          const Layer *layer) const
 {
     painter->setBrush(color);
     painter->setPen(Qt::NoPen);
@@ -471,7 +471,7 @@ void ZLevelRenderer::drawMapObject(QPainter *painter,
                                       const MapObject *object,
                                       const QColor &color) const
 {
-	Layer *layer = object->objectGroup();
+    Layer *layer = object->objectGroup();
 
     painter->save();
 
@@ -575,9 +575,9 @@ QPointF ZLevelRenderer::pixelToTileCoords(qreal x, qreal y, const Layer *layer) 
 
     x -= map()->height() * tileWidth / 2;
 #ifdef ZOMBOID
-	y -= map()->cellsPerLevel().y() * (map()->maxLevel() - (layer ? layer->level() : 0)) * tileHeight;
+    y -= map()->cellsPerLevel().y() * (map()->maxLevel() - (layer ? layer->level() : 0)) * tileHeight;
 #endif
-	const qreal mx = y + (x / ratio);
+    const qreal mx = y + (x / ratio);
     const qreal my = y - (x / ratio);
 
     return QPointF(mx / tileHeight,
@@ -589,12 +589,12 @@ QPointF ZLevelRenderer::tileToPixelCoords(qreal x, qreal y, const Layer *layer) 
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
 #ifdef ZOMBOID
-	const int originX = map()->height() * tileWidth / 2; // top-left corner
-	const int originY = map()->cellsPerLevel().y() * (map()->maxLevel() - (layer ? layer->level() : 0)) * tileHeight;
+    const int originX = map()->height() * tileWidth / 2; // top-left corner
+    const int originY = map()->cellsPerLevel().y() * (map()->maxLevel() - (layer ? layer->level() : 0)) * tileHeight;
     return QPointF((x - y) * tileWidth / 2 + originX,
                    (x + y) * tileHeight / 2 + originY);
 #else
-	const int originX = map()->height() * tileWidth / 2;
+    const int originX = map()->height() * tileWidth / 2;
     return QPointF((x - y) * tileWidth / 2 + originX,
                    (x + y) * tileHeight / 2);
 #endif

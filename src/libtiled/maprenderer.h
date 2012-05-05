@@ -120,7 +120,7 @@ public:
                                    const QColor &color,
 #ifdef ZOMBOID
                                    const QRectF &exposed,
-								   const Layer *layer = 0) const = 0;
+                                   const Layer *layer = 0) const = 0;
 #else
                                    const QRectF &exposed) const = 0;
 #endif

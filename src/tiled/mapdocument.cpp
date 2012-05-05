@@ -62,8 +62,8 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     mMap(map),
     mLayerModel(new LayerModel(this)),
 #ifdef ZOMBOID
-	mLevelsModel(new ZLevelsModel(this)),
-	mMapObjectModel(new ZMapObjectModel(this)),
+    mLevelsModel(new ZLevelsModel(this)),
+    mMapObjectModel(new ZMapObjectModel(this)),
 #endif
     mUndoStack(new QUndoStack(this))
 {
@@ -79,7 +79,7 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
         mRenderer = new ZLevelRenderer(map);
         break;
 #endif
-	default:
+    default:
         mRenderer = new OrthogonalRenderer(map);
         break;
     }
@@ -96,17 +96,17 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
 #ifdef ZOMBOID
     connect(mLayerModel, SIGNAL(layerRenamed(int)), SIGNAL(layerRenamed(int)));
 
-	mMaxVisibleLayer = map->layerCount();
+    mMaxVisibleLayer = map->layerCount();
 #endif
 
 #ifdef ZOMBOID
-	mLevelsModel->setMapDocument(this);
+    mLevelsModel->setMapDocument(this);
 
-	mMapObjectModel->setMapDocument(this);
-	connect(mMapObjectModel, SIGNAL(objectsAdded(QList<MapObject*>)), SLOT(onObjectsAdded(QList<MapObject*>)));
-	connect(mMapObjectModel, SIGNAL(objectsChanged(QList<MapObject*>)), SLOT(onObjectsChanged(QList<MapObject*>)));
-	connect(mMapObjectModel, SIGNAL(objectsAboutToBeRemoved(QList<MapObject*>)), SLOT(onObjectsAboutToBeRemoved(QList<MapObject*>)));
-	connect(mMapObjectModel, SIGNAL(objectsRemoved(QList<MapObject*>)), SLOT(onObjectsRemoved(QList<MapObject*>)));
+    mMapObjectModel->setMapDocument(this);
+    connect(mMapObjectModel, SIGNAL(objectsAdded(QList<MapObject*>)), SLOT(onObjectsAdded(QList<MapObject*>)));
+    connect(mMapObjectModel, SIGNAL(objectsChanged(QList<MapObject*>)), SLOT(onObjectsChanged(QList<MapObject*>)));
+    connect(mMapObjectModel, SIGNAL(objectsAboutToBeRemoved(QList<MapObject*>)), SLOT(onObjectsAboutToBeRemoved(QList<MapObject*>)));
+    connect(mMapObjectModel, SIGNAL(objectsRemoved(QList<MapObject*>)), SLOT(onObjectsRemoved(QList<MapObject*>)));
 #endif
 
     connect(mUndoStack, SIGNAL(cleanChanged(bool)), SIGNAL(modifiedChanged()));
@@ -123,9 +123,9 @@ MapDocument::~MapDocument()
     tilesetManager->removeReferences(mMap->tilesets());
 
 #ifdef ZOMBOID
-	// Paranoia
-	mLevelsModel->setMapDocument(0);
-	mMapObjectModel->setMapDocument(0);
+    // Paranoia
+    mLevelsModel->setMapDocument(0);
+    mMapObjectModel->setMapDocument(0);
 #endif
 
     delete mRenderer;
@@ -507,8 +507,8 @@ void MapDocument::emitRegionChanged(const QRegion &region)
 #ifdef ZOMBOID
 void MapDocument::setTileLayerName(Tile *tile, const QString &name)
 {
-	TilesetManager::instance()->setLayerName(tile, name);
-	emit tileLayerNameChanged(tile);
+    TilesetManager::instance()->setLayerName(tile, name);
+    emit tileLayerNameChanged(tile);
 }
 #endif // ZOMBOID
 
@@ -559,22 +559,22 @@ void MapDocument::emitObjectsChanged(const QList<MapObject*> &objects)
 #ifdef ZOMBOID
 void MapDocument::onObjectsAdded(const QList<MapObject*> &objects)
 {
-	emitObjectsAdded(objects);
+    emitObjectsAdded(objects);
 }
 
 void MapDocument::onObjectsChanged(const QList<MapObject*> &objects)
 {
-	emitObjectsChanged(objects);
+    emitObjectsChanged(objects);
 }
 
 void MapDocument::onObjectsAboutToBeRemoved(const QList<MapObject*> &objects)
 {
-	emitObjectsAboutToBeRemoved(objects);
+    emitObjectsAboutToBeRemoved(objects);
 }
 
 void MapDocument::onObjectsRemoved(const QList<MapObject*> &objects)
 {
-	emitObjectsRemoved(objects);
+    emitObjectsRemoved(objects);
 }
 #endif
 
@@ -593,7 +593,7 @@ void MapDocument::onLayerAboutToBeRemoved(int index)
     if (ObjectGroup *og = dynamic_cast<ObjectGroup*>(mMap->layerAt(index)))
         deselectObjects(og->objects());
 #ifdef ZOMBOID
-	emit layerAboutToBeRemoved(index);
+    emit layerAboutToBeRemoved(index);
 #endif
 }
 

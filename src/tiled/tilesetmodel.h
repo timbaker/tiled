@@ -41,7 +41,7 @@ class MapDocument;
 class TilesetModel : public QAbstractListModel
 {
 #ifdef ZOMBOID
-	Q_OBJECT
+    Q_OBJECT
 #endif
 public:
     /**
@@ -96,15 +96,15 @@ public:
     void tilesetChanged() { reset(); }
 
 #ifdef ZOMBOID
-	~TilesetModel();
+    ~TilesetModel();
 
-	void setMapDocument(MapDocument *mapDocument);
+    void setMapDocument(MapDocument *mapDocument);
 
 private:
-	MapDocument *mMapDocument;
+    MapDocument *mMapDocument;
 
 private slots:
-	void tileLayerNameChanged(Tile *tile);
+    void tileLayerNameChanged(Tile *tile);
 #endif
 
 private:

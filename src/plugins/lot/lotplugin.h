@@ -39,56 +39,56 @@ namespace Lot {
 class Tile
 {
 public:
-	Tile(const QString& name)
-	{
-		this->name = name;
-		this->used = false;
-		this->id = -1;
-	}
-	QString name;
-	bool used;
-	int id;
+    Tile(const QString& name)
+    {
+        this->name = name;
+        this->used = false;
+        this->id = -1;
+    }
+    QString name;
+    bool used;
+    int id;
 };
 
 class Lot
 {
 public:
-	Lot(QString name, int x, int y, int w, int h)
-	{
-		this->name = name;
-		this->x = x;
-		this->y = y;
-		this->w = w;
-		this->h = h;
-	}
-	QString name;
-	int x;
-	int y;
-	int w;
-	int h;
+    Lot(QString name, int x, int y, int w, int h)
+    {
+        this->name = name;
+        this->x = x;
+        this->y = y;
+        this->w = w;
+        this->h = h;
+    }
+    QString name;
+    int x;
+    int y;
+    int w;
+    int h;
 };
 
 class Entry
 {
 public:
-	Entry(int gid)
-	{
-		this->gid = gid;
-	}
-	int gid;
+    Entry(int gid)
+    {
+        this->gid = gid;
+    }
+    int gid;
 };
 
 class Square
 {
 public:
-	QList<Entry*> Entries;
+    QList<Entry*> Entries;
 };
 
 class Zone
 {
 public:
-	Zone(const QString& name, const QString& val, int x, int y, int z, int width, int height)
-	{
+    Zone(const QString& name, const QString& val, int x, int y, int z, int width, int height)
+    {
         this->name = name;
         this->val = val;
         this->x = x;
@@ -96,15 +96,15 @@ public:
         this->z = z;
         this->width = width;
         this->height = height;
-	}
+    }
 
-	QString name;
-	QString val;
-	int x;
-	int y;
-	int z;
-	int width;
-	int height;
+    QString name;
+    QString val;
+    int x;
+    int y;
+    int z;
+    int width;
+    int height;
 };
 
 /**
@@ -126,24 +126,24 @@ public:
 
 
 private:
-	bool handleTileset(QFile& file, const Tiled::Tileset *tileset, uint firstGid);
-	bool handleTileLayer(QFile& file, const Tiled::TileLayer *tileLayer);
+    bool handleTileset(QFile& file, const Tiled::Tileset *tileset, uint firstGid);
+    bool handleTileLayer(QFile& file, const Tiled::TileLayer *tileLayer);
 
-	bool parseNameToLevel(const QString& name, int *level);
+    bool parseNameToLevel(const QString& name, int *level);
 
-	QString mError;
+    QString mError;
     QDir mMapDir;     // The directory in which the map is being saved
     Tiled::GidMapper mGidMapper;
 
-	QList<Zone*> ZoneList;
-	QList<Lot*> LotList;
-	QMap<int,Tile*> TileMap;
-	int StartX;
-	int StartY;
-	int EndX;
-	int EndY;
-	int MaxLevel;
-	int Version;
+    QList<Zone*> ZoneList;
+    QList<Lot*> LotList;
+    QMap<int,Tile*> TileMap;
+    int StartX;
+    int StartY;
+    int EndX;
+    int EndY;
+    int MaxLevel;
+    int Version;
 };
 
 } // namespace Lot

@@ -45,7 +45,7 @@ Layer::Layer(Type type, const QString &name, int x, int y,
     mWidth(width),
     mHeight(height),
 #ifdef ZOMBOID
-	mLevel(0),
+    mLevel(0),
 #endif
     mOpacity(1.0f),
     mVisible(true),
@@ -77,9 +77,9 @@ Layer *Layer::initializeClone(Layer *clone) const
     clone->mMap = mMap;
     clone->setProperties(properties());
 #ifdef ZOMBOID
-	clone->mLevel = mLevel;
+    clone->mLevel = mLevel;
 #endif
-	return clone;
+    return clone;
 }
 
 TileLayer *Layer::asTileLayer()

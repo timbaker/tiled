@@ -45,12 +45,12 @@ Zoomable::Zoomable(QObject *parent)
     : QObject(parent)
     , mScale(1)
 #ifdef ZOMBOID
-	, mComboBox(0)
+    , mComboBox(0)
 #endif
 {
 #ifdef ZOMBOID
-	for (int i = 0; i < zoomFactorCount; i++)
-		mZoomFactors << zoomFactors[i];
+    for (int i = 0; i < zoomFactorCount; i++)
+        mZoomFactors << zoomFactors[i];
 #endif
 }
 
@@ -61,11 +61,11 @@ void Zoomable::setScale(qreal scale)
 
     mScale = scale;
 #ifdef ZOMBOID
-	if (mComboBox) {
-		int index = mComboBox->findData(scale);
-		if (index != -1)
-			mComboBox->setCurrentIndex(index);
-	}
+    if (mComboBox) {
+        int index = mComboBox->findData(scale);
+        if (index != -1)
+            mComboBox->setCurrentIndex(index);
+    }
 #endif
     emit scaleChanged(mScale);
 }
@@ -82,7 +82,7 @@ bool Zoomable::canZoomIn() const
 bool Zoomable::canZoomOut() const
 {
 #ifdef ZOMBOID
-	return mScale > mZoomFactors.first();
+    return mScale > mZoomFactors.first();
 #else
     return mScale > zoomFactors[0];
 #endif
@@ -91,34 +91,34 @@ bool Zoomable::canZoomOut() const
 #ifdef ZOMBOID
 void Zoomable::setZoomFactors(const QVector<qreal>& factors)
 {
-	mZoomFactors = factors;
+    mZoomFactors = factors;
 }
 
 void Zoomable::connectToComboBox(QComboBox *comboBox)
 {
-	if (mComboBox)
-		disconnect(mComboBox, SIGNAL(activated(int)), this, SLOT(comboActivated(int)));
+    if (mComboBox)
+        disconnect(mComboBox, SIGNAL(activated(int)), this, SLOT(comboActivated(int)));
 
-	mComboBox = comboBox;
+    mComboBox = comboBox;
 
-	if (mComboBox) {
-		mComboBox->clear();
-		int index = 0;
-		foreach (qreal scale, mZoomFactors) {
-			mComboBox->addItem(QString(QLatin1String("%1 %")).arg(int(scale * 100)), scale);
-			if (scale == mScale)
-				mComboBox->setCurrentIndex(index);
-			++index;
-		}
-		connect(mComboBox, SIGNAL(activated(int)), this, SLOT(comboActivated(int)));
-	}
+    if (mComboBox) {
+        mComboBox->clear();
+        int index = 0;
+        foreach (qreal scale, mZoomFactors) {
+            mComboBox->addItem(QString(QLatin1String("%1 %")).arg(int(scale * 100)), scale);
+            if (scale == mScale)
+                mComboBox->setCurrentIndex(index);
+            ++index;
+        }
+        connect(mComboBox, SIGNAL(activated(int)), this, SLOT(comboActivated(int)));
+    }
 }
 
 void Zoomable::comboActivated(int index)
 {
-	QVariant data = mComboBox->itemData(index);
-	qreal scale = data.toReal();
-	setScale(scale);
+    QVariant data = mComboBox->itemData(index);
+    qreal scale = data.toReal();
+    setScale(scale);
 }
 #endif // ZOMBOID
 

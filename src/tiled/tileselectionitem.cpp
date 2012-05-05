@@ -63,7 +63,7 @@ void TileSelectionItem::paint(QPainter *painter,
     MapRenderer *renderer = mMapDocument->renderer();
     renderer->drawTileSelection(painter, selection, highlight,
 #ifdef ZOMBOID
-		option->exposedRect, mMapDocument->currentLayer());
+        option->exposedRect, mMapDocument->currentLayer());
 #else
                                 option->exposedRect);
 #endif

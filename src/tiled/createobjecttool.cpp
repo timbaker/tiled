@@ -117,9 +117,9 @@ void CreateObjectTool::mouseMoved(const QPointF &pos,
     switch (mMode) {
     case CreateArea: {
 #ifdef ZOMBOID
-		const QPointF tileCoords = renderer->pixelToTileCoords(pos, currentObjectGroup());
+        const QPointF tileCoords = renderer->pixelToTileCoords(pos, currentObjectGroup());
 #else
-		const QPointF tileCoords = renderer->pixelToTileCoords(pos);
+        const QPointF tileCoords = renderer->pixelToTileCoords(pos);
 #endif
         // Update the size of the new map object
         const QPointF objectPos = mNewMapObjectItem->mapObject()->position();
@@ -227,12 +227,12 @@ void CreateObjectTool::mousePressed(QGraphicsSceneMouseEvent *event)
 
         const QPointF diff(-mTile->width() / 2, mTile->height() / 2);
 #ifdef ZOMBOID
-		tileCoords = renderer->pixelToTileCoords(event->scenePos() + diff, objectGroup);
+        tileCoords = renderer->pixelToTileCoords(event->scenePos() + diff, objectGroup);
     } else {
         tileCoords = renderer->pixelToTileCoords(event->scenePos(), objectGroup);
     }
 #else
-		tileCoords = renderer->pixelToTileCoords(event->scenePos() + diff);
+        tileCoords = renderer->pixelToTileCoords(event->scenePos() + diff);
     } else {
         tileCoords = renderer->pixelToTileCoords(event->scenePos());
     }
@@ -252,16 +252,15 @@ void CreateObjectTool::mouseReleased(QGraphicsSceneMouseEvent *event)
     if (event->button() == Qt::LeftButton && mNewMapObjectItem) {
 #ifdef ZOMBOID
         if (mMode == CreateArea || mMode == CreateTile) {
-			QRectF r = mNewMapObjectItem->boundingRect();
-			if (r.width() < 6 && r.height() < 6)
-				cancelNewMapObject();
-			else
-				finishNewMapObject();
-		}
-				
+            QRectF r = mNewMapObjectItem->boundingRect();
+            if (r.width() < 6 && r.height() < 6)
+                cancelNewMapObject();
+            else
+                finishNewMapObject();
+        }
 #else
         if (mMode == CreateArea || mMode == CreateTile)
-			finishNewMapObject();
+            finishNewMapObject();
 #endif
     }
 }
@@ -304,7 +303,7 @@ void CreateObjectTool::startNewMapObject(const QPointF &pos,
 
     if (mMode == CreatePolygon || mMode == CreatePolyline) {
 #ifdef ZOMBOID
-		mOverlayObjectGroup->setLevel(objectGroup->level());
+        mOverlayObjectGroup->setLevel(objectGroup->level());
 #endif
         MapObject::Shape shape = mMode == CreatePolygon ? MapObject::Polygon
                                                         : MapObject::Polyline;

@@ -50,10 +50,10 @@ LayerDock::LayerDock(QWidget *parent):
     mOpacityLabel(new QLabel),
     mOpacitySlider(new QSlider(Qt::Horizontal)),
 #ifdef ZOMBOID
-	mZomboidLayerLabel(new QLabel),
+    mZomboidLayerLabel(new QLabel),
     mZomboidLayerSlider(new QSlider(Qt::Horizontal)),
 #endif
-	mLayerView(new LayerView),
+    mLayerView(new LayerView),
     mMapDocument(0)
 {
     setObjectName(QLatin1String("layerDock"));
@@ -91,9 +91,9 @@ LayerDock::LayerDock(QWidget *parent):
     newLayerButton->setMenu(newLayerMenu);
     newLayerButton->setIcon(newIcon);
 #ifdef ZOMBOID
-	newLayerButton->setToolTip(tr("New Layer"));
+    newLayerButton->setToolTip(tr("New Layer"));
 #endif
-	Utils::setThemeIcon(newLayerButton, "document-new");
+    Utils::setThemeIcon(newLayerButton, "document-new");
 
     QToolBar *buttonContainer = new QToolBar;
     buttonContainer->setFloatable(false);
@@ -103,17 +103,17 @@ LayerDock::LayerDock(QWidget *parent):
     buttonContainer->addWidget(newLayerButton);
     buttonContainer->addAction(handler->actionMoveLayerUp());
     buttonContainer->addAction(handler->actionMoveLayerDown());
-	buttonContainer->addAction(handler->actionDuplicateLayer());
+    buttonContainer->addAction(handler->actionDuplicateLayer());
     buttonContainer->addAction(handler->actionRemoveLayer());
     buttonContainer->addSeparator();
     buttonContainer->addAction(handler->actionToggleOtherLayers());
 
 #ifdef ZOMBOID
-	QToolButton *button;
-	button = dynamic_cast<QToolButton*>(buttonContainer->widgetForAction(handler->actionMoveLayerUp()));
-	button->setAutoRepeat(true);
-	button = dynamic_cast<QToolButton*>(buttonContainer->widgetForAction(handler->actionMoveLayerDown()));
-	button->setAutoRepeat(true);
+    QToolButton *button;
+    button = dynamic_cast<QToolButton*>(buttonContainer->widgetForAction(handler->actionMoveLayerUp()));
+    button->setAutoRepeat(true);
+    button = dynamic_cast<QToolButton*>(buttonContainer->widgetForAction(handler->actionMoveLayerDown()));
+    button->setAutoRepeat(true);
 #endif
 
 
@@ -121,7 +121,7 @@ LayerDock::LayerDock(QWidget *parent):
 #ifdef ZOMBOID
     layout->addLayout(zomboidLayerLayout);
 #endif
-	layout->addWidget(mLayerView);
+    layout->addWidget(mLayerView);
     layout->addWidget(buttonContainer);
 
     setWidget(widget);
@@ -224,10 +224,10 @@ void LayerDock::updateZomboidLayerSlider()
     mZomboidLayerSlider->setEnabled(enabled);
     mZomboidLayerLabel->setEnabled(enabled);
     if (enabled) {
-		mZomboidLayerSlider->blockSignals(true);
-		mZomboidLayerSlider->setMaximum(mMapDocument->map()->layerCount());
+        mZomboidLayerSlider->blockSignals(true);
+        mZomboidLayerSlider->setMaximum(mMapDocument->map()->layerCount());
         mZomboidLayerSlider->setValue(mMapDocument->maxVisibleLayer());
-		mZomboidLayerSlider->blockSignals(false);
+        mZomboidLayerSlider->blockSignals(false);
     } else {
         mZomboidLayerSlider->setValue(mZomboidLayerSlider->maximum());
     }
@@ -242,18 +242,18 @@ void LayerDock::setZomboidLayer(int number)
 
     int index = 0;
     foreach (Layer *layer, mMapDocument->map()->layers()) {
-		if (layer->asTileLayer() ) {
-			bool visible = (index + 1 <= number);
-			if (visible != layer->isVisible()) {
-				 layerModel->setData(layerModel->index(mMapDocument->map()->layerCount() - index - 1),
-									 visible ? Qt::Checked : Qt::Unchecked,
-									 Qt::CheckStateRole);
-			}
-		}
+        if (layer->asTileLayer() ) {
+            bool visible = (index + 1 <= number);
+            if (visible != layer->isVisible()) {
+                 layerModel->setData(layerModel->index(mMapDocument->map()->layerCount() - index - 1),
+                                     visible ? Qt::Checked : Qt::Unchecked,
+                                     Qt::CheckStateRole);
+            }
+        }
         index++;
     }
 
-	mMapDocument->setMaxVisibleLayer(number);
+    mMapDocument->setMaxVisibleLayer(number);
 }
 #endif // ZOMBOID
 

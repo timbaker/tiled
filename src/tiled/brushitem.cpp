@@ -111,8 +111,8 @@ void BrushItem::paint(QPainter *painter,
         const qreal opacity = painter->opacity();
         painter->setOpacity(0.75);
 #ifdef ZOMBOID
-		mTileLayer->setLevel(mMapDocument->currentLayer() ? mMapDocument->currentLayer()->level() : 0);
-		renderer->drawTileLayer(painter, mTileLayer, option->exposedRect);
+        mTileLayer->setLevel(mMapDocument->currentLayer() ? mMapDocument->currentLayer()->level() : 0);
+        renderer->drawTileLayer(painter, mTileLayer, option->exposedRect);
         painter->setOpacity(opacity);
 
         renderer->drawTileSelection(painter, mRegion, highlight,
@@ -122,7 +122,7 @@ void BrushItem::paint(QPainter *painter,
                                     option->exposedRect, mMapDocument->currentLayer());
     }
 #else
-		renderer->drawTileLayer(painter, mTileLayer, option->exposedRect);
+        renderer->drawTileLayer(painter, mTileLayer, option->exposedRect);
         painter->setOpacity(opacity);
 
         renderer->drawTileSelection(painter, mRegion, highlight,
@@ -145,7 +145,7 @@ void BrushItem::updateBoundingRect()
 
     const QRect bounds = mRegion.boundingRect();
 #ifdef ZOMBOID
-	mBoundingRect = mMapDocument->renderer()->boundingRect(bounds, mMapDocument->currentLayer());
+    mBoundingRect = mMapDocument->renderer()->boundingRect(bounds, mMapDocument->currentLayer());
 #else
     mBoundingRect = mMapDocument->renderer()->boundingRect(bounds);
 #endif
@@ -156,10 +156,10 @@ void BrushItem::updateBoundingRect()
         QMargins drawMargins = mTileLayer->drawMargins();
 #ifdef ZOMBOID
         drawMargins.setTop(qMax(0, drawMargins.top() - map->tileHeight()));
-		drawMargins.setRight(qMax(0, drawMargins.right() - map->tileWidth()));
+        drawMargins.setRight(qMax(0, drawMargins.right() - map->tileWidth()));
 #else
         drawMargins.setTop(drawMargins.top() - map->tileHeight());
-		drawMargins.setRight(drawMargins.right() - map->tileWidth());
+        drawMargins.setRight(drawMargins.right() - map->tileWidth());
 #endif
         mBoundingRect.adjust(-drawMargins.left(),
                              -drawMargins.top(),

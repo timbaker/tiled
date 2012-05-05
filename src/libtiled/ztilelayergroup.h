@@ -47,28 +47,28 @@ public:
     virtual void addTileLayer(TileLayer *layer, int index);
     virtual void removeTileLayer(TileLayer *layer);
 
-	// Layer
-	virtual QRect bounds() const;
+    // Layer
+    virtual QRect bounds() const;
 
-	// TileLayer
-	virtual QMargins drawMargins() const;
+    // TileLayer
+    virtual QMargins drawMargins() const;
 
     virtual bool orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const = 0;
-	virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect) = 0;
+    virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect) = 0;
 
-	void setLevel(int level) { mLevel = level; }
-	int level() const { return mLevel; }
+    void setLevel(int level) { mLevel = level; }
+    int level() const { return mLevel; }
 
-	const QVector<TileLayer*> &layers() const { return mLayers; }
-	int layerCount() const { return mLayers.count(); }
+    const QVector<TileLayer*> &layers() const { return mLayers; }
+    int layerCount() const { return mLayers.count(); }
 
-	bool isVisible() const { return mVisible; }
-	void setVisible(bool visible) { mVisible = visible; }
+    bool isVisible() const { return mVisible; }
+    void setVisible(bool visible) { mVisible = visible; }
 
     QVector<TileLayer*> mLayers;
-	QVector<int> mIndices;
-	int mLevel;
-	bool mVisible;
+    QVector<int> mIndices;
+    int mLevel;
+    bool mVisible;
 };
 
 } // namespace Tiled

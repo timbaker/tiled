@@ -37,7 +37,7 @@ MapObject::MapObject():
     mTile(0),
     mObjectGroup(0)
 #ifdef ZOMBOID
-	, mVisible(true)
+    , mVisible(true)
 #endif
 {
 }
@@ -53,7 +53,7 @@ MapObject::MapObject(const QString &name, const QString &type,
     mTile(0),
     mObjectGroup(0)
 #ifdef ZOMBOID
-	, mVisible(true)
+    , mVisible(true)
 #endif
 {
 }

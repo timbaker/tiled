@@ -272,8 +272,8 @@ public:
     virtual Layer *clone() const;
 
 #ifdef ZOMBOID
-	void setGroup(ZTileLayerGroup *group) { mTileLayerGroup = group; }
-	ZTileLayerGroup *group() const { return mTileLayerGroup; }
+    void setGroup(ZTileLayerGroup *group) { mTileLayerGroup = group; }
+    ZTileLayerGroup *group() const { return mTileLayerGroup; }
 #endif
 
 protected:
@@ -284,7 +284,7 @@ private:
     QMargins mOffsetMargins;
     QVector<Cell> mGrid;
 #ifdef ZOMBOID
-	ZTileLayerGroup *mTileLayerGroup;
+    ZTileLayerGroup *mTileLayerGroup;
 #endif
 };
 

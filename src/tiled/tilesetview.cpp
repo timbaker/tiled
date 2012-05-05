@@ -83,19 +83,19 @@ void TileDelegate::paint(QPainter *painter,
         painter->setRenderHint(QPainter::SmoothPixmapTransform);
 
 #ifdef ZOMBOID
-	const QFontMetrics fm = painter->fontMetrics();
-	const int labelHeight = mTilesetView->showLayerNames() ? fm.lineSpacing() : 0;
-	painter->drawPixmap(option.rect.adjusted(0, 0, -extra, -extra - labelHeight), tileImage);
+    const QFontMetrics fm = painter->fontMetrics();
+    const int labelHeight = mTilesetView->showLayerNames() ? fm.lineSpacing() : 0;
+    painter->drawPixmap(option.rect.adjusted(0, 0, -extra, -extra - labelHeight), tileImage);
 
-	if (mTilesetView->showLayerNames()) {
-		const QVariant decoration = index.model()->data(index, Qt::DecorationRole);
-		QString layerName = decoration.toString();
-		if (layerName.isEmpty())
-			layerName = QLatin1String("???");
+    if (mTilesetView->showLayerNames()) {
+        const QVariant decoration = index.model()->data(index, Qt::DecorationRole);
+        QString layerName = decoration.toString();
+        if (layerName.isEmpty())
+            layerName = QLatin1String("???");
 
-		QString name = fm.elidedText(layerName, Qt::ElideRight, option.rect.width());
-		painter->drawText(option.rect.left(), option.rect.bottom() - labelHeight, option.rect.width(), labelHeight, Qt::AlignHCenter, name);
-	}
+        QString name = fm.elidedText(layerName, Qt::ElideRight, option.rect.width());
+        painter->drawText(option.rect.left(), option.rect.bottom() - labelHeight, option.rect.width(), labelHeight, Qt::AlignHCenter, name);
+    }
 #else
     painter->drawPixmap(option.rect.adjusted(0, 0, -extra, -extra), tileImage);
 #endif
@@ -118,8 +118,8 @@ QSize TileDelegate::sizeHint(const QStyleOptionViewItem & option,
     const qreal zoom = mTilesetView->zoomable()->scale();
     const int extra = mTilesetView->drawGrid() ? 1 : 0;
 #ifdef ZOMBOID
-	const QFontMetrics &fm = option.fontMetrics;
-	const int labelHeight = mTilesetView->showLayerNames() ? fm.lineSpacing() : 0;
+    const QFontMetrics &fm = option.fontMetrics;
+    const int labelHeight = mTilesetView->showLayerNames() ? fm.lineSpacing() : 0;
     return QSize(tileset->tileWidth() * zoom + extra,
                  tileset->tileHeight() * zoom + extra + labelHeight);
 #else
@@ -162,7 +162,7 @@ TilesetView::TilesetView(MapDocument *mapDocument, QWidget *parent)
     // Hardcode this view on 'left to right' since it doesn't work properly
     // for 'right to left' languages.
     setLayoutDirection(Qt::LeftToRight);
-    
+
     Preferences *prefs = Preferences::instance();
     mDrawGrid = prefs->showTilesetGrid();
 
@@ -170,7 +170,7 @@ TilesetView::TilesetView(MapDocument *mapDocument, QWidget *parent)
     connect(prefs, SIGNAL(showTilesetGridChanged(bool)),
             SLOT(setDrawGrid(bool)));
 #ifdef ZOMBOID
-	mShowLayerNames = prefs->autoSwitchLayer();
+    mShowLayerNames = prefs->autoSwitchLayer();
     connect(prefs, SIGNAL(autoSwitchLayerChanged(bool)),
             SLOT(autoSwitchLayerChanged(bool)));
 #endif
@@ -250,14 +250,14 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
     QIcon propIcon(QLatin1String(":images/16x16/document-properties.png"));
 
 #ifdef ZOMBOID
-	QAction *actionProperties = 0;
+    QAction *actionProperties = 0;
     if (tile) {
-		actionProperties = menu.addAction(propIcon,
+        actionProperties = menu.addAction(propIcon,
                                           tr("Tile &Properties..."));
         actionProperties->setEnabled(!isExternal);
         Utils::setThemeIcon(actionProperties, "document-properties");
         menu.addSeparator();
-	}
+    }
 #else
     if (tile) {
        // Select this tile to make sure it is clear that only the properties
@@ -266,7 +266,7 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
                                           QItemSelectionModel::SelectCurrent |
                                           QItemSelectionModel::Clear);
 
-		QAction *tileProperties = menu.addAction(propIcon,
+        QAction *tileProperties = menu.addAction(propIcon,
                                                  tr("Tile &Properties..."));
         tileProperties->setEnabled(!isExternal);
         Utils::setThemeIcon(tileProperties, "document-properties");
@@ -274,39 +274,39 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
 
         connect(tileProperties, SIGNAL(triggered()),
                 SLOT(editTileProperties()));
-	}
+    }
 #endif
 
 #ifdef ZOMBOID
     QVector<QAction*> layerActions;
-	QStringList layerNames;
-	if (tile) {
-		menu.addSeparator();
+    QStringList layerNames;
+    if (tile) {
+        menu.addSeparator();
 
-		// Get a list of layer names from the current map
-		QSet<QString> set;
-		foreach (TileLayer *tl, mMapDocument->map()->tileLayers()) {
-			if (tl->group()) {
-				set.insert(tl->name().split(QLatin1String("_")).at(1));
-			}
-		}
+        // Get a list of layer names from the current map
+        QSet<QString> set;
+        foreach (TileLayer *tl, mMapDocument->map()->tileLayers()) {
+            if (tl->group()) {
+                set.insert(tl->name().split(QLatin1String("_")).at(1));
+            }
+        }
 
-		// Get a list of layer names for the current tileset
-		for (int i = 0; i < m->tileset()->tileCount(); i++) {
-			Tile *tile = m->tileset()->tileAt(i);
-			QString layerName = TilesetManager::instance()->layerName(tile);
-			if (!layerName.isEmpty())
-				set.insert(layerName);
-		}
-		layerNames = QStringList::fromSet(set);
-		layerNames.sort();
+        // Get a list of layer names for the current tileset
+        for (int i = 0; i < m->tileset()->tileCount(); i++) {
+            Tile *tile = m->tileset()->tileAt(i);
+            QString layerName = TilesetManager::instance()->layerName(tile);
+            if (!layerName.isEmpty())
+                set.insert(layerName);
+        }
+        layerNames = QStringList::fromSet(set);
+        layerNames.sort();
 
-		QMenu *layersMenu = menu.addMenu(QLatin1String("Default Layer"));
-		foreach (QString layerName, layerNames) {
-			QAction *action = layersMenu->addAction(layerName);
-			layerActions.append(action);
-		}
-	}
+        QMenu *layersMenu = menu.addMenu(QLatin1String("Default Layer"));
+        foreach (QString layerName, layerNames) {
+            QAction *action = layersMenu->addAction(layerName);
+            layerActions.append(action);
+        }
+    }
 #endif
 
     menu.addSeparator();
@@ -321,29 +321,29 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
 #ifdef ZOMBOID
     QAction *action = menu.exec(event->globalPos());
 
-	if (action && action == actionProperties) {
+    if (action && action == actionProperties) {
        // Select this tile to make sure it is clear that only the properties
         // of a single tile are being edited.
         selectionModel()->setCurrentIndex(index,
                                           QItemSelectionModel::SelectCurrent |
                                           QItemSelectionModel::Clear);
-		editTileProperties();
-	}
+        editTileProperties();
+    }
 
-	else if (action && layerActions.contains(action)) {
-		int index = layerActions.indexOf(action);
-		QString layerName = layerNames[index];
-		QModelIndexList indexes = selectionModel()->selectedIndexes();
-		QUndoStack *undoStack = mMapDocument->undoStack();
-		undoStack->beginMacro(tr("Change Tile Layer Name (x%n)", "", indexes.size()));
-		foreach (QModelIndex index, indexes) {
-			tile = m->tileAt(index);
-			QString oldName = TilesetManager::instance()->layerName(tile);
-			ChangeTileLayerName *undo = new ChangeTileLayerName(mMapDocument, tile, oldName, layerName);
-			mMapDocument->undoStack()->push(undo);
-		}
-		undoStack->endMacro();
-	}
+    else if (action && layerActions.contains(action)) {
+        int index = layerActions.indexOf(action);
+        QString layerName = layerNames[index];
+        QModelIndexList indexes = selectionModel()->selectedIndexes();
+        QUndoStack *undoStack = mMapDocument->undoStack();
+        undoStack->beginMacro(tr("Change Tile Layer Name (x%n)", "", indexes.size()));
+        foreach (QModelIndex index, indexes) {
+            tile = m->tileAt(index);
+            QString oldName = TilesetManager::instance()->layerName(tile);
+            ChangeTileLayerName *undo = new ChangeTileLayerName(mMapDocument, tile, oldName, layerName);
+            mMapDocument->undoStack()->push(undo);
+        }
+        undoStack->endMacro();
+    }
 #else
     menu.exec(event->globalPos());
 #endif
@@ -377,7 +377,7 @@ void TilesetView::adjustScale()
 #ifdef ZOMBOID
 void TilesetView::autoSwitchLayerChanged(bool enabled)
 {
-	mShowLayerNames = enabled;
+    mShowLayerNames = enabled;
     tilesetModel()->tilesetChanged();
 }
 #endif

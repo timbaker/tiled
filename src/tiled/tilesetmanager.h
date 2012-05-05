@@ -129,8 +129,8 @@ public:
     { return mReloadTilesetsOnChange; }
 
 #ifdef ZOMBOID
-	void setLayerName(Tile *tile, const QString &name);
-	QString layerName(Tile *tile);
+    void setLayerName(Tile *tile, const QString &name);
+    QString layerName(Tile *tile);
 #endif
 
 signals:
@@ -159,14 +159,14 @@ private:
     static TilesetManager *mInstance;
 
 #ifdef ZOMBOID
-	QMap<QString,ZTileLayerNames*> mTileLayerNames; // imageSource -> tile layer names
+    QMap<QString,ZTileLayerNames*> mTileLayerNames; // imageSource -> tile layer names
 
-	QString tileLayerNamesFile(Tileset *ts);
-	ZTileLayerNames *layerNamesForTileset(Tileset *ts);
+    QString tileLayerNamesFile(Tileset *ts);
+    ZTileLayerNames *layerNamesForTileset(Tileset *ts);
 
-	void readTileLayerNames(Tileset *ts);
-	void writeTileLayerNames(ZTileLayerNames *tln);
-	void syncTileLayerNames(Tileset *ts);
+    void readTileLayerNames(Tileset *ts);
+    void writeTileLayerNames(ZTileLayerNames *tln);
+    void syncTileLayerNames(Tileset *ts);
 #endif
 
     /**

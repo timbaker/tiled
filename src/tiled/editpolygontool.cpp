@@ -392,12 +392,12 @@ void EditPolygonTool::updateHandles()
         for (int i = 0; i < pointHandles.size(); ++i) {
             const QPointF &point = polygon.at(i);
 #ifdef ZOMBOID
-			Layer *layer = pointHandles[i]->mapObject()->objectGroup();
-			const QPointF handlePos = renderer->tileToPixelCoords(point, layer);
+            Layer *layer = pointHandles[i]->mapObject()->objectGroup();
+            const QPointF handlePos = renderer->tileToPixelCoords(point, layer);
 #else
             const QPointF handlePos = renderer->tileToPixelCoords(point);
 #endif
-			pointHandles.at(i)->setPos(handlePos);
+            pointHandles.at(i)->setPos(handlePos);
         }
 
         mHandles.insert(item, pointHandles);
@@ -510,18 +510,18 @@ void EditPolygonTool::updateMovingItems(const QPointF &pos,
 #ifdef ZOMBOID
     int i = 0;
     foreach (PointHandle *handle, mSelectedHandles) {
-		Layer *layer = handle->mapObject()->objectGroup();
-		QPointF diff = pos - mStart;
-		if (snapToGrid) {
-			const QPointF alignPixelPos =
-				renderer->tileToPixelCoords(mAlignPosition, layer);
-			const QPointF newAlignPixelPos = alignPixelPos + diff;
+        Layer *layer = handle->mapObject()->objectGroup();
+        QPointF diff = pos - mStart;
+        if (snapToGrid) {
+            const QPointF alignPixelPos =
+                renderer->tileToPixelCoords(mAlignPosition, layer);
+            const QPointF newAlignPixelPos = alignPixelPos + diff;
 
-			// Snap the position to the grid
-			const QPointF newTileCoords =
-					renderer->pixelToTileCoords(newAlignPixelPos, layer).toPoint();
-			diff = renderer->tileToPixelCoords(newTileCoords, layer) - alignPixelPos;
-		}
+            // Snap the position to the grid
+            const QPointF newTileCoords =
+                    renderer->pixelToTileCoords(newAlignPixelPos, layer).toPoint();
+            diff = renderer->tileToPixelCoords(newTileCoords, layer) - alignPixelPos;
+        }
         const QPointF newPixelPos = mOldHandlePositions.at(i) + diff;
         const QPointF newPos = renderer->pixelToTileCoords(newPixelPos, layer);
         handle->setPos(newPixelPos);

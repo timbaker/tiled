@@ -30,62 +30,62 @@
 using namespace Tiled;
 
 ZTileLayerGroup::ZTileLayerGroup(int level)
-	: mLevel(level)
-	, mVisible(true)
+    : mLevel(level)
+    , mVisible(true)
 {
 }
 
 void ZTileLayerGroup::addTileLayer(TileLayer *layer, int index)
 {
-	Q_ASSERT(layer->level() == mLevel);
+    Q_ASSERT(layer->level() == mLevel);
     if (mLayers.contains(layer))
         return;
-	int arrayIndex = 0;
-	foreach(int index1, mIndices) {
-		if (index1 >= index)
-			break;
-		arrayIndex++;
-	}
+    int arrayIndex = 0;
+    foreach(int index1, mIndices) {
+        if (index1 >= index)
+            break;
+        arrayIndex++;
+    }
     mLayers.insert(arrayIndex, layer);
-	mIndices.insert(arrayIndex, index);
-	++arrayIndex;
-	while (arrayIndex < mIndices.count())
-	{
-		mIndices[arrayIndex] += 1;
-		arrayIndex++;
-	}
-	layer->setGroup(this);
-//	layer->setLevel(mLevel);
+    mIndices.insert(arrayIndex, index);
+    ++arrayIndex;
+    while (arrayIndex < mIndices.count())
+    {
+        mIndices[arrayIndex] += 1;
+        arrayIndex++;
+    }
+    layer->setGroup(this);
+//    layer->setLevel(mLevel);
 }
 
 void ZTileLayerGroup::removeTileLayer(TileLayer *layer)
 {
     if (mLayers.contains(layer)) {
-		int arrayIndex = mLayers.indexOf(layer);
+        int arrayIndex = mLayers.indexOf(layer);
         mLayers.remove(arrayIndex);
-		mIndices.remove(arrayIndex);
-		while (arrayIndex < mIndices.count())
-		{
-			mIndices[arrayIndex] -= 1;
-			arrayIndex++;
-		}
-		layer->setGroup(0);
-//		layer->setLevel(0);
-	}
+        mIndices.remove(arrayIndex);
+        while (arrayIndex < mIndices.count())
+        {
+            mIndices[arrayIndex] -= 1;
+            arrayIndex++;
+        }
+        layer->setGroup(0);
+//        layer->setLevel(0);
+    }
 }
 
 QRect ZTileLayerGroup::bounds() const
 {
-	QRect r;
-	foreach (TileLayer *tl, mLayers)
-		r |= tl->bounds();
-	return r;
+    QRect r;
+    foreach (TileLayer *tl, mLayers)
+        r |= tl->bounds();
+    return r;
 }
 
 // from map.cpp
 static void maxMargins(const QMargins &a,
                            const QMargins &b,
-						   QMargins &out)
+                           QMargins &out)
 {
     out.setLeft(qMax(a.left(), b.left()));
     out.setTop(qMax(a.top(), b.top()));
@@ -95,9 +95,9 @@ static void maxMargins(const QMargins &a,
 
 QMargins ZTileLayerGroup::drawMargins() const
 {
-	QMargins m;
-	foreach (TileLayer *tl, mLayers) {
-		maxMargins(m, tl->drawMargins(), m);
-	}
-	return m;
+    QMargins m;
+    foreach (TileLayer *tl, mLayers) {
+        maxMargins(m, tl->drawMargins(), m);
+    }
+    return m;
 }
