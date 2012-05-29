@@ -22,10 +22,7 @@
 
 #include "mapdocument.h"
 #include "mapobject.h"
-#ifdef ZOMBOID
-#include "zmapobjectmodel.hpp"
-#endif
-
+#include "mapobjectmodel.h"
 #include <QCoreApplication>
 
 using namespace Tiled;
@@ -44,20 +41,9 @@ ResizeMapObject::ResizeMapObject(MapDocument *mapDocument,
 
 void ResizeMapObject::undo()
 {
-#ifdef ZOMBOID
     mMapDocument->mapObjectModel()->setObjectSize(mMapObject, mOldSize);
-#else
-    mMapObject->setSize(mOldSize);
-    mMapDocument->emitObjectChanged(mMapObject);
-#endif
 }
-
 void ResizeMapObject::redo()
 {
-#ifdef ZOMBOID
     mMapDocument->mapObjectModel()->setObjectSize(mMapObject, mNewSize);
-#else
-    mMapObject->setSize(mNewSize);
-    mMapDocument->emitObjectChanged(mMapObject);
-#endif
 }

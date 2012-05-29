@@ -228,10 +228,8 @@ public:
      */
     MapObject *clone() const;
 
-#ifdef ZOMBOID
     bool isVisible() const { return mVisible; }
     void setVisible(bool visible) { mVisible = visible; }
-#endif
 
 private:
     QString mName;
@@ -242,9 +240,7 @@ private:
     Shape mShape;
     Tile *mTile;
     ObjectGroup *mObjectGroup;
-#ifdef ZOMBOID
     bool mVisible;
-#endif
 };
 
 } // namespace Tiled

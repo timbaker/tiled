@@ -82,9 +82,11 @@ QPainterPath StaggeredRenderer::shape(const MapObject *object) const
 }
 
 #ifdef ZOMBOID
-void StaggeredRenderer::drawGrid(QPainter *painter, const QRectF &rect, const Layer *layer) const
+void StaggeredRenderer::drawGrid(QPainter *painter, const QRectF &rect,
+                                 QColor gridColor, const Layer *layer) const
 #else
-void StaggeredRenderer::drawGrid(QPainter *painter, const QRectF &rect) const
+void StaggeredRenderer::drawGrid(QPainter *painter, const QRectF &rect,
+                                 QColor gridColor) const
 #endif
 {
     const int tileWidth = map()->tileWidth();
@@ -100,7 +102,6 @@ void StaggeredRenderer::drawGrid(QPainter *painter, const QRectF &rect) const
     endX = qMin((int) std::ceil(rect.right()) / tileWidth + 1, endX);
     endY = qMin((int) std::ceil(rect.bottom()) / tileHeight + 1, endY);
 
-    QColor gridColor(Qt::black);
     gridColor.setAlpha(128);
 
     QPen gridPen(gridColor);

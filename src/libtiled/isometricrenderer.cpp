@@ -125,9 +125,11 @@ QPainterPath IsometricRenderer::shape(const MapObject *object) const
 }
 
 #ifdef ZOMBOID
-void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect, const Layer *layer) const
+void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect,
+                                 QColor gridColor, const Layer *layer) const
 #else
-void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect) const
+void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect,
+                                 QColor gridColor) const
 #endif
 {
     const int tileWidth = map()->tileWidth();
@@ -144,7 +146,6 @@ void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect) const
     const int endY = qMin(qreal(map()->height()),
                           pixelToTileCoords(r.bottomLeft()).y());
 
-    QColor gridColor(Qt::black);
     gridColor.setAlpha(128);
 
     QPen gridPen(gridColor);

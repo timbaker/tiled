@@ -49,9 +49,9 @@ namespace Internal {
 
 class LayerModel;
 class TileSelectionModel;
+class MapObjectModel;
 #ifdef ZOMBOID
 class ZLevelsModel;
-class ZMapObjectModel;
 #endif
 
 /**
@@ -168,9 +168,9 @@ public:
      */
     LayerModel *layerModel() const { return mLayerModel; }
 
+    MapObjectModel *mapObjectModel() const { return mMapObjectModel; }
 #ifdef ZOMBOID
     ZLevelsModel *levelsModel() const { return mLevelsModel; }
-    ZMapObjectModel *mapObjectModel() const { return mMapObjectModel; }
 #endif
 
     /**
@@ -242,28 +242,6 @@ public:
     void setTileLayerName(Tile *tile, const QString &name);
 #endif
 
-#ifdef ZOMBOID // make private, see ZMapObjectsModel
-private:
-#endif
-    void emitObjectsAdded(const QList<MapObject*> &objects);
-#ifdef ZOMBOID
-    void emitObjectsAboutToBeRemoved(const QList<MapObject*> &objects);
-#endif
-    void emitObjectsRemoved(const QList<MapObject*> &objects);
-    void emitObjectsChanged(const QList<MapObject*> &objects);
-
-    inline void emitObjectAdded(MapObject *object)
-    { emitObjectsAdded(QList<MapObject*>() << object); }
-
-    inline void emitObjectRemoved(MapObject *object)
-    { emitObjectsRemoved(QList<MapObject*>() << object); }
-
-    inline void emitObjectChanged(MapObject *object)
-    { emitObjectsChanged(QList<MapObject*>() << object); }
-#ifdef ZOMBOID // Undo setting private above
-public:
-#endif
-
     /**
      * Emits the editLayerNameRequested signal, to get renamed.
      */
@@ -292,10 +270,8 @@ signals:
     void mapChanged();
 
     void layerAdded(int index);
-#ifdef ZOMBOID
     void layerAboutToBeRemoved(int index);
     void layerRenamed(int index);
-#endif
     void layerRemoved(int index);
     void layerChanged(int index);
 
@@ -337,19 +313,13 @@ signals:
 #endif
 
     void objectsAdded(const QList<MapObject*> &objects);
-#ifdef ZOMBOID
     void objectsAboutToBeRemoved(const QList<MapObject*> &objects);
-#endif
     void objectsRemoved(const QList<MapObject*> &objects);
     void objectsChanged(const QList<MapObject*> &objects);
 
 private slots:
-#ifdef ZOMBOID
-    void onObjectsAdded(const QList<MapObject*> &objects);
-    void onObjectsChanged(const QList<MapObject*> &objects);
-    void onObjectsAboutToBeRemoved(const QList<MapObject*> &objects);
     void onObjectsRemoved(const QList<MapObject*> &objects);
-#endif
+
     void onLayerAdded(int index);
     void onLayerAboutToBeRemoved(int index);
     void onLayerRemoved(int index);
@@ -364,9 +334,9 @@ private:
     QList<MapObject*> mSelectedObjects;
     MapRenderer *mRenderer;
     int mCurrentLayerIndex;
+    MapObjectModel *mMapObjectModel;
 #ifdef ZOMBOID
     ZLevelsModel *mLevelsModel;
-    ZMapObjectModel *mMapObjectModel;
     int mMaxVisibleLayer;
 #endif
     QUndoStack *mUndoStack;

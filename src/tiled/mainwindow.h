@@ -30,11 +30,8 @@
 #include <QSessionManager>
 #include <QSettings>
 
-#ifdef ZOMBOID
 class QComboBox;
-#endif
-class QLabel;
-class QToolButton;
+class QLabel;class QToolButton;
 
 namespace Ui {
 class MainWindow;
@@ -57,11 +54,11 @@ class BucketFillTool;
 class TilesetDock;
 class MapView;
 class CommandButton;
-#ifdef ZOMBOID
+class ObjectsDock;
 class Zoomable;
+#ifdef ZOMBOID
 class ZLevelsDock;
 class ZMapsDock;
-class ZObjectsDock;
 #endif
 
 /**
@@ -209,19 +206,15 @@ private:
     MapDocument *mMapDocument;
     MapDocumentActionHandler *mActionHandler;
     LayerDock *mLayerDock;
+    ObjectsDock *mObjectsDock;
 #ifdef ZOMBOID
     ZLevelsDock *mLevelsDock;
     ZMapsDock *mMapsDock;
-    ZObjectsDock *mObjectsDock;
-    Zoomable *mZoomable;
-    QComboBox *mZoomComboBox;
 #endif
     TilesetDock *mTilesetDock;
-#ifdef ZOMBOID
     QLabel *mCurrentLayerLabel;
-#else
-    QLabel *mZoomLabel;
-#endif
+    Zoomable *mZoomable;
+    QComboBox *mZoomComboBox;
     QLabel *mStatusInfoLabel;
     QSettings mSettings;
     QToolButton *mRandomButton;

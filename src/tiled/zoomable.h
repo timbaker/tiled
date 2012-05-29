@@ -22,10 +22,11 @@
 #define ZOOMABLE_H
 
 #include <QObject>
-#ifdef ZOMBOID
+#include <QRegExp>
 #include <QVector>
+
 class QComboBox;
-#endif
+class QRegExpValidator;
 
 namespace Tiled {
 namespace Internal {
@@ -51,36 +52,45 @@ public:
     bool canZoomOut() const;
 
     /**
+     * Changes the current scale based on the given mouse wheel \a delta.
+     *
+     * For convenience, the delta is assumed to be in the same units as
+     * QWheelEvent::delta, which is the distance that the wheel is rotated,
+     * in eighths of a degree.
+     */
+    void handleWheelDelta(int delta);
+
+    /**
      * Returns whether images should be smoothly transformed when drawn at the
      * current scale. This is the case when the scale is not a whole number.
      */
     bool smoothTransform() const
     { return mScale != (int) mScale; }
 
-#ifdef ZOMBOID
     void setZoomFactors(const QVector<qreal>& factors);
     void connectToComboBox(QComboBox *comboBox);
-#endif
 
 public slots:
     void zoomIn();
     void zoomOut();
     void resetZoom();
 
-#ifdef ZOMBOID
 private slots:
     void comboActivated(int index);
-#endif
+    void comboEdited();
 
 signals:
     void scaleChanged(qreal scale);
 
 private:
+    void syncComboBox();
+
+private:
     qreal mScale;
-#ifdef ZOMBOID
     QVector<qreal> mZoomFactors;
     QComboBox *mComboBox;
-#endif
+    QRegExp mComboRegExp;
+    QRegExpValidator *mComboValidator;
 };
 
 } // namespace Internal

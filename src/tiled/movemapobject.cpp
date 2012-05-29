@@ -22,10 +22,7 @@
 
 #include "mapdocument.h"
 #include "mapobject.h"
-#ifdef ZOMBOID
-#include "zmapobjectmodel.hpp"
-#endif
-
+#include "mapobjectmodel.h"
 #include <QCoreApplication>
 
 using namespace Tiled;
@@ -44,20 +41,9 @@ MoveMapObject::MoveMapObject(MapDocument *mapDocument,
 
 void MoveMapObject::undo()
 {
-#ifdef ZOMBOID
     mMapDocument->mapObjectModel()->setObjectPosition(mMapObject, mOldPos);
-#else
-    mMapObject->setPosition(mOldPos);
-    mMapDocument->emitObjectChanged(mMapObject);
-#endif
 }
-
 void MoveMapObject::redo()
 {
-#ifdef ZOMBOID
     mMapDocument->mapObjectModel()->setObjectPosition(mMapObject, mNewPos);
-#else
-    mMapObject->setPosition(mNewPos);
-    mMapDocument->emitObjectChanged(mMapObject);
-#endif
 }

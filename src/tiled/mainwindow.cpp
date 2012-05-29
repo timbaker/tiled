@@ -74,10 +74,10 @@
 #include "utils.h"
 #include "zoomable.h"
 #include "commandbutton.h"
+#include "objectsdock.h"
 #ifdef ZOMBOID
 #include "zlevelsdock.hpp"
 #include "zmapsdock.hpp"
-#include "zobjectsdock.hpp"
 #include "zprogress.hpp"
 #endif
 
@@ -86,9 +86,7 @@
 #endif
 
 #include <QCloseEvent>
-#ifdef ZOMBOID
 #include <QComboBox>
-#endif
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QScrollBar>
@@ -98,6 +96,7 @@
 #include <QUndoStack>
 #include <QUndoView>
 #include <QImageReader>
+#include <QRegExp>
 #include <QSignalMapper>
 #include <QShortcut>
 #include <QToolButton>
@@ -112,17 +111,15 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     , mMapDocument(0)
     , mActionHandler(new MapDocumentActionHandler(this))
     , mLayerDock(new LayerDock(this))
+    , mObjectsDock(new ObjectsDock())
 #ifdef ZOMBOID
     , mLevelsDock(new ZLevelsDock(this))
     , mMapsDock(new ZMapsDock(this))
-    , mObjectsDock(new ZObjectsDock())
-    , mZoomComboBox(new QComboBox)
-    , mCurrentLayerLabel(new QLabel)
 #endif
     , mTilesetDock(new TilesetDock(this))
-#ifndef ZOMBOID
-    , mZoomLabel(new QLabel)
-#endif
+    , mCurrentLayerLabel(new QLabel)
+    , mZoomable(0)
+    , mZoomComboBox(new QComboBox)
     , mStatusInfoLabel(new QLabel)
     , mClipboardManager(new ClipboardManager(this))
     , mDocumentManager(DocumentManager::instance())
@@ -182,16 +179,13 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     tabifyDockWidget(mLayerDock, mLevelsDock);
     tabifyDockWidget(mLevelsDock, mObjectsDock);
     tabifyDockWidget(mObjectsDock, mMapsDock);
+#else
+    addDockWidget(Qt::RightDockWidgetArea, mObjectsDock);
+    tabifyDockWidget(mLayerDock, mObjectsDock);
 #endif
     addDockWidget(Qt::RightDockWidgetArea, mTilesetDock);
 
-#ifdef ZOMBOID
-    mZoomable = 0;
     statusBar()->addPermanentWidget(mZoomComboBox);
-#else
-    statusBar()->addPermanentWidget(mZoomLabel);
-#endif
-
     mUi->actionNew->setShortcuts(QKeySequence::New);
     mUi->actionOpen->setShortcuts(QKeySequence::Open);
     mUi->actionSave->setShortcuts(QKeySequence::Save);
@@ -241,6 +235,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     mRandomButton->setToolTip(tr("Random Mode"));
     mRandomButton->setIcon(QIcon(QLatin1String(":images/24x24/dice.png")));
     mRandomButton->setCheckable(true);
+    mRandomButton->setShortcut(QKeySequence(tr("D")));
     mUi->mainToolBar->addWidget(mRandomButton);
 
     mLayerMenu = new QMenu(tr("&Layer"), this);
@@ -364,6 +359,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 
     connect(mRandomButton, SIGNAL(toggled(bool)),
             mStampBrush, SLOT(setRandom(bool)));
+    connect(mRandomButton, SIGNAL(toggled(bool)),
+            mBucketFillTool, SLOT(setRandom(bool)));
 
     ToolManager *toolManager = ToolManager::instance();
     toolManager->registerTool(mStampBrush);
@@ -383,17 +380,14 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     statusBar()->addWidget(mStatusInfoLabel);
     connect(toolManager, SIGNAL(statusInfoChanged(QString)),
             this, SLOT(updateStatusInfoLabel(QString)));
-#ifdef ZOMBOID
     statusBar()->addWidget(mCurrentLayerLabel);
-#endif
-
     mUi->menuView->addSeparator();
     mUi->menuView->addAction(mTilesetDock->toggleViewAction());
     mUi->menuView->addAction(mLayerDock->toggleViewAction());
     mUi->menuView->addAction(undoDock->toggleViewAction());
+    mUi->menuView->addAction(mObjectsDock->toggleViewAction());
 #ifdef ZOMBOID
     mUi->menuView->addAction(mLevelsDock->toggleViewAction());
-    mUi->menuView->addAction(mObjectsDock->toggleViewAction());
     mUi->menuView->addAction(mMapsDock->toggleViewAction());
 #endif
 
@@ -806,11 +800,27 @@ void MainWindow::exportAs()
     QString selectedFilter =
             mSettings.value(QLatin1String("lastUsedExportFilter")).toString();
 
+    QFileInfo baseNameInfo = QFileInfo(mMapDocument->fileName());
+    QString baseName = baseNameInfo.baseName();
+
+    QRegExp extensionFinder(QLatin1String("\\(\\*\\.([^\\)\\s]*)"));
+    extensionFinder.indexIn(selectedFilter);
+    const QString extension = extensionFinder.cap(1);
+
+    Preferences *pref = Preferences::instance();
+    QString lastExportedFilePath = pref->lastPath(Preferences::ExportedFile);
+
+    QString suggestedFilename = lastExportedFilePath
+                                + QLatin1String("/") + baseName
+                                + QLatin1Char('.') + extension;
+
     QString fileName = QFileDialog::getSaveFileName(this, tr("Export As..."),
-                                                    fileDialogStartLocation(),
+                                                    suggestedFilename,
                                                     filter, &selectedFilter);
     if (fileName.isEmpty())
         return;
+
+    pref->setLastPath(Preferences::ExportedFile, QFileInfo(fileName).path());
 
     MapWriterInterface *chosenWriter = 0;
 
@@ -1268,27 +1278,22 @@ void MainWindow::updateActions()
 
     updateZoomLabel(); // for the zoom actions
 
-#ifdef ZOMBOID
     Layer *layer = mMapDocument ? mMapDocument->currentLayer() : 0;
-    mCurrentLayerLabel->setText(QString(QLatin1String("    Current layer: %1")).arg(layer ? layer->name() : QLatin1String("<none>")));
-#endif
+    mCurrentLayerLabel->setText(tr("Current layer: %1").arg(
+                                    layer ? layer->name() : tr("<none>")));
 }
 
 void MainWindow::updateZoomLabel()
 {
     MapView *mapView = mDocumentManager->currentMapView();
-#ifdef ZOMBOID
+
     Zoomable *zoomable = mapView ? mapView->zoomable() : 0;
-#else
-    const Zoomable *zoomable = mapView ? mapView->zoomable() : 0;
-#endif
     const qreal scale = zoomable ? zoomable->scale() : 1;
 
     mUi->actionZoomIn->setEnabled(zoomable && zoomable->canZoomIn());
     mUi->actionZoomOut->setEnabled(zoomable && zoomable->canZoomOut());
     mUi->actionZoomNormal->setEnabled(scale != 1);
 
-#ifdef ZOMBOID
     if (zoomable) {
         mZoomComboBox->setEnabled(true);
     } else {
@@ -1296,14 +1301,7 @@ void MainWindow::updateZoomLabel()
         mZoomComboBox->setCurrentIndex(index);
         mZoomComboBox->setEnabled(false);
     }
-#else
-    if (zoomable)
-        mZoomLabel->setText(tr("%1%").arg(scale * 100));
-    else
-        mZoomLabel->setText(QString());
-#endif
 }
-
 void MainWindow::editLayerProperties()
 {
     if (!mMapDocument)
@@ -1472,19 +1470,18 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
 {
     if (mMapDocument)
         mMapDocument->disconnect(this);
-#ifdef ZOMBOID
+
     if (mZoomable)
         mZoomable->connectToComboBox(0);
     mZoomable = 0;
-#endif
 
     mMapDocument = mapDocument;
 
     mActionHandler->setMapDocument(mMapDocument);
     mLayerDock->setMapDocument(mMapDocument);
+    mObjectsDock->setMapDocument(mMapDocument);
 #ifdef ZOMBOID
     mLevelsDock->setMapDocument(mMapDocument);
-    mObjectsDock->setMapDocument(mMapDocument);
 #endif
     mTilesetDock->setMapDocument(mMapDocument);
     AutomappingManager::instance()->setMapDocument(mMapDocument);
@@ -1499,15 +1496,12 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
                 SLOT(updateActions()));
         connect(mapDocument, SIGNAL(selectedObjectsChanged()),
                 SLOT(updateActions()));
-#ifdef ZOMBOID
+
         if (MapView *mapView = mDocumentManager->currentMapView()) {
             mZoomable = mapView->zoomable();
-            if (mZoomable)
-                mZoomable->connectToComboBox(mZoomComboBox);
+            mZoomable->connectToComboBox(mZoomComboBox);
         }
-#endif
     }
-
     updateWindowTitle();
     updateActions();
 }

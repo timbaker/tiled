@@ -40,17 +40,15 @@
 #include "tilesetmanager.h"
 #include "tmxmapwriter.h"
 #include "utils.h"
+#include "zoomable.h"
 #ifdef ZOMBOID
 #include "preferences.h"
-#include "zoomable.h"
 #include "ztilesetthumbview.hpp"
 #endif
 
 #include <QAction>
 #include <QDropEvent>
-#ifdef ZOMBOID
 #include <QComboBox>
-#endif
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QInputDialog>
@@ -162,7 +160,6 @@ TilesetDock::TilesetDock(QWidget *parent):
 {
     setObjectName(QLatin1String("TilesetDock"));
 
-    mTabBar->setTabsClosable(true);
     mTabBar->setMovable(true);
     mTabBar->setUsesScrollButtons(true);
 
@@ -170,8 +167,6 @@ TilesetDock::TilesetDock(QWidget *parent):
             SLOT(updateActions()));
     connect(mTabBar, SIGNAL(currentChanged(int)),
             mViewStack, SLOT(setCurrentIndex(int)));
-    connect(mTabBar, SIGNAL(tabCloseRequested(int)),
-            this, SLOT(removeTileset(int)));
     connect(mTabBar, SIGNAL(tabMoved(int,int)),
             this, SLOT(moveTileset(int,int)));
 
@@ -192,14 +187,10 @@ TilesetDock::TilesetDock(QWidget *parent):
     vertical->addLayout(horizontal);
 #endif
     vertical->addWidget(mViewStack);
-#ifdef ZOMBOID
     horizontal = new QHBoxLayout();
     horizontal->setSpacing(5);
     horizontal->addWidget(mToolBar, 1);
     vertical->addLayout(horizontal);
-#else
-    vertical->addWidget(mToolBar);
-#endif
 
     mImportTileset->setIcon(QIcon(QLatin1String(":images/16x16/document-import.png")));
     mExportTileset->setIcon(QIcon(QLatin1String(":images/16x16/document-export.png")));
@@ -252,15 +243,14 @@ TilesetDock::TilesetDock(QWidget *parent):
     connect(Preferences::instance(), SIGNAL(autoSwitchLayerChanged(bool)), SLOT(autoSwitchLayerChanged(bool)));
     mToolBar->addWidget(mButtonSwitchLayer);
     }
+#endif
 
     mZoomable = new Zoomable(this);
     mZoomable->setZoomFactors(QVector<qreal>() << 0.25 << 0.5 << 0.75 << 1.0 << 1.25 << 1.5 << 1.75 << 2.0);
-//    mToolBar->addSeparator();
+    mToolBar->addSeparator();
     mZoomComboBox = new QComboBox;
     mZoomable->connectToComboBox(mZoomComboBox);
-//    mActionZoom = mToolBar->addWidget(mZoomComboBox);
     horizontal->addWidget(mZoomComboBox);
-#endif
 
     connect(mViewStack, SIGNAL(currentChanged(int)),
             this, SLOT(updateCurrentTiles()));
@@ -422,11 +412,7 @@ void TilesetDock::dropEvent(QDropEvent *e)
 
 void TilesetDock::insertTilesetView(int index, Tileset *tileset)
 {
-#ifdef ZOMBOID
     TilesetView *view = new TilesetView(mMapDocument, mZoomable);
-#else
-    TilesetView *view = new TilesetView(mMapDocument);
-#endif
     view->setModel(new TilesetModel(tileset, view));
 #ifdef ZOMBOID
     view->tilesetModel()->setMapDocument(mMapDocument);
@@ -438,6 +424,7 @@ void TilesetDock::insertTilesetView(int index, Tileset *tileset)
 
     mTabBar->insertTab(index, tileset->name());
     mViewStack->insertWidget(index, view);
+    updateActions();
 }
 
 void TilesetDock::updateActions()

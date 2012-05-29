@@ -132,17 +132,10 @@ QSize TileDelegate::sizeHint(const QStyleOptionViewItem & option,
 
 } // anonymous namespace
 
-#ifdef ZOMBOID
 TilesetView::TilesetView(MapDocument *mapDocument, Zoomable *zoomable, QWidget *parent)
     : QTableView(parent)
     , mZoomable(zoomable)
     , mMapDocument(mapDocument)
-#else
-TilesetView::TilesetView(MapDocument *mapDocument, QWidget *parent)
-    : QTableView(parent)
-    , mZoomable(new Zoomable(this))
-    , mMapDocument(mapDocument)
-#endif
 {
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -189,10 +182,7 @@ void TilesetView::wheelEvent(QWheelEvent *event)
     if (event->modifiers() & Qt::ControlModifier
         && event->orientation() == Qt::Vertical)
     {
-        if (event->delta() > 0)
-            mZoomable->zoomIn();
-        else
-            mZoomable->zoomOut();
+        mZoomable->handleWheelDelta(event->delta());
         return;
     }
 
@@ -260,7 +250,7 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
     }
 #else
     if (tile) {
-       // Select this tile to make sure it is clear that only the properties
+        // Select this tile to make sure it is clear that only the properties
         // of a single tile are being edited.
         selectionModel()->setCurrentIndex(index,
                                           QItemSelectionModel::SelectCurrent |

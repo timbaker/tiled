@@ -1,5 +1,8 @@
 /*
- * zobjectsdock.cpp
+ * objectsdock.cpp
+ * Copyright 2012, Tim Baker <treectrl@hotmail.com>
+ *
+ * This file is part of Tiled.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -15,7 +18,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "zobjectsdock.hpp"
+#include "objectsdock.h"
 
 #include "addremovemapobject.h"
 #include "documentmanager.h"
@@ -27,7 +30,7 @@
 #include "objectgroup.h"
 #include "objectpropertiesdialog.h"
 #include "utils.h"
-#include "zmapobjectmodel.hpp"
+#include "mapobjectmodel.h"
 
 #include <QBoxLayout>
 #include <QApplication>
@@ -46,12 +49,12 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 
-ZObjectsDock::ZObjectsDock(QWidget *parent)
+ObjectsDock::ObjectsDock(QWidget *parent)
     : QDockWidget(parent)
-    , mObjectsView(new ZObjectsView())
+    , mObjectsView(new ObjectsView())
     , mMapDocument(0)
 {
-    setObjectName(QLatin1String("ZObjectsDock"));
+    setObjectName(QLatin1String("ObjectsDock"));
 
     mActionDuplicateObjects = new QAction(this);
     mActionDuplicateObjects->setIcon(QIcon(QLatin1String(":/images/16x16/stock-duplicate-16.png")));
@@ -62,6 +65,9 @@ ZObjectsDock::ZObjectsDock(QWidget *parent)
     mActionObjectProperties = new QAction(this);
     mActionObjectProperties->setIcon(QIcon(QLatin1String(":/images/16x16/document-properties.png")));
     mActionObjectProperties->setToolTip(tr("Object Propertes"));
+
+    Utils::setThemeIcon(mActionRemoveObjects, "edit-delete");
+    Utils::setThemeIcon(mActionObjectProperties, "document-properties");
 
     connect(mActionDuplicateObjects, SIGNAL(triggered()), SLOT(duplicateObjects()));
     connect(mActionRemoveObjects, SIGNAL(triggered()), SLOT(removeObjects()));
@@ -74,23 +80,11 @@ ZObjectsDock::ZObjectsDock(QWidget *parent)
 
     MapDocumentActionHandler *handler = MapDocumentActionHandler::instance();
 
-#if 1
     QAction *newLayerAction = new QAction(this);
     newLayerAction->setIcon(QIcon(QLatin1String(":/images/16x16/document-new.png")));
     newLayerAction->setToolTip(tr("Add Object Layer"));
-    connect(newLayerAction, SIGNAL(triggered()), handler->actionAddObjectGroup(), SIGNAL(triggered()));
-#else
-    QMenu *newLayerMenu = new QMenu(this);
-    newLayerMenu->addAction(handler->actionAddObjectGroup());
-
-    const QIcon newIcon(QLatin1String(":/images/16x16/document-new.png"));
-    QToolButton *newLayerButton = new QToolButton;
-    newLayerButton->setPopupMode(QToolButton::InstantPopup);
-    newLayerButton->setMenu(newLayerMenu);
-    newLayerButton->setIcon(newIcon);
-    newLayerButton->setToolTip(tr("New Layer"));
-    Utils::setThemeIcon(newLayerButton, "document-new");
-#endif
+    connect(newLayerAction, SIGNAL(triggered()),
+            handler->actionAddObjectGroup(), SIGNAL(triggered()));
 
     mActionMoveToLayer = new QAction(this);
     mActionMoveToLayer->setIcon(QIcon(QLatin1String(":/images/16x16/layer-object.png")));
@@ -101,11 +95,7 @@ ZObjectsDock::ZObjectsDock(QWidget *parent)
     toolbar->setMovable(false);
     toolbar->setIconSize(QSize(16, 16));
 
-#if 1
     toolbar->addAction(newLayerAction);
-#else
-    toolbar->addWidget(newLayerButton);
-#endif
     toolbar->addAction(mActionDuplicateObjects);
     toolbar->addAction(mActionRemoveObjects);
 
@@ -116,7 +106,8 @@ ZObjectsDock::ZObjectsDock(QWidget *parent)
     button->setPopupMode(QToolButton::InstantPopup);
     button->setMenu(mMoveToMenu);
     connect(mMoveToMenu, SIGNAL(aboutToShow()), SLOT(aboutToShowMoveToMenu()));
-    connect(mMoveToMenu, SIGNAL(triggered(QAction*)), SLOT(triggeredMoveToMenu(QAction*)));
+    connect(mMoveToMenu, SIGNAL(triggered(QAction*)),
+            SLOT(triggeredMoveToMenu(QAction*)));
 
     toolbar->addAction(mActionObjectProperties);
 
@@ -135,7 +126,7 @@ ZObjectsDock::ZObjectsDock(QWidget *parent)
     updateActions();
 }
 
-void ZObjectsDock::setMapDocument(MapDocument *mapDoc)
+void ObjectsDock::setMapDocument(MapDocument *mapDoc)
 {
     if (mMapDocument) {
         saveExpandedGroups(mMapDocument);
@@ -148,13 +139,14 @@ void ZObjectsDock::setMapDocument(MapDocument *mapDoc)
 
     if (mMapDocument) {
         restoreExpandedGroups(mMapDocument);
-        connect(mMapDocument, SIGNAL(selectedObjectsChanged()), this, SLOT(updateActions()));
+        connect(mMapDocument, SIGNAL(selectedObjectsChanged()),
+                this, SLOT(updateActions()));
     }
 
     updateActions();
 }
 
-void ZObjectsDock::changeEvent(QEvent *e)
+void ObjectsDock::changeEvent(QEvent *e)
 {
     QDockWidget::changeEvent(e);
     switch (e->type()) {
@@ -166,12 +158,12 @@ void ZObjectsDock::changeEvent(QEvent *e)
     }
 }
 
-void ZObjectsDock::retranslateUi()
+void ObjectsDock::retranslateUi()
 {
     setWindowTitle(tr("Objects"));
 }
 
-void ZObjectsDock::updateActions()
+void ObjectsDock::updateActions()
 {
     int count = mMapDocument ? mMapDocument->selectedObjects().count() : 0;
     bool enabled = count > 0;
@@ -191,19 +183,20 @@ void ZObjectsDock::updateActions()
         ? tr("Move %n Objects To Layer", "", count) : tr("Move Object To Layer"));
 }
 
-void ZObjectsDock::aboutToShowMoveToMenu()
+void ObjectsDock::aboutToShowMoveToMenu()
 {
     mMoveToMenu->clear();
 
-    foreach (ObjectGroup *objectGroup, mMapDocument->map()->objectGroups())
-        mMoveToMenu->addAction(objectGroup->name());
+    foreach (ObjectGroup *objectGroup, mMapDocument->map()->objectGroups()) {
+        QAction *action = mMoveToMenu->addAction(objectGroup->name());
+        action->setData(QVariant::fromValue(objectGroup));
+    }
 }
 
-void ZObjectsDock::triggeredMoveToMenu(QAction *action)
+void ObjectsDock::triggeredMoveToMenu(QAction *action)
 {
-    int actionIndex = mMoveToMenu->actions().indexOf(action);
-    ObjectGroup *objectGroup = mMapDocument->map()->objectGroups().at(actionIndex);
-    
+    ObjectGroup *objectGroup = action->data().value<ObjectGroup*>();
+
     const QList<MapObject *> &objects = mMapDocument->selectedObjects();
 
     QUndoStack *undoStack = mMapDocument->undoStack();
@@ -219,7 +212,7 @@ void ZObjectsDock::triggeredMoveToMenu(QAction *action)
     undoStack->endMacro();
 }
 
-void ZObjectsDock::duplicateObjects()
+void ObjectsDock::duplicateObjects()
 {
     // Unnecessary check is unnecessary
     if (!mMapDocument || !mMapDocument->selectedObjects().count())
@@ -243,7 +236,7 @@ void ZObjectsDock::duplicateObjects()
     mMapDocument->setSelectedObjects(clones);
 }
 
-void ZObjectsDock::removeObjects()
+void ObjectsDock::removeObjects()
 {
     // Unnecessary check is unnecessary
     if (!mMapDocument || !mMapDocument->selectedObjects().count())
@@ -258,7 +251,7 @@ void ZObjectsDock::removeObjects()
     undoStack->endMacro();
 }
 
-void ZObjectsDock::objectProperties()
+void ObjectsDock::objectProperties()
 {
     // Unnecessary check is unnecessary
     if (!mMapDocument || !mMapDocument->selectedObjects().count())
@@ -271,7 +264,7 @@ void ZObjectsDock::objectProperties()
     propertiesDialog.exec();
 }
 
-void ZObjectsDock::saveExpandedGroups(MapDocument *mapDoc)
+void ObjectsDock::saveExpandedGroups(MapDocument *mapDoc)
 {
     mExpandedGroups[mapDoc].clear();
     foreach (ObjectGroup *og, mapDoc->map()->objectGroups()) {
@@ -280,10 +273,8 @@ void ZObjectsDock::saveExpandedGroups(MapDocument *mapDoc)
     }
 }
 
-void ZObjectsDock::restoreExpandedGroups(MapDocument *mapDoc)
+void ObjectsDock::restoreExpandedGroups(MapDocument *mapDoc)
 {
-    if (!mExpandedGroups.contains(mapDoc))
-        mObjectsView->expandAll();
     foreach (ObjectGroup *og, mExpandedGroups[mapDoc])
         mObjectsView->setExpanded(mObjectsView->model()->index(og), true);
     mExpandedGroups[mapDoc].clear();
@@ -295,7 +286,7 @@ void ZObjectsDock::restoreExpandedGroups(MapDocument *mapDoc)
     }
 }
 
-void ZObjectsDock::documentCloseRequested(int index)
+void ObjectsDock::documentCloseRequested(int index)
 {
     DocumentManager *documentManager = DocumentManager::instance();
     MapDocument *mapDoc = documentManager->documents().at(index);
@@ -304,7 +295,7 @@ void ZObjectsDock::documentCloseRequested(int index)
 
 ///// ///// ///// ///// /////
 
-ZObjectsView::ZObjectsView(QWidget *parent)
+ObjectsView::ObjectsView(QWidget *parent)
     : QTreeView(parent)
     , mMapDocument(0)
     , mSynching(false)
@@ -317,27 +308,21 @@ ZObjectsView::ZObjectsView(QWidget *parent)
     setSelectionBehavior(QAbstractItemView::SelectRows);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-//    ZMapObjectModel *model = new ZMapObjectModel;
-//    setModel(model);
-
     connect(this, SIGNAL(activated(QModelIndex)), SLOT(onActivated(QModelIndex)));
 }
 
-QSize ZObjectsView::sizeHint() const
+QSize ObjectsView::sizeHint() const
 {
     return QSize(130, 100);
 }
 
-void ZObjectsView::setMapDocument(MapDocument *mapDoc)
+void ObjectsView::setMapDocument(MapDocument *mapDoc)
 {
     if (mapDoc == mMapDocument)
         return;
 
-    if (mMapDocument) {
+    if (mMapDocument)
         mMapDocument->disconnect(this);
-        disconnect(selectionModel(), SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
-                this, SLOT(currentRowChanged(QModelIndex)));
-    }
 
     mMapDocument = mapDoc;
 
@@ -347,11 +332,8 @@ void ZObjectsView::setMapDocument(MapDocument *mapDoc)
         model()->setMapDocument(mapDoc);
         header()->setResizeMode(0, QHeaderView::Stretch); // 2 equal-sized columns, user can't adjust
 
-        connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
-                this, SLOT(currentLayerIndexChanged(int)));
-         connect(mMapDocument, SIGNAL(selectedObjectsChanged()), this, SLOT(selectedObjectsChanged()));
-        connect(selectionModel(), SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
-                this, SLOT(currentRowChanged(QModelIndex)));
+        connect(mMapDocument, SIGNAL(selectedObjectsChanged()),
+                this, SLOT(selectedObjectsChanged()));
     } else {
         if (model())
             model()->setMapDocument(0);
@@ -360,12 +342,14 @@ void ZObjectsView::setMapDocument(MapDocument *mapDoc)
 
 }
 
-void ZObjectsView::onActivated(const QModelIndex &index)
+void ObjectsView::onActivated(const QModelIndex &index)
 {
+    Q_UNUSED(index)
     // show object properties, center in view
 }
 
-void ZObjectsView::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
+void ObjectsView::selectionChanged(const QItemSelection &selected,
+                                   const QItemSelection &deselected)
 {
     QTreeView::selectionChanged(selected, deselected);
 
@@ -384,9 +368,8 @@ void ZObjectsView::selectionChanged(const QItemSelection &selected, const QItemS
             else if (currentLayerIndex != index)
                 currentLayerIndex = -2;
         }
-        if (MapObject *o = model()->toMapObject(index)) {
+        if (MapObject *o = model()->toMapObject(index))
             selectedObjects.append(o);
-        }
     }
 
     // Switch the current object layer if only one object layer (and/or its objects)
@@ -400,39 +383,18 @@ void ZObjectsView::selectionChanged(const QItemSelection &selected, const QItemS
             MapObject *o = selectedObjects.first();
             QPoint pos = o->position().toPoint();
             QSize size = o->size().toSize();
-            DocumentManager::instance()->centerViewOn(pos.x() + size.width() / 2, pos.y() + size.height() / 2);
+            DocumentManager::instance()->centerViewOn(pos.x() + size.width() / 2,
+                                                      pos.y() + size.height() / 2);
         }
         mMapDocument->setSelectedObjects(selectedObjects);
         mSynching = false;
     }
-    selectedRows.clear();
 }
 
-void ZObjectsView::currentRowChanged(const QModelIndex &index)
+void ObjectsView::selectedObjectsChanged()
 {
-}
-
-void ZObjectsView::currentLayerIndexChanged(int index)
-{
-#if 0
-    if (index > -1) {
-        Layer *layer = mMapDocument->currentLayer();
-        if (ObjectGroup *og = layer->asObjectGroup()) {
-            if (model()->toLayer(currentIndex()) != og) {
-                setCurrentIndex(model()->index(og));
-            }
-            return;
-        }
-    }
-    setCurrentIndex(QModelIndex());
-#endif
-}
-
-void ZObjectsView::selectedObjectsChanged()
-{
-    if (mSynching) {
+    if (mSynching)
         return;
-    }
 
     if (!mMapDocument)
         return;

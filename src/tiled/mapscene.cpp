@@ -79,6 +79,7 @@ MapScene::MapScene(QObject *parent):
     connect(prefs, SIGNAL(objectTypesChanged()), SLOT(syncAllObjectItems()));
     connect(prefs, SIGNAL(highlightCurrentLayerChanged(bool)),
             SLOT(setHighlightCurrentLayer(bool)));
+    connect(prefs, SIGNAL(gridColorChanged(QColor)), SLOT(update()));
 
     mDarkRectangle->setPen(Qt::NoPen);
     mDarkRectangle->setBrush(Qt::black);
@@ -555,7 +556,8 @@ void MapScene::drawForeground(QPainter *painter, const QRectF &rect)
 #ifdef ZOMBOID
 //    mMapDocument->renderer()->drawGrid(painter, rect, mMapDocument->currentLayer());
 #else
-    mMapDocument->renderer()->drawGrid(painter, rect);
+    Preferences *prefs = Preferences::instance();
+    mMapDocument->renderer()->drawGrid(painter, rect, prefs->gridColor());
 #endif
 }
 

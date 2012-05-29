@@ -176,10 +176,13 @@ static QVector<QPoint> calculateLine(int x0, int y0, int x1, int y1)
 
 void StampBrush::tilePositionChanged(const QPoint &)
 {
+    const int x = mStampX;
+    const int y = mStampY;
     updatePosition();
     switch (mBrushBehavior) {
     case Paint:
-        doPaint(true, mStampX, mStampY);
+        foreach (const QPoint &p, calculateLine(x, y, mStampX, mStampY))
+            doPaint(true, p.x(), p.y());
         break;
     case LineStartSet:
         configureBrush(calculateLine(mStampReferenceX, mStampReferenceY,
@@ -360,14 +363,15 @@ TileLayer *StampBrush::getRandomTileLayer() const
 
 void StampBrush::updateRandomList()
 {
+    mRandomList.clear();
+
     if (!mStamp)
         return;
 
-    mRandomList.clear();
     for (int x = 0; x < mStamp->width(); x++)
         for (int y = 0; y < mStamp->height(); y++)
-            if (!mStamp->cellAt(x,y).isEmpty())
-                mRandomList.append(mStamp->cellAt(x,y));
+            if (!mStamp->cellAt(x, y).isEmpty())
+                mRandomList.append(mStamp->cellAt(x, y));
 }
 
 void StampBrush::setStamp(TileLayer *stamp)

@@ -105,6 +105,7 @@ set ( Tiled_SRCS
 	mapdocumentactionhandler.cpp
 	mapdocument.cpp
 	mapobjectitem.cpp
+	mapobjectmodel.cpp
 	mapscene.cpp
 	mapview.cpp
 	movelayer.cpp
@@ -116,6 +117,7 @@ set ( Tiled_SRCS
 	objectgroupitem.cpp
 	objectgrouppropertiesdialog.cpp
 	objectpropertiesdialog.cpp
+	objectsdock.cpp
 	objectselectiontool.cpp
 	objecttypes.cpp
 	objecttypesmodel.cpp
@@ -159,9 +161,7 @@ set ( Tiled_SRCS
 	zlevelsmodel.cpp
 	zlot.cpp
 	zlotmanager.cpp
-	zmapobjectmodel.cpp
 	zmapsdock.cpp
-	zobjectsdock.cpp
 	ZomboidScene.cpp
 	zprogress.cpp
 	ztilelayergroupitem.cpp
@@ -184,6 +184,9 @@ set ( Tiled_UIS
 	newimagelayerdialog.ui
 	)
 QT4_WRAP_UI(UIS ${Tiled_UIS})
+
+# uic needs to find colorbutton.h
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set ( Tiled_RSCS
 	tiled.qrc
@@ -215,12 +218,14 @@ set ( Tiled_MOCS
 	mainwindow.h
 	mapdocumentactionhandler.h
 	mapdocument.h
+	mapobjectmodel.h
 	mapscene.h
 	mapview.h
 	newmapdialog.h
 	newtilesetdialog.h
 	objectgrouppropertiesdialog.h
 	objectpropertiesdialog.h
+	objectsdock.h
 	objectselectiontool.h
 	objecttypesmodel.h
 	offsetmapdialog.h
@@ -247,10 +252,8 @@ set ( Tiled_MOCS
 	zlevelsdock.hpp
 	zlevelsmodel.hpp
 	zlotmanager.hpp
-	zmapobjectmodel.hpp
 	zmapsdock.hpp
 	ZomboidScene.h
-	zobjectsdock.hpp
 	zprogress.hpp
 	ztilesetthumbmodel.hpp
 	ztilesetthumbview.hpp

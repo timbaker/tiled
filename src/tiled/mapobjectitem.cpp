@@ -178,11 +178,11 @@ QVariant ResizeHandle::itemChange(GraphicsItemChange change,
             // Update the size of the map object
             const QPointF newPos = value.toPointF() + mMapObjectItem->pos();
 #ifdef ZOMBOID
-           QPointF tileCoords = renderer->pixelToTileCoords(newPos, layer);
+            QPointF tileCoords = renderer->pixelToTileCoords(newPos, layer);
 #else
-           QPointF tileCoords = renderer->pixelToTileCoords(newPos);
+            QPointF tileCoords = renderer->pixelToTileCoords(newPos);
 #endif
-           tileCoords -= mMapObjectItem->mapObject()->position();
+            tileCoords -= mMapObjectItem->mapObject()->position();
             mMapObjectItem->resize(QSizeF(tileCoords.x(), tileCoords.y()));
         }
     }
@@ -265,11 +265,8 @@ void MapObjectItem::syncWithMapObject()
 
     mSyncing = false;
 
-#ifdef ZOMBOID
     setVisible(mObject->isVisible());
-#endif
 }
-
 #ifdef ZOMBOID
 // This is to accomodate Lot maps, should create a LotItem class
 void MapObjectItem::setDrawMargins(const QMargins &drawMargins)

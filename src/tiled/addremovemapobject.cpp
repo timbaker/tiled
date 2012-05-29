@@ -23,9 +23,7 @@
 #include "mapdocument.h"
 #include "mapobject.h"
 #include "objectgroup.h"
-#ifdef ZOMBOID
-#include "zmapobjectmodel.hpp"
-#endif
+#include "mapobjectmodel.h"
 
 #include <QCoreApplication>
 
@@ -54,27 +52,15 @@ AddRemoveMapObject::~AddRemoveMapObject()
 
 void AddRemoveMapObject::addObject()
 {
-#ifdef ZOMBOID
-    mMapDocument->mapObjectModel()->insertObject(mObjectGroup, mIndex, mMapObject);
-#else
-    if (mIndex == -1)
-        mObjectGroup->addObject(mMapObject);
-    else
-        mObjectGroup->insertObject(mIndex, mMapObject);
-
-    mMapDocument->emitObjectAdded(mMapObject);
-#endif
+    mMapDocument->mapObjectModel()->insertObject(mObjectGroup, mIndex,
+                                                 mMapObject);
     mOwnsObject = false;
 }
 
 void AddRemoveMapObject::removeObject()
 {
-#ifdef ZOMBOID
-    mIndex = mMapDocument->mapObjectModel()->removeObject(mObjectGroup, mMapObject);
-#else
-    mIndex = mObjectGroup->removeObject(mMapObject);
-    mMapDocument->emitObjectRemoved(mMapObject);
-#endif
+    mIndex = mMapDocument->mapObjectModel()->removeObject(mObjectGroup,
+                                                          mMapObject);
     mOwnsObject = true;
 }
 

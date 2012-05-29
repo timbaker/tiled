@@ -31,9 +31,7 @@
 #include "map.h"
 
 #include "layer.h"
-#ifdef ZOMBOID
 #include "objectgroup.h"
-#endif
 #include "tile.h"
 #include "tilelayer.h"
 #include "tileset.h"
@@ -97,7 +95,6 @@ int Map::layerCount(Layer::Type type) const
     return count;
 }
 
-#ifdef ZOMBOID
 QList<Layer*> Map::layers(Layer::Type type) const
 {
     QList<Layer*> layers;
@@ -124,9 +121,6 @@ QList<TileLayer*> Map::tileLayers() const
             layers.append(tl);
     return layers;
 }
-
-
-#endif
 
 void Map::addLayer(Layer *layer)
 {

@@ -91,9 +91,11 @@ public:
      * \a painter.
      */
 #ifdef ZOMBOID
-    virtual void drawGrid(QPainter *painter, const QRectF &rect, const Layer *layer = 0) const = 0;
+    virtual void drawGrid(QPainter *painter, const QRectF &rect,
+                          QColor gridColor = Qt::black, const Layer *layer = 0) const = 0;
 #else
-    virtual void drawGrid(QPainter *painter, const QRectF &rect) const = 0;
+    virtual void drawGrid(QPainter *painter, const QRectF &rect,
+                          QColor gridColor = Qt::black) const = 0;
 #endif
     /**
      * Draws the given \a layer using the given \a painter.

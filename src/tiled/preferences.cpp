@@ -67,6 +67,8 @@ Preferences::Preferences()
     mShowGrid = mSettings->value(QLatin1String("ShowGrid"), false).toBool();
     mSnapToGrid = mSettings->value(QLatin1String("SnapToGrid"),
                                    false).toBool();
+    mGridColor = QColor(mSettings->value(QLatin1String("GridColor"),
+                                  QColor(Qt::black).name()).toString());
     mHighlightCurrentLayer = mSettings->value(QLatin1String("HighlightCurrentLayer"),
                                               false).toBool();
     mShowTilesetGrid = mSettings->value(QLatin1String("ShowTilesetGrid"),
@@ -129,6 +131,16 @@ void Preferences::setSnapToGrid(bool snapToGrid)
     mSnapToGrid = snapToGrid;
     mSettings->setValue(QLatin1String("Interface/SnapToGrid"), mSnapToGrid);
     emit snapToGridChanged(mSnapToGrid);
+}
+
+void Preferences::setGridColor(QColor gridColor)
+{
+    if (mGridColor == gridColor)
+        return;
+
+    mGridColor = gridColor;
+    mSettings->setValue(QLatin1String("Interface/GridColor"), mGridColor.name());
+    emit gridColorChanged(mGridColor);
 }
 
 void Preferences::setHighlightCurrentLayer(bool highlight)
@@ -255,6 +267,9 @@ static QString lastPathKey(Preferences::FileType fileType)
         break;
     case Preferences::ImageFile:
         key.append(QLatin1String("Images"));
+        break;
+    case Preferences::ExportedFile:
+        key.append(QLatin1String("ExportedFile"));
         break;
     default:
         Q_ASSERT(false); // Getting here means invalid file type

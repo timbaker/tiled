@@ -39,12 +39,7 @@ class TilesetView : public QTableView
     Q_OBJECT
 
 public:
-#ifdef ZOMBOID
     TilesetView(MapDocument *mapDocument, Zoomable *zoomable, QWidget *parent = 0);
-#else
-    TilesetView(MapDocument *mapDocument, QWidget *parent = 0);
-#endif
-
     QSize sizeHint() const;
 
     Zoomable *zoomable() const { return mZoomable; }

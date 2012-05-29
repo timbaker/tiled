@@ -20,9 +20,11 @@
 
 #include "zoomable.h"
 
-#ifdef ZOMBOID
 #include <QComboBox>
-#endif
+#include <QLineEdit>
+#include <QValidator>
+
+#include <cmath>
 
 using namespace Tiled::Internal;
 
@@ -41,17 +43,22 @@ static const qreal zoomFactors[] = {
 };
 const int zoomFactorCount = sizeof(zoomFactors) / sizeof(zoomFactors[0]);
 
+
+static QString scaleToString(qreal scale)
+{
+    return QString(QLatin1String("%1 %")).arg(int(scale * 100));
+}
+
+
 Zoomable::Zoomable(QObject *parent)
     : QObject(parent)
     , mScale(1)
-#ifdef ZOMBOID
     , mComboBox(0)
-#endif
+    , mComboRegExp(QLatin1String("^\\s*(\\d+)\\s*%?\\s*$"))
+    , mComboValidator(0)
 {
-#ifdef ZOMBOID
     for (int i = 0; i < zoomFactorCount; i++)
         mZoomFactors << zoomFactors[i];
-#endif
 }
 
 void Zoomable::setScale(qreal scale)
@@ -60,79 +67,49 @@ void Zoomable::setScale(qreal scale)
         return;
 
     mScale = scale;
-#ifdef ZOMBOID
-    if (mComboBox) {
-        int index = mComboBox->findData(scale);
-        if (index != -1)
-            mComboBox->setCurrentIndex(index);
-    }
-#endif
+
+    syncComboBox();
+
     emit scaleChanged(mScale);
 }
 
 bool Zoomable::canZoomIn() const
 {
-#ifdef ZOMBOID
-   return mScale < mZoomFactors.back();
-#else
-   return mScale < zoomFactors[zoomFactorCount - 1];
-#endif
+    return mScale < mZoomFactors.last();
 }
 
 bool Zoomable::canZoomOut() const
 {
-#ifdef ZOMBOID
     return mScale > mZoomFactors.first();
-#else
-    return mScale > zoomFactors[0];
-#endif
 }
 
-#ifdef ZOMBOID
-void Zoomable::setZoomFactors(const QVector<qreal>& factors)
+void Zoomable::handleWheelDelta(int delta)
 {
-    mZoomFactors = factors;
-}
+    if (delta <= -120) {
+        zoomOut();
+    } else if (delta >= 120) {
+        zoomIn();
+    } else {
+        // We're dealing with a finer-resolution mouse. Allow it to have finer
+        // control over the zoom level.
+        qreal factor = 1 + 0.3 * qAbs(qreal(delta) / 8 / 15);
+        if (delta < 0)
+            factor = 1 / factor;
 
-void Zoomable::connectToComboBox(QComboBox *comboBox)
-{
-    if (mComboBox)
-        disconnect(mComboBox, SIGNAL(activated(int)), this, SLOT(comboActivated(int)));
+        qreal scale = qBound(mZoomFactors.first(),
+                             mScale * factor,
+                             mZoomFactors.back());
 
-    mComboBox = comboBox;
-
-    if (mComboBox) {
-        mComboBox->clear();
-        int index = 0;
-        foreach (qreal scale, mZoomFactors) {
-            mComboBox->addItem(QString(QLatin1String("%1 %")).arg(int(scale * 100)), scale);
-            if (scale == mScale)
-                mComboBox->setCurrentIndex(index);
-            ++index;
-        }
-        connect(mComboBox, SIGNAL(activated(int)), this, SLOT(comboActivated(int)));
+        // Round to at most four digits after the decimal point
+        setScale(std::floor(scale * 10000 + 0.5) / 10000);
     }
 }
 
-void Zoomable::comboActivated(int index)
-{
-    QVariant data = mComboBox->itemData(index);
-    qreal scale = data.toReal();
-    setScale(scale);
-}
-#endif // ZOMBOID
-
 void Zoomable::zoomIn()
 {
-#ifdef ZOMBOID
     foreach (qreal scale, mZoomFactors) {
         if (scale > mScale) {
             setScale(scale);
-#else
-    for (int i = 0; i < zoomFactorCount; ++i) {
-        if (zoomFactors[i] > mScale) {
-            setScale(zoomFactors[i]);
-#endif
             break;
         }
     }
@@ -140,15 +117,9 @@ void Zoomable::zoomIn()
 
 void Zoomable::zoomOut()
 {
-#ifdef ZOMBOID
     for (int i = mZoomFactors.count() - 1; i >= 0; --i) {
         if (mZoomFactors[i] < mScale) {
             setScale(mZoomFactors[i]);
-#else
-    for (int i = mZoomFactors.count() - 1; i >= 0; --i) {
-        if (zoomFactors[i] < mScale) {
-            setScale(zoomFactors[i]);
-#endif
             break;
         }
     }
@@ -157,4 +128,67 @@ void Zoomable::zoomOut()
 void Zoomable::resetZoom()
 {
     setScale(1);
+}
+
+void Zoomable::setZoomFactors(const QVector<qreal>& factors)
+{
+    mZoomFactors = factors;
+}
+
+void Zoomable::connectToComboBox(QComboBox *comboBox)
+{
+    if (mComboBox) {
+        mComboBox->disconnect(this);
+        if (mComboBox->lineEdit())
+            mComboBox->lineEdit()->disconnect(this);
+        mComboBox->setValidator(0);
+    }
+
+    mComboBox = comboBox;
+
+    if (mComboBox) {
+        mComboBox->clear();
+        foreach (qreal scale, mZoomFactors)
+            mComboBox->addItem(scaleToString(scale), scale);
+        syncComboBox();
+        connect(mComboBox, SIGNAL(activated(int)),
+                this, SLOT(comboActivated(int)));
+
+        mComboBox->setEditable(true);
+        mComboBox->setInsertPolicy(QComboBox::NoInsert);
+        connect(mComboBox->lineEdit(), SIGNAL(editingFinished()),
+                this, SLOT(comboEdited()));
+
+        if (!mComboValidator)
+            mComboValidator = new QRegExpValidator(mComboRegExp, this);
+        mComboBox->setValidator(mComboValidator);
+    }
+}
+
+void Zoomable::comboActivated(int index)
+{
+    setScale(mComboBox->itemData(index).toReal());
+}
+
+void Zoomable::comboEdited()
+{
+    int pos = mComboRegExp.indexIn(mComboBox->currentText());
+    Q_ASSERT(pos != -1);
+
+    qreal scale = qBound(mZoomFactors.first(),
+                         qreal(mComboRegExp.cap(1).toDouble() / 100.f),
+                         mZoomFactors.last());
+
+    setScale(scale);
+}
+
+void Zoomable::syncComboBox()
+{
+    if (!mComboBox)
+        return;
+
+    int index = mComboBox->findData(mScale);
+    // For a custom scale, the current index must be set to -1
+    mComboBox->setCurrentIndex(index);
+    mComboBox->setEditText(scaleToString(mScale));
 }

@@ -20,6 +20,7 @@
  */
 
 #include "objectpropertiesdialog.h"
+#include "ui_objectpropertiesdialog.h"
 
 #include "changemapobject.h"
 #include "mapdocument.h"
@@ -53,6 +54,8 @@ ObjectPropertiesDialog::ObjectPropertiesDialog(MapDocument *mapDocument,
     ObjectTypesModel *objectTypesModel = new ObjectTypesModel(this);
     objectTypesModel->setObjectTypes(Preferences::instance()->objectTypes());
     mUi->type->setModel(objectTypesModel);
+    // No support for inserting new types at the moment
+    mUi->type->setInsertPolicy(QComboBox::NoInsert);
 
     // Initialize UI with values from the map-object
     mUi->name->setText(mMapObject->name());

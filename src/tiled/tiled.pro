@@ -82,6 +82,7 @@ SOURCES += aboutdialog.cpp \
     mapdocumentactionhandler.cpp \
     mapdocument.cpp \
     mapobjectitem.cpp \
+    mapobjectmodel.cpp \
     mapscene.cpp \
     mapview.cpp \
     movelayer.cpp \
@@ -93,6 +94,7 @@ SOURCES += aboutdialog.cpp \
     objectgroupitem.cpp \
     objectgrouppropertiesdialog.cpp \
     objectpropertiesdialog.cpp \
+    objectsdock.cpp \
     objectselectiontool.cpp \
     objecttypes.cpp \
     objecttypesmodel.cpp \
@@ -135,9 +137,7 @@ SOURCES += aboutdialog.cpp \
     zlevelsmodel.cpp \
     zlot.cpp \
     zlotmanager.cpp \
-    zmapobjectmodel.cpp \
     zmapsdock.cpp \
-    zobjectsdock.cpp \
     ZomboidScene.cpp \
     zprogress.cpp \
     ztilelayergroupitem.cpp \
@@ -187,6 +187,7 @@ HEADERS += aboutdialog.h \
     mapdocumentactionhandler.h \
     mapdocument.h \
     mapobjectitem.h \
+    mapobjectmodel.h \
     mapreaderinterface.h \
     mapscene.h \
     mapview.h \
@@ -200,6 +201,7 @@ HEADERS += aboutdialog.h \
     objectgroupitem.h \
     objectgrouppropertiesdialog.h \
     objectpropertiesdialog.h \
+    objectsdock.h \
     objectselectiontool.h \
     objecttypes.h \
     objecttypesmodel.h \
@@ -242,10 +244,8 @@ HEADERS += aboutdialog.h \
     zlevelsdock.hpp \
     zlevelsmodel.hpp \
     zlotmanager.hpp \
-    zmapobjectmodel.hpp \
     zmapsdock.hpp \
     ZomboidScene.h \
-    zobjectsdock.hpp \
     zprogress.hpp \
     ztilesetthumbmodel.hpp \
     ztilesetthumbview.hpp

@@ -22,6 +22,7 @@
 #define PREFERENCES_H
 
 #include <QObject>
+#include <QColor>
 
 #include "mapwriter.h"
 #include "objecttypes.h"
@@ -45,6 +46,8 @@ public:
 
     bool showGrid() const { return mShowGrid; }
     bool snapToGrid() const { return mSnapToGrid; }
+    QColor gridColor() const { return mGridColor; }
+
     bool highlightCurrentLayer() const { return mHighlightCurrentLayer; }
     bool showTilesetGrid() const { return mShowTilesetGrid; }
 
@@ -68,7 +71,8 @@ public:
 
     enum FileType {
         ObjectTypesFile,
-        ImageFile
+        ImageFile,
+        ExportedFile
     };
 
     QString lastPath(FileType fileType) const;
@@ -94,12 +98,14 @@ public:
 public slots:
     void setShowGrid(bool showGrid);
     void setSnapToGrid(bool snapToGrid);
+    void setGridColor(QColor gridColor);
     void setHighlightCurrentLayer(bool highlight);
     void setShowTilesetGrid(bool showTilesetGrid);
 
 signals:
     void showGridChanged(bool showGrid);
     void snapToGridChanged(bool snapToGrid);
+    void gridColorChanged(QColor gridColor);
     void highlightCurrentLayerChanged(bool highlight);
     void showTilesetGridChanged(bool showTilesetGrid);
 
@@ -120,6 +126,7 @@ private:
 
     bool mShowGrid;
     bool mSnapToGrid;
+    QColor mGridColor;
     bool mHighlightCurrentLayer;
     bool mShowTilesetGrid;
 
