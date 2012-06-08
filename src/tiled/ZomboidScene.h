@@ -76,8 +76,8 @@ public:
             , mLayerGroup(layerGroup)
         {
         }
-        const ZLot *mLot;
         const MapObject *mMapObject;
+        const ZLot *mLot;
         const ZTileLayerGroup *mLayerGroup;
     };
     QVector<LotLayers> mPreparedLotLayers;

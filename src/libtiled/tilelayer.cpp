@@ -39,10 +39,11 @@ using namespace Tiled;
 TileLayer::TileLayer(const QString &name, int x, int y, int width, int height):
     Layer(TileLayerType, name, x, y, width, height),
     mMaxTileSize(0, 0),
-#ifdef ZOMBOID
-    mTileLayerGroup(0),
-#endif
     mGrid(width * height)
+#ifdef ZOMBOID
+    ,
+    mTileLayerGroup(0)
+#endif
 {
     Q_ASSERT(width >= 0);
     Q_ASSERT(height >= 0);

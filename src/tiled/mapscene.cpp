@@ -64,10 +64,11 @@ MapScene::MapScene(QObject *parent):
     mGridVisible(true),
     mUnderMouse(false),
     mCurrentModifiers(Qt::NoModifier),
-#ifdef ZOMBOID
-    mGridItem(new ZGridItem),
-#endif
     mDarkRectangle(new QGraphicsRectItem)
+#ifdef ZOMBOID
+    ,
+    mGridItem(new ZGridItem)
+#endif
 {
     setBackgroundBrush(Qt::darkGray);
 
