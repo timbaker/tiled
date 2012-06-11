@@ -1,5 +1,8 @@
 /*
- * zmapsdock.h
+ * mapsdock.h
+ * Copyright 2012, Tim Baker <treectrl@hotmail.com>
+ *
+ * This file is part of Tiled.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -15,12 +18,13 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ZMAPSDOCK_H
-#define ZMAPSDOCK_H
+#ifndef MAPSDOCK_H
+#define MAPSDOCK_H
 
 #include <QDockWidget>
 #include <QTreeView>
 
+class QFileSystemModel;
 class QLabel;
 class QLineEdit;
 class QModelIndex;
@@ -30,19 +34,19 @@ namespace Tiled {
 namespace Internal {
 
 class MainWindow;
-class ZMapsView;
+class MapsView;
 
-class ZMapsDock : public QDockWidget
+class MapsDock : public QDockWidget
 {
     Q_OBJECT
 
 public:
-    ZMapsDock(MainWindow *mainWindow, QWidget *parent = 0);
+    MapsDock(MainWindow *mainWindow, QWidget *parent = 0);
 
 private slots:
-	void browse();
-	void editedLotDirectory();
-	void onLotDirectoryChanged();
+    void browse();
+    void editedMapsDirectory();
+    void onMapsDirectoryChanged();
 
 protected:
     void changeEvent(QEvent *e);
@@ -50,40 +54,35 @@ protected:
 private:
     void retranslateUi();
 
-	QLineEdit *mDirectoryEdit;
-	ZMapsView *mMapsView;
+    QLineEdit *mDirectoryEdit;
+    MapsView *mMapsView;
 };
 
 /**
  * This view makes sure the size hint makes sense and implements the context
  * menu.
  */
-class ZMapsView : public QTreeView
+class MapsView : public QTreeView
 {
     Q_OBJECT
 
 public:
-    ZMapsView(MainWindow *mainWindow, QWidget *parent = 0);
+    MapsView(MainWindow *mainWindow, QWidget *parent = 0);
 
     QSize sizeHint() const;
 
-protected:
-	void mousePressEvent(QMouseEvent *event);
-	void mouseMoveEvent(QMouseEvent *event);
-
-    void contextMenuEvent(QContextMenuEvent *event);
-    void keyPressEvent(QKeyEvent *event);
+    QFileSystemModel *model() const { return mFSModel; }
 
 private slots:
-    void currentRowChanged(const QModelIndex &index);
-	void onLotDirectoryChanged();
-	void onActivated(const QModelIndex &index);
+    void onMapsDirectoryChanged();
+    void onActivated(const QModelIndex &index);
 
 private:
-	MainWindow *mMainWindow;
+    MainWindow *mMainWindow;
+    QFileSystemModel *mFSModel;
 };
 
 } // namespace Internal
 } // namespace Tiled
 
-#endif // ZMAPSDOCK_H
+#endif // MAPSDOCK_H

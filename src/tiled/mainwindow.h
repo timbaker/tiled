@@ -58,7 +58,7 @@ class ObjectsDock;
 class Zoomable;
 #ifdef ZOMBOID
 class ZLevelsDock;
-class ZMapsDock;
+class MapsDock;
 #endif
 
 /**
@@ -209,7 +209,7 @@ private:
     ObjectsDock *mObjectsDock;
 #ifdef ZOMBOID
     ZLevelsDock *mLevelsDock;
-    ZMapsDock *mMapsDock;
+    MapsDock *mMapsDock;
 #endif
     TilesetDock *mTilesetDock;
     QLabel *mCurrentLayerLabel;

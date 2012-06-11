@@ -52,7 +52,7 @@ signals:
 	void lotUpdated(ZLot *lot, MapObject *mapObject);
 
 private slots:
-	void onLotDirectoryChanged();
+	void onMapsDirectoryChanged();
 
 	void onLayerAdded(int index);
 	void onLayerAboutToBeRemoved(int index);

@@ -160,7 +160,7 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
             SLOT(useAutomappingDrawingToggled(bool)));
 
 #ifdef ZOMBOID
-    connect(mUi->lotBrowseButton, SIGNAL(clicked()), SLOT(lotBrowse()));
+    connect(mUi->lotBrowseButton, SIGNAL(clicked()), SLOT(mapsBrowse()));
 #endif
 }
 
@@ -292,7 +292,7 @@ void PreferencesDialog::exportObjectTypes()
 }
 
 #ifdef ZOMBOID
-void PreferencesDialog::lotBrowse()
+void PreferencesDialog::mapsBrowse()
 {
     QString f = QFileDialog::getExistingDirectory(this, tr("Directory"), mUi->lotDirectory->text());
     if (!f.isEmpty()) {
@@ -340,7 +340,7 @@ void PreferencesDialog::fromPreferences()
     mObjectTypesModel->setObjectTypes(prefs->objectTypes());
 
 #ifdef ZOMBOID
-    mUi->lotDirectory->setText(prefs->lotDirectory());
+    mUi->lotDirectory->setText(prefs->mapsDirectory());
 #endif
 }
 
@@ -354,7 +354,7 @@ void PreferencesDialog::toPreferences()
     prefs->setAutomappingDrawing(mUi->autoMapWhileDrawing->isChecked());
 
 #ifdef ZOMBOID
-    prefs->setLotDirectory(mUi->lotDirectory->text());
+    prefs->setMapsDirectory(mUi->lotDirectory->text());
 #endif
 }
 

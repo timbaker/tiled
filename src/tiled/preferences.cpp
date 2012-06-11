@@ -99,8 +99,8 @@ Preferences::Preferences()
     mSettings->endGroup();
 
 #ifdef ZOMBOID
-    mSettings->beginGroup(QLatin1String("Lot"));
-    mLotDirectory = mSettings->value(QLatin1String("Directory"), QString()).toString();
+    mSettings->beginGroup(QLatin1String("MapsDirectory"));
+    mMapsDirectory = mSettings->value(QLatin1String("Current"), QString()).toString();
     mSettings->endGroup();
 #endif
 
@@ -320,23 +320,23 @@ void Preferences::setAutomappingDrawing(bool enabled)
 }
 
 #ifdef ZOMBOID
-QString Preferences::lotDirectory() const
+QString Preferences::mapsDirectory() const
 {
-    return mLotDirectory;
+    return mMapsDirectory;
 }
 
-void Preferences::setLotDirectory(const QString &path)
+void Preferences::setMapsDirectory(const QString &path)
 {
-    if (mLotDirectory == path)
+    if (mMapsDirectory == path)
         return;
-    mLotDirectory = path;
-    mSettings->setValue(QLatin1String("Lot/Directory"), path);
+    mMapsDirectory = path;
+    mSettings->setValue(QLatin1String("MapsDirectory/Current"), path);
 
     // Put this up, otherwise the progress dialog shows and hides for each lot.
     // Since each open document has its own ZLotManager, this shows and hides for each document as well.
     ZProgressManager::instance()->begin(QLatin1String("Checking lots..."));
 
-    emit lotDirectoryChanged();
+    emit mapsDirectoryChanged();
 
     ZProgressManager::instance()->end();
 }

@@ -107,6 +107,7 @@ set ( Tiled_SRCS
 	mapobjectitem.cpp
 	mapobjectmodel.cpp
 	mapscene.cpp
+	mapsdock.cpp
 	mapview.cpp
 	movelayer.cpp
 	movemapobject.cpp
@@ -161,7 +162,6 @@ set ( Tiled_SRCS
 	zlevelsmodel.cpp
 	zlot.cpp
 	zlotmanager.cpp
-	zmapsdock.cpp
 	ZomboidScene.cpp
 	zprogress.cpp
 	ztilelayergroupitem.cpp
@@ -220,6 +220,7 @@ set ( Tiled_MOCS
 	mapdocument.h
 	mapobjectmodel.h
 	mapscene.h
+	mapsdock.h
 	mapview.h
 	newmapdialog.h
 	newtilesetdialog.h
@@ -252,7 +253,6 @@ set ( Tiled_MOCS
 	zlevelsdock.hpp
 	zlevelsmodel.hpp
 	zlotmanager.hpp
-	zmapsdock.hpp
 	ZomboidScene.h
 	zprogress.hpp
 	ztilesetthumbmodel.hpp

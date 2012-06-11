@@ -77,7 +77,7 @@
 #include "objectsdock.h"
 #ifdef ZOMBOID
 #include "zlevelsdock.hpp"
-#include "zmapsdock.hpp"
+#include "mapsdock.h"
 #include "zprogress.hpp"
 #endif
 
@@ -114,7 +114,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     , mObjectsDock(new ObjectsDock())
 #ifdef ZOMBOID
     , mLevelsDock(new ZLevelsDock(this))
-    , mMapsDock(new ZMapsDock(this))
+    , mMapsDock(new MapsDock(this))
 #endif
     , mTilesetDock(new TilesetDock(this))
     , mCurrentLayerLabel(new QLabel)

@@ -39,7 +39,7 @@ ZLotManager::ZLotManager()
     : mMapDocument(0)
 {
     Preferences *prefs = Preferences::instance();
-    connect(prefs, SIGNAL(lotDirectoryChanged()), SLOT(onLotDirectoryChanged()));
+    connect(prefs, SIGNAL(mapsDirectoryChanged()), SLOT(onMapsDirectoryChanged()));
 }
 
 ZLotManager::~ZLotManager()
@@ -101,7 +101,7 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
             newLot = mLots[type];
         } else {
             Preferences *prefs = Preferences::instance();
-            QDir lotDirectory(prefs->lotDirectory());
+            QDir lotDirectory(prefs->mapsDirectory());
             if (lotDirectory.exists()) {
                 QFileInfo fileInfo(lotDirectory, type + QLatin1String(".tmx"));
                 if (fileInfo.exists()) {
@@ -220,7 +220,7 @@ void ZLotManager::convertOrientation(Map *map0, const Map *map1)
     }
 }
 
-void ZLotManager::onLotDirectoryChanged()
+void ZLotManager::onMapsDirectoryChanged()
 {
     // This will try to load any lot files that couldn't be loaded from the old directory.
     // Lot files that were already loaded won't be affected.
