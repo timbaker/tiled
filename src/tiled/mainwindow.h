@@ -31,7 +31,8 @@
 #include <QSettings>
 
 class QComboBox;
-class QLabel;class QToolButton;
+class QLabel;
+class QToolButton;
 
 namespace Ui {
 class MainWindow;
