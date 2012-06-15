@@ -485,7 +485,9 @@ void IsometricRenderer::drawMapObject(QPainter *painter,
         case MapObject::Rectangle: {
             QPolygonF polygon = tileRectToPolygon(object->bounds());
             painter->drawPolygon(polygon);
-
+#ifdef ZOMBOID
+            if (object->name() == "lot") break;
+#endif
             pen.setColor(color);
             painter->setPen(pen);
             painter->setBrush(brush);
