@@ -256,16 +256,25 @@ void TilesetManager::setLayerName(Tile *tile, const QString &name)
 {
     Tileset *ts = tile->tileset();
     if (ZTileLayerNames *tln = layerNamesForTileset(ts)) {
-        tln->mTiles[tile->id()].mLayerName = name;
-        tln->mModified = true;
+        // Prevent an error if two tilesets share the same image file but have
+        // different tile dimensions.
+        if ((tile->id() >= 0) && (tile->id() < tln->mRows * tln->mColumns)) {
+            tln->mTiles[tile->id()].mLayerName = name;
+            tln->mModified = true;
+        }
     }
 }
 
 QString TilesetManager::layerName(Tile *tile)
 {
     Tileset *ts = tile->tileset();
-    if (mTileLayerNames.contains(ts->imageSource()))
-        return mTileLayerNames[ts->imageSource()]->mTiles[tile->id()].mLayerName;
+    if (mTileLayerNames.contains(ts->imageSource())) {
+        ZTileLayerNames *tln =  mTileLayerNames[ts->imageSource()];
+        // Prevent an error if two tilesets share the same image file but have
+        // different tile dimensions.
+        if ((tile->id() >= 0) && (tile->id() < tln->mRows * tln->mColumns))
+            return tln->mTiles[tile->id()].mLayerName;
+    }
     return QString();
 }
 
