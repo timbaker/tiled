@@ -22,6 +22,9 @@
 #ifndef TILESETMANAGER_H
 #define TILESETMANAGER_H
 
+#ifdef ZOMBOID
+#include <QFileInfo>
+#endif
 #include <QObject>
 #include <QList>
 #include <QMap>
@@ -161,7 +164,7 @@ private:
 #ifdef ZOMBOID
     QMap<QString,ZTileLayerNames*> mTileLayerNames; // imageSource -> tile layer names
 
-    QString tileLayerNamesFile(Tileset *ts);
+    QFileInfo tileLayerNamesFile(Tileset *ts);
     ZTileLayerNames *layerNamesForTileset(Tileset *ts);
 
     void readTileLayerNames(Tileset *ts);

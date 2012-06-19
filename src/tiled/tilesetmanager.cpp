@@ -188,7 +188,6 @@ void TilesetManager::fileChangedTimeout()
 #include <QDebug>
 #include <QDir>
 #include <QFile>
-#include <QFileInfo>
 #include <QMessageBox>
 #include <QXmlStreamReader>
 
@@ -394,13 +393,12 @@ private:
     QString mError;
 };
 
-QString TilesetManager::tileLayerNamesFile(Tileset *ts)
+QFileInfo TilesetManager::tileLayerNamesFile(Tileset *ts)
 {
     QString imageSource = ts->imageSource();
     QFileInfo fileInfoImgSrc(imageSource);
     QDir dir = fileInfoImgSrc.absoluteDir();
-    QFileInfo fileInfo(dir, fileInfoImgSrc.completeBaseName() + QLatin1String(".tilelayers.xml"));
-    return fileInfo.absoluteFilePath();
+    return QFileInfo(dir, fileInfoImgSrc.completeBaseName() + QLatin1String(".tilelayers.xml"));
 }
 
 ZTileLayerNames *TilesetManager::layerNamesForTileset(Tileset *ts)
@@ -413,7 +411,8 @@ ZTileLayerNames *TilesetManager::layerNamesForTileset(Tileset *ts)
     int columns = ts->columnCount();
     int rows = columns ? ts->tileCount() / columns : 0;
 
-    QString filePath = tileLayerNamesFile(ts);
+    QFileInfo fileInfo = tileLayerNamesFile(ts);
+    QString filePath = fileInfo.absoluteFilePath();
     return mTileLayerNames[imageSource] = new ZTileLayerNames(filePath, columns, rows);
 }
 
@@ -426,10 +425,7 @@ void TilesetManager::readTileLayerNames(Tileset *ts)
     int columns = ts->columnCount();
     int rows = columns ? ts->tileCount() / columns : 0;
 
-    QFileInfo fileInfoImgSrc(imageSource);
-    QDir dir = fileInfoImgSrc.absoluteDir();
-    QFileInfo fileInfo(dir, fileInfoImgSrc.completeBaseName() + QLatin1String(".tilelayers.xml"));
-    QString filePath = fileInfo.absoluteFilePath();
+    QFileInfo fileInfo = tileLayerNamesFile(ts);
     if (fileInfo.exists()) {
         qDebug() << "Reading: " << filePath;
         ZTileLayerNamesReader reader;
