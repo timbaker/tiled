@@ -21,8 +21,6 @@
 #include <QDockWidget>
 #include <QTreeView>
 
-class QTreeView;
-
 namespace Tiled {
 
 class ZTileLayerGroup;

@@ -20,24 +20,17 @@
 #include "documentmanager.h"
 #include "map.h"
 #include "mapdocument.h"
-#include "mapdocumentactionhandler.h"
-#include "utils.h"
 #include "tilelayer.h"
 #include "zlevelsmodel.hpp"
 
 #include <QBoxLayout>
 #include <QApplication>
 #include <QContextMenuEvent>
-#include <QFileDialog>
 #include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
 #include <QToolButton>
-#include <QMenu>
-#include <QSlider>
 #include <QToolBar>
-#include <QUrl>
-#include <QUndoStack>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -54,13 +47,14 @@ ZLevelsDock::ZLevelsDock(QWidget *parent)
     layout->setMargin(5);
     layout->addWidget(mView);
 
+#if 0
     QToolBar *toolbar = new QToolBar;
     toolbar->setFloatable(false);
     toolbar->setMovable(false);
     toolbar->setIconSize(QSize(16, 16));
 
-
     layout->addWidget(toolbar);
+#endif
     setWidget(widget);
     retranslateUi();
 
