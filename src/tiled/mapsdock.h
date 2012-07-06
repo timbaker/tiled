@@ -71,8 +71,9 @@ public:
 
     QSize sizeHint() const;
 
-    QFileSystemModel *model() const { return mFSModel; }
+    void mousePressEvent(QMouseEvent *event);
 
+    QFileSystemModel *model() const { return mFSModel; }
 private slots:
     void onMapsDirectoryChanged();
     void onActivated(const QModelIndex &index);

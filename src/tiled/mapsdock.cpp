@@ -33,6 +33,7 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
+#include <QMouseEvent>
 #include <QToolButton>
 
 using namespace Tiled;
@@ -168,6 +169,23 @@ MapsView::MapsView(MainWindow *mainWindow, QWidget *parent)
 QSize MapsView::sizeHint() const
 {
     return QSize(130, 100);
+}
+
+void MapsView::mousePressEvent(QMouseEvent *event)
+{
+    QModelIndex index = indexAt(event->pos());
+    if (index.isValid()) {
+        // Prevent drag-and-drop starting when clicking on an unselected item.
+        setDragEnabled(selectionModel()->isSelected(index));
+
+        // Hack: disable dragging folders.
+        // FIXME: the correct way to do this would be to override the flags()
+        // method of QFileSystemModel.
+        if (model()->isDir(index))
+            setDragEnabled(false);
+    }
+
+    QTreeView::mousePressEvent(event);
 }
 
 void MapsView::onMapsDirectoryChanged()
