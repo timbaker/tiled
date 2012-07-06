@@ -78,6 +78,11 @@ public:
     using MapRenderer::tileToPixelCoords;
     QPointF tileToPixelCoords(qreal x, qreal y, int level = 0) const;
 
+    void drawFancyRectangle(QPainter *painter,
+                            const QRectF &tileBounds,
+                            const QColor &color,
+                            int level = 0) const;
+
 private:
     QPolygonF tileRectToPolygon(const QRect &rect, int level = 0) const;
     QPolygonF tileRectToPolygon(const QRectF &rect, int level = 0) const;

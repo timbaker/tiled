@@ -537,6 +537,42 @@ void IsometricRenderer::drawMapObject(QPainter *painter,
     painter->restore();
 }
 
+#ifdef ZOMBOID
+void IsometricRenderer::drawFancyRectangle(QPainter *painter,
+                                           const QRectF &tileBounds,
+                                           const QColor &color,
+                                           int level) const
+{
+    Q_UNUSED(level)
+
+    painter->save();
+
+    QPen pen(Qt::black);
+
+    QColor brushColor = color;
+    brushColor.setAlpha(50);
+    QBrush brush(brushColor);
+
+    pen.setJoinStyle(Qt::RoundJoin);
+    pen.setCapStyle(Qt::RoundCap);
+    pen.setWidth(2);
+
+    painter->setPen(pen);
+    painter->setRenderHint(QPainter::Antialiasing);
+
+    QPolygonF polygon = tileRectToPolygon(tileBounds);
+    painter->drawPolygon(polygon);
+
+    pen.setColor(color);
+    painter->setPen(pen);
+    painter->setBrush(brush);
+    polygon.translate(0, -1);
+    painter->drawPolygon(polygon);
+
+    painter->restore();
+}
+#endif
+
 void IsometricRenderer::drawImageLayer(QPainter *painter,
                                        const ImageLayer *imageLayer,
                                        const QRectF &exposed) const

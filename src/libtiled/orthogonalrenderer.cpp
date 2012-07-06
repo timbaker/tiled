@@ -396,6 +396,19 @@ void OrthogonalRenderer::drawMapObject(QPainter *painter,
 }
 
 #ifdef ZOMBOID
+void OrthogonalRenderer::drawFancyRectangle(QPainter *painter,
+                                const QRectF &tileBounds,
+                                const QColor &color,
+                                int level) const
+{
+    Q_UNUSED(painter)
+    Q_UNUSED(tileBounds)
+    Q_UNUSED(color)
+    Q_UNUSED(level)
+}
+#endif
+
+#ifdef ZOMBOID
 QPointF OrthogonalRenderer::pixelToTileCoords(qreal x, qreal y, int level) const
 {
     Q_UNUSED(level)

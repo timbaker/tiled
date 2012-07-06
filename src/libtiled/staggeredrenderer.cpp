@@ -287,6 +287,19 @@ void StaggeredRenderer::drawMapObject(QPainter *painter,
     // TODO
 }
 
+#ifdef ZOMBOID
+void StaggeredRenderer::drawFancyRectangle(QPainter *painter,
+                                           const QRectF &tileBounds,
+                                           const QColor &color,
+                                           int level) const
+{
+    Q_UNUSED(painter)
+    Q_UNUSED(tileBounds)
+    Q_UNUSED(color)
+    Q_UNUSED(level)
+}
+#endif
+
 void StaggeredRenderer::drawImageLayer(QPainter *painter,
                                        const ImageLayer *imageLayer,
                                        const QRectF &exposed) const

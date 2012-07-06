@@ -133,6 +133,13 @@ public:
                                const MapObject *object,
                                const QColor &color) const = 0;
 
+#ifdef ZOMBOID
+    virtual void drawFancyRectangle(QPainter *painter,
+                                const QRectF &tileBounds,
+                                const QColor &color,
+                                int level = 0) const = 0;
+#endif
+
     /**
      * Draws the given image \a layer using the given \a painter.
      */

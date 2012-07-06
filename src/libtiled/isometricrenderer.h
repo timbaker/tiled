@@ -101,6 +101,13 @@ public:
     QPointF tileToPixelCoords(qreal x, qreal y) const;
 #endif
 
+#ifdef ZOMBOID
+    void drawFancyRectangle(QPainter *painter,
+                            const QRectF &tileBounds,
+                            const QColor &color,
+                            int level = 0) const;
+#endif
+
 private:
 #ifdef ZOMBOID
     QPolygonF tileRectToPolygon(const QRect &rect, int level = 0) const;
