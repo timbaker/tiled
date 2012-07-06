@@ -84,6 +84,7 @@ SOURCES += aboutdialog.cpp \
     mapobjectitem.cpp \
     mapobjectmodel.cpp \
     mapscene.cpp \
+    mapsdock.cpp \
     mapview.cpp \
     movelayer.cpp \
     movemapobject.cpp \
@@ -137,7 +138,6 @@ SOURCES += aboutdialog.cpp \
     zlevelsmodel.cpp \
     zlot.cpp \
     zlotmanager.cpp \
-    zmapsdock.cpp \
     ZomboidScene.cpp \
     zprogress.cpp \
     ztilelayergroupitem.cpp \
@@ -190,6 +190,7 @@ HEADERS += aboutdialog.h \
     mapobjectmodel.h \
     mapreaderinterface.h \
     mapscene.h \
+    mapsdock.h \
     mapview.h \
     mapwriterinterface.h \
     movelayer.h \
@@ -244,7 +245,6 @@ HEADERS += aboutdialog.h \
     zlevelsdock.hpp \
     zlevelsmodel.hpp \
     zlotmanager.hpp \
-    zmapsdock.hpp \
     ZomboidScene.h \
     zprogress.hpp \
     ztilesetthumbmodel.hpp \
