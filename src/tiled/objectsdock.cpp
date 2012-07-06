@@ -120,8 +120,8 @@ ObjectsDock::ObjectsDock(QWidget *parent)
     connect(this, SIGNAL(visibilityChanged(bool)),
             mObjectsView, SLOT(setVisible(bool)));
 
-    connect(DocumentManager::instance(), SIGNAL(documentCloseRequested(int)),
-            SLOT(documentCloseRequested(int)));
+    connect(DocumentManager::instance(), SIGNAL(documentAboutToClose(int,MapDocument*)),
+            SLOT(documentAboutToClose(int,MapDocument*)));
 
     updateActions();
 }
@@ -286,11 +286,9 @@ void ObjectsDock::restoreExpandedGroups(MapDocument *mapDoc)
     }
 }
 
-void ObjectsDock::documentCloseRequested(int index)
+void ObjectsDock::documentAboutToClose(int index, MapDocument *mapDocument)
 {
-    DocumentManager *documentManager = DocumentManager::instance();
-    MapDocument *mapDoc = documentManager->documents().at(index);
-    mExpandedGroups.remove(mapDoc);
+    mExpandedGroups.remove(mapDocument);
 }
 
 ///// ///// ///// ///// /////

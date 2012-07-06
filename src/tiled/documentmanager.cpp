@@ -185,6 +185,9 @@ void DocumentManager::closeCurrentDocument()
     MapView *mapView = currentMapView();
 
     mTabWidget->removeTab(index);
+#ifdef ZOMBOID
+    emit documentAboutToClose(index, mapDocument);
+#endif
     delete mapView;
     delete mapDocument;
 }

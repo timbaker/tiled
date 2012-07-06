@@ -135,6 +135,10 @@ signals:
      */
     void documentCloseRequested(int index);
 
+#ifdef ZOMBOID
+    void documentAboutToClose(int index, MapDocument *mapDocument);
+#endif
+
 public slots:
     void switchToLeftDocument();
     void switchToRightDocument();

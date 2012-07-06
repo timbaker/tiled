@@ -63,8 +63,8 @@ ZLevelsDock::ZLevelsDock(QWidget *parent)
     connect(this, SIGNAL(visibilityChanged(bool)),
             mView, SLOT(setVisible(bool)));
 
-    connect(DocumentManager::instance(), SIGNAL(documentCloseRequested(int)),
-            SLOT(documentCloseRequested(int)));
+    connect(DocumentManager::instance(), SIGNAL(documentAboutToClose(int,MapDocument*)),
+            SLOT(documentAboutToClose(int,MapDocument*)));
 
     updateActions();
 }
@@ -133,11 +133,9 @@ void ZLevelsDock::restoreExpandedLevels(MapDocument *mapDoc)
 #endif
 }
 
-void ZLevelsDock::documentCloseRequested(int index)
+void ZLevelsDock::documentAboutToClose(int index, MapDocument *mapDocument)
 {
-    DocumentManager *documentManager = DocumentManager::instance();
-    MapDocument *mapDoc = documentManager->documents().at(index);
-    mExpandedLevels.remove(mapDoc);
+    mExpandedLevels.remove(mapDocument);
 }
 
 ///// ///// ///// ///// /////

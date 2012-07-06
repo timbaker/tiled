@@ -45,7 +45,7 @@ protected:
 
 private slots:
 	void updateActions();
-	void documentCloseRequested(int index);
+    void documentAboutToClose(int index, MapDocument *mapDocument);
 
 private:
     void retranslateUi();

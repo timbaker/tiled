@@ -120,7 +120,11 @@ private slots:
 
     void renameTileset();
 
+#ifdef ZOMBOID
+    void documentAboutToClose(int index, MapDocument *mapDocument);
+#else
     void documentCloseRequested(int index);
+#endif
 
     void refreshTilesetMenu();
 

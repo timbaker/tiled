@@ -258,8 +258,13 @@ TilesetDock::TilesetDock(QWidget *parent):
     connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
             this, SLOT(tilesetChanged(Tileset*)));
 
+#ifdef ZOMBOID
+    connect(DocumentManager::instance(), SIGNAL(documentAboutToClose(int,MapDocument*)),
+            SLOT(documentAboutToClose(int,MapDocument*)));
+#else
     connect(DocumentManager::instance(), SIGNAL(documentCloseRequested(int)),
             SLOT(documentCloseRequested(int)));
+#endif
 
     mTilesetMenuButton->setMenu(mTilesetMenu);
     mTilesetMenuButton->setPopupMode(QToolButton::InstantPopup);
@@ -747,11 +752,18 @@ void TilesetDock::tilesetNameChanged(Tileset *tileset)
     }
 }
 
+#ifdef ZOMBOID
+void TilesetDock::documentAboutToClose(int index, MapDocument *mapDocument)
+{
+    mCurrentTilesets.remove(mapDocument);
+}
+#else
 void TilesetDock::documentCloseRequested(int index)
 {
     DocumentManager *documentManager = DocumentManager::instance();
     mCurrentTilesets.remove(documentManager->documents().at(index));
 }
+#endif
 
 void TilesetDock::refreshTilesetMenu()
 {

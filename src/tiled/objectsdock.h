@@ -55,7 +55,7 @@ private slots:
     void duplicateObjects();
     void removeObjects();
     void objectProperties();
-    void documentCloseRequested(int index);
+    void documentAboutToClose(int index, MapDocument *mapDocument);
 
 private:
     void retranslateUi();
