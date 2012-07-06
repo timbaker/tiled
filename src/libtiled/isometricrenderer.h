@@ -48,7 +48,7 @@ public:
     QSize mapSize() const;
 
 #ifdef ZOMBOID
-    QRect boundingRect(const QRect &rect, const Layer *layer = 0) const;
+    QRect boundingRect(const QRect &rect, int level = 0) const;
 #else
     QRect boundingRect(const QRect &rect) const;
 #endif
@@ -57,7 +57,7 @@ public:
     QPainterPath shape(const MapObject *object) const;
 
 #ifdef ZOMBOID
-    void drawGrid(QPainter *painter, const QRectF &rect, QColor grid, const Layer *layer = 0) const;
+    void drawGrid(QPainter *painter, const QRectF &rect, QColor grid, int level = 0) const;
 #else
     void drawGrid(QPainter *painter, const QRectF &rect, QColor grid) const;
 #endif
@@ -74,7 +74,7 @@ public:
                            const QColor &color,
 #ifdef ZOMBOID
                             const QRectF &exposed,
-                            const Layer *layer = 0) const;
+                            int level = 0) const;
 #else
                            const QRectF &exposed) const;
 #endif
@@ -89,10 +89,10 @@ public:
 
 #ifdef ZOMBOID
     using MapRenderer::pixelToTileCoords;
-    QPointF pixelToTileCoords(qreal x, qreal y, const Layer *layer = 0) const;
+    QPointF pixelToTileCoords(qreal x, qreal y, int level = 0) const;
 
     using MapRenderer::tileToPixelCoords;
-    QPointF tileToPixelCoords(qreal x, qreal y, const Layer *layer = 0) const;
+    QPointF tileToPixelCoords(qreal x, qreal y, int level = 0) const;
 #else
     using MapRenderer::pixelToTileCoords;
     QPointF pixelToTileCoords(qreal x, qreal y) const;
@@ -103,8 +103,8 @@ public:
 
 private:
 #ifdef ZOMBOID
-    QPolygonF tileRectToPolygon(const QRect &rect, const Layer *layer = 0) const;
-    QPolygonF tileRectToPolygon(const QRectF &rect, const Layer *layer = 0) const;
+    QPolygonF tileRectToPolygon(const QRect &rect, int level = 0) const;
+    QPolygonF tileRectToPolygon(const QRectF &rect, int level = 0) const;
 #else
     QPolygonF tileRectToPolygon(const QRect &rect) const;
     QPolygonF tileRectToPolygon(const QRectF &rect) const;

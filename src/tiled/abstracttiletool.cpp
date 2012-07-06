@@ -76,7 +76,7 @@ void AbstractTileTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers)
     const MapRenderer *renderer = mapDocument()->renderer();
 #ifdef ZOMBOID
     Layer *layer = currentTileLayer();
-    const QPointF tilePosF = renderer->pixelToTileCoords(pos, layer);
+    const QPointF tilePosF = renderer->pixelToTileCoords(pos, layer ? layer->level() : 0);
 #else
     const QPointF tilePosF = renderer->pixelToTileCoords(pos);
 #endif

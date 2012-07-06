@@ -51,11 +51,13 @@ QSize IsometricRenderer::mapSize() const
 }
 
 #ifdef ZOMBOID
-QRect IsometricRenderer::boundingRect(const QRect &rect, const Layer *layer) const
+QRect IsometricRenderer::boundingRect(const QRect &rect, int level) const
+{
+    Q_UNUSED(level)
 #else
 QRect IsometricRenderer::boundingRect(const QRect &rect) const
-#endif
 {
+#endif
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
 
@@ -126,12 +128,14 @@ QPainterPath IsometricRenderer::shape(const MapObject *object) const
 
 #ifdef ZOMBOID
 void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect,
-                                 QColor gridColor, const Layer *layer) const
+                                 QColor gridColor, int level) const
+{
+    Q_UNUSED(level)
 #else
 void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect,
                                  QColor gridColor) const
-#endif
 {
+#endif
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
 
@@ -431,11 +435,13 @@ void IsometricRenderer::drawTileSelection(QPainter *painter,
                                           const QColor &color,
 #ifdef ZOMBOID
                                           const QRectF &exposed,
-                                          const Layer *layer) const
+                                          int level) const
+{
+    Q_UNUSED(level)
 #else
                                           const QRectF &exposed) const
-#endif
 {
+#endif
     painter->setBrush(color);
     painter->setPen(Qt::NoPen);
     foreach (const QRect &r, region.rects()) {
@@ -546,11 +552,13 @@ void IsometricRenderer::drawImageLayer(QPainter *painter,
 }
 
 #ifdef ZOMBOID
-QPointF IsometricRenderer::pixelToTileCoords(qreal x, qreal y, const Layer *layer) const
+QPointF IsometricRenderer::pixelToTileCoords(qreal x, qreal y, int level) const
+{
+    Q_UNUSED(level)
 #else
 QPointF IsometricRenderer::pixelToTileCoords(qreal x, qreal y) const
-#endif
 {
+#endif
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
     const qreal ratio = (qreal) tileWidth / tileHeight;
@@ -564,11 +572,13 @@ QPointF IsometricRenderer::pixelToTileCoords(qreal x, qreal y) const
 }
 
 #ifdef ZOMBOID
-QPointF IsometricRenderer::tileToPixelCoords(qreal x, qreal y, const Layer *layer) const
+QPointF IsometricRenderer::tileToPixelCoords(qreal x, qreal y, int level) const
+{
+    Q_UNUSED(level)
 #else
 QPointF IsometricRenderer::tileToPixelCoords(qreal x, qreal y) const
-#endif
 {
+#endif
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
     const int originX = map()->height() * tileWidth / 2;
@@ -578,11 +588,13 @@ QPointF IsometricRenderer::tileToPixelCoords(qreal x, qreal y) const
 }
 
 #ifdef ZOMBOID
-QPolygonF IsometricRenderer::tileRectToPolygon(const QRect &rect, const Layer *layer) const
+QPolygonF IsometricRenderer::tileRectToPolygon(const QRect &rect, int level) const
+{
+    Q_UNUSED(level)
 #else
 QPolygonF IsometricRenderer::tileRectToPolygon(const QRect &rect) const
-#endif
 {
+#endif
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
 
@@ -601,11 +613,13 @@ QPolygonF IsometricRenderer::tileRectToPolygon(const QRect &rect) const
 }
 
 #ifdef ZOMBOID
-QPolygonF IsometricRenderer::tileRectToPolygon(const QRectF &rect, const Layer *layer) const
+QPolygonF IsometricRenderer::tileRectToPolygon(const QRectF &rect, int level) const
+{
+    Q_UNUSED(level)
 #else
 QPolygonF IsometricRenderer::tileRectToPolygon(const QRectF &rect) const
-#endif
 {
+#endif
     QPolygonF polygon;
     polygon << QPointF(tileToPixelCoords(rect.topLeft()));
     polygon << QPointF(tileToPixelCoords(rect.topRight()));

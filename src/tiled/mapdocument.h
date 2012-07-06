@@ -127,6 +127,13 @@ public:
     Layer *currentLayer() const;
 
 #ifdef ZOMBOID
+    int currentLevel() const
+    {
+        if (Layer *layer = currentLayer())
+            return layer->level();
+        return 0;
+    }
+
     /* For the visibility slider in the LayerDock. */
     void setMaxVisibleLayer(int index) { mMaxVisibleLayer = index; }
     int maxVisibleLayer() const { return mMaxVisibleLayer; }

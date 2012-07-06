@@ -68,7 +68,7 @@ public:
      * a region of tiles that was changed.
      */
 #ifdef ZOMBOID
-    virtual QRect boundingRect(const QRect &rect, const Layer *layer = 0) const = 0;
+    virtual QRect boundingRect(const QRect &rect, int level = 0) const = 0;
 #else
     virtual QRect boundingRect(const QRect &rect) const = 0;
 #endif
@@ -92,7 +92,7 @@ public:
      */
 #ifdef ZOMBOID
     virtual void drawGrid(QPainter *painter, const QRectF &rect,
-                          QColor gridColor = Qt::black, const Layer *layer = 0) const = 0;
+                          QColor gridColor = Qt::black, int level = 0) const = 0;
 #else
     virtual void drawGrid(QPainter *painter, const QRectF &rect,
                           QColor gridColor = Qt::black) const = 0;
@@ -122,7 +122,7 @@ public:
                                    const QColor &color,
 #ifdef ZOMBOID
                                    const QRectF &exposed,
-                                   const Layer *layer = 0) const = 0;
+                                   int level = 0) const = 0;
 #else
                                    const QRectF &exposed) const = 0;
 #endif
@@ -144,24 +144,25 @@ public:
     /**
      * Returns the tile coordinates matching the given pixel position.
      */
-    virtual QPointF pixelToTileCoords(qreal x, qreal y, const Layer *layer = 0) const = 0;
+    virtual QPointF pixelToTileCoords(qreal x, qreal y, int level = 0) const = 0;
 
-    inline QPointF pixelToTileCoords(const QPointF &point, const Layer *layer = 0) const
-    { return pixelToTileCoords(point.x(), point.y(), layer); }
+    inline QPointF pixelToTileCoords(const QPointF &point, int level = 0) const
+    { return pixelToTileCoords(point.x(), point.y(), level); }
+
 
     /**
      * Returns the pixel coordinates matching the given tile coordinates.
      */
-    virtual QPointF tileToPixelCoords(qreal x, qreal y, const Layer *layer = 0) const = 0;
+    virtual QPointF tileToPixelCoords(qreal x, qreal y, int level = 0) const = 0;
 
-    inline QPointF tileToPixelCoords(const QPointF &point, const Layer *layer = 0) const
-    { return tileToPixelCoords(point.x(), point.y(), layer); }
+    inline QPointF tileToPixelCoords(const QPointF &point, int level = 0) const
+    { return tileToPixelCoords(point.x(), point.y(), level); }
 
-    QPolygonF tileToPixelCoords(const QPolygonF &polygon, const Layer *layer = 0) const
+    QPolygonF tileToPixelCoords(const QPolygonF &polygon, int level = 0) const
     {
         QPolygonF screenPolygon(polygon.size());
         for (int i = polygon.size() - 1; i >= 0; --i)
-            screenPolygon[i] = tileToPixelCoords(polygon[i], layer);
+            screenPolygon[i] = tileToPixelCoords(polygon[i], level);
         return screenPolygon;
     }
 #else

@@ -117,7 +117,7 @@ void CreateObjectTool::mouseMoved(const QPointF &pos,
     switch (mMode) {
     case CreateArea: {
 #ifdef ZOMBOID
-        const QPointF tileCoords = renderer->pixelToTileCoords(pos, currentObjectGroup());
+        const QPointF tileCoords = renderer->pixelToTileCoords(pos, currentObjectGroup()->level());
 #else
         const QPointF tileCoords = renderer->pixelToTileCoords(pos);
 #endif
@@ -136,7 +136,7 @@ void CreateObjectTool::mouseMoved(const QPointF &pos,
         const QSize imgSize = mNewMapObjectItem->mapObject()->tile()->size();
         const QPointF diff(-imgSize.width() / 2, imgSize.height() / 2);
 #ifdef ZOMBOID
-        QPointF tileCoords = renderer->pixelToTileCoords(pos + diff, currentObjectGroup());
+        QPointF tileCoords = renderer->pixelToTileCoords(pos + diff, currentObjectGroup()->level());
 #else
         QPointF tileCoords = renderer->pixelToTileCoords(pos + diff);
 #endif
@@ -151,7 +151,7 @@ void CreateObjectTool::mouseMoved(const QPointF &pos,
     case CreatePolygon:
     case CreatePolyline: {
  #ifdef ZOMBOID
-      QPointF tileCoords = renderer->pixelToTileCoords(pos, currentObjectGroup());
+      QPointF tileCoords = renderer->pixelToTileCoords(pos, currentObjectGroup()->level());
 #else
       QPointF tileCoords = renderer->pixelToTileCoords(pos);
 #endif
@@ -227,9 +227,9 @@ void CreateObjectTool::mousePressed(QGraphicsSceneMouseEvent *event)
 
         const QPointF diff(-mTile->width() / 2, mTile->height() / 2);
 #ifdef ZOMBOID
-        tileCoords = renderer->pixelToTileCoords(event->scenePos() + diff, objectGroup);
+        tileCoords = renderer->pixelToTileCoords(event->scenePos() + diff, objectGroup->level());
     } else {
-        tileCoords = renderer->pixelToTileCoords(event->scenePos(), objectGroup);
+        tileCoords = renderer->pixelToTileCoords(event->scenePos(), objectGroup->level());
     }
 #else
         tileCoords = renderer->pixelToTileCoords(event->scenePos() + diff);

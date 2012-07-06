@@ -283,10 +283,10 @@ void MapScene::regionChanged(const QRegion &region, Layer *layer)
     const QMargins margins = mMapDocument->map()->drawMargins();
 
     foreach (const QRect &r, region.rects()) {
-        update(renderer->boundingRect(r, layer).adjusted(-margins.left(),
-                                                  -margins.top(),
-                                                  margins.right(),
-                                                  margins.bottom()));
+        update(renderer->boundingRect(r, layer->level()).adjusted(-margins.left(),
+                                                                  -margins.top(),
+                                                                  margins.right(),
+                                                                  margins.bottom()));
     }
 }
 #else

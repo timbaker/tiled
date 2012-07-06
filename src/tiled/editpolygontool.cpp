@@ -393,7 +393,7 @@ void EditPolygonTool::updateHandles()
             const QPointF &point = polygon.at(i);
 #ifdef ZOMBOID
             Layer *layer = pointHandles[i]->mapObject()->objectGroup();
-            const QPointF handlePos = renderer->tileToPixelCoords(point, layer);
+            const QPointF handlePos = renderer->tileToPixelCoords(point, layer->level());
 #else
             const QPointF handlePos = renderer->tileToPixelCoords(point);
 #endif
@@ -514,16 +514,16 @@ void EditPolygonTool::updateMovingItems(const QPointF &pos,
         QPointF diff = pos - mStart;
         if (snapToGrid) {
             const QPointF alignPixelPos =
-                renderer->tileToPixelCoords(mAlignPosition, layer);
+                renderer->tileToPixelCoords(mAlignPosition, layer->level());
             const QPointF newAlignPixelPos = alignPixelPos + diff;
 
             // Snap the position to the grid
             const QPointF newTileCoords =
-                    renderer->pixelToTileCoords(newAlignPixelPos, layer).toPoint();
-            diff = renderer->tileToPixelCoords(newTileCoords, layer) - alignPixelPos;
+                    renderer->pixelToTileCoords(newAlignPixelPos, layer->level()).toPoint();
+            diff = renderer->tileToPixelCoords(newTileCoords, layer->level()) - alignPixelPos;
         }
         const QPointF newPixelPos = mOldHandlePositions.at(i) + diff;
-        const QPointF newPos = renderer->pixelToTileCoords(newPixelPos, layer);
+        const QPointF newPos = renderer->pixelToTileCoords(newPixelPos, layer->level());
         handle->setPos(newPixelPos);
         handle->setPointPosition(newPos);
         ++i;

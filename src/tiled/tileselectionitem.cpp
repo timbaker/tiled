@@ -63,7 +63,7 @@ void TileSelectionItem::paint(QPainter *painter,
     MapRenderer *renderer = mMapDocument->renderer();
     renderer->drawTileSelection(painter, selection, highlight,
 #ifdef ZOMBOID
-        option->exposedRect, mMapDocument->currentLayer());
+        option->exposedRect, mMapDocument->currentLevel());
 #else
                                 option->exposedRect);
 #endif
@@ -78,7 +78,7 @@ void TileSelectionItem::selectionChanged(const QRegion &newSelection,
     // Make sure changes within the bounding rect are updated
     const QRect changedArea = newSelection.xored(oldSelection).boundingRect();
 #ifdef ZOMBOID
-    update(mMapDocument->renderer()->boundingRect(changedArea, mMapDocument->currentLayer()));
+    update(mMapDocument->renderer()->boundingRect(changedArea, mMapDocument->currentLevel()));
 #else
     update(mMapDocument->renderer()->boundingRect(changedArea));
 #endif
@@ -96,7 +96,7 @@ void TileSelectionItem::updateBoundingRect()
 {
     const QRect b = mMapDocument->tileSelection().boundingRect();
 #ifdef ZOMBOID
-    mBoundingRect = mMapDocument->renderer()->boundingRect(b, mMapDocument->currentLayer());
+    mBoundingRect = mMapDocument->renderer()->boundingRect(b, mMapDocument->currentLevel());
 #else
     mBoundingRect = mMapDocument->renderer()->boundingRect(b);
 #endif

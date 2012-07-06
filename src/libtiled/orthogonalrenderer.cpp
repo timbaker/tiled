@@ -46,11 +46,13 @@ QSize OrthogonalRenderer::mapSize() const
 }
 
 #ifdef ZOMBOID
-QRect OrthogonalRenderer::boundingRect(const QRect &rect, const Layer *layer) const
+QRect OrthogonalRenderer::boundingRect(const QRect &rect, int level) const
+{
+    Q_UNUSED(level)
 #else
 QRect OrthogonalRenderer::boundingRect(const QRect &rect) const
-#endif
 {
+#endif
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
 
@@ -145,12 +147,14 @@ QPainterPath OrthogonalRenderer::shape(const MapObject *object) const
 
 #ifdef ZOMBOID
 void OrthogonalRenderer::drawGrid(QPainter *painter, const QRectF &rect,
-                                  QColor gridColor, const Layer *layer) const
+                                  QColor gridColor, int level) const
+{
+    Q_UNUSED(level)
 #else
 void OrthogonalRenderer::drawGrid(QPainter *painter, const QRectF &rect,
                                   QColor gridColor) const
-#endif
 {
+#endif
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
 
@@ -281,16 +285,21 @@ void OrthogonalRenderer::drawTileLayer(QPainter *painter,
     painter->setTransform(savedTransform);
 }
 
+#ifdef ZOMBOID
 void OrthogonalRenderer::drawTileSelection(QPainter *painter,
                                            const QRegion &region,
                                            const QColor &color,
-#ifdef ZOMBOID
                                            const QRectF &exposed,
-                                           const Layer *layer) const
-#else
-                                           const QRectF &exposed) const
-#endif
+                                           int level) const
 {
+    Q_UNUSED(level)
+#else
+void OrthogonalRenderer::drawTileSelection(QPainter *painter,
+                                           const QRegion &region,
+                                           const QColor &color,
+                                           const QRectF &exposed) const
+{
+#endif
     foreach (const QRect &r, region.rects()) {
         const QRectF toFill = QRectF(boundingRect(r)).intersected(exposed);
         if (!toFill.isEmpty())
@@ -387,14 +396,16 @@ void OrthogonalRenderer::drawMapObject(QPainter *painter,
 }
 
 #ifdef ZOMBOID
-QPointF OrthogonalRenderer::pixelToTileCoords(qreal x, qreal y, const Layer *layer) const
+QPointF OrthogonalRenderer::pixelToTileCoords(qreal x, qreal y, int level) const
 {
+    Q_UNUSED(level)
     return QPointF(x / map()->tileWidth(),
                    y / map()->tileHeight());
 }
 
-QPointF OrthogonalRenderer::tileToPixelCoords(qreal x, qreal y, const Layer *layer) const
+QPointF OrthogonalRenderer::tileToPixelCoords(qreal x, qreal y, int level) const
 {
+    Q_UNUSED(level)
     return QPointF(x * map()->tileWidth(),
                    y * map()->tileHeight());
 }

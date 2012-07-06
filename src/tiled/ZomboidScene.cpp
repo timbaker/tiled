@@ -36,10 +36,7 @@ using namespace Tiled::Internal;
 QRectF layerGroupSceneBounds(Map *map, const ZTileLayerGroup *layerGroup, const MapRenderer *renderer, int levelOffset, const QPoint &offset)
 {
     QRect r = layerGroup->bounds().translated(offset);
-    Layer *layer = layerGroup->mLayers.first();
-    layer->setLevel(layer->level() + levelOffset);
-    QRectF bounds = renderer->boundingRect(r, layer);
-    layer->setLevel(layerGroup->level());
+    QRectF bounds = renderer->boundingRect(r, layerGroup->level() + levelOffset);
 
     QMargins m = map->drawMargins(); /* layerGroup->drawMargins(); */
     bounds.adjust(-m.left(), -m.top(), m.right(), m.bottom());
@@ -720,7 +717,7 @@ void ZomboidScene::onLotAdded(ZLot *lot, MapObject *mapObject)
         QRectF levelBoundsTop = layerGroupSceneBounds(lot->map(), lotGrp, mMapDocument->renderer(),
             mapObject->objectGroup()->level(), mapObject->position().toPoint());
         QRect mapBounds(mapObject->position().toPoint(), lot->map()->size());
-        QRectF mapObjectBounds = mMapDocument->renderer()->boundingRect(mapBounds, mapObject->objectGroup());
+        QRectF mapObjectBounds = mMapDocument->renderer()->boundingRect(mapBounds, mapObject->objectGroup()->level());
         QRectF lotBounds = levelBoundsTop | levelBoundsBottom;
         item->setDrawMargins(QMargins(mapObjectBounds.left() - lotBounds.left(),
             mapObjectBounds.top() - lotBounds.top(),
@@ -787,7 +784,7 @@ void ZomboidScene::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
         if (info.suffix() != QLatin1String("tmx")) continue;
 
         MapObject *newMapObject = new MapObject;
-        newMapObject->setPosition(mMapDocument->renderer()->pixelToTileCoords(event->scenePos(), objectGroup));
+        newMapObject->setPosition(mMapDocument->renderer()->pixelToTileCoords(event->scenePos(), objectGroup->level()));
         newMapObject->setShape(MapObject::Rectangle);
         newMapObject->setSize(4, 4);
         objectGroup->addObject(newMapObject);
@@ -804,7 +801,7 @@ void ZomboidScene::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
 void ZomboidScene::dragMoveEvent(QGraphicsSceneDragDropEvent *event)
 {
     ObjectGroup *objectGroup = mDnDMapObjectItem->mapObject()->objectGroup();
-    mDnDMapObjectItem->mapObject()->setPosition(mMapDocument->renderer()->pixelToTileCoords(event->scenePos(), objectGroup));
+    mDnDMapObjectItem->mapObject()->setPosition(mMapDocument->renderer()->pixelToTileCoords(event->scenePos(), objectGroup->level()));
     mDnDMapObjectItem->syncWithMapObject();
 //    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 }
@@ -844,7 +841,7 @@ void ZomboidScene::dropEvent(QGraphicsSceneDragDropEvent *event)
         ObjectGroup *objectGroup = newMapObject->objectGroup();
         objectGroup->removeObject(newMapObject);
 
-        newMapObject->setPosition(mMapDocument->renderer()->pixelToTileCoords(event->scenePos(), objectGroup));
+        newMapObject->setPosition(mMapDocument->renderer()->pixelToTileCoords(event->scenePos(), objectGroup->level()));
         newMapObject->setName(QLatin1String("lot"));
         newMapObject->setType(info.baseName());
 

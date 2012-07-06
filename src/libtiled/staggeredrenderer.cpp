@@ -46,11 +46,13 @@ QSize StaggeredRenderer::mapSize() const
 }
 
 #ifdef ZOMBOID
-QRect StaggeredRenderer::boundingRect(const QRect &rect, const Layer *layer) const
+QRect StaggeredRenderer::boundingRect(const QRect &rect, int level) const
+{
+    Q_UNUSED(level)
 #else
 QRect StaggeredRenderer::boundingRect(const QRect &rect) const
-#endif
 {
+#endif
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
 
@@ -83,12 +85,14 @@ QPainterPath StaggeredRenderer::shape(const MapObject *object) const
 
 #ifdef ZOMBOID
 void StaggeredRenderer::drawGrid(QPainter *painter, const QRectF &rect,
-                                 QColor gridColor, const Layer *layer) const
+                                 QColor gridColor, int level) const
+{
+    Q_UNUSED(level)
 #else
 void StaggeredRenderer::drawGrid(QPainter *painter, const QRectF &rect,
                                  QColor gridColor) const
-#endif
 {
+#endif
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
 
@@ -252,11 +256,13 @@ void StaggeredRenderer::drawTileSelection(QPainter *painter,
                                           const QColor &color,
 #ifdef ZOMBOID
                                           const QRectF &exposed,
-                                          const Layer *layer) const
+                                          int level) const
+{
+    Q_UNUSED(level)
 #else
                                           const QRectF &exposed) const
-#endif
 {
+#endif
     painter->setBrush(color);
     painter->setPen(Qt::NoPen);
 
@@ -300,11 +306,13 @@ void StaggeredRenderer::drawImageLayer(QPainter *painter,
  * supported by this renderer.
  */
 #ifdef ZOMBOID
-QPointF StaggeredRenderer::pixelToTileCoords(qreal x, qreal y, const Layer *layer) const
+QPointF StaggeredRenderer::pixelToTileCoords(qreal x, qreal y, int level) const
+{
+    Q_UNUSED(level)
 #else
 QPointF StaggeredRenderer::pixelToTileCoords(qreal x, qreal y) const
-#endif
 {
+#endif
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
 
@@ -337,11 +345,13 @@ QPointF StaggeredRenderer::pixelToTileCoords(qreal x, qreal y) const
  * supported by this renderer.
  */
 #ifdef ZOMBOID
-QPointF StaggeredRenderer::tileToPixelCoords(qreal x, qreal y, const Layer *layer) const
+QPointF StaggeredRenderer::tileToPixelCoords(qreal x, qreal y, int level) const
+{
+    Q_UNUSED(level)
 #else
 QPointF StaggeredRenderer::tileToPixelCoords(qreal x, qreal y) const
-#endif
 {
+#endif
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
 

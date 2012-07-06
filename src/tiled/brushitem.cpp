@@ -111,15 +111,16 @@ void BrushItem::paint(QPainter *painter,
         const qreal opacity = painter->opacity();
         painter->setOpacity(0.75);
 #ifdef ZOMBOID
-        mTileLayer->setLevel(mMapDocument->currentLayer() ? mMapDocument->currentLayer()->level() : 0);
+        mTileLayer->setLevel(mMapDocument->currentLevel());
         renderer->drawTileLayer(painter, mTileLayer, option->exposedRect);
         painter->setOpacity(opacity);
 
         renderer->drawTileSelection(painter, mRegion, highlight,
-                                    option->exposedRect, mTileLayer);
+                                    option->exposedRect, mTileLayer->level());
     } else {
+        int level = mMapDocument->currentLevel();
         renderer->drawTileSelection(painter, mRegion, highlight,
-                                    option->exposedRect, mMapDocument->currentLayer());
+                                    option->exposedRect, level);
     }
 #else
         renderer->drawTileLayer(painter, mTileLayer, option->exposedRect);
@@ -145,7 +146,7 @@ void BrushItem::updateBoundingRect()
 
     const QRect bounds = mRegion.boundingRect();
 #ifdef ZOMBOID
-    mBoundingRect = mMapDocument->renderer()->boundingRect(bounds, mMapDocument->currentLayer());
+    mBoundingRect = mMapDocument->renderer()->boundingRect(bounds, mMapDocument->currentLevel());
 #else
     mBoundingRect = mMapDocument->renderer()->boundingRect(bounds);
 #endif

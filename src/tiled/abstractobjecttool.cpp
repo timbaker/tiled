@@ -69,7 +69,7 @@ void AbstractObjectTool::mouseMoved(const QPointF &pos,
 {
 #ifdef ZOMBOID
     Layer *layer = currentObjectGroup();
-    const QPointF tilePosF = mapDocument()->renderer()->pixelToTileCoords(pos, layer);
+    const QPointF tilePosF = mapDocument()->renderer()->pixelToTileCoords(pos, layer ? layer->level() : 0);
 #else
     const QPointF tilePosF = mapDocument()->renderer()->pixelToTileCoords(pos);
 #endif

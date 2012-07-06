@@ -156,7 +156,7 @@ QVariant ResizeHandle::itemChange(GraphicsItemChange change,
 
             // Calculate the new coordinates in tiles
 #ifdef ZOMBOID
-            QPointF tileCoords = renderer->pixelToTileCoords(pixelPos, layer);
+            QPointF tileCoords = renderer->pixelToTileCoords(pixelPos, layer->level());
 #else
             QPointF tileCoords = renderer->pixelToTileCoords(pixelPos);
 #endif
@@ -169,7 +169,7 @@ QVariant ResizeHandle::itemChange(GraphicsItemChange change,
             tileCoords += objectPos;
 
 #ifdef ZOMBOID
-            return renderer->tileToPixelCoords(tileCoords, layer) - itemPos;
+            return renderer->tileToPixelCoords(tileCoords, layer->level()) - itemPos;
 #else
             return renderer->tileToPixelCoords(tileCoords) - itemPos;
 #endif
@@ -178,7 +178,7 @@ QVariant ResizeHandle::itemChange(GraphicsItemChange change,
             // Update the size of the map object
             const QPointF newPos = value.toPointF() + mMapObjectItem->pos();
 #ifdef ZOMBOID
-            QPointF tileCoords = renderer->pixelToTileCoords(newPos, layer);
+            QPointF tileCoords = renderer->pixelToTileCoords(newPos, layer->level());
 #else
             QPointF tileCoords = renderer->pixelToTileCoords(newPos);
 #endif
@@ -229,7 +229,7 @@ void MapObjectItem::syncWithMapObject()
     MapRenderer *renderer = mMapDocument->renderer();
 #ifdef ZOMBOID
     Layer *layer = mObject->objectGroup();
-    const QPointF pixelPos = renderer->tileToPixelCoords(mObject->position(), layer);
+    const QPointF pixelPos = renderer->tileToPixelCoords(mObject->position(), layer->level());
 #else
     const QPointF pixelPos = renderer->tileToPixelCoords(mObject->position());
 #endif
@@ -256,7 +256,7 @@ void MapObjectItem::syncWithMapObject()
         mBoundingRect = bounds;
         const QPointF bottomRight = mObject->bounds().bottomRight();
 #ifdef ZOMBOID
-        const QPointF handlePos = renderer->tileToPixelCoords(bottomRight, layer);
+        const QPointF handlePos = renderer->tileToPixelCoords(bottomRight, layer->level());
 #else
         const QPointF handlePos = renderer->tileToPixelCoords(bottomRight);
 #endif
