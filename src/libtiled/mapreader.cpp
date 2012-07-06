@@ -352,6 +352,20 @@ void MapReaderPrivate::readTilesetImage(Tileset *tileset)
     const int width = atts.value(QLatin1String("width")).toString().toInt();
     mGidMapper.setTilesetWidth(tileset, width);
 
+#ifdef ZOMBOID
+    if (p->tilesetImageCache()) {
+        Tileset *cached = p->tilesetImageCache()->findMatch(tileset, source);
+        if (!cached || !tileset->loadFromCache(cached)) {
+            const QImage tilesetImage = p->readExternalImage(source);
+            if (!tileset->loadFromImage(tilesetImage, source))
+                xml.raiseError(tr("Error loading tileset image:\n'%1'").arg(source));
+            p->tilesetImageCache()->addTileset(tileset);
+        }
+        xml.skipCurrentElement();
+        return;
+    }
+#endif
+
     const QImage tilesetImage = p->readExternalImage(source);
     if (!tileset->loadFromImage(tilesetImage, source))
         xml.raiseError(tr("Error loading tileset image:\n'%1'").arg(source));
@@ -811,6 +825,9 @@ void MapReaderPrivate::readProperty(Properties *properties)
 
 MapReader::MapReader()
     : d(new MapReaderPrivate(this))
+#ifdef ZOMBOID
+    , mTilesetImageCache(0)
+#endif
 {
 }
 

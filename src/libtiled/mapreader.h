@@ -39,6 +39,9 @@ namespace Tiled {
 
 class Map;
 class Tileset;
+#ifdef ZOMBOID
+class TilesetImageCache;
+#endif
 
 namespace Internal {
 class MapReaderPrivate;
@@ -95,6 +98,11 @@ public:
      */
     QString errorString() const;
 
+#ifdef ZOMBOID
+    void setTilesetImageCache(TilesetImageCache *cache) { mTilesetImageCache = cache; }
+    TilesetImageCache *tilesetImageCache() const { return mTilesetImageCache; }
+#endif
+
 protected:
     /**
      * Called for each \a reference to an external file. Should return the path
@@ -122,6 +130,10 @@ protected:
 private:
     friend class Internal::MapReaderPrivate;
     Internal::MapReaderPrivate *d;
+
+#ifdef ZOMBOID
+    TilesetImageCache *mTilesetImageCache;
+#endif
 };
 
 } // namespace Tiled

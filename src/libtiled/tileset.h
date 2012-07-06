@@ -43,6 +43,19 @@ namespace Tiled {
 
 class Tile;
 
+#ifdef ZOMBOID
+class Tileset;
+class TILEDSHARED_EXPORT TilesetImageCache
+{
+public:
+    ~TilesetImageCache();
+    void addTileset(Tileset *ts);
+    Tileset *findMatch(Tileset *ts, const QString &imageSource);
+    QList<Tileset*> mTilesets;
+};
+
+#endif
+
 /**
  * A tileset, representing a set of tiles.
  *
@@ -192,6 +205,11 @@ public:
      *         returns <code>false</code>
      */
     bool loadFromImage(const QImage &image, const QString &fileName);
+
+#ifdef ZOMBOID
+    bool loadFromCache(Tileset *cached);
+    friend class TilesetImageCache;
+#endif
 
     /**
      * This checks if there is a similar tileset in the given list.
