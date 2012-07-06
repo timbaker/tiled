@@ -139,12 +139,14 @@ MapsView::MapsView(MainWindow *mainWindow, QWidget *parent)
     Preferences *prefs = Preferences::instance();
     connect(prefs, SIGNAL(mapsDirectoryChanged()), this, SLOT(onMapsDirectoryChanged()));
 
-    QDir mapsDirectory(prefs->mapsDirectory());
+    QDir mapsDir(prefs->mapsDirectory());
+    if (!mapsDir.exists())
+        mapsDir.setPath(QDir::currentPath());
 
     QFileSystemModel *model = mFSModel = new QFileSystemModel;
-    model->setRootPath(mapsDirectory.absolutePath());
+    model->setRootPath(mapsDir.absolutePath());
 
-    model->setFilter(QDir::Files);
+    model->setFilter(QDir::AllDirs | QDir::NoDot | QDir::Files);
     model->setNameFilters(QStringList(QLatin1String("*.tmx")));
     model->setNameFilterDisables(false); // hide filtered files
 
@@ -154,7 +156,7 @@ MapsView::MapsView(MainWindow *mainWindow, QWidget *parent)
     hHeader->hideSection(2);
     hHeader->hideSection(3);
 
-    setRootIndex(model->index(mapsDirectory.absolutePath()));
+    setRootIndex(model->index(mapsDir.absolutePath()));
     
     header()->setStretchLastSection(false);
     header()->setResizeMode(0, QHeaderView::Stretch);
@@ -171,12 +173,21 @@ QSize MapsView::sizeHint() const
 void MapsView::onMapsDirectoryChanged()
 {
     Preferences *prefs = Preferences::instance();
-    QDir mapsDirectory(prefs->mapsDirectory());
-    setRootIndex(model()->index(mapsDirectory.absolutePath()));
+    QDir mapsDir(prefs->mapsDirectory());
+    if (!mapsDir.exists())
+        mapsDir.setPath(QDir::currentPath());
+    model()->setRootPath(mapsDir.canonicalPath());
+    setRootIndex(model()->index(mapsDir.absolutePath()));
 }
 
 void MapsView::onActivated(const QModelIndex &index)
 {
     QString path = model()->filePath(index);
+    QFileInfo fileInfo(path);
+    if (fileInfo.isDir()) {
+        Preferences *prefs = Preferences::instance();
+        prefs->setMapsDirectory(fileInfo.canonicalFilePath());
+        return;
+    }
     mMainWindow->openFile(path);
 }
