@@ -564,6 +564,12 @@ void MapReaderPrivate::decodeCSVLayerData(TileLayer *tileLayer, const QString &t
             }
             tileLayer->setCell(x, y, cellForGid(gid));
         }
+#if 1
+        // Hack to keep the app responsive.
+        // TODO: Move map reading to a worker thread. Only issue is tileset images
+        // cannot be accessed outside the GUI thread.
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+#endif
     }
 #else
     QStringList tiles = trimText.split(QLatin1Char(','));
