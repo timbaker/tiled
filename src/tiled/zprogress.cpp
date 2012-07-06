@@ -51,6 +51,7 @@ void ZProgressManager::setMainWindow(QWidget *mainWindow)
     layout->addWidget(mLabel);
     mDialog->setWindowModality(Qt::WindowModal);
     mDialog->setLayout(layout);
+    mDialog->setWindowFlags(Qt::CustomizeWindowHint | Qt::Dialog);
 }
 
 void ZProgressManager::begin(const QString &text)

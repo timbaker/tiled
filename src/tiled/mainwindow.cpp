@@ -551,23 +551,18 @@ bool MainWindow::openFile(const QString &fileName,
 
 #ifdef ZOMBOID
     QFileInfo fileInfo(fileName);
-    ZProgressManager::instance()->begin(QString(QLatin1String("Reading %1")).arg(fileInfo.fileName())); 
+    PROGRESS progress(tr("Reading %1").arg(fileInfo.fileName()));
 #endif
 
     Map *map = mapReader->read(fileName);
     if (!map) {
-#ifdef ZOMBOID
-        ZProgressManager::instance()->end();
-#endif
         QMessageBox::critical(this, tr("Error Opening Map"),
                               mapReader->errorString());
         return false;
     }
 
     addMapDocument(new MapDocument(map, fileName));
-#ifdef ZOMBOID
-    ZProgressManager::instance()->end();
-#endif
+
     setRecentFile(fileName);
     return true;
 }

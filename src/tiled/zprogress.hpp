@@ -31,9 +31,9 @@ class ZProgressManager : public QObject
 public:
     static ZProgressManager *instance();
 
-	void begin(const QString &text);
-	void update(const QString &text);
-	void end();
+    void begin(const QString &text);
+    void update(const QString &text);
+    void end();
 
     void setMainWindow(QWidget *parent);
 
@@ -43,10 +43,29 @@ private:
     ZProgressManager();
 
     QWidget *mMainWindow;
-	QDialog *mDialog;
-	QLabel *mLabel;
-	int mDepth;
-	static ZProgressManager *mInstance;
+    QDialog *mDialog;
+    QLabel *mLabel;
+    int mDepth;
+    static ZProgressManager *mInstance;
+};
+
+class PROGRESS
+{
+public:
+    PROGRESS(const QString &text)
+    {
+        ZProgressManager::instance()->begin(text);
+    }
+
+    void update(const QString &text)
+    {
+        ZProgressManager::instance()->update(text);
+    }
+
+    ~PROGRESS()
+    {
+        ZProgressManager::instance()->end();
+    }
 };
 
 #endif /* ZPROGRESSMANAGER_H */
