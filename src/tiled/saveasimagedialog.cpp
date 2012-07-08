@@ -22,6 +22,9 @@
 #include "ui_saveasimagedialog.h"
 
 #include "map.h"
+#ifdef ZOMBOID
+#include "mapcomposite.h"
+#endif
 #include "mapdocument.h"
 #include "mapobjectitem.h"
 #include "maprenderer.h"
@@ -39,6 +42,11 @@
 static const char * const VISIBLE_ONLY_KEY = "SaveAsImage/VisibleLayersOnly";
 static const char * const CURRENT_SCALE_KEY = "SaveAsImage/CurrentScale";
 static const char * const DRAW_GRID_KEY = "SaveAsImage/DrawGrid";
+#ifdef ZOMBOID
+static const char * const OBJECT_LAYERS_KEY = "SaveAsImage/ObjectLayers";
+static const char * const NORENDER_KEY = "SaveAsImage/NoRender";
+static const char * const IMAGE_WIDTH_KEY = "SaveAsImage/ImageWidth";
+#endif
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -91,6 +99,28 @@ SaveAsImageDialog::SaveAsImageDialog(MapDocument *mapDocument,
     mUi->visibleLayersOnly->setChecked(visibleLayersOnly);
     mUi->currentZoomLevel->setChecked(useCurrentScale);
     mUi->drawTileGrid->setChecked(drawTileGrid);
+#ifdef ZOMBOID
+    MapRenderer *renderer = mMapDocument->renderer();
+    QSize mapSize = mMapDocument->mapComposite()->boundingRect(renderer).size().toSize() * mCurrentScale;
+    QString imageSizeString = tr("(%1 x %2)").arg(mapSize.width()).arg(mapSize.height());
+    mUi->imageSizeLabel->setText(imageSizeString);
+
+    const bool drawObjectLayers =
+            s->value(QLatin1String(OBJECT_LAYERS_KEY), false).toBool();
+    mUi->drawObjectLayers->setChecked(drawObjectLayers);
+
+    const bool drawNoRender =
+            s->value(QLatin1String(NORENDER_KEY), false).toBool();
+    mUi->drawNoRender->setChecked(drawNoRender);
+
+    const int customImageWidth =
+            s->value(QLatin1String(IMAGE_WIDTH_KEY), 512).toInt();
+    mUi->imageWidthSpinBox->setValue(customImageWidth);
+
+    mUi->imageWidthRadio->setChecked(!useCurrentScale);
+    mUi->imageWidthSpinBox->setEnabled(!useCurrentScale);
+    connect(mUi->currentZoomLevel, SIGNAL(toggled(bool)), mUi->imageWidthSpinBox, SLOT(setDisabled(bool)));
+#endif
 
     connect(mUi->browseButton, SIGNAL(clicked()), SLOT(browse()));
     connect(mUi->fileNameEdit, SIGNAL(textChanged(QString)),
@@ -126,6 +156,87 @@ void SaveAsImageDialog::accept()
     const bool useCurrentScale = mUi->currentZoomLevel->isChecked();
     const bool drawTileGrid = mUi->drawTileGrid->isChecked();
 
+#ifdef ZOMBOID
+    const bool drawObjectLayers = mUi->drawObjectLayers->isChecked();
+    const bool drawNoRender = mUi->drawNoRender->isChecked();
+    const int customImageWidth = mUi->imageWidthSpinBox->value();
+
+    MapRenderer *renderer = mMapDocument->renderer();
+    QRectF sceneRect = mMapDocument->mapComposite()->boundingRect(renderer);
+    QSize mapSize = sceneRect.size().toSize();
+
+    qreal scale = mCurrentScale;
+    if (!useCurrentScale)
+        scale = customImageWidth / qreal(mapSize.width());
+    mapSize *= scale;
+
+    QImage image(mapSize, QImage::Format_ARGB32);
+    image.fill(Qt::transparent);
+    QPainter painter(&image);
+
+    if (scale != qreal(1)) {
+        painter.setRenderHints(QPainter::SmoothPixmapTransform |
+                               QPainter::HighQualityAntialiasing);
+        painter.setTransform(QTransform::fromScale(scale,
+                                                   scale));
+    }
+
+//    QPointF offset = renderer->tileToPixelCoords(0, 0, mMapDocument->map()->maxLevel());
+    painter.translate(0, -sceneRect.top()/*offset.y()*/);
+
+    ZTileLayerGroup *layerGroup = 0;
+
+    foreach (Layer *layer, mMapDocument->map()->layers()) {
+
+        painter.setOpacity(layer->opacity());
+
+        if (TileLayer *tileLayer = layer->asTileLayer()) {
+            if (tileLayer->group()) {
+                // FIXME: LayerGroups should be drawn with the same Z-order the scene uses.
+                // They will usually be in the same order anyways.
+                if (tileLayer->group() != layerGroup) {
+                    QMap<TileLayer*,bool> visible;
+                    layerGroup = tileLayer->group();
+                    if (!visibleLayersOnly || !drawNoRender) {
+                        foreach (TileLayer *tl, layerGroup->layers()) {
+                            visible[tl] = tl->isVisible();
+                            bool isVisible = !visibleLayersOnly || tl->isVisible();
+                            if (!drawNoRender && tl->name().contains(QLatin1String("NoRender")))
+                                isVisible = false;
+                            tl->setVisible(isVisible);
+                        }
+                        ((CompositeLayerGroup*)layerGroup)->synch();
+                    }
+                    renderer->drawTileLayerGroup(&painter, layerGroup);
+                    if (!visibleLayersOnly || !drawNoRender) {
+                        foreach (TileLayer *tl, layerGroup->layers())
+                            tl->setVisible(visible[tl]);
+                        ((CompositeLayerGroup*)layerGroup)->synch();
+                    }
+                }
+            } else {
+                if (visibleLayersOnly && !layer->isVisible())
+                    continue;
+                if (!drawNoRender && layer->name().contains(QLatin1String("NoRender")))
+                    continue;
+                renderer->drawTileLayer(&painter, tileLayer);
+            }
+        } else if (ObjectGroup *objGroup = layer->asObjectGroup()) {
+            if (!drawObjectLayers)
+                continue;
+            if (visibleLayersOnly && !layer->isVisible())
+                continue;
+            foreach (const MapObject *object, objGroup->objects()) {
+                const QColor color = MapObjectItem::objectColor(object);
+                renderer->drawMapObject(&painter, object, color);
+            }
+        } else if (ImageLayer *imageLayer = layer->asImageLayer()) {
+            if (visibleLayersOnly && !layer->isVisible())
+                continue;
+            renderer->drawImageLayer(&painter, imageLayer);
+        }
+    }
+#else // !ZOMBOID
     MapRenderer *renderer = mMapDocument->renderer();
     QSize mapSize = renderer->mapSize();
 
@@ -164,7 +275,7 @@ void SaveAsImageDialog::accept()
             renderer->drawImageLayer(&painter, imageLayer);
         }
     }
-
+#endif // !ZOMBOID
     if (drawTileGrid) {
         Preferences *prefs = Preferences::instance();
         renderer->drawGrid(&painter, QRectF(QPointF(), renderer->mapSize()),
@@ -179,6 +290,11 @@ void SaveAsImageDialog::accept()
     s->setValue(QLatin1String(VISIBLE_ONLY_KEY), visibleLayersOnly);
     s->setValue(QLatin1String(CURRENT_SCALE_KEY), useCurrentScale);
     s->setValue(QLatin1String(DRAW_GRID_KEY), drawTileGrid);
+#ifdef ZOMBOID
+    s->setValue(QLatin1String(OBJECT_LAYERS_KEY), drawObjectLayers);
+    s->setValue(QLatin1String(NORENDER_KEY), drawNoRender);
+    s->setValue(QLatin1String(IMAGE_WIDTH_KEY), customImageWidth);
+#endif
 
     QDialog::accept();
 }
