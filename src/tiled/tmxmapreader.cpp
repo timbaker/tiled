@@ -76,6 +76,9 @@ Map *TmxMapReader::read(const QString &fileName)
     mError.clear();
 
     EditorMapReader reader;
+#ifdef ZOMBOID
+    reader.setTilesetImageCache(TilesetManager::instance()->imageCache());
+#endif
     Map *map = reader.readMap(fileName);
     if (!map)
         mError = reader.errorString();

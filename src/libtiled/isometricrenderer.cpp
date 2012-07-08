@@ -374,6 +374,7 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *l
         QPoint columnItr = rowItr;
 
         for (int x = startPos.x(); x < rect.right(); x += tileWidth) {
+            cells.clear();
             if (layerGroup->orderedCellsAt(columnItr, cells)) {
                 foreach (const Cell *cell, cells) {
                     if (!cell->isEmpty()) {
@@ -500,9 +501,7 @@ void IsometricRenderer::drawMapObject(QPainter *painter,
         case MapObject::Rectangle: {
             QPolygonF polygon = tileRectToPolygon(object->bounds());
             painter->drawPolygon(polygon);
-#ifdef ZOMBOID
-            if (object->name() == "lot") break;
-#endif
+
             pen.setColor(color);
             painter->setPen(pen);
             painter->setBrush(brush);

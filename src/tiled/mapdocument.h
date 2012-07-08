@@ -35,6 +35,11 @@ class QRect;
 class QSize;
 class QUndoStack;
 
+#ifdef ZOMBOID
+class CompositeLayerGroup;
+class MapComposite;
+#endif
+
 namespace Tiled {
 
 class Map;
@@ -109,6 +114,10 @@ public:
      */
     Map *map() const { return mMap; }
 
+#ifdef ZOMBOID
+    MapComposite *mapComposite() const { return mMapComposite; }
+#endif
+
     /**
      * Sets the current layer to the given index.
      */
@@ -178,6 +187,8 @@ public:
     MapObjectModel *mapObjectModel() const { return mMapObjectModel; }
 #ifdef ZOMBOID
     ZLevelsModel *levelsModel() const { return mLevelsModel; }
+
+    void setLayerGroupVisibility(CompositeLayerGroup *layerGroup, bool visible);
 #endif
 
     /**
@@ -282,6 +293,17 @@ signals:
     void layerRemoved(int index);
     void layerChanged(int index);
 
+#ifdef ZOMBOID
+    void layerGroupAdded(int level);
+    void layerGroupVisibilityChanged(CompositeLayerGroup *layerGroup);
+
+    void layerAddedToGroup(int index);
+    void layerAboutToBeRemovedFromGroup(int index);
+    void layerRemovedFromGroup(int index, CompositeLayerGroup *oldGroup);
+
+    void layerLevelChanged(int index, int oldLevel);
+#endif
+
     /**
      * Emitted after a new layer was added and the name should be edited.
      * Applies to the current layer.
@@ -330,6 +352,9 @@ private slots:
     void onLayerAdded(int index);
     void onLayerAboutToBeRemoved(int index);
     void onLayerRemoved(int index);
+#ifdef ZOMBOID
+    void onLayerRenamed(int index);
+#endif
 
 private:
     void deselectObjects(const QList<MapObject*> &objects);
@@ -345,6 +370,7 @@ private:
 #ifdef ZOMBOID
     ZLevelsModel *mLevelsModel;
     int mMaxVisibleLayer;
+    MapComposite *mMapComposite;
 #endif
     QUndoStack *mUndoStack;
 };

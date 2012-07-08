@@ -267,6 +267,7 @@ void MapObjectItem::syncWithMapObject()
 
     setVisible(mObject->isVisible());
 }
+
 #ifdef ZOMBOID
 // This is to accomodate Lot maps, should create a LotItem class
 void MapObjectItem::setDrawMargins(const QMargins &drawMargins)

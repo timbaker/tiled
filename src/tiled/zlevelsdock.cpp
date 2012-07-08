@@ -19,6 +19,7 @@
 
 #include "documentmanager.h"
 #include "map.h"
+#include "mapcomposite.h"
 #include "mapdocument.h"
 #include "tilelayer.h"
 #include "zlevelsmodel.hpp"
@@ -111,7 +112,7 @@ void ZLevelsDock::updateActions()
 void ZLevelsDock::saveExpandedLevels(MapDocument *mapDoc)
 {
     mExpandedLevels[mapDoc].clear();
-    foreach (ZTileLayerGroup *g, mapDoc->map()->tileLayerGroups()) {
+    foreach (CompositeLayerGroup *g, mapDoc->mapComposite()->layerGroups()) {
         if (mView->isExpanded(mView->model()->index(g)))
             mExpandedLevels[mapDoc].append(g);
     }
@@ -121,7 +122,7 @@ void ZLevelsDock::restoreExpandedLevels(MapDocument *mapDoc)
 {
     if (!mExpandedLevels.contains(mapDoc))
         mView->expandAll();
-    foreach (ZTileLayerGroup *g, mExpandedLevels[mapDoc])
+    foreach (CompositeLayerGroup *g, mExpandedLevels[mapDoc])
         mView->setExpanded(mView->model()->index(g), true);
     mExpandedLevels[mapDoc].clear();
 #if 0
@@ -205,7 +206,7 @@ void ZLevelsView::selectionChanged(const QItemSelection &selected, const QItemSe
 
     if (count == 1) {
         QModelIndex index = selectedRows.first();
-        if (TileLayer *tl = model()->toTileLayer(index)) {
+        if (TileLayer *tl = model()->toLayer(index)) {
             int layerIndex = mMapDocument->map()->layers().indexOf(tl);
             if (layerIndex != mMapDocument->currentLayerIndex()) {
                 mSynching = true;
@@ -233,7 +234,7 @@ void ZLevelsView::currentLayerIndexChanged(int index)
         }
     }
 
-    // Selected no layer, or a layer not in a ZTileLayerGroup
+    // Selected no layer, or a layer not in a CompositeLayerGroup
     mSynching = true;
     setCurrentIndex(QModelIndex());
     mSynching = false;

@@ -21,11 +21,12 @@
 #include <QAbstractItemModel>
 #include <QIcon>
 
+class CompositeLayerGroup;
+
 namespace Tiled {
 
 class Map;
 class TileLayer;
-class ZTileLayerGroup;
 
 namespace Internal {
 
@@ -36,77 +37,81 @@ class ZLevelsModel : public QAbstractItemModel
     Q_OBJECT
 
 public:
-    enum UserRoles {
-        OpacityRole = Qt::UserRole
-    };
-
-	struct LayerOrGroup
-	{
-		LayerOrGroup(ZTileLayerGroup *g)
-			: mGroup(g)
-			, mLayer(0)
-		{
-		}
-		LayerOrGroup(TileLayer *tl)
-			: mGroup(0)
-			, mLayer(tl)
-		{
-		}
-		ZTileLayerGroup *mGroup;
-		TileLayer *mLayer;
-	};
-
     ZLevelsModel(QObject *parent = 0);
-	~ZLevelsModel();
+    ~ZLevelsModel();
 
-	QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
-	QModelIndex parent(const QModelIndex &index) const;
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
+    QModelIndex parent(const QModelIndex &index) const;
 
-	int rowCount(const QModelIndex &parent = QModelIndex()) const;
-	int columnCount(const QModelIndex &parent = QModelIndex()) const;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    int columnCount(const QModelIndex &parent = QModelIndex()) const;
 
-	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
 
     bool setData(const QModelIndex &index, const QVariant &value, int role);
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
     Qt::ItemFlags flags(const QModelIndex &index) const;
 
-	QModelIndex index(ZTileLayerGroup *og) const;
-	QModelIndex index(TileLayer *o) const;
+    QModelIndex index(CompositeLayerGroup *og) const;
+    QModelIndex index(TileLayer *o) const;
 
-	ZTileLayerGroup *toTileLayerGroup(const QModelIndex &index) const;
-    TileLayer *toTileLayer(const QModelIndex &index) const;
-
-    int toRow(ZTileLayerGroup *tileLayerGroup) const;
-    int toRow(TileLayer *tileLayer) const;
-
-	int toGroupRow(int groupIndex) const;
-    int toLayerRow(ZTileLayerGroup *g, int layerIndex) const;
-
-	int toGroupIndex(int row) const;
-	int toLayerIndex(ZTileLayerGroup *g, int row) const;
+    CompositeLayerGroup *toLayerGroup(const QModelIndex &index) const;
+    TileLayer *toLayer(const QModelIndex &index) const;
 
     void setMapDocument(MapDocument *mapDocument);
     MapDocument *mapDocument() const { return mMapDocument; }
 
-	void addTileLayerGroup(ZTileLayerGroup *g);
-	void addLayerToGroup(ZTileLayerGroup *g, TileLayer *tl);
-	void removeLayerFromGroup(TileLayer *tl);
-
-signals:
-	void layerGroupVisibilityChanged(ZTileLayerGroup *g);
-
 private slots:
-	void layerAdded(int index);
-	void layerChanged(int index);
-	void layerAboutToBeRemoved(int index);
+    void layerChanged(int index);
+
+    void layerGroupAdded(int level);
+    void layerGroupVisibilityChanged(CompositeLayerGroup *g);
+
+    void layerAddedToGroup(int layerIndex);
+    void layerAboutToBeRemovedFromGroup(int layerIndex);
 
 private:
+    class Item
+    {
+    public:
+        Item()
+            : parent(0)
+            , group(0)
+            , layer(0)
+        {
+
+        }
+
+        Item(Item *parent, int indexInParent, CompositeLayerGroup *g)
+            : parent(parent)
+            , group(g)
+            , layer(0)
+        {
+            parent->children.insert(indexInParent, this);
+        }
+
+        Item(Item *parent, int indexInParent, TileLayer *tl)
+            : parent(parent)
+            , group(0)
+            , layer(tl)
+        {
+            parent->children.insert(indexInParent, this);
+        }
+
+        CompositeLayerGroup *group;
+        TileLayer *layer;
+        Item *parent;
+        QList<Item*> children;
+    };
+
+    Item *toItem(const QModelIndex &index) const;
+    Item *toItem(CompositeLayerGroup *g) const;
+    Item *toItem(TileLayer *tl) const;
+
     MapDocument *mMapDocument;
     Map *mMap;
-	QMap<ZTileLayerGroup*,LayerOrGroup*> mGroupToLOG;
-	QMap<TileLayer*,LayerOrGroup*> mLayerToLOG;
+    Item *mRootItem;
 };
 
 } // namespace Internal

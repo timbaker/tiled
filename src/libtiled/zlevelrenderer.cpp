@@ -399,6 +399,7 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
         QPoint columnItr = rowItr;
 
         for (int x = startPos.x(); x < rect.right(); x += tileWidth) {
+            cells.clear();
             if (layerGroup->orderedCellsAt(columnItr, cells)) {
                 foreach (const Cell *cell, cells) {
                     if (!cell->isEmpty()) {

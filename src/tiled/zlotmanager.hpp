@@ -24,12 +24,12 @@
 #include <QList>
 #include <QMap>
 
+class MapComposite;
+
 namespace Tiled {
 
 class Map;
 class MapObject;
-class ZLot;
-class Tileset;
 
 namespace Internal {
 class MapDocument;
@@ -43,33 +43,29 @@ public:
     ZLotManager();
     ~ZLotManager();
 
-	void setMapDocument(Internal::MapDocument *mapDoc);
-	Internal::MapDocument *mapDocument() { return mMapDocument; }
+    void setMapDocument(Internal::MapDocument *mapDoc);
+    Internal::MapDocument *mapDocument() { return mMapDocument; }
 
 signals:
-	void lotAdded(ZLot *lot, MapObject *mapObject);
-	void lotRemoved(ZLot *lot, MapObject *mapObject);
-	void lotUpdated(ZLot *lot, MapObject *mapObject);
+    void lotAdded(MapComposite *lot, MapObject *mapObject);
+    void lotRemoved(MapComposite *lot, MapObject *mapObject);
+    void lotUpdated(MapComposite *lot, MapObject *mapObject);
 
 private slots:
-	void onMapsDirectoryChanged();
+    void onMapsDirectoryChanged();
 
-	void onLayerAdded(int index);
-	void onLayerAboutToBeRemoved(int index);
+    void onLayerAdded(int index);
+    void onLayerAboutToBeRemoved(int index);
 
-	void onObjectsAdded(const QList<MapObject*> &objects);
-	void onObjectsChanged(const QList<MapObject*> &objects);
-	void onObjectsRemoved(const QList<MapObject*> &objects);
+    void onObjectsAdded(const QList<MapObject*> &objects);
+    void onObjectsChanged(const QList<MapObject*> &objects);
+    void onObjectsRemoved(const QList<MapObject*> &objects);
 
 private:
     void handleMapObject(MapObject *mapObject);
-	void shareTilesets(Map *map);
-	void convertOrientation(Map *map0, const Map *map1);
 
-	Internal::MapDocument *mMapDocument;
-	QMap<QString,ZLot*> mLots; // One ZLot per different .lot file
-	QMap<MapObject*,ZLot*> mMapObjectToLot;
-	QList<Tileset*> mTilesets;
+    Internal::MapDocument *mMapDocument;
+    QMap<MapObject*,MapComposite*> mMapObjectToLot;
 };
 
 } // namespace Tiled

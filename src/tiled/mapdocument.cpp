@@ -31,6 +31,8 @@
 #include "layermodel.h"
 #include "mapobjectmodel.h"
 #ifdef ZOMBOID
+#include "mapcomposite.h"
+#include "mapmanager.h"
 #include "zlevelrenderer.hpp"
 #include "zlevelsmodel.hpp"
 #endif
@@ -64,9 +66,13 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     mMapObjectModel(new MapObjectModel(this)),
 #ifdef ZOMBOID
     mLevelsModel(new ZLevelsModel(this)),
+    mMapComposite(0),
 #endif
     mUndoStack(new QUndoStack(this))
 {
+#ifdef ZOMBOID
+    mMapComposite = new MapComposite(MapManager::instance()->newFromMap(map, fileName));
+#endif
     switch (map->orientation()) {
     case Map::Isometric:
         mRenderer = new IsometricRenderer(map);
@@ -94,8 +100,19 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     connect(mLayerModel, SIGNAL(layerRemoved(int)), SLOT(onLayerRemoved(int)));
     connect(mLayerModel, SIGNAL(layerChanged(int)), SIGNAL(layerChanged(int)));
 #ifdef ZOMBOID
-    connect(mLayerModel, SIGNAL(layerRenamed(int)), SIGNAL(layerRenamed(int)));
+    connect(mLayerModel, SIGNAL(layerRenamed(int)), SLOT(onLayerRenamed(int)));
     mMaxVisibleLayer = map->layerCount();
+
+    connect(mMapComposite, SIGNAL(layerGroupAdded(int)),
+            SIGNAL(layerGroupAdded(int)));
+    connect(mMapComposite, SIGNAL(layerAddedToGroup(int)),
+            SIGNAL(layerAddedToGroup(int)));
+    connect(mMapComposite, SIGNAL(layerAboutToBeRemovedFromGroup(int)),
+            SIGNAL(layerAboutToBeRemovedFromGroup(int)));
+    connect(mMapComposite, SIGNAL(layerRemovedFromGroup(int,CompositeLayerGroup*)),
+            SIGNAL(layerRemovedFromGroup(int,CompositeLayerGroup*)));
+    connect(mMapComposite, SIGNAL(layerLevelChanged(int,int)),
+            SIGNAL(layerLevelChanged(int,int)));
 #endif
 
 #ifdef ZOMBOID
@@ -130,6 +147,7 @@ MapDocument::~MapDocument()
     // Paranoia
     mLevelsModel->setMapDocument(0);
     mMapObjectModel->setMapDocument(0);
+    delete mMapComposite;
 #endif
 
     delete mRenderer;
@@ -534,6 +552,9 @@ void MapDocument::onObjectsRemoved(const QList<MapObject*> &objects)
 void MapDocument::onLayerAdded(int index)
 {
     emit layerAdded(index);
+#ifdef ZOMBOID
+    mMapComposite->layerAdded(index);
+#endif
 
     // Select the first layer that gets added to the map
     if (mMap->layerCount() == 1)
@@ -545,6 +566,9 @@ void MapDocument::onLayerAboutToBeRemoved(int index)
     // Deselect any objects on this layer when necessary
     if (ObjectGroup *og = dynamic_cast<ObjectGroup*>(mMap->layerAt(index)))
         deselectObjects(og->objects());
+#ifdef ZOMBOID
+    mMapComposite->layerAboutToBeRemoved(index);
+#endif
     emit layerAboutToBeRemoved(index);
 }
 void MapDocument::onLayerRemoved(int index)
@@ -554,6 +578,7 @@ void MapDocument::onLayerRemoved(int index)
     if (currentLayerRemoved)
         mCurrentLayerIndex = mCurrentLayerIndex - 1;
 
+
     emit layerRemoved(index);
 
     // Emitted after the layerRemoved signal so that the MapScene has a chance
@@ -561,6 +586,21 @@ void MapDocument::onLayerRemoved(int index)
     if (currentLayerRemoved)
         emit currentLayerIndexChanged(mCurrentLayerIndex);
 }
+
+#ifdef ZOMBOID
+void MapDocument::setLayerGroupVisibility(CompositeLayerGroup *layerGroup, bool visible)
+{
+    layerGroup->setVisible(visible);
+    emit layerGroupVisibilityChanged(layerGroup);
+}
+
+void MapDocument::onLayerRenamed(int index)
+{
+    mMapComposite->layerRenamed(index);
+
+    emit layerRenamed(index);
+}
+#endif
 
 void MapDocument::deselectObjects(const QList<MapObject *> &objects)
 {

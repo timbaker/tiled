@@ -36,6 +36,7 @@ namespace Tiled {
 
 #ifdef ZOMBOID
 class Tile;
+class TilesetImageCache;
 #endif
 class Tileset;
 
@@ -134,6 +135,8 @@ public:
 #ifdef ZOMBOID
     void setLayerName(Tile *tile, const QString &name);
     QString layerName(Tile *tile);
+
+    TilesetImageCache *imageCache() const { return mTilesetImageCache; }
 #endif
 
 signals:
@@ -170,6 +173,8 @@ private:
     void readTileLayerNames(Tileset *ts);
     void writeTileLayerNames(ZTileLayerNames *tln);
     void syncTileLayerNames(Tileset *ts);
+
+    TilesetImageCache *mTilesetImageCache;
 #endif
 
     /**

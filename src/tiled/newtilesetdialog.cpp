@@ -23,6 +23,9 @@
 
 #include "preferences.h"
 #include "tileset.h"
+#ifdef ZOMBOID
+#include "tilesetmanager.h"
+#endif
 #include "utils.h"
 
 #include <QFileDialog>
@@ -127,6 +130,22 @@ void NewTilesetDialog::tryAccept()
 
     if (useTransparentColor)
         tileset->setTransparentColor(transparentColor);
+
+#ifdef ZOMBOID
+    if (TilesetImageCache *imageCache = TilesetManager::instance()->imageCache()) {
+        Tileset *cached = imageCache->findMatch(tileset.get(), image);
+        if (!cached || !tileset->loadFromCache(cached)) {
+            if (!tileset->loadFromImage(QImage(image), image)) {
+                QMessageBox::critical(this, tr("Error"),
+                                      tr("Failed to load tileset image '%1'.")
+                                      .arg(image));
+                return;
+            }
+            imageCache->addTileset(tileset.get());
+        }
+    }
+    else
+#endif
 
     if (!tileset->loadFromImage(QImage(image), image)) {
         QMessageBox::critical(this, tr("Error"),

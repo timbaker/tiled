@@ -34,6 +34,9 @@ TilesetManager *TilesetManager::mInstance = 0;
 TilesetManager::TilesetManager():
     mWatcher(new FileSystemWatcher(this)),
     mReloadTilesetsOnChange(false)
+#ifdef ZOMBOID
+   , mTilesetImageCache(new TilesetImageCache)
+#endif
 {
     connect(mWatcher, SIGNAL(fileChanged(QString)),
             this, SLOT(fileChanged(QString)));
@@ -164,6 +167,27 @@ void TilesetManager::fileChanged(const QString &path)
 
 void TilesetManager::fileChangedTimeout()
 {
+#ifdef ZOMBOID
+    foreach (Tileset *tileset, mTilesetImageCache->mTilesets) {
+        QString fileName = tileset->imageSource();
+        if (mChangedFiles.contains(fileName)) {
+            if (tileset->loadFromImage(QImage(fileName), fileName)) {
+            }
+        }
+    }
+    foreach (Tileset *tileset, tilesets()) {
+        QString fileName = tileset->imageSource();
+        if (mChangedFiles.contains(fileName)) {
+            if (Tileset *cached = mTilesetImageCache->findMatch(tileset, fileName)) {
+                if (tileset->loadFromCache(cached)) {
+                    syncTileLayerNames(tileset);
+                    emit tilesetChanged(tileset);
+                }
+            }
+        }
+    }
+#else
+
     foreach (Tileset *tileset, tilesets()) {
         QString fileName = tileset->imageSource();
         if (mChangedFiles.contains(fileName))
@@ -177,6 +201,7 @@ void TilesetManager::fileChangedTimeout()
                 emit tilesetChanged(tileset);
 #endif
     }
+#endif
 
     mChangedFiles.clear();
 }
@@ -427,7 +452,8 @@ void TilesetManager::readTileLayerNames(Tileset *ts)
 
     QFileInfo fileInfo = tileLayerNamesFile(ts);
     if (fileInfo.exists()) {
-        qDebug() << "Reading: " << filePath;
+        QString filePath = fileInfo.absoluteFilePath();
+//        qDebug() << "Reading: " << filePath;
         ZTileLayerNamesReader reader;
         if (reader.read(filePath)) {
             mTileLayerNames[imageSource] = new ZTileLayerNames(reader.result());
@@ -444,7 +470,7 @@ void TilesetManager::writeTileLayerNames(ZTileLayerNames *tln)
 {
     if (tln->mModified == false)
         return;
-    qDebug() << "Writing: " << tln->mFilePath;
+//    qDebug() << "Writing: " << tln->mFilePath;
     ZTileLayerNamesWriter writer;
     if (writer.write(tln) == false) {
         QMessageBox::critical(0, tr("Error Writing Tile Layer Names"),

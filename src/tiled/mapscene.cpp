@@ -40,6 +40,7 @@
 #include "toolmanager.h"
 #include "tilesetmanager.h"
 #ifdef ZOMBOID
+#include "mapcomposite.h"
 #include "zgriditem.hpp"
 #endif
 
@@ -190,11 +191,10 @@ void MapScene::refreshScene()
 
     const QSize mapSize = mMapDocument->renderer()->mapSize();
 #ifdef ZOMBOID
-    /* This stops tall tiles being cut off near the 0,0 tile at the top of the window */
-    const QMargins& margins = mMapDocument->map()->drawMargins();
-    QRect sceneRect(-margins.left(), -margins.top(),
-        margins.left() + mapSize.width() + margins.right(),
-        margins.top() + mapSize.height() + margins.bottom());
+    // This stops tall tiles being cut off near the 0,0 tile at the top of the window
+    // by including the map's drawMargins.
+    // It also includes lot bounds.
+    QRectF sceneRect = mMapDocument->mapComposite()->boundingRect(mMapDocument->renderer());
     setSceneRect(sceneRect);
     mDarkRectangle->setRect(sceneRect);
 #else
@@ -354,17 +354,16 @@ void MapScene::currentLayerIndexChanged()
  */
 void MapScene::mapChanged()
 {
-    const QSize mapSize = mMapDocument->renderer()->mapSize();
 #ifdef ZOMBOID
-    /* This stops tall tiles being cut off near the 0,0 tile at the top of the window */
-    const QMargins& margins = mMapDocument->map()->drawMargins();
-    QRect sceneRect(-margins.left(), -margins.top(),
-        margins.left() + mapSize.width() + margins.right(),
-        margins.top() + mapSize.height() + margins.bottom());
+    // This stops tall tiles being cut off near the 0,0 tile at the top of the window
+    // by including the map's drawMargins.
+    // It also includes lot bounds.
+    QRectF sceneRect = mMapDocument->mapComposite()->boundingRect(mMapDocument->renderer());
     setSceneRect(sceneRect);
     mDarkRectangle->setRect(sceneRect);
     mGridItem->currentLayerIndexChanged(); // index didn't change, just updating the bounds
 #else
+    const QSize mapSize = mMapDocument->renderer()->mapSize();
     setSceneRect(0, 0, mapSize.width(), mapSize.height());
     mDarkRectangle->setRect(0, 0, mapSize.width(), mapSize.height());
 #endif
@@ -374,7 +373,7 @@ void MapScene::mapChanged()
             tli->syncWithTileLayer();
     }
 #ifdef ZOMBOID
-        // BUG: create object layer, add items, resize map much larger, try to select the objects
+    // BUG: create object layer, add items, resize map much larger, try to select the objects
     foreach (MapObjectItem *item, mObjectItems)
         item->syncWithMapObject();
 #endif

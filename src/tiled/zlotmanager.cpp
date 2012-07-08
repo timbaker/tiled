@@ -18,18 +18,35 @@
 #include "zlotmanager.hpp"
 
 #include "map.h"
+#include "mapcomposite.h"
 #include "mapdocument.h"
+#include "mapmanager.h"
 #include "mapobject.h"
 #include "mapreader.h"
 #include "objectgroup.h"
 #include "preferences.h"
 #include "tilelayer.h"
 #include "tileset.h"
-#include "zlot.hpp"
 #include "zprogress.hpp"
 
 #include <QDir>
 #include <QFileInfo>
+
+// FIXME: Duplicated in ZomboidScene.cpp and mapcomposite.cpp
+static bool levelForLayer(Tiled::Layer *layer, int *level)
+{
+    (*level) = 0;
+
+    // See if the layer name matches "0_foo" or "1_bar" etc.
+    const QString& name = layer->name();
+    QStringList sl = name.trimmed().split(QLatin1Char('_'));
+    if (sl.count() > 1 && !sl[1].isEmpty()) {
+        bool conversionOK;
+        (*level) = sl[0].toInt(&conversionOK);
+        return conversionOK;
+    }
+    return false;
+}
 
 namespace Tiled {
 
@@ -49,18 +66,18 @@ ZLotManager::~ZLotManager()
 
     if (mapDocument())
         mapDocument()->disconnect(this);
-
-    qDeleteAll(mTilesets);
-    qDeleteAll(mLots);
 }
 
 void ZLotManager::setMapDocument(MapDocument *mapDoc)
 {
     if (mapDoc != mMapDocument) {
+
         if (mMapDocument) {
             mapDocument()->disconnect(this);
         }
+
         mMapDocument = mapDoc;
+
         if (mMapDocument) {
             connect(mapDocument(), SIGNAL(layerAdded(int)),
                     this, SLOT(onLayerAdded(int)));
@@ -74,11 +91,8 @@ void ZLotManager::setMapDocument(MapDocument *mapDoc)
                 this, SLOT(onObjectsRemoved(QList<MapObject*>)));
 
             Map *map = mapDocument()->map();
-            foreach (Layer *layer, map->layers()) {
-                if (ObjectGroup *og = layer->asObjectGroup()) {
-                    onObjectsAdded(og->objects());
-                }
-            }
+            foreach (ObjectGroup *og, map->objectGroups())
+                onObjectsAdded(og->objects());
         }
     }
 }
@@ -88,45 +102,37 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
     const QString& name = mapObject->name();
     const QString& type = mapObject->type();
 
-    ZLot *currLot = 0, *newLot = 0;
+    MapComposite *currLot = 0, *newLot = 0;
 
     if (mMapObjectToLot.contains(mapObject))
         currLot = mMapObjectToLot[mapObject];
 
-    bool progress = false;
-
     if (name == QLatin1String("lot") && !type.isEmpty()) {
 
-        if (mLots.keys().contains(type)) {
-            newLot = mLots[type];
+        QString mapName = type/* + QLatin1String(".tmx")*/;
+        MapInfo *newMapInfo = MapManager::instance()->loadMap(mapName,
+                                                     mMapDocument->map()->orientation(),
+                                                     mMapDocument->fileName());
+
+        if (newMapInfo) {
+            if (!currLot || (currLot->map() != newMapInfo->map())) {
+                int level;
+                (void) levelForLayer(mapObject->objectGroup(), &level);
+                newLot = mMapDocument->mapComposite()->addMap(newMapInfo,
+                                                              mapObject->position().toPoint(),
+                                                              level);
+            } else
+                newLot = currLot;
         } else {
-            Preferences *prefs = Preferences::instance();
-            QDir lotDirectory(prefs->mapsDirectory());
-            if (lotDirectory.exists()) {
-                QFileInfo fileInfo(lotDirectory, type + QLatin1String(".tmx"));
-                if (fileInfo.exists()) {
-                    ZProgressManager::instance()->begin(QLatin1String("Reading ") + fileInfo.fileName());
-                    progress = true;
-                    MapReader reader;
-                    Map *map = reader.readMap(fileInfo.absoluteFilePath());
-                    if (map) {
-                        Map::Orientation orient = map->orientation();
-                        shareTilesets(map);
-                        convertOrientation(map, mMapDocument->map());
-                        // TODO: sanity check the lot-map tile width and height against the current map
-                        mLots[type] = new ZLot(map, orient);
-                        newLot = mLots[type];
-                    } else {
-                        // TODO: Add error handling
-                    }
-                }
-            }
+            if (currLot && (currLot->mapInfo() == newMapInfo))
+                newLot = currLot;
         }
     }
 
     if (currLot != newLot) {
         if (currLot) {
-            QMap<MapObject*,ZLot*>::iterator it = mMapObjectToLot.find(mapObject);
+            QMap<MapObject*,MapComposite*>::iterator it = mMapObjectToLot.find(mapObject);
+            mMapDocument->mapComposite()->removeMap((*it)); // deletes currLot!
             mMapObjectToLot.erase(it);
             emit lotRemoved(currLot, mapObject); // remove from scene
         }
@@ -135,88 +141,14 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
             emit lotAdded(newLot, mapObject); // add to scene
         }
     } else if (currLot) {
+        if (currLot->origin() != mapObject->position().toPoint())
+            mMapDocument->mapComposite()->moveSubMap(currLot, mapObject->position().toPoint());
+        else if (currLot->isVisible() != mapObject->isVisible()) {
+            currLot->setVisible(mapObject->isVisible());
+            foreach (CompositeLayerGroup *g, mMapDocument->mapComposite()->layerGroups())
+                g->synch();
+        }
         emit lotUpdated(currLot, mapObject); // position change, etc
-    }
-
-    if (progress)
-        ZProgressManager::instance()->end();
-}
-
-void ZLotManager::shareTilesets(Map *map)
-{
-    foreach (Tileset *ts0, map->tilesets()) {
-        Tileset *ts1 = ts0->findSimilarTileset(mTilesets);
-        if (ts1) {
-            map->replaceTileset(ts0, ts1);
-            delete ts0;
-        } else {
-            mTilesets.append(ts0);
-        }
-    }
-}
-
-// FIXME: Duplicated in ZomboidScene.cpp and zlot.cpp
-static bool levelForLayer(Layer *layer, int *level)
-{
-    (*level) = 0;
-
-    // See if the layer name matches "0_foo" or "1_bar" etc.
-    const QString& name = layer->name();
-    QStringList sl = name.trimmed().split(QLatin1Char('_'));
-    if (sl.count() > 1 && !sl[1].isEmpty()) {
-        bool conversionOK;
-        (*level) = sl[0].toInt(&conversionOK);
-        return conversionOK;
-    }
-    return false;
-}
-
-void ZLotManager::convertOrientation(Map *map0, const Map *map1)
-{
-    if (!map0 || !map1)
-        return;
-    if (map0->orientation() == map1->orientation())
-        return;
-    if (map0->orientation() == Map::Isometric && map1->orientation() == Map::LevelIsometric) {
-        QPoint offset(3, 3);
-        foreach (Layer *layer, map0->layers()) {
-            if (TileLayer *tl = layer->asTileLayer()) {
-                int level;
-                if (levelForLayer(tl, &level) && level > 0) {
-                    tl->offset(offset * level, tl->bounds(), false, false);
-                }
-            }
-        }
-        map0->setOrientation(map1->orientation());
-        return;
-    }
-    if (map0->orientation() == Map::LevelIsometric && map1->orientation() == Map::Isometric) {
-        QPoint offset(3, 3);
-#if 1
-        int level;
-        foreach (Layer *layer, map0->layers()) {
-            if (levelForLayer(layer, &level) && level > 0)
-                layer->setPosition(-offset * level);
-        }
-#else
-        int level, maxLevel = 0;
-        foreach (Layer *layer, map0->layers()) {
-            if (levelForLayer(layer, &level) && (level > maxLevel))
-                maxLevel = level;
-        }
-        if (maxLevel > 0) {
-            QSize size(map0->width() + maxLevel * 3, map0->height() + maxLevel * 3);
-            foreach (Layer *layer, map0->layers()) {
-                (void) levelForLayer(layer, &level);
-                layer->resize(size, offset * (maxLevel - level));
-                layer->setPosition(map0->width() - size.width(), map0->height() - size.height());
-            }
-            map0->setWidth(size.width());
-            map0->setHeight(size.height());
-        }
-#endif
-        map0->setOrientation(map1->orientation());
-        return;
     }
 }
 
@@ -225,11 +157,8 @@ void ZLotManager::onMapsDirectoryChanged()
     // This will try to load any lot files that couldn't be loaded from the old directory.
     // Lot files that were already loaded won't be affected.
     Map *map = mapDocument()->map();
-    foreach (Layer *layer, map->layers()) {
-        if (ObjectGroup *og = layer->asObjectGroup()) {
-            onObjectsChanged(og->objects());
-        }
-    }
+    foreach (ObjectGroup *og, map->objectGroups())
+        onObjectsChanged(og->objects());
 }
 
 void ZLotManager::onLayerAdded(int index)
@@ -265,9 +194,10 @@ void ZLotManager::onObjectsChanged(const QList<MapObject*> &objects)
 void ZLotManager::onObjectsRemoved(const QList<MapObject*> &objects)
 {
     foreach (MapObject *mapObject, objects) {
-        QMap<MapObject*,ZLot*>::iterator it = mMapObjectToLot.find(mapObject);
+        QMap<MapObject*,MapComposite*>::iterator it = mMapObjectToLot.find(mapObject);
         if (it != mMapObjectToLot.end()) {
-            ZLot *lot = it.value();
+            MapComposite *lot = it.value();
+            mMapDocument->mapComposite()->removeMap(lot); // deletes lot!
             mMapObjectToLot.erase(it);
             emit lotRemoved(lot, mapObject);
         }

@@ -21,9 +21,9 @@
 #include <QDockWidget>
 #include <QTreeView>
 
-namespace Tiled {
+class CompositeLayerGroup;
 
-class ZTileLayerGroup;
+namespace Tiled {
 
 namespace Internal {
 
@@ -55,7 +55,7 @@ private:
 
 	ZLevelsView *mView;
 	MapDocument *mMapDocument;
-    QMap<MapDocument*,QList<ZTileLayerGroup*> > mExpandedLevels;
+    QMap<MapDocument*,QList<CompositeLayerGroup*> > mExpandedLevels;
 };
 
 class ZLevelsView : public QTreeView

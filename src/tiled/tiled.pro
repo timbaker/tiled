@@ -136,13 +136,14 @@ SOURCES += aboutdialog.cpp \
     zgriditem.cpp \
     zlevelsdock.cpp \
     zlevelsmodel.cpp \
-    zlot.cpp \
     zlotmanager.cpp \
     ZomboidScene.cpp \
     zprogress.cpp \
     ztilelayergroupitem.cpp \
     ztilesetthumbmodel.cpp \
-    ztilesetthumbview.cpp
+    ztilesetthumbview.cpp \
+    mapcomposite.cpp \
+    mapmanager.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -248,7 +249,9 @@ HEADERS += aboutdialog.h \
     ZomboidScene.h \
     zprogress.hpp \
     ztilesetthumbmodel.hpp \
-    ztilesetthumbview.hpp
+    ztilesetthumbview.hpp \
+    mapcomposite.h \
+    mapmanager.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

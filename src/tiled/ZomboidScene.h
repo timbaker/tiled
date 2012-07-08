@@ -19,71 +19,21 @@
 #define ZOMBOIDSCENE_H
 
 #include "mapscene.h"
+#include "zlotmanager.hpp"
+
 #include <QMap>
 
-#include "zlotmanager.hpp"
-#include "ztilelayergroup.h"
-#include "ztilelayergroupitem.h"
+class CompositeLayerGroup;
+class CompositeLayerGroupItem;
 
 namespace Tiled {
 
 class Layer;
 class MapObject;
+class TileLayer;
 class Tileset;
-class ZLot;
 
 namespace Internal {
-
-///// ///// ///// ///// /////
-
-class ZomboidScene;
-class ZomboidTileLayerGroup : public ZTileLayerGroup
-{
-public:
-    ZomboidTileLayerGroup(ZomboidScene *mapScene, int level);
-    bool orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const;
-
-    // Layer
-    virtual QRect bounds() const;
-
-    // TileLayer
-    virtual QMargins drawMargins() const;
-
-    // ZTileLayerGroup
-    virtual void addTileLayer(TileLayer *layer, int index);
-    virtual void removeTileLayer(TileLayer *layer);
-    virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect);
-
-    void synch();
-
-    ZomboidScene *mMapScene;
-    int mLevel;
-
-    bool mAnyVisibleLayers;
-    QRect mTileBounds;
-    QRect mLotTileBounds;
-    QMargins mDrawMargins;
-
-    struct LotLayers
-    {
-        LotLayers()
-        {
-            mLayerGroup = 0;
-        }
-        LotLayers(const MapObject *mapObject, const ZLot *lot, const ZTileLayerGroup *layerGroup)
-            : mMapObject(mapObject)
-            , mLot(lot)
-            , mLayerGroup(layerGroup)
-        {
-        }
-        const MapObject *mMapObject;
-        const ZLot *mLot;
-        const ZTileLayerGroup *mLayerGroup;
-    };
-    QVector<LotLayers> mPreparedLotLayers;
-
-    QVector<LotLayers> mVisibleLotLayers;
-};
 
 ///// ///// ///// ///// /////
 /**
@@ -99,7 +49,7 @@ public:
 
     // accessed by ZomboidTileLayerGroup
     QList<MapObject*> mLotMapObjects;
-    QMap<MapObject*,ZLot*> mMapObjectToLot;
+    QMap<MapObject*,MapComposite*> mMapObjectToLot;
 
     // MapScene
     virtual void setMapDocument(MapDocument *mapDoc);
@@ -111,23 +61,35 @@ private slots:
 
     virtual void mapChanged();
 
-    void layerGroupVisibilityChanged(ZTileLayerGroup *g);
+    void layerAdded(int index);
+    void layerRemoved(int index);
+    void layerChanged(int index);
 
-    virtual void layerAdded(int index);
-    virtual void layerAboutToBeRemoved(int index);
-    virtual void layerRemoved(int index);
-    virtual void layerChanged(int index);
-    virtual void layerRenamed(int index);
+    void layerGroupAdded(int level);
+    void layerGroupVisibilityChanged(CompositeLayerGroup *g);
 
-    void onLotAdded(ZLot *lot, MapObject *mapObject);
-    void onLotRemoved(ZLot *lot, MapObject *mapObject);
-    void onLotUpdated(ZLot *lot, MapObject *mapObject);
-protected:
-    void layerGroupAboutToChange(TileLayer *tl, ZTileLayerGroup *newGroup);
-    void layerGroupChanged(TileLayer *tl, ZTileLayerGroup *oldGroup);
+    void layerAddedToGroup(int index);
+    void layerRemovedFromGroup(int index, CompositeLayerGroup *oldGroup);
 
-    void layerLevelAboutToChange(int index, int newLevel);
     void layerLevelChanged(int index, int oldLevel);
+
+    void onLotAdded(MapComposite *lot, MapObject *mapObject);
+    void onLotRemoved(MapComposite *lot, MapObject *mapObject);
+    void onLotUpdated(MapComposite *lot, MapObject *mapObject);
+
+    void handlePendingUpdates();
+
+public:
+    enum Pending {
+        None = 0,
+        AllGroups = 0x01,
+        Bounds = 0x02,
+        Synch = 0x04,
+        ZOrder = 0x08
+    };
+    Q_DECLARE_FLAGS(PendingFlags, Pending)
+
+protected:
 
     // QGraphicsScene
     virtual void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
@@ -139,20 +101,28 @@ protected:
     virtual QGraphicsItem *createLayerItem(Layer *layer);
     virtual void updateCurrentLayerHighlight();
 
-    bool levelForLayer(Layer *layer, int *level = 0);
     void synchWithTileLayers();
     void synchWithTileLayer(TileLayer *tl);
+    void updateLayerGroupItemBounds();
+    void updateLayerGroupItemBounds(TileLayer *tl);
 
     void setGraphicsSceneZOrder();
     int levelZOrder(int level);
 private:
-    QMap<int,ZTileLayerGroup*> mTileLayerGroups;
-    QMap<int,ZTileLayerGroupItem*> mTileLayerGroupItems;
+    void doLater(PendingFlags flags);
+    PendingFlags mPendingFlags;
+    bool mPendingActive;
+    QList<CompositeLayerGroupItem*> mPendingGroupItems;
+    QMap<MapObjectItem*,QRectF> mOldMapObjectBounds;
+
+    QMap<int,CompositeLayerGroupItem*> mTileLayerGroupItems;
     ZLotManager mLotManager;
     MapObjectItem *mDnDMapObjectItem;
 };
 
 } // namespace Internal
 } // namespace Tiled
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(Tiled::Internal::ZomboidScene::PendingFlags)
 
 #endif // ZOMBOIDSCENE_H
