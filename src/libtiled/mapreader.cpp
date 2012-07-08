@@ -536,8 +536,67 @@ void QString_split(const QChar &sep, QString::SplitBehavior behavior, Qt::CaseSe
 
 void MapReaderPrivate::decodeCSVLayerData(TileLayer *tileLayer, const QString &text)
 {
-    QString trimText = text.trimmed();
 #if defined(ZOMBOID) /*&& defined(_DEBUG)*/
+
+    int start = 0;
+    int end = text.length();
+    while (start < end && text.at(start).isSpace())
+        start++;
+    int x = 0, y = 0;
+    const QChar sep(QLatin1Char(','));
+    const QChar nullChar(QLatin1Char('0'));
+    const Cell emptyCell = cellForGid(0);
+    while ((end = text.indexOf(sep, start, Qt::CaseSensitive)) != -1) {
+        if (end - start == 1 && text.at(start) == nullChar) {
+            tileLayer->setCell(x, y, emptyCell);
+        } else {
+            bool conversionOk;
+            uint gid = text.mid(start, end - start).toUInt(&conversionOk);
+            if (!conversionOk) {
+                xml.raiseError(
+                        tr("Unable to parse tile at (%1,%2) on layer '%3'")
+                               .arg(x + 1).arg(y + 1).arg(tileLayer->name()));
+                return;
+            }
+            tileLayer->setCell(x, y, cellForGid(gid));
+        }
+        start = end + 1;
+        if (++x == tileLayer->width()) {
+            ++y;
+            if (y >= tileLayer->height()) {
+                xml.raiseError(tr("Corrupt layer data for layer '%1'")
+                               .arg(tileLayer->name()));
+                return;
+            }
+            x = 0;
+        }
+    }
+    end = text.size();
+    while (start < end && text.at(end-1).isSpace())
+        end--;
+    if (end - start == 1 && text.at(start) == nullChar) {
+        tileLayer->setCell(x, y, emptyCell);
+    } else {
+        bool conversionOk;
+        uint gid = text.mid(start, end - start).toUInt(&conversionOk);
+        if (!conversionOk) {
+            xml.raiseError(
+                    tr("Unable to parse tile at (%1,%2) on layer '%3'")
+                           .arg(x + 1).arg(y + 1).arg(tileLayer->name()));
+            return;
+        }
+        tileLayer->setCell(x, y, cellForGid(gid));
+    }
+
+#if 1
+    // Hack to keep the app responsive.
+    // TODO: Move map reading to a worker thread. Only issue is tileset images
+    // cannot be accessed outside the GUI thread.
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+#endif
+
+#elif 0
+    QString trimText = text.trimmed();
     static QVector<int> tiles;
     tiles.clear();
     QString_split(QLatin1Char(','), QString::KeepEmptyParts, Qt::CaseSensitive, trimText, tiles);
@@ -572,6 +631,7 @@ void MapReaderPrivate::decodeCSVLayerData(TileLayer *tileLayer, const QString &t
 #endif
     }
 #else
+    QString trimText = text.trimmed();
     QStringList tiles = trimText.split(QLatin1Char(','));
 
     if (tiles.length() != tileLayer->width() * tileLayer->height()) {
