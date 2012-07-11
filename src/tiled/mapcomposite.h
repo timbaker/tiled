@@ -31,10 +31,10 @@ public:
     QRect bounds() const;
     QMargins drawMargins() const;
 
+    QRectF boundingRect(const Tiled::MapRenderer *renderer) const;
+
     void setLayerVisibility(const QString &name, bool visible) const;
     void layerRenamed(Tiled::TileLayer *layer);
-
-    QRectF boundingRect(Tiled::MapRenderer *renderer) const;
 
     MapComposite *owner() const { return mOwner; }
     void synch();
@@ -102,6 +102,7 @@ public:
     QPoint origin() const { return mPos; }
 
     QPoint originRecursive() const;
+    int levelRecursive() const;
 
     void setLevel(int level) { mLevelOffset = level; }
     int levelOffset() const { return mLevelOffset; }

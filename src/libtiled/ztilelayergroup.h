@@ -35,6 +35,7 @@
 namespace Tiled {
 
 class Cell;
+class Map;
 class MapRenderer;
 class TileLayer;
 
@@ -42,7 +43,7 @@ class TILEDSHARED_EXPORT ZTileLayerGroup
 {
 public:
 
-    ZTileLayerGroup(int level);
+    ZTileLayerGroup(Map *map, int level);
 
     virtual void addTileLayer(TileLayer *layer, int index);
     virtual void removeTileLayer(TileLayer *layer);
@@ -52,6 +53,8 @@ public:
 
     // TileLayer
     virtual QMargins drawMargins() const;
+
+    virtual QRectF boundingRect(const MapRenderer *renderer) const;
 
     virtual bool orderedCellsAt(const QPoint &point, QVector<const Cell*>& cells) const = 0;
     virtual void prepareDrawing(const MapRenderer *renderer, const QRect &rect) = 0;
@@ -65,6 +68,7 @@ public:
     bool isVisible() const { return mVisible; }
     void setVisible(bool visible) { mVisible = visible; }
 
+    Map *mMap;
     QVector<TileLayer*> mLayers;
     QVector<int> mIndices;
     int mLevel;

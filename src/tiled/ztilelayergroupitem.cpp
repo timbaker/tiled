@@ -60,20 +60,11 @@ bool ZTileLayerGroupItem::ownsTileLayer(TileLayer *layer)
 
 void ZTileLayerGroupItem::syncWithTileLayers()
 {
-    prepareGeometryChange();
-    QRect tileBounds = mLayerGroup->bounds();
-    mBoundingRect = mRenderer->boundingRect(tileBounds, mLayerGroup->level());
-
-    QMargins drawMargins = mLayerGroup->drawMargins();
-
-    // The TileLayer includes the maximum tile size in its draw margins. So
-    // we need to subtract the tile size of the map, since that part does not
-    // contribute to additional margin.
-
-    mBoundingRect.adjust(-drawMargins.left(),
-                -qMax(0, drawMargins.top() - mMapDocument->map()->tileHeight()),
-                qMax(0, drawMargins.right() - mMapDocument->map()->tileWidth()),
-                drawMargins.bottom());
+    QRectF bounds = mLayerGroup->boundingRect(mRenderer);
+    if (bounds != mBoundingRect) {
+        prepareGeometryChange();
+        mBoundingRect = bounds;
+    }
 }
 
 QRectF ZTileLayerGroupItem::boundingRect() const

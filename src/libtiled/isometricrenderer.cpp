@@ -316,7 +316,7 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *l
 
     QRect rect = exposed.toAlignedRect();
     if (rect.isNull())
-        rect = boundingRect(layerGroup->bounds());
+        rect = layerGroup->boundingRect(this).toAlignedRect();
 
     QMargins drawMargins = layerGroup->drawMargins();
     drawMargins.setTop(drawMargins.top() - tileHeight);

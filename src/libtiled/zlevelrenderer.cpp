@@ -346,7 +346,7 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
 
     QRect rect = exposed.toAlignedRect();
     if (rect.isNull())
-        rect = boundingRect(layerGroup->bounds(), level);
+        rect = layerGroup->boundingRect(this).toAlignedRect();
 
     QMargins drawMargins = layerGroup->drawMargins();
     drawMargins.setTop(drawMargins.top() - tileHeight);

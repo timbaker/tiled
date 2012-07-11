@@ -25,12 +25,15 @@
 
 #include "ztilelayergroup.h"
 
+#include "map.h"
+#include "maprenderer.h"
 #include "tilelayer.h"
 
 using namespace Tiled;
 
-ZTileLayerGroup::ZTileLayerGroup(int level)
-    : mLevel(level)
+ZTileLayerGroup::ZTileLayerGroup(Map *map, int level)
+    : mMap(map)
+    , mLevel(level)
     , mVisible(true)
 {
 }
@@ -100,4 +103,21 @@ QMargins ZTileLayerGroup::drawMargins() const
         maxMargins(m, tl->drawMargins(), m);
     }
     return m;
+}
+
+QRectF ZTileLayerGroup::boundingRect(const MapRenderer *renderer) const
+{
+    QRectF boundingRect = renderer->boundingRect(bounds(), mLevel);
+
+    // The TileLayer includes the maximum tile size in its draw margins. So
+    // we need to subtract the tile size of the map, since that part does not
+    // contribute to additional margin.
+
+    QMargins drawMargins = this->drawMargins();
+    boundingRect.adjust(-drawMargins.left(),
+                -qMax(0, drawMargins.top() - mMap->tileHeight()),
+                qMax(0, drawMargins.right() - mMap->tileWidth()),
+                drawMargins.bottom());
+
+    return boundingRect;
 }

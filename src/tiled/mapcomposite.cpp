@@ -14,18 +14,6 @@
 
 using namespace Tiled;
 
-static QRectF layerGroupSceneBounds(Map *map, const ZTileLayerGroup *layerGroup,
-                                    const MapRenderer *renderer, int levelOffset,
-                                    const QPoint &offset)
-{
-    QRect r = layerGroup->bounds().translated(offset);
-    QRectF bounds = renderer->boundingRect(r, layerGroup->level() + levelOffset);
-
-    QMargins m = map->drawMargins(); /* layerGroup->drawMargins(); */
-    bounds.adjust(-m.left(), -m.top(), m.right(), m.bottom());
-    return bounds;
-}
-
 static void maxMargins(const QMargins &a,
                        const QMargins &b,
                        QMargins &out)
@@ -65,7 +53,7 @@ static void unionSceneRects(const QRectF &a,
 ///// ///// ///// ///// /////
 
 CompositeLayerGroup::CompositeLayerGroup(MapComposite *owner, int level)
-    : ZTileLayerGroup(level)
+    : ZTileLayerGroup(owner->map(), level)
     , mOwner(owner)
     , mAnyVisibleLayers(false)
 {
@@ -106,10 +94,7 @@ void CompositeLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRec
         return;
     foreach (const SubMapLayers &subMapLayer, mVisibleSubMapLayers) {
         CompositeLayerGroup *layerGroup = subMapLayer.mLayerGroup;
-        MapComposite *subMap = subMapLayer.mSubMap;
-        QPoint mapOrigin = subMap->originRecursive();
-        int levelOffset = subMap->levelOffset();
-        QRectF bounds = layerGroupSceneBounds(subMap->map(), layerGroup, renderer, levelOffset, mapOrigin);
+        QRectF bounds = layerGroup->boundingRect(renderer);
         if ((bounds & rect).isValid()) {
             mPreparedSubMapLayers.append(subMapLayer);
             layerGroup->prepareDrawing(renderer, rect);
@@ -234,9 +219,10 @@ void CompositeLayerGroup::layerRenamed(TileLayer *layer)
     mLayersByName[layer->name()].append(layer);
 }
 
-QRectF CompositeLayerGroup::boundingRect(MapRenderer *renderer) const
+QRectF CompositeLayerGroup::boundingRect(const MapRenderer *renderer) const
 {
-    QRectF boundingRect = renderer->boundingRect(mTileBounds, mLevel);
+    QRectF boundingRect = renderer->boundingRect(mTileBounds.translated(mOwner->originRecursive()),
+                                                 mLevel + mOwner->levelRecursive());
 
     // The TileLayer includes the maximum tile size in its draw margins. So
     // we need to subtract the tile size of the map, since that part does not
@@ -248,10 +234,7 @@ QRectF CompositeLayerGroup::boundingRect(MapRenderer *renderer) const
                 mDrawMargins.bottom());
 
     foreach (const SubMapLayers &subMapLayer, mVisibleSubMapLayers) {
-        int levelOffset = subMapLayer.mSubMap->levelOffset();
-        QPoint mapOrigin = subMapLayer.mSubMap->origin();
-        QRectF bounds = layerGroupSceneBounds(subMapLayer.mSubMap->map(),
-            subMapLayer.mLayerGroup, renderer, levelOffset, mapOrigin);
+        QRectF bounds = subMapLayer.mLayerGroup->boundingRect(renderer);
         unionSceneRects(boundingRect, bounds, boundingRect);
     }
 
@@ -535,7 +518,14 @@ void MapComposite::setOrigin(const QPoint &origin)
 
 QPoint MapComposite::originRecursive() const
 {
-    return mPos + (mParent ? mParent->origin() : QPoint());
+    return mPos + (mParent ? mParent->originRecursive() : QPoint());
+}
+
+int MapComposite::levelRecursive() const
+{
+    return mLevelOffset + (mParent ? mParent->levelRecursive() : 0);
+}
+
 }
 
 QRectF MapComposite::boundingRect(MapRenderer *renderer, bool forceMapBounds) const
@@ -543,8 +533,7 @@ QRectF MapComposite::boundingRect(MapRenderer *renderer, bool forceMapBounds) co
     QRectF bounds;
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups) {
         unionSceneRects(bounds,
-                        layerGroupSceneBounds(mMap, layerGroup, renderer,
-                                              mLevelOffset, mPos),
+                        layerGroup->boundingRect(renderer),
                         bounds);
     }
     if (forceMapBounds) {
