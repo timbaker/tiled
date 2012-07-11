@@ -99,10 +99,10 @@ private:
             parent->children.insert(indexInParent, this);
         }
 
-        CompositeLayerGroup *group;
-        TileLayer *layer;
         Item *parent;
         QList<Item*> children;
+        CompositeLayerGroup *group;
+        TileLayer *layer;
     };
 
     Item *toItem(const QModelIndex &index) const;

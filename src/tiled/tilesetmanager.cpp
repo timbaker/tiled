@@ -32,11 +32,11 @@ using namespace Tiled::Internal;
 TilesetManager *TilesetManager::mInstance = 0;
 
 TilesetManager::TilesetManager():
+    #ifdef ZOMBOID
+    mTilesetImageCache(new TilesetImageCache),
+    #endif
     mWatcher(new FileSystemWatcher(this)),
     mReloadTilesetsOnChange(false)
-#ifdef ZOMBOID
-   , mTilesetImageCache(new TilesetImageCache)
-#endif
 {
     connect(mWatcher, SIGNAL(fileChanged(QString)),
             this, SLOT(fileChanged(QString)));

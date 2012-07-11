@@ -103,9 +103,9 @@ void CompositeLayerGroupItem::updateBounds()
 
 ZomboidScene::ZomboidScene(QObject *parent)
     : MapScene(parent)
+    , mPendingActive(false)
     , mDnDItem(0)
     , mWasHighlightCurrentLayer(false)
-    , mPendingActive(false)
 {
     connect(&mLotManager, SIGNAL(lotAdded(MapComposite*,MapObject*)),
         this, SLOT(onLotAdded(MapComposite*,MapObject*)));
