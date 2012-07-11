@@ -57,7 +57,6 @@ set ( Tiled_HDRS
 	utils.h
 
 	zgriditem.hpp
-	zlot.hpp
 	ztilelayergroupitem.h
 	)
 
@@ -157,10 +156,12 @@ set ( Tiled_SRCS
 	utils.cpp
 	zoomable.cpp
 
+	mapcomposite.cpp
+	mapimagemanager.cpp
+	mapmanager.cpp
 	zgriditem.cpp
 	zlevelsdock.cpp
 	zlevelsmodel.cpp
-	zlot.cpp
 	zlotmanager.cpp
 	ZomboidScene.cpp
 	zprogress.cpp
@@ -250,6 +251,9 @@ set ( Tiled_MOCS
 	undodock.h
 	zoomable.h
 
+	mapcomposite.h
+	mapimagemanager.h
+	mapmanager.h
 	zlevelsdock.hpp
 	zlevelsmodel.hpp
 	zlotmanager.hpp

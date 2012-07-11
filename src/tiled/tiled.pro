@@ -143,7 +143,8 @@ SOURCES += aboutdialog.cpp \
     ztilesetthumbmodel.cpp \
     ztilesetthumbview.cpp \
     mapcomposite.cpp \
-    mapmanager.cpp
+    mapmanager.cpp \
+    mapimagemanager.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -251,7 +252,8 @@ HEADERS += aboutdialog.h \
     ztilesetthumbmodel.hpp \
     ztilesetthumbview.hpp \
     mapcomposite.h \
-    mapmanager.h
+    mapmanager.h \
+    mapimagemanager.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
