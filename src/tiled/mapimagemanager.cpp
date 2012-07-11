@@ -6,6 +6,9 @@
 #include "mapcomposite.h"
 #include "mapmanager.h"
 #include "objectgroup.h"
+#include "orthogonalrenderer.h"
+#include "staggeredrenderer.h"
+#include "tilelayer.h"
 #include "zprogress.hpp"
 #include "zlevelrenderer.hpp"
 
@@ -107,6 +110,14 @@ QImage MapImageManager::generateMapImage(MapComposite *mapComposite)
     case Map::LevelIsometric:
         renderer = new ZLevelRenderer(map);
         break;
+    case Map::Orthogonal:
+        renderer = new OrthogonalRenderer(map);
+        break;
+    case Map::Staggered:
+        renderer = new StaggeredRenderer(map);
+        break;
+    default:
+        return QImage();
     }
 
     QRectF sceneRect = mapComposite->boundingRect(renderer);
@@ -126,46 +137,43 @@ QImage MapImageManager::generateMapImage(MapComposite *mapComposite)
     painter.setTransform(QTransform::fromScale(scale, scale).translate(0, -sceneRect.top()));
 
 
-#if 1
     mapComposite->saveVisibility();
+#if 1
+    ZTileLayerGroup *layerGroup = 0;
+    foreach (Layer *layer, mapComposite->map()->layers()) {
+        if (TileLayer *tileLayer = layer->asTileLayer()) {
+            if (tileLayer->group()) {
+                // FIXME: LayerGroups should be drawn with the same Z-order the scene uses.
+                // They will usually be in the same order anyways.
+                if (tileLayer->group() != layerGroup) {
+                    layerGroup = tileLayer->group();
+                    foreach (TileLayer *tl, layerGroup->layers()) {
+                        bool isVisible = true;
+                        if (tl->name().contains(QLatin1String("NoRender")))
+                            isVisible = false;
+                        tl->setVisible(isVisible);
+                    }
+                    ((CompositeLayerGroup*)layerGroup)->synch();
+                    renderer->drawTileLayerGroup(&painter, layerGroup);
+                }
+            } else {
+                if (layer->name().contains(QLatin1String("NoRender")))
+                    continue;
+                renderer->drawTileLayer(&painter, tileLayer);
+            }
+        }
+    }
+#else
     foreach (Layer *layer, map->layers())
         layer->setVisible(!layer->name().contains(QLatin1String("NoRender")));
     foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups()) {
         layerGroup->synch();
         renderer->drawTileLayerGroup(&painter, layerGroup);
     }
+#endif
     mapComposite->restoreVisibility();
     foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups())
         layerGroup->synch();
-#elif 0
-    const QMap<int,CompositeLayerGroup*> &layerGroups = mapComposite->layerGroups();
-    for (int level = 0; level <= map->maxLevel(); level++) {
-        if (layerGroups.contains(level))
-            renderer->drawTileLayerGroup(&painter, layerGroups[level]);
-    }
-#else
-    bool visibleLayersOnly = false;
-
-    foreach (Layer *layer, map->layers()) {
-        if (visibleLayersOnly && !layer->isVisible())
-            continue;
-
-        painter.setOpacity(layer->opacity());
-
-        if (TileLayer *tileLayer = layer->asTileLayer()) {
-            if (layer->name().contains(QLatin1String("NoRender")))
-                continue;
-            renderer->drawTileLayer(&painter, tileLayer);
-        } else if (ObjectGroup *objGroup = layer->asObjectGroup()) {
-            foreach (const MapObject *object, objGroup->objects()) {
-//                const QColor color = MapObjectItem::objectColor(object);
-//                renderer->drawMapObject(&painter, object, color);
-            }
-        } else if (ImageLayer *imageLayer = layer->asImageLayer()) {
-            renderer->drawImageLayer(&painter, imageLayer);
-        }
-    }
-#endif
 
     delete renderer;
 
