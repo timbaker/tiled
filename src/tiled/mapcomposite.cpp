@@ -363,16 +363,17 @@ MapComposite::~MapComposite()
     qDeleteAll(mLayerGroups);
 }
 
-bool MapComposite::levelForLayer(Layer *layer, int *level)
+bool MapComposite::levelForLayer(Layer *layer, int *levelPtr)
 {
-    (*level) = 0;
+    if (levelPtr) (*levelPtr) = 0;
 
     // See if the layer name matches "0_foo" or "1_bar" etc.
     const QString& name = layer->name();
     QStringList sl = name.trimmed().split(QLatin1Char('_'));
     if (sl.count() > 1 && !sl[1].isEmpty()) {
         bool conversionOK;
-        (*level) = sl[0].toUInt(&conversionOK);
+        uint level = sl[0].toUInt(&conversionOK);
+        if (levelPtr) (*levelPtr) = level;
         return conversionOK;
     }
     return false;
@@ -466,6 +467,7 @@ void MapComposite::addLayerToGroup(int index)
 {
     Layer *layer = mMap->layerAt(index);
     Q_ASSERT(layer->isTileLayer());
+    Q_ASSERT(levelForLayer(layer));
     if (TileLayer *tl = layer->asTileLayer()) {
         int level = tl->level();
         if (!mLayerGroups.contains(level)) {

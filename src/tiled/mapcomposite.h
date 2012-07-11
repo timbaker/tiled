@@ -75,7 +75,7 @@ public:
     MapComposite(MapInfo *mapInfo, MapComposite *parent = 0, const QPoint &positionInParent = QPoint(), int levelOffset = 0);
     ~MapComposite();
 
-    static bool levelForLayer(Tiled::Layer *layer, int *level);
+    static bool levelForLayer(Tiled::Layer *layer, int *levelPtr = 0);
 
     MapComposite *addMap(MapInfo *mapInfo, const QPoint &pos, int levelOffset);
     void removeMap(MapComposite *subMap);
