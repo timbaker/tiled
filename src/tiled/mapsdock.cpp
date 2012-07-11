@@ -159,7 +159,7 @@ MapsView::MapsView(MainWindow *mainWindow, QWidget *parent)
     , mMainWindow(mainWindow)
 {
     setRootIsDecorated(false);
-    setHeaderHidden(false);
+    setHeaderHidden(true);
     setItemsExpandable(false);
     setUniformRowHeights(true);
     setDragEnabled(true);
@@ -182,6 +182,7 @@ MapsView::MapsView(MainWindow *mainWindow, QWidget *parent)
     setModel(model);
 
     QHeaderView* hHeader = header();
+    hHeader->hideSection(1); // Size
     hHeader->hideSection(2);
     hHeader->hideSection(3);
 
