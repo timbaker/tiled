@@ -130,7 +130,6 @@ public:
     void saveVisibility();
     void restoreVisibility();
 
-#if NO_CONVERT
 signals:
     void layerGroupAdded(int level);
     void layerAddedToGroup(int index);

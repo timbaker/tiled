@@ -531,8 +531,6 @@ int MapComposite::levelRecursive() const
     return mLevelOffset + (mParent ? mParent->levelRecursive() : 0);
 }
 
-}
-
 QRectF MapComposite::boundingRect(MapRenderer *renderer, bool forceMapBounds) const
 {
     QRectF bounds;
