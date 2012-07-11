@@ -20,6 +20,7 @@
 
 #include "mapsdock.h"
 
+#include "mapimagemanager.h"
 #include "mainwindow.h"
 #include "preferences.h"
 #include "utils.h"
@@ -41,13 +42,18 @@ using namespace Tiled::Internal;
 
 MapsDock::MapsDock(MainWindow *mainWindow, QWidget *parent)
     : QDockWidget(parent)
+    , mPreviewLabel(new QLabel(this))
     , mMapsView(new MapsView(mainWindow))
 {
     setObjectName(QLatin1String("MapsDock"));
 
     QWidget *widget = new QWidget(this);
     QVBoxLayout *layout = new QVBoxLayout(widget);
-    layout->setMargin(5);
+    layout->setMargin(2);
+
+    mPreviewLabel->setFrameShape(QFrame::StyledPanel);
+    mPreviewLabel->setFrameShadow(QFrame::Plain);
+    mPreviewLabel->setMinimumHeight(128);
 
     QHBoxLayout *dirLayout = new QHBoxLayout;
     QLabel *label = new QLabel(tr("Folder:"));
@@ -67,6 +73,7 @@ MapsDock::MapsDock(MainWindow *mainWindow, QWidget *parent)
     dirLayout->addWidget(button);
 
     layout->addWidget(mMapsView);
+    layout->addWidget(mPreviewLabel);
     layout->addLayout(dirLayout);
 
     setWidget(widget);
@@ -78,6 +85,9 @@ MapsDock::MapsDock(MainWindow *mainWindow, QWidget *parent)
     connect(prefs, SIGNAL(mapsDirectoryChanged()), this, SLOT(onMapsDirectoryChanged()));
     edit->setText(prefs->mapsDirectory());
     connect(edit, SIGNAL(returnPressed()), this, SLOT(editedMapsDirectory()));
+
+    connect(mMapsView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            SLOT(selectionChanged()));
 
     // Workaround since a tabbed dockwidget that is not currently visible still
     // returns true for isVisible()
@@ -105,6 +115,24 @@ void MapsDock::onMapsDirectoryChanged()
 {
     Preferences *prefs = Preferences::instance();
     mDirectoryEdit->setText(prefs->mapsDirectory());
+}
+
+void MapsDock::selectionChanged()
+{
+    QModelIndexList selectedRows = mMapsView->selectionModel()->selectedRows();
+    if (selectedRows.isEmpty()) {
+        mPreviewLabel->setPixmap(QPixmap());
+        return;
+    }
+    QModelIndex index = selectedRows.first();
+    QString path = mMapsView->model()->filePath(index);
+    if (QFileInfo(path).isDir())
+        return;
+    MapImage *mapImage = MapImageManager::instance()->getMapImage(path);
+    if (mapImage)
+        mPreviewLabel->setPixmap(QPixmap::fromImage(mapImage->image().scaled(256, 123, Qt::KeepAspectRatio)));
+    else
+        mPreviewLabel->setPixmap(QPixmap());
 }
 
 void MapsDock::changeEvent(QEvent *e)

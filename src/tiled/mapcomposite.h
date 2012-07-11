@@ -113,6 +113,15 @@ public:
     void setGroupVisible(bool visible) { mGroupVisible = visible; }
     bool isGroupVisible() const { return mGroupVisible; }
 
+    /**
+      * Hack: when dragging a MapObjectItem representing a Lot, the map is hidden
+      * at the start of the drag and shown when dragging is finished.  But I don't
+      * want to affect the scene bounds, so instead of calling setVisible(false)
+      * I call this.
+      */
+    void setHiddenDuringDrag(bool hidden) { mHiddenDuringDrag = hidden; }
+    bool isHiddenDuringDrag() const { return mHiddenDuringDrag; }
+
     QRectF boundingRect(Tiled::MapRenderer *renderer, bool forceMapBounds = true) const;
 
 signals:
@@ -138,6 +147,7 @@ private:
     int mMinLevel;
     bool mVisible;
     bool mGroupVisible;
+    bool mHiddenDuringDrag;
 };
 
 #endif // MAPCOMPOSITE_H

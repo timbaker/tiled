@@ -25,6 +25,7 @@
 
 class CompositeLayerGroup;
 class CompositeLayerGroupItem;
+class DnDItem;
 
 namespace Tiled {
 
@@ -117,7 +118,8 @@ private:
 
     QMap<int,CompositeLayerGroupItem*> mTileLayerGroupItems;
     ZLotManager mLotManager;
-    MapObjectItem *mDnDMapObjectItem;
+    DnDItem *mDnDItem;
+    bool mWasHighlightCurrentLayer;
 };
 
 } // namespace Internal

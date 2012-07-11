@@ -94,6 +94,8 @@ void CompositeLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRec
         return;
     foreach (const SubMapLayers &subMapLayer, mVisibleSubMapLayers) {
         CompositeLayerGroup *layerGroup = subMapLayer.mLayerGroup;
+        if (subMapLayer.mSubMap->isHiddenDuringDrag())
+            continue;
         QRectF bounds = layerGroup->boundingRect(renderer);
         if ((bounds & rect).isValid()) {
             mPreparedSubMapLayers.append(subMapLayer);
@@ -253,6 +255,7 @@ MapComposite::MapComposite(MapInfo *mapInfo, MapComposite *parent, const QPoint 
     , mMinLevel(0)
     , mVisible(true)
     , mGroupVisible(true)
+    , mHiddenDuringDrag(false)
 {
     int index = 0;
     foreach (Layer *layer, mMap->layers()) {

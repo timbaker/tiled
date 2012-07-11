@@ -47,6 +47,7 @@ private slots:
     void browse();
     void editedMapsDirectory();
     void onMapsDirectoryChanged();
+    void selectionChanged();
 
 protected:
     void changeEvent(QEvent *e);
@@ -54,14 +55,11 @@ protected:
 private:
     void retranslateUi();
 
+    QLabel *mPreviewLabel;
     QLineEdit *mDirectoryEdit;
     MapsView *mMapsView;
 };
 
-/**
- * This view makes sure the size hint makes sense and implements the context
- * menu.
- */
 class MapsView : public QTreeView
 {
     Q_OBJECT

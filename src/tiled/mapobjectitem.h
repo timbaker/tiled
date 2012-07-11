@@ -24,8 +24,10 @@
 
 #include <QCoreApplication>
 #include <QGraphicsItem>
+
 #ifdef ZOMBOID
-#include <QMargins>
+class MapComposite;
+class MapImage;
 #endif
 
 namespace Tiled {
@@ -94,8 +96,11 @@ public:
     void setPolygon(const QPolygonF &polygon);
 
 #ifdef ZOMBOID
-    void setDrawMargins(const QMargins &drawMargins);
-    QMargins drawMargins() const { return mDrawMargins; }
+    void setLot(MapComposite *lot);
+    MapComposite *lot() const { return mLot; }
+
+    void setMapImage(MapImage *mapImage);
+    void setDragging(bool dragging);
 #endif
 
     /**
@@ -122,7 +127,9 @@ private:
     bool mSyncing;
     ResizeHandle *mResizeHandle;
 #ifdef ZOMBOID
-    QMargins mDrawMargins;
+    MapComposite *mLot;
+    MapImage *mMapImage;
+    bool mDragging;
 #endif
 
     friend class Handle;

@@ -20,6 +20,8 @@
 #include "map.h"
 #include "mapcomposite.h"
 #include "mapdocument.h"
+#include "mapimagemanager.h"
+#include "mapmanager.h"
 #include "mapobject.h"
 #include "mapobjectitem.h"
 #include "maprenderer.h"
@@ -101,7 +103,8 @@ void CompositeLayerGroupItem::updateBounds()
 
 ZomboidScene::ZomboidScene(QObject *parent)
     : MapScene(parent)
-    , mDnDMapObjectItem(0)
+    , mDnDItem(0)
+    , mWasHighlightCurrentLayer(false)
     , mPendingActive(false)
 {
     connect(&mLotManager, SIGNAL(lotAdded(MapComposite*,MapObject*)),
@@ -243,6 +246,25 @@ void ZomboidScene::updateCurrentLayerHighlight()
         return;
 
     Layer *currentLayer = mMapDocument->currentLayer();
+    int currentLayerIndex = mMapDocument->currentLayerIndex();
+
+#define HIGHLIGHT_LEVEL_NOT_LAYER 1
+#if HIGHLIGHT_LEVEL_NOT_LAYER
+    if (currentLayer) {
+#else
+    // During drag-and-drop of a lot, the layer highlight is turned on automatically.
+    // In that case, highlight the CompositeLayerGroup instead of the ObjectGroup.
+    if (mDnDItem) {
+#endif
+        int level = currentLayer->level();
+        if (mTileLayerGroupItems.contains(level)) {
+            CompositeLayerGroup *layerGroup = mTileLayerGroupItems[level]->layerGroup();
+            if (layerGroup->layerCount()) {
+                currentLayer = layerGroup->layers().first();
+                currentLayerIndex = mMapDocument->map()->layers().indexOf(currentLayer);
+            }
+        }
+    }
 
     if (!mHighlightCurrentLayer || !currentLayer) {
         mDarkRectangle->setVisible(false);
@@ -261,7 +283,7 @@ void ZomboidScene::updateCurrentLayerHighlight()
         return;
     }
 
-    QGraphicsItem *currentItem = mLayerItems[mMapDocument->currentLayerIndex()];
+    QGraphicsItem *currentItem = mLayerItems[currentLayerIndex];
     if (currentLayer->asTileLayer() && currentLayer->asTileLayer()->group()) {
         Q_ASSERT(mTileLayerGroupItems.contains(currentLayer->level()));
         if (mTileLayerGroupItems.contains(currentLayer->level()))
@@ -272,13 +294,23 @@ void ZomboidScene::updateCurrentLayerHighlight()
     int index = 0;
     foreach (QGraphicsItem *item, mLayerItems) {
         Layer *layer = mMapDocument->map()->layerAt(index);
+#if HIGHLIGHT_LEVEL_NOT_LAYER
+        bool visible = layer->isVisible() && (layer->level() <= currentLayer->level());
+        if (layer->isObjectGroup() && (layer->level() != currentLayer->level()))
+            visible = false;
+#else
         if (!layer->isTileLayer()) continue; // leave ObjectGroups alone
         bool visible = layer->isVisible() && (item->zValue() <= currentItem->zValue());
+#endif
         item->setVisible(visible);
         ++index;
     }
     foreach (CompositeLayerGroupItem *item, mTileLayerGroupItems) {
+#if HIGHLIGHT_LEVEL_NOT_LAYER
+        bool visible = item->layerGroup()->isVisible() && (item->layerGroup()->level() <= currentLayer->level());
+#else
         bool visible = item->layerGroup()->isVisible() && (item->zValue() <= currentItem->zValue());
+#endif
         item->setVisible(visible);
     }
 
@@ -434,8 +466,11 @@ void ZomboidScene::layerLevelChanged(int index, int oldLevel)
         bool synch = false;
         foreach (MapObject *mapObject, og->objects()) {
             if (mMapObjectToLot.contains(mapObject)) {
-                mMapObjectToLot[mapObject]->setGroupVisible(og->isVisible());
-                mMapObjectToLot[mapObject]->setLevel(og->level());
+                MapComposite *lot = mMapObjectToLot[mapObject];
+                lot->setGroupVisible(og->isVisible());
+                lot->setLevel(og->level());
+                // Recalculate the MapObject bounds
+                onLotUpdated(lot, mapObject);
                 synch = true;
             }
             mObjectItems[mapObject]->syncWithMapObject();
@@ -513,19 +548,16 @@ void ZomboidScene::onLotAdded(MapComposite *lot, MapObject *mapObject)
 
     MapObjectItem *item = itemForObject(mapObject); // FIXME: assumes createLayerItem() was called before this
     if (item) {
-        QRect mapBounds(lot->origin(), lot->map()->size());
-        QRectF mapObjectBounds = mMapDocument->renderer()->boundingRect(mapBounds, lot->levelOffset());
-        QRectF lotBounds = lot->boundingRect(mMapDocument->renderer());
-        item->setDrawMargins(QMargins(mapObjectBounds.left() - lotBounds.left(),
-            mapObjectBounds.top() - lotBounds.top(),
-            lotBounds.right() - mapObjectBounds.right(),
-            lotBounds.bottom() - mapObjectBounds.bottom()));
+        item->setLot(lot);
 
         // Resize the map object to the size of the lot's map, and snap-to-grid
         mapObject->setPosition(lot->origin());
         item->resize(lot->map()->size());
 
-        mOldMapObjectBounds[item] = lotBounds;
+        mOldMapObjectBounds[item] = item->boundingRect().translated(item->pos());
+
+        MapImage *mapImage = MapImageManager::instance()->getMapImage(lot->mapInfo()->path());
+        item->setMapImage(mapImage);
     }
 
     // MapComposite::synch was already called
@@ -538,7 +570,8 @@ void ZomboidScene::onLotRemoved(MapComposite *lot, MapObject *mapObject)
     Q_UNUSED(lot)
     MapObjectItem *item = itemForObject(mapObject);
     if (item) {
-        item->setDrawMargins(QMargins());
+        item->setLot(0);
+        item->setMapImage(0);
         mOldMapObjectBounds.remove(item);
     }
     mLotMapObjects.removeOne(mapObject);
@@ -549,9 +582,9 @@ void ZomboidScene::onLotRemoved(MapComposite *lot, MapObject *mapObject)
 
 void ZomboidScene::onLotUpdated(MapComposite *lot, MapObject *mapObject)
 {
-    // Resize the map object to the size of the lot's map, and snap-to-grid
     MapObjectItem *item = itemForObject(mapObject);
     if (item) {
+        // Resize the map object to the size of the lot's map, and snap-to-grid
         mapObject->setPosition(lot->origin());
         item->resize(lot->map()->size());
 
@@ -561,15 +594,14 @@ void ZomboidScene::onLotUpdated(MapComposite *lot, MapObject *mapObject)
         // lot bounds or at the new location; Therefore those areas must be
         // repainted manually.
 
-        // Can't call item->boundingRect() because the LotManager gets the
-        // objectsChanged() signal before MapScene.
-        QRectF newBounds = lot->boundingRect(mMapDocument->renderer());
-
+        QRectF newBounds = item->boundingRect().translated(item->pos());
+#if 0 // Old bounds *are* updated now since the lot is hidden when dragging starts
         if (mOldMapObjectBounds.contains(item)) {
             QRectF oldBounds = mOldMapObjectBounds[item];
             if (newBounds != oldBounds)
                 update(oldBounds);
         }
+#endif
         // FIXME: unset this if the item is deleted
         mOldMapObjectBounds[item] = newBounds;
         update(newBounds);
@@ -604,12 +636,121 @@ void ZomboidScene::handlePendingUpdates()
     mPendingActive = false;
 }
 
+#include "preferences.h"
 #include "addremovemapobject.h"
 #include <QFileInfo>
 #include <QMimeData>
 #include <QStringList>
 #include <qgraphicssceneevent.h>
 #include <QUrl>
+
+/////
+
+
+/**
+ * Item that represents a map during drag-and-drop.
+ */
+class DnDItem : public QGraphicsItem
+{
+public:
+    DnDItem(const QString &path, Tiled::MapRenderer *renderer, int level, QGraphicsItem *parent = 0);
+
+    QRectF boundingRect() const;
+
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
+
+    QPainterPath shape() const;
+
+    void setTilePosition(QPoint tilePos);
+
+    void setHotSpot(const QPoint &pos);
+    void setHotSpot(int x, int y) { setHotSpot(QPoint(x, y)); }
+    QPoint hotSpot() { return mHotSpot; }
+
+    QPoint dropPosition();
+
+    MapInfo *mapInfo();
+
+private:
+    MapImage *mMapImage;
+    Tiled::MapRenderer *mRenderer;
+    QRectF mBoundingRect;
+    QPoint mPositionInMap;
+    QPoint mHotSpot;
+    int mLevel;
+};
+
+/////
+
+DnDItem::DnDItem(const QString &path, MapRenderer *renderer, int level, QGraphicsItem *parent)
+    : QGraphicsItem(parent)
+    , mMapImage(MapImageManager::instance()->getMapImage(path))
+    , mRenderer(renderer)
+    , mLevel(level)
+{
+    setHotSpot(mMapImage->mapInfo()->width() / 2, mMapImage->mapInfo()->height() / 2);
+}
+
+QRectF DnDItem::boundingRect() const
+{
+    return mBoundingRect;
+}
+
+void DnDItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
+{
+    painter->setOpacity(0.5);
+    QRectF target = mBoundingRect;
+    QRectF source = QRect(QPoint(0, 0), mMapImage->image().size());
+    painter->drawImage(target, mMapImage->image(), source);
+    painter->setOpacity(effectiveOpacity());
+
+    QRect tileBounds(mPositionInMap.x() - mHotSpot.x(), mPositionInMap.y() - mHotSpot.y(),
+                     mMapImage->mapInfo()->width(), mMapImage->mapInfo()->height());
+    mRenderer->drawFancyRectangle(painter, tileBounds, Qt::darkGray, mLevel);
+
+#ifdef _DEBUG
+    painter->drawRect(mBoundingRect);
+#endif
+}
+
+QPainterPath DnDItem::shape() const
+{
+    // FIXME: need polygon
+    return QGraphicsItem::shape();
+}
+
+void DnDItem::setTilePosition(QPoint tilePos)
+{
+    mPositionInMap = tilePos;
+    QRectF bounds;
+    QSize scaledImageSize(mMapImage->image().size() / mMapImage->scale());
+    bounds = QRectF(-mMapImage->tileToImageCoords(mHotSpot) / mMapImage->scale(), scaledImageSize);
+    bounds.translate(mRenderer->tileToPixelCoords(mPositionInMap, mLevel));
+    if (bounds != mBoundingRect) {
+        prepareGeometryChange();
+        mBoundingRect = bounds;
+    }
+}
+
+void DnDItem::setHotSpot(const QPoint &pos)
+{
+    // Position the item so that the top-left corner of the hotspot tile is at the item's origin
+    mHotSpot = pos;
+    QSize scaledImageSize(mMapImage->image().size() / mMapImage->scale());
+    mBoundingRect = QRectF(-mMapImage->tileToImageCoords(mHotSpot) / mMapImage->scale(), scaledImageSize);
+}
+
+QPoint DnDItem::dropPosition()
+{
+    return mPositionInMap - mHotSpot;
+}
+
+MapInfo *DnDItem::mapInfo()
+{
+    return mMapImage->mapInfo();
+}
+
+/////
 
 void ZomboidScene::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
 {
@@ -630,13 +771,19 @@ void ZomboidScene::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
         if (!info.isFile()) continue;
         if (info.suffix() != QLatin1String("tmx")) continue;
 
-        MapObject *newMapObject = new MapObject;
-        newMapObject->setPosition(mMapDocument->renderer()->pixelToTileCoords(event->scenePos(), objectGroup->level()));
-        newMapObject->setShape(MapObject::Rectangle);
-        newMapObject->setSize(4, 4);
-        objectGroup->addObject(newMapObject);
-        mDnDMapObjectItem = new MapObjectItem(newMapObject, mapDocument());
-        addItem(mDnDMapObjectItem);
+        QString path = info.canonicalFilePath();
+        MapRenderer *renderer = mMapDocument->renderer();
+        mDnDItem = new DnDItem(path, renderer, objectGroup->level());
+        QPoint tilePos = renderer->pixelToTileCoords(event->scenePos(), objectGroup->level()).toPoint();
+        mDnDItem->setTilePosition(tilePos);
+        addItem(mDnDItem);
+        mDnDItem->setZValue(10001);
+
+        mWasHighlightCurrentLayer = mHighlightCurrentLayer;
+        if (!mWasHighlightCurrentLayer)
+            Preferences::instance()->setHighlightCurrentLayer(true);
+        else
+            updateCurrentLayerHighlight();
 
         event->accept();
         return;
@@ -647,25 +794,24 @@ void ZomboidScene::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
 
 void ZomboidScene::dragMoveEvent(QGraphicsSceneDragDropEvent *event)
 {
-    ObjectGroup *objectGroup = mDnDMapObjectItem->mapObject()->objectGroup();
-    mDnDMapObjectItem->mapObject()->setPosition(mMapDocument->renderer()->pixelToTileCoords(event->scenePos(), objectGroup->level()));
-    mDnDMapObjectItem->syncWithMapObject();
-//    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    if (mDnDItem) {
+        int level = mMapDocument->currentLevel();
+        QPoint tilePos = mMapDocument->renderer()->pixelToTileCoords(event->scenePos(), level).toPoint();
+        mDnDItem->setTilePosition(tilePos);
+    }
 }
 
 void ZomboidScene::dragLeaveEvent(QGraphicsSceneDragDropEvent *event)
 {
     Q_UNUSED(event)
-    if (mDnDMapObjectItem) {
-        MapObject *newMapObject = mDnDMapObjectItem->mapObject();
+    if (mDnDItem) {
+        delete mDnDItem;
+        mDnDItem = 0;
 
-        ObjectGroup *objectGroup = newMapObject->objectGroup();
-        objectGroup->removeObject(newMapObject);
-
-        delete mDnDMapObjectItem;
-        mDnDMapObjectItem = 0;
-
-        delete newMapObject;
+        if (!mWasHighlightCurrentLayer)
+            Preferences::instance()->setHighlightCurrentLayer(false);
+        else
+            updateCurrentLayerHighlight();
     }
 }
 
@@ -676,21 +822,20 @@ void ZomboidScene::dropEvent(QGraphicsSceneDragDropEvent *event)
     ObjectGroup *objectGroup = layer->asObjectGroup();
     if (!objectGroup) return;
 
-    foreach (const QUrl &url, event->mimeData()->urls()) {
-        QFileInfo info(url.toLocalFile());
-        if (!info.exists()) continue;
-        if (!info.isFile()) continue;
-        if (info.suffix() != QLatin1String("tmx")) continue;
+    if (mDnDItem) {
 
-        MapObject *newMapObject = mDnDMapObjectItem->mapObject();
-        delete mDnDMapObjectItem;
+        QString mapName = QFileInfo(mDnDItem->mapInfo()->path()).completeBaseName();
+        MapObject *newMapObject = new MapObject(QLatin1String("lot"),
+                                                mapName,
+                                                mDnDItem->dropPosition(),
+                                                mDnDItem->mapInfo()->size());
+        delete mDnDItem;
+        mDnDItem = 0;
 
-        ObjectGroup *objectGroup = newMapObject->objectGroup();
-        objectGroup->removeObject(newMapObject);
-
-        newMapObject->setPosition(mMapDocument->renderer()->pixelToTileCoords(event->scenePos(), objectGroup->level()));
-        newMapObject->setName(QLatin1String("lot"));
-        newMapObject->setType(info.baseName());
+        if (!mWasHighlightCurrentLayer)
+            Preferences::instance()->setHighlightCurrentLayer(false);
+        else
+            updateCurrentLayerHighlight();
 
         mapDocument()->undoStack()->push(new AddMapObject(mapDocument(),
                                                           objectGroup,

@@ -32,7 +32,8 @@
 #include "resizemapobject.h"
 
 #ifdef ZOMBOID
-#include "zlotmanager.hpp"
+#include "mapcomposite.h"
+#include "mapimagemanager.h"
 #endif
 
 #include <QApplication>
@@ -199,6 +200,11 @@ MapObjectItem::MapObjectItem(MapObject *object, MapDocument *mapDocument,
     mIsEditable(false),
     mSyncing(false),
     mResizeHandle(new ResizeHandle(this))
+#ifdef ZOMBOID
+  , mLot(0)
+  , mMapImage(0)
+  , mDragging(false)
+#endif
 {
     syncWithMapObject();
     mResizeHandle->setVisible(false);
@@ -234,12 +240,12 @@ void MapObjectItem::syncWithMapObject()
     const QPointF pixelPos = renderer->tileToPixelCoords(mObject->position());
 #endif
     QRectF bounds = renderer->boundingRect(mObject);
-    bounds.translate(-pixelPos);
-
 #ifdef ZOMBOID
-    bounds.adjust(-mDrawMargins.left(), -mDrawMargins.top(), mDrawMargins.right(), mDrawMargins.bottom());
+    if (mLot)
+        bounds |= mLot->boundingRect(renderer);
     QPointF oldPos = pos();
 #endif
+    bounds.translate(-pixelPos);
 
     setPos(pixelPos);
     setZValue(pixelPos.y());
@@ -269,10 +275,28 @@ void MapObjectItem::syncWithMapObject()
 }
 
 #ifdef ZOMBOID
-// This is to accomodate Lot maps, should create a LotItem class
-void MapObjectItem::setDrawMargins(const QMargins &drawMargins)
+void MapObjectItem::setLot(MapComposite *lot)
 {
-    mDrawMargins = drawMargins;
+    mLot = lot;
+}
+
+void MapObjectItem::setMapImage(MapImage *mapImage)
+{
+    mMapImage = mapImage;
+}
+
+void MapObjectItem::setDragging(bool dragging)
+{
+    if (dragging && !mDragging) {
+        if (mLot) {
+            mLot->setHiddenDuringDrag(true);
+        }
+    } else if (!dragging && mDragging) {
+        if (mLot) {
+            mLot->setHiddenDuringDrag(false);
+        }
+    }
+    mDragging = dragging;
 }
 #endif
 
@@ -312,6 +336,20 @@ void MapObjectItem::paint(QPainter *painter,
 {
     painter->translate(-pos());
     mMapDocument->renderer()->drawMapObject(painter, mObject, mColor);
+
+#ifdef ZOMBOID
+    if (mDragging && mMapImage) {
+        QSize scaledImageSize(mMapImage->image().size() / mMapImage->scale());
+        QRectF bounds = QRectF(-mMapImage->tileToImageCoords(QPoint(0, 0)) / mMapImage->scale(), scaledImageSize);
+        bounds.translate(pos());
+
+        painter->setOpacity(0.5);
+        QRectF target = bounds;
+        QRectF source = QRect(QPoint(0, 0), mMapImage->image().size());
+        painter->drawImage(target, mMapImage->image(), source);
+        painter->setOpacity(effectiveOpacity());
+    }
+#endif
 
     if (mIsEditable) {
         painter->translate(pos());

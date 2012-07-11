@@ -247,6 +247,7 @@ void ObjectSelectionTool::updateMovingItems(const QPointF &pos,
         objectItem->setPos(newPixelPos);
         objectItem->setZValue(newPixelPos.y());
         objectItem->mapObject()->setPosition(newPos);
+        objectItem->setDragging(true);
         ++i;
     }
 #else
@@ -277,6 +278,11 @@ void ObjectSelectionTool::finishMoving(const QPointF &pos)
 {
     Q_ASSERT(mMode == Moving);
     mMode = NoMode;
+
+#ifdef ZOMBOID
+    foreach (MapObjectItem *objectItem, mMovingItems)
+        objectItem->setDragging(false);
+#endif
 
     if (mStart == pos) // Move is a no-op
         return;
