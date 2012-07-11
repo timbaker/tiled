@@ -124,7 +124,7 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
             } else
                 newLot = currLot;
         } else {
-            if (currLot && (currLot->mapInfo() == newMapInfo))
+            if (currLot && QFileInfo(currLot->mapInfo()->path()).completeBaseName() == type)
                 newLot = currLot;
         }
     }
