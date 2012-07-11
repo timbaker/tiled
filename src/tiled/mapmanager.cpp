@@ -178,6 +178,7 @@ MapInfo *MapManager::newFromMap(Map *map, const QString &mapFilePath)
     MapInfo *info = new MapInfo(map->orientation(), map->width(), map->height(),
                                 map->tileWidth(), map->tileHeight());
     info->mMap = map;
+    info->mBeingEdited = true;
 
     if (!mapFilePath.isEmpty()) {
         Q_ASSERT(!QFileInfo(mapFilePath).isRelative());

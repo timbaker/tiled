@@ -277,7 +277,7 @@ MapComposite::MapComposite(MapInfo *mapInfo, MapComposite *parent, const QPoint 
 #if 1
     // Load lots, but only if this is not the map being edited (that is handled
     // by the LotManager).
-    if (mParent) {
+    if (!mapInfo->isBeingEdited()) {
         foreach (ObjectGroup *objectGroup, mMap->objectGroups()) {
             foreach (MapObject *object, objectGroup->objects()) {
                 if (object->name() == QLatin1String("lot") && !object->type().isEmpty()) {

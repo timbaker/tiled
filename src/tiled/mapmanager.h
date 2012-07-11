@@ -19,6 +19,7 @@ public:
         , mMap(0)
         , mConverted(0)
         , mPlaceholder(false)
+        , mBeingEdited(false)
     {
 
     }
@@ -28,6 +29,7 @@ public:
     Tiled::Map::Orientation orientation() const { return mOrientation; }
     int width() const { return mWidth; }
     int height() const { return mHeight; }
+    QSize size() const { return QSize(mWidth, mHeight); }
     int tileWidth() const { return mTileWidth; }
     int tileHeight() const { return mTileHeight; }
 
@@ -37,6 +39,8 @@ public:
     Tiled::Map *map() const { return mMap; }
 
     MapInfo *converted(Tiled::Map::Orientation orient);
+
+    bool isBeingEdited() const { return mBeingEdited; }
 
 private:
     Tiled::Map::Orientation mOrientation;
@@ -48,6 +52,7 @@ private:
     Tiled::Map *mMap;
     MapInfo *mConverted;
     bool mPlaceholder;
+    bool mBeingEdited;
 
     friend class MapManager;
 };
