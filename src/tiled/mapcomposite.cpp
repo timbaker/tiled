@@ -265,11 +265,11 @@ MapComposite::MapComposite(MapInfo *mapInfo, MapComposite *parent, const QPoint 
         if (levelForLayer(layer, &level)) {
             // FIXME: no changing of mMap should happen after it is loaded!
             layer->setLevel(level); // for ObjectGroup,ImageLayer as well
-        }
-        if (TileLayer *tl = layer->asTileLayer()) {
-            if (!mLayerGroups.contains(level))
-                mLayerGroups[level] = new CompositeLayerGroup(this, level);
-            mLayerGroups[level]->addTileLayer(tl, index);
+            if (TileLayer *tl = layer->asTileLayer()) {
+                if (!mLayerGroups.contains(level))
+                    mLayerGroups[level] = new CompositeLayerGroup(this, level);
+                mLayerGroups[level]->addTileLayer(tl, index);
+            }
         }
         ++index;
     }
