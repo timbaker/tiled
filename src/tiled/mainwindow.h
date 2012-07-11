@@ -139,6 +139,9 @@ public slots:
     void updateWindowTitle();
     void updateActions();
     void updateZoomLabel();
+#ifdef ZOMBOID
+    void resizeStatusInfoLabel();
+#endif
     void aboutTiled();
     void openRecentFile();
     void clearRecentFiles();

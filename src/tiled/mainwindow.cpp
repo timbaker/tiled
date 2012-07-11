@@ -377,6 +377,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 
     addToolBar(toolManager->toolBar());
 
+#ifdef ZOMBOID
+    mStatusInfoLabel->setAlignment(Qt::AlignCenter);
+    resizeStatusInfoLabel();
+#endif
     statusBar()->addWidget(mStatusInfoLabel);
     connect(toolManager, SIGNAL(statusInfoChanged(QString)),
             this, SLOT(updateStatusInfoLabel(QString)));
@@ -1297,6 +1301,21 @@ void MainWindow::updateZoomLabel()
         mZoomComboBox->setEnabled(false);
     }
 }
+
+#ifdef ZOMBOID
+void MainWindow::resizeStatusInfoLabel()
+{
+    int width = 999, height = 999;
+    if (mMapDocument) {
+        width = qMax(width, mMapDocument->map()->width());
+        height = qMax(height, mMapDocument->map()->height());
+    }
+    QFontMetrics fm = mStatusInfoLabel->fontMetrics();
+    QString coordString = QString(QLatin1String("%1,%2")).arg(width).arg(height);
+    mStatusInfoLabel->setMinimumWidth(fm.width(coordString) + 8);
+}
+#endif
+
 void MainWindow::editLayerProperties()
 {
     if (!mMapDocument)
@@ -1491,6 +1510,10 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
                 SLOT(updateActions()));
         connect(mapDocument, SIGNAL(selectedObjectsChanged()),
                 SLOT(updateActions()));
+#ifdef ZOMBOID
+        connect(mapDocument, SIGNAL(mapChanged()),
+                SLOT(resizeStatusInfoLabel()));
+#endif
 
         if (MapView *mapView = mDocumentManager->currentMapView()) {
             mZoomable = mapView->zoomable();
@@ -1499,6 +1522,9 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
     }
     updateWindowTitle();
     updateActions();
+#ifdef ZOMBOID
+    resizeStatusInfoLabel();
+#endif
 }
 
 void MainWindow::setupQuickStamps()
