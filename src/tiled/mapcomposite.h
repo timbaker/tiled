@@ -124,6 +124,13 @@ public:
 
     QRectF boundingRect(Tiled::MapRenderer *renderer, bool forceMapBounds = true) const;
 
+    /**
+      * Used when generating map images.
+      */
+    void saveVisibility();
+    void restoreVisibility();
+
+#if NO_CONVERT
 signals:
     void layerGroupAdded(int level);
     void layerAddedToGroup(int index);
@@ -147,6 +154,8 @@ private:
     int mMinLevel;
     bool mVisible;
     bool mGroupVisible;
+    bool mSavedGroupVisible;
+    QVector<bool> mSavedLayerVisible;
     bool mHiddenDuringDrag;
 };
 

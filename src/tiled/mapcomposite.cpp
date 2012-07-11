@@ -556,3 +556,31 @@ QRectF MapComposite::boundingRect(MapRenderer *renderer, bool forceMapBounds) co
     }
     return bounds;
 }
+
+void MapComposite::saveVisibility()
+{
+    mSavedGroupVisible = mGroupVisible;
+    mGroupVisible = true; // hack
+
+    int index = 0;
+    mSavedLayerVisible.resize(mMap->layerCount());
+    foreach (Layer *layer, mMap->layers())
+        mSavedLayerVisible[index++] = layer->isVisible();
+
+    // FIXME: there can easily be multiple instances of the same map,
+    // in which case this does unnecessary work.
+    foreach (MapComposite *subMap, mSubMaps)
+        subMap->saveVisibility();
+}
+
+void MapComposite::restoreVisibility()
+{
+    mGroupVisible = mSavedGroupVisible;
+
+    int index = 0;
+    foreach (Layer *layer, mMap->layers())
+        layer->setVisible(mSavedLayerVisible[index++]);
+
+    foreach (MapComposite *subMap, mSubMaps)
+        subMap->restoreVisibility();
+}

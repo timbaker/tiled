@@ -181,8 +181,9 @@ void SaveAsImageDialog::accept()
                                                    scale));
     }
 
-//    QPointF offset = renderer->tileToPixelCoords(0, 0, mMapDocument->map()->maxLevel());
-    painter.translate(0, -sceneRect.top()/*offset.y()*/);
+    painter.translate(0, -sceneRect.top());
+
+    mMapDocument->mapComposite()->saveVisibility();
 
     ZTileLayerGroup *layerGroup = 0;
 
@@ -195,11 +196,9 @@ void SaveAsImageDialog::accept()
                 // FIXME: LayerGroups should be drawn with the same Z-order the scene uses.
                 // They will usually be in the same order anyways.
                 if (tileLayer->group() != layerGroup) {
-                    QMap<TileLayer*,bool> visible;
                     layerGroup = tileLayer->group();
                     if (!visibleLayersOnly || !drawNoRender) {
                         foreach (TileLayer *tl, layerGroup->layers()) {
-                            visible[tl] = tl->isVisible();
                             bool isVisible = !visibleLayersOnly || tl->isVisible();
                             if (!drawNoRender && tl->name().contains(QLatin1String("NoRender")))
                                 isVisible = false;
@@ -208,11 +207,6 @@ void SaveAsImageDialog::accept()
                         ((CompositeLayerGroup*)layerGroup)->synch();
                     }
                     renderer->drawTileLayerGroup(&painter, layerGroup);
-                    if (!visibleLayersOnly || !drawNoRender) {
-                        foreach (TileLayer *tl, layerGroup->layers())
-                            tl->setVisible(visible[tl]);
-                        ((CompositeLayerGroup*)layerGroup)->synch();
-                    }
                 }
             } else {
                 if (visibleLayersOnly && !layer->isVisible())
@@ -236,6 +230,11 @@ void SaveAsImageDialog::accept()
             renderer->drawImageLayer(&painter, imageLayer);
         }
     }
+
+    mMapDocument->mapComposite()->restoreVisibility();
+    foreach (CompositeLayerGroup *layerGroup, mMapDocument->mapComposite()->sortedLayerGroups())
+        layerGroup->synch();
+
 #else // !ZOMBOID
     MapRenderer *renderer = mMapDocument->renderer();
     QSize mapSize = renderer->mapSize();
