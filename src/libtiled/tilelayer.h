@@ -90,6 +90,88 @@ public:
     bool flippedAntiDiagonally;
 };
 
+#ifdef ZOMBOID
+#define SPARSE_TILELAYER 1
+class SparseTileGrid
+{
+public:
+    SparseTileGrid(int width, int height)
+        : mWidth(width)
+        , mHeight(height)
+        , mUseVector(false)
+    {
+    }
+
+    int size() const
+    { return mWidth * mHeight; }
+
+    const Cell &at(int index) const
+    {
+        if (mUseVector)
+            return mCellsVector[index];
+        QHash<int,Cell>::const_iterator it = mCells.find(index);
+        if (it != mCells.end())
+            return *it;
+        return mEmptyCell;
+    }
+
+    void replace(int index, const Cell &cell)
+    {
+        if (mUseVector) {
+            mCellsVector[index] = cell;
+            return;
+        }
+        QHash<int,Cell>::iterator it = mCells.find(index);
+        if (it == mCells.end()) {
+            if (cell.isEmpty())
+                return;
+            mCells.insert(index, cell);
+        } else if (!cell.isEmpty())
+            (*it) = cell;
+        else
+            mCells.erase(it);
+        if (mCells.size() > 300 * 300 / 2)
+            swapToVector();
+    }
+
+    void replace(int x, int y, const Cell &cell)
+    {
+        int index = y * mWidth + x;
+        replace(index, cell);
+    }
+
+    void setTile(int index, Tile *tile)
+    {
+        Cell cell = at(index);
+        cell.tile = tile;
+        replace(index, cell);
+    }
+
+    bool isEmpty() const
+    { return !mUseVector && mCells.isEmpty(); }
+
+private:
+    void swapToVector()
+    {
+        Q_ASSERT(!mUseVector);
+        mCellsVector.resize(size());
+        QHash<int,Cell>::const_iterator it = mCells.begin();
+        while (it != mCells.end()) {
+            mCellsVector[it.key()] = (*it);
+            ++it;
+        }
+        mCells.clear();
+        mUseVector = true;
+    }
+
+    int mWidth, mHeight;
+    QHash<int,Cell> mCells;
+    QVector<Cell> mCellsVector;
+    bool mUseVector;
+    Cell mEmptyCell;
+};
+#endif
+
 /**
  * A tile layer is a grid of cells. Each cell refers to a specific tile, and
  * stores how the tile is flipped.
@@ -282,9 +364,11 @@ protected:
 private:
     QSize mMaxTileSize;
     QMargins mOffsetMargins;
-    QVector<Cell> mGrid;
-#ifdef ZOMBOID
     ZTileLayerGroup *mTileLayerGroup;
+#if SPARSE_TILELAYER
+    SparseTileGrid mGrid;
+#else
+    QVector<Cell> mGrid;
 #endif
 };
 

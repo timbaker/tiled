@@ -39,10 +39,13 @@ using namespace Tiled;
 TileLayer::TileLayer(const QString &name, int x, int y, int width, int height):
     Layer(TileLayerType, name, x, y, width, height),
     mMaxTileSize(0, 0),
-    mGrid(width * height)
 #ifdef ZOMBOID
-    ,
     mTileLayerGroup(0)
+#endif
+#if SPARSE_TILELAYER
+    , mGrid(width, height)
+#else
+    mGrid(width * height)
 #endif
 {
     Q_ASSERT(width >= 0);
@@ -112,7 +115,11 @@ void TileLayer::setCell(int x, int y, const Cell &cell)
             mMap->adjustDrawMargins(drawMargins());
     }
 
+#if SPARSE_TILELAYER
+    mGrid.replace(x, y, cell);
+#else
     mGrid[x + y * mWidth] = cell;
+#endif
 }
 
 TileLayer *TileLayer::copy(const QRegion &region) const
@@ -180,6 +187,25 @@ void TileLayer::erase(const QRegion &area)
 
 void TileLayer::flip(FlipDirection direction)
 {
+#if SPARSE_TILELAYER
+    SparseTileGrid newGrid(mWidth, mHeight);
+
+    Q_ASSERT(direction == FlipHorizontally || direction == FlipVertically);
+
+    for (int y = 0; y < mHeight; ++y) {
+        for (int x = 0; x < mWidth; ++x) {
+            if (direction == FlipHorizontally) {
+                Cell source = cellAt(mWidth - x - 1, y);
+                source.flippedHorizontally = !source.flippedHorizontally;
+                newGrid.replace(x, y, source);
+            } else if (direction == FlipVertically) {
+                Cell source = cellAt(x, mHeight - y - 1);
+                source.flippedVertically = !source.flippedVertically;
+                newGrid.replace(x, y, source);
+            }
+        }
+    }
+#else
     QVector<Cell> newGrid(mWidth * mHeight);
 
     Q_ASSERT(direction == FlipHorizontally || direction == FlipVertically);
@@ -198,6 +224,7 @@ void TileLayer::flip(FlipDirection direction)
             }
         }
     }
+#endif
 
     mGrid = newGrid;
 }
@@ -212,7 +239,11 @@ void TileLayer::rotate(RotateDirection direction)
 
     int newWidth = mHeight;
     int newHeight = mWidth;
+#if SPARSE_TILELAYER
+    SparseTileGrid newGrid(newWidth, newHeight);
+#else
     QVector<Cell> newGrid(newWidth * newHeight);
+#endif
 
     for (int y = 0; y < mHeight; ++y) {
         for (int x = 0; x < mWidth; ++x) {
@@ -230,10 +261,17 @@ void TileLayer::rotate(RotateDirection direction)
             dest.flippedVertically = (mask & 2) != 0;
             dest.flippedAntiDiagonally = (mask & 1) != 0;
 
+#if SPARSE_TILELAYER
+            if (direction == RotateRight)
+                newGrid.replace(x * newWidth + (mHeight - y - 1), dest);
+            else
+                newGrid.replace((mWidth - x - 1) * newWidth + y, dest);
+#else
             if (direction == RotateRight)
                 newGrid[x * newWidth + (mHeight - y - 1)] = dest;
             else
                 newGrid[(mWidth - x - 1) * newWidth + y] = dest;
+#endif
         }
     }
 
@@ -295,13 +333,21 @@ void TileLayer::replaceReferencesToTileset(Tileset *oldTileset,
     for (int i = 0, i_end = mGrid.size(); i < i_end; ++i) {
         const Tile *tile = mGrid.at(i).tile;
         if (tile && tile->tileset() == oldTileset)
+#if SPARSE_TILELAYER
+            mGrid.setTile(i, newTileset->tileAt(tile->id()));
+#else
             mGrid[i].tile = newTileset->tileAt(tile->id());
+#endif
     }
 }
 
 void TileLayer::resize(const QSize &size, const QPoint &offset)
 {
+#if SPARSE_TILELAYER
+    SparseTileGrid newGrid(size.width(), size.height());
+#else
     QVector<Cell> newGrid(size.width() * size.height());
+#endif
 
     // Copy over the preserved part
     const int startX = qMax(0, -offset.x());
@@ -312,7 +358,11 @@ void TileLayer::resize(const QSize &size, const QPoint &offset)
     for (int y = startY; y < endY; ++y) {
         for (int x = startX; x < endX; ++x) {
             const int index = x + offset.x() + (y + offset.y()) * size.width();
+#if SPARSE_TILELAYER
+            newGrid.replace(index, cellAt(x, y));
+#else
             newGrid[index] = cellAt(x, y);
+#endif
         }
     }
 
@@ -324,13 +374,21 @@ void TileLayer::offset(const QPoint &offset,
                        const QRect &bounds,
                        bool wrapX, bool wrapY)
 {
+#if SPARSE_TILELAYER
+    SparseTileGrid newGrid(mWidth, mHeight);
+#else
     QVector<Cell> newGrid(mWidth * mHeight);
+#endif
 
     for (int y = 0; y < mHeight; ++y) {
         for (int x = 0; x < mWidth; ++x) {
             // Skip out of bounds tiles
             if (!bounds.contains(x, y)) {
+#if SPARSE_TILELAYER
+                newGrid.replace(x, y, cellAt(x, y));
+#else
                 newGrid[x + y * mWidth] = cellAt(x, y);
+#endif
                 continue;
             }
 
@@ -355,10 +413,17 @@ void TileLayer::offset(const QPoint &offset,
             }
 
             // Set the new tile
+#if SPARSE_TILELAYER
+            if (contains(oldX, oldY) && bounds.contains(oldX, oldY))
+                newGrid.replace(x, y, cellAt(oldX, oldY));
+            else
+                newGrid.replace(x, y, Cell());
+#else
             if (contains(oldX, oldY) && bounds.contains(oldX, oldY))
                 newGrid[x + y * mWidth] = cellAt(oldX, oldY);
             else
                 newGrid[x + y * mWidth] = Cell();
+#endif
         }
     }
 
@@ -412,11 +477,15 @@ QRegion TileLayer::computeDiffRegion(const TileLayer *other) const
 
 bool TileLayer::isEmpty() const
 {
+#if SPARSE_TILELAYER
+    return mGrid.isEmpty();
+#else
     for (int i = 0, i_end = mGrid.size(); i < i_end; ++i)
         if (!mGrid.at(i).isEmpty())
             return false;
 
     return true;
+#endif
 }
 
 /**

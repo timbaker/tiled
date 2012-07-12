@@ -71,9 +71,9 @@ void CompositeLayerGroup::addTileLayer(TileLayer *layer, int index)
     // But don't do this for the top-level map (the one being edited).
     // TileLayer::isEmpty() is SLOW, it's why I'm caching it.
     mEmptyLayers.resize(layerCount());
-    mEmptyLayers[mLayers.indexOf(layer)] = mOwner->parent()
-            ? layer->isEmpty() || layer->name().contains(QLatin1String("NoRender"))
-            : false;
+    mEmptyLayers[mLayers.indexOf(layer)] = mOwner->mapInfo()->isBeingEdited()
+            ? false
+            : layer->isEmpty() || layer->name().contains(QLatin1String("NoRender"));
 }
 
 void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
@@ -110,7 +110,12 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos, QVector<const Cell *
     int index = -1;
     foreach (TileLayer *tl, mLayers) {
         ++index;
+#if SPARSE_TILELAYER
+        // Checking isEmpty() and mEmptyLayers to catch hidden NoRender layers in submaps
+        if (!tl->isVisible() || mEmptyLayers[index] || tl->isEmpty())
+#else
         if (!tl->isVisible() || mEmptyLayers[index])
+#endif
             continue;
         QPoint subPos = pos - tl->position();
         if (tl->contains(subPos)) {
@@ -142,7 +147,12 @@ void CompositeLayerGroup::synch()
 
     int index = 0;
     foreach (TileLayer *tl, mLayers) {
+#if SPARSE_TILELAYER
+        // Checking isEmpty() and mEmptyLayers to catch hidden NoRender layers in submaps
+        if (tl->isVisible() && !mEmptyLayers[index] && !tl->isEmpty()) {
+#else
         if (tl->isVisible() && !mEmptyLayers[index]) {
+#endif
             unionTileRects(r, tl->bounds(), r);
             maxMargins(m, tl->drawMargins(), m);
             mAnyVisibleLayers = true;
