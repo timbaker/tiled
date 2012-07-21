@@ -29,6 +29,7 @@
 #include "zprogress.hpp"
 #include "zlevelrenderer.h"
 
+#include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
 #include <QMessageBox>
@@ -90,7 +91,7 @@ QImage MapImageManager::generateMapImage(const QString &mapFilePath)
 
     QFileInfo fileInfo(mapFilePath);
     QFileInfo imageInfo = imageFileInfo(mapFilePath);
-    if (imageInfo.exists()) {
+    if (imageInfo.exists() && (fileInfo.lastModified() < imageInfo.lastModified())) {
         QImage image(imageInfo.absoluteFilePath());
         if (image.isNull())
             QMessageBox::warning(0, tr("Error Loading Image"),
