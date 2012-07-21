@@ -842,10 +842,12 @@ void TilesetDock::switchLayerForTile(Tile *tile)
         if (TileLayer *tl = currentLayer->asTileLayer()) { // FIXME: ObjectGroup too?
             if (tl->group()) {
                 foreach (TileLayer *tl1, tl->group()->layers()) {
-                    QString name = tl1->name().split(QLatin1Char('_')).at(1);
+                    int pos = tl1->name().indexOf(QLatin1Char('_')) + 1;
+                    QString name = tl1->name().mid(pos);
                     if (name == layerName) {
                         int layerIndex = mMapDocument->map()->layers().indexOf(tl1);
-                        mMapDocument->setCurrentLayerIndex(layerIndex);
+                        if (layerIndex != mMapDocument->currentLayerIndex())
+                            mMapDocument->setCurrentLayerIndex(layerIndex);
                         return;
                     }
                 }
