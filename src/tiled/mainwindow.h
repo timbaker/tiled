@@ -141,6 +141,10 @@ public slots:
     void updateZoomLabel();
 #ifdef ZOMBOID
     void resizeStatusInfoLabel();
+    void aboutToShowLevelMenu();
+    void aboutToShowLayerMenu();
+    void triggeredLevelMenu(QAction *action);
+    void triggeredLayerMenu(QAction *action);
 #endif
     void aboutTiled();
     void openRecentFile();
@@ -216,7 +220,14 @@ private:
     MapsDock *mMapsDock;
 #endif
     TilesetDock *mTilesetDock;
+#ifdef ZOMBOID
+    QMenu *mCurrentLevelMenu;
+    QToolButton *mCurrentLevelButton;
+    QMenu *mCurrentLayerMenu;
+    QToolButton *mCurrentLayerButton;
+#else
     QLabel *mCurrentLayerLabel;
+#endif
     Zoomable *mZoomable;
     QComboBox *mZoomComboBox;
     QLabel *mStatusInfoLabel;

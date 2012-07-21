@@ -76,8 +76,9 @@
 #include "commandbutton.h"
 #include "objectsdock.h"
 #ifdef ZOMBOID
-#include "zlevelsdock.hpp"
+#include "mapcomposite.h"
 #include "mapsdock.h"
+#include "zlevelsdock.hpp"
 #include "zprogress.hpp"
 #endif
 
@@ -117,7 +118,14 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     , mMapsDock(new MapsDock(this))
 #endif
     , mTilesetDock(new TilesetDock(this))
+#ifdef ZOMBOID
+    , mCurrentLevelMenu(new QMenu(this))
+    , mCurrentLevelButton(new QToolButton(this))
+    , mCurrentLayerMenu(new QMenu(this))
+    , mCurrentLayerButton(new QToolButton(this))
+#else
     , mCurrentLayerLabel(new QLabel)
+#endif
     , mZoomable(0)
     , mZoomComboBox(new QComboBox)
     , mStatusInfoLabel(new QLabel)
@@ -125,7 +133,12 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     , mDocumentManager(DocumentManager::instance())
 {
     mUi->setupUi(this);
+#ifdef ZOMBOID
+    QVBoxLayout *centralLayout = static_cast<QVBoxLayout*>(centralWidget()->layout());
+    centralLayout->insertWidget(0, mDocumentManager->widget());
+#else
     setCentralWidget(mDocumentManager->widget());
+#endif
 
     PluginManager::instance()->loadPlugins();
 
@@ -169,23 +182,34 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 
     UndoDock *undoDock = new UndoDock(undoGroup, this);
 
-    addDockWidget(Qt::RightDockWidgetArea, mLayerDock);
-    addDockWidget(Qt::RightDockWidgetArea, undoDock);
-    tabifyDockWidget(undoDock, mLayerDock);
 #ifdef ZOMBOID
+    addDockWidget(Qt::RightDockWidgetArea, mLayerDock);
     addDockWidget(Qt::RightDockWidgetArea, mLevelsDock);
     addDockWidget(Qt::RightDockWidgetArea, mObjectsDock);
     addDockWidget(Qt::RightDockWidgetArea, mMapsDock);
+    addDockWidget(Qt::RightDockWidgetArea, undoDock);
+    addDockWidget(Qt::RightDockWidgetArea, mTilesetDock);
     tabifyDockWidget(mLayerDock, mLevelsDock);
     tabifyDockWidget(mLevelsDock, mObjectsDock);
     tabifyDockWidget(mObjectsDock, mMapsDock);
+    tabifyDockWidget(undoDock, mTilesetDock);
+
+    setStatusBar(0);
+
+    QHBoxLayout *statusBarLayout = new QHBoxLayout(mUi->statusBarFrame);
+    statusBarLayout->setObjectName(QLatin1String("statusBarLayout"));
+    statusBarLayout->setContentsMargins(0, 3, 0, 3);
+    mUi->statusBarFrame->setLayout(statusBarLayout);
 #else
+    addDockWidget(Qt::RightDockWidgetArea, mLayerDock);
+    addDockWidget(Qt::RightDockWidgetArea, undoDock);
+    tabifyDockWidget(undoDock, mLayerDock);
     addDockWidget(Qt::RightDockWidgetArea, mObjectsDock);
     tabifyDockWidget(mLayerDock, mObjectsDock);
-#endif
     addDockWidget(Qt::RightDockWidgetArea, mTilesetDock);
 
     statusBar()->addPermanentWidget(mZoomComboBox);
+#endif
     mUi->actionNew->setShortcuts(QKeySequence::New);
     mUi->actionOpen->setShortcuts(QKeySequence::Open);
     mUi->actionSave->setShortcuts(QKeySequence::Save);
@@ -378,13 +402,34 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     addToolBar(toolManager->toolBar());
 
 #ifdef ZOMBOID
+    mStatusInfoLabel->setObjectName(QLatin1String("statusInfoLabel"));
     mStatusInfoLabel->setAlignment(Qt::AlignCenter);
     resizeStatusInfoLabel();
-#endif
+    statusBarLayout->addWidget(mStatusInfoLabel);
+#else
     statusBar()->addWidget(mStatusInfoLabel);
+#endif
     connect(toolManager, SIGNAL(statusInfoChanged(QString)),
             this, SLOT(updateStatusInfoLabel(QString)));
+#ifdef ZOMBOID
+    mCurrentLevelButton->setObjectName(QLatin1String("currentLevelButton"));
+    mCurrentLayerButton->setObjectName(QLatin1String("currentLayerButton"));
+    connect(mCurrentLevelMenu, SIGNAL(aboutToShow()), SLOT(aboutToShowLevelMenu()));
+    connect(mCurrentLayerMenu, SIGNAL(aboutToShow()), SLOT(aboutToShowLayerMenu()));
+    connect(mCurrentLevelMenu, SIGNAL(triggered(QAction*)), SLOT(triggeredLevelMenu(QAction*)));
+    connect(mCurrentLayerMenu, SIGNAL(triggered(QAction*)), SLOT(triggeredLayerMenu(QAction*)));
+    mCurrentLevelButton->setMenu(mCurrentLevelMenu);
+    mCurrentLayerButton->setMenu(mCurrentLayerMenu);
+    mCurrentLevelButton->setPopupMode(QToolButton::InstantPopup);
+    mCurrentLayerButton->setPopupMode(QToolButton::InstantPopup);
+    statusBarLayout->addWidget(mCurrentLevelButton);
+    statusBarLayout->addWidget(mCurrentLayerButton);
+    statusBarLayout->addStretch();
+    mZoomComboBox->setObjectName(QLatin1String("zoomComboBox"));
+    statusBarLayout->addWidget(mZoomComboBox);
+#else
     statusBar()->addWidget(mCurrentLayerLabel);
+#endif
     mUi->menuView->addSeparator();
     mUi->menuView->addAction(mTilesetDock->toggleViewAction());
     mUi->menuView->addAction(mLayerDock->toggleViewAction());
@@ -1278,8 +1323,30 @@ void MainWindow::updateActions()
     updateZoomLabel(); // for the zoom actions
 
     Layer *layer = mMapDocument ? mMapDocument->currentLayer() : 0;
+#ifdef ZOMBOID
+    if (layer) {
+        mCurrentLevelButton->setEnabled(true);
+        mCurrentLayerButton->setEnabled(true);
+        // The extra space at the end is deliberate so the toolbutton arrow
+        // doesn't overlap the text.
+        mCurrentLevelButton->setText(tr("Level: %1 ").arg(layer->level()));
+        int n;
+        QString name = layer->name();
+        if (name.isEmpty())
+            name = tr("<no name>");
+        else if ((n = name.indexOf(QLatin1Char('_'))) != -1)
+            name = name.mid(n + 1);
+        mCurrentLayerButton->setText(tr("Layer: %1 ").arg(name));
+    } else {
+        mCurrentLevelButton->setText(tr("Level: <none> "));
+        mCurrentLayerButton->setText(tr("Layer: <none> "));
+        mCurrentLevelButton->setEnabled(false);
+        mCurrentLayerButton->setEnabled(false);
+    }
+#else
     mCurrentLayerLabel->setText(tr("Current layer: %1").arg(
                                     layer ? layer->name() : tr("<none>")));
+#endif
 }
 
 void MainWindow::updateZoomLabel()
@@ -1314,7 +1381,112 @@ void MainWindow::resizeStatusInfoLabel()
     QString coordString = QString(QLatin1String("%1,%2")).arg(width).arg(height);
     mStatusInfoLabel->setMinimumWidth(fm.width(coordString) + 8);
 }
-#endif
+
+void MainWindow::aboutToShowLevelMenu()
+{
+    if (!mMapDocument) return;
+    mCurrentLevelMenu->clear();
+    QStringList items;
+    items.prepend(QString::number(0));
+    foreach (CompositeLayerGroup *layerGroup, mMapDocument->mapComposite()->sortedLayerGroups()) {
+        if (!layerGroup->level()) continue;
+        items.prepend(QString::number(layerGroup->level()));
+    }
+    foreach (QString item, items) {
+        QAction *action = mCurrentLevelMenu->addAction(item);
+        if (item.toInt() == mMapDocument->currentLevel()) {
+            action->setCheckable(true);
+            action->setChecked(true);
+            action->setEnabled(false);
+        }
+    }
+}
+
+void MainWindow::aboutToShowLayerMenu()
+{
+    if (!mMapDocument) return;
+    mCurrentLayerMenu->clear();
+    int level = mMapDocument->currentLevel();
+    QIcon tileIcon(QLatin1String(":/images/16x16/layer-tile.png"));
+
+    QAction *before = 0;
+    foreach (TileLayer *tl, mMapDocument->map()->tileLayers()) {
+        if (tl->level() == level) {
+            QAction *action = new QAction(tl->name(), mCurrentLayerMenu);
+            action->setData(QVariant::fromValue(tl));
+            mCurrentLayerMenu->insertAction(before, action);
+            if (tl == mMapDocument->currentLayer()) {
+                action->setCheckable(true);
+                action->setChecked(true);
+                action->setEnabled(false);
+            } else
+                action->setIcon(tileIcon);
+            before = action;
+        }
+    }
+
+    QIcon objectIcon(QLatin1String(":/images/16x16/layer-object.png"));
+    foreach (ObjectGroup *og, mMapDocument->map()->objectGroups()) {
+        if (og->level() == level) {
+            QAction *action = new QAction(og->name(), mCurrentLayerMenu);
+            action->setData(QVariant::fromValue(og));
+            mCurrentLayerMenu->insertAction(before, action);
+            if (og == mMapDocument->currentLayer()) {
+                action->setCheckable(true);
+                action->setChecked(true);
+                action->setEnabled(false);
+            }
+            else
+                action->setIcon(objectIcon);
+            before = action;
+        }
+    }
+}
+
+void MainWindow::triggeredLevelMenu(QAction *action)
+{
+    if (!mMapDocument) return;
+    int level = action->text().toInt();
+    if (CompositeLayerGroup *layerGroup = mMapDocument->mapComposite()->tileLayersForLevel(level)) {
+        if (Layer *layer = mMapDocument->currentLayer()) {
+            // Try to switch to a layer with the same name in the new level
+            int n;
+            QString name = layer->name();
+            if (!name.isEmpty() && ((n = name.indexOf(QLatin1Char('_'))) != -1))
+                name = name.mid(n + 1);
+            foreach (TileLayer *tl, layerGroup->layers()) {
+                QString name2 = tl->name();
+                if ((n = name2.indexOf(QLatin1Char('_'))) != -1)
+                    name2 = name2.mid(n + 1);
+                if (name == name2) {
+                    int index = mMapDocument->map()->layers().indexOf(tl);
+                    mMapDocument->setCurrentLayerIndex(index);
+                    return;
+                }
+            }
+        }
+    }
+    int index = 0;
+    foreach (Layer *layer, mMapDocument->map()->layers()) {
+        if (layer->level() == level) {
+            mMapDocument->setCurrentLayerIndex(index);
+            return;
+        }
+        ++index;
+    }
+}
+
+void MainWindow::triggeredLayerMenu(QAction *action)
+{
+    if (!mMapDocument) return;
+    ObjectGroup *og = action->data().value<ObjectGroup*>();
+    TileLayer *tl = action->data().value<TileLayer*>();
+    if (Layer *layer = og ? (Layer*)og : (Layer*)tl) {
+        int index = mMapDocument->map()->layers().indexOf(layer);
+        mMapDocument->setCurrentLayerIndex(index);
+    }
+}
+#endif // ZOMBOID
 
 void MainWindow::editLayerProperties()
 {
@@ -1513,6 +1685,8 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
 #ifdef ZOMBOID
         connect(mapDocument, SIGNAL(mapChanged()),
                 SLOT(resizeStatusInfoLabel()));
+        connect(mapDocument, SIGNAL(layerRenamed(int)),
+                SLOT(updateActions()));
 #endif
 
         if (MapView *mapView = mDocumentManager->currentMapView()) {

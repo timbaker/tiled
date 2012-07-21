@@ -92,6 +92,12 @@ public:
 
 #ifdef ZOMBOID
 #define SPARSE_TILELAYER 1
+
+/**
+  * This is a QHash-based tile grid.  Project Zomboid maps can be 300x300 with over
+  * 100 tile layers, most of which are mostly empty.  Using a sparse array results in
+  * massive memory savings.
+  */
 class SparseTileGrid
 {
 public:
@@ -130,7 +136,7 @@ public:
             (*it) = cell;
         else
             mCells.erase(it);
-        if (mCells.size() > 300 * 300 / 2)
+        if (mCells.size() > 300 * 300 / 3)
             swapToVector();
     }
 
@@ -373,5 +379,10 @@ private:
 };
 
 } // namespace Tiled
+
+#ifdef ZOMBOID
+#include <QMetaType>
+Q_DECLARE_METATYPE(Tiled::TileLayer*)
+#endif
 
 #endif // TILELAYER_H
