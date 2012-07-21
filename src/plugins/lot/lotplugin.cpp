@@ -235,6 +235,7 @@ QString LotPlugin::errorString() const
 
 bool LotPlugin::handleTileset(QFile& file, const Tiled::Tileset *tileset, uint firstGid)
 {
+    Q_UNUSED(file)
     if (!tileset->fileName().isEmpty()) {
         mError = tr("Only tileset image files supported, not external tilesets");
         return false;
@@ -256,6 +257,7 @@ bool LotPlugin::handleTileset(QFile& file, const Tiled::Tileset *tileset, uint f
 
 bool LotPlugin::handleTileLayer(QFile& file, const Tiled::TileLayer *tileLayer)
 {
+    Q_UNUSED(file)
     // FIXME: Assumes all layers are the same size
     StartX = 0;
     StartY = 0;

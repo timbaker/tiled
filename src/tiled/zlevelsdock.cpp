@@ -136,6 +136,7 @@ void ZLevelsDock::restoreExpandedLevels(MapDocument *mapDoc)
 
 void ZLevelsDock::documentAboutToClose(int index, MapDocument *mapDocument)
 {
+    Q_UNUSED(index)
     mExpandedLevels.remove(mapDocument);
 }
 

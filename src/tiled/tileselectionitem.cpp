@@ -87,6 +87,7 @@ void TileSelectionItem::selectionChanged(const QRegion &newSelection,
 #ifdef ZOMBOID
 void TileSelectionItem::currentLayerIndexChanged(int index)
 {
+    Q_UNUSED(index)
     prepareGeometryChange();
     updateBoundingRect();
 }

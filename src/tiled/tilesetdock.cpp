@@ -755,6 +755,7 @@ void TilesetDock::tilesetNameChanged(Tileset *tileset)
 #ifdef ZOMBOID
 void TilesetDock::documentAboutToClose(int index, MapDocument *mapDocument)
 {
+    Q_UNUSED(index)
     mCurrentTilesets.remove(mapDocument);
 }
 #else

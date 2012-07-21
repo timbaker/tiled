@@ -64,6 +64,7 @@ QSize ZTilesetThumbView::sizeHint() const
 
 void ZTilesetThumbView::contextMenuEvent(QContextMenuEvent *event)
 {
+    Q_UNUSED(event)
 }
 
 void ZTilesetThumbView::setMapDocument(MapDocument *mapDoc)

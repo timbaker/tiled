@@ -261,7 +261,7 @@ void ZLevelsModel::layerChanged(int layerIndex)
     // Handle name, visibility changes
     Layer *layer = mMap->layerAt(layerIndex);
     if (TileLayer *tl = layer->asTileLayer()) {
-        if (Item *item = toItem(tl)) {
+        if (/*Item *item =*/ toItem(tl)) {
             QModelIndex index = this->index(tl);
             emit dataChanged(index, index);
         }

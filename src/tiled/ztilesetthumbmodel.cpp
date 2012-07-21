@@ -172,16 +172,20 @@ void ZTilesetThumbModel::setMapDocument(MapDocument *mapDoc)
 
 void ZTilesetThumbModel::tilesetAdded(int index, Tileset *tileset)
 {
+    Q_UNUSED(index)
+    Q_UNUSED(tileset)
     reset();
 }
 
 void ZTilesetThumbModel::tilesetChanged(Tileset *tileset)
 {
+    Q_UNUSED(tileset)
     reset();
 }
 
 void ZTilesetThumbModel::tilesetRemoved(Tileset *tileset)
 {
+    Q_UNUSED(tileset)
     reset();
 }
 
@@ -201,4 +205,5 @@ void ZTilesetThumbModel::tilesetNameChanged(Tileset *tileset)
 
 void ZTilesetThumbModel::tilesetFileNameChanged(Tileset *tileset)
 {
+    Q_UNUSED(tileset)
 }

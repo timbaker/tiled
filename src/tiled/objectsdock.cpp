@@ -288,6 +288,7 @@ void ObjectsDock::restoreExpandedGroups(MapDocument *mapDoc)
 
 void ObjectsDock::documentAboutToClose(int index, MapDocument *mapDocument)
 {
+    Q_UNUSED(index)
     mExpandedGroups.remove(mapDocument);
 }
 

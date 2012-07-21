@@ -441,6 +441,7 @@ void MapScene::layerChanged(int index)
 #ifdef ZOMBOID
 void MapScene::layerRenamed(int index)
 {
+    Q_UNUSED(index)
 }
 #endif
 
@@ -550,12 +551,14 @@ void MapScene::setHighlightCurrentLayer(bool highlightCurrentLayer)
 
 void MapScene::drawForeground(QPainter *painter, const QRectF &rect)
 {
+#ifdef ZOMBOID
+    // There is a GridItem that draws the grid for us.
+    Q_UNUSED(painter)
+    Q_UNUSED(rect)
+#else
     if (!mMapDocument || !mGridVisible)
         return;
 
-#ifdef ZOMBOID
-//    mMapDocument->renderer()->drawGrid(painter, rect, mMapDocument->currentLayer());
-#else
     Preferences *prefs = Preferences::instance();
     mMapDocument->renderer()->drawGrid(painter, rect, prefs->gridColor());
 #endif

@@ -67,7 +67,11 @@ public:
 #ifdef ZOMBOID
    void drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *layerGroup,
                                const QRectF &exposed = QRectF()) const
-   { /* NO-OP */ }
+   {
+       Q_UNUSED(painter)
+       Q_UNUSED(layerGroup)
+       Q_UNUSED(exposed)
+   }
 #endif
 
     void drawTileSelection(QPainter *painter,
