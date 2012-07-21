@@ -307,7 +307,11 @@ void MapObjectItem::setEditable(bool editable)
 
     mIsEditable = editable;
 
+#ifdef ZOMBOID
+    const bool handlesVisible = mIsEditable && !mObject->tile() && !mLot;
+#else
     const bool handlesVisible = mIsEditable && !mObject->tile();
+#endif
     mResizeHandle->setVisible(handlesVisible && mObject->polygon().isEmpty());
 
     if (mIsEditable)
