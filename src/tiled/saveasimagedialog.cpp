@@ -199,7 +199,7 @@ void SaveAsImageDialog::accept()
                     layerGroup = tileLayer->group();
                     if (!visibleLayersOnly || !drawNoRender) {
                         foreach (TileLayer *tl, layerGroup->layers()) {
-                            bool isVisible = !visibleLayersOnly || tl->isVisible();
+                            bool isVisible = !visibleLayersOnly || (layerGroup->isVisible() && tl->isVisible());
                             if (!drawNoRender && tl->name().contains(QLatin1String("NoRender")))
                                 isVisible = false;
                             tl->setVisible(isVisible);
