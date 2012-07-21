@@ -44,6 +44,9 @@ BucketFillTool::BucketFillTool(QObject *parent)
     , mStamp(0)
     , mFillOverlay(0)
     , mIsRandom(false)
+#ifdef ZOMBOID
+    , mIsActive(false)
+#endif
 {
 }
 
@@ -55,18 +58,29 @@ BucketFillTool::~BucketFillTool()
 
 void BucketFillTool::activate(MapScene *scene)
 {
+#ifdef ZOMBOID
+    mIsActive = true;
+#endif
     AbstractTileTool::activate(scene);
     tilePositionChanged(tilePosition());
 }
 
 void BucketFillTool::deactivate(MapScene *scene)
 {
+#ifdef ZOMBOID
+    mIsActive = false;
+#endif
     AbstractTileTool::deactivate(scene);
     mFillRegion = QRegion();
 }
 
 void BucketFillTool::tilePositionChanged(const QPoint &tilePos)
 {
+#ifdef ZOMBOID
+    // I notice selecting a new tile in the tileset dock is pretty slow for 300x300 maps.
+    if (!mIsActive)
+        return;
+#endif
     bool shiftPressed = QApplication::keyboardModifiers() & Qt::ShiftModifier;
     bool fillRegionChanged = false;
 

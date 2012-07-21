@@ -119,6 +119,13 @@ private:
      * caller is responsible for the returned tile layer.
      */
     TileLayer *getRandomTileLayer(const QRegion &region) const;
+
+#ifdef ZOMBOID
+    /**
+      * Is this the currently-active tool?
+      */
+    bool mIsActive;
+#endif
 };
 
 } // namespace Internal
