@@ -54,6 +54,7 @@ MapsDock::MapsDock(MainWindow *mainWindow, QWidget *parent)
     mPreviewLabel->setFrameShape(QFrame::StyledPanel);
     mPreviewLabel->setFrameShadow(QFrame::Plain);
     mPreviewLabel->setMinimumHeight(128);
+    mPreviewLabel->setAlignment(Qt::AlignCenter);
 
     QHBoxLayout *dirLayout = new QHBoxLayout;
     QLabel *label = new QLabel(tr("Folder:"));
