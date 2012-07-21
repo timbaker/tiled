@@ -471,7 +471,15 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
             mActionHandler, SLOT(copyPosition()));
 
     updateActions();
+#ifdef ZOMBOID
+    // Something broke when I replaced the statusBar with a QFrame.
+    // The dock widget geometry (specifically the width of the right-side dock
+    // area) was no longer restored properly when the window was maximized.
+    // So now I call readSettings() *after* the MainWindow is shown (see main.cpp).
+    // Possibly related to https://bugreports.qt-project.org/browse/QTBUG-15080
+#else
     readSettings();
+#endif
     setupQuickStamps();
 
     connect(AutomappingManager::instance(), SIGNAL(warningsOccurred()),

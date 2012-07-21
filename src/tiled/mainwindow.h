@@ -192,7 +192,13 @@ private:
     bool saveFile(const QString &fileName);
 
     void writeSettings();
+#ifdef ZOMBOID
+public:
     void readSettings();
+private:
+#else
+    void readSettings();
+#endif
 
     void addMapDocument(MapDocument *mapDocument);
     QStringList recentFiles() const;
