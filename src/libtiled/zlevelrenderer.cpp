@@ -23,7 +23,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "zlevelrenderer.hpp"
+#include "zlevelrenderer.h"
 
 #include "map.h"
 #include "mapobject.h"

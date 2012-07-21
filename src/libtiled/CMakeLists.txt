@@ -31,7 +31,7 @@ set ( tiled_HDRS
 	tileset.h
 	gidmapper.h
 
-	zlevelrenderer.hpp
+	zlevelrenderer.h
 	ztilelayergroup.h
 	)
 

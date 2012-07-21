@@ -10,7 +10,7 @@
 #include "staggeredrenderer.h"
 #include "tilelayer.h"
 #include "zprogress.hpp"
-#include "zlevelrenderer.hpp"
+#include "zlevelrenderer.h"
 
 #include <QDir>
 #include <QFileInfo>

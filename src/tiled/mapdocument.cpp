@@ -33,7 +33,7 @@
 #ifdef ZOMBOID
 #include "mapcomposite.h"
 #include "mapmanager.h"
-#include "zlevelrenderer.hpp"
+#include "zlevelrenderer.h"
 #include "zlevelsmodel.hpp"
 #endif
 #include "map.h"

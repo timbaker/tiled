@@ -63,7 +63,7 @@ HEADERS += compression.h \
     tilelayer.h \
     tileset.h \
     gidmapper.h \
-    zlevelrenderer.hpp \
+    zlevelrenderer.h \
     ztilelayergroup.h
 macx {
     contains(QT_CONFIG, ppc):CONFIG += x86 \
