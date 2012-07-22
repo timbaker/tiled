@@ -65,6 +65,17 @@ static void unionSceneRects(const QRectF &a,
         out = a | b;
 }
 
+static QString layerNameWithoutPrefix(const QString &name)
+{
+    int pos = name.indexOf(QLatin1Char('_')) + 1; // Could be "-1 + 1 == 0"
+    return name.mid(pos);
+}
+
+static QString layerNameWithoutPrefix(Layer *layer)
+{
+    return layerNameWithoutPrefix(layer->name());
+}
+
 ///// ///// ///// ///// /////
 
 ///// ///// ///// ///// /////
@@ -81,8 +92,9 @@ void CompositeLayerGroup::addTileLayer(TileLayer *layer, int index)
 {
     ZTileLayerGroup::addTileLayer(layer, index);
 
-    // FIXME: name shouldn't include "N_" prefix
-    mLayersByName[layer->name()].append(layer);
+    // Remember the names of layers (without the N_ prefix)
+    const QString name = layerNameWithoutPrefix(layer);
+    mLayersByName[name].append(layer);
 
     // To optimize drawing of submaps, remember which layers are totally empty.
     // But don't do this for the top-level map (the one being edited).
@@ -100,8 +112,9 @@ void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
 
     ZTileLayerGroup::removeTileLayer(layer);
 
-    index = mLayersByName[layer->name()].indexOf(layer);
-    mLayersByName[layer->name()].remove(index);
+    const QString name = layerNameWithoutPrefix(layer);
+    index = mLayersByName[name].indexOf(layer);
+    mLayersByName[name].remove(index);
 }
 
 void CompositeLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRect &rect)
@@ -224,8 +237,9 @@ QMargins CompositeLayerGroup::drawMargins() const
     return mDrawMargins;
 }
 
-void CompositeLayerGroup::setLayerVisibility(const QString &name, bool visible) const
+void CompositeLayerGroup::setLayerVisibility(const QString &layerName, bool visible) const
 {
+    const QString name = layerNameWithoutPrefix(layerName);
     if (!mLayersByName.contains(name))
         return;
     foreach (Layer *layer, mLayersByName[name])
@@ -245,7 +259,8 @@ void CompositeLayerGroup::layerRenamed(TileLayer *layer)
         }
     }
 
-    mLayersByName[layer->name()].append(layer);
+    const QString name = layerNameWithoutPrefix(layer->name());
+    mLayersByName[name].append(layer);
 }
 
 QRectF CompositeLayerGroup::boundingRect(const MapRenderer *renderer) const
