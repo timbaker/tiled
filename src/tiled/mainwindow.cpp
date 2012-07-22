@@ -657,6 +657,10 @@ void MainWindow::openLastFiles()
     QStringList selectedLayer = mSettings.value(
                 QLatin1String("selectedLayer")).toStringList();
 
+#ifdef ZOMBOID
+    PROGRESS *progress = lastOpenFiles.size() ? new PROGRESS(tr("Restoring session")) : 0;
+#endif
+
     for (int i = 0; i < lastOpenFiles.size(); i++) {
         if (!(i < mapScales.size()))
             continue;
@@ -692,6 +696,10 @@ void MainWindow::openLastFiles()
         mDocumentManager->switchToDocument(documentIndex);
 
     mSettings.endGroup();
+
+#ifdef ZOMBOID
+    delete progress;
+#endif
 }
 
 void MainWindow::openFile()
