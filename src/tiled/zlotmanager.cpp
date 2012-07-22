@@ -138,6 +138,7 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
         }
         if (newLot) {
             mMapObjectToLot[mapObject] = newLot;
+            newLot->setGroupVisible(mapObject->objectGroup()->isVisible());
             emit lotAdded(newLot, mapObject); // add to scene
         }
     } else if (currLot) {
