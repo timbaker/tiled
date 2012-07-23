@@ -19,7 +19,7 @@
 
 #include "mapcomposite.h"
 #include "preferences.h"
-#include "zprogress.hpp"
+#include "zprogress.h"
 
 #include "map.h"
 #include "mapreader.h"

@@ -15,7 +15,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ztilesetthumbmodel.hpp"
+#include "ztilesetthumbmodel.h"
 
 #include "map.h"
 #include "mapdocument.h"

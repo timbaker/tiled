@@ -15,7 +15,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "zlotmanager.hpp"
+#include "zlotmanager.h"
 
 #include "map.h"
 #include "mapcomposite.h"
@@ -27,7 +27,7 @@
 #include "preferences.h"
 #include "tilelayer.h"
 #include "tileset.h"
-#include "zprogress.hpp"
+#include "zprogress.h"
 
 #include <QDir>
 #include <QFileInfo>

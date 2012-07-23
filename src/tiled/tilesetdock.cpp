@@ -43,7 +43,7 @@
 #include "zoomable.h"
 #ifdef ZOMBOID
 #include "preferences.h"
-#include "ztilesetthumbview.hpp"
+#include "ztilesetthumbview.h"
 #endif
 
 #include <QAction>

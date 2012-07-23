@@ -26,7 +26,7 @@
 #include "orthogonalrenderer.h"
 #include "staggeredrenderer.h"
 #include "tilelayer.h"
-#include "zprogress.hpp"
+#include "zprogress.h"
 #include "zlevelrenderer.h"
 
 #include <QDateTime>

@@ -244,16 +244,17 @@ HEADERS += aboutdialog.h \
     undodock.h \
     utils.h \
     zoomable.h \
-    zlevelsdock.hpp \
-    zlevelsmodel.hpp \
-    zlotmanager.hpp \
     ZomboidScene.h \
-    zprogress.hpp \
-    ztilesetthumbmodel.hpp \
-    ztilesetthumbview.hpp \
     mapcomposite.h \
     mapmanager.h \
-    mapimagemanager.h
+    mapimagemanager.h \
+    zlevelsdock.h \
+    zlevelsmodel.h \
+    zlotmanager.h \
+    ztilesetthumbmodel.h \
+    ztilesetthumbview.h \
+    zgriditem.h \
+    zprogress.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

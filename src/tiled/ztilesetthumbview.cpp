@@ -15,7 +15,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ztilesetthumbview.hpp"
+#include "ztilesetthumbview.h"
 
 #include "map.h"
 #include "mapdocument.h"
@@ -26,7 +26,7 @@
 #include "tileset.h"
 #include "tilesetmodel.h"
 #include "utils.h"
-#include "ztilesetthumbmodel.hpp"
+#include "ztilesetthumbmodel.h"
 
 #include <QAbstractItemDelegate>
 #include <QCoreApplication>

@@ -15,7 +15,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "zgriditem.hpp"
+#include "zgriditem.h"
 
 #include "map.h"
 #include "mapdocument.h"

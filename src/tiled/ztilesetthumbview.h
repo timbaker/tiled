@@ -18,7 +18,7 @@
 #ifndef ZTILESETTHUMBVIEW_H
 #define ZTILESETTHUMBVIEW_H
 
-#include "ztilesetthumbmodel.hpp"
+#include "ztilesetthumbmodel.h"
 
 #include <QListView>
 

@@ -34,7 +34,7 @@
 #include "mapcomposite.h"
 #include "mapmanager.h"
 #include "zlevelrenderer.h"
-#include "zlevelsmodel.hpp"
+#include "zlevelsmodel.h"
 #endif
 #include "map.h"
 #include "mapobject.h"

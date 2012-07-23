@@ -41,7 +41,7 @@
 #include "tilesetmanager.h"
 #ifdef ZOMBOID
 #include "mapcomposite.h"
-#include "zgriditem.hpp"
+#include "zgriditem.h"
 #endif
 
 #include <QGraphicsSceneMouseEvent>

@@ -19,7 +19,7 @@
 #define ZOMBOIDSCENE_H
 
 #include "mapscene.h"
-#include "zlotmanager.hpp"
+#include "zlotmanager.h"
 
 #include <QMap>
 

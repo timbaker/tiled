@@ -15,7 +15,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "zlevelsmodel.hpp"
+#include "zlevelsmodel.h"
 
 #include "map.h"
 #include "layermodel.h"

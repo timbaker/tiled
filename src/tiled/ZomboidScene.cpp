@@ -25,12 +25,12 @@
 #include "mapobject.h"
 #include "mapobjectitem.h"
 #include "maprenderer.h"
-#include "zgriditem.hpp"
+#include "zgriditem.h"
 #include "objectgroup.h"
 #include "tilelayer.h"
 #include "tilelayeritem.h"
-#include "zlevelsmodel.hpp"
-#include "zlotmanager.hpp"
+#include "zlevelsmodel.h"
+#include "zlotmanager.h"
 
 using namespace Tiled;
 using namespace Tiled::Internal;

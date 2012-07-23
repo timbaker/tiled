@@ -56,7 +56,7 @@ set ( Tiled_HDRS
 	undocommands.h
 	utils.h
 
-	zgriditem.hpp
+	zgriditem.h
 	ztilelayergroupitem.h
 	)
 
@@ -254,13 +254,13 @@ set ( Tiled_MOCS
 	mapcomposite.h
 	mapimagemanager.h
 	mapmanager.h
-	zlevelsdock.hpp
-	zlevelsmodel.hpp
-	zlotmanager.hpp
+	zlevelsdock.h
+	zlevelsmodel.h
+	zlotmanager.h
 	ZomboidScene.h
-	zprogress.hpp
-	ztilesetthumbmodel.hpp
-	ztilesetthumbview.hpp
+	zprogress.h
+	ztilesetthumbmodel.h
+	ztilesetthumbview.h
 	)
 QT4_WRAP_CPP(MOCS ${Tiled_MOCS})
 

@@ -41,20 +41,20 @@ public:
     void setMapDocument(MapDocument *mapDoc);
 
 protected:
-	void changeEvent(QEvent *e);
+    void changeEvent(QEvent *e);
 
 private slots:
-	void updateActions();
+    void updateActions();
     void documentAboutToClose(int index, MapDocument *mapDocument);
 
 private:
     void retranslateUi();
 
-	void saveExpandedLevels(MapDocument *mapDoc);
-	void restoreExpandedLevels(MapDocument *mapDoc);
+    void saveExpandedLevels(MapDocument *mapDoc);
+    void restoreExpandedLevels(MapDocument *mapDoc);
 
-	ZLevelsView *mView;
-	MapDocument *mMapDocument;
+    ZLevelsView *mView;
+    MapDocument *mMapDocument;
     QMap<MapDocument*,QList<CompositeLayerGroup*> > mExpandedLevels;
 };
 
@@ -68,19 +68,19 @@ public:
     QSize sizeHint() const;
 
     void setMapDocument(MapDocument *mapDoc);
-	ZLevelsModel *model() const { return mModel; }
+    ZLevelsModel *model() const { return mModel; }
 
 protected slots:
-	virtual void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+    virtual void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
 
 private slots:
-	void currentLayerIndexChanged(int index);
-	void onActivated(const QModelIndex &index);
+    void currentLayerIndexChanged(int index);
+    void onActivated(const QModelIndex &index);
 
 private:
-	MapDocument *mMapDocument;
-	bool mSynching;
-	ZLevelsModel *mModel;
+    MapDocument *mMapDocument;
+    bool mSynching;
+    ZLevelsModel *mModel;
 };
 
 } // namespace Internal

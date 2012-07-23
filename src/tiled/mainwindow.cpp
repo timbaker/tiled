@@ -78,8 +78,8 @@
 #ifdef ZOMBOID
 #include "mapcomposite.h"
 #include "mapsdock.h"
-#include "zlevelsdock.hpp"
-#include "zprogress.hpp"
+#include "zlevelsdock.h"
+#include "zprogress.h"
 #endif
 
 #ifdef Q_WS_MAC

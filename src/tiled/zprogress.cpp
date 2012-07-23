@@ -15,7 +15,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "zprogress.hpp"
+#include "zprogress.h"
 
 #include <QApplication>
 #include <QLabel>

@@ -15,14 +15,14 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "zlevelsdock.hpp"
+#include "zlevelsdock.h"
 
 #include "documentmanager.h"
 #include "map.h"
 #include "mapcomposite.h"
 #include "mapdocument.h"
 #include "tilelayer.h"
-#include "zlevelsmodel.hpp"
+#include "zlevelsmodel.h"
 
 #include <QBoxLayout>
 #include <QApplication>

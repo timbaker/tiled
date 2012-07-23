@@ -24,7 +24,7 @@
 #include "languagemanager.h"
 #include "tilesetmanager.h"
 #ifdef ZOMBOID
-#include "zprogress.hpp"
+#include "zprogress.h"
 #endif
 
 #include <QDesktopServices>
