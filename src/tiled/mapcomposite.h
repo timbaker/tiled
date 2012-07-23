@@ -48,17 +48,21 @@ public:
     QRect bounds() const;
     QMargins drawMargins() const;
 
-    QRectF boundingRect(const Tiled::MapRenderer *renderer) const;
+    QRectF boundingRect(const Tiled::MapRenderer *renderer);
 
-    void setLayerVisibility(const QString &name, bool visible) const;
+    void setLayerVisibility(const QString &layerName, bool visible) const;
     void layerRenamed(Tiled::TileLayer *layer);
 
     MapComposite *owner() const { return mOwner; }
+
+    void setNeedsSynch(bool synch) { mNeedsSynch = synch; }
+    bool needsSynch() const { return mNeedsSynch; }
     void synch();
 
 private:
     MapComposite *mOwner;
     bool mAnyVisibleLayers;
+    bool mNeedsSynch;
     QRect mTileBounds;
     QRect mSubMapTileBounds;
     QMargins mDrawMargins;

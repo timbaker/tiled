@@ -27,7 +27,6 @@
 #include <QDebug>
 #include <QDir>
 #include <QFileInfo>
-//#include <QMapIterator>
 
 using namespace Tiled;
 
@@ -84,6 +83,7 @@ CompositeLayerGroup::CompositeLayerGroup(MapComposite *owner, int level)
     : ZTileLayerGroup(owner->map(), level)
     , mOwner(owner)
     , mAnyVisibleLayers(false)
+    , mNeedsSynch(true)
 {
 
 }
@@ -223,6 +223,8 @@ void CompositeLayerGroup::synch()
 
     mSubMapTileBounds = r;
     mDrawMargins = m;
+
+    mNeedsSynch = false;
 }
 
 QRect CompositeLayerGroup::bounds() const
@@ -263,8 +265,11 @@ void CompositeLayerGroup::layerRenamed(TileLayer *layer)
     mLayersByName[name].append(layer);
 }
 
-QRectF CompositeLayerGroup::boundingRect(const MapRenderer *renderer) const
+QRectF CompositeLayerGroup::boundingRect(const MapRenderer *renderer)
 {
+    if (mNeedsSynch)
+        synch();
+
     QRectF boundingRect = renderer->boundingRect(mTileBounds.translated(mOwner->originRecursive()),
                                                  mLevel + mOwner->levelRecursive());
 
@@ -301,7 +306,7 @@ MapComposite::MapComposite(MapInfo *mapInfo, MapComposite *parent, const QPoint 
 {
     int index = 0;
     foreach (Layer *layer, mMap->layers()) {
-        if (mParent)
+        if (!mapInfo->isBeingEdited())
             layer->setVisible(!layer->name().contains(QLatin1String("NoRender")));
         int level;
         if (levelForLayer(layer, &level)) {
@@ -316,7 +321,6 @@ MapComposite::MapComposite(MapInfo *mapInfo, MapComposite *parent, const QPoint 
         ++index;
     }
 
-#if 1
     // Load lots, but only if this is not the map being edited (that is handled
     // by the LotManager).
     if (!mapInfo->isBeingEdited()) {
@@ -349,40 +353,12 @@ MapComposite::MapComposite(MapInfo *mapInfo, MapComposite *parent, const QPoint 
             }
         }
     }
-#else
-    foreach (ObjectGroup *objectGroup, mMap->objectGroups()) {
-        foreach (MapObject *object, objectGroup->objects()) {
-            if (object->name() == QLatin1String("lot") && !object->type().isEmpty()) {
-                // FIXME: if this sub-map is converted from LevelIsometric to Isometric,
-                // then any sub-maps of its own will lose their level offsets.
-                // FIXME: look in the same directory as the parent map, then the maptools directory.
-                MapInfo *subMapInfo = MapManager::instance()->loadMap(object->type(), mMap->orientation(),
-                                                                      QFileInfo(mMapInfo->path()).absolutePath());
-                if (!subMapInfo) {
-                    qDebug() << "failed to find sub-map" << object->type() << "inside map" << mMapInfo->path();
-                    subMapInfo = MapManager::instance()->getPlaceholderMap(object->type(), mMap->orientation(),
-                                                                           32, 32); // FIXME: calculate map size
-                }
-                if (subMapInfo) {
-                    int levelOffset;
-                    (void) levelForLayer(objectGroup, &levelOffset);
-#if 1
-                    MapComposite *_subMap = new MapComposite(subMapInfo);
-                    _subMap->setParentInfo(this, object->position().toPoint(), levelOffset);
-                    mSubMaps.append(_subMap);
-#else
-                    addMap(subMap, object->position().toPoint(), levelOffset);
-#endif
-                }
-            }
-        }
-    }
-#endif
 
     mMinLevel = 10000;
 
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups) {
-        layerGroup->synch();
+        if (!mMapInfo->isBeingEdited())
+            layerGroup->synch();
         if (layerGroup->level() < mMinLevel)
             mMinLevel = layerGroup->level();
         // FIXME: no changing of mMap should happen after it is loaded!
@@ -429,7 +405,7 @@ MapComposite *MapComposite::addMap(MapInfo *mapInfo, const QPoint &pos, int leve
 //    ensureMaxLevels(levelOffset + mapInfo->map()->maxLevel());
 
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups)
-        layerGroup->synch();
+        layerGroup->setNeedsSynch(true);
 
     return subMap;
 }
@@ -441,7 +417,7 @@ void MapComposite::removeMap(MapComposite *subMap)
     delete subMap;
 
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups)
-        layerGroup->synch();
+        layerGroup->setNeedsSynch(true);
 }
 
 void MapComposite::moveSubMap(MapComposite *subMap, const QPoint &pos)
@@ -450,7 +426,7 @@ void MapComposite::moveSubMap(MapComposite *subMap, const QPoint &pos)
     subMap->setOrigin(pos);
 
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups)
-        layerGroup->synch();
+        layerGroup->setNeedsSynch(true);
 }
 
 void MapComposite::layerAdded(int index)

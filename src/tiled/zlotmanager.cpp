@@ -146,8 +146,8 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
             mMapDocument->mapComposite()->moveSubMap(currLot, mapObject->position().toPoint());
         else if (currLot->isVisible() != mapObject->isVisible()) {
             currLot->setVisible(mapObject->isVisible());
-            foreach (CompositeLayerGroup *g, mMapDocument->mapComposite()->layerGroups())
-                g->synch();
+//            foreach (CompositeLayerGroup *g, mMapDocument->mapComposite()->layerGroups())
+//                g->synch();
         }
         emit lotUpdated(currLot, mapObject); // position change, etc
     }

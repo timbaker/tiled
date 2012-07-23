@@ -75,9 +75,9 @@ QRectF CompositeLayerGroupItem::boundingRect() const
 
 void CompositeLayerGroupItem::paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *)
 {
-    if (mBoundingRect != mLayerGroup->boundingRect(mRenderer)) {
+    if (mLayerGroup->needsSynch() /*mBoundingRect != mLayerGroup->boundingRect(mRenderer)*/)
         return;
-    }
+
     mRenderer->drawTileLayerGroup(p, mLayerGroup, option->exposedRect);
 #ifdef _DEBUG
     p->drawRect(mBoundingRect);
@@ -86,7 +86,8 @@ void CompositeLayerGroupItem::paint(QPainter *p, const QStyleOptionGraphicsItem 
 
 void CompositeLayerGroupItem::synchWithTileLayers()
 {
-    layerGroup()->synch();
+    if (layerGroup()->needsSynch())
+        layerGroup()->synch();
     update();
 }
 
@@ -142,42 +143,31 @@ void ZomboidScene::regionChanged(const QRegion &region, Layer *layer)
         // in an empty layer.
         if (tl->group() && mTileLayerGroupItems.contains(tl->level())) {
             if (tl->drawMargins() != tl->group()->drawMargins())
-                synchWithTileLayer(tl); // recalculate CompositeLayerGroup::mDrawMargins
+                updateLayerGroupLater(tl->level(), Synch | Bounds); // recalculate CompositeLayerGroup::mDrawMargins
         }
     }
 
     MapScene::regionChanged(region, layer);
 }
 
-void ZomboidScene::synchWithTileLayers()
+void ZomboidScene::updateLayerGroupsLater(PendingFlags flags)
 {
-    doLater(AllGroups | Synch | Bounds);
-}
-
-void ZomboidScene::synchWithTileLayer(TileLayer *tl)
-{
-    if (tl->group()) {
-        if (mTileLayerGroupItems.contains(tl->level())) {
-            CompositeLayerGroupItem *item = mTileLayerGroupItems[tl->level()];
-            if (!mPendingGroupItems.contains(item))
-                mPendingGroupItems += item;
-            doLater(Synch | Bounds);
-        }
+    if (flags & Synch) {
+        foreach (CompositeLayerGroupItem *item, mTileLayerGroupItems)
+            item->layerGroup()->setNeedsSynch(true);
     }
+    doLater(AllGroups | flags);
 }
 
-void ZomboidScene::updateLayerGroupItemBounds()
+void ZomboidScene::updateLayerGroupLater(int level, PendingFlags flags)
 {
-    doLater(Bounds | AllGroups);
-}
-
-void ZomboidScene::updateLayerGroupItemBounds(TileLayer *tl)
-{
-    if (mTileLayerGroupItems.contains(tl->level())) {
-        CompositeLayerGroupItem *item = mTileLayerGroupItems[tl->level()];
+    if (mTileLayerGroupItems.contains(level)) {
+        CompositeLayerGroupItem *item = mTileLayerGroupItems[level];
         if (!mPendingGroupItems.contains(item))
             mPendingGroupItems += item;
-        doLater(Bounds);
+        if (flags & Synch)
+            item->layerGroup()->setNeedsSynch(true);
+        doLater(flags);
     }
 }
 
@@ -189,14 +179,14 @@ void ZomboidScene::refreshScene()
     MapScene::refreshScene();
 
     doLater(ZOrder);
-    synchWithTileLayers();
+    updateLayerGroupsLater(Synch | Bounds);
 }
 
 void ZomboidScene::mapChanged()
 {
     MapScene::mapChanged();
 
-    updateLayerGroupItemBounds();
+    updateLayerGroupsLater(Bounds);
 }
 
 class DummyGraphicsItem : public QGraphicsItem
@@ -232,7 +222,7 @@ QGraphicsItem *ZomboidScene::createLayerItem(Layer *layer)
                 mTileLayerGroupItems[tl->level()] = new CompositeLayerGroupItem((CompositeLayerGroup*)tl->group(),
                                                                                 mMapDocument->renderer());
                 addItem(mTileLayerGroupItems[tl->level()]);
-                updateLayerGroupItemBounds(tl);
+                updateLayerGroupLater(tl->level(), Bounds);
             }
             return new DummyGraphicsItem();
         }
@@ -363,8 +353,8 @@ void ZomboidScene::layerChanged(int index)
                 }
                 changingOpacity = false;
             }
+            updateLayerGroupLater(tl->level(), Synch | Bounds);
         }
-        synchWithTileLayer(tl);
     } else if (ObjectGroup *og = layer->asObjectGroup()) {
         bool synch = false;
         foreach (MapObject *mo, og->objects()) {
@@ -377,7 +367,7 @@ void ZomboidScene::layerChanged(int index)
             }
         }
         if (synch)
-            synchWithTileLayers();
+            updateLayerGroupsLater(Synch | Bounds);
     }
 #if 0
     const Layer *layer = mMapDocument->map()->layerAt(index);
@@ -419,7 +409,7 @@ void ZomboidScene::layerAddedToGroup(int index)
     Q_ASSERT(layer->isTileLayer());
     int level = layer->level();
     if (mTileLayerGroupItems.contains(level))
-        synchWithTileLayer(layer->asTileLayer());
+        updateLayerGroupLater(level, Synch | Bounds);
 
     // If a TileLayerGroup owns a layer, then a DummyGraphicsItem is created which is
     // managed by the base class.
@@ -435,13 +425,14 @@ void ZomboidScene::layerAddedToGroup(int index)
 
 void ZomboidScene::layerRemovedFromGroup(int index, CompositeLayerGroup *oldGroup)
 {
+    Q_UNUSED(oldGroup)
     Layer *layer = mMapDocument->map()->layerAt(index);
     Q_ASSERT(layer->isTileLayer());
     TileLayer *tl = layer->asTileLayer();
 
     int level = layer->level(); // STILL VALID FOR GROUP IT WAS IN
     if (mTileLayerGroupItems.contains(level))
-        synchWithTileLayer(layer->asTileLayer());
+        updateLayerGroupLater(level, Synch | Bounds);
 
     // If a TileLayerGroup owns a layer, then a DummyGraphicsItem is created which is
     // managed by the base class.
@@ -458,9 +449,10 @@ void ZomboidScene::layerRemovedFromGroup(int index, CompositeLayerGroup *oldGrou
 
 void ZomboidScene::layerLevelChanged(int index, int oldLevel)
 {
+    Q_UNUSED(oldLevel)
     Layer *layer = mMapDocument->map()->layerAt(index);
 
-    if (TileLayer *tl = layer->asTileLayer()) {
+    if (/*TileLayer *tl =*/ layer->asTileLayer()) {
 
     } else if (ObjectGroup *og = layer->asObjectGroup()) {
         bool synch = false;
@@ -476,7 +468,7 @@ void ZomboidScene::layerLevelChanged(int index, int oldLevel)
             mObjectItems[mapObject]->syncWithMapObject();
         }
         if (synch)
-            synchWithTileLayers();
+            updateLayerGroupsLater(Synch | Bounds);
     } else {
         // ImageLayer
         mLayerItems[index]->update();
@@ -492,12 +484,17 @@ int ZomboidScene::levelZOrder(int level)
 
 void ZomboidScene::doLater(PendingFlags flags)
 {
+#if 1
+    mPendingFlags |= flags;
+    handlePendingUpdates();
+#else
     mPendingFlags |= flags;
     if (mPendingActive)
         return;
     QMetaObject::invokeMethod(this, "handlePendingUpdates",
                               Qt::QueuedConnection);
     mPendingActive = true;
+#endif
 }
 
 // Determine sane Z-order for layers in and out of TileLayerGroups
@@ -543,7 +540,6 @@ void ZomboidScene::setGraphicsSceneZOrder()
 
 void ZomboidScene::onLotAdded(MapComposite *lot, MapObject *mapObject)
 {
-    mLotMapObjects.append(mapObject);
     mMapObjectToLot[mapObject] = lot;
 
     MapObjectItem *item = itemForObject(mapObject); // FIXME: assumes createLayerItem() was called before this
@@ -554,14 +550,11 @@ void ZomboidScene::onLotAdded(MapComposite *lot, MapObject *mapObject)
         mapObject->setPosition(lot->origin());
         item->resize(lot->map()->size());
 
-        mOldMapObjectBounds[item] = item->boundingRect().translated(item->pos());
-
         MapImage *mapImage = MapImageManager::instance()->getMapImage(lot->mapInfo()->path());
         item->setMapImage(mapImage);
     }
 
-    // MapComposite::synch was already called
-    updateLayerGroupItemBounds();
+    updateLayerGroupsLater(Synch | Bounds);
 }
 
 void ZomboidScene::onLotRemoved(MapComposite *lot, MapObject *mapObject)
@@ -572,12 +565,10 @@ void ZomboidScene::onLotRemoved(MapComposite *lot, MapObject *mapObject)
     if (item) {
         item->setLot(0);
         item->setMapImage(0);
-        mOldMapObjectBounds.remove(item);
     }
-    mLotMapObjects.removeOne(mapObject);
     mMapObjectToLot.remove(mapObject);
 
-    updateLayerGroupItemBounds();
+    updateLayerGroupsLater(Synch | Bounds);
 }
 
 void ZomboidScene::onLotUpdated(MapComposite *lot, MapObject *mapObject)
@@ -587,7 +578,7 @@ void ZomboidScene::onLotUpdated(MapComposite *lot, MapObject *mapObject)
         // Resize the map object to the size of the lot's map, and snap-to-grid
         mapObject->setPosition(lot->origin());
         item->resize(lot->map()->size());
-
+#if 0
         // When a MapObject is moved by the user, no redrawing takes place
         // once the move is complete (because the MapObject was redrawn
         // while being dragged).  So the map won't be redrawn under the old
@@ -595,19 +586,12 @@ void ZomboidScene::onLotUpdated(MapComposite *lot, MapObject *mapObject)
         // repainted manually.
 
         QRectF newBounds = item->boundingRect().translated(item->pos());
-#if 0 // Old bounds *are* updated now since the lot is hidden when dragging starts
-        if (mOldMapObjectBounds.contains(item)) {
-            QRectF oldBounds = mOldMapObjectBounds[item];
-            if (newBounds != oldBounds)
-                update(oldBounds);
-        }
-#endif
-        // FIXME: unset this if the item is deleted
-        mOldMapObjectBounds[item] = newBounds;
+        // Old bounds *are* updated now since the lot is hidden when dragging starts
         update(newBounds);
+#endif
     }
 
-    updateLayerGroupItemBounds();
+    updateLayerGroupsLater(Synch | Bounds);
 }
 
 void ZomboidScene::handlePendingUpdates()
@@ -817,6 +801,7 @@ void ZomboidScene::dragLeaveEvent(QGraphicsSceneDragDropEvent *event)
 
 void ZomboidScene::dropEvent(QGraphicsSceneDragDropEvent *event)
 {
+    Q_UNUSED(event)
     Layer *layer = mMapDocument->currentLayer();
     if (!layer) return;
     ObjectGroup *objectGroup = layer->asObjectGroup();

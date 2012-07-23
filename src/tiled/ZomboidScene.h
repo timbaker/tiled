@@ -48,10 +48,6 @@ public:
     ZomboidScene(QObject *parent);
     ~ZomboidScene();
 
-    // accessed by ZomboidTileLayerGroup
-    QList<MapObject*> mLotMapObjects;
-    QMap<MapObject*,MapComposite*> mMapObjectToLot;
-
     // MapScene
     virtual void setMapDocument(MapDocument *mapDoc);
 
@@ -102,19 +98,18 @@ protected:
     virtual QGraphicsItem *createLayerItem(Layer *layer);
     virtual void updateCurrentLayerHighlight();
 
-    void synchWithTileLayers();
-    void synchWithTileLayer(TileLayer *tl);
-    void updateLayerGroupItemBounds();
-    void updateLayerGroupItemBounds(TileLayer *tl);
+    void updateLayerGroupsLater(PendingFlags flags);
+    void updateLayerGroupLater(int level, PendingFlags flags);
 
     void setGraphicsSceneZOrder();
     int levelZOrder(int level);
 private:
+    QMap<MapObject*,MapComposite*> mMapObjectToLot;
+
     void doLater(PendingFlags flags);
     PendingFlags mPendingFlags;
     bool mPendingActive;
     QList<CompositeLayerGroupItem*> mPendingGroupItems;
-    QMap<MapObjectItem*,QRectF> mOldMapObjectBounds;
 
     QMap<int,CompositeLayerGroupItem*> mTileLayerGroupItems;
     ZLotManager mLotManager;
