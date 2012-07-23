@@ -32,22 +32,6 @@
 #include <QDir>
 #include <QFileInfo>
 
-// FIXME: Duplicated in ZomboidScene.cpp and mapcomposite.cpp
-static bool levelForLayer(Tiled::Layer *layer, int *level)
-{
-    (*level) = 0;
-
-    // See if the layer name matches "0_foo" or "1_bar" etc.
-    const QString& name = layer->name();
-    QStringList sl = name.trimmed().split(QLatin1Char('_'));
-    if (sl.count() > 1 && !sl[1].isEmpty()) {
-        bool conversionOK;
-        (*level) = sl[0].toInt(&conversionOK);
-        return conversionOK;
-    }
-    return false;
-}
-
 namespace Tiled {
 
 using namespace Internal;
@@ -117,7 +101,7 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
         if (newMapInfo) {
             if (!currLot || (currLot->map() != newMapInfo->map())) {
                 int level;
-                (void) levelForLayer(mapObject->objectGroup(), &level);
+                (void) MapComposite::levelForLayer(mapObject->objectGroup(), &level);
                 newLot = mMapDocument->mapComposite()->addMap(newMapInfo,
                                                               mapObject->position().toPoint(),
                                                               level);
