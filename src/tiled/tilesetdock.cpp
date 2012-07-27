@@ -251,8 +251,9 @@ TilesetDock::TilesetDock(QWidget *parent):
     mZoomable->setScale(Preferences::instance()->tilesetScale());
     connect(mZoomable, SIGNAL(scaleChanged(qreal)), Preferences::instance(),
             SLOT(setTilesetScale(qreal)));
-#endif
+#else
     mToolBar->addSeparator();
+#endif
     mZoomComboBox = new QComboBox;
     mZoomable->connectToComboBox(mZoomComboBox);
     horizontal->addWidget(mZoomComboBox);
