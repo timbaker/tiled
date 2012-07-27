@@ -198,7 +198,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 
     QHBoxLayout *statusBarLayout = new QHBoxLayout(mUi->statusBarFrame);
     statusBarLayout->setObjectName(QLatin1String("statusBarLayout"));
-    statusBarLayout->setContentsMargins(0, 3, 0, 3);
+    statusBarLayout->setContentsMargins(3, 3, 0, 3);
     mUi->statusBarFrame->setLayout(statusBarLayout);
 #else
     addDockWidget(Qt::RightDockWidgetArea, mLayerDock);
