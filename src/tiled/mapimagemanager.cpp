@@ -173,25 +173,25 @@ MapImageManager::ImageData MapImageManager::generateMapImage(MapComposite *mapCo
 
     mapComposite->saveVisibility();
 #if 1
-    CompositeLayerGroup *prevLayerGroup = 0;
+    QVector<int> drawnLevels;
     foreach (Layer *layer, mapComposite->map()->layers()) {
         if (TileLayer *tileLayer = layer->asTileLayer()) {
             int level;
             if (MapComposite::levelForLayer(tileLayer, &level)) {
-                // FIXME: LayerGroups should be drawn with the same Z-order the scene uses.
-                // They will usually be in the same order anyways.
+                if (drawnLevels.contains(level))
+                    continue;
+                drawnLevels += level;
+                // FIXME: LayerGroups should be drawn with the same Z-order the
+                // scene uses.  They will usually be in the same order anyways.
                 CompositeLayerGroup *layerGroup = mapComposite->tileLayersForLevel(level);
-                if (layerGroup != prevLayerGroup) {
-                    prevLayerGroup = layerGroup;
-                    foreach (TileLayer *tl, layerGroup->layers()) {
-                        bool isVisible = true;
-                        if (tl->name().contains(QLatin1String("NoRender")))
-                            isVisible = false;
-                        layerGroup->setLayerVisibility(tl, isVisible);
-                    }
-                    layerGroup->synch();
-                    renderer->drawTileLayerGroup(&painter, layerGroup);
+                foreach (TileLayer *tl, layerGroup->layers()) {
+                    bool isVisible = true;
+                    if (tl->name().contains(QLatin1String("NoRender")))
+                        isVisible = false;
+                    layerGroup->setLayerVisibility(tl, isVisible);
                 }
+                layerGroup->synch();
+                renderer->drawTileLayerGroup(&painter, layerGroup);
             } else {
                 if (layer->name().contains(QLatin1String("NoRender")))
                     continue;
