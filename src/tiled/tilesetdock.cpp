@@ -228,20 +228,22 @@ TilesetDock::TilesetDock(QWidget *parent):
 
 #ifdef ZOMBOID
     {
-    mIconTileLayer = QIcon(QLatin1String(":/images/16x16/layer-tile.png"));
-    mIconTileLayerStop = QIcon(QLatin1String(":/images/16x16/layer-tile-stop.png"));
-//    mActionSwitchLayer = mToolBar->addAction(mIconTileLayer, QLatin1String("Auto-switch Layers"));
-//    mButtonSwitchLayer = dynamic_cast<QToolButton*>(mToolBar->widgetForAction(mActionSwitchLayer));
-    mButtonSwitchLayer = new QToolButton();
-    mButtonSwitchLayer->setIcon(mIconTileLayer);
-    mButtonSwitchLayer->setCheckable(true);
-    bool enabled = Preferences::instance()->autoSwitchLayer();
-    mButtonSwitchLayer->setChecked(enabled == false);
-    mButtonSwitchLayer->setIcon(enabled ? mIconTileLayer : mIconTileLayerStop);
-    mButtonSwitchLayer->setToolTip(enabled ? tr("Layer Switch Enabled") : tr("Layer Switch Disabled"));
-    connect(mButtonSwitchLayer, SIGNAL(toggled(bool)), this, SLOT(layerSwitchToggled()));
-    connect(Preferences::instance(), SIGNAL(autoSwitchLayerChanged(bool)), SLOT(autoSwitchLayerChanged(bool)));
-    mToolBar->addWidget(mButtonSwitchLayer);
+        mIconTileLayer = QIcon(QLatin1String(":/images/16x16/layer-tile.png"));
+        mIconTileLayerStop = QIcon(QLatin1String(":/images/16x16/layer-tile-stop.png"));
+        mActionSwitchLayer = new QAction(this);
+        mActionSwitchLayer->setIcon(mIconTileLayer);
+        mActionSwitchLayer->setCheckable(true);
+        bool enabled = Preferences::instance()->autoSwitchLayer();
+        mActionSwitchLayer->setChecked(enabled == false);
+        mActionSwitchLayer->setIcon(enabled ? mIconTileLayer : mIconTileLayerStop);
+        QString text = enabled ? tr("Layer Switch Enabled") : tr("Layer Switch Disabled");
+        mActionSwitchLayer->setToolTip(text);
+        mActionSwitchLayer->setText(text);
+        connect(mActionSwitchLayer, SIGNAL(toggled(bool)),
+                SLOT(layerSwitchToggled()));
+        connect(Preferences::instance(), SIGNAL(autoSwitchLayerChanged(bool)),
+                SLOT(autoSwitchLayerChanged(bool)));
+        mToolBar->addAction(mActionSwitchLayer);
     }
 #endif
 
@@ -826,14 +828,16 @@ void TilesetDock::thumbSyncWithTabs()
 
 void TilesetDock::layerSwitchToggled()
 {
-    bool checked = mButtonSwitchLayer->isChecked();
+    bool checked = mActionSwitchLayer->isChecked();
     Preferences::instance()->setAutoSwitchLayer(checked == false);
 }
 
 void TilesetDock::autoSwitchLayerChanged(bool enabled)
 {
-    mButtonSwitchLayer->setIcon(enabled ? mIconTileLayer : mIconTileLayerStop);
-    mButtonSwitchLayer->setToolTip(enabled ? tr("Layer Switch Enabled") : tr("Layer Switch Disabled"));
+    mActionSwitchLayer->setIcon(enabled ? mIconTileLayer : mIconTileLayerStop);
+    QString text = enabled ? tr("Layer Switch Enabled") : tr("Layer Switch Disabled");
+    mActionSwitchLayer->setToolTip(text);
+    mActionSwitchLayer->setText(text);
 }
 
 void TilesetDock::switchLayerForTile(Tile *tile)

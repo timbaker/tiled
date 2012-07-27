@@ -177,7 +177,6 @@ private:
 
     QIcon mIconTileLayer;
     QIcon mIconTileLayerStop;
-    QToolButton *mButtonSwitchLayer;
     QAction *mActionSwitchLayer;
 
     ZTilesetThumbView *mThumbView;
