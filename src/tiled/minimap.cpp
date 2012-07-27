@@ -92,7 +92,9 @@ void MiniMapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
         QRectF source = QRect(QPoint(0, 0), mMapImage->size());
         painter->drawImage(target, *mMapImage, source);
     }
+#if _DEBUG
     painter->drawRect(mMapImageBounds);
+#endif
 }
 
 void MiniMapItem::updateImage(const QRectF &dirtyRect)
@@ -120,7 +122,6 @@ void MiniMapItem::updateImage(const QRectF &dirtyRect)
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
     mMapComposite->saveVisibility();
-    CompositeLayerGroup *prevLayerGroup = 0;
     QVector<int> drawnLevels;
     foreach (Layer *layer, mMapComposite->map()->layers()) {
         if (TileLayer *tileLayer = layer->asTileLayer()) {
@@ -129,22 +130,18 @@ void MiniMapItem::updateImage(const QRectF &dirtyRect)
                 if (drawnLevels.contains(level))
                     continue;
                 drawnLevels += level;
-                // FIXME: LayerGroups should be drawn with the same Z-order the scene uses.
-                // They will usually be in the same order anyways.
+                // FIXME: LayerGroups should be drawn with the same Z-order the
+                // scene uses.  They will usually be in the same order anyways.
                 CompositeLayerGroup *layerGroup = mMapComposite->tileLayersForLevel(level);
-                if (layerGroup != prevLayerGroup) {
-                    prevLayerGroup = layerGroup;
-
-                    foreach (TileLayer *tl, layerGroup->layers()) {
-                        bool isVisible = true;
-                        if (tl->name().contains(QLatin1String("NoRender")))
-                            isVisible = false;
-                        layerGroup->setLayerVisibility(tl, isVisible);
-                    }
-                    layerGroup->synch();
-
-                    mRenderer->drawTileLayerGroup(&painter, layerGroup, dirtyRect);
+                foreach (TileLayer *tl, layerGroup->layers()) {
+                    bool isVisible = true;
+                    if (tl->name().contains(QLatin1String("NoRender")))
+                        isVisible = false;
+                    layerGroup->setLayerVisibility(tl, isVisible);
                 }
+                layerGroup->synch();
+
+                mRenderer->drawTileLayerGroup(&painter, layerGroup, dirtyRect);
             } else {
                 if (layer->name().contains(QLatin1String("NoRender")))
                     continue;
