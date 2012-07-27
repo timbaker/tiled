@@ -277,7 +277,8 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
         QSet<QString> set;
         foreach (TileLayer *tl, mMapDocument->map()->tileLayers()) {
             if (tl->group()) {
-                set.insert(tl->name().split(QLatin1String("_")).at(1));
+                int n = tl->name().indexOf(QLatin1Char('_')) + 1;
+                set.insert(tl->name().mid(n));
             }
         }
 
