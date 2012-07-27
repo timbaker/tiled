@@ -74,6 +74,12 @@ public:
     void updateImageBounds();
     void recreateImage();
 
+    void minimapVisibilityChanged(bool visible);
+
+private:
+    void updateLater(const QRectF &dirtyRect = QRectF());
+    void recreateLater();
+
     typedef Tiled::Layer Layer; // hack for signals/slots
 private slots:
     void sceneRectChanged(const QRectF &sceneRect);
@@ -87,6 +93,8 @@ private slots:
 
     void regionAltered(const QRegion &region, Layer *layer);
 
+    void updateNow();
+
 private:
     Tiled::Internal::ZomboidScene *mScene;
     Tiled::MapRenderer *mRenderer;
@@ -95,6 +103,10 @@ private:
     QRectF mLevelZeroBounds;
     MapComposite *mMapComposite;
     QMap<MapComposite*,QRectF> mLotBounds;
+    bool mMiniMapVisible;
+    bool mUpdatePending;
+    QRectF mNeedsUpdate;
+    bool mNeedsRecreate;
 };
 
 class MiniMap : public QGraphicsView
@@ -118,6 +130,8 @@ public slots:
 
 protected:
     bool event(QEvent *event);
+    void showEvent(QShowEvent *event);
+    void hideEvent(QHideEvent *event);
 
 private:
     void mousePressEvent(QMouseEvent *event);

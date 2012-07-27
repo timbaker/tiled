@@ -44,6 +44,9 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
     , mScene(zscene)
     , mRenderer(mScene->mapDocument()->renderer())
     , mMapImage(0)
+    , mMiniMapVisible(false)
+    , mUpdatePending(false)
+    , mNeedsRecreate(false)
 {
     mMapComposite = mScene->mapDocument()->mapComposite();
 
@@ -179,41 +182,74 @@ void MiniMapItem::recreateImage()
     updateImageBounds();
 }
 
+void MiniMapItem::minimapVisibilityChanged(bool visible)
+{
+    mMiniMapVisible = visible;
+    if (mMiniMapVisible)
+        updateNow();
+}
+
+void MiniMapItem::updateLater(const QRectF &dirtyRect)
+{
+    if (mNeedsUpdate.isEmpty())
+        mNeedsUpdate = dirtyRect;
+    else
+        mNeedsUpdate |= dirtyRect;
+
+    if (!mMiniMapVisible)
+        return;
+
+    if (mUpdatePending)
+        return;
+    mUpdatePending = true;
+    QMetaObject::invokeMethod(this, "updateNow",
+                              Qt::QueuedConnection);
+}
+
+void MiniMapItem::recreateLater()
+{
+    mNeedsRecreate = true;
+
+    if (!mMiniMapVisible)
+        return;
+
+    if (mUpdatePending)
+        return;
+    mUpdatePending = true;
+    QMetaObject::invokeMethod(this, "updateNow",
+                              Qt::QueuedConnection);
+}
+
 void MiniMapItem::sceneRectChanged(const QRectF &sceneRect)
 {
     Q_UNUSED(sceneRect)
-    recreateImage();
-    update();
+    recreateLater();
 }
 
 void MiniMapItem::layerAdded(int index)
 {
     Q_UNUSED(index)
-    recreateImage();
-    update();
+    recreateLater();
 }
 
 void MiniMapItem::layerRemoved(int index)
 {
     Q_UNUSED(index)
-    recreateImage();
-    update();
+    recreateLater();
 }
 
 void MiniMapItem::onLotAdded(MapComposite *lot, Tiled::MapObject *mapObject)
 {
     Q_UNUSED(mapObject)
     QRectF bounds = lot->boundingRect(mRenderer);
-    updateImage(mLotBounds[lot] | bounds);
-    update(mLotBounds[lot] | bounds);
+    updateLater(mLotBounds[lot] | bounds);
     mLotBounds[lot] = bounds;
 }
 
 void MiniMapItem::onLotRemoved(MapComposite *lot, Tiled::MapObject *mapObject)
 {
     Q_UNUSED(mapObject)
-    updateImage(mLotBounds[lot]);
-    update(mLotBounds[lot]);
+    updateLater(mLotBounds[lot]);
     mLotBounds.remove(lot);
 }
 
@@ -221,8 +257,7 @@ void MiniMapItem::onLotUpdated(MapComposite *lot, Tiled::MapObject *mapObject)
 {
     Q_UNUSED(mapObject)
     QRectF bounds = lot->boundingRect(mRenderer);
-    updateImage(mLotBounds[lot] | bounds);
-    update(mLotBounds[lot] | bounds);
+    updateLater(mLotBounds[lot] | bounds);
     mLotBounds[lot] = bounds;
 }
 
@@ -235,8 +270,21 @@ void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
                   -margins.top(),
                   margins.right(),
                   margins.bottom());
-    updateImage(bounds);
-    update(bounds);
+    updateLater(bounds);
+}
+
+void MiniMapItem::updateNow()
+{
+    if (mNeedsRecreate) {
+        recreateImage();
+        update();
+    } else if (!mNeedsUpdate.isEmpty()) {
+        updateImage(mNeedsUpdate);
+        update(mNeedsUpdate);
+    }
+    mNeedsRecreate = false;
+    mNeedsUpdate = QRectF();
+    mUpdatePending = false;
 }
 
 /////
@@ -390,6 +438,20 @@ bool MiniMap::event(QEvent *event)
     }
 
     return QGraphicsView::event(event);
+}
+
+void MiniMap::showEvent(QShowEvent *event)
+{
+    Q_UNUSED(event)
+    if (mExtraItem)
+        mExtraItem->minimapVisibilityChanged(true);
+}
+
+void MiniMap::hideEvent(QHideEvent *event)
+{
+    Q_UNUSED(event)
+    if (mExtraItem)
+        mExtraItem->minimapVisibilityChanged(false);
 }
 
 void MiniMap::mousePressEvent(QMouseEvent *event)
