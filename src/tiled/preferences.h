@@ -88,6 +88,8 @@ public:
     bool autoSwitchLayer() const;
     void setAutoSwitchLayer(bool enable);
 
+    qreal tilesetScale() const;
+
     bool showMiniMap() const;
     void setMiniMapWidth(int width);
     int miniMapWidth() const;
@@ -106,6 +108,7 @@ public slots:
     void setHighlightCurrentLayer(bool highlight);
     void setShowTilesetGrid(bool showTilesetGrid);
 #ifdef ZOMBOID
+    void setTilesetScale(qreal scale);
     void setShowMiniMap(bool show);
 #endif
 
@@ -123,6 +126,7 @@ signals:
 #ifdef ZOMBOID
     void mapsDirectoryChanged();
     void autoSwitchLayerChanged(bool enabled);
+    void tilesetScaleChanged(qreal scale);
     void showMiniMapChanged(bool show);
     void miniMapWidthChanged(int width);
 #endif
@@ -151,6 +155,7 @@ private:
 #ifdef ZOMBOID
     QString mMapsDirectory;
     bool mAutoSwitchLayer;
+    qreal mTilesetScale;
     bool mShowMiniMap;
     int mMiniMapWidth;
 #endif

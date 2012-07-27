@@ -247,6 +247,11 @@ TilesetDock::TilesetDock(QWidget *parent):
 
     mZoomable = new Zoomable(this);
     mZoomable->setZoomFactors(QVector<qreal>() << 0.25 << 0.5 << 0.75 << 1.0 << 1.25 << 1.5 << 1.75 << 2.0);
+#ifdef ZOMBOID
+    mZoomable->setScale(Preferences::instance()->tilesetScale());
+    connect(mZoomable, SIGNAL(scaleChanged(qreal)), Preferences::instance(),
+            SLOT(setTilesetScale(qreal)));
+#endif
     mToolBar->addSeparator();
     mZoomComboBox = new QComboBox;
     mZoomable->connectToComboBox(mZoomComboBox);

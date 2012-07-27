@@ -78,6 +78,7 @@ Preferences::Preferences()
     mUseOpenGL = mSettings->value(QLatin1String("OpenGL"), false).toBool();
 #ifdef ZOMBOID
     mAutoSwitchLayer = mSettings->value(QLatin1String("AutoSwitchLayer"), true).toBool();
+    mTilesetScale = mSettings->value(QLatin1String("TilesetScale"), 1.0).toReal();
     mShowMiniMap = mSettings->value(QLatin1String("ShowMiniMap"), true).toBool();
     mMiniMapWidth = mSettings->value(QLatin1String("MiniMapWidth"), 256).toInt();
 #endif
@@ -353,6 +354,20 @@ void Preferences::setAutoSwitchLayer(bool enabled)
     mAutoSwitchLayer = enabled;
     mSettings->setValue(QLatin1String("Interface/AutoSwitchLayer"), enabled);
     emit autoSwitchLayerChanged(mAutoSwitchLayer);
+}
+
+qreal Preferences::tilesetScale() const
+{
+    return mTilesetScale;
+}
+
+void Preferences::setTilesetScale(qreal scale)
+{
+    if (mTilesetScale == scale)
+        return;
+    mTilesetScale = scale;
+    mSettings->setValue(QLatin1String("Interface/TilesetScale"), scale);
+    emit tilesetScaleChanged(mTilesetScale);
 }
 
 bool Preferences::showMiniMap() const
