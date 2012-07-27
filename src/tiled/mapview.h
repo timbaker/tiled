@@ -23,6 +23,10 @@
 
 #include <QGraphicsView>
 
+#ifdef ZOMBOID
+#include "minimap.h"
+#endif
+
 namespace Tiled {
 namespace Internal {
 
@@ -44,6 +48,9 @@ public:
     MapView(QWidget *parent = 0);
     ~MapView();
 
+#ifdef ZOMBOID
+    void setMapScene(MapScene *scene);
+#endif
     MapScene *mapScene() const;
 
     Zoomable *zoomable() const { return mZoomable; }
@@ -62,6 +69,11 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
 
+#ifdef ZOMBOID
+    void resizeEvent(QResizeEvent *event);
+    void scrollContentsBy(int dx, int dy);
+#endif
+
 private slots:
     void adjustScale(qreal scale);
     void setUseOpenGL(bool useOpenGL);
@@ -71,6 +83,10 @@ private:
     QPointF mLastMouseScenePos;
     bool mHandScrolling;
     Zoomable *mZoomable;
+#ifdef ZOMBOID
+    MiniMap *mMiniMap;
+    MiniMapItem *mMiniMapItem;
+#endif
 };
 
 } // namespace Internal

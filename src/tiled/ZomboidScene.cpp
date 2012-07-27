@@ -39,25 +39,6 @@ using namespace Tiled::Internal;
 
 #include <QStyleOptionGraphicsItem>
 
-class CompositeLayerGroupItem : public QGraphicsItem
-{
-public:
-    CompositeLayerGroupItem(CompositeLayerGroup *layerGroup, Tiled::MapRenderer *renderer, QGraphicsItem *parent = 0);
-
-    QRectF boundingRect() const;
-    void paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *);
-
-    void synchWithTileLayers();
-    void updateBounds();
-
-    CompositeLayerGroup *layerGroup() const { return mLayerGroup; }
-
-private:
-    CompositeLayerGroup *mLayerGroup;
-    Tiled::MapRenderer *mRenderer;
-    QRectF mBoundingRect;
-};
-
 CompositeLayerGroupItem::CompositeLayerGroupItem(CompositeLayerGroup *layerGroup, Tiled::MapRenderer *renderer, QGraphicsItem *parent)
     : QGraphicsItem(parent)
     , mLayerGroup(layerGroup)
@@ -86,7 +67,7 @@ void CompositeLayerGroupItem::paint(QPainter *p, const QStyleOptionGraphicsItem 
 
 void CompositeLayerGroupItem::synchWithTileLayers()
 {
-    if (layerGroup()->needsSynch())
+//    if (layerGroup()->needsSynch())
         layerGroup()->synch();
     update();
 }
@@ -108,12 +89,12 @@ ZomboidScene::ZomboidScene(QObject *parent)
     , mDnDItem(0)
     , mWasHighlightCurrentLayer(false)
 {
-    connect(&mLotManager, SIGNAL(lotAdded(MapComposite*,MapObject*)),
-        this, SLOT(onLotAdded(MapComposite*,MapObject*)));
-    connect(&mLotManager, SIGNAL(lotRemoved(MapComposite*,MapObject*)),
-        this, SLOT(onLotRemoved(MapComposite*,MapObject*)));
-    connect(&mLotManager, SIGNAL(lotUpdated(MapComposite*,MapObject*)),
-        this, SLOT(onLotUpdated(MapComposite*,MapObject*)));
+    connect(&mLotManager, SIGNAL(lotAdded(MapComposite*,Tiled::MapObject*)),
+        this, SLOT(onLotAdded(MapComposite*,Tiled::MapObject*)));
+    connect(&mLotManager, SIGNAL(lotRemoved(MapComposite*,Tiled::MapObject*)),
+        this, SLOT(onLotRemoved(MapComposite*,Tiled::MapObject*)));
+    connect(&mLotManager, SIGNAL(lotUpdated(MapComposite*,Tiled::MapObject*)),
+        this, SLOT(onLotUpdated(MapComposite*,Tiled::MapObject*)));
 }
 
 ZomboidScene::~ZomboidScene()
@@ -127,6 +108,8 @@ void ZomboidScene::setMapDocument(MapDocument *mapDoc)
     mLotManager.setMapDocument(mapDocument());
 
     if (mapDocument()) {
+        connect(mMapDocument, SIGNAL(regionAltered(QRegion,Layer*)),
+                SLOT(regionAltered(QRegion,Layer*)));
         connect(mMapDocument, SIGNAL(layerGroupAdded(int)), SLOT(layerGroupAdded(int)));
         connect(mMapDocument, SIGNAL(layerGroupVisibilityChanged(CompositeLayerGroup*)), SLOT(layerGroupVisibilityChanged(CompositeLayerGroup*)));
         connect(mMapDocument, SIGNAL(layerAddedToGroup(int)), SLOT(layerAddedToGroup(int)));
@@ -135,14 +118,14 @@ void ZomboidScene::setMapDocument(MapDocument *mapDoc)
     }
 }
 
-void ZomboidScene::regionChanged(const QRegion &region, Layer *layer)
+void ZomboidScene::regionAltered(const QRegion &region, Layer *layer)
 {
     // Painting tiles may update the draw margins of a layer.
     if (TileLayer *tl = layer->asTileLayer()) {
         // The drawMargins will only change the first time painting occurs
         // in an empty layer.
         if (tl->group() && mTileLayerGroupItems.contains(tl->level())) {
-            if (tl->drawMargins() != tl->group()->drawMargins())
+            if (mTileLayerGroupItems[tl->level()]->layerGroup()->regionAltered(tl))
                 updateLayerGroupLater(tl->level(), Synch | Bounds); // recalculate CompositeLayerGroup::mDrawMargins
         }
     }
@@ -353,6 +336,7 @@ void ZomboidScene::layerChanged(int index)
                 }
                 changingOpacity = false;
             }
+            layerGroupItem->layerGroup()->setLayerVisibility(tl, tl->isVisible());
             updateLayerGroupLater(tl->level(), Synch | Bounds);
         }
     } else if (ObjectGroup *og = layer->asObjectGroup()) {

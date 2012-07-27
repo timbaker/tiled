@@ -526,18 +526,23 @@ void MapDocument::emitRegionChanged(const QRegion &region)
 }
 #endif
 
+void MapDocument::emitRegionEdited(const QRegion &region, Layer *layer)
+{
+    emit regionEdited(region, layer);
+}
+
 #ifdef ZOMBOID
+void MapDocument::emitRegionAltered(const QRegion &region, Layer *layer)
+{
+    emit regionAltered(region, layer);
+}
+
 void MapDocument::setTileLayerName(Tile *tile, const QString &name)
 {
     TilesetManager::instance()->setLayerName(tile, name);
     emit tileLayerNameChanged(tile);
 }
 #endif // ZOMBOID
-
-void MapDocument::emitRegionEdited(const QRegion &region, Layer *layer)
-{
-    emit regionEdited(region, layer);
-}
 
 /**
  * Before forwarding the signal, the objects are removed from the list of

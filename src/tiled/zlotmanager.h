@@ -46,10 +46,14 @@ public:
     void setMapDocument(Internal::MapDocument *mapDoc);
     Internal::MapDocument *mapDocument() { return mMapDocument; }
 
+    // Yuck: used by MiniMap
+    const QMap<MapObject*,MapComposite*> &objectToLot()
+    { return mMapObjectToLot; }
+
 signals:
-    void lotAdded(MapComposite *lot, MapObject *mapObject);
-    void lotRemoved(MapComposite *lot, MapObject *mapObject);
-    void lotUpdated(MapComposite *lot, MapObject *mapObject);
+    void lotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
+    void lotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
+    void lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
 
 private slots:
     void onMapsDirectoryChanged();

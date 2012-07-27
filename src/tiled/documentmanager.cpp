@@ -162,7 +162,11 @@ void DocumentManager::addDocument(MapDocument *mapDocument)
 #endif
 
     scene->setMapDocument(mapDocument);
+#ifdef ZOMBOID
+    view->setMapScene(scene);
+#else
     view->setScene(scene);
+#endif
 
     const int documentIndex = mDocuments.size() - 1;
 

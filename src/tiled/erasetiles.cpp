@@ -20,6 +20,7 @@
 
 #include "erasetiles.h"
 
+#include "mapdocument.h"
 #include "tilelayer.h"
 #include "tilepainter.h"
 
@@ -53,12 +54,18 @@ void EraseTiles::undo()
     const QRect bounds = mRegion.boundingRect();
     TilePainter painter(mMapDocument, mTileLayer);
     painter.drawCells(bounds.x(), bounds.y(), mErasedCells);
+#ifdef ZOMBOID
+    mMapDocument->emitRegionAltered(mRegion, mTileLayer);
+#endif
 }
 
 void EraseTiles::redo()
 {
     TilePainter painter(mMapDocument, mTileLayer);
     painter.erase(mRegion);
+#ifdef ZOMBOID
+    mMapDocument->emitRegionAltered(mRegion, mTileLayer);
+#endif
 }
 
 bool EraseTiles::mergeWith(const QUndoCommand *other)

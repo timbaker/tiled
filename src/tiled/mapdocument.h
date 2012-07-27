@@ -257,6 +257,14 @@ public:
     void emitRegionEdited(const QRegion &region, Layer *layer);
 
 #ifdef ZOMBOID
+    /**
+      * emitRegionChanged -- redraw part of the map
+      * emitRegionEdited -- changes due to user edits, not undo/redo
+      * emitRegionAltered -- changes due to user edit plus undo/redo
+      * This is to support the MiniMap.
+      */
+    void emitRegionAltered(const QRegion &region, Layer *layer);
+
     void setTileLayerName(Tile *tile, const QString &name);
 #endif
 
@@ -331,6 +339,16 @@ signals:
      * If multiple layers have been edited, multiple signals will be emitted.
      */
     void regionEdited(const QRegion &region, Layer *layer);
+
+#ifdef ZOMBOID
+    /**
+      * regionChanged -- redraw part of the map
+      * regionEdited -- changes due to user edits, not undo/redo
+      * regionAltered -- changes due to user edit plus undo/redo
+      * This is to support the MiniMap.
+      */
+    void regionAltered(const QRegion &region, Layer *layer);
+#endif
 
     void tilesetAdded(int index, Tileset *tileset);
     void tilesetRemoved(Tileset *tileset);

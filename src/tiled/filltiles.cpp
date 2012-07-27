@@ -21,6 +21,9 @@
 
 #include "filltiles.h"
 
+#ifdef ZOMBOID
+#include "mapdocument.h"
+#endif
 #include "tilelayer.h"
 #include "tilepainter.h"
 
@@ -56,10 +59,16 @@ void FillTiles::undo()
                      boundingRect.y(),
                      mOriginalCells,
                      mFillRegion);
+#ifdef ZOMBOID
+    mMapDocument->emitRegionAltered(mFillRegion, mTileLayer);
+#endif
 }
 
 void FillTiles::redo()
 {
     TilePainter painter(mMapDocument, mTileLayer);
     painter.drawStamp(mFillStamp, mFillRegion);
+#ifdef ZOMBOID
+    mMapDocument->emitRegionAltered(mFillRegion, mTileLayer);
+#endif
 }

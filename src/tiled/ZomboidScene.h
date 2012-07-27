@@ -21,11 +21,34 @@
 #include "mapscene.h"
 #include "zlotmanager.h"
 
+#include <QGraphicsItem>
 #include <QMap>
 
 class CompositeLayerGroup;
-class CompositeLayerGroupItem;
 class DnDItem;
+
+namespace Tiled {
+class MapRenderer;
+}
+
+class CompositeLayerGroupItem : public QGraphicsItem
+{
+public:
+    CompositeLayerGroupItem(CompositeLayerGroup *layerGroup, Tiled::MapRenderer *renderer, QGraphicsItem *parent = 0);
+
+    QRectF boundingRect() const;
+    void paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *);
+
+    void synchWithTileLayers();
+    void updateBounds();
+
+    CompositeLayerGroup *layerGroup() const { return mLayerGroup; }
+
+private:
+    CompositeLayerGroup *mLayerGroup;
+    Tiled::MapRenderer *mRenderer;
+    QRectF mBoundingRect;
+};
 
 namespace Tiled {
 
@@ -51,10 +74,12 @@ public:
     // MapScene
     virtual void setMapDocument(MapDocument *mapDoc);
 
+    ZLotManager &lotManager() { return mLotManager; }
+
 private slots:
     virtual void refreshScene();
 
-    virtual void regionChanged(const QRegion &region, Layer *layer);
+    virtual void regionAltered(const QRegion &region, Layer *layer);
 
     virtual void mapChanged();
 
@@ -70,9 +95,9 @@ private slots:
 
     void layerLevelChanged(int index, int oldLevel);
 
-    void onLotAdded(MapComposite *lot, MapObject *mapObject);
-    void onLotRemoved(MapComposite *lot, MapObject *mapObject);
-    void onLotUpdated(MapComposite *lot, MapObject *mapObject);
+    void onLotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
+    void onLotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
+    void onLotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
 
     void handlePendingUpdates();
 

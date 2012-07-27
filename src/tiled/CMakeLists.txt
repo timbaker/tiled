@@ -159,6 +159,7 @@ set ( Tiled_SRCS
 	mapcomposite.cpp
 	mapimagemanager.cpp
 	mapmanager.cpp
+	minimap.cpp
 	zgriditem.cpp
 	zlevelsdock.cpp
 	zlevelsmodel.cpp
@@ -254,6 +255,7 @@ set ( Tiled_MOCS
 	mapcomposite.h
 	mapimagemanager.h
 	mapmanager.h
+	minimap.h
 	zlevelsdock.h
 	zlevelsmodel.h
 	zlotmanager.h

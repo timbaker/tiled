@@ -39,6 +39,9 @@ MapView::MapView(QWidget *parent)
     : QGraphicsView(parent)
     , mHandScrolling(false)
     , mZoomable(new Zoomable(this))
+#ifdef ZOMBOID
+    , mMiniMap(0)
+#endif
 {
     setTransformationAnchor(QGraphicsView::AnchorViewCenter);
 #ifdef Q_OS_MAC
@@ -72,6 +75,20 @@ MapView::~MapView()
     setHandScrolling(false); // Just in case we didn't get a hide event
 }
 
+#ifdef ZOMBOID
+#include "ZomboidScene.h"
+void MapView::setMapScene(MapScene *scene)
+{
+    QGraphicsView::setScene(scene);
+
+    mMiniMap = new MiniMap(this);
+    mMiniMap->setMapScene(scene);
+
+    mMiniMapItem = new MiniMapItem(static_cast<ZomboidScene*>(scene));
+    mMiniMap->setExtraItem(mMiniMapItem);
+}
+#endif
+
 MapScene *MapView::mapScene() const
 {
     return static_cast<MapScene*>(scene());
@@ -84,6 +101,44 @@ void MapView::adjustScale(qreal scale)
                   mZoomable->smoothTransform());
 }
 
+#ifdef ZOMBOID
+void MapView::setUseOpenGL(bool useOpenGL)
+{
+#ifndef QT_NO_OPENGL
+    QWidget *oldViewport = viewport();
+    QWidget *newViewport = viewport();
+    if (useOpenGL && QGLFormat::hasOpenGL()) {
+        if (!qobject_cast<QGLWidget*>(viewport())) {
+            QGLFormat format = QGLFormat::defaultFormat();
+            format.setDepth(false); // No need for a depth buffer
+            format.setSampleBuffers(true); // Enable anti-aliasing
+            newViewport = new QGLWidget(format);
+        }
+    } else {
+        if (qobject_cast<QGLWidget*>(viewport()))
+            newViewport = 0;
+    }
+
+    // Changing the viewport destroys its child widgets
+    if (newViewport != oldViewport) {
+        if (mMiniMap) {
+            mMiniMap->setVisible(false);
+            mMiniMap->setParent(static_cast<QWidget*>(parent()));
+        }
+        setViewport(newViewport);
+        if (mMiniMap) {
+            mMiniMap->setParent(this);
+            mMiniMap->setVisible(Preferences::instance()->showMiniMap());
+            mMiniMap->sceneRectChanged(scene()->sceneRect());
+        }
+    }
+
+    QWidget *v = viewport();
+    v->setAttribute(Qt::WA_StaticContents);
+    v->setMouseTracking(true);
+#endif
+}
+#else
 void MapView::setUseOpenGL(bool useOpenGL)
 {
 #ifndef QT_NO_OPENGL
@@ -104,6 +159,7 @@ void MapView::setUseOpenGL(bool useOpenGL)
     v->setMouseTracking(true);
 #endif
 }
+#endif
 
 void MapView::setHandScrolling(bool handScrolling)
 {
@@ -217,3 +273,21 @@ void MapView::mouseMoveEvent(QMouseEvent *event)
     mLastMousePos = event->globalPos();
     mLastMouseScenePos = mapToScene(viewport()->mapFromGlobal(mLastMousePos));
 }
+
+#ifdef ZOMBOID
+
+void MapView::resizeEvent(QResizeEvent *event)
+{
+    QGraphicsView::resizeEvent(event);
+    if (mMiniMap)
+        mMiniMap->viewRectChanged();
+}
+
+void MapView::scrollContentsBy(int dx, int dy)
+{
+    QGraphicsView::scrollContentsBy(dx, dy);
+    if (mMiniMap)
+        mMiniMap->viewRectChanged();
+}
+
+#endif // ZOMBOID

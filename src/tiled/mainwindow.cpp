@@ -226,6 +226,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     mUi->actionShowGrid->setChecked(preferences->showGrid());
     mUi->actionSnapToGrid->setChecked(preferences->snapToGrid());
     mUi->actionHighlightCurrentLayer->setChecked(preferences->highlightCurrentLayer());
+#ifdef ZOMBOID
+    mUi->actionShowMiniMap->setChecked(preferences->showMiniMap());
+#endif
 
     // Make sure Ctrl+= also works for zooming in
     QList<QKeySequence> keys = QKeySequence::keyBindings(QKeySequence::ZoomIn);
@@ -307,6 +310,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
             preferences, SLOT(setSnapToGrid(bool)));
     connect(mUi->actionHighlightCurrentLayer, SIGNAL(toggled(bool)),
             preferences, SLOT(setHighlightCurrentLayer(bool)));
+#ifdef ZOMBOID
+    connect(mUi->actionShowMiniMap, SIGNAL(toggled(bool)),
+            preferences, SLOT(setShowMiniMap(bool)));
+#endif
     connect(mUi->actionZoomIn, SIGNAL(triggered()), SLOT(zoomIn()));
     connect(mUi->actionZoomOut, SIGNAL(triggered()), SLOT(zoomOut()));
     connect(mUi->actionZoomNormal, SIGNAL(triggered()), SLOT(zoomNormal()));

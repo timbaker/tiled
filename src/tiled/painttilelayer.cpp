@@ -59,12 +59,18 @@ void PaintTileLayer::undo()
 {
     TilePainter painter(mMapDocument, mTarget);
     painter.setCells(mX, mY, mErased, mPaintedRegion);
+#ifdef ZOMBOID
+    mMapDocument->emitRegionAltered(mPaintedRegion, mTarget);
+#endif
 }
 
 void PaintTileLayer::redo()
 {
     TilePainter painter(mMapDocument, mTarget);
     painter.drawCells(mX, mY, mSource);
+#ifdef ZOMBOID
+    mMapDocument->emitRegionAltered(mPaintedRegion, mTarget);
+#endif
 }
 
 bool PaintTileLayer::mergeWith(const QUndoCommand *other)

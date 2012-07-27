@@ -131,7 +131,9 @@ void AutomappingManager::autoMapInternal(QRegion where, Layer *touchedLayer)
     }
 
 #ifdef ZOMBOID
-    mMapDocument->emitRegionChanged(*passedRegion, map->layerAt(map->indexOfLayer(layer)));
+    // AutoMapperWrapper calls this for each edited layer...
+    mMapDocument->emitRegionChanged(*passedRegion,
+                                    map->layerAt(map->indexOfLayer(layer)));
 #else
     mMapDocument->emitRegionChanged(*passedRegion);
 #endif

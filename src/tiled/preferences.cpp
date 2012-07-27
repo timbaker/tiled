@@ -78,6 +78,8 @@ Preferences::Preferences()
     mUseOpenGL = mSettings->value(QLatin1String("OpenGL"), false).toBool();
 #ifdef ZOMBOID
     mAutoSwitchLayer = mSettings->value(QLatin1String("AutoSwitchLayer"), true).toBool();
+    mShowMiniMap = mSettings->value(QLatin1String("ShowMiniMap"), true).toBool();
+    mMiniMapWidth = mSettings->value(QLatin1String("MiniMapWidth"), 256).toInt();
 #endif
     mSettings->endGroup();
 
@@ -351,5 +353,36 @@ void Preferences::setAutoSwitchLayer(bool enabled)
     mAutoSwitchLayer = enabled;
     mSettings->setValue(QLatin1String("Interface/AutoSwitchLayer"), enabled);
     emit autoSwitchLayerChanged(mAutoSwitchLayer);
+}
+
+bool Preferences::showMiniMap() const
+{
+    return mShowMiniMap;
+}
+
+void Preferences::setMiniMapWidth(int width)
+{
+    width = qMin(width, 512);
+    width = qMax(width, 128);
+
+    if (mMiniMapWidth == width)
+        return;
+    mMiniMapWidth = width;
+    mSettings->setValue(QLatin1String("Interface/MiniMapWidth"), width);
+    emit miniMapWidthChanged(mMiniMapWidth);
+}
+
+int Preferences::miniMapWidth() const
+{
+    return mMiniMapWidth;
+}
+
+void Preferences::setShowMiniMap(bool show)
+{
+    if (mShowMiniMap == show)
+        return;
+    mShowMiniMap = show;
+    mSettings->setValue(QLatin1String("Interface/ShowMiniMap"), show);
+    emit showMiniMapChanged(mShowMiniMap);
 }
 #endif // ZOMBOID
