@@ -511,6 +511,9 @@ void MapDocument::unifyTilesets(Map *map)
  */
 void MapDocument::emitMapChanged()
 {
+#ifdef ZOMBOID
+    MapManager::instance()->mapChanged(mMapComposite->mapInfo());
+#endif
     emit mapChanged();
 }
 

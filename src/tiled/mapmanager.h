@@ -111,6 +111,11 @@ public:
       */
     MapInfo *getPlaceholderMap(const QString &mapName, Tiled::Map::Orientation orient, int width, int height);
 
+    /**
+      * Call this when the map's size or tile size changes.
+      */
+    void mapChanged(MapInfo *mapInfo);
+
 signals:
     void mapMagicallyGotMoreLayers(Tiled::Map *map);
 

@@ -385,6 +385,16 @@ MapInfo *MapManager::getPlaceholderMap(const QString &mapName, Map::Orientation 
     return mapInfo;
 }
 
+void MapManager::mapChanged(MapInfo *mapInfo)
+{
+    Map *map = mapInfo->map();
+    Q_ASSERT(map);
+    mapInfo->mHeight = map->height();
+    mapInfo->mWidth = map->width();
+    mapInfo->mTileWidth = map->tileWidth();
+    mapInfo->mTileHeight = map->tileHeight();
+}
+
 Map *MapManager::convertOrientation(Map *map, Tiled::Map::Orientation orient)
 {
     Map::Orientation orient0 = map->orientation();
