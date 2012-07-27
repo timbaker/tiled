@@ -342,7 +342,7 @@
            </widget>
           </item>
           <item row="0" column="2">
-           <widget class="QPushButton" name="lotBrowseButton">
+           <widget class="QToolButton" name="lotBrowseButton">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -350,13 +350,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>&amp;Browse...</string>
-            </property>
-            <property name="autoDefault">
-             <bool>false</bool>
-            </property>
-            <property name="flat">
-             <bool>false</bool>
+             <string>...</string>
             </property>
            </widget>
           </item>

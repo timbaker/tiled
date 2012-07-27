@@ -67,7 +67,7 @@ MapsDock::MapsDock(MainWindow *mainWindow, QWidget *parent)
     edit->setCompleter(completer);
 
     QToolButton *button = new QToolButton();
-    button->setIcon(QIcon(QLatin1String(":/images/16x16/document-properties.png")));
+    button->setText(tr("..."));
     button->setToolTip(tr("Choose Folder"));
     dirLayout->addWidget(label);
     dirLayout->addWidget(edit);
