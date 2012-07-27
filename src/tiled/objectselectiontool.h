@@ -53,6 +53,9 @@ private:
         NoMode,
         Selecting,
         Moving
+#ifdef ZOMBOID
+        , CancelMoving
+#endif
     };
 
     void updateSelection(const QPointF &pos,
@@ -64,6 +67,9 @@ private:
     void updateMovingItems(const QPointF &pos,
                            Qt::KeyboardModifiers modifiers);
     void finishMoving(const QPointF &pos);
+#ifdef ZOMBOID
+    void cancelMoving();
+#endif
 
     SelectionRectangle *mSelectionRectangle;
     bool mMousePressed;

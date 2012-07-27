@@ -82,6 +82,10 @@ void ObjectSelectionTool::mouseMoved(const QPointF &pos,
     case Moving:
         updateMovingItems(pos, modifiers);
         break;
+#ifdef ZOMBOID
+    case CancelMoving:
+        break;
+#endif
     case NoMode:
         break;
     }
@@ -89,6 +93,25 @@ void ObjectSelectionTool::mouseMoved(const QPointF &pos,
 
 void ObjectSelectionTool::mousePressed(QGraphicsSceneMouseEvent *event)
 {
+#ifdef ZOMBOID
+
+    switch (event->button()) {
+    case Qt::LeftButton:
+        if (mMode != NoMode) // Ignore additional presses during select/move
+            return;
+        mMousePressed = true;
+        mStart = event->scenePos();
+        mClickedObjectItem = topMostObjectItemAt(mStart);
+        break;
+    case Qt::RightButton:
+        if (mMode == Moving)
+            cancelMoving();
+        break;
+    default:
+        AbstractObjectTool::mousePressed(event);
+        break;
+    }
+#else
     if (mMode != NoMode) // Ignore additional presses during select/move
         return;
 
@@ -102,6 +125,7 @@ void ObjectSelectionTool::mousePressed(QGraphicsSceneMouseEvent *event)
         AbstractObjectTool::mousePressed(event);
         break;
     }
+#endif
 }
 
 void ObjectSelectionTool::mouseReleased(QGraphicsSceneMouseEvent *event)
@@ -136,6 +160,11 @@ void ObjectSelectionTool::mouseReleased(QGraphicsSceneMouseEvent *event)
     case Moving:
         finishMoving(event->scenePos());
         break;
+#ifdef ZOMBOID
+    case CancelMoving:
+        mMode = NoMode;
+        break;
+#endif
     }
 
     mMousePressed = false;
@@ -302,3 +331,21 @@ void ObjectSelectionTool::finishMoving(const QPointF &pos)
     mOldObjectPositions.clear();
     mMovingItems.clear();
 }
+
+#ifdef ZOMBOID
+void ObjectSelectionTool::cancelMoving()
+{
+    int i = 0;
+    foreach (MapObjectItem *objectItem, mMovingItems) {
+        objectItem->setDragging(false);
+        objectItem->mapObject()->setPosition(mOldObjectPositions.at(i));
+        objectItem->setPos(mOldObjectItemPositions.at(i));
+    }
+
+    mOldObjectItemPositions.clear();
+    mOldObjectPositions.clear();
+    mMovingItems.clear();
+
+    mMode = CancelMoving;
+}
+#endif
