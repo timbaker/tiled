@@ -158,6 +158,12 @@ void ObjectSelectionTool::mouseReleased(QGraphicsSceneMouseEvent *event)
         mMode = NoMode;
         break;
     case Moving:
+#ifdef ZOMBOID
+        // WTF: The sceneRect may change when moving a Lot, which calls
+        // QGraphicsView::replayLastMouseEvent, which calls our mouseMoved(), which
+        // starts the drag *again* because mMousePressed hasn't been cleared yet.
+        mMousePressed = false;
+#endif
         finishMoving(event->scenePos());
         break;
 #ifdef ZOMBOID
