@@ -283,6 +283,13 @@ void CompositeLayerGroup::setLayerVisibility(TileLayer *tl, bool visible)
     }
 }
 
+bool CompositeLayerGroup::isLayerVisible(TileLayer *tl)
+{
+    int index = mLayers.indexOf(tl);
+    Q_ASSERT(index != -1);
+    return mVisibleLayers[index];
+}
+
 void CompositeLayerGroup::layerRenamed(TileLayer *layer)
 {
     QMapIterator<QString,QVector<Layer*> > it(mLayersByName);

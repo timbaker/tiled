@@ -52,6 +52,7 @@ public:
 
     void setLayerVisibility(const QString &layerName, bool visible);
     void setLayerVisibility(Tiled::TileLayer *tl, bool visible);
+    bool isLayerVisible(Tiled::TileLayer *tl);
     void layerRenamed(Tiled::TileLayer *layer);
 
     MapComposite *owner() const { return mOwner; }
