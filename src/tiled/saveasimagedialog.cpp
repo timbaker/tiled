@@ -37,14 +37,19 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QImageWriter>
+#ifdef ZOMBOID
+#include <QPushButton>
+#endif
 #include <QSettings>
 
 static const char * const VISIBLE_ONLY_KEY = "SaveAsImage/VisibleLayersOnly";
 static const char * const CURRENT_SCALE_KEY = "SaveAsImage/CurrentScale";
 static const char * const DRAW_GRID_KEY = "SaveAsImage/DrawGrid";
 #ifdef ZOMBOID
+static const char * const IMAGES_FOLDER_KEY = "SaveAsImage/Directory";
 static const char * const OBJECT_LAYERS_KEY = "SaveAsImage/ObjectLayers";
 static const char * const NORENDER_KEY = "SaveAsImage/NoRender";
+static const char * const LOTS_KEY = "SaveAsImage/Lots";
 static const char * const IMAGE_WIDTH_KEY = "SaveAsImage/ImageWidth";
 #endif
 
@@ -65,8 +70,13 @@ SaveAsImageDialog::SaveAsImageDialog(MapDocument *mapDocument,
     mUi->setupUi(this);
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
+#ifdef ZOMBOID
+    QSettings *s = Preferences::instance()->settings();
+    QString suggestion = s->value(QLatin1String(IMAGES_FOLDER_KEY)).toString();
+#else
     // Default to the last chosen location
     QString suggestion = mPath;
+#endif
 
     // Suggest a nice name for the image
     if (!fileName.isEmpty()) {
@@ -88,7 +98,9 @@ SaveAsImageDialog::SaveAsImageDialog(MapDocument *mapDocument,
     mUi->fileNameEdit->setText(suggestion);
 
     // Restore previously used settings
+#ifndef ZOMBOID
     QSettings *s = Preferences::instance()->settings();
+#endif
     const bool visibleLayersOnly =
             s->value(QLatin1String(VISIBLE_ONLY_KEY), true).toBool();
     const bool useCurrentScale =
@@ -112,6 +124,10 @@ SaveAsImageDialog::SaveAsImageDialog(MapDocument *mapDocument,
     const bool drawNoRender =
             s->value(QLatin1String(NORENDER_KEY), false).toBool();
     mUi->drawNoRender->setChecked(drawNoRender);
+
+    const bool drawLots =
+            s->value(QLatin1String(LOTS_KEY), true).toBool();
+    mUi->drawLots->setChecked(drawNoRender);
 
     const int customImageWidth =
             s->value(QLatin1String(IMAGE_WIDTH_KEY), 512).toInt();
@@ -159,6 +175,7 @@ void SaveAsImageDialog::accept()
 #ifdef ZOMBOID
     const bool drawObjectLayers = mUi->drawObjectLayers->isChecked();
     const bool drawNoRender = mUi->drawNoRender->isChecked();
+    const bool drawLots = mUi->drawLots->isChecked();
     const int customImageWidth = mUi->imageWidthSpinBox->value();
 
     MapRenderer *renderer = mMapDocument->renderer();
@@ -181,33 +198,40 @@ void SaveAsImageDialog::accept()
                                                    scale));
     }
 
-    painter.translate(0, -sceneRect.top());
+    painter.translate(-sceneRect.left(), -sceneRect.top());
 
     mMapDocument->mapComposite()->saveVisibility();
 
-    ZTileLayerGroup *layerGroup = 0;
+    if (!drawLots) {
+        foreach (MapComposite *lot, mMapDocument->mapComposite()->subMaps())
+            lot->setVisible(false);
+    }
 
+    QVector<CompositeLayerGroup*> drawnLayerGroups;
     foreach (Layer *layer, mMapDocument->map()->layers()) {
-
         painter.setOpacity(layer->opacity());
-
         if (TileLayer *tileLayer = layer->asTileLayer()) {
             if (tileLayer->group()) {
-                // FIXME: LayerGroups should be drawn with the same Z-order the scene uses.
-                // They will usually be in the same order anyways.
-                if (tileLayer->group() != layerGroup) {
-                    layerGroup = tileLayer->group();
-                    if (!visibleLayersOnly || !drawNoRender) {
-                        foreach (TileLayer *tl, layerGroup->layers()) {
-                            bool isVisible = !visibleLayersOnly || (layerGroup->isVisible() && tl->isVisible());
-                            if (!drawNoRender && tl->name().contains(QLatin1String("NoRender")))
-                                isVisible = false;
-                            tl->setVisible(isVisible);
-                        }
-                        ((CompositeLayerGroup*)layerGroup)->synch();
+                CompositeLayerGroup *layerGroup =
+                        static_cast<CompositeLayerGroup*>(tileLayer->group());
+                if (drawnLayerGroups.contains(layerGroup))
+                    continue;
+                drawnLayerGroups += layerGroup;
+                // FIXME: LayerGroups should be drawn with the same Z-order the
+                // scene uses.  They will usually be in the same order anyways.
+                if (visibleLayersOnly && !layerGroup->isVisible())
+                    continue;
+                if (!visibleLayersOnly || !drawNoRender) {
+                    foreach (TileLayer *tl, layerGroup->layers()) {
+                        bool isVisible = !visibleLayersOnly ||
+                                (layerGroup->isVisible() && layerGroup->isLayerVisible(tl));
+                        if (!drawNoRender && tl->name().contains(QLatin1String("NoRender")))
+                            isVisible = false;
+                        layerGroup->setLayerVisibility(tl, isVisible);
                     }
-                    renderer->drawTileLayerGroup(&painter, layerGroup);
                 }
+                layerGroup->synch();
+                renderer->drawTileLayerGroup(&painter, layerGroup);
             } else {
                 if (visibleLayersOnly && !layer->isVisible())
                     continue;
@@ -290,8 +314,10 @@ void SaveAsImageDialog::accept()
     s->setValue(QLatin1String(CURRENT_SCALE_KEY), useCurrentScale);
     s->setValue(QLatin1String(DRAW_GRID_KEY), drawTileGrid);
 #ifdef ZOMBOID
+    s->setValue(QLatin1String(IMAGES_FOLDER_KEY), mPath);
     s->setValue(QLatin1String(OBJECT_LAYERS_KEY), drawObjectLayers);
     s->setValue(QLatin1String(NORENDER_KEY), drawNoRender);
+    s->setValue(QLatin1String(LOTS_KEY), drawLots);
     s->setValue(QLatin1String(IMAGE_WIDTH_KEY), customImageWidth);
 #endif
 
