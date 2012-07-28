@@ -127,7 +127,7 @@ SaveAsImageDialog::SaveAsImageDialog(MapDocument *mapDocument,
 
     const bool drawLots =
             s->value(QLatin1String(LOTS_KEY), true).toBool();
-    mUi->drawLots->setChecked(drawNoRender);
+    mUi->drawLots->setChecked(drawLots);
 
     const int customImageWidth =
             s->value(QLatin1String(IMAGE_WIDTH_KEY), 512).toInt();
