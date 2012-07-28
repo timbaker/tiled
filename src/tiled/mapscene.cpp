@@ -395,9 +395,11 @@ void MapScene::layerAdded(int index)
     addItem(layerItem);
     mLayerItems.insert(index, layerItem);
 
+#ifndef ZOMBOID
     int z = 0;
     foreach (QGraphicsItem *item, mLayerItems)
         item->setZValue(z++);
+#endif
 }
 
 #ifdef ZOMBOID
