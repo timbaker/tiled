@@ -58,6 +58,9 @@ DocumentManager::DocumentManager(QObject *parent)
     , mSelectedTool(0)
     , mSceneWithTool(0)
 {
+#ifdef ZOMBOID
+    mTabWidget->setObjectName(QLatin1String("documentTabs"));
+#endif
     mTabWidget->setDocumentMode(true);
     mTabWidget->setTabsClosable(true);
 
