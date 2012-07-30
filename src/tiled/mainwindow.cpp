@@ -76,7 +76,9 @@
 #include "commandbutton.h"
 #include "objectsdock.h"
 #ifdef ZOMBOID
+#include "convertorientationdialog.h"
 #include "mapcomposite.h"
+#include "mapmanager.h"
 #include "mapsdock.h"
 #include "zlevelsdock.h"
 #include "zprogress.h"
@@ -326,6 +328,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     connect(mUi->actionMapProperties, SIGNAL(triggered()),
             SLOT(editMapProperties()));
     connect(mUi->actionAutoMap, SIGNAL(triggered()), SLOT(autoMap()));
+#ifdef ZOMBOID
+    connect(mUi->actionConvertOrientation, SIGNAL(triggered()),
+            SLOT(convertOrientation()));
+#endif
 
     connect(mActionHandler->actionLayerProperties(), SIGNAL(triggered()),
             SLOT(editLayerProperties()));
@@ -502,6 +508,9 @@ MainWindow::~MainWindow()
     AutomappingManager::deleteInstance();
     QuickStampManager::deleteInstance();
     ToolManager::deleteInstance();
+#ifdef ZOMBOID
+    MapManager::deleteInstance();
+#endif
     TilesetManager::deleteInstance();
     DocumentManager::deleteInstance();
     Preferences::deleteInstance();
@@ -1239,6 +1248,14 @@ void MainWindow::autoMappingError()
         QMessageBox::critical(this, title, error);
     }
 }
+
+#ifdef ZOMBOID
+void MainWindow::convertOrientation()
+{
+    ConvertOrientationDialog dialog(this);
+    dialog.exec();
+}
+#endif
 
 void MainWindow::openRecentFile()
 {

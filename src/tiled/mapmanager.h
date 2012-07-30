@@ -22,6 +22,8 @@
 
 #include <QMap>
 
+// FIXME: The user can save a map, replacing a file whose MapInfo has already
+// been loaded.
 class MapInfo
 {
 public:
@@ -29,6 +31,7 @@ public:
             int width, int height,
             int tileWidth, int tileHeight)
         : mOrientation(orientation)
+        , mUnconvertedOrientation(orientation)
         , mWidth(width)
         , mHeight(height)
         , mTileWidth(tileWidth)
@@ -43,7 +46,11 @@ public:
 
     bool isValid() const { return mWidth > 0 && mHeight > 0; }
 
-    Tiled::Map::Orientation orientation() const { return mOrientation; }
+    Tiled::Map::Orientation orientation() const
+    { return mOrientation; }
+    Tiled::Map::Orientation unconvertedOrientation() const
+    { return mUnconvertedOrientation; }
+
     int width() const { return mWidth; }
     int height() const { return mHeight; }
     QSize size() const { return QSize(mWidth, mHeight); }
@@ -57,10 +64,12 @@ public:
 
     MapInfo *converted(Tiled::Map::Orientation orient);
 
+    void setBeingEdited(bool edited) { mBeingEdited = edited; }
     bool isBeingEdited() const { return mBeingEdited; }
 
 private:
     Tiled::Map::Orientation mOrientation;
+    Tiled::Map::Orientation mUnconvertedOrientation;
     int mWidth;
     int mHeight;
     int mTileWidth;
@@ -116,6 +125,11 @@ public:
       */
     void mapChanged(MapInfo *mapInfo);
 
+    /**
+      * Returns the error from the map reader if loadMap() failed.
+      */
+    QString errorString() const { return mError; }
+
 signals:
     void mapMagicallyGotMoreLayers(Tiled::Map *map);
 
@@ -128,7 +142,10 @@ private:
     Tiled::Map *convertOrientation(Tiled::Map *map, Tiled::Map::Orientation orient);
 
     MapManager();
+    ~MapManager();
+
     QMap<QString,MapInfo*> mMapInfo;
+    QString mError;
     static MapManager *mInstance;
 };
 

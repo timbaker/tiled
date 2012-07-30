@@ -145,7 +145,8 @@ SOURCES += aboutdialog.cpp \
     mapcomposite.cpp \
     mapmanager.cpp \
     mapimagemanager.cpp \
-    minimap.cpp
+    minimap.cpp \
+    convertorientationdialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -256,7 +257,8 @@ HEADERS += aboutdialog.h \
     ztilesetthumbview.h \
     zgriditem.h \
     zprogress.h \
-    minimap.h
+    minimap.h \
+    convertorientationdialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -273,7 +275,8 @@ FORMS += aboutdialog.ui \
     propertiesdialog.ui \
     resizedialog.ui \
     saveasimagedialog.ui\
-    newimagelayerdialog.ui
+    newimagelayerdialog.ui \
+    convertorientationdialog.ui
 
 RESOURCES += tiled.qrc
 macx {

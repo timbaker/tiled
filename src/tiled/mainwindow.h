@@ -135,6 +135,9 @@ public slots:
     void offsetMap();
     void editMapProperties();
     void autoMap();
+#ifdef ZOMBOID
+    void convertOrientation();
+#endif
 
     void updateWindowTitle();
     void updateActions();
