@@ -144,7 +144,8 @@ bool ConvertOrientationDialog::convertMap(const QString &mapFilePath)
 
 void ConvertOrientationDialog::browse()
 {
-    QString f = QFileDialog::getExistingDirectory(this);
+    QString f = QFileDialog::getExistingDirectory(this, QString(),
+                                                  ui->directoryEdit->text());
     if (!f.isEmpty()) {
         ui->directoryEdit->setText(f);
         setList();
