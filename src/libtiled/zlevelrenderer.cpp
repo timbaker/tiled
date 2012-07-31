@@ -165,6 +165,8 @@ void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect, QColor grid
     const int endY = qMin(qreal(map()->height()),
                           pixelToTileCoords(r.bottomLeft(), level).y());
 
+    gridColor.setAlpha(128);
+
 #if 1
     QPen pen;
     QBrush brush(gridColor, Qt::Dense4Pattern);
@@ -173,8 +175,6 @@ void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect, QColor grid
     pen.setBrush(brush);
     painter->setPen(pen);
 #else
-    gridColor.setAlpha(128);
-
     QPen gridPen(gridColor);
     gridPen.setDashPattern(QVector<qreal>() << 2 << 2);
     painter->setPen(gridPen);
