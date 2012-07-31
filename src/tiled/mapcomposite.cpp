@@ -159,14 +159,7 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos, QVector<const Cell *
         if (!mVisibleLayers[index] || mEmptyLayers[index])
 #endif
             continue;
-        QPoint adjust;
-        MapComposite *ancestor = mOwner;
-        while (ancestor) {
-            adjust += ancestor->orientAdjustTiles();
-            break;
-            ancestor = ancestor->parent();
-        }
-        QPoint subPos = pos - adjust * mLevel;
+        QPoint subPos = pos - mOwner->orientAdjustTiles() * mLevel;
         if (tl->contains(subPos)) {
             const Cell *cell = &tl->cellAt(subPos);
             if (!cell->isEmpty()) {
@@ -181,7 +174,7 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos, QVector<const Cell *
 
     // Overwrite map cells with sub-map cells at this location
     foreach (const SubMapLayers& subMapLayer, mPreparedSubMapLayers)
-        subMapLayer.mLayerGroup->orderedCellsAt(pos - (subMapLayer.mSubMap->origin() + mOwner->orientAdjustPos() * mOwner->levelOffset()), cells);
+        subMapLayer.mLayerGroup->orderedCellsAt(pos - subMapLayer.mSubMap->origin(), cells);
 
     return !cells.isEmpty();
 }
@@ -202,7 +195,7 @@ void CompositeLayerGroup::synch()
 #else
         if (mVisibleLayers[index] && !mEmptyLayers[index]) {
 #endif
-            unionTileRects(r, tl->bounds().translated(/*mOwner->orientAdjustPos() * mOwner->levelOffset() +*/ mOwner->orientAdjustTiles() * mLevel), r);
+            unionTileRects(r, tl->bounds().translated(mOwner->orientAdjustTiles() * mLevel), r);
             maxMargins(m, tl->drawMargins(), m);
             mAnyVisibleLayers = true;
         }
@@ -382,14 +375,16 @@ MapComposite::MapComposite(MapInfo *mapInfo, MapComposite *parent, const QPoint 
             mOrientAdjustPos = mOrientAdjustTiles = QPoint(3, 3);
         }
         if (orientSelf == Map::LevelIsometric && orientRender == Map::Isometric) {
-            mOrientAdjustTiles = QPoint(-3, -3);
+            mOrientAdjustPos = mOrientAdjustTiles = QPoint(-3, -3);
         }
+#if 0
         if ((mParent->map()->orientation() == Map::Isometric) &&
                 (orientRender == Map::LevelIsometric))
             mOrientAdjustPos += QPoint(3, 3);
         if ((mParent->map()->orientation() == Map::LevelIsometric) &&
                 (orientRender == Map::Isometric))
             mOrientAdjustPos += QPoint(-3, -3);
+#endif
     }
 
     int index = 0;
@@ -429,9 +424,8 @@ MapComposite::MapComposite(MapInfo *mapInfo, MapComposite *parent, const QPoint 
                     if (subMapInfo) {
                         int levelOffset;
                         (void) levelForLayer(objectGroup, &levelOffset);
-                        qDebug() << "adding sub-map" << object->type() << "inside map" << mMapInfo->path();
 #if 1
-                        MapComposite *_subMap = new MapComposite(subMapInfo, this, object->position().toPoint(), levelOffset);
+                        MapComposite *_subMap = new MapComposite(subMapInfo, this, object->position().toPoint() + mOrientAdjustPos * levelOffset, levelOffset);
                         mSubMaps.append(_subMap);
 #else
                         addMap(subMap, object->position().toPoint(), levelOffset);
