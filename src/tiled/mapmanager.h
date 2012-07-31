@@ -31,13 +31,11 @@ public:
             int width, int height,
             int tileWidth, int tileHeight)
         : mOrientation(orientation)
-        , mUnconvertedOrientation(orientation)
         , mWidth(width)
         , mHeight(height)
         , mTileWidth(tileWidth)
         , mTileHeight(tileHeight)
         , mMap(0)
-        , mConverted(0)
         , mPlaceholder(false)
         , mBeingEdited(false)
     {
@@ -48,8 +46,6 @@ public:
 
     Tiled::Map::Orientation orientation() const
     { return mOrientation; }
-    Tiled::Map::Orientation unconvertedOrientation() const
-    { return mUnconvertedOrientation; }
 
     int width() const { return mWidth; }
     int height() const { return mHeight; }
@@ -62,21 +58,17 @@ public:
 
     Tiled::Map *map() const { return mMap; }
 
-    MapInfo *converted(Tiled::Map::Orientation orient);
-
     void setBeingEdited(bool edited) { mBeingEdited = edited; }
     bool isBeingEdited() const { return mBeingEdited; }
 
 private:
     Tiled::Map::Orientation mOrientation;
-    Tiled::Map::Orientation mUnconvertedOrientation;
     int mWidth;
     int mHeight;
     int mTileWidth;
     int mTileHeight;
     QString mFilePath;
     Tiled::Map *mMap;
-    MapInfo *mConverted;
     bool mPlaceholder;
     bool mBeingEdited;
 
@@ -98,13 +90,11 @@ public:
     QString pathForMap(const QString &mapName, const QString &relativeTo);
 
     MapInfo *loadMap(const QString &mapName,
-                     Tiled::Map::Orientation orient = Tiled::Map::Unknown,
                      const QString &relativeTo = QString());
 
     MapInfo *newFromMap(Tiled::Map *map, const QString &mapFilePath = QString());
 
-    MapInfo *mapInfo(const QString &mapFilePath,
-                     Tiled::Map::Orientation orient = Tiled::Map::Unknown);
+    MapInfo *mapInfo(const QString &mapFilePath);
 
     /**
      * The "empty map" is used when a WorldCell has no map.
@@ -118,7 +108,13 @@ public:
       * A placeholder map may be updated to a real map when the
       * user changes the maptools directory.
       */
-    MapInfo *getPlaceholderMap(const QString &mapName, Tiled::Map::Orientation orient, int width, int height);
+    MapInfo *getPlaceholderMap(const QString &mapName, int width, int height);
+
+    /**
+     * Converts a map to Isometric or LevelIsometric.
+     * A new map is returned if conversion occurred.
+     */
+    Tiled::Map *convertOrientation(Tiled::Map *map, Tiled::Map::Orientation orient);
 
     /**
       * Call this when the map's size or tile size changes.
@@ -134,12 +130,6 @@ signals:
     void mapMagicallyGotMoreLayers(Tiled::Map *map);
 
 private:
-
-    /**
-     * Converts a map to Isometric or LevelIsometric.
-     * A new map is returned if conversion occurred.
-     */
-    Tiled::Map *convertOrientation(Tiled::Map *map, Tiled::Map::Orientation orient);
 
     MapManager();
     ~MapManager();

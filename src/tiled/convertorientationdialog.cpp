@@ -86,13 +86,7 @@ void ConvertOrientationDialog::setList()
 
 bool ConvertOrientationDialog::convertMap(const QString &mapFilePath)
 {
-    MapInfo *mapInfo = MapManager::instance()->loadMap(mapFilePath,
-                                                       Map::LevelIsometric);
-
-    // Restore the message since loadMap() will change it.
-    QString msg = QString(QLatin1String("Writing %1"))
-            .arg(QFileInfo(mapFilePath).fileName());
-    ZProgressManager::instance()->update(msg);
+    MapInfo *mapInfo = MapManager::instance()->loadMap(mapFilePath);
 
     if (!mapInfo) {
         QMessageBox::critical(this, tr("Error Loading Map"),
@@ -100,12 +94,20 @@ bool ConvertOrientationDialog::convertMap(const QString &mapFilePath)
         return false;
     }
 
+    Map *map = MapManager::instance()->convertOrientation(mapInfo->map(),
+                                              Map::LevelIsometric);
+
+    // Restore the message since loadMap() will change it.
+    QString msg = QString(QLatin1String("Writing %1"))
+            .arg(QFileInfo(mapFilePath).fileName());
+    ZProgressManager::instance()->update(msg);
+
     QFileInfo info(mapInfo->path());
     QString convertedPath = info.absolutePath() + QLatin1Char('/') +
             info.completeBaseName() + QLatin1String(".converted.tmx");
 
     TmxMapWriter w;
-    if (!w.write(mapInfo->map(), convertedPath)) {
+    if (!w.write(map, convertedPath)) {
         QMessageBox::critical(this, tr("Error Writing Map"),
                               w.errorString());
         return false;

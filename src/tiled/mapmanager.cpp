@@ -63,13 +63,6 @@ MapManager::~MapManager()
     QMap<QString,MapInfo*>::const_iterator it = mMapInfo.constBegin();
     while (it != end) {
         MapInfo *mapInfo = it.value();
-        if (mapInfo->mConverted) {
-            if (Map *map = mapInfo->mConverted->map()) {
-                tilesetManager->removeReferences(map->tilesets());
-                delete map;
-            }
-
-        }
         if (Map *map = mapInfo->map()) {
             tilesetManager->removeReferences(map->tilesets());
             delete map;
@@ -160,36 +153,14 @@ public:
 };
 #endif
 
-MapInfo *MapManager::loadMap(const QString &mapName, Map::Orientation orient, const QString &relativeTo)
+MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo)
 {
     QString mapFilePath = pathForMap(mapName, relativeTo);
     if (mapFilePath.isEmpty())
         return 0;
 
     if (mMapInfo.contains(mapFilePath) && mMapInfo[mapFilePath]->map()) {
-convertOrientation:
-        MapInfo *mapInfo = mMapInfo[mapFilePath];
-        if (orient != Map::Unknown && mapInfo->orientation() != orient) {
-            if (!mapInfo->mConverted) {
-                qDebug() << "converting" << mapFilePath << "to" << orientationToString(orient);
-                Map *newMap = convertOrientation(mapInfo->map(), orient);
-                MapInfo *newInfo = new MapInfo(orient, newMap->width(), newMap->height(),
-                                               newMap->tileWidth(), newMap->tileHeight());
-                newInfo->setFilePath(mapFilePath);
-                newInfo->mMap = newMap;
-                newInfo->mConverted = mapInfo;
-                newInfo->mUnconvertedOrientation = mapInfo->mUnconvertedOrientation;
-                mapInfo->mConverted = newInfo;
-            }
-            mapInfo = mapInfo->mConverted;
-        }
-        if (orient == Map::Unknown &&
-                (mapInfo->orientation() != mapInfo->mUnconvertedOrientation)) {
-            Q_ASSERT(mapInfo->mConverted);
-            Q_ASSERT(mapInfo->mConverted->mOrientation == mapInfo->mUnconvertedOrientation);
-            mapInfo = mapInfo->mConverted;
-        }
-        return mapInfo;
+        return mMapInfo[mapFilePath];
     }
 
     QFileInfo fileInfoMap(mapFilePath);
@@ -216,7 +187,8 @@ convertOrientation:
     TilesetManager::instance()->addReferences(map->tilesets());
 
     if (!mMapInfo.contains(mapFilePath)) {
-        MapInfo *info = new MapInfo(map->orientation(), map->width(), map->height(),
+        MapInfo *info = new MapInfo(map->orientation(),
+                                    map->width(), map->height(),
                                     map->tileWidth(), map->tileHeight());
         info->setFilePath(mapFilePath);
         mMapInfo[mapFilePath] = info;
@@ -224,15 +196,13 @@ convertOrientation:
 
     mMapInfo[mapFilePath]->mMap = map;
 
-    if (orient != Map::Unknown && map->orientation() != orient)
-        goto convertOrientation;
-
     return mMapInfo[mapFilePath];
 }
 
 MapInfo *MapManager::newFromMap(Map *map, const QString &mapFilePath)
 {
-    MapInfo *info = new MapInfo(map->orientation(), map->width(), map->height(),
+    MapInfo *info = new MapInfo(map->orientation(),
+                                map->width(), map->height(),
                                 map->tileWidth(), map->tileHeight());
     info->mMap = map;
     info->mBeingEdited = true;
@@ -329,32 +299,10 @@ public:
     QString mError;
 };
 
-MapInfo *MapManager::mapInfo(const QString &mapFilePath, Map::Orientation orient)
+MapInfo *MapManager::mapInfo(const QString &mapFilePath)
 {
-    if (mMapInfo.contains(mapFilePath)) {
-        MapInfo *mapInfo = mMapInfo[mapFilePath];
-        if (orient != Map::Unknown && orient != mapInfo->orientation()) {
-convertOrientation:
-            if (!mapInfo->mConverted) {
-                MapInfo *newInfo = new MapInfo(mapInfo->orientation(),
-                                               mapInfo->width(),
-                                               mapInfo->height(),
-                                               mapInfo->tileWidth(),
-                                               mapInfo->tileHeight());
-                newInfo->mConverted = mapInfo;
-                newInfo->mUnconvertedOrientation = mapInfo->mUnconvertedOrientation;
-                mapInfo->mConverted = newInfo;
-            }
-            mapInfo = mapInfo->mConverted;
-        }
-        if (orient == Map::Unknown &&
-                mapInfo->orientation() != mapInfo->unconvertedOrientation()) {
-            Q_ASSERT(mapInfo->mConverted);
-            Q_ASSERT(mapInfo->mConverted->mOrientation == mapInfo->mUnconvertedOrientation);
-            mapInfo = mapInfo->mConverted;
-        }
-        return mapInfo;
-    }
+    if (mMapInfo.contains(mapFilePath))
+       return mMapInfo[mapFilePath];
 
     QFileInfo fileInfo(mapFilePath);
     if (!fileInfo.exists())
@@ -370,9 +318,6 @@ convertOrientation:
 
     mMapInfo[mapFilePath] = mapInfo;
 
-    if (orient != Map::Unknown && orient != mapInfo->orientation())
-        goto convertOrientation;
-
     return mapInfo;
 }
 
@@ -386,7 +331,8 @@ MapInfo *MapManager::getEmptyMap()
         return mMapInfo[mapFilePath];
 
     MapInfo *mapInfo = new MapInfo(Map::LevelIsometric, 300, 300, 64, 32);
-    Map *map = new Map(mapInfo->orientation(), mapInfo->width(), mapInfo->height(),
+    Map *map = new Map(mapInfo->orientation(),
+                       mapInfo->width(), mapInfo->height(),
                        mapInfo->tileWidth(), mapInfo->tileHeight());
 
     for (int level = 0; level < 1; level++) {
@@ -402,34 +348,15 @@ MapInfo *MapManager::getEmptyMap()
     return mapInfo;
 }
 
-MapInfo *MapManager::getPlaceholderMap(const QString &mapName, Map::Orientation orient, int width, int height)
+MapInfo *MapManager::getPlaceholderMap(const QString &mapName, int width, int height)
 {
-    if (orient == Map::Unknown)
-        orient = Map::LevelIsometric;
-
     QString mapFilePath(mapName);
-    if (mMapInfo.contains(mapFilePath)) {
-        MapInfo *mapInfo = mMapInfo[mapFilePath];
-        if (mapInfo->orientation() != orient) {
-            if (!mapInfo->mConverted) {
-                qDebug() << "converting" << mapFilePath << "to" << orientationToString(orient);
-                Map *newMap = convertOrientation(mapInfo->map(), orient);
-                MapInfo *newInfo = new MapInfo(orient, newMap->width(), newMap->height(),
-                                               newMap->tileWidth(), newMap->tileHeight());
-                newInfo->setFilePath(mapFilePath);
-                newInfo->mPlaceholder = true;
-                newInfo->mMap = newMap;
-                newInfo->mConverted = mapInfo;
-                mapInfo->mConverted = newInfo;
-            }
-            return mapInfo->mConverted;
-        }
-        return mapInfo;
-    }
+    if (mMapInfo.contains(mapFilePath))
+        return mMapInfo[mapFilePath];
 
     if (width <= 0) width = 32;
     if (height <= 0) height = 32;
-    MapInfo *mapInfo = new MapInfo(orient, width, height, 64, 32);
+    MapInfo *mapInfo = new MapInfo(Map::LevelIsometric, width, height, 64, 32);
     Map *map = new Map(mapInfo->orientation(), mapInfo->width(), mapInfo->height(),
                        mapInfo->tileWidth(), mapInfo->tileHeight());
 

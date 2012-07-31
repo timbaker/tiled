@@ -95,7 +95,6 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
 
         QString mapName = type/* + QLatin1String(".tmx")*/;
         MapInfo *newMapInfo = MapManager::instance()->loadMap(mapName,
-                                                     mMapDocument->map()->orientation(),
                                                      mMapDocument->fileName());
 
         if (newMapInfo) {

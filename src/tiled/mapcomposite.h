@@ -143,6 +143,9 @@ public:
     void setGroupVisible(bool visible) { mGroupVisible = visible; }
     bool isGroupVisible() const { return mGroupVisible; }
 
+    QPoint orientAdjustPos() const { return mOrientAdjustPos; }
+    QPoint orientAdjustTiles() const { return mOrientAdjustTiles; }
+
     /**
       * Hack: when dragging a MapObjectItem representing a Lot, the map is hidden
       * at the start of the drag and shown when dragging is finished.  But I don't
@@ -181,6 +184,8 @@ private:
     MapComposite *mParent;
     QPoint mPos;
     int mLevelOffset;
+    QPoint mOrientAdjustPos;
+    QPoint mOrientAdjustTiles;
     int mMinLevel;
     bool mVisible;
     bool mGroupVisible;
