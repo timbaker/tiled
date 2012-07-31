@@ -290,10 +290,12 @@ void MapObjectItem::setDragging(bool dragging)
     if (dragging && !mDragging) {
         if (mLot) {
             mLot->setHiddenDuringDrag(true);
+            update();
         }
     } else if (!dragging && mDragging) {
         if (mLot) {
             mLot->setHiddenDuringDrag(false);
+            update();
         }
     }
     mDragging = dragging;
