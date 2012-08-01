@@ -17,7 +17,6 @@
 
 #include "mapcomposite.h"
 
-#include "map.h"
 #include "mapmanager.h"
 #include "mapobject.h"
 #include "maprenderer.h"
@@ -354,38 +353,29 @@ QRectF CompositeLayerGroup::boundingRect(const MapRenderer *renderer)
 ///// ///// ///// ///// /////
 
 // FIXME: If the MapDocument is saved to a new name, this MapInfo should be replaced with a new one
-MapComposite::MapComposite(MapInfo *mapInfo, MapComposite *parent, const QPoint &positionInParent, int levelOffset)
+MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
+                           MapComposite *parent, const QPoint &positionInParent,
+                           int levelOffset)
     : mMapInfo(mapInfo)
     , mMap(mapInfo->map())
     , mParent(parent)
     , mPos(positionInParent)
     , mLevelOffset(levelOffset)
+    , mOrientRender(orientRender)
     , mMinLevel(0)
     , mMaxLevel(0)
     , mVisible(true)
     , mGroupVisible(true)
     , mHiddenDuringDrag(false)
 {
-    if (mParent) {
-        MapComposite *root = mParent;
-        while (root->mParent)
-            root = root->mParent;
-        Map::Orientation orientRender = root->map()->orientation();
+    if (mOrientRender == Map::Unknown)
+        mOrientRender = mMap->orientation();
+    if (mMap->orientation() != mOrientRender) {
         Map::Orientation orientSelf = mMap->orientation();
-        if (orientSelf == Map::Isometric && orientRender == Map::LevelIsometric) {
+        if (orientSelf == Map::Isometric && mOrientRender == Map::LevelIsometric)
             mOrientAdjustPos = mOrientAdjustTiles = QPoint(3, 3);
-        }
-        if (orientSelf == Map::LevelIsometric && orientRender == Map::Isometric) {
+        if (orientSelf == Map::LevelIsometric && mOrientRender == Map::Isometric)
             mOrientAdjustPos = mOrientAdjustTiles = QPoint(-3, -3);
-        }
-#if 0
-        if ((mParent->map()->orientation() == Map::Isometric) &&
-                (orientRender == Map::LevelIsometric))
-            mOrientAdjustPos += QPoint(3, 3);
-        if ((mParent->map()->orientation() == Map::LevelIsometric) &&
-                (orientRender == Map::Isometric))
-            mOrientAdjustPos += QPoint(-3, -3);
-#endif
     }
 
     int index = 0;
@@ -426,7 +416,10 @@ MapComposite::MapComposite(MapInfo *mapInfo, MapComposite *parent, const QPoint 
                         int levelOffset;
                         (void) levelForLayer(objectGroup, &levelOffset);
 #if 1
-                        MapComposite *_subMap = new MapComposite(subMapInfo, this, object->position().toPoint() + mOrientAdjustPos * levelOffset, levelOffset);
+                        MapComposite *_subMap = new MapComposite(subMapInfo, mOrientRender,
+                                                                 this, object->position().toPoint()
+                                                                 + mOrientAdjustPos * levelOffset,
+                                                                 levelOffset);
                         mSubMaps.append(_subMap);
 #else
                         addMap(subMap, object->position().toPoint(), levelOffset);
@@ -482,7 +475,7 @@ bool MapComposite::levelForLayer(Layer *layer, int *levelPtr)
 
 MapComposite *MapComposite::addMap(MapInfo *mapInfo, const QPoint &pos, int levelOffset)
 {
-    MapComposite *subMap = new MapComposite(mapInfo, this, pos, levelOffset);
+    MapComposite *subMap = new MapComposite(mapInfo, mOrientRender, this, pos, levelOffset);
     mSubMaps.append(subMap);
 
 //    ensureMaxLevels(levelOffset + mapInfo->map()->maxLevel());

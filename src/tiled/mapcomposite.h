@@ -18,6 +18,7 @@
 #ifndef MAPCOMPOSITE_H
 #define MAPCOMPOSITE_H
 
+#include "map.h"
 #include "ztilelayergroup.h"
 
 #include <QObject>
@@ -29,7 +30,6 @@ class MapInfo;
 
 namespace Tiled {
 class Layer;
-class Map;
 }
 
 class MapComposite;
@@ -102,7 +102,9 @@ class MapComposite : public QObject
 {
     Q_OBJECT
 public:
-    MapComposite(MapInfo *mapInfo, MapComposite *parent = 0, const QPoint &positionInParent = QPoint(), int levelOffset = 0);
+    MapComposite(MapInfo *mapInfo, Tiled::Map::Orientation orientRender = Tiled::Map::Unknown,
+                 MapComposite *parent = 0, const QPoint &positionInParent = QPoint(),
+                 int levelOffset = 0);
     ~MapComposite();
 
     static bool levelForLayer(Tiled::Layer *layer, int *levelPtr = 0);
@@ -186,6 +188,7 @@ private:
     MapComposite *mParent;
     QPoint mPos;
     int mLevelOffset;
+    Tiled::Map::Orientation mOrientRender;
     QPoint mOrientAdjustPos;
     QPoint mOrientAdjustTiles;
     int mMinLevel;
