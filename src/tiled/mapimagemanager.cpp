@@ -29,11 +29,11 @@
 #include "zprogress.h"
 #include "zlevelrenderer.h"
 
+#include <QDataStream>
 #include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
 #include <QMessageBox>
-#include <QDataStream>
 
 using namespace Tiled;
 
@@ -155,6 +155,25 @@ MapImageManager::ImageData MapImageManager::generateMapImage(MapComposite *mapCo
         return ImageData();
     }
 
+    mapComposite->saveVisibility();
+    foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups()) {
+        foreach (TileLayer *tl, layerGroup->layers()) {
+            bool isVisible = true;
+            if (tl->name().contains(QLatin1String("NoRender")))
+                isVisible = false;
+            layerGroup->setLayerVisibility(tl, isVisible);
+        }
+        layerGroup->synch();
+    }
+
+    // Don't draw empty levels
+    int maxLevel = 0;
+    foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups()) {
+        if (!layerGroup->bounds().isEmpty())
+            maxLevel = layerGroup->level();
+    }
+    renderer->setMaxLevel(maxLevel);
+
     QRectF sceneRect = mapComposite->boundingRect(renderer);
     QSize mapSize = sceneRect.size().toSize();
     if (mapSize.isEmpty())
@@ -171,8 +190,6 @@ MapImageManager::ImageData MapImageManager::generateMapImage(MapComposite *mapCo
                            QPainter::HighQualityAntialiasing);
     painter.setTransform(QTransform::fromScale(scale, scale).translate(-sceneRect.left(), -sceneRect.top()));
 
-    mapComposite->saveVisibility();
-#if 1
     QVector<int> drawnLevels;
     foreach (Layer *layer, mapComposite->map()->layers()) {
         if (TileLayer *tileLayer = layer->asTileLayer()) {
@@ -184,13 +201,6 @@ MapImageManager::ImageData MapImageManager::generateMapImage(MapComposite *mapCo
                 // FIXME: LayerGroups should be drawn with the same Z-order the
                 // scene uses.  They will usually be in the same order anyways.
                 CompositeLayerGroup *layerGroup = mapComposite->tileLayersForLevel(level);
-                foreach (TileLayer *tl, layerGroup->layers()) {
-                    bool isVisible = true;
-                    if (tl->name().contains(QLatin1String("NoRender")))
-                        isVisible = false;
-                    layerGroup->setLayerVisibility(tl, isVisible);
-                }
-                layerGroup->synch();
                 renderer->drawTileLayerGroup(&painter, layerGroup);
             } else {
                 if (layer->name().contains(QLatin1String("NoRender")))
@@ -199,14 +209,7 @@ MapImageManager::ImageData MapImageManager::generateMapImage(MapComposite *mapCo
             }
         }
     }
-#else
-    foreach (Layer *layer, map->layers())
-        layer->setVisible(!layer->name().contains(QLatin1String("NoRender")));
-    foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups()) {
-        layerGroup->synch();
-        renderer->drawTileLayerGroup(&painter, layerGroup);
-    }
-#endif
+
     mapComposite->restoreVisibility();
     foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups())
         layerGroup->synch();
