@@ -178,8 +178,37 @@ void SaveAsImageDialog::accept()
     const bool drawLots = mUi->drawLots->isChecked();
     const int customImageWidth = mUi->imageWidthSpinBox->value();
 
+    MapComposite *mapComposite = mMapDocument->mapComposite();
+    mapComposite->saveVisibility();
+    if (!drawLots) {
+        foreach (MapComposite *lot, mapComposite->subMaps())
+            lot->setVisible(false);
+    }
+    foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups()) {
+        if (!visibleLayersOnly || !drawNoRender) {
+            foreach (TileLayer *tl, layerGroup->layers()) {
+                bool isVisible = !visibleLayersOnly ||
+                        (layerGroup->isVisible() && layerGroup->isLayerVisible(tl));
+                if (!drawNoRender && tl->name().contains(QLatin1String("NoRender")))
+                    isVisible = false;
+                layerGroup->setLayerVisibility(tl, isVisible);
+            }
+        }
+        layerGroup->synch();
+    }
+
     MapRenderer *renderer = mMapDocument->renderer();
-    QRectF sceneRect = mMapDocument->mapComposite()->boundingRect(renderer);
+
+    // Don't draw empty levels
+    int savedMaxLevel = renderer->maxLevel();
+    int maxLevel = 0;
+    foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups()) {
+        if (!layerGroup->bounds().isEmpty())
+            maxLevel = layerGroup->level();
+    }
+    renderer->setMaxLevel(maxLevel);
+
+    QRectF sceneRect = mapComposite->boundingRect(renderer);
     QSize mapSize = sceneRect.size().toSize();
 
     qreal scale = mCurrentScale;
@@ -200,13 +229,6 @@ void SaveAsImageDialog::accept()
 
     painter.translate(-sceneRect.left(), -sceneRect.top());
 
-    mMapDocument->mapComposite()->saveVisibility();
-
-    if (!drawLots) {
-        foreach (MapComposite *lot, mMapDocument->mapComposite()->subMaps())
-            lot->setVisible(false);
-    }
-
     QVector<CompositeLayerGroup*> drawnLayerGroups;
     foreach (Layer *layer, mMapDocument->map()->layers()) {
         painter.setOpacity(layer->opacity());
@@ -221,16 +243,6 @@ void SaveAsImageDialog::accept()
                 // scene uses.  They will usually be in the same order anyways.
                 if (visibleLayersOnly && !layerGroup->isVisible())
                     continue;
-                if (!visibleLayersOnly || !drawNoRender) {
-                    foreach (TileLayer *tl, layerGroup->layers()) {
-                        bool isVisible = !visibleLayersOnly ||
-                                (layerGroup->isVisible() && layerGroup->isLayerVisible(tl));
-                        if (!drawNoRender && tl->name().contains(QLatin1String("NoRender")))
-                            isVisible = false;
-                        layerGroup->setLayerVisibility(tl, isVisible);
-                    }
-                }
-                layerGroup->synch();
                 renderer->drawTileLayerGroup(&painter, layerGroup);
             } else {
                 if (visibleLayersOnly && !layer->isVisible())
@@ -255,8 +267,9 @@ void SaveAsImageDialog::accept()
         }
     }
 
-    mMapDocument->mapComposite()->restoreVisibility();
-    foreach (CompositeLayerGroup *layerGroup, mMapDocument->mapComposite()->sortedLayerGroups())
+    mapComposite->restoreVisibility();
+    renderer->setMaxLevel(savedMaxLevel);
+    foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups())
         layerGroup->synch();
 
 #else // !ZOMBOID
