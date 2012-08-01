@@ -377,8 +377,10 @@ void ZomboidScene::layerGroupAdded(int level)
     }
 
     // Setting a new maxLevel() for a map resizes the scene, requiring all existing items to be repositioned.
-    if (level == mMapDocument->map()->maxLevel())
+    if (level == mMapDocument->mapComposite()->maxLevel()) {
+        mMapDocument->renderer()->setMaxLevel(level);
         mapChanged();
+    }
 }
 
 void ZomboidScene::layerGroupVisibilityChanged(CompositeLayerGroup *g)

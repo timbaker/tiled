@@ -143,6 +143,8 @@ public:
     void setGroupVisible(bool visible) { mGroupVisible = visible; }
     bool isGroupVisible() const { return mGroupVisible; }
 
+    int maxLevel() const { return mMaxLevel; }
+
     QPoint orientAdjustPos() const { return mOrientAdjustPos; }
     QPoint orientAdjustTiles() const { return mOrientAdjustTiles; }
 
@@ -187,6 +189,7 @@ private:
     QPoint mOrientAdjustPos;
     QPoint mOrientAdjustTiles;
     int mMinLevel;
+    int mMaxLevel;
     bool mVisible;
     bool mGroupVisible;
     bool mSavedGroupVisible;

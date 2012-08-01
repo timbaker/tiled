@@ -361,6 +361,7 @@ MapComposite::MapComposite(MapInfo *mapInfo, MapComposite *parent, const QPoint 
     , mPos(positionInParent)
     , mLevelOffset(levelOffset)
     , mMinLevel(0)
+    , mMaxLevel(0)
     , mVisible(true)
     , mGroupVisible(true)
     , mHiddenDuringDrag(false)
@@ -437,21 +438,21 @@ MapComposite::MapComposite(MapInfo *mapInfo, MapComposite *parent, const QPoint 
     }
 
     mMinLevel = 10000;
+    mMaxLevel = 0;
 
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups) {
         if (!mMapInfo->isBeingEdited())
             layerGroup->synch();
         if (layerGroup->level() < mMinLevel)
             mMinLevel = layerGroup->level();
-        // FIXME: no changing of mMap should happen after it is loaded!
-        if (layerGroup->level() > mMap->maxLevel())
-            mMap->setMaxLevel(layerGroup->level());
+        if (layerGroup->level() > mMaxLevel)
+            mMaxLevel = layerGroup->level();
     }
 
     if (mMinLevel == 10000)
         mMinLevel = 0;
 
-    for (int level = mMinLevel; level <= mMap->maxLevel(); ++level) {
+    for (int level = mMinLevel; level <= mMaxLevel; ++level) {
         if (mLayerGroups.contains(level))
             mSortedLayerGroups.append(mLayerGroups[level]);
     }
@@ -575,11 +576,11 @@ void MapComposite::addLayerToGroup(int index)
 
             if (level < mMinLevel)
                 mMinLevel = level;
-            if (level > mMap->maxLevel())
-                mMap->setMaxLevel(level);
+            if (level > mMaxLevel)
+                mMaxLevel = level;
 
             mSortedLayerGroups.clear();
-            for (int n = mMinLevel; n <= mMap->maxLevel(); ++n) {
+            for (int n = mMinLevel; n <= mMaxLevel; ++n) {
                 if (mLayerGroups.contains(n))
                     mSortedLayerGroups.append(mLayerGroups[n]);
             }
@@ -641,8 +642,13 @@ int MapComposite::levelRecursive() const
 
 QRectF MapComposite::boundingRect(MapRenderer *renderer, bool forceMapBounds) const
 {
+    // The reason I'm checking renderer->maxLevel() here is because when drawing
+    // map images, I don't want empty levels at the top.
+
     QRectF bounds;
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups) {
+        if (mLevelOffset + layerGroup->level() > renderer->maxLevel())
+            continue;
         unionSceneRects(bounds,
                         layerGroup->boundingRect(renderer),
                         bounds);
@@ -653,13 +659,19 @@ QRectF MapComposite::boundingRect(MapRenderer *renderer, bool forceMapBounds) co
         // Always include level 0, even if there are no layers or only empty/hidden
         // layers on level 0, otherwise a SubMapItem's bounds won't include the
         // fancy rectangle.
+        int minLevel = mLevelOffset;
+        if (minLevel > renderer->maxLevel())
+            minLevel = renderer->maxLevel();
         unionSceneRects(bounds,
-                        renderer->boundingRect(mapTileBounds),
+                        renderer->boundingRect(mapTileBounds, minLevel),
                         bounds);
         // When setting the bounds of the scene, make sure the highest level is included
         // in the sceneRect() so the grid won't be cut off.
+        int maxLevel = mLevelOffset + mMaxLevel;
+        if (maxLevel > renderer->maxLevel())
+            maxLevel = renderer->maxLevel();
         unionSceneRects(bounds,
-                        renderer->boundingRect(mapTileBounds, mLevelOffset + mMap->maxLevel()),
+                        renderer->boundingRect(mapTileBounds, maxLevel),
                         bounds);
     }
     return bounds;
