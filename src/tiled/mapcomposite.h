@@ -167,6 +167,7 @@ public:
     void saveVisibility();
     void restoreVisibility();
 
+    void ensureMaxLevels(int maxLevel);
 signals:
     void layerGroupAdded(int level);
     void layerAddedToGroup(int index);

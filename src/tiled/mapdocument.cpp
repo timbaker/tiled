@@ -83,13 +83,16 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
 #ifdef ZOMBOID
     case Map::LevelIsometric:
         mRenderer = new ZLevelRenderer(map);
-        mRenderer->setMaxLevel(mMapComposite->maxLevel());
         break;
 #endif
     default:
         mRenderer = new OrthogonalRenderer(map);
         break;
     }
+
+#ifdef ZOMBOID
+    mRenderer->setMaxLevel(mMapComposite->maxLevel());
+#endif
 
     mCurrentLayerIndex = (map->layerCount() == 0) ? -1 : 0;
     mLayerModel->setMapDocument(this);

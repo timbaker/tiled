@@ -415,14 +415,16 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
                     if (subMapInfo) {
                         int levelOffset;
                         (void) levelForLayer(objectGroup, &levelOffset);
-#if 1
+#if 0
                         MapComposite *_subMap = new MapComposite(subMapInfo, mOrientRender,
                                                                  this, object->position().toPoint()
                                                                  + mOrientAdjustPos * levelOffset,
                                                                  levelOffset);
                         mSubMaps.append(_subMap);
 #else
-                        addMap(subMap, object->position().toPoint(), levelOffset);
+                        addMap(subMapInfo, object->position().toPoint()
+                               + mOrientAdjustPos * levelOffset,
+                               levelOffset);
 #endif
                     }
                 }
@@ -446,8 +448,9 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
         mMinLevel = 0;
 
     for (int level = mMinLevel; level <= mMaxLevel; ++level) {
-        if (mLayerGroups.contains(level))
-            mSortedLayerGroups.append(mLayerGroups[level]);
+        if (!mLayerGroups.contains(level))
+            mLayerGroups[level] = new CompositeLayerGroup(this, level);
+        mSortedLayerGroups.append(mLayerGroups[level]);
     }
 }
 
@@ -478,7 +481,7 @@ MapComposite *MapComposite::addMap(MapInfo *mapInfo, const QPoint &pos, int leve
     MapComposite *subMap = new MapComposite(mapInfo, mOrientRender, this, pos, levelOffset);
     mSubMaps.append(subMap);
 
-//    ensureMaxLevels(levelOffset + mapInfo->map()->maxLevel());
+    ensureMaxLevels(levelOffset + subMap->maxLevel());
 
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups)
         layerGroup->setNeedsSynch(true);
@@ -640,7 +643,7 @@ QRectF MapComposite::boundingRect(MapRenderer *renderer, bool forceMapBounds) co
 
     QRectF bounds;
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups) {
-        if (mLevelOffset + layerGroup->level() > renderer->maxLevel())
+        if (levelRecursive() + layerGroup->level() > renderer->maxLevel())
             continue;
         unionSceneRects(bounds,
                         layerGroup->boundingRect(renderer),
@@ -652,7 +655,7 @@ QRectF MapComposite::boundingRect(MapRenderer *renderer, bool forceMapBounds) co
         // Always include level 0, even if there are no layers or only empty/hidden
         // layers on level 0, otherwise a SubMapItem's bounds won't include the
         // fancy rectangle.
-        int minLevel = mLevelOffset;
+        int minLevel = levelRecursive();
         if (minLevel > renderer->maxLevel())
             minLevel = renderer->maxLevel();
         unionSceneRects(bounds,
@@ -660,7 +663,7 @@ QRectF MapComposite::boundingRect(MapRenderer *renderer, bool forceMapBounds) co
                         bounds);
         // When setting the bounds of the scene, make sure the highest level is included
         // in the sceneRect() so the grid won't be cut off.
-        int maxLevel = mLevelOffset + mMaxLevel;
+        int maxLevel = levelRecursive() + mMaxLevel;
         if (maxLevel > renderer->maxLevel())
             maxLevel = renderer->maxLevel();
         unionSceneRects(bounds,
@@ -698,3 +701,28 @@ void MapComposite::restoreVisibility()
     foreach (MapComposite *subMap, mSubMaps)
         subMap->restoreVisibility();
 }
+
+void MapComposite::ensureMaxLevels(int maxLevel)
+{
+    maxLevel = qMax(maxLevel, mMaxLevel);
+    if (mMinLevel == 0 && maxLevel < mLayerGroups.size())
+        return;
+
+    for (int level = 0; level <= maxLevel; level++) {
+        if (!mLayerGroups.contains(level)) {
+            mLayerGroups[level] = new CompositeLayerGroup(this, level);
+
+            if (mMinLevel > level)
+                mMinLevel = level;
+            if (level > mMaxLevel)
+                mMaxLevel = level;
+
+            mSortedLayerGroups.clear();
+            for (int i = mMinLevel; i <= mMaxLevel; ++i)
+                mSortedLayerGroups.append(mLayerGroups[i]);
+
+            emit layerGroupAdded(level);
+        }
+    }
+}
+

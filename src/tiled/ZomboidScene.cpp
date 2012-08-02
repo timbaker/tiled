@@ -205,6 +205,7 @@ QGraphicsItem *ZomboidScene::createLayerItem(Layer *layer)
                 mTileLayerGroupItems[tl->level()] = new CompositeLayerGroupItem((CompositeLayerGroup*)tl->group(),
                                                                                 mMapDocument->renderer());
                 addItem(mTileLayerGroupItems[tl->level()]);
+                mMapDocument->renderer()->setMaxLevel(mMapDocument->mapComposite()->maxLevel());
                 updateLayerGroupLater(tl->level(), Bounds);
             }
             return new DummyGraphicsItem();
@@ -374,6 +375,8 @@ void ZomboidScene::layerGroupAdded(int level)
         mTileLayerGroupItems[level] = new CompositeLayerGroupItem((CompositeLayerGroup*)layerGroup,
                                                                   mMapDocument->renderer());
         addItem(mTileLayerGroupItems[level]);
+        mMapDocument->renderer()->setMaxLevel(mMapDocument->mapComposite()->maxLevel());
+        updateLayerGroupLater(level, Synch | Bounds | ZOrder);
     }
 
     // Setting a new maxLevel() for a map resizes the scene, requiring all existing items to be repositioned.
@@ -447,6 +450,7 @@ void ZomboidScene::layerLevelChanged(int index, int oldLevel)
                 MapComposite *lot = mMapObjectToLot[mapObject];
                 lot->setGroupVisible(og->isVisible());
                 lot->setLevel(og->level());
+                mMapDocument->mapComposite()->ensureMaxLevels(lot->levelOffset() + lot->maxLevel());
                 // Recalculate the MapObject bounds
                 onLotUpdated(lot, mapObject);
                 synch = true;
@@ -582,6 +586,24 @@ void ZomboidScene::onLotUpdated(MapComposite *lot, MapObject *mapObject)
 
 void ZomboidScene::handlePendingUpdates()
 {
+#if 1
+    /////
+    MapComposite *mapComposite = mMapDocument->mapComposite();
+    if (mTileLayerGroupItems.size() != mapComposite->layerGroupCount()) {
+        foreach (CompositeLayerGroup *layerGroup, mapComposite->layerGroups()) {
+            int level = layerGroup->level();
+            if (!mTileLayerGroupItems.contains(level)) {
+                mTileLayerGroupItems[level]
+                        = new CompositeLayerGroupItem(layerGroup,
+                                                      mMapDocument->renderer());
+                addItem(mTileLayerGroupItems[level]);
+                mPendingFlags |= ZOrder;
+            }
+        }
+        mMapDocument->renderer()->setMaxLevel(mapComposite->maxLevel());
+    }
+    /////
+#endif
     if (mPendingFlags & AllGroups)
         mPendingGroupItems = mTileLayerGroupItems.values();
     if (mPendingFlags & Synch) {
