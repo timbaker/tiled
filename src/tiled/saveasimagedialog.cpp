@@ -229,6 +229,35 @@ void SaveAsImageDialog::accept()
 
     painter.translate(-sceneRect.left(), -sceneRect.top());
 
+#if 1
+    MapComposite::ZOrderList zorder = mapComposite->zOrder();
+    foreach (MapComposite::ZOrderItem zo, zorder) {
+        if (zo.group) {
+            if (visibleLayersOnly && !zo.group->isVisible())
+                continue;
+            renderer->drawTileLayerGroup(&painter, zo.group);
+        } else if (TileLayer *tl = zo.layer->asTileLayer()) {
+            if (visibleLayersOnly && !tl->isVisible())
+                continue;
+            if (tl->name().contains(QLatin1String("NoRender")))
+                continue;
+            renderer->drawTileLayer(&painter, tl);
+        } else if (ObjectGroup *objGroup = zo.layer->asObjectGroup()) {
+            if (!drawObjectLayers)
+                continue;
+            if (visibleLayersOnly && !objGroup->isVisible())
+                continue;
+            foreach (const MapObject *object, objGroup->objects()) {
+                const QColor color = MapObjectItem::objectColor(object);
+                renderer->drawMapObject(&painter, object, color);
+            }
+        } else if (ImageLayer *imageLayer = zo.layer->asImageLayer()) {
+            if (visibleLayersOnly && !imageLayer->isVisible())
+                continue;
+            renderer->drawImageLayer(&painter, imageLayer);
+        }
+    }
+#else
     QVector<CompositeLayerGroup*> drawnLayerGroups;
     foreach (Layer *layer, mMapDocument->map()->layers()) {
         painter.setOpacity(layer->opacity());
@@ -266,6 +295,7 @@ void SaveAsImageDialog::accept()
             renderer->drawImageLayer(&painter, imageLayer);
         }
     }
+#endif
 
     mapComposite->restoreVisibility();
     renderer->setMaxLevel(savedMaxLevel);

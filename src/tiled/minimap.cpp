@@ -121,6 +121,18 @@ void MiniMapItem::updateImage(const QRectF &dirtyRect)
     painter.fillRect(dirtyRect, Qt::transparent);
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
+#if 1
+    MapComposite::ZOrderList zorder = mMapComposite->zOrder();
+    foreach (MapComposite::ZOrderItem zo, zorder) {
+        if (zo.group)
+            mRenderer->drawTileLayerGroup(&painter, zo.group, dirtyRect);
+        else if (TileLayer *tl = zo.layer->asTileLayer()) {
+            if (tl->name().contains(QLatin1String("NoRender")))
+                continue;
+            mRenderer->drawTileLayer(&painter, tl, dirtyRect);
+        }
+    }
+#else
     mMapComposite->saveVisibility();
     QVector<int> drawnLevels;
     foreach (Layer *layer, mMapComposite->map()->layers()) {
@@ -149,6 +161,8 @@ void MiniMapItem::updateImage(const QRectF &dirtyRect)
             }
         }
     }
+#endif
+
     mMapComposite->restoreVisibility();
     foreach (CompositeLayerGroup *layerGroup, mMapComposite->sortedLayerGroups())
         layerGroup->synch();

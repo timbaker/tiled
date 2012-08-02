@@ -190,6 +190,18 @@ MapImageManager::ImageData MapImageManager::generateMapImage(MapComposite *mapCo
                            QPainter::HighQualityAntialiasing);
     painter.setTransform(QTransform::fromScale(scale, scale).translate(-sceneRect.left(), -sceneRect.top()));
 
+#if 1
+    MapComposite::ZOrderList zorder = mapComposite->zOrder();
+    foreach (MapComposite::ZOrderItem zo, zorder) {
+        if (zo.group)
+            renderer->drawTileLayerGroup(&painter, zo.group);
+        else if (TileLayer *tl = zo.layer->asTileLayer()) {
+            if (tl->name().contains(QLatin1String("NoRender")))
+                continue;
+            renderer->drawTileLayer(&painter, tl);
+        }
+    }
+#else
     QVector<int> drawnLevels;
     foreach (Layer *layer, mapComposite->map()->layers()) {
         if (TileLayer *tileLayer = layer->asTileLayer()) {
@@ -209,6 +221,7 @@ MapImageManager::ImageData MapImageManager::generateMapImage(MapComposite *mapCo
             }
         }
     }
+#endif
 
     mapComposite->restoreVisibility();
     foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups())

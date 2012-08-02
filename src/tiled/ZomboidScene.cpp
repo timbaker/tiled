@@ -161,8 +161,7 @@ void ZomboidScene::refreshScene()
 
     MapScene::refreshScene();
 
-    doLater(ZOrder);
-    updateLayerGroupsLater(Synch | Bounds);
+    updateLayerGroupsLater(Synch | Bounds | ZOrder);
 }
 
 void ZomboidScene::mapChanged()
@@ -490,6 +489,21 @@ void ZomboidScene::doLater(PendingFlags flags)
 // Determine sane Z-order for layers in and out of TileLayerGroups
 void ZomboidScene::setGraphicsSceneZOrder()
 {
+#if 1
+    MapComposite::ZOrderList zorder = mMapDocument->mapComposite()->zOrder();
+    int z = 0;
+    foreach (MapComposite::ZOrderItem zo, zorder) {
+        if (zo.group) {
+            int level = zo.group->level();
+            if (mTileLayerGroupItems.contains(level))
+                mTileLayerGroupItems[level]->setZValue(z);
+        } else if (mLayerItems.size() > zo.layerIndex) {
+            if (mLayerItems[zo.layerIndex])
+                mLayerItems[zo.layerIndex]->setZValue(z);
+        }
+        ++z;
+    }
+#else
     foreach (CompositeLayerGroupItem *item, mTileLayerGroupItems)
         item->setZValue(levelZOrder(item->layerGroup()->level()));
 
@@ -526,6 +540,7 @@ void ZomboidScene::setGraphicsSceneZOrder()
             ++index;
         }
     }
+#endif
 }
 
 void ZomboidScene::onLotAdded(MapComposite *lot, MapObject *mapObject)
