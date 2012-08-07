@@ -33,7 +33,7 @@
 #include <QHeaderView>
 #include <QMenu>
 #include <QPainter>
-#include <QScrollbar>
+#include <QScrollBar>
 #include <QUndoCommand>
 
 using namespace Tiled;
