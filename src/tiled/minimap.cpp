@@ -121,7 +121,17 @@ void MiniMapItem::updateImage(const QRectF &dirtyRect)
     painter.fillRect(dirtyRect, Qt::transparent);
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
-#if 1
+    mMapComposite->saveVisibility();
+    foreach (CompositeLayerGroup *layerGroup, mMapComposite->sortedLayerGroups()) {
+        foreach (TileLayer *tl, layerGroup->layers()) {
+            bool isVisible = true;
+            if (tl->name().contains(QLatin1String("NoRender")))
+                isVisible = false;
+            layerGroup->setLayerVisibility(tl, isVisible);
+        }
+        layerGroup->synch();
+    }
+
     MapComposite::ZOrderList zorder = mMapComposite->zOrder();
     foreach (MapComposite::ZOrderItem zo, zorder) {
         if (zo.group)
@@ -132,36 +142,6 @@ void MiniMapItem::updateImage(const QRectF &dirtyRect)
             mRenderer->drawTileLayer(&painter, tl, dirtyRect);
         }
     }
-#else
-    mMapComposite->saveVisibility();
-    QVector<int> drawnLevels;
-    foreach (Layer *layer, mMapComposite->map()->layers()) {
-        if (TileLayer *tileLayer = layer->asTileLayer()) {
-            int level;
-            if (MapComposite::levelForLayer(tileLayer, &level)) {
-                if (drawnLevels.contains(level))
-                    continue;
-                drawnLevels += level;
-                // FIXME: LayerGroups should be drawn with the same Z-order the
-                // scene uses.  They will usually be in the same order anyways.
-                CompositeLayerGroup *layerGroup = mMapComposite->tileLayersForLevel(level);
-                foreach (TileLayer *tl, layerGroup->layers()) {
-                    bool isVisible = true;
-                    if (tl->name().contains(QLatin1String("NoRender")))
-                        isVisible = false;
-                    layerGroup->setLayerVisibility(tl, isVisible);
-                }
-                layerGroup->synch();
-
-                mRenderer->drawTileLayerGroup(&painter, layerGroup, dirtyRect);
-            } else {
-                if (layer->name().contains(QLatin1String("NoRender")))
-                    continue;
-                mRenderer->drawTileLayer(&painter, tileLayer, dirtyRect);
-            }
-        }
-    }
-#endif
 
     mMapComposite->restoreVisibility();
     foreach (CompositeLayerGroup *layerGroup, mMapComposite->sortedLayerGroups())
