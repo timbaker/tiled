@@ -42,6 +42,7 @@
 #include "utils.h"
 #include "zoomable.h"
 #ifdef ZOMBOID
+#include "mapcomposite.h"
 #include "preferences.h"
 #include "ztilesetthumbview.h"
 #endif
@@ -852,8 +853,7 @@ void TilesetDock::switchLayerForTile(Tile *tile)
         if (TileLayer *tl = currentLayer->asTileLayer()) { // FIXME: ObjectGroup too?
             if (tl->group()) {
                 foreach (TileLayer *tl1, tl->group()->layers()) {
-                    int pos = tl1->name().indexOf(QLatin1Char('_')) + 1;
-                    QString name = tl1->name().mid(pos);
+                    QString name = MapComposite::layerNameWithoutPrefix(tl1);
                     if (name == layerName) {
                         int layerIndex = mMapDocument->map()->layers().indexOf(tl1);
                         if (layerIndex != mMapDocument->currentLayerIndex())

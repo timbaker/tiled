@@ -63,13 +63,13 @@ static void unionSceneRects(const QRectF &a,
         out = a | b;
 }
 
-static QString layerNameWithoutPrefix(const QString &name)
+QString MapComposite::layerNameWithoutPrefix(const QString &name)
 {
     int pos = name.indexOf(QLatin1Char('_')) + 1; // Could be "-1 + 1 == 0"
     return name.mid(pos);
 }
 
-static QString layerNameWithoutPrefix(Layer *layer)
+QString MapComposite::layerNameWithoutPrefix(Layer *layer)
 {
     return layerNameWithoutPrefix(layer->name());
 }
@@ -96,7 +96,7 @@ void CompositeLayerGroup::addTileLayer(TileLayer *layer, int index)
         layer->setGroup(oldGroup);
 
     // Remember the names of layers (without the N_ prefix)
-    const QString name = layerNameWithoutPrefix(layer);
+    const QString name = MapComposite::layerNameWithoutPrefix(layer);
     mLayersByName[name].append(layer);
 
     index = mLayers.indexOf(layer);
@@ -123,7 +123,7 @@ void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
     if (!mOwner->mapInfo()->isBeingEdited())
         layer->setGroup(oldGroup);
 
-    const QString name = layerNameWithoutPrefix(layer);
+    const QString name = MapComposite::layerNameWithoutPrefix(layer);
     index = mLayersByName[name].indexOf(layer);
     mLayersByName[name].remove(index);
 }
@@ -263,7 +263,7 @@ QMargins CompositeLayerGroup::drawMargins() const
 
 void CompositeLayerGroup::setLayerVisibility(const QString &layerName, bool visible)
 {
-    const QString name = layerNameWithoutPrefix(layerName);
+    const QString name = MapComposite::layerNameWithoutPrefix(layerName);
     if (!mLayersByName.contains(name))
         return;
     foreach (Layer *layer, mLayersByName[name]) {
@@ -302,7 +302,7 @@ void CompositeLayerGroup::layerRenamed(TileLayer *layer)
         }
     }
 
-    const QString name = layerNameWithoutPrefix(layer->name());
+    const QString name = MapComposite::layerNameWithoutPrefix(layer);
     mLayersByName[name].append(layer);
 }
 

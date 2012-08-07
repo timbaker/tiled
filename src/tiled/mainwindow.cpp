@@ -1370,12 +1370,11 @@ void MainWindow::updateActions()
         // The extra space at the end is deliberate so the toolbutton arrow
         // doesn't overlap the text.
         mCurrentLevelButton->setText(tr("Level: %1 ").arg(layer->level()));
-        int n;
         QString name = layer->name();
         if (name.isEmpty())
             name = tr("<no name>");
-        else if ((n = name.indexOf(QLatin1Char('_'))) != -1)
-            name = name.mid(n + 1);
+        else
+            name = MapComposite::layerNameWithoutPrefix(name);
         mCurrentLayerButton->setText(tr("Layer: %1 ").arg(name));
     } else {
         mCurrentLevelButton->setText(tr("Level: <none> "));
@@ -1490,18 +1489,26 @@ void MainWindow::triggeredLevelMenu(QAction *action)
     if (CompositeLayerGroup *layerGroup = mMapDocument->mapComposite()->tileLayersForLevel(level)) {
         if (Layer *layer = mMapDocument->currentLayer()) {
             // Try to switch to a layer with the same name in the new level
-            int n;
-            QString name = layer->name();
-            if (!name.isEmpty() && ((n = name.indexOf(QLatin1Char('_'))) != -1))
-                name = name.mid(n + 1);
-            foreach (TileLayer *tl, layerGroup->layers()) {
-                QString name2 = tl->name();
-                if ((n = name2.indexOf(QLatin1Char('_'))) != -1)
-                    name2 = name2.mid(n + 1);
-                if (name == name2) {
-                    int index = mMapDocument->map()->layers().indexOf(tl);
-                    mMapDocument->setCurrentLayerIndex(index);
-                    return;
+            QString name = MapComposite::layerNameWithoutPrefix(layer);
+            if (layer->isTileLayer()) {
+                foreach (TileLayer *tl, layerGroup->layers()) {
+                    QString name2 = MapComposite::layerNameWithoutPrefix(tl);
+                    if (name == name2) {
+                        int index = mMapDocument->map()->layers().indexOf(tl);
+                        mMapDocument->setCurrentLayerIndex(index);
+                        return;
+                    }
+                }
+            } else if (layer->isObjectGroup()) {
+                foreach (ObjectGroup *og, mMapDocument->map()->objectGroups()) {
+                    if (og->level() == level) {
+                        QString name2 = MapComposite::layerNameWithoutPrefix(og);
+                        if (name == name2) {
+                            int index = mMapDocument->map()->layers().indexOf(og);
+                            mMapDocument->setCurrentLayerIndex(index);
+                            return;
+                        }
+                    }
                 }
             }
         }

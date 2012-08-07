@@ -29,6 +29,7 @@
 #include "tileset.h"
 #include "tilesetmodel.h"
 #ifdef ZOMBOID
+#include "mapcomposite.h"
 #include "tilelayer.h"
 #include "tilesetmanager.h"
 #endif
@@ -277,8 +278,8 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
         QSet<QString> set;
         foreach (TileLayer *tl, mMapDocument->map()->tileLayers()) {
             if (tl->group()) {
-                int n = tl->name().indexOf(QLatin1Char('_')) + 1;
-                set.insert(tl->name().mid(n));
+                QString name = MapComposite::layerNameWithoutPrefix(tl);
+                set.insert(name);
             }
         }
 

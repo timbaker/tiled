@@ -92,10 +92,8 @@ QVariant ZLevelsModel::data(const QModelIndex &index, int role) const
 {
     if (TileLayer *tl = toLayer(index)) {
         switch (role) {
-        case Qt::DisplayRole: {
-            int i = tl->name().indexOf(QLatin1Char('_')) + 1;
-            return tl->name().mid(i);
-        }
+        case Qt::DisplayRole:
+            return MapComposite::layerNameWithoutPrefix(tl);
         case Qt::EditRole:
             return tl->name();
         case Qt::DecorationRole:
