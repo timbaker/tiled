@@ -29,8 +29,14 @@
 using namespace Tiled::Internal;
 
 static const qreal zoomFactors[] = {
+#ifdef ZOMBOID
+    // These x100 must be whole numbers for the combobox
+    0.06,
+    0.12,
+#else
     0.0625,
     0.125,
+#endif
     0.25,
     0.33,
     0.5,
@@ -173,6 +179,7 @@ void Zoomable::comboActivated(int index)
 void Zoomable::comboEdited()
 {
     int pos = mComboRegExp.indexIn(mComboBox->currentText());
+    Q_UNUSED(pos)
     Q_ASSERT(pos != -1);
 
     qreal scale = qBound(mZoomFactors.first(),
