@@ -40,16 +40,9 @@ using namespace Tiled;
 
 QSize ZLevelRenderer::mapSize() const
 {
-#if 1
     const int side = map()->height() + map()->width();
     return QSize(side * map()->tileWidth() / 2 + maxLevel() * map()->cellsPerLevel().x() * map()->tileWidth(),
                  side * map()->tileHeight() / 2 + maxLevel() * map()->cellsPerLevel().y() * map()->tileHeight());
-#else
-    // Map width and height contribute equally in both directions
-    const int side = map()->height() + map()->width();
-    return QSize(side * map()->tileWidth() / 2,
-                 side * map()->tileHeight() / 2);
-#endif
 }
 
 QRect ZLevelRenderer::boundingRect(const QRect &rect, int level) const

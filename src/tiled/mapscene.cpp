@@ -337,15 +337,8 @@ void MapScene::currentLayerIndexChanged()
 {
     updateCurrentLayerHighlight();
 #ifdef ZOMBOID
-#if 1
     // LevelIsometric orientation may move the grid
     mGridItem->currentLayerIndexChanged();
-#else
-    if (isGridVisible()
-        && mMapDocument && mMapDocument->renderer()
-        && (mMapDocument->map()->orientation() == Map::LevelIsometric))
-        update();
-#endif
 #endif
 }
 

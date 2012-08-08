@@ -127,7 +127,7 @@ protected:
     void updateLayerGroupLater(int level, PendingFlags flags);
 
     void setGraphicsSceneZOrder();
-    int levelZOrder(int level);
+
 private:
     QMap<MapObject*,MapComposite*> mMapObjectToLot;
 

@@ -221,14 +221,7 @@ void ZomboidScene::updateCurrentLayerHighlight()
     Layer *currentLayer = mMapDocument->currentLayer();
     int currentLayerIndex = mMapDocument->currentLayerIndex();
 
-#define HIGHLIGHT_LEVEL_NOT_LAYER 1
-#if HIGHLIGHT_LEVEL_NOT_LAYER
     if (currentLayer) {
-#else
-    // During drag-and-drop of a lot, the layer highlight is turned on automatically.
-    // In that case, highlight the CompositeLayerGroup instead of the ObjectGroup.
-    if (mDnDItem) {
-#endif
         int level = currentLayer->level();
         if (mTileLayerGroupItems.contains(level)) {
             CompositeLayerGroup *layerGroup = mTileLayerGroupItems[level]->layerGroup();
@@ -267,23 +260,14 @@ void ZomboidScene::updateCurrentLayerHighlight()
     int index = 0;
     foreach (QGraphicsItem *item, mLayerItems) {
         Layer *layer = mMapDocument->map()->layerAt(index);
-#if HIGHLIGHT_LEVEL_NOT_LAYER
         bool visible = layer->isVisible() && (layer->level() <= currentLayer->level());
         if (layer->isObjectGroup() && (layer->level() != currentLayer->level()))
             visible = false;
-#else
-        if (!layer->isTileLayer()) continue; // leave ObjectGroups alone
-        bool visible = layer->isVisible() && (item->zValue() <= currentItem->zValue());
-#endif
         item->setVisible(visible);
         ++index;
     }
     foreach (CompositeLayerGroupItem *item, mTileLayerGroupItems) {
-#if HIGHLIGHT_LEVEL_NOT_LAYER
         bool visible = item->layerGroup()->isVisible() && (item->layerGroup()->level() <= currentLayer->level());
-#else
-        bool visible = item->layerGroup()->isVisible() && (item->zValue() <= currentItem->zValue());
-#endif
         item->setVisible(visible);
     }
 
@@ -466,11 +450,6 @@ void ZomboidScene::layerLevelChanged(int index, int oldLevel)
     mGridItem->currentLayerIndexChanged(); // index didn't change, just updating the bounds
 }
 
-int ZomboidScene::levelZOrder(int level)
-{
-    return (level + 1) * 100;
-}
-
 void ZomboidScene::doLater(PendingFlags flags)
 {
 #if 1
@@ -489,7 +468,6 @@ void ZomboidScene::doLater(PendingFlags flags)
 // Determine sane Z-order for layers in and out of TileLayerGroups
 void ZomboidScene::setGraphicsSceneZOrder()
 {
-#if 1
     MapComposite::ZOrderList zorder = mMapDocument->mapComposite()->zOrder();
     int z = 0;
     foreach (MapComposite::ZOrderItem zo, zorder) {
@@ -503,44 +481,6 @@ void ZomboidScene::setGraphicsSceneZOrder()
         }
         ++z;
     }
-#else
-    foreach (CompositeLayerGroupItem *item, mTileLayerGroupItems)
-        item->setZValue(levelZOrder(item->layerGroup()->level()));
-
-    CompositeLayerGroupItem *previousLevelItem = 0;
-    QMap<CompositeLayerGroupItem*,QVector<QGraphicsItem*> > layersAboveLevel;
-    int layerIndex = 0;
-    foreach (Layer *layer, mMapDocument->map()->layers()) {
-        if (TileLayer *tl = layer->asTileLayer()) {
-            int level = tl->level();
-            if (tl->group() && mTileLayerGroupItems.contains(level)) {
-                previousLevelItem = mTileLayerGroupItems[level];
-                ++layerIndex;
-                continue;
-            }
-        }
-
-        // Handle any layers not in a TileLayerGroup.
-        // Layers between the first and last in a TileLayerGroup will be displayed above that TileLayerGroup.
-        // Layers before the first TileLayerGroup will be displayed below the first TileLayerGroup.
-        if (previousLevelItem)
-            layersAboveLevel[previousLevelItem].append(mLayerItems[layerIndex]);
-        else
-            mLayerItems[layerIndex]->setZValue(layerIndex);
-        ++layerIndex;
-    }
-
-    QMap<CompositeLayerGroupItem*,QVector<QGraphicsItem*> >::const_iterator it,
-        it_start = layersAboveLevel.begin(),
-        it_end = layersAboveLevel.end();
-    for (it = it_start; it != it_end; it++) {
-        int index = 1;
-        foreach (QGraphicsItem *item, *it) {
-            item->setZValue(levelZOrder(it.key()->layerGroup()->level()) + index);
-            ++index;
-        }
-    }
-#endif
 }
 
 void ZomboidScene::onLotAdded(MapComposite *lot, MapObject *mapObject)
@@ -583,17 +523,6 @@ void ZomboidScene::onLotUpdated(MapComposite *lot, MapObject *mapObject)
         // Resize the map object to the size of the lot's map, and snap-to-grid
         mapObject->setPosition(lot->origin());
         item->resize(lot->map()->size());
-#if 0
-        // When a MapObject is moved by the user, no redrawing takes place
-        // once the move is complete (because the MapObject was redrawn
-        // while being dragged).  So the map won't be redrawn under the old
-        // lot bounds or at the new location; Therefore those areas must be
-        // repainted manually.
-
-        QRectF newBounds = item->boundingRect().translated(item->pos());
-        // Old bounds *are* updated now since the lot is hidden when dragging starts
-        update(newBounds);
-#endif
     }
 
     updateLayerGroupsLater(Synch | Bounds);
@@ -601,8 +530,6 @@ void ZomboidScene::onLotUpdated(MapComposite *lot, MapObject *mapObject)
 
 void ZomboidScene::handlePendingUpdates()
 {
-#if 1
-    /////
     MapComposite *mapComposite = mMapDocument->mapComposite();
     if (mTileLayerGroupItems.size() != mapComposite->layerGroupCount()) {
         foreach (CompositeLayerGroup *layerGroup, mapComposite->layerGroups()) {
@@ -617,8 +544,7 @@ void ZomboidScene::handlePendingUpdates()
         }
         mMapDocument->renderer()->setMaxLevel(mapComposite->maxLevel());
     }
-    /////
-#endif
+
     if (mPendingFlags & AllGroups)
         mPendingGroupItems = mTileLayerGroupItems.values();
     if (mPendingFlags & Synch) {

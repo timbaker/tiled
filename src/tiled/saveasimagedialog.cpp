@@ -229,7 +229,6 @@ void SaveAsImageDialog::accept()
 
     painter.translate(-sceneRect.left(), -sceneRect.top());
 
-#if 1
     MapComposite::ZOrderList zorder = mapComposite->zOrder();
     foreach (MapComposite::ZOrderItem zo, zorder) {
         if (zo.group) {
@@ -257,45 +256,6 @@ void SaveAsImageDialog::accept()
             renderer->drawImageLayer(&painter, imageLayer);
         }
     }
-#else
-    QVector<CompositeLayerGroup*> drawnLayerGroups;
-    foreach (Layer *layer, mMapDocument->map()->layers()) {
-        painter.setOpacity(layer->opacity());
-        if (TileLayer *tileLayer = layer->asTileLayer()) {
-            if (tileLayer->group()) {
-                CompositeLayerGroup *layerGroup =
-                        static_cast<CompositeLayerGroup*>(tileLayer->group());
-                if (drawnLayerGroups.contains(layerGroup))
-                    continue;
-                drawnLayerGroups += layerGroup;
-                // FIXME: LayerGroups should be drawn with the same Z-order the
-                // scene uses.  They will usually be in the same order anyways.
-                if (visibleLayersOnly && !layerGroup->isVisible())
-                    continue;
-                renderer->drawTileLayerGroup(&painter, layerGroup);
-            } else {
-                if (visibleLayersOnly && !layer->isVisible())
-                    continue;
-                if (!drawNoRender && layer->name().contains(QLatin1String("NoRender")))
-                    continue;
-                renderer->drawTileLayer(&painter, tileLayer);
-            }
-        } else if (ObjectGroup *objGroup = layer->asObjectGroup()) {
-            if (!drawObjectLayers)
-                continue;
-            if (visibleLayersOnly && !layer->isVisible())
-                continue;
-            foreach (const MapObject *object, objGroup->objects()) {
-                const QColor color = MapObjectItem::objectColor(object);
-                renderer->drawMapObject(&painter, object, color);
-            }
-        } else if (ImageLayer *imageLayer = layer->asImageLayer()) {
-            if (visibleLayersOnly && !layer->isVisible())
-                continue;
-            renderer->drawImageLayer(&painter, imageLayer);
-        }
-    }
-#endif
 
     mapComposite->restoreVisibility();
     renderer->setMaxLevel(savedMaxLevel);

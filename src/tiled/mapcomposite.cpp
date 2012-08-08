@@ -221,9 +221,8 @@ void CompositeLayerGroup::synch()
             foreach (TileLayer *layer, mLayers)
                 layerGroup->setLayerVisibility(layer->name(), mVisibleLayers[index++]);
 
-#if 1 // Re-enable this if submaps ever change
             layerGroup->synch();
-#endif
+
             if (layerGroup->mAnyVisibleLayers) {
                 mVisibleSubMapLayers.append(SubMapLayers(subMap, layerGroup));
                 unionTileRects(r, layerGroup->bounds().translated(subMap->origin()), r);
@@ -746,7 +745,7 @@ MapComposite::ZOrderList MapComposite::zOrder()
         ++layerIndex;
         int level;
         bool hasGroup = levelForLayer(layer, &level);
-        if (TileLayer *tl = layer->asTileLayer()) {
+        if (layer->isTileLayer()) {
             // The layer may not be in a group yet during renaming.
             if (hasGroup && mLayerGroups.contains(level)) {
                 if (!seenLevels.contains(level)) {

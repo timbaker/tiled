@@ -190,38 +190,15 @@ MapImageManager::ImageData MapImageManager::generateMapImage(MapComposite *mapCo
                            QPainter::HighQualityAntialiasing);
     painter.setTransform(QTransform::fromScale(scale, scale).translate(-sceneRect.left(), -sceneRect.top()));
 
-#if 1
-    MapComposite::ZOrderList zorder = mapComposite->zOrder();
-    foreach (MapComposite::ZOrderItem zo, zorder) {
-        if (zo.group)
+    foreach (MapComposite::ZOrderItem zo, mapComposite->zOrder()) {
+        if (zo.group) {
             renderer->drawTileLayerGroup(&painter, zo.group);
-        else if (TileLayer *tl = zo.layer->asTileLayer()) {
+        } else if (TileLayer *tl = zo.layer->asTileLayer()) {
             if (tl->name().contains(QLatin1String("NoRender")))
                 continue;
             renderer->drawTileLayer(&painter, tl);
         }
     }
-#else
-    QVector<int> drawnLevels;
-    foreach (Layer *layer, mapComposite->map()->layers()) {
-        if (TileLayer *tileLayer = layer->asTileLayer()) {
-            int level;
-            if (MapComposite::levelForLayer(tileLayer, &level)) {
-                if (drawnLevels.contains(level))
-                    continue;
-                drawnLevels += level;
-                // FIXME: LayerGroups should be drawn with the same Z-order the
-                // scene uses.  They will usually be in the same order anyways.
-                CompositeLayerGroup *layerGroup = mapComposite->tileLayersForLevel(level);
-                renderer->drawTileLayerGroup(&painter, layerGroup);
-            } else {
-                if (layer->name().contains(QLatin1String("NoRender")))
-                    continue;
-                renderer->drawTileLayer(&painter, tileLayer);
-            }
-        }
-    }
-#endif
 
     mapComposite->restoreVisibility();
     foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups())
@@ -354,21 +331,12 @@ QRectF MapImage::bounds()
 
 qreal MapImage::scale()
 {
-#if 1
     return mScale;
-#else
-    return (mImage.width() / bounds().width());
-#endif
 }
 
 QPointF MapImage::tileToImageCoords(qreal x, qreal y)
 {
     QPointF pos = tileToPixelCoords(x, y);
-#if 1
     pos += mLevelZeroBounds.topLeft();
-#else
-    // this is the drawMargins of the map (plus LevelIsometric height, if any)
-    pos += QPointF(0, mImage.height() / scale() - bounds().height());
-#endif
     return pos * scale();
 }

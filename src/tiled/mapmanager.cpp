@@ -91,12 +91,6 @@ QString MapManager::pathForMap(const QString &mapName, const QString &_relativeT
         mapFilePath += QLatin1String(".tmx");
 
     QFileInfo fileInfo(mapFilePath);
-#if 0
-    if (!fileInfo.isAbsolute()) {
-        QDir mapsDir(Preferences::instance()->mapsDirectory());
-        fileInfo.setFile(mapsDir, mapFilePath);
-    }
-#endif
     if (fileInfo.exists())
         return fileInfo.canonicalFilePath();
 
