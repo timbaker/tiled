@@ -189,7 +189,6 @@ void MapScene::refreshScene()
         return;
     }
 
-    const QSize mapSize = mMapDocument->renderer()->mapSize();
 #ifdef ZOMBOID
     // This stops tall tiles being cut off near the 0,0 tile at the top of the window
     // by including the map's drawMargins.
@@ -198,6 +197,7 @@ void MapScene::refreshScene()
     setSceneRect(sceneRect);
     mDarkRectangle->setRect(sceneRect);
 #else
+    const QSize mapSize = mMapDocument->renderer()->mapSize();
     setSceneRect(0, 0, mapSize.width(), mapSize.height());
     mDarkRectangle->setRect(0, 0, mapSize.width(), mapSize.height());
 #endif
