@@ -348,7 +348,31 @@ void SaveAsImageDialog::accept()
                            prefs->gridColor());
     }
 
+#ifdef ZOMBOID
+    QFileInfo fileInfo(fileName);
+    QDir dir = fileInfo.dir();
+    if (!dir.exists()) {
+        QString path = dir.cleanPath(dir.absolutePath());
+        QMessageBox::StandardButton b = QMessageBox::question(this,
+            tr("Directory not found"),
+            tr("The images directory does not exist.\n%1\n\nCreate directory?")
+            .arg(dir.path()), QMessageBox::Ok | QMessageBox::Cancel);
+        if (b != QMessageBox::Ok)
+            return;
+        if (!dir.mkpath(path)) {
+            QMessageBox::warning(this, tr("Error creating directory"),
+                                 tr("Failed to create the images directory!\n%1")
+                                 .arg(path));
+            return;
+        }
+    }
+    if (!image.save(fileName)) {
+        QMessageBox::warning(this, tr("Error Saving Image"),
+                             tr("Error saving map image!"));
+    }
+#else
     image.save(fileName);
+#endif
     mPath = QFileInfo(fileName).path();
 
     // Store settings for next time
