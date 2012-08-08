@@ -20,12 +20,14 @@
 
 #include "mapmanager.h"
 #include "preferences.h"
+#include "tilesetmanager.h"
 #include "tmxmapwriter.h"
 #include "zprogress.h"
 
 #include <QFile>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QScopedPointer>
 
 using namespace Tiled;
 using namespace Internal;
@@ -39,7 +41,6 @@ ConvertOrientationDialog::ConvertOrientationDialog(QWidget *parent) :
     connect(ui->browseButton, SIGNAL(clicked()), SLOT(browse()));
     connect(ui->selectAll, SIGNAL(clicked()), SLOT(selectAll()));
     connect(ui->selectNone, SIGNAL(clicked()), SLOT(selectNone()));
-    connect(this, SIGNAL(accepted()), SLOT(convert()));
 
     Preferences *prefs = Preferences::instance();
     QString mapsDir = prefs->mapsDirectory();
@@ -84,18 +85,30 @@ void ConvertOrientationDialog::setList()
     QApplication::restoreOverrideCursor();
 }
 
+struct ScopedPointerCustomDeleter
+{
+    static inline void cleanup(Map *map)
+    {
+        TilesetManager *tilesetMgr = TilesetManager::instance();
+        tilesetMgr->removeReferences(map->tilesets());
+        delete map;
+    }
+};
+
 bool ConvertOrientationDialog::convertMap(const QString &mapFilePath)
 {
-    MapInfo *mapInfo = MapManager::instance()->loadMap(mapFilePath);
+    MapManager *mapMgr = MapManager::instance();
+    MapInfo *mapInfo = mapMgr->loadMap(mapFilePath);
 
     if (!mapInfo) {
         QMessageBox::critical(this, tr("Error Loading Map"),
-                              MapManager::instance()->errorString());
+                              mapMgr->errorString());
         return false;
     }
 
-    Map *map = MapManager::instance()->convertOrientation(mapInfo->map(),
-                                              Map::LevelIsometric);
+    QScopedPointer<Tiled::Map,ScopedPointerCustomDeleter>
+            map(mapMgr->convertOrientation(mapInfo->map(),
+                                           Map::LevelIsometric));
 
     // Restore the message since loadMap() will change it.
     QString msg = QString(QLatin1String("Writing %1"))
@@ -107,7 +120,7 @@ bool ConvertOrientationDialog::convertMap(const QString &mapFilePath)
             info.completeBaseName() + QLatin1String(".converted.tmx");
 
     TmxMapWriter w;
-    if (!w.write(map, convertedPath)) {
+    if (!w.write(map.data(), convertedPath)) {
         QMessageBox::critical(this, tr("Error Writing Map"),
                               w.errorString());
         return false;
@@ -152,7 +165,7 @@ void ConvertOrientationDialog::browse()
     }
 }
 
-void ConvertOrientationDialog::convert()
+void ConvertOrientationDialog::accept()
 {
     QDir dir(ui->directoryEdit->text());
 
@@ -170,6 +183,8 @@ void ConvertOrientationDialog::convert()
         if (!convertMap(filePath))
             break;
     }
+
+    QDialog::accept();
 }
 
 void ConvertOrientationDialog::selectAll()

@@ -33,12 +33,12 @@ public:
     ~ConvertOrientationDialog();
 
 private:
+    void accept();
     bool convertMap(const QString &mapFilePath);
 
 private slots:
     void setList();
     void browse();
-    void convert();
     void selectAll();
     void selectNone();
 
