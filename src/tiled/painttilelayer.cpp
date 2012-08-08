@@ -34,13 +34,22 @@ PaintTileLayer::PaintTileLayer(MapDocument *mapDocument,
                                TileLayer *target,
                                int x,
                                int y,
+#ifdef ZOMBOID
+                               const TileLayer *source,
+                               const QRegion &mask):
+#else
                                const TileLayer *source):
+#endif
     mMapDocument(mapDocument),
     mTarget(target),
     mSource(static_cast<TileLayer*>(source->clone())),
     mX(x),
     mY(y),
+#ifdef ZOMBOID
+    mPaintedRegion(mask),
+#else
     mPaintedRegion(x, y, source->width(), source->height()),
+#endif
     mMergeable(false)
 {
     mErased = mTarget->copy(mX - mTarget->x(),

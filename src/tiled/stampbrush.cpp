@@ -181,8 +181,18 @@ void StampBrush::tilePositionChanged(const QPoint &)
     updatePosition();
     switch (mBrushBehavior) {
     case Paint:
+#ifdef ZOMBOID
+        foreach (const QPoint &p, calculateLine(x, y, mStampX, mStampY)) {
+            // Must updatePosition() at each point along the line,
+            // because brushItem()->tileRegion() is used as the mask
+            // region to PaintTileLayer (see doPaint).
+            brushItem()->setTileLayerPosition(p);
+            doPaint(true, p.x(), p.y());
+        }
+#else
         foreach (const QPoint &p, calculateLine(x, y, mStampX, mStampY))
             doPaint(true, p.x(), p.y());
+#endif
         break;
     case LineStartSet:
         configureBrush(calculateLine(mStampReferenceX, mStampReferenceY,
@@ -466,7 +476,12 @@ void StampBrush::doPaint(bool mergeable, int whereX, int whereY)
         return;
 
     PaintTileLayer *paint = new PaintTileLayer(mapDocument(), tileLayer,
+#ifdef ZOMBOID
+                                               whereX, whereY, stamp,
+                                               brushItem()->tileRegion());
+#else
                             whereX, whereY, stamp);
+#endif
     paint->setMergeable(mergeable);
     mapDocument()->undoStack()->push(paint);
     mapDocument()->emitRegionEdited(brushItem()->tileRegion(), tileLayer);

@@ -52,7 +52,12 @@ public:
     PaintTileLayer(MapDocument *mapDocument,
                    TileLayer *target,
                    int x, int y,
+#ifdef ZOMBOID
+                   const TileLayer *source,
+                   const QRegion &mask);
+#else
                    const TileLayer *source);
+#endif
 
     ~PaintTileLayer();
 
