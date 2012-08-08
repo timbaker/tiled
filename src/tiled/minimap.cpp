@@ -108,6 +108,10 @@ void MiniMapItem::updateImage(const QRectF &dirtyRect)
     if (mapSize.isEmpty())
         return;
 
+    QRectF paintRect = dirtyRect;
+    if (dirtyRect.isEmpty())
+        paintRect = sceneRect;
+
     qreal scale = mMapImage->width() / qreal(mapSize.width());
 
     QPainter painter(mMapImage);
@@ -117,8 +121,10 @@ void MiniMapItem::updateImage(const QRectF &dirtyRect)
     painter.setTransform(QTransform::fromScale(scale, scale)
                          .translate(-sceneRect.left(), -sceneRect.top()));
 
+    painter.setClipRect(paintRect);
+
     painter.setCompositionMode(QPainter::CompositionMode_Clear);
-    painter.fillRect(dirtyRect, Qt::transparent);
+    painter.fillRect(paintRect, Qt::transparent);
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
     mMapComposite->saveVisibility();
@@ -135,11 +141,11 @@ void MiniMapItem::updateImage(const QRectF &dirtyRect)
     MapComposite::ZOrderList zorder = mMapComposite->zOrder();
     foreach (MapComposite::ZOrderItem zo, zorder) {
         if (zo.group)
-            mRenderer->drawTileLayerGroup(&painter, zo.group, dirtyRect);
+            mRenderer->drawTileLayerGroup(&painter, zo.group, paintRect);
         else if (TileLayer *tl = zo.layer->asTileLayer()) {
             if (tl->name().contains(QLatin1String("NoRender")))
                 continue;
-            mRenderer->drawTileLayer(&painter, tl, dirtyRect);
+            mRenderer->drawTileLayer(&painter, tl, paintRect);
         }
     }
 
@@ -254,14 +260,15 @@ void MiniMapItem::onLotUpdated(MapComposite *lot, Tiled::MapObject *mapObject)
 
 void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
 {
-    QRectF bounds = mRenderer->boundingRect(region.boundingRect(),
-                                            layer->level());
     QMargins margins = mMapComposite->map()->drawMargins();
-    bounds.adjust(-margins.left(),
-                  -margins.top(),
-                  margins.right(),
-                  margins.bottom());
-    updateLater(bounds);
+    foreach (const QRect &r, region.rects()) {
+        QRectF bounds = mRenderer->boundingRect(r, layer->level());
+        bounds.adjust(-margins.left(),
+                      -margins.top(),
+                      margins.right(),
+                      margins.bottom());
+        updateLater(bounds);
+    }
 }
 
 void MiniMapItem::updateNow()
