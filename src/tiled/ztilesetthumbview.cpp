@@ -71,17 +71,33 @@ void ZTilesetThumbView::setMapDocument(MapDocument *mapDoc)
 {
     if (mMapDocument == mapDoc)
         return;
+    if (mMapDocument)
+        mMapDocument->disconnect(this);
+
     mMapDocument = mapDoc;
+    if (mMapDocument) {
+        connect(mMapDocument, SIGNAL(tilesetAdded(int,Tileset*)),
+                SLOT(calculateWidth()));
+        connect(mMapDocument, SIGNAL(tilesetNameChanged(Tileset*)),
+                SLOT(calculateWidth()));
+        connect(mMapDocument, SIGNAL(tilesetRemoved(Tileset*)),
+                SLOT(calculateWidth()));
+    }
+
     model()->setMapDocument(mapDoc);
 
+    calculateWidth();
+}
+
+void ZTilesetThumbView::calculateWidth()
+{
+    int width = 64;
     if (mMapDocument) {
         QFontMetrics fm = fontMetrics(); // FIXME: same font used by QPainter?
-        int width = 64;
-        foreach (Tileset *ts, mMapDocument->map()->tilesets()) {
+        foreach (Tileset *ts, mMapDocument->map()->tilesets())
             width = qMax(width, fm.width(ts->name()));
-        }
-        mContentWidth = width;
     }
+    mContentWidth = width;
 
     updateGeometry();
 }

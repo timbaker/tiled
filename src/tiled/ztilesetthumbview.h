@@ -39,16 +39,20 @@ public:
     ZTilesetThumbModel *model() const
     { return mModel; }
 
-	void setMapDocument(MapDocument *mapDoc);
-	int contentWidth() const { return mContentWidth; }
+    void setMapDocument(MapDocument *mapDoc);
+
+    int contentWidth() const { return mContentWidth; }
+
+private slots:
+    void calculateWidth();
 
 protected:
     void contextMenuEvent(QContextMenuEvent *event);
 
 private:
     MapDocument *mMapDocument;
-	ZTilesetThumbModel *mModel;
-	int mContentWidth;
+    ZTilesetThumbModel *mModel;
+    int mContentWidth;
 };
 
 } // namespace Internal
