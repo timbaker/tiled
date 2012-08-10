@@ -346,6 +346,7 @@ void ObjectSelectionTool::cancelMoving()
         objectItem->setDragging(false);
         objectItem->mapObject()->setPosition(mOldObjectPositions.at(i));
         objectItem->setPos(mOldObjectItemPositions.at(i));
+        ++i;
     }
 
     mOldObjectItemPositions.clear();
