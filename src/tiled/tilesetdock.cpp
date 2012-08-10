@@ -439,6 +439,9 @@ void TilesetDock::insertTilesetView(int index, Tileset *tileset)
     mTabBar->insertTab(index, tileset->name());
     mViewStack->insertWidget(index, view);
     updateActions();
+#ifdef ZOMBOID
+    thumbSyncWithTabs();
+#endif
 }
 
 void TilesetDock::updateActions()
@@ -544,6 +547,10 @@ void TilesetDock::tilesetRemoved(Tileset *tileset)
     }
     if (mCurrentTile && mCurrentTile->tileset() == tileset)
         setCurrentTile(0);
+
+#ifdef ZOMBOID
+    thumbSyncWithTabs();
+#endif
 }
 
 void TilesetDock::tilesetMoved(int from, int to)
