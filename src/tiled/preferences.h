@@ -91,6 +91,8 @@ public:
     qreal tilesetScale() const;
 
     bool showMiniMap() const;
+#define MINIMAP_MIN_WIDTH 128
+#define MINIMAP_MAX_WIDTH 512
     void setMiniMapWidth(int width);
     int miniMapWidth() const;
 #endif

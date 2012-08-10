@@ -34,6 +34,8 @@ class ZomboidScene;
 }
 }
 
+class QToolButton;
+
 /**
   * The MiniMap
   *
@@ -145,6 +147,8 @@ private:
     int mWidth;
     QGraphicsPolygonItem *mViewportItem;
     MiniMapItem *mExtraItem;
+    QToolButton *mBiggerButton;
+    QToolButton *mSmallerButton;
 };
 
 #endif // MINIMAP_H

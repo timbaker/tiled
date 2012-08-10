@@ -377,8 +377,8 @@ bool Preferences::showMiniMap() const
 
 void Preferences::setMiniMapWidth(int width)
 {
-    width = qMin(width, 512);
-    width = qMax(width, 128);
+    width = qMin(width, MINIMAP_MAX_WIDTH);
+    width = qMax(width, MINIMAP_MIN_WIDTH);
 
     if (mMiniMapWidth == width)
         return;
