@@ -31,6 +31,9 @@
 
 #include "imagelayer.h"
 #include "objectgroup.h"
+#ifdef ZOMBOID
+#include "pathlayer.h"
+#endif
 #include "tilelayer.h"
 
 
@@ -95,3 +98,10 @@ ImageLayer *Layer::asImageLayer()
 {
     return isImageLayer() ? static_cast<ImageLayer*>(this) : 0;
 }
+
+#ifdef ZOMBOID
+PathLayer *Layer::asPathLayer()
+{
+    return isPathLayer() ? static_cast<PathLayer*>(this) : 0;
+}
+#endif

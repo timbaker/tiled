@@ -122,6 +122,17 @@ QList<TileLayer*> Map::tileLayers() const
     return layers;
 }
 
+#ifdef ZOMBOID
+QList<PathLayer *> Map::pathLayers() const
+{
+    QList<PathLayer*> layers;
+    foreach (Layer *layer, mLayers)
+        if (PathLayer *pl = layer->asPathLayer())
+            layers.append(pl);
+    return layers;
+}
+#endif
+
 void Map::addLayer(Layer *layer)
 {
     adoptLayer(layer);

@@ -144,6 +144,9 @@ private:
     QIcon mTileLayerIcon;
     QIcon mObjectGroupIcon;
     QIcon mImageLayerIcon;
+#ifdef ZOMBOID
+    QIcon mPathLayerIcon;
+#endif
 };
 
 } // namespace Internal

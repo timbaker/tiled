@@ -83,6 +83,9 @@ LayerDock::LayerDock(QWidget *parent):
     QMenu *newLayerMenu = new QMenu(this);
     newLayerMenu->addAction(handler->actionAddTileLayer());
     newLayerMenu->addAction(handler->actionAddObjectGroup());
+#ifdef ZOMBOID
+    newLayerMenu->addAction(handler->actionAddPathLayer());
+#endif
     newLayerMenu->addAction(handler->actionAddImageLayer());
 
     const QIcon newIcon(QLatin1String(":/images/16x16/document-new.png"));
@@ -353,6 +356,9 @@ void LayerView::contextMenuEvent(QContextMenuEvent *event)
     QMenu menu;
     menu.addAction(handler->actionAddTileLayer());
     menu.addAction(handler->actionAddObjectGroup());
+#ifdef ZOMBOID
+    menu.addAction(handler->actionAddPathLayer());
+#endif
     menu.addAction(handler->actionAddImageLayer());
 
     if (layerIndex >= 0) {

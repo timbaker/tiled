@@ -146,7 +146,13 @@ SOURCES += aboutdialog.cpp \
     mapmanager.cpp \
     mapimagemanager.cpp \
     minimap.cpp \
-    convertorientationdialog.cpp
+    convertorientationdialog.cpp \
+    pathitem.cpp \
+    pathlayeritem.cpp \
+    createpathtool.cpp \
+    abstractpathtool.cpp \
+    addremovepath.cpp \
+    pathmodel.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -258,7 +264,13 @@ HEADERS += aboutdialog.h \
     zgriditem.h \
     zprogress.h \
     minimap.h \
-    convertorientationdialog.h
+    convertorientationdialog.h \
+    pathitem.h \
+    pathlayeritem.h \
+    createpathtool.h \
+    abstractpathtool.h \
+    addremovepath.h \
+    pathmodel.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

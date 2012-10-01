@@ -33,6 +33,7 @@
 #ifdef ZOMBOID
 #include "mapcomposite.h"
 #include "mapmanager.h"
+#include "pathlayer.h"
 #include "zlevelrenderer.h"
 #include "zlevelsmodel.h"
 #endif
@@ -305,6 +306,12 @@ void MapDocument::addLayer(Layer::Type layerType)
         name = tr("Image Layer %1").arg(mMap->imageLayerCount() + 1);
         layer = new ImageLayer(name, 0, 0, mMap->width(), mMap->height());
         break;
+#ifdef ZOMBOID
+    case Layer::PathLayerType:
+        name = tr("Path Layer %1").arg(mMap->pathLayerCount() + 1);
+        layer = new PathLayer(name, 0, 0, mMap->width(), mMap->height());
+        break;
+#endif
     case Layer::AnyLayerType:
         break; // Q_ASSERT below will fail.
     }

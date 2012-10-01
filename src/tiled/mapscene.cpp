@@ -41,6 +41,9 @@
 #include "tilesetmanager.h"
 #ifdef ZOMBOID
 #include "mapcomposite.h"
+#include "pathitem.h"
+#include "pathlayer.h"
+#include "pathlayeritem.h"
 #include "zgriditem.h"
 #endif
 
@@ -235,6 +238,14 @@ QGraphicsItem *MapScene::createLayerItem(Layer *layer)
             mObjectItems.insert(object, item);
         }
         layerItem = ogItem;
+#ifdef ZOMBOID
+    } else if (PathLayer *pl = layer->asPathLayer()) {
+        PathLayerItem *plItem = new PathLayerItem(pl);
+        foreach (Path *path, pl->paths()) {
+            PathItem *item = new PathItem(path, mMapDocument, plItem);
+        }
+        layerItem = plItem;
+#endif
     } else if (ImageLayer *il = layer->asImageLayer()) {
         layerItem = new ImageLayerItem(il, mMapDocument->renderer());
     }

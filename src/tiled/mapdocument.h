@@ -56,6 +56,7 @@ class LayerModel;
 class TileSelectionModel;
 class MapObjectModel;
 #ifdef ZOMBOID
+class PathModel;
 class ZLevelsModel;
 #endif
 
@@ -186,6 +187,8 @@ public:
 
     MapObjectModel *mapObjectModel() const { return mMapObjectModel; }
 #ifdef ZOMBOID
+    PathModel *pathModel() const { return mPathModel; }
+
     ZLevelsModel *levelsModel() const { return mLevelsModel; }
 
     void setLayerGroupVisibility(CompositeLayerGroup *layerGroup, bool visible);
@@ -386,6 +389,7 @@ private:
     int mCurrentLayerIndex;
     MapObjectModel *mMapObjectModel;
 #ifdef ZOMBOID
+    PathModel *mPathModel;
     ZLevelsModel *mLevelsModel;
     int mMaxVisibleLayer;
     MapComposite *mMapComposite;

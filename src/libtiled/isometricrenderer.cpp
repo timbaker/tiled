@@ -35,6 +35,7 @@
 #include "tileset.h"
 #include "imagelayer.h"
 #ifdef ZOMBOID
+#include "pathlayer.h"
 #include "ztilelayergroup.h"
 #endif
 
@@ -546,6 +547,76 @@ void IsometricRenderer::drawMapObject(QPainter *painter,
 }
 
 #ifdef ZOMBOID
+QPainterPath IsometricRenderer::shape(const Path *tilePath) const
+{
+    QPainterPath path;
+
+    const QPolygonF polygon = tilePath->polygon();
+    const QPolygonF screenPolygon = tileToPixelCoords(polygon);
+    if (tilePath->isClosed()) {
+        path.addPolygon(screenPolygon);
+    } else {
+        for (int i = 1; i < screenPolygon.size(); ++i) {
+            path.addPolygon(lineToPolygon(screenPolygon[i - 1],
+                                          screenPolygon[i]));
+        }
+        path.setFillRule(Qt::WindingFill);
+    }
+    return path;
+}
+
+void IsometricRenderer::drawPath(QPainter *painter,
+                                 const Path *path,
+                                 const QColor &color) const
+{
+    painter->save();
+
+    QPen pen(Qt::black);
+
+    {
+        QColor brushColor = color;
+        brushColor.setAlpha(50);
+        QBrush brush(brushColor);
+
+        pen.setJoinStyle(Qt::RoundJoin);
+        pen.setCapStyle(Qt::RoundCap);
+        pen.setWidth(2);
+
+        painter->setPen(pen);
+        painter->setRenderHint(QPainter::Antialiasing);
+
+        // TODO: Draw the object name
+        // TODO: Do something sensible to make null-sized objects usable
+
+        if (path->isClosed()) {
+            const QPolygonF polygon = path->polygon();
+            QPolygonF screenPolygon = tileToPixelCoords(polygon);
+
+            painter->drawPolygon(screenPolygon);
+
+            pen.setColor(color);
+            painter->setPen(pen);
+            painter->setBrush(brush);
+            screenPolygon.translate(0, -1);
+
+            painter->drawPolygon(screenPolygon);
+        } else {
+            const QPolygonF polygon = path->polygon();
+            QPolygonF screenPolygon = tileToPixelCoords(polygon);
+
+            painter->drawPolyline(screenPolygon);
+
+            pen.setColor(color);
+            painter->setPen(pen);
+            screenPolygon.translate(0, -1);
+
+            painter->drawPolyline(screenPolygon);
+        }
+    }
+
+    painter->restore();
+}
+
 void IsometricRenderer::drawFancyRectangle(QPainter *painter,
                                            const QRectF &tileBounds,
                                            const QColor &color,

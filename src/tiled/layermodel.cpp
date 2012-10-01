@@ -37,6 +37,10 @@ LayerModel::LayerModel(QObject *parent):
     mTileLayerIcon(QLatin1String(":/images/16x16/layer-tile.png")),
     mObjectGroupIcon(QLatin1String(":/images/16x16/layer-object.png")),
     mImageLayerIcon(QLatin1String(":/images/16x16/layer-image.png"))
+#ifdef ZOMBOID
+    ,
+    mPathLayerIcon(QLatin1String(":/images/16x16/layer-tile-stop.png"))
+#endif
 {
 }
 
@@ -64,6 +68,10 @@ QVariant LayerModel::data(const QModelIndex &index, int role) const
             return mObjectGroupIcon;
         else if (layer->isImageLayer())
             return mImageLayerIcon;
+#ifdef ZOMBOID
+        else if (layer->isPathLayer())
+            return mPathLayerIcon;
+#endif
         else
             Q_ASSERT(false);
     case Qt::CheckStateRole:

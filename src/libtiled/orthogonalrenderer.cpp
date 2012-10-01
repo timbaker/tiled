@@ -34,6 +34,9 @@
 #include "tilelayer.h"
 #include "tileset.h"
 #include "imagelayer.h"
+#ifdef ZOMBOID
+#include "pathlayer.h"
+#endif
 
 #include <cmath>
 
@@ -396,6 +399,31 @@ void OrthogonalRenderer::drawMapObject(QPainter *painter,
 }
 
 #ifdef ZOMBOID
+QPainterPath OrthogonalRenderer::shape(const Path *tilePath) const
+{
+    QPainterPath path;
+
+    const QPolygonF polygon = tilePath->polygon();
+    const QPolygonF screenPolygon = tileToPixelCoords(polygon);
+    if (tilePath->isClosed()) {
+        path.addPolygon(screenPolygon);
+    } else {
+        for (int i = 1; i < screenPolygon.size(); ++i) {
+            path.addPolygon(lineToPolygon(screenPolygon[i - 1],
+                                          screenPolygon[i]));
+        }
+        path.setFillRule(Qt::WindingFill);
+    }
+    return path;
+}
+
+void OrthogonalRenderer::drawPath(QPainter *painter,
+                                  const Path *path,
+                                  const QColor &color) const
+{
+
+}
+
 void OrthogonalRenderer::drawFancyRectangle(QPainter *painter,
                                 const QRectF &tileBounds,
                                 const QColor &color,

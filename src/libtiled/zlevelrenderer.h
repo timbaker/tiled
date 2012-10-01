@@ -68,6 +68,12 @@ public:
                        const MapObject *object,
                        const QColor &color) const;
 
+    virtual QPainterPath shape(const Path *path) const;
+
+    virtual void drawPath(QPainter *painter,
+                          const Path *path,
+                          const QColor &color) const;
+
     void drawImageLayer(QPainter *painter,
                         const ImageLayer *layer,
                         const QRectF &exposed = QRectF()) const;
