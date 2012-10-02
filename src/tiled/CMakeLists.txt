@@ -156,6 +156,7 @@ set ( Tiled_SRCS
 	utils.cpp
 	zoomable.cpp
 
+	converttolotdialog.cpp
 	convertorientationdialog.cpp
 	mapcomposite.cpp
 	mapimagemanager.cpp
@@ -175,6 +176,7 @@ set ( Tiled_SRCS
 set ( Tiled_UIS
 	aboutdialog.ui
 	commanddialog.ui
+	converttolotdialog.ui
 	convertorientationdialog.ui
 	mainwindow.ui
 	newmapdialog.ui
@@ -254,6 +256,7 @@ set ( Tiled_MOCS
 	undodock.h
 	zoomable.h
 
+	converttolotdialog.h
 	convertorientationdialog.h
 	mapcomposite.h
 	mapimagemanager.h

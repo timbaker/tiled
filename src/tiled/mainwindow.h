@@ -136,6 +136,7 @@ public slots:
     void editMapProperties();
     void autoMap();
 #ifdef ZOMBOID
+    void convertToLot();
     void convertOrientation();
 #endif
 
