@@ -184,6 +184,8 @@ public:
     typedef QList<ZOrderItem> ZOrderList;
     ZOrderList zOrder();
 
+    bool mapFileChanged(MapInfo *mapInfo);
+
 signals:
     void layerGroupAdded(int level);
     void layerAddedToGroup(int index);
@@ -194,6 +196,8 @@ signals:
 private:
     void addLayerToGroup(int index);
     void removeLayerFromGroup(int index);
+
+    void recreate();
 
 private:
     MapInfo *mMapInfo;

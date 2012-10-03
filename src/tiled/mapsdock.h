@@ -24,6 +24,8 @@
 #include <QDockWidget>
 #include <QTreeView>
 
+class MapImage;
+
 class QFileSystemModel;
 class QLabel;
 class QLineEdit;
@@ -48,6 +50,7 @@ private slots:
     void editedMapsDirectory();
     void onMapsDirectoryChanged();
     void selectionChanged();
+    void onMapImageChanged(MapImage *mapImage);
 
 protected:
     void changeEvent(QEvent *e);
@@ -56,6 +59,7 @@ private:
     void retranslateUi();
 
     QLabel *mPreviewLabel;
+    MapImage *mPreviewMapImage;
     QLineEdit *mDirectoryEdit;
     MapsView *mMapsView;
 };

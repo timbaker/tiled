@@ -38,6 +38,7 @@ class QUndoStack;
 #ifdef ZOMBOID
 class CompositeLayerGroup;
 class MapComposite;
+class MapInfo;
 #endif
 
 namespace Tiled {
@@ -364,6 +365,10 @@ signals:
     void objectsRemoved(const QList<MapObject*> &objects);
     void objectsChanged(const QList<MapObject*> &objects);
 
+#ifdef ZOMBOID
+    void mapCompositeChanged();
+#endif
+
 private slots:
     void onObjectsRemoved(const QList<MapObject*> &objects);
 
@@ -372,6 +377,8 @@ private slots:
     void onLayerRemoved(int index);
 #ifdef ZOMBOID
     void onLayerRenamed(int index);
+
+    void onMapFileChanged(MapInfo *mapInfo);
 #endif
 
 private:

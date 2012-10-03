@@ -99,6 +99,8 @@ private slots:
     void onLotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
     void onLotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
 
+    void mapCompositeChanged();
+
     void handlePendingUpdates();
 
 public:
