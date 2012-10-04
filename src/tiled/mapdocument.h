@@ -378,6 +378,7 @@ private slots:
 #ifdef ZOMBOID
     void onLayerRenamed(int index);
 
+    void onMapAboutToChange(MapInfo *mapInfo);
     void onMapFileChanged(MapInfo *mapInfo);
 #endif
 

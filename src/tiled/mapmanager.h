@@ -133,6 +133,7 @@ public:
 
 signals:
     void mapMagicallyGotMoreLayers(Tiled::Map *map);
+    void mapAboutToChange(MapInfo *mapInf);
     void mapFileChanged(MapInfo *mapInfo);
 
 private slots:

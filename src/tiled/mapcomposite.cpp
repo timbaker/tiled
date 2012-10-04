@@ -774,6 +774,27 @@ MapComposite::ZOrderList MapComposite::zOrder()
     return result;
 }
 
+// When 2 TileZeds are running, TZA has main map, TZB has lot map, and lot map
+// is saved, TZA MapImageManager puts up PROGRESS dialog, causing the scene to
+// be redrawn before the MapComposites have been updated.
+bool MapComposite::mapAboutToChange(MapInfo *mapInfo)
+{
+    if (mapInfo == mMapInfo) {
+        return true;
+    }
+    bool affected = false;
+    foreach (MapComposite *subMap, mSubMaps) {
+        if (subMap->mapAboutToChange(mapInfo)) {
+            // See CompositeLayerGroupItem::paint() for why this stops drawing.
+            // FIXME: Not safe enough!
+            foreach (CompositeLayerGroup *layerGroup, mLayerGroups)
+                layerGroup->setNeedsSynch(true);
+            affected = true;
+        }
+    }
+    return affected;
+}
+
 // Called by MapDocument when MapManager tells it a map changed on disk.
 // Returns true if this map or any sub-map is affected.
 bool MapComposite::mapFileChanged(MapInfo *mapInfo)

@@ -72,6 +72,8 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
 {
 #ifdef ZOMBOID
     mMapComposite = new MapComposite(MapManager::instance()->newFromMap(map, fileName));
+    connect(MapManager::instance(), SIGNAL(mapAboutToChange(MapInfo*)),
+            SLOT(onMapAboutToChange(MapInfo*)));
     connect(MapManager::instance(), SIGNAL(mapFileChanged(MapInfo*)),
             SLOT(onMapFileChanged(MapInfo*)));
 #endif
@@ -613,6 +615,11 @@ void MapDocument::onLayerRenamed(int index)
     mMapComposite->layerRenamed(index);
 
     emit layerRenamed(index);
+}
+
+void MapDocument::onMapAboutToChange(MapInfo *mapInfo)
+{
+    mMapComposite->mapAboutToChange(mapInfo);
 }
 
 void MapDocument::onMapFileChanged(MapInfo *mapInfo)
