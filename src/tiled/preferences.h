@@ -90,6 +90,8 @@ public:
 
     qreal tilesetScale() const;
 
+    bool sortTilesets() const;
+
     bool showMiniMap() const;
 #define MINIMAP_MIN_WIDTH 128
 #define MINIMAP_MAX_WIDTH 512
@@ -111,6 +113,7 @@ public slots:
     void setShowTilesetGrid(bool showTilesetGrid);
 #ifdef ZOMBOID
     void setTilesetScale(qreal scale);
+    void setSortTilesets(bool sort);
     void setShowMiniMap(bool show);
 #endif
 
@@ -129,6 +132,7 @@ signals:
     void mapsDirectoryChanged();
     void autoSwitchLayerChanged(bool enabled);
     void tilesetScaleChanged(qreal scale);
+    void sortTilesetsChanged(bool sort);
     void showMiniMapChanged(bool show);
     void miniMapWidthChanged(int width);
 #endif
@@ -158,6 +162,7 @@ private:
     QString mMapsDirectory;
     bool mAutoSwitchLayer;
     qreal mTilesetScale;
+    bool mSortTilesets;
     bool mShowMiniMap;
     int mMiniMapWidth;
 #endif

@@ -54,6 +54,11 @@ public:
 
 	void setMapDocument(MapDocument *mapDoc);
 
+    void setSortByName(bool sort);
+
+private:
+    void setModelData();
+
 private slots:
     void tilesetAdded(int index, Tileset *tileset);
     void tilesetChanged(Tileset *tileset);
@@ -64,6 +69,8 @@ private slots:
 
 private:
 	MapDocument *mMapDocument;
+    bool mSortByName;
+    QList<Tileset*> mTilesets;
 };
 
 } // namespace Internal

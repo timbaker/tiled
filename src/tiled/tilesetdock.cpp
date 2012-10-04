@@ -303,6 +303,11 @@ TilesetDock::TilesetDock(QWidget *parent):
     button = dynamic_cast<QToolButton*>(toolbar->widgetForAction(mActionTilesetDown));
     button->setAutoRepeat(true);
 
+    mActionSortByName = toolbar->addAction(QIcon(QLatin1String(":/images/16x16/sort-by-name.png")),
+                                            tr("Sort By Name"), this, SLOT(sortByName()));
+    mActionSortByName->setCheckable(true);
+    mActionSortByName->setChecked(Preferences::instance()->sortTilesets());
+
     vertical->addWidget(mThumbView);
     vertical->addWidget(toolbar);
 
@@ -465,8 +470,9 @@ void TilesetDock::updateActions()
 #ifdef ZOMBOID
 //    mActionZoom->setEnabled(view != 0);
     mActionNewTileset->setEnabled(mMapDocument != 0);
-    mActionTilesetUp->setEnabled(view && (index > 0));
-    mActionTilesetDown->setEnabled(view && (index + 1 < mTabBar->count()));
+    bool sort = Preferences::instance()->sortTilesets();
+    mActionTilesetUp->setEnabled(!sort && view && (index > 0));
+    mActionTilesetDown->setEnabled(!sort && view && (index + 1 < mTabBar->count()));
     mZoomComboBox->setEnabled(view != 0);
 #endif
 }
@@ -549,6 +555,21 @@ void TilesetDock::tilesetRemoved(Tileset *tileset)
         setCurrentTile(0);
 
 #ifdef ZOMBOID
+    // When deleting a tileset, the mTabBar->removeTab call selects another
+    // tab, but those tabs aren't sorted by name.  So select previous/next tab
+    // by name when tileset sorting is enabled.
+    if (Preferences::instance()->sortTilesets()) {
+        QMap<QString,Tileset*> sorted;
+        sorted.insert(tileset->name(), tileset);
+        foreach (Tileset *ts, mMapDocument->map()->tilesets())
+            sorted.insertMulti(ts->name(), ts);
+        QList<Tileset*> tilesets = sorted.values();
+        int index = tilesets.indexOf(tileset);
+        if (index < sorted.count() - 1)
+            mThumbView->setCurrentIndex(mThumbView->model()->index(tilesets.at(index + 1)));
+        else if (index > 0)
+            mThumbView->setCurrentIndex(mThumbView->model()->index(tilesets.at(index - 1)));
+    }
     thumbSyncWithTabs();
 #endif
 }
@@ -569,6 +590,10 @@ void TilesetDock::tilesetMoved(int from, int to)
         if (mTabBar->tabText(i) != tileset->name())
             mTabBar->setTabText(i, tileset->name());
     }
+
+#ifdef ZOMBOID
+    thumbSyncWithTabs();
+#endif
 }
 
 /**
@@ -759,6 +784,11 @@ void TilesetDock::renameTileset()
 
 void TilesetDock::tilesetNameChanged(Tileset *tileset)
 {
+#ifdef ZOMBOID
+    // To support sort-by-name
+    thumbSyncWithTabs();
+#endif
+
     for (int i = 0; i < mTabBar->count(); i++) {
         TilesetView *view = tilesetViewAt(i);
         if (tileset == view->tilesetModel()->tileset()) {
@@ -830,8 +860,9 @@ void TilesetDock::thumbSyncWithTabs()
 #endif
     QModelIndex index = mThumbView->model()->index(ts);
     mThumbView->setCurrentIndex(index);
-    mThumbView->selectionModel()->select(index, QItemSelectionModel::Select |  QItemSelectionModel::Rows);
+    mThumbView->selectionModel()->select(index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
     mThumbView->selectionModel()->blockSignals(false);
+    mThumbView->scrollTo(index);
 }
 
 void TilesetDock::layerSwitchToggled()
@@ -893,6 +924,15 @@ void TilesetDock::moveTilesetDown()
         Tileset *ts = mMapDocument->map()->tilesets()[from+1];
         mThumbView->setCurrentIndex(mThumbView->model()->index(ts));
     }
+}
+
+void TilesetDock::sortByName()
+{
+    bool sort = mActionSortByName->isChecked();
+    Preferences::instance()->setSortTilesets(sort);
+    mThumbView->model()->setSortByName(sort);
+    thumbSyncWithTabs();
+    updateActions();
 }
 
 #endif // ZOMBOID
