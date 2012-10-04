@@ -43,6 +43,7 @@ using namespace Tiled::Internal;
 MapsDock::MapsDock(MainWindow *mainWindow, QWidget *parent)
     : QDockWidget(parent)
     , mPreviewLabel(new QLabel(this))
+    , mPreviewMapImage(0)
     , mMapsView(new MapsView(mainWindow))
 {
     setObjectName(QLatin1String("MapsDock"));
@@ -86,6 +87,9 @@ MapsDock::MapsDock(MainWindow *mainWindow, QWidget *parent)
     connect(prefs, SIGNAL(mapsDirectoryChanged()), this, SLOT(onMapsDirectoryChanged()));
     edit->setText(prefs->mapsDirectory());
     connect(edit, SIGNAL(returnPressed()), this, SLOT(editedMapsDirectory()));
+
+    connect(MapImageManager::instance(), SIGNAL(mapImageChanged(MapImage*)),
+            SLOT(onMapImageChanged(MapImage*)));
 
     connect(mMapsView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(selectionChanged()));
@@ -134,6 +138,15 @@ void MapsDock::selectionChanged()
         mPreviewLabel->setPixmap(QPixmap::fromImage(mapImage->image().scaled(256, 123, Qt::KeepAspectRatio)));
     else
         mPreviewLabel->setPixmap(QPixmap());
+    mPreviewMapImage = mapImage;
+}
+
+void MapsDock::onMapImageChanged(MapImage *mapImage)
+{
+    if (mapImage == mPreviewMapImage) {
+        QImage image = mapImage->image().scaled(256, 123, Qt::KeepAspectRatio);
+        mPreviewLabel->setPixmap(QPixmap::fromImage(image));
+    }
 }
 
 void MapsDock::changeEvent(QEvent *e)

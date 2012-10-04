@@ -115,6 +115,8 @@ void ZomboidScene::setMapDocument(MapDocument *mapDoc)
         connect(mMapDocument, SIGNAL(layerAddedToGroup(int)), SLOT(layerAddedToGroup(int)));
         connect(mMapDocument, SIGNAL(layerRemovedFromGroup(int,CompositeLayerGroup*)), SLOT(layerRemovedFromGroup(int,CompositeLayerGroup*)));
         connect(mMapDocument, SIGNAL(layerLevelChanged(int,int)), SLOT(layerLevelChanged(int,int)));
+        connect(mMapDocument, SIGNAL(mapCompositeChanged()),
+                SLOT(mapCompositeChanged()));
     }
 }
 
@@ -525,6 +527,21 @@ void ZomboidScene::onLotUpdated(MapComposite *lot, MapObject *mapObject)
         item->resize(lot->map()->size());
     }
 
+    updateLayerGroupsLater(Synch | Bounds);
+}
+
+// Called when a map file displayed as a Lot is changed on disk.
+void ZomboidScene::mapCompositeChanged()
+{
+    QMap<MapObject*,MapComposite*>::iterator it_begin = mMapObjectToLot.begin();
+    QMap<MapObject*,MapComposite*>::iterator it_end = mMapObjectToLot.end();
+    QMap<MapObject*,MapComposite*>::iterator it;
+    for (it = it_begin; it != it_end; it++) {
+        MapObject *mapObject = it.key();
+        MapComposite *lot = it.value();
+        if (MapObjectItem *item = itemForObject(mapObject))
+            item->resize(lot->map()->size());
+    }
     updateLayerGroupsLater(Synch | Bounds);
 }
 

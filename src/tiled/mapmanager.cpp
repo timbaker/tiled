@@ -26,6 +26,7 @@
 #include "mapobject.h"
 #include "objectgroup.h"
 #include "tilelayer.h"
+#include "tileset.h"
 #include "tilesetmanager.h"
 
 #include <QDebug>
@@ -52,7 +53,15 @@ void MapManager::deleteInstance()
 }
 
 MapManager::MapManager()
+    : mFileSystemWatcher(new FileSystemWatcher(this))
 {
+    connect(mFileSystemWatcher, SIGNAL(fileChanged(QString)),
+            SLOT(fileChanged(QString)));
+
+    mChangedFilesTimer.setInterval(500);
+    mChangedFilesTimer.setSingleShot(true);
+    connect(&mChangedFilesTimer, SIGNAL(timeout()),
+            SLOT(fileChangedTimeout()));
 }
 
 MapManager::~MapManager()
@@ -186,9 +195,11 @@ MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo)
                                     map->tileWidth(), map->tileHeight());
         info->setFilePath(mapFilePath);
         mMapInfo[mapFilePath] = info;
+        mFileSystemWatcher->addPath(mapFilePath);
     }
 
     mMapInfo[mapFilePath]->mMap = map;
+    mMapInfo[mapFilePath]->mLastModified = QFileInfo(mapFilePath).lastModified();
 
     return mMapInfo[mapFilePath];
 }
@@ -310,7 +321,9 @@ MapInfo *MapManager::mapInfo(const QString &mapFilePath)
     qDebug() << "read map info for" << mapFilePath;
     mapInfo->setFilePath(mapFilePath);
 
+    mapInfo->mLastModified = QFileInfo(mapFilePath).lastModified();
     mMapInfo[mapFilePath] = mapInfo;
+    mFileSystemWatcher->addPath(mapFilePath);
 
     return mapInfo;
 }
@@ -407,4 +420,43 @@ Map *MapManager::convertOrientation(Map *map, Tiled::Map::Orientation orient)
     }
 
     return map;
+}
+
+void MapManager::fileChanged(const QString &path)
+{
+    mChangedFiles.insert(path);
+    mChangedFilesTimer.start();
+}
+
+void MapManager::fileChangedTimeout()
+{
+    foreach (const QString &path, mChangedFiles) {
+        if (mMapInfo.contains(path)) {
+            qDebug() << "MapManager::fileChanged" << path;
+            QFileInfo info(path);
+            if (info.exists()) {
+                MapInfo *mapInfo = mMapInfo[path];
+                if (Map *oldMap = mapInfo->map()) {
+                    Q_ASSERT(!mapInfo->isBeingEdited());
+
+                    mapInfo->mMap = 0;
+                    MapInfo *sameInfo = loadMap(path);
+                    if (sameInfo && sameInfo->map()) {
+                        TilesetManager *tilesetMgr = TilesetManager::instance();
+                        tilesetMgr->removeReferences(oldMap->tilesets());
+                        delete oldMap;
+                    } else {
+                        qDebug() << "MapManager::fileChangedTimeout: FAILED to load the changed map";
+                        // Error loading the new map, keep the old one.
+                        mapInfo->mMap = oldMap;
+                        continue;
+                    }
+
+                }
+                emit mapFileChanged(mapInfo);
+            }
+        }
+    }
+
+    mChangedFiles.clear();
 }

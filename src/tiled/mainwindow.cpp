@@ -76,12 +76,15 @@
 #include "commandbutton.h"
 #include "objectsdock.h"
 #ifdef ZOMBOID
+#include "changetileselection.h"
+#include "converttolotdialog.h"
 #include "convertorientationdialog.h"
 #include "mapcomposite.h"
 #include "mapmanager.h"
 #include "mapsdock.h"
 #include "zlevelsdock.h"
 #include "zprogress.h"
+#include <QDebug>
 #endif
 
 #ifdef Q_WS_MAC
@@ -329,6 +332,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
             SLOT(editMapProperties()));
     connect(mUi->actionAutoMap, SIGNAL(triggered()), SLOT(autoMap()));
 #ifdef ZOMBOID
+    connect(mUi->actionConvertToLot, SIGNAL(triggered()),
+            SLOT(convertToLot()));
     connect(mUi->actionConvertOrientation, SIGNAL(triggered()),
             SLOT(convertOrientation()));
 #endif
@@ -1250,6 +1255,167 @@ void MainWindow::autoMappingError()
 }
 
 #ifdef ZOMBOID
+void MainWindow::convertToLot()
+{
+    if (!mMapDocument)
+        return;
+
+    const QRect bounds = mMapDocument->tileSelection().boundingRect();
+    if (bounds.isEmpty())
+        return;
+
+    Map *map = mMapDocument->map();
+
+    ConvertToLotDialog dialog(mMapDocument, this);
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    MapComposite *mapComposite = mMapDocument->mapComposite();
+    QPoint mapOffset;
+    int mapWidth = bounds.width(), mapHeight = bounds.height();
+    int maxLevel = 0;
+    if (dialog.emptyLevels()) {
+        maxLevel = mapComposite->maxLevel();
+    } else {
+#if 1
+        int numLevels = mapComposite->layerGroupCount();
+        for (int level = numLevels - 1; level >= 0; --level) {
+            CompositeLayerGroup *lg = mapComposite->tileLayersForLevel(level);
+            bool empty = true;
+            foreach (TileLayer *tl, lg->layers()) {
+                QRect bounds2 = bounds;
+                if (map->orientation() == Map::Isometric)
+                    bounds2.translate(-lg->level() * 3, -lg->level() * 3);
+                for (int y = bounds2.top(); y <= bounds2.bottom(); y++) {
+                    for (int x = bounds2.left(); x <= bounds2.right(); x++) {
+                        if (!tl->cellAt(x, y).isEmpty()) {
+                            empty = false;
+                            break;
+                        }
+                    }
+                    if (!empty)
+                        break;
+                }
+                if (!empty)
+                    break;
+            }
+            if (!empty) {
+                maxLevel = lg->level();
+                break;
+            }
+        }
+#else
+        foreach (CompositeLayerGroup *lg, mapComposite->sortedLayerGroups()) {
+            // FIXME: only check emptiness of the converted area
+            if (!lg->bounds().isEmpty())
+                maxLevel = lg->level();
+        }
+#endif
+    }
+    if (map->orientation() == Map::Isometric) {
+        int offset = maxLevel * 3;
+        mapOffset.setX(offset);
+        mapOffset.setY(offset);
+        mapWidth += offset;
+        mapHeight += offset;
+    }
+    Map *clone = new Map(map->orientation(), mapWidth, mapHeight,
+                     map->tileWidth(), map->tileHeight());
+    foreach (Tileset *ts, map->tilesets())
+        clone->addTileset(ts);
+
+    QUndoStack *undoStack = mMapDocument->undoStack();
+    undoStack->beginMacro(tr("Convert Selection To Lot"));
+
+    QRegion oldSelection = mMapDocument->tileSelection();
+
+    foreach (Layer *layer, map->layers()) {
+        if (TileLayer *tl = layer->asTileLayer()) {
+#if 0
+            int level = tl->level();
+            if (level > maxLevel)
+                continue;
+            int offset = 0, offsetSrc = 0;
+            if (map->orientation() == Map::Isometric) {
+                offset = mapOffset.x() - level * 3;
+                offsetSrc = -level * 3;
+            }
+            TileLayer *cloneLayer = tl->copy(mMapDocument->tileSelection().translated(offsetSrc, offsetSrc));
+            cloneLayer->offset(mapOffset);
+            clone->addLayer(cloneLayer);
+#else
+            int level = tl->level();
+            if (level > maxLevel)
+                continue;
+            TileLayer *cloneLayer = new TileLayer(tl->name(), 0, 0,
+                                                 mapWidth, mapHeight);
+            clone->addLayer(cloneLayer);
+
+            int offset = 0, offsetSrc = 0;
+            if (map->orientation() == Map::Isometric) {
+                offset = mapOffset.x() - level * 3;
+                offsetSrc = -level * 3;
+            }
+            for (int y = bounds.top(); y <= bounds.bottom(); y++) {
+                for (int x = bounds.left(); x <= bounds.right(); x++) {
+                    if (x + offsetSrc < 0 || y + offsetSrc < 0)
+                        continue;
+#if 0
+                    if (!cloneLayer->contains(offset + x - bounds.left(),
+                                              offset + y - bounds.top()))
+                        continue;
+#endif
+                    cloneLayer->setCell(offset + x - bounds.left(),
+                                        offset + y - bounds.top(),
+                                        tl->cellAt(x + offsetSrc, y + offsetSrc));
+                }
+            }
+#endif
+
+            if (dialog.eraseSource()) {
+                QRect eraseRect = bounds.translated(offsetSrc, offsetSrc);
+                eraseRect &= tl->bounds();
+                QRegion eraseRegion(eraseRect);
+                qDebug() << tl->name() << eraseRect;
+
+                // Must set the tileSelection to the area to erase otherwise
+                // TilePainter::paintableRegion won't erase outside the
+                // selection.
+                if (eraseRegion != mMapDocument->tileSelection())
+                    undoStack->push(new ChangeTileSelection(mMapDocument, eraseRegion));
+                undoStack->push(new EraseTiles(mMapDocument, tl, eraseRegion));
+            }
+        }
+    }
+
+    TmxMapWriter writer;
+    if (!writer.write(clone, dialog.filePath())) {
+        QMessageBox::critical(this, tr("Error Saving Map"),
+                              writer.errorString());
+        if (oldSelection != mMapDocument->tileSelection())
+            undoStack->push(new ChangeTileSelection(mMapDocument, oldSelection));
+        undoStack->endMacro();
+        delete clone; // FIXME: release tilesets?
+        return;
+    }
+
+    delete clone; // FIXME: release tilesets?
+
+    if (ObjectGroup *og = dialog.objectGroup()) {
+        QString lotName = dialog.filePath();
+        if (QFileInfo(lotName).absoluteDir() == QFileInfo(mMapDocument->fileName()).absoluteDir())
+            lotName = QFileInfo(lotName).completeBaseName();
+        MapObject *o = new MapObject(QLatin1String("lot"), lotName,
+                                     bounds.topLeft() - mapOffset,
+                                     clone->size());
+        undoStack->push(new AddMapObject(mMapDocument, og, o));
+    }
+
+    if (oldSelection != mMapDocument->tileSelection())
+        undoStack->push(new ChangeTileSelection(mMapDocument, oldSelection));
+    undoStack->endMacro();
+}
+
 void MainWindow::convertOrientation()
 {
     ConvertOrientationDialog dialog(this);
@@ -1385,6 +1551,15 @@ void MainWindow::updateActions()
 #else
     mCurrentLayerLabel->setText(tr("Current layer: %1").arg(
                                     layer ? layer->name() : tr("<none>")));
+#endif
+
+#ifdef ZOMBOID
+    mUi->actionConvertToLot->setEnabled(false);
+    if (mMapDocument) {
+        const QRect bounds = mMapDocument->tileSelection().boundingRect();
+        if (!bounds.isEmpty())
+            mUi->actionConvertToLot->setEnabled(true);
+    }
 #endif
 }
 

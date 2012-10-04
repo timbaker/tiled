@@ -147,6 +147,7 @@ SOURCES += aboutdialog.cpp \
     mapimagemanager.cpp \
     minimap.cpp \
     convertorientationdialog.cpp \
+    converttolotdialog.cpp \
     pathitem.cpp \
     pathlayeritem.cpp \
     createpathtool.cpp \
@@ -265,6 +266,7 @@ HEADERS += aboutdialog.h \
     zprogress.h \
     minimap.h \
     convertorientationdialog.h \
+    converttolotdialog.h \
     pathitem.h \
     pathlayeritem.h \
     createpathtool.h \
@@ -288,7 +290,8 @@ FORMS += aboutdialog.ui \
     resizedialog.ui \
     saveasimagedialog.ui\
     newimagelayerdialog.ui \
-    convertorientationdialog.ui
+    convertorientationdialog.ui \
+    converttolotdialog.ui
 
 RESOURCES += tiled.qrc
 macx {

@@ -19,8 +19,11 @@
 #define MAPMANAGER_H
 
 #include "map.h"
+#include "filesystemwatcher.h"
 
+#include <QDateTime>
 #include <QMap>
+#include <QTimer>
 
 // FIXME: The user can save a map, replacing a file whose MapInfo has already
 // been loaded.
@@ -71,6 +74,8 @@ private:
     Tiled::Map *mMap;
     bool mPlaceholder;
     bool mBeingEdited;
+
+    QDateTime mLastModified;
 
     friend class MapManager;
 };
@@ -128,6 +133,11 @@ public:
 
 signals:
     void mapMagicallyGotMoreLayers(Tiled::Map *map);
+    void mapFileChanged(MapInfo *mapInfo);
+
+private slots:
+    void fileChanged(const QString &path);
+    void fileChangedTimeout();
 
 private:
 
@@ -135,6 +145,11 @@ private:
     ~MapManager();
 
     QMap<QString,MapInfo*> mMapInfo;
+
+    Tiled::Internal::FileSystemWatcher *mFileSystemWatcher;
+    QSet<QString> mChangedFiles;
+    QTimer mChangedFilesTimer;
+
     QString mError;
     static MapManager *mInstance;
 };

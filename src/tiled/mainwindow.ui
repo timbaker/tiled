@@ -106,6 +106,7 @@
     <addaction name="actionMapProperties"/>
     <addaction name="actionAutoMap"/>
     <addaction name="separator"/>
+    <addaction name="actionConvertToLot"/>
     <addaction name="actionConvertOrientation"/>
    </widget>
    <widget class="QMenu" name="menuView">
@@ -434,6 +435,11 @@
   <action name="actionConvertOrientation">
    <property name="text">
     <string>Convert Orientation...</string>
+   </property>
+  </action>
+  <action name="actionConvertToLot">
+   <property name="text">
+    <string>Convert Selection To Lot...</string>
    </property>
   </action>
  </widget>

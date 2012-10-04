@@ -73,6 +73,8 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
 {
 #ifdef ZOMBOID
     mMapComposite = new MapComposite(MapManager::instance()->newFromMap(map, fileName));
+    connect(MapManager::instance(), SIGNAL(mapFileChanged(MapInfo*)),
+            SLOT(onMapFileChanged(MapInfo*)));
 #endif
     switch (map->orientation()) {
     case Map::Isometric:
@@ -618,6 +620,12 @@ void MapDocument::onLayerRenamed(int index)
     mMapComposite->layerRenamed(index);
 
     emit layerRenamed(index);
+}
+
+void MapDocument::onMapFileChanged(MapInfo *mapInfo)
+{
+    if (mMapComposite->mapFileChanged(mapInfo))
+        emit mapCompositeChanged();
 }
 #endif
 

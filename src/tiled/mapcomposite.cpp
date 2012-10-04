@@ -801,3 +801,127 @@ MapComposite::ZOrderList MapComposite::zOrder()
 
     return result;
 }
+
+// Called by MapDocument when MapManager tells it a map changed on disk.
+// Returns true if this map or any sub-map is affected.
+bool MapComposite::mapFileChanged(MapInfo *mapInfo)
+{
+    if (mapInfo == mMapInfo) {
+        recreate();
+        return true;
+    }
+
+    bool changed = false;
+    foreach (MapComposite *subMap, mSubMaps) {
+        if (subMap->mapFileChanged(mapInfo)) {
+            if (!changed) {
+                foreach (CompositeLayerGroup *layerGroup, mLayerGroups)
+                    layerGroup->setNeedsSynch(true);
+                changed = true;
+            }
+        }
+    }
+
+    return changed;
+}
+
+void MapComposite::recreate()
+{
+    qDeleteAll(mSubMaps);
+    qDeleteAll(mLayerGroups);
+    mSubMaps.clear();
+    mLayerGroups.clear();
+    mSortedLayerGroups.clear();
+
+    mMap = mMapInfo->map();
+
+    /////
+
+    if (mMap->orientation() != mOrientRender) {
+        Map::Orientation orientSelf = mMap->orientation();
+        if (orientSelf == Map::Isometric && mOrientRender == Map::LevelIsometric)
+            mOrientAdjustPos = mOrientAdjustTiles = QPoint(3, 3);
+        if (orientSelf == Map::LevelIsometric && mOrientRender == Map::Isometric)
+            mOrientAdjustPos = mOrientAdjustTiles = QPoint(-3, -3);
+    }
+
+    int index = 0;
+    foreach (Layer *layer, mMap->layers()) {
+        int level;
+        if (levelForLayer(layer, &level)) {
+            // FIXME: no changing of mMap should happen after it is loaded!
+            layer->setLevel(level); // for ObjectGroup,ImageLayer as well
+            if (TileLayer *tl = layer->asTileLayer()) {
+                if (!mLayerGroups.contains(level))
+                    mLayerGroups[level] = new CompositeLayerGroup(this, level);
+                mLayerGroups[level]->addTileLayer(tl, index);
+                if (!mMapInfo->isBeingEdited())
+                    mLayerGroups[level]->setLayerVisibility(tl, !layer->name().contains(QLatin1String("NoRender")));
+            }
+        }
+        ++index;
+    }
+
+    // Load lots, but only if this is not the map being edited (that is handled
+    // by the LotManager).
+    if (!mMapInfo->isBeingEdited()) {
+        foreach (ObjectGroup *objectGroup, mMap->objectGroups()) {
+            foreach (MapObject *object, objectGroup->objects()) {
+                if (object->name() == QLatin1String("lot") && !object->type().isEmpty()) {
+                    // FIXME: if this sub-map is converted from LevelIsometric to Isometric,
+                    // then any sub-maps of its own will lose their level offsets.
+                    MapInfo *subMapInfo = MapManager::instance()->loadMap(object->type(),
+                                                                          QFileInfo(mMapInfo->path()).absolutePath());
+                    if (!subMapInfo) {
+                        qDebug() << "failed to find sub-map" << object->type() << "inside map" << mMapInfo->path();
+#if 0 // FIXME: attempt to load this if mapsDirectory changes
+                        subMapInfo = MapManager::instance()->getPlaceholderMap(object->type(), mMap->orientation(),
+                                                                               32, 32); // FIXME: calculate map size
+#endif
+                    }
+                    if (subMapInfo) {
+                        int levelOffset;
+                        (void) levelForLayer(objectGroup, &levelOffset);
+#if 0
+                        MapComposite *_subMap = new MapComposite(subMapInfo, mOrientRender,
+                                                                 this, object->position().toPoint()
+                                                                 + mOrientAdjustPos * levelOffset,
+                                                                 levelOffset);
+                        mSubMaps.append(_subMap);
+#else
+                        addMap(subMapInfo, object->position().toPoint()
+                               + mOrientAdjustPos * levelOffset,
+                               levelOffset);
+#endif
+                    }
+                }
+            }
+        }
+    }
+
+    mMinLevel = 10000;
+    mMaxLevel = 0;
+
+    foreach (CompositeLayerGroup *layerGroup, mLayerGroups) {
+        if (!mMapInfo->isBeingEdited())
+            layerGroup->synch();
+        if (layerGroup->level() < mMinLevel)
+            mMinLevel = layerGroup->level();
+        if (layerGroup->level() > mMaxLevel)
+            mMaxLevel = layerGroup->level();
+    }
+
+    if (mMinLevel == 10000)
+        mMinLevel = 0;
+
+    for (int level = mMinLevel; level <= mMaxLevel; ++level) {
+        if (!mLayerGroups.contains(level))
+            mLayerGroups[level] = new CompositeLayerGroup(this, level);
+        mSortedLayerGroups.append(mLayerGroups[level]);
+    }
+
+    /////
+
+    if (mParent)
+        mParent->moveSubMap(this, origin());
+}
