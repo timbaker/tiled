@@ -438,7 +438,7 @@ void MapManager::fileChangedTimeout()
                 MapInfo *mapInfo = mMapInfo[path];
                 if (Map *oldMap = mapInfo->map()) {
                     Q_ASSERT(!mapInfo->isBeingEdited());
-
+                    emit mapAboutToChange(mapInfo);
                     mapInfo->mMap = 0;
                     MapInfo *sameInfo = loadMap(path);
                     if (sameInfo && sameInfo->map()) {
@@ -449,11 +449,9 @@ void MapManager::fileChangedTimeout()
                         qDebug() << "MapManager::fileChangedTimeout: FAILED to load the changed map";
                         // Error loading the new map, keep the old one.
                         mapInfo->mMap = oldMap;
-                        continue;
                     }
-
+                    emit mapFileChanged(mapInfo);
                 }
-                emit mapFileChanged(mapInfo);
             }
         }
     }

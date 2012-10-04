@@ -135,6 +135,8 @@ private slots:
     void moveTilesetUp();
     void moveTilesetDown();
 
+    void sortByName();
+
     void layerSwitchToggled();
     void autoSwitchLayerChanged(bool enable);
     void switchLayerForTile(Tile *tile);
@@ -174,6 +176,7 @@ private:
     QAction *mActionZoom;
     QAction *mActionTilesetUp;
     QAction *mActionTilesetDown;
+    QAction *mActionSortByName;
 
     QIcon mIconTileLayer;
     QIcon mIconTileLayerStop;

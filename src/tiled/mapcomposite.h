@@ -188,6 +188,7 @@ public:
     typedef QList<ZOrderItem> ZOrderList;
     ZOrderList zOrder();
 
+    bool mapAboutToChange(MapInfo *mapInfo);
     bool mapFileChanged(MapInfo *mapInfo);
 
 signals:

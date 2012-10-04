@@ -398,6 +398,7 @@ private slots:
 
     void onPathsRemoved(const QList<Path*> &paths);
 
+    void onMapAboutToChange(MapInfo *mapInfo);
     void onMapFileChanged(MapInfo *mapInfo);
 #endif
 

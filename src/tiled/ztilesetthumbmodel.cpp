@@ -19,6 +19,7 @@
 
 #include "map.h"
 #include "mapdocument.h"
+#include "preferences.h"
 #include "tile.h"
 #include "tileset.h"
 #include "tilesetmanager.h"
@@ -32,7 +33,9 @@ using namespace Tiled::Internal;
 ZTilesetThumbModel::ZTilesetThumbModel(QObject *parent)
     : QAbstractListModel(parent)
     , mMapDocument(0)
+    , mSortByName(false)
 {
+    mSortByName = Preferences::instance()->sortTilesets();
 }
 
 int ZTilesetThumbModel::rowCount(const QModelIndex &parent) const
@@ -138,12 +141,12 @@ Tileset *ZTilesetThumbModel::tilesetAt(const QModelIndex &index) const
     if (!mMapDocument)
         return 0;
 
-    return mMapDocument->map()->tilesets().at(index.row());
+    return mTilesets.at(index.row());
 }
 
 QModelIndex ZTilesetThumbModel::index(Tileset *ts) const
 {
-    const int row = mMapDocument->map()->tilesets().indexOf(ts);
+    int row = mTilesets.indexOf(ts);
     return createIndex(row, 0, 0);
 }
 
@@ -153,7 +156,6 @@ void ZTilesetThumbModel::setMapDocument(MapDocument *mapDoc)
         return;
     if (mMapDocument)
         mMapDocument->disconnect(this);
-    beginResetModel();
     mMapDocument = mapDoc;
     if (mMapDocument) {
         connect(mMapDocument, SIGNAL(tilesetAdded(int,Tileset*)),
@@ -167,6 +169,31 @@ void ZTilesetThumbModel::setMapDocument(MapDocument *mapDoc)
         connect(mMapDocument, SIGNAL(tilesetFileNameChanged(Tileset*)),
                 SLOT(tilesetFileNameChanged(Tileset*)));
     }
+    setModelData();
+}
+
+void ZTilesetThumbModel::setSortByName(bool sort)
+{
+    if (sort != mSortByName) {
+        mSortByName = sort;
+        setModelData();
+    }
+}
+
+void ZTilesetThumbModel::setModelData()
+{
+    beginResetModel();
+    mTilesets.clear();
+    if (mMapDocument) {
+        if (mSortByName) {
+            QMap<QString,Tileset*> sorted;
+            foreach (Tileset *ts, mMapDocument->map()->tilesets())
+                sorted.insertMulti(ts->name(), ts);
+            mTilesets = sorted.values();
+        } else {
+            mTilesets = mMapDocument->map()->tilesets();
+        }
+    }
     endResetModel();
 }
 
@@ -174,31 +201,38 @@ void ZTilesetThumbModel::tilesetAdded(int index, Tileset *tileset)
 {
     Q_UNUSED(index)
     Q_UNUSED(tileset)
-    reset();
+    setModelData();
 }
 
 void ZTilesetThumbModel::tilesetChanged(Tileset *tileset)
 {
     Q_UNUSED(tileset)
-    reset();
+    setModelData();
 }
 
 void ZTilesetThumbModel::tilesetRemoved(Tileset *tileset)
 {
     Q_UNUSED(tileset)
-    reset();
+    setModelData();
 }
 
 void ZTilesetThumbModel::tilesetMoved(int from, int to)
 {
+    if (mSortByName)
+        return;
     int start = qMin(from, to);
     int end = qMax(from, to);
     // FIXME: should use beingMoveRows()/endMoveRows()
+    mTilesets.insert(to, mTilesets.takeAt(from));
     emit dataChanged(createIndex(start, 0, 0), createIndex(end, 0, 0));
 }
 
 void ZTilesetThumbModel::tilesetNameChanged(Tileset *tileset)
 {
+    if (mSortByName) {
+        setModelData();
+        return;
+    }
     QModelIndex index = this->index(tileset);
     emit dataChanged(index, index);
 }

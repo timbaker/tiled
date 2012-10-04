@@ -79,6 +79,7 @@ Preferences::Preferences()
 #ifdef ZOMBOID
     mAutoSwitchLayer = mSettings->value(QLatin1String("AutoSwitchLayer"), true).toBool();
     mTilesetScale = mSettings->value(QLatin1String("TilesetScale"), 1.0).toReal();
+    mSortTilesets = mSettings->value(QLatin1String("SortTilesets"), false).toBool();
     mShowMiniMap = mSettings->value(QLatin1String("ShowMiniMap"), true).toBool();
     mMiniMapWidth = mSettings->value(QLatin1String("MiniMapWidth"), 256).toInt();
 #endif
@@ -361,6 +362,11 @@ qreal Preferences::tilesetScale() const
     return mTilesetScale;
 }
 
+bool Preferences::sortTilesets() const
+{
+    return mSortTilesets;
+}
+
 void Preferences::setTilesetScale(qreal scale)
 {
     if (mTilesetScale == scale)
@@ -368,6 +374,15 @@ void Preferences::setTilesetScale(qreal scale)
     mTilesetScale = scale;
     mSettings->setValue(QLatin1String("Interface/TilesetScale"), scale);
     emit tilesetScaleChanged(mTilesetScale);
+}
+
+void Preferences::setSortTilesets(bool sort)
+{
+    if (mSortTilesets == sort)
+        return;
+    mSortTilesets = sort;
+    mSettings->setValue(QLatin1String("Interface/SortTilesets"), sort);
+    emit sortTilesetsChanged(mSortTilesets);
 }
 
 bool Preferences::showMiniMap() const
