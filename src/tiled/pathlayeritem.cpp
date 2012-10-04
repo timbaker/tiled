@@ -4,6 +4,7 @@ using namespace Tiled;
 using namespace Tiled::Internal;
 
 PathLayerItem::PathLayerItem(PathLayer *pathLayer)
+    : mPathLayer(pathLayer)
 {
     // Since we don't do any painting, we can spare us the call to paint()
     setFlag(QGraphicsItem::ItemHasNoContents);

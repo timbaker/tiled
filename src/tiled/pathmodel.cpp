@@ -20,12 +20,11 @@
 
 #include "pathmodel.h"
 
-#include "changemapobject.h"
-#include "map.h"
+//#include "changepath.h"
 #include "layermodel.h"
+#include "map.h"
 #include "mapdocument.h"
-#include "mapobject.h"
-#include "objectgroup.h"
+#include "pathlayer.h"
 #include "renamelayer.h"
 
 #define GROUPS_IN_DISPLAY_ORDER 1
@@ -37,89 +36,89 @@ PathModel::PathModel(QObject *parent):
     QAbstractItemModel(parent),
     mMapDocument(0),
     mMap(0),
-    mObjectGroupIcon(QLatin1String(":/images/16x16/layer-object.png"))
+    mRootItem(0),
+    mPathLayerIcon(QLatin1String(":/images/16x16/layer-tile-stop.png"))
 {
 }
 
 QModelIndex PathModel::index(int row, int column,
                                   const QModelIndex &parent) const
 {
+    if (!mRootItem)
+        return QModelIndex();
+
     if (!parent.isValid()) {
-        if (row < mObjectGroups.count())
-            return createIndex(row, column, mGroups[mObjectGroups.at(row)]);
+        if (row < mRootItem->children.size())
+            return createIndex(row, column, mRootItem->children.at(row));
         return QModelIndex();
     }
 
-    ObjectGroup *og = toObjectGroup(parent);
-
-    // happens when deleting the last item in a parent
-    if (row >= og->objectCount())
+    if (Item *item = toItem(parent)) {
+        if (row < item->children.size())
+            return createIndex(row, column, item->children.at(row));
         return QModelIndex();
+    }
 
-    // Paranoia: sometimes "fake" objects are in use (see createobjecttool)
-    if (!mObjects.contains(og->objects().at(row)))
-        return QModelIndex();
-
-    return createIndex(row, column, mObjects[og->objects()[row]]);
+    return QModelIndex();
 }
 
 QModelIndex PathModel::parent(const QModelIndex &index) const
 {
-    MapObject *mapObject = toMapObject(index);
-    if (mapObject)
-        return this->index(mapObject->objectGroup());
+    if (Item *item = toItem(index)) {
+        if (item->parent != mRootItem) {
+            Item *grandParent = item->parent->parent;
+            return createIndex(grandParent->children.indexOf(item->parent), 0,
+                               item->parent);
+        }
+    }
     return QModelIndex();
 }
 
 int PathModel::rowCount(const QModelIndex &parent) const
 {
-    if (!mMapDocument)
+    if (!mRootItem)
         return 0;
     if (!parent.isValid())
-        return mObjectGroups.size();
-    if (ObjectGroup *og = toObjectGroup(parent))
-        return og->objectCount();
+        return mRootItem->children.size();
+    if (Item *item = toItem(parent))
+        return item->children.size();
     return 0;
 }
 
 int PathModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
-    return 2; // MapObject name|type
+    return 2; // Path name|type
 }
 
 QVariant PathModel::data(const QModelIndex &index, int role) const
 {
-    if (MapObject *mapObject = toMapObject(index)) {
+    if (Path *path = toPath(index)) {
         switch (role) {
         case Qt::DisplayRole:
         case Qt::EditRole:
-            return index.column() ? mapObject->type() : mapObject->name();
+            return index.column() ? QLatin1String("type") : QLatin1String("name");
         case Qt::DecorationRole:
             return QVariant(); // no icon -> maybe the color?
         case Qt::CheckStateRole:
             if (index.column() > 0)
                 return QVariant();
-            return mapObject->isVisible() ? Qt::Checked : Qt::Unchecked;
-        case OpacityRole:
-            return qreal(1);
+            return path->isVisible() ? Qt::Checked : Qt::Unchecked;
         default:
             return QVariant();
         }
     }
-    if (ObjectGroup *objectGroup = toObjectGroup(index)) {
+    if (PathLayer *pathLayer = toLayer(index)) {
         switch (role) {
         case Qt::DisplayRole:
         case Qt::EditRole:
-            return index.column() ? QVariant() : objectGroup->name();
+            return index.column() ? QVariant() : pathLayer->name();
         case Qt::DecorationRole:
-            return index.column() ? QVariant() : mObjectGroupIcon;
+            return index.column() ? QVariant() : mPathLayerIcon;
         case Qt::CheckStateRole:
             if (index.column() > 0)
                 return QVariant();
-            return objectGroup->isVisible() ? Qt::Checked : Qt::Unchecked;
-        case OpacityRole:
-            return objectGroup->opacity();
+            return pathLayer->isVisible() ? Qt::Checked : Qt::Unchecked;
         default:
             return QVariant();
         }
@@ -130,49 +129,51 @@ QVariant PathModel::data(const QModelIndex &index, int role) const
 bool PathModel::setData(const QModelIndex &index, const QVariant &value,
                              int role)
 {
-    if (MapObject *mapObject = toMapObject(index)) {
+    if (Path *path = toPath(index)) {
         switch (role) {
         case Qt::CheckStateRole: {
             Qt::CheckState c = static_cast<Qt::CheckState>(value.toInt());
-            mapObject->setVisible(c == Qt::Checked);
+            path->setVisible(c == Qt::Checked);
             emit dataChanged(index, index);
-            emit objectsChanged(QList<MapObject*>() << mapObject);
+            emit pathsChanged(QList<Path*>() << path);
             return true;
         }
         case Qt::EditRole: {
+#if 0
             const QString s = value.toString();
-            if (index.column() == 0 && s != mapObject->name()) {
+            if (index.column() == 0 && s != path->name()) {
                 QUndoStack *undo = mMapDocument->undoStack();
                 undo->beginMacro(tr("Change Object Name"));
-                undo->push(new ChangeMapObject(mMapDocument, mapObject,
-                                               s, mapObject->type()));
+                undo->push(new ChangeMapObject(mMapDocument, path,
+                                               s, path->type()));
                 undo->endMacro();
             }
-            if (index.column() == 1 && s != mapObject->type()) {
+            if (index.column() == 1 && s != path->type()) {
                 QUndoStack *undo = mMapDocument->undoStack();
                 undo->beginMacro(tr("Change Object Type"));
-                undo->push(new ChangeMapObject(mMapDocument, mapObject,
-                                               mapObject->name(), s));
+                undo->push(new ChangeMapObject(mMapDocument, path,
+                                               path->name(), s));
                 undo->endMacro();
             }
+#endif
             return true;
         }
         }
         return false;
     }
-    if (ObjectGroup *objectGroup = toObjectGroup(index)) {
+    if (PathLayer *pathLayer = toLayer(index)) {
         switch (role) {
         case Qt::CheckStateRole: {
             LayerModel *layerModel = mMapDocument->layerModel();
-            const int layerIndex = mMap->layers().indexOf(objectGroup);
+            const int layerIndex = mMap->layers().indexOf(pathLayer);
             const int row = layerModel->layerIndexToRow(layerIndex);
             layerModel->setData(layerModel->index(row), value, role);
             return true;
         }
         case Qt::EditRole: {
             const QString newName = value.toString();
-            if (objectGroup->name() != newName) {
-                const int layerIndex = mMap->layers().indexOf(objectGroup);
+            if (pathLayer->name() != newName) {
+                const int layerIndex = mMap->layers().indexOf(pathLayer);
                 RenameLayer *rename = new RenameLayer(mMapDocument, layerIndex,
                                                       newName);
                 mMapDocument->undoStack()->push(rename);
@@ -191,7 +192,7 @@ Qt::ItemFlags PathModel::flags(const QModelIndex &index) const
     if (index.column() == 0)
         rc |= Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
     else if (index.parent().isValid())
-        rc |= Qt::ItemIsEditable; // MapObject type
+        rc |= Qt::ItemIsEditable; // Path type
     return rc;
 }
 
@@ -246,11 +247,8 @@ void PathModel::setMapDocument(MapDocument *mapDocument)
     mMapDocument = mapDocument;
     mMap = 0;
 
-    mObjectGroups.clear();
-    qDeleteAll(mGroups);
-    mGroups.clear();
-    qDeleteAll(mObjects);
-    mObjects.clear();
+    delete mRootItem;
+    mRootItem = 0;
 
     if (mMapDocument) {
         mMap = mMapDocument->map();
@@ -262,15 +260,12 @@ void PathModel::setMapDocument(MapDocument *mapDocument)
         connect(mMapDocument, SIGNAL(layerAboutToBeRemoved(int)),
                 this, SLOT(layerAboutToBeRemoved(int)));
 
-        foreach (ObjectGroup *og, mMap->objectGroups()) {
-#if GROUPS_IN_DISPLAY_ORDER
-            mObjectGroups.prepend(og);
-#else
-            mObjectGroups.append(og);
-#endif
-            mGroups.insert(og, new ObjectOrGroup(og));
-            foreach (MapObject *o, og->objects())
-                mObjects.insert(o, new ObjectOrGroup(o));
+        mRootItem = new Item();
+
+        foreach (PathLayer *pathLayer, mMap->pathLayers()) {
+            Item *parent = new Item(mRootItem, 0, pathLayer);
+            foreach (Path *path, pathLayer->paths())
+                new Item(parent, 0, path);
         }
     }
 
@@ -280,35 +275,19 @@ void PathModel::setMapDocument(MapDocument *mapDocument)
 void PathModel::layerAdded(int index)
 {
     Layer *layer = mMap->layerAt(index);
-    if (ObjectGroup *og = layer->asObjectGroup()) {
-        if (!mGroups.contains(og)) {
-            ObjectGroup *prev = 0;
-            for (index = index - 1; index >= 0; --index)
-                if ((prev = mMap->layerAt(index)->asObjectGroup()))
-                    break;
-#if GROUPS_IN_DISPLAY_ORDER
-            index = prev ? mObjectGroups.indexOf(prev) : mObjectGroups.count();
-#else
-            index = prev ? mObjectGroups.indexOf(prev) + 1 : 0;
-#endif
-            mObjectGroups.insert(index, og);
-            const int row = mObjectGroups.indexOf(og);
-            beginInsertRows(QModelIndex(), row, row);
-            mGroups.insert(og, new ObjectOrGroup(og));
-            foreach (MapObject *o, og->objects()) {
-                if (!mObjects.contains(o))
-                    mObjects.insert(o, new ObjectOrGroup(o));
-            }
-            endInsertRows();
-        }
+    if (PathLayer *pathLayer = layer->asPathLayer()) {
+        int row = mMap->pathLayerCount() - mMap->pathLayers().indexOf(pathLayer) - 1;
+        beginInsertRows(QModelIndex(), row, row);
+        new Item(mRootItem, row, pathLayer);
+        endInsertRows();
     }
 }
 
 void PathModel::layerChanged(int index)
 {
     Layer *layer = mMap->layerAt(index);
-    if (ObjectGroup *og = layer->asObjectGroup()) {
-        QModelIndex index = this->index(og);
+    if (PathLayer *pathLayer = layer->asPathLayer()) {
+        QModelIndex index = this->index(pathLayer);
         emit dataChanged(index, index);
     }
 }
@@ -316,77 +295,114 @@ void PathModel::layerChanged(int index)
 void PathModel::layerAboutToBeRemoved(int index)
 {
     Layer *layer = mMap->layerAt(index);
-    if (ObjectGroup *og = layer->asObjectGroup()) {
-        const int row = mObjectGroups.indexOf(og);
-        beginRemoveRows(QModelIndex(), row, row);
-        mObjectGroups.removeAt(row);
-        delete mGroups.take(og);
-        foreach (MapObject *o, og->objects())
-            delete mObjects.take(o);
-
-        endRemoveRows();
+    if (PathLayer *pathLayer = layer->asPathLayer()) {
+        if (Item *item = toItem(pathLayer)) {
+            Item *parentItem = item->parent; // mRootItem
+            int row = parentItem->children.indexOf(item);
+            beginRemoveRows(QModelIndex(), row, row);
+            delete parentItem->children.takeAt(row);
+            endRemoveRows();
+        }
     }
 }
 
-void PathModel::insertObject(ObjectGroup *og, int index, MapObject *o)
+void PathModel::insertPath(PathLayer *pathLayer, int index, Path *path)
 {
-    const int row = (index >= 0) ? index : og->objectCount();
-    beginInsertRows(this->index(og), row, row);
-    og->insertObject(row, o);
-    mObjects.insert(o, new ObjectOrGroup(o));
+    const int row = (index >= 0) ? index : pathLayer->pathCount();
+    beginInsertRows(this->index(pathLayer), row, row);
+    pathLayer->insertPath(row, path);
+    new Item(toItem(pathLayer), row, path);
     endInsertRows();
-    emit objectsAdded(QList<MapObject*>() << o);
+    emit pathsAdded(QList<Path*>() << path);
 }
 
-int PathModel::removeObject(ObjectGroup *og, MapObject *o)
+int PathModel::removePath(PathLayer *pathLayer, Path *path)
 {
-    emit objectsAboutToBeRemoved(QList<MapObject*>() << o);
-    const int row = og->objects().indexOf(o);
-    beginRemoveRows(index(og), row, row);
-    og->removeObjectAt(row);
-    delete mObjects.take(o);
-    endRemoveRows();
-    emit objectsRemoved(QList<MapObject*>() << o);
-    return row;
+    emit pathsAboutToBeRemoved(QList<Path*>() << path);
+    if (Item *item = toItem(path)) {
+        Item *parentItem = item->parent;
+        QModelIndex parentIndex = index(/*parentItem->*/pathLayer);
+        int row = parentItem->children.indexOf(item);
+        beginRemoveRows(parentIndex, row, row);
+        pathLayer->removePath(path);
+        delete parentItem->children.takeAt(row);
+        endRemoveRows();
+        emit pathsRemoved(QList<Path*>() << path);
+        return row;
+    }
+    return -1;
 }
 
-// ObjectGroup color changed
+// PathLayer color changed
 // FIXME: layerChanged should let the scene know that objects need redrawing
-void PathModel::emitObjectsChanged(const QList<MapObject *> &objects)
+void PathModel::emitPathsChanged(const QList<Path *> &objects)
 {
-    emit objectsChanged(objects);
+    emit pathsChanged(objects);
 }
 
-void PathModel::setObjectName(MapObject *o, const QString &name)
+#if 0
+void PathModel::setObjectName(Path *o, const QString &name)
 {
     o->setName(name);
     QModelIndex index = this->index(o);
     emit dataChanged(index, index);
-    emit objectsChanged(QList<MapObject*>() << o);
+    emit objectsChanged(QList<Path*>() << o);
 }
 
-void PathModel::setObjectType(MapObject *o, const QString &type)
+void PathModel::setObjectType(Path *o, const QString &type)
 {
     o->setType(type);
     QModelIndex index = this->index(o, 1);
     emit dataChanged(index, index);
-    emit objectsChanged(QList<MapObject*>() << o);
+    emit objectsChanged(QList<Path*>() << o);
 }
 
-void PathModel::setObjectPolygon(MapObject *o, const QPolygonF &polygon)
+void PathModel::setObjectPolygon(Path *o, const QPolygonF &polygon)
 {
     o->setPolygon(polygon);
-    emit objectsChanged(QList<MapObject*>() << o);
+    emit objectsChanged(QList<Path*>() << o);
 }
 
-void PathModel::setObjectPosition(MapObject *o, const QPointF &pos)
+void PathModel::setObjectPosition(Path *o, const QPointF &pos)
 {
     o->setPosition(pos);
-    emit objectsChanged(QList<MapObject*>() << o);
+    emit objectsChanged(QList<Path*>() << o);
 }
 
-void PathModel::setObjectSize(MapObject *o, const QSizeF &size)
+void PathModel::setObjectSize(Path *o, const QSizeF &size)
 {
     o->setSize(size);
-    emit objectsChanged(QList<MapObject*>() << o);
+    emit objectsChanged(QList<Path*>() << o);
 }
+#endif
+
+PathModel::Item *PathModel::toItem(const QModelIndex &index) const
+{
+    if (index.isValid())
+        return static_cast<Item*>(index.internalPointer());
+    return 0;
+}
+
+PathModel::Item *PathModel::toItem(PathLayer *pathLayer) const
+{
+    if (!mRootItem)
+        return 0;
+    foreach (Item *item, mRootItem->children)
+        if (item->layer == pathLayer)
+            return item;
+    return 0;
+}
+
+PathModel::Item *PathModel::toItem(Path *path) const
+{
+    if (!mRootItem)
+        return 0;
+    if (!path->pathLayer())
+        return 0;
+    Item *parent = toItem(path->pathLayer());
+    foreach (Item *item, parent->children)
+        if (item->path == path)
+            return item;
+    return 0;
+}
+

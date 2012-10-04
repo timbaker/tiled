@@ -33,6 +33,9 @@ namespace Tiled {
 class Layer;
 class MapObject;
 class Tileset;
+#ifdef ZOMBOID
+class Path;
+#endif
 
 namespace Internal {
 
@@ -42,6 +45,7 @@ class MapObjectItem;
 class MapScene;
 class ObjectGroupItem;
 #ifdef ZOMBOID
+class PathItem;
 class ZGridItem;
 #endif
 
@@ -99,6 +103,13 @@ public:
      */
     MapObjectItem *itemForObject(MapObject *object) const
     { return mObjectItems.value(object); }
+
+#ifdef ZOMBOID
+    const QSet<PathItem*> &selectedPathItems() const
+    { return mSelectedPathItems; }
+
+    void setSelectedPathItems( const QSet<PathItem*> &items);
+#endif
 
     /**
      * Enables the selected tool at this map scene.
@@ -195,6 +206,13 @@ private slots:
     void syncAllObjectItems();
 
 #ifdef ZOMBOID
+    void pathsAdded(const QList<Path*> &paths);
+//    void pathsAboutToBeRemoved(const QList<Path*> &paths);
+    void pathsRemoved(const QList<Path*> &paths);
+    void pathsChanged(const QList<Path*> &paths);
+#endif
+
+#ifdef ZOMBOID
 protected:
     virtual QGraphicsItem *createLayerItem(Layer *layer);
 
@@ -225,6 +243,12 @@ private:
     typedef QMap<MapObject*, MapObjectItem*> ObjectItems;
     ObjectItems mObjectItems;
     QSet<MapObjectItem*> mSelectedObjectItems;
+
+#ifdef ZOMBOID
+    typedef QMap<Path*, PathItem*> PathItems;
+    PathItems mPathItems;
+    QSet<PathItem*> mSelectedPathItems;
+#endif
 };
 
 } // namespace Internal

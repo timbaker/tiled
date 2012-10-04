@@ -40,9 +40,9 @@ class AddRemovePath : public QUndoCommand
 {
 public:
     AddRemovePath(MapDocument *mapDocument,
-                       ObjectGroup *objectGroup,
-                       MapObject *mapObject,
-                       bool ownObject,
+                       PathLayer *pathLayer,
+                       Path *path,
+                       bool ownsPath,
                        QUndoCommand *parent = 0);
     ~AddRemovePath();
 
@@ -52,8 +52,8 @@ protected:
 
 private:
     MapDocument *mMapDocument;
-    MapObject *mPath;
-    ObjectGroup *mPathLayer;
+    Path *mPath;
+    PathLayer *mPathLayer;
     int mIndex;
     bool mOwnsPath;
 };

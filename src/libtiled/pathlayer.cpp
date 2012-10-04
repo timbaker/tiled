@@ -11,20 +11,19 @@ using namespace Tiled;
 Path::Path()
     : mIsClosed(false)
 {
-    mPoints += new PathPoint();
-    mPoints.last()->x = 0, mPoints.last()->y = 0;
-    mPoints += new PathPoint();
-    mPoints.last()->x = 10, mPoints.last()->y = 0;
-    mPoints += new PathPoint();
-    mPoints.last()->x = 10, mPoints.last()->y = 10;
+}
+
+void Path::setPoints(const PathPoints &points)
+{
+    mPoints = points;
 }
 
 QPolygonF Path::polygon() const
 {
     QPolygonF poly;
 
-    foreach (PathPoint *pt, mPoints) {
-        poly.append(QPointF(pt->x + 0.5, pt->y + 0.5));
+    foreach (PathPoint pt, mPoints) {
+        poly.append(QPointF(pt.x() + 0.5, pt.y() + 0.5));
     }
 
     return poly;
@@ -81,16 +80,52 @@ void Path::generate(Map *map, QVector<TileLayer *> &layers) const
 {
     if (!map->tilesets().count())
         return;
+    if (!mPoints.size())
+        return;
+
     Tileset *ts = map->tilesets().first();
-    for (int i = 0; i < mPoints.size() - 1; i++) {
-        foreach (QPoint pt, calculateLine(mPoints[i]->x, mPoints[i]->y,
-                                          mPoints[i+1]->x, mPoints[i+1]->y)) {
+    PathPoints points = mPoints;
+    if (mIsClosed)
+        points += points.first();
+    for (int i = 0; i < points.size() - 1; i++) {
+        foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
+                                          points[i+1].x(), points[i+1].y())) {
             if (!layers[0]->contains(pt))
                 continue;
             Cell cell(ts->tileAt(3));
             layers[0]->setCell(pt.x(), pt.y(), cell);
         }
     }
+
+    if (!mIsClosed)
+        return;
+
+    QRect bounds(mPoints.first().x(), mPoints.first().y(), 1, 1);
+    foreach (const PathPoint &pt, mPoints) {
+        bounds |= QRect(pt.x(), pt.y(), 1, 1);
+    }
+
+    QPolygonF polygon = this->polygon();
+    for (int x = bounds.left(); x <= bounds.right(); x++)
+        for (int y = bounds.top(); y <= bounds.bottom(); y++) {
+            QPointF pt(x + 0.5, y + 0.5);
+            if (polygon.containsPoint(pt, Qt::WindingFill)) {
+                if (!layers[0]->contains(pt.toPoint()))
+                    continue;
+                Cell cell(ts->tileAt(3));
+                layers[0]->setCell(pt.x(), pt.y(), cell);
+            }
+        }
+}
+
+Path *Path::clone() const
+{
+    Path *klone = new Path();
+    klone->setPathLayer(mLayer);
+    klone->setPoints(mPoints);
+    klone->setClosed(mIsClosed);
+    klone->setVisible(mVisible);
+    return klone;
 }
 
 /////
@@ -104,7 +139,11 @@ PathLayer::PathLayer(const QString &name,
                      int x, int y, int width, int height)
     : Layer(PathLayerType, name, x, y, width, height)
 {
-    mPaths += new Path();
+}
+
+PathLayer::~PathLayer()
+{
+    qDeleteAll(mPaths);
 }
 
 bool PathLayer::isEmpty() const
@@ -117,6 +156,28 @@ Layer *PathLayer::clone() const
     return initializeClone(new PathLayer(mName, mX, mY, mWidth, mHeight));
 }
 
+void PathLayer::addPath(Path *path)
+{
+    mPaths.append(path);
+    path->setPathLayer(this);
+}
+
+void PathLayer::insertPath(int index, Path *path)
+{
+    mPaths.insert(index, path);
+    path->setPathLayer(this);
+}
+
+int PathLayer::removePath(Path *path)
+{
+    const int index = mPaths.indexOf(path);
+    Q_ASSERT(index != -1);
+
+    mPaths.removeAt(index);
+    path->setPathLayer(0);
+    return index;
+}
+
 void PathLayer::generate(QVector<TileLayer *> &layers) const
 {
     foreach (Path *path, mPaths)
@@ -127,9 +188,10 @@ PathLayer *PathLayer::initializeClone(PathLayer *clone) const
 {
     Layer::initializeClone(clone);
 
-/*    clone->mImageSource = mImageSource;
-    clone->mTransparentColor = mTransparentColor;
-    clone->mImage = mImage;*/
+    foreach (Path *path, mPaths)
+        clone->addPath(path->clone());
+
+    clone->setColor(mColor);
 
     return clone;
 }

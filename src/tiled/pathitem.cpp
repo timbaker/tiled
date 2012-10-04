@@ -29,6 +29,7 @@ QPainterPath PathItem::shape() const
 void PathItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                      QWidget *widget)
 {
+    Q_UNUSED(option)
     Q_UNUSED(widget)
     mMapDocument->renderer()->drawPath(painter, mPath, mColor);
 }

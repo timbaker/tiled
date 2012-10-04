@@ -25,10 +25,10 @@
 #include "map.h"
 #include "mapdocument.h"
 #include "pathlayer.h"
-#include "pathlayeritem.h"
+#include "pathitem.h"
 #include "maprenderer.h"
 #include "mapscene.h"
-#include "movepathtolayer.h"
+//#include "movepathtolayer.h"
 //#include "objectpropertiesdialog.h"
 #include "utils.h"
 
@@ -89,7 +89,7 @@ void AbstractPathTool::updateEnabledState()
     setEnabled(currentPathLayer() != 0);
 }
 
-ObjectGroup *AbstractPathTool::currentPathLayer() const
+PathLayer *AbstractPathTool::currentPathLayer() const
 {
     if (!mapDocument())
         return 0;
@@ -189,7 +189,7 @@ void AbstractPathTool::showContextMenu(PathItem *clickedPathItem,
 void AbstractPathTool::duplicatePaths(const QList<Path *> &paths)
 {
     QUndoStack *undoStack = mapDocument()->undoStack();
-    undoStack->beginMacro(tr("Duplicate %n Path(s)", "", objects.size()));
+    undoStack->beginMacro(tr("Duplicate %n Path(s)", "", paths.size()));
 
     QList<Path*> clones;
     foreach (const Path *path, paths) {
@@ -216,6 +216,7 @@ void AbstractPathTool::removePaths(const QList<Path *> &paths)
 void AbstractPathTool::movePathsToLayer(const QList<Path *> &paths,
                                         PathLayer *pathLayer)
 {
+#if 0
     QUndoStack *undoStack = mapDocument()->undoStack();
     undoStack->beginMacro(tr("Move %n Path(s) to Layer", "", paths.size()));
     foreach (Path *path, paths) {
@@ -224,4 +225,5 @@ void AbstractPathTool::movePathsToLayer(const QList<Path *> &paths,
         undoStack->push(new MovePathToLayer(mapDocument(), path, pathLayer));
     }
     undoStack->endMacro();
+#endif
 }

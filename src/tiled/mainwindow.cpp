@@ -79,6 +79,7 @@
 #include "changetileselection.h"
 #include "converttolotdialog.h"
 #include "convertorientationdialog.h"
+#include "createpathtool.h"
 #include "mapcomposite.h"
 #include "mapmanager.h"
 #include "mapsdock.h"
@@ -416,6 +417,19 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     toolManager->registerTool(tileObjectsTool);
     toolManager->registerTool(polygonObjectsTool);
     toolManager->registerTool(polylineObjectsTool);
+
+#ifdef ZOMBOID
+    CreatePathTool *areaPathTool = new CreatePathTool(
+            CreatePathTool::CreateArea, this);
+    CreatePathTool *polygonPathTool = new CreatePathTool(
+            CreatePathTool::CreatePolygon, this);
+    CreatePathTool *polylinePathTool = new CreatePathTool(
+            CreatePathTool::CreatePolyline, this);
+    toolManager->addSeparator();
+    toolManager->registerTool(areaPathTool);
+    toolManager->registerTool(polygonPathTool);
+    toolManager->registerTool(polylinePathTool);
+#endif
 
     addToolBar(toolManager->toolBar());
 

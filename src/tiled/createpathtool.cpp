@@ -21,17 +21,14 @@
 
 #include "createpathtool.h"
 
-#include "addremovemapobject.h"
+#include "addremovepath.h"
 #include "map.h"
 #include "mapdocument.h"
-#include "mapobject.h"
-#include "mapobjectitem.h"
+#include "pathitem.h"
+#include "pathlayer.h"
 #include "maprenderer.h"
 #include "mapscene.h"
-#include "objectgroup.h"
-#include "objectgroupitem.h"
 #include "preferences.h"
-#include "tile.h"
 #include "utils.h"
 
 #include <QApplication>
@@ -40,73 +37,68 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 
-CreateObjectTool::CreateObjectTool(CreationMode mode, QObject *parent)
-    : AbstractObjectTool(QString(),
+CreatePathTool::CreatePathTool(CreationMode mode, QObject *parent)
+    : AbstractPathTool(QString(),
           QIcon(QLatin1String(":images/24x24/insert-object.png")),
           QKeySequence(tr("O")),
           parent)
-    , mNewMapObjectItem(0)
-    , mOverlayObjectGroup(0)
-    , mOverlayPolygonObject(0)
-    , mOverlayPolygonItem(0)
-    , mTile(0)
+    , mNewPathItem(0)
+    , mOverlayPathLayer(0)
+    , mOverlayPath(0)
+    , mOverlayItem(0)
     , mMode(mode)
-{
+{    
+    mOverlayPath = new Path;
+
     switch (mMode) {
     case CreateArea:
+        mOverlayPath->setClosed(true);
         Utils::setThemeIcon(this, "insert-object");
         break;
 
-    case CreateTile:
-        setIcon(QIcon(QLatin1String(":images/24x24/insert-image.png")));
-        Utils::setThemeIcon(this, "insert-image");
-        break;
-
     case CreatePolygon:
+        mOverlayPath->setClosed(true);
         setIcon(QIcon(QLatin1String(":images/24x24/insert-polygon.png")));
-        // fall through
+        break;
 
     case CreatePolyline: {
-        if (mMode != CreatePolygon)
-            setIcon(QIcon(QLatin1String(":images/24x24/insert-polyline.png")));
-
-        mOverlayPolygonObject = new MapObject;
-
-        mOverlayObjectGroup = new ObjectGroup;
-        mOverlayObjectGroup->addObject(mOverlayPolygonObject);
-
-        QColor highlight = QApplication::palette().highlight().color();
-        mOverlayObjectGroup->setColor(highlight);
+        setIcon(QIcon(QLatin1String(":images/24x24/insert-polyline.png")));
         break;
     }
     }
+
+    mOverlayPathLayer = new PathLayer;
+    mOverlayPathLayer->addPath(mOverlayPath);
+
+    QColor highlight = QApplication::palette().highlight().color();
+    mOverlayPathLayer->setColor(highlight);
 
     languageChanged();
 }
 
-CreateObjectTool::~CreateObjectTool()
+CreatePathTool::~CreatePathTool()
 {
-    delete mOverlayObjectGroup;
+    delete mOverlayPathLayer;
 }
 
-void CreateObjectTool::deactivate(MapScene *scene)
+void CreatePathTool::deactivate(MapScene *scene)
 {
-    if (mNewMapObjectItem)
-        cancelNewMapObject();
+    if (mNewPathItem)
+        cancelNewPath();
 
-    AbstractObjectTool::deactivate(scene);
+    AbstractPathTool::deactivate(scene);
 }
 
-void CreateObjectTool::mouseEntered()
+void CreatePathTool::mouseEntered()
 {
 }
 
-void CreateObjectTool::mouseMoved(const QPointF &pos,
+void CreatePathTool::mouseMoved(const QPointF &pos,
                                   Qt::KeyboardModifiers modifiers)
 {
-    AbstractObjectTool::mouseMoved(pos, modifiers);
+    AbstractPathTool::mouseMoved(pos, modifiers);
 
-    if (!mNewMapObjectItem)
+    if (!mNewPathItem)
         return;
 
     const MapRenderer *renderer = mapDocument()->renderer();
@@ -117,68 +109,56 @@ void CreateObjectTool::mouseMoved(const QPointF &pos,
 
     switch (mMode) {
     case CreateArea: {
-#ifdef ZOMBOID
-        const QPointF tileCoords = renderer->pixelToTileCoords(pos, currentObjectGroup()->level());
-#else
-        const QPointF tileCoords = renderer->pixelToTileCoords(pos);
-#endif
-        // Update the size of the new map object
-        const QPointF objectPos = mNewMapObjectItem->mapObject()->position();
-        QSizeF newSize(qMax(qreal(0), tileCoords.x() - objectPos.x()),
-                       qMax(qreal(0), tileCoords.y() - objectPos.y()));
+        const QPoint tileCoords = renderer->pixelToTileCoordsInt(pos,
+                                      currentPathLayer()->level());
 
-        if (snapToGrid)
-            newSize = newSize.toSize();
+        // Update the size of the new path
+        const PathPoint topLeft = mNewPathItem->path()->points().first();
+        QSize newSize(qMax(2, tileCoords.x() - topLeft.x() + 1),
+                      qMax(2, tileCoords.y() - topLeft.y() + 1));
 
-        mNewMapObjectItem->resize(newSize);
-        break;
-    }
-    case CreateTile: {
-        const QSize imgSize = mNewMapObjectItem->mapObject()->tile()->size();
-        const QPointF diff(-imgSize.width() / 2, imgSize.height() / 2);
-#ifdef ZOMBOID
-        QPointF tileCoords = renderer->pixelToTileCoords(pos + diff, currentObjectGroup()->level());
-#else
-        QPointF tileCoords = renderer->pixelToTileCoords(pos + diff);
-#endif
+//        if (snapToGrid)
+//            newSize = newSize.toSize();
 
-        if (snapToGrid)
-            tileCoords = tileCoords.toPoint();
+        PathPoints points;
+        points += topLeft;
+        points += PathPoint(topLeft.x() + newSize.width() - 1,
+                            topLeft.y());
+        points += PathPoint(topLeft.x() + newSize.width() - 1,
+                            topLeft.y() + newSize.height() - 1);
+        points += PathPoint(topLeft.x(),
+                            topLeft.y() + newSize.height() - 1);
 
-        mNewMapObjectItem->mapObject()->setPosition(tileCoords);
-        mNewMapObjectItem->syncWithMapObject();
+        mNewPathItem->path()->setPoints(points); // FIXME: don't need both
+        mOverlayItem->path()->setPoints(points); // FIXME: don't need both
         break;
     }
     case CreatePolygon:
     case CreatePolyline: {
- #ifdef ZOMBOID
-      QPointF tileCoords = renderer->pixelToTileCoords(pos, currentObjectGroup()->level());
-#else
-      QPointF tileCoords = renderer->pixelToTileCoords(pos);
-#endif
+        QPoint tileCoords = renderer->pixelToTileCoordsInt(pos, currentPathLayer()->level());
 
-        if (snapToGrid)
-            tileCoords = tileCoords.toPoint();
+//        if (snapToGrid)
+//            tileCoords = tileCoords.toPoint();
 
-        tileCoords -= mNewMapObjectItem->mapObject()->position();
-
-        QPolygonF polygon = mOverlayPolygonObject->polygon();
-        polygon.last() = tileCoords;
-        mOverlayPolygonItem->setPolygon(polygon);
+        PathPoints points = mOverlayPath->points();
+        points.last() = PathPoint(tileCoords.x(), tileCoords.y());
+        mOverlayItem->path()->setPoints(points);
         break;
     }
     }
+
+    mNewPathItem->update();
+    mOverlayItem->update();
 }
 
-void CreateObjectTool::mousePressed(QGraphicsSceneMouseEvent *event)
+void CreatePathTool::mousePressed(QGraphicsSceneMouseEvent *event)
 {
-    // Check if we are already creating a new map object
-    if (mNewMapObjectItem) {
+    // Check if we are already creating a new path
+    if (mNewPathItem) {
         switch (mMode) {
         case CreateArea:
-        case CreateTile:
             if (event->button() == Qt::RightButton)
-                cancelNewMapObject();
+                cancelNewPath();
             break;
         case CreatePolygon:
         case CreatePolyline:
@@ -186,24 +166,24 @@ void CreateObjectTool::mousePressed(QGraphicsSceneMouseEvent *event)
                 // The polygon needs to have at least three points and a
                 // polyline needs at least two.
                 int min = mMode == CreatePolygon ? 3 : 2;
-                if (mNewMapObjectItem->mapObject()->polygon().size() >= min)
-                    finishNewMapObject();
+                if (mNewPathItem->path()->numPoints() >= min)
+                    finishNewPath();
                 else
-                    cancelNewMapObject();
+                    cancelNewPath();
             } else if (event->button() == Qt::LeftButton) {
-                QPolygonF current = mNewMapObjectItem->mapObject()->polygon();
-                QPolygonF next = mOverlayPolygonObject->polygon();
+                PathPoints current = mNewPathItem->path()->points();
+                PathPoints next = mOverlayPath->points();
 
                 // If the last position is still the same, ignore the click
                 if (next.last() == current.last())
                     return;
 
-                // Assign current overlay polygon to the new object
-                mNewMapObjectItem->setPolygon(next);
+                // Assign current overlay polygon to the new path
+                mNewPathItem->path()->setPoints(next);
 
                 // Add a new editable point to the overlay
                 next.append(next.last());
-                mOverlayPolygonItem->setPolygon(next);
+                mOverlayItem->path()->setPoints(next);
             }
             break;
         }
@@ -211,33 +191,18 @@ void CreateObjectTool::mousePressed(QGraphicsSceneMouseEvent *event)
     }
 
     if (event->button() != Qt::LeftButton) {
-        AbstractObjectTool::mousePressed(event);
+        AbstractPathTool::mousePressed(event);
         return;
     }
 
-    ObjectGroup *objectGroup = currentObjectGroup();
-    if (!objectGroup || !objectGroup->isVisible())
+    PathLayer *pathLayer = currentPathLayer();
+    if (!pathLayer || !pathLayer->isVisible())
         return;
 
     const MapRenderer *renderer = mapDocument()->renderer();
-    QPointF tileCoords;
+    QPointF tileCoords = renderer->pixelToTileCoordsInt(event->scenePos(),
+                                                        pathLayer->level());
 
-    if (mMode == CreateTile) {
-        if (!mTile)
-            return;
-
-        const QPointF diff(-mTile->width() / 2, mTile->height() / 2);
-#ifdef ZOMBOID
-        tileCoords = renderer->pixelToTileCoords(event->scenePos() + diff, objectGroup->level());
-    } else {
-        tileCoords = renderer->pixelToTileCoords(event->scenePos(), objectGroup->level());
-    }
-#else
-        tileCoords = renderer->pixelToTileCoords(event->scenePos() + diff);
-    } else {
-        tileCoords = renderer->pixelToTileCoords(event->scenePos());
-    }
-#endif
     bool snapToGrid = Preferences::instance()->snapToGrid();
     if (event->modifiers() & Qt::ControlModifier)
         snapToGrid = !snapToGrid;
@@ -245,122 +210,111 @@ void CreateObjectTool::mousePressed(QGraphicsSceneMouseEvent *event)
     if (snapToGrid)
         tileCoords = tileCoords.toPoint();
 
-    startNewMapObject(tileCoords, objectGroup);
+    startNewPath(tileCoords, pathLayer);
 }
 
-void CreateObjectTool::mouseReleased(QGraphicsSceneMouseEvent *event)
+void CreatePathTool::mouseReleased(QGraphicsSceneMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton && mNewMapObjectItem) {
-#ifdef ZOMBOID
-        if (mMode == CreateArea || mMode == CreateTile) {
-            QRectF r = mNewMapObjectItem->boundingRect();
-            if (r.width() < 6 && r.height() < 6)
-                cancelNewMapObject();
-            else
-                finishNewMapObject();
+    if (event->button() == Qt::LeftButton && mNewPathItem) {
+        if (mMode == CreateArea) {
+            finishNewPath();
         }
-#else
-        if (mMode == CreateArea || mMode == CreateTile)
-            finishNewMapObject();
-#endif
     }
 }
 
-void CreateObjectTool::languageChanged()
+void CreatePathTool::languageChanged()
 {
     switch (mMode) {
     case CreateArea:
-        setName(tr("Insert Object"));
-        setShortcut(QKeySequence(tr("O")));
-        break;
-    case CreateTile:
-        setName(tr("Insert Tile"));
-        setShortcut(QKeySequence(tr("T")));
+        setName(tr("Create Rectangle"));
+//        setShortcut(QKeySequence(tr("O")));
         break;
     case CreatePolygon:
-        setName(tr("Insert Polygon"));
-        setShortcut(QKeySequence(tr("P")));
+        setName(tr("Create Polygon"));
+//        setShortcut(QKeySequence(tr("P")));
         break;
     case CreatePolyline:
-        setName(tr("Insert Polyline"));
-        setShortcut(QKeySequence(tr("L")));
+        setName(tr("Create Polyline"));
+//        setShortcut(QKeySequence(tr("L")));
         break;
     }
 }
 
-void CreateObjectTool::startNewMapObject(const QPointF &pos,
-                                         ObjectGroup *objectGroup)
+void CreatePathTool::startNewPath(const QPointF &pos,
+                                  PathLayer *pathLayer)
 {
-    Q_ASSERT(!mNewMapObjectItem);
+    Q_ASSERT(!mNewPathItem);
 
-    if (mMode == CreateTile && !mTile)
-        return;
+    Path *newPath = new Path;
 
-    MapObject *newMapObject = new MapObject;
-    newMapObject->setPosition(pos);
+    PathPoints points;
 
-    if (mMode == CreateTile)
-        newMapObject->setTile(mTile);
-
-    if (mMode == CreatePolygon || mMode == CreatePolyline) {
-#ifdef ZOMBOID
-        mOverlayObjectGroup->setLevel(objectGroup->level());
-#endif
-        MapObject::Shape shape = mMode == CreatePolygon ? MapObject::Polygon
-                                                        : MapObject::Polyline;
-        QPolygonF polygon;
-        polygon.append(QPointF());
-        newMapObject->setPolygon(polygon);
-        newMapObject->setShape(shape);
-
-        polygon.append(QPointF()); // The last point is connected to the mouse
-        mOverlayPolygonObject->setPolygon(polygon);
-        mOverlayPolygonObject->setShape(shape);
-        mOverlayPolygonObject->setPosition(pos);
-
-        mOverlayPolygonItem = new MapObjectItem(mOverlayPolygonObject,
-                                                mapDocument());
-        mapScene()->addItem(mOverlayPolygonItem);
+    switch (mMode) {
+    case CreateArea:
+        points += PathPoint(pos.x(), pos.y());
+        points += PathPoint(pos.x() + 1, pos.y());
+        points += PathPoint(pos.x() + 1, pos.y() + 1);
+        points += PathPoint(pos.x(), pos.y() + 1);
+        newPath->setClosed(true);
+        newPath->setPoints(points);
+        mOverlayPath->setPoints(points);
+        break;
+    case CreatePolygon:
+        points += PathPoint(pos.x(), pos.y());
+        newPath->setClosed(true);
+        newPath->setPoints(points);
+        points += points.first(); // The last point is connected to the mouse
+        mOverlayPath->setPoints(points);
+        break;
+    case CreatePolyline:
+        points += PathPoint(pos.x(), pos.y());
+        newPath->setPoints(points);
+        points += points.first(); // The last point is connected to the mouse
+        mOverlayPath->setPoints(points);
+        break;
     }
 
-    objectGroup->addObject(newMapObject);
+    mOverlayItem = new PathItem(mOverlayPath, mapDocument());
+    mapScene()->addItem(mOverlayItem);
 
-    mNewMapObjectItem = new MapObjectItem(newMapObject, mapDocument());
-    mapScene()->addItem(mNewMapObjectItem);
+    pathLayer->addPath(newPath);
+
+    mNewPathItem = new PathItem(newPath, mapDocument());
+    mapScene()->addItem(mNewPathItem);
 }
 
-MapObject *CreateObjectTool::clearNewMapObjectItem()
+Path *CreatePathTool::clearNewPathItem()
 {
-    Q_ASSERT(mNewMapObjectItem);
+    Q_ASSERT(mNewPathItem);
 
-    MapObject *newMapObject = mNewMapObjectItem->mapObject();
+    Path *newPath = mNewPathItem->path();
 
-    ObjectGroup *objectGroup = newMapObject->objectGroup();
-    objectGroup->removeObject(newMapObject);
+    PathLayer *pathLayer = newPath->pathLayer();
+    pathLayer->removePath(newPath);
 
-    delete mNewMapObjectItem;
-    mNewMapObjectItem = 0;
+    delete mNewPathItem;
+    mNewPathItem = 0;
 
-    delete mOverlayPolygonItem;
-    mOverlayPolygonItem = 0;
+    delete mOverlayItem;
+    mOverlayItem = 0;
 
-    return newMapObject;
+    return newPath;
 }
 
-void CreateObjectTool::cancelNewMapObject()
+void CreatePathTool::cancelNewPath()
 {
-    MapObject *newMapObject = clearNewMapObjectItem();
-    delete newMapObject;
+    Path *newPath = clearNewPathItem();
+    delete newPath;
 }
 
-void CreateObjectTool::finishNewMapObject()
+void CreatePathTool::finishNewPath()
 {
-    Q_ASSERT(mNewMapObjectItem);
-    MapObject *newMapObject = mNewMapObjectItem->mapObject();
-    ObjectGroup *objectGroup = newMapObject->objectGroup();
-    clearNewMapObjectItem();
+    Q_ASSERT(mNewPathItem);
+    Path *newPath = mNewPathItem->path();
+    PathLayer *pathLayer = newPath->pathLayer();
+    clearNewPathItem();
 
-    mapDocument()->undoStack()->push(new AddMapObject(mapDocument(),
-                                                      objectGroup,
-                                                      newMapObject));
+    mapDocument()->undoStack()->push(new AddPath(mapDocument(),
+                                                 pathLayer,
+                                                 newPath));
 }

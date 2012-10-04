@@ -22,6 +22,9 @@ public:
                const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0);
 
+    Path *path() const
+    { return mPath; }
+
 private:
     Path *mPath;
     MapDocument *mMapDocument;

@@ -65,8 +65,8 @@ private:
 
     PathItem *mNewPathItem;
     PathLayer *mOverlayPathLayer;
-    Path *mOverlayPolygonPath;
-    PathItem *mOverlayPolygonItem;
+    Path *mOverlayPath;
+    PathItem *mOverlayItem;
     CreationMode mMode;
 };
 
