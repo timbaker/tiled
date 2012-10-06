@@ -66,7 +66,10 @@ public:
     void insertPath(PathLayer *pathLayer, int index, Path *path);
     int removePath(PathLayer *pathLayer, Path *path);
     void emitPathsChanged(const QList<Path *> &paths);
-#if 0
+#if 1
+    void movePath(Path *path, const QPoint &delta);
+    void setPathPolygon(Path *path, const QPolygon &polygon);
+#else
     void setObjectName(MapObject *o, const QString &name);
     void setObjectType(MapObject *o, const QString &type);
     void setObjectPolygon(MapObject *o, const QPolygonF &polygon);

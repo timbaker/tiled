@@ -150,10 +150,14 @@ SOURCES += aboutdialog.cpp \
     converttolotdialog.cpp \
     pathitem.cpp \
     pathlayeritem.cpp \
-    createpathtool.cpp \
     abstractpathtool.cpp \
     addremovepath.cpp \
-    pathmodel.cpp
+    pathmodel.cpp \
+    selectpathtool.cpp \
+    createpathtool.cpp \
+    movepath.cpp \
+    editpathtool.cpp \
+    changepathpolygon.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -272,7 +276,11 @@ HEADERS += aboutdialog.h \
     createpathtool.h \
     abstractpathtool.h \
     addremovepath.h \
-    pathmodel.h
+    pathmodel.h \
+    selectpathtool.h \
+    movepath.h \
+    editpathtool.h \
+    changepathpolygon.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

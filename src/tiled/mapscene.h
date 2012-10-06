@@ -109,6 +109,9 @@ public:
     { return mSelectedPathItems; }
 
     void setSelectedPathItems( const QSet<PathItem*> &items);
+
+    PathItem *itemForPath(Path *path) const
+    { return mPathItems.value(path); }
 #endif
 
     /**
@@ -125,6 +128,9 @@ public:
 
 signals:
     void selectedObjectItemsChanged();
+#ifdef ZOMBOID
+    void selectedPathItemsChanged();
+#endif
 
 public slots:
     /**
@@ -210,6 +216,8 @@ private slots:
 //    void pathsAboutToBeRemoved(const QList<Path*> &paths);
     void pathsRemoved(const QList<Path*> &paths);
     void pathsChanged(const QList<Path*> &paths);
+
+    void updateSelectedPathItems();
 #endif
 
 #ifdef ZOMBOID

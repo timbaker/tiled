@@ -134,8 +134,8 @@ void AbstractPathTool::showContextMenu(PathItem *clickedPathItem,
     QIcon dupIcon(QLatin1String(":images/16x16/stock-duplicate-16.png"));
     QIcon delIcon(QLatin1String(":images/16x16/edit-delete.png"));
     QIcon propIcon(QLatin1String(":images/16x16/document-properties.png"));
-    QString dupText = tr("Duplicate %n Object(s)", "", selectedPaths.size());
-    QString removeText = tr("Remove %n Object(s)", "", selectedPaths.size());
+    QString dupText = tr("Duplicate %n Path(s)", "", selectedPaths.size());
+    QString removeText = tr("Remove %n Path(s)", "", selectedPaths.size());
     QAction *dupAction = menu.addAction(dupIcon, dupText);
     QAction *removeAction = menu.addAction(delIcon, removeText);
 

@@ -18,13 +18,34 @@ void Path::setPoints(const PathPoints &points)
     mPoints = points;
 }
 
-QPolygonF Path::polygon() const
+void Path::setPoint(int index, const PathPoint &point)
+{
+    mPoints[index] = point;
+}
+
+void Path::setPolygon(const QPolygon &polygon)
+{
+    mPoints.clear();
+    foreach (QPoint pt, polygon)
+        mPoints += PathPoint(pt.x(), pt.y());
+}
+
+QPolygon Path::polygon() const
+{
+    QPolygon poly;
+
+    foreach (PathPoint pt, mPoints)
+        poly.append(QPoint(pt.x(), pt.y()));
+
+    return poly;
+}
+
+QPolygonF Path::polygonf() const
 {
     QPolygonF poly;
 
-    foreach (PathPoint pt, mPoints) {
+    foreach (PathPoint pt, mPoints)
         poly.append(QPointF(pt.x() + 0.5, pt.y() + 0.5));
-    }
 
     return poly;
 }
@@ -105,7 +126,7 @@ void Path::generate(Map *map, QVector<TileLayer *> &layers) const
         bounds |= QRect(pt.x(), pt.y(), 1, 1);
     }
 
-    QPolygonF polygon = this->polygon();
+    QPolygonF polygon = this->polygonf();
     for (int x = bounds.left(); x <= bounds.right(); x++)
         for (int y = bounds.top(); y <= bounds.bottom(); y++) {
             QPointF pt(x + 0.5, y + 0.5);
@@ -126,6 +147,13 @@ Path *Path::clone() const
     klone->setClosed(mIsClosed);
     klone->setVisible(mVisible);
     return klone;
+}
+
+void Path::translate(const QPoint &delta)
+{
+    for (int i = 0; i < mPoints.count(); i++) {
+        mPoints[i].translate(delta);
+    }
 }
 
 /////

@@ -547,11 +547,12 @@ void IsometricRenderer::drawMapObject(QPainter *painter,
 }
 
 #ifdef ZOMBOID
-QPainterPath IsometricRenderer::shape(const Path *tilePath) const
+QPainterPath IsometricRenderer::shape(const Path *tilePath,
+                                      const QPoint &offset) const
 {
     QPainterPath path;
 
-    const QPolygonF polygon = tilePath->polygon();
+    const QPolygonF polygon = tilePath->polygonf().translated(offset);
     const QPolygonF screenPolygon = tileToPixelCoords(polygon);
     if (tilePath->isClosed()) {
         path.addPolygon(screenPolygon);
@@ -567,7 +568,8 @@ QPainterPath IsometricRenderer::shape(const Path *tilePath) const
 
 void IsometricRenderer::drawPath(QPainter *painter,
                                  const Path *path,
-                                 const QColor &color) const
+                                 const QColor &color,
+                                 const QPoint &offset) const
 {
     painter->save();
 
@@ -585,13 +587,13 @@ void IsometricRenderer::drawPath(QPainter *painter,
         painter->setPen(pen);
         painter->setRenderHint(QPainter::Antialiasing);
 
+        const QPolygonF polygon = path->polygonf().translated(offset);
+        QPolygonF screenPolygon = tileToPixelCoords(polygon);
+
         // TODO: Draw the object name
         // TODO: Do something sensible to make null-sized objects usable
 
         if (path->isClosed()) {
-            const QPolygonF polygon = path->polygon();
-            QPolygonF screenPolygon = tileToPixelCoords(polygon);
-
             painter->drawPolygon(screenPolygon);
 
             pen.setColor(color);
@@ -601,9 +603,6 @@ void IsometricRenderer::drawPath(QPainter *painter,
 
             painter->drawPolygon(screenPolygon);
         } else {
-            const QPolygonF polygon = path->polygon();
-            QPolygonF screenPolygon = tileToPixelCoords(polygon);
-
             painter->drawPolyline(screenPolygon);
 
             pen.setColor(color);

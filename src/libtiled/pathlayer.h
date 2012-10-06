@@ -6,6 +6,7 @@
 #include "layer.h"
 
 #include <QMetaType>
+#include <QPolygon>
 
 namespace Tiled {
 
@@ -35,6 +36,9 @@ public:
     bool operator == (const PathPoint &other) const
     { return mX == other.mX && mY == other.mY; }
 
+    void translate(const QPoint &delta)
+    { mX += delta.x(), mY += delta.y(); }
+
 private:
     int mX, mY;
 };
@@ -53,6 +57,7 @@ public:
     { mLayer = pathLayer; }
 
     void setPoints(const PathPoints &points);
+    void setPoint(int index, const PathPoint &point);
 
     const PathPoints points() const
     { return mPoints; }
@@ -72,11 +77,17 @@ public:
     void setVisible(bool visible)
     { mVisible = visible; }
 
-    QPolygonF polygon() const;
+    void setPolygon(const QPolygon &polygon);
+
+    QPolygon polygon() const;
+
+    QPolygonF polygonf() const;
 
     void generate(Map *map, QVector<TileLayer *> &layers) const;
 
     Path *clone() const;
+
+    void translate(const QPoint &delta);
 
 private:
     PathLayer *mLayer;

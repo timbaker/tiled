@@ -25,11 +25,28 @@ public:
     Path *path() const
     { return mPath; }
 
+    void setEditable(bool editable);
+
+    bool isEditable() const
+    { return mEditable; }
+
+    void setDragging(bool dragging);
+
+    void setDragOffset(const QPoint &offset);
+
+    QPoint dragOffset() const
+    { return mDragOffset; }
+
+    void syncWithPath();
+
 private:
     Path *mPath;
     MapDocument *mMapDocument;
     QRectF mBoundingRect;
     QColor mColor;
+    bool mEditable;
+    bool mDragging;
+    QPoint mDragOffset;
 };
 
 } // namespace Internal

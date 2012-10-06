@@ -561,11 +561,11 @@ void ZLevelRenderer::drawMapObject(QPainter *painter,
     painter->restore();
 }
 
-QPainterPath ZLevelRenderer::shape(const Path *tilePath) const
+QPainterPath ZLevelRenderer::shape(const Path *tilePath, const QPoint &offset) const
 {
     QPainterPath path;
 
-    const QPolygonF polygon = tilePath->polygon();
+    const QPolygonF polygon = tilePath->polygonf().translated(offset);
     const QPolygonF screenPolygon = tileToPixelCoords(polygon);
     if (tilePath->isClosed()) {
         path.addPolygon(screenPolygon);
@@ -581,8 +581,13 @@ QPainterPath ZLevelRenderer::shape(const Path *tilePath) const
 
 void ZLevelRenderer::drawPath(QPainter *painter,
                               const Path *path,
-                              const QColor &color) const
+                              const QColor &color,
+                              const QPoint &offset) const
 {
+    Q_UNUSED(painter)
+    Q_UNUSED(path)
+    Q_UNUSED(color)
+    Q_UNUSED(offset)
 }
 
 void ZLevelRenderer::drawFancyRectangle(QPainter *painter,

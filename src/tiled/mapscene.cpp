@@ -158,6 +158,8 @@ void MapScene::setMapDocument(MapDocument *mapDocument)
                 SLOT(pathsRemoved(QList<Path*>)));
         connect(mMapDocument, SIGNAL(pathsChanged(QList<Path*>)),
                 SLOT(pathsChanged(QList<Path*>)));
+        connect(mMapDocument, SIGNAL(selectedPathsChanged()),
+                SLOT(updateSelectedPathItems()));
 #endif
     }
 }
@@ -598,6 +600,33 @@ void MapScene::pathsRemoved(const QList<Path *> &paths)
 
 void MapScene::pathsChanged(const QList<Path *> &paths)
 {
+    foreach (Path *path, paths) {
+        PathItem *pathItem = itemForPath(path);
+        Q_ASSERT(pathItem);
+        pathItem->syncWithPath();
+    }
+}
+
+void MapScene::updateSelectedPathItems()
+{
+    const QList<Path*> &paths = mMapDocument->selectedPaths();
+
+    QSet<PathItem*> items;
+    foreach (Path *path, paths) {
+        PathItem *item = itemForPath(path);
+        Q_ASSERT(item);
+
+        items.insert(item);
+    }
+
+    // Update the editable state of the items
+    foreach (PathItem *item, mSelectedPathItems - items)
+        item->setEditable(false);
+    foreach (PathItem *item, items - mSelectedPathItems)
+        item->setEditable(true);
+
+    mSelectedPathItems = items;
+    emit selectedPathItemsChanged();
 }
 #endif
 

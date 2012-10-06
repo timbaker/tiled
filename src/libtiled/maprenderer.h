@@ -142,11 +142,13 @@ public:
                                const QColor &color) const = 0;
 
 #ifdef ZOMBOID
-    virtual QPainterPath shape(const Path *path) const = 0;
+    virtual QPainterPath shape(const Path *path,
+                               const QPoint &offset) const = 0;
 
     virtual void drawPath(QPainter *painter,
                           const Path *path,
-                          const QColor &color) const = 0;
+                          const QColor &color,
+                          const QPoint &offset) const = 0;
 
     virtual void drawFancyRectangle(QPainter *painter,
                                 const QRectF &tileBounds,

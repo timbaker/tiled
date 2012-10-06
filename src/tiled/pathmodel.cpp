@@ -340,6 +340,18 @@ void PathModel::emitPathsChanged(const QList<Path *> &objects)
     emit pathsChanged(objects);
 }
 
+void PathModel::movePath(Path *path, const QPoint &delta)
+{
+    path->translate(delta);
+    emit pathsChanged(QList<Path*>() << path);
+}
+
+void PathModel::setPathPolygon(Path *path, const QPolygon &polygon)
+{
+    path->setPolygon(polygon);
+    emit pathsChanged(QList<Path*>() << path);
+}
+
 #if 0
 void PathModel::setObjectName(Path *o, const QString &name)
 {
