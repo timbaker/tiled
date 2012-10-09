@@ -126,6 +126,7 @@ void PathPointHandle::setPointPosition(const QPoint &pos)
 {
     Path *path = mPathItem->path();
     path->setPoint(mPointIndex, PathPoint(pos.x(), pos.y()));
+    mPathItem->syncWithPath();
 }
 
 QRectF PathPointHandle::boundingRect() const

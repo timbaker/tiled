@@ -44,7 +44,8 @@ SOURCES += compression.cpp \
     gidmapper.cpp \
     zlevelrenderer.cpp \
     ztilelayergroup.cpp \
-    pathlayer.cpp
+    pathlayer.cpp \
+    pathgenerator.cpp
 HEADERS += compression.h \
     imagelayer.h \
     isometricrenderer.h \
@@ -66,7 +67,8 @@ HEADERS += compression.h \
     gidmapper.h \
     zlevelrenderer.h \
     ztilelayergroup.h \
-    pathlayer.h
+    pathlayer.h \
+    pathgenerator.h
 macx {
     contains(QT_CONFIG, ppc):CONFIG += x86 \
         ppc

@@ -15,7 +15,7 @@ PathItem::PathItem(Path *path, MapDocument *mapDocument, PathLayerItem *parent)
     , mEditable(false)
     , mDragging(false)
 {
-    mBoundingRect = shape().boundingRect();
+    mBoundingRect = shape().boundingRect().adjusted(-2, -2, 3, 3);;
     mColor = Qt::lightGray;
 }
 
@@ -82,7 +82,8 @@ void PathItem::syncWithPath()
 {
     setVisible(mPath->isVisible());
 
-    QRectF bounds = shape().boundingRect();
+    // FIXME: the bounds must include any tiles generated!
+    QRectF bounds = shape().boundingRect().adjusted(-2, -2, 3, 3);;
     if (bounds != mBoundingRect) {
         prepareGeometryChange();
         mBoundingRect = bounds;

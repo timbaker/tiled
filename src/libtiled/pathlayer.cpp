@@ -3,6 +3,7 @@
 #include "pathlayer.h"
 
 #include "map.h"
+#include "pathgenerator.h"
 #include "tilelayer.h"
 #include "tileset.h"
 
@@ -10,7 +11,9 @@ using namespace Tiled;
 
 Path::Path()
     : mIsClosed(false)
+    , mVisible(true)
 {
+    addGenerator(new PathGenerator(0, this));
 }
 
 void Path::setPoints(const PathPoints &points)
@@ -50,55 +53,12 @@ QPolygonF Path::polygonf() const
     return poly;
 }
 
-/**
- * Returns the lists of points on a line from (x0,y0) to (x1,y1).
- *
- * This is an implementation of bresenhams line algorithm, initially copied
- * from http://en.wikipedia.org/wiki/Bresenham's_line_algorithm#Optimization
- * changed to C++ syntax.
- */
-// from stampBrush.cpp
-static QVector<QPoint> calculateLine(int x0, int y0, int x1, int y1)
-{
-    QVector<QPoint> ret;
-
-    bool steep = qAbs(y1 - y0) > qAbs(x1 - x0);
-    if (steep) {
-        qSwap(x0, y0);
-        qSwap(x1, y1);
-    }
-    if (x0 > x1) {
-        qSwap(x0, x1);
-        qSwap(y0, y1);
-    }
-    const int deltax = x1 - x0;
-    const int deltay = qAbs(y1 - y0);
-    int error = deltax / 2;
-    int ystep;
-    int y = y0;
-
-    if (y0 < y1)
-        ystep = 1;
-    else
-        ystep = -1;
-
-    for (int x = x0; x < x1 + 1 ; x++) {
-        if (steep)
-            ret += QPoint(y, x);
-        else
-            ret += QPoint(x, y);
-        error = error - deltay;
-        if (error < 0) {
-             y = y + ystep;
-             error = error + deltax;
-        }
-    }
-
-    return ret;
-}
-
 void Path::generate(Map *map, QVector<TileLayer *> &layers) const
 {
+#if 1
+    foreach (PathGenerator *pathGen, mGenerators)
+        pathGen->generate(map, layers);
+#else
     if (!map->tilesets().count())
         return;
     if (!mPoints.size())
@@ -137,6 +97,7 @@ void Path::generate(Map *map, QVector<TileLayer *> &layers) const
                 layers[0]->setCell(pt.x(), pt.y(), cell);
             }
         }
+#endif
 }
 
 Path *Path::clone() const
@@ -154,6 +115,16 @@ void Path::translate(const QPoint &delta)
     for (int i = 0; i < mPoints.count(); i++) {
         mPoints[i].translate(delta);
     }
+}
+
+void Path::addGenerator(PathGenerator *pathGen)
+{
+    mGenerators.append(pathGen);
+}
+
+PathGenerator *Path::removeGenerator(int index)
+{
+    return mGenerators.takeAt(index);
 }
 
 /////
@@ -208,8 +179,13 @@ int PathLayer::removePath(Path *path)
 
 void PathLayer::generate(QVector<TileLayer *> &layers) const
 {
-    foreach (Path *path, mPaths)
+    if (!isVisible())
+        return;
+    foreach (Path *path, mPaths) {
+        if (!path->isVisible())
+            continue;
         path->generate(map(), layers);
+    }
 }
 
 PathLayer *PathLayer::initializeClone(PathLayer *clone) const

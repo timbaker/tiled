@@ -10,6 +10,8 @@
 
 namespace Tiled {
 
+class PathGenerator;
+
 class TILEDSHARED_EXPORT PathPoint
 {
 public:
@@ -89,11 +91,16 @@ public:
 
     void translate(const QPoint &delta);
 
+    void addGenerator(PathGenerator *pathGen);
+    PathGenerator *removeGenerator(int index);
+
 private:
     PathLayer *mLayer;
     PathPoints mPoints;
     bool mIsClosed;
     bool mVisible;
+
+    QList<PathGenerator*> mGenerators;
 };
 
 class TILEDSHARED_EXPORT PathLayer : public Layer

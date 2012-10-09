@@ -167,6 +167,26 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos, QVector<const Cell *
             continue;
         QPoint subPos = pos - mOwner->orientAdjustTiles() * mLevel;
         if (tl->contains(subPos)) {
+#if 1
+            const Cell *cell = &mPathTileLayers[index]->cellAt(subPos);
+            if (!cell->isEmpty()) {
+                if (!cleared) {
+                    cells.clear();
+                    cleared = true;
+                }
+                cells.append(cell);
+            }
+            else {
+                const Cell *cell = &tl->cellAt(subPos);
+                if (!cell->isEmpty()) {
+                    if (!cleared) {
+                        cells.clear();
+                        cleared = true;
+                    }
+                    cells.append(cell);
+                }
+            }
+#else
             const Cell *cell = &tl->cellAt(subPos);
             if (!cell->isEmpty()) {
                 if (!cleared) {
@@ -185,6 +205,7 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos, QVector<const Cell *
                     cells.append(cell);
                 }
             }
+#endif
         }
     }
 
