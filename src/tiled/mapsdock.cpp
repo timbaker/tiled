@@ -127,6 +127,7 @@ void MapsDock::selectionChanged()
     QModelIndexList selectedRows = mMapsView->selectionModel()->selectedRows();
     if (selectedRows.isEmpty()) {
         mPreviewLabel->setPixmap(QPixmap());
+        mPreviewMapImage = 0;
         return;
     }
     QModelIndex index = selectedRows.first();
