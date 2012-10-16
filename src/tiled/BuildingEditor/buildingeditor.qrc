@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/BuildingEditor">
+        <file>icons/icon_door.png</file>
+        <file>icons/icon_eraser.png</file>
+        <file>icons/icon_floordn.png</file>
+        <file>icons/icon_floorup.png</file>
+        <file>icons/icon_pencil.png</file>
+        <file>icons/icon_stair.png</file>
+        <file>icons/icon_window.png</file>
+    </qresource>
+</RCC>

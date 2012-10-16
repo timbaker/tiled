@@ -1,0 +1,58 @@
+Name=Suburban 1
+Wall=walls_exterior_house_01_32
+Room=
+{
+	Name= Living Room,
+	Color = 255 0 0,
+	InternalName = livingroom,
+	Floor = floors_interior_tilesandwood_01_42,
+	Wall = walls_interior_house_01_20
+}
+Room=
+{
+	Name= Dining Room,
+	Color = 255 0 128,
+	InternalName = diningroom,
+	Floor = floors_interior_tilesandwood_01_42,
+	Wall = walls_interior_house_01_20
+}
+Room=
+{
+	Name= Bathroom,
+	Color = 255 128 0,
+	InternalName = bathroom,
+	Floor = floors_interior_tilesandwood_01_2,
+	Wall = walls_interior_house_01_32
+}
+Room=
+{
+	Name= Kitchen,
+	Color = 0 255 0,
+	InternalName = kitchen,
+	Floor = floors_interior_tilesandwood_01_2,
+	Wall = walls_interior_house_02_0
+}
+Room=
+{
+	Name= Bedroom1,
+	Color = 0 0 255,
+	InternalName = bedroom,
+	Floor = floors_interior_carpet_01_0,
+	Wall = walls_interior_house_02_4
+}
+Room=
+{
+	Name= Bedroom2,
+	Color = 0 64 255,
+	InternalName = bedroom,
+	Floor = floors_interior_carpet_01_0,
+	Wall = walls_interior_house_02_32
+}
+Room=
+{
+	Name= Bedroom3,
+	Color = 0 128 255,
+	InternalName = bedroom,
+	Floor = floors_interior_carpet_01_0,
+	Wall = walls_interior_house_02_40
+}

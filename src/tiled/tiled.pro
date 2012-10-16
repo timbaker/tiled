@@ -147,7 +147,10 @@ SOURCES += aboutdialog.cpp \
     mapimagemanager.cpp \
     minimap.cpp \
     convertorientationdialog.cpp \
-    converttolotdialog.cpp
+    converttolotdialog.cpp \
+    BuildingEditor/buildingeditorwindow.cpp \
+    BuildingEditor/simplefile.cpp \
+    BuildingEditor/buildingtools.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -260,7 +263,10 @@ HEADERS += aboutdialog.h \
     zprogress.h \
     minimap.h \
     convertorientationdialog.h \
-    converttolotdialog.h
+    converttolotdialog.h \
+    BuildingEditor/buildingeditorwindow.h \
+    BuildingEditor/simplefile.h \
+    BuildingEditor/buildingtools.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -279,9 +285,11 @@ FORMS += aboutdialog.ui \
     saveasimagedialog.ui\
     newimagelayerdialog.ui \
     convertorientationdialog.ui \
-    converttolotdialog.ui
+    converttolotdialog.ui \
+    BuildingEditor/buildingeditorwindow.ui
 
-RESOURCES += tiled.qrc
+RESOURCES += tiled.qrc \
+    BuildingEditor/buildingeditor.qrc
 macx {
     TARGET = TileZed
     QMAKE_INFO_PLIST = Info.plist

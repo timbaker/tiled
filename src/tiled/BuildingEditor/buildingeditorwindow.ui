@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>BuildingEditorWindow</class>
+ <widget class="QMainWindow" name="BuildingEditorWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Building Editor</string>
+  </property>
+  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionNewBuilding"/>
+    <addaction name="actionOpen"/>
+    <addaction name="actionSave"/>
+    <addaction name="separator"/>
+    <addaction name="actionClose"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionUndo"/>
+    <addaction name="actionRedo"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionPecil"/>
+   <addaction name="actionEraser"/>
+   <addaction name="actionDoor"/>
+   <addaction name="actionWindow"/>
+   <addaction name="actionStairs"/>
+   <addaction name="actionUpLevel"/>
+   <addaction name="actionDownLevel"/>
+  </widget>
+  <action name="actionClose">
+   <property name="text">
+    <string>Close</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open Building...</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="text">
+    <string>Save Building</string>
+   </property>
+  </action>
+  <action name="actionUndo">
+   <property name="text">
+    <string>Undo</string>
+   </property>
+  </action>
+  <action name="actionRedo">
+   <property name="text">
+    <string>Redo</string>
+   </property>
+  </action>
+  <action name="actionNewBuilding">
+   <property name="text">
+    <string>New Building...</string>
+   </property>
+  </action>
+  <action name="actionPecil">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_pencil.png</normaloff>:/BuildingEditor/icons/icon_pencil.png</iconset>
+   </property>
+   <property name="text">
+    <string>Pecil</string>
+   </property>
+  </action>
+  <action name="actionEraser">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_eraser.png</normaloff>:/BuildingEditor/icons/icon_eraser.png</iconset>
+   </property>
+   <property name="text">
+    <string>Eraser</string>
+   </property>
+  </action>
+  <action name="actionDoor">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_door.png</normaloff>:/BuildingEditor/icons/icon_door.png</iconset>
+   </property>
+   <property name="text">
+    <string>Door</string>
+   </property>
+  </action>
+  <action name="actionWindow">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_window.png</normaloff>:/BuildingEditor/icons/icon_window.png</iconset>
+   </property>
+   <property name="text">
+    <string>Window</string>
+   </property>
+  </action>
+  <action name="actionStairs">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_stair.png</normaloff>:/BuildingEditor/icons/icon_stair.png</iconset>
+   </property>
+   <property name="text">
+    <string>Stairs</string>
+   </property>
+  </action>
+  <action name="actionUpLevel">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_floorup.png</normaloff>:/BuildingEditor/icons/icon_floorup.png</iconset>
+   </property>
+   <property name="text">
+    <string>Up One Level</string>
+   </property>
+  </action>
+  <action name="actionDownLevel">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_floordn.png</normaloff>:/BuildingEditor/icons/icon_floordn.png</iconset>
+   </property>
+   <property name="text">
+    <string>Down One Level</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="buildingeditor.qrc"/>
+ </resources>
+ <connections/>
+</ui>

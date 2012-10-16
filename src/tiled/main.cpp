@@ -26,6 +26,7 @@
 #include "preferences.h"
 #include "tiledapplication.h"
 #ifdef ZOMBOID
+#include "BuildingEditor/buildingeditorwindow.h"
 #include "zprogress.h"
 #endif
 
@@ -172,6 +173,13 @@ int main(int argc, char *argv[])
     } else {
         w.openLastFiles();
     }
+
+#ifdef ZOMBOID
+    BuildingEditor::BuildingEditorWindow bw(&w);
+    bw.show();
+    if (!bw.Startup())
+        return -1;
+#endif
 
     return a.exec();
 }

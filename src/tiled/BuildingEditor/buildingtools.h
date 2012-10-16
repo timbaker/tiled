@@ -1,0 +1,4 @@
+#ifndef BUILDINGTOOLS_H
+#define BUILDINGTOOLS_H
+
+#endif // BUILDINGTOOLS_H

@@ -1,0 +1,65 @@
+Name=Wooden Shack
+Wall=walls_exterior_house_01_48
+{
+	Name= Foyer,
+	Color = 255 255 255,
+	InternalName = hall,
+	Floor = floors_interior_tilesandwood_01_42,
+	Wall = walls_interior_house_01_20
+}
+{
+	Name= Hall,
+	Color = 200 200 200,
+	InternalName = hall,
+	Floor = floors_interior_tilesandwood_01_42,
+	Wall = walls_interior_house_01_20
+}
+{
+	Name= Living Room,
+	Color = 255 0 0,
+	InternalName = livingroom,
+	Floor = floors_interior_carpet_01_8,
+	Wall = walls_exterior_wooden_01_24
+}
+{
+	Name= Dining Room,
+	Color = 255 0 128,
+	InternalName = diningroom,
+	Floor = floors_interior_carpet_01_8,
+	Wall = walls_exterior_wooden_01_24
+}
+{
+	Name= Bathroom,
+	Color = 255 128 0,
+	InternalName = bathroom,
+	Floor = floors_interior_carpet_01_8,
+	Wall = walls_exterior_wooden_01_24
+}
+{
+	Name= Kitchen,
+	Color = 0 255 0,
+	InternalName = kitchen,
+	Floor = floors_interior_carpet_01_8,
+	Wall = walls_exterior_wooden_01_24
+}
+{
+	Name= Bedroom1,
+	Color = 0 0 255,
+	InternalName = bedroom,
+	Floor = floors_interior_carpet_01_8,
+	Wall = walls_exterior_wooden_01_24
+}
+{
+	Name= Bedroom2,
+	Color = 0 64 255,
+	InternalName = bedroom,
+	Floor = floors_interior_carpet_01_8,
+	Wall = walls_exterior_wooden_01_24
+}
+{
+	Name= Bedroom3,
+	Color = 0 128 255,
+	InternalName = bedroom,
+	Floor = floors_interior_carpet_01_8,
+	Wall = walls_exterior_wooden_01_24
+}
