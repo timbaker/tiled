@@ -27,9 +27,10 @@
 
 #include <QComboBox>
 #include <QDir>
-#include <QGraphicsSceneMouseEvent>
+#include <QGraphicsView>
 #include <QLabel>
 #include <QMessageBox>
+#include <QPixmap>
 #include <QUndoGroup>
 
 using namespace BuildingEditor;
@@ -73,6 +74,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
             EraserTool::instance(), SLOT(activate()));
     EraserTool::instance()->setEditor(roomEditor);
     EraserTool::instance()->setAction(ui->actionEraser);
+
+    connect(room, SIGNAL(currentIndexChanged(int)),
+            SLOT(roomIndexChanged(int)));
 
     QAction *undoAction = mUndoGroup->createUndoAction(this, tr("Undo"));
     QAction *redoAction = mUndoGroup->createRedoAction(this, tr("Redo"));
@@ -126,6 +130,16 @@ bool BuildingEditorWindow::Startup()
     roomEditor->currentFloor = building->floors().first();
     roomEditor->mFloorItems += new GraphicsFloorItem(roomEditor->currentFloor);
     this->room->addItems(RoomDefinitionManager::instance->FillCombo());
+
+    this->room->setIconSize(QSize(20, 20));
+    for (int i = 0; i < RoomDefinitionManager::instance->getRoomCount(); i++) {
+        QImage image(20, 20, QImage::Format_ARGB32);
+        image.fill(qRgba(0,0,0,0));
+        QPainter painter(&image);
+        painter.fillRect(1, 1, 18, 18, RoomDefinitionManager::instance->getRoom(i)->Color);
+        this->room->setItemIcon(i, QPixmap::fromImage(image));
+    }
+
     roomEditor->UpdateMetaBuilding();
 
     roomEditor->addItem(roomEditor->mFloorItems.first());
@@ -196,6 +210,10 @@ Room *BuildingEditorWindow::currentRoom() const
 {
     int roomIndex = room->currentIndex();
     return RoomDefinitionManager::instance->getRoom(roomIndex);
+}
+
+void BuildingEditorWindow::roomIndexChanged(int index)
+{
 }
 
 /////

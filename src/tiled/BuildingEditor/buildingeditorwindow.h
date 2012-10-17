@@ -18,9 +18,6 @@
 #ifndef BUILDINGEDITORWINDOW_H
 #define BUILDINGEDITORWINDOW_H
 
-#include <QGraphicsItem>
-#include <QGraphicsScene>
-#include <QGraphicsView>
 #include <QMainWindow>
 #include <QMap>
 #include <QVector>
@@ -246,6 +243,9 @@ public:
     bool LoadBuildingTemplates();
 
     Room *currentRoom() const;
+
+private slots:
+    void roomIndexChanged(int index);
 
 private:
     Ui::BuildingEditorWindow *ui;
