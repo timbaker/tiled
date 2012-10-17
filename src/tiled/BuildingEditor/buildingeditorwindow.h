@@ -29,6 +29,11 @@ namespace Ui {
 class BuildingEditorWindow;
 }
 
+namespace Tiled {
+class Tile;
+class Tileset;
+}
+
 namespace BuildingEditor {
 
 class BaseTool;
@@ -57,7 +62,6 @@ public:
 class WallTypes
 {
 public:
-
     static WallTypes *instance;
     QList<WallType*> ETypes;
     QList<WallType*> ITypes;
@@ -83,6 +87,11 @@ public:
         Index(ind)
     {
 
+    }
+
+    QString ToString()
+    {
+        return Tilesheet + QLatin1String("_") + QString::number(Index);
     }
 };
 
@@ -239,11 +248,15 @@ public:
     bool Startup();
 
     bool LoadBuildingTemplates();
+    bool LoadBuildingTiles();
+    bool LoadMapBaseXMLLots();
 
     Room *currentRoom() const;
 
     BuildingDocument *currentDocument() const
     { return mCurrentDocument; }
+
+    Tiled::Tile *tileFor(const QString &tileName);
 
 private slots:
     void roomIndexChanged(int index);
@@ -254,6 +267,8 @@ private:
     FloorEditor *roomEditor;
     QComboBox *room;
     QUndoGroup *mUndoGroup;
+    QMap<QString,Tiled::Tileset*> mTilesetByName;
+    QString mError;
 };
 
 } // namespace BuildingEditor

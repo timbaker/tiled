@@ -21,19 +21,28 @@
 #include "building.h"
 #include "buildingdocument.h"
 #include "buildingfloor.h"
+#include "buildingpreviewwindow.h"
 #include "buildingtools.h"
 #include "FloorEditor.h"
+#include "mixedtilesetview.h"
 #include "simplefile.h"
+
+#include "tileset.h"
+#include "tilesetmanager.h"
 
 #include <QComboBox>
 #include <QDir>
 #include <QGraphicsView>
 #include <QLabel>
+#include <QListWidget>
 #include <QMessageBox>
 #include <QPixmap>
 #include <QUndoGroup>
+#include <QXmlStreamReader>
 
 using namespace BuildingEditor;
+using namespace Tiled;
+using namespace Tiled::Internal;
 
 /////
 
@@ -79,6 +88,23 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(room, SIGNAL(currentIndexChanged(int)),
             SLOT(roomIndexChanged(int)));
 
+    /////
+
+    QToolBox *toolBox = ui->toolBox;
+    while (toolBox->count())
+        toolBox->removeItem(0);
+
+    Tiled::Internal::MixedTilesetView *w = new Tiled::Internal::MixedTilesetView(toolBox);
+    toolBox->addItem(w, tr("External Walls"));
+
+    w = new Tiled::Internal::MixedTilesetView(toolBox);
+    toolBox->addItem(w, tr("Internal Walls"));
+
+    w = new Tiled::Internal::MixedTilesetView(toolBox);
+    toolBox->addItem(w, tr("Floors"));
+
+    /////
+
     QAction *undoAction = mUndoGroup->createUndoAction(this, tr("Undo"));
     QAction *redoAction = mUndoGroup->createRedoAction(this, tr("Redo"));
     undoAction->setShortcuts(QKeySequence::Undo);
@@ -94,27 +120,35 @@ BuildingEditorWindow::~BuildingEditorWindow()
 
 bool BuildingEditorWindow::Startup()
 {
-#if 1
     if (!LoadBuildingTemplates())
         return false;
 
-#else
-    // NewBuildingDialog
-    BuildingDefinition *def = new BuildingDefinition;
-    def->Name = QLatin1String("Suburban 1");
-    def->Wall = QLatin1String("walls_exterior_house_01_32");
+    if (!LoadBuildingTiles())
+        return false;
 
-    Room *room = new Room;
-    room->Name = QLatin1String("Living Room");
-    room->Color = qRgb(255, 0, 0);
-    room->internalName = QLatin1String("livingroom");
-    room->Wall = QLatin1String("walls_interior_house_01_20");
-    room->Floor = QLatin1String("floors_interior_tilesandwood_01_42");
-    def->RoomList += room;
+    if (!LoadMapBaseXMLLots()) {
+        QMessageBox::critical(this, tr("It's no good, Jim!"), mError);
+        return false;
+    }
 
-    BuildingDefinition::Definitions += def;
-    BuildingDefinition::DefinitionMap[def->Name] = def;
-#endif
+    Tiled::Internal::MixedTilesetView *v;
+    v = static_cast<Tiled::Internal::MixedTilesetView*>(ui->toolBox->widget(0));
+    QList<Tiled::Tile*> tiles;
+    foreach (WallType *t, WallTypes::instance->ETypes)
+        tiles += tileFor(t->ToString());
+    v->model()->setTiles(tiles);
+
+    v = static_cast<Tiled::Internal::MixedTilesetView*>(ui->toolBox->widget(1));
+    tiles.clear();
+    foreach (WallType *t, WallTypes::instance->ITypes)
+        tiles += tileFor(t->ToString());
+    v->model()->setTiles(tiles);
+
+    v = static_cast<Tiled::Internal::MixedTilesetView*>(ui->toolBox->widget(2));
+    tiles.clear();
+    foreach (FloorType *t, FloorTypes::instance->Types)
+        tiles += tileFor(t->ToString());
+    v->model()->setTiles(tiles);
 
     RoomDefinitionManager::instance->Init(BuildingDefinition::Definitions.first());
 
@@ -150,6 +184,10 @@ bool BuildingEditorWindow::Startup()
     roomEditor->setSceneRect(-10, -10, building->width() * 30 + 10, building->height() * 30 + 10);
     /////
 
+    BuildingPreviewWindow *previewWin = new BuildingPreviewWindow(this);
+    previewWin->scene()->setTilesets(mTilesetByName);
+    previewWin->setDocument(currentDocument());
+    previewWin->show();
 
     return true;
 }
@@ -209,10 +247,127 @@ bool BuildingEditorWindow::LoadBuildingTemplates()
     return true;
 }
 
+bool BuildingEditorWindow::LoadBuildingTiles()
+{
+    QFileInfo info(QCoreApplication::applicationDirPath() + QLatin1Char('/')
+                  + QLatin1String("BuildingTiles.txt"));
+    if (!info.exists()) {
+        QMessageBox::critical(this, tr("It's no good, Jim!"),
+                              tr("The BuildingTiles.txt file doesn't exist."));
+        return false;
+    }
+
+    QString path = info.canonicalFilePath();
+    SimpleFile simple;
+    if (!simple.read(path)) {
+        QMessageBox::critical(this, tr("It's no good, Jim!"),
+                              tr("Error reading %1.").arg(path));
+        return false;
+    }
+
+    foreach (SimpleFileBlock block, simple.blocks) {
+        if (block.name == QLatin1String("category")) {
+            QString categoryName = block.value("name");
+            SimpleFileBlock tilesBlock = block.block("tiles");
+            foreach (SimpleFileKeyValue kv, tilesBlock.values) {
+                if (kv.name == QLatin1String("tile")) {
+                    QString tileName = kv.value;
+                    QString tilesetName = tileName.mid(0, tileName.lastIndexOf(QLatin1Char('_')));
+                    int index = tileName.mid(tileName.lastIndexOf(QLatin1Char('_')) + 1).toInt();
+                    if (categoryName == QLatin1String("exterior_walls")) {
+                        WallTypes::instance->AddExt(tilesetName, index);
+                    }
+                    if (categoryName == QLatin1String("interior_walls")) {
+                        WallTypes::instance->Add(tilesetName, index);
+                    }
+                    if (categoryName == QLatin1String("floors")) {
+                        FloorTypes::instance->Add(tilesetName, index);
+                    }
+                } else {
+                    QMessageBox::critical(this, tr("It's no good, Jim!"),
+                                          tr("Unknown value name '%1'.\n%2")
+                                          .arg(kv.name)
+                                          .arg(path));
+                    return false;
+                }
+            }
+        } else {
+            QMessageBox::critical(this, tr("It's no good, Jim!"),
+                                  tr("Unknown block name '%1'.\n%2")
+                                  .arg(block.name)
+                                  .arg(path));
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool BuildingEditorWindow::LoadMapBaseXMLLots()
+{
+    QString path = QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + QLatin1String("MapBaseXMLLots.txt");
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        mError = tr("Couldn't open %1").arg(path);
+        return false;
+    }
+
+    QXmlStreamReader xml;
+    xml.setDevice(&file);
+
+    if (xml.readNextStartElement() && xml.name() == "map") {
+        while (xml.readNextStartElement()) {
+            if (xml.name() == "tileset") {
+                const QXmlStreamAttributes atts = xml.attributes();
+//                const int firstGID = atts.value(QLatin1String("firstgid")).toString().toInt();
+                const QString name = atts.value(QLatin1String("name")).toString();
+
+                QString source = QCoreApplication::applicationDirPath() + QLatin1Char('/')
+                        + QLatin1String("../../ProjectZomboid/BMPToMap/BuildingEditor/Tiles/") + name + QLatin1String(".png");
+                if (!QFileInfo(source).exists()) {
+                    mError = tr("Tileset in MapBaseXMLLots.txt doesn't exist.\n%1").arg(source);
+                    return false;
+                }
+                source = QFileInfo(source).canonicalFilePath();
+
+                Tileset *ts = new Tileset(name, 64, 128);
+
+                TilesetImageCache *cache = TilesetManager::instance()->imageCache();
+                Tileset *cached = cache->findMatch(ts, source);
+                if (!cached || !ts->loadFromCache(cached)) {
+                    const QImage tilesetImage = QImage(source);
+                    if (ts->loadFromImage(tilesetImage, source))
+                        cache->addTileset(ts);
+                    else {
+                        mError = tr("Error loading tileset image:\n'%1'").arg(source);
+                        return false;
+                    }
+                }
+
+                mTilesetByName[name] = ts;
+            }
+            xml.skipCurrentElement();
+        }
+    } else {
+        mError = tr("Not a map file.\n%1").arg(path);
+        return false;
+    }
+
+    return true;
+}
+
 Room *BuildingEditorWindow::currentRoom() const
 {
     int roomIndex = room->currentIndex();
     return RoomDefinitionManager::instance->getRoom(roomIndex);
+}
+
+Tiled::Tile *BuildingEditorWindow::tileFor(const QString &tileName)
+{
+    QString tilesetName = tileName.mid(0, tileName.lastIndexOf(QLatin1Char('_')));
+    int index = tileName.mid(tileName.lastIndexOf(QLatin1Char('_')) + 1).toInt();
+    return mTilesetByName[tilesetName]->tileAt(index);
 }
 
 void BuildingEditorWindow::roomIndexChanged(int index)
@@ -259,6 +414,14 @@ WallType *WallTypes::getOrAdd(QString exteriorWall)
 /////
 
 FloorTypes *FloorTypes::instance = new FloorTypes;
+
+
+void FloorTypes::Add(QString name, int first)
+{
+    FloorType *t = new FloorType(name, first);
+    Types += t;
+    TypesByName[name] = t;
+}
 
 /////
 

@@ -156,7 +156,8 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/building.cpp \
     BuildingEditor/buildingfloor.cpp \
     BuildingEditor/buildingundoredo.cpp \
-    BuildingEditor/buildingpreviewwindow.cpp
+    BuildingEditor/buildingpreviewwindow.cpp \
+    BuildingEditor/mixedtilesetview.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -278,7 +279,8 @@ HEADERS += aboutdialog.h \
     BuildingEditor/building.h \
     BuildingEditor/buildingfloor.h \
     BuildingEditor/buildingundoredo.h \
-    BuildingEditor/buildingpreviewwindow.h
+    BuildingEditor/buildingpreviewwindow.h \
+    BuildingEditor/mixedtilesetview.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

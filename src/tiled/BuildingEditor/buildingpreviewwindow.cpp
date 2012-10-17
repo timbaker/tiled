@@ -35,10 +35,9 @@
 #include "tilesetmanager.h"
 #include "zlevelrenderer.h"
 
-#include <QStyleOptionGraphicsItem>
 #include <QMessageBox>
+#include <QStyleOptionGraphicsItem>
 #include <QWheelEvent>
-#include <QXmlStreamReader>
 
 using namespace BuildingEditor;
 using namespace Tiled;
@@ -200,60 +199,6 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
 
     connect(mDocument, SIGNAL(roomAtPositionChanged(BuildingFloor*,QPoint)),
             SLOT(roomAtPositionChanged(BuildingFloor*,QPoint)));
-}
-
-bool BuildingPreviewScene::LoadMapBaseXMLLots()
-{
-    QString path = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + QLatin1String("MapBaseXMLLots.txt");
-    QFile file(path);
-    if (!file.open(QIODevice::ReadOnly)) {
-        mError = tr("Couldn't open %1").arg(path);
-        return false;
-    }
-
-    QXmlStreamReader xml;
-    xml.setDevice(&file);
-
-    if (xml.readNextStartElement() && xml.name() == "map") {
-        while (xml.readNextStartElement()) {
-            if (xml.name() == "tileset") {
-                const QXmlStreamAttributes atts = xml.attributes();
-//                const int firstGID = atts.value(QLatin1String("firstgid")).toString().toInt();
-                const QString name = atts.value(QLatin1String("name")).toString();
-
-                QString source = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-                        + QLatin1String("../../ProjectZomboid/BMPToMap/BuildingEditor/Tiles/") + name + QLatin1String(".png");
-                if (!QFileInfo(source).exists()) {
-                    mError = tr("Tileset in MapBaseXMLLots.txt doesn't exist.\n%1").arg(source);
-                    return false;
-                }
-                source = QFileInfo(source).canonicalFilePath();
-
-                Tileset *ts = new Tileset(name, 64, 128);
-
-                TilesetImageCache *cache = TilesetManager::instance()->imageCache();
-                Tileset *cached = cache->findMatch(ts, source);
-                if (!cached || !ts->loadFromCache(cached)) {
-                    const QImage tilesetImage = QImage(source);
-                    if (ts->loadFromImage(tilesetImage, source))
-                        cache->addTileset(ts);
-                    else {
-                        mError = tr("Error loading tileset image:\n'%1'").arg(source);
-                        return false;
-                    }
-                }
-
-                mTilesetByName[name] = ts;
-            }
-            xml.skipCurrentElement();
-        }
-    } else {
-        mError = tr("Not a map file.\n%1").arg(path);
-        return false;
-    }
-
-    return true;
 }
 
 void BuildingPreviewScene::BuildingToMap()

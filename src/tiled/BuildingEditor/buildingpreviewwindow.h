@@ -77,7 +77,9 @@ public:
 
     void setDocument(BuildingDocument *doc);
 
-    bool LoadMapBaseXMLLots();
+    void setTilesets(const QMap<QString,Tiled::Tileset*> &tilesets)
+    { mTilesetByName = tilesets; }
+
     void BuildingToMap();
     void BuildingFloorToTileLayers(BuildingFloor *floor, const QVector<Tiled::TileLayer *> &layers);
 

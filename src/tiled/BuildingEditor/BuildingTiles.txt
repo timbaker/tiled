@@ -1,0 +1,71 @@
+category
+{
+    name = exterior_walls
+    tiles
+    {
+	tile = walls_exterior_house_01_0
+	tile = walls_exterior_house_01_4
+	tile = walls_exterior_house_01_16
+	tile = walls_exterior_house_01_20
+	tile = walls_exterior_house_01_48
+    }
+}
+
+category
+{
+    name = interior_walls
+    tiles
+    {
+	tile = walls_interior_house_01_0
+	tile = walls_interior_house_01_4
+	tile = walls_interior_house_01_16
+	tile = walls_interior_house_01_20
+	tile = walls_interior_house_01_32
+	tile = walls_interior_house_01_36
+	tile = walls_interior_house_01_48
+	tile = walls_interior_house_01_52
+
+	tile = walls_interior_house_02_0
+	tile = walls_interior_house_02_4
+	tile = walls_interior_house_02_16
+	tile = walls_interior_house_02_20
+	tile = walls_interior_house_02_32
+	tile = walls_interior_house_02_36
+	tile = walls_interior_house_02_48
+	tile = walls_interior_house_02_52
+    }
+}
+
+category
+{
+    name = floors
+    tiles
+    {
+	tile = floors_interior_carpet_01_0
+	tile = floors_interior_carpet_01_1
+	tile = floors_interior_carpet_01_2
+	tile = floors_interior_carpet_01_3
+	tile = floors_interior_carpet_01_4
+	tile = floors_interior_carpet_01_5
+	tile = floors_interior_carpet_01_6
+	tile = floors_interior_carpet_01_7
+	tile = floors_interior_carpet_01_8
+	tile = floors_interior_carpet_01_9
+	tile = floors_interior_carpet_01_10
+	tile = floors_interior_carpet_01_11
+
+	tile = floors_interior_tilesandwood_01_0
+	tile = floors_interior_tilesandwood_01_1
+	tile = floors_interior_tilesandwood_01_2
+	tile = floors_interior_tilesandwood_01_3
+	tile = floors_interior_tilesandwood_01_4
+	tile = floors_interior_tilesandwood_01_5
+	tile = floors_interior_tilesandwood_01_6
+	tile = floors_interior_tilesandwood_01_7
+	tile = floors_interior_tilesandwood_01_8
+	tile = floors_interior_tilesandwood_01_9
+	tile = floors_interior_tilesandwood_01_10
+	tile = floors_interior_tilesandwood_01_11
+    }
+}
+

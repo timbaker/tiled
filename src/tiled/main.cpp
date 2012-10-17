@@ -27,7 +27,6 @@
 #include "tiledapplication.h"
 #ifdef ZOMBOID
 #include "BuildingEditor/buildingeditorwindow.h"
-#include "BuildingEditor/buildingpreviewwindow.h"
 #include "zprogress.h"
 
 #include <QMessageBox>
@@ -182,14 +181,6 @@ int main(int argc, char *argv[])
     bw.show();
     if (!bw.Startup())
         return -1;
-    BuildingEditor::BuildingPreviewWindow bp(&bw);
-    bp.show();
-    if (!bp.scene()->LoadMapBaseXMLLots()) {
-        QMessageBox::critical(&bp, a.translate("Star Trek", "It's no good, Jim!"),
-                              bp.scene()->errorString());
-        return -1;
-    }
-    bp.setDocument(bw.currentDocument());
 #endif
 
     return a.exec();
