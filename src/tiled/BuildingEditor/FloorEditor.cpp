@@ -168,6 +168,7 @@ void FloorEditor::activateTool(BaseTool *tool)
 
 QPoint FloorEditor::sceneToTile(const QPointF &scenePos)
 {
+    // FIXME: x/y < 0 rounds up to zero
     return QPoint(scenePos.x() / 30, scenePos.y() / 30);
 }
 
@@ -188,7 +189,7 @@ void FloorEditor::roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos)
 {
     int index = floor->building()->floors().indexOf(floor);
     Room *room = floor->layout()->roomAt(pos);
-    qDebug() << floor << pos << room;
+//    qDebug() << floor << pos << room;
     mFloorItems[index]->bmp()->setPixel(pos, room ? room->Color : qRgb(0, 0, 0));
     mFloorItems[index]->update();
 }

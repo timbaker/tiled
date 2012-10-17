@@ -226,8 +226,6 @@ public:
     void setFloorForRoom(QString room, QString tile);
 };
 
-//int WallType_getIndexFromSection(WallType *type, BuildingFloor::WallTile::WallSection section);
-
 class BuildingEditorWindow : public QMainWindow
 {
     Q_OBJECT
@@ -243,6 +241,9 @@ public:
     bool LoadBuildingTemplates();
 
     Room *currentRoom() const;
+
+    BuildingDocument *currentDocument() const
+    { return mCurrentDocument; }
 
 private slots:
     void roomIndexChanged(int index);

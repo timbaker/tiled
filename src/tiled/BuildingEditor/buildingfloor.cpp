@@ -22,9 +22,10 @@
 
 using namespace BuildingEditor;
 
-BuildingFloor::BuildingFloor(Building *building) :
+BuildingFloor::BuildingFloor(Building *building, int level) :
     mBuilding(building),
-    mLayout(new Layout(mBuilding->width(), mBuilding->height()))
+    mLayout(new Layout(mBuilding->width(), mBuilding->height())),
+    mLevel(level)
 {
 }
 
@@ -35,6 +36,7 @@ void BuildingFloor::LayoutToSquares()
     int w = l->w + 1;
     int h = l->h + 1;
     // +1 for the outside walls;
+    squares.clear();
     squares.resize(w);
     for (int x = 0; x < w; x++)
         squares[x].resize(h);

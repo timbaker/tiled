@@ -83,6 +83,9 @@ public:
     class Square
     {
     public:
+        Square() :
+            floorTile(0)
+        {}
         FloorTile *floorTile;
         QList<WallTile*> walls;
         QString stairsTexture;
@@ -97,7 +100,7 @@ public:
     QVector<QVector<Square> > squares;
 
 
-    BuildingFloor(Building *building);
+    BuildingFloor(Building *building, int level);
 
     Building *building() const
     { return mBuilding; }
@@ -116,9 +119,13 @@ public:
     int width() const;
     int height() const;
 
+    int level() const
+    { return mLevel; }
+
 private:
     Building *mBuilding;
     Layout *mLayout;
+    int mLevel;
 };
 
 } // namespace BuildingEditor

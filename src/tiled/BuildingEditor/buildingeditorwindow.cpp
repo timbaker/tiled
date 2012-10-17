@@ -62,6 +62,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     QGraphicsView *view = new QGraphicsView(this);
     view->setScene(roomEditor);
     view->setMouseTracking(true);
+    view->setAlignment(Qt::AlignLeft | Qt::AlignTop);
 
     setCentralWidget(view);
 
@@ -118,7 +119,7 @@ bool BuildingEditorWindow::Startup()
     RoomDefinitionManager::instance->Init(BuildingDefinition::Definitions.first());
 
     Building *building = new Building(20, 20);
-    building->insertFloor(0, new BuildingFloor(building));
+    building->insertFloor(0, new BuildingFloor(building, 0));
 
     mCurrentDocument = new BuildingDocument(building, QString());
     mUndoGroup->addStack(mCurrentDocument->undoStack());
@@ -145,6 +146,8 @@ bool BuildingEditorWindow::Startup()
     roomEditor->addItem(roomEditor->mFloorItems.first());
     roomEditor->addItem(new GraphicsGridItem(building->width(),
                                              building->height()));
+
+    roomEditor->setSceneRect(-10, -10, building->width() * 30 + 10, building->height() * 30 + 10);
     /////
 
 
