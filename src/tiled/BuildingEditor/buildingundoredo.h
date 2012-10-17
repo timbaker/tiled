@@ -15,49 +15,37 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SIMPLEFILE_H
-#define SIMPLEFILE_H
+#ifndef BUILDINGUNDOREDO_H
+#define BUILDINGUNDOREDO_H
 
-#include <QString>
-#include <QTextStream>
+#include <QPoint>
+#include <QUndoCommand>
 
-class SimpleFileKeyValue
+namespace BuildingEditor {
+
+class BuildingDocument;
+class BuildingFloor;
+class Layout;
+class Room;
+
+class ChangeRoomAtPosition : public QUndoCommand
 {
 public:
-    QString name;
-    QString value;
-};
+    ChangeRoomAtPosition(BuildingDocument *doc, BuildingFloor *floor,
+                         const QPoint &pos, Room *room);
 
-class SimpleFileBlock
-{
-public:
-    QString name;
-    QList<SimpleFileKeyValue> values;
-    QList<SimpleFileBlock> blocks;
-
-    QString value(const char *key)
-    { return value(QLatin1String(key)); }
-
-    QString value(const QString &key);
-
-    SimpleFileBlock block(const char *name)
-    { return block(QLatin1String(name)); }
-
-    SimpleFileBlock block(const QString &name);
-
-    void print();
-};
-
-
-class SimpleFile : public SimpleFileBlock
-{
-public:
-    SimpleFile();
-
-    bool read(const QString &filePath);
+    void undo() { swap(); }
+    void redo() { swap(); }
 
 private:
-    SimpleFileBlock readBlock(QTextStream &ts);
+    void swap();
+
+    BuildingDocument *mDocument;
+    BuildingFloor *mFloor;
+    QPoint mPosition;
+    Room *mRoom;
 };
 
-#endif // SIMPLEFILE_H
+} // namespace BuildingEditor
+
+#endif // BUILDINGUNDOREDO_H

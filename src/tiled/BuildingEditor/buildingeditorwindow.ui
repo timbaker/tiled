@@ -37,8 +37,6 @@
     <property name="title">
      <string>Edit</string>
     </property>
-    <addaction name="actionUndo"/>
-    <addaction name="actionRedo"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>

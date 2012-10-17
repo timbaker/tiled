@@ -1,3 +1,20 @@
+/*
+ * Copyright 2012, Tim Baker <treectrl@users.sf.net>
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef BUILDINGEDITORWINDOW_H
 #define BUILDINGEDITORWINDOW_H
 
@@ -9,6 +26,7 @@
 #include <QVector>
 
 class QComboBox;
+class QUndoGroup;
 
 namespace Ui {
 class BuildingEditorWindow;
@@ -16,28 +34,32 @@ class BuildingEditorWindow;
 
 namespace BuildingEditor {
 
+class BaseTool;
+class BuildingDocument;
 class FloorEditor;
+class Room;
+
+class WallType
+{
+public:
+    QString Tilesheet;
+    int FirstIndex;
+
+    WallType(QString tile, int ind) :
+        Tilesheet(tile),
+        FirstIndex(ind)
+    {
+    }
+
+    QString ToString()
+    {
+        return Tilesheet + QLatin1String("_") + QString::number(FirstIndex);
+    }
+};
 
 class WallTypes
 {
 public:
-    class WallType
-    {
-    public:
-        QString Tilesheet;
-        int FirstIndex;
-
-        WallType(QString tile, int ind) :
-            Tilesheet(tile),
-            FirstIndex(ind)
-        {
-        }
-
-        QString ToString()
-        {
-            return Tilesheet + QLatin1String("_") + QString::number(FirstIndex);
-        }
-    };
 
     static WallTypes *instance;
     QList<WallType*> ETypes;
@@ -53,24 +75,24 @@ public:
     WallType *getOrAdd(QString exteriorWall);
 };
 
+class FloorType
+{
+public:
+    QString Tilesheet;
+    int Index;
+
+    FloorType(QString tile, int ind) :
+        Tilesheet(tile),
+        Index(ind)
+    {
+
+    }
+};
+
 class FloorTypes
 {
 public:
     static FloorTypes *instance;
-
-    class FloorType
-    {
-    public:
-        QString Tilesheet;
-        int Index;
-
-        FloorType(QString tile, int ind) :
-            Tilesheet(tile),
-            Index(ind)
-        {
-
-        }
-    };
 
     QList<FloorType*> Types;
     QMap<QString,FloorType*> TypesByName;
@@ -117,92 +139,28 @@ public:
 class Layout
 {
 public:
+    Layout(int w, int h);
+
+    Room *roomAt(int x, int y);
+    Room *roomAt(const QPoint &pos)
+    { return roomAt(pos.x(), pos.y()); }
 
     QVector<QVector<int> > grid;
     int w, h;
-    WallTypes::WallType *exteriorWall;
-    QVector<WallTypes::WallType*> interiorWalls;
-    QVector<FloorTypes::FloorType*> floors;
-    QList<QRgb> colList;
-
-    Layout(int w, int h, bool bCreate);
-
-    QList<BaseMapObject*> Objects;
-
-    Layout(QImage *bmp, QList<BaseMapObject*> objects);
-
-    Door *GetDoorAt(int x, int y);
-    Window *GetWindowAt(int x, int y);
-    Stairs *GetStairsAt(int x, int y);
+    WallType *exteriorWall;
+    QVector<WallType*> interiorWalls;
+    QVector<FloorType*> floors;
+//    QList<QRgb> colList;
 };
 
-class BuildingFloor
+class Room
 {
 public:
-
-    class WallTile
-    {
-    public:
-        enum WallSection
-        {
-            N,
-            NDoor,
-            W,
-            WDoor,
-            NW,
-            SE,
-            WWindow,
-            NWindow
-        };
-
-        WallSection Section;
-        WallTypes::WallType *Type;
-
-        WallTile(WallSection section, WallTypes::WallType *type) :
-            Section(section),
-            Type(type)
-        {
-        }
-    };
-
-    class FloorTile
-    {
-    public:
-        FloorTypes::FloorType *Type;
-
-        FloorTile(FloorTypes::FloorType *type) :
-            Type(type)
-        {
-
-        }
-    };
-
-    int w, h;
-    WallTypes::WallType *exteriorWall;
-    QVector<WallTypes::WallType*> interiorWalls;
-    QVector<FloorTypes::FloorType*> floors;
-
-    class Square
-    {
-    public:
-        FloorTile *floorTile;
-        QList<WallTile*> walls;
-        QString stairsTexture;
-
-        bool Contains(WallTile::WallSection sec);
-
-        void Replace(WallTile *tile, WallTile::WallSection secToReplace);
-        void ReplaceWithDoor(WallTile::WallSection direction);
-        void ReplaceWithWindow(WallTile::WallSection direction);
-    };
-
-    QVector<QVector<Square> > squares;
-
-    Layout *layout;
-
-    BuildingFloor(Layout *layout);
-
-    bool IsTopStairAt(int x, int y);
+    QString Name;
+    QRgb Color;
+    QString internalName;
+    QString Floor;
+    QString Wall;
 };
 
 class BuildingDefinition
@@ -211,15 +169,6 @@ public:
     QString Name;
     QString Wall;
 
-    class Room
-    {
-    public:
-        QString Name;
-        QRgb Color;
-        QString internalName;
-        QString Floor;
-        QString Wall;
-    };
     QList<Room*> RoomList;
 
     static QList<BuildingDefinition*> Definitions;
@@ -230,12 +179,18 @@ class RoomDefinitionManager
 {
 public:
     static RoomDefinitionManager *instance;
+#if 1
+    BuildingDefinition *mBuildingDefinition;
+    QMap<QRgb,Room*> ColorToRoom;
+    QMap<Room*,QRgb> RoomToColor;
+#else
     QString BuildingName;
     QMap<QRgb,QString> ColorToRoomName;
     QMap<QString,QRgb> RoomNameToColor;
     QMap<QString,QString> WallForRoom;
     QMap<QString,QString> FloorForRoom;
     QStringList Rooms;
+#endif
     QString ExteriorWall;
     QString FrameStyleTilesheet;
     QString DoorStyleTilesheet;
@@ -257,190 +212,24 @@ public:
     void Init();
 
     QStringList FillCombo();
-
+#if 0
     QRgb Get(QString roomName);
+#endif
     int GetIndex(QRgb col);
+    int GetIndex(Room *room);
+    Room *getRoom(int index);
     int getRoomCount();
 
-    WallTypes::WallType *getWallForRoom(int i);
-    FloorTypes::FloorType *getFloorForRoom(int i);
+    WallType *getWallForRoom(int i);
+    FloorType *getFloorForRoom(int i);
     int getFromColor(QRgb pixel);
-    WallTypes::WallType *getWallForRoom(QString room);
-    FloorTypes::FloorType *getFloorForRoom(QString room);
+    WallType *getWallForRoom(QString room);
+    FloorType *getFloorForRoom(QString room);
     void setWallForRoom(QString room, QString tile);
     void setFloorForRoom(QString room, QString tile);
 };
 
-int WallType_getIndexFromSection(WallTypes::WallType *type, BuildingFloor::WallTile::WallSection section);
-
-class EditorFloor
-{
-public:
-    QImage *bmp;
-    int width;
-    int height;
-    Layout *layout;
-    QList<BaseMapObject*> Objects;
-
-    EditorFloor(int w, int h);
-
-    void UpdateLayout();
-
-    QImage *getBMP()
-    { return bmp; }
-};
-
-class MetaBuilding
-{
-public:
-    QVector<Layout*> floors;
-    QVector<BuildingFloor*> buildingFloors;
-    QImage bmp;
-
-    MetaBuilding(QVector<Layout*> floors, WallTypes::WallType *ext);
-};
-
-class GraphicsFloorItem : public QGraphicsItem
-{
-public:
-    GraphicsFloorItem(EditorFloor *floor);
-
-    QRectF boundingRect() const;
-
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-
-private:
-    EditorFloor *mFloor;
-};
-
-class GraphicsGridItem : public QGraphicsItem
-{
-public:
-    GraphicsGridItem(int width, int height);
-
-    QRectF boundingRect() const;
-
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-
-    void setSize(int width, int height);
-
-private:
-    int mWidth, mHeight;
-};
-
-/////
-
-class BaseTool : public QObject
-{
-    Q_OBJECT
-public:
-    BaseTool() :
-        QObject(0),
-        mEditor(0)
-    {}
-
-    virtual void setEditor(FloorEditor *editor)
-    { mEditor = editor; }
-
-    void setAction(QAction *action)
-    { mAction = action; }
-
-    QAction *action() const
-    { return mAction; }
-
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) = 0;
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) = 0;
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) = 0;
-
-public slots:
-    virtual void activate() = 0;
-    virtual void deactivate() = 0;
-
-protected:
-    FloorEditor *mEditor;
-    QAction *mAction;
-};
-
-class PencilTool : public BaseTool
-{
-    Q_OBJECT
-public:
-    static PencilTool *instance();
-
-    PencilTool();
-
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-
-public slots:
-    void activate();
-    void deactivate();
-
-private:
-    static PencilTool *mInstance;
-    bool mMouseDown;
-};
-
-class EraserTool : public BaseTool
-{
-    Q_OBJECT
-public:
-    static EraserTool *instance();
-
-    EraserTool();
-
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-
-public slots:
-    void activate();
-    void deactivate();
-
-private:
-    static EraserTool *mInstance;
-    bool mMouseDown;
-};
-
-/////
-
-class FloorEditor : public QGraphicsScene
-{
-    Q_OBJECT
-
-public:
-    explicit FloorEditor(QWidget *parent = 0);
-
-    QList<EditorFloor*> floors;
-    EditorFloor *currentFloor;
-    GraphicsFloorItem *mCurrentFloorItem;
-    MetaBuilding *building;
-    int Floor;
-
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-
-    void UpdateMetaBuilding();
-
-    void UpFloor();
-    void DownFloor();
-
-    int posY, posX;
-    int wallSnapX, wallSnapY;
-    bool vertWall;
-    BaseMapObject::Direction dir;
-
-    void ProcessMove(int x, int y);
-
-    void activateTool(BaseTool *tool);
-    QPoint sceneToTile(const QPointF &scenePos);
-    bool currentFloorContains(const QPoint &tilePos);
-
-private:
-    BaseTool *mCurrentTool;
-};
+//int WallType_getIndexFromSection(WallType *type, BuildingFloor::WallTile::WallSection section);
 
 class BuildingEditorWindow : public QMainWindow
 {
@@ -456,12 +245,14 @@ public:
 
     bool LoadBuildingTemplates();
 
-    QString currentRoom() const;
+    Room *currentRoom() const;
 
 private:
     Ui::BuildingEditorWindow *ui;
+    BuildingDocument *mCurrentDocument;
     FloorEditor *roomEditor;
     QComboBox *room;
+    QUndoGroup *mUndoGroup;
 };
 
 } // namespace BuildingEditor

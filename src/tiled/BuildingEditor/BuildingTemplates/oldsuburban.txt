@@ -3,7 +3,7 @@ Wall=walls_exterior_house_01_32
 {
 	Name= Foyer,
 	Color = 255 255 255,
-	InternalName = hall,
+	InternalName = foyer,
 	Floor = floors_interior_tilesandwood_01_43,
 	Wall = location_hospitality_sunstarmotel_01_4
 }

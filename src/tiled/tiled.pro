@@ -150,7 +150,12 @@ SOURCES += aboutdialog.cpp \
     converttolotdialog.cpp \
     BuildingEditor/buildingeditorwindow.cpp \
     BuildingEditor/simplefile.cpp \
-    BuildingEditor/buildingtools.cpp
+    BuildingEditor/buildingtools.cpp \
+    BuildingEditor/FloorEditor.cpp \
+    BuildingEditor/buildingdocument.cpp \
+    BuildingEditor/building.cpp \
+    BuildingEditor/buildingfloor.cpp \
+    BuildingEditor/buildingundoredo.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -266,7 +271,12 @@ HEADERS += aboutdialog.h \
     converttolotdialog.h \
     BuildingEditor/buildingeditorwindow.h \
     BuildingEditor/simplefile.h \
-    BuildingEditor/buildingtools.h
+    BuildingEditor/buildingtools.h \
+    BuildingEditor/FloorEditor.h \
+    BuildingEditor/buildingdocument.h \
+    BuildingEditor/building.h \
+    BuildingEditor/buildingfloor.h \
+    BuildingEditor/buildingundoredo.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

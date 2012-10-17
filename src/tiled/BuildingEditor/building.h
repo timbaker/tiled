@@ -15,49 +15,38 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SIMPLEFILE_H
-#define SIMPLEFILE_H
+#ifndef BUILDING_H
+#define BUILDING_H
 
-#include <QString>
-#include <QTextStream>
+#include <QList>
 
-class SimpleFileKeyValue
+namespace BuildingEditor {
+
+class BuildingFloor;
+class Layout;
+class WallType;
+
+class Building
 {
 public:
-    QString name;
-    QString value;
-};
+    Building(int width, int height);
 
-class SimpleFileBlock
-{
-public:
-    QString name;
-    QList<SimpleFileKeyValue> values;
-    QList<SimpleFileBlock> blocks;
+    int width() const { return mWidth; }
+    int height() const { return mHeight; }
 
-    QString value(const char *key)
-    { return value(QLatin1String(key)); }
+    void recreate(const QList<Layout*> &layouts, WallType *wallType);
 
-    QString value(const QString &key);
+    const QList<BuildingFloor*> &floors() const
+    { return mFloors; }
 
-    SimpleFileBlock block(const char *name)
-    { return block(QLatin1String(name)); }
-
-    SimpleFileBlock block(const QString &name);
-
-    void print();
-};
-
-
-class SimpleFile : public SimpleFileBlock
-{
-public:
-    SimpleFile();
-
-    bool read(const QString &filePath);
+    void insertFloor(int index, BuildingFloor *floor);
+    BuildingFloor *removeFloor(int index);
 
 private:
-    SimpleFileBlock readBlock(QTextStream &ts);
+    int mWidth, mHeight;
+    QList<BuildingFloor*> mFloors;
 };
 
-#endif // SIMPLEFILE_H
+} // namespace BuildingEditor
+
+#endif // BUILDING_H
