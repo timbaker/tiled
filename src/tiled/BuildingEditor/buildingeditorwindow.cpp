@@ -60,6 +60,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 
     QGraphicsView *view = new QGraphicsView(this);
     view->setScene(roomEditor);
+    view->setMouseTracking(true);
 
     setCentralWidget(view);
 

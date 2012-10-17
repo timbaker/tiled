@@ -19,8 +19,10 @@
 #define BUILDINGTOOLS_H
 
 #include <QObject>
+#include <QPointF>
 
 class QAction;
+class QGraphicsRectItem;
 class QGraphicsSceneMouseEvent;
 
 namespace BuildingEditor {
@@ -77,8 +79,13 @@ public slots:
     void deactivate();
 
 private:
+    void updateCursor(const QPointF &scenePos);
+
+private:
     static PencilTool *mInstance;
     bool mMouseDown;
+    bool mInitialPaint;
+    QGraphicsRectItem *mCursor;
 };
 
 class EraserTool : public BaseTool
@@ -100,6 +107,7 @@ public slots:
 private:
     static EraserTool *mInstance;
     bool mMouseDown;
+    bool mInitialPaint;
 };
 
 } // namespace BuildingEditor

@@ -102,6 +102,7 @@ public:
 
     void activateTool(BaseTool *tool);
     QPoint sceneToTile(const QPointF &scenePos);
+    QRectF tileToSceneRect(const QPoint &tilePos);
     bool currentFloorContains(const QPoint &tilePos);
 
 private slots:

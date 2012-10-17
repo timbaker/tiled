@@ -23,6 +23,8 @@
 #include "buildingundoredo.h"
 #include "FloorEditor.h"
 
+#include <QDebug>
+#include <QGraphicsRectItem>
 #include <QGraphicsSceneMouseEvent>
 #include <QImage>
 #include <QUndoStack>
@@ -40,36 +42,32 @@ PencilTool *PencilTool::instance()
     return mInstance;
 }
 
-PencilTool::PencilTool()
-    : BaseTool()
+PencilTool::PencilTool() :
+    BaseTool(),
+    mMouseDown(false),
+    mCursor(new QGraphicsRectItem)
 {
 }
 
 void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-#if 0
-    QImage *bmp = mEditor->currentFloor->getBMP();
-#endif
+    mInitialPaint = true;
     QPoint tilePos = mEditor->sceneToTile(event->scenePos());
     if (mEditor->currentFloorContains(tilePos) &&
             mEditor->currentFloor->layout()->roomAt(tilePos) != BuildingEditorWindow::instance->currentRoom()) {
-#if 1
         mEditor->document()->undoStack()->push(new PaintRoom(mEditor->document(),
                                                              mEditor->currentFloor,
                                                              tilePos,
                                                              BuildingEditorWindow::instance->currentRoom()));
-#else
-        QString roomName = BuildingEditorWindow::instance->currentRoom();
-        bmp->setPixel(tilePos, RoomDefinitionManager::instance->Get(roomName));
-        mEditor->currentFloor->UpdateLayout(mEditor->currentFloor->layout->exteriorWall);
-        mEditor->mCurrentFloorItem->update();
-#endif
+        mInitialPaint = false;
     }
     mMouseDown = true;
 }
 
 void PencilTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    updateCursor(event->scenePos());
+
     if (mMouseDown) {
         QPoint tilePos = mEditor->sceneToTile(event->scenePos());
         if (mEditor->currentFloorContains(tilePos) &&
@@ -78,8 +76,9 @@ void PencilTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
                                            mEditor->currentFloor,
                                            tilePos,
                                            BuildingEditorWindow::instance->currentRoom());
-            cmd->setMergeable(true);
+            cmd->setMergeable(!mInitialPaint);
             mEditor->document()->undoStack()->push(cmd);
+            mInitialPaint = false;
         }
     }
 }
@@ -95,10 +94,21 @@ void PencilTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 void PencilTool::activate()
 {
     mEditor->activateTool(this);
+    mEditor->addItem(mCursor);
+    updateCursor(QPointF(-100,-100));
 }
 
 void PencilTool::deactivate()
 {
+    mEditor->removeItem(mCursor);
+}
+
+void PencilTool::updateCursor(const QPointF &scenePos)
+{
+    QPoint tilePos = mEditor->sceneToTile(scenePos);
+    mCursor->setRect(mEditor->tileToSceneRect(tilePos).adjusted(0,0,-1,-1));
+    mCursor->setBrush(QColor(BuildingEditorWindow::instance->currentRoom()->Color));
+    mCursor->setVisible(mEditor->currentFloorContains(tilePos));
 }
 
 /////
@@ -112,28 +122,22 @@ EraserTool *EraserTool::instance()
     return mInstance;
 }
 
-EraserTool::EraserTool()
-    : BaseTool()
+EraserTool::EraserTool() :
+    BaseTool(),
+    mMouseDown(false)
 {
 }
 
 void EraserTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-#if 0
-    QImage *bmp = mEditor->currentFloor->getBMP();
-#endif
+    mInitialPaint = true;
     QPoint tilePos = mEditor->sceneToTile(event->scenePos());
     if (mEditor->currentFloorContains(tilePos) &&
             mEditor->currentFloor->layout()->roomAt(tilePos) != 0) {
-#if 1
         mEditor->document()->undoStack()->push(new EraseRoom(mEditor->document(),
                                                              mEditor->currentFloor,
                                                              tilePos));
-#else
-        bmp->setPixel(tilePos, qRgb(0, 0, 0));
-        mEditor->currentFloor->UpdateLayout(mEditor->currentFloor->layout->exteriorWall);
-        mEditor->mCurrentFloorItem->update();
-#endif
+        mInitialPaint = false;
     }
     mMouseDown = true;
 }
@@ -147,8 +151,9 @@ void EraserTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
             EraseRoom *cmd = new EraseRoom(mEditor->document(),
                                                       mEditor->currentFloor,
                                                       tilePos);
-            cmd->setMergeable(true);
+            cmd->setMergeable(!mInitialPaint);
             mEditor->document()->undoStack()->push(cmd);
+            mInitialPaint = false;
         }
     }
 }

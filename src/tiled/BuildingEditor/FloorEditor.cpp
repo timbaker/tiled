@@ -171,6 +171,11 @@ QPoint FloorEditor::sceneToTile(const QPointF &scenePos)
     return QPoint(scenePos.x() / 30, scenePos.y() / 30);
 }
 
+QRectF FloorEditor::tileToSceneRect(const QPoint &tilePos)
+{
+    return QRectF(tilePos.x() * 30, tilePos.y() * 30, 30, 30);
+}
+
 bool FloorEditor::currentFloorContains(const QPoint &tilePos)
 {
     int x = tilePos.x(), y = tilePos.y();
