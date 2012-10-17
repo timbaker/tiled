@@ -20,6 +20,7 @@
 
 #include <QPoint>
 #include <QUndoCommand>
+#include <QVector>
 
 namespace BuildingEditor {
 
@@ -27,6 +28,11 @@ class BuildingDocument;
 class BuildingFloor;
 class Layout;
 class Room;
+
+enum {
+    UndoCmd_PaintRoom = 1000,
+    UndoCmd_EraseRoom = 1001
+};
 
 class ChangeRoomAtPosition : public QUndoCommand
 {
@@ -37,13 +43,41 @@ public:
     void undo() { swap(); }
     void redo() { swap(); }
 
+    bool mergeWith(const QUndoCommand *other);
+
+    void setMergeable(bool mergeable)
+    { mMergeable = mergeable; }
+
 private:
     void swap();
 
     BuildingDocument *mDocument;
     BuildingFloor *mFloor;
-    QPoint mPosition;
-    Room *mRoom;
+    class Changed {
+    public:
+        QPoint mPosition;
+        Room *mRoom;
+    };
+    QVector<Changed> mChanged;
+    bool mMergeable;
+};
+
+class PaintRoom : public ChangeRoomAtPosition
+{
+public:
+    PaintRoom(BuildingDocument *doc, BuildingFloor *floor,
+              const QPoint &pos, Room *room);
+
+    int id() const { return UndoCmd_PaintRoom; }
+};
+
+class EraseRoom : public ChangeRoomAtPosition
+{
+public:
+    EraseRoom(BuildingDocument *doc, BuildingFloor *floor,
+              const QPoint &pos);
+
+    int id() const { return UndoCmd_EraseRoom; }
 };
 
 } // namespace BuildingEditor

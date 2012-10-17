@@ -28,13 +28,61 @@ ChangeRoomAtPosition::ChangeRoomAtPosition(BuildingDocument *doc, BuildingFloor 
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Room At Position")),
     mDocument(doc),
     mFloor(floor),
-    mPosition(pos),
-    mRoom(room)
+    mMergeable(false)
 {
+    Changed changed;
+    changed.mPosition = pos;
+    changed.mRoom = room;
+    mChanged += changed;
+}
+
+bool ChangeRoomAtPosition::mergeWith(const QUndoCommand *other)
+{
+    const ChangeRoomAtPosition *o = static_cast<const ChangeRoomAtPosition*>(other);
+    if (!(mFloor == o->mFloor &&
+            o->mMergeable))
+        return false;
+
+    foreach (Changed changedOther, o->mChanged) {
+        bool ignore = false;
+        foreach (Changed changedSelf, mChanged) {
+            if (changedSelf.mPosition == changedOther.mPosition) {
+                ignore = true;
+                break;
+            }
+        }
+        if (!ignore)
+            mChanged += changedOther;
+    }
+
+    return true;
 }
 
 void ChangeRoomAtPosition::swap()
 {
-    mRoom = mDocument->changeRoomAtPosition(mFloor, mPosition, mRoom);
+    QVector<Changed> old;
+
+    foreach (Changed changed, mChanged) {
+        Changed changed2;
+        changed2.mRoom = mDocument->changeRoomAtPosition(mFloor, changed.mPosition, changed.mRoom);
+        changed2.mPosition = changed.mPosition;
+        old += changed2;
+    }
+
+    mChanged = old;
+}
+
+/////
+
+PaintRoom::PaintRoom(BuildingDocument *doc, BuildingFloor *floor, const QPoint &pos, Room *room) :
+    ChangeRoomAtPosition(doc, floor, pos, room)
+{
+    setText(QCoreApplication::translate("Undo Commands", "Paint Room"));
+}
+
+EraseRoom::EraseRoom(BuildingDocument *doc, BuildingFloor *floor, const QPoint &pos) :
+    ChangeRoomAtPosition(doc, floor, pos, 0)
+{
+    setText(QCoreApplication::translate("Undo Commands", "Erase Room"));
 }
 
