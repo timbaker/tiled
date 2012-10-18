@@ -80,6 +80,53 @@ public:
     int id() const { return UndoCmd_EraseRoom; }
 };
 
+class ChangeEWall : public QUndoCommand
+{
+public:
+    ChangeEWall(BuildingDocument *doc, const QString &tileName);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    QString mTileName;
+};
+
+class ChangeWallForRoom : public QUndoCommand
+{
+public:
+    ChangeWallForRoom(BuildingDocument *doc, Room *room, const QString &tileName);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    Room *mRoom;
+    QString mTileName;
+};
+
+class ChangeFloorForRoom : public QUndoCommand
+{
+public:
+    ChangeFloorForRoom(BuildingDocument *doc, Room *room, const QString &tileName);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    Room *mRoom;
+    QString mTileName;
+};
+
 } // namespace BuildingEditor
 
 #endif // BUILDINGUNDOREDO_H

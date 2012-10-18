@@ -44,10 +44,14 @@ public:
 
     // +UNDO/REDO
     Room *changeRoomAtPosition(BuildingFloor *floor, const QPoint &pos, Room *room);
+    QString changeEWall(const QString &tileName);
+    QString changeWallForRoom(Room *room, const QString &tileName);
+    QString changeFloorForRoom(Room *room, const QString &tileName);
     // -UNDO/REDO
     
 signals:
     void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
+    void roomDefinitionChanged();
     
 public slots:
     

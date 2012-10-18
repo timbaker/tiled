@@ -43,9 +43,20 @@ void BuildingFloor::LayoutToSquares()
 
     WallType *wtype = 0;
 
+#if 1
+    exteriorWall = WallTypes::instance->getOrAdd(RoomDefinitionManager::instance->ExteriorWall);
+    interiorWalls.clear();
+    floors.clear();
+    int nRooms = RoomDefinitionManager::instance->getRoomCount();
+    for (int i = 0; i < nRooms; i++) {
+        interiorWalls += RoomDefinitionManager::instance->getWallForRoom(i);
+        floors += RoomDefinitionManager::instance->getFloorForRoom(i);
+    }
+#else
     exteriorWall = l->exteriorWall;
     interiorWalls = l->interiorWalls;
     floors = l->floors;
+#endif
 
     // first put back walls in...
 

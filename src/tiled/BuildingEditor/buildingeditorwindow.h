@@ -18,6 +18,7 @@
 #ifndef BUILDINGEDITORWINDOW_H
 #define BUILDINGEDITORWINDOW_H
 
+#include <QItemSelection>
 #include <QMainWindow>
 #include <QMap>
 #include <QVector>
@@ -231,8 +232,8 @@ public:
     int getFromColor(QRgb pixel);
     WallType *getWallForRoom(QString room);
     FloorType *getFloorForRoom(QString room);
-    void setWallForRoom(QString room, QString tile);
-    void setFloorForRoom(QString room, QString tile);
+    void setWallForRoom(Room *room, QString tile);
+    void setFloorForRoom(Room *room, QString tile);
 };
 
 class BuildingEditorWindow : public QMainWindow
@@ -258,8 +259,13 @@ public:
 
     Tiled::Tile *tileFor(const QString &tileName);
 
+    QString nameForTile(Tiled::Tile *tile);
+
 private slots:
     void roomIndexChanged(int index);
+    void currentEWallChanged(const QItemSelection &selected);
+    void currentIWallChanged(const QItemSelection &selected);
+    void currentFloorChanged(const QItemSelection &selected);
 
 private:
     Ui::BuildingEditorWindow *ui;

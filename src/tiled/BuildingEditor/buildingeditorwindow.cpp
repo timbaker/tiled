@@ -22,11 +22,13 @@
 #include "buildingdocument.h"
 #include "buildingfloor.h"
 #include "buildingpreviewwindow.h"
+#include "buildingundoredo.h"
 #include "buildingtools.h"
 #include "FloorEditor.h"
 #include "mixedtilesetview.h"
 #include "simplefile.h"
 
+#include "tile.h"
 #include "tileset.h"
 #include "tilesetmanager.h"
 
@@ -96,12 +98,18 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 
     Tiled::Internal::MixedTilesetView *w = new Tiled::Internal::MixedTilesetView(toolBox);
     toolBox->addItem(w, tr("External Walls"));
+    connect(w->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            SLOT(currentEWallChanged(QItemSelection)));
 
     w = new Tiled::Internal::MixedTilesetView(toolBox);
     toolBox->addItem(w, tr("Internal Walls"));
+    connect(w->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            SLOT(currentIWallChanged(QItemSelection)));
 
     w = new Tiled::Internal::MixedTilesetView(toolBox);
     toolBox->addItem(w, tr("Floors"));
+    connect(w->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            SLOT(currentFloorChanged(QItemSelection)));
 
     /////
 
@@ -111,6 +119,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     redoAction->setShortcuts(QKeySequence::Redo);
     ui->menuEdit->insertAction(0, redoAction);
     ui->menuEdit->insertAction(0, undoAction);
+
+    /////
+
 }
 
 BuildingEditorWindow::~BuildingEditorWindow()
@@ -370,8 +381,57 @@ Tiled::Tile *BuildingEditorWindow::tileFor(const QString &tileName)
     return mTilesetByName[tilesetName]->tileAt(index);
 }
 
+QString BuildingEditorWindow::nameForTile(Tile *tile)
+{
+    return tile->tileset()->name() + QLatin1String("_") + QString::number(tile->id());
+}
+
 void BuildingEditorWindow::roomIndexChanged(int index)
 {
+}
+
+void BuildingEditorWindow::currentEWallChanged(const QItemSelection &selected)
+{
+    QModelIndexList indexes = selected.indexes();
+    if (indexes.count() == 1) {
+        QModelIndex index = indexes.first();
+        const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
+        Tile *tile = m->tileAt(index);
+        if (!tile)
+            return;
+        mCurrentDocument->undoStack()->push(new ChangeEWall(mCurrentDocument,
+                                                            nameForTile(tile)));
+    }
+}
+
+void BuildingEditorWindow::currentIWallChanged(const QItemSelection &selected)
+{
+    QModelIndexList indexes = selected.indexes();
+    if (indexes.count() == 1) {
+        QModelIndex index = indexes.first();
+        const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
+        Tile *tile = m->tileAt(index);
+        if (!tile)
+            return;
+        mCurrentDocument->undoStack()->push(new ChangeWallForRoom(mCurrentDocument,
+                                                                  currentRoom(),
+                                                                  nameForTile(tile)));
+    }
+}
+
+void BuildingEditorWindow::currentFloorChanged(const QItemSelection &selected)
+{
+    QModelIndexList indexes = selected.indexes();
+    if (indexes.count() == 1) {
+        QModelIndex index = indexes.first();
+        const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
+        Tile *tile = m->tileAt(index);
+        if (!tile)
+            return;
+        mCurrentDocument->undoStack()->push(new ChangeFloorForRoom(mCurrentDocument,
+                                                                   currentRoom(),
+                                                                   nameForTile(tile)));
+    }
 }
 
 /////
@@ -509,7 +569,7 @@ WallType *RoomDefinitionManager::getWallForRoom(int i)
         QString name = room->Wall;
         QString id = room->Wall;
         name = name.mid(0, name.lastIndexOf(QLatin1Char('_')));
-        id = id.mid(name.lastIndexOf(QLatin1Char('_')) + 1);
+        id = id.mid(id.lastIndexOf(QLatin1Char('_')) + 1);
         WallType *wall = new WallType(name, id.toInt());
         WallTypes::instance->ITypes += wall;
         WallTypes::instance->ITypesByName[room->Wall] = wall;
@@ -524,12 +584,22 @@ FloorType *RoomDefinitionManager::getFloorForRoom(int i)
         QString name = room->Floor;
         QString id = room->Floor;
         name = name.mid(0, name.lastIndexOf(QLatin1Char('_')));
-        id = id.mid(name.lastIndexOf(QLatin1Char('_')) + 1);
-        FloorType *wall = new FloorType(name, id.toInt());
-        FloorTypes::instance->Types += wall;
-        FloorTypes::instance->TypesByName[room->Floor] = wall;
+        id = id.mid(id.lastIndexOf(QLatin1Char('_')) + 1);
+        FloorType *floor = new FloorType(name, id.toInt());
+        FloorTypes::instance->Types += floor;
+        FloorTypes::instance->TypesByName[room->Floor] = floor;
     }
     return FloorTypes::instance->TypesByName[room->Floor];
+}
+
+void RoomDefinitionManager::setWallForRoom(Room *room, QString tile)
+{
+    room->Wall = tile;
+}
+
+void RoomDefinitionManager::setFloorForRoom(Room *room, QString tile)
+{
+    room->Floor = tile;
 }
 
 /////

@@ -86,6 +86,12 @@ public:
         Square() :
             floorTile(0)
         {}
+        ~Square()
+        {
+            delete floorTile;
+            qDeleteAll(walls);
+        }
+
         FloorTile *floorTile;
         QList<WallTile*> walls;
         QString stairsTexture;

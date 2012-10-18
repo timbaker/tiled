@@ -90,9 +90,9 @@ void CompositeLayerGroupItem::paint(QPainter *p, const QStyleOptionGraphicsItem 
     mRenderer->drawTileLayerGroup(p, mLayerGroup, option->exposedRect);
 #ifdef _DEBUG
     p->drawRect(mBoundingRect);
-#endif
 
     mRenderer->drawGrid(p, option->exposedRect, Qt::black, mLayerGroup->level());
+#endif
 }
 
 void CompositeLayerGroupItem::synchWithTileLayers()
@@ -199,6 +199,8 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
 
     connect(mDocument, SIGNAL(roomAtPositionChanged(BuildingFloor*,QPoint)),
             SLOT(roomAtPositionChanged(BuildingFloor*,QPoint)));
+    connect(mDocument, SIGNAL(roomDefinitionChanged()),
+            SLOT(roomDefinitionChanged()));
 }
 
 void BuildingPreviewScene::BuildingToMap()
@@ -279,6 +281,16 @@ void BuildingPreviewScene::roomAtPositionChanged(BuildingFloor *floor, const QPo
     BuildingFloorToTileLayers(floor, mMapComposite->tileLayersForLevel(floor->level())->layers());
     mLayerGroupItems[floor->level()]->synchWithTileLayers();
     mLayerGroupItems[floor->level()]->updateBounds();
+}
+
+void BuildingPreviewScene::roomDefinitionChanged()
+{
+    foreach (BuildingFloor *floor, mDocument->building()->floors()) {
+        floor->LayoutToSquares();
+        BuildingFloorToTileLayers(floor, mMapComposite->tileLayersForLevel(floor->level())->layers());
+        mLayerGroupItems[floor->level()]->synchWithTileLayers();
+        mLayerGroupItems[floor->level()]->updateBounds();
+    }
 }
 
 /////

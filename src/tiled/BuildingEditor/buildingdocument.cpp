@@ -42,3 +42,27 @@ Room *BuildingDocument::changeRoomAtPosition(BuildingFloor *floor, const QPoint 
     emit roomAtPositionChanged(floor, pos);
     return (old >= 0) ? RoomDefinitionManager::instance->getRoom(old) : 0;
 }
+
+QString BuildingDocument::changeEWall(const QString &tileName)
+{
+    QString old = RoomDefinitionManager::instance->ExteriorWall;
+    RoomDefinitionManager::instance->ExteriorWall = tileName;
+    emit roomDefinitionChanged();
+    return old;
+}
+
+QString BuildingDocument::changeWallForRoom(Room *room, const QString &tileName)
+{
+    QString old = room->Wall;
+    RoomDefinitionManager::instance->setWallForRoom(room, tileName);
+    emit roomDefinitionChanged();
+    return old;
+}
+
+QString BuildingDocument::changeFloorForRoom(Room *room, const QString &tileName)
+{
+    QString old = room->Floor;
+    RoomDefinitionManager::instance->setFloorForRoom(room, tileName);
+    emit roomDefinitionChanged();
+    return old;
+}

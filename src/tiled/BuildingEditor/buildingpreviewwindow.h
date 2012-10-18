@@ -97,6 +97,7 @@ public:
 
 private slots:
     void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
+    void roomDefinitionChanged();
 
 private:
     BuildingDocument *mDocument;

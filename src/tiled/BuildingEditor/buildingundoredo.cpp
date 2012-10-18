@@ -18,6 +18,7 @@
 #include "buildingundoredo.h"
 
 #include "buildingdocument.h"
+#include "buildingeditorwindow.h"
 
 #include <QCoreApplication>
 
@@ -85,4 +86,50 @@ EraseRoom::EraseRoom(BuildingDocument *doc, BuildingFloor *floor, const QPoint &
 {
     setText(QCoreApplication::translate("Undo Commands", "Erase Room"));
 }
+
+/////
+
+ChangeEWall::ChangeEWall(BuildingDocument *doc, const QString &tileName) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change External Wall")),
+    mDocument(doc),
+    mTileName(tileName)
+{
+}
+
+void ChangeEWall::swap()
+{
+    mTileName = mDocument->changeEWall(mTileName);
+}
+
+/////
+
+ChangeWallForRoom::ChangeWallForRoom(BuildingDocument *doc, Room *room, const QString &tileName) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Room's Wall")),
+    mDocument(doc),
+    mRoom(room),
+    mTileName(tileName)
+{
+}
+
+void ChangeWallForRoom::swap()
+{
+    mTileName = mDocument->changeWallForRoom(mRoom, mTileName);
+}
+
+/////
+
+ChangeFloorForRoom::ChangeFloorForRoom(BuildingDocument *doc, Room *room, const QString &tileName) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Room's Floor")),
+    mDocument(doc),
+    mRoom(room),
+    mTileName(tileName)
+{
+}
+
+void ChangeFloorForRoom::swap()
+{
+    mTileName = mDocument->changeFloorForRoom(mRoom, mTileName);
+}
+
+/////
 
