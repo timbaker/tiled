@@ -39,6 +39,12 @@ public:
     const QList<BuildingFloor*> &floors() const
     { return mFloors; }
 
+    BuildingFloor *floor(int index)
+    { return mFloors.at(index); }
+
+    int floorCount() const
+    { return mFloors.count(); }
+
     void insertFloor(int index, BuildingFloor *floor);
     BuildingFloor *removeFloor(int index);
 

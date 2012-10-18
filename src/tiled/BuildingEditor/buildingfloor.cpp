@@ -29,6 +29,16 @@ BuildingFloor::BuildingFloor(Building *building, int level) :
 {
 }
 
+void BuildingFloor::insertObject(int index, BaseMapObject *object)
+{
+    mObjects.insert(index, object);
+}
+
+BaseMapObject *BuildingFloor::removeObject(int index)
+{
+    return mObjects.takeAt(index);
+}
+
 void BuildingFloor::LayoutToSquares()
 {
     Layout *l = mLayout;
@@ -141,18 +151,18 @@ void BuildingFloor::LayoutToSquares()
             Door *door = GetDoorAt(x, y);
             if (door != 0)
             {
-                if (door->dir == BaseMapObject::N)
+                if (door->dir() == BaseMapObject::N)
                     squares[x][y].ReplaceWithDoor(WallTile::N);
-                if (door->dir == BaseMapObject::W)
+                if (door->dir() == BaseMapObject::W)
                     squares[x][y].ReplaceWithDoor(WallTile::W);
             }
 
             Window *window = GetWindowAt(x, y);
             if (window != 0)
             {
-                if (window->dir == BaseMapObject::N)
+                if (window->dir() == BaseMapObject::N)
                     squares[x][y].ReplaceWithWindow(WallTile::N);
-                if (window->dir == BaseMapObject::W)
+                if (window->dir() == BaseMapObject::W)
                     squares[x][y].ReplaceWithWindow(WallTile::W);
             }
 
@@ -175,7 +185,7 @@ void BuildingFloor::LayoutToSquares()
 
 Door *BuildingFloor::GetDoorAt(int x, int y)
 {
-    foreach (BaseMapObject *o, Objects) {
+    foreach (BaseMapObject *o, mObjects) {
         if (!o->bounds().contains(x, y))
             continue;
         if (Door *door = dynamic_cast<Door*>(o))
@@ -186,7 +196,7 @@ Door *BuildingFloor::GetDoorAt(int x, int y)
 
 Window *BuildingFloor::GetWindowAt(int x, int y)
 {
-    foreach (BaseMapObject *o, Objects) {
+    foreach (BaseMapObject *o, mObjects) {
         if (!o->bounds().contains(x, y))
             continue;
         if (Window *window = dynamic_cast<Window*>(o))
@@ -197,7 +207,7 @@ Window *BuildingFloor::GetWindowAt(int x, int y)
 
 Stairs *BuildingFloor::GetStairsAt(int x, int y)
 {
-    foreach (BaseMapObject *o, Objects) {
+    foreach (BaseMapObject *o, mObjects) {
         if (!o->bounds().contains(x, y))
             continue;
         if (Stairs *stairs = dynamic_cast<Stairs*>(o))

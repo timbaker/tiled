@@ -20,11 +20,13 @@
 
 #include <QObject>
 #include <QPoint>
+#include <QSet>
 
 class QUndoStack;
 
 namespace BuildingEditor {
 
+class BaseMapObject;
 class Building;
 class BuildingFloor;
 class Layout;
@@ -39,26 +41,49 @@ public:
     Building *building() const
     { return mBuilding; }
 
+    void setCurrentFloor(BuildingFloor *floor);
+
+    BuildingFloor *currentFloor() const
+    { return mCurrentFloor; }
+
     QUndoStack *undoStack() const
     { return mUndoStack; }
+
+    void setSelectedObjects(const QSet<BaseMapObject*> &selection);
+
+    const QSet<BaseMapObject*> &selectedObjects() const
+    { return mSelectedObjects; }
 
     // +UNDO/REDO
     Room *changeRoomAtPosition(BuildingFloor *floor, const QPoint &pos, Room *room);
     QString changeEWall(const QString &tileName);
     QString changeWallForRoom(Room *room, const QString &tileName);
     QString changeFloorForRoom(Room *room, const QString &tileName);
+    void insertFloor(int index, BuildingFloor *floor);
+    void insertObject(BuildingFloor *floor, int index, BaseMapObject *object);
+    BaseMapObject *removeObject(BuildingFloor *floor, int index);
+    QPoint moveObject(BaseMapObject *object, const QPoint &pos);
     // -UNDO/REDO
     
 signals:
+    void currentFloorChanged();
     void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
     void roomDefinitionChanged();
-    
+    void floorAdded(BuildingFloor *floor);
+    void objectAdded(BaseMapObject *object);
+    void objectAboutToBeRemoved(BaseMapObject *object);
+    void objectRemoved(BuildingFloor *floor, int index);
+    void objectMoved(BaseMapObject *object);
+    void selectedObjectsChanged();
+
 public slots:
     
 private:
     Building *mBuilding;
     QString mFilePath;
     QUndoStack *mUndoStack;
+    BuildingFloor *mCurrentFloor;
+    QSet<BaseMapObject*> mSelectedObjects;
 };
 
 } // namespace BuildingEditor

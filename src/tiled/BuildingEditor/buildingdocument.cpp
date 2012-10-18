@@ -32,6 +32,18 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
 {
 }
 
+void BuildingDocument::setCurrentFloor(BuildingFloor *floor)
+{
+    mCurrentFloor = floor;
+    emit currentFloorChanged();
+}
+
+void BuildingDocument::setSelectedObjects(const QSet<BaseMapObject *> &selection)
+{
+    mSelectedObjects = selection;
+    emit selectedObjectsChanged();
+}
+
 Room *BuildingDocument::changeRoomAtPosition(BuildingFloor *floor, const QPoint &pos, Room *room)
 {
     Layout *layout = floor->layout();
@@ -64,5 +76,41 @@ QString BuildingDocument::changeFloorForRoom(Room *room, const QString &tileName
     QString old = room->Floor;
     RoomDefinitionManager::instance->setFloorForRoom(room, tileName);
     emit roomDefinitionChanged();
+    return old;
+}
+
+void BuildingDocument::insertFloor(int index, BuildingFloor *floor)
+{
+    building()->insertFloor(index, floor);
+    emit floorAdded(floor);
+}
+
+void BuildingDocument::insertObject(BuildingFloor *floor, int index, BaseMapObject *object)
+{
+    Q_ASSERT(object->floor() == floor);
+    floor->insertObject(index, object);
+    emit objectAdded(object);
+}
+
+BaseMapObject *BuildingDocument::removeObject(BuildingFloor *floor, int index)
+{
+    BaseMapObject *object = floor->object(index);
+
+    if (mSelectedObjects.contains(object)) {
+        mSelectedObjects.remove(object);
+        emit selectedObjectsChanged();
+    }
+
+    emit objectAboutToBeRemoved(object);
+    floor->removeObject(index);
+    emit objectRemoved(floor, index);
+    return object;
+}
+
+QPoint BuildingDocument::moveObject(BaseMapObject *object, const QPoint &pos)
+{
+    QPoint old = object->pos();
+    object->setPos(pos);
+    emit objectMoved(object);
     return old;
 }

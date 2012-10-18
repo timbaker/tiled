@@ -86,12 +86,84 @@ void GraphicsGridItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
 /////
 
+GraphicsObjectItem::GraphicsObjectItem(FloorEditor *editor, BaseMapObject *object) :
+    QGraphicsItem(),
+    mEditor(editor),
+    mObject(object),
+    mDragging(false)
+{
+    synchWithObject();
+}
+
+QRectF GraphicsObjectItem::boundingRect() const
+{
+    return mBoundingRect;
+}
+
+void GraphicsObjectItem::paint(QPainter *painter,
+                               const QStyleOptionGraphicsItem *,
+                               QWidget *)
+{
+    QPoint dragOffset = mDragging ? mDragOffset : QPoint();
+
+    // Screw you, polymorphism!!!
+    if (Door *door = dynamic_cast<Door*>(mObject)) {
+        if (door->dir() == Door::N) {
+            QPointF p = mEditor->tileToScene(door->pos() + dragOffset);
+            painter->fillRect(p.x(), p.y() - 5, 30, 10, Qt::white);
+            QPen pen(Qt::blue);
+            painter->setPen(pen);
+            painter->drawRect(p.x(), p.y() - 5, 30, 10);
+        }
+        if (door->dir() == Door::W) {
+            QPointF p = mEditor->tileToScene(door->pos() + dragOffset);
+            painter->fillRect(p.x() - 5, p.y(), 10, 30, Qt::white);
+            QPen pen(Qt::blue);
+            painter->setPen(pen);
+            painter->drawRect(p.x() - 5, p.y(), 10, 30);
+        }
+    }
+}
+
+void GraphicsObjectItem::setObject(BaseMapObject *object)
+{
+    mObject = object;
+    synchWithObject();
+    update();
+}
+
+void GraphicsObjectItem::synchWithObject()
+{
+    QRectF bounds = mEditor->tileToSceneRect(mObject->bounds()
+                                             .translated(mDragging ? mDragOffset : QPoint()));
+    bounds.adjust(-10, -10, 10, 10);
+    if (bounds != mBoundingRect) {
+        prepareGeometryChange();
+        mBoundingRect = bounds;
+    }
+}
+
+void GraphicsObjectItem::setDragging(bool dragging)
+{
+    mDragging = dragging;
+    synchWithObject();
+}
+
+void GraphicsObjectItem::setDragOffset(const QPoint &offset)
+{
+    mDragOffset = offset;
+    synchWithObject();
+}
+
+/////
+
 FloorEditor::FloorEditor(QWidget *parent) :
     QGraphicsScene(parent),
     mDocument(0),
     mCurrentTool(0)
 {
     setBackgroundBrush(Qt::black);
+
 }
 
 void FloorEditor::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -142,9 +214,34 @@ void FloorEditor::setDocument(BuildingDocument *doc)
 
     mDocument = doc;
 
+    clear();
+
+    mFloorItems.clear();
+    foreach (BuildingFloor *floor, building()->floors())
+        floorAdded(floor);
+
+    GraphicsGridItem *item = new GraphicsGridItem(building()->width(),
+                                                  building()->height());
+    item->setZValue(20);
+    addItem(item);
+
+    setSceneRect(-10, -10,
+                 building()->width() * 30 + 10,
+                 building()->height() * 30 + 10);
+
     if (mDocument) {
+        connect(mDocument, SIGNAL(currentFloorChanged()),
+                SLOT(currentFloorChanged()));
         connect(mDocument, SIGNAL(roomAtPositionChanged(BuildingFloor*,QPoint)),
                 SLOT(roomAtPositionChanged(BuildingFloor*,QPoint)));
+        connect(mDocument, SIGNAL(floorAdded(BuildingFloor*)),
+                SLOT(floorAdded(BuildingFloor*)));
+        connect(mDocument, SIGNAL(objectAdded(BaseMapObject*)),
+                SLOT(objectAdded(BaseMapObject*)));
+        connect(mDocument, SIGNAL(objectAboutToBeRemoved(BaseMapObject*)),
+                SLOT(objectAboutToBeRemoved(BaseMapObject*)));
+        connect(mDocument, SIGNAL(objectMoved(BaseMapObject*)),
+                SLOT(objectMoved(BaseMapObject*)));
     }
 }
 
@@ -172,17 +269,73 @@ QPoint FloorEditor::sceneToTile(const QPointF &scenePos)
     return QPoint(scenePos.x() / 30, scenePos.y() / 30);
 }
 
+QPointF FloorEditor::sceneToTileF(const QPointF &scenePos)
+{
+    return scenePos / 30;
+}
+
+QRect FloorEditor::sceneToTileRect(const QRectF &sceneRect)
+{
+    QPoint topLeft = sceneToTile(sceneRect.topLeft());
+    QPoint botRight = sceneToTile(sceneRect.bottomRight());
+    return QRect(topLeft, botRight);
+}
+
+QPointF FloorEditor::tileToScene(const QPoint &tilePos)
+{
+    return tilePos * 30;
+}
+
 QRectF FloorEditor::tileToSceneRect(const QPoint &tilePos)
 {
     return QRectF(tilePos.x() * 30, tilePos.y() * 30, 30, 30);
 }
 
+QRectF FloorEditor::tileToSceneRect(const QRect &tileRect)
+{
+    return QRectF(tileRect.x() * 30, tileRect.y() * 30,
+                  tileRect.width() * 30, tileRect.height() * 30);
+}
+
 bool FloorEditor::currentFloorContains(const QPoint &tilePos)
 {
     int x = tilePos.x(), y = tilePos.y();
-    if (x < 0 || y < 0 || x >= currentFloor->width() || y >= currentFloor->height())
+    if (x < 0 || y < 0
+            || x >= mDocument->currentFloor()->width()
+            || y >= mDocument->currentFloor()->height())
         return false;
     return true;
+}
+
+GraphicsObjectItem *FloorEditor::itemForObject(BaseMapObject *object)
+{
+    foreach (GraphicsObjectItem *item, mObjectItems) {
+        if (item->object() == object)
+            return item;
+    }
+    return 0;
+}
+
+QSet<BaseMapObject*> FloorEditor::objectsInRect(const QRectF &sceneRect)
+{
+    QSet<BaseMapObject*> objects;
+    QRect tileRect = sceneToTileRect(sceneRect);
+    foreach (BaseMapObject *object, mDocument->currentFloor()->objects()) {
+        if (object->bounds().intersects(tileRect))
+            objects.insert(object);
+    }
+    return objects;
+}
+
+void FloorEditor::currentFloorChanged()
+{
+    int level = mDocument->currentFloor()->level();
+    for (int i = 0; i <= level; i++) {
+        mFloorItems[i]->setOpacity((i == level) ? 1.0 : 0.15);
+        mFloorItems[i]->setVisible(true);
+    }
+    for (int i = level + 1; i < building()->floorCount(); i++)
+        mFloorItems[i]->setVisible(false);
 }
 
 void FloorEditor::roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos)
@@ -192,6 +345,40 @@ void FloorEditor::roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos)
 //    qDebug() << floor << pos << room;
     mFloorItems[index]->bmp()->setPixel(pos, room ? room->Color : qRgb(0, 0, 0));
     mFloorItems[index]->update();
+}
+
+void FloorEditor::floorAdded(BuildingFloor *floor)
+{
+    GraphicsFloorItem *item = new GraphicsFloorItem(floor);
+    mFloorItems.insert(floor->level(), item);
+    addItem(item);
+}
+
+void FloorEditor::objectAdded(BaseMapObject *object)
+{
+    Q_ASSERT(!itemForObject(object));
+    GraphicsObjectItem *item = new GraphicsObjectItem(this, object);
+    item->setParentItem(mFloorItems[object->floor()->level()]);
+    mObjectItems.insert(object->index(), item);
+    addItem(item);
+
+    for (int i = object->index(); i < mObjectItems.count(); i++)
+        mObjectItems[i]->setZValue(i);
+}
+
+void FloorEditor::objectAboutToBeRemoved(BaseMapObject *object)
+{
+    GraphicsObjectItem *item = itemForObject(object);
+    Q_ASSERT(item);
+    mObjectItems.removeAll(item);
+    removeItem(item);
+}
+
+void FloorEditor::objectMoved(BaseMapObject *object)
+{
+    GraphicsObjectItem *item = itemForObject(object);
+    Q_ASSERT(item);
+    item->synchWithObject();
 }
 
 /////

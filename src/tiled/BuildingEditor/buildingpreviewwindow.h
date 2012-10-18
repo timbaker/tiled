@@ -44,6 +44,7 @@ class BuildingPreviewWindow;
 
 namespace BuildingEditor {
 
+class BaseMapObject;
 class BuildingFloor;
 class BuildingDocument;
 
@@ -80,8 +81,6 @@ public:
     void setTilesets(const QMap<QString,Tiled::Tileset*> &tilesets)
     { mTilesetByName = tilesets; }
 
-    void BuildingToMap();
-    void BuildingFloorToTileLayers(BuildingFloor *floor, const QVector<Tiled::TileLayer *> &layers);
 
     QString errorString() const
     { return mError; }
@@ -95,9 +94,19 @@ public:
         Furniture
     };
 
+private:
+    void BuildingToMap();
+    void BuildingFloorToTileLayers(BuildingFloor *floor, const QVector<Tiled::TileLayer *> &layers);
+    void floorEdited(BuildingFloor *floor);
+
 private slots:
+    void currentFloorChanged();
     void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
     void roomDefinitionChanged();
+    void floorAdded(BuildingFloor *floor);
+    void objectAdded(BaseMapObject *object);
+    void objectRemoved(BuildingFloor *floor, int index);
+    void objectMoved(BaseMapObject *object);
 
 private:
     BuildingDocument *mDocument;

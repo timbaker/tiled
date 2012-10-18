@@ -24,6 +24,7 @@
 #include <QVector>
 
 class QComboBox;
+class QLabel;
 class QUndoGroup;
 
 namespace Ui {
@@ -39,6 +40,7 @@ namespace BuildingEditor {
 
 class BaseTool;
 class BuildingDocument;
+class BuildingFloor;
 class FloorEditor;
 class Room;
 
@@ -107,6 +109,36 @@ public:
     void Add(QString name, int first);
 };
 
+class DoorType
+{
+public:
+    QString Tilesheet;
+    int Index;
+
+    DoorType(QString tile, int ind) :
+        Tilesheet(tile),
+        Index(ind)
+    {
+
+    }
+
+    QString ToString()
+    {
+        return Tilesheet + QLatin1String("_") + QString::number(Index);
+    }
+};
+
+class DoorTypes
+{
+public:
+    static DoorTypes *instance;
+
+    QList<DoorType*> Types;
+    QMap<QString,DoorType*> TypesByName;
+
+    void Add(QString name, int first);
+};
+
 class BaseMapObject
 {
 public:
@@ -118,16 +150,47 @@ public:
         W
     };
 
-    virtual QRect bounds() const
-    { return QRect(X, Y, 1, 1); }
+    BaseMapObject(BuildingFloor *floor, int x, int y, Direction mDir);
 
-    Direction dir;
-    int X, Y;
- };
+    BuildingFloor *floor() const
+    { return mFloor; }
+
+    int index();
+
+    virtual QRect bounds() const
+    { return QRect(mX, mY, 1, 1); }
+
+    void setPos(int x, int y)
+    { mX = x, mY = y; }
+
+    void setPos(const QPoint &pos)
+    { mX = pos.x(), mY = pos.y(); }
+
+    QPoint pos() const
+    { return QPoint(mX, mY); }
+
+    void setDir(Direction dir)
+    { mDir = dir; }
+
+    Direction dir() const
+    { return mDir; }
+
+protected:
+    BuildingFloor *mFloor;
+    Direction mDir;
+    int mX;
+    int mY;
+};
 
 class Door : public BaseMapObject
 {
 public:
+    Door(BuildingFloor *floor, int x, int y, Direction dir) :
+        BaseMapObject(floor, x, y, dir)
+    {
+
+    }
+
 };
 
 class Stairs : public BaseMapObject
@@ -252,6 +315,7 @@ public:
     bool LoadBuildingTiles();
     bool LoadMapBaseXMLLots();
 
+    void setCurrentRoom(Room *room) const; // TODO: move to BuildingDocument
     Room *currentRoom() const;
 
     BuildingDocument *currentDocument() const
@@ -263,15 +327,20 @@ public:
 
 private slots:
     void roomIndexChanged(int index);
+
     void currentEWallChanged(const QItemSelection &selected);
     void currentIWallChanged(const QItemSelection &selected);
     void currentFloorChanged(const QItemSelection &selected);
+
+    void upLevel();
+    void downLevel();
 
 private:
     Ui::BuildingEditorWindow *ui;
     BuildingDocument *mCurrentDocument;
     FloorEditor *roomEditor;
     QComboBox *room;
+    QLabel *mFloorLabel;
     QUndoGroup *mUndoGroup;
     QMap<QString,Tiled::Tileset*> mTilesetByName;
     QString mError;

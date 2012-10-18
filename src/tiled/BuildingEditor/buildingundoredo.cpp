@@ -133,3 +133,60 @@ void ChangeFloorForRoom::swap()
 
 /////
 
+AddRemoveObject::AddRemoveObject(BuildingDocument *doc, BuildingFloor *floor,
+                                 int index, BaseMapObject *object) :
+    QUndoCommand(),
+    mDocument(doc),
+    mFloor(floor),
+    mIndex(index),
+    mObject(object)
+{
+}
+
+AddRemoveObject::~AddRemoveObject()
+{
+    delete mObject;
+}
+
+void AddRemoveObject::add()
+{
+    mDocument->insertObject(mFloor, mIndex, mObject);
+    mObject = 0;
+}
+
+void AddRemoveObject::remove()
+{
+    mObject = mDocument->removeObject(mFloor, mIndex);
+}
+
+AddObject::AddObject(BuildingDocument *doc, BuildingFloor *floor, int index,
+                     BaseMapObject *object) :
+    AddRemoveObject(doc, floor, index, object)
+{
+    setText(QCoreApplication::translate("Undo Commands", "Add Object"));
+}
+
+RemoveObject::RemoveObject(BuildingDocument *doc, BuildingFloor *floor,
+                           int index) :
+    AddRemoveObject(doc, floor, index, 0)
+{
+    setText(QCoreApplication::translate("Undo Commands", "Remove Object"));
+}
+
+/////
+
+MoveObject::MoveObject(BuildingDocument *doc, BaseMapObject *object, const QPoint &pos) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Move Object")),
+    mDocument(doc),
+    mObject(object),
+    mPos(pos)
+{
+}
+
+void MoveObject::swap()
+{
+    mPos = mDocument->moveObject(mObject, mPos);
+}
+
+/////
+

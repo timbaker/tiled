@@ -24,10 +24,12 @@
 namespace BuildingEditor {
 
 class BaseMapObject;
+class GraphicsObjectItem;
 class BaseTool;
 class Building;
 class BuildingDocument;
 class BuildingFloor;
+class FloorEditor;
 class Layout;
 class WallType;
 
@@ -65,15 +67,39 @@ private:
     int mWidth, mHeight;
 };
 
+class GraphicsObjectItem : public QGraphicsItem
+{
+public:
+    GraphicsObjectItem(FloorEditor *editor, BaseMapObject *object);
+
+    QRectF boundingRect() const;
+
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+    void setObject(BaseMapObject *object);
+
+    BaseMapObject *object() const
+    { return mObject; }
+
+    void synchWithObject();
+
+    void setDragging(bool dragging);
+    void setDragOffset(const QPoint &offset);
+
+private:
+    FloorEditor *mEditor;
+    BaseMapObject *mObject;
+    QRectF mBoundingRect;
+    bool mDragging;
+    QPoint mDragOffset;
+};
+
 class FloorEditor : public QGraphicsScene
 {
     Q_OBJECT
 
 public:
     explicit FloorEditor(QWidget *parent = 0);
-
-    BuildingFloor *currentFloor;
-    int Floor;
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
@@ -88,9 +114,6 @@ public:
 
     Building *building() const;
 
-    void UpFloor();
-    void DownFloor();
-
 #if 0
     int posY, posX;
     int wallSnapX, wallSnapY;
@@ -102,17 +125,29 @@ public:
 
     void activateTool(BaseTool *tool);
     QPoint sceneToTile(const QPointF &scenePos);
+    QPointF sceneToTileF(const QPointF &scenePos);
+    QRect sceneToTileRect(const QRectF &sceneRect);
+    QPointF tileToScene(const QPoint &tilePos);
     QRectF tileToSceneRect(const QPoint &tilePos);
+    QRectF tileToSceneRect(const QRect &tileRect);
     bool currentFloorContains(const QPoint &tilePos);
 
-private slots:
-    void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
+    GraphicsObjectItem *itemForObject(BaseMapObject *object);
 
-public:
-    QList<GraphicsFloorItem*> mFloorItems;
+    QSet<BaseMapObject*> objectsInRect(const QRectF &sceneRect);
+
+private slots:
+    void currentFloorChanged();
+    void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
+    void floorAdded(BuildingFloor *floor);
+    void objectAdded(BaseMapObject *object);
+    void objectAboutToBeRemoved(BaseMapObject *object);
+    void objectMoved(BaseMapObject *object);
 
 private:
     BuildingDocument *mDocument;
+    QList<GraphicsFloorItem*> mFloorItems;
+    QList<GraphicsObjectItem*> mObjectItems;
     BaseTool *mCurrentTool;
 };
 

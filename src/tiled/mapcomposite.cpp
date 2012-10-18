@@ -158,7 +158,7 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos, QVector<const Cell *
         if (!mVisibleLayers[index] || mEmptyLayers[index])
 #endif
             continue;
-        QPoint subPos = pos - mOwner->orientAdjustTiles() * mLevel;
+        QPoint subPos = pos - mOwner->orientAdjustTiles() * mLevel - tl->position();
         if (tl->contains(subPos)) {
             const Cell *cell = &tl->cellAt(subPos);
             if (!cell->isEmpty()) {

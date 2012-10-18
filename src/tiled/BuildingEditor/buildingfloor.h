@@ -78,7 +78,6 @@ public:
     QVector<WallType*> interiorWalls;
     QVector<FloorType*> floors;
 
-    QList<BaseMapObject*> Objects;
 
     class Square
     {
@@ -114,6 +113,21 @@ public:
     Layout *layout() const
     { return mLayout; }
 
+    void insertObject(int index, BaseMapObject *object);
+    BaseMapObject *removeObject(int index);
+
+    int indexOf(BaseMapObject *object)
+    { return mObjects.indexOf(object); }
+
+    BaseMapObject *object(int index) const
+    { return mObjects.at(index); }
+
+    const QList<BaseMapObject*> &objects() const
+    { return mObjects; }
+
+    int objectCount() const
+    { return mObjects.size(); }
+
     Door *GetDoorAt(int x, int y);
     Window *GetWindowAt(int x, int y);
     Stairs *GetStairsAt(int x, int y);
@@ -132,6 +146,7 @@ private:
     Building *mBuilding;
     Layout *mLayout;
     int mLevel;
+    QList<BaseMapObject*> mObjects;
 };
 
 } // namespace BuildingEditor

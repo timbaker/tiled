@@ -24,6 +24,7 @@
 
 namespace BuildingEditor {
 
+class BaseMapObject;
 class BuildingDocument;
 class BuildingFloor;
 class Layout;
@@ -125,6 +126,57 @@ private:
     BuildingDocument *mDocument;
     Room *mRoom;
     QString mTileName;
+};
+
+class AddRemoveObject : public QUndoCommand
+{
+public:
+    AddRemoveObject(BuildingDocument *doc, BuildingFloor *floor, int index,
+                    BaseMapObject *object);
+    ~AddRemoveObject();
+
+protected:
+    void add();
+    void remove();
+
+    BuildingDocument *mDocument;
+    BuildingFloor *mFloor;
+    int mIndex;
+    BaseMapObject *mObject;
+};
+
+class AddObject : public AddRemoveObject
+{
+public:
+    AddObject(BuildingDocument *doc, BuildingFloor *floor, int index, BaseMapObject *object);
+
+    void undo() { remove(); }
+    void redo() { add(); }
+};
+
+class RemoveObject : public AddRemoveObject
+{
+public:
+    RemoveObject(BuildingDocument *doc, BuildingFloor *floor, int index);
+
+    void undo() { add(); }
+    void redo() { remove(); }
+};
+
+class MoveObject : public QUndoCommand
+{
+public:
+    MoveObject(BuildingDocument *doc, BaseMapObject *object, const QPoint &pos);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    BaseMapObject *mObject;
+    QPoint mPos;
 };
 
 } // namespace BuildingEditor

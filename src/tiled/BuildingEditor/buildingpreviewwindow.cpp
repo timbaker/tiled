@@ -152,28 +152,6 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
         mMap->addTileset(ts);
     TilesetManager::instance()->addReferences(mMap->tilesets());
 
-    foreach (BuildingFloor *floor, doc->building()->floors()) {
-        TileLayer *tl = new TileLayer(tr("%1_Floor").arg(floor->level()), 0, 0,
-                                      floor->width(), floor->height());
-        mMap->addLayer(tl);
-
-        tl = new TileLayer(tr("%1_Walls").arg(floor->level()), 0, 0,
-                           floor->width(), floor->height());
-        mMap->addLayer(tl);
-
-        tl = new TileLayer(tr("%1_Frames").arg(floor->level()), 0, 0,
-                           floor->width(), floor->height());
-        mMap->addLayer(tl);
-
-        tl = new TileLayer(tr("%1_Doors").arg(floor->level()), 0, 0,
-                           floor->width(), floor->height());
-        mMap->addLayer(tl);
-
-        tl = new TileLayer(tr("%1_Furniture").arg(floor->level()), 0, 0,
-                           floor->width(), floor->height());
-        mMap->addLayer(tl);
-    }
-
     switch (mMap->orientation()) {
     case Map::Isometric:
         mRenderer = new IsometricRenderer(mMap);
@@ -189,18 +167,24 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
 
     mMapComposite = new MapComposite(mapInfo);
 
-    foreach (CompositeLayerGroup *lg, mMapComposite->sortedLayerGroups()) {
-        CompositeLayerGroupItem *item = new CompositeLayerGroupItem(lg,
-                                                                    mRenderer);
-        mLayerGroupItems[lg->level()] = item;
-        item->synchWithTileLayers();
-        addItem(item);
+    foreach (BuildingFloor *floor, doc->building()->floors()) {
+        floorAdded(floor);
     }
 
+    connect(mDocument, SIGNAL(currentFloorChanged()),
+            SLOT(currentFloorChanged()));
     connect(mDocument, SIGNAL(roomAtPositionChanged(BuildingFloor*,QPoint)),
             SLOT(roomAtPositionChanged(BuildingFloor*,QPoint)));
     connect(mDocument, SIGNAL(roomDefinitionChanged()),
             SLOT(roomDefinitionChanged()));
+    connect(mDocument, SIGNAL(floorAdded(BuildingFloor*)),
+            SLOT(floorAdded(BuildingFloor*)));
+    connect(mDocument, SIGNAL(objectAdded(BaseMapObject*)),
+            SLOT(objectAdded(BaseMapObject*)));
+    connect(mDocument, SIGNAL(objectRemoved(BuildingFloor*,int)),
+            SLOT(objectRemoved(BuildingFloor*,int)));
+    connect(mDocument, SIGNAL(objectMoved(BaseMapObject*)),
+            SLOT(objectMoved(BaseMapObject*)));
 }
 
 void BuildingPreviewScene::BuildingToMap()
@@ -230,14 +214,12 @@ int WallType_getIndexFromSection(WallType *type, BuildingFloor::WallTile::WallSe
             break;
         case BuildingFloor::WallTile::WDoor:
             index += 10;
-
             break;
         case BuildingFloor::WallTile::NWindow:
             index += 9;
             break;
         case BuildingFloor::WallTile::WWindow:
             index += 8;
-
             break;
         case BuildingFloor::WallTile::SE:
             index += 3;
@@ -269,13 +251,24 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                         }
                     }
                 }
+#if 0
+                if (index == Door) {
+                    if (floor->squares[x][y].walls.count()) {
+                        BuildingFloor::WallTile *tile = floor->squares[x][y].walls[0];
+                        if (tile && tile->Type) {
+                            if (tile->Section == BuildingFloor::WallTile::NDoor)
+                                tl->setCell(x, y, Cell(mTilesetByName[RoomDefinitionManager::instance->DoorStyleTilesheet]->tileAt(RoomDefinitionManager::instance->DoorStyleIDN)));
+                        }
+                    }
+                }
+#endif
             }
         }
         index++;
     }
 }
 
-void BuildingPreviewScene::roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos)
+void BuildingPreviewScene::floorEdited(BuildingFloor *floor)
 {
     floor->LayoutToSquares();
     BuildingFloorToTileLayers(floor, mMapComposite->tileLayersForLevel(floor->level())->layers());
@@ -283,14 +276,77 @@ void BuildingPreviewScene::roomAtPositionChanged(BuildingFloor *floor, const QPo
     mLayerGroupItems[floor->level()]->updateBounds();
 }
 
+void BuildingPreviewScene::currentFloorChanged()
+{
+    int level = mDocument->currentFloor()->level();
+    for (int i = 0; i <= level; i++) {
+        mLayerGroupItems[i]->setVisible(true);
+    }
+    for (int i = level + 1; i < mDocument->building()->floorCount(); i++)
+        mLayerGroupItems[i]->setVisible(false);
+}
+
+void BuildingPreviewScene::roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos)
+{
+    Q_UNUSED(pos);
+    floorEdited(floor);
+}
+
 void BuildingPreviewScene::roomDefinitionChanged()
 {
-    foreach (BuildingFloor *floor, mDocument->building()->floors()) {
-        floor->LayoutToSquares();
-        BuildingFloorToTileLayers(floor, mMapComposite->tileLayersForLevel(floor->level())->layers());
-        mLayerGroupItems[floor->level()]->synchWithTileLayers();
-        mLayerGroupItems[floor->level()]->updateBounds();
-    }
+    foreach (BuildingFloor *floor, mDocument->building()->floors())
+        floorEdited(floor);
+}
+
+void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
+{
+    int x = floor->level() * -3, y = floor->level() * -3; // FIXME: not for LevelIsometric
+
+    TileLayer *tl = new TileLayer(tr("%1_Floor").arg(floor->level()), x, y,
+                                  floor->width(), floor->height());
+    mMap->addLayer(tl);
+    mMapComposite->layerAdded(mMap->layerCount() - 1);
+
+    tl = new TileLayer(tr("%1_Walls").arg(floor->level()), x, y,
+                       floor->width(), floor->height());
+    mMap->addLayer(tl);
+    mMapComposite->layerAdded(mMap->layerCount() - 1);
+
+    tl = new TileLayer(tr("%1_Frames").arg(floor->level()), x, y,
+                       floor->width(), floor->height());
+    mMap->addLayer(tl);
+    mMapComposite->layerAdded(mMap->layerCount() - 1);
+
+    tl = new TileLayer(tr("%1_Doors").arg(floor->level()), x, y,
+                       floor->width(), floor->height());
+    mMap->addLayer(tl);
+    mMapComposite->layerAdded(mMap->layerCount() - 1);
+
+    tl = new TileLayer(tr("%1_Furniture").arg(floor->level()), x, y,
+                       floor->width(), floor->height());
+    mMap->addLayer(tl);
+    mMapComposite->layerAdded(mMap->layerCount() - 1);
+
+    CompositeLayerGroup *lg = mMapComposite->tileLayersForLevel(floor->level());
+    CompositeLayerGroupItem *item = new CompositeLayerGroupItem(lg, mRenderer);
+    mLayerGroupItems[lg->level()] = item;
+    item->synchWithTileLayers();
+    addItem(item);
+}
+
+void BuildingPreviewScene::objectAdded(BaseMapObject *object)
+{
+    floorEdited(object->floor());
+}
+
+void BuildingPreviewScene::objectRemoved(BuildingFloor *floor, int index)
+{
+    floorEdited(floor);
+}
+
+void BuildingPreviewScene::objectMoved(BaseMapObject *object)
+{
+    floorEdited(object->floor());
 }
 
 /////

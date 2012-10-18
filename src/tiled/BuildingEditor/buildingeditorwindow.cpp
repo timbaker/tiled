@@ -66,9 +66,10 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->toolBar->insertWidget(ui->actionUpLevel, room);
     ui->toolBar->insertSeparator(ui->actionUpLevel);
 
-    QLabel *label = new QLabel;
-    label->setText(tr("Ground Floor"));
-    ui->toolBar->insertWidget(ui->actionUpLevel, label);
+    mFloorLabel = new QLabel;
+    mFloorLabel->setText(tr("Ground Floor"));
+    mFloorLabel->setMinimumWidth(90);
+    ui->toolBar->insertWidget(ui->actionUpLevel, mFloorLabel);
 
     QGraphicsView *view = new QGraphicsView(this);
     view->setScene(roomEditor);
@@ -87,8 +88,23 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     EraserTool::instance()->setEditor(roomEditor);
     EraserTool::instance()->setAction(ui->actionEraser);
 
+    connect(ui->actionDoor, SIGNAL(triggered()),
+            DoorTool::instance(), SLOT(activate()));
+    DoorTool::instance()->setEditor(roomEditor);
+    DoorTool::instance()->setAction(ui->actionDoor);
+
+    connect(ui->actionSelectObject, SIGNAL(triggered()),
+            SelectMoveObjectTool::instance(), SLOT(activate()));
+    SelectMoveObjectTool::instance()->setEditor(roomEditor);
+    SelectMoveObjectTool::instance()->setAction(ui->actionSelectObject);
+
     connect(room, SIGNAL(currentIndexChanged(int)),
             SLOT(roomIndexChanged(int)));
+
+    connect(ui->actionUpLevel, SIGNAL(triggered()),
+            SLOT(upLevel()));
+    connect(ui->actionDownLevel, SIGNAL(triggered()),
+            SLOT(downLevel()));
 
     /////
 
@@ -167,14 +183,13 @@ bool BuildingEditorWindow::Startup()
     building->insertFloor(0, new BuildingFloor(building, 0));
 
     mCurrentDocument = new BuildingDocument(building, QString());
+    mCurrentDocument->setCurrentFloor(building->floor(0));
     mUndoGroup->addStack(mCurrentDocument->undoStack());
     mUndoGroup->setActiveStack(mCurrentDocument->undoStack());
 
     roomEditor->setDocument(mCurrentDocument);
 
     ///// NewBuildingDialog.exec()
-    roomEditor->currentFloor = building->floors().first();
-    roomEditor->mFloorItems += new GraphicsFloorItem(roomEditor->currentFloor);
     this->room->addItems(RoomDefinitionManager::instance->FillCombo());
 
     this->room->setIconSize(QSize(20, 20));
@@ -188,11 +203,6 @@ bool BuildingEditorWindow::Startup()
 
     roomEditor->UpdateMetaBuilding();
 
-    roomEditor->addItem(roomEditor->mFloorItems.first());
-    roomEditor->addItem(new GraphicsGridItem(building->width(),
-                                             building->height()));
-
-    roomEditor->setSceneRect(-10, -10, building->width() * 30 + 10, building->height() * 30 + 10);
     /////
 
     BuildingPreviewWindow *previewWin = new BuildingPreviewWindow(this);
@@ -294,6 +304,9 @@ bool BuildingEditorWindow::LoadBuildingTiles()
                     if (categoryName == QLatin1String("floors")) {
                         FloorTypes::instance->Add(tilesetName, index);
                     }
+                    if (categoryName == QLatin1String("doors")) {
+                        DoorTypes::instance->Add(tilesetName, index);
+                    }
                 } else {
                     QMessageBox::critical(this, tr("It's no good, Jim!"),
                                           tr("Unknown value name '%1'.\n%2")
@@ -368,6 +381,12 @@ bool BuildingEditorWindow::LoadMapBaseXMLLots()
     return true;
 }
 
+void BuildingEditorWindow::setCurrentRoom(Room *room) const
+{
+    int roomIndex = RoomDefinitionManager::instance->GetIndex(room);
+    this->room->setCurrentIndex(roomIndex);
+}
+
 Room *BuildingEditorWindow::currentRoom() const
 {
     int roomIndex = room->currentIndex();
@@ -434,6 +453,29 @@ void BuildingEditorWindow::currentFloorChanged(const QItemSelection &selected)
     }
 }
 
+void BuildingEditorWindow::upLevel()
+{
+    int level = mCurrentDocument->currentFloor()->level() + 1;
+    if (level == mCurrentDocument->building()->floorCount()) {
+        BuildingFloor *floor = new BuildingFloor(mCurrentDocument->building(), level);
+        mCurrentDocument->insertFloor(level, floor); // TODO: make undoable
+    }
+    mCurrentDocument->setCurrentFloor(mCurrentDocument->building()->floor(level));
+    mFloorLabel->setText(tr("Floor %1").arg(level));
+}
+
+void BuildingEditorWindow::downLevel()
+{
+    int level = mCurrentDocument->currentFloor()->level() - 1;
+    if (level < 0)
+        return;
+    mCurrentDocument->setCurrentFloor(mCurrentDocument->building()->floor(level));
+    if (level > 0)
+        mFloorLabel->setText(tr("Floor %1").arg(level));
+    else
+        mFloorLabel->setText(tr("Ground Floor"));
+}
+
 /////
 
 WallTypes *WallTypes::instance = new WallTypes;
@@ -479,6 +521,18 @@ FloorTypes *FloorTypes::instance = new FloorTypes;
 void FloorTypes::Add(QString name, int first)
 {
     FloorType *t = new FloorType(name, first);
+    Types += t;
+    TypesByName[name] = t;
+}
+
+/////
+
+DoorTypes *DoorTypes::instance = new DoorTypes;
+
+
+void DoorTypes::Add(QString name, int first)
+{
+    DoorType *t = new DoorType(name, first);
     Types += t;
     TypesByName[name] = t;
 }
@@ -661,23 +715,35 @@ Room *Layout::roomAt(int x, int y)
 
 /////
 
+BaseMapObject::BaseMapObject(BuildingFloor *floor, int x, int y, Direction dir) :
+    mFloor(floor),
+    mX(x),
+    mY(y),
+    mDir(dir)
+{
+}
+
+int BaseMapObject::index()
+{
+    return mFloor->indexOf(this);
+}
 
 /////
 
 QRect Stairs::bounds() const
 {
-    if (dir == N)
-        return QRect(X, Y, 1, 5);
-    if (dir == W)
-        return QRect(X, Y, 5, 1);
+    if (mDir == N)
+        return QRect(mX, mY, 1, 5);
+    if (mDir == W)
+        return QRect(mX, mY, 5, 1);
     return QRect();
 }
 
 QString Stairs::getStairsTexture(int x, int y)
 {
-    if (dir == N) {
-        if (x == X / 30) {
-            int index = y - (Y / 30);
+    if (mDir == N) {
+        if (x == mX / 30) {
+            int index = y - (mY / 30);
             if (index == 1)
                 return RoomDefinitionManager::instance->TopStairNorth;
             if (index == 2)
@@ -686,9 +752,9 @@ QString Stairs::getStairsTexture(int x, int y)
                 return RoomDefinitionManager::instance->BotStairNorth;
         }
     }
-    if (dir == W) {
-        if (y == Y / 30) {
-            int index = x - (X / 30);
+    if (mDir == W) {
+        if (y == mY / 30) {
+            int index = x - (mX / 30);
             if (index == 1)
                 return RoomDefinitionManager::instance->TopStairWest;
             if (index == 2)

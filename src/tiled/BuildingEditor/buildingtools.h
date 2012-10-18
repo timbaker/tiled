@@ -20,6 +20,7 @@
 
 #include <QObject>
 #include <QPointF>
+#include <QSet>
 
 class QAction;
 class QGraphicsRectItem;
@@ -27,7 +28,10 @@ class QGraphicsSceneMouseEvent;
 
 namespace BuildingEditor {
 
+class BaseMapObject;
+class Door;
 class FloorEditor;
+class GraphicsObjectItem;
 
 /////
 
@@ -100,6 +104,9 @@ public:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
+private:
+    void updateCursor(const QPointF &scenePos);
+
 public slots:
     void activate();
     void deactivate();
@@ -108,6 +115,105 @@ private:
     static EraserTool *mInstance;
     bool mMouseDown;
     bool mInitialPaint;
+    QGraphicsRectItem *mCursor;
+};
+
+/////
+
+class BaseObjectTool : public BaseTool
+{
+    Q_OBJECT
+public:
+    BaseObjectTool();
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
+public slots:
+    void activate();
+    void deactivate();
+
+protected:
+    void setCursorObject(BaseMapObject *object);
+
+    enum TileEdge {
+        Center,
+        N,
+        S,
+        W,
+        E
+    };
+
+    QPoint mTilePos;
+    TileEdge mTileEdge;
+    GraphicsObjectItem *mCursorItem;
+};
+
+class DoorTool : public BaseObjectTool
+{
+    Q_OBJECT
+public:
+    static DoorTool *instance();
+
+    DoorTool();
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+
+private:
+    static DoorTool *mInstance;
+    Door *mCursorDoor;
+};
+
+/////
+
+class SelectMoveObjectTool : public BaseTool
+{
+    Q_OBJECT
+public:
+    static SelectMoveObjectTool *instance();
+
+    SelectMoveObjectTool();
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
+public slots:
+    void activate();
+    void deactivate();
+
+private:
+    enum Mode {
+        NoMode,
+        Selecting,
+        Moving,
+        CancelMoving
+    };
+
+    void updateSelection(const QPointF &pos,
+                         Qt::KeyboardModifiers modifiers);
+
+    void startSelecting();
+
+    void startMoving();
+    void updateMovingItems(const QPointF &pos,
+                           Qt::KeyboardModifiers modifiers);
+    void finishMoving(const QPointF &pos);
+    void cancelMoving();
+
+    BaseMapObject *topmostObjectAt(const QPointF &scenePos);
+
+    static SelectMoveObjectTool *mInstance;
+
+    Mode mMode;
+    bool mMouseDown;
+    QPointF mStartScenePos;
+    QPoint mDragOffset;
+    BaseMapObject *mClickedObject;
+    QSet<BaseMapObject*> mMovingObjects;
+    QGraphicsRectItem *mSelectionRectItem;
 };
 
 } // namespace BuildingEditor
