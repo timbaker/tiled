@@ -65,7 +65,7 @@ public:
     void insertObject(BuildingFloor *floor, int index, BaseMapObject *object);
     BaseMapObject *removeObject(BuildingFloor *floor, int index);
     QPoint moveObject(BaseMapObject *object, const QPoint &pos);
-    BuildingTile *changeDoorTile(Door *door, BuildingTile *tile);
+    BuildingTile *changeDoorTile(Door *door, BuildingTile *tile, bool isFrame);
     // -UNDO/REDO
     
 signals:

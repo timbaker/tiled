@@ -184,7 +184,8 @@ private:
 class ChangeDoorTile : public QUndoCommand
 {
 public:
-    ChangeDoorTile(BuildingDocument *doc, Door *door, BuildingTile *tile);
+    ChangeDoorTile(BuildingDocument *doc, Door *door, BuildingTile *tile,
+                   bool isFrame = false);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -195,6 +196,7 @@ private:
     BuildingDocument *mDocument;
     Door *mDoor;
     BuildingTile *mTile;
+    bool mIsFrame;
 };
 
 } // namespace BuildingEditor

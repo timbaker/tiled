@@ -554,6 +554,27 @@ void BuildingEditorWindow::currentDoorFrameChanged(const QItemSelection &selecte
         Tile *tile = m->tileAt(index);
         if (!tile)
             return;
+        RoomDefinitionManager::instance->mDoorFrameTile = nameForTile(tile);
+        // Assign the new tile to selected doors
+        QList<Door*> doors;
+        QString tileName = nameForTile(tile);
+        foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
+            if (Door *door = dynamic_cast<Door*>(object)) {
+                if (door->mFrameTile != BuildingTiles::instance()->tileForDoor(door, tileName, true))
+                    doors += door;
+            }
+        }
+        if (doors.count()) {
+            if (doors.count() > 1)
+                mCurrentDocument->undoStack()->beginMacro(tr("Change Door Frame Tile"));
+            foreach (Door *door, doors)
+                mCurrentDocument->undoStack()->push(new ChangeDoorTile(mCurrentDocument,
+                                                                       door,
+                                                                       BuildingTiles::instance()->tileForDoor(door, tileName, true),
+                                                                       true));
+            if (doors.count() > 1)
+                mCurrentDocument->undoStack()->endMacro();
+        }
     }
 }
 
@@ -878,12 +899,13 @@ QString BuildingTiles::adjustTileNameIndex(const QString &tileName, int offset)
     return tilesetName + QLatin1Char('_') + QString::number(index);
 }
 
-BuildingTile *BuildingTiles::tileForDoor(Door *door, const QString &tileName)
+BuildingTile *BuildingTiles::tileForDoor(Door *door, const QString &tileName,
+                                         bool isFrame)
 {
     QString adjustedName = tileName;
     if (door->dir() == BaseMapObject::N)
         adjustedName = adjustTileNameIndex(tileName, 1);
-    return get(QLatin1String("doors"), adjustedName);
+    return get(QLatin1String(isFrame ? "door_frames" : "doors"), adjustedName);
 }
 
 /////

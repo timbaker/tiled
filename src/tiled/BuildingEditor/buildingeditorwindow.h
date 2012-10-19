@@ -191,7 +191,8 @@ public:
     static bool parseTileName(const QString &tileName, QString &tilesetName, int &index);
     static QString adjustTileNameIndex(const QString &tileName, int offset);
 
-    BuildingTile *tileForDoor(Door *door, const QString &tileName);
+    BuildingTile *tileForDoor(Door *door, const QString &tileName,
+                              bool isFrame = false);
 
 private:
     static BuildingTiles *mInstance;

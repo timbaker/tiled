@@ -309,7 +309,8 @@ void DoorTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     door->mDoorTile = BuildingTiles::instance()->tileForDoor(door,
                                                              RoomDefinitionManager::instance->mDoorTile);
     door->mFrameTile = BuildingTiles::instance()->tileForDoor(door,
-                                                              RoomDefinitionManager::instance->mDoorFrameTile);
+                                                              RoomDefinitionManager::instance->mDoorFrameTile,
+                                                              true);
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                          floor,
                                                          floor->objectCount(),

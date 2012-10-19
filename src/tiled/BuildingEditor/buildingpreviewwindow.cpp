@@ -256,6 +256,11 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                     if (tile)
                         tl->setCell(x, y, Cell(mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
                 }
+                if (index == LayerIndexFrame) {
+                    BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionFrame];
+                    if (tile)
+                        tl->setCell(x, y, Cell(mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
+                }
             }
         }
         index++;
