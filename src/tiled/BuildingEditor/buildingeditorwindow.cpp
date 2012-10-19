@@ -39,6 +39,8 @@
 #include <QCloseEvent>
 #include <QComboBox>
 #include <QDir>
+#include <QFileDialog>
+#include <QFileInfo>
 #include <QGraphicsView>
 #include <QLabel>
 #include <QListWidget>
@@ -134,6 +136,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     Utils::setThemeIcon(redoAction, "edit-redo");
     ui->menuEdit->insertAction(0, redoAction);
     ui->menuEdit->insertAction(redoAction, undoAction);
+
+    connect(ui->actionExportTMX, SIGNAL(triggered()), SLOT(exportTMX()));
 
     connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
     setWindowFlags(windowFlags() & ~Qt::WA_DeleteOnClose);
@@ -713,6 +717,23 @@ void BuildingEditorWindow::downLevel()
         mFloorLabel->setText(tr("Floor %1").arg(level));
     else
         mFloorLabel->setText(tr("Ground Floor"));
+}
+
+void BuildingEditorWindow::exportTMX()
+{
+    QString initialDir = mSettings.value(
+                QLatin1String("BuildingEditor/ExportDirectory")).toString();
+
+    const QString fileName =
+            QFileDialog::getSaveFileName(this, QString(), initialDir,
+                                         tr("Tiled map files (*.tmx)"));
+    if (fileName.isEmpty())
+        return;
+
+    mPreviewWin->exportTMX(fileName);
+
+    mSettings.setValue(QLatin1String("BuildingEditor/ExportDirectory"),
+                       QFileInfo(fileName).absolutePath());
 }
 
 /////

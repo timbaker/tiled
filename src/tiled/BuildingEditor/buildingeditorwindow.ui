@@ -31,6 +31,8 @@
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
     <addaction name="separator"/>
+    <addaction name="actionExportTMX"/>
+    <addaction name="separator"/>
     <addaction name="actionClose"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -225,6 +227,11 @@
    </property>
    <property name="text">
     <string>Select Objects</string>
+   </property>
+  </action>
+  <action name="actionExportTMX">
+   <property name="text">
+    <string>Export TMX...</string>
    </property>
   </action>
  </widget>

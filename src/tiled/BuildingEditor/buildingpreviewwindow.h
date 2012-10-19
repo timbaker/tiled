@@ -83,6 +83,8 @@ public:
     void setTilesets(const QMap<QString,Tiled::Tileset*> &tilesets)
     { mTilesetByName = tilesets; }
 
+    Tiled::Map *map() const
+    { return mMap; }
 
     QString errorString() const
     { return mError; }
@@ -160,6 +162,8 @@ public:
 
     void readSettings();
     void writeSettings();
+
+    bool exportTMX(const QString &fileName);
 
 private slots:
     void updateActions();

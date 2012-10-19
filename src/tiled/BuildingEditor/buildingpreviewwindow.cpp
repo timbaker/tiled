@@ -30,6 +30,7 @@
 #include "isometricrenderer.h"
 #include "map.h"
 #include "maprenderer.h"
+#include "tmxmapwriter.h"
 #include "tilelayer.h"
 #include "tileset.h"
 #include "tilesetmanager.h"
@@ -113,6 +114,17 @@ void BuildingPreviewWindow::writeSettings()
     mSettings.setValue(QLatin1String("state"), saveState());
     mSettings.setValue(QLatin1String("scale"), ui->graphicsView->zoomable()->scale());
     mSettings.endGroup();
+}
+
+bool BuildingPreviewWindow::exportTMX(const QString &fileName)
+{
+    TmxMapWriter writer;
+    if (!writer.write(mScene->map(), fileName)) {
+        QMessageBox::critical(this, tr("Error Saving Map"),
+                              writer.errorString());
+        return false;
+    }
+    return true;
 }
 
 void BuildingPreviewWindow::updateActions()

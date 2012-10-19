@@ -372,6 +372,8 @@ private slots:
     void upLevel();
     void downLevel();
 
+    void exportTMX();
+
 private:
     Ui::BuildingEditorWindow *ui;
     BuildingDocument *mCurrentDocument;
