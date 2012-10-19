@@ -161,10 +161,14 @@ public:
     void readSettings();
     void writeSettings();
 
+private slots:
+    void updateActions();
+
 private:
     Ui::BuildingPreviewWindow *ui;
     BuildingDocument *mDocument;
     BuildingPreviewScene *mScene;
+    BuildingPreviewView *mView;
     QSettings mSettings;
 };
 

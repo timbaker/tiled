@@ -51,13 +51,26 @@ BuildingPreviewWindow::BuildingPreviewWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    mView = ui->graphicsView;
+
     ui->graphicsView->setScene(mScene);
 
-    ui->graphicsView->zoomable()->connectToComboBox(ui->zoomComboBox);
+    mView->zoomable()->connectToComboBox(ui->zoomComboBox);
+    connect(mView->zoomable(), SIGNAL(scaleChanged(qreal)),
+            SLOT(updateActions()));
+
+    connect(ui->actionZoomIn, SIGNAL(triggered()),
+            mView->zoomable(), SLOT(zoomIn()));
+    connect(ui->actionZoomOut, SIGNAL(triggered()),
+            mView->zoomable(), SLOT(zoomOut()));
+    connect(ui->actionNormalSize, SIGNAL(triggered()),
+            mView->zoomable(), SLOT(resetZoom()));
 
     setWindowFlags(Qt::Tool);
 
     readSettings();
+
+    updateActions();
 }
 
 void BuildingPreviewWindow::closeEvent(QCloseEvent *event)
@@ -100,6 +113,13 @@ void BuildingPreviewWindow::writeSettings()
     mSettings.setValue(QLatin1String("state"), saveState());
     mSettings.setValue(QLatin1String("scale"), ui->graphicsView->zoomable()->scale());
     mSettings.endGroup();
+}
+
+void BuildingPreviewWindow::updateActions()
+{
+    ui->actionZoomIn->setEnabled(mView->zoomable()->canZoomIn());
+    ui->actionZoomOut->setEnabled(mView->zoomable()->canZoomOut());
+    ui->actionNormalSize->setEnabled(mView->zoomable()->scale() != 1.0);
 }
 
 /////
