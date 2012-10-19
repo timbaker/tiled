@@ -741,8 +741,10 @@ void SelectMoveObjectTool::cancelMoving()
 BaseMapObject *SelectMoveObjectTool::topmostObjectAt(const QPointF &scenePos)
 {
     foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
-        if (GraphicsObjectItem *objectItem = dynamic_cast<GraphicsObjectItem*>(item))
-            return objectItem->object();
+        if (GraphicsObjectItem *objectItem = dynamic_cast<GraphicsObjectItem*>(item)) {
+            if (objectItem->object()->floor() == mEditor->document()->currentFloor())
+                return objectItem->object();
+        }
     }
     return 0;
 }
