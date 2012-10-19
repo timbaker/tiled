@@ -38,6 +38,12 @@ namespace Ui {
 class MainWindow;
 }
 
+#ifdef ZOMBOID
+namespace BuildingEditor {
+class BuildingEditorWindow;
+}
+#endif
+
 namespace Tiled {
 
 class TileLayer;
@@ -169,6 +175,11 @@ public slots:
 
     void autoMappingError();
     void autoMappingWarning();
+
+#ifdef ZOMBOID
+    void showBuildingEditor();
+#endif
+
 private:
     /**
       * Asks the user whether the current map should be saved when necessary.
@@ -258,6 +269,10 @@ private:
     void setupQuickStamps();
 
     DocumentManager *mDocumentManager;
+
+#ifdef ZOMBOID
+    BuildingEditor::BuildingEditorWindow *mBuildingEditor;
+#endif
 };
 
 } // namespace Internal

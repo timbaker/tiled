@@ -42,6 +42,7 @@ namespace BuildingEditor {
 class BaseTool;
 class BuildingDocument;
 class BuildingFloor;
+class BuildingPreviewWindow;
 class Door;
 class FloorEditor;
 class Room;
@@ -334,6 +335,9 @@ public:
 
     void closeEvent(QCloseEvent *event);
 
+    bool confirmAllSave();
+    bool closeYerself();
+
     bool Startup();
 
     bool LoadBuildingTemplates();
@@ -378,6 +382,7 @@ private:
     QMap<QString,Tiled::Tileset*> mTilesetByName;
     QSettings mSettings;
     QString mError;
+    BuildingPreviewWindow *mPreviewWin;
 };
 
 } // namespace BuildingEditor

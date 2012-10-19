@@ -107,7 +107,6 @@
     <addaction name="actionAutoMap"/>
     <addaction name="separator"/>
     <addaction name="actionConvertToLot"/>
-    <addaction name="actionConvertOrientation"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -122,10 +121,18 @@
     <addaction name="actionZoomOut"/>
     <addaction name="actionZoomNormal"/>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionBuildingEditor"/>
+    <addaction name="actionConvertOrientation"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuMap"/>
+   <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
@@ -440,6 +447,11 @@
   <action name="actionConvertToLot">
    <property name="text">
     <string>Convert Selection To Lot...</string>
+   </property>
+  </action>
+  <action name="actionBuildingEditor">
+   <property name="text">
+    <string>Building Editor</string>
    </property>
   </action>
  </widget>

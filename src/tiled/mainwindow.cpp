@@ -76,6 +76,7 @@
 #include "commandbutton.h"
 #include "objectsdock.h"
 #ifdef ZOMBOID
+#include "BuildingEditor/buildingeditorwindow.h"
 #include "changetileselection.h"
 #include "converttolotdialog.h"
 #include "convertorientationdialog.h"
@@ -136,6 +137,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     , mStatusInfoLabel(new QLabel)
     , mClipboardManager(new ClipboardManager(this))
     , mDocumentManager(DocumentManager::instance())
+#ifdef ZOMBOID
+    , mBuildingEditor(0)
+#endif
 {
     mUi->setupUi(this);
 #ifdef ZOMBOID
@@ -288,7 +292,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     mLayerMenu->addSeparator();
     mLayerMenu->addAction(mActionHandler->actionLayerProperties());
 
+#ifdef ZOMBOID
+    menuBar()->insertMenu(mUi->menuTools->menuAction(), mLayerMenu);
+#else
     menuBar()->insertMenu(mUi->menuHelp->menuAction(), mLayerMenu);
+#endif
 
     connect(mUi->actionNew, SIGNAL(triggered()), SLOT(newMap()));
     connect(mUi->actionOpen, SIGNAL(triggered()), SLOT(openFile()));
@@ -488,6 +496,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     connect(copyPositionShortcut, SIGNAL(activated()),
             mActionHandler, SLOT(copyPosition()));
 
+#ifdef ZOMBOID
+    connect(mUi->actionBuildingEditor, SIGNAL(triggered()),
+            SLOT(showBuildingEditor()));
+#endif
+
     updateActions();
 #ifdef ZOMBOID
     // Something broke when I replaced the statusBar with a QFrame.
@@ -536,12 +549,20 @@ void MainWindow::commitData(QSessionManager &manager)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+#ifdef ZOMBOID
+    writeSettings();
+    if (confirmAllSave() && (!mBuildingEditor || mBuildingEditor->closeYerself())) {
+        event->accept();
+    } else
+        event->ignore();
+#else
     writeSettings();
 
     if (confirmAllSave())
         event->accept();
     else
         event->ignore();
+#endif
 }
 
 void MainWindow::changeEvent(QEvent *event)
@@ -1244,6 +1265,23 @@ void MainWindow::autoMappingWarning()
         QMessageBox::warning(this, title, warnings);
     }
 }
+
+#ifdef ZOMBOID
+void MainWindow::showBuildingEditor()
+{
+    if (!mBuildingEditor) {
+        mBuildingEditor = new BuildingEditor::BuildingEditorWindow();
+        mBuildingEditor->show();
+        if (!mBuildingEditor->Startup()) {
+            delete mBuildingEditor;
+            return;
+        }
+    }
+
+    mBuildingEditor->show();
+    mBuildingEditor->raise();
+}
+#endif
 
 void MainWindow::autoMappingError()
 {

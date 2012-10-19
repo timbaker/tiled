@@ -28,11 +28,15 @@
 #include "mixedtilesetview.h"
 #include "simplefile.h"
 
+#include "zprogress.h"
+
 #include "tile.h"
 #include "tileset.h"
 #include "tilesetmanager.h"
+#include "utils.h"
 
 #include <QBitmap>
+#include <QCloseEvent>
 #include <QComboBox>
 #include <QDir>
 #include <QGraphicsView>
@@ -57,7 +61,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mCurrentDocument(0),
     roomEditor(new FloorEditor(this)),
     room(new QComboBox()),
-    mUndoGroup(new QUndoGroup(this))
+    mUndoGroup(new QUndoGroup(this)),
+    mPreviewWin(0)
 {
     ui->setupUi(this);
 
@@ -123,6 +128,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     redoAction->setShortcuts(QKeySequence::Redo);
     ui->menuEdit->insertAction(0, redoAction);
     ui->menuEdit->insertAction(0, undoAction);
+    connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
+    setWindowFlags(windowFlags() & ~Qt::WA_DeleteOnClose);
 
     readSettings();
 }
@@ -134,17 +141,38 @@ BuildingEditorWindow::~BuildingEditorWindow()
 
 void BuildingEditorWindow::closeEvent(QCloseEvent *event)
 {
-    writeSettings();
-#if 0
-    if (confirmAllSave())
-        event->accept();
-    else
+    if (confirmAllSave()) {
+        writeSettings();
+        event->accept(); // doesn't destroy us, hides PreviewWindow for us
+    } else
         event->ignore();
-#endif
+
+}
+
+bool BuildingEditorWindow::confirmAllSave()
+{
+    return true;
+}
+
+// Called by Tiled::Internal::MainWindow::closeEvent
+bool BuildingEditorWindow::closeYerself()
+{
+    if (confirmAllSave()) {
+        writeSettings();
+        if (mPreviewWin)
+            mPreviewWin->writeSettings();
+        delete this; // Delete ourself and PreviewWindow.
+                     // Gotta delete PreviewWindow before Tiled's MainWindow
+                     // so all the tilesets are released.
+        return true;
+    }
+    return false;
 }
 
 bool BuildingEditorWindow::Startup()
 {
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+
     if (!LoadBuildingTemplates())
         return false;
 
@@ -231,10 +259,10 @@ bool BuildingEditorWindow::Startup()
 
     /////
 
-    BuildingPreviewWindow *previewWin = new BuildingPreviewWindow(this);
-    previewWin->scene()->setTilesets(mTilesetByName);
-    previewWin->setDocument(currentDocument());
-    previewWin->show();
+    mPreviewWin = new BuildingPreviewWindow(this);
+    mPreviewWin->scene()->setTilesets(mTilesetByName);
+    mPreviewWin->setDocument(currentDocument());
+    mPreviewWin->show();
 
     return true;
 }
@@ -373,6 +401,8 @@ bool BuildingEditorWindow::LoadMapBaseXMLLots()
         mError = tr("Couldn't open %1").arg(path);
         return false;
     }
+
+    PROGRESS progress(tr("Reading MapBaseXMLLots.txt tilesets"), this);
 
     QXmlStreamReader xml;
     xml.setDevice(&file);

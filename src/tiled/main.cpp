@@ -26,10 +26,7 @@
 #include "preferences.h"
 #include "tiledapplication.h"
 #ifdef ZOMBOID
-#include "BuildingEditor/buildingeditorwindow.h"
 #include "zprogress.h"
-
-#include <QMessageBox>
 #endif
 
 #include <QDebug>
@@ -175,13 +172,6 @@ int main(int argc, char *argv[])
     } else {
         w.openLastFiles();
     }
-
-#ifdef ZOMBOID
-    BuildingEditor::BuildingEditorWindow bw;
-    bw.show();
-    if (!bw.Startup())
-        return -1;
-#endif
 
     return a.exec();
 }
