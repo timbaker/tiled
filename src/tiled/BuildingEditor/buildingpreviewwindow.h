@@ -47,6 +47,7 @@ namespace BuildingEditor {
 class BaseMapObject;
 class BuildingFloor;
 class BuildingDocument;
+class Door;
 
 class CompositeLayerGroupItem : public QGraphicsItem
 {
@@ -87,11 +88,11 @@ public:
 
     enum LayerType
     {
-        Floor,
-        Wall,
-        Frame,
-        Door,
-        Furniture
+        LayerIndexFloor,
+        LayerIndexWall,
+        LayerIndexFrame,
+        LayerIndexDoor,
+        LayerIndexFurniture
     };
 
 private:
@@ -107,6 +108,7 @@ private slots:
     void objectAdded(BaseMapObject *object);
     void objectRemoved(BuildingFloor *floor, int index);
     void objectMoved(BaseMapObject *object);
+    void doorTileChanged(Door *door);
 
 private:
     BuildingDocument *mDocument;

@@ -190,3 +190,18 @@ void MoveObject::swap()
 
 /////
 
+ChangeDoorTile::ChangeDoorTile(BuildingDocument *doc, Door *door, BuildingTile *tile) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Door Tile")),
+    mDocument(doc),
+    mDoor(door),
+    mTile(tile)
+{
+}
+
+void ChangeDoorTile::swap()
+{
+    mTile = mDocument->changeDoorTile(mDoor, mTile);
+}
+
+/////
+

@@ -51,10 +51,11 @@ void BuildingFloor::LayoutToSquares()
     for (int x = 0; x < w; x++)
         squares[x].resize(h);
 
-    WallType *wtype = 0;
+    BuildingTile *wtype = 0;
 
 #if 1
-    exteriorWall = WallTypes::instance->getOrAdd(RoomDefinitionManager::instance->ExteriorWall);
+    exteriorWall = BuildingTiles::instance()->get(QLatin1String("exterior_walls"),
+                                                  RoomDefinitionManager::instance->ExteriorWall);
     interiorWalls.clear();
     floors.clear();
     int nRooms = RoomDefinitionManager::instance->getRoomCount();
@@ -74,13 +75,14 @@ void BuildingFloor::LayoutToSquares()
 
     for (int x = 0; x < l->w; x++) {
         for (int y = 0; y < l->h + 1; y++) {
-            if (y == l->h && l->grid[x][y - 1] > 0)
+            if (y == l->h && l->grid[x][y - 1] > 0) {
                 // put N wall here...
-                squares[x][y].walls += new WallTile(WallTile::N, exteriorWall);
-            else if (y < l->h && l->grid[x][y] < 0 && y > 0 && l->grid[x][y-1] != l->grid[x][y])
-                squares[x][y].walls += new WallTile(WallTile::N, exteriorWall);
-            else if (y < l->h && (y == 0 || l->grid[x][y-1] != l->grid[x][y]) && l->grid[x][y] >= 0)
-                squares[x][y].walls += new WallTile(WallTile::N, interiorWalls[l->grid[x][y]]);
+                squares[x][y].ReplaceWall(exteriorWall, Square::WallOrientN);
+            } else if (y < l->h && l->grid[x][y] < 0 && y > 0 && l->grid[x][y-1] != l->grid[x][y]) {
+                squares[x][y].ReplaceWall(exteriorWall, Square::WallOrientN);
+            } else if (y < l->h && (y == 0 || l->grid[x][y-1] != l->grid[x][y]) && l->grid[x][y] >= 0) {
+                squares[x][y].ReplaceWall(interiorWalls[l->grid[x][y]], Square::WallOrientN);
+            }
         }
     }
 
@@ -92,31 +94,31 @@ void BuildingFloor::LayoutToSquares()
             {
                 wtype = exteriorWall;
                 // If already contains a north, put in a west...
-                if (squares[x][y].Contains(WallTile::N))
-                    squares[x][y].Replace(new WallTile(WallTile::NW, wtype), WallTile::N);
+                if (squares[x][y].IsWallOrient(Square::WallOrientN))
+                    squares[x][y].ReplaceWall(wtype, Square::WallOrientNW);
                 else
                     // put W wall here...
-                    squares[x][y].walls += new WallTile(WallTile::W, wtype);
+                    squares[x][y].ReplaceWall(wtype, Square::WallOrientW);
             }
             else if (x < l->w && l->grid[x][y] < 0 && x > 0 && l->grid[x - 1][y] != l->grid[x][y])
             {
                 wtype = exteriorWall;
                 // If already contains a north, put in a west...
-                if (squares[x][y].Contains(WallTile::N))
-                    squares[x][y].Replace(new WallTile(WallTile::NW, wtype), WallTile::N);
+                if (squares[x][y].IsWallOrient(Square::WallOrientN))
+                    squares[x][y].ReplaceWall(wtype, Square::WallOrientNW);
                 else
                     // put W wall here...
-                    squares[x][y].walls += new WallTile(WallTile::W, wtype);
+                    squares[x][y].ReplaceWall(wtype, Square::WallOrientW);
             }
             else if (x < l->w && l->grid[x][y] >= 0 && (x == 0 || l->grid[x - 1][y] != l->grid[x][y]))
             {
                 wtype = interiorWalls[l->grid[x][y]];
                 // If already contains a north, put in a west...
-                if(squares[x][y].Contains(WallTile::N))
-                    squares[x][y].Replace(new WallTile(WallTile::NW, wtype), WallTile::N);
+                if(squares[x][y].IsWallOrient(Square::WallOrientN))
+                    squares[x][y].ReplaceWall(wtype, Square::WallOrientNW);
                 else
-                // put W wall here...
-                squares[x][y].walls += new WallTile(WallTile::W, wtype);
+                    // put W wall here...
+                    squares[x][y].ReplaceWall(wtype, BuildingFloor::Square::WallOrientW);
             }
 
         }
@@ -128,8 +130,8 @@ void BuildingFloor::LayoutToSquares()
         {
             if (x > 0 && y > 0)
             {
-                if (squares[x][y].walls.count() > 0)
-                    continue;
+//                if (squares[x][y].walls.count() > 0)
+//                    continue;
                 if (x < l->w && l->grid[x][y - 1] >= 0)
                     wtype = interiorWalls[l->grid[x][y - 1]];
                 else if (y < l->h &&  l->grid[x-1][y] >= 0)
@@ -137,8 +139,11 @@ void BuildingFloor::LayoutToSquares()
                 else
                     wtype = exteriorWall;
                 // Put in the SE piece...
-                if ((squares[x][y - 1].Contains(WallTile::W) || squares[x][y - 1].Contains(WallTile::NW)) && (squares[x - 1][y].Contains(WallTile::N) || squares[x - 1][y].Contains(WallTile::NW)))
-                    squares[x][y].walls += new WallTile(WallTile::SE, wtype);
+                if ((squares[x][y - 1].IsWallOrient(Square::WallOrientW) ||
+                     squares[x][y - 1].IsWallOrient(Square::WallOrientNW)) &&
+                        (squares[x - 1][y].IsWallOrient(Square::WallOrientN) ||
+                         squares[x - 1][y].IsWallOrient(Square::WallOrientNW)))
+                    squares[x][y].ReplaceWall(wtype, Square::WallOrientSE);
             }
 
         }
@@ -148,23 +153,13 @@ void BuildingFloor::LayoutToSquares()
     {
         for (int y = 0; y < l->h + 1; y++)
         {
-            Door *door = GetDoorAt(x, y);
-            if (door != 0)
-            {
-                if (door->dir() == BaseMapObject::N)
-                    squares[x][y].ReplaceWithDoor(WallTile::N);
-                if (door->dir() == BaseMapObject::W)
-                    squares[x][y].ReplaceWithDoor(WallTile::W);
+            if (Door *door = GetDoorAt(x, y)) {
+                squares[x][y].ReplaceDoor(door->mDoorTile);
+                squares[x][y].ReplaceFrame(door->mFrameTile);
             }
 
-            Window *window = GetWindowAt(x, y);
-            if (window != 0)
-            {
-                if (window->dir() == BaseMapObject::N)
-                    squares[x][y].ReplaceWithWindow(WallTile::N);
-                if (window->dir() == BaseMapObject::W)
-                    squares[x][y].ReplaceWithWindow(WallTile::W);
-            }
+            if (Window *window = GetWindowAt(x, y))
+                squares[x][h].ReplaceFrame(window->mTile);
 
             Stairs *stairs = GetStairsAt(x, y);
             if (stairs != 0)
@@ -177,7 +172,7 @@ void BuildingFloor::LayoutToSquares()
     for (int x = 0; x < l->w; x++) {
         for (int y = 0; y < l->h; y++) {
             if (l->grid[x][y] >= 0)
-                squares[x][y].floorTile = new FloorTile(floors[l->grid[x][y]]);
+                squares[x][y].mTiles[Square::SectionFloor] = floors[l->grid[x][y]];
         }
     }
 }
@@ -216,60 +211,6 @@ Stairs *BuildingFloor::GetStairsAt(int x, int y)
     return 0;
 }
 
-/////
-
-bool BuildingFloor::Square::Contains(BuildingFloor::WallTile::WallSection sec)
-{
-    foreach (WallTile *wallTile, walls) {
-        if (wallTile->Section == sec)
-            return true;
-    }
-    return false;
-}
-
-void BuildingFloor::Square::Replace(BuildingFloor::WallTile *tile,
-                                    BuildingFloor::WallTile::WallSection secToReplace)
-{
-    int i = 0;
-    foreach (WallTile *wallTile, walls) {
-        if (wallTile->Section == secToReplace) {
-            walls.replace(i, tile);
-            return;
-        }
-        i++;
-    }
-}
-
-void BuildingFloor::Square::ReplaceWithDoor(BuildingFloor::WallTile::WallSection direction)
-{
-    Q_UNUSED(direction)
-    foreach (WallTile *wallTile, walls) {
-        if (wallTile->Section == WallTile::N) {
-            wallTile->Section = WallTile::NDoor;
-            return;
-        }
-        if (wallTile->Section == WallTile::W) {
-            wallTile->Section = WallTile::WDoor;
-            return;
-        }
-    }
-}
-
-void BuildingFloor::Square::ReplaceWithWindow(BuildingFloor::WallTile::WallSection direction)
-{
-    Q_UNUSED(direction)
-    foreach (WallTile *wallTile, walls) {
-        if (wallTile->Section == WallTile::N) {
-            wallTile->Section = WallTile::NWindow;
-            return;
-        }
-        if (wallTile->Section == WallTile::W) {
-            wallTile->Section = WallTile::WWindow;
-            return;
-        }
-    }
-}
-
 int BuildingFloor::width() const
 {
     return mBuilding->width();
@@ -278,4 +219,70 @@ int BuildingFloor::width() const
 int BuildingFloor::height() const
 {
     return mBuilding->height();
+}
+
+/////
+
+BuildingFloor::Square::Square()
+{
+    for (int i = 0; i < MaxSection; i++)
+        mTiles[i] = 0;
+}
+
+
+BuildingFloor::Square::~Square()
+{
+    // mTiles are owned by BuildingTiles
+//    for (int i = 0; i < MaxSection; i++)
+//        delete mTiles[i];
+}
+
+void BuildingFloor::Square::ReplaceWall(BuildingTile *tile, Square::WallOrientation orient)
+{
+    mTiles[SectionWall] = tile;
+    mWallOrientation = orient;
+}
+
+void BuildingFloor::Square::ReplaceDoor(BuildingTile *tile)
+{
+    mTiles[SectionDoor] = tile;
+}
+
+void BuildingFloor::Square::ReplaceFrame(BuildingTile *tile)
+{
+    mTiles[SectionFrame] = tile;
+}
+
+int BuildingFloor::Square::getTileIndexForWall()
+{
+    BuildingTile *tile = mTiles[SectionWall];
+    if (!tile)
+        return -1;
+
+    int index = tile->mIndex;
+
+    switch (mWallOrientation) {
+    case WallOrientN:
+        if (mTiles[SectionDoor] != 0)
+            index += 11;
+        else if (mTiles[SectionFrame] != 0)
+            index += 9; // window
+        else
+            index += 1;
+        break;
+    case  WallOrientNW:
+        index += 2;
+        break;
+    case  WallOrientW:
+        if (mTiles[SectionDoor] != 0)
+            index += 10;
+        else if (mTiles[SectionFrame] != 0)
+            index += 8; // window
+        break;
+    case  WallOrientSE:
+        index += 3;
+        break;
+    }
+
+    return index;
 }

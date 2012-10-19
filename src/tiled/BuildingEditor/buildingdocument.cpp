@@ -114,3 +114,11 @@ QPoint BuildingDocument::moveObject(BaseMapObject *object, const QPoint &pos)
     emit objectMoved(object);
     return old;
 }
+
+BuildingTile *BuildingDocument::changeDoorTile(Door *door, BuildingTile *tile)
+{
+    BuildingTile *old = door->mDoorTile;
+    door->mDoorTile = tile;
+    emit doorTileChanged(door);
+    return old;
+}

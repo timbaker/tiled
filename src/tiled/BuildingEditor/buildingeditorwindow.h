@@ -41,9 +41,11 @@ namespace BuildingEditor {
 class BaseTool;
 class BuildingDocument;
 class BuildingFloor;
+class Door;
 class FloorEditor;
 class Room;
 
+#if 0
 class WallType
 {
 public:
@@ -108,35 +110,93 @@ public:
 
     void Add(QString name, int first);
 };
+#endif
 
-class DoorType
+class BuildingTile
 {
 public:
-    QString Tilesheet;
-    int Index;
+    BuildingTile(const QString &tilesetName, int index) :
+        mTilesetName(tilesetName),
+        mIndex(index)
+    {}
 
-    DoorType(QString tile, int ind) :
-        Tilesheet(tile),
-        Index(ind)
-    {
-
-    }
-
-    QString ToString()
-    {
-        return Tilesheet + QLatin1String("_") + QString::number(Index);
-    }
+    QString mTilesetName;
+    int mIndex;
 };
 
-class DoorTypes
+class BuildingTiles
 {
 public:
-    static DoorTypes *instance;
+    static BuildingTiles *instance();
 
-    QList<DoorType*> Types;
-    QMap<QString,DoorType*> TypesByName;
+    class Category
+    {
+    public:
+        Category(const QString &name) :
+            mName(name)
+        {}
 
-    void Add(QString name, int first);
+        void add(const QString &tileName)
+        {
+            QString tilesetName;
+            int tileIndex;
+            parseTileName(tileName, tilesetName, tileIndex);
+            BuildingTile *tile = new BuildingTile(tilesetName, tileIndex);
+            mTiles += tile;
+            mTileByName[tileName] = tile;
+        }
+
+        BuildingTile *get(const QString &tileName)
+        {
+            if (!mTileByName.contains(tileName))
+                add(tileName);
+            return mTileByName[tileName];
+        }
+
+        QString name() const
+        { return mName; }
+
+        const QList<BuildingTile*> &tiles() const
+        { return mTiles; }
+
+    private:
+        QString mName;
+        QList<BuildingTile*> mTiles;
+        QMap<QString,BuildingTile*> mTileByName;
+    };
+
+    void add(const QString &categoryName, const QString &tileName)
+    {
+        Category *category = this->category(categoryName);
+        if (!category) {
+            category = new Category(categoryName);
+            mCategories += category;
+            mCategoryByName[categoryName]= category;
+        }
+        category->add(tileName);
+    }
+
+    BuildingTile *get(const QString &categoryName, const QString &tileName);
+
+    const QList<Category*> &categories() const
+    { return mCategories; }
+
+    Category *category(const QString &name)
+    {
+        if (mCategoryByName.contains(name))
+            return mCategoryByName[name];
+        return 0;
+    }
+
+    static bool parseTileName(const QString &tileName, QString &tilesetName, int &index);
+    static QString adjustTileNameIndex(const QString &tileName, int offset);
+
+    BuildingTile *tileForDoor(Door *door, const QString &tileName);
+
+private:
+    static BuildingTiles *mInstance;
+    QList<Category*> mCategories;
+    QMap<QString,Category*> mCategoryByName;
 };
 
 class BaseMapObject
@@ -186,11 +246,15 @@ class Door : public BaseMapObject
 {
 public:
     Door(BuildingFloor *floor, int x, int y, Direction dir) :
-        BaseMapObject(floor, x, y, dir)
+        BaseMapObject(floor, x, y, dir),
+        mDoorTile(0),
+        mFrameTile(0)
     {
 
     }
 
+    BuildingTile *mDoorTile;
+    BuildingTile *mFrameTile;
 };
 
 class Stairs : public BaseMapObject
@@ -204,6 +268,14 @@ public:
 class Window : public BaseMapObject
 {
 public:
+    Window(BuildingFloor *floor, int x, int y, Direction dir) :
+        BaseMapObject(floor, x, y, dir),
+        mTile(0)
+    {
+
+    }
+
+    BuildingTile *mTile;
 };
 
 class Layout
@@ -217,9 +289,11 @@ public:
 
     QVector<QVector<int> > grid;
     int w, h;
+#if 0
     WallType *exteriorWall;
     QVector<WallType*> interiorWalls;
     QVector<FloorType*> floors;
+#endif
 //    QList<QRgb> colList;
 };
 
@@ -262,12 +336,16 @@ public:
     QStringList Rooms;
 #endif
     QString ExteriorWall;
+    QString mDoorTile;
+    QString mDoorFrameTile;
+#if 1
     QString FrameStyleTilesheet;
     QString DoorStyleTilesheet;
     int DoorFrameStyleIDW;
     int DoorFrameStyleIDN;
     int DoorStyleIDW;
     int DoorStyleIDN;
+#endif
     QString TopStairNorth;
     QString MidStairNorth;
     QString BotStairNorth;
@@ -290,11 +368,13 @@ public:
     Room *getRoom(int index);
     int getRoomCount();
 
-    WallType *getWallForRoom(int i);
-    FloorType *getFloorForRoom(int i);
+    BuildingTile *getWallForRoom(int i);
+    BuildingTile *getFloorForRoom(int i);
     int getFromColor(QRgb pixel);
+#if 0
     WallType *getWallForRoom(QString room);
     FloorType *getFloorForRoom(QString room);
+#endif
     void setWallForRoom(Room *room, QString tile);
     void setFloorForRoom(Room *room, QString tile);
 };
@@ -331,6 +411,8 @@ private slots:
     void currentEWallChanged(const QItemSelection &selected);
     void currentIWallChanged(const QItemSelection &selected);
     void currentFloorChanged(const QItemSelection &selected);
+    void currentDoorChanged(const QItemSelection &selected);
+    void currentDoorFrameChanged(const QItemSelection &selected);
 
     void upLevel();
     void downLevel();

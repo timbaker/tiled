@@ -185,6 +185,8 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
             SLOT(objectRemoved(BuildingFloor*,int)));
     connect(mDocument, SIGNAL(objectMoved(BaseMapObject*)),
             SLOT(objectMoved(BaseMapObject*)));
+    connect(mDocument, SIGNAL(doorTileChanged(Door*)),
+            SLOT(doorTileChanged(Door*)));
 }
 
 void BuildingPreviewScene::BuildingToMap()
@@ -195,6 +197,7 @@ void BuildingPreviewScene::BuildingToMap()
     }
 }
 
+#if 0
 int WallType_getIndexFromSection(WallType *type, BuildingFloor::WallTile::WallSection section)
 {
     int index = type->FirstIndex;
@@ -228,6 +231,7 @@ int WallType_getIndexFromSection(WallType *type, BuildingFloor::WallTile::WallSe
 
     return index;
 }
+#endif
 
 void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                                                      const QVector<TileLayer *> &layers)
@@ -237,31 +241,21 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
         tl->erase(QRegion(QRect(0, 0, tl->width(), tl->height())));
         for (int x = 0; x < floor->width(); x++) {
             for (int y = 0; y < floor->height(); y++) {
-                if (index == Floor) {
-                    BuildingFloor::FloorTile *tile = floor->squares[x][y].floorTile;
-                    if (tile && tile->Type) {
-                        tl->setCell(x, y, Cell(mTilesetByName[tile->Type->Tilesheet]->tileAt(tile->Type->Index)));
-                    }
+                if (index == LayerIndexFloor) {
+                    BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionFloor];
+                    if (tile)
+                        tl->setCell(x, y, Cell(mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
                 }
-                if (index == Wall) {
-                    if (floor->squares[x][y].walls.count()) {
-                        BuildingFloor::WallTile *tile = floor->squares[x][y].walls[0];
-                        if (tile && tile->Type) {
-                            tl->setCell(x, y, Cell(mTilesetByName[tile->Type->Tilesheet]->tileAt(WallType_getIndexFromSection(tile->Type, tile->Section))));
-                        }
-                    }
+                if (index == LayerIndexWall) {
+                    BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionWall];
+                    if (tile)
+                        tl->setCell(x, y, Cell(mTilesetByName[tile->mTilesetName]->tileAt(floor->squares[x][y].getTileIndexForWall())));
                 }
-#if 0
-                if (index == Door) {
-                    if (floor->squares[x][y].walls.count()) {
-                        BuildingFloor::WallTile *tile = floor->squares[x][y].walls[0];
-                        if (tile && tile->Type) {
-                            if (tile->Section == BuildingFloor::WallTile::NDoor)
-                                tl->setCell(x, y, Cell(mTilesetByName[RoomDefinitionManager::instance->DoorStyleTilesheet]->tileAt(RoomDefinitionManager::instance->DoorStyleIDN)));
-                        }
-                    }
+                if (index == LayerIndexDoor) {
+                    BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionDoor];
+                    if (tile)
+                        tl->setCell(x, y, Cell(mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
                 }
-#endif
             }
         }
         index++;
@@ -341,12 +335,18 @@ void BuildingPreviewScene::objectAdded(BaseMapObject *object)
 
 void BuildingPreviewScene::objectRemoved(BuildingFloor *floor, int index)
 {
+    Q_UNUSED(index)
     floorEdited(floor);
 }
 
 void BuildingPreviewScene::objectMoved(BaseMapObject *object)
 {
     floorEdited(object->floor());
+}
+
+void BuildingPreviewScene::doorTileChanged(BuildingEditor::Door *door)
+{
+    floorEdited(door->floor());
 }
 
 /////

@@ -29,6 +29,8 @@ namespace BuildingEditor {
 class BaseMapObject;
 class Building;
 class BuildingFloor;
+class BuildingTile;
+class Door;
 class Layout;
 class Room;
 
@@ -63,6 +65,7 @@ public:
     void insertObject(BuildingFloor *floor, int index, BaseMapObject *object);
     BaseMapObject *removeObject(BuildingFloor *floor, int index);
     QPoint moveObject(BaseMapObject *object, const QPoint &pos);
+    BuildingTile *changeDoorTile(Door *door, BuildingTile *tile);
     // -UNDO/REDO
     
 signals:
@@ -74,6 +77,8 @@ signals:
     void objectAboutToBeRemoved(BaseMapObject *object);
     void objectRemoved(BuildingFloor *floor, int index);
     void objectMoved(BaseMapObject *object);
+    void doorTileChanged(Door *door);
+
     void selectedObjectsChanged();
 
 public slots:

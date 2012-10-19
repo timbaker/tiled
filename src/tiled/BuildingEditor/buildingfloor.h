@@ -26,6 +26,7 @@ namespace BuildingEditor {
 
 class BaseMapObject;
 class Building;
+class BuildingTile;
 class Door;
 class FloorType;
 class Layout;
@@ -74,32 +75,46 @@ public:
         }
     };
 
-    WallType *exteriorWall;
-    QVector<WallType*> interiorWalls;
-    QVector<FloorType*> floors;
+    BuildingTile *exteriorWall;
+    QVector<BuildingTile*> interiorWalls;
+    QVector<BuildingTile*> floors;
 
 
     class Square
     {
     public:
-        Square() :
-            floorTile(0)
-        {}
-        ~Square()
+        enum SquareSection
         {
-            delete floorTile;
-            qDeleteAll(walls);
-        }
+            SectionFloor,
+            SectionWall,
+            SectionFrame,
+            SectionDoor,
+            MaxSection
+        };
 
-        FloorTile *floorTile;
-        QList<WallTile*> walls;
+        enum WallOrientation
+        {
+            WallOrientN,
+            WallOrientW,
+            WallOrientNW,
+            WallOrientSE
+        };
+
+        Square();
+        ~Square();
+
+        BuildingTile *mTiles[MaxSection];
+        WallOrientation mWallOrientation;
         QString stairsTexture;
 
-        bool Contains(WallTile::WallSection sec);
+        bool IsWallOrient(WallOrientation orient)
+        { return mWallOrientation == orient; }
 
-        void Replace(WallTile *tile, WallTile::WallSection secToReplace);
-        void ReplaceWithDoor(WallTile::WallSection direction);
-        void ReplaceWithWindow(WallTile::WallSection direction);
+        void ReplaceWall(BuildingTile *tile, WallOrientation orient);
+        void ReplaceDoor(BuildingTile *tile);
+        void ReplaceFrame(BuildingTile *tile);
+        int getTileIndexForWall();
+        int getTileIndexForDoor();
     };
 
     QVector<QVector<Square> > squares;

@@ -27,6 +27,8 @@ namespace BuildingEditor {
 class BaseMapObject;
 class BuildingDocument;
 class BuildingFloor;
+class BuildingTile;
+class Door;
 class Layout;
 class Room;
 
@@ -177,6 +179,22 @@ private:
     BuildingDocument *mDocument;
     BaseMapObject *mObject;
     QPoint mPos;
+};
+
+class ChangeDoorTile : public QUndoCommand
+{
+public:
+    ChangeDoorTile(BuildingDocument *doc, Door *door, BuildingTile *tile);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    Door *mDoor;
+    BuildingTile *mTile;
 };
 
 } // namespace BuildingEditor
