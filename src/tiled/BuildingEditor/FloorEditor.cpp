@@ -335,8 +335,10 @@ QSet<BaseMapObject*> FloorEditor::objectsInRect(const QRectF &sceneRect)
 {
     QSet<BaseMapObject*> objects;
     foreach (QGraphicsItem *item, items(sceneRect)) {
-        if (GraphicsObjectItem *objectItem = dynamic_cast<GraphicsObjectItem*>(item))
-            objects += objectItem->object();
+        if (GraphicsObjectItem *objectItem = dynamic_cast<GraphicsObjectItem*>(item)) {
+            if (objectItem->object()->floor() == mDocument->currentFloor())
+                objects += objectItem->object();
+        }
     }
     return objects;
 }
