@@ -33,6 +33,7 @@ class BuildingTile;
 class Door;
 class Layout;
 class Room;
+class Window;
 
 class BuildingDocument : public QObject
 {
@@ -66,6 +67,7 @@ public:
     BaseMapObject *removeObject(BuildingFloor *floor, int index);
     QPoint moveObject(BaseMapObject *object, const QPoint &pos);
     BuildingTile *changeDoorTile(Door *door, BuildingTile *tile, bool isFrame);
+    BuildingTile *changeWindowTile(Window *window, BuildingTile *tile);
     // -UNDO/REDO
     
 signals:
@@ -77,7 +79,7 @@ signals:
     void objectAboutToBeRemoved(BaseMapObject *object);
     void objectRemoved(BuildingFloor *floor, int index);
     void objectMoved(BaseMapObject *object);
-    void doorTileChanged(Door *door);
+    void objectTileChanged(BaseMapObject *object);
 
     void selectedObjectsChanged();
 

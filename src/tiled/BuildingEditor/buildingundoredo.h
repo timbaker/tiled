@@ -31,6 +31,7 @@ class BuildingTile;
 class Door;
 class Layout;
 class Room;
+class Window;
 
 enum {
     UndoCmd_PaintRoom = 1000,
@@ -197,6 +198,22 @@ private:
     Door *mDoor;
     BuildingTile *mTile;
     bool mIsFrame;
+};
+
+class ChangeWindowTile : public QUndoCommand
+{
+public:
+    ChangeWindowTile(BuildingDocument *doc, Window *window, BuildingTile *tile);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    Window *mWindow;
+    BuildingTile *mTile;
 };
 
 } // namespace BuildingEditor

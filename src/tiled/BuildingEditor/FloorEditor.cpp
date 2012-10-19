@@ -108,19 +108,36 @@ void GraphicsObjectItem::paint(QPainter *painter,
 
     // Screw you, polymorphism!!!
     if (Door *door = dynamic_cast<Door*>(mObject)) {
-        if (door->dir() == Door::N) {
+        if (door->dir() == BaseMapObject::N) {
             QPointF p = mEditor->tileToScene(door->pos() + dragOffset);
             painter->fillRect(p.x(), p.y() - 5, 30, 10, Qt::white);
             QPen pen(Qt::blue);
             painter->setPen(pen);
             painter->drawRect(p.x(), p.y() - 5, 30, 10);
         }
-        if (door->dir() == Door::W) {
+        if (door->dir() == BaseMapObject::W) {
             QPointF p = mEditor->tileToScene(door->pos() + dragOffset);
             painter->fillRect(p.x() - 5, p.y(), 10, 30, Qt::white);
             QPen pen(Qt::blue);
             painter->setPen(pen);
             painter->drawRect(p.x() - 5, p.y(), 10, 30);
+        }
+    }
+
+    if (Window *window = dynamic_cast<Window*>(mObject)) {
+        if (window->dir() == BaseMapObject::N) {
+            QPointF p = mEditor->tileToScene(window->pos() + dragOffset);
+            painter->fillRect(p.x() + 7, p.y() - 3, 16, 6, Qt::white);
+            QPen pen(Qt::blue);
+            painter->setPen(pen);
+            painter->drawRect(p.x() + 7, p.y() - 3, 16, 6);
+        }
+        if (window->dir() == BaseMapObject::W) {
+            QPointF p = mEditor->tileToScene(window->pos() + dragOffset);
+            painter->fillRect(p.x() - 3, p.y() + 7, 6, 16, Qt::white);
+            QPen pen(Qt::blue);
+            painter->setPen(pen);
+            painter->drawRect(p.x() - 3, p.y() + 7, 6, 16);
         }
     }
 }
@@ -156,6 +173,9 @@ void GraphicsObjectItem::setDragOffset(const QPoint &offset)
 }
 
 /////
+
+const int FloorEditor::ZVALUE_GRID = 20;
+const int FloorEditor::ZVALUE_CURSOR = 100;
 
 FloorEditor::FloorEditor(QWidget *parent) :
     QGraphicsScene(parent),
@@ -222,7 +242,7 @@ void FloorEditor::setDocument(BuildingDocument *doc)
 
     GraphicsGridItem *item = new GraphicsGridItem(building()->width(),
                                                   building()->height());
-    item->setZValue(20);
+    item->setZValue(ZVALUE_GRID);
     addItem(item);
 
     setSceneRect(-10, -10,

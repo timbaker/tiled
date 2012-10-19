@@ -130,6 +130,9 @@
    <property name="text">
     <string>Pecil</string>
    </property>
+   <property name="toolTip">
+    <string>Draw Room</string>
+   </property>
   </action>
   <action name="actionEraser">
    <property name="checkable">
@@ -141,6 +144,9 @@
    </property>
    <property name="text">
     <string>Eraser</string>
+   </property>
+   <property name="toolTip">
+    <string>Erase Room</string>
    </property>
   </action>
   <action name="actionDoor">
@@ -154,6 +160,9 @@
    <property name="text">
     <string>Door</string>
    </property>
+   <property name="toolTip">
+    <string>Place Door</string>
+   </property>
   </action>
   <action name="actionWindow">
    <property name="checkable">
@@ -166,6 +175,9 @@
    <property name="text">
     <string>Window</string>
    </property>
+   <property name="toolTip">
+    <string>Place Window</string>
+   </property>
   </action>
   <action name="actionStairs">
    <property name="checkable">
@@ -177,6 +189,9 @@
    </property>
    <property name="text">
     <string>Stairs</string>
+   </property>
+   <property name="toolTip">
+    <string>Place Stairs</string>
    </property>
   </action>
   <action name="actionUpLevel">

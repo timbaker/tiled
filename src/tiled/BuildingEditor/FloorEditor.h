@@ -99,6 +99,9 @@ class FloorEditor : public QGraphicsScene
     Q_OBJECT
 
 public:
+    static const int ZVALUE_CURSOR;
+    static const int ZVALUE_GRID;
+
     explicit FloorEditor(QWidget *parent = 0);
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);

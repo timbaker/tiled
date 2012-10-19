@@ -108,7 +108,7 @@ private slots:
     void objectAdded(BaseMapObject *object);
     void objectRemoved(BuildingFloor *floor, int index);
     void objectMoved(BaseMapObject *object);
-    void doorTileChanged(Door *door);
+    void objectTileChanged(BaseMapObject *object);
 
 private:
     BuildingDocument *mDocument;

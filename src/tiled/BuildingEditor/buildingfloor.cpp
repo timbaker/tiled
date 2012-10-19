@@ -159,7 +159,7 @@ void BuildingFloor::LayoutToSquares()
             }
 
             if (Window *window = GetWindowAt(x, y))
-                squares[x][h].ReplaceFrame(window->mTile);
+                squares[x][y].ReplaceFrame(window->mTile);
 
             Stairs *stairs = GetStairsAt(x, y);
             if (stairs != 0)

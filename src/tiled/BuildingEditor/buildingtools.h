@@ -32,6 +32,7 @@ class BaseMapObject;
 class Door;
 class FloorEditor;
 class GraphicsObjectItem;
+class Window;
 
 /////
 
@@ -163,7 +164,23 @@ public:
 
 private:
     static DoorTool *mInstance;
-    Door *mCursorDoor;
+    Door *mCursorObject;
+};
+
+class WindowTool : public BaseObjectTool
+{
+    Q_OBJECT
+public:
+    static WindowTool *instance();
+
+    WindowTool();
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+
+private:
+    static WindowTool *mInstance;
+    Window *mCursorObject;
 };
 
 /////

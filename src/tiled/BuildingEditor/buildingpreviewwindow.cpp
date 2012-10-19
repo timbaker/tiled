@@ -185,8 +185,8 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
             SLOT(objectRemoved(BuildingFloor*,int)));
     connect(mDocument, SIGNAL(objectMoved(BaseMapObject*)),
             SLOT(objectMoved(BaseMapObject*)));
-    connect(mDocument, SIGNAL(doorTileChanged(Door*)),
-            SLOT(doorTileChanged(Door*)));
+    connect(mDocument, SIGNAL(objectTileChanged(BaseMapObject*)),
+            SLOT(objectTileChanged(BaseMapObject*)));
 }
 
 void BuildingPreviewScene::BuildingToMap()
@@ -349,9 +349,9 @@ void BuildingPreviewScene::objectMoved(BaseMapObject *object)
     floorEdited(object->floor());
 }
 
-void BuildingPreviewScene::doorTileChanged(BuildingEditor::Door *door)
+void BuildingPreviewScene::objectTileChanged(BuildingEditor::BaseMapObject *object)
 {
-    floorEdited(door->floor());
+    floorEdited(object->floor());
 }
 
 /////

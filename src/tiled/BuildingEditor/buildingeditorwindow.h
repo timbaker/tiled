@@ -44,6 +44,7 @@ class BuildingFloor;
 class Door;
 class FloorEditor;
 class Room;
+class Window;
 
 #if 0
 class WallType
@@ -194,6 +195,8 @@ public:
     BuildingTile *tileForDoor(Door *door, const QString &tileName,
                               bool isFrame = false);
 
+    BuildingTile *tileForWindow(Window *window, const QString &tileName);
+
 private:
     static BuildingTiles *mInstance;
     QList<Category*> mCategories;
@@ -339,6 +342,7 @@ public:
     QString ExteriorWall;
     QString mDoorTile;
     QString mDoorFrameTile;
+    QString mWindowTile;
 #if 1
     QString FrameStyleTilesheet;
     QString DoorStyleTilesheet;
@@ -414,6 +418,7 @@ private slots:
     void currentFloorChanged(const QItemSelection &selected);
     void currentDoorChanged(const QItemSelection &selected);
     void currentDoorFrameChanged(const QItemSelection &selected);
+    void currentWindowChanged(const QItemSelection &selected);
 
     void upLevel();
     void downLevel();

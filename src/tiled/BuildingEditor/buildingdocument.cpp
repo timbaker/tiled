@@ -120,6 +120,14 @@ BuildingTile *BuildingDocument::changeDoorTile(Door *door, BuildingTile *tile,
 {
     BuildingTile *old = door->mDoorTile;
     isFrame ? door->mFrameTile = tile : door->mDoorTile = tile;
-    emit doorTileChanged(door);
+    emit objectTileChanged(door);
+    return old;
+}
+
+BuildingTile *BuildingDocument::changeWindowTile(Window *window, BuildingTile *tile)
+{
+    BuildingTile *old = window->mTile;
+    window->mTile = tile;
+    emit objectTileChanged(window);
     return old;
 }

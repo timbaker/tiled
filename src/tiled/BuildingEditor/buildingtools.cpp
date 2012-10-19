@@ -263,6 +263,7 @@ void BaseObjectTool::setCursorObject(BaseMapObject *object)
 {
     if (!mCursorItem) {
         mCursorItem = new GraphicsObjectItem(mEditor, object);
+        mCursorItem->setZValue(FloorEditor::ZVALUE_CURSOR);
         mEditor->addItem(mCursorItem);
     }
     mCursorItem->setObject(object);
@@ -281,7 +282,7 @@ DoorTool *DoorTool::instance()
 
 DoorTool::DoorTool() :
     BaseObjectTool(),
-    mCursorDoor(0)
+    mCursorObject(0)
 {
 }
 
@@ -321,6 +322,59 @@ void DoorTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     BaseObjectTool::mouseMoveEvent(event);
 
+    if (mTileEdge == Center) {
+        if (mCursorItem)
+            mCursorItem->setVisible(false);
+        return;
+    }
+
+    if (mCursorItem)
+        mCursorItem->setVisible(true);
+
+    int x = mTilePos.x(), y = mTilePos.y();
+    BaseMapObject::Direction dir = BaseMapObject::N;
+
+    if (mTileEdge == W)
+        dir = BaseMapObject::W;
+    else if (mTileEdge == E) {
+        x++;
+        dir = BaseMapObject::W;
+    }
+    else if (mTileEdge == S)
+        y++;
+
+    if (!mCursorObject) {
+        BuildingFloor *floor = mEditor->document()->currentFloor();
+        mCursorObject = new Door(floor, x, y, dir);
+    }
+    // mCursorDoor->setFloor()
+    mCursorObject->setPos(x, y);
+    mCursorObject->setDir(dir);
+
+    setCursorObject(mCursorObject);
+}
+
+/////
+
+WindowTool *WindowTool::mInstance = 0;
+
+WindowTool *WindowTool::instance()
+{
+    if (!mInstance)
+        mInstance = new WindowTool();
+    return mInstance;
+}
+
+WindowTool::WindowTool() :
+    BaseObjectTool(),
+    mCursorObject(0)
+{
+}
+
+void WindowTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    Q_UNUSED(event)
+
     if (mTileEdge == Center)
         return;
 
@@ -336,15 +390,50 @@ void DoorTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     else if (mTileEdge == S)
         y++;
 
-    if (!mCursorDoor) {
+    BuildingFloor *floor = mEditor->document()->currentFloor();
+    Window *window = new Window(floor, x, y, dir);
+    window->mTile = BuildingTiles::instance()->tileForWindow(window,
+                                                             RoomDefinitionManager::instance->mWindowTile);
+    mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
+                                                         floor,
+                                                         floor->objectCount(),
+                                                         window));
+}
+
+void WindowTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    BaseObjectTool::mouseMoveEvent(event);
+
+    if (mTileEdge == Center) {
+        if (mCursorItem)
+            mCursorItem->setVisible(false);
+        return;
+    }
+
+    if (mCursorItem)
+        mCursorItem->setVisible(true);
+
+    int x = mTilePos.x(), y = mTilePos.y();
+    BaseMapObject::Direction dir = BaseMapObject::N;
+
+    if (mTileEdge == W)
+        dir = BaseMapObject::W;
+    else if (mTileEdge == E) {
+        x++;
+        dir = BaseMapObject::W;
+    }
+    else if (mTileEdge == S)
+        y++;
+
+    if (!mCursorObject) {
         BuildingFloor *floor = mEditor->document()->currentFloor();
-        mCursorDoor = new Door(floor, x, y, dir);
+        mCursorObject = new Window(floor, x, y, dir);
     }
     // mCursorDoor->setFloor()
-    mCursorDoor->setPos(x, y);
-    mCursorDoor->setDir(dir);
+    mCursorObject->setPos(x, y);
+    mCursorObject->setDir(dir);
 
-    setCursorObject(mCursorDoor);
+    setCursorObject(mCursorObject);
 }
 
 /////

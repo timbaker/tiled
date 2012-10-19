@@ -93,6 +93,11 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     DoorTool::instance()->setEditor(roomEditor);
     DoorTool::instance()->setAction(ui->actionDoor);
 
+    connect(ui->actionWindow, SIGNAL(triggered()),
+            WindowTool::instance(), SLOT(activate()));
+    WindowTool::instance()->setEditor(roomEditor);
+    WindowTool::instance()->setAction(ui->actionWindow);
+
     connect(ui->actionSelectObject, SIGNAL(triggered()),
             SelectMoveObjectTool::instance(), SLOT(activate()));
     SelectMoveObjectTool::instance()->setEditor(roomEditor);
@@ -137,6 +142,11 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(w->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(currentDoorFrameChanged(QItemSelection)));
 
+    w = new Tiled::Internal::MixedTilesetView(toolBox);
+    toolBox->addItem(w, tr("Windows"));
+    connect(w->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            SLOT(currentWindowChanged(QItemSelection)));
+
     /////
 
     QAction *undoAction = mUndoGroup->createUndoAction(this, tr("Undo"));
@@ -170,7 +180,7 @@ bool BuildingEditorWindow::Startup()
 
     Tiled::Internal::MixedTilesetView *v;
     QList<Tiled::Tile*> tiles;
-#if 1
+
     v = static_cast<Tiled::Internal::MixedTilesetView*>(ui->toolBox->widget(0));
     tiles.clear();
     foreach (BuildingTile *tile, BuildingTiles::instance()->category(QLatin1String("exterior_walls"))->tiles())
@@ -188,42 +198,7 @@ bool BuildingEditorWindow::Startup()
     foreach (BuildingTile *tile, BuildingTiles::instance()->category(QLatin1String("floors"))->tiles())
         tiles += mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex);
     v->model()->setTiles(tiles);
-#else
-    foreach (BuildingTiles::Category *category, BuildingTiles::instance()->categories()) {
-        if (category->name() == QLatin1String("exterior_walls")) {
-            foreach (BuildingTile *tile, category->tiles())
-                WallTypes::instance->AddExt(tile->mTilesetName, tile->mIndex);
-        }
-        if (category->name() == QLatin1String("interior_walls")) {
-            foreach (BuildingTile *tile, category->tiles())
-                WallTypes::instance->Add(tile->mTilesetName, tile->mIndex);
-        }
-        if (category->name() == QLatin1String("floors")) {
-            foreach (BuildingTile *tile, category->tiles())
-                FloorTypes::instance->Add(tile->mTilesetName, tile->mIndex);
-        }
-        if (category->name() == QLatin1String("doors")) {
-        }
-    }
 
-    v = static_cast<Tiled::Internal::MixedTilesetView*>(ui->toolBox->widget(0));
-    QList<Tiled::Tile*> tiles;
-    foreach (WallType *t, WallTypes::instance->ETypes)
-        tiles += tileFor(t->ToString());
-    v->model()->setTiles(tiles);
-
-    v = static_cast<Tiled::Internal::MixedTilesetView*>(ui->toolBox->widget(1));
-    tiles.clear();
-    foreach (WallType *t, WallTypes::instance->ITypes)
-        tiles += tileFor(t->ToString());
-    v->model()->setTiles(tiles);
-
-    v = static_cast<Tiled::Internal::MixedTilesetView*>(ui->toolBox->widget(2));
-    tiles.clear();
-    foreach (FloorType *t, FloorTypes::instance->Types)
-        tiles += tileFor(t->ToString());
-    v->model()->setTiles(tiles);
-#endif
     v = static_cast<Tiled::Internal::MixedTilesetView*>(ui->toolBox->widget(3));
     tiles.clear();
     foreach (BuildingTile *tile, BuildingTiles::instance()->category(QLatin1String("doors"))->tiles())
@@ -233,6 +208,12 @@ bool BuildingEditorWindow::Startup()
     v = static_cast<Tiled::Internal::MixedTilesetView*>(ui->toolBox->widget(4));
     tiles.clear();
     foreach (BuildingTile *tile, BuildingTiles::instance()->category(QLatin1String("door_frames"))->tiles())
+        tiles += mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex);
+    v->model()->setTiles(tiles);
+
+    v = static_cast<Tiled::Internal::MixedTilesetView*>(ui->toolBox->widget(5));
+    tiles.clear();
+    foreach (BuildingTile *tile, BuildingTiles::instance()->category(QLatin1String("windows"))->tiles())
         tiles += mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex);
     v->model()->setTiles(tiles);
 
@@ -578,6 +559,39 @@ void BuildingEditorWindow::currentDoorFrameChanged(const QItemSelection &selecte
     }
 }
 
+void BuildingEditorWindow::currentWindowChanged(const QItemSelection &selected)
+{
+    QModelIndexList indexes = selected.indexes();
+    if (indexes.count() == 1) {
+        QModelIndex index = indexes.first();
+        const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
+        Tile *tile = m->tileAt(index);
+        if (!tile)
+            return;
+        // New windows will be created with this tile
+        RoomDefinitionManager::instance->mWindowTile = nameForTile(tile);
+        // Assign the new tile to selected windows
+        QList<Window*> windows;
+        QString tileName = nameForTile(tile);
+        foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
+            if (Window *window = dynamic_cast<Window*>(object)) {
+                if (window->mTile != BuildingTiles::instance()->tileForWindow(window, tileName))
+                    windows += window;
+            }
+        }
+        if (windows.count()) {
+            if (windows.count() > 1)
+                mCurrentDocument->undoStack()->beginMacro(tr("Change Door Frame Tile"));
+            foreach (Window *window, windows)
+                mCurrentDocument->undoStack()->push(new ChangeWindowTile(mCurrentDocument,
+                                                                       window,
+                                                                       BuildingTiles::instance()->tileForWindow(window, tileName)));
+            if (windows.count() > 1)
+                mCurrentDocument->undoStack()->endMacro();
+        }
+    }
+}
+
 void BuildingEditorWindow::upLevel()
 {
     int level = mCurrentDocument->currentFloor()->level() + 1;
@@ -672,6 +686,7 @@ void RoomDefinitionManager::Init(BuildingDefinition *definition)
     ExteriorWall = definition->Wall;
     mDoorTile = QLatin1String("fixtures_doors_01_0");
     mDoorFrameTile = QLatin1String("fixtures_doors_frames_01_0");
+    mWindowTile = QLatin1String("fixtures_windows_01_0");
 
     foreach (Room *room, definition->RoomList) {
         ColorToRoom[room->Color] = room;
@@ -906,6 +921,14 @@ BuildingTile *BuildingTiles::tileForDoor(Door *door, const QString &tileName,
     if (door->dir() == BaseMapObject::N)
         adjustedName = adjustTileNameIndex(tileName, 1);
     return get(QLatin1String(isFrame ? "door_frames" : "doors"), adjustedName);
+}
+
+BuildingTile *BuildingTiles::tileForWindow(Window *window, const QString &tileName)
+{
+    QString adjustedName = tileName;
+    if (window->dir() == BaseMapObject::N)
+        adjustedName = adjustTileNameIndex(tileName, 1);
+    return get(QLatin1String("windows"), adjustedName);
 }
 
 /////
