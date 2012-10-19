@@ -35,6 +35,9 @@ public:
     void update(const QString &text);
     void end();
 
+    QWidget *mainWindow() const
+    { return mMainWindow; }
+
     void setMainWindow(QWidget *parent);
 
 private:
@@ -52,8 +55,13 @@ private:
 class PROGRESS
 {
 public:
-    PROGRESS(const QString &text)
+    PROGRESS(const QString &text, QWidget *parent = 0) :
+        mMainWindow(0)
     {
+        if (parent) {
+            mMainWindow = ZProgressManager::instance()->mainWindow();
+            ZProgressManager::instance()->setMainWindow(parent);
+        }
         ZProgressManager::instance()->begin(text);
     }
 
@@ -65,7 +73,11 @@ public:
     ~PROGRESS()
     {
         ZProgressManager::instance()->end();
+        if (mMainWindow)
+            ZProgressManager::instance()->setMainWindow(mMainWindow);
     }
+
+    QWidget *mMainWindow;
 };
 
 #endif /* ZPROGRESSMANAGER_H */

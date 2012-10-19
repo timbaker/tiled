@@ -41,8 +41,11 @@ ZProgressManager::ZProgressManager()
 
 void ZProgressManager::setMainWindow(QWidget *mainWindow)
 {
-    if (mMainWindow)
+    if (mMainWindow) {
+        mDialog->setParent(mMainWindow = mainWindow);
+        mDialog->setWindowFlags(Qt::CustomizeWindowHint | Qt::Dialog);
         return;
+    }
     mMainWindow = mainWindow;
     mDialog = new QDialog(mainWindow);
     QVBoxLayout *layout = new QVBoxLayout();
