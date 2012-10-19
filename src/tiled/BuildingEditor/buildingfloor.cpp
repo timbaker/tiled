@@ -29,6 +29,11 @@ BuildingFloor::BuildingFloor(Building *building, int level) :
 {
 }
 
+BuildingFloor *BuildingFloor::floorBelow() const
+{
+    return (mLevel > 0) ? mBuilding->floor(mLevel - 1) : 0;
+}
+
 void BuildingFloor::insertObject(int index, BaseMapObject *object)
 {
     mObjects.insert(index, object);
@@ -53,7 +58,6 @@ void BuildingFloor::LayoutToSquares()
 
     BuildingTile *wtype = 0;
 
-#if 1
     exteriorWall = BuildingTiles::instance()->get(QLatin1String("exterior_walls"),
                                                   RoomDefinitionManager::instance->ExteriorWall);
     interiorWalls.clear();
@@ -63,11 +67,6 @@ void BuildingFloor::LayoutToSquares()
         interiorWalls += RoomDefinitionManager::instance->getWallForRoom(i);
         floors += RoomDefinitionManager::instance->getFloorForRoom(i);
     }
-#else
-    exteriorWall = l->exteriorWall;
-    interiorWalls = l->interiorWalls;
-    floors = l->floors;
-#endif
 
     // first put back walls in...
 
@@ -130,8 +129,8 @@ void BuildingFloor::LayoutToSquares()
         {
             if (x > 0 && y > 0)
             {
-//                if (squares[x][y].walls.count() > 0)
-//                    continue;
+                if (squares[x][y].mTiles[Square::SectionWall]) // if (squares[x][y].walls.count() > 0)
+                    continue;
                 if (x < l->w && l->grid[x][y - 1] >= 0)
                     wtype = interiorWalls[l->grid[x][y - 1]];
                 else if (y < l->h &&  l->grid[x-1][y] >= 0)
@@ -154,17 +153,18 @@ void BuildingFloor::LayoutToSquares()
         for (int y = 0; y < l->h + 1; y++)
         {
             if (Door *door = GetDoorAt(x, y)) {
-                squares[x][y].ReplaceDoor(door->mDoorTile);
+                squares[x][y].ReplaceDoor(door->mTile);
                 squares[x][y].ReplaceFrame(door->mFrameTile);
             }
 
             if (Window *window = GetWindowAt(x, y))
                 squares[x][y].ReplaceFrame(window->mTile);
 
-            Stairs *stairs = GetStairsAt(x, y);
-            if (stairs != 0)
-            {
-                squares[x][y].stairsTexture = stairs->getStairsTexture(x, y);
+            if (Stairs *stairs = GetStairsAt(x, y)) {
+                squares[x][y].ReplaceFurniture((stairs->dir() == BaseMapObject::W)
+                                               ? stairs->mTile
+                                               : stairs->mTile->mAlternates[1],
+                                               stairs->getStairsOffset(x, y));
             }
         }
     }
@@ -175,6 +175,11 @@ void BuildingFloor::LayoutToSquares()
                 squares[x][y].mTiles[Square::SectionFloor] = floors[l->grid[x][y]];
         }
     }
+}
+
+bool BuildingFloor::IsTopStairAt(int x, int y)
+{
+    return squares[x][y].mTiles[Square::SectionFurniture] != 0; // FIXME
 }
 
 
@@ -225,8 +230,10 @@ int BuildingFloor::height() const
 
 BuildingFloor::Square::Square()
 {
-    for (int i = 0; i < MaxSection; i++)
+    for (int i = 0; i < MaxSection; i++) {
         mTiles[i] = 0;
+        mTileOffset[i] = 0;
+    }
 }
 
 
@@ -251,6 +258,17 @@ void BuildingFloor::Square::ReplaceDoor(BuildingTile *tile)
 void BuildingFloor::Square::ReplaceFrame(BuildingTile *tile)
 {
     mTiles[SectionFrame] = tile;
+}
+
+void BuildingFloor::Square::ReplaceFurniture(BuildingTile *tile, int offset)
+{
+    if (offset < 0) { // see getStairsOffset
+        mTiles[SectionFurniture] = 0;
+        mTileOffset[SectionFurniture] = 0;
+        return;
+    }
+    mTiles[SectionFurniture] = tile;
+    mTileOffset[SectionFurniture] = offset;
 }
 
 int BuildingFloor::Square::getTileIndexForWall()

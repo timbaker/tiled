@@ -22,6 +22,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include <QMainWindow>
+#include <QSettings>
 
 class CompositeLayerGroup;
 class MapComposite;
@@ -150,15 +151,21 @@ class BuildingPreviewWindow : public QMainWindow
 public:
     BuildingPreviewWindow(QWidget *parent = 0);
 
+    void closeEvent(QCloseEvent *event);
+
     void setDocument(BuildingDocument *doc);
 
     BuildingPreviewScene *scene() const
     { return mScene; }
 
+    void readSettings();
+    void writeSettings();
+
 private:
     Ui::BuildingPreviewWindow *ui;
     BuildingDocument *mDocument;
     BuildingPreviewScene *mScene;
+    QSettings mSettings;
 };
 
 } // namespace BuildingEditor

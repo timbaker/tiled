@@ -37,48 +37,9 @@ class Window;
 class BuildingFloor
 {
 public:
-
-    class WallTile
-    {
-    public:
-        enum WallSection
-        {
-            N,
-            NDoor,
-            W,
-            WDoor,
-            NW,
-            SE,
-            WWindow,
-            NWindow
-        };
-
-        WallSection Section;
-        WallType *Type;
-
-        WallTile(WallSection section, WallType *type) :
-            Section(section),
-            Type(type)
-        {
-        }
-    };
-
-    class FloorTile
-    {
-    public:
-        FloorType *Type;
-
-        FloorTile(FloorType *type) :
-            Type(type)
-        {
-
-        }
-    };
-
     BuildingTile *exteriorWall;
     QVector<BuildingTile*> interiorWalls;
     QVector<BuildingTile*> floors;
-
 
     class Square
     {
@@ -89,6 +50,7 @@ public:
             SectionWall,
             SectionFrame,
             SectionDoor,
+            SectionFurniture,
             MaxSection
         };
 
@@ -104,26 +66,30 @@ public:
         ~Square();
 
         BuildingTile *mTiles[MaxSection];
+        int mTileOffset[MaxSection];
         WallOrientation mWallOrientation;
         QString stairsTexture;
 
         bool IsWallOrient(WallOrientation orient)
-        { return mWallOrientation == orient; }
+        { return mTiles[SectionWall] && (mWallOrientation == orient); }
 
         void ReplaceWall(BuildingTile *tile, WallOrientation orient);
         void ReplaceDoor(BuildingTile *tile);
         void ReplaceFrame(BuildingTile *tile);
+        void ReplaceFurniture(BuildingTile *tile, int offset);
+
         int getTileIndexForWall();
         int getTileIndexForDoor();
     };
 
     QVector<QVector<Square> > squares;
 
-
     BuildingFloor(Building *building, int level);
 
     Building *building() const
     { return mBuilding; }
+
+    BuildingFloor *floorBelow() const;
 
     Layout *layout() const
     { return mLayout; }

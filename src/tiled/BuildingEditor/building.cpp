@@ -27,17 +27,6 @@ Building::Building(int width, int height) :
 {
 }
 
-void Building::recreate(const QList<Layout *> &layouts, WallType *wallType)
-{
-#if 0
-    qDeleteAll(mFloors);
-    mFloors.clear();
-
-    foreach (Layout *layout, layouts)
-        mFloors += new BuildingFloor(layout);
-#endif
-}
-
 void Building::insertFloor(int index, BuildingFloor *floor)
 {
     mFloors.insert(index, floor);

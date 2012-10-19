@@ -21,6 +21,7 @@
 #include <QItemSelection>
 #include <QMainWindow>
 #include <QMap>
+#include <QSettings>
 #include <QVector>
 
 class QComboBox;
@@ -45,73 +46,7 @@ class Door;
 class FloorEditor;
 class Room;
 class Window;
-
-#if 0
-class WallType
-{
-public:
-    QString Tilesheet;
-    int FirstIndex;
-
-    WallType(QString tile, int ind) :
-        Tilesheet(tile),
-        FirstIndex(ind)
-    {
-    }
-
-    QString ToString()
-    {
-        return Tilesheet + QLatin1String("_") + QString::number(FirstIndex);
-    }
-};
-
-class WallTypes
-{
-public:
-    static WallTypes *instance;
-    QList<WallType*> ETypes;
-    QList<WallType*> ITypes;
-    QMap<QString,WallType*> ITypesByName;
-
-    void Add(QString name, int first);
-    void AddExt(QString name, int first);
-
-    QStringList AddExteriorWallsToList();
-
-    WallType *getEWallFromName(QString exteriorWall);
-    WallType *getOrAdd(QString exteriorWall);
-};
-
-class FloorType
-{
-public:
-    QString Tilesheet;
-    int Index;
-
-    FloorType(QString tile, int ind) :
-        Tilesheet(tile),
-        Index(ind)
-    {
-
-    }
-
-    QString ToString()
-    {
-        return Tilesheet + QLatin1String("_") + QString::number(Index);
-    }
-};
-
-class FloorTypes
-{
-public:
-    static FloorTypes *instance;
-
-    QList<FloorType*> Types;
-    QMap<QString,FloorType*> TypesByName;
-
-    void Add(QString name, int first);
-};
-#endif
+class Stairs;
 
 class BuildingTile
 {
@@ -123,6 +58,8 @@ public:
 
     QString mTilesetName;
     int mIndex;
+
+    QVector<BuildingTile*> mAlternates;
 };
 
 class BuildingTiles
@@ -133,11 +70,12 @@ public:
     class Category
     {
     public:
-        Category(const QString &name) :
-            mName(name)
+        Category(const QString &name, const QString &label) :
+            mName(name),
+            mLabel(label)
         {}
 
-        void add(const QString &tileName)
+        BuildingTile *add(const QString &tileName)
         {
             QString tilesetName;
             int tileIndex;
@@ -145,6 +83,7 @@ public:
             BuildingTile *tile = new BuildingTile(tilesetName, tileIndex);
             mTiles += tile;
             mTileByName[tileName] = tile;
+            return tile;
         }
 
         BuildingTile *get(const QString &tileName)
@@ -157,24 +96,50 @@ public:
         QString name() const
         { return mName; }
 
+        QString label() const
+        { return mLabel; }
+
         const QList<BuildingTile*> &tiles() const
         { return mTiles; }
 
     private:
         QString mName;
+        QString mLabel;
         QList<BuildingTile*> mTiles;
         QMap<QString,BuildingTile*> mTileByName;
     };
 
-    void add(const QString &categoryName, const QString &tileName)
+    Category *addCategory(const QString &categoryName, const QString &label)
     {
         Category *category = this->category(categoryName);
+        if (!category) {
+            category = new Category(categoryName, label);
+            mCategories += category;
+            mCategoryByName[categoryName]= category;
+        }
+        return category;
+    }
+
+    BuildingTile *add(const QString &categoryName, const QString &tileName)
+    {
+        Category *category = this->category(categoryName);
+#if 0
         if (!category) {
             category = new Category(categoryName);
             mCategories += category;
             mCategoryByName[categoryName]= category;
         }
-        category->add(tileName);
+#endif
+        return category->add(tileName);
+    }
+
+    void add(const QString &categoryName, const QStringList &tileNames)
+    {
+        QVector<BuildingTile*> tiles;
+        foreach (QString tileName, tileNames)
+            tiles += add(categoryName, tileName);
+        foreach (BuildingTile *tile, tiles)
+            tile->mAlternates = tiles;
     }
 
     BuildingTile *get(const QString &categoryName, const QString &tileName);
@@ -196,6 +161,8 @@ public:
                               bool isFrame = false);
 
     BuildingTile *tileForWindow(Window *window, const QString &tileName);
+
+    BuildingTile *tileForStairs(Stairs *stairs, const QString &tileName);
 
 private:
     static BuildingTiles *mInstance;
@@ -239,6 +206,8 @@ public:
     Direction dir() const
     { return mDir; }
 
+    BuildingTile *mTile;
+
 protected:
     BuildingFloor *mFloor;
     Direction mDir;
@@ -251,35 +220,35 @@ class Door : public BaseMapObject
 public:
     Door(BuildingFloor *floor, int x, int y, Direction dir) :
         BaseMapObject(floor, x, y, dir),
-        mDoorTile(0),
         mFrameTile(0)
     {
 
     }
 
-    BuildingTile *mDoorTile;
     BuildingTile *mFrameTile;
 };
 
 class Stairs : public BaseMapObject
 {
 public:
+    Stairs(BuildingFloor *floor, int x, int y, Direction dir) :
+        BaseMapObject(floor, x, y, dir)
+    {
+    }
+
     QRect bounds() const;
 
-    QString getStairsTexture(int x, int y);
+    int getStairsOffset(int x, int y);
 };
 
 class Window : public BaseMapObject
 {
 public:
     Window(BuildingFloor *floor, int x, int y, Direction dir) :
-        BaseMapObject(floor, x, y, dir),
-        mTile(0)
+        BaseMapObject(floor, x, y, dir)
     {
 
     }
-
-    BuildingTile *mTile;
 };
 
 class Layout
@@ -293,12 +262,6 @@ public:
 
     QVector<QVector<int> > grid;
     int w, h;
-#if 0
-    WallType *exteriorWall;
-    QVector<WallType*> interiorWalls;
-    QVector<FloorType*> floors;
-#endif
-//    QList<QRgb> colList;
 };
 
 class Room
@@ -327,36 +290,16 @@ class RoomDefinitionManager
 {
 public:
     static RoomDefinitionManager *instance;
-#if 1
+
     BuildingDefinition *mBuildingDefinition;
     QMap<QRgb,Room*> ColorToRoom;
     QMap<Room*,QRgb> RoomToColor;
-#else
-    QString BuildingName;
-    QMap<QRgb,QString> ColorToRoomName;
-    QMap<QString,QRgb> RoomNameToColor;
-    QMap<QString,QString> WallForRoom;
-    QMap<QString,QString> FloorForRoom;
-    QStringList Rooms;
-#endif
+
     QString ExteriorWall;
     QString mDoorTile;
     QString mDoorFrameTile;
     QString mWindowTile;
-#if 1
-    QString FrameStyleTilesheet;
-    QString DoorStyleTilesheet;
-    int DoorFrameStyleIDW;
-    int DoorFrameStyleIDN;
-    int DoorStyleIDW;
-    int DoorStyleIDN;
-#endif
-    QString TopStairNorth;
-    QString MidStairNorth;
-    QString BotStairNorth;
-    QString TopStairWest;
-    QString MidStairWest;
-    QString BotStairWest;
+    QString mStairsTile;
 
     void Add(QString roomName, QRgb col, QString wall, QString floor);
 
@@ -365,9 +308,7 @@ public:
     void Init();
 
     QStringList FillCombo();
-#if 0
-    QRgb Get(QString roomName);
-#endif
+
     int GetIndex(QRgb col);
     int GetIndex(Room *room);
     Room *getRoom(int index);
@@ -376,10 +317,7 @@ public:
     BuildingTile *getWallForRoom(int i);
     BuildingTile *getFloorForRoom(int i);
     int getFromColor(QRgb pixel);
-#if 0
-    WallType *getWallForRoom(QString room);
-    FloorType *getFloorForRoom(QString room);
-#endif
+
     void setWallForRoom(Room *room, QString tile);
     void setFloorForRoom(Room *room, QString tile);
 };
@@ -394,6 +332,8 @@ public:
 
     static BuildingEditorWindow *instance;
 
+    void closeEvent(QCloseEvent *event);
+
     bool Startup();
 
     bool LoadBuildingTemplates();
@@ -407,8 +347,12 @@ public:
     { return mCurrentDocument; }
 
     Tiled::Tile *tileFor(const QString &tileName);
+    Tiled::Tile *tileFor(BuildingTile *tile);
 
     QString nameForTile(Tiled::Tile *tile);
+
+    void readSettings();
+    void writeSettings();
 
 private slots:
     void roomIndexChanged(int index);
@@ -419,6 +363,7 @@ private slots:
     void currentDoorChanged(const QItemSelection &selected);
     void currentDoorFrameChanged(const QItemSelection &selected);
     void currentWindowChanged(const QItemSelection &selected);
+    void currentStairsChanged(const QItemSelection &selected);
 
     void upLevel();
     void downLevel();
@@ -431,6 +376,7 @@ private:
     QLabel *mFloorLabel;
     QUndoGroup *mUndoGroup;
     QMap<QString,Tiled::Tileset*> mTilesetByName;
+    QSettings mSettings;
     QString mError;
 };
 

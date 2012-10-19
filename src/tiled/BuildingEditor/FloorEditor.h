@@ -20,6 +20,7 @@
 
 #include <QGraphicsItem>
 #include <QGraphicsScene>
+#include <QSet>
 
 namespace BuildingEditor {
 
@@ -72,6 +73,8 @@ class GraphicsObjectItem : public QGraphicsItem
 public:
     GraphicsObjectItem(FloorEditor *editor, BaseMapObject *object);
 
+    QPainterPath shape() const;
+
     QRectF boundingRect() const;
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
@@ -83,6 +86,11 @@ public:
 
     void synchWithObject();
 
+    void setSelected(bool selected);
+
+    bool isSelected() const
+    { return mSelected; }
+
     void setDragging(bool dragging);
     void setDragOffset(const QPoint &offset);
 
@@ -90,6 +98,7 @@ private:
     FloorEditor *mEditor;
     BaseMapObject *mObject;
     QRectF mBoundingRect;
+    bool mSelected;
     bool mDragging;
     QPoint mDragOffset;
 };
@@ -108,21 +117,12 @@ public:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
-    void UpdateMetaBuilding();
-
     void setDocument(BuildingDocument *doc);
 
     BuildingDocument *document() const
     { return mDocument; }
 
     Building *building() const;
-
-#if 0
-    int posY, posX;
-    int wallSnapX, wallSnapY;
-    bool vertWall;
-    BaseMapObject::Direction dir;
-#endif
 
     void ProcessMove(int x, int y);
 
@@ -146,11 +146,13 @@ private slots:
     void objectAdded(BaseMapObject *object);
     void objectAboutToBeRemoved(BaseMapObject *object);
     void objectMoved(BaseMapObject *object);
+    void selectedObjectsChanged();
 
 private:
     BuildingDocument *mDocument;
     QList<GraphicsFloorItem*> mFloorItems;
     QList<GraphicsObjectItem*> mObjectItems;
+    QSet<GraphicsObjectItem*> mSelectedObjectItems;
     BaseTool *mCurrentTool;
 };
 

@@ -200,10 +200,10 @@ private:
     bool mIsFrame;
 };
 
-class ChangeWindowTile : public QUndoCommand
+class ChangeObjectTile : public QUndoCommand
 {
 public:
-    ChangeWindowTile(BuildingDocument *doc, Window *window, BuildingTile *tile);
+    ChangeObjectTile(BuildingDocument *doc, BaseMapObject *object, BuildingTile *tile);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -212,7 +212,7 @@ private:
     void swap();
 
     BuildingDocument *mDocument;
-    Window *mWindow;
+    BaseMapObject *mObject;
     BuildingTile *mTile;
 };
 

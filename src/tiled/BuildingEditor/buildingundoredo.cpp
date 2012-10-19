@@ -209,18 +209,18 @@ void ChangeDoorTile::swap()
 
 /////
 
-ChangeWindowTile::ChangeWindowTile(BuildingDocument *doc, Window *window,
+ChangeObjectTile::ChangeObjectTile(BuildingDocument *doc, BaseMapObject *object,
                                BuildingTile *tile) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Window Tile")),
     mDocument(doc),
-    mWindow(window),
+    mObject(object),
     mTile(tile)
 {
 }
 
-void ChangeWindowTile::swap()
+void ChangeObjectTile::swap()
 {
-    mTile = mDocument->changeWindowTile(mWindow, mTile);
+    mTile = mDocument->changeObjectTile(mObject, mTile);
 }
 
 /////

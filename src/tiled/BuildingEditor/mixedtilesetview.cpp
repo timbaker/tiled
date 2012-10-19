@@ -53,6 +53,12 @@ void TileDelegate::paint(QPainter *painter,
                          const QStyleOptionViewItem &option,
                          const QModelIndex &index) const
 {
+    const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
+    if (!m->tileAt(index)) {
+        painter->drawLine(option.rect.topLeft(), option.rect.bottomRight());
+        return;
+    }
+
     // Draw the tile image
     const QVariant display = index.model()->data(index, Qt::DisplayRole);
     const QPixmap tileImage = display.value<QPixmap>();
@@ -80,7 +86,7 @@ QSize TileDelegate::sizeHint(const QStyleOptionViewItem & option,
 {
     const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
     if (!m->tileAt(index))
-        return QSize();
+        return QSize(64,128);
     const Tileset *tileset = m->tileAt(index)->tileset();
     const qreal zoom = 1.0; //mView->zoomable()->scale();
     const int extra = 0; // mView->drawGrid() ? 1 : 0;

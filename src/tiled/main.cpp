@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
     }
 
 #ifdef ZOMBOID
-    BuildingEditor::BuildingEditorWindow bw(&w);
+    BuildingEditor::BuildingEditorWindow bw;
     bw.show();
     if (!bw.Startup())
         return -1;

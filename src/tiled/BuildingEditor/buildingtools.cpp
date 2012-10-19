@@ -98,7 +98,6 @@ void PencilTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_UNUSED(event)
     if (mMouseDown) {
-        mEditor->UpdateMetaBuilding();
         mMouseDown = false;
     }
 }
@@ -180,7 +179,6 @@ void EraserTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_UNUSED(event)
     if (mMouseDown) {
-        mEditor->UpdateMetaBuilding();
         mMouseDown = false;
     }
 }
@@ -290,6 +288,9 @@ void DoorTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_UNUSED(event)
 
+    if (event->button() != Qt::LeftButton)
+        return;
+
     if (mTileEdge == Center)
         return;
 
@@ -307,7 +308,7 @@ void DoorTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     BuildingFloor *floor = mEditor->document()->currentFloor();
     Door *door = new Door(floor, x, y, dir);
-    door->mDoorTile = BuildingTiles::instance()->tileForDoor(door,
+    door->mTile = BuildingTiles::instance()->tileForDoor(door,
                                                              RoomDefinitionManager::instance->mDoorTile);
     door->mFrameTile = BuildingTiles::instance()->tileForDoor(door,
                                                               RoomDefinitionManager::instance->mDoorFrameTile,
@@ -375,6 +376,9 @@ void WindowTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_UNUSED(event)
 
+    if (event->button() != Qt::LeftButton)
+        return;
+
     if (mTileEdge == Center)
         return;
 
@@ -428,6 +432,91 @@ void WindowTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     if (!mCursorObject) {
         BuildingFloor *floor = mEditor->document()->currentFloor();
         mCursorObject = new Window(floor, x, y, dir);
+    }
+    // mCursorDoor->setFloor()
+    mCursorObject->setPos(x, y);
+    mCursorObject->setDir(dir);
+
+    setCursorObject(mCursorObject);
+}
+
+/////
+
+StairsTool *StairsTool::mInstance = 0;
+
+StairsTool *StairsTool::instance()
+{
+    if (!mInstance)
+        mInstance = new StairsTool();
+    return mInstance;
+}
+
+StairsTool::StairsTool() :
+    BaseObjectTool(),
+    mCursorObject(0)
+{
+}
+
+void StairsTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    Q_UNUSED(event)
+
+    if (event->button() != Qt::LeftButton)
+        return;
+
+    if (mTileEdge == Center)
+        return;
+
+    int x = mTilePos.x(), y = mTilePos.y();
+    BaseMapObject::Direction dir = BaseMapObject::N;
+
+    if (mTileEdge == W)
+        dir = BaseMapObject::W;
+    else if (mTileEdge == E) {
+        x++;
+        dir = BaseMapObject::W;
+    }
+    else if (mTileEdge == S)
+        y++;
+
+    BuildingFloor *floor = mEditor->document()->currentFloor();
+    Stairs *stairs = new Stairs(floor, x, y, dir);
+    stairs->mTile = BuildingTiles::instance()->tileForStairs(stairs,
+                                                             RoomDefinitionManager::instance->mStairsTile);
+    mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
+                                                         floor,
+                                                         floor->objectCount(),
+                                                         stairs));
+}
+
+void StairsTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    BaseObjectTool::mouseMoveEvent(event);
+
+    if (mTileEdge == Center) {
+        if (mCursorItem)
+            mCursorItem->setVisible(false);
+        return;
+    }
+
+    if (mCursorItem)
+        mCursorItem->setVisible(true);
+
+    int x = mTilePos.x(), y = mTilePos.y();
+    BaseMapObject::Direction dir = BaseMapObject::N;
+
+    if (mTileEdge == W)
+        dir = BaseMapObject::W;
+    else if (mTileEdge == E) {
+        x++;
+        dir = BaseMapObject::W;
+    }
+    else if (mTileEdge == S)
+        y++;
+
+    if (!mCursorObject) {
+        BuildingFloor *floor = mEditor->document()->currentFloor();
+        mCursorObject = new Stairs(floor, x, y, dir);
     }
     // mCursorDoor->setFloor()
     mCursorObject->setPos(x, y);

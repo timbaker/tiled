@@ -34,8 +34,6 @@ public:
     int width() const { return mWidth; }
     int height() const { return mHeight; }
 
-    void recreate(const QList<Layout*> &layouts, WallType *wallType);
-
     const QList<BuildingFloor*> &floors() const
     { return mFloors; }
 

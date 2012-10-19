@@ -90,9 +90,52 @@ GraphicsObjectItem::GraphicsObjectItem(FloorEditor *editor, BaseMapObject *objec
     QGraphicsItem(),
     mEditor(editor),
     mObject(object),
+    mSelected(false),
     mDragging(false)
 {
     synchWithObject();
+}
+
+QPainterPath GraphicsObjectItem::shape() const
+{
+    QPainterPath path;
+    QPoint dragOffset = mDragging ? mDragOffset : QPoint();
+
+    // Screw you, polymorphism!!!
+    if (Door *door = dynamic_cast<Door*>(mObject)) {
+        if (door->dir() == BaseMapObject::N) {
+            QPointF p = mEditor->tileToScene(door->pos() + dragOffset);
+            path.addRect(p.x(), p.y() - 5, 30, 10);
+        }
+        if (door->dir() == BaseMapObject::W) {
+            QPointF p = mEditor->tileToScene(door->pos() + dragOffset);
+            path.addRect(p.x() - 5, p.y(), 10, 30);
+        }
+    }
+
+    if (Window *window = dynamic_cast<Window*>(mObject)) {
+        if (window->dir() == BaseMapObject::N) {
+            QPointF p = mEditor->tileToScene(window->pos() + dragOffset);
+            path.addRect(p.x() + 7, p.y() - 3, 16, 6);
+        }
+        if (window->dir() == BaseMapObject::W) {
+            QPointF p = mEditor->tileToScene(window->pos() + dragOffset);
+            path.addRect(p.x() - 3, p.y() + 7, 6, 16);
+        }
+    }
+
+    if (Stairs *stairs = dynamic_cast<Stairs*>(mObject)) {
+        if (stairs->dir() == BaseMapObject::N) {
+            QPointF p = mEditor->tileToScene(stairs->pos() + dragOffset);
+            path.addRect(p.x(), p.y(), 30, 30 * 5);
+        }
+        if (stairs->dir() == BaseMapObject::W) {
+            QPointF p = mEditor->tileToScene(stairs->pos() + dragOffset);
+            path.addRect(p.x(), p.y(), 30 * 5, 30);
+        }
+    }
+
+    return path;
 }
 
 QRectF GraphicsObjectItem::boundingRect() const
@@ -104,42 +147,11 @@ void GraphicsObjectItem::paint(QPainter *painter,
                                const QStyleOptionGraphicsItem *,
                                QWidget *)
 {
-    QPoint dragOffset = mDragging ? mDragOffset : QPoint();
-
-    // Screw you, polymorphism!!!
-    if (Door *door = dynamic_cast<Door*>(mObject)) {
-        if (door->dir() == BaseMapObject::N) {
-            QPointF p = mEditor->tileToScene(door->pos() + dragOffset);
-            painter->fillRect(p.x(), p.y() - 5, 30, 10, Qt::white);
-            QPen pen(Qt::blue);
-            painter->setPen(pen);
-            painter->drawRect(p.x(), p.y() - 5, 30, 10);
-        }
-        if (door->dir() == BaseMapObject::W) {
-            QPointF p = mEditor->tileToScene(door->pos() + dragOffset);
-            painter->fillRect(p.x() - 5, p.y(), 10, 30, Qt::white);
-            QPen pen(Qt::blue);
-            painter->setPen(pen);
-            painter->drawRect(p.x() - 5, p.y(), 10, 30);
-        }
-    }
-
-    if (Window *window = dynamic_cast<Window*>(mObject)) {
-        if (window->dir() == BaseMapObject::N) {
-            QPointF p = mEditor->tileToScene(window->pos() + dragOffset);
-            painter->fillRect(p.x() + 7, p.y() - 3, 16, 6, Qt::white);
-            QPen pen(Qt::blue);
-            painter->setPen(pen);
-            painter->drawRect(p.x() + 7, p.y() - 3, 16, 6);
-        }
-        if (window->dir() == BaseMapObject::W) {
-            QPointF p = mEditor->tileToScene(window->pos() + dragOffset);
-            painter->fillRect(p.x() - 3, p.y() + 7, 6, 16, Qt::white);
-            QPen pen(Qt::blue);
-            painter->setPen(pen);
-            painter->drawRect(p.x() - 3, p.y() + 7, 6, 16);
-        }
-    }
+    QPainterPath path = shape();
+    painter->fillPath(path, mSelected ? Qt::cyan : Qt::white);
+    QPen pen(Qt::blue);
+    painter->setPen(pen);
+    painter->drawPath(path);
 }
 
 void GraphicsObjectItem::setObject(BaseMapObject *object)
@@ -151,13 +163,17 @@ void GraphicsObjectItem::setObject(BaseMapObject *object)
 
 void GraphicsObjectItem::synchWithObject()
 {
-    QRectF bounds = mEditor->tileToSceneRect(mObject->bounds()
-                                             .translated(mDragging ? mDragOffset : QPoint()));
-    bounds.adjust(-10, -10, 10, 10);
+    QRectF bounds = shape().boundingRect();
     if (bounds != mBoundingRect) {
         prepareGeometryChange();
         mBoundingRect = bounds;
     }
+}
+
+void GraphicsObjectItem::setSelected(bool selected)
+{
+    mSelected = selected;
+    update();
 }
 
 void GraphicsObjectItem::setDragging(bool dragging)
@@ -204,29 +220,6 @@ void FloorEditor::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         mCurrentTool->mouseReleaseEvent(event);
 }
 
-void FloorEditor::UpdateMetaBuilding()
-{
-#if 0
-    QString wallName = RoomDefinitionManager::instance->ExteriorWall;
-    WallType *exteriorWall = WallTypes::instance->getEWallFromName(wallName);
-
-    QList<Layout*> layouts;
-    foreach (EditorFloor *fl, floors) {
-        fl->UpdateLayout(exteriorWall);
-        layouts += fl->layout;
-    }
-
-    building()->recreate(layouts, exteriorWall);
-
-    if (Form1.instance.preview == null)
-        return;
-
-    Form1.instance.preview.panel1.building = building;
-    Form1.instance.preview.panel1.Invalidate();
-    Invalidate();
-#endif
-}
-
 void FloorEditor::setDocument(BuildingDocument *doc)
 {
     if (mDocument)
@@ -262,6 +255,8 @@ void FloorEditor::setDocument(BuildingDocument *doc)
                 SLOT(objectAboutToBeRemoved(BaseMapObject*)));
         connect(mDocument, SIGNAL(objectMoved(BaseMapObject*)),
                 SLOT(objectMoved(BaseMapObject*)));
+        connect(mDocument, SIGNAL(selectedObjectsChanged()),
+                SLOT(selectedObjectsChanged()));
     }
 }
 
@@ -339,10 +334,9 @@ GraphicsObjectItem *FloorEditor::itemForObject(BaseMapObject *object)
 QSet<BaseMapObject*> FloorEditor::objectsInRect(const QRectF &sceneRect)
 {
     QSet<BaseMapObject*> objects;
-    QRect tileRect = sceneToTileRect(sceneRect);
-    foreach (BaseMapObject *object, mDocument->currentFloor()->objects()) {
-        if (object->bounds().intersects(tileRect))
-            objects.insert(object);
+    foreach (QGraphicsItem *item, items(sceneRect)) {
+        if (GraphicsObjectItem *objectItem = dynamic_cast<GraphicsObjectItem*>(item))
+            objects += objectItem->object();
     }
     return objects;
 }
@@ -391,6 +385,7 @@ void FloorEditor::objectAboutToBeRemoved(BaseMapObject *object)
     GraphicsObjectItem *item = itemForObject(object);
     Q_ASSERT(item);
     mObjectItems.removeAll(item);
+    mSelectedObjectItems.remove(item); // paranoia
     removeItem(item);
 }
 
@@ -399,6 +394,22 @@ void FloorEditor::objectMoved(BaseMapObject *object)
     GraphicsObjectItem *item = itemForObject(object);
     Q_ASSERT(item);
     item->synchWithObject();
+}
+
+void FloorEditor::selectedObjectsChanged()
+{
+    QSet<BaseMapObject*> selectedObjects = mDocument->selectedObjects();
+    QSet<GraphicsObjectItem*> selectedItems;
+
+    foreach (BaseMapObject *object, selectedObjects)
+        selectedItems += itemForObject(object);
+
+    foreach (GraphicsObjectItem *item, mSelectedObjectItems - selectedItems)
+        item->setSelected(false);
+    foreach (GraphicsObjectItem *item, selectedItems - mSelectedObjectItems)
+        item->setSelected(true);
+
+    mSelectedObjectItems = selectedItems;
 }
 
 /////

@@ -118,16 +118,16 @@ QPoint BuildingDocument::moveObject(BaseMapObject *object, const QPoint &pos)
 BuildingTile *BuildingDocument::changeDoorTile(Door *door, BuildingTile *tile,
                                                bool isFrame)
 {
-    BuildingTile *old = door->mDoorTile;
-    isFrame ? door->mFrameTile = tile : door->mDoorTile = tile;
+    BuildingTile *old = door->mTile;
+    isFrame ? door->mFrameTile = tile : door->mTile = tile;
     emit objectTileChanged(door);
     return old;
 }
 
-BuildingTile *BuildingDocument::changeWindowTile(Window *window, BuildingTile *tile)
+BuildingTile *BuildingDocument::changeObjectTile(BaseMapObject *object, BuildingTile *tile)
 {
-    BuildingTile *old = window->mTile;
-    window->mTile = tile;
-    emit objectTileChanged(window);
+    BuildingTile *old = object->mTile;
+    object->mTile = tile;
+    emit objectTileChanged(object);
     return old;
 }

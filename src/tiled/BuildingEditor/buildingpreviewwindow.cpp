@@ -54,6 +54,21 @@ BuildingPreviewWindow::BuildingPreviewWindow(QWidget *parent) :
     ui->graphicsView->setScene(mScene);
 
     ui->graphicsView->zoomable()->connectToComboBox(ui->zoomComboBox);
+
+    setWindowFlags(Qt::Tool);
+
+    readSettings();
+}
+
+void BuildingPreviewWindow::closeEvent(QCloseEvent *event)
+{
+    writeSettings();
+#if 0
+    if (confirmAllSave())
+        event->accept();
+    else
+        event->ignore();
+#endif
 }
 
 void BuildingPreviewWindow::setDocument(BuildingDocument *doc)
@@ -61,6 +76,30 @@ void BuildingPreviewWindow::setDocument(BuildingDocument *doc)
     mDocument = doc;
 
     mScene->setDocument(doc);
+}
+
+void BuildingPreviewWindow::readSettings()
+{
+    mSettings.beginGroup(QLatin1String("BuildingEditor/PreviewWindow"));
+    QByteArray geom = mSettings.value(QLatin1String("geometry")).toByteArray();
+    if (!geom.isEmpty())
+        restoreGeometry(geom);
+    else
+        resize(400, 300);
+    restoreState(mSettings.value(QLatin1String("state"),
+                                 QByteArray()).toByteArray());
+    qreal scale = mSettings.value(QLatin1String("scale"), 1.0f).toReal();
+    ui->graphicsView->zoomable()->setScale(scale);
+    mSettings.endGroup();
+}
+
+void BuildingPreviewWindow::writeSettings()
+{
+    mSettings.beginGroup(QLatin1String("BuildingEditor/PreviewWindow"));
+    mSettings.setValue(QLatin1String("geometry"), saveGeometry());
+    mSettings.setValue(QLatin1String("state"), saveState());
+    mSettings.setValue(QLatin1String("scale"), ui->graphicsView->zoomable()->scale());
+    mSettings.endGroup();
 }
 
 /////
@@ -88,9 +127,8 @@ void CompositeLayerGroupItem::paint(QPainter *p, const QStyleOptionGraphicsItem 
         return;
 
     mRenderer->drawTileLayerGroup(p, mLayerGroup, option->exposedRect);
-#ifdef _DEBUG
+#if 0 && defined(_DEBUG)
     p->drawRect(mBoundingRect);
-
     mRenderer->drawGrid(p, option->exposedRect, Qt::black, mLayerGroup->level());
 #endif
 }
@@ -197,42 +235,6 @@ void BuildingPreviewScene::BuildingToMap()
     }
 }
 
-#if 0
-int WallType_getIndexFromSection(WallType *type, BuildingFloor::WallTile::WallSection section)
-{
-    int index = type->FirstIndex;
-
-    switch (section)
-    {
-        case BuildingFloor::WallTile::N:
-            index += 1;
-            break;
-        case BuildingFloor::WallTile::NDoor:
-            index += 11;
-        break;
-        case BuildingFloor::WallTile::NW:
-            index += 2;
-            break;
-        case BuildingFloor::WallTile::W:
-            break;
-        case BuildingFloor::WallTile::WDoor:
-            index += 10;
-            break;
-        case BuildingFloor::WallTile::NWindow:
-            index += 9;
-            break;
-        case BuildingFloor::WallTile::WWindow:
-            index += 8;
-            break;
-        case BuildingFloor::WallTile::SE:
-            index += 3;
-            break;
-    }
-
-    return index;
-}
-#endif
-
 void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                                                      const QVector<TileLayer *> &layers)
 {
@@ -242,9 +244,12 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
         for (int x = 0; x < floor->width(); x++) {
             for (int y = 0; y < floor->height(); y++) {
                 if (index == LayerIndexFloor) {
-                    BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionFloor];
-                    if (tile)
-                        tl->setCell(x, y, Cell(mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
+                    bool bAboveStep = floor->level() ? floor->floorBelow()->IsTopStairAt(x, y) : false;
+                    if (!bAboveStep) {
+                        BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionFloor];
+                        if (tile)
+                            tl->setCell(x, y, Cell(mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
+                    }
                 }
                 if (index == LayerIndexWall) {
                     BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionWall];
@@ -260,6 +265,11 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                     BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionFrame];
                     if (tile)
                         tl->setCell(x, y, Cell(mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
+                }
+                if (index == LayerIndexFurniture) {
+                    BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionFurniture];
+                    if (tile)
+                        tl->setCell(x, y, Cell(mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + floor->squares[x][y].mTileOffset[BuildingFloor::Square::SectionFurniture])));
                 }
             }
         }
