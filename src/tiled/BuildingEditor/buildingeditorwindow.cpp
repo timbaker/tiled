@@ -126,8 +126,15 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     QAction *redoAction = mUndoGroup->createRedoAction(this, tr("Redo"));
     undoAction->setShortcuts(QKeySequence::Undo);
     redoAction->setShortcuts(QKeySequence::Redo);
+    QIcon undoIcon(QLatin1String(":images/16x16/edit-undo.png"));
+    QIcon redoIcon(QLatin1String(":images/16x16/edit-redo.png"));
+    undoAction->setIcon(undoIcon);
+    redoAction->setIcon(redoIcon);
+    Utils::setThemeIcon(undoAction, "edit-undo");
+    Utils::setThemeIcon(redoAction, "edit-redo");
     ui->menuEdit->insertAction(0, redoAction);
-    ui->menuEdit->insertAction(0, undoAction);
+    ui->menuEdit->insertAction(redoAction, undoAction);
+
     connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
     setWindowFlags(windowFlags() & ~Qt::WA_DeleteOnClose);
 
