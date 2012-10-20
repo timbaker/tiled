@@ -56,7 +56,10 @@ void TileDelegate::paint(QPainter *painter,
 {
     const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
     if (!m->tileAt(index)) {
+#if 0
         painter->drawLine(option.rect.topLeft(), option.rect.bottomRight());
+        painter->drawLine(option.rect.topRight(), option.rect.bottomLeft());
+#endif
         return;
     }
 
