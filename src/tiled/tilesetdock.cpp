@@ -45,6 +45,9 @@
 #include "mapcomposite.h"
 #include "preferences.h"
 #include "ztilesetthumbview.h"
+
+#include <QApplication>
+#include <QClipboard>
 #endif
 
 #include <QAction>
@@ -516,6 +519,15 @@ void TilesetDock::updateCurrentTiles()
 
     setCurrentTiles(tileLayer);
     setCurrentTile(model->tileAt(s->currentIndex()));
+
+#ifdef ZOMBOID
+    // Hack - copy tile name to the clipboard
+    if (mCurrentTile) {
+        QString tileName = QFileInfo(mCurrentTile->tileset()->imageSource()).baseName() +
+                QLatin1Char('_') + QString::number(mCurrentTile->id());
+        qApp->clipboard()->setText(tileName);
+    }
+#endif
 }
 
 void TilesetDock::tilesetChanged(Tileset *tileset)
