@@ -1,71 +1,113 @@
 category
 {
-    name = exterior_walls
-    tiles
-    {
-	tile = walls_exterior_house_01_0
-	tile = walls_exterior_house_01_4
-	tile = walls_exterior_house_01_16
-	tile = walls_exterior_house_01_20
-	tile = walls_exterior_house_01_48
-    }
+	label = Exterior Walls
+	name = exterior_walls
+	tiles
+	{
+		tile = walls_exterior_house_01_0
+		tile = walls_exterior_house_01_4
+		tile = walls_exterior_house_01_16
+		tile = walls_exterior_house_01_20
+		tile = walls_exterior_house_01_48
+	}
 }
 
 category
 {
-    name = interior_walls
-    tiles
-    {
-	tile = walls_interior_house_01_0
-	tile = walls_interior_house_01_4
-	tile = walls_interior_house_01_16
-	tile = walls_interior_house_01_20
-	tile = walls_interior_house_01_32
-	tile = walls_interior_house_01_36
-	tile = walls_interior_house_01_48
-	tile = walls_interior_house_01_52
+	label = Interior Walls
+	name = interior_walls
+	tiles
+	{
+		tile = walls_interior_house_01_0
+		tile = walls_interior_house_01_4
+		tile = walls_interior_house_01_16
+		tile = walls_interior_house_01_20
+		tile = walls_interior_house_01_32
+		tile = walls_interior_house_01_36
+		tile = walls_interior_house_01_48
+		tile = walls_interior_house_01_52
 
-	tile = walls_interior_house_02_0
-	tile = walls_interior_house_02_4
-	tile = walls_interior_house_02_16
-	tile = walls_interior_house_02_20
-	tile = walls_interior_house_02_32
-	tile = walls_interior_house_02_36
-	tile = walls_interior_house_02_48
-	tile = walls_interior_house_02_52
-    }
+		tile = walls_interior_house_02_0
+		tile = walls_interior_house_02_4
+		tile = walls_interior_house_02_16
+		tile = walls_interior_house_02_20
+		tile = walls_interior_house_02_32
+		tile = walls_interior_house_02_36
+		tile = walls_interior_house_02_48
+		tile = walls_interior_house_02_52
+	}
 }
 
 category
 {
-    name = floors
-    tiles
-    {
-	tile = floors_interior_carpet_01_0
-	tile = floors_interior_carpet_01_1
-	tile = floors_interior_carpet_01_2
-	tile = floors_interior_carpet_01_3
-	tile = floors_interior_carpet_01_4
-	tile = floors_interior_carpet_01_5
-	tile = floors_interior_carpet_01_6
-	tile = floors_interior_carpet_01_7
-	tile = floors_interior_carpet_01_8
-	tile = floors_interior_carpet_01_9
-	tile = floors_interior_carpet_01_10
-	tile = floors_interior_carpet_01_11
-
-	tile = floors_interior_tilesandwood_01_0
-	tile = floors_interior_tilesandwood_01_1
-	tile = floors_interior_tilesandwood_01_2
-	tile = floors_interior_tilesandwood_01_3
-	tile = floors_interior_tilesandwood_01_4
-	tile = floors_interior_tilesandwood_01_5
-	tile = floors_interior_tilesandwood_01_6
-	tile = floors_interior_tilesandwood_01_7
-	tile = floors_interior_tilesandwood_01_8
-	tile = floors_interior_tilesandwood_01_9
-	tile = floors_interior_tilesandwood_01_10
-	tile = floors_interior_tilesandwood_01_11
-    }
+	label = Floors
+	name = floors
+	range
+	{
+		tileset = floors_interior_carpet_01
+		start = 0
+		offset = 1
+		count = 11
+	}
+	range
+	{
+		tileset = floors_interior_tilesandwood_01
+		start = 0
+		offset = 1
+		count = 11
+	}
 }
+
+category
+{
+	label = Doors
+	name = doors
+	range
+	{
+		tileset = fixtures_doors_01
+		start = 0
+		offset = 4
+		count = all
+	}
+}
+		
+category
+{
+	label = Door Frames
+	name = door_frames
+	range
+	{
+		tileset = fixtures_doors_frames_01
+		start = 0
+		offset = 2
+		count = all
+	}
+}
+		
+category
+{
+	label = Windows
+	name = windows
+	range
+	{
+		tileset = fixtures_windows_01
+		start = 0
+		offset = 8
+		count = 40
+	}
+}
+
+category
+{
+	label = Stairs
+	name = stairs
+	tiles
+	{
+		tile = fixtures_stairs_01_0 fixtures_stairs_01_8
+		tile = fixtures_stairs_01_16 fixtures_stairs_01_24
+		tile = fixtures_stairs_01_19 fixtures_stairs_01_27
+		tile = fixtures_stairs_01_32 fixtures_stairs_01_40
+	}
+}
+
 
