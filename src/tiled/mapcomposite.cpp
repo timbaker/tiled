@@ -918,3 +918,17 @@ void MapComposite::recreate()
     if (mParent)
         mParent->moveSubMap(this, origin());
 }
+
+QStringList MapComposite::getMapFileNames() const
+{
+    QStringList result;
+
+    result += mMapInfo->path();
+    foreach (MapComposite *subMap, mSubMaps)
+        foreach (QString path, subMap->getMapFileNames())
+            if (!result.contains(path))
+                result += path;
+
+    return result;
+}
+
