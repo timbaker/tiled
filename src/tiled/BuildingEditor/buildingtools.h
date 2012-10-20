@@ -41,13 +41,9 @@ class BaseTool : public QObject
 {
     Q_OBJECT
 public:
-    BaseTool() :
-        QObject(0),
-        mEditor(0)
-    {}
+    BaseTool();
 
-    virtual void setEditor(FloorEditor *editor)
-    { mEditor = editor; }
+    virtual void setEditor(FloorEditor *editor);
 
     void setAction(QAction *action)
     { mAction = action; }
@@ -60,6 +56,7 @@ public:
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) = 0;
 
 public slots:
+    virtual void documentChanged() {};
     virtual void activate() = 0;
     virtual void deactivate() = 0;
 
@@ -75,6 +72,8 @@ public:
     static PencilTool *instance();
 
     PencilTool();
+
+    void documentChanged();
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
@@ -102,10 +101,11 @@ public:
 
     EraserTool();
 
+    void documentChanged();
+
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-
 private:
     void updateCursor(const QPointF &scenePos);
 
@@ -133,6 +133,7 @@ public:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
 public slots:
+    void documentChanged();
     void activate();
     void deactivate();
 
@@ -215,6 +216,7 @@ public:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
 public slots:
+    void documentChanged();
     void activate();
     void deactivate();
 

@@ -23,11 +23,18 @@
 #include "buildingtools.h"
 #include "buildingeditorwindow.h"
 
+#include "zoomable.h"
+
 #include <QAction>
 #include <QDebug>
+#include <QMouseEvent>
 #include <QPainter>
+#include <QWheelEvent>
 
 using namespace BuildingEditor;
+
+using namespace Tiled;
+using namespace Internal;
 
 GraphicsFloorItem::GraphicsFloorItem(BuildingFloor *floor) :
     QGraphicsItem(),
@@ -230,19 +237,22 @@ void FloorEditor::setDocument(BuildingDocument *doc)
     clear();
 
     mFloorItems.clear();
-    foreach (BuildingFloor *floor, building()->floors())
-        floorAdded(floor);
-
-    GraphicsGridItem *item = new GraphicsGridItem(building()->width(),
-                                                  building()->height());
-    item->setZValue(ZVALUE_GRID);
-    addItem(item);
-
-    setSceneRect(-10, -10,
-                 building()->width() * 30 + 10,
-                 building()->height() * 30 + 10);
+    mObjectItems.clear();
+    mSelectedObjectItems.clear();
 
     if (mDocument) {
+        foreach (BuildingFloor *floor, building()->floors())
+            floorAdded(floor);
+
+        GraphicsGridItem *item = new GraphicsGridItem(building()->width(),
+                                                      building()->height());
+        item->setZValue(ZVALUE_GRID);
+        addItem(item);
+
+        setSceneRect(-10, -10,
+                     building()->width() * 30 + 10,
+                     building()->height() * 30 + 10);
+
         connect(mDocument, SIGNAL(currentFloorChanged()),
                 SLOT(currentFloorChanged()));
         connect(mDocument, SIGNAL(roomAtPositionChanged(BuildingFloor*,QPoint)),
@@ -258,6 +268,13 @@ void FloorEditor::setDocument(BuildingDocument *doc)
         connect(mDocument, SIGNAL(selectedObjectsChanged()),
                 SLOT(selectedObjectsChanged()));
     }
+
+    emit documentChanged();
+}
+
+void FloorEditor::clearDocument()
+{
+    setDocument(0);
 }
 
 Building *FloorEditor::building() const
@@ -412,6 +429,64 @@ void FloorEditor::selectedObjectsChanged()
         item->setSelected(true);
 
     mSelectedObjectItems = selectedItems;
+}
+
+/////
+
+FloorView::FloorView(QWidget *parent) :
+    QGraphicsView(parent),
+    mZoomable(new Zoomable(this))
+{
+    // Alignment of the scene within the view
+    setAlignment(Qt::AlignLeft | Qt::AlignTop);
+
+    // This enables mouseMoveEvent without any buttons being pressed
+    setMouseTracking(true);
+
+    connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(adjustScale(qreal)));
+}
+
+void FloorView::mouseMoveEvent(QMouseEvent *event)
+{
+    QGraphicsView::mouseMoveEvent(event);
+
+    mLastMousePos = event->globalPos();
+    mLastMouseScenePos = mapToScene(viewport()->mapFromGlobal(mLastMousePos));
+}
+
+/**
+ * Override to support zooming in and out using the mouse wheel.
+ */
+void FloorView::wheelEvent(QWheelEvent *event)
+{
+    if (event->modifiers() & Qt::ControlModifier
+        && event->orientation() == Qt::Vertical)
+    {
+        // No automatic anchoring since we'll do it manually
+        setTransformationAnchor(QGraphicsView::NoAnchor);
+
+        mZoomable->handleWheelDelta(event->delta());
+
+        // Place the last known mouse scene pos below the mouse again
+        QWidget *view = viewport();
+        QPointF viewCenterScenePos = mapToScene(view->rect().center());
+        QPointF mouseScenePos = mapToScene(view->mapFromGlobal(mLastMousePos));
+        QPointF diff = viewCenterScenePos - mouseScenePos;
+        centerOn(mLastMouseScenePos + diff);
+
+        // Restore the centering anchor
+        setTransformationAnchor(QGraphicsView::AnchorViewCenter);
+        return;
+    }
+
+    QGraphicsView::wheelEvent(event);
+}
+
+void FloorView::adjustScale(qreal scale)
+{
+    setTransform(QTransform::fromScale(scale, scale));
+    setRenderHint(QPainter::SmoothPixmapTransform,
+                  mZoomable->smoothTransform());
 }
 
 /////

@@ -26,6 +26,7 @@
 #include "buildingtools.h"
 #include "FloorEditor.h"
 #include "mixedtilesetview.h"
+#include "newbuildingdialog.h"
 #include "simplefile.h"
 
 #include "zprogress.h"
@@ -34,6 +35,7 @@
 #include "tileset.h"
 #include "tilesetmanager.h"
 #include "utils.h"
+#include "zoomable.h"
 
 #include <QBitmap>
 #include <QCloseEvent>
@@ -62,7 +64,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui(new Ui::BuildingEditorWindow),
     mCurrentDocument(0),
     roomEditor(new FloorEditor(this)),
-    room(new QComboBox()),
+    mRoomComboBox(new QComboBox()),
     mUndoGroup(new QUndoGroup(this)),
     mPreviewWin(0)
 {
@@ -71,20 +73,23 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     instance = this;
 
     ui->toolBar->insertSeparator(ui->actionUpLevel);
-    ui->toolBar->insertWidget(ui->actionUpLevel, room);
+    ui->toolBar->insertWidget(ui->actionUpLevel, mRoomComboBox);
     ui->toolBar->insertSeparator(ui->actionUpLevel);
+
+    mRoomComboBox->setIconSize(QSize(20, 20));
+    mRoomComboBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);
 
     mFloorLabel = new QLabel;
     mFloorLabel->setText(tr("Ground Floor"));
     mFloorLabel->setMinimumWidth(90);
     ui->toolBar->insertWidget(ui->actionUpLevel, mFloorLabel);
 
-    QGraphicsView *view = new QGraphicsView(this);
-    view->setScene(roomEditor);
-    view->setMouseTracking(true);
-    view->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    mView = new FloorView(this);
+    mView->setScene(roomEditor);
+    connect(mView->zoomable(), SIGNAL(scaleChanged(qreal)),
+            SLOT(updateActions()));
 
-    setCentralWidget(view);
+    setCentralWidget(mView);
 
     connect(ui->actionPecil, SIGNAL(triggered()),
             PencilTool::instance(), SLOT(activate()));
@@ -116,7 +121,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     SelectMoveObjectTool::instance()->setEditor(roomEditor);
     SelectMoveObjectTool::instance()->setAction(ui->actionSelectObject);
 
-    connect(room, SIGNAL(currentIndexChanged(int)),
+    connect(mRoomComboBox, SIGNAL(currentIndexChanged(int)),
             SLOT(roomIndexChanged(int)));
 
     connect(ui->actionUpLevel, SIGNAL(triggered()),
@@ -137,12 +142,22 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->menuEdit->insertAction(0, redoAction);
     ui->menuEdit->insertAction(redoAction, undoAction);
 
+    connect(ui->actionNewBuilding, SIGNAL(triggered()), SLOT(newBuilding()));
     connect(ui->actionExportTMX, SIGNAL(triggered()), SLOT(exportTMX()));
 
     connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
     setWindowFlags(windowFlags() & ~Qt::WA_DeleteOnClose);
 
+    connect(ui->actionZoomIn, SIGNAL(triggered()),
+            mView->zoomable(), SLOT(zoomIn()));
+    connect(ui->actionZoomOut, SIGNAL(triggered()),
+            mView->zoomable(), SLOT(zoomOut()));
+    connect(ui->actionNormalSize, SIGNAL(triggered()),
+            mView->zoomable(), SLOT(resetZoom()));
+
     readSettings();
+
+    updateActions();
 }
 
 BuildingEditorWindow::~BuildingEditorWindow()
@@ -154,6 +169,8 @@ void BuildingEditorWindow::closeEvent(QCloseEvent *event)
 {
     if (confirmAllSave()) {
         writeSettings();
+        if (mPreviewWin)
+            mPreviewWin->writeSettings();
         event->accept(); // doesn't destroy us, hides PreviewWindow for us
     } else
         event->ignore();
@@ -172,6 +189,7 @@ bool BuildingEditorWindow::closeYerself()
         writeSettings();
         if (mPreviewWin)
             mPreviewWin->writeSettings();
+        TilesetManager::instance()->removeReferences(mTilesetByName.values());
         delete this; // Delete ourself and PreviewWindow.
                      // Gotta delete PreviewWindow before Tiled's MainWindow
                      // so all the tilesets are released.
@@ -182,6 +200,7 @@ bool BuildingEditorWindow::closeYerself()
 
 bool BuildingEditorWindow::Startup()
 {
+    // Refresh the ui before blocking while loading tilesets etc
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 
     if (!LoadBuildingTemplates())
@@ -198,14 +217,16 @@ bool BuildingEditorWindow::Startup()
         return false;
     }
 
-    QList<Tiled::Tile*> tiles;
-
     /////
 
     QToolBox *toolBox = ui->toolBox;
-    while (toolBox->count())
+    while (toolBox->count()) {
+        QWidget *w = toolBox->widget(0);
         toolBox->removeItem(0);
+        delete w;
+    }
 
+    // Add tile categories to the gui
     foreach (BuildingTiles::Category *category, BuildingTiles::instance()->categories()) {
         QString categoryName = category->name();
         const char *slot = 0;
@@ -224,9 +245,7 @@ bool BuildingEditorWindow::Startup()
         else if (categoryName == QLatin1String("stairs"))
             slot = SLOT(currentStairsChanged(QItemSelection));
         else {
-            mError = tr("Unknown category '%1' in BuildingTiles.txt.").arg(categoryName);
-            QMessageBox::critical(this, tr("It's no good, Jim!"), mError);
-            return false;
+            qFatal("bogus category name"); // the names were validated elsewhere
         }
 
         Tiled::Internal::MixedTilesetView *w = new Tiled::Internal::MixedTilesetView(toolBox);
@@ -234,7 +253,7 @@ bool BuildingEditorWindow::Startup()
         connect(w->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
                 slot);
 
-        tiles.clear();
+        QList<Tiled::Tile*> tiles;
         foreach (BuildingTile *tile, category->tiles()) {
             if (!tile->mAlternates.count() || (tile == tile->mAlternates.first()))
                 tiles += mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex);
@@ -244,35 +263,8 @@ bool BuildingEditorWindow::Startup()
 
     /////
 
-    RoomDefinitionManager::instance->Init(BuildingDefinition::Definitions.first());
-
-    Building *building = new Building(20, 20);
-    building->insertFloor(0, new BuildingFloor(building, 0));
-
-    mCurrentDocument = new BuildingDocument(building, QString());
-    mCurrentDocument->setCurrentFloor(building->floor(0));
-    mUndoGroup->addStack(mCurrentDocument->undoStack());
-    mUndoGroup->setActiveStack(mCurrentDocument->undoStack());
-
-    roomEditor->setDocument(mCurrentDocument);
-
-    ///// NewBuildingDialog.exec()
-    this->room->addItems(RoomDefinitionManager::instance->FillCombo());
-
-    this->room->setIconSize(QSize(20, 20));
-    for (int i = 0; i < RoomDefinitionManager::instance->getRoomCount(); i++) {
-        QImage image(20, 20, QImage::Format_ARGB32);
-        image.fill(qRgba(0,0,0,0));
-        QPainter painter(&image);
-        painter.fillRect(1, 1, 18, 18, RoomDefinitionManager::instance->getRoom(i)->Color);
-        this->room->setItemIcon(i, QPixmap::fromImage(image));
-    }
-
-    /////
-
     mPreviewWin = new BuildingPreviewWindow(this);
     mPreviewWin->scene()->setTilesets(mTilesetByName);
-    mPreviewWin->setDocument(currentDocument());
     mPreviewWin->show();
 
     return true;
@@ -349,9 +341,22 @@ bool BuildingEditorWindow::LoadBuildingTiles()
         return false;
     }
 
+    static const char *validCategoryNamesC[] = {
+        "exterior_walls", "interior_walls", "floors", "doors", "door_frames",
+        "windows", "stairs", 0
+    };
+    QStringList validCategoryNames;
+    for (int i = 0; validCategoryNamesC[i]; i++)
+        validCategoryNames << QLatin1String(validCategoryNamesC[i]);
+
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("category")) {
             QString categoryName = block.value("name");
+            if (!validCategoryNames.contains(categoryName)) {
+                mError = tr("Unknown category '%1' in BuildingTiles.txt.").arg(categoryName);
+                return false;
+            }
+
             QString label = block.value("label");
             BuildingTiles::instance()->addCategory(categoryName, label);
             SimpleFileBlock tilesBlock = block.block("tiles");
@@ -387,6 +392,7 @@ bool BuildingEditorWindow::LoadBuildingTiles()
             return false;
         }
     }
+
 
     // Check that all the tiles exist
     foreach (BuildingTiles::Category *category, BuildingTiles::instance()->categories()) {
@@ -456,18 +462,20 @@ bool BuildingEditorWindow::LoadMapBaseXMLLots()
         return false;
     }
 
+    TilesetManager::instance()->addReferences(mTilesetByName.values());
+
     return true;
 }
 
 void BuildingEditorWindow::setCurrentRoom(Room *room) const
 {
     int roomIndex = RoomDefinitionManager::instance->GetIndex(room);
-    this->room->setCurrentIndex(roomIndex);
+    this->mRoomComboBox->setCurrentIndex(roomIndex);
 }
 
 Room *BuildingEditorWindow::currentRoom() const
 {
-    int roomIndex = room->currentIndex();
+    int roomIndex = mRoomComboBox->currentIndex();
     return RoomDefinitionManager::instance->getRoom(roomIndex);
 }
 
@@ -523,6 +531,8 @@ void BuildingEditorWindow::roomIndexChanged(int index)
 
 void BuildingEditorWindow::currentEWallChanged(const QItemSelection &selected)
 {
+    if (!mCurrentDocument)
+        return;
     QModelIndexList indexes = selected.indexes();
     if (indexes.count() == 1) {
         QModelIndex index = indexes.first();
@@ -537,6 +547,8 @@ void BuildingEditorWindow::currentEWallChanged(const QItemSelection &selected)
 
 void BuildingEditorWindow::currentIWallChanged(const QItemSelection &selected)
 {
+    if (!mCurrentDocument)
+        return;
     QModelIndexList indexes = selected.indexes();
     if (indexes.count() == 1) {
         QModelIndex index = indexes.first();
@@ -552,6 +564,8 @@ void BuildingEditorWindow::currentIWallChanged(const QItemSelection &selected)
 
 void BuildingEditorWindow::currentFloorChanged(const QItemSelection &selected)
 {
+    if (!mCurrentDocument)
+        return;
     QModelIndexList indexes = selected.indexes();
     if (indexes.count() == 1) {
         QModelIndex index = indexes.first();
@@ -567,6 +581,8 @@ void BuildingEditorWindow::currentFloorChanged(const QItemSelection &selected)
 
 void BuildingEditorWindow::currentDoorChanged(const QItemSelection &selected)
 {
+    if (!mCurrentDocument)
+        return;
     QModelIndexList indexes = selected.indexes();
     if (indexes.count() == 1) {
         QModelIndex index = indexes.first();
@@ -599,6 +615,8 @@ void BuildingEditorWindow::currentDoorChanged(const QItemSelection &selected)
 
 void BuildingEditorWindow::currentDoorFrameChanged(const QItemSelection &selected)
 {
+    if (!mCurrentDocument)
+        return;
     QModelIndexList indexes = selected.indexes();
     if (indexes.count() == 1) {
         QModelIndex index = indexes.first();
@@ -632,6 +650,8 @@ void BuildingEditorWindow::currentDoorFrameChanged(const QItemSelection &selecte
 
 void BuildingEditorWindow::currentWindowChanged(const QItemSelection &selected)
 {
+    if (!mCurrentDocument)
+        return;
     QModelIndexList indexes = selected.indexes();
     if (indexes.count() == 1) {
         QModelIndex index = indexes.first();
@@ -665,6 +685,8 @@ void BuildingEditorWindow::currentWindowChanged(const QItemSelection &selected)
 
 void BuildingEditorWindow::currentStairsChanged(const QItemSelection &selected)
 {
+    if (!mCurrentDocument)
+        return;
     QModelIndexList indexes = selected.indexes();
     if (indexes.count() == 1) {
         QModelIndex index = indexes.first();
@@ -719,6 +741,50 @@ void BuildingEditorWindow::downLevel()
         mFloorLabel->setText(tr("Ground Floor"));
 }
 
+void BuildingEditorWindow::newBuilding()
+{
+    NewBuildingDialog dialog(this);
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    if (mCurrentDocument) {
+        roomEditor->clearDocument();
+        mPreviewWin->clearDocument();
+        mUndoGroup->removeStack(mCurrentDocument->undoStack());
+        delete mCurrentDocument->building();
+        delete mCurrentDocument;
+    }
+
+    RoomDefinitionManager::instance->Init(dialog.buildingDefinition());
+
+    Building *building = new Building(dialog.buildingWidth(), dialog.buildingHeight());
+    building->insertFloor(0, new BuildingFloor(building, 0));
+
+    mCurrentDocument = new BuildingDocument(building, QString());
+    mCurrentDocument->setCurrentFloor(building->floor(0));
+    mUndoGroup->addStack(mCurrentDocument->undoStack());
+    mUndoGroup->setActiveStack(mCurrentDocument->undoStack());
+
+    roomEditor->setDocument(mCurrentDocument);
+
+    mRoomComboBox->clear();
+    mRoomComboBox->addItems(RoomDefinitionManager::instance->FillCombo());
+
+    for (int i = 0; i < RoomDefinitionManager::instance->getRoomCount(); i++) {
+        QImage image(20, 20, QImage::Format_ARGB32);
+        image.fill(qRgba(0,0,0,0));
+        QPainter painter(&image);
+        painter.fillRect(1, 1, 18, 18, RoomDefinitionManager::instance->getRoom(i)->Color);
+        mRoomComboBox->setItemIcon(i, QPixmap::fromImage(image));
+    }
+
+    /////
+
+    mPreviewWin->setDocument(currentDocument());
+
+    updateActions();
+}
+
 void BuildingEditorWindow::exportTMX()
 {
     QString initialDir = mSettings.value(
@@ -734,6 +800,24 @@ void BuildingEditorWindow::exportTMX()
 
     mSettings.setValue(QLatin1String("BuildingEditor/ExportDirectory"),
                        QFileInfo(fileName).absolutePath());
+}
+
+void BuildingEditorWindow::updateActions()
+{
+    ui->actionPecil->setEnabled(mCurrentDocument != 0);
+    ui->actionEraser->setEnabled(mCurrentDocument != 0);
+    ui->actionDoor->setEnabled(mCurrentDocument != 0);
+    ui->actionWindow->setEnabled(mCurrentDocument != 0);
+    ui->actionStairs->setEnabled(mCurrentDocument != 0);
+    ui->actionSelectObject->setEnabled(mCurrentDocument != 0);
+    ui->actionUpLevel->setEnabled(mCurrentDocument != 0);
+    ui->actionDownLevel->setEnabled(mCurrentDocument != 0);
+
+    ui->actionZoomIn->setEnabled(mView->zoomable()->canZoomIn());
+    ui->actionZoomOut->setEnabled(mView->zoomable()->canZoomOut());
+    ui->actionNormalSize->setEnabled(mView->zoomable()->scale() != 1.0);
+
+    mRoomComboBox->setEnabled(mCurrentDocument != 0);
 }
 
 /////

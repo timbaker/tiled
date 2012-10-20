@@ -45,6 +45,7 @@ class BuildingFloor;
 class BuildingPreviewWindow;
 class Door;
 class FloorEditor;
+class FloorView;
 class Room;
 class Window;
 class Stairs;
@@ -344,7 +345,7 @@ public:
     bool LoadBuildingTiles();
     bool LoadMapBaseXMLLots();
 
-    void setCurrentRoom(Room *room) const; // TODO: move to BuildingDocument
+    void setCurrentRoom(Room *mRoomComboBox) const; // TODO: move to BuildingDocument
     Room *currentRoom() const;
 
     BuildingDocument *currentDocument() const
@@ -372,13 +373,17 @@ private slots:
     void upLevel();
     void downLevel();
 
+    void newBuilding();
     void exportTMX();
+
+    void updateActions();
 
 private:
     Ui::BuildingEditorWindow *ui;
     BuildingDocument *mCurrentDocument;
     FloorEditor *roomEditor;
-    QComboBox *room;
+    FloorView *mView;
+    QComboBox *mRoomComboBox;
     QLabel *mFloorLabel;
     QUndoGroup *mUndoGroup;
     QMap<QString,Tiled::Tileset*> mTilesetByName;

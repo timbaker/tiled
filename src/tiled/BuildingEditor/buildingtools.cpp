@@ -34,6 +34,21 @@ using namespace BuildingEditor;
 
 /////
 
+BaseTool::BaseTool() :
+    QObject(0),
+    mEditor(0)
+{
+}
+
+void BaseTool::setEditor(FloorEditor *editor)
+{
+    mEditor = editor;
+
+    connect(mEditor, SIGNAL(documentChanged()), SLOT(documentChanged()));
+}
+
+/////
+
 PencilTool *PencilTool::mInstance = 0;
 
 PencilTool *PencilTool::instance()
@@ -46,8 +61,13 @@ PencilTool *PencilTool::instance()
 PencilTool::PencilTool() :
     BaseTool(),
     mMouseDown(false),
-    mCursor(new QGraphicsRectItem)
+    mCursor(0)
 {
+}
+
+void PencilTool::documentChanged()
+{
+    mCursor = 0; // it was deleted from the editor
 }
 
 void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -105,8 +125,8 @@ void PencilTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 void PencilTool::activate()
 {
     mEditor->activateTool(this);
-    mEditor->addItem(mCursor);
     updateCursor(QPointF(-100,-100));
+    mEditor->addItem(mCursor);
 }
 
 void PencilTool::deactivate()
@@ -117,6 +137,10 @@ void PencilTool::deactivate()
 void PencilTool::updateCursor(const QPointF &scenePos)
 {
     QPoint tilePos = mEditor->sceneToTile(scenePos);
+    if (!mCursor) {
+        mCursor = new QGraphicsRectItem;
+        mCursor->setZValue(FloorEditor::ZVALUE_CURSOR);
+    }
     mCursor->setRect(mEditor->tileToSceneRect(tilePos).adjusted(0,0,-1,-1));
     mCursor->setBrush(QColor(BuildingEditorWindow::instance->currentRoom()->Color));
     mCursor->setVisible(mEditor->currentFloorContains(tilePos));
@@ -136,11 +160,13 @@ EraserTool *EraserTool::instance()
 EraserTool::EraserTool() :
     BaseTool(),
     mMouseDown(false),
-    mCursor(new QGraphicsRectItem)
+    mCursor(0)
 {
-    QPen pen(QColor(255,0,0,128));
-    pen.setWidth(3);
-    mCursor->setPen(pen);
+}
+
+void EraserTool::documentChanged()
+{
+    mCursor = 0; // it was deleted from the editor
 }
 
 void EraserTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -186,8 +212,8 @@ void EraserTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 void EraserTool::activate()
 {
     mEditor->activateTool(this);
-    mEditor->addItem(mCursor);
     updateCursor(QPointF(-100,-100));
+    mEditor->addItem(mCursor);
 }
 
 void EraserTool::deactivate()
@@ -198,6 +224,13 @@ void EraserTool::deactivate()
 void EraserTool::updateCursor(const QPointF &scenePos)
 {
     QPoint tilePos = mEditor->sceneToTile(scenePos);
+    if (!mCursor) {
+        QPen pen(QColor(255,0,0,128));
+        pen.setWidth(3);
+        mCursor = new QGraphicsRectItem;
+        mCursor->setPen(pen);
+        mCursor->setZValue(FloorEditor::ZVALUE_CURSOR);
+    }
     mCursor->setRect(mEditor->tileToSceneRect(tilePos).adjusted(0,0,-1,-1));
     mCursor->setVisible(mEditor->currentFloorContains(tilePos));
 }
@@ -209,6 +242,11 @@ BaseObjectTool::BaseObjectTool() :
     mTileEdge(Center),
     mCursorItem(0)
 {
+}
+
+void BaseObjectTool::documentChanged()
+{
+    mCursorItem = 0; // it was deleted from the editor
 }
 
 void BaseObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -541,11 +579,8 @@ SelectMoveObjectTool::SelectMoveObjectTool() :
     mMode(NoMode),
     mMouseDown(false),
     mClickedObject(0),
-    mSelectionRectItem(new QGraphicsRectItem())
+    mSelectionRectItem(0)
 {
-    mSelectionRectItem->setPen(QColor(0x33,0x99,0xff));
-    mSelectionRectItem->setBrush(QBrush(QColor(0x33,0x99,0xff,255/8)));
-    mSelectionRectItem->setZValue(1000);
 }
 
 void SelectMoveObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -633,6 +668,11 @@ void SelectMoveObjectTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     mClickedObject = 0;
 }
 
+void SelectMoveObjectTool::documentChanged()
+{
+    mSelectionRectItem = 0;
+}
+
 void SelectMoveObjectTool::activate()
 {
     mEditor->activateTool(this);
@@ -671,6 +711,12 @@ void SelectMoveObjectTool::updateSelection(const QPointF &pos,
 void SelectMoveObjectTool::startSelecting()
 {
     mMode = Selecting;
+    if (mSelectionRectItem == 0) {
+        mSelectionRectItem = new QGraphicsRectItem();
+        mSelectionRectItem->setPen(QColor(0x33,0x99,0xff));
+        mSelectionRectItem->setBrush(QBrush(QColor(0x33,0x99,0xff,255/8)));
+        mSelectionRectItem->setZValue(FloorEditor::ZVALUE_CURSOR);
+    }
     mEditor->addItem(mSelectionRectItem);
 }
 

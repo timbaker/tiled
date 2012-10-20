@@ -29,6 +29,11 @@ BuildingFloor::BuildingFloor(Building *building, int level) :
 {
 }
 
+BuildingFloor::~BuildingFloor()
+{
+    qDeleteAll(mObjects);
+}
+
 BuildingFloor *BuildingFloor::floorBelow() const
 {
     return (mLevel > 0) ? mBuilding->floor(mLevel - 1) : 0;

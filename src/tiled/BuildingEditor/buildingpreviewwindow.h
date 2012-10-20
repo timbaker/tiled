@@ -79,6 +79,7 @@ public:
     ~BuildingPreviewScene();
 
     void setDocument(BuildingDocument *doc);
+    void clearDocument();
 
     void setTilesets(const QMap<QString,Tiled::Tileset*> &tilesets)
     { mTilesetByName = tilesets; }
@@ -156,6 +157,7 @@ public:
     void closeEvent(QCloseEvent *event);
 
     void setDocument(BuildingDocument *doc);
+    void clearDocument();
 
     BuildingPreviewScene *scene() const
     { return mScene; }

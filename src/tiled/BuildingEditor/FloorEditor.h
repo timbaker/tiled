@@ -20,7 +20,14 @@
 
 #include <QGraphicsItem>
 #include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QSet>
+
+namespace Tiled {
+namespace Internal {
+class Zoomable;
+}
+}
 
 namespace BuildingEditor {
 
@@ -118,6 +125,7 @@ public:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
     void setDocument(BuildingDocument *doc);
+    void clearDocument();
 
     BuildingDocument *document() const
     { return mDocument; }
@@ -139,6 +147,9 @@ public:
 
     QSet<BaseMapObject*> objectsInRect(const QRectF &sceneRect);
 
+signals:
+    void documentChanged();
+
 private slots:
     void currentFloorChanged();
     void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
@@ -154,6 +165,30 @@ private:
     QList<GraphicsObjectItem*> mObjectItems;
     QSet<GraphicsObjectItem*> mSelectedObjectItems;
     BaseTool *mCurrentTool;
+};
+
+class FloorView : public QGraphicsView
+{
+    Q_OBJECT
+public:
+    FloorView(QWidget *parent = 0);
+
+    FloorEditor *scene() const
+    { return dynamic_cast<FloorEditor*>(QGraphicsView::scene()); }
+
+    Tiled::Internal::Zoomable *zoomable() const
+    { return mZoomable; }
+
+    void mouseMoveEvent(QMouseEvent *event);
+    void wheelEvent(QWheelEvent *event);
+
+private slots:
+    void adjustScale(qreal scale);
+
+private:
+    Tiled::Internal::Zoomable *mZoomable;
+    QPoint mLastMousePos;
+    QPointF mLastMouseScenePos;
 };
 
 } // namespace BuildingEditor

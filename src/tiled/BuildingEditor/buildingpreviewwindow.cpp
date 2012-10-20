@@ -76,13 +76,13 @@ BuildingPreviewWindow::BuildingPreviewWindow(QWidget *parent) :
 
 void BuildingPreviewWindow::closeEvent(QCloseEvent *event)
 {
-    writeSettings();
 #if 0
+    writeSettings();
     if (confirmAllSave())
         event->accept();
     else
-        event->ignore();
 #endif
+        event->ignore();
 }
 
 void BuildingPreviewWindow::setDocument(BuildingDocument *doc)
@@ -90,6 +90,11 @@ void BuildingPreviewWindow::setDocument(BuildingDocument *doc)
     mDocument = doc;
 
     mScene->setDocument(doc);
+}
+
+void BuildingPreviewWindow::clearDocument()
+{
+    mScene->clearDocument();
 }
 
 void BuildingPreviewWindow::readSettings()
@@ -204,15 +209,27 @@ BuildingPreviewScene::~BuildingPreviewScene()
 
 void BuildingPreviewScene::setDocument(BuildingDocument *doc)
 {
+    if (mDocument)
+        mDocument->disconnect(this);
+
     mDocument = doc;
 
-    delete mMapComposite;
-    if (mMap)
+    if (mMap) {
+        delete mMapComposite->mapInfo();
+        delete mMapComposite;
         TilesetManager::instance()->removeReferences(mMap->tilesets());
-    delete mMap;
-    delete mRenderer;
-    qDeleteAll(mLayerGroupItems);
-    mLayerGroupItems.clear();
+        delete mMap;
+        delete mRenderer;
+        qDeleteAll(mLayerGroupItems);
+        mLayerGroupItems.clear();
+
+        mMapComposite = 0;
+        mMap = 0;
+        mRenderer = 0;
+    }
+
+    if (!mDocument)
+        return;
 
     mMap = new Map(Map::Isometric, doc->building()->width(),
                    doc->building()->height(), 64, 32);
@@ -257,6 +274,11 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
             SLOT(objectMoved(BaseMapObject*)));
     connect(mDocument, SIGNAL(objectTileChanged(BaseMapObject*)),
             SLOT(objectTileChanged(BaseMapObject*)));
+}
+
+void BuildingPreviewScene::clearDocument()
+{
+    setDocument(0);
 }
 
 void BuildingPreviewScene::BuildingToMap()

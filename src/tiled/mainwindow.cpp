@@ -1274,6 +1274,7 @@ void MainWindow::showBuildingEditor()
         mBuildingEditor->show();
         if (!mBuildingEditor->Startup()) {
             delete mBuildingEditor;
+            mBuildingEditor = 0;
             return;
         }
     }

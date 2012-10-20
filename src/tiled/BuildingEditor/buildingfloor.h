@@ -85,6 +85,7 @@ public:
     QVector<QVector<Square> > squares;
 
     BuildingFloor(Building *building, int level);
+    ~BuildingFloor();
 
     Building *building() const
     { return mBuilding; }
