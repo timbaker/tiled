@@ -27,6 +27,7 @@
 
 #include <QAction>
 #include <QDebug>
+#include <QStyleOptionGraphicsItem>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QWheelEvent>
@@ -41,6 +42,7 @@ GraphicsFloorItem::GraphicsFloorItem(BuildingFloor *floor) :
     mFloor(floor),
     mBmp(new QImage(mFloor->width(), mFloor->height(), QImage::Format_RGB32))
 {
+    setFlag(ItemUsesExtendedStyleOption);
     mBmp->fill(Qt::black);
 }
 
@@ -49,11 +51,22 @@ QRectF GraphicsFloorItem::boundingRect() const
     return QRectF(0, 0, mFloor->width() * 30, mFloor->height() * 30);
 }
 
-void GraphicsFloorItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
+void GraphicsFloorItem::paint(QPainter *painter,
+                              const QStyleOptionGraphicsItem *option,
                               QWidget *)
 {
-    for (int x = 0; x < mFloor->width(); x++) {
-        for (int y = 0; y < mFloor->height(); y++) {
+    int minX = option->exposedRect.left() / 30 - 1;
+    int maxX = option->exposedRect.right() / 30 + 1;
+    int minY = option->exposedRect.top() / 30 - 1;
+    int maxY = option->exposedRect.bottom() / 30 + 1;
+
+    minX = qMax(0, minX);
+    maxX = qMin(maxX, mFloor->width());
+    minY = qMax(0, minY);
+    maxY = qMin(maxY, mFloor->height());
+
+    for (int x = minX; x < maxX; x++) {
+        for (int y = 0; y < maxY; y++) {
             QRgb c = mBmp->pixel(x, y);
             if (c == qRgb(0, 0, 0))
                 continue;
@@ -69,6 +82,7 @@ GraphicsGridItem::GraphicsGridItem(int width, int height) :
     mWidth(width),
     mHeight(height)
 {
+    setFlag(ItemUsesExtendedStyleOption);
 }
 
 QRectF GraphicsGridItem::boundingRect() const
@@ -76,7 +90,8 @@ QRectF GraphicsGridItem::boundingRect() const
     return QRectF(0, 0, mWidth * 30, mHeight * 30);
 }
 
-void GraphicsGridItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *,
+void GraphicsGridItem::paint(QPainter *painter,
+                             const QStyleOptionGraphicsItem *option,
                              QWidget *)
 {
     QPen pen(QColor(128, 128, 220, 80));
@@ -84,11 +99,21 @@ void GraphicsGridItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     pen.setStyle(Qt::DotLine);
     painter->setPen(pen);
 
-    for (int x = 0; x <= mWidth; x++)
-        painter->drawLine(x * 30, 0, x * 30, mHeight * 30);
+    int minX = option->exposedRect.left() / 30 - 1;
+    int maxX = option->exposedRect.right() / 30 + 1;
+    int minY = option->exposedRect.top() / 30 - 1;
+    int maxY = option->exposedRect.bottom() / 30 + 1;
 
-    for (int y = 0; y <= mHeight; y++)
-        painter->drawLine(0, y * 30, mWidth * 30, y * 30);
+    minX = qMax(0, minX);
+    maxX = qMin(maxX, mWidth);
+    minY = qMax(0, minY);
+    maxY = qMin(maxY, mHeight);
+
+    for (int x = minX; x <= maxX; x++)
+        painter->drawLine(x * 30, minY * 30, x * 30, maxY * 30);
+
+    for (int y = minY; y <= maxY; y++)
+        painter->drawLine(minX * 30, y * 30, maxX * 30, y * 30);
 }
 
 /////
