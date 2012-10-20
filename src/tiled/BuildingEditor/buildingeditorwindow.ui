@@ -24,6 +24,16 @@
     <item>
      <layout class="QHBoxLayout" name="statusBarLayout">
       <item>
+       <widget class="QLabel" name="coordLabel">
+        <property name="text">
+         <string>999,999</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="horizontalSpacer_2">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>

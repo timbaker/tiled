@@ -182,6 +182,9 @@ public:
     void mouseMoveEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
 
+signals:
+    void mouseCoordinateChanged(const QPoint &tilePos);
+
 private slots:
     void adjustScale(qreal scale);
 
@@ -189,6 +192,7 @@ private:
     Tiled::Internal::Zoomable *mZoomable;
     QPoint mLastMousePos;
     QPointF mLastMouseScenePos;
+    QPoint mLastMouseTilePos;
 };
 
 } // namespace BuildingEditor

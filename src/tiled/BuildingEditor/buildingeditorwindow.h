@@ -363,6 +363,8 @@ public:
     void readSettings();
     void writeSettings();
 
+    void resizeCoordsLabel();
+
 private slots:
     void roomIndexChanged(int index);
 
@@ -381,6 +383,8 @@ private slots:
     void exportTMX();
 
     void preferences();
+
+    void mouseCoordinateChanged(const QPoint &tilePos);
 
     void updateActions();
 

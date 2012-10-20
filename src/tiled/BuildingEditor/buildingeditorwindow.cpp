@@ -90,6 +90,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 
     mView = ui->floorView;
     mView->setScene(roomEditor);
+    ui->coordLabel->clear();
+    connect(mView, SIGNAL(mouseCoordinateChanged(QPoint)),
+            SLOT(mouseCoordinateChanged(QPoint)));
     connect(mView->zoomable(), SIGNAL(scaleChanged(qreal)),
             SLOT(updateActions()));
     mView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
@@ -821,6 +824,8 @@ void BuildingEditorWindow::newBuilding()
 
     mFloorLabel->setText(tr("Ground Floor"));
 
+    resizeCoordsLabel();
+
     /////
 
     mPreviewWin->setDocument(currentDocument());
@@ -849,6 +854,23 @@ void BuildingEditorWindow::preferences()
 {
     BuildingPreferencesDialog dialog(this);
     dialog.exec();
+}
+
+void BuildingEditorWindow::mouseCoordinateChanged(const QPoint &tilePos)
+{
+    ui->coordLabel->setText(tr("%1,%2").arg(tilePos.x()).arg(tilePos.y()));
+}
+
+void BuildingEditorWindow::resizeCoordsLabel()
+{
+    int width = 999, height = 999;
+    if (mCurrentDocument) {
+        width = qMax(width, mCurrentDocument->building()->width());
+        height = qMax(height, mCurrentDocument->building()->height());
+    }
+    QFontMetrics fm = ui->coordLabel->fontMetrics();
+    QString coordString = QString(QLatin1String("%1,%2")).arg(width).arg(height);
+    ui->coordLabel->setMinimumWidth(fm.width(coordString) + 8);
 }
 
 void BuildingEditorWindow::updateActions()

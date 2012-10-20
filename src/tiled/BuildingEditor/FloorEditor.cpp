@@ -477,6 +477,12 @@ void FloorView::mouseMoveEvent(QMouseEvent *event)
 
     mLastMousePos = event->globalPos();
     mLastMouseScenePos = mapToScene(viewport()->mapFromGlobal(mLastMousePos));
+
+    QPoint tilePos = scene()->sceneToTile(mLastMouseScenePos);
+    if (tilePos != mLastMouseTilePos) {
+        mLastMouseTilePos = tilePos;
+        emit mouseCoordinateChanged(mLastMouseTilePos);
+    }
 }
 
 /**
