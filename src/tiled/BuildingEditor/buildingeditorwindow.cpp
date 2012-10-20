@@ -21,6 +21,7 @@
 #include "building.h"
 #include "buildingdocument.h"
 #include "buildingfloor.h"
+#include "buildingpreferencesdialog.h"
 #include "buildingpreviewwindow.h"
 #include "buildingundoredo.h"
 #include "buildingtools.h"
@@ -48,6 +49,7 @@
 #include <QListWidget>
 #include <QMessageBox>
 #include <QPixmap>
+#include <QShowEvent>
 #include <QUndoGroup>
 #include <QXmlStreamReader>
 
@@ -66,7 +68,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     roomEditor(new FloorEditor(this)),
     mRoomComboBox(new QComboBox()),
     mUndoGroup(new QUndoGroup(this)),
-    mPreviewWin(0)
+    mPreviewWin(0),
+    mZoomable(new Zoomable(this)),
+    mCategoryZoomable(new Zoomable(this))
 {
     ui->setupUi(this);
 
@@ -84,12 +88,11 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mFloorLabel->setMinimumWidth(90);
     ui->toolBar->insertWidget(ui->actionUpLevel, mFloorLabel);
 
-    mView = new FloorView(this);
+    mView = ui->floorView;
     mView->setScene(roomEditor);
     connect(mView->zoomable(), SIGNAL(scaleChanged(qreal)),
             SLOT(updateActions()));
-
-    setCentralWidget(mView);
+    mView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
 
     connect(ui->actionPecil, SIGNAL(triggered()),
             PencilTool::instance(), SLOT(activate()));
@@ -139,8 +142,11 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     redoAction->setIcon(redoIcon);
     Utils::setThemeIcon(undoAction, "edit-undo");
     Utils::setThemeIcon(redoAction, "edit-redo");
-    ui->menuEdit->insertAction(0, redoAction);
-    ui->menuEdit->insertAction(redoAction, undoAction);
+    ui->menuEdit->insertAction(ui->menuEdit->actions().at(0), undoAction);
+    ui->menuEdit->insertAction(ui->menuEdit->actions().at(1), redoAction);
+    ui->menuEdit->insertSeparator(ui->menuEdit->actions().at(2));
+
+    connect(ui->actionPreferences, SIGNAL(triggered()), SLOT(preferences()));
 
     connect(ui->actionNewBuilding, SIGNAL(triggered()), SLOT(newBuilding()));
     connect(ui->actionExportTMX, SIGNAL(triggered()), SLOT(exportTMX()));
@@ -155,6 +161,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionNormalSize, SIGNAL(triggered()),
             mView->zoomable(), SLOT(resetZoom()));
 
+    mCategoryZoomable->connectToComboBox(ui->scaleComboBox);
+
     readSettings();
 
     updateActions();
@@ -165,13 +173,22 @@ BuildingEditorWindow::~BuildingEditorWindow()
     delete ui;
 }
 
+void BuildingEditorWindow::showEvent(QShowEvent *event)
+{
+    if (mPreviewWin)
+        mPreviewWin->show();
+    event->accept();
+}
+
 void BuildingEditorWindow::closeEvent(QCloseEvent *event)
 {
     if (confirmAllSave()) {
         writeSettings();
-        if (mPreviewWin)
+        if (mPreviewWin) {
             mPreviewWin->writeSettings();
-        event->accept(); // doesn't destroy us, hides PreviewWindow for us
+            mPreviewWin->hide();
+        }
+        event->accept(); // doesn't destroy us
     } else
         event->ignore();
 
@@ -207,7 +224,8 @@ bool BuildingEditorWindow::Startup()
         return false;
 
     if (!LoadMapBaseXMLLots()) {
-        QMessageBox::critical(this, tr("It's no good, Jim!"), mError);
+        if (!mError.isEmpty())
+            QMessageBox::critical(this, tr("It's no good, Jim!"), mError);
         return false;
     }
 
@@ -248,7 +266,8 @@ bool BuildingEditorWindow::Startup()
             qFatal("bogus category name"); // the names were validated elsewhere
         }
 
-        Tiled::Internal::MixedTilesetView *w = new Tiled::Internal::MixedTilesetView(toolBox);
+        Tiled::Internal::MixedTilesetView *w
+                = new Tiled::Internal::MixedTilesetView(mCategoryZoomable, toolBox);
         toolBox->addItem(w, category->label());
         connect(w->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
                 slot);
@@ -411,6 +430,22 @@ bool BuildingEditorWindow::LoadBuildingTiles()
 
 bool BuildingEditorWindow::LoadMapBaseXMLLots()
 {
+    // Make sure the user has chosen the Tiles directory.
+    static const char *KEY_TILES_DIR = "BuildingEditor/TilesDirectory";
+    QString tilesDirectory = mSettings.value(QLatin1String(KEY_TILES_DIR),
+                                             QLatin1String("../Tiles")).toString();
+    QDir dir(tilesDirectory);
+    if (!dir.exists()) {
+        QMessageBox::information(this, tr("Choose Tiles Directory"),
+                                 tr("Please enter the Tiles directory in the Preferences."));
+        BuildingPreferencesDialog dialog(this);
+        if (dialog.exec() != QDialog::Accepted) {
+            mError.clear();
+            return false;
+        }
+        tilesDirectory = mSettings.value(QLatin1String(KEY_TILES_DIR)).toString();
+    }
+
     QString path = QCoreApplication::applicationDirPath() + QLatin1Char('/')
             + QLatin1String("MapBaseXMLLots.txt");
     QFile file(path);
@@ -431,8 +466,8 @@ bool BuildingEditorWindow::LoadMapBaseXMLLots()
 //                const int firstGID = atts.value(QLatin1String("firstgid")).toString().toInt();
                 const QString name = atts.value(QLatin1String("name")).toString();
 
-                QString source = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-                        + QLatin1String("../../ProjectZomboid/BMPToMap/BuildingEditor/Tiles/") + name + QLatin1String(".png");
+                QString source = tilesDirectory + QLatin1Char('/') + name
+                        + QLatin1String(".png");
                 if (!QFileInfo(source).exists()) {
                     mError = tr("Tileset in MapBaseXMLLots.txt doesn't exist.\n%1").arg(source);
                     return false;
@@ -514,6 +549,10 @@ void BuildingEditorWindow::readSettings()
         resize(800, 600);
     restoreState(mSettings.value(QLatin1String("state"),
                                  QByteArray()).toByteArray());
+    mView->zoomable()->setScale(mSettings.value(QLatin1String("EditorScale"),
+                                                1.0).toReal());
+    mCategoryZoomable->setScale(mSettings.value(QLatin1String("CategoryScale"),
+                                                0.5).toReal());
     mSettings.endGroup();
 }
 
@@ -522,6 +561,8 @@ void BuildingEditorWindow::writeSettings()
     mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
     mSettings.setValue(QLatin1String("geometry"), saveGeometry());
     mSettings.setValue(QLatin1String("state"), saveState());
+    mSettings.setValue(QLatin1String("EditorScale"), mView->zoomable()->scale());
+    mSettings.setValue(QLatin1String("CategoryScale"), mCategoryZoomable->scale());
     mSettings.endGroup();
 }
 
@@ -778,6 +819,8 @@ void BuildingEditorWindow::newBuilding()
         mRoomComboBox->setItemIcon(i, QPixmap::fromImage(image));
     }
 
+    mFloorLabel->setText(tr("Ground Floor"));
+
     /////
 
     mPreviewWin->setDocument(currentDocument());
@@ -802,6 +845,12 @@ void BuildingEditorWindow::exportTMX()
                        QFileInfo(fileName).absolutePath());
 }
 
+void BuildingEditorWindow::preferences()
+{
+    BuildingPreferencesDialog dialog(this);
+    dialog.exec();
+}
+
 void BuildingEditorWindow::updateActions()
 {
     ui->actionPecil->setEnabled(mCurrentDocument != 0);
@@ -812,6 +861,11 @@ void BuildingEditorWindow::updateActions()
     ui->actionSelectObject->setEnabled(mCurrentDocument != 0);
     ui->actionUpLevel->setEnabled(mCurrentDocument != 0);
     ui->actionDownLevel->setEnabled(mCurrentDocument != 0);
+
+    ui->actionOpen->setEnabled(false);
+    ui->actionSave->setEnabled(false);
+    ui->actionSaveAs->setEnabled(false);
+    ui->actionExportTMX->setEnabled(mCurrentDocument != 0);
 
     ui->actionZoomIn->setEnabled(mView->zoomable()->canZoomIn());
     ui->actionZoomOut->setEnabled(mView->zoomable()->canZoomOut());

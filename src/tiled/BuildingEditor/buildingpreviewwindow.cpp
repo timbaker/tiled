@@ -107,7 +107,7 @@ void BuildingPreviewWindow::readSettings()
         resize(400, 300);
     restoreState(mSettings.value(QLatin1String("state"),
                                  QByteArray()).toByteArray());
-    qreal scale = mSettings.value(QLatin1String("scale"), 1.0f).toReal();
+    qreal scale = mSettings.value(QLatin1String("scale"), 0.5f).toReal();
     ui->graphicsView->zoomable()->setScale(scale);
     mSettings.endGroup();
 }

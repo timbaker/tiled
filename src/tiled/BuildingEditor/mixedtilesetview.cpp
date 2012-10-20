@@ -19,6 +19,7 @@
 
 #include "tile.h"
 #include "tileset.h"
+#include "zoomable.h"
 
 #include <QHeaderView>
 #include <QPainter>
@@ -64,10 +65,8 @@ void TileDelegate::paint(QPainter *painter,
     const QPixmap tileImage = display.value<QPixmap>();
     const int extra = 0; // mView->drawGrid() ? 1 : 0;
 
-#if 0
     if (mView->zoomable()->smoothTransform())
         painter->setRenderHint(QPainter::SmoothPixmapTransform);
-#endif
 
     painter->drawPixmap(option.rect.adjusted(0, 0, -extra, -extra), tileImage);
 
@@ -85,11 +84,11 @@ QSize TileDelegate::sizeHint(const QStyleOptionViewItem & option,
                              const QModelIndex &index) const
 {
     const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
-    if (!m->tileAt(index))
-        return QSize(64,128);
-    const Tileset *tileset = m->tileAt(index)->tileset();
-    const qreal zoom = 1.0; //mView->zoomable()->scale();
+    const qreal zoom = mView->zoomable()->scale();
     const int extra = 0; // mView->drawGrid() ? 1 : 0;
+    if (!m->tileAt(index))
+        return QSize(64 * zoom + extra, 128 * zoom + extra);
+    const Tileset *tileset = m->tileAt(index)->tileset();
     return QSize(tileset->tileWidth() * zoom + extra,
                  tileset->tileHeight() * zoom + extra);
 }
@@ -99,9 +98,10 @@ QSize TileDelegate::sizeHint(const QStyleOptionViewItem & option,
 
 /////
 
-MixedTilesetView::MixedTilesetView(QWidget *parent) :
+MixedTilesetView::MixedTilesetView(Zoomable *zoomable, QWidget *parent) :
     QTableView(parent),
-    mModel(new MixedTilesetModel(this))
+    mModel(new MixedTilesetModel(this)),
+    mZoomable(zoomable)
 {
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -125,11 +125,18 @@ MixedTilesetView::MixedTilesetView(QWidget *parent) :
     setLayoutDirection(Qt::LeftToRight);
 
     setModel(mModel);
+
+    connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(scaleChanged(qreal)));
 }
 
 QSize MixedTilesetView::sizeHint() const
 {
     return QSize(64 * 4, 128);
+}
+
+void MixedTilesetView::scaleChanged(qreal scale)
+{
+    model()->scaleChanged(scale);
 }
 
 /////
@@ -194,4 +201,9 @@ Tile *MixedTilesetModel::tileAt(const QModelIndex &index) const
 
     const int i = index.column() + index.row() * COLUMN_COUNT;
     return (i < mTiles.count()) ?  mTiles.at(i) : 0;
+}
+
+void MixedTilesetModel::scaleChanged(qreal scale)
+{
+    reset();
 }

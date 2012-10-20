@@ -35,6 +35,9 @@ class BuildingEditorWindow;
 namespace Tiled {
 class Tile;
 class Tileset;
+namespace Internal {
+class Zoomable;
+}
 }
 
 namespace BuildingEditor {
@@ -334,6 +337,7 @@ public:
 
     static BuildingEditorWindow *instance;
 
+    void showEvent(QShowEvent *event);
     void closeEvent(QCloseEvent *event);
 
     bool confirmAllSave();
@@ -376,6 +380,8 @@ private slots:
     void newBuilding();
     void exportTMX();
 
+    void preferences();
+
     void updateActions();
 
 private:
@@ -390,6 +396,8 @@ private:
     QSettings mSettings;
     QString mError;
     BuildingPreviewWindow *mPreviewWin;
+    Tiled::Internal::Zoomable *mZoomable;
+    Tiled::Internal::Zoomable *mCategoryZoomable;
 };
 
 } // namespace BuildingEditor

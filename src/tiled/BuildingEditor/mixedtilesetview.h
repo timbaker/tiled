@@ -27,6 +27,8 @@ class Tile;
 
 namespace Internal {
 
+class Zoomable;
+
 class MixedTilesetModel : public QAbstractListModel
 {
 public:
@@ -45,6 +47,8 @@ public:
 
     Tile *tileAt(const QModelIndex &index) const;
 
+    void scaleChanged(qreal scale);
+
 private:
     QList<Tiled::Tile*> mTiles;
 };
@@ -53,20 +57,24 @@ class MixedTilesetView : public QTableView
 {
     Q_OBJECT
 public:
-    explicit MixedTilesetView(QWidget *parent = 0);
+    explicit MixedTilesetView(Zoomable *zoomable, QWidget *parent = 0);
 
     QSize sizeHint() const;
 
     MixedTilesetModel *model() const
     { return mModel; }
 
+    Zoomable *zoomable() const
+    { return mZoomable; }
+
 signals:
     
 public slots:
+    void scaleChanged(qreal scale);
 
 private:
     MixedTilesetModel *mModel;
-    
+    Zoomable *mZoomable;
 };
 
 } // namespace Internal

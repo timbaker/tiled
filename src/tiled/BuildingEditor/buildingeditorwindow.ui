@@ -13,7 +13,36 @@
   <property name="windowTitle">
    <string>Building Editor</string>
   </property>
-  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <property name="margin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="BuildingEditor::FloorView" name="floorView"/>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="statusBarLayout">
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QComboBox" name="editorScaleComboBox"/>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
@@ -30,6 +59,7 @@
     <addaction name="actionNewBuilding"/>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
+    <addaction name="actionSaveAs"/>
     <addaction name="separator"/>
     <addaction name="actionExportTMX"/>
     <addaction name="separator"/>
@@ -39,6 +69,7 @@
     <property name="title">
      <string>Edit</string>
     </property>
+    <addaction name="actionPreferences"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -91,7 +122,7 @@
           <x>0</x>
           <y>0</y>
           <width>192</width>
-          <height>478</height>
+          <height>450</height>
          </rect>
         </property>
         <attribute name="label">
@@ -99,6 +130,30 @@
         </attribute>
        </widget>
       </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QComboBox" name="scaleComboBox">
+         <property name="frame">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </widget>
@@ -110,12 +165,12 @@
   </action>
   <action name="actionOpen">
    <property name="text">
-    <string>Open Building...</string>
+    <string>Open...</string>
    </property>
   </action>
   <action name="actionSave">
    <property name="text">
-    <string>Save Building</string>
+    <string>Save</string>
    </property>
   </action>
   <action name="actionUndo">
@@ -130,7 +185,7 @@
   </action>
   <action name="actionNewBuilding">
    <property name="text">
-    <string>New Building...</string>
+    <string>New...</string>
    </property>
   </action>
   <action name="actionPecil">
@@ -270,7 +325,24 @@
     <string>Normal Size</string>
    </property>
   </action>
+  <action name="actionPreferences">
+   <property name="text">
+    <string>Preferences...</string>
+   </property>
+  </action>
+  <action name="actionSaveAs">
+   <property name="text">
+    <string>Save As...</string>
+   </property>
+  </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>BuildingEditor::FloorView</class>
+   <extends>QGraphicsView</extends>
+   <header>BuildingEditor/FloorEditor.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="../tiled.qrc"/>
   <include location="buildingeditor.qrc"/>
