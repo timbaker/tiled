@@ -19,6 +19,8 @@
 
 #include "buildingdocument.h"
 #include "buildingeditorwindow.h"
+#include "buildingobjects.h"
+#include "buildingtemplates.h"
 
 #include <QCoreApplication>
 
@@ -221,6 +223,79 @@ ChangeObjectTile::ChangeObjectTile(BuildingDocument *doc, BaseMapObject *object,
 void ChangeObjectTile::swap()
 {
     mTile = mDocument->changeObjectTile(mObject, mTile);
+}
+
+/////
+
+AddRemoveRoom::AddRemoveRoom(BuildingDocument *doc, int index, Room *room) :
+    QUndoCommand(),
+    mDocument(doc),
+    mIndex(index),
+    mRoom(room)
+{
+}
+
+AddRemoveRoom::~AddRemoveRoom()
+{
+    delete mRoom;
+}
+
+void AddRemoveRoom::add()
+{
+    mDocument->insertRoom(mIndex, mRoom);
+    mRoom = 0;
+}
+
+void AddRemoveRoom::remove()
+{
+    mRoom = mDocument->removeRoom(mIndex);
+}
+
+AddRoom::AddRoom(BuildingDocument *doc, int index, Room *room) :
+    AddRemoveRoom(doc, index, room)
+{
+    setText(QCoreApplication::translate("Undo Commands", "Add Room"));
+}
+
+RemoveRoom::RemoveRoom(BuildingDocument *doc, int index) :
+    AddRemoveRoom(doc, index, 0)
+{
+    setText(QCoreApplication::translate("Undo Commands", "Remove Room"));
+}
+
+/////
+
+ReorderRoom::ReorderRoom(BuildingDocument *doc, int index, Room *room) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Reorder Rooms")),
+    mDocument(doc),
+    mIndex(index),
+    mRoom(room)
+{
+}
+
+void ReorderRoom::swap()
+{
+    mIndex = mDocument->reorderRoom(mIndex, mRoom);
+}
+
+/////
+
+ChangeRoom::ChangeRoom(BuildingDocument *doc, Room *room, const Room *data) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Room")),
+    mDocument(doc),
+    mRoom(room),
+    mData(new Room(data))
+{
+}
+
+ChangeRoom::~ChangeRoom()
+{
+    delete mData;
+}
+
+void ChangeRoom::swap()
+{
+    mData = mDocument->changeRoom(mRoom, mData);
 }
 
 /////

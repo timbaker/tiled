@@ -18,13 +18,23 @@
 #include "building.h"
 
 #include "buildingfloor.h"
+#include "buildingtemplates.h"
 
 using namespace BuildingEditor;
 
-Building::Building(int width, int height) :
+Building::Building(int width, int height, BuildingTemplate *btemplate) :
     mWidth(width),
     mHeight(height)
 {
+    if (btemplate) {
+        mExteriorWall = btemplate->Wall;
+        mDoorTile = btemplate->DoorTile;
+        mDoorFrameTile = btemplate->DoorFrameTile;
+        mWindowTile = btemplate->WindowTile;
+        mStairsTile = btemplate->StairsTile;
+        foreach (Room *room, btemplate->RoomList)
+            insertRoom(mRooms.count(), new Room(room));
+    }
 }
 
 void Building::insertFloor(int index, BuildingFloor *floor)
@@ -35,4 +45,14 @@ void Building::insertFloor(int index, BuildingFloor *floor)
 BuildingFloor *Building::removeFloor(int index)
 {
     return mFloors.takeAt(index);
+}
+
+void Building::insertRoom(int index, Room *room)
+{
+    mRooms.insert(index, room);
+}
+
+Room *Building::removeRoom(int index)
+{
+    return mRooms.takeAt(index);
 }

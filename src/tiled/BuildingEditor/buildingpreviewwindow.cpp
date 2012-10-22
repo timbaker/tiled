@@ -22,6 +22,7 @@
 #include "buildingdocument.h"
 #include "buildingfloor.h"
 #include "buildingeditorwindow.h"
+#include "buildingobjects.h"
 
 #include "mapcomposite.h"
 #include "mapmanager.h"
@@ -235,7 +236,7 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
                    doc->building()->height(), 64, 32);
 
     // Add tilesets from MapBaseXMLLots.txt
-    foreach (Tileset *ts, mTilesetByName)
+    foreach (Tileset *ts, BuildingTiles::instance()->tilesets())
         mMap->addTileset(ts);
     TilesetManager::instance()->addReferences(mMap->tilesets());
 
@@ -292,6 +293,9 @@ void BuildingPreviewScene::BuildingToMap()
 void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                                                      const QVector<TileLayer *> &layers)
 {
+    const QMap<QString,Tiled::Tileset*> &tilesetByName =
+            BuildingTiles::instance()->tilesetsMap();
+
     int index = 0;
     foreach (TileLayer *tl, layers) {
         tl->erase(QRegion(QRect(0, 0, tl->width(), tl->height())));
@@ -302,28 +306,28 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                     if (!bAboveStep) {
                         BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionFloor];
                         if (tile)
-                            tl->setCell(x, y, Cell(mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
+                            tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
                     }
                 }
                 if (index == LayerIndexWall) {
                     BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionWall];
                     if (tile)
-                        tl->setCell(x, y, Cell(mTilesetByName[tile->mTilesetName]->tileAt(floor->squares[x][y].getTileIndexForWall())));
+                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(floor->squares[x][y].getTileIndexForWall())));
                 }
                 if (index == LayerIndexDoor) {
                     BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionDoor];
                     if (tile)
-                        tl->setCell(x, y, Cell(mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
+                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
                 }
                 if (index == LayerIndexFrame) {
                     BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionFrame];
                     if (tile)
-                        tl->setCell(x, y, Cell(mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
+                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
                 }
                 if (index == LayerIndexFurniture) {
                     BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionFurniture];
                     if (tile)
-                        tl->setCell(x, y, Cell(mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + floor->squares[x][y].mTileOffset[BuildingFloor::Square::SectionFurniture])));
+                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + floor->squares[x][y].mTileOffset[BuildingFloor::Square::SectionFurniture])));
                 }
             }
         }

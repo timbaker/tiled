@@ -29,7 +29,6 @@ class BuildingDocument;
 class BuildingFloor;
 class BuildingTile;
 class Door;
-class Layout;
 class Room;
 class Window;
 
@@ -214,6 +213,72 @@ private:
     BuildingDocument *mDocument;
     BaseMapObject *mObject;
     BuildingTile *mTile;
+};
+
+class AddRemoveRoom : public QUndoCommand
+{
+public:
+    AddRemoveRoom(BuildingDocument *doc, int index, Room *room);
+    ~AddRemoveRoom();
+
+protected:
+    void add();
+    void remove();
+
+    BuildingDocument *mDocument;
+    int mIndex;
+    Room *mRoom;
+};
+
+class AddRoom : public AddRemoveRoom
+{
+public:
+    AddRoom(BuildingDocument *doc, int index, Room *room);
+
+    void undo() { remove(); }
+    void redo() { add(); }
+};
+
+class RemoveRoom : public AddRemoveRoom
+{
+public:
+    RemoveRoom(BuildingDocument *doc, int index);
+
+    void undo() { add(); }
+    void redo() { remove(); }
+};
+
+class ReorderRoom : public QUndoCommand
+{
+public:
+    ReorderRoom(BuildingDocument *doc, int index, Room *room);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    int mIndex;
+    Room *mRoom;
+};
+
+class ChangeRoom : public QUndoCommand
+{
+public:
+    ChangeRoom(BuildingDocument *doc, Room *room, const Room *data);
+    ~ChangeRoom();
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    Room *mRoom;
+    Room *mData;
 };
 
 } // namespace BuildingEditor

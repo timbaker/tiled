@@ -19,9 +19,11 @@
 
 #include "building.h"
 #include "buildingdocument.h"
-#include "buildingfloor.h"
-#include "buildingtools.h"
 #include "buildingeditorwindow.h"
+#include "buildingfloor.h"
+#include "buildingobjects.h"
+#include "buildingtools.h"
+#include "buildingtemplates.h"
 
 #include "zoomable.h"
 
@@ -130,6 +132,45 @@ GraphicsObjectItem::GraphicsObjectItem(FloorEditor *editor, BaseMapObject *objec
 
 QPainterPath GraphicsObjectItem::shape() const
 {
+    return mShape;
+}
+
+QRectF GraphicsObjectItem::boundingRect() const
+{
+    return mBoundingRect;
+}
+
+void GraphicsObjectItem::paint(QPainter *painter,
+                               const QStyleOptionGraphicsItem *,
+                               QWidget *)
+{
+    QPainterPath path = shape();
+    painter->fillPath(path, mSelected ? Qt::cyan : Qt::white);
+    QPen pen(Qt::blue);
+    painter->setPen(pen);
+    painter->drawPath(path);
+}
+
+void GraphicsObjectItem::setObject(BaseMapObject *object)
+{
+    mObject = object;
+    synchWithObject();
+    update();
+}
+
+void GraphicsObjectItem::synchWithObject()
+{
+    QPainterPath shape = calcShape();
+    QRectF bounds = shape.boundingRect();
+    if (bounds != mBoundingRect) {
+        prepareGeometryChange();
+        mBoundingRect = bounds;
+        mShape = shape;
+    }
+}
+
+QPainterPath GraphicsObjectItem::calcShape()
+{
     QPainterPath path;
     QPoint dragOffset = mDragging ? mDragOffset : QPoint();
 
@@ -168,38 +209,6 @@ QPainterPath GraphicsObjectItem::shape() const
     }
 
     return path;
-}
-
-QRectF GraphicsObjectItem::boundingRect() const
-{
-    return mBoundingRect;
-}
-
-void GraphicsObjectItem::paint(QPainter *painter,
-                               const QStyleOptionGraphicsItem *,
-                               QWidget *)
-{
-    QPainterPath path = shape();
-    painter->fillPath(path, mSelected ? Qt::cyan : Qt::white);
-    QPen pen(Qt::blue);
-    painter->setPen(pen);
-    painter->drawPath(path);
-}
-
-void GraphicsObjectItem::setObject(BaseMapObject *object)
-{
-    mObject = object;
-    synchWithObject();
-    update();
-}
-
-void GraphicsObjectItem::synchWithObject()
-{
-    QRectF bounds = shape().boundingRect();
-    if (bounds != mBoundingRect) {
-        prepareGeometryChange();
-        mBoundingRect = bounds;
-    }
 }
 
 void GraphicsObjectItem::setSelected(bool selected)
@@ -292,6 +301,9 @@ void FloorEditor::setDocument(BuildingDocument *doc)
                 SLOT(objectMoved(BaseMapObject*)));
         connect(mDocument, SIGNAL(selectedObjectsChanged()),
                 SLOT(selectedObjectsChanged()));
+
+        connect(mDocument, SIGNAL(roomChanged(Room*)),
+                SLOT(roomChanged(Room*)));
     }
 
     emit documentChanged();
@@ -399,7 +411,7 @@ void FloorEditor::currentFloorChanged()
 void FloorEditor::roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos)
 {
     int index = floor->building()->floors().indexOf(floor);
-    Room *room = floor->layout()->roomAt(pos);
+    Room *room = floor->GetRoomAt(pos);
 //    qDebug() << floor << pos << room;
     mFloorItems[index]->bmp()->setPixel(pos, room ? room->Color : qRgb(0, 0, 0));
     mFloorItems[index]->update();
@@ -454,6 +466,22 @@ void FloorEditor::selectedObjectsChanged()
         item->setSelected(true);
 
     mSelectedObjectItems = selectedItems;
+}
+
+void FloorEditor::roomChanged(Room *room)
+{
+    foreach (GraphicsFloorItem *item, mFloorItems) {
+        QImage *bmp = item->bmp();
+//        bmp->fill(Qt::black);
+        BuildingFloor *floor = item->floor();
+        for (int x = 0; x < building()->width(); x++) {
+            for (int y = 0; y < building()->height(); y++) {
+                if (floor->GetRoomAt(x, y) == room)
+                    bmp->setPixel(x, y, room->Color);
+            }
+        }
+        item->update();
+    }
 }
 
 /////

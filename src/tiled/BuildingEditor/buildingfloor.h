@@ -29,17 +29,13 @@ class Building;
 class BuildingTile;
 class Door;
 class FloorType;
-class Layout;
+class Room;
 class Stairs;
-class WallType;
 class Window;
 
 class BuildingFloor
 {
 public:
-    BuildingTile *exteriorWall;
-    QVector<BuildingTile*> interiorWalls;
-    QVector<BuildingTile*> floors;
 
     class Square
     {
@@ -92,9 +88,6 @@ public:
 
     BuildingFloor *floorBelow() const;
 
-    Layout *layout() const
-    { return mLayout; }
-
     void insertObject(int index, BaseMapObject *object);
     BaseMapObject *removeObject(int index);
 
@@ -114,6 +107,11 @@ public:
     Window *GetWindowAt(int x, int y);
     Stairs *GetStairsAt(int x, int y);
 
+    void SetRoomAt(const QPoint &pos, Room *room);
+    Room *GetRoomAt(const QPoint &pos);
+    Room *GetRoomAt(int x, int y)
+    { return GetRoomAt(QPoint(x, y)); }
+
     void LayoutToSquares();
 
     bool IsTopStairAt(int x, int y);
@@ -126,7 +124,7 @@ public:
 
 private:
     Building *mBuilding;
-    Layout *mLayout;
+    QVector<QVector<int> > mGrid;
     int mLevel;
     QList<BaseMapObject*> mObjects;
 };

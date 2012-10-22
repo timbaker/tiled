@@ -1,5 +1,9 @@
 Name=Suburban 1
 Wall=walls_exterior_house_01_32
+Door = fixtures_doors_01_0
+DoorFrame = fixtures_doors_frames_01_0
+Window = fixtures_windows_01_0
+Stairs = fixtures_stairs_01_0
 Room
 {
 	Name= Living Room

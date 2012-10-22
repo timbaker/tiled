@@ -38,8 +38,7 @@ class Building;
 class BuildingDocument;
 class BuildingFloor;
 class FloorEditor;
-class Layout;
-class WallType;
+class Room;
 
 /////
 
@@ -51,6 +50,9 @@ public:
     QRectF boundingRect() const;
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+    BuildingFloor *floor() const
+    { return mFloor; }
 
     QImage *bmp() const
     { return mBmp; }
@@ -92,6 +94,7 @@ public:
     { return mObject; }
 
     void synchWithObject();
+    QPainterPath calcShape();
 
     void setSelected(bool selected);
 
@@ -108,6 +111,7 @@ private:
     bool mSelected;
     bool mDragging;
     QPoint mDragOffset;
+    QPainterPath mShape;
 };
 
 class FloorEditor : public QGraphicsScene
@@ -154,10 +158,13 @@ private slots:
     void currentFloorChanged();
     void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
     void floorAdded(BuildingFloor *floor);
+
     void objectAdded(BaseMapObject *object);
     void objectAboutToBeRemoved(BaseMapObject *object);
     void objectMoved(BaseMapObject *object);
     void selectedObjectsChanged();
+
+    void roomChanged(Room *room);
 
 private:
     BuildingDocument *mDocument;

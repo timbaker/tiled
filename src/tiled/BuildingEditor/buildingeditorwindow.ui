@@ -89,9 +89,18 @@
     <addaction name="actionZoomOut"/>
     <addaction name="actionNormalSize"/>
    </widget>
+   <widget class="QMenu" name="menuBuilding">
+    <property name="title">
+     <string>Building</string>
+    </property>
+    <addaction name="actionRooms"/>
+    <addaction name="actionTemplates"/>
+    <addaction name="actionTiles"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
+   <addaction name="menuBuilding"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
@@ -343,6 +352,21 @@
   <action name="actionSaveAs">
    <property name="text">
     <string>Save As...</string>
+   </property>
+  </action>
+  <action name="actionRooms">
+   <property name="text">
+    <string>Rooms...</string>
+   </property>
+  </action>
+  <action name="actionTemplates">
+   <property name="text">
+    <string>Templates...</string>
+   </property>
+  </action>
+  <action name="actionTiles">
+   <property name="text">
+    <string>Tiles...</string>
    </property>
   </action>
  </widget>

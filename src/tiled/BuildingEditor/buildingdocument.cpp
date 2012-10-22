@@ -20,6 +20,8 @@
 #include "building.h"
 #include "buildingeditorwindow.h"
 #include "buildingfloor.h"
+#include "buildingobjects.h"
+#include "buildingtemplates.h"
 
 #include <QUndoStack>
 
@@ -46,19 +48,16 @@ void BuildingDocument::setSelectedObjects(const QSet<BaseMapObject *> &selection
 
 Room *BuildingDocument::changeRoomAtPosition(BuildingFloor *floor, const QPoint &pos, Room *room)
 {
-    Layout *layout = floor->layout();
-    int old = layout->grid[pos.x()][pos.y()];
-    layout->grid[pos.x()][pos.y()] = room
-            ? RoomDefinitionManager::instance->GetIndex(room)
-            : -1;
+    Room *old = floor->GetRoomAt(pos);
+    floor->SetRoomAt(pos, room);
     emit roomAtPositionChanged(floor, pos);
-    return (old >= 0) ? RoomDefinitionManager::instance->getRoom(old) : 0;
+    return old;
 }
 
 QString BuildingDocument::changeEWall(const QString &tileName)
 {
-    QString old = RoomDefinitionManager::instance->ExteriorWall;
-    RoomDefinitionManager::instance->ExteriorWall = tileName;
+    QString old = mBuilding->exteriorWall();
+    mBuilding->setExteriorWall(tileName);
     emit roomDefinitionChanged();
     return old;
 }
@@ -66,7 +65,7 @@ QString BuildingDocument::changeEWall(const QString &tileName)
 QString BuildingDocument::changeWallForRoom(Room *room, const QString &tileName)
 {
     QString old = room->Wall;
-    RoomDefinitionManager::instance->setWallForRoom(room, tileName);
+    room->Wall = tileName;
     emit roomDefinitionChanged();
     return old;
 }
@@ -74,7 +73,7 @@ QString BuildingDocument::changeWallForRoom(Room *room, const QString &tileName)
 QString BuildingDocument::changeFloorForRoom(Room *room, const QString &tileName)
 {
     QString old = room->Floor;
-    RoomDefinitionManager::instance->setFloorForRoom(room, tileName);
+    room->Floor = tileName;
     emit roomDefinitionChanged();
     return old;
 }
@@ -129,5 +128,38 @@ BuildingTile *BuildingDocument::changeObjectTile(BaseMapObject *object, Building
     BuildingTile *old = object->mTile;
     object->mTile = tile;
     emit objectTileChanged(object);
+    return old;
+}
+
+void BuildingDocument::insertRoom(int index, Room *room)
+{
+    mBuilding->insertRoom(index, room);
+    emit roomAdded(room);
+}
+
+Room *BuildingDocument::removeRoom(int index)
+{
+    Room *room = building()->room(index);
+    emit roomAboutToBeRemoved(room);
+    building()->removeRoom(index);
+    emit roomRemoved(room);
+    return room;
+}
+
+int BuildingDocument::reorderRoom(int index, Room *room)
+{
+    int oldIndex = building()->rooms().indexOf(room);
+    building()->removeRoom(oldIndex);
+    building()->insertRoom(index, room);
+    emit roomsReordered();
+    return oldIndex;
+}
+
+Room *BuildingDocument::changeRoom(Room *room, const Room *data)
+{
+    Room *old = new Room(room);
+    room->copy(data);
+    emit roomChanged(room);
+    delete data;
     return old;
 }

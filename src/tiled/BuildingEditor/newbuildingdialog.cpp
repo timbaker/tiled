@@ -19,6 +19,7 @@
 #include "ui_newbuildingdialog.h"
 
 #include "buildingeditorwindow.h"
+#include "buildingtemplates.h"
 
 using namespace BuildingEditor;
 
@@ -28,7 +29,7 @@ NewBuildingDialog::NewBuildingDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    foreach (BuildingDefinition *def, BuildingDefinition::Definitions)
+    foreach (BuildingTemplate *def, BuildingTemplate::mTemplates)
         ui->comboBox->addItem(def->Name);
 }
 
@@ -47,9 +48,9 @@ int NewBuildingDialog::buildingHeight() const
     return ui->height->value();
 }
 
-BuildingDefinition *NewBuildingDialog::buildingDefinition() const
+BuildingTemplate *NewBuildingDialog::buildingTemplate() const
 {
-    return BuildingDefinition::Definitions.at(ui->comboBox->currentIndex());
+    return BuildingTemplate::mTemplates.at(ui->comboBox->currentIndex());
 }
 
 void NewBuildingDialog::accept()

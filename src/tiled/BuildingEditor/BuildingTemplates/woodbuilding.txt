@@ -1,5 +1,9 @@
 Name=Wooden Shack
 Wall=walls_exterior_house_01_48
+Door = fixtures_doors_01_0
+DoorFrame = fixtures_doors_frames_01_0
+Window = fixtures_windows_01_0
+Stairs = fixtures_stairs_01_0
 Room
 {
 	Name= Foyer

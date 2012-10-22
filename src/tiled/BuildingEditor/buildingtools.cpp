@@ -17,9 +17,12 @@
 
 #include "buildingtools.h"
 
+#include "building.h"
 #include "buildingdocument.h"
 #include "buildingeditorwindow.h"
 #include "buildingfloor.h"
+#include "buildingobjects.h"
+#include "buildingtemplates.h"
 #include "buildingundoredo.h"
 #include "FloorEditor.h"
 
@@ -75,7 +78,7 @@ void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     QPoint tilePos = mEditor->sceneToTile(event->scenePos());
 
     if (event->button() == Qt::RightButton) {
-        Room *room = mEditor->document()->currentFloor()->layout()->roomAt(tilePos);
+        Room *room = mEditor->document()->currentFloor()->GetRoomAt(tilePos);
         if (room) {
             BuildingEditorWindow::instance->setCurrentRoom(room);
             updateCursor(event->scenePos());
@@ -85,7 +88,7 @@ void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     mInitialPaint = true;
     if (mEditor->currentFloorContains(tilePos) &&
-            mEditor->document()->currentFloor()->layout()->roomAt(tilePos) != BuildingEditorWindow::instance->currentRoom()) {
+            mEditor->document()->currentFloor()->GetRoomAt(tilePos) != BuildingEditorWindow::instance->currentRoom()) {
         mEditor->document()->undoStack()->push(new PaintRoom(mEditor->document(),
                                                              mEditor->document()->currentFloor(),
                                                              tilePos,
@@ -102,7 +105,7 @@ void PencilTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     if (mMouseDown) {
         QPoint tilePos = mEditor->sceneToTile(event->scenePos());
         if (mEditor->currentFloorContains(tilePos) &&
-                mEditor->document()->currentFloor()->layout()->roomAt(tilePos) != BuildingEditorWindow::instance->currentRoom()) {
+                mEditor->document()->currentFloor()->GetRoomAt(tilePos) != BuildingEditorWindow::instance->currentRoom()) {
             PaintRoom *cmd = new PaintRoom(mEditor->document(),
                                            mEditor->document()->currentFloor(),
                                            tilePos,
@@ -174,7 +177,7 @@ void EraserTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     mInitialPaint = true;
     QPoint tilePos = mEditor->sceneToTile(event->scenePos());
     if (mEditor->currentFloorContains(tilePos) &&
-            mEditor->document()->currentFloor()->layout()->roomAt(tilePos) != 0) {
+            mEditor->document()->currentFloor()->GetRoomAt(tilePos) != 0) {
         mEditor->document()->undoStack()->push(new EraseRoom(mEditor->document(),
                                                              mEditor->document()->currentFloor(),
                                                              tilePos));
@@ -190,7 +193,7 @@ void EraserTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     if (mMouseDown) {
         QPoint tilePos = mEditor->sceneToTile(event->scenePos());
         if (mEditor->currentFloorContains(tilePos) &&
-                mEditor->document()->currentFloor()->layout()->roomAt(tilePos) != 0) {
+                mEditor->document()->currentFloor()->GetRoomAt(tilePos) != 0) {
             EraseRoom *cmd = new EraseRoom(mEditor->document(),
                                                       mEditor->document()->currentFloor(),
                                                       tilePos);
@@ -347,9 +350,9 @@ void DoorTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     BuildingFloor *floor = mEditor->document()->currentFloor();
     Door *door = new Door(floor, x, y, dir);
     door->mTile = BuildingTiles::instance()->tileForDoor(door,
-                                                             RoomDefinitionManager::instance->mDoorTile);
+                                                         mEditor->building()->doorTile());
     door->mFrameTile = BuildingTiles::instance()->tileForDoor(door,
-                                                              RoomDefinitionManager::instance->mDoorFrameTile,
+                                                              mEditor->building()->doorFrameTile(),
                                                               true);
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                          floor,
@@ -435,7 +438,7 @@ void WindowTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     BuildingFloor *floor = mEditor->document()->currentFloor();
     Window *window = new Window(floor, x, y, dir);
     window->mTile = BuildingTiles::instance()->tileForWindow(window,
-                                                             RoomDefinitionManager::instance->mWindowTile);
+                                                             mEditor->building()->windowTile());
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                          floor,
                                                          floor->objectCount(),
@@ -520,7 +523,7 @@ void StairsTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     BuildingFloor *floor = mEditor->document()->currentFloor();
     Stairs *stairs = new Stairs(floor, x, y, dir);
     stairs->mTile = BuildingTiles::instance()->tileForStairs(stairs,
-                                                             RoomDefinitionManager::instance->mStairsTile);
+                                                             mEditor->building()->stairsTile());
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                          floor,
                                                          floor->objectCount(),

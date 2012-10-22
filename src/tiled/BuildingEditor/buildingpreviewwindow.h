@@ -81,9 +81,6 @@ public:
     void setDocument(BuildingDocument *doc);
     void clearDocument();
 
-    void setTilesets(const QMap<QString,Tiled::Tileset*> &tilesets)
-    { mTilesetByName = tilesets; }
-
     Tiled::Map *map() const
     { return mMap; }
 
@@ -120,7 +117,6 @@ private:
     Tiled::Map *mMap;
     Tiled::MapRenderer *mRenderer;
     QMap<int,CompositeLayerGroupItem*> mLayerGroupItems;
-    QMap<QString,Tiled::Tileset*> mTilesetByName;
     QString mError;
 };
 

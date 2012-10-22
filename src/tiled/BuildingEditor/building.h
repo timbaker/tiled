@@ -19,17 +19,18 @@
 #define BUILDING_H
 
 #include <QList>
+#include <QString>
 
 namespace BuildingEditor {
 
 class BuildingFloor;
-class Layout;
-class WallType;
+class BuildingTemplate;
+class Room;
 
 class Building
 {
 public:
-    Building(int width, int height);
+    Building(int width, int height, BuildingTemplate *btemplate);
 
     int width() const { return mWidth; }
     int height() const { return mHeight; }
@@ -46,9 +47,60 @@ public:
     void insertFloor(int index, BuildingFloor *floor);
     BuildingFloor *removeFloor(int index);
 
+    const QList<Room*> &rooms() const
+    { return mRooms; }
+
+    Room *room(int index) const
+    { return mRooms.at(index); }
+
+    int roomCount() const
+    { return mRooms.count(); }
+
+    int indexOf(Room *room) const
+    { return mRooms.indexOf(room); }
+
+    void insertRoom(int index, Room *room);
+    Room *removeRoom(int index);
+
+    QString exteriorWall() const
+    { return mExteriorWall; }
+
+    void setExteriorWall(const QString &tileName)
+    { mExteriorWall = tileName; }
+
+    QString doorTile() const
+    { return mDoorTile; }
+
+    void setDoorTile(const QString &tileName)
+    { mDoorTile = tileName; }
+
+    QString doorFrameTile() const
+    { return mDoorFrameTile; }
+
+    void setDoorFrameTile(const QString &tileName)
+    { mDoorFrameTile = tileName; }
+
+    QString windowTile() const
+    { return mWindowTile; }
+
+    void setWindowTile(const QString &tileName)
+    { mWindowTile = tileName; }
+
+    QString stairsTile() const
+    { return mStairsTile; }
+
+    void setStairsTile(const QString &tileName)
+    { mStairsTile = tileName; }
+
 private:
     int mWidth, mHeight;
     QList<BuildingFloor*> mFloors;
+    QList<Room*> mRooms;
+    QString mExteriorWall;
+    QString mDoorTile;
+    QString mDoorFrameTile;
+    QString mWindowTile;
+    QString mStairsTile;
 };
 
 } // namespace BuildingEditor

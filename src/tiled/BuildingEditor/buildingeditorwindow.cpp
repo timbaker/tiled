@@ -21,13 +21,18 @@
 #include "building.h"
 #include "buildingdocument.h"
 #include "buildingfloor.h"
+#include "buildingobjects.h"
 #include "buildingpreferencesdialog.h"
 #include "buildingpreviewwindow.h"
 #include "buildingundoredo.h"
+#include "buildingtemplates.h"
+#include "buildingtemplatesdialog.h"
+#include "buildingtilesdialog.h"
 #include "buildingtools.h"
 #include "FloorEditor.h"
 #include "mixedtilesetview.h"
 #include "newbuildingdialog.h"
+#include "roomsdialog.h"
 #include "simplefile.h"
 
 #include "zprogress.h"
@@ -41,6 +46,7 @@
 #include <QBitmap>
 #include <QCloseEvent>
 #include <QComboBox>
+#include <QDebug>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -164,6 +170,10 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionNormalSize, SIGNAL(triggered()),
             mView->zoomable(), SLOT(resetZoom()));
 
+    connect(ui->actionRooms, SIGNAL(triggered()), SLOT(roomsDialog()));
+    connect(ui->actionTemplates, SIGNAL(triggered()), SLOT(templatesDialog()));
+    connect(ui->actionTiles, SIGNAL(triggered()), SLOT(tilesDialog()));
+
     mCategoryZoomable->connectToComboBox(ui->scaleComboBox);
 
     readSettings();
@@ -173,6 +183,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 
 BuildingEditorWindow::~BuildingEditorWindow()
 {
+    BuildingTiles::deleteInstance(); // Ensure all the tilesets are released
     delete ui;
 }
 
@@ -209,10 +220,7 @@ bool BuildingEditorWindow::closeYerself()
         writeSettings();
         if (mPreviewWin)
             mPreviewWin->writeSettings();
-        TilesetManager::instance()->removeReferences(mTilesetByName.values());
         delete this; // Delete ourself and PreviewWindow.
-                     // Gotta delete PreviewWindow before Tiled's MainWindow
-                     // so all the tilesets are released.
         return true;
     }
     return false;
@@ -240,53 +248,37 @@ bool BuildingEditorWindow::Startup()
 
     /////
 
-    QToolBox *toolBox = ui->toolBox;
-    while (toolBox->count()) {
-        QWidget *w = toolBox->widget(0);
-        toolBox->removeItem(0);
-        delete w;
-    }
-
-    // Add tile categories to the gui
-    foreach (BuildingTiles::Category *category, BuildingTiles::instance()->categories()) {
-        QString categoryName = category->name();
-        const char *slot = 0;
-        if (categoryName == QLatin1String("exterior_walls"))
-            slot = SLOT(currentEWallChanged(QItemSelection));
-        else if (categoryName == QLatin1String("interior_walls"))
-            slot = SLOT(currentIWallChanged(QItemSelection));
-        else if (categoryName == QLatin1String("floors"))
-            slot = SLOT(currentFloorChanged(QItemSelection));
-        else if (categoryName == QLatin1String("doors"))
-            slot = SLOT(currentDoorChanged(QItemSelection));
-        else if (categoryName == QLatin1String("door_frames"))
-            slot = SLOT(currentDoorFrameChanged(QItemSelection));
-        else if (categoryName == QLatin1String("windows"))
-            slot = SLOT(currentWindowChanged(QItemSelection));
-        else if (categoryName == QLatin1String("stairs"))
-            slot = SLOT(currentStairsChanged(QItemSelection));
-        else {
-            qFatal("bogus category name"); // the names were validated elsewhere
+    foreach (BuildingTemplate *btemplate, BuildingTemplate::mTemplates) {
+        if (!validateTile(btemplate->Wall, "Wall") ||
+                !validateTile(btemplate->DoorTile, "Door") ||
+                !validateTile(btemplate->DoorFrameTile, "DoorFrame") ||
+                !validateTile(btemplate->WindowTile, "Window") ||
+                !validateTile(btemplate->StairsTile, "Stairs")) {
+            mError += tr("\nIn template %1").arg(btemplate->Name);
+            QMessageBox::critical(this, tr("It's no good, Jim!"), mError);
+            return false;
         }
 
-        Tiled::Internal::MixedTilesetView *w
-                = new Tiled::Internal::MixedTilesetView(mCategoryZoomable, toolBox);
-        toolBox->addItem(w, category->label());
-        connect(w->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
-                slot);
-
-        QList<Tiled::Tile*> tiles;
-        foreach (BuildingTile *tile, category->tiles()) {
-            if (!tile->mAlternates.count() || (tile == tile->mAlternates.first()))
-                tiles += mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex);
+        foreach (Room *room, btemplate->RoomList) {
+            if (!validateTile(room->Floor, "Floor") ||
+                    !validateTile(room->Wall, "Wall")) {
+                mError += tr("\nIn template %1, room %2")
+                        .arg(btemplate->Name)
+                        .arg(room->Name);
+                QMessageBox::critical(this, tr("It's no good, Jim!"), mError);
+                return false;
+            }
         }
-        w->model()->setTiles(tiles);
     }
 
     /////
 
+    // Add tile categories to the gui
+    setCategoryLists();
+
+    /////
+
     mPreviewWin = new BuildingPreviewWindow(this);
-    mPreviewWin->scene()->setTilesets(mTilesetByName);
     mPreviewWin->show();
 
     return true;
@@ -310,9 +302,13 @@ bool BuildingEditorWindow::LoadBuildingTemplates()
                                   tr("Error reading %1.").arg(path));
             return false;
         }
-        BuildingDefinition *def = new BuildingDefinition;
+        BuildingTemplate *def = new BuildingTemplate;
         def->Name = simple.value("Name");
         def->Wall = simple.value("Wall");
+        def->DoorTile = simple.value("Door");
+        def->DoorFrameTile = simple.value("DoorFrame");
+        def->WindowTile = simple.value("Window");
+        def->StairsTile = simple.value("Stairs");
         foreach (SimpleFileBlock block, simple.blocks) {
             if (block.name == QLatin1String("Room")) {
                 Room *room = new Room;
@@ -334,11 +330,11 @@ bool BuildingEditorWindow::LoadBuildingTemplates()
             }
         }
 
-        BuildingDefinition::Definitions += def;
-        BuildingDefinition::DefinitionMap[def->Name] = def;
+        BuildingTemplate::mTemplates += def;
+        BuildingTemplate::DefinitionMap[def->Name] = def;
     }
 
-    if (BuildingDefinition::Definitions.isEmpty()) {
+    if (BuildingTemplate::mTemplates.isEmpty()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
                               tr("No buildings were defined in BuildingTemplates/ directory."));
         return false;
@@ -385,6 +381,8 @@ bool BuildingEditorWindow::LoadBuildingTiles()
             foreach (SimpleFileKeyValue kv, tilesBlock.values) {
                 if (kv.name == QLatin1String("tile")) {
                     QStringList values = kv.value.split(QLatin1Char(' '), QString::SkipEmptyParts);
+                    for (int i = 0; i < values.count(); i++)
+                        values[i] = BuildingTiles::normalizeTileName(values[i]);
                     BuildingTiles::instance()->add(categoryName, values);
                 } else {
                     mError = tr("Unknown value name '%1'.\n%2")
@@ -399,12 +397,12 @@ bool BuildingEditorWindow::LoadBuildingTiles()
                     int start = rangeBlock.value("start").toInt();
                     int offset = rangeBlock.value("offset").toInt();
                     QString countStr = rangeBlock.value("count");
-                    int count = mTilesetByName[tilesetName]->tileCount();
+                    int count = BuildingTiles::instance()->tilesetFor(tilesetName)->tileCount(); // FIXME: tileset might not exist
                     if (countStr != QLatin1String("all"))
                         count = countStr.toInt();
                     for (int i = start; i < start + count; i += offset)
                         BuildingTiles::instance()->add(categoryName,
-                                                       tilesetName + QLatin1Char('_') + QString::number(i));
+                                                       BuildingTiles::nameForTile(tilesetName, i));
                 }
             }
         } else {
@@ -419,7 +417,7 @@ bool BuildingEditorWindow::LoadBuildingTiles()
     // Check that all the tiles exist
     foreach (BuildingTiles::Category *category, BuildingTiles::instance()->categories()) {
         foreach (BuildingTile *tile, category->tiles()) {
-            if (!tileFor(tile)) {
+            if (!BuildingTiles::instance()->tileFor(tile)) {
                 mError = tr("Tile %1 #%2 doesn't exist.")
                         .arg(tile->mTilesetName)
                         .arg(tile->mIndex);
@@ -491,7 +489,7 @@ bool BuildingEditorWindow::LoadMapBaseXMLLots()
                     }
                 }
 
-                mTilesetByName[name] = ts;
+                BuildingTiles::instance()->addTileset(ts);
             }
             xml.skipCurrentElement();
         }
@@ -500,46 +498,37 @@ bool BuildingEditorWindow::LoadMapBaseXMLLots()
         return false;
     }
 
-    TilesetManager::instance()->addReferences(mTilesetByName.values());
+    return true;
+}
 
+bool BuildingEditorWindow::validateTile(QString &tileName, const char *key)
+{
+    QString fixedName = BuildingTiles::normalizeTileName(tileName);
+    if (!BuildingTiles::instance()->tileFor(fixedName)) {
+        mError = tr("%1 tile '%2' doesn't exist.")
+                .arg(QLatin1String(key))
+                .arg(tileName);
+        return false;
+    }
+    tileName = fixedName;
     return true;
 }
 
 void BuildingEditorWindow::setCurrentRoom(Room *room) const
 {
-    int roomIndex = RoomDefinitionManager::instance->GetIndex(room);
+    int roomIndex = mCurrentDocument->building()->indexOf(room);
     this->mRoomComboBox->setCurrentIndex(roomIndex);
 }
 
 Room *BuildingEditorWindow::currentRoom() const
 {
     int roomIndex = mRoomComboBox->currentIndex();
-    return RoomDefinitionManager::instance->getRoom(roomIndex);
+    return mCurrentDocument->building()->room(roomIndex);
 }
 
-Tiled::Tile *BuildingEditorWindow::tileFor(const QString &tileName)
+Building *BuildingEditorWindow::currentBuilding() const
 {
-    QString tilesetName = tileName.mid(0, tileName.lastIndexOf(QLatin1Char('_')));
-    int index = tileName.mid(tileName.lastIndexOf(QLatin1Char('_')) + 1).toInt();
-    if (!mTilesetByName.contains(tilesetName))
-        return 0;
-    if (index >= mTilesetByName[tilesetName]->tileCount())
-        return 0;
-    return mTilesetByName[tilesetName]->tileAt(index);
-}
-
-Tile *BuildingEditorWindow::tileFor(BuildingTile *tile)
-{
-    if (!mTilesetByName.contains(tile->mTilesetName))
-        return 0;
-    if (tile->mIndex >= mTilesetByName[tile->mTilesetName]->tileCount())
-        return 0;
-    return mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex);
-}
-
-QString BuildingEditorWindow::nameForTile(Tile *tile)
-{
-    return tile->tileset()->name() + QLatin1String("_") + QString::number(tile->id());
+    return mCurrentDocument ? mCurrentDocument->building() : 0;
 }
 
 void BuildingEditorWindow::readSettings()
@@ -569,6 +558,24 @@ void BuildingEditorWindow::writeSettings()
     mSettings.endGroup();
 }
 
+void BuildingEditorWindow::updateRoomComboBox()
+{
+    mRoomComboBox->clear();
+    if (!mCurrentDocument)
+        return;
+
+    int index = 0;
+    foreach (Room *room, currentBuilding()->rooms()) {
+        QImage image(20, 20, QImage::Format_ARGB32);
+        image.fill(qRgba(0,0,0,0));
+        QPainter painter(&image);
+        painter.fillRect(1, 1, 18, 18, room->Color);
+        mRoomComboBox->addItem(room->Name);
+        mRoomComboBox->setItemIcon(index, QPixmap::fromImage(image));
+        index++;
+    }
+}
+
 void BuildingEditorWindow::roomIndexChanged(int index)
 {
 }
@@ -585,7 +592,7 @@ void BuildingEditorWindow::currentEWallChanged(const QItemSelection &selected)
         if (!tile)
             return;
         mCurrentDocument->undoStack()->push(new ChangeEWall(mCurrentDocument,
-                                                            nameForTile(tile)));
+                                                            BuildingTiles::instance()->nameForTile(tile)));
     }
 }
 
@@ -602,7 +609,7 @@ void BuildingEditorWindow::currentIWallChanged(const QItemSelection &selected)
             return;
         mCurrentDocument->undoStack()->push(new ChangeWallForRoom(mCurrentDocument,
                                                                   currentRoom(),
-                                                                  nameForTile(tile)));
+                                                                  BuildingTiles::instance()->nameForTile(tile)));
     }
 }
 
@@ -619,7 +626,7 @@ void BuildingEditorWindow::currentFloorChanged(const QItemSelection &selected)
             return;
         mCurrentDocument->undoStack()->push(new ChangeFloorForRoom(mCurrentDocument,
                                                                    currentRoom(),
-                                                                   nameForTile(tile)));
+                                                                   BuildingTiles::instance()->nameForTile(tile)));
     }
 }
 
@@ -634,10 +641,10 @@ void BuildingEditorWindow::currentDoorChanged(const QItemSelection &selected)
         Tile *tile = m->tileAt(index);
         if (!tile)
             return;
-        RoomDefinitionManager::instance->mDoorTile = nameForTile(tile);
+        QString tileName = BuildingTiles::instance()->nameForTile(tile);
+        currentBuilding()->setDoorTile(tileName);
         // Assign the new tile to selected doors
         QList<Door*> doors;
-        QString tileName = nameForTile(tile);
         foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
             if (Door *door = dynamic_cast<Door*>(object)) {
                 if (door->mTile != BuildingTiles::instance()->tileForDoor(door, tileName))
@@ -668,10 +675,10 @@ void BuildingEditorWindow::currentDoorFrameChanged(const QItemSelection &selecte
         Tile *tile = m->tileAt(index);
         if (!tile)
             return;
-        RoomDefinitionManager::instance->mDoorFrameTile = nameForTile(tile);
+        QString tileName = BuildingTiles::instance()->nameForTile(tile);
+        currentBuilding()->setDoorFrameTile(tileName);
         // Assign the new tile to selected doors
         QList<Door*> doors;
-        QString tileName = nameForTile(tile);
         foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
             if (Door *door = dynamic_cast<Door*>(object)) {
                 if (door->mFrameTile != BuildingTiles::instance()->tileForDoor(door, tileName, true))
@@ -704,10 +711,10 @@ void BuildingEditorWindow::currentWindowChanged(const QItemSelection &selected)
         if (!tile)
             return;
         // New windows will be created with this tile
-        RoomDefinitionManager::instance->mWindowTile = nameForTile(tile);
+        QString tileName = BuildingTiles::instance()->nameForTile(tile);
+        currentBuilding()->setWindowTile(tileName);
         // Assign the new tile to selected windows
         QList<Window*> windows;
-        QString tileName = nameForTile(tile);
         foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
             if (Window *window = dynamic_cast<Window*>(object)) {
                 if (window->mTile != BuildingTiles::instance()->tileForWindow(window, tileName))
@@ -739,10 +746,10 @@ void BuildingEditorWindow::currentStairsChanged(const QItemSelection &selected)
         if (!tile)
             return;
         // New stairs will be created with this tile
-        RoomDefinitionManager::instance->mStairsTile = nameForTile(tile);
+        QString tileName = BuildingTiles::instance()->nameForTile(tile);
+        currentBuilding()->setStairsTile(tileName);
         // Assign the new tile to selected stairs
         QList<Stairs*> stairsList;
-        QString tileName = nameForTile(tile);
         foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
             if (Stairs *stairs = dynamic_cast<Stairs*>(object)) {
                 if (stairs->mTile != BuildingTiles::instance()->tileForStairs(stairs, tileName))
@@ -799,9 +806,13 @@ void BuildingEditorWindow::newBuilding()
         delete mCurrentDocument;
     }
 
-    RoomDefinitionManager::instance->Init(dialog.buildingDefinition());
+#if 0
+    RoomDefinitionManager::instance->Init(dialog.buildingTemplate());
+#endif
 
-    Building *building = new Building(dialog.buildingWidth(), dialog.buildingHeight());
+    Building *building = new Building(dialog.buildingWidth(),
+                                      dialog.buildingHeight(),
+                                      dialog.buildingTemplate());
     building->insertFloor(0, new BuildingFloor(building, 0));
 
     mCurrentDocument = new BuildingDocument(building, QString());
@@ -811,20 +822,16 @@ void BuildingEditorWindow::newBuilding()
 
     roomEditor->setDocument(mCurrentDocument);
 
-    mRoomComboBox->clear();
-    mRoomComboBox->addItems(RoomDefinitionManager::instance->FillCombo());
-
-    for (int i = 0; i < RoomDefinitionManager::instance->getRoomCount(); i++) {
-        QImage image(20, 20, QImage::Format_ARGB32);
-        image.fill(qRgba(0,0,0,0));
-        QPainter painter(&image);
-        painter.fillRect(1, 1, 18, 18, RoomDefinitionManager::instance->getRoom(i)->Color);
-        mRoomComboBox->setItemIcon(i, QPixmap::fromImage(image));
-    }
+    updateRoomComboBox();
 
     mFloorLabel->setText(tr("Ground Floor"));
 
     resizeCoordsLabel();
+
+    connect(mCurrentDocument, SIGNAL(roomAdded(Room*)), SLOT(roomAdded(Room*)));
+    connect(mCurrentDocument, SIGNAL(roomRemoved(Room*)), SLOT(roomRemoved(Room*)));
+    connect(mCurrentDocument, SIGNAL(roomsReordered()), SLOT(roomsReordered()));
+    connect(mCurrentDocument, SIGNAL(roomChanged(Room*)), SLOT(roomChanged(Room*)));
 
     /////
 
@@ -856,6 +863,85 @@ void BuildingEditorWindow::preferences()
     dialog.exec();
 }
 
+void BuildingEditorWindow::roomsDialog()
+{
+    if (!mCurrentDocument)
+        return;
+    QList<Room*> originalRoomList = mCurrentDocument->building()->rooms();
+    RoomsDialog dialog(originalRoomList, this);
+    if (dialog.exec() == QDialog::Accepted) {
+        QList<Room*> deletedRooms = originalRoomList;
+        // Rooms may have been added, moved, deleted, and/or edited.
+        foreach (Room *dialogRoom, dialog.rooms()) {
+            if (Room *room = dialog.originalRoom(dialogRoom)) {
+                int oldIndex = mCurrentDocument->building()->rooms().indexOf(room);
+                int newIndex = dialog.rooms().indexOf(dialogRoom);
+                if (oldIndex != newIndex) {
+                    qDebug() << "move room" << room->Name << "from " << oldIndex << " to " << newIndex;
+                    mCurrentDocument->undoStack()->push(new ReorderRoom(mCurrentDocument,
+                                                                        newIndex,
+                                                                        room));
+                }
+                if (*room != *dialogRoom) {
+                    qDebug() << "change room" << room->Name;
+                    mCurrentDocument->undoStack()->push(new ChangeRoom(mCurrentDocument,
+                                                                       room,
+                                                                       dialogRoom));
+                }
+                deletedRooms.removeOne(room);
+            } else {
+                // This is a new room.
+                qDebug() << "add room" << dialogRoom->Name << "at" << dialog.rooms().indexOf(dialogRoom);
+                Room *newRoom = new Room(dialogRoom);
+                int index = dialog.rooms().indexOf(dialogRoom);
+                mCurrentDocument->undoStack()->push(new AddRoom(mCurrentDocument,
+                                                                index,
+                                                                newRoom));
+            }
+        }
+        // now handle deleted rooms
+        foreach (Room *room, deletedRooms) {
+            qDebug() << "delete room" << room->Name;
+            int index = mCurrentDocument->building()->rooms().indexOf(room);
+            mCurrentDocument->undoStack()->push(new RemoveRoom(mCurrentDocument,
+                                                               index));
+        }
+    }
+}
+
+void BuildingEditorWindow::roomAdded(Room *room)
+{
+    updateRoomComboBox();
+}
+
+void BuildingEditorWindow::roomRemoved(Room *room)
+{
+    updateRoomComboBox();
+}
+
+void BuildingEditorWindow::roomsReordered()
+{
+    updateRoomComboBox();
+}
+
+void BuildingEditorWindow::roomChanged(Room *room)
+{
+    updateRoomComboBox();
+}
+
+void BuildingEditorWindow::templatesDialog()
+{
+    BuildingTemplatesDialog dialog(this);
+    dialog.exec();
+}
+
+void BuildingEditorWindow::tilesDialog()
+{
+    BuildingTilesDialog dialog(this);
+    dialog.exec();
+    setCategoryLists();
+}
+
 void BuildingEditorWindow::mouseCoordinateChanged(const QPoint &tilePos)
 {
     ui->coordLabel->setText(tr("%1,%2").arg(tilePos.x()).arg(tilePos.y()));
@@ -871,6 +957,51 @@ void BuildingEditorWindow::resizeCoordsLabel()
     QFontMetrics fm = ui->coordLabel->fontMetrics();
     QString coordString = QString(QLatin1String("%1,%2")).arg(width).arg(height);
     ui->coordLabel->setMinimumWidth(fm.width(coordString) + 8);
+}
+
+void BuildingEditorWindow::setCategoryLists()
+{
+    QToolBox *toolBox = ui->toolBox;
+    while (toolBox->count()) {
+        QWidget *w = toolBox->widget(0);
+        toolBox->removeItem(0);
+        delete w;
+    }
+
+    foreach (BuildingTiles::Category *category, BuildingTiles::instance()->categories()) {
+        QString categoryName = category->name();
+        const char *slot = 0;
+        if (categoryName == QLatin1String("exterior_walls"))
+            slot = SLOT(currentEWallChanged(QItemSelection));
+        else if (categoryName == QLatin1String("interior_walls"))
+            slot = SLOT(currentIWallChanged(QItemSelection));
+        else if (categoryName == QLatin1String("floors"))
+            slot = SLOT(currentFloorChanged(QItemSelection));
+        else if (categoryName == QLatin1String("doors"))
+            slot = SLOT(currentDoorChanged(QItemSelection));
+        else if (categoryName == QLatin1String("door_frames"))
+            slot = SLOT(currentDoorFrameChanged(QItemSelection));
+        else if (categoryName == QLatin1String("windows"))
+            slot = SLOT(currentWindowChanged(QItemSelection));
+        else if (categoryName == QLatin1String("stairs"))
+            slot = SLOT(currentStairsChanged(QItemSelection));
+        else {
+            qFatal("bogus category name"); // the names were validated elsewhere
+        }
+
+        Tiled::Internal::MixedTilesetView *w
+                = new Tiled::Internal::MixedTilesetView(mCategoryZoomable, toolBox);
+        toolBox->addItem(w, category->label());
+        connect(w->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+                slot);
+
+        QList<Tiled::Tile*> tiles;
+        foreach (BuildingTile *tile, category->tiles()) {
+            if (!tile->mAlternates.count() || (tile == tile->mAlternates.first()))
+                tiles += BuildingTiles::instance()->tileFor(tile);
+        }
+        w->model()->setTiles(tiles);
+    }
 }
 
 void BuildingEditorWindow::updateActions()
@@ -893,162 +1024,9 @@ void BuildingEditorWindow::updateActions()
     ui->actionZoomOut->setEnabled(mView->zoomable()->canZoomOut());
     ui->actionNormalSize->setEnabled(mView->zoomable()->scale() != 1.0);
 
+    ui->actionRooms->setEnabled(mCurrentDocument != 0);
+
     mRoomComboBox->setEnabled(mCurrentDocument != 0);
-}
-
-/////
-
-QList<BuildingDefinition*> BuildingDefinition::Definitions;
-QMap<QString,BuildingDefinition*> BuildingDefinition::DefinitionMap;
-
-/////
-
-RoomDefinitionManager *RoomDefinitionManager::instance = new RoomDefinitionManager;
-
-
-void RoomDefinitionManager::Init(BuildingDefinition *definition)
-{
-    mBuildingDefinition = definition;
-    ColorToRoom.clear();
-    RoomToColor.clear();
-
-    ExteriorWall = definition->Wall;
-    mDoorTile = QLatin1String("fixtures_doors_01_0");
-    mDoorFrameTile = QLatin1String("fixtures_doors_frames_01_0");
-    mWindowTile = QLatin1String("fixtures_windows_01_0");
-    mStairsTile = QLatin1String("fixtures_stairs_01_0");
-
-    foreach (Room *room, definition->RoomList) {
-        ColorToRoom[room->Color] = room;
-        RoomToColor[room] = room->Color;
-    }
-}
-
-QStringList RoomDefinitionManager::FillCombo()
-{
-    QStringList roomNames;
-    foreach (Room *room, mBuildingDefinition->RoomList)
-        roomNames += room->Name;
-    return roomNames;
-}
-
-int RoomDefinitionManager::GetIndex(QRgb col)
-{
-    return mBuildingDefinition->RoomList.indexOf(ColorToRoom[col]);
-}
-
-int RoomDefinitionManager::GetIndex(Room *room)
-{
-    return mBuildingDefinition->RoomList.indexOf(room);
-}
-
-Room *RoomDefinitionManager::getRoom(int index)
-{
-    if (index < 0)
-        return 0;
-    return mBuildingDefinition->RoomList.at(index);
-}
-
-int RoomDefinitionManager::getRoomCount()
-{
-    return mBuildingDefinition->RoomList.count();
-}
-
-BuildingTile *RoomDefinitionManager::getWallForRoom(int i)
-{
-    Room *room = getRoom(i);
-    return BuildingTiles::instance()->get(QLatin1String("interior_walls"), room->Wall);
-}
-
-BuildingTile *RoomDefinitionManager::getFloorForRoom(int i)
-{
-    Room *room = getRoom(i);
-    return BuildingTiles::instance()->get(QLatin1String("floors"), room->Floor);
-}
-
-void RoomDefinitionManager::setWallForRoom(Room *room, QString tile)
-{
-    room->Wall = tile;
-}
-
-void RoomDefinitionManager::setFloorForRoom(Room *room, QString tile)
-{
-    room->Floor = tile;
-}
-
-/////
-
-Layout::Layout(int w, int h) :
-    w(w),
-    h(h)
-{
-    grid.resize(w);
-    for (int x = 0; x < w; x++) {
-        grid[x].resize(h);
-        for (int y = 0; y < h; y++) {
-            grid[x][y] = -1;
-        }
-    }
-}
-
-Room *Layout::roomAt(int x, int y)
-{
-    int roomIndex = grid[x][y];
-    return RoomDefinitionManager::instance->getRoom(roomIndex);
-}
-
-/////
-
-BaseMapObject::BaseMapObject(BuildingFloor *floor, int x, int y, Direction dir) :
-    mFloor(floor),
-    mX(x),
-    mY(y),
-    mDir(dir),
-    mTile(0)
-{
-}
-
-int BaseMapObject::index()
-{
-    return mFloor->indexOf(this);
-}
-
-/////
-
-QRect Stairs::bounds() const
-{
-    if (mDir == N)
-        return QRect(mX, mY, 1, 5);
-    if (mDir == W)
-        return QRect(mX, mY, 5, 1);
-    return QRect();
-}
-
-int Stairs::getStairsOffset(int x, int y)
-{
-    if (mDir == N) {
-        if (x == mX) {
-            int index = y - mY;
-            if (index == 1)
-                return 2; //RoomDefinitionManager::instance->TopStairNorth;
-            if (index == 2)
-                return 1; //RoomDefinitionManager::instance->MidStairNorth;
-            if (index == 3)
-                return 0; //RoomDefinitionManager::instance->BotStairNorth;
-        }
-    }
-    if (mDir == W) {
-        if (y == mY) {
-            int index = x - mX;
-            if (index == 1)
-                return 2; //RoomDefinitionManager::instance->TopStairWest;
-            if (index == 2)
-                return 1; //RoomDefinitionManager::instance->MidStairWest;
-            if (index == 3)
-                return 0; //RoomDefinitionManager::instance->BotStairWest;
-        }
-    }
-    return -1;
 }
 
 /////
@@ -1062,16 +1040,50 @@ BuildingTiles *BuildingTiles::instance()
     return mInstance;
 }
 
+void BuildingTiles::deleteInstance()
+{
+    delete mInstance;
+    mInstance = 0;
+}
+
+BuildingTiles::~BuildingTiles()
+{
+    TilesetManager::instance()->removeReferences(tilesets());
+}
+
 BuildingTile *BuildingTiles::get(const QString &categoryName, const QString &tileName)
 {
     Category *category = this->category(categoryName);
     return category->get(tileName);
 }
 
+QString BuildingTiles::nameForTile(const QString &tilesetName, int index)
+{
+    // The only reason I'm padding the tile index is so that the tiles are sorted
+    // by increasing tileset name and index.
+    return tilesetName + QLatin1Char('_') +
+            QString(QLatin1String("%1")).arg(index, 3, 10, QLatin1Char('0'));
+}
+
+QString BuildingTiles::nameForTile(Tile *tile)
+{
+    return nameForTile(tile->tileset()->name(), tile->id());
+}
+
 bool BuildingTiles::parseTileName(const QString &tileName, QString &tilesetName, int &index)
 {
     tilesetName = tileName.mid(0, tileName.lastIndexOf(QLatin1Char('_')));
-    index = tileName.mid(tileName.lastIndexOf(QLatin1Char('_')) + 1).toInt();
+    QString indexString = tileName.mid(tileName.lastIndexOf(QLatin1Char('_')) + 1);
+    // Strip leading zeroes from the tile index
+#if 1
+    int i = 0;
+    while (i < indexString.length() - 1 && indexString[i] == QLatin1Char('0'))
+        i++;
+    indexString.remove(0, i);
+#else
+    indexString.remove( QRegExp(QLatin1String("^[0]*")) );
+#endif
+    index = indexString.toInt();
     return true;
 }
 
@@ -1081,7 +1093,15 @@ QString BuildingTiles::adjustTileNameIndex(const QString &tileName, int offset)
     int index;
     parseTileName(tileName, tilesetName, index);
     index += offset;
-    return tilesetName + QLatin1Char('_') + QString::number(index);
+    return nameForTile(tilesetName, index);
+}
+
+QString BuildingTiles::normalizeTileName(const QString &tileName)
+{
+    QString tilesetName;
+    int index;
+    parseTileName(tileName, tilesetName, index);
+    return nameForTile(tilesetName, index);
 }
 
 BuildingTile *BuildingTiles::tileForDoor(Door *door, const QString &tileName,
@@ -1104,6 +1124,66 @@ BuildingTile *BuildingTiles::tileForWindow(Window *window, const QString &tileNa
 BuildingTile *BuildingTiles::tileForStairs(Stairs *stairs, const QString &tileName)
 {
     return get(QLatin1String("stairs"), tileName);
+}
+
+void BuildingTiles::addTileset(Tileset *tileset)
+{
+    mTilesetByName[tileset->name()] = tileset;
+    TilesetManager::instance()->addReference(tileset);
+}
+
+Tiled::Tile *BuildingTiles::tileFor(const QString &tileName)
+{
+    QString tilesetName;
+    int index;
+    parseTileName(tileName, tilesetName, index);
+    if (!mTilesetByName.contains(tilesetName))
+        return 0;
+    if (index >= mTilesetByName[tilesetName]->tileCount())
+        return 0;
+    return mTilesetByName[tilesetName]->tileAt(index);
+}
+
+Tile *BuildingTiles::tileFor(BuildingTile *tile)
+{
+    if (!mTilesetByName.contains(tile->mTilesetName))
+        return 0;
+    if (tile->mIndex >= mTilesetByName[tile->mTilesetName]->tileCount())
+        return 0;
+    return mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex);
+}
+
+/////
+
+bool BuildingTiles::Category::usesTile(Tile *tile) const
+{
+    return mTileByName.contains(nameForTile(tile));
+}
+
+QRect BuildingTiles::Category::categoryBounds() const
+{
+    if (mName == QLatin1String("exterior_walls"))
+        return QRect(0, 0, 4, 2);
+    if (mName == QLatin1String("interior_walls"))
+        return QRect(0, 0, 4, 2);
+    if (mName == QLatin1String("floors"))
+        return QRect(0, 0, 1, 1);
+    if (mName == QLatin1String("doors"))
+        return QRect(0, 0, 4, 1);
+    if (mName == QLatin1String("door_frames"))
+        return QRect(0, 0, 2, 1);
+    if (mName == QLatin1String("windows"))
+        return QRect(0, 0, 2, 1);
+    if (mName == QLatin1String("stairs"))
+        return QRect(0, 0, 3, 2);
+    return QRect();
+}
+
+/////
+
+QString BuildingTile::name() const
+{
+    return BuildingTiles::nameForTile(mTilesetName, mIndex);
 }
 
 /////

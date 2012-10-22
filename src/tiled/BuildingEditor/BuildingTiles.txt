@@ -103,10 +103,10 @@ category
 	name = stairs
 	tiles
 	{
-		tile = fixtures_stairs_01_0 fixtures_stairs_01_8
-		tile = fixtures_stairs_01_16 fixtures_stairs_01_24
-		tile = fixtures_stairs_01_19 fixtures_stairs_01_27
-		tile = fixtures_stairs_01_32 fixtures_stairs_01_40
+		tile = fixtures_stairs_01_0
+		tile = fixtures_stairs_01_16
+		tile = fixtures_stairs_01_19
+		tile = fixtures_stairs_01_32
 	}
 }
 

@@ -15,38 +15,48 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef NEWBUILDINGDIALOG_H
-#define NEWBUILDINGDIALOG_H
+#ifndef CHOOSEBUILDINGTILEDIALOG_H
+#define CHOOSEBUILDINGTILEDIALOG_H
 
 #include <QDialog>
 
 namespace Ui {
-class NewBuildingDialog;
+class ChooseBuildingTileDialog;
+}
+
+namespace Tiled {
+class Tile;
+namespace Internal {
+class Zoomable;
+}
 }
 
 namespace BuildingEditor {
 
-class BuildingTemplate;
+class BuildingTile;
 
-class NewBuildingDialog : public QDialog
+class ChooseBuildingTileDialog : public QDialog
 {
     Q_OBJECT
     
 public:
-    explicit NewBuildingDialog(QWidget *parent = 0);
-    ~NewBuildingDialog();
+    explicit ChooseBuildingTileDialog(const QString &categoryName,
+                                      BuildingTile *initialTile,
+                                      QWidget *parent = 0);
+    ~ChooseBuildingTileDialog();
 
-    int buildingWidth() const;
-    int buildingHeight() const;
-    BuildingTemplate *buildingTemplate() const;
+    BuildingTile *selectedTile() const;
 
 private slots:
     void accept();
     
 private:
-    Ui::NewBuildingDialog *ui;
+    Ui::ChooseBuildingTileDialog *ui;
+    QList<Tiled::Tile*> mTiles;
+    QList<BuildingTile*> mBuildingTiles;
+    Tiled::Internal::Zoomable *mZoomable;
 };
 
 } // namespace BuildingEditor
 
-#endif // NEWBUILDINGDIALOG_H
+#endif // CHOOSEBUILDINGTILEDIALOG_H

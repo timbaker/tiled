@@ -43,6 +43,7 @@ class Zoomable;
 namespace BuildingEditor {
 
 class BaseTool;
+class Building;
 class BuildingDocument;
 class BuildingFloor;
 class BuildingPreviewWindow;
@@ -61,6 +62,8 @@ public:
         mIndex(index)
     {}
 
+    QString name() const;
+
     QString mTilesetName;
     int mIndex;
 
@@ -71,6 +74,7 @@ class BuildingTiles
 {
 public:
     static BuildingTiles *instance();
+    static void deleteInstance();
 
     class Category
     {
@@ -86,9 +90,18 @@ public:
             int tileIndex;
             parseTileName(tileName, tilesetName, tileIndex);
             BuildingTile *tile = new BuildingTile(tilesetName, tileIndex);
-            mTiles += tile;
+            Q_ASSERT(!mTileByName.contains(tile->name()));
             mTileByName[tileName] = tile;
+            mTiles = mTileByName.values(); // sorted by increasing tileset name and tile index!
             return tile;
+        }
+
+        void remove(const QString &tileName)
+        {
+            if (!mTileByName.contains(tileName))
+                return;
+            mTileByName.remove(tileName);
+            mTiles = mTileByName.values(); // sorted by increasing tileset name and tile index!
         }
 
         BuildingTile *get(const QString &tileName)
@@ -107,12 +120,17 @@ public:
         const QList<BuildingTile*> &tiles() const
         { return mTiles; }
 
+        bool usesTile(Tiled::Tile *tile) const;
+        QRect categoryBounds() const;
+
     private:
         QString mName;
         QString mLabel;
         QList<BuildingTile*> mTiles;
         QMap<QString,BuildingTile*> mTileByName;
     };
+
+    ~BuildingTiles();
 
     Category *addCategory(const QString &categoryName, const QString &label)
     {
@@ -159,8 +177,14 @@ public:
         return 0;
     }
 
+    static QString nameForTile(const QString &tilesetName, int index);
+    static QString nameForTile(Tiled::Tile *tile);
     static bool parseTileName(const QString &tileName, QString &tilesetName, int &index);
     static QString adjustTileNameIndex(const QString &tileName, int offset);
+    static QString normalizeTileName(const QString &tileName);
+
+    Tiled::Tile *tileFor(const QString &tileName);
+    Tiled::Tile *tileFor(BuildingTile *tile);
 
     BuildingTile *tileForDoor(Door *door, const QString &tileName,
                               bool isFrame = false);
@@ -169,162 +193,22 @@ public:
 
     BuildingTile *tileForStairs(Stairs *stairs, const QString &tileName);
 
+    void addTileset(Tiled::Tileset *tileset);
+
+    Tiled::Tileset *tilesetFor(const QString &tilesetName)
+    { return mTilesetByName[tilesetName]; }
+
+    const QMap<QString,Tiled::Tileset*> &tilesetsMap() const
+    { return mTilesetByName; }
+
+    QList<Tiled::Tileset*> tilesets() const
+    { return mTilesetByName.values(); }
+
 private:
     static BuildingTiles *mInstance;
     QList<Category*> mCategories;
     QMap<QString,Category*> mCategoryByName;
-};
-
-class BaseMapObject
-{
-public:
-    enum Direction
-    {
-        N,
-        S,
-        E,
-        W
-    };
-
-    BaseMapObject(BuildingFloor *floor, int x, int y, Direction mDir);
-
-    BuildingFloor *floor() const
-    { return mFloor; }
-
-    int index();
-
-    virtual QRect bounds() const
-    { return QRect(mX, mY, 1, 1); }
-
-    void setPos(int x, int y)
-    { mX = x, mY = y; }
-
-    void setPos(const QPoint &pos)
-    { mX = pos.x(), mY = pos.y(); }
-
-    QPoint pos() const
-    { return QPoint(mX, mY); }
-
-    void setDir(Direction dir)
-    { mDir = dir; }
-
-    Direction dir() const
-    { return mDir; }
-
-    BuildingTile *mTile;
-
-protected:
-    BuildingFloor *mFloor;
-    Direction mDir;
-    int mX;
-    int mY;
-};
-
-class Door : public BaseMapObject
-{
-public:
-    Door(BuildingFloor *floor, int x, int y, Direction dir) :
-        BaseMapObject(floor, x, y, dir),
-        mFrameTile(0)
-    {
-
-    }
-
-    BuildingTile *mFrameTile;
-};
-
-class Stairs : public BaseMapObject
-{
-public:
-    Stairs(BuildingFloor *floor, int x, int y, Direction dir) :
-        BaseMapObject(floor, x, y, dir)
-    {
-    }
-
-    QRect bounds() const;
-
-    int getStairsOffset(int x, int y);
-};
-
-class Window : public BaseMapObject
-{
-public:
-    Window(BuildingFloor *floor, int x, int y, Direction dir) :
-        BaseMapObject(floor, x, y, dir)
-    {
-
-    }
-};
-
-class Layout
-{
-public:
-    Layout(int w, int h);
-
-    Room *roomAt(int x, int y);
-    Room *roomAt(const QPoint &pos)
-    { return roomAt(pos.x(), pos.y()); }
-
-    QVector<QVector<int> > grid;
-    int w, h;
-};
-
-class Room
-{
-public:
-    QString Name;
-    QRgb Color;
-    QString internalName;
-    QString Floor;
-    QString Wall;
-};
-
-class BuildingDefinition
-{
-public:
-    QString Name;
-    QString Wall;
-
-    QList<Room*> RoomList;
-
-    static QList<BuildingDefinition*> Definitions;
-    static QMap<QString,BuildingDefinition*> DefinitionMap;
-};
-
-class RoomDefinitionManager
-{
-public:
-    static RoomDefinitionManager *instance;
-
-    BuildingDefinition *mBuildingDefinition;
-    QMap<QRgb,Room*> ColorToRoom;
-    QMap<Room*,QRgb> RoomToColor;
-
-    QString ExteriorWall;
-    QString mDoorTile;
-    QString mDoorFrameTile;
-    QString mWindowTile;
-    QString mStairsTile;
-
-    void Add(QString roomName, QRgb col, QString wall, QString floor);
-
-    void Init(BuildingDefinition *definition);
-
-    void Init();
-
-    QStringList FillCombo();
-
-    int GetIndex(QRgb col);
-    int GetIndex(Room *room);
-    Room *getRoom(int index);
-    int getRoomCount();
-
-    BuildingTile *getWallForRoom(int i);
-    BuildingTile *getFloorForRoom(int i);
-    int getFromColor(QRgb pixel);
-
-    void setWallForRoom(Room *room, QString tile);
-    void setFloorForRoom(Room *room, QString tile);
+    QMap<QString,Tiled::Tileset*> mTilesetByName;
 };
 
 class BuildingEditorWindow : public QMainWindow
@@ -348,6 +232,7 @@ public:
     bool LoadBuildingTemplates();
     bool LoadBuildingTiles();
     bool LoadMapBaseXMLLots();
+    bool validateTile(QString &tileName, const char *key);
 
     void setCurrentRoom(Room *mRoomComboBox) const; // TODO: move to BuildingDocument
     Room *currentRoom() const;
@@ -355,15 +240,16 @@ public:
     BuildingDocument *currentDocument() const
     { return mCurrentDocument; }
 
-    Tiled::Tile *tileFor(const QString &tileName);
-    Tiled::Tile *tileFor(BuildingTile *tile);
+    Building *currentBuilding() const;
 
-    QString nameForTile(Tiled::Tile *tile);
-
+private:
     void readSettings();
     void writeSettings();
 
+    void updateRoomComboBox();
     void resizeCoordsLabel();
+
+    void setCategoryLists();
 
 private slots:
     void roomIndexChanged(int index);
@@ -384,6 +270,15 @@ private slots:
 
     void preferences();
 
+    void roomsDialog();
+    void roomAdded(Room *room);
+    void roomRemoved(Room *room);
+    void roomsReordered();
+    void roomChanged(Room *room);
+
+    void templatesDialog();
+    void tilesDialog();
+
     void mouseCoordinateChanged(const QPoint &tilePos);
 
     void updateActions();
@@ -396,7 +291,6 @@ private:
     QComboBox *mRoomComboBox;
     QLabel *mFloorLabel;
     QUndoGroup *mUndoGroup;
-    QMap<QString,Tiled::Tileset*> mTilesetByName;
     QSettings mSettings;
     QString mError;
     BuildingPreviewWindow *mPreviewWin;
