@@ -49,6 +49,7 @@ class BaseMapObject;
 class BuildingFloor;
 class BuildingDocument;
 class Door;
+class Room;
 
 class CompositeLayerGroupItem : public QGraphicsItem
 {
@@ -99,13 +100,19 @@ public:
 private:
     void BuildingToMap();
     void BuildingFloorToTileLayers(BuildingFloor *floor, const QVector<Tiled::TileLayer *> &layers);
-    void floorEdited(BuildingFloor *floor);
 
 private slots:
     void currentFloorChanged();
     void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
     void roomDefinitionChanged();
+
+    void roomAdded(Room *room);
+    void roomRemoved(Room *room);
+    void roomChanged(Room *room);
+
     void floorAdded(BuildingFloor *floor);
+    void floorEdited(BuildingFloor *floor);
+
     void objectAdded(BaseMapObject *object);
     void objectRemoved(BuildingFloor *floor, int index);
     void objectMoved(BaseMapObject *object);

@@ -19,11 +19,13 @@
 #include "ui_buildingtemplatesdialog.h"
 
 #include "buildingtemplates.h"
-#include "buildingeditorwindow.h"
+#include "buildingtiles.h"
 #include "choosebuildingtiledialog.h"
 #include "roomsdialog.h"
 
 #include "tile.h"
+
+#include <QMessageBox>
 
 using namespace BuildingEditor;
 
@@ -43,7 +45,7 @@ BuildingTemplatesDialog::BuildingTemplatesDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    foreach (BuildingTemplate *btemplate, BuildingTemplate::mTemplates) {
+    foreach (BuildingTemplate *btemplate, BuildingTemplates::instance()->templates()) {
         BuildingTemplate *clone = new BuildingTemplate(btemplate);
         mTemplates += clone;
         ui->templatesList->addItem(btemplate->Name);
@@ -51,6 +53,10 @@ BuildingTemplatesDialog::BuildingTemplatesDialog(QWidget *parent) :
 
     connect(ui->templatesList, SIGNAL(itemSelectionChanged()),
             SLOT(templateSelectionChanged()));
+    connect(ui->add, SIGNAL(clicked()), SLOT(addTemplate()));
+    connect(ui->remove, SIGNAL(clicked()), SLOT(removeTemplate()));
+    connect(ui->duplicate, SIGNAL(clicked()), SLOT(duplicateTemplate()));
+    connect(ui->name, SIGNAL(textEdited(QString)), SLOT(nameEdited(QString)));
     connect(ui->tilesList, SIGNAL(itemSelectionChanged()),
             SLOT(tileSelectionChanged()));
     connect(ui->editRooms, SIGNAL(clicked()), SLOT(editRooms()));
@@ -65,6 +71,7 @@ BuildingTemplatesDialog::BuildingTemplatesDialog(QWidget *parent) :
 BuildingTemplatesDialog::~BuildingTemplatesDialog()
 {
     delete ui;
+    qDeleteAll(mTemplates);
 }
 
 void BuildingTemplatesDialog::templateSelectionChanged()
@@ -90,16 +97,78 @@ void BuildingTemplatesDialog::tileSelectionChanged()
     synchUI();
 }
 
+void BuildingTemplatesDialog::addTemplate()
+{
+    BuildingTemplate *btemplate = new BuildingTemplate;
+    btemplate->Name = QLatin1String("New Template");
+    btemplate->Wall = BuildingTiles::instance()->defaultExteriorWall();
+    btemplate->DoorTile = BuildingTiles::instance()->defaultDoorTile();
+    btemplate->DoorFrameTile = BuildingTiles::instance()->defaultDoorFrameTile();
+    btemplate->WindowTile = BuildingTiles::instance()->defaultWindowTile();
+    btemplate->StairsTile = BuildingTiles::instance()->defaultStairsTile();
+
+    mTemplates += btemplate;
+    ui->templatesList->addItem(btemplate->Name);
+    ui->templatesList->setCurrentRow(ui->templatesList->count() - 1);
+}
+
+void BuildingTemplatesDialog::removeTemplate()
+{
+    if (!mTemplate)
+        return;
+
+    if (QMessageBox::question(this, tr("Remove Template"),
+                              tr("Really remove the template '%1'?").arg(mTemplate->Name),
+                              QMessageBox::Yes, QMessageBox::No) != QMessageBox::Yes)
+        return;
+
+    int index = mTemplates.indexOf(mTemplate);
+    delete mTemplates.takeAt(index);
+    delete ui->templatesList->takeItem(index);
+}
+
+void BuildingTemplatesDialog::duplicateTemplate()
+{
+    if (!mTemplate)
+        return;
+
+    BuildingTemplate *btemplate = new BuildingTemplate(mTemplate);
+    mTemplates += btemplate;
+    ui->templatesList->addItem(btemplate->Name);
+    ui->templatesList->setCurrentRow(ui->templatesList->count() - 1);
+}
+
+void BuildingTemplatesDialog::nameEdited(const QString &name)
+{
+    if (!mTemplate)
+        return;
+
+    int index = mTemplates.indexOf(mTemplate);
+    mTemplate->Name = name;
+    ui->templatesList->item(index)->setText(name);
+}
+
 void BuildingTemplatesDialog::editRooms()
 {
     RoomsDialog dialog(mTemplate->RoomList, this);
+    dialog.setWindowTitle(tr("Rooms in '%1'").arg(mTemplate->Name));
     if (dialog.exec() == QDialog::Accepted) {
+        qDeleteAll(mTemplate->RoomList);
+        mTemplate->RoomList.clear();
+        foreach (Room *dialogRoom, dialog.rooms())
+            mTemplate->RoomList += new Room(dialogRoom);
     }
 }
 
 void BuildingTemplatesDialog::chooseTile()
 {
-    ChooseBuildingTileDialog dialog(QLatin1String(categoryNames[mTileRow]),
+    static const char *titles[] = {
+        "Wall", "Door", "Door frame", "Window", "Stairs"
+    };
+    ChooseBuildingTileDialog dialog(tr("Choose %1 tile for '%2'")
+                                    .arg(QLatin1String(titles[mTileRow]))
+                                    .arg(mTemplate->Name),
+                                    QLatin1String(categoryNames[mTileRow]),
                                     selectedTile(), this);
     if (dialog.exec() == QDialog::Accepted) {
         if (BuildingTile *btile = dialog.selectedTile()) {
@@ -118,6 +187,8 @@ void BuildingTemplatesDialog::chooseTile()
 void BuildingTemplatesDialog::synchUI()
 {
     ui->name->setEnabled(mTemplate != 0);
+    ui->remove->setEnabled(mTemplate != 0);
+    ui->duplicate->setEnabled(mTemplate != 0);
     ui->tilesList->setEnabled(mTemplate != 0);
     ui->chooseTile->setEnabled(mTemplate != 0 && mTileRow != -1);
     ui->editRooms->setEnabled(mTemplate != 0);

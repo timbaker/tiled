@@ -1,0 +1,325 @@
+Template
+{
+    Name = Old Suburban
+    Wall = walls_exterior_house_01_032
+    Door = fixtures_doors_01_000
+    DoorFrame = fixtures_doors_frames_01_000
+    Window = fixtures_windows_01_000
+    Stairs = fixtures_stairs_01_000
+    Room
+    {
+        Name = Foyer
+        Color = 255 255 255
+        InternalName = foyer
+        Wall = location_hospitality_sunstarmotel_01_004
+        Floor = floors_interior_tilesandwood_01_043
+    }
+    Room
+    {
+        Name = Hall
+        Color = 200 200 200
+        InternalName = hall
+        Wall = location_hospitality_sunstarmotel_01_004
+        Floor = floors_interior_tilesandwood_01_043
+    }
+    Room
+    {
+        Name = Living Room
+        Color = 255 0 0
+        InternalName = livingroom
+        Wall = location_hospitality_sunstarmotel_01_004
+        Floor = floors_interior_tilesandwood_01_043
+    }
+    Room
+    {
+        Name = Dining Room
+        Color = 255 0 128
+        InternalName = diningroom
+        Wall = location_hospitality_sunstarmotel_01_004
+        Floor = floors_interior_tilesandwood_01_043
+    }
+    Room
+    {
+        Name = Bathroom
+        Color = 255 128 0
+        InternalName = bathroom
+        Wall = location_hospitality_sunstarmotel_01_004
+        Floor = floors_interior_tilesandwood_01_043
+    }
+    Room
+    {
+        Name = Kitchen
+        Color = 0 255 0
+        InternalName = kitchen
+        Wall = location_hospitality_sunstarmotel_01_004
+        Floor = floors_interior_tilesandwood_01_043
+    }
+    Room
+    {
+        Name = Bedroom1
+        Color = 0 0 255
+        InternalName = bedroom
+        Wall = location_hospitality_sunstarmotel_01_000
+        Floor = floors_interior_tilesandwood_01_043
+    }
+    Room
+    {
+        Name = Bedroom2
+        Color = 0 64 255
+        InternalName = bedroom
+        Wall = location_hospitality_sunstarmotel_01_000
+        Floor = floors_interior_tilesandwood_01_043
+    }
+    Room
+    {
+        Name = Bedroom3
+        Color = 0 128 255
+        InternalName = bedroom
+        Wall = location_hospitality_sunstarmotel_01_000
+        Floor = floors_interior_tilesandwood_01_043
+    }
+}
+Template
+{
+    Name = Suburban 1
+    Wall = walls_exterior_house_01_032
+    Door = fixtures_doors_01_000
+    DoorFrame = fixtures_doors_frames_01_000
+    Window = fixtures_windows_01_000
+    Stairs = fixtures_stairs_01_000
+    Room
+    {
+        Name = Living Room
+        Color = 255 0 0
+        InternalName = livingroom
+        Wall = walls_interior_house_01_020
+        Floor = floors_interior_tilesandwood_01_042
+    }
+    Room
+    {
+        Name = Dining Room
+        Color = 255 0 128
+        InternalName = diningroom
+        Wall = walls_interior_house_01_020
+        Floor = floors_interior_tilesandwood_01_042
+    }
+    Room
+    {
+        Name = Bathroom
+        Color = 255 128 0
+        InternalName = bathroom
+        Wall = walls_interior_house_01_032
+        Floor = floors_interior_tilesandwood_01_002
+    }
+    Room
+    {
+        Name = Kitchen
+        Color = 0 255 0
+        InternalName = kitchen
+        Wall = walls_interior_house_02_000
+        Floor = floors_interior_tilesandwood_01_002
+    }
+    Room
+    {
+        Name = Bedroom1
+        Color = 0 0 255
+        InternalName = bedroom
+        Wall = walls_interior_house_02_004
+        Floor = floors_interior_carpet_01_000
+    }
+    Room
+    {
+        Name = Bedroom2
+        Color = 0 64 255
+        InternalName = bedroom
+        Wall = walls_interior_house_02_032
+        Floor = floors_interior_carpet_01_000
+    }
+    Room
+    {
+        Name = Bedroom3
+        Color = 0 128 255
+        InternalName = bedroom
+        Wall = walls_interior_house_02_032
+        Floor = floors_interior_carpet_01_000
+    }
+}
+Template
+{
+    Name = Suburban 2
+    Wall = walls_exterior_house_01_016
+    Door = fixtures_doors_01_000
+    DoorFrame = fixtures_doors_frames_01_000
+    Window = fixtures_windows_01_000
+    Stairs = fixtures_stairs_01_000
+    Room
+    {
+        Name = Foyer
+        Color = 255 255 255
+        InternalName = hall
+        Wall = walls_interior_house_02_052
+        Floor = floors_interior_tilesandwood_01_011
+    }
+    Room
+    {
+        Name = Hall
+        Color = 200 200 200
+        InternalName = hall
+        Wall = walls_interior_house_02_052
+        Floor = floors_interior_tilesandwood_01_011
+    }
+    Room
+    {
+        Name = Living Room
+        Color = 255 0 0
+        InternalName = livingroom
+        Wall = walls_interior_house_02_052
+        Floor = floors_interior_carpet_01_010
+    }
+    Room
+    {
+        Name = Dining Room
+        Color = 255 0 128
+        InternalName = diningroom
+        Wall = walls_interior_house_02_052
+        Floor = floors_interior_carpet_01_010
+    }
+    Room
+    {
+        Name = Bathroom
+        Color = 255 128 0
+        InternalName = bathroom
+        Wall = walls_interior_house_02_032
+        Floor = floors_interior_tilesandwood_01_002
+    }
+    Room
+    {
+        Name = Kitchen
+        Color = 0 255 0
+        InternalName = kitchen
+        Wall = walls_interior_house_02_000
+        Floor = floors_interior_tilesandwood_01_002
+    }
+    Room
+    {
+        Name = Bedroom1
+        Color = 0 0 255
+        InternalName = bedroom
+        Wall = walls_interior_house_02_016
+        Floor = floors_interior_carpet_01_002
+    }
+    Room
+    {
+        Name = Bedroom2
+        Color = 0 64 255
+        InternalName = bedroom
+        Wall = walls_interior_house_02_052
+        Floor = floors_interior_carpet_01_002
+    }
+    Room
+    {
+        Name = Bedroom3
+        Color = 0 128 255
+        InternalName = bedroom
+        Wall = walls_interior_house_02_052
+        Floor = floors_interior_carpet_01_002
+    }
+}
+Template
+{
+    Name = Wooden Shack
+    Wall = walls_exterior_wooden_01_024
+    Door = fixtures_doors_01_000
+    DoorFrame = fixtures_doors_frames_01_000
+    Window = fixtures_windows_01_000
+    Stairs = fixtures_stairs_01_000
+    Room
+    {
+        Name = Foyer
+        Color = 255 255 255
+        InternalName = hall
+        Wall = walls_interior_house_01_020
+        Floor = floors_interior_tilesandwood_01_042
+    }
+    Room
+    {
+        Name = Hall
+        Color = 200 200 200
+        InternalName = hall
+        Wall = walls_interior_house_01_020
+        Floor = floors_interior_tilesandwood_01_042
+    }
+    Room
+    {
+        Name = Living Room
+        Color = 255 0 0
+        InternalName = livingroom
+        Wall = walls_exterior_wooden_01_024
+        Floor = floors_interior_carpet_01_008
+    }
+    Room
+    {
+        Name = Dining Room
+        Color = 255 0 128
+        InternalName = diningroom
+        Wall = walls_exterior_wooden_01_024
+        Floor = floors_interior_carpet_01_008
+    }
+    Room
+    {
+        Name = Bathroom
+        Color = 255 128 0
+        InternalName = bathroom
+        Wall = walls_exterior_wooden_01_024
+        Floor = floors_interior_carpet_01_008
+    }
+    Room
+    {
+        Name = Kitchen
+        Color = 0 255 0
+        InternalName = kitchen
+        Wall = walls_exterior_wooden_01_024
+        Floor = floors_interior_carpet_01_008
+    }
+    Room
+    {
+        Name = Bedroom1
+        Color = 0 0 255
+        InternalName = bedroom
+        Wall = walls_exterior_wooden_01_024
+        Floor = floors_interior_carpet_01_008
+    }
+    Room
+    {
+        Name = Bedroom2
+        Color = 0 64 255
+        InternalName = bedroom
+        Wall = walls_exterior_wooden_01_024
+        Floor = floors_interior_carpet_01_008
+    }
+    Room
+    {
+        Name = Bedroom3
+        Color = 0 128 255
+        InternalName = bedroom
+        Wall = walls_exterior_wooden_01_024
+        Floor = floors_interior_carpet_01_008
+    }
+}
+Template
+{
+    Name = Bank
+    Wall = walls_exterior_house_01_048
+    Door = fixtures_doors_01_020
+    DoorFrame = fixtures_doors_frames_01_004
+    Window = fixtures_windows_01_032
+    Stairs = location_hospitality_sunstarmotel_01_040
+    Room
+    {
+        Name = Livingroom
+        Color = 255 255 255
+        InternalName = livingroom
+        Wall = walls_interior_house_01_016
+        Floor = floors_interior_tilesandwood_01_004
+    }
+}

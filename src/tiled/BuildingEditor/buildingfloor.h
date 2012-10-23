@@ -86,6 +86,7 @@ public:
     Building *building() const
     { return mBuilding; }
 
+    BuildingFloor *floorAbove() const;
     BuildingFloor *floorBelow() const;
 
     void insertObject(int index, BaseMapObject *object);
@@ -103,6 +104,11 @@ public:
     int objectCount() const
     { return mObjects.size(); }
 
+    BaseMapObject *objectAt(int x, int y);
+
+    inline BaseMapObject *objectAt(const QPoint &pos)
+    { return objectAt(pos.x(), pos.y()); }
+
     Door *GetDoorAt(int x, int y);
     Window *GetWindowAt(int x, int y);
     Stairs *GetStairsAt(int x, int y);
@@ -111,6 +117,12 @@ public:
     Room *GetRoomAt(const QPoint &pos);
     Room *GetRoomAt(int x, int y)
     { return GetRoomAt(QPoint(x, y)); }
+
+    void setGrid(const QVector<QVector<Room*> > &grid)
+    { mRoomAtPos = grid; }
+
+    const QVector<QVector<Room*> > &grid() const
+    { return mRoomAtPos; }
 
     void LayoutToSquares();
 
@@ -124,7 +136,8 @@ public:
 
 private:
     Building *mBuilding;
-    QVector<QVector<int> > mGrid;
+    QVector<QVector<Room*> > mRoomAtPos;
+    QVector<QVector<int> > mIndexAtPos;
     int mLevel;
     QList<BaseMapObject*> mObjects;
 };

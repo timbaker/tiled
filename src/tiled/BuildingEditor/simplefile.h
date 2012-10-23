@@ -24,6 +24,18 @@
 class SimpleFileKeyValue
 {
 public:
+    SimpleFileKeyValue()
+    {
+
+    }
+
+    SimpleFileKeyValue(const QString &name, const QString &value) :
+        name(name),
+        value(value)
+    {
+
+    }
+
     QString name;
     QString value;
 };
@@ -56,8 +68,33 @@ public:
 
     bool read(const QString &filePath);
 
+    bool write(const QString &filePath);
+
 private:
     SimpleFileBlock readBlock(QTextStream &ts);
+    void writeBlock(QTextStream &ts, const SimpleFileBlock &block);
+
+    class INDENT
+    {
+    public:
+        INDENT(int &depth) :
+            mDepth(depth)
+        {
+            ++mDepth;
+        }
+        ~INDENT()
+        {
+            --mDepth;
+        }
+
+        QString text() const
+        { return QString(QLatin1Char(' ')).repeated(mDepth * 4); }
+
+    private:
+        int &mDepth;
+    };
+
+    int mIndent;
 };
 
 #endif // SIMPLEFILE_H

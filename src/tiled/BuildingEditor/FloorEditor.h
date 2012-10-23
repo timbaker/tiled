@@ -138,7 +138,6 @@ public:
 
     void ProcessMove(int x, int y);
 
-    void activateTool(BaseTool *tool);
     QPoint sceneToTile(const QPointF &scenePos);
     QPointF sceneToTileF(const QPointF &scenePos);
     QRect sceneToTileRect(const QRectF &sceneRect);
@@ -151,13 +150,19 @@ public:
 
     QSet<BaseMapObject*> objectsInRect(const QRectF &sceneRect);
 
+    BaseMapObject *topmostObjectAt(const QPointF &scenePos);
+
 signals:
     void documentChanged();
 
 private slots:
+    void currentToolChanged(BaseTool *tool);
+
     void currentFloorChanged();
     void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
+
     void floorAdded(BuildingFloor *floor);
+    void floorEdited(BuildingFloor *floor);
 
     void objectAdded(BaseMapObject *object);
     void objectAboutToBeRemoved(BaseMapObject *object);
@@ -165,6 +170,9 @@ private slots:
     void selectedObjectsChanged();
 
     void roomChanged(Room *room);
+    void roomAdded(Room *room);
+    void roomRemoved(Room *room);
+    void roomsReordered();
 
 private:
     BuildingDocument *mDocument;

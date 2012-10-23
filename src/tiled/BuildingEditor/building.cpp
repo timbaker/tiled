@@ -19,6 +19,7 @@
 
 #include "buildingfloor.h"
 #include "buildingtemplates.h"
+#include "buildingtiles.h"
 
 using namespace BuildingEditor;
 
@@ -34,6 +35,12 @@ Building::Building(int width, int height, BuildingTemplate *btemplate) :
         mStairsTile = btemplate->StairsTile;
         foreach (Room *room, btemplate->RoomList)
             insertRoom(mRooms.count(), new Room(room));
+    } else {
+        mExteriorWall = BuildingTiles::instance()->defaultExteriorWall();
+        mDoorTile = BuildingTiles::instance()->defaultDoorTile();
+        mDoorFrameTile = BuildingTiles::instance()->defaultDoorFrameTile();
+        mWindowTile = BuildingTiles::instance()->defaultWindowTile();
+        mStairsTile = BuildingTiles::instance()->defaultStairsTile();
     }
 }
 

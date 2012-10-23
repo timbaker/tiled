@@ -21,8 +21,8 @@
 #include "building.h"
 #include "buildingdocument.h"
 #include "buildingfloor.h"
-#include "buildingeditorwindow.h"
 #include "buildingobjects.h"
+#include "buildingtiles.h"
 
 #include "mapcomposite.h"
 #include "mapmanager.h"
@@ -261,12 +261,18 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
 
     connect(mDocument, SIGNAL(currentFloorChanged()),
             SLOT(currentFloorChanged()));
+
     connect(mDocument, SIGNAL(roomAtPositionChanged(BuildingFloor*,QPoint)),
             SLOT(roomAtPositionChanged(BuildingFloor*,QPoint)));
+
     connect(mDocument, SIGNAL(roomDefinitionChanged()),
             SLOT(roomDefinitionChanged()));
+
     connect(mDocument, SIGNAL(floorAdded(BuildingFloor*)),
             SLOT(floorAdded(BuildingFloor*)));
+    connect(mDocument, SIGNAL(floorEdited(BuildingFloor*)),
+            SLOT(floorEdited(BuildingFloor*)));
+
     connect(mDocument, SIGNAL(objectAdded(BaseMapObject*)),
             SLOT(objectAdded(BaseMapObject*)));
     connect(mDocument, SIGNAL(objectRemoved(BuildingFloor*,int)),
@@ -275,6 +281,10 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
             SLOT(objectMoved(BaseMapObject*)));
     connect(mDocument, SIGNAL(objectTileChanged(BaseMapObject*)),
             SLOT(objectTileChanged(BaseMapObject*)));
+
+    connect(mDocument, SIGNAL(roomAdded(Room*)), SLOT(roomAdded(Room*)));
+    connect(mDocument, SIGNAL(roomRemoved(Room*)), SLOT(roomRemoved(Room*)));
+    connect(mDocument, SIGNAL(roomChanged(Room*)), SLOT(roomChanged(Room*)));
 }
 
 void BuildingPreviewScene::clearDocument()
@@ -302,12 +312,9 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
         for (int x = 0; x < floor->width(); x++) {
             for (int y = 0; y < floor->height(); y++) {
                 if (index == LayerIndexFloor) {
-                    bool bAboveStep = floor->level() ? floor->floorBelow()->IsTopStairAt(x, y) : false;
-                    if (!bAboveStep) {
-                        BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionFloor];
-                        if (tile)
-                            tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
-                    }
+                    BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionFloor];
+                    if (tile)
+                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
                 }
                 if (index == LayerIndexWall) {
                     BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionWall];
@@ -365,6 +372,23 @@ void BuildingPreviewScene::roomDefinitionChanged()
         floorEdited(floor);
 }
 
+void BuildingPreviewScene::roomAdded(Room *room)
+{
+    foreach (BuildingFloor *floor, mDocument->building()->floors())
+        floorEdited(floor);
+}
+
+void BuildingPreviewScene::roomRemoved(Room *room)
+{
+    foreach (BuildingFloor *floor, mDocument->building()->floors())
+        floorEdited(floor);
+}
+
+void BuildingPreviewScene::roomChanged(Room *room)
+{
+    roomDefinitionChanged();
+}
+
 void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
 {
     int x = floor->level() * -3, y = floor->level() * -3; // FIXME: not for LevelIsometric
@@ -403,18 +427,32 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
 
 void BuildingPreviewScene::objectAdded(BaseMapObject *object)
 {
-    floorEdited(object->floor());
+    BuildingFloor *floor = object->floor();
+    floorEdited(floor);
+
+    // Stairs affect the floor tiles on the floor above
+    if (dynamic_cast<Stairs*>(object) && (floor = floor->floorAbove()))
+        floorEdited(floor);
 }
 
 void BuildingPreviewScene::objectRemoved(BuildingFloor *floor, int index)
 {
     Q_UNUSED(index)
     floorEdited(floor);
+
+    // Stairs affect the floor tiles on the floor above
+    if (floor = floor->floorAbove())
+        floorEdited(floor);
 }
 
 void BuildingPreviewScene::objectMoved(BaseMapObject *object)
 {
-    floorEdited(object->floor());
+    BuildingFloor *floor = object->floor();
+    floorEdited(floor);
+
+    // Stairs affect the floor tiles on the floor above
+    if (dynamic_cast<Stairs*>(object) && (floor = floor->floorAbove()))
+        floorEdited(floor);
 }
 
 void BuildingPreviewScene::objectTileChanged(BuildingEditor::BaseMapObject *object)

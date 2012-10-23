@@ -58,14 +58,20 @@ void TileDelegate::paint(QPainter *painter,
 
     QString tilesetName = m->headerAt(index);
     if (!tilesetName.isEmpty()) {
+        if (index.row() > 0) {
+            painter->setPen(Qt::darkGray);
+            painter->drawLine(option.rect.topLeft(), option.rect.topRight());
+            painter->setPen(Qt::black);
+        }
+        // One slice of the tileset name is drawn in each column.
         if (index.column() == 0)
-            painter->drawText(option.rect.adjusted(2, 0, 0, 0), tilesetName);
+            painter->drawText(option.rect.adjusted(2, 2, 0, 0), tilesetName);
         else {
-            QRect r = option.rect.adjusted(index.column() * option.rect.width(),
+            QRect r = option.rect.adjusted(-index.column() * option.rect.width(),
                                            0, 0, 0);
             painter->save();
             painter->setClipRect(option.rect);
-            painter->drawText(r.adjusted(2, 0, 0, 0), tilesetName);
+            painter->drawText(r.adjusted(2, 2, 0, 0), tilesetName);
             painter->restore();
         }
         return;
@@ -134,7 +140,7 @@ QSize TileDelegate::sizeHint(const QStyleOptionViewItem & option,
     const qreal zoom = mView->zoomable()->scale();
     const int extra = 4;
     if (m->headerAt(index).length())
-        return QSize(64 * zoom + extra, option.fontMetrics.lineSpacing());
+        return QSize(64 * zoom + extra, option.fontMetrics.lineSpacing() + 2);
     if (!m->tileAt(index))
         return QSize(64 * zoom + extra, 128 * zoom + extra);
     const Tileset *tileset = m->tileAt(index)->tileset();
@@ -276,6 +282,8 @@ QModelIndex MixedTilesetModel::index(int row, int column, const QModelIndex &par
         return QModelIndex();
 
     Item *item = mItems.at(row * columnCount() + column);
+    if (!item->mTile && item->mTilesetName.isEmpty())
+        return QModelIndex();
     return createIndex(row, column, item);
 }
 

@@ -55,6 +55,9 @@ public:
     QPoint pos() const
     { return QPoint(mX, mY); }
 
+    int x() const { return mX; }
+    int y() const { return mY; }
+
     void setDir(Direction dir)
     { mDir = dir; }
 

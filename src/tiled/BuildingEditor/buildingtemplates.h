@@ -89,42 +89,38 @@ public:
             RoomList += new Room(room);
     }
 
-    static QList<BuildingTemplate*> mTemplates;
-    static QMap<QString,BuildingTemplate*> DefinitionMap;
+    ~BuildingTemplate()
+    {
+        qDeleteAll(RoomList);
+    }
 };
 
-#if 0
-class RoomDefinitionManager
+class BuildingTemplates
 {
 public:
-    static RoomDefinitionManager *instance;
+    static BuildingTemplates *instance();
+    static void deleteInstance();
 
-    BuildingTemplate *mBuildingDefinition;
-    QMap<QRgb,Room*> ColorToRoom;
-    QMap<Room*,QRgb> RoomToColor;
+    BuildingTemplates();
+    ~BuildingTemplates();
 
-    QString ExteriorWall;
-    QString mDoorTile;
-    QString mDoorFrameTile;
-    QString mWindowTile;
-    QString mStairsTile;
+    void addTemplate(BuildingTemplate *btemplate);
 
-    void Add(QString roomName, QRgb col, QString wall, QString floor);
+    void replaceTemplates(const QList<BuildingTemplate *> &templates);
 
-    void Init(BuildingTemplate *definition);
+    int templateCount() const
+    { return mTemplates.count(); }
 
-    void Init();
+    const QList<BuildingTemplate*> &templates() const
+    { return mTemplates; }
 
-    QStringList FillCombo();
+    BuildingTemplate *templateAt(int index) const
+    { return mTemplates.at(index); }
 
-    int GetIndex(QRgb col);
-    int GetIndex(Room *room);
-    Room *getRoom(int index);
-    int getRoomCount();
-
-    int getFromColor(QRgb pixel);
+private:
+    static BuildingTemplates *mInstance;
+    QList<BuildingTemplate*> mTemplates;
 };
-#endif
 
 } // namespace BuildingEditor
 

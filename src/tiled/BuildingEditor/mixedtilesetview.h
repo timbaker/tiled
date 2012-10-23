@@ -62,7 +62,9 @@ public:
 
 
 private:
-    struct Item {
+    class Item
+    {
+    public:
         Item() :
             mTile(0)
         {

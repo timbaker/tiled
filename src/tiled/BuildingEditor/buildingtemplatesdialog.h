@@ -36,10 +36,17 @@ class BuildingTemplatesDialog : public QDialog
 public:
     explicit BuildingTemplatesDialog(QWidget *parent = 0);
     ~BuildingTemplatesDialog();
+
+    const QList<BuildingTemplate*> &templates() const
+    { return mTemplates; }
     
 private slots:
     void templateSelectionChanged();
     void tileSelectionChanged();
+    void addTemplate();
+    void removeTemplate();
+    void duplicateTemplate();
+    void nameEdited(const QString &name);
     void editRooms();
     void chooseTile();
     void synchUI();

@@ -51,12 +51,15 @@ public:
     QAction *action() const
     { return mAction; }
 
+    void setEnabled(bool enabled);
+
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) = 0;
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) = 0;
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) = 0;
 
 public slots:
-    virtual void documentChanged() {};
+    void makeCurrent();
+    virtual void documentChanged() {}
     virtual void activate() = 0;
     virtual void deactivate() = 0;
 
@@ -64,6 +67,32 @@ protected:
     FloorEditor *mEditor;
     QAction *mAction;
 };
+
+/////
+
+class ToolManager : public QObject
+{
+    Q_OBJECT
+public:
+    static ToolManager *instance();
+
+    ToolManager();
+
+    void addTool(BaseTool *tool);
+    void activateTool(BaseTool *tool);
+
+    void toolEnabledChanged(BaseTool *tool, bool enabled);
+
+signals:
+    void currentToolChanged(BaseTool *tool);
+
+private:
+    static ToolManager *mInstance;
+    QList<BaseTool*> mTools;
+    BaseTool *mCurrentTool;
+};
+
+/////
 
 class PencilTool : public BaseTool
 {
@@ -238,8 +267,6 @@ private:
                            Qt::KeyboardModifiers modifiers);
     void finishMoving(const QPointF &pos);
     void cancelMoving();
-
-    BaseMapObject *topmostObjectAt(const QPointF &scenePos);
 
     static SelectMoveObjectTool *mInstance;
 

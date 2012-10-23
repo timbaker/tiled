@@ -1,113 +1,138 @@
 category
 {
-	label = Exterior Walls
-	name = exterior_walls
-	tiles
-	{
-		tile = walls_exterior_house_01_0
-		tile = walls_exterior_house_01_4
-		tile = walls_exterior_house_01_16
-		tile = walls_exterior_house_01_20
-		tile = walls_exterior_house_01_48
-	}
+    label = Exterior Walls
+    name = exterior_walls
+    tiles
+    {
+        tile = walls_exterior_house_01_000
+        tile = walls_exterior_house_01_004
+        tile = walls_exterior_house_01_016
+        tile = walls_exterior_house_01_020
+        tile = walls_exterior_house_01_032
+        tile = walls_exterior_house_01_048
+        tile = walls_exterior_wooden_01_000
+        tile = walls_exterior_wooden_01_024
+    }
 }
-
 category
 {
-	label = Interior Walls
-	name = interior_walls
-	tiles
-	{
-		tile = walls_interior_house_01_0
-		tile = walls_interior_house_01_4
-		tile = walls_interior_house_01_16
-		tile = walls_interior_house_01_20
-		tile = walls_interior_house_01_32
-		tile = walls_interior_house_01_36
-		tile = walls_interior_house_01_48
-		tile = walls_interior_house_01_52
-
-		tile = walls_interior_house_02_0
-		tile = walls_interior_house_02_4
-		tile = walls_interior_house_02_16
-		tile = walls_interior_house_02_20
-		tile = walls_interior_house_02_32
-		tile = walls_interior_house_02_36
-		tile = walls_interior_house_02_48
-		tile = walls_interior_house_02_52
-	}
+    label = Interior Walls
+    name = interior_walls
+    tiles
+    {
+        tile = location_hospitality_sunstarmotel_01_000
+        tile = location_hospitality_sunstarmotel_01_004
+        tile = walls_interior_bathroom_01_000
+        tile = walls_interior_bathroom_01_004
+        tile = walls_interior_bathroom_01_016
+        tile = walls_interior_house_01_000
+        tile = walls_interior_house_01_004
+        tile = walls_interior_house_01_016
+        tile = walls_interior_house_01_020
+        tile = walls_interior_house_01_032
+        tile = walls_interior_house_01_036
+        tile = walls_interior_house_01_048
+        tile = walls_interior_house_01_052
+        tile = walls_interior_house_02_000
+        tile = walls_interior_house_02_004
+        tile = walls_interior_house_02_016
+        tile = walls_interior_house_02_020
+        tile = walls_interior_house_02_032
+        tile = walls_interior_house_02_036
+        tile = walls_interior_house_02_048
+        tile = walls_interior_house_02_052
+    }
 }
-
 category
 {
-	label = Floors
-	name = floors
-	range
-	{
-		tileset = floors_interior_carpet_01
-		start = 0
-		offset = 1
-		count = 11
-	}
-	range
-	{
-		tileset = floors_interior_tilesandwood_01
-		start = 0
-		offset = 1
-		count = 11
-	}
+    label = Floors
+    name = floors
+    tiles
+    {
+        tile = floors_interior_carpet_01_000
+        tile = floors_interior_carpet_01_001
+        tile = floors_interior_carpet_01_002
+        tile = floors_interior_carpet_01_003
+        tile = floors_interior_carpet_01_004
+        tile = floors_interior_carpet_01_005
+        tile = floors_interior_carpet_01_006
+        tile = floors_interior_carpet_01_007
+        tile = floors_interior_carpet_01_008
+        tile = floors_interior_carpet_01_009
+        tile = floors_interior_carpet_01_010
+        tile = floors_interior_tilesandwood_01_000
+        tile = floors_interior_tilesandwood_01_001
+        tile = floors_interior_tilesandwood_01_002
+        tile = floors_interior_tilesandwood_01_003
+        tile = floors_interior_tilesandwood_01_004
+        tile = floors_interior_tilesandwood_01_005
+        tile = floors_interior_tilesandwood_01_006
+        tile = floors_interior_tilesandwood_01_007
+        tile = floors_interior_tilesandwood_01_008
+        tile = floors_interior_tilesandwood_01_009
+        tile = floors_interior_tilesandwood_01_010
+        tile = floors_interior_tilesandwood_01_043
+    }
 }
-
 category
 {
-	label = Doors
-	name = doors
-	range
-	{
-		tileset = fixtures_doors_01
-		start = 0
-		offset = 4
-		count = all
-	}
+    label = Doors
+    name = doors
+    tiles
+    {
+        tile = fixtures_doors_01_000
+        tile = fixtures_doors_01_004
+        tile = fixtures_doors_01_008
+        tile = fixtures_doors_01_012
+        tile = fixtures_doors_01_016
+        tile = fixtures_doors_01_020
+        tile = fixtures_doors_01_021
+        tile = fixtures_doors_01_024
+        tile = fixtures_doors_01_028
+        tile = fixtures_doors_01_032
+        tile = fixtures_doors_01_036
+        tile = fixtures_doors_01_040
+        tile = fixtures_doors_01_044
+        tile = fixtures_doors_01_048
+        tile = fixtures_doors_01_052
+    }
 }
-		
 category
 {
-	label = Door Frames
-	name = door_frames
-	range
-	{
-		tileset = fixtures_doors_frames_01
-		start = 0
-		offset = 2
-		count = all
-	}
+    label = Door Frames
+    name = door_frames
+    tiles
+    {
+        tile = fixtures_doors_frames_01_000
+        tile = fixtures_doors_frames_01_002
+        tile = fixtures_doors_frames_01_004
+        tile = fixtures_doors_frames_01_005
+    }
 }
-		
 category
 {
-	label = Windows
-	name = windows
-	range
-	{
-		tileset = fixtures_windows_01
-		start = 0
-		offset = 8
-		count = 40
-	}
+    label = Windows
+    name = windows
+    tiles
+    {
+        tile = fixtures_windows_01_000
+        tile = fixtures_windows_01_008
+        tile = fixtures_windows_01_016
+        tile = fixtures_windows_01_024
+        tile = fixtures_windows_01_032
+        tile = fixtures_windows_01_033
+    }
 }
-
 category
 {
-	label = Stairs
-	name = stairs
-	tiles
-	{
-		tile = fixtures_stairs_01_0
-		tile = fixtures_stairs_01_16
-		tile = fixtures_stairs_01_19
-		tile = fixtures_stairs_01_32
-	}
+    label = Stairs
+    name = stairs
+    tiles
+    {
+        tile = fixtures_stairs_01_000
+        tile = fixtures_stairs_01_016
+        tile = fixtures_stairs_01_019
+        tile = fixtures_stairs_01_032
+        tile = location_hospitality_sunstarmotel_01_040
+    }
 }
-
-

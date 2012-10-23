@@ -61,6 +61,20 @@ bool SimpleFile::read(const QString &filePath)
     return true;
 }
 
+bool SimpleFile::write(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        return false;
+    }
+
+    QTextStream ts(&file);
+    mIndent = -1;
+    writeBlock(ts, *this);
+
+    return true;
+}
+
 SimpleFileBlock SimpleFile::readBlock(QTextStream &ts)
 {
     SimpleFileBlock block;
@@ -87,6 +101,19 @@ SimpleFileBlock SimpleFile::readBlock(QTextStream &ts)
             buf += line.trimmed();
     }
     return block;
+}
+
+void SimpleFile::writeBlock(QTextStream &ts, const SimpleFileBlock &block)
+{
+    INDENT indent(mIndent);
+    foreach (SimpleFileKeyValue kv, block.values) {
+        ts << indent.text() << kv.name << " = " << kv.value << "\n";
+    }
+    foreach (SimpleFileBlock child, block.blocks) {
+        ts << indent.text() << child.name << "\n" << indent.text() << "{\n";
+        writeBlock(ts, child);
+        ts << indent.text() << "}\n";
+    }
 }
 
 /////

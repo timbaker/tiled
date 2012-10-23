@@ -15,69 +15,50 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "buildingeditorwindow.h"
 #include "buildingtemplates.h"
+
+#include "buildingeditorwindow.h"
 
 using namespace BuildingEditor;
 
 /////
 
-QList<BuildingTemplate*> BuildingTemplate::mTemplates;
-QMap<QString,BuildingTemplate*> BuildingTemplate::DefinitionMap;
+BuildingTemplates *BuildingTemplates::mInstance = 0;
+
+BuildingTemplates *BuildingTemplates::instance()
+{
+    if (!mInstance)
+        mInstance = new BuildingTemplates;
+    return mInstance;
+}
+
+void BuildingTemplates::deleteInstance()
+{
+    delete mInstance;
+    mInstance = 0;
+}
+
+BuildingTemplates::BuildingTemplates()
+{
+}
+
+BuildingTemplates::~BuildingTemplates()
+{
+    qDeleteAll(mTemplates);
+}
+
+void BuildingTemplates::addTemplate(BuildingTemplate *btemplate)
+{
+    mTemplates += btemplate;
+}
+
+void BuildingTemplates::replaceTemplates(const QList<BuildingTemplate *> &templates)
+{
+    qDeleteAll(mTemplates);
+    mTemplates.clear();
+    foreach (BuildingTemplate *btemplate, templates)
+        mTemplates += new BuildingTemplate(btemplate);
+}
 
 /////
 
-#if 0
-
-RoomDefinitionManager *RoomDefinitionManager::instance = new RoomDefinitionManager;
-
-
-void RoomDefinitionManager::Init(BuildingTemplate *definition)
-{
-    mBuildingDefinition = definition;
-    ColorToRoom.clear();
-    RoomToColor.clear();
-
-    ExteriorWall = definition->Wall;
-    mDoorTile = QLatin1String("fixtures_doors_01_0");
-    mDoorFrameTile = QLatin1String("fixtures_doors_frames_01_0");
-    mWindowTile = QLatin1String("fixtures_windows_01_0");
-    mStairsTile = QLatin1String("fixtures_stairs_01_0");
-
-    foreach (Room *room, definition->RoomList) {
-        ColorToRoom[room->Color] = room;
-        RoomToColor[room] = room->Color;
-    }
-}
-
-QStringList RoomDefinitionManager::FillCombo()
-{
-    QStringList roomNames;
-    foreach (Room *room, mBuildingDefinition->RoomList)
-        roomNames += room->Name;
-    return roomNames;
-}
-
-int RoomDefinitionManager::GetIndex(QRgb col)
-{
-    return mBuildingDefinition->RoomList.indexOf(ColorToRoom[col]);
-}
-
-int RoomDefinitionManager::GetIndex(Room *room)
-{
-    return mBuildingDefinition->RoomList.indexOf(room);
-}
-
-Room *RoomDefinitionManager::getRoom(int index)
-{
-    if (index < 0)
-        return 0;
-    return mBuildingDefinition->RoomList.at(index);
-}
-
-int RoomDefinitionManager::getRoomCount()
-{
-    return mBuildingDefinition->RoomList.count();
-}
-
-#endif

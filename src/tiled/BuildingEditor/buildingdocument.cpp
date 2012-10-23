@@ -163,3 +163,12 @@ Room *BuildingDocument::changeRoom(Room *room, const Room *data)
     delete data;
     return old;
 }
+
+QVector<QVector<Room*> > BuildingDocument::swapFloorGrid(BuildingFloor *floor,
+                                                         const QVector<QVector<Room*> > &grid)
+{
+    QVector<QVector<Room*> > old = floor->grid();
+    floor->setGrid(grid);
+    emit floorEdited(floor);
+    return old;
+}

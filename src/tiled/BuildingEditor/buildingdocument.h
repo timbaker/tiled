@@ -72,13 +72,20 @@ public:
     Room *removeRoom(int index);
     int reorderRoom(int index, Room *room);
     Room *changeRoom(Room *room, const Room *data);
+
+    QVector<QVector<Room *> > swapFloorGrid(BuildingFloor *floor,
+                                            const QVector<QVector<Room *> > &grid);
     // -UNDO/REDO
     
 signals:
     void currentFloorChanged();
+
     void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
     void roomDefinitionChanged();
+
     void floorAdded(BuildingFloor *floor);
+    void floorEdited(BuildingFloor *floor);
+
     void objectAdded(BaseMapObject *object);
     void objectAboutToBeRemoved(BaseMapObject *object);
     void objectRemoved(BuildingFloor *floor, int index);

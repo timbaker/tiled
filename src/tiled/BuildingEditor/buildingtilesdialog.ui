@@ -18,7 +18,7 @@
     <widget class="QToolBox" name="toolBox">
      <property name="maximumSize">
       <size>
-       <width>300</width>
+       <width>332</width>
        <height>16777215</height>
       </size>
      </property>
@@ -70,6 +70,9 @@
      </item>
      <item>
       <widget class="QToolButton" name="addTiles">
+       <property name="toolTip">
+        <string>Add selected tiles to category</string>
+       </property>
        <property name="text">
         <string>&lt;&lt;&lt;</string>
        </property>
@@ -81,6 +84,9 @@
      </item>
      <item>
       <widget class="QToolButton" name="removeTiles">
+       <property name="toolTip">
+        <string>Remove selected tiles from category</string>
+       </property>
        <property name="text">
         <string>&gt;&gt;&gt;</string>
        </property>
@@ -128,7 +134,7 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>

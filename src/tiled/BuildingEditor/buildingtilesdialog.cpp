@@ -18,7 +18,7 @@
 #include "buildingtilesdialog.h"
 #include "ui_buildingtilesdialog.h"
 
-#include "buildingeditorwindow.h"
+#include "buildingtiles.h"
 
 #include "zoomable.h"
 

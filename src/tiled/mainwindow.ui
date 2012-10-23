@@ -450,6 +450,10 @@
    </property>
   </action>
   <action name="actionBuildingEditor">
+   <property name="icon">
+    <iconset resource="BuildingEditor/buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_pencil.png</normaloff>:/BuildingEditor/icons/icon_pencil.png</iconset>
+   </property>
    <property name="text">
     <string>Building Editor</string>
    </property>
@@ -458,6 +462,7 @@
  <layoutdefault spacing="6" margin="11"/>
  <resources>
   <include location="tiled.qrc"/>
+  <include location="BuildingEditor/buildingeditor.qrc"/>
  </resources>
  <connections/>
 </ui>

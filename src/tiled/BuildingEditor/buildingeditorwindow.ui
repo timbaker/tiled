@@ -96,6 +96,8 @@
     <addaction name="actionRooms"/>
     <addaction name="actionTemplates"/>
     <addaction name="actionTiles"/>
+    <addaction name="separator"/>
+    <addaction name="actionTemplateFromBuilding"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -367,6 +369,11 @@
   <action name="actionTiles">
    <property name="text">
     <string>Tiles...</string>
+   </property>
+  </action>
+  <action name="actionTemplateFromBuilding">
+   <property name="text">
+    <string>Template From Building...</string>
    </property>
   </action>
  </widget>

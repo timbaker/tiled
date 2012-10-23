@@ -29,7 +29,8 @@ NewBuildingDialog::NewBuildingDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    foreach (BuildingTemplate *def, BuildingTemplate::mTemplates)
+    ui->comboBox->addItem(QLatin1String("<None>"));
+    foreach (BuildingTemplate *def, BuildingTemplates::instance()->templates())
         ui->comboBox->addItem(def->Name);
 }
 
@@ -50,7 +51,8 @@ int NewBuildingDialog::buildingHeight() const
 
 BuildingTemplate *NewBuildingDialog::buildingTemplate() const
 {
-    return BuildingTemplate::mTemplates.at(ui->comboBox->currentIndex());
+    int index = ui->comboBox->currentIndex();
+    return index ? BuildingTemplates::instance()->templateAt(index - 1) : 0;
 }
 
 void NewBuildingDialog::accept()

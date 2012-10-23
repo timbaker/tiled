@@ -19,6 +19,8 @@
 #include "ui_choosebuildingtiledialog.h"
 
 #include "buildingeditorwindow.h"
+#include "buildingtiles.h"
+#include "buildingtilesdialog.h"
 
 #include "zoomable.h"
 
@@ -27,38 +29,26 @@
 using namespace BuildingEditor;
 using namespace Tiled::Internal;
 
-ChooseBuildingTileDialog::ChooseBuildingTileDialog(const QString &categoryName,
-                                                   BuildingTile *initialTile,
-                                                   QWidget *parent) :
+ChooseBuildingTileDialog::ChooseBuildingTileDialog(const QString &prompt,
+                                                   const QString &categoryName,
+                                                   BuildingTile *initialTile, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ChooseBuildingTileDialog),
+    mCategoryName(categoryName),
     mZoomable(new Zoomable(this))
 {
     ui->setupUi(this);
 
-    Tiled::Tile *tile = 0;
+    ui->prompt->setText(prompt);
 
-    MixedTilesetView *v = ui->tableView;
-    BuildingTiles::Category *category = BuildingTiles::instance()->category(categoryName);
-    foreach (BuildingTile *btile, category->tiles()) {
-        if (!btile->mAlternates.count() || (btile == btile->mAlternates.first())) {
-            mTiles += BuildingTiles::instance()->tileFor(btile);
-            mBuildingTiles += btile;
-            if (btile == initialTile)
-                tile = mTiles.last();
-        }
-    }
-    v->model()->setTiles(mTiles);
-
-    v->setZoomable(mZoomable);
+    ui->tableView->setZoomable(mZoomable);
     mZoomable->setScale(QSettings().value(QLatin1String("BuildingEditor/MainWindow/CategoryScale"), 0.5).toReal());
 
-    if (tile != 0)
-        v->setCurrentIndex(v->model()->index(tile));
-    else
-        v->setCurrentIndex(v->model()->index(0, 0));
+    connect(ui->tilesButton, SIGNAL(clicked()), SLOT(tilesDialog()));
 
-    connect(v, SIGNAL(activated(QModelIndex)), SLOT(accept()));
+    setTilesList(mCategoryName, initialTile);
+
+    connect(ui->tableView, SIGNAL(activated(QModelIndex)), SLOT(accept()));
 }
 
 ChooseBuildingTileDialog::~ChooseBuildingTileDialog()
@@ -75,6 +65,41 @@ BuildingTile *ChooseBuildingTileDialog::selectedTile() const
         return mBuildingTiles.at(mTiles.indexOf(tile));
     }
     return 0;
+}
+
+void ChooseBuildingTileDialog::setTilesList(const QString &categoryName,
+                                            BuildingTile *initialTile)
+{
+    Tiled::Tile *tile = 0;
+
+    mTiles.clear();
+
+    MixedTilesetView *v = ui->tableView;
+    BuildingTiles::Category *category = BuildingTiles::instance()->category(categoryName);
+    foreach (BuildingTile *btile, category->tiles()) {
+        if (!btile->mAlternates.count() || (btile == btile->mAlternates.first())) {
+            mTiles += BuildingTiles::instance()->tileFor(btile);
+            mBuildingTiles += btile;
+            if (btile == initialTile)
+                tile = mTiles.last();
+        }
+    }
+    v->model()->setTiles(mTiles);
+
+    if (tile != 0)
+        v->setCurrentIndex(v->model()->index(tile));
+    else
+        v->setCurrentIndex(v->model()->index(0, 0));
+}
+
+void ChooseBuildingTileDialog::tilesDialog()
+{
+    BuildingTilesDialog dialog(this);
+    dialog.exec();
+
+    BuildingTiles::instance()->writeBuildingTilesTxt();
+
+    setTilesList(mCategoryName);
 }
 
 void ChooseBuildingTileDialog::accept()

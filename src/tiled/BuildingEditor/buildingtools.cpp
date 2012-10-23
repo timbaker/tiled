@@ -23,9 +23,11 @@
 #include "buildingfloor.h"
 #include "buildingobjects.h"
 #include "buildingtemplates.h"
+#include "buildingtiles.h"
 #include "buildingundoredo.h"
 #include "FloorEditor.h"
 
+#include <QAction>
 #include <QApplication>
 #include <QDebug>
 #include <QGraphicsRectItem>
@@ -41,6 +43,7 @@ BaseTool::BaseTool() :
     QObject(0),
     mEditor(0)
 {
+    ToolManager::instance()->addTool(this);
 }
 
 void BaseTool::setEditor(FloorEditor *editor)
@@ -49,6 +52,73 @@ void BaseTool::setEditor(FloorEditor *editor)
 
     connect(mEditor, SIGNAL(documentChanged()), SLOT(documentChanged()));
 }
+
+void BaseTool::setEnabled(bool enabled)
+{
+    if (enabled != mAction->isEnabled()) {
+        mAction->setEnabled(enabled);
+        ToolManager::instance()->toolEnabledChanged(this, enabled);
+    }
+}
+
+void BaseTool::makeCurrent()
+{
+    ToolManager::instance()->activateTool(this);
+}
+
+/////
+
+ToolManager *ToolManager::mInstance = 0;
+
+ToolManager *ToolManager::instance()
+{
+    if (!mInstance)
+        mInstance = new ToolManager;
+    return mInstance;
+}
+
+ToolManager::ToolManager() :
+    QObject(),
+    mCurrentTool(0)
+{
+}
+
+void ToolManager::addTool(BaseTool *tool)
+{
+    mTools += tool;
+}
+
+void ToolManager::activateTool(BaseTool *tool)
+{
+    if (mCurrentTool) {
+        mCurrentTool->deactivate();
+        mCurrentTool->action()->setChecked(false);
+    }
+
+    mCurrentTool = tool;
+
+    if (mCurrentTool) {
+        mCurrentTool->activate();
+        mCurrentTool->action()->setChecked(true);
+    }
+
+    emit currentToolChanged(mCurrentTool);
+}
+
+void ToolManager::toolEnabledChanged(BaseTool *tool, bool enabled)
+{
+    if (!enabled && tool == mCurrentTool) {
+        foreach (BaseTool *tool2, mTools) {
+            if (tool2 != tool && tool2->action()->isEnabled()) {
+                activateTool(tool2);
+                return;
+            }
+        }
+        mCurrentTool = 0;
+        emit currentToolChanged(mCurrentTool);
+    }
+}
+
 
 /////
 
@@ -127,7 +197,6 @@ void PencilTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void PencilTool::activate()
 {
-    mEditor->activateTool(this);
     updateCursor(QPointF(-100,-100));
     mEditor->addItem(mCursor);
 }
@@ -214,7 +283,6 @@ void EraserTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void EraserTool::activate()
 {
-    mEditor->activateTool(this);
     updateCursor(QPointF(-100,-100));
     mEditor->addItem(mCursor);
 }
@@ -254,7 +322,15 @@ void BaseObjectTool::documentChanged()
 
 void BaseObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    Q_UNUSED(event)
+    if (event->button() != Qt::RightButton)
+        return;
+
+    if (BaseMapObject *object = mEditor->topmostObjectAt(event->scenePos())) {
+        BuildingFloor *floor = mEditor->document()->currentFloor();
+        mEditor->document()->undoStack()->push(new RemoveObject(mEditor->document(),
+                                                                floor,
+                                                                floor->indexOf(object)));
+    }
 }
 
 void BaseObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
@@ -287,7 +363,6 @@ void BaseObjectTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void BaseObjectTool::activate()
 {
-    mEditor->activateTool(this);
 }
 
 void BaseObjectTool::deactivate()
@@ -328,6 +403,12 @@ DoorTool::DoorTool() :
 void DoorTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_UNUSED(event)
+
+    // Right-click to delete objects.
+    if (event->button() == Qt::RightButton) {
+        BaseObjectTool::mousePressEvent(event);
+        return;
+    }
 
     if (event->button() != Qt::LeftButton)
         return;
@@ -417,6 +498,12 @@ void WindowTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_UNUSED(event)
 
+    // Right-click to delete objects.
+    if (event->button() == Qt::RightButton) {
+        BaseObjectTool::mousePressEvent(event);
+        return;
+    }
+
     if (event->button() != Qt::LeftButton)
         return;
 
@@ -501,6 +588,12 @@ StairsTool::StairsTool() :
 void StairsTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_UNUSED(event)
+
+    // Right-click to delete objects.
+    if (event->button() == Qt::RightButton) {
+        BaseObjectTool::mousePressEvent(event);
+        return;
+    }
 
     if (event->button() != Qt::LeftButton)
         return;
@@ -593,7 +686,7 @@ void SelectMoveObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             return;
         mMouseDown = true;
         mStartScenePos = event->scenePos();
-        mClickedObject = topmostObjectAt(mStartScenePos);
+        mClickedObject = mEditor->topmostObjectAt(mStartScenePos);
     }
     if (event->button() == Qt::RightButton) {
         if (mMode == Moving)
@@ -678,7 +771,6 @@ void SelectMoveObjectTool::documentChanged()
 
 void SelectMoveObjectTool::activate()
 {
-    mEditor->activateTool(this);
 }
 
 void SelectMoveObjectTool::deactivate()
@@ -785,17 +877,6 @@ void SelectMoveObjectTool::cancelMoving()
     mMovingObjects.clear();
 
     mMode = CancelMoving;
-}
-
-BaseMapObject *SelectMoveObjectTool::topmostObjectAt(const QPointF &scenePos)
-{
-    foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
-        if (GraphicsObjectItem *objectItem = dynamic_cast<GraphicsObjectItem*>(item)) {
-            if (objectItem->object()->floor() == mEditor->document()->currentFloor())
-                return objectItem->object();
-        }
-    }
-    return 0;
 }
 
 /////

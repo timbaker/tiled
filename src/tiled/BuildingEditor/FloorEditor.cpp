@@ -241,6 +241,8 @@ FloorEditor::FloorEditor(QWidget *parent) :
 {
     setBackgroundBrush(Qt::black);
 
+    connect(ToolManager::instance(), SIGNAL(currentToolChanged(BaseTool*)),
+            SLOT(currentToolChanged(BaseTool*)));
 }
 
 void FloorEditor::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -289,10 +291,15 @@ void FloorEditor::setDocument(BuildingDocument *doc)
 
         connect(mDocument, SIGNAL(currentFloorChanged()),
                 SLOT(currentFloorChanged()));
+
         connect(mDocument, SIGNAL(roomAtPositionChanged(BuildingFloor*,QPoint)),
                 SLOT(roomAtPositionChanged(BuildingFloor*,QPoint)));
+
         connect(mDocument, SIGNAL(floorAdded(BuildingFloor*)),
                 SLOT(floorAdded(BuildingFloor*)));
+        connect(mDocument, SIGNAL(floorEdited(BuildingFloor*)),
+                SLOT(floorEdited(BuildingFloor*)));
+
         connect(mDocument, SIGNAL(objectAdded(BaseMapObject*)),
                 SLOT(objectAdded(BaseMapObject*)));
         connect(mDocument, SIGNAL(objectAboutToBeRemoved(BaseMapObject*)),
@@ -304,6 +311,12 @@ void FloorEditor::setDocument(BuildingDocument *doc)
 
         connect(mDocument, SIGNAL(roomChanged(Room*)),
                 SLOT(roomChanged(Room*)));
+        connect(mDocument, SIGNAL(roomAdded(Room*)),
+                SLOT(roomAdded(Room*)));
+        connect(mDocument, SIGNAL(roomRemoved(Room*)),
+                SLOT(roomRemoved(Room*)));
+        connect(mDocument, SIGNAL(roomsReordered()),
+                SLOT(roomsReordered()));
     }
 
     emit documentChanged();
@@ -319,17 +332,9 @@ Building *FloorEditor::building() const
     return mDocument ? mDocument->building() : 0;
 }
 
-void FloorEditor::activateTool(BaseTool *tool)
+void FloorEditor::currentToolChanged(BaseTool *tool)
 {
-    if (mCurrentTool) {
-        mCurrentTool->deactivate();
-        mCurrentTool->action()->setChecked(false);
-    }
-
     mCurrentTool = tool;
-
-    if (mCurrentTool)
-        mCurrentTool->action()->setChecked(true);
 }
 
 QPoint FloorEditor::sceneToTile(const QPointF &scenePos)
@@ -397,6 +402,17 @@ QSet<BaseMapObject*> FloorEditor::objectsInRect(const QRectF &sceneRect)
     return objects;
 }
 
+BaseMapObject *FloorEditor::topmostObjectAt(const QPointF &scenePos)
+{
+    foreach (QGraphicsItem *item, items(scenePos)) {
+        if (GraphicsObjectItem *objectItem = dynamic_cast<GraphicsObjectItem*>(item)) {
+            if (objectItem->object()->floor() == mDocument->currentFloor())
+                return objectItem->object();
+        }
+    }
+    return 0;
+}
+
 void FloorEditor::currentFloorChanged()
 {
     int level = mDocument->currentFloor()->level();
@@ -424,13 +440,30 @@ void FloorEditor::floorAdded(BuildingFloor *floor)
     addItem(item);
 }
 
+void FloorEditor::floorEdited(BuildingFloor *floor)
+{
+    int index = floor->building()->floors().indexOf(floor);
+    GraphicsFloorItem *item = mFloorItems[index];
+
+    QImage *bmp = item->bmp();
+    bmp->fill(Qt::black);
+    for (int x = 0; x < floor->width(); x++) {
+        for (int y = 0; y < floor->height(); y++) {
+            if (Room *room = floor->GetRoomAt(x, y))
+                bmp->setPixel(x, y, room->Color);
+        }
+    }
+
+    item->update();
+}
+
 void FloorEditor::objectAdded(BaseMapObject *object)
 {
     Q_ASSERT(!itemForObject(object));
     GraphicsObjectItem *item = new GraphicsObjectItem(this, object);
     item->setParentItem(mFloorItems[object->floor()->level()]);
     mObjectItems.insert(object->index(), item);
-    addItem(item);
+//    addItem(item);
 
     for (int i = object->index(); i < mObjectItems.count(); i++)
         mObjectItems[i]->setZValue(i);
@@ -482,6 +515,38 @@ void FloorEditor::roomChanged(Room *room)
         }
         item->update();
     }
+}
+
+void FloorEditor::roomAdded(Room *room)
+{
+    // This is only to support undoing removing a room.
+    // When the room is re-added, the floor grid gets put
+    // back the way it was, so we have to update the bitmap.
+}
+
+void FloorEditor::roomRemoved(Room *room)
+{
+#if 1
+    foreach (BuildingFloor *floor, building()->floors())
+        floorEdited(floor);
+#else
+    foreach (GraphicsFloorItem *item, mFloorItems) {
+        QImage *bmp = item->bmp();
+        bmp->fill(Qt::black);
+        BuildingFloor *floor = item->floor();
+        for (int x = 0; x < building()->width(); x++) {
+            for (int y = 0; y < building()->height(); y++) {
+                if (Room *room = floor->GetRoomAt(x, y))
+                    bmp->setPixel(x, y, room->Color);
+            }
+        }
+        item->update();
+    }
+#endif
+}
+
+void FloorEditor::roomsReordered()
+{
 }
 
 /////

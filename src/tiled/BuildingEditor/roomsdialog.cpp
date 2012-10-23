@@ -20,6 +20,7 @@
 
 #include "buildingtemplates.h"
 #include "buildingeditorwindow.h"
+#include "buildingtiles.h"
 #include "choosebuildingtiledialog.h"
 
 #include "tile.h"
@@ -249,7 +250,11 @@ BuildingTile *RoomsDialog::selectedTile()
 
 void RoomsDialog::chooseTile()
 {
-    ChooseBuildingTileDialog dialog(QLatin1String(categoryNames[mTileRow]),
+    static const char *titles[] = { "Wall", "Floor" };
+    ChooseBuildingTileDialog dialog(tr("Choose %1 tile for '%2'")
+                                    .arg(QLatin1String(titles[mTileRow]))
+                                    .arg(mRoom->Name),
+                                    QLatin1String(categoryNames[mTileRow]),
                                     selectedTile(), this);
     if (dialog.exec() == QDialog::Accepted) {
         if (BuildingTile *btile = dialog.selectedTile()) {

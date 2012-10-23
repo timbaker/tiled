@@ -165,7 +165,9 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/buildingtemplatesdialog.cpp \
     BuildingEditor/choosebuildingtiledialog.cpp \
     BuildingEditor/roomsdialog.cpp \
-    BuildingEditor/buildingtilesdialog.cpp
+    BuildingEditor/buildingtilesdialog.cpp \
+    BuildingEditor/buildingtiles.cpp \
+    BuildingEditor/templatefrombuildingdialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -296,7 +298,9 @@ HEADERS += aboutdialog.h \
     BuildingEditor/buildingtemplatesdialog.h \
     BuildingEditor/choosebuildingtiledialog.h \
     BuildingEditor/roomsdialog.h \
-    BuildingEditor/buildingtilesdialog.h
+    BuildingEditor/buildingtilesdialog.h \
+    BuildingEditor/buildingtiles.h \
+    BuildingEditor/templatefrombuildingdialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -323,7 +327,8 @@ FORMS += aboutdialog.ui \
     BuildingEditor/buildingtemplatesdialog.ui \
     BuildingEditor/choosebuildingtiledialog.ui \
     BuildingEditor/roomsdialog.ui \
-    BuildingEditor/buildingtilesdialog.ui
+    BuildingEditor/buildingtilesdialog.ui \
+    BuildingEditor/templatefrombuildingdialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

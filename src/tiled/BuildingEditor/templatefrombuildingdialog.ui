@@ -1,35 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ChooseBuildingTileDialog</class>
- <widget class="QDialog" name="ChooseBuildingTileDialog">
+ <class>TemplateFromBuildingDialog</class>
+ <widget class="QDialog" name="TemplateFromBuildingDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>363</width>
-    <height>450</height>
+    <width>296</width>
+    <height>126</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Tile Picker</string>
+   <string>Template from building</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <widget class="QLabel" name="prompt">
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
      <property name="text">
-      <string>Choose a tile</string>
+      <string>This will create a new template from the current building being edited.  The current building won't be affected in any way.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
-   <item>
-    <widget class="Tiled::Internal::MixedTilesetView" name="tableView"/>
-   </item>
-   <item>
+   <item row="1" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QToolButton" name="tilesButton">
+      <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Tiles...</string>
+        <string>Name:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="name">
+       <property name="minimumSize">
+        <size>
+         <width>200</width>
+         <height>0</height>
+        </size>
        </property>
       </widget>
      </item>
@@ -48,14 +58,7 @@
      </item>
     </layout>
    </item>
-   <item>
-    <widget class="Line" name="line">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
+   <item row="3" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -65,21 +68,27 @@
      </property>
     </widget>
    </item>
+   <item row="2" column="0">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>Tiled::Internal::MixedTilesetView</class>
-   <extends>QTableWidget</extends>
-   <header>BuildingEditor/mixedtilesetview.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections>
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>ChooseBuildingTileDialog</receiver>
+   <receiver>TemplateFromBuildingDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -95,7 +104,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>ChooseBuildingTileDialog</receiver>
+   <receiver>TemplateFromBuildingDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

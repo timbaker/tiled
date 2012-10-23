@@ -281,6 +281,23 @@ private:
     Room *mData;
 };
 
+class SwapFloorGrid : public QUndoCommand
+{
+public:
+    SwapFloorGrid(BuildingDocument *doc, BuildingFloor *floor,
+                  const QVector<QVector<Room*> > &grid);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    BuildingFloor *mFloor;
+    QVector<QVector<Room*> > mGrid;
+};
+
 } // namespace BuildingEditor
 
 #endif // BUILDINGUNDOREDO_H

@@ -40,18 +40,24 @@ class ChooseBuildingTileDialog : public QDialog
     Q_OBJECT
     
 public:
-    explicit ChooseBuildingTileDialog(const QString &categoryName,
+    explicit ChooseBuildingTileDialog(const QString &prompt,
+                                      const QString &categoryName,
                                       BuildingTile *initialTile,
                                       QWidget *parent = 0);
     ~ChooseBuildingTileDialog();
 
     BuildingTile *selectedTile() const;
 
+private:
+    void setTilesList(const QString &categoryName, BuildingTile *initialTile = 0);
+
 private slots:
+    void tilesDialog();
     void accept();
     
 private:
     Ui::ChooseBuildingTileDialog *ui;
+    QString mCategoryName;
     QList<Tiled::Tile*> mTiles;
     QList<BuildingTile*> mBuildingTiles;
     Tiled::Internal::Zoomable *mZoomable;
