@@ -86,7 +86,7 @@ public:
 class ChangeEWall : public QUndoCommand
 {
 public:
-    ChangeEWall(BuildingDocument *doc, const QString &tileName);
+    ChangeEWall(BuildingDocument *doc, BuildingTile *tile);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -95,13 +95,13 @@ private:
     void swap();
 
     BuildingDocument *mDocument;
-    QString mTileName;
+    BuildingTile *mTile;
 };
 
 class ChangeWallForRoom : public QUndoCommand
 {
 public:
-    ChangeWallForRoom(BuildingDocument *doc, Room *room, const QString &tileName);
+    ChangeWallForRoom(BuildingDocument *doc, Room *room, BuildingTile *tile);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -111,13 +111,13 @@ private:
 
     BuildingDocument *mDocument;
     Room *mRoom;
-    QString mTileName;
+    BuildingTile *mTile;
 };
 
 class ChangeFloorForRoom : public QUndoCommand
 {
 public:
-    ChangeFloorForRoom(BuildingDocument *doc, Room *room, const QString &tileName);
+    ChangeFloorForRoom(BuildingDocument *doc, Room *room, BuildingTile *tile);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -127,7 +127,7 @@ private:
 
     BuildingDocument *mDocument;
     Room *mRoom;
-    QString mTileName;
+    BuildingTile *mTile;
 };
 
 class AddRemoveObject : public QUndoCommand

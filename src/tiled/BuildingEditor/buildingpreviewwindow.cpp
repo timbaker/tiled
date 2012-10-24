@@ -311,30 +311,31 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
         tl->erase(QRegion(QRect(0, 0, tl->width(), tl->height())));
         for (int x = 0; x < floor->width(); x++) {
             for (int y = 0; y < floor->height(); y++) {
+                const BuildingFloor::Square &square = floor->squares[x][y];
                 if (index == LayerIndexFloor) {
-                    BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionFloor];
+                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionFloor];
                     if (tile)
                         tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
                 }
                 if (index == LayerIndexWall) {
-                    BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionWall];
+                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionWall];
                     if (tile)
-                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(floor->squares[x][y].getTileIndexForWall())));
+                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionWall])));
                 }
                 if (index == LayerIndexDoor) {
-                    BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionDoor];
+                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionDoor];
                     if (tile)
-                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
+                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionDoor])));
                 }
                 if (index == LayerIndexFrame) {
-                    BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionFrame];
+                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionFrame];
                     if (tile)
-                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
+                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionFrame])));
                 }
                 if (index == LayerIndexFurniture) {
-                    BuildingTile *tile = floor->squares[x][y].mTiles[BuildingFloor::Square::SectionFurniture];
+                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionFurniture];
                     if (tile)
-                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + floor->squares[x][y].mTileOffset[BuildingFloor::Square::SectionFurniture])));
+                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionFurniture])));
                 }
             }
         }

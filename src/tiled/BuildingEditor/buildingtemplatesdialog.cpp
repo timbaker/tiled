@@ -173,11 +173,11 @@ void BuildingTemplatesDialog::chooseTile()
     if (dialog.exec() == QDialog::Accepted) {
         if (BuildingTile *btile = dialog.selectedTile()) {
             switch (mTileRow) {
-            case 0: mTemplate->Wall = btile->name(); break;
-            case 1: mTemplate->DoorTile = btile->name(); break;
-            case 2: mTemplate->DoorFrameTile = btile->name(); break;
-            case 3: mTemplate->WindowTile = btile->name(); break;
-            case 4: mTemplate->StairsTile = btile->name(); break;
+            case 0: mTemplate->Wall = btile; break;
+            case 1: mTemplate->DoorTile = btile; break;
+            case 2: mTemplate->DoorFrameTile = btile; break;
+            case 3: mTemplate->WindowTile = btile; break;
+            case 4: mTemplate->StairsTile = btile; break;
             }
             setTilePixmap();
         }
@@ -217,15 +217,13 @@ BuildingTile *BuildingTemplatesDialog::selectedTile()
     if (mTemplate == 0 || mTileRow == -1)
         return 0;
 
-    QString tileName;
     switch (mTileRow) {
-    case 0: tileName = mTemplate->Wall; break;
-    case 1: tileName = mTemplate->DoorTile; break;
-    case 2: tileName = mTemplate->DoorFrameTile; break;
-    case 3: tileName = mTemplate->WindowTile; break;
-    case 4: tileName = mTemplate->StairsTile; break;
+    case 0: return mTemplate->Wall;
+    case 1: return mTemplate->DoorTile;
+    case 2: return mTemplate->DoorFrameTile;
+    case 3: return mTemplate->WindowTile;
+    case 4: return mTemplate->StairsTile;
     }
 
-    return BuildingTiles::instance()->get(
-                QLatin1String(categoryNames[mTileRow]), tileName);
+    return 0;
 }

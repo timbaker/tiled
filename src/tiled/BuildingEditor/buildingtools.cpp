@@ -430,11 +430,8 @@ void DoorTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     BuildingFloor *floor = mEditor->document()->currentFloor();
     Door *door = new Door(floor, x, y, dir);
-    door->mTile = BuildingTiles::instance()->tileForDoor(door,
-                                                         mEditor->building()->doorTile());
-    door->mFrameTile = BuildingTiles::instance()->tileForDoor(door,
-                                                              mEditor->building()->doorFrameTile(),
-                                                              true);
+    door->mTile = mEditor->building()->doorTile();
+    door->mFrameTile = mEditor->building()->doorFrameTile();
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                          floor,
                                                          floor->objectCount(),
@@ -524,8 +521,7 @@ void WindowTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     BuildingFloor *floor = mEditor->document()->currentFloor();
     Window *window = new Window(floor, x, y, dir);
-    window->mTile = BuildingTiles::instance()->tileForWindow(window,
-                                                             mEditor->building()->windowTile());
+    window->mTile = mEditor->building()->windowTile();
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                          floor,
                                                          floor->objectCount(),
@@ -615,8 +611,7 @@ void StairsTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     BuildingFloor *floor = mEditor->document()->currentFloor();
     Stairs *stairs = new Stairs(floor, x, y, dir);
-    stairs->mTile = BuildingTiles::instance()->tileForStairs(stairs,
-                                                             mEditor->building()->stairsTile());
+    stairs->mTile = mEditor->building()->stairsTile();
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                          floor,
                                                          floor->objectCount(),

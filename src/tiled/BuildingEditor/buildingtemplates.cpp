@@ -17,7 +17,10 @@
 
 #include "buildingtemplates.h"
 
-#include "buildingeditorwindow.h"
+#include "buildingtiles.h"
+#include "simplefile.h"
+
+#include <QCoreApplication>
 
 using namespace BuildingEditor;
 
@@ -58,6 +61,39 @@ void BuildingTemplates::replaceTemplates(const QList<BuildingTemplate *> &templa
     mTemplates.clear();
     foreach (BuildingTemplate *btemplate, templates)
         mTemplates += new BuildingTemplate(btemplate);
+}
+
+void BuildingTemplates::writeBuildingTemplatesTxt()
+{
+    SimpleFile simpleFile;
+    foreach (BuildingTemplate *btemplate, BuildingTemplates::instance()->templates()) {
+        SimpleFileBlock templateBlock;
+        templateBlock.name = QLatin1String("Template");
+        templateBlock.values += SimpleFileKeyValue(QLatin1String("Name"), btemplate->Name);
+        templateBlock.values += SimpleFileKeyValue(QLatin1String("Wall"), btemplate->Wall->name());
+        templateBlock.values += SimpleFileKeyValue(QLatin1String("Door"), btemplate->DoorTile->name());
+        templateBlock.values += SimpleFileKeyValue(QLatin1String("DoorFrame"), btemplate->DoorFrameTile->name());
+        templateBlock.values += SimpleFileKeyValue(QLatin1String("Window"), btemplate->WindowTile->name());
+        templateBlock.values += SimpleFileKeyValue(QLatin1String("Stairs"), btemplate->StairsTile->name());
+        foreach (Room *room, btemplate->RoomList) {
+            SimpleFileBlock roomBlock;
+            roomBlock.name = QLatin1String("Room");
+            roomBlock.values += SimpleFileKeyValue(QLatin1String("Name"), room->Name);
+            QString colorString = QString(QLatin1String("%1 %2 %3"))
+                    .arg(qRed(room->Color))
+                    .arg(qGreen(room->Color))
+                    .arg(qBlue(room->Color));
+            roomBlock.values += SimpleFileKeyValue(QLatin1String("Color"), colorString);
+            roomBlock.values += SimpleFileKeyValue(QLatin1String("InternalName"), room->internalName);
+            roomBlock.values += SimpleFileKeyValue(QLatin1String("Wall"), room->Wall->name());
+            roomBlock.values += SimpleFileKeyValue(QLatin1String("Floor"), room->Floor->name());
+            templateBlock.blocks += roomBlock;
+        }
+        simpleFile.blocks += templateBlock;
+    }
+    QString path = QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + QLatin1String("BuildingTemplates.txt");
+    simpleFile.write(path);
 }
 
 /////

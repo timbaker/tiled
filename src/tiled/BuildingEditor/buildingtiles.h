@@ -170,6 +170,8 @@ public:
     Tiled::Tile *tileFor(const QString &tileName);
     Tiled::Tile *tileFor(BuildingTile *tile);
 
+    BuildingTile *fromTiledTile(const QString &categoryName, Tiled::Tile *tile);
+
     BuildingTile *tileForDoor(Door *door, const QString &tileName,
                               bool isFrame = false);
 
@@ -190,11 +192,21 @@ public:
 
     void writeBuildingTilesTxt();
 
-    QString defaultExteriorWall() const;
-    QString defaultDoorTile() const;
-    QString defaultDoorFrameTile() const;
-    QString defaultWindowTile() const;
-    QString defaultStairsTile() const;
+    BuildingTile *defaultExteriorWall() const;
+    BuildingTile *defaultInteriorWall() const;
+    BuildingTile *defaultFloorTile() const;
+    BuildingTile *defaultDoorTile() const;
+    BuildingTile *defaultDoorFrameTile() const;
+    BuildingTile *defaultWindowTile() const;
+    BuildingTile *defaultStairsTile() const;
+
+    BuildingTile *getExteriorWall(const QString &tileName);
+    BuildingTile *getInteriorWall(const QString &tileName);
+    BuildingTile *getFloorTile(const QString &tileName);
+    BuildingTile *getDoorTile(const QString &tileName);
+    BuildingTile *getDoorFrameTile(const QString &tileName);
+    BuildingTile *getWindowTile(const QString &tileName);
+    BuildingTile *getStairsTile(const QString &tileName);
 
 private:
     static BuildingTiles *mInstance;

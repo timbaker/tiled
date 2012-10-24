@@ -57,19 +57,19 @@ public:
     QString Name;
     QRgb Color;
     QString internalName;
-    QString Floor;
-    QString Wall;
+    BuildingTile *Floor;
+    BuildingTile *Wall;
 };
 
 class BuildingTemplate
 {
 public:
     QString Name;
-    QString Wall;
-    QString DoorTile;
-    QString DoorFrameTile;
-    QString WindowTile;
-    QString StairsTile;
+    BuildingTile *Wall;
+    BuildingTile *DoorTile;
+    BuildingTile *DoorFrameTile;
+    BuildingTile *WindowTile;
+    BuildingTile *StairsTile;
 
     QList<Room*> RoomList;
 
@@ -116,6 +116,8 @@ public:
 
     BuildingTemplate *templateAt(int index) const
     { return mTemplates.at(index); }
+
+    void writeBuildingTemplatesTxt();
 
 private:
     static BuildingTemplates *mInstance;

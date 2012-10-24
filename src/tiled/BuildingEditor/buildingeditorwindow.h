@@ -47,6 +47,7 @@ class Building;
 class BuildingDocument;
 class BuildingFloor;
 class BuildingPreviewWindow;
+class BuildingTile;
 class Door;
 class FloorEditor;
 class FloorView;
@@ -77,7 +78,7 @@ public:
     bool LoadBuildingTemplates();
     bool LoadBuildingTiles();
     bool LoadMapBaseXMLLots();
-    bool validateTile(QString &tileName, const char *key);
+    bool validateTile(BuildingTile *btile, const char *key);
 
     void setCurrentRoom(Room *mRoomComboBox) const; // TODO: move to BuildingDocument
     Room *currentRoom() const;
@@ -98,6 +99,7 @@ private:
 
 private slots:
     void roomIndexChanged(int index);
+    void categoryScaleChanged(qreal scale);
 
     void currentEWallChanged(const QItemSelection &selected);
     void currentIWallChanged(const QItemSelection &selected);

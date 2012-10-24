@@ -70,11 +70,11 @@ public:
         { return mTiles[SectionWall] && (mWallOrientation == orient); }
 
         void ReplaceWall(BuildingTile *tile, WallOrientation orient);
-        void ReplaceDoor(BuildingTile *tile);
-        void ReplaceFrame(BuildingTile *tile);
+        void ReplaceDoor(BuildingTile *tile, int offset);
+        void ReplaceFrame(BuildingTile *tile, int offset);
         void ReplaceFurniture(BuildingTile *tile, int offset);
 
-        int getTileIndexForWall();
+        int getWallOffset();
         int getTileIndexForDoor();
     };
 

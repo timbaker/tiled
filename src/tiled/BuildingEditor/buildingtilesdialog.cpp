@@ -145,6 +145,7 @@ void BuildingTilesDialog::tilesetSelectionChanged()
                 model->setCategoryBounds(tile, bounds);
         }
     }
+    synchUI();
 }
 
 void BuildingTilesDialog::addTiles()

@@ -91,46 +91,46 @@ EraseRoom::EraseRoom(BuildingDocument *doc, BuildingFloor *floor, const QPoint &
 
 /////
 
-ChangeEWall::ChangeEWall(BuildingDocument *doc, const QString &tileName) :
+ChangeEWall::ChangeEWall(BuildingDocument *doc, BuildingTile *tile) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Change External Wall")),
     mDocument(doc),
-    mTileName(tileName)
+    mTile(tile)
 {
 }
 
 void ChangeEWall::swap()
 {
-    mTileName = mDocument->changeEWall(mTileName);
+    mTile = mDocument->changeEWall(mTile);
 }
 
 /////
 
-ChangeWallForRoom::ChangeWallForRoom(BuildingDocument *doc, Room *room, const QString &tileName) :
+ChangeWallForRoom::ChangeWallForRoom(BuildingDocument *doc, Room *room, BuildingTile *tile) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Room's Wall")),
     mDocument(doc),
     mRoom(room),
-    mTileName(tileName)
+    mTile(tile)
 {
 }
 
 void ChangeWallForRoom::swap()
 {
-    mTileName = mDocument->changeWallForRoom(mRoom, mTileName);
+    mTile = mDocument->changeWallForRoom(mRoom, mTile);
 }
 
 /////
 
-ChangeFloorForRoom::ChangeFloorForRoom(BuildingDocument *doc, Room *room, const QString &tileName) :
+ChangeFloorForRoom::ChangeFloorForRoom(BuildingDocument *doc, Room *room, BuildingTile *tile) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Room's Floor")),
     mDocument(doc),
     mRoom(room),
-    mTileName(tileName)
+    mTile(tile)
 {
 }
 
 void ChangeFloorForRoom::swap()
 {
-    mTileName = mDocument->changeFloorForRoom(mRoom, mTileName);
+    mTile = mDocument->changeFloorForRoom(mRoom, mTile);
 }
 
 /////

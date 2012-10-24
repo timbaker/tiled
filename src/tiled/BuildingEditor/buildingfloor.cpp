@@ -93,12 +93,11 @@ void BuildingFloor::LayoutToSquares()
     QVector<BuildingTile*> interiorWalls;
     QVector<BuildingTile*> floors;
 
-    exteriorWall = BuildingTiles::instance()->get(QLatin1String("exterior_walls"),
-                                                  mBuilding->exteriorWall());
+    exteriorWall = mBuilding->exteriorWall();
 
     foreach (Room *room, mBuilding->rooms()) {
-        interiorWalls += BuildingTiles::instance()->get(QLatin1String("interior_walls"), room->Wall);
-        floors += BuildingTiles::instance()->get(QLatin1String("floors"), room->Floor);
+        interiorWalls += room->Wall;
+        floors += room->Floor;
     }
 
     for (int x = 0; x < width(); x++) {
@@ -193,16 +192,19 @@ void BuildingFloor::LayoutToSquares()
         for (int y = 0; y < height() + 1; y++)
         {
             if (Door *door = GetDoorAt(x, y)) {
-                squares[x][y].ReplaceDoor(door->mTile);
-                squares[x][y].ReplaceFrame(door->mFrameTile);
+                squares[x][y].ReplaceDoor(door->mTile,
+                                          door->getOffset());
+                squares[x][y].ReplaceFrame(door->mFrameTile,
+                                           door->getOffset());
             }
 
             if (Window *window = GetWindowAt(x, y))
-                squares[x][y].ReplaceFrame(window->mTile);
+                squares[x][y].ReplaceFrame(window->mTile,
+                                           window->getOffset());
 
             if (Stairs *stairs = GetStairsAt(x, y)) {
                 squares[x][y].ReplaceFurniture(stairs->mTile,
-                                               stairs->getStairsOffset(x, y));
+                                               stairs->getOffset(x, y));
             }
         }
     }
@@ -316,16 +318,21 @@ void BuildingFloor::Square::ReplaceWall(BuildingTile *tile, Square::WallOrientat
 {
     mTiles[SectionWall] = tile;
     mWallOrientation = orient;
+    mTileOffset[SectionWall] = getWallOffset();
 }
 
-void BuildingFloor::Square::ReplaceDoor(BuildingTile *tile)
+void BuildingFloor::Square::ReplaceDoor(BuildingTile *tile, int offset)
 {
     mTiles[SectionDoor] = tile;
+    mTileOffset[SectionDoor] = offset;
+    mTileOffset[SectionWall] = getWallOffset();
 }
 
-void BuildingFloor::Square::ReplaceFrame(BuildingTile *tile)
+void BuildingFloor::Square::ReplaceFrame(BuildingTile *tile, int offset)
 {
     mTiles[SectionFrame] = tile;
+    mTileOffset[SectionFrame] = offset;
+    mTileOffset[SectionWall] = getWallOffset();
 }
 
 void BuildingFloor::Square::ReplaceFurniture(BuildingTile *tile, int offset)
@@ -339,36 +346,36 @@ void BuildingFloor::Square::ReplaceFurniture(BuildingTile *tile, int offset)
     mTileOffset[SectionFurniture] = offset;
 }
 
-int BuildingFloor::Square::getTileIndexForWall()
+int BuildingFloor::Square::getWallOffset()
 {
     BuildingTile *tile = mTiles[SectionWall];
     if (!tile)
         return -1;
 
-    int index = tile->mIndex;
+    int offset = 0;
 
     switch (mWallOrientation) {
     case WallOrientN:
         if (mTiles[SectionDoor] != 0)
-            index += 11;
+            offset += 11;
         else if (mTiles[SectionFrame] != 0)
-            index += 9; // window
+            offset += 9; // window
         else
-            index += 1;
+            offset += 1;
         break;
     case  WallOrientNW:
-        index += 2;
+        offset += 2;
         break;
     case  WallOrientW:
         if (mTiles[SectionDoor] != 0)
-            index += 10;
+            offset += 10;
         else if (mTiles[SectionFrame] != 0)
-            index += 8; // window
+            offset += 8; // window
         break;
     case  WallOrientSE:
-        index += 3;
+        offset += 3;
         break;
     }
 
-    return index;
+    return offset;
 }

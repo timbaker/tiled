@@ -83,6 +83,9 @@ public:
 
     }
 
+    int getOffset()
+    { return (mDir == N) ? 1 : 0; }
+
     BuildingTile *mFrameTile;
 };
 
@@ -96,7 +99,7 @@ public:
 
     QRect bounds() const;
 
-    int getStairsOffset(int x, int y);
+    int getOffset(int x, int y);
 };
 
 class Window : public BaseMapObject
@@ -107,6 +110,9 @@ public:
     {
 
     }
+
+    int getOffset()
+    { return (mDir == N) ? 1 : 0; }
 };
 
 } // namespace BulidingEditor

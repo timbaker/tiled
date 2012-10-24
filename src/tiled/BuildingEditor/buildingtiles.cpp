@@ -178,29 +178,81 @@ Tile *BuildingTiles::tileFor(BuildingTile *tile)
     return mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex);
 }
 
-QString BuildingTiles::defaultExteriorWall() const
+BuildingTile *BuildingTiles::fromTiledTile(const QString &categoryName, Tile *tile)
 {
-    return category(QLatin1String("exterior_walls"))->tileAt(0)->name();
+    if (Category *category = this->category(categoryName))
+        return category->get(nameForTile(tile));
+    return 0;
 }
 
-QString BuildingTiles::defaultDoorTile() const
+BuildingTile *BuildingTiles::defaultExteriorWall() const
 {
-    return category(QLatin1String("doors"))->tileAt(0)->name();
+    return category(QLatin1String("exterior_walls"))->tileAt(0);
 }
 
-QString BuildingTiles::defaultDoorFrameTile() const
+BuildingTile *BuildingTiles::defaultInteriorWall() const
 {
-    return category(QLatin1String("door_frames"))->tileAt(0)->name();
+    return category(QLatin1String("interior_walls"))->tileAt(0);
 }
 
-QString BuildingTiles::defaultWindowTile() const
+BuildingTile *BuildingTiles::defaultFloorTile() const
 {
-    return category(QLatin1String("windows"))->tileAt(0)->name();
+    return category(QLatin1String("floors"))->tileAt(0);
 }
 
-QString BuildingTiles::defaultStairsTile() const
+BuildingTile *BuildingTiles::defaultDoorTile() const
 {
-    return category(QLatin1String("stairs"))->tileAt(0)->name();
+    return category(QLatin1String("doors"))->tileAt(0);
+}
+
+BuildingTile *BuildingTiles::defaultDoorFrameTile() const
+{
+    return category(QLatin1String("door_frames"))->tileAt(0);
+}
+
+BuildingTile *BuildingTiles::defaultWindowTile() const
+{
+    return category(QLatin1String("windows"))->tileAt(0);
+}
+
+BuildingTile *BuildingTiles::defaultStairsTile() const
+{
+    return category(QLatin1String("stairs"))->tileAt(0);
+}
+
+BuildingTile *BuildingTiles::getExteriorWall(const QString &tileName)
+{
+    return category(QLatin1String("exterior_walls"))->get(tileName);
+}
+
+BuildingTile *BuildingTiles::getInteriorWall(const QString &tileName)
+{
+    return category(QLatin1String("interior_walls"))->get(tileName);
+}
+
+BuildingTile *BuildingTiles::getFloorTile(const QString &tileName)
+{
+    return category(QLatin1String("floors"))->get(tileName);
+}
+
+BuildingTile *BuildingTiles::getDoorTile(const QString &tileName)
+{
+    return category(QLatin1String("doors"))->get(tileName);
+}
+
+BuildingTile *BuildingTiles::getDoorFrameTile(const QString &tileName)
+{
+    return category(QLatin1String("door_frames"))->get(tileName);
+}
+
+BuildingTile *BuildingTiles::getWindowTile(const QString &tileName)
+{
+    return category(QLatin1String("windows"))->get(tileName);
+}
+
+BuildingTile *BuildingTiles::getStairsTile(const QString &tileName)
+{
+    return category(QLatin1String("stairs"))->get(tileName);
 }
 
 /////

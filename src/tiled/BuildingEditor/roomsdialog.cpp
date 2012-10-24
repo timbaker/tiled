@@ -135,10 +135,10 @@ void RoomsDialog::addRoom()
     room->Name = QLatin1String("New Room");
     room->internalName = QLatin1String("newroom");
     room->Color = QColor(Qt::white).rgba();
-    BuildingTile *btile = BuildingTiles::instance()->category(QLatin1String("interior_walls"))->tiles().first();
-    room->Wall = btile->name();
-    btile = BuildingTiles::instance()->category(QLatin1String("floors"))->tiles().first();
-    room->Floor = btile->name();
+    BuildingTile *btile = BuildingTiles::instance()->defaultInteriorWall();
+    room->Wall = btile;
+    btile = BuildingTiles::instance()->defaultFloorTile();
+    room->Floor = btile;
 
     mRooms += room;
     mRoomsMap[room] = 0;
@@ -238,14 +238,12 @@ BuildingTile *RoomsDialog::selectedTile()
     if (mRoom == 0 || mTileRow == -1)
         return 0;
 
-    QString tileName;
     switch (mTileRow) {
-    case 0: tileName = mRoom->Wall; break;
-    case 1: tileName = mRoom->Floor; break;
+    case 0: return mRoom->Wall;
+    case 1: return mRoom->Floor;
     }
 
-    return BuildingTiles::instance()->get(
-                QLatin1String(categoryNames[mTileRow]), tileName);
+    return 0;
 }
 
 void RoomsDialog::chooseTile()
@@ -259,8 +257,8 @@ void RoomsDialog::chooseTile()
     if (dialog.exec() == QDialog::Accepted) {
         if (BuildingTile *btile = dialog.selectedTile()) {
             switch (mTileRow) {
-            case 0: mRoom->Wall = btile->name(); break;
-            case 1: mRoom->Floor = btile->name(); break;
+            case 0: mRoom->Wall = btile; break;
+            case 1: mRoom->Floor = btile; break;
             }
             setTilePixmap();
         }

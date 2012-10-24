@@ -58,9 +58,9 @@ public:
 
     // +UNDO/REDO
     Room *changeRoomAtPosition(BuildingFloor *floor, const QPoint &pos, Room *room);
-    QString changeEWall(const QString &tileName);
-    QString changeWallForRoom(Room *room, const QString &tileName);
-    QString changeFloorForRoom(Room *room, const QString &tileName);
+    BuildingTile *changeEWall(BuildingTile *tile);
+    BuildingTile *changeWallForRoom(Room *room, BuildingTile *tile);
+    BuildingTile *changeFloorForRoom(Room *room, BuildingTile *tile);
     void insertFloor(int index, BuildingFloor *floor);
     void insertObject(BuildingFloor *floor, int index, BaseMapObject *object);
     BaseMapObject *removeObject(BuildingFloor *floor, int index);

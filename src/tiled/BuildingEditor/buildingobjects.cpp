@@ -47,7 +47,7 @@ QRect Stairs::bounds() const
     return QRect();
 }
 
-int Stairs::getStairsOffset(int x, int y)
+int Stairs::getOffset(int x, int y)
 {
     if (mDir == N) {
         if (x == mX) {

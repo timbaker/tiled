@@ -94,7 +94,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mFloorLabel = new QLabel;
     mFloorLabel->setText(tr("Ground Floor"));
     mFloorLabel->setMinimumWidth(90);
-    mFloorLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    mFloorLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     ui->toolBar->insertWidget(ui->actionUpLevel, mFloorLabel);
 
     mView = ui->floorView;
@@ -180,6 +180,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
             SLOT(templateFromBuilding()));
 
     mCategoryZoomable->connectToComboBox(ui->scaleComboBox);
+    connect(mCategoryZoomable, SIGNAL(scaleChanged(qreal)),
+            SLOT(categoryScaleChanged(qreal)));
 
     readSettings();
 
@@ -237,12 +239,6 @@ bool BuildingEditorWindow::Startup()
     // Refresh the ui before blocking while loading tilesets etc
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 
-    if (!LoadBuildingTemplates()) {
-        QMessageBox::critical(this, tr("It's no good, Jim!"),
-                              tr("Error while reading BuildingTemplates.txt\n") + mError);
-        return false;
-    }
-
     if (!LoadMapBaseXMLLots()) {
         if (!mError.isEmpty())
             QMessageBox::critical(this, tr("It's no good, Jim!"), mError);
@@ -252,6 +248,12 @@ bool BuildingEditorWindow::Startup()
     if (!LoadBuildingTiles()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
                               tr("Error while reading BuildingTiles.txt\n") + mError);
+        return false;
+    }
+
+    if (!LoadBuildingTemplates()) {
+        QMessageBox::critical(this, tr("It's no good, Jim!"),
+                              tr("Error while reading BuildingTemplates.txt\n") + mError);
         return false;
     }
 
@@ -308,15 +310,16 @@ bool BuildingEditorWindow::LoadBuildingTemplates()
         mError = tr("Error reading %1.").arg(path);
         return false;
     }
+    BuildingTiles *btiles = BuildingTiles::instance();
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("Template")) {
             BuildingTemplate *def = new BuildingTemplate;
             def->Name = block.value("Name");
-            def->Wall = block.value("Wall");
-            def->DoorTile = block.value("Door");
-            def->DoorFrameTile = block.value("DoorFrame");
-            def->WindowTile = block.value("Window");
-            def->StairsTile = block.value("Stairs");
+            def->Wall = btiles->getExteriorWall(block.value("Wall"));
+            def->DoorTile = btiles->getDoorTile(block.value("Door"));
+            def->DoorFrameTile = btiles->getDoorFrameTile(block.value("DoorFrame"));
+            def->WindowTile = btiles->getWindowTile(block.value("Window"));
+            def->StairsTile = btiles->getStairsTile(block.value("Stairs"));
             foreach (SimpleFileBlock roomBlock, block.blocks) {
                 if (roomBlock.name == QLatin1String("Room")) {
                     Room *room = new Room;
@@ -325,8 +328,8 @@ bool BuildingEditorWindow::LoadBuildingTemplates()
                     room->Color = qRgb(rgb.at(0).toInt(),
                                        rgb.at(1).toInt(),
                                        rgb.at(2).toInt());
-                    room->Wall = roomBlock.value("Wall");
-                    room->Floor = roomBlock.value("Floor");
+                    room->Wall = btiles->getInteriorWall(roomBlock.value("Wall"));
+                    room->Floor = btiles->getFloorTile(roomBlock.value("Floor"));
                     room->internalName = roomBlock.value("InternalName");
                     def->RoomList += room;
                 } else {
@@ -514,16 +517,14 @@ bool BuildingEditorWindow::LoadMapBaseXMLLots()
     return true;
 }
 
-bool BuildingEditorWindow::validateTile(QString &tileName, const char *key)
+bool BuildingEditorWindow::validateTile(BuildingTile *btile, const char *key)
 {
-    QString fixedName = BuildingTiles::normalizeTileName(tileName);
-    if (!BuildingTiles::instance()->tileFor(fixedName)) {
+    if (!BuildingTiles::instance()->tileFor(btile)) {
         mError = tr("%1 tile '%2' doesn't exist.")
                 .arg(QLatin1String(key))
-                .arg(tileName);
+                .arg(btile->name());
         return false;
     }
-    tileName = fixedName;
     return true;
 }
 
@@ -595,6 +596,12 @@ void BuildingEditorWindow::roomIndexChanged(int index)
 {
 }
 
+void BuildingEditorWindow::categoryScaleChanged(qreal scale)
+{
+    mSettings.setValue(QLatin1String("BuildingEditor/MainWindow/CategoryScale"),
+                       scale);
+}
+
 void BuildingEditorWindow::currentEWallChanged(const QItemSelection &selected)
 {
     if (!mCurrentDocument)
@@ -606,8 +613,10 @@ void BuildingEditorWindow::currentEWallChanged(const QItemSelection &selected)
         Tile *tile = m->tileAt(index);
         if (!tile)
             return;
+        BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                    QLatin1String("exterior_walls"), tile);
         mCurrentDocument->undoStack()->push(new ChangeEWall(mCurrentDocument,
-                                                            BuildingTiles::instance()->nameForTile(tile)));
+                                                            btile));
     }
 }
 
@@ -622,9 +631,11 @@ void BuildingEditorWindow::currentIWallChanged(const QItemSelection &selected)
         Tile *tile = m->tileAt(index);
         if (!tile)
             return;
+        BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                    QLatin1String("interior_walls"), tile);
         mCurrentDocument->undoStack()->push(new ChangeWallForRoom(mCurrentDocument,
                                                                   currentRoom(),
-                                                                  BuildingTiles::instance()->nameForTile(tile)));
+                                                                  btile));
     }
 }
 
@@ -639,9 +650,11 @@ void BuildingEditorWindow::currentFloorChanged(const QItemSelection &selected)
         Tile *tile = m->tileAt(index);
         if (!tile)
             return;
+        BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                    QLatin1String("floors"), tile);
         mCurrentDocument->undoStack()->push(new ChangeFloorForRoom(mCurrentDocument,
                                                                    currentRoom(),
-                                                                   BuildingTiles::instance()->nameForTile(tile)));
+                                                                   btile));
     }
 }
 
@@ -656,13 +669,14 @@ void BuildingEditorWindow::currentDoorChanged(const QItemSelection &selected)
         Tile *tile = m->tileAt(index);
         if (!tile)
             return;
-        QString tileName = BuildingTiles::instance()->nameForTile(tile);
-        currentBuilding()->setDoorTile(tileName);
+        BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                    QLatin1String("doors"), tile);
+        currentBuilding()->setDoorTile(btile);
         // Assign the new tile to selected doors
         QList<Door*> doors;
         foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
             if (Door *door = dynamic_cast<Door*>(object)) {
-                if (door->mTile != BuildingTiles::instance()->tileForDoor(door, tileName))
+                if (door->mTile != btile)
                     doors += door;
             }
         }
@@ -672,7 +686,7 @@ void BuildingEditorWindow::currentDoorChanged(const QItemSelection &selected)
             foreach (Door *door, doors)
                 mCurrentDocument->undoStack()->push(new ChangeDoorTile(mCurrentDocument,
                                                                        door,
-                                                                       BuildingTiles::instance()->tileForDoor(door, tileName)));
+                                                                       btile));
             if (doors.count() > 1)
                 mCurrentDocument->undoStack()->endMacro();
         }
@@ -690,13 +704,14 @@ void BuildingEditorWindow::currentDoorFrameChanged(const QItemSelection &selecte
         Tile *tile = m->tileAt(index);
         if (!tile)
             return;
-        QString tileName = BuildingTiles::instance()->nameForTile(tile);
-        currentBuilding()->setDoorFrameTile(tileName);
+        BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                    QLatin1String("door_frames"), tile);
+        currentBuilding()->setDoorFrameTile(btile);
         // Assign the new tile to selected doors
         QList<Door*> doors;
         foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
             if (Door *door = dynamic_cast<Door*>(object)) {
-                if (door->mFrameTile != BuildingTiles::instance()->tileForDoor(door, tileName, true))
+                if (door->mFrameTile != btile)
                     doors += door;
             }
         }
@@ -706,7 +721,7 @@ void BuildingEditorWindow::currentDoorFrameChanged(const QItemSelection &selecte
             foreach (Door *door, doors)
                 mCurrentDocument->undoStack()->push(new ChangeDoorTile(mCurrentDocument,
                                                                        door,
-                                                                       BuildingTiles::instance()->tileForDoor(door, tileName, true),
+                                                                       btile,
                                                                        true));
             if (doors.count() > 1)
                 mCurrentDocument->undoStack()->endMacro();
@@ -726,13 +741,14 @@ void BuildingEditorWindow::currentWindowChanged(const QItemSelection &selected)
         if (!tile)
             return;
         // New windows will be created with this tile
-        QString tileName = BuildingTiles::instance()->nameForTile(tile);
-        currentBuilding()->setWindowTile(tileName);
+        BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                    QLatin1String("windows"), tile);
+        currentBuilding()->setWindowTile(btile);
         // Assign the new tile to selected windows
         QList<Window*> windows;
         foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
             if (Window *window = dynamic_cast<Window*>(object)) {
-                if (window->mTile != BuildingTiles::instance()->tileForWindow(window, tileName))
+                if (window->mTile != btile)
                     windows += window;
             }
         }
@@ -742,7 +758,7 @@ void BuildingEditorWindow::currentWindowChanged(const QItemSelection &selected)
             foreach (Window *window, windows)
                 mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
                                                                        window,
-                                                                       BuildingTiles::instance()->tileForWindow(window, tileName)));
+                                                                       btile));
             if (windows.count() > 1)
                 mCurrentDocument->undoStack()->endMacro();
         }
@@ -761,13 +777,14 @@ void BuildingEditorWindow::currentStairsChanged(const QItemSelection &selected)
         if (!tile)
             return;
         // New stairs will be created with this tile
-        QString tileName = BuildingTiles::instance()->nameForTile(tile);
-        currentBuilding()->setStairsTile(tileName);
+        BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                    QLatin1String("stairs"), tile);
+        currentBuilding()->setStairsTile(btile);
         // Assign the new tile to selected stairs
         QList<Stairs*> stairsList;
         foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
             if (Stairs *stairs = dynamic_cast<Stairs*>(object)) {
-                if (stairs->mTile != BuildingTiles::instance()->tileForStairs(stairs, tileName))
+                if (stairs->mTile != btile)
                     stairsList += stairs;
             }
         }
@@ -777,7 +794,7 @@ void BuildingEditorWindow::currentStairsChanged(const QItemSelection &selected)
             foreach (Stairs *stairs, stairsList)
                 mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
                                                                        stairs,
-                                                                       BuildingTiles::instance()->tileForStairs(stairs, tileName)));
+                                                                       btile));
             if (stairsList.count() > 1)
                 mCurrentDocument->undoStack()->endMacro();
         }
@@ -793,7 +810,7 @@ void BuildingEditorWindow::upLevel()
     }
     mCurrentDocument->setSelectedObjects(QSet<BaseMapObject*>());
     mCurrentDocument->setCurrentFloor(mCurrentDocument->building()->floor(level));
-    mFloorLabel->setText(tr("Floor %1").arg(level + 1));
+    updateActions();
 }
 
 void BuildingEditorWindow::downLevel()
@@ -803,10 +820,7 @@ void BuildingEditorWindow::downLevel()
         return;
     mCurrentDocument->setSelectedObjects(QSet<BaseMapObject*>());
     mCurrentDocument->setCurrentFloor(mCurrentDocument->building()->floor(level));
-    if (level > 0)
-        mFloorLabel->setText(tr("Floor %1").arg(level + 1));
-    else
-        mFloorLabel->setText(tr("Ground Floor"));
+    updateActions();
 }
 
 void BuildingEditorWindow::newBuilding()
@@ -982,36 +996,7 @@ void BuildingEditorWindow::templatesDialog()
         return;
 
     BuildingTemplates::instance()->replaceTemplates(dialog.templates());
-
-    SimpleFile simpleFile;
-    foreach (BuildingTemplate *btemplate, BuildingTemplates::instance()->templates()) {
-        SimpleFileBlock templateBlock;
-        templateBlock.name = QLatin1String("Template");
-        templateBlock.values += SimpleFileKeyValue(QLatin1String("Name"), btemplate->Name);
-        templateBlock.values += SimpleFileKeyValue(QLatin1String("Wall"), btemplate->Wall);
-        templateBlock.values += SimpleFileKeyValue(QLatin1String("Door"), btemplate->DoorTile);
-        templateBlock.values += SimpleFileKeyValue(QLatin1String("DoorFrame"), btemplate->DoorFrameTile);
-        templateBlock.values += SimpleFileKeyValue(QLatin1String("Window"), btemplate->WindowTile);
-        templateBlock.values += SimpleFileKeyValue(QLatin1String("Stairs"), btemplate->StairsTile);
-        foreach (Room *room, btemplate->RoomList) {
-            SimpleFileBlock roomBlock;
-            roomBlock.name = QLatin1String("Room");
-            roomBlock.values += SimpleFileKeyValue(QLatin1String("Name"), room->Name);
-            QString colorString = QString(QLatin1String("%1 %2 %3"))
-                    .arg(qRed(room->Color))
-                    .arg(qGreen(room->Color))
-                    .arg(qBlue(room->Color));
-            roomBlock.values += SimpleFileKeyValue(QLatin1String("Color"), colorString);
-            roomBlock.values += SimpleFileKeyValue(QLatin1String("InternalName"), room->internalName);
-            roomBlock.values += SimpleFileKeyValue(QLatin1String("Wall"), room->Wall);
-            roomBlock.values += SimpleFileKeyValue(QLatin1String("Floor"), room->Floor);
-            templateBlock.blocks += roomBlock;
-        }
-        simpleFile.blocks += templateBlock;
-    }
-    QString path = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + QLatin1String("BuildingTemplates.txt");
-    simpleFile.write(path);
+    BuildingTemplates::instance()->writeBuildingTemplatesTxt();
 }
 
 void BuildingEditorWindow::tilesDialog()
@@ -1046,6 +1031,8 @@ void BuildingEditorWindow::templateFromBuilding()
         btemplate->RoomList += new Room(room);
 
     BuildingTemplates::instance()->addTemplate(btemplate);
+
+    BuildingTemplates::instance()->writeBuildingTemplatesTxt();
 
     templatesDialog();
 }
@@ -1123,7 +1110,8 @@ void BuildingEditorWindow::updateActions()
     SelectMoveObjectTool::instance()->setEnabled(mCurrentDocument != 0);
 
     ui->actionUpLevel->setEnabled(mCurrentDocument != 0);
-    ui->actionDownLevel->setEnabled(mCurrentDocument != 0);
+    ui->actionDownLevel->setEnabled(mCurrentDocument != 0 &&
+            mCurrentDocument->currentFloor()->level() > 0);
 
     ui->actionOpen->setEnabled(false);
     ui->actionSave->setEnabled(false);
@@ -1139,4 +1127,11 @@ void BuildingEditorWindow::updateActions()
 
     mRoomComboBox->setEnabled(mCurrentDocument != 0 &&
             currentRoom() != 0);
+
+    if (mCurrentDocument)
+        mFloorLabel->setText(tr("Floor %1/%2")
+                             .arg(mCurrentDocument->currentFloor()->level() + 1)
+                             .arg(mCurrentDocument->building()->floorCount()));
+    else
+        mFloorLabel->clear();
 }
