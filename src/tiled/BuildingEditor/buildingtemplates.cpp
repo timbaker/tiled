@@ -21,6 +21,7 @@
 #include "simplefile.h"
 
 #include <QCoreApplication>
+#include <QMessageBox>
 
 using namespace BuildingEditor;
 
@@ -63,7 +64,7 @@ void BuildingTemplates::replaceTemplates(const QList<BuildingTemplate *> &templa
         mTemplates += new BuildingTemplate(btemplate);
 }
 
-void BuildingTemplates::writeBuildingTemplatesTxt()
+void BuildingTemplates::writeBuildingTemplatesTxt(QWidget *parent)
 {
     SimpleFile simpleFile;
     foreach (BuildingTemplate *btemplate, BuildingTemplates::instance()->templates()) {
@@ -93,7 +94,10 @@ void BuildingTemplates::writeBuildingTemplatesTxt()
     }
     QString path = QCoreApplication::applicationDirPath() + QLatin1Char('/')
             + QLatin1String("BuildingTemplates.txt");
-    simpleFile.write(path);
+    if (!simpleFile.write(path)) {
+        QMessageBox::warning(parent, tr("It's no good, Jim!"),
+                             simpleFile.errorString());
+    }
 }
 
 /////

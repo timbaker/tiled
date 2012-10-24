@@ -70,9 +70,14 @@ public:
 
     bool write(const QString &filePath);
 
+    QString errorString() const
+    { return mError; }
+
 private:
     SimpleFileBlock readBlock(QTextStream &ts);
     void writeBlock(QTextStream &ts, const SimpleFileBlock &block);
+
+    QString mError;
 
     class INDENT
     {

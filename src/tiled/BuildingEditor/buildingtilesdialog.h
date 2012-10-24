@@ -39,6 +39,9 @@ class BuildingTilesDialog : public QDialog
 public:
     explicit BuildingTilesDialog(QWidget *parent = 0);
     ~BuildingTilesDialog();
+
+    bool changes() const
+    { return mChanges; }
     
 private:
     void setCategoryTiles(const QString &categoryName);
@@ -55,6 +58,7 @@ private:
     Ui::BuildingTilesDialog *ui;
     Tiled::Internal::Zoomable *mZoomable;
     QString mCategoryName;
+    bool mChanges;
 };
 
 } // namespace BuildingEditor

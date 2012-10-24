@@ -51,8 +51,9 @@ public:
     QVector<BuildingTile*> mAlternates;
 };
 
-class BuildingTiles
+class BuildingTiles : public QObject
 {
+    Q_OBJECT
 public:
     static BuildingTiles *instance();
     static void deleteInstance();
@@ -190,7 +191,7 @@ public:
     QList<Tiled::Tileset*> tilesets() const
     { return mTilesetByName.values(); }
 
-    void writeBuildingTilesTxt();
+    void writeBuildingTilesTxt(QWidget *parent = 0);
 
     BuildingTile *defaultExteriorWall() const;
     BuildingTile *defaultInteriorWall() const;

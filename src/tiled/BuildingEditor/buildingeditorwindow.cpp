@@ -996,7 +996,7 @@ void BuildingEditorWindow::templatesDialog()
         return;
 
     BuildingTemplates::instance()->replaceTemplates(dialog.templates());
-    BuildingTemplates::instance()->writeBuildingTemplatesTxt();
+    BuildingTemplates::instance()->writeBuildingTemplatesTxt(this);
 }
 
 void BuildingEditorWindow::tilesDialog()
@@ -1004,9 +1004,10 @@ void BuildingEditorWindow::tilesDialog()
     BuildingTilesDialog dialog(this);
     dialog.exec();
 
-    BuildingTiles::instance()->writeBuildingTilesTxt();
-
-    setCategoryLists();
+    if (dialog.changes()) {
+        BuildingTiles::instance()->writeBuildingTilesTxt(this);
+        setCategoryLists();
+    }
 }
 
 void BuildingEditorWindow::templateFromBuilding()
@@ -1032,7 +1033,7 @@ void BuildingEditorWindow::templateFromBuilding()
 
     BuildingTemplates::instance()->addTemplate(btemplate);
 
-    BuildingTemplates::instance()->writeBuildingTemplatesTxt();
+    BuildingTemplates::instance()->writeBuildingTemplatesTxt(this);
 
     templatesDialog();
 }

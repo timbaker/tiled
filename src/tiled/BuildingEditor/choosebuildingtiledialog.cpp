@@ -97,9 +97,10 @@ void ChooseBuildingTileDialog::tilesDialog()
     BuildingTilesDialog dialog(this);
     dialog.exec();
 
-    BuildingTiles::instance()->writeBuildingTilesTxt();
-
-    setTilesList(mCategoryName);
+    if (dialog.changes()) {
+        BuildingTiles::instance()->writeBuildingTilesTxt(this);
+        setTilesList(mCategoryName);
+    }
 }
 
 void ChooseBuildingTileDialog::accept()

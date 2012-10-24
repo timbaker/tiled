@@ -35,7 +35,8 @@ using namespace Tiled::Internal;
 BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::BuildingTilesDialog),
-    mZoomable(new Zoomable(this))
+    mZoomable(new Zoomable(this)),
+    mChanges(false)
 {
     ui->setupUi(this);
 
@@ -158,8 +159,10 @@ void BuildingTilesDialog::addTiles()
     foreach (QModelIndex index, selection) {
         Tile *tile = ui->tableWidget->model()->tileAt(index);
         QString tileName = BuildingTiles::instance()->nameForTile(tile);
-        if (!category->usesTile(tile))
+        if (!category->usesTile(tile)) {
             category->add(tileName);
+            mChanges = true;
+        }
     }
 
     tilesetSelectionChanged();
@@ -179,6 +182,7 @@ void BuildingTilesDialog::removeTiles()
         Tile *tile = v->model()->tileAt(index);
         QString tileName = BuildingTiles::instance()->nameForTile(tile);
         category->remove(tileName);
+        mChanges = true;
     }
 
     tilesetSelectionChanged();

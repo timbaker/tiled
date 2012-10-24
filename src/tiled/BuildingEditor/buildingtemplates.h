@@ -95,8 +95,9 @@ public:
     }
 };
 
-class BuildingTemplates
+class BuildingTemplates : public QObject
 {
+    Q_OBJECT
 public:
     static BuildingTemplates *instance();
     static void deleteInstance();
@@ -117,7 +118,7 @@ public:
     BuildingTemplate *templateAt(int index) const
     { return mTemplates.at(index); }
 
-    void writeBuildingTemplatesTxt();
+    void writeBuildingTemplatesTxt(QWidget *parent = 0);
 
 private:
     static BuildingTemplates *mInstance;

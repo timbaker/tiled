@@ -25,7 +25,8 @@
 #include "tile.h"
 #include "tileset.h"
 
-#include <qcoreapplication>
+#include <QCoreApplication>
+#include <QMessageBox>
 
 using namespace BuildingEditor;
 using namespace Tiled;
@@ -134,7 +135,7 @@ void BuildingTiles::addTileset(Tileset *tileset)
     TilesetManager::instance()->addReference(tileset);
 }
 
-void BuildingTiles::writeBuildingTilesTxt()
+void BuildingTiles::writeBuildingTilesTxt(QWidget *parent)
 {
     SimpleFile simpleFile;
     foreach (BuildingTiles::Category *category, categories()) {
@@ -154,7 +155,10 @@ void BuildingTiles::writeBuildingTilesTxt()
     }
     QString path = QCoreApplication::applicationDirPath() + QLatin1Char('/')
             + QLatin1String("BuildingTiles.txt");
-    simpleFile.write(path);
+    if (!simpleFile.write(path)) {
+        QMessageBox::warning(0, tr("It's no good, Jim!"),
+                             simpleFile.errorString());
+    }
 }
 
 Tiled::Tile *BuildingTiles::tileFor(const QString &tileName)
