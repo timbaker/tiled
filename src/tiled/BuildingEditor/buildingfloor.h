@@ -113,7 +113,11 @@ public:
     Window *GetWindowAt(int x, int y);
     Stairs *GetStairsAt(int x, int y);
 
-    void SetRoomAt(const QPoint &pos, Room *room);
+    void SetRoomAt(int x, int y, Room *room);
+
+    inline void SetRoomAt(const QPoint &pos, Room *room)
+    { SetRoomAt(pos.x(), pos.y(), room); }
+
     Room *GetRoomAt(const QPoint &pos);
     Room *GetRoomAt(int x, int y)
     { return GetRoomAt(QPoint(x, y)); }

@@ -21,8 +21,11 @@
 #include "buildingeditorwindow.h"
 #include "buildingfloor.h"
 #include "buildingobjects.h"
+#include "buildingreader.h"
 #include "buildingtemplates.h"
+#include "buildingwriter.h"
 
+#include <QMessageBox>
 #include <QUndoStack>
 
 using namespace BuildingEditor;
@@ -30,14 +33,43 @@ using namespace BuildingEditor;
 BuildingDocument::BuildingDocument(Building *building, const QString &fileName) :
     QObject(),
     mBuilding(building),
+    mFileName(fileName),
     mUndoStack(new QUndoStack(this))
 {
+}
+
+BuildingDocument *BuildingDocument::read(const QString &fileName, QString &error)
+{
+    BuildingReader reader;
+    if (Building *building = reader.read(fileName)) {
+        BuildingDocument *doc = new BuildingDocument(building, fileName);
+        return doc;
+    }
+    error = reader.errorString();
+    return 0;
+}
+
+bool BuildingDocument::write(const QString &fileName, QString &error)
+{
+    BuildingWriter w;
+    if (!w.write(mBuilding, fileName)) {
+        error = w.errorString();
+        return false;
+    }
+    mFileName = fileName;
+    mUndoStack->setClean();
+    return true;
 }
 
 void BuildingDocument::setCurrentFloor(BuildingFloor *floor)
 {
     mCurrentFloor = floor;
     emit currentFloorChanged();
+}
+
+bool BuildingDocument::isModified() const
+{
+    return !mUndoStack->isClean();
 }
 
 void BuildingDocument::setSelectedObjects(const QSet<BaseMapObject *> &selection)
@@ -117,16 +149,16 @@ QPoint BuildingDocument::moveObject(BaseMapObject *object, const QPoint &pos)
 BuildingTile *BuildingDocument::changeDoorTile(Door *door, BuildingTile *tile,
                                                bool isFrame)
 {
-    BuildingTile *old = door->mTile;
-    isFrame ? door->mFrameTile = tile : door->mTile = tile;
+    BuildingTile *old = door->tile();
+    isFrame ? door->setFrameTile(tile) : door->setTile(tile);
     emit objectTileChanged(door);
     return old;
 }
 
 BuildingTile *BuildingDocument::changeObjectTile(BaseMapObject *object, BuildingTile *tile)
 {
-    BuildingTile *old = object->mTile;
-    object->mTile = tile;
+    BuildingTile *old = object->tile();
+    object->setTile(tile);
     emit objectTileChanged(object);
     return old;
 }

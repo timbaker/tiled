@@ -97,6 +97,12 @@ private:
 
     void setCategoryLists();
 
+    bool writeBuilding(BuildingDocument *doc, const QString &fileName);
+
+    bool confirmSave();
+
+    void addDocument(BuildingDocument *doc);
+
 private slots:
     void roomIndexChanged(int index);
     void categoryScaleChanged(qreal scale);
@@ -113,6 +119,9 @@ private slots:
     void downLevel();
 
     void newBuilding();
+    void openBuilding();
+    bool saveBuilding();
+    bool saveBuildingAs();
     void exportTMX();
 
     void preferences();
@@ -144,6 +153,7 @@ private:
     BuildingPreviewWindow *mPreviewWin;
     Tiled::Internal::Zoomable *mZoomable;
     Tiled::Internal::Zoomable *mCategoryZoomable;
+    bool mSynching;
 };
 
 } // namespace BuildingEditor

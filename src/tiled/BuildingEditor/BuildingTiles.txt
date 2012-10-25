@@ -22,6 +22,7 @@ category
     {
         tile = location_hospitality_sunstarmotel_01_000
         tile = location_hospitality_sunstarmotel_01_004
+        tile = walls_exterior_wooden_01_024
         tile = walls_interior_bathroom_01_000
         tile = walls_interior_bathroom_01_004
         tile = walls_interior_bathroom_01_016
@@ -71,7 +72,15 @@ category
         tile = floors_interior_tilesandwood_01_008
         tile = floors_interior_tilesandwood_01_009
         tile = floors_interior_tilesandwood_01_010
+        tile = floors_interior_tilesandwood_01_011
+        tile = floors_interior_tilesandwood_01_040
+        tile = floors_interior_tilesandwood_01_041
+        tile = floors_interior_tilesandwood_01_042
         tile = floors_interior_tilesandwood_01_043
+        tile = floors_interior_tilesandwood_01_044
+        tile = floors_interior_tilesandwood_01_045
+        tile = floors_interior_tilesandwood_01_048
+        tile = floors_interior_tilesandwood_01_049
     }
 }
 category
@@ -86,7 +95,6 @@ category
         tile = fixtures_doors_01_012
         tile = fixtures_doors_01_016
         tile = fixtures_doors_01_020
-        tile = fixtures_doors_01_021
         tile = fixtures_doors_01_024
         tile = fixtures_doors_01_028
         tile = fixtures_doors_01_032
@@ -106,7 +114,6 @@ category
         tile = fixtures_doors_frames_01_000
         tile = fixtures_doors_frames_01_002
         tile = fixtures_doors_frames_01_004
-        tile = fixtures_doors_frames_01_005
     }
 }
 category
@@ -120,7 +127,6 @@ category
         tile = fixtures_windows_01_016
         tile = fixtures_windows_01_024
         tile = fixtures_windows_01_032
-        tile = fixtures_windows_01_033
     }
 }
 category

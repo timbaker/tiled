@@ -43,6 +43,12 @@ public:
     Building *building() const
     { return mBuilding; }
 
+    QString fileName() const
+    { return mFileName; }
+
+    static BuildingDocument *read(const QString &fileName, QString &error);
+    bool write(const QString &fileName, QString &error);
+
     void setCurrentFloor(BuildingFloor *floor);
 
     BuildingFloor *currentFloor() const
@@ -50,6 +56,8 @@ public:
 
     QUndoStack *undoStack() const
     { return mUndoStack; }
+
+    bool isModified() const;
 
     void setSelectedObjects(const QSet<BaseMapObject*> &selection);
 
@@ -104,7 +112,7 @@ public slots:
     
 private:
     Building *mBuilding;
-    QString mFilePath;
+    QString mFileName;
     QUndoStack *mUndoStack;
     BuildingFloor *mCurrentFloor;
     QSet<BaseMapObject*> mSelectedObjects;

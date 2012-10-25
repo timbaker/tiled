@@ -78,7 +78,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mUndoGroup(new QUndoGroup(this)),
     mPreviewWin(0),
     mZoomable(new Zoomable(this)),
-    mCategoryZoomable(new Zoomable(this))
+    mCategoryZoomable(new Zoomable(this)),
+    mSynching(false)
 {
     ui->setupUi(this);
 
@@ -161,7 +162,15 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionPreferences, SIGNAL(triggered()), SLOT(preferences()));
 
     connect(ui->actionNewBuilding, SIGNAL(triggered()), SLOT(newBuilding()));
+    connect(ui->actionOpen, SIGNAL(triggered()), SLOT(openBuilding()));
+    connect(ui->actionSave, SIGNAL(triggered()), SLOT(saveBuilding()));
+    connect(ui->actionSaveAs, SIGNAL(triggered()), SLOT(saveBuildingAs()));
     connect(ui->actionExportTMX, SIGNAL(triggered()), SLOT(exportTMX()));
+
+    ui->actionNewBuilding->setShortcuts(QKeySequence::New);
+    ui->actionOpen->setShortcuts(QKeySequence::Open);
+    ui->actionSave->setShortcuts(QKeySequence::Save);
+    ui->actionSaveAs->setShortcuts(QKeySequence::SaveAs);
 
     connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
     setWindowFlags(windowFlags() & ~Qt::WA_DeleteOnClose);
@@ -172,6 +181,20 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
             mView->zoomable(), SLOT(zoomOut()));
     connect(ui->actionNormalSize, SIGNAL(triggered()),
             mView->zoomable(), SLOT(resetZoom()));
+
+    QList<QKeySequence> keys = QKeySequence::keyBindings(QKeySequence::ZoomIn);
+//    keys += QKeySequence(tr("Ctrl+="));
+    keys += QKeySequence(tr("+"));
+    ui->actionZoomIn->setShortcuts(keys);
+
+    keys = QKeySequence::keyBindings(QKeySequence::ZoomOut);
+    keys += QKeySequence(tr("-"));
+    ui->actionZoomOut->setShortcuts(keys);
+
+    keys.clear();
+    keys += QKeySequence(tr("Ctrl+0"));
+    keys += QKeySequence(tr("0"));
+    ui->actionNormalSize->setShortcuts(keys);
 
     connect(ui->actionRooms, SIGNAL(triggered()), SLOT(roomsDialog()));
     connect(ui->actionTemplates, SIGNAL(triggered()), SLOT(templatesDialog()));
@@ -604,7 +627,7 @@ void BuildingEditorWindow::categoryScaleChanged(qreal scale)
 
 void BuildingEditorWindow::currentEWallChanged(const QItemSelection &selected)
 {
-    if (!mCurrentDocument)
+    if (!mCurrentDocument || mSynching)
         return;
     QModelIndexList indexes = selected.indexes();
     if (indexes.count() == 1) {
@@ -622,7 +645,7 @@ void BuildingEditorWindow::currentEWallChanged(const QItemSelection &selected)
 
 void BuildingEditorWindow::currentIWallChanged(const QItemSelection &selected)
 {
-    if (!mCurrentDocument)
+    if (!mCurrentDocument || mSynching)
         return;
     QModelIndexList indexes = selected.indexes();
     if (indexes.count() == 1) {
@@ -641,7 +664,7 @@ void BuildingEditorWindow::currentIWallChanged(const QItemSelection &selected)
 
 void BuildingEditorWindow::currentFloorChanged(const QItemSelection &selected)
 {
-    if (!mCurrentDocument)
+    if (!mCurrentDocument || mSynching)
         return;
     QModelIndexList indexes = selected.indexes();
     if (indexes.count() == 1) {
@@ -660,7 +683,7 @@ void BuildingEditorWindow::currentFloorChanged(const QItemSelection &selected)
 
 void BuildingEditorWindow::currentDoorChanged(const QItemSelection &selected)
 {
-    if (!mCurrentDocument)
+    if (!mCurrentDocument || mSynching)
         return;
     QModelIndexList indexes = selected.indexes();
     if (indexes.count() == 1) {
@@ -676,7 +699,7 @@ void BuildingEditorWindow::currentDoorChanged(const QItemSelection &selected)
         QList<Door*> doors;
         foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
             if (Door *door = dynamic_cast<Door*>(object)) {
-                if (door->mTile != btile)
+                if (door->tile() != btile)
                     doors += door;
             }
         }
@@ -695,7 +718,7 @@ void BuildingEditorWindow::currentDoorChanged(const QItemSelection &selected)
 
 void BuildingEditorWindow::currentDoorFrameChanged(const QItemSelection &selected)
 {
-    if (!mCurrentDocument)
+    if (!mCurrentDocument || mSynching)
         return;
     QModelIndexList indexes = selected.indexes();
     if (indexes.count() == 1) {
@@ -711,7 +734,7 @@ void BuildingEditorWindow::currentDoorFrameChanged(const QItemSelection &selecte
         QList<Door*> doors;
         foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
             if (Door *door = dynamic_cast<Door*>(object)) {
-                if (door->mFrameTile != btile)
+                if (door->frameTile() != btile)
                     doors += door;
             }
         }
@@ -731,7 +754,7 @@ void BuildingEditorWindow::currentDoorFrameChanged(const QItemSelection &selecte
 
 void BuildingEditorWindow::currentWindowChanged(const QItemSelection &selected)
 {
-    if (!mCurrentDocument)
+    if (!mCurrentDocument || mSynching)
         return;
     QModelIndexList indexes = selected.indexes();
     if (indexes.count() == 1) {
@@ -748,7 +771,7 @@ void BuildingEditorWindow::currentWindowChanged(const QItemSelection &selected)
         QList<Window*> windows;
         foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
             if (Window *window = dynamic_cast<Window*>(object)) {
-                if (window->mTile != btile)
+                if (window->tile() != btile)
                     windows += window;
             }
         }
@@ -767,7 +790,7 @@ void BuildingEditorWindow::currentWindowChanged(const QItemSelection &selected)
 
 void BuildingEditorWindow::currentStairsChanged(const QItemSelection &selected)
 {
-    if (!mCurrentDocument)
+    if (!mCurrentDocument || mSynching)
         return;
     QModelIndexList indexes = selected.indexes();
     if (indexes.count() == 1) {
@@ -784,7 +807,7 @@ void BuildingEditorWindow::currentStairsChanged(const QItemSelection &selected)
         QList<Stairs*> stairsList;
         foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
             if (Stairs *stairs = dynamic_cast<Stairs*>(object)) {
-                if (stairs->mTile != btile)
+                if (stairs->tile() != btile)
                     stairsList += stairs;
             }
         }
@@ -825,10 +848,23 @@ void BuildingEditorWindow::downLevel()
 
 void BuildingEditorWindow::newBuilding()
 {
+    if (!confirmSave())
+        return;
+
     NewBuildingDialog dialog(this);
     if (dialog.exec() != QDialog::Accepted)
         return;
 
+#if 1
+    Building *building = new Building(dialog.buildingWidth(),
+                                      dialog.buildingHeight(),
+                                      dialog.buildingTemplate());
+    building->insertFloor(0, new BuildingFloor(building, 0));
+
+    BuildingDocument *doc = new BuildingDocument(building, QString());
+
+    addDocument(doc);
+#else
     if (mCurrentDocument) {
         roomEditor->clearDocument();
         mPreviewWin->clearDocument();
@@ -836,10 +872,6 @@ void BuildingEditorWindow::newBuilding()
         delete mCurrentDocument->building();
         delete mCurrentDocument;
     }
-
-#if 0
-    RoomDefinitionManager::instance->Init(dialog.buildingTemplate());
-#endif
 
     Building *building = new Building(dialog.buildingWidth(),
                                       dialog.buildingHeight(),
@@ -865,6 +897,148 @@ void BuildingEditorWindow::newBuilding()
     connect(mCurrentDocument, SIGNAL(roomChanged(Room*)), SLOT(roomChanged(Room*)));
 
     /////
+
+    mPreviewWin->setDocument(currentDocument());
+
+    updateActions();
+
+    if (building->roomCount())
+        PencilTool::instance()->makeCurrent();
+#endif
+}
+
+void BuildingEditorWindow::openBuilding()
+{
+    if (!confirmSave())
+        return;
+
+    QString filter = tr("TileZed building files (*.tbx)");
+    filter += QLatin1String(";;");
+    filter += tr("All Files (*)");
+
+    QString initialDir = mSettings.value(
+                QLatin1String("BuildingEditor/OpenSaveDirectory")).toString();
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Building"),
+                                                    initialDir, filter);
+    if (fileName.isEmpty())
+        return;
+
+    mSettings.setValue(QLatin1String("BuildingEditor/OpenSaveDirectory"),
+                       QFileInfo(fileName).absolutePath());
+
+    QString error;
+    if (BuildingDocument *doc = BuildingDocument::read(fileName, error)) {
+        addDocument(doc);
+        return;
+    }
+
+    QMessageBox::warning(this, tr("Error reading building"), error);
+}
+
+bool BuildingEditorWindow::saveBuilding()
+{
+    if (!mCurrentDocument)
+        return false;
+
+    const QString currentFileName = mCurrentDocument->fileName();
+
+    if (currentFileName.endsWith(QLatin1String(".tbx"), Qt::CaseInsensitive))
+        return writeBuilding(mCurrentDocument, currentFileName);
+    else
+        return saveBuildingAs();
+}
+
+bool BuildingEditorWindow::saveBuildingAs()
+{
+    if (!mCurrentDocument)
+        return false;
+
+    QString suggestedFileName;
+    if (!mCurrentDocument->fileName().isEmpty()) {
+        const QFileInfo fileInfo(mCurrentDocument->fileName());
+        suggestedFileName = fileInfo.path();
+        suggestedFileName += QLatin1Char('/');
+        suggestedFileName += fileInfo.completeBaseName();
+        suggestedFileName += QLatin1String(".tbx");
+    } else {
+        suggestedFileName = mSettings.value(
+                    QLatin1String("BuildingEditor/OpenSaveDirectory")).toString();
+        suggestedFileName += QLatin1Char('/');
+        suggestedFileName += tr("untitled.tbx");
+    }
+
+    const QString fileName =
+            QFileDialog::getSaveFileName(this, QString(), suggestedFileName,
+                                         tr("TileZed building files (*.tbx)"));
+    if (!fileName.isEmpty()) {
+        mSettings.setValue(QLatin1String("BuildingEditor/OpenSaveDirectory"),
+                           QFileInfo(fileName).absolutePath());
+        return writeBuilding(mCurrentDocument, fileName);
+    }
+    return false;
+}
+
+bool BuildingEditorWindow::writeBuilding(BuildingDocument *doc, const QString &fileName)
+{
+    if (!doc)
+        return false;
+
+    QString error;
+    if (!doc->write(fileName, error)) {
+        QMessageBox::critical(this, tr("Error Saving Building"), error);
+        return false;
+    }
+
+//    setRecentFile(fileName);
+    return true;
+}
+
+bool BuildingEditorWindow::confirmSave()
+{
+    if (!mCurrentDocument || !mCurrentDocument->isModified())
+        return true;
+
+    int ret = QMessageBox::warning(
+            this, tr("Unsaved Changes"),
+            tr("There are unsaved changes. Do you want to save now?"),
+            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+
+    switch (ret) {
+    case QMessageBox::Save:    return saveBuilding();
+    case QMessageBox::Discard: return true;
+    case QMessageBox::Cancel:
+    default:
+        return false;
+    }
+}
+
+void BuildingEditorWindow::addDocument(BuildingDocument *doc)
+{
+    if (mCurrentDocument) {
+        roomEditor->clearDocument();
+        mPreviewWin->clearDocument();
+        mUndoGroup->removeStack(mCurrentDocument->undoStack());
+        delete mCurrentDocument->building();
+        delete mCurrentDocument;
+    }
+
+    mCurrentDocument = doc;
+
+    Building *building = mCurrentDocument->building();
+    mCurrentDocument->setCurrentFloor(building->floor(0));
+    mUndoGroup->addStack(mCurrentDocument->undoStack());
+    mUndoGroup->setActiveStack(mCurrentDocument->undoStack());
+
+    roomEditor->setDocument(mCurrentDocument);
+
+    updateRoomComboBox();
+
+    resizeCoordsLabel();
+
+    connect(mCurrentDocument, SIGNAL(roomAdded(Room*)), SLOT(roomAdded(Room*)));
+    connect(mCurrentDocument, SIGNAL(roomRemoved(Room*)), SLOT(roomRemoved(Room*)));
+    connect(mCurrentDocument, SIGNAL(roomsReordered()), SLOT(roomsReordered()));
+    connect(mCurrentDocument, SIGNAL(roomChanged(Room*)), SLOT(roomChanged(Room*)));
 
     mPreviewWin->setDocument(currentDocument());
 
@@ -1057,6 +1231,8 @@ void BuildingEditorWindow::resizeCoordsLabel()
 
 void BuildingEditorWindow::setCategoryLists()
 {
+    mSynching = true;
+
     QToolBox *toolBox = ui->toolBox;
     while (toolBox->count()) {
         QWidget *w = toolBox->widget(0);
@@ -1098,6 +1274,8 @@ void BuildingEditorWindow::setCategoryLists()
         }
         w->model()->setTiles(tiles);
     }
+
+    mSynching = false;
 }
 
 void BuildingEditorWindow::updateActions()
@@ -1114,14 +1292,14 @@ void BuildingEditorWindow::updateActions()
     ui->actionDownLevel->setEnabled(mCurrentDocument != 0 &&
             mCurrentDocument->currentFloor()->level() > 0);
 
-    ui->actionOpen->setEnabled(false);
-    ui->actionSave->setEnabled(false);
-    ui->actionSaveAs->setEnabled(false);
+//    ui->actionOpen->setEnabled(false);
+    ui->actionSave->setEnabled(mCurrentDocument != 0);
+    ui->actionSaveAs->setEnabled(mCurrentDocument != 0);
     ui->actionExportTMX->setEnabled(mCurrentDocument != 0);
 
-    ui->actionZoomIn->setEnabled(mView->zoomable()->canZoomIn());
-    ui->actionZoomOut->setEnabled(mView->zoomable()->canZoomOut());
-    ui->actionNormalSize->setEnabled(mView->zoomable()->scale() != 1.0);
+    ui->actionZoomIn->setEnabled(mCurrentDocument && mView->zoomable()->canZoomIn());
+    ui->actionZoomOut->setEnabled(mCurrentDocument && mView->zoomable()->canZoomOut());
+    ui->actionNormalSize->setEnabled(mCurrentDocument && mView->zoomable()->scale() != 1.0);
 
     ui->actionRooms->setEnabled(mCurrentDocument != 0);
     ui->actionTemplateFromBuilding->setEnabled(mCurrentDocument != 0);

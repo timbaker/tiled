@@ -148,6 +148,8 @@ void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     QPoint tilePos = mEditor->sceneToTile(event->scenePos());
 
     if (event->button() == Qt::RightButton) {
+        if (!mEditor->currentFloorContains(tilePos))
+            return;
         Room *room = mEditor->document()->currentFloor()->GetRoomAt(tilePos);
         if (room) {
             BuildingEditorWindow::instance->setCurrentRoom(room);
@@ -203,7 +205,8 @@ void PencilTool::activate()
 
 void PencilTool::deactivate()
 {
-    mEditor->removeItem(mCursor);
+    if (mCursor)
+        mEditor->removeItem(mCursor);
 }
 
 void PencilTool::updateCursor(const QPointF &scenePos)
@@ -289,7 +292,8 @@ void EraserTool::activate()
 
 void EraserTool::deactivate()
 {
-    mEditor->removeItem(mCursor);
+    if (mCursor)
+        mEditor->removeItem(mCursor);
 }
 
 void EraserTool::updateCursor(const QPointF &scenePos)
@@ -369,6 +373,7 @@ void BaseObjectTool::deactivate()
 {
     if (mCursorItem) {
         mEditor->removeItem(mCursorItem);
+        delete mCursorItem;
         mCursorItem = 0;
     }
 }
@@ -430,8 +435,8 @@ void DoorTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     BuildingFloor *floor = mEditor->document()->currentFloor();
     Door *door = new Door(floor, x, y, dir);
-    door->mTile = mEditor->building()->doorTile();
-    door->mFrameTile = mEditor->building()->doorFrameTile();
+    door->setTile(mEditor->building()->doorTile());
+    door->setFrameTile(mEditor->building()->doorFrameTile());
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                          floor,
                                                          floor->objectCount(),
@@ -464,7 +469,7 @@ void DoorTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         y++;
 
     if (!mCursorObject) {
-        BuildingFloor *floor = mEditor->document()->currentFloor();
+        BuildingFloor *floor = 0; //mEditor->document()->currentFloor();
         mCursorObject = new Door(floor, x, y, dir);
     }
     // mCursorDoor->setFloor()
@@ -521,7 +526,7 @@ void WindowTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     BuildingFloor *floor = mEditor->document()->currentFloor();
     Window *window = new Window(floor, x, y, dir);
-    window->mTile = mEditor->building()->windowTile();
+    window->setTile(mEditor->building()->windowTile());
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                          floor,
                                                          floor->objectCount(),
@@ -554,7 +559,7 @@ void WindowTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         y++;
 
     if (!mCursorObject) {
-        BuildingFloor *floor = mEditor->document()->currentFloor();
+        BuildingFloor *floor = 0; //mEditor->document()->currentFloor();
         mCursorObject = new Window(floor, x, y, dir);
     }
     // mCursorDoor->setFloor()
@@ -611,7 +616,7 @@ void StairsTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     BuildingFloor *floor = mEditor->document()->currentFloor();
     Stairs *stairs = new Stairs(floor, x, y, dir);
-    stairs->mTile = mEditor->building()->stairsTile();
+    stairs->setTile(mEditor->building()->stairsTile());
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                          floor,
                                                          floor->objectCount(),
@@ -644,7 +649,7 @@ void StairsTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         y++;
 
     if (!mCursorObject) {
-        BuildingFloor *floor = mEditor->document()->currentFloor();
+        BuildingFloor *floor = 0; //mEditor->document()->currentFloor();
         mCursorObject = new Stairs(floor, x, y, dir);
     }
     // mCursorDoor->setFloor()

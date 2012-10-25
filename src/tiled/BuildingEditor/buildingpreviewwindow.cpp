@@ -164,10 +164,11 @@ void CompositeLayerGroupItem::paint(QPainter *p, const QStyleOptionGraphicsItem 
     if (mLayerGroup->needsSynch() /*mBoundingRect != mLayerGroup->boundingRect(mRenderer)*/)
         return;
 
+    if (mLayerGroup->level() == 0 && !mBoundingRect.isEmpty())
+        mRenderer->drawGrid(p, option->exposedRect, Qt::black, mLayerGroup->level());
     mRenderer->drawTileLayerGroup(p, mLayerGroup, option->exposedRect);
 #if 0 && defined(_DEBUG)
     p->drawRect(mBoundingRect);
-    mRenderer->drawGrid(p, option->exposedRect, Qt::black, mLayerGroup->level());
 #endif
 }
 
@@ -255,9 +256,12 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
 
     mMapComposite = new MapComposite(mapInfo);
 
-    foreach (BuildingFloor *floor, doc->building()->floors()) {
+    foreach (BuildingFloor *floor, doc->building()->floors())
         floorAdded(floor);
-    }
+    currentFloorChanged();
+
+    mRenderer->setMaxLevel(mMapComposite->maxLevel());
+    setSceneRect(mMapComposite->boundingRect(mRenderer));
 
     connect(mDocument, SIGNAL(currentFloorChanged()),
             SLOT(currentFloorChanged()));
@@ -345,6 +349,12 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
 
 void BuildingPreviewScene::floorEdited(BuildingFloor *floor)
 {
+    // Existence check needed while loading a map.
+    // floorAdded -> objectAdded -> floorEdited
+    // With stairs, this may be the floor above the one the object is on, but
+    // that floor hasn't been added yet.
+    if (!mLayerGroupItems.contains(floor->level()))
+        return;
     floor->LayoutToSquares();
     BuildingFloorToTileLayers(floor, mMapComposite->tileLayersForLevel(floor->level())->layers());
     mLayerGroupItems[floor->level()]->synchWithTileLayers();
@@ -422,8 +432,17 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
     CompositeLayerGroup *lg = mMapComposite->tileLayersForLevel(floor->level());
     CompositeLayerGroupItem *item = new CompositeLayerGroupItem(lg, mRenderer);
     mLayerGroupItems[lg->level()] = item;
+    floor->LayoutToSquares();
+    BuildingFloorToTileLayers(floor, lg->layers());
     item->synchWithTileLayers();
+    item->updateBounds();
     addItem(item);
+
+    foreach (BaseMapObject *object, floor->objects())
+        objectAdded(object);
+
+    mRenderer->setMaxLevel(mMapComposite->maxLevel());
+    setSceneRect(mMapComposite->boundingRect(mRenderer));
 }
 
 void BuildingPreviewScene::objectAdded(BaseMapObject *object)

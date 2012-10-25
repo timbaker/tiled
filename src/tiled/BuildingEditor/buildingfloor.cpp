@@ -192,18 +192,18 @@ void BuildingFloor::LayoutToSquares()
         for (int y = 0; y < height() + 1; y++)
         {
             if (Door *door = GetDoorAt(x, y)) {
-                squares[x][y].ReplaceDoor(door->mTile,
+                squares[x][y].ReplaceDoor(door->tile(),
                                           door->getOffset());
-                squares[x][y].ReplaceFrame(door->mFrameTile,
+                squares[x][y].ReplaceFrame(door->frameTile(),
                                            door->getOffset());
             }
 
             if (Window *window = GetWindowAt(x, y))
-                squares[x][y].ReplaceFrame(window->mTile,
+                squares[x][y].ReplaceFrame(window->tile(),
                                            window->getOffset());
 
             if (Stairs *stairs = GetStairsAt(x, y)) {
-                squares[x][y].ReplaceFurniture(stairs->mTile,
+                squares[x][y].ReplaceFurniture(stairs->tile(),
                                                stairs->getOffset(x, y));
             }
         }
@@ -223,11 +223,15 @@ void BuildingFloor::LayoutToSquares()
             if (Stairs *stairs = dynamic_cast<Stairs*>(object)) {
                 int x = stairs->x(), y = stairs->y();
                 if (stairs->dir() == BaseMapObject::W) {
+                    if (x + 3 >= width())
+                        continue;
                     squares[x+1][y].mTiles[Square::SectionFloor] = 0;
                     squares[x+2][y].mTiles[Square::SectionFloor] = 0;
                     squares[x+3][y].mTiles[Square::SectionFloor] = 0;
                 }
                 if (stairs->dir() == BaseMapObject::N) {
+                    if (y + 3 >= height())
+                        continue;
                     squares[x][y+1].mTiles[Square::SectionFloor] = 0;
                     squares[x][y+2].mTiles[Square::SectionFloor] = 0;
                     squares[x][y+3].mTiles[Square::SectionFloor] = 0;
@@ -276,9 +280,9 @@ Stairs *BuildingFloor::GetStairsAt(int x, int y)
     return 0;
 }
 
-void BuildingFloor::SetRoomAt(const QPoint &pos, Room *room)
+void BuildingFloor::SetRoomAt(int x, int y, Room *room)
 {
-    mRoomAtPos[pos.x()][pos.y()] = room;
+    mRoomAtPos[x][y] = room;
 }
 
 Room *BuildingFloor::GetRoomAt(const QPoint &pos)

@@ -31,7 +31,7 @@ class Room;
 class Building
 {
 public:
-    Building(int width, int height, BuildingTemplate *btemplate);
+    Building(int width, int height, BuildingTemplate *btemplate = 0);
 
     int width() const { return mWidth; }
     int height() const { return mHeight; }

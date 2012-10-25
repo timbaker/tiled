@@ -279,6 +279,7 @@ void FloorEditor::setDocument(BuildingDocument *doc)
     if (mDocument) {
         foreach (BuildingFloor *floor, building()->floors())
             floorAdded(floor);
+        currentFloorChanged();
 
         GraphicsGridItem *item = new GraphicsGridItem(building()->width(),
                                                       building()->height());
@@ -438,6 +439,11 @@ void FloorEditor::floorAdded(BuildingFloor *floor)
     GraphicsFloorItem *item = new GraphicsFloorItem(floor);
     mFloorItems.insert(floor->level(), item);
     addItem(item);
+
+    floorEdited(floor);
+
+    foreach (BaseMapObject *object, floor->objects())
+        objectAdded(object);
 }
 
 void FloorEditor::floorEdited(BuildingFloor *floor)

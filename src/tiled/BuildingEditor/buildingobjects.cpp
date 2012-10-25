@@ -31,6 +31,21 @@ BaseMapObject::BaseMapObject(BuildingFloor *floor, int x, int y, Direction dir) 
 {
 }
 
+QString BaseMapObject::dirString() const
+{
+    static const char *s[] = { "N", "S", "E", "W" };
+    return QLatin1String(s[mDir]);
+}
+
+BaseMapObject::Direction BaseMapObject::dirFromString(const QString &s)
+{
+    if (s == QLatin1String("N")) return N;
+    if (s == QLatin1String("S")) return S;
+    if (s == QLatin1String("W")) return W;
+    if (s == QLatin1String("E")) return E;
+    return Invalid;
+}
+
 int BaseMapObject::index()
 {
     return mFloor->indexOf(this);

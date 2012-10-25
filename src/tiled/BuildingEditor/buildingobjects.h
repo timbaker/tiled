@@ -33,7 +33,8 @@ public:
         N,
         S,
         E,
-        W
+        W,
+        Invalid
     };
 
     BaseMapObject(BuildingFloor *floor, int x, int y, Direction mDir);
@@ -64,13 +65,21 @@ public:
     Direction dir() const
     { return mDir; }
 
-    BuildingTile *mTile;
+    QString dirString() const;
+    static Direction dirFromString(const QString &s);
+
+    void setTile(BuildingTile *tile)
+    { mTile = tile; }
+
+    BuildingTile *tile() const
+    { return mTile; }
 
 protected:
     BuildingFloor *mFloor;
     Direction mDir;
     int mX;
     int mY;
+    BuildingTile *mTile;
 };
 
 class Door : public BaseMapObject
@@ -86,6 +95,13 @@ public:
     int getOffset()
     { return (mDir == N) ? 1 : 0; }
 
+    void setFrameTile(BuildingTile *tile)
+    { mFrameTile = tile; }
+
+    BuildingTile *frameTile() const
+    { return mFrameTile; }
+
+private:
     BuildingTile *mFrameTile;
 };
 
