@@ -56,6 +56,8 @@ BuildingTemplatesDialog::BuildingTemplatesDialog(QWidget *parent) :
     connect(ui->add, SIGNAL(clicked()), SLOT(addTemplate()));
     connect(ui->remove, SIGNAL(clicked()), SLOT(removeTemplate()));
     connect(ui->duplicate, SIGNAL(clicked()), SLOT(duplicateTemplate()));
+    connect(ui->moveUp, SIGNAL(clicked()), SLOT(moveUp()));
+    connect(ui->moveDown, SIGNAL(clicked()), SLOT(moveDown()));
     connect(ui->name, SIGNAL(textEdited(QString)), SLOT(nameEdited(QString)));
     connect(ui->tilesList, SIGNAL(itemSelectionChanged()),
             SLOT(tileSelectionChanged()));
@@ -123,8 +125,9 @@ void BuildingTemplatesDialog::removeTemplate()
         return;
 
     int index = mTemplates.indexOf(mTemplate);
-    delete mTemplates.takeAt(index);
+    // Order is important here. templateSelectionChanged() will get called.
     delete ui->templatesList->takeItem(index);
+    delete mTemplates.takeAt(index);
 }
 
 void BuildingTemplatesDialog::duplicateTemplate()
@@ -136,6 +139,36 @@ void BuildingTemplatesDialog::duplicateTemplate()
     mTemplates += btemplate;
     ui->templatesList->addItem(btemplate->Name);
     ui->templatesList->setCurrentRow(ui->templatesList->count() - 1);
+}
+
+void BuildingTemplatesDialog::moveUp()
+{
+    if (!mTemplate)
+        return;
+
+    int index = mTemplates.indexOf(mTemplate);
+    if (index > 0) {
+        mTemplates.takeAt(index);
+        mTemplates.insert(index - 1, mTemplate);
+        QListWidgetItem *item = ui->templatesList->takeItem(index);
+        ui->templatesList->insertItem(index - 1, item);
+        ui->templatesList->setCurrentItem(item);
+    }
+}
+
+void BuildingTemplatesDialog::moveDown()
+{
+    if (!mTemplate)
+        return;
+
+    int index = mTemplates.indexOf(mTemplate);
+    if (index < mTemplates.size() - 1) {
+        mTemplates.takeAt(index);
+        mTemplates.insert(index + 1, mTemplate);
+        QListWidgetItem *item = ui->templatesList->takeItem(index);
+        ui->templatesList->insertItem(index + 1, item);
+        ui->templatesList->setCurrentItem(item);
+    }
 }
 
 void BuildingTemplatesDialog::nameEdited(const QString &name)
@@ -189,6 +222,10 @@ void BuildingTemplatesDialog::synchUI()
     ui->name->setEnabled(mTemplate != 0);
     ui->remove->setEnabled(mTemplate != 0);
     ui->duplicate->setEnabled(mTemplate != 0);
+    ui->moveUp->setEnabled(mTemplate != 0 &&
+            mTemplates.indexOf(mTemplate) > 0);
+    ui->moveDown->setEnabled(mTemplate != 0 &&
+            mTemplates.indexOf(mTemplate) < mTemplates.count() - 1);
     ui->tilesList->setEnabled(mTemplate != 0);
     ui->chooseTile->setEnabled(mTemplate != 0 && mTileRow != -1);
     ui->editRooms->setEnabled(mTemplate != 0);

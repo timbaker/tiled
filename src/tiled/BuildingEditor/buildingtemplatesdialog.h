@@ -46,6 +46,8 @@ private slots:
     void addTemplate();
     void removeTemplate();
     void duplicateTemplate();
+    void moveUp();
+    void moveDown();
     void nameEdited(const QString &name);
     void editRooms();
     void chooseTile();
