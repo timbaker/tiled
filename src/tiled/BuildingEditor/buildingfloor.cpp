@@ -300,6 +300,18 @@ int BuildingFloor::height() const
     return mBuilding->height();
 }
 
+QRegion BuildingFloor::roomRegion(Room *room)
+{
+    QRegion region;
+    for (int y = 0; y < height(); y++) {
+    for (int x = 0; x < width(); x++) {
+            if (mRoomAtPos[x][y] == room)
+                region |= QRegion(x, y, 1, 1);
+        }
+    }
+    return region;
+}
+
 /////
 
 BuildingFloor::Square::Square()

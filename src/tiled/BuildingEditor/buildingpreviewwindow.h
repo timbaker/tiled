@@ -46,6 +46,7 @@ class BuildingPreviewWindow;
 namespace BuildingEditor {
 
 class BaseMapObject;
+class Building;
 class BuildingFloor;
 class BuildingDocument;
 class Door;
@@ -72,6 +73,23 @@ private:
     QRectF mBoundingRect;
 };
 
+class PreviewGridItem : public QGraphicsItem
+{
+public:
+    PreviewGridItem(Building *building, Tiled::MapRenderer *renderer);
+
+    void synchWithBuilding();
+
+    QRectF boundingRect() const;
+    void paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *);
+
+private:
+    Building *mBuilding;
+    Tiled::MapRenderer *mRenderer;
+    QRect mTileBounds;
+    QRectF mBoundingRect;
+};
+
 class BuildingPreviewScene : public QGraphicsScene
 {
     Q_OBJECT
@@ -81,6 +99,9 @@ public:
 
     void setDocument(BuildingDocument *doc);
     void clearDocument();
+
+    MapComposite *mapComposite() const
+    { return mMapComposite; }
 
     Tiled::Map *map() const
     { return mMap; }
@@ -123,6 +144,7 @@ private:
     MapComposite *mMapComposite;
     Tiled::Map *mMap;
     Tiled::MapRenderer *mRenderer;
+    PreviewGridItem *mGridItem;
     QMap<int,CompositeLayerGroupItem*> mLayerGroupItems;
     QString mError;
 };

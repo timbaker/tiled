@@ -19,6 +19,7 @@
 #define BUILDINGFLOOR_H
 
 #include <QList>
+#include <QRegion>
 #include <QString>
 #include <QVector>
 
@@ -137,6 +138,8 @@ public:
 
     int level() const
     { return mLevel; }
+
+    QRegion roomRegion(Room *room);
 
 private:
     Building *mBuilding;

@@ -22,6 +22,7 @@
 #include "buildingdocument.h"
 #include "buildingfloor.h"
 #include "buildingobjects.h"
+#include "buildingtemplates.h"
 #include "buildingtiles.h"
 
 #include "mapcomposite.h"
@@ -30,7 +31,9 @@
 
 #include "isometricrenderer.h"
 #include "map.h"
+#include "mapobject.h"
 #include "maprenderer.h"
+#include "objectgroup.h"
 #include "tmxmapwriter.h"
 #include "tilelayer.h"
 #include "tileset.h"
@@ -125,6 +128,29 @@ void BuildingPreviewWindow::writeSettings()
 bool BuildingPreviewWindow::exportTMX(const QString &fileName)
 {
     TmxMapWriter writer;
+
+    foreach (BuildingFloor *floor, mDocument->building()->floors()) {
+        int n = mScene->map()->indexOfLayer(tr("%1_RoomDefs").arg(floor->level()),
+                                            Layer::ObjectGroupType);
+        ObjectGroup *objectGroup = mScene->map()->layerAt(n)->asObjectGroup();
+        while (objectGroup->objectCount()) {
+            MapObject *mapObject = objectGroup->objects().at(0);
+            objectGroup->removeObjectAt(0);
+            delete mapObject;
+        }
+        int delta = (mScene->mapComposite()->maxLevel() - floor->level()) * 3;
+        QPoint offset(delta, delta); // FIXME: not for LevelIsometric
+        foreach (Room *room, mDocument->building()->rooms()) {
+            QRegion roomRegion = floor->roomRegion(room);
+            foreach (QRect rect, roomRegion.rects()) {
+                MapObject *mapObject = new MapObject(room->internalName, tr("room"),
+                                                     rect.topLeft() + offset,
+                                                     rect.size());
+                objectGroup->addObject(mapObject);
+            }
+        }
+    }
+
     if (!writer.write(mScene->map(), fileName)) {
         QMessageBox::critical(this, tr("Error Saving Map"),
                               writer.errorString());
@@ -164,8 +190,6 @@ void CompositeLayerGroupItem::paint(QPainter *p, const QStyleOptionGraphicsItem 
     if (mLayerGroup->needsSynch() /*mBoundingRect != mLayerGroup->boundingRect(mRenderer)*/)
         return;
 
-    if (mLayerGroup->level() == 0 && !mBoundingRect.isEmpty())
-        mRenderer->drawGrid(p, option->exposedRect, Qt::black, mLayerGroup->level());
     mRenderer->drawTileLayerGroup(p, mLayerGroup, option->exposedRect);
 #if 0 && defined(_DEBUG)
     p->drawRect(mBoundingRect);
@@ -190,12 +214,46 @@ void CompositeLayerGroupItem::updateBounds()
 
 /////
 
+PreviewGridItem::PreviewGridItem(Building *building, MapRenderer *renderer) :
+    QGraphicsItem(),
+    mBuilding(building),
+    mRenderer(renderer)
+{
+    setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
+    synchWithBuilding();
+}
+
+void PreviewGridItem::synchWithBuilding()
+{
+    int offset = (mBuilding->floorCount() - 1) * 3;
+    mTileBounds = QRect(offset, offset, mBuilding->width(), mBuilding->height());
+
+    QRectF bounds = mRenderer->boundingRect(mTileBounds);
+    if (bounds != mBoundingRect) {
+        prepareGeometryChange();
+        mBoundingRect = bounds;
+    }
+}
+
+QRectF PreviewGridItem::boundingRect() const
+{
+    return mBoundingRect;
+}
+
+void PreviewGridItem::paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *)
+{
+    mRenderer->drawGrid(p, option->exposedRect, Qt::black, 0, mTileBounds);
+}
+
+/////
+
 BuildingPreviewScene::BuildingPreviewScene(QWidget *parent) :
     QGraphicsScene(parent),
     mDocument(0),
     mMapComposite(0),
     mMap(0),
-    mRenderer(0)
+    mRenderer(0),
+    mGridItem(0)
 {
     setBackgroundBrush(Qt::darkGray);
 }
@@ -224,6 +282,7 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
         delete mRenderer;
         qDeleteAll(mLayerGroupItems);
         mLayerGroupItems.clear();
+        delete mGridItem;
 
         mMapComposite = 0;
         mMap = 0;
@@ -251,6 +310,9 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
     default:
         return;
     }
+
+    mGridItem = new PreviewGridItem(mDocument->building(), mRenderer);
+    addItem(mGridItem);
 
     MapInfo *mapInfo = MapManager::instance()->newFromMap(mMap);
 
@@ -310,36 +372,38 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
     const QMap<QString,Tiled::Tileset*> &tilesetByName =
             BuildingTiles::instance()->tilesetsMap();
 
+    int offset = (mMapComposite->maxLevel() - floor->level()) * 3; // FIXME: not for LevelIsometric
+
     int index = 0;
     foreach (TileLayer *tl, layers) {
-        tl->erase(QRegion(QRect(0, 0, tl->width(), tl->height())));
+        tl->erase(QRegion(0, 0, tl->width(), tl->height()));
         for (int x = 0; x < floor->width(); x++) {
             for (int y = 0; y < floor->height(); y++) {
                 const BuildingFloor::Square &square = floor->squares[x][y];
                 if (index == LayerIndexFloor) {
                     BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionFloor];
                     if (tile)
-                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
+                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
                 }
                 if (index == LayerIndexWall) {
                     BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionWall];
                     if (tile)
-                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionWall])));
+                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionWall])));
                 }
                 if (index == LayerIndexDoor) {
                     BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionDoor];
                     if (tile)
-                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionDoor])));
+                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionDoor])));
                 }
                 if (index == LayerIndexFrame) {
                     BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionFrame];
                     if (tile)
-                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionFrame])));
+                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionFrame])));
                 }
                 if (index == LayerIndexFurniture) {
                     BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionFurniture];
                     if (tile)
-                        tl->setCell(x, y, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionFurniture])));
+                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionFurniture])));
                 }
             }
         }
@@ -402,30 +466,42 @@ void BuildingPreviewScene::roomChanged(Room *room)
 
 void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
 {
-    int x = floor->level() * -3, y = floor->level() * -3; // FIXME: not for LevelIsometric
+    // Resize the map and all existing layers to accomodate the new level.
+    int maxLevel = qMax(mMapComposite->maxLevel(), floor->level());
+    QSize mapSize = QSize(floor->width() + 3 * maxLevel,
+                          floor->height() + 3 * maxLevel);
+    bool didResize = false; // always true
+    if (mapSize != mMap->size()) {
+        int delta = maxLevel - mMapComposite->maxLevel();
+        foreach (Layer *layer, mMap->layers())
+            layer->resize(mapSize, QPoint(delta * 3, delta * 3));
+        mMap->setWidth(mapSize.width());
+        mMap->setHeight(mapSize.height());
+        didResize = true;
+    }
 
-    TileLayer *tl = new TileLayer(tr("%1_Floor").arg(floor->level()), x, y,
-                                  floor->width(), floor->height());
+    TileLayer *tl = new TileLayer(tr("%1_Floor").arg(floor->level()), 0, 0,
+                                  mapSize.width(), mapSize.height());
     mMap->addLayer(tl);
     mMapComposite->layerAdded(mMap->layerCount() - 1);
 
-    tl = new TileLayer(tr("%1_Walls").arg(floor->level()), x, y,
-                       floor->width(), floor->height());
+    tl = new TileLayer(tr("%1_Walls").arg(floor->level()), 0, 0,
+                       mapSize.width(), mapSize.height());
     mMap->addLayer(tl);
     mMapComposite->layerAdded(mMap->layerCount() - 1);
 
-    tl = new TileLayer(tr("%1_Frames").arg(floor->level()), x, y,
-                       floor->width(), floor->height());
+    tl = new TileLayer(tr("%1_Frames").arg(floor->level()), 0, 0,
+                       mapSize.width(), mapSize.height());
     mMap->addLayer(tl);
     mMapComposite->layerAdded(mMap->layerCount() - 1);
 
-    tl = new TileLayer(tr("%1_Doors").arg(floor->level()), x, y,
-                       floor->width(), floor->height());
+    tl = new TileLayer(tr("%1_Doors").arg(floor->level()), 0, 0,
+                       mapSize.width(), mapSize.height());
     mMap->addLayer(tl);
     mMapComposite->layerAdded(mMap->layerCount() - 1);
 
-    tl = new TileLayer(tr("%1_Furniture").arg(floor->level()), x, y,
-                       floor->width(), floor->height());
+    tl = new TileLayer(tr("%1_Furniture").arg(floor->level()), 0, 0,
+                       mapSize.width(), mapSize.height());
     mMap->addLayer(tl);
     mMapComposite->layerAdded(mMap->layerCount() - 1);
 
@@ -438,8 +514,28 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
     item->updateBounds();
     addItem(item);
 
+    // Add an object layer for RoomDefs.  Objects are only added when
+    // exporting to a TMX.
+    ObjectGroup *objectGroup = new ObjectGroup(tr("%1_RoomDefs").arg(floor->level()),
+                                               0, 0, mapSize.width(), mapSize.height());
+    mMap->addLayer(objectGroup);
+
     foreach (BaseMapObject *object, floor->objects())
         objectAdded(object);
+
+    if (didResize) {
+        foreach (CompositeLayerGroupItem *item, mLayerGroupItems) {
+            int level = item->layerGroup()->level();
+            if (level == floor->level())
+                continue;
+            BuildingFloorToTileLayers(mDocument->building()->floor(level),
+                                      item->layerGroup()->layers());
+            item->synchWithTileLayers();
+            item->updateBounds();
+        }
+    }
+
+    mGridItem->synchWithBuilding();
 
     mRenderer->setMaxLevel(mMapComposite->maxLevel());
     setSceneRect(mMapComposite->boundingRect(mRenderer));
