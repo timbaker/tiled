@@ -100,7 +100,8 @@ void TileDelegate::paint(QPainter *painter,
         if (index.row() == r.bottom())
             --bottom;
 
-        painter->fillRect(left, top, right-left, bottom-top, qRgb(220, 220, 220));
+        painter->fillRect(left, top, right-left+1, bottom-top+1,
+                          qRgb(220, 220, 220));
 
         painter->setPen(Qt::darkGray);
         if (index.column() == r.left())
