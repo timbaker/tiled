@@ -66,8 +66,10 @@ RoomsDialog::RoomsDialog(const QList<Room*> &rooms, QWidget *parent) :
             SLOT(tileSelectionChanged()));
     connect(ui->chooseTile, SIGNAL(clicked()), SLOT(chooseTile()));
 
-    ui->listWidget->setCurrentRow(0);
-    ui->tilesList->setCurrentRow(0);
+    if (rooms.count()) {
+        ui->listWidget->setCurrentRow(0);
+        ui->tilesList->setCurrentRow(0);
+    }
 }
 
 RoomsDialog::~RoomsDialog()
@@ -103,6 +105,7 @@ void RoomsDialog::synchUI()
     ui->internalName->setEnabled(mRoom != 0);
     ui->color->setEnabled(mRoom != 0);
     ui->tilesList->setEnabled(mRoom != 0);
+    ui->chooseTile->setEnabled(mRoom != 0);
 
     if (mRoom) {
         ui->name->setText(mRoom->Name);
