@@ -142,8 +142,12 @@ AddRemoveMapObject::removeObject
     return path;
 }
 
-void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect, QColor gridColor, int level) const
+void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect,
+                              QColor gridColor, int level,
+                              const QRect &tileBounds) const
 {
+    Q_UNUSED(tileBounds)
+
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
 

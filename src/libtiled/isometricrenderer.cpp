@@ -128,9 +128,14 @@ QPainterPath IsometricRenderer::shape(const MapObject *object) const
 
 #ifdef ZOMBOID
 void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect,
-                                 QColor gridColor, int level) const
+                                 QColor gridColor, int level,
+                                 const QRect &tileBounds) const
 {
     Q_UNUSED(level)
+
+    QRect b = tileBounds;
+    if (b.isEmpty())
+        b = QRect(QPoint(0, 0), map()->size());
 #else
 void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect,
                                  QColor gridColor) const
@@ -143,12 +148,19 @@ void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect,
     r.adjust(-tileWidth / 2, -tileHeight / 2,
              tileWidth / 2, tileHeight / 2);
 
+#ifdef ZOMBOID
+    const int startX = qMax(qreal(b.left()), pixelToTileCoords(r.topLeft()).x());
+    const int startY = qMax(qreal(b.top()), pixelToTileCoords(r.topRight()).y());
+    const int endX = qMin(qreal(b.right() + 1), pixelToTileCoords(r.bottomRight()).x());
+    const int endY = qMin(qreal(b.bottom() + 1), pixelToTileCoords(r.bottomLeft()).y());
+#else
     const int startX = qMax(qreal(0), pixelToTileCoords(r.topLeft()).x());
     const int startY = qMax(qreal(0), pixelToTileCoords(r.topRight()).y());
     const int endX = qMin(qreal(map()->width()),
                           pixelToTileCoords(r.bottomRight()).x());
     const int endY = qMin(qreal(map()->height()),
                           pixelToTileCoords(r.bottomLeft()).y());
+#endif
 
     gridColor.setAlpha(128);
 

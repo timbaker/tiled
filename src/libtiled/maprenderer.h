@@ -99,7 +99,8 @@ public:
      */
 #ifdef ZOMBOID
     virtual void drawGrid(QPainter *painter, const QRectF &rect,
-                          QColor gridColor = Qt::black, int level = 0) const = 0;
+                          QColor gridColor = Qt::black, int level = 0,
+                          const QRect &tileBounds = QRect()) const = 0;
 #else
     virtual void drawGrid(QPainter *painter, const QRectF &rect,
                           QColor gridColor = Qt::black) const = 0;
