@@ -93,6 +93,9 @@
     <property name="title">
      <string>Building</string>
     </property>
+    <addaction name="actionRotateRight"/>
+    <addaction name="actionRotateLeft"/>
+    <addaction name="separator"/>
     <addaction name="actionRooms"/>
     <addaction name="actionTemplates"/>
     <addaction name="actionTiles"/>
@@ -393,6 +396,16 @@
   <action name="actionTemplateFromBuilding">
    <property name="text">
     <string>Template From Building...</string>
+   </property>
+  </action>
+  <action name="actionRotateRight">
+   <property name="text">
+    <string>Rotate Right</string>
+   </property>
+  </action>
+  <action name="actionRotateLeft">
+   <property name="text">
+    <string>Rotate Left</string>
    </property>
   </action>
  </widget>

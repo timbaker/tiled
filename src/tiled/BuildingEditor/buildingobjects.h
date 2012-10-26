@@ -74,6 +74,8 @@ public:
     BuildingTile *tile() const
     { return mTile; }
 
+    virtual void rotate(bool right);
+
 protected:
     BuildingFloor *mFloor;
     Direction mDir;
@@ -114,6 +116,8 @@ public:
     }
 
     QRect bounds() const;
+
+    void rotate(bool right);
 
     int getOffset(int x, int y);
 };

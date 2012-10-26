@@ -46,6 +46,32 @@ BaseMapObject::Direction BaseMapObject::dirFromString(const QString &s)
     return Invalid;
 }
 
+void BaseMapObject::rotate(bool right)
+{
+    Q_UNUSED(right)
+    mDir = (mDir == N) ? W : N;
+
+    int oldWidth = mFloor->height();
+    int oldHeight = mFloor->width();
+    if (right) {
+        int x = mX;
+        mX = oldHeight - mY - 1;
+        mY = x;
+        if (mDir == N)
+            ;
+        else
+            mX++;
+    } else {
+        int x = mX;
+        mX = mY;
+        mY = oldWidth - x - 1;
+        if (mDir == N)
+            mY++;
+        else
+            ;
+    }
+}
+
 int BaseMapObject::index()
 {
     return mFloor->indexOf(this);
@@ -60,6 +86,18 @@ QRect Stairs::bounds() const
     if (mDir == W)
         return QRect(mX, mY, 5, 1);
     return QRect();
+}
+
+void Stairs::rotate(bool right)
+{
+    BaseMapObject::rotate(right);
+    if (right) {
+        if (mDir == W) // used to be N
+            mX -= 5;
+    } else {
+        if (mDir == N) // used to be W
+            mY -= 5;
+    }
 }
 
 int Stairs::getOffset(int x, int y)

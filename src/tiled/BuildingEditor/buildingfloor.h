@@ -141,6 +141,8 @@ public:
 
     QRegion roomRegion(Room *room);
 
+    void rotate(bool right);
+
 private:
     Building *mBuilding;
     QVector<QVector<Room*> > mRoomAtPos;

@@ -348,6 +348,8 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
     connect(mDocument, SIGNAL(objectTileChanged(BaseMapObject*)),
             SLOT(objectTileChanged(BaseMapObject*)));
 
+    connect(mDocument, SIGNAL(buildingRotated()), SLOT(buildingRotated()));
+
     connect(mDocument, SIGNAL(roomAdded(Room*)), SLOT(roomAdded(Room*)));
     connect(mDocument, SIGNAL(roomRemoved(Room*)), SLOT(roomRemoved(Room*)));
     connect(mDocument, SIGNAL(roomChanged(Room*)), SLOT(roomChanged(Room*)));
@@ -377,8 +379,8 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
     int index = 0;
     foreach (TileLayer *tl, layers) {
         tl->erase(QRegion(0, 0, tl->width(), tl->height()));
-        for (int x = 0; x < floor->width(); x++) {
-            for (int y = 0; y < floor->height(); y++) {
+        for (int x = 0; x <= floor->width(); x++) {
+            for (int y = 0; y <= floor->height(); y++) {
                 const BuildingFloor::Square &square = floor->squares[x][y];
                 if (index == LayerIndexFloor) {
                     BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionFloor];
@@ -449,18 +451,21 @@ void BuildingPreviewScene::roomDefinitionChanged()
 
 void BuildingPreviewScene::roomAdded(Room *room)
 {
+    Q_UNUSED(room)
     foreach (BuildingFloor *floor, mDocument->building()->floors())
         floorEdited(floor);
 }
 
 void BuildingPreviewScene::roomRemoved(Room *room)
 {
+    Q_UNUSED(room)
     foreach (BuildingFloor *floor, mDocument->building()->floors())
         floorEdited(floor);
 }
 
 void BuildingPreviewScene::roomChanged(Room *room)
 {
+    Q_UNUSED(room)
     roomDefinitionChanged();
 }
 
@@ -468,8 +473,8 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
 {
     // Resize the map and all existing layers to accomodate the new level.
     int maxLevel = qMax(mMapComposite->maxLevel(), floor->level());
-    QSize mapSize = QSize(floor->width() + 3 * maxLevel,
-                          floor->height() + 3 * maxLevel);
+    QSize mapSize = QSize(floor->width() + 3 * maxLevel + 1,
+                          floor->height() + 3 * maxLevel + 1);
     bool didResize = false; // always true
     if (mapSize != mMap->size()) {
         int delta = maxLevel - mMapComposite->maxLevel();
@@ -574,6 +579,22 @@ void BuildingPreviewScene::objectMoved(BaseMapObject *object)
 void BuildingPreviewScene::objectTileChanged(BuildingEditor::BaseMapObject *object)
 {
     floorEdited(object->floor());
+}
+
+void BuildingPreviewScene::buildingRotated()
+{
+    int extra = mMapComposite->maxLevel() * 3 + 1;
+    int width = mDocument->building()->width() + extra;
+    int height = mDocument->building()->height() + extra;
+    foreach (Layer *layer, mMap->layers())
+        layer->resize(QSize(width, height), QPoint());
+    mMap->setWidth(mDocument->building()->width());
+    mMap->setHeight(mDocument->building()->height());
+
+    foreach (BuildingFloor *floor, mDocument->building()->floors()) {
+        floorEdited(floor);
+    }
+    mGridItem->synchWithBuilding();
 }
 
 /////

@@ -196,6 +196,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     keys += QKeySequence(tr("0"));
     ui->actionNormalSize->setShortcuts(keys);
 
+    connect(ui->actionRotateRight, SIGNAL(triggered()), SLOT(rotateRight()));
+    connect(ui->actionRotateLeft, SIGNAL(triggered()), SLOT(rotateLeft()));
+
     connect(ui->actionRooms, SIGNAL(triggered()), SLOT(roomsDialog()));
     connect(ui->actionTemplates, SIGNAL(triggered()), SLOT(templatesDialog()));
     connect(ui->actionTiles, SIGNAL(triggered()), SLOT(tilesDialog()));
@@ -617,6 +620,7 @@ void BuildingEditorWindow::updateRoomComboBox()
 
 void BuildingEditorWindow::roomIndexChanged(int index)
 {
+    Q_UNUSED(index)
 }
 
 void BuildingEditorWindow::categoryScaleChanged(qreal scale)
@@ -1143,12 +1147,14 @@ void BuildingEditorWindow::roomsDialog()
 
 void BuildingEditorWindow::roomAdded(Room *room)
 {
+    Q_UNUSED(room)
     updateRoomComboBox();
     updateActions();
 }
 
 void BuildingEditorWindow::roomRemoved(Room *room)
 {
+    Q_UNUSED(room)
     updateRoomComboBox();
     updateActions();
 }
@@ -1160,7 +1166,26 @@ void BuildingEditorWindow::roomsReordered()
 
 void BuildingEditorWindow::roomChanged(Room *room)
 {
+    Q_UNUSED(room)
     updateRoomComboBox();
+}
+
+void BuildingEditorWindow::rotateRight()
+{
+    if (!mCurrentDocument)
+        return;
+
+    mCurrentDocument->undoStack()->push(new RotateBuilding(mCurrentDocument,
+                                                           true));
+}
+
+void BuildingEditorWindow::rotateLeft()
+{
+    if (!mCurrentDocument)
+        return;
+
+    mCurrentDocument->undoStack()->push(new RotateBuilding(mCurrentDocument,
+                                                           false));
 }
 
 void BuildingEditorWindow::templatesDialog()
@@ -1303,6 +1328,9 @@ void BuildingEditorWindow::updateActions()
 
     ui->actionRooms->setEnabled(mCurrentDocument != 0);
     ui->actionTemplateFromBuilding->setEnabled(mCurrentDocument != 0);
+
+    ui->actionRotateRight->setEnabled(mCurrentDocument != 0);
+    ui->actionRotateLeft->setEnabled(mCurrentDocument != 0);
 
     mRoomComboBox->setEnabled(mCurrentDocument != 0 &&
             currentRoom() != 0);

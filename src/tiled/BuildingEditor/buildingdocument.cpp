@@ -204,3 +204,11 @@ QVector<QVector<Room*> > BuildingDocument::swapFloorGrid(BuildingFloor *floor,
     emit floorEdited(floor);
     return old;
 }
+
+void BuildingDocument::rotateBuilding(bool right)
+{
+    mBuilding->rotate(right);
+    foreach (BuildingFloor *floor, mBuilding->floors())
+        floor->rotate(right);
+    emit buildingRotated();
+}

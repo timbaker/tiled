@@ -48,6 +48,11 @@ GraphicsFloorItem::GraphicsFloorItem(BuildingFloor *floor) :
     mBmp->fill(Qt::black);
 }
 
+GraphicsFloorItem::~GraphicsFloorItem()
+{
+    delete mBmp;
+}
+
 QRectF GraphicsFloorItem::boundingRect() const
 {
     return QRectF(0, 0, mFloor->width() * 30, mFloor->height() * 30);
@@ -75,6 +80,12 @@ void GraphicsFloorItem::paint(QPainter *painter,
             painter->fillRect(x * 30, y * 30, 30, 30, c);
         }
     }
+}
+
+void GraphicsFloorItem::synchWithFloor()
+{
+    delete mBmp;
+    mBmp = new QImage(mFloor->width(), mFloor->height(), QImage::Format_RGB32);
 }
 
 /////
@@ -116,6 +127,13 @@ void GraphicsGridItem::paint(QPainter *painter,
 
     for (int y = minY; y <= maxY; y++)
         painter->drawLine(minX * 30, y * 30, maxX * 30, y * 30);
+}
+
+void GraphicsGridItem::setSize(int width, int height)
+{
+    prepareGeometryChange();
+    mWidth = width;
+    mHeight = height;
 }
 
 /////
@@ -281,10 +299,10 @@ void FloorEditor::setDocument(BuildingDocument *doc)
             floorAdded(floor);
         currentFloorChanged();
 
-        GraphicsGridItem *item = new GraphicsGridItem(building()->width(),
-                                                      building()->height());
-        item->setZValue(ZVALUE_GRID);
-        addItem(item);
+        mGridItem = new GraphicsGridItem(building()->width(),
+                                         building()->height());
+        mGridItem->setZValue(ZVALUE_GRID);
+        addItem(mGridItem);
 
         setSceneRect(-10, -10,
                      building()->width() * 30 + 10,
@@ -318,6 +336,8 @@ void FloorEditor::setDocument(BuildingDocument *doc)
                 SLOT(roomRemoved(Room*)));
         connect(mDocument, SIGNAL(roomsReordered()),
                 SLOT(roomsReordered()));
+
+        connect(mDocument, SIGNAL(buildingRotated()), SLOT(buildingRotated()));
     }
 
     emit documentChanged();
@@ -525,6 +545,7 @@ void FloorEditor::roomChanged(Room *room)
 
 void FloorEditor::roomAdded(Room *room)
 {
+    Q_UNUSED(room)
     // This is only to support undoing removing a room.
     // When the room is re-added, the floor grid gets put
     // back the way it was, so we have to update the bitmap.
@@ -532,6 +553,7 @@ void FloorEditor::roomAdded(Room *room)
 
 void FloorEditor::roomRemoved(Room *room)
 {
+    Q_UNUSED(room)
 #if 1
     foreach (BuildingFloor *floor, building()->floors())
         floorEdited(floor);
@@ -553,6 +575,23 @@ void FloorEditor::roomRemoved(Room *room)
 
 void FloorEditor::roomsReordered()
 {
+}
+
+void FloorEditor::buildingRotated()
+{
+    foreach (GraphicsFloorItem *item, mFloorItems) {
+        item->synchWithFloor();
+        floorEdited(item->floor());
+    }
+
+    foreach (GraphicsObjectItem *item, mObjectItems)
+        item->synchWithObject();
+
+    mGridItem->setSize(building()->width(), building()->height());
+
+    setSceneRect(-10, -10,
+                 building()->width() * 30 + 10,
+                 building()->height() * 30 + 10);
 }
 
 /////

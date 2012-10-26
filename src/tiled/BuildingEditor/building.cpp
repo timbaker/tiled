@@ -63,3 +63,8 @@ Room *Building::removeRoom(int index)
 {
     return mRooms.takeAt(index);
 }
+
+void Building::rotate(bool right)
+{
+    qSwap(mWidth, mHeight);
+}

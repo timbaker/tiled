@@ -139,6 +139,8 @@ private slots:
     void objectMoved(BaseMapObject *object);
     void objectTileChanged(BaseMapObject *object);
 
+    void buildingRotated();
+
 private:
     BuildingDocument *mDocument;
     MapComposite *mMapComposite;

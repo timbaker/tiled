@@ -315,3 +315,19 @@ void SwapFloorGrid::swap()
 }
 
 /////
+
+RotateBuilding::RotateBuilding(BuildingDocument *doc, bool right) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Rotate Building")),
+    mDocument(doc),
+    mRight(right)
+{
+}
+
+void RotateBuilding::swap()
+{
+    mDocument->rotateBuilding(mRight);
+    mRight = !mRight;
+}
+
+
+/////

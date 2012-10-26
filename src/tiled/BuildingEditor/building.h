@@ -93,6 +93,8 @@ public:
     void setStairsTile(BuildingTile *tileName)
     { mStairsTile = tileName; }
 
+    void rotate(bool right);
+
 private:
     int mWidth, mHeight;
     QList<BuildingFloor*> mFloors;

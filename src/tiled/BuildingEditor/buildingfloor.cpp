@@ -312,6 +312,43 @@ QRegion BuildingFloor::roomRegion(Room *room)
     return region;
 }
 
+void BuildingFloor::rotate(bool right)
+{
+    int oldWidth = mRoomAtPos.size();
+    int oldHeight = mRoomAtPos[0].size();
+
+    int newWidth = oldWidth, newHeight = oldHeight;
+    qSwap(newWidth, newHeight);
+
+    QVector<QVector<Room*> > roomAtPos;
+    QVector<QVector<int> > indexAtPos;
+    roomAtPos.resize(newWidth);
+    indexAtPos.resize(newWidth);
+    for (int x = 0; x < newWidth; x++) {
+        roomAtPos[x].resize(newHeight);
+        indexAtPos[x].resize(newHeight);
+        for (int y = 0; y < newHeight; y++) {
+            roomAtPos[x][y] = 0;
+        }
+    }
+
+    for (int x = 0; x < oldWidth; x++) {
+        for (int y = 0; y < oldHeight; y++) {
+            Room *room = mRoomAtPos[x][y];
+            if (right)
+                roomAtPos[oldHeight - y - 1][x] = room;
+            else
+                roomAtPos[y][oldWidth - x - 1] = room;
+        }
+    }
+
+    mRoomAtPos = roomAtPos;
+    mIndexAtPos = indexAtPos;
+
+    foreach (BaseMapObject *object, mObjects)
+        object->rotate(right);
+}
+
 /////
 
 BuildingFloor::Square::Square()

@@ -132,6 +132,9 @@ private slots:
     void roomsReordered();
     void roomChanged(Room *room);
 
+    void rotateRight();
+    void rotateLeft();
+
     void templatesDialog();
     void tilesDialog();
     void templateFromBuilding();

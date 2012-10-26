@@ -298,6 +298,21 @@ private:
     QVector<QVector<Room*> > mGrid;
 };
 
+class RotateBuilding : public QUndoCommand
+{
+public:
+    RotateBuilding(BuildingDocument *doc, bool right);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    bool mRight;
+};
+
 } // namespace BuildingEditor
 
 #endif // BUILDINGUNDOREDO_H

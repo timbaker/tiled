@@ -83,6 +83,8 @@ public:
 
     QVector<QVector<Room *> > swapFloorGrid(BuildingFloor *floor,
                                             const QVector<QVector<Room *> > &grid);
+
+    void rotateBuilding(bool right);
     // -UNDO/REDO
     
 signals:
@@ -105,6 +107,8 @@ signals:
     void roomRemoved(Room *room);
     void roomsReordered();
     void roomChanged(Room *room);
+
+    void buildingRotated();
 
     void selectedObjectsChanged();
 

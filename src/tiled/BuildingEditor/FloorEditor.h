@@ -46,6 +46,7 @@ class GraphicsFloorItem : public QGraphicsItem
 {
 public:
     GraphicsFloorItem(BuildingFloor *floor);
+    ~GraphicsFloorItem();
 
     QRectF boundingRect() const;
 
@@ -56,6 +57,8 @@ public:
 
     QImage *bmp() const
     { return mBmp; }
+
+    void synchWithFloor();
 
 private:
     BuildingFloor *mFloor;
@@ -174,8 +177,11 @@ private slots:
     void roomRemoved(Room *room);
     void roomsReordered();
 
+    void buildingRotated();
+
 private:
     BuildingDocument *mDocument;
+    GraphicsGridItem *mGridItem;
     QList<GraphicsFloorItem*> mFloorItems;
     QList<GraphicsObjectItem*> mObjectItems;
     QSet<GraphicsObjectItem*> mSelectedObjectItems;
