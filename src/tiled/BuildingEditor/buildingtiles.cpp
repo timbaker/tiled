@@ -134,7 +134,7 @@ void BuildingTiles::writeBuildingTilesTxt(QWidget *parent)
     QString path = QCoreApplication::applicationDirPath() + QLatin1Char('/')
             + QLatin1String("BuildingTiles.txt");
     if (!simpleFile.write(path)) {
-        QMessageBox::warning(0, tr("It's no good, Jim!"),
+        QMessageBox::warning(parent, tr("It's no good, Jim!"),
                              simpleFile.errorString());
     }
 }
