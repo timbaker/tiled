@@ -93,6 +93,9 @@
     <property name="title">
      <string>Building</string>
     </property>
+    <addaction name="actionResize"/>
+    <addaction name="actionFlipHorizontal"/>
+    <addaction name="actionFlipVertical"/>
     <addaction name="actionRotateRight"/>
     <addaction name="actionRotateLeft"/>
     <addaction name="separator"/>
@@ -123,6 +126,7 @@
    <addaction name="actionWindow"/>
    <addaction name="actionStairs"/>
    <addaction name="actionSelectObject"/>
+   <addaction name="actionRooms"/>
    <addaction name="actionUpLevel"/>
    <addaction name="actionDownLevel"/>
   </widget>
@@ -379,6 +383,10 @@
    </property>
   </action>
   <action name="actionRooms">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_rooms.png</normaloff>:/BuildingEditor/icons/icon_rooms.png</iconset>
+   </property>
    <property name="text">
     <string>Rooms...</string>
    </property>
@@ -399,13 +407,48 @@
    </property>
   </action>
   <action name="actionRotateRight">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_rotate_right.png</normaloff>:/BuildingEditor/icons/icon_rotate_right.png</iconset>
+   </property>
    <property name="text">
     <string>Rotate Right</string>
    </property>
   </action>
   <action name="actionRotateLeft">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_rotate_left.png</normaloff>:/BuildingEditor/icons/icon_rotate_left.png</iconset>
+   </property>
    <property name="text">
     <string>Rotate Left</string>
+   </property>
+  </action>
+  <action name="actionResize">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_resize.png</normaloff>:/BuildingEditor/icons/icon_resize.png</iconset>
+   </property>
+   <property name="text">
+    <string>Resize Building...</string>
+   </property>
+  </action>
+  <action name="actionFlipHorizontal">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_flip_horizontal.png</normaloff>:/BuildingEditor/icons/icon_flip_horizontal.png</iconset>
+   </property>
+   <property name="text">
+    <string>Flip Horizontal</string>
+   </property>
+  </action>
+  <action name="actionFlipVertical">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_flip_vertical.png</normaloff>:/BuildingEditor/icons/icon_flip_vertical.png</iconset>
+   </property>
+   <property name="text">
+    <string>Flip Vertical</string>
    </property>
   </action>
  </widget>

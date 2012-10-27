@@ -167,7 +167,9 @@ public slots:
     void deactivate();
 
 protected:
+    virtual void updateCursorObject() = 0;
     void setCursorObject(BaseMapObject *object);
+    virtual void placeObject() = 0;
 
     enum TileEdge {
         Center,
@@ -179,6 +181,7 @@ protected:
 
     QPoint mTilePos;
     TileEdge mTileEdge;
+    BaseMapObject *mCursorObject;
     GraphicsObjectItem *mCursorItem;
 };
 
@@ -190,12 +193,11 @@ public:
 
     DoorTool();
 
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void placeObject();
+    void updateCursorObject();
 
 private:
     static DoorTool *mInstance;
-    Door *mCursorObject;
 };
 
 class WindowTool : public BaseObjectTool
@@ -206,12 +208,11 @@ public:
 
     WindowTool();
 
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void placeObject();
+    void updateCursorObject();
 
 private:
     static WindowTool *mInstance;
-    Window *mCursorObject;
 };
 
 class StairsTool : public BaseObjectTool
@@ -222,12 +223,11 @@ public:
 
     StairsTool();
 
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void placeObject();
+    void updateCursorObject();
 
 private:
     static StairsTool *mInstance;
-    Stairs *mCursorObject;
 };
 
 /////

@@ -139,6 +139,7 @@ private slots:
     void objectMoved(BaseMapObject *object);
     void objectTileChanged(BaseMapObject *object);
 
+    void buildingResized();
     void buildingRotated();
 
 private:

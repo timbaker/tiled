@@ -33,6 +33,7 @@
 #include "FloorEditor.h"
 #include "mixedtilesetview.h"
 #include "newbuildingdialog.h"
+#include "resizebuildingdialog.h"
 #include "roomsdialog.h"
 #include "simplefile.h"
 #include "templatefrombuildingdialog.h"
@@ -58,6 +59,7 @@
 #include <QMessageBox>
 #include <QPixmap>
 #include <QShowEvent>
+#include <QToolButton>
 #include <QUndoGroup>
 #include <QXmlStreamReader>
 
@@ -85,8 +87,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 
     instance = this;
 
-    ui->toolBar->insertSeparator(ui->actionUpLevel);
-    ui->toolBar->insertWidget(ui->actionUpLevel, mRoomComboBox);
+    ui->toolBar->insertSeparator(ui->actionRooms);
+    ui->toolBar->insertWidget(ui->actionRooms, mRoomComboBox);
     ui->toolBar->insertSeparator(ui->actionUpLevel);
 
     mRoomComboBox->setIconSize(QSize(20, 20));
@@ -196,6 +198,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     keys += QKeySequence(tr("0"));
     ui->actionNormalSize->setShortcuts(keys);
 
+    connect(ui->actionResize, SIGNAL(triggered()), SLOT(resizeBuilding()));
+    connect(ui->actionFlipHorizontal, SIGNAL(triggered()), SLOT(flipHorizontal()));
+    connect(ui->actionFlipVertical, SIGNAL(triggered()), SLOT(flipVertical()));
     connect(ui->actionRotateRight, SIGNAL(triggered()), SLOT(rotateRight()));
     connect(ui->actionRotateLeft, SIGNAL(triggered()), SLOT(rotateLeft()));
 
@@ -977,7 +982,10 @@ bool BuildingEditorWindow::saveBuildingAs()
     if (!fileName.isEmpty()) {
         mSettings.setValue(QLatin1String("BuildingEditor/OpenSaveDirectory"),
                            QFileInfo(fileName).absolutePath());
-        return writeBuilding(mCurrentDocument, fileName);
+        bool ok = writeBuilding(mCurrentDocument, fileName);
+        if (ok)
+            updateWindowTitle();
+        return ok;
     }
     return false;
 }
@@ -1050,6 +1058,19 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
 
     if (building->roomCount())
         PencilTool::instance()->makeCurrent();
+
+    updateWindowTitle();
+}
+
+void BuildingEditorWindow::updateWindowTitle()
+{
+    QString fileName = mCurrentDocument ? mCurrentDocument->fileName() : QString();
+    if (fileName.isEmpty())
+        fileName = tr("Untitled");
+    else {
+        fileName = QDir::toNativeSeparators(fileName);
+    }
+    setWindowTitle(tr("%1 - Building Editor").arg(fileName));
 }
 
 void BuildingEditorWindow::exportTMX()
@@ -1168,6 +1189,51 @@ void BuildingEditorWindow::roomChanged(Room *room)
 {
     Q_UNUSED(room)
     updateRoomComboBox();
+}
+
+void BuildingEditorWindow::resizeBuilding()
+{
+    if (!mCurrentDocument)
+        return;
+
+    ResizeBuildingDialog dialog(mCurrentDocument->building(), this);
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    QSize newSize = dialog.buildingSize();
+
+    QUndoStack *undoStack = mCurrentDocument->undoStack();
+    undoStack->beginMacro(tr("Resize Building"));
+    undoStack->push(new ResizeBuildingBefore(mCurrentDocument));
+    undoStack->push(new ResizeBuilding(mCurrentDocument, newSize));
+    foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
+        undoStack->push(new ResizeFloor(mCurrentDocument, floor, newSize));
+        // Remove objects that aren't in bounds.
+        for (int i = floor->objectCount() - 1; i >= 0; --i) {
+            BaseMapObject *object = floor->object(i);
+            if (!object->isValidPos())
+                undoStack->push(new RemoveObject(mCurrentDocument,
+                                                 floor, i));
+        }
+    }
+    undoStack->push(new ResizeBuildingAfter(mCurrentDocument));
+    undoStack->endMacro();
+}
+
+void BuildingEditorWindow::flipHorizontal()
+{
+    if (!mCurrentDocument)
+        return;
+
+    mCurrentDocument->undoStack()->push(new FlipBuilding(mCurrentDocument, true));
+}
+
+void BuildingEditorWindow::flipVertical()
+{
+    if (!mCurrentDocument)
+        return;
+
+    mCurrentDocument->undoStack()->push(new FlipBuilding(mCurrentDocument, false));
 }
 
 void BuildingEditorWindow::rotateRight()
@@ -1329,6 +1395,9 @@ void BuildingEditorWindow::updateActions()
     ui->actionRooms->setEnabled(mCurrentDocument != 0);
     ui->actionTemplateFromBuilding->setEnabled(mCurrentDocument != 0);
 
+    ui->actionResize->setEnabled(mCurrentDocument != 0);
+    ui->actionFlipHorizontal->setEnabled(mCurrentDocument != 0);
+    ui->actionFlipVertical->setEnabled(mCurrentDocument != 0);
     ui->actionRotateRight->setEnabled(mCurrentDocument != 0);
     ui->actionRotateLeft->setEnabled(mCurrentDocument != 0);
 

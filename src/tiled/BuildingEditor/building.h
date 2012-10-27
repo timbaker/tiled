@@ -19,6 +19,7 @@
 #define BUILDING_H
 
 #include <QList>
+#include <QSize>
 #include <QString>
 
 namespace BuildingEditor {
@@ -35,6 +36,8 @@ public:
 
     int width() const { return mWidth; }
     int height() const { return mHeight; }
+
+    QSize size() const { return QSize(mWidth, mHeight); }
 
     const QList<BuildingFloor*> &floors() const
     { return mFloors; }
@@ -93,7 +96,9 @@ public:
     void setStairsTile(BuildingTile *tileName)
     { mStairsTile = tileName; }
 
+    void resize(const QSize &newSize);
     void rotate(bool right);
+    void flip(bool horizontal);
 
 private:
     int mWidth, mHeight;

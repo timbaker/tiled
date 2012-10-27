@@ -33,6 +33,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QWheelEvent>
+#include <qmath.h>
 
 using namespace BuildingEditor;
 
@@ -62,10 +63,10 @@ void GraphicsFloorItem::paint(QPainter *painter,
                               const QStyleOptionGraphicsItem *option,
                               QWidget *)
 {
-    int minX = option->exposedRect.left() / 30 - 1;
-    int maxX = option->exposedRect.right() / 30 + 1;
-    int minY = option->exposedRect.top() / 30 - 1;
-    int maxY = option->exposedRect.bottom() / 30 + 1;
+    int minX = qFloor(option->exposedRect.left() / 30) - 1;
+    int maxX = qCeil(option->exposedRect.right() / 30) + 1;
+    int minY = qFloor(option->exposedRect.top() / 30) - 1;
+    int maxY = qCeil(option->exposedRect.bottom() / 30) + 1;
 
     minX = qMax(0, minX);
     maxX = qMin(maxX, mFloor->width());
@@ -100,7 +101,7 @@ GraphicsGridItem::GraphicsGridItem(int width, int height) :
 
 QRectF GraphicsGridItem::boundingRect() const
 {
-    return QRectF(0, 0, mWidth * 30, mHeight * 30);
+    return QRectF(-2, -2, mWidth * 30 + 4, mHeight * 30 + 4);
 }
 
 void GraphicsGridItem::paint(QPainter *painter,
@@ -108,14 +109,21 @@ void GraphicsGridItem::paint(QPainter *painter,
                              QWidget *)
 {
     QPen pen(QColor(128, 128, 220, 80));
+#if 1
+    QBrush brush(QColor(128, 128, 220, 80), Qt::Dense4Pattern);
+    brush.setTransform(QTransform::fromScale(1/painter->transform().m11(),
+                                             1/painter->transform().m22()));
+    pen.setBrush(brush);
+#else
     pen.setWidth(2);
-    pen.setStyle(Qt::DotLine);
+    pen.setStyle(Qt::DotLine); // FIXME: causes graphics corruption at some scales
+#endif
     painter->setPen(pen);
 
-    int minX = option->exposedRect.left() / 30 - 1;
-    int maxX = option->exposedRect.right() / 30 + 1;
-    int minY = option->exposedRect.top() / 30 - 1;
-    int maxY = option->exposedRect.bottom() / 30 + 1;
+    int minX = qFloor(option->exposedRect.left() / 30) - 1;
+    int maxX = qCeil(option->exposedRect.right() / 30) + 1;
+    int minY = qFloor(option->exposedRect.top() / 30) - 1;
+    int maxY = qCeil(option->exposedRect.bottom() / 30) + 1;
 
     minX = qMax(0, minX);
     maxX = qMin(maxX, mWidth);
@@ -143,7 +151,8 @@ GraphicsObjectItem::GraphicsObjectItem(FloorEditor *editor, BaseMapObject *objec
     mEditor(editor),
     mObject(object),
     mSelected(false),
-    mDragging(false)
+    mDragging(false),
+    mValidPos(true)
 {
     synchWithObject();
 }
@@ -163,8 +172,11 @@ void GraphicsObjectItem::paint(QPainter *painter,
                                QWidget *)
 {
     QPainterPath path = shape();
-    painter->fillPath(path, mSelected ? Qt::cyan : Qt::white);
-    QPen pen(Qt::blue);
+    QColor color = mSelected ? Qt::cyan : Qt::white;
+    if (!mValidPos)
+        color = Qt::red;
+    painter->fillPath(path, color);
+    QPen pen(mValidPos ? Qt::blue : Qt::red);
     painter->setPen(pen);
     painter->drawPath(path);
 }
@@ -247,6 +259,14 @@ void GraphicsObjectItem::setDragOffset(const QPoint &offset)
     synchWithObject();
 }
 
+void GraphicsObjectItem::setValidPos(bool valid)
+{
+    if (valid != mValidPos) {
+        mValidPos = valid;
+        update();
+    }
+}
+
 /////
 
 const int FloorEditor::ZVALUE_GRID = 20;
@@ -305,8 +325,8 @@ void FloorEditor::setDocument(BuildingDocument *doc)
         addItem(mGridItem);
 
         setSceneRect(-10, -10,
-                     building()->width() * 30 + 10,
-                     building()->height() * 30 + 10);
+                     building()->width() * 30 + 20,
+                     building()->height() * 30 + 20);
 
         connect(mDocument, SIGNAL(currentFloorChanged()),
                 SLOT(currentFloorChanged()));
@@ -337,6 +357,7 @@ void FloorEditor::setDocument(BuildingDocument *doc)
         connect(mDocument, SIGNAL(roomsReordered()),
                 SLOT(roomsReordered()));
 
+        connect(mDocument, SIGNAL(buildingResized()), SLOT(buildingResized()));
         connect(mDocument, SIGNAL(buildingRotated()), SLOT(buildingRotated()));
     }
 
@@ -577,6 +598,11 @@ void FloorEditor::roomsReordered()
 {
 }
 
+void FloorEditor::buildingResized()
+{
+    buildingRotated();
+}
+
 void FloorEditor::buildingRotated()
 {
     foreach (GraphicsFloorItem *item, mFloorItems) {
@@ -590,8 +616,8 @@ void FloorEditor::buildingRotated()
     mGridItem->setSize(building()->width(), building()->height());
 
     setSceneRect(-10, -10,
-                 building()->width() * 30 + 10,
-                 building()->height() * 30 + 10);
+                 building()->width() * 30 + 20,
+                 building()->height() * 30 + 20);
 }
 
 /////

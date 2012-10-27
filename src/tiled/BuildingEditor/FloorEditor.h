@@ -107,6 +107,10 @@ public:
     void setDragging(bool dragging);
     void setDragOffset(const QPoint &offset);
 
+    void setValidPos(bool valid);
+    bool isValidPos() const
+    { return mValidPos; }
+
 private:
     FloorEditor *mEditor;
     BaseMapObject *mObject;
@@ -115,6 +119,7 @@ private:
     bool mDragging;
     QPoint mDragOffset;
     QPainterPath mShape;
+    bool mValidPos;
 };
 
 class FloorEditor : public QGraphicsScene
@@ -177,6 +182,7 @@ private slots:
     void roomRemoved(Room *room);
     void roomsReordered();
 
+    void buildingResized();
     void buildingRotated();
 
 private:

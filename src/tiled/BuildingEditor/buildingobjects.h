@@ -74,7 +74,11 @@ public:
     BuildingTile *tile() const
     { return mTile; }
 
+    virtual bool isValidPos(const QPoint &offset = QPoint(),
+                            BuildingEditor::BuildingFloor *floor = 0) const;
+
     virtual void rotate(bool right);
+    virtual void flip(bool horizontal);
 
 protected:
     BuildingFloor *mFloor;
@@ -118,6 +122,10 @@ public:
     QRect bounds() const;
 
     void rotate(bool right);
+    void flip(bool horizontal);
+
+    bool isValidPos(const QPoint &offset = QPoint(),
+                    BuildingEditor::BuildingFloor *floor = 0) const;
 
     int getOffset(int x, int y);
 };

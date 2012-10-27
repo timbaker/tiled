@@ -21,6 +21,7 @@
 #include <QObject>
 #include <QPoint>
 #include <QSet>
+#include <QSize>
 
 class QUndoStack;
 
@@ -64,6 +65,9 @@ public:
     const QSet<BaseMapObject*> &selectedObjects() const
     { return mSelectedObjects; }
 
+    void emitBuildingResized()
+    { emit buildingResized(); }
+
     // +UNDO/REDO
     Room *changeRoomAtPosition(BuildingFloor *floor, const QPoint &pos, Room *room);
     BuildingTile *changeEWall(BuildingTile *tile);
@@ -84,7 +88,11 @@ public:
     QVector<QVector<Room *> > swapFloorGrid(BuildingFloor *floor,
                                             const QVector<QVector<Room *> > &grid);
 
+    QSize resizeBuilding(const QSize &newSize);
+    QVector<QVector<Room *> > resizeFloor(BuildingFloor *floor,
+                                          const QVector<QVector<Room *> > &grid);
     void rotateBuilding(bool right);
+    void flipBuilding(bool horizontal);
     // -UNDO/REDO
     
 signals:
@@ -108,6 +116,7 @@ signals:
     void roomsReordered();
     void roomChanged(Room *room);
 
+    void buildingResized();
     void buildingRotated();
 
     void selectedObjectsChanged();

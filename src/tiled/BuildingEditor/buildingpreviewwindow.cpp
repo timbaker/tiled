@@ -348,6 +348,7 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
     connect(mDocument, SIGNAL(objectTileChanged(BaseMapObject*)),
             SLOT(objectTileChanged(BaseMapObject*)));
 
+    connect(mDocument, SIGNAL(buildingResized()), SLOT(buildingResized()));
     connect(mDocument, SIGNAL(buildingRotated()), SLOT(buildingRotated()));
 
     connect(mDocument, SIGNAL(roomAdded(Room*)), SLOT(roomAdded(Room*)));
@@ -581,6 +582,11 @@ void BuildingPreviewScene::objectTileChanged(BuildingEditor::BaseMapObject *obje
     floorEdited(object->floor());
 }
 
+void BuildingPreviewScene::buildingResized()
+{
+    buildingRotated();
+}
+
 void BuildingPreviewScene::buildingRotated()
 {
     int extra = mMapComposite->maxLevel() * 3 + 1;
@@ -588,8 +594,8 @@ void BuildingPreviewScene::buildingRotated()
     int height = mDocument->building()->height() + extra;
     foreach (Layer *layer, mMap->layers())
         layer->resize(QSize(width, height), QPoint());
-    mMap->setWidth(mDocument->building()->width());
-    mMap->setHeight(mDocument->building()->height());
+    mMap->setWidth(width);
+    mMap->setHeight(height);
 
     foreach (BuildingFloor *floor, mDocument->building()->floors()) {
         floorEdited(floor);

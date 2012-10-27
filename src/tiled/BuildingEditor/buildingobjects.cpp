@@ -46,6 +46,17 @@ BaseMapObject::Direction BaseMapObject::dirFromString(const QString &s)
     return Invalid;
 }
 
+bool BaseMapObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
+{
+    if (!floor)
+        floor = mFloor; // hackery for BaseObjectTool
+
+    // +1 because doors/windows can be on the outside edge of the building
+    QRect floorBounds(0, 0, floor->width() + 1, floor->height() + 1);
+    QRect objectBounds = bounds().translated(offset);
+    return (floorBounds & objectBounds) == objectBounds;
+}
+
 void BaseMapObject::rotate(bool right)
 {
     Q_UNUSED(right)
@@ -69,6 +80,19 @@ void BaseMapObject::rotate(bool right)
             mY++;
         else
             ;
+    }
+}
+
+void BaseMapObject::flip(bool horizontal)
+{
+    if (horizontal) {
+        mX = mFloor->width() - mX - 1;
+        if (mDir == W)
+            mX++;
+    } else {
+        mY = mFloor->height() - mY - 1;
+        if (mDir == N)
+            mY++;
     }
 }
 
@@ -98,6 +122,26 @@ void Stairs::rotate(bool right)
         if (mDir == N) // used to be W
             mY -= 5;
     }
+}
+
+void Stairs::flip(bool horizontal)
+{
+    BaseMapObject::flip(horizontal);
+    if (mDir == W && horizontal)
+        mX -= 5;
+    else if (mDir == N && !horizontal)
+        mY -= 5;
+}
+
+bool Stairs::isValidPos(const QPoint &offset, BuildingFloor *floor) const
+{
+    if (!floor)
+        floor = mFloor;
+
+    // No +1 because stairs can't be on the outside edge of the building.
+    QRect floorBounds(0, 0, floor->width(), floor->height());
+    QRect objectBounds = bounds().translated(offset);
+    return (floorBounds & objectBounds) == objectBounds;
 }
 
 int Stairs::getOffset(int x, int y)

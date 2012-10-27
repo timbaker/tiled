@@ -64,7 +64,18 @@ Room *Building::removeRoom(int index)
     return mRooms.takeAt(index);
 }
 
+void Building::resize(const QSize &newSize)
+{
+    mWidth = newSize.width();
+    mHeight = newSize.height();
+}
+
 void Building::rotate(bool right)
 {
+    Q_UNUSED(right)
     qSwap(mWidth, mHeight);
+}
+
+void Building::flip(bool horizontal)
+{
 }

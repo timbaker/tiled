@@ -315,6 +315,7 @@ void EraserTool::updateCursor(const QPointF &scenePos)
 BaseObjectTool::BaseObjectTool() :
     BaseTool(),
     mTileEdge(Center),
+    mCursorObject(0),
     mCursorItem(0)
 {
 }
@@ -326,15 +327,23 @@ void BaseObjectTool::documentChanged()
 
 void BaseObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (event->button() != Qt::RightButton)
+    if (event->button() == Qt::RightButton) {
+        if (BaseMapObject *object = mEditor->topmostObjectAt(event->scenePos())) {
+            BuildingFloor *floor = mEditor->document()->currentFloor();
+            mEditor->document()->undoStack()->push(new RemoveObject(mEditor->document(),
+                                                                    floor,
+                                                                    floor->indexOf(object)));
+        }
+        return;
+    }
+
+    if (event->button() != Qt::LeftButton)
         return;
 
-    if (BaseMapObject *object = mEditor->topmostObjectAt(event->scenePos())) {
-        BuildingFloor *floor = mEditor->document()->currentFloor();
-        mEditor->document()->undoStack()->push(new RemoveObject(mEditor->document(),
-                                                                floor,
-                                                                floor->indexOf(object)));
-    }
+    if (!mCursorItem || !mCursorItem->isVisible() || !mCursorItem->isValidPos())
+        return;
+
+    placeObject();
 }
 
 void BaseObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
@@ -358,6 +367,13 @@ void BaseObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         mTileEdge = xEdge;
     else
         mTileEdge = yEdge;
+
+    updateCursorObject();
+
+    if (mCursorItem && mCursorObject && mCursorItem->isVisible()) {
+        BuildingFloor *floor = mEditor->document()->currentFloor();
+        mCursorItem->setValidPos(mCursorObject->isValidPos(QPoint(), floor));
+    }
 }
 
 void BaseObjectTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
@@ -380,12 +396,13 @@ void BaseObjectTool::deactivate()
 
 void BaseObjectTool::setCursorObject(BaseMapObject *object)
 {
+    mCursorObject = object;
     if (!mCursorItem) {
-        mCursorItem = new GraphicsObjectItem(mEditor, object);
+        mCursorItem = new GraphicsObjectItem(mEditor, mCursorObject);
         mCursorItem->setZValue(FloorEditor::ZVALUE_CURSOR);
         mEditor->addItem(mCursorItem);
     }
-    mCursorItem->setObject(object);
+    mCursorItem->setObject(mCursorObject);
 }
 
 /////
@@ -400,41 +417,15 @@ DoorTool *DoorTool::instance()
 }
 
 DoorTool::DoorTool() :
-    BaseObjectTool(),
-    mCursorObject(0)
+    BaseObjectTool()
 {
 }
 
-void DoorTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void DoorTool::placeObject()
 {
-    Q_UNUSED(event)
-
-    // Right-click to delete objects.
-    if (event->button() == Qt::RightButton) {
-        BaseObjectTool::mousePressEvent(event);
-        return;
-    }
-
-    if (event->button() != Qt::LeftButton)
-        return;
-
-    if (mTileEdge == Center)
-        return;
-
-    int x = mTilePos.x(), y = mTilePos.y();
-    BaseMapObject::Direction dir = BaseMapObject::N;
-
-    if (mTileEdge == W)
-        dir = BaseMapObject::W;
-    else if (mTileEdge == E) {
-        x++;
-        dir = BaseMapObject::W;
-    }
-    else if (mTileEdge == S)
-        y++;
-
     BuildingFloor *floor = mEditor->document()->currentFloor();
-    Door *door = new Door(floor, x, y, dir);
+    Door *door = new Door(floor, mCursorObject->x(), mCursorObject->y(),
+                          mCursorObject->dir());
     door->setTile(mEditor->building()->doorTile());
     door->setFrameTile(mEditor->building()->doorFrameTile());
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
@@ -443,11 +434,9 @@ void DoorTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                                                          door));
 }
 
-void DoorTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void DoorTool::updateCursorObject()
 {
-    BaseObjectTool::mouseMoveEvent(event);
-
-    if (mTileEdge == Center) {
+    if (mTileEdge == Center || !mEditor->currentFloorContains(mTilePos)) {
         if (mCursorItem)
             mCursorItem->setVisible(false);
         return;
@@ -491,41 +480,15 @@ WindowTool *WindowTool::instance()
 }
 
 WindowTool::WindowTool() :
-    BaseObjectTool(),
-    mCursorObject(0)
+    BaseObjectTool()
 {
 }
 
-void WindowTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void WindowTool::placeObject()
 {
-    Q_UNUSED(event)
-
-    // Right-click to delete objects.
-    if (event->button() == Qt::RightButton) {
-        BaseObjectTool::mousePressEvent(event);
-        return;
-    }
-
-    if (event->button() != Qt::LeftButton)
-        return;
-
-    if (mTileEdge == Center)
-        return;
-
-    int x = mTilePos.x(), y = mTilePos.y();
-    BaseMapObject::Direction dir = BaseMapObject::N;
-
-    if (mTileEdge == W)
-        dir = BaseMapObject::W;
-    else if (mTileEdge == E) {
-        x++;
-        dir = BaseMapObject::W;
-    }
-    else if (mTileEdge == S)
-        y++;
-
     BuildingFloor *floor = mEditor->document()->currentFloor();
-    Window *window = new Window(floor, x, y, dir);
+    Window *window = new Window(floor, mCursorObject->x(), mCursorObject->y(),
+                                mCursorObject->dir());
     window->setTile(mEditor->building()->windowTile());
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                          floor,
@@ -533,11 +496,9 @@ void WindowTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                                                          window));
 }
 
-void WindowTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void WindowTool::updateCursorObject()
 {
-    BaseObjectTool::mouseMoveEvent(event);
-
-    if (mTileEdge == Center) {
+    if (mTileEdge == Center || !mEditor->currentFloorContains(mTilePos)) {
         if (mCursorItem)
             mCursorItem->setVisible(false);
         return;
@@ -581,41 +542,15 @@ StairsTool *StairsTool::instance()
 }
 
 StairsTool::StairsTool() :
-    BaseObjectTool(),
-    mCursorObject(0)
+    BaseObjectTool()
 {
 }
 
-void StairsTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void StairsTool::placeObject()
 {
-    Q_UNUSED(event)
-
-    // Right-click to delete objects.
-    if (event->button() == Qt::RightButton) {
-        BaseObjectTool::mousePressEvent(event);
-        return;
-    }
-
-    if (event->button() != Qt::LeftButton)
-        return;
-
-    if (mTileEdge == Center)
-        return;
-
-    int x = mTilePos.x(), y = mTilePos.y();
-    BaseMapObject::Direction dir = BaseMapObject::N;
-
-    if (mTileEdge == W)
-        dir = BaseMapObject::W;
-    else if (mTileEdge == E) {
-        x++;
-        dir = BaseMapObject::W;
-    }
-    else if (mTileEdge == S)
-        y++;
-
     BuildingFloor *floor = mEditor->document()->currentFloor();
-    Stairs *stairs = new Stairs(floor, x, y, dir);
+    Stairs *stairs = new Stairs(floor, mCursorObject->x(), mCursorObject->y(),
+                                mCursorObject->dir());
     stairs->setTile(mEditor->building()->stairsTile());
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                          floor,
@@ -623,11 +558,9 @@ void StairsTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                                                          stairs));
 }
 
-void StairsTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void StairsTool::updateCursorObject()
 {
-    BaseObjectTool::mouseMoveEvent(event);
-
-    if (mTileEdge == Center) {
+    if (mTileEdge == Center || !mEditor->currentFloorContains(mTilePos)) {
         if (mCursorItem)
             mCursorItem->setVisible(false);
         return;
@@ -840,8 +773,10 @@ void SelectMoveObjectTool::updateMovingItems(const QPointF &pos,
     mDragOffset = currentTilePos - startTilePos;
 
     foreach (BaseMapObject *object, mMovingObjects) {
-        mEditor->itemForObject(object)->setDragging(true);
-        mEditor->itemForObject(object)->setDragOffset(mDragOffset);
+        GraphicsObjectItem *item = mEditor->itemForObject(object);
+        item->setDragging(true);
+        item->setDragOffset(mDragOffset);
+        item->setValidPos(object->isValidPos(mDragOffset));
     }
 }
 
@@ -852,8 +787,10 @@ void SelectMoveObjectTool::finishMoving(const QPointF &pos)
     Q_ASSERT(mMode == Moving);
     mMode = NoMode;
 
-    foreach (BaseMapObject *object, mMovingObjects)
+    foreach (BaseMapObject *object, mMovingObjects) {
         mEditor->itemForObject(object)->setDragging(false);
+        mEditor->itemForObject(object)->setValidPos(true);
+    }
 
     if (mDragOffset.isNull()) // Move is a no-op
         return;
@@ -861,8 +798,13 @@ void SelectMoveObjectTool::finishMoving(const QPointF &pos)
     QUndoStack *undoStack = mEditor->document()->undoStack();
     undoStack->beginMacro(tr("Move %n Object(s)", "", mMovingObjects.size()));
     foreach (BaseMapObject *object, mMovingObjects) {
-        undoStack->push(new MoveObject(mEditor->document(), object,
-                                       object->pos() + mDragOffset));
+        if (!object->isValidPos(mDragOffset))
+            undoStack->push(new RemoveObject(mEditor->document(),
+                                             object->floor(),
+                                             object->floor()->indexOf(object)));
+        else
+            undoStack->push(new MoveObject(mEditor->document(), object,
+                                           object->pos() + mDragOffset));
     }
     undoStack->endMacro();
 
@@ -871,8 +813,10 @@ void SelectMoveObjectTool::finishMoving(const QPointF &pos)
 
 void SelectMoveObjectTool::cancelMoving()
 {
-    foreach (BaseMapObject *object, mMovingObjects)
+    foreach (BaseMapObject *object, mMovingObjects) {
         mEditor->itemForObject(object)->setDragging(false);
+        mEditor->itemForObject(object)->setValidPos(true);
+    }
 
     mMovingObjects.clear();
 

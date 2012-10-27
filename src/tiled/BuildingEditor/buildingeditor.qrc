@@ -8,5 +8,11 @@
         <file>icons/icon_stair.png</file>
         <file>icons/icon_window.png</file>
         <file>icons/icon_select.png</file>
+        <file>icons/icon_rotate_left.png</file>
+        <file>icons/icon_rotate_right.png</file>
+        <file>icons/icon_flip_horizontal.png</file>
+        <file>icons/icon_flip_vertical.png</file>
+        <file>icons/icon_resize.png</file>
+        <file>icons/icon_rooms.png</file>
     </qresource>
 </RCC>

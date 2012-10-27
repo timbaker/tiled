@@ -123,8 +123,7 @@ public:
     Room *GetRoomAt(int x, int y)
     { return GetRoomAt(QPoint(x, y)); }
 
-    void setGrid(const QVector<QVector<Room*> > &grid)
-    { mRoomAtPos = grid; }
+    void setGrid(const QVector<QVector<Room*> > &grid);
 
     const QVector<QVector<Room*> > &grid() const
     { return mRoomAtPos; }
@@ -141,7 +140,10 @@ public:
 
     QRegion roomRegion(Room *room);
 
+    QVector<QVector<Room*> > resized(const QSize &newSize) const;
+
     void rotate(bool right);
+    void flip(bool horizontal);
 
 private:
     Building *mBuilding;

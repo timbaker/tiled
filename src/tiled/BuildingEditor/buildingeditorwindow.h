@@ -103,6 +103,8 @@ private:
 
     void addDocument(BuildingDocument *doc);
 
+    void updateWindowTitle();
+
 private slots:
     void roomIndexChanged(int index);
     void categoryScaleChanged(qreal scale);
@@ -132,6 +134,9 @@ private slots:
     void roomsReordered();
     void roomChanged(Room *room);
 
+    void resizeBuilding();
+    void flipHorizontal();
+    void flipVertical();
     void rotateRight();
     void rotateLeft();
 

@@ -77,6 +77,15 @@ BaseMapObject *BuildingFloor::objectAt(int x, int y)
     return 0;
 }
 
+void BuildingFloor::setGrid(const QVector<QVector<Room *> > &grid)
+{
+    mRoomAtPos = grid;
+
+    mIndexAtPos.resize(mRoomAtPos.size());
+    for (int x = 0; x < mIndexAtPos.size(); x++)
+        mIndexAtPos[x].resize(mRoomAtPos[x].size());
+}
+
 void BuildingFloor::LayoutToSquares()
 {
     int w = width() + 1;
@@ -187,10 +196,8 @@ void BuildingFloor::LayoutToSquares()
         }
     }
 
-    for (int x = 0; x < width(); x++)
-    {
-        for (int y = 0; y < height() + 1; y++)
-        {
+    for (int x = 0; x < width() + 1; x++) {
+        for (int y = 0; y < height() + 1; y++) {
             if (Door *door = GetDoorAt(x, y)) {
                 squares[x][y].ReplaceDoor(door->tile(),
                                           door->getOffset());
@@ -223,14 +230,14 @@ void BuildingFloor::LayoutToSquares()
             if (Stairs *stairs = dynamic_cast<Stairs*>(object)) {
                 int x = stairs->x(), y = stairs->y();
                 if (stairs->dir() == BaseMapObject::W) {
-                    if (x + 3 >= width())
+                    if (x + 1 < 0 || x + 3 >= width() || y < 0 || y >= height())
                         continue;
                     squares[x+1][y].mTiles[Square::SectionFloor] = 0;
                     squares[x+2][y].mTiles[Square::SectionFloor] = 0;
                     squares[x+3][y].mTiles[Square::SectionFloor] = 0;
                 }
                 if (stairs->dir() == BaseMapObject::N) {
-                    if (y + 3 >= height())
+                    if (x < 0 || x >= width() || y + 1 < 0 || y + 3 >= height())
                         continue;
                     squares[x][y+1].mTiles[Square::SectionFloor] = 0;
                     squares[x][y+2].mTiles[Square::SectionFloor] = 0;
@@ -312,6 +319,15 @@ QRegion BuildingFloor::roomRegion(Room *room)
     return region;
 }
 
+QVector<QVector<Room *> > BuildingFloor::resized(const QSize &newSize) const
+{
+    QVector<QVector<Room *> > grid = mRoomAtPos;
+    grid.resize(newSize.width());
+    for (int x = 0; x < newSize.width(); x++)
+        grid[x].resize(newSize.height());
+    return grid;
+}
+
 void BuildingFloor::rotate(bool right)
 {
     int oldWidth = mRoomAtPos.size();
@@ -321,12 +337,9 @@ void BuildingFloor::rotate(bool right)
     qSwap(newWidth, newHeight);
 
     QVector<QVector<Room*> > roomAtPos;
-    QVector<QVector<int> > indexAtPos;
     roomAtPos.resize(newWidth);
-    indexAtPos.resize(newWidth);
     for (int x = 0; x < newWidth; x++) {
         roomAtPos[x].resize(newHeight);
-        indexAtPos[x].resize(newHeight);
         for (int y = 0; y < newHeight; y++) {
             roomAtPos[x][y] = 0;
         }
@@ -342,11 +355,25 @@ void BuildingFloor::rotate(bool right)
         }
     }
 
-    mRoomAtPos = roomAtPos;
-    mIndexAtPos = indexAtPos;
+    setGrid(roomAtPos);
 
     foreach (BaseMapObject *object, mObjects)
         object->rotate(right);
+}
+
+void BuildingFloor::flip(bool horizontal)
+{
+    if (horizontal) {
+        for (int x = 0; x < width() / 2; x++)
+            mRoomAtPos[x].swap(mRoomAtPos[width() - x - 1]);
+    } else {
+        for (int x = 0; x < width(); x++)
+            for (int y = 0; y < height() / 2; y++)
+                qSwap(mRoomAtPos[x][y], mRoomAtPos[x][height() - y - 1]);
+    }
+
+    foreach (BaseMapObject *object, mObjects)
+        object->flip(horizontal);
 }
 
 /////

@@ -205,10 +205,33 @@ QVector<QVector<Room*> > BuildingDocument::swapFloorGrid(BuildingFloor *floor,
     return old;
 }
 
+QSize BuildingDocument::resizeBuilding(const QSize &newSize)
+{
+    QSize old = building()->size();
+    building()->resize(newSize);
+    return old;
+}
+
+QVector<QVector<Room *> > BuildingDocument::resizeFloor(BuildingFloor *floor,
+                                                        const QVector<QVector<Room *> > &grid)
+{
+    QVector<QVector<Room *> > old = floor->grid();
+    floor->setGrid(grid);
+    return old;
+}
+
 void BuildingDocument::rotateBuilding(bool right)
 {
     mBuilding->rotate(right);
     foreach (BuildingFloor *floor, mBuilding->floors())
         floor->rotate(right);
+    emit buildingRotated();
+}
+
+void BuildingDocument::flipBuilding(bool horizontal)
+{
+    mBuilding->flip(horizontal);
+    foreach (BuildingFloor *floor, mBuilding->floors())
+        floor->flip(horizontal);
     emit buildingRotated();
 }

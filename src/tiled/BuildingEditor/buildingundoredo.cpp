@@ -18,7 +18,7 @@
 #include "buildingundoredo.h"
 
 #include "buildingdocument.h"
-#include "buildingeditorwindow.h"
+#include "buildingfloor.h"
 #include "buildingobjects.h"
 #include "buildingtemplates.h"
 
@@ -316,6 +316,63 @@ void SwapFloorGrid::swap()
 
 /////
 
+ResizeBuilding::ResizeBuilding(BuildingDocument *doc, const QSize &newSize) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Building")),
+    mDocument(doc),
+    mSize(newSize)
+{
+}
+
+void ResizeBuilding::swap()
+{
+    mSize = mDocument->resizeBuilding(mSize);
+}
+
+/////
+
+ResizeFloor::ResizeFloor(BuildingDocument *doc, BuildingFloor *floor,
+                             const QSize &newSize) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Floor")),
+    mDocument(doc),
+    mFloor(floor),
+    mSize(newSize)
+{
+    mGrid = floor->resized(newSize);
+}
+
+void ResizeFloor::swap()
+{
+    mGrid = mDocument->resizeFloor(mFloor, mGrid);
+}
+
+/////
+
+ResizeBuildingBefore::ResizeBuildingBefore(BuildingDocument *doc) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Building")),
+    mDocument(doc)
+{
+}
+
+void ResizeBuildingBefore::undo()
+{
+    mDocument->emitBuildingResized();
+}
+
+/////
+
+ResizeBuildingAfter::ResizeBuildingAfter(BuildingDocument *doc) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Building")),
+    mDocument(doc)
+{
+}
+
+void ResizeBuildingAfter::redo()
+{
+    mDocument->emitBuildingResized();
+}
+
+/////
+
 RotateBuilding::RotateBuilding(BuildingDocument *doc, bool right) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Rotate Building")),
     mDocument(doc),
@@ -329,5 +386,18 @@ void RotateBuilding::swap()
     mRight = !mRight;
 }
 
+/////
+
+FlipBuilding::FlipBuilding(BuildingDocument *doc, bool horizontal) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Flip Building")),
+    mDocument(doc),
+    mHorizontal(horizontal)
+{
+}
+
+void FlipBuilding::swap()
+{
+    mDocument->flipBuilding(mHorizontal);
+}
 
 /////

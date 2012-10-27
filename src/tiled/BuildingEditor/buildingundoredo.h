@@ -20,6 +20,7 @@
 
 #include <QPoint>
 #include <QUndoCommand>
+#include <QSize>
 #include <QVector>
 
 namespace BuildingEditor {
@@ -298,6 +299,60 @@ private:
     QVector<QVector<Room*> > mGrid;
 };
 
+class ResizeBuilding : public QUndoCommand
+{
+public:
+    ResizeBuilding(BuildingDocument *doc, const QSize &newSize);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    QSize mSize;
+};
+
+class ResizeFloor : public QUndoCommand
+{
+public:
+    ResizeFloor(BuildingDocument *doc, BuildingFloor *floor, const QSize &newSize);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    BuildingFloor *mFloor;
+    QSize mSize;
+    QVector<QVector<Room*> > mGrid;
+};
+
+class ResizeBuildingBefore : public QUndoCommand
+{
+public:
+    ResizeBuildingBefore(BuildingDocument *doc);
+
+    void undo();
+    void redo() {}
+
+    BuildingDocument *mDocument;
+};
+
+class ResizeBuildingAfter : public QUndoCommand
+{
+public:
+    ResizeBuildingAfter(BuildingDocument *doc);
+
+    void undo() {}
+    void redo();
+
+    BuildingDocument *mDocument;
+};
+
 class RotateBuilding : public QUndoCommand
 {
 public:
@@ -311,6 +366,21 @@ private:
 
     BuildingDocument *mDocument;
     bool mRight;
+};
+
+class FlipBuilding : public QUndoCommand
+{
+public:
+    FlipBuilding(BuildingDocument *doc, bool horizontal);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    bool mHorizontal;
 };
 
 } // namespace BuildingEditor

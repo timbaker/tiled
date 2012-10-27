@@ -215,11 +215,12 @@ BaseMapObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
     const QString dirString = atts.value(QLatin1String("dir")).toString();
     const QString tile = atts.value(QLatin1String("Tile")).toString();
 
-    if (x < 0 || x >= mBuilding->width() || y < 0 || y >= mBuilding->height()) {
+    if (x < 0 || x >= mBuilding->width() + 1 || y < 0 || y >= mBuilding->height() + 1) {
         xml.raiseError(tr("Invalid object coordinates (%1,%2")
                        .arg(x).arg(y));
         return 0;
     }
+
     BaseMapObject::Direction dir = BaseMapObject::dirFromString(dirString);
     if (dir == BaseMapObject::Invalid) {
         xml.raiseError(tr("Invalid object direction '%1'").arg(dirString));
