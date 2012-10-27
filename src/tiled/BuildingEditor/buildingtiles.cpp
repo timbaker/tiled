@@ -107,28 +107,6 @@ QString BuildingTiles::normalizeTileName(const QString &tileName)
     return nameForTile(tilesetName, index);
 }
 
-BuildingTile *BuildingTiles::tileForDoor(Door *door, const QString &tileName,
-                                         bool isFrame)
-{
-    QString adjustedName = tileName;
-    if (door->dir() == BaseMapObject::N)
-        adjustedName = adjustTileNameIndex(tileName, 1);
-    return get(QLatin1String(isFrame ? "door_frames" : "doors"), adjustedName);
-}
-
-BuildingTile *BuildingTiles::tileForWindow(Window *window, const QString &tileName)
-{
-    QString adjustedName = tileName;
-    if (window->dir() == BaseMapObject::N)
-        adjustedName = adjustTileNameIndex(tileName, 1);
-    return get(QLatin1String("windows"), adjustedName);
-}
-
-BuildingTile *BuildingTiles::tileForStairs(Stairs *stairs, const QString &tileName)
-{
-    return get(QLatin1String("stairs"), tileName);
-}
-
 void BuildingTiles::addTileset(Tileset *tileset)
 {
     mTilesetByName[tileset->name()] = tileset;

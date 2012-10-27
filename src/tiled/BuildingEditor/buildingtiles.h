@@ -173,13 +173,6 @@ public:
 
     BuildingTile *fromTiledTile(const QString &categoryName, Tiled::Tile *tile);
 
-    BuildingTile *tileForDoor(Door *door, const QString &tileName,
-                              bool isFrame = false);
-
-    BuildingTile *tileForWindow(Window *window, const QString &tileName);
-
-    BuildingTile *tileForStairs(Stairs *stairs, const QString &tileName);
-
     void addTileset(Tiled::Tileset *tileset);
 
     Tiled::Tileset *tilesetFor(const QString &tilesetName)
