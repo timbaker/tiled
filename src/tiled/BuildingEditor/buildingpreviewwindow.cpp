@@ -426,6 +426,9 @@ void BuildingPreviewScene::floorEdited(BuildingFloor *floor)
     BuildingFloorToTileLayers(floor, mMapComposite->tileLayersForLevel(floor->level())->layers());
     mLayerGroupItems[floor->level()]->synchWithTileLayers();
     mLayerGroupItems[floor->level()]->updateBounds();
+
+    mRenderer->setMaxLevel(mMapComposite->maxLevel());
+    setSceneRect(mMapComposite->boundingRect(mRenderer));
 }
 
 void BuildingPreviewScene::currentFloorChanged()
