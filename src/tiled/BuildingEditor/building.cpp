@@ -78,4 +78,5 @@ void Building::rotate(bool right)
 
 void Building::flip(bool horizontal)
 {
+    Q_UNUSED(horizontal)
 }

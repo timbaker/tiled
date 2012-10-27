@@ -269,6 +269,8 @@ QVariant MixedTilesetModel::data(const QModelIndex &index, int role) const
 
 QVariant MixedTilesetModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+    Q_UNUSED(section)
+    Q_UNUSED(orientation)
     if (role == Qt::SizeHintRole)
         return QSize(1, 1);
     return QVariant();
@@ -378,6 +380,7 @@ QRect MixedTilesetModel::categoryBounds(Tile *tile) const
 
 void MixedTilesetModel::scaleChanged(qreal scale)
 {
+    Q_UNUSED(scale)
     reset();
 }
 
