@@ -136,7 +136,7 @@ void ChangeFloorForRoom::swap()
 /////
 
 AddRemoveObject::AddRemoveObject(BuildingDocument *doc, BuildingFloor *floor,
-                                 int index, BaseMapObject *object) :
+                                 int index, BuildingObject *object) :
     QUndoCommand(),
     mDocument(doc),
     mFloor(floor),
@@ -162,7 +162,7 @@ void AddRemoveObject::remove()
 }
 
 AddObject::AddObject(BuildingDocument *doc, BuildingFloor *floor, int index,
-                     BaseMapObject *object) :
+                     BuildingObject *object) :
     AddRemoveObject(doc, floor, index, object)
 {
     setText(QCoreApplication::translate("Undo Commands", "Add Object"));
@@ -177,7 +177,7 @@ RemoveObject::RemoveObject(BuildingDocument *doc, BuildingFloor *floor,
 
 /////
 
-MoveObject::MoveObject(BuildingDocument *doc, BaseMapObject *object, const QPoint &pos) :
+MoveObject::MoveObject(BuildingDocument *doc, BuildingObject *object, const QPoint &pos) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Move Object")),
     mDocument(doc),
     mObject(object),
@@ -211,7 +211,7 @@ void ChangeDoorTile::swap()
 
 /////
 
-ChangeObjectTile::ChangeObjectTile(BuildingDocument *doc, BaseMapObject *object,
+ChangeObjectTile::ChangeObjectTile(BuildingDocument *doc, BuildingObject *object,
                                BuildingTile *tile) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Window Tile")),
     mDocument(doc),

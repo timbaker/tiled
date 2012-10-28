@@ -339,14 +339,14 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
     connect(mDocument, SIGNAL(floorEdited(BuildingFloor*)),
             SLOT(floorEdited(BuildingFloor*)));
 
-    connect(mDocument, SIGNAL(objectAdded(BaseMapObject*)),
-            SLOT(objectAdded(BaseMapObject*)));
+    connect(mDocument, SIGNAL(objectAdded(BuildingObject*)),
+            SLOT(objectAdded(BuildingObject*)));
     connect(mDocument, SIGNAL(objectRemoved(BuildingFloor*,int)),
             SLOT(objectRemoved(BuildingFloor*,int)));
-    connect(mDocument, SIGNAL(objectMoved(BaseMapObject*)),
-            SLOT(objectMoved(BaseMapObject*)));
-    connect(mDocument, SIGNAL(objectTileChanged(BaseMapObject*)),
-            SLOT(objectTileChanged(BaseMapObject*)));
+    connect(mDocument, SIGNAL(objectMoved(BuildingObject*)),
+            SLOT(objectMoved(BuildingObject*)));
+    connect(mDocument, SIGNAL(objectTileChanged(BuildingObject*)),
+            SLOT(objectTileChanged(BuildingObject*)));
 
     connect(mDocument, SIGNAL(buildingResized()), SLOT(buildingResized()));
     connect(mDocument, SIGNAL(buildingRotated()), SLOT(buildingRotated()));
@@ -529,7 +529,7 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
                                                0, 0, mapSize.width(), mapSize.height());
     mMap->addLayer(objectGroup);
 
-    foreach (BaseMapObject *object, floor->objects())
+    foreach (BuildingObject *object, floor->objects())
         objectAdded(object);
 
     if (didResize) {
@@ -550,7 +550,7 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
     setSceneRect(mMapComposite->boundingRect(mRenderer));
 }
 
-void BuildingPreviewScene::objectAdded(BaseMapObject *object)
+void BuildingPreviewScene::objectAdded(BuildingObject *object)
 {
     BuildingFloor *floor = object->floor();
     floorEdited(floor);
@@ -570,7 +570,7 @@ void BuildingPreviewScene::objectRemoved(BuildingFloor *floor, int index)
         floorEdited(floor);
 }
 
-void BuildingPreviewScene::objectMoved(BaseMapObject *object)
+void BuildingPreviewScene::objectMoved(BuildingObject *object)
 {
     BuildingFloor *floor = object->floor();
     floorEdited(floor);
@@ -580,7 +580,7 @@ void BuildingPreviewScene::objectMoved(BaseMapObject *object)
         floorEdited(floor);
 }
 
-void BuildingPreviewScene::objectTileChanged(BuildingEditor::BaseMapObject *object)
+void BuildingPreviewScene::objectTileChanged(BuildingEditor::BuildingObject *object)
 {
     floorEdited(object->floor());
 }

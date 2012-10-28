@@ -31,7 +31,7 @@ class Zoomable;
 
 namespace BuildingEditor {
 
-class BaseMapObject;
+class BuildingObject;
 class GraphicsObjectItem;
 class BaseTool;
 class Building;
@@ -83,7 +83,7 @@ private:
 class GraphicsObjectItem : public QGraphicsItem
 {
 public:
-    GraphicsObjectItem(FloorEditor *editor, BaseMapObject *object);
+    GraphicsObjectItem(FloorEditor *editor, BuildingObject *object);
 
     QPainterPath shape() const;
 
@@ -91,9 +91,9 @@ public:
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-    void setObject(BaseMapObject *object);
+    void setObject(BuildingObject *object);
 
-    BaseMapObject *object() const
+    BuildingObject *object() const
     { return mObject; }
 
     void synchWithObject();
@@ -113,7 +113,7 @@ public:
 
 private:
     FloorEditor *mEditor;
-    BaseMapObject *mObject;
+    BuildingObject *mObject;
     QRectF mBoundingRect;
     bool mSelected;
     bool mDragging;
@@ -154,11 +154,11 @@ public:
     QRectF tileToSceneRect(const QRect &tileRect);
     bool currentFloorContains(const QPoint &tilePos);
 
-    GraphicsObjectItem *itemForObject(BaseMapObject *object);
+    GraphicsObjectItem *itemForObject(BuildingObject *object);
 
-    QSet<BaseMapObject*> objectsInRect(const QRectF &sceneRect);
+    QSet<BuildingObject*> objectsInRect(const QRectF &sceneRect);
 
-    BaseMapObject *topmostObjectAt(const QPointF &scenePos);
+    BuildingObject *topmostObjectAt(const QPointF &scenePos);
 
 signals:
     void documentChanged();
@@ -172,9 +172,9 @@ private slots:
     void floorAdded(BuildingFloor *floor);
     void floorEdited(BuildingFloor *floor);
 
-    void objectAdded(BaseMapObject *object);
-    void objectAboutToBeRemoved(BaseMapObject *object);
-    void objectMoved(BaseMapObject *object);
+    void objectAdded(BuildingObject *object);
+    void objectAboutToBeRemoved(BuildingObject *object);
+    void objectMoved(BuildingObject *object);
     void selectedObjectsChanged();
 
     void roomChanged(Room *room);

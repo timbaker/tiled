@@ -72,7 +72,7 @@ bool BuildingDocument::isModified() const
     return !mUndoStack->isClean();
 }
 
-void BuildingDocument::setSelectedObjects(const QSet<BaseMapObject *> &selection)
+void BuildingDocument::setSelectedObjects(const QSet<BuildingObject *> &selection)
 {
     mSelectedObjects = selection;
     emit selectedObjectsChanged();
@@ -116,16 +116,16 @@ void BuildingDocument::insertFloor(int index, BuildingFloor *floor)
     emit floorAdded(floor);
 }
 
-void BuildingDocument::insertObject(BuildingFloor *floor, int index, BaseMapObject *object)
+void BuildingDocument::insertObject(BuildingFloor *floor, int index, BuildingObject *object)
 {
     Q_ASSERT(object->floor() == floor);
     floor->insertObject(index, object);
     emit objectAdded(object);
 }
 
-BaseMapObject *BuildingDocument::removeObject(BuildingFloor *floor, int index)
+BuildingObject *BuildingDocument::removeObject(BuildingFloor *floor, int index)
 {
-    BaseMapObject *object = floor->object(index);
+    BuildingObject *object = floor->object(index);
 
     if (mSelectedObjects.contains(object)) {
         mSelectedObjects.remove(object);
@@ -138,7 +138,7 @@ BaseMapObject *BuildingDocument::removeObject(BuildingFloor *floor, int index)
     return object;
 }
 
-QPoint BuildingDocument::moveObject(BaseMapObject *object, const QPoint &pos)
+QPoint BuildingDocument::moveObject(BuildingObject *object, const QPoint &pos)
 {
     QPoint old = object->pos();
     object->setPos(pos);
@@ -155,7 +155,7 @@ BuildingTile *BuildingDocument::changeDoorTile(Door *door, BuildingTile *tile,
     return old;
 }
 
-BuildingTile *BuildingDocument::changeObjectTile(BaseMapObject *object, BuildingTile *tile)
+BuildingTile *BuildingDocument::changeObjectTile(BuildingObject *object, BuildingTile *tile)
 {
     BuildingTile *old = object->tile();
     object->setTile(tile);

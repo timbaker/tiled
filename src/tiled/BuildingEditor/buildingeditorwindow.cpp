@@ -782,7 +782,7 @@ void BuildingEditorWindow::currentDoorChanged(Tile *tile)
 
     // Assign the new tile to selected doors
     QList<Door*> doors;
-    foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
+    foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
         if (Door *door = dynamic_cast<Door*>(object)) {
             if (door->tile() != btile)
                 doors += door;
@@ -808,7 +808,7 @@ void BuildingEditorWindow::currentDoorFrameChanged(Tile *tile)
 
     // Assign the new tile to selected doors
     QList<Door*> doors;
-    foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
+    foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
         if (Door *door = dynamic_cast<Door*>(object)) {
             if (door->frameTile() != btile)
                 doors += door;
@@ -836,7 +836,7 @@ void BuildingEditorWindow::currentWindowChanged(Tile *tile)
 
     // Assign the new tile to selected windows
     QList<Window*> windows;
-    foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
+    foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
         if (Window *window = dynamic_cast<Window*>(object)) {
             if (window->tile() != btile)
                 windows += window;
@@ -862,7 +862,7 @@ void BuildingEditorWindow::currentStairsChanged(Tile *tile)
     currentBuilding()->setStairsTile(btile);
     // Assign the new tile to selected stairs
     QList<Stairs*> stairsList;
-    foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
+    foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
         if (Stairs *stairs = dynamic_cast<Stairs*>(object)) {
             if (stairs->tile() != btile)
                 stairsList += stairs;
@@ -887,7 +887,7 @@ void BuildingEditorWindow::upLevel()
         BuildingFloor *floor = new BuildingFloor(mCurrentDocument->building(), level);
         mCurrentDocument->insertFloor(level, floor); // TODO: make undoable
     }
-    mCurrentDocument->setSelectedObjects(QSet<BaseMapObject*>());
+    mCurrentDocument->setSelectedObjects(QSet<BuildingObject*>());
     mCurrentDocument->setCurrentFloor(mCurrentDocument->building()->floor(level));
     updateActions();
 }
@@ -897,7 +897,7 @@ void BuildingEditorWindow::downLevel()
     int level = mCurrentDocument->currentFloor()->level() - 1;
     if (level < 0)
         return;
-    mCurrentDocument->setSelectedObjects(QSet<BaseMapObject*>());
+    mCurrentDocument->setSelectedObjects(QSet<BuildingObject*>());
     mCurrentDocument->setCurrentFloor(mCurrentDocument->building()->floor(level));
     updateActions();
 }
@@ -1257,7 +1257,7 @@ void BuildingEditorWindow::resizeBuilding()
         undoStack->push(new ResizeFloor(mCurrentDocument, floor, newSize));
         // Remove objects that aren't in bounds.
         for (int i = floor->objectCount() - 1; i >= 0; --i) {
-            BaseMapObject *object = floor->object(i);
+            BuildingObject *object = floor->object(i);
             if (!object->isValidPos())
                 undoStack->push(new RemoveObject(mCurrentDocument,
                                                  floor, i));

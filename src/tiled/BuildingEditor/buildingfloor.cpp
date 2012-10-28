@@ -59,19 +59,19 @@ BuildingFloor *BuildingFloor::floorBelow() const
     return (mLevel > 0) ? mBuilding->floor(mLevel - 1) : 0;
 }
 
-void BuildingFloor::insertObject(int index, BaseMapObject *object)
+void BuildingFloor::insertObject(int index, BuildingObject *object)
 {
     mObjects.insert(index, object);
 }
 
-BaseMapObject *BuildingFloor::removeObject(int index)
+BuildingObject *BuildingFloor::removeObject(int index)
 {
     return mObjects.takeAt(index);
 }
 
-BaseMapObject *BuildingFloor::objectAt(int x, int y)
+BuildingObject *BuildingFloor::objectAt(int x, int y)
 {
-    foreach (BaseMapObject *object, mObjects)
+    foreach (BuildingObject *object, mObjects)
         if (object->bounds().contains(x, y))
             return object;
     return 0;
@@ -226,17 +226,17 @@ void BuildingFloor::LayoutToSquares()
 
     // Nuke floors that have stairs on the floor below.
     if (BuildingFloor *floorBelow = this->floorBelow()) {
-        foreach (BaseMapObject *object, floorBelow->objects()) {
+        foreach (BuildingObject *object, floorBelow->objects()) {
             if (Stairs *stairs = dynamic_cast<Stairs*>(object)) {
                 int x = stairs->x(), y = stairs->y();
-                if (stairs->dir() == BaseMapObject::W) {
+                if (stairs->dir() == BuildingObject::W) {
                     if (x + 1 < 0 || x + 3 >= width() || y < 0 || y >= height())
                         continue;
                     squares[x+1][y].mTiles[Square::SectionFloor] = 0;
                     squares[x+2][y].mTiles[Square::SectionFloor] = 0;
                     squares[x+3][y].mTiles[Square::SectionFloor] = 0;
                 }
-                if (stairs->dir() == BaseMapObject::N) {
+                if (stairs->dir() == BuildingObject::N) {
                     if (x < 0 || x >= width() || y + 1 < 0 || y + 3 >= height())
                         continue;
                     squares[x][y+1].mTiles[Square::SectionFloor] = 0;
@@ -256,7 +256,7 @@ bool BuildingFloor::IsTopStairAt(int x, int y)
 
 Door *BuildingFloor::GetDoorAt(int x, int y)
 {
-    foreach (BaseMapObject *o, mObjects) {
+    foreach (BuildingObject *o, mObjects) {
         if (!o->bounds().contains(x, y))
             continue;
         if (Door *door = dynamic_cast<Door*>(o))
@@ -267,7 +267,7 @@ Door *BuildingFloor::GetDoorAt(int x, int y)
 
 Window *BuildingFloor::GetWindowAt(int x, int y)
 {
-    foreach (BaseMapObject *o, mObjects) {
+    foreach (BuildingObject *o, mObjects) {
         if (!o->bounds().contains(x, y))
             continue;
         if (Window *window = dynamic_cast<Window*>(o))
@@ -278,7 +278,7 @@ Window *BuildingFloor::GetWindowAt(int x, int y)
 
 Stairs *BuildingFloor::GetStairsAt(int x, int y)
 {
-    foreach (BaseMapObject *o, mObjects) {
+    foreach (BuildingObject *o, mObjects) {
         if (!o->bounds().contains(x, y))
             continue;
         if (Stairs *stairs = dynamic_cast<Stairs*>(o))
@@ -357,7 +357,7 @@ void BuildingFloor::rotate(bool right)
 
     setGrid(roomAtPos);
 
-    foreach (BaseMapObject *object, mObjects)
+    foreach (BuildingObject *object, mObjects)
         object->rotate(right);
 }
 
@@ -372,7 +372,7 @@ void BuildingFloor::flip(bool horizontal)
                 qSwap(mRoomAtPos[x][y], mRoomAtPos[x][height() - y - 1]);
     }
 
-    foreach (BaseMapObject *object, mObjects)
+    foreach (BuildingObject *object, mObjects)
         object->flip(horizontal);
 }
 

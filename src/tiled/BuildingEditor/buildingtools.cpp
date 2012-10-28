@@ -328,7 +328,7 @@ void BaseObjectTool::documentChanged()
 void BaseObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::RightButton) {
-        if (BaseMapObject *object = mEditor->topmostObjectAt(event->scenePos())) {
+        if (BuildingObject *object = mEditor->topmostObjectAt(event->scenePos())) {
             BuildingFloor *floor = mEditor->document()->currentFloor();
             mEditor->document()->undoStack()->push(new RemoveObject(mEditor->document(),
                                                                     floor,
@@ -394,7 +394,7 @@ void BaseObjectTool::deactivate()
     }
 }
 
-void BaseObjectTool::setCursorObject(BaseMapObject *object)
+void BaseObjectTool::setCursorObject(BuildingObject *object)
 {
     mCursorObject = object;
     if (!mCursorItem) {
@@ -446,13 +446,13 @@ void DoorTool::updateCursorObject()
         mCursorItem->setVisible(true);
 
     int x = mTilePos.x(), y = mTilePos.y();
-    BaseMapObject::Direction dir = BaseMapObject::N;
+    BuildingObject::Direction dir = BuildingObject::N;
 
     if (mTileEdge == W)
-        dir = BaseMapObject::W;
+        dir = BuildingObject::W;
     else if (mTileEdge == E) {
         x++;
-        dir = BaseMapObject::W;
+        dir = BuildingObject::W;
     }
     else if (mTileEdge == S)
         y++;
@@ -508,13 +508,13 @@ void WindowTool::updateCursorObject()
         mCursorItem->setVisible(true);
 
     int x = mTilePos.x(), y = mTilePos.y();
-    BaseMapObject::Direction dir = BaseMapObject::N;
+    BuildingObject::Direction dir = BuildingObject::N;
 
     if (mTileEdge == W)
-        dir = BaseMapObject::W;
+        dir = BuildingObject::W;
     else if (mTileEdge == E) {
         x++;
-        dir = BaseMapObject::W;
+        dir = BuildingObject::W;
     }
     else if (mTileEdge == S)
         y++;
@@ -570,13 +570,13 @@ void StairsTool::updateCursorObject()
         mCursorItem->setVisible(true);
 
     int x = mTilePos.x(), y = mTilePos.y();
-    BaseMapObject::Direction dir = BaseMapObject::N;
+    BuildingObject::Direction dir = BuildingObject::N;
 
     if (mTileEdge == W)
-        dir = BaseMapObject::W;
+        dir = BuildingObject::W;
     else if (mTileEdge == E) {
         x++;
-        dir = BaseMapObject::W;
+        dir = BuildingObject::W;
     }
     else if (mTileEdge == S)
         y++;
@@ -663,7 +663,7 @@ void SelectMoveObjectTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     switch (mMode) {
     case NoMode:
         if (mClickedObject) {
-            QSet<BaseMapObject*> selection = mEditor->document()->selectedObjects();
+            QSet<BuildingObject*> selection = mEditor->document()->selectedObjects();
             const Qt::KeyboardModifiers modifiers = event->modifiers();
             if (modifiers & (Qt::ShiftModifier | Qt::ControlModifier)) {
                 if (selection.contains(mClickedObject))
@@ -676,7 +676,7 @@ void SelectMoveObjectTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             }
             mEditor->document()->setSelectedObjects(selection);
         } else {
-            mEditor->document()->setSelectedObjects(QSet<BaseMapObject*>());
+            mEditor->document()->setSelectedObjects(QSet<BuildingObject*>());
         }
         break;
     case Selecting:
@@ -719,13 +719,13 @@ void SelectMoveObjectTool::updateSelection(const QPointF &pos,
     rect.setWidth(qMax(qreal(1), rect.width()));
     rect.setHeight(qMax(qreal(1), rect.height()));
 
-    QSet<BaseMapObject*> selectedObjects;
+    QSet<BuildingObject*> selectedObjects;
 
-    foreach (BaseMapObject *object, mEditor->objectsInRect(rect))
+    foreach (BuildingObject *object, mEditor->objectsInRect(rect))
         selectedObjects.insert(object);
 
-    const QSet<BaseMapObject*> oldSelection = mEditor->document()->selectedObjects();
-    QSet<BaseMapObject*> newSelection;
+    const QSet<BuildingObject*> oldSelection = mEditor->document()->selectedObjects();
+    QSet<BuildingObject*> newSelection;
 
     if (modifiers & (Qt::ControlModifier | Qt::ShiftModifier)) {
         newSelection = oldSelection | selectedObjects;
@@ -772,7 +772,7 @@ void SelectMoveObjectTool::updateMovingItems(const QPointF &pos,
     QPoint currentTilePos = mEditor->sceneToTile(pos);
     mDragOffset = currentTilePos - startTilePos;
 
-    foreach (BaseMapObject *object, mMovingObjects) {
+    foreach (BuildingObject *object, mMovingObjects) {
         GraphicsObjectItem *item = mEditor->itemForObject(object);
         item->setDragging(true);
         item->setDragOffset(mDragOffset);
@@ -787,7 +787,7 @@ void SelectMoveObjectTool::finishMoving(const QPointF &pos)
     Q_ASSERT(mMode == Moving);
     mMode = NoMode;
 
-    foreach (BaseMapObject *object, mMovingObjects) {
+    foreach (BuildingObject *object, mMovingObjects) {
         mEditor->itemForObject(object)->setDragging(false);
         mEditor->itemForObject(object)->setValidPos(true);
     }
@@ -797,7 +797,7 @@ void SelectMoveObjectTool::finishMoving(const QPointF &pos)
 
     QUndoStack *undoStack = mEditor->document()->undoStack();
     undoStack->beginMacro(tr("Move %n Object(s)", "", mMovingObjects.size()));
-    foreach (BaseMapObject *object, mMovingObjects) {
+    foreach (BuildingObject *object, mMovingObjects) {
         if (!object->isValidPos(mDragOffset))
             undoStack->push(new RemoveObject(mEditor->document(),
                                              object->floor(),
@@ -813,7 +813,7 @@ void SelectMoveObjectTool::finishMoving(const QPointF &pos)
 
 void SelectMoveObjectTool::cancelMoving()
 {
-    foreach (BaseMapObject *object, mMovingObjects) {
+    foreach (BuildingObject *object, mMovingObjects) {
         mEditor->itemForObject(object)->setDragging(false);
         mEditor->itemForObject(object)->setValidPos(true);
     }

@@ -25,7 +25,7 @@ namespace BuildingEditor {
 class BuildingFloor;
 class BuildingTile;
 
-class BaseMapObject
+class BuildingObject
 {
 public:
     enum Direction
@@ -37,7 +37,7 @@ public:
         Invalid
     };
 
-    BaseMapObject(BuildingFloor *floor, int x, int y, Direction mDir);
+    BuildingObject(BuildingFloor *floor, int x, int y, Direction mDir);
 
     BuildingFloor *floor() const
     { return mFloor; }
@@ -88,11 +88,11 @@ protected:
     BuildingTile *mTile;
 };
 
-class Door : public BaseMapObject
+class Door : public BuildingObject
 {
 public:
     Door(BuildingFloor *floor, int x, int y, Direction dir) :
-        BaseMapObject(floor, x, y, dir),
+        BuildingObject(floor, x, y, dir),
         mFrameTile(0)
     {
 
@@ -111,11 +111,11 @@ private:
     BuildingTile *mFrameTile;
 };
 
-class Stairs : public BaseMapObject
+class Stairs : public BuildingObject
 {
 public:
     Stairs(BuildingFloor *floor, int x, int y, Direction dir) :
-        BaseMapObject(floor, x, y, dir)
+        BuildingObject(floor, x, y, dir)
     {
     }
 
@@ -130,11 +130,11 @@ public:
     int getOffset(int x, int y);
 };
 
-class Window : public BaseMapObject
+class Window : public BuildingObject
 {
 public:
     Window(BuildingFloor *floor, int x, int y, Direction dir) :
-        BaseMapObject(floor, x, y, dir)
+        BuildingObject(floor, x, y, dir)
     {
 
     }

@@ -135,6 +135,12 @@ void GraphicsGridItem::paint(QPainter *painter,
 
     for (int y = minY; y <= maxY; y++)
         painter->drawLine(minX * 30, y * 30, maxX * 30, y * 30);
+
+#if 0
+    static QColor dbg = Qt::blue;
+    painter->fillRect(option->exposedRect, dbg);
+    if (dbg == Qt::blue) dbg = Qt::green; else dbg = Qt::blue;
+#endif
 }
 
 void GraphicsGridItem::setSize(int width, int height)
@@ -146,7 +152,7 @@ void GraphicsGridItem::setSize(int width, int height)
 
 /////
 
-GraphicsObjectItem::GraphicsObjectItem(FloorEditor *editor, BaseMapObject *object) :
+GraphicsObjectItem::GraphicsObjectItem(FloorEditor *editor, BuildingObject *object) :
     QGraphicsItem(),
     mEditor(editor),
     mObject(object),
@@ -181,7 +187,7 @@ void GraphicsObjectItem::paint(QPainter *painter,
     painter->drawPath(path);
 }
 
-void GraphicsObjectItem::setObject(BaseMapObject *object)
+void GraphicsObjectItem::setObject(BuildingObject *object)
 {
     mObject = object;
     synchWithObject();
@@ -206,33 +212,33 @@ QPainterPath GraphicsObjectItem::calcShape()
 
     // Screw you, polymorphism!!!
     if (Door *door = dynamic_cast<Door*>(mObject)) {
-        if (door->dir() == BaseMapObject::N) {
+        if (door->dir() == BuildingObject::N) {
             QPointF p = mEditor->tileToScene(door->pos() + dragOffset);
             path.addRect(p.x(), p.y() - 5, 30, 10);
         }
-        if (door->dir() == BaseMapObject::W) {
+        if (door->dir() == BuildingObject::W) {
             QPointF p = mEditor->tileToScene(door->pos() + dragOffset);
             path.addRect(p.x() - 5, p.y(), 10, 30);
         }
     }
 
     if (Window *window = dynamic_cast<Window*>(mObject)) {
-        if (window->dir() == BaseMapObject::N) {
+        if (window->dir() == BuildingObject::N) {
             QPointF p = mEditor->tileToScene(window->pos() + dragOffset);
             path.addRect(p.x() + 7, p.y() - 3, 16, 6);
         }
-        if (window->dir() == BaseMapObject::W) {
+        if (window->dir() == BuildingObject::W) {
             QPointF p = mEditor->tileToScene(window->pos() + dragOffset);
             path.addRect(p.x() - 3, p.y() + 7, 6, 16);
         }
     }
 
     if (Stairs *stairs = dynamic_cast<Stairs*>(mObject)) {
-        if (stairs->dir() == BaseMapObject::N) {
+        if (stairs->dir() == BuildingObject::N) {
             QPointF p = mEditor->tileToScene(stairs->pos() + dragOffset);
             path.addRect(p.x(), p.y(), 30, 30 * 5);
         }
-        if (stairs->dir() == BaseMapObject::W) {
+        if (stairs->dir() == BuildingObject::W) {
             QPointF p = mEditor->tileToScene(stairs->pos() + dragOffset);
             path.addRect(p.x(), p.y(), 30 * 5, 30);
         }
@@ -339,12 +345,12 @@ void FloorEditor::setDocument(BuildingDocument *doc)
         connect(mDocument, SIGNAL(floorEdited(BuildingFloor*)),
                 SLOT(floorEdited(BuildingFloor*)));
 
-        connect(mDocument, SIGNAL(objectAdded(BaseMapObject*)),
-                SLOT(objectAdded(BaseMapObject*)));
-        connect(mDocument, SIGNAL(objectAboutToBeRemoved(BaseMapObject*)),
-                SLOT(objectAboutToBeRemoved(BaseMapObject*)));
-        connect(mDocument, SIGNAL(objectMoved(BaseMapObject*)),
-                SLOT(objectMoved(BaseMapObject*)));
+        connect(mDocument, SIGNAL(objectAdded(BuildingObject*)),
+                SLOT(objectAdded(BuildingObject*)));
+        connect(mDocument, SIGNAL(objectAboutToBeRemoved(BuildingObject*)),
+                SLOT(objectAboutToBeRemoved(BuildingObject*)));
+        connect(mDocument, SIGNAL(objectMoved(BuildingObject*)),
+                SLOT(objectMoved(BuildingObject*)));
         connect(mDocument, SIGNAL(selectedObjectsChanged()),
                 SLOT(selectedObjectsChanged()));
 
@@ -423,7 +429,7 @@ bool FloorEditor::currentFloorContains(const QPoint &tilePos)
     return true;
 }
 
-GraphicsObjectItem *FloorEditor::itemForObject(BaseMapObject *object)
+GraphicsObjectItem *FloorEditor::itemForObject(BuildingObject *object)
 {
     foreach (GraphicsObjectItem *item, mObjectItems) {
         if (item->object() == object)
@@ -432,9 +438,9 @@ GraphicsObjectItem *FloorEditor::itemForObject(BaseMapObject *object)
     return 0;
 }
 
-QSet<BaseMapObject*> FloorEditor::objectsInRect(const QRectF &sceneRect)
+QSet<BuildingObject*> FloorEditor::objectsInRect(const QRectF &sceneRect)
 {
-    QSet<BaseMapObject*> objects;
+    QSet<BuildingObject*> objects;
     foreach (QGraphicsItem *item, items(sceneRect)) {
         if (GraphicsObjectItem *objectItem = dynamic_cast<GraphicsObjectItem*>(item)) {
             if (objectItem->object()->floor() == mDocument->currentFloor())
@@ -444,7 +450,7 @@ QSet<BaseMapObject*> FloorEditor::objectsInRect(const QRectF &sceneRect)
     return objects;
 }
 
-BaseMapObject *FloorEditor::topmostObjectAt(const QPointF &scenePos)
+BuildingObject *FloorEditor::topmostObjectAt(const QPointF &scenePos)
 {
     foreach (QGraphicsItem *item, items(scenePos)) {
         if (GraphicsObjectItem *objectItem = dynamic_cast<GraphicsObjectItem*>(item)) {
@@ -483,7 +489,7 @@ void FloorEditor::floorAdded(BuildingFloor *floor)
 
     floorEdited(floor);
 
-    foreach (BaseMapObject *object, floor->objects())
+    foreach (BuildingObject *object, floor->objects())
         objectAdded(object);
 }
 
@@ -504,7 +510,7 @@ void FloorEditor::floorEdited(BuildingFloor *floor)
     item->update();
 }
 
-void FloorEditor::objectAdded(BaseMapObject *object)
+void FloorEditor::objectAdded(BuildingObject *object)
 {
     Q_ASSERT(!itemForObject(object));
     GraphicsObjectItem *item = new GraphicsObjectItem(this, object);
@@ -516,7 +522,7 @@ void FloorEditor::objectAdded(BaseMapObject *object)
         mObjectItems[i]->setZValue(i);
 }
 
-void FloorEditor::objectAboutToBeRemoved(BaseMapObject *object)
+void FloorEditor::objectAboutToBeRemoved(BuildingObject *object)
 {
     GraphicsObjectItem *item = itemForObject(object);
     Q_ASSERT(item);
@@ -525,7 +531,7 @@ void FloorEditor::objectAboutToBeRemoved(BaseMapObject *object)
     removeItem(item);
 }
 
-void FloorEditor::objectMoved(BaseMapObject *object)
+void FloorEditor::objectMoved(BuildingObject *object)
 {
     GraphicsObjectItem *item = itemForObject(object);
     Q_ASSERT(item);
@@ -534,10 +540,10 @@ void FloorEditor::objectMoved(BaseMapObject *object)
 
 void FloorEditor::selectedObjectsChanged()
 {
-    QSet<BaseMapObject*> selectedObjects = mDocument->selectedObjects();
+    QSet<BuildingObject*> selectedObjects = mDocument->selectedObjects();
     QSet<GraphicsObjectItem*> selectedItems;
 
-    foreach (BaseMapObject *object, selectedObjects)
+    foreach (BuildingObject *object, selectedObjects)
         selectedItems += itemForObject(object);
 
     foreach (GraphicsObjectItem *item, mSelectedObjectItems - selectedItems)

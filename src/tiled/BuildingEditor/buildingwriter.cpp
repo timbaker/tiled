@@ -111,7 +111,7 @@ public:
         w.writeStartElement(QLatin1String("floor"));
 //        w.writeAttribute(QLatin1String("level"), QString::number(floor->level()));
 
-        foreach (BaseMapObject *object, floor->objects())
+        foreach (BuildingObject *object, floor->objects())
             writeObject(w, object);
 
         QString text;
@@ -135,7 +135,7 @@ public:
         w.writeEndElement(); // </floor>
     }
 
-    void writeObject(QXmlStreamWriter &w, BaseMapObject *object)
+    void writeObject(QXmlStreamWriter &w, BuildingObject *object)
     {
         w.writeStartElement(QLatin1String("object"));
         if (Door *door = dynamic_cast<Door*>(object)) {

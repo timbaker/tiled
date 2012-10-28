@@ -28,7 +28,7 @@ class QGraphicsSceneMouseEvent;
 
 namespace BuildingEditor {
 
-class BaseMapObject;
+class BuildingObject;
 class Door;
 class FloorEditor;
 class GraphicsObjectItem;
@@ -168,7 +168,7 @@ public slots:
 
 protected:
     virtual void updateCursorObject() = 0;
-    void setCursorObject(BaseMapObject *object);
+    void setCursorObject(BuildingObject *object);
     virtual void placeObject() = 0;
 
     enum TileEdge {
@@ -181,7 +181,7 @@ protected:
 
     QPoint mTilePos;
     TileEdge mTileEdge;
-    BaseMapObject *mCursorObject;
+    BuildingObject *mCursorObject;
     GraphicsObjectItem *mCursorItem;
 };
 
@@ -274,8 +274,8 @@ private:
     bool mMouseDown;
     QPointF mStartScenePos;
     QPoint mDragOffset;
-    BaseMapObject *mClickedObject;
-    QSet<BaseMapObject*> mMovingObjects;
+    BuildingObject *mClickedObject;
+    QSet<BuildingObject*> mMovingObjects;
     QGraphicsRectItem *mSelectionRectItem;
 };
 

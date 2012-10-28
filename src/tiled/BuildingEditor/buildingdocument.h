@@ -27,7 +27,7 @@ class QUndoStack;
 
 namespace BuildingEditor {
 
-class BaseMapObject;
+class BuildingObject;
 class Building;
 class BuildingFloor;
 class BuildingTile;
@@ -60,9 +60,9 @@ public:
 
     bool isModified() const;
 
-    void setSelectedObjects(const QSet<BaseMapObject*> &selection);
+    void setSelectedObjects(const QSet<BuildingObject*> &selection);
 
-    const QSet<BaseMapObject*> &selectedObjects() const
+    const QSet<BuildingObject*> &selectedObjects() const
     { return mSelectedObjects; }
 
     void emitBuildingResized()
@@ -74,11 +74,11 @@ public:
     BuildingTile *changeWallForRoom(Room *room, BuildingTile *tile);
     BuildingTile *changeFloorForRoom(Room *room, BuildingTile *tile);
     void insertFloor(int index, BuildingFloor *floor);
-    void insertObject(BuildingFloor *floor, int index, BaseMapObject *object);
-    BaseMapObject *removeObject(BuildingFloor *floor, int index);
-    QPoint moveObject(BaseMapObject *object, const QPoint &pos);
+    void insertObject(BuildingFloor *floor, int index, BuildingObject *object);
+    BuildingObject *removeObject(BuildingFloor *floor, int index);
+    QPoint moveObject(BuildingObject *object, const QPoint &pos);
     BuildingTile *changeDoorTile(Door *door, BuildingTile *tile, bool isFrame);
-    BuildingTile *changeObjectTile(BaseMapObject *object, BuildingTile *tile);
+    BuildingTile *changeObjectTile(BuildingObject *object, BuildingTile *tile);
 
     void insertRoom(int index, Room *room);
     Room *removeRoom(int index);
@@ -104,11 +104,11 @@ signals:
     void floorAdded(BuildingFloor *floor);
     void floorEdited(BuildingFloor *floor);
 
-    void objectAdded(BaseMapObject *object);
-    void objectAboutToBeRemoved(BaseMapObject *object);
+    void objectAdded(BuildingObject *object);
+    void objectAboutToBeRemoved(BuildingObject *object);
     void objectRemoved(BuildingFloor *floor, int index);
-    void objectMoved(BaseMapObject *object);
-    void objectTileChanged(BaseMapObject *object);
+    void objectMoved(BuildingObject *object);
+    void objectTileChanged(BuildingObject *object);
 
     void roomAdded(Room *room);
     void roomAboutToBeRemoved(Room *room);
@@ -128,7 +128,7 @@ private:
     QString mFileName;
     QUndoStack *mUndoStack;
     BuildingFloor *mCurrentFloor;
-    QSet<BaseMapObject*> mSelectedObjects;
+    QSet<BuildingObject*> mSelectedObjects;
 };
 
 } // namespace BuildingEditor

@@ -25,7 +25,7 @@
 
 namespace BuildingEditor {
 
-class BaseMapObject;
+class BuildingObject;
 class BuildingDocument;
 class BuildingFloor;
 class BuildingTile;
@@ -135,7 +135,7 @@ class AddRemoveObject : public QUndoCommand
 {
 public:
     AddRemoveObject(BuildingDocument *doc, BuildingFloor *floor, int index,
-                    BaseMapObject *object);
+                    BuildingObject *object);
     ~AddRemoveObject();
 
 protected:
@@ -145,13 +145,13 @@ protected:
     BuildingDocument *mDocument;
     BuildingFloor *mFloor;
     int mIndex;
-    BaseMapObject *mObject;
+    BuildingObject *mObject;
 };
 
 class AddObject : public AddRemoveObject
 {
 public:
-    AddObject(BuildingDocument *doc, BuildingFloor *floor, int index, BaseMapObject *object);
+    AddObject(BuildingDocument *doc, BuildingFloor *floor, int index, BuildingObject *object);
 
     void undo() { remove(); }
     void redo() { add(); }
@@ -169,7 +169,7 @@ public:
 class MoveObject : public QUndoCommand
 {
 public:
-    MoveObject(BuildingDocument *doc, BaseMapObject *object, const QPoint &pos);
+    MoveObject(BuildingDocument *doc, BuildingObject *object, const QPoint &pos);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -178,7 +178,7 @@ private:
     void swap();
 
     BuildingDocument *mDocument;
-    BaseMapObject *mObject;
+    BuildingObject *mObject;
     QPoint mPos;
 };
 
@@ -203,7 +203,7 @@ private:
 class ChangeObjectTile : public QUndoCommand
 {
 public:
-    ChangeObjectTile(BuildingDocument *doc, BaseMapObject *object, BuildingTile *tile);
+    ChangeObjectTile(BuildingDocument *doc, BuildingObject *object, BuildingTile *tile);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -212,7 +212,7 @@ private:
     void swap();
 
     BuildingDocument *mDocument;
-    BaseMapObject *mObject;
+    BuildingObject *mObject;
     BuildingTile *mTile;
 };
 

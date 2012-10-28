@@ -25,7 +25,7 @@
 
 namespace BuildingEditor {
 
-class BaseMapObject;
+class BuildingObject;
 class Building;
 class BuildingTile;
 class Door;
@@ -90,24 +90,24 @@ public:
     BuildingFloor *floorAbove() const;
     BuildingFloor *floorBelow() const;
 
-    void insertObject(int index, BaseMapObject *object);
-    BaseMapObject *removeObject(int index);
+    void insertObject(int index, BuildingObject *object);
+    BuildingObject *removeObject(int index);
 
-    int indexOf(BaseMapObject *object)
+    int indexOf(BuildingObject *object)
     { return mObjects.indexOf(object); }
 
-    BaseMapObject *object(int index) const
+    BuildingObject *object(int index) const
     { return mObjects.at(index); }
 
-    const QList<BaseMapObject*> &objects() const
+    const QList<BuildingObject*> &objects() const
     { return mObjects; }
 
     int objectCount() const
     { return mObjects.size(); }
 
-    BaseMapObject *objectAt(int x, int y);
+    BuildingObject *objectAt(int x, int y);
 
-    inline BaseMapObject *objectAt(const QPoint &pos)
+    inline BuildingObject *objectAt(const QPoint &pos)
     { return objectAt(pos.x(), pos.y()); }
 
     Door *GetDoorAt(int x, int y);
@@ -150,7 +150,7 @@ private:
     QVector<QVector<Room*> > mRoomAtPos;
     QVector<QVector<int> > mIndexAtPos;
     int mLevel;
-    QList<BaseMapObject*> mObjects;
+    QList<BuildingObject*> mObjects;
 };
 
 } // namespace BuildingEditor

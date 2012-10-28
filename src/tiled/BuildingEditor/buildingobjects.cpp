@@ -22,7 +22,7 @@ using namespace BuildingEditor;
 
 /////
 
-BaseMapObject::BaseMapObject(BuildingFloor *floor, int x, int y, Direction dir) :
+BuildingObject::BuildingObject(BuildingFloor *floor, int x, int y, Direction dir) :
     mFloor(floor),
     mX(x),
     mY(y),
@@ -31,13 +31,13 @@ BaseMapObject::BaseMapObject(BuildingFloor *floor, int x, int y, Direction dir) 
 {
 }
 
-QString BaseMapObject::dirString() const
+QString BuildingObject::dirString() const
 {
     static const char *s[] = { "N", "S", "E", "W" };
     return QLatin1String(s[mDir]);
 }
 
-BaseMapObject::Direction BaseMapObject::dirFromString(const QString &s)
+BuildingObject::Direction BuildingObject::dirFromString(const QString &s)
 {
     if (s == QLatin1String("N")) return N;
     if (s == QLatin1String("S")) return S;
@@ -46,7 +46,7 @@ BaseMapObject::Direction BaseMapObject::dirFromString(const QString &s)
     return Invalid;
 }
 
-bool BaseMapObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
+bool BuildingObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
 {
     if (!floor)
         floor = mFloor; // hackery for BaseObjectTool
@@ -57,7 +57,7 @@ bool BaseMapObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
     return (floorBounds & objectBounds) == objectBounds;
 }
 
-void BaseMapObject::rotate(bool right)
+void BuildingObject::rotate(bool right)
 {
     Q_UNUSED(right)
     mDir = (mDir == N) ? W : N;
@@ -83,7 +83,7 @@ void BaseMapObject::rotate(bool right)
     }
 }
 
-void BaseMapObject::flip(bool horizontal)
+void BuildingObject::flip(bool horizontal)
 {
     if (horizontal) {
         mX = mFloor->width() - mX - 1;
@@ -96,7 +96,7 @@ void BaseMapObject::flip(bool horizontal)
     }
 }
 
-int BaseMapObject::index()
+int BuildingObject::index()
 {
     return mFloor->indexOf(this);
 }
@@ -114,7 +114,7 @@ QRect Stairs::bounds() const
 
 void Stairs::rotate(bool right)
 {
-    BaseMapObject::rotate(right);
+    BuildingObject::rotate(right);
     if (right) {
         if (mDir == W) // used to be N
             mX -= 5;
@@ -126,7 +126,7 @@ void Stairs::rotate(bool right)
 
 void Stairs::flip(bool horizontal)
 {
-    BaseMapObject::flip(horizontal);
+    BuildingObject::flip(horizontal);
     if (mDir == W && horizontal)
         mX -= 5;
     else if (mDir == N && !horizontal)

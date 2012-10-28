@@ -59,7 +59,7 @@ private:
     void decodeCSVFloorData(BuildingFloor *floor, const QString &text);
     Room *getRoom(BuildingFloor *floor, int x, int y, int index);
 
-    BaseMapObject *readObject(BuildingFloor *floor);
+    BuildingObject *readObject(BuildingFloor *floor);
 
     BuildingReader *p;
 
@@ -187,7 +187,7 @@ BuildingFloor *BuildingReaderPrivate::readFloor()
 
     while (xml.readNextStartElement()) {
         if (xml.name() == "object") {
-            if (BaseMapObject *object = readObject(floor))
+            if (BuildingObject *object = readObject(floor))
                 floor->insertObject(floor->objectCount(), object);
         } else if (xml.name() == "rooms") {
             while (xml.readNext() != QXmlStreamReader::Invalid) {
@@ -204,7 +204,7 @@ BuildingFloor *BuildingReaderPrivate::readFloor()
     return floor;
 }
 
-BaseMapObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
+BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
 {
     Q_ASSERT(xml.isStartElement() && xml.name() == "object");
 
@@ -221,13 +221,13 @@ BaseMapObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
         return 0;
     }
 
-    BaseMapObject::Direction dir = BaseMapObject::dirFromString(dirString);
-    if (dir == BaseMapObject::Invalid) {
+    BuildingObject::Direction dir = BuildingObject::dirFromString(dirString);
+    if (dir == BuildingObject::Invalid) {
         xml.raiseError(tr("Invalid object direction '%1'").arg(dirString));
         return 0;
     }
 
-    BaseMapObject *object = 0;
+    BuildingObject *object = 0;
     if (type == QLatin1String("door")) {
         Door *door = new Door(floor, x, y, dir);
         door->setTile(BuildingTiles::instance()->getDoorTile(tile));

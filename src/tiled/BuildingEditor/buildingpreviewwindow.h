@@ -45,7 +45,7 @@ class BuildingPreviewWindow;
 
 namespace BuildingEditor {
 
-class BaseMapObject;
+class BuildingObject;
 class Building;
 class BuildingFloor;
 class BuildingDocument;
@@ -134,10 +134,10 @@ private slots:
     void floorAdded(BuildingFloor *floor);
     void floorEdited(BuildingFloor *floor);
 
-    void objectAdded(BaseMapObject *object);
+    void objectAdded(BuildingObject *object);
     void objectRemoved(BuildingFloor *floor, int index);
-    void objectMoved(BaseMapObject *object);
-    void objectTileChanged(BaseMapObject *object);
+    void objectMoved(BuildingObject *object);
+    void objectTileChanged(BuildingObject *object);
 
     void buildingResized();
     void buildingRotated();
