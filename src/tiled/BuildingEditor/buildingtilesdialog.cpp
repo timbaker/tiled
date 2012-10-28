@@ -19,6 +19,8 @@
 #include "ui_buildingtilesdialog.h"
 
 #include "buildingtiles.h"
+#include "furnituregroups.h"
+#include "furnitureview.h"
 
 #include "zoomable.h"
 
@@ -36,6 +38,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::BuildingTilesDialog),
     mZoomable(new Zoomable(this)),
+    mFurnitureGroup(0),
     mChanges(false)
 {
     ui->setupUi(this);
@@ -60,7 +63,6 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
                 = new Tiled::Internal::MixedTilesetView(mZoomable, ui->toolBox);
         w->setSelectionMode(QAbstractItemView::ExtendedSelection);
         ui->toolBox->addItem(w, category->label());
-
         connect(w->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
                 SLOT(synchUI()));
 
@@ -68,6 +70,18 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     }
     connect(ui->toolBox, SIGNAL(currentChanged(int)), SLOT(categoryChanged(int)));
     mCategoryName = BuildingTiles::instance()->categories().at(ui->toolBox->currentIndex())->name();
+
+    // Added to "categories" view, but not a category
+    foreach (FurnitureGroup *group, FurnitureGroups::instance()->groups()) {
+        FurnitureView *w = new FurnitureView(mZoomable, ui->toolBox);
+        w->model()->setTiles(group->mTiles);
+        w->setAcceptDrops(true);
+        w->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        connect(w->model(), SIGNAL(edited()), SLOT(furnitureEdited()));
+        ui->toolBox->addItem(w, group->mLabel);
+        connect(w->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+                SLOT(synchUI()));
+    }
 
     // Add the list of tilesets, and resize it to fit
     int width = 64;
@@ -91,6 +105,8 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     connect(ui->tableWidget->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(synchUI()));
+
+    ui->tableWidget->setDragEnabled(true);
 
     synchUI();
 }
@@ -116,16 +132,29 @@ void BuildingTilesDialog::setCategoryTiles(const QString &categoryName)
 
 void BuildingTilesDialog::synchUI()
 {
-    ui->addTiles->setEnabled(!mCategoryName.isEmpty() &&
-                             ui->tableWidget->selectionModel()->selectedIndexes().count());
-    ui->removeTiles->setEnabled(!mCategoryName.isEmpty() &&
-                                static_cast<MixedTilesetView*>(ui->toolBox->currentWidget())->selectionModel()->selectedIndexes().count());
+    bool add = false;
+    bool remove = static_cast<QTableView*>(ui->toolBox->currentWidget())
+            ->selectionModel()->selectedIndexes().count();
+    if (mFurnitureGroup) {
+        add = true;
+    } else if (!mCategoryName.isEmpty()) {
+        add = ui->tableWidget->selectionModel()->selectedIndexes().count();
+    }
+    ui->addTiles->setEnabled(add);
+    ui->removeTiles->setEnabled(remove);
 }
 
 void BuildingTilesDialog::categoryChanged(int index)
 {
-    mCategoryName = BuildingTiles::instance()->categories().at(index)->name();
-    tilesetSelectionChanged();
+    if (index < BuildingTiles::instance()->categories().count()) {
+        mCategoryName = BuildingTiles::instance()->categories().at(index)->name();
+        mFurnitureGroup = 0;
+        tilesetSelectionChanged();
+    } else {
+        mCategoryName.clear(); // it's furniture
+        mFurnitureGroup = FurnitureGroups::instance()->groups()
+                .at(index - BuildingTiles::instance()->categories().count());
+    }
     synchUI();
 }
 
@@ -134,15 +163,19 @@ void BuildingTilesDialog::tilesetSelectionChanged()
     QList<QListWidgetItem*> selection = ui->listWidget->selectedItems();
     QListWidgetItem *item = selection.count() ? selection.first() : 0;
     if (item) {
-        BuildingTiles::Category *category = BuildingTiles::instance()->category(mCategoryName);
-        QRect bounds = category->categoryBounds();
+        QRect bounds;
+        BuildingTiles::Category *category = 0;
+        if (!mCategoryName.isEmpty()) {
+            category = BuildingTiles::instance()->category(mCategoryName);
+            bounds = category->categoryBounds();
+        }
         int row = ui->listWidget->row(item);
         MixedTilesetModel *model = ui->tableWidget->model();
         Tileset *tileset = BuildingTiles::instance()->tilesets().at(row);
         model->setTileset(tileset);
         for (int i = 0; i < tileset->tileCount(); i++) {
             Tile *tile = tileset->tileAt(i);
-            if (category->usesTile(tile))
+            if (category && category->usesTile(tile))
                 model->setCategoryBounds(tile, bounds);
         }
     }
@@ -151,6 +184,19 @@ void BuildingTilesDialog::tilesetSelectionChanged()
 
 void BuildingTilesDialog::addTiles()
 {
+    if (mFurnitureGroup != 0) {
+        FurnitureTiles *tiles = new FurnitureTiles;
+        tiles->mTiles[0] = new FurnitureTile(tiles, FurnitureTile::FurnitureW);
+        tiles->mTiles[1] = new FurnitureTile(tiles, FurnitureTile::FurnitureN);
+        tiles->mTiles[2] = new FurnitureTile(tiles, FurnitureTile::FurnitureE);
+        tiles->mTiles[3] = new FurnitureTile(tiles, FurnitureTile::FurnitureS);
+        mFurnitureGroup->mTiles += tiles;
+        FurnitureView *v = static_cast<FurnitureView*>(ui->toolBox->currentWidget());
+        v->model()->setTiles(mFurnitureGroup->mTiles);
+        mChanges = true;
+        return;
+    }
+
     if (mCategoryName.isEmpty())
         return;
     BuildingTiles::Category *category = BuildingTiles::instance()->category(mCategoryName);
@@ -172,6 +218,31 @@ void BuildingTilesDialog::addTiles()
 
 void BuildingTilesDialog::removeTiles()
 {
+    if (mFurnitureGroup != 0) {
+        FurnitureView *v = static_cast<FurnitureView*>(ui->toolBox->currentWidget());
+        QList<FurnitureTiles*> remove;
+        QModelIndexList selection = v->selectionModel()->selectedIndexes();
+        foreach (QModelIndex index, selection) {
+            FurnitureTile *tile = v->model()->tileAt(index);
+            if (tile->owner()->isEmpty()) {
+                if (!remove.contains(tile->owner()))
+                    remove += tile->owner();
+            } else {
+                tile->clear();
+                v->update(index);
+            }
+        }
+        foreach (FurnitureTiles *tiles, remove) {
+            mFurnitureGroup->mTiles.removeOne(tiles);
+            v->model()->removeTiles(tiles);
+#if 0
+            delete tiles; // don't delete, may still be in use by furniture objects
+#endif
+        }
+        mChanges = true;
+        return;
+    }
+
     if (mCategoryName.isEmpty())
         return;
     BuildingTiles::Category *category = BuildingTiles::instance()->category(mCategoryName);
@@ -188,4 +259,9 @@ void BuildingTilesDialog::removeTiles()
     tilesetSelectionChanged();
     setCategoryTiles(mCategoryName);
     synchUI(); // model calling reset() doesn't generate selectionChanged signal
+}
+
+void BuildingTilesDialog::furnitureEdited()
+{
+    mChanges = true;
 }

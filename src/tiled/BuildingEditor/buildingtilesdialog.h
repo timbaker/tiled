@@ -32,6 +32,8 @@ class Zoomable;
 
 namespace BuildingEditor {
 
+class FurnitureGroup;
+
 class BuildingTilesDialog : public QDialog
 {
     Q_OBJECT
@@ -54,10 +56,13 @@ private slots:
     void addTiles();
     void removeTiles();
 
+    void furnitureEdited();
+
 private:
     Ui::BuildingTilesDialog *ui;
     Tiled::Internal::Zoomable *mZoomable;
     QString mCategoryName;
+    FurnitureGroup *mFurnitureGroup;
     bool mChanges;
 };
 

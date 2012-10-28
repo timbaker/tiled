@@ -49,9 +49,17 @@ void BuildingTiles::deleteInstance()
     mInstance = 0;
 }
 
+BuildingTiles::BuildingTiles() :
+    mFurnitureCategory(new Category(QLatin1String("Furniture"),
+                                    QLatin1String("furniture")))
+{
+}
+
 BuildingTiles::~BuildingTiles()
 {
     TilesetManager::instance()->removeReferences(tilesets());
+    qDeleteAll(mCategories);
+    delete mFurnitureCategory;
 }
 
 BuildingTile *BuildingTiles::get(const QString &categoryName, const QString &tileName)
@@ -235,6 +243,11 @@ BuildingTile *BuildingTiles::getWindowTile(const QString &tileName)
 BuildingTile *BuildingTiles::getStairsTile(const QString &tileName)
 {
     return category(QLatin1String("stairs"))->get(tileName);
+}
+
+BuildingTile *BuildingTiles::getFurnitureTile(const QString &tileName)
+{
+    return mFurnitureCategory->get(tileName);
 }
 
 /////

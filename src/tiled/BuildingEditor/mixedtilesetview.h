@@ -49,6 +49,12 @@ public:
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
     QModelIndex index(Tiled::Tile *tile);
 
+    Qt::DropActions supportedDropActions() const
+    { return Qt::CopyAction; }
+
+    QStringList mimeTypes() const;
+    QMimeData *mimeData(const QModelIndexList &indexes) const;
+
     void setTiles(const QList<Tile*> &tiles);
     void setTileset(Tileset *tileset);
 
@@ -93,6 +99,7 @@ private:
     QList<Tiled::Tile*> mTiles;
     Tiled::Tileset *mTileset;
     QMap<Tiled::Tile*,QRect> mCategoryBounds;
+    static QString mMimeType;
 };
 
 class MixedTilesetView : public QTableView

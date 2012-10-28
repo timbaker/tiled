@@ -22,6 +22,7 @@
 #include "zoomable.h"
 
 #include <QHeaderView>
+#include <QMimeData>
 #include <QPainter>
 
 using namespace Tiled;
@@ -254,6 +255,8 @@ Qt::ItemFlags MixedTilesetModel::flags(const QModelIndex &index) const
     Qt::ItemFlags flags = QAbstractListModel::flags(index);
     if (!tileAt(index))
         flags &= ~(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+    else
+        flags |= Qt::ItemIsDragEnabled;
     return flags;
 }
 
@@ -296,6 +299,32 @@ QModelIndex MixedTilesetModel::index(Tile *tile)
     if (tileIndex != -1)
         return index(tileIndex / columnCount(), tileIndex % columnCount());
     return QModelIndex();
+}
+
+QString MixedTilesetModel::mMimeType(QLatin1String("application/x-tilezed-tile"));
+
+QStringList MixedTilesetModel::mimeTypes() const
+{
+    QStringList types;
+    types << mMimeType;
+    return types;}
+
+QMimeData *MixedTilesetModel::mimeData(const QModelIndexList &indexes) const
+{
+    QMimeData *mimeData = new QMimeData();
+    QByteArray encodedData;
+
+    QDataStream stream(&encodedData, QIODevice::WriteOnly);
+
+    foreach (const QModelIndex &index, indexes) {
+        if (Tile *tile = tileAt(index)) {
+            stream << tile->tileset()->name();
+            stream << tile->id();
+        }
+    }
+
+    mimeData->setData(mMimeType, encodedData);
+    return mimeData;
 }
 
 void MixedTilesetModel::setTiles(const QList<Tile *> &tiles)

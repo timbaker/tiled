@@ -31,6 +31,8 @@
 #include "buildingtilesdialog.h"
 #include "buildingtools.h"
 #include "FloorEditor.h"
+#include "furnituregroups.h"
+#include "furnitureview.h"
 #include "mixedtilesetview.h"
 #include "newbuildingdialog.h"
 #include "resizebuildingdialog.h"
@@ -285,6 +287,13 @@ bool BuildingEditorWindow::Startup()
     if (!LoadBuildingTemplates()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
                               tr("Error while reading BuildingTemplates.txt\n") + mError);
+        return false;
+    }
+
+    if (!FurnitureGroups::instance()->readTxt()) {
+        QMessageBox::critical(this, tr("It's no good, Jim!"),
+                              tr("Error while reading BuildingFurniture.txt\n")
+                              + FurnitureGroups::instance()->errorString());
         return false;
     }
 
@@ -1271,6 +1280,10 @@ void BuildingEditorWindow::tilesDialog()
 
     if (dialog.changes()) {
         BuildingTiles::instance()->writeBuildingTilesTxt(this);
+        if (!FurnitureGroups::instance()->writeTxt()) {
+            QMessageBox::warning(this, tr("It's no good, Jim!"),
+                                 FurnitureGroups::instance()->errorString());
+        }
         setCategoryLists();
     }
 }
@@ -1364,6 +1377,12 @@ void BuildingEditorWindow::setCategoryLists()
                 tiles += BuildingTiles::instance()->tileFor(tile);
         }
         w->model()->setTiles(tiles);
+    }
+
+    foreach (FurnitureGroup *group, FurnitureGroups::instance()->groups()) {
+        FurnitureView *w = new FurnitureView(mCategoryZoomable, toolBox);
+        w->model()->setTiles(group->mTiles);
+        toolBox->addItem(w, group->mLabel);
     }
 
     mSynching = false;

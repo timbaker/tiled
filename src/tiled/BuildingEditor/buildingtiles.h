@@ -115,6 +115,7 @@ public:
         QMap<QString,BuildingTile*> mTileByName;
     };
 
+    BuildingTiles();
     ~BuildingTiles();
 
     Category *addCategory(const QString &categoryName, const QString &label)
@@ -201,12 +202,14 @@ public:
     BuildingTile *getDoorFrameTile(const QString &tileName);
     BuildingTile *getWindowTile(const QString &tileName);
     BuildingTile *getStairsTile(const QString &tileName);
+    BuildingTile *getFurnitureTile(const QString &tileName);
 
 private:
     static BuildingTiles *mInstance;
     QList<Category*> mCategories;
     QMap<QString,Category*> mCategoryByName;
     QMap<QString,Tiled::Tileset*> mTilesetByName;
+    Category *mFurnitureCategory;
 };
 
 } // namespace BuildingEditor
