@@ -15,108 +15,113 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <widget class="QToolBox" name="toolBox">
-     <property name="maximumSize">
-      <size>
-       <width>332</width>
-       <height>16777215</height>
-      </size>
+    <widget class="QSplitter" name="splitter_3">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
      </property>
-     <property name="currentIndex">
-      <number>0</number>
+     <property name="childrenCollapsible">
+      <bool>false</bool>
      </property>
-     <widget class="QWidget" name="page">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>275</width>
-        <height>474</height>
-       </rect>
+     <widget class="QSplitter" name="categorySplitter">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
       </property>
-      <attribute name="label">
-       <string>Page 1</string>
-      </attribute>
-     </widget>
-     <widget class="QWidget" name="page_2">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>275</width>
-        <height>474</height>
-       </rect>
+      <property name="childrenCollapsible">
+       <bool>false</bool>
       </property>
-      <attribute name="label">
-       <string>Page 2</string>
-      </attribute>
+      <widget class="QListWidget" name="categoryList"/>
+      <widget class="QStackedWidget" name="categoryStack">
+       <widget class="QWidget" name="page">
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <property name="margin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="Tiled::Internal::MixedTilesetView" name="tilesetView"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="page_2">
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <property name="margin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="BuildingEditor::FurnitureView" name="furnitureView"/>
+         </item>
+        </layout>
+       </widget>
+      </widget>
      </widget>
-    </widget>
-   </item>
-   <item row="0" column="1">
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
+     <widget class="QWidget" name="">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="sizeConstraint">
+        <enum>QLayout::SetMaximumSize</enum>
        </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QToolButton" name="addTiles">
-       <property name="toolTip">
-        <string>Add selected tiles to category</string>
-       </property>
-       <property name="text">
-        <string>&lt;&lt;&lt;</string>
-       </property>
-       <property name="icon">
-        <iconset resource="../tiled.qrc">
-         <normaloff>:/images/22x22/add.png</normaloff>:/images/22x22/add.png</iconset>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="removeTiles">
-       <property name="toolTip">
-        <string>Remove selected tiles from category</string>
-       </property>
-       <property name="text">
-        <string>&gt;&gt;&gt;</string>
-       </property>
-       <property name="icon">
-        <iconset resource="../tiled.qrc">
-         <normaloff>:/images/22x22/remove.png</normaloff>:/images/22x22/remove.png</iconset>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="verticalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item row="0" column="2">
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QToolButton" name="addTiles">
+         <property name="toolTip">
+          <string>Add selected tiles to category</string>
+         </property>
+         <property name="text">
+          <string>&lt;&lt;&lt;</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../tiled.qrc">
+           <normaloff>:/images/22x22/add.png</normaloff>:/images/22x22/add.png</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="removeTiles">
+         <property name="toolTip">
+          <string>Remove selected tiles from category</string>
+         </property>
+         <property name="text">
+          <string>&gt;&gt;&gt;</string>
+         </property>
+         <property name="icon">
+          <iconset resource="../tiled.qrc">
+           <normaloff>:/images/22x22/remove.png</normaloff>:/images/22x22/remove.png</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QSplitter" name="tilesetSplitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="childrenCollapsible">
+       <bool>false</bool>
+      </property>
       <widget class="QListWidget" name="listWidget"/>
-     </item>
-     <item>
       <widget class="Tiled::Internal::MixedTilesetView" name="tableWidget">
        <property name="minimumSize">
         <size>
@@ -125,10 +130,10 @@
         </size>
        </property>
       </widget>
-     </item>
-    </layout>
+     </widget>
+    </widget>
    </item>
-   <item row="1" column="2">
+   <item row="1" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -139,12 +144,21 @@
     </widget>
    </item>
   </layout>
+  <zorder>buttonBox</zorder>
+  <zorder>categoryList</zorder>
+  <zorder>categoryStack</zorder>
+  <zorder>furnitureView</zorder>
  </widget>
  <customwidgets>
   <customwidget>
    <class>Tiled::Internal::MixedTilesetView</class>
    <extends>QTableWidget</extends>
    <header>BuildingEditor/mixedtilesetview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>BuildingEditor::FurnitureView</class>
+   <extends>QTableWidget</extends>
+   <header>BuildingEditor/furnitureview.h</header>
   </customwidget>
  </customwidgets>
  <resources>

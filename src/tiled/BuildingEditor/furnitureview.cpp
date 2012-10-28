@@ -90,6 +90,7 @@ void FurnitureTileDelegate::paint(QPainter *painter,
     qreal tileWidth = 64 * scale;
     qreal tileHeight = 32 * scale;
     qreal imageHeight = 128 * scale;
+    QPointF tileMargins(0, imageHeight - tileHeight);
 
     // Draw the tile images.
     for (int y = 0; y < 2; y++) {
@@ -98,7 +99,7 @@ void FurnitureTileDelegate::paint(QPainter *painter,
             QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
             if (BuildingTile *btile = ftile->mTiles[i]) {
                 Tile *tile = BuildingTiles::instance()->tileFor(btile); // FIXME: calc this elsewhere
-                QPointF p1 = tileToPixelCoords(x, y) + QPoint(0, imageHeight - tileHeight) + r.topLeft();
+                QPointF p1 = tileToPixelCoords(x, y) + tileMargins + r.topLeft();
                 QRect r((p1 - QPointF(tileWidth/2, imageHeight - tileHeight)).toPoint(),
                         QSize(tileWidth, imageHeight));
                 painter->drawPixmap(r, tile->image());
@@ -106,34 +107,33 @@ void FurnitureTileDelegate::paint(QPainter *painter,
         }
     }
 
-    if (!mView->acceptDrops())
-        return;
+    if (mView->acceptDrops()) {
+        // Draw the tile grid.
+        for (int y = 0; y < 2; y++) {
+            for (int x = 0; x < 2; x++) {
+                QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
+                QPointF p1 = tileToPixelCoords(x, y) + tileMargins + r.topLeft();
+                QPointF p2 = tileToPixelCoords(x+1, y) + tileMargins + r.topLeft();
+                QPointF p3 = tileToPixelCoords(x, y+1) + tileMargins + r.topLeft();
+                QPointF p4 = tileToPixelCoords(x+1, y+1) + tileMargins + r.topLeft();
 
-    // Draw the tile grid.
-    for (int y = 0; y < 2; y++) {
-        for (int x = 0; x < 2; x++) {
-            QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-            QPointF p1 = tileToPixelCoords(x, y) + QPointF(0, imageHeight - tileHeight) + r.topLeft();
-            QPointF p2 = tileToPixelCoords(x+1, y) + QPointF(0, imageHeight - tileHeight) + r.topLeft();
-            QPointF p3 = tileToPixelCoords(x, y+1) + QPointF(0, imageHeight - tileHeight) + r.topLeft();
-            QPointF p4 = tileToPixelCoords(x+1, y+1) + QPointF(0, imageHeight - tileHeight) + r.topLeft();
+                if (QPoint(x,y) == m->dropCoords() && index == m->dropIndex()) {
+                    QBrush brush(Qt::gray, Qt::Dense4Pattern);
+                    QPolygonF poly;
+                    poly << p1 << p2 << p4 << p3 << p1;
+                    QPainterPath path;
+                    path.addPolygon(poly);
+                    painter->fillPath(path, brush);
+                    QPen pen;
+                    pen.setWidth(3);
+                    painter->setPen(pen);
+                    painter->drawPath(path);
+                    painter->setPen(QPen());
+                }
 
-            if (QPoint(x,y) == m->dropCoords() && index == m->dropIndex()) {
-                QBrush brush(Qt::gray, Qt::Dense4Pattern);
-                QPolygonF poly;
-                poly << p1 << p2 << p4 << p3 << p1;
-                QPainterPath path;
-                path.addPolygon(poly);
-                painter->fillPath(path, brush);
-                QPen pen;
-                pen.setWidth(3);
-                painter->setPen(pen);
-                painter->drawPath(path);
-                painter->setPen(QPen());
+                painter->drawLine(p1, p2); painter->drawLine(p3, p4);
+                painter->drawLine(p1, p3); painter->drawLine(p2, p4);
             }
-
-            painter->drawLine(p1, p2); painter->drawLine(p3, p4);
-            painter->drawLine(p1, p3); painter->drawLine(p2, p4);
         }
     }
 
@@ -205,6 +205,7 @@ QPointF FurnitureTileDelegate::tileToPixelCoords(qreal x, qreal y) const
 FurnitureView::FurnitureView(QWidget *parent) :
     QTableView(parent),
     mModel(new FurnitureModel(this)),
+    mDelegate(new FurnitureTileDelegate(this, this)),
     mZoomable(new Zoomable(this))
 {
     init();
@@ -255,8 +256,8 @@ void FurnitureView::dragLeaveEvent(QDragLeaveEvent *event)
 
 void FurnitureView::dropEvent(QDropEvent *event)
 {
-    model()->setDropCoords(QPoint(-1,-1), QModelIndex());
     QAbstractItemView::dropEvent(event);
+    model()->setDropCoords(QPoint(-1,-1), QModelIndex());
 }
 
 void FurnitureView::setZoomable(Zoomable *zoomable)

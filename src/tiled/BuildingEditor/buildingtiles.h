@@ -51,6 +51,42 @@ public:
     QVector<BuildingTile*> mAlternates;
 };
 
+class BuildingTileCategory
+{
+public:
+    BuildingTileCategory(const QString &name, const QString &label) :
+        mName(name),
+        mLabel(label)
+    {}
+
+    BuildingTile *add(const QString &tileName);
+
+    void remove(const QString &tileName);
+
+    BuildingTile *get(const QString &tileName);
+
+    QString name() const
+    { return mName; }
+
+    QString label() const
+    { return mLabel; }
+
+    const QList<BuildingTile*> &tiles() const
+    { return mTiles; }
+
+    BuildingTile *tileAt(int index) const
+    { return mTiles.at(index); }
+
+    bool usesTile(Tiled::Tile *tile) const;
+    QRect categoryBounds() const;
+
+private:
+    QString mName;
+    QString mLabel;
+    QList<BuildingTile*> mTiles;
+    QMap<QString,BuildingTile*> mTileByName;
+};
+
 class BuildingTiles : public QObject
 {
     Q_OBJECT
@@ -58,71 +94,14 @@ public:
     static BuildingTiles *instance();
     static void deleteInstance();
 
-    class Category
-    {
-    public:
-        Category(const QString &name, const QString &label) :
-            mName(name),
-            mLabel(label)
-        {}
-
-        BuildingTile *add(const QString &tileName)
-        {
-            QString tilesetName;
-            int tileIndex;
-            parseTileName(tileName, tilesetName, tileIndex);
-            BuildingTile *tile = new BuildingTile(tilesetName, tileIndex);
-            Q_ASSERT(!mTileByName.contains(tile->name()));
-            mTileByName[tileName] = tile;
-            mTiles = mTileByName.values(); // sorted by increasing tileset name and tile index!
-            return tile;
-        }
-
-        void remove(const QString &tileName)
-        {
-            if (!mTileByName.contains(tileName))
-                return;
-            mTileByName.remove(tileName);
-            mTiles = mTileByName.values(); // sorted by increasing tileset name and tile index!
-        }
-
-        BuildingTile *get(const QString &tileName)
-        {
-            if (!mTileByName.contains(tileName))
-                add(tileName);
-            return mTileByName[tileName];
-        }
-
-        QString name() const
-        { return mName; }
-
-        QString label() const
-        { return mLabel; }
-
-        const QList<BuildingTile*> &tiles() const
-        { return mTiles; }
-
-        BuildingTile *tileAt(int index) const
-        { return mTiles.at(index); }
-
-        bool usesTile(Tiled::Tile *tile) const;
-        QRect categoryBounds() const;
-
-    private:
-        QString mName;
-        QString mLabel;
-        QList<BuildingTile*> mTiles;
-        QMap<QString,BuildingTile*> mTileByName;
-    };
-
     BuildingTiles();
     ~BuildingTiles();
 
-    Category *addCategory(const QString &categoryName, const QString &label)
+    BuildingTileCategory *addCategory(const QString &categoryName, const QString &label)
     {
-        Category *category = this->category(categoryName);
+        BuildingTileCategory *category = this->category(categoryName);
         if (!category) {
-            category = new Category(categoryName, label);
+            category = new BuildingTileCategory(categoryName, label);
             mCategories += category;
             mCategoryByName[categoryName]= category;
         }
@@ -131,7 +110,7 @@ public:
 
     BuildingTile *add(const QString &categoryName, const QString &tileName)
     {
-        Category *category = this->category(categoryName);
+        BuildingTileCategory *category = this->category(categoryName);
 #if 0
         if (!category) {
             category = new Category(categoryName);
@@ -153,10 +132,10 @@ public:
 
     BuildingTile *get(const QString &categoryName, const QString &tileName);
 
-    const QList<Category*> &categories() const
+    const QList<BuildingTileCategory*> &categories() const
     { return mCategories; }
 
-    Category *category(const QString &name) const
+    BuildingTileCategory *category(const QString &name) const
     {
         if (mCategoryByName.contains(name))
             return mCategoryByName[name];
@@ -206,10 +185,10 @@ public:
 
 private:
     static BuildingTiles *mInstance;
-    QList<Category*> mCategories;
-    QMap<QString,Category*> mCategoryByName;
+    QList<BuildingTileCategory*> mCategories;
+    QMap<QString,BuildingTileCategory*> mCategoryByName;
     QMap<QString,Tiled::Tileset*> mTilesetByName;
-    Category *mFurnitureCategory;
+    BuildingTileCategory *mFurnitureCategory;
 };
 
 } // namespace BuildingEditor

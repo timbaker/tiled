@@ -50,7 +50,7 @@ void BuildingTiles::deleteInstance()
 }
 
 BuildingTiles::BuildingTiles() :
-    mFurnitureCategory(new Category(QLatin1String("Furniture"),
+    mFurnitureCategory(new BuildingTileCategory(QLatin1String("Furniture"),
                                     QLatin1String("furniture")))
 {
 }
@@ -64,7 +64,7 @@ BuildingTiles::~BuildingTiles()
 
 BuildingTile *BuildingTiles::get(const QString &categoryName, const QString &tileName)
 {
-    Category *category = this->category(categoryName);
+    BuildingTileCategory *category = this->category(categoryName);
     return category->get(tileName);
 }
 
@@ -124,7 +124,7 @@ void BuildingTiles::addTileset(Tileset *tileset)
 void BuildingTiles::writeBuildingTilesTxt(QWidget *parent)
 {
     SimpleFile simpleFile;
-    foreach (BuildingTiles::Category *category, categories()) {
+    foreach (BuildingTileCategory *category, categories()) {
         SimpleFileBlock categoryBlock;
         categoryBlock.name = QLatin1String("category");
         categoryBlock.values += SimpleFileKeyValue(QLatin1String("label"),
@@ -170,7 +170,7 @@ Tile *BuildingTiles::tileFor(BuildingTile *tile)
 
 BuildingTile *BuildingTiles::fromTiledTile(const QString &categoryName, Tile *tile)
 {
-    if (Category *category = this->category(categoryName))
+    if (BuildingTileCategory *category = this->category(categoryName))
         return category->get(nameForTile(tile));
     return 0;
 }
@@ -252,12 +252,39 @@ BuildingTile *BuildingTiles::getFurnitureTile(const QString &tileName)
 
 /////
 
-bool BuildingTiles::Category::usesTile(Tile *tile) const
+BuildingTile *BuildingTileCategory::add(const QString &tileName)
 {
-    return mTileByName.contains(nameForTile(tile));
+    QString tilesetName;
+    int tileIndex;
+    BuildingTiles::parseTileName(tileName, tilesetName, tileIndex);
+    BuildingTile *tile = new BuildingTile(tilesetName, tileIndex);
+    Q_ASSERT(!mTileByName.contains(tile->name()));
+    mTileByName[tileName] = tile;
+    mTiles = mTileByName.values(); // sorted by increasing tileset name and tile index!
+    return tile;
 }
 
-QRect BuildingTiles::Category::categoryBounds() const
+void BuildingTileCategory::remove(const QString &tileName)
+{
+    if (!mTileByName.contains(tileName))
+        return;
+    mTileByName.remove(tileName);
+    mTiles = mTileByName.values(); // sorted by increasing tileset name and tile index!
+}
+
+BuildingTile *BuildingTileCategory::get(const QString &tileName)
+{
+    if (!mTileByName.contains(tileName))
+        add(tileName);
+    return mTileByName[tileName];
+}
+
+bool BuildingTileCategory::usesTile(Tile *tile) const
+{
+    return mTileByName.contains(BuildingTiles::nameForTile(tile));
+}
+
+QRect BuildingTileCategory::categoryBounds() const
 {
     if (mName == QLatin1String("exterior_walls"))
         return QRect(0, 0, 4, 2);
@@ -273,6 +300,7 @@ QRect BuildingTiles::Category::categoryBounds() const
         return QRect(0, 0, 2, 1);
     if (mName == QLatin1String("stairs"))
         return QRect(0, 0, 3, 2);
+    qFatal("unhandled category name in categoryBounds");
     return QRect();
 }
 

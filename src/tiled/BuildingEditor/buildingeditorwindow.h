@@ -26,6 +26,7 @@
 
 class QComboBox;
 class QLabel;
+class QSplitter;
 class QUndoGroup;
 
 namespace Ui {
@@ -48,14 +49,14 @@ class BuildingDocument;
 class BuildingFloor;
 class BuildingPreviewWindow;
 class BuildingTile;
+class BuildingTileCategory;
 class Door;
 class FloorEditor;
 class FloorView;
+class FurnitureGroup;
 class Room;
 class Window;
 class Stairs;
-
-
 
 class BuildingEditorWindow : public QMainWindow
 {
@@ -91,6 +92,8 @@ public:
 private:
     void readSettings();
     void writeSettings();
+    void saveSplitterSizes(QSplitter *splitter);
+    void restoreSplitterSizes(QSplitter *splitter);
 
     void updateRoomComboBox();
     void resizeCoordsLabel();
@@ -105,17 +108,21 @@ private:
 
     void updateWindowTitle();
 
+    void currentEWallChanged(Tiled::Tile *tile);
+    void currentIWallChanged(Tiled::Tile *tile);
+    void currentFloorChanged(Tiled::Tile *tile);
+    void currentDoorChanged(Tiled::Tile *tile);
+    void currentDoorFrameChanged(Tiled::Tile *tile);
+    void currentWindowChanged(Tiled::Tile *tile);
+    void currentStairsChanged(Tiled::Tile *tile);
+
 private slots:
     void roomIndexChanged(int index);
     void categoryScaleChanged(qreal scale);
 
-    void currentEWallChanged(const QItemSelection &selected);
-    void currentIWallChanged(const QItemSelection &selected);
-    void currentFloorChanged(const QItemSelection &selected);
-    void currentDoorChanged(const QItemSelection &selected);
-    void currentDoorFrameChanged(const QItemSelection &selected);
-    void currentWindowChanged(const QItemSelection &selected);
-    void currentStairsChanged(const QItemSelection &selected);
+    void categorySelectionChanged();
+    void tileSelectionChanged();
+    void furnitureSelectionChanged();
 
     void upLevel();
     void downLevel();
@@ -161,6 +168,8 @@ private:
     BuildingPreviewWindow *mPreviewWin;
     Tiled::Internal::Zoomable *mZoomable;
     Tiled::Internal::Zoomable *mCategoryZoomable;
+    BuildingTileCategory *mCategory;
+    FurnitureGroup *mFurnitureGroup;
     bool mSynching;
 };
 

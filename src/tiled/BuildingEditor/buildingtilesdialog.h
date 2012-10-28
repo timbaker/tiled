@@ -20,6 +20,8 @@
 
 #include <QDialog>
 
+class QSplitter;
+
 namespace Ui {
 class BuildingTilesDialog;
 }
@@ -32,6 +34,7 @@ class Zoomable;
 
 namespace BuildingEditor {
 
+class BuildingTileCategory;
 class FurnitureGroup;
 
 class BuildingTilesDialog : public QDialog
@@ -46,7 +49,10 @@ public:
     { return mChanges; }
     
 private:
-    void setCategoryTiles(const QString &categoryName);
+    void setCategoryTiles();
+    void setFurnitureTiles();
+    void saveSplitterSizes(QSplitter *splitter);
+    void restoreSplitterSizes(QSplitter *splitter);
 
 private slots:
     void categoryChanged(int index);
@@ -58,10 +64,12 @@ private slots:
 
     void furnitureEdited();
 
+    void accept();
+
 private:
     Ui::BuildingTilesDialog *ui;
     Tiled::Internal::Zoomable *mZoomable;
-    QString mCategoryName;
+    BuildingTileCategory *mCategory;
     FurnitureGroup *mFurnitureGroup;
     bool mChanges;
 };

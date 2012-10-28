@@ -83,6 +83,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mPreviewWin(0),
     mZoomable(new Zoomable(this)),
     mCategoryZoomable(new Zoomable(this)),
+    mCategory(0),
+    mFurnitureGroup(0),
     mSynching(false)
 {
     ui->setupUi(this);
@@ -215,6 +217,21 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mCategoryZoomable->connectToComboBox(ui->scaleComboBox);
     connect(mCategoryZoomable, SIGNAL(scaleChanged(qreal)),
             SLOT(categoryScaleChanged(qreal)));
+
+    ui->categorySplitter->setSizes(QList<int>() << 128 << 256);
+
+    connect(ui->categoryList, SIGNAL(itemSelectionChanged()),
+            SLOT(categorySelectionChanged()));
+
+    ui->tilesetView->setZoomable(mCategoryZoomable);
+    connect(ui->tilesetView->selectionModel(),
+            SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            SLOT(tileSelectionChanged()));
+
+    ui->furnitureView->setZoomable(mCategoryZoomable);
+    connect(ui->furnitureView->selectionModel(),
+            SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            SLOT(furnitureSelectionChanged()));
 
     readSettings();
 
@@ -471,7 +488,7 @@ bool BuildingEditorWindow::LoadBuildingTiles()
 
 
     // Check that all the tiles exist
-    foreach (BuildingTiles::Category *category, BuildingTiles::instance()->categories()) {
+    foreach (BuildingTileCategory *category, BuildingTiles::instance()->categories()) {
         foreach (BuildingTile *tile, category->tiles()) {
             if (!BuildingTiles::instance()->tileFor(tile)) {
                 mError = tr("Tile %1 #%2 doesn't exist.")
@@ -602,6 +619,8 @@ void BuildingEditorWindow::readSettings()
     mCategoryZoomable->setScale(mSettings.value(QLatin1String("CategoryScale"),
                                                 0.5).toReal());
     mSettings.endGroup();
+
+    restoreSplitterSizes(ui->categorySplitter);
 }
 
 void BuildingEditorWindow::writeSettings()
@@ -612,6 +631,34 @@ void BuildingEditorWindow::writeSettings()
     mSettings.setValue(QLatin1String("EditorScale"), mView->zoomable()->scale());
     mSettings.setValue(QLatin1String("CategoryScale"), mCategoryZoomable->scale());
     mSettings.endGroup();
+
+    saveSplitterSizes(ui->categorySplitter);
+}
+
+void BuildingEditorWindow::saveSplitterSizes(QSplitter *splitter)
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
+    QVariantList v;
+    foreach (int size, splitter->sizes())
+        v += size;
+    settings.setValue(tr("%1/sizes").arg(splitter->objectName()), v);
+    settings.endGroup();
+}
+
+void BuildingEditorWindow::restoreSplitterSizes(QSplitter *splitter)
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
+    QVariant v = settings.value(tr("%1/sizes").arg(splitter->objectName()));
+    if (v.canConvert(QVariant::List)) {
+        QList<int> sizes;
+        foreach (QVariant v2, v.toList()) {
+            sizes += v2.toInt();
+        }
+        splitter->setSizes(sizes);
+    }
+    settings.endGroup();
 }
 
 void BuildingEditorWindow::updateRoomComboBox()
@@ -643,202 +690,193 @@ void BuildingEditorWindow::categoryScaleChanged(qreal scale)
                        scale);
 }
 
-void BuildingEditorWindow::currentEWallChanged(const QItemSelection &selected)
+void BuildingEditorWindow::categorySelectionChanged()
 {
-    if (!mCurrentDocument || mSynching)
-        return;
-    QModelIndexList indexes = selected.indexes();
-    if (indexes.count() == 1) {
-        QModelIndex index = indexes.first();
-        const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
-        Tile *tile = m->tileAt(index);
-        if (!tile)
-            return;
-        BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
-                    QLatin1String("exterior_walls"), tile);
-        mCurrentDocument->undoStack()->push(new ChangeEWall(mCurrentDocument,
-                                                            btile));
+    mCategory = 0;
+    mFurnitureGroup = 0;
+
+    QList<QListWidgetItem*> selected = ui->categoryList->selectedItems();
+    if (selected.count() == 1) {
+        int row = ui->categoryList->row(selected.first());
+        if (row < BuildingTiles::instance()->categories().count()) {
+            mCategory = BuildingTiles::instance()->categories().at(row);
+            QList<Tiled::Tile*> tiles;
+            foreach (BuildingTile *tile, mCategory->tiles()) {
+                if (!tile->mAlternates.count() || (tile == tile->mAlternates.first()))
+                    tiles += BuildingTiles::instance()->tileFor(tile);
+            }
+            ui->tilesetView->model()->setTiles(tiles);
+            ui->categoryStack->setCurrentIndex(0);
+        } else {
+            row -= BuildingTiles::instance()->categories().count();
+            mFurnitureGroup = FurnitureGroups::instance()->groups().at(row);
+            ui->furnitureView->model()->setTiles(mFurnitureGroup->mTiles);
+            ui->categoryStack->setCurrentIndex(1);
+        }
     }
 }
 
-void BuildingEditorWindow::currentIWallChanged(const QItemSelection &selected)
+void BuildingEditorWindow::tileSelectionChanged()
 {
     if (!mCurrentDocument || mSynching)
         return;
-    QModelIndexList indexes = selected.indexes();
+
+    QModelIndexList indexes = ui->tilesetView->selectionModel()->selectedIndexes();
     if (indexes.count() == 1) {
         QModelIndex index = indexes.first();
-        const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
-        Tile *tile = m->tileAt(index);
-        if (!tile)
-            return;
-        BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
-                    QLatin1String("interior_walls"), tile);
-        mCurrentDocument->undoStack()->push(new ChangeWallForRoom(mCurrentDocument,
-                                                                  currentRoom(),
-                                                                  btile));
+        if (Tile *tile = ui->tilesetView->model()->tileAt(index)) {
+            if (mCategory->name() == QLatin1String("exterior_walls"))
+                currentEWallChanged(tile);
+            else if (mCategory->name() == QLatin1String("interior_walls"))
+                currentIWallChanged(tile);
+            else if (mCategory->name() == QLatin1String("floors"))
+                currentFloorChanged(tile);
+            else if (mCategory->name() == QLatin1String("doors"))
+                currentDoorChanged(tile);
+            else if (mCategory->name() == QLatin1String("door_frames"))
+                currentDoorFrameChanged(tile);
+            else if (mCategory->name() == QLatin1String("windows"))
+                currentWindowChanged(tile);
+            else if (mCategory->name() == QLatin1String("stairs"))
+                currentStairsChanged(tile);
+            else
+                qFatal("unhandled category name");
+        }
     }
 }
 
-void BuildingEditorWindow::currentFloorChanged(const QItemSelection &selected)
+void BuildingEditorWindow::furnitureSelectionChanged()
 {
-    if (!mCurrentDocument || mSynching)
-        return;
-    QModelIndexList indexes = selected.indexes();
-    if (indexes.count() == 1) {
-        QModelIndex index = indexes.first();
-        const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
-        Tile *tile = m->tileAt(index);
-        if (!tile)
-            return;
-        BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
-                    QLatin1String("floors"), tile);
-        mCurrentDocument->undoStack()->push(new ChangeFloorForRoom(mCurrentDocument,
-                                                                   currentRoom(),
+}
+
+void BuildingEditorWindow::currentEWallChanged(Tile *tile)
+{
+    BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                QLatin1String("exterior_walls"), tile);
+    mCurrentDocument->undoStack()->push(new ChangeEWall(mCurrentDocument, btile));
+}
+
+void BuildingEditorWindow::currentIWallChanged(Tile *tile)
+{
+    BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                QLatin1String("interior_walls"), tile);
+    mCurrentDocument->undoStack()->push(new ChangeWallForRoom(mCurrentDocument,
+                                                              currentRoom(),
+                                                              btile));
+}
+
+void BuildingEditorWindow::currentFloorChanged(Tile *tile)
+{
+    BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                QLatin1String("floors"), tile);
+    mCurrentDocument->undoStack()->push(new ChangeFloorForRoom(mCurrentDocument,
+                                                               currentRoom(),
+                                                               btile));
+}
+
+void BuildingEditorWindow::currentDoorChanged(Tile *tile)
+{
+    BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                QLatin1String("doors"), tile);
+    currentBuilding()->setDoorTile(btile);
+
+    // Assign the new tile to selected doors
+    QList<Door*> doors;
+    foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
+        if (Door *door = dynamic_cast<Door*>(object)) {
+            if (door->tile() != btile)
+                doors += door;
+        }
+    }
+    if (doors.count()) {
+        if (doors.count() > 1)
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Door Tile"));
+        foreach (Door *door, doors)
+            mCurrentDocument->undoStack()->push(new ChangeDoorTile(mCurrentDocument,
+                                                                   door,
                                                                    btile));
+        if (doors.count() > 1)
+            mCurrentDocument->undoStack()->endMacro();
     }
 }
 
-void BuildingEditorWindow::currentDoorChanged(const QItemSelection &selected)
+void BuildingEditorWindow::currentDoorFrameChanged(Tile *tile)
 {
-    if (!mCurrentDocument || mSynching)
-        return;
-    QModelIndexList indexes = selected.indexes();
-    if (indexes.count() == 1) {
-        QModelIndex index = indexes.first();
-        const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
-        Tile *tile = m->tileAt(index);
-        if (!tile)
-            return;
-        BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
-                    QLatin1String("doors"), tile);
-        currentBuilding()->setDoorTile(btile);
-        // Assign the new tile to selected doors
-        QList<Door*> doors;
-        foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
-            if (Door *door = dynamic_cast<Door*>(object)) {
-                if (door->tile() != btile)
-                    doors += door;
-            }
+    BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                QLatin1String("door_frames"), tile);
+    currentBuilding()->setDoorFrameTile(btile);
+
+    // Assign the new tile to selected doors
+    QList<Door*> doors;
+    foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
+        if (Door *door = dynamic_cast<Door*>(object)) {
+            if (door->frameTile() != btile)
+                doors += door;
         }
-        if (doors.count()) {
-            if (doors.count() > 1)
-                mCurrentDocument->undoStack()->beginMacro(tr("Change Door Tile"));
-            foreach (Door *door, doors)
-                mCurrentDocument->undoStack()->push(new ChangeDoorTile(mCurrentDocument,
-                                                                       door,
-                                                                       btile));
-            if (doors.count() > 1)
-                mCurrentDocument->undoStack()->endMacro();
-        }
+    }
+    if (doors.count()) {
+        if (doors.count() > 1)
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Door Frame Tile"));
+        foreach (Door *door, doors)
+            mCurrentDocument->undoStack()->push(new ChangeDoorTile(mCurrentDocument,
+                                                                   door,
+                                                                   btile,
+                                                                   true));
+        if (doors.count() > 1)
+            mCurrentDocument->undoStack()->endMacro();
     }
 }
 
-void BuildingEditorWindow::currentDoorFrameChanged(const QItemSelection &selected)
+void BuildingEditorWindow::currentWindowChanged(Tile *tile)
 {
-    if (!mCurrentDocument || mSynching)
-        return;
-    QModelIndexList indexes = selected.indexes();
-    if (indexes.count() == 1) {
-        QModelIndex index = indexes.first();
-        const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
-        Tile *tile = m->tileAt(index);
-        if (!tile)
-            return;
-        BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
-                    QLatin1String("door_frames"), tile);
-        currentBuilding()->setDoorFrameTile(btile);
-        // Assign the new tile to selected doors
-        QList<Door*> doors;
-        foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
-            if (Door *door = dynamic_cast<Door*>(object)) {
-                if (door->frameTile() != btile)
-                    doors += door;
-            }
+    // New windows will be created with this tile
+    BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                QLatin1String("windows"), tile);
+    currentBuilding()->setWindowTile(btile);
+
+    // Assign the new tile to selected windows
+    QList<Window*> windows;
+    foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
+        if (Window *window = dynamic_cast<Window*>(object)) {
+            if (window->tile() != btile)
+                windows += window;
         }
-        if (doors.count()) {
-            if (doors.count() > 1)
-                mCurrentDocument->undoStack()->beginMacro(tr("Change Door Frame Tile"));
-            foreach (Door *door, doors)
-                mCurrentDocument->undoStack()->push(new ChangeDoorTile(mCurrentDocument,
-                                                                       door,
-                                                                       btile,
-                                                                       true));
-            if (doors.count() > 1)
-                mCurrentDocument->undoStack()->endMacro();
-        }
+    }
+    if (windows.count()) {
+        if (windows.count() > 1)
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Door Frame Tile"));
+        foreach (Window *window, windows)
+            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
+                                                                     window,
+                                                                     btile));
+        if (windows.count() > 1)
+            mCurrentDocument->undoStack()->endMacro();
     }
 }
 
-void BuildingEditorWindow::currentWindowChanged(const QItemSelection &selected)
+void BuildingEditorWindow::currentStairsChanged(Tile *tile)
 {
-    if (!mCurrentDocument || mSynching)
-        return;
-    QModelIndexList indexes = selected.indexes();
-    if (indexes.count() == 1) {
-        QModelIndex index = indexes.first();
-        const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
-        Tile *tile = m->tileAt(index);
-        if (!tile)
-            return;
-        // New windows will be created with this tile
-        BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
-                    QLatin1String("windows"), tile);
-        currentBuilding()->setWindowTile(btile);
-        // Assign the new tile to selected windows
-        QList<Window*> windows;
-        foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
-            if (Window *window = dynamic_cast<Window*>(object)) {
-                if (window->tile() != btile)
-                    windows += window;
-            }
-        }
-        if (windows.count()) {
-            if (windows.count() > 1)
-                mCurrentDocument->undoStack()->beginMacro(tr("Change Door Frame Tile"));
-            foreach (Window *window, windows)
-                mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
-                                                                       window,
-                                                                       btile));
-            if (windows.count() > 1)
-                mCurrentDocument->undoStack()->endMacro();
+    // New stairs will be created with this tile
+    BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                QLatin1String("stairs"), tile);
+    currentBuilding()->setStairsTile(btile);
+    // Assign the new tile to selected stairs
+    QList<Stairs*> stairsList;
+    foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
+        if (Stairs *stairs = dynamic_cast<Stairs*>(object)) {
+            if (stairs->tile() != btile)
+                stairsList += stairs;
         }
     }
-}
-
-void BuildingEditorWindow::currentStairsChanged(const QItemSelection &selected)
-{
-    if (!mCurrentDocument || mSynching)
-        return;
-    QModelIndexList indexes = selected.indexes();
-    if (indexes.count() == 1) {
-        QModelIndex index = indexes.first();
-        const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
-        Tile *tile = m->tileAt(index);
-        if (!tile)
-            return;
-        // New stairs will be created with this tile
-        BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
-                    QLatin1String("stairs"), tile);
-        currentBuilding()->setStairsTile(btile);
-        // Assign the new tile to selected stairs
-        QList<Stairs*> stairsList;
-        foreach (BaseMapObject *object, mCurrentDocument->selectedObjects()) {
-            if (Stairs *stairs = dynamic_cast<Stairs*>(object)) {
-                if (stairs->tile() != btile)
-                    stairsList += stairs;
-            }
-        }
-        if (stairsList.count()) {
-            if (stairsList.count() > 1)
-                mCurrentDocument->undoStack()->beginMacro(tr("Change Stairs Tile"));
-            foreach (Stairs *stairs, stairsList)
-                mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
-                                                                       stairs,
-                                                                       btile));
-            if (stairsList.count() > 1)
-                mCurrentDocument->undoStack()->endMacro();
-        }
+    if (stairsList.count()) {
+        if (stairsList.count() > 1)
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Stairs Tile"));
+        foreach (Stairs *stairs, stairsList)
+            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
+                                                                     stairs,
+                                                                     btile));
+        if (stairsList.count() > 1)
+            mCurrentDocument->undoStack()->endMacro();
     }
 }
 
@@ -1337,14 +1375,11 @@ void BuildingEditorWindow::setCategoryLists()
 {
     mSynching = true;
 
-    QToolBox *toolBox = ui->toolBox;
-    while (toolBox->count()) {
-        QWidget *w = toolBox->widget(0);
-        toolBox->removeItem(0);
-        delete w;
-    }
-
-    foreach (BuildingTiles::Category *category, BuildingTiles::instance()->categories()) {
+    ui->categoryList->clear();
+    foreach (BuildingTileCategory *category, BuildingTiles::instance()->categories()) {
+#if 1
+        ui->categoryList->addItem(category->label());
+#else
         QString categoryName = category->name();
         const char *slot = 0;
         if (categoryName == QLatin1String("exterior_walls"))
@@ -1377,12 +1412,17 @@ void BuildingEditorWindow::setCategoryLists()
                 tiles += BuildingTiles::instance()->tileFor(tile);
         }
         w->model()->setTiles(tiles);
+#endif
     }
 
     foreach (FurnitureGroup *group, FurnitureGroups::instance()->groups()) {
+#if 1
+        ui->categoryList->addItem(group->mLabel);
+#else
         FurnitureView *w = new FurnitureView(mCategoryZoomable, toolBox);
         w->model()->setTiles(group->mTiles);
         toolBox->addItem(w, group->mLabel);
+#endif
     }
 
     mSynching = false;

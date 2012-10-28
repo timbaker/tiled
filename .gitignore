@@ -28,3 +28,5 @@ tests/test_mapreader
 .DS_Store
 
 bin
+
+*.bak
