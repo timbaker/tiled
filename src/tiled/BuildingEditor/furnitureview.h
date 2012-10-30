@@ -76,7 +76,8 @@ public:
     { return mDropIndex; }
 
 signals:
-    void edited();
+    void furnitureTileDropped(FurnitureTile *ftile, int index,
+                              const QString &tileName);
 
 private:
     QList<FurnitureTile*> mTiles;

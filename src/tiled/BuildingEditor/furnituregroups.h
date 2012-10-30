@@ -126,6 +126,8 @@ public:
     FurnitureGroups();
 
     void addGroup(FurnitureGroup *group);
+    void insertGroup(int index, FurnitureGroup *group);
+    FurnitureGroup *removeGroup(int index);
     void removeGroup(FurnitureGroup *group);
 
     bool readTxt();
@@ -133,6 +135,9 @@ public:
 
     const QList<FurnitureGroup*> groups() const
     { return mGroups; }
+
+    int indexOf(FurnitureGroup *group) const
+    { return mGroups.indexOf(group); }
 
     QString errorString()
     { return mError; }

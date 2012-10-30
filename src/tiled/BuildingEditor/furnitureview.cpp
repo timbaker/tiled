@@ -154,6 +154,8 @@ void FurnitureTileDelegate::paint(QPainter *painter,
 QSize FurnitureTileDelegate::sizeHint(const QStyleOptionViewItem & option,
                              const QModelIndex &index) const
 {
+    Q_UNUSED(option)
+    Q_UNUSED(index)
 //    const FurnitureModel *m = static_cast<const FurnitureModel*>(index.model());
     const qreal zoom = scale();
     const int extra = 2;
@@ -392,6 +394,9 @@ QStringList FurnitureModel::mimeTypes() const
 bool FurnitureModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                                   int row, int column, const QModelIndex &parent)
  {
+    Q_UNUSED(row)
+    Q_UNUSED(column)
+
     if (action == Qt::IgnoreAction)
          return true;
 
@@ -416,10 +421,14 @@ bool FurnitureModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
          int tileId;
          stream >> tileId;
          QString tileName = BuildingTiles::nameForTile(tilesetName, tileId);
+#if 1
+         emit furnitureTileDropped(tile, n, tileName);
+#else
          tile->mTiles[n] = BuildingTiles::instance()->getFurnitureTile(tileName);
+#endif
      }
 
-     emit edited();
+//     emit edited();
 
      return true;
 }

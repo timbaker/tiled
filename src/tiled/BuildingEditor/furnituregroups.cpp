@@ -49,6 +49,16 @@ void FurnitureGroups::addGroup(FurnitureGroup *group)
     mGroups += group;
 }
 
+void FurnitureGroups::insertGroup(int index, FurnitureGroup *group)
+{
+    mGroups.insert(index, group);
+}
+
+FurnitureGroup *FurnitureGroups::removeGroup(int index)
+{
+    return mGroups.takeAt(index);
+}
+
 void FurnitureGroups::removeGroup(FurnitureGroup *group)
 {
     mGroups.removeAll(group);

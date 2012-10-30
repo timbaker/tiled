@@ -22,6 +22,8 @@
 
 class QListWidgetItem;
 class QSplitter;
+class QUndoGroup;
+class QUndoStack;
 
 namespace Ui {
 class BuildingTilesDialog;
@@ -37,6 +39,8 @@ namespace BuildingEditor {
 
 class BuildingTileCategory;
 class FurnitureGroup;
+class FurnitureTile;
+class FurnitureTiles;
 
 class BuildingTilesDialog : public QDialog
 {
@@ -46,9 +50,23 @@ public:
     explicit BuildingTilesDialog(QWidget *parent = 0);
     ~BuildingTilesDialog();
 
-    bool changes() const
-    { return mChanges; }
-    
+    bool changes() const;
+
+    void addTile(BuildingTileCategory *category, const QString &tileName);
+    void removeTile(BuildingTileCategory *category, const QString &tileName);
+
+    void addCategory(int index, FurnitureGroup *category);
+    FurnitureGroup *removeCategory(int index);
+
+    void insertFurnitureTiles(FurnitureGroup *category, int index,
+                              FurnitureTiles *ftiles);
+    FurnitureTiles* removeFurnitureTiles(FurnitureGroup *category, int index);
+
+    QString changeFurnitureTile(FurnitureTile *ftile, int index,
+                                const QString &tileName);
+
+    QString renameCategory(FurnitureGroup *category, const QString &name);
+
 private:
     void setCategoryList();
     void setCategoryTiles();
@@ -63,8 +81,10 @@ private slots:
 
     void addTiles();
     void removeTiles();
+    void clearTiles();
 
-    void furnitureEdited();
+    void furnitureTileDropped(FurnitureTile *ftile, int index,
+                              const QString &tileName);
 
     void categoryNameEdited(QListWidgetItem *item);
 
@@ -79,7 +99,8 @@ private:
     Tiled::Internal::Zoomable *mZoomable;
     BuildingTileCategory *mCategory;
     FurnitureGroup *mFurnitureGroup;
-    bool mChanges;
+    QUndoGroup *mUndoGroup;
+    QUndoStack *mUndoStack;
 };
 
 } // namespace BuildingEditor
