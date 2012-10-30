@@ -14,5 +14,8 @@
         <file>icons/icon_flip_vertical.png</file>
         <file>icons/icon_resize.png</file>
         <file>icons/icon_rooms.png</file>
+        <file>icons/icon_furniture.png</file>
+        <file>icons/icon_corners.png</file>
+        <file>icons/icon_edges.png</file>
     </qresource>
 </RCC>

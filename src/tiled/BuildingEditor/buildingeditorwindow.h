@@ -98,7 +98,7 @@ private:
     void updateRoomComboBox();
     void resizeCoordsLabel();
 
-    void setCategoryLists();
+    void setCategoryList();
 
     bool writeBuilding(BuildingDocument *doc, const QString &fileName);
 

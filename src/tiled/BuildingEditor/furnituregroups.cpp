@@ -44,6 +44,16 @@ FurnitureGroups::FurnitureGroups()
 {
 }
 
+void FurnitureGroups::addGroup(FurnitureGroup *group)
+{
+    mGroups += group;
+}
+
+void FurnitureGroups::removeGroup(FurnitureGroup *group)
+{
+    mGroups.removeAll(group);
+}
+
 bool FurnitureGroups::readTxt()
 {
     QFileInfo info(QCoreApplication::applicationDirPath() + QLatin1Char('/')
@@ -93,7 +103,7 @@ bool FurnitureGroups::readTxt()
                                 tile->mTiles[x + y * 2] = BuildingTiles::instance()->getFurnitureTile(kv.value);
 
                             }
-                            tiles->mTiles[tile->mOrient] = tile;
+                            tiles->mTiles[FurnitureTiles::orientIndex(tile->mOrient)] = tile;
                         } else {
                             mError = tr("Unknown block name '%1'.\n%2")
                                     .arg(block.name)
@@ -199,5 +209,51 @@ FurnitureTile::FurnitureOrientation FurnitureGroups::orientFromString(const QStr
     if (s == QLatin1String("N")) return FurnitureTile::FurnitureN;
     if (s == QLatin1String("E")) return FurnitureTile::FurnitureE;
     if (s == QLatin1String("S")) return FurnitureTile::FurnitureS;
+    if (s == QLatin1String("SW")) return FurnitureTile::FurnitureSW;
+    if (s == QLatin1String("NW")) return FurnitureTile::FurnitureNW;
+    if (s == QLatin1String("NE")) return FurnitureTile::FurnitureNE;
+    if (s == QLatin1String("SE")) return FurnitureTile::FurnitureSE;
     return FurnitureTile::FurnitureUnknown;
+}
+
+/////
+
+QSize FurnitureTile::size() const
+{
+    int width = (mTiles[1] || mTiles[3]) ? 2 : 1;
+    int height = (mTiles[2] || mTiles[3]) ? 2 : 1;
+    return QSize(width, height);
+}
+
+/////
+
+bool FurnitureTiles::isCorners() const
+{
+    return mTiles[0]->isSW();
+}
+
+void FurnitureTiles::toggleCorners()
+{
+    if (isCorners()) {
+        mTiles[0]->mOrient = FurnitureTile::FurnitureW;
+        mTiles[1]->mOrient = FurnitureTile::FurnitureN;
+        mTiles[2]->mOrient = FurnitureTile::FurnitureE;
+        mTiles[3]->mOrient = FurnitureTile::FurnitureS;
+    } else {
+        mTiles[0]->mOrient = FurnitureTile::FurnitureSW;
+        mTiles[1]->mOrient = FurnitureTile::FurnitureNW;
+        mTiles[2]->mOrient = FurnitureTile::FurnitureNE;
+        mTiles[3]->mOrient = FurnitureTile::FurnitureSE;
+    }
+}
+
+FurnitureTile *FurnitureTiles::tile(FurnitureTile::FurnitureOrientation orient) const
+{
+    return mTiles[orientIndex(orient)];
+}
+
+int FurnitureTiles::orientIndex(FurnitureTile::FurnitureOrientation orient)
+{
+    int index[9] = {0, 1, 2, 3, 0, 1, 2, 3, -1};
+    return index[orient];
 }

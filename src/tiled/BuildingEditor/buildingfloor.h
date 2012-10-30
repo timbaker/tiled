@@ -30,6 +30,7 @@ class Building;
 class BuildingTile;
 class Door;
 class FloorType;
+class FurnitureObject;
 class Room;
 class Stairs;
 class Window;
@@ -73,7 +74,7 @@ public:
         void ReplaceWall(BuildingTile *tile, WallOrientation orient);
         void ReplaceDoor(BuildingTile *tile, int offset);
         void ReplaceFrame(BuildingTile *tile, int offset);
-        void ReplaceFurniture(BuildingTile *tile, int offset);
+        void ReplaceFurniture(BuildingTile *tile, int offset = 0);
 
         int getWallOffset();
         int getTileIndexForDoor();
@@ -113,6 +114,7 @@ public:
     Door *GetDoorAt(int x, int y);
     Window *GetWindowAt(int x, int y);
     Stairs *GetStairsAt(int x, int y);
+    FurnitureObject *GetFurnitureAt(int x, int y);
 
     void SetRoomAt(int x, int y, Room *room);
 

@@ -145,6 +145,10 @@ void FurnitureTileDelegate::paint(QPainter *painter,
                           option.palette.highlight());
         painter->setOpacity(opacity);
     }
+
+    painter->drawText(option.rect.adjusted(extra, extra, 0, 0),
+                      ftile->orientToString(),
+                      Qt::AlignTop | Qt::AlignLeft);
 }
 
 QSize FurnitureTileDelegate::sizeHint(const QStyleOptionViewItem & option,

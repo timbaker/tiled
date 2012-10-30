@@ -20,6 +20,7 @@
 
 #include <QCoreApplication>
 #include <QList>
+#include <QSize>
 #include <QString>
 
 namespace BuildingEditor {
@@ -31,11 +32,14 @@ class FurnitureTile
 {
 public:
     enum FurnitureOrientation {
-        FurnitureW = 0,
-        FurnitureN = 1,
-        FurnitureE = 2,
-        FurnitureS = 3,
-        FurnitureMaxOrient,
+        FurnitureW,
+        FurnitureN,
+        FurnitureE,
+        FurnitureS,
+        FurnitureSW,
+        FurnitureNW,
+        FurnitureNE,
+        FurnitureSE,
         FurnitureUnknown
     };
 
@@ -54,18 +58,30 @@ public:
         mTiles[0] = mTiles[1] = mTiles[2] = mTiles[3] = 0;
     }
 
-    bool isEmpty()
-    { return !(mTiles[0] || mTiles[1] && mTiles[2] && mTiles[3]); }
+    bool isEmpty() const
+    { return !(mTiles[0] || mTiles[1] || mTiles[2] || mTiles[3]); }
+
+    bool isW() const { return mOrient == FurnitureW; }
+    bool isN() const { return mOrient == FurnitureN; }
+    bool isE() const { return mOrient == FurnitureE; }
+    bool isS() const { return mOrient == FurnitureS; }
+
+    bool isSW() const { return mOrient == FurnitureSW; }
+    bool isNW() const { return mOrient == FurnitureNW; }
+    bool isNE() const { return mOrient == FurnitureNE; }
+    bool isSE() const { return mOrient == FurnitureSE; }
 
     QString orientToString() const
     {
-        static const char *s[] = { "W", "N", "E", "S" };
+        static const char *s[] = { "W", "N", "E", "S", "SW", "NW", "NE", "SE" };
         return QLatin1String(s[mOrient]);
     }
 
+    QSize size() const;
+
     FurnitureTiles *mOwner;
     FurnitureOrientation mOrient;
-    BuildingTile *mTiles[4]; // NW NE SW SE
+    BuildingTile *mTiles[4]; // W N E S or SW NW NE SE
 };
 
 class FurnitureTiles
@@ -83,7 +99,14 @@ public:
     { return mTiles[0]->isEmpty() && mTiles[1]->isEmpty() &&
                 mTiles[2]->isEmpty() && mTiles[3]->isEmpty(); }
 
-    FurnitureTile *mTiles[FurnitureTile::FurnitureMaxOrient];
+    bool isCorners() const;
+    void toggleCorners();
+
+    FurnitureTile *tile(FurnitureTile::FurnitureOrientation orient) const;
+
+    static int orientIndex(FurnitureTile::FurnitureOrientation orient);
+
+    FurnitureTile *mTiles[4];
 };
 
 class FurnitureGroup
@@ -101,6 +124,9 @@ public:
     static void deleteInstance();
 
     FurnitureGroups();
+
+    void addGroup(FurnitureGroup *group);
+    void removeGroup(FurnitureGroup *group);
 
     bool readTxt();
     bool writeTxt();

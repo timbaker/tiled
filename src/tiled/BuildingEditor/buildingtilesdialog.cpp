@@ -29,6 +29,7 @@
 #include <QDebug>
 #include <QScrollBar>
 #include <QSettings>
+#include <QToolBar>
 
 using namespace BuildingEditor;
 using namespace Tiled;
@@ -66,18 +67,12 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(synchUI()));
 
-    // Add tile categories to the gui
-    ui->categoryList->clear();
-    foreach (BuildingTileCategory *category, BuildingTiles::instance()->categories())
-        ui->categoryList->addItem(category->label());
-
+    setCategoryList();
     connect(ui->categoryList, SIGNAL(currentRowChanged(int)),
             SLOT(categoryChanged(int)));
+    connect(ui->categoryList, SIGNAL(itemChanged(QListWidgetItem*)),
+            SLOT(categoryNameEdited(QListWidgetItem*)));
 //    mCategory = BuildingTiles::instance()->categories().at(ui->categoryList->currentRow());
-
-    // Added to "categories" view, but not a category
-    foreach (FurnitureGroup *group, FurnitureGroups::instance()->groups())
-        ui->categoryList->addItem(group->mLabel);
 
     // Add the list of tilesets, and resize it to fit
     int width = 64;
@@ -104,6 +99,17 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
 
     ui->tableWidget->setDragEnabled(true);
 
+    /////
+    QToolBar *toolBar = new QToolBar();
+    toolBar->addAction(ui->actionNewCategory);
+    toolBar->addAction(ui->actionRemoveCategory);
+    toolBar->addAction(ui->actionToggleCorners);
+    connect(ui->actionRemoveCategory, SIGNAL(triggered()), SLOT(removeCategory()));
+    connect(ui->actionNewCategory, SIGNAL(triggered()), SLOT(newCategory()));
+    connect(ui->actionToggleCorners, SIGNAL(triggered()), SLOT(toggleCorners()));
+    ui->categoryToolbarLayout->addWidget(toolBar);
+    /////
+
     synchUI();
 
     settings.beginGroup(QLatin1String("BuildingEditor/BuildingTilesDialog"));
@@ -112,7 +118,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
         restoreGeometry(geom);
     settings.endGroup();
 
-    restoreSplitterSizes(ui->splitter_3);
+    restoreSplitterSizes(ui->overallSplitter);
     restoreSplitterSizes(ui->categorySplitter);
     restoreSplitterSizes(ui->tilesetSplitter);
 }
@@ -120,6 +126,21 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
 BuildingTilesDialog::~BuildingTilesDialog()
 {
     delete ui;
+}
+
+void BuildingTilesDialog::setCategoryList()
+{
+    ui->categoryList->clear();
+
+    foreach (BuildingTileCategory *category, BuildingTiles::instance()->categories())
+        ui->categoryList->addItem(category->label());
+
+    foreach (FurnitureGroup *group, FurnitureGroups::instance()->groups()) {
+        QListWidgetItem *item = new QListWidgetItem();
+        item->setText(group->mLabel);
+        item->setFlags(item->flags() | Qt::ItemIsEditable);
+        ui->categoryList->addItem(item);
+    }
 }
 
 void BuildingTilesDialog::setCategoryTiles()
@@ -176,13 +197,18 @@ void BuildingTilesDialog::synchUI()
     }
     ui->addTiles->setEnabled(add);
     ui->removeTiles->setEnabled(remove);
+
+    ui->actionRemoveCategory->setEnabled(mFurnitureGroup != 0);
+    ui->actionToggleCorners->setEnabled(mFurnitureGroup && remove);
 }
 
 void BuildingTilesDialog::categoryChanged(int index)
 {
     mCategory = 0;
     mFurnitureGroup = 0;
-    if (index < BuildingTiles::instance()->categories().count()) {
+    if (index < 0) {
+        // only happens when setting the list again
+    } else if (index < BuildingTiles::instance()->categories().count()) {
         mCategory = BuildingTiles::instance()->categories().at(index);
         ui->categoryStack->setCurrentIndex(0);
         setCategoryTiles();
@@ -299,6 +325,60 @@ void BuildingTilesDialog::furnitureEdited()
     mChanges = true;
 }
 
+void BuildingTilesDialog::categoryNameEdited(QListWidgetItem *item)
+{
+    int row = ui->categoryList->row(item);
+    row -= BuildingTiles::instance()->categories().count();
+    FurnitureGroup *category = FurnitureGroups::instance()->groups().at(row);
+    category->mLabel = item->text();
+    mChanges = true;
+}
+
+void BuildingTilesDialog::newCategory()
+{
+    FurnitureGroup *group = new FurnitureGroup;
+    group->mLabel = QLatin1String("New Category");
+    FurnitureGroups::instance()->addGroup(group);
+    setCategoryList();
+    ui->categoryList->setCurrentRow(ui->categoryList->count() - 1);
+    mChanges = true;
+    synchUI();
+}
+
+void BuildingTilesDialog::removeCategory()
+{
+    if (!mFurnitureGroup)
+        return;
+
+    FurnitureGroups::instance()->removeGroup(mFurnitureGroup);
+    delete ui->categoryList->currentItem();
+    mChanges = true;
+    synchUI();
+}
+
+void BuildingTilesDialog::toggleCorners()
+{
+    if (mFurnitureGroup != 0) {
+        FurnitureView *v = ui->furnitureView;
+        QList<FurnitureTiles*> toggle;
+        QModelIndexList selection = v->selectionModel()->selectedIndexes();
+        foreach (QModelIndex index, selection) {
+            FurnitureTile *tile = v->model()->tileAt(index);
+            if (!toggle.contains(tile->owner()))
+                toggle += tile->owner();
+        }
+        foreach (FurnitureTiles *tiles, toggle) {
+            tiles->toggleCorners();
+            v->update(v->model()->index(tiles->mTiles[0]));
+            v->update(v->model()->index(tiles->mTiles[1]));
+            v->update(v->model()->index(tiles->mTiles[2]));
+            v->update(v->model()->index(tiles->mTiles[3]));
+        }
+        mChanges = true;
+        return;
+    }
+}
+
 void BuildingTilesDialog::accept()
 {
     QSettings settings;
@@ -306,7 +386,7 @@ void BuildingTilesDialog::accept()
     settings.setValue(QLatin1String("geometry"), saveGeometry());
     settings.endGroup();
 
-    saveSplitterSizes(ui->splitter_3);
+    saveSplitterSizes(ui->overallSplitter);
     saveSplitterSizes(ui->categorySplitter);
     saveSplitterSizes(ui->tilesetSplitter);
 

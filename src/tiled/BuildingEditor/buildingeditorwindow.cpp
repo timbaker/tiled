@@ -138,6 +138,11 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     StairsTool::instance()->setEditor(roomEditor);
     StairsTool::instance()->setAction(ui->actionStairs);
 
+    connect(ui->actionFurniture, SIGNAL(triggered()),
+            FurnitureTool::instance(), SLOT(makeCurrent()));
+    FurnitureTool::instance()->setEditor(roomEditor);
+    FurnitureTool::instance()->setAction(ui->actionFurniture);
+
     connect(ui->actionSelectObject, SIGNAL(triggered()),
             SelectMoveObjectTool::instance(), SLOT(makeCurrent()));
     SelectMoveObjectTool::instance()->setEditor(roomEditor);
@@ -342,7 +347,7 @@ bool BuildingEditorWindow::Startup()
     /////
 
     // Add tile categories to the gui
-    setCategoryLists();
+    setCategoryList();
 
     /////
 
@@ -740,13 +745,20 @@ void BuildingEditorWindow::tileSelectionChanged()
             else if (mCategory->name() == QLatin1String("stairs"))
                 currentStairsChanged(tile);
             else
-                qFatal("unhandled category name");
+                qFatal("unhandled category name in BuildingEditorWindow::tileSelectionChanged()");
         }
     }
 }
 
 void BuildingEditorWindow::furnitureSelectionChanged()
 {
+    QModelIndexList indexes = ui->furnitureView->selectionModel()->selectedIndexes();
+    if (indexes.count() == 1) {
+        QModelIndex index = indexes.first();
+        if (FurnitureTile *ftile = ui->furnitureView->model()->tileAt(index))
+            FurnitureTool::instance()->setCurrentTile(ftile);
+    }
+    updateActions();
 }
 
 void BuildingEditorWindow::currentEWallChanged(Tile *tile)
@@ -1322,7 +1334,10 @@ void BuildingEditorWindow::tilesDialog()
             QMessageBox::warning(this, tr("It's no good, Jim!"),
                                  FurnitureGroups::instance()->errorString());
         }
-        setCategoryLists();
+        int row = ui->categoryList->currentRow();
+        setCategoryList();
+        row = qMin(row, ui->categoryList->count() - 1);
+        ui->categoryList->setCurrentRow(row);
     }
 }
 
@@ -1371,58 +1386,18 @@ void BuildingEditorWindow::resizeCoordsLabel()
     ui->coordLabel->setMinimumWidth(fm.width(coordString) + 8);
 }
 
-void BuildingEditorWindow::setCategoryLists()
+void BuildingEditorWindow::setCategoryList()
 {
     mSynching = true;
 
     ui->categoryList->clear();
+
     foreach (BuildingTileCategory *category, BuildingTiles::instance()->categories()) {
-#if 1
         ui->categoryList->addItem(category->label());
-#else
-        QString categoryName = category->name();
-        const char *slot = 0;
-        if (categoryName == QLatin1String("exterior_walls"))
-            slot = SLOT(currentEWallChanged(QItemSelection));
-        else if (categoryName == QLatin1String("interior_walls"))
-            slot = SLOT(currentIWallChanged(QItemSelection));
-        else if (categoryName == QLatin1String("floors"))
-            slot = SLOT(currentFloorChanged(QItemSelection));
-        else if (categoryName == QLatin1String("doors"))
-            slot = SLOT(currentDoorChanged(QItemSelection));
-        else if (categoryName == QLatin1String("door_frames"))
-            slot = SLOT(currentDoorFrameChanged(QItemSelection));
-        else if (categoryName == QLatin1String("windows"))
-            slot = SLOT(currentWindowChanged(QItemSelection));
-        else if (categoryName == QLatin1String("stairs"))
-            slot = SLOT(currentStairsChanged(QItemSelection));
-        else {
-            qFatal("bogus category name"); // the names were validated elsewhere
-        }
-
-        Tiled::Internal::MixedTilesetView *w
-                = new Tiled::Internal::MixedTilesetView(mCategoryZoomable, toolBox);
-        toolBox->addItem(w, category->label());
-        connect(w->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
-                slot);
-
-        QList<Tiled::Tile*> tiles;
-        foreach (BuildingTile *tile, category->tiles()) {
-            if (!tile->mAlternates.count() || (tile == tile->mAlternates.first()))
-                tiles += BuildingTiles::instance()->tileFor(tile);
-        }
-        w->model()->setTiles(tiles);
-#endif
     }
 
     foreach (FurnitureGroup *group, FurnitureGroups::instance()->groups()) {
-#if 1
         ui->categoryList->addItem(group->mLabel);
-#else
-        FurnitureView *w = new FurnitureView(mCategoryZoomable, toolBox);
-        w->model()->setTiles(group->mTiles);
-        toolBox->addItem(w, group->mLabel);
-#endif
     }
 
     mSynching = false;
@@ -1436,6 +1411,8 @@ void BuildingEditorWindow::updateActions()
     DoorTool::instance()->setEnabled(mCurrentDocument != 0);
     WindowTool::instance()->setEnabled(mCurrentDocument != 0);
     StairsTool::instance()->setEnabled(mCurrentDocument != 0);
+    FurnitureTool::instance()->setEnabled(mCurrentDocument != 0 &&
+            FurnitureTool::instance()->currentTile() != 0);
     SelectMoveObjectTool::instance()->setEnabled(mCurrentDocument != 0);
 
     ui->actionUpLevel->setEnabled(mCurrentDocument != 0);

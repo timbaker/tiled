@@ -21,6 +21,7 @@
 #include "buildingobjects.h"
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
+#include "furnituregroups.h"
 
 using namespace BuildingEditor;
 
@@ -216,6 +217,22 @@ void BuildingFloor::LayoutToSquares()
         }
     }
 
+    foreach (BuildingObject *object, mObjects) {
+        if (FurnitureObject *fo = dynamic_cast<FurnitureObject*>(object)) {
+            int x = fo->x();
+            int y = fo->y();
+            FurnitureTile *ftile = fo->furnitureTile();
+            if (ftile->mTiles[0])
+                squares[x][y].ReplaceFurniture(ftile->mTiles[0]);
+            if (ftile->mTiles[1])
+                squares[x+1][y].ReplaceFurniture(ftile->mTiles[1]);
+            if (ftile->mTiles[2])
+                squares[x][y+1].ReplaceFurniture(ftile->mTiles[2]);
+            if (ftile->mTiles[3])
+                squares[x+1][y+1].ReplaceFurniture(ftile->mTiles[3]);
+        }
+    }
+
     // Place floors
     for (int x = 0; x < width(); x++) {
         for (int y = 0; y < height(); y++) {
@@ -283,6 +300,17 @@ Stairs *BuildingFloor::GetStairsAt(int x, int y)
             continue;
         if (Stairs *stairs = dynamic_cast<Stairs*>(o))
             return stairs;
+    }
+    return 0;
+}
+
+FurnitureObject *BuildingFloor::GetFurnitureAt(int x, int y)
+{
+    foreach (BuildingObject *o, mObjects) {
+        if (!o->bounds().contains(x, y))
+            continue;
+        if (FurnitureObject *fo = dynamic_cast<FurnitureObject*>(o))
+            return fo;
     }
     return 0;
 }

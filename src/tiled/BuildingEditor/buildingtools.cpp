@@ -26,6 +26,7 @@
 #include "buildingtiles.h"
 #include "buildingundoredo.h"
 #include "FloorEditor.h"
+#include "furnituregroups.h"
 
 #include <QAction>
 #include <QApplication>
@@ -590,6 +591,77 @@ void StairsTool::updateCursorObject()
     mCursorObject->setDir(dir);
 
     setCursorObject(mCursorObject);
+}
+
+/////
+
+FurnitureTool *FurnitureTool::mInstance = 0;
+
+FurnitureTool *FurnitureTool::instance()
+{
+    if (!mInstance)
+        mInstance = new FurnitureTool();
+    return mInstance;
+}
+
+FurnitureTool::FurnitureTool() :
+    BaseObjectTool(),
+    mCurrentTile(0)
+{
+}
+
+void FurnitureTool::placeObject()
+{
+    BuildingFloor *floor = mEditor->document()->currentFloor();
+    FurnitureObject *object = new FurnitureObject(floor,
+                                                  mCursorObject->x(),
+                                                  mCursorObject->y(),
+                                                  mCursorObject->dir());
+    object->setFurnitureTile(mCurrentTile);
+    mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
+                                                         floor,
+                                                         floor->objectCount(),
+                                                         object));
+}
+
+void FurnitureTool::updateCursorObject()
+{
+    if (!mEditor->currentFloorContains(mTilePos)) {
+        if (mCursorItem)
+            mCursorItem->setVisible(false);
+        return;
+    }
+
+    if (mCursorItem)
+        mCursorItem->setVisible(true);
+
+    int x = mTilePos.x(), y = mTilePos.y();
+    BuildingObject::Direction dir = BuildingObject::Invalid;
+    switch (mCurrentTile->mOrient) {
+    case FurnitureTile::FurnitureW: dir = BuildingObject::W; break;
+    case FurnitureTile::FurnitureN: dir = BuildingObject::N; break;
+    case FurnitureTile::FurnitureE: dir = BuildingObject::E; break;
+    case FurnitureTile::FurnitureS: dir = BuildingObject::S; break;
+    }
+
+    if (!mCursorObject) {
+        BuildingFloor *floor = 0; //mEditor->document()->currentFloor();
+        FurnitureObject *object = new FurnitureObject(floor, x, y, dir);
+        object->setFurnitureTile(mCurrentTile);
+        mCursorObject = object;
+    }
+    // mCursorDoor->setFloor()
+    mCursorObject->setPos(x, y);
+    mCursorObject->setDir(dir);
+
+    setCursorObject(mCursorObject);
+}
+
+void FurnitureTool::setCurrentTile(FurnitureTile *tile)
+{
+    mCurrentTile = tile;
+    if (mCursorObject)
+        static_cast<FurnitureObject*>(mCursorObject)->setFurnitureTile(tile);
 }
 
 /////

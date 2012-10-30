@@ -31,6 +31,7 @@ namespace BuildingEditor {
 class BuildingObject;
 class Door;
 class FloorEditor;
+class FurnitureTile;
 class GraphicsObjectItem;
 class Stairs;
 class Window;
@@ -228,6 +229,27 @@ public:
 
 private:
     static StairsTool *mInstance;
+};
+
+class FurnitureTool : public BaseObjectTool
+{
+    Q_OBJECT
+public:
+    static FurnitureTool *instance();
+
+    FurnitureTool();
+
+    void placeObject();
+    void updateCursorObject();
+
+    void setCurrentTile(FurnitureTile *tile);
+
+    FurnitureTile *currentTile() const
+    { return mCurrentTile; }
+
+private:
+    static FurnitureTool *mInstance;
+    FurnitureTile *mCurrentTile;
 };
 
 /////

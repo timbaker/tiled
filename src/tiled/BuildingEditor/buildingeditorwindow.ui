@@ -125,6 +125,7 @@
    <addaction name="actionDoor"/>
    <addaction name="actionWindow"/>
    <addaction name="actionStairs"/>
+   <addaction name="actionFurniture"/>
    <addaction name="actionSelectObject"/>
    <addaction name="actionRooms"/>
    <addaction name="actionUpLevel"/>
@@ -477,13 +478,23 @@
     <string>Flip Vertical</string>
    </property>
   </action>
+  <action name="actionFurniture">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_furniture.png</normaloff>:/BuildingEditor/icons/icon_furniture.png</iconset>
+   </property>
+   <property name="text">
+    <string>Furniture</string>
+   </property>
+   <property name="toolTip">
+    <string>Furniture tool</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>BuildingEditor::FloorView</class>
-   <extends>QGraphicsView</extends>
-   <header>BuildingEditor/FloorEditor.h</header>
-  </customwidget>
   <customwidget>
    <class>Tiled::Internal::MixedTilesetView</class>
    <extends>QTableWidget</extends>
@@ -493,6 +504,11 @@
    <class>BuildingEditor::FurnitureView</class>
    <extends>QTableWidget</extends>
    <header>BuildingEditor/furnitureview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>BuildingEditor::FloorView</class>
+   <extends>QGraphicsView</extends>
+   <header>BuildingEditor/FloorEditor.h</header>
   </customwidget>
  </customwidgets>
  <resources>

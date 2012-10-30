@@ -24,6 +24,7 @@
 #include "buildingobjects.h"
 #include "buildingtools.h"
 #include "buildingtemplates.h"
+#include "furnituregroups.h"
 
 #include "zoomable.h"
 
@@ -185,6 +186,53 @@ void GraphicsObjectItem::paint(QPainter *painter,
     QPen pen(mValidPos ? Qt::blue : Qt::red);
     painter->setPen(pen);
     painter->drawPath(path);
+
+    if (FurnitureObject *object = dynamic_cast<FurnitureObject*>(mObject)) {
+        QPoint dragOffset = mDragging ? mDragOffset : QPoint();
+        QRectF r = mEditor->tileToSceneRect(object->bounds().translated(dragOffset));
+        r.adjust(2, 2, -2, -2);
+
+        bool lineW = false, lineN = false, lineE = false, lineS = false;
+        switch (object->furnitureTile()->mOrient) {
+        case FurnitureTile::FurnitureN:
+            lineN = true;
+            break;
+        case FurnitureTile::FurnitureS:
+            lineS = true;
+            break;
+        case FurnitureTile::FurnitureNW:
+            lineN = true;
+            // fall through
+        case FurnitureTile::FurnitureW:
+            lineW = true;
+            break;
+        case FurnitureTile::FurnitureNE:
+            lineN = true;
+            // fall through
+        case FurnitureTile::FurnitureE:
+            lineE = true;
+            break;
+        case FurnitureTile::FurnitureSE:
+            lineS = true;
+            lineE = true;
+            break;
+        case FurnitureTile::FurnitureSW:
+            lineS = true;
+            lineW = true;
+            break;
+        }
+
+        QPainterPath path2;
+        if (lineW)
+            path2.addRect(r.left() + 2, r.top() + 2, 2, r.height() - 4);
+        if (lineE)
+            path2.addRect(r.right() - 4, r.top() + 2, 2, r.height() - 4);
+        if (lineN)
+            path2.addRect(r.left() + 2, r.top() + 2, r.width() - 4, 2);
+        if (lineS)
+            path2.addRect(r.left() + 2, r.bottom() - 4, r.width() - 4, 2);
+        painter->fillPath(path2, pen.color());
+    }
 }
 
 void GraphicsObjectItem::setObject(BuildingObject *object)
@@ -242,6 +290,12 @@ QPainterPath GraphicsObjectItem::calcShape()
             QPointF p = mEditor->tileToScene(stairs->pos() + dragOffset);
             path.addRect(p.x(), p.y(), 30 * 5, 30);
         }
+    }
+
+    if (FurnitureObject *object = dynamic_cast<FurnitureObject*>(mObject)) {
+        QRectF r = mEditor->tileToSceneRect(object->bounds().translated(dragOffset));
+        r.adjust(2, 2, -2, -2);
+        path.addRect(r);
     }
 
     return path;

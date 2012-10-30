@@ -15,8 +15,10 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "buildingfloor.h"
 #include "buildingobjects.h"
+
+#include "buildingfloor.h"
+#include "furnituregroups.h"
 
 using namespace BuildingEditor;
 
@@ -169,6 +171,128 @@ int Stairs::getOffset(int x, int y)
         }
     }
     return -1;
+}
+
+FurnitureObject::FurnitureObject(BuildingFloor *floor, int x, int y,
+                                 BuildingObject::Direction dir) :
+    BuildingObject(floor, x, y, dir),
+    mFurnitureTile(0)
+{
+
+}
+
+QRect FurnitureObject::bounds() const
+{
+    return mFurnitureTile ? QRect(pos(), mFurnitureTile->size())
+                           : QRect(mX, mY, 1, 1);
+}
+
+void FurnitureObject::rotate(bool right)
+{
+    int oldWidth = mFloor->height();
+    int oldHeight = mFloor->width();
+
+    FurnitureTile *oldTile = mFurnitureTile;
+    FurnitureTile *newTile = mFurnitureTile;
+    if (right) {
+        int index = FurnitureTiles::orientIndex(oldTile->mOrient) + 1;
+        newTile = oldTile->owner()->mTiles[index % 4];
+#if 0
+        if (oldTile->isW())
+            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureN];
+        else if (oldTile->isN())
+            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureE];
+        else if (oldTile->isE())
+            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureS];
+        else if (oldTile->isS())
+            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureW];
+#endif
+    } else {
+        int index = 4 + FurnitureTiles::orientIndex(oldTile->mOrient) - 1;
+        newTile = oldTile->owner()->mTiles[index % 4];
+#if 0
+        if (oldTile->isW())
+            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureS];
+        else if (oldTile->isS())
+            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureE];
+        else if (oldTile->isE())
+            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureN];
+        else if (oldTile->isN())
+            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureW];
+#endif
+    }
+
+    if (right) {
+        int x = mX;
+        mX = oldHeight - mY - newTile->size().width();
+        mY = x;
+    } else {
+        int x = mX;
+        mX = mY;
+        mY = oldWidth - x - newTile->size().height();
+    }
+
+    // Stop things going out of bounds, which can happen if the furniture
+    // is asymmetric.
+    if (mX < 0)
+        mX = 0;
+    if (mX + newTile->size().width() > mFloor->width())
+        mX -= 1;
+    if (mY < 0)
+        mY = 0;
+    if (mY + newTile->size().height() > mFloor->height())
+        mY -= 1;
+
+    mFurnitureTile = newTile;
+}
+
+void FurnitureObject::flip(bool horizontal)
+{
+    if (horizontal) {
+        mX = mFloor->width() - mX - mFurnitureTile->size().width();
+        if (mFurnitureTile->isW())
+            mFurnitureTile = mFurnitureTile->owner()->mTiles[FurnitureTile::FurnitureE];
+        else if (mFurnitureTile->isE())
+            mFurnitureTile = mFurnitureTile->owner()->mTiles[FurnitureTile::FurnitureW];
+        else if (mFurnitureTile->isNW())
+            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureNE);
+        else if (mFurnitureTile->isNE())
+            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureNW);
+        else if (mFurnitureTile->isSW())
+            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureSE);
+        else if (mFurnitureTile->isSE())
+            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureSW);
+    } else {
+        mY = mFloor->height() - mY - mFurnitureTile->size().height();
+        if (mFurnitureTile->isN())
+            mFurnitureTile = mFurnitureTile->owner()->mTiles[FurnitureTile::FurnitureS];
+        else if (mFurnitureTile->isS())
+            mFurnitureTile = mFurnitureTile->owner()->mTiles[FurnitureTile::FurnitureN];
+        else if (mFurnitureTile->isNW())
+            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureSW);
+        else if (mFurnitureTile->isSW())
+            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureNW);
+        else if (mFurnitureTile->isNE())
+            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureSE);
+        else if (mFurnitureTile->isSE())
+            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureNE);
+    }
+}
+
+bool FurnitureObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
+{
+    if (!floor)
+        floor = mFloor;
+
+    // No +1 because furniture can't be on the outside edge of the building.
+    QRect floorBounds(0, 0, floor->width(), floor->height());
+    QRect objectBounds = bounds().translated(offset);
+    return (floorBounds & objectBounds) == objectBounds;
+}
+
+void FurnitureObject::setFurnitureTile(FurnitureTile *tile)
+{
+    mFurnitureTile = tile;
 }
 
 /////

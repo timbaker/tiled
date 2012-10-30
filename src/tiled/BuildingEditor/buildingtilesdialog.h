@@ -20,6 +20,7 @@
 
 #include <QDialog>
 
+class QListWidgetItem;
 class QSplitter;
 
 namespace Ui {
@@ -49,6 +50,7 @@ public:
     { return mChanges; }
     
 private:
+    void setCategoryList();
     void setCategoryTiles();
     void setFurnitureTiles();
     void saveSplitterSizes(QSplitter *splitter);
@@ -63,6 +65,12 @@ private slots:
     void removeTiles();
 
     void furnitureEdited();
+
+    void categoryNameEdited(QListWidgetItem *item);
+
+    void newCategory();
+    void removeCategory();
+    void toggleCorners();
 
     void accept();
 

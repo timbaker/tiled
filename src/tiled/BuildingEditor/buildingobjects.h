@@ -24,6 +24,7 @@ namespace BuildingEditor {
 
 class BuildingFloor;
 class BuildingTile;
+class FurnitureTile;
 
 class BuildingObject
 {
@@ -141,6 +142,28 @@ public:
 
     int getOffset()
     { return (mDir == N) ? 1 : 0; }
+};
+
+class FurnitureObject : public BuildingObject
+{
+public:
+    FurnitureObject(BuildingFloor *floor, int x, int y, Direction dir);
+
+    QRect bounds() const;
+
+    void rotate(bool right);
+    void flip(bool horizontal);
+
+    bool isValidPos(const QPoint &offset = QPoint(),
+                    BuildingEditor::BuildingFloor *floor = 0) const;
+
+    void setFurnitureTile(FurnitureTile *tile);
+
+    FurnitureTile *furnitureTile() const
+    { return mFurnitureTile; }
+
+private:
+    FurnitureTile *mFurnitureTile;
 };
 
 } // namespace BulidingEditor
