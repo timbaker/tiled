@@ -419,7 +419,7 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                     if (tile)
                         tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
                 }
-                if ((index == LayerIndexWall) && mShowWalls) {
+                if ((index == LayerIndexWall) && (mShowWalls || floor != mDocument->currentFloor())) {
                     BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionWall];
                     if (tile)
                         tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionWall])));
@@ -470,6 +470,12 @@ void BuildingPreviewScene::currentFloorChanged()
     }
     for (int i = level + 1; i < mDocument->building()->floorCount(); i++)
         mLayerGroupItems[i]->setVisible(false);
+
+    if (!mShowWalls) {
+        foreach (BuildingFloor *floor, mDocument->building()->floors())
+            BuildingFloorToTileLayers(floor,
+                                      mMapComposite->tileLayersForLevel(floor->level())->layers());
+    }
 }
 
 void BuildingPreviewScene::roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos)
