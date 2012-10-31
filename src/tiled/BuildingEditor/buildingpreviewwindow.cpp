@@ -64,6 +64,13 @@ BuildingPreviewWindow::BuildingPreviewWindow(QWidget *parent) :
     connect(mView->zoomable(), SIGNAL(scaleChanged(qreal)),
             SLOT(updateActions()));
 
+    QSettings settings;
+    bool showWalls = settings.value(QLatin1String("BuildingEditor/PreviewWindow/ShowWalls"),
+                                    true).toBool();
+    ui->actionShowWalls->setChecked(showWalls);
+    connect(ui->actionShowWalls, SIGNAL(toggled(bool)),
+            mScene, SLOT(showWalls(bool)));
+
     connect(ui->actionZoomIn, SIGNAL(triggered()),
             mView->zoomable(), SLOT(zoomIn()));
     connect(ui->actionZoomOut, SIGNAL(triggered()),
@@ -256,6 +263,10 @@ BuildingPreviewScene::BuildingPreviewScene(QWidget *parent) :
     mGridItem(0)
 {
     setBackgroundBrush(Qt::darkGray);
+
+    QSettings settings;
+    mShowWalls = settings.value(QLatin1String("BuildingEditor/PreviewWindow/ShowWalls"),
+                                true).toBool();
 }
 
 BuildingPreviewScene::~BuildingPreviewScene()
@@ -388,7 +399,7 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                     if (tile)
                         tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
                 }
-                if (index == LayerIndexWall) {
+                if ((index == LayerIndexWall) && mShowWalls) {
                     BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionWall];
                     if (tile)
                         tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionWall])));
@@ -604,6 +615,18 @@ void BuildingPreviewScene::buildingRotated()
         floorEdited(floor);
     }
     mGridItem->synchWithBuilding();
+}
+
+void BuildingPreviewScene::showWalls(bool show)
+{
+    if (show == mShowWalls)
+        return;
+
+    mShowWalls = show;
+
+    foreach (BuildingFloor *floor, mDocument->building()->floors())
+        BuildingFloorToTileLayers(floor, mMapComposite->tileLayersForLevel(floor->level())->layers());
+    update();
 }
 
 /////

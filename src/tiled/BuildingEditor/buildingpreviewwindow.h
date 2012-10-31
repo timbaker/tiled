@@ -142,6 +142,8 @@ private slots:
     void buildingResized();
     void buildingRotated();
 
+    void showWalls(bool show);
+
 private:
     BuildingDocument *mDocument;
     MapComposite *mMapComposite;
@@ -150,6 +152,7 @@ private:
     PreviewGridItem *mGridItem;
     QMap<int,CompositeLayerGroupItem*> mLayerGroupItems;
     QString mError;
+    bool mShowWalls;
 };
 
 class BuildingPreviewView : public QGraphicsView
