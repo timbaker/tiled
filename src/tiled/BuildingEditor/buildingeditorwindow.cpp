@@ -170,6 +170,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->menuEdit->insertAction(ui->menuEdit->actions().at(1), redoAction);
     ui->menuEdit->insertSeparator(ui->menuEdit->actions().at(2));
 
+    connect(mUndoGroup, SIGNAL(cleanChanged(bool)), SLOT(updateWindowTitle()));
+
     connect(ui->actionPreferences, SIGNAL(triggered()), SLOT(preferences()));
 
     connect(ui->actionNewBuilding, SIGNAL(triggered()), SLOT(newBuilding()));
@@ -1155,7 +1157,9 @@ void BuildingEditorWindow::updateWindowTitle()
     else {
         fileName = QDir::toNativeSeparators(fileName);
     }
-    setWindowTitle(tr("%1 - Building Editor").arg(fileName));
+    setWindowTitle(tr("[*]%1 - Building Editor").arg(fileName));
+    setWindowFilePath(fileName);
+    setWindowModified(mCurrentDocument ? mCurrentDocument->isModified() : false);
 }
 
 void BuildingEditorWindow::exportTMX()

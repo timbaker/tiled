@@ -106,8 +106,6 @@ private:
 
     void addDocument(BuildingDocument *doc);
 
-    void updateWindowTitle();
-
     void currentEWallChanged(Tiled::Tile *tile);
     void currentIWallChanged(Tiled::Tile *tile);
     void currentFloorChanged(Tiled::Tile *tile);
@@ -117,6 +115,8 @@ private:
     void currentStairsChanged(Tiled::Tile *tile);
 
 private slots:
+    void updateWindowTitle();
+
     void roomIndexChanged(int index);
     void categoryScaleChanged(qreal scale);
 
