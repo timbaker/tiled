@@ -1184,6 +1184,11 @@ void BuildingEditorWindow::exportTMX()
     QString initialDir = mSettings.value(
                 QLatin1String("BuildingEditor/ExportDirectory")).toString();
 
+    if (!mCurrentDocument->fileName().isEmpty()) {
+        QFileInfo info(mCurrentDocument->fileName());
+        initialDir += tr("/%1").arg(info.completeBaseName());
+    }
+
     const QString fileName =
             QFileDialog::getSaveFileName(this, QString(), initialDir,
                                          tr("Tiled map files (*.tmx)"));
