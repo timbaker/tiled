@@ -22,6 +22,7 @@
 #include "buildingobjects.h"
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
+#include "furnituregroups.h"
 
 #include <QCoreApplication>
 #include <QDebug>
@@ -53,6 +54,10 @@ private:
 
     Building *readBuilding();
 
+    FurnitureTiles *readFurnitureTiles();
+    FurnitureTile *readFurnitureTile(FurnitureTiles *ftiles);
+    BuildingTile *readFurnitureTile(FurnitureTile *ftile, QPoint &pos);
+
     Room *readRoom();
 
     BuildingFloor *readFloor();
@@ -66,6 +71,7 @@ private:
     QString mError;
     QString mPath;
     Building *mBuilding;
+    QList<FurnitureTiles*> mFurnitureTiles;
 
     QXmlStreamReader xml;
 };
@@ -136,7 +142,10 @@ Building *BuildingReaderPrivate::readBuilding()
     mBuilding->setStairsTile(BuildingTiles::instance()->getStairsTile(stairs));
 
     while (xml.readNextStartElement()) {
-        if (xml.name() == "room") {
+        if (xml.name() == "furniture") {
+            if (FurnitureTiles *tiles = readFurnitureTiles())
+                mFurnitureTiles += tiles;
+        } else if (xml.name() == "room") {
             if (Room *room = readRoom())
                 mBuilding->insertRoom(mBuilding->roomCount(), room);
         } else if (xml.name() == "floor") {
@@ -153,6 +162,81 @@ Building *BuildingReaderPrivate::readBuilding()
     }
 
     return mBuilding;
+}
+
+FurnitureTiles *BuildingReaderPrivate::readFurnitureTiles()
+{
+    Q_ASSERT(xml.isStartElement() && xml.name() == "furniture");
+
+    FurnitureTiles *ftiles = new FurnitureTiles;
+
+    while (xml.readNextStartElement()) {
+        if (xml.name() == "entry") {
+            if (FurnitureTile *ftile = readFurnitureTile(ftiles))
+                ftiles->mTiles[ftiles->orientIndex(ftile->mOrient)] = ftile;
+        } else
+            readUnknownElement();
+    }
+
+    // Clean up in case of error
+    if (xml.hasError()) {
+        delete ftiles;
+        return 0;
+    }
+
+    return ftiles;
+}
+
+FurnitureTile *BuildingReaderPrivate::readFurnitureTile(FurnitureTiles *ftiles)
+{
+    Q_ASSERT(xml.isStartElement() && xml.name() == "entry");
+
+    const QXmlStreamAttributes atts = xml.attributes();
+    QString orientString = atts.value(QLatin1String("orient")).toString();
+    FurnitureTile::FurnitureOrientation orient =
+            FurnitureGroups::orientFromString(orientString);
+    if (orient == FurnitureTile::FurnitureUnknown) {
+        xml.raiseError(tr("invalid furniture tile orientation '%1'").arg(orientString));
+        return 0;
+    }
+
+    FurnitureTile *ftile = new FurnitureTile(ftiles, orient);
+
+    while (xml.readNextStartElement()) {
+        if (xml.name() == "tile") {
+            QPoint pos;
+            if (BuildingTile *btile = readFurnitureTile(ftile, pos))
+                ftile->mTiles[pos.x() + pos.y() * 2] = btile;
+        } else
+            readUnknownElement();
+    }
+
+    // Clean up in case of error
+    if (xml.hasError()) {
+        delete ftile;
+        return 0;
+    }
+
+    return ftile;
+}
+
+BuildingTile *BuildingReaderPrivate::readFurnitureTile(FurnitureTile *ftile, QPoint &pos)
+{
+    Q_UNUSED(ftile)
+    Q_ASSERT(xml.isStartElement() && xml.name() == "tile");
+    const QXmlStreamAttributes atts = xml.attributes();
+    int x = atts.value(QLatin1String("x")).toString().toInt();
+    int y = atts.value(QLatin1String("y")).toString().toInt();
+    if (x < 0 || y < 0) {
+        xml.raiseError(tr("invalid furniture tile coordinates (%1,%2)")
+                       .arg(x).arg(y));
+    }
+    pos.setX(x);
+    pos.setY(y);
+    QString tileName = atts.value(QLatin1String("name")).toString();
+    BuildingTile *btile = BuildingTiles::instance()->getFurnitureTile(tileName);
+    xml.skipCurrentElement();
+    return btile;
 }
 
 Room *BuildingReaderPrivate::readRoom()
@@ -221,8 +305,12 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
         return 0;
     }
 
+    bool readDir = true;
+    if (type == QLatin1String("furniture"))
+        readDir = false;
+
     BuildingObject::Direction dir = BuildingObject::dirFromString(dirString);
-    if (dir == BuildingObject::Invalid) {
+    if (readDir && dir == BuildingObject::Invalid) {
         xml.raiseError(tr("Invalid object direction '%1'").arg(dirString));
         return 0;
     }
@@ -240,6 +328,24 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
     } else if (type == QLatin1String("window")) {
         object = new Window(floor, x, y, dir);
         object->setTile(BuildingTiles::instance()->getWindowTile(tile));
+    } else if (type == QLatin1String("furniture")) {
+        FurnitureObject *furniture = new FurnitureObject(floor, x, y);
+        int index = atts.value(QLatin1String("FurnitureTiles")).toString().toInt();
+        if (index < 0 || index >= mFurnitureTiles.count()) {
+            xml.raiseError(tr("Furniture index %1 out of range").arg(index));
+            delete furniture;
+            return 0;
+        }
+        QString orientString = atts.value(QLatin1String("orient")).toString();
+        FurnitureTile::FurnitureOrientation orient =
+                FurnitureGroups::orientFromString(orientString);
+        if (orient == FurnitureTile::FurnitureUnknown) {
+            xml.raiseError(tr("Unknown furniture orientation '%1'").arg(orientString));
+            delete furniture;
+            return 0;
+        }
+        furniture->setFurnitureTile(mFurnitureTiles.at(index)->tile(orient));
+        object = furniture;
     } else {
         xml.raiseError(tr("Unknown object type '%1'").arg(type));
         return 0;

@@ -147,7 +147,7 @@ public:
 class FurnitureObject : public BuildingObject
 {
 public:
-    FurnitureObject(BuildingFloor *floor, int x, int y, Direction dir);
+    FurnitureObject(BuildingFloor *floor, int x, int y);
 
     QRect bounds() const;
 

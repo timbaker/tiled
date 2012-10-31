@@ -87,6 +87,11 @@ public:
 class FurnitureTiles
 {
 public:
+    FurnitureTiles()
+    {
+        mTiles[0] = mTiles[1] = mTiles[2] = mTiles[3] = 0;
+    }
+
     ~FurnitureTiles()
     {
         delete mTiles[0];
@@ -142,7 +147,7 @@ public:
     QString errorString()
     { return mError; }
 
-    FurnitureTile::FurnitureOrientation orientFromString(const QString &s);
+    static FurnitureTile::FurnitureOrientation orientFromString(const QString &s);
 
 private:
     static FurnitureGroups *mInstance;

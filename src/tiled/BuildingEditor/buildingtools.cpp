@@ -615,8 +615,7 @@ void FurnitureTool::placeObject()
     BuildingFloor *floor = mEditor->document()->currentFloor();
     FurnitureObject *object = new FurnitureObject(floor,
                                                   mCursorObject->x(),
-                                                  mCursorObject->y(),
-                                                  mCursorObject->dir());
+                                                  mCursorObject->y());
     object->setFurnitureTile(mCurrentTile);
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                          floor,
@@ -636,6 +635,7 @@ void FurnitureTool::updateCursorObject()
         mCursorItem->setVisible(true);
 
     int x = mTilePos.x(), y = mTilePos.y();
+#if 0
     BuildingObject::Direction dir = BuildingObject::Invalid;
     switch (mCurrentTile->mOrient) {
     case FurnitureTile::FurnitureW: dir = BuildingObject::W; break;
@@ -643,16 +643,18 @@ void FurnitureTool::updateCursorObject()
     case FurnitureTile::FurnitureE: dir = BuildingObject::E; break;
     case FurnitureTile::FurnitureS: dir = BuildingObject::S; break;
     }
-
+#endif
     if (!mCursorObject) {
         BuildingFloor *floor = 0; //mEditor->document()->currentFloor();
-        FurnitureObject *object = new FurnitureObject(floor, x, y, dir);
+        FurnitureObject *object = new FurnitureObject(floor, x, y);
         object->setFurnitureTile(mCurrentTile);
         mCursorObject = object;
     }
     // mCursorDoor->setFloor()
     mCursorObject->setPos(x, y);
+#if 0
     mCursorObject->setDir(dir);
+#endif
 
     setCursorObject(mCursorObject);
 }

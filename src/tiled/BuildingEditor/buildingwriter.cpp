@@ -22,6 +22,7 @@
 #include "buildingobjects.h"
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
+#include "furnituregroups.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -82,6 +83,8 @@ public:
         w.writeAttribute(QLatin1String("Window"), building->windowTile()->name());
         w.writeAttribute(QLatin1String("Stairs"), building->stairsTile()->name());
 
+        writeFurniture(w);
+
         foreach (Room *room, building->rooms())
             writeRoom(w, room);
 
@@ -104,6 +107,50 @@ public:
         w.writeAttribute(QLatin1String("InteriorWall"), room->Wall->name());
         w.writeAttribute(QLatin1String("Floor"), room->Floor->name());
         w.writeEndElement(); // </room>
+    }
+
+    void writeFurniture(QXmlStreamWriter &w)
+    {
+        foreach (BuildingFloor *floor, mBuilding->floors()) {
+            foreach (BuildingObject *object, floor->objects()) {
+                if (FurnitureObject *furniture = dynamic_cast<FurnitureObject*>(object)) {
+                    FurnitureTiles *ftiles = furniture->furnitureTile()->owner();
+                    if (!mFurnitureTiles.contains(ftiles))
+                        mFurnitureTiles += ftiles;
+                }
+            }
+        }
+
+        foreach (FurnitureTiles *ftiles, mFurnitureTiles) {
+            w.writeStartElement(QLatin1String("furniture"));
+            writeFurnitureTile(w, ftiles->mTiles[0]);
+            writeFurnitureTile(w, ftiles->mTiles[1]);
+            writeFurnitureTile(w, ftiles->mTiles[2]);
+            writeFurnitureTile(w, ftiles->mTiles[3]);
+            w.writeEndElement(); // </furniture>
+        }
+    }
+
+    void writeFurnitureTile(QXmlStreamWriter &w, FurnitureTile *ftile)
+    {
+        w.writeStartElement(QLatin1String("entry"));
+        w.writeAttribute(QLatin1String("orient"), ftile->orientToString());
+        writeFurnitureTile(w, 0, 0, ftile->mTiles[0]);
+        writeFurnitureTile(w, 1, 0, ftile->mTiles[1]);
+        writeFurnitureTile(w, 0, 1, ftile->mTiles[2]);
+        writeFurnitureTile(w, 1, 1, ftile->mTiles[3]);
+        w.writeEndElement(); // </entry>
+    }
+
+    void writeFurnitureTile(QXmlStreamWriter &w, int x, int y, BuildingTile *btile)
+    {
+        if (!btile)
+            return;
+        w.writeStartElement(QLatin1String("tile"));
+        w.writeAttribute(QLatin1String("x"), QString::number(x));
+        w.writeAttribute(QLatin1String("y"), QString::number(y));
+        w.writeAttribute(QLatin1String("name"), btile->name());
+        w.writeEndElement(); // </tile>
     }
 
     void writeFloor(QXmlStreamWriter &w, BuildingFloor *floor)
@@ -138,6 +185,7 @@ public:
     void writeObject(QXmlStreamWriter &w, BuildingObject *object)
     {
         w.writeStartElement(QLatin1String("object"));
+        bool writeDir = true, writeTile = true;
         if (Door *door = dynamic_cast<Door*>(object)) {
             w.writeAttribute(QLatin1String("type"), QLatin1String("door"));
             w.writeAttribute(QLatin1String("FrameTile"), door->frameTile()->name());
@@ -145,16 +193,30 @@ public:
             w.writeAttribute(QLatin1String("type"), QLatin1String("window"));
         else if (dynamic_cast<Stairs*>(object))
             w.writeAttribute(QLatin1String("type"), QLatin1String("stairs"));
+        else if (FurnitureObject *furniture = dynamic_cast<FurnitureObject*>(object)) {
+            w.writeAttribute(QLatin1String("type"), QLatin1String("furniture"));
+
+            FurnitureTile *ftile = furniture->furnitureTile();
+            int index = mFurnitureTiles.indexOf(ftile->owner());
+            w.writeAttribute(QLatin1String("FurnitureTiles"), QString::number(index));
+            w.writeAttribute(QLatin1String("orient"), ftile->orientToString());
+
+            writeDir = false;
+            writeTile = false;
+        }
         w.writeAttribute(QLatin1String("x"), QString::number(object->x()));
         w.writeAttribute(QLatin1String("y"), QString::number(object->y()));
-        w.writeAttribute(QLatin1String("dir"), object->dirString());
-        w.writeAttribute(QLatin1String("Tile"), object->tile()->name());
+        if (writeDir)
+            w.writeAttribute(QLatin1String("dir"), object->dirString());
+        if (writeTile)
+            w.writeAttribute(QLatin1String("Tile"), object->tile()->name());
         w.writeEndElement(); // </object>
     }
 
     Building *mBuilding;
     QString mError;
     QDir mMapDir;
+    QList<FurnitureTiles*> mFurnitureTiles;
 };
 
 /////

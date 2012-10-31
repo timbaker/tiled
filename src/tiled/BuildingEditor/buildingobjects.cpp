@@ -173,9 +173,8 @@ int Stairs::getOffset(int x, int y)
     return -1;
 }
 
-FurnitureObject::FurnitureObject(BuildingFloor *floor, int x, int y,
-                                 BuildingObject::Direction dir) :
-    BuildingObject(floor, x, y, dir),
+FurnitureObject::FurnitureObject(BuildingFloor *floor, int x, int y) :
+    BuildingObject(floor, x, y, Invalid),
     mFurnitureTile(0)
 {
 
