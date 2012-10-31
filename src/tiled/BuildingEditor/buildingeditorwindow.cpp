@@ -755,8 +755,28 @@ void BuildingEditorWindow::furnitureSelectionChanged()
     QModelIndexList indexes = ui->furnitureView->selectionModel()->selectedIndexes();
     if (indexes.count() == 1) {
         QModelIndex index = indexes.first();
-        if (FurnitureTile *ftile = ui->furnitureView->model()->tileAt(index))
+        if (FurnitureTile *ftile = ui->furnitureView->model()->tileAt(index)) {
             FurnitureTool::instance()->setCurrentTile(ftile);
+
+            // Assign the new tile to selected objects
+            QList<FurnitureObject*> objects;
+            foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
+                if (FurnitureObject *furniture = dynamic_cast<FurnitureObject*>(object)) {
+                    if (furniture->furnitureTile() != ftile)
+                        objects += furniture;
+                }
+            }
+
+            if (objects.count() > 1)
+                mCurrentDocument->undoStack()->beginMacro(tr("Change Furniture Tile"));
+            foreach (FurnitureObject *furniture, objects)
+                mCurrentDocument->undoStack()->push(new ChangeFurnitureTile(mCurrentDocument,
+                                                                            furniture,
+                                                                            ftile));
+            if (objects.count() > 1)
+                mCurrentDocument->undoStack()->endMacro();
+
+        }
     }
     updateActions();
 }

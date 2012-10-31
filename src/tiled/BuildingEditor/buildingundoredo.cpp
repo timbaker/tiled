@@ -401,3 +401,20 @@ void FlipBuilding::swap()
 }
 
 /////
+
+ChangeFurnitureTile::ChangeFurnitureTile(BuildingDocument *doc,
+                                         FurnitureObject *object,
+                                         FurnitureTile *ftile) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Furniture Tile")),
+    mDocument(doc),
+    mObject(object),
+    mTile(ftile)
+{
+}
+
+void ChangeFurnitureTile::swap()
+{
+    mTile = mDocument->changeFurnitureTile(mObject, mTile);
+}
+
+/////

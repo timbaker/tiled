@@ -405,6 +405,8 @@ void FloorEditor::setDocument(BuildingDocument *doc)
                 SLOT(objectAboutToBeRemoved(BuildingObject*)));
         connect(mDocument, SIGNAL(objectMoved(BuildingObject*)),
                 SLOT(objectMoved(BuildingObject*)));
+        connect(mDocument, SIGNAL(objectTileChanged(BuildingObject*)),
+                SLOT(objectTileChanged(BuildingObject*)));
         connect(mDocument, SIGNAL(selectedObjectsChanged()),
                 SLOT(selectedObjectsChanged()));
 
@@ -590,6 +592,15 @@ void FloorEditor::objectMoved(BuildingObject *object)
     GraphicsObjectItem *item = itemForObject(object);
     Q_ASSERT(item);
     item->synchWithObject();
+}
+
+void FloorEditor::objectTileChanged(BuildingObject *object)
+{
+    // FurnitureObject might change size/orientation so redisplay
+    GraphicsObjectItem *item = itemForObject(object);
+    Q_ASSERT(item);
+    item->synchWithObject();
+    item->update();
 }
 
 void FloorEditor::selectedObjectsChanged()

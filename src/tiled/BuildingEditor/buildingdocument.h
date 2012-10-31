@@ -32,6 +32,8 @@ class Building;
 class BuildingFloor;
 class BuildingTile;
 class Door;
+class FurnitureObject;
+class FurnitureTile;
 class Room;
 class Window;
 
@@ -93,6 +95,8 @@ public:
                                           const QVector<QVector<Room *> > &grid);
     void rotateBuilding(bool right);
     void flipBuilding(bool horizontal);
+
+    FurnitureTile *changeFurnitureTile(FurnitureObject *object, FurnitureTile *ftile);
     // -UNDO/REDO
     
 signals:

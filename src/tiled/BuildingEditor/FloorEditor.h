@@ -175,6 +175,7 @@ private slots:
     void objectAdded(BuildingObject *object);
     void objectAboutToBeRemoved(BuildingObject *object);
     void objectMoved(BuildingObject *object);
+    void objectTileChanged(BuildingObject *object);
     void selectedObjectsChanged();
 
     void roomChanged(Room *room);

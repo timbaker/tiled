@@ -235,3 +235,11 @@ void BuildingDocument::flipBuilding(bool horizontal)
         floor->flip(horizontal);
     emit buildingRotated();
 }
+
+FurnitureTile *BuildingDocument::changeFurnitureTile(FurnitureObject *object, FurnitureTile *ftile)
+{
+    FurnitureTile *old = object->furnitureTile();
+    object->setFurnitureTile(ftile);
+    emit objectTileChanged(object);
+    return old;
+}

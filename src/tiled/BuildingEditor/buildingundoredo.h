@@ -30,6 +30,8 @@ class BuildingDocument;
 class BuildingFloor;
 class BuildingTile;
 class Door;
+class FurnitureObject;
+class FurnitureTile;
 class Room;
 class Window;
 
@@ -381,6 +383,23 @@ private:
 
     BuildingDocument *mDocument;
     bool mHorizontal;
+};
+
+class ChangeFurnitureTile : public QUndoCommand
+{
+public:
+    ChangeFurnitureTile(BuildingDocument *doc, FurnitureObject *object,
+                        FurnitureTile *ftile);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    FurnitureObject *mObject;
+    FurnitureTile *mTile;
 };
 
 } // namespace BuildingEditor
