@@ -484,6 +484,184 @@ group
 group
 {
     label = Fixtures - Sinks
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = fixtures_sinks_01_001
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_sinks_01_002
+        }
+        entry
+        {
+            orient = E
+            0,0 = fixtures_sinks_01_003
+        }
+        entry
+        {
+            orient = S
+            0,0 = fixtures_sinks_01_000
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = fixtures_sinks_01_004
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_sinks_01_005
+        }
+        entry
+        {
+            orient = E
+            0,0 = fixtures_sinks_01_006
+        }
+        entry
+        {
+            orient = S
+            0,0 = fixtures_sinks_01_007
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = fixtures_sinks_01_008
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_sinks_01_009
+        }
+        entry
+        {
+            orient = E
+            0,0 = fixtures_sinks_01_010
+        }
+        entry
+        {
+            orient = S
+            0,0 = fixtures_sinks_01_011
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = fixtures_sinks_01_013
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_sinks_01_012
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = fixtures_sinks_01_015
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_sinks_01_014
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = fixtures_sinks_01_016
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_sinks_01_017
+        }
+        entry
+        {
+            orient = E
+            0,0 = fixtures_sinks_01_018
+        }
+        entry
+        {
+            orient = S
+            0,0 = fixtures_sinks_01_019
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = fixtures_sinks_01_021
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_sinks_01_022
+        }
+        entry
+        {
+            orient = E
+            0,0 = fixtures_sinks_01_023
+        }
+        entry
+        {
+            orient = S
+            0,0 = fixtures_sinks_01_020
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = fixtures_sinks_01_025
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_sinks_01_024
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
 }
 group
 {
@@ -1564,14 +1742,10 @@ group
         entry
         {
             orient = E
-            0,0 = furniture_tables_high_01_003
-            0,1 = furniture_tables_high_01_002
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_high_01_000
-            1,0 = furniture_tables_high_01_001
         }
     }
     furniture
@@ -1591,14 +1765,10 @@ group
         entry
         {
             orient = E
-            0,0 = furniture_tables_high_01_011
-            0,1 = furniture_tables_high_01_010
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_high_01_008
-            1,0 = furniture_tables_high_01_009
         }
     }
     furniture
@@ -1618,14 +1788,10 @@ group
         entry
         {
             orient = E
-            0,0 = furniture_tables_high_01_018
-            0,1 = furniture_tables_high_01_017
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_high_01_019
-            1,0 = furniture_tables_high_01_020
         }
     }
     furniture
@@ -1638,17 +1804,14 @@ group
         entry
         {
             orient = N
-            0,0 = furniture_tables_high_01_016
         }
         entry
         {
             orient = E
-            0,0 = furniture_tables_high_01_016
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_high_01_016
         }
     }
     furniture
@@ -1666,12 +1829,10 @@ group
         entry
         {
             orient = E
-            0,0 = furniture_tables_high_01_005
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_high_01_004
         }
     }
     furniture
@@ -1689,12 +1850,10 @@ group
         entry
         {
             orient = E
-            0,0 = furniture_tables_high_01_012
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_high_01_013
         }
     }
     furniture
@@ -1712,12 +1871,10 @@ group
         entry
         {
             orient = E
-            0,0 = furniture_tables_high_01_022
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_high_01_021
         }
     }
     furniture
@@ -1730,17 +1887,14 @@ group
         entry
         {
             orient = N
-            0,0 = furniture_tables_high_01_006
         }
         entry
         {
             orient = E
-            0,0 = furniture_tables_high_01_006
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_high_01_006
         }
     }
     furniture
@@ -1753,17 +1907,14 @@ group
         entry
         {
             orient = N
-            0,0 = furniture_tables_high_01_007
         }
         entry
         {
             orient = E
-            0,0 = furniture_tables_high_01_007
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_high_01_007
         }
     }
     furniture
@@ -1776,17 +1927,14 @@ group
         entry
         {
             orient = N
-            0,0 = furniture_tables_high_01_014
         }
         entry
         {
             orient = E
-            0,0 = furniture_tables_high_01_014
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_high_01_014
         }
     }
     furniture
@@ -1799,17 +1947,14 @@ group
         entry
         {
             orient = N
-            0,0 = furniture_tables_high_01_015
         }
         entry
         {
             orient = E
-            0,0 = furniture_tables_high_01_015
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_high_01_015
         }
     }
     furniture
@@ -1856,14 +2001,10 @@ group
         entry
         {
             orient = E
-            0,0 = furniture_tables_high_01_049
-            0,1 = furniture_tables_high_01_048
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_high_01_050
-            1,0 = furniture_tables_high_01_051
         }
     }
     furniture
@@ -1883,14 +2024,10 @@ group
         entry
         {
             orient = E
-            0,0 = furniture_tables_high_01_055
-            0,1 = furniture_tables_high_01_054
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_high_01_052
-            1,0 = furniture_tables_high_01_053
         }
     }
 }
@@ -1933,12 +2070,10 @@ group
         entry
         {
             orient = E
-            0,0 = furniture_tables_low_01_002
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_low_01_003
         }
     }
     furniture
@@ -1958,14 +2093,10 @@ group
         entry
         {
             orient = E
-            0,0 = furniture_tables_low_01_007
-            0,1 = furniture_tables_low_01_006
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_low_01_005
-            1,0 = furniture_tables_low_01_004
         }
     }
     furniture
@@ -1985,64 +2116,10 @@ group
         entry
         {
             orient = E
-            0,0 = furniture_tables_low_01_011
-            0,1 = furniture_tables_low_01_010
         }
         entry
         {
             orient = S
-            0,0 = furniture_tables_low_01_008
-            1,0 = furniture_tables_low_01_009
-        }
-    }
-}
-group
-{
-    label = Rugs
-    furniture
-    {
-        entry
-        {
-            orient = SW
-            0,0 = floors_rugs_01_006
-        }
-        entry
-        {
-            orient = NW
-            0,0 = floors_rugs_01_000
-        }
-        entry
-        {
-            orient = NE
-            0,0 = floors_rugs_01_001
-        }
-        entry
-        {
-            orient = SE
-            0,0 = floors_rugs_01_007
-        }
-    }
-    furniture
-    {
-        entry
-        {
-            orient = W
-            0,0 = floors_rugs_01_002
-        }
-        entry
-        {
-            orient = N
-            0,0 = floors_rugs_01_005
-        }
-        entry
-        {
-            orient = E
-            0,0 = floors_rugs_01_003
-        }
-        entry
-        {
-            orient = S
-            0,0 = floors_rugs_01_004
         }
     }
 }
