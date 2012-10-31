@@ -207,6 +207,30 @@
     <string>Switch between corners and edges</string>
    </property>
   </action>
+  <action name="actionMoveCategoryUp">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/go-up.png</normaloff>:/images/16x16/go-up.png</iconset>
+   </property>
+   <property name="text">
+    <string>Move Category Up</string>
+   </property>
+   <property name="toolTip">
+    <string>Move selected category up the list</string>
+   </property>
+  </action>
+  <action name="actionMoveCategoryDown">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/go-down.png</normaloff>:/images/16x16/go-down.png</iconset>
+   </property>
+   <property name="text">
+    <string>Move Category Down</string>
+   </property>
+   <property name="toolTip">
+    <string>Move selected category down the list</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

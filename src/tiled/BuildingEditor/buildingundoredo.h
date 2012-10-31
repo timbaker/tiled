@@ -385,10 +385,10 @@ private:
     bool mHorizontal;
 };
 
-class ChangeFurnitureTile : public QUndoCommand
+class ChangeFurnitureObjectTile : public QUndoCommand
 {
 public:
-    ChangeFurnitureTile(BuildingDocument *doc, FurnitureObject *object,
+    ChangeFurnitureObjectTile(BuildingDocument *doc, FurnitureObject *object,
                         FurnitureTile *ftile);
 
     void undo() { swap(); }

@@ -135,6 +135,9 @@ public:
     const QList<BuildingTileCategory*> &categories() const
     { return mCategories; }
 
+    int categoryCount() const
+    { return mCategories.count(); }
+
     BuildingTileCategory *category(const QString &name) const
     {
         if (mCategoryByName.contains(name))

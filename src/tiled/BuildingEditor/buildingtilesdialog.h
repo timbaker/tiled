@@ -73,6 +73,7 @@ private:
     void setFurnitureTiles();
     void saveSplitterSizes(QSplitter *splitter);
     void restoreSplitterSizes(QSplitter *splitter);
+    int numTileCategories() const;
 
 private slots:
     void categoryChanged(int index);
@@ -90,6 +91,10 @@ private slots:
 
     void newCategory();
     void removeCategory();
+
+    void moveCategoryUp();
+    void moveCategoryDown();
+
     void toggleCorners();
 
     void accept();
@@ -101,6 +106,7 @@ private:
     FurnitureGroup *mFurnitureGroup;
     QUndoGroup *mUndoGroup;
     QUndoStack *mUndoStack;
+    bool mChanges;
 };
 
 } // namespace BuildingEditor

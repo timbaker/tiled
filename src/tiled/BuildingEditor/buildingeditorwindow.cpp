@@ -770,7 +770,7 @@ void BuildingEditorWindow::furnitureSelectionChanged()
             if (objects.count() > 1)
                 mCurrentDocument->undoStack()->beginMacro(tr("Change Furniture Tile"));
             foreach (FurnitureObject *furniture, objects)
-                mCurrentDocument->undoStack()->push(new ChangeFurnitureTile(mCurrentDocument,
+                mCurrentDocument->undoStack()->push(new ChangeFurnitureObjectTile(mCurrentDocument,
                                                                             furniture,
                                                                             ftile));
             if (objects.count() > 1)

@@ -141,6 +141,9 @@ public:
     const QList<FurnitureGroup*> groups() const
     { return mGroups; }
 
+    int groupCount() const
+    { return mGroups.count(); }
+
     int indexOf(FurnitureGroup *group) const
     { return mGroups.indexOf(group); }
 
