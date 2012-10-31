@@ -236,11 +236,11 @@ void FurnitureObject::rotate(bool right)
     if (mX < 0)
         mX = 0;
     if (mX + newTile->size().width() > mFloor->width())
-        mX -= 1;
+        mX = mFloor->width() - newTile->size().width();
     if (mY < 0)
         mY = 0;
     if (mY + newTile->size().height() > mFloor->height())
-        mY -= 1;
+        mY = mFloor->height() - newTile->size().height();
 
     mFurnitureTile = newTile;
 }
@@ -248,7 +248,7 @@ void FurnitureObject::rotate(bool right)
 void FurnitureObject::flip(bool horizontal)
 {
     if (horizontal) {
-        mX = mFloor->width() - mX - mFurnitureTile->size().width();
+        int oldWidth = mFurnitureTile->size().width();
         if (mFurnitureTile->isW())
             mFurnitureTile = mFurnitureTile->owner()->mTiles[FurnitureTile::FurnitureE];
         else if (mFurnitureTile->isE())
@@ -261,8 +261,9 @@ void FurnitureObject::flip(bool horizontal)
             mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureSE);
         else if (mFurnitureTile->isSE())
             mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureSW);
+        mX = mFloor->width() - mX - qMax(oldWidth, mFurnitureTile->size().width());
     } else {
-        mY = mFloor->height() - mY - mFurnitureTile->size().height();
+        int oldHeight = mFurnitureTile->size().height();
         if (mFurnitureTile->isN())
             mFurnitureTile = mFurnitureTile->owner()->mTiles[FurnitureTile::FurnitureS];
         else if (mFurnitureTile->isS())
@@ -275,6 +276,7 @@ void FurnitureObject::flip(bool horizontal)
             mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureSE);
         else if (mFurnitureTile->isSE())
             mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureNE);
+        mY = mFloor->height() - mY - qMax(oldHeight, mFurnitureTile->size().height());
     }
 }
 
