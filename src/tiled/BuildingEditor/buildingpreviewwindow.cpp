@@ -119,12 +119,14 @@ void BuildingPreviewWindow::closeEvent(QCloseEvent *event)
 void BuildingPreviewWindow::setDocument(BuildingDocument *doc)
 {
     mDocument = doc;
-
+    updateActions();
     mScene->setDocument(doc);
 }
 
 void BuildingPreviewWindow::clearDocument()
 {
+    mDocument = 0;
+    updateActions();
     mScene->clearDocument();
 }
 
@@ -188,6 +190,7 @@ bool BuildingPreviewWindow::exportTMX(const QString &fileName)
 
 void BuildingPreviewWindow::updateActions()
 {
+    ui->actionShowWalls->setEnabled(mDocument != 0);
     ui->actionZoomIn->setEnabled(mView->zoomable()->canZoomIn());
     ui->actionZoomOut->setEnabled(mView->zoomable()->canZoomOut());
     ui->actionNormalSize->setEnabled(mView->zoomable()->scale() != 1.0);

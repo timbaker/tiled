@@ -268,6 +268,7 @@ void BuildingEditorWindow::showEvent(QShowEvent *event)
 void BuildingEditorWindow::closeEvent(QCloseEvent *event)
 {
     if (confirmAllSave()) {
+        clearDocument();
         writeSettings();
         if (mPreviewWin) {
             mPreviewWin->writeSettings();
@@ -1147,6 +1148,22 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         PencilTool::instance()->makeCurrent();
 
     updateWindowTitle();
+}
+
+void BuildingEditorWindow::clearDocument()
+{
+    if (mCurrentDocument) {
+        roomEditor->clearDocument();
+        mPreviewWin->clearDocument();
+        mUndoGroup->removeStack(mCurrentDocument->undoStack());
+        delete mCurrentDocument->building();
+        delete mCurrentDocument;
+        mCurrentDocument = 0;
+        updateRoomComboBox();
+        resizeCoordsLabel();
+        updateActions();
+        updateWindowTitle();
+    }
 }
 
 void BuildingEditorWindow::updateWindowTitle()

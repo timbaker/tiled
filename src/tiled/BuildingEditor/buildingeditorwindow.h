@@ -105,6 +105,7 @@ private:
     bool confirmSave();
 
     void addDocument(BuildingDocument *doc);
+    void clearDocument();
 
     void currentEWallChanged(Tiled::Tile *tile);
     void currentIWallChanged(Tiled::Tile *tile);
