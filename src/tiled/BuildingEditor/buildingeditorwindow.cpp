@@ -281,7 +281,7 @@ void BuildingEditorWindow::closeEvent(QCloseEvent *event)
 
 bool BuildingEditorWindow::confirmAllSave()
 {
-    return true;
+    return confirmSave();
 }
 
 // Called by Tiled::Internal::MainWindow::closeEvent
