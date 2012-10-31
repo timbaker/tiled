@@ -197,15 +197,21 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 //    keys += QKeySequence(tr("Ctrl+="));
     keys += QKeySequence(tr("+"));
     ui->actionZoomIn->setShortcuts(keys);
+    mView->addAction(ui->actionZoomIn);
+    ui->actionZoomIn->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     keys = QKeySequence::keyBindings(QKeySequence::ZoomOut);
     keys += QKeySequence(tr("-"));
     ui->actionZoomOut->setShortcuts(keys);
+    mView->addAction(ui->actionZoomOut);
+    ui->actionZoomOut->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     keys.clear();
     keys += QKeySequence(tr("Ctrl+0"));
     keys += QKeySequence(tr("0"));
     ui->actionNormalSize->setShortcuts(keys);
+    mView->addAction(ui->actionNormalSize);
+    ui->actionNormalSize->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     connect(ui->actionResize, SIGNAL(triggered()), SLOT(resizeBuilding()));
     connect(ui->actionFlipHorizontal, SIGNAL(triggered()), SLOT(flipHorizontal()));

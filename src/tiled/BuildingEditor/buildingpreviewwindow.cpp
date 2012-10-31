@@ -41,6 +41,7 @@
 #include "zlevelrenderer.h"
 
 #include <QMessageBox>
+#include <QSettings>
 #include <QStyleOptionGraphicsItem>
 #include <QWheelEvent>
 
@@ -70,6 +71,25 @@ BuildingPreviewWindow::BuildingPreviewWindow(QWidget *parent) :
     ui->actionShowWalls->setChecked(showWalls);
     connect(ui->actionShowWalls, SIGNAL(toggled(bool)),
             mScene, SLOT(showWalls(bool)));
+
+    QList<QKeySequence> keys = QKeySequence::keyBindings(QKeySequence::ZoomIn);
+    keys += QKeySequence(tr("+"));
+    ui->actionZoomIn->setShortcuts(keys);
+    mView->addAction(ui->actionZoomIn);
+    ui->actionZoomIn->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+
+    keys = QKeySequence::keyBindings(QKeySequence::ZoomOut);
+    keys += QKeySequence(tr("-"));
+    ui->actionZoomOut->setShortcuts(keys);
+    mView->addAction(ui->actionZoomOut);
+    ui->actionZoomOut->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+
+    keys.clear();
+    keys += QKeySequence(tr("Ctrl+0"));
+    keys += QKeySequence(tr("0"));
+    ui->actionNormalSize->setShortcuts(keys);
+    mView->addAction(ui->actionNormalSize);
+    ui->actionNormalSize->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     connect(ui->actionZoomIn, SIGNAL(triggered()),
             mView->zoomable(), SLOT(zoomIn()));
