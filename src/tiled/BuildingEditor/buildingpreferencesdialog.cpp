@@ -18,11 +18,13 @@
 #include "buildingpreferencesdialog.h"
 #include "ui_buildingpreferencesdialog.h"
 
+#include "buildingpreferences.h"
+
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QSettings>
 
-static const char *KEY_TILES_DIR = "BuildingEditor/TilesDirectory";
+using namespace BuildingEditor;
 
 BuildingPreferencesDialog::BuildingPreferencesDialog(QWidget *parent) :
     QDialog(parent),
@@ -32,9 +34,12 @@ BuildingPreferencesDialog::BuildingPreferencesDialog(QWidget *parent) :
 
     connect(ui->browseTiles, SIGNAL(clicked()), SLOT(browseTiles()));
 
-    QString tilesDir = mSettings.value(QLatin1String(KEY_TILES_DIR)).toString();
+    QString tilesDir = BuildingPreferences::instance()->tilesDirectory();
     if (QDir(tilesDir).exists())
-        ui->editTiles->setText(mSettings.value(QLatin1String(KEY_TILES_DIR)).toString());
+        ui->editTiles->setText(QDir::toNativeSeparators(tilesDir));
+
+    QString configPath = BuildingPreferences::instance()->configPath();
+    ui->configDirEdit->setText(QDir::toNativeSeparators(configPath));
 }
 
 BuildingPreferencesDialog::~BuildingPreferencesDialog()
@@ -58,8 +63,7 @@ void BuildingPreferencesDialog::accept()
         return;
     }
 
-    QSettings settings;
-    settings.setValue(QLatin1String(KEY_TILES_DIR), ui->editTiles->text());
+    BuildingPreferences::instance()->setTilesDirectory(ui->editTiles->text());
 
     QDialog::accept();
 }

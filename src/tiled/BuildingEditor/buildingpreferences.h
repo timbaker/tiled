@@ -35,6 +35,7 @@ public:
     QString configPath() const;
     QString configPath(const QString &fileName) const;
 
+    void setTilesDirectory(const QString &path);
     QString tilesDirectory() const;
     
 signals:

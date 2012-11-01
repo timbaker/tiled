@@ -55,6 +55,12 @@ QString BuildingPreferences::configPath(const QString &fileName) const
     return configPath() + QLatin1Char('/') + fileName;
 }
 
+void BuildingPreferences::setTilesDirectory(const QString &path)
+{
+    mTilesDirectory = path;
+    mSettings.setValue(QLatin1String(KEY_TILES_DIR), mTilesDirectory);
+}
+
 QString BuildingPreferences::tilesDirectory() const
 {
     return mTilesDirectory;

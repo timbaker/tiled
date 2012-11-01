@@ -25,6 +25,8 @@ namespace Ui {
 class BuildingPreferencesDialog;
 }
 
+namespace BuildingEditor {
+
 class BuildingPreferencesDialog : public QDialog
 {
     Q_OBJECT
@@ -41,5 +43,7 @@ private:
     Ui::BuildingPreferencesDialog *ui;
     QSettings mSettings;
 };
+
+} // BuildingEditor
 
 #endif // BUILDINGPREFERENCESDIALOG_H

@@ -33,7 +33,7 @@
           <item>
            <widget class="QLabel" name="label_2">
             <property name="text">
-             <string>This is the directory containing all the tilesets listed in the MapBaseXMLLots.txt file.</string>
+             <string>This is the directory containing all the tilesets listed in the TMXConfig.txt file.</string>
             </property>
             <property name="wordWrap">
              <bool>true</bool>
@@ -64,6 +64,32 @@
              </widget>
             </item>
            </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
+          <string>Config Files</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <item>
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Changes you make in the Rooms, Templates, and Tiles dialogs are saved in files in this directory:</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="configDirEdit">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
