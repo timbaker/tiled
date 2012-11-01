@@ -76,8 +76,6 @@ public:
 
     bool Startup();
 
-    bool LoadBuildingTemplates();
-    bool LoadBuildingTiles();
     bool LoadMapBaseXMLLots();
     bool validateTile(BuildingTile *btile, const char *key);
 

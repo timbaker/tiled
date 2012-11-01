@@ -97,38 +97,10 @@ public:
     BuildingTiles();
     ~BuildingTiles();
 
-    BuildingTileCategory *addCategory(const QString &categoryName, const QString &label)
-    {
-        BuildingTileCategory *category = this->category(categoryName);
-        if (!category) {
-            category = new BuildingTileCategory(categoryName, label);
-            mCategories += category;
-            mCategoryByName[categoryName]= category;
-        }
-        return category;
-    }
+    BuildingTileCategory *addCategory(const QString &categoryName, const QString &label);
 
-    BuildingTile *add(const QString &categoryName, const QString &tileName)
-    {
-        BuildingTileCategory *category = this->category(categoryName);
-#if 0
-        if (!category) {
-            category = new Category(categoryName);
-            mCategories += category;
-            mCategoryByName[categoryName]= category;
-        }
-#endif
-        return category->add(tileName);
-    }
-
-    void add(const QString &categoryName, const QStringList &tileNames)
-    {
-        QVector<BuildingTile*> tiles;
-        foreach (QString tileName, tileNames)
-            tiles += add(categoryName, tileName);
-        foreach (BuildingTile *tile, tiles)
-            tile->mAlternates = tiles;
-    }
+    BuildingTile *add(const QString &categoryName, const QString &tileName);
+    void add(const QString &categoryName, const QStringList &tileNames);
 
     BuildingTile *get(const QString &categoryName, const QString &tileName);
 
@@ -167,6 +139,7 @@ public:
     QList<Tiled::Tileset*> tilesets() const
     { return mTilesetByName.values(); }
 
+    bool readBuildingTilesTxt();
     void writeBuildingTilesTxt(QWidget *parent = 0);
 
     BuildingTile *defaultExteriorWall() const;
@@ -186,12 +159,16 @@ public:
     BuildingTile *getStairsTile(const QString &tileName);
     BuildingTile *getFurnitureTile(const QString &tileName);
 
+    QString errorString() const
+    { return mError; }
+
 private:
     static BuildingTiles *mInstance;
     QList<BuildingTileCategory*> mCategories;
     QMap<QString,BuildingTileCategory*> mCategoryByName;
     QMap<QString,Tiled::Tileset*> mTilesetByName;
     BuildingTileCategory *mFurnitureCategory;
+    QString mError;
 };
 
 } // namespace BuildingEditor

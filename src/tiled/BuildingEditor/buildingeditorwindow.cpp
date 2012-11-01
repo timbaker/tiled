@@ -22,6 +22,7 @@
 #include "buildingdocument.h"
 #include "buildingfloor.h"
 #include "buildingobjects.h"
+#include "buildingpreferences.h"
 #include "buildingpreferencesdialog.h"
 #include "buildingpreviewwindow.h"
 #include "buildingundoredo.h"
@@ -29,6 +30,7 @@
 #include "buildingtemplatesdialog.h"
 #include "buildingtiles.h"
 #include "buildingtilesdialog.h"
+#include "buildingtmx.h"
 #include "buildingtools.h"
 #include "FloorEditor.h"
 #include "furnituregroups.h"
@@ -255,6 +257,8 @@ BuildingEditorWindow::~BuildingEditorWindow()
 {
     BuildingTemplates::deleteInstance();
     BuildingTiles::deleteInstance(); // Ensure all the tilesets are released
+    BuildingTMX::deleteInstance();
+    BuildingPreferences::deleteInstance();
     delete ui;
 }
 
@@ -303,21 +307,58 @@ bool BuildingEditorWindow::Startup()
     // Refresh the ui before blocking while loading tilesets etc
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 
+    // Create ~/.TileZed if needed.
+    QString configPath = BuildingPreferences::instance()->configPath();
+    QDir dir(configPath);
+    if (!dir.exists()) {
+        if (!dir.mkpath(configPath)) {
+            QMessageBox::critical(this, tr("It's no good, Jim!"),
+                                  tr("Failed to create config directory:\n%1")
+                                  .arg(QDir::toNativeSeparators(configPath)));
+            return false;
+        }
+    }
+
+    // Copy config files from the application directory to ~/.TileZed if they
+    // don't exist there.
+    static const char *configFiles[] = { "BuildingFurniture.txt",
+                                         "BuildingTiles.txt",
+                                         "BuildingTemplates.txt",
+                                         "TMXConfig.txt",
+                                         0 };
+    for (int i = 0; configFiles[i]; i++) {
+        QString fileName = configPath + QLatin1Char('/') + QLatin1String(configFiles[i]);
+        if (!QFileInfo(fileName).exists()) {
+            QString source = QCoreApplication::applicationDirPath() + QLatin1Char('/')
+                    + QLatin1String(configFiles[i]);
+            if (QFileInfo(source).exists()) {
+                if (!QFile::copy(source, fileName)) {
+                    QMessageBox::critical(this, tr("It's no good, Jim!"),
+                                          tr("Failed to copy file:\nFrom: %1\nTo: %2")
+                                          .arg(source).arg(fileName));
+                    return false;
+                }
+            }
+        }
+    }
+
     if (!LoadMapBaseXMLLots()) {
         if (!mError.isEmpty())
             QMessageBox::critical(this, tr("It's no good, Jim!"), mError);
         return false;
     }
 
-    if (!LoadBuildingTiles()) {
+    if (!BuildingTiles::instance()->readBuildingTilesTxt()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
-                              tr("Error while reading BuildingTiles.txt\n") + mError);
+                              tr("Error while reading BuildingTiles.txt\n")
+                              + BuildingTiles::instance()->errorString());
         return false;
     }
 
-    if (!LoadBuildingTemplates()) {
+    if (!BuildingTemplates::instance()->readBuildingTemplatesTxt()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
-                              tr("Error while reading BuildingTemplates.txt\n") + mError);
+                              tr("Error while reading BuildingTemplates.txt\n")
+                              + BuildingTemplates::instance()->errorString());
         return false;
     }
 
@@ -366,158 +407,26 @@ bool BuildingEditorWindow::Startup()
     return true;
 }
 
-bool BuildingEditorWindow::LoadBuildingTemplates()
-{
-    QFileInfo info(QCoreApplication::applicationDirPath() + QLatin1Char('/')
-                  + QLatin1String("BuildingTemplates.txt"));
-    if (!info.exists()) {
-        mError = tr("The BuildingTemplates.txt file doesn't exist.");
-        return false;
-    }
-
-    QString path = info.absoluteFilePath();
-    SimpleFile simple;
-    if (!simple.read(path)) {
-        mError = tr("Error reading %1.").arg(path);
-        return false;
-    }
-    BuildingTiles *btiles = BuildingTiles::instance();
-    foreach (SimpleFileBlock block, simple.blocks) {
-        if (block.name == QLatin1String("Template")) {
-            BuildingTemplate *def = new BuildingTemplate;
-            def->Name = block.value("Name");
-            def->Wall = btiles->getExteriorWall(block.value("Wall"));
-            def->DoorTile = btiles->getDoorTile(block.value("Door"));
-            def->DoorFrameTile = btiles->getDoorFrameTile(block.value("DoorFrame"));
-            def->WindowTile = btiles->getWindowTile(block.value("Window"));
-            def->StairsTile = btiles->getStairsTile(block.value("Stairs"));
-            foreach (SimpleFileBlock roomBlock, block.blocks) {
-                if (roomBlock.name == QLatin1String("Room")) {
-                    Room *room = new Room;
-                    room->Name = roomBlock.value("Name");
-                    QStringList rgb = roomBlock.value("Color").split(QLatin1String(" "), QString::SkipEmptyParts);
-                    room->Color = qRgb(rgb.at(0).toInt(),
-                                       rgb.at(1).toInt(),
-                                       rgb.at(2).toInt());
-                    room->Wall = btiles->getInteriorWall(roomBlock.value("Wall"));
-                    room->Floor = btiles->getFloorTile(roomBlock.value("Floor"));
-                    room->internalName = roomBlock.value("InternalName");
-                    def->RoomList += room;
-                } else {
-                    mError = tr("Unknown block name '%1': expected 'Room'.\n%2")
-                            .arg(roomBlock.name)
-                            .arg(path);
-                    return false;
-                }
-            }
-            BuildingTemplates::instance()->addTemplate(def);
-        } else {
-            mError = tr("Unknown block name '%1': expected 'Template'.\n%2")
-                    .arg(block.name)
-                    .arg(path);
-            return false;
-        }
-    }
-
-#if 0
-    if (BuildingTemplates::instance()->templateCount() == 0) {
-        QMessageBox::critical(this, tr("It's no good, Jim!"),
-                              tr("No buildings were defined in BuildingTemplates.txt."));
-        return false;
-    }
-#endif
-
-    return true;
-}
-
-bool BuildingEditorWindow::LoadBuildingTiles()
-{
-    QFileInfo info(QCoreApplication::applicationDirPath() + QLatin1Char('/')
-                  + QLatin1String("BuildingTiles.txt"));
-    if (!info.exists()) {
-        mError = tr("The BuildingTiles.txt file doesn't exist.");
-        return false;
-    }
-
-    QString path = info.canonicalFilePath();
-    SimpleFile simple;
-    if (!simple.read(path)) {
-        mError = tr("Error reading %1.").arg(path);
-        return false;
-    }
-
-    static const char *validCategoryNamesC[] = {
-        "exterior_walls", "interior_walls", "floors", "doors", "door_frames",
-        "windows", "stairs", 0
-    };
-    QStringList validCategoryNames;
-    for (int i = 0; validCategoryNamesC[i]; i++)
-        validCategoryNames << QLatin1String(validCategoryNamesC[i]);
-
-    foreach (SimpleFileBlock block, simple.blocks) {
-        if (block.name == QLatin1String("category")) {
-            QString categoryName = block.value("name");
-            if (!validCategoryNames.contains(categoryName)) {
-                mError = tr("Unknown category '%1' in BuildingTiles.txt.").arg(categoryName);
-                return false;
-            }
-
-            QString label = block.value("label");
-            BuildingTiles::instance()->addCategory(categoryName, label);
-            SimpleFileBlock tilesBlock = block.block("tiles");
-            foreach (SimpleFileKeyValue kv, tilesBlock.values) {
-                if (kv.name == QLatin1String("tile")) {
-                    QStringList values = kv.value.split(QLatin1Char(' '), QString::SkipEmptyParts);
-                    for (int i = 0; i < values.count(); i++)
-                        values[i] = BuildingTiles::normalizeTileName(values[i]);
-                    BuildingTiles::instance()->add(categoryName, values);
-                } else {
-                    mError = tr("Unknown value name '%1'.\n%2")
-                            .arg(kv.name)
-                            .arg(path);
-                    return false;
-                }
-            }
-            foreach (SimpleFileBlock rangeBlock, block.blocks) {
-                if (rangeBlock.name == QLatin1String("range")) {
-                    QString tilesetName = rangeBlock.value("tileset");
-                    int start = rangeBlock.value("start").toInt();
-                    int offset = rangeBlock.value("offset").toInt();
-                    QString countStr = rangeBlock.value("count");
-                    int count = BuildingTiles::instance()->tilesetFor(tilesetName)->tileCount(); // FIXME: tileset might not exist
-                    if (countStr != QLatin1String("all"))
-                        count = countStr.toInt();
-                    for (int i = start; i < start + count; i += offset)
-                        BuildingTiles::instance()->add(categoryName,
-                                                       BuildingTiles::nameForTile(tilesetName, i));
-                }
-            }
-        } else {
-            mError = tr("Unknown block name '%1'.\n%2")
-                    .arg(block.name)
-                    .arg(path);
-            return false;
-        }
-    }
-
-
-    // Check that all the tiles exist
-    foreach (BuildingTileCategory *category, BuildingTiles::instance()->categories()) {
-        foreach (BuildingTile *tile, category->tiles()) {
-            if (!BuildingTiles::instance()->tileFor(tile)) {
-                mError = tr("Tile %1 #%2 doesn't exist.")
-                        .arg(tile->mTilesetName)
-                        .arg(tile->mIndex);
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
-
 bool BuildingEditorWindow::LoadMapBaseXMLLots()
 {
+#if 1
+    // Make sure the user has chosen the Tiles directory.
+    QString tilesDirectory = BuildingPreferences::instance()->tilesDirectory();
+    QDir dir(tilesDirectory);
+    if (!dir.exists()) {
+        QMessageBox::information(this, tr("Choose Tiles Directory"),
+                                 tr("Please enter the Tiles directory in the Preferences."));
+        BuildingPreferencesDialog dialog(this);
+        if (dialog.exec() != QDialog::Accepted) {
+            mError.clear();
+            return false;
+        }
+    }
+
+    PROGRESS progress(tr("Reading TMXConfig.txt tilesets"), this);
+
+    return BuildingTMX::instance()->readTxt();
+#else
     // Make sure the user has chosen the Tiles directory.
     static const char *KEY_TILES_DIR = "BuildingEditor/TilesDirectory";
     QString tilesDirectory = mSettings.value(QLatin1String(KEY_TILES_DIR),
@@ -584,7 +493,7 @@ bool BuildingEditorWindow::LoadMapBaseXMLLots()
         mError = tr("Not a map file.\n%1").arg(path);
         return false;
     }
-
+#endif
     return true;
 }
 

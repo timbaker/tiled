@@ -24,6 +24,7 @@
 #include "buildingobjects.h"
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
+#include "buildingtmx.h"
 
 #include "mapcomposite.h"
 #include "mapmanager.h"
@@ -156,6 +157,15 @@ void BuildingPreviewWindow::writeSettings()
 
 bool BuildingPreviewWindow::exportTMX(const QString &fileName)
 {
+#if 1
+    if (!BuildingTMX::instance()->exportTMX(mDocument->building(),
+                                           mScene->mapComposite(),
+                                           fileName)) {
+        QMessageBox::critical(this, tr("Error Saving Map"),
+                              BuildingTMX::instance()->errorString());
+    }
+    return true;
+#else
     TmxMapWriter writer;
 
     foreach (BuildingFloor *floor, mDocument->building()->floors()) {
@@ -186,6 +196,7 @@ bool BuildingPreviewWindow::exportTMX(const QString &fileName)
         return false;
     }
     return true;
+#endif
 }
 
 void BuildingPreviewWindow::updateActions()
@@ -529,6 +540,23 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
         didResize = true;
     }
 
+#if 0
+    foreach (QString layerName, BuildingTMX::instance()->layers()) {
+        // If the layer name is 0_Vegetation, only add it on level 0
+        int level;
+        if (MapComposite::levelForLayer(layerName, &level)) {
+            if (level != floor->level())
+                continue;
+        } else {
+            layerName = tr("%1_%2").arg(floor->level()).arg(layerName);
+        }
+        TileLayer *tl = new TileLayer(layerName, 0, 0,
+                                      mapSize.width(), mapSize.height());
+        mMap->addLayer(tl);
+        mMapComposite->layerAdded(mMap->layerCount() - 1);
+    }
+
+#else
     TileLayer *tl = new TileLayer(tr("%1_Floor").arg(floor->level()), 0, 0,
                                   mapSize.width(), mapSize.height());
     mMap->addLayer(tl);
@@ -553,6 +581,7 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
                        mapSize.width(), mapSize.height());
     mMap->addLayer(tl);
     mMapComposite->layerAdded(mMap->layerCount() - 1);
+#endif
 
     CompositeLayerGroup *lg = mMapComposite->tileLayersForLevel(floor->level());
     CompositeLayerGroupItem *item = new CompositeLayerGroupItem(lg, mRenderer);
@@ -562,13 +591,13 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
     item->synchWithTileLayers();
     item->updateBounds();
     addItem(item);
-
+#if 0
     // Add an object layer for RoomDefs.  Objects are only added when
     // exporting to a TMX.
     ObjectGroup *objectGroup = new ObjectGroup(tr("%1_RoomDefs").arg(floor->level()),
                                                0, 0, mapSize.width(), mapSize.height());
     mMap->addLayer(objectGroup);
-
+#endif
     foreach (BuildingObject *object, floor->objects())
         objectAdded(object);
 

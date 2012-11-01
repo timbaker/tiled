@@ -459,13 +459,12 @@ MapComposite::~MapComposite()
     qDeleteAll(mLayerGroups);
 }
 
-bool MapComposite::levelForLayer(Layer *layer, int *levelPtr)
+bool MapComposite::levelForLayer(const QString &layerName, int *levelPtr)
 {
     if (levelPtr) (*levelPtr) = 0;
 
     // See if the layer name matches "0_foo" or "1_bar" etc.
-    const QString& name = layer->name();
-    QStringList sl = name.trimmed().split(QLatin1Char('_'));
+    QStringList sl = layerName.trimmed().split(QLatin1Char('_'));
     if (sl.count() > 1 && !sl[1].isEmpty()) {
         bool conversionOK;
         uint level = sl[0].toUInt(&conversionOK);
@@ -473,6 +472,11 @@ bool MapComposite::levelForLayer(Layer *layer, int *levelPtr)
         return conversionOK;
     }
     return false;
+}
+
+bool MapComposite::levelForLayer(Layer *layer, int *levelPtr)
+{
+    return levelForLayer(layer->name(), levelPtr);
 }
 
 MapComposite *MapComposite::addMap(MapInfo *mapInfo, const QPoint &pos, int levelOffset)

@@ -172,7 +172,9 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/buildingreader.cpp \
     BuildingEditor/resizebuildingdialog.cpp \
     BuildingEditor/furnitureview.cpp \
-    BuildingEditor/furnituregroups.cpp
+    BuildingEditor/furnituregroups.cpp \
+    BuildingEditor/buildingpreferences.cpp \
+    BuildingEditor/buildingtmx.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -310,7 +312,9 @@ HEADERS += aboutdialog.h \
     BuildingEditor/buildingreader.h \
     BuildingEditor/resizebuildingdialog.h \
     BuildingEditor/furnitureview.h \
-    BuildingEditor/furnituregroups.h
+    BuildingEditor/furnituregroups.h \
+    BuildingEditor/buildingpreferences.h \
+    BuildingEditor/buildingtmx.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

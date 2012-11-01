@@ -18,9 +18,11 @@
 #include "buildingtemplates.h"
 
 #include "buildingtiles.h"
+#include "buildingpreferences.h"
 #include "simplefile.h"
 
 #include <QCoreApplication>
+#include <QFileInfo>
 #include <QMessageBox>
 
 using namespace BuildingEditor;
@@ -64,6 +66,70 @@ void BuildingTemplates::replaceTemplates(const QList<BuildingTemplate *> &templa
         mTemplates += new BuildingTemplate(btemplate);
 }
 
+bool BuildingTemplates::readBuildingTemplatesTxt()
+{
+    QFileInfo info(BuildingPreferences::instance()
+                   ->configPath(QLatin1String("BuildingTemplates.txt")));
+    if (!info.exists()) {
+        mError = tr("The BuildingTemplates.txt file doesn't exist.");
+        return false;
+    }
+
+    QString path = info.absoluteFilePath();
+    SimpleFile simple;
+    if (!simple.read(path)) {
+        mError = tr("Error reading %1.").arg(path);
+        return false;
+    }
+    BuildingTiles *btiles = BuildingTiles::instance();
+    foreach (SimpleFileBlock block, simple.blocks) {
+        if (block.name == QLatin1String("Template")) {
+            BuildingTemplate *def = new BuildingTemplate;
+            def->Name = block.value("Name");
+            def->Wall = btiles->getExteriorWall(block.value("Wall"));
+            def->DoorTile = btiles->getDoorTile(block.value("Door"));
+            def->DoorFrameTile = btiles->getDoorFrameTile(block.value("DoorFrame"));
+            def->WindowTile = btiles->getWindowTile(block.value("Window"));
+            def->StairsTile = btiles->getStairsTile(block.value("Stairs"));
+            foreach (SimpleFileBlock roomBlock, block.blocks) {
+                if (roomBlock.name == QLatin1String("Room")) {
+                    Room *room = new Room;
+                    room->Name = roomBlock.value("Name");
+                    QStringList rgb = roomBlock.value("Color").split(QLatin1String(" "), QString::SkipEmptyParts);
+                    room->Color = qRgb(rgb.at(0).toInt(),
+                                       rgb.at(1).toInt(),
+                                       rgb.at(2).toInt());
+                    room->Wall = btiles->getInteriorWall(roomBlock.value("Wall"));
+                    room->Floor = btiles->getFloorTile(roomBlock.value("Floor"));
+                    room->internalName = roomBlock.value("InternalName");
+                    def->RoomList += room;
+                } else {
+                    mError = tr("Unknown block name '%1': expected 'Room'.\n%2")
+                            .arg(roomBlock.name)
+                            .arg(path);
+                    return false;
+                }
+            }
+            addTemplate(def);
+        } else {
+            mError = tr("Unknown block name '%1': expected 'Template'.\n%2")
+                    .arg(block.name)
+                    .arg(path);
+            return false;
+        }
+    }
+
+#if 0
+    if (BuildingTemplates::instance()->templateCount() == 0) {
+        QMessageBox::critical(this, tr("It's no good, Jim!"),
+                              tr("No buildings were defined in BuildingTemplates.txt."));
+        return false;
+    }
+#endif
+
+    return true;
+}
+
 void BuildingTemplates::writeBuildingTemplatesTxt(QWidget *parent)
 {
     SimpleFile simpleFile;
@@ -92,8 +158,8 @@ void BuildingTemplates::writeBuildingTemplatesTxt(QWidget *parent)
         }
         simpleFile.blocks += templateBlock;
     }
-    QString path = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + QLatin1String("BuildingTemplates.txt");
+    QString path = BuildingPreferences::instance()
+            ->configPath(QLatin1String("BuildingTemplates.txt"));
     if (!simpleFile.write(path)) {
         QMessageBox::warning(parent, tr("It's no good, Jim!"),
                              simpleFile.errorString());

@@ -18,6 +18,7 @@
 #include "buildingtiles.h"
 
 #include "buildingobjects.h"
+#include "buildingpreferences.h"
 #include "simplefile.h"
 
 #include "tilesetmanager.h"
@@ -60,6 +61,39 @@ BuildingTiles::~BuildingTiles()
     TilesetManager::instance()->removeReferences(tilesets());
     qDeleteAll(mCategories);
     delete mFurnitureCategory;
+}
+
+BuildingTileCategory *BuildingTiles::addCategory(const QString &categoryName, const QString &label)
+{
+    BuildingTileCategory *category = this->category(categoryName);
+    if (!category) {
+        category = new BuildingTileCategory(categoryName, label);
+        mCategories += category;
+        mCategoryByName[categoryName]= category;
+    }
+    return category;
+}
+
+BuildingTile *BuildingTiles::add(const QString &categoryName, const QString &tileName)
+{
+    BuildingTileCategory *category = this->category(categoryName);
+#if 0
+    if (!category) {
+        category = new Category(categoryName);
+        mCategories += category;
+        mCategoryByName[categoryName]= category;
+    }
+#endif
+    return category->add(tileName);
+}
+
+void BuildingTiles::add(const QString &categoryName, const QStringList &tileNames)
+{
+    QVector<BuildingTile*> tiles;
+    foreach (QString tileName, tileNames)
+        tiles += add(categoryName, tileName);
+    foreach (BuildingTile *tile, tiles)
+        tile->mAlternates = tiles;
 }
 
 BuildingTile *BuildingTiles::get(const QString &categoryName, const QString &tileName)
@@ -121,6 +155,92 @@ void BuildingTiles::addTileset(Tileset *tileset)
     TilesetManager::instance()->addReference(tileset);
 }
 
+bool BuildingTiles::readBuildingTilesTxt()
+{
+    QString fileName = BuildingPreferences::instance()
+            ->configPath(QLatin1String("BuildingTiles.txt"));
+    QFileInfo info(fileName);
+    if (!info.exists()) {
+        mError = tr("The BuildingTiles.txt file doesn't exist.");
+        return false;
+    }
+
+    QString path = info.canonicalFilePath();
+    SimpleFile simple;
+    if (!simple.read(path)) {
+        mError = tr("Error reading %1.").arg(path);
+        return false;
+    }
+
+    static const char *validCategoryNamesC[] = {
+        "exterior_walls", "interior_walls", "floors", "doors", "door_frames",
+        "windows", "stairs", 0
+    };
+    QStringList validCategoryNames;
+    for (int i = 0; validCategoryNamesC[i]; i++)
+        validCategoryNames << QLatin1String(validCategoryNamesC[i]);
+
+    foreach (SimpleFileBlock block, simple.blocks) {
+        if (block.name == QLatin1String("category")) {
+            QString categoryName = block.value("name");
+            if (!validCategoryNames.contains(categoryName)) {
+                mError = tr("Unknown category '%1' in BuildingTiles.txt.").arg(categoryName);
+                return false;
+            }
+
+            QString label = block.value("label");
+            addCategory(categoryName, label);
+            SimpleFileBlock tilesBlock = block.block("tiles");
+            foreach (SimpleFileKeyValue kv, tilesBlock.values) {
+                if (kv.name == QLatin1String("tile")) {
+                    QStringList values = kv.value.split(QLatin1Char(' '), QString::SkipEmptyParts);
+                    for (int i = 0; i < values.count(); i++)
+                        values[i] = BuildingTiles::normalizeTileName(values[i]);
+                    add(categoryName, values);
+                } else {
+                    mError = tr("Unknown value name '%1'.\n%2")
+                            .arg(kv.name)
+                            .arg(path);
+                    return false;
+                }
+            }
+            foreach (SimpleFileBlock rangeBlock, block.blocks) {
+                if (rangeBlock.name == QLatin1String("range")) {
+                    QString tilesetName = rangeBlock.value("tileset");
+                    int start = rangeBlock.value("start").toInt();
+                    int offset = rangeBlock.value("offset").toInt();
+                    QString countStr = rangeBlock.value("count");
+                    int count = tilesetFor(tilesetName)->tileCount(); // FIXME: tileset might not exist
+                    if (countStr != QLatin1String("all"))
+                        count = countStr.toInt();
+                    for (int i = start; i < start + count; i += offset)
+                        add(categoryName, BuildingTiles::nameForTile(tilesetName, i));
+                }
+            }
+        } else {
+            mError = tr("Unknown block name '%1'.\n%2")
+                    .arg(block.name)
+                    .arg(path);
+            return false;
+        }
+    }
+
+
+    // Check that all the tiles exist
+    foreach (BuildingTileCategory *category, categories()) {
+        foreach (BuildingTile *tile, category->tiles()) {
+            if (!tileFor(tile)) {
+                mError = tr("Tile %1 #%2 doesn't exist.")
+                        .arg(tile->mTilesetName)
+                        .arg(tile->mIndex);
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 void BuildingTiles::writeBuildingTilesTxt(QWidget *parent)
 {
     SimpleFile simpleFile;
@@ -139,9 +259,9 @@ void BuildingTiles::writeBuildingTilesTxt(QWidget *parent)
         categoryBlock.blocks += tileBlock;
         simpleFile.blocks += categoryBlock;
     }
-    QString path = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + QLatin1String("BuildingTiles.txt");
-    if (!simpleFile.write(path)) {
+    QString fileName = BuildingPreferences::instance()
+            ->configPath(QLatin1String("BuildingTiles.txt"));
+    if (!simpleFile.write(fileName)) {
         QMessageBox::warning(parent, tr("It's no good, Jim!"),
                              simpleFile.errorString());
     }

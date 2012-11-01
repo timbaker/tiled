@@ -118,11 +118,16 @@ public:
     BuildingTemplate *templateAt(int index) const
     { return mTemplates.at(index); }
 
+    bool readBuildingTemplatesTxt();
     void writeBuildingTemplatesTxt(QWidget *parent = 0);
+
+    QString errorString() const
+    { return mError; }
 
 private:
     static BuildingTemplates *mInstance;
     QList<BuildingTemplate*> mTemplates;
+    QString mError;
 };
 
 } // namespace BuildingEditor

@@ -17,6 +17,7 @@
 
 #include "furnituregroups.h"
 
+#include "buildingpreferences.h"
 #include "buildingtiles.h"
 #include "simplefile.h"
 
@@ -66,8 +67,8 @@ void FurnitureGroups::removeGroup(FurnitureGroup *group)
 
 bool FurnitureGroups::readTxt()
 {
-    QFileInfo info(QCoreApplication::applicationDirPath() + QLatin1Char('/')
-                  + QLatin1String("BuildingFurniture.txt"));
+    QFileInfo info(BuildingPreferences::instance()
+                   ->configPath(QLatin1String("BuildingFurniture.txt")));
     if (!info.exists()) {
         mError = tr("The BuildingFurniture.txt file doesn't exist.");
         return false;
@@ -204,8 +205,8 @@ bool FurnitureGroups::writeTxt()
         }
         simpleFile.blocks += groupBlock;
     }
-    QString path = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + QLatin1String("BuildingFurniture.txt");
+    QString path = BuildingPreferences::instance()
+            ->configPath(QLatin1String("BuildingFurniture.txt"));
     if (!simpleFile.write(path)) {
         mError = simpleFile.errorString();
         return false;
