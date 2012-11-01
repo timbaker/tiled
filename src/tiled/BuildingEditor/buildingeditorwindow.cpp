@@ -668,6 +668,9 @@ void BuildingEditorWindow::tileSelectionChanged()
 
 void BuildingEditorWindow::furnitureSelectionChanged()
 {
+    if (!mCurrentDocument)
+        return;
+
     QModelIndexList indexes = ui->furnitureView->selectionModel()->selectedIndexes();
     if (indexes.count() == 1) {
         QModelIndex index = indexes.first();
