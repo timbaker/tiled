@@ -152,6 +152,7 @@ public:
     QPointF tileToScene(const QPoint &tilePos);
     QRectF tileToSceneRect(const QPoint &tilePos);
     QRectF tileToSceneRect(const QRect &tileRect);
+    QRectF tileToSceneRectF(const QRectF &tileRect);
     bool currentFloorContains(const QPoint &tilePos);
 
     GraphicsObjectItem *itemForObject(BuildingObject *object);

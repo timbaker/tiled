@@ -243,3 +243,20 @@ FurnitureTile *BuildingDocument::changeFurnitureTile(FurnitureObject *object, Fu
     emit objectTileChanged(object);
     return old;
 }
+
+void BuildingDocument::resizeRoof(RoofObject *roof, int &length, int &thickness)
+{
+    int oldLength = (roof->dir() == BuildingObject::W)
+            ? roof->bounds().width()
+            : roof->bounds().height();
+    int oldThickness = (roof->dir() == BuildingObject::W)
+            ? roof->bounds().height()
+            : roof->bounds().width();
+
+    roof->resize(length, thickness);
+
+    emit objectMoved(roof);
+
+    length = oldLength;
+    thickness = oldThickness;
+}

@@ -125,6 +125,7 @@
    <addaction name="actionDoor"/>
    <addaction name="actionWindow"/>
    <addaction name="actionStairs"/>
+   <addaction name="actionRoof"/>
    <addaction name="actionFurniture"/>
    <addaction name="actionSelectObject"/>
    <addaction name="actionRooms"/>
@@ -491,6 +492,21 @@
    </property>
    <property name="toolTip">
     <string>Furniture tool</string>
+   </property>
+  </action>
+  <action name="actionRoof">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_roof.png</normaloff>:/BuildingEditor/icons/icon_roof.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add Roof</string>
+   </property>
+   <property name="toolTip">
+    <string>Place Roof</string>
    </property>
   </action>
  </widget>

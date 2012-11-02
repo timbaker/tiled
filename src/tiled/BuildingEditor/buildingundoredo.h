@@ -32,6 +32,7 @@ class BuildingTile;
 class Door;
 class FurnitureObject;
 class FurnitureTile;
+class RoofObject;
 class Room;
 class Window;
 
@@ -400,6 +401,24 @@ private:
     BuildingDocument *mDocument;
     FurnitureObject *mObject;
     FurnitureTile *mTile;
+};
+
+class ResizeRoof : public QUndoCommand
+{
+public:
+    ResizeRoof(BuildingDocument *doc, RoofObject *roof, int length,
+               int thickness);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    RoofObject *mObject;
+    int mLength;
+    int mThickness;
 };
 
 } // namespace BuildingEditor

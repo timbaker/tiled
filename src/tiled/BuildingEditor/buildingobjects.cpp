@@ -297,3 +297,113 @@ void FurnitureObject::setFurnitureTile(FurnitureTile *tile)
 }
 
 /////
+
+RoofObject::RoofObject(BuildingFloor *floor, int x, int y,
+                       BuildingObject::Direction dir, int length,
+                       int width1, int width2, int gap) :
+    BuildingObject(floor, x, y, dir),
+    mLength(length),
+    mWidth1(width1),
+    mWidth2(width2),
+    mGap(gap),
+    mMidTile(false)
+{
+}
+
+QRect RoofObject::bounds() const
+{
+    if (mDir == N)
+        return mMidTile ? QRect(mX - 1, mY, 3, mLength) // restricted to 3 tiles wide
+                        : QRect(mX - mWidth1, mY, mWidth1 + mWidth2 + mGap, mLength);
+    if (mDir == W)
+        return mMidTile ? QRect(mX, mY - 1, mLength, 3) // restricted to 3 tiles wide
+                        : QRect(mX, mY - mWidth1, mLength, mWidth1 + mWidth2 + mGap);
+    return QRect();
+}
+
+void RoofObject::rotate(bool right)
+{
+}
+
+void RoofObject::flip(bool horizontal)
+{
+}
+
+bool RoofObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
+{
+    if (!floor)
+        floor = mFloor;
+
+    // No +1 because roofs can't be on the outside edge of the building.
+    // However, the E or S cap wall tiles can be on the outside edge.
+    QRect floorBounds(0, 0, floor->width(), floor->height());
+    QRect objectBounds = bounds().translated(offset);
+    return (floorBounds & objectBounds) == objectBounds;
+}
+
+void RoofObject::resize(int length, int thickness)
+{
+    if (thickness <= 2) {
+        mWidth1 = mWidth2 = 1;
+        mGap = 0;
+        mMidTile = false;
+    } else if (thickness == 3) {
+        mWidth1 = mWidth2 = 1;
+        mGap = 0;
+        mMidTile = true;
+    } else if (thickness == 4) {
+        mWidth1 = mWidth2 = 2;
+        mGap = 0;
+        mMidTile = false;
+    } else {
+        mWidth1 = mWidth2 = 3;
+        mGap = qMax(0, thickness - 6);
+        mMidTile = false;
+    }
+
+    mLength = length;
+}
+
+#include "buildingtiles.h"
+BuildingTile *RoofObject::tile(RoofObject::RoofTile tile) const
+{
+    QString tilesetName = QLatin1String("roofs_01");
+    if (tile >= CapRiseE1)
+        tilesetName = QLatin1String("walls_exterior_roofs_03");
+    int index = 0;
+    switch (tile) {
+    case FlatS1: index = 0; break;
+    case FlatS2: index = 1; break;
+    case FlatS3: index = 2; break;
+
+    case FlatE1: index = 5; break;
+    case FlatE2: index = 4; break;
+    case FlatE3: index = 3; break;
+
+    case HalfFlatS: index = 15; break;
+    case HalfFlatE: index = 14; break;
+
+    case CapRiseE1: index = 0; break;
+    case CapRiseE2: index = 1; break;
+    case CapRiseE3: index = 2; break;
+    case CapFallE1: index = 8; break;
+    case CapFallE2: index = 9; break;
+    case CapFallE3: index = 10; break;
+
+    case CapRiseS1: index = 13; break;
+    case CapRiseS2: index = 12; break;
+    case CapRiseS3: index = 11; break;
+    case CapFallS1: index = 5; break;
+    case CapFallS2: index = 4; break;
+    case CapFallS3: index = 3; break;
+
+    case CapMidS: index = 6; break;
+    case CapMidE: index = 14; break;
+
+    case CapGapS: tilesetName = QLatin1String("walls_exterior_house_01"); index = 49; break;
+    case CapGapE: tilesetName = QLatin1String("walls_exterior_house_01"); index = 48; break;
+    }
+    return BuildingTiles::instance()->getFurnitureTile(BuildingTiles::instance()->nameForTile(tilesetName, index));
+}
+
+/////

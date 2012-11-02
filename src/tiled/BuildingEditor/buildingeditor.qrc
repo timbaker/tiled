@@ -17,5 +17,6 @@
         <file>icons/icon_furniture.png</file>
         <file>icons/icon_corners.png</file>
         <file>icons/icon_edges.png</file>
+        <file>icons/icon_roof.png</file>
     </qresource>
 </RCC>

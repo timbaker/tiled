@@ -34,6 +34,7 @@ class BuildingTile;
 class Door;
 class FurnitureObject;
 class FurnitureTile;
+class RoofObject;
 class Room;
 class Window;
 
@@ -97,6 +98,8 @@ public:
     void flipBuilding(bool horizontal);
 
     FurnitureTile *changeFurnitureTile(FurnitureObject *object, FurnitureTile *ftile);
+
+    void resizeRoof(RoofObject *roof, int &length, int &thickness);
     // -UNDO/REDO
     
 signals:

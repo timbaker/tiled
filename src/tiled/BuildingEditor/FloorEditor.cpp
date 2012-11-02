@@ -187,8 +187,10 @@ void GraphicsObjectItem::paint(QPainter *painter,
     painter->setPen(pen);
     painter->drawPath(path);
 
+    QPoint dragOffset = mDragging ? mDragOffset : QPoint();
+
+    // Draw line(s) indicating the orientation of the furniture tile.
     if (FurnitureObject *object = dynamic_cast<FurnitureObject*>(mObject)) {
-        QPoint dragOffset = mDragging ? mDragOffset : QPoint();
         QRectF r = mEditor->tileToSceneRect(object->bounds().translated(dragOffset));
         r.adjust(2, 2, -2, -2);
 
@@ -232,6 +234,23 @@ void GraphicsObjectItem::paint(QPainter *painter,
         if (lineS)
             path2.addRect(r.left() + 2, r.bottom() - 4, r.width() - 4, 2);
         painter->fillPath(path2, pen.color());
+    }
+
+    if (RoofObject *roof = dynamic_cast<RoofObject*>(mObject)) {
+        QRectF r1, r2, r3;
+        r1 = r2 = r3 = mObject->bounds().translated(dragOffset);
+        if (roof->dir() == BuildingObject::W) {
+            r1.setBottom(mObject->y() + dragOffset.y() + (roof->midTile() ? 0.5 : 0));
+            r2.setTop(r1.bottom()); r2.setBottom(r2.top() + roof->gap());
+            r3.setTop(r2.bottom());
+        } else if (roof->dir() == BuildingObject::N) {
+            r1.setRight(mObject->x() + dragOffset.x() + (roof->midTile() ? 0.5 : 0));
+            r2.setLeft(r1.right()); r2.setRight(r2.left() + roof->gap());
+            r3.setTop(r2.right());
+        }
+        painter->fillRect(mEditor->tileToSceneRectF(r1), Qt::darkGray);
+        painter->fillRect(mEditor->tileToSceneRectF(r2), Qt::gray);
+        painter->fillRect(mEditor->tileToSceneRectF(r2), Qt::lightGray);
     }
 }
 
@@ -296,6 +315,10 @@ QPainterPath GraphicsObjectItem::calcShape()
         QRectF r = mEditor->tileToSceneRect(object->bounds().translated(dragOffset));
         r.adjust(2, 2, -2, -2);
         path.addRect(r);
+    }
+
+    if (RoofObject *roof = dynamic_cast<RoofObject*>(mObject)) {
+        path.addRect(mEditor->tileToSceneRect(roof->bounds().translated(dragOffset)));
     }
 
     return path;
@@ -470,6 +493,12 @@ QRectF FloorEditor::tileToSceneRect(const QPoint &tilePos)
 }
 
 QRectF FloorEditor::tileToSceneRect(const QRect &tileRect)
+{
+    return QRectF(tileRect.x() * 30, tileRect.y() * 30,
+                  tileRect.width() * 30, tileRect.height() * 30);
+}
+
+QRectF FloorEditor::tileToSceneRectF(const QRectF &tileRect)
 {
     return QRectF(tileRect.x() * 30, tileRect.y() * 30,
                   tileRect.width() * 30, tileRect.height() * 30);

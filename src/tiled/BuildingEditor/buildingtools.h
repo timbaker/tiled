@@ -21,6 +21,7 @@
 #include <QObject>
 #include <QPointF>
 #include <QSet>
+#include <QSize>
 
 class QAction;
 class QGraphicsRectItem;
@@ -33,6 +34,7 @@ class Door;
 class FloorEditor;
 class FurnitureTile;
 class GraphicsObjectItem;
+class RoofObject;
 class Stairs;
 class Window;
 
@@ -250,6 +252,44 @@ public:
 private:
     static FurnitureTool *mInstance;
     FurnitureTile *mCurrentTile;
+};
+
+class RoofTool : public BaseTool
+{
+    Q_OBJECT
+public:
+    static RoofTool *instance();
+
+    RoofTool();
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
+    void documentChanged();
+    void activate();
+    void deactivate();
+
+private:
+    RoofObject *topmostRoofAt(const QPointF &scenePos);
+    void updateHandle(const QPointF &scenePos);
+    void resizeRoof(RoofObject *roofObject, int length, int thickness);
+
+private:
+    static RoofTool *mInstance;
+    bool mMouseDown;
+    QPoint mStartPos;
+    QPoint mCurrentPos;
+    bool mMidTileX;
+    bool mMidTileY;
+    RoofObject *mObject;
+    GraphicsObjectItem *mItem;
+    QGraphicsRectItem *mCursorItem;
+
+    RoofObject *mHandleObject;
+    QGraphicsRectItem *mHandleItem;
+    bool mMouseOverHandle;
+    QSize mOriginalSize;
 };
 
 /////

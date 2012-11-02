@@ -132,8 +132,6 @@ public:
 
     void LayoutToSquares();
 
-    bool IsTopStairAt(int x, int y);
-
     int width() const;
     int height() const;
 
