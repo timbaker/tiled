@@ -147,10 +147,14 @@ public:
     QGraphicsItem *width2Handle() const
     { return mWidth2Item; }
 
+    QGraphicsItem *heightHandle() const
+    { return mHeightItem; }
+
 private:
     QGraphicsRectItem *mHandleItem;
     QGraphicsEllipseItem *mWidth1Item;
     QGraphicsEllipseItem *mWidth2Item;
+    QGraphicsPathItem *mHeightItem;
     bool mShowHandles;
 };
 

@@ -281,6 +281,7 @@ private:
     void resizeRoof(RoofObject *roof, int length, int thickness);
     void toggleShowWidth1(RoofObject *roof);
     void toggleShowWidth2(RoofObject *roof);
+    void setHeight(RoofObject *roof, int height);
 
 private:
     static RoofTool *mInstance;

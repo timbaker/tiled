@@ -227,6 +227,11 @@ public:
     void toggleWidth1();
     void toggleWidth2();
 
+    void setHeight(int height);
+
+    int height() const
+    { return mHeight; }
+
     enum RoofTile {
         FlatS1, FlatS2, FlatS3,
         FlatE1, FlatE2, FlatE3,
@@ -245,6 +250,7 @@ private:
     int mWidth2; // Thickness below (mDir=W) or right of (mDir=N) the gap
     int mGap; // Gap between mWidth1 and mWidth2 slopes
     bool mMidTile;
+    int mHeight;
 };
 
 } // namespace BulidingEditor

@@ -706,6 +706,13 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                 toggleShowWidth2(mHandleObject);
                 return;
             }
+            if (mHandleItem == mObjectItem->heightHandle()) {
+                if (mHandleItem->mapFromScene(event->scenePos()).y() < mHandleItem->boundingRect().height()/2)
+                    setHeight(mHandleObject, mHandleObject->height() + 1);
+                else
+                    setHeight(mHandleObject, mHandleObject->height() - 1);
+                return;
+            }
             mOriginalLength = mHandleObject->length();
             mOriginalThickness = mHandleObject->thickness();
             mMode = Resize;
@@ -884,7 +891,8 @@ void RoofTool::updateHandle(const QPointF &scenePos)
         foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
             if (item == mObjectItem->resizeHandle() ||
                     item == mObjectItem->width1Handle() ||
-                    item == mObjectItem->width2Handle()) {
+                    item == mObjectItem->width2Handle() ||
+                    item == mObjectItem->heightHandle()) {
                 mHandleItem = item;
                 mMouseOverHandle = true;
                 break;
@@ -961,6 +969,15 @@ void RoofTool::toggleShowWidth1(RoofObject *roof)
 void RoofTool::toggleShowWidth2(RoofObject *roof)
 {
     roof->toggleWidth2();
+    mEditor->itemForObject(roof)->synchWithObject();
+    mEditor->document()->emitObjectChanged(roof);
+}
+
+void RoofTool::setHeight(RoofObject *roof, int height)
+{
+    if (height < 1 || height > 3)
+        return;
+    roof->setHeight(height);
     mEditor->itemForObject(roof)->synchWithObject();
     mEditor->document()->emitObjectChanged(roof);
 }

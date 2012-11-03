@@ -364,6 +364,7 @@ GraphicsRoofItem::GraphicsRoofItem(FloorEditor *editor, RoofObject *roof) :
     mHandleItem(new QGraphicsRectItem(this)),
     mWidth1Item(new QGraphicsEllipseItem(this)),
     mWidth2Item(new QGraphicsEllipseItem(this)),
+    mHeightItem(new QGraphicsPathItem(this)),
     mShowHandles(false)
 {
     mHandleItem->setBrush(Qt::gray);
@@ -371,6 +372,12 @@ GraphicsRoofItem::GraphicsRoofItem(FloorEditor *editor, RoofObject *roof) :
 
     mWidth1Item->setBrush(Qt::lightGray);
     mWidth2Item->setBrush(Qt::lightGray);
+
+    QPainterPath path;
+    path.addRect(0, 0, 14, 14);
+    path.addRect(0, 15, 14, 14);
+    mHeightItem->setPath(path);
+    mHeightItem->setBrush(Qt::gray);
 }
 
 void GraphicsRoofItem::synchWithObject()
@@ -380,27 +387,31 @@ void GraphicsRoofItem::synchWithObject()
     mHandleItem->setVisible(mShowHandles);
     mWidth1Item->setVisible(mShowHandles);
     mWidth2Item->setVisible(mShowHandles);
+    mHeightItem->setVisible(mShowHandles);
 
     QRectF r = boundingRect().translated(-pos());
     QRectF r2 = r;
-    r2.setLeft(r.right() - 16);
-    r2.setTop(r.bottom() - 16);
+    r2.setLeft(r.right() - 15);
+    r2.setTop(r.bottom() - 15);
     mHandleItem->setRect(r2);
 
     r2 = r;
-    r2.setRight(r.left() + 16);
-    r2.setBottom(r.top() + 16);
+    r2.setRight(r.left() + 15);
+    r2.setBottom(r.top() + 15);
     mWidth1Item->setRect(r2);
 
     r2 = r;
     if (mObject->isN()) {
-        r2.setLeft(r.right() - 16);
-        r2.setBottom(r.top() + 16);
+        r2.setLeft(r.right() - 15);
+        r2.setBottom(r.top() + 15);
     } else {
-        r2.setRight(r.left() + 16);
-        r2.setTop(r.bottom() - 16);
+        r2.setRight(r.left() + 15);
+        r2.setTop(r.bottom() - 15);
     }
     mWidth2Item->setRect(r2);
+
+    mHeightItem->setPos(r.center() - QPoint(mHeightItem->boundingRect().width()/2,
+                                            mHeightItem->boundingRect().height()/2));
 }
 
 void GraphicsRoofItem::setShowHandles(bool show)
