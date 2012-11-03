@@ -411,6 +411,9 @@ bool BuildingEditorWindow::Startup()
         }
     }
 
+    RoofTool::instance()->setCurrentTile(BuildingTiles::instance()->defaultRoofTile());
+    RoofTool::instance()->setCurrentCapTile(BuildingTiles::instance()->defaultRoofCapTile());
+
     /////
 
     // Add tile categories to the gui
@@ -677,6 +680,10 @@ void BuildingEditorWindow::tileSelectionChanged()
                 currentWindowChanged(tile);
             else if (mCategory->name() == QLatin1String("stairs"))
                 currentStairsChanged(tile);
+            else if (mCategory->name() == QLatin1String("roofs"))
+                currentRoofChanged(tile);
+            else if (mCategory->name() == QLatin1String("roof_caps"))
+                currentRoofCapChanged(tile);
             else
                 qFatal("unhandled category name in BuildingEditorWindow::tileSelectionChanged()");
         }
@@ -844,6 +851,65 @@ void BuildingEditorWindow::currentStairsChanged(Tile *tile)
                                                                      stairs,
                                                                      btile));
         if (stairsList.count() > 1)
+            mCurrentDocument->undoStack()->endMacro();
+    }
+}
+
+void BuildingEditorWindow::currentRoofChanged(Tile *tile)
+{
+    // New roofs will be created with this tile
+    BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                QLatin1String("roofs"), tile);
+    RoofTool::instance()->setCurrentTile(btile);
+
+    // Assign the new tile to selected roofs
+    QList<BuildingObject*> objectList;
+    foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
+        if (RoofObject *roof = object->asRoof()) {
+            if (roof->tile() != btile)
+                objectList += roof;
+        }
+        if (RoofCornerObject *roof = object->asRoofCorner()) {
+            if (roof->tile() != btile)
+                objectList += roof;
+        }
+    }
+    if (objectList.count()) {
+        if (objectList.count() > 1)
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Roof Tile"));
+        foreach (BuildingObject *roof, objectList)
+            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
+                                                                      roof,
+                                                                      btile));
+        if (objectList.count() > 1)
+            mCurrentDocument->undoStack()->endMacro();
+    }
+}
+
+void BuildingEditorWindow::currentRoofCapChanged(Tile *tile)
+{
+    // New roofs will be created with this tile
+    BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                QLatin1String("roof_caps"), tile);
+    RoofTool::instance()->setCurrentCapTile(btile);
+
+    // Assign the new tile to selected roofs
+    QList<RoofObject*> objectList;
+    foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
+        if (RoofObject *roof = object->asRoof()) {
+            if (roof->capTile() != btile)
+                objectList += roof;
+        }
+    }
+    if (objectList.count()) {
+        if (objectList.count() > 1)
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Roof Cap Tile"));
+        foreach (RoofObject *roof, objectList)
+            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
+                                                                      roof,
+                                                                      btile,
+                                                                      1));
+        if (objectList.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
 }

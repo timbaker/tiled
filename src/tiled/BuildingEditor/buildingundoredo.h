@@ -207,7 +207,8 @@ private:
 class ChangeObjectTile : public QUndoCommand
 {
 public:
-    ChangeObjectTile(BuildingDocument *doc, BuildingObject *object, BuildingTile *tile);
+    ChangeObjectTile(BuildingDocument *doc, BuildingObject *object,
+                     BuildingTile *tile, int alternate = 0);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -218,6 +219,7 @@ private:
     BuildingDocument *mDocument;
     BuildingObject *mObject;
     BuildingTile *mTile;
+    int mAlternate;
 };
 
 class AddRemoveRoom : public QUndoCommand

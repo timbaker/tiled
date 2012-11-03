@@ -149,6 +149,8 @@ public:
     BuildingTile *defaultDoorFrameTile() const;
     BuildingTile *defaultWindowTile() const;
     BuildingTile *defaultStairsTile() const;
+    BuildingTile *defaultRoofTile() const;
+    BuildingTile *defaultRoofCapTile() const;
 
     BuildingTile *getExteriorWall(const QString &tileName);
     BuildingTile *getInteriorWall(const QString &tileName);
@@ -157,6 +159,8 @@ public:
     BuildingTile *getDoorFrameTile(const QString &tileName);
     BuildingTile *getWindowTile(const QString &tileName);
     BuildingTile *getStairsTile(const QString &tileName);
+    BuildingTile *getRoofTile(const QString &tileName);
+    BuildingTile *getRoofCapTile(const QString &tileName);
     BuildingTile *getFurnitureTile(const QString &tileName);
 
     QString errorString() const

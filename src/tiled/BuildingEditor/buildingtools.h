@@ -31,6 +31,7 @@ class QGraphicsSceneMouseEvent;
 namespace BuildingEditor {
 
 class BuildingObject;
+class BuildingTile;
 class Door;
 class FloorEditor;
 class FurnitureTile;
@@ -288,6 +289,18 @@ public:
     void activate();
     void deactivate();
 
+    void setCurrentTile(BuildingTile *btile)
+    { mCurrentTile = btile; }
+
+    BuildingTile *currentTile() const
+    { return mCurrentTile; }
+
+    void setCurrentCapTile(BuildingTile *btile)
+    { mCurrentCapTile = btile; }
+
+    BuildingTile *currentCapTile() const
+    { return mCurrentCapTile; }
+
 private slots:
     void objectAboutToBeRemoved(BuildingObject *object);
 
@@ -302,6 +315,8 @@ private:
 
 private:
     static RoofTool *mInstance;
+    BuildingTile *mCurrentTile;
+    BuildingTile *mCurrentCapTile;
 
     enum Mode {
         NoMode,

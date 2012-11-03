@@ -18,6 +18,7 @@
 #include "buildingobjects.h"
 
 #include "buildingfloor.h"
+#include "buildingtiles.h"
 #include "furnituregroups.h"
 
 using namespace BuildingEditor;
@@ -331,6 +332,14 @@ void RoofObject::flip(bool horizontal)
 {
 }
 
+void RoofObject::setTile(BuildingTile *tile, int alternate)
+{
+    if (alternate == 1)
+        mCapTile = tile;
+    else
+        mTile = tile;
+}
+
 bool RoofObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
 {
     if (!floor)
@@ -407,12 +416,12 @@ void RoofObject::toggleCapped()
     mCapped = !mCapped;
 }
 
-#include "buildingtiles.h"
-BuildingTile *RoofObject::tile(RoofObject::RoofTile tile) const
+BuildingTile *RoofObject::roofTile(RoofObject::RoofTile tile) const
 {
-    QString tilesetName = QLatin1String("roofs_01");
+    BuildingTile *btile =  mTile;
     if (tile >= CapRiseE1)
-        tilesetName = QLatin1String("walls_exterior_roofs_03");
+        btile = mCapTile;
+
     int index = 0;
     switch (tile) {
     case FlatS1: index = 0; break;
@@ -448,10 +457,20 @@ BuildingTile *RoofObject::tile(RoofObject::RoofTile tile) const
         // These are the 1/3- and 2/3-height walls which don't have tiles
         return 0;
 
-    case CapGapS3: tilesetName = QLatin1String("walls_exterior_house_01"); index = 49; break;
-    case CapGapE3: tilesetName = QLatin1String("walls_exterior_house_01"); index = 48; break;
+    case CapGapS3:
+//        tilesetName = QLatin1String("walls_exterior_house_01");
+//        index = 49;
+        return 0;
+        break;
+    case CapGapE3:
+//        tilesetName = QLatin1String("walls_exterior_house_01");
+//        index = 48;
+        return 0;
+        break;
     }
-    return BuildingTiles::instance()->getFurnitureTile(BuildingTiles::instance()->nameForTile(tilesetName, index));
+    return BuildingTiles::instance()->getFurnitureTile(
+                BuildingTiles::instance()->nameForTile(btile->mTilesetName,
+                                                       btile->mIndex + index));
 }
 
 /////
@@ -505,9 +524,9 @@ void RoofCornerObject::toggleInner()
     mInner = !mInner;
 }
 
-BuildingTile *RoofCornerObject::tile(RoofCornerObject::RoofTile tile) const
+BuildingTile *RoofCornerObject::roofTile(RoofCornerObject::RoofTile tile) const
 {
-    QString tilesetName = QLatin1String("roofs_01");
+    BuildingTile *btile = mTile;
     int index = 0;
 
     switch (tile) {
@@ -528,7 +547,9 @@ BuildingTile *RoofCornerObject::tile(RoofCornerObject::RoofTile tile) const
     case Inner3: index = 13; break;
     }
 
-    return BuildingTiles::instance()->getFurnitureTile(BuildingTiles::instance()->nameForTile(tilesetName, index));
+    return BuildingTiles::instance()->getFurnitureTile(
+                BuildingTiles::instance()->nameForTile(btile->mTilesetName,
+                                                       btile->mIndex + index));
 }
 
 /////

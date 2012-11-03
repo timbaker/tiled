@@ -174,7 +174,7 @@ bool BuildingTiles::readBuildingTilesTxt()
 
     static const char *validCategoryNamesC[] = {
         "exterior_walls", "interior_walls", "floors", "doors", "door_frames",
-        "windows", "stairs", 0
+        "windows", "stairs", "roofs", "roof_caps", 0
     };
     QStringList validCategoryNames;
     for (int i = 0; validCategoryNamesC[i]; i++)
@@ -224,7 +224,6 @@ bool BuildingTiles::readBuildingTilesTxt()
             return false;
         }
     }
-
 
     // Check that all the tiles exist
     foreach (BuildingTileCategory *category, categories()) {
@@ -330,6 +329,16 @@ BuildingTile *BuildingTiles::defaultStairsTile() const
     return category(QLatin1String("stairs"))->tileAt(0);
 }
 
+BuildingTile *BuildingTiles::defaultRoofTile() const
+{
+    return category(QLatin1String("roofs"))->tileAt(0);
+}
+
+BuildingTile *BuildingTiles::defaultRoofCapTile() const
+{
+    return category(QLatin1String("roof_caps"))->tileAt(0);
+}
+
 BuildingTile *BuildingTiles::getExteriorWall(const QString &tileName)
 {
     return category(QLatin1String("exterior_walls"))->get(tileName);
@@ -363,6 +372,16 @@ BuildingTile *BuildingTiles::getWindowTile(const QString &tileName)
 BuildingTile *BuildingTiles::getStairsTile(const QString &tileName)
 {
     return category(QLatin1String("stairs"))->get(tileName);
+}
+
+BuildingTile *BuildingTiles::getRoofTile(const QString &tileName)
+{
+    return category(QLatin1String("roofs"))->get(tileName);
+}
+
+BuildingTile *BuildingTiles::getRoofCapTile(const QString &tileName)
+{
+    return category(QLatin1String("roof_caps"))->get(tileName);
 }
 
 BuildingTile *BuildingTiles::getFurnitureTile(const QString &tileName)
@@ -420,6 +439,10 @@ QRect BuildingTileCategory::categoryBounds() const
         return QRect(0, 0, 2, 1);
     if (mName == QLatin1String("stairs"))
         return QRect(0, 0, 3, 2);
+    if (mName == QLatin1String("roofs"))
+        return QRect(0, 0, 8, 2);
+    if (mName == QLatin1String("roof_caps"))
+        return QRect(0, 0, 8, 2);
     qFatal("unhandled category name in categoryBounds");
     return QRect();
 }

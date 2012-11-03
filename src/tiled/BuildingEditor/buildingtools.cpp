@@ -698,6 +698,8 @@ RoofTool *RoofTool::instance()
 
 RoofTool::RoofTool() :
     BaseTool(),
+    mCurrentTile(0),
+    mCurrentCapTile(0),
     mMode(NoMode),
     mObject(0),
     mItem(0),
@@ -844,6 +846,8 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     if (mMode == Create) {
         mMode = NoMode;
         if (mObject->isValidPos()) {
+            mObject->setTile(mCurrentTile);
+            mObject->setTile(mCurrentCapTile, 1);
             BuildingFloor *floor = mEditor->document()->currentFloor();
             mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                                  floor,
@@ -1154,6 +1158,7 @@ void RoofCornerTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     if (mMode == Create) {
         mMode = NoMode;
         if (mObject->isValidPos()) {
+            mObject->setTile(RoofTool::instance()->currentTile());
             BuildingFloor *floor = mEditor->document()->currentFloor();
             mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                                  floor,

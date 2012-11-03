@@ -77,11 +77,17 @@ public:
     QString dirString() const;
     static Direction dirFromString(const QString &s);
 
-    void setTile(BuildingTile *tile)
-    { mTile = tile; }
+    virtual void setTile(BuildingTile *tile, int alternate = 0)
+    {
+        Q_UNUSED(alternate)
+        mTile = tile;
+    }
 
-    BuildingTile *tile() const
-    { return mTile; }
+    BuildingTile *tile(int alternate = 0) const
+    {
+        Q_UNUSED(alternate)
+        return mTile;
+    }
 
     virtual bool isValidPos(const QPoint &offset = QPoint(),
                             BuildingEditor::BuildingFloor *floor = 0) const;
@@ -188,6 +194,8 @@ public:
     void rotate(bool right);
     void flip(bool horizontal);
 
+    void setTile(BuildingTile *roofTile, int alternate = 0);
+
     bool isValidPos(const QPoint &offset = QPoint(),
                     BuildingEditor::BuildingFloor *floor = 0) const;
 
@@ -239,6 +247,9 @@ public:
 
     void toggleCapped();
 
+    BuildingTile *capTile() const
+    { return mCapTile; }
+
     enum RoofTile {
         FlatS1, FlatS2, FlatS3,
         FlatE1, FlatE2, FlatE3,
@@ -250,7 +261,7 @@ public:
         CapGapE1, CapGapE2, CapGapE3
     };
 
-    BuildingTile *tile(RoofTile tile) const;
+    BuildingTile *roofTile(RoofTile roofTile) const;
 
 private:
     int mLength;
@@ -260,6 +271,7 @@ private:
     bool mMidTile;
     int mHeight;
     bool mCapped;
+    BuildingTile *mCapTile;
 };
 
 class RoofCornerObject : public BuildingObject
@@ -298,7 +310,7 @@ public:
         Outer1, Outer2, Outer3,
         Inner1, Inner2, Inner3
     };
-    BuildingTile *tile(RoofTile tile) const;
+    BuildingTile *roofTile(RoofTile roofTile) const;
 
 private:
     int mWidth;

@@ -155,10 +155,12 @@ BuildingTile *BuildingDocument::changeDoorTile(Door *door, BuildingTile *tile,
     return old;
 }
 
-BuildingTile *BuildingDocument::changeObjectTile(BuildingObject *object, BuildingTile *tile)
+BuildingTile *BuildingDocument::changeObjectTile(BuildingObject *object,
+                                                 BuildingTile *tile,
+                                                 int alternate)
 {
-    BuildingTile *old = object->tile();
-    object->setTile(tile);
+    BuildingTile *old = object->tile(alternate);
+    object->setTile(tile, alternate);
     emit objectTileChanged(object);
     return old;
 }
