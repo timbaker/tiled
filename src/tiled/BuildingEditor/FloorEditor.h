@@ -43,8 +43,9 @@ class RoofObject;
 class Room;
 
 class GraphicsObjectItem;
-class GraphicsRoofItem;
+class GraphicsRoofBaseItem;
 class GraphicsRoofCornerItem;
+class GraphicsRoofItem;
 
 /////
 
@@ -131,7 +132,57 @@ protected:
     bool mValidPos;
 };
 
-class GraphicsRoofItem : public GraphicsObjectItem
+class GraphicsRoofHandleItem : public QGraphicsItem
+{
+public:
+    enum Type {
+        Resize,
+        Width1,
+        Width2,
+        HeightUp,
+        HeightDown,
+        Capped,
+        InnerOuter
+    };
+    GraphicsRoofHandleItem(GraphicsRoofBaseItem *roofItem, Type type);
+
+    QRectF boundingRect() const;
+
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+    QString statusText() const
+    { return mStatusText; }
+
+    void synchWithObject();
+
+    void setHighlight(bool highlight);
+
+private:
+    QRectF calcBoundingRect();
+
+private:
+    GraphicsRoofBaseItem *mRoofItem;
+    Type mType;
+    bool mHighlight;
+    QString mStatusText;
+    QRectF mBoundingRect;
+};
+
+class GraphicsRoofBaseItem : public GraphicsObjectItem
+{
+public:
+    GraphicsRoofBaseItem(FloorEditor *editor, BuildingObject *object);
+
+    void setShowHandles(bool show);
+
+    bool handlesVisible() const
+    { return mShowHandles; }
+
+protected:
+    bool mShowHandles;
+};
+
+class GraphicsRoofItem : public GraphicsRoofBaseItem
 {
 public:
     GraphicsRoofItem(FloorEditor *editor, RoofObject *roof);
@@ -140,29 +191,34 @@ public:
 
     GraphicsRoofItem *asRoof() { return this; }
 
-    void setShowHandles(bool show);
-
-    QGraphicsItem *resizeHandle() const
+    GraphicsRoofHandleItem *resizeHandle() const
     { return mHandleItem; }
 
-    QGraphicsItem *width1Handle() const
+    GraphicsRoofHandleItem *width1Handle() const
     { return mWidth1Item; }
 
-    QGraphicsItem *width2Handle() const
+    GraphicsRoofHandleItem *width2Handle() const
     { return mWidth2Item; }
 
-    QGraphicsItem *heightHandle() const
-    { return mHeightItem; }
+    GraphicsRoofHandleItem *heightUpHandle() const
+    { return mHeightUpItem; }
+
+    GraphicsRoofHandleItem *heightDownHandle() const
+    { return mHeightDownItem; }
+
+    GraphicsRoofHandleItem *cappedHandle() const
+    { return mCappedItem; }
 
 private:
-    QGraphicsRectItem *mHandleItem;
-    QGraphicsEllipseItem *mWidth1Item;
-    QGraphicsEllipseItem *mWidth2Item;
-    QGraphicsPathItem *mHeightItem;
-    bool mShowHandles;
+    GraphicsRoofHandleItem *mHandleItem;
+    GraphicsRoofHandleItem *mWidth1Item;
+    GraphicsRoofHandleItem *mWidth2Item;
+    GraphicsRoofHandleItem *mHeightUpItem;
+    GraphicsRoofHandleItem *mHeightDownItem;
+    GraphicsRoofHandleItem *mCappedItem;
 };
 
-class GraphicsRoofCornerItem : public GraphicsObjectItem
+class GraphicsRoofCornerItem : public GraphicsRoofBaseItem
 {
 public:
     GraphicsRoofCornerItem(FloorEditor *editor, RoofCornerObject *roof);
@@ -173,22 +229,23 @@ public:
 
     GraphicsRoofCornerItem *asRoofCorner() { return this; }
 
-    void setShowHandles(bool show);
-
-    QGraphicsItem *resizeHandle() const
+    GraphicsRoofHandleItem *resizeHandle() const
     { return mHandleItem; }
 
-    QGraphicsItem *heightHandle() const
-    { return mHeightItem; }
+    GraphicsRoofHandleItem *heightUpHandle() const
+    { return mHeightUpItem; }
 
-    QGraphicsItem *toggleHandle() const
+    GraphicsRoofHandleItem *heightDownHandle() const
+    { return mHeightDownItem; }
+
+    GraphicsRoofHandleItem *toggleHandle() const
     { return mToggleItem; }
 
 private:
-    QGraphicsRectItem *mHandleItem;
-    QGraphicsPathItem *mHeightItem;
-    QGraphicsEllipseItem *mToggleItem;
-    bool mShowHandles;
+    GraphicsRoofHandleItem *mHandleItem;
+    GraphicsRoofHandleItem *mHeightUpItem;
+    GraphicsRoofHandleItem *mHeightDownItem;
+    GraphicsRoofHandleItem *mToggleItem;
 };
 
 class FloorEditor : public QGraphicsScene
@@ -200,6 +257,9 @@ public:
     static const int ZVALUE_GRID;
 
     explicit FloorEditor(QWidget *parent = 0);
+
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+    { mousePressEvent(event); }
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);

@@ -34,6 +34,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="statusLabel">
+        <property name="text">
+         <string>Status</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="horizontalSpacer_2">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -522,7 +529,7 @@
     <string>Place Roof Corner</string>
    </property>
    <property name="toolTip">
-    <string>Place a roof corner</string>
+    <string>Place Roof Corner</string>
    </property>
   </action>
  </widget>

@@ -362,94 +362,184 @@ void GraphicsObjectItem::setValidPos(bool valid)
 
 /////
 
+GraphicsRoofHandleItem::GraphicsRoofHandleItem(GraphicsRoofBaseItem *roofItem,
+                                               GraphicsRoofHandleItem::Type type) :
+    QGraphicsItem(roofItem),
+    mRoofItem(roofItem),
+    mType(type),
+    mHighlight(false)
+{
+    switch (mType) {
+    case Resize:
+        mStatusText = QCoreApplication::translate("Tools", "Left-click-drag to resize the roof.");
+        break;
+    case Width1:
+        mStatusText = QCoreApplication::translate("Tools", "Left-click to toggle slope.");
+        break;
+    case Width2:
+        mStatusText = QCoreApplication::translate("Tools", "Left-click to toggle slope.");
+        break;
+    case HeightUp:
+        mStatusText = QCoreApplication::translate("Tools", "Left-click to increase height.");
+        break;
+    case HeightDown:
+        mStatusText = QCoreApplication::translate("Tools", "Left-click to decrease height.");
+        break;
+    case Capped:
+        mStatusText = QCoreApplication::translate("Tools", "Left-click to toggle end cap.");
+        break;
+    case InnerOuter:
+        mStatusText = QCoreApplication::translate("Tools", "Left-click to toggle inner/outer shape.");
+        break;
+    }
 
-GraphicsRoofItem::GraphicsRoofItem(FloorEditor *editor, RoofObject *roof) :
-    GraphicsObjectItem(editor, roof),
-    mHandleItem(new QGraphicsRectItem(this)),
-    mWidth1Item(new QGraphicsEllipseItem(this)),
-    mWidth2Item(new QGraphicsEllipseItem(this)),
-    mHeightItem(new QGraphicsPathItem(this)),
+    synchWithObject();
+}
+
+QRectF GraphicsRoofHandleItem::boundingRect() const
+{
+    return mBoundingRect;
+}
+
+void GraphicsRoofHandleItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+    Q_UNUSED(option)
+    Q_UNUSED(widget)
+    QRectF r = mBoundingRect;
+    painter->fillRect(r, mHighlight ? Qt::white : Qt::gray);
+    painter->drawRect(r);
+}
+
+void GraphicsRoofHandleItem::synchWithObject()
+{
+    QRectF r = calcBoundingRect();
+    if (r != mBoundingRect) {
+        prepareGeometryChange();
+        mBoundingRect = r;
+    }
+
+    setVisible(mRoofItem->handlesVisible());
+}
+
+void GraphicsRoofHandleItem::setHighlight(bool highlight)
+{
+    if (highlight == mHighlight)
+        return;
+    mHighlight = highlight;
+    update();
+}
+
+QRectF GraphicsRoofHandleItem::calcBoundingRect()
+{
+    QRectF r = mRoofItem->boundingRect().translated(-mRoofItem->pos());
+
+    switch (mType) {
+    case Resize:
+        r.setLeft(r.right() - 15);
+        r.setTop(r.bottom() - 15);
+        break;
+    case Width1:
+        if (mRoofItem->object()->isN()) {
+            r.setRight(r.left() + 15);
+            r.adjust(0,15,0,-15);
+        } else {
+            r.setBottom(r.top() + 15);
+            r.adjust(15,0,-15,0);
+        }
+        break;
+    case Width2:
+        if (mRoofItem->object()->isN()) {
+            r.setLeft(r.right() - 15);
+            r.adjust(0,15,0,-15);
+        } else {
+            r.setTop(r.bottom() - 15);
+            r.adjust(15,0,-15,0);
+        }
+        break;
+    case HeightUp:
+        r = QRectF(r.center().x()-7,r.center().y()-14,
+                  14, 14);
+        break;
+    case HeightDown:
+        r = QRectF(r.center().x()-7,r.center().y(),
+                  14, 14);
+        break;
+    case Capped:
+        if (mRoofItem->object()->isW()) {
+            r.setLeft(r.right() - 15);
+            r.adjust(0,15,0,-15);
+        } else {
+            r.setTop(r.bottom() - 15);
+            r.adjust(15,0,-15,0);
+        }
+        break;
+    case InnerOuter:
+        r.setRight(r.left() + 15);
+        r.setBottom(r.top() + 15);
+        break;
+    }
+
+    return r;
+}
+
+/////
+
+GraphicsRoofBaseItem::GraphicsRoofBaseItem(FloorEditor *editor, BuildingObject *object) :
+    GraphicsObjectItem(editor, object),
     mShowHandles(false)
 {
-    mHandleItem->setBrush(Qt::gray);
+}
+
+void GraphicsRoofBaseItem::setShowHandles(bool show)
+{
+    if (mShowHandles == show)
+        return;
+    mShowHandles = show;
+    synchWithObject();
+}
+
+/////
+
+GraphicsRoofItem::GraphicsRoofItem(FloorEditor *editor, RoofObject *roof) :
+    GraphicsRoofBaseItem(editor, roof),
+    mHandleItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Resize)),
+    mWidth1Item(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Width1)),
+    mWidth2Item(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Width2)),
+    mHeightUpItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::HeightUp)),
+    mHeightDownItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::HeightDown)),
+    mCappedItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Capped))
+{
     mHandleItem->setCursor(Qt::SizeAllCursor);
-
-    mWidth1Item->setBrush(Qt::lightGray);
-    mWidth2Item->setBrush(Qt::lightGray);
-
-    QPainterPath path;
-    path.addRect(0, 0, 14, 14);
-    path.addRect(0, 15, 14, 14);
-    mHeightItem->setPath(path);
-    mHeightItem->setBrush(Qt::gray);
 }
 
 void GraphicsRoofItem::synchWithObject()
 {
     GraphicsObjectItem::synchWithObject();
 
-    mHandleItem->setVisible(mShowHandles);
-    mWidth1Item->setVisible(mShowHandles);
-    mWidth2Item->setVisible(mShowHandles);
-    mHeightItem->setVisible(mShowHandles);
-
-    QRectF r = boundingRect().translated(-pos());
-    QRectF r2 = r;
-    r2.setLeft(r.right() - 15);
-    r2.setTop(r.bottom() - 15);
-    mHandleItem->setRect(r2);
-
-    r2 = r;
-    r2.setRight(r.left() + 15);
-    r2.setBottom(r.top() + 15);
-    mWidth1Item->setRect(r2);
-
-    r2 = r;
-    if (mObject->isN()) {
-        r2.setLeft(r.right() - 15);
-        r2.setBottom(r.top() + 15);
-    } else {
-        r2.setRight(r.left() + 15);
-        r2.setTop(r.bottom() - 15);
-    }
-    mWidth2Item->setRect(r2);
-
-    mHeightItem->setPos(r.center() - QPoint(mHeightItem->boundingRect().width()/2,
-                                            mHeightItem->boundingRect().height()/2));
-}
-
-void GraphicsRoofItem::setShowHandles(bool show)
-{
-    if (mShowHandles == show)
-        return;
-    mShowHandles = show;
-    synchWithObject();
-//    mHandleItem->setVisible(show);
+    mHandleItem->synchWithObject();
+    mWidth1Item->synchWithObject();
+    mWidth2Item->synchWithObject();
+    mHeightUpItem->synchWithObject();
+    mHeightDownItem->synchWithObject();
+    mCappedItem->synchWithObject();
 }
 
 /////
 
 GraphicsRoofCornerItem::GraphicsRoofCornerItem(FloorEditor *editor, RoofCornerObject *roof) :
-    GraphicsObjectItem(editor, roof),
-    mHandleItem(new QGraphicsRectItem(this)),
-    mHeightItem(new QGraphicsPathItem(this)),
-    mToggleItem(new QGraphicsEllipseItem(this)),
-    mShowHandles(false)
+    GraphicsRoofBaseItem(editor, roof),
+    mHandleItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Resize)),
+    mHeightUpItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::HeightUp)),
+    mHeightDownItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::HeightDown)),
+    mToggleItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::InnerOuter))
 {
-    mHandleItem->setBrush(Qt::gray);
     mHandleItem->setCursor(Qt::SizeAllCursor);
-
-    QPainterPath path;
-    path.addRect(0, 0, 14, 14);
-    path.addRect(0, 15, 14, 14);
-    mHeightItem->setPath(path);
-    mHeightItem->setBrush(Qt::gray);
-
-    mToggleItem->setBrush(Qt::gray);
 }
 
 void GraphicsRoofCornerItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
+    Q_UNUSED(option)
+    Q_UNUSED(widget)
     QPainterPath path = shape();
     painter->fillPath(path, Qt::darkGray);
     QPen pen(mValidPos ? Qt::blue : Qt::red);
@@ -480,6 +570,7 @@ void GraphicsRoofCornerItem::paint(QPainter *painter, const QStyleOptionGraphics
     QColor color = mSelected ? Qt::cyan : Qt::white;
     if (!mValidPos)
         color = Qt::red;
+    painter->setClipRect(boundingRect());
     painter->fillPath(path, color);
 }
 
@@ -487,31 +578,10 @@ void GraphicsRoofCornerItem::synchWithObject()
 {
     GraphicsObjectItem::synchWithObject();
 
-    mHandleItem->setVisible(mShowHandles);
-    mHeightItem->setVisible(mShowHandles);
-    mToggleItem->setVisible(mShowHandles);
-
-    QRectF r = boundingRect().translated(-pos());
-    QRectF r2 = r;
-    r2.setLeft(r.right() - 15);
-    r2.setTop(r.bottom() - 15);
-    mHandleItem->setRect(r2);
-
-    mHeightItem->setPos(r.center() - QPoint(mHeightItem->boundingRect().width()/2,
-                                            mHeightItem->boundingRect().height()/2));
-
-    r2 = r;
-    r2.setRight(r.left() + 15);
-    r2.setBottom(r.top() + 15);
-    mToggleItem->setRect(r2);
-}
-
-void GraphicsRoofCornerItem::setShowHandles(bool show)
-{
-    if (mShowHandles == show)
-        return;
-    mShowHandles = show;
-    synchWithObject();
+    mHandleItem->synchWithObject();
+    mHeightUpItem->synchWithObject();
+    mHeightDownItem->synchWithObject();
+    mToggleItem->synchWithObject();
 }
 
 /////

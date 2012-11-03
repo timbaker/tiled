@@ -234,6 +234,11 @@ public:
     int height() const
     { return mHeight; }
 
+    bool isCapped() const
+    { return mCapped; }
+
+    void toggleCapped();
+
     enum RoofTile {
         FlatS1, FlatS2, FlatS3,
         FlatE1, FlatE2, FlatE3,
@@ -254,6 +259,7 @@ private:
     int mGap; // Gap between mWidth1 and mWidth2 slopes
     bool mMidTile;
     int mHeight;
+    bool mCapped;
 };
 
 class RoofCornerObject : public BuildingObject

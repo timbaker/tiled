@@ -62,6 +62,12 @@ void BaseTool::setEnabled(bool enabled)
     }
 }
 
+void BaseTool::setStatusText(const QString &text)
+{
+    mStatusText = text;
+    emit statusTextChanged();
+}
+
 void BaseTool::makeCurrent()
 {
     ToolManager::instance()->activateTool(this);
@@ -94,11 +100,14 @@ void ToolManager::activateTool(BaseTool *tool)
     if (mCurrentTool) {
         mCurrentTool->deactivate();
         mCurrentTool->action()->setChecked(false);
+        mCurrentTool->disconnect(this);
     }
 
     mCurrentTool = tool;
 
     if (mCurrentTool) {
+        connect(mCurrentTool, SIGNAL(statusTextChanged()),
+                SLOT(currentToolStatusTextChanged()));
         mCurrentTool->activate();
         mCurrentTool->action()->setChecked(true);
     }
@@ -120,6 +129,10 @@ void ToolManager::toolEnabledChanged(BaseTool *tool, bool enabled)
     }
 }
 
+void ToolManager::currentToolStatusTextChanged()
+{
+    emit statusTextChanged(mCurrentTool);
+}
 
 /////
 
@@ -137,6 +150,7 @@ PencilTool::PencilTool() :
     mMouseDown(false),
     mCursor(0)
 {
+    setStatusText(tr("Left-click to draw a room.  Right-click to switch to room under pointer."));
 }
 
 void PencilTool::documentChanged()
@@ -238,6 +252,7 @@ EraserTool::EraserTool() :
     mMouseDown(false),
     mCursor(0)
 {
+    setStatusText(tr("Left-click to erase room."));
 }
 
 void EraserTool::documentChanged()
@@ -420,6 +435,7 @@ DoorTool *DoorTool::instance()
 DoorTool::DoorTool() :
     BaseObjectTool()
 {
+    setStatusText(tr("Left-click to place a door.  Right-click to remove any object."));
 }
 
 void DoorTool::placeObject()
@@ -483,6 +499,7 @@ WindowTool *WindowTool::instance()
 WindowTool::WindowTool() :
     BaseObjectTool()
 {
+    setStatusText(tr("Left-click to place a window.  Right-click to remove any object."));
 }
 
 void WindowTool::placeObject()
@@ -545,6 +562,7 @@ StairsTool *StairsTool::instance()
 StairsTool::StairsTool() :
     BaseObjectTool()
 {
+    setStatusText(tr("Left-click to place stairs.  Right-click to remove any object."));
 }
 
 void StairsTool::placeObject()
@@ -608,6 +626,7 @@ FurnitureTool::FurnitureTool() :
     BaseObjectTool(),
     mCurrentTile(0)
 {
+    setStatusText(tr("Left-click to place furniture.  Right-click to remove any object."));
 }
 
 void FurnitureTool::placeObject()
@@ -706,11 +725,16 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                 toggleShowWidth2(mHandleObject);
                 return;
             }
-            if (mHandleItem == mObjectItem->heightHandle()) {
-                if (mHandleItem->mapFromScene(event->scenePos()).y() < mHandleItem->boundingRect().height()/2)
-                    setHeight(mHandleObject, mHandleObject->height() + 1);
-                else
-                    setHeight(mHandleObject, mHandleObject->height() - 1);
+            if (mHandleItem == mObjectItem->heightUpHandle()) {
+                setHeight(mHandleObject, mHandleObject->height() + 1);
+                return;
+            }
+            if (mHandleItem == mObjectItem->heightDownHandle()) {
+                setHeight(mHandleObject, mHandleObject->height() - 1);
+                return;
+            }
+            if (mHandleItem == mObjectItem->cappedHandle()) {
+                toggleCapped(mHandleObject);
                 return;
             }
             mOriginalLength = mHandleObject->length();
@@ -849,6 +873,7 @@ void RoofTool::documentChanged()
 
 void RoofTool::activate()
 {
+    setStatusText(tr("Left-click-drag to place a roof."));
     if (mCursorItem)
         mEditor->addItem(mCursorItem);
 }
@@ -885,17 +910,22 @@ void RoofTool::updateHandle(const QPointF &scenePos)
 {
     RoofObject *ro = topmostRoofAt(scenePos);
 
+    if (mMouseOverHandle) {
+        mHandleItem->setHighlight(false);
+        mMouseOverHandle = false;
+        setStatusText(tr("Left-click-drag to place a roof."));
+    }
     mHandleItem = 0;
-    mMouseOverHandle = false;
     if (ro && (ro == mHandleObject)) {
         foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
-            if (item == mObjectItem->resizeHandle() ||
-                    item == mObjectItem->width1Handle() ||
-                    item == mObjectItem->width2Handle() ||
-                    item == mObjectItem->heightHandle()) {
-                mHandleItem = item;
-                mMouseOverHandle = true;
-                break;
+            if (GraphicsRoofHandleItem *handle = dynamic_cast<GraphicsRoofHandleItem*>(item)) {
+                if (handle->parentItem() == mObjectItem) {
+                    setStatusText(handle->statusText());
+                    mHandleItem = handle;
+                    mMouseOverHandle = true;
+                    mHandleItem->setHighlight(true);
+                    break;
+                }
             }
         }
         return;
@@ -973,6 +1003,13 @@ void RoofTool::toggleShowWidth2(RoofObject *roof)
     mEditor->document()->emitObjectChanged(roof);
 }
 
+void RoofTool::toggleCapped(RoofObject *roof)
+{
+    roof->toggleCapped();
+    mEditor->itemForObject(roof)->synchWithObject();
+    mEditor->document()->emitObjectChanged(roof);
+}
+
 void RoofTool::setHeight(RoofObject *roof, int height)
 {
     if (height < 1 || height > 3)
@@ -1014,11 +1051,12 @@ void RoofCornerTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mStartPos = mEditor->sceneToTile(event->scenePos());
         mCurrentPos = mStartPos;
         if (mMouseOverHandle) {
-            if (mHandleItem == mObjectItem->heightHandle()) {
-                if (mHandleItem->mapFromScene(event->scenePos()).y() < mHandleItem->boundingRect().height()/2)
-                    setDepth(mHandleObject, mHandleObject->depth() + 1);
-                else
-                    setDepth(mHandleObject, mHandleObject->depth() - 1);
+            if (mHandleItem == mObjectItem->heightUpHandle()) {
+                setDepth(mHandleObject, mHandleObject->depth() + 1);
+                return;
+            }
+            if (mHandleItem == mObjectItem->heightDownHandle()) {
+                setDepth(mHandleObject, mHandleObject->depth() - 1);
                 return;
             }
             if (mHandleItem == mObjectItem->toggleHandle()) {
@@ -1145,6 +1183,7 @@ void RoofCornerTool::documentChanged()
 
 void RoofCornerTool::activate()
 {
+    setStatusText(tr("Left-click-drag to place a corner."));
     if (mCursorItem)
         mEditor->addItem(mCursorItem);
 }
@@ -1181,16 +1220,22 @@ void RoofCornerTool::updateHandle(const QPointF &scenePos)
 {
     RoofCornerObject *ro = topmostRoofCornerAt(scenePos);
 
+    if (mMouseOverHandle) {
+        mHandleItem->setHighlight(false);
+        mMouseOverHandle = false;
+        setStatusText(tr("Left-click-drag to place a roof corner."));
+    }
     mHandleItem = 0;
-    mMouseOverHandle = false;
     if (ro && (ro == mHandleObject)) {
         foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
-            if (item == mObjectItem->resizeHandle() ||
-                    item == mObjectItem->heightHandle() ||
-                    item == mObjectItem->toggleHandle()) {
-                mHandleItem = item;
-                mMouseOverHandle = true;
-                break;
+            if (GraphicsRoofHandleItem *handle = dynamic_cast<GraphicsRoofHandleItem*>(item)) {
+                if (handle->parentItem() == mObjectItem) {
+                    mHandleItem = handle;
+                    mMouseOverHandle = true;
+                    mHandleItem->setHighlight(true);
+                    setStatusText(handle->statusText());
+                    break;
+                }
             }
         }
         return;
@@ -1261,6 +1306,7 @@ SelectMoveObjectTool::SelectMoveObjectTool() :
     mClickedObject(0),
     mSelectionRectItem(0)
 {
+    setStatusText(tr("Left-click to select.  Left-click-drag to move objects."));
 }
 
 void SelectMoveObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -1473,6 +1519,5 @@ void SelectMoveObjectTool::cancelMoving()
 
     mMode = CancelMoving;
 }
-
 /////
 

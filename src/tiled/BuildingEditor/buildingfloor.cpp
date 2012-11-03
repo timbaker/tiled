@@ -258,6 +258,9 @@ void BuildingFloor::LayoutToSquares()
                         squares[x][r.bottom()-2].ReplaceFurniture(ro->tile(RoofObject::FlatS3));
                 }
 
+                if (!ro->isCapped())
+                    continue;
+
                 // End cap (above midline)
                 if (ro->width1() == 3) {
                     squares[r.right()+1][ro->y()+0].ReplaceFurniture(ro->tile(RoofObject::CapFallE1));
@@ -312,6 +315,10 @@ void BuildingFloor::LayoutToSquares()
                     if (ro->width2() > 2)
                         squares[r.right()-2][y].ReplaceFurniture(ro->tile(RoofObject::FlatE3));
                 }
+
+                if (!ro->isCapped())
+                    continue;
+
                 // End cap (left of midline)
                 if (ro->width1() == 3) {
                     squares[ro->x()+0][r.bottom()+1].ReplaceFurniture(ro->tile(RoofObject::CapRiseS1));

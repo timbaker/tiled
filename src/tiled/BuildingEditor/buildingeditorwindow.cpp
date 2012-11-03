@@ -160,6 +160,11 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     SelectMoveObjectTool::instance()->setEditor(roomEditor);
     SelectMoveObjectTool::instance()->setAction(ui->actionSelectObject);
 
+    connect(ToolManager::instance(), SIGNAL(currentToolChanged(BaseTool*)),
+            SLOT(currentToolChanged(BaseTool*)));
+    connect(ToolManager::instance(), SIGNAL(statusTextChanged(BaseTool*)),
+            SLOT(currentToolChanged(BaseTool*)));
+
     connect(mRoomComboBox, SIGNAL(currentIndexChanged(int)),
             SLOT(roomIndexChanged(int)));
 
@@ -257,6 +262,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->furnitureView->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(furnitureSelectionChanged()));
+
+    ui->statusLabel->clear();
 
     readSettings();
 
@@ -1344,6 +1351,14 @@ void BuildingEditorWindow::templateFromBuilding()
 void BuildingEditorWindow::mouseCoordinateChanged(const QPoint &tilePos)
 {
     ui->coordLabel->setText(tr("%1,%2").arg(tilePos.x()).arg(tilePos.y()));
+}
+
+void BuildingEditorWindow::currentToolChanged(BaseTool *tool)
+{
+    if (tool)
+        ui->statusLabel->setText(tool->statusText());
+    else
+        ui->statusLabel->clear();
 }
 
 void BuildingEditorWindow::resizeCoordsLabel()

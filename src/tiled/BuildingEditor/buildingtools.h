@@ -37,6 +37,7 @@ class FurnitureTile;
 class GraphicsObjectItem;
 class GraphicsRoofItem;
 class GraphicsRoofCornerItem;
+class GraphicsRoofHandleItem;
 class RoofCornerObject;
 class RoofObject;
 class Stairs;
@@ -64,6 +65,14 @@ public:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) = 0;
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) = 0;
 
+    QString statusText() const
+    { return mStatusText; }
+
+    void setStatusText(const QString &text);
+
+signals:
+    void statusTextChanged();
+
 public slots:
     void makeCurrent();
     virtual void documentChanged() {}
@@ -73,6 +82,7 @@ public slots:
 protected:
     FloorEditor *mEditor;
     QAction *mAction;
+    QString mStatusText;
 };
 
 /////
@@ -92,6 +102,10 @@ public:
 
 signals:
     void currentToolChanged(BaseTool *tool);
+    void statusTextChanged(BaseTool *tool);
+
+private slots:
+    void currentToolStatusTextChanged();
 
 private:
     static ToolManager *mInstance;
@@ -283,6 +297,7 @@ private:
     void resizeRoof(RoofObject *roof, int length, int thickness);
     void toggleShowWidth1(RoofObject *roof);
     void toggleShowWidth2(RoofObject *roof);
+    void toggleCapped(RoofObject *roof);
     void setHeight(RoofObject *roof, int height);
 
 private:
@@ -303,7 +318,7 @@ private:
 
     GraphicsRoofItem *mObjectItem; // item for roof object mouse is over
     RoofObject *mHandleObject; // roof object mouse is over
-    QGraphicsItem *mHandleItem;
+    GraphicsRoofHandleItem *mHandleItem;
     bool mMouseOverHandle;
     int mOriginalLength, mOriginalThickness;
 };
@@ -354,7 +369,7 @@ private:
 
     GraphicsRoofCornerItem *mObjectItem; // item for roof object mouse is over
     RoofCornerObject *mHandleObject; // roof object mouse is over
-    QGraphicsItem *mHandleItem;
+    GraphicsRoofHandleItem *mHandleItem;
     bool mMouseOverHandle;
     int mOriginalWidth, mOriginalHeight;
 };

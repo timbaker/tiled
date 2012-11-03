@@ -307,7 +307,8 @@ RoofObject::RoofObject(BuildingFloor *floor, int x, int y,
     mWidth2(width2),
     mGap(gap),
     mMidTile(false),
-    mHeight(3)
+    mHeight(3),
+    mCapped(true)
 {
 }
 
@@ -399,6 +400,11 @@ void RoofObject::setHeight(int height)
 {
     mHeight = height;
     resize(length(), thickness());
+}
+
+void RoofObject::toggleCapped()
+{
+    mCapped = !mCapped;
 }
 
 #include "buildingtiles.h"

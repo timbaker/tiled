@@ -79,7 +79,7 @@ public:
     bool LoadMapBaseXMLLots();
     bool validateTile(BuildingTile *btile, const char *key);
 
-    void setCurrentRoom(Room *mRoomComboBox) const; // TODO: move to BuildingDocument
+    void setCurrentRoom(Room *room) const; // TODO: move to BuildingDocument
     Room *currentRoom() const;
 
     BuildingDocument *currentDocument() const
@@ -151,6 +151,8 @@ private slots:
     void templateFromBuilding();
 
     void mouseCoordinateChanged(const QPoint &tilePos);
+
+    void currentToolChanged(BaseTool *tool);
 
     void updateActions();
 
