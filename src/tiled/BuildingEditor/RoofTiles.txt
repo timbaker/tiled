@@ -1,0 +1,26 @@
+tiles
+{
+    exterior_wall = walls_exterior_house_01_0
+    cap_tile = walls_exterior_roofs_01_0
+}
+tiles
+{
+    exterior_wall = walls_exterior_house_01_4
+    cap_tile = walls_exterior_roofs_02_0
+}
+tiles
+{
+    exterior_wall = walls_exterior_wooden_01_24
+    cap_tile = walls_exterior_roofs_02_24
+}
+tiles
+{
+    exterior_wall = walls_exterior_house_01_48
+    cap_tile = walls_exterior_roofs_03_0
+}
+tiles
+{
+    exterior_wall = walls_exterior_house_01_32
+    cap_tile = walls_exterior_roofs_03_24
+}
+

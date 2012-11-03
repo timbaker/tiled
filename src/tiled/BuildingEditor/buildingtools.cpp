@@ -27,6 +27,7 @@
 #include "buildingundoredo.h"
 #include "FloorEditor.h"
 #include "furnituregroups.h"
+#include "rooftiles.h"
 
 #include <QAction>
 #include <QApplication>
@@ -847,7 +848,8 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         mMode = NoMode;
         if (mObject->isValidPos()) {
             mObject->setTile(mCurrentTile);
-            mObject->setTile(mCurrentCapTile, 1);
+            mObject->setTile(RoofTiles::instance()->capTileForExteriorWall(
+                                 mEditor->building()->exteriorWall()), 1);
             BuildingFloor *floor = mEditor->document()->currentFloor();
             mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                                  floor,

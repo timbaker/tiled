@@ -142,3 +142,27 @@ category
         tile = location_hospitality_sunstarmotel_01_040
     }
 }
+category
+{
+    label = Roofs
+    name = roofs
+    tiles
+    {
+        tile = roofs_01_000
+        tile = roofs_01_024
+    }
+}
+category
+{
+    label = Roof Caps
+    name = roof_caps
+    tiles
+    {
+        tile = walls_exterior_roofs_01_000
+        tile = walls_exterior_roofs_01_024
+        tile = walls_exterior_roofs_02_000
+        tile = walls_exterior_roofs_02_024
+        tile = walls_exterior_roofs_03_000
+        tile = walls_exterior_roofs_03_024
+    }
+}

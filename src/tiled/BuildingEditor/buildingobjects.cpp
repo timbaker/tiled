@@ -20,6 +20,7 @@
 #include "buildingfloor.h"
 #include "buildingtiles.h"
 #include "furnituregroups.h"
+#include "rooftiles.h"
 
 using namespace BuildingEditor;
 
@@ -422,6 +423,9 @@ BuildingTile *RoofObject::roofTile(RoofObject::RoofTile tile) const
     if (tile >= CapRiseE1)
         btile = mCapTile;
 
+    if (!btile)
+        return 0;
+
     int index = 0;
     switch (tile) {
     case FlatS1: index = 0; break;
@@ -458,14 +462,16 @@ BuildingTile *RoofObject::roofTile(RoofObject::RoofTile tile) const
         return 0;
 
     case CapGapS3:
-//        tilesetName = QLatin1String("walls_exterior_house_01");
-//        index = 49;
-        return 0;
+        btile = RoofTiles::instance()->gapTileForCap(btile);
+        if (!btile)
+            return 0;
+        index = 1; // South wall
         break;
     case CapGapE3:
-//        tilesetName = QLatin1String("walls_exterior_house_01");
-//        index = 48;
-        return 0;
+        btile = RoofTiles::instance()->gapTileForCap(btile);
+        if (!btile)
+            return 0;
+        index = 0; // West wall
         break;
     }
     return BuildingTiles::instance()->getFurnitureTile(

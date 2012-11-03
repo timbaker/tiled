@@ -38,6 +38,7 @@
 #include "mixedtilesetview.h"
 #include "newbuildingdialog.h"
 #include "resizebuildingdialog.h"
+#include "rooftiles.h"
 #include "roomsdialog.h"
 #include "simplefile.h"
 #include "templatefrombuildingdialog.h"
@@ -273,6 +274,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 BuildingEditorWindow::~BuildingEditorWindow()
 {
     BuildingTemplates::deleteInstance();
+    RoofTiles::deleteInstance();
     BuildingTiles::deleteInstance(); // Ensure all the tilesets are released
     BuildingTMX::deleteInstance();
     BuildingPreferences::deleteInstance();
@@ -341,6 +343,7 @@ bool BuildingEditorWindow::Startup()
     static const char *configFiles[] = { "BuildingFurniture.txt",
                                          "BuildingTiles.txt",
                                          "BuildingTemplates.txt",
+                                         "RoofTiles.txt",
                                          "TMXConfig.txt",
                                          0 };
     for (int i = 0; configFiles[i]; i++) {
@@ -383,6 +386,13 @@ bool BuildingEditorWindow::Startup()
         QMessageBox::critical(this, tr("It's no good, Jim!"),
                               tr("Error while reading BuildingFurniture.txt\n")
                               + FurnitureGroups::instance()->errorString());
+        return false;
+    }
+
+    if (!RoofTiles::instance()->readTxt()) {
+        QMessageBox::critical(this, tr("It's no good, Jim!"),
+                              tr("Error while reading RoofTiles.txt\n")
+                              + RoofTiles::instance()->errorString());
         return false;
     }
 
@@ -726,9 +736,26 @@ void BuildingEditorWindow::furnitureSelectionChanged()
 
 void BuildingEditorWindow::currentEWallChanged(Tile *tile)
 {
+    mCurrentDocument->undoStack()->beginMacro(tr("Change Exterior Wall"));
+
     BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
                 QLatin1String("exterior_walls"), tile);
     mCurrentDocument->undoStack()->push(new ChangeEWall(mCurrentDocument, btile));
+
+    // Change the cap tiles for each roof object.
+    BuildingTile *capTile = RoofTiles::instance()->capTileForExteriorWall(btile);
+    foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
+        foreach (BuildingObject *object, floor->objects()) {
+            if (RoofObject *roof = object->asRoof()) {
+                mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
+                                                                         roof,
+                                                                         capTile,
+                                                                         1));
+            }
+        }
+    }
+
+    mCurrentDocument->undoStack()->endMacro();
 }
 
 void BuildingEditorWindow::currentIWallChanged(Tile *tile)
@@ -862,6 +889,16 @@ void BuildingEditorWindow::currentRoofChanged(Tile *tile)
                 QLatin1String("roofs"), tile);
     RoofTool::instance()->setCurrentTile(btile);
 
+#if 1
+    QList<BuildingObject*> objectList;
+    // Change the cap tiles for each roof object.
+    foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
+        foreach (BuildingObject *object, floor->objects()) {
+            if (object->asRoof() || object->asRoofCorner())
+                objectList += object;
+        }
+    }
+#else
     // Assign the new tile to selected roofs
     QList<BuildingObject*> objectList;
     foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
@@ -874,6 +911,7 @@ void BuildingEditorWindow::currentRoofChanged(Tile *tile)
                 objectList += roof;
         }
     }
+#endif
     if (objectList.count()) {
         if (objectList.count() > 1)
             mCurrentDocument->undoStack()->beginMacro(tr("Change Roof Tile"));
