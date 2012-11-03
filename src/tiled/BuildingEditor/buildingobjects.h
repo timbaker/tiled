@@ -25,6 +25,7 @@ namespace BuildingEditor {
 class BuildingFloor;
 class BuildingTile;
 class FurnitureTile;
+class RoofObject;
 
 class BuildingObject
 {
@@ -66,6 +67,12 @@ public:
     Direction dir() const
     { return mDir; }
 
+    bool isW() const
+    { return mDir == W; }
+
+    bool isN() const
+    { return mDir == N; }
+
     QString dirString() const;
     static Direction dirFromString(const QString &s);
 
@@ -80,6 +87,8 @@ public:
 
     virtual void rotate(bool right);
     virtual void flip(bool horizontal);
+
+    virtual RoofObject *asRoof() { return 0; }
 
 protected:
     BuildingFloor *mFloor;
@@ -180,8 +189,20 @@ public:
     bool isValidPos(const QPoint &offset = QPoint(),
                     BuildingEditor::BuildingFloor *floor = 0) const;
 
+    RoofObject *asRoof() { return this; }
+
     void setLength(int length)
     { mLength = length; }
+
+    int length() const
+    { return mLength; }
+
+    int thickness() const
+    {
+        if (mMidTile)
+            return 3;
+        return mWidth1 + mGap + mWidth2;
+    }
 
     void setWidths(int width1, int width2)
     { mWidth1 = width1, mWidth2 = width2; }
@@ -203,6 +224,9 @@ public:
 
     void resize(int length, int thickness);
 
+    void toggleWidth1();
+    void toggleWidth2();
+
     enum RoofTile {
         FlatS1, FlatS2, FlatS3,
         FlatE1, FlatE2, FlatE3,
@@ -217,9 +241,9 @@ public:
 
 private:
     int mLength;
-    int mWidth1; // Thickness above (mDir=W) or left (mDir=N) of the midline
-    int mWidth2; // Thickness below (mDir=W) or right (mDir=N) of the midline
-    int mGap; // Gap between mWidth1 and mWidth2 slope, only valid for mWidth1/2 == 3
+    int mWidth1; // Thickness above (mDir=W) or left of (mDir=N) the gap
+    int mWidth2; // Thickness below (mDir=W) or right of (mDir=N) the gap
+    int mGap; // Gap between mWidth1 and mWidth2 slopes
     bool mMidTile;
 };
 

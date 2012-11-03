@@ -237,19 +237,25 @@ void GraphicsObjectItem::paint(QPainter *painter,
     }
 
     if (RoofObject *roof = dynamic_cast<RoofObject*>(mObject)) {
-        QRectF r1, r2, r3;
-        r1 = r2 = r3 = mObject->bounds().translated(dragOffset);
-        if (roof->dir() == BuildingObject::W) {
-            r1.setBottom(mObject->y() + dragOffset.y() + (roof->midTile() ? 0.5 : 0));
-            r2.setTop(r1.bottom()); r2.setBottom(r2.top() + roof->gap());
-            r3.setTop(r2.bottom());
-        } else if (roof->dir() == BuildingObject::N) {
-            r1.setRight(mObject->x() + dragOffset.x() + (roof->midTile() ? 0.5 : 0));
-            r2.setLeft(r1.right()); r2.setRight(r2.left() + roof->gap());
-            r3.setTop(r2.right());
+        QRectF r1, rGap, r2;
+        r1 = rGap = r2 = roof->bounds().translated(dragOffset);
+        qreal thick1 = roof->width1() ? roof->width1() + (roof->midTile() ? 0.5 : 0)
+                                      : 0;
+        qreal thick2 = roof->width2() ? roof->width2() + (roof->midTile() ? 0.5 : 0)
+                                      : 0;
+        if (roof->isW()) {
+            r1.setBottom(r1.top() + thick1);
+            r2.setTop(r2.bottom() - thick2);
+            rGap.setTop(r1.bottom());
+            rGap.setBottom(r2.top());
+        } else if (roof->isN()) {
+            r1.setRight(r1.left() + thick1);
+            r2.setLeft(r2.right() - thick2);
+            rGap.setLeft(r1.right());
+            rGap.setRight(r2.left());
         }
         painter->fillRect(mEditor->tileToSceneRectF(r1), Qt::darkGray);
-        painter->fillRect(mEditor->tileToSceneRectF(r2), Qt::gray);
+        painter->fillRect(mEditor->tileToSceneRectF(rGap), Qt::gray);
         painter->fillRect(mEditor->tileToSceneRectF(r2), Qt::lightGray);
     }
 }
@@ -348,6 +354,62 @@ void GraphicsObjectItem::setValidPos(bool valid)
         mValidPos = valid;
         update();
     }
+}
+
+/////
+
+
+GraphicsRoofItem::GraphicsRoofItem(FloorEditor *editor, RoofObject *roof) :
+    GraphicsObjectItem(editor, roof),
+    mHandleItem(new QGraphicsRectItem(this)),
+    mWidth1Item(new QGraphicsEllipseItem(this)),
+    mWidth2Item(new QGraphicsEllipseItem(this)),
+    mShowHandles(false)
+{
+    mHandleItem->setBrush(Qt::gray);
+    mHandleItem->setCursor(Qt::SizeAllCursor);
+
+    mWidth1Item->setBrush(Qt::lightGray);
+    mWidth2Item->setBrush(Qt::lightGray);
+}
+
+void GraphicsRoofItem::synchWithObject()
+{
+    GraphicsObjectItem::synchWithObject();
+
+    mHandleItem->setVisible(mShowHandles);
+    mWidth1Item->setVisible(mShowHandles);
+    mWidth2Item->setVisible(mShowHandles);
+
+    QRectF r = boundingRect().translated(-pos());
+    QRectF r2 = r;
+    r2.setLeft(r.right() - 16);
+    r2.setTop(r.bottom() - 16);
+    mHandleItem->setRect(r2);
+
+    r2 = r;
+    r2.setRight(r.left() + 16);
+    r2.setBottom(r.top() + 16);
+    mWidth1Item->setRect(r2);
+
+    r2 = r;
+    if (mObject->isN()) {
+        r2.setLeft(r.right() - 16);
+        r2.setBottom(r.top() + 16);
+    } else {
+        r2.setRight(r.left() + 16);
+        r2.setTop(r.bottom() - 16);
+    }
+    mWidth2Item->setRect(r2);
+}
+
+void GraphicsRoofItem::setShowHandles(bool show)
+{
+    if (mShowHandles == show)
+        return;
+    mShowHandles = show;
+    synchWithObject();
+//    mHandleItem->setVisible(show);
 }
 
 /////
@@ -598,7 +660,11 @@ void FloorEditor::floorEdited(BuildingFloor *floor)
 void FloorEditor::objectAdded(BuildingObject *object)
 {
     Q_ASSERT(!itemForObject(object));
-    GraphicsObjectItem *item = new GraphicsObjectItem(this, object);
+    GraphicsObjectItem *item;
+    if (RoofObject *roof = object->asRoof())
+        item = new GraphicsRoofItem(this, roof);
+    else
+        item = new GraphicsObjectItem(this, object);
     item->setParentItem(mFloorItems[object->floor()->level()]);
     mObjectItems.insert(object->index(), item);
 //    addItem(item);

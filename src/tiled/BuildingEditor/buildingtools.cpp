@@ -679,10 +679,11 @@ RoofTool *RoofTool::instance()
 
 RoofTool::RoofTool() :
     BaseTool(),
-    mMouseDown(false),
+    mMode(NoMode),
     mObject(0),
     mItem(0),
     mCursorItem(0),
+    mObjectItem(0),
     mHandleObject(0),
     mHandleItem(0),
     mMouseOverHandle(false)
@@ -692,15 +693,26 @@ RoofTool::RoofTool() :
 void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
-        if (mMouseDown)
-            return;
+        if (mMode != NoMode)
+            return; // ignore clicks when creating/resizing
         mStartPos = mEditor->sceneToTile(event->scenePos());
         mCurrentPos = mStartPos;
-        mMouseDown = true;
         if (mMouseOverHandle) {
-            mOriginalSize = mHandleObject->bounds().size();
+            if (mHandleItem == mObjectItem->width1Handle()) {
+                toggleShowWidth1(mHandleObject);
+                return;
+            }
+            if (mHandleItem == mObjectItem->width2Handle()) {
+                toggleShowWidth2(mHandleObject);
+                return;
+            }
+            mOriginalLength = mHandleObject->length();
+            mOriginalThickness = mHandleObject->thickness();
+            mMode = Resize;
             return;
         }
+        if (!mEditor->currentFloorContains(mCurrentPos))
+            return;
         mObject = new RoofObject(mEditor->document()->currentFloor(),
                                  mStartPos.x(), mStartPos.y(),
                                  BuildingObject::W,
@@ -709,95 +721,97 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mItem = new GraphicsObjectItem(mEditor, mObject);
         mItem->setZValue(FloorEditor::ZVALUE_CURSOR);
         mEditor->addItem(mItem);
+        mMode = Create;
     }
 }
 
 void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (mMouseDown) {
-        mCurrentPos = mEditor->sceneToTile(event->scenePos());
-        QPoint diff = mCurrentPos - mStartPos;
-        if (mMouseOverHandle) {
-            if (mHandleObject->dir() == BuildingObject::W) {
-                resizeRoof(mHandleObject,
-                           mHandleObject->bounds().width() + diff.x(),
-                           mHandleObject->bounds().height() + diff.y());
-            } else {
-                resizeRoof(mHandleObject,
-                           mHandleObject->bounds().height() + diff.y(),
-                           mHandleObject->bounds().width() + diff.x());
-            }
-            return;
+    mCurrentPos = mEditor->sceneToTile(event->scenePos());
+
+    if (mMode == NoMode) {
+        if (!mCursorItem) {
+            mCursorItem = new QGraphicsRectItem;
+            mCursorItem->setZValue(FloorEditor::ZVALUE_CURSOR);
+            mCursorItem->setBrush(QColor(0,255,0,128));
+            mEditor->addItem(mCursorItem);
         }
+        mCursorItem->setRect(mEditor->tileToSceneRect(mCurrentPos));
+
+        updateHandle(event->scenePos());
+
+        mCursorItem->setVisible(mEditor->currentFloorContains(mCurrentPos) &&
+                                !mMouseOverHandle);
+        return;
+    }
+
+    QPoint diff = mCurrentPos - mStartPos;
+
+    if (mMode == Resize) {
+        if (mCurrentPos.x() < mHandleObject->x())
+            diff.setX(mHandleObject->x() - mStartPos.x() + (mHandleObject->isN() ? 1 : 0));
+        if (mCurrentPos.y() < mHandleObject->y())
+            diff.setY(mHandleObject->y() - mStartPos.y() + (mHandleObject->isW() ? 1 : 0));
+        if (mCurrentPos.x() >= mEditor->document()->currentFloor()->width())
+            diff.setX(mEditor->document()->currentFloor()->width() - mStartPos.x() - 1);
+        if (mCurrentPos.y() >= mEditor->document()->currentFloor()->height())
+            diff.setY(mEditor->document()->currentFloor()->height() - mStartPos.y() - 1);
+        if (mHandleObject->isW()) {
+            resizeRoof(mHandleObject,
+                       mHandleObject->length() + diff.x(),
+                       mHandleObject->thickness() + diff.y());
+        } else {
+            resizeRoof(mHandleObject,
+                       mHandleObject->length() + diff.y(),
+                       mHandleObject->thickness() + diff.x());
+        }
+        return;
+    }
+
+    if (mMode == Create) {
+        if (!mEditor->currentFloorContains(mCurrentPos))
+            return;
         if (qAbs(diff.x()) > qAbs(diff.y())) {
             mObject->setDir(BuildingObject::W);
+            mObject->setLength(qAbs(diff.x()) + 1);
             diff.setY(0);
-            mObject->setLength(qAbs(diff.x()));
-            if (diff.x() < 0)
+            if (diff.x() < 0) {
                 mObject->setPos(mStartPos + diff);
-            else
+            } else {
                 mObject->setPos(mStartPos);
-            mObject->setMidTile(mMidTileY);
-            // The gap can only be > 0 when width1/width2 is 3, because there
-            // aren't any wall segments shorter than 3 tiles high that could go
-            // into the gap.
-//            mObject->setGap(mMidTileY ? 0 : 1);
+            }
         } else {
             mObject->setDir(BuildingObject::N);
-            mObject->setLength(qAbs(diff.y()));
+            mObject->setLength(qAbs(diff.y()) + 1);
             diff.setX(0);
-            if (diff.y() < 0)
+            if (diff.y() < 0) {
                 mObject->setPos(mStartPos + diff);
-            else
+            } else {
                 mObject->setPos(mStartPos);
-            mObject->setMidTile(mMidTileX);
-//            mObject->setGap(mMidTileX ? 0 : 1);
+            }
         }
         mItem->synchWithObject();
         mItem->update();
-    } else {
-        QPointF p = mEditor->sceneToTileF(event->scenePos());
-        QPointF m(p.x() - int(p.x()), p.y() - int(p.y()));
-        if (m.x() >= 0.75)
-            p.setX(p.x() + 1);
-        if (m.y() >= 0.75)
-            p.setY(p.y() + 1);
-        mMidTileX = (m.x() >= 0.25 && m.x() < 0.75);
-        mMidTileY = (m.y() >= 0.25 && m.y() < 0.75);
-        if (!mCursorItem) {
-            mCursorItem = new QGraphicsRectItem;
-            mCursorItem->setBrush(Qt::red);
-            mCursorItem->setZValue(FloorEditor::ZVALUE_CURSOR);
-            mEditor->addItem(mCursorItem);
-        }
-        QRectF r = mEditor->tileToSceneRectF(QRectF(p - m + QPointF(mMidTileX ? 0.5 : 0, mMidTileY ? 0.5 : 0),
-                                             QSizeF(0.4, 0.4)));
-        mCursorItem->setRect(r.translated(-r.width() / 2, -r.height() / 2));
-
-        updateHandle(event->scenePos());
     }
 }
 
 void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (mMouseDown && (event->button() == Qt::LeftButton)) {
-        mMouseDown = false;
-        if (mMouseOverHandle) {
-            int length, thickness;
-            if (mHandleObject->dir() == BuildingObject::W) {
-                length = mHandleObject->bounds().width();
-                thickness = mHandleObject->bounds().height();
-                mHandleObject->resize(mOriginalSize.width(), mOriginalSize.height());
-            } else {
-                length = mHandleObject->bounds().height();
-                thickness = mHandleObject->bounds().width();
-                mHandleObject->resize(mOriginalSize.height(), mOriginalSize.width());
-            }
-            mEditor->document()->undoStack()->push(new ResizeRoof(mEditor->document(),
-                                                                  mHandleObject,
-                                                                  length, thickness));
-            return;
-        }
+    if (event->button() != Qt::LeftButton)
+        return;
+
+    if (mMode == Resize) {
+        mMode = NoMode;
+        int length = mHandleObject->length(), thickness = mHandleObject->thickness();
+        mHandleObject->resize(mOriginalLength, mOriginalThickness);
+        mEditor->document()->undoStack()->push(new ResizeRoof(mEditor->document(),
+                                                              mHandleObject,
+                                                              length, thickness));
+        return;
+    }
+
+    if (mMode == Create) {
+        mMode = NoMode;
         if (mObject->isValidPos()) {
             BuildingFloor *floor = mEditor->document()->currentFloor();
             mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
@@ -818,31 +832,42 @@ void RoofTool::documentChanged()
     mItem = 0;
     mCursorItem = 0;
     mHandleItem = 0;
+    mObjectItem = 0;
+
+    if (mEditor->document())
+        connect(mEditor->document(),
+                SIGNAL(objectAboutToBeRemoved(BuildingObject*)),
+                SLOT(objectAboutToBeRemoved(BuildingObject*)));
 }
 
 void RoofTool::activate()
 {
     if (mCursorItem)
         mEditor->addItem(mCursorItem);
-    if (mHandleItem)
-        mEditor->addItem(mHandleItem);
 }
 
 void RoofTool::deactivate()
 {
     if (mCursorItem)
         mEditor->removeItem(mCursorItem);
-    if (mHandleItem)
-        mEditor->removeItem(mHandleItem);
+}
+
+void RoofTool::objectAboutToBeRemoved(BuildingObject *object)
+{
+    if (object == mHandleObject) {
+        mHandleObject = 0;
+        mObjectItem = 0;
+        mMouseOverHandle = false;
+        mMode = NoMode;
+    }
 }
 
 RoofObject *RoofTool::topmostRoofAt(const QPointF &scenePos)
 {
     foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
-        if (GraphicsObjectItem *objectItem = dynamic_cast<GraphicsObjectItem*>(item)) {
-            if (objectItem->object()->floor() == mEditor->document()->currentFloor()) {
-                if (RoofObject *ro = dynamic_cast<RoofObject*>(objectItem->object()))
-                    return ro;
+        if (GraphicsRoofItem *roofItem = dynamic_cast<GraphicsRoofItem*>(item)) {
+            if (roofItem->object()->floor() == mEditor->document()->currentFloor()) {
+                return roofItem->object()->asRoof();
             }
         }
     }
@@ -853,10 +878,14 @@ void RoofTool::updateHandle(const QPointF &scenePos)
 {
     RoofObject *ro = topmostRoofAt(scenePos);
 
+    mHandleItem = 0;
     mMouseOverHandle = false;
     if (ro && (ro == mHandleObject)) {
         foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
-            if (item == mHandleItem) {
+            if (item == mObjectItem->resizeHandle() ||
+                    item == mObjectItem->width1Handle() ||
+                    item == mObjectItem->width2Handle()) {
+                mHandleItem = item;
                 mMouseOverHandle = true;
                 break;
             }
@@ -864,11 +893,18 @@ void RoofTool::updateHandle(const QPointF &scenePos)
         return;
     }
 
+    if (mObjectItem) {
+        mObjectItem->setShowHandles(false);
+        mObjectItem = 0;
+    }
+
     if (ro) {
+#if 0
         if (!mHandleItem) {
             mHandleItem = new QGraphicsRectItem;
-            mHandleItem->setBrush(Qt::blue);
+            mHandleItem->setBrush(Qt::gray);
             mHandleItem->setZValue(FloorEditor::ZVALUE_CURSOR);
+            mHandleItem->setCursor(Qt::SizeAllCursor);
             mEditor->addItem(mHandleItem);
         }
         QRectF r = mEditor->tileToSceneRect(ro->bounds());
@@ -876,23 +912,57 @@ void RoofTool::updateHandle(const QPointF &scenePos)
         r.setTop(r.bottom() - 16);
         mHandleItem->setRect(r);
         mHandleItem->setVisible(true);
+#endif
+        mObjectItem = mEditor->itemForObject(ro)->asRoof();
+        mObjectItem->setShowHandles(true);
     } else {
+#if 0
         if (mHandleItem)
             mHandleItem->setVisible(false);
+        if (mObjectItem) {
+            mObjectItem->setShowHandles(false);
+            mObjectItem = 0;
+//            mHandleItem = 0;
+        }
+#endif
     }
     mHandleObject = ro;
 }
 
-void RoofTool::resizeRoof(RoofObject *roofObject, int length, int thickness)
+void RoofTool::resizeRoof(RoofObject *roof, int length, int thickness)
 {
-    roofObject->resize(length, thickness);
-    mEditor->itemForObject(roofObject)->synchWithObject();
+    if (length < 1 || thickness < 2)
+        return;
 
-    QRectF r = mEditor->tileToSceneRect(roofObject->bounds());
-    mStartPos = roofObject->bounds().bottomRight();
-    r.setLeft(r.right() - 8);
-    r.setTop(r.bottom() - 8);
+    int oldLength = roof->length(), oldThickness = roof->thickness();
+    roof->resize(length, thickness);
+    if (!roof->isValidPos()) {
+        roof->resize(oldLength, oldThickness);
+        return;
+    }
+
+    mEditor->itemForObject(roof)->synchWithObject();
+    QRectF r = mEditor->tileToSceneRect(roof->bounds());
+    mStartPos = roof->bounds().bottomRight();
+#if 0
+    r.setLeft(r.right() - 16);
+    r.setTop(r.bottom() - 16);
     mHandleItem->setRect(r);
+#endif
+}
+
+void RoofTool::toggleShowWidth1(RoofObject *roof)
+{
+    roof->toggleWidth1();
+    mEditor->itemForObject(roof)->synchWithObject();
+    mEditor->document()->emitObjectChanged(roof);
+}
+
+void RoofTool::toggleShowWidth2(RoofObject *roof)
+{
+    roof->toggleWidth2();
+    mEditor->itemForObject(roof)->synchWithObject();
+    mEditor->document()->emitObjectChanged(roof);
 }
 
 /////

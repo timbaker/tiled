@@ -24,6 +24,7 @@
 #include <QSize>
 
 class QAction;
+class QGraphicsItem;
 class QGraphicsRectItem;
 class QGraphicsSceneMouseEvent;
 
@@ -34,6 +35,7 @@ class Door;
 class FloorEditor;
 class FurnitureTile;
 class GraphicsObjectItem;
+class GraphicsRoofItem;
 class RoofObject;
 class Stairs;
 class Window;
@@ -270,26 +272,37 @@ public:
     void activate();
     void deactivate();
 
+private slots:
+    void objectAboutToBeRemoved(BuildingObject *object);
+
 private:
     RoofObject *topmostRoofAt(const QPointF &scenePos);
     void updateHandle(const QPointF &scenePos);
-    void resizeRoof(RoofObject *roofObject, int length, int thickness);
+    void resizeRoof(RoofObject *roof, int length, int thickness);
+    void toggleShowWidth1(RoofObject *roof);
+    void toggleShowWidth2(RoofObject *roof);
 
 private:
     static RoofTool *mInstance;
-    bool mMouseDown;
+
+    enum Mode {
+        NoMode,
+        Create,
+        Resize
+    };
+    Mode mMode;
+
     QPoint mStartPos;
     QPoint mCurrentPos;
-    bool mMidTileX;
-    bool mMidTileY;
     RoofObject *mObject;
     GraphicsObjectItem *mItem;
     QGraphicsRectItem *mCursorItem;
 
-    RoofObject *mHandleObject;
-    QGraphicsRectItem *mHandleItem;
+    GraphicsRoofItem *mObjectItem; // item for roof object mouse is over
+    RoofObject *mHandleObject; // roof object mouse is over
+    QGraphicsItem *mHandleItem;
     bool mMouseOverHandle;
-    QSize mOriginalSize;
+    int mOriginalLength, mOriginalThickness;
 };
 
 /////

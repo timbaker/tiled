@@ -71,6 +71,10 @@ public:
     void emitBuildingResized()
     { emit buildingResized(); }
 
+    void emitObjectChanged(BuildingObject *object)
+    { emit objectTileChanged(object); }
+
+
     // +UNDO/REDO
     Room *changeRoomAtPosition(BuildingFloor *floor, const QPoint &pos, Room *room);
     BuildingTile *changeEWall(BuildingTile *tile);

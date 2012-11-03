@@ -19,6 +19,7 @@
 #define FLOOREDITOR_H
 
 #include <QGraphicsItem>
+//#include <QGraphicsEllipseItem>
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include <QSet>
@@ -38,6 +39,8 @@ class Building;
 class BuildingDocument;
 class BuildingFloor;
 class FloorEditor;
+class GraphicsRoofItem;
+class RoofObject;
 class Room;
 
 /////
@@ -96,7 +99,7 @@ public:
     BuildingObject *object() const
     { return mObject; }
 
-    void synchWithObject();
+    virtual void synchWithObject();
     QPainterPath calcShape();
 
     void setSelected(bool selected);
@@ -111,7 +114,9 @@ public:
     bool isValidPos() const
     { return mValidPos; }
 
-private:
+    virtual GraphicsRoofItem *asRoof() { return 0; }
+
+protected:
     FloorEditor *mEditor;
     BuildingObject *mObject;
     QRectF mBoundingRect;
@@ -120,6 +125,33 @@ private:
     QPoint mDragOffset;
     QPainterPath mShape;
     bool mValidPos;
+};
+
+class GraphicsRoofItem : public GraphicsObjectItem
+{
+public:
+    GraphicsRoofItem(FloorEditor *editor, RoofObject *roof);
+
+    void synchWithObject();
+
+    GraphicsRoofItem *asRoof() { return this; }
+
+    void setShowHandles(bool show);
+
+    QGraphicsItem *resizeHandle() const
+    { return mHandleItem; }
+
+    QGraphicsItem *width1Handle() const
+    { return mWidth1Item; }
+
+    QGraphicsItem *width2Handle() const
+    { return mWidth2Item; }
+
+private:
+    QGraphicsRectItem *mHandleItem;
+    QGraphicsEllipseItem *mWidth1Item;
+    QGraphicsEllipseItem *mWidth2Item;
+    bool mShowHandles;
 };
 
 class FloorEditor : public QGraphicsScene

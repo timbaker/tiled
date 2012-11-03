@@ -313,11 +313,11 @@ RoofObject::RoofObject(BuildingFloor *floor, int x, int y,
 QRect RoofObject::bounds() const
 {
     if (mDir == N)
-        return mMidTile ? QRect(mX - 1, mY, 3, mLength) // restricted to 3 tiles wide
-                        : QRect(mX - mWidth1, mY, mWidth1 + mWidth2 + mGap, mLength);
+        return mMidTile ? QRect(mX, mY, 3, mLength) // restricted to 3 tiles wide
+                        : QRect(mX, mY, mWidth1 + mWidth2 + mGap, mLength);
     if (mDir == W)
-        return mMidTile ? QRect(mX, mY - 1, mLength, 3) // restricted to 3 tiles wide
-                        : QRect(mX, mY - mWidth1, mLength, mWidth1 + mWidth2 + mGap);
+        return mMidTile ? QRect(mX, mY, mLength, 3) // restricted to 3 tiles wide
+                        : QRect(mX, mY, mLength, mWidth1 + mWidth2 + mGap);
     return QRect();
 }
 
@@ -344,24 +344,54 @@ bool RoofObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
 void RoofObject::resize(int length, int thickness)
 {
     if (thickness <= 2) {
-        mWidth1 = mWidth2 = 1;
-        mGap = 0;
+        if (mWidth1) mWidth1 = mWidth2 ? 1 : 2;
+        if (mWidth2) mWidth2 = mWidth1 ? 1 : 2;
+        mGap = thickness - mWidth1 - mWidth2;
         mMidTile = false;
     } else if (thickness == 3) {
-        mWidth1 = mWidth2 = 1;
-        mGap = 0;
-        mMidTile = true;
-    } else if (thickness == 4) {
-        mWidth1 = mWidth2 = 2;
-        mGap = 0;
+        if (mWidth1) mWidth1 = mWidth2 ? 1 : 3;
+        if (mWidth2) mWidth2 = mWidth1 ? 1 : 3;
+        mGap = thickness - mWidth1 - mWidth2;
+        if (mGap == 1)
+            mGap = 0;
+        mMidTile = mWidth1 && mWidth2;
+    } else if (thickness < 6) {
+        if (mWidth1) mWidth1 = mWidth2 ? 2 : 3;
+        if (mWidth2) mWidth2 = mWidth1 ? 2 : 3;
+        mGap = thickness - mWidth1 - mWidth2;
         mMidTile = false;
     } else {
-        mWidth1 = mWidth2 = 3;
-        mGap = qMax(0, thickness - 6);
+        if (mWidth1) mWidth1 = 3;
+        if (mWidth2) mWidth2 = 3;
+        mGap = qMax(0, thickness - mWidth1 - mWidth2);
         mMidTile = false;
     }
 
     mLength = length;
+}
+
+void RoofObject::toggleWidth1()
+{
+    int thickness = this->thickness();
+    if (mWidth1 > 0) {
+        mWidth1 = 0;
+        mGap += mWidth1;
+    } else {
+        mWidth1 = 1; // some non-zero value
+    }
+    resize(length(), thickness);
+}
+
+void RoofObject::toggleWidth2()
+{
+    int thickness = this->thickness();
+    if (mWidth2 > 0) {
+        mGap += mWidth2;
+        mWidth2 = 0;
+    } else {
+        mWidth2 = 1; // some non-zero value
+    }
+    resize(length(), thickness);
 }
 
 #include "buildingtiles.h"
