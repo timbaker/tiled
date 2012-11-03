@@ -33,15 +33,18 @@ class Zoomable;
 namespace BuildingEditor {
 
 class BuildingObject;
-class GraphicsObjectItem;
 class BaseTool;
 class Building;
 class BuildingDocument;
 class BuildingFloor;
 class FloorEditor;
-class GraphicsRoofItem;
+class RoofCornerObject;
 class RoofObject;
 class Room;
+
+class GraphicsObjectItem;
+class GraphicsRoofItem;
+class GraphicsRoofCornerItem;
 
 /////
 
@@ -115,6 +118,7 @@ public:
     { return mValidPos; }
 
     virtual GraphicsRoofItem *asRoof() { return 0; }
+    virtual GraphicsRoofCornerItem *asRoofCorner() { return 0; }
 
 protected:
     FloorEditor *mEditor;
@@ -155,6 +159,35 @@ private:
     QGraphicsEllipseItem *mWidth1Item;
     QGraphicsEllipseItem *mWidth2Item;
     QGraphicsPathItem *mHeightItem;
+    bool mShowHandles;
+};
+
+class GraphicsRoofCornerItem : public GraphicsObjectItem
+{
+public:
+    GraphicsRoofCornerItem(FloorEditor *editor, RoofCornerObject *roof);
+
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+    void synchWithObject();
+
+    GraphicsRoofCornerItem *asRoofCorner() { return this; }
+
+    void setShowHandles(bool show);
+
+    QGraphicsItem *resizeHandle() const
+    { return mHandleItem; }
+
+    QGraphicsItem *heightHandle() const
+    { return mHeightItem; }
+
+    QGraphicsItem *toggleHandle() const
+    { return mToggleItem; }
+
+private:
+    QGraphicsRectItem *mHandleItem;
+    QGraphicsPathItem *mHeightItem;
+    QGraphicsEllipseItem *mToggleItem;
     bool mShowHandles;
 };
 

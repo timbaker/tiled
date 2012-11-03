@@ -437,9 +437,91 @@ BuildingTile *RoofObject::tile(RoofObject::RoofTile tile) const
     case CapMidS: index = 6; break;
     case CapMidE: index = 14; break;
 
-    case CapGapS: tilesetName = QLatin1String("walls_exterior_house_01"); index = 49; break;
-    case CapGapE: tilesetName = QLatin1String("walls_exterior_house_01"); index = 48; break;
+    case CapGapS1: case CapGapS2:
+    case CapGapE1: case CapGapE2:
+        // These are the 1/3- and 2/3-height walls which don't have tiles
+        return 0;
+
+    case CapGapS3: tilesetName = QLatin1String("walls_exterior_house_01"); index = 49; break;
+    case CapGapE3: tilesetName = QLatin1String("walls_exterior_house_01"); index = 48; break;
     }
+    return BuildingTiles::instance()->getFurnitureTile(BuildingTiles::instance()->nameForTile(tilesetName, index));
+}
+
+/////
+
+RoofCornerObject::RoofCornerObject(BuildingFloor *floor, int x, int y,
+                                   int width, int height, int depth) :
+    BuildingObject(floor, x, y, Invalid),
+    mWidth(width),
+    mHeight(height),
+    mDepth(depth),
+    mInner(true)
+{
+}
+
+QRect RoofCornerObject::bounds() const
+{
+    return QRect(mX, mY, mWidth, mHeight);
+}
+
+void RoofCornerObject::rotate(bool right)
+{
+}
+
+void RoofCornerObject::flip(bool horizontal)
+{
+}
+
+bool RoofCornerObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
+{
+    if (!floor)
+        floor = mFloor;
+
+    // No +1 because roofs can't be on the outside edge of the building.
+    QRect floorBounds(0, 0, floor->width(), floor->height());
+    QRect objectBounds = bounds().translated(offset);
+    return (floorBounds & objectBounds) == objectBounds;
+}
+
+void RoofCornerObject::setDepth(int depth)
+{
+    mDepth = depth;
+}
+
+void RoofCornerObject::resize(int width, int height)
+{
+    mWidth = width, mHeight = height;
+}
+
+void RoofCornerObject::toggleInner()
+{
+    mInner = !mInner;
+}
+
+BuildingTile *RoofCornerObject::tile(RoofCornerObject::RoofTile tile) const
+{
+    QString tilesetName = QLatin1String("roofs_01");
+    int index = 0;
+
+    switch (tile) {
+    case FlatS1: index = 0; break;
+    case FlatS2: index = 1; break;
+    case FlatS3: index = 2; break;
+
+    case FlatE1: index = 5; break;
+    case FlatE2: index = 4; break;
+    case FlatE3: index = 3; break;
+
+    case Outer1: index = 8; break;
+    case Outer2: index = 9; break;
+    case Outer3: index = 10; break;
+
+    case Inner1: index = 11; break;
+    case Inner2: index = 12; break;
+    case Inner3: index = 13; break;
+    }
+
     return BuildingTiles::instance()->getFurnitureTile(BuildingTiles::instance()->nameForTile(tilesetName, index));
 }
 

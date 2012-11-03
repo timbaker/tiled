@@ -25,6 +25,7 @@ namespace BuildingEditor {
 class BuildingFloor;
 class BuildingTile;
 class FurnitureTile;
+class RoofCornerObject;
 class RoofObject;
 
 class BuildingObject
@@ -89,6 +90,7 @@ public:
     virtual void flip(bool horizontal);
 
     virtual RoofObject *asRoof() { return 0; }
+    virtual RoofCornerObject *asRoofCorner() { return 0; }
 
 protected:
     BuildingFloor *mFloor;
@@ -239,7 +241,8 @@ public:
         CapRiseE1, CapRiseE2, CapRiseE3, CapFallE1, CapFallE2, CapFallE3,
         CapRiseS1, CapRiseS2, CapRiseS3, CapFallS1, CapFallS2, CapFallS3,
         CapMidS, CapMidE,
-        CapGapS, CapGapE
+        CapGapS1, CapGapS2, CapGapS3,
+        CapGapE1, CapGapE2, CapGapE3
     };
 
     BuildingTile *tile(RoofTile tile) const;
@@ -251,6 +254,51 @@ private:
     int mGap; // Gap between mWidth1 and mWidth2 slopes
     bool mMidTile;
     int mHeight;
+};
+
+class RoofCornerObject : public BuildingObject
+{
+public:
+    RoofCornerObject(BuildingFloor *floor, int x, int y, int width, int height,
+                     int depth);
+
+    QRect bounds() const;
+
+    void rotate(bool right);
+    void flip(bool horizontal);
+
+    bool isValidPos(const QPoint &offset = QPoint(),
+                    BuildingEditor::BuildingFloor *floor = 0) const;
+
+    RoofCornerObject *asRoofCorner()
+    { return this; }
+
+    int width() const { return mWidth; }
+    int height() const { return mHeight; }
+    int depth() const { return mDepth; }
+
+    void setWidth(int width) { resize(width, mHeight); }
+    void setHeight(int height) { resize(mWidth, height); }
+    void setDepth(int depth);
+
+    void resize(int width, int height);
+
+    bool isInner() const { return mInner; }
+    void toggleInner();
+
+    enum RoofTile {
+        FlatS1, FlatS2, FlatS3,
+        FlatE1, FlatE2, FlatE3,
+        Outer1, Outer2, Outer3,
+        Inner1, Inner2, Inner3
+    };
+    BuildingTile *tile(RoofTile tile) const;
+
+private:
+    int mWidth;
+    int mHeight;
+    int mDepth;
+    bool mInner;
 };
 
 } // namespace BulidingEditor

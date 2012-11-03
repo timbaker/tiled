@@ -420,7 +420,7 @@ void ChangeFurnitureObjectTile::swap()
 /////
 
 ResizeRoof::ResizeRoof(BuildingDocument *doc, RoofObject *roof, int length, int thickness) :
-    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Furniture Tile")),
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Roof")),
     mDocument(doc),
     mObject(roof),
     mLength(length),
@@ -433,5 +433,21 @@ void ResizeRoof::swap()
     mDocument->resizeRoof(mObject, mLength, mThickness);
 }
 
+/////
+
+ResizeRoofCorner::ResizeRoofCorner(BuildingDocument *doc, RoofCornerObject *corner,
+                                   int width, int height) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Roof Corner")),
+    mDocument(doc),
+    mObject(corner),
+    mWidth(width),
+    mHeight(height)
+{
+}
+
+void ResizeRoofCorner::swap()
+{
+    mDocument->resizeRoofCorner(mObject, mWidth, mHeight);
+}
 
 /////

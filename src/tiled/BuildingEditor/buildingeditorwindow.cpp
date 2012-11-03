@@ -150,6 +150,11 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     RoofTool::instance()->setEditor(roomEditor);
     RoofTool::instance()->setAction(ui->actionRoof);
 
+    connect(ui->actionRoofCorner, SIGNAL(triggered()),
+            RoofCornerTool::instance(), SLOT(makeCurrent()));
+    RoofCornerTool::instance()->setEditor(roomEditor);
+    RoofCornerTool::instance()->setAction(ui->actionRoofCorner);
+
     connect(ui->actionSelectObject, SIGNAL(triggered()),
             SelectMoveObjectTool::instance(), SLOT(makeCurrent()));
     SelectMoveObjectTool::instance()->setEditor(roomEditor);
@@ -1381,6 +1386,7 @@ void BuildingEditorWindow::updateActions()
     FurnitureTool::instance()->setEnabled(mCurrentDocument != 0 &&
             FurnitureTool::instance()->currentTile() != 0);
     RoofTool::instance()->setEnabled(mCurrentDocument != 0);
+    RoofCornerTool::instance()->setEnabled(mCurrentDocument != 0);
     SelectMoveObjectTool::instance()->setEnabled(mCurrentDocument != 0);
 
     ui->actionUpLevel->setEnabled(mCurrentDocument != 0);

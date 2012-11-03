@@ -984,6 +984,267 @@ void RoofTool::setHeight(RoofObject *roof, int height)
 
 /////
 
+RoofCornerTool *RoofCornerTool::mInstance = 0;
+
+RoofCornerTool *RoofCornerTool::instance()
+{
+    if (!mInstance)
+        mInstance = new RoofCornerTool;
+    return mInstance;
+}
+
+RoofCornerTool::RoofCornerTool() :
+    BaseTool(),
+    mMode(NoMode),
+    mObject(0),
+    mItem(0),
+    mCursorItem(0),
+    mObjectItem(0),
+    mHandleObject(0),
+    mHandleItem(0),
+    mMouseOverHandle(false)
+{
+}
+
+void RoofCornerTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        if (mMode != NoMode)
+            return; // ignore clicks when creating/resizing
+        mStartPos = mEditor->sceneToTile(event->scenePos());
+        mCurrentPos = mStartPos;
+        if (mMouseOverHandle) {
+            if (mHandleItem == mObjectItem->heightHandle()) {
+                if (mHandleItem->mapFromScene(event->scenePos()).y() < mHandleItem->boundingRect().height()/2)
+                    setDepth(mHandleObject, mHandleObject->depth() + 1);
+                else
+                    setDepth(mHandleObject, mHandleObject->depth() - 1);
+                return;
+            }
+            if (mHandleItem == mObjectItem->toggleHandle()) {
+                toggleInnerOuter(mHandleObject);
+                return;
+            }
+            mOriginalWidth = mHandleObject->width();
+            mOriginalHeight = mHandleObject->height();
+            mMode = Resize;
+            return;
+        }
+        if (!mEditor->currentFloorContains(mCurrentPos))
+            return;
+        mObject = new RoofCornerObject(mEditor->document()->currentFloor(),
+                                 mStartPos.x(), mStartPos.y(), 1, 1, 3);
+        mItem = new GraphicsRoofCornerItem(mEditor, mObject);
+        mItem->setZValue(FloorEditor::ZVALUE_CURSOR);
+        mEditor->addItem(mItem);
+        mMode = Create;
+    }
+}
+
+void RoofCornerTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    mCurrentPos = mEditor->sceneToTile(event->scenePos());
+
+    if (mMode == NoMode) {
+        if (!mCursorItem) {
+            mCursorItem = new QGraphicsRectItem;
+            mCursorItem->setZValue(FloorEditor::ZVALUE_CURSOR);
+            mCursorItem->setBrush(QColor(0,255,0,128));
+            mEditor->addItem(mCursorItem);
+        }
+        mCursorItem->setRect(mEditor->tileToSceneRect(mCurrentPos));
+
+        updateHandle(event->scenePos());
+
+        mCursorItem->setVisible(mEditor->currentFloorContains(mCurrentPos) &&
+                                !mMouseOverHandle);
+        return;
+    }
+
+    QPoint diff = mCurrentPos - mStartPos;
+
+    if (mMode == Resize) {
+        if (mCurrentPos.x() < mHandleObject->x())
+            diff.setX(mHandleObject->x() - mStartPos.x() + (mHandleObject->isN() ? 1 : 0));
+        if (mCurrentPos.y() < mHandleObject->y())
+            diff.setY(mHandleObject->y() - mStartPos.y() + (mHandleObject->isW() ? 1 : 0));
+        if (mCurrentPos.x() >= mEditor->document()->currentFloor()->width())
+            diff.setX(mEditor->document()->currentFloor()->width() - mStartPos.x() - 1);
+        if (mCurrentPos.y() >= mEditor->document()->currentFloor()->height())
+            diff.setY(mEditor->document()->currentFloor()->height() - mStartPos.y() - 1);
+
+        resizeRoof(mHandleObject,
+                   mHandleObject->width() + diff.x(),
+                   mHandleObject->height() + diff.y());
+        return;
+    }
+
+    if (mMode == Create) {
+        if (!mEditor->currentFloorContains(mCurrentPos))
+            return;
+
+        mObject->setWidth(qAbs(diff.x()) + 1);
+        mObject->setHeight(qAbs(diff.y()) + 1);
+
+        int x = mStartPos.x(), y = mStartPos.y();
+        if (diff.x() < 0)
+            x += diff.x();
+        if (diff.y() < 0)
+            y += diff.y();
+        mObject->setPos(QPoint(x, y));
+
+        mItem->synchWithObject();
+        mItem->update();
+    }
+}
+
+void RoofCornerTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button() != Qt::LeftButton)
+        return;
+
+    if (mMode == Resize) {
+        mMode = NoMode;
+        int width = mHandleObject->width(), height = mHandleObject->height();
+        mHandleObject->resize(mOriginalWidth, mOriginalHeight);
+        mEditor->document()->undoStack()->push(new ResizeRoofCorner(mEditor->document(),
+                                                              mHandleObject,
+                                                              width, height));
+        return;
+    }
+
+    if (mMode == Create) {
+        mMode = NoMode;
+        if (mObject->isValidPos()) {
+            BuildingFloor *floor = mEditor->document()->currentFloor();
+            mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
+                                                                 floor,
+                                                                 floor->objectCount(),
+                                                                 mObject));
+        } else
+            delete mObject;
+        mObject = 0;
+        delete mItem;
+        mItem = 0;
+    }
+}
+
+void RoofCornerTool::documentChanged()
+{
+    // When the document changes, the scene is cleared, deleting our items.
+    mItem = 0;
+    mCursorItem = 0;
+    mHandleItem = 0;
+    mObjectItem = 0;
+
+    if (mEditor->document())
+        connect(mEditor->document(),
+                SIGNAL(objectAboutToBeRemoved(BuildingObject*)),
+                SLOT(objectAboutToBeRemoved(BuildingObject*)));
+}
+
+void RoofCornerTool::activate()
+{
+    if (mCursorItem)
+        mEditor->addItem(mCursorItem);
+}
+
+void RoofCornerTool::deactivate()
+{
+    if (mCursorItem)
+        mEditor->removeItem(mCursorItem);
+}
+
+void RoofCornerTool::objectAboutToBeRemoved(BuildingObject *object)
+{
+    if (object == mHandleObject) {
+        mHandleObject = 0;
+        mObjectItem = 0;
+        mMouseOverHandle = false;
+        mMode = NoMode;
+    }
+}
+
+RoofCornerObject *RoofCornerTool::topmostRoofCornerAt(const QPointF &scenePos)
+{
+    foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
+        if (GraphicsRoofCornerItem *cornerItem = dynamic_cast<GraphicsRoofCornerItem*>(item)) {
+            if (cornerItem->object()->floor() == mEditor->document()->currentFloor()) {
+                return cornerItem->object()->asRoofCorner();
+            }
+        }
+    }
+    return 0;
+}
+
+void RoofCornerTool::updateHandle(const QPointF &scenePos)
+{
+    RoofCornerObject *ro = topmostRoofCornerAt(scenePos);
+
+    mHandleItem = 0;
+    mMouseOverHandle = false;
+    if (ro && (ro == mHandleObject)) {
+        foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
+            if (item == mObjectItem->resizeHandle() ||
+                    item == mObjectItem->heightHandle() ||
+                    item == mObjectItem->toggleHandle()) {
+                mHandleItem = item;
+                mMouseOverHandle = true;
+                break;
+            }
+        }
+        return;
+    }
+
+    if (mObjectItem) {
+        mObjectItem->setShowHandles(false);
+        mObjectItem = 0;
+    }
+
+    if (ro) {
+        mObjectItem = mEditor->itemForObject(ro)->asRoofCorner();
+        mObjectItem->setShowHandles(true);
+    } else {
+    }
+    mHandleObject = ro;
+}
+
+void RoofCornerTool::resizeRoof(RoofCornerObject *corner, int width, int height)
+{
+    if (width < 1 || height < 1)
+        return;
+
+    int oldWidth = corner->width(), oldHeight = corner->height();
+    corner->resize(width, height);
+    if (!corner->isValidPos()) {
+        corner->resize(oldWidth, oldHeight);
+        return;
+    }
+
+    mEditor->itemForObject(corner)->synchWithObject();
+    QRectF r = mEditor->tileToSceneRect(corner->bounds());
+    mStartPos = corner->bounds().bottomRight();
+}
+
+void RoofCornerTool::setDepth(RoofCornerObject *corner, int depth)
+{
+    if (depth < 1 || depth > 3)
+        return;
+    corner->setDepth(depth);
+    mEditor->itemForObject(corner)->synchWithObject();
+    mEditor->document()->emitObjectChanged(corner);
+
+}
+
+void RoofCornerTool::toggleInnerOuter(RoofCornerObject *corner)
+{
+    corner->toggleInner();
+    mEditor->itemForObject(corner)->synchWithObject();
+    mEditor->document()->emitObjectChanged(corner);
+}
+
+/////
+
 SelectMoveObjectTool *SelectMoveObjectTool::mInstance = 0;
 
 SelectMoveObjectTool *SelectMoveObjectTool::instance()

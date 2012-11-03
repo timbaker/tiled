@@ -36,6 +36,8 @@ class FloorEditor;
 class FurnitureTile;
 class GraphicsObjectItem;
 class GraphicsRoofItem;
+class GraphicsRoofCornerItem;
+class RoofCornerObject;
 class RoofObject;
 class Stairs;
 class Window;
@@ -304,6 +306,57 @@ private:
     QGraphicsItem *mHandleItem;
     bool mMouseOverHandle;
     int mOriginalLength, mOriginalThickness;
+};
+
+/////
+
+class RoofCornerTool : public BaseTool
+{
+    Q_OBJECT
+public:
+    static RoofCornerTool *instance();
+
+    RoofCornerTool();
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
+    void documentChanged();
+    void activate();
+    void deactivate();
+
+private slots:
+    void objectAboutToBeRemoved(BuildingObject *object);
+
+private:
+    static RoofCornerTool *mInstance;
+
+    enum Mode {
+        NoMode,
+        Create,
+        Resize
+    };
+    Mode mMode;
+
+private:
+    RoofCornerObject *topmostRoofCornerAt(const QPointF &scenePos);
+    void updateHandle(const QPointF &scenePos);
+    void resizeRoof(RoofCornerObject *corner, int width, int height);
+    void setDepth(RoofCornerObject *corner, int depth);
+    void toggleInnerOuter(RoofCornerObject *corner);
+
+    QPoint mStartPos;
+    QPoint mCurrentPos;
+    RoofCornerObject *mObject;
+    GraphicsObjectItem *mItem;
+    QGraphicsRectItem *mCursorItem;
+
+    GraphicsRoofCornerItem *mObjectItem; // item for roof object mouse is over
+    RoofCornerObject *mHandleObject; // roof object mouse is over
+    QGraphicsItem *mHandleItem;
+    bool mMouseOverHandle;
+    int mOriginalWidth, mOriginalHeight;
 };
 
 /////

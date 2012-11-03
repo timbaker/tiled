@@ -323,8 +323,12 @@ QPainterPath GraphicsObjectItem::calcShape()
         path.addRect(r);
     }
 
-    if (RoofObject *roof = dynamic_cast<RoofObject*>(mObject)) {
+    if (RoofObject *roof = mObject->asRoof()) {
         path.addRect(mEditor->tileToSceneRect(roof->bounds().translated(dragOffset)));
+    }
+
+    if (RoofCornerObject *corner = mObject->asRoofCorner()) {
+        path.addRect(mEditor->tileToSceneRect(corner->bounds().translated(dragOffset)));
     }
 
     return path;
@@ -421,6 +425,93 @@ void GraphicsRoofItem::setShowHandles(bool show)
     mShowHandles = show;
     synchWithObject();
 //    mHandleItem->setVisible(show);
+}
+
+/////
+
+GraphicsRoofCornerItem::GraphicsRoofCornerItem(FloorEditor *editor, RoofCornerObject *roof) :
+    GraphicsObjectItem(editor, roof),
+    mHandleItem(new QGraphicsRectItem(this)),
+    mHeightItem(new QGraphicsPathItem(this)),
+    mToggleItem(new QGraphicsEllipseItem(this)),
+    mShowHandles(false)
+{
+    mHandleItem->setBrush(Qt::gray);
+    mHandleItem->setCursor(Qt::SizeAllCursor);
+
+    QPainterPath path;
+    path.addRect(0, 0, 14, 14);
+    path.addRect(0, 15, 14, 14);
+    mHeightItem->setPath(path);
+    mHeightItem->setBrush(Qt::gray);
+
+    mToggleItem->setBrush(Qt::gray);
+}
+
+void GraphicsRoofCornerItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+    QPainterPath path = shape();
+    painter->fillPath(path, Qt::darkGray);
+    QPen pen(mValidPos ? Qt::blue : Qt::red);
+    painter->setPen(pen);
+    painter->drawPath(path);
+
+    QPoint dragOffset = mDragging ? mDragOffset : QPoint();
+    QRectF r = mEditor->tileToSceneRect(mObject->bounds().translated(dragOffset));
+    int depth = mObject->asRoofCorner()->depth();
+    path = QPainterPath();
+    if (mObject->asRoofCorner()->isInner()) {
+        path.moveTo(r.topLeft());
+        path.lineTo(r.topRight());
+        path.lineTo(r.topRight() + QPointF(0, 30 * depth));
+        path.lineTo(r.topLeft() + QPointF(30 * depth, 30 * depth));
+        path.lineTo(r.bottomLeft() + QPointF(30 * depth, 0));
+        path.lineTo(r.bottomLeft());
+        path.closeSubpath();//path.lineTo(r.topLeft());
+    } else {
+        path.moveTo(r.topRight());
+        path.lineTo(r.bottomRight());
+        path.lineTo(r.bottomLeft());
+        path.lineTo(r.bottomLeft() - QPointF(0, 30 * depth));
+        path.lineTo(r.bottomRight() - QPointF(30 * depth, 30 * depth));
+        path.lineTo(r.topRight() - QPointF(30 * depth, 0));
+        path.closeSubpath();//path.lineTo(r.topRight());
+    }
+    QColor color = mSelected ? Qt::cyan : Qt::white;
+    if (!mValidPos)
+        color = Qt::red;
+    painter->fillPath(path, color);
+}
+
+void GraphicsRoofCornerItem::synchWithObject()
+{
+    GraphicsObjectItem::synchWithObject();
+
+    mHandleItem->setVisible(mShowHandles);
+    mHeightItem->setVisible(mShowHandles);
+    mToggleItem->setVisible(mShowHandles);
+
+    QRectF r = boundingRect().translated(-pos());
+    QRectF r2 = r;
+    r2.setLeft(r.right() - 15);
+    r2.setTop(r.bottom() - 15);
+    mHandleItem->setRect(r2);
+
+    mHeightItem->setPos(r.center() - QPoint(mHeightItem->boundingRect().width()/2,
+                                            mHeightItem->boundingRect().height()/2));
+
+    r2 = r;
+    r2.setRight(r.left() + 15);
+    r2.setBottom(r.top() + 15);
+    mToggleItem->setRect(r2);
+}
+
+void GraphicsRoofCornerItem::setShowHandles(bool show)
+{
+    if (mShowHandles == show)
+        return;
+    mShowHandles = show;
+    synchWithObject();
 }
 
 /////
@@ -674,6 +765,8 @@ void FloorEditor::objectAdded(BuildingObject *object)
     GraphicsObjectItem *item;
     if (RoofObject *roof = object->asRoof())
         item = new GraphicsRoofItem(this, roof);
+    else if (RoofCornerObject *corner = object->asRoofCorner())
+        item = new GraphicsRoofCornerItem(this, corner);
     else
         item = new GraphicsObjectItem(this, object);
     item->setParentItem(mFloorItems[object->floor()->level()]);
@@ -860,5 +953,4 @@ void FloorView::adjustScale(qreal scale)
     setRenderHint(QPainter::SmoothPixmapTransform,
                   mZoomable->smoothTransform());
 }
-
 /////
