@@ -154,6 +154,7 @@ private:
     QMap<int,CompositeLayerGroupItem*> mLayerGroupItems;
     QString mError;
     bool mShowWalls;
+    bool mLoading;
 };
 
 class BuildingPreviewView : public QGraphicsView

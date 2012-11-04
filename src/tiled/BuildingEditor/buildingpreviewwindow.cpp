@@ -294,7 +294,8 @@ BuildingPreviewScene::BuildingPreviewScene(QWidget *parent) :
     mMapComposite(0),
     mMap(0),
     mRenderer(0),
-    mGridItem(0)
+    mGridItem(0),
+    mLoading(false)
 {
     setBackgroundBrush(Qt::darkGray);
 
@@ -363,9 +364,11 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
 
     mMapComposite = new MapComposite(mapInfo);
 
+    mLoading = true;
     foreach (BuildingFloor *floor, doc->building()->floors())
         floorAdded(floor);
     currentFloorChanged();
+    mLoading = false;
 
     mRenderer->setMaxLevel(mMapComposite->maxLevel());
     setSceneRect(mMapComposite->boundingRect(mRenderer));
@@ -490,12 +493,14 @@ void BuildingPreviewScene::currentFloorChanged()
     for (int i = level + 1; i < mDocument->building()->floorCount(); i++)
         mLayerGroupItems[i]->setVisible(false);
 
-    if (!mShowWalls) {
+    if (!mShowWalls || mLoading) {
         foreach (BuildingFloor *floor, mDocument->building()->floors()) {
             CompositeLayerGroup *layerGroup = mMapComposite->tileLayersForLevel(floor->level());
             mMapComposite->tileLayersForLevel(floor->level())
                     ->setLayerVisibility(layerGroup->layers()[LayerIndexWall],
                                          mShowWalls || floor != mDocument->currentFloor());
+            if (mLoading)
+                BuildingFloorToTileLayers(floor, layerGroup->layers());
             itemForFloor(floor)->synchWithTileLayers();
             itemForFloor(floor)->updateBounds();
         }
@@ -597,9 +602,11 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
     CompositeLayerGroupItem *item = new CompositeLayerGroupItem(lg, mRenderer);
     mLayerGroupItems[lg->level()] = item;
     floor->LayoutToSquares();
-    BuildingFloorToTileLayers(floor, lg->layers());
-    item->synchWithTileLayers();
-    item->updateBounds();
+    if (!mLoading) {
+        BuildingFloorToTileLayers(floor, lg->layers());
+        item->synchWithTileLayers();
+        item->updateBounds();
+    }
     addItem(item);
 #if 0
     // Add an object layer for RoomDefs.  Objects are only added when
@@ -611,7 +618,7 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
     foreach (BuildingObject *object, floor->objects())
         objectAdded(object);
 
-    if (didResize) {
+    if (didResize && !mLoading) {
         foreach (CompositeLayerGroupItem *item, mLayerGroupItems) {
             int level = item->layerGroup()->level();
             if (level == floor->level())
@@ -631,6 +638,9 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
 
 void BuildingPreviewScene::objectAdded(BuildingObject *object)
 {
+    if (mLoading)
+        return;
+
     BuildingFloor *floor = object->floor();
     floorEdited(floor);
 
