@@ -306,7 +306,8 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
     }
 
     bool readDir = true;
-    if (type == QLatin1String("furniture"))
+    if (type == QLatin1String("furniture") ||
+            type == QLatin1String("roof_corner"))
         readDir = false;
 
     BuildingObject::Direction dir = BuildingObject::dirFromString(dirString);
@@ -346,6 +347,30 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
         }
         furniture->setFurnitureTile(mFurnitureTiles.at(index)->tile(orient));
         object = furniture;
+    } else if (type == QLatin1String("roof")) {
+        int length = atts.value(QLatin1String("length")).toString().toInt();
+        int thickness = atts.value(QLatin1String("thickness")).toString().toInt();
+        int width1 = atts.value(QLatin1String("width1")).toString().toInt();
+        int width2 = atts.value(QLatin1String("width2")).toString().toInt();
+        bool capped = atts.value(QLatin1String("capped")).toString().toInt() ? true : false;
+        int depth = atts.value(QLatin1String("depth")).toString().toInt();
+        RoofObject *roof = new RoofObject(floor, x, y, dir,
+                                          length, thickness, width1, width2,
+                                          capped, depth);
+        roof->setTile(BuildingTiles::instance()->getRoofTile(tile));
+        const QString capTile = atts.value(QLatin1String("CapTile")).toString();
+        roof->setTile(BuildingTiles::instance()->getRoofCapTile(capTile), 1);
+        object = roof;
+    } else if (type == QLatin1String("roof_corner")) {
+        int width = atts.value(QLatin1String("width")).toString().toInt();
+        int height = atts.value(QLatin1String("height")).toString().toInt();
+        int depth = atts.value(QLatin1String("depth")).toString().toInt();
+        bool inner = atts.value(QLatin1String("inner")).toString().toInt() ? true : false;
+        RoofCornerObject *corner = new RoofCornerObject(floor, x, y,
+                                                        width, height, depth,
+                                                        inner);
+        corner->setTile(BuildingTiles::instance()->getRoofTile(tile));
+        object = corner;
     } else {
         xml.raiseError(tr("Unknown object type '%1'").arg(type));
         return 0;

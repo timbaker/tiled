@@ -750,8 +750,9 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mObject = new RoofObject(mEditor->document()->currentFloor(),
                                  mStartPos.x(), mStartPos.y(),
                                  BuildingObject::W,
-                                 /*length=*/1, /*width1=*/1, /*width2=*/1,
-                                 /*gap=*/0);
+                                 /*length=*/1, /*thickness=*/2,
+                                 /*width1=*/1, /*width2=*/1,
+                                 /*capped=*/true, /*depth=*/3);
         mItem = new GraphicsObjectItem(mEditor, mObject);
         mItem->setZValue(FloorEditor::ZVALUE_CURSOR);
         mEditor->addItem(mItem);
@@ -1077,7 +1078,7 @@ void RoofCornerTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         if (!mEditor->currentFloorContains(mCurrentPos))
             return;
         mObject = new RoofCornerObject(mEditor->document()->currentFloor(),
-                                 mStartPos.x(), mStartPos.y(), 1, 1, 3);
+                                 mStartPos.x(), mStartPos.y(), 1, 1, 3, true);
         mItem = new GraphicsRoofCornerItem(mEditor, mObject);
         mItem->setZValue(FloorEditor::ZVALUE_CURSOR);
         mEditor->addItem(mItem);

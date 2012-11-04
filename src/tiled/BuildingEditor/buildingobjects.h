@@ -187,7 +187,7 @@ class RoofObject : public BuildingObject
 {
 public:
     RoofObject(BuildingFloor *floor, int x, int y, Direction dir, int length,
-               int width1, int width2, int gap);
+               int thickness, int width1, int width2, bool capped, int depth);
 
     QRect bounds() const;
 
@@ -208,29 +208,16 @@ public:
     { return mLength; }
 
     int thickness() const
-    {
-        if (mMidTile)
-            return 3;
-        return mWidth1 + mGap + mWidth2;
-    }
-
-    void setWidths(int width1, int width2)
-    { mWidth1 = width1, mWidth2 = width2; }
+    { return mThickness; }
 
     int width1() const { return mWidth1; }
     int width2() const { return mWidth2; }
 
-    void setGap(int gap)
-    { mGap = gap; }
-
     int gap() const
-    { return mGap; }
-
-    void setMidTile(bool midTile)
-    { mMidTile = midTile; }
+    { return mThickness - mWidth1 - mWidth2; }
 
     bool midTile() const
-    { return mMidTile; }
+    { return mThickness == 3 && mWidth1 && mWidth2; }
 
     void resize(int length, int thickness);
 
@@ -265,10 +252,9 @@ public:
 
 private:
     int mLength;
+    int mThickness;
     int mWidth1; // Thickness above (mDir=W) or left of (mDir=N) the gap
     int mWidth2; // Thickness below (mDir=W) or right of (mDir=N) the gap
-    int mGap; // Gap between mWidth1 and mWidth2 slopes
-    bool mMidTile;
     int mHeight;
     bool mCapped;
     BuildingTile *mCapTile;
@@ -278,7 +264,7 @@ class RoofCornerObject : public BuildingObject
 {
 public:
     RoofCornerObject(BuildingFloor *floor, int x, int y, int width, int height,
-                     int depth);
+                     int depth, bool inner);
 
     QRect bounds() const;
 
