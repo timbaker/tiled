@@ -324,10 +324,29 @@ QRect RoofObject::bounds() const
 
 void RoofObject::rotate(bool right)
 {
+    int oldFloorWidth = mFloor->height();
+    int oldFloorHeight = mFloor->width();
+
+    mDir = isW() ? N : W;
+
+    if (right) {
+        int x = mX;
+        mX = oldFloorHeight - mY - bounds().width();
+        mY = x;
+    } else {
+        int x = mX;
+        mX = mY;
+        mY = oldFloorWidth - x - bounds().height();
+    }
 }
 
 void RoofObject::flip(bool horizontal)
 {
+    if (horizontal) {
+        mX = mFloor->width() - mX - bounds().width();
+    } else {
+        mY = mFloor->height() - mY - bounds().height();
+    }
 }
 
 void RoofObject::setTile(BuildingTile *tile, int alternate)
@@ -484,10 +503,29 @@ QRect RoofCornerObject::bounds() const
 
 void RoofCornerObject::rotate(bool right)
 {
+    int oldFloorWidth = mFloor->height();
+    int oldFloorHeight = mFloor->width();
+
+    qSwap(mWidth, mHeight);
+
+    if (right) {
+        int x = mX;
+        mX = oldFloorHeight - mY - mWidth;
+        mY = x;
+    } else {
+        int x = mX;
+        mX = mY;
+        mY = oldFloorWidth - x - mHeight;
+    }
 }
 
 void RoofCornerObject::flip(bool horizontal)
 {
+    if (horizontal) {
+        mX = mFloor->width() - mX - mWidth;
+    } else {
+        mY = mFloor->height() - mY - mHeight;
+    }
 }
 
 bool RoofCornerObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
