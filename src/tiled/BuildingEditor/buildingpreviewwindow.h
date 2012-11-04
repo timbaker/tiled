@@ -121,6 +121,7 @@ public:
 private:
     void BuildingToMap();
     void BuildingFloorToTileLayers(BuildingFloor *floor, const QVector<Tiled::TileLayer *> &layers);
+    CompositeLayerGroupItem *itemForFloor(BuildingFloor *floor);
 
 private slots:
     void currentFloorChanged();

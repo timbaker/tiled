@@ -433,7 +433,7 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                     if (tile)
                         tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
                 }
-                if ((index == LayerIndexWall) && (mShowWalls || floor != mDocument->currentFloor())) {
+                if ((index == LayerIndexWall) /*&& (mShowWalls || floor != mDocument->currentFloor())*/) {
                     BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionWall];
                     if (tile)
                         tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionWall])));
@@ -459,6 +459,11 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
     }
 }
 
+CompositeLayerGroupItem *BuildingPreviewScene::itemForFloor(BuildingFloor *floor)
+{
+    return mLayerGroupItems[floor->level()];
+}
+
 void BuildingPreviewScene::floorEdited(BuildingFloor *floor)
 {
     // Existence check needed while loading a map.
@@ -469,8 +474,8 @@ void BuildingPreviewScene::floorEdited(BuildingFloor *floor)
         return;
     floor->LayoutToSquares();
     BuildingFloorToTileLayers(floor, mMapComposite->tileLayersForLevel(floor->level())->layers());
-    mLayerGroupItems[floor->level()]->synchWithTileLayers();
-    mLayerGroupItems[floor->level()]->updateBounds();
+    itemForFloor(floor)->synchWithTileLayers();
+    itemForFloor(floor)->updateBounds();
 
     mRenderer->setMaxLevel(mMapComposite->maxLevel());
     setSceneRect(mMapComposite->boundingRect(mRenderer));
@@ -486,9 +491,14 @@ void BuildingPreviewScene::currentFloorChanged()
         mLayerGroupItems[i]->setVisible(false);
 
     if (!mShowWalls) {
-        foreach (BuildingFloor *floor, mDocument->building()->floors())
-            BuildingFloorToTileLayers(floor,
-                                      mMapComposite->tileLayersForLevel(floor->level())->layers());
+        foreach (BuildingFloor *floor, mDocument->building()->floors()) {
+            CompositeLayerGroup *layerGroup = mMapComposite->tileLayersForLevel(floor->level());
+            mMapComposite->tileLayersForLevel(floor->level())
+                    ->setLayerVisibility(layerGroup->layers()[LayerIndexWall],
+                                         mShowWalls || floor != mDocument->currentFloor());
+            itemForFloor(floor)->synchWithTileLayers();
+            itemForFloor(floor)->updateBounds();
+        }
     }
 }
 
@@ -682,8 +692,15 @@ void BuildingPreviewScene::showWalls(bool show)
 
     mShowWalls = show;
 
-    foreach (BuildingFloor *floor, mDocument->building()->floors())
-        BuildingFloorToTileLayers(floor, mMapComposite->tileLayersForLevel(floor->level())->layers());
+    foreach (BuildingFloor *floor, mDocument->building()->floors()) {
+        CompositeLayerGroup *layerGroup = mMapComposite->tileLayersForLevel(floor->level());
+        mMapComposite->tileLayersForLevel(floor->level())
+                ->setLayerVisibility(layerGroup->layers()[LayerIndexWall],
+                                     mShowWalls || floor != mDocument->currentFloor());
+        itemForFloor(floor)->synchWithTileLayers();
+        itemForFloor(floor)->updateBounds();
+    }
+//        BuildingFloorToTileLayers(floor, mMapComposite->tileLayersForLevel(floor->level())->layers());
     update();
 }
 
