@@ -115,7 +115,9 @@ public:
         LayerIndexWall,
         LayerIndexFrame,
         LayerIndexDoor,
-        LayerIndexFurniture
+        LayerIndexFurniture,
+        LayerIndexFurniture2,
+        LayerIndexRoof
     };
 
 private:

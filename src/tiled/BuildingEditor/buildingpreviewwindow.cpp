@@ -456,6 +456,16 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                     if (tile)
                         tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionFurniture])));
                 }
+                if (index == LayerIndexFurniture2) {
+                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionFurniture2];
+                    if (tile)
+                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionFurniture2])));
+                }
+                if (index == LayerIndexRoof) {
+                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionRoof];
+                    if (tile)
+                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionRoof])));
+                }
             }
         }
         index++;
@@ -555,23 +565,6 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
         didResize = true;
     }
 
-#if 0
-    foreach (QString layerName, BuildingTMX::instance()->layers()) {
-        // If the layer name is 0_Vegetation, only add it on level 0
-        int level;
-        if (MapComposite::levelForLayer(layerName, &level)) {
-            if (level != floor->level())
-                continue;
-        } else {
-            layerName = tr("%1_%2").arg(floor->level()).arg(layerName);
-        }
-        TileLayer *tl = new TileLayer(layerName, 0, 0,
-                                      mapSize.width(), mapSize.height());
-        mMap->addLayer(tl);
-        mMapComposite->layerAdded(mMap->layerCount() - 1);
-    }
-
-#else
     TileLayer *tl = new TileLayer(tr("%1_Floor").arg(floor->level()), 0, 0,
                                   mapSize.width(), mapSize.height());
     mMap->addLayer(tl);
@@ -596,7 +589,16 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
                        mapSize.width(), mapSize.height());
     mMap->addLayer(tl);
     mMapComposite->layerAdded(mMap->layerCount() - 1);
-#endif
+
+    tl = new TileLayer(tr("%1_Furniture2").arg(floor->level()), 0, 0,
+                       mapSize.width(), mapSize.height());
+    mMap->addLayer(tl);
+    mMapComposite->layerAdded(mMap->layerCount() - 1);
+
+    tl = new TileLayer(tr("%1_Roof").arg(floor->level()), 0, 0,
+                       mapSize.width(), mapSize.height());
+    mMap->addLayer(tl);
+    mMapComposite->layerAdded(mMap->layerCount() - 1);
 
     CompositeLayerGroup *lg = mMapComposite->tileLayersForLevel(floor->level());
     CompositeLayerGroupItem *item = new CompositeLayerGroupItem(lg, mRenderer);
@@ -615,6 +617,7 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
                                                0, 0, mapSize.width(), mapSize.height());
     mMap->addLayer(objectGroup);
 #endif
+
     foreach (BuildingObject *object, floor->objects())
         objectAdded(object);
 

@@ -49,6 +49,8 @@ public:
             SectionFrame,
             SectionDoor,
             SectionFurniture,
+            SectionFurniture2,
+            SectionRoof,
             MaxSection
         };
 
@@ -75,6 +77,7 @@ public:
         void ReplaceDoor(BuildingTile *tile, int offset);
         void ReplaceFrame(BuildingTile *tile, int offset);
         void ReplaceFurniture(BuildingTile *tile, int offset = 0);
+        void ReplaceRoof(BuildingTile *tile, int offset = 0);
 
         int getWallOffset();
         int getTileIndexForDoor();
