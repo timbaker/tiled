@@ -243,10 +243,13 @@ void BuildingFloor::LayoutToSquares()
                         squares[x][r.bottom()-1].ReplaceRoof(ro->roofTile(RoofObject::HalfFlatS));
                     }
 
+                    if (!ro->isCapped())
+                        continue;
+
                     // End cap
-                    squares[r.right()+1][ro->y()+0].ReplaceFurniture(ro->roofTile(RoofObject::CapFallE1));
-                    squares[r.right()+1][ro->y()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapMidE));
-                    squares[r.right()+1][ro->y()+2].ReplaceFurniture(ro->roofTile(RoofObject::CapRiseE1));
+                    squares[r.right()+1][ro->y()+0].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallE1), Square::WallOrientW);
+                    squares[r.right()+1][ro->y()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapMidE), Square::WallOrientW);
+                    squares[r.right()+1][ro->y()+2].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseE1), Square::WallOrientW);
                     continue;
                 }
                 for (int x = r.left(); x <= r.right(); x++) {
@@ -263,35 +266,35 @@ void BuildingFloor::LayoutToSquares()
 
                 // End cap (above midline)
                 if (ro->width1() == 3) {
-                    squares[r.right()+1][ro->y()+0].ReplaceFurniture(ro->roofTile(RoofObject::CapFallE1));
-                    squares[r.right()+1][ro->y()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapFallE2));
-                    squares[r.right()+1][ro->y()+2].ReplaceFurniture(ro->roofTile(RoofObject::CapFallE3));
+                    squares[r.right()+1][ro->y()+0].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallE1), Square::WallOrientW);
+                    squares[r.right()+1][ro->y()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallE2), Square::WallOrientW);
+                    squares[r.right()+1][ro->y()+2].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallE3), Square::WallOrientW);
                 } else if (ro->width1() == 2) {
-                    squares[r.right()+1][ro->y()+0].ReplaceFurniture(ro->roofTile(RoofObject::CapFallE1));
-                    squares[r.right()+1][ro->y()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapFallE2));
+                    squares[r.right()+1][ro->y()+0].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallE1), Square::WallOrientW);
+                    squares[r.right()+1][ro->y()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallE2), Square::WallOrientW);
                 } else if (ro->width1() == 1)
-                    squares[r.right()+1][ro->y()+0].ReplaceFurniture(ro->roofTile(RoofObject::CapFallE1));
+                    squares[r.right()+1][ro->y()+0].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallE1), Square::WallOrientW);
 
                 // End cap (gap)
                 for (int y = r.top() + ro->width1(); y < r.top()+ro->width1()+ro->gap(); y++) {
                     if (ro->height() == 1)
-                        squares[r.right()+1][y].ReplaceFurniture(ro->roofTile(RoofObject::CapGapE1));
+                        squares[r.right()+1][y].ReplaceRoofCap(ro->roofTile(RoofObject::CapGapE1), Square::WallOrientW);
                     else if (ro->height() == 2)
-                        squares[r.right()+1][y].ReplaceFurniture(ro->roofTile(RoofObject::CapGapE2));
+                        squares[r.right()+1][y].ReplaceRoofCap(ro->roofTile(RoofObject::CapGapE2), Square::WallOrientW);
                     else if (ro->height() == 3)
-                        squares[r.right()+1][y].ReplaceFurniture(ro->roofTile(RoofObject::CapGapE3));
+                        squares[r.right()+1][y].ReplaceRoofCap(ro->roofTile(RoofObject::CapGapE3), Square::WallOrientW);
                 }
 
                 // End cap (below midline)
                 if (ro->width2() == 3) {
-                    squares[r.right()+1][r.bottom()-2].ReplaceFurniture(ro->roofTile(RoofObject::CapRiseE3));
-                    squares[r.right()+1][r.bottom()-1].ReplaceFurniture(ro->roofTile(RoofObject::CapRiseE2));
-                    squares[r.right()+1][r.bottom()-0].ReplaceFurniture(ro->roofTile(RoofObject::CapRiseE1));
+                    squares[r.right()+1][r.bottom()-2].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseE3), Square::WallOrientW);
+                    squares[r.right()+1][r.bottom()-1].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseE2), Square::WallOrientW);
+                    squares[r.right()+1][r.bottom()-0].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseE1), Square::WallOrientW);
                 } else if (ro->width2() == 2) {
-                    squares[r.right()+1][r.bottom()-1].ReplaceFurniture(ro->roofTile(RoofObject::CapRiseE2));
-                    squares[r.right()+1][r.bottom()-0].ReplaceFurniture(ro->roofTile(RoofObject::CapRiseE1));
+                    squares[r.right()+1][r.bottom()-1].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseE2), Square::WallOrientW);
+                    squares[r.right()+1][r.bottom()-0].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseE1), Square::WallOrientW);
                 } else if (ro->width2() == 1)
-                    squares[r.right()+1][r.bottom()-0].ReplaceFurniture(ro->roofTile(RoofObject::CapRiseE1));
+                    squares[r.right()+1][r.bottom()-0].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseE1), Square::WallOrientW);
             } else if (ro->isN()) {
                 roofRegionUnion |= QRegion(r.adjusted(0,0,0,1));
                 roofRegionXor ^= QRegion(r.adjusted(0,0,0,1));
@@ -301,10 +304,13 @@ void BuildingFloor::LayoutToSquares()
                         squares[r.right()-1][y].ReplaceRoof(ro->roofTile(RoofObject::HalfFlatE));
                     }
 
+                    if (!ro->isCapped())
+                        continue;
+
                     // End cap
-                    squares[ro->x()+0][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapRiseS1));
-                    squares[ro->x()+1][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapMidS));
-                    squares[ro->x()+2][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapFallS1));
+                    squares[ro->x()+0][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseS1), Square::WallOrientN);
+                    squares[ro->x()+1][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapMidS), Square::WallOrientN);
+                    squares[ro->x()+2][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallS1), Square::WallOrientN);
                     continue;
                 }
                 for (int y = r.top(); y <= r.bottom(); y++) {
@@ -321,35 +327,35 @@ void BuildingFloor::LayoutToSquares()
 
                 // End cap (left of midline)
                 if (ro->width1() == 3) {
-                    squares[ro->x()+0][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapRiseS1));
-                    squares[ro->x()+1][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapRiseS2));
-                    squares[ro->x()+2][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapRiseS3));
+                    squares[ro->x()+0][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseS1), Square::WallOrientN);
+                    squares[ro->x()+1][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseS2), Square::WallOrientN);
+                    squares[ro->x()+2][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseS3), Square::WallOrientN);
                 } else if (ro->width1() == 2) {
-                    squares[ro->x()+0][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapRiseS1));
-                    squares[ro->x()+1][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapRiseS2));
+                    squares[ro->x()+0][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseS1), Square::WallOrientN);
+                    squares[ro->x()+1][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseS2), Square::WallOrientN);
                 } else if (ro->width1() == 1)
-                    squares[ro->x()+0][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapRiseS1));
+                    squares[ro->x()+0][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseS1), Square::WallOrientN);
 
                 // End cap (gap)
                 for (int x = r.left() + ro->width1(); x < r.left()+ro->width1()+ro->gap(); x++) {
                     if (ro->height() == 1)
-                        squares[x][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapGapS1));
+                        squares[x][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapGapS1), Square::WallOrientN);
                     else if (ro->height() == 2)
-                        squares[x][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapGapS2));
+                        squares[x][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapGapS2), Square::WallOrientN);
                     else if (ro->height() == 3)
-                        squares[x][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapGapS3));
+                        squares[x][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapGapS3), Square::WallOrientN);
                 }
 
                 // End cap (right of midline)
                 if (ro->width2() == 3) {
-                    squares[r.right()-2][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapFallS3));
-                    squares[r.right()-1][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapFallS2));
-                    squares[r.right()-0][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapFallS1));
+                    squares[r.right()-2][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallS3), Square::WallOrientN);
+                    squares[r.right()-1][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallS2), Square::WallOrientN);
+                    squares[r.right()-0][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallS1), Square::WallOrientN);
                 } else if (ro->width2() == 2) {
-                    squares[r.right()-1][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapFallS2));
-                    squares[r.right()-0][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapFallS1));
+                    squares[r.right()-1][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallS2), Square::WallOrientN);
+                    squares[r.right()-0][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallS1), Square::WallOrientN);
                 } else if (ro->width2() == 1)
-                    squares[r.right()-0][r.bottom()+1].ReplaceFurniture(ro->roofTile(RoofObject::CapFallS1));
+                    squares[r.right()-0][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallS1), Square::WallOrientN);
             }
         }
 
@@ -647,6 +653,13 @@ void BuildingFloor::Square::ReplaceRoof(BuildingTile *tile, int offset)
 {
     mTiles[SectionRoof] = tile;
     mTileOffset[SectionRoof] = offset;
+}
+
+void BuildingFloor::Square::ReplaceRoofCap(BuildingTile *tile, Square::WallOrientation orient)
+{
+    mTiles[SectionWall] = tile;
+    mWallOrientation = orient;
+    mTileOffset[SectionWall] = 0;
 }
 
 int BuildingFloor::Square::getWallOffset()
