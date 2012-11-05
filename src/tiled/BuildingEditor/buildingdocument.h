@@ -73,7 +73,7 @@ public:
     { emit buildingResized(); }
 
     void emitObjectChanged(BuildingObject *object)
-    { emit objectTileChanged(object); }
+    { emit objectChanged(object); }
 
 
     // +UNDO/REDO
@@ -122,6 +122,7 @@ signals:
     void objectRemoved(BuildingFloor *floor, int index);
     void objectMoved(BuildingObject *object);
     void objectTileChanged(BuildingObject *object);
+    void objectChanged(BuildingObject *object);
 
     void roomAdded(Room *room);
     void roomAboutToBeRemoved(Room *room);

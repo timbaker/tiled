@@ -306,6 +306,8 @@ private slots:
     void objectAboutToBeRemoved(BuildingObject *object);
     void objectMoved(BuildingObject *object);
     void objectTileChanged(BuildingObject *object);
+    void objectChanged(BuildingObject *object);
+
     void selectedObjectsChanged();
 
     void roomChanged(Room *room);

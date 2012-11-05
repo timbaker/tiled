@@ -101,6 +101,8 @@ public:
     virtual void rotate(bool right);
     virtual void flip(bool horizontal);
 
+    virtual bool affectsFloorAbove() const { return false; }
+
     virtual Door *asDoor() { return 0; }
     virtual Window *asWindow() { return 0; }
     virtual Stairs *asStairs() { return 0; }
@@ -156,6 +158,8 @@ public:
 
     bool isValidPos(const QPoint &offset = QPoint(),
                     BuildingEditor::BuildingFloor *floor = 0) const;
+
+    bool affectsFloorAbove() const { return true; }
 
     Stairs *asStairs() { return this; }
 
@@ -216,6 +220,8 @@ public:
 
     bool isValidPos(const QPoint &offset = QPoint(),
                     BuildingEditor::BuildingFloor *floor = 0) const;
+
+    bool affectsFloorAbove() const { return true; }
 
     RoofObject *asRoof() { return this; }
 
@@ -304,8 +310,9 @@ public:
     bool isValidPos(const QPoint &offset = QPoint(),
                     BuildingEditor::BuildingFloor *floor = 0) const;
 
-    RoofCornerObject *asRoofCorner()
-    { return this; }
+    bool affectsFloorAbove() const { return true; }
+
+    RoofCornerObject *asRoofCorner() { return this; }
 
     int width() const { return mWidth; }
     int height() const { return mHeight; }

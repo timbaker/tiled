@@ -681,6 +681,8 @@ void FloorEditor::setDocument(BuildingDocument *doc)
                 SLOT(objectMoved(BuildingObject*)));
         connect(mDocument, SIGNAL(objectTileChanged(BuildingObject*)),
                 SLOT(objectTileChanged(BuildingObject*)));
+        connect(mDocument, SIGNAL(objectChanged(BuildingObject*)),
+                SLOT(objectChanged(BuildingObject*)));
         connect(mDocument, SIGNAL(selectedObjectsChanged()),
                 SLOT(selectedObjectsChanged()));
 
@@ -886,6 +888,14 @@ void FloorEditor::objectTileChanged(BuildingObject *object)
     GraphicsObjectItem *item = itemForObject(object);
     Q_ASSERT(item);
     item->synchWithObject();
+    item->update();
+}
+
+// This is for roofs being edited via handles
+void FloorEditor::objectChanged(BuildingObject *object)
+{
+    GraphicsObjectItem *item = itemForObject(object);
+    Q_ASSERT(item);
     item->update();
 }
 

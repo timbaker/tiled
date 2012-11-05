@@ -362,6 +362,8 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
             SLOT(objectMoved(BuildingObject*)));
     connect(mDocument, SIGNAL(objectTileChanged(BuildingObject*)),
             SLOT(objectTileChanged(BuildingObject*)));
+    connect(mDocument, SIGNAL(objectChanged(BuildingObject*)),
+            SLOT(objectMoved(BuildingObject*)));
 
     connect(mDocument, SIGNAL(buildingResized()), SLOT(buildingResized()));
     connect(mDocument, SIGNAL(buildingRotated()), SLOT(buildingRotated()));
@@ -607,9 +609,12 @@ void BuildingPreviewScene::objectAdded(BuildingObject *object)
     BuildingFloor *floor = object->floor();
     floorEdited(floor);
 
-    // Stairs affect the floor tiles on the floor above
-    if (object->asStairs() && (floor = floor->floorAbove()))
-        floorEdited(floor);
+    // Stairs affect the floor tiles on the floor above.
+    // Roofs sometimes affect the floor tiles on the floor above.
+    if (BuildingFloor *floorAbove = floor->floorAbove()) {
+        if (object->affectsFloorAbove())
+            floorEdited(floorAbove);
+    }
 }
 
 void BuildingPreviewScene::objectRemoved(BuildingFloor *floor, int index)
@@ -617,9 +622,10 @@ void BuildingPreviewScene::objectRemoved(BuildingFloor *floor, int index)
     Q_UNUSED(index)
     floorEdited(floor);
 
-    // Stairs affect the floor tiles on the floor above
-    if (floor = floor->floorAbove())
-        floorEdited(floor);
+    // Stairs affect the floor tiles on the floor above.
+    // Roofs sometimes affect the floor tiles on the floor above.
+    if (BuildingFloor *floorAbove = floor->floorAbove())
+        floorEdited(floorAbove);
 }
 
 void BuildingPreviewScene::objectMoved(BuildingObject *object)
@@ -627,13 +633,12 @@ void BuildingPreviewScene::objectMoved(BuildingObject *object)
     BuildingFloor *floor = object->floor();
     floorEdited(floor);
 
-    // Stairs affect the floor tiles on the floor above
-    if (object->asStairs() && (floor = floor->floorAbove()))
-        floorEdited(floor);
-
-    // Roofs affect the floor tiles on the floor above
-    if ((object->asRoof() || object->asRoofCorner()) && (floor = floor->floorAbove()))
-        floorEdited(floor);
+    // Stairs affect the floor tiles on the floor above.
+    // Roofs sometimes affect the floor tiles on the floor above.
+    if (BuildingFloor *floorAbove = floor->floorAbove()) {
+        if (object->affectsFloorAbove())
+            floorEdited(floorAbove);
+    }
 }
 
 void BuildingPreviewScene::objectTileChanged(BuildingEditor::BuildingObject *object)
