@@ -26,9 +26,13 @@ namespace BuildingEditor {
 
 class BuildingFloor;
 class BuildingTile;
+class Door;
+class FurnitureObject;
 class FurnitureTile;
 class RoofCornerObject;
 class RoofObject;
+class Stairs;
+class Window;
 
 class BuildingObject
 {
@@ -97,6 +101,10 @@ public:
     virtual void rotate(bool right);
     virtual void flip(bool horizontal);
 
+    virtual Door *asDoor() { return 0; }
+    virtual Window *asWindow() { return 0; }
+    virtual Stairs *asStairs() { return 0; }
+    virtual FurnitureObject *asFurniture() { return 0; }
     virtual RoofObject *asRoof() { return 0; }
     virtual RoofCornerObject *asRoofCorner() { return 0; }
 
@@ -117,6 +125,8 @@ public:
     {
 
     }
+
+    virtual Door *asDoor() { return this; }
 
     int getOffset()
     { return (mDir == N) ? 1 : 0; }
@@ -147,6 +157,8 @@ public:
     bool isValidPos(const QPoint &offset = QPoint(),
                     BuildingEditor::BuildingFloor *floor = 0) const;
 
+    Stairs *asStairs() { return this; }
+
     int getOffset(int x, int y);
 };
 
@@ -158,6 +170,8 @@ public:
     {
 
     }
+
+    virtual Window *asWindow() { return this; }
 
     int getOffset()
     { return (mDir == N) ? 1 : 0; }
@@ -175,6 +189,8 @@ public:
 
     bool isValidPos(const QPoint &offset = QPoint(),
                     BuildingEditor::BuildingFloor *floor = 0) const;
+
+    virtual FurnitureObject *asFurniture() { return this; }
 
     void setFurnitureTile(FurnitureTile *tile);
 

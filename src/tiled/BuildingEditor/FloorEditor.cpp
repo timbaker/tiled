@@ -188,7 +188,7 @@ void GraphicsObjectItem::paint(QPainter *painter,
     QPoint dragOffset = mDragging ? mDragOffset : QPoint();
 
     // Draw line(s) indicating the orientation of the furniture tile.
-    if (FurnitureObject *object = dynamic_cast<FurnitureObject*>(mObject)) {
+    if (FurnitureObject *object = mObject->asFurniture()) {
         QRectF r = mEditor->tileToSceneRect(object->bounds().translated(dragOffset));
         r.adjust(2, 2, -2, -2);
 
@@ -285,7 +285,7 @@ QPainterPath GraphicsObjectItem::calcShape()
     QPoint dragOffset = mDragging ? mDragOffset : QPoint();
 
     // Screw you, polymorphism!!!
-    if (Door *door = dynamic_cast<Door*>(mObject)) {
+    if (Door *door = mObject->asDoor()) {
         if (door->dir() == BuildingObject::N) {
             QPointF p = mEditor->tileToScene(door->pos() + dragOffset);
             path.addRect(p.x(), p.y() - 5, 30, 10);
@@ -296,7 +296,7 @@ QPainterPath GraphicsObjectItem::calcShape()
         }
     }
 
-    if (Window *window = dynamic_cast<Window*>(mObject)) {
+    if (Window *window = mObject->asWindow()) {
         if (window->dir() == BuildingObject::N) {
             QPointF p = mEditor->tileToScene(window->pos() + dragOffset);
             path.addRect(p.x() + 7, p.y() - 3, 16, 6);
@@ -307,7 +307,7 @@ QPainterPath GraphicsObjectItem::calcShape()
         }
     }
 
-    if (Stairs *stairs = dynamic_cast<Stairs*>(mObject)) {
+    if (Stairs *stairs = mObject->asStairs()) {
         if (stairs->dir() == BuildingObject::N) {
             QPointF p = mEditor->tileToScene(stairs->pos() + dragOffset);
             path.addRect(p.x(), p.y(), 30, 30 * 5);
@@ -318,7 +318,7 @@ QPainterPath GraphicsObjectItem::calcShape()
         }
     }
 
-    if (FurnitureObject *object = dynamic_cast<FurnitureObject*>(mObject)) {
+    if (FurnitureObject *object = mObject->asFurniture()) {
         QRectF r = mEditor->tileToSceneRect(object->bounds().translated(dragOffset));
         r.adjust(2, 2, -2, -2);
         path.addRect(r);

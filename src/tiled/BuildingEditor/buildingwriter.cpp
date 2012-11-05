@@ -113,7 +113,7 @@ public:
     {
         foreach (BuildingFloor *floor, mBuilding->floors()) {
             foreach (BuildingObject *object, floor->objects()) {
-                if (FurnitureObject *furniture = dynamic_cast<FurnitureObject*>(object)) {
+                if (FurnitureObject *furniture = object->asFurniture()) {
                     FurnitureTiles *ftiles = furniture->furnitureTile()->owner();
                     if (!mFurnitureTiles.contains(ftiles))
                         mFurnitureTiles += ftiles;
@@ -186,14 +186,14 @@ public:
     {
         w.writeStartElement(QLatin1String("object"));
         bool writeDir = true, writeTile = true;
-        if (Door *door = dynamic_cast<Door*>(object)) {
+        if (Door *door = object->asDoor()) {
             w.writeAttribute(QLatin1String("type"), QLatin1String("door"));
             w.writeAttribute(QLatin1String("FrameTile"), door->frameTile()->name());
-        } else if (dynamic_cast<Window*>(object))
+        } else if (object->asWindow())
             w.writeAttribute(QLatin1String("type"), QLatin1String("window"));
-        else if (dynamic_cast<Stairs*>(object))
+        else if (object->asStairs())
             w.writeAttribute(QLatin1String("type"), QLatin1String("stairs"));
-        else if (FurnitureObject *furniture = dynamic_cast<FurnitureObject*>(object)) {
+        else if (FurnitureObject *furniture = object->asFurniture()) {
             w.writeAttribute(QLatin1String("type"), QLatin1String("furniture"));
 
             FurnitureTile *ftile = furniture->furnitureTile();

@@ -261,7 +261,7 @@ void BuildingFloor::LayoutToSquares()
 
     QRegion roofRegionUnion, roofRegionXor;
     foreach (BuildingObject *object, mObjects) {
-        if (FurnitureObject *fo = dynamic_cast<FurnitureObject*>(object)) {
+        if (FurnitureObject *fo = object->asFurniture()) {
             int x = fo->x();
             int y = fo->y();
             FurnitureTile *ftile = fo->furnitureTile();
@@ -471,7 +471,7 @@ void BuildingFloor::LayoutToSquares()
     // Nuke floors that have stairs on the floor below.
     if (BuildingFloor *floorBelow = this->floorBelow()) {
         foreach (BuildingObject *object, floorBelow->objects()) {
-            if (Stairs *stairs = dynamic_cast<Stairs*>(object)) {
+            if (Stairs *stairs = object->asStairs()) {
                 int x = stairs->x(), y = stairs->y();
                 if (stairs->isW()) {
                     if (x + 1 < 0 || x + 3 >= width() || y < 0 || y >= height())
@@ -497,7 +497,7 @@ Door *BuildingFloor::GetDoorAt(int x, int y)
     foreach (BuildingObject *o, mObjects) {
         if (!o->bounds().contains(x, y))
             continue;
-        if (Door *door = dynamic_cast<Door*>(o))
+        if (Door *door = o->asDoor())
             return door;
     }
     return 0;
@@ -508,7 +508,7 @@ Window *BuildingFloor::GetWindowAt(int x, int y)
     foreach (BuildingObject *o, mObjects) {
         if (!o->bounds().contains(x, y))
             continue;
-        if (Window *window = dynamic_cast<Window*>(o))
+        if (Window *window = o->asWindow())
             return window;
     }
     return 0;
@@ -519,7 +519,7 @@ Stairs *BuildingFloor::GetStairsAt(int x, int y)
     foreach (BuildingObject *o, mObjects) {
         if (!o->bounds().contains(x, y))
             continue;
-        if (Stairs *stairs = dynamic_cast<Stairs*>(o))
+        if (Stairs *stairs = o->asStairs())
             return stairs;
     }
     return 0;
@@ -530,7 +530,7 @@ FurnitureObject *BuildingFloor::GetFurnitureAt(int x, int y)
     foreach (BuildingObject *o, mObjects) {
         if (!o->bounds().contains(x, y))
             continue;
-        if (FurnitureObject *fo = dynamic_cast<FurnitureObject*>(o))
+        if (FurnitureObject *fo = o->asFurniture())
             return fo;
     }
     return 0;

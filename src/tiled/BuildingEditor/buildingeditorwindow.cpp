@@ -644,7 +644,7 @@ void BuildingEditorWindow::furnitureSelectionChanged()
             // Assign the new tile to selected objects
             QList<FurnitureObject*> objects;
             foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
-                if (FurnitureObject *furniture = dynamic_cast<FurnitureObject*>(object)) {
+                if (FurnitureObject *furniture = object->asFurniture()) {
                     if (furniture->furnitureTile() != ftile)
                         objects += furniture;
                 }
@@ -715,7 +715,7 @@ void BuildingEditorWindow::currentDoorChanged(Tile *tile)
     // Assign the new tile to selected doors
     QList<Door*> doors;
     foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
-        if (Door *door = dynamic_cast<Door*>(object)) {
+        if (Door *door = object->asDoor()) {
             if (door->tile() != btile)
                 doors += door;
         }
@@ -741,7 +741,7 @@ void BuildingEditorWindow::currentDoorFrameChanged(Tile *tile)
     // Assign the new tile to selected doors
     QList<Door*> doors;
     foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
-        if (Door *door = dynamic_cast<Door*>(object)) {
+        if (Door *door = object->asDoor()) {
             if (door->frameTile() != btile)
                 doors += door;
         }
@@ -769,7 +769,7 @@ void BuildingEditorWindow::currentWindowChanged(Tile *tile)
     // Assign the new tile to selected windows
     QList<Window*> windows;
     foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
-        if (Window *window = dynamic_cast<Window*>(object)) {
+        if (Window *window = object->asWindow()) {
             if (window->tile() != btile)
                 windows += window;
         }
@@ -795,7 +795,7 @@ void BuildingEditorWindow::currentStairsChanged(Tile *tile)
     // Assign the new tile to selected stairs
     QList<Stairs*> stairsList;
     foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
-        if (Stairs *stairs = dynamic_cast<Stairs*>(object)) {
+        if (Stairs *stairs = object->asStairs()) {
             if (stairs->tile() != btile)
                 stairsList += stairs;
         }
