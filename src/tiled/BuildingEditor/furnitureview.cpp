@@ -421,14 +421,8 @@ bool FurnitureModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
          int tileId;
          stream >> tileId;
          QString tileName = BuildingTiles::nameForTile(tilesetName, tileId);
-#if 1
          emit furnitureTileDropped(tile, n, tileName);
-#else
-         tile->mTiles[n] = BuildingTiles::instance()->getFurnitureTile(tileName);
-#endif
      }
-
-//     emit edited();
 
      return true;
 }

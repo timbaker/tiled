@@ -157,7 +157,6 @@ void BuildingPreviewWindow::writeSettings()
 
 bool BuildingPreviewWindow::exportTMX(const QString &fileName)
 {
-#if 1
     if (!BuildingTMX::instance()->exportTMX(mDocument->building(),
                                            mScene->mapComposite(),
                                            fileName)) {
@@ -165,38 +164,6 @@ bool BuildingPreviewWindow::exportTMX(const QString &fileName)
                               BuildingTMX::instance()->errorString());
     }
     return true;
-#else
-    TmxMapWriter writer;
-
-    foreach (BuildingFloor *floor, mDocument->building()->floors()) {
-        int n = mScene->map()->indexOfLayer(tr("%1_RoomDefs").arg(floor->level()),
-                                            Layer::ObjectGroupType);
-        ObjectGroup *objectGroup = mScene->map()->layerAt(n)->asObjectGroup();
-        while (objectGroup->objectCount()) {
-            MapObject *mapObject = objectGroup->objects().at(0);
-            objectGroup->removeObjectAt(0);
-            delete mapObject;
-        }
-        int delta = (mScene->mapComposite()->maxLevel() - floor->level()) * 3;
-        QPoint offset(delta, delta); // FIXME: not for LevelIsometric
-        foreach (Room *room, mDocument->building()->rooms()) {
-            QRegion roomRegion = floor->roomRegion(room);
-            foreach (QRect rect, roomRegion.rects()) {
-                MapObject *mapObject = new MapObject(room->internalName, tr("room"),
-                                                     rect.topLeft() + offset,
-                                                     rect.size());
-                objectGroup->addObject(mapObject);
-            }
-        }
-    }
-
-    if (!writer.write(mScene->map(), fileName)) {
-        QMessageBox::critical(this, tr("Error Saving Map"),
-                              writer.errorString());
-        return false;
-    }
-    return true;
-#endif
 }
 
 void BuildingPreviewWindow::updateActions()
@@ -610,13 +577,6 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
         item->updateBounds();
     }
     addItem(item);
-#if 0
-    // Add an object layer for RoomDefs.  Objects are only added when
-    // exporting to a TMX.
-    ObjectGroup *objectGroup = new ObjectGroup(tr("%1_RoomDefs").arg(floor->level()),
-                                               0, 0, mapSize.width(), mapSize.height());
-    mMap->addLayer(objectGroup);
-#endif
 
     foreach (BuildingObject *object, floor->objects())
         objectAdded(object);

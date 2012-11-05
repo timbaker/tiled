@@ -612,11 +612,6 @@ void BuildingTilesDialog::addTiles()
         mUndoStack->push(new AddFurnitureTiles(this, mFurnitureGroup,
                                                mFurnitureGroup->mTiles.count(),
                                                tiles));
-#if 0
-        mFurnitureGroup->mTiles += tiles;
-        ui->furnitureView->model()->setTiles(mFurnitureGroup->mTiles);
-        mChanges = true;
-#endif
         return;
     }
 
@@ -629,10 +624,6 @@ void BuildingTilesDialog::addTiles()
         Tile *tile = ui->tableWidget->model()->tileAt(index);
         if (!mCategory->usesTile(tile))
             tiles += tile;
-#if 0
-            mCategory->add(tileName);
-            mChanges = true;
-#endif
     }
     if (tiles.isEmpty())
         return;
@@ -644,11 +635,6 @@ void BuildingTilesDialog::addTiles()
     }
     if (tiles.count() > 1)
         mUndoStack->endMacro();
-#if 0
-    tilesetSelectionChanged();
-    setCategoryTiles();
-    synchUI(); // model calling reset() doesn't generate selectionChanged signal
-#endif
 }
 
 void BuildingTilesDialog::removeTiles()
@@ -667,17 +653,9 @@ void BuildingTilesDialog::removeTiles()
         foreach (FurnitureTiles *tiles, remove) {
             mUndoStack->push(new RemoveFurnitureTiles(this, mFurnitureGroup,
                                                       mFurnitureGroup->mTiles.indexOf(tiles)));
-#if 0
-            mFurnitureGroup->mTiles.removeOne(tiles);
-            v->model()->removeTiles(tiles);
-#if 0
-            delete tiles; // don't delete, may still be in use by furniture objects
-#endif
-#endif
         }
         if (remove.count() > 1)
             mUndoStack->endMacro();
-//        mChanges = true;
         return;
     }
 
@@ -692,16 +670,9 @@ void BuildingTilesDialog::removeTiles()
         Tile *tile = v->model()->tileAt(index);
         QString tileName = BuildingTiles::instance()->nameForTile(tile);
         mUndoStack->push(new RemoveTileFromCategory(this, mCategory, tileName));
-//        mCategory->remove(tileName);
-//        mChanges = true;
     }
     if (selection.count() > 1)
         mUndoStack->endMacro();
-#if 0
-    tilesetSelectionChanged();
-    setCategoryTiles();
-    synchUI(); // model calling reset() doesn't generate selectionChanged signal
-#endif
 }
 
 void BuildingTilesDialog::clearTiles()
@@ -725,7 +696,6 @@ void BuildingTilesDialog::clearTiles()
             }
         }
         mUndoStack->endMacro();
-//        mChanges = true;
         return;
     }
 }
@@ -734,7 +704,6 @@ void BuildingTilesDialog::furnitureTileDropped(FurnitureTile *ftile, int index,
                                                const QString &tileName)
 {
     mUndoStack->push(new ChangeFurnitureTile(this, ftile, index, tileName));
-//    mChanges = true;
 }
 
 void BuildingTilesDialog::categoryNameEdited(QListWidgetItem *item)
@@ -742,13 +711,8 @@ void BuildingTilesDialog::categoryNameEdited(QListWidgetItem *item)
     int row = ui->categoryList->row(item);
     row -= numTileCategories();
     FurnitureGroup *category = FurnitureGroups::instance()->groups().at(row);
-#if 1
     if (item->text() != category->mLabel)
         mUndoStack->push(new RenameCategory(this, category, item->text()));
-#else
-    category->mLabel = item->text();
-    mChanges = true;
-#endif
 }
 
 void BuildingTilesDialog::newCategory()
@@ -757,15 +721,7 @@ void BuildingTilesDialog::newCategory()
     group->mLabel = QLatin1String("New Category");
     mUndoStack->push(new AddCategory(this, FurnitureGroups::instance()->groups().count(),
                                      group));
-#if 1
     ui->categoryList->setCurrentRow(ui->categoryList->count() - 1);
-#else
-    FurnitureGroups::instance()->addGroup(group);
-    setCategoryList();
-    ui->categoryList->setCurrentRow(ui->categoryList->count() - 1);
-    mChanges = true;
-    synchUI();
-#endif
 }
 
 void BuildingTilesDialog::removeCategory()
@@ -775,12 +731,6 @@ void BuildingTilesDialog::removeCategory()
 
     mUndoStack->push(new RemoveCategory(this,
                                         FurnitureGroups::instance()->indexOf(mFurnitureGroup)));
-#if 0
-    FurnitureGroups::instance()->removeGroup(mFurnitureGroup);
-    delete ui->categoryList->currentItem();
-    mChanges = true;
-    synchUI();
-#endif
 }
 
 void BuildingTilesDialog::moveCategoryUp()

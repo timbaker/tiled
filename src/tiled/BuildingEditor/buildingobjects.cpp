@@ -198,29 +198,9 @@ void FurnitureObject::rotate(bool right)
     if (right) {
         int index = FurnitureTiles::orientIndex(oldTile->mOrient) + 1;
         newTile = oldTile->owner()->mTiles[index % 4];
-#if 0
-        if (oldTile->isW())
-            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureN];
-        else if (oldTile->isN())
-            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureE];
-        else if (oldTile->isE())
-            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureS];
-        else if (oldTile->isS())
-            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureW];
-#endif
     } else {
         int index = 4 + FurnitureTiles::orientIndex(oldTile->mOrient) - 1;
         newTile = oldTile->owner()->mTiles[index % 4];
-#if 0
-        if (oldTile->isW())
-            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureS];
-        else if (oldTile->isS())
-            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureE];
-        else if (oldTile->isE())
-            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureN];
-        else if (oldTile->isN())
-            newTile = oldTile->owner()->mTiles[FurnitureTile::FurnitureW];
-#endif
     }
 
     if (right) {

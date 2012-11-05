@@ -542,16 +542,13 @@ void GraphicsRoofCornerItem::paint(QPainter *painter, const QStyleOptionGraphics
     Q_UNUSED(option)
     Q_UNUSED(widget)
     QPainterPath path = shape();
-    painter->fillPath(path, Qt::darkGray);
-    QPen pen(mValidPos ? Qt::blue : Qt::red);
-    painter->setPen(pen);
-    painter->drawPath(path);
+    painter->fillPath(path, Qt::white);
 
     QPoint dragOffset = mDragging ? mDragOffset : QPoint();
     QRectF r = mEditor->tileToSceneRect(mObject->bounds().translated(dragOffset));
     RoofCornerObject *rc = mObject->asRoofCorner();
     int depth = rc->depth();
-#if 1
+
     if (rc->isNW() || rc->isNE()) {
         painter->fillRect(r.left(), r.top(), r.width(), 30 * depth, Qt::darkGray);
     }
@@ -588,47 +585,10 @@ void GraphicsRoofCornerItem::paint(QPainter *painter, const QStyleOptionGraphics
                           30 * depth, 30 * depth,
                           Qt::darkGray);
     }
-#else
-    path = QPainterPath();
-    if (mObject->asRoofCorner()->isSW()) {
-        path.moveTo(r.topLeft());
-        path.lineTo(r.bottomLeft());
-        path.lineTo(r.bottomRight());
-        path.lineTo(r.bottomRight() - QPointF(0, 30 * depth));
-        path.lineTo(r.bottomLeft() + QPointF(30 * depth, -30 * depth));
-        path.lineTo(r.topLeft() + QPointF(30 * depth, 0));
-        path.closeSubpath();
-    } else if (mObject->asRoofCorner()->isNW()) {
-        path.moveTo(r.topLeft());
-        path.lineTo(r.topRight());
-        path.lineTo(r.topRight() + QPointF(0, 30 * depth));
-        path.lineTo(r.topLeft() + QPointF(30 * depth, 30 * depth));
-        path.lineTo(r.bottomLeft() + QPointF(30 * depth, 0));
-        path.lineTo(r.bottomLeft());
-        path.closeSubpath();
-    } else if (mObject->asRoofCorner()->isNE()) {
-        path.moveTo(r.topLeft());
-        path.lineTo(r.topRight());
-        path.lineTo(r.bottomRight());
-        path.lineTo(r.bottomRight() - QPointF(30 * depth, 0));
-        path.lineTo(r.topRight() + QPointF(-30 * depth, 30 * depth));
-        path.lineTo(r.topLeft() + QPointF(0, 30 * depth));
-        path.closeSubpath();
-    } else if (mObject->asRoofCorner()->isSE()) {
-        path.moveTo(r.topRight());
-        path.lineTo(r.bottomRight());
-        path.lineTo(r.bottomLeft());
-        path.lineTo(r.bottomLeft() - QPointF(0, 30 * depth));
-        path.lineTo(r.bottomRight() - QPointF(30 * depth, 30 * depth));
-        path.lineTo(r.topRight() - QPointF(30 * depth, 0));
-        path.closeSubpath();
-    }
-    QColor color = mSelected ? Qt::cyan : Qt::white;
-    if (!mValidPos)
-        color = Qt::red;
-    painter->setClipRect(boundingRect());
-    painter->fillPath(path, color);
-#endif
+
+    QPen pen(mValidPos ? Qt::blue : Qt::red);
+    painter->setPen(pen);
+    painter->drawPath(path);
 }
 
 void GraphicsRoofCornerItem::synchWithObject()
@@ -972,23 +932,8 @@ void FloorEditor::roomAdded(Room *room)
 void FloorEditor::roomRemoved(Room *room)
 {
     Q_UNUSED(room)
-#if 1
     foreach (BuildingFloor *floor, building()->floors())
         floorEdited(floor);
-#else
-    foreach (GraphicsFloorItem *item, mFloorItems) {
-        QImage *bmp = item->bmp();
-        bmp->fill(Qt::black);
-        BuildingFloor *floor = item->floor();
-        for (int x = 0; x < building()->width(); x++) {
-            for (int y = 0; y < building()->height(); y++) {
-                if (Room *room = floor->GetRoomAt(x, y))
-                    bmp->setPixel(x, y, room->Color);
-            }
-        }
-        item->update();
-    }
-#endif
 }
 
 void FloorEditor::roomsReordered()

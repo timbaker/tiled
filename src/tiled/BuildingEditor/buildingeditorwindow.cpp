@@ -439,7 +439,6 @@ bool BuildingEditorWindow::Startup()
 
 bool BuildingEditorWindow::LoadMapBaseXMLLots()
 {
-#if 1
     // Make sure the user has chosen the Tiles directory.
     QString tilesDirectory = BuildingPreferences::instance()->tilesDirectory();
     QDir dir(tilesDirectory);
@@ -456,75 +455,6 @@ bool BuildingEditorWindow::LoadMapBaseXMLLots()
     PROGRESS progress(tr("Reading TMXConfig.txt tilesets"), this);
 
     return BuildingTMX::instance()->readTxt();
-#else
-    // Make sure the user has chosen the Tiles directory.
-    static const char *KEY_TILES_DIR = "BuildingEditor/TilesDirectory";
-    QString tilesDirectory = mSettings.value(QLatin1String(KEY_TILES_DIR),
-                                             QLatin1String("../Tiles")).toString();
-    QDir dir(tilesDirectory);
-    if (!dir.exists()) {
-        QMessageBox::information(this, tr("Choose Tiles Directory"),
-                                 tr("Please enter the Tiles directory in the Preferences."));
-        BuildingPreferencesDialog dialog(this);
-        if (dialog.exec() != QDialog::Accepted) {
-            mError.clear();
-            return false;
-        }
-        tilesDirectory = mSettings.value(QLatin1String(KEY_TILES_DIR)).toString();
-    }
-
-    QString path = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + QLatin1String("MapBaseXMLLots.txt");
-    QFile file(path);
-    if (!file.open(QIODevice::ReadOnly)) {
-        mError = tr("Couldn't open %1").arg(path);
-        return false;
-    }
-
-    PROGRESS progress(tr("Reading MapBaseXMLLots.txt tilesets"), this);
-
-    QXmlStreamReader xml;
-    xml.setDevice(&file);
-
-    if (xml.readNextStartElement() && xml.name() == "map") {
-        while (xml.readNextStartElement()) {
-            if (xml.name() == "tileset") {
-                const QXmlStreamAttributes atts = xml.attributes();
-//                const int firstGID = atts.value(QLatin1String("firstgid")).toString().toInt();
-                const QString name = atts.value(QLatin1String("name")).toString();
-
-                QString source = tilesDirectory + QLatin1Char('/') + name
-                        + QLatin1String(".png");
-                if (!QFileInfo(source).exists()) {
-                    mError = tr("Tileset in MapBaseXMLLots.txt doesn't exist.\n%1").arg(source);
-                    return false;
-                }
-                source = QFileInfo(source).canonicalFilePath();
-
-                Tileset *ts = new Tileset(name, 64, 128);
-
-                TilesetImageCache *cache = TilesetManager::instance()->imageCache();
-                Tileset *cached = cache->findMatch(ts, source);
-                if (!cached || !ts->loadFromCache(cached)) {
-                    const QImage tilesetImage = QImage(source);
-                    if (ts->loadFromImage(tilesetImage, source))
-                        cache->addTileset(ts);
-                    else {
-                        mError = tr("Error loading tileset image:\n'%1'").arg(source);
-                        return false;
-                    }
-                }
-
-                BuildingTiles::instance()->addTileset(ts);
-            }
-            xml.skipCurrentElement();
-        }
-    } else {
-        mError = tr("Not a map file.\n%1").arg(path);
-        return false;
-    }
-#endif
-    return true;
 }
 
 bool BuildingEditorWindow::validateTile(BuildingTile *btile, const char *key)
@@ -983,7 +913,6 @@ void BuildingEditorWindow::newBuilding()
     if (dialog.exec() != QDialog::Accepted)
         return;
 
-#if 1
     Building *building = new Building(dialog.buildingWidth(),
                                       dialog.buildingHeight(),
                                       dialog.buildingTemplate());
@@ -992,47 +921,6 @@ void BuildingEditorWindow::newBuilding()
     BuildingDocument *doc = new BuildingDocument(building, QString());
 
     addDocument(doc);
-#else
-    if (mCurrentDocument) {
-        roomEditor->clearDocument();
-        mPreviewWin->clearDocument();
-        mUndoGroup->removeStack(mCurrentDocument->undoStack());
-        delete mCurrentDocument->building();
-        delete mCurrentDocument;
-    }
-
-    Building *building = new Building(dialog.buildingWidth(),
-                                      dialog.buildingHeight(),
-                                      dialog.buildingTemplate());
-    building->insertFloor(0, new BuildingFloor(building, 0));
-
-    mCurrentDocument = new BuildingDocument(building, QString());
-    mCurrentDocument->setCurrentFloor(building->floor(0));
-    mUndoGroup->addStack(mCurrentDocument->undoStack());
-    mUndoGroup->setActiveStack(mCurrentDocument->undoStack());
-
-    roomEditor->setDocument(mCurrentDocument);
-
-    updateRoomComboBox();
-
-    mFloorLabel->setText(tr("Ground Floor"));
-
-    resizeCoordsLabel();
-
-    connect(mCurrentDocument, SIGNAL(roomAdded(Room*)), SLOT(roomAdded(Room*)));
-    connect(mCurrentDocument, SIGNAL(roomRemoved(Room*)), SLOT(roomRemoved(Room*)));
-    connect(mCurrentDocument, SIGNAL(roomsReordered()), SLOT(roomsReordered()));
-    connect(mCurrentDocument, SIGNAL(roomChanged(Room*)), SLOT(roomChanged(Room*)));
-
-    /////
-
-    mPreviewWin->setDocument(currentDocument());
-
-    updateActions();
-
-    if (building->roomCount())
-        PencilTool::instance()->makeCurrent();
-#endif
 }
 
 void BuildingEditorWindow::openBuilding()

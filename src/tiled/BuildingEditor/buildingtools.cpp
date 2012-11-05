@@ -655,15 +655,6 @@ void FurnitureTool::updateCursorObject()
         mCursorItem->setVisible(true);
 
     int x = mTilePos.x(), y = mTilePos.y();
-#if 0
-    BuildingObject::Direction dir = BuildingObject::Invalid;
-    switch (mCurrentTile->mOrient) {
-    case FurnitureTile::FurnitureW: dir = BuildingObject::W; break;
-    case FurnitureTile::FurnitureN: dir = BuildingObject::N; break;
-    case FurnitureTile::FurnitureE: dir = BuildingObject::E; break;
-    case FurnitureTile::FurnitureS: dir = BuildingObject::S; break;
-    }
-#endif
     if (!mCursorObject) {
         BuildingFloor *floor = 0; //mEditor->document()->currentFloor();
         FurnitureObject *object = new FurnitureObject(floor, x, y);
@@ -672,9 +663,6 @@ void FurnitureTool::updateCursorObject()
     }
     // mCursorDoor->setFloor()
     mCursorObject->setPos(x, y);
-#if 0
-    mCursorObject->setDir(dir);
-#endif
 
     setCursorObject(mCursorObject);
 }
@@ -944,32 +932,8 @@ void RoofTool::updateHandle(const QPointF &scenePos)
     }
 
     if (ro) {
-#if 0
-        if (!mHandleItem) {
-            mHandleItem = new QGraphicsRectItem;
-            mHandleItem->setBrush(Qt::gray);
-            mHandleItem->setZValue(FloorEditor::ZVALUE_CURSOR);
-            mHandleItem->setCursor(Qt::SizeAllCursor);
-            mEditor->addItem(mHandleItem);
-        }
-        QRectF r = mEditor->tileToSceneRect(ro->bounds());
-        r.setLeft(r.right() - 16);
-        r.setTop(r.bottom() - 16);
-        mHandleItem->setRect(r);
-        mHandleItem->setVisible(true);
-#endif
         mObjectItem = mEditor->itemForObject(ro)->asRoof();
         mObjectItem->setShowHandles(true);
-    } else {
-#if 0
-        if (mHandleItem)
-            mHandleItem->setVisible(false);
-        if (mObjectItem) {
-            mObjectItem->setShowHandles(false);
-            mObjectItem = 0;
-//            mHandleItem = 0;
-        }
-#endif
     }
     mHandleObject = ro;
 }
@@ -987,13 +951,7 @@ void RoofTool::resizeRoof(RoofObject *roof, int length, int thickness)
     }
 
     mEditor->itemForObject(roof)->synchWithObject();
-    QRectF r = mEditor->tileToSceneRect(roof->bounds());
     mStartPos = roof->bounds().bottomRight();
-#if 0
-    r.setLeft(r.right() - 16);
-    r.setTop(r.bottom() - 16);
-    mHandleItem->setRect(r);
-#endif
 }
 
 void RoofTool::toggleShowWidth1(RoofObject *roof)
