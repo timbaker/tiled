@@ -321,7 +321,7 @@ void BuildingFloor::LayoutToSquares()
                     squares[r.right()+1][ro->y()+0].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallE1), Square::WallOrientW);
 
                 // End cap (gap)
-                int height = (ro->width1() || ro->width2()) ? qMax(ro->width1(), ro->width2()) : ro->height();
+                int height = (ro->width1() || ro->width2()) ? qMax(ro->width1(), ro->width2()) : ro->depth();
                 for (int y = r.top() + ro->width1(); y < r.top()+ro->width1()+ro->gap(); y++) {
                     if (height == 1)
                         squares[r.right()+1][y].ReplaceRoofCap(ro->roofTile(RoofObject::CapGapE1), Square::WallOrientW);
@@ -371,7 +371,7 @@ void BuildingFloor::LayoutToSquares()
                     squares[ro->x()+0][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseS1), Square::WallOrientN);
 
                 // End cap (gap)
-                int height = (ro->width1() || ro->width2()) ? qMax(ro->width1(), ro->width2()) : ro->height();
+                int height = (ro->width1() || ro->width2()) ? qMax(ro->width1(), ro->width2()) : ro->depth();
                 for (int x = r.left() + ro->width1(); x < r.left()+ro->width1()+ro->gap(); x++) {
                     if (height == 1)
                         squares[x][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapGapS1), Square::WallOrientN);
@@ -456,10 +456,13 @@ void BuildingFloor::LayoutToSquares()
     if (BuildingFloor *floorBelow = this->floorBelow()) {
         foreach (BuildingObject *object, floorBelow->objects()) {
             if (RoofObject *ro = object->asRoof())
-                ReplaceRoofTop(ro, ro->flatTop(), squares);
+                if (ro->depth() == 3)
+                    ReplaceRoofTop(ro, ro->flatTop(), squares);
             if (RoofCornerObject *rc = object->asRoofCorner())
-                foreach (QRect r, rc->flatTop().rects())
-                    ReplaceRoofTop(rc, r, squares);
+                if (rc->depth() == 3) {
+                    foreach (QRect r, rc->flatTop().rects())
+                        ReplaceRoofTop(rc, r, squares);
+                }
         }
     }
 

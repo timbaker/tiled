@@ -228,8 +228,8 @@ public:
 
     void setHeight(int height);
 
-    int height() const
-    { return mHeight; }
+    int depth() const
+    { return mDepth; }
 
     bool isCapped() const
     { return mCapped; }
@@ -261,7 +261,7 @@ private:
     int mThickness;
     int mWidth1; // Thickness above (mDir=W) or left of (mDir=N) the gap
     int mWidth2; // Thickness below (mDir=W) or right of (mDir=N) the gap
-    int mHeight;
+    int mDepth;
     bool mCapped;
     BuildingTile *mCapTile;
 };

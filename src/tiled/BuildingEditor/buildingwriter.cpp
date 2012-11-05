@@ -210,7 +210,7 @@ public:
             w.writeAttribute(QLatin1String("width1"), QString::number(roof->width1()));
             w.writeAttribute(QLatin1String("width2"), QString::number(roof->width2()));
             w.writeAttribute(QLatin1String("capped"), QString::number(roof->isCapped() ? 1 : 0));
-            w.writeAttribute(QLatin1String("depth"), QString::number(roof->height()));
+            w.writeAttribute(QLatin1String("depth"), QString::number(roof->depth()));
             if (roof->capTile())
                 w.writeAttribute(QLatin1String("CapTile"), roof->capTile()->name());
         } else if (RoofCornerObject *corner = object->asRoofCorner()) {

@@ -288,7 +288,7 @@ RoofObject::RoofObject(BuildingFloor *floor, int x, int y,
     mThickness(thickness),
     mWidth1(width1),
     mWidth2(width2),
-    mHeight(depth),
+    mDepth(depth),
     mCapped(capped)
 {
 }
@@ -352,17 +352,17 @@ bool RoofObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
 void RoofObject::resize(int length, int thickness)
 {
     if (thickness <= 2) {
-        if (mWidth1) mWidth1 = qMin(mHeight, mWidth2 ? 1 : 2);
-        if (mWidth2) mWidth2 = qMin(mHeight, mWidth1 ? 1 : 2);
+        if (mWidth1) mWidth1 = qMin(mDepth, mWidth2 ? 1 : 2);
+        if (mWidth2) mWidth2 = qMin(mDepth, mWidth1 ? 1 : 2);
     } else if (thickness == 3) {
-        if (mWidth1) mWidth1 = qMin(mHeight, mWidth2 ? 1 : 3);
-        if (mWidth2) mWidth2 = qMin(mHeight, mWidth1 ? 1 : 3);
+        if (mWidth1) mWidth1 = qMin(mDepth, mWidth2 ? 1 : 3);
+        if (mWidth2) mWidth2 = qMin(mDepth, mWidth1 ? 1 : 3);
     } else if (thickness < 6) {
-        if (mWidth1) mWidth1 = qMin(mHeight, mWidth2 ? 2 : 3);
-        if (mWidth2) mWidth2 = qMin(mHeight, mWidth1 ? 2 : 3);
+        if (mWidth1) mWidth1 = qMin(mDepth, mWidth2 ? 2 : 3);
+        if (mWidth2) mWidth2 = qMin(mDepth, mWidth1 ? 2 : 3);
     } else {
-        if (mWidth1) mWidth1 = qMin(mHeight, 3);
-        if (mWidth2) mWidth2 = qMin(mHeight, 3);
+        if (mWidth1) mWidth1 = qMin(mDepth, 3);
+        if (mWidth2) mWidth2 = qMin(mDepth, 3);
     }
 
     mLength = length;
@@ -393,7 +393,7 @@ void RoofObject::toggleWidth2()
 
 void RoofObject::setHeight(int height)
 {
-    mHeight = height;
+    mDepth = height;
     resize(length(), thickness());
 }
 

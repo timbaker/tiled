@@ -716,12 +716,12 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                 toggleShowWidth2(mHandleObject);
                 return;
             }
-            if (mHandleItem == mObjectItem->heightUpHandle()) {
-                setHeight(mHandleObject, mHandleObject->height() + 1);
+            if (mHandleItem == mObjectItem->depthUpHandle()) {
+                setDepth(mHandleObject, mHandleObject->depth() + 1);
                 return;
             }
-            if (mHandleItem == mObjectItem->heightDownHandle()) {
-                setHeight(mHandleObject, mHandleObject->height() - 1);
+            if (mHandleItem == mObjectItem->depthDownHandle()) {
+                setDepth(mHandleObject, mHandleObject->depth() - 1);
                 return;
             }
             if (mHandleItem == mObjectItem->cappedHandle()) {
@@ -975,7 +975,7 @@ void RoofTool::toggleCapped(RoofObject *roof)
     mEditor->document()->emitObjectChanged(roof);
 }
 
-void RoofTool::setHeight(RoofObject *roof, int height)
+void RoofTool::setDepth(RoofObject *roof, int height)
 {
     if (height < 1 || height > 3)
         return;
@@ -1016,11 +1016,11 @@ void RoofCornerTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mStartPos = mEditor->sceneToTile(event->scenePos());
         mCurrentPos = mStartPos;
         if (mMouseOverHandle) {
-            if (mHandleItem == mObjectItem->heightUpHandle()) {
+            if (mHandleItem == mObjectItem->depthUpHandle()) {
                 setDepth(mHandleObject, mHandleObject->depth() + 1);
                 return;
             }
-            if (mHandleItem == mObjectItem->heightDownHandle()) {
+            if (mHandleItem == mObjectItem->depthDownHandle()) {
                 setDepth(mHandleObject, mHandleObject->depth() - 1);
                 return;
             }

@@ -139,8 +139,8 @@ public:
         Resize,
         Width1,
         Width2,
-        HeightUp,
-        HeightDown,
+        DepthUp,
+        DepthDown,
         Capped,
         Orient
     };
@@ -200,11 +200,11 @@ public:
     GraphicsRoofHandleItem *width2Handle() const
     { return mWidth2Item; }
 
-    GraphicsRoofHandleItem *heightUpHandle() const
-    { return mHeightUpItem; }
+    GraphicsRoofHandleItem *depthUpHandle() const
+    { return mDepthUpItem; }
 
-    GraphicsRoofHandleItem *heightDownHandle() const
-    { return mHeightDownItem; }
+    GraphicsRoofHandleItem *depthDownHandle() const
+    { return mDepthDownItem; }
 
     GraphicsRoofHandleItem *cappedHandle() const
     { return mCappedItem; }
@@ -213,8 +213,8 @@ private:
     GraphicsRoofHandleItem *mHandleItem;
     GraphicsRoofHandleItem *mWidth1Item;
     GraphicsRoofHandleItem *mWidth2Item;
-    GraphicsRoofHandleItem *mHeightUpItem;
-    GraphicsRoofHandleItem *mHeightDownItem;
+    GraphicsRoofHandleItem *mDepthUpItem;
+    GraphicsRoofHandleItem *mDepthDownItem;
     GraphicsRoofHandleItem *mCappedItem;
 };
 
@@ -232,19 +232,19 @@ public:
     GraphicsRoofHandleItem *resizeHandle() const
     { return mHandleItem; }
 
-    GraphicsRoofHandleItem *heightUpHandle() const
-    { return mHeightUpItem; }
+    GraphicsRoofHandleItem *depthUpHandle() const
+    { return mDepthUpItem; }
 
-    GraphicsRoofHandleItem *heightDownHandle() const
-    { return mHeightDownItem; }
+    GraphicsRoofHandleItem *depthDownHandle() const
+    { return mDepthDownItem; }
 
     GraphicsRoofHandleItem *orientHandle() const
     { return mOrientItem; }
 
 private:
     GraphicsRoofHandleItem *mHandleItem;
-    GraphicsRoofHandleItem *mHeightUpItem;
-    GraphicsRoofHandleItem *mHeightDownItem;
+    GraphicsRoofHandleItem *mDepthUpItem;
+    GraphicsRoofHandleItem *mDepthDownItem;
     GraphicsRoofHandleItem *mOrientItem;
 };
 
