@@ -468,7 +468,7 @@ QRect RoofObject::southEdge()
 {
     QRect r = bounds();
     if (isW())
-        return QRect(r.left(), r.top() + width1() + gap(),
+        return QRect(r.left(), r.bottom() - width2() + 1,
                      r.width(), width2());
     return QRect();
 }
@@ -477,7 +477,7 @@ QRect RoofObject::eastEdge()
 {
     QRect r = bounds();
     if (isN())
-        return QRect(r.left() + width1() + gap(), r.top(),
+        return QRect(r.right() - width2() + 1, r.top(),
                       width2(), r.height());
     return QRect();
 }
@@ -634,6 +634,9 @@ BuildingTile *RoofCornerObject::roofTile(RoofCornerObject::RoofTile tile) const
     case Inner1: index = 11; break;
     case Inner2: index = 12; break;
     case Inner3: index = 13; break;
+
+    case HalfFlatS: index = 15; break;
+    case HalfFlatE: index = 14; break;
     }
 
     return BuildingTiles::instance()->getFurnitureTile(
@@ -681,7 +684,7 @@ QRect RoofCornerObject::eastEdge(int &dy1, int &dy2)
     dy1 = dy2 = 0;
     if (isSW())
         return QRect(r.right() - depth() + 1, r.top(),
-                     depth(), r.height() - depth());
+                     depth(), r.height() - depth() - (midTile() ? 1 : 0));
     if (isNW()) {
         dy1 = 1;
         return QRect(r.right() - depth() + 1, r.bottom() - depth() + 1,

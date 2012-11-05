@@ -105,7 +105,13 @@ static void ReplaceRoofTop(RoofObject *ro, const QRect &r,
     BuildingTile *btile = BuildingTiles::instance()->defaultFloorTile();
     for (int x = r.left(); x <= r.right(); x++)
         for (int y = r.top(); y <= r.bottom(); y++)
-            squares[x][y].ReplaceRoofTop(btile);
+#ifdef ROOF_TOPS
+            (ro->depth() == 3)
+                ? squares[x][y].ReplaceFloor(btile)
+                : squares[x][y].ReplaceRoofTop(btile);
+#else
+            squares[x][y].ReplaceFloor(btile);
+#endif
 }
 
 static void ReplaceRoof(RoofCornerObject *rc, const QRect &r,
@@ -126,7 +132,13 @@ static void ReplaceRoofTop(RoofCornerObject *rc, const QRect &r,
     BuildingTile *btile = BuildingTiles::instance()->defaultFloorTile();
     for (int x = r.left(); x <= r.right(); x++)
         for (int y = r.top(); y <= r.bottom(); y++)
-            squares[x][y].ReplaceRoofTop(btile);
+#ifdef ROOF_TOPS
+            (rc->depth() == 3)
+                ? squares[x][y].ReplaceFloor(btile)
+                : squares[x][y].ReplaceRoofTop(btile);
+#else
+            squares[x][y].ReplaceFloor(btile);
+#endif
 }
 
 void BuildingFloor::LayoutToSquares()
@@ -285,11 +297,16 @@ void BuildingFloor::LayoutToSquares()
                 ReplaceRoof(ro, se.translated(0, -1), squares, RoofObject::HalfFlatS);
 
             QRect ee = ro->eastEdge();
-            ReplaceRoof(ro, ee.adjusted(ee.width()-1,0,0,0), squares, RoofObject::FlatE1);
+            ReplaceRoof(ro, ee.adjusted(qMax(ee.width()-1,0),0,0,0), squares, RoofObject::FlatE1);
             ReplaceRoof(ro, ee.adjusted(qMax(ee.width()-2,0),0,-1,0), squares, RoofObject::FlatE2);
             ReplaceRoof(ro, ee.adjusted(0,0,-2,0), squares, RoofObject::FlatE3);
             if (ro->midTile())
                 ReplaceRoof(ro, ee.translated(-1,0), squares, RoofObject::HalfFlatE);
+
+#ifdef ROOF_TOPS
+            if (ro->depth() < 3)
+                ReplaceRoofTop(ro, ro->flatTop(), squares);
+#endif
 
             if (ro->isW()) {
                 roofRegionUnion |= QRegion(r.adjusted(0,0,1,0));
@@ -399,15 +416,25 @@ void BuildingFloor::LayoutToSquares()
 
             int dx1, dx2;
             QRect se = rc->southEdge(dx1, dx2);
-            ReplaceRoof(rc, se.adjusted(dx1*3,  se.height()-1, -dx2,    0), squares, RoofCornerObject::FlatS1);
-            ReplaceRoof(rc, se.adjusted(dx1*2,  qMax(se.height()-2,0), -dx2*2, -1), squares, RoofCornerObject::FlatS2);
-            ReplaceRoof(rc, se.adjusted(dx1,    0,             -dx2*3, -2), squares, RoofCornerObject::FlatS3);
+            ReplaceRoof(rc, se.adjusted(dx1*rc->depth(),  se.height()-1, -dx2,    0), squares, RoofCornerObject::FlatS1);
+            ReplaceRoof(rc, se.adjusted(dx1*(rc->depth()-1),  qMax(se.height()-2,0), -dx2*(rc->depth()-1), -1), squares, RoofCornerObject::FlatS2);
+            ReplaceRoof(rc, se.adjusted(dx1,    0,             -dx2*rc->depth(), -2), squares, RoofCornerObject::FlatS3);
+            if (rc->midTile())
+                ReplaceRoof(rc, se.adjusted(0, -1, -dx2*2,    -1), squares, RoofCornerObject::HalfFlatS);
 
             int dy1, dy2;
             QRect ee = rc->eastEdge(dy1, dy2);
-            ReplaceRoof(rc, ee.adjusted(ee.width()-1, dy1*3, 0,  -dy2), squares, RoofCornerObject::FlatE1);
-            ReplaceRoof(rc, ee.adjusted(qMax(ee.width()-2,0), dy1*2, -1, -dy2*2), squares, RoofCornerObject::FlatE2);
-            ReplaceRoof(rc, ee.adjusted(0,            dy1,   -2, -dy2*3), squares, RoofCornerObject::FlatE3);
+            ReplaceRoof(rc, ee.adjusted(ee.width()-1,         dy1*rc->depth(), 0,  -dy2), squares, RoofCornerObject::FlatE1);
+            ReplaceRoof(rc, ee.adjusted(qMax(ee.width()-2,0), dy1*(rc->depth()-1), -1, -dy2*(rc->depth()-1)), squares, RoofCornerObject::FlatE2);
+            ReplaceRoof(rc, ee.adjusted(0,                    dy1,   -2, -dy2*rc->depth()), squares, RoofCornerObject::FlatE3);
+            if (rc->midTile())
+                ReplaceRoof(rc, ee.adjusted(-1, 0, -1,  -dy2*2), squares, RoofCornerObject::HalfFlatE);
+
+#ifdef ROOF_TOPS
+            if (rc->depth() < 3)
+                foreach (QRect r, rc->flatTop().rects())
+                    ReplaceRoofTop(rc, r, squares);
+#endif
 
             if (rc->isSW()) {
 
@@ -640,7 +667,13 @@ BuildingFloor::Square::~Square()
 {
     // mTiles are owned by BuildingTiles
 //    for (int i = 0; i < MaxSection; i++)
-//        delete mTiles[i];
+    //        delete mTiles[i];
+}
+
+void BuildingFloor::Square::ReplaceFloor(BuildingTile *tile)
+{
+    mTiles[SectionFloor] = tile;
+    mTileOffset[SectionFloor] = 0;
 }
 
 void BuildingFloor::Square::ReplaceWall(BuildingTile *tile, Square::WallOrientation orient)
@@ -693,11 +726,13 @@ void BuildingFloor::Square::ReplaceRoofCap(BuildingTile *tile, Square::WallOrien
     mTileOffset[SectionWall] = 0;
 }
 
+#ifdef ROOF_TOPS
 void BuildingFloor::Square::ReplaceRoofTop(BuildingTile *tile)
 {
-    mTiles[SectionFloor] = tile;
-    mTileOffset[SectionFloor] = 0;
+    mTiles[SectionRoofTop] = tile;
+    mTileOffset[SectionRoofTop] = 0;
 }
+#endif
 
 int BuildingFloor::Square::getWallOffset()
 {

@@ -117,7 +117,11 @@ public:
         LayerIndexDoor,
         LayerIndexFurniture,
         LayerIndexFurniture2,
-        LayerIndexRoof
+        LayerIndexRoof,
+#ifdef ROOF_TOPS
+        LayerIndexRoofTop,
+#endif
+        LayerMax
     };
 
 private:

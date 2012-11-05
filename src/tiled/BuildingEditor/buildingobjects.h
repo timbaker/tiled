@@ -238,10 +238,14 @@ public:
     int width2() const { return mWidth2; }
 
     int gap() const
-    { return mThickness - mWidth1 - mWidth2; }
+    {
+        if (midTile())
+            return 0;
+        return mThickness - mWidth1 - mWidth2;
+    }
 
     bool midTile() const
-    { return mThickness == 3 && mWidth1 && mWidth2; }
+    { return (mThickness == 3) && (mWidth1 && mWidth2) && (mDepth > 1); }
 
     void resize(int length, int thickness);
 
@@ -318,6 +322,9 @@ public:
     int height() const { return mHeight; }
     int depth() const { return mDepth; }
 
+    bool midTile() const
+    { return (mWidth==3 || mHeight==3) && (mDepth == 1); }
+
     void setWidth(int width) { resize(width, mHeight); }
     void setHeight(int height) { resize(mWidth, height); }
     void setDepth(int depth);
@@ -342,7 +349,8 @@ public:
         FlatS1, FlatS2, FlatS3,
         FlatE1, FlatE2, FlatE3,
         Outer1, Outer2, Outer3,
-        Inner1, Inner2, Inner3
+        Inner1, Inner2, Inner3,
+        HalfFlatS, HalfFlatE
     };
     BuildingTile *roofTile(RoofTile roofTile) const;
 

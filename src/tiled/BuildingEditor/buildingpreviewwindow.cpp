@@ -435,6 +435,13 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                     if (tile)
                         tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionRoof])));
                 }
+#ifdef ROOF_TOPS
+                if (index == LayerIndexRoofTop) {
+                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionRoofTop];
+                    if (tile)
+                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionRoofTop])));
+                }
+#endif
             }
         }
         index++;
@@ -568,6 +575,13 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
                        mapSize.width(), mapSize.height());
     mMap->addLayer(tl);
     mMapComposite->layerAdded(mMap->layerCount() - 1);
+
+#ifdef ROOF_TOPS
+    tl = new TileLayer(tr("%1_RoofTop").arg(floor->level()), 0, 0,
+                       mapSize.width(), mapSize.height());
+    mMap->addLayer(tl);
+    mMapComposite->layerAdded(mMap->layerCount() - 1);
+#endif
 
     CompositeLayerGroup *lg = mMapComposite->tileLayersForLevel(floor->level());
     CompositeLayerGroupItem *item = new CompositeLayerGroupItem(lg, mRenderer);

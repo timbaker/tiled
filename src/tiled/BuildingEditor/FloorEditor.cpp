@@ -183,7 +183,7 @@ void GraphicsObjectItem::paint(QPainter *painter,
     if (!mValidPos)
         color = Qt::red;
     painter->fillPath(path, color);
-    QPen pen(mValidPos ? Qt::blue : Qt::red);
+    QPen pen(mValidPos ? (mSelected ? Qt::cyan : Qt::blue) : Qt::red);
 
     QPoint dragOffset = mDragging ? mDragOffset : QPoint();
 
@@ -561,10 +561,14 @@ void GraphicsRoofCornerItem::paint(QPainter *painter, const QStyleOptionGraphics
     if (rc->isNE() || rc->isSE()) {
         painter->fillRect(r.right() - 30 * depth, r.top(), 30 * depth, r.height(), Qt::lightGray);
     }
-    if (rc->isSW())
+    if (rc->isSW()) {
         painter->fillRect(r.left() + 30 * depth, r.top(),
-                          r.width() - 30 * depth, r.height() - 30 * depth,
+                          r.width() - 30 * depth * 2, r.height() - 30 * depth,
                           Qt::gray);
+        painter->fillRect(r.left() + 30 * depth, r.top() + 30 * depth,
+                          r.width() - 30 * depth, r.height() - 30 * depth * 2,
+                          Qt::gray);
+    }
     if (rc->isNW()) {
         painter->fillRect(r.left() + 30 * depth, r.top() + 30 * depth,
                           r.width() - 30 * depth, r.height() - 30 * depth,
@@ -573,10 +577,14 @@ void GraphicsRoofCornerItem::paint(QPainter *painter, const QStyleOptionGraphics
                           30 * depth, 30 * depth,
                           Qt::lightGray);
     }
-    if (rc->isNE())
+    if (rc->isNE()) {
         painter->fillRect(r.left(), r.top() + 30 * depth,
-                          r.width() - 30 * depth, r.height() - 30 * depth,
+                          r.width() - 30 * depth, r.height() - 30 * depth * 2,
                           Qt::gray);
+        painter->fillRect(r.left() + 30 * depth, r.top() + 30 * depth,
+                          r.width() - 30 * depth * 2, r.height() - 30 * depth,
+                          Qt::gray);
+    }
     if (rc->isSE()) {
         painter->fillRect(r.left(), r.top(),
                           r.width() - 30 * depth, r.height() - 30 * depth,
@@ -586,7 +594,7 @@ void GraphicsRoofCornerItem::paint(QPainter *painter, const QStyleOptionGraphics
                           Qt::darkGray);
     }
 
-    QPen pen(mValidPos ? Qt::blue : Qt::red);
+    QPen pen(mValidPos ? (mSelected ? Qt::cyan : Qt::blue) : Qt::red);
     painter->setPen(pen);
     painter->drawPath(path);
 }
@@ -873,6 +881,9 @@ void FloorEditor::objectAboutToBeRemoved(BuildingObject *object)
     mObjectItems.removeAll(item);
     mSelectedObjectItems.remove(item); // paranoia
     removeItem(item);
+
+    for (int i = object->index(); i < mObjectItems.count(); i++)
+        mObjectItems[i]->setZValue(i);
 }
 
 void FloorEditor::objectMoved(BuildingObject *object)

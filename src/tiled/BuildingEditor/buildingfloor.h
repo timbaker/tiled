@@ -51,6 +51,9 @@ public:
             SectionFurniture,
             SectionFurniture2,
             SectionRoof,
+#ifdef ROOF_TOPS
+            SectionRoofTop,
+#endif
             MaxSection
         };
 
@@ -73,14 +76,16 @@ public:
         bool IsWallOrient(WallOrientation orient)
         { return mTiles[SectionWall] && (mWallOrientation == orient); }
 
+        void ReplaceFloor(BuildingTile *tile);
         void ReplaceWall(BuildingTile *tile, WallOrientation orient);
         void ReplaceDoor(BuildingTile *tile, int offset);
         void ReplaceFrame(BuildingTile *tile, int offset);
         void ReplaceFurniture(BuildingTile *tile, int offset = 0);
         void ReplaceRoof(BuildingTile *tile, int offset = 0);
         void ReplaceRoofCap(BuildingTile *tile, WallOrientation orient);
+#ifdef ROOF_TOPS
         void ReplaceRoofTop(BuildingTile *tile);
-
+#endif
         int getWallOffset();
         int getTileIndexForDoor();
     };
