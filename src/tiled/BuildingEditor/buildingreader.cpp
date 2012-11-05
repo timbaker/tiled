@@ -365,10 +365,16 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
         int width = atts.value(QLatin1String("width")).toString().toInt();
         int height = atts.value(QLatin1String("height")).toString().toInt();
         int depth = atts.value(QLatin1String("depth")).toString().toInt();
-        bool inner = atts.value(QLatin1String("inner")).toString().toInt() ? true : false;
+        QString orientString = atts.value(QLatin1String("orient")).toString();
+        RoofCornerObject::Orient orient = RoofCornerObject::orientFromString(
+                    orientString);
+        if (orient == RoofCornerObject::Invalid) {
+            xml.raiseError(tr("Unknown roof_corner orient '%1'").arg(orientString));
+            return 0;
+        }
         RoofCornerObject *corner = new RoofCornerObject(floor, x, y,
                                                         width, height, depth,
-                                                        inner);
+                                                        orient);
         corner->setTile(BuildingTiles::instance()->getRoofTile(tile));
         object = corner;
     } else {

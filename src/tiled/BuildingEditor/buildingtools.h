@@ -374,7 +374,7 @@ private:
     void updateHandle(const QPointF &scenePos);
     void resizeRoof(RoofCornerObject *corner, int width, int height);
     void setDepth(RoofCornerObject *corner, int depth);
-    void toggleInnerOuter(RoofCornerObject *corner);
+    void toggleOrient(RoofCornerObject *corner);
 
     QPoint mStartPos;
     QPoint mCurrentPos;

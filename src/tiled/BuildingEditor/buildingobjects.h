@@ -19,6 +19,8 @@
 #define BUILDINGOBJECTS_H
 
 #include <QRect>
+#include <QRegion>
+#include <QString>
 
 namespace BuildingEditor {
 
@@ -250,6 +252,10 @@ public:
 
     BuildingTile *roofTile(RoofTile roofTile) const;
 
+    QRect southEdge();
+    QRect eastEdge();
+    QRect flatTop();
+
 private:
     int mLength;
     int mThickness;
@@ -263,8 +269,16 @@ private:
 class RoofCornerObject : public BuildingObject
 {
 public:
+    enum Orient {
+        SW,
+        NW,
+        NE,
+        SE,
+        Invalid
+    };
+
     RoofCornerObject(BuildingFloor *floor, int x, int y, int width, int height,
-                     int depth, bool inner);
+                     int depth, Orient orient);
 
     QRect bounds() const;
 
@@ -287,8 +301,19 @@ public:
 
     void resize(int width, int height);
 
-    bool isInner() const { return mInner; }
-    void toggleInner();
+    Orient orient() const
+    { return mOrient; }
+
+    void toggleOrient();
+
+    QString orientToString() { return orientToString(mOrient); }
+    static QString orientToString(Orient orient);
+    static Orient orientFromString(const QString &s);
+
+    bool isSW() { return mOrient == SW; }
+    bool isNW() { return mOrient == NW; }
+    bool isNE() { return mOrient == NE; }
+    bool isSE() { return mOrient == SE; }
 
     enum RoofTile {
         FlatS1, FlatS2, FlatS3,
@@ -298,11 +323,16 @@ public:
     };
     BuildingTile *roofTile(RoofTile roofTile) const;
 
+    QRect corners();
+    QRect southEdge(int &dx1, int &dx2);
+    QRect eastEdge(int &dy1, int &dy2);
+    QRegion flatTop();
+
 private:
     int mWidth;
     int mHeight;
     int mDepth;
-    bool mInner;
+    Orient mOrient;
 };
 
 } // namespace BulidingEditor

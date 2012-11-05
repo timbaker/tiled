@@ -670,6 +670,10 @@ void BuildingPreviewScene::objectMoved(BuildingObject *object)
     // Stairs affect the floor tiles on the floor above
     if (dynamic_cast<Stairs*>(object) && (floor = floor->floorAbove()))
         floorEdited(floor);
+
+    // Roofs affect the floor tiles on the floor above
+    if ((object->asRoof() || object->asRoofCorner()) && (floor = floor->floorAbove()))
+        floorEdited(floor);
 }
 
 void BuildingPreviewScene::objectTileChanged(BuildingEditor::BuildingObject *object)

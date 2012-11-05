@@ -484,15 +484,46 @@ BuildingTile *RoofObject::roofTile(RoofObject::RoofTile tile) const
                                                        btile->mIndex + index));
 }
 
+QRect RoofObject::southEdge()
+{
+    QRect r = bounds();
+    if (isW())
+        return QRect(r.left(), r.top() + width1() + gap(),
+                     r.width(), width2());
+    return QRect();
+}
+
+QRect RoofObject::eastEdge()
+{
+    QRect r = bounds();
+    if (isN())
+        return QRect(r.left() + width1() + gap(), r.top(),
+                      width2(), r.height());
+    return QRect();
+}
+
+QRect RoofObject::flatTop()
+{
+    QRect r = bounds();
+    if (isW())
+        return QRect(r.left(), r.top() + width1(),
+                     r.width(), gap());
+    if (isN())
+        return QRect(r.left() + width1(), r.top(),
+                     gap(), r.height());
+    return QRect();
+}
+
 /////
 
 RoofCornerObject::RoofCornerObject(BuildingFloor *floor, int x, int y,
-                                   int width, int height, int depth, bool inner) :
-    BuildingObject(floor, x, y, Invalid),
+                                   int width, int height, int depth,
+                                   Orient orient) :
+    BuildingObject(floor, x, y, BuildingObject::Invalid),
     mWidth(width),
     mHeight(height),
     mDepth(depth),
-    mInner(inner)
+    mOrient(orient)
 {
 }
 
@@ -512,10 +543,20 @@ void RoofCornerObject::rotate(bool right)
         int x = mX;
         mX = oldFloorHeight - mY - mWidth;
         mY = x;
+
+        if (isSW()) mOrient = NW;
+        else if (isNW()) mOrient = NE;
+        else if (isNE()) mOrient = SE;
+        else if (isSE()) mOrient = SW;
     } else {
         int x = mX;
         mX = mY;
         mY = oldFloorWidth - x - mHeight;
+
+        if (isSW()) mOrient = SE;
+        else if (isSE()) mOrient = NE;
+        else if (isNE()) mOrient = NW;
+        else if (isNW()) mOrient = SW;
     }
 }
 
@@ -523,8 +564,16 @@ void RoofCornerObject::flip(bool horizontal)
 {
     if (horizontal) {
         mX = mFloor->width() - mX - mWidth;
+        if (isSW()) mOrient = SE;
+        else if (isNW()) mOrient = NE;
+        else if (isNE()) mOrient = NW;
+        else if (isSE()) mOrient = SW;
     } else {
         mY = mFloor->height() - mY - mHeight;
+        if (isSW()) mOrient = NW;
+        else if (isNW()) mOrient = SW;
+        else if (isNE()) mOrient = SE;
+        else if (isSE()) mOrient = NE;
     }
 }
 
@@ -549,9 +598,31 @@ void RoofCornerObject::resize(int width, int height)
     mWidth = width, mHeight = height;
 }
 
-void RoofCornerObject::toggleInner()
+void RoofCornerObject::toggleOrient()
 {
-    mInner = !mInner;
+    // Rotate clockwise
+    if (isSW()) mOrient = NW;
+    else if (isNW()) mOrient = NE;
+    else if (isNE()) mOrient = SE;
+    else if (isSE()) mOrient = SW;
+}
+
+QString RoofCornerObject::orientToString(RoofCornerObject::Orient orient)
+{
+    if (orient == SW) return QLatin1String("SW");
+    if (orient == NW) return QLatin1String("NW");
+    if (orient == NE) return QLatin1String("NE");
+    if (orient == SE) return QLatin1String("SE");
+    return QString();
+}
+
+RoofCornerObject::Orient RoofCornerObject::orientFromString(const QString &s)
+{
+    if (s == QLatin1String("SW")) return SW;
+    if (s == QLatin1String("NW")) return NW;
+    if (s == QLatin1String("NE")) return NE;
+    if (s == QLatin1String("SE")) return SE;
+    return Invalid;
 }
 
 BuildingTile *RoofCornerObject::roofTile(RoofCornerObject::RoofTile tile) const
@@ -580,6 +651,81 @@ BuildingTile *RoofCornerObject::roofTile(RoofCornerObject::RoofTile tile) const
     return BuildingTiles::instance()->getFurnitureTile(
                 BuildingTiles::instance()->nameForTile(btile->mTilesetName,
                                                        btile->mIndex + index));
+}
+
+QRect RoofCornerObject::corners()
+{
+    QRect r = bounds();
+    if (isNW())
+        return QRect(r.right() - depth(), r.bottom() - depth(),
+                     depth(), depth());
+    if (isSE())
+        return QRect(r.left(), r.top(), depth(), depth());
+    return QRect();
+}
+
+QRect RoofCornerObject::southEdge(int &dx1, int &dx2)
+{
+    QRect r = bounds();
+    dx1 = dx2 = 0;
+    if (isSW())
+        return QRect(r.left() + depth(), r.bottom() - depth() + 1,
+                     r.width() - depth(), depth());
+    if (isNW()) {
+        dx1 = 1;
+        return QRect(r.right() - depth() + 1, r.bottom() - depth() + 1,
+                     depth(), depth());
+    }
+    if (isNE())
+        return QRect(r.left(), r.bottom() - depth() + 1,
+                     r.width() - depth(), depth());
+    if (isSE()) {
+        dx2 = 1;
+        return QRect(r.left(), r.bottom() - depth() + 1,
+                     r.width(), depth());
+    }
+    return QRect();
+}
+
+QRect RoofCornerObject::eastEdge(int &dy1, int &dy2)
+{
+    QRect r = bounds();
+    dy1 = dy2 = 0;
+    if (isSW())
+        return QRect(r.right() - depth() + 1, r.top(),
+                     depth(), r.height() - depth());
+    if (isNW()) {
+        dy1 = 1;
+        return QRect(r.right() - depth() + 1, r.bottom() - depth() + 1,
+                     depth(), depth());
+    }
+    if (isNE())
+        return QRect(r.right() - depth() + 1, r.top() + depth(),
+                     depth(), r.height() - depth());
+    if (isSE()) {
+        dy2 = 1;
+        return QRect(r.right() - depth() + 1, r.top(),
+                     depth(), r.height());
+    }
+    return QRect();
+}
+
+QRegion RoofCornerObject::flatTop()
+{
+    QRect r = bounds();
+    if (isSW())
+        return QRegion(r.adjusted(depth(), 0, -depth(), -depth()))
+                | QRegion(r.adjusted(depth(), depth(), 0, -depth()));
+    if (isNW())
+        return QRegion(r.adjusted(depth(), depth(), 0, -depth()))
+                | QRegion(r.adjusted(depth(), depth(), -depth(), 0));
+    if (isNE())
+        return QRegion(r.adjusted(0, depth(), -depth(), -depth()))
+                | QRegion(r.adjusted(depth(), depth(), -depth(), 0));
+    if (isSE())
+        return QRegion(r.adjusted(depth(), 0, -depth(), -depth()))
+                | QRegion(r.adjusted(0, depth(), -depth(), -depth()));
+    return QRect();
 }
 
 /////

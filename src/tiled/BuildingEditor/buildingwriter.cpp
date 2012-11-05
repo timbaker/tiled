@@ -206,7 +206,7 @@ public:
         } else if (RoofObject *roof = object->asRoof()) {
             w.writeAttribute(QLatin1String("type"), QLatin1String("roof"));
             w.writeAttribute(QLatin1String("length"), QString::number(roof->length()));
-            w.writeAttribute(QLatin1String("thickness"), QString::number(roof->gap()));
+            w.writeAttribute(QLatin1String("thickness"), QString::number(roof->thickness()));
             w.writeAttribute(QLatin1String("width1"), QString::number(roof->width1()));
             w.writeAttribute(QLatin1String("width2"), QString::number(roof->width2()));
             w.writeAttribute(QLatin1String("capped"), QString::number(roof->isCapped() ? 1 : 0));
@@ -218,7 +218,7 @@ public:
             w.writeAttribute(QLatin1String("width"), QString::number(corner->width()));
             w.writeAttribute(QLatin1String("height"), QString::number(corner->height()));
             w.writeAttribute(QLatin1String("depth"), QString::number(corner->depth()));
-            w.writeAttribute(QLatin1String("inner"), QString::number(corner->isInner() ? 1 : 0));
+            w.writeAttribute(QLatin1String("orient"), corner->orientToString());
             writeDir = false;
         } else {
             qFatal("Unhandled object type in BuildingWriter::writeObject");

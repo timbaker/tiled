@@ -1066,8 +1066,8 @@ void RoofCornerTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                 setDepth(mHandleObject, mHandleObject->depth() - 1);
                 return;
             }
-            if (mHandleItem == mObjectItem->toggleHandle()) {
-                toggleInnerOuter(mHandleObject);
+            if (mHandleItem == mObjectItem->orientHandle()) {
+                toggleOrient(mHandleObject);
                 return;
             }
             mOriginalWidth = mHandleObject->width();
@@ -1078,7 +1078,8 @@ void RoofCornerTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         if (!mEditor->currentFloorContains(mCurrentPos))
             return;
         mObject = new RoofCornerObject(mEditor->document()->currentFloor(),
-                                 mStartPos.x(), mStartPos.y(), 1, 1, 3, true);
+                                 mStartPos.x(), mStartPos.y(), 1, 1, 3,
+                                       RoofCornerObject::NW);
         mItem = new GraphicsRoofCornerItem(mEditor, mObject);
         mItem->setZValue(FloorEditor::ZVALUE_CURSOR);
         mEditor->addItem(mItem);
@@ -1289,9 +1290,9 @@ void RoofCornerTool::setDepth(RoofCornerObject *corner, int depth)
 
 }
 
-void RoofCornerTool::toggleInnerOuter(RoofCornerObject *corner)
+void RoofCornerTool::toggleOrient(RoofCornerObject *corner)
 {
-    corner->toggleInner();
+    corner->toggleOrient();
     mEditor->itemForObject(corner)->synchWithObject();
     mEditor->document()->emitObjectChanged(corner);
 }

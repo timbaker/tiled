@@ -79,6 +79,7 @@ public:
         void ReplaceFurniture(BuildingTile *tile, int offset = 0);
         void ReplaceRoof(BuildingTile *tile, int offset = 0);
         void ReplaceRoofCap(BuildingTile *tile, WallOrientation orient);
+        void ReplaceRoofTop(BuildingTile *tile);
 
         int getWallOffset();
         int getTileIndexForDoor();

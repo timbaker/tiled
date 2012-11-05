@@ -142,7 +142,7 @@ public:
         HeightUp,
         HeightDown,
         Capped,
-        InnerOuter
+        Orient
     };
     GraphicsRoofHandleItem(GraphicsRoofBaseItem *roofItem, Type type);
 
@@ -238,14 +238,14 @@ public:
     GraphicsRoofHandleItem *heightDownHandle() const
     { return mHeightDownItem; }
 
-    GraphicsRoofHandleItem *toggleHandle() const
-    { return mToggleItem; }
+    GraphicsRoofHandleItem *orientHandle() const
+    { return mOrientItem; }
 
 private:
     GraphicsRoofHandleItem *mHandleItem;
     GraphicsRoofHandleItem *mHeightUpItem;
     GraphicsRoofHandleItem *mHeightDownItem;
-    GraphicsRoofHandleItem *mToggleItem;
+    GraphicsRoofHandleItem *mOrientItem;
 };
 
 class FloorEditor : public QGraphicsScene

@@ -184,8 +184,6 @@ void GraphicsObjectItem::paint(QPainter *painter,
         color = Qt::red;
     painter->fillPath(path, color);
     QPen pen(mValidPos ? Qt::blue : Qt::red);
-    painter->setPen(pen);
-    painter->drawPath(path);
 
     QPoint dragOffset = mDragging ? mDragOffset : QPoint();
 
@@ -236,7 +234,7 @@ void GraphicsObjectItem::paint(QPainter *painter,
         painter->fillPath(path2, pen.color());
     }
 
-    if (RoofObject *roof = dynamic_cast<RoofObject*>(mObject)) {
+    if (RoofObject *roof = mObject->asRoof()) {
         QRectF r1, rGap, r2;
         r1 = rGap = r2 = roof->bounds().translated(dragOffset);
         qreal thick1 = roof->width1() ? roof->width1() + (roof->midTile() ? 0.5 : 0)
@@ -258,6 +256,9 @@ void GraphicsObjectItem::paint(QPainter *painter,
         painter->fillRect(mEditor->tileToSceneRectF(rGap), Qt::gray);
         painter->fillRect(mEditor->tileToSceneRectF(r2), Qt::lightGray);
     }
+
+    painter->setPen(pen);
+    painter->drawPath(path);
 }
 
 void GraphicsObjectItem::setObject(BuildingObject *object)
@@ -388,8 +389,8 @@ GraphicsRoofHandleItem::GraphicsRoofHandleItem(GraphicsRoofBaseItem *roofItem,
     case Capped:
         mStatusText = QCoreApplication::translate("Tools", "Left-click to toggle end cap.");
         break;
-    case InnerOuter:
-        mStatusText = QCoreApplication::translate("Tools", "Left-click to toggle inner/outer shape.");
+    case Orient:
+        mStatusText = QCoreApplication::translate("Tools", "Left-click to toggle orientation.");
         break;
     }
 
@@ -473,7 +474,7 @@ QRectF GraphicsRoofHandleItem::calcBoundingRect()
             r.adjust(15,0,-15,0);
         }
         break;
-    case InnerOuter:
+    case Orient:
         r.setRight(r.left() + 15);
         r.setBottom(r.top() + 15);
         break;
@@ -531,7 +532,7 @@ GraphicsRoofCornerItem::GraphicsRoofCornerItem(FloorEditor *editor, RoofCornerOb
     mHandleItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Resize)),
     mHeightUpItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::HeightUp)),
     mHeightDownItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::HeightDown)),
-    mToggleItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::InnerOuter))
+    mOrientItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Orient))
 {
     mHandleItem->setCursor(Qt::SizeAllCursor);
 }
@@ -548,30 +549,86 @@ void GraphicsRoofCornerItem::paint(QPainter *painter, const QStyleOptionGraphics
 
     QPoint dragOffset = mDragging ? mDragOffset : QPoint();
     QRectF r = mEditor->tileToSceneRect(mObject->bounds().translated(dragOffset));
-    int depth = mObject->asRoofCorner()->depth();
+    RoofCornerObject *rc = mObject->asRoofCorner();
+    int depth = rc->depth();
+#if 1
+    if (rc->isNW() || rc->isNE()) {
+        painter->fillRect(r.left(), r.top(), r.width(), 30 * depth, Qt::darkGray);
+    }
+    if (rc->isSW() || rc->isSE()) {
+        painter->fillRect(r.left(), r.bottom() - 30 * depth, r.width(), 30 * depth, Qt::lightGray);
+    }
+    if (rc->isSW() || rc->isNW()) {
+        painter->fillRect(r.left(), r.top(), 30 * depth, r.height(), Qt::darkGray);
+    }
+    if (rc->isNE() || rc->isSE()) {
+        painter->fillRect(r.right() - 30 * depth, r.top(), 30 * depth, r.height(), Qt::lightGray);
+    }
+    if (rc->isSW())
+        painter->fillRect(r.left() + 30 * depth, r.top(),
+                          r.width() - 30 * depth, r.height() - 30 * depth,
+                          Qt::gray);
+    if (rc->isNW()) {
+        painter->fillRect(r.left() + 30 * depth, r.top() + 30 * depth,
+                          r.width() - 30 * depth, r.height() - 30 * depth,
+                          Qt::gray);
+        painter->fillRect(r.right() - 30 * depth, r.bottom() - 30 * depth,
+                          30 * depth, 30 * depth,
+                          Qt::lightGray);
+    }
+    if (rc->isNE())
+        painter->fillRect(r.left(), r.top() + 30 * depth,
+                          r.width() - 30 * depth, r.height() - 30 * depth,
+                          Qt::gray);
+    if (rc->isSE()) {
+        painter->fillRect(r.left(), r.top(),
+                          r.width() - 30 * depth, r.height() - 30 * depth,
+                          Qt::gray);
+        painter->fillRect(r.left(), r.top(),
+                          30 * depth, 30 * depth,
+                          Qt::darkGray);
+    }
+#else
     path = QPainterPath();
-    if (mObject->asRoofCorner()->isInner()) {
+    if (mObject->asRoofCorner()->isSW()) {
+        path.moveTo(r.topLeft());
+        path.lineTo(r.bottomLeft());
+        path.lineTo(r.bottomRight());
+        path.lineTo(r.bottomRight() - QPointF(0, 30 * depth));
+        path.lineTo(r.bottomLeft() + QPointF(30 * depth, -30 * depth));
+        path.lineTo(r.topLeft() + QPointF(30 * depth, 0));
+        path.closeSubpath();
+    } else if (mObject->asRoofCorner()->isNW()) {
         path.moveTo(r.topLeft());
         path.lineTo(r.topRight());
         path.lineTo(r.topRight() + QPointF(0, 30 * depth));
         path.lineTo(r.topLeft() + QPointF(30 * depth, 30 * depth));
         path.lineTo(r.bottomLeft() + QPointF(30 * depth, 0));
         path.lineTo(r.bottomLeft());
-        path.closeSubpath();//path.lineTo(r.topLeft());
-    } else {
+        path.closeSubpath();
+    } else if (mObject->asRoofCorner()->isNE()) {
+        path.moveTo(r.topLeft());
+        path.lineTo(r.topRight());
+        path.lineTo(r.bottomRight());
+        path.lineTo(r.bottomRight() - QPointF(30 * depth, 0));
+        path.lineTo(r.topRight() + QPointF(-30 * depth, 30 * depth));
+        path.lineTo(r.topLeft() + QPointF(0, 30 * depth));
+        path.closeSubpath();
+    } else if (mObject->asRoofCorner()->isSE()) {
         path.moveTo(r.topRight());
         path.lineTo(r.bottomRight());
         path.lineTo(r.bottomLeft());
         path.lineTo(r.bottomLeft() - QPointF(0, 30 * depth));
         path.lineTo(r.bottomRight() - QPointF(30 * depth, 30 * depth));
         path.lineTo(r.topRight() - QPointF(30 * depth, 0));
-        path.closeSubpath();//path.lineTo(r.topRight());
+        path.closeSubpath();
     }
     QColor color = mSelected ? Qt::cyan : Qt::white;
     if (!mValidPos)
         color = Qt::red;
     painter->setClipRect(boundingRect());
     painter->fillPath(path, color);
+#endif
 }
 
 void GraphicsRoofCornerItem::synchWithObject()
@@ -581,7 +638,7 @@ void GraphicsRoofCornerItem::synchWithObject()
     mHandleItem->synchWithObject();
     mHeightUpItem->synchWithObject();
     mHeightDownItem->synchWithObject();
-    mToggleItem->synchWithObject();
+    mOrientItem->synchWithObject();
 }
 
 /////
