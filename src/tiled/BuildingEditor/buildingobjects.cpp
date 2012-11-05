@@ -282,14 +282,16 @@ void FurnitureObject::setFurnitureTile(FurnitureTile *tile)
 
 RoofObject::RoofObject(BuildingFloor *floor, int x, int y,
                        BuildingObject::Direction dir, int length,
-                       int thickness, int width1, int width2, bool capped, int depth) :
+                       int thickness, int width1, int width2, bool capped1,
+                       bool capped2, int depth) :
     BuildingObject(floor, x, y, dir),
     mLength(length),
     mThickness(thickness),
     mWidth1(width1),
     mWidth2(width2),
     mDepth(depth),
-    mCapped(capped)
+    mCapped1(capped1),
+    mCapped2(capped2)
 {
 }
 
@@ -324,8 +326,12 @@ void RoofObject::flip(bool horizontal)
 {
     if (horizontal) {
         mX = mFloor->width() - mX - bounds().width();
+        if (isW())
+            qSwap(mCapped1, mCapped2);
     } else {
         mY = mFloor->height() - mY - bounds().height();
+        if (isN())
+            qSwap(mCapped1, mCapped2);
     }
 }
 
@@ -397,9 +403,14 @@ void RoofObject::setDepth(int height)
     resize(length(), thickness());
 }
 
-void RoofObject::toggleCapped()
+void RoofObject::toggleCapped1()
 {
-    mCapped = !mCapped;
+    mCapped1 = !mCapped1;
+}
+
+void RoofObject::toggleCapped2()
+{
+    mCapped2 = !mCapped2;
 }
 
 BuildingTile *RoofObject::roofTile(RoofObject::RoofTile tile) const

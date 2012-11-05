@@ -141,7 +141,8 @@ public:
         Width2,
         DepthUp,
         DepthDown,
-        Capped,
+        Capped1,
+        Capped2,
         Orient
     };
     GraphicsRoofHandleItem(GraphicsRoofBaseItem *roofItem, Type type);
@@ -206,8 +207,11 @@ public:
     GraphicsRoofHandleItem *depthDownHandle() const
     { return mDepthDownItem; }
 
-    GraphicsRoofHandleItem *cappedHandle() const
-    { return mCappedItem; }
+    GraphicsRoofHandleItem *capped1Handle() const
+    { return mCapped1Item; }
+
+    GraphicsRoofHandleItem *capped2Handle() const
+    { return mCapped2Item; }
 
 private:
     GraphicsRoofHandleItem *mHandleItem;
@@ -215,7 +219,8 @@ private:
     GraphicsRoofHandleItem *mWidth2Item;
     GraphicsRoofHandleItem *mDepthUpItem;
     GraphicsRoofHandleItem *mDepthDownItem;
-    GraphicsRoofHandleItem *mCappedItem;
+    GraphicsRoofHandleItem *mCapped1Item;
+    GraphicsRoofHandleItem *mCapped2Item;
 };
 
 class GraphicsRoofCornerItem : public GraphicsRoofBaseItem

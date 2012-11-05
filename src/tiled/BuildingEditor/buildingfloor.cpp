@@ -313,7 +313,7 @@ void BuildingFloor::LayoutToSquares()
                 roofRegionXor ^= QRegion(r.adjusted(0,0,1,0));
                 if (ro->midTile()) {
 
-                    if (!ro->isCapped())
+                    if (!ro->isCapped2())
                         continue;
 
                     // End cap
@@ -323,7 +323,7 @@ void BuildingFloor::LayoutToSquares()
                     continue;
                 }
 
-                if (!ro->isCapped())
+                if (!ro->isCapped2())
                     continue;
 
                 // End cap (above midline)
@@ -363,7 +363,7 @@ void BuildingFloor::LayoutToSquares()
                 roofRegionXor ^= QRegion(r.adjusted(0,0,0,1));
                 if (ro->midTile()) {
 
-                    if (!ro->isCapped())
+                    if (!ro->isCapped2())
                         continue;
 
                     // End cap
@@ -373,7 +373,7 @@ void BuildingFloor::LayoutToSquares()
                     continue;
                 }
 
-                if (!ro->isCapped())
+                if (!ro->isCapped2())
                     continue;
 
                 // End cap (left of midline)

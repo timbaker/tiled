@@ -453,8 +453,11 @@ void HandleRoof::swap()
     case ToggleWidth2:
         mObject->toggleWidth2();
         break;
-    case ToggleCapped:
-        mObject->toggleCapped();
+    case ToggleCapped1:
+        mObject->toggleCapped1();
+        break;
+    case ToggleCapped2:
+        mObject->toggleCapped2();
         break;
     case IncrDepth:
         mObject->setDepth(mObject->depth() + 1);

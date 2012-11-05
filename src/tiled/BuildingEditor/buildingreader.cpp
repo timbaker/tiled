@@ -352,11 +352,12 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
         int thickness = atts.value(QLatin1String("thickness")).toString().toInt();
         int width1 = atts.value(QLatin1String("width1")).toString().toInt();
         int width2 = atts.value(QLatin1String("width2")).toString().toInt();
-        bool capped = atts.value(QLatin1String("capped")).toString().toInt() ? true : false;
+        bool capped1 = atts.value(QLatin1String("capped1")).toString().toInt() ? true : false;
+        bool capped2 = atts.value(QLatin1String("capped2")).toString().toInt() ? true : false;
         int depth = atts.value(QLatin1String("depth")).toString().toInt();
         RoofObject *roof = new RoofObject(floor, x, y, dir,
                                           length, thickness, width1, width2,
-                                          capped, depth);
+                                          capped1, capped2, depth);
         roof->setTile(BuildingTiles::instance()->getRoofTile(tile));
         const QString capTile = atts.value(QLatin1String("CapTile")).toString();
         roof->setTile(BuildingTiles::instance()->getRoofCapTile(capTile), 1);

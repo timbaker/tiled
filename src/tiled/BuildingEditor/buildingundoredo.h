@@ -430,7 +430,8 @@ public:
     enum Handle {
         ToggleWidth1,
         ToggleWidth2,
-        ToggleCapped,
+        ToggleCapped1,
+        ToggleCapped2,
         IncrDepth,
         DecrDepth,
     };

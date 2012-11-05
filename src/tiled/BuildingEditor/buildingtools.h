@@ -310,7 +310,8 @@ private:
     void resizeRoof(RoofObject *roof, int length, int thickness);
     void toggleShowWidth1(RoofObject *roof);
     void toggleShowWidth2(RoofObject *roof);
-    void toggleCapped(RoofObject *roof);
+    void toggleCapped1(RoofObject *roof);
+    void toggleCapped2(RoofObject *roof);
     void setDepth(RoofObject *roof, int depth);
 
 private:

@@ -724,8 +724,12 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                 setDepth(mHandleObject, mHandleObject->depth() - 1);
                 return;
             }
-            if (mHandleItem == mObjectItem->cappedHandle()) {
-                toggleCapped(mHandleObject);
+            if (mHandleItem == mObjectItem->capped1Handle()) {
+                toggleCapped1(mHandleObject);
+                return;
+            }
+            if (mHandleItem == mObjectItem->capped2Handle()) {
+                toggleCapped2(mHandleObject);
                 return;
             }
             mOriginalLength = mHandleObject->length();
@@ -740,7 +744,8 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                                  BuildingObject::W,
                                  /*length=*/1, /*thickness=*/2,
                                  /*width1=*/1, /*width2=*/1,
-                                 /*capped=*/true, /*depth=*/3);
+                                 /*capped1=*/true,
+                                 /*capped2=*/true, /*depth=*/3);
         mItem = new GraphicsObjectItem(mEditor, mObject);
         mItem->setZValue(FloorEditor::ZVALUE_CURSOR);
         mEditor->addItem(mItem);
@@ -966,10 +971,16 @@ void RoofTool::toggleShowWidth2(RoofObject *roof)
                                                           HandleRoof::ToggleWidth2));
 }
 
-void RoofTool::toggleCapped(RoofObject *roof)
+void RoofTool::toggleCapped1(RoofObject *roof)
 {
     mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(), roof,
-                                                          HandleRoof::ToggleCapped));
+                                                          HandleRoof::ToggleCapped1));
+}
+
+void RoofTool::toggleCapped2(RoofObject *roof)
+{
+    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(), roof,
+                                                          HandleRoof::ToggleCapped2));
 }
 
 void RoofTool::setDepth(RoofObject *roof, int depth)

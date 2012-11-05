@@ -128,7 +128,7 @@ public:
 
     }
 
-    virtual Door *asDoor() { return this; }
+    Door *asDoor() { return this; }
 
     int getOffset()
     { return (mDir == N) ? 1 : 0; }
@@ -175,7 +175,7 @@ public:
 
     }
 
-    virtual Window *asWindow() { return this; }
+    Window *asWindow() { return this; }
 
     int getOffset()
     { return (mDir == N) ? 1 : 0; }
@@ -194,7 +194,7 @@ public:
     bool isValidPos(const QPoint &offset = QPoint(),
                     BuildingEditor::BuildingFloor *floor = 0) const;
 
-    virtual FurnitureObject *asFurniture() { return this; }
+    FurnitureObject *asFurniture() { return this; }
 
     void setFurnitureTile(FurnitureTile *tile);
 
@@ -209,7 +209,8 @@ class RoofObject : public BuildingObject
 {
 public:
     RoofObject(BuildingFloor *floor, int x, int y, Direction dir, int length,
-               int thickness, int width1, int width2, bool capped, int depth);
+               int thickness, int width1, int width2, bool capped1,
+               bool capped2, int depth);
 
     QRect bounds() const;
 
@@ -257,10 +258,14 @@ public:
     int depth() const
     { return mDepth; }
 
-    bool isCapped() const
-    { return mCapped; }
+    bool isCapped1() const
+    { return mCapped1; }
 
-    void toggleCapped();
+    bool isCapped2() const
+    { return mCapped2; }
+
+    void toggleCapped1();
+    void toggleCapped2();
 
     BuildingTile *capTile() const
     { return mCapTile; }
@@ -288,7 +293,8 @@ private:
     int mWidth1; // Thickness above (mDir=W) or left of (mDir=N) the gap
     int mWidth2; // Thickness below (mDir=W) or right of (mDir=N) the gap
     int mDepth;
-    bool mCapped;
+    bool mCapped1; // Capped on left (mDir=W) or top (mDir=N)
+    bool mCapped2; // Capped on right (mDir=W) or bottom (mDir=N)
     BuildingTile *mCapTile;
 };
 
