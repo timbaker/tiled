@@ -424,6 +424,30 @@ private:
     int mThickness;
 };
 
+class HandleRoof : public QUndoCommand
+{
+public:
+    enum Handle {
+        ToggleWidth1,
+        ToggleWidth2,
+        ToggleCapped,
+        IncrDepth,
+        DecrDepth,
+    };
+
+    HandleRoof(BuildingDocument *doc, RoofObject *roof, Handle handle);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    RoofObject *mObject;
+    Handle mHandle;
+};
+
 class ResizeRoofCorner : public QUndoCommand
 {
 public:
@@ -440,6 +464,29 @@ private:
     RoofCornerObject *mObject;
     int mWidth;
     int mHeight;
+};
+
+class HandleRoofCorner : public QUndoCommand
+{
+public:
+    enum Handle {
+        ToggleOrientationLeft,
+        ToggleOrientationRight,
+        IncrDepth,
+        DecrDepth,
+    };
+
+    HandleRoofCorner(BuildingDocument *doc, RoofCornerObject *corner, Handle handle);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    RoofCornerObject *mObject;
+    Handle mHandle;
 };
 
 } // namespace BuildingEditor

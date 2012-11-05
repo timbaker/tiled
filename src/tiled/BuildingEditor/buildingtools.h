@@ -311,7 +311,7 @@ private:
     void toggleShowWidth1(RoofObject *roof);
     void toggleShowWidth2(RoofObject *roof);
     void toggleCapped(RoofObject *roof);
-    void setDepth(RoofObject *roof, int height);
+    void setDepth(RoofObject *roof, int depth);
 
 private:
     static RoofTool *mInstance;

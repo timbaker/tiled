@@ -436,6 +436,40 @@ void ResizeRoof::swap()
 
 /////
 
+HandleRoof::HandleRoof(BuildingDocument *doc, RoofObject *roof, HandleRoof::Handle handle) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Edit Roof")),
+    mDocument(doc),
+    mObject(roof),
+    mHandle(handle)
+{
+}
+
+void HandleRoof::swap()
+{
+    switch (mHandle) {
+    case ToggleWidth1:
+        mObject->toggleWidth1();
+        break;
+    case ToggleWidth2:
+        mObject->toggleWidth2();
+        break;
+    case ToggleCapped:
+        mObject->toggleCapped();
+        break;
+    case IncrDepth:
+        mObject->setDepth(mObject->depth() + 1);
+        mHandle = DecrDepth;
+        break;
+    case DecrDepth:
+        mObject->setDepth(mObject->depth() - 1);
+        mHandle = IncrDepth;
+        break;
+    }
+    mDocument->emitObjectChanged(mObject);
+}
+
+/////
+
 ResizeRoofCorner::ResizeRoofCorner(BuildingDocument *doc, RoofCornerObject *corner,
                                    int width, int height) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Roof Corner")),
@@ -449,6 +483,40 @@ ResizeRoofCorner::ResizeRoofCorner(BuildingDocument *doc, RoofCornerObject *corn
 void ResizeRoofCorner::swap()
 {
     mDocument->resizeRoofCorner(mObject, mWidth, mHeight);
+}
+
+/////
+
+HandleRoofCorner::HandleRoofCorner(BuildingDocument *doc, RoofCornerObject *corner,
+                                   HandleRoofCorner::Handle handle) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Edit Roof Corner")),
+    mDocument(doc),
+    mObject(corner),
+    mHandle(handle)
+{
+}
+
+void HandleRoofCorner::swap()
+{
+    switch (mHandle) {
+    case ToggleOrientationLeft:
+        mObject->toggleOrient(false);
+        mHandle = ToggleOrientationRight;
+        break;
+    case ToggleOrientationRight:
+        mObject->toggleOrient(true);
+        mHandle = ToggleOrientationLeft;
+        break;
+    case IncrDepth:
+        mObject->setDepth(mObject->depth() + 1);
+        mHandle = DecrDepth;
+        break;
+    case DecrDepth:
+        mObject->setDepth(mObject->depth() - 1);
+        mHandle = IncrDepth;
+        break;
+    }
+    mDocument->emitObjectChanged(mObject);
 }
 
 /////

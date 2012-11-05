@@ -391,7 +391,7 @@ void RoofObject::toggleWidth2()
     resize(length(), thickness);
 }
 
-void RoofObject::setHeight(int height)
+void RoofObject::setDepth(int height)
 {
     mDepth = height;
     resize(length(), thickness());
@@ -578,13 +578,21 @@ void RoofCornerObject::resize(int width, int height)
     mWidth = width, mHeight = height;
 }
 
-void RoofCornerObject::toggleOrient()
+void RoofCornerObject::toggleOrient(bool right)
 {
-    // Rotate clockwise
-    if (isSW()) mOrient = NW;
-    else if (isNW()) mOrient = NE;
-    else if (isNE()) mOrient = SE;
-    else if (isSE()) mOrient = SW;
+    if (right) {
+        // Rotate clockwise
+        if (isSW()) mOrient = NW;
+        else if (isNW()) mOrient = NE;
+        else if (isNE()) mOrient = SE;
+        else if (isSE()) mOrient = SW;
+    } else {
+        // Rotate counter-clockwise
+        if (isSW()) mOrient = SE;
+        else if (isSE()) mOrient = NE;
+        else if (isNE()) mOrient = NW;
+        else if (isNW()) mOrient = SW;
+    }
 }
 
 QString RoofCornerObject::orientToString(RoofCornerObject::Orient orient)

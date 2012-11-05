@@ -956,32 +956,30 @@ void RoofTool::resizeRoof(RoofObject *roof, int length, int thickness)
 
 void RoofTool::toggleShowWidth1(RoofObject *roof)
 {
-    roof->toggleWidth1();
-    mEditor->itemForObject(roof)->synchWithObject();
-    mEditor->document()->emitObjectChanged(roof);
+    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(), roof,
+                                                          HandleRoof::ToggleWidth1));
 }
 
 void RoofTool::toggleShowWidth2(RoofObject *roof)
 {
-    roof->toggleWidth2();
-    mEditor->itemForObject(roof)->synchWithObject();
-    mEditor->document()->emitObjectChanged(roof);
+    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(), roof,
+                                                          HandleRoof::ToggleWidth2));
 }
 
 void RoofTool::toggleCapped(RoofObject *roof)
 {
-    roof->toggleCapped();
-    mEditor->itemForObject(roof)->synchWithObject();
-    mEditor->document()->emitObjectChanged(roof);
+    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(), roof,
+                                                          HandleRoof::ToggleCapped));
 }
 
-void RoofTool::setDepth(RoofObject *roof, int height)
+void RoofTool::setDepth(RoofObject *roof, int depth)
 {
-    if (height < 1 || height > 3)
+    if (depth < 1 || depth > 3)
         return;
-    roof->setHeight(height);
-    mEditor->itemForObject(roof)->synchWithObject();
-    mEditor->document()->emitObjectChanged(roof);
+    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(), roof,
+                                                          (depth == roof->depth() + 1)
+                                                          ? HandleRoof::IncrDepth
+                                                          : HandleRoof::DecrDepth));
 }
 
 /////
@@ -1242,17 +1240,18 @@ void RoofCornerTool::setDepth(RoofCornerObject *corner, int depth)
 {
     if (depth < 1 || depth > 3)
         return;
-    corner->setDepth(depth);
-    mEditor->itemForObject(corner)->synchWithObject();
-    mEditor->document()->emitObjectChanged(corner);
-
+    mEditor->document()->undoStack()->push(new HandleRoofCorner(mEditor->document(),
+                                                                corner,
+                                                                (depth == corner->depth() + 1)
+                                                                ? HandleRoofCorner::IncrDepth
+                                                                : HandleRoofCorner::DecrDepth));
 }
 
 void RoofCornerTool::toggleOrient(RoofCornerObject *corner)
 {
-    corner->toggleOrient();
-    mEditor->itemForObject(corner)->synchWithObject();
-    mEditor->document()->emitObjectChanged(corner);
+    mEditor->document()->undoStack()->push(new HandleRoofCorner(mEditor->document(),
+                                                                corner,
+                                                                HandleRoofCorner::ToggleOrientationRight));
 }
 
 /////

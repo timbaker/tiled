@@ -242,7 +242,7 @@ public:
     void toggleWidth1();
     void toggleWidth2();
 
-    void setHeight(int height);
+    void setDepth(int height);
 
     int depth() const
     { return mDepth; }
@@ -320,7 +320,7 @@ public:
     Orient orient() const
     { return mOrient; }
 
-    void toggleOrient();
+    void toggleOrient(bool right);
 
     QString orientToString() { return orientToString(mOrient); }
     static QString orientToString(Orient orient);
