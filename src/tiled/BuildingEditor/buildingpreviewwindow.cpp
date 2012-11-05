@@ -22,6 +22,7 @@
 #include "buildingdocument.h"
 #include "buildingfloor.h"
 #include "buildingobjects.h"
+#include "buildingpreferences.h"
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
 #include "buildingtmx.h"
@@ -66,12 +67,20 @@ BuildingPreviewWindow::BuildingPreviewWindow(QWidget *parent) :
     connect(mView->zoomable(), SIGNAL(scaleChanged(qreal)),
             SLOT(updateActions()));
 
+    BuildingPreferences *prefs = BuildingPreferences::instance();
+
     QSettings settings;
     bool showWalls = settings.value(QLatin1String("BuildingEditor/PreviewWindow/ShowWalls"),
                                     true).toBool();
     ui->actionShowWalls->setChecked(showWalls);
     connect(ui->actionShowWalls, SIGNAL(toggled(bool)),
             mScene, SLOT(showWalls(bool)));
+
+    ui->actionHighlightFloor->setChecked(prefs->highlightFloor());
+    connect(ui->actionHighlightFloor, SIGNAL(toggled(bool)),
+            prefs, SLOT(setHighlightFloor(bool)));
+    connect(prefs, SIGNAL(highlightFloorChanged(bool)),
+            mScene, SLOT(highlightFloorChanged(bool)));
 
     QList<QKeySequence> keys = QKeySequence::keyBindings(QKeySequence::ZoomIn);
     keys += QKeySequence(tr("+"));
@@ -262,13 +271,20 @@ BuildingPreviewScene::BuildingPreviewScene(QWidget *parent) :
     mMap(0),
     mRenderer(0),
     mGridItem(0),
-    mLoading(false)
+    mLoading(false),
+    mDarkRectangle(new QGraphicsRectItem)
 {
     setBackgroundBrush(Qt::darkGray);
 
     QSettings settings;
     mShowWalls = settings.value(QLatin1String("BuildingEditor/PreviewWindow/ShowWalls"),
                                 true).toBool();
+
+    mDarkRectangle->setPen(Qt::NoPen);
+    mDarkRectangle->setBrush(Qt::black);
+    mDarkRectangle->setOpacity(0.6);
+    mDarkRectangle->setVisible(false);
+    addItem(mDarkRectangle);
 }
 
 BuildingPreviewScene::~BuildingPreviewScene()
@@ -339,6 +355,7 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
 
     mRenderer->setMaxLevel(mMapComposite->maxLevel());
     setSceneRect(mMapComposite->boundingRect(mRenderer));
+    mDarkRectangle->setRect(sceneRect());
 
     connect(mDocument, SIGNAL(currentFloorChanged()),
             SLOT(currentFloorChanged()));
@@ -468,16 +485,21 @@ void BuildingPreviewScene::floorEdited(BuildingFloor *floor)
 
     mRenderer->setMaxLevel(mMapComposite->maxLevel());
     setSceneRect(mMapComposite->boundingRect(mRenderer));
+    mDarkRectangle->setRect(sceneRect());
 }
 
 void BuildingPreviewScene::currentFloorChanged()
 {
+#if 1
+    highlightFloorChanged(BuildingPreferences::instance()->highlightFloor());
+#else
     int level = mDocument->currentFloor()->level();
     for (int i = 0; i <= level; i++) {
         mLayerGroupItems[i]->setVisible(true);
     }
     for (int i = level + 1; i < mDocument->building()->floorCount(); i++)
         mLayerGroupItems[i]->setVisible(false);
+#endif
 
     if (!mShowWalls || mLoading) {
         foreach (BuildingFloor *floor, mDocument->building()->floors()) {
@@ -592,6 +614,7 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
         item->synchWithTileLayers();
         item->updateBounds();
     }
+    item->setZValue(lg->level());
     addItem(item);
 
     foreach (BuildingObject *object, floor->objects())
@@ -613,6 +636,7 @@ void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
 
     mRenderer->setMaxLevel(mMapComposite->maxLevel());
     setSceneRect(mMapComposite->boundingRect(mRenderer));
+    mDarkRectangle->setRect(sceneRect());
 }
 
 void BuildingPreviewScene::objectAdded(BuildingObject *object)
@@ -698,6 +722,27 @@ void BuildingPreviewScene::showWalls(bool show)
     }
 //        BuildingFloorToTileLayers(floor, mMapComposite->tileLayersForLevel(floor->level())->layers());
     update();
+}
+
+void BuildingPreviewScene::highlightFloorChanged(bool highlight)
+{
+    qreal z = 0;
+
+    if (!mDocument) {
+        mDarkRectangle->setVisible(false);
+        return;
+    }
+
+    int currentLevel = mDocument->currentFloor()->level();
+    foreach (CompositeLayerGroupItem *item, mLayerGroupItems) {
+        item->setVisible(!highlight ||
+                         (item->layerGroup()->level() <= currentLevel));
+        if (item->layerGroup()->level() == currentLevel)
+            z = item->zValue() - 0.5;
+    }
+
+    mDarkRectangle->setVisible(highlight);
+    mDarkRectangle->setZValue(z);
 }
 
 /////

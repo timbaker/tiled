@@ -22,6 +22,7 @@
 using namespace BuildingEditor;
 
 static const char *KEY_TILES_DIR = "BuildingEditor/TilesDirectory";
+static const char *KEY_HIGHLIGHT_FLOOR = "BuildingEditor/PreviewWindow/HighlightFloor";
 
 BuildingPreferences *BuildingPreferences::mInstance = 0;
 
@@ -43,6 +44,8 @@ BuildingPreferences::BuildingPreferences(QObject *parent) :
 {
     mTilesDirectory = mSettings.value(QLatin1String(KEY_TILES_DIR),
                                       QLatin1String("../Tiles")).toString();
+    mHighlightFloor = mSettings.value(QLatin1String(KEY_HIGHLIGHT_FLOOR),
+                                      true).toBool();
 }
 
 QString BuildingPreferences::configPath() const
@@ -64,4 +67,13 @@ void BuildingPreferences::setTilesDirectory(const QString &path)
 QString BuildingPreferences::tilesDirectory() const
 {
     return mTilesDirectory;
+}
+
+void BuildingPreferences::setHighlightFloor(bool highlight)
+{
+    if (highlight == mHighlightFloor)
+        return;
+    mHighlightFloor = highlight;
+    mSettings.setValue(QLatin1String(KEY_HIGHLIGHT_FLOOR), mHighlightFloor);
+    emit highlightFloorChanged(mHighlightFloor);
 }

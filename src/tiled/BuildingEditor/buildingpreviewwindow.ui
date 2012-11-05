@@ -65,6 +65,7 @@
      <string>View</string>
     </property>
     <addaction name="actionShowWalls"/>
+    <addaction name="actionHighlightFloor"/>
     <addaction name="separator"/>
     <addaction name="actionZoomIn"/>
     <addaction name="actionZoomOut"/>
@@ -105,6 +106,17 @@
    </property>
    <property name="text">
     <string>Show Walls</string>
+   </property>
+  </action>
+  <action name="actionHighlightFloor">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Highlight Current Floor</string>
+   </property>
+   <property name="shortcut">
+    <string>H</string>
    </property>
   </action>
  </widget>

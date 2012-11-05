@@ -37,15 +37,21 @@ public:
 
     void setTilesDirectory(const QString &path);
     QString tilesDirectory() const;
+
+    bool highlightFloor() const
+    { return mHighlightFloor; }
     
 signals:
-    
+    void highlightFloorChanged(bool highlight);
+
 public slots:
-    
+    void setHighlightFloor(bool highlight);
+
 private:
     static BuildingPreferences *mInstance;
     QSettings mSettings;
     QString mTilesDirectory;
+    bool mHighlightFloor;
 };
 
 } // namespace BuildingEditor

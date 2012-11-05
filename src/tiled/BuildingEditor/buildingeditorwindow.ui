@@ -112,10 +112,19 @@
     <addaction name="separator"/>
     <addaction name="actionTemplateFromBuilding"/>
    </widget>
+   <widget class="QMenu" name="menuFloor">
+    <property name="title">
+     <string>Floor</string>
+    </property>
+    <addaction name="actionInsertFloorAbove"/>
+    <addaction name="actionInsertFloorBelow"/>
+    <addaction name="actionRemoveFloor"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuBuilding"/>
+   <addaction name="menuFloor"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
@@ -530,6 +539,30 @@
    </property>
    <property name="toolTip">
     <string>Place Roof Corner</string>
+   </property>
+  </action>
+  <action name="actionInsertFloorAbove">
+   <property name="text">
+    <string>Insert Floor Above</string>
+   </property>
+   <property name="toolTip">
+    <string>Add a new floor above the current one</string>
+   </property>
+  </action>
+  <action name="actionInsertFloorBelow">
+   <property name="text">
+    <string>Insert Floor Below</string>
+   </property>
+   <property name="toolTip">
+    <string>Add a new floor below the current one</string>
+   </property>
+  </action>
+  <action name="actionRemoveFloor">
+   <property name="text">
+    <string>Remove Current Floor</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove the current floor</string>
    </property>
   </action>
  </widget>

@@ -150,6 +150,7 @@ private slots:
     void buildingRotated();
 
     void showWalls(bool show);
+    void highlightFloorChanged(bool highlight);
 
 private:
     BuildingDocument *mDocument;
@@ -161,6 +162,7 @@ private:
     QString mError;
     bool mShowWalls;
     bool mLoading;
+    QGraphicsRectItem *mDarkRectangle;
 };
 
 class BuildingPreviewView : public QGraphicsView
