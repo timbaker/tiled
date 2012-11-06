@@ -19,6 +19,7 @@
 #include "ui_choosebuildingtiledialog.h"
 
 #include "buildingeditorwindow.h"
+#include "buildingpreferences.h"
 #include "buildingtiles.h"
 #include "buildingtilesdialog.h"
 
@@ -42,13 +43,20 @@ ChooseBuildingTileDialog::ChooseBuildingTileDialog(const QString &prompt,
     ui->prompt->setText(prompt);
 
     ui->tableView->setZoomable(mZoomable);
-    mZoomable->setScale(QSettings().value(QLatin1String("BuildingEditor/MainWindow/CategoryScale"), 0.5).toReal());
+    mZoomable->setScale(BuildingPreferences::instance()->tileScale());
 
     connect(ui->tilesButton, SIGNAL(clicked()), SLOT(tilesDialog()));
 
     setTilesList(mCategoryName, initialTile);
 
     connect(ui->tableView, SIGNAL(activated(QModelIndex)), SLOT(accept()));
+
+    QSettings settings;
+    settings.beginGroup(QLatin1String("BuildingEditor/ChooseBuildingTileDialog"));
+    QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
+    if (!geom.isEmpty())
+        restoreGeometry(geom);
+    settings.endGroup();
 }
 
 ChooseBuildingTileDialog::~ChooseBuildingTileDialog()
@@ -105,5 +113,10 @@ void ChooseBuildingTileDialog::tilesDialog()
 
 void ChooseBuildingTileDialog::accept()
 {
+    QSettings settings;
+    settings.beginGroup(QLatin1String("BuildingEditor/ChooseBuildingTileDialog"));
+    settings.setValue(QLatin1String("geometry"), saveGeometry());
+    settings.endGroup();
+
     QDialog::accept();
 }
