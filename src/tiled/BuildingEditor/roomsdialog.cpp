@@ -148,6 +148,9 @@ void RoomsDialog::addRoom()
 
     setRoomsList();
     ui->listWidget->setCurrentRow(mRooms.count() - 1);
+
+    ui->name->setFocus();
+    ui->name->selectAll();
 }
 
 void RoomsDialog::removeRoom()
