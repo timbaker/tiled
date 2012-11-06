@@ -74,9 +74,12 @@ public:
 
     void synchWithFloor();
 
+    void setDragBmp(QImage *bmp);
+
 private:
     BuildingFloor *mFloor;
     QImage *mBmp;
+    QImage *mDragBmp;
     QList<GraphicsObjectItem*> mObjectItems;
 };
 

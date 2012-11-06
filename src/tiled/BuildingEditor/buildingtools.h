@@ -20,16 +20,20 @@
 
 #include <QObject>
 #include <QPointF>
+#include <QRegion>
 #include <QSet>
 #include <QSize>
 
 class QAction;
 class QGraphicsItem;
+class QGraphicsPathItem;
 class QGraphicsRectItem;
 class QGraphicsSceneMouseEvent;
+class QImage;
 
 namespace BuildingEditor {
 
+class BuildingFloor;
 class BuildingObject;
 class BuildingTile;
 class Door;
@@ -70,6 +74,8 @@ public:
     { return mStatusText; }
 
     void setStatusText(const QString &text);
+
+    BuildingFloor *floor() const;
 
 signals:
     void statusTextChanged();
@@ -169,6 +175,56 @@ private:
     bool mMouseDown;
     bool mInitialPaint;
     QGraphicsRectItem *mCursor;
+};
+
+/////
+
+class SelectMoveRoomsTool : public BaseTool
+{
+    Q_OBJECT
+public:
+    static SelectMoveRoomsTool *instance();
+
+    SelectMoveRoomsTool();
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
+public slots:
+    void documentChanged();
+    void activate();
+    void deactivate();
+
+private:
+    enum Mode {
+        NoMode,
+        Selecting,
+        Moving,
+        CancelMoving
+    };
+
+    void updateSelection(const QPointF &pos,
+                         Qt::KeyboardModifiers modifiers);
+
+    void startSelecting();
+
+    void startMoving();
+    void updateMovingItems(const QPointF &pos,
+                           Qt::KeyboardModifiers modifiers);
+    void finishMoving(const QPointF &pos);
+    void cancelMoving();
+
+    static SelectMoveRoomsTool *mInstance;
+
+    Mode mMode;
+    bool mMouseDown;
+    QPointF mStartScenePos;
+    QPoint mStartTilePos;
+    QPoint mDragOffset;
+    QGraphicsPathItem *mSelectionItem;
+    QRegion mSelectedArea;
+    QImage *mBmp;
 };
 
 /////

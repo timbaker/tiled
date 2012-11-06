@@ -44,7 +44,8 @@ using namespace Internal;
 GraphicsFloorItem::GraphicsFloorItem(BuildingFloor *floor) :
     QGraphicsItem(),
     mFloor(floor),
-    mBmp(new QImage(mFloor->width(), mFloor->height(), QImage::Format_RGB32))
+    mBmp(new QImage(mFloor->width(), mFloor->height(), QImage::Format_RGB32)),
+    mDragBmp(0)
 {
     setFlag(ItemUsesExtendedStyleOption);
     mBmp->fill(Qt::black);
@@ -74,9 +75,10 @@ void GraphicsFloorItem::paint(QPainter *painter,
     minY = qMax(0, minY);
     maxY = qMin(maxY, mFloor->height());
 
+    QImage *bmp = mDragBmp ? mDragBmp : mBmp;
     for (int x = minX; x < maxX; x++) {
         for (int y = 0; y < maxY; y++) {
-            QRgb c = mBmp->pixel(x, y);
+            QRgb c = bmp->pixel(x, y);
             if (c == qRgb(0, 0, 0))
                 continue;
             painter->fillRect(x * 30, y * 30, 30, 30, c);
@@ -120,6 +122,12 @@ void GraphicsFloorItem::synchWithFloor()
 
     foreach (GraphicsObjectItem *item, mObjectItems)
         item->synchWithObject();
+}
+
+void GraphicsFloorItem::setDragBmp(QImage *bmp)
+{
+    mDragBmp = bmp;
+    update();
 }
 
 /////
@@ -804,7 +812,12 @@ void FloorEditor::currentToolChanged(BaseTool *tool)
 QPoint FloorEditor::sceneToTile(const QPointF &scenePos)
 {
     // FIXME: x/y < 0 rounds up to zero
-    return QPoint(scenePos.x() / 30, scenePos.y() / 30);
+    qreal x = scenePos.x() / 30, y = scenePos.y() / 30;
+    if (x < 0)
+        x = -qCeil(qAbs(x));
+    if (y < 0)
+        y = -qCeil(qAbs(y));
+    return QPoint(x, y);
 }
 
 QPointF FloorEditor::sceneToTileF(const QPointF &scenePos)

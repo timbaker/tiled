@@ -18,6 +18,7 @@
 #include "buildingtilesdialog.h"
 #include "ui_buildingtilesdialog.h"
 
+#include "buildingpreferences.h"
 #include "buildingtiles.h"
 #include "furnituregroups.h"
 #include "furnitureview.h"
@@ -284,10 +285,8 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     ui->setupUi(this);
 
     QSettings settings;
-    settings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
-    qreal scale = settings.value(QLatin1String("CategoryScale"), 0.5).toReal();
-    settings.endGroup();
-    mZoomable->setScale(scale);
+
+    mZoomable->setScale(BuildingPreferences::instance()->tileScale());
 
     connect(ui->addTiles, SIGNAL(clicked()), SLOT(addTiles()));
     connect(ui->removeTiles, SIGNAL(clicked()), SLOT(removeTiles()));

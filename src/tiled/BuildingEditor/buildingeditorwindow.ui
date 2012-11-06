@@ -138,6 +138,8 @@
    </attribute>
    <addaction name="actionPecil"/>
    <addaction name="actionEraser"/>
+   <addaction name="actionSelectRooms"/>
+   <addaction name="separator"/>
    <addaction name="actionDoor"/>
    <addaction name="actionWindow"/>
    <addaction name="actionStairs"/>
@@ -371,11 +373,14 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="buildingeditor.qrc">
-     <normaloff>:/BuildingEditor/icons/icon_select.png</normaloff>:/BuildingEditor/icons/icon_select.png</iconset>
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/22x22/tool-select-objects.png</normaloff>:/images/22x22/tool-select-objects.png</iconset>
    </property>
    <property name="text">
     <string>Select Objects</string>
+   </property>
+   <property name="toolTip">
+    <string>Select and Move Objects</string>
    </property>
   </action>
   <action name="actionExportTMX">
@@ -563,6 +568,21 @@
    </property>
    <property name="toolTip">
     <string>Remove the current floor</string>
+   </property>
+  </action>
+  <action name="actionSelectRooms">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/22x22/stock-tool-rect-select.png</normaloff>:/images/22x22/stock-tool-rect-select.png</iconset>
+   </property>
+   <property name="text">
+    <string>Select Rooms</string>
+   </property>
+   <property name="toolTip">
+    <string>Select and move rooms</string>
    </property>
   </action>
  </widget>

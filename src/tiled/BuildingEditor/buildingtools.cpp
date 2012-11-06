@@ -69,6 +69,11 @@ void BaseTool::setStatusText(const QString &text)
     emit statusTextChanged();
 }
 
+BuildingFloor *BaseTool::floor() const
+{
+    return mEditor->document()->currentFloor();
+}
+
 void BaseTool::makeCurrent()
 {
     ToolManager::instance()->activateTool(this);
@@ -325,6 +330,271 @@ void EraserTool::updateCursor(const QPointF &scenePos)
     }
     mCursor->setRect(mEditor->tileToSceneRect(tilePos).adjusted(0,0,-1,-1));
     mCursor->setVisible(mEditor->currentFloorContains(tilePos));
+}
+
+/////
+
+SelectMoveRoomsTool *SelectMoveRoomsTool::mInstance = 0;
+
+SelectMoveRoomsTool *SelectMoveRoomsTool::instance()
+{
+    if (!mInstance)
+        mInstance = new SelectMoveRoomsTool;
+    return mInstance;
+}
+
+SelectMoveRoomsTool::SelectMoveRoomsTool() :
+    BaseTool(),
+    mMode(NoMode),
+    mMouseDown(false),
+    mSelectionItem(0),
+    mBmp(0)
+{
+    setStatusText(tr("Left-click to select.  Left-click-drag selection to move rooms."));
+}
+
+void SelectMoveRoomsTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        if (mMode != NoMode) // Ignore additional presses during select/move
+            return;
+        mMouseDown = true;
+        mStartScenePos = event->scenePos();
+        mStartTilePos = mEditor->sceneToTile(event->scenePos());
+    }
+    if (event->button() == Qt::RightButton) {
+        if (mMode == Moving)
+            cancelMoving();
+    }
+}
+
+void SelectMoveRoomsTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    QPointF pos = event->scenePos();
+
+    if (mMode == NoMode && mMouseDown) {
+        const int dragDistance = (mStartScenePos - pos).manhattanLength();
+        if (dragDistance >= QApplication::startDragDistance()) {
+            QPoint tilePos = mEditor->sceneToTile(event->scenePos());
+            if (mSelectedArea.contains(tilePos))
+                startMoving();
+            else
+                startSelecting();
+        }
+    }
+
+    switch (mMode) {
+    case Selecting: {
+        QPoint tilePos = mEditor->sceneToTile(pos);
+        QRect tileBounds = QRect(mStartTilePos, tilePos).normalized();
+
+        mSelectedArea = QRegion(tileBounds);
+        QPainterPath path;
+        path.addRegion(mSelectedArea);
+        mSelectionItem->setPath(path);
+        break;
+    }
+    case Moving:
+        updateMovingItems(pos, event->modifiers());
+        break;
+    case CancelMoving:
+        break;
+    case NoMode:
+        break;
+    }
+}
+
+void SelectMoveRoomsTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button() != Qt::LeftButton)
+        return;
+
+    switch (mMode) {
+    case NoMode: // TODO: single-click to select adjoining tiles of a room
+        if (mSelectionItem && !mSelectedArea.contains(mStartTilePos)) {
+            delete mSelectionItem;
+            mSelectionItem = 0;
+            mSelectedArea = QRegion();
+        }
+#if 0
+        if (mClickedObject) {
+            QSet<BuildingObject*> selection = mEditor->document()->selectedObjects();
+            const Qt::KeyboardModifiers modifiers = event->modifiers();
+            if (modifiers & (Qt::ShiftModifier | Qt::ControlModifier)) {
+                if (selection.contains(mClickedObject))
+                    selection.remove(mClickedObject);
+                else
+                    selection.insert(mClickedObject);
+            } else {
+                selection.clear();
+                selection.insert(mClickedObject);
+            }
+            mEditor->document()->setSelectedObjects(selection);
+        } else {
+            mEditor->document()->setSelectedObjects(QSet<BuildingObject*>());
+        }
+#endif
+        break;
+    case Selecting:
+        updateSelection(event->scenePos(), event->modifiers());
+//        mEditor->removeItem(mSelectionItem);
+        mMode = NoMode;
+        break;
+    case Moving:
+        mMouseDown = false;
+        finishMoving(event->scenePos());
+        break;
+    case CancelMoving:
+        mMode = NoMode;
+        break;
+    }
+
+    mMouseDown = false;
+}
+
+void SelectMoveRoomsTool::documentChanged()
+{
+    mSelectionItem = 0;
+}
+
+void SelectMoveRoomsTool::activate()
+{
+}
+
+void SelectMoveRoomsTool::deactivate()
+{
+    delete mSelectionItem;
+    mSelectionItem = 0;
+    mSelectedArea = QRegion();
+}
+
+void SelectMoveRoomsTool::updateSelection(const QPointF &pos,
+                                           Qt::KeyboardModifiers modifiers)
+{
+}
+
+void SelectMoveRoomsTool::startSelecting()
+{
+    mMode = Selecting;
+    if (mSelectionItem == 0) {
+        mSelectionItem = new QGraphicsPathItem();
+        mSelectionItem->setPen(QColor(0x33,0x99,0xff));
+        mSelectionItem->setBrush(QBrush(QColor(0x33,0x99,0xff,255/8)));
+        mSelectionItem->setZValue(FloorEditor::ZVALUE_CURSOR);
+        mSelectionItem->setScale(30);
+        mEditor->addItem(mSelectionItem);
+    }
+    mSelectedArea = QRegion(QRect(mStartTilePos, QSize(1,1)));
+    QPainterPath path;
+    path.addRegion(mSelectedArea);
+    mSelectionItem->setPath(path);
+}
+
+void SelectMoveRoomsTool::startMoving()
+{
+    mMode = Moving;
+    mDragOffset = QPoint();
+
+    GraphicsFloorItem *item = mEditor->itemForFloor(floor());
+    mBmp = new QImage(item->bmp()->copy());
+    item->setDragBmp(mBmp);
+}
+
+void SelectMoveRoomsTool::updateMovingItems(const QPointF &pos,
+                                             Qt::KeyboardModifiers modifiers)
+{
+    Q_UNUSED(modifiers)
+
+    QPoint startTilePos = mStartTilePos;
+    QPoint currentTilePos = mEditor->sceneToTile(pos);
+    mDragOffset = currentTilePos - startTilePos;
+
+    BuildingFloor *floor = this->floor();
+    QImage *bmp = mEditor->itemForFloor(floor)->bmp();
+    for (int x = 0; x < floor->width(); x++) {
+        for (int y = 0; y < floor->height(); y++) {
+            if (mSelectedArea.contains(QPoint(x, y)))
+                mBmp->setPixel(x, y, qRgb(0,0,0));
+            else
+                mBmp->setPixel(x, y, bmp->pixel(x, y));
+        }
+    }
+
+    QRect floorBounds(0, 0, floor->width(), floor->height());
+    foreach (QRect src, mSelectedArea.rects()) {
+        src &= floorBounds;
+        for (int x = src.left(); x <= src.right(); x++) {
+            for (int y = src.top(); y <= src.bottom(); y++) {
+                QPoint p = QPoint(x, y) + mDragOffset;
+                if (floorBounds.contains(p))
+                    mBmp->setPixel(p, bmp->pixel(x, y));
+            }
+        }
+    }
+
+    mEditor->itemForFloor(floor)->update();
+
+    QPainterPath path;
+    path.addRegion(mSelectedArea.translated(mDragOffset));
+    mSelectionItem->setPath(path);
+}
+
+void SelectMoveRoomsTool::finishMoving(const QPointF &pos)
+{
+    Q_UNUSED(pos)
+
+    Q_ASSERT(mMode == Moving);
+    mMode = NoMode;
+
+    BuildingFloor *floor = this->floor();
+    mEditor->itemForFloor(floor)->setDragBmp(0);
+    delete mBmp;
+    mBmp = 0;
+
+    if (mDragOffset.isNull()) // Move is a no-op
+        return;
+
+    QVector<QVector<Room*> > grid = floor->grid();
+
+    QRect floorBounds(0, 0, floor->width(), floor->height());
+    foreach (QRect src, mSelectedArea.rects()) {
+        src &= floorBounds;
+        for (int x = src.left(); x <= src.right(); x++) {
+            for (int y = src.top(); y <= src.bottom(); y++) {
+                grid[x][y] = 0;
+            }
+        }
+    }
+
+    foreach (QRect src, mSelectedArea.rects()) {
+        src &= floorBounds;
+        for (int x = src.left(); x <= src.right(); x++) {
+            for (int y = src.top(); y <= src.bottom(); y++) {
+                QPoint p = QPoint(x, y) + mDragOffset;
+                if (floorBounds.contains(p))
+                    grid[p.x()][p.y()] = floor->grid()[x][y];
+            }
+        }
+    }
+
+    // Final position of the selection.
+    mSelectedArea.translate(mDragOffset);
+
+    mEditor->document()->undoStack()->push(new SwapFloorGrid(mEditor->document(),
+                                                             floor, grid));
+}
+
+void SelectMoveRoomsTool::cancelMoving()
+{
+    mEditor->itemForFloor(floor())->setDragBmp(0);
+    delete mBmp;
+    mBmp = 0;
+
+    QPainterPath path;
+    path.addRegion(mSelectedArea);
+    mSelectionItem->setPath(path);
+
+    mMode = CancelMoving;
 }
 
 /////
@@ -945,7 +1215,7 @@ void RoofTool::updateHandle(const QPointF &scenePos)
 
 void RoofTool::resizeRoof(RoofObject *roof, int length, int thickness)
 {
-    if (length < 1 || thickness < 2)
+    if (length < 1 || thickness < 1)
         return;
 
     int oldLength = roof->length(), oldThickness = roof->thickness();
@@ -1496,5 +1766,5 @@ void SelectMoveObjectTool::cancelMoving()
 
     mMode = CancelMoving;
 }
-/////
 
+/////

@@ -126,6 +126,11 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     EraserTool::instance()->setEditor(roomEditor);
     EraserTool::instance()->setAction(ui->actionEraser);
 
+    connect(ui->actionSelectRooms, SIGNAL(triggered()),
+            SelectMoveRoomsTool::instance(), SLOT(makeCurrent()));
+    SelectMoveRoomsTool::instance()->setEditor(roomEditor);
+    SelectMoveRoomsTool::instance()->setAction(ui->actionSelectRooms);
+
     connect(ui->actionDoor, SIGNAL(triggered()),
             DoorTool::instance(), SLOT(makeCurrent()));
     DoorTool::instance()->setEditor(roomEditor);
@@ -893,7 +898,7 @@ void BuildingEditorWindow::upLevel()
     int level = mCurrentDocument->currentLevel() + 1;
     mCurrentDocument->setSelectedObjects(QSet<BuildingObject*>());
     mCurrentDocument->setCurrentFloor(mCurrentDocument->building()->floor(level));
-    updateActions();
+//    updateActions();
 }
 
 void BuildingEditorWindow::downLevel()
@@ -903,7 +908,7 @@ void BuildingEditorWindow::downLevel()
     int level = mCurrentDocument->currentLevel() - 1;
     mCurrentDocument->setSelectedObjects(QSet<BuildingObject*>());
     mCurrentDocument->setCurrentFloor(mCurrentDocument->building()->floor(level));
-    updateActions();
+//    updateActions();
 }
 
 void BuildingEditorWindow::insertFloorAbove()
@@ -1099,6 +1104,8 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
     connect(mCurrentDocument, SIGNAL(floorAdded(BuildingFloor*)),
             SLOT(updateActions()));
     connect(mCurrentDocument, SIGNAL(floorRemoved(BuildingFloor*)),
+            SLOT(updateActions()));
+    connect(mCurrentDocument, SIGNAL(currentFloorChanged()),
             SLOT(updateActions()));
 
     mPreviewWin->setDocument(currentDocument());
@@ -1431,6 +1438,7 @@ void BuildingEditorWindow::updateActions()
     PencilTool::instance()->setEnabled(hasDoc &&
             currentRoom() != 0);
     EraserTool::instance()->setEnabled(hasDoc);
+    SelectMoveRoomsTool::instance()->setEnabled(hasDoc);
     DoorTool::instance()->setEnabled(hasDoc);
     WindowTool::instance()->setEnabled(hasDoc);
     StairsTool::instance()->setEnabled(hasDoc);
