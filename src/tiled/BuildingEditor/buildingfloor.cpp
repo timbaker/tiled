@@ -110,7 +110,7 @@ static void ReplaceRoofTop(RoofObject *ro, const QRect &r,
                         QVector<QVector<BuildingFloor::Square> > &squares)
 {
     if (r.isEmpty()) return;
-    BuildingTile *btile = BuildingTiles::instance()->defaultFloorTile();
+    BuildingTile *btile = ro->roofTile(ro->isN() ? RoofObject::FlatTopN : RoofObject::FlatTopW);
     for (int x = r.left(); x <= r.right(); x++)
         for (int y = r.top(); y <= r.bottom(); y++)
 #ifdef ROOF_TOPS
@@ -137,7 +137,7 @@ static void ReplaceRoofTop(RoofCornerObject *rc, const QRect &r,
                         QVector<QVector<BuildingFloor::Square> > &squares)
 {
     if (r.isEmpty()) return;
-    BuildingTile *btile = BuildingTiles::instance()->defaultFloorTile();
+    BuildingTile *btile = rc->roofTile(RoofCornerObject::FlatTopN); // FIXME: N/W orientation?
     for (int x = r.left(); x <= r.right(); x++)
         for (int y = r.top(); y <= r.bottom(); y++)
 #ifdef ROOF_TOPS
@@ -298,18 +298,33 @@ void BuildingFloor::LayoutToSquares()
             QRect r = ro->bounds();
 
             QRect se = ro->southEdge();
-            ReplaceRoof(ro, se.adjusted(0,se.height()-1,0,0), squares, RoofObject::FlatS1);
-            ReplaceRoof(ro, se.adjusted(0,qMax(se.height()-2,0),0,-1), squares, RoofObject::FlatS2);
-            ReplaceRoof(ro, se.adjusted(0,0,0,-2), squares, RoofObject::FlatS3);
-            if (ro->midTile())
+            if (ro->thickness() == 1) {
+                // This is a CHEAT! The 1/2 height roof tile is not 'touching
+                // the ground' so to speak.
+                ReplaceRoof(ro, se.adjusted(1,1,1,1), squares, RoofObject::HalfFlatS);
+
+            } else if (ro->midTile()) {
+                ReplaceRoof(ro, se.adjusted(0,se.height()-1,0,0), squares, RoofObject::FlatS1);
                 ReplaceRoof(ro, se.translated(0, -1), squares, RoofObject::HalfFlatS);
+            } else {
+                ReplaceRoof(ro, se.adjusted(0,se.height()-1,0,0), squares, RoofObject::FlatS1);
+                ReplaceRoof(ro, se.adjusted(0,qMax(se.height()-2,0),0,-1), squares, RoofObject::FlatS2);
+                ReplaceRoof(ro, se.adjusted(0,0,0,-2), squares, RoofObject::FlatS3);
+            }
 
             QRect ee = ro->eastEdge();
-            ReplaceRoof(ro, ee.adjusted(qMax(ee.width()-1,0),0,0,0), squares, RoofObject::FlatE1);
-            ReplaceRoof(ro, ee.adjusted(qMax(ee.width()-2,0),0,-1,0), squares, RoofObject::FlatE2);
-            ReplaceRoof(ro, ee.adjusted(0,0,-2,0), squares, RoofObject::FlatE3);
-            if (ro->midTile())
+            if (ro->thickness() == 1) {
+                // This is a CHEAT! The 1/2 height roof tile is not 'touching
+                // the ground' so to speak.
+                ReplaceRoof(ro, ee.adjusted(1,1,1,1), squares, RoofObject::HalfFlatE);
+            } else if (ro->midTile()) {
+                ReplaceRoof(ro, ee.adjusted(qMax(ee.width()-1,0),0,0,0), squares, RoofObject::FlatE1);
                 ReplaceRoof(ro, ee.translated(-1,0), squares, RoofObject::HalfFlatE);
+            } else {
+                ReplaceRoof(ro, ee.adjusted(qMax(ee.width()-1,0),0,0,0), squares, RoofObject::FlatE1);
+                ReplaceRoof(ro, ee.adjusted(qMax(ee.width()-2,0),0,-1,0), squares, RoofObject::FlatE2);
+                ReplaceRoof(ro, ee.adjusted(0,0,-2,0), squares, RoofObject::FlatE3);
+            }
 
 #ifdef ROOF_TOPS
             if (ro->depth() < 3)
@@ -319,6 +334,12 @@ void BuildingFloor::LayoutToSquares()
             if (ro->isW()) {
                 roofRegionUnion |= QRegion(r.adjusted(0,0,1,0));
                 roofRegionXor ^= QRegion(r.adjusted(0,0,1,0));
+                if (ro->thickness() == 1 && ro->width1() && ro->width2()) {
+                    if (!ro->isCapped2())
+                        continue;
+                    squares[r.right()+1][ro->y()].ReplaceRoofCap(ro->roofTile(RoofObject::CapMidPt5E), Square::WallOrientW);
+                    continue;
+                }
                 if (ro->midTile()) {
 
                     if (!ro->isCapped2())
@@ -369,6 +390,12 @@ void BuildingFloor::LayoutToSquares()
             } else if (ro->isN()) {
                 roofRegionUnion |= QRegion(r.adjusted(0,0,0,1));
                 roofRegionXor ^= QRegion(r.adjusted(0,0,0,1));
+                if (ro->thickness() == 1 && ro->width1() && ro->width2()) {
+                    if (!ro->isCapped2())
+                        continue;
+                    squares[ro->x()][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapMidPt5S), Square::WallOrientN);
+                    continue;
+                }
                 if (ro->midTile()) {
 
                     if (!ro->isCapped2())

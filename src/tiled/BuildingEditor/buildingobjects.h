@@ -274,9 +274,11 @@ public:
         FlatS1, FlatS2, FlatS3,
         FlatE1, FlatE2, FlatE3,
         HalfFlatS, HalfFlatE,
+        FlatTopW, FlatTopN,
         CapRiseE1, CapRiseE2, CapRiseE3, CapFallE1, CapFallE2, CapFallE3,
         CapRiseS1, CapRiseS2, CapRiseS3, CapFallS1, CapFallS2, CapFallS3,
         CapMidS, CapMidE,
+        CapMidPt5S, CapMidPt5E,
         CapGapS1, CapGapS2, CapGapS3,
         CapGapE1, CapGapE2, CapGapE3
     };
@@ -356,7 +358,8 @@ public:
         FlatE1, FlatE2, FlatE3,
         Outer1, Outer2, Outer3,
         Inner1, Inner2, Inner3,
-        HalfFlatS, HalfFlatE
+        HalfFlatS, HalfFlatE,
+        FlatTopW, FlatTopN
     };
     BuildingTile *roofTile(RoofTile roofTile) const;
 

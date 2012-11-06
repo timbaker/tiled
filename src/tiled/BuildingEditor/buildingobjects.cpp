@@ -364,7 +364,10 @@ bool RoofObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
 
 void RoofObject::resize(int length, int thickness)
 {
-    if (thickness <= 2) {
+    if (thickness == 1) {
+        if (mWidth1) mWidth1 = 1;
+        if (mWidth2) mWidth2 = 1;
+    } else if (thickness == 2) {
         if (mWidth1) mWidth1 = qMin(mDepth, mWidth2 ? 1 : 2);
         if (mWidth2) mWidth2 = qMin(mDepth, mWidth1 ? 1 : 2);
     } else if (thickness == 3) {
@@ -442,6 +445,9 @@ BuildingTile *RoofObject::roofTile(RoofObject::RoofTile tile) const
     case HalfFlatS: index = 15; break;
     case HalfFlatE: index = 14; break;
 
+    case FlatTopW: index = 22; break; // not even sure about these
+    case FlatTopN: index = 23; break;
+
     case CapRiseE1: index = 0; break;
     case CapRiseE2: index = 1; break;
     case CapRiseE3: index = 2; break;
@@ -458,6 +464,9 @@ BuildingTile *RoofObject::roofTile(RoofObject::RoofTile tile) const
 
     case CapMidS: index = 6; break;
     case CapMidE: index = 14; break;
+
+    case CapMidPt5S: index = 7; break;
+    case CapMidPt5E: index = 15; break;
 
     case CapGapS1: case CapGapS2:
     case CapGapE1: case CapGapE2:
@@ -655,6 +664,9 @@ BuildingTile *RoofCornerObject::roofTile(RoofCornerObject::RoofTile tile) const
 
     case HalfFlatS: index = 15; break;
     case HalfFlatE: index = 14; break;
+
+    case FlatTopW: index = 22; break; // not even sure about these
+    case FlatTopN: index = 23; break;
     }
 
     return BuildingTiles::instance()->getFurnitureTile(

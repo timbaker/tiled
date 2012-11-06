@@ -1,5 +1,231 @@
 group
 {
+    label = Appliances - Cooking
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_cooking_01_000
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_cooking_01_001
+        }
+        entry
+        {
+            orient = E
+            0,0 = appliances_cooking_01_002
+        }
+        entry
+        {
+            orient = S
+            0,0 = appliances_cooking_01_003
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_cooking_01_004
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_cooking_01_005
+        }
+        entry
+        {
+            orient = E
+            0,0 = appliances_cooking_01_006
+        }
+        entry
+        {
+            orient = S
+            0,0 = appliances_cooking_01_007
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_cooking_01_008
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_cooking_01_009
+        }
+        entry
+        {
+            orient = E
+            0,0 = appliances_cooking_01_010
+        }
+        entry
+        {
+            orient = S
+            0,0 = appliances_cooking_01_011
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_cooking_01_012
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_cooking_01_013
+        }
+        entry
+        {
+            orient = E
+            0,0 = appliances_cooking_01_014
+        }
+        entry
+        {
+            orient = S
+            0,0 = appliances_cooking_01_015
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_cooking_01_016
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_cooking_01_017
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_cooking_01_020
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_cooking_01_021
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_cooking_01_024
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_cooking_01_025
+        }
+        entry
+        {
+            orient = E
+            0,0 = appliances_cooking_01_026
+        }
+        entry
+        {
+            orient = S
+            0,0 = appliances_cooking_01_027
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_cooking_01_028
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_cooking_01_029
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_cooking_01_032
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_cooking_01_033
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_cooking_01_037
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_cooking_01_036
+        }
+        entry
+        {
+            orient = E
+            0,0 = appliances_cooking_01_039
+        }
+        entry
+        {
+            orient = S
+            0,0 = appliances_cooking_01_038
+        }
+    }
+}
+group
+{
     label = Appliances - Refrigeration
     furniture
     {
@@ -1171,12 +1397,12 @@ group
         entry
         {
             orient = W
-            0,0 = furniture_storage_01_052
+            0,0 = furniture_storage_01_053
         }
         entry
         {
             orient = N
-            0,0 = furniture_storage_01_053
+            0,0 = furniture_storage_01_052
         }
         entry
         {
@@ -1212,6 +1438,176 @@ group
             orient = S
             0,0 = furniture_storage_01_062
             1,0 = furniture_storage_01_063
+        }
+    }
+}
+group
+{
+    label = Lighting - Indoor
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_indoor_01_001
+        }
+        entry
+        {
+            orient = N
+            0,0 = lighting_indoor_01_000
+        }
+        entry
+        {
+            orient = E
+            0,0 = lighting_indoor_01_002
+        }
+        entry
+        {
+            orient = S
+            0,0 = lighting_indoor_01_003
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_indoor_01_016
+        }
+        entry
+        {
+            orient = N
+            0,0 = lighting_indoor_01_017
+        }
+        entry
+        {
+            orient = E
+            0,0 = lighting_indoor_01_018
+        }
+        entry
+        {
+            orient = S
+            0,0 = lighting_indoor_01_019
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_indoor_01_008
+        }
+        entry
+        {
+            orient = N
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_indoor_01_009
+        }
+        entry
+        {
+            orient = N
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_indoor_01_010
+        }
+        entry
+        {
+            orient = N
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_indoor_01_011
+        }
+        entry
+        {
+            orient = N
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_indoor_01_012
+        }
+        entry
+        {
+            orient = N
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_indoor_01_013
+        }
+        entry
+        {
+            orient = N
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
         }
     }
 }

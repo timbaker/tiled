@@ -78,4 +78,6 @@ layers
     tile = Frames
     tile = Doors
     tile = Furniture
+    tile = Furniture2
+    tile = Roof
 }
