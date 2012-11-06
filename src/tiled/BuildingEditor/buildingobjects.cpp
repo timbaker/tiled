@@ -315,10 +315,17 @@ void RoofObject::rotate(bool right)
         int x = mX;
         mX = oldFloorHeight - mY - bounds().width();
         mY = x;
+
+        if (isW()) // was N
+            qSwap(mCapped1, mCapped2);
+
     } else {
         int x = mX;
         mX = mY;
         mY = oldFloorWidth - x - bounds().height();
+
+        if (isN()) // was W
+            qSwap(mCapped1, mCapped2);
     }
 }
 
