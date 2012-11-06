@@ -127,7 +127,10 @@ public:
 private:
     void BuildingToMap();
     void BuildingFloorToTileLayers(BuildingFloor *floor, const QVector<Tiled::TileLayer *> &layers);
+
     CompositeLayerGroupItem *itemForFloor(BuildingFloor *floor);
+
+    void synchWithShowWalls();
 
 private slots:
     void currentFloorChanged();
@@ -139,17 +142,18 @@ private slots:
     void roomChanged(Room *room);
 
     void floorAdded(BuildingFloor *floor);
+    void floorRemoved(BuildingFloor *floor);
     void floorEdited(BuildingFloor *floor);
 
     void objectAdded(BuildingObject *object);
-    void objectRemoved(BuildingFloor *floor, int index);
+    void objectRemoved(BuildingObject *object);
     void objectMoved(BuildingObject *object);
     void objectTileChanged(BuildingObject *object);
 
     void buildingResized();
     void buildingRotated();
 
-    void showWalls(bool show);
+    void showWallsChanged(bool show);
     void highlightFloorChanged(bool highlight);
 
 private:

@@ -95,11 +95,17 @@ public:
     BuildingFloor(Building *building, int level);
     ~BuildingFloor();
 
+    void setLevel(int level)
+    { mLevel = level; }
+
     Building *building() const
     { return mBuilding; }
 
     BuildingFloor *floorAbove() const;
     BuildingFloor *floorBelow() const;
+
+    bool isTopFloor() const;
+    bool isBottomFloor() const;
 
     void insertObject(int index, BuildingObject *object);
     BuildingObject *removeObject(int index);

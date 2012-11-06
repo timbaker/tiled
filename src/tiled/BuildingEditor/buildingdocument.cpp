@@ -67,6 +67,22 @@ void BuildingDocument::setCurrentFloor(BuildingFloor *floor)
     emit currentFloorChanged();
 }
 
+int BuildingDocument::currentLevel() const
+{
+    Q_ASSERT(mCurrentFloor);
+    return mCurrentFloor->level();
+}
+
+bool BuildingDocument::currentFloorIsTop()
+{
+    return mCurrentFloor == mBuilding->floors().last();
+}
+
+bool BuildingDocument::currentFloorIsBottom()
+{
+    return mCurrentFloor == mBuilding->floors().first();
+}
+
 bool BuildingDocument::isModified() const
 {
     return !mUndoStack->isClean();
@@ -116,6 +132,19 @@ void BuildingDocument::insertFloor(int index, BuildingFloor *floor)
     emit floorAdded(floor);
 }
 
+BuildingFloor *BuildingDocument::removeFloor(int index)
+{
+    BuildingFloor *floor = building()->floor(index);
+    if (floor->floorAbove())
+        setCurrentFloor(floor->floorAbove());
+    else if (floor->floorBelow())
+        setCurrentFloor(floor->floorBelow());
+
+    floor = building()->removeFloor(index);
+    emit floorRemoved(floor);
+    return floor;
+}
+
 void BuildingDocument::insertObject(BuildingFloor *floor, int index, BuildingObject *object)
 {
     Q_ASSERT(object->floor() == floor);
@@ -134,7 +163,7 @@ BuildingObject *BuildingDocument::removeObject(BuildingFloor *floor, int index)
 
     emit objectAboutToBeRemoved(object);
     floor->removeObject(index);
-    emit objectRemoved(floor, index);
+    emit objectRemoved(object);
     return object;
 }
 

@@ -84,10 +84,42 @@ void GraphicsFloorItem::paint(QPainter *painter,
     }
 }
 
+void GraphicsFloorItem::objectAdded(GraphicsObjectItem *item)
+{
+    BuildingObject *object = item->object();
+    Q_ASSERT(!itemForObject(object));
+    item->setParentItem(this);
+    mObjectItems.insert(object->index(), item);
+
+    for (int i = object->index(); i < mObjectItems.count(); i++)
+        mObjectItems[i]->setZValue(i);
+}
+
+void GraphicsFloorItem::objectAboutToBeRemoved(GraphicsObjectItem *item)
+{
+    BuildingObject *object = item->object();
+    mObjectItems.removeAll(item);
+
+    for (int i = object->index(); i < mObjectItems.count(); i++)
+        mObjectItems[i]->setZValue(i);
+}
+
+GraphicsObjectItem *GraphicsFloorItem::itemForObject(BuildingObject *object) const
+{
+    foreach (GraphicsObjectItem *item, mObjectItems) {
+        if (item->object() == object)
+            return item;
+    }
+    return 0;
+}
+
 void GraphicsFloorItem::synchWithFloor()
 {
     delete mBmp;
     mBmp = new QImage(mFloor->width(), mFloor->height(), QImage::Format_RGB32);
+
+    foreach (GraphicsObjectItem *item, mObjectItems)
+        item->synchWithObject();
 }
 
 /////
@@ -696,7 +728,6 @@ void FloorEditor::setDocument(BuildingDocument *doc)
     clear();
 
     mFloorItems.clear();
-    mObjectItems.clear();
     mSelectedObjectItems.clear();
 
     if (mDocument) {
@@ -721,6 +752,8 @@ void FloorEditor::setDocument(BuildingDocument *doc)
 
         connect(mDocument, SIGNAL(floorAdded(BuildingFloor*)),
                 SLOT(floorAdded(BuildingFloor*)));
+        connect(mDocument, SIGNAL(floorRemoved(BuildingFloor*)),
+                SLOT(floorRemoved(BuildingFloor*)));
         connect(mDocument, SIGNAL(floorEdited(BuildingFloor*)),
                 SLOT(floorEdited(BuildingFloor*)));
 
@@ -818,13 +851,14 @@ bool FloorEditor::currentFloorContains(const QPoint &tilePos)
     return true;
 }
 
+GraphicsFloorItem *FloorEditor::itemForFloor(BuildingFloor *floor)
+{
+    return mFloorItems[floor->level()];
+}
+
 GraphicsObjectItem *FloorEditor::itemForObject(BuildingObject *object)
 {
-    foreach (GraphicsObjectItem *item, mObjectItems) {
-        if (item->object() == object)
-            return item;
-    }
-    return 0;
+    return itemForFloor(object->floor())->itemForObject(object);
 }
 
 QSet<BuildingObject*> FloorEditor::objectsInRect(const QRectF &sceneRect)
@@ -852,7 +886,7 @@ BuildingObject *FloorEditor::topmostObjectAt(const QPointF &scenePos)
 
 void FloorEditor::currentFloorChanged()
 {
-    int level = mDocument->currentFloor()->level();
+    int level = mDocument->currentLevel();
     for (int i = 0; i <= level; i++) {
         mFloorItems[i]->setOpacity((i == level) ? 1.0 : 0.15);
         mFloorItems[i]->setVisible(true);
@@ -876,10 +910,23 @@ void FloorEditor::floorAdded(BuildingFloor *floor)
     mFloorItems.insert(floor->level(), item);
     addItem(item);
 
+    foreach (GraphicsFloorItem *item, mFloorItems)
+        item->setZValue(item->floor()->level());
+
     floorEdited(floor);
 
     foreach (BuildingObject *object, floor->objects())
         objectAdded(object);
+}
+
+void FloorEditor::floorRemoved(BuildingFloor *floor)
+{
+    Q_ASSERT(mFloorItems[floor->level()]
+             && mFloorItems[floor->level()]->floor() == floor);
+    delete mFloorItems.takeAt(floor->level());
+
+    foreach (GraphicsFloorItem *item, mFloorItems)
+        item->setZValue(item->floor()->level());
 }
 
 void FloorEditor::floorEdited(BuildingFloor *floor)
@@ -909,24 +956,17 @@ void FloorEditor::objectAdded(BuildingObject *object)
         item = new GraphicsRoofCornerItem(this, corner);
     else
         item = new GraphicsObjectItem(this, object);
-    item->setParentItem(mFloorItems[object->floor()->level()]);
-    mObjectItems.insert(object->index(), item);
-//    addItem(item);
-
-    for (int i = object->index(); i < mObjectItems.count(); i++)
-        mObjectItems[i]->setZValue(i);
+    itemForFloor(object->floor())->objectAdded(item);
 }
 
 void FloorEditor::objectAboutToBeRemoved(BuildingObject *object)
 {
     GraphicsObjectItem *item = itemForObject(object);
     Q_ASSERT(item);
-    mObjectItems.removeAll(item);
     mSelectedObjectItems.remove(item); // paranoia
+    itemForFloor(object->floor())->objectAboutToBeRemoved(item);
     removeItem(item);
-
-    for (int i = object->index(); i < mObjectItems.count(); i++)
-        mObjectItems[i]->setZValue(i);
+    delete item;
 }
 
 void FloorEditor::objectMoved(BuildingObject *object)
@@ -1015,9 +1055,6 @@ void FloorEditor::buildingRotated()
         item->synchWithFloor();
         floorEdited(item->floor());
     }
-
-    foreach (GraphicsObjectItem *item, mObjectItems)
-        item->synchWithObject();
 
     mGridItem->setSize(building()->width(), building()->height());
 

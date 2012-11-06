@@ -127,6 +127,7 @@ public:
     int layerGroupCount() const { return mLayerGroups.size(); }
     const QMap<int,CompositeLayerGroup*>& layerGroups() const { return mLayerGroups; }
     CompositeLayerGroup *tileLayersForLevel(int level) const;
+    CompositeLayerGroup *layerGroupForLevel(int level) const;
     const QList<CompositeLayerGroup*> &sortedLayerGroups() const { return mSortedLayerGroups; }
     CompositeLayerGroup *layerGroupForLayer(Tiled::TileLayer *tl) const;
 

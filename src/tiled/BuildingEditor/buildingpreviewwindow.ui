@@ -107,6 +107,9 @@
    <property name="text">
     <string>Show Walls</string>
    </property>
+   <property name="shortcut">
+    <string>W</string>
+   </property>
   </action>
   <action name="actionHighlightFloor">
    <property name="checkable">

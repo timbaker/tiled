@@ -348,6 +348,59 @@ void ResizeFloor::swap()
 
 /////
 
+InsertFloor::InsertFloor(BuildingDocument *doc, int index, BuildingFloor *floor) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Insert Floor")),
+    mDocument(doc),
+    mIndex(index),
+    mFloor(floor)
+{
+}
+
+InsertFloor::~InsertFloor()
+{
+    delete mFloor;
+}
+
+void InsertFloor::add()
+{
+    mDocument->insertFloor(mIndex, mFloor);
+    mFloor = 0;
+}
+
+void InsertFloor::remove()
+{
+    mFloor = mDocument->removeFloor(mIndex);
+}
+
+/////
+
+RemoveFloor::RemoveFloor(BuildingDocument *doc, int index) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Remove Floor")),
+    mDocument(doc),
+    mIndex(index),
+    mFloor(0)
+{
+}
+
+RemoveFloor::~RemoveFloor()
+{
+    delete mFloor;
+}
+
+void RemoveFloor::add()
+{
+    mDocument->insertFloor(mIndex, mFloor);
+    mFloor = 0;
+}
+
+void RemoveFloor::remove()
+{
+    mFloor = mDocument->removeFloor(mIndex);
+}
+
+
+/////
+
 ResizeBuildingBefore::ResizeBuildingBefore(BuildingDocument *doc) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Building")),
     mDocument(doc)

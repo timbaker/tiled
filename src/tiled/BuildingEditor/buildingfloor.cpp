@@ -50,14 +50,22 @@ BuildingFloor::~BuildingFloor()
 
 BuildingFloor *BuildingFloor::floorAbove() const
 {
-    return (mLevel < mBuilding->floorCount() - 1)
-            ? mBuilding->floor(mLevel + 1)
-            : 0;
+    return isTopFloor() ? 0 : mBuilding->floor(mLevel + 1);
 }
 
 BuildingFloor *BuildingFloor::floorBelow() const
 {
-    return (mLevel > 0) ? mBuilding->floor(mLevel - 1) : 0;
+    return isBottomFloor() ? 0 : mBuilding->floor(mLevel - 1);
+}
+
+bool BuildingFloor::isTopFloor() const
+{
+    return mLevel == mBuilding->floorCount() - 1;
+}
+
+bool BuildingFloor::isBottomFloor() const
+{
+    return mLevel == 0;
 }
 
 void BuildingFloor::insertObject(int index, BuildingObject *object)

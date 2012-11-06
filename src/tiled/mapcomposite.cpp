@@ -619,6 +619,13 @@ CompositeLayerGroup *MapComposite::tileLayersForLevel(int level) const
     return 0;
 }
 
+CompositeLayerGroup *MapComposite::layerGroupForLevel(int level) const
+{
+    if (mLayerGroups.contains(level))
+        return mLayerGroups[level];
+    return 0;
+}
+
 CompositeLayerGroup *MapComposite::layerGroupForLayer(TileLayer *tl) const
 {
     return tileLayersForLevel(tl->level());

@@ -65,11 +65,19 @@ public:
     QImage *bmp() const
     { return mBmp; }
 
+    const QList<GraphicsObjectItem*> &objectItems() const
+    { return mObjectItems; }
+
+    void objectAdded(GraphicsObjectItem *item);
+    void objectAboutToBeRemoved(GraphicsObjectItem *item);
+    GraphicsObjectItem *itemForObject(BuildingObject *object) const;
+
     void synchWithFloor();
 
 private:
     BuildingFloor *mFloor;
     QImage *mBmp;
+    QList<GraphicsObjectItem*> mObjectItems;
 };
 
 class GraphicsGridItem : public QGraphicsItem
@@ -289,6 +297,7 @@ public:
     QRectF tileToSceneRectF(const QRectF &tileRect);
     bool currentFloorContains(const QPoint &tilePos);
 
+    GraphicsFloorItem *itemForFloor(BuildingFloor *floor);
     GraphicsObjectItem *itemForObject(BuildingObject *object);
 
     QSet<BuildingObject*> objectsInRect(const QRectF &sceneRect);
@@ -305,6 +314,7 @@ private slots:
     void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
 
     void floorAdded(BuildingFloor *floor);
+    void floorRemoved(BuildingFloor *floor);
     void floorEdited(BuildingFloor *floor);
 
     void objectAdded(BuildingObject *object);
@@ -327,7 +337,6 @@ private:
     BuildingDocument *mDocument;
     GraphicsGridItem *mGridItem;
     QList<GraphicsFloorItem*> mFloorItems;
-    QList<GraphicsObjectItem*> mObjectItems;
     QSet<GraphicsObjectItem*> mSelectedObjectItems;
     BaseTool *mCurrentTool;
 };

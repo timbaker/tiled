@@ -239,14 +239,21 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionRotateRight, SIGNAL(triggered()), SLOT(rotateRight()));
     connect(ui->actionRotateLeft, SIGNAL(triggered()), SLOT(rotateLeft()));
 
+    connect(ui->actionInsertFloorAbove, SIGNAL(triggered()), SLOT(insertFloorAbove()));
+    connect(ui->actionInsertFloorBelow, SIGNAL(triggered()), SLOT(insertFloorBelow()));
+    connect(ui->actionRemoveFloor, SIGNAL(triggered()), SLOT(removeFloor()));
+
     connect(ui->actionRooms, SIGNAL(triggered()), SLOT(roomsDialog()));
     connect(ui->actionTemplates, SIGNAL(triggered()), SLOT(templatesDialog()));
     connect(ui->actionTiles, SIGNAL(triggered()), SLOT(tilesDialog()));
     connect(ui->actionTemplateFromBuilding, SIGNAL(triggered()),
             SLOT(templateFromBuilding()));
 
+    BuildingPreferences *prefs = BuildingPreferences::instance();
     mCategoryZoomable->connectToComboBox(ui->scaleComboBox);
     connect(mCategoryZoomable, SIGNAL(scaleChanged(qreal)),
+            prefs, SLOT(setTileScale(qreal)));
+    connect(prefs, SIGNAL(tileScaleChanged(qreal)),
             SLOT(categoryScaleChanged(qreal)));
 
     ui->categorySplitter->setSizes(QList<int>() << 128 << 256);
@@ -499,9 +506,9 @@ void BuildingEditorWindow::readSettings()
                                  QByteArray()).toByteArray());
     mView->zoomable()->setScale(mSettings.value(QLatin1String("EditorScale"),
                                                 1.0).toReal());
-    mCategoryZoomable->setScale(mSettings.value(QLatin1String("CategoryScale"),
-                                                0.5).toReal());
     mSettings.endGroup();
+
+    mCategoryZoomable->setScale(BuildingPreferences::instance()->tileScale());
 
     restoreSplitterSizes(ui->categorySplitter);
 }
@@ -512,7 +519,6 @@ void BuildingEditorWindow::writeSettings()
     mSettings.setValue(QLatin1String("geometry"), saveGeometry());
     mSettings.setValue(QLatin1String("state"), saveState());
     mSettings.setValue(QLatin1String("EditorScale"), mView->zoomable()->scale());
-    mSettings.setValue(QLatin1String("CategoryScale"), mCategoryZoomable->scale());
     mSettings.endGroup();
 
     saveSplitterSizes(ui->categorySplitter);
@@ -567,8 +573,6 @@ void BuildingEditorWindow::roomIndexChanged(int index)
 
 void BuildingEditorWindow::categoryScaleChanged(qreal scale)
 {
-    mSettings.setValue(QLatin1String("BuildingEditor/MainWindow/CategoryScale"),
-                       scale);
 }
 
 void BuildingEditorWindow::categorySelectionChanged()
@@ -884,11 +888,9 @@ void BuildingEditorWindow::currentRoofCapChanged(Tile *tile)
 
 void BuildingEditorWindow::upLevel()
 {
-    int level = mCurrentDocument->currentFloor()->level() + 1;
-    if (level == mCurrentDocument->building()->floorCount()) {
-        BuildingFloor *floor = new BuildingFloor(mCurrentDocument->building(), level);
-        mCurrentDocument->insertFloor(level, floor); // TODO: make undoable
-    }
+    if ( mCurrentDocument->currentFloorIsTop())
+        return;
+    int level = mCurrentDocument->currentLevel() + 1;
     mCurrentDocument->setSelectedObjects(QSet<BuildingObject*>());
     mCurrentDocument->setCurrentFloor(mCurrentDocument->building()->floor(level));
     updateActions();
@@ -896,12 +898,47 @@ void BuildingEditorWindow::upLevel()
 
 void BuildingEditorWindow::downLevel()
 {
-    int level = mCurrentDocument->currentFloor()->level() - 1;
-    if (level < 0)
+    if (mCurrentDocument->currentFloorIsBottom())
         return;
+    int level = mCurrentDocument->currentLevel() - 1;
     mCurrentDocument->setSelectedObjects(QSet<BuildingObject*>());
     mCurrentDocument->setCurrentFloor(mCurrentDocument->building()->floor(level));
     updateActions();
+}
+
+void BuildingEditorWindow::insertFloorAbove()
+{
+    if (!mCurrentDocument)
+        return;
+    BuildingFloor *newFloor = new BuildingFloor(mCurrentDocument->building(),
+                                                mCurrentDocument->currentLevel() + 1);
+    mCurrentDocument->undoStack()->push(new InsertFloor(mCurrentDocument,
+                                                        newFloor->level(),
+                                                        newFloor));
+    mCurrentDocument->setCurrentFloor(newFloor);
+}
+
+void BuildingEditorWindow::insertFloorBelow()
+{
+    if (!mCurrentDocument)
+        return;
+    int level = mCurrentDocument->currentLevel();
+    BuildingFloor *newFloor = new BuildingFloor(mCurrentDocument->building(),
+                                                level);
+    mCurrentDocument->undoStack()->push(new InsertFloor(mCurrentDocument,
+                                                        newFloor->level(),
+                                                        newFloor));
+    mCurrentDocument->setCurrentFloor(newFloor);
+}
+
+void BuildingEditorWindow::removeFloor()
+{
+    if (!mCurrentDocument || mCurrentDocument->building()->floorCount() == 1)
+        return;
+
+    int index = mCurrentDocument->currentLevel();
+    mCurrentDocument->undoStack()->push(new RemoveFloor(mCurrentDocument,
+                                                        index));
 }
 
 void BuildingEditorWindow::newBuilding()
@@ -1058,6 +1095,11 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
     connect(mCurrentDocument, SIGNAL(roomRemoved(Room*)), SLOT(roomRemoved(Room*)));
     connect(mCurrentDocument, SIGNAL(roomsReordered()), SLOT(roomsReordered()));
     connect(mCurrentDocument, SIGNAL(roomChanged(Room*)), SLOT(roomChanged(Room*)));
+
+    connect(mCurrentDocument, SIGNAL(floorAdded(BuildingFloor*)),
+            SLOT(updateActions()));
+    connect(mCurrentDocument, SIGNAL(floorRemoved(BuildingFloor*)),
+            SLOT(updateActions()));
 
     mPreviewWin->setDocument(currentDocument());
 
@@ -1384,46 +1426,53 @@ void BuildingEditorWindow::setCategoryList()
 
 void BuildingEditorWindow::updateActions()
 {
-    PencilTool::instance()->setEnabled(mCurrentDocument != 0 &&
-            currentRoom() != 0);
-    EraserTool::instance()->setEnabled(mCurrentDocument != 0);
-    DoorTool::instance()->setEnabled(mCurrentDocument != 0);
-    WindowTool::instance()->setEnabled(mCurrentDocument != 0);
-    StairsTool::instance()->setEnabled(mCurrentDocument != 0);
-    FurnitureTool::instance()->setEnabled(mCurrentDocument != 0 &&
-            FurnitureTool::instance()->currentTile() != 0);
-    RoofTool::instance()->setEnabled(mCurrentDocument != 0);
-    RoofCornerTool::instance()->setEnabled(mCurrentDocument != 0);
-    SelectMoveObjectTool::instance()->setEnabled(mCurrentDocument != 0);
+    bool hasDoc = mCurrentDocument != 0;
 
-    ui->actionUpLevel->setEnabled(mCurrentDocument != 0);
-    ui->actionDownLevel->setEnabled(mCurrentDocument != 0 &&
-            mCurrentDocument->currentFloor()->level() > 0);
+    PencilTool::instance()->setEnabled(hasDoc &&
+            currentRoom() != 0);
+    EraserTool::instance()->setEnabled(hasDoc);
+    DoorTool::instance()->setEnabled(hasDoc);
+    WindowTool::instance()->setEnabled(hasDoc);
+    StairsTool::instance()->setEnabled(hasDoc);
+    FurnitureTool::instance()->setEnabled(hasDoc &&
+            FurnitureTool::instance()->currentTile() != 0);
+    RoofTool::instance()->setEnabled(hasDoc);
+    RoofCornerTool::instance()->setEnabled(hasDoc);
+    SelectMoveObjectTool::instance()->setEnabled(hasDoc);
+
+    ui->actionUpLevel->setEnabled(hasDoc &&
+                                  !mCurrentDocument->currentFloorIsTop());
+    ui->actionDownLevel->setEnabled(hasDoc &&
+                                    !mCurrentDocument->currentFloorIsBottom());
 
 //    ui->actionOpen->setEnabled(false);
-    ui->actionSave->setEnabled(mCurrentDocument != 0);
-    ui->actionSaveAs->setEnabled(mCurrentDocument != 0);
-    ui->actionExportTMX->setEnabled(mCurrentDocument != 0);
+    ui->actionSave->setEnabled(hasDoc);
+    ui->actionSaveAs->setEnabled(hasDoc);
+    ui->actionExportTMX->setEnabled(hasDoc);
 
-    ui->actionZoomIn->setEnabled(mCurrentDocument && mView->zoomable()->canZoomIn());
-    ui->actionZoomOut->setEnabled(mCurrentDocument && mView->zoomable()->canZoomOut());
-    ui->actionNormalSize->setEnabled(mCurrentDocument && mView->zoomable()->scale() != 1.0);
+    ui->actionZoomIn->setEnabled(hasDoc && mView->zoomable()->canZoomIn());
+    ui->actionZoomOut->setEnabled(hasDoc && mView->zoomable()->canZoomOut());
+    ui->actionNormalSize->setEnabled(hasDoc && mView->zoomable()->scale() != 1.0);
 
-    ui->actionRooms->setEnabled(mCurrentDocument != 0);
-    ui->actionTemplateFromBuilding->setEnabled(mCurrentDocument != 0);
+    ui->actionRooms->setEnabled(hasDoc);
+    ui->actionTemplateFromBuilding->setEnabled(hasDoc);
 
-    ui->actionResize->setEnabled(mCurrentDocument != 0);
-    ui->actionFlipHorizontal->setEnabled(mCurrentDocument != 0);
-    ui->actionFlipVertical->setEnabled(mCurrentDocument != 0);
-    ui->actionRotateRight->setEnabled(mCurrentDocument != 0);
-    ui->actionRotateLeft->setEnabled(mCurrentDocument != 0);
+    ui->actionResize->setEnabled(hasDoc);
+    ui->actionFlipHorizontal->setEnabled(hasDoc);
+    ui->actionFlipVertical->setEnabled(hasDoc);
+    ui->actionRotateRight->setEnabled(hasDoc);
+    ui->actionRotateLeft->setEnabled(hasDoc);
 
-    mRoomComboBox->setEnabled(mCurrentDocument != 0 &&
-            currentRoom() != 0);
+    ui->actionInsertFloorAbove->setEnabled(hasDoc);
+    ui->actionInsertFloorBelow->setEnabled(hasDoc);
+    ui->actionRemoveFloor->setEnabled(hasDoc &&
+                                      mCurrentDocument->building()->floorCount() > 1);
+
+    mRoomComboBox->setEnabled(hasDoc && currentRoom() != 0);
 
     if (mCurrentDocument)
         mFloorLabel->setText(tr("Floor %1/%2")
-                             .arg(mCurrentDocument->currentFloor()->level() + 1)
+                             .arg(mCurrentDocument->currentLevel() + 1)
                              .arg(mCurrentDocument->building()->floorCount()));
     else
         mFloorLabel->clear();

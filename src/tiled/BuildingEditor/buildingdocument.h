@@ -59,6 +59,11 @@ public:
     BuildingFloor *currentFloor() const
     { return mCurrentFloor; }
 
+    int currentLevel() const;
+
+    bool currentFloorIsTop();
+    bool currentFloorIsBottom();
+
     QUndoStack *undoStack() const
     { return mUndoStack; }
 
@@ -81,7 +86,10 @@ public:
     BuildingTile *changeEWall(BuildingTile *tile);
     BuildingTile *changeWallForRoom(Room *room, BuildingTile *tile);
     BuildingTile *changeFloorForRoom(Room *room, BuildingTile *tile);
+
     void insertFloor(int index, BuildingFloor *floor);
+    BuildingFloor *removeFloor(int index);
+
     void insertObject(BuildingFloor *floor, int index, BuildingObject *object);
     BuildingObject *removeObject(BuildingFloor *floor, int index);
     QPoint moveObject(BuildingObject *object, const QPoint &pos);
@@ -115,11 +123,12 @@ signals:
     void roomDefinitionChanged();
 
     void floorAdded(BuildingFloor *floor);
+    void floorRemoved(BuildingFloor *floor);
     void floorEdited(BuildingFloor *floor);
 
     void objectAdded(BuildingObject *object);
     void objectAboutToBeRemoved(BuildingObject *object);
-    void objectRemoved(BuildingFloor *floor, int index);
+    void objectRemoved(BuildingObject *object);
     void objectMoved(BuildingObject *object);
     void objectTileChanged(BuildingObject *object);
     void objectChanged(BuildingObject *object);

@@ -47,11 +47,16 @@ Building::Building(int width, int height, BuildingTemplate *btemplate) :
 void Building::insertFloor(int index, BuildingFloor *floor)
 {
     mFloors.insert(index, floor);
+    for (int i = index; i < mFloors.count(); i++)
+        mFloors[i]->setLevel(i);
 }
 
 BuildingFloor *Building::removeFloor(int index)
 {
-    return mFloors.takeAt(index);
+    BuildingFloor *floor = mFloors.takeAt(index);
+    for (int i = index; i < mFloors.count(); i++)
+        mFloors[i]->setLevel(i);
+    return floor;
 }
 
 void Building::insertRoom(int index, Room *room)

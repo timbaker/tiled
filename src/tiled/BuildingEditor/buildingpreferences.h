@@ -40,18 +40,30 @@ public:
 
     bool highlightFloor() const
     { return mHighlightFloor; }
-    
+
+    bool showWalls() const
+    { return mShowWalls; }
+
+    qreal tileScale() const
+    { return mTileScale; }
+
 signals:
     void highlightFloorChanged(bool highlight);
+    void showWallsChanged(bool show);
+    void tileScaleChanged(qreal scale);
 
 public slots:
     void setHighlightFloor(bool highlight);
+    void setShowWalls(bool show);
+    void setTileScale(qreal scale);
 
 private:
     static BuildingPreferences *mInstance;
     QSettings mSettings;
     QString mTilesDirectory;
     bool mHighlightFloor;
+    bool mShowWalls;
+    qreal mTileScale;
 };
 
 } // namespace BuildingEditor

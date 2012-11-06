@@ -128,6 +128,10 @@ private slots:
     void upLevel();
     void downLevel();
 
+    void insertFloorAbove();
+    void insertFloorBelow();
+    void removeFloor();
+
     void newBuilding();
     void openBuilding();
     bool saveBuilding();

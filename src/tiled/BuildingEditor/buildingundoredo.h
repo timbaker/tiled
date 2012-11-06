@@ -337,6 +337,42 @@ private:
     QVector<QVector<Room*> > mGrid;
 };
 
+class InsertFloor : public QUndoCommand
+{
+public:
+    InsertFloor(BuildingDocument *doc, int index, BuildingFloor *floor);
+    ~InsertFloor();
+
+    void undo() { remove(); }
+    void redo() { add(); }
+
+private:
+    void add();
+    void remove();
+
+    BuildingDocument *mDocument;
+    int mIndex;
+    BuildingFloor *mFloor;
+};
+
+class RemoveFloor : public QUndoCommand
+{
+public:
+    RemoveFloor(BuildingDocument *doc, int index);
+    ~RemoveFloor();
+
+    void undo() { add(); }
+    void redo() { remove(); }
+
+private:
+    void add();
+    void remove();
+
+    BuildingDocument *mDocument;
+    int mIndex;
+    BuildingFloor *mFloor;
+};
+
 class ResizeBuildingBefore : public QUndoCommand
 {
 public:

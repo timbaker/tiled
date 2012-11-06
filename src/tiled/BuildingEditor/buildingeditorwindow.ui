@@ -508,7 +508,7 @@
     <string>Furniture</string>
    </property>
    <property name="toolTip">
-    <string>Furniture tool</string>
+    <string>Place Furniture</string>
    </property>
   </action>
   <action name="actionRoof">
@@ -543,7 +543,7 @@
   </action>
   <action name="actionInsertFloorAbove">
    <property name="text">
-    <string>Insert Floor Above</string>
+    <string>Add Floor Above</string>
    </property>
    <property name="toolTip">
     <string>Add a new floor above the current one</string>
@@ -551,7 +551,7 @@
   </action>
   <action name="actionInsertFloorBelow">
    <property name="text">
-    <string>Insert Floor Below</string>
+    <string>Add Floor Below</string>
    </property>
    <property name="toolTip">
     <string>Add a new floor below the current one</string>

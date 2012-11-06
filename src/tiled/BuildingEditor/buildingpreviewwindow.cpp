@@ -70,11 +70,11 @@ BuildingPreviewWindow::BuildingPreviewWindow(QWidget *parent) :
     BuildingPreferences *prefs = BuildingPreferences::instance();
 
     QSettings settings;
-    bool showWalls = settings.value(QLatin1String("BuildingEditor/PreviewWindow/ShowWalls"),
-                                    true).toBool();
-    ui->actionShowWalls->setChecked(showWalls);
+    ui->actionShowWalls->setChecked(prefs->showWalls());
     connect(ui->actionShowWalls, SIGNAL(toggled(bool)),
-            mScene, SLOT(showWalls(bool)));
+            prefs, SLOT(setShowWalls(bool)));
+    connect(prefs, SIGNAL(showWallsChanged(bool)),
+            mScene, SLOT(showWallsChanged(bool)));
 
     ui->actionHighlightFloor->setChecked(prefs->highlightFloor());
     connect(ui->actionHighlightFloor, SIGNAL(toggled(bool)),
@@ -276,9 +276,7 @@ BuildingPreviewScene::BuildingPreviewScene(QWidget *parent) :
 {
     setBackgroundBrush(Qt::darkGray);
 
-    QSettings settings;
-    mShowWalls = settings.value(QLatin1String("BuildingEditor/PreviewWindow/ShowWalls"),
-                                true).toBool();
+    mShowWalls = BuildingPreferences::instance()->showWalls();
 
     mDarkRectangle->setPen(Qt::NoPen);
     mDarkRectangle->setBrush(Qt::black);
@@ -321,35 +319,9 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
     if (!mDocument)
         return;
 
-    mMap = new Map(Map::Isometric, doc->building()->width(),
-                   doc->building()->height(), 64, 32);
-
-    // Add tilesets from MapBaseXMLLots.txt
-    foreach (Tileset *ts, BuildingTiles::instance()->tilesets())
-        mMap->addTileset(ts);
-    TilesetManager::instance()->addReferences(mMap->tilesets());
-
-    switch (mMap->orientation()) {
-    case Map::Isometric:
-        mRenderer = new IsometricRenderer(mMap);
-        break;
-    case Map::LevelIsometric:
-        mRenderer = new ZLevelRenderer(mMap);
-        break;
-    default:
-        return;
-    }
-
-    mGridItem = new PreviewGridItem(mDocument->building(), mRenderer);
-    addItem(mGridItem);
-
-    MapInfo *mapInfo = MapManager::instance()->newFromMap(mMap);
-
-    mMapComposite = new MapComposite(mapInfo);
+    BuildingToMap();
 
     mLoading = true;
-    foreach (BuildingFloor *floor, doc->building()->floors())
-        floorAdded(floor);
     currentFloorChanged();
     mLoading = false;
 
@@ -368,13 +340,15 @@ void BuildingPreviewScene::setDocument(BuildingDocument *doc)
 
     connect(mDocument, SIGNAL(floorAdded(BuildingFloor*)),
             SLOT(floorAdded(BuildingFloor*)));
+    connect(mDocument, SIGNAL(floorRemoved(BuildingFloor*)),
+            SLOT(floorRemoved(BuildingFloor*)));
     connect(mDocument, SIGNAL(floorEdited(BuildingFloor*)),
             SLOT(floorEdited(BuildingFloor*)));
 
     connect(mDocument, SIGNAL(objectAdded(BuildingObject*)),
             SLOT(objectAdded(BuildingObject*)));
-    connect(mDocument, SIGNAL(objectRemoved(BuildingFloor*,int)),
-            SLOT(objectRemoved(BuildingFloor*,int)));
+    connect(mDocument, SIGNAL(objectRemoved(BuildingObject*)),
+            SLOT(objectRemoved(BuildingObject*)));
     connect(mDocument, SIGNAL(objectMoved(BuildingObject*)),
             SLOT(objectMoved(BuildingObject*)));
     connect(mDocument, SIGNAL(objectTileChanged(BuildingObject*)),
@@ -397,10 +371,90 @@ void BuildingPreviewScene::clearDocument()
 
 void BuildingPreviewScene::BuildingToMap()
 {
-    foreach (BuildingFloor *floor, mDocument->building()->floors()) {
-        floor->LayoutToSquares();
-        BuildingFloorToTileLayers(floor, mMapComposite->tileLayersForLevel(floor->level())->layers());
+    if (mMapComposite) {
+        delete mMapComposite->mapInfo();
+        delete mMapComposite;
+        TilesetManager::instance()->removeReferences(mMap->tilesets());
+        delete mMap;
+        delete mRenderer;
+        qDeleteAll(mLayerGroupItems);
+        mLayerGroupItems.clear();
+        delete mGridItem;
     }
+
+    mMap = new Map(Map::Isometric,
+                   mDocument->building()->width(),
+                   mDocument->building()->height(),
+                   64, 32);
+
+    // Add tilesets from MapBaseXMLLots.txt
+    foreach (Tileset *ts, BuildingTiles::instance()->tilesets())
+        mMap->addTileset(ts);
+    TilesetManager::instance()->addReferences(mMap->tilesets());
+
+    switch (mMap->orientation()) {
+    case Map::Isometric:
+        mRenderer = new IsometricRenderer(mMap);
+        break;
+    case Map::LevelIsometric:
+        mRenderer = new ZLevelRenderer(mMap);
+        break;
+    default:
+        return;
+    }
+
+    // The order must match the LayerIndexXXX constants.
+    const char *layerNames[] = {
+        "Floor",
+        "Walls",
+        "Frames",
+        "Doors",
+        "Furniture",
+        "Furniture2",
+        "Roof",
+#ifdef ROOF_TOP
+        "RoofTop"
+#endif
+        0
+    };
+
+    int maxLevel =  mDocument->building()->floorCount() - 1;
+    int extraForWalls = 1;
+    QSize mapSize(mDocument->building()->width() + maxLevel * 3 + extraForWalls,
+                  mDocument->building()->height() + maxLevel * 3 + extraForWalls);
+    foreach (BuildingFloor *floor, mDocument->building()->floors()) {
+        for (int i = 0; layerNames[i]; i++) {
+            QString name = QLatin1String(layerNames[i]);
+            QString layerName = tr("%1_%2").arg(floor->level()).arg(name);
+            TileLayer *tl = new TileLayer(layerName,
+                                          0, 0, mapSize.width(), mapSize.height());
+            mMap->addLayer(tl);
+        }
+    }
+
+    MapInfo *mapInfo = MapManager::instance()->newFromMap(mMap);
+    mMapComposite = new MapComposite(mapInfo);
+
+    foreach (CompositeLayerGroup *layerGroup, mMapComposite->layerGroups()) {
+        BuildingFloor *floor = mDocument->building()->floor(layerGroup->level());
+        floor->LayoutToSquares();
+        BuildingFloorToTileLayers(floor, layerGroup->layers());
+
+        CompositeLayerGroupItem *item = new CompositeLayerGroupItem(layerGroup, mRenderer);
+        item->setZValue(layerGroup->level());
+        item->synchWithTileLayers();
+        item->updateBounds();
+        addItem(item);
+        mLayerGroupItems[layerGroup->level()] = item;
+    }
+
+    mGridItem = new PreviewGridItem(mDocument->building(), mRenderer);
+    mGridItem->synchWithBuilding();
+    addItem(mGridItem);
+
+    mRenderer->setMaxLevel(mMapComposite->maxLevel());
+    setSceneRect(mMapComposite->boundingRect(mRenderer));
+    mDarkRectangle->setRect(sceneRect());
 }
 
 void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
@@ -470,6 +524,19 @@ CompositeLayerGroupItem *BuildingPreviewScene::itemForFloor(BuildingFloor *floor
     return mLayerGroupItems[floor->level()];
 }
 
+void BuildingPreviewScene::synchWithShowWalls()
+{
+    foreach (BuildingFloor *floor, mDocument->building()->floors()) {
+        CompositeLayerGroup *layerGroup = mMapComposite->layerGroupForLevel(floor->level());
+        layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexWall],
+                                       mShowWalls || floor < mDocument->currentFloor());
+        layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexRoof],
+                                       mShowWalls || floor < mDocument->currentFloor());
+        itemForFloor(floor)->synchWithTileLayers();
+        itemForFloor(floor)->updateBounds();
+    }
+}
+
 void BuildingPreviewScene::floorEdited(BuildingFloor *floor)
 {
     // Existence check needed while loading a map.
@@ -490,29 +557,10 @@ void BuildingPreviewScene::floorEdited(BuildingFloor *floor)
 
 void BuildingPreviewScene::currentFloorChanged()
 {
-#if 1
     highlightFloorChanged(BuildingPreferences::instance()->highlightFloor());
-#else
-    int level = mDocument->currentFloor()->level();
-    for (int i = 0; i <= level; i++) {
-        mLayerGroupItems[i]->setVisible(true);
-    }
-    for (int i = level + 1; i < mDocument->building()->floorCount(); i++)
-        mLayerGroupItems[i]->setVisible(false);
-#endif
 
-    if (!mShowWalls || mLoading) {
-        foreach (BuildingFloor *floor, mDocument->building()->floors()) {
-            CompositeLayerGroup *layerGroup = mMapComposite->tileLayersForLevel(floor->level());
-            mMapComposite->tileLayersForLevel(floor->level())
-                    ->setLayerVisibility(layerGroup->layers()[LayerIndexWall],
-                                         mShowWalls || floor != mDocument->currentFloor());
-            if (mLoading)
-                BuildingFloorToTileLayers(floor, layerGroup->layers());
-            itemForFloor(floor)->synchWithTileLayers();
-            itemForFloor(floor)->updateBounds();
-        }
-    }
+    if (!mShowWalls || mLoading)
+        synchWithShowWalls();
 }
 
 void BuildingPreviewScene::roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos)
@@ -549,94 +597,12 @@ void BuildingPreviewScene::roomChanged(Room *room)
 
 void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
 {
-    // Resize the map and all existing layers to accomodate the new level.
-    int maxLevel = qMax(mMapComposite->maxLevel(), floor->level());
-    QSize mapSize = QSize(floor->width() + 3 * maxLevel + 1,
-                          floor->height() + 3 * maxLevel + 1);
-    bool didResize = false; // always true
-    if (mapSize != mMap->size()) {
-        int delta = maxLevel - mMapComposite->maxLevel();
-        foreach (Layer *layer, mMap->layers())
-            layer->resize(mapSize, QPoint(delta * 3, delta * 3));
-        mMap->setWidth(mapSize.width());
-        mMap->setHeight(mapSize.height());
-        didResize = true;
-    }
+    BuildingToMap();
+}
 
-    TileLayer *tl = new TileLayer(tr("%1_Floor").arg(floor->level()), 0, 0,
-                                  mapSize.width(), mapSize.height());
-    mMap->addLayer(tl);
-    mMapComposite->layerAdded(mMap->layerCount() - 1);
-
-    tl = new TileLayer(tr("%1_Walls").arg(floor->level()), 0, 0,
-                       mapSize.width(), mapSize.height());
-    mMap->addLayer(tl);
-    mMapComposite->layerAdded(mMap->layerCount() - 1);
-
-    tl = new TileLayer(tr("%1_Frames").arg(floor->level()), 0, 0,
-                       mapSize.width(), mapSize.height());
-    mMap->addLayer(tl);
-    mMapComposite->layerAdded(mMap->layerCount() - 1);
-
-    tl = new TileLayer(tr("%1_Doors").arg(floor->level()), 0, 0,
-                       mapSize.width(), mapSize.height());
-    mMap->addLayer(tl);
-    mMapComposite->layerAdded(mMap->layerCount() - 1);
-
-    tl = new TileLayer(tr("%1_Furniture").arg(floor->level()), 0, 0,
-                       mapSize.width(), mapSize.height());
-    mMap->addLayer(tl);
-    mMapComposite->layerAdded(mMap->layerCount() - 1);
-
-    tl = new TileLayer(tr("%1_Furniture2").arg(floor->level()), 0, 0,
-                       mapSize.width(), mapSize.height());
-    mMap->addLayer(tl);
-    mMapComposite->layerAdded(mMap->layerCount() - 1);
-
-    tl = new TileLayer(tr("%1_Roof").arg(floor->level()), 0, 0,
-                       mapSize.width(), mapSize.height());
-    mMap->addLayer(tl);
-    mMapComposite->layerAdded(mMap->layerCount() - 1);
-
-#ifdef ROOF_TOPS
-    tl = new TileLayer(tr("%1_RoofTop").arg(floor->level()), 0, 0,
-                       mapSize.width(), mapSize.height());
-    mMap->addLayer(tl);
-    mMapComposite->layerAdded(mMap->layerCount() - 1);
-#endif
-
-    CompositeLayerGroup *lg = mMapComposite->tileLayersForLevel(floor->level());
-    CompositeLayerGroupItem *item = new CompositeLayerGroupItem(lg, mRenderer);
-    mLayerGroupItems[lg->level()] = item;
-    floor->LayoutToSquares();
-    if (!mLoading) {
-        BuildingFloorToTileLayers(floor, lg->layers());
-        item->synchWithTileLayers();
-        item->updateBounds();
-    }
-    item->setZValue(lg->level());
-    addItem(item);
-
-    foreach (BuildingObject *object, floor->objects())
-        objectAdded(object);
-
-    if (didResize && !mLoading) {
-        foreach (CompositeLayerGroupItem *item, mLayerGroupItems) {
-            int level = item->layerGroup()->level();
-            if (level == floor->level())
-                continue;
-            BuildingFloorToTileLayers(mDocument->building()->floor(level),
-                                      item->layerGroup()->layers());
-            item->synchWithTileLayers();
-            item->updateBounds();
-        }
-    }
-
-    mGridItem->synchWithBuilding();
-
-    mRenderer->setMaxLevel(mMapComposite->maxLevel());
-    setSceneRect(mMapComposite->boundingRect(mRenderer));
-    mDarkRectangle->setRect(sceneRect());
+void BuildingPreviewScene::floorRemoved(BuildingFloor *floor)
+{
+    BuildingToMap();
 }
 
 void BuildingPreviewScene::objectAdded(BuildingObject *object)
@@ -655,15 +621,17 @@ void BuildingPreviewScene::objectAdded(BuildingObject *object)
     }
 }
 
-void BuildingPreviewScene::objectRemoved(BuildingFloor *floor, int index)
+void BuildingPreviewScene::objectRemoved(BuildingObject *object)
 {
-    Q_UNUSED(index)
+    BuildingFloor *floor = object->floor();
     floorEdited(floor);
 
     // Stairs affect the floor tiles on the floor above.
     // Roofs sometimes affect the floor tiles on the floor above.
-    if (BuildingFloor *floorAbove = floor->floorAbove())
-        floorEdited(floorAbove);
+    if (BuildingFloor *floorAbove = floor->floorAbove()) {
+        if (object->affectsFloorAbove())
+            floorEdited(floorAbove);
+    }
 }
 
 void BuildingPreviewScene::objectMoved(BuildingObject *object)
@@ -705,22 +673,15 @@ void BuildingPreviewScene::buildingRotated()
     mGridItem->synchWithBuilding();
 }
 
-void BuildingPreviewScene::showWalls(bool show)
+void BuildingPreviewScene::showWallsChanged(bool show)
 {
     if (show == mShowWalls)
         return;
 
     mShowWalls = show;
 
-    foreach (BuildingFloor *floor, mDocument->building()->floors()) {
-        CompositeLayerGroup *layerGroup = mMapComposite->tileLayersForLevel(floor->level());
-        mMapComposite->tileLayersForLevel(floor->level())
-                ->setLayerVisibility(layerGroup->layers()[LayerIndexWall],
-                                     mShowWalls || floor != mDocument->currentFloor());
-        itemForFloor(floor)->synchWithTileLayers();
-        itemForFloor(floor)->updateBounds();
-    }
-//        BuildingFloorToTileLayers(floor, mMapComposite->tileLayersForLevel(floor->level())->layers());
+    synchWithShowWalls();
+
     update();
 }
 
@@ -733,7 +694,7 @@ void BuildingPreviewScene::highlightFloorChanged(bool highlight)
         return;
     }
 
-    int currentLevel = mDocument->currentFloor()->level();
+    int currentLevel = mDocument->currentLevel();
     foreach (CompositeLayerGroupItem *item, mLayerGroupItems) {
         item->setVisible(!highlight ||
                          (item->layerGroup()->level() <= currentLevel));
