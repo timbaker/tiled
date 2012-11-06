@@ -342,6 +342,14 @@ void RoofObject::flip(bool horizontal)
     }
 }
 
+BuildingTile *RoofObject::tile(int alternate) const
+{
+    if (alternate == 1)
+        return mCapTile;
+    else
+        return mTile;
+}
+
 void RoofObject::setTile(BuildingTile *tile, int alternate)
 {
     if (alternate == 1)

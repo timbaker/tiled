@@ -89,7 +89,7 @@ public:
         mTile = tile;
     }
 
-    BuildingTile *tile(int alternate = 0) const
+    virtual BuildingTile *tile(int alternate = 0) const
     {
         Q_UNUSED(alternate)
         return mTile;
@@ -216,6 +216,8 @@ public:
 
     void rotate(bool right);
     void flip(bool horizontal);
+
+    BuildingTile *tile(int alternate) const;
 
     void setTile(BuildingTile *roofTile, int alternate = 0);
 
