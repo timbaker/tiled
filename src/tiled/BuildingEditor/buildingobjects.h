@@ -334,7 +334,8 @@ public:
     };
 
     RoofCornerObject(BuildingFloor *floor, int x, int y, int width, int height,
-                     int depth, Orient orient);
+                     int depth, bool slopeW, bool slopeN, bool slopeE, bool slopeS,
+                     Orient orient);
 
     QRect bounds() const;
 
@@ -375,6 +376,16 @@ public:
     bool isNE() { return mOrient == NE; }
     bool isSE() { return mOrient == SE; }
 
+    bool isSlopeW() const { return mSlopeW; }
+    bool isSlopeN() const { return mSlopeN; }
+    bool isSlopeE() const { return mSlopeE; }
+    bool isSlopeS() const { return mSlopeS; }
+
+    void toggleSlopeW() { mSlopeW = !mSlopeW; }
+    void toggleSlopeN() { mSlopeN = !mSlopeN; }
+    void toggleSlopeE() { mSlopeE = !mSlopeE; }
+    void toggleSlopeS() { mSlopeS = !mSlopeS; }
+
     int actualDepth() const;
 
     enum RoofTile {
@@ -396,6 +407,10 @@ private:
     int mWidth;
     int mHeight;
     int mDepth;
+    bool mSlopeW;
+    bool mSlopeN;
+    bool mSlopeE;
+    bool mSlopeS;
     Orient mOrient;
 };
 

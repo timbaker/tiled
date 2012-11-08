@@ -382,8 +382,10 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
             xml.raiseError(tr("Unknown roof_corner orient '%1'").arg(orientString));
             return 0;
         }
+        bool slopeW = true, slopeN = true, slopeE = true, slopeS = true;
         RoofCornerObject *corner = new RoofCornerObject(floor, x, y,
                                                         width, height, depth,
+                                                        slopeW, slopeN, slopeE, slopeS,
                                                         orient);
         corner->setTile(BuildingTiles::instance()->getRoofTile(tile));
         object = corner;

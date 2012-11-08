@@ -148,8 +148,12 @@ class GraphicsRoofHandleItem : public QGraphicsItem
 public:
     enum Type {
         Resize,
-        Width1,
-        Width2,
+        Slope1,
+        Slope2,
+        SlopeW,
+        SlopeN,
+        SlopeE,
+        SlopeS,
         DepthUp,
         DepthDown,
         Capped1,
@@ -204,13 +208,13 @@ public:
     GraphicsRoofItem *asRoof() { return this; }
 
     GraphicsRoofHandleItem *resizeHandle() const
-    { return mHandleItem; }
+    { return mResizeItem; }
 
-    GraphicsRoofHandleItem *width1Handle() const
-    { return mWidth1Item; }
+    GraphicsRoofHandleItem *slope1Handle() const
+    { return mSlope1Item; }
 
-    GraphicsRoofHandleItem *width2Handle() const
-    { return mWidth2Item; }
+    GraphicsRoofHandleItem *slope2Handle() const
+    { return mSlope2Item; }
 
     GraphicsRoofHandleItem *depthUpHandle() const
     { return mDepthUpItem; }
@@ -225,9 +229,9 @@ public:
     { return mCapped2Item; }
 
 private:
-    GraphicsRoofHandleItem *mHandleItem;
-    GraphicsRoofHandleItem *mWidth1Item;
-    GraphicsRoofHandleItem *mWidth2Item;
+    GraphicsRoofHandleItem *mResizeItem;
+    GraphicsRoofHandleItem *mSlope1Item;
+    GraphicsRoofHandleItem *mSlope2Item;
     GraphicsRoofHandleItem *mDepthUpItem;
     GraphicsRoofHandleItem *mDepthDownItem;
     GraphicsRoofHandleItem *mCapped1Item;
@@ -246,7 +250,7 @@ public:
     GraphicsRoofCornerItem *asRoofCorner() { return this; }
 
     GraphicsRoofHandleItem *resizeHandle() const
-    { return mHandleItem; }
+    { return mResizeItem; }
 
     GraphicsRoofHandleItem *depthUpHandle() const
     { return mDepthUpItem; }
@@ -257,11 +261,27 @@ public:
     GraphicsRoofHandleItem *orientHandle() const
     { return mOrientItem; }
 
+    GraphicsRoofHandleItem *slopeWHandle() const
+    { return mSlopeWItem; }
+
+    GraphicsRoofHandleItem *slopeNHandle() const
+    { return mSlopeNItem; }
+
+    GraphicsRoofHandleItem *slopeEHandle() const
+    { return mSlopeEItem; }
+
+    GraphicsRoofHandleItem *slopeSHandle() const
+    { return mSlopeSItem; }
+
 private:
-    GraphicsRoofHandleItem *mHandleItem;
+    GraphicsRoofHandleItem *mResizeItem;
     GraphicsRoofHandleItem *mDepthUpItem;
     GraphicsRoofHandleItem *mDepthDownItem;
     GraphicsRoofHandleItem *mOrientItem;
+    GraphicsRoofHandleItem *mSlopeWItem;
+    GraphicsRoofHandleItem *mSlopeNItem;
+    GraphicsRoofHandleItem *mSlopeEItem;
+    GraphicsRoofHandleItem *mSlopeSItem;
 };
 
 class FloorEditor : public QGraphicsScene

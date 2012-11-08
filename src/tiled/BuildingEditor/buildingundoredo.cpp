@@ -500,10 +500,10 @@ HandleRoof::HandleRoof(BuildingDocument *doc, RoofObject *roof, HandleRoof::Hand
 void HandleRoof::swap()
 {
     switch (mHandle) {
-    case ToggleWidth1:
+    case ToggleSlope1:
         mObject->toggleSlope1();
         break;
-    case ToggleWidth2:
+    case ToggleSlope2:
         mObject->toggleSlope2();
         break;
     case ToggleCapped1:
@@ -570,6 +570,18 @@ void HandleRoofCorner::swap()
     case DecrDepth:
         mObject->setDepth(mObject->depth() - 1);
         mHandle = IncrDepth;
+        break;
+    case ToggleSlopeW:
+        mObject->toggleSlopeW();
+        break;
+    case ToggleSlopeN:
+        mObject->toggleSlopeN();
+        break;
+    case ToggleSlopeE:
+        mObject->toggleSlopeE();
+        break;
+    case ToggleSlopeS:
+        mObject->toggleSlopeS();
         break;
     }
     mDocument->emitObjectChanged(mObject);

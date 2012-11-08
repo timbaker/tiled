@@ -364,8 +364,8 @@ private:
     RoofObject *topmostRoofAt(const QPointF &scenePos);
     void updateHandle(const QPointF &scenePos);
     void resizeRoof(RoofObject *roof, int length, int thickness);
-    void toggleShowWidth1(RoofObject *roof);
-    void toggleShowWidth2(RoofObject *roof);
+    void toggleSlope1(RoofObject *roof);
+    void toggleSlope2(RoofObject *roof);
     void toggleCapped1(RoofObject *roof);
     void toggleCapped2(RoofObject *roof);
     void setDepth(RoofObject *roof, int depth);
@@ -432,6 +432,11 @@ private:
     void resizeRoof(RoofCornerObject *corner, int width, int height);
     void setDepth(RoofCornerObject *corner, int depth);
     void toggleOrient(RoofCornerObject *corner);
+
+    void toggleSlopeW();
+    void toggleSlopeN();
+    void toggleSlopeE();
+    void toggleSlopeS();
 
     QPoint mStartPos;
     QPoint mCurrentPos;

@@ -464,8 +464,8 @@ class HandleRoof : public QUndoCommand
 {
 public:
     enum Handle {
-        ToggleWidth1,
-        ToggleWidth2,
+        ToggleSlope1,
+        ToggleSlope2,
         ToggleCapped1,
         ToggleCapped2,
         IncrDepth,
@@ -511,6 +511,10 @@ public:
         ToggleOrientationRight,
         IncrDepth,
         DecrDepth,
+        ToggleSlopeW,
+        ToggleSlopeN,
+        ToggleSlopeE,
+        ToggleSlopeS
     };
 
     HandleRoofCorner(BuildingDocument *doc, RoofCornerObject *corner, Handle handle);

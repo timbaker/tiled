@@ -978,12 +978,12 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mStartPos = mEditor->sceneToTile(event->scenePos());
         mCurrentPos = mStartPos;
         if (mMouseOverHandle) {
-            if (mHandleItem == mObjectItem->width1Handle()) {
-                toggleShowWidth1(mHandleObject);
+            if (mHandleItem == mObjectItem->slope1Handle()) {
+                toggleSlope1(mHandleObject);
                 return;
             }
-            if (mHandleItem == mObjectItem->width2Handle()) {
-                toggleShowWidth2(mHandleObject);
+            if (mHandleItem == mObjectItem->slope2Handle()) {
+                toggleSlope2(mHandleObject);
                 return;
             }
             if (mHandleItem == mObjectItem->depthUpHandle()) {
@@ -1228,16 +1228,16 @@ void RoofTool::resizeRoof(RoofObject *roof, int length, int thickness)
     mStartPos = roof->bounds().bottomRight();
 }
 
-void RoofTool::toggleShowWidth1(RoofObject *roof)
+void RoofTool::toggleSlope1(RoofObject *roof)
 {
     mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(), roof,
-                                                          HandleRoof::ToggleWidth1));
+                                                          HandleRoof::ToggleSlope1));
 }
 
-void RoofTool::toggleShowWidth2(RoofObject *roof)
+void RoofTool::toggleSlope2(RoofObject *roof)
 {
     mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(), roof,
-                                                          HandleRoof::ToggleWidth2));
+                                                          HandleRoof::ToggleSlope2));
 }
 
 void RoofTool::toggleCapped1(RoofObject *roof)
@@ -1306,6 +1306,22 @@ void RoofCornerTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                 toggleOrient(mHandleObject);
                 return;
             }
+            if (mHandleItem == mObjectItem->slopeWHandle()) {
+                toggleSlopeW();
+                return;
+            }
+            if (mHandleItem == mObjectItem->slopeNHandle()) {
+                toggleSlopeN();
+                return;
+            }
+            if (mHandleItem == mObjectItem->slopeEHandle()) {
+                toggleSlopeE();
+                return;
+            }
+            if (mHandleItem == mObjectItem->slopeSHandle()) {
+                toggleSlopeS();
+                return;
+            }
             mOriginalWidth = mHandleObject->width();
             mOriginalHeight = mHandleObject->height();
             mMode = Resize;
@@ -1315,6 +1331,7 @@ void RoofCornerTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             return;
         mObject = new RoofCornerObject(mEditor->document()->currentFloor(),
                                  mStartPos.x(), mStartPos.y(), 1, 1, 3,
+                                       true, true, true, true,
                                        RoofCornerObject::NW);
         mItem = new GraphicsRoofCornerItem(mEditor, mObject);
         mItem->setZValue(FloorEditor::ZVALUE_CURSOR);
@@ -1532,6 +1549,34 @@ void RoofCornerTool::toggleOrient(RoofCornerObject *corner)
     mEditor->document()->undoStack()->push(new HandleRoofCorner(mEditor->document(),
                                                                 corner,
                                                                 HandleRoofCorner::ToggleOrientationRight));
+}
+
+void RoofCornerTool::toggleSlopeW()
+{
+    mEditor->document()->undoStack()->push(new HandleRoofCorner(mEditor->document(),
+                                                                mHandleObject,
+                                                                HandleRoofCorner::ToggleSlopeW));
+}
+
+void RoofCornerTool::toggleSlopeN()
+{
+    mEditor->document()->undoStack()->push(new HandleRoofCorner(mEditor->document(),
+                                                                mHandleObject,
+                                                                HandleRoofCorner::ToggleSlopeN));
+}
+
+void RoofCornerTool::toggleSlopeE()
+{
+    mEditor->document()->undoStack()->push(new HandleRoofCorner(mEditor->document(),
+                                                                mHandleObject,
+                                                                HandleRoofCorner::ToggleSlopeE));
+}
+
+void RoofCornerTool::toggleSlopeS()
+{
+    mEditor->document()->undoStack()->push(new HandleRoofCorner(mEditor->document(),
+                                                                mHandleObject,
+                                                                HandleRoofCorner::ToggleSlopeS));
 }
 
 /////

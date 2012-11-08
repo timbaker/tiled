@@ -597,11 +597,16 @@ QRect RoofObject::flatTop()
 
 RoofCornerObject::RoofCornerObject(BuildingFloor *floor, int x, int y,
                                    int width, int height, int depth,
+                                   bool slopeW, bool slopeN, bool slopeE, bool slopeS,
                                    Orient orient) :
     BuildingObject(floor, x, y, BuildingObject::Invalid),
     mWidth(width),
     mHeight(height),
     mDepth(depth),
+    mSlopeW(slopeW),
+    mSlopeN(slopeN),
+    mSlopeE(slopeE),
+    mSlopeS(slopeS),
     mOrient(orient)
 {
 }
@@ -714,21 +719,21 @@ RoofCornerObject::Orient RoofCornerObject::orientFromString(const QString &s)
 
 int RoofCornerObject::actualDepth() const
 {
-    int depthW = mDepth;
-    int depthE = mDepth;
+    int depthW = mSlopeW ? mDepth : 0;
+    int depthE = mSlopeE ? mDepth : 0;
     int depthWE = qMax(depthW, depthE);
     if (depthW + depthE > mWidth) {
-        int div = 2;
+        int div = (mSlopeW && mSlopeE) ? 2 : 1;
         depthWE = mWidth / div;
         if (depthWE == 0) // thickness == 1 / 2 == 0
             depthWE = 1;
     }
 
-    int depthN = mDepth;
-    int depthS = mDepth;
+    int depthN = mSlopeN ? mDepth : 0;
+    int depthS = mSlopeS ? mDepth : 0;
     int depthNS = qMax(depthN, depthS);
     if (depthN + depthS > bounds().height()) {
-        int div = 2;
+        int div = (mSlopeN && mSlopeS) ? 2 : 1;
         depthNS = mHeight / div;
         if (depthNS == 0) // thickness == 1 / 2 == 0
             depthNS = 1;
@@ -776,16 +781,24 @@ BuildingTile *RoofCornerObject::roofTile(RoofCornerObject::RoofTile tile) const
 QRect RoofCornerObject::corners()
 {
     QRect r = bounds();
-    if (isNW())
+    if (isNW()) {
+        if (!mSlopeE || !mSlopeS)
+            return QRect();
         return QRect(r.right() - actualDepth(), r.bottom() - actualDepth(),
                      actualDepth(), actualDepth());
-    if (isSE())
+    }
+    if (isSE()) {
+        if (!mSlopeW || !mSlopeN)
+            return QRect();
         return QRect(r.left(), r.top(), actualDepth(), actualDepth());
+    }
     return QRect();
 }
 
 QRect RoofCornerObject::southEdge(int &dx1, int &dx2)
 {
+    if (!mSlopeS)
+        return QRect();
     QRect r = bounds();
     dx1 = dx2 = 0;
     if (isSW())
@@ -809,6 +822,8 @@ QRect RoofCornerObject::southEdge(int &dx1, int &dx2)
 
 QRect RoofCornerObject::eastEdge(int &dy1, int &dy2)
 {
+    if (!mSlopeE)
+        return QRect();
     QRect r = bounds();
     dy1 = dy2 = 0;
     if (isSW())

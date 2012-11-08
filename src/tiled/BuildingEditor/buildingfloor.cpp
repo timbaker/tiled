@@ -471,6 +471,8 @@ void BuildingFloor::LayoutToSquares()
             if (rc->isSW()) {
 
             } else if (rc->isNW()) {
+                if (!rc->isSlopeE() || !rc->isSlopeS())
+                    continue;
 
                 // Corners
                 squares[r.right()][r.bottom()].ReplaceRoof(rc->roofTile(RoofCornerObject::Inner1));
@@ -482,6 +484,8 @@ void BuildingFloor::LayoutToSquares()
             } else if (rc->isNE()) {
 
             } else if (rc->isSE()) {
+                if (!rc->isSlopeW() || !rc->isSlopeN())
+                    continue;
 
                 // Corners
                 squares[r.right()][r.bottom()].ReplaceRoof(rc->roofTile(RoofCornerObject::Outer1));

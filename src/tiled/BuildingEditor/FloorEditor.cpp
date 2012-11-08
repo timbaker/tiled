@@ -414,8 +414,12 @@ GraphicsRoofHandleItem::GraphicsRoofHandleItem(GraphicsRoofBaseItem *roofItem,
     case Resize:
         mStatusText = QCoreApplication::translate("Tools", "Left-click-drag to resize the roof.");
         break;
-    case Width1:
-    case Width2:
+    case Slope1:
+    case Slope2:
+    case SlopeW:
+    case SlopeE:
+    case SlopeN:
+    case SlopeS:
         mStatusText = QCoreApplication::translate("Tools", "Left-click to toggle slope.");
         break;
     case DepthUp:
@@ -455,11 +459,23 @@ void GraphicsRoofHandleItem::paint(QPainter *painter, const QStyleOptionGraphics
     switch (mType) {
     case Resize:
         break;
-    case Width1:
+    case Slope1:
         cross = roof->isSlope1() == false;
         break;
-    case Width2:
+    case Slope2:
         cross = roof->isSlope2() == false;
+        break;
+    case SlopeW:
+        cross = corner->isSlopeW() == false;
+        break;
+    case SlopeN:
+        cross = corner->isSlopeN() == false;
+        break;
+    case SlopeE:
+        cross = corner->isSlopeE() == false;
+        break;
+    case SlopeS:
+        cross = corner->isSlopeS() == false;
         break;
     case DepthUp:
         cross = roof ? roof->depth() == 3 : corner->depth() == 3;
@@ -511,7 +527,7 @@ QRectF GraphicsRoofHandleItem::calcBoundingRect()
         r.setLeft(r.right() - 15);
         r.setTop(r.bottom() - 15);
         break;
-    case Width1:
+    case Slope1:
         if (mRoofItem->object()->isN()) {
             r.setRight(r.left() + 15);
             r.adjust(0,15,0,-15);
@@ -520,7 +536,7 @@ QRectF GraphicsRoofHandleItem::calcBoundingRect()
             r.adjust(15,0,-15,0);
         }
         break;
-    case Width2:
+    case Slope2:
         if (mRoofItem->object()->isN()) {
             r.setLeft(r.right() - 15);
             r.adjust(0,15,0,-15);
@@ -528,6 +544,22 @@ QRectF GraphicsRoofHandleItem::calcBoundingRect()
             r.setTop(r.bottom() - 15);
             r.adjust(15,0,-15,0);
         }
+        break;
+    case SlopeW:
+        r.setRight(r.left() + 15);
+        r.adjust(0,15,0,-15);
+        break;
+    case SlopeN:
+        r.setBottom(r.top() + 15);
+        r.adjust(15,0,-15,0);
+        break;
+    case SlopeE:
+        r.setLeft(r.right() - 15);
+        r.adjust(0,15,0,-15);
+        break;
+    case SlopeS:
+        r.setTop(r.bottom() - 15);
+        r.adjust(15,0,-15,0);
         break;
     case DepthUp:
         r = QRectF(r.center().x()-7,r.center().y()-14,
@@ -584,24 +616,24 @@ void GraphicsRoofBaseItem::setShowHandles(bool show)
 
 GraphicsRoofItem::GraphicsRoofItem(FloorEditor *editor, RoofObject *roof) :
     GraphicsRoofBaseItem(editor, roof),
-    mHandleItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Resize)),
-    mWidth1Item(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Width1)),
-    mWidth2Item(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Width2)),
+    mResizeItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Resize)),
+    mSlope1Item(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Slope1)),
+    mSlope2Item(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Slope2)),
     mDepthUpItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::DepthUp)),
     mDepthDownItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::DepthDown)),
     mCapped1Item(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Capped1)),
     mCapped2Item(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Capped2))
 {
-    mHandleItem->setCursor(Qt::SizeAllCursor);
+    mResizeItem->setCursor(Qt::SizeAllCursor);
 }
 
 void GraphicsRoofItem::synchWithObject()
 {
     GraphicsObjectItem::synchWithObject();
 
-    mHandleItem->synchWithObject();
-    mWidth1Item->synchWithObject();
-    mWidth2Item->synchWithObject();
+    mResizeItem->synchWithObject();
+    mSlope1Item->synchWithObject();
+    mSlope2Item->synchWithObject();
     mDepthUpItem->synchWithObject();
     mDepthDownItem->synchWithObject();
     mCapped1Item->synchWithObject();
@@ -612,12 +644,16 @@ void GraphicsRoofItem::synchWithObject()
 
 GraphicsRoofCornerItem::GraphicsRoofCornerItem(FloorEditor *editor, RoofCornerObject *roof) :
     GraphicsRoofBaseItem(editor, roof),
-    mHandleItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Resize)),
+    mResizeItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Resize)),
     mDepthUpItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::DepthUp)),
     mDepthDownItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::DepthDown)),
-    mOrientItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Orient))
+    mOrientItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Orient)),
+    mSlopeWItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::SlopeW)),
+    mSlopeNItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::SlopeN)),
+    mSlopeEItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::SlopeE)),
+    mSlopeSItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::SlopeS))
 {
-    mHandleItem->setCursor(Qt::SizeAllCursor);
+    mResizeItem->setCursor(Qt::SizeAllCursor);
 }
 
 void GraphicsRoofCornerItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -686,10 +722,14 @@ void GraphicsRoofCornerItem::synchWithObject()
 {
     GraphicsObjectItem::synchWithObject();
 
-    mHandleItem->synchWithObject();
+    mResizeItem->synchWithObject();
     mDepthUpItem->synchWithObject();
     mDepthDownItem->synchWithObject();
     mOrientItem->synchWithObject();
+    mSlopeWItem->synchWithObject();
+    mSlopeNItem->synchWithObject();
+    mSlopeEItem->synchWithObject();
+    mSlopeSItem->synchWithObject();
 }
 
 /////
