@@ -712,6 +712,33 @@ RoofCornerObject::Orient RoofCornerObject::orientFromString(const QString &s)
     return Invalid;
 }
 
+int RoofCornerObject::actualDepth() const
+{
+    int depthW = mDepth;
+    int depthE = mDepth;
+    int depthWE = qMax(depthW, depthE);
+    if (depthW + depthE > mWidth) {
+        int div = 2;
+        depthWE = mWidth / div;
+        if (depthWE == 0) // thickness == 1 / 2 == 0
+            depthWE = 1;
+    }
+
+    int depthN = mDepth;
+    int depthS = mDepth;
+    int depthNS = qMax(depthN, depthS);
+    if (depthN + depthS > bounds().height()) {
+        int div = 2;
+        depthNS = mHeight / div;
+        if (depthNS == 0) // thickness == 1 / 2 == 0
+            depthNS = 1;
+    }
+
+    if (depthWE && depthNS)
+        return qMin(depthWE, depthNS);
+    return depthWE + depthNS;
+}
+
 BuildingTile *RoofCornerObject::roofTile(RoofCornerObject::RoofTile tile) const
 {
     BuildingTile *btile = mTile;
@@ -750,10 +777,10 @@ QRect RoofCornerObject::corners()
 {
     QRect r = bounds();
     if (isNW())
-        return QRect(r.right() - depth(), r.bottom() - depth(),
-                     depth(), depth());
+        return QRect(r.right() - actualDepth(), r.bottom() - actualDepth(),
+                     actualDepth(), actualDepth());
     if (isSE())
-        return QRect(r.left(), r.top(), depth(), depth());
+        return QRect(r.left(), r.top(), actualDepth(), actualDepth());
     return QRect();
 }
 
@@ -762,20 +789,20 @@ QRect RoofCornerObject::southEdge(int &dx1, int &dx2)
     QRect r = bounds();
     dx1 = dx2 = 0;
     if (isSW())
-        return QRect(r.left() + depth(), r.bottom() - depth() + 1,
-                     r.width() - depth(), depth());
+        return QRect(r.left() + actualDepth(), r.bottom() - actualDepth() + 1,
+                     r.width() - actualDepth(), actualDepth());
     if (isNW()) {
         dx1 = 1;
-        return QRect(r.right() - depth() + 1, r.bottom() - depth() + 1,
-                     depth(), depth());
+        return QRect(r.right() - actualDepth() + 1, r.bottom() - actualDepth() + 1,
+                     actualDepth(), actualDepth());
     }
     if (isNE())
-        return QRect(r.left(), r.bottom() - depth() + 1,
-                     r.width() - depth(), depth());
+        return QRect(r.left(), r.bottom() - actualDepth() + 1,
+                     r.width() - actualDepth(), actualDepth());
     if (isSE()) {
         dx2 = 1;
-        return QRect(r.left(), r.bottom() - depth() + 1,
-                     r.width(), depth());
+        return QRect(r.left(), r.bottom() - actualDepth() + 1,
+                     r.width(), actualDepth());
     }
     return QRect();
 }
@@ -785,20 +812,20 @@ QRect RoofCornerObject::eastEdge(int &dy1, int &dy2)
     QRect r = bounds();
     dy1 = dy2 = 0;
     if (isSW())
-        return QRect(r.right() - depth() + 1, r.top(),
-                     depth(), r.height() - depth() - (midTile() ? 1 : 0));
+        return QRect(r.right() - actualDepth() + 1, r.top(),
+                     actualDepth(), r.height() - actualDepth());
     if (isNW()) {
         dy1 = 1;
-        return QRect(r.right() - depth() + 1, r.bottom() - depth() + 1,
-                     depth(), depth());
+        return QRect(r.right() - actualDepth() + 1, r.bottom() - actualDepth() + 1,
+                     actualDepth(), actualDepth());
     }
     if (isNE())
-        return QRect(r.right() - depth() + 1, r.top() + depth(),
-                     depth(), r.height() - depth());
+        return QRect(r.right() - actualDepth() + 1, r.top() + actualDepth(),
+                     actualDepth(), r.height() - actualDepth());
     if (isSE()) {
         dy2 = 1;
-        return QRect(r.right() - depth() + 1, r.top(),
-                     depth(), r.height());
+        return QRect(r.right() - actualDepth() + 1, r.top(),
+                     actualDepth(), r.height());
     }
     return QRect();
 }
@@ -807,17 +834,17 @@ QRegion RoofCornerObject::flatTop()
 {
     QRect r = bounds();
     if (isSW())
-        return QRegion(r.adjusted(depth(), 0, -depth(), -depth()))
-                | QRegion(r.adjusted(depth(), depth(), 0, -depth()));
+        return QRegion(r.adjusted(actualDepth(), 0, -actualDepth(), -actualDepth()))
+                | QRegion(r.adjusted(actualDepth(), actualDepth(), 0, -actualDepth()));
     if (isNW())
-        return QRegion(r.adjusted(depth(), depth(), 0, -depth()))
-                | QRegion(r.adjusted(depth(), depth(), -depth(), 0));
+        return QRegion(r.adjusted(actualDepth(), actualDepth(), 0, -actualDepth()))
+                | QRegion(r.adjusted(actualDepth(), actualDepth(), -actualDepth(), 0));
     if (isNE())
-        return QRegion(r.adjusted(0, depth(), -depth(), -depth()))
-                | QRegion(r.adjusted(depth(), depth(), -depth(), 0));
+        return QRegion(r.adjusted(0, actualDepth(), -actualDepth(), -actualDepth()))
+                | QRegion(r.adjusted(actualDepth(), actualDepth(), -actualDepth(), 0));
     if (isSE())
-        return QRegion(r.adjusted(depth(), 0, -depth(), -depth()))
-                | QRegion(r.adjusted(0, depth(), -depth(), -depth()));
+        return QRegion(r.adjusted(actualDepth(), 0, -actualDepth(), -actualDepth()))
+                | QRegion(r.adjusted(0, actualDepth(), -actualDepth(), -actualDepth()));
     return QRect();
 }
 

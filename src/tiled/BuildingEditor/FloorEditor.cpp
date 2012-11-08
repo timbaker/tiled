@@ -630,7 +630,7 @@ void GraphicsRoofCornerItem::paint(QPainter *painter, const QStyleOptionGraphics
     QPoint dragOffset = mDragging ? mDragOffset : QPoint();
     QRectF r = mEditor->tileToSceneRect(mObject->bounds().translated(dragOffset));
     RoofCornerObject *rc = mObject->asRoofCorner();
-    int depth = rc->depth();
+    int depth = rc->actualDepth();
 
     if (rc->isNW() || rc->isNE()) {
         painter->fillRect(r.left(), r.top(), r.width(), 30 * depth, Qt::darkGray);

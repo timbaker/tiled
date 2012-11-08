@@ -445,19 +445,22 @@ void BuildingFloor::LayoutToSquares()
 
             int dx1, dx2;
             QRect se = rc->southEdge(dx1, dx2);
-            ReplaceRoof(rc, se.adjusted(dx1*rc->depth(),  se.height()-1, -dx2,    0), squares, RoofCornerObject::FlatS1);
-            ReplaceRoof(rc, se.adjusted(dx1*(rc->depth()-1),  qMax(se.height()-2,0), -dx2*(rc->depth()-1), -1), squares, RoofCornerObject::FlatS2);
-            ReplaceRoof(rc, se.adjusted(dx1,    0,             -dx2*rc->depth(), -2), squares, RoofCornerObject::FlatS3);
+            ReplaceRoof(rc, se.adjusted(dx1*rc->actualDepth(),  se.height()-1, -dx2,    0), squares, RoofCornerObject::FlatS1);
+            ReplaceRoof(rc, se.adjusted(dx1*(rc->actualDepth()-1),  qMax(se.height()-2,0), -dx2*(rc->actualDepth()-1), -1), squares, RoofCornerObject::FlatS2);
+            ReplaceRoof(rc, se.adjusted(dx1,    0,             -dx2*rc->actualDepth(), -2), squares, RoofCornerObject::FlatS3);
+#if 0 // there are no 1.5 height corner tiles
             if (rc->midTile())
                 ReplaceRoof(rc, se.adjusted(0, -1, -dx2*2,    -1), squares, RoofCornerObject::HalfFlatS);
-
+#endif
             int dy1, dy2;
             QRect ee = rc->eastEdge(dy1, dy2);
-            ReplaceRoof(rc, ee.adjusted(ee.width()-1,         dy1*rc->depth(), 0,  -dy2), squares, RoofCornerObject::FlatE1);
-            ReplaceRoof(rc, ee.adjusted(qMax(ee.width()-2,0), dy1*(rc->depth()-1), -1, -dy2*(rc->depth()-1)), squares, RoofCornerObject::FlatE2);
-            ReplaceRoof(rc, ee.adjusted(0,                    dy1,   -2, -dy2*rc->depth()), squares, RoofCornerObject::FlatE3);
+            ReplaceRoof(rc, ee.adjusted(ee.width()-1,         dy1*rc->actualDepth(), 0,  -dy2), squares, RoofCornerObject::FlatE1);
+            ReplaceRoof(rc, ee.adjusted(qMax(ee.width()-2,0), dy1*(rc->actualDepth()-1), -1, -dy2*(rc->actualDepth()-1)), squares, RoofCornerObject::FlatE2);
+            ReplaceRoof(rc, ee.adjusted(0,                    dy1,   -2, -dy2*rc->actualDepth()), squares, RoofCornerObject::FlatE3);
+#if 0 // there are no 1.5 height corner tiles
             if (rc->midTile())
                 ReplaceRoof(rc, ee.adjusted(-1, 0, -1,  -dy2*2), squares, RoofCornerObject::HalfFlatE);
+#endif
 
 #ifdef ROOF_TOPS
             if (rc->depth() < 3)
@@ -471,9 +474,9 @@ void BuildingFloor::LayoutToSquares()
 
                 // Corners
                 squares[r.right()][r.bottom()].ReplaceRoof(rc->roofTile(RoofCornerObject::Inner1));
-                if (rc->depth() > 1 && rc->width() > 1 && rc->height() > 1)
+                if (rc->actualDepth() > 1)
                     squares[r.right()-1][r.bottom()-1].ReplaceRoof(rc->roofTile(RoofCornerObject::Inner2));
-                if (rc->depth() > 2 && rc->width() > 2 && rc->height() > 2)
+                if (rc->actualDepth() > 2)
                     squares[r.right()-2][r.bottom()-2].ReplaceRoof(rc->roofTile(RoofCornerObject::Inner3));
 
             } else if (rc->isNE()) {
@@ -482,9 +485,9 @@ void BuildingFloor::LayoutToSquares()
 
                 // Corners
                 squares[r.right()][r.bottom()].ReplaceRoof(rc->roofTile(RoofCornerObject::Outer1));
-                if (rc->depth() > 1 && rc->width() > 1 && rc->height() > 1)
+                if (rc->actualDepth() > 1)
                     squares[r.right()-1][r.bottom()-1].ReplaceRoof(rc->roofTile(RoofCornerObject::Outer2));
-                if (rc->depth() > 2 && rc->width() > 2 && rc->height() > 2)
+                if (rc->actualDepth() > 2)
                     squares[r.right()-2][r.bottom()-2].ReplaceRoof(rc->roofTile(RoofCornerObject::Outer3));
             }
         }
@@ -515,7 +518,7 @@ void BuildingFloor::LayoutToSquares()
                 if (ro->roofHeight() == RoofObject::Three)
                     ReplaceRoofTop(ro, ro->flatTop(), squares);
             if (RoofCornerObject *rc = object->asRoofCorner())
-                if (rc->depth() == 3) {
+                if (rc->actualDepth() == 3) {
                     foreach (QRect r, rc->flatTop().rects())
                         ReplaceRoofTop(rc, r, squares);
                 }

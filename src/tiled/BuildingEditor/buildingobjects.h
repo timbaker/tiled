@@ -353,7 +353,7 @@ public:
     int depth() const { return mDepth; }
 
     bool midTile() const
-    { return (mWidth==3 || mHeight==3) && (mDepth == 1); }
+    { return (mWidth==3 || mHeight==3) && (mDepth > 1); }
 
     void setWidth(int width) { resize(width, mHeight); }
     void setHeight(int height) { resize(mWidth, height); }
@@ -374,6 +374,8 @@ public:
     bool isNW() { return mOrient == NW; }
     bool isNE() { return mOrient == NE; }
     bool isSE() { return mOrient == SE; }
+
+    int actualDepth() const;
 
     enum RoofTile {
         FlatS1, FlatS2, FlatS3,
