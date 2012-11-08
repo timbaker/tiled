@@ -282,14 +282,15 @@ void FurnitureObject::setFurnitureTile(FurnitureTile *tile)
 
 RoofObject::RoofObject(BuildingFloor *floor, int x, int y,
                        BuildingObject::Direction dir, int length,
-                       int thickness, int width1, int width2, bool capped1,
-                       bool capped2, int depth) :
+                       int thickness, int depth,
+                       bool slope1, bool slope2,
+                       bool capped1, bool capped2) :
     BuildingObject(floor, x, y, dir),
     mLength(length),
     mThickness(thickness),
-    mWidth1(width1),
-    mWidth2(width2),
     mDepth(depth),
+    mSlope1(slope1),
+    mSlope2(slope2),
     mCapped1(capped1),
     mCapped2(capped2)
 {
@@ -318,6 +319,8 @@ void RoofObject::rotate(bool right)
 
         if (isW()) // was N
             qSwap(mCapped1, mCapped2);
+        if (isN()) // was W
+            qSwap(mSlope1, mSlope2);
 
     } else {
         int x = mX;
@@ -326,6 +329,8 @@ void RoofObject::rotate(bool right)
 
         if (isN()) // was W
             qSwap(mCapped1, mCapped2);
+        if (isW()) // was N
+            qSwap(mSlope1, mSlope2);
     }
 }
 
@@ -335,10 +340,14 @@ void RoofObject::flip(bool horizontal)
         mX = mFloor->width() - mX - bounds().width();
         if (isW())
             qSwap(mCapped1, mCapped2);
+        if (isN())
+            qSwap(mSlope1, mSlope2);
     } else {
         mY = mFloor->height() - mY - bounds().height();
         if (isN())
             qSwap(mCapped1, mCapped2);
+        if (isW())
+            qSwap(mSlope1, mSlope2);
     }
 }
 
@@ -372,53 +381,23 @@ bool RoofObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
 
 void RoofObject::resize(int length, int thickness)
 {
-    if (thickness == 1) {
-        if (mWidth1) mWidth1 = 1;
-        if (mWidth2) mWidth2 = 1;
-    } else if (thickness == 2) {
-        if (mWidth1) mWidth1 = qMin(mDepth, mWidth2 ? 1 : 2);
-        if (mWidth2) mWidth2 = qMin(mDepth, mWidth1 ? 1 : 2);
-    } else if (thickness == 3) {
-        if (mWidth1) mWidth1 = qMin(mDepth, mWidth2 ? 1 : 3);
-        if (mWidth2) mWidth2 = qMin(mDepth, mWidth1 ? 1 : 3);
-    } else if (thickness < 6) {
-        if (mWidth1) mWidth1 = qMin(mDepth, mWidth2 ? 2 : 3);
-        if (mWidth2) mWidth2 = qMin(mDepth, mWidth1 ? 2 : 3);
-    } else {
-        if (mWidth1) mWidth1 = qMin(mDepth, 3);
-        if (mWidth2) mWidth2 = qMin(mDepth, 3);
-    }
-
     mLength = length;
     mThickness = thickness;
 }
 
-void RoofObject::toggleWidth1()
+void RoofObject::setDepth(int depth)
 {
-    int thickness = this->thickness();
-    if (mWidth1 > 0) {
-        mWidth1 = 0;
-    } else {
-        mWidth1 = 1; // some non-zero value
-    }
-    resize(length(), thickness);
+    mDepth = depth;
 }
 
-void RoofObject::toggleWidth2()
+void RoofObject::toggleSlope1()
 {
-    int thickness = this->thickness();
-    if (mWidth2 > 0) {
-        mWidth2 = 0;
-    } else {
-        mWidth2 = 1; // some non-zero value
-    }
-    resize(length(), thickness);
+    mSlope1 = !mSlope1;
 }
 
-void RoofObject::setDepth(int height)
+void RoofObject::toggleSlope2()
 {
-    mDepth = height;
-    resize(length(), thickness());
+    mSlope2 = !mSlope2;
 }
 
 void RoofObject::toggleCapped1()
@@ -433,18 +412,24 @@ void RoofObject::toggleCapped2()
 
 int RoofObject::actualDepth() const
 {
-    int depthW = (isW() && mWidth1 > 0) ? mDepth : 0;
-    int depthE = (isW() && mWidth2 > 0) ? mDepth : 0;
+    int depthW = (isN() && mSlope1) ? mDepth : 0;
+    int depthE = (isN() && mSlope2) ? mDepth : 0;
     int depthWE = qMax(depthW, depthE);
     if (depthW + depthE > bounds().width()) {
-        depthWE = bounds().width() / 2;
+        int div = (mSlope1 && mSlope2) ? 2 : 1;
+        depthWE = bounds().width() / div;
+        if (depthWE == 0) // thickness == 1 / 2 == 0
+            depthWE = 1;
     }
 
-    int depthN = (isN() && mWidth1 > 0) ? mDepth : 0;
-    int depthS = (isN() && mWidth2 > 0) ? mDepth : 0;
+    int depthN = (isW() && mSlope1) ? mDepth : 0;
+    int depthS = (isW() && mSlope2) ? mDepth : 0;
     int depthNS = qMax(depthN, depthS);
     if (depthN + depthS > bounds().height()) {
-        depthNS = bounds().height() / 2;
+        int div = (mSlope1 && mSlope2) ? 2 : 1;
+        depthNS = bounds().height() / div;
+        if (depthNS == 0) // thickness == 1 / 2 == 0
+            depthNS = 1;
     }
 
     if (depthWE && depthNS)
@@ -455,26 +440,26 @@ int RoofObject::actualDepth() const
 RoofObject::RoofHeight RoofObject::roofHeight() const
 {
     if (mThickness == 1) {
-        if (mWidth1 && mWidth2)
+        if (mSlope1 && mSlope2)
             return Point5;
-        if (mWidth1 || mWidth2)
+        if (mSlope1 || mSlope2)
             return One;
         return (mDepth == 3) ? Three : ((mDepth == 2) ? Two : One);
     }
     if (mThickness == 2) {
-        if (mWidth1 && mWidth2)
+        if (mSlope1 && mSlope2)
             return One;
-        if (mWidth1 || mWidth2)
+        if (mSlope1 || mSlope2)
             return (mDepth >= 2) ? Two : One;
         return (mDepth == 3) ? Three : ((mDepth == 2) ? Two : One);
     }
     if (mThickness == 3) {
-        if (mWidth1 && mWidth2)
+        if (mSlope1 && mSlope2)
             return (mDepth > 1) ? OnePoint5 : One;
         return (mDepth == 3) ? Three : ((mDepth == 2) ? Two : One);
     }
     if (mThickness < 6) {
-        if (mWidth1 && mWidth2)
+        if (mSlope1 && mSlope2)
             return (mDepth > 1) ? Two : One;
         return (mDepth == 3) ? Three : ((mDepth == 2) ? Two : One);
     }
@@ -553,18 +538,18 @@ BuildingTile *RoofObject::roofTile(RoofObject::RoofTile tile) const
 QRect RoofObject::eastEdge()
 {
     QRect r = bounds();
-    if (isN())
-        return QRect(r.right() - width2() + 1, r.top(),
-                      width2(), r.height());
+    if (isN() && mSlope2)
+        return QRect(r.right() - actualDepth() + 1, r.top(),
+                     actualDepth(), r.height());
     return QRect();
 }
 
 QRect RoofObject::southEdge()
 {
     QRect r = bounds();
-    if (isW())
-        return QRect(r.left(), r.bottom() - width2() + 1,
-                     r.width(), width2());
+    if (isW() && mSlope2)
+        return QRect(r.left(), r.bottom() - actualDepth() + 1,
+                     r.width(), actualDepth());
     return QRect();
 }
 
@@ -573,11 +558,11 @@ QRect RoofObject::eastGap(RoofHeight height)
     if (height != roofHeight())
         return QRect();
     QRect r = bounds();
-    if (isN() && !mWidth2) {
-        return QRect(r.right()+1, r.top(), 1, r.height());
+    if (isN() && !mSlope2) {
+        return QRect(r.right() + 1, r.top(), 1, r.height());
     }
     if (isW() && mCapped2) {
-        return QRect(r.right()+1, r.top() + mWidth1, 1, r.height() - mWidth1 - mWidth2);
+        return QRect(r.right() + 1, r.top() + slope1(), 1, r.height() - slope1() - slope2());
     }
     return QRect();
 }
@@ -588,10 +573,10 @@ QRect RoofObject::southGap(RoofHeight height)
         return QRect();
     QRect r = bounds();
     if (isN() && mCapped2) {
-        return QRect(r.left() + mWidth1, r.bottom()+1, r.width() - mWidth1 - mWidth2, 1);
+        return QRect(r.left() + slope1(), r.bottom() + 1, r.width() - slope1() - slope2(), 1);
     }
-    if (isW() && !mWidth2) {
-        return QRect(r.left(), r.bottom()+1, r.width(), 1);
+    if (isW() && !mSlope2) {
+        return QRect(r.left(), r.bottom() + 1, r.width(), 1);
     }
     return QRect();
 }
@@ -600,10 +585,10 @@ QRect RoofObject::flatTop()
 {
     QRect r = bounds();
     if (isW())
-        return QRect(r.left(), r.top() + width1(),
+        return QRect(r.left(), r.top() + slope1(),
                      r.width(), gap());
     if (isN())
-        return QRect(r.left() + width1(), r.top(),
+        return QRect(r.left() + slope1(), r.top(),
                      gap(), r.height());
     return QRect();
 }

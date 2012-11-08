@@ -501,10 +501,10 @@ void HandleRoof::swap()
 {
     switch (mHandle) {
     case ToggleWidth1:
-        mObject->toggleWidth1();
+        mObject->toggleSlope1();
         break;
     case ToggleWidth2:
-        mObject->toggleWidth2();
+        mObject->toggleSlope2();
         break;
     case ToggleCapped1:
         mObject->toggleCapped1();

@@ -207,11 +207,11 @@ public:
             w.writeAttribute(QLatin1String("type"), QLatin1String("roof"));
             w.writeAttribute(QLatin1String("length"), QString::number(roof->length()));
             w.writeAttribute(QLatin1String("thickness"), QString::number(roof->thickness()));
-            w.writeAttribute(QLatin1String("width1"), QString::number(roof->width1()));
-            w.writeAttribute(QLatin1String("width2"), QString::number(roof->width2()));
-            w.writeAttribute(QLatin1String("capped1"), QString::number(roof->isCapped1() ? 1 : 0));
-            w.writeAttribute(QLatin1String("capped2"), QString::number(roof->isCapped2() ? 1 : 0));
             w.writeAttribute(QLatin1String("depth"), QString::number(roof->depth()));
+            writeBoolean(w, QLatin1String("slope1"), roof->isSlope1());
+            writeBoolean(w, QLatin1String("slope2"), roof->isSlope2());
+            writeBoolean(w, QLatin1String("capped1"), roof->isCapped1());
+            writeBoolean(w, QLatin1String("capped2"), roof->isCapped2());
             if (roof->capTile())
                 w.writeAttribute(QLatin1String("CapTile"), roof->capTile()->name());
         } else if (RoofCornerObject *corner = object->asRoofCorner()) {
@@ -231,6 +231,11 @@ public:
         if (writeTile)
             w.writeAttribute(QLatin1String("Tile"), object->tile()->name());
         w.writeEndElement(); // </object>
+    }
+
+    void writeBoolean(QXmlStreamWriter &w, const QString &name, bool value)
+    {
+        w.writeAttribute(name, value ? QLatin1String("true") : QLatin1String("false"));
     }
 
     Building *mBuilding;

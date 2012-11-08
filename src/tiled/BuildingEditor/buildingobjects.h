@@ -209,8 +209,8 @@ class RoofObject : public BuildingObject
 {
 public:
     RoofObject(BuildingFloor *floor, int x, int y, Direction dir, int length,
-               int thickness, int width1, int width2, bool capped1,
-               bool capped2, int depth);
+               int thickness, int depth, bool slope1, bool slope2,
+               bool capped1, bool capped2);
 
     QRect bounds() const;
 
@@ -237,34 +237,40 @@ public:
     int thickness() const
     { return mThickness; }
 
-    int width1() const { return mWidth1; }
-    int width2() const { return mWidth2; }
+    int slope1() const { return mSlope1 ? actualDepth() : 0; }
+    int slope2() const { return mSlope2 ? actualDepth() : 0; }
 
     int gap() const
     {
         if (midTile())
             return 0;
-        return mThickness - mWidth1 - mWidth2;
+        return mThickness - slope1() - slope2();
     }
 
     bool midTile() const
-    { return (mThickness == 3) && (mWidth1 && mWidth2) && (mDepth > 1); }
+    { return (mThickness == 3) && (mSlope1 && mSlope2) && (mDepth > 1); }
 
     void resize(int length, int thickness);
 
-    void toggleWidth1();
-    void toggleWidth2();
-
-    void setDepth(int height);
+    void setDepth(int depth);
 
     int depth() const
     { return mDepth; }
+
+    bool isSlope1() const
+    { return mSlope1; }
+
+    bool isSlope2() const
+    { return mSlope2; }
 
     bool isCapped1() const
     { return mCapped1; }
 
     bool isCapped2() const
     { return mCapped2; }
+
+    void toggleSlope1();
+    void toggleSlope2();
 
     void toggleCapped1();
     void toggleCapped2();
@@ -308,9 +314,9 @@ public:
 private:
     int mLength;
     int mThickness;
-    int mWidth1; // Thickness above (mDir=W) or left of (mDir=N) the gap
-    int mWidth2; // Thickness below (mDir=W) or right of (mDir=N) the gap
     int mDepth;
+    bool mSlope1; // Slope above (mDir=W) or left of (mDir=N) the gap
+    bool mSlope2; // Slope below (mDir=W) or right of (mDir=N) the gap
     bool mCapped1; // Capped on left (mDir=W) or top (mDir=N)
     bool mCapped2; // Capped on right (mDir=W) or bottom (mDir=N)
     BuildingTile *mCapTile;

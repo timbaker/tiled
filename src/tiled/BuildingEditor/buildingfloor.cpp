@@ -348,7 +348,7 @@ void BuildingFloor::LayoutToSquares()
             ReplaceRoofGap(ro, sg, squares, RoofObject::CapGapS3, Square::WallOrientN);
 
             // SE corner 'pole'
-            if (ro->isCapped2() && !ro->width2() && ro->roofHeight() == RoofObject::Three)
+            if (ro->isCapped2() && !ro->slope2() && ro->roofHeight() == RoofObject::Three)
                 squares[r.right()+1][r.bottom()+1].ReplaceWall(ro->roofTile(RoofObject::CapGapE3), Square::WallOrientSE);
 
 #ifdef ROOF_TOPS
@@ -374,7 +374,7 @@ void BuildingFloor::LayoutToSquares()
                 }
 
                 // End cap (above midline)
-                if (!ro->width1()) {
+                if (!ro->slope1()) {
                 } else if (ro->roofHeight() == RoofObject::Three) {
                     squares[r.right()+1][ro->y()+0].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallE1), Square::WallOrientW);
                     squares[r.right()+1][ro->y()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallE2), Square::WallOrientW);
@@ -386,7 +386,7 @@ void BuildingFloor::LayoutToSquares()
                     squares[r.right()+1][ro->y()+0].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallE1), Square::WallOrientW);
 
                 // End cap (below midline)
-                if (!ro->width2()) {
+                if (!ro->slope2()) {
                 } else if (ro->roofHeight() == RoofObject::Three) {
                     squares[r.right()+1][r.bottom()-2].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseE3), Square::WallOrientW);
                     squares[r.right()+1][r.bottom()-1].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseE2), Square::WallOrientW);
@@ -415,7 +415,7 @@ void BuildingFloor::LayoutToSquares()
                 }
 
                 // End cap (left of midline)
-                if (!ro->width1()) {
+                if (!ro->slope1()) {
                 } else                 if (ro->roofHeight() == RoofObject::Three) {
                     squares[ro->x()+0][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseS1), Square::WallOrientN);
                     squares[ro->x()+1][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseS2), Square::WallOrientN);
@@ -427,7 +427,7 @@ void BuildingFloor::LayoutToSquares()
                     squares[ro->x()+0][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapRiseS1), Square::WallOrientN);
 
                 // End cap (right of midline)
-                if (!ro->width2()) {
+                if (!ro->slope2()) {
                 } else                 if (ro->roofHeight() == RoofObject::Three) {
                     squares[r.right()-2][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallS3), Square::WallOrientN);
                     squares[r.right()-1][r.bottom()+1].ReplaceRoofCap(ro->roofTile(RoofObject::CapFallS2), Square::WallOrientN);

@@ -66,6 +66,8 @@ private:
 
     BuildingObject *readObject(BuildingFloor *floor);
 
+    bool booleanFromString(const QString &s, bool &result);
+
     BuildingReader *p;
 
     QString mError;
@@ -350,14 +352,21 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
     } else if (type == QLatin1String("roof")) {
         int length = atts.value(QLatin1String("length")).toString().toInt();
         int thickness = atts.value(QLatin1String("thickness")).toString().toInt();
-        int width1 = atts.value(QLatin1String("width1")).toString().toInt();
-        int width2 = atts.value(QLatin1String("width2")).toString().toInt();
-        bool capped1 = atts.value(QLatin1String("capped1")).toString().toInt() ? true : false;
-        bool capped2 = atts.value(QLatin1String("capped2")).toString().toInt() ? true : false;
+        bool slope1, slope2;
+        if (!booleanFromString(atts.value(QLatin1String("slope1")).toString(), slope1))
+            return 0;
+        if (!booleanFromString(atts.value(QLatin1String("slope2")).toString(), slope2))
+            return 0;
+        bool capped1, capped2;
+        if (!booleanFromString(atts.value(QLatin1String("capped1")).toString(), capped1))
+            return 0;
+        if (!booleanFromString(atts.value(QLatin1String("capped2")).toString(), capped2))
+            return 0;
         int depth = atts.value(QLatin1String("depth")).toString().toInt();
         RoofObject *roof = new RoofObject(floor, x, y, dir,
-                                          length, thickness, width1, width2,
-                                          capped1, capped2, depth);
+                                          length, thickness, depth,
+                                          slope1, slope2,
+                                          capped1, capped2);
         roof->setTile(BuildingTiles::instance()->getRoofTile(tile));
         const QString capTile = atts.value(QLatin1String("CapTile")).toString();
         roof->setTile(BuildingTiles::instance()->getRoofCapTile(capTile), 1);
@@ -386,6 +395,20 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
     xml.skipCurrentElement();
 
     return object;
+}
+
+bool BuildingReaderPrivate::booleanFromString(const QString &s, bool &result)
+{
+    if (s == QLatin1String("true")) {
+        result = true;
+        return true;
+    }
+    if (s == QLatin1String("false")) {
+        result = false;
+        return true;
+    }
+    xml.raiseError(tr("Expected boolean but got '%1'").arg(s));
+    return false;
 }
 
 void BuildingReaderPrivate::decodeCSVFloorData(BuildingFloor *floor,

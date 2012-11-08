@@ -277,9 +277,9 @@ void GraphicsObjectItem::paint(QPainter *painter,
     if (RoofObject *roof = mObject->asRoof()) {
         QRectF r1, rGap, r2;
         r1 = rGap = r2 = roof->bounds().translated(dragOffset);
-        qreal thick1 = roof->width1() ? roof->width1() + (roof->midTile() ? 0.5 : 0)
+        qreal thick1 = roof->slope1() ? roof->slope1() + (roof->midTile() ? 0.5 : 0)
                                       : 0;
-        qreal thick2 = roof->width2() ? roof->width2() + (roof->midTile() ? 0.5 : 0)
+        qreal thick2 = roof->slope2() ? roof->slope2() + (roof->midTile() ? 0.5 : 0)
                                       : 0;
         if (roof->isW()) {
             r1.setBottom(r1.top() + thick1);
@@ -456,10 +456,10 @@ void GraphicsRoofHandleItem::paint(QPainter *painter, const QStyleOptionGraphics
     case Resize:
         break;
     case Width1:
-        cross = roof->width1() == 0;
+        cross = roof->isSlope1() == false;
         break;
     case Width2:
-        cross = roof->width2() == 0;
+        cross = roof->isSlope2() == false;
         break;
     case DepthUp:
         cross = roof ? roof->depth() == 3 : corner->depth() == 3;
