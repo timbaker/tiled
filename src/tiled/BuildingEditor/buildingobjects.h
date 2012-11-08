@@ -272,6 +272,18 @@ public:
     BuildingTile *capTile() const
     { return mCapTile; }
 
+    int actualDepth() const;
+
+    enum RoofHeight {
+        Point5,
+        One,
+        OnePoint5,
+        Two,
+        Three
+    };
+
+    RoofHeight roofHeight() const;
+
     enum RoofTile {
         FlatS1, FlatS2, FlatS3,
         FlatE1, FlatE2, FlatE3,
@@ -287,8 +299,10 @@ public:
 
     BuildingTile *roofTile(RoofTile roofTile) const;
 
-    QRect southEdge();
     QRect eastEdge();
+    QRect southEdge();
+    QRect eastGap(RoofHeight height);
+    QRect southGap(RoofHeight height);
     QRect flatTop();
 
 private:

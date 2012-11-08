@@ -431,6 +431,57 @@ void RoofObject::toggleCapped2()
     mCapped2 = !mCapped2;
 }
 
+int RoofObject::actualDepth() const
+{
+    int depthW = (isW() && mWidth1 > 0) ? mDepth : 0;
+    int depthE = (isW() && mWidth2 > 0) ? mDepth : 0;
+    int depthWE = qMax(depthW, depthE);
+    if (depthW + depthE > bounds().width()) {
+        depthWE = bounds().width() / 2;
+    }
+
+    int depthN = (isN() && mWidth1 > 0) ? mDepth : 0;
+    int depthS = (isN() && mWidth2 > 0) ? mDepth : 0;
+    int depthNS = qMax(depthN, depthS);
+    if (depthN + depthS > bounds().height()) {
+        depthNS = bounds().height() / 2;
+    }
+
+    if (depthWE && depthNS)
+        return qMin(depthWE, depthNS);
+    return depthWE + depthNS;
+}
+
+RoofObject::RoofHeight RoofObject::roofHeight() const
+{
+    if (mThickness == 1) {
+        if (mWidth1 && mWidth2)
+            return Point5;
+        if (mWidth1 || mWidth2)
+            return One;
+        return (mDepth == 3) ? Three : ((mDepth == 2) ? Two : One);
+    }
+    if (mThickness == 2) {
+        if (mWidth1 && mWidth2)
+            return One;
+        if (mWidth1 || mWidth2)
+            return (mDepth >= 2) ? Two : One;
+        return (mDepth == 3) ? Three : ((mDepth == 2) ? Two : One);
+    }
+    if (mThickness == 3) {
+        if (mWidth1 && mWidth2)
+            return (mDepth > 1) ? OnePoint5 : One;
+        return (mDepth == 3) ? Three : ((mDepth == 2) ? Two : One);
+    }
+    if (mThickness < 6) {
+        if (mWidth1 && mWidth2)
+            return (mDepth > 1) ? Two : One;
+        return (mDepth == 3) ? Three : ((mDepth == 2) ? Two : One);
+    }
+
+    return (mDepth == 3) ? Three : ((mDepth == 2) ? Two : One);
+}
+
 BuildingTile *RoofObject::roofTile(RoofObject::RoofTile tile) const
 {
     BuildingTile *btile =  mTile;
@@ -499,6 +550,15 @@ BuildingTile *RoofObject::roofTile(RoofObject::RoofTile tile) const
                                                        btile->mIndex + index));
 }
 
+QRect RoofObject::eastEdge()
+{
+    QRect r = bounds();
+    if (isN())
+        return QRect(r.right() - width2() + 1, r.top(),
+                      width2(), r.height());
+    return QRect();
+}
+
 QRect RoofObject::southEdge()
 {
     QRect r = bounds();
@@ -508,12 +568,31 @@ QRect RoofObject::southEdge()
     return QRect();
 }
 
-QRect RoofObject::eastEdge()
+QRect RoofObject::eastGap(RoofHeight height)
 {
+    if (height != roofHeight())
+        return QRect();
     QRect r = bounds();
-    if (isN())
-        return QRect(r.right() - width2() + 1, r.top(),
-                      width2(), r.height());
+    if (isN() && !mWidth2) {
+        return QRect(r.right()+1, r.top(), 1, r.height());
+    }
+    if (isW() && mCapped2) {
+        return QRect(r.right()+1, r.top() + mWidth1, 1, r.height() - mWidth1 - mWidth2);
+    }
+    return QRect();
+}
+
+QRect RoofObject::southGap(RoofHeight height)
+{
+    if (height != roofHeight())
+        return QRect();
+    QRect r = bounds();
+    if (isN() && mCapped2) {
+        return QRect(r.left() + mWidth1, r.bottom()+1, r.width() - mWidth1 - mWidth2, 1);
+    }
+    if (isW() && !mWidth2) {
+        return QRect(r.left(), r.bottom()+1, r.width(), 1);
+    }
     return QRect();
 }
 
