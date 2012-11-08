@@ -529,9 +529,9 @@ void BuildingPreviewScene::synchWithShowWalls()
     foreach (BuildingFloor *floor, mDocument->building()->floors()) {
         CompositeLayerGroup *layerGroup = mMapComposite->layerGroupForLevel(floor->level());
         layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexWall],
-                                       mShowWalls || floor < mDocument->currentFloor());
+                                       mShowWalls || floor->level() < mDocument->currentFloor()->level());
         layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexRoof],
-                                       mShowWalls || floor < mDocument->currentFloor());
+                                       mShowWalls || floor->level() < mDocument->currentFloor()->level());
         itemForFloor(floor)->synchWithTileLayers();
         itemForFloor(floor)->updateBounds();
     }
