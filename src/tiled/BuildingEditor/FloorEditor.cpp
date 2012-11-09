@@ -22,6 +22,7 @@
 #include "buildingeditorwindow.h"
 #include "buildingfloor.h"
 #include "buildingobjects.h"
+#include "buildingpreferences.h"
 #include "buildingtools.h"
 #include "buildingtemplates.h"
 #include "furnituregroups.h"
@@ -91,6 +92,7 @@ void GraphicsFloorItem::objectAdded(GraphicsObjectItem *item)
     BuildingObject *object = item->object();
     Q_ASSERT(!itemForObject(object));
     item->setParentItem(this);
+    item->setVisible(BuildingPreferences::instance()->showObjects());
     mObjectItems.insert(object->index(), item);
 
     for (int i = object->index(); i < mObjectItems.count(); i++)
@@ -128,6 +130,12 @@ void GraphicsFloorItem::setDragBmp(QImage *bmp)
 {
     mDragBmp = bmp;
     update();
+}
+
+void GraphicsFloorItem::showObjectsChanged(bool show)
+{
+    foreach (GraphicsObjectItem *item, mObjectItems)
+        item->setVisible(show);
 }
 
 /////
@@ -686,6 +694,9 @@ void FloorEditor::setDocument(BuildingDocument *doc)
 
         connect(mDocument, SIGNAL(buildingResized()), SLOT(buildingResized()));
         connect(mDocument, SIGNAL(buildingRotated()), SLOT(buildingRotated()));
+
+        BuildingPreferences *prefs = BuildingPreferences::instance();
+        connect(prefs, SIGNAL(showObjectsChanged(bool)), SLOT(showObjectsChanged(bool)));
     }
 
     emit documentChanged();
@@ -969,6 +980,12 @@ void FloorEditor::buildingRotated()
     setSceneRect(-10, -10,
                  building()->width() * 30 + 20,
                  building()->height() * 30 + 20);
+}
+
+void FloorEditor::showObjectsChanged(bool show)
+{
+    foreach (GraphicsFloorItem *item, mFloorItems)
+        item->showObjectsChanged(show);
 }
 
 /////

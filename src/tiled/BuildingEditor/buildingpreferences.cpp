@@ -25,6 +25,7 @@ static const char *KEY_TILES_DIR = "BuildingEditor/TilesDirectory";
 static const char *KEY_TILE_SCALE = "BuildingEditor/MainWindow/CategoryScale";
 static const char *KEY_HIGHLIGHT_FLOOR = "BuildingEditor/PreviewWindow/HighlightFloor";
 static const char *KEY_SHOW_WALLS = "BuildingEditor/PreviewWindow/ShowWalls";
+static const char *KEY_SHOW_OBJECTS = "BuildingEditor/PreviewWindow/ShowObjects";
 
 BuildingPreferences *BuildingPreferences::mInstance = 0;
 
@@ -49,6 +50,8 @@ BuildingPreferences::BuildingPreferences(QObject *parent) :
     mHighlightFloor = mSettings.value(QLatin1String(KEY_HIGHLIGHT_FLOOR),
                                       true).toBool();
     mShowWalls = mSettings.value(QLatin1String(KEY_SHOW_WALLS),
+                                 true).toBool();
+    mShowObjects = mSettings.value(QLatin1String(KEY_SHOW_OBJECTS),
                                  true).toBool();
     mTileScale = mSettings.value(QLatin1String(KEY_TILE_SCALE),
                                  0.5).toReal();
@@ -91,6 +94,15 @@ void BuildingPreferences::setShowWalls(bool show)
     mShowWalls = show;
     mSettings.setValue(QLatin1String(KEY_SHOW_WALLS), mShowWalls);
     emit showWallsChanged(mShowWalls);
+}
+
+void BuildingPreferences::setShowObjects(bool show)
+{
+    if (show == mShowObjects)
+        return;
+    mShowObjects = show;
+    mSettings.setValue(QLatin1String(KEY_SHOW_OBJECTS), mShowObjects);
+    emit showObjectsChanged(mShowObjects);
 }
 
 void BuildingPreferences::setTileScale(qreal scale)

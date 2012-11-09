@@ -69,7 +69,6 @@ BuildingPreviewWindow::BuildingPreviewWindow(QWidget *parent) :
 
     BuildingPreferences *prefs = BuildingPreferences::instance();
 
-    QSettings settings;
     ui->actionShowWalls->setChecked(prefs->showWalls());
     connect(ui->actionShowWalls, SIGNAL(toggled(bool)),
             prefs, SLOT(setShowWalls(bool)));
@@ -610,11 +609,13 @@ void BuildingPreviewScene::roomChanged(Room *room)
 
 void BuildingPreviewScene::floorAdded(BuildingFloor *floor)
 {
+    Q_UNUSED(floor)
     BuildingToMap();
 }
 
 void BuildingPreviewScene::floorRemoved(BuildingFloor *floor)
 {
+    Q_UNUSED(floor)
     BuildingToMap();
 }
 

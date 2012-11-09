@@ -93,6 +93,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->setupUi(this);
 
     instance = this;
+    BuildingPreferences *prefs = BuildingPreferences::instance();
 
     ui->toolBar->insertSeparator(ui->actionRooms);
     ui->toolBar->insertWidget(ui->actionRooms, mRoomComboBox);
@@ -258,6 +259,11 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
     setWindowFlags(windowFlags() & ~Qt::WA_DeleteOnClose);
 
+    ui->actionShowObjects->setChecked(prefs->showObjects());
+    connect(ui->actionShowObjects, SIGNAL(toggled(bool)),
+            prefs, SLOT(setShowObjects(bool)));
+    connect(prefs, SIGNAL(showObjectsChanged(bool)), SLOT(updateActions()));
+
     connect(ui->actionZoomIn, SIGNAL(triggered()),
             mView->zoomable(), SLOT(zoomIn()));
     connect(ui->actionZoomOut, SIGNAL(triggered()),
@@ -301,7 +307,6 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionTemplateFromBuilding, SIGNAL(triggered()),
             SLOT(templateFromBuilding()));
 
-    BuildingPreferences *prefs = BuildingPreferences::instance();
     mCategoryZoomable->connectToComboBox(ui->scaleComboBox);
     connect(mCategoryZoomable, SIGNAL(scaleChanged(qreal)),
             prefs, SLOT(setTileScale(qreal)));
@@ -625,6 +630,7 @@ void BuildingEditorWindow::roomIndexChanged(int index)
 
 void BuildingEditorWindow::categoryScaleChanged(qreal scale)
 {
+    Q_UNUSED(scale)
 }
 
 void BuildingEditorWindow::categorySelectionChanged()
@@ -1529,19 +1535,20 @@ void BuildingEditorWindow::setCategoryList()
 void BuildingEditorWindow::updateActions()
 {
     bool hasDoc = mCurrentDocument != 0;
+    bool showObjects = BuildingPreferences::instance()->showObjects();
 
     PencilTool::instance()->setEnabled(hasDoc &&
             currentRoom() != 0);
     EraserTool::instance()->setEnabled(hasDoc);
     SelectMoveRoomsTool::instance()->setEnabled(hasDoc);
-    DoorTool::instance()->setEnabled(hasDoc);
-    WindowTool::instance()->setEnabled(hasDoc);
-    StairsTool::instance()->setEnabled(hasDoc);
-    FurnitureTool::instance()->setEnabled(hasDoc &&
+    DoorTool::instance()->setEnabled(hasDoc && showObjects);
+    WindowTool::instance()->setEnabled(hasDoc && showObjects);
+    StairsTool::instance()->setEnabled(hasDoc && showObjects);
+    FurnitureTool::instance()->setEnabled(hasDoc && showObjects &&
             FurnitureTool::instance()->currentTile() != 0);
-    RoofTool::instance()->setEnabled(hasDoc);
-    RoofCornerTool::instance()->setEnabled(hasDoc);
-    SelectMoveObjectTool::instance()->setEnabled(hasDoc);
+    RoofTool::instance()->setEnabled(hasDoc && showObjects);
+    RoofCornerTool::instance()->setEnabled(hasDoc && showObjects);
+    SelectMoveObjectTool::instance()->setEnabled(hasDoc && showObjects);
 
     ui->actionUpLevel->setEnabled(hasDoc &&
                                   !mCurrentDocument->currentFloorIsTop());
@@ -1552,6 +1559,8 @@ void BuildingEditorWindow::updateActions()
     ui->actionSave->setEnabled(hasDoc);
     ui->actionSaveAs->setEnabled(hasDoc);
     ui->actionExportTMX->setEnabled(hasDoc);
+
+    ui->actionShowObjects->setEnabled(hasDoc);
 
     ui->actionZoomIn->setEnabled(hasDoc && mView->zoomable()->canZoomIn());
     ui->actionZoomOut->setEnabled(hasDoc && mView->zoomable()->canZoomOut());

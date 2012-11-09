@@ -76,6 +76,8 @@ public:
 
     void setDragBmp(QImage *bmp);
 
+    void showObjectsChanged(bool show);
+
 private:
     BuildingFloor *mFloor;
     QImage *mBmp;
@@ -297,6 +299,8 @@ private slots:
 
     void buildingResized();
     void buildingRotated();
+
+    void showObjectsChanged(bool show);
 
 private:
     BuildingDocument *mDocument;

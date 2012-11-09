@@ -63,10 +63,11 @@ class BuildingEditorWindow : public QMainWindow
     Q_OBJECT
     
 public:
+    static BuildingEditorWindow *instance()
+    { return mInstance; }
+
     explicit BuildingEditorWindow(QWidget *parent = 0);
     ~BuildingEditorWindow();
-
-    static BuildingEditorWindow *instance;
 
     void showEvent(QShowEvent *event);
     void closeEvent(QCloseEvent *event);
@@ -166,6 +167,7 @@ private slots:
     void updateActions();
 
 private:
+    static BuildingEditorWindow *mInstance;
     Ui::BuildingEditorWindow *ui;
     BuildingDocument *mCurrentDocument;
     FloorEditor *roomEditor;

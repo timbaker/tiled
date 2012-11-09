@@ -44,17 +44,22 @@ public:
     bool showWalls() const
     { return mShowWalls; }
 
+    bool showObjects() const
+    { return mShowObjects; }
+
     qreal tileScale() const
     { return mTileScale; }
 
 signals:
     void highlightFloorChanged(bool highlight);
     void showWallsChanged(bool show);
+    void showObjectsChanged(bool show);
     void tileScaleChanged(qreal scale);
 
 public slots:
     void setHighlightFloor(bool highlight);
     void setShowWalls(bool show);
+    void setShowObjects(bool show);
     void setTileScale(qreal scale);
 
 private:
@@ -63,6 +68,7 @@ private:
     QString mTilesDirectory;
     bool mHighlightFloor;
     bool mShowWalls;
+    bool mShowObjects;
     qreal mTileScale;
 };
 
