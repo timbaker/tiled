@@ -158,6 +158,10 @@ private slots:
     void showWallsChanged(bool show);
     void highlightFloorChanged(bool highlight);
 
+    void tilesetAdded(Tiled::Tileset *tileset);
+    void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
+    void tilesetRemoved(Tiled::Tileset *tileset);
+
 private:
     BuildingDocument *mDocument;
     MapComposite *mMapComposite;

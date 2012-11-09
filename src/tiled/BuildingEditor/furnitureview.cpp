@@ -98,11 +98,12 @@ void FurnitureTileDelegate::paint(QPainter *painter,
             int i = x + y * 2;
             QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
             if (BuildingTile *btile = ftile->mTiles[i]) {
-                Tile *tile = BuildingTiles::instance()->tileFor(btile); // FIXME: calc this elsewhere
-                QPointF p1 = tileToPixelCoords(x, y) + tileMargins + r.topLeft();
-                QRect r((p1 - QPointF(tileWidth/2, imageHeight - tileHeight)).toPoint(),
-                        QSize(tileWidth, imageHeight));
-                painter->drawPixmap(r, tile->image());
+                if (Tile *tile = BuildingTiles::instance()->tileFor(btile)) { // FIXME: calc this elsewhere
+                    QPointF p1 = tileToPixelCoords(x, y) + tileMargins + r.topLeft();
+                    QRect r((p1 - QPointF(tileWidth/2, imageHeight - tileHeight)).toPoint(),
+                            QSize(tileWidth, imageHeight));
+                    painter->drawPixmap(r, tile->image());
+                }
             }
         }
     }

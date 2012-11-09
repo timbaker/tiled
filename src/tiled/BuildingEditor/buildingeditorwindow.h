@@ -77,7 +77,7 @@ public:
 
     bool Startup();
 
-    bool LoadMapBaseXMLLots();
+    bool LoadTMXConfig();
     bool validateTile(BuildingTile *btile, const char *key);
 
     void setCurrentRoom(Room *room) const; // TODO: move to BuildingDocument
@@ -163,6 +163,10 @@ private slots:
 
     void roofTypeChanged(QAction *action);
     void roofCornerTypeChanged(QAction *action);
+
+    void tilesetAdded(Tiled::Tileset *tileset);
+    void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
+    void tilesetRemoved(Tiled::Tileset *tileset);
 
     void updateActions();
 

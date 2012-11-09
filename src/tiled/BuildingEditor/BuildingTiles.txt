@@ -42,6 +42,9 @@ category
         tile = walls_interior_house_02_036
         tile = walls_interior_house_02_048
         tile = walls_interior_house_02_052
+        tile = walls_interior_house_03_000
+        tile = walls_interior_house_03_004
+        tile = walls_interior_house_03_016
     }
 }
 category

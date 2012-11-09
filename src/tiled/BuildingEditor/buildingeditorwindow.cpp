@@ -427,7 +427,7 @@ bool BuildingEditorWindow::Startup()
         }
     }
 
-    if (!LoadMapBaseXMLLots()) {
+    if (!LoadTMXConfig()) {
         if (!mError.isEmpty())
             QMessageBox::critical(this, tr("It's no good, Jim!"), mError);
         return false;
@@ -489,6 +489,13 @@ bool BuildingEditorWindow::Startup()
     RoofTool::instance()->setCurrentTile(BuildingTiles::instance()->defaultRoofTile());
     RoofTool::instance()->setCurrentCapTile(BuildingTiles::instance()->defaultRoofCapTile());
 
+    connect(BuildingTiles::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
+            SLOT(tilesetAdded(Tiled::Tileset*)));
+    connect(BuildingTiles::instance(), SIGNAL(tilesetAboutToBeRemoved(Tiled::Tileset*)),
+            SLOT(tilesetAboutToBeRemoved(Tiled::Tileset*)));
+    connect(BuildingTiles::instance(), SIGNAL(tilesetRemoved(Tiled::Tileset*)),
+            SLOT(tilesetRemoved(Tiled::Tileset*)));
+
     /////
 
     // Add tile categories to the gui
@@ -502,7 +509,7 @@ bool BuildingEditorWindow::Startup()
     return true;
 }
 
-bool BuildingEditorWindow::LoadMapBaseXMLLots()
+bool BuildingEditorWindow::LoadTMXConfig()
 {
     // Make sure the user has chosen the Tiles directory.
     QString tilesDirectory = BuildingPreferences::instance()->tilesDirectory();
@@ -645,9 +652,11 @@ void BuildingEditorWindow::categorySelectionChanged()
         if (row < BuildingTiles::instance()->categories().count()) {
             mCategory = BuildingTiles::instance()->categories().at(row);
             QList<Tiled::Tile*> tiles;
-            foreach (BuildingTile *tile, mCategory->tiles()) {
-                if (!tile->mAlternates.count() || (tile == tile->mAlternates.first()))
-                    tiles += BuildingTiles::instance()->tileFor(tile);
+            foreach (BuildingTile *btile, mCategory->tiles()) {
+                if (!btile->mAlternates.count() || (btile == btile->mAlternates.first())) {
+                    if (Tiled::Tile *tile = BuildingTiles::instance()->tileFor(btile))
+                        tiles += tile;
+                }
             }
             ui->tilesetView->model()->setTiles(tiles);
             ui->categoryStack->setCurrentIndex(0);
@@ -1403,11 +1412,6 @@ void BuildingEditorWindow::tilesDialog()
     dialog.exec();
 
     if (dialog.changes()) {
-        BuildingTiles::instance()->writeBuildingTilesTxt(this);
-        if (!FurnitureGroups::instance()->writeTxt()) {
-            QMessageBox::warning(this, tr("It's no good, Jim!"),
-                                 FurnitureGroups::instance()->errorString());
-        }
         int row = ui->categoryList->currentRow();
         setCategoryList();
         row = qMin(row, ui->categoryList->count() - 1);
@@ -1502,6 +1506,22 @@ void BuildingEditorWindow::roofCornerTypeChanged(QAction *action)
     if (!RoofCornerTool::instance()->isCurrent())
         RoofCornerTool::instance()->makeCurrent();
 
+}
+
+void BuildingEditorWindow::tilesetAdded(Tileset *tileset)
+{
+    categorySelectionChanged();
+}
+
+void BuildingEditorWindow::tilesetAboutToBeRemoved(Tileset *tileset)
+{
+    ui->tilesetView->model()->setTiles(QList<Tile*>());
+    // FurnitureView doesn't cache Tiled::Tiles
+}
+
+void BuildingEditorWindow::tilesetRemoved(Tileset *tileset)
+{
+    categorySelectionChanged();
 }
 
 void BuildingEditorWindow::resizeCoordsLabel()

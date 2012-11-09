@@ -52,15 +52,24 @@ void BuildingTiles::deleteInstance()
 
 BuildingTiles::BuildingTiles() :
     mFurnitureCategory(new BuildingTileCategory(QLatin1String("Furniture"),
-                                    QLatin1String("furniture")))
+                                    QLatin1String("furniture"))),
+    mMissingTile(0)
 {
+    Tileset *tileset = new Tileset(QLatin1String("missing"), 64, 128);
+    tileset->setTransparentColor(Qt::white);
+    QString fileName = QLatin1String(":/BuildingEditor/icons/missing-tile.png");
+    if (tileset->loadFromImage(QImage(fileName), fileName))
+        mMissingTile = tileset->tileAt(0);
 }
 
 BuildingTiles::~BuildingTiles()
 {
     TilesetManager::instance()->removeReferences(tilesets());
+    TilesetManager::instance()->removeReferences(mRemovedTilesets);
     qDeleteAll(mCategories);
     delete mFurnitureCategory;
+    if (mMissingTile)
+        delete mMissingTile->tileset();
 }
 
 BuildingTileCategory *BuildingTiles::addCategory(const QString &categoryName, const QString &label)
@@ -151,8 +160,26 @@ QString BuildingTiles::normalizeTileName(const QString &tileName)
 
 void BuildingTiles::addTileset(Tileset *tileset)
 {
+    Q_ASSERT(mTilesetByName.contains(tileset->name()) == false);
     mTilesetByName[tileset->name()] = tileset;
-    TilesetManager::instance()->addReference(tileset);
+    if (!mRemovedTilesets.contains(tileset))
+        TilesetManager::instance()->addReference(tileset);
+    mRemovedTilesets.removeAll(tileset);
+    emit tilesetAdded(tileset);
+}
+
+void BuildingTiles::removeTileset(Tileset *tileset)
+{
+    Q_ASSERT(mTilesetByName.contains(tileset->name()));
+    Q_ASSERT(mRemovedTilesets.contains(tileset) == false);
+    emit tilesetAboutToBeRemoved(tileset);
+    mTilesetByName.remove(tileset->name());
+    emit tilesetRemoved(tileset);
+
+    // Don't remove references now, that will delete the tileset, and the
+    // user might undo the removal.
+    mRemovedTilesets += tileset;
+//    TilesetManager::instance()->removeReference(tileset);
 }
 
 bool BuildingTiles::readBuildingTilesTxt()
@@ -272,19 +299,19 @@ Tiled::Tile *BuildingTiles::tileFor(const QString &tileName)
     int index;
     parseTileName(tileName, tilesetName, index);
     if (!mTilesetByName.contains(tilesetName))
-        return 0;
+        return mMissingTile;
     if (index >= mTilesetByName[tilesetName]->tileCount())
-        return 0;
+        return mMissingTile;
     return mTilesetByName[tilesetName]->tileAt(index);
 }
 
-Tile *BuildingTiles::tileFor(BuildingTile *tile)
+Tile *BuildingTiles::tileFor(BuildingTile *tile, int offset)
 {
     if (!mTilesetByName.contains(tile->mTilesetName))
-        return 0;
-    if (tile->mIndex >= mTilesetByName[tile->mTilesetName]->tileCount())
-        return 0;
-    return mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex);
+        return mMissingTile;
+    if (tile->mIndex + offset >= mTilesetByName[tile->mTilesetName]->tileCount())
+        return mMissingTile;
+    return mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + offset);
 }
 
 BuildingTile *BuildingTiles::fromTiledTile(const QString &categoryName, Tile *tile)

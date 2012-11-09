@@ -30,6 +30,7 @@ class BuildingTilesDialog;
 }
 
 namespace Tiled {
+class Tileset;
 namespace Internal {
 class Zoomable;
 }
@@ -67,10 +68,14 @@ public:
 
     QString renameCategory(FurnitureGroup *category, const QString &name);
 
+    void addTileset(Tiled::Tileset *tileset);
+    void removeTileset(Tiled::Tileset *tileset);
+
 private:
     void setCategoryList();
     void setCategoryTiles();
     void setFurnitureTiles();
+    void setTilesetList();
     void saveSplitterSizes(QSplitter *splitter);
     void restoreSplitterSizes(QSplitter *splitter);
     int numTileCategories() const;
@@ -96,6 +101,9 @@ private slots:
     void moveCategoryDown();
 
     void toggleCorners();
+
+    void addTileset();
+    void removeTileset();
 
     void accept();
 

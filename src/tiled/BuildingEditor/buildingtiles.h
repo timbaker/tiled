@@ -124,14 +124,19 @@ public:
     static QString normalizeTileName(const QString &tileName);
 
     Tiled::Tile *tileFor(const QString &tileName);
-    Tiled::Tile *tileFor(BuildingTile *tile);
+    Tiled::Tile *tileFor(BuildingTile *tile, int offset = 0);
 
     BuildingTile *fromTiledTile(const QString &categoryName, Tiled::Tile *tile);
 
     void addTileset(Tiled::Tileset *tileset);
+    void removeTileset(Tiled::Tileset *tileset);
 
     Tiled::Tileset *tilesetFor(const QString &tilesetName)
-    { return mTilesetByName[tilesetName]; }
+    {
+        if (mTilesetByName.contains(tilesetName))
+            return mTilesetByName[tilesetName];
+        return 0;
+    }
 
     const QMap<QString,Tiled::Tileset*> &tilesetsMap() const
     { return mTilesetByName; }
@@ -166,12 +171,19 @@ public:
     QString errorString() const
     { return mError; }
 
+signals:
+    void tilesetAdded(Tiled::Tileset *tileset);
+    void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
+    void tilesetRemoved(Tiled::Tileset *tileset);
+
 private:
     static BuildingTiles *mInstance;
     QList<BuildingTileCategory*> mCategories;
     QMap<QString,BuildingTileCategory*> mCategoryByName;
     QMap<QString,Tiled::Tileset*> mTilesetByName;
+    QList<Tiled::Tileset*> mRemovedTilesets;
     BuildingTileCategory *mFurnitureCategory;
+    Tiled::Tile *mMissingTile;
     QString mError;
 };
 

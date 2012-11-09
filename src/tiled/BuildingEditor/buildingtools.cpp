@@ -476,6 +476,8 @@ void SelectMoveRoomsTool::deactivate()
 void SelectMoveRoomsTool::updateSelection(const QPointF &pos,
                                            Qt::KeyboardModifiers modifiers)
 {
+    Q_UNUSED(pos)
+    Q_UNUSED(modifiers)
 }
 
 void SelectMoveRoomsTool::startSelecting()

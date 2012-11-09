@@ -171,7 +171,11 @@ bool BuildingTMX::readTxt()
                         return false;
                     }
                     source = info.canonicalFilePath();
-
+#if 1
+                    Tileset *ts = loadTileset(source);
+                    if (!ts)
+                        return false;
+#else
                     Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
 
                     TilesetImageCache *cache = TilesetManager::instance()->imageCache();
@@ -185,7 +189,7 @@ bool BuildingTMX::readTxt()
                             return false;
                         }
                     }
-
+#endif
                     BuildingTiles::instance()->addTileset(ts);
 
                     mTilesets += ts->name();
@@ -218,4 +222,61 @@ bool BuildingTMX::readTxt()
     }
 
     return true;
+}
+
+bool BuildingTMX::writeTxt()
+{
+    SimpleFile simpleFile;
+
+    QString fileName = BuildingPreferences::instance()
+            ->configPath(QLatin1String("TMXConfig.txt"));
+
+    QDir tilesDir(BuildingPreferences::instance()->tilesDirectory());
+    SimpleFileBlock tilesetBlock;
+    tilesetBlock.name = QLatin1String("tilesets");
+    foreach (Tiled::Tileset *tileset, BuildingTiles::instance()->tilesets()) {
+        QString relativePath = tilesDir.relativeFilePath(tileset->imageSource());
+        relativePath.truncate(relativePath.length() - 4); // remove .png
+        tilesetBlock.values += SimpleFileKeyValue(QLatin1String("tileset"), relativePath);
+    }
+    simpleFile.blocks += tilesetBlock;
+
+    SimpleFileBlock layersBlock;
+    layersBlock.name = QLatin1String("layers");
+    foreach (LayerInfo layerInfo, mLayers) {
+        QString key;
+        switch (layerInfo.mType) {
+        case LayerInfo::Tile: key = QLatin1String("tile"); break;
+        case LayerInfo::Object: key = QLatin1String("object"); break;
+        }
+        layersBlock.values += SimpleFileKeyValue(key, layerInfo.mName);
+    }
+    simpleFile.blocks += layersBlock;
+
+    if (!simpleFile.write(fileName)) {
+        mError = simpleFile.errorString();
+        return false;
+    }
+    return true;
+}
+
+Tiled::Tileset *BuildingTMX::loadTileset(const QString &source)
+{
+    QFileInfo info(source);
+
+    Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
+
+    TilesetImageCache *cache = TilesetManager::instance()->imageCache();
+    Tileset *cached = cache->findMatch(ts, source);
+    if (!cached || !ts->loadFromCache(cached)) {
+        const QImage tilesetImage = QImage(source);
+        if (ts->loadFromImage(tilesetImage, source))
+            cache->addTileset(ts);
+        else {
+            delete ts;
+            mError = tr("Error loading tileset image:\n'%1'").arg(source);
+            return 0;
+        }
+    }
+    return ts;
 }

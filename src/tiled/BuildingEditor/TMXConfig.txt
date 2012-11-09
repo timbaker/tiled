@@ -79,5 +79,7 @@ layers
     tile = Doors
     tile = Furniture
     tile = Furniture2
+    tile = RoofCap
+    tile = RoofCap2
     tile = Roof
 }

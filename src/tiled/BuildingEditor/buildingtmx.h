@@ -23,6 +23,10 @@
 
 class MapComposite;
 
+namespace Tiled {
+class Tileset;
+}
+
 namespace BuildingEditor {
 
 class Building;
@@ -46,6 +50,8 @@ public:
 
     bool readTxt();
     bool writeTxt();
+
+    Tiled::Tileset *loadTileset(const QString &imageSource);
 
     QString errorString() const
     { return mError; }

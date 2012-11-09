@@ -282,6 +282,13 @@ BuildingPreviewScene::BuildingPreviewScene(QWidget *parent) :
     mDarkRectangle->setOpacity(0.6);
     mDarkRectangle->setVisible(false);
     addItem(mDarkRectangle);
+
+    connect(BuildingTiles::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
+            SLOT(tilesetAdded(Tiled::Tileset*)));
+    connect(BuildingTiles::instance(), SIGNAL(tilesetAboutToBeRemoved(Tiled::Tileset*)),
+            SLOT(tilesetAboutToBeRemoved(Tiled::Tileset*)));
+    connect(BuildingTiles::instance(), SIGNAL(tilesetRemoved(Tiled::Tileset*)),
+            SLOT(tilesetRemoved(Tiled::Tileset*)));
 }
 
 BuildingPreviewScene::~BuildingPreviewScene()
@@ -386,7 +393,7 @@ void BuildingPreviewScene::BuildingToMap()
                    mDocument->building()->height(),
                    64, 32);
 
-    // Add tilesets from MapBaseXMLLots.txt
+    // Add tilesets from TMXConfig.txt
     foreach (Tileset *ts, BuildingTiles::instance()->tilesets())
         mMap->addTileset(ts);
     TilesetManager::instance()->addReferences(mMap->tilesets());
@@ -461,10 +468,22 @@ void BuildingPreviewScene::BuildingToMap()
 void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                                                      const QVector<TileLayer *> &layers)
 {
-    const QMap<QString,Tiled::Tileset*> &tilesetByName =
-            BuildingTiles::instance()->tilesetsMap();
-
     int offset = (mMapComposite->maxLevel() - floor->level()) * 3; // FIXME: not for LevelIsometric
+
+    static BuildingFloor::Square::SquareSection layerToSection[] = {
+        BuildingFloor::Square::SectionFloor,
+        BuildingFloor::Square::SectionWall,
+        BuildingFloor::Square::SectionDoor,
+        BuildingFloor::Square::SectionFrame,
+        BuildingFloor::Square::SectionFurniture,
+        BuildingFloor::Square::SectionFurniture2,
+        BuildingFloor::Square::SectionRoofCap,
+        BuildingFloor::Square::SectionRoofCap2,
+        BuildingFloor::Square::SectionRoof,
+    #if ROOF_TOPS
+        BuildingFloor::Square::SectionRoofTop
+    #endif
+    };
 
     int index = 0;
     foreach (TileLayer *tl, layers) {
@@ -472,58 +491,14 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
         for (int x = 0; x <= floor->width(); x++) {
             for (int y = 0; y <= floor->height(); y++) {
                 const BuildingFloor::Square &square = floor->squares[x][y];
-                if (index == LayerIndexFloor) {
-                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionFloor];
-                    if (tile)
-                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex)));
+                BuildingFloor::Square::SquareSection section = layerToSection[index];
+
+                if (BuildingTile *btile = square.mTiles[section]) {
+                    int tileOffset = square.mTileOffset[section];
+                    if (Tiled::Tile *tile = BuildingTiles::instance()->tileFor(btile, tileOffset))
+                        tl->setCell(x + offset, y + offset, Cell(tile));
                 }
-                if ((index == LayerIndexWall) /*&& (mShowWalls || floor != mDocument->currentFloor())*/) {
-                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionWall];
-                    if (tile)
-                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionWall])));
-                }
-                if (index == LayerIndexDoor) {
-                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionDoor];
-                    if (tile)
-                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionDoor])));
-                }
-                if (index == LayerIndexFrame) {
-                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionFrame];
-                    if (tile)
-                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionFrame])));
-                }
-                if (index == LayerIndexFurniture) {
-                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionFurniture];
-                    if (tile)
-                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionFurniture])));
-                }
-                if (index == LayerIndexFurniture2) {
-                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionFurniture2];
-                    if (tile)
-                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionFurniture2])));
-                }
-                if (index == LayerIndexRoofCap) {
-                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionRoofCap];
-                    if (tile)
-                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionRoofCap])));
-                }
-                if (index == LayerIndexRoofCap2) {
-                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionRoofCap2];
-                    if (tile)
-                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionRoofCap2])));
-                }
-                if (index == LayerIndexRoof) {
-                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionRoof];
-                    if (tile)
-                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionRoof])));
-                }
-#ifdef ROOF_TOPS
-                if (index == LayerIndexRoofTop) {
-                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionRoofTop];
-                    if (tile)
-                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionRoofTop])));
-                }
-#endif
+
             }
         }
         index++;
@@ -718,6 +693,31 @@ void BuildingPreviewScene::highlightFloorChanged(bool highlight)
 
     mDarkRectangle->setVisible(highlight);
     mDarkRectangle->setZValue(z);
+}
+
+void BuildingPreviewScene::tilesetAdded(Tileset *tileset)
+{
+    Q_UNUSED(tileset)
+    if (!mDocument)
+        return;
+    BuildingToMap();
+}
+
+void BuildingPreviewScene::tilesetAboutToBeRemoved(Tileset *tileset)
+{
+    Q_UNUSED(tileset)
+    if (!mDocument)
+        return;
+    qDeleteAll(mLayerGroupItems);
+    mLayerGroupItems.clear();
+}
+
+void BuildingPreviewScene::tilesetRemoved(Tileset *tileset)
+{
+    Q_UNUSED(tileset)
+    if (!mDocument)
+        return;
+    BuildingToMap();
 }
 
 /////

@@ -19,9 +19,6 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <property name="childrenCollapsible">
-      <bool>false</bool>
-     </property>
      <widget class="QSplitter" name="categorySplitter">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
@@ -29,7 +26,16 @@
       <property name="childrenCollapsible">
        <bool>false</bool>
       </property>
-      <widget class="QListWidget" name="categoryList"/>
+      <widget class="QWidget" name="">
+       <layout class="QVBoxLayout" name="verticalLayout_6">
+        <item>
+         <widget class="QListWidget" name="categoryList"/>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="categoryListToolbarLayout"/>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
@@ -40,7 +46,7 @@
              <number>0</number>
             </property>
             <item>
-             <widget class="Tiled::Internal::MixedTilesetView" name="tilesetView"/>
+             <widget class="Tiled::Internal::MixedTilesetView" name="categoryTilesView"/>
             </item>
            </layout>
           </widget>
@@ -113,20 +119,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="clearTiles">
-         <property name="toolTip">
-          <string>Clear tiles assigned to selected furniture</string>
-         </property>
-         <property name="text">
-          <string>...</string>
-         </property>
-         <property name="icon">
-          <iconset resource="../tiled.qrc">
-           <normaloff>:/images/16x16/edit-clear.png</normaloff>:/images/16x16/edit-clear.png</iconset>
-         </property>
-        </widget>
-       </item>
-       <item>
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -148,8 +140,17 @@
       <property name="childrenCollapsible">
        <bool>false</bool>
       </property>
-      <widget class="QListWidget" name="listWidget"/>
-      <widget class="Tiled::Internal::MixedTilesetView" name="tableWidget">
+      <widget class="QWidget" name="">
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="QListWidget" name="tilesetList"/>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="tilesetToolbarLayout"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="Tiled::Internal::MixedTilesetView" name="tilesetTilesView">
        <property name="minimumSize">
         <size>
          <width>256</width>
@@ -229,6 +230,42 @@
    </property>
    <property name="toolTip">
     <string>Move selected category down the list</string>
+   </property>
+  </action>
+  <action name="actionAddTilesets">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/document-new.png</normaloff>:/images/16x16/document-new.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add Tilesets</string>
+   </property>
+   <property name="toolTip">
+    <string>Add tilesets</string>
+   </property>
+  </action>
+  <action name="actionClearTiles">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/edit-clear.png</normaloff>:/images/16x16/edit-clear.png</iconset>
+   </property>
+   <property name="text">
+    <string>Clear Tiles</string>
+   </property>
+   <property name="toolTip">
+    <string>Clear tiles from selected furniture</string>
+   </property>
+  </action>
+  <action name="actionRemoveTileset">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>Remove Tileset</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove selected tileset</string>
    </property>
   </action>
  </widget>

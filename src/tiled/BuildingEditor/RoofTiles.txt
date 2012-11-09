@@ -5,6 +5,11 @@ tiles
 }
 tiles
 {
+    exterior_wall = walls_exterior_house_01_32
+    cap_tile = walls_exterior_roofs_03_24
+}
+tiles
+{
     exterior_wall = walls_exterior_house_01_4
     cap_tile = walls_exterior_roofs_02_0
 }
@@ -20,7 +25,7 @@ tiles
 }
 tiles
 {
-    exterior_wall = walls_exterior_house_01_32
-    cap_tile = walls_exterior_roofs_03_24
+    exterior_wall = walls_exterior_house_01_20
+    cap_tile = walls_exterior_roofs_01_24
 }
 
