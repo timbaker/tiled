@@ -469,7 +469,37 @@ void GraphicsRoofHandleItem::synchWithObject()
         mBoundingRect = r;
     }
 
-    setVisible(mRoofItem->handlesVisible());
+    bool visible = true;
+    RoofObject *roof = mRoofItem->object()->asRoof();
+    switch (mType) {
+    case Resize:
+        break;
+    case DepthUp:
+        visible = roof->roofType() == RoofObject::FlatTop;
+        break;
+    case DepthDown:
+        visible = roof->roofType() == RoofObject::FlatTop;
+        break;
+    case CappedW:
+        visible = roof->roofType() != RoofObject::SlopeW &&
+                roof->roofType() != RoofObject::PeakNS;
+        break;
+    case CappedN:
+        visible = roof->roofType() != RoofObject::SlopeN &&
+                roof->roofType() != RoofObject::PeakWE;
+        break;
+    case CappedE:
+        visible = roof->roofType() != RoofObject::SlopeE &&
+                roof->roofType() != RoofObject::PeakNS;
+        break;
+    case CappedS:
+        visible = roof->roofType() != RoofObject::SlopeS &&
+                roof->roofType() != RoofObject::PeakWE;
+        break;
+    case Orient:
+        break;
+    }
+    setVisible(mRoofItem->handlesVisible() && visible);
 }
 
 void GraphicsRoofHandleItem::setHighlight(bool highlight)

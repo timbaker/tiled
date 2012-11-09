@@ -403,6 +403,19 @@ private:
 
 /////
 
+class RoofCornerTool : public RoofTool
+{
+public:
+    static RoofCornerTool *instance();
+
+    RoofCornerTool();
+
+private:
+    static RoofCornerTool *mInstance;
+};
+
+/////
+
 class SelectMoveObjectTool : public BaseTool
 {
     Q_OBJECT

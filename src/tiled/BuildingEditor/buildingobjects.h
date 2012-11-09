@@ -214,10 +214,14 @@ public:
         PeakWE,
         PeakNS,
         FlatTop,
-        CornerSW,
-        CornerNW,
-        CornerNE,
-        CornerSE,
+        CornerInnerSW,
+        CornerInnerNW,
+        CornerInnerNE,
+        CornerInnerSE,
+        CornerOuterSW,
+        CornerOuterNW,
+        CornerOuterNE,
+        CornerOuterSE,
         InvalidType
     };
 
@@ -254,6 +258,9 @@ public:
 
     RoofType roofType() const
     { return mType; }
+
+    bool isCorner() const
+    { return mType >= CornerInnerSW && mType <= CornerOuterSE; }
 
     void setWidth(int width);
 
@@ -301,6 +308,12 @@ public:
         FlatE1, FlatE2, FlatE3,
         HalfFlatS, HalfFlatE,
         FlatTopW, FlatTopN,
+
+        // Corners
+        Inner1, Inner2, Inner3,
+        Outer1, Outer2, Outer3,
+
+        // Caps must come last (see roofTile())
         CapRiseE1, CapRiseE2, CapRiseE3, CapFallE1, CapFallE2, CapFallE3,
         CapRiseS1, CapRiseS2, CapRiseS3, CapFallS1, CapFallS2, CapFallS3,
         CapMidS, CapMidE,

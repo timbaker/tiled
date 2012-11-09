@@ -151,13 +151,13 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     FurnitureTool::instance()->setEditor(roomEditor);
     FurnitureTool::instance()->setAction(ui->actionFurniture);
 
+    /////
     connect(ui->actionRoof, SIGNAL(triggered()),
             RoofTool::instance(), SLOT(makeCurrent()));
     RoofTool::instance()->setEditor(roomEditor);
     RoofTool::instance()->setAction(ui->actionRoof);
 
     QMenu *roofMenu = new QMenu(this);
-    QIcon icon;
     roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeW.png")),
                         tr("Slope (W)"));
     roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeN.png")),
@@ -172,19 +172,41 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
                         tr("Peak (Vertical)"));
     roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_flat.png")),
                         tr("Flat Top"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_cornerSW.png")),
-                        tr("Corner (SW)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_cornerNW.png")),
-                        tr("Corner (NW)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_cornerNE.png")),
-                        tr("Corner (NE)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_cornerSE.png")),
-                        tr("Corner (SE)"));
     connect(roofMenu, SIGNAL(triggered(QAction*)), SLOT(roofTypeChanged(QAction*)));
 
     QToolButton *button = static_cast<QToolButton*>(ui->toolBar->widgetForAction(ui->actionRoof));
     button->setMenu(roofMenu);
     button->setPopupMode(QToolButton::MenuButtonPopup);
+    /////
+
+    connect(ui->actionRoofCorner, SIGNAL(triggered()),
+            RoofCornerTool::instance(), SLOT(makeCurrent()));
+    RoofCornerTool::instance()->setEditor(roomEditor);
+    RoofCornerTool::instance()->setAction(ui->actionRoofCorner);
+
+    roofMenu = new QMenu(this);
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerNW.png")),
+                        tr("Inner (NW)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerNE.png")),
+                        tr("Inner (NE)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerSE.png")),
+                        tr("Inner (SE)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_innerSW.png")),
+                        tr("Inner (SW)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerNW.png")),
+                        tr("Outer (NW)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerNE.png")),
+                        tr("Outer (NE)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerSE.png")),
+                        tr("Outer (SE)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_corner_outerSW.png")),
+                        tr("Outer (SW)"));
+    connect(roofMenu, SIGNAL(triggered(QAction*)), SLOT(roofCornerTypeChanged(QAction*)));
+
+    button = static_cast<QToolButton*>(ui->toolBar->widgetForAction(ui->actionRoofCorner));
+    button->setMenu(roofMenu);
+    button->setPopupMode(QToolButton::MenuButtonPopup);
+    /////
 
     connect(ui->actionSelectObject, SIGNAL(triggered()),
             SelectMoveObjectTool::instance(), SLOT(makeCurrent()));
@@ -1439,10 +1461,6 @@ void BuildingEditorWindow::roofTypeChanged(QAction *action)
         RoofObject::PeakWE,
         RoofObject::PeakNS,
         RoofObject::FlatTop,
-        RoofObject::CornerSW,
-        RoofObject::CornerNW,
-        RoofObject::CornerNE,
-        RoofObject::CornerSE
     };
 
     RoofTool::instance()->setRoofType(roofTypes[index]);
@@ -1451,6 +1469,31 @@ void BuildingEditorWindow::roofTypeChanged(QAction *action)
 
     if (!RoofTool::instance()->isCurrent())
         RoofTool::instance()->makeCurrent();
+
+}
+
+void BuildingEditorWindow::roofCornerTypeChanged(QAction *action)
+{
+    int index = action->parentWidget()->actions().indexOf(action);
+
+    static RoofObject::RoofType roofTypes[] = {
+        RoofObject::CornerInnerNW,
+        RoofObject::CornerInnerNE,
+        RoofObject::CornerInnerSE,
+        RoofObject::CornerInnerSW,
+
+        RoofObject::CornerOuterNW,
+        RoofObject::CornerOuterNE,
+        RoofObject::CornerOuterSE,
+        RoofObject::CornerOuterSW
+    };
+
+    RoofCornerTool::instance()->setRoofType(roofTypes[index]);
+
+    ui->actionRoofCorner->setIcon(action->icon());
+
+    if (!RoofCornerTool::instance()->isCurrent())
+        RoofCornerTool::instance()->makeCurrent();
 
 }
 
@@ -1497,6 +1540,7 @@ void BuildingEditorWindow::updateActions()
     FurnitureTool::instance()->setEnabled(hasDoc &&
             FurnitureTool::instance()->currentTile() != 0);
     RoofTool::instance()->setEnabled(hasDoc);
+    RoofCornerTool::instance()->setEnabled(hasDoc);
     SelectMoveObjectTool::instance()->setEnabled(hasDoc);
 
     ui->actionUpLevel->setEnabled(hasDoc &&

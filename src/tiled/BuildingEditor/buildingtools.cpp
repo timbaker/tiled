@@ -964,6 +964,7 @@ RoofTool::RoofTool() :
     BaseTool(),
     mCurrentTile(0),
     mCurrentCapTile(0),
+    mRoofType(RoofObject::SlopeW),
     mMode(NoMode),
     mObject(0),
     mItem(0),
@@ -1067,23 +1068,18 @@ void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     if (mMode == Create) {
         if (!mEditor->currentFloorContains(mCurrentPos))
             return;
-        if (qAbs(diff.x()) > qAbs(diff.y())) {
-            mObject->setWidth(qAbs(diff.x()) + 1);
-            diff.setY(0);
-            if (diff.x() < 0) {
-                mObject->setPos(mStartPos + diff);
-            } else {
-                mObject->setPos(mStartPos);
-            }
-        } else {
-            mObject->setHeight(qAbs(diff.y()) + 1);
-            diff.setX(0);
-            if (diff.y() < 0) {
-                mObject->setPos(mStartPos + diff);
-            } else {
-                mObject->setPos(mStartPos);
-            }
-        }
+
+        QPoint pos = mStartPos;
+
+        // This call might restrict the width and/or height.
+        mObject->resize(qAbs(diff.x()) + 1, qAbs(diff.y()) + 1);
+
+        if (diff.x() < 0)
+            pos.setX(mStartPos.x() - mObject->width() + 1);
+        if (diff.y() < 0)
+            pos.setY(mStartPos.y() - mObject->height() + 1);
+        mObject->setPos(pos);
+
         mItem->synchWithObject();
         mItem->update();
     }
@@ -1107,7 +1103,7 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     if (mMode == Create) {
         mMode = NoMode;
         if (mObject->isValidPos()) {
-            mObject->setTile(mCurrentTile);
+            mObject->setTile(RoofTool::instance()->currentTile());
             mObject->setTile(RoofTiles::instance()->capTileForExteriorWall(
                                  mEditor->building()->exteriorWall()), 1);
             BuildingFloor *floor = mEditor->document()->currentFloor();
@@ -1273,6 +1269,22 @@ void RoofTool::depthDown()
                                                           HandleRoof::DecrDepth));
 }
 
+/////
+
+RoofCornerTool *RoofCornerTool::mInstance = 0;
+
+RoofCornerTool *RoofCornerTool::instance()
+{
+    if (!mInstance)
+        mInstance = new RoofCornerTool;
+    return mInstance;
+}
+
+RoofCornerTool::RoofCornerTool()
+    : RoofTool()
+{
+    setRoofType(RoofObject::CornerInnerNW);
+}
 
 /////
 

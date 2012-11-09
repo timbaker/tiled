@@ -161,6 +161,7 @@ private slots:
     void currentToolChanged(BaseTool *tool);
 
     void roofTypeChanged(QAction *action);
+    void roofCornerTypeChanged(QAction *action);
 
     void updateActions();
 
