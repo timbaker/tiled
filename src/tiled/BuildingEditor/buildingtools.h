@@ -18,6 +18,7 @@
 #ifndef BUILDINGTOOLS_H
 #define BUILDINGTOOLS_H
 
+#include "buildingobjects.h" // need RoofType enum
 #include <QObject>
 #include <QPointF>
 #include <QRegion>
@@ -34,7 +35,6 @@ class QImage;
 namespace BuildingEditor {
 
 class BuildingFloor;
-class BuildingObject;
 class BuildingTile;
 class Door;
 class FloorEditor;
@@ -43,10 +43,6 @@ class GraphicsObjectItem;
 class GraphicsRoofItem;
 class GraphicsRoofCornerItem;
 class GraphicsRoofHandleItem;
-class RoofCornerObject;
-class RoofObject;
-class Stairs;
-class Window;
 
 /////
 
@@ -77,6 +73,8 @@ public:
 
     BuildingFloor *floor() const;
 
+    bool isCurrent();
+
 signals:
     void statusTextChanged();
 
@@ -106,6 +104,9 @@ public:
     void activateTool(BaseTool *tool);
 
     void toolEnabledChanged(BaseTool *tool, bool enabled);
+
+    BaseTool *currentTool() const
+    { return mCurrentTool; }
 
 signals:
     void currentToolChanged(BaseTool *tool);
@@ -357,23 +358,28 @@ public:
     BuildingTile *currentCapTile() const
     { return mCurrentCapTile; }
 
+    void setRoofType(RoofObject::RoofType type)
+    { mRoofType = type; }
+
 private slots:
     void objectAboutToBeRemoved(BuildingObject *object);
 
 private:
     RoofObject *topmostRoofAt(const QPointF &scenePos);
     void updateHandle(const QPointF &scenePos);
-    void resizeRoof(RoofObject *roof, int length, int thickness);
-    void toggleSlope1(RoofObject *roof);
-    void toggleSlope2(RoofObject *roof);
-    void toggleCapped1(RoofObject *roof);
-    void toggleCapped2(RoofObject *roof);
-    void setDepth(RoofObject *roof, int depth);
+    void resizeRoof(int width, int height);
+    void toggleCappedW();
+    void toggleCappedN();
+    void toggleCappedE();
+    void toggleCappedS();
+    void depthUp();
+    void depthDown();
 
 private:
     static RoofTool *mInstance;
     BuildingTile *mCurrentTile;
     BuildingTile *mCurrentCapTile;
+    RoofObject::RoofType mRoofType;
 
     enum Mode {
         NoMode,
@@ -390,62 +396,6 @@ private:
 
     GraphicsRoofItem *mObjectItem; // item for roof object mouse is over
     RoofObject *mHandleObject; // roof object mouse is over
-    GraphicsRoofHandleItem *mHandleItem;
-    bool mMouseOverHandle;
-    int mOriginalLength, mOriginalThickness;
-};
-
-/////
-
-class RoofCornerTool : public BaseTool
-{
-    Q_OBJECT
-public:
-    static RoofCornerTool *instance();
-
-    RoofCornerTool();
-
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-
-    void documentChanged();
-    void activate();
-    void deactivate();
-
-private slots:
-    void objectAboutToBeRemoved(BuildingObject *object);
-
-private:
-    static RoofCornerTool *mInstance;
-
-    enum Mode {
-        NoMode,
-        Create,
-        Resize
-    };
-    Mode mMode;
-
-private:
-    RoofCornerObject *topmostRoofCornerAt(const QPointF &scenePos);
-    void updateHandle(const QPointF &scenePos);
-    void resizeRoof(RoofCornerObject *corner, int width, int height);
-    void setDepth(RoofCornerObject *corner, int depth);
-    void toggleOrient(RoofCornerObject *corner);
-
-    void toggleSlopeW();
-    void toggleSlopeN();
-    void toggleSlopeE();
-    void toggleSlopeS();
-
-    QPoint mStartPos;
-    QPoint mCurrentPos;
-    RoofCornerObject *mObject;
-    GraphicsObjectItem *mItem;
-    QGraphicsRectItem *mCursorItem;
-
-    GraphicsRoofCornerItem *mObjectItem; // item for roof object mouse is over
-    RoofCornerObject *mHandleObject; // roof object mouse is over
     GraphicsRoofHandleItem *mHandleItem;
     bool mMouseOverHandle;
     int mOriginalWidth, mOriginalHeight;

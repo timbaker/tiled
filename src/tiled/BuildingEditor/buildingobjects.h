@@ -29,7 +29,6 @@ class BuildingTile;
 class Door;
 class FurnitureObject;
 class FurnitureTile;
-class RoofCornerObject;
 class RoofObject;
 class Stairs;
 class Window;
@@ -108,7 +107,6 @@ public:
     virtual Stairs *asStairs() { return 0; }
     virtual FurnitureObject *asFurniture() { return 0; }
     virtual RoofObject *asRoof() { return 0; }
-    virtual RoofCornerObject *asRoofCorner() { return 0; }
 
 protected:
     BuildingFloor *mFloor;
@@ -208,9 +206,33 @@ private:
 class RoofObject : public BuildingObject
 {
 public:
-    RoofObject(BuildingFloor *floor, int x, int y, Direction dir, int length,
-               int thickness, int depth, bool slope1, bool slope2,
-               bool capped1, bool capped2);
+    enum RoofType {
+        SlopeW,
+        SlopeN,
+        SlopeE,
+        SlopeS,
+        PeakWE,
+        PeakNS,
+        FlatTop,
+        CornerSW,
+        CornerNW,
+        CornerNE,
+        CornerSE,
+        InvalidType
+    };
+
+    enum RoofDepth {
+        Point5,
+        One,
+        OnePoint5,
+        Two,
+        Three,
+        InvalidDepth
+    };
+
+    RoofObject(BuildingFloor *floor, int x, int y, int width, int height,
+               RoofType type,
+               bool cappedW, bool cappedN, bool cappedE, bool cappedS);
 
     QRect bounds() const;
 
@@ -228,67 +250,51 @@ public:
 
     RoofObject *asRoof() { return this; }
 
-    void setLength(int length)
-    { mLength = length; }
+    void setType(RoofType type);
 
-    int length() const
-    { return mLength; }
+    RoofType roofType() const
+    { return mType; }
 
-    int thickness() const
-    { return mThickness; }
+    void setWidth(int width);
 
-    int slope1() const { return mSlope1 ? actualDepth() : 0; }
-    int slope2() const { return mSlope2 ? actualDepth() : 0; }
+    int width() const
+    { return mWidth; }
 
-    int gap() const
-    {
-        if (midTile())
-            return 0;
-        return mThickness - slope1() - slope2();
-    }
+    void setHeight(int height);
 
-    bool midTile() const
-    { return (mThickness == 3) && (mSlope1 && mSlope2) && (mDepth > 1); }
+    int height() const
+    { return mHeight; }
 
-    void resize(int length, int thickness);
+    void resize(int width, int height);
 
-    void setDepth(int depth);
+    void depthUp();
+    void depthDown();
 
-    int depth() const
+    bool isDepthMax();
+    bool isDepthMin();
+
+    RoofDepth depth() const
     { return mDepth; }
 
-    bool isSlope1() const
-    { return mSlope1; }
+    int actualWidth() const;
+    int actualHeight() const;
 
-    bool isSlope2() const
-    { return mSlope2; }
+    bool isCappedW() const
+    { return mCappedW; }
 
-    bool isCapped1() const
-    { return mCapped1; }
+    bool isCappedN() const
+    { return mCappedN; }
 
-    bool isCapped2() const
-    { return mCapped2; }
+    bool isCappedE() const
+    { return mCappedE; }
 
-    void toggleSlope1();
-    void toggleSlope2();
+    bool isCappedS() const
+    { return mCappedS; }
 
-    void toggleCapped1();
-    void toggleCapped2();
-
-    BuildingTile *capTile() const
-    { return mCapTile; }
-
-    int actualDepth() const;
-
-    enum RoofHeight {
-        Point5,
-        One,
-        OnePoint5,
-        Two,
-        Three
-    };
-
-    RoofHeight roofHeight() const;
+    void toggleCappedW();
+    void toggleCappedN();
+    void toggleCappedE();
+    void toggleCappedS();
 
     enum RoofTile {
         FlatS1, FlatS2, FlatS3,
@@ -305,113 +311,40 @@ public:
 
     BuildingTile *roofTile(RoofTile roofTile) const;
 
+    BuildingTile *capTile() const
+    { return mCapTile; }
+
+    QRect westEdge();
+    QRect northEdge();
     QRect eastEdge();
     QRect southEdge();
-    QRect eastGap(RoofHeight height);
-    QRect southGap(RoofHeight height);
+    QRect eastGap(RoofDepth depth);
+    QRect southGap(RoofDepth depth);
     QRect flatTop();
 
-private:
-    int mLength;
-    int mThickness;
-    int mDepth;
-    bool mSlope1; // Slope above (mDir=W) or left of (mDir=N) the gap
-    bool mSlope2; // Slope below (mDir=W) or right of (mDir=N) the gap
-    bool mCapped1; // Capped on left (mDir=W) or top (mDir=N)
-    bool mCapped2; // Capped on right (mDir=W) or bottom (mDir=N)
-    BuildingTile *mCapTile;
-};
+    QString typeToString() const
+    { return typeToString(mType); }
 
-class RoofCornerObject : public BuildingObject
-{
-public:
-    enum Orient {
-        SW,
-        NW,
-        NE,
-        SE,
-        Invalid
-    };
+    static QString typeToString(RoofType type);
+    static RoofType typeFromString(const QString &s);
 
-    RoofCornerObject(BuildingFloor *floor, int x, int y, int width, int height,
-                     int depth, bool slopeW, bool slopeN, bool slopeE, bool slopeS,
-                     Orient orient);
+    QString depthToString() const
+    { return depthToString(mDepth); }
 
-    QRect bounds() const;
+    static QString depthToString(RoofDepth depth);
+    static RoofDepth depthFromString(const QString &s);
 
-    void rotate(bool right);
-    void flip(bool horizontal);
-
-    bool isValidPos(const QPoint &offset = QPoint(),
-                    BuildingEditor::BuildingFloor *floor = 0) const;
-
-    bool affectsFloorAbove() const { return true; }
-
-    RoofCornerObject *asRoofCorner() { return this; }
-
-    int width() const { return mWidth; }
-    int height() const { return mHeight; }
-    int depth() const { return mDepth; }
-
-    bool midTile() const
-    { return (mWidth==3 || mHeight==3) && (mDepth > 1); }
-
-    void setWidth(int width) { resize(width, mHeight); }
-    void setHeight(int height) { resize(mWidth, height); }
-    void setDepth(int depth);
-
-    void resize(int width, int height);
-
-    Orient orient() const
-    { return mOrient; }
-
-    void toggleOrient(bool right);
-
-    QString orientToString() { return orientToString(mOrient); }
-    static QString orientToString(Orient orient);
-    static Orient orientFromString(const QString &s);
-
-    bool isSW() { return mOrient == SW; }
-    bool isNW() { return mOrient == NW; }
-    bool isNE() { return mOrient == NE; }
-    bool isSE() { return mOrient == SE; }
-
-    bool isSlopeW() const { return mSlopeW; }
-    bool isSlopeN() const { return mSlopeN; }
-    bool isSlopeE() const { return mSlopeE; }
-    bool isSlopeS() const { return mSlopeS; }
-
-    void toggleSlopeW() { mSlopeW = !mSlopeW; }
-    void toggleSlopeN() { mSlopeN = !mSlopeN; }
-    void toggleSlopeE() { mSlopeE = !mSlopeE; }
-    void toggleSlopeS() { mSlopeS = !mSlopeS; }
-
-    int actualDepth() const;
-
-    enum RoofTile {
-        FlatS1, FlatS2, FlatS3,
-        FlatE1, FlatE2, FlatE3,
-        Outer1, Outer2, Outer3,
-        Inner1, Inner2, Inner3,
-        HalfFlatS, HalfFlatE,
-        FlatTopW, FlatTopN
-    };
-    BuildingTile *roofTile(RoofTile roofTile) const;
-
-    QRect corners();
-    QRect southEdge(int &dx1, int &dx2);
-    QRect eastEdge(int &dy1, int &dy2);
-    QRegion flatTop();
 
 private:
     int mWidth;
     int mHeight;
-    int mDepth;
-    bool mSlopeW;
-    bool mSlopeN;
-    bool mSlopeE;
-    bool mSlopeS;
-    Orient mOrient;
+    RoofType mType;
+    RoofDepth mDepth;
+    bool mCappedW;
+    bool mCappedN;
+    bool mCappedE;
+    bool mCappedS;
+    BuildingTile *mCapTile;
 };
 
 } // namespace BulidingEditor

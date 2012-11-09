@@ -148,19 +148,15 @@ class GraphicsRoofHandleItem : public QGraphicsItem
 public:
     enum Type {
         Resize,
-        Slope1,
-        Slope2,
-        SlopeW,
-        SlopeN,
-        SlopeE,
-        SlopeS,
         DepthUp,
         DepthDown,
-        Capped1,
-        Capped2,
+        CappedW,
+        CappedN,
+        CappedE,
+        CappedS,
         Orient
     };
-    GraphicsRoofHandleItem(GraphicsRoofBaseItem *roofItem, Type type);
+    GraphicsRoofHandleItem(GraphicsRoofItem *roofItem, Type type);
 
     QRectF boundingRect() const;
 
@@ -177,28 +173,14 @@ private:
     QRectF calcBoundingRect();
 
 private:
-    GraphicsRoofBaseItem *mRoofItem;
+    GraphicsRoofItem *mRoofItem;
     Type mType;
     bool mHighlight;
     QString mStatusText;
     QRectF mBoundingRect;
 };
 
-class GraphicsRoofBaseItem : public GraphicsObjectItem
-{
-public:
-    GraphicsRoofBaseItem(FloorEditor *editor, BuildingObject *object);
-
-    void setShowHandles(bool show);
-
-    bool handlesVisible() const
-    { return mShowHandles; }
-
-protected:
-    bool mShowHandles;
-};
-
-class GraphicsRoofItem : public GraphicsRoofBaseItem
+class GraphicsRoofItem : public GraphicsObjectItem
 {
 public:
     GraphicsRoofItem(FloorEditor *editor, RoofObject *roof);
@@ -207,47 +189,10 @@ public:
 
     GraphicsRoofItem *asRoof() { return this; }
 
-    GraphicsRoofHandleItem *resizeHandle() const
-    { return mResizeItem; }
+    void setShowHandles(bool show);
 
-    GraphicsRoofHandleItem *slope1Handle() const
-    { return mSlope1Item; }
-
-    GraphicsRoofHandleItem *slope2Handle() const
-    { return mSlope2Item; }
-
-    GraphicsRoofHandleItem *depthUpHandle() const
-    { return mDepthUpItem; }
-
-    GraphicsRoofHandleItem *depthDownHandle() const
-    { return mDepthDownItem; }
-
-    GraphicsRoofHandleItem *capped1Handle() const
-    { return mCapped1Item; }
-
-    GraphicsRoofHandleItem *capped2Handle() const
-    { return mCapped2Item; }
-
-private:
-    GraphicsRoofHandleItem *mResizeItem;
-    GraphicsRoofHandleItem *mSlope1Item;
-    GraphicsRoofHandleItem *mSlope2Item;
-    GraphicsRoofHandleItem *mDepthUpItem;
-    GraphicsRoofHandleItem *mDepthDownItem;
-    GraphicsRoofHandleItem *mCapped1Item;
-    GraphicsRoofHandleItem *mCapped2Item;
-};
-
-class GraphicsRoofCornerItem : public GraphicsRoofBaseItem
-{
-public:
-    GraphicsRoofCornerItem(FloorEditor *editor, RoofCornerObject *roof);
-
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-
-    void synchWithObject();
-
-    GraphicsRoofCornerItem *asRoofCorner() { return this; }
+    bool handlesVisible() const
+    { return mShowHandles; }
 
     GraphicsRoofHandleItem *resizeHandle() const
     { return mResizeItem; }
@@ -258,30 +203,27 @@ public:
     GraphicsRoofHandleItem *depthDownHandle() const
     { return mDepthDownItem; }
 
-    GraphicsRoofHandleItem *orientHandle() const
-    { return mOrientItem; }
+    GraphicsRoofHandleItem *cappedWHandle() const
+    { return mCappedWItem; }
 
-    GraphicsRoofHandleItem *slopeWHandle() const
-    { return mSlopeWItem; }
+    GraphicsRoofHandleItem *cappedNHandle() const
+    { return mCappedNItem; }
 
-    GraphicsRoofHandleItem *slopeNHandle() const
-    { return mSlopeNItem; }
+    GraphicsRoofHandleItem *cappedEHandle() const
+    { return mCappedEItem; }
 
-    GraphicsRoofHandleItem *slopeEHandle() const
-    { return mSlopeEItem; }
-
-    GraphicsRoofHandleItem *slopeSHandle() const
-    { return mSlopeSItem; }
+    GraphicsRoofHandleItem *cappedSHandle() const
+    { return mCappedSItem; }
 
 private:
+    bool mShowHandles;
     GraphicsRoofHandleItem *mResizeItem;
     GraphicsRoofHandleItem *mDepthUpItem;
     GraphicsRoofHandleItem *mDepthDownItem;
-    GraphicsRoofHandleItem *mOrientItem;
-    GraphicsRoofHandleItem *mSlopeWItem;
-    GraphicsRoofHandleItem *mSlopeNItem;
-    GraphicsRoofHandleItem *mSlopeEItem;
-    GraphicsRoofHandleItem *mSlopeSItem;
+    GraphicsRoofHandleItem *mCappedWItem;
+    GraphicsRoofHandleItem *mCappedNItem;
+    GraphicsRoofHandleItem *mCappedEItem;
+    GraphicsRoofHandleItem *mCappedSItem;
 };
 
 class FloorEditor : public QGraphicsScene

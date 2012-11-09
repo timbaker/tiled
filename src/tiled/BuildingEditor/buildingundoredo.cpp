@@ -500,88 +500,25 @@ HandleRoof::HandleRoof(BuildingDocument *doc, RoofObject *roof, HandleRoof::Hand
 void HandleRoof::swap()
 {
     switch (mHandle) {
-    case ToggleSlope1:
-        mObject->toggleSlope1();
+    case ToggleCappedW:
+        mObject->toggleCappedW();
         break;
-    case ToggleSlope2:
-        mObject->toggleSlope2();
+    case ToggleCappedN:
+        mObject->toggleCappedN();
         break;
-    case ToggleCapped1:
-        mObject->toggleCapped1();
+    case ToggleCappedE:
+        mObject->toggleCappedE();
         break;
-    case ToggleCapped2:
-        mObject->toggleCapped2();
+    case ToggleCappedS:
+        mObject->toggleCappedS();
         break;
     case IncrDepth:
-        mObject->setDepth(mObject->depth() + 1);
+        mObject->depthUp();
         mHandle = DecrDepth;
         break;
     case DecrDepth:
-        mObject->setDepth(mObject->depth() - 1);
+        mObject->depthDown();
         mHandle = IncrDepth;
-        break;
-    }
-    mDocument->emitObjectChanged(mObject);
-}
-
-/////
-
-ResizeRoofCorner::ResizeRoofCorner(BuildingDocument *doc, RoofCornerObject *corner,
-                                   int width, int height) :
-    QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Roof Corner")),
-    mDocument(doc),
-    mObject(corner),
-    mWidth(width),
-    mHeight(height)
-{
-}
-
-void ResizeRoofCorner::swap()
-{
-    mDocument->resizeRoofCorner(mObject, mWidth, mHeight);
-}
-
-/////
-
-HandleRoofCorner::HandleRoofCorner(BuildingDocument *doc, RoofCornerObject *corner,
-                                   HandleRoofCorner::Handle handle) :
-    QUndoCommand(QCoreApplication::translate("Undo Commands", "Edit Roof Corner")),
-    mDocument(doc),
-    mObject(corner),
-    mHandle(handle)
-{
-}
-
-void HandleRoofCorner::swap()
-{
-    switch (mHandle) {
-    case ToggleOrientationLeft:
-        mObject->toggleOrient(false);
-        mHandle = ToggleOrientationRight;
-        break;
-    case ToggleOrientationRight:
-        mObject->toggleOrient(true);
-        mHandle = ToggleOrientationLeft;
-        break;
-    case IncrDepth:
-        mObject->setDepth(mObject->depth() + 1);
-        mHandle = DecrDepth;
-        break;
-    case DecrDepth:
-        mObject->setDepth(mObject->depth() - 1);
-        mHandle = IncrDepth;
-        break;
-    case ToggleSlopeW:
-        mObject->toggleSlopeW();
-        break;
-    case ToggleSlopeN:
-        mObject->toggleSlopeN();
-        break;
-    case ToggleSlopeE:
-        mObject->toggleSlopeE();
-        break;
-    case ToggleSlopeS:
-        mObject->toggleSlopeS();
         break;
     }
     mDocument->emitObjectChanged(mObject);

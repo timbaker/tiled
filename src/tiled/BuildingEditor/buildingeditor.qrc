@@ -18,6 +18,16 @@
         <file>icons/icon_corners.png</file>
         <file>icons/icon_edges.png</file>
         <file>icons/icon_roof.png</file>
-        <file>icons/icon_roof_corner.png</file>
+        <file>icons/icon_roof_cornerNE.png</file>
+        <file>icons/icon_roof_cornerNW.png</file>
+        <file>icons/icon_roof_cornerSE.png</file>
+        <file>icons/icon_roof_cornerSW.png</file>
+        <file>icons/icon_roof_peakNS.png</file>
+        <file>icons/icon_roof_peakWE.png</file>
+        <file>icons/icon_roof_flat.png</file>
+        <file>icons/icon_roof_slopeE.png</file>
+        <file>icons/icon_roof_slopeN.png</file>
+        <file>icons/icon_roof_slopeS.png</file>
+        <file>icons/icon_roof_slopeW.png</file>
     </qresource>
 </RCC>

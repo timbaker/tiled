@@ -74,6 +74,11 @@ BuildingFloor *BaseTool::floor() const
     return mEditor->document()->currentFloor();
 }
 
+bool BaseTool::isCurrent()
+{
+    return ToolManager::instance()->currentTool() == this;
+}
+
 void BaseTool::makeCurrent()
 {
     ToolManager::instance()->activateTool(this);
@@ -978,32 +983,32 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mStartPos = mEditor->sceneToTile(event->scenePos());
         mCurrentPos = mStartPos;
         if (mMouseOverHandle) {
-            if (mHandleItem == mObjectItem->slope1Handle()) {
-                toggleSlope1(mHandleObject);
-                return;
-            }
-            if (mHandleItem == mObjectItem->slope2Handle()) {
-                toggleSlope2(mHandleObject);
-                return;
-            }
             if (mHandleItem == mObjectItem->depthUpHandle()) {
-                setDepth(mHandleObject, mHandleObject->depth() + 1);
+                depthUp();
                 return;
             }
             if (mHandleItem == mObjectItem->depthDownHandle()) {
-                setDepth(mHandleObject, mHandleObject->depth() - 1);
+                depthDown();
                 return;
             }
-            if (mHandleItem == mObjectItem->capped1Handle()) {
-                toggleCapped1(mHandleObject);
+            if (mHandleItem == mObjectItem->cappedWHandle()) {
+                toggleCappedW();
                 return;
             }
-            if (mHandleItem == mObjectItem->capped2Handle()) {
-                toggleCapped2(mHandleObject);
+            if (mHandleItem == mObjectItem->cappedNHandle()) {
+                toggleCappedN();
                 return;
             }
-            mOriginalLength = mHandleObject->length();
-            mOriginalThickness = mHandleObject->thickness();
+            if (mHandleItem == mObjectItem->cappedEHandle()) {
+                toggleCappedE();
+                return;
+            }
+            if (mHandleItem == mObjectItem->cappedSHandle()) {
+                toggleCappedS();
+                return;
+            }
+            mOriginalWidth = mHandleObject->width();
+            mOriginalHeight = mHandleObject->height();
             mMode = Resize;
             return;
         }
@@ -1011,10 +1016,10 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             return;
         mObject = new RoofObject(mEditor->document()->currentFloor(),
                                  mStartPos.x(), mStartPos.y(),
-                                 BuildingObject::W,
-                                 /*length=*/1, /*thickness=*/2, /*depth=*/3,
-                                 /*slope1=*/true, /*slope2=*/true,
-                                 /*capped1=*/true, /*capped2=*/true);
+                                 /*width=*/2, /*height=*/2,
+                                 /*type=*/mRoofType,
+                                 /*cappedW=*/true, /*cappedN=*/true,
+                                 /*cappedE=*/true, /*cappedS=*/true);
         mItem = new GraphicsObjectItem(mEditor, mObject);
         mItem->setZValue(FloorEditor::ZVALUE_CURSOR);
         mEditor->addItem(mItem);
@@ -1053,15 +1058,9 @@ void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
             diff.setX(mEditor->document()->currentFloor()->width() - mStartPos.x() - 1);
         if (mCurrentPos.y() >= mEditor->document()->currentFloor()->height())
             diff.setY(mEditor->document()->currentFloor()->height() - mStartPos.y() - 1);
-        if (mHandleObject->isW()) {
-            resizeRoof(mHandleObject,
-                       mHandleObject->length() + diff.x(),
-                       mHandleObject->thickness() + diff.y());
-        } else {
-            resizeRoof(mHandleObject,
-                       mHandleObject->length() + diff.y(),
-                       mHandleObject->thickness() + diff.x());
-        }
+
+        resizeRoof(mHandleObject->width() + diff.x(),
+                   mHandleObject->height() + diff.y());
         return;
     }
 
@@ -1069,8 +1068,7 @@ void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         if (!mEditor->currentFloorContains(mCurrentPos))
             return;
         if (qAbs(diff.x()) > qAbs(diff.y())) {
-            mObject->setDir(BuildingObject::W);
-            mObject->setLength(qAbs(diff.x()) + 1);
+            mObject->setWidth(qAbs(diff.x()) + 1);
             diff.setY(0);
             if (diff.x() < 0) {
                 mObject->setPos(mStartPos + diff);
@@ -1078,8 +1076,7 @@ void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
                 mObject->setPos(mStartPos);
             }
         } else {
-            mObject->setDir(BuildingObject::N);
-            mObject->setLength(qAbs(diff.y()) + 1);
+            mObject->setHeight(qAbs(diff.y()) + 1);
             diff.setX(0);
             if (diff.y() < 0) {
                 mObject->setPos(mStartPos + diff);
@@ -1099,11 +1096,11 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
     if (mMode == Resize) {
         mMode = NoMode;
-        int length = mHandleObject->length(), thickness = mHandleObject->thickness();
-        mHandleObject->resize(mOriginalLength, mOriginalThickness);
+        int width = mHandleObject->width(), height = mHandleObject->height();
+        mHandleObject->resize(mOriginalWidth, mOriginalHeight);
         mEditor->document()->undoStack()->push(new ResizeRoof(mEditor->document(),
                                                               mHandleObject,
-                                                              length, thickness));
+                                                              width, height));
         return;
     }
 
@@ -1212,15 +1209,17 @@ void RoofTool::updateHandle(const QPointF &scenePos)
     mHandleObject = ro;
 }
 
-void RoofTool::resizeRoof(RoofObject *roof, int length, int thickness)
+void RoofTool::resizeRoof(int width, int height)
 {
-    if (length < 1 || thickness < 1)
+    if (width < 1 || height < 1)
         return;
 
-    int oldLength = roof->length(), oldThickness = roof->thickness();
-    roof->resize(length, thickness);
+    RoofObject *roof = mHandleObject;
+
+    int oldWidth = roof->width(), oldHeight = roof->height();
+    roof->resize(width, height);
     if (!roof->isValidPos()) {
-        roof->resize(oldLength, oldThickness);
+        roof->resize(oldWidth, oldHeight);
         return;
     }
 
@@ -1228,356 +1227,52 @@ void RoofTool::resizeRoof(RoofObject *roof, int length, int thickness)
     mStartPos = roof->bounds().bottomRight();
 }
 
-void RoofTool::toggleSlope1(RoofObject *roof)
+void RoofTool::toggleCappedW()
 {
-    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(), roof,
-                                                          HandleRoof::ToggleSlope1));
+    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(),
+                                                          mHandleObject,
+                                                          HandleRoof::ToggleCappedW));
 }
 
-void RoofTool::toggleSlope2(RoofObject *roof)
+void RoofTool::toggleCappedN()
 {
-    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(), roof,
-                                                          HandleRoof::ToggleSlope2));
+    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(),
+                                                          mHandleObject,
+                                                          HandleRoof::ToggleCappedN));
 }
 
-void RoofTool::toggleCapped1(RoofObject *roof)
+void RoofTool::toggleCappedE()
 {
-    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(), roof,
-                                                          HandleRoof::ToggleCapped1));
+    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(),
+                                                          mHandleObject,
+                                                          HandleRoof::ToggleCappedE));
 }
 
-void RoofTool::toggleCapped2(RoofObject *roof)
+void RoofTool::toggleCappedS()
 {
-    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(), roof,
-                                                          HandleRoof::ToggleCapped2));
+    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(),
+                                                          mHandleObject,
+                                                          HandleRoof::ToggleCappedS));
 }
 
-void RoofTool::setDepth(RoofObject *roof, int depth)
+void RoofTool::depthUp()
 {
-    if (depth < 1 || depth > 3)
+    if (mHandleObject->isDepthMax())
         return;
-    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(), roof,
-                                                          (depth == roof->depth() + 1)
-                                                          ? HandleRoof::IncrDepth
-                                                          : HandleRoof::DecrDepth));
+    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(),
+                                                          mHandleObject,
+                                                          HandleRoof::IncrDepth));
 }
 
-/////
-
-RoofCornerTool *RoofCornerTool::mInstance = 0;
-
-RoofCornerTool *RoofCornerTool::instance()
+void RoofTool::depthDown()
 {
-    if (!mInstance)
-        mInstance = new RoofCornerTool;
-    return mInstance;
-}
-
-RoofCornerTool::RoofCornerTool() :
-    BaseTool(),
-    mMode(NoMode),
-    mObject(0),
-    mItem(0),
-    mCursorItem(0),
-    mObjectItem(0),
-    mHandleObject(0),
-    mHandleItem(0),
-    mMouseOverHandle(false)
-{
-}
-
-void RoofCornerTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
-{
-    if (event->button() == Qt::LeftButton) {
-        if (mMode != NoMode)
-            return; // ignore clicks when creating/resizing
-        mStartPos = mEditor->sceneToTile(event->scenePos());
-        mCurrentPos = mStartPos;
-        if (mMouseOverHandle) {
-            if (mHandleItem == mObjectItem->depthUpHandle()) {
-                setDepth(mHandleObject, mHandleObject->depth() + 1);
-                return;
-            }
-            if (mHandleItem == mObjectItem->depthDownHandle()) {
-                setDepth(mHandleObject, mHandleObject->depth() - 1);
-                return;
-            }
-            if (mHandleItem == mObjectItem->orientHandle()) {
-                toggleOrient(mHandleObject);
-                return;
-            }
-            if (mHandleItem == mObjectItem->slopeWHandle()) {
-                toggleSlopeW();
-                return;
-            }
-            if (mHandleItem == mObjectItem->slopeNHandle()) {
-                toggleSlopeN();
-                return;
-            }
-            if (mHandleItem == mObjectItem->slopeEHandle()) {
-                toggleSlopeE();
-                return;
-            }
-            if (mHandleItem == mObjectItem->slopeSHandle()) {
-                toggleSlopeS();
-                return;
-            }
-            mOriginalWidth = mHandleObject->width();
-            mOriginalHeight = mHandleObject->height();
-            mMode = Resize;
-            return;
-        }
-        if (!mEditor->currentFloorContains(mCurrentPos))
-            return;
-        mObject = new RoofCornerObject(mEditor->document()->currentFloor(),
-                                 mStartPos.x(), mStartPos.y(), 1, 1, 3,
-                                       true, true, true, true,
-                                       RoofCornerObject::NW);
-        mItem = new GraphicsRoofCornerItem(mEditor, mObject);
-        mItem->setZValue(FloorEditor::ZVALUE_CURSOR);
-        mEditor->addItem(mItem);
-        mMode = Create;
-    }
-}
-
-void RoofCornerTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
-{
-    mCurrentPos = mEditor->sceneToTile(event->scenePos());
-
-    if (mMode == NoMode) {
-        if (!mCursorItem) {
-            mCursorItem = new QGraphicsRectItem;
-            mCursorItem->setZValue(FloorEditor::ZVALUE_CURSOR);
-            mCursorItem->setBrush(QColor(0,255,0,128));
-            mEditor->addItem(mCursorItem);
-        }
-        mCursorItem->setRect(mEditor->tileToSceneRect(mCurrentPos));
-
-        updateHandle(event->scenePos());
-
-        mCursorItem->setVisible(mEditor->currentFloorContains(mCurrentPos) &&
-                                !mMouseOverHandle);
+    if (mHandleObject->isDepthMin())
         return;
-    }
-
-    QPoint diff = mCurrentPos - mStartPos;
-
-    if (mMode == Resize) {
-        if (mCurrentPos.x() < mHandleObject->x())
-            diff.setX(mHandleObject->x() - mStartPos.x() + (mHandleObject->isN() ? 1 : 0));
-        if (mCurrentPos.y() < mHandleObject->y())
-            diff.setY(mHandleObject->y() - mStartPos.y() + (mHandleObject->isW() ? 1 : 0));
-        if (mCurrentPos.x() >= mEditor->document()->currentFloor()->width())
-            diff.setX(mEditor->document()->currentFloor()->width() - mStartPos.x() - 1);
-        if (mCurrentPos.y() >= mEditor->document()->currentFloor()->height())
-            diff.setY(mEditor->document()->currentFloor()->height() - mStartPos.y() - 1);
-
-        resizeRoof(mHandleObject,
-                   mHandleObject->width() + diff.x(),
-                   mHandleObject->height() + diff.y());
-        return;
-    }
-
-    if (mMode == Create) {
-        if (!mEditor->currentFloorContains(mCurrentPos))
-            return;
-
-        mObject->setWidth(qAbs(diff.x()) + 1);
-        mObject->setHeight(qAbs(diff.y()) + 1);
-
-        int x = mStartPos.x(), y = mStartPos.y();
-        if (diff.x() < 0)
-            x += diff.x();
-        if (diff.y() < 0)
-            y += diff.y();
-        mObject->setPos(QPoint(x, y));
-
-        mItem->synchWithObject();
-        mItem->update();
-    }
+    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(),
+                                                          mHandleObject,
+                                                          HandleRoof::DecrDepth));
 }
 
-void RoofCornerTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
-{
-    if (event->button() != Qt::LeftButton)
-        return;
-
-    if (mMode == Resize) {
-        mMode = NoMode;
-        int width = mHandleObject->width(), height = mHandleObject->height();
-        mHandleObject->resize(mOriginalWidth, mOriginalHeight);
-        mEditor->document()->undoStack()->push(new ResizeRoofCorner(mEditor->document(),
-                                                              mHandleObject,
-                                                              width, height));
-        return;
-    }
-
-    if (mMode == Create) {
-        mMode = NoMode;
-        if (mObject->isValidPos()) {
-            mObject->setTile(RoofTool::instance()->currentTile());
-            BuildingFloor *floor = mEditor->document()->currentFloor();
-            mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
-                                                                 floor,
-                                                                 floor->objectCount(),
-                                                                 mObject));
-        } else
-            delete mObject;
-        mObject = 0;
-        delete mItem;
-        mItem = 0;
-    }
-}
-
-void RoofCornerTool::documentChanged()
-{
-    // When the document changes, the scene is cleared, deleting our items.
-    mItem = 0;
-    mCursorItem = 0;
-    mHandleItem = 0;
-    mObjectItem = 0;
-
-    if (mEditor->document())
-        connect(mEditor->document(),
-                SIGNAL(objectAboutToBeRemoved(BuildingObject*)),
-                SLOT(objectAboutToBeRemoved(BuildingObject*)));
-}
-
-void RoofCornerTool::activate()
-{
-    setStatusText(tr("Left-click-drag to place a corner."));
-    if (mCursorItem)
-        mEditor->addItem(mCursorItem);
-}
-
-void RoofCornerTool::deactivate()
-{
-    if (mCursorItem)
-        mEditor->removeItem(mCursorItem);
-}
-
-void RoofCornerTool::objectAboutToBeRemoved(BuildingObject *object)
-{
-    if (object == mHandleObject) {
-        mHandleObject = 0;
-        mObjectItem = 0;
-        mMouseOverHandle = false;
-        mMode = NoMode;
-    }
-}
-
-RoofCornerObject *RoofCornerTool::topmostRoofCornerAt(const QPointF &scenePos)
-{
-    foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
-        if (GraphicsRoofCornerItem *cornerItem = dynamic_cast<GraphicsRoofCornerItem*>(item)) {
-            if (cornerItem->object()->floor() == mEditor->document()->currentFloor()) {
-                return cornerItem->object()->asRoofCorner();
-            }
-        }
-    }
-    return 0;
-}
-
-void RoofCornerTool::updateHandle(const QPointF &scenePos)
-{
-    RoofCornerObject *ro = topmostRoofCornerAt(scenePos);
-
-    if (mMouseOverHandle) {
-        mHandleItem->setHighlight(false);
-        mMouseOverHandle = false;
-        setStatusText(tr("Left-click-drag to place a roof corner."));
-    }
-    mHandleItem = 0;
-    if (ro && (ro == mHandleObject)) {
-        foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
-            if (GraphicsRoofHandleItem *handle = dynamic_cast<GraphicsRoofHandleItem*>(item)) {
-                if (handle->parentItem() == mObjectItem) {
-                    mHandleItem = handle;
-                    mMouseOverHandle = true;
-                    mHandleItem->setHighlight(true);
-                    setStatusText(handle->statusText());
-                    break;
-                }
-            }
-        }
-        return;
-    }
-
-    if (mObjectItem) {
-        mObjectItem->setShowHandles(false);
-        mObjectItem = 0;
-    }
-
-    if (ro) {
-        mObjectItem = mEditor->itemForObject(ro)->asRoofCorner();
-        mObjectItem->setShowHandles(true);
-    } else {
-    }
-    mHandleObject = ro;
-}
-
-void RoofCornerTool::resizeRoof(RoofCornerObject *corner, int width, int height)
-{
-    if (width < 1 || height < 1)
-        return;
-
-    int oldWidth = corner->width(), oldHeight = corner->height();
-    corner->resize(width, height);
-    if (!corner->isValidPos()) {
-        corner->resize(oldWidth, oldHeight);
-        return;
-    }
-
-    mEditor->itemForObject(corner)->synchWithObject();
-    QRectF r = mEditor->tileToSceneRect(corner->bounds());
-    mStartPos = corner->bounds().bottomRight();
-}
-
-void RoofCornerTool::setDepth(RoofCornerObject *corner, int depth)
-{
-    if (depth < 1 || depth > 3)
-        return;
-    mEditor->document()->undoStack()->push(new HandleRoofCorner(mEditor->document(),
-                                                                corner,
-                                                                (depth == corner->depth() + 1)
-                                                                ? HandleRoofCorner::IncrDepth
-                                                                : HandleRoofCorner::DecrDepth));
-}
-
-void RoofCornerTool::toggleOrient(RoofCornerObject *corner)
-{
-    mEditor->document()->undoStack()->push(new HandleRoofCorner(mEditor->document(),
-                                                                corner,
-                                                                HandleRoofCorner::ToggleOrientationRight));
-}
-
-void RoofCornerTool::toggleSlopeW()
-{
-    mEditor->document()->undoStack()->push(new HandleRoofCorner(mEditor->document(),
-                                                                mHandleObject,
-                                                                HandleRoofCorner::ToggleSlopeW));
-}
-
-void RoofCornerTool::toggleSlopeN()
-{
-    mEditor->document()->undoStack()->push(new HandleRoofCorner(mEditor->document(),
-                                                                mHandleObject,
-                                                                HandleRoofCorner::ToggleSlopeN));
-}
-
-void RoofCornerTool::toggleSlopeE()
-{
-    mEditor->document()->undoStack()->push(new HandleRoofCorner(mEditor->document(),
-                                                                mHandleObject,
-                                                                HandleRoofCorner::ToggleSlopeE));
-}
-
-void RoofCornerTool::toggleSlopeS()
-{
-    mEditor->document()->undoStack()->push(new HandleRoofCorner(mEditor->document(),
-                                                                mHandleObject,
-                                                                HandleRoofCorner::ToggleSlopeS));
-}
 
 /////
 

@@ -464,12 +464,12 @@ class HandleRoof : public QUndoCommand
 {
 public:
     enum Handle {
-        ToggleSlope1,
-        ToggleSlope2,
-        ToggleCapped1,
-        ToggleCapped2,
+        ToggleCappedW,
+        ToggleCappedN,
+        ToggleCappedE,
+        ToggleCappedS,
         IncrDepth,
-        DecrDepth,
+        DecrDepth
     };
 
     HandleRoof(BuildingDocument *doc, RoofObject *roof, Handle handle);
@@ -482,51 +482,6 @@ private:
 
     BuildingDocument *mDocument;
     RoofObject *mObject;
-    Handle mHandle;
-};
-
-class ResizeRoofCorner : public QUndoCommand
-{
-public:
-    ResizeRoofCorner(BuildingDocument *doc, RoofCornerObject *corner, int width,
-                     int height);
-
-    void undo() { swap(); }
-    void redo() { swap(); }
-
-private:
-    void swap();
-
-    BuildingDocument *mDocument;
-    RoofCornerObject *mObject;
-    int mWidth;
-    int mHeight;
-};
-
-class HandleRoofCorner : public QUndoCommand
-{
-public:
-    enum Handle {
-        ToggleOrientationLeft,
-        ToggleOrientationRight,
-        IncrDepth,
-        DecrDepth,
-        ToggleSlopeW,
-        ToggleSlopeN,
-        ToggleSlopeE,
-        ToggleSlopeS
-    };
-
-    HandleRoofCorner(BuildingDocument *doc, RoofCornerObject *corner, Handle handle);
-
-    void undo() { swap(); }
-    void redo() { swap(); }
-
-private:
-    void swap();
-
-    BuildingDocument *mDocument;
-    RoofCornerObject *mObject;
     Handle mHandle;
 };
 

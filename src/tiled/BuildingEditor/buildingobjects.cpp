@@ -22,6 +22,8 @@
 #include "furnituregroups.h"
 #include "rooftiles.h"
 
+#include <qmath.h>
+
 using namespace BuildingEditor;
 
 /////
@@ -280,29 +282,25 @@ void FurnitureObject::setFurnitureTile(FurnitureTile *tile)
 
 /////
 
-RoofObject::RoofObject(BuildingFloor *floor, int x, int y,
-                       BuildingObject::Direction dir, int length,
-                       int thickness, int depth,
-                       bool slope1, bool slope2,
-                       bool capped1, bool capped2) :
-    BuildingObject(floor, x, y, dir),
-    mLength(length),
-    mThickness(thickness),
-    mDepth(depth),
-    mSlope1(slope1),
-    mSlope2(slope2),
-    mCapped1(capped1),
-    mCapped2(capped2)
+RoofObject::RoofObject(BuildingFloor *floor, int x, int y, int width, int height,
+                       RoofType type,
+                       bool cappedW, bool cappedN, bool cappedE, bool cappedS) :
+    BuildingObject(floor, x, y, BuildingObject::Invalid),
+    mWidth(width),
+    mHeight(height),
+    mType(type),
+    mDepth(InvalidDepth),
+    mCappedW(cappedW),
+    mCappedN(cappedN),
+    mCappedE(cappedE),
+    mCappedS(cappedS)
 {
+    resize(mWidth, mHeight);
 }
 
 QRect RoofObject::bounds() const
 {
-    if (mDir == N)
-        return QRect(mX, mY, mThickness, mLength);
-    if (mDir == W)
-        return QRect(mX, mY, mLength, mThickness);
-    return QRect();
+    return QRect(mX, mY, mWidth, mHeight);
 }
 
 void RoofObject::rotate(bool right)
@@ -310,27 +308,47 @@ void RoofObject::rotate(bool right)
     int oldFloorWidth = mFloor->height();
     int oldFloorHeight = mFloor->width();
 
-    mDir = isW() ? N : W;
-
     if (right) {
         int x = mX;
         mX = oldFloorHeight - mY - bounds().width();
         mY = x;
 
-        if (isW()) // was N
-            qSwap(mCapped1, mCapped2);
-        if (isN()) // was W
-            qSwap(mSlope1, mSlope2);
+        switch (mType) {
+        case SlopeW: mType = SlopeN; break;
+        case SlopeN: mType = SlopeE; break;
+        case SlopeE: mType = SlopeS; break;
+        case SlopeS: mType = SlopeW; break;
+        case PeakWE: mType = PeakNS; break;
+        case PeakNS: mType = PeakWE; break;
+        case FlatTop: break;
+        case CornerSW: mType = CornerNW; break;
+        case CornerNW: mType = CornerNE; break;
+        case CornerNE: mType = CornerSE; break;
+        case CornerSE: mType = CornerSW; break;
+        }
+
+        // TODO: swap caps
 
     } else {
         int x = mX;
         mX = mY;
         mY = oldFloorWidth - x - bounds().height();
 
-        if (isN()) // was W
-            qSwap(mCapped1, mCapped2);
-        if (isW()) // was N
-            qSwap(mSlope1, mSlope2);
+        switch (mType) {
+        case SlopeW: mType = SlopeS; break;
+        case SlopeN: mType = SlopeW; break;
+        case SlopeE: mType = SlopeN; break;
+        case SlopeS: mType = SlopeE; break;
+        case PeakWE: mType = PeakNS; break;
+        case PeakNS: mType = PeakWE; break;
+        case FlatTop: break;
+        case CornerSW: mType = CornerSE; break;
+        case CornerNW: mType = CornerSW; break;
+        case CornerNE: mType = CornerNW; break;
+        case CornerSE: mType = CornerNE; break;
+        }
+
+        // TODO: swap caps
     }
 }
 
@@ -338,16 +356,39 @@ void RoofObject::flip(bool horizontal)
 {
     if (horizontal) {
         mX = mFloor->width() - mX - bounds().width();
-        if (isW())
-            qSwap(mCapped1, mCapped2);
-        if (isN())
-            qSwap(mSlope1, mSlope2);
+
+        switch (mType) {
+        case SlopeW: mType = SlopeE; break;
+        case SlopeN:  break;
+        case SlopeE: mType = SlopeW; break;
+        case SlopeS:  break;
+        case PeakWE:  break;
+        case PeakNS:  break;
+        case FlatTop: break;
+        case CornerSW: mType = CornerSE; break;
+        case CornerNW: mType = CornerNE; break;
+        case CornerNE: mType = CornerNW; break;
+        case CornerSE: mType = CornerSW; break;
+        }
+
+        // TODO: swap caps
     } else {
         mY = mFloor->height() - mY - bounds().height();
-        if (isN())
-            qSwap(mCapped1, mCapped2);
-        if (isW())
-            qSwap(mSlope1, mSlope2);
+        switch (mType) {
+        case SlopeW:  break;
+        case SlopeN: mType = SlopeS; break;
+        case SlopeE:  break;
+        case SlopeS: mType = SlopeN; break;
+        case PeakWE:  break;
+        case PeakNS:  break;
+        case FlatTop: break;
+        case CornerSW: mType = CornerNW; break;
+        case CornerNW: mType = CornerSW; break;
+        case CornerNE: mType = CornerNW; break;
+        case CornerSE: mType = CornerSW; break;
+        }
+
+        // TODO: swap caps
     }
 }
 
@@ -379,92 +420,437 @@ bool RoofObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
     return (floorBounds & objectBounds) == objectBounds;
 }
 
-void RoofObject::resize(int length, int thickness)
+void RoofObject::setType(RoofObject::RoofType type)
 {
-    mLength = length;
-    mThickness = thickness;
+    mType = type;
 }
 
-void RoofObject::setDepth(int depth)
+void RoofObject::setWidth(int width)
 {
-    mDepth = depth;
+    switch (mType) {
+    case SlopeW:
+    case SlopeE:
+        mWidth = qBound(1, width, 3);
+        switch (mWidth) {
+        case 1:
+            mDepth = One;
+            break;
+        case 2:
+            mDepth = Two;
+            break;
+        case 3:
+            mDepth = Three;
+            break;
+        }
+        break;
+    case SlopeN:
+    case SlopeS:
+    case PeakWE:
+    case FlatTop:
+        mWidth = width;
+        break;
+    case PeakNS:
+        mWidth = qBound(1, width, 6);
+        switch (mWidth) {
+        case 1:
+            mDepth = Point5;
+            break;
+        case 2:
+            mDepth = One;
+            break;
+        case 3:
+            mDepth = OnePoint5;
+            break;
+        case 4:
+            mDepth = Two;
+            break;
+        case 5:
+            mWidth = 4;
+            mDepth = Two;
+            break;
+        default:
+            mDepth = Three;
+            break;
+        }
+        break;
+    case CornerSW:
+    case CornerNW:
+    case CornerNE:
+    case CornerSE:
+        mWidth = qBound(1, width, 3);
+        switch (mWidth) {
+        case 1:
+            mDepth = One;
+            break;
+        case 2:
+            mDepth = Two;
+            break;
+        case 3:
+            mDepth = Three;
+            break;
+        }
+        break;
+    }
 }
 
-void RoofObject::toggleSlope1()
+void RoofObject::setHeight(int height)
 {
-    mSlope1 = !mSlope1;
+    switch (mType) {
+    case SlopeW:
+    case SlopeE:
+        mHeight = height;
+        break;
+    case SlopeN:
+    case SlopeS:
+        mHeight = qBound(1, height, 3);
+        switch (mHeight) {
+        case 1:
+            mDepth = One;
+            break;
+        case 2:
+            mDepth = Two;
+            break;
+        case 3:
+            mDepth = Three;
+            break;
+        }
+        break;
+    case PeakWE:
+        mHeight = qBound(1, height, 6);
+        switch (mHeight) {
+        case 1:
+            mDepth = Point5;
+            break;
+        case 2:
+            mDepth = One;
+            break;
+        case 3:
+            mDepth = OnePoint5;
+            break;
+        case 4:
+            mDepth = Two;
+            break;
+        case 5:
+            mHeight = 4;
+            mDepth = Two;
+            break;
+        default:
+            mDepth = Three;
+            break;
+        }
+        break;
+    case PeakNS:
+    case FlatTop:
+        mHeight = height;
+        break;
+    case CornerSW:
+    case CornerNW:
+    case CornerNE:
+    case CornerSE:
+        mHeight = qBound(1, height, 3);
+        switch (mHeight) {
+        case 1:
+            mDepth = One;
+            break;
+        case 2:
+            mDepth = Two;
+            break;
+        case 3:
+            mDepth = Three;
+            break;
+        }
+        break;
+    }
 }
 
-void RoofObject::toggleSlope2()
+void RoofObject::resize(int width, int height)
 {
-    mSlope2 = !mSlope2;
+    setWidth(width);
+    setHeight(height);
 }
 
-void RoofObject::toggleCapped1()
+void RoofObject::depthUp()
 {
-    mCapped1 = !mCapped1;
+    switch (mType) {
+    case SlopeW:
+    case SlopeN:
+    case SlopeE:
+    case SlopeS:
+        switch (mDepth) {
+        case Point5: break;
+        case One: mDepth = Two; break;
+        case OnePoint5: break;
+        case Two: mDepth = Three; break;
+        case Three: break;
+        }
+        break;
+    case PeakWE:
+    case PeakNS:
+        switch (mDepth) {
+        case Point5: mDepth = One; break;
+        case One: mDepth = OnePoint5; break;
+        case OnePoint5: mDepth = Two; break;
+        case Two: mDepth = Three; break;
+        case Three: break;
+        }
+        break;
+    case FlatTop:
+        // depth can only be Three
+        break;
+    case CornerSW:
+    case CornerNW:
+    case CornerNE:
+    case CornerSE:
+        switch (mDepth) {
+        case Point5: break;
+        case One: mDepth = Two; break;
+        case OnePoint5: break;
+        case Two: mDepth = Three; break;
+        case Three: break;
+        }
+        break;
+    }
 }
 
-void RoofObject::toggleCapped2()
+void RoofObject::depthDown()
 {
-    mCapped2 = !mCapped2;
+    switch (mType) {
+    case SlopeW:
+    case SlopeN:
+    case SlopeE:
+    case SlopeS:
+        switch (mDepth) {
+        case Point5: break;
+        case One: break;
+        case OnePoint5: break;
+        case Two: mDepth = One; break;
+        case Three: mDepth = Two; break;
+        }
+        break;
+    case PeakWE:
+    case PeakNS:
+        switch (mDepth) {
+        case Point5: break;
+        case One: mDepth = Point5; break;
+        case OnePoint5: mDepth = One; break;
+        case Two: mDepth = OnePoint5; break;
+        case Three: mDepth = Two; break;
+        }
+        break;
+    case FlatTop:
+        // depth can only be Three
+        break;
+    case CornerSW:
+    case CornerNW:
+    case CornerNE:
+    case CornerSE:
+        switch (mDepth) {
+        case Point5: break;
+        case One: break;
+        case OnePoint5: break;
+        case Two: mDepth = One; break;
+        case Three: mDepth = Two; break;
+        }
+        break;
+    }
 }
 
-int RoofObject::actualDepth() const
+bool RoofObject::isDepthMax()
 {
-    int depthW = (isN() && mSlope1) ? mDepth : 0;
-    int depthE = (isN() && mSlope2) ? mDepth : 0;
-    int depthWE = qMax(depthW, depthE);
-    if (depthW + depthE > bounds().width()) {
-        int div = (mSlope1 && mSlope2) ? 2 : 1;
-        depthWE = bounds().width() / div;
-        if (depthWE == 0) // thickness == 1 / 2 == 0
-            depthWE = 1;
+    switch (mType) {
+    case SlopeW:
+    case SlopeN:
+    case SlopeE:
+    case SlopeS:
+        switch (mDepth) {
+        case Point5: break;
+        case One: break;
+        case OnePoint5: break;
+        case Two: break;
+        case Three: return true; ///
+        }
+        break;
+    case PeakWE:
+    case PeakNS:
+        switch (mDepth) {
+        case Point5: break;
+        case One: break;
+        case OnePoint5: break;
+        case Two: break;
+        case Three: return true; ///
+        }
+        break;
+    case FlatTop:
+        return true; // depth can only be Three
+        break;
+    case CornerSW:
+    case CornerNW:
+    case CornerNE:
+    case CornerSE:
+        switch (mDepth) {
+        case Point5: break;
+        case One: break;
+        case OnePoint5: break;
+        case Two: mDepth = One; break;
+        case Three: return true; ///
+        }
+        break;
     }
 
-    int depthN = (isW() && mSlope1) ? mDepth : 0;
-    int depthS = (isW() && mSlope2) ? mDepth : 0;
-    int depthNS = qMax(depthN, depthS);
-    if (depthN + depthS > bounds().height()) {
-        int div = (mSlope1 && mSlope2) ? 2 : 1;
-        depthNS = bounds().height() / div;
-        if (depthNS == 0) // thickness == 1 / 2 == 0
-            depthNS = 1;
-    }
-
-    if (depthWE && depthNS)
-        return qMin(depthWE, depthNS);
-    return depthWE + depthNS;
+    return false;
 }
 
-RoofObject::RoofHeight RoofObject::roofHeight() const
+bool RoofObject::isDepthMin()
 {
-    if (mThickness == 1) {
-        if (mSlope1 && mSlope2)
-            return Point5;
-        if (mSlope1 || mSlope2)
-            return One;
-        return (mDepth == 3) ? Three : ((mDepth == 2) ? Two : One);
-    }
-    if (mThickness == 2) {
-        if (mSlope1 && mSlope2)
-            return One;
-        if (mSlope1 || mSlope2)
-            return (mDepth >= 2) ? Two : One;
-        return (mDepth == 3) ? Three : ((mDepth == 2) ? Two : One);
-    }
-    if (mThickness == 3) {
-        if (mSlope1 && mSlope2)
-            return (mDepth > 1) ? OnePoint5 : One;
-        return (mDepth == 3) ? Three : ((mDepth == 2) ? Two : One);
-    }
-    if (mThickness < 6) {
-        if (mSlope1 && mSlope2)
-            return (mDepth > 1) ? Two : One;
-        return (mDepth == 3) ? Three : ((mDepth == 2) ? Two : One);
+    switch (mType) {
+    case SlopeW:
+    case SlopeN:
+    case SlopeE:
+    case SlopeS:
+        switch (mDepth) {
+        case Point5: break;
+        case One: return true; ///
+        case OnePoint5: break;
+        case Two: break;
+        case Three: break;
+        }
+        break;
+    case PeakWE:
+    case PeakNS:
+        switch (mDepth) {
+        case Point5: return true; ///
+        case One: break;
+        case OnePoint5: break;
+        case Two: break;
+        case Three: break;
+        }
+        break;
+    case FlatTop:
+        return true; // depth can only be Three
+        break;
+    case CornerSW:
+    case CornerNW:
+    case CornerNE:
+    case CornerSE:
+        switch (mDepth) {
+        case Point5: break;
+        case One: return true; ///
+        case OnePoint5: break;
+        case Two: mDepth = One; break;
+        case Three: break;
+        }
+        break;
     }
 
-    return (mDepth == 3) ? Three : ((mDepth == 2) ? Two : One);
+    return false;
+}
+
+int RoofObject::actualWidth() const
+{
+    switch (mType) {
+    case SlopeW:
+    case SlopeE:
+        switch (mDepth) {
+        case Point5: return 0;
+        case One: return 1;
+        case OnePoint5: return 0;
+        case Two: return 2;
+        case Three: return 3;
+        }
+        break;
+    case SlopeN:
+    case SlopeS:
+    case PeakWE:
+    case FlatTop:
+        return mWidth;
+    case PeakNS:
+        switch (mDepth) {
+        case Point5: return 1;
+        case One: return 2;
+        case OnePoint5: return 3;
+        case Two: return 4;
+        case Three: return 6;
+        }
+        break;
+    case CornerSW:
+    case CornerNW:
+    case CornerNE:
+    case CornerSE:
+        switch (mDepth) {
+        case Point5: return 0;
+        case One: return 1;
+        case OnePoint5: return 0;
+        case Two: return 2;
+        case Three: return 3;
+        }
+        break;
+    }
+
+    return 0;
+}
+
+int RoofObject::actualHeight() const
+{
+    switch (mType) {
+    case SlopeW:
+    case SlopeE:
+    case PeakNS:
+    case FlatTop:
+        return mHeight;
+    case SlopeN:
+    case SlopeS:
+        switch (mDepth) {
+        case Point5: return 0;
+        case One: return 1;
+        case OnePoint5: return 0;
+        case Two: return 2;
+        case Three: return 3;
+        }
+        break;
+    case PeakWE:
+        switch (mDepth) {
+        case Point5: return 1;
+        case One: return 2;
+        case OnePoint5: return 3;
+        case Two: return 4;
+        case Three: return 6;
+        }
+        break;
+    case CornerSW:
+    case CornerNW:
+    case CornerNE:
+    case CornerSE:
+        switch (mDepth) {
+        case Point5: return 0;
+        case One: return 1;
+        case OnePoint5: return 0;
+        case Two: return 2;
+        case Three: return 3;
+        }
+        break;
+    }
+
+    return 0;
+}
+
+void RoofObject::toggleCappedW()
+{
+    mCappedW = !mCappedW;
+}
+
+void RoofObject::toggleCappedN()
+{
+    mCappedN = !mCappedN;
+}
+
+void RoofObject::toggleCappedE()
+{
+    mCappedE = !mCappedE;
+}
+
+void RoofObject::toggleCappedS()
+{
+    mCappedS = !mCappedS;
 }
 
 BuildingTile *RoofObject::roofTile(RoofObject::RoofTile tile) const
@@ -535,47 +921,69 @@ BuildingTile *RoofObject::roofTile(RoofObject::RoofTile tile) const
                                                        btile->mIndex + index));
 }
 
+QRect RoofObject::westEdge()
+{
+    QRect r = bounds();
+    if (mType == SlopeW)
+        return QRect(r.left(), r.top(),
+                     actualWidth(), r.height());
+    return QRect();
+}
+
+QRect RoofObject::northEdge()
+{
+    QRect r = bounds();
+    if (mType == SlopeN)
+        return QRect(r.left(), r.top(),
+                     r.width(), actualHeight());
+    return QRect();
+}
+
 QRect RoofObject::eastEdge()
 {
     QRect r = bounds();
-    if (isN() && mSlope2)
-        return QRect(r.right() - actualDepth() + 1, r.top(),
-                     actualDepth(), r.height());
+    if (mType == SlopeE)
+        return QRect(r.right() - actualWidth() + 1, r.top(),
+                     actualWidth(), r.height());
+    if (mType == PeakNS) {
+        int slopeThickness = qCeil(qreal(mWidth) / 2);
+        return QRect(r.right() - slopeThickness + 1, r.top(),
+                     slopeThickness, r.height());
+    }
     return QRect();
 }
 
 QRect RoofObject::southEdge()
 {
     QRect r = bounds();
-    if (isW() && mSlope2)
-        return QRect(r.left(), r.bottom() - actualDepth() + 1,
-                     r.width(), actualDepth());
+    if (mType == SlopeS)
+        return QRect(r.left(), r.bottom() - actualHeight() + 1,
+                     r.width(), actualHeight());
+    if (mType == PeakWE) {
+        int slopeThickness = qCeil(qreal(mHeight) / 2);
+        return QRect(r.left(), r.bottom() - slopeThickness + 1,
+                     r.width(), slopeThickness);
+    }
     return QRect();
 }
 
-QRect RoofObject::eastGap(RoofHeight height)
+QRect RoofObject::eastGap(RoofDepth depth)
 {
-    if (height != roofHeight())
+    if (depth != mDepth || !mCappedE)
         return QRect();
     QRect r = bounds();
-    if (isN() && !mSlope2) {
+    if (mType == SlopeW || mType == FlatTop) {
         return QRect(r.right() + 1, r.top(), 1, r.height());
     }
-    if (isW() && mCapped2) {
-        return QRect(r.right() + 1, r.top() + slope1(), 1, r.height() - slope1() - slope2());
-    }
     return QRect();
 }
 
-QRect RoofObject::southGap(RoofHeight height)
+QRect RoofObject::southGap(RoofDepth depth)
 {
-    if (height != roofHeight())
+    if (depth != mDepth || !mCappedS)
         return QRect();
     QRect r = bounds();
-    if (isN() && mCapped2) {
-        return QRect(r.left() + slope1(), r.bottom() + 1, r.width() - slope1() - slope2(), 1);
-    }
-    if (isW() && !mSlope2) {
+    if (mType == SlopeN || mType == FlatTop) {
         return QRect(r.left(), r.bottom() + 1, r.width(), 1);
     }
     return QRect();
@@ -584,283 +992,75 @@ QRect RoofObject::southGap(RoofHeight height)
 QRect RoofObject::flatTop()
 {
     QRect r = bounds();
-    if (isW())
-        return QRect(r.left(), r.top() + slope1(),
-                     r.width(), gap());
-    if (isN())
-        return QRect(r.left() + slope1(), r.top(),
-                     gap(), r.height());
+    if (mType == FlatTop)
+        return r;
     return QRect();
 }
 
-/////
-
-RoofCornerObject::RoofCornerObject(BuildingFloor *floor, int x, int y,
-                                   int width, int height, int depth,
-                                   bool slopeW, bool slopeN, bool slopeE, bool slopeS,
-                                   Orient orient) :
-    BuildingObject(floor, x, y, BuildingObject::Invalid),
-    mWidth(width),
-    mHeight(height),
-    mDepth(depth),
-    mSlopeW(slopeW),
-    mSlopeN(slopeN),
-    mSlopeE(slopeE),
-    mSlopeS(slopeS),
-    mOrient(orient)
+QString RoofObject::typeToString(RoofObject::RoofType type)
 {
-}
+    switch (type) {
+    case SlopeW: return QLatin1String("SlopeW");
+    case SlopeN: return QLatin1String("SlopeN");
+    case SlopeE: return QLatin1String("SlopeE");
+    case SlopeS: return QLatin1String("SlopeS");
 
-QRect RoofCornerObject::bounds() const
-{
-    return QRect(mX, mY, mWidth, mHeight);
-}
+    case PeakWE: return QLatin1String("PeakWE");
+    case PeakNS: return QLatin1String("PeakNS");
 
-void RoofCornerObject::rotate(bool right)
-{
-    int oldFloorWidth = mFloor->height();
-    int oldFloorHeight = mFloor->width();
+    case FlatTop: return QLatin1String("FlatTop");
 
-    qSwap(mWidth, mHeight);
-
-    if (right) {
-        int x = mX;
-        mX = oldFloorHeight - mY - mWidth;
-        mY = x;
-
-        if (isSW()) mOrient = NW;
-        else if (isNW()) mOrient = NE;
-        else if (isNE()) mOrient = SE;
-        else if (isSE()) mOrient = SW;
-    } else {
-        int x = mX;
-        mX = mY;
-        mY = oldFloorWidth - x - mHeight;
-
-        if (isSW()) mOrient = SE;
-        else if (isSE()) mOrient = NE;
-        else if (isNE()) mOrient = NW;
-        else if (isNW()) mOrient = SW;
-    }
-}
-
-void RoofCornerObject::flip(bool horizontal)
-{
-    if (horizontal) {
-        mX = mFloor->width() - mX - mWidth;
-        if (isSW()) mOrient = SE;
-        else if (isNW()) mOrient = NE;
-        else if (isNE()) mOrient = NW;
-        else if (isSE()) mOrient = SW;
-    } else {
-        mY = mFloor->height() - mY - mHeight;
-        if (isSW()) mOrient = NW;
-        else if (isNW()) mOrient = SW;
-        else if (isNE()) mOrient = SE;
-        else if (isSE()) mOrient = NE;
-    }
-}
-
-bool RoofCornerObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
-{
-    if (!floor)
-        floor = mFloor;
-
-    // No +1 because roofs can't be on the outside edge of the building.
-    QRect floorBounds(0, 0, floor->width(), floor->height());
-    QRect objectBounds = bounds().translated(offset);
-    return (floorBounds & objectBounds) == objectBounds;
-}
-
-void RoofCornerObject::setDepth(int depth)
-{
-    mDepth = depth;
-}
-
-void RoofCornerObject::resize(int width, int height)
-{
-    mWidth = width, mHeight = height;
-}
-
-void RoofCornerObject::toggleOrient(bool right)
-{
-    if (right) {
-        // Rotate clockwise
-        if (isSW()) mOrient = NW;
-        else if (isNW()) mOrient = NE;
-        else if (isNE()) mOrient = SE;
-        else if (isSE()) mOrient = SW;
-    } else {
-        // Rotate counter-clockwise
-        if (isSW()) mOrient = SE;
-        else if (isSE()) mOrient = NE;
-        else if (isNE()) mOrient = NW;
-        else if (isNW()) mOrient = SW;
-    }
-}
-
-QString RoofCornerObject::orientToString(RoofCornerObject::Orient orient)
-{
-    if (orient == SW) return QLatin1String("SW");
-    if (orient == NW) return QLatin1String("NW");
-    if (orient == NE) return QLatin1String("NE");
-    if (orient == SE) return QLatin1String("SE");
-    return QString();
-}
-
-RoofCornerObject::Orient RoofCornerObject::orientFromString(const QString &s)
-{
-    if (s == QLatin1String("SW")) return SW;
-    if (s == QLatin1String("NW")) return NW;
-    if (s == QLatin1String("NE")) return NE;
-    if (s == QLatin1String("SE")) return SE;
-    return Invalid;
-}
-
-int RoofCornerObject::actualDepth() const
-{
-    int depthW = mSlopeW ? mDepth : 0;
-    int depthE = mSlopeE ? mDepth : 0;
-    int depthWE = qMax(depthW, depthE);
-    if (depthW + depthE > mWidth) {
-        int div = (mSlopeW && mSlopeE) ? 2 : 1;
-        depthWE = mWidth / div;
-        if (depthWE == 0) // thickness == 1 / 2 == 0
-            depthWE = 1;
+    case CornerSW: return QLatin1String("CornerSW");
+    case CornerNW: return QLatin1String("CornerNW");
+    case CornerNE: return QLatin1String("CornerNE");
+    case CornerSE: return QLatin1String("CornerSE");
     }
 
-    int depthN = mSlopeN ? mDepth : 0;
-    int depthS = mSlopeS ? mDepth : 0;
-    int depthNS = qMax(depthN, depthS);
-    if (depthN + depthS > bounds().height()) {
-        int div = (mSlopeN && mSlopeS) ? 2 : 1;
-        depthNS = mHeight / div;
-        if (depthNS == 0) // thickness == 1 / 2 == 0
-            depthNS = 1;
-    }
-
-    if (depthWE && depthNS)
-        return qMin(depthWE, depthNS);
-    return depthWE + depthNS;
+    return QLatin1String("Invalid");
 }
 
-BuildingTile *RoofCornerObject::roofTile(RoofCornerObject::RoofTile tile) const
+RoofObject::RoofType RoofObject::typeFromString(const QString &s)
 {
-    BuildingTile *btile = mTile;
-    int index = 0;
+    if (s == QLatin1String("SlopeW")) return SlopeW;
+    if (s == QLatin1String("SlopeN")) return SlopeN;
+    if (s == QLatin1String("SlopeE")) return SlopeE;
+    if (s == QLatin1String("SlopeS")) return SlopeS;
 
-    switch (tile) {
-    case FlatS1: index = 0; break;
-    case FlatS2: index = 1; break;
-    case FlatS3: index = 2; break;
+    if (s == QLatin1String("PeakWE")) return PeakWE;
+    if (s == QLatin1String("PeakNS")) return PeakNS;
 
-    case FlatE1: index = 5; break;
-    case FlatE2: index = 4; break;
-    case FlatE3: index = 3; break;
+    if (s == QLatin1String("FlatTop")) return FlatTop;
 
-    case Outer1: index = 8; break;
-    case Outer2: index = 9; break;
-    case Outer3: index = 10; break;
+    if (s == QLatin1String("CornerSW")) return CornerSW;
+    if (s == QLatin1String("CornerNW")) return CornerNW;
+    if (s == QLatin1String("CornerNE")) return CornerNE;
+    if (s == QLatin1String("CornerSE")) return CornerSE;
 
-    case Inner1: index = 11; break;
-    case Inner2: index = 12; break;
-    case Inner3: index = 13; break;
-
-    case HalfFlatS: index = 15; break;
-    case HalfFlatE: index = 14; break;
-
-    case FlatTopW: index = 22; break; // not even sure about these
-    case FlatTopN: index = 23; break;
-    }
-
-    return BuildingTiles::instance()->getFurnitureTile(
-                BuildingTiles::instance()->nameForTile(btile->mTilesetName,
-                                                       btile->mIndex + index));
+    return InvalidType;
 }
 
-QRect RoofCornerObject::corners()
+QString RoofObject::depthToString(RoofObject::RoofDepth depth)
 {
-    QRect r = bounds();
-    if (isNW()) {
-        if (!mSlopeE || !mSlopeS)
-            return QRect();
-        return QRect(r.right() - actualDepth(), r.bottom() - actualDepth(),
-                     actualDepth(), actualDepth());
+    switch (depth) {
+    case Point5: return QLatin1String("Point5");
+    case One: return QLatin1String("One");
+    case OnePoint5: return QLatin1String("OnePoint5");
+    case Two: return QLatin1String("Two");
+    case Three: return QLatin1String("Three");
     }
-    if (isSE()) {
-        if (!mSlopeW || !mSlopeN)
-            return QRect();
-        return QRect(r.left(), r.top(), actualDepth(), actualDepth());
-    }
-    return QRect();
+
+    return QLatin1String("Invalid");
 }
 
-QRect RoofCornerObject::southEdge(int &dx1, int &dx2)
+RoofObject::RoofDepth RoofObject::depthFromString(const QString &s)
 {
-    if (!mSlopeS)
-        return QRect();
-    QRect r = bounds();
-    dx1 = dx2 = 0;
-    if (isSW())
-        return QRect(r.left() + actualDepth(), r.bottom() - actualDepth() + 1,
-                     r.width() - actualDepth(), actualDepth());
-    if (isNW()) {
-        dx1 = 1;
-        return QRect(r.right() - actualDepth() + 1, r.bottom() - actualDepth() + 1,
-                     actualDepth(), actualDepth());
-    }
-    if (isNE())
-        return QRect(r.left(), r.bottom() - actualDepth() + 1,
-                     r.width() - actualDepth(), actualDepth());
-    if (isSE()) {
-        dx2 = 1;
-        return QRect(r.left(), r.bottom() - actualDepth() + 1,
-                     r.width(), actualDepth());
-    }
-    return QRect();
-}
+    if (s == QLatin1String("Point5")) return Point5;
+    if (s == QLatin1String("One")) return One;
+    if (s == QLatin1String("OnePoint5")) return OnePoint5;
+    if (s == QLatin1String("Two")) return Two;
+    if (s == QLatin1String("Three")) return Three;
 
-QRect RoofCornerObject::eastEdge(int &dy1, int &dy2)
-{
-    if (!mSlopeE)
-        return QRect();
-    QRect r = bounds();
-    dy1 = dy2 = 0;
-    if (isSW())
-        return QRect(r.right() - actualDepth() + 1, r.top(),
-                     actualDepth(), r.height() - actualDepth());
-    if (isNW()) {
-        dy1 = 1;
-        return QRect(r.right() - actualDepth() + 1, r.bottom() - actualDepth() + 1,
-                     actualDepth(), actualDepth());
-    }
-    if (isNE())
-        return QRect(r.right() - actualDepth() + 1, r.top() + actualDepth(),
-                     actualDepth(), r.height() - actualDepth());
-    if (isSE()) {
-        dy2 = 1;
-        return QRect(r.right() - actualDepth() + 1, r.top(),
-                     actualDepth(), r.height());
-    }
-    return QRect();
-}
-
-QRegion RoofCornerObject::flatTop()
-{
-    QRect r = bounds();
-    if (isSW())
-        return QRegion(r.adjusted(actualDepth(), 0, -actualDepth(), -actualDepth()))
-                | QRegion(r.adjusted(actualDepth(), actualDepth(), 0, -actualDepth()));
-    if (isNW())
-        return QRegion(r.adjusted(actualDepth(), actualDepth(), 0, -actualDepth()))
-                | QRegion(r.adjusted(actualDepth(), actualDepth(), -actualDepth(), 0));
-    if (isNE())
-        return QRegion(r.adjusted(0, actualDepth(), -actualDepth(), -actualDepth()))
-                | QRegion(r.adjusted(actualDepth(), actualDepth(), -actualDepth(), 0));
-    if (isSE())
-        return QRegion(r.adjusted(actualDepth(), 0, -actualDepth(), -actualDepth()))
-                | QRegion(r.adjusted(0, actualDepth(), -actualDepth(), -actualDepth()));
-    return QRect();
+    return InvalidDepth;
 }
 
 /////

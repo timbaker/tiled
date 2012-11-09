@@ -291,16 +291,3 @@ void BuildingDocument::resizeRoof(RoofObject *roof, int &length, int &thickness)
     length = oldLength;
     thickness = oldThickness;
 }
-
-void BuildingDocument::resizeRoofCorner(RoofCornerObject *corner, int &width, int &height)
-{
-    int oldWidth = corner->width();
-    int oldHeight = corner->height();
-
-    corner->resize(width, height);
-
-    emit objectMoved(corner);
-
-    width = oldWidth;
-    height = oldHeight;
-}

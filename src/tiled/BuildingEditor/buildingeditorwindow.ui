@@ -144,7 +144,6 @@
    <addaction name="actionWindow"/>
    <addaction name="actionStairs"/>
    <addaction name="actionRoof"/>
-   <addaction name="actionRoofCorner"/>
    <addaction name="actionFurniture"/>
    <addaction name="actionSelectObject"/>
    <addaction name="actionRooms"/>
@@ -529,21 +528,6 @@
    </property>
    <property name="toolTip">
     <string>Place Roof</string>
-   </property>
-  </action>
-  <action name="actionRoofCorner">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="buildingeditor.qrc">
-     <normaloff>:/BuildingEditor/icons/icon_roof_corner.png</normaloff>:/BuildingEditor/icons/icon_roof_corner.png</iconset>
-   </property>
-   <property name="text">
-    <string>Place Roof Corner</string>
-   </property>
-   <property name="toolTip">
-    <string>Place Roof Corner</string>
    </property>
   </action>
   <action name="actionInsertFloorAbove">

@@ -309,7 +309,7 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
 
     bool readDir = true;
     if (type == QLatin1String("furniture") ||
-            type == QLatin1String("roof_corner"))
+            type == QLatin1String("roof"))
         readDir = false;
 
     BuildingObject::Direction dir = BuildingObject::dirFromString(dirString);
@@ -350,45 +350,30 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
         furniture->setFurnitureTile(mFurnitureTiles.at(index)->tile(orient));
         object = furniture;
     } else if (type == QLatin1String("roof")) {
-        int length = atts.value(QLatin1String("length")).toString().toInt();
-        int thickness = atts.value(QLatin1String("thickness")).toString().toInt();
-        bool slope1, slope2;
-        if (!booleanFromString(atts.value(QLatin1String("slope1")).toString(), slope1))
+        int width = atts.value(QLatin1String("width")).toString().toInt();
+        int height = atts.value(QLatin1String("height")).toString().toInt();
+        QString typeString = atts.value(QLatin1String("RoofType")).toString();
+        RoofObject::RoofType roofType = RoofObject::typeFromString(typeString);
+        if (roofType == RoofObject::InvalidType) {
+            xml.raiseError(tr("Invalid roof type '%1'").arg(typeString));
             return 0;
-        if (!booleanFromString(atts.value(QLatin1String("slope2")).toString(), slope2))
+        }
+        bool cappedW, cappedN, cappedE, cappedS;
+        if (!booleanFromString(atts.value(QLatin1String("cappedW")).toString(), cappedW))
             return 0;
-        bool capped1, capped2;
-        if (!booleanFromString(atts.value(QLatin1String("capped1")).toString(), capped1))
+        if (!booleanFromString(atts.value(QLatin1String("cappedN")).toString(), cappedN))
             return 0;
-        if (!booleanFromString(atts.value(QLatin1String("capped2")).toString(), capped2))
+        if (!booleanFromString(atts.value(QLatin1String("cappedE")).toString(), cappedE))
             return 0;
-        int depth = atts.value(QLatin1String("depth")).toString().toInt();
-        RoofObject *roof = new RoofObject(floor, x, y, dir,
-                                          length, thickness, depth,
-                                          slope1, slope2,
-                                          capped1, capped2);
+        if (!booleanFromString(atts.value(QLatin1String("cappedS")).toString(), cappedS))
+            return 0;
+        RoofObject *roof = new RoofObject(floor, x, y, width, height,
+                                          roofType,
+                                          cappedW, cappedN, cappedE, cappedS);
         roof->setTile(BuildingTiles::instance()->getRoofTile(tile));
         const QString capTile = atts.value(QLatin1String("CapTile")).toString();
         roof->setTile(BuildingTiles::instance()->getRoofCapTile(capTile), 1);
         object = roof;
-    } else if (type == QLatin1String("roof_corner")) {
-        int width = atts.value(QLatin1String("width")).toString().toInt();
-        int height = atts.value(QLatin1String("height")).toString().toInt();
-        int depth = atts.value(QLatin1String("depth")).toString().toInt();
-        QString orientString = atts.value(QLatin1String("orient")).toString();
-        RoofCornerObject::Orient orient = RoofCornerObject::orientFromString(
-                    orientString);
-        if (orient == RoofCornerObject::Invalid) {
-            xml.raiseError(tr("Unknown roof_corner orient '%1'").arg(orientString));
-            return 0;
-        }
-        bool slopeW = true, slopeN = true, slopeE = true, slopeS = true;
-        RoofCornerObject *corner = new RoofCornerObject(floor, x, y,
-                                                        width, height, depth,
-                                                        slopeW, slopeN, slopeE, slopeS,
-                                                        orient);
-        corner->setTile(BuildingTiles::instance()->getRoofTile(tile));
-        object = corner;
     } else {
         xml.raiseError(tr("Unknown object type '%1'").arg(type));
         return 0;

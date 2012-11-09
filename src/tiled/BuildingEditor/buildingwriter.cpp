@@ -205,21 +205,16 @@ public:
             writeTile = false;
         } else if (RoofObject *roof = object->asRoof()) {
             w.writeAttribute(QLatin1String("type"), QLatin1String("roof"));
-            w.writeAttribute(QLatin1String("length"), QString::number(roof->length()));
-            w.writeAttribute(QLatin1String("thickness"), QString::number(roof->thickness()));
-            w.writeAttribute(QLatin1String("depth"), QString::number(roof->depth()));
-            writeBoolean(w, QLatin1String("slope1"), roof->isSlope1());
-            writeBoolean(w, QLatin1String("slope2"), roof->isSlope2());
-            writeBoolean(w, QLatin1String("capped1"), roof->isCapped1());
-            writeBoolean(w, QLatin1String("capped2"), roof->isCapped2());
+            w.writeAttribute(QLatin1String("width"), QString::number(roof->width()));
+            w.writeAttribute(QLatin1String("height"), QString::number(roof->height()));
+            w.writeAttribute(QLatin1String("RoofType"), roof->typeToString());
+            w.writeAttribute(QLatin1String("Depth"), roof->depthToString());
+            writeBoolean(w, QLatin1String("cappedW"), roof->isCappedW());
+            writeBoolean(w, QLatin1String("cappedN"), roof->isCappedN());
+            writeBoolean(w, QLatin1String("cappedE"), roof->isCappedE());
+            writeBoolean(w, QLatin1String("cappedS"), roof->isCappedS());
             if (roof->capTile())
                 w.writeAttribute(QLatin1String("CapTile"), roof->capTile()->name());
-        } else if (RoofCornerObject *corner = object->asRoofCorner()) {
-            w.writeAttribute(QLatin1String("type"), QLatin1String("roof_corner"));
-            w.writeAttribute(QLatin1String("width"), QString::number(corner->width()));
-            w.writeAttribute(QLatin1String("height"), QString::number(corner->height()));
-            w.writeAttribute(QLatin1String("depth"), QString::number(corner->depth()));
-            w.writeAttribute(QLatin1String("orient"), corner->orientToString());
             writeDir = false;
         } else {
             qFatal("Unhandled object type in BuildingWriter::writeObject");

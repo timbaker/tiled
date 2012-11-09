@@ -156,10 +156,35 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     RoofTool::instance()->setEditor(roomEditor);
     RoofTool::instance()->setAction(ui->actionRoof);
 
-    connect(ui->actionRoofCorner, SIGNAL(triggered()),
-            RoofCornerTool::instance(), SLOT(makeCurrent()));
-    RoofCornerTool::instance()->setEditor(roomEditor);
-    RoofCornerTool::instance()->setAction(ui->actionRoofCorner);
+    QMenu *roofMenu = new QMenu(this);
+    QIcon icon;
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeW.png")),
+                        tr("Slope (W)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeN.png")),
+                        tr("Slope (N)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeE.png")),
+                        tr("Slope (E)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeS.png")),
+                        tr("Slope (S)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_peakWE.png")),
+                        tr("Peak (Horizontal)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_peakNS.png")),
+                        tr("Peak (Vertical)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_flat.png")),
+                        tr("Flat Top"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_cornerSW.png")),
+                        tr("Corner (SW)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_cornerNW.png")),
+                        tr("Corner (NW)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_cornerNE.png")),
+                        tr("Corner (NE)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_cornerSE.png")),
+                        tr("Corner (SE)"));
+    connect(roofMenu, SIGNAL(triggered(QAction*)), SLOT(roofTypeChanged(QAction*)));
+
+    QToolButton *button = static_cast<QToolButton*>(ui->toolBar->widgetForAction(ui->actionRoof));
+    button->setMenu(roofMenu);
+    button->setPopupMode(QToolButton::MenuButtonPopup);
 
     connect(ui->actionSelectObject, SIGNAL(triggered()),
             SelectMoveObjectTool::instance(), SLOT(makeCurrent()));
@@ -833,7 +858,7 @@ void BuildingEditorWindow::currentRoofChanged(Tile *tile)
     // Change the cap tiles for each roof object.
     foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
         foreach (BuildingObject *object, floor->objects()) {
-            if (object->asRoof() || object->asRoofCorner())
+            if (object->asRoof())
                 objectList += object;
         }
     }
@@ -1402,6 +1427,33 @@ void BuildingEditorWindow::currentToolChanged(BaseTool *tool)
         ui->statusLabel->clear();
 }
 
+void BuildingEditorWindow::roofTypeChanged(QAction *action)
+{
+    int index = action->parentWidget()->actions().indexOf(action);
+
+    static RoofObject::RoofType roofTypes[] = {
+        RoofObject::SlopeW,
+        RoofObject::SlopeN,
+        RoofObject::SlopeE,
+        RoofObject::SlopeS,
+        RoofObject::PeakWE,
+        RoofObject::PeakNS,
+        RoofObject::FlatTop,
+        RoofObject::CornerSW,
+        RoofObject::CornerNW,
+        RoofObject::CornerNE,
+        RoofObject::CornerSE
+    };
+
+    RoofTool::instance()->setRoofType(roofTypes[index]);
+
+    ui->actionRoof->setIcon(action->icon());
+
+    if (!RoofTool::instance()->isCurrent())
+        RoofTool::instance()->makeCurrent();
+
+}
+
 void BuildingEditorWindow::resizeCoordsLabel()
 {
     int width = 999, height = 999;
@@ -1445,7 +1497,6 @@ void BuildingEditorWindow::updateActions()
     FurnitureTool::instance()->setEnabled(hasDoc &&
             FurnitureTool::instance()->currentTile() != 0);
     RoofTool::instance()->setEnabled(hasDoc);
-    RoofCornerTool::instance()->setEnabled(hasDoc);
     SelectMoveObjectTool::instance()->setEnabled(hasDoc);
 
     ui->actionUpLevel->setEnabled(hasDoc &&
