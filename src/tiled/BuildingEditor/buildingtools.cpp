@@ -178,7 +178,7 @@ void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             return;
         Room *room = mEditor->document()->currentFloor()->GetRoomAt(tilePos);
         if (room) {
-            BuildingEditorWindow::instance->setCurrentRoom(room);
+            BuildingEditorWindow::instance()->setCurrentRoom(room);
             updateCursor(event->scenePos());
         }
         return;
@@ -186,11 +186,11 @@ void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     mInitialPaint = true;
     if (mEditor->currentFloorContains(tilePos) &&
-            mEditor->document()->currentFloor()->GetRoomAt(tilePos) != BuildingEditorWindow::instance->currentRoom()) {
+            mEditor->document()->currentFloor()->GetRoomAt(tilePos) != BuildingEditorWindow::instance()->currentRoom()) {
         mEditor->document()->undoStack()->push(new PaintRoom(mEditor->document(),
                                                              mEditor->document()->currentFloor(),
                                                              tilePos,
-                                                             BuildingEditorWindow::instance->currentRoom()));
+                                                             BuildingEditorWindow::instance()->currentRoom()));
         mInitialPaint = false;
     }
     mMouseDown = true;
@@ -203,11 +203,11 @@ void PencilTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     if (mMouseDown) {
         QPoint tilePos = mEditor->sceneToTile(event->scenePos());
         if (mEditor->currentFloorContains(tilePos) &&
-                mEditor->document()->currentFloor()->GetRoomAt(tilePos) != BuildingEditorWindow::instance->currentRoom()) {
+                mEditor->document()->currentFloor()->GetRoomAt(tilePos) != BuildingEditorWindow::instance()->currentRoom()) {
             PaintRoom *cmd = new PaintRoom(mEditor->document(),
                                            mEditor->document()->currentFloor(),
                                            tilePos,
-                                           BuildingEditorWindow::instance->currentRoom());
+                                           BuildingEditorWindow::instance()->currentRoom());
             cmd->setMergeable(!mInitialPaint);
             mEditor->document()->undoStack()->push(cmd);
             mInitialPaint = false;
@@ -243,7 +243,7 @@ void PencilTool::updateCursor(const QPointF &scenePos)
         mCursor->setZValue(FloorEditor::ZVALUE_CURSOR);
     }
     mCursor->setRect(mEditor->tileToSceneRect(tilePos).adjusted(0,0,-1,-1));
-    mCursor->setBrush(QColor(BuildingEditorWindow::instance->currentRoom()->Color));
+    mCursor->setBrush(QColor(BuildingEditorWindow::instance()->currentRoom()->Color));
     mCursor->setVisible(mEditor->currentFloorContains(tilePos));
 }
 

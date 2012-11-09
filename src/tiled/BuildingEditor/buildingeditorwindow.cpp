@@ -74,7 +74,7 @@ using namespace Tiled::Internal;
 
 /////
 
-BuildingEditorWindow* BuildingEditorWindow::instance = 0;
+BuildingEditorWindow* BuildingEditorWindow::mInstance = 0;
 
 BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -92,7 +92,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    instance = this;
+    mInstance = this;
+
     BuildingPreferences *prefs = BuildingPreferences::instance();
 
     ui->toolBar->insertSeparator(ui->actionRooms);
