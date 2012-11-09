@@ -117,6 +117,8 @@ public:
         LayerIndexDoor,
         LayerIndexFurniture,
         LayerIndexFurniture2,
+        LayerIndexRoofCap,
+        LayerIndexRoofCap2,
         LayerIndexRoof,
 #ifdef ROOF_TOPS
         LayerIndexRoofTop,

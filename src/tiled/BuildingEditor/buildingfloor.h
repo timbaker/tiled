@@ -50,6 +50,8 @@ public:
             SectionDoor,
             SectionFurniture,
             SectionFurniture2,
+            SectionRoofCap,
+            SectionRoofCap2,
             SectionRoof,
 #ifdef ROOF_TOPS
             SectionRoofTop,
@@ -82,7 +84,7 @@ public:
         void ReplaceFrame(BuildingTile *tile, int offset);
         void ReplaceFurniture(BuildingTile *tile, int offset = 0);
         void ReplaceRoof(BuildingTile *tile, int offset = 0);
-        void ReplaceRoofCap(BuildingTile *tile, WallOrientation orient);
+        void ReplaceRoofCap(BuildingTile *tile, int offset = 0);
 #ifdef ROOF_TOPS
         void ReplaceRoofTop(BuildingTile *tile);
 #endif

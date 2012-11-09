@@ -964,7 +964,7 @@ RoofTool::RoofTool() :
     BaseTool(),
     mCurrentTile(0),
     mCurrentCapTile(0),
-    mRoofType(RoofObject::SlopeW),
+    mRoofType(RoofObject::PeakNS),
     mMode(NoMode),
     mObject(0),
     mItem(0),

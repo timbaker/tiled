@@ -411,6 +411,8 @@ void BuildingPreviewScene::BuildingToMap()
         "Doors",
         "Furniture",
         "Furniture2",
+        "RoofCap",
+        "RoofCap2",
         "Roof",
 #ifdef ROOF_TOP
         "RoofTop"
@@ -501,6 +503,16 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                     if (tile)
                         tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionFurniture2])));
                 }
+                if (index == LayerIndexRoofCap) {
+                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionRoofCap];
+                    if (tile)
+                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionRoofCap])));
+                }
+                if (index == LayerIndexRoofCap2) {
+                    BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionRoofCap2];
+                    if (tile)
+                        tl->setCell(x + offset, y + offset, Cell(tilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + square.mTileOffset[BuildingFloor::Square::SectionRoofCap2])));
+                }
                 if (index == LayerIndexRoof) {
                     BuildingTile *tile = square.mTiles[BuildingFloor::Square::SectionRoof];
                     if (tile)
@@ -527,11 +539,12 @@ CompositeLayerGroupItem *BuildingPreviewScene::itemForFloor(BuildingFloor *floor
 void BuildingPreviewScene::synchWithShowWalls()
 {
     foreach (BuildingFloor *floor, mDocument->building()->floors()) {
+        bool visible = mShowWalls || floor->level() < mDocument->currentFloor()->level();
         CompositeLayerGroup *layerGroup = mMapComposite->layerGroupForLevel(floor->level());
-        layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexWall],
-                                       mShowWalls || floor->level() < mDocument->currentFloor()->level());
-        layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexRoof],
-                                       mShowWalls || floor->level() < mDocument->currentFloor()->level());
+        layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexWall], visible);
+        layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexRoofCap], visible);
+        layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexRoofCap2], visible);
+        layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexRoof], visible);
         itemForFloor(floor)->synchWithTileLayers();
         itemForFloor(floor)->updateBounds();
     }
