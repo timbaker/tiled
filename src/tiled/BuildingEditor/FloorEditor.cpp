@@ -235,6 +235,18 @@ void GraphicsObjectItem::paint(QPainter *painter,
 
     QPoint dragOffset = mDragging ? mDragOffset : QPoint();
 
+    if (Stairs *stairs = mObject->asStairs()) {
+        QRectF r = path.boundingRect();
+        if (stairs->isW()) {
+            for (int x = 30; x <= 120; x += 10)
+                painter->drawLine(r.left()+x, r.top(), r.left()+x,r.bottom());
+        } else {
+            for (int y = 30; y <= 120; y += 10)
+                painter->drawLine(r.left(), r.top()+y, r.right(),r.top()+y);
+
+        }
+    }
+
     // Draw line(s) indicating the orientation of the furniture tile.
     if (FurnitureObject *object = mObject->asFurniture()) {
         QRectF r = mEditor->tileToSceneRect(object->bounds().translated(dragOffset));
