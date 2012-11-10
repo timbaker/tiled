@@ -414,6 +414,7 @@ void BuildingPreviewScene::BuildingToMap()
         "Floor",
         "Walls",
         "Frames",
+        "Curtains",
         "Doors",
         "Furniture",
         "Furniture2",
@@ -475,6 +476,7 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
         BuildingFloor::Square::SectionWall,
         BuildingFloor::Square::SectionDoor,
         BuildingFloor::Square::SectionFrame,
+        BuildingFloor::Square::SectionCurtains,
         BuildingFloor::Square::SectionFurniture,
         BuildingFloor::Square::SectionFurniture2,
         BuildingFloor::Square::SectionRoofCap,
@@ -494,6 +496,8 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                 BuildingFloor::Square::SquareSection section = layerToSection[index];
 
                 if (BuildingTile *btile = square.mTiles[section]) {
+                    if (btile->isNone())
+                        continue;
                     int tileOffset = square.mTileOffset[section];
                     if (Tiled::Tile *tile = BuildingTiles::instance()->tileFor(btile, tileOffset))
                         tl->setCell(x + offset, y + offset, Cell(tile));

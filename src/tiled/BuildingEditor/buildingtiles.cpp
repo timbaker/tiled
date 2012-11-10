@@ -53,13 +53,35 @@ void BuildingTiles::deleteInstance()
 BuildingTiles::BuildingTiles() :
     mFurnitureCategory(new BuildingTileCategory(QLatin1String("Furniture"),
                                     QLatin1String("furniture"))),
-    mMissingTile(0)
+    mMissingTile(0),
+    mNoneTiledTile(0),
+    mNoneBuildingTile(0)
 {
     Tileset *tileset = new Tileset(QLatin1String("missing"), 64, 128);
     tileset->setTransparentColor(Qt::white);
     QString fileName = QLatin1String(":/BuildingEditor/icons/missing-tile.png");
     if (tileset->loadFromImage(QImage(fileName), fileName))
         mMissingTile = tileset->tileAt(0);
+    else {
+        QImage image(64, 128, QImage::Format_ARGB32);
+        image.fill(Qt::red);
+        tileset->loadFromImage(image, fileName);
+        mMissingTile = tileset->tileAt(0);
+    }
+
+    tileset = new Tileset(QLatin1String("none"), 64, 128);
+    tileset->setTransparentColor(Qt::white);
+    fileName = QLatin1String(":/BuildingEditor/icons/none-tile.png");
+    if (tileset->loadFromImage(QImage(fileName), fileName))
+        mNoneTiledTile = tileset->tileAt(0);
+    else {
+        QImage image(64, 128, QImage::Format_ARGB32);
+        image.fill(Qt::red);
+        tileset->loadFromImage(image, fileName);
+        mNoneTiledTile = tileset->tileAt(0);
+    }
+
+    mNoneBuildingTile = new NoneBuildingTile();
 }
 
 BuildingTiles::~BuildingTiles()
@@ -70,6 +92,9 @@ BuildingTiles::~BuildingTiles()
     delete mFurnitureCategory;
     if (mMissingTile)
         delete mMissingTile->tileset();
+    if (mNoneTiledTile)
+        delete mNoneTiledTile->tileset();
+    delete mNoneBuildingTile;
 }
 
 BuildingTileCategory *BuildingTiles::addCategory(const QString &categoryName, const QString &label)
@@ -201,7 +226,7 @@ bool BuildingTiles::readBuildingTilesTxt()
 
     static const char *validCategoryNamesC[] = {
         "exterior_walls", "interior_walls", "floors", "doors", "door_frames",
-        "windows", "stairs", "roofs", "roof_caps", 0
+        "windows", "curtains", "stairs", "roofs", "roof_caps", 0
     };
     QStringList validCategoryNames;
     for (int i = 0; validCategoryNamesC[i]; i++)
@@ -307,6 +332,8 @@ Tiled::Tile *BuildingTiles::tileFor(const QString &tileName)
 
 Tile *BuildingTiles::tileFor(BuildingTile *tile, int offset)
 {
+    if (tile->isNone())
+        return mNoneTiledTile;
     if (!mTilesetByName.contains(tile->mTilesetName))
         return mMissingTile;
     if (tile->mIndex + offset >= mTilesetByName[tile->mTilesetName]->tileCount())
@@ -316,6 +343,8 @@ Tile *BuildingTiles::tileFor(BuildingTile *tile, int offset)
 
 BuildingTile *BuildingTiles::fromTiledTile(const QString &categoryName, Tile *tile)
 {
+    if (tile == mNoneTiledTile)
+        return mNoneBuildingTile;
     if (BuildingTileCategory *category = this->category(categoryName))
         return category->get(nameForTile(tile));
     return 0;
@@ -349,6 +378,11 @@ BuildingTile *BuildingTiles::defaultDoorFrameTile() const
 BuildingTile *BuildingTiles::defaultWindowTile() const
 {
     return category(QLatin1String("windows"))->tileAt(0);
+}
+
+BuildingTile *BuildingTiles::defaultCurtainsTile() const
+{
+    return mNoneBuildingTile;
 }
 
 BuildingTile *BuildingTiles::defaultStairsTile() const
@@ -396,6 +430,11 @@ BuildingTile *BuildingTiles::getWindowTile(const QString &tileName)
     return category(QLatin1String("windows"))->get(tileName);
 }
 
+BuildingTile *BuildingTiles::getCurtainsTile(const QString &tileName)
+{
+    return category(QLatin1String("curtains"))->get(tileName);
+}
+
 BuildingTile *BuildingTiles::getStairsTile(const QString &tileName)
 {
     return category(QLatin1String("stairs"))->get(tileName);
@@ -440,6 +479,8 @@ void BuildingTileCategory::remove(const QString &tileName)
 
 BuildingTile *BuildingTileCategory::get(const QString &tileName)
 {
+    if (tileName.isEmpty())
+        return BuildingTiles::instance()->noneTile();
     if (!mTileByName.contains(tileName))
         add(tileName);
     return mTileByName[tileName];
@@ -464,6 +505,8 @@ QRect BuildingTileCategory::categoryBounds() const
         return QRect(0, 0, 2, 1);
     if (mName == QLatin1String("windows"))
         return QRect(0, 0, 2, 1);
+    if (mName == QLatin1String("curtains"))
+        return QRect(0, 0, 4, 1);
     if (mName == QLatin1String("stairs"))
         return QRect(0, 0, 3, 2);
     if (mName == QLatin1String("roofs"))
@@ -472,6 +515,32 @@ QRect BuildingTileCategory::categoryBounds() const
         return QRect(0, 0, 8, 2);
     qFatal("unhandled category name in categoryBounds");
     return QRect();
+}
+
+bool BuildingTileCategory::canAssignNone() const
+{
+    if (mName == QLatin1String("exterior_walls"))
+        return false;
+    if (mName == QLatin1String("interior_walls"))
+        return false;
+    if (mName == QLatin1String("floors"))
+        return false;
+    if (mName == QLatin1String("doors"))
+        return true;
+    if (mName == QLatin1String("door_frames"))
+        return true;
+    if (mName == QLatin1String("windows"))
+        return true;
+    if (mName == QLatin1String("curtains"))
+        return true;
+    if (mName == QLatin1String("stairs"))
+        return false;
+    if (mName == QLatin1String("roofs"))
+        return false;
+    if (mName == QLatin1String("roof_caps"))
+        return false;
+    qFatal("unhandled category name in canAssignNone");
+    return false;
 }
 
 /////

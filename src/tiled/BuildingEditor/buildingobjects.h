@@ -131,8 +131,11 @@ public:
     int getOffset()
     { return (mDir == N) ? 1 : 0; }
 
-    void setFrameTile(BuildingTile *tile)
-    { mFrameTile = tile; }
+    void setTile(BuildingTile *tile, int alternate = 0)
+    { alternate ? mFrameTile = tile : mTile = tile; }
+
+    BuildingTile *tile(int alternate = 0) const
+    { return alternate ? mFrameTile : mTile; }
 
     BuildingTile *frameTile() const
     { return mFrameTile; }
@@ -168,15 +171,28 @@ class Window : public BuildingObject
 {
 public:
     Window(BuildingFloor *floor, int x, int y, Direction dir) :
-        BuildingObject(floor, x, y, dir)
+        BuildingObject(floor, x, y, dir),
+        mCurtainsTile(0)
     {
 
     }
 
+    void setTile(BuildingTile *tile, int alternate = 0)
+    { alternate ? mCurtainsTile = tile : mTile = tile; }
+
+    BuildingTile *tile(int alternate = 0) const
+    { return alternate ? mCurtainsTile : mTile; }
+
     Window *asWindow() { return this; }
 
-    int getOffset()
+    int getOffset() const
     { return (mDir == N) ? 1 : 0; }
+
+    BuildingTile *curtainsTile()
+    { return mCurtainsTile; }
+
+private:
+    BuildingTile *mCurtainsTile;
 };
 
 class FurnitureObject : public BuildingObject

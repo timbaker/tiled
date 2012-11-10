@@ -186,24 +186,6 @@ private:
     QPoint mPos;
 };
 
-class ChangeDoorTile : public QUndoCommand
-{
-public:
-    ChangeDoorTile(BuildingDocument *doc, Door *door, BuildingTile *tile,
-                   bool isFrame = false);
-
-    void undo() { swap(); }
-    void redo() { swap(); }
-
-private:
-    void swap();
-
-    BuildingDocument *mDocument;
-    Door *mDoor;
-    BuildingTile *mTile;
-    bool mIsFrame;
-};
-
 class ChangeObjectTile : public QUndoCommand
 {
 public:

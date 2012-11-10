@@ -468,6 +468,7 @@ bool BuildingEditorWindow::Startup()
                 !validateTile(btemplate->DoorTile, "Door") ||
                 !validateTile(btemplate->DoorFrameTile, "DoorFrame") ||
                 !validateTile(btemplate->WindowTile, "Window") ||
+                !validateTile(btemplate->CurtainsTile, "Curtains") ||
                 !validateTile(btemplate->StairsTile, "Stairs")) {
             mError += tr("\nIn template %1").arg(btemplate->Name);
             QMessageBox::critical(this, tr("It's no good, Jim!"), mError);
@@ -531,6 +532,8 @@ bool BuildingEditorWindow::LoadTMXConfig()
 
 bool BuildingEditorWindow::validateTile(BuildingTile *btile, const char *key)
 {
+    if (btile->isNone())
+        return true;
     if (!BuildingTiles::instance()->tileFor(btile)) {
         mError = tr("%1 tile '%2' doesn't exist.")
                 .arg(QLatin1String(key))
@@ -652,6 +655,8 @@ void BuildingEditorWindow::categorySelectionChanged()
         if (row < BuildingTiles::instance()->categories().count()) {
             mCategory = BuildingTiles::instance()->categories().at(row);
             QList<Tiled::Tile*> tiles;
+            if (mCategory->canAssignNone())
+                tiles += BuildingTiles::instance()->noneTiledTile();
             foreach (BuildingTile *btile, mCategory->tiles()) {
                 if (!btile->mAlternates.count() || (btile == btile->mAlternates.first())) {
                     if (Tiled::Tile *tile = BuildingTiles::instance()->tileFor(btile))
@@ -690,6 +695,8 @@ void BuildingEditorWindow::tileSelectionChanged()
                 currentDoorFrameChanged(tile);
             else if (mCategory->name() == QLatin1String("windows"))
                 currentWindowChanged(tile);
+            else if (mCategory->name() == QLatin1String("curtains"))
+                currentCurtainsChanged(tile);
             else if (mCategory->name() == QLatin1String("stairs"))
                 currentStairsChanged(tile);
             else if (mCategory->name() == QLatin1String("roofs"))
@@ -796,7 +803,7 @@ void BuildingEditorWindow::currentDoorChanged(Tile *tile)
         if (doors.count() > 1)
             mCurrentDocument->undoStack()->beginMacro(tr("Change Door Tile"));
         foreach (Door *door, doors)
-            mCurrentDocument->undoStack()->push(new ChangeDoorTile(mCurrentDocument,
+            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
                                                                    door,
                                                                    btile));
         if (doors.count() > 1)
@@ -822,10 +829,10 @@ void BuildingEditorWindow::currentDoorFrameChanged(Tile *tile)
         if (doors.count() > 1)
             mCurrentDocument->undoStack()->beginMacro(tr("Change Door Frame Tile"));
         foreach (Door *door, doors)
-            mCurrentDocument->undoStack()->push(new ChangeDoorTile(mCurrentDocument,
+            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
                                                                    door,
                                                                    btile,
-                                                                   true));
+                                                                   1));
         if (doors.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
@@ -853,6 +860,34 @@ void BuildingEditorWindow::currentWindowChanged(Tile *tile)
             mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
                                                                      window,
                                                                      btile));
+        if (windows.count() > 1)
+            mCurrentDocument->undoStack()->endMacro();
+    }
+}
+
+void BuildingEditorWindow::currentCurtainsChanged(Tile *tile)
+{
+    // New windows will be created with this tile
+    BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
+                QLatin1String("curtains"), tile);
+    currentBuilding()->setCurtainsTile(btile);
+
+    // Assign the new tile to selected windows
+    QList<Window*> windows;
+    foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
+        if (Window *window = object->asWindow()) {
+            if (window->tile(1) != btile)
+                windows += window;
+        }
+    }
+    if (windows.count()) {
+        if (windows.count() > 1)
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Window Curtains"));
+        foreach (Window *window, windows)
+            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
+                                                                     window,
+                                                                     btile,
+                                                                     1));
         if (windows.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
@@ -1435,6 +1470,7 @@ void BuildingEditorWindow::templateFromBuilding()
     btemplate->DoorTile = building->doorTile();
     btemplate->DoorFrameTile = building->doorFrameTile();
     btemplate->WindowTile = building->windowTile();
+    btemplate->CurtainsTile = building->curtainsTile();
     btemplate->StairsTile = building->stairsTile();
 
     foreach (Room *room, building->rooms())

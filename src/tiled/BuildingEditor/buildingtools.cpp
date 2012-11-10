@@ -722,7 +722,7 @@ void DoorTool::placeObject()
     Door *door = new Door(floor, mCursorObject->x(), mCursorObject->y(),
                           mCursorObject->dir());
     door->setTile(mEditor->building()->doorTile());
-    door->setFrameTile(mEditor->building()->doorFrameTile());
+    door->setTile(mEditor->building()->doorFrameTile(), 1);
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                          floor,
                                                          floor->objectCount(),
@@ -786,6 +786,7 @@ void WindowTool::placeObject()
     Window *window = new Window(floor, mCursorObject->x(), mCursorObject->y(),
                                 mCursorObject->dir());
     window->setTile(mEditor->building()->windowTile());
+    window->setTile(mEditor->building()->curtainsTile(), 1);
     mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                          floor,
                                                          floor->objectCount(),

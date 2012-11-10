@@ -90,6 +90,12 @@ public:
     void setWindowTile(BuildingTile *tileName)
     { mWindowTile = tileName; }
 
+    BuildingTile *curtainsTile() const
+    { return mCurtainsTile; }
+
+    void setCurtainsTile(BuildingTile *tileName)
+    { mCurtainsTile = tileName; }
+
     BuildingTile *stairsTile() const
     { return mStairsTile; }
 
@@ -108,6 +114,7 @@ private:
     BuildingTile *mDoorTile;
     BuildingTile *mDoorFrameTile;
     BuildingTile *mWindowTile;
+    BuildingTile *mCurtainsTile;
     BuildingTile *mStairsTile;
 };
 

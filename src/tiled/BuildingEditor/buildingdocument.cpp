@@ -175,15 +175,6 @@ QPoint BuildingDocument::moveObject(BuildingObject *object, const QPoint &pos)
     return old;
 }
 
-BuildingTile *BuildingDocument::changeDoorTile(Door *door, BuildingTile *tile,
-                                               bool isFrame)
-{
-    BuildingTile *old = door->tile();
-    isFrame ? door->setFrameTile(tile) : door->setTile(tile);
-    emit objectTileChanged(door);
-    return old;
-}
-
 BuildingTile *BuildingDocument::changeObjectTile(BuildingObject *object,
                                                  BuildingTile *tile,
                                                  int alternate)

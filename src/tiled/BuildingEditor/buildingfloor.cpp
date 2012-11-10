@@ -184,7 +184,7 @@ void BuildingFloor::LayoutToSquares()
             } else if (y < height() && mIndexAtPos[x][y] < 0 && y > 0 && mIndexAtPos[x][y-1] != mIndexAtPos[x][y]) {
                 squares[x][y].ReplaceWall(exteriorWall, Square::WallOrientN);
             } else if (y < height() && (y == 0 || mIndexAtPos[x][y-1] != mIndexAtPos[x][y]) && mIndexAtPos[x][y] >= 0) {
-                squares[x][y].ReplaceWall(interiorWalls[mIndexAtPos[x][y]], Square::WallOrientN);
+                squares[x][y].ReplaceWall(interiorWalls[mIndexAtPos[x][y]], Square::WallOrientN, false);
             }
         }
     }
@@ -218,10 +218,10 @@ void BuildingFloor::LayoutToSquares()
                 wtype = interiorWalls[mIndexAtPos[x][y]];
                 // If already contains a north, put in a west...
                 if(squares[x][y].IsWallOrient(Square::WallOrientN))
-                    squares[x][y].ReplaceWall(wtype, Square::WallOrientNW);
+                    squares[x][y].ReplaceWall(wtype, Square::WallOrientNW, false);
                 else
                     // put W wall here...
-                    squares[x][y].ReplaceWall(wtype, BuildingFloor::Square::WallOrientW);
+                    squares[x][y].ReplaceWall(wtype, BuildingFloor::Square::WallOrientW, false);
             }
 
         }
@@ -261,9 +261,17 @@ void BuildingFloor::LayoutToSquares()
                                            door->getOffset());
             }
 
-            if (Window *window = GetWindowAt(x, y))
+            if (Window *window = GetWindowAt(x, y)) {
                 squares[x][y].ReplaceFrame(window->tile(),
                                            window->getOffset());
+
+                // Window curtains on exterior walls must be *inside* the
+                // room.
+                if (squares[x][y].mExterior)
+                    squares[x - (window->isW() ? 1 : 0)][y - (window->isN() ? 1 : 0)].ReplaceCurtains(window, true);
+                else
+                    squares[x][y].ReplaceCurtains(window, false);
+            }
 
             if (Stairs *stairs = GetStairsAt(x, y)) {
                 squares[x][y].ReplaceFurniture(stairs->tile(),
@@ -752,7 +760,8 @@ void BuildingFloor::flip(bool horizontal)
 
 /////
 
-BuildingFloor::Square::Square()
+BuildingFloor::Square::Square() :
+    mExterior(false)
 {
     for (int i = 0; i < MaxSection; i++) {
         mTiles[i] = 0;
@@ -774,11 +783,14 @@ void BuildingFloor::Square::ReplaceFloor(BuildingTile *tile)
     mTileOffset[SectionFloor] = 0;
 }
 
-void BuildingFloor::Square::ReplaceWall(BuildingTile *tile, Square::WallOrientation orient)
+void BuildingFloor::Square::ReplaceWall(BuildingTile *tile,
+                                        Square::WallOrientation orient,
+                                        bool exterior)
 {
     mTiles[SectionWall] = tile;
     mWallOrientation = orient;
     mTileOffset[SectionWall] = getWallOffset();
+    mExterior = exterior;
 }
 
 void BuildingFloor::Square::ReplaceDoor(BuildingTile *tile, int offset)
@@ -793,6 +805,15 @@ void BuildingFloor::Square::ReplaceFrame(BuildingTile *tile, int offset)
     mTiles[SectionFrame] = tile;
     mTileOffset[SectionFrame] = offset;
     mTileOffset[SectionWall] = getWallOffset();
+}
+
+void BuildingFloor::Square::ReplaceCurtains(Window *window, bool exterior)
+{
+    mTiles[SectionCurtains] = window->curtainsTile();
+    int offset = window->isW() ? 0 : 2; // W E N S
+    if (exterior)
+        ++offset;
+    mTileOffset[SectionCurtains] = offset;
 }
 
 void BuildingFloor::Square::ReplaceFurniture(BuildingTile *tile, int offset)

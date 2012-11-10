@@ -81,9 +81,17 @@ void ChooseBuildingTileDialog::setTilesList(const QString &categoryName,
     Tiled::Tile *tile = 0;
 
     mTiles.clear();
+    mBuildingTiles.clear();
+
+    BuildingTileCategory *category = BuildingTiles::instance()->category(categoryName);
+    if (category->canAssignNone()) {
+        mTiles += BuildingTiles::instance()->noneTiledTile();
+        mBuildingTiles += BuildingTiles::instance()->noneTile();
+        if (initialTile == mBuildingTiles[0])
+            tile = mTiles[0];
+    }
 
     MixedTilesetView *v = ui->tableView;
-    BuildingTileCategory *category = BuildingTiles::instance()->category(categoryName);
     foreach (BuildingTile *btile, category->tiles()) {
         if (!btile->mAlternates.count() || (btile == btile->mAlternates.first())) {
             mTiles += BuildingTiles::instance()->tileFor(btile);

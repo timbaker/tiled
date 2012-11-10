@@ -323,7 +323,7 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
         Door *door = new Door(floor, x, y, dir);
         door->setTile(BuildingTiles::instance()->getDoorTile(tile));
         const QString frame = atts.value(QLatin1String("FrameTile")).toString();
-        door->setFrameTile(BuildingTiles::instance()->getDoorFrameTile(frame));
+        door->setTile(BuildingTiles::instance()->getDoorFrameTile(frame), 1);
         object = door;
     } else if (type == QLatin1String("stairs")) {
         object = new Stairs(floor, x, y, dir);
@@ -331,6 +331,8 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
     } else if (type == QLatin1String("window")) {
         object = new Window(floor, x, y, dir);
         object->setTile(BuildingTiles::instance()->getWindowTile(tile));
+        const QString curtains = atts.value(QLatin1String("CurtainsTile")).toString();
+        object->setTile(BuildingTiles::instance()->getCurtainsTile(curtains), 1);
     } else if (type == QLatin1String("furniture")) {
         FurnitureObject *furniture = new FurnitureObject(floor, x, y);
         int index = atts.value(QLatin1String("FurnitureTiles")).toString().toInt();

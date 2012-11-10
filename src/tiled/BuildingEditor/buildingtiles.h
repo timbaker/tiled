@@ -43,12 +43,29 @@ public:
         mIndex(index)
     {}
 
-    QString name() const;
+    virtual bool isNone() const
+    { return false; }
+
+    virtual QString name() const;
 
     QString mTilesetName;
     int mIndex;
 
     QVector<BuildingTile*> mAlternates;
+};
+
+class NoneBuildingTile : public BuildingTile
+{
+public:
+    NoneBuildingTile() :
+        BuildingTile(QString(), 0)
+    {}
+
+    virtual bool isNone() const
+    { return true; }
+
+    virtual QString name() const
+    { return QString(); }
 };
 
 class BuildingTileCategory
@@ -78,7 +95,10 @@ public:
     { return mTiles.at(index); }
 
     bool usesTile(Tiled::Tile *tile) const;
+
     QRect categoryBounds() const;
+
+    bool canAssignNone() const;
 
 private:
     QString mName;
@@ -128,6 +148,12 @@ public:
 
     BuildingTile *fromTiledTile(const QString &categoryName, Tiled::Tile *tile);
 
+    BuildingTile *noneTile() const
+    { return mNoneBuildingTile; }
+
+    Tiled::Tile *noneTiledTile() const
+    { return mNoneTiledTile; }
+
     void addTileset(Tiled::Tileset *tileset);
     void removeTileset(Tiled::Tileset *tileset);
 
@@ -153,6 +179,7 @@ public:
     BuildingTile *defaultDoorTile() const;
     BuildingTile *defaultDoorFrameTile() const;
     BuildingTile *defaultWindowTile() const;
+    BuildingTile *defaultCurtainsTile() const;
     BuildingTile *defaultStairsTile() const;
     BuildingTile *defaultRoofTile() const;
     BuildingTile *defaultRoofCapTile() const;
@@ -163,6 +190,7 @@ public:
     BuildingTile *getDoorTile(const QString &tileName);
     BuildingTile *getDoorFrameTile(const QString &tileName);
     BuildingTile *getWindowTile(const QString &tileName);
+    BuildingTile *getCurtainsTile(const QString &tileName);
     BuildingTile *getStairsTile(const QString &tileName);
     BuildingTile *getRoofTile(const QString &tileName);
     BuildingTile *getRoofCapTile(const QString &tileName);
@@ -184,6 +212,8 @@ private:
     QList<Tiled::Tileset*> mRemovedTilesets;
     BuildingTileCategory *mFurnitureCategory;
     Tiled::Tile *mMissingTile;
+    Tiled::Tile *mNoneTiledTile;
+    BuildingTile *mNoneBuildingTile;
     QString mError;
 };
 

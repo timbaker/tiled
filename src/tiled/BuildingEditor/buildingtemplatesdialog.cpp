@@ -34,6 +34,7 @@ static const char *categoryNames[] = {
     "doors",
     "door_frames",
     "windows",
+    "curtains",
     "stairs"
 };
 
@@ -107,6 +108,7 @@ void BuildingTemplatesDialog::addTemplate()
     btemplate->DoorTile = BuildingTiles::instance()->defaultDoorTile();
     btemplate->DoorFrameTile = BuildingTiles::instance()->defaultDoorFrameTile();
     btemplate->WindowTile = BuildingTiles::instance()->defaultWindowTile();
+    btemplate->CurtainsTile = BuildingTiles::instance()->defaultCurtainsTile();
     btemplate->StairsTile = BuildingTiles::instance()->defaultStairsTile();
 
     mTemplates += btemplate;
@@ -196,7 +198,7 @@ void BuildingTemplatesDialog::editRooms()
 void BuildingTemplatesDialog::chooseTile()
 {
     static const char *titles[] = {
-        "Wall", "Door", "Door frame", "Window", "Stairs"
+        "Wall", "Door", "Door frame", "Window", "Curtains", "Stairs"
     };
     ChooseBuildingTileDialog dialog(tr("Choose %1 tile for '%2'")
                                     .arg(QLatin1String(titles[mTileRow]))
@@ -210,7 +212,8 @@ void BuildingTemplatesDialog::chooseTile()
             case 1: mTemplate->DoorTile = btile; break;
             case 2: mTemplate->DoorFrameTile = btile; break;
             case 3: mTemplate->WindowTile = btile; break;
-            case 4: mTemplate->StairsTile = btile; break;
+            case 4: mTemplate->CurtainsTile = btile; break;
+            case 5: mTemplate->StairsTile = btile; break;
             }
             setTilePixmap();
         }
@@ -259,7 +262,8 @@ BuildingTile *BuildingTemplatesDialog::selectedTile()
     case 1: return mTemplate->DoorTile;
     case 2: return mTemplate->DoorFrameTile;
     case 3: return mTemplate->WindowTile;
-    case 4: return mTemplate->StairsTile;
+    case 4: return mTemplate->CurtainsTile;
+    case 5: return mTemplate->StairsTile;
     }
 
     return 0;

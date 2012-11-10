@@ -34,5 +34,6 @@
         <file>icons/icon_corner_outerSE.png</file>
         <file>icons/icon_corner_outerSW.png</file>
         <file>icons/missing-tile.png</file>
+        <file>icons/none-tile.png</file>
     </qresource>
 </RCC>

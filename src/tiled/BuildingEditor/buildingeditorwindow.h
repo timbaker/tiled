@@ -112,6 +112,7 @@ private:
     void currentDoorChanged(Tiled::Tile *tile);
     void currentDoorFrameChanged(Tiled::Tile *tile);
     void currentWindowChanged(Tiled::Tile *tile);
+    void currentCurtainsChanged(Tiled::Tile *tile);
     void currentStairsChanged(Tiled::Tile *tile);
     void currentRoofChanged(Tiled::Tile *tile);
     void currentRoofCapChanged(Tiled::Tile *tile);

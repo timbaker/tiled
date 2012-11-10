@@ -550,6 +550,10 @@
    </property>
   </action>
   <action name="actionRemoveFloor">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
+   </property>
    <property name="text">
     <string>Remove Current Floor</string>
    </property>

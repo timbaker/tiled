@@ -189,9 +189,10 @@ public:
         if (Door *door = object->asDoor()) {
             w.writeAttribute(QLatin1String("type"), QLatin1String("door"));
             w.writeAttribute(QLatin1String("FrameTile"), door->frameTile()->name());
-        } else if (object->asWindow())
+        } else if (Window *window = object->asWindow()) {
             w.writeAttribute(QLatin1String("type"), QLatin1String("window"));
-        else if (object->asStairs())
+            w.writeAttribute(QLatin1String("CurtainsTile"), window->curtainsTile()->name());
+        } else if (object->asStairs())
             w.writeAttribute(QLatin1String("type"), QLatin1String("stairs"));
         else if (FurnitureObject *furniture = object->asFurniture()) {
             w.writeAttribute(QLatin1String("type"), QLatin1String("furniture"));

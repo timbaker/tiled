@@ -90,6 +90,7 @@ bool BuildingTemplates::readBuildingTemplatesTxt()
             def->DoorTile = btiles->getDoorTile(block.value("Door"));
             def->DoorFrameTile = btiles->getDoorFrameTile(block.value("DoorFrame"));
             def->WindowTile = btiles->getWindowTile(block.value("Window"));
+            def->CurtainsTile = btiles->getCurtainsTile(block.value("Curtains"));
             def->StairsTile = btiles->getStairsTile(block.value("Stairs"));
             foreach (SimpleFileBlock roomBlock, block.blocks) {
                 if (roomBlock.name == QLatin1String("Room")) {
@@ -141,6 +142,7 @@ void BuildingTemplates::writeBuildingTemplatesTxt(QWidget *parent)
         templateBlock.values += SimpleFileKeyValue(QLatin1String("Door"), btemplate->DoorTile->name());
         templateBlock.values += SimpleFileKeyValue(QLatin1String("DoorFrame"), btemplate->DoorFrameTile->name());
         templateBlock.values += SimpleFileKeyValue(QLatin1String("Window"), btemplate->WindowTile->name());
+        templateBlock.values += SimpleFileKeyValue(QLatin1String("Curtains"), btemplate->CurtainsTile->name());
         templateBlock.values += SimpleFileKeyValue(QLatin1String("Stairs"), btemplate->StairsTile->name());
         foreach (Room *room, btemplate->RoomList) {
             SimpleFileBlock roomBlock;

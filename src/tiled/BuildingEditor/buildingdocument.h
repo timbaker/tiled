@@ -93,7 +93,6 @@ public:
     void insertObject(BuildingFloor *floor, int index, BuildingObject *object);
     BuildingObject *removeObject(BuildingFloor *floor, int index);
     QPoint moveObject(BuildingObject *object, const QPoint &pos);
-    BuildingTile *changeDoorTile(Door *door, BuildingTile *tile, bool isFrame);
     BuildingTile *changeObjectTile(BuildingObject *object, BuildingTile *tile, int alternate);
 
     void insertRoom(int index, Room *room);

@@ -47,6 +47,7 @@ public:
             SectionFloor,
             SectionWall,
             SectionFrame,
+            SectionCurtains,
             SectionDoor,
             SectionFurniture,
             SectionFurniture2,
@@ -73,15 +74,16 @@ public:
         BuildingTile *mTiles[MaxSection];
         int mTileOffset[MaxSection];
         WallOrientation mWallOrientation;
-        QString stairsTexture;
+        bool mExterior;
 
         bool IsWallOrient(WallOrientation orient)
         { return mTiles[SectionWall] && (mWallOrientation == orient); }
 
         void ReplaceFloor(BuildingTile *tile);
-        void ReplaceWall(BuildingTile *tile, WallOrientation orient);
+        void ReplaceWall(BuildingTile *tile, WallOrientation orient, bool exterior = true);
         void ReplaceDoor(BuildingTile *tile, int offset);
         void ReplaceFrame(BuildingTile *tile, int offset);
+        void ReplaceCurtains(Window *window, bool exterior);
         void ReplaceFurniture(BuildingTile *tile, int offset = 0);
         void ReplaceRoof(BuildingTile *tile, int offset = 0);
         void ReplaceRoofCap(BuildingTile *tile, int offset = 0);

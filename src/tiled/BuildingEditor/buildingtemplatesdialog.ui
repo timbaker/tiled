@@ -183,6 +183,11 @@
           </item>
           <item>
            <property name="text">
+            <string>Curtains</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
             <string>Stairs</string>
            </property>
           </item>

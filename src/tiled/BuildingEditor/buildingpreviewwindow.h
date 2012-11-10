@@ -114,6 +114,7 @@ public:
         LayerIndexFloor,
         LayerIndexWall,
         LayerIndexFrame,
+        LayerIndexCurtains,
         LayerIndexDoor,
         LayerIndexFurniture,
         LayerIndexFurniture2,

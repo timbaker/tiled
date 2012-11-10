@@ -69,6 +69,7 @@ public:
     BuildingTile *DoorTile;
     BuildingTile *DoorFrameTile;
     BuildingTile *WindowTile;
+    BuildingTile *CurtainsTile;
     BuildingTile *StairsTile;
 
     QList<Room*> RoomList;
@@ -83,6 +84,7 @@ public:
         DoorTile = other->DoorTile;
         DoorFrameTile = other->DoorFrameTile;
         WindowTile = other->WindowTile;
+        CurtainsTile = other->CurtainsTile;
         StairsTile = other->StairsTile;
 
         foreach (Room *room, other->RoomList)
