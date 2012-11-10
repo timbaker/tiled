@@ -36,6 +36,7 @@
 #include <QScrollBar>
 #include <QSettings>
 #include <QToolBar>
+#include <QToolButton>
 #include <QUndoCommand>
 #include <QUndoGroup>
 #include <QUndoStack>
@@ -155,6 +156,32 @@ public:
     FurnitureGroup *mCategory;
 };
 
+class ReorderCategory : public QUndoCommand
+{
+public:
+    ReorderCategory(BuildingTilesDialog *d, int oldIndex, int newIndex) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Reorder Category")),
+        mDialog(d),
+        mOldIndex(oldIndex),
+        mNewIndex(newIndex)
+    {
+    }
+
+    void undo()
+    {
+        mDialog->reorderCategory(mNewIndex, mOldIndex);
+    }
+
+    void redo()
+    {
+        mDialog->reorderCategory(mOldIndex, mNewIndex);
+    }
+
+    BuildingTilesDialog *mDialog;
+    int mOldIndex;
+    int mNewIndex;
+};
+
 class ChangeFurnitureTile : public QUndoCommand
 {
 public:
@@ -241,6 +268,59 @@ public:
     BuildingTilesDialog *mDialog;
     FurnitureGroup *mCategory;
     int mIndex;
+    FurnitureTiles *mTiles;
+};
+
+class ReorderFurniture : public QUndoCommand
+{
+public:
+    ReorderFurniture(BuildingTilesDialog *d, FurnitureGroup *category,
+                     int oldIndex, int newIndex) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Reorder Furniture")),
+        mDialog(d),
+        mCategory(category),
+        mOldIndex(oldIndex),
+        mNewIndex(newIndex)
+    {
+    }
+
+    void undo()
+    {
+        mDialog->reorderFurniture(mCategory, mNewIndex, mOldIndex);
+    }
+
+    void redo()
+    {
+        mDialog->reorderFurniture(mCategory, mOldIndex, mNewIndex);
+    }
+
+    BuildingTilesDialog *mDialog;
+    FurnitureGroup *mCategory;
+    int mOldIndex;
+    int mNewIndex;
+};
+
+class ToggleFurnitureCorners : public QUndoCommand
+{
+public:
+    ToggleFurnitureCorners(BuildingTilesDialog *d, FurnitureTiles *tiles) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Toggle Corners")),
+        mDialog(d),
+        mTiles(tiles)
+    {
+    }
+
+    void undo()
+    {
+        mDialog->toggleCorners(mTiles);
+    }
+
+    void redo()
+    {
+        mDialog->toggleCorners(mTiles);
+    }
+
+    BuildingTilesDialog *mDialog;
     FurnitureTiles *mTiles;
 };
 
@@ -338,17 +418,13 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     mCategory(0),
     mFurnitureGroup(0),
     mUndoGroup(new QUndoGroup(this)),
-    mUndoStack(new QUndoStack(this)),
-    mChanges(false)
+    mUndoStack(new QUndoStack(this))
 {
     ui->setupUi(this);
 
     QSettings settings;
 
     mZoomable->setScale(BuildingPreferences::instance()->tileScale());
-
-    connect(ui->addTiles, SIGNAL(clicked()), SLOT(addTiles()));
-    connect(ui->removeTiles, SIGNAL(clicked()), SLOT(removeTiles()));
 
     ui->categoryTilesView->setZoomable(mZoomable);
     ui->categoryTilesView->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -404,26 +480,52 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     toolBar->setIconSize(QSize(16, 16));
     toolBar->addAction(ui->actionToggleCorners);
     toolBar->addAction(ui->actionClearTiles);
+    toolBar->addAction(ui->actionMoveFurnitureUp);
+    toolBar->addAction(ui->actionMoveFurnitureDown);
+    toolBar->addSeparator();
+    toolBar->addAction(ui->actionAddTiles);
+    toolBar->addAction(ui->actionRemoveTiles);
     connect(ui->actionToggleCorners, SIGNAL(triggered()), SLOT(toggleCorners()));
     connect(ui->actionClearTiles, SIGNAL(triggered()), SLOT(clearTiles()));
+    connect(ui->actionMoveFurnitureUp, SIGNAL(triggered()), SLOT(moveFurnitureUp()));
+    connect(ui->actionMoveFurnitureDown, SIGNAL(triggered()), SLOT(moveFurnitureDown()));
+    connect(ui->actionAddTiles, SIGNAL(triggered()), SLOT(addTiles()));
+    connect(ui->actionRemoveTiles, SIGNAL(triggered()), SLOT(removeTiles()));
     ui->categoryToolbarLayout->addWidget(toolBar);
     /////
 
     QAction *undoAction = mUndoGroup->createUndoAction(this, tr("Undo"));
     QAction *redoAction = mUndoGroup->createRedoAction(this, tr("Redo"));
-    undoAction->setShortcuts(QKeySequence::Undo);
-    redoAction->setShortcuts(QKeySequence::Redo);
     QIcon undoIcon(QLatin1String(":images/16x16/edit-undo.png"));
     QIcon redoIcon(QLatin1String(":images/16x16/edit-redo.png"));
-    undoAction->setIcon(undoIcon);
-    redoAction->setIcon(redoIcon);
-    Utils::setThemeIcon(undoAction, "edit-undo");
-    Utils::setThemeIcon(redoAction, "edit-redo");
-    toolBar->addSeparator();
-    toolBar->addAction(undoAction);
-    toolBar->addAction(redoAction);
     mUndoGroup->addStack(mUndoStack);
     mUndoGroup->setActiveStack(mUndoStack);
+
+    QToolButton *button = new QToolButton(this);
+    button->setIcon(undoIcon);
+    Utils::setThemeIcon(button, "edit-undo");
+    button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    button->setText(undoAction->text());
+    button->setEnabled(mUndoGroup->canUndo());
+    button->setShortcut(QKeySequence::Undo);
+    mUndoButton = button;
+    ui->buttonsLayout->addWidget(button);
+    connect(mUndoGroup, SIGNAL(canUndoChanged(bool)), button, SLOT(setEnabled(bool)));
+    connect(mUndoGroup, SIGNAL(undoTextChanged(QString)), SLOT(undoTextChanged(QString)));
+    connect(mUndoGroup, SIGNAL(redoTextChanged(QString)), SLOT(redoTextChanged(QString)));
+    connect(button, SIGNAL(clicked()), undoAction, SIGNAL(triggered()));
+
+    button = new QToolButton(this);
+    button->setIcon(redoIcon);
+    button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    Utils::setThemeIcon(button, "edit-redo");
+    button->setText(redoAction->text());
+    button->setEnabled(mUndoGroup->canRedo());
+    button->setShortcut(QKeySequence::Redo);
+    mRedoButton = button;
+    ui->buttonsLayout->addWidget(button);
+    connect(mUndoGroup, SIGNAL(canRedoChanged(bool)), button, SLOT(setEnabled(bool)));
+    connect(button, SIGNAL(clicked()), redoAction, SIGNAL(triggered()));
 
     /////
     toolBar = new QToolBar();
@@ -455,7 +557,7 @@ BuildingTilesDialog::~BuildingTilesDialog()
 
 bool BuildingTilesDialog::changes() const
 {
-    return mChanges || !mUndoStack->isClean();
+    return !mUndoStack->isClean();
 }
 
 void BuildingTilesDialog::addTile(BuildingTileCategory *category, const QString &tileName)
@@ -527,6 +629,28 @@ QString BuildingTilesDialog::changeFurnitureTile(FurnitureTile *ftile,
     return old;
 }
 
+void BuildingTilesDialog::reorderFurniture(FurnitureGroup *category,
+                                           int oldIndex, int newIndex)
+{
+    FurnitureTiles *ftiles = category->mTiles.takeAt(oldIndex);
+    category->mTiles.insert(newIndex, ftiles);
+
+    setFurnitureTiles();
+    ui->furnitureView->setCurrentIndex(
+                ui->furnitureView->model()->index(ftiles->mTiles[0]));
+}
+
+void BuildingTilesDialog::toggleCorners(FurnitureTiles *ftiles)
+{
+    ftiles->toggleCorners();
+
+    FurnitureView *v = ui->furnitureView;
+    v->update(v->model()->index(ftiles->mTiles[0]));
+    v->update(v->model()->index(ftiles->mTiles[1]));
+    v->update(v->model()->index(ftiles->mTiles[2]));
+    v->update(v->model()->index(ftiles->mTiles[3]));
+}
+
 QString BuildingTilesDialog::renameCategory(FurnitureGroup *category,
                                             const QString &name)
 {
@@ -535,6 +659,15 @@ QString BuildingTilesDialog::renameCategory(FurnitureGroup *category,
     int row = numTileCategories() + FurnitureGroups::instance()->indexOf(category);
     ui->categoryList->item(row)->setText(name);
     return old;
+}
+
+void BuildingTilesDialog::reorderCategory(int oldIndex, int newIndex)
+{
+    FurnitureGroup *category = FurnitureGroups::instance()->removeGroup(oldIndex);
+    FurnitureGroups::instance()->insertGroup(newIndex, category);
+
+    setCategoryList();
+    ui->categoryList->setCurrentRow(numTileCategories() + newIndex);
 }
 
 void BuildingTilesDialog::addTileset(Tileset *tileset)
@@ -652,8 +785,8 @@ void BuildingTilesDialog::synchUI()
         add = ui->tilesetTilesView->selectionModel()->selectedIndexes().count();
         remove = ui->categoryTilesView->selectionModel()->selectedIndexes().count();
     }
-    ui->addTiles->setEnabled(add);
-    ui->removeTiles->setEnabled(remove);
+    ui->actionAddTiles->setEnabled(add);
+    ui->actionRemoveTiles->setEnabled(remove);
 
     ui->actionRemoveCategory->setEnabled(mFurnitureGroup != 0);
     ui->actionMoveCategoryUp->setEnabled(mFurnitureGroup != 0 &&
@@ -663,6 +796,12 @@ void BuildingTilesDialog::synchUI()
 
     ui->actionToggleCorners->setEnabled(mFurnitureGroup && remove);
     ui->actionClearTiles->setEnabled(mFurnitureGroup && remove);
+
+    QModelIndex current = ui->furnitureView->currentIndex();
+    int index = current.isValid() ? current.row() : -1;
+    ui->actionMoveFurnitureUp->setEnabled(mFurnitureGroup && (index > 0));
+    ui->actionMoveFurnitureDown->setEnabled(mFurnitureGroup && (index >= 0) &&
+                                            (index < mFurnitureGroup->mTiles.count()));
 
     ui->actionRemoveTileset->setEnabled(ui->tilesetList->currentRow() >= 0);
 }
@@ -832,9 +971,14 @@ void BuildingTilesDialog::newCategory()
 {
     FurnitureGroup *group = new FurnitureGroup;
     group->mLabel = QLatin1String("New Category");
-    mUndoStack->push(new AddCategory(this, FurnitureGroups::instance()->groups().count(),
-                                     group));
-    ui->categoryList->setCurrentRow(ui->categoryList->count() - 1);
+    int index = mFurnitureGroup
+            ? FurnitureGroups::instance()->indexOf(mFurnitureGroup) + 1
+            : FurnitureGroups::instance()->groupCount();
+    mUndoStack->push(new AddCategory(this, index, group));
+
+    QListWidgetItem *item = ui->categoryList->item(numTileCategories() + index);
+    ui->categoryList->setCurrentItem(item);
+    ui->categoryList->editItem(item);
 }
 
 void BuildingTilesDialog::removeCategory()
@@ -853,13 +997,7 @@ void BuildingTilesDialog::moveCategoryUp()
     int index = FurnitureGroups::instance()->indexOf(mFurnitureGroup);
     if (index == 0)
         return;
-    FurnitureGroups::instance()->removeGroup(index);
-    FurnitureGroups::instance()->insertGroup(index - 1, mFurnitureGroup);
-
-    setCategoryList();
-    ui->categoryList->setCurrentRow(numTileCategories() + index - 1);
-
-    mChanges = true;
+    mUndoStack->push(new ReorderCategory(this, index, index - 1));
 }
 
 void BuildingTilesDialog::moveCategoryDown()
@@ -869,13 +1007,37 @@ void BuildingTilesDialog::moveCategoryDown()
     int index = FurnitureGroups::instance()->indexOf(mFurnitureGroup);
     if (index == FurnitureGroups::instance()->groupCount() - 1)
         return;
-    FurnitureGroups::instance()->removeGroup(index);
-    FurnitureGroups::instance()->insertGroup(index + 1, mFurnitureGroup);
+    mUndoStack->push(new ReorderCategory(this, index, index + 1));
+}
 
-    setCategoryList();
-    ui->categoryList->setCurrentRow(numTileCategories() + index + 1);
+void BuildingTilesDialog::moveFurnitureUp()
+{
+    if (!mFurnitureGroup)
+         return;
+    FurnitureView *v = ui->furnitureView;
+    QModelIndex current = v->currentIndex();
+    if (!current.isValid())
+        return;
+    FurnitureTiles *ftiles = v->model()->tileAt(current)->owner();
+    int index = mFurnitureGroup->mTiles.indexOf(ftiles);
+    if (index == 0)
+        return;
+    mUndoStack->push(new ReorderFurniture(this, mFurnitureGroup, index, index - 1));
+}
 
-    mChanges = true;
+void BuildingTilesDialog::moveFurnitureDown()
+{
+    if (!mFurnitureGroup)
+         return;
+    FurnitureView *v = ui->furnitureView;
+    QModelIndex current = v->currentIndex();
+    if (!current.isValid())
+        return;
+    FurnitureTiles *ftiles = v->model()->tileAt(current)->owner();
+    int index = mFurnitureGroup->mTiles.indexOf(ftiles);
+    if (index == mFurnitureGroup->mTiles.count() - 1)
+        return;
+    mUndoStack->push(new ReorderFurniture(this, mFurnitureGroup, index, index + 1));
 }
 
 void BuildingTilesDialog::toggleCorners()
@@ -885,19 +1047,18 @@ void BuildingTilesDialog::toggleCorners()
         QList<FurnitureTiles*> toggle;
         QModelIndexList selection = v->selectionModel()->selectedIndexes();
         foreach (QModelIndex index, selection) {
-            FurnitureTile *tile = v->model()->tileAt(index);
-            if (!toggle.contains(tile->owner()))
-                toggle += tile->owner();
+            FurnitureTile *ftile = v->model()->tileAt(index);
+            if (!toggle.contains(ftile->owner()))
+                toggle += ftile->owner();
         }
-        foreach (FurnitureTiles *tiles, toggle) {
-            tiles->toggleCorners();
-            v->update(v->model()->index(tiles->mTiles[0]));
-            v->update(v->model()->index(tiles->mTiles[1]));
-            v->update(v->model()->index(tiles->mTiles[2]));
-            v->update(v->model()->index(tiles->mTiles[3]));
-        }
-        mChanges = true;
-        return;
+        if (toggle.count() == 0)
+            return;
+        if (toggle.count() > 1)
+            mUndoStack->beginMacro(tr("Toggle Corners"));
+        foreach (FurnitureTiles *ftiles, toggle)
+            mUndoStack->push(new ToggleFurnitureCorners(this, ftiles));
+        if (toggle.count() > 1)
+            mUndoStack->endMacro();
     }
 }
 
@@ -905,13 +1066,21 @@ void BuildingTilesDialog::addTileset()
 {
     const QString tilesDir = BuildingPreferences::instance()->tilesDirectory();
     const QString filter = Utils::readableImageFormatsFilter();
-    QString f = QFileDialog::getOpenFileName(this, tr("Tileset Image"), tilesDir,
-                                             filter);
-    if (!f.isEmpty()) {
+    QStringList fileNames = QFileDialog::getOpenFileNames(this,
+                                                          tr("Tileset Image"),
+                                                          tilesDir,
+                                                          filter);
+    QFileInfoList add;
+    foreach (QString f, fileNames) {
         QFileInfo info(f);
         QString name = info.completeBaseName();
         if (BuildingTiles::instance()->tilesetFor(name))
-            return; // duplicate tileset names not allowed
+            continue; // FIXME: duplicate tileset names not allowed, even in different directories
+        add += info;
+    }
+    if (add.count() > 1)
+        mUndoStack->beginMacro(tr("Add Tilesets"));
+    foreach (QFileInfo info, add) {
         if (Tiled::Tileset *ts = BuildingTMX::instance()->loadTileset(info.canonicalFilePath()))
             mUndoStack->push(new AddBuildingTileset(this, ts));
         else {
@@ -919,6 +1088,8 @@ void BuildingTilesDialog::addTileset()
                                  BuildingTMX::instance()->errorString());
         }
     }
+    if (add.count() > 1)
+        mUndoStack->endMacro();
 }
 
 void BuildingTilesDialog::removeTileset()
@@ -934,6 +1105,16 @@ void BuildingTilesDialog::removeTileset()
             return;
         mUndoStack->push(new RemoveBuildingTileset(this, tileset));
     }
+}
+
+void BuildingTilesDialog::undoTextChanged(const QString &text)
+{
+    mUndoButton->setToolTip(text);
+}
+
+void BuildingTilesDialog::redoTextChanged(const QString &text)
+{
+    mRedoButton->setToolTip(text);
 }
 
 void BuildingTilesDialog::accept()

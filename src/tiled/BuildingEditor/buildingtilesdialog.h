@@ -22,6 +22,7 @@
 
 class QListWidgetItem;
 class QSplitter;
+class QToolButton;
 class QUndoGroup;
 class QUndoStack;
 
@@ -53,6 +54,7 @@ public:
 
     bool changes() const;
 
+    //+ UNDO/REDO
     void addTile(BuildingTileCategory *category, const QString &tileName);
     void removeTile(BuildingTileCategory *category, const QString &tileName);
 
@@ -62,14 +64,17 @@ public:
     void insertFurnitureTiles(FurnitureGroup *category, int index,
                               FurnitureTiles *ftiles);
     FurnitureTiles* removeFurnitureTiles(FurnitureGroup *category, int index);
-
     QString changeFurnitureTile(FurnitureTile *ftile, int index,
                                 const QString &tileName);
+    void reorderFurniture(FurnitureGroup *category, int oldIndex, int newIndex);
+    void toggleCorners(FurnitureTiles *ftiles);
 
     QString renameCategory(FurnitureGroup *category, const QString &name);
+    void reorderCategory(int oldIndex, int newIndex);
 
     void addTileset(Tiled::Tileset *tileset);
     void removeTileset(Tiled::Tileset *tileset);
+    //- UNDO/REDO
 
 private:
     void setCategoryList();
@@ -100,10 +105,16 @@ private slots:
     void moveCategoryUp();
     void moveCategoryDown();
 
+    void moveFurnitureUp();
+    void moveFurnitureDown();
+
     void toggleCorners();
 
     void addTileset();
     void removeTileset();
+
+    void undoTextChanged(const QString &text);
+    void redoTextChanged(const QString &text);
 
     void accept();
 
@@ -114,7 +125,8 @@ private:
     FurnitureGroup *mFurnitureGroup;
     QUndoGroup *mUndoGroup;
     QUndoStack *mUndoStack;
-    bool mChanges;
+    QToolButton *mUndoButton;
+    QToolButton *mRedoButton;
 };
 
 } // namespace BuildingEditor
