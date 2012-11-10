@@ -111,8 +111,7 @@ public:
 
     FurnitureTile *changeFurnitureTile(FurnitureObject *object, FurnitureTile *ftile);
 
-    void resizeRoof(RoofObject *roof, int &length, int &thickness);
-    void resizeRoofCorner(RoofCornerObject *roof, int &width, int &height);
+    void resizeRoof(RoofObject *roof, int &width, int &height);
     // -UNDO/REDO
     
 signals:
