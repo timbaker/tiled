@@ -42,7 +42,9 @@
 #include "tilesetmanager.h"
 #include "zlevelrenderer.h"
 
+#include <QDebug>
 #include <QMessageBox>
+#include <QScrollBar>
 #include <QSettings>
 #include <QStyleOptionGraphicsItem>
 #include <QWheelEvent>
@@ -123,6 +125,22 @@ void BuildingPreviewWindow::closeEvent(QCloseEvent *event)
     else
 #endif
         event->ignore();
+}
+
+void BuildingPreviewWindow::keyPressEvent(QKeyEvent *event)
+{
+    qDebug() << event << event->key();
+    if (event->key() == Qt::Key_Space && !event->isAutoRepeat())
+        if (mDocument)
+            mView->setHandScrolling(true);
+}
+
+void BuildingPreviewWindow::keyReleaseEvent(QKeyEvent *event)
+{
+    qDebug() << event << event->key();
+    if (event->key() == Qt::Key_Space && !event->isAutoRepeat())
+        if (mDocument)
+            mView->setHandScrolling(false);
 }
 
 void BuildingPreviewWindow::setDocument(BuildingDocument *doc)
@@ -728,7 +746,8 @@ void BuildingPreviewScene::tilesetRemoved(Tileset *tileset)
 
 BuildingPreviewView::BuildingPreviewView(QWidget *parent) :
     QGraphicsView(parent),
-    mZoomable(new Zoomable(this))
+    mZoomable(new Zoomable(this)),
+    mHandScrolling(false)
 {
     // This enables mouseMoveEvent without any buttons being pressed
     setMouseTracking(true);
@@ -736,10 +755,66 @@ BuildingPreviewView::BuildingPreviewView(QWidget *parent) :
     connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(adjustScale(qreal)));
 }
 
+BuildingPreviewView::~BuildingPreviewView()
+{
+    setHandScrolling(false); // Just in case we didn't get a hide event
+}
+
+bool BuildingPreviewView::event(QEvent *e)
+{
+    // Ignore space bar events since they're handled by the MainWindow
+    if (e->type() == QEvent::KeyPress || e->type() == QEvent::KeyRelease) {
+        if (static_cast<QKeyEvent*>(e)->key() == Qt::Key_Space) {
+            e->ignore();
+            return false;
+        }
+    }
+
+    return QGraphicsView::event(e);
+}
+
+void BuildingPreviewView::hideEvent(QHideEvent *event)
+{
+    // Disable hand scrolling when the view gets hidden in any way
+    setHandScrolling(false);
+    QGraphicsView::hideEvent(event);
+}
+
+void BuildingPreviewView::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::MidButton) {
+        setHandScrolling(true);
+        return;
+    }
+
+    QGraphicsView::mousePressEvent(event);
+}
+
 void BuildingPreviewView::mouseMoveEvent(QMouseEvent *event)
 {
+    if (mHandScrolling) {
+        QScrollBar *hBar = horizontalScrollBar();
+        QScrollBar *vBar = verticalScrollBar();
+        const QPoint d = event->globalPos() - mLastMousePos;
+        hBar->setValue(hBar->value() + (isRightToLeft() ? d.x() : -d.x()));
+        vBar->setValue(vBar->value() - d.y());
+
+        mLastMousePos = event->globalPos();
+        return;
+    }
+
     mLastMousePos = event->globalPos();
     mLastMouseScenePos = mapToScene(viewport()->mapFromGlobal(mLastMousePos));
+}
+
+void BuildingPreviewView::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::MidButton) {
+        setHandScrolling(false);
+        return;
+    }
+
+    QGraphicsView::mouseReleaseEvent(event);
 }
 
 /**
@@ -768,6 +843,25 @@ void BuildingPreviewView::wheelEvent(QWheelEvent *event)
     }
 
     QGraphicsView::wheelEvent(event);
+}
+
+void BuildingPreviewView::setHandScrolling(bool handScrolling)
+{
+    if (mHandScrolling == handScrolling)
+        return;
+
+    mHandScrolling = handScrolling;
+    qDebug() << "setHandScrolling" << mHandScrolling;
+    setInteractive(!mHandScrolling);
+
+    if (mHandScrolling) {
+        mLastMousePos = QCursor::pos();
+        QApplication::setOverrideCursor(QCursor(Qt::ClosedHandCursor));
+        viewport()->grabMouse();
+    } else {
+        viewport()->releaseMouse();
+        QApplication::restoreOverrideCursor();
+    }
 }
 
 void BuildingPreviewView::adjustScale(qreal scale)

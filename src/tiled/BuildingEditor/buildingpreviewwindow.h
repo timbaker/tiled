@@ -181,6 +181,7 @@ class BuildingPreviewView : public QGraphicsView
     Q_OBJECT
 public:
     BuildingPreviewView(QWidget *parent = 0);
+    ~BuildingPreviewView();
 
     BuildingPreviewScene *scene() const
     { return dynamic_cast<BuildingPreviewScene*>(QGraphicsView::scene()); }
@@ -188,8 +189,16 @@ public:
     Tiled::Internal::Zoomable *zoomable() const
     { return mZoomable; }
 
+    bool event(QEvent *event);
+
+    void hideEvent(QHideEvent *event);
+
+    void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
+
+    void setHandScrolling(bool handScrolling);
 
 private slots:
     void adjustScale(qreal scale);
@@ -198,6 +207,7 @@ private:
     Tiled::Internal::Zoomable *mZoomable;
     QPoint mLastMousePos;
     QPointF mLastMouseScenePos;
+    bool mHandScrolling;
 };
 
 class BuildingPreviewWindow : public QMainWindow
@@ -207,6 +217,9 @@ public:
     BuildingPreviewWindow(QWidget *parent = 0);
 
     void closeEvent(QCloseEvent *event);
+
+    void keyPressEvent(QKeyEvent *event);
+    void keyReleaseEvent(QKeyEvent *event);
 
     void setDocument(BuildingDocument *doc);
     void clearDocument();
