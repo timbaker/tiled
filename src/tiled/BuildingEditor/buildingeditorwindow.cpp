@@ -665,6 +665,35 @@ void BuildingEditorWindow::categorySelectionChanged()
             }
             ui->tilesetView->model()->setTiles(tiles);
             ui->categoryStack->setCurrentIndex(0);
+
+            // Select the "current" tile in the category.
+            if (!mCurrentDocument)
+                return;
+            BuildingTile *currentTile = 0;
+            if (mCategory->name() == QLatin1String("exterior_walls"))
+                currentTile = mCurrentDocument->building()->exteriorWall();
+            if (currentRoom() && mCategory->name() == QLatin1String("interior_walls"))
+                currentTile = currentRoom()->Wall;
+            if (currentRoom() && mCategory->name() == QLatin1String("floors"))
+                currentTile = currentRoom()->Floor;
+            if (mCategory->name() == QLatin1String("doors"))
+                currentTile = mCurrentDocument->building()->doorTile();
+            if (mCategory->name() == QLatin1String("door_frames"))
+                currentTile = mCurrentDocument->building()->doorFrameTile();
+            if (mCategory->name() == QLatin1String("windows"))
+                currentTile = mCurrentDocument->building()->windowTile();
+            if (mCategory->name() == QLatin1String("curtains"))
+                currentTile = mCurrentDocument->building()->curtainsTile();
+            if (mCategory->name() == QLatin1String("stairs"))
+                currentTile = mCurrentDocument->building()->stairsTile();
+            if (currentTile) {
+                if (Tiled::Tile *tile = BuildingTiles::instance()->tileFor(currentTile)) {
+                    QModelIndex index = ui->tilesetView->model()->index(tile);
+                    mSynching = true;
+                    ui->tilesetView->setCurrentIndex(index);
+                    mSynching = false;
+                }
+            }
         } else {
             row -= BuildingTiles::instance()->categories().count();
             mFurnitureGroup = FurnitureGroups::instance()->groups().at(row);
@@ -769,6 +798,9 @@ void BuildingEditorWindow::currentEWallChanged(Tile *tile)
 
 void BuildingEditorWindow::currentIWallChanged(Tile *tile)
 {
+    if (!currentRoom())
+        return;
+
     BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
                 QLatin1String("interior_walls"), tile);
     mCurrentDocument->undoStack()->push(new ChangeWallForRoom(mCurrentDocument,
@@ -778,6 +810,9 @@ void BuildingEditorWindow::currentIWallChanged(Tile *tile)
 
 void BuildingEditorWindow::currentFloorChanged(Tile *tile)
 {
+    if (!currentRoom())
+        return;
+
     BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
                 QLatin1String("floors"), tile);
     mCurrentDocument->undoStack()->push(new ChangeFloorForRoom(mCurrentDocument,
