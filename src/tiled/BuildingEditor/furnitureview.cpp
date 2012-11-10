@@ -93,11 +93,14 @@ void FurnitureTileDelegate::paint(QPainter *painter,
     QPointF tileMargins(0, imageHeight - tileHeight);
 
     // Draw the tile images.
+    const QVector<BuildingTile*> btiles = mView->acceptDrops()
+            ? ftile->mTiles
+            : ftile->resolvedTiles();
     for (int y = 0; y < 2; y++) {
         for (int x = 0; x < 2; x++) {
             int i = x + y * 2;
             QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-            if (BuildingTile *btile = ftile->mTiles[i]) {
+            if (BuildingTile *btile = btiles[i]) {
                 if (Tile *tile = BuildingTiles::instance()->tileFor(btile)) { // FIXME: calc this elsewhere
                     QPointF p1 = tileToPixelCoords(x, y) + tileMargins + r.topLeft();
                     QRect r((p1 - QPointF(tileWidth/2, imageHeight - tileHeight)).toPoint(),
@@ -147,9 +150,15 @@ void FurnitureTileDelegate::paint(QPainter *painter,
         painter->setOpacity(opacity);
     }
 
+    QRectF textRect;
     painter->drawText(option.rect.adjusted(extra, extra, 0, 0),
+                      Qt::AlignTop | Qt::AlignLeft,
                       ftile->orientToString(),
-                      Qt::AlignTop | Qt::AlignLeft);
+                      &textRect);
+
+    // Draw resolved-tiles indicator
+    if (!mView->acceptDrops() && (ftile->mTiles != ftile->resolvedTiles()))
+        painter->fillRect(textRect.right() + 3, textRect.center().y()-2, 4, 4, Qt::gray);
 }
 
 QSize FurnitureTileDelegate::sizeHint(const QStyleOptionViewItem & option,

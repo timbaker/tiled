@@ -22,6 +22,7 @@
 #include <QList>
 #include <QSize>
 #include <QString>
+#include <QVector>
 
 namespace BuildingEditor {
 
@@ -45,9 +46,9 @@ public:
 
     FurnitureTile(FurnitureTiles *tiles, FurnitureOrientation orient) :
         mOwner(tiles),
-        mOrient(orient)
+        mOrient(orient),
+        mTiles(4, 0)
     {
-        mTiles[0] = mTiles[1] = mTiles[2] = mTiles[3] = 0;
     }
 
     FurnitureTiles *owner() const
@@ -79,17 +80,19 @@ public:
 
     QSize size() const;
 
+    const QVector<BuildingTile*> &resolvedTiles() const;
+
     FurnitureTiles *mOwner;
     FurnitureOrientation mOrient;
-    BuildingTile *mTiles[4]; // W N E S or SW NW NE SE
+    QVector<BuildingTile*> mTiles; // W N E S or SW NW NE SE
 };
 
 class FurnitureTiles
 {
 public:
-    FurnitureTiles()
+    FurnitureTiles() :
+        mTiles(4, 0)
     {
-        mTiles[0] = mTiles[1] = mTiles[2] = mTiles[3] = 0;
     }
 
     ~FurnitureTiles()
@@ -111,7 +114,7 @@ public:
 
     static int orientIndex(FurnitureTile::FurnitureOrientation orient);
 
-    FurnitureTile *mTiles[4];
+    QVector<FurnitureTile*> mTiles;
 };
 
 class FurnitureGroup

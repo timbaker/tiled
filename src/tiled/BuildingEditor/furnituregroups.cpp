@@ -231,9 +231,25 @@ FurnitureTile::FurnitureOrientation FurnitureGroups::orientFromString(const QStr
 
 QSize FurnitureTile::size() const
 {
-    int width = (mTiles[1] || mTiles[3]) ? 2 : 1;
-    int height = (mTiles[2] || mTiles[3]) ? 2 : 1;
+    int width = (resolvedTiles()[1] || resolvedTiles()[3]) ? 2 : 1;
+    int height = (resolvedTiles()[2] || resolvedTiles()[3]) ? 2 : 1;
     return QSize(width, height);
+}
+
+const QVector<BuildingTile *> &FurnitureTile::resolvedTiles() const
+{
+    if (isEmpty()) {
+        if (mOrient == FurnitureE)
+            return mOwner->mTiles[FurnitureW]->mTiles;
+        if (mOrient == FurnitureN)
+            return mOwner->mTiles[FurnitureW]->mTiles;
+        if (mOrient == FurnitureS) {
+            if (!mOwner->mTiles[FurnitureN]->isEmpty())
+                return mOwner->mTiles[FurnitureN]->mTiles;
+            return mOwner->mTiles[FurnitureW]->mTiles;
+        }
+    }
+    return mTiles;
 }
 
 /////

@@ -285,14 +285,14 @@ void BuildingFloor::LayoutToSquares()
             int x = fo->x();
             int y = fo->y();
             FurnitureTile *ftile = fo->furnitureTile();
-            if (ftile->mTiles[0])
-                squares[x][y].ReplaceFurniture(ftile->mTiles[0]);
-            if (ftile->mTiles[1])
-                squares[x+1][y].ReplaceFurniture(ftile->mTiles[1]);
-            if (ftile->mTiles[2])
-                squares[x][y+1].ReplaceFurniture(ftile->mTiles[2]);
-            if (ftile->mTiles[3])
-                squares[x+1][y+1].ReplaceFurniture(ftile->mTiles[3]);
+            if (ftile->resolvedTiles()[0])
+                squares[x][y].ReplaceFurniture(ftile->resolvedTiles()[0]);
+            if (ftile->resolvedTiles()[1])
+                squares[x+1][y].ReplaceFurniture(ftile->resolvedTiles()[1]);
+            if (ftile->resolvedTiles()[2])
+                squares[x][y+1].ReplaceFurniture(ftile->resolvedTiles()[2]);
+            if (ftile->resolvedTiles()[3])
+                squares[x+1][y+1].ReplaceFurniture(ftile->resolvedTiles()[3]);
         }
         if (RoofObject *ro = object->asRoof()) {
             QRect r = ro->bounds();
