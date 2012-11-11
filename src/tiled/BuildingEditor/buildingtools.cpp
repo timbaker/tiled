@@ -1029,6 +1029,15 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mEditor->addItem(mItem);
         mMode = Create;
     }
+
+    if (event->button() == Qt::RightButton) {
+        if (BuildingObject *object = mEditor->topmostObjectAt(event->scenePos())) {
+            BuildingFloor *floor = mEditor->document()->currentFloor();
+            mEditor->document()->undoStack()->push(new RemoveObject(mEditor->document(),
+                                                                    floor,
+                                                                    floor->indexOf(object)));
+        }
+    }
 }
 
 void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
@@ -1138,7 +1147,7 @@ void RoofTool::documentChanged()
 
 void RoofTool::activate()
 {
-    setStatusText(tr("Left-click-drag to place a roof."));
+    setStatusText(tr("Left-click-drag to place a roof.  Right-click to remove any object."));
     if (mCursorItem)
         mEditor->addItem(mCursorItem);
 }
