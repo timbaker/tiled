@@ -102,6 +102,33 @@ public:
     QString mTileName;
 };
 
+class RenameTileCategory : public QUndoCommand
+{
+public:
+    RenameTileCategory(BuildingTilesDialog *d, BuildingTileCategory *category,
+                   const QString &name) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Rename Tile Category")),
+        mDialog(d),
+        mCategory(category),
+        mName(name)
+    {
+    }
+
+    void undo()
+    {
+        mName = mDialog->renameTileCategory(mCategory, mName);
+    }
+
+    void redo()
+    {
+        mName = mDialog->renameTileCategory(mCategory, mName);
+    }
+
+    BuildingTilesDialog *mDialog;
+    BuildingTileCategory *mCategory;
+    QString mName;
+};
+
 class AddCategory : public QUndoCommand
 {
 public:
@@ -324,12 +351,12 @@ public:
     FurnitureTiles *mTiles;
 };
 
-class RenameCategory : public QUndoCommand
+class RenameFurnitureCategory : public QUndoCommand
 {
 public:
-    RenameCategory(BuildingTilesDialog *d, FurnitureGroup *category,
+    RenameFurnitureCategory(BuildingTilesDialog *d, FurnitureGroup *category,
                    const QString &name) :
-        QUndoCommand(QCoreApplication::translate("UndoCommands", "Rename Category")),
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Rename Furniture Category")),
         mDialog(d),
         mCategory(category),
         mName(name)
@@ -338,12 +365,12 @@ public:
 
     void undo()
     {
-        mName = mDialog->renameCategory(mCategory, mName);
+        mName = mDialog->renameFurnitureCategory(mCategory, mName);
     }
 
     void redo()
     {
-        mName = mDialog->renameCategory(mCategory, mName);
+        mName = mDialog->renameFurnitureCategory(mCategory, mName);
     }
 
     BuildingTilesDialog *mDialog;
@@ -578,6 +605,16 @@ void BuildingTilesDialog::removeTile(BuildingTileCategory *category, const QStri
     synchUI(); // model calling reset() doesn't generate selectionChanged signal
 }
 
+QString BuildingTilesDialog::renameTileCategory(BuildingTileCategory *category,
+                                                const QString &name)
+{
+    QString old = category->label();
+    category->setLabel(name);
+    int row = BuildingTiles::instance()->indexOf(category);
+    ui->categoryList->item(row)->setText(name);
+    return old;
+}
+
 void BuildingTilesDialog::addCategory(int index, FurnitureGroup *category)
 {
     FurnitureGroups::instance()->insertGroup(index, category);
@@ -651,7 +688,7 @@ void BuildingTilesDialog::toggleCorners(FurnitureTiles *ftiles)
     v->update(v->model()->index(ftiles->mTiles[3]));
 }
 
-QString BuildingTilesDialog::renameCategory(FurnitureGroup *category,
+QString BuildingTilesDialog::renameFurnitureCategory(FurnitureGroup *category,
                                             const QString &name)
 {
     QString old = category->mLabel;
@@ -694,8 +731,12 @@ void BuildingTilesDialog::setCategoryList()
 {
     ui->categoryList->clear();
 
-    foreach (BuildingTileCategory *category, BuildingTiles::instance()->categories())
-        ui->categoryList->addItem(category->label());
+    foreach (BuildingTileCategory *category, BuildingTiles::instance()->categories()) {
+        QListWidgetItem *item = new QListWidgetItem();
+        item->setText(category->label());
+        item->setFlags(item->flags() | Qt::ItemIsEditable);
+        ui->categoryList->addItem(item);
+    }
 
     foreach (FurnitureGroup *group, FurnitureGroups::instance()->groups()) {
         QListWidgetItem *item = new QListWidgetItem();
@@ -816,13 +857,13 @@ void BuildingTilesDialog::categoryChanged(int index)
         setFurnitureTiles();
         tilesetSelectionChanged();
     } else if (index < numTileCategories()) {
-        mCategory = BuildingTiles::instance()->categories().at(index);
+        mCategory = BuildingTiles::instance()->category(index);
         ui->categoryStack->setCurrentIndex(0);
         setCategoryTiles();
         tilesetSelectionChanged();
     } else {
         index -= numTileCategories();
-        mFurnitureGroup = FurnitureGroups::instance()->groups().at(index);
+        mFurnitureGroup = FurnitureGroups::instance()->group(index);
         setFurnitureTiles();
         ui->categoryStack->setCurrentIndex(1);
     }
@@ -961,10 +1002,16 @@ void BuildingTilesDialog::furnitureTileDropped(FurnitureTile *ftile, int index,
 void BuildingTilesDialog::categoryNameEdited(QListWidgetItem *item)
 {
     int row = ui->categoryList->row(item);
+    if (row < numTileCategories()) {
+        BuildingTileCategory *category = BuildingTiles::instance()->category(row);
+        if (item->text() != category->label())
+            mUndoStack->push(new RenameTileCategory(this, category, item->text()));
+        return;
+    }
     row -= numTileCategories();
-    FurnitureGroup *category = FurnitureGroups::instance()->groups().at(row);
+    FurnitureGroup *category = FurnitureGroups::instance()->group(row);
     if (item->text() != category->mLabel)
-        mUndoStack->push(new RenameCategory(this, category, item->text()));
+        mUndoStack->push(new RenameFurnitureCategory(this, category, item->text()));
 }
 
 void BuildingTilesDialog::newCategory()

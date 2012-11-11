@@ -57,6 +57,7 @@ public:
     //+ UNDO/REDO
     void addTile(BuildingTileCategory *category, const QString &tileName);
     void removeTile(BuildingTileCategory *category, const QString &tileName);
+    QString renameTileCategory(BuildingTileCategory *category, const QString &name);
 
     void addCategory(int index, FurnitureGroup *category);
     FurnitureGroup *removeCategory(int index);
@@ -69,7 +70,7 @@ public:
     void reorderFurniture(FurnitureGroup *category, int oldIndex, int newIndex);
     void toggleCorners(FurnitureTiles *ftiles);
 
-    QString renameCategory(FurnitureGroup *category, const QString &name);
+    QString renameFurnitureCategory(FurnitureGroup *category, const QString &name);
     void reorderCategory(int oldIndex, int newIndex);
 
     void addTileset(Tiled::Tileset *tileset);
