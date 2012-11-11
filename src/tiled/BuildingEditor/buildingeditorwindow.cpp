@@ -558,9 +558,13 @@ void BuildingEditorWindow::setCurrentRoom(Room *room) const
 
 Room *BuildingEditorWindow::currentRoom() const
 {
+    if (!mCurrentDocument)
+        return 0;
     if (!currentBuilding()->roomCount())
         return 0;
     int roomIndex = mRoomComboBox->currentIndex();
+    if (roomIndex < 0)
+        return 0;
     return mCurrentDocument->building()->room(roomIndex);
 }
 
@@ -625,6 +629,7 @@ void BuildingEditorWindow::restoreSplitterSizes(QSplitter *splitter)
 
 void BuildingEditorWindow::updateRoomComboBox()
 {
+    Room *currentRoom = this->currentRoom();
     mRoomComboBox->clear();
     if (!mCurrentDocument)
         return;
@@ -639,6 +644,9 @@ void BuildingEditorWindow::updateRoomComboBox()
         mRoomComboBox->setItemIcon(index, QPixmap::fromImage(image));
         index++;
     }
+
+    if (currentBuilding()->rooms().contains(currentRoom))
+        setCurrentRoom(currentRoom);
 }
 
 void BuildingEditorWindow::roomIndexChanged(int index)
@@ -1611,17 +1619,20 @@ void BuildingEditorWindow::roofCornerTypeChanged(QAction *action)
 
 void BuildingEditorWindow::tilesetAdded(Tileset *tileset)
 {
+    Q_UNUSED(tileset)
     categorySelectionChanged();
 }
 
 void BuildingEditorWindow::tilesetAboutToBeRemoved(Tileset *tileset)
 {
+    Q_UNUSED(tileset)
     ui->tilesetView->model()->setTiles(QList<Tile*>());
     // FurnitureView doesn't cache Tiled::Tiles
 }
 
 void BuildingEditorWindow::tilesetRemoved(Tileset *tileset)
 {
+    Q_UNUSED(tileset)
     categorySelectionChanged();
 }
 

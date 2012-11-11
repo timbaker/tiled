@@ -129,7 +129,6 @@ void BuildingPreviewWindow::closeEvent(QCloseEvent *event)
 
 void BuildingPreviewWindow::keyPressEvent(QKeyEvent *event)
 {
-    qDebug() << event << event->key();
     if (event->key() == Qt::Key_Space && !event->isAutoRepeat())
         if (mDocument)
             mView->setHandScrolling(true);
@@ -137,7 +136,6 @@ void BuildingPreviewWindow::keyPressEvent(QKeyEvent *event)
 
 void BuildingPreviewWindow::keyReleaseEvent(QKeyEvent *event)
 {
-    qDebug() << event << event->key();
     if (event->key() == Qt::Key_Space && !event->isAutoRepeat())
         if (mDocument)
             mView->setHandScrolling(false);
