@@ -4,6 +4,8 @@ category
     name = exterior_walls
     tiles
     {
+        tile = location_community_church_small_01_000
+        tile = location_community_church_small_01_004
         tile = walls_exterior_house_01_000
         tile = walls_exterior_house_01_004
         tile = walls_exterior_house_01_016
@@ -20,8 +22,12 @@ category
     name = interior_walls
     tiles
     {
+        tile = location_business_bank_01_000
         tile = location_hospitality_sunstarmotel_01_000
         tile = location_hospitality_sunstarmotel_01_004
+        tile = location_hospitality_sunstarmotel_01_024
+        tile = location_trailer_01_000
+        tile = location_trailer_01_024
         tile = walls_exterior_wooden_01_024
         tile = walls_interior_bathroom_01_000
         tile = walls_interior_bathroom_01_004
@@ -53,6 +59,9 @@ category
     name = floors
     tiles
     {
+        tile = floors_exterior_tilesandstone_01_000
+        tile = floors_exterior_tilesandstone_01_001
+        tile = floors_exterior_tilesandstone_01_002
         tile = floors_interior_carpet_01_000
         tile = floors_interior_carpet_01_001
         tile = floors_interior_carpet_01_002
@@ -76,6 +85,8 @@ category
         tile = floors_interior_tilesandwood_01_009
         tile = floors_interior_tilesandwood_01_010
         tile = floors_interior_tilesandwood_01_011
+        tile = floors_interior_tilesandwood_01_016
+        tile = floors_interior_tilesandwood_01_017
         tile = floors_interior_tilesandwood_01_040
         tile = floors_interior_tilesandwood_01_041
         tile = floors_interior_tilesandwood_01_042
@@ -130,6 +141,28 @@ category
         tile = fixtures_windows_01_016
         tile = fixtures_windows_01_024
         tile = fixtures_windows_01_032
+    }
+}
+category
+{
+    label = Curtains
+    name = curtains
+    tiles
+    {
+        tile = fixtures_windows_curtains_01_000
+        tile = fixtures_windows_curtains_01_004
+        tile = fixtures_windows_curtains_01_008
+        tile = fixtures_windows_curtains_01_012
+        tile = fixtures_windows_curtains_01_016
+        tile = fixtures_windows_curtains_01_020
+        tile = fixtures_windows_curtains_01_024
+        tile = fixtures_windows_curtains_01_028
+        tile = fixtures_windows_curtains_01_032
+        tile = fixtures_windows_curtains_01_036
+        tile = fixtures_windows_curtains_01_040
+        tile = fixtures_windows_curtains_01_044
+        tile = fixtures_windows_curtains_01_048
+        tile = fixtures_windows_curtains_01_052
     }
 }
 category

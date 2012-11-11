@@ -5,6 +5,7 @@ Template
     Door = fixtures_doors_01_000
     DoorFrame = fixtures_doors_frames_01_000
     Window = fixtures_windows_01_000
+    Curtains = 
     Stairs = fixtures_stairs_01_000
     Room
     {
@@ -86,6 +87,7 @@ Template
     Door = fixtures_doors_01_000
     DoorFrame = fixtures_doors_frames_01_000
     Window = fixtures_windows_01_000
+    Curtains = 
     Stairs = fixtures_stairs_01_000
     Room
     {
@@ -151,6 +153,7 @@ Template
     Door = fixtures_doors_01_000
     DoorFrame = fixtures_doors_frames_01_000
     Window = fixtures_windows_01_000
+    Curtains = 
     Stairs = fixtures_stairs_01_000
     Room
     {
@@ -232,6 +235,7 @@ Template
     Door = fixtures_doors_01_000
     DoorFrame = fixtures_doors_frames_01_000
     Window = fixtures_windows_01_000
+    Curtains = 
     Stairs = fixtures_stairs_01_000
     Room
     {
@@ -313,6 +317,7 @@ Template
     Door = fixtures_doors_01_020
     DoorFrame = fixtures_doors_frames_01_004
     Window = fixtures_windows_01_032
+    Curtains = 
     Stairs = location_hospitality_sunstarmotel_01_040
     Room
     {

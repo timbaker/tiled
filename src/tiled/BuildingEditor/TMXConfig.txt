@@ -1,8 +1,8 @@
 tilesets
 {
     tileset = appliances_cooking_01
-    tileset = appliances_refrigeration_01
     tileset = appliances_laundry_01
+    tileset = appliances_refrigeration_01
     tileset = appliances_television_01
     tileset = camping_01
     tileset = carpentry_01
@@ -15,8 +15,10 @@ tilesets
     tileset = fixtures_sinks_01
     tileset = fixtures_stairs_01
     tileset = fixtures_windows_01
+    tileset = fixtures_windows_curtains_01
     tileset = floors_exterior_natural_01
     tileset = floors_exterior_street_01
+    tileset = floors_exterior_tilesandstone_01
     tileset = floors_interior_carpet_01
     tileset = floors_interior_tilesandwood_01
     tileset = floors_rugs_01
@@ -35,15 +37,16 @@ tilesets
     tileset = location_community_church_small_01
     tileset = location_hospitality_sunstarmotel_01
     tileset = location_hospitality_sunstarmotel_02
+    tileset = location_restaurant_bar_01
     tileset = location_restaurant_spiffos_01
     tileset = location_restaurant_spiffos_02
     tileset = location_sewer_01
+    tileset = location_shop_accessories_01
     tileset = location_shop_fossoil_01
     tileset = location_shop_generic_01
     tileset = location_shop_greenes_01
     tileset = location_trailer_01
     tileset = location_trailer_02
-    tileset = location_shop_accessories_01
     tileset = overlay_grime_floor_01
     tileset = overlay_grime_wall_01
     tileset = roofs_01
@@ -59,23 +62,23 @@ tilesets
     tileset = walls_commercial_02
     tileset = walls_decoration_01
     tileset = walls_detailing_01
-    tileset = walls_exterior_wooden_01
     tileset = walls_exterior_house_01
     tileset = walls_exterior_roofs_01
     tileset = walls_exterior_roofs_02
     tileset = walls_exterior_roofs_03
+    tileset = walls_exterior_wooden_01
     tileset = walls_interior_bathroom_01
     tileset = walls_interior_house_01
     tileset = walls_interior_house_02
     tileset = walls_interior_house_03
 }
-
 layers
 {
     tile = Floor
     tile = 0_Vegetation
     tile = Walls
     tile = Frames
+    tile = Curtains
     tile = Doors
     tile = Furniture
     tile = Furniture2

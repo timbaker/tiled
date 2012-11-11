@@ -163,12 +163,12 @@ group
         entry
         {
             orient = W
-            0,0 = appliances_cooking_01_028
+            0,0 = appliances_cooking_01_029
         }
         entry
         {
             orient = N
-            0,0 = appliances_cooking_01_029
+            0,0 = appliances_cooking_01_028
         }
         entry
         {
@@ -221,6 +221,79 @@ group
         {
             orient = S
             0,0 = appliances_cooking_01_038
+        }
+    }
+}
+group
+{
+    label = Appliances - Laundry
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_laundry_01_001
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_laundry_01_000
+        }
+        entry
+        {
+            orient = E
+            0,0 = appliances_laundry_01_003
+        }
+        entry
+        {
+            orient = S
+            0,0 = appliances_laundry_01_002
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_laundry_01_005
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_laundry_01_004
+        }
+        entry
+        {
+            orient = E
+            0,0 = appliances_laundry_01_007
+        }
+        entry
+        {
+            orient = S
+            0,0 = appliances_laundry_01_006
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_laundry_01_013
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_laundry_01_012
+        }
+        entry
+        {
+            orient = E
+            0,0 = appliances_laundry_01_015
+        }
+        entry
+        {
+            orient = S
+            0,0 = appliances_laundry_01_014
         }
     }
 }
@@ -324,6 +397,29 @@ group
         entry
         {
             orient = W
+            0,0 = appliances_refrigeration_01_024
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_refrigeration_01_025
+        }
+        entry
+        {
+            orient = E
+            0,0 = appliances_refrigeration_01_027
+        }
+        entry
+        {
+            orient = S
+            0,0 = appliances_refrigeration_01_026
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
             0,0 = appliances_refrigeration_01_017
             0,1 = appliances_refrigeration_01_016
         }
@@ -332,27 +428,6 @@ group
             orient = N
             0,0 = appliances_refrigeration_01_018
             1,0 = appliances_refrigeration_01_019
-        }
-        entry
-        {
-            orient = E
-        }
-        entry
-        {
-            orient = S
-        }
-    }
-    furniture
-    {
-        entry
-        {
-            orient = W
-            0,0 = appliances_refrigeration_01_021
-            0,1 = appliances_refrigeration_01_020
-        }
-        entry
-        {
-            orient = N
         }
         entry
         {
@@ -389,22 +464,93 @@ group
         entry
         {
             orient = W
-            0,0 = appliances_refrigeration_01_024
+            0,0 = appliances_refrigeration_01_021
+            0,1 = appliances_refrigeration_01_020
         }
         entry
         {
             orient = N
-            0,0 = appliances_refrigeration_01_025
         }
         entry
         {
             orient = E
-            0,0 = appliances_refrigeration_01_027
         }
         entry
         {
             orient = S
-            0,0 = appliances_refrigeration_01_026
+        }
+    }
+}
+group
+{
+    label = Applicances - Television
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_television_01_000
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_television_01_001
+        }
+        entry
+        {
+            orient = E
+            0,0 = appliances_television_01_002
+        }
+        entry
+        {
+            orient = S
+            0,0 = appliances_television_01_003
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_television_01_005
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_television_01_004
+        }
+        entry
+        {
+            orient = E
+            0,0 = appliances_television_01_007
+        }
+        entry
+        {
+            orient = S
+            0,0 = appliances_television_01_006
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_television_01_008
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_television_01_009
+        }
+        entry
+        {
+            orient = E
+            0,0 = appliances_television_01_010
+        }
+        entry
+        {
+            orient = S
+            0,0 = appliances_television_01_011
         }
     }
 }
@@ -438,52 +584,6 @@ group
     {
         entry
         {
-            orient = SW
-            0,0 = fixtures_counters_01_010
-        }
-        entry
-        {
-            orient = NW
-            0,0 = fixtures_counters_01_012
-        }
-        entry
-        {
-            orient = NE
-            0,0 = fixtures_counters_01_014
-        }
-        entry
-        {
-            orient = SE
-            0,0 = fixtures_counters_01_008
-        }
-    }
-    furniture
-    {
-        entry
-        {
-            orient = SW
-            0,0 = fixtures_counters_01_034
-        }
-        entry
-        {
-            orient = NW
-            0,0 = fixtures_counters_01_036
-        }
-        entry
-        {
-            orient = NE
-            0,0 = fixtures_counters_01_038
-        }
-        entry
-        {
-            orient = SE
-            0,0 = fixtures_counters_01_032
-        }
-    }
-    furniture
-    {
-        entry
-        {
             orient = W
             0,0 = fixtures_counters_01_003
         }
@@ -507,6 +607,29 @@ group
     {
         entry
         {
+            orient = SW
+            0,0 = fixtures_counters_01_010
+        }
+        entry
+        {
+            orient = NW
+            0,0 = fixtures_counters_01_012
+        }
+        entry
+        {
+            orient = NE
+            0,0 = fixtures_counters_01_014
+        }
+        entry
+        {
+            orient = SE
+            0,0 = fixtures_counters_01_008
+        }
+    }
+    furniture
+    {
+        entry
+        {
             orient = W
             0,0 = fixtures_counters_01_011
         }
@@ -524,6 +647,29 @@ group
         {
             orient = S
             0,0 = fixtures_counters_01_009
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = SW
+            0,0 = fixtures_counters_01_034
+        }
+        entry
+        {
+            orient = NW
+            0,0 = fixtures_counters_01_036
+        }
+        entry
+        {
+            orient = NE
+            0,0 = fixtures_counters_01_038
+        }
+        entry
+        {
+            orient = SE
+            0,0 = fixtures_counters_01_032
         }
     }
     furniture
@@ -646,14 +792,12 @@ group
         entry
         {
             orient = W
-            0,0 = fixtures_bathroom_01_026
-            1,0 = fixtures_bathroom_01_027
+            0,0 = fixtures_bathroom_01_029
         }
         entry
         {
             orient = N
-            0,0 = fixtures_bathroom_01_025
-            0,1 = fixtures_bathroom_01_024
+            0,0 = fixtures_bathroom_01_028
         }
         entry
         {
@@ -669,12 +813,14 @@ group
         entry
         {
             orient = W
-            0,0 = fixtures_bathroom_01_029
+            0,0 = fixtures_bathroom_01_026
+            1,0 = fixtures_bathroom_01_027
         }
         entry
         {
             orient = N
-            0,0 = fixtures_bathroom_01_028
+            0,0 = fixtures_bathroom_01_025
+            0,1 = fixtures_bathroom_01_024
         }
         entry
         {
@@ -738,6 +884,29 @@ group
         entry
         {
             orient = W
+            0,0 = fixtures_sinks_01_021
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_sinks_01_022
+        }
+        entry
+        {
+            orient = E
+            0,0 = fixtures_sinks_01_023
+        }
+        entry
+        {
+            orient = S
+            0,0 = fixtures_sinks_01_020
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
             0,0 = fixtures_sinks_01_004
         }
         entry
@@ -784,6 +953,29 @@ group
         entry
         {
             orient = W
+            0,0 = fixtures_sinks_01_016
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_sinks_01_017
+        }
+        entry
+        {
+            orient = E
+            0,0 = fixtures_sinks_01_018
+        }
+        entry
+        {
+            orient = S
+            0,0 = fixtures_sinks_01_019
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
             0,0 = fixtures_sinks_01_013
         }
         entry
@@ -819,52 +1011,6 @@ group
         entry
         {
             orient = S
-        }
-    }
-    furniture
-    {
-        entry
-        {
-            orient = W
-            0,0 = fixtures_sinks_01_016
-        }
-        entry
-        {
-            orient = N
-            0,0 = fixtures_sinks_01_017
-        }
-        entry
-        {
-            orient = E
-            0,0 = fixtures_sinks_01_018
-        }
-        entry
-        {
-            orient = S
-            0,0 = fixtures_sinks_01_019
-        }
-    }
-    furniture
-    {
-        entry
-        {
-            orient = W
-            0,0 = fixtures_sinks_01_021
-        }
-        entry
-        {
-            orient = N
-            0,0 = fixtures_sinks_01_022
-        }
-        entry
-        {
-            orient = E
-            0,0 = fixtures_sinks_01_023
-        }
-        entry
-        {
-            orient = S
-            0,0 = fixtures_sinks_01_020
         }
     }
     furniture
@@ -1005,22 +1151,26 @@ group
         entry
         {
             orient = W
-            0,0 = furniture_bedding_01_032
-            1,0 = furniture_bedding_01_033
+            0,0 = furniture_bedding_01_028
+            1,0 = furniture_bedding_01_029
         }
         entry
         {
             orient = N
-            0,0 = furniture_bedding_01_035
-            0,1 = furniture_bedding_01_034
+            0,0 = furniture_bedding_01_027
+            0,1 = furniture_bedding_01_026
         }
         entry
         {
             orient = E
+            0,0 = furniture_bedding_01_016
+            1,0 = furniture_bedding_01_017
         }
         entry
         {
             orient = S
+            0,0 = furniture_bedding_01_023
+            0,1 = furniture_bedding_01_022
         }
     }
     furniture
@@ -1056,6 +1206,29 @@ group
             1,0 = furniture_bedding_01_055
             0,1 = furniture_bedding_01_052
             1,1 = furniture_bedding_01_054
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = furniture_bedding_01_032
+            1,0 = furniture_bedding_01_033
+        }
+        entry
+        {
+            orient = N
+            0,0 = furniture_bedding_01_035
+            0,1 = furniture_bedding_01_034
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
         }
     }
 }
@@ -1205,29 +1378,6 @@ group
         entry
         {
             orient = W
-            0,0 = furniture_storage_01_012
-        }
-        entry
-        {
-            orient = N
-            0,0 = furniture_storage_01_013
-        }
-        entry
-        {
-            orient = E
-            0,0 = furniture_storage_01_014
-        }
-        entry
-        {
-            orient = S
-            0,0 = furniture_storage_01_015
-        }
-    }
-    furniture
-    {
-        entry
-        {
-            orient = W
             0,0 = furniture_storage_01_017
             0,1 = furniture_storage_01_016
         }
@@ -1248,6 +1398,29 @@ group
             orient = S
             0,0 = furniture_storage_01_022
             1,0 = furniture_storage_01_023
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = furniture_storage_01_012
+        }
+        entry
+        {
+            orient = N
+            0,0 = furniture_storage_01_013
+        }
+        entry
+        {
+            orient = E
+            0,0 = furniture_storage_01_014
+        }
+        entry
+        {
+            orient = S
+            0,0 = furniture_storage_01_015
         }
     }
     furniture
@@ -1328,22 +1501,26 @@ group
         entry
         {
             orient = W
-            0,0 = furniture_storage_01_042
+            0,0 = furniture_storage_01_057
+            0,1 = furniture_storage_01_056
         }
         entry
         {
             orient = N
-            0,0 = furniture_storage_01_043
+            0,0 = furniture_storage_01_058
+            1,0 = furniture_storage_01_059
         }
         entry
         {
             orient = E
-            0,0 = furniture_storage_01_040
+            0,0 = furniture_storage_01_061
+            0,1 = furniture_storage_01_060
         }
         entry
         {
             orient = S
-            0,0 = furniture_storage_01_041
+            0,0 = furniture_storage_01_062
+            1,0 = furniture_storage_01_063
         }
     }
     furniture
@@ -1397,6 +1574,29 @@ group
         entry
         {
             orient = W
+            0,0 = furniture_storage_01_042
+        }
+        entry
+        {
+            orient = N
+            0,0 = furniture_storage_01_043
+        }
+        entry
+        {
+            orient = E
+            0,0 = furniture_storage_01_040
+        }
+        entry
+        {
+            orient = S
+            0,0 = furniture_storage_01_041
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
             0,0 = furniture_storage_01_053
         }
         entry
@@ -1411,33 +1611,6 @@ group
         entry
         {
             orient = S
-        }
-    }
-    furniture
-    {
-        entry
-        {
-            orient = W
-            0,0 = furniture_storage_01_057
-            0,1 = furniture_storage_01_056
-        }
-        entry
-        {
-            orient = N
-            0,0 = furniture_storage_01_058
-            1,0 = furniture_storage_01_059
-        }
-        entry
-        {
-            orient = E
-            0,0 = furniture_storage_01_061
-            0,1 = furniture_storage_01_060
-        }
-        entry
-        {
-            orient = S
-            0,0 = furniture_storage_01_062
-            1,0 = furniture_storage_01_063
         }
     }
 }
@@ -1613,6 +1786,597 @@ group
 }
 group
 {
+    label = Lighting - Outdoor
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_outdoor_01_000
+        }
+        entry
+        {
+            orient = N
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_outdoor_01_001
+        }
+        entry
+        {
+            orient = N
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_outdoor_01_002
+        }
+        entry
+        {
+            orient = N
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_outdoor_01_025
+        }
+        entry
+        {
+            orient = N
+            0,0 = lighting_outdoor_01_024
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_outdoor_01_027
+        }
+        entry
+        {
+            orient = N
+            0,0 = lighting_outdoor_01_026
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_outdoor_01_033
+        }
+        entry
+        {
+            orient = N
+            0,0 = lighting_outdoor_01_032
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_outdoor_01_035
+        }
+        entry
+        {
+            orient = N
+            0,0 = lighting_outdoor_01_034
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_outdoor_01_041
+        }
+        entry
+        {
+            orient = N
+            0,0 = lighting_outdoor_01_040
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = lighting_outdoor_01_043
+        }
+        entry
+        {
+            orient = N
+            0,0 = lighting_outdoor_01_042
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+}
+group
+{
+    label = Location - Business - Office - Generic
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_business_office_generic_01_001
+            0,1 = location_business_office_generic_01_000
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_business_office_generic_01_005
+            1,0 = location_business_office_generic_01_006
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_business_office_generic_01_014
+            0,1 = location_business_office_generic_01_013
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_business_office_generic_01_008
+            1,0 = location_business_office_generic_01_010
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_business_office_generic_01_017
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_business_office_generic_01_016
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_business_office_generic_01_025
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_business_office_generic_01_024
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_business_office_generic_01_033
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_business_office_generic_01_032
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_business_office_generic_01_035
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_business_office_generic_01_034
+        }
+    }
+}
+group
+{
+    label = Location - Shop - Accesories
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_accessories_01_000
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_accessories_01_001
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_shop_accessories_01_003
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_shop_accessories_01_002
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_accessories_01_004
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_accessories_01_005
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_shop_accessories_01_007
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_shop_accessories_01_006
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_accessories_01_009
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_accessories_01_008
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_accessories_01_016
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_accessories_01_017
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_accessories_01_018
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_accessories_01_019
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_accessories_01_011
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_accessories_01_010
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+}
+group
+{
+    label = Location - Shop - Generic
+    furniture
+    {
+        entry
+        {
+            orient = SW
+            0,0 = location_shop_generic_01_018
+        }
+        entry
+        {
+            orient = NW
+            0,0 = location_shop_generic_01_020
+        }
+        entry
+        {
+            orient = NE
+            0,0 = location_shop_generic_01_022
+        }
+        entry
+        {
+            orient = SE
+            0,0 = location_shop_generic_01_016
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_generic_01_019
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_generic_01_021
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_shop_generic_01_023
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_shop_generic_01_017
+        }
+    }
+}
+group
+{
+    label = Location - Trailer
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_trailer_02_001
+            0,1 = location_trailer_02_000
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_trailer_02_002
+            1,0 = location_trailer_02_003
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_trailer_02_005
+            0,1 = location_trailer_02_004
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_trailer_02_006
+            1,0 = location_trailer_02_007
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_trailer_02_008
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_trailer_02_009
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_trailer_02_015
+            0,1 = location_trailer_02_014
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_trailer_02_012
+            1,0 = location_trailer_02_013
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_trailer_02_023
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_trailer_02_022
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_trailer_02_017
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_trailer_02_016
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_trailer_02_019
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_trailer_02_018
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_trailer_02_021
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_trailer_02_020
+        }
+    }
+}
+group
+{
     label = Seating - Indoor
     furniture
     {
@@ -1646,29 +2410,6 @@ group
         entry
         {
             orient = W
-            0,0 = furniture_seating_indoor_01_008
-        }
-        entry
-        {
-            orient = N
-            0,0 = furniture_seating_indoor_01_009
-        }
-        entry
-        {
-            orient = E
-            0,0 = furniture_seating_indoor_01_010
-        }
-        entry
-        {
-            orient = S
-            0,0 = furniture_seating_indoor_01_011
-        }
-    }
-    furniture
-    {
-        entry
-        {
-            orient = W
             0,0 = furniture_seating_indoor_01_013
         }
         entry
@@ -1685,6 +2426,27 @@ group
         {
             orient = S
             0,0 = furniture_seating_indoor_01_015
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = furniture_seating_indoor_01_047
+        }
+        entry
+        {
+            orient = N
+            0,0 = furniture_seating_indoor_01_046
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
         }
     }
     furniture
@@ -1712,6 +2474,29 @@ group
             orient = S
             0,0 = furniture_seating_indoor_01_020
             1,0 = furniture_seating_indoor_01_021
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = furniture_seating_indoor_01_008
+        }
+        entry
+        {
+            orient = N
+            0,0 = furniture_seating_indoor_01_009
+        }
+        entry
+        {
+            orient = E
+            0,0 = furniture_seating_indoor_01_010
+        }
+        entry
+        {
+            orient = S
+            0,0 = furniture_seating_indoor_01_011
         }
     }
     furniture
@@ -1821,27 +2606,6 @@ group
         {
             orient = N
             0,0 = furniture_seating_indoor_01_045
-        }
-        entry
-        {
-            orient = E
-        }
-        entry
-        {
-            orient = S
-        }
-    }
-    furniture
-    {
-        entry
-        {
-            orient = W
-            0,0 = furniture_seating_indoor_01_047
-        }
-        entry
-        {
-            orient = N
-            0,0 = furniture_seating_indoor_01_046
         }
         entry
         {
@@ -2236,12 +3000,12 @@ group
         entry
         {
             orient = W
-            0,0 = furniture_tables_high_01_012
+            0,0 = furniture_tables_high_01_022
         }
         entry
         {
             orient = N
-            0,0 = furniture_tables_high_01_013
+            0,0 = furniture_tables_high_01_021
         }
         entry
         {
@@ -2257,12 +3021,12 @@ group
         entry
         {
             orient = W
-            0,0 = furniture_tables_high_01_022
+            0,0 = furniture_tables_high_01_012
         }
         entry
         {
             orient = N
-            0,0 = furniture_tables_high_01_021
+            0,0 = furniture_tables_high_01_013
         }
         entry
         {
@@ -2456,12 +3220,14 @@ group
         entry
         {
             orient = W
-            0,0 = furniture_tables_low_01_002
+            0,0 = furniture_tables_low_01_007
+            0,1 = furniture_tables_low_01_006
         }
         entry
         {
             orient = N
-            0,0 = furniture_tables_low_01_003
+            0,0 = furniture_tables_low_01_005
+            1,0 = furniture_tables_low_01_004
         }
         entry
         {
@@ -2477,14 +3243,12 @@ group
         entry
         {
             orient = W
-            0,0 = furniture_tables_low_01_007
-            0,1 = furniture_tables_low_01_006
+            0,0 = furniture_tables_low_01_002
         }
         entry
         {
             orient = N
-            0,0 = furniture_tables_low_01_005
-            1,0 = furniture_tables_low_01_004
+            0,0 = furniture_tables_low_01_003
         }
         entry
         {
