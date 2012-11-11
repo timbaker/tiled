@@ -56,6 +56,8 @@ bool BuildingDocument::write(const QString &fileName, QString &error)
         error = w.errorString();
         return false;
     }
+    if (fileName.endsWith(QLatin1String(".autosave")))
+        return true;
     mFileName = fileName;
     mUndoStack->setClean();
     return true;

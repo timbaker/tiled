@@ -305,6 +305,10 @@ bool BuildingWriter::write(Building *building, const QString &filePath)
     // a successful save.
     tempFile.setAutoRemove(false);
 
+    if (filePath.endsWith(QLatin1String(".autosave")))
+        if (backupFile.exists())
+            backupFile.remove();
+
     return true;
 }
 

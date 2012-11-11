@@ -117,6 +117,8 @@ private:
     void currentRoofChanged(Tiled::Tile *tile);
     void currentRoofCapChanged(Tiled::Tile *tile);
 
+    void removeAutoSaveFile();
+
 private slots:
     void updateWindowTitle();
 
@@ -169,6 +171,9 @@ private slots:
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
     void tilesetRemoved(Tiled::Tileset *tileset);
 
+    void autoSaveCheck();
+    void autoSaveTimeout();
+
     void updateActions();
 
 private:
@@ -188,6 +193,8 @@ private:
     BuildingTileCategory *mCategory;
     FurnitureGroup *mFurnitureGroup;
     bool mSynching;
+    QTimer *mAutoSaveTimer;
+    QString mAutoSaveFileName;
 };
 
 } // namespace BuildingEditor

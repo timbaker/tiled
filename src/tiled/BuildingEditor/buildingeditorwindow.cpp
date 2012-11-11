@@ -88,7 +88,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mCategoryZoomable(new Zoomable(this)),
     mCategory(0),
     mFurnitureGroup(0),
-    mSynching(false)
+    mSynching(false),
+    mAutoSaveTimer(new QTimer(this))
 {
     ui->setupUi(this);
 
@@ -243,6 +244,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->menuEdit->insertSeparator(ui->menuEdit->actions().at(2));
 
     connect(mUndoGroup, SIGNAL(cleanChanged(bool)), SLOT(updateWindowTitle()));
+    connect(mUndoGroup, SIGNAL(cleanChanged(bool)), SLOT(autoSaveCheck()));
+    connect(mUndoGroup, SIGNAL(indexChanged(int)), SLOT(autoSaveCheck()));
 
     connect(ui->actionPreferences, SIGNAL(triggered()), SLOT(preferences()));
 
@@ -330,6 +333,10 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
             SLOT(furnitureSelectionChanged()));
 
     ui->statusLabel->clear();
+
+    mAutoSaveTimer->setSingleShot(true);
+    mAutoSaveTimer->setInterval(2.5 * 60 * 1000);
+    connect(mAutoSaveTimer, SIGNAL(timeout()), SLOT(autoSaveTimeout()));
 
     readSettings();
 
@@ -1024,6 +1031,18 @@ void BuildingEditorWindow::currentRoofCapChanged(Tile *tile)
     }
 }
 
+void BuildingEditorWindow::removeAutoSaveFile()
+{
+    if (mAutoSaveFileName.isEmpty())
+        return;
+    QFile file(mAutoSaveFileName);
+    if (file.exists()) {
+        file.remove();
+        qDebug() << "BuildingEd autosave deleted:" << mAutoSaveFileName;
+    }
+    mAutoSaveFileName.clear();
+}
+
 void BuildingEditorWindow::upLevel()
 {
     if ( mCurrentDocument->currentFloorIsTop())
@@ -1214,6 +1233,9 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         mUndoGroup->removeStack(mCurrentDocument->undoStack());
         delete mCurrentDocument->building();
         delete mCurrentDocument;
+        removeAutoSaveFile();
+        if (mAutoSaveTimer->isActive())
+            mAutoSaveTimer->stop();
     }
 
     mCurrentDocument = doc;
@@ -1264,6 +1286,7 @@ void BuildingEditorWindow::clearDocument()
         resizeCoordsLabel();
         updateActions();
         updateWindowTitle();
+        removeAutoSaveFile();
     }
 }
 
@@ -1593,6 +1616,36 @@ void BuildingEditorWindow::tilesetAboutToBeRemoved(Tileset *tileset)
 void BuildingEditorWindow::tilesetRemoved(Tileset *tileset)
 {
     categorySelectionChanged();
+}
+
+void BuildingEditorWindow::autoSaveCheck()
+{
+    if (!mCurrentDocument || !mCurrentDocument->isModified()) {
+        if (mAutoSaveTimer->isActive()) {
+            mAutoSaveTimer->stop();
+            qDebug() << "BuildingEd auto-save timer stopped (document is clean)";
+        }
+        removeAutoSaveFile();
+        return;
+    }
+    if (mAutoSaveTimer->isActive())
+        return;
+    mAutoSaveTimer->start();
+    qDebug() << "BuildingEd auto-save timer started";
+}
+
+void BuildingEditorWindow::autoSaveTimeout()
+{
+    qDebug() << "BuildingEd auto-save timeout";
+    if (!mCurrentDocument)
+        return;
+    QString fileName = mCurrentDocument->fileName();
+    if (fileName.isEmpty())
+        return; // where to save it?
+    fileName += QLatin1String(".autosave");
+    writeBuilding(mCurrentDocument, fileName);
+    mAutoSaveFileName = fileName;
+    qDebug() << "BuildingEd auto-saved:" << fileName;
 }
 
 void BuildingEditorWindow::resizeCoordsLabel()
