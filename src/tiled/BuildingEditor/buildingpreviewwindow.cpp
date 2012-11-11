@@ -404,9 +404,13 @@ void BuildingPreviewScene::BuildingToMap()
         delete mGridItem;
     }
 
+    int maxLevel =  mDocument->building()->floorCount() - 1;
+    int extraForWalls = 1;
+    QSize mapSize(mDocument->building()->width() + maxLevel * 3 + extraForWalls,
+                  mDocument->building()->height() + maxLevel * 3 + extraForWalls);
+
     mMap = new Map(Map::Isometric,
-                   mDocument->building()->width(),
-                   mDocument->building()->height(),
+                   mapSize.width(), mapSize.height(),
                    64, 32);
 
     // Add tilesets from TMXConfig.txt
@@ -443,10 +447,6 @@ void BuildingPreviewScene::BuildingToMap()
         0
     };
 
-    int maxLevel =  mDocument->building()->floorCount() - 1;
-    int extraForWalls = 1;
-    QSize mapSize(mDocument->building()->width() + maxLevel * 3 + extraForWalls,
-                  mDocument->building()->height() + maxLevel * 3 + extraForWalls);
     foreach (BuildingFloor *floor, mDocument->building()->floors()) {
         for (int i = 0; layerNames[i]; i++) {
             QString name = QLatin1String(layerNames[i]);
