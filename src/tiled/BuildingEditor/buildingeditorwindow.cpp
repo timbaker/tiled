@@ -644,6 +644,7 @@ void BuildingEditorWindow::updateRoomComboBox()
 void BuildingEditorWindow::roomIndexChanged(int index)
 {
     Q_UNUSED(index)
+    selectCurrentCategoryTile();
 }
 
 void BuildingEditorWindow::categoryScaleChanged(qreal scale)
@@ -671,40 +672,15 @@ void BuildingEditorWindow::categorySelectionChanged()
                 }
             }
             ui->tilesetView->model()->setTiles(tiles);
+            ui->tilesetView->scrollToTop();
             ui->categoryStack->setCurrentIndex(0);
 
-            // Select the "current" tile in the category.
-            if (!mCurrentDocument)
-                return;
-            BuildingTile *currentTile = 0;
-            if (mCategory->name() == QLatin1String("exterior_walls"))
-                currentTile = mCurrentDocument->building()->exteriorWall();
-            if (currentRoom() && mCategory->name() == QLatin1String("interior_walls"))
-                currentTile = currentRoom()->Wall;
-            if (currentRoom() && mCategory->name() == QLatin1String("floors"))
-                currentTile = currentRoom()->Floor;
-            if (mCategory->name() == QLatin1String("doors"))
-                currentTile = mCurrentDocument->building()->doorTile();
-            if (mCategory->name() == QLatin1String("door_frames"))
-                currentTile = mCurrentDocument->building()->doorFrameTile();
-            if (mCategory->name() == QLatin1String("windows"))
-                currentTile = mCurrentDocument->building()->windowTile();
-            if (mCategory->name() == QLatin1String("curtains"))
-                currentTile = mCurrentDocument->building()->curtainsTile();
-            if (mCategory->name() == QLatin1String("stairs"))
-                currentTile = mCurrentDocument->building()->stairsTile();
-            if (currentTile) {
-                if (Tiled::Tile *tile = BuildingTiles::instance()->tileFor(currentTile)) {
-                    QModelIndex index = ui->tilesetView->model()->index(tile);
-                    mSynching = true;
-                    ui->tilesetView->setCurrentIndex(index);
-                    mSynching = false;
-                }
-            }
+            selectCurrentCategoryTile();
         } else {
             row -= BuildingTiles::instance()->categories().count();
             mFurnitureGroup = FurnitureGroups::instance()->groups().at(row);
             ui->furnitureView->model()->setTiles(mFurnitureGroup->mTiles);
+            ui->furnitureView->scrollToTop();
             ui->categoryStack->setCurrentIndex(1);
         }
     }
@@ -1028,6 +1004,37 @@ void BuildingEditorWindow::currentRoofCapChanged(Tile *tile)
                                                                       1));
         if (objectList.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
+    }
+}
+
+void BuildingEditorWindow::selectCurrentCategoryTile()
+{
+    if (!mCurrentDocument || !mCategory)
+        return;
+    BuildingTile *currentTile = 0;
+    if (mCategory->name() == QLatin1String("exterior_walls"))
+        currentTile = mCurrentDocument->building()->exteriorWall();
+    if (currentRoom() && mCategory->name() == QLatin1String("interior_walls"))
+        currentTile = currentRoom()->Wall;
+    if (currentRoom() && mCategory->name() == QLatin1String("floors"))
+        currentTile = currentRoom()->Floor;
+    if (mCategory->name() == QLatin1String("doors"))
+        currentTile = mCurrentDocument->building()->doorTile();
+    if (mCategory->name() == QLatin1String("door_frames"))
+        currentTile = mCurrentDocument->building()->doorFrameTile();
+    if (mCategory->name() == QLatin1String("windows"))
+        currentTile = mCurrentDocument->building()->windowTile();
+    if (mCategory->name() == QLatin1String("curtains"))
+        currentTile = mCurrentDocument->building()->curtainsTile();
+    if (mCategory->name() == QLatin1String("stairs"))
+        currentTile = mCurrentDocument->building()->stairsTile();
+    if (currentTile) {
+        if (Tiled::Tile *tile = BuildingTiles::instance()->tileFor(currentTile)) {
+            QModelIndex index = ui->tilesetView->model()->index(tile);
+            mSynching = true;
+            ui->tilesetView->setCurrentIndex(index);
+            mSynching = false;
+        }
     }
 }
 

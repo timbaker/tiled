@@ -117,6 +117,8 @@ private:
     void currentRoofChanged(Tiled::Tile *tile);
     void currentRoofCapChanged(Tiled::Tile *tile);
 
+    void selectCurrentCategoryTile();
+
     void removeAutoSaveFile();
 
 private slots:
