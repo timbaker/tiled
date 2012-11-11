@@ -223,11 +223,11 @@ QRectF GraphicsObjectItem::boundingRect() const
 }
 
 void GraphicsObjectItem::paint(QPainter *painter,
-                               const QStyleOptionGraphicsItem *,
+                               const QStyleOptionGraphicsItem *option,
                                QWidget *)
 {
     QPainterPath path = shape();
-    QColor color = mSelected ? Qt::cyan : Qt::white;
+    QColor color = Qt::white;
     if (!mValidPos)
         color = Qt::red;
     painter->fillPath(path, color);
@@ -304,6 +304,12 @@ void GraphicsObjectItem::paint(QPainter *painter,
 
     painter->setPen(pen);
     painter->drawPath(path);
+
+    // Highlight
+    if (mSelected) {
+        painter->setOpacity(0.5);
+        painter->fillPath(path, option->palette.highlight());
+    }
 }
 
 void GraphicsObjectItem::setObject(BuildingObject *object)
