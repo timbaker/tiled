@@ -134,7 +134,7 @@ void RoomsDialog::roomSelectionChanged()
 
 void RoomsDialog::addRoom()
 {
-    // Assign an unused color from this default list of room colors.
+    // Pick an unused color from this default list of room colors.
     // TODO: Add more colors.
     QList<QRgb> colors;
     colors += qRgb(200, 200, 200);
@@ -154,9 +154,17 @@ void RoomsDialog::addRoom()
     if (colors.count())
         color = colors.first();
 
+    // Pick a default unused name for the new room.
+    QStringList names;
+    foreach (Room *room, mRooms)
+        names += room->internalName;
+    int n = 1;
+    while (names.contains(tr("room%1").arg(n)))
+        n++;
+
     Room *room = new Room;
-    room->Name = QLatin1String("New Room");
-    room->internalName = QLatin1String("newroom");
+    room->Name = tr("Room %1").arg(n);
+    room->internalName = tr("room%1").arg(n);
     room->Color = color;
     BuildingTile *btile = BuildingTiles::instance()->defaultInteriorWall();
     room->Wall = btile;
