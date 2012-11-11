@@ -26,6 +26,8 @@
 
 using namespace BuildingEditor;
 
+static const char *TXT_FILE = "BuildingFurniture.txt";
+
 FurnitureGroups *FurnitureGroups::mInstance = 0;
 
 FurnitureGroups *FurnitureGroups::instance()
@@ -65,19 +67,40 @@ void FurnitureGroups::removeGroup(FurnitureGroup *group)
     mGroups.removeAll(group);
 }
 
+QString FurnitureGroups::txtName()
+{
+    return QLatin1String(TXT_FILE);
+}
+
+QString FurnitureGroups::txtPath()
+{
+    return BuildingPreferences::instance()->configPath(txtName());
+}
+
+#define VERSION0 0
+#define VERSION_LATEST VERSION0
+
 bool FurnitureGroups::readTxt()
 {
-    QFileInfo info(BuildingPreferences::instance()
-                   ->configPath(QLatin1String("BuildingFurniture.txt")));
+    QFileInfo info(txtPath());
     if (!info.exists()) {
-        mError = tr("The BuildingFurniture.txt file doesn't exist.");
+        mError = tr("The %1 file doesn't exist.").arg(txtName());
         return false;
     }
+
+    if (!upgradeTxt())
+        return false;
 
     QString path = info.canonicalFilePath();
     SimpleFile simple;
     if (!simple.read(path)) {
         mError = tr("Error reading %1.").arg(path);
+        return false;
+    }
+
+    if (simple.version() != VERSION_LATEST) {
+        mError = tr("Expected %1 version %2, got %3")
+                .arg(txtName()).arg(VERSION_LATEST).arg(simple.version());
         return false;
     }
 
@@ -205,9 +228,8 @@ bool FurnitureGroups::writeTxt()
         }
         simpleFile.blocks += groupBlock;
     }
-    QString path = BuildingPreferences::instance()
-            ->configPath(QLatin1String("BuildingFurniture.txt"));
-    if (!simpleFile.write(path)) {
+    simpleFile.setVersion(VERSION_LATEST);
+    if (!simpleFile.write(txtPath())) {
         mError = simpleFile.errorString();
         return false;
     }
@@ -225,6 +247,42 @@ FurnitureTile::FurnitureOrientation FurnitureGroups::orientFromString(const QStr
     if (s == QLatin1String("NE")) return FurnitureTile::FurnitureNE;
     if (s == QLatin1String("SE")) return FurnitureTile::FurnitureSE;
     return FurnitureTile::FurnitureUnknown;
+}
+
+bool FurnitureGroups::upgradeTxt()
+{
+    QString userPath = txtPath();
+
+    SimpleFile userFile;
+    if (!userFile.read(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+
+    int userVersion = userFile.version(); // may be zero for unversioned file
+    if (userVersion == VERSION_LATEST)
+        return true;
+
+    // Not the latest version -> upgrade it.
+
+    QString sourcePath = QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + txtName();
+
+    SimpleFile sourceFile;
+    if (!sourceFile.read(sourcePath)) {
+        mError = sourceFile.errorString();
+        return false;
+    }
+    Q_ASSERT(sourceFile.version() == VERSION_LATEST);
+
+    // UPGRADE HERE
+
+    userFile.setVersion(VERSION_LATEST);
+    if (!userFile.write(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+    return true;
 }
 
 /////

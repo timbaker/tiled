@@ -1,3 +1,4 @@
+version = 0
 tiles
 {
     exterior_wall = walls_exterior_house_01_0

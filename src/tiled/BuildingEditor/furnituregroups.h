@@ -138,6 +138,9 @@ public:
     FurnitureGroup *removeGroup(int index);
     void removeGroup(FurnitureGroup *group);
 
+    QString txtName();
+    QString txtPath();
+
     bool readTxt();
     bool writeTxt();
 
@@ -147,6 +150,13 @@ public:
     int groupCount() const
     { return mGroups.count(); }
 
+    FurnitureGroup *group(int index) const
+    {
+        if (index < 0 || index >= mGroups.count())
+            return 0;
+        return mGroups[index];
+    }
+
     int indexOf(FurnitureGroup *group) const
     { return mGroups.indexOf(group); }
 
@@ -154,6 +164,9 @@ public:
     { return mError; }
 
     static FurnitureTile::FurnitureOrientation orientFromString(const QString &s);
+
+private:
+    bool upgradeTxt();
 
 private:
     static FurnitureGroups *mInstance;

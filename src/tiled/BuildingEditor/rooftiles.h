@@ -41,6 +41,9 @@ public:
 
     RoofTiles();
 
+    QString txtName();
+    QString txtPath();
+
     bool readTxt();
     bool writeTxt();
 
@@ -52,6 +55,9 @@ public:
 
     QString errorString() const
     { return mError; }
+
+private:
+    bool upgradeTxt();
 
 private:
     static RoofTiles *mInstance;

@@ -1,3 +1,4 @@
+version = 0
 Template
 {
     Name = Old Suburban
@@ -308,23 +309,5 @@ Template
         InternalName = bedroom
         Wall = walls_exterior_wooden_01_024
         Floor = floors_interior_carpet_01_008
-    }
-}
-Template
-{
-    Name = Bank
-    Wall = walls_exterior_house_01_048
-    Door = fixtures_doors_01_020
-    DoorFrame = fixtures_doors_frames_01_004
-    Window = fixtures_windows_01_032
-    Curtains = 
-    Stairs = location_hospitality_sunstarmotel_01_040
-    Room
-    {
-        Name = Livingroom
-        Color = 255 255 255
-        InternalName = livingroom
-        Wall = walls_interior_house_01_016
-        Floor = floors_interior_tilesandwood_01_004
     }
 }

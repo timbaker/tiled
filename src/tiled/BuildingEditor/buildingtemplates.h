@@ -120,11 +120,17 @@ public:
     BuildingTemplate *templateAt(int index) const
     { return mTemplates.at(index); }
 
+    QString txtName();
+    QString txtPath();
+
     bool readBuildingTemplatesTxt();
     void writeBuildingTemplatesTxt(QWidget *parent = 0);
 
     QString errorString() const
     { return mError; }
+
+private:
+    bool upgradeTxt();
 
 private:
     static BuildingTemplates *mInstance;

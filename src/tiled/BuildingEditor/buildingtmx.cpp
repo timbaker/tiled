@@ -42,6 +42,8 @@ using namespace BuildingEditor;
 using namespace Tiled;
 using namespace Tiled::Internal;
 
+static const char *TXT_FILE = "TMXConfig.txt";
+
 BuildingTMX *BuildingTMX::mInstance = 0;
 
 BuildingTMX *BuildingTMX::instance()
@@ -132,6 +134,19 @@ bool BuildingTMX::exportTMX(Building *building, const MapComposite *mapComposite
     return true;
 }
 
+QString BuildingTMX::txtName()
+{
+    return QLatin1String(TXT_FILE);
+}
+
+QString BuildingTMX::txtPath()
+{
+    return BuildingPreferences::instance()->configPath(txtName());
+}
+
+#define VERSION0 0
+#define VERSION_LATEST VERSION0
+
 bool BuildingTMX::readTxt()
 {
     // Make sure the user has chosen the Tiles directory.
@@ -143,23 +158,29 @@ bool BuildingTMX::readTxt()
         return false;
     }
 
-    QString path = BuildingPreferences::instance()
-            ->configPath(QLatin1String("TMXConfig.txt"));
-    QFile file(path);
-    if (!file.open(QIODevice::ReadOnly)) {
-        mError = tr("Couldn't open %1").arg(path);
+    QFileInfo info(txtPath());
+    if (!info.exists()) {
+        mError = tr("The %1 file doesn't exist.").arg(txtName());
         return false;
     }
 
-//    PROGRESS progress(tr("Reading TMXConfig.txt tilesets"), this);
+    if (!upgradeTxt())
+        return false;
 
-    SimpleFile simpleFile;
-    if (!simpleFile.read(path)) {
-        mError = simpleFile.errorString();
+    QString path = info.canonicalFilePath();
+    SimpleFile simple;
+    if (!simple.read(path)) {
+        mError = simple.errorString();
         return false;
     }
 
-    foreach (SimpleFileBlock block, simpleFile.blocks) {
+    if (simple.version() != VERSION_LATEST) {
+        mError = tr("Expected %1 version %2, got %3")
+                .arg(txtName()).arg(VERSION_LATEST).arg(simple.version());
+        return false;
+    }
+
+    foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("tilesets")) {
             foreach (SimpleFileKeyValue kv, block.values) {
                 if (kv.name == QLatin1String("tileset")) {
@@ -167,7 +188,8 @@ bool BuildingTMX::readTxt()
                             + QLatin1String(".png");
                     QFileInfo info(source);
                     if (!info.exists()) {
-                        mError = tr("Tileset in TMXConfig.txt doesn't exist.\n%1").arg(source);
+                        mError = tr("Tileset in %1 doesn't exist.\n%2")
+                                .arg(txtName()).arg(source);
                         return false;
                     }
                     source = info.canonicalFilePath();
@@ -228,9 +250,6 @@ bool BuildingTMX::writeTxt()
 {
     SimpleFile simpleFile;
 
-    QString fileName = BuildingPreferences::instance()
-            ->configPath(QLatin1String("TMXConfig.txt"));
-
     QDir tilesDir(BuildingPreferences::instance()->tilesDirectory());
     SimpleFileBlock tilesetBlock;
     tilesetBlock.name = QLatin1String("tilesets");
@@ -253,7 +272,8 @@ bool BuildingTMX::writeTxt()
     }
     simpleFile.blocks += layersBlock;
 
-    if (!simpleFile.write(fileName)) {
+    simpleFile.setVersion(VERSION_LATEST);
+    if (!simpleFile.write(txtPath())) {
         mError = simpleFile.errorString();
         return false;
     }
@@ -279,4 +299,40 @@ Tiled::Tileset *BuildingTMX::loadTileset(const QString &source)
         }
     }
     return ts;
+}
+
+bool BuildingTMX::upgradeTxt()
+{
+    QString userPath = txtPath();
+
+    SimpleFile userFile;
+    if (!userFile.read(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+
+    int userVersion = userFile.version(); // may be zero for unversioned file
+    if (userVersion == VERSION_LATEST)
+        return true;
+
+    // Not the latest version -> upgrade it.
+
+    QString sourcePath = QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + txtName();
+
+    SimpleFile sourceFile;
+    if (!sourceFile.read(sourcePath)) {
+        mError = sourceFile.errorString();
+        return false;
+    }
+    Q_ASSERT(sourceFile.version() == VERSION_LATEST);
+
+    // UPGRADE HERE
+
+    userFile.setVersion(VERSION_LATEST);
+    if (!userFile.write(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+    return true;
 }

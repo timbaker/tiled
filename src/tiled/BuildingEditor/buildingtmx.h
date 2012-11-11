@@ -48,6 +48,9 @@ public:
     bool exportTMX(Building *building, const MapComposite *mapComposite,
                    const QString &fileName);
 
+    QString txtName();
+    QString txtPath();
+
     bool readTxt();
     bool writeTxt();
 
@@ -57,6 +60,8 @@ public:
     { return mError; }
 
 private:
+    bool upgradeTxt();
+
     class LayerInfo
     {
     public:

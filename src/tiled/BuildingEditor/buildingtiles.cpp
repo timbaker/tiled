@@ -33,6 +33,8 @@ using namespace BuildingEditor;
 using namespace Tiled;
 using namespace Tiled::Internal;
 
+static const char *TXT_FILE = "BuildingTiles.txt";
+
 /////
 
 BuildingTiles *BuildingTiles::mInstance = 0;
@@ -104,6 +106,8 @@ BuildingTileCategory *BuildingTiles::addCategory(const QString &categoryName, co
         category = new BuildingTileCategory(categoryName, label);
         mCategories += category;
         mCategoryByName[categoryName]= category;
+    } else {
+        category->setLabel(label);
     }
     return category;
 }
@@ -207,15 +211,39 @@ void BuildingTiles::removeTileset(Tileset *tileset)
 //    TilesetManager::instance()->removeReference(tileset);
 }
 
+QString BuildingTiles::txtName()
+{
+    return QLatin1String(TXT_FILE);
+}
+
+QString BuildingTiles::txtPath()
+{
+    return BuildingPreferences::instance()->configPath(txtName());
+}
+
+// VERSION0: original format without 'version' keyvalue
+#define VERSION0 0
+
+// VERSION2
+// added 'version' keyvalue
+// added 'curtains' category
+// added 'roofs' category
+// added 'roof_caps' category
+#define VERSION1 1
+#define VERSION_LATEST VERSION1
+
 bool BuildingTiles::readBuildingTilesTxt()
 {
     QString fileName = BuildingPreferences::instance()
-            ->configPath(QLatin1String("BuildingTiles.txt"));
+            ->configPath(QLatin1String(TXT_FILE));
     QFileInfo info(fileName);
     if (!info.exists()) {
         mError = tr("The BuildingTiles.txt file doesn't exist.");
         return false;
     }
+
+    if (!upgradeTxt())
+        return false;
 
     QString path = info.canonicalFilePath();
     SimpleFile simple;
@@ -224,13 +252,22 @@ bool BuildingTiles::readBuildingTilesTxt()
         return false;
     }
 
+    if (simple.version() != VERSION_LATEST) {
+        mError = tr("Expected BuildingTiles.txt version %1, got %2")
+                .arg(VERSION_LATEST).arg(simple.version());
+        return false;
+    }
+
     static const char *validCategoryNamesC[] = {
         "exterior_walls", "interior_walls", "floors", "doors", "door_frames",
         "windows", "curtains", "stairs", "roofs", "roof_caps", 0
     };
     QStringList validCategoryNames;
-    for (int i = 0; validCategoryNamesC[i]; i++)
-        validCategoryNames << QLatin1String(validCategoryNamesC[i]);
+    for (int i = 0; validCategoryNamesC[i]; i++) {
+        QString categoryName = QLatin1String(validCategoryNamesC[i]);
+        addCategory(categoryName, categoryName);
+        validCategoryNames << categoryName;
+    }
 
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("category")) {
@@ -311,11 +348,65 @@ void BuildingTiles::writeBuildingTilesTxt(QWidget *parent)
         simpleFile.blocks += categoryBlock;
     }
     QString fileName = BuildingPreferences::instance()
-            ->configPath(QLatin1String("BuildingTiles.txt"));
+            ->configPath(QLatin1String(TXT_FILE));
+    simpleFile.setVersion(VERSION_LATEST);
     if (!simpleFile.write(fileName)) {
         QMessageBox::warning(parent, tr("It's no good, Jim!"),
                              simpleFile.errorString());
     }
+}
+
+static SimpleFileBlock findCategoryBlock(const SimpleFileBlock &parent,
+                                         const QString &categoryName)
+{
+    foreach (SimpleFileBlock block, parent.blocks) {
+        if (block.name == QLatin1String("category")) {
+            if (block.value("name") == categoryName)
+                return block;
+        }
+    }
+    return SimpleFileBlock();
+}
+
+bool BuildingTiles::upgradeTxt()
+{
+    QString userPath = BuildingPreferences::instance()
+            ->configPath(QLatin1String(TXT_FILE));
+
+    SimpleFile userFile;
+    if (!userFile.read(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+
+    int userVersion = userFile.version(); // may be zero for unversioned file
+    if (userVersion == VERSION_LATEST)
+        return true;
+
+    // Not the latest version -> upgrade it.
+
+    QString sourcePath = QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + QLatin1String(TXT_FILE);
+
+    SimpleFile sourceFile;
+    if (!sourceFile.read(sourcePath)) {
+        mError = sourceFile.errorString();
+        return false;
+    }
+    Q_ASSERT(sourceFile.version() == VERSION_LATEST);
+
+    if (userVersion == VERSION0) {
+        userFile.blocks += findCategoryBlock(sourceFile, QLatin1String("curtains"));
+        userFile.blocks += findCategoryBlock(sourceFile, QLatin1String("roofs"));
+        userFile.blocks += findCategoryBlock(sourceFile, QLatin1String("roof_caps"));
+    }
+
+    userFile.setVersion(VERSION_LATEST);
+    if (!userFile.write(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+    return true;
 }
 
 Tiled::Tile *BuildingTiles::tileFor(const QString &tileName)

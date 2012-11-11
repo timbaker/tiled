@@ -27,6 +27,8 @@
 
 using namespace BuildingEditor;
 
+static const char *TXT_FILE = "BuildingTemplates.txt";
+
 /////
 
 BuildingTemplates *BuildingTemplates::mInstance = 0;
@@ -66,14 +68,29 @@ void BuildingTemplates::replaceTemplates(const QList<BuildingTemplate *> &templa
         mTemplates += new BuildingTemplate(btemplate);
 }
 
+QString BuildingTemplates::txtName()
+{
+    return QLatin1String(TXT_FILE);
+}
+
+QString BuildingTemplates::txtPath()
+{
+    return BuildingPreferences::instance()->configPath(txtName());
+}
+
+#define VERSION0 0
+#define VERSION_LATEST 0
+
 bool BuildingTemplates::readBuildingTemplatesTxt()
 {
-    QFileInfo info(BuildingPreferences::instance()
-                   ->configPath(QLatin1String("BuildingTemplates.txt")));
+    QFileInfo info(txtPath());
     if (!info.exists()) {
-        mError = tr("The BuildingTemplates.txt file doesn't exist.");
+        mError = tr("The %1 file doesn't exist.").arg(txtName());
         return false;
     }
+
+    if (!upgradeTxt())
+        return false;
 
     QString path = info.absoluteFilePath();
     SimpleFile simple;
@@ -81,6 +98,13 @@ bool BuildingTemplates::readBuildingTemplatesTxt()
         mError = tr("Error reading %1.").arg(path);
         return false;
     }
+
+    if (simple.version() != VERSION_LATEST) {
+        mError = tr("Expected %1 version %2, got %3")
+                .arg(txtName()).arg(VERSION_LATEST).arg(simple.version());
+        return false;
+    }
+
     BuildingTiles *btiles = BuildingTiles::instance();
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("Template")) {
@@ -160,12 +184,47 @@ void BuildingTemplates::writeBuildingTemplatesTxt(QWidget *parent)
         }
         simpleFile.blocks += templateBlock;
     }
-    QString path = BuildingPreferences::instance()
-            ->configPath(QLatin1String("BuildingTemplates.txt"));
-    if (!simpleFile.write(path)) {
+    simpleFile.setVersion(VERSION_LATEST);
+    if (!simpleFile.write(txtPath())) {
         QMessageBox::warning(parent, tr("It's no good, Jim!"),
                              simpleFile.errorString());
     }
+}
+
+bool BuildingTemplates::upgradeTxt()
+{
+    QString userPath = txtPath();
+
+    SimpleFile userFile;
+    if (!userFile.read(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+
+    int userVersion = userFile.version(); // may be zero for unversioned file
+    if (userVersion == VERSION_LATEST)
+        return true;
+
+    // Not the latest version -> upgrade it.
+
+    QString sourcePath = QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + txtName();
+
+    SimpleFile sourceFile;
+    if (!sourceFile.read(sourcePath)) {
+        mError = sourceFile.errorString();
+        return false;
+    }
+    Q_ASSERT(sourceFile.version() == VERSION_LATEST);
+
+    // UPGRADE HERE
+
+    userFile.setVersion(VERSION_LATEST);
+    if (!userFile.write(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+    return true;
 }
 
 /////

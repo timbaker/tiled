@@ -85,6 +85,9 @@ public:
     QString name() const
     { return mName; }
 
+    void setLabel(const QString &label)
+    { mLabel = label; }
+
     QString label() const
     { return mLabel; }
 
@@ -130,12 +133,22 @@ public:
     int categoryCount() const
     { return mCategories.count(); }
 
+    BuildingTileCategory *category(int index) const
+    {
+        if (index < 0 || index >= mCategories.count())
+            return 0;
+        return mCategories[index];
+    }
+
     BuildingTileCategory *category(const QString &name) const
     {
         if (mCategoryByName.contains(name))
             return mCategoryByName[name];
         return 0;
     }
+
+    int indexOf(BuildingTileCategory *category) const
+    { return mCategories.indexOf(category); }
 
     static QString nameForTile(const QString &tilesetName, int index);
     static QString nameForTile(Tiled::Tile *tile);
@@ -170,6 +183,9 @@ public:
     QList<Tiled::Tileset*> tilesets() const
     { return mTilesetByName.values(); }
 
+    QString txtName();
+    QString txtPath();
+
     bool readBuildingTilesTxt();
     void writeBuildingTilesTxt(QWidget *parent = 0);
 
@@ -198,6 +214,9 @@ public:
 
     QString errorString() const
     { return mError; }
+
+private:
+    bool upgradeTxt();
 
 signals:
     void tilesetAdded(Tiled::Tileset *tileset);

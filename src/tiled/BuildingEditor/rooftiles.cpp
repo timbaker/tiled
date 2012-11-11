@@ -21,9 +21,12 @@
 #include "buildingtiles.h"
 #include "simplefile.h"
 
+#include <QCoreApplication>
 #include <QFileInfo>
 
 using namespace BuildingEditor;
+
+static const char *TXT_FILE = "RoofTiles.txt";
 
 RoofTiles *RoofTiles::mInstance = 0;
 
@@ -44,20 +47,41 @@ RoofTiles::RoofTiles()
 {
 }
 
+QString RoofTiles::txtName()
+{
+    return QLatin1String(TXT_FILE);
+}
+
+QString RoofTiles::txtPath()
+{
+    return BuildingPreferences::instance()->configPath(txtName());
+}
+
+#define VERSION0 0
+#define VERSION_LATEST VERSION0
+
 bool RoofTiles::readTxt()
 {
-    QString fileName = BuildingPreferences::instance()
-            ->configPath(QLatin1String("RoofTiles.txt"));
+    QString fileName = txtPath();
     QFileInfo info(fileName);
     if (!info.exists()) {
-        mError = tr("The RoofTiles.txt file doesn't exist.");
+        mError = tr("The %1 file doesn't exist.").arg(txtName());
         return false;
     }
+
+    if (!upgradeTxt())
+        return false;
 
     QString path = info.canonicalFilePath();
     SimpleFile simple;
     if (!simple.read(path)) {
         mError = tr("Error reading %1.").arg(path);
+        return false;
+    }
+
+    if (simple.version() != VERSION_LATEST) {
+        mError = tr("Expected %1 version %2, got %3")
+                .arg(txtName()).arg(VERSION_LATEST).arg(simple.version());
         return false;
     }
 
@@ -110,9 +134,9 @@ bool RoofTiles::writeTxt()
                                                tile->mCapTile->name());
         simpleFile.blocks += tileBlock;
     }
-    QString fileName = BuildingPreferences::instance()
-            ->configPath(QLatin1String("RoofTiles.txt"));
-    if (!simpleFile.write(fileName)) {
+
+    simpleFile.setVersion(VERSION_LATEST);
+    if (!simpleFile.write(txtPath())) {
         mError = simpleFile.errorString();
         return false;
     }
@@ -135,4 +159,40 @@ BuildingTile *RoofTiles::capTileForExteriorWall(BuildingTile *exteriorWall)
             return tile->mCapTile;
     }
     return 0;
+}
+
+bool RoofTiles::upgradeTxt()
+{
+    QString userPath = txtPath();
+
+    SimpleFile userFile;
+    if (!userFile.read(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+
+    int userVersion = userFile.version(); // may be zero for unversioned file
+    if (userVersion == VERSION_LATEST)
+        return true;
+
+    // Not the latest version -> upgrade it.
+
+    QString sourcePath = QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + txtName();
+
+    SimpleFile sourceFile;
+    if (!sourceFile.read(sourcePath)) {
+        mError = sourceFile.errorString();
+        return false;
+    }
+    Q_ASSERT(sourceFile.version() == VERSION_LATEST);
+
+    // UPGRADE HERE
+
+    userFile.setVersion(VERSION_LATEST);
+    if (!userFile.write(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+    return true;
 }

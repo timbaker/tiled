@@ -412,17 +412,18 @@ bool BuildingEditorWindow::Startup()
 
     // Copy config files from the application directory to ~/.TileZed if they
     // don't exist there.
-    static const char *configFiles[] = { "BuildingFurniture.txt",
-                                         "BuildingTiles.txt",
-                                         "BuildingTemplates.txt",
-                                         "RoofTiles.txt",
-                                         "TMXConfig.txt",
-                                         0 };
-    for (int i = 0; configFiles[i]; i++) {
-        QString fileName = configPath + QLatin1Char('/') + QLatin1String(configFiles[i]);
+    QStringList configFiles;
+    configFiles += BuildingTemplates::instance()->txtName();
+    configFiles += BuildingTiles::instance()->txtName();
+    configFiles += BuildingTMX::instance()->txtName();
+    configFiles += FurnitureGroups::instance()->txtName();
+    configFiles += RoofTiles::instance()->txtName();
+
+    foreach (QString configFile, configFiles) {
+        QString fileName = configPath + QLatin1Char('/') + configFile;
         if (!QFileInfo(fileName).exists()) {
             QString source = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-                    + QLatin1String(configFiles[i]);
+                    + configFile;
             if (QFileInfo(source).exists()) {
                 if (!QFile::copy(source, fileName)) {
                     QMessageBox::critical(this, tr("It's no good, Jim!"),
@@ -435,29 +436,32 @@ bool BuildingEditorWindow::Startup()
     }
 
     if (!LoadTMXConfig()) {
-        if (!mError.isEmpty())
+        if (!mError.isEmpty()) // Empty when user cancelled choosing Tiles directory.
             QMessageBox::critical(this, tr("It's no good, Jim!"), mError);
         return false;
     }
 
     if (!BuildingTiles::instance()->readBuildingTilesTxt()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
-                              tr("Error while reading BuildingTiles.txt\n")
-                              + BuildingTiles::instance()->errorString());
+                              tr("Error while reading %1.txt\n%2")
+                              .arg(BuildingTiles::instance()->txtName())
+                              .arg(BuildingTiles::instance()->errorString()));
         return false;
     }
 
     if (!BuildingTemplates::instance()->readBuildingTemplatesTxt()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
-                              tr("Error while reading BuildingTemplates.txt\n")
-                              + BuildingTemplates::instance()->errorString());
+                              tr("Error while reading %1\n%2")
+                              .arg(BuildingTemplates::instance()->txtName())
+                              .arg(BuildingTemplates::instance()->errorString()));
         return false;
     }
 
     if (!FurnitureGroups::instance()->readTxt()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
-                              tr("Error while reading BuildingFurniture.txt\n")
-                              + FurnitureGroups::instance()->errorString());
+                              tr("Error while reading %1\n%2")
+                              .arg(FurnitureGroups::instance()->txtName())
+                              .arg(FurnitureGroups::instance()->errorString()));
         return false;
     }
 
@@ -534,7 +538,9 @@ bool BuildingEditorWindow::LoadTMXConfig()
 
     PROGRESS progress(tr("Reading TMXConfig.txt tilesets"), this);
 
-    return BuildingTMX::instance()->readTxt();
+    bool ok = BuildingTMX::instance()->readTxt();
+    mError = BuildingTMX::instance()->errorString();
+    return ok;
 }
 
 bool BuildingEditorWindow::validateTile(BuildingTile *btile, const char *key)
@@ -668,8 +674,8 @@ void BuildingEditorWindow::categorySelectionChanged()
     QList<QListWidgetItem*> selected = ui->categoryList->selectedItems();
     if (selected.count() == 1) {
         int row = ui->categoryList->row(selected.first());
-        if (row < BuildingTiles::instance()->categories().count()) {
-            mCategory = BuildingTiles::instance()->categories().at(row);
+        if (row < BuildingTiles::instance()->categoryCount()) {
+            mCategory = BuildingTiles::instance()->category(row);
             QList<Tiled::Tile*> tiles;
             if (mCategory->canAssignNone())
                 tiles += BuildingTiles::instance()->noneTiledTile();
@@ -685,8 +691,8 @@ void BuildingEditorWindow::categorySelectionChanged()
 
             selectCurrentCategoryTile();
         } else {
-            row -= BuildingTiles::instance()->categories().count();
-            mFurnitureGroup = FurnitureGroups::instance()->groups().at(row);
+            row -= BuildingTiles::instance()->categoryCount();
+            mFurnitureGroup = FurnitureGroups::instance()->group(row);
             ui->furnitureView->model()->setTiles(mFurnitureGroup->mTiles);
             ui->furnitureView->scrollToTop();
             ui->categoryStack->setCurrentIndex(1);

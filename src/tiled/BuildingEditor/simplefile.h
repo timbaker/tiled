@@ -52,6 +52,11 @@ public:
 
     QString value(const QString &key);
 
+    void replaceValue(const char *key, const QString &value, bool atEnd = true)
+    { replaceValue(QLatin1String(key), value, atEnd); }
+
+    void replaceValue(const QString &key, const QString &value, bool atEnd = true);
+
     SimpleFileBlock block(const char *name)
     { return block(QLatin1String(name)); }
 
@@ -59,7 +64,6 @@ public:
 
     void print();
 };
-
 
 class SimpleFile : public SimpleFileBlock
 {
@@ -73,11 +77,18 @@ public:
     QString errorString() const
     { return mError; }
 
+    void setVersion(int version)
+    { mVersion = version; }
+
+    int version() const
+    { return mVersion; }
+
 private:
     SimpleFileBlock readBlock(QTextStream &ts);
     void writeBlock(QTextStream &ts, const SimpleFileBlock &block);
 
     QString mError;
+    int mVersion;
 
     class INDENT
     {

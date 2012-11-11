@@ -24,7 +24,8 @@
 #include <QTemporaryFile>
 #include <QTextStream>
 
-SimpleFile::SimpleFile()
+SimpleFile::SimpleFile() :
+    mVersion(0)
 {
 }
 
@@ -35,6 +36,7 @@ bool SimpleFile::read(const QString &filePath)
 
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        mError = file.errorString();
         return false;
     }
 
@@ -60,6 +62,8 @@ bool SimpleFile::read(const QString &filePath)
 
     file.close();
 
+    mVersion = value("version").toInt(); // will be zero for old files
+
     return true;
 }
 
@@ -67,8 +71,11 @@ bool SimpleFile::write(const QString &filePath)
 {
     QTemporaryFile tempFile;
     if (!tempFile.open(/*QIODevice::WriteOnly | QIODevice::Text*/)) {
+        mError = tempFile.errorString();
         return false;
     }
+
+    replaceValue("version", QString::number(mVersion), false);
 
     QTextStream ts(&tempFile);
     mIndent = -1;
@@ -172,6 +179,19 @@ QString SimpleFileBlock::value(const QString &key)
             return kv.value;
     }
     return QString();
+}
+
+void SimpleFileBlock::replaceValue(const QString &key, const QString &value,
+                                   bool atEnd)
+{
+    for (int i = 0; i < values.count(); i++) {
+        if (values[i].name == key) {
+            values[i].value = value;
+            return;
+        }
+    }
+    int index = atEnd ? values.count() : 0;
+    values.insert(index, SimpleFileKeyValue(key, value));
 }
 
 SimpleFileBlock SimpleFileBlock::block(const QString &name)
