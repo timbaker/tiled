@@ -496,8 +496,7 @@ void RoofObject::setWidth(int width)
             mDepth = Two;
             break;
         case 5:
-            mWidth = 4;
-            mDepth = Two;
+            mDepth = TwoPoint5;
             break;
         default:
             mDepth = Three;
@@ -566,8 +565,7 @@ void RoofObject::setHeight(int height)
             mDepth = Two;
             break;
         case 5:
-            mHeight = 4;
-            mDepth = Two;
+            mDepth = TwoPoint5;
             break;
         default:
             mDepth = Three;
@@ -627,6 +625,7 @@ void RoofObject::depthUp()
         case One: mDepth = Two; break;
         case OnePoint5: break;
         case Two: mDepth = Three; break;
+        case TwoPoint5: break;
         case Three: break;
         }
         break;
@@ -636,7 +635,8 @@ void RoofObject::depthUp()
         case Point5: mDepth = One; break;
         case One: mDepth = OnePoint5; break;
         case OnePoint5: mDepth = Two; break;
-        case Two: mDepth = Three; break;
+        case Two: mDepth = TwoPoint5; break;
+        case TwoPoint5: mDepth = Three; break;
         case Three: break;
         }
         break;
@@ -652,6 +652,7 @@ void RoofObject::depthUp()
         case One: mDepth = Two; break;
         case OnePoint5: break;
         case Two: mDepth = Three; break;
+        case TwoPoint5: break;
         case Three: break;
         }
         break;
@@ -670,6 +671,7 @@ void RoofObject::depthDown()
         case One: break;
         case OnePoint5: break;
         case Two: mDepth = One; break;
+        case TwoPoint5: break;
         case Three: mDepth = Two; break;
         }
         break;
@@ -680,7 +682,8 @@ void RoofObject::depthDown()
         case One: mDepth = Point5; break;
         case OnePoint5: mDepth = One; break;
         case Two: mDepth = OnePoint5; break;
-        case Three: mDepth = Two; break;
+        case TwoPoint5: mDepth = Two; break;
+        case Three: mDepth = TwoPoint5; break;
         }
         break;
     case FlatTop:
@@ -695,6 +698,7 @@ void RoofObject::depthDown()
         case One: break;
         case OnePoint5: break;
         case Two: mDepth = One; break;
+        case TwoPoint5: break;
         case Three: mDepth = Two; break;
         }
         break;
@@ -713,6 +717,7 @@ bool RoofObject::isDepthMax()
         case One: break;
         case OnePoint5: break;
         case Two: break;
+        case TwoPoint5: break;
         case Three: return true; ///
         }
         break;
@@ -723,6 +728,7 @@ bool RoofObject::isDepthMax()
         case One: break;
         case OnePoint5: break;
         case Two: break;
+        case TwoPoint5: break;
         case Three: return true; ///
         }
         break;
@@ -737,7 +743,8 @@ bool RoofObject::isDepthMax()
         case Point5: break;
         case One: break;
         case OnePoint5: break;
-        case Two: mDepth = One; break;
+        case Two: break;
+        case TwoPoint5: break;
         case Three: return true; ///
         }
         break;
@@ -758,6 +765,7 @@ bool RoofObject::isDepthMin()
         case One: return true; ///
         case OnePoint5: break;
         case Two: break;
+        case TwoPoint5: break;
         case Three: break;
         }
         break;
@@ -768,6 +776,7 @@ bool RoofObject::isDepthMin()
         case One: break;
         case OnePoint5: break;
         case Two: break;
+        case TwoPoint5: break;
         case Three: break;
         }
         break;
@@ -782,7 +791,8 @@ bool RoofObject::isDepthMin()
         case Point5: break;
         case One: return true; ///
         case OnePoint5: break;
-        case Two: mDepth = One; break;
+        case Two: break;
+        case TwoPoint5: break;
         case Three: break;
         }
         break;
@@ -930,7 +940,7 @@ BuildingEditor::RoofTile RoofObject::roofTile(RoofObject::RoofTile tile) const
     };
 
     if (tile >= CapRiseE1)
-        return mCapTiles->roofTile(int(mapCap[tile - CapRiseE1]));
+        return mCapTiles->roofTile(mapCap[tile - CapRiseE1]);
 
     return mSlopeTiles->roofTile(mapSlope[tile]);
 #if 0

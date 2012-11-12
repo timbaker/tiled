@@ -86,4 +86,5 @@ layers
     tile = RoofCap
     tile = RoofCap2
     tile = Roof
+    tile = Roof2
 }

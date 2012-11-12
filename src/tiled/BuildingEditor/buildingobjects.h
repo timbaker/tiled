@@ -249,6 +249,7 @@ public:
         One,
         OnePoint5,
         Two,
+        TwoPoint5,
         Three,
         InvalidDepth
     };
