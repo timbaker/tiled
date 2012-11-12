@@ -38,7 +38,6 @@ class Building;
 class BuildingDocument;
 class BuildingFloor;
 class FloorEditor;
-class RoofCornerObject;
 class RoofObject;
 class Room;
 
@@ -127,7 +126,6 @@ public:
     void setDragging(bool dragging);
     void setDragOffset(const QPoint &offset);
 
-    void setValidPos(bool valid);
     bool isValidPos() const
     { return mValidPos; }
 

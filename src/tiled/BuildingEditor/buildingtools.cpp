@@ -663,11 +663,6 @@ void BaseObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         mTileEdge = yEdge;
 
     updateCursorObject();
-
-    if (mCursorItem && mCursorObject && mCursorItem->isVisible()) {
-        BuildingFloor *floor = mEditor->document()->currentFloor();
-        mCursorItem->setValidPos(mCursorObject->isValidPos(QPoint(), floor));
-    }
 }
 
 void BaseObjectTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
@@ -1483,7 +1478,6 @@ void SelectMoveObjectTool::updateMovingItems(const QPointF &pos,
         GraphicsObjectItem *item = mEditor->itemForObject(object);
         item->setDragging(true);
         item->setDragOffset(mDragOffset);
-        item->setValidPos(object->isValidPos(mDragOffset));
     }
 }
 
@@ -1496,7 +1490,6 @@ void SelectMoveObjectTool::finishMoving(const QPointF &pos)
 
     foreach (BuildingObject *object, mMovingObjects) {
         mEditor->itemForObject(object)->setDragging(false);
-        mEditor->itemForObject(object)->setValidPos(true);
     }
 
     if (mDragOffset.isNull()) // Move is a no-op
@@ -1522,7 +1515,6 @@ void SelectMoveObjectTool::cancelMoving()
 {
     foreach (BuildingObject *object, mMovingObjects) {
         mEditor->itemForObject(object)->setDragging(false);
-        mEditor->itemForObject(object)->setValidPos(true);
     }
 
     mMovingObjects.clear();

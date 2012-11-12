@@ -228,8 +228,6 @@ void GraphicsObjectItem::paint(QPainter *painter,
 {
     QPainterPath path = shape();
     QColor color = Qt::white;
-    if (!mValidPos)
-        color = Qt::red;
     painter->fillPath(path, color);
     QPen pen(mValidPos ? (mSelected ? Qt::cyan : Qt::blue) : Qt::red);
 
@@ -305,7 +303,10 @@ void GraphicsObjectItem::paint(QPainter *painter,
     painter->setPen(pen);
     painter->drawPath(path);
 
-    // Highlight
+    if (!mValidPos) {
+        painter->fillPath(path, QColor(255, 0, 0, 128));
+    }
+
     if (mSelected) {
         painter->setOpacity(0.5);
         painter->fillPath(path, option->palette.highlight());
@@ -321,6 +322,11 @@ void GraphicsObjectItem::setObject(BuildingObject *object)
 
 void GraphicsObjectItem::synchWithObject()
 {
+    mValidPos = mObject->isValidPos(mDragging ? mDragOffset : QPoint(),
+                                    // This is a hack for cursor objects
+                                    // that haven't been added to the floor.
+                                    mEditor->document()->currentFloor());
+
     QPainterPath shape = calcShape();
     QRectF bounds = shape.boundingRect();
     if (bounds != mBoundingRect) {
@@ -398,14 +404,6 @@ void GraphicsObjectItem::setDragOffset(const QPoint &offset)
 {
     mDragOffset = offset;
     synchWithObject();
-}
-
-void GraphicsObjectItem::setValidPos(bool valid)
-{
-    if (valid != mValidPos) {
-        mValidPos = valid;
-        update();
-    }
 }
 
 /////
