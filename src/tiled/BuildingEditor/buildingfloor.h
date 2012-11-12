@@ -55,6 +55,7 @@ public:
             SectionRoofCap2,
             SectionRoof,
             SectionRoof2,
+#define ROOF_TOPS 1
 #ifdef ROOF_TOPS
             SectionRoofTop,
 #endif

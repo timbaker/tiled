@@ -442,8 +442,8 @@ void BuildingPreviewScene::BuildingToMap()
         "RoofCap2",
         "Roof",
         "Roof2",
-#ifdef ROOF_TOP
-        "RoofTop"
+#ifdef ROOF_TOPS
+        "RoofTop",
 #endif
         0
     };
@@ -660,7 +660,13 @@ void BuildingPreviewScene::objectMoved(BuildingObject *object)
 
 void BuildingPreviewScene::objectTileChanged(BuildingEditor::BuildingObject *object)
 {
-    floorEdited(object->floor());
+    BuildingFloor *floor = object->floor();
+    floorEdited(floor);
+
+    if (BuildingFloor *floorAbove = floor->floorAbove()) {
+        if (object->affectsFloorAbove())
+            floorEdited(floorAbove);
+    }
 }
 
 void BuildingPreviewScene::buildingResized()

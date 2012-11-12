@@ -134,19 +134,21 @@ static void ReplaceRoofCap(RoofObject *ro, int x, int y,
 }
 
 static void ReplaceRoofTop(RoofObject *ro, const QRect &r,
-                        QVector<QVector<BuildingFloor::Square> > &squares)
+                           QVector<QVector<BuildingFloor::Square> > &squares)
 {
     if (r.isEmpty()) return;
-    RoofTile roofTile = ro->roofTile(
-                ro->isN() ? RoofObject::FlatTopN : RoofObject::FlatTopW);
+    RoofObject::RoofTile e = ro->isN() ? RoofObject::FlatTopN1 : RoofObject::FlatTopW1;
+    if (ro->depth() == RoofObject::Two) e = ro->isN() ? RoofObject::FlatTopN2 : RoofObject::FlatTopW2;
+    if (ro->depth() == RoofObject::Three) e = ro->isN() ? RoofObject::FlatTopN3 : RoofObject::FlatTopW3;
+    RoofTile roofTile = ro->roofTile(e);
     QRect bounds(0, 0, squares.size(), squares[0].size());
     QRect rOffset = r.translated(roofTile.offset()) & bounds;
     for (int x = rOffset.left(); x <= rOffset.right(); x++)
         for (int y = rOffset.top(); y <= rOffset.bottom(); y++)
 #ifdef ROOF_TOPS
-            (ro->depth() == 3)
-                ? squares[x][y].ReplaceFloor(btile)
-                : squares[x][y].ReplaceRoofTop(btile);
+            (ro->depth() == RoofObject::Three)
+                ? squares[x][y].ReplaceFloor(roofTile.tile())
+                : squares[x][y].ReplaceRoofTop(roofTile.tile());
 #else
             squares[x][y].ReplaceFloor(roofTile.tile());
 #endif
@@ -463,7 +465,9 @@ void BuildingFloor::LayoutToSquares()
                 ReplaceRoofCap(ro, r.right()+1, r.bottom()+1, squares, RoofObject::CapGapE3, 3);
 
 #ifdef ROOF_TOPS
-            if (ro->depth() < 3)
+            // Roof tops with depth of 3 are place in the floor layer of the
+            // floor above.
+            if (ro->depth() != RoofObject::Three)
                 ReplaceRoofTop(ro, ro->flatTop(), squares);
 #endif
 

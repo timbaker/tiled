@@ -641,7 +641,18 @@ void RoofObject::depthUp()
         }
         break;
     case FlatTop:
+#ifdef ROOF_TOPS
+        switch (mDepth) {
+        case Point5: break;
+        case One: mDepth = Two; break;
+        case OnePoint5: break;
+        case Two: mDepth = Three; break;
+        case TwoPoint5: break;
+        case Three: break;
+        }
+#else
         // depth can only be Three
+#endif
         break;
     case CornerInnerSW:
     case CornerInnerNW:
@@ -687,7 +698,18 @@ void RoofObject::depthDown()
         }
         break;
     case FlatTop:
+#ifdef ROOF_TOPS
+        switch (mDepth) {
+        case Point5: break;
+        case One: break;
+        case OnePoint5: break;
+        case Two: mDepth = One; break;
+        case TwoPoint5: break;
+        case Three: mDepth = Two; break;
+        }
+#else
         // depth can only be Three
+#endif
         break;
     case CornerInnerSW:
     case CornerInnerNW:
@@ -733,7 +755,11 @@ bool RoofObject::isDepthMax()
         }
         break;
     case FlatTop:
+#ifdef ROOF_TOPS
+        return mDepth == Three;
+#else
         return true; // depth can only be Three
+#endif
         break;
     case CornerInnerSW:
     case CornerInnerNW:
@@ -781,7 +807,11 @@ bool RoofObject::isDepthMin()
         }
         break;
     case FlatTop:
+#ifdef ROOF_TOPS
+        return mDepth == One;
+#else
         return true; // depth can only be Three
+#endif
         break;
     case CornerInnerSW:
     case CornerInnerNW:
@@ -923,7 +953,8 @@ BuildingEditor::RoofTile RoofObject::roofTile(RoofObject::RoofTile tile) const
         RoofSlopeTiles::SlopePt5S, RoofSlopeTiles::SlopePt5E,
         RoofSlopeTiles::SlopeOnePt5S, RoofSlopeTiles::SlopeOnePt5E,
         RoofSlopeTiles::SlopeTwoPt5S, RoofSlopeTiles::SlopeTwoPt5E,
-        RoofSlopeTiles::FlatTopN3, RoofSlopeTiles::FlatTopW3,
+        RoofSlopeTiles::FlatTopW1, RoofSlopeTiles::FlatTopW2, RoofSlopeTiles::FlatTopW3,
+        RoofSlopeTiles::FlatTopN1, RoofSlopeTiles::FlatTopN2, RoofSlopeTiles::FlatTopN3,
         RoofSlopeTiles::Inner1, RoofSlopeTiles::Inner2, RoofSlopeTiles::Inner3,
         RoofSlopeTiles::Outer1, RoofSlopeTiles::Outer2, RoofSlopeTiles::Outer3
     };
