@@ -246,9 +246,11 @@ bool FurnitureGroups::writeTxt()
     return true;
 }
 
-void FurnitureGroups::furnitureTileChanged(FurnitureTile *ftile)
 {
-    emit furnitureTilesChanged(ftile->owner());
+
+void FurnitureGroups::tileChanged(FurnitureTile *ftile)
+{
+    emit furnitureTileChanged(ftile);
 }
 
 FurnitureTile::FurnitureOrientation FurnitureGroups::orientFromString(const QString &s)

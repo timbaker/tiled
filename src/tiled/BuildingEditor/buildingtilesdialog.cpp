@@ -662,10 +662,10 @@ QString BuildingTilesDialog::changeFurnitureTile(FurnitureTile *ftile,
     QString old = ftile->mTiles[index] ? ftile->mTiles[index]->name() : QString();
     ftile->mTiles[index] = tileName.isEmpty() ? 0
                                               : BuildingTiles::instance()->getFurnitureTile(tileName);
+
+    FurnitureGroups::instance()->tileChanged(ftile);
+
     ui->furnitureView->update(ui->furnitureView->model()->index(ftile));
-    // This might change the size of furniture objects, causing them to go
-    // out-of-bounds.
-    FurnitureGroups::instance()->furnitureTileChanged(ftile);
     return old;
 }
 

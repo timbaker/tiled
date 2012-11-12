@@ -23,7 +23,9 @@
 #include "buildingobjects.h"
 #include "buildingreader.h"
 #include "buildingtemplates.h"
+#include "buildingundoredo.h"
 #include "buildingwriter.h"
+#include "furnituregroups.h"
 
 #include <QMessageBox>
 #include <QUndoStack>
@@ -36,6 +38,9 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
     mFileName(fileName),
     mUndoStack(new QUndoStack(this))
 {
+    connect(FurnitureGroups::instance(),
+            SIGNAL(furnitureTileChanged(FurnitureTile*)),
+            SLOT(furnitureTileChanged(FurnitureTile*)));
 }
 
 BuildingDocument *BuildingDocument::read(const QString &fileName, QString &error)
@@ -260,7 +265,8 @@ void BuildingDocument::flipBuilding(bool horizontal)
     emit buildingRotated();
 }
 
-FurnitureTile *BuildingDocument::changeFurnitureTile(FurnitureObject *object, FurnitureTile *ftile)
+FurnitureTile *BuildingDocument::changeFurnitureTile(FurnitureObject *object,
+                                                     FurnitureTile *ftile)
 {
     FurnitureTile *old = object->furnitureTile();
     object->setFurnitureTile(ftile);
@@ -290,4 +296,17 @@ void BuildingDocument::changeRoofTiles(RoofObject *roof, RoofCapTiles *&capTiles
     emit objectTileChanged(roof);
     capTiles = oldCapTiles;
     slopeTiles = oldSlopeTiles;
+}
+
+void BuildingDocument::furnitureTileChanged(FurnitureTile *ftile)
+{
+    foreach (BuildingFloor *floor, mBuilding->floors()) {
+        foreach (BuildingObject *object, floor->objects()) {
+            if (FurnitureObject *furniture = object->asFurniture()) {
+                if (furniture->furnitureTile() == ftile) {
+                    emit objectTileChanged(furniture);
+                }
+            }
+        }
+    }
 }

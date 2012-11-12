@@ -170,12 +170,12 @@ public:
     QString errorString()
     { return mError; }
 
-    void furnitureTileChanged(FurnitureTile *ftile);
+    void tileChanged(FurnitureTile *ftile);
 
     static FurnitureTile::FurnitureOrientation orientFromString(const QString &s);
 
 signals:
-    void furnitureTilesChanged(FurnitureTiles *ftiles);
+    void furnitureTileChanged(FurnitureTile *ftile);
 
 private:
     bool upgradeTxt();

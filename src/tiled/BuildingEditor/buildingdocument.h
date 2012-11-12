@@ -34,6 +34,7 @@ class BuildingTile;
 class Door;
 class FurnitureObject;
 class FurnitureTile;
+class FurnitureTiles;
 class RoofCapTiles;
 class RoofObject;
 class RoofSlopeTiles;
@@ -146,7 +147,8 @@ signals:
 
     void selectedObjectsChanged();
 
-public slots:
+private slots:
+    void furnitureTileChanged(FurnitureTile *ftile);
     
 private:
     Building *mBuilding;
