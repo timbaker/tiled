@@ -1011,6 +1011,11 @@ QRect RoofObject::westEdge()
     if (mType == SlopeW)
         return QRect(r.left(), r.top(),
                      actualWidth(), r.height());
+    if (mType == PeakNS) {
+        int slopeThickness = qCeil(qreal(mWidth) / 2);
+        return QRect(r.left(), r.top(),
+                     slopeThickness, r.height());
+    }
     return QRect();
 }
 
@@ -1020,6 +1025,11 @@ QRect RoofObject::northEdge()
     if (mType == SlopeN)
         return QRect(r.left(), r.top(),
                      r.width(), actualHeight());
+    if (mType == PeakWE) {
+        int slopeThickness = qCeil(qreal(mHeight) / 2);
+        return QRect(r.left(), r.top(),
+                     r.width(), slopeThickness);
+    }
     return QRect();
 }
 

@@ -298,6 +298,15 @@ void GraphicsObjectItem::paint(QPainter *painter,
         painter->fillRect(mEditor->tileToSceneRectF(roof->eastEdge().translated(dragOffset)), Qt::lightGray);
         painter->fillRect(mEditor->tileToSceneRectF(roof->southEdge().translated(dragOffset)), Qt::lightGray);
         painter->fillRect(mEditor->tileToSceneRectF(roof->flatTop().translated(dragOffset)), Qt::gray);
+
+        if ((roof->roofType() == RoofObject::PeakNS) && (roof->width() & 1)) {
+            QRectF we = roof->westEdge().translated(dragOffset);
+            painter->fillRect(mEditor->tileToSceneRectF(we.adjusted(0,0,-0.5,0)), Qt::darkGray);
+        }
+        if ((roof->roofType() == RoofObject::PeakWE) && (roof->height() & 1)) {
+            QRectF ne = roof->northEdge().translated(dragOffset);
+            painter->fillRect(mEditor->tileToSceneRectF(ne.adjusted(0,0,0,-0.5)), Qt::darkGray);
+        }
     }
 
     painter->setPen(pen);
