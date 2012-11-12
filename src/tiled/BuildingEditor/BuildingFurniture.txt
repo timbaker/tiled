@@ -1044,14 +1044,18 @@ group
         entry
         {
             orient = W
-            0,0 = furniture_bedding_01_002
-            1,0 = furniture_bedding_01_003
+            0,0 = furniture_bedding_01_014
+            1,0 = furniture_bedding_01_015
+            0,1 = furniture_bedding_01_012
+            1,1 = furniture_bedding_01_013
         }
         entry
         {
             orient = N
-            0,0 = furniture_bedding_01_001
-            0,1 = furniture_bedding_01_000
+            0,0 = furniture_bedding_01_005
+            1,0 = furniture_bedding_01_007
+            0,1 = furniture_bedding_01_004
+            1,1 = furniture_bedding_01_006
         }
         entry
         {
@@ -1067,18 +1071,14 @@ group
         entry
         {
             orient = W
-            0,0 = furniture_bedding_01_014
-            1,0 = furniture_bedding_01_015
-            0,1 = furniture_bedding_01_012
-            1,1 = furniture_bedding_01_013
+            0,0 = furniture_bedding_01_002
+            1,0 = furniture_bedding_01_003
         }
         entry
         {
             orient = N
-            0,0 = furniture_bedding_01_005
-            1,0 = furniture_bedding_01_007
-            0,1 = furniture_bedding_01_004
-            1,1 = furniture_bedding_01_006
+            0,0 = furniture_bedding_01_001
+            0,1 = furniture_bedding_01_000
         }
         entry
         {
