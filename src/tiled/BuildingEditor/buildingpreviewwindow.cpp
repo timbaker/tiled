@@ -441,6 +441,7 @@ void BuildingPreviewScene::BuildingToMap()
         "RoofCap",
         "RoofCap2",
         "Roof",
+        "Roof2",
 #ifdef ROOF_TOP
         "RoofTop"
 #endif
@@ -498,6 +499,7 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
         BuildingFloor::Square::SectionRoofCap,
         BuildingFloor::Square::SectionRoofCap2,
         BuildingFloor::Square::SectionRoof,
+        BuildingFloor::Square::SectionRoof2,
     #if ROOF_TOPS
         BuildingFloor::Square::SectionRoofTop
     #endif
@@ -510,7 +512,6 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
             for (int y = 0; y <= floor->height(); y++) {
                 const BuildingFloor::Square &square = floor->squares[x][y];
                 BuildingFloor::Square::SquareSection section = layerToSection[index];
-
                 if (BuildingTile *btile = square.mTiles[section]) {
                     if (btile->isNone())
                         continue;
@@ -539,6 +540,7 @@ void BuildingPreviewScene::synchWithShowWalls()
         layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexRoofCap], visible);
         layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexRoofCap2], visible);
         layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexRoof], visible);
+        layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexRoof2], visible);
         itemForFloor(floor)->synchWithTileLayers();
         itemForFloor(floor)->updateBounds();
     }

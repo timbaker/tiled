@@ -860,6 +860,11 @@ void BuildingFloor::Square::ReplaceFurniture(BuildingTile *tile, int offset)
 
 void BuildingFloor::Square::ReplaceRoof(BuildingTile *tile, int offset)
 {
+    if (mTiles[SectionRoof]) {
+        mTiles[SectionRoof2] = tile;
+        mTileOffset[SectionRoof2] = offset;
+        return;
+    }
     mTiles[SectionRoof] = tile;
     mTileOffset[SectionRoof] = offset;
 }

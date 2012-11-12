@@ -121,6 +121,7 @@ public:
         LayerIndexRoofCap,
         LayerIndexRoofCap2,
         LayerIndexRoof,
+        LayerIndexRoof2,
 #ifdef ROOF_TOPS
         LayerIndexRoofTop,
 #endif
