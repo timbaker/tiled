@@ -223,7 +223,8 @@ void MixedTilesetView::init()
 
 MixedTilesetModel::MixedTilesetModel(QObject *parent) :
     QAbstractListModel(parent),
-    mTileset(0)
+    mTileset(0),
+    mShowHeaders(true)
 {
 }
 
@@ -337,7 +338,7 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles)
     mItems.clear();
     QString tilesetName;
     foreach (Tile *tile, mTiles) {
-        if (tile->tileset()->name() != tilesetName) {
+        if (mShowHeaders && tile->tileset()->name() != tilesetName) {
             while (mItems.count() % columnCount())
                 mItems += new Item(); // filler after previous tile
             tilesetName = tile->tileset()->name();
@@ -411,6 +412,11 @@ void MixedTilesetModel::scaleChanged(qreal scale)
 {
     Q_UNUSED(scale)
     reset();
+}
+
+void MixedTilesetModel::setShowHeaders(bool show)
+{
+    mShowHeaders = show;
 }
 
 MixedTilesetModel::Item *MixedTilesetModel::toItem(const QModelIndex &index) const

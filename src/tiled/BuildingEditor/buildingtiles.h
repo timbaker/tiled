@@ -197,8 +197,6 @@ public:
     BuildingTile *defaultWindowTile() const;
     BuildingTile *defaultCurtainsTile() const;
     BuildingTile *defaultStairsTile() const;
-    BuildingTile *defaultRoofTile() const;
-    BuildingTile *defaultRoofCapTile() const;
 
     BuildingTile *getExteriorWall(const QString &tileName);
     BuildingTile *getInteriorWall(const QString &tileName);
@@ -230,6 +228,7 @@ private:
     QMap<QString,Tiled::Tileset*> mTilesetByName;
     QList<Tiled::Tileset*> mRemovedTilesets;
     BuildingTileCategory *mFurnitureCategory;
+    BuildingTileCategory *mRoofCategory;
     Tiled::Tile *mMissingTile;
     Tiled::Tile *mNoneTiledTile;
     BuildingTile *mNoneBuildingTile;

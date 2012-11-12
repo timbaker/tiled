@@ -34,8 +34,9 @@ class BuildingTile;
 class Door;
 class FurnitureObject;
 class FurnitureTile;
-class RoofCornerObject;
+class RoofCapTiles;
 class RoofObject;
+class RoofSlopeTiles;
 class Room;
 class Window;
 
@@ -112,6 +113,9 @@ public:
     FurnitureTile *changeFurnitureTile(FurnitureObject *object, FurnitureTile *ftile);
 
     void resizeRoof(RoofObject *roof, int &width, int &height);
+    void changeRoofTiles(RoofObject *roof,
+                         RoofCapTiles *&capTiles,
+                         RoofSlopeTiles *&slopeTiles);
     // -UNDO/REDO
     
 signals:

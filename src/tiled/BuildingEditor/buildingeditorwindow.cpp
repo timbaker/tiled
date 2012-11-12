@@ -327,6 +327,12 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(tileSelectionChanged()));
 
+    ui->roofView->setZoomable(mCategoryZoomable);
+    ui->roofView->model()->setShowHeaders(false);
+    connect(ui->roofView->selectionModel(),
+            SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            SLOT(roofSelectionChanged()));
+
     ui->furnitureView->setZoomable(mCategoryZoomable);
     connect(ui->furnitureView->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
@@ -443,7 +449,7 @@ bool BuildingEditorWindow::Startup()
 
     if (!BuildingTiles::instance()->readBuildingTilesTxt()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
-                              tr("Error while reading %1.txt\n%2")
+                              tr("Error while reading %1\n%2")
                               .arg(BuildingTiles::instance()->txtName())
                               .arg(BuildingTiles::instance()->errorString()));
         return false;
@@ -467,8 +473,9 @@ bool BuildingEditorWindow::Startup()
 
     if (!RoofTiles::instance()->readTxt()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
-                              tr("Error while reading RoofTiles.txt\n")
-                              + RoofTiles::instance()->errorString());
+                              tr("Error while reading %1.txt\n%2")
+                              .arg(RoofTiles::instance()->txtName())
+                              .arg(RoofTiles::instance()->errorString()));
         return false;
     }
 
@@ -498,8 +505,12 @@ bool BuildingEditorWindow::Startup()
         }
     }
 
-    RoofTool::instance()->setCurrentTile(BuildingTiles::instance()->defaultRoofTile());
-    RoofTool::instance()->setCurrentCapTile(BuildingTiles::instance()->defaultRoofCapTile());
+    RoofTool::instance()->setCurrentCapTiles(RoofTiles::instance()->capTiles().size()
+                                             ? RoofTiles::instance()->capTiles().first()
+                                             : 0);
+    RoofTool::instance()->setCurrentSlopeTiles(RoofTiles::instance()->slopeTiles().size()
+                                               ? RoofTiles::instance()->slopeTiles().first()
+                                               : 0);
 
     connect(BuildingTiles::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
             SLOT(tilesetAdded(Tiled::Tileset*)));
@@ -690,8 +701,24 @@ void BuildingEditorWindow::categorySelectionChanged()
             ui->categoryStack->setCurrentIndex(0);
 
             selectCurrentCategoryTile();
+        } else if (row < BuildingTiles::instance()->categoryCount() + 1) {
+            QList<Tiled::Tile*> tiles;
+            foreach (RoofCapTiles *rtiles, RoofTiles::instance()->capTiles())
+                tiles += BuildingTiles::instance()->tileFor(
+                            rtiles->roofTile(RoofCapTiles::CapRiseE3).tile());
+            ui->roofView->model()->setTiles(tiles);
+            ui->roofView->scrollToTop();
+            ui->categoryStack->setCurrentIndex(2);
+        } else if (row < BuildingTiles::instance()->categoryCount() + 2) {
+            QList<Tiled::Tile*> tiles;
+            foreach (RoofSlopeTiles *rtiles, RoofTiles::instance()->slopeTiles())
+                tiles += BuildingTiles::instance()->tileFor(
+                            rtiles->roofTile(RoofSlopeTiles::SlopeS2).tile());
+            ui->roofView->model()->setTiles(tiles);
+            ui->roofView->scrollToTop();
+            ui->categoryStack->setCurrentIndex(2);
         } else {
-            row -= BuildingTiles::instance()->categoryCount();
+            row -= BuildingTiles::instance()->categoryCount() + 2;
             mFurnitureGroup = FurnitureGroups::instance()->group(row);
             ui->furnitureView->model()->setTiles(mFurnitureGroup->mTiles);
             ui->furnitureView->scrollToTop();
@@ -725,12 +752,31 @@ void BuildingEditorWindow::tileSelectionChanged()
                 currentCurtainsChanged(tile);
             else if (mCategory->name() == QLatin1String("stairs"))
                 currentStairsChanged(tile);
-            else if (mCategory->name() == QLatin1String("roofs"))
-                currentRoofChanged(tile);
-            else if (mCategory->name() == QLatin1String("roof_caps"))
-                currentRoofCapChanged(tile);
             else
                 qFatal("unhandled category name in BuildingEditorWindow::tileSelectionChanged()");
+        }
+    }
+}
+
+void BuildingEditorWindow::roofSelectionChanged()
+{
+    if (!mCurrentDocument || mSynching)
+        return;
+
+    QModelIndexList indexes = ui->roofView->selectionModel()->selectedIndexes();
+    if (indexes.count() == 1) {
+        QModelIndex index = indexes.first();
+        if (Tile *tile = ui->roofView->model()->tileAt(index)) {
+            if (ui->categoryList->currentRow() == BuildingTiles::instance()->categoryCount()) {
+                RoofCapTiles *rtiles = RoofTiles::instance()->capTiles()
+                        .at(index.column() + index.row() * ui->roofView->model()->columnCount());
+                currentRoofCapChanged(rtiles);
+            } else if (ui->categoryList->currentRow() == BuildingTiles::instance()->categoryCount() + 1) {
+                RoofSlopeTiles *rtiles = RoofTiles::instance()->slopeTiles()
+                        .at(index.column() + index.row() * ui->roofView->model()->columnCount());
+                currentRoofSlopeChanged(rtiles);
+            } else
+                qFatal("Unhandled roof category in BuildingEditorWindow::roofSelectionChanged()");
         }
     }
 }
@@ -771,26 +817,9 @@ void BuildingEditorWindow::furnitureSelectionChanged()
 
 void BuildingEditorWindow::currentEWallChanged(Tile *tile)
 {
-    mCurrentDocument->undoStack()->beginMacro(tr("Change Exterior Wall"));
-
     BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
                 QLatin1String("exterior_walls"), tile);
     mCurrentDocument->undoStack()->push(new ChangeEWall(mCurrentDocument, btile));
-
-    // Change the cap tiles for each roof object.
-    BuildingTile *capTile = RoofTiles::instance()->capTileForExteriorWall(btile);
-    foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
-        foreach (BuildingObject *object, floor->objects()) {
-            if (RoofObject *roof = object->asRoof()) {
-                mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
-                                                                         roof,
-                                                                         capTile,
-                                                                         1));
-            }
-        }
-    }
-
-    mCurrentDocument->undoStack()->endMacro();
 }
 
 void BuildingEditorWindow::currentIWallChanged(Tile *tile)
@@ -951,71 +980,57 @@ void BuildingEditorWindow::currentStairsChanged(Tile *tile)
     }
 }
 
-void BuildingEditorWindow::currentRoofChanged(Tile *tile)
+void BuildingEditorWindow::currentRoofCapChanged(RoofCapTiles *rtiles)
 {
-    // New roofs will be created with this tile
-    BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
-                QLatin1String("roofs"), tile);
-    RoofTool::instance()->setCurrentTile(btile);
+    // New roofs will be created with these tiles
+    RoofTool::instance()->setCurrentCapTiles(rtiles);
 
-#if 1
-    QList<BuildingObject*> objectList;
+    QList<RoofObject*> objectList;
     // Change the cap tiles for each roof object.
     foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
         foreach (BuildingObject *object, floor->objects()) {
-            if (object->asRoof())
-                objectList += object;
+            if (RoofObject *roof = object->asRoof())
+                if (roof->capTiles() != rtiles)
+                    objectList += roof;
         }
     }
-#else
-    // Assign the new tile to selected roofs
-    QList<BuildingObject*> objectList;
-    foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
-        if (RoofObject *roof = object->asRoof()) {
-            if (roof->tile() != btile)
-                objectList += roof;
-        }
-        if (RoofCornerObject *roof = object->asRoofCorner()) {
-            if (roof->tile() != btile)
-                objectList += roof;
-        }
-    }
-#endif
+
     if (objectList.count()) {
         if (objectList.count() > 1)
-            mCurrentDocument->undoStack()->beginMacro(tr("Change Roof Tile"));
-        foreach (BuildingObject *roof, objectList)
-            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
-                                                                      roof,
-                                                                      btile));
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Roof Cap Tiles"));
+        foreach (RoofObject *roof, objectList)
+            mCurrentDocument->undoStack()->push(new ChangeRoofTiles(mCurrentDocument,
+                                                                    roof,
+                                                                    rtiles,
+                                                                    roof->slopeTiles()));
         if (objectList.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
 }
 
-void BuildingEditorWindow::currentRoofCapChanged(Tile *tile)
+void BuildingEditorWindow::currentRoofSlopeChanged(RoofSlopeTiles *rtiles)
 {
-    // New roofs will be created with this tile
-    BuildingTile *btile = BuildingTiles::instance()->fromTiledTile(
-                QLatin1String("roof_caps"), tile);
-    RoofTool::instance()->setCurrentCapTile(btile);
+    // New roofs will be created with these tiles
+    RoofTool::instance()->setCurrentSlopeTiles(rtiles);
 
-    // Assign the new tile to selected roofs
     QList<RoofObject*> objectList;
-    foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
-        if (RoofObject *roof = object->asRoof()) {
-            if (roof->capTile() != btile)
-                objectList += roof;
+    // Change the cap tiles for each roof object.
+    foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
+        foreach (BuildingObject *object, floor->objects()) {
+            if (RoofObject *roof = object->asRoof())
+                if (roof->slopeTiles() != rtiles)
+                    objectList += roof;
         }
     }
+
     if (objectList.count()) {
         if (objectList.count() > 1)
-            mCurrentDocument->undoStack()->beginMacro(tr("Change Roof Cap Tile"));
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Roof Slope Tiles"));
         foreach (RoofObject *roof, objectList)
-            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
+            mCurrentDocument->undoStack()->push(new ChangeRoofTiles(mCurrentDocument,
                                                                       roof,
-                                                                      btile,
-                                                                      1));
+                                                                      roof->capTiles(),
+                                                                      rtiles));
         if (objectList.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
@@ -1693,6 +1708,9 @@ void BuildingEditorWindow::setCategoryList()
     foreach (BuildingTileCategory *category, BuildingTiles::instance()->categories()) {
         ui->categoryList->addItem(category->label());
     }
+
+    ui->categoryList->addItem(QLatin1String("Roof Caps"));
+    ui->categoryList->addItem(QLatin1String("Roof Slopes"));
 
     foreach (FurnitureGroup *group, FurnitureGroups::instance()->groups()) {
         ui->categoryList->addItem(group->mLabel);

@@ -949,7 +949,7 @@ void FurnitureTool::setCurrentTile(FurnitureTile *tile)
 {
     mCurrentTile = tile;
     if (mCursorObject)
-        static_cast<FurnitureObject*>(mCursorObject)->setFurnitureTile(tile);
+        mCursorObject->asFurniture()->setFurnitureTile(tile);
 }
 
 /////
@@ -965,8 +965,8 @@ RoofTool *RoofTool::instance()
 
 RoofTool::RoofTool() :
     BaseTool(),
-    mCurrentTile(0),
-    mCurrentCapTile(0),
+    mCurrentCapTiles(0),
+    mCurrentSlopeTiles(0),
     mRoofType(RoofObject::PeakNS),
     mMode(NoMode),
     mObject(0),
@@ -1115,9 +1115,9 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     if (mMode == Create) {
         mMode = NoMode;
         if (mObject->isValidPos()) {
-            mObject->setTile(RoofTool::instance()->currentTile());
-            mObject->setTile(RoofTiles::instance()->capTileForExteriorWall(
-                                 mEditor->building()->exteriorWall()), 1);
+            // Using instance() because there are two tools for roofs.
+            mObject->setCapTiles(RoofTool::instance()->currentCapTiles());
+            mObject->setSlopeTiles(RoofTool::instance()->currentSlopeTiles());
             BuildingFloor *floor = mEditor->document()->currentFloor();
             mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                                  floor,

@@ -43,7 +43,8 @@ void FurnitureGroups::deleteInstance()
     mInstance = 0;
 }
 
-FurnitureGroups::FurnitureGroups()
+FurnitureGroups::FurnitureGroups() :
+    QObject()
 {
 }
 
@@ -65,6 +66,15 @@ FurnitureGroup *FurnitureGroups::removeGroup(int index)
 void FurnitureGroups::removeGroup(FurnitureGroup *group)
 {
     mGroups.removeAll(group);
+}
+
+FurnitureTiles *FurnitureGroups::findMatch(FurnitureTiles *other)
+{
+    foreach (FurnitureGroup *candidate, mGroups) {
+        if (FurnitureTiles *ftiles = candidate->findMatch(other))
+            return ftiles;
+    }
+    return 0;
 }
 
 QString FurnitureGroups::txtName()
@@ -236,6 +246,11 @@ bool FurnitureGroups::writeTxt()
     return true;
 }
 
+void FurnitureGroups::furnitureTileChanged(FurnitureTile *ftile)
+{
+    emit furnitureTilesChanged(ftile->owner());
+}
+
 FurnitureTile::FurnitureOrientation FurnitureGroups::orientFromString(const QString &s)
 {
     if (s == QLatin1String("W")) return FurnitureTile::FurnitureW;
@@ -294,6 +309,12 @@ QSize FurnitureTile::size() const
     return QSize(width, height);
 }
 
+bool FurnitureTile::equals(FurnitureTile *other)
+{
+    return other->mTiles == mTiles &&
+            other->mOrient == mOrient;
+}
+
 const QVector<BuildingTile *> &FurnitureTile::resolvedTiles() const
 {
     if (isEmpty()) {
@@ -337,8 +358,27 @@ FurnitureTile *FurnitureTiles::tile(FurnitureTile::FurnitureOrientation orient) 
     return mTiles[orientIndex(orient)];
 }
 
+bool FurnitureTiles::equals(const FurnitureTiles *other)
+{
+    return other->mTiles[0]->equals(mTiles[0]) &&
+            other->mTiles[1]->equals(mTiles[1]) &&
+            other->mTiles[2]->equals(mTiles[2]) &&
+            other->mTiles[3]->equals(mTiles[3]);
+}
+
 int FurnitureTiles::orientIndex(FurnitureTile::FurnitureOrientation orient)
 {
     int index[9] = {0, 1, 2, 3, 0, 1, 2, 3, -1};
     return index[orient];
+}
+
+/////
+
+FurnitureTiles *FurnitureGroup::findMatch(FurnitureTiles *ftiles) const
+{
+    foreach (FurnitureTiles *candidate, mTiles) {
+        if (candidate->equals(ftiles))
+            return candidate;
+    }
+    return 0;
 }

@@ -80,6 +80,8 @@ public:
 
     QSize size() const;
 
+    bool equals(FurnitureTile *other);
+
     const QVector<BuildingTile*> &resolvedTiles() const;
 
     FurnitureTiles *mOwner;
@@ -112,6 +114,8 @@ public:
 
     FurnitureTile *tile(FurnitureTile::FurnitureOrientation orient) const;
 
+    bool equals(const FurnitureTiles *other);
+
     static int orientIndex(FurnitureTile::FurnitureOrientation orient);
 
     QVector<FurnitureTile*> mTiles;
@@ -120,13 +124,14 @@ public:
 class FurnitureGroup
 {
 public:
+    FurnitureTiles *findMatch(FurnitureTiles *ftiles) const;
     QString mLabel;
     QList<FurnitureTiles*> mTiles;
 };
 
-class FurnitureGroups
+class FurnitureGroups : public QObject
 {
-    Q_DECLARE_TR_FUNCTIONS(FurnitureGroups)
+    Q_OBJECT
 public:
     static FurnitureGroups *instance();
     static void deleteInstance();
@@ -137,6 +142,8 @@ public:
     void insertGroup(int index, FurnitureGroup *group);
     FurnitureGroup *removeGroup(int index);
     void removeGroup(FurnitureGroup *group);
+
+    FurnitureTiles *findMatch(FurnitureTiles *other);
 
     QString txtName();
     QString txtPath();
@@ -163,7 +170,12 @@ public:
     QString errorString()
     { return mError; }
 
+    void furnitureTileChanged(FurnitureTile *ftile);
+
     static FurnitureTile::FurnitureOrientation orientFromString(const QString &s);
+
+signals:
+    void furnitureTilesChanged(FurnitureTiles *ftiles);
 
 private:
     bool upgradeTxt();

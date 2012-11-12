@@ -54,7 +54,9 @@ void BuildingTiles::deleteInstance()
 
 BuildingTiles::BuildingTiles() :
     mFurnitureCategory(new BuildingTileCategory(QLatin1String("Furniture"),
-                                    QLatin1String("furniture"))),
+                                                QLatin1String("furniture"))),
+    mRoofCategory(new BuildingTileCategory(QLatin1String("Roof"),
+                                           QLatin1String("roof"))),
     mMissingTile(0),
     mNoneTiledTile(0),
     mNoneBuildingTile(0)
@@ -181,6 +183,8 @@ QString BuildingTiles::adjustTileNameIndex(const QString &tileName, int offset)
 
 QString BuildingTiles::normalizeTileName(const QString &tileName)
 {
+    if (tileName.isEmpty())
+        return tileName;
     QString tilesetName;
     int index;
     parseTileName(tileName, tilesetName, index);
@@ -227,8 +231,6 @@ QString BuildingTiles::txtPath()
 // VERSION2
 // added 'version' keyvalue
 // added 'curtains' category
-// added 'roofs' category
-// added 'roof_caps' category
 #define VERSION1 1
 #define VERSION_LATEST VERSION1
 
@@ -238,7 +240,7 @@ bool BuildingTiles::readBuildingTilesTxt()
             ->configPath(QLatin1String(TXT_FILE));
     QFileInfo info(fileName);
     if (!info.exists()) {
-        mError = tr("The BuildingTiles.txt file doesn't exist.");
+        mError = tr("The %1 file doesn't exist.").arg(txtName());
         return false;
     }
 
@@ -253,14 +255,14 @@ bool BuildingTiles::readBuildingTilesTxt()
     }
 
     if (simple.version() != VERSION_LATEST) {
-        mError = tr("Expected BuildingTiles.txt version %1, got %2")
-                .arg(VERSION_LATEST).arg(simple.version());
+        mError = tr("Expected %1 version %2, got %3")
+                .arg(txtName()).arg(VERSION_LATEST).arg(simple.version());
         return false;
     }
 
     static const char *validCategoryNamesC[] = {
         "exterior_walls", "interior_walls", "floors", "doors", "door_frames",
-        "windows", "curtains", "stairs", "roofs", "roof_caps", 0
+        "windows", "curtains", "stairs", 0
     };
     QStringList validCategoryNames;
     for (int i = 0; validCategoryNamesC[i]; i++) {
@@ -397,8 +399,6 @@ bool BuildingTiles::upgradeTxt()
 
     if (userVersion == VERSION0) {
         userFile.blocks += findCategoryBlock(sourceFile, QLatin1String("curtains"));
-        userFile.blocks += findCategoryBlock(sourceFile, QLatin1String("roofs"));
-        userFile.blocks += findCategoryBlock(sourceFile, QLatin1String("roof_caps"));
     }
 
     userFile.setVersion(VERSION_LATEST);
@@ -481,16 +481,6 @@ BuildingTile *BuildingTiles::defaultStairsTile() const
     return category(QLatin1String("stairs"))->tileAt(0);
 }
 
-BuildingTile *BuildingTiles::defaultRoofTile() const
-{
-    return category(QLatin1String("roofs"))->tileAt(0);
-}
-
-BuildingTile *BuildingTiles::defaultRoofCapTile() const
-{
-    return category(QLatin1String("roof_caps"))->tileAt(0);
-}
-
 BuildingTile *BuildingTiles::getExteriorWall(const QString &tileName)
 {
     return category(QLatin1String("exterior_walls"))->get(tileName);
@@ -533,12 +523,7 @@ BuildingTile *BuildingTiles::getStairsTile(const QString &tileName)
 
 BuildingTile *BuildingTiles::getRoofTile(const QString &tileName)
 {
-    return category(QLatin1String("roofs"))->get(tileName);
-}
-
-BuildingTile *BuildingTiles::getRoofCapTile(const QString &tileName)
-{
-    return category(QLatin1String("roof_caps"))->get(tileName);
+    return mRoofCategory->get(tileName);
 }
 
 BuildingTile *BuildingTiles::getFurnitureTile(const QString &tileName)
@@ -572,6 +557,7 @@ BuildingTile *BuildingTileCategory::get(const QString &tileName)
 {
     if (tileName.isEmpty())
         return BuildingTiles::instance()->noneTile();
+    Q_ASSERT(tileName == BuildingTiles::normalizeTileName(tileName));
     if (!mTileByName.contains(tileName))
         add(tileName);
     return mTileByName[tileName];
@@ -600,10 +586,6 @@ QRect BuildingTileCategory::categoryBounds() const
         return QRect(0, 0, 4, 1);
     if (mName == QLatin1String("stairs"))
         return QRect(0, 0, 3, 2);
-    if (mName == QLatin1String("roofs"))
-        return QRect(0, 0, 8, 2);
-    if (mName == QLatin1String("roof_caps"))
-        return QRect(0, 0, 8, 2);
     qFatal("unhandled category name in categoryBounds");
     return QRect();
 }
@@ -625,10 +607,6 @@ bool BuildingTileCategory::canAssignNone() const
     if (mName == QLatin1String("curtains"))
         return true;
     if (mName == QLatin1String("stairs"))
-        return false;
-    if (mName == QLatin1String("roofs"))
-        return false;
-    if (mName == QLatin1String("roof_caps"))
         return false;
     qFatal("unhandled category name in canAssignNone");
     return false;

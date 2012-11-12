@@ -506,3 +506,21 @@ void HandleRoof::swap()
 }
 
 /////
+
+ChangeRoofTiles::ChangeRoofTiles(BuildingDocument *doc, RoofObject *roof,
+                                 RoofCapTiles *capTiles,
+                                 RoofSlopeTiles *slopeTiles) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Roof Tiles")),
+    mDocument(doc),
+    mObject(roof),
+    mCapTiles(capTiles),
+    mSlopeTiles(slopeTiles)
+{
+}
+
+void ChangeRoofTiles::swap()
+{
+    mDocument->changeRoofTiles(mObject, mCapTiles, mSlopeTiles);
+}
+
+/////

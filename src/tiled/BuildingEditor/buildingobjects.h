@@ -29,7 +29,10 @@ class BuildingTile;
 class Door;
 class FurnitureObject;
 class FurnitureTile;
+class RoofCapTiles;
 class RoofObject;
+class RoofSlopeTiles;
+class RoofTile;
 class Stairs;
 class Window;
 
@@ -259,16 +262,24 @@ public:
     void rotate(bool right);
     void flip(bool horizontal);
 
-    BuildingTile *tile(int alternate) const;
-
-    void setTile(BuildingTile *roofTile, int alternate = 0);
-
     bool isValidPos(const QPoint &offset = QPoint(),
                     BuildingEditor::BuildingFloor *floor = 0) const;
 
     bool affectsFloorAbove() const { return true; }
 
     RoofObject *asRoof() { return this; }
+
+    void setCapTiles(RoofCapTiles *rtiles)
+    { mCapTiles = rtiles; }
+
+    RoofCapTiles *capTiles() const
+    { return mCapTiles; }
+
+    void setSlopeTiles(RoofSlopeTiles *rtiles)
+    { mSlopeTiles = rtiles; }
+
+    RoofSlopeTiles *slopeTiles() const
+    { return mSlopeTiles; }
 
     void setType(RoofType type);
 
@@ -320,28 +331,28 @@ public:
     void toggleCappedS();
 
     enum RoofTile {
-        FlatS1, FlatS2, FlatS3,
-        FlatE1, FlatE2, FlatE3,
-        HalfFlatS, HalfFlatE,
+        SlopeS1, SlopeS2, SlopeS3,
+        SlopeE1, SlopeE2, SlopeE3,
+        SlopePt5S, SlopePt5E,
+        SlopeOnePt5S, SlopeOnePt5E,
+        SlopeTwoPt5S, SlopeTwoPt5E,
         FlatTopW, FlatTopN,
 
         // Corners
         Inner1, Inner2, Inner3,
         Outer1, Outer2, Outer3,
 
-        // Caps must come last (see roofTile())
+        // Caps
         CapRiseE1, CapRiseE2, CapRiseE3, CapFallE1, CapFallE2, CapFallE3,
         CapRiseS1, CapRiseS2, CapRiseS3, CapFallS1, CapFallS2, CapFallS3,
-        CapMidS, CapMidE,
-        CapMidPt5S, CapMidPt5E,
+        PeakPt5S, PeakPt5E,
+        PeakOnePt5S, PeakOnePt5E,
+        PeakTwoPt5S, PeakTwoPt5E,
         CapGapS1, CapGapS2, CapGapS3,
         CapGapE1, CapGapE2, CapGapE3
     };
 
-    BuildingTile *roofTile(RoofTile roofTile) const;
-
-    BuildingTile *capTile() const
-    { return mCapTile; }
+    BuildingEditor::RoofTile roofTile(RoofTile roofTile) const;
 
     QRect westEdge();
     QRect northEdge();
@@ -373,7 +384,8 @@ private:
     bool mCappedN;
     bool mCappedE;
     bool mCappedS;
-    BuildingTile *mCapTile;
+    RoofCapTiles *mCapTiles;
+    RoofSlopeTiles *mSlopeTiles;
 };
 
 } // namespace BulidingEditor

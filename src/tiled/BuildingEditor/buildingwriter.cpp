@@ -23,6 +23,7 @@
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
 #include "furnituregroups.h"
+#include "rooftiles.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -84,6 +85,8 @@ public:
         w.writeAttribute(QLatin1String("Stairs"), building->stairsTile()->name());
 
         writeFurniture(w);
+        writeRoofCapTiles(w);
+        writeRoofSlopeTiles(w);
 
         foreach (Room *room, building->rooms())
             writeRoom(w, room);
@@ -153,6 +156,56 @@ public:
         w.writeEndElement(); // </tile>
     }
 
+    void writeRoofCapTiles(QXmlStreamWriter &w)
+    {
+        foreach (BuildingFloor *floor, mBuilding->floors()) {
+            foreach (BuildingObject *object, floor->objects()) {
+                if (RoofObject *roof = object->asRoof()) {
+                    if (!mRoofCapTiles.contains(roof->capTiles()))
+                        mRoofCapTiles += roof->capTiles();
+                }
+            }
+        }
+
+        foreach (RoofCapTiles *tiles, mRoofCapTiles) {
+            w.writeStartElement(QLatin1String("roof_cap"));
+            int n = 0;
+            foreach (RoofTile rtile, tiles->roofTiles())
+                writeRoofTile(w, &rtile, RoofCapTiles::enumToString(n++));
+            w.writeEndElement(); // </roof_cap>
+        }
+    }
+
+    void writeRoofSlopeTiles(QXmlStreamWriter &w)
+    {
+        foreach (BuildingFloor *floor, mBuilding->floors()) {
+            foreach (BuildingObject *object, floor->objects()) {
+                if (RoofObject *roof = object->asRoof()) {
+                    if (!mRoofSlopeTiles.contains(roof->slopeTiles()))
+                        mRoofSlopeTiles += roof->slopeTiles();
+                }
+            }
+        }
+
+        foreach (RoofSlopeTiles *tiles, mRoofSlopeTiles) {
+            w.writeStartElement(QLatin1String("roof_slope"));
+            int n = 0;
+            foreach (RoofTile rtile, tiles->roofTiles())
+                writeRoofTile(w, &rtile, RoofSlopeTiles::enumToString(n++));
+            w.writeEndElement(); // </roof_slope>
+        }
+    }
+
+    void writeRoofTile(QXmlStreamWriter &w, RoofTile *rtile, const QString &tileEnum)
+    {
+        w.writeStartElement(QLatin1String("tile"));
+        w.writeAttribute(QLatin1String("enum"), tileEnum);
+        w.writeAttribute(QLatin1String("tile"), rtile->tile()->name());
+        writePoint(w, QLatin1String("offset"), rtile->offset());
+        w.writeEndElement(); // </tile>
+
+    }
+
     void writeFloor(QXmlStreamWriter &w, BuildingFloor *floor)
     {
         w.writeStartElement(QLatin1String("floor"));
@@ -214,9 +267,12 @@ public:
             writeBoolean(w, QLatin1String("cappedN"), roof->isCappedN());
             writeBoolean(w, QLatin1String("cappedE"), roof->isCappedE());
             writeBoolean(w, QLatin1String("cappedS"), roof->isCappedS());
-            if (roof->capTile())
-                w.writeAttribute(QLatin1String("CapTile"), roof->capTile()->name());
+            int index = mRoofCapTiles.indexOf(roof->capTiles());
+            w.writeAttribute(QLatin1String("CapTiles"), QString::number(index));
+            index = mRoofSlopeTiles.indexOf(roof->slopeTiles());
+            w.writeAttribute(QLatin1String("SlopeTiles"), QString::number(index));
             writeDir = false;
+            writeTile = false;
         } else {
             qFatal("Unhandled object type in BuildingWriter::writeObject");
         }
@@ -234,10 +290,23 @@ public:
         w.writeAttribute(name, value ? QLatin1String("true") : QLatin1String("false"));
     }
 
+    void writePoint(QXmlStreamWriter &w, const QString &name, const QPoint &p)
+    {
+        write2Int(w, name, p.x(), p.y());
+    }
+
+    void write2Int(QXmlStreamWriter &w, const QString &name, int v1, int v2)
+    {
+        QString value = QString::number(v1) + QLatin1Char(',') + QString::number(v2);
+        w.writeAttribute(name, value);
+    }
+
     Building *mBuilding;
     QString mError;
     QDir mMapDir;
     QList<FurnitureTiles*> mFurnitureTiles;
+    QList<RoofCapTiles*> mRoofCapTiles;
+    QList<RoofSlopeTiles*> mRoofSlopeTiles;
 };
 
 /////

@@ -66,6 +66,7 @@ public:
 
     void scaleChanged(qreal scale);
 
+    void setShowHeaders(bool show);
 
 private:
     class Item
@@ -100,6 +101,7 @@ private:
     Tiled::Tileset *mTileset;
     QMap<Tiled::Tile*,QRect> mCategoryBounds;
     static QString mMimeType;
+    bool mShowHeaders;
 };
 
 class MixedTilesetView : public QTableView

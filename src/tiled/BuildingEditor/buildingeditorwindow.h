@@ -54,6 +54,8 @@ class Door;
 class FloorEditor;
 class FloorView;
 class FurnitureGroup;
+class RoofCapTiles;
+class RoofSlopeTiles;
 class Room;
 class Window;
 class Stairs;
@@ -114,8 +116,8 @@ private:
     void currentWindowChanged(Tiled::Tile *tile);
     void currentCurtainsChanged(Tiled::Tile *tile);
     void currentStairsChanged(Tiled::Tile *tile);
-    void currentRoofChanged(Tiled::Tile *tile);
-    void currentRoofCapChanged(Tiled::Tile *tile);
+    void currentRoofCapChanged(RoofCapTiles *rtiles);
+    void currentRoofSlopeChanged(RoofSlopeTiles *rtiles);
 
     void selectCurrentCategoryTile();
 
@@ -129,6 +131,7 @@ private slots:
 
     void categorySelectionChanged();
     void tileSelectionChanged();
+    void roofSelectionChanged();
     void furnitureSelectionChanged();
 
     void upLevel();

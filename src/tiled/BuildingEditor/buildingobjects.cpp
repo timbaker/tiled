@@ -277,6 +277,13 @@ bool FurnitureObject::isValidPos(const QPoint &offset, BuildingFloor *floor) con
 
 void FurnitureObject::setFurnitureTile(FurnitureTile *tile)
 {
+    // FIXME: the object might change size and go out of bounds.
+    QSize oldSize = mFurnitureTile ? mFurnitureTile->size() : QSize(0, 0);
+    QSize newSize = tile ? tile->size() : QSize(0, 0);
+    if (oldSize != newSize) {
+
+    }
+
     mFurnitureTile = tile;
 }
 
@@ -426,22 +433,6 @@ void RoofObject::flip(bool horizontal)
 
         qSwap(mCappedN, mCappedS);
     }
-}
-
-BuildingTile *RoofObject::tile(int alternate) const
-{
-    if (alternate == 1)
-        return mCapTile;
-    else
-        return mTile;
-}
-
-void RoofObject::setTile(BuildingTile *tile, int alternate)
-{
-    if (alternate == 1)
-        mCapTile = tile;
-    else
-        mTile = tile;
 }
 
 bool RoofObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
@@ -914,27 +905,50 @@ void RoofObject::toggleCappedS()
     mCappedS = !mCappedS;
 }
 
-BuildingTile *RoofObject::roofTile(RoofObject::RoofTile tile) const
+BuildingEditor::RoofTile RoofObject::roofTile(RoofObject::RoofTile tile) const
 {
-    BuildingTile *btile =  mTile;
-    if (tile >= CapRiseE1)
-        btile = mCapTile;
+    RoofSlopeTiles::TileEnum mapSlope[] = {
+        RoofSlopeTiles::SlopeS1, RoofSlopeTiles::SlopeS2, RoofSlopeTiles::SlopeS3,
+        RoofSlopeTiles::SlopeE1, RoofSlopeTiles::SlopeE2, RoofSlopeTiles::SlopeE3,
+        RoofSlopeTiles::SlopePt5S, RoofSlopeTiles::SlopePt5E,
+        RoofSlopeTiles::SlopeOnePt5S, RoofSlopeTiles::SlopeOnePt5E,
+        RoofSlopeTiles::SlopeTwoPt5S, RoofSlopeTiles::SlopeTwoPt5E,
+        RoofSlopeTiles::FlatTopN3, RoofSlopeTiles::FlatTopW3,
+        RoofSlopeTiles::Inner1, RoofSlopeTiles::Inner2, RoofSlopeTiles::Inner3,
+        RoofSlopeTiles::Outer1, RoofSlopeTiles::Outer2, RoofSlopeTiles::Outer3
+    };
+    RoofCapTiles::TileEnum mapCap[] = {
+        RoofCapTiles::CapRiseE1, RoofCapTiles::CapRiseE2, RoofCapTiles::CapRiseE3,
+        RoofCapTiles::CapFallE1, RoofCapTiles::CapFallE2, RoofCapTiles::CapFallE3,
+        RoofCapTiles::CapRiseS1, RoofCapTiles::CapRiseS2, RoofCapTiles::CapRiseS3,
+        RoofCapTiles::CapFallS1, RoofCapTiles::CapFallS2, RoofCapTiles::CapFallS3,
+        RoofCapTiles::PeakPt5S, RoofCapTiles::PeakPt5E,
+        RoofCapTiles::PeakOnePt5S, RoofCapTiles::PeakOnePt5E,
+        RoofCapTiles::PeakTwoPt5S, RoofCapTiles::PeakTwoPt5E,
+        RoofCapTiles::CapGapS1, RoofCapTiles::CapGapS2, RoofCapTiles::CapGapS3,
+        RoofCapTiles::CapGapE1, RoofCapTiles::CapGapE2, RoofCapTiles::CapGapE3
+    };
 
+    if (tile >= CapRiseE1)
+        return mCapTiles->roofTile(int(mapCap[tile - CapRiseE1]));
+
+    return mSlopeTiles->roofTile(mapSlope[tile]);
+#if 0
     if (!btile)
         return 0;
 
     int index = 0;
     switch (tile) {
-    case FlatS1: index = 0; break;
-    case FlatS2: index = 1; break;
-    case FlatS3: index = 2; break;
+    case SlopeS1: index = 0; break;
+    case SlopeS2: index = 1; break;
+    case SlopeS3: index = 2; break;
 
-    case FlatE1: index = 5; break;
-    case FlatE2: index = 4; break;
-    case FlatE3: index = 3; break;
+    case SlopeE1: index = 5; break;
+    case SlopeE2: index = 4; break;
+    case SlopeE3: index = 3; break;
 
-    case HalfFlatS: index = 15; break;
-    case HalfFlatE: index = 14; break;
+    case SlopePt5S: index = 15; break;
+    case SlopePt5E: index = 14; break;
 
     case FlatTopW: index = 22; break; // not even sure about these
     case FlatTopN: index = 23; break;
@@ -953,11 +967,11 @@ BuildingTile *RoofObject::roofTile(RoofObject::RoofTile tile) const
     case CapFallS2: index = 4; break;
     case CapFallS3: index = 3; break;
 
-    case CapMidS: index = 6; break;
-    case CapMidE: index = 14; break;
+    case PeakOnePt5S: index = 6; break;
+    case PeakOnePt5E: index = 14; break;
 
-    case CapMidPt5S: index = 7; break;
-    case CapMidPt5E: index = 15; break;
+    case PeakPt5S: index = 7; break;
+    case PeakPt5E: index = 15; break;
 
     case CapGapS1: case CapGapS2:
     case CapGapE1: case CapGapE2:
@@ -988,6 +1002,7 @@ BuildingTile *RoofObject::roofTile(RoofObject::RoofTile tile) const
     return BuildingTiles::instance()->getFurnitureTile(
                 BuildingTiles::instance()->nameForTile(btile->mTilesetName,
                                                        btile->mIndex + index));
+#endif
 }
 
 QRect RoofObject::westEdge()

@@ -32,8 +32,9 @@ class BuildingTile;
 class Door;
 class FurnitureObject;
 class FurnitureTile;
-class RoofCornerObject;
+class RoofCapTiles;
 class RoofObject;
+class RoofSlopeTiles;
 class Room;
 class Window;
 
@@ -465,6 +466,24 @@ private:
     BuildingDocument *mDocument;
     RoofObject *mObject;
     Handle mHandle;
+};
+
+class ChangeRoofTiles : public QUndoCommand
+{
+public:
+    ChangeRoofTiles(BuildingDocument *doc, RoofObject *roof,
+                    RoofCapTiles *capTiles, RoofSlopeTiles *slopeTiles);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    RoofObject *mObject;
+    RoofCapTiles *mCapTiles;
+    RoofSlopeTiles *mSlopeTiles;
 };
 
 } // namespace BuildingEditor
