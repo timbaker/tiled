@@ -163,6 +163,17 @@ static void ReplaceRoofCorner(RoofObject *ro, int x, int y,
         squares[p.x()][p.y()].ReplaceRoof(roofTile.tile(), offset);
 }
 
+static void ReplaceFurniture(int x, int y,
+                             QVector<QVector<BuildingFloor::Square> > &squares,
+                             BuildingTile *btile)
+{
+    if (!btile)
+        return;
+    QRect bounds(0, 0, squares.size() - 1, squares[0].size() - 1);
+    if (bounds.contains(x, y))
+        squares[x][y].ReplaceFurniture(btile);
+}
+
 void BuildingFloor::LayoutToSquares()
 {
     int w = width() + 1;
@@ -306,14 +317,10 @@ void BuildingFloor::LayoutToSquares()
             int x = fo->x();
             int y = fo->y();
             FurnitureTile *ftile = fo->furnitureTile();
-            if (ftile->resolvedTiles()[0])
-                squares[x][y].ReplaceFurniture(ftile->resolvedTiles()[0]);
-            if (ftile->resolvedTiles()[1])
-                squares[x+1][y].ReplaceFurniture(ftile->resolvedTiles()[1]);
-            if (ftile->resolvedTiles()[2])
-                squares[x][y+1].ReplaceFurniture(ftile->resolvedTiles()[2]);
-            if (ftile->resolvedTiles()[3])
-                squares[x+1][y+1].ReplaceFurniture(ftile->resolvedTiles()[3]);
+            ReplaceFurniture(x, y, squares, ftile->resolvedTiles()[0]);
+            ReplaceFurniture(x+1, y, squares, ftile->resolvedTiles()[1]);
+            ReplaceFurniture(x, y+1, squares, ftile->resolvedTiles()[2]);
+            ReplaceFurniture(x+1, y+1, squares, ftile->resolvedTiles()[3]);
         }
         if (RoofObject *ro = object->asRoof()) {
             QRect r = ro->bounds();
@@ -321,9 +328,7 @@ void BuildingFloor::LayoutToSquares()
             QRect se = ro->southEdge();
             switch (ro->depth()) {
             case RoofObject::Point5:
-                // This is a CHEAT! The 1/2 height roof tile is not 'touching
-                // the ground' so to speak.
-                ReplaceRoof(ro, se/*.adjusted(1,1,1,1)*/, squares, RoofObject::SlopePt5S);
+                ReplaceRoof(ro, se, squares, RoofObject::SlopePt5S);
                 break;
             case RoofObject::One:
                 ReplaceRoof(ro, se, squares, RoofObject::SlopeS1);
