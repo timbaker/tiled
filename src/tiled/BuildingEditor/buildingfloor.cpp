@@ -710,6 +710,11 @@ int BuildingFloor::height() const
     return mBuilding->height();
 }
 
+QRect BuildingFloor::bounds() const
+{
+    return mBuilding->bounds();
+}
+
 QRegion BuildingFloor::roomRegion(Room *room)
 {
     QRegion region;

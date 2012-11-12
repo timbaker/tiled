@@ -19,7 +19,7 @@
 #define BUILDING_H
 
 #include <QList>
-#include <QSize>
+#include <QRect>
 #include <QString>
 
 namespace BuildingEditor {
@@ -38,6 +38,8 @@ public:
     int height() const { return mHeight; }
 
     QSize size() const { return QSize(mWidth, mHeight); }
+
+    QRect bounds() const { return QRect(0, 0, mWidth, mHeight); }
 
     const QList<BuildingFloor*> &floors() const
     { return mFloors; }

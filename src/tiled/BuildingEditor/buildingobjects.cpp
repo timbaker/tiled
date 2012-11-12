@@ -58,7 +58,7 @@ bool BuildingObject::isValidPos(const QPoint &offset, BuildingFloor *floor) cons
         floor = mFloor; // hackery for BaseObjectTool
 
     // +1 because doors/windows can be on the outside edge of the building
-    QRect floorBounds(0, 0, floor->width() + 1, floor->height() + 1);
+    QRect floorBounds = floor->bounds().adjusted(0, 0, 1, 1);
     QRect objectBounds = bounds().translated(offset);
     return (floorBounds & objectBounds) == objectBounds;
 }
@@ -145,7 +145,7 @@ bool Stairs::isValidPos(const QPoint &offset, BuildingFloor *floor) const
         floor = mFloor;
 
     // No +1 because stairs can't be on the outside edge of the building.
-    QRect floorBounds(0, 0, floor->width(), floor->height());
+    QRect floorBounds = floor->bounds();
     QRect objectBounds = bounds().translated(offset);
     return (floorBounds & objectBounds) == objectBounds;
 }
@@ -270,7 +270,7 @@ bool FurnitureObject::isValidPos(const QPoint &offset, BuildingFloor *floor) con
         floor = mFloor;
 
     // No +1 because furniture can't be on the outside edge of the building.
-    QRect floorBounds(0, 0, floor->width(), floor->height());
+    QRect floorBounds = floor->bounds();
     QRect objectBounds = bounds().translated(offset);
     return (floorBounds & objectBounds) == objectBounds;
 }
@@ -442,7 +442,7 @@ bool RoofObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
 
     // No +1 because roofs can't be on the outside edge of the building.
     // However, the E or S cap wall tiles can be on the outside edge.
-    QRect floorBounds(0, 0, floor->width(), floor->height());
+    QRect floorBounds = floor->bounds();
     QRect objectBounds = bounds().translated(offset);
     return (floorBounds & objectBounds) == objectBounds;
 }

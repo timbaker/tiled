@@ -527,7 +527,7 @@ void SelectMoveRoomsTool::updateMovingItems(const QPointF &pos,
         }
     }
 
-    QRect floorBounds(0, 0, floor->width(), floor->height());
+    QRect floorBounds = floor->bounds();
     foreach (QRect src, mSelectedArea.rects()) {
         src &= floorBounds;
         for (int x = src.left(); x <= src.right(); x++) {
@@ -563,7 +563,7 @@ void SelectMoveRoomsTool::finishMoving(const QPointF &pos)
 
     QVector<QVector<Room*> > grid = floor->grid();
 
-    QRect floorBounds(0, 0, floor->width(), floor->height());
+    QRect floorBounds = floor->bounds();
     foreach (QRect src, mSelectedArea.rects()) {
         src &= floorBounds;
         for (int x = src.left(); x <= src.right(); x++) {

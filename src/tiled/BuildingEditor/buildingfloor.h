@@ -155,6 +155,8 @@ public:
     int width() const;
     int height() const;
 
+    QRect bounds() const;
+
     int level() const
     { return mLevel; }
 
