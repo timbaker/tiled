@@ -703,19 +703,31 @@ void BuildingEditorWindow::categorySelectionChanged()
             selectCurrentCategoryTile();
         } else if (row < BuildingTiles::instance()->categoryCount() + 1) {
             QList<Tiled::Tile*> tiles;
-            foreach (RoofCapTiles *rtiles, RoofTiles::instance()->capTiles())
+            Tiled::Tile *current = 0;
+            foreach (RoofCapTiles *rtiles, RoofTiles::instance()->capTiles()) {
                 tiles += BuildingTiles::instance()->tileFor(
                             rtiles->roofTile(RoofCapTiles::CapRiseE3).tile());
+                if (rtiles == RoofTool::instance()->currentCapTiles())
+                    current = tiles.last();
+            }
             ui->roofView->model()->setTiles(tiles);
             ui->roofView->scrollToTop();
+            if (current)
+                ui->roofView->setCurrentIndex(ui->roofView->model()->index(current));
             ui->categoryStack->setCurrentIndex(2);
         } else if (row < BuildingTiles::instance()->categoryCount() + 2) {
             QList<Tiled::Tile*> tiles;
-            foreach (RoofSlopeTiles *rtiles, RoofTiles::instance()->slopeTiles())
+            Tiled::Tile *current = 0;
+            foreach (RoofSlopeTiles *rtiles, RoofTiles::instance()->slopeTiles()) {
                 tiles += BuildingTiles::instance()->tileFor(
                             rtiles->roofTile(RoofSlopeTiles::SlopeS2).tile());
+                if (rtiles == RoofTool::instance()->currentSlopeTiles())
+                    current = tiles.last();
+            }
             ui->roofView->model()->setTiles(tiles);
             ui->roofView->scrollToTop();
+            if (current)
+                ui->roofView->setCurrentIndex(ui->roofView->model()->index(current));
             ui->categoryStack->setCurrentIndex(2);
         } else {
             row -= BuildingTiles::instance()->categoryCount() + 2;
