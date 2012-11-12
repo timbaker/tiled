@@ -167,6 +167,8 @@ public:
     int indexOf(FurnitureGroup *group) const
     { return mGroups.indexOf(group); }
 
+    int indexOf(const QString &name) const;
+
     QString errorString()
     { return mError; }
 

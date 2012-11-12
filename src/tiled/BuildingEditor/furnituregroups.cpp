@@ -246,7 +246,16 @@ bool FurnitureGroups::writeTxt()
     return true;
 }
 
+int FurnitureGroups::indexOf(const QString &name) const
 {
+    int index = 0;
+    foreach (FurnitureGroup *group, mGroups) {
+        if (group->mLabel == name)
+            return index;
+        ++index;
+    }
+    return -1;
+}
 
 void FurnitureGroups::tileChanged(FurnitureTile *ftile)
 {

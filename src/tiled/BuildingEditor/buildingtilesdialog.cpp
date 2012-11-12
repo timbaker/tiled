@@ -570,6 +570,18 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
     if (!geom.isEmpty())
         restoreGeometry(geom);
+    QString categoryName = settings.value(QLatin1String("SelectedCategory")).toString();
+    if (!categoryName.isEmpty()) {
+        int index = BuildingTiles::instance()->indexOf(categoryName);
+        if (index >= 0)
+            ui->categoryList->setCurrentRow(index);
+    }
+    QString furnitureGroupName = settings.value(QLatin1String("SelectedFurnitureGroup")).toString();
+    if (!furnitureGroupName.isEmpty()) {
+        int index = FurnitureGroups::instance()->indexOf(furnitureGroupName);
+        if (index >= 0)
+            ui->categoryList->setCurrentRow(numTileCategories() + index);
+    }
     settings.endGroup();
 
     restoreSplitterSizes(ui->overallSplitter);
@@ -1182,6 +1194,10 @@ void BuildingTilesDialog::accept()
     QSettings settings;
     settings.beginGroup(QLatin1String("BuildingEditor/BuildingTilesDialog"));
     settings.setValue(QLatin1String("geometry"), saveGeometry());
+    settings.setValue(QLatin1String("SelectedCategory"),
+                      mCategory ? mCategory->name() : QString());
+    settings.setValue(QLatin1String("SelectedFurnitureGroup"),
+                      mFurnitureGroup ? mFurnitureGroup->mLabel : QString());
     settings.endGroup();
 
     saveSplitterSizes(ui->overallSplitter);

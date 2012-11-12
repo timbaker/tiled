@@ -150,6 +150,13 @@ public:
     int indexOf(BuildingTileCategory *category) const
     { return mCategories.indexOf(category); }
 
+    int indexOf(const QString &name) const
+    {
+        if (BuildingTileCategory *category = this->category(name))
+            return mCategories.indexOf(category);
+        return -1;
+    }
+
     static QString nameForTile(const QString &tilesetName, int index);
     static QString nameForTile(Tiled::Tile *tile);
     static bool parseTileName(const QString &tileName, QString &tilesetName, int &index);
