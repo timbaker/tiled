@@ -287,10 +287,11 @@ void BuildingDocument::resizeRoof(RoofObject *roof, int &width, int &height)
     height = oldHeight;
 }
 
-void BuildingDocument::changeRoofTiles(RoofObject *roof, RoofCapTiles *&capTiles, RoofSlopeTiles *&slopeTiles)
+void BuildingDocument::changeRoofTiles(RoofObject *roof, RoofCapTiles *&capTiles,
+                                       RoofSlopeTiles *&slopeTiles)
 {
-    RoofCapTiles *oldCapTiles;
-    RoofSlopeTiles *oldSlopeTiles;
+    RoofCapTiles *oldCapTiles = roof->capTiles();
+    RoofSlopeTiles *oldSlopeTiles = roof->slopeTiles();
     roof->setCapTiles(capTiles);
     roof->setSlopeTiles(slopeTiles);
     emit objectTileChanged(roof);
