@@ -101,7 +101,7 @@ void FurnitureTileDelegate::paint(QPainter *painter,
             int i = x + y * 2;
             QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
             if (BuildingTile *btile = btiles[i]) {
-                if (Tile *tile = BuildingTiles::instance()->tileFor(btile)) { // FIXME: calc this elsewhere
+                if (Tile *tile = BuildingTilesMgr::instance()->tileFor(btile)) { // FIXME: calc this elsewhere
                     QPointF p1 = tileToPixelCoords(x, y) + tileMargins + r.topLeft();
                     QRect r((p1 - QPointF(tileWidth/2, imageHeight - tileHeight)).toPoint(),
                             QSize(tileWidth, imageHeight));
@@ -430,7 +430,7 @@ bool FurnitureModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
          stream >> tilesetName;
          int tileId;
          stream >> tileId;
-         QString tileName = BuildingTiles::nameForTile(tilesetName, tileId);
+         QString tileName = BuildingTilesMgr::nameForTile(tilesetName, tileId);
          emit furnitureTileDropped(tile, n, tileName);
      }
 

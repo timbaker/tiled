@@ -131,7 +131,6 @@ private slots:
 
     void categorySelectionChanged();
     void tileSelectionChanged();
-    void roofSelectionChanged();
     void furnitureSelectionChanged();
 
     void upLevel();

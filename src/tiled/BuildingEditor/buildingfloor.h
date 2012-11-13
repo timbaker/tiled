@@ -28,6 +28,7 @@ namespace BuildingEditor {
 class BuildingObject;
 class Building;
 class BuildingTile;
+class BuildingTileEntry;
 class Door;
 class FloorType;
 class FurnitureObject;
@@ -73,7 +74,7 @@ public:
         Square();
         ~Square();
 
-        BuildingTile *mTiles[MaxSection];
+        BuildingTileEntry *mTiles[MaxSection];
         int mTileOffset[MaxSection];
         WallOrientation mWallOrientation;
         bool mExterior;
@@ -81,16 +82,16 @@ public:
         bool IsWallOrient(WallOrientation orient)
         { return mTiles[SectionWall] && (mWallOrientation == orient); }
 
-        void ReplaceFloor(BuildingTile *tile);
-        void ReplaceWall(BuildingTile *tile, WallOrientation orient, bool exterior = true);
-        void ReplaceDoor(BuildingTile *tile, int offset);
-        void ReplaceFrame(BuildingTile *tile, int offset);
+        void ReplaceFloor(BuildingTileEntry *tile, int offset);
+        void ReplaceWall(BuildingTileEntry *tile, WallOrientation orient, bool exterior = true);
+        void ReplaceDoor(BuildingTileEntry *tile, int offset);
+        void ReplaceFrame(BuildingTileEntry *tile, int offset);
         void ReplaceCurtains(Window *window, bool exterior);
-        void ReplaceFurniture(BuildingTile *tile, int offset = 0);
-        void ReplaceRoof(BuildingTile *tile, int offset = 0);
-        void ReplaceRoofCap(BuildingTile *tile, int offset = 0);
+        void ReplaceFurniture(BuildingTileEntry *tile, int offset = 0);
+        void ReplaceRoof(BuildingTileEntry *tile, int offset = 0);
+        void ReplaceRoofCap(BuildingTileEntry *tile, int offset = 0);
 #ifdef ROOF_TOPS
-        void ReplaceRoofTop(BuildingTile *tile);
+        void ReplaceRoofTop(BuildingTileEntry *tile, int offset);
 #endif
         int getWallOffset();
         int getTileIndexForDoor();

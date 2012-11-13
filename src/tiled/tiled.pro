@@ -174,8 +174,7 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/furnitureview.cpp \
     BuildingEditor/furnituregroups.cpp \
     BuildingEditor/buildingpreferences.cpp \
-    BuildingEditor/buildingtmx.cpp \
-    BuildingEditor/rooftiles.cpp
+    BuildingEditor/buildingtmx.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \

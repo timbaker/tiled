@@ -104,12 +104,12 @@ void BuildingTemplatesDialog::addTemplate()
 {
     BuildingTemplate *btemplate = new BuildingTemplate;
     btemplate->Name = QLatin1String("New Template");
-    btemplate->Wall = BuildingTiles::instance()->defaultExteriorWall();
-    btemplate->DoorTile = BuildingTiles::instance()->defaultDoorTile();
-    btemplate->DoorFrameTile = BuildingTiles::instance()->defaultDoorFrameTile();
-    btemplate->WindowTile = BuildingTiles::instance()->defaultWindowTile();
-    btemplate->CurtainsTile = BuildingTiles::instance()->defaultCurtainsTile();
-    btemplate->StairsTile = BuildingTiles::instance()->defaultStairsTile();
+    btemplate->Wall = BuildingTilesMgr::instance()->defaultExteriorWall();
+    btemplate->DoorTile = BuildingTilesMgr::instance()->defaultDoorTile();
+    btemplate->DoorFrameTile = BuildingTilesMgr::instance()->defaultDoorFrameTile();
+    btemplate->WindowTile = BuildingTilesMgr::instance()->defaultWindowTile();
+    btemplate->CurtainsTile = BuildingTilesMgr::instance()->defaultCurtainsTile();
+    btemplate->StairsTile = BuildingTilesMgr::instance()->defaultStairsTile();
 
     mTemplates += btemplate;
     ui->templatesList->addItem(btemplate->Name);
@@ -245,7 +245,7 @@ void BuildingTemplatesDialog::synchUI()
 void BuildingTemplatesDialog::setTilePixmap()
 {
     if (BuildingTile *btile = selectedTile()) {
-        Tiled::Tile *tile = BuildingTiles::instance()->tileFor(btile);
+        Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(btile);
         ui->tileLabel->setPixmap(tile->image());
     } else {
         ui->tileLabel->clear();

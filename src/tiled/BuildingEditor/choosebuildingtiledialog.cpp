@@ -32,7 +32,7 @@ using namespace Tiled::Internal;
 
 ChooseBuildingTileDialog::ChooseBuildingTileDialog(const QString &prompt,
                                                    const QString &categoryName,
-                                                   BuildingTile *initialTile, QWidget *parent) :
+                                                   BuildingTileEntry *initialTile, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ChooseBuildingTileDialog),
     mCategoryName(categoryName),
@@ -64,7 +64,7 @@ ChooseBuildingTileDialog::~ChooseBuildingTileDialog()
     delete ui;
 }
 
-BuildingTile *ChooseBuildingTileDialog::selectedTile() const
+BuildingTileEntry *ChooseBuildingTileDialog::selectedTile() const
 {
     QModelIndexList selection = ui->tableView->selectionModel()->selectedIndexes();
     if (selection.count()) {
@@ -76,29 +76,27 @@ BuildingTile *ChooseBuildingTileDialog::selectedTile() const
 }
 
 void ChooseBuildingTileDialog::setTilesList(const QString &categoryName,
-                                            BuildingTile *initialTile)
+                                            BuildingTileEntry *initialTile)
 {
     Tiled::Tile *tile = 0;
 
     mTiles.clear();
     mBuildingTiles.clear();
 
-    BuildingTileCategory *category = BuildingTiles::instance()->category(categoryName);
+    BuildingTileCategory *category = BuildingTilesMgr::instance()->category(categoryName);
     if (category->canAssignNone()) {
-        mTiles += BuildingTiles::instance()->noneTiledTile();
-        mBuildingTiles += BuildingTiles::instance()->noneTile();
+        mTiles += BuildingTilesMgr::instance()->noneTiledTile();
+        mBuildingTiles += BuildingTilesMgr::instance()->noneTileEntry();
         if (initialTile == mBuildingTiles[0])
             tile = mTiles[0];
     }
 
     MixedTilesetView *v = ui->tableView;
-    foreach (BuildingTile *btile, category->tiles()) {
-        if (!btile->mAlternates.count() || (btile == btile->mAlternates.first())) {
-            mTiles += BuildingTiles::instance()->tileFor(btile);
-            mBuildingTiles += btile;
-            if (btile == initialTile)
-                tile = mTiles.last();
-        }
+    foreach (BuildingTileEntry *entry, category->entries()) {
+        mTiles += BuildingTilesMgr::instance()->tileFor(entry->displayTile());
+        mBuildingTiles += entry;
+        if (entry == initialTile)
+            tile = mTiles.last();
     }
     v->model()->setTiles(mTiles);
 

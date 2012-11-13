@@ -572,7 +572,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
         restoreGeometry(geom);
     QString categoryName = settings.value(QLatin1String("SelectedCategory")).toString();
     if (!categoryName.isEmpty()) {
-        int index = BuildingTiles::instance()->indexOf(categoryName);
+        int index = BuildingTilesMgr::instance()->indexOf(categoryName);
         if (index >= 0)
             ui->categoryList->setCurrentRow(index);
     }
@@ -601,7 +601,9 @@ bool BuildingTilesDialog::changes() const
 
 void BuildingTilesDialog::addTile(BuildingTileCategory *category, const QString &tileName)
 {
-    category->add(tileName);
+    // Create a new BuildingTileEntry based on assumptions about the order of
+    // tiles in the tileset.
+    category->addTile(tileName);
 
     tilesetSelectionChanged();
     setCategoryTiles();
@@ -622,7 +624,7 @@ QString BuildingTilesDialog::renameTileCategory(BuildingTileCategory *category,
 {
     QString old = category->label();
     category->setLabel(name);
-    int row = BuildingTiles::instance()->indexOf(category);
+    int row = BuildingTilesMgr::instance()->indexOf(category);
     ui->categoryList->item(row)->setText(name);
     return old;
 }
@@ -673,7 +675,7 @@ QString BuildingTilesDialog::changeFurnitureTile(FurnitureTile *ftile,
 {
     QString old = ftile->mTiles[index] ? ftile->mTiles[index]->name() : QString();
     ftile->mTiles[index] = tileName.isEmpty() ? 0
-                                              : BuildingTiles::instance()->getFurnitureTile(tileName);
+                                              : BuildingTilesMgr::instance()->get(tileName);
 
     FurnitureGroups::instance()->tileChanged(ftile);
 
@@ -724,7 +726,7 @@ void BuildingTilesDialog::reorderCategory(int oldIndex, int newIndex)
 
 void BuildingTilesDialog::addTileset(Tileset *tileset)
 {
-    BuildingTiles::instance()->addTileset(tileset);
+    BuildingTilesMgr::instance()->addTileset(tileset);
 
     categoryChanged(ui->categoryList->currentRow());
     setTilesetList();
@@ -735,7 +737,7 @@ void BuildingTilesDialog::removeTileset(Tileset *tileset)
 {
     ui->categoryTilesView->model()->setTiles(QList<Tiled::Tile*>());
 
-    BuildingTiles::instance()->removeTileset(tileset);
+    BuildingTilesMgr::instance()->removeTileset(tileset);
 
     categoryChanged(ui->categoryList->currentRow());
     setTilesetList();
@@ -746,7 +748,7 @@ void BuildingTilesDialog::setCategoryList()
 {
     ui->categoryList->clear();
 
-    foreach (BuildingTileCategory *category, BuildingTiles::instance()->categories()) {
+    foreach (BuildingTileCategory *category, BuildingTilesMgr::instance()->categories()) {
         QListWidgetItem *item = new QListWidgetItem();
         item->setText(category->label());
         item->setFlags(item->flags() | Qt::ItemIsEditable);
@@ -765,11 +767,9 @@ void BuildingTilesDialog::setCategoryTiles()
 { 
     QList<Tiled::Tile*> tiles;
     if (mCategory) {
-        foreach (BuildingTile *btile, mCategory->tiles()) {
-            if (!btile->mAlternates.count() || (btile == btile->mAlternates.first())) {
-                if (Tiled::Tile *tile = BuildingTiles::instance()->tileFor(btile))
-                    tiles += tile;
-            }
+        foreach (BuildingTileEntry *entry, mCategory->entries()) {
+            if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile()))
+                tiles += tile;
         }
     }
     ui->categoryTilesView->model()->setTiles(tiles);
@@ -789,7 +789,7 @@ void BuildingTilesDialog::setTilesetList()
     // Add the list of tilesets, and resize it to fit
     int width = 64;
     QFontMetrics fm = ui->tilesetList->fontMetrics();
-    foreach (Tileset *tileset, BuildingTiles::instance()->tilesets()) {
+    foreach (Tileset *tileset, BuildingTilesMgr::instance()->tilesets()) {
         QListWidgetItem *item = new QListWidgetItem();
         item->setText(tileset->name());
         ui->tilesetList->addItem(item);
@@ -827,7 +827,7 @@ void BuildingTilesDialog::restoreSplitterSizes(QSplitter *splitter)
 
 int BuildingTilesDialog::numTileCategories() const
 {
-    return BuildingTiles::instance()->categoryCount();
+    return BuildingTilesMgr::instance()->categoryCount();
 }
 
 void BuildingTilesDialog::synchUI()
@@ -872,7 +872,7 @@ void BuildingTilesDialog::categoryChanged(int index)
         setFurnitureTiles();
         tilesetSelectionChanged();
     } else if (index < numTileCategories()) {
-        mCategory = BuildingTiles::instance()->category(index);
+        mCategory = BuildingTilesMgr::instance()->category(index);
         ui->categoryStack->setCurrentIndex(0);
         setCategoryTiles();
         tilesetSelectionChanged();
@@ -890,18 +890,21 @@ void BuildingTilesDialog::tilesetSelectionChanged()
     QList<QListWidgetItem*> selection = ui->tilesetList->selectedItems();
     QListWidgetItem *item = selection.count() ? selection.first() : 0;
     if (item) {
+#if 0
         QRect bounds;
         if (mCategory)
             bounds = mCategory->categoryBounds();
-
+#endif
         int row = ui->tilesetList->row(item);
         MixedTilesetModel *model = ui->tilesetTilesView->model();
-        Tileset *tileset = BuildingTiles::instance()->tilesets().at(row);
+        Tileset *tileset = BuildingTilesMgr::instance()->tilesets().at(row);
         model->setTileset(tileset);
         for (int i = 0; i < tileset->tileCount(); i++) {
             Tile *tile = tileset->tileAt(i);
+#if 0
             if (mCategory && mCategory->usesTile(tile))
                 model->setCategoryBounds(tile, bounds);
+#endif
         }
     } else {
         ui->tilesetTilesView->model()->setTiles(QList<Tile*>());
@@ -938,7 +941,7 @@ void BuildingTilesDialog::addTiles()
     if (tiles.count() > 1)
         mUndoStack->beginMacro(tr("Add Tiles To %1").arg(mCategory->label()));
     foreach (Tile *tile, tiles) {
-        QString tileName = BuildingTiles::instance()->nameForTile(tile);
+        QString tileName = BuildingTilesMgr::instance()->nameForTile(tile);
         mUndoStack->push(new AddTileToCategory(this, mCategory, tileName));
     }
     if (tiles.count() > 1)
@@ -976,7 +979,7 @@ void BuildingTilesDialog::removeTiles()
         mUndoStack->beginMacro(tr("Remove Tiles from %1").arg(mCategory->label()));
     foreach (QModelIndex index, selection) {
         Tile *tile = v->model()->tileAt(index);
-        QString tileName = BuildingTiles::instance()->nameForTile(tile);
+        QString tileName = BuildingTilesMgr::instance()->nameForTile(tile);
         mUndoStack->push(new RemoveTileFromCategory(this, mCategory, tileName));
     }
     if (selection.count() > 1)
@@ -1018,7 +1021,7 @@ void BuildingTilesDialog::categoryNameEdited(QListWidgetItem *item)
 {
     int row = ui->categoryList->row(item);
     if (row < numTileCategories()) {
-        BuildingTileCategory *category = BuildingTiles::instance()->category(row);
+        BuildingTileCategory *category = BuildingTilesMgr::instance()->category(row);
         if (item->text() != category->label())
             mUndoStack->push(new RenameTileCategory(this, category, item->text()));
         return;
@@ -1136,7 +1139,7 @@ void BuildingTilesDialog::addTileset()
     foreach (QString f, fileNames) {
         QFileInfo info(f);
         QString name = info.completeBaseName();
-        if (BuildingTiles::instance()->tilesetFor(name))
+        if (BuildingTilesMgr::instance()->tilesetFor(name))
             continue; // FIXME: duplicate tileset names not allowed, even in different directories
         add += info;
     }
@@ -1160,7 +1163,7 @@ void BuildingTilesDialog::removeTileset()
     QListWidgetItem *item = selection.count() ? selection.first() : 0;
     if (item) {
         int row = ui->tilesetList->row(item);
-        Tileset *tileset = BuildingTiles::instance()->tilesets().at(row);
+        Tileset *tileset = BuildingTilesMgr::instance()->tilesets().at(row);
         if (QMessageBox::question(this, tr("Remove Tileset"),
                                   tr("Really remove the tileset '%1'?").arg(tileset->name()),
                                   QMessageBox::Ok, QMessageBox::Cancel) == QMessageBox::Cancel)
@@ -1181,7 +1184,7 @@ void BuildingTilesDialog::redoTextChanged(const QString &text)
 
 void BuildingTilesDialog::accept()
 {
-    BuildingTiles::instance()->writeBuildingTilesTxt(this);
+    BuildingTilesMgr::instance()->writeBuildingTilesTxt(this);
     if (!FurnitureGroups::instance()->writeTxt()) {
         QMessageBox::warning(this, tr("It's no good, Jim!"),
                              FurnitureGroups::instance()->errorString());

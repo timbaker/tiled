@@ -31,9 +31,7 @@ class Tileset;
 
 namespace BuildingEditor {
 
-class Door;
-class Window;
-class Stairs;
+class BuildingTileCategory;
 
 class BuildingTile
 {
@@ -50,8 +48,6 @@ public:
 
     QString mTilesetName;
     int mIndex;
-
-    QVector<BuildingTile*> mAlternates;
 };
 
 class NoneBuildingTile : public BuildingTile
@@ -68,19 +64,61 @@ public:
     { return QString(); }
 };
 
+class BuildingTileEntry
+{
+public:
+    BuildingTileEntry(BuildingTileCategory *category);
+
+    BuildingTileCategory *category() const
+    { return mCategory; }
+
+    BuildingTile *displayTile() const;
+
+    BuildingTile *tile(int n) const;
+
+    int tileCount() const
+    { return mTiles.size(); }
+
+    /* NOTE about these offsets.  Some roof tiles must be placed at an x,y
+      offset from their actual position in order be displayed in the expected
+      *visual* position.  Ideally, every roof tile would be created so that
+      it doesn't need to be offset from its actual x,y position in the map.
+      */
+    QPoint offset(int n) const;
+
+    bool usesTile(BuildingTile *btile) const;
+
+    BuildingTileEntry *asExteriorWall();
+    BuildingTileEntry *asInteriorWall();
+    BuildingTileEntry *asFloor();
+    BuildingTileEntry *asDoor();
+    BuildingTileEntry *asDoorFrame();
+    BuildingTileEntry *asWindow();
+    BuildingTileEntry *asCurtains();
+    BuildingTileEntry *asStairs();
+    BuildingTileEntry *asRoofCap();
+    BuildingTileEntry *asRoofSlope();
+    BuildingTileEntry *asRoofTop();
+
+    BuildingTileCategory *mCategory;
+    QVector<BuildingTile*> mTiles;
+    QVector<QPoint> mOffsets;
+};
+
 class BuildingTileCategory
 {
 public:
-    BuildingTileCategory(const QString &name, const QString &label) :
+    enum TileEnum
+    {
+        Invalid = -1
+    };
+
+    BuildingTileCategory(const QString &name, const QString &label,
+                         int displayIndex) :
         mName(name),
-        mLabel(label)
+        mLabel(label),
+        mDisplayIndex(displayIndex)
     {}
-
-    BuildingTile *add(const QString &tileName);
-
-    void remove(const QString &tileName);
-
-    BuildingTile *get(const QString &tileName);
 
     QString name() const
     { return mName; }
@@ -91,41 +129,320 @@ public:
     QString label() const
     { return mLabel; }
 
-    const QList<BuildingTile*> &tiles() const
-    { return mTiles; }
+    int displayIndex() const
+    { return mDisplayIndex; }
 
-    BuildingTile *tileAt(int index) const
-    { return mTiles.at(index); }
+    const QList<BuildingTileEntry*> &entries() const
+    { return mEntries; }
+
+    BuildingTileEntry *entry(int index) const
+    { return mEntries.at(index); }
+
+    int entryCount() const
+    { return mEntries.size(); }
+
+    void insertEntry(int index, BuildingTileEntry *entry);
+    BuildingTileEntry *removeEntry(int index);
+
+    int enumCount() const
+    { return mEnumNames.size(); }
+
+    QString enumToString(int index) const;
+    int enumFromString(const QString &s) const;
+
+    /*
+     * This is the method used to fill in all the tiles in an entry from a single
+     * tile. For example, given a door tile, all the different door tiles for each
+     * of the enumeration values (west, north, southeast, etc) used by the doors
+     * category are assigned to a new entry.
+     */
+    virtual void addTile(const QString &tileName);
 
     bool usesTile(Tiled::Tile *tile) const;
 
-    QRect categoryBounds() const;
+    virtual bool canAssignNone() const
+    { return false; }
 
-    bool canAssignNone() const;
+    virtual BuildingTileCategory *asExteriorWalls() { return 0; }
+    virtual BuildingTileCategory *asInteriorWalls() { return 0; }
+    virtual BuildingTileCategory *asFloors() { return 0; }
+    virtual BuildingTileCategory *asDoors() { return 0; }
+    virtual BuildingTileCategory *asDoorFrames() { return 0; }
+    virtual BuildingTileCategory *asWindows() { return 0; }
+    virtual BuildingTileCategory *asCurtains() { return 0; }
+    virtual BuildingTileCategory *asStairs() { return 0; }
+    virtual BuildingTileCategory *asRoofCaps() { return 0; }
+    virtual BuildingTileCategory *asRoofSlopes() { return 0; }
+    virtual BuildingTileCategory *asRoofTops() { return 0; }
 
-private:
+protected:
     QString mName;
     QString mLabel;
-    QList<BuildingTile*> mTiles;
-    QMap<QString,BuildingTile*> mTileByName;
+    int mDisplayIndex;
+    QList<BuildingTileEntry*> mEntries;
+    QStringList mEnumNames;
 };
 
-class BuildingTiles : public QObject
+class BTC_Curtains : public BuildingTileCategory
+{
+public:
+    enum TileEnum
+    {
+        West,
+        East,
+        North,
+        South,
+        // Could add separate open/closed, but I want the user to be able to
+        // choose opened/closed from the browser
+        EnumCount
+    };
+
+    BTC_Curtains(const QString &label);
+
+    void addTile(const QString &tileName);
+
+    bool canAssignNone() const
+    { return true; }
+
+    virtual BuildingTileCategory *asCurtains()
+    { return this; }
+};
+
+class BTC_Doors : public BuildingTileCategory
+{
+public:
+    enum TileEnum
+    {
+        West,
+        North,
+        WestOpen,
+        NorthOpen,
+        EnumCount
+    };
+
+    BTC_Doors(const QString &label);
+
+    void addTile(const QString &tileName);
+
+    bool canAssignNone() const
+    { return true; }
+
+    BuildingTileCategory *asDoors() { return this; }
+};
+
+class BTC_DoorFrames : public BuildingTileCategory
+{
+public:
+    enum TileEnum
+    {
+        West,
+        North,
+        EnumCount
+    };
+
+    BTC_DoorFrames(const QString &label);
+
+    void addTile(const QString &tileName);
+
+    bool canAssignNone() const
+    { return true; }
+
+    BuildingTileCategory *asDoorFrames() { return this; }
+};
+
+class BTC_Floors : public BuildingTileCategory
+{
+public:
+    enum TileEnum
+    {
+        Floor,
+        EnumCount
+    };
+
+    BTC_Floors(const QString &label);
+
+    void addTile(const QString &tileName);
+
+    BuildingTileCategory *asFloors() { return this; }
+};
+
+class BTC_Stairs : public BuildingTileCategory
+{
+public:
+    enum TileEnum
+    {
+        West1,
+        West2,
+        West3,
+        North1,
+        North2,
+        North3,
+        // TODO: open/broken
+        EnumCount
+    };
+
+    BTC_Stairs(const QString &label);
+
+    void addTile(const QString &tileName);
+
+    BuildingTileCategory *asStairs() { return this; }
+};
+
+class BTC_Walls : public BuildingTileCategory
+{
+public:
+    enum TileEnum
+    {
+        West,
+        North,
+        NorthWest,
+        SouthEast,
+        WestWindow,
+        NorthWindow,
+        WestDoor,
+        NorthDoor,
+        EnumCount
+    };
+
+    BTC_Walls(const QString &label);
+
+    void addTile(const QString &tileName);
+
+};
+
+class BTC_EWalls : public BTC_Walls
+{
+public:
+    BTC_EWalls(const QString &label) :
+        BTC_Walls(label)
+    {}
+
+    BuildingTileCategory *asExteriorWalls() { return this; }
+};
+
+class BTC_IWalls : public BTC_Walls
+{
+public:
+    BTC_IWalls(const QString &label) :
+        BTC_Walls(label)
+    {}
+
+    BuildingTileCategory *asInteriorWalls() { return this; }
+};
+
+class BTC_Windows : public BuildingTileCategory
+{
+public:
+    enum TileEnum
+    {
+        West,
+        North,
+        // TODO: open/broken
+        EnumCount
+    };
+
+    BTC_Windows(const QString &label);
+
+    void addTile(const QString &tileName);
+
+    bool canAssignNone() const
+    { return true; }
+
+    BuildingTileCategory *asWindows() { return this; }
+};
+
+class BTC_RoofCaps : public BuildingTileCategory
+{
+public:
+    enum TileEnum
+    {
+        // Sloped cap tiles go left-to-right or bottom-to-top
+        CapRiseE1, CapRiseE2, CapRiseE3, CapFallE1, CapFallE2, CapFallE3,
+        CapRiseS1, CapRiseS2, CapRiseS3, CapFallS1, CapFallS2, CapFallS3,
+
+        // Cap tiles with peaked tops
+        PeakPt5S, PeakPt5E,
+        PeakOnePt5S, PeakOnePt5E,
+        PeakTwoPt5S, PeakTwoPt5E,
+
+        // Cap tiles with flat tops
+        CapGapS1, CapGapS2, CapGapS3,
+        CapGapE1, CapGapE2, CapGapE3,
+
+        EnumCount
+    };
+
+    BTC_RoofCaps(const QString &label);
+
+    void addTile(const QString &tileName);
+
+    BuildingTileCategory *asRoofCaps() { return this; }
+};
+
+class BTC_RoofSlopes : public BuildingTileCategory
+{
+public:
+    enum TileEnum
+    {
+        // Sloped sides
+        SlopeS1, SlopeS2, SlopeS3,
+        SlopeE1, SlopeE2, SlopeE3,
+        SlopePt5S, SlopePt5E,
+        SlopeOnePt5S, SlopeOnePt5E,
+        SlopeTwoPt5S, SlopeTwoPt5E,
+
+        // Flat rooftops
+        FlatTopW1, FlatTopW2, FlatTopW3,
+        FlatTopN1, FlatTopN2, FlatTopN3,
+
+        // Sloped corners
+        Inner1, Inner2, Inner3,
+        Outer1, Outer2, Outer3,
+
+        EnumCount
+    };
+
+    BTC_RoofSlopes(const QString &label);
+
+    void addTile(const QString &tileName);
+
+    BuildingTileCategory *asRoofSlopes() { return this; }
+};
+
+class BTC_RoofTops : public BuildingTileCategory
+{
+public:
+    enum TileEnum
+    {
+        West1,
+        West2,
+        West3,
+        North1,
+        North2,
+        North3,
+        EnumCount
+    };
+
+    BTC_RoofTops(const QString &label);
+
+    void addTile(const QString &tileName);
+
+    BuildingTileCategory *asRoofTops() { return this; }
+};
+
+class BuildingTilesMgr : public QObject
 {
     Q_OBJECT
 public:
-    static BuildingTiles *instance();
+    static BuildingTilesMgr *instance();
     static void deleteInstance();
 
-    BuildingTiles();
-    ~BuildingTiles();
+    BuildingTilesMgr();
+    ~BuildingTilesMgr();
 
-    BuildingTileCategory *addCategory(const QString &categoryName, const QString &label);
+    BuildingTile *add(const QString &tileName);
 
-    BuildingTile *add(const QString &categoryName, const QString &tileName);
-    void add(const QString &categoryName, const QStringList &tileNames);
-
-    BuildingTile *get(const QString &categoryName, const QString &tileName);
+    BuildingTile *get(const QString &tileName, int offset = 0);
 
     const QList<BuildingTileCategory*> &categories() const
     { return mCategories; }
@@ -166,10 +483,13 @@ public:
     Tiled::Tile *tileFor(const QString &tileName);
     Tiled::Tile *tileFor(BuildingTile *tile, int offset = 0);
 
-    BuildingTile *fromTiledTile(const QString &categoryName, Tiled::Tile *tile);
+    BuildingTile *fromTiledTile(Tiled::Tile *tile);
 
     BuildingTile *noneTile() const
     { return mNoneBuildingTile; }
+
+    BuildingTileEntry *noneTileEntry() const
+    { return mNoneTileEntry; }
 
     Tiled::Tile *noneTiledTile() const
     { return mNoneTiledTile; }
@@ -196,26 +516,18 @@ public:
     bool readBuildingTilesTxt();
     void writeBuildingTilesTxt(QWidget *parent = 0);
 
-    BuildingTile *defaultExteriorWall() const;
-    BuildingTile *defaultInteriorWall() const;
-    BuildingTile *defaultFloorTile() const;
-    BuildingTile *defaultDoorTile() const;
-    BuildingTile *defaultDoorFrameTile() const;
-    BuildingTile *defaultWindowTile() const;
-    BuildingTile *defaultCurtainsTile() const;
-    BuildingTile *defaultStairsTile() const;
+    BuildingTileEntry *defaultExteriorWall() const;
+    BuildingTileEntry *defaultInteriorWall() const;
+    BuildingTileEntry *defaultFloorTile() const;
+    BuildingTileEntry *defaultDoorTile() const;
+    BuildingTileEntry *defaultDoorFrameTile() const;
+    BuildingTileEntry *defaultWindowTile() const;
+    BuildingTileEntry *defaultCurtainsTile() const;
+    BuildingTileEntry *defaultStairsTile() const;
 
-    BuildingTile *getExteriorWall(const QString &tileName);
-    BuildingTile *getInteriorWall(const QString &tileName);
-    BuildingTile *getFloorTile(const QString &tileName);
-    BuildingTile *getDoorTile(const QString &tileName);
-    BuildingTile *getDoorFrameTile(const QString &tileName);
-    BuildingTile *getWindowTile(const QString &tileName);
-    BuildingTile *getCurtainsTile(const QString &tileName);
-    BuildingTile *getStairsTile(const QString &tileName);
-    BuildingTile *getRoofTile(const QString &tileName);
-    BuildingTile *getRoofCapTile(const QString &tileName);
-    BuildingTile *getFurnitureTile(const QString &tileName);
+    BuildingTileEntry *defaultRoofCapTiles() const;
+    BuildingTileEntry *defaultRoofSlopeTiles() const;
+    BuildingTileEntry *defaultRoofTopTiles() const;
 
     QString errorString() const
     { return mError; }
@@ -229,17 +541,36 @@ signals:
     void tilesetRemoved(Tiled::Tileset *tileset);
 
 private:
-    static BuildingTiles *mInstance;
+    static BuildingTilesMgr *mInstance;
+
     QList<BuildingTileCategory*> mCategories;
     QMap<QString,BuildingTileCategory*> mCategoryByName;
+
     QMap<QString,Tiled::Tileset*> mTilesetByName;
+
+    QList<BuildingTile*> mTiles;
+    QMap<QString,BuildingTile*> mTileByName;
+
     QList<Tiled::Tileset*> mRemovedTilesets;
-    BuildingTileCategory *mFurnitureCategory;
-    BuildingTileCategory *mRoofCategory;
     Tiled::Tile *mMissingTile;
     Tiled::Tile *mNoneTiledTile;
     BuildingTile *mNoneBuildingTile;
+    BuildingTileEntry *mNoneTileEntry;
     QString mError;
+
+    // The categories
+    BTC_Curtains *mCatCurtains;
+    BTC_Doors *mCatDoors;
+    BTC_DoorFrames *mCatDoorFrames;
+    BTC_Floors *mCatFloors;
+    BTC_Stairs *mCatStairs;
+    BTC_EWalls *mCatEWalls;
+    BTC_IWalls *mCatIWalls;
+    BTC_Windows *mCatWindows;
+
+    BTC_RoofCaps *mCatRoofCaps;
+    BTC_RoofSlopes *mCatRoofSlopes;
+    BTC_RoofTops *mCatRoofTops;
 };
 
 } // namespace BuildingEditor

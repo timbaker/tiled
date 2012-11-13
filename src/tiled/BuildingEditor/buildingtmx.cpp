@@ -212,7 +212,7 @@ bool BuildingTMX::readTxt()
                         }
                     }
 #endif
-                    BuildingTiles::instance()->addTileset(ts);
+                    BuildingTilesMgr::instance()->addTileset(ts);
 
                     mTilesets += ts->name();
                 } else {
@@ -253,7 +253,7 @@ bool BuildingTMX::writeTxt()
     QDir tilesDir(BuildingPreferences::instance()->tilesDirectory());
     SimpleFileBlock tilesetBlock;
     tilesetBlock.name = QLatin1String("tilesets");
-    foreach (Tiled::Tileset *tileset, BuildingTiles::instance()->tilesets()) {
+    foreach (Tiled::Tileset *tileset, BuildingTilesMgr::instance()->tilesets()) {
         QString relativePath = tilesDir.relativeFilePath(tileset->imageSource());
         relativePath.truncate(relativePath.length() - 4); // remove .png
         tilesetBlock.values += SimpleFileKeyValue(QLatin1String("tileset"), relativePath);

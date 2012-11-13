@@ -26,7 +26,7 @@ namespace BuildingEditor {
 
 class BuildingFloor;
 class BuildingTemplate;
-class BuildingTile;
+class BuildingTileEntry;
 class Room;
 
 class Building
@@ -68,41 +68,41 @@ public:
     void insertRoom(int index, Room *room);
     Room *removeRoom(int index);
 
-    BuildingTile *exteriorWall() const
+    BuildingTileEntry *exteriorWall() const
     { return mExteriorWall; }
 
-    void setExteriorWall(BuildingTile *tileName)
-    { mExteriorWall = tileName; }
+    void setExteriorWall(BuildingTileEntry *entry)
+    { mExteriorWall = entry; }
 
-    BuildingTile *doorTile() const
+    BuildingTileEntry *doorTile() const
     { return mDoorTile; }
 
-    void setDoorTile(BuildingTile *tileName)
-    { mDoorTile = tileName; }
+    void setDoorTile(BuildingTileEntry *entry)
+    { mDoorTile = entry; }
 
-    BuildingTile *doorFrameTile() const
+    BuildingTileEntry *doorFrameTile() const
     { return mDoorFrameTile; }
 
-    void setDoorFrameTile(BuildingTile *tileName)
-    { mDoorFrameTile = tileName; }
+    void setDoorFrameTile(BuildingTileEntry *entry)
+    { mDoorFrameTile = entry; }
 
-    BuildingTile *windowTile() const
+    BuildingTileEntry *windowTile() const
     { return mWindowTile; }
 
-    void setWindowTile(BuildingTile *tileName)
-    { mWindowTile = tileName; }
+    void setWindowTile(BuildingTileEntry *entry)
+    { mWindowTile = entry; }
 
-    BuildingTile *curtainsTile() const
+    BuildingTileEntry *curtainsTile() const
     { return mCurtainsTile; }
 
-    void setCurtainsTile(BuildingTile *tileName)
-    { mCurtainsTile = tileName; }
+    void setCurtainsTile(BuildingTileEntry *entry)
+    { mCurtainsTile = entry; }
 
-    BuildingTile *stairsTile() const
+    BuildingTileEntry *stairsTile() const
     { return mStairsTile; }
 
-    void setStairsTile(BuildingTile *tileName)
-    { mStairsTile = tileName; }
+    void setStairsTile(BuildingTileEntry *entry)
+    { mStairsTile = entry; }
 
     void resize(const QSize &newSize);
     void rotate(bool right);
@@ -112,12 +112,14 @@ private:
     int mWidth, mHeight;
     QList<BuildingFloor*> mFloors;
     QList<Room*> mRooms;
-    BuildingTile *mExteriorWall;
-    BuildingTile *mDoorTile;
-    BuildingTile *mDoorFrameTile;
-    BuildingTile *mWindowTile;
-    BuildingTile *mCurtainsTile;
-    BuildingTile *mStairsTile;
+    BuildingTileEntry *mExteriorWall;
+    BuildingTileEntry *mDoorTile;
+    BuildingTileEntry *mDoorFrameTile;
+    BuildingTileEntry *mWindowTile;
+    BuildingTileEntry *mCurtainsTile;
+    BuildingTileEntry *mStairsTile;
+    BuildingTileEntry *mRoofCap;
+    BuildingTileEntry *mRoofSlope;
 };
 
 } // namespace BuildingEditor

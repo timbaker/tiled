@@ -156,22 +156,22 @@ int Stairs::getOffset(int x, int y)
         if (x == mX) {
             int index = y - mY;
             if (index == 1)
-                return 2 + 8; // FIXME: +8 is Tileset::columnCount()
+                return BTC_Stairs::North3;
             if (index == 2)
-                return 1 + 8; // FIXME: +8 is Tileset::columnCount()
+                return BTC_Stairs::North2;
             if (index == 3)
-                return 0 + 8; // FIXME: +8 is Tileset::columnCount()
+                return BTC_Stairs::North1;
         }
     }
     if (mDir == W) {
         if (y == mY) {
             int index = x - mX;
             if (index == 1)
-                return 2;
+                return BTC_Stairs::West3;
             if (index == 2)
-                return 1;
+                return BTC_Stairs::West2;
             if (index == 3)
-                return 0;
+                return BTC_Stairs::West1;
         }
     }
     return -1;
@@ -300,7 +300,9 @@ RoofObject::RoofObject(BuildingFloor *floor, int x, int y, int width, int height
     mCappedW(cappedW),
     mCappedN(cappedN),
     mCappedE(cappedE),
-    mCappedS(cappedS)
+    mCappedS(cappedS),
+    mCapTiles(0),
+    mSlopeTiles(0)
 {
     resize(mWidth, mHeight);
 }
@@ -445,6 +447,42 @@ bool RoofObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
     QRect floorBounds = floor->bounds();
     QRect objectBounds = bounds().translated(offset);
     return (floorBounds & objectBounds) == objectBounds;
+}
+
+void RoofObject::setTile(BuildingTileEntry *tile, int alternate)
+{
+    if ((alternate == 0) && dynamic_cast<BTC_RoofCaps*>(tile->category()))
+        mCapTiles = tile;
+    else if ((alternate == 1) && dynamic_cast<BTC_RoofSlopes*>(tile->category()))
+        mSlopeTiles = tile;
+    else if ((alternate == 2) && dynamic_cast<BTC_RoofTops*>(tile->category()))
+        mTopTiles = tile;
+}
+
+BuildingTileEntry *RoofObject::tile(int alternate) const
+{
+    if (alternate == 0) return mCapTiles;
+    if (alternate == 1) return mSlopeTiles;
+    if (alternate == 2) return mTopTiles;
+    return 0;
+}
+
+void RoofObject::setCapTiles(BuildingTileEntry *rtiles)
+{
+    if (!dynamic_cast<BTC_RoofCaps*>(rtiles->category())) {
+        qFatal("wrong type of tiles passed to RoofObject::setCapTiles");
+        return;
+    }
+    mCapTiles = rtiles;
+}
+
+void RoofObject::setSlopeTiles(BuildingTileEntry *rtiles)
+{
+    if (!dynamic_cast<BTC_RoofSlopes*>(rtiles->category())) {
+        qFatal("wrong type of tiles passed to RoofObject::setSlopeTiles");
+        return;
+    }
+    mSlopeTiles = rtiles;
 }
 
 void RoofObject::setType(RoofObject::RoofType type)
@@ -834,95 +872,11 @@ bool RoofObject::isDepthMin()
 int RoofObject::actualWidth() const
 {
     return mWidth;
-#if 0
-    switch (mType) {
-    case SlopeW:
-    case SlopeE:
-        switch (mDepth) {
-        case Point5: return 0;
-        case One: return 1;
-        case OnePoint5: return 0;
-        case Two: return 2;
-        case Three: return 3;
-        }
-        break;
-    case SlopeN:
-    case SlopeS:
-    case PeakWE:
-    case FlatTop:
-        return mWidth;
-    case PeakNS:
-        switch (mDepth) {
-        case Point5: return 1;
-        case One: return 2;
-        case OnePoint5: return 3;
-        case Two: return 4;
-        case Three: return 6;
-        }
-        break;
-    case CornerInnerSW:
-    case CornerInnerNW:
-    case CornerInnerNE:
-    case CornerInnerSE:
-        switch (mDepth) {
-        case Point5: return 0;
-        case One: return 1;
-        case OnePoint5: return 0;
-        case Two: return 2;
-        case Three: return 3;
-        }
-        break;
-    }
-
-    return 0;
-#endif
 }
 
 int RoofObject::actualHeight() const
 {
     return mHeight;
-#if 0
-    switch (mType) {
-    case SlopeW:
-    case SlopeE:
-    case PeakNS:
-    case FlatTop:
-        return mHeight;
-    case SlopeN:
-    case SlopeS:
-        switch (mDepth) {
-        case Point5: return 0;
-        case One: return 1;
-        case OnePoint5: return 0;
-        case Two: return 2;
-        case Three: return 3;
-        }
-        break;
-    case PeakWE:
-        switch (mDepth) {
-        case Point5: return 1;
-        case One: return 2;
-        case OnePoint5: return 3;
-        case Two: return 4;
-        case Three: return 6;
-        }
-        break;
-    case CornerInnerSW:
-    case CornerInnerNW:
-    case CornerInnerNE:
-    case CornerInnerSE:
-        switch (mDepth) {
-        case Point5: return 0;
-        case One: return 1;
-        case OnePoint5: return 0;
-        case Two: return 2;
-        case Three: return 3;
-        }
-        break;
-    }
-
-    return 0;
-#endif
 }
 
 void RoofObject::toggleCappedW()
@@ -945,105 +899,36 @@ void RoofObject::toggleCappedS()
     mCappedS = !mCappedS;
 }
 
-BuildingEditor::RoofTile RoofObject::roofTile(RoofObject::RoofTile tile) const
+int RoofObject::getOffset(RoofObject::RoofTile tile) const
 {
-    RoofSlopeTiles::TileEnum mapSlope[] = {
-        RoofSlopeTiles::SlopeS1, RoofSlopeTiles::SlopeS2, RoofSlopeTiles::SlopeS3,
-        RoofSlopeTiles::SlopeE1, RoofSlopeTiles::SlopeE2, RoofSlopeTiles::SlopeE3,
-        RoofSlopeTiles::SlopePt5S, RoofSlopeTiles::SlopePt5E,
-        RoofSlopeTiles::SlopeOnePt5S, RoofSlopeTiles::SlopeOnePt5E,
-        RoofSlopeTiles::SlopeTwoPt5S, RoofSlopeTiles::SlopeTwoPt5E,
-        RoofSlopeTiles::FlatTopW1, RoofSlopeTiles::FlatTopW2, RoofSlopeTiles::FlatTopW3,
-        RoofSlopeTiles::FlatTopN1, RoofSlopeTiles::FlatTopN2, RoofSlopeTiles::FlatTopN3,
-        RoofSlopeTiles::Inner1, RoofSlopeTiles::Inner2, RoofSlopeTiles::Inner3,
-        RoofSlopeTiles::Outer1, RoofSlopeTiles::Outer2, RoofSlopeTiles::Outer3
+    static const BTC_RoofSlopes::TileEnum mapSlope[] = {
+        BTC_RoofSlopes::SlopeS1, BTC_RoofSlopes::SlopeS2, BTC_RoofSlopes::SlopeS3,
+        BTC_RoofSlopes::SlopeE1, BTC_RoofSlopes::SlopeE2, BTC_RoofSlopes::SlopeE3,
+        BTC_RoofSlopes::SlopePt5S, BTC_RoofSlopes::SlopePt5E,
+        BTC_RoofSlopes::SlopeOnePt5S, BTC_RoofSlopes::SlopeOnePt5E,
+        BTC_RoofSlopes::SlopeTwoPt5S, BTC_RoofSlopes::SlopeTwoPt5E,
+        BTC_RoofSlopes::FlatTopW1, BTC_RoofSlopes::FlatTopW2, BTC_RoofSlopes::FlatTopW3,
+        BTC_RoofSlopes::FlatTopN1, BTC_RoofSlopes::FlatTopN2, BTC_RoofSlopes::FlatTopN3,
+        BTC_RoofSlopes::Inner1, BTC_RoofSlopes::Inner2, BTC_RoofSlopes::Inner3,
+        BTC_RoofSlopes::Outer1, BTC_RoofSlopes::Outer2, BTC_RoofSlopes::Outer3
     };
-    RoofCapTiles::TileEnum mapCap[] = {
-        RoofCapTiles::CapRiseE1, RoofCapTiles::CapRiseE2, RoofCapTiles::CapRiseE3,
-        RoofCapTiles::CapFallE1, RoofCapTiles::CapFallE2, RoofCapTiles::CapFallE3,
-        RoofCapTiles::CapRiseS1, RoofCapTiles::CapRiseS2, RoofCapTiles::CapRiseS3,
-        RoofCapTiles::CapFallS1, RoofCapTiles::CapFallS2, RoofCapTiles::CapFallS3,
-        RoofCapTiles::PeakPt5S, RoofCapTiles::PeakPt5E,
-        RoofCapTiles::PeakOnePt5S, RoofCapTiles::PeakOnePt5E,
-        RoofCapTiles::PeakTwoPt5S, RoofCapTiles::PeakTwoPt5E,
-        RoofCapTiles::CapGapS1, RoofCapTiles::CapGapS2, RoofCapTiles::CapGapS3,
-        RoofCapTiles::CapGapE1, RoofCapTiles::CapGapE2, RoofCapTiles::CapGapE3
+
+    static const BTC_RoofCaps::TileEnum mapCap[] = {
+        BTC_RoofCaps::CapRiseE1, BTC_RoofCaps::CapRiseE2, BTC_RoofCaps::CapRiseE3,
+        BTC_RoofCaps::CapFallE1, BTC_RoofCaps::CapFallE2, BTC_RoofCaps::CapFallE3,
+        BTC_RoofCaps::CapRiseS1, BTC_RoofCaps::CapRiseS2, BTC_RoofCaps::CapRiseS3,
+        BTC_RoofCaps::CapFallS1, BTC_RoofCaps::CapFallS2, BTC_RoofCaps::CapFallS3,
+        BTC_RoofCaps::PeakPt5S, BTC_RoofCaps::PeakPt5E,
+        BTC_RoofCaps::PeakOnePt5S, BTC_RoofCaps::PeakOnePt5E,
+        BTC_RoofCaps::PeakTwoPt5S, BTC_RoofCaps::PeakTwoPt5E,
+        BTC_RoofCaps::CapGapS1, BTC_RoofCaps::CapGapS2, BTC_RoofCaps::CapGapS3,
+        BTC_RoofCaps::CapGapE1, BTC_RoofCaps::CapGapE2, BTC_RoofCaps::CapGapE3
     };
 
     if (tile >= CapRiseE1)
-        return mCapTiles->roofTile(mapCap[tile - CapRiseE1]);
+        return mapCap[tile - CapRiseE1];
 
-    return mSlopeTiles->roofTile(mapSlope[tile]);
-#if 0
-    if (!btile)
-        return 0;
-
-    int index = 0;
-    switch (tile) {
-    case SlopeS1: index = 0; break;
-    case SlopeS2: index = 1; break;
-    case SlopeS3: index = 2; break;
-
-    case SlopeE1: index = 5; break;
-    case SlopeE2: index = 4; break;
-    case SlopeE3: index = 3; break;
-
-    case SlopePt5S: index = 15; break;
-    case SlopePt5E: index = 14; break;
-
-    case FlatTopW: index = 22; break; // not even sure about these
-    case FlatTopN: index = 23; break;
-
-    case CapRiseE1: index = 0; break;
-    case CapRiseE2: index = 1; break;
-    case CapRiseE3: index = 2; break;
-    case CapFallE1: index = 8; break;
-    case CapFallE2: index = 9; break;
-    case CapFallE3: index = 10; break;
-
-    case CapRiseS1: index = 13; break;
-    case CapRiseS2: index = 12; break;
-    case CapRiseS3: index = 11; break;
-    case CapFallS1: index = 5; break;
-    case CapFallS2: index = 4; break;
-    case CapFallS3: index = 3; break;
-
-    case PeakOnePt5S: index = 6; break;
-    case PeakOnePt5E: index = 14; break;
-
-    case PeakPt5S: index = 7; break;
-    case PeakPt5E: index = 15; break;
-
-    case CapGapS1: case CapGapS2:
-    case CapGapE1: case CapGapE2:
-        // These are the 1/3- and 2/3-height walls which don't have tiles
-        return 0;
-
-    case CapGapS3:
-        btile = RoofTiles::instance()->gapTileForCap(btile);
-        if (!btile)
-            return 0;
-        index = 1; // South wall
-        break;
-    case CapGapE3:
-        btile = RoofTiles::instance()->gapTileForCap(btile);
-        if (!btile)
-            return 0;
-        index = 0; // West wall
-        break;
-
-    case Outer1: index = 8; break;
-    case Outer2: index = 9; break;
-    case Outer3: index = 10; break;
-
-    case Inner1: index = 11; break;
-    case Inner2: index = 12; break;
-    case Inner3: index = 13; break;
-    }
-    return BuildingTiles::instance()->getFurnitureTile(
-                BuildingTiles::instance()->nameForTile(btile->mTilesetName,
-                                                       btile->mIndex + index));
-#endif
+    return mapSlope[tile];
 }
 
 QRect RoofObject::westEdge()

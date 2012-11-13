@@ -109,25 +109,25 @@ Room *BuildingDocument::changeRoomAtPosition(BuildingFloor *floor, const QPoint 
     return old;
 }
 
-BuildingTile *BuildingDocument::changeEWall(BuildingTile *tile)
+BuildingTileEntry *BuildingDocument::changeEWall(BuildingTileEntry *tile)
 {
-    BuildingTile *old = mBuilding->exteriorWall();
+    BuildingTileEntry *old = mBuilding->exteriorWall();
     mBuilding->setExteriorWall(tile);
     emit roomDefinitionChanged();
     return old;
 }
 
-BuildingTile *BuildingDocument::changeWallForRoom(Room *room, BuildingTile *tile)
+BuildingTileEntry *BuildingDocument::changeWallForRoom(Room *room, BuildingTileEntry *tile)
 {
-    BuildingTile *old = room->Wall;
+    BuildingTileEntry *old = room->Wall;
     room->Wall = tile;
     emit roomDefinitionChanged();
     return old;
 }
 
-BuildingTile *BuildingDocument::changeFloorForRoom(Room *room, BuildingTile *tile)
+BuildingTileEntry *BuildingDocument::changeFloorForRoom(Room *room, BuildingTileEntry *tile)
 {
-    BuildingTile *old = room->Floor;
+    BuildingTileEntry *old = room->Floor;
     room->Floor = tile;
     emit roomDefinitionChanged();
     return old;
@@ -182,11 +182,11 @@ QPoint BuildingDocument::moveObject(BuildingObject *object, const QPoint &pos)
     return old;
 }
 
-BuildingTile *BuildingDocument::changeObjectTile(BuildingObject *object,
-                                                 BuildingTile *tile,
-                                                 int alternate)
+BuildingTileEntry *BuildingDocument::changeObjectTile(BuildingObject *object,
+                                                      BuildingTileEntry *tile,
+                                                      int alternate)
 {
-    BuildingTile *old = object->tile(alternate);
+    BuildingTileEntry *old = object->tile(alternate);
     object->setTile(tile, alternate);
     emit objectTileChanged(object);
     return old;
@@ -285,18 +285,6 @@ void BuildingDocument::resizeRoof(RoofObject *roof, int &width, int &height)
 
     width = oldWidth;
     height = oldHeight;
-}
-
-void BuildingDocument::changeRoofTiles(RoofObject *roof, RoofCapTiles *&capTiles,
-                                       RoofSlopeTiles *&slopeTiles)
-{
-    RoofCapTiles *oldCapTiles = roof->capTiles();
-    RoofSlopeTiles *oldSlopeTiles = roof->slopeTiles();
-    roof->setCapTiles(capTiles);
-    roof->setSlopeTiles(slopeTiles);
-    emit objectTileChanged(roof);
-    capTiles = oldCapTiles;
-    slopeTiles = oldSlopeTiles;
 }
 
 void BuildingDocument::furnitureTileChanged(FurnitureTile *ftile)

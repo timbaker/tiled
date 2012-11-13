@@ -91,7 +91,7 @@ EraseRoom::EraseRoom(BuildingDocument *doc, BuildingFloor *floor, const QPoint &
 
 /////
 
-ChangeEWall::ChangeEWall(BuildingDocument *doc, BuildingTile *tile) :
+ChangeEWall::ChangeEWall(BuildingDocument *doc, BuildingTileEntry *tile) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Change External Wall")),
     mDocument(doc),
     mTile(tile)
@@ -105,7 +105,7 @@ void ChangeEWall::swap()
 
 /////
 
-ChangeWallForRoom::ChangeWallForRoom(BuildingDocument *doc, Room *room, BuildingTile *tile) :
+ChangeWallForRoom::ChangeWallForRoom(BuildingDocument *doc, Room *room, BuildingTileEntry *tile) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Room's Wall")),
     mDocument(doc),
     mRoom(room),
@@ -120,7 +120,7 @@ void ChangeWallForRoom::swap()
 
 /////
 
-ChangeFloorForRoom::ChangeFloorForRoom(BuildingDocument *doc, Room *room, BuildingTile *tile) :
+ChangeFloorForRoom::ChangeFloorForRoom(BuildingDocument *doc, Room *room, BuildingTileEntry *tile) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Room's Floor")),
     mDocument(doc),
     mRoom(room),
@@ -193,7 +193,7 @@ void MoveObject::swap()
 /////
 
 ChangeObjectTile::ChangeObjectTile(BuildingDocument *doc, BuildingObject *object,
-                               BuildingTile *tile, int alternate) :
+                               BuildingTileEntry *tile, int alternate) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Object Tile")),
     mDocument(doc),
     mObject(object),
@@ -503,24 +503,6 @@ void HandleRoof::swap()
         break;
     }
     mDocument->emitObjectChanged(mObject);
-}
-
-/////
-
-ChangeRoofTiles::ChangeRoofTiles(BuildingDocument *doc, RoofObject *roof,
-                                 RoofCapTiles *capTiles,
-                                 RoofSlopeTiles *slopeTiles) :
-    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Roof Tiles")),
-    mDocument(doc),
-    mObject(roof),
-    mCapTiles(capTiles),
-    mSlopeTiles(slopeTiles)
-{
-}
-
-void ChangeRoofTiles::swap()
-{
-    mDocument->changeRoofTiles(mObject, mCapTiles, mSlopeTiles);
 }
 
 /////

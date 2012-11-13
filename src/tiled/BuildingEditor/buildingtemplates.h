@@ -26,7 +26,7 @@
 
 namespace BuildingEditor {
 
-class BuildingTile;
+class BuildingTileEntry;
 
 class Room
 {
@@ -57,20 +57,20 @@ public:
     QString Name;
     QRgb Color;
     QString internalName;
-    BuildingTile *Floor;
-    BuildingTile *Wall;
+    BuildingTileEntry *Floor;
+    BuildingTileEntry *Wall;
 };
 
 class BuildingTemplate
 {
 public:
     QString Name;
-    BuildingTile *Wall;
-    BuildingTile *DoorTile;
-    BuildingTile *DoorFrameTile;
-    BuildingTile *WindowTile;
-    BuildingTile *CurtainsTile;
-    BuildingTile *StairsTile;
+    BuildingTileEntry *Wall;
+    BuildingTileEntry *DoorTile;
+    BuildingTileEntry *DoorFrameTile;
+    BuildingTileEntry *WindowTile;
+    BuildingTileEntry *CurtainsTile;
+    BuildingTileEntry *StairsTile;
 
     QList<Room*> RoomList;
 
@@ -132,10 +132,16 @@ public:
 private:
     bool upgradeTxt();
 
+    void addEntry(BuildingTileEntry *entry);
+    QString entryIndex(BuildingTileEntry *entry);
+    BuildingTileEntry *getEntry(const QString &s);
+
 private:
     static BuildingTemplates *mInstance;
     QList<BuildingTemplate*> mTemplates;
     QString mError;
+
+    QList<BuildingTileEntry*> mEntries; // Used during readTxt()/writeTxt()
 };
 
 } // namespace BuildingEditor

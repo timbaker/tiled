@@ -37,12 +37,12 @@ Building::Building(int width, int height, BuildingTemplate *btemplate) :
         foreach (Room *room, btemplate->RoomList)
             insertRoom(mRooms.count(), new Room(room));
     } else {
-        mExteriorWall = BuildingTiles::instance()->defaultExteriorWall();
-        mDoorTile = BuildingTiles::instance()->defaultDoorTile();
-        mDoorFrameTile = BuildingTiles::instance()->defaultDoorFrameTile();
-        mWindowTile = BuildingTiles::instance()->defaultWindowTile();
-        mCurtainsTile = BuildingTiles::instance()->defaultCurtainsTile();
-        mStairsTile = BuildingTiles::instance()->defaultStairsTile();
+        mExteriorWall = BuildingTilesMgr::instance()->defaultExteriorWall();
+        mDoorTile = BuildingTilesMgr::instance()->defaultDoorTile();
+        mDoorFrameTile = BuildingTilesMgr::instance()->defaultDoorFrameTile();
+        mWindowTile = BuildingTilesMgr::instance()->defaultWindowTile();
+        mCurtainsTile = BuildingTilesMgr::instance()->defaultCurtainsTile();
+        mStairsTile = BuildingTilesMgr::instance()->defaultStairsTile();
     }
 }
 

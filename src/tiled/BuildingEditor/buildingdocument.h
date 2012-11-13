@@ -30,7 +30,7 @@ namespace BuildingEditor {
 class BuildingObject;
 class Building;
 class BuildingFloor;
-class BuildingTile;
+class BuildingTileEntry;
 class Door;
 class FurnitureObject;
 class FurnitureTile;
@@ -85,9 +85,9 @@ public:
 
     // +UNDO/REDO
     Room *changeRoomAtPosition(BuildingFloor *floor, const QPoint &pos, Room *room);
-    BuildingTile *changeEWall(BuildingTile *tile);
-    BuildingTile *changeWallForRoom(Room *room, BuildingTile *tile);
-    BuildingTile *changeFloorForRoom(Room *room, BuildingTile *tile);
+    BuildingEditor::BuildingTileEntry *changeEWall(BuildingEditor::BuildingTileEntry *tile);
+    BuildingTileEntry *changeWallForRoom(Room *room, BuildingTileEntry *tile);
+    BuildingTileEntry *changeFloorForRoom(Room *room, BuildingTileEntry *tile);
 
     void insertFloor(int index, BuildingFloor *floor);
     BuildingFloor *removeFloor(int index);
@@ -95,7 +95,8 @@ public:
     void insertObject(BuildingFloor *floor, int index, BuildingObject *object);
     BuildingObject *removeObject(BuildingFloor *floor, int index);
     QPoint moveObject(BuildingObject *object, const QPoint &pos);
-    BuildingTile *changeObjectTile(BuildingObject *object, BuildingTile *tile, int alternate);
+    BuildingTileEntry *changeObjectTile(BuildingObject *object,
+                                        BuildingTileEntry *tile, int alternate);
 
     void insertRoom(int index, Room *room);
     Room *removeRoom(int index);
@@ -114,9 +115,6 @@ public:
     FurnitureTile *changeFurnitureTile(FurnitureObject *object, FurnitureTile *ftile);
 
     void resizeRoof(RoofObject *roof, int &width, int &height);
-    void changeRoofTiles(RoofObject *roof,
-                         RoofCapTiles *&capTiles,
-                         RoofSlopeTiles *&slopeTiles);
     // -UNDO/REDO
     
 signals:

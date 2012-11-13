@@ -166,9 +166,9 @@ void RoomsDialog::addRoom()
     room->Name = tr("Room %1").arg(n);
     room->internalName = tr("room%1").arg(n);
     room->Color = color;
-    BuildingTile *btile = BuildingTiles::instance()->defaultInteriorWall();
+    BuildingTile *btile = BuildingTilesMgr::instance()->defaultInteriorWall();
     room->Wall = btile;
-    btile = BuildingTiles::instance()->defaultFloorTile();
+    btile = BuildingTilesMgr::instance()->defaultFloorTile();
     room->Floor = btile;
 
     mRooms += room;
@@ -260,7 +260,7 @@ void RoomsDialog::tileSelectionChanged()
 void RoomsDialog::setTilePixmap()
 {
     if (BuildingTile *btile = selectedTile()) {
-        Tiled::Tile *tile = BuildingTiles::instance()->tileFor(btile);
+        Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(btile);
         ui->tileLabel->setPixmap(tile->image());
     } else {
         ui->tileLabel->clear();

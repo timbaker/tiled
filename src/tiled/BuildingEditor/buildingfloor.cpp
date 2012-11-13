@@ -101,54 +101,61 @@ static void ReplaceRoof(RoofObject *ro, const QRect &r,
                         RoofObject::RoofTile tile)
 {
     if (r.isEmpty()) return;
-    RoofTile roofTile = ro->roofTile(tile);
+    int offset = ro->getOffset(tile);
+    QPoint tileOffset = ro->capTiles()->offset(offset);
     QRect bounds(0, 0, squares.size(), squares[0].size());
-    QRect rOffset = r.translated(roofTile.offset()) & bounds;
+    QRect rOffset = r.translated(tileOffset) & bounds;
     for (int x = rOffset.left(); x <= rOffset.right(); x++)
         for (int y = rOffset.top(); y <= rOffset.bottom(); y++)
-            squares[x][y].ReplaceRoof(roofTile.tile());
+            squares[x][y].ReplaceRoof(ro->capTiles(), offset);
 }
 
 static void ReplaceRoofGap(RoofObject *ro, const QRect &r,
                            QVector<QVector<BuildingFloor::Square> > &squares,
-                           RoofObject::RoofTile tile, int offset = 0)
+                           RoofObject::RoofTile tile)
 {
     if (r.isEmpty()) return;
-    RoofTile roofTile = ro->roofTile(tile);
+    int offset = ro->getOffset(tile);
+    QPoint tileOffset = ro->capTiles()->offset(offset);
     QRect bounds(0, 0, squares.size(), squares[0].size());
-    QRect rOffset = r.translated(roofTile.offset()) & bounds;
+    QRect rOffset = r.translated(tileOffset) & bounds;
     for (int x = rOffset.left(); x <= rOffset.right(); x++)
         for (int y = rOffset.top(); y <= rOffset.bottom(); y++)
-            squares[x][y].ReplaceRoofCap(roofTile.tile(), offset);
+            squares[x][y].ReplaceRoofCap(ro->capTiles(), offset);
 }
 
 static void ReplaceRoofCap(RoofObject *ro, int x, int y,
                            QVector<QVector<BuildingFloor::Square> > &squares,
-                           RoofObject::RoofTile tile, int offset = 0)
+                           RoofObject::RoofTile tile)
 {
-    RoofTile roofTile = ro->roofTile(tile);
+    int offset = ro->getOffset(tile);
+    QPoint tileOffset = ro->capTiles()->offset(offset);
     QRect bounds(0, 0, squares.size(), squares[0].size());
-    QPoint p = QPoint(x, y) + roofTile.offset();
+    QPoint p = QPoint(x, y) + tileOffset;
     if (bounds.contains(p))
-        squares[p.x()][p.y()].ReplaceRoofCap(roofTile.tile(), offset);
+        squares[p.x()][p.y()].ReplaceRoofCap(ro->capTiles(), offset);
 }
 
 static void ReplaceRoofTop(RoofObject *ro, const QRect &r,
                            QVector<QVector<BuildingFloor::Square> > &squares)
 {
     if (r.isEmpty()) return;
-    RoofObject::RoofTile e = ro->isN() ? RoofObject::FlatTopN1 : RoofObject::FlatTopW1;
-    if (ro->depth() == RoofObject::Two) e = ro->isN() ? RoofObject::FlatTopN2 : RoofObject::FlatTopW2;
-    if (ro->depth() == RoofObject::Three) e = ro->isN() ? RoofObject::FlatTopN3 : RoofObject::FlatTopW3;
-    RoofTile roofTile = ro->roofTile(e);
+    int offset = 0;
+    if (ro->depth() == RoofObject::One)
+        ro->isN() ? BTC_RoofTops::North1 : BTC_RoofTops::West1;
+    else if (ro->depth() == RoofObject::Two)
+        offset = ro->isN() ? BTC_RoofTops::North2 : BTC_RoofTops::West2;
+    else if (ro->depth() == RoofObject::Three)
+        offset = ro->isN() ? BTC_RoofTops::North3 : BTC_RoofTops::West3;
+    QPoint tileOffset = ro->topTiles()->offset(offset);
     QRect bounds(0, 0, squares.size(), squares[0].size());
-    QRect rOffset = r.translated(roofTile.offset()) & bounds;
+    QRect rOffset = r.translated(tileOffset) & bounds;
     for (int x = rOffset.left(); x <= rOffset.right(); x++)
         for (int y = rOffset.top(); y <= rOffset.bottom(); y++)
 #ifdef ROOF_TOPS
             (ro->depth() == RoofObject::Three)
-                ? squares[x][y].ReplaceFloor(roofTile.tile())
-                : squares[x][y].ReplaceRoofTop(roofTile.tile());
+                ? squares[x][y].ReplaceFloor(ro->topTiles(), offset)
+                : squares[x][y].ReplaceRoofTop(ro->topTiles(), offset);
 #else
             squares[x][y].ReplaceFloor(roofTile.tile());
 #endif
@@ -156,13 +163,14 @@ static void ReplaceRoofTop(RoofObject *ro, const QRect &r,
 
 static void ReplaceRoofCorner(RoofObject *ro, int x, int y,
                               QVector<QVector<BuildingFloor::Square> > &squares,
-                              RoofObject::RoofTile tile, int offset = 0)
+                              RoofObject::RoofTile tile)
 {
-    RoofTile roofTile = ro->roofTile(tile);
+    int offset = ro->getOffset(tile);
+    QPoint tileOffset = ro->capTiles()->offset(offset);
     QRect bounds(0, 0, squares.size(), squares[0].size());
-    QPoint p = QPoint(x, y) + roofTile.offset();
+    QPoint p = QPoint(x, y) + tileOffset;
     if (bounds.contains(p))
-        squares[p.x()][p.y()].ReplaceRoof(roofTile.tile(), offset);
+        squares[p.x()][p.y()].ReplaceRoof(ro->slopeTiles(), offset);
 }
 
 static void ReplaceFurniture(int x, int y,
@@ -186,11 +194,11 @@ void BuildingFloor::LayoutToSquares()
     for (int x = 0; x < w; x++)
         squares[x].resize(h);
 
-    BuildingTile *wtype = 0;
+    BuildingTileEntry *wtype = 0;
 
-    BuildingTile *exteriorWall;
-    QVector<BuildingTile*> interiorWalls;
-    QVector<BuildingTile*> floors;
+    BuildingTileEntry *exteriorWall;
+    QVector<BuildingTileEntry*> interiorWalls;
+    QVector<BuildingTileEntry*> floors;
 
     exteriorWall = mBuilding->exteriorWall();
 
@@ -290,20 +298,25 @@ void BuildingFloor::LayoutToSquares()
         for (int y = 0; y < height() + 1; y++) {
             if (Door *door = GetDoorAt(x, y)) {
                 squares[x][y].ReplaceDoor(door->tile(),
-                                          door->getOffset());
+                                          door->isW() ? BTC_Doors::West
+                                                      : BTC_Doors::North);
                 squares[x][y].ReplaceFrame(door->frameTile(),
-                                           door->getOffset());
+                                           door->isW() ? BTC_DoorFrames::West
+                                                       : BTC_DoorFrames::North);
             }
 
             if (Window *window = GetWindowAt(x, y)) {
                 squares[x][y].ReplaceFrame(window->tile(),
-                                           window->getOffset());
+                                           window->isW() ? BTC_Windows::West
+                                                         : BTC_Windows::North);
 
                 // Window curtains on exterior walls must be *inside* the
                 // room.
-                if (squares[x][y].mExterior)
-                    squares[x - (window->isW() ? 1 : 0)][y - (window->isN() ? 1 : 0)].ReplaceCurtains(window, true);
-                else
+                if (squares[x][y].mExterior) {
+                    int dx = window->isW() ? 1 : 0;
+                    int dy = window->isN() ? 1 : 0;
+                    squares[x - dx][y - dy].ReplaceCurtains(window, true);
+                } else
                     squares[x][y].ReplaceCurtains(window, false);
             }
 
@@ -846,30 +859,30 @@ BuildingFloor::Square::~Square()
     //        delete mTiles[i];
 }
 
-void BuildingFloor::Square::ReplaceFloor(BuildingTile *tile)
+void BuildingFloor::Square::ReplaceFloor(BuildingTileEntry *tile, int offset)
 {
     mTiles[SectionFloor] = tile;
-    mTileOffset[SectionFloor] = 0;
+    mTileOffset[SectionFloor] = offset;
 }
 
-void BuildingFloor::Square::ReplaceWall(BuildingTile *tile,
+void BuildingFloor::Square::ReplaceWall(BuildingTileEntry *tile,
                                         Square::WallOrientation orient,
                                         bool exterior)
 {
     mTiles[SectionWall] = tile;
-    mWallOrientation = orient;
     mTileOffset[SectionWall] = getWallOffset();
+    mWallOrientation = orient;
     mExterior = exterior;
 }
 
-void BuildingFloor::Square::ReplaceDoor(BuildingTile *tile, int offset)
+void BuildingFloor::Square::ReplaceDoor(BuildingTileEntry *tile, int offset)
 {
     mTiles[SectionDoor] = tile;
     mTileOffset[SectionDoor] = offset;
     mTileOffset[SectionWall] = getWallOffset();
 }
 
-void BuildingFloor::Square::ReplaceFrame(BuildingTile *tile, int offset)
+void BuildingFloor::Square::ReplaceFrame(BuildingTileEntry *tile, int offset)
 {
     mTiles[SectionFrame] = tile;
     mTileOffset[SectionFrame] = offset;
@@ -879,13 +892,12 @@ void BuildingFloor::Square::ReplaceFrame(BuildingTile *tile, int offset)
 void BuildingFloor::Square::ReplaceCurtains(Window *window, bool exterior)
 {
     mTiles[SectionCurtains] = window->curtainsTile();
-    int offset = window->isW() ? 0 : 2; // W E N S
-    if (exterior)
-        ++offset;
-    mTileOffset[SectionCurtains] = offset;
+    mTileOffset[SectionCurtains] = window->isW()
+            ? (exterior ? BTC_Curtains::East : BTC_Curtains::West)
+            : (exterior ? BTC_Curtains::South : BTC_Curtains::North);
 }
 
-void BuildingFloor::Square::ReplaceFurniture(BuildingTile *tile, int offset)
+void BuildingFloor::Square::ReplaceFurniture(BuildingTileEntry *tile, int offset)
 {
     if (offset < 0) { // see getStairsOffset
         mTiles[SectionFurniture] = 0;
@@ -901,7 +913,7 @@ void BuildingFloor::Square::ReplaceFurniture(BuildingTile *tile, int offset)
     mTileOffset[SectionFurniture] = offset;
 }
 
-void BuildingFloor::Square::ReplaceRoof(BuildingTile *tile, int offset)
+void BuildingFloor::Square::ReplaceRoof(BuildingTileEntry *tile, int offset)
 {
     if (mTiles[SectionRoof]) {
         mTiles[SectionRoof2] = tile;
@@ -912,7 +924,7 @@ void BuildingFloor::Square::ReplaceRoof(BuildingTile *tile, int offset)
     mTileOffset[SectionRoof] = offset;
 }
 
-void BuildingFloor::Square::ReplaceRoofCap(BuildingTile *tile, int offset)
+void BuildingFloor::Square::ReplaceRoofCap(BuildingTileEntry *tile, int offset)
 {
     if (mTiles[SectionRoofCap]) {
         mTiles[SectionRoofCap2] = tile;
@@ -924,41 +936,41 @@ void BuildingFloor::Square::ReplaceRoofCap(BuildingTile *tile, int offset)
 }
 
 #ifdef ROOF_TOPS
-void BuildingFloor::Square::ReplaceRoofTop(BuildingTile *tile)
+void BuildingFloor::Square::ReplaceRoofTop(BuildingTileEntry *tile, int offset)
 {
     mTiles[SectionRoofTop] = tile;
-    mTileOffset[SectionRoofTop] = 0;
+    mTileOffset[SectionRoofTop] = offset;
 }
 #endif
 
 int BuildingFloor::Square::getWallOffset()
 {
-    BuildingTile *tile = mTiles[SectionWall];
+    BuildingTileEntry *tile = mTiles[SectionWall];
     if (!tile)
         return -1;
 
-    int offset = 0;
+    int offset = BTC_Walls::West;
 
     switch (mWallOrientation) {
     case WallOrientN:
         if (mTiles[SectionDoor] != 0)
-            offset += 11;
+            offset = BTC_Walls::NorthDoor;
         else if (mTiles[SectionFrame] != 0)
-            offset += 9; // window
+            offset = BTC_Walls::NorthWindow;
         else
-            offset += 1;
+            offset = BTC_Walls::North;
         break;
     case  WallOrientNW:
-        offset += 2;
+        offset = BTC_Walls::NorthWest;
         break;
     case  WallOrientW:
         if (mTiles[SectionDoor] != 0)
-            offset += 10;
+            offset = BTC_Walls::WestDoor;
         else if (mTiles[SectionFrame] != 0)
-            offset += 8; // window
+            offset = BTC_Walls::WestWindow;
         break;
     case  WallOrientSE:
-        offset += 3;
+        offset = BTC_Walls::SouthEast;
         break;
     }
 

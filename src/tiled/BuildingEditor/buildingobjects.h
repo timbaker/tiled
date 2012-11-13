@@ -26,6 +26,7 @@ namespace BuildingEditor {
 
 class BuildingFloor;
 class BuildingTile;
+class BuildingTileEntry;
 class Door;
 class FurnitureObject;
 class FurnitureTile;
@@ -85,13 +86,13 @@ public:
     QString dirString() const;
     static Direction dirFromString(const QString &s);
 
-    virtual void setTile(BuildingTile *tile, int alternate = 0)
+    virtual void setTile(BuildingTileEntry *tile, int alternate = 0)
     {
         Q_UNUSED(alternate)
         mTile = tile;
     }
 
-    virtual BuildingTile *tile(int alternate = 0) const
+    virtual BuildingTileEntry *tile(int alternate = 0) const
     {
         Q_UNUSED(alternate)
         return mTile;
@@ -116,7 +117,7 @@ protected:
     Direction mDir;
     int mX;
     int mY;
-    BuildingTile *mTile;
+    BuildingTileEntry *mTile;
 };
 
 class Door : public BuildingObject
@@ -134,17 +135,17 @@ public:
     int getOffset()
     { return (mDir == N) ? 1 : 0; }
 
-    void setTile(BuildingTile *tile, int alternate = 0)
+    void setTile(BuildingTileEntry *tile, int alternate = 0)
     { alternate ? mFrameTile = tile : mTile = tile; }
 
-    BuildingTile *tile(int alternate = 0) const
+    BuildingTileEntry *tile(int alternate = 0) const
     { return alternate ? mFrameTile : mTile; }
 
-    BuildingTile *frameTile() const
+    BuildingTileEntry *frameTile() const
     { return mFrameTile; }
 
 private:
-    BuildingTile *mFrameTile;
+    BuildingTileEntry *mFrameTile;
 };
 
 class Stairs : public BuildingObject
@@ -180,10 +181,10 @@ public:
 
     }
 
-    void setTile(BuildingTile *tile, int alternate = 0)
+    void setTile(BuildingTileEntry *tile, int alternate = 0)
     { alternate ? mCurtainsTile = tile : mTile = tile; }
 
-    BuildingTile *tile(int alternate = 0) const
+    BuildingTileEntry *tile(int alternate = 0) const
     { return alternate ? mCurtainsTile : mTile; }
 
     Window *asWindow() { return this; }
@@ -191,11 +192,11 @@ public:
     int getOffset() const
     { return (mDir == N) ? 1 : 0; }
 
-    BuildingTile *curtainsTile()
+    BuildingTileEntry *curtainsTile()
     { return mCurtainsTile; }
 
 private:
-    BuildingTile *mCurtainsTile;
+    BuildingTileEntry *mCurtainsTile;
 };
 
 class FurnitureObject : public BuildingObject
@@ -266,21 +267,28 @@ public:
     bool isValidPos(const QPoint &offset = QPoint(),
                     BuildingEditor::BuildingFloor *floor = 0) const;
 
+    void setTile(BuildingTileEntry *tile, int alternate = 0);
+
+    BuildingTileEntry *tile(int alternate = 0) const;
+
     bool affectsFloorAbove() const { return true; }
 
     RoofObject *asRoof() { return this; }
 
-    void setCapTiles(RoofCapTiles *rtiles)
-    { mCapTiles = rtiles; }
+    void setCapTiles(BuildingTileEntry *rtiles);
 
-    RoofCapTiles *capTiles() const
+    BuildingTileEntry *capTiles() const
     { return mCapTiles; }
 
-    void setSlopeTiles(RoofSlopeTiles *rtiles)
-    { mSlopeTiles = rtiles; }
+    void setSlopeTiles(BuildingTileEntry *rtiles);
 
-    RoofSlopeTiles *slopeTiles() const
+    BuildingTileEntry *slopeTiles() const
     { return mSlopeTiles; }
+
+    void setTopTiles(BuildingTileEntry *rtiles);
+
+    BuildingTileEntry *topTiles() const
+    { return mTopTiles; }
 
     void setType(RoofType type);
 
@@ -354,7 +362,7 @@ public:
         CapGapE1, CapGapE2, CapGapE3
     };
 
-    BuildingEditor::RoofTile roofTile(RoofTile roofTile) const;
+    int getOffset(RoofTile getOffset) const;
 
     QRect westEdge();
     QRect northEdge();
@@ -376,7 +384,6 @@ public:
     static QString depthToString(RoofDepth depth);
     static RoofDepth depthFromString(const QString &s);
 
-
 private:
     int mWidth;
     int mHeight;
@@ -386,8 +393,9 @@ private:
     bool mCappedN;
     bool mCappedE;
     bool mCappedS;
-    RoofCapTiles *mCapTiles;
-    RoofSlopeTiles *mSlopeTiles;
+    BuildingTileEntry *mCapTiles;
+    BuildingTileEntry *mSlopeTiles;
+    BuildingTileEntry *mTopTiles;
 };
 
 } // namespace BulidingEditor

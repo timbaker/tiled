@@ -140,11 +140,11 @@ bool FurnitureGroups::readTxt()
                                 }
                                 QString tilesetName;
                                 int tileIndex;
-                                if (!BuildingTiles::parseTileName(kv.value, tilesetName, tileIndex)) {
+                                if (!BuildingTilesMgr::parseTileName(kv.value, tilesetName, tileIndex)) {
                                     mError = tr("Can't parse tile name '%1'").arg(kv.value);
                                     return false;
                                 }
-                                tile->mTiles[x + y * 2] = BuildingTiles::instance()->getFurnitureTile(kv.value);
+                                tile->mTiles[x + y * 2] = BuildingTilesMgr::instance()->get(kv.value);
 
                             }
                             tiles->mTiles[FurnitureTiles::orientIndex(tile->mOrient)] = tile;

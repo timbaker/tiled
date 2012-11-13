@@ -299,11 +299,11 @@ BuildingPreviewScene::BuildingPreviewScene(QWidget *parent) :
     mDarkRectangle->setVisible(false);
     addItem(mDarkRectangle);
 
-    connect(BuildingTiles::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
+    connect(BuildingTilesMgr::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
             SLOT(tilesetAdded(Tiled::Tileset*)));
-    connect(BuildingTiles::instance(), SIGNAL(tilesetAboutToBeRemoved(Tiled::Tileset*)),
+    connect(BuildingTilesMgr::instance(), SIGNAL(tilesetAboutToBeRemoved(Tiled::Tileset*)),
             SLOT(tilesetAboutToBeRemoved(Tiled::Tileset*)));
-    connect(BuildingTiles::instance(), SIGNAL(tilesetRemoved(Tiled::Tileset*)),
+    connect(BuildingTilesMgr::instance(), SIGNAL(tilesetRemoved(Tiled::Tileset*)),
             SLOT(tilesetRemoved(Tiled::Tileset*)));
 }
 
@@ -414,7 +414,7 @@ void BuildingPreviewScene::BuildingToMap()
                    64, 32);
 
     // Add tilesets from TMXConfig.txt
-    foreach (Tileset *ts, BuildingTiles::instance()->tilesets())
+    foreach (Tileset *ts, BuildingTilesMgr::instance()->tilesets())
         mMap->addTileset(ts);
     TilesetManager::instance()->addReferences(mMap->tilesets());
 
@@ -516,7 +516,7 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                     if (btile->isNone())
                         continue;
                     int tileOffset = square.mTileOffset[section];
-                    if (Tiled::Tile *tile = BuildingTiles::instance()->tileFor(btile, tileOffset))
+                    if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(btile, tileOffset))
                         tl->setCell(x + offset, y + offset, Cell(tile));
                 }
 

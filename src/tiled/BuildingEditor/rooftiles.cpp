@@ -101,8 +101,8 @@ bool RoofTiles::readTxt()
                     delete tiles;
                     return false;
                 }
-                QString tileName = BuildingTiles::normalizeTileName(kv.value);
-                BuildingTile *btile = BuildingTiles::instance()->getRoofTile(tileName);
+                QString tileName = BuildingTilesMgr::normalizeTileName(kv.value);
+                BuildingTile *btile = BuildingTilesMgr::instance()->getRoofTile(tileName);
                 tiles->mTiles[e] = RoofTile(btile);
             }
             mCapTiles += tiles;
@@ -132,8 +132,8 @@ bool RoofTiles::readTxt()
                     delete tiles;
                     return false;
                 }
-                QString tileName = BuildingTiles::normalizeTileName(kv.value);
-                BuildingTile *btile = BuildingTiles::instance()->getRoofTile(tileName);
+                QString tileName = BuildingTilesMgr::normalizeTileName(kv.value);
+                BuildingTile *btile = BuildingTilesMgr::instance()->getRoofTile(tileName);
                 tiles->mTiles[e] = RoofTile(btile);
             }
             mSlopeTiles += tiles;
@@ -148,7 +148,7 @@ bool RoofTiles::readTxt()
     // Check that all the tiles exist
     foreach (RoofCapTiles *rtiles, mCapTiles) {
         foreach (RoofTile rtile, rtiles->roofTiles()) {
-            if (!BuildingTiles::instance()->tileFor(rtile.tile())) {
+            if (!BuildingTilesMgr::instance()->tileFor(rtile.tile())) {
                 mError = tr("Tile %1 #%2 doesn't exist.")
                         .arg(rtile.tile()->mTilesetName)
                         .arg(rtile.tile()->mIndex);
@@ -158,7 +158,7 @@ bool RoofTiles::readTxt()
     }
     foreach (RoofSlopeTiles *rtiles, mSlopeTiles) {
         foreach (RoofTile rtile, rtiles->roofTiles()) {
-            if (!BuildingTiles::instance()->tileFor(rtile.tile())) {
+            if (!BuildingTilesMgr::instance()->tileFor(rtile.tile())) {
                 mError = tr("Tile %1 #%2 doesn't exist.")
                         .arg(rtile.tile()->mTilesetName)
                         .arg(rtile.tile()->mIndex);
@@ -257,7 +257,7 @@ bool RoofTiles::upgradeTxt()
 /////
 
 RoofTile::RoofTile()
-    : mTile(BuildingTiles::instance()->noneTile())
+    : mTile(BuildingTilesMgr::instance()->noneTile())
 {
 }
 

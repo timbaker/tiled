@@ -29,6 +29,7 @@ class BuildingObject;
 class BuildingDocument;
 class BuildingFloor;
 class BuildingTile;
+class BuildingTileEntry;
 class Door;
 class FurnitureObject;
 class FurnitureTile;
@@ -92,7 +93,7 @@ public:
 class ChangeEWall : public QUndoCommand
 {
 public:
-    ChangeEWall(BuildingDocument *doc, BuildingTile *tile);
+    ChangeEWall(BuildingDocument *doc, BuildingEditor::BuildingTileEntry *tile);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -101,13 +102,13 @@ private:
     void swap();
 
     BuildingDocument *mDocument;
-    BuildingTile *mTile;
+    BuildingTileEntry *mTile;
 };
 
 class ChangeWallForRoom : public QUndoCommand
 {
 public:
-    ChangeWallForRoom(BuildingDocument *doc, Room *room, BuildingTile *tile);
+    ChangeWallForRoom(BuildingDocument *doc, Room *room, BuildingTileEntry *tile);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -117,13 +118,13 @@ private:
 
     BuildingDocument *mDocument;
     Room *mRoom;
-    BuildingTile *mTile;
+    BuildingTileEntry *mTile;
 };
 
 class ChangeFloorForRoom : public QUndoCommand
 {
 public:
-    ChangeFloorForRoom(BuildingDocument *doc, Room *room, BuildingTile *tile);
+    ChangeFloorForRoom(BuildingDocument *doc, Room *room, BuildingTileEntry *tile);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -133,7 +134,7 @@ private:
 
     BuildingDocument *mDocument;
     Room *mRoom;
-    BuildingTile *mTile;
+    BuildingTileEntry *mTile;
 };
 
 class AddRemoveObject : public QUndoCommand
@@ -191,7 +192,7 @@ class ChangeObjectTile : public QUndoCommand
 {
 public:
     ChangeObjectTile(BuildingDocument *doc, BuildingObject *object,
-                     BuildingTile *tile, int alternate = 0);
+                     BuildingTileEntry *tile, int alternate = 0);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -201,7 +202,7 @@ private:
 
     BuildingDocument *mDocument;
     BuildingObject *mObject;
-    BuildingTile *mTile;
+    BuildingTileEntry *mTile;
     int mAlternate;
 };
 
@@ -466,24 +467,6 @@ private:
     BuildingDocument *mDocument;
     RoofObject *mObject;
     Handle mHandle;
-};
-
-class ChangeRoofTiles : public QUndoCommand
-{
-public:
-    ChangeRoofTiles(BuildingDocument *doc, RoofObject *roof,
-                    RoofCapTiles *capTiles, RoofSlopeTiles *slopeTiles);
-
-    void undo() { swap(); }
-    void redo() { swap(); }
-
-private:
-    void swap();
-
-    BuildingDocument *mDocument;
-    RoofObject *mObject;
-    RoofCapTiles *mCapTiles;
-    RoofSlopeTiles *mSlopeTiles;
 };
 
 } // namespace BuildingEditor

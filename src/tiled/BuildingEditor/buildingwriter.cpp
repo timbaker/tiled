@@ -74,19 +74,20 @@ public:
     {
         w.writeStartElement(QLatin1String("building"));
 
+        writeBuildingTileEntries(w);
+
         w.writeAttribute(QLatin1String("version"), QLatin1String("1.0"));
         w.writeAttribute(QLatin1String("width"), QString::number(building->width()));
         w.writeAttribute(QLatin1String("height"), QString::number(building->height()));
 
-        w.writeAttribute(QLatin1String("ExteriorWall"), building->exteriorWall()->name());
-        w.writeAttribute(QLatin1String("Door"), building->doorTile()->name());
-        w.writeAttribute(QLatin1String("DoorFrame"), building->doorFrameTile()->name());
-        w.writeAttribute(QLatin1String("Window"), building->windowTile()->name());
-        w.writeAttribute(QLatin1String("Stairs"), building->stairsTile()->name());
+        w.writeAttribute(QLatin1String("ExteriorWall"), entryIndex(building->exteriorWall()));
+        w.writeAttribute(QLatin1String("Door"), entryIndex(building->doorTile()));
+        w.writeAttribute(QLatin1String("DoorFrame"), entryIndex(building->doorFrameTile()));
+        w.writeAttribute(QLatin1String("Window"), entryIndex(building->windowTile()));
+        w.writeAttribute(QLatin1String("Curtains"), entryIndex(building->curtainsTile()));
+        w.writeAttribute(QLatin1String("Stairs"), entryIndex(building->stairsTile()));
 
         writeFurniture(w);
-        writeRoofCapTiles(w);
-        writeRoofSlopeTiles(w);
 
         foreach (Room *room, building->rooms())
             writeRoom(w, room);
@@ -107,8 +108,8 @@ public:
                 .arg(qGreen(room->Color))
                 .arg(qBlue(room->Color));
         w.writeAttribute(QLatin1String("Color"), colorString);
-        w.writeAttribute(QLatin1String("InteriorWall"), room->Wall->name());
-        w.writeAttribute(QLatin1String("Floor"), room->Floor->name());
+        w.writeAttribute(QLatin1String("InteriorWall"), entryIndex(room->Wall));
+        w.writeAttribute(QLatin1String("Floor"), entryIndex(room->Floor));
         w.writeEndElement(); // </room>
     }
 
@@ -156,54 +157,56 @@ public:
         w.writeEndElement(); // </tile>
     }
 
-    void writeRoofCapTiles(QXmlStreamWriter &w)
+    void writeBuildingTileEntries(QXmlStreamWriter &w)
     {
+        addEntry(mBuilding->exteriorWall());
+        addEntry(mBuilding->doorTile());
+        addEntry(mBuilding->doorFrameTile());
+        addEntry(mBuilding->windowTile());
+        addEntry(mBuilding->curtainsTile());
+        addEntry(mBuilding->stairsTile());
+
+        foreach (Room *room, mBuilding->rooms()) {
+            addEntry(room->Floor);
+            addEntry(room->Wall);
+        }
+
         foreach (BuildingFloor *floor, mBuilding->floors()) {
             foreach (BuildingObject *object, floor->objects()) {
-                if (RoofObject *roof = object->asRoof()) {
-                    if (!mRoofCapTiles.contains(roof->capTiles()))
-                        mRoofCapTiles += roof->capTiles();
+                addEntry(object->tile());
+                if (Door *door = object->asDoor()) {
+                    addEntry(door->frameTile());
+                } if (RoofObject *roof = object->asRoof()) {
+                    addEntry(roof->capTiles());
+                    addEntry(roof->slopeTiles());
+                    addEntry(roof->topTiles());
+                } else if (Window *window = object->asWindow()) {
+                    addEntry(window->curtainsTile());
                 }
             }
         }
 
-        foreach (RoofCapTiles *tiles, mRoofCapTiles) {
-            w.writeStartElement(QLatin1String("roof_cap"));
-            int n = 0;
-            foreach (RoofTile rtile, tiles->roofTiles())
-                writeRoofTile(w, &rtile, RoofCapTiles::enumToString(n++));
-            w.writeEndElement(); // </roof_cap>
+        foreach (BuildingTileEntry *entry, mTileEntries) {
+            writeBuildingTileEntry(w, entry);
         }
     }
 
-    void writeRoofSlopeTiles(QXmlStreamWriter &w)
+    void writeBuildingTileEntry(QXmlStreamWriter &w, BuildingTileEntry *entry)
     {
-        foreach (BuildingFloor *floor, mBuilding->floors()) {
-            foreach (BuildingObject *object, floor->objects()) {
-                if (RoofObject *roof = object->asRoof()) {
-                    if (!mRoofSlopeTiles.contains(roof->slopeTiles()))
-                        mRoofSlopeTiles += roof->slopeTiles();
-                }
-            }
-        }
-
-        foreach (RoofSlopeTiles *tiles, mRoofSlopeTiles) {
-            w.writeStartElement(QLatin1String("roof_slope"));
-            int n = 0;
-            foreach (RoofTile rtile, tiles->roofTiles())
-                writeRoofTile(w, &rtile, RoofSlopeTiles::enumToString(n++));
-            w.writeEndElement(); // </roof_slope>
-        }
+        w.writeStartElement(QLatin1String("tile_entry"));
+        w.writeAttribute(QLatin1String("category"), entry->category()->name());
+        for (int i = 0; i < entry->tileCount(); i++)
+            writeBuildingTile(w, entry, i);
+        w.writeEndElement(); // </tile_entry>
     }
 
-    void writeRoofTile(QXmlStreamWriter &w, RoofTile *rtile, const QString &tileEnum)
+    void writeBuildingTile(QXmlStreamWriter &w, BuildingTileEntry *entry, int index)
     {
         w.writeStartElement(QLatin1String("tile"));
-        w.writeAttribute(QLatin1String("enum"), tileEnum);
-        w.writeAttribute(QLatin1String("tile"), rtile->tile()->name());
-        writePoint(w, QLatin1String("offset"), rtile->offset());
+        w.writeAttribute(QLatin1String("enum"), entry->category()->enumToString(index));
+        w.writeAttribute(QLatin1String("tile"), entry->tile(index)->name());
+        writePoint(w, QLatin1String("offset"), entry->offset(index));
         w.writeEndElement(); // </tile>
-
     }
 
     void writeFloor(QXmlStreamWriter &w, BuildingFloor *floor)
@@ -241,10 +244,10 @@ public:
         bool writeDir = true, writeTile = true;
         if (Door *door = object->asDoor()) {
             w.writeAttribute(QLatin1String("type"), QLatin1String("door"));
-            w.writeAttribute(QLatin1String("FrameTile"), door->frameTile()->name());
+            w.writeAttribute(QLatin1String("FrameTile"), entryIndex(door->frameTile()));
         } else if (Window *window = object->asWindow()) {
             w.writeAttribute(QLatin1String("type"), QLatin1String("window"));
-            w.writeAttribute(QLatin1String("CurtainsTile"), window->curtainsTile()->name());
+            w.writeAttribute(QLatin1String("CurtainsTile"), entryIndex(window->curtainsTile()));
         } else if (object->asStairs())
             w.writeAttribute(QLatin1String("type"), QLatin1String("stairs"));
         else if (FurnitureObject *furniture = object->asFurniture()) {
@@ -267,10 +270,9 @@ public:
             writeBoolean(w, QLatin1String("cappedN"), roof->isCappedN());
             writeBoolean(w, QLatin1String("cappedE"), roof->isCappedE());
             writeBoolean(w, QLatin1String("cappedS"), roof->isCappedS());
-            int index = mRoofCapTiles.indexOf(roof->capTiles());
-            w.writeAttribute(QLatin1String("CapTiles"), QString::number(index));
-            index = mRoofSlopeTiles.indexOf(roof->slopeTiles());
-            w.writeAttribute(QLatin1String("SlopeTiles"), QString::number(index));
+            w.writeAttribute(QLatin1String("CapTiles"), entryIndex(roof->capTiles()));
+            w.writeAttribute(QLatin1String("SlopeTiles"), entryIndex(roof->slopeTiles()));
+            w.writeAttribute(QLatin1String("TopTiles"), entryIndex(roof->topTiles()));
             writeDir = false;
             writeTile = false;
         } else {
@@ -281,7 +283,7 @@ public:
         if (writeDir)
             w.writeAttribute(QLatin1String("dir"), object->dirString());
         if (writeTile)
-            w.writeAttribute(QLatin1String("Tile"), object->tile()->name());
+            w.writeAttribute(QLatin1String("Tile"), entryIndex(object->tile()));
         w.writeEndElement(); // </object>
     }
 
@@ -301,12 +303,24 @@ public:
         w.writeAttribute(name, value);
     }
 
+    void addEntry(BuildingTileEntry *entry)
+    {
+        if (entry && !mTileEntries.contains(entry))
+            mTileEntries += entry;
+    }
+
+    QString entryIndex(BuildingTileEntry *entry)
+    {
+        if (entry)
+            return QString::number(mTileEntries.indexOf(entry) + 1);
+        return QString::number(0);
+    }
+
     Building *mBuilding;
     QString mError;
     QDir mMapDir;
     QList<FurnitureTiles*> mFurnitureTiles;
-    QList<RoofCapTiles*> mRoofCapTiles;
-    QList<RoofSlopeTiles*> mRoofSlopeTiles;
+    QList<BuildingTileEntry*> mTileEntries;
 };
 
 /////
