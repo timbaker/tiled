@@ -29,7 +29,7 @@ class RoomsDialog;
 
 namespace BuildingEditor {
 
-class BuildingTile;
+class BuildingTileEntry;
 class Room;
 
 class RoomsDialog : public QDialog
@@ -49,7 +49,7 @@ private:
     void setRoomsList();
     void synchUI();
     void setTilePixmap();
-    BuildingTile *selectedTile();
+    BuildingEditor::BuildingTileEntry *selectedTile();
 
 private slots:
     void roomSelectionChanged();

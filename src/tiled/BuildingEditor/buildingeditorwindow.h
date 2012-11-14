@@ -49,6 +49,7 @@ class BuildingDocument;
 class BuildingFloor;
 class BuildingPreviewWindow;
 class BuildingTile;
+class BuildingTileEntry;
 class BuildingTileCategory;
 class Door;
 class FloorEditor;
@@ -108,16 +109,17 @@ private:
     void addDocument(BuildingDocument *doc);
     void clearDocument();
 
-    void currentEWallChanged(Tiled::Tile *tile);
-    void currentIWallChanged(Tiled::Tile *tile);
-    void currentFloorChanged(Tiled::Tile *tile);
-    void currentDoorChanged(Tiled::Tile *tile);
-    void currentDoorFrameChanged(Tiled::Tile *tile);
-    void currentWindowChanged(Tiled::Tile *tile);
-    void currentCurtainsChanged(Tiled::Tile *tile);
-    void currentStairsChanged(Tiled::Tile *tile);
-    void currentRoofCapChanged(RoofCapTiles *rtiles);
-    void currentRoofSlopeChanged(RoofSlopeTiles *rtiles);
+    void currentEWallChanged(BuildingTileEntry *entry);
+    void currentIWallChanged(BuildingTileEntry *entry);
+    void currentFloorChanged(BuildingTileEntry *entry);
+    void currentDoorChanged(BuildingTileEntry *entry);
+    void currentDoorFrameChanged(BuildingTileEntry *entry);
+    void currentWindowChanged(BuildingTileEntry *entry);
+    void currentCurtainsChanged(BuildingTileEntry *entry);
+    void currentStairsChanged(BuildingTileEntry *entry);
+    void currentRoofCapChanged(BuildingTileEntry *entry);
+    void currentRoofSlopeChanged(BuildingTileEntry *entry);
+    void currentRoofTopChanged(BuildingTileEntry *entry);
 
     void selectCurrentCategoryTile();
 

@@ -23,7 +23,6 @@
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
 #include "furnituregroups.h"
-#include "rooftiles.h"
 
 #include <QCoreApplication>
 #include <QDebug>
@@ -471,6 +470,14 @@ bool BuildingReaderPrivate::readPoint(const QString &name, QPoint &result)
     result.setX(split[0].toInt());
     result.setY(split[1].toInt());
     return true;
+}
+
+BuildingTileEntry *BuildingReaderPrivate::getEntry(const QString &s)
+{
+    int index = s.toInt();
+    if (index >= 1 && index <= mEntries.size())
+        return mEntries[index];
+    return BuildingTilesMgr::instance()->noneTileEntry();
 }
 
 void BuildingReaderPrivate::decodeCSVFloorData(BuildingFloor *floor,

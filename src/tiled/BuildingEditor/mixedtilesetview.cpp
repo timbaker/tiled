@@ -302,6 +302,14 @@ QModelIndex MixedTilesetModel::index(Tile *tile)
     return QModelIndex();
 }
 
+QModelIndex MixedTilesetModel::index(void *userData)
+{
+    int tileIndex = mItems.indexOf(toItem(userData));
+    if (tileIndex != -1)
+        return index(tileIndex / columnCount(), tileIndex % columnCount());
+    return QModelIndex();
+}
+
 QString MixedTilesetModel::mMimeType(QLatin1String("application/x-tilezed-tile"));
 
 QStringList MixedTilesetModel::mimeTypes() const
@@ -328,9 +336,11 @@ QMimeData *MixedTilesetModel::mimeData(const QModelIndexList &indexes) const
     return mimeData;
 }
 
-void MixedTilesetModel::setTiles(const QList<Tile *> &tiles)
+void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
+                                 const QList<void *> &userData)
 {
     mTiles = tiles;
+    mUserData = userData;
     mTileset = 0;
     mCategoryBounds.clear();
 
@@ -345,7 +355,7 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles)
             for (int i = 0; i < columnCount(); i++)
                 mItems += new Item(tilesetName);
         }
-        mItems += new Item(tile);
+        mItems += new Item(tile, userData.at(mTiles.indexOf(tile)));
     }
 
     reset();
@@ -390,6 +400,13 @@ QString MixedTilesetModel::headerAt(const QModelIndex &index) const
     return QString();
 }
 
+void *MixedTilesetModel::userDataAt(const QModelIndex &index) const
+{
+    if (Item *item = toItem(index))
+        return item->mUserData;
+    return 0;
+}
+
 void MixedTilesetModel::setCategoryBounds(Tile *tile, const QRect &bounds)
 {
     QModelIndex index = this->index(tile);
@@ -430,6 +447,14 @@ MixedTilesetModel::Item *MixedTilesetModel::toItem(Tile *tile) const
 {
     foreach (Item *item, mItems)
         if (item->mTile == tile)
+            return item;
+    return 0;
+}
+
+MixedTilesetModel::Item *MixedTilesetModel::toItem(void *userData) const
+{
+    foreach (Item *item, mItems)
+        if (item->mUserData == userData)
             return item;
     return 0;
 }

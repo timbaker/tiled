@@ -56,6 +56,7 @@ BuildingTilesMgr::BuildingTilesMgr() :
     mMissingTile(0),
     mNoneTiledTile(0),
     mNoneBuildingTile(0),
+    mNoneCategory(0),
     mNoneTileEntry(0)
 {
     mCatCurtains = new BTC_Curtains(QLatin1String("Curtains"));
@@ -69,6 +70,12 @@ BuildingTilesMgr::BuildingTilesMgr() :
     mCatRoofCaps = new BTC_RoofCaps(QLatin1String("Roof Caps"));
     mCatRoofSlopes = new BTC_RoofSlopes(QLatin1String("Roof Slopes"));
     mCatRoofTops = new BTC_RoofTops(QLatin1String("Roof Tops"));
+
+    mCategories << mCatEWalls << mCatIWalls << mCatFloors << mCatDoors <<
+                   mCatDoorFrames << mCatWindows << mCatCurtains << mCatStairs
+                   << mCatRoofCaps << mCatRoofSlopes << mCatRoofTops;
+    foreach (BuildingTileCategory *category, mCategories)
+        mCategoryByName[category->name()] = category;
 
     Tileset *tileset = new Tileset(QLatin1String("missing"), 64, 128);
     tileset->setTransparentColor(Qt::white);
@@ -96,7 +103,8 @@ BuildingTilesMgr::BuildingTilesMgr() :
 
     mNoneBuildingTile = new NoneBuildingTile();
 
-    mNoneTileEntry = new BuildingTileEntry(0);
+    mNoneCategory = new NoneBuildingTileCategory();
+    mNoneTileEntry = new NoneBuildingTileEntry(mNoneCategory);
 }
 
 BuildingTilesMgr::~BuildingTilesMgr()
@@ -218,26 +226,76 @@ QString BuildingTilesMgr::txtPath()
     return BuildingPreferences::instance()->configPath(txtName());
 }
 
-static void writeTileEntry(SimpleFileBlock &block, BuildingTileEntry *entry)
+static void writeTileEntry(SimpleFileBlock &parentBlock, BuildingTileEntry *entry)
 {
-
+    BuildingTileCategory *category = entry->category();
+    SimpleFileBlock block;
+    block.name = QLatin1String("entry");
+//    block.addValue("category", category->name());
+    for (int i = 0; i < category->enumCount(); i++) {
+        block.addValue(category->enumToString(i), entry->tile(i)->name());
+    }
+    for (int i = 0; i < category->enumCount(); i++) {
+        QPoint p = entry->offset(i);
+        if (p.isNull())
+            continue;
+        block.addValue("offset", QString(QLatin1String("%1 %2 %3"))
+                       .arg(category->enumToString(i)).arg(p.x()).arg(p.y()));
+    }
+    parentBlock.blocks += block;
 }
 
-static BuildingTileEntry *readTileEntry(SimpleFileBlock &block)
+static BuildingTileEntry *readTileEntry(BuildingTileCategory *category,
+                                        SimpleFileBlock &block,
+                                        QString &error)
 {
-    return 0;
+    BuildingTileEntry *entry = new BuildingTileEntry(category);
+
+    foreach (SimpleFileKeyValue kv, block.values) {
+        if (kv.name == QLatin1String("offset")) {
+            QStringList split = kv.value.split(QLatin1Char(' '), QString::SkipEmptyParts);
+            if (split.size() != 3) {
+                error = BuildingTilesMgr::instance()->tr("Expected 'offset = name x y', got '%1'").arg(kv.value);
+                delete entry;
+                return false;
+            }
+            int e = category->enumFromString(split[0]);
+            if (e == BuildingTileCategory::Invalid) {
+                error = BuildingTilesMgr::instance()->tr("Unknown %1 enum name '%2'")
+                        .arg(category->name()).arg(split[0]);
+                delete entry;
+                return 0;
+            }
+            entry->mOffsets[e] = QPoint(split[1].toInt(), split[2].toInt());
+            continue;
+        }
+        int e = category->enumFromString(kv.name);
+        if (e == BuildingTileCategory::Invalid) {
+            error = BuildingTilesMgr::instance()->tr("Unknown %1 enum name '%2'")
+                    .arg(category->name()).arg(kv.name);
+            delete entry;
+            return 0;
+        }
+        entry->mTiles[e] = BuildingTilesMgr::instance()->get(kv.value);
+    }
+
+    return entry;
 }
 
 // VERSION0: original format without 'version' keyvalue
 #define VERSION0 0
 
-// VERSION2
+// VERSION1
 // added 'version' keyvalue
 // added 'curtains' category
 #define VERSION1 1
-#define VERSION_LATEST VERSION1
 
-bool BuildingTilesMgr::readBuildingTilesTxt()
+// VERSION2
+// massive rewrite!
+#define VERSION2 2
+#define VERSION_LATEST VERSION2
+
+bool BuildingTilesMgr::readTxt()
 {
     QString fileName = BuildingPreferences::instance()
             ->configPath(QLatin1String(TXT_FILE));
@@ -284,7 +342,7 @@ bool BuildingTilesMgr::readBuildingTilesTxt()
             BuildingTileCategory *category = this->category(categoryName);
             foreach (SimpleFileBlock block2, block.blocks) {
                 if (block2.name == QLatin1String("entry")) {
-                    if (BuildingTileEntry *entry = readTileEntry(block2)) {
+                    if (BuildingTileEntry *entry = readTileEntry(category, block2, mError)) {
                         // read offset = a b c here too
                         category->insertEntry(category->entryCount(), entry);
                     } else
@@ -321,7 +379,7 @@ bool BuildingTilesMgr::readBuildingTilesTxt()
     return true;
 }
 
-void BuildingTilesMgr::writeBuildingTilesTxt(QWidget *parent)
+void BuildingTilesMgr::writeTxt(QWidget *parent)
 {
     SimpleFile simpleFile;
     foreach (BuildingTileCategory *category, categories()) {
@@ -387,6 +445,38 @@ bool BuildingTilesMgr::upgradeTxt()
 
     if (userVersion == VERSION0) {
         userFile.blocks += findCategoryBlock(sourceFile, QLatin1String("curtains"));
+    }
+
+    if (VERSION_LATEST == VERSION2) {
+        SimpleFileBlock newFile;
+        // Massive rewrite -> BuildingTileEntry stuff
+        foreach (SimpleFileBlock block, userFile.blocks) {
+            if (block.name == QLatin1String("category")) {
+                QString categoryName = block.value(QLatin1String("name"));
+                SimpleFileBlock newCatBlock;
+                newCatBlock.name = block.name;
+                newCatBlock.values += SimpleFileKeyValue(QLatin1String("name"),
+                                                         categoryName);
+                BuildingTileCategory *category = this->category(categoryName);
+                foreach (SimpleFileKeyValue kv, block.block("tiles").values) {
+                    QString tileName = kv.value;
+                    BuildingTileEntry *entry = category->createEntryFromSingleTile(tileName);
+                    SimpleFileBlock newEntryBlock;
+                    newEntryBlock.name = QLatin1String("entry");
+                    for (int i = 0; i < category->enumCount(); i++) {
+                        newEntryBlock.values += SimpleFileKeyValue(category->enumToString(i),
+                                                                   entry->tile(i)->name());
+                        if (!entry->offset(i).isNull())
+                            newEntryBlock.values += SimpleFileKeyValue(QLatin1String("offset"),
+                                                                       QLatin1String("FIXME"));
+                    }
+                    newCatBlock.blocks += newEntryBlock;
+                }
+                newFile.blocks += newCatBlock;
+            }
+        }
+        userFile.blocks = newFile.blocks;
+        userFile.values = newFile.values;
     }
 
     userFile.setVersion(VERSION_LATEST);
@@ -467,6 +557,21 @@ BuildingTileEntry *BuildingTilesMgr::defaultStairsTile() const
     return mCatStairs->entry(0);
 }
 
+BuildingTileEntry *BuildingTilesMgr::defaultRoofCapTiles() const
+{
+    return mCatRoofCaps->entry(0);
+}
+
+BuildingTileEntry *BuildingTilesMgr::defaultRoofSlopeTiles() const
+{
+    return mCatRoofSlopes->entry(0);
+}
+
+BuildingTileEntry *BuildingTilesMgr::defaultRoofTopTiles() const
+{
+    return mCatRoofTops->entry(0);
+}
+
 /////
 
 bool BuildingTileCategory::usesTile(Tile *tile) const
@@ -491,6 +596,12 @@ QString BuildingTile::name() const
 BuildingTileEntry::BuildingTileEntry(BuildingTileCategory *category) :
     mCategory(category)
 {
+    if (category) {
+        mTiles.resize(category->enumCount());
+        mOffsets.resize(category->enumCount());
+        for (int i = 0; i < mTiles.size(); i++)
+            mTiles[i] = BuildingTilesMgr::instance()->noneTile();
+    }
 }
 
 BuildingTile *BuildingTileEntry::displayTile() const
@@ -501,7 +612,7 @@ BuildingTile *BuildingTileEntry::displayTile() const
 BuildingTile *BuildingTileEntry::tile(int n) const
 {
     if (n < 0 || n >= mTiles.size())
-        return 0;
+        return BuildingTilesMgr::instance()->noneTile();
     return mTiles[n];
 }
 
@@ -517,10 +628,65 @@ bool BuildingTileEntry::usesTile(BuildingTile *btile) const
     return mTiles.contains(btile);
 }
 
+BuildingTileEntry *BuildingTileEntry::asExteriorWall()
+{
+    return mCategory->asExteriorWalls() ? this : 0;
+}
+
+BuildingTileEntry *BuildingTileEntry::asInteriorWall()
+{
+    return mCategory->asInteriorWalls() ? this : 0;
+}
+
+BuildingTileEntry *BuildingTileEntry::asFloor()
+{
+    return mCategory->asFloors() ? this : 0;
+}
+
+BuildingTileEntry *BuildingTileEntry::asDoor()
+{
+    return mCategory->asDoors() ? this : 0;
+}
+
+BuildingTileEntry *BuildingTileEntry::asDoorFrame()
+{
+    return mCategory->asDoorFrames() ? this : 0;
+}
+
+BuildingTileEntry *BuildingTileEntry::asWindow()
+{
+    return mCategory->asWindows() ? this : 0;
+}
+
+BuildingTileEntry *BuildingTileEntry::asCurtains()
+{
+    return mCategory->asCurtains() ? this : 0;
+}
+
+BuildingTileEntry *BuildingTileEntry::asStairs()
+{
+    return mCategory->asStairs() ? this : 0;
+}
+
+BuildingTileEntry *BuildingTileEntry::asRoofCap()
+{
+    return mCategory->asRoofCaps() ? this : 0;
+}
+
+BuildingTileEntry *BuildingTileEntry::asRoofSlope()
+{
+    return mCategory->asRoofSlopes() ? this : 0;
+}
+
+BuildingTileEntry *BuildingTileEntry::asRoofTop()
+{
+    return mCategory->asRoofTops() ? this : 0;
+}
+
 /////
 
 BTC_Doors::BTC_Doors(const QString &label) :
-    BuildingTileCategory(label, QLatin1String("doors"), West)
+    BuildingTileCategory(QLatin1String("doors"), label, West)
 {
     mEnumNames += QLatin1String("West");
     mEnumNames += QLatin1String("North");
@@ -529,20 +695,20 @@ BTC_Doors::BTC_Doors(const QString &label) :
     Q_ASSERT(mEnumNames.size() == EnumCount);
 }
 
-void BTC_Doors::addTile(const QString &tileName)
+BuildingTileEntry *BTC_Doors::createEntryFromSingleTile(const QString &tileName)
 {
     BuildingTileEntry *entry = new BuildingTileEntry(this);
     entry->mTiles[West] = BuildingTilesMgr::instance()->get(tileName);
     entry->mTiles[North] = BuildingTilesMgr::instance()->get(tileName, 1);
     entry->mTiles[WestOpen] = BuildingTilesMgr::instance()->get(tileName, 2);
     entry->mTiles[NorthOpen] = BuildingTilesMgr::instance()->get(tileName, 3);
-    mEntries += entry;
+    return entry;
 }
 
 /////
 
 BTC_Curtains::BTC_Curtains(const QString &label) :
-    BuildingTileCategory(label, QLatin1String("door_frames"), West)
+    BuildingTileCategory(QLatin1String("curtains"), label, West)
 {
     mEnumNames += QLatin1String("West");
     mEnumNames += QLatin1String("East");
@@ -551,54 +717,54 @@ BTC_Curtains::BTC_Curtains(const QString &label) :
     Q_ASSERT(mEnumNames.size() == EnumCount);
 }
 
-void BTC_Curtains::addTile(const QString &tileName)
+BuildingTileEntry *BTC_Curtains::createEntryFromSingleTile(const QString &tileName)
 {
     BuildingTileEntry *entry = new BuildingTileEntry(this);
     entry->mTiles[West] = BuildingTilesMgr::instance()->get(tileName);
     entry->mTiles[East] = BuildingTilesMgr::instance()->get(tileName, 1);
     entry->mTiles[North] = BuildingTilesMgr::instance()->get(tileName, 2);
     entry->mTiles[South] = BuildingTilesMgr::instance()->get(tileName, 3);
-    mEntries += entry;
+    return entry;
 }
 
 /////
 
 BTC_DoorFrames::BTC_DoorFrames(const QString &label) :
-    BuildingTileCategory(label, QLatin1String("door_frames"), West)
+    BuildingTileCategory(QLatin1String("door_frames"), label, West)
 {
     mEnumNames += QLatin1String("West");
     mEnumNames += QLatin1String("North");
     Q_ASSERT(mEnumNames.size() == EnumCount);
 }
 
-void BTC_DoorFrames::addTile(const QString &tileName)
+BuildingTileEntry *BTC_DoorFrames::createEntryFromSingleTile(const QString &tileName)
 {
     BuildingTileEntry *entry = new BuildingTileEntry(this);
     entry->mTiles[West] = BuildingTilesMgr::instance()->get(tileName);
     entry->mTiles[North] = BuildingTilesMgr::instance()->get(tileName, 1);
-    mEntries += entry;
+    return entry;
 }
 
 /////
 
 BTC_Floors::BTC_Floors(const QString &label) :
-    BuildingTileCategory(label, QLatin1String("floors"), Floor)
+    BuildingTileCategory(QLatin1String("floors"), label, Floor)
 {
     mEnumNames += QLatin1String("Floor");
     Q_ASSERT(mEnumNames.size() == EnumCount);
 }
 
-void BTC_Floors::addTile(const QString &tileName)
+BuildingTileEntry *BTC_Floors::createEntryFromSingleTile(const QString &tileName)
 {
     BuildingTileEntry *entry = new BuildingTileEntry(this);
     entry->mTiles[Floor] = BuildingTilesMgr::instance()->get(tileName);
-    mEntries += entry;
+    return entry;
 }
 
 /////
 
 BTC_Stairs::BTC_Stairs(const QString &label) :
-    BuildingTileCategory(label, QLatin1String("stairs"), West1)
+    BuildingTileCategory(QLatin1String("stairs"), label, West1)
 {
     mEnumNames += QLatin1String("West1");
     mEnumNames += QLatin1String("West2");
@@ -609,7 +775,7 @@ BTC_Stairs::BTC_Stairs(const QString &label) :
     Q_ASSERT(mEnumNames.size() == EnumCount);
 }
 
-void BTC_Stairs::addTile(const QString &tileName)
+BuildingTileEntry *BTC_Stairs::createEntryFromSingleTile(const QString &tileName)
 {
     BuildingTileEntry *entry = new BuildingTileEntry(this);
     entry->mTiles[West1] = BuildingTilesMgr::instance()->get(tileName);
@@ -618,13 +784,13 @@ void BTC_Stairs::addTile(const QString &tileName)
     entry->mTiles[North1] = BuildingTilesMgr::instance()->get(tileName, 8);
     entry->mTiles[North2] = BuildingTilesMgr::instance()->get(tileName, 9);
     entry->mTiles[North3] = BuildingTilesMgr::instance()->get(tileName, 10);
-    mEntries += entry;
+    return entry;
 }
 
 /////
 
-BTC_Walls::BTC_Walls(const QString &label) :
-    BuildingTileCategory(label, QLatin1String("walls"), West)
+BTC_Walls::BTC_Walls(const QString &name, const QString &label) :
+    BuildingTileCategory(name, label, West)
 {
     mEnumNames += QLatin1String("West");
     mEnumNames += QLatin1String("North");
@@ -637,7 +803,7 @@ BTC_Walls::BTC_Walls(const QString &label) :
     Q_ASSERT(mEnumNames.size() == EnumCount);
 }
 
-void BTC_Walls::addTile(const QString &tileName)
+BuildingTileEntry *BTC_Walls::createEntryFromSingleTile(const QString &tileName)
 {
     BuildingTileEntry *entry = new BuildingTileEntry(this);
     entry->mTiles[West] = BuildingTilesMgr::instance()->get(tileName);
@@ -647,32 +813,32 @@ void BTC_Walls::addTile(const QString &tileName)
     entry->mTiles[WestWindow] = BuildingTilesMgr::instance()->get(tileName, 8);
     entry->mTiles[NorthWindow] = BuildingTilesMgr::instance()->get(tileName, 9);
     entry->mTiles[WestDoor] = BuildingTilesMgr::instance()->get(tileName, 10);
-    entry->mTiles[NorthWindow] = BuildingTilesMgr::instance()->get(tileName, 11);
-    mEntries += entry;
+    entry->mTiles[NorthDoor] = BuildingTilesMgr::instance()->get(tileName, 11);
+    return entry;
 }
 
 /////
 
 BTC_Windows::BTC_Windows(const QString &label) :
-    BuildingTileCategory(label, QLatin1String("windows"), West)
+    BuildingTileCategory(QLatin1String("windows"), label, West)
 {
     mEnumNames += QLatin1String("West");
     mEnumNames += QLatin1String("North");
     Q_ASSERT(mEnumNames.size() == EnumCount);
 }
 
-void BTC_Windows::addTile(const QString &tileName)
+BuildingTileEntry *BTC_Windows::createEntryFromSingleTile(const QString &tileName)
 {
     BuildingTileEntry *entry = new BuildingTileEntry(this);
     entry->mTiles[West] = BuildingTilesMgr::instance()->get(tileName);
     entry->mTiles[North] = BuildingTilesMgr::instance()->get(tileName, 1);
-    mEntries += entry;
+    return entry;
 }
 
 /////
 
 BTC_RoofCaps::BTC_RoofCaps(const QString &label) :
-    BuildingTileCategory(label, QLatin1String("roof_caps"), CapRiseE3)
+    BuildingTileCategory(QLatin1String("roof_caps"), label, CapRiseE3)
 {
     mEnumNames += QLatin1String("CapRiseE1");
     mEnumNames += QLatin1String("CapRiseE2");
@@ -705,15 +871,42 @@ BTC_RoofCaps::BTC_RoofCaps(const QString &label) :
     Q_ASSERT(mEnumNames.size() == EnumCount);
 }
 
-void BTC_RoofCaps::addTile(const QString &tileName)
+BuildingTileEntry *BTC_RoofCaps::createEntryFromSingleTile(const QString &tileName)
 {
-    // TODO
+    BuildingTileEntry *entry = new BuildingTileEntry(this);
+    entry->mTiles[CapRiseE1] = BuildingTilesMgr::instance()->get(tileName, 0);
+    entry->mTiles[CapRiseE2] = BuildingTilesMgr::instance()->get(tileName, 1);
+    entry->mTiles[CapRiseE3] = BuildingTilesMgr::instance()->get(tileName, 2);
+    entry->mTiles[CapFallE1] = BuildingTilesMgr::instance()->get(tileName, 8);
+    entry->mTiles[CapFallE2] = BuildingTilesMgr::instance()->get(tileName, 9);
+    entry->mTiles[CapFallE3] = BuildingTilesMgr::instance()->get(tileName, 10);
+    entry->mTiles[CapRiseS1] = BuildingTilesMgr::instance()->get(tileName, 13);
+    entry->mTiles[CapRiseS2] = BuildingTilesMgr::instance()->get(tileName, 12);
+    entry->mTiles[CapRiseS3] = BuildingTilesMgr::instance()->get(tileName, 11);
+    entry->mTiles[CapFallS1] = BuildingTilesMgr::instance()->get(tileName, 5);
+    entry->mTiles[CapFallS2] = BuildingTilesMgr::instance()->get(tileName, 4);
+    entry->mTiles[CapFallS3] = BuildingTilesMgr::instance()->get(tileName, 3);
+    entry->mTiles[PeakPt5S] = BuildingTilesMgr::instance()->get(tileName, 7);
+    entry->mTiles[PeakPt5E] = BuildingTilesMgr::instance()->get(tileName, 15);
+    entry->mTiles[PeakOnePt5S] = BuildingTilesMgr::instance()->get(tileName, 6);
+    entry->mTiles[PeakOnePt5E] = BuildingTilesMgr::instance()->get(tileName, 14);
+    entry->mTiles[PeakTwoPt5S] = BuildingTilesMgr::instance()->get(tileName, 17);
+    entry->mTiles[PeakTwoPt5E] = BuildingTilesMgr::instance()->get(tileName, 16);
+#if 0 // impossible to guess these
+    entry->mTiles[CapGapS1] = BuildingTilesMgr::instance()->get(tileName, );
+    entry->mTiles[CapGapS2] = BuildingTilesMgr::instance()->get(tileName, );
+    entry->mTiles[CapGapS3] = BuildingTilesMgr::instance()->get(tileName, );
+    entry->mTiles[CapGapE1] = BuildingTilesMgr::instance()->get(tileName, );
+    entry->mTiles[CapGapE2] = BuildingTilesMgr::instance()->get(tileName, );
+    entry->mTiles[CapGapE3] = BuildingTilesMgr::instance()->get(tileName, );
+#endif
+    return entry;
 }
 
 /////
 
 BTC_RoofSlopes::BTC_RoofSlopes(const QString &label) :
-    BuildingTileCategory(label, QLatin1String("roof_slopes"), SlopeS2)
+    BuildingTileCategory(QLatin1String("roof_slopes"), label, SlopeS2)
 {
     mEnumNames += QLatin1String("SlopeS1");
     mEnumNames += QLatin1String("SlopeS2");
@@ -728,14 +921,14 @@ BTC_RoofSlopes::BTC_RoofSlopes(const QString &label) :
     mEnumNames += QLatin1String("SlopeOnePt5E");
     mEnumNames += QLatin1String("SlopeTwoPt5S");
     mEnumNames += QLatin1String("SlopeTwoPt5E");
-
+#if 0
     mEnumNames += QLatin1String("FlatTopW1");
     mEnumNames += QLatin1String("FlatTopW2");
     mEnumNames += QLatin1String("FlatTopW3");
     mEnumNames += QLatin1String("FlatTopN1");
     mEnumNames += QLatin1String("FlatTopN2");
     mEnumNames += QLatin1String("FlatTopN3");
-
+#endif
     mEnumNames += QLatin1String("Inner1");
     mEnumNames += QLatin1String("Inner2");
     mEnumNames += QLatin1String("Inner3");
@@ -746,15 +939,39 @@ BTC_RoofSlopes::BTC_RoofSlopes(const QString &label) :
     Q_ASSERT(mEnumNames.size() == EnumCount);
 }
 
-void BTC_RoofSlopes::addTile(const QString &tileName)
+BuildingTileEntry *BTC_RoofSlopes::createEntryFromSingleTile(const QString &tileName)
 {
-    // TODO
+    BuildingTileEntry *entry = new BuildingTileEntry(this);
+    entry->mTiles[SlopeS1] = BuildingTilesMgr::instance()->get(tileName, 0);
+    entry->mTiles[SlopeS2] = BuildingTilesMgr::instance()->get(tileName, 1);
+    entry->mTiles[SlopeS3] = BuildingTilesMgr::instance()->get(tileName, 2);
+    entry->mTiles[SlopeE1] = BuildingTilesMgr::instance()->get(tileName, 5);
+    entry->mTiles[SlopeE2] = BuildingTilesMgr::instance()->get(tileName, 4);
+    entry->mTiles[SlopeE3] = BuildingTilesMgr::instance()->get(tileName, 3);
+    entry->mTiles[SlopePt5S] = BuildingTilesMgr::instance()->get(tileName, 15);
+    entry->mTiles[SlopePt5E] = BuildingTilesMgr::instance()->get(tileName, 14);
+    entry->mTiles[SlopeOnePt5S] = BuildingTilesMgr::instance()->get(tileName, 15);
+    entry->mTiles[SlopeOnePt5E] = BuildingTilesMgr::instance()->get(tileName, 14);
+    entry->mTiles[SlopeTwoPt5S] = BuildingTilesMgr::instance()->get(tileName, 15);
+    entry->mTiles[SlopeTwoPt5E] = BuildingTilesMgr::instance()->get(tileName, 14);
+    entry->mTiles[Inner1] = BuildingTilesMgr::instance()->get(tileName, 11);
+    entry->mTiles[Inner2] = BuildingTilesMgr::instance()->get(tileName, 12);
+    entry->mTiles[Inner3] = BuildingTilesMgr::instance()->get(tileName, 13);
+    entry->mTiles[Outer1] = BuildingTilesMgr::instance()->get(tileName, 8);
+    entry->mTiles[Outer2] = BuildingTilesMgr::instance()->get(tileName, 9);
+    entry->mTiles[Outer3] = BuildingTilesMgr::instance()->get(tileName, 10);
+
+    entry->mOffsets[SlopePt5S] = QPoint(1, 1);
+    entry->mOffsets[SlopePt5E] = QPoint(1, 1);
+    entry->mOffsets[SlopeTwoPt5S] = QPoint(-1, -1);
+    entry->mOffsets[SlopeTwoPt5E] = QPoint(-1, -1);
+    return entry;
 }
 
 /////
 
 BTC_RoofTops::BTC_RoofTops(const QString &label) :
-    BuildingTileCategory(label, QLatin1String("roof_tops"), West2)
+    BuildingTileCategory(QLatin1String("roof_tops"), label, West2)
 {
     mEnumNames += QLatin1String("West1");
     mEnumNames += QLatin1String("West2");
@@ -765,7 +982,7 @@ BTC_RoofTops::BTC_RoofTops(const QString &label) :
     Q_ASSERT(mEnumNames.size() == EnumCount);
 }
 
-void BTC_RoofTops::addTile(const QString &tileName)
+BuildingTileEntry *BTC_RoofTops::createEntryFromSingleTile(const QString &tileName)
 {
     BuildingTileEntry *entry = new BuildingTileEntry(this);
     entry->mTiles[West1] = BuildingTilesMgr::instance()->get(tileName);
@@ -774,7 +991,49 @@ void BTC_RoofTops::addTile(const QString &tileName)
     entry->mTiles[North1] = BuildingTilesMgr::instance()->get(tileName);
     entry->mTiles[North2] = BuildingTilesMgr::instance()->get(tileName);
     entry->mTiles[North3] = BuildingTilesMgr::instance()->get(tileName);
-    mEntries += entry;
+    return entry;
+}
+
+/////
+
+BuildingTileEntry *BuildingTileCategory::entry(int index) const
+{
+    if (index < 0 || index >= mEntries.size())
+        return BuildingTilesMgr::instance()->noneTileEntry();
+    return mEntries[index];
+}
+
+void BuildingTileCategory::insertEntry(int index, BuildingTileEntry *entry)
+{
+    Q_ASSERT(entry && !entry->isNone());
+    Q_ASSERT(!mEntries.contains(entry));
+    Q_ASSERT(entry->category() == this);
+    mEntries.insert(index, entry);
+}
+
+BuildingTileEntry *BuildingTileCategory::removeEntry(int index)
+{
+    return mEntries.takeAt(index);
+}
+
+QString BuildingTileCategory::enumToString(int index) const
+{
+    if (index < 0 || index >= mEnumNames.size())
+        return QLatin1String("Invalid");
+    return mEnumNames[index];
+}
+
+int BuildingTileCategory::enumFromString(const QString &s) const
+{
+    if (mEnumNames.contains(s))
+        return mEnumNames.indexOf(s);
+    return Invalid;
+}
+
+BuildingTileEntry *BuildingTileCategory::createEntryFromSingleTile(const QString &tileName)
+{
+    Q_UNUSED(tileName)
+    return 0;
 }
 
 /////

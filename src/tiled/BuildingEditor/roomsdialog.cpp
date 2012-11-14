@@ -166,10 +166,10 @@ void RoomsDialog::addRoom()
     room->Name = tr("Room %1").arg(n);
     room->internalName = tr("room%1").arg(n);
     room->Color = color;
-    BuildingTile *btile = BuildingTilesMgr::instance()->defaultInteriorWall();
-    room->Wall = btile;
-    btile = BuildingTilesMgr::instance()->defaultFloorTile();
-    room->Floor = btile;
+    BuildingTileEntry *entry = BuildingTilesMgr::instance()->defaultInteriorWall();
+    room->Wall = entry;
+    entry = BuildingTilesMgr::instance()->defaultFloorTile();
+    room->Floor = entry;
 
     mRooms += room;
     mRoomsMap[room] = 0;
@@ -259,15 +259,15 @@ void RoomsDialog::tileSelectionChanged()
 
 void RoomsDialog::setTilePixmap()
 {
-    if (BuildingTile *btile = selectedTile()) {
-        Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(btile);
+    if (BuildingTileEntry *entry = selectedTile()) {
+        Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile());
         ui->tileLabel->setPixmap(tile->image());
     } else {
         ui->tileLabel->clear();
     }
 }
 
-BuildingTile *RoomsDialog::selectedTile()
+BuildingTileEntry *RoomsDialog::selectedTile()
 {
     if (mRoom == 0 || mTileRow == -1)
         return 0;
@@ -289,10 +289,10 @@ void RoomsDialog::chooseTile()
                                     QLatin1String(categoryNames[mTileRow]),
                                     selectedTile(), this);
     if (dialog.exec() == QDialog::Accepted) {
-        if (BuildingTile *btile = dialog.selectedTile()) {
+        if (BuildingTileEntry *entry = dialog.selectedTile()) {
             switch (mTileRow) {
-            case 0: mRoom->Wall = btile; break;
-            case 1: mRoom->Floor = btile; break;
+            case 0: mRoom->Wall = entry; break;
+            case 1: mRoom->Floor = entry; break;
             }
             setTilePixmap();
         }

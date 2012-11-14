@@ -52,54 +52,58 @@ class AddTileToCategory : public QUndoCommand
 {
 public:
     AddTileToCategory(BuildingTilesDialog *d, BuildingTileCategory *category,
-                      const QString &tileName) :
+                      int index, BuildingTileEntry *entry) :
         QUndoCommand(QCoreApplication::translate("UndoCommands", "Add Tile to Category")),
         mDialog(d),
         mCategory(category),
-        mTileName(tileName)
+        mIndex(index),
+        mEntry(entry)
     {
     }
 
     void undo()
     {
-        mDialog->removeTile(mCategory, mTileName);
+        mEntry = mDialog->removeTile(mCategory, mIndex);
     }
 
     void redo()
     {
-        mDialog->addTile(mCategory, mTileName);
+        mDialog->addTile(mCategory, mIndex, mEntry);
     }
 
     BuildingTilesDialog *mDialog;
     BuildingTileCategory *mCategory;
-    QString mTileName;
+    int mIndex;
+    BuildingTileEntry *mEntry;
 };
 
 class RemoveTileFromCategory : public QUndoCommand
 {
 public:
     RemoveTileFromCategory(BuildingTilesDialog *d, BuildingTileCategory *category,
-                           const QString &tileName) :
+                           int index) :
         QUndoCommand(QCoreApplication::translate("UndoCommands", "Remove Tile from Category")),
         mDialog(d),
         mCategory(category),
-        mTileName(tileName)
+        mIndex(index),
+        mEntry(0)
     {
     }
 
     void undo()
     {
-        mDialog->addTile(mCategory, mTileName);
+        mDialog->addTile(mCategory, mIndex, mEntry);
     }
 
     void redo()
     {
-        mDialog->removeTile(mCategory, mTileName);
+        mEntry = mDialog->removeTile(mCategory, mIndex);
     }
 
     BuildingTilesDialog *mDialog;
     BuildingTileCategory *mCategory;
-    QString mTileName;
+    int mIndex;
+    BuildingTileEntry *mEntry;
 };
 
 class RenameTileCategory : public QUndoCommand
@@ -599,24 +603,27 @@ bool BuildingTilesDialog::changes() const
     return !mUndoStack->isClean();
 }
 
-void BuildingTilesDialog::addTile(BuildingTileCategory *category, const QString &tileName)
+void BuildingTilesDialog::addTile(BuildingTileCategory *category,
+                                  int index, BuildingTileEntry *entry)
 {
     // Create a new BuildingTileEntry based on assumptions about the order of
     // tiles in the tileset.
-    category->addTile(tileName);
+    category->insertEntry(index, entry);
 
     tilesetSelectionChanged();
     setCategoryTiles();
     synchUI(); // model calling reset() doesn't generate selectionChanged signal
 }
 
-void BuildingTilesDialog::removeTile(BuildingTileCategory *category, const QString &tileName)
+BuildingTileEntry *BuildingTilesDialog::removeTile(BuildingTileCategory *category, int index)
 {
-    category->remove(tileName);
+    BuildingTileEntry *entry = category->removeEntry(index);
 
     tilesetSelectionChanged();
     setCategoryTiles();
     synchUI(); // model calling reset() doesn't generate selectionChanged signal
+
+    return entry;
 }
 
 QString BuildingTilesDialog::renameTileCategory(BuildingTileCategory *category,
@@ -766,13 +773,16 @@ void BuildingTilesDialog::setCategoryList()
 void BuildingTilesDialog::setCategoryTiles()
 { 
     QList<Tiled::Tile*> tiles;
+    QList<void*> userData;
     if (mCategory) {
         foreach (BuildingTileEntry *entry, mCategory->entries()) {
-            if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile()))
+            if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile())) {
                 tiles += tile;
+                userData += entry;
+            }
         }
     }
-    ui->categoryTilesView->model()->setTiles(tiles);
+    ui->categoryTilesView->model()->setTiles(tiles, userData);
 }
 
 void BuildingTilesDialog::setFurnitureTiles()
@@ -899,13 +909,13 @@ void BuildingTilesDialog::tilesetSelectionChanged()
         MixedTilesetModel *model = ui->tilesetTilesView->model();
         Tileset *tileset = BuildingTilesMgr::instance()->tilesets().at(row);
         model->setTileset(tileset);
+#if 0
         for (int i = 0; i < tileset->tileCount(); i++) {
             Tile *tile = tileset->tileAt(i);
-#if 0
             if (mCategory && mCategory->usesTile(tile))
                 model->setCategoryBounds(tile, bounds);
-#endif
         }
+#endif
     } else {
         ui->tilesetTilesView->model()->setTiles(QList<Tile*>());
     }
@@ -942,7 +952,9 @@ void BuildingTilesDialog::addTiles()
         mUndoStack->beginMacro(tr("Add Tiles To %1").arg(mCategory->label()));
     foreach (Tile *tile, tiles) {
         QString tileName = BuildingTilesMgr::instance()->nameForTile(tile);
-        mUndoStack->push(new AddTileToCategory(this, mCategory, tileName));
+        BuildingTileEntry *entry = mCategory->createEntryFromSingleTile(tileName);
+        mUndoStack->push(new AddTileToCategory(this, mCategory,
+                                               mCategory->entryCount(), entry));
     }
     if (tiles.count() > 1)
         mUndoStack->endMacro();
@@ -978,9 +990,10 @@ void BuildingTilesDialog::removeTiles()
     if (selection.count() > 1)
         mUndoStack->beginMacro(tr("Remove Tiles from %1").arg(mCategory->label()));
     foreach (QModelIndex index, selection) {
-        Tile *tile = v->model()->tileAt(index);
-        QString tileName = BuildingTilesMgr::instance()->nameForTile(tile);
-        mUndoStack->push(new RemoveTileFromCategory(this, mCategory, tileName));
+        BuildingTileEntry *entry = static_cast<BuildingTileEntry*>(
+                    v->model()->userDataAt(index));
+        mUndoStack->push(new RemoveTileFromCategory(this, mCategory,
+                                                    mCategory->indexOf(entry)));
     }
     if (selection.count() > 1)
         mUndoStack->endMacro();
@@ -1184,7 +1197,7 @@ void BuildingTilesDialog::redoTextChanged(const QString &text)
 
 void BuildingTilesDialog::accept()
 {
-    BuildingTilesMgr::instance()->writeBuildingTilesTxt(this);
+    BuildingTilesMgr::instance()->writeTxt(this);
     if (!FurnitureGroups::instance()->writeTxt()) {
         QMessageBox::warning(this, tr("It's no good, Jim!"),
                              FurnitureGroups::instance()->errorString());

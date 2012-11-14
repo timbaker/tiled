@@ -181,6 +181,11 @@ QString SimpleFileBlock::value(const QString &key)
     return QString();
 }
 
+void SimpleFileBlock::addValue(const QString &key, const QString &value)
+{
+    values += SimpleFileKeyValue(key, value);
+}
+
 void SimpleFileBlock::replaceValue(const QString &key, const QString &value,
                                    bool atEnd)
 {

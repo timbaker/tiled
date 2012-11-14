@@ -23,7 +23,6 @@
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
 #include "furnituregroups.h"
-#include "rooftiles.h"
 
 #include <QCoreApplication>
 #include <QDir>

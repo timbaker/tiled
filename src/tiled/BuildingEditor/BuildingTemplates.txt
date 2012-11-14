@@ -1,313 +1,539 @@
-version = 0
+version = 1
+TileEntry
+{
+    category = door_frames
+    West = fixtures_doors_frames_01_000
+    North = fixtures_doors_frames_01_001
+}
+TileEntry
+{
+    category = doors
+    West = fixtures_doors_01_000
+    North = fixtures_doors_01_001
+    WestOpen = fixtures_doors_01_002
+    NorthOpen = fixtures_doors_01_003
+}
+TileEntry
+{
+    category = exterior_walls
+    West = walls_exterior_house_01_016
+    North = walls_exterior_house_01_017
+    NorthWest = walls_exterior_house_01_018
+    SouthEast = walls_exterior_house_01_019
+    WestWindow = walls_exterior_house_01_024
+    NorthWindow = walls_exterior_house_01_025
+    WestDoor = walls_exterior_house_01_026
+    NorthDoor = walls_exterior_house_01_027
+}
+TileEntry
+{
+    category = exterior_walls
+    West = walls_exterior_house_01_032
+    North = walls_exterior_house_01_033
+    NorthWest = walls_exterior_house_01_034
+    SouthEast = walls_exterior_house_01_035
+    WestWindow = walls_exterior_house_01_040
+    NorthWindow = walls_exterior_house_01_041
+    WestDoor = walls_exterior_house_01_042
+    NorthDoor = walls_exterior_house_01_043
+}
+TileEntry
+{
+    category = exterior_walls
+    West = walls_exterior_wooden_01_024
+    North = walls_exterior_wooden_01_025
+    NorthWest = walls_exterior_wooden_01_026
+    SouthEast = walls_exterior_wooden_01_027
+    WestWindow = walls_exterior_wooden_01_032
+    NorthWindow = walls_exterior_wooden_01_033
+    WestDoor = walls_exterior_wooden_01_034
+    NorthDoor = walls_exterior_wooden_01_035
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_carpet_01_000
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_carpet_01_002
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_carpet_01_008
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_carpet_01_010
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_tilesandwood_01_002
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_tilesandwood_01_011
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_tilesandwood_01_042
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_tilesandwood_01_043
+}
+TileEntry
+{
+    category = interior_walls
+    West = location_hospitality_sunstarmotel_01_000
+    North = location_hospitality_sunstarmotel_01_001
+    NorthWest = location_hospitality_sunstarmotel_01_002
+    SouthEast = location_hospitality_sunstarmotel_01_003
+    WestWindow = location_hospitality_sunstarmotel_01_008
+    NorthWindow = location_hospitality_sunstarmotel_01_009
+    WestDoor = location_hospitality_sunstarmotel_01_010
+    NorthDoor = location_hospitality_sunstarmotel_01_011
+}
+TileEntry
+{
+    category = interior_walls
+    West = location_hospitality_sunstarmotel_01_004
+    North = location_hospitality_sunstarmotel_01_005
+    NorthWest = location_hospitality_sunstarmotel_01_006
+    SouthEast = location_hospitality_sunstarmotel_01_007
+    WestWindow = location_hospitality_sunstarmotel_01_012
+    NorthWindow = location_hospitality_sunstarmotel_01_013
+    WestDoor = location_hospitality_sunstarmotel_01_014
+    NorthDoor = location_hospitality_sunstarmotel_01_015
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_exterior_wooden_01_024
+    North = walls_exterior_wooden_01_025
+    NorthWest = walls_exterior_wooden_01_026
+    SouthEast = walls_exterior_wooden_01_027
+    WestWindow = walls_exterior_wooden_01_032
+    NorthWindow = walls_exterior_wooden_01_033
+    WestDoor = walls_exterior_wooden_01_034
+    NorthDoor = walls_exterior_wooden_01_035
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_interior_house_01_020
+    North = walls_interior_house_01_021
+    NorthWest = walls_interior_house_01_022
+    SouthEast = walls_interior_house_01_023
+    WestWindow = walls_interior_house_01_028
+    NorthWindow = walls_interior_house_01_029
+    WestDoor = walls_interior_house_01_030
+    NorthDoor = walls_interior_house_01_031
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_interior_house_01_032
+    North = walls_interior_house_01_033
+    NorthWest = walls_interior_house_01_034
+    SouthEast = walls_interior_house_01_035
+    WestWindow = walls_interior_house_01_040
+    NorthWindow = walls_interior_house_01_041
+    WestDoor = walls_interior_house_01_042
+    NorthDoor = walls_interior_house_01_043
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_interior_house_02_000
+    North = walls_interior_house_02_001
+    NorthWest = walls_interior_house_02_002
+    SouthEast = walls_interior_house_02_003
+    WestWindow = walls_interior_house_02_008
+    NorthWindow = walls_interior_house_02_009
+    WestDoor = walls_interior_house_02_010
+    NorthDoor = walls_interior_house_02_011
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_interior_house_02_004
+    North = walls_interior_house_02_005
+    NorthWest = walls_interior_house_02_006
+    SouthEast = walls_interior_house_02_007
+    WestWindow = walls_interior_house_02_012
+    NorthWindow = walls_interior_house_02_013
+    WestDoor = walls_interior_house_02_014
+    NorthDoor = walls_interior_house_02_015
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_interior_house_02_016
+    North = walls_interior_house_02_017
+    NorthWest = walls_interior_house_02_018
+    SouthEast = walls_interior_house_02_019
+    WestWindow = walls_interior_house_02_024
+    NorthWindow = walls_interior_house_02_025
+    WestDoor = walls_interior_house_02_026
+    NorthDoor = walls_interior_house_02_027
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_interior_house_02_032
+    North = walls_interior_house_02_033
+    NorthWest = walls_interior_house_02_034
+    SouthEast = walls_interior_house_02_035
+    WestWindow = walls_interior_house_02_040
+    NorthWindow = walls_interior_house_02_041
+    WestDoor = walls_interior_house_02_042
+    NorthDoor = walls_interior_house_02_043
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_interior_house_02_052
+    North = walls_interior_house_02_053
+    NorthWest = walls_interior_house_02_054
+    SouthEast = walls_interior_house_02_055
+    WestWindow = walls_interior_house_02_060
+    NorthWindow = walls_interior_house_02_061
+    WestDoor = walls_interior_house_02_062
+    NorthDoor = walls_interior_house_02_063
+}
+TileEntry
+{
+    category = stairs
+    West1 = fixtures_stairs_01_000
+    West2 = fixtures_stairs_01_001
+    West3 = fixtures_stairs_01_002
+    North1 = fixtures_stairs_01_008
+    North2 = fixtures_stairs_01_009
+    North3 = fixtures_stairs_01_010
+}
+TileEntry
+{
+    category = windows
+    West = fixtures_windows_01_000
+    North = fixtures_windows_01_001
+}
 Template
 {
     Name = Old Suburban
-    Wall = walls_exterior_house_01_032
-    Door = fixtures_doors_01_000
-    DoorFrame = fixtures_doors_frames_01_000
-    Window = fixtures_windows_01_000
-    Curtains = 
-    Stairs = fixtures_stairs_01_000
+    Wall = 4
+    Door = 2
+    DoorFrame = 1
+    Window = 25
+    Curtains = 0
+    Stairs = 24
     Room
     {
         Name = Foyer
         Color = 255 255 255
         InternalName = foyer
-        Wall = location_hospitality_sunstarmotel_01_004
-        Floor = floors_interior_tilesandwood_01_043
+        Wall = 15
+        Floor = 13
     }
     Room
     {
         Name = Hall
         Color = 200 200 200
         InternalName = hall
-        Wall = location_hospitality_sunstarmotel_01_004
-        Floor = floors_interior_tilesandwood_01_043
+        Wall = 15
+        Floor = 13
     }
     Room
     {
         Name = Living Room
         Color = 255 0 0
         InternalName = livingroom
-        Wall = location_hospitality_sunstarmotel_01_004
-        Floor = floors_interior_tilesandwood_01_043
+        Wall = 15
+        Floor = 13
     }
     Room
     {
         Name = Dining Room
         Color = 255 0 128
         InternalName = diningroom
-        Wall = location_hospitality_sunstarmotel_01_004
-        Floor = floors_interior_tilesandwood_01_043
+        Wall = 15
+        Floor = 13
     }
     Room
     {
         Name = Bathroom
         Color = 255 128 0
         InternalName = bathroom
-        Wall = location_hospitality_sunstarmotel_01_004
-        Floor = floors_interior_tilesandwood_01_043
+        Wall = 15
+        Floor = 13
     }
     Room
     {
         Name = Kitchen
         Color = 0 255 0
         InternalName = kitchen
-        Wall = location_hospitality_sunstarmotel_01_004
-        Floor = floors_interior_tilesandwood_01_043
+        Wall = 15
+        Floor = 13
     }
     Room
     {
         Name = Bedroom1
         Color = 0 0 255
         InternalName = bedroom
-        Wall = location_hospitality_sunstarmotel_01_000
-        Floor = floors_interior_tilesandwood_01_043
+        Wall = 14
+        Floor = 13
     }
     Room
     {
         Name = Bedroom2
         Color = 0 64 255
         InternalName = bedroom
-        Wall = location_hospitality_sunstarmotel_01_000
-        Floor = floors_interior_tilesandwood_01_043
+        Wall = 14
+        Floor = 13
     }
     Room
     {
         Name = Bedroom3
         Color = 0 128 255
         InternalName = bedroom
-        Wall = location_hospitality_sunstarmotel_01_000
-        Floor = floors_interior_tilesandwood_01_043
+        Wall = 14
+        Floor = 13
     }
 }
 Template
 {
     Name = Suburban 1
-    Wall = walls_exterior_house_01_032
-    Door = fixtures_doors_01_000
-    DoorFrame = fixtures_doors_frames_01_000
-    Window = fixtures_windows_01_000
-    Curtains = 
-    Stairs = fixtures_stairs_01_000
+    Wall = 4
+    Door = 2
+    DoorFrame = 1
+    Window = 25
+    Curtains = 0
+    Stairs = 24
     Room
     {
         Name = Living Room
         Color = 255 0 0
         InternalName = livingroom
-        Wall = walls_interior_house_01_020
-        Floor = floors_interior_tilesandwood_01_042
+        Wall = 17
+        Floor = 12
     }
     Room
     {
         Name = Dining Room
         Color = 255 0 128
         InternalName = diningroom
-        Wall = walls_interior_house_01_020
-        Floor = floors_interior_tilesandwood_01_042
+        Wall = 17
+        Floor = 12
     }
     Room
     {
         Name = Bathroom
         Color = 255 128 0
         InternalName = bathroom
-        Wall = walls_interior_house_01_032
-        Floor = floors_interior_tilesandwood_01_002
+        Wall = 18
+        Floor = 10
     }
     Room
     {
         Name = Kitchen
         Color = 0 255 0
         InternalName = kitchen
-        Wall = walls_interior_house_02_000
-        Floor = floors_interior_tilesandwood_01_002
+        Wall = 19
+        Floor = 10
     }
     Room
     {
         Name = Bedroom1
         Color = 0 0 255
         InternalName = bedroom
-        Wall = walls_interior_house_02_004
-        Floor = floors_interior_carpet_01_000
+        Wall = 20
+        Floor = 6
     }
     Room
     {
         Name = Bedroom2
         Color = 0 64 255
         InternalName = bedroom
-        Wall = walls_interior_house_02_032
-        Floor = floors_interior_carpet_01_000
+        Wall = 22
+        Floor = 6
     }
     Room
     {
         Name = Bedroom3
         Color = 0 128 255
         InternalName = bedroom
-        Wall = walls_interior_house_02_032
-        Floor = floors_interior_carpet_01_000
+        Wall = 22
+        Floor = 6
     }
 }
 Template
 {
     Name = Suburban 2
-    Wall = walls_exterior_house_01_016
-    Door = fixtures_doors_01_000
-    DoorFrame = fixtures_doors_frames_01_000
-    Window = fixtures_windows_01_000
-    Curtains = 
-    Stairs = fixtures_stairs_01_000
+    Wall = 3
+    Door = 2
+    DoorFrame = 1
+    Window = 25
+    Curtains = 0
+    Stairs = 24
     Room
     {
         Name = Foyer
         Color = 255 255 255
         InternalName = hall
-        Wall = walls_interior_house_02_052
-        Floor = floors_interior_tilesandwood_01_011
+        Wall = 23
+        Floor = 11
     }
     Room
     {
         Name = Hall
         Color = 200 200 200
         InternalName = hall
-        Wall = walls_interior_house_02_052
-        Floor = floors_interior_tilesandwood_01_011
+        Wall = 23
+        Floor = 11
     }
     Room
     {
         Name = Living Room
         Color = 255 0 0
         InternalName = livingroom
-        Wall = walls_interior_house_02_052
-        Floor = floors_interior_carpet_01_010
+        Wall = 23
+        Floor = 9
     }
     Room
     {
         Name = Dining Room
         Color = 255 0 128
         InternalName = diningroom
-        Wall = walls_interior_house_02_052
-        Floor = floors_interior_carpet_01_010
+        Wall = 23
+        Floor = 9
     }
     Room
     {
         Name = Bathroom
         Color = 255 128 0
         InternalName = bathroom
-        Wall = walls_interior_house_02_032
-        Floor = floors_interior_tilesandwood_01_002
+        Wall = 22
+        Floor = 10
     }
     Room
     {
         Name = Kitchen
         Color = 0 255 0
         InternalName = kitchen
-        Wall = walls_interior_house_02_000
-        Floor = floors_interior_tilesandwood_01_002
+        Wall = 19
+        Floor = 10
     }
     Room
     {
         Name = Bedroom1
         Color = 0 0 255
         InternalName = bedroom
-        Wall = walls_interior_house_02_016
-        Floor = floors_interior_carpet_01_002
+        Wall = 21
+        Floor = 7
     }
     Room
     {
         Name = Bedroom2
         Color = 0 64 255
         InternalName = bedroom
-        Wall = walls_interior_house_02_052
-        Floor = floors_interior_carpet_01_002
+        Wall = 23
+        Floor = 7
     }
     Room
     {
         Name = Bedroom3
         Color = 0 128 255
         InternalName = bedroom
-        Wall = walls_interior_house_02_052
-        Floor = floors_interior_carpet_01_002
+        Wall = 23
+        Floor = 7
     }
 }
 Template
 {
     Name = Wooden Shack
-    Wall = walls_exterior_wooden_01_024
-    Door = fixtures_doors_01_000
-    DoorFrame = fixtures_doors_frames_01_000
-    Window = fixtures_windows_01_000
-    Curtains = 
-    Stairs = fixtures_stairs_01_000
+    Wall = 5
+    Door = 2
+    DoorFrame = 1
+    Window = 25
+    Curtains = 0
+    Stairs = 24
     Room
     {
         Name = Foyer
         Color = 255 255 255
         InternalName = hall
-        Wall = walls_interior_house_01_020
-        Floor = floors_interior_tilesandwood_01_042
+        Wall = 17
+        Floor = 12
     }
     Room
     {
         Name = Hall
         Color = 200 200 200
         InternalName = hall
-        Wall = walls_interior_house_01_020
-        Floor = floors_interior_tilesandwood_01_042
+        Wall = 17
+        Floor = 12
     }
     Room
     {
         Name = Living Room
         Color = 255 0 0
         InternalName = livingroom
-        Wall = walls_exterior_wooden_01_024
-        Floor = floors_interior_carpet_01_008
+        Wall = 16
+        Floor = 8
     }
     Room
     {
         Name = Dining Room
         Color = 255 0 128
         InternalName = diningroom
-        Wall = walls_exterior_wooden_01_024
-        Floor = floors_interior_carpet_01_008
+        Wall = 16
+        Floor = 8
     }
     Room
     {
         Name = Bathroom
         Color = 255 128 0
         InternalName = bathroom
-        Wall = walls_exterior_wooden_01_024
-        Floor = floors_interior_carpet_01_008
+        Wall = 16
+        Floor = 8
     }
     Room
     {
         Name = Kitchen
         Color = 0 255 0
         InternalName = kitchen
-        Wall = walls_exterior_wooden_01_024
-        Floor = floors_interior_carpet_01_008
+        Wall = 16
+        Floor = 8
     }
     Room
     {
         Name = Bedroom1
         Color = 0 0 255
         InternalName = bedroom
-        Wall = walls_exterior_wooden_01_024
-        Floor = floors_interior_carpet_01_008
+        Wall = 16
+        Floor = 8
     }
     Room
     {
         Name = Bedroom2
         Color = 0 64 255
         InternalName = bedroom
-        Wall = walls_exterior_wooden_01_024
-        Floor = floors_interior_carpet_01_008
+        Wall = 16
+        Floor = 8
     }
     Room
     {
         Name = Bedroom3
         Color = 0 128 255
         InternalName = bedroom
-        Wall = walls_exterior_wooden_01_024
-        Floor = floors_interior_carpet_01_008
+        Wall = 16
+        Floor = 8
     }
 }

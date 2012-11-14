@@ -191,6 +191,21 @@
             <string>Stairs</string>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>Roof Cap</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Roof Slope</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Roof Top</string>
+           </property>
+          </item>
          </widget>
         </item>
         <item>

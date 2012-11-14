@@ -88,6 +88,10 @@ public:
 
     bool usesTile(BuildingTile *btile) const;
 
+    // Check for the universal null entry
+    virtual bool isNone() const { return false; }
+    virtual BuildingTileEntry *asNone() { return 0; }
+
     BuildingTileEntry *asExteriorWall();
     BuildingTileEntry *asInteriorWall();
     BuildingTileEntry *asFloor();
@@ -103,6 +107,16 @@ public:
     BuildingTileCategory *mCategory;
     QVector<BuildingTile*> mTiles;
     QVector<QPoint> mOffsets;
+};
+
+class NoneBuildingTileEntry : public BuildingTileEntry
+{
+public:
+    NoneBuildingTileEntry(BuildingTileCategory *category) :
+        BuildingTileEntry(category)
+    {}
+    BuildingTileEntry *asNone() { return this; }
+    bool isNone() const { return true; }
 };
 
 class BuildingTileCategory
@@ -135,11 +149,13 @@ public:
     const QList<BuildingTileEntry*> &entries() const
     { return mEntries; }
 
-    BuildingTileEntry *entry(int index) const
-    { return mEntries.at(index); }
+    BuildingTileEntry *entry(int index) const;
 
     int entryCount() const
     { return mEntries.size(); }
+
+    int indexOf(BuildingTileEntry *entry) const
+    { return mEntries.indexOf(entry); }
 
     void insertEntry(int index, BuildingTileEntry *entry);
     BuildingTileEntry *removeEntry(int index);
@@ -156,13 +172,16 @@ public:
      * of the enumeration values (west, north, southeast, etc) used by the doors
      * category are assigned to a new entry.
      */
-    virtual void addTile(const QString &tileName);
+    virtual BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     bool usesTile(Tiled::Tile *tile) const;
 
     virtual bool canAssignNone() const
     { return false; }
 
+    virtual bool isNone() const { return false; }
+
+    virtual BuildingTileCategory *asNone() { return 0; }
     virtual BuildingTileCategory *asExteriorWalls() { return 0; }
     virtual BuildingTileCategory *asInteriorWalls() { return 0; }
     virtual BuildingTileCategory *asFloors() { return 0; }
@@ -183,6 +202,17 @@ protected:
     QStringList mEnumNames;
 };
 
+class NoneBuildingTileCategory : public BuildingTileCategory
+{
+public:
+    NoneBuildingTileCategory()
+        : BuildingTileCategory(QString(), QString(), 0)
+    {}
+
+    bool isNone() const { return true; }
+    BuildingTileCategory *asNone() { return this; }
+};
+
 class BTC_Curtains : public BuildingTileCategory
 {
 public:
@@ -199,7 +229,7 @@ public:
 
     BTC_Curtains(const QString &label);
 
-    void addTile(const QString &tileName);
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     bool canAssignNone() const
     { return true; }
@@ -222,7 +252,7 @@ public:
 
     BTC_Doors(const QString &label);
 
-    void addTile(const QString &tileName);
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     bool canAssignNone() const
     { return true; }
@@ -242,7 +272,7 @@ public:
 
     BTC_DoorFrames(const QString &label);
 
-    void addTile(const QString &tileName);
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     bool canAssignNone() const
     { return true; }
@@ -261,7 +291,7 @@ public:
 
     BTC_Floors(const QString &label);
 
-    void addTile(const QString &tileName);
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     BuildingTileCategory *asFloors() { return this; }
 };
@@ -283,7 +313,7 @@ public:
 
     BTC_Stairs(const QString &label);
 
-    void addTile(const QString &tileName);
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     BuildingTileCategory *asStairs() { return this; }
 };
@@ -304,9 +334,9 @@ public:
         EnumCount
     };
 
-    BTC_Walls(const QString &label);
+    BTC_Walls(const QString &name, const QString &label);
 
-    void addTile(const QString &tileName);
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
 };
 
@@ -314,7 +344,7 @@ class BTC_EWalls : public BTC_Walls
 {
 public:
     BTC_EWalls(const QString &label) :
-        BTC_Walls(label)
+        BTC_Walls(QLatin1String("exterior_walls"), label)
     {}
 
     BuildingTileCategory *asExteriorWalls() { return this; }
@@ -324,7 +354,7 @@ class BTC_IWalls : public BTC_Walls
 {
 public:
     BTC_IWalls(const QString &label) :
-        BTC_Walls(label)
+        BTC_Walls(QLatin1String("interior_walls"), label)
     {}
 
     BuildingTileCategory *asInteriorWalls() { return this; }
@@ -343,7 +373,7 @@ public:
 
     BTC_Windows(const QString &label);
 
-    void addTile(const QString &tileName);
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     bool canAssignNone() const
     { return true; }
@@ -374,7 +404,7 @@ public:
 
     BTC_RoofCaps(const QString &label);
 
-    void addTile(const QString &tileName);
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     BuildingTileCategory *asRoofCaps() { return this; }
 };
@@ -390,11 +420,11 @@ public:
         SlopePt5S, SlopePt5E,
         SlopeOnePt5S, SlopeOnePt5E,
         SlopeTwoPt5S, SlopeTwoPt5E,
-
+#if 0
         // Flat rooftops
         FlatTopW1, FlatTopW2, FlatTopW3,
         FlatTopN1, FlatTopN2, FlatTopN3,
-
+#endif
         // Sloped corners
         Inner1, Inner2, Inner3,
         Outer1, Outer2, Outer3,
@@ -404,7 +434,7 @@ public:
 
     BTC_RoofSlopes(const QString &label);
 
-    void addTile(const QString &tileName);
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     BuildingTileCategory *asRoofSlopes() { return this; }
 };
@@ -425,7 +455,7 @@ public:
 
     BTC_RoofTops(const QString &label);
 
-    void addTile(const QString &tileName);
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     BuildingTileCategory *asRoofTops() { return this; }
 };
@@ -513,8 +543,20 @@ public:
     QString txtName();
     QString txtPath();
 
-    bool readBuildingTilesTxt();
-    void writeBuildingTilesTxt(QWidget *parent = 0);
+    bool readTxt();
+    void writeTxt(QWidget *parent = 0);
+
+    BuildingTileCategory *catEWalls() const { return mCatEWalls; }
+    BuildingTileCategory *catIWalls() const { return mCatIWalls; }
+    BuildingTileCategory *catFloors() const { return mCatFloors; }
+    BuildingTileCategory *catDoors() const { return mCatDoors; }
+    BuildingTileCategory *catDoorFrames() const { return mCatDoorFrames; }
+    BuildingTileCategory *catWindows() const { return mCatWindows; }
+    BuildingTileCategory *catCurtains() const { return mCatCurtains; }
+    BuildingTileCategory *catStairs() const { return mCatStairs; }
+    BuildingTileCategory *catRoofCaps() const { return mCatRoofCaps; }
+    BuildingTileCategory *catRoofSlopes() const { return mCatRoofSlopes; }
+    BuildingTileCategory *catRoofTops() const { return mCatRoofTops; }
 
     BuildingTileEntry *defaultExteriorWall() const;
     BuildingTileEntry *defaultInteriorWall() const;
@@ -555,7 +597,10 @@ private:
     Tiled::Tile *mMissingTile;
     Tiled::Tile *mNoneTiledTile;
     BuildingTile *mNoneBuildingTile;
+
+    BuildingTileCategory *mNoneCategory;
     BuildingTileEntry *mNoneTileEntry;
+
     QString mError;
 
     // The categories

@@ -345,8 +345,10 @@ public:
         SlopePt5S, SlopePt5E,
         SlopeOnePt5S, SlopeOnePt5E,
         SlopeTwoPt5S, SlopeTwoPt5E,
+#if 0
         FlatTopW1, FlatTopW2, FlatTopW3,
         FlatTopN1, FlatTopN2, FlatTopN3,
+#endif
 
         // Corners
         Inner1, Inner2, Inner3,

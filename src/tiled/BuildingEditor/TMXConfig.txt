@@ -33,12 +33,16 @@ tilesets
     tileset = furniture_tables_low_01
     tileset = lighting_indoor_01
     tileset = lighting_outdoor_01
+    tileset = location_barn_01
     tileset = location_business_bank_01
     tileset = location_business_office_generic_01
     tileset = location_community_church_small_01
     tileset = location_hospitality_sunstarmotel_01
     tileset = location_hospitality_sunstarmotel_02
     tileset = location_restaurant_bar_01
+    tileset = location_restaurant_diner_01
+    tileset = location_restaurant_pie_01
+    tileset = location_restaurant_seahorse_01
     tileset = location_restaurant_spiffos_01
     tileset = location_restaurant_spiffos_02
     tileset = location_sewer_01

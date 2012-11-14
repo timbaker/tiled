@@ -20,12 +20,14 @@
 
 #include <QList>
 #include <QMap>
+#include <QPair>
 #include <QString>
 #include <QStringList>
 #include <QRgb>
 
 namespace BuildingEditor {
 
+class BuildingTileCategory;
 class BuildingTileEntry;
 
 class Room
@@ -71,6 +73,9 @@ public:
     BuildingTileEntry *WindowTile;
     BuildingTileEntry *CurtainsTile;
     BuildingTileEntry *StairsTile;
+    BuildingTileEntry *RoofCap;
+    BuildingTileEntry *RoofSlope;
+    BuildingTileEntry *RoofTop;
 
     QList<Room*> RoomList;
 
@@ -86,6 +91,9 @@ public:
         WindowTile = other->WindowTile;
         CurtainsTile = other->CurtainsTile;
         StairsTile = other->StairsTile;
+        RoofCap = other->RoofCap;
+        RoofSlope = other->RoofSlope;
+        RoofTop = other->RoofTop;
 
         foreach (Room *room, other->RoomList)
             RoomList += new Room(room);
@@ -123,8 +131,8 @@ public:
     QString txtName();
     QString txtPath();
 
-    bool readBuildingTemplatesTxt();
-    void writeBuildingTemplatesTxt(QWidget *parent = 0);
+    bool readTxt();
+    void writeTxt(QWidget *parent = 0);
 
     QString errorString() const
     { return mError; }
@@ -136,12 +144,17 @@ private:
     QString entryIndex(BuildingTileEntry *entry);
     BuildingTileEntry *getEntry(const QString &s);
 
+    void addEntry(BuildingTileCategory *category, const QString &tileName);
+    QString entryIndex(BuildingTileCategory *category, const QString &tileName);
+
 private:
     static BuildingTemplates *mInstance;
     QList<BuildingTemplate*> mTemplates;
     QString mError;
 
     QList<BuildingTileEntry*> mEntries; // Used during readTxt()/writeTxt()
+    QMap<QString,BuildingTileEntry*> mEntriesByCategoryName;
+    QMap<QPair<BuildingTileCategory*,QString>,BuildingTileEntry*> mEntryMap;
 };
 
 } // namespace BuildingEditor

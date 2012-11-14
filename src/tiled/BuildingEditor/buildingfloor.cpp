@@ -22,7 +22,6 @@
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
 #include "furnituregroups.h"
-#include "rooftiles.h"
 
 using namespace BuildingEditor;
 
@@ -96,18 +95,18 @@ void BuildingFloor::setGrid(const QVector<QVector<Room *> > &grid)
         mIndexAtPos[x].resize(mRoomAtPos[x].size());
 }
 
-static void ReplaceRoof(RoofObject *ro, const QRect &r,
+static void ReplaceRoofSlope(RoofObject *ro, const QRect &r,
                         QVector<QVector<BuildingFloor::Square> > &squares,
                         RoofObject::RoofTile tile)
 {
     if (r.isEmpty()) return;
     int offset = ro->getOffset(tile);
-    QPoint tileOffset = ro->capTiles()->offset(offset);
+    QPoint tileOffset = ro->slopeTiles()->offset(offset);
     QRect bounds(0, 0, squares.size(), squares[0].size());
     QRect rOffset = r.translated(tileOffset) & bounds;
     for (int x = rOffset.left(); x <= rOffset.right(); x++)
         for (int y = rOffset.top(); y <= rOffset.bottom(); y++)
-            squares[x][y].ReplaceRoof(ro->capTiles(), offset);
+            squares[x][y].ReplaceRoof(ro->slopeTiles(), offset);
 }
 
 static void ReplaceRoofGap(RoofObject *ro, const QRect &r,
@@ -177,11 +176,13 @@ static void ReplaceFurniture(int x, int y,
                              QVector<QVector<BuildingFloor::Square> > &squares,
                              BuildingTile *btile)
 {
+#if 0
     if (!btile)
         return;
     QRect bounds(0, 0, squares.size() - 1, squares[0].size() - 1);
     if (bounds.contains(x, y))
         squares[x][y].ReplaceFurniture(btile);
+#endif
 }
 
 void BuildingFloor::LayoutToSquares()
@@ -343,56 +344,56 @@ void BuildingFloor::LayoutToSquares()
             QRect se = ro->southEdge();
             switch (ro->depth()) {
             case RoofObject::Point5:
-                ReplaceRoof(ro, se, squares, RoofObject::SlopePt5S);
+                ReplaceRoofSlope(ro, se, squares, RoofObject::SlopePt5S);
                 break;
             case RoofObject::One:
-                ReplaceRoof(ro, se, squares, RoofObject::SlopeS1);
+                ReplaceRoofSlope(ro, se, squares, RoofObject::SlopeS1);
                 break;
             case RoofObject::OnePoint5:
-                ReplaceRoof(ro, se.adjusted(0,1,0,0), squares, RoofObject::SlopeS1);
-                ReplaceRoof(ro, se.adjusted(0,0,0,-1), squares, RoofObject::SlopeOnePt5S);
+                ReplaceRoofSlope(ro, se.adjusted(0,1,0,0), squares, RoofObject::SlopeS1);
+                ReplaceRoofSlope(ro, se.adjusted(0,0,0,-1), squares, RoofObject::SlopeOnePt5S);
                 break;
             case RoofObject::Two:
-                ReplaceRoof(ro, se.adjusted(0,1,0,0), squares, RoofObject::SlopeS1);
-                ReplaceRoof(ro, se.adjusted(0,0,0,-1), squares, RoofObject::SlopeS2);
+                ReplaceRoofSlope(ro, se.adjusted(0,1,0,0), squares, RoofObject::SlopeS1);
+                ReplaceRoofSlope(ro, se.adjusted(0,0,0,-1), squares, RoofObject::SlopeS2);
                 break;
             case RoofObject::TwoPoint5:
-                ReplaceRoof(ro, se.adjusted(0,2,0,0), squares, RoofObject::SlopeS1);
-                ReplaceRoof(ro, se.adjusted(0,1,0,-1), squares, RoofObject::SlopeS2);
-                ReplaceRoof(ro, se.adjusted(0,0,0,-2), squares, RoofObject::SlopeTwoPt5S);
+                ReplaceRoofSlope(ro, se.adjusted(0,2,0,0), squares, RoofObject::SlopeS1);
+                ReplaceRoofSlope(ro, se.adjusted(0,1,0,-1), squares, RoofObject::SlopeS2);
+                ReplaceRoofSlope(ro, se.adjusted(0,0,0,-2), squares, RoofObject::SlopeTwoPt5S);
                 break;
             case RoofObject::Three:
-                ReplaceRoof(ro, se.adjusted(0,2,0,0), squares, RoofObject::SlopeS1);
-                ReplaceRoof(ro, se.adjusted(0,1,0,-1), squares, RoofObject::SlopeS2);
-                ReplaceRoof(ro, se.adjusted(0,0,0,-2), squares, RoofObject::SlopeS3);
+                ReplaceRoofSlope(ro, se.adjusted(0,2,0,0), squares, RoofObject::SlopeS1);
+                ReplaceRoofSlope(ro, se.adjusted(0,1,0,-1), squares, RoofObject::SlopeS2);
+                ReplaceRoofSlope(ro, se.adjusted(0,0,0,-2), squares, RoofObject::SlopeS3);
                 break;
             }
 
             QRect ee = ro->eastEdge();
             switch (ro->depth()) {
             case RoofObject::Point5:
-                ReplaceRoof(ro, ee, squares, RoofObject::SlopePt5E);
+                ReplaceRoofSlope(ro, ee, squares, RoofObject::SlopePt5E);
                 break;
             case RoofObject::One:
-                ReplaceRoof(ro, ee, squares, RoofObject::SlopeE1);
+                ReplaceRoofSlope(ro, ee, squares, RoofObject::SlopeE1);
                 break;
             case RoofObject::OnePoint5:
-                ReplaceRoof(ro, ee.adjusted(1,0,0,0), squares, RoofObject::SlopeE1);
-                ReplaceRoof(ro, ee.adjusted(0,0,-1,0), squares, RoofObject::SlopeOnePt5E);
+                ReplaceRoofSlope(ro, ee.adjusted(1,0,0,0), squares, RoofObject::SlopeE1);
+                ReplaceRoofSlope(ro, ee.adjusted(0,0,-1,0), squares, RoofObject::SlopeOnePt5E);
                 break;
             case RoofObject::Two:
-                ReplaceRoof(ro, ee.adjusted(1,0,0,0), squares, RoofObject::SlopeE1);
-                ReplaceRoof(ro, ee.adjusted(0,0,-1,0), squares, RoofObject::SlopeE2);
+                ReplaceRoofSlope(ro, ee.adjusted(1,0,0,0), squares, RoofObject::SlopeE1);
+                ReplaceRoofSlope(ro, ee.adjusted(0,0,-1,0), squares, RoofObject::SlopeE2);
                 break;
             case RoofObject::TwoPoint5:
-                ReplaceRoof(ro, ee.adjusted(2,0,0,0), squares, RoofObject::SlopeE1);
-                ReplaceRoof(ro, ee.adjusted(1,0,-1,0), squares, RoofObject::SlopeE2);
-                ReplaceRoof(ro, ee.adjusted(0,0,-2,0), squares, RoofObject::SlopeTwoPt5E);
+                ReplaceRoofSlope(ro, ee.adjusted(2,0,0,0), squares, RoofObject::SlopeE1);
+                ReplaceRoofSlope(ro, ee.adjusted(1,0,-1,0), squares, RoofObject::SlopeE2);
+                ReplaceRoofSlope(ro, ee.adjusted(0,0,-2,0), squares, RoofObject::SlopeTwoPt5E);
                 break;
             case RoofObject::Three:
-                ReplaceRoof(ro, ee.adjusted(2,0,0,0), squares, RoofObject::SlopeE1);
-                ReplaceRoof(ro, ee.adjusted(1,0,-1,0), squares, RoofObject::SlopeE2);
-                ReplaceRoof(ro, ee.adjusted(0,0,-2,0), squares, RoofObject::SlopeE3);
+                ReplaceRoofSlope(ro, ee.adjusted(2,0,0,0), squares, RoofObject::SlopeE1);
+                ReplaceRoofSlope(ro, ee.adjusted(1,0,-1,0), squares, RoofObject::SlopeE2);
+                ReplaceRoofSlope(ro, ee.adjusted(0,0,-2,0), squares, RoofObject::SlopeE3);
                 break;
             }
 
@@ -471,12 +472,12 @@ void BuildingFloor::LayoutToSquares()
 
             QRect sg = ro->southGap(RoofObject::Three);
             ReplaceRoofGap(ro, sg, squares, RoofObject::CapGapS3);
-
+#if 0
             // SE corner 'pole'
             if (ro->depth() == RoofObject::Three && eg.isValid() && sg.isValid() &&
                     (eg.adjusted(0,0,0,1).bottomLeft() == sg.adjusted(0,0,1,0).topRight()))
                 ReplaceRoofCap(ro, r.right()+1, r.bottom()+1, squares, RoofObject::CapGapE3, 3);
-
+#endif
 #ifdef ROOF_TOPS
             // Roof tops with depth of 3 are place in the floor layer of the
             // floor above.
@@ -870,8 +871,8 @@ void BuildingFloor::Square::ReplaceWall(BuildingTileEntry *tile,
                                         bool exterior)
 {
     mTiles[SectionWall] = tile;
+    mWallOrientation = orient; // Must set this before getWallOffset() is called
     mTileOffset[SectionWall] = getWallOffset();
-    mWallOrientation = orient;
     mExterior = exterior;
 }
 

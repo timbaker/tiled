@@ -34,6 +34,9 @@ Building::Building(int width, int height, BuildingTemplate *btemplate) :
         mWindowTile = btemplate->WindowTile;
         mCurtainsTile = btemplate->CurtainsTile;
         mStairsTile = btemplate->StairsTile;
+        mRoofCap = btemplate->RoofCap;
+        mRoofSlope = btemplate->RoofSlope;
+        mRoofTop = btemplate->RoofTop;
         foreach (Room *room, btemplate->RoomList)
             insertRoom(mRooms.count(), new Room(room));
     } else {
@@ -43,6 +46,9 @@ Building::Building(int width, int height, BuildingTemplate *btemplate) :
         mWindowTile = BuildingTilesMgr::instance()->defaultWindowTile();
         mCurtainsTile = BuildingTilesMgr::instance()->defaultCurtainsTile();
         mStairsTile = BuildingTilesMgr::instance()->defaultStairsTile();
+        mRoofCap = BuildingTilesMgr::instance()->defaultRoofCapTiles();
+        mRoofSlope = BuildingTilesMgr::instance()->defaultRoofSlopeTiles();
+        mRoofTop = BuildingTilesMgr::instance()->defaultRoofTopTiles();
     }
 }
 

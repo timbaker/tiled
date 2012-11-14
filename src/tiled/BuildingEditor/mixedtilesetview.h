@@ -48,6 +48,7 @@ public:
 
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
     QModelIndex index(Tiled::Tile *tile);
+    QModelIndex index(void *userData);
 
     Qt::DropActions supportedDropActions() const
     { return Qt::CopyAction; }
@@ -55,11 +56,13 @@ public:
     QStringList mimeTypes() const;
     QMimeData *mimeData(const QModelIndexList &indexes) const;
 
-    void setTiles(const QList<Tile*> &tiles);
+    void setTiles(const QList<Tile*> &tiles,
+                  const QList<void*> &userData = QList<void*>());
     void setTileset(Tileset *tileset);
 
     Tile *tileAt(const QModelIndex &index) const;
     QString headerAt(const QModelIndex &index) const;
+    void *userDataAt(const QModelIndex &index) const;
 
     void setCategoryBounds(Tile *tile, const QRect &bounds);
     QRect categoryBounds(Tile *tile) const;
@@ -73,31 +76,37 @@ private:
     {
     public:
         Item() :
-            mTile(0)
+            mTile(0),
+            mUserData(0)
         {
         }
 
-        Item(Tiled::Tile *tile) :
-            mTile(tile)
+        Item(Tiled::Tile *tile, void *userData = 0) :
+            mTile(tile),
+            mUserData(userData)
         {
 
         }
         Item(const QString &tilesetName) :
             mTile(0),
+            mUserData(0),
             mTilesetName(tilesetName)
         {
 
         }
 
         Tiled::Tile *mTile;
+        void *mUserData;
         QString mTilesetName;
     };
 
     Item *toItem(const QModelIndex &index) const;
     Item *toItem(Tiled::Tile *tile) const;
+    Item *toItem(void *userData) const;
 
     QList<Item*> mItems;
     QList<Tiled::Tile*> mTiles;
+    QList<void *> mUserData;
     Tiled::Tileset *mTileset;
     QMap<Tiled::Tile*,QRect> mCategoryBounds;
     static QString mMimeType;

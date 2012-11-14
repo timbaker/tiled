@@ -52,6 +52,11 @@ public:
 
     QString value(const QString &key);
 
+    void addValue(const char *key, const QString &value)
+    { addValue(QLatin1String(key), value); }
+
+    void addValue(const QString &key, const QString &value);
+
     void replaceValue(const char *key, const QString &value, bool atEnd = true)
     { replaceValue(QLatin1String(key), value, atEnd); }
 

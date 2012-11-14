@@ -104,6 +104,25 @@ public:
     void setStairsTile(BuildingTileEntry *entry)
     { mStairsTile = entry; }
 
+    BuildingTileEntry *roofCapTile() const
+    { return mRoofCap; }
+
+    void setRoofCapTile(BuildingTileEntry *entry)
+    { mRoofCap = entry; }
+
+    BuildingTileEntry *roofSlopeTile() const
+    { return mRoofSlope; }
+
+    void setRoofSlopeTile(BuildingTileEntry *entry)
+    { mRoofSlope = entry; }
+
+    BuildingTileEntry *roofTopTile() const
+    { return mRoofTop; }
+
+    void setRoofTopTile(BuildingTileEntry *entry)
+    { mRoofTop = entry; }
+
+
     void resize(const QSize &newSize);
     void rotate(bool right);
     void flip(bool horizontal);
@@ -120,6 +139,7 @@ private:
     BuildingTileEntry *mStairsTile;
     BuildingTileEntry *mRoofCap;
     BuildingTileEntry *mRoofSlope;
+    BuildingTileEntry *mRoofTop;
 };
 
 } // namespace BuildingEditor

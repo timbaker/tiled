@@ -2054,6 +2054,125 @@ group
 }
 group
 {
+    label = Location - Restaurant - Diner
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_diner_01_035
+            0,1 = location_restaurant_diner_01_034
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_diner_01_032
+            1,0 = location_restaurant_diner_01_033
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_restaurant_diner_01_039
+            0,1 = location_restaurant_diner_01_038
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_diner_01_036
+            1,0 = location_restaurant_diner_01_037
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = SW
+            0,0 = location_restaurant_diner_01_027
+        }
+        entry
+        {
+            orient = NW
+            0,0 = location_restaurant_diner_01_029
+        }
+        entry
+        {
+            orient = NE
+            0,0 = location_restaurant_diner_01_031
+        }
+        entry
+        {
+            orient = SE
+            0,0 = location_restaurant_diner_01_025
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_diner_01_028
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_diner_01_030
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_diner_01_026
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_diner_01_015
+            0,1 = location_restaurant_diner_01_014
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_diner_01_006
+            1,0 = location_restaurant_diner_01_007
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_diner_01_024
+        }
+        entry
+        {
+            orient = N
+        }
+        entry
+        {
+            orient = E
+        }
+        entry
+        {
+            orient = S
+        }
+    }
+}
+group
+{
     label = Location - Shop - Accesories
     furniture
     {

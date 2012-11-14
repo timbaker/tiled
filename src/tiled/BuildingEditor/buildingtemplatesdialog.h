@@ -27,7 +27,7 @@ class BuildingTemplatesDialog;
 namespace BuildingEditor {
 
 class BuildingTemplate;
-class BuildingTile;
+class BuildingTileEntry;
 
 class BuildingTemplatesDialog : public QDialog
 {
@@ -55,7 +55,7 @@ private slots:
 
 private:
     void setTilePixmap();
-    BuildingTile *selectedTile();
+    BuildingTileEntry *selectedTile();
 
 private:
     Ui::BuildingTemplatesDialog *ui;

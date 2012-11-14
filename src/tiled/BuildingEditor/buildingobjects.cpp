@@ -20,7 +20,6 @@
 #include "buildingfloor.h"
 #include "buildingtiles.h"
 #include "furnituregroups.h"
-#include "rooftiles.h"
 
 #include <qmath.h>
 
@@ -907,8 +906,10 @@ int RoofObject::getOffset(RoofObject::RoofTile tile) const
         BTC_RoofSlopes::SlopePt5S, BTC_RoofSlopes::SlopePt5E,
         BTC_RoofSlopes::SlopeOnePt5S, BTC_RoofSlopes::SlopeOnePt5E,
         BTC_RoofSlopes::SlopeTwoPt5S, BTC_RoofSlopes::SlopeTwoPt5E,
+    #if 0
         BTC_RoofSlopes::FlatTopW1, BTC_RoofSlopes::FlatTopW2, BTC_RoofSlopes::FlatTopW3,
         BTC_RoofSlopes::FlatTopN1, BTC_RoofSlopes::FlatTopN2, BTC_RoofSlopes::FlatTopN3,
+    #endif
         BTC_RoofSlopes::Inner1, BTC_RoofSlopes::Inner2, BTC_RoofSlopes::Inner3,
         BTC_RoofSlopes::Outer1, BTC_RoofSlopes::Outer2, BTC_RoofSlopes::Outer3
     };

@@ -83,15 +83,37 @@ static void writeTileEntry(SimpleFileBlock &block, BuildingTileEntry *entry)
 
 }
 
-static BuildingTileEntry *readTileEntry(SimpleFileBlock &block)
+static BuildingTileEntry *readTileEntry(SimpleFileBlock &block, QString &error)
 {
+    QString categoryName = block.value("category");
+    if (BuildingTileCategory *category = BuildingTilesMgr::instance()->category(categoryName)) {
+        BuildingTileEntry *entry = new BuildingTileEntry(category);
+        foreach (SimpleFileKeyValue kv, block.values) {
+            if (kv.name == QLatin1String("category"))
+                continue;
+            int e = category->enumFromString(kv.name);
+            if (e == BuildingTileCategory::Invalid) {
+                error = BuildingTilesMgr::instance()->tr("Unknown %1 enum %2")
+                        .arg(categoryName).arg(kv.name);
+                return 0;
+            }
+            entry->mTiles[e] = BuildingTilesMgr::instance()->get(kv.value);
+        }
+        return entry;
+    }
+    error = BuildingTilesMgr::instance()->tr("Unknown tile category '%1'")
+            .arg(categoryName);
     return 0;
 }
 
 #define VERSION0 0
-#define VERSION_LATEST 0
 
-bool BuildingTemplates::readBuildingTemplatesTxt()
+// VERSION1
+// Massive rewrite -> BuildingTileEntry
+#define VERSION1 1
+#define VERSION_LATEST VERSION1
+
+bool BuildingTemplates::readTxt()
 {
     QFileInfo info(txtPath());
     if (!info.exists()) {
@@ -115,11 +137,12 @@ bool BuildingTemplates::readBuildingTemplatesTxt()
         return false;
     }
 
+    BuildingTileEntry *noneEntry = BuildingTilesMgr::instance()->noneTileEntry();
+
     mEntries.clear();
-    BuildingTilesMgr *btiles = BuildingTilesMgr::instance();
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("TileEntry")) {
-            if (BuildingTileEntry *entry = readTileEntry(block))
+            if (BuildingTileEntry *entry = readTileEntry(block, mError))
                 addEntry(entry);
             else
                 return false;
@@ -134,6 +157,9 @@ bool BuildingTemplates::readBuildingTemplatesTxt()
             def->WindowTile = getEntry(block.value("Window"))->asWindow();
             def->CurtainsTile = getEntry(block.value("Curtains"))->asCurtains();
             def->StairsTile = getEntry(block.value("Stairs"))->asStairs();
+            def->RoofCap = getEntry(block.value("RoofCap"))->asRoofCap();
+            def->RoofSlope = getEntry(block.value("RoofSlope"))->asRoofSlope();
+            def->RoofTop = getEntry(block.value("RoofTop"))->asRoofTop();
             foreach (SimpleFileBlock roomBlock, block.blocks) {
                 if (roomBlock.name == QLatin1String("Room")) {
                     Room *room = new Room;
@@ -153,6 +179,15 @@ bool BuildingTemplates::readBuildingTemplatesTxt()
                     return false;
                 }
             }
+            if (!def->Wall) def->Wall = noneEntry;
+            if (!def->DoorTile) def->DoorTile = noneEntry;
+            if (!def->DoorFrameTile) def->DoorFrameTile = noneEntry;
+            if (!def->WindowTile) def->WindowTile = noneEntry;
+            if (!def->CurtainsTile) def->CurtainsTile = noneEntry;
+            if (!def->StairsTile) def->StairsTile = noneEntry;
+            if (!def->RoofCap) def->RoofCap = noneEntry;
+            if (!def->RoofSlope) def->RoofSlope = noneEntry;
+            if (!def->RoofTop) def->RoofTop = noneEntry;
             addTemplate(def);
         } else {
             mError = tr("Unknown block name '%1': expected 'Template'.\n%2")
@@ -165,17 +200,19 @@ bool BuildingTemplates::readBuildingTemplatesTxt()
     return true;
 }
 
-void BuildingTemplates::writeBuildingTemplatesTxt(QWidget *parent)
+void BuildingTemplates::writeTxt(QWidget *parent)
 {
     mEntries.clear();
     foreach (BuildingTemplate *btemplate, BuildingTemplates::instance()->templates()) {
+        addEntry(btemplate->Wall);
         addEntry(btemplate->DoorTile);
         addEntry(btemplate->DoorFrameTile);
+        addEntry(btemplate->WindowTile);
         addEntry(btemplate->CurtainsTile);
         addEntry(btemplate->StairsTile);
-        addEntry(btemplate->Wall);
-        addEntry(btemplate->StairsTile);
-        addEntry(btemplate->WindowTile);
+        addEntry(btemplate->RoofCap);
+        addEntry(btemplate->RoofSlope);
+        addEntry(btemplate->RoofTop);
         foreach (Room *room, btemplate->RoomList) {
             addEntry(room->Floor);
             addEntry(room->Wall);
@@ -189,25 +226,28 @@ void BuildingTemplates::writeBuildingTemplatesTxt(QWidget *parent)
     foreach (BuildingTemplate *btemplate, BuildingTemplates::instance()->templates()) {
         SimpleFileBlock templateBlock;
         templateBlock.name = QLatin1String("Template");
-        templateBlock.values += SimpleFileKeyValue(QLatin1String("Name"), btemplate->Name);
-        templateBlock.values += SimpleFileKeyValue(QLatin1String("Wall"), entryIndex(btemplate->Wall));
-        templateBlock.values += SimpleFileKeyValue(QLatin1String("Door"), entryIndex(btemplate->DoorTile));
-        templateBlock.values += SimpleFileKeyValue(QLatin1String("DoorFrame"), entryIndex(btemplate->DoorFrameTile));
-        templateBlock.values += SimpleFileKeyValue(QLatin1String("Window"), entryIndex(btemplate->WindowTile));
-        templateBlock.values += SimpleFileKeyValue(QLatin1String("Curtains"), entryIndex(btemplate->CurtainsTile));
-        templateBlock.values += SimpleFileKeyValue(QLatin1String("Stairs"), entryIndex(btemplate->StairsTile));
+        templateBlock.addValue("Name", btemplate->Name);
+        templateBlock.addValue("Wall", entryIndex(btemplate->Wall));
+        templateBlock.addValue("Door", entryIndex(btemplate->DoorTile));
+        templateBlock.addValue("DoorFrame", entryIndex(btemplate->DoorFrameTile));
+        templateBlock.addValue("Window", entryIndex(btemplate->WindowTile));
+        templateBlock.addValue("Curtains", entryIndex(btemplate->CurtainsTile));
+        templateBlock.addValue("Stairs", entryIndex(btemplate->StairsTile));
+        templateBlock.addValue("RoofCap", entryIndex(btemplate->RoofCap));
+        templateBlock.addValue("RoofSlope", entryIndex(btemplate->RoofSlope));
+        templateBlock.addValue("RoofTop", entryIndex(btemplate->RoofTop));
         foreach (Room *room, btemplate->RoomList) {
             SimpleFileBlock roomBlock;
             roomBlock.name = QLatin1String("Room");
-            roomBlock.values += SimpleFileKeyValue(QLatin1String("Name"), room->Name);
+            roomBlock.addValue("Name", room->Name);
             QString colorString = QString(QLatin1String("%1 %2 %3"))
                     .arg(qRed(room->Color))
                     .arg(qGreen(room->Color))
                     .arg(qBlue(room->Color));
-            roomBlock.values += SimpleFileKeyValue(QLatin1String("Color"), colorString);
-            roomBlock.values += SimpleFileKeyValue(QLatin1String("InternalName"), room->internalName);
-            roomBlock.values += SimpleFileKeyValue(QLatin1String("Wall"), entryIndex(room->Wall));
-            roomBlock.values += SimpleFileKeyValue(QLatin1String("Floor"), entryIndex(room->Floor));
+            roomBlock.addValue("Color", colorString);
+            roomBlock.addValue("InternalName", room->internalName);
+            roomBlock.addValue("Wall", entryIndex(room->Wall));
+            roomBlock.addValue("Floor", entryIndex(room->Floor));
             templateBlock.blocks += roomBlock;
         }
         simpleFile.blocks += templateBlock;
@@ -217,6 +257,15 @@ void BuildingTemplates::writeBuildingTemplatesTxt(QWidget *parent)
         QMessageBox::warning(parent, tr("It's no good, Jim!"),
                              simpleFile.errorString());
     }
+}
+
+QString BuildingTemplates::entryIndex(BuildingTileCategory *category,
+                                      const QString &tileName)
+{
+    if (tileName.isEmpty())
+        return QString::number(0);
+    BuildingTileEntry *entry = mEntryMap[qMakePair(category,tileName)];
+    return QString::number(mEntries.indexOf(entry) + 1);
 }
 
 bool BuildingTemplates::upgradeTxt()
@@ -245,7 +294,71 @@ bool BuildingTemplates::upgradeTxt()
     }
     Q_ASSERT(sourceFile.version() == VERSION_LATEST);
 
-    // UPGRADE HERE
+    if (VERSION_LATEST == VERSION1) {
+        // Massive rewrite -> BuildingTileEntry stuff
+
+        // Step 1: read all the single-tile assignments and convert them to
+        // BuildingTileEntry.
+        mEntries.clear();
+        mEntryMap.clear();
+        mEntriesByCategoryName.clear();
+        BuildingTilesMgr *btiles = BuildingTilesMgr::instance();
+        foreach (SimpleFileBlock block, userFile.blocks) {
+            if (block.name == QLatin1String("Template")) {
+                addEntry(btiles->catEWalls(), block.value("Wall"));
+                addEntry(btiles->catDoors(), block.value("Door"));
+                addEntry(btiles->catDoorFrames(), block.value("DoorFrame"));
+                addEntry(btiles->catWindows(), block.value("Window"));
+                addEntry(btiles->catCurtains(), block.value("Curtains"));
+                addEntry(btiles->catStairs(), block.value("Stairs"));
+                foreach (SimpleFileBlock roomBlock, block.blocks) {
+                    if (roomBlock.name == QLatin1String("Room")) {
+                        addEntry(btiles->category(QLatin1String("interior_walls")), roomBlock.value("Wall"));
+                        addEntry(btiles->category(QLatin1String("floors")), roomBlock.value("Floor"));
+                    }
+                }
+            }
+        }
+
+        // Step 3: add the TileEntry blocks
+        SimpleFileBlock newFile;
+        foreach (BuildingTileEntry *entry, mEntries) {
+            SimpleFileBlock block;
+            block.name = QLatin1String("TileEntry");
+            block.addValue("category", entry->category()->name());
+            for (int i = 0; i < entry->category()->enumCount(); i++)
+                block.addValue(entry->category()->enumToString(i), entry->tile(i)->name());
+            newFile.blocks += block;
+        }
+
+        // Step 3: replace tile names with entry indices
+        foreach (SimpleFileBlock block, userFile.blocks) {
+            SimpleFileBlock newBlock;
+            newBlock.name = block.name;
+            newBlock.values = block.values;
+            if (block.name == QLatin1String("Template")) {
+                newBlock.replaceValue("Wall", entryIndex(btiles->catEWalls(), block.value("Wall")));
+                newBlock.replaceValue("Door", entryIndex(btiles->catDoors(), block.value("Door")));
+                newBlock.replaceValue("DoorFrame",  entryIndex(btiles->catDoorFrames(), block.value("DoorFrame")));
+                newBlock.replaceValue("Window", entryIndex(btiles->catWindows(), block.value("Window")));
+                newBlock.replaceValue("Curtains", entryIndex(btiles->catCurtains(), block.value("Curtains")));
+                newBlock.replaceValue("Stairs", entryIndex(btiles->catStairs(), block.value("Stairs")));
+
+                foreach (SimpleFileBlock roomBlock, block.blocks) {
+                    SimpleFileBlock newRoomBlock = roomBlock;
+                    if (roomBlock.name == QLatin1String("Room")) {
+                        newRoomBlock.replaceValue("Wall", entryIndex(btiles->catIWalls(), roomBlock.value("Wall")));
+                        newRoomBlock.replaceValue("Floor", entryIndex(btiles->catFloors(), roomBlock.value("Floor")));
+                    }
+                    newBlock.blocks += newRoomBlock;
+                }
+            }
+            newFile.blocks += newBlock;
+        }
+
+        userFile.blocks = newFile.blocks;
+        userFile.values = newFile.values;
+    }
 
     userFile.setVersion(VERSION_LATEST);
     if (!userFile.write(userPath)) {
@@ -253,6 +366,42 @@ bool BuildingTemplates::upgradeTxt()
         return false;
     }
     return true;
+}
+
+void BuildingTemplates::addEntry(BuildingTileEntry *entry)
+{
+    if (entry && !entry->isNone() && !mEntries.contains(entry))
+        mEntries += entry;
+}
+
+void BuildingTemplates::addEntry(BuildingTileCategory *category,
+                                 const QString &tileName)
+{
+    if (tileName.isEmpty())
+        return;
+    QPair<BuildingTileCategory*,QString> p = qMakePair(category, tileName);
+    if (mEntryMap.contains(p))
+        return;
+
+    BuildingTileEntry *entry = category->createEntryFromSingleTile(tileName);
+    mEntriesByCategoryName[category->name() + tileName] = entry;
+    mEntries = mEntriesByCategoryName.values(); // sorted
+    mEntryMap[p] = entry;
+}
+
+QString BuildingTemplates::entryIndex(BuildingTileEntry *entry)
+{
+    if (!entry || entry->isNone())
+        return QString::number(0);
+    return QString::number(mEntries.indexOf(entry) + 1);
+}
+
+BuildingTileEntry *BuildingTemplates::getEntry(const QString &s)
+{
+    int index = s.toInt();
+    if (index >= 1 && index <= mEntries.size())
+        return mEntries[index - 1];
+    return BuildingTilesMgr::instance()->noneTileEntry();
 }
 
 /////

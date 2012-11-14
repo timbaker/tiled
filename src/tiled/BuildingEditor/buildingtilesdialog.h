@@ -39,6 +39,7 @@ class Zoomable;
 
 namespace BuildingEditor {
 
+class BuildingTileEntry;
 class BuildingTileCategory;
 class FurnitureGroup;
 class FurnitureTile;
@@ -55,8 +56,8 @@ public:
     bool changes() const;
 
     //+ UNDO/REDO
-    void addTile(BuildingTileCategory *category, const QString &tileName);
-    void removeTile(BuildingTileCategory *category, const QString &tileName);
+    void addTile(BuildingTileCategory *category, int index, BuildingTileEntry *entry);
+    BuildingTileEntry *removeTile(BuildingTileCategory *category, int index);
     QString renameTileCategory(BuildingTileCategory *category, const QString &name);
 
     void addCategory(int index, FurnitureGroup *category);

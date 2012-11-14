@@ -27,7 +27,6 @@
 #include "buildingundoredo.h"
 #include "FloorEditor.h"
 #include "furnituregroups.h"
-#include "rooftiles.h"
 
 #include <QAction>
 #include <QApplication>
