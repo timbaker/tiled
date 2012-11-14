@@ -959,8 +959,9 @@ RoofTool *RoofTool::instance()
 
 RoofTool::RoofTool() :
     BaseTool(),
-    mCurrentCapTiles(0),
-    mCurrentSlopeTiles(0),
+    mCurrentCapTiles(BuildingTilesMgr::instance()->noneTileEntry()),
+    mCurrentSlopeTiles(BuildingTilesMgr::instance()->noneTileEntry()),
+    mCurrentTopTiles(BuildingTilesMgr::instance()->noneTileEntry()),
     mRoofType(RoofObject::PeakNS),
     mMode(NoMode),
     mObject(0),
@@ -1112,6 +1113,7 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             // Using instance() because there are two tools for roofs.
             mObject->setCapTiles(RoofTool::instance()->currentCapTiles());
             mObject->setSlopeTiles(RoofTool::instance()->currentSlopeTiles());
+            mObject->setTopTiles(RoofTool::instance()->currentTopTiles());
             BuildingFloor *floor = mEditor->document()->currentFloor();
             mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
                                                                  floor,

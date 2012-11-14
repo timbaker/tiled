@@ -27,11 +27,6 @@
 
 using namespace BuildingEditor;
 
-static const char *categoryNames[] = {
-    "interior_walls",
-    "floors"
-};
-
 RoomsDialog::RoomsDialog(const QList<Room*> &rooms, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RoomsDialog),
@@ -64,6 +59,7 @@ RoomsDialog::RoomsDialog(const QList<Room*> &rooms, QWidget *parent) :
     connect(ui->color, SIGNAL(colorChanged(QColor)), SLOT(colorChanged(QColor)));
     connect(ui->tilesList, SIGNAL(itemSelectionChanged()),
             SLOT(tileSelectionChanged()));
+    connect(ui->tilesList, SIGNAL(activated(QModelIndex)), SLOT(chooseTile()));
     connect(ui->chooseTile, SIGNAL(clicked()), SLOT(chooseTile()));
 
     if (rooms.count()) {
@@ -166,10 +162,8 @@ void RoomsDialog::addRoom()
     room->Name = tr("Room %1").arg(n);
     room->internalName = tr("room%1").arg(n);
     room->Color = color;
-    BuildingTileEntry *entry = BuildingTilesMgr::instance()->defaultInteriorWall();
-    room->Wall = entry;
-    entry = BuildingTilesMgr::instance()->defaultFloorTile();
-    room->Floor = entry;
+    room->Wall = BuildingTilesMgr::instance()->defaultInteriorWall();
+    room->Floor = BuildingTilesMgr::instance()->defaultFloorTile();
 
     mRooms += room;
     mRoomsMap[room] = 0;
@@ -282,11 +276,13 @@ BuildingTileEntry *RoomsDialog::selectedTile()
 
 void RoomsDialog::chooseTile()
 {
-    static const char *titles[] = { "Wall", "Floor" };
+    BuildingTileCategory *category = mTileRow
+            ? BuildingTilesMgr::instance()->catFloors()
+            : BuildingTilesMgr::instance()->catIWalls();
     ChooseBuildingTileDialog dialog(tr("Choose %1 tile for '%2'")
-                                    .arg(QLatin1String(titles[mTileRow]))
+                                    .arg(category->label())
                                     .arg(mRoom->Name),
-                                    QLatin1String(categoryNames[mTileRow]),
+                                    category,
                                     selectedTile(), this);
     if (dialog.exec() == QDialog::Accepted) {
         if (BuildingTileEntry *entry = dialog.selectedTile()) {

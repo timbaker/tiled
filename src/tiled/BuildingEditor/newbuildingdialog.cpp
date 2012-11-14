@@ -31,7 +31,7 @@ NewBuildingDialog::NewBuildingDialog(QWidget *parent) :
 
     ui->comboBox->addItem(QLatin1String("<None>"));
     foreach (BuildingTemplate *def, BuildingTemplates::instance()->templates())
-        ui->comboBox->addItem(def->Name);
+        ui->comboBox->addItem(def->name());
 }
 
 NewBuildingDialog::~NewBuildingDialog()

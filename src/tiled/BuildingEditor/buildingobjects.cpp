@@ -301,7 +301,8 @@ RoofObject::RoofObject(BuildingFloor *floor, int x, int y, int width, int height
     mCappedE(cappedE),
     mCappedS(cappedS),
     mCapTiles(0),
-    mSlopeTiles(0)
+    mSlopeTiles(0),
+    mTopTiles(0)
 {
     resize(mWidth, mHeight);
 }
@@ -450,11 +451,11 @@ bool RoofObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
 
 void RoofObject::setTile(BuildingTileEntry *tile, int alternate)
 {
-    if ((alternate == 0) && dynamic_cast<BTC_RoofCaps*>(tile->category()))
+    if ((alternate == 0) && (/*tile->isNone() || */tile->asRoofCap()))
         mCapTiles = tile;
-    else if ((alternate == 1) && dynamic_cast<BTC_RoofSlopes*>(tile->category()))
+    else if ((alternate == 1) && (/*tile->isNone() || */tile->asRoofSlope()))
         mSlopeTiles = tile;
-    else if ((alternate == 2) && dynamic_cast<BTC_RoofTops*>(tile->category()))
+    else if ((alternate == 2) && (/*tile->isNone() || */tile->asRoofTop()))
         mTopTiles = tile;
 }
 
@@ -466,22 +467,31 @@ BuildingTileEntry *RoofObject::tile(int alternate) const
     return 0;
 }
 
-void RoofObject::setCapTiles(BuildingTileEntry *rtiles)
+void RoofObject::setCapTiles(BuildingTileEntry *entry)
 {
-    if (!dynamic_cast<BTC_RoofCaps*>(rtiles->category())) {
+    if (!entry->asRoofCap()) {
         qFatal("wrong type of tiles passed to RoofObject::setCapTiles");
         return;
     }
-    mCapTiles = rtiles;
+    mCapTiles = entry;
 }
 
-void RoofObject::setSlopeTiles(BuildingTileEntry *rtiles)
+void RoofObject::setSlopeTiles(BuildingTileEntry *entry)
 {
-    if (!dynamic_cast<BTC_RoofSlopes*>(rtiles->category())) {
+    if (!entry->asRoofSlope()) {
         qFatal("wrong type of tiles passed to RoofObject::setSlopeTiles");
         return;
     }
-    mSlopeTiles = rtiles;
+    mSlopeTiles = entry;
+}
+
+void RoofObject::setTopTiles(BuildingTileEntry *entry)
+{
+    if (!entry->asRoofTop()) {
+        qFatal("wrong type of tiles passed to RoofObject::setTopTiles");
+        return;
+    }
+    mTopTiles = entry;
 }
 
 void RoofObject::setType(RoofObject::RoofType type)

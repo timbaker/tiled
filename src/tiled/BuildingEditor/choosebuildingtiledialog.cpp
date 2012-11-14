@@ -31,11 +31,12 @@ using namespace BuildingEditor;
 using namespace Tiled::Internal;
 
 ChooseBuildingTileDialog::ChooseBuildingTileDialog(const QString &prompt,
-                                                   const QString &categoryName,
-                                                   BuildingTileEntry *initialTile, QWidget *parent) :
+                                                   BuildingTileCategory *category,
+                                                   BuildingTileEntry *initialTile,
+                                                   QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ChooseBuildingTileDialog),
-    mCategoryName(categoryName),
+    mCategory(category),
     mZoomable(new Zoomable(this))
 {
     ui->setupUi(this);
@@ -47,7 +48,7 @@ ChooseBuildingTileDialog::ChooseBuildingTileDialog(const QString &prompt,
 
     connect(ui->tilesButton, SIGNAL(clicked()), SLOT(tilesDialog()));
 
-    setTilesList(mCategoryName, initialTile);
+    setTilesList(mCategory, initialTile);
 
     connect(ui->tableView, SIGNAL(activated(QModelIndex)), SLOT(accept()));
 
@@ -79,7 +80,7 @@ BuildingTileEntry *ChooseBuildingTileDialog::selectedTile() const
     return 0;
 }
 
-void ChooseBuildingTileDialog::setTilesList(const QString &categoryName,
+void ChooseBuildingTileDialog::setTilesList(BuildingTileCategory *category,
                                             BuildingTileEntry *initialTile)
 {
     Tiled::Tile *tile = 0;
@@ -88,7 +89,6 @@ void ChooseBuildingTileDialog::setTilesList(const QString &categoryName,
     mBuildingTiles.clear();
     QList<void*> userData;
 
-    BuildingTileCategory *category = BuildingTilesMgr::instance()->category(categoryName);
     if (category->canAssignNone()) {
         mTiles += BuildingTilesMgr::instance()->noneTiledTile();
         mBuildingTiles += BuildingTilesMgr::instance()->noneTileEntry();
@@ -119,7 +119,7 @@ void ChooseBuildingTileDialog::tilesDialog()
     dialog.exec();
 
     if (dialog.changes()) {
-        setTilesList(mCategoryName);
+        setTilesList(mCategory);
     }
 }
 

@@ -186,6 +186,16 @@ void SimpleFileBlock::addValue(const QString &key, const QString &value)
     values += SimpleFileKeyValue(key, value);
 }
 
+void SimpleFileBlock::renameValue(const QString &key, const QString &newName)
+{
+    for (int i = 0; i < values.count(); i++) {
+        if (values[i].name == key) {
+            values[i].name = newName;
+            return;
+        }
+    }
+}
+
 void SimpleFileBlock::replaceValue(const QString &key, const QString &value,
                                    bool atEnd)
 {

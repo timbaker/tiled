@@ -25,30 +25,16 @@ using namespace BuildingEditor;
 
 Building::Building(int width, int height, BuildingTemplate *btemplate) :
     mWidth(width),
-    mHeight(height)
+    mHeight(height),
+    mTiles(TileCount)
 {
     if (btemplate) {
-        mExteriorWall = btemplate->Wall;
-        mDoorTile = btemplate->DoorTile;
-        mDoorFrameTile = btemplate->DoorFrameTile;
-        mWindowTile = btemplate->WindowTile;
-        mCurtainsTile = btemplate->CurtainsTile;
-        mStairsTile = btemplate->StairsTile;
-        mRoofCap = btemplate->RoofCap;
-        mRoofSlope = btemplate->RoofSlope;
-        mRoofTop = btemplate->RoofTop;
-        foreach (Room *room, btemplate->RoomList)
+        mTiles = btemplate->tiles();
+        foreach (Room *room, btemplate->rooms())
             insertRoom(mRooms.count(), new Room(room));
     } else {
-        mExteriorWall = BuildingTilesMgr::instance()->defaultExteriorWall();
-        mDoorTile = BuildingTilesMgr::instance()->defaultDoorTile();
-        mDoorFrameTile = BuildingTilesMgr::instance()->defaultDoorFrameTile();
-        mWindowTile = BuildingTilesMgr::instance()->defaultWindowTile();
-        mCurtainsTile = BuildingTilesMgr::instance()->defaultCurtainsTile();
-        mStairsTile = BuildingTilesMgr::instance()->defaultStairsTile();
-        mRoofCap = BuildingTilesMgr::instance()->defaultRoofCapTiles();
-        mRoofSlope = BuildingTilesMgr::instance()->defaultRoofSlopeTiles();
-        mRoofTop = BuildingTilesMgr::instance()->defaultRoofTopTiles();
+        for (int i = 0; i < TileCount; i++)
+            mTiles[i] = BuildingTilesMgr::instance()->defaultCategoryTile(categoryEnum(i));
     }
 }
 
@@ -75,6 +61,33 @@ void Building::insertRoom(int index, Room *room)
 Room *Building::removeRoom(int index)
 {
     return mRooms.takeAt(index);
+}
+
+void Building::setTile(int n, BuildingTileEntry *entry)
+{
+    if (entry)
+        entry = entry->asCategory(categoryEnum(n));
+
+    if (!entry)
+        entry = BuildingTilesMgr::instance()->noneTileEntry();
+
+    mTiles[n] = entry;
+}
+
+void Building::setTiles(const QVector<BuildingTileEntry *> &tiles)
+{
+    for (int i = 0; i < tiles.size(); i++)
+        setTile(i, tiles[i]);
+}
+
+QString Building::enumToString(int n)
+{
+    return BuildingTemplate::enumToString(n);
+}
+
+int Building::categoryEnum(int n)
+{
+    return BuildingTemplate::categoryEnum(n);
 }
 
 void Building::resize(const QSize &newSize)

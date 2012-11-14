@@ -275,17 +275,17 @@ public:
 
     RoofObject *asRoof() { return this; }
 
-    void setCapTiles(BuildingTileEntry *rtiles);
+    void setCapTiles(BuildingTileEntry *entry);
 
     BuildingTileEntry *capTiles() const
     { return mCapTiles; }
 
-    void setSlopeTiles(BuildingTileEntry *rtiles);
+    void setSlopeTiles(BuildingTileEntry *entry);
 
     BuildingTileEntry *slopeTiles() const
     { return mSlopeTiles; }
 
-    void setTopTiles(BuildingTileEntry *rtiles);
+    void setTopTiles(BuildingTileEntry *entry);
 
     BuildingTileEntry *topTiles() const
     { return mTopTiles; }

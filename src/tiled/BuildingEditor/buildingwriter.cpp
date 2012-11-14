@@ -73,18 +73,16 @@ public:
     {
         w.writeStartElement(QLatin1String("building"));
 
-        writeBuildingTileEntries(w);
+        initBuildingTileEntries();
 
         w.writeAttribute(QLatin1String("version"), QLatin1String("1.0"));
         w.writeAttribute(QLatin1String("width"), QString::number(building->width()));
         w.writeAttribute(QLatin1String("height"), QString::number(building->height()));
 
-        w.writeAttribute(QLatin1String("ExteriorWall"), entryIndex(building->exteriorWall()));
-        w.writeAttribute(QLatin1String("Door"), entryIndex(building->doorTile()));
-        w.writeAttribute(QLatin1String("DoorFrame"), entryIndex(building->doorFrameTile()));
-        w.writeAttribute(QLatin1String("Window"), entryIndex(building->windowTile()));
-        w.writeAttribute(QLatin1String("Curtains"), entryIndex(building->curtainsTile()));
-        w.writeAttribute(QLatin1String("Stairs"), entryIndex(building->stairsTile()));
+        for (int i = 0; i < Building::TileCount; i++)
+            w.writeAttribute(building->enumToString(i), entryIndex(building->tile(i)));
+
+        writeBuildingTileEntries(w);
 
         writeFurniture(w);
 
@@ -156,14 +154,10 @@ public:
         w.writeEndElement(); // </tile>
     }
 
-    void writeBuildingTileEntries(QXmlStreamWriter &w)
+    void initBuildingTileEntries()
     {
-        addEntry(mBuilding->exteriorWall());
-        addEntry(mBuilding->doorTile());
-        addEntry(mBuilding->doorFrameTile());
-        addEntry(mBuilding->windowTile());
-        addEntry(mBuilding->curtainsTile());
-        addEntry(mBuilding->stairsTile());
+        foreach (BuildingTileEntry *entry, mBuilding->tiles())
+            addEntry(entry);
 
         foreach (Room *room, mBuilding->rooms()) {
             addEntry(room->Floor);
@@ -185,6 +179,10 @@ public:
             }
         }
 
+    }
+
+    void writeBuildingTileEntries(QXmlStreamWriter &w)
+    {
         foreach (BuildingTileEntry *entry, mTileEntries) {
             writeBuildingTileEntry(w, entry);
         }
@@ -204,7 +202,8 @@ public:
         w.writeStartElement(QLatin1String("tile"));
         w.writeAttribute(QLatin1String("enum"), entry->category()->enumToString(index));
         w.writeAttribute(QLatin1String("tile"), entry->tile(index)->name());
-        writePoint(w, QLatin1String("offset"), entry->offset(index));
+        if (!entry->offset(index).isNull())
+            writePoint(w, QLatin1String("offset"), entry->offset(index));
         w.writeEndElement(); // </tile>
     }
 
@@ -304,8 +303,11 @@ public:
 
     void addEntry(BuildingTileEntry *entry)
     {
-        if (entry && !mTileEntries.contains(entry))
-            mTileEntries += entry;
+        if (entry && !entry->isNone() && !mTileEntries.contains(entry)) {
+            mEntriesByCategoryName[entry->category()->name()
+                    + QString::number((qulonglong)entry)] = entry;
+            mTileEntries = mEntriesByCategoryName.values(); // sorted
+        }
     }
 
     QString entryIndex(BuildingTileEntry *entry)
@@ -320,6 +322,7 @@ public:
     QDir mMapDir;
     QList<FurnitureTiles*> mFurnitureTiles;
     QList<BuildingTileEntry*> mTileEntries;
+    QMap<QString,BuildingTileEntry*> mEntriesByCategoryName;
 };
 
 /////

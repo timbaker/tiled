@@ -1197,14 +1197,16 @@ void BuildingTilesDialog::redoTextChanged(const QString &text)
 
 void BuildingTilesDialog::accept()
 {
-    BuildingTilesMgr::instance()->writeTxt(this);
-    if (!FurnitureGroups::instance()->writeTxt()) {
-        QMessageBox::warning(this, tr("It's no good, Jim!"),
-                             FurnitureGroups::instance()->errorString());
-    }
-    if (!BuildingTMX::instance()->writeTxt()) {
-        QMessageBox::warning(this, tr("It's no good, Jim!"),
-                             BuildingTMX::instance()->errorString());
+    if (changes()) {
+        BuildingTilesMgr::instance()->writeTxt(this);
+        if (!FurnitureGroups::instance()->writeTxt()) {
+            QMessageBox::warning(this, tr("It's no good, Jim!"),
+                                 FurnitureGroups::instance()->errorString());
+        }
+        if (!BuildingTMX::instance()->writeTxt()) {
+            QMessageBox::warning(this, tr("It's no good, Jim!"),
+                                 BuildingTMX::instance()->errorString());
+        }
     }
 
     QSettings settings;

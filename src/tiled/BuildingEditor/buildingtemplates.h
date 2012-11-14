@@ -24,6 +24,7 @@
 #include <QString>
 #include <QStringList>
 #include <QRgb>
+#include <QVector>
 
 namespace BuildingEditor {
 
@@ -66,35 +67,26 @@ public:
 class BuildingTemplate
 {
 public:
-    QString Name;
-    BuildingTileEntry *Wall;
-    BuildingTileEntry *DoorTile;
-    BuildingTileEntry *DoorFrameTile;
-    BuildingTileEntry *WindowTile;
-    BuildingTileEntry *CurtainsTile;
-    BuildingTileEntry *StairsTile;
-    BuildingTileEntry *RoofCap;
-    BuildingTileEntry *RoofSlope;
-    BuildingTileEntry *RoofTop;
+    // Must match Building::Tiles enum
+    enum Tiles {
+        ExteriorWall,
+        Door,
+        DoorFrame,
+        Window,
+        Curtains,
+        Stairs,
+        RoofCap,
+        RoofSlope,
+        RoofTop,
+        TileCount
+    };
 
-    QList<Room*> RoomList;
-
-    BuildingTemplate()
-    {}
+    BuildingTemplate();
 
     BuildingTemplate(BuildingTemplate *other)
     {
         Name = other->Name;
-        Wall = other->Wall;
-        DoorTile = other->DoorTile;
-        DoorFrameTile = other->DoorFrameTile;
-        WindowTile = other->WindowTile;
-        CurtainsTile = other->CurtainsTile;
-        StairsTile = other->StairsTile;
-        RoofCap = other->RoofCap;
-        RoofSlope = other->RoofSlope;
-        RoofTop = other->RoofTop;
-
+        mTiles = other->mTiles;
         foreach (Room *room, other->RoomList)
             RoomList += new Room(room);
     }
@@ -103,6 +95,43 @@ public:
     {
         qDeleteAll(RoomList);
     }
+
+    void setName(const QString &name)
+    { Name = name; }
+
+    QString name() const
+    { return Name; }
+
+    void setTile(int n, BuildingTileEntry *entry);
+    void setTiles(const QVector<BuildingTileEntry*> &entries);
+
+    BuildingTileEntry *tile(int n)
+    { return mTiles[n]; }
+
+    const QVector<BuildingTileEntry*> &tiles() const
+    { return mTiles; }
+
+    static int categoryEnum(int n);
+
+    void addRoom(Room *room)
+    { RoomList += room; }
+
+    void clearRooms()
+    { qDeleteAll(RoomList); RoomList.clear(); }
+
+    const QList<Room*> &rooms() const
+    { return RoomList; }
+
+    static QString enumToString(int n);
+
+private:
+    static void initNames();
+
+private:
+    QString Name;
+    QVector<BuildingTileEntry*> mTiles;
+    static QStringList mEnumNames;
+    QList<Room*> RoomList;
 };
 
 class BuildingTemplates : public QObject

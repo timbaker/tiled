@@ -490,6 +490,7 @@ bool BuildingEditorWindow::Startup()
 #endif
     RoofTool::instance()->setCurrentCapTiles(BuildingTilesMgr::instance()->defaultRoofCapTiles());
     RoofTool::instance()->setCurrentSlopeTiles(BuildingTilesMgr::instance()->defaultRoofSlopeTiles());
+    RoofTool::instance()->setCurrentTopTiles(BuildingTilesMgr::instance()->defaultRoofTopTiles());
 
     connect(BuildingTilesMgr::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
             SLOT(tilesetAdded(Tiled::Tileset*)));
@@ -1534,19 +1535,11 @@ void BuildingEditorWindow::templateFromBuilding()
 
     Building *building = mCurrentDocument->building();
     BuildingTemplate *btemplate = new BuildingTemplate;
-    btemplate->Name = dialog.name();
-    btemplate->Wall = building->exteriorWall();
-    btemplate->DoorTile = building->doorTile();
-    btemplate->DoorFrameTile = building->doorFrameTile();
-    btemplate->WindowTile = building->windowTile();
-    btemplate->CurtainsTile = building->curtainsTile();
-    btemplate->StairsTile = building->stairsTile();
-    btemplate->RoofCap = building->roofCapTile();
-    btemplate->RoofSlope = building->roofSlopeTile();
-    btemplate->RoofTop = building->roofTopTile();
+    btemplate->setName(dialog.name());
+    btemplate->setTiles(building->tiles());
 
     foreach (Room *room, building->rooms())
-        btemplate->RoomList += new Room(room);
+        btemplate->addRoom(new Room(room));
 
     BuildingTemplates::instance()->addTemplate(btemplate);
 
@@ -1708,12 +1701,11 @@ void BuildingEditorWindow::updateActions()
     StairsTool::instance()->setEnabled(hasDoc && showObjects);
     FurnitureTool::instance()->setEnabled(hasDoc && showObjects &&
             FurnitureTool::instance()->currentTile() != 0);
-    RoofTool::instance()->setEnabled(hasDoc && showObjects &&
-                                     RoofTool::instance()->currentCapTiles()->asRoofCap() &&
-                                     RoofTool::instance()->currentSlopeTiles()->asRoofSlope());
-    RoofCornerTool::instance()->setEnabled(hasDoc && showObjects &&
-                                           RoofTool::instance()->currentCapTiles()->asRoofCap() &&
-                                           RoofTool::instance()->currentSlopeTiles()->asRoofSlope());
+    bool roofTilesOK = RoofTool::instance()->currentCapTiles()->asRoofCap() &&
+            RoofTool::instance()->currentSlopeTiles()->asRoofSlope() &&
+            RoofTool::instance()->currentTopTiles()->asRoofTop();
+    RoofTool::instance()->setEnabled(hasDoc && showObjects && roofTilesOK);
+    RoofCornerTool::instance()->setEnabled(hasDoc && showObjects && roofTilesOK);
     SelectMoveObjectTool::instance()->setEnabled(hasDoc && showObjects);
 
     ui->actionUpLevel->setEnabled(hasDoc &&

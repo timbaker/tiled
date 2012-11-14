@@ -29,18 +29,6 @@
 
 using namespace BuildingEditor;
 
-static const char *categoryNames[] = {
-    "exterior_walls",
-    "doors",
-    "door_frames",
-    "windows",
-    "curtains",
-    "stairs",
-    "roof_caps",
-    "roof_slopes",
-    "roof_tops"
-};
-
 BuildingTemplatesDialog::BuildingTemplatesDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::BuildingTemplatesDialog),
@@ -52,7 +40,7 @@ BuildingTemplatesDialog::BuildingTemplatesDialog(QWidget *parent) :
     foreach (BuildingTemplate *btemplate, BuildingTemplates::instance()->templates()) {
         BuildingTemplate *clone = new BuildingTemplate(btemplate);
         mTemplates += clone;
-        ui->templatesList->addItem(btemplate->Name);
+        ui->templatesList->addItem(btemplate->name());
     }
 
     connect(ui->templatesList, SIGNAL(itemSelectionChanged()),
@@ -66,6 +54,7 @@ BuildingTemplatesDialog::BuildingTemplatesDialog(QWidget *parent) :
     connect(ui->tilesList, SIGNAL(itemSelectionChanged()),
             SLOT(tileSelectionChanged()));
     connect(ui->editRooms, SIGNAL(clicked()), SLOT(editRooms()));
+    connect(ui->tilesList, SIGNAL(activated(QModelIndex)), SLOT(chooseTile()));
     connect(ui->chooseTile, SIGNAL(clicked()), SLOT(chooseTile()));
 
     ui->templatesList->setCurrentRow(0);
@@ -106,19 +95,12 @@ void BuildingTemplatesDialog::tileSelectionChanged()
 void BuildingTemplatesDialog::addTemplate()
 {
     BuildingTemplate *btemplate = new BuildingTemplate;
-    btemplate->Name = QLatin1String("New Template");
-    btemplate->Wall = BuildingTilesMgr::instance()->defaultExteriorWall();
-    btemplate->DoorTile = BuildingTilesMgr::instance()->defaultDoorTile();
-    btemplate->DoorFrameTile = BuildingTilesMgr::instance()->defaultDoorFrameTile();
-    btemplate->WindowTile = BuildingTilesMgr::instance()->defaultWindowTile();
-    btemplate->CurtainsTile = BuildingTilesMgr::instance()->defaultCurtainsTile();
-    btemplate->StairsTile = BuildingTilesMgr::instance()->defaultStairsTile();
-    btemplate->RoofCap = BuildingTilesMgr::instance()->defaultRoofCapTiles();
-    btemplate->RoofSlope = BuildingTilesMgr::instance()->defaultRoofSlopeTiles();
-    btemplate->RoofTop = BuildingTilesMgr::instance()->defaultRoofTopTiles();
+    btemplate->setName(QLatin1String("New Template"));
+    for (int i = 0; i < BuildingTemplate::TileCount; i++)
+        btemplate->setTile(i, BuildingTilesMgr::instance()->defaultCategoryTile(btemplate->categoryEnum(i)));
 
     mTemplates += btemplate;
-    ui->templatesList->addItem(btemplate->Name);
+    ui->templatesList->addItem(btemplate->name());
     ui->templatesList->setCurrentRow(ui->templatesList->count() - 1);
 }
 
@@ -128,7 +110,7 @@ void BuildingTemplatesDialog::removeTemplate()
         return;
 
     if (QMessageBox::question(this, tr("Remove Template"),
-                              tr("Really remove the template '%1'?").arg(mTemplate->Name),
+                              tr("Really remove the template '%1'?").arg(mTemplate->name()),
                               QMessageBox::Yes, QMessageBox::No) != QMessageBox::Yes)
         return;
 
@@ -145,7 +127,7 @@ void BuildingTemplatesDialog::duplicateTemplate()
 
     BuildingTemplate *btemplate = new BuildingTemplate(mTemplate);
     mTemplates += btemplate;
-    ui->templatesList->addItem(btemplate->Name);
+    ui->templatesList->addItem(btemplate->name());
     ui->templatesList->setCurrentRow(ui->templatesList->count() - 1);
 }
 
@@ -185,46 +167,33 @@ void BuildingTemplatesDialog::nameEdited(const QString &name)
         return;
 
     int index = mTemplates.indexOf(mTemplate);
-    mTemplate->Name = name;
+    mTemplate->setName(name);
     ui->templatesList->item(index)->setText(name);
 }
 
 void BuildingTemplatesDialog::editRooms()
 {
-    RoomsDialog dialog(mTemplate->RoomList, this);
-    dialog.setWindowTitle(tr("Rooms in '%1'").arg(mTemplate->Name));
+    RoomsDialog dialog(mTemplate->rooms(), this);
+    dialog.setWindowTitle(tr("Rooms in '%1'").arg(mTemplate->name()));
     if (dialog.exec() == QDialog::Accepted) {
-        qDeleteAll(mTemplate->RoomList);
-        mTemplate->RoomList.clear();
+        mTemplate->clearRooms();
         foreach (Room *dialogRoom, dialog.rooms())
-            mTemplate->RoomList += new Room(dialogRoom);
+            mTemplate->addRoom(new Room(dialogRoom));
     }
 }
 
 void BuildingTemplatesDialog::chooseTile()
 {
-    static const char *titles[] = {
-        "Wall", "Door", "Door frame", "Window", "Curtains", "Stairs",
-        "Roof Cap", "Roof Slope", "Roof Top"
-    };
+    BuildingTileCategory *category = BuildingTilesMgr::instance()->category(
+                mTemplate->categoryEnum(mTileRow));
     ChooseBuildingTileDialog dialog(tr("Choose %1 tile for '%2'")
-                                    .arg(QLatin1String(titles[mTileRow]))
-                                    .arg(mTemplate->Name),
-                                    QLatin1String(categoryNames[mTileRow]),
+                                    .arg(category->label())
+                                    .arg(mTemplate->name()),
+                                    category,
                                     selectedTile(), this);
     if (dialog.exec() == QDialog::Accepted) {
         if (BuildingTileEntry *entry = dialog.selectedTile()) {
-            switch (mTileRow) {
-            case 0: mTemplate->Wall = entry; break;
-            case 1: mTemplate->DoorTile = entry; break;
-            case 2: mTemplate->DoorFrameTile = entry; break;
-            case 3: mTemplate->WindowTile = entry; break;
-            case 4: mTemplate->CurtainsTile = entry; break;
-            case 5: mTemplate->StairsTile = entry; break;
-            case 6: mTemplate->RoofCap = entry; break;
-            case 7: mTemplate->RoofSlope = entry; break;
-            case 8: mTemplate->RoofTop = entry; break;
-            }
+            mTemplate->setTile(mTileRow, entry);
             setTilePixmap();
         }
     }
@@ -244,7 +213,7 @@ void BuildingTemplatesDialog::synchUI()
     ui->editRooms->setEnabled(mTemplate != 0);
 
     if (mTemplate != 0) {
-        ui->name->setText(mTemplate->Name);
+        ui->name->setText(mTemplate->name());
     } else {
         ui->name->clear();
         ui->tilesList->clearSelection();
@@ -267,17 +236,7 @@ BuildingTileEntry *BuildingTemplatesDialog::selectedTile()
     if (mTemplate == 0 || mTileRow == -1)
         return 0;
 
-    switch (mTileRow) {
-    case 0: return mTemplate->Wall;
-    case 1: return mTemplate->DoorTile;
-    case 2: return mTemplate->DoorFrameTile;
-    case 3: return mTemplate->WindowTile;
-    case 4: return mTemplate->CurtainsTile;
-    case 5: return mTemplate->StairsTile;
-    case 6: return mTemplate->RoofCap;
-    case 7: return mTemplate->RoofSlope;
-    case 8: return mTemplate->RoofTop;
-    }
+    return mTemplate->tile(mTileRow);
 
     return 0;
 }

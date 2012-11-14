@@ -57,6 +57,11 @@ public:
 
     void addValue(const QString &key, const QString &value);
 
+    void renameValue(const char *key, const QString &newName)
+    { renameValue(QLatin1String(key), newName); }
+
+    void renameValue(const QString &key, const QString &newName);
+
     void replaceValue(const char *key, const QString &value, bool atEnd = true)
     { replaceValue(QLatin1String(key), value, atEnd); }
 

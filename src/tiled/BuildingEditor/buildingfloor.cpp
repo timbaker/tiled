@@ -905,7 +905,7 @@ void BuildingFloor::Square::ReplaceFurniture(BuildingTileEntry *tile, int offset
         mTileOffset[SectionFurniture] = 0;
         return;
     }
-    if (mTiles[SectionFurniture]) {
+    if (mTiles[SectionFurniture] && !mTiles[SectionFurniture]->isNone()) {
         mTiles[SectionFurniture2] = tile;
         mTileOffset[SectionFurniture2] = offset;
         return;
@@ -916,7 +916,7 @@ void BuildingFloor::Square::ReplaceFurniture(BuildingTileEntry *tile, int offset
 
 void BuildingFloor::Square::ReplaceRoof(BuildingTileEntry *tile, int offset)
 {
-    if (mTiles[SectionRoof]) {
+    if (mTiles[SectionRoof] && !mTiles[SectionRoof]->isNone()) {
         mTiles[SectionRoof2] = tile;
         mTileOffset[SectionRoof2] = offset;
         return;
@@ -927,7 +927,7 @@ void BuildingFloor::Square::ReplaceRoof(BuildingTileEntry *tile, int offset)
 
 void BuildingFloor::Square::ReplaceRoofCap(BuildingTileEntry *tile, int offset)
 {
-    if (mTiles[SectionRoofCap]) {
+    if (mTiles[SectionRoofCap] && !mTiles[SectionRoofCap]->isNone()) {
         mTiles[SectionRoofCap2] = tile;
         mTileOffset[SectionRoofCap2] = offset;
         return;

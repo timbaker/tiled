@@ -33,6 +33,7 @@ class Zoomable;
 
 namespace BuildingEditor {
 
+class BuildingTileCategory;
 class BuildingTileEntry;
 
 class ChooseBuildingTileDialog : public QDialog
@@ -41,7 +42,7 @@ class ChooseBuildingTileDialog : public QDialog
     
 public:
     explicit ChooseBuildingTileDialog(const QString &prompt,
-                                      const QString &categoryName,
+                                      BuildingTileCategory *category,
                                       BuildingTileEntry *initialTile,
                                       QWidget *parent = 0);
     ~ChooseBuildingTileDialog();
@@ -49,7 +50,8 @@ public:
     BuildingTileEntry *selectedTile() const;
 
 private:
-    void setTilesList(const QString &categoryName, BuildingTileEntry *initialTile = 0);
+    void setTilesList(BuildingTileCategory *category,
+                      BuildingTileEntry *initialTile = 0);
 
 private slots:
     void tilesDialog();
@@ -57,7 +59,7 @@ private slots:
     
 private:
     Ui::ChooseBuildingTileDialog *ui;
-    QString mCategoryName;
+    BuildingTileCategory *mCategory;
     QList<Tiled::Tile*> mTiles;
     QList<BuildingTileEntry*> mBuildingTiles;
     Tiled::Internal::Zoomable *mZoomable;

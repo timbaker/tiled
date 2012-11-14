@@ -134,12 +134,7 @@ Building *BuildingReaderPrivate::readBuilding()
     const int width = atts.value(QLatin1String("width")).toString().toInt();
     const int height = atts.value(QLatin1String("height")).toString().toInt();
 
-    const QString exteriorWall = atts.value(QLatin1String("ExteriorWall")).toString();
-    const QString door = atts.value(QLatin1String("Door")).toString();
-    const QString doorFrame = atts.value(QLatin1String("DoorFrame")).toString();
-    const QString window = atts.value(QLatin1String("Window")).toString();
-    const QString curtains = atts.value(QLatin1String("Curtains")).toString();
-    const QString stairs = atts.value(QLatin1String("Stairs")).toString();
+    mBuilding = new Building(width, height);
 
     while (xml.readNextStartElement()) {
         if (xml.name() == "furniture") {
@@ -158,13 +153,10 @@ Building *BuildingReaderPrivate::readBuilding()
             readUnknownElement();
     }
 
-    mBuilding = new Building(width, height);
-    mBuilding->setExteriorWall(getEntry(exteriorWall)->asExteriorWall());
-    mBuilding->setDoorTile(getEntry(door)->asDoor());
-    mBuilding->setDoorFrameTile(getEntry(doorFrame)->asDoorFrame());
-    mBuilding->setWindowTile(getEntry(window)->asWindow());
-    mBuilding->setCurtainsTile(getEntry(curtains)->asCurtains());
-    mBuilding->setStairsTile(getEntry(stairs)->asStairs());
+    for (int i = 0; i < Building::TileCount; i++) {
+        const QString entryString = atts.value(mBuilding->enumToString(i)).toString();
+        mBuilding->setTile(i, getEntry(entryString)->asCategory(mBuilding->categoryEnum(i)));
+    }
 
     // Clean up in case of error
     if (xml.hasError()) {
@@ -271,10 +263,11 @@ BuildingTileEntry *BuildingReaderPrivate::readTileEntry()
 
     while (xml.readNextStartElement()) {
         if (xml.name() == "tile") {
+            const QXmlStreamAttributes atts = xml.attributes();
             const QString enumName = atts.value(QLatin1String("enum")).toString();
             int e = category->enumFromString(enumName);
             if (e == BuildingTileCategory::Invalid) {
-                xml.raiseError(tr("Unknown %1 enum '%1'").arg(categoryName).arg(enumName));
+                xml.raiseError(tr("Unknown %1 enum '%2'").arg(categoryName).arg(enumName));
                 return false;
             }
             const QString tileName = atts.value(QLatin1String("tile")).toString();
@@ -286,8 +279,14 @@ BuildingTileEntry *BuildingReaderPrivate::readTileEntry()
 
             entry->mTiles[e] = btile;
             entry->mOffsets[e] = offset;
+            xml.skipCurrentElement();
         } else
             readUnknownElement();
+    }
+
+    if (BuildingTileEntry *match = category->findMatch(entry)) {
+        delete entry;
+        return match;
     }
 
     return entry;
@@ -476,7 +475,7 @@ BuildingTileEntry *BuildingReaderPrivate::getEntry(const QString &s)
 {
     int index = s.toInt();
     if (index >= 1 && index <= mEntries.size())
-        return mEntries[index];
+        return mEntries[index - 1];
     return BuildingTilesMgr::instance()->noneTileEntry();
 }
 

@@ -21,6 +21,7 @@
 #include <QList>
 #include <QRect>
 #include <QString>
+#include <QVector>
 
 namespace BuildingEditor {
 
@@ -32,6 +33,19 @@ class Room;
 class Building
 {
 public:
+    enum Tiles {
+        ExteriorWall,
+        Door,
+        DoorFrame,
+        Window,
+        Curtains,
+        Stairs,
+        RoofCap,
+        RoofSlope,
+        RoofTop,
+        TileCount
+    };
+
     Building(int width, int height, BuildingTemplate *btemplate = 0);
 
     int width() const { return mWidth; }
@@ -68,60 +82,71 @@ public:
     void insertRoom(int index, Room *room);
     Room *removeRoom(int index);
 
+    void setTile(int n, BuildingTileEntry *entry);
+    void setTiles(const QVector<BuildingTileEntry*> &tiles);
+
+    const QVector<BuildingTileEntry*> &tiles() const
+    { return mTiles; }
+
+    BuildingTileEntry *tile(int n)
+    { return mTiles[n]; }
+
+    QString enumToString(int n);
+    int categoryEnum(int n);
+
     BuildingTileEntry *exteriorWall() const
-    { return mExteriorWall; }
+    { return mTiles[ExteriorWall]; }
 
     void setExteriorWall(BuildingTileEntry *entry)
-    { mExteriorWall = entry; }
+    { mTiles[ExteriorWall] = entry; }
 
     BuildingTileEntry *doorTile() const
-    { return mDoorTile; }
+    { return mTiles[Door]; }
 
     void setDoorTile(BuildingTileEntry *entry)
-    { mDoorTile = entry; }
+    { mTiles[Door] = entry; }
 
     BuildingTileEntry *doorFrameTile() const
-    { return mDoorFrameTile; }
+    { return mTiles[DoorFrame]; }
 
     void setDoorFrameTile(BuildingTileEntry *entry)
-    { mDoorFrameTile = entry; }
+    { mTiles[DoorFrame] = entry; }
 
     BuildingTileEntry *windowTile() const
-    { return mWindowTile; }
+    { return mTiles[Window]; }
 
     void setWindowTile(BuildingTileEntry *entry)
-    { mWindowTile = entry; }
+    { mTiles[Window] = entry; }
 
     BuildingTileEntry *curtainsTile() const
-    { return mCurtainsTile; }
+    { return mTiles[Curtains]; }
 
     void setCurtainsTile(BuildingTileEntry *entry)
-    { mCurtainsTile = entry; }
+    { mTiles[Curtains] = entry; }
 
     BuildingTileEntry *stairsTile() const
-    { return mStairsTile; }
+    { return mTiles[Stairs]; }
 
     void setStairsTile(BuildingTileEntry *entry)
-    { mStairsTile = entry; }
+    { mTiles[Stairs] = entry; }
 
     BuildingTileEntry *roofCapTile() const
-    { return mRoofCap; }
+    { return mTiles[RoofCap]; }
 
     void setRoofCapTile(BuildingTileEntry *entry)
-    { mRoofCap = entry; }
+    { mTiles[RoofCap] = entry; }
 
     BuildingTileEntry *roofSlopeTile() const
-    { return mRoofSlope; }
+    { return mTiles[RoofSlope]; }
 
     void setRoofSlopeTile(BuildingTileEntry *entry)
-    { mRoofSlope = entry; }
+    { mTiles[RoofSlope] = entry; }
 
     BuildingTileEntry *roofTopTile() const
-    { return mRoofTop; }
+    { return mTiles[RoofTop]; }
 
     void setRoofTopTile(BuildingTileEntry *entry)
-    { mRoofTop = entry; }
-
+    { mTiles[RoofTop] = entry; }
 
     void resize(const QSize &newSize);
     void rotate(bool right);
@@ -131,15 +156,7 @@ private:
     int mWidth, mHeight;
     QList<BuildingFloor*> mFloors;
     QList<Room*> mRooms;
-    BuildingTileEntry *mExteriorWall;
-    BuildingTileEntry *mDoorTile;
-    BuildingTileEntry *mDoorFrameTile;
-    BuildingTileEntry *mWindowTile;
-    BuildingTileEntry *mCurtainsTile;
-    BuildingTileEntry *mStairsTile;
-    BuildingTileEntry *mRoofCap;
-    BuildingTileEntry *mRoofSlope;
-    BuildingTileEntry *mRoofTop;
+    QVector<BuildingTileEntry*> mTiles;
 };
 
 } // namespace BuildingEditor

@@ -92,6 +92,9 @@ public:
     virtual bool isNone() const { return false; }
     virtual BuildingTileEntry *asNone() { return 0; }
 
+    bool equals(BuildingTileEntry *other) const;
+
+    BuildingTileEntry *asCategory(int n);
     BuildingTileEntry *asExteriorWall();
     BuildingTileEntry *asInteriorWall();
     BuildingTileEntry *asFloor();
@@ -128,11 +131,7 @@ public:
     };
 
     BuildingTileCategory(const QString &name, const QString &label,
-                         int displayIndex) :
-        mName(name),
-        mLabel(label),
-        mDisplayIndex(displayIndex)
-    {}
+                         int displayIndex);
 
     QString name() const
     { return mName; }
@@ -145,6 +144,12 @@ public:
 
     int displayIndex() const
     { return mDisplayIndex; }
+
+    void setDefaultEntry(BuildingTileEntry *entry)
+    { mDefaultEntry = entry; }
+
+    BuildingTileEntry *defaultEntry() const
+    { return mDefaultEntry; }
 
     const QList<BuildingTileEntry*> &entries() const
     { return mEntries; }
@@ -174,6 +179,7 @@ public:
      */
     virtual BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
+    BuildingTileEntry *findMatch(BuildingTileEntry *entry) const;
     bool usesTile(Tiled::Tile *tile) const;
 
     virtual bool canAssignNone() const
@@ -200,6 +206,7 @@ protected:
     int mDisplayIndex;
     QList<BuildingTileEntry*> mEntries;
     QStringList mEnumNames;
+    BuildingTileEntry *mDefaultEntry;
 };
 
 class NoneBuildingTileCategory : public BuildingTileCategory
@@ -464,6 +471,21 @@ class BuildingTilesMgr : public QObject
 {
     Q_OBJECT
 public:
+    enum CategoryEnum {
+        ExteriorWalls,
+        InteriorWalls,
+        Floors,
+        Doors,
+        DoorFrames,
+        Windows,
+        Curtains,
+        Stairs,
+        RoofCaps,
+        RoofSlopes,
+        RoofTops,
+        Count
+    };
+
     static BuildingTilesMgr *instance();
     static void deleteInstance();
 
@@ -557,6 +579,8 @@ public:
     BuildingTileCategory *catRoofCaps() const { return mCatRoofCaps; }
     BuildingTileCategory *catRoofSlopes() const { return mCatRoofSlopes; }
     BuildingTileCategory *catRoofTops() const { return mCatRoofTops; }
+
+    BuildingTileEntry *defaultCategoryTile(int e) const;
 
     BuildingTileEntry *defaultExteriorWall() const;
     BuildingTileEntry *defaultInteriorWall() const;

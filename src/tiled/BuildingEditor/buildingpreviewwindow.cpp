@@ -476,6 +476,7 @@ void BuildingPreviewScene::BuildingToMap()
 
     mGridItem = new PreviewGridItem(mDocument->building(), mRenderer);
     mGridItem->synchWithBuilding();
+    mGridItem->setZValue(1000);
     addItem(mGridItem);
 
     mRenderer->setMaxLevel(mMapComposite->maxLevel());
@@ -513,9 +514,9 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
                 const BuildingFloor::Square &square = floor->squares[x][y];
                 BuildingFloor::Square::SquareSection section = layerToSection[index];
                 if (BuildingTileEntry *entry = square.mTiles[section]) {
-                    if (entry->isNone())
-                        continue;
                     int tileOffset = square.mTileOffset[section];
+                    if (entry->isNone() || entry->tile(tileOffset)->isNone())
+                        continue;
                     if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->tile(tileOffset)))
                         tl->setCell(x + offset, y + offset, Cell(tile));
                 }

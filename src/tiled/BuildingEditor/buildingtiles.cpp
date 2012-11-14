@@ -376,6 +376,10 @@ bool BuildingTilesMgr::readTxt()
         }
     }
 
+    foreach (BuildingTileCategory *category, mCategories)
+        category->setDefaultEntry(category->entry(0));
+    mCatCurtains->setDefaultEntry(noneTileEntry());
+
     return true;
 }
 
@@ -402,6 +406,11 @@ void BuildingTilesMgr::writeTxt(QWidget *parent)
         QMessageBox::warning(parent, tr("It's no good, Jim!"),
                              simpleFile.errorString());
     }
+}
+
+BuildingTileEntry *BuildingTilesMgr::defaultCategoryTile(int e) const
+{
+    return mCategories[e]->defaultEntry();
 }
 
 static SimpleFileBlock findCategoryBlock(const SimpleFileBlock &parent,
@@ -519,69 +528,57 @@ BuildingTile *BuildingTilesMgr::fromTiledTile(Tile *tile)
 
 BuildingTileEntry *BuildingTilesMgr::defaultExteriorWall() const
 {
-    return mCatEWalls->entry(0);
+    return mCatEWalls->defaultEntry();
 }
 
 BuildingTileEntry *BuildingTilesMgr::defaultInteriorWall() const
 {
-    return mCatIWalls->entry(0);
+    return mCatIWalls->defaultEntry();
 }
 
 BuildingTileEntry *BuildingTilesMgr::defaultFloorTile() const
 {
-    return mCatFloors->entry(0);
+    return mCatFloors->defaultEntry();
 }
 
 BuildingTileEntry *BuildingTilesMgr::defaultDoorTile() const
 {
-    return mCatDoors->entry(0);
+    return mCatDoors->defaultEntry();
 }
 
 BuildingTileEntry *BuildingTilesMgr::defaultDoorFrameTile() const
 {
-    return mCatDoorFrames->entry(0);
+    return mCatDoorFrames->defaultEntry();
 }
 
 BuildingTileEntry *BuildingTilesMgr::defaultWindowTile() const
 {
-    return mCatWindows->entry(0);
+    return mCatWindows->defaultEntry();
 }
 
 BuildingTileEntry *BuildingTilesMgr::defaultCurtainsTile() const
 {
-    return mNoneTileEntry;
+    return mCatCurtains->defaultEntry();
 }
 
 BuildingTileEntry *BuildingTilesMgr::defaultStairsTile() const
 {
-    return mCatStairs->entry(0);
+    return mCatStairs->defaultEntry();
 }
 
 BuildingTileEntry *BuildingTilesMgr::defaultRoofCapTiles() const
 {
-    return mCatRoofCaps->entry(0);
+    return mCatRoofCaps->defaultEntry();
 }
 
 BuildingTileEntry *BuildingTilesMgr::defaultRoofSlopeTiles() const
 {
-    return mCatRoofSlopes->entry(0);
+    return mCatRoofSlopes->defaultEntry();
 }
 
 BuildingTileEntry *BuildingTilesMgr::defaultRoofTopTiles() const
 {
-    return mCatRoofTops->entry(0);
-}
-
-/////
-
-bool BuildingTileCategory::usesTile(Tile *tile) const
-{
-    BuildingTile *btile = BuildingTilesMgr::instance()->fromTiledTile(tile);
-    foreach (BuildingTileEntry *entry, mEntries) {
-        if (entry->usesTile(btile))
-            return true;
-    }
-    return false;
+    return mCatRoofTops->defaultEntry();
 }
 
 /////
@@ -626,6 +623,19 @@ QPoint BuildingTileEntry::offset(int n) const
 bool BuildingTileEntry::usesTile(BuildingTile *btile) const
 {
     return mTiles.contains(btile);
+}
+
+bool BuildingTileEntry::equals(BuildingTileEntry *other) const
+{
+    return (mCategory == other->mCategory) &&
+            (mTiles == other->mTiles) &&
+            (mOffsets == other->mOffsets);
+}
+
+BuildingTileEntry *BuildingTileEntry::asCategory(int n)
+{
+    return (mCategory == BuildingTilesMgr::instance()->category(n))
+            ? this : 0;
 }
 
 BuildingTileEntry *BuildingTileEntry::asExteriorWall()
@@ -991,10 +1001,24 @@ BuildingTileEntry *BTC_RoofTops::createEntryFromSingleTile(const QString &tileNa
     entry->mTiles[North1] = BuildingTilesMgr::instance()->get(tileName);
     entry->mTiles[North2] = BuildingTilesMgr::instance()->get(tileName);
     entry->mTiles[North3] = BuildingTilesMgr::instance()->get(tileName);
+    entry->mOffsets[West1] = QPoint(-1, -1);
+    entry->mOffsets[West2] = QPoint(-2, -2);
+    entry->mOffsets[North1] = QPoint(-1, -1);
+    entry->mOffsets[North2] = QPoint(-2, -2);
     return entry;
 }
 
 /////
+
+BuildingTileCategory::BuildingTileCategory(const QString &name,
+                                           const QString &label,
+                                           int displayIndex) :
+    mName(name),
+    mLabel(label),
+    mDisplayIndex(displayIndex),
+    mDefaultEntry(0)
+{
+}
 
 BuildingTileEntry *BuildingTileCategory::entry(int index) const
 {
@@ -1028,6 +1052,25 @@ int BuildingTileCategory::enumFromString(const QString &s) const
     if (mEnumNames.contains(s))
         return mEnumNames.indexOf(s);
     return Invalid;
+}
+
+BuildingTileEntry *BuildingTileCategory::findMatch(BuildingTileEntry *entry) const
+{
+    foreach (BuildingTileEntry *candidate, mEntries) {
+        if (candidate->equals(entry))
+            return candidate;
+    }
+    return 0;
+}
+
+bool BuildingTileCategory::usesTile(Tile *tile) const
+{
+    BuildingTile *btile = BuildingTilesMgr::instance()->fromTiledTile(tile);
+    foreach (BuildingTileEntry *entry, mEntries) {
+        if (entry->usesTile(btile))
+            return true;
+    }
+    return false;
 }
 
 BuildingTileEntry *BuildingTileCategory::createEntryFromSingleTile(const QString &tileName)

@@ -99,6 +99,12 @@ static BuildingTileEntry *readTileEntry(SimpleFileBlock &block, QString &error)
             }
             entry->mTiles[e] = BuildingTilesMgr::instance()->get(kv.value);
         }
+
+        if (BuildingTileEntry *match = category->findMatch(entry)) {
+            delete entry;
+            entry = match;
+        }
+
         return entry;
     }
     error = BuildingTilesMgr::instance()->tr("Unknown tile category '%1'")
@@ -137,8 +143,6 @@ bool BuildingTemplates::readTxt()
         return false;
     }
 
-    BuildingTileEntry *noneEntry = BuildingTilesMgr::instance()->noneTileEntry();
-
     mEntries.clear();
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("TileEntry")) {
@@ -150,16 +154,9 @@ bool BuildingTemplates::readTxt()
         }
         if (block.name == QLatin1String("Template")) {
             BuildingTemplate *def = new BuildingTemplate;
-            def->Name = block.value("Name");
-            def->Wall = getEntry(block.value("Wall"))->asExteriorWall();
-            def->DoorTile = getEntry(block.value("Door"))->asDoor();
-            def->DoorFrameTile = getEntry(block.value("DoorFrame"))->asDoorFrame();
-            def->WindowTile = getEntry(block.value("Window"))->asWindow();
-            def->CurtainsTile = getEntry(block.value("Curtains"))->asCurtains();
-            def->StairsTile = getEntry(block.value("Stairs"))->asStairs();
-            def->RoofCap = getEntry(block.value("RoofCap"))->asRoofCap();
-            def->RoofSlope = getEntry(block.value("RoofSlope"))->asRoofSlope();
-            def->RoofTop = getEntry(block.value("RoofTop"))->asRoofTop();
+            def->setName(block.value("Name"));
+            for (int i = 0; i < BuildingTemplate::TileCount; i++)
+                def->setTile(i, getEntry(block.value(def->enumToString(i))));
             foreach (SimpleFileBlock roomBlock, block.blocks) {
                 if (roomBlock.name == QLatin1String("Room")) {
                     Room *room = new Room;
@@ -171,7 +168,7 @@ bool BuildingTemplates::readTxt()
                     room->Wall = getEntry(roomBlock.value("Wall"))->asInteriorWall();
                     room->Floor = getEntry(roomBlock.value("Floor"))->asFloor();
                     room->internalName = roomBlock.value("InternalName");
-                    def->RoomList += room;
+                    def->addRoom(room);
                 } else {
                     mError = tr("Unknown block name '%1': expected 'Room'.\n%2")
                             .arg(roomBlock.name)
@@ -179,15 +176,6 @@ bool BuildingTemplates::readTxt()
                     return false;
                 }
             }
-            if (!def->Wall) def->Wall = noneEntry;
-            if (!def->DoorTile) def->DoorTile = noneEntry;
-            if (!def->DoorFrameTile) def->DoorFrameTile = noneEntry;
-            if (!def->WindowTile) def->WindowTile = noneEntry;
-            if (!def->CurtainsTile) def->CurtainsTile = noneEntry;
-            if (!def->StairsTile) def->StairsTile = noneEntry;
-            if (!def->RoofCap) def->RoofCap = noneEntry;
-            if (!def->RoofSlope) def->RoofSlope = noneEntry;
-            if (!def->RoofTop) def->RoofTop = noneEntry;
             addTemplate(def);
         } else {
             mError = tr("Unknown block name '%1': expected 'Template'.\n%2")
@@ -204,16 +192,9 @@ void BuildingTemplates::writeTxt(QWidget *parent)
 {
     mEntries.clear();
     foreach (BuildingTemplate *btemplate, BuildingTemplates::instance()->templates()) {
-        addEntry(btemplate->Wall);
-        addEntry(btemplate->DoorTile);
-        addEntry(btemplate->DoorFrameTile);
-        addEntry(btemplate->WindowTile);
-        addEntry(btemplate->CurtainsTile);
-        addEntry(btemplate->StairsTile);
-        addEntry(btemplate->RoofCap);
-        addEntry(btemplate->RoofSlope);
-        addEntry(btemplate->RoofTop);
-        foreach (Room *room, btemplate->RoomList) {
+        foreach (BuildingTileEntry *entry, btemplate->tiles())
+            addEntry(entry);
+        foreach (Room *room, btemplate->rooms()) {
             addEntry(room->Floor);
             addEntry(room->Wall);
         }
@@ -226,17 +207,10 @@ void BuildingTemplates::writeTxt(QWidget *parent)
     foreach (BuildingTemplate *btemplate, BuildingTemplates::instance()->templates()) {
         SimpleFileBlock templateBlock;
         templateBlock.name = QLatin1String("Template");
-        templateBlock.addValue("Name", btemplate->Name);
-        templateBlock.addValue("Wall", entryIndex(btemplate->Wall));
-        templateBlock.addValue("Door", entryIndex(btemplate->DoorTile));
-        templateBlock.addValue("DoorFrame", entryIndex(btemplate->DoorFrameTile));
-        templateBlock.addValue("Window", entryIndex(btemplate->WindowTile));
-        templateBlock.addValue("Curtains", entryIndex(btemplate->CurtainsTile));
-        templateBlock.addValue("Stairs", entryIndex(btemplate->StairsTile));
-        templateBlock.addValue("RoofCap", entryIndex(btemplate->RoofCap));
-        templateBlock.addValue("RoofSlope", entryIndex(btemplate->RoofSlope));
-        templateBlock.addValue("RoofTop", entryIndex(btemplate->RoofTop));
-        foreach (Room *room, btemplate->RoomList) {
+        templateBlock.addValue("Name", btemplate->name());
+        for (int i = 0; i < BuildingTemplate::TileCount; i++)
+            templateBlock.addValue(btemplate->enumToString(i), entryIndex(btemplate->tile(i)));
+        foreach (Room *room, btemplate->rooms()) {
             SimpleFileBlock roomBlock;
             roomBlock.name = QLatin1String("Room");
             roomBlock.addValue("Name", room->Name);
@@ -338,6 +312,7 @@ bool BuildingTemplates::upgradeTxt()
             newBlock.values = block.values;
             if (block.name == QLatin1String("Template")) {
                 newBlock.replaceValue("Wall", entryIndex(btiles->catEWalls(), block.value("Wall")));
+                newBlock.renameValue("Wall", QLatin1String("ExteriorWall"));
                 newBlock.replaceValue("Door", entryIndex(btiles->catDoors(), block.value("Door")));
                 newBlock.replaceValue("DoorFrame",  entryIndex(btiles->catDoorFrames(), block.value("DoorFrame")));
                 newBlock.replaceValue("Window", entryIndex(btiles->catWindows(), block.value("Window")));
@@ -406,3 +381,67 @@ BuildingTileEntry *BuildingTemplates::getEntry(const QString &s)
 
 /////
 
+QStringList BuildingTemplate::mEnumNames;
+
+BuildingTemplate::BuildingTemplate() :
+    mTiles(TileCount)
+{
+}
+
+void BuildingTemplate::setTile(int n, BuildingTileEntry *entry)
+{
+    if (entry)
+        entry = entry->asCategory(categoryEnum(n));
+
+    if (!entry)
+        entry = BuildingTilesMgr::instance()->noneTileEntry();
+
+    mTiles[n] = entry;
+}
+
+void BuildingTemplate::setTiles(const QVector<BuildingTileEntry *> &entries)
+{
+    for (int i = 0; i < entries.size(); i++)
+        setTile(i, entries[i]);
+}
+
+int BuildingTemplate::categoryEnum(int n)
+{
+    switch (n) {
+    case ExteriorWall: return BuildingTilesMgr::ExteriorWalls;
+    case Door: return BuildingTilesMgr::Doors;
+    case DoorFrame: return BuildingTilesMgr::DoorFrames;
+    case Window: return BuildingTilesMgr::Windows;
+    case Curtains: return BuildingTilesMgr::Curtains;
+    case Stairs: return BuildingTilesMgr::Stairs;
+    case RoofCap: return BuildingTilesMgr::RoofCaps;
+    case RoofSlope: return BuildingTilesMgr::RoofSlopes;
+    case RoofTop: return BuildingTilesMgr::RoofTops;
+    default:
+        qFatal("Invalid enum passed to BuildingTemplate::categoryEnum");
+        break;
+    }
+    return 0;
+}
+
+QString BuildingTemplate::enumToString(int n)
+{
+    initNames();
+    return mEnumNames[n];
+}
+
+void BuildingTemplate::initNames()
+{
+    if (!mEnumNames.isEmpty())
+        return;
+    mEnumNames.reserve(TileCount);
+    mEnumNames += QLatin1String("ExteriorWall");
+    mEnumNames += QLatin1String("Door");
+    mEnumNames += QLatin1String("DoorFrame");
+    mEnumNames += QLatin1String("Window");
+    mEnumNames += QLatin1String("Curtains");
+    mEnumNames += QLatin1String("Stairs");
+    mEnumNames += QLatin1String("RoofCap");
+    mEnumNames += QLatin1String("RoofSlope");
+    mEnumNames += QLatin1String("RoofTop");
+}

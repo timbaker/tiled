@@ -358,6 +358,12 @@ public:
     BuildingTileEntry *currentSlopeTiles() const
     { return mCurrentSlopeTiles; }
 
+    void setCurrentTopTiles(BuildingTileEntry *tiles)
+    { mCurrentTopTiles = tiles; }
+
+    BuildingTileEntry *currentTopTiles() const
+    { return mCurrentTopTiles; }
+
     void setRoofType(RoofObject::RoofType type)
     { mRoofType = type; }
 
@@ -379,6 +385,7 @@ private:
     static RoofTool *mInstance;
     BuildingTileEntry *mCurrentCapTiles;
     BuildingTileEntry *mCurrentSlopeTiles;
+    BuildingTileEntry *mCurrentTopTiles;
     RoofObject::RoofType mRoofType;
 
     enum Mode {
