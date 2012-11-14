@@ -23,6 +23,7 @@
 #include "buildingobjects.h"
 #include "buildingreader.h"
 #include "buildingtemplates.h"
+#include "buildingtiles.h"
 #include "buildingundoredo.h"
 #include "buildingwriter.h"
 #include "furnituregroups.h"
@@ -38,6 +39,8 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
     mFileName(fileName),
     mUndoStack(new QUndoStack(this))
 {
+    connect(BuildingTilesMgr::instance(), SIGNAL(entryTileChanged(BuildingTileEntry*)),
+            SLOT(entryTileChanged(BuildingTileEntry*)));
     connect(FurnitureGroups::instance(),
             SIGNAL(furnitureTileChanged(FurnitureTile*)),
             SLOT(furnitureTileChanged(FurnitureTile*)));
@@ -295,6 +298,19 @@ void BuildingDocument::furnitureTileChanged(FurnitureTile *ftile)
                 if (furniture->furnitureTile() == ftile) {
                     emit objectTileChanged(furniture);
                 }
+            }
+        }
+    }
+}
+
+void BuildingDocument::entryTileChanged(BuildingTileEntry *entry)
+{
+    foreach (BuildingFloor *floor, mBuilding->floors()) {
+        foreach (BuildingObject *object, floor->objects()) {
+            if (object->tile() == entry ||
+                    object->tile(1) == entry ||
+                    object->tile(2) == entry) {
+                emit objectTileChanged(object);
             }
         }
     }

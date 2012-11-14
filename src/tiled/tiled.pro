@@ -174,7 +174,8 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/furnitureview.cpp \
     BuildingEditor/furnituregroups.cpp \
     BuildingEditor/buildingpreferences.cpp \
-    BuildingEditor/buildingtmx.cpp
+    BuildingEditor/buildingtmx.cpp \
+    BuildingEditor/tilecategoryview.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -315,7 +316,8 @@ HEADERS += aboutdialog.h \
     BuildingEditor/furnituregroups.h \
     BuildingEditor/buildingpreferences.h \
     BuildingEditor/buildingtmx.h \
-    BuildingEditor/rooftiles.h
+    BuildingEditor/rooftiles.h \
+    BuildingEditor/tilecategoryview.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

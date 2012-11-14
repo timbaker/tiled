@@ -62,6 +62,7 @@ public:
 
     void addCategory(int index, FurnitureGroup *category);
     FurnitureGroup *removeCategory(int index);
+    QString changeEntryTile(BuildingTileEntry *entry, int e, const QString &tileName);
 
     void insertFurnitureTiles(FurnitureGroup *category, int index,
                               FurnitureTiles *ftiles);
@@ -96,6 +97,10 @@ private slots:
     void removeTiles();
     void clearTiles();
 
+    void setExpertMode(bool expert);
+
+    void entryTileDropped(BuildingTileEntry *entry, int e, const QString &tileName);
+
     void furnitureTileDropped(FurnitureTile *ftile, int index,
                               const QString &tileName);
 
@@ -129,6 +134,7 @@ private:
     QUndoStack *mUndoStack;
     QToolButton *mUndoButton;
     QToolButton *mRedoButton;
+    bool mExpertMode;
 };
 
 } // namespace BuildingEditor

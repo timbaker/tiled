@@ -35,5 +35,7 @@
         <file>icons/icon_corner_outerSW.png</file>
         <file>icons/missing-tile.png</file>
         <file>icons/none-tile.png</file>
+        <file>icons/shadow_roof_caps.png</file>
+        <file>icons/icon_expert_mode.png</file>
     </qresource>
 </RCC>

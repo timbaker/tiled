@@ -74,8 +74,11 @@ BuildingTilesMgr::BuildingTilesMgr() :
     mCategories << mCatEWalls << mCatIWalls << mCatFloors << mCatDoors <<
                    mCatDoorFrames << mCatWindows << mCatCurtains << mCatStairs
                    << mCatRoofCaps << mCatRoofSlopes << mCatRoofTops;
+
     foreach (BuildingTileCategory *category, mCategories)
         mCategoryByName[category->name()] = category;
+
+    mCatRoofCaps->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_roof_caps.png")));
 
     Tileset *tileset = new Tileset(QLatin1String("missing"), 64, 128);
     tileset->setTransparentColor(Qt::white);
@@ -213,7 +216,13 @@ void BuildingTilesMgr::removeTileset(Tileset *tileset)
     // Don't remove references now, that will delete the tileset, and the
     // user might undo the removal.
     mRemovedTilesets += tileset;
-//    TilesetManager::instance()->removeReference(tileset);
+    //    TilesetManager::instance()->removeReference(tileset);
+}
+
+void BuildingTilesMgr::entryTileChanged(BuildingTileEntry *entry, int e)
+{
+    Q_UNUSED(e)
+    emit entryTileChanged(entry);
 }
 
 QString BuildingTilesMgr::txtName()
@@ -606,6 +615,12 @@ BuildingTile *BuildingTileEntry::displayTile() const
     return tile(mCategory->displayIndex());
 }
 
+void BuildingTileEntry::setTile(int e, BuildingTile *btile)
+{
+    Q_ASSERT(btile);
+    mTiles[e] = btile;
+}
+
 BuildingTile *BuildingTileEntry::tile(int n) const
 {
     if (n < 0 || n >= mTiles.size())
@@ -911,6 +926,25 @@ BuildingTileEntry *BTC_RoofCaps::createEntryFromSingleTile(const QString &tileNa
     entry->mTiles[CapGapE3] = BuildingTilesMgr::instance()->get(tileName, );
 #endif
     return entry;
+}
+
+int BTC_RoofCaps::shadowToEnum(int shadowIndex)
+{
+    const int map[EnumCount] = {
+        CapRiseE1, CapRiseE2, CapRiseE3, CapFallS3, CapFallS2, CapFallS1,
+        CapFallE1, CapFallE2, CapFallE3, CapRiseS3, CapRiseS2, CapRiseS1,
+        PeakPt5E, PeakOnePt5E, PeakTwoPt5E, PeakTwoPt5S, PeakOnePt5S, PeakPt5S,
+        CapGapE1, CapGapE2, CapGapE3, CapGapS3, CapGapS2, CapGapS1
+    };
+    return map[shadowIndex];
+}
+
+int BTC_RoofCaps::enumToShadow(int e)
+{
+    int map[EnumCount];
+    for (int i = 0; i < EnumCount; i++)
+        map[shadowToEnum(i)] = i;
+    return map[e];
 }
 
 /////

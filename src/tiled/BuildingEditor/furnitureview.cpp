@@ -38,7 +38,7 @@ using namespace Internal;
 
 namespace BuildingEditor {
 
-QSize isometricSize(int numX, int numY, int tileWidth, int tileHeight)
+static QSize isometricSize(int numX, int numY, int tileWidth, int tileHeight)
 {
     // Map width and height contribute equally in both directions
     const int side = numX + numY;

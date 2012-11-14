@@ -78,11 +78,27 @@ QString BuildingTemplates::txtPath()
     return BuildingPreferences::instance()->configPath(txtName());
 }
 
-static void writeTileEntry(SimpleFileBlock &block, BuildingTileEntry *entry)
+// this code is almost the same as BuildingTilesMgr::writeTileEntry
+static void writeTileEntry(SimpleFileBlock &parentBlock, BuildingTileEntry *entry)
 {
-
+    BuildingTileCategory *category = entry->category();
+    SimpleFileBlock block;
+    block.name = QLatin1String("TileEntry");
+    block.addValue("category", category->name());
+    for (int i = 0; i < category->enumCount(); i++) {
+        block.addValue(category->enumToString(i), entry->tile(i)->name());
+    }
+    for (int i = 0; i < category->enumCount(); i++) {
+        QPoint p = entry->offset(i);
+        if (p.isNull())
+            continue;
+        block.addValue("offset", QString(QLatin1String("%1 %2 %3"))
+                       .arg(category->enumToString(i)).arg(p.x()).arg(p.y()));
+    }
+    parentBlock.blocks += block;
 }
 
+// this code is almost the same as BuildingTilesMgr::readTileEntry
 static BuildingTileEntry *readTileEntry(SimpleFileBlock &block, QString &error)
 {
     QString categoryName = block.value("category");
@@ -91,6 +107,23 @@ static BuildingTileEntry *readTileEntry(SimpleFileBlock &block, QString &error)
         foreach (SimpleFileKeyValue kv, block.values) {
             if (kv.name == QLatin1String("category"))
                 continue;
+            if (kv.name == QLatin1String("offset")) {
+                QStringList split = kv.value.split(QLatin1Char(' '), QString::SkipEmptyParts);
+                if (split.size() != 3) {
+                    error = BuildingTilesMgr::instance()->tr("Expected 'offset = name x y', got '%1'").arg(kv.value);
+                    delete entry;
+                    return false;
+                }
+                int e = category->enumFromString(split[0]);
+                if (e == BuildingTileCategory::Invalid) {
+                    error = BuildingTilesMgr::instance()->tr("Unknown %1 enum '%2'")
+                            .arg(categoryName).arg(split[0]);
+                    delete entry;
+                    return 0;
+                }
+                entry->mOffsets[e] = QPoint(split[1].toInt(), split[2].toInt());
+                continue;
+            }
             int e = category->enumFromString(kv.name);
             if (e == BuildingTileCategory::Invalid) {
                 error = BuildingTilesMgr::instance()->tr("Unknown %1 enum %2")
@@ -144,6 +177,7 @@ bool BuildingTemplates::readTxt()
     }
 
     mEntries.clear();
+    mEntriesByCategoryName.clear();
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("TileEntry")) {
             if (BuildingTileEntry *entry = readTileEntry(block, mError))
@@ -191,6 +225,7 @@ bool BuildingTemplates::readTxt()
 void BuildingTemplates::writeTxt(QWidget *parent)
 {
     mEntries.clear();
+    mEntriesByCategoryName.clear();
     foreach (BuildingTemplate *btemplate, BuildingTemplates::instance()->templates()) {
         foreach (BuildingTileEntry *entry, btemplate->tiles())
             addEntry(entry);
@@ -345,8 +380,11 @@ bool BuildingTemplates::upgradeTxt()
 
 void BuildingTemplates::addEntry(BuildingTileEntry *entry)
 {
-    if (entry && !entry->isNone() && !mEntries.contains(entry))
-        mEntries += entry;
+    if (entry && !entry->isNone() && !mEntries.contains(entry)) {
+        mEntriesByCategoryName[entry->category()->name()
+                + QString::number((qulonglong)entry)] = entry;
+        mEntries = mEntriesByCategoryName.values(); // sorted
+    }
 }
 
 void BuildingTemplates::addEntry(BuildingTileCategory *category,

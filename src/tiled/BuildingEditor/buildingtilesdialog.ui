@@ -60,6 +60,13 @@
             </item>
            </layout>
           </widget>
+          <widget class="QWidget" name="page_3">
+           <layout class="QVBoxLayout" name="verticalLayout">
+            <item>
+             <widget class="BuildingEditor::TileCategoryView" name="categoryView"/>
+            </item>
+           </layout>
+          </widget>
          </widget>
         </item>
         <item>
@@ -252,6 +259,21 @@
     <string>Move selected furniture down the list</string>
    </property>
   </action>
+  <action name="actionExpertMode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_expert_mode.png</normaloff>:/BuildingEditor/icons/icon_expert_mode.png</iconset>
+   </property>
+   <property name="text">
+    <string>Export Mode</string>
+   </property>
+   <property name="toolTip">
+    <string>Switch between expert mode</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -263,6 +285,11 @@
    <class>BuildingEditor::FurnitureView</class>
    <extends>QTableWidget</extends>
    <header>BuildingEditor/furnitureview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>BuildingEditor::TileCategoryView</class>
+   <extends>QTableView</extends>
+   <header>BuildingEditor/tilecategoryview.h</header>
   </customwidget>
  </customwidgets>
  <resources>
