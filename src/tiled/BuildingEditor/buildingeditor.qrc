@@ -35,5 +35,16 @@
         <file>icons/icon_corner_outerSW.png</file>
         <file>icons/missing-tile.png</file>
         <file>icons/none-tile.png</file>
+        <file>icons/shadow_roof_caps.png</file>
+        <file>icons/icon_expert_mode.png</file>
+        <file>icons/shadow_walls.png</file>
+        <file>icons/shadow_roof_slopes.png</file>
+        <file>icons/shadow_windows.png</file>
+        <file>icons/shadow_doors.png</file>
+        <file>icons/shadow_door_frames.png</file>
+        <file>icons/shadow_stairs.png</file>
+        <file>icons/shadow_floors.png</file>
+        <file>icons/shadow_roof_tops.png</file>
+        <file>icons/shadow_curtains.png</file>
     </qresource>
 </RCC>

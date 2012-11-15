@@ -967,10 +967,10 @@ category
         PeakTwoPt5E = walls_exterior_roofs_01_016
         CapGapS1 = 
         CapGapS2 = 
-        CapGapS3 = 
+        CapGapS3 = walls_exterior_house_01_001
         CapGapE1 = 
         CapGapE2 = 
-        CapGapE3 = 
+        CapGapE3 = walls_exterior_house_01_000
     }
     entry
     {
@@ -1021,10 +1021,10 @@ category
         PeakTwoPt5E = location_barn_01_040
         CapGapS1 = 
         CapGapS2 = 
-        CapGapS3 = 
+        CapGapS3 = location_barn_01_001
         CapGapE1 = 
         CapGapE2 = 
-        CapGapE3 = 
+        CapGapE3 = location_barn_01_000
     }
     entry
     {
@@ -1048,10 +1048,10 @@ category
         PeakTwoPt5E = walls_exterior_roofs_02_016
         CapGapS1 = 
         CapGapS2 = 
-        CapGapS3 = 
+        CapGapS3 = walls_exterior_house_01_005
         CapGapE1 = 
         CapGapE2 = 
-        CapGapE3 = 
+        CapGapE3 = walls_exterior_house_01_004
     }
     entry
     {
@@ -1075,10 +1075,10 @@ category
         PeakTwoPt5E = walls_exterior_roofs_02_040
         CapGapS1 = 
         CapGapS2 = 
-        CapGapS3 = 
+        CapGapS3 = walls_exterior_wooden_01_025
         CapGapE1 = 
         CapGapE2 = 
-        CapGapE3 = 
+        CapGapE3 = walls_exterior_wooden_01_024
     }
     entry
     {
@@ -1102,10 +1102,10 @@ category
         PeakTwoPt5E = walls_exterior_roofs_03_016
         CapGapS1 = 
         CapGapS2 = 
-        CapGapS3 = 
+        CapGapS3 = walls_exterior_house_01_049
         CapGapE1 = 
         CapGapE2 = 
-        CapGapE3 = 
+        CapGapE3 = walls_exterior_house_01_048
     }
     entry
     {
@@ -1129,10 +1129,10 @@ category
         PeakTwoPt5E = walls_exterior_roofs_03_040
         CapGapS1 = 
         CapGapS2 = 
-        CapGapS3 = 
+        CapGapS3 = walls_exterior_house_01_033
         CapGapE1 = 
         CapGapE2 = 
-        CapGapE3 = 
+        CapGapE3 = walls_exterior_house_01_032
     }
 }
 category
@@ -1194,4 +1194,30 @@ category
 {
     label = Roof Tops
     name = roof_tops
+    entry
+    {
+        West1 = roofs_01_022
+        West2 = roofs_01_022
+        West3 = roofs_01_022
+        North1 = roofs_01_022
+        North2 = roofs_01_022
+        North3 = roofs_01_022
+        offset = West1 -1 -1
+        offset = West2 -2 -2
+        offset = North1 -1 -1
+        offset = North2 -2 -2
+    }
+    entry
+    {
+        West1 = roofs_01_023
+        West2 = roofs_01_023
+        West3 = roofs_01_023
+        North1 = roofs_01_023
+        North2 = roofs_01_023
+        North3 = roofs_01_023
+        offset = West1 -1 -1
+        offset = West2 -2 -2
+        offset = North1 -1 -1
+        offset = North2 -2 -2
+    }
 }

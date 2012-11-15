@@ -26,6 +26,7 @@
 
 #include "zoomable.h"
 
+#include "tile.h"
 #include "tileset.h"
 #include "utils.h"
 
@@ -212,6 +213,36 @@ public:
     int mOldIndex;
     int mNewIndex;
 };
+
+class ChangeEntryTile : public QUndoCommand
+{
+public:
+    ChangeEntryTile(BuildingTilesDialog *d, BuildingTileEntry *entry,
+                        int index, const QString &tileName = QString()) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Entry Tile")),
+        mDialog(d),
+        mEntry(entry),
+        mIndex(index),
+        mTileName(tileName)
+    {
+    }
+
+    void undo()
+    {
+        mTileName = mDialog->changeEntryTile(mEntry, mIndex, mTileName);
+    }
+
+    void redo()
+    {
+        mTileName = mDialog->changeEntryTile(mEntry, mIndex, mTileName);
+    }
+
+    BuildingTilesDialog *mDialog;
+    BuildingTileEntry *mEntry;
+    int mIndex;
+    QString mTileName;
+};
+
 
 class ChangeFurnitureTile : public QUndoCommand
 {
@@ -449,11 +480,14 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     mCategory(0),
     mFurnitureGroup(0),
     mUndoGroup(new QUndoGroup(this)),
-    mUndoStack(new QUndoStack(this))
+    mUndoStack(new QUndoStack(this)),
+    mExpertMode(false)
 {
     ui->setupUi(this);
 
     QSettings settings;
+    mExpertMode = settings.value(QLatin1String("BuildingEditor/BuildingTilesDialog/ExpertMode"), false).toBool();
+    ui->actionExpertMode->setChecked(mExpertMode);
 
     mZoomable->setScale(BuildingPreferences::instance()->tileScale());
 
@@ -462,6 +496,19 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     connect(ui->categoryTilesView->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(synchUI()));
+    connect(ui->categoryTilesView, SIGNAL(activated(QModelIndex)),
+            SLOT(tileActivated(QModelIndex)));
+
+    ui->categoryView->setZoomable(mZoomable);
+    ui->categoryView->setAcceptDrops(true);
+    ui->categoryView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    connect(ui->categoryView->model(), SIGNAL(tileDropped(BuildingTileEntry*,int,QString)),
+            SLOT(entryTileDropped(BuildingTileEntry*,int,QString)));
+    connect(ui->categoryView->selectionModel(),
+            SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            SLOT(synchUI()));
+    connect(ui->categoryView, SIGNAL(activated(QModelIndex)),
+            SLOT(entryActivated(QModelIndex)));
 
     ui->furnitureView->setZoomable(mZoomable);
     ui->furnitureView->setAcceptDrops(true);
@@ -473,7 +520,6 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(synchUI()));
 
-    setCategoryList();
     connect(ui->categoryList, SIGNAL(currentRowChanged(int)),
             SLOT(categoryChanged(int)));
     connect(ui->categoryList, SIGNAL(itemChanged(QListWidgetItem*)),
@@ -482,7 +528,6 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
 
     ui->tilesetList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 //    ui->listWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    setTilesetList();
     connect(ui->tilesetList, SIGNAL(itemSelectionChanged()),
             SLOT(tilesetSelectionChanged()));
 
@@ -516,12 +561,14 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     toolBar->addSeparator();
     toolBar->addAction(ui->actionAddTiles);
     toolBar->addAction(ui->actionRemoveTiles);
+    toolBar->addAction(ui->actionExpertMode);
     connect(ui->actionToggleCorners, SIGNAL(triggered()), SLOT(toggleCorners()));
     connect(ui->actionClearTiles, SIGNAL(triggered()), SLOT(clearTiles()));
     connect(ui->actionMoveFurnitureUp, SIGNAL(triggered()), SLOT(moveFurnitureUp()));
     connect(ui->actionMoveFurnitureDown, SIGNAL(triggered()), SLOT(moveFurnitureDown()));
     connect(ui->actionAddTiles, SIGNAL(triggered()), SLOT(addTiles()));
     connect(ui->actionRemoveTiles, SIGNAL(triggered()), SLOT(removeTiles()));
+    connect(ui->actionExpertMode, SIGNAL(toggled(bool)), SLOT(setExpertMode(bool)));
     ui->categoryToolbarLayout->addWidget(toolBar);
     /////
 
@@ -567,6 +614,9 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     connect(ui->actionAddTilesets, SIGNAL(triggered()), SLOT(addTileset()));
     connect(ui->actionRemoveTileset, SIGNAL(triggered()), SLOT(removeTileset()));
     /////
+
+    setCategoryList();
+    setTilesetList();
 
     synchUI();
 
@@ -658,6 +708,18 @@ FurnitureGroup *BuildingTilesDialog::removeCategory(int index)
     synchUI();
 
     return group;
+}
+
+QString BuildingTilesDialog::changeEntryTile(BuildingTileEntry *entry, int e,
+                                             const QString &tileName)
+{
+    QString old = entry->tile(e)->isNone() ? QString() : entry->tile(e)->name();
+    entry->setTile(e, BuildingTilesMgr::instance()->get(tileName));
+
+    BuildingTilesMgr::instance()->entryTileChanged(entry, e);
+
+    ui->categoryView->update(ui->categoryView->model()->index(entry, e));
+    return old;
 }
 
 void BuildingTilesDialog::insertFurnitureTiles(FurnitureGroup *category,
@@ -772,9 +834,10 @@ void BuildingTilesDialog::setCategoryList()
 
 void BuildingTilesDialog::setCategoryTiles()
 { 
+    bool expertMode = mExpertMode && mCategory && !mCategory->shadowImage().isNull();
     QList<Tiled::Tile*> tiles;
     QList<void*> userData;
-    if (mCategory) {
+    if (mCategory && !expertMode) {
         foreach (BuildingTileEntry *entry, mCategory->entries()) {
             if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile())) {
                 tiles += tile;
@@ -783,6 +846,7 @@ void BuildingTilesDialog::setCategoryTiles()
         }
     }
     ui->categoryTilesView->model()->setTiles(tiles, userData);
+    ui->categoryView->model()->setCategory(expertMode ? mCategory : 0);
 }
 
 void BuildingTilesDialog::setFurnitureTiles()
@@ -840,16 +904,40 @@ int BuildingTilesDialog::numTileCategories() const
     return BuildingTilesMgr::instance()->categoryCount();
 }
 
+void BuildingTilesDialog::displayTileInTileset(Tiled::Tile *tile)
+{
+    if (!tile)
+        return;
+    int row = BuildingTilesMgr::instance()->tilesets().indexOf(tile->tileset());
+    if (row >= 0) {
+        ui->tilesetList->setCurrentRow(row);
+        ui->tilesetTilesView->setCurrentIndex(ui->tilesetTilesView->model()->index(tile));
+    }
+}
+
+void BuildingTilesDialog::displayTileInTileset(BuildingTile *tile)
+{
+    displayTileInTileset(BuildingTilesMgr::instance()->tileFor(tile));
+}
+
 void BuildingTilesDialog::synchUI()
 {
     bool add = false;
     bool remove = false;
+    bool clear = false;
     if (mFurnitureGroup) {
         add = true;
         remove = ui->furnitureView->selectionModel()->selectedIndexes().count();
+        clear = remove;
     } else if (mCategory) {
-        add = ui->tilesetTilesView->selectionModel()->selectedIndexes().count();
-        remove = ui->categoryTilesView->selectionModel()->selectedIndexes().count();
+        if (mExpertMode && !mCategory->shadowImage().isNull()) {
+            add = true;
+            remove = ui->categoryView->selectionModel()->selectedIndexes().count();
+            clear = remove;
+        } else {
+            add = ui->tilesetTilesView->selectionModel()->selectedIndexes().count();
+            remove = ui->categoryTilesView->selectionModel()->selectedIndexes().count();
+        }
     }
     ui->actionAddTiles->setEnabled(add);
     ui->actionRemoveTiles->setEnabled(remove);
@@ -861,7 +949,7 @@ void BuildingTilesDialog::synchUI()
             mFurnitureGroup != FurnitureGroups::instance()->groups().last());
 
     ui->actionToggleCorners->setEnabled(mFurnitureGroup && remove);
-    ui->actionClearTiles->setEnabled(mFurnitureGroup && remove);
+    ui->actionClearTiles->setEnabled(clear);
 
     QModelIndex current = ui->furnitureView->currentIndex();
     int index = current.isValid() ? current.row() : -1;
@@ -883,7 +971,11 @@ void BuildingTilesDialog::categoryChanged(int index)
         tilesetSelectionChanged();
     } else if (index < numTileCategories()) {
         mCategory = BuildingTilesMgr::instance()->category(index);
-        ui->categoryStack->setCurrentIndex(0);
+        if (mExpertMode && !mCategory->shadowImage().isNull()) {
+            ui->categoryStack->setCurrentIndex(2);
+        } else {
+            ui->categoryStack->setCurrentIndex(0);
+        }
         setCategoryTiles();
         tilesetSelectionChanged();
     } else {
@@ -939,6 +1031,14 @@ void BuildingTilesDialog::addTiles()
     if (!mCategory)
         return;
 
+    if (mExpertMode && !mCategory->shadowImage().isNull()) {
+        // Create a new blank entry in the category.
+        BuildingTileEntry *entry = new BuildingTileEntry(mCategory);
+        mUndoStack->push(new AddTileToCategory(this, mCategory,
+                                               mCategory->entryCount(), entry));
+        return;
+    }
+
     QModelIndexList selection = ui->tilesetTilesView->selectionModel()->selectedIndexes();
     QList<Tile*> tiles;
     foreach (QModelIndex index, selection) {
@@ -985,6 +1085,26 @@ void BuildingTilesDialog::removeTiles()
     if (!mCategory)
         return;
 
+    if (mExpertMode && !mCategory->shadowImage().isNull()) {
+        TileCategoryView *v = ui->categoryView;
+        QModelIndexList selection = v->selectionModel()->selectedIndexes();
+        QList<BuildingTileEntry*> entries;
+        foreach (QModelIndex index, selection) {
+            if (BuildingTileEntry *entry = v->model()->entryAt(index)) {
+                if (!entries.contains(entry))
+                    entries += entry;
+            }
+        }
+        if (entries.count() > 1)
+            mUndoStack->beginMacro(tr("Remove Tiles from %1").arg(mCategory->label()));
+        foreach (BuildingTileEntry *entry, entries)
+            mUndoStack->push(new RemoveTileFromCategory(this, mCategory,
+                                                        mCategory->indexOf(entry)));
+        if (entries.count() > 1)
+            mUndoStack->endMacro();
+        return;
+    }
+
     MixedTilesetView *v = ui->categoryTilesView;
     QModelIndexList selection = v->selectionModel()->selectedIndexes();
     if (selection.count() > 1)
@@ -1022,6 +1142,39 @@ void BuildingTilesDialog::clearTiles()
         mUndoStack->endMacro();
         return;
     }
+
+    if (mExpertMode && !mCategory->shadowImage().isNull()) {
+        TileCategoryView *v = ui->categoryView;
+        QModelIndexList selection = v->selectionModel()->selectedIndexes();
+        QList<BuildingTileEntry*> entries;
+        QList<int> enums;
+        foreach (QModelIndex index, selection) {
+            if (BuildingTileEntry *entry = v->model()->entryAt(index)) {
+                entries += entry;
+                enums += v->model()->enumAt(index);
+            }
+        }
+        if (entries.count() > 1)
+            mUndoStack->beginMacro(tr("Clear Tiles from %1").arg(mCategory->label()));
+        for (int i = 0; i < entries.size(); i++)
+            mUndoStack->push(new ChangeEntryTile(this, entries[i], enums[i], QString()));
+        if (entries.count() > 1)
+            mUndoStack->endMacro();
+        return;
+    }
+}
+
+void BuildingTilesDialog::setExpertMode(bool expert)
+{
+    if (expert != mExpertMode) {
+        mExpertMode = expert;
+        categoryChanged(ui->categoryList->currentRow());
+    }
+}
+
+void BuildingTilesDialog::entryTileDropped(BuildingTileEntry *entry, int e, const QString &tileName)
+{
+    mUndoStack->push(new ChangeEntryTile(this, entry, e, tileName));
 }
 
 void BuildingTilesDialog::furnitureTileDropped(FurnitureTile *ftile, int index,
@@ -1195,6 +1348,22 @@ void BuildingTilesDialog::redoTextChanged(const QString &text)
     mRedoButton->setToolTip(text);
 }
 
+void BuildingTilesDialog::tileActivated(const QModelIndex &index)
+{
+    MixedTilesetModel *m = ui->categoryTilesView->model();
+    if (Tiled::Tile *tile = m->tileAt(index))
+        displayTileInTileset(tile);
+}
+
+void BuildingTilesDialog::entryActivated(const QModelIndex &index)
+{
+    TileCategoryModel *m = ui->categoryView->model();
+    if (BuildingTileEntry *entry = m->entryAt(index)) {
+        int e = m->enumAt(index);
+        displayTileInTileset(entry->tile(e));
+    }
+}
+
 void BuildingTilesDialog::accept()
 {
     if (changes()) {
@@ -1216,6 +1385,7 @@ void BuildingTilesDialog::accept()
                       mCategory ? mCategory->name() : QString());
     settings.setValue(QLatin1String("SelectedFurnitureGroup"),
                       mFurnitureGroup ? mFurnitureGroup->mLabel : QString());
+    settings.setValue(QLatin1String("ExpertMode"), mExpertMode);
     settings.endGroup();
 
     saveSplitterSizes(ui->overallSplitter);

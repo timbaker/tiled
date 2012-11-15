@@ -18,6 +18,7 @@
 #ifndef BUILDINGTILES_H
 #define BUILDINGTILES_H
 
+#include <QImage>
 #include <QMap>
 #include <QRect>
 #include <QString>
@@ -74,6 +75,7 @@ public:
 
     BuildingTile *displayTile() const;
 
+    void setTile(int e, BuildingTile *btile);
     BuildingTile *tile(int n) const;
 
     int tileCount() const
@@ -171,6 +173,16 @@ public:
     QString enumToString(int index) const;
     int enumFromString(const QString &s) const;
 
+    void setShadowImage(const QImage &image)
+    { mShadowImage = image; }
+
+    QImage shadowImage() const
+    { return mShadowImage; }
+
+    virtual int shadowCount() const { return enumCount(); }
+    virtual int shadowToEnum(int shadowIndex) { return shadowIndex; }
+    virtual int enumToShadow(int e);
+
     /*
      * This is the method used to fill in all the tiles in an entry from a single
      * tile. For example, given a door tile, all the different door tiles for each
@@ -207,6 +219,7 @@ protected:
     QList<BuildingTileEntry*> mEntries;
     QStringList mEnumNames;
     BuildingTileEntry *mDefaultEntry;
+    QImage mShadowImage;
 };
 
 class NoneBuildingTileCategory : public BuildingTileCategory
@@ -241,8 +254,9 @@ public:
     bool canAssignNone() const
     { return true; }
 
-    virtual BuildingTileCategory *asCurtains()
-    { return this; }
+    virtual BuildingTileCategory *asCurtains() { return this; }
+
+    int shadowToEnum(int shadowIndex);
 };
 
 class BTC_Doors : public BuildingTileCategory
@@ -265,6 +279,8 @@ public:
     { return true; }
 
     BuildingTileCategory *asDoors() { return this; }
+
+    int shadowToEnum(int shadowIndex);
 };
 
 class BTC_DoorFrames : public BuildingTileCategory
@@ -285,6 +301,8 @@ public:
     { return true; }
 
     BuildingTileCategory *asDoorFrames() { return this; }
+
+    int shadowToEnum(int shadowIndex);
 };
 
 class BTC_Floors : public BuildingTileCategory
@@ -301,6 +319,8 @@ public:
     BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     BuildingTileCategory *asFloors() { return this; }
+
+    int shadowToEnum(int shadowIndex);
 };
 
 class BTC_Stairs : public BuildingTileCategory
@@ -314,7 +334,6 @@ public:
         North1,
         North2,
         North3,
-        // TODO: open/broken
         EnumCount
     };
 
@@ -323,6 +342,8 @@ public:
     BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     BuildingTileCategory *asStairs() { return this; }
+
+    int shadowToEnum(int shadowIndex);
 };
 
 class BTC_Walls : public BuildingTileCategory
@@ -345,6 +366,7 @@ public:
 
     BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
+    int shadowToEnum(int shadowIndex);
 };
 
 class BTC_EWalls : public BTC_Walls
@@ -386,6 +408,8 @@ public:
     { return true; }
 
     BuildingTileCategory *asWindows() { return this; }
+
+    int shadowToEnum(int shadowIndex);
 };
 
 class BTC_RoofCaps : public BuildingTileCategory
@@ -414,6 +438,9 @@ public:
     BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     BuildingTileCategory *asRoofCaps() { return this; }
+
+    int shadowCount() { return EnumCount; }
+    int shadowToEnum(int shadowIndex);
 };
 
 class BTC_RoofSlopes : public BuildingTileCategory
@@ -444,6 +471,8 @@ public:
     BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     BuildingTileCategory *asRoofSlopes() { return this; }
+
+    int shadowToEnum(int shadowIndex);
 };
 
 class BTC_RoofTops : public BuildingTileCategory
@@ -465,6 +494,9 @@ public:
     BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
     BuildingTileCategory *asRoofTops() { return this; }
+
+    int shadowCount() const { return 3; }
+    int shadowToEnum(int shadowIndex);
 };
 
 class BuildingTilesMgr : public QObject
@@ -562,6 +594,8 @@ public:
     QList<Tiled::Tileset*> tilesets() const
     { return mTilesetByName.values(); }
 
+    void entryTileChanged(BuildingTileEntry *entry, int e);
+
     QString txtName();
     QString txtPath();
 
@@ -605,6 +639,8 @@ signals:
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
     void tilesetRemoved(Tiled::Tileset *tileset);
+
+    void entryTileChanged(BuildingTileEntry *entry);
 
 private:
     static BuildingTilesMgr *mInstance;

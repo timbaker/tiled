@@ -19,6 +19,7 @@
 #define BUILDINGTILESDIALOG_H
 
 #include <QDialog>
+#include <QModelIndex>
 
 class QListWidgetItem;
 class QSplitter;
@@ -31,6 +32,7 @@ class BuildingTilesDialog;
 }
 
 namespace Tiled {
+class Tile;
 class Tileset;
 namespace Internal {
 class Zoomable;
@@ -39,6 +41,7 @@ class Zoomable;
 
 namespace BuildingEditor {
 
+class BuildingTile;
 class BuildingTileEntry;
 class BuildingTileCategory;
 class FurnitureGroup;
@@ -62,6 +65,7 @@ public:
 
     void addCategory(int index, FurnitureGroup *category);
     FurnitureGroup *removeCategory(int index);
+    QString changeEntryTile(BuildingTileEntry *entry, int e, const QString &tileName);
 
     void insertFurnitureTiles(FurnitureGroup *category, int index,
                               FurnitureTiles *ftiles);
@@ -86,6 +90,8 @@ private:
     void saveSplitterSizes(QSplitter *splitter);
     void restoreSplitterSizes(QSplitter *splitter);
     int numTileCategories() const;
+    void displayTileInTileset(Tiled::Tile *tile);
+    void displayTileInTileset(BuildingTile *tile);
 
 private slots:
     void categoryChanged(int index);
@@ -95,6 +101,10 @@ private slots:
     void addTiles();
     void removeTiles();
     void clearTiles();
+
+    void setExpertMode(bool expert);
+
+    void entryTileDropped(BuildingTileEntry *entry, int e, const QString &tileName);
 
     void furnitureTileDropped(FurnitureTile *ftile, int index,
                               const QString &tileName);
@@ -118,6 +128,9 @@ private slots:
     void undoTextChanged(const QString &text);
     void redoTextChanged(const QString &text);
 
+    void tileActivated(const QModelIndex &index);
+    void entryActivated(const QModelIndex &index);
+
     void accept();
 
 private:
@@ -129,6 +142,7 @@ private:
     QUndoStack *mUndoStack;
     QToolButton *mUndoButton;
     QToolButton *mRedoButton;
+    bool mExpertMode;
 };
 
 } // namespace BuildingEditor

@@ -74,8 +74,21 @@ BuildingTilesMgr::BuildingTilesMgr() :
     mCategories << mCatEWalls << mCatIWalls << mCatFloors << mCatDoors <<
                    mCatDoorFrames << mCatWindows << mCatCurtains << mCatStairs
                    << mCatRoofCaps << mCatRoofSlopes << mCatRoofTops;
+
     foreach (BuildingTileCategory *category, mCategories)
         mCategoryByName[category->name()] = category;
+
+    mCatEWalls->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_walls.png")));
+    mCatIWalls->setShadowImage(mCatEWalls->shadowImage());
+    mCatFloors->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_floors.png")));
+    mCatDoors->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_doors.png")));
+    mCatDoorFrames->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_door_frames.png")));
+    mCatWindows->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_windows.png")));
+    mCatCurtains->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_curtains.png")));
+    mCatStairs->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_stairs.png")));
+    mCatRoofCaps->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_roof_caps.png")));
+    mCatRoofSlopes->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_roof_slopes.png")));
+    mCatRoofTops->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_roof_tops.png")));
 
     Tileset *tileset = new Tileset(QLatin1String("missing"), 64, 128);
     tileset->setTransparentColor(Qt::white);
@@ -213,7 +226,13 @@ void BuildingTilesMgr::removeTileset(Tileset *tileset)
     // Don't remove references now, that will delete the tileset, and the
     // user might undo the removal.
     mRemovedTilesets += tileset;
-//    TilesetManager::instance()->removeReference(tileset);
+    //    TilesetManager::instance()->removeReference(tileset);
+}
+
+void BuildingTilesMgr::entryTileChanged(BuildingTileEntry *entry, int e)
+{
+    Q_UNUSED(e)
+    emit entryTileChanged(entry);
 }
 
 QString BuildingTilesMgr::txtName()
@@ -606,6 +625,12 @@ BuildingTile *BuildingTileEntry::displayTile() const
     return tile(mCategory->displayIndex());
 }
 
+void BuildingTileEntry::setTile(int e, BuildingTile *btile)
+{
+    Q_ASSERT(btile);
+    mTiles[e] = btile;
+}
+
 BuildingTile *BuildingTileEntry::tile(int n) const
 {
     if (n < 0 || n >= mTiles.size())
@@ -695,28 +720,6 @@ BuildingTileEntry *BuildingTileEntry::asRoofTop()
 
 /////
 
-BTC_Doors::BTC_Doors(const QString &label) :
-    BuildingTileCategory(QLatin1String("doors"), label, West)
-{
-    mEnumNames += QLatin1String("West");
-    mEnumNames += QLatin1String("North");
-    mEnumNames += QLatin1String("WestOpen");
-    mEnumNames += QLatin1String("NorthOpen");
-    Q_ASSERT(mEnumNames.size() == EnumCount);
-}
-
-BuildingTileEntry *BTC_Doors::createEntryFromSingleTile(const QString &tileName)
-{
-    BuildingTileEntry *entry = new BuildingTileEntry(this);
-    entry->mTiles[West] = BuildingTilesMgr::instance()->get(tileName);
-    entry->mTiles[North] = BuildingTilesMgr::instance()->get(tileName, 1);
-    entry->mTiles[WestOpen] = BuildingTilesMgr::instance()->get(tileName, 2);
-    entry->mTiles[NorthOpen] = BuildingTilesMgr::instance()->get(tileName, 3);
-    return entry;
-}
-
-/////
-
 BTC_Curtains::BTC_Curtains(const QString &label) :
     BuildingTileCategory(QLatin1String("curtains"), label, West)
 {
@@ -737,6 +740,44 @@ BuildingTileEntry *BTC_Curtains::createEntryFromSingleTile(const QString &tileNa
     return entry;
 }
 
+int BTC_Curtains::shadowToEnum(int shadowIndex)
+{
+    const int map[EnumCount] = {
+        West, East, North, South
+    };
+    return map[shadowIndex];
+}
+
+/////
+
+BTC_Doors::BTC_Doors(const QString &label) :
+    BuildingTileCategory(QLatin1String("doors"), label, West)
+{
+    mEnumNames += QLatin1String("West");
+    mEnumNames += QLatin1String("North");
+    mEnumNames += QLatin1String("WestOpen");
+    mEnumNames += QLatin1String("NorthOpen");
+    Q_ASSERT(mEnumNames.size() == EnumCount);
+}
+
+BuildingTileEntry *BTC_Doors::createEntryFromSingleTile(const QString &tileName)
+{
+    BuildingTileEntry *entry = new BuildingTileEntry(this);
+    entry->mTiles[West] = BuildingTilesMgr::instance()->get(tileName);
+    entry->mTiles[North] = BuildingTilesMgr::instance()->get(tileName, 1);
+    entry->mTiles[WestOpen] = BuildingTilesMgr::instance()->get(tileName, 2);
+    entry->mTiles[NorthOpen] = BuildingTilesMgr::instance()->get(tileName, 3);
+    return entry;
+}
+
+int BTC_Doors::shadowToEnum(int shadowIndex)
+{
+    const int map[EnumCount] = {
+        West, North, WestOpen, NorthOpen
+    };
+    return map[shadowIndex];
+}
+
 /////
 
 BTC_DoorFrames::BTC_DoorFrames(const QString &label) :
@@ -755,6 +796,14 @@ BuildingTileEntry *BTC_DoorFrames::createEntryFromSingleTile(const QString &tile
     return entry;
 }
 
+int BTC_DoorFrames::shadowToEnum(int shadowIndex)
+{
+    const int map[EnumCount] = {
+        West, North
+    };
+    return map[shadowIndex];
+}
+
 /////
 
 BTC_Floors::BTC_Floors(const QString &label) :
@@ -769,6 +818,14 @@ BuildingTileEntry *BTC_Floors::createEntryFromSingleTile(const QString &tileName
     BuildingTileEntry *entry = new BuildingTileEntry(this);
     entry->mTiles[Floor] = BuildingTilesMgr::instance()->get(tileName);
     return entry;
+}
+
+int BTC_Floors::shadowToEnum(int shadowIndex)
+{
+    const int map[EnumCount] = {
+        Floor
+    };
+    return map[shadowIndex];
 }
 
 /////
@@ -795,6 +852,14 @@ BuildingTileEntry *BTC_Stairs::createEntryFromSingleTile(const QString &tileName
     entry->mTiles[North2] = BuildingTilesMgr::instance()->get(tileName, 9);
     entry->mTiles[North3] = BuildingTilesMgr::instance()->get(tileName, 10);
     return entry;
+}
+
+int BTC_Stairs::shadowToEnum(int shadowIndex)
+{
+    const int map[EnumCount] = {
+        West1, West2, West3, North1, North2, North3
+    };
+    return map[shadowIndex];
 }
 
 /////
@@ -827,6 +892,14 @@ BuildingTileEntry *BTC_Walls::createEntryFromSingleTile(const QString &tileName)
     return entry;
 }
 
+int BTC_Walls::shadowToEnum(int shadowIndex)
+{
+    const int map[EnumCount] = {
+        West, North, NorthWest, SouthEast, WestWindow, NorthWindow, WestDoor, NorthDoor
+    };
+    return map[shadowIndex];
+}
+
 /////
 
 BTC_Windows::BTC_Windows(const QString &label) :
@@ -843,6 +916,14 @@ BuildingTileEntry *BTC_Windows::createEntryFromSingleTile(const QString &tileNam
     entry->mTiles[West] = BuildingTilesMgr::instance()->get(tileName);
     entry->mTiles[North] = BuildingTilesMgr::instance()->get(tileName, 1);
     return entry;
+}
+
+int BTC_Windows::shadowToEnum(int shadowIndex)
+{
+    const int map[EnumCount] = {
+        West, North
+    };
+    return map[shadowIndex];
 }
 
 /////
@@ -913,6 +994,17 @@ BuildingTileEntry *BTC_RoofCaps::createEntryFromSingleTile(const QString &tileNa
     return entry;
 }
 
+int BTC_RoofCaps::shadowToEnum(int shadowIndex)
+{
+    const int map[EnumCount] = {
+        CapRiseE1, CapRiseE2, CapRiseE3, CapFallS3, CapFallS2, CapFallS1,
+        CapFallE1, CapFallE2, CapFallE3, CapRiseS3, CapRiseS2, CapRiseS1,
+        PeakPt5E, PeakOnePt5E, PeakTwoPt5E, PeakTwoPt5S, PeakOnePt5S, PeakPt5S,
+        CapGapE1, CapGapE2, CapGapE3, CapGapS3, CapGapS2, CapGapS1
+    };
+    return map[shadowIndex];
+}
+
 /////
 
 BTC_RoofSlopes::BTC_RoofSlopes(const QString &label) :
@@ -978,6 +1070,16 @@ BuildingTileEntry *BTC_RoofSlopes::createEntryFromSingleTile(const QString &tile
     return entry;
 }
 
+int BTC_RoofSlopes::shadowToEnum(int shadowIndex)
+{
+    const int map[EnumCount] = {
+        SlopeS1, SlopeS2, SlopeS3, SlopeE3, SlopeE2, SlopeE1,
+        SlopePt5S, SlopeOnePt5S, SlopeTwoPt5S, SlopeTwoPt5E, SlopeOnePt5E, SlopePt5E,
+        Outer1, Outer2, Outer3, Inner1, Inner2, Inner3
+    };
+    return map[shadowIndex];
+}
+
 /////
 
 BTC_RoofTops::BTC_RoofTops(const QString &label) :
@@ -1006,6 +1108,14 @@ BuildingTileEntry *BTC_RoofTops::createEntryFromSingleTile(const QString &tileNa
     entry->mOffsets[North1] = QPoint(-1, -1);
     entry->mOffsets[North2] = QPoint(-2, -2);
     return entry;
+}
+
+int BTC_RoofTops::shadowToEnum(int shadowIndex)
+{
+    const int map[EnumCount] = {
+        West1, West2, West3
+    };
+    return map[shadowIndex];
 }
 
 /////
@@ -1052,6 +1162,14 @@ int BuildingTileCategory::enumFromString(const QString &s) const
     if (mEnumNames.contains(s))
         return mEnumNames.indexOf(s);
     return Invalid;
+}
+
+int BuildingTileCategory::enumToShadow(int e)
+{
+    QVector<int> map(100);
+    for (int i = 0; i < enumCount(); i++)
+        map[shadowToEnum(i)] = i;
+    return map[e];
 }
 
 BuildingTileEntry *BuildingTileCategory::findMatch(BuildingTileEntry *entry) const

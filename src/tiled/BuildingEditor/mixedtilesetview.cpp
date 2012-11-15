@@ -347,6 +347,7 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
     qDeleteAll(mItems);
     mItems.clear();
     QString tilesetName;
+    int index = 0;
     foreach (Tile *tile, mTiles) {
         if (mShowHeaders && tile->tileset()->name() != tilesetName) {
             while (mItems.count() % columnCount())
@@ -355,7 +356,8 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
             for (int i = 0; i < columnCount(); i++)
                 mItems += new Item(tilesetName);
         }
-        mItems += new Item(tile, userData.at(mTiles.indexOf(tile)));
+        mItems += new Item(tile, userData.at(index));
+        index++;
     }
 
     reset();
