@@ -246,6 +246,7 @@ public:
     };
 
     enum RoofDepth {
+        Zero,
         Point5,
         One,
         OnePoint5,

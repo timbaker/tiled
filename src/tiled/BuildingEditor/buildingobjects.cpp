@@ -668,12 +668,8 @@ void RoofObject::depthUp()
     case SlopeE:
     case SlopeS:
         switch (mDepth) {
-        case Point5: break;
         case One: mDepth = Two; break;
-        case OnePoint5: break;
         case Two: mDepth = Three; break;
-        case TwoPoint5: break;
-        case Three: break;
         }
         break;
     case PeakWE:
@@ -684,18 +680,14 @@ void RoofObject::depthUp()
         case OnePoint5: mDepth = Two; break;
         case Two: mDepth = TwoPoint5; break;
         case TwoPoint5: mDepth = Three; break;
-        case Three: break;
         }
         break;
     case FlatTop:
 #ifdef ROOF_TOPS
         switch (mDepth) {
-        case Point5: break;
+        case Zero: mDepth = One; break;
         case One: mDepth = Two; break;
-        case OnePoint5: break;
         case Two: mDepth = Three; break;
-        case TwoPoint5: break;
-        case Three: break;
         }
 #else
         // depth can only be Three
@@ -706,12 +698,8 @@ void RoofObject::depthUp()
     case CornerInnerNE:
     case CornerInnerSE:
         switch (mDepth) {
-        case Point5: break;
         case One: mDepth = Two; break;
-        case OnePoint5: break;
         case Two: mDepth = Three; break;
-        case TwoPoint5: break;
-        case Three: break;
         }
         break;
     }
@@ -725,18 +713,13 @@ void RoofObject::depthDown()
     case SlopeE:
     case SlopeS:
         switch (mDepth) {
-        case Point5: break;
-        case One: break;
-        case OnePoint5: break;
         case Two: mDepth = One; break;
-        case TwoPoint5: break;
         case Three: mDepth = Two; break;
         }
         break;
     case PeakWE:
     case PeakNS:
         switch (mDepth) {
-        case Point5: break;
         case One: mDepth = Point5; break;
         case OnePoint5: mDepth = One; break;
         case Two: mDepth = OnePoint5; break;
@@ -747,11 +730,8 @@ void RoofObject::depthDown()
     case FlatTop:
 #ifdef ROOF_TOPS
         switch (mDepth) {
-        case Point5: break;
-        case One: break;
-        case OnePoint5: break;
+        case One: mDepth = Zero; break;
         case Two: mDepth = One; break;
-        case TwoPoint5: break;
         case Three: mDepth = Two; break;
         }
 #else
@@ -782,22 +762,12 @@ bool RoofObject::isDepthMax()
     case SlopeE:
     case SlopeS:
         switch (mDepth) {
-        case Point5: break;
-        case One: break;
-        case OnePoint5: break;
-        case Two: break;
-        case TwoPoint5: break;
         case Three: return true; ///
         }
         break;
     case PeakWE:
     case PeakNS:
         switch (mDepth) {
-        case Point5: break;
-        case One: break;
-        case OnePoint5: break;
-        case Two: break;
-        case TwoPoint5: break;
         case Three: return true; ///
         }
         break;
@@ -813,11 +783,6 @@ bool RoofObject::isDepthMax()
     case CornerInnerNE:
     case CornerInnerSE:
         switch (mDepth) {
-        case Point5: break;
-        case One: break;
-        case OnePoint5: break;
-        case Two: break;
-        case TwoPoint5: break;
         case Three: return true; ///
         }
         break;
@@ -834,28 +799,18 @@ bool RoofObject::isDepthMin()
     case SlopeE:
     case SlopeS:
         switch (mDepth) {
-        case Point5: break;
         case One: return true; ///
-        case OnePoint5: break;
-        case Two: break;
-        case TwoPoint5: break;
-        case Three: break;
         }
         break;
     case PeakWE:
     case PeakNS:
         switch (mDepth) {
         case Point5: return true; ///
-        case One: break;
-        case OnePoint5: break;
-        case Two: break;
-        case TwoPoint5: break;
-        case Three: break;
         }
         break;
     case FlatTop:
 #ifdef ROOF_TOPS
-        return mDepth == One;
+        return mDepth == Zero;
 #else
         return true; // depth can only be Three
 #endif
@@ -865,12 +820,7 @@ bool RoofObject::isDepthMin()
     case CornerInnerNE:
     case CornerInnerSE:
         switch (mDepth) {
-        case Point5: break;
         case One: return true; ///
-        case OnePoint5: break;
-        case Two: break;
-        case TwoPoint5: break;
-        case Three: break;
         }
         break;
     }
@@ -1087,6 +1037,7 @@ RoofObject::RoofType RoofObject::typeFromString(const QString &s)
 QString RoofObject::depthToString(RoofObject::RoofDepth depth)
 {
     switch (depth) {
+    case Zero: return QLatin1String("Zero");
     case Point5: return QLatin1String("Point5");
     case One: return QLatin1String("One");
     case OnePoint5: return QLatin1String("OnePoint5");
@@ -1099,6 +1050,7 @@ QString RoofObject::depthToString(RoofObject::RoofDepth depth)
 
 RoofObject::RoofDepth RoofObject::depthFromString(const QString &s)
 {
+    if (s == QLatin1String("Zero")) return Zero;
     if (s == QLatin1String("Point5")) return Point5;
     if (s == QLatin1String("One")) return One;
     if (s == QLatin1String("OnePoint5")) return OnePoint5;

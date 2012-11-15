@@ -140,8 +140,10 @@ static void ReplaceRoofTop(RoofObject *ro, const QRect &r,
 {
     if (r.isEmpty()) return;
     int offset = 0;
-    if (ro->depth() == RoofObject::One)
-        ro->isN() ? BTC_RoofTops::North1 : BTC_RoofTops::West1;
+    if (ro->depth() == RoofObject::Zero)
+        offset = ro->isN() ? BTC_RoofTops::North3 : BTC_RoofTops::West3;
+    else if (ro->depth() == RoofObject::One)
+        offset = ro->isN() ? BTC_RoofTops::North1 : BTC_RoofTops::West1;
     else if (ro->depth() == RoofObject::Two)
         offset = ro->isN() ? BTC_RoofTops::North2 : BTC_RoofTops::West2;
     else if (ro->depth() == RoofObject::Three)
@@ -152,7 +154,7 @@ static void ReplaceRoofTop(RoofObject *ro, const QRect &r,
     for (int x = rOffset.left(); x <= rOffset.right(); x++)
         for (int y = rOffset.top(); y <= rOffset.bottom(); y++)
 #ifdef ROOF_TOPS
-            (ro->depth() == RoofObject::Three)
+            (ro->depth() == RoofObject::Zero || ro->depth() == RoofObject::Three)
                 ? squares[x][y].ReplaceFloor(ro->topTiles(), offset)
                 : squares[x][y].ReplaceRoofTop(ro->topTiles(), offset);
 #else
@@ -479,7 +481,7 @@ void BuildingFloor::LayoutToSquares()
                 ReplaceRoofCap(ro, r.right()+1, r.bottom()+1, squares, RoofObject::CapGapE3, 3);
 #endif
 #ifdef ROOF_TOPS
-            // Roof tops with depth of 3 are place in the floor layer of the
+            // Roof tops with depth of 3 are placed in the floor layer of the
             // floor above.
             if (ro->depth() != RoofObject::Three)
                 ReplaceRoofTop(ro, ro->flatTop(), squares);
