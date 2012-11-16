@@ -1168,6 +1168,8 @@ int BuildingTileCategory::enumToShadow(int e)
 {
     QVector<int> map(100);
     for (int i = 0; i < enumCount(); i++)
+        map[i] = -1;
+    for (int i = 0; i < shadowCount(); i++)
         map[shadowToEnum(i)] = i;
     return map[e];
 }
