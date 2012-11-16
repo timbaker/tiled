@@ -74,6 +74,7 @@ public:
     Qt::KeyboardModifiers keyboardModifiers() const;
 
     bool controlModifier() const;
+    bool shiftModifier() const;
 
     QString statusText() const
     { return mStatusText; }

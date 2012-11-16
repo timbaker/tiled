@@ -72,6 +72,11 @@ bool BaseTool::controlModifier() const
     return (keyboardModifiers() & Qt::ControlModifier) != 0;
 }
 
+bool BaseTool::shiftModifier() const
+{
+    return (keyboardModifiers() & Qt::ShiftModifier) != 0;
+}
+
 void BaseTool::setStatusText(const QString &text)
 {
     mStatusText = text;
@@ -950,7 +955,7 @@ FurnitureTool::FurnitureTool() :
     BaseObjectTool(),
     mCurrentTile(0)
 {
-    setStatusText(tr("Left-click to place furniture.  Right-click to remove any object.  CTRL toggles auto-align."));
+    setStatusText(tr("Left-click to place furniture. Right-click to remove any object. CTRL toggles auto-align. SHIFT toggles corner choice."));
 }
 
 void FurnitureTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
@@ -991,20 +996,27 @@ void FurnitureTool::updateCursorObject()
     FurnitureTiles *ftiles = mCurrentTile->owner();
     FurnitureTile::FurnitureOrientation orient = mCurrentTile->orient();
     if (!controlModifier()) {
-        switch (calcOrient(x, y)) {
+        Orient wallOrient = calcOrient(x, y);
+        switch (wallOrient) {
         case OrientNone: break;
         case OrientNW: orient = ftiles->hasCorners()
-                    ? FurnitureTile::FurnitureNW : FurnitureTile::FurnitureN; break;
-        case OrientN: orient = FurnitureTile::FurnitureN; break;
+                    ? FurnitureTile::FurnitureNW
+                    : (shiftModifier() ? FurnitureTile::FurnitureW : FurnitureTile::FurnitureN); break;
         case OrientNE: orient = ftiles->hasCorners()
-                    ? FurnitureTile::FurnitureNE : FurnitureTile::FurnitureN; break;
-        case OrientW: orient = FurnitureTile::FurnitureW; break;
-        case OrientE: orient = FurnitureTile::FurnitureE; break;
+                    ? FurnitureTile::FurnitureNE
+                    : (shiftModifier() ? FurnitureTile::FurnitureE : FurnitureTile::FurnitureN); break;
         case OrientSW: orient = ftiles->hasCorners()
-                    ? FurnitureTile::FurnitureSW : FurnitureTile::FurnitureS; break;
-        case OrientS: orient = FurnitureTile::FurnitureS; break;
+                    ? FurnitureTile::FurnitureSW
+                    : (shiftModifier() ? FurnitureTile::FurnitureW : FurnitureTile::FurnitureS); break;
         case OrientSE: orient = ftiles->hasCorners()
-                    ? FurnitureTile::FurnitureSE : FurnitureTile::FurnitureS; break;
+                    ? FurnitureTile::FurnitureSE
+                    : (shiftModifier() ? FurnitureTile::FurnitureE : FurnitureTile::FurnitureS); break;
+        case OrientW: orient = FurnitureTile::FurnitureW; break;
+        case OrientN: orient = FurnitureTile::FurnitureN; break;
+        case OrientE: orient = FurnitureTile::FurnitureE; break;
+        case OrientS: orient = FurnitureTile::FurnitureS; break;
+        }
+
         }
     }
     mCursorObject->asFurniture()->setFurnitureTile(ftiles->tile(orient));
