@@ -22,6 +22,7 @@
 #include <QModelIndex>
 
 class QListWidgetItem;
+class QSpinBox;
 class QSplitter;
 class QToolButton;
 class QUndoGroup;
@@ -66,6 +67,7 @@ public:
     void addCategory(int index, FurnitureGroup *category);
     FurnitureGroup *removeCategory(int index);
     QString changeEntryTile(BuildingTileEntry *entry, int e, const QString &tileName);
+    QPoint changeEntryOffset(BuildingTileEntry *entry, int e, const QPoint &offset);
 
     void insertFurnitureTiles(FurnitureGroup *category, int index,
                               FurnitureTiles *ftiles);
@@ -131,6 +133,8 @@ private slots:
     void tileActivated(const QModelIndex &index);
     void entryActivated(const QModelIndex &index);
 
+    void entryOffsetChanged();
+
     void accept();
 
 private:
@@ -142,6 +146,12 @@ private:
     QUndoStack *mUndoStack;
     QToolButton *mUndoButton;
     QToolButton *mRedoButton;
+
+    QWidget *mEntryOffsetUI;
+    QSpinBox *mEntryOffsetSpinX;
+    QSpinBox *mEntryOffsetSpinY;
+    bool mSynching;
+
     bool mExpertMode;
 };
 

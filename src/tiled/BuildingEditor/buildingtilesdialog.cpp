@@ -33,9 +33,11 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QFileDialog>
+#include <QLabel>
 #include <QMessageBox>
 #include <QScrollBar>
 #include <QSettings>
+#include <QSpinBox>
 #include <QToolBar>
 #include <QToolButton>
 #include <QUndoCommand>
@@ -241,6 +243,35 @@ public:
     BuildingTileEntry *mEntry;
     int mIndex;
     QString mTileName;
+};
+
+class ChangeEntryOffset : public QUndoCommand
+{
+public:
+    ChangeEntryOffset(BuildingTilesDialog *d, BuildingTileEntry *entry,
+                        int e, const QPoint &offset) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Entry Offset")),
+        mDialog(d),
+        mEntry(entry),
+        mEnum(e),
+        mOffset(offset)
+    {
+    }
+
+    void undo()
+    {
+        mOffset = mDialog->changeEntryOffset(mEntry, mEnum, mOffset);
+    }
+
+    void redo()
+    {
+        mOffset = mDialog->changeEntryOffset(mEntry, mEnum, mOffset);
+    }
+
+    BuildingTilesDialog *mDialog;
+    BuildingTileEntry *mEntry;
+    int mEnum;
+    QPoint mOffset;
 };
 
 
@@ -481,6 +512,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     mFurnitureGroup(0),
     mUndoGroup(new QUndoGroup(this)),
     mUndoStack(new QUndoStack(this)),
+    mSynching(false),
     mExpertMode(false)
 {
     ui->setupUi(this);
@@ -551,6 +583,38 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     connect(ui->actionMoveCategoryUp, SIGNAL(triggered()), SLOT(moveCategoryUp()));
     connect(ui->actionMoveCategoryDown, SIGNAL(triggered()), SLOT(moveCategoryDown()));
     ui->categoryListToolbarLayout->addWidget(toolBar);
+    /////
+
+    // Create UI for adjusting BuildingTileEntry offset
+    QHBoxLayout *hbox = new QHBoxLayout;
+    hbox->setMargin(0);
+
+    QLabel *label = new QLabel(tr("Tile Offset"));
+    hbox->addWidget(label);
+
+    label = new QLabel(tr("x:"));
+    mEntryOffsetSpinX = new QSpinBox();
+    mEntryOffsetSpinX->setRange(-3, 3);
+    hbox->addWidget(label);
+    hbox->addWidget(mEntryOffsetSpinX);
+
+    label = new QLabel(tr("y:"));
+    mEntryOffsetSpinY = new QSpinBox();
+    mEntryOffsetSpinY->setRange(-3, 3);
+    hbox->addWidget(label);
+    hbox->addWidget(mEntryOffsetSpinY);
+
+    hbox->addStretch(1);
+
+    QWidget *layoutWidget = new QWidget();
+    layoutWidget->setLayout(hbox);
+    ui->categoryLayout->insertWidget(1, layoutWidget);
+    mEntryOffsetUI = layoutWidget;
+    connect(mEntryOffsetSpinX, SIGNAL(valueChanged(int)),
+            SLOT(entryOffsetChanged()));
+    connect(mEntryOffsetSpinY, SIGNAL(valueChanged(int)),
+            SLOT(entryOffsetChanged()));
+
     /////
     toolBar = new QToolBar();
     toolBar->setIconSize(QSize(16, 16));
@@ -718,6 +782,16 @@ QString BuildingTilesDialog::changeEntryTile(BuildingTileEntry *entry, int e,
 
     BuildingTilesMgr::instance()->entryTileChanged(entry, e);
 
+    ui->categoryView->update(ui->categoryView->model()->index(entry, e));
+    return old;
+}
+
+QPoint BuildingTilesDialog::changeEntryOffset(BuildingTileEntry *entry, int e,
+                                              const QPoint &offset)
+{
+    QPoint old = entry->offset(e);
+    entry->setOffset(e, offset);
+    BuildingTilesMgr::instance()->entryTileChanged(entry, e);
     ui->categoryView->update(ui->categoryView->model()->index(entry, e));
     return old;
 }
@@ -931,6 +1005,15 @@ void BuildingTilesDialog::synchUI()
             add = true;
             remove = ui->categoryView->selectionModel()->selectedIndexes().count();
             clear = remove;
+            TileCategoryModel *m = ui->categoryView->model();
+            QModelIndex current = ui->categoryView->currentIndex();
+            if (BuildingTileEntry *entry = m->entryAt(current)) {
+                int e = m->enumAt(current);
+                mSynching = true;
+                mEntryOffsetSpinX->setValue(entry->offset(e).x());
+                mEntryOffsetSpinY->setValue(entry->offset(e).y());
+                mSynching = false;
+            }
         } else {
             add = ui->tilesetTilesView->selectionModel()->selectedIndexes().count();
             remove = ui->categoryTilesView->selectionModel()->selectedIndexes().count();
@@ -948,6 +1031,9 @@ void BuildingTilesDialog::synchUI()
     ui->actionToggleCorners->setEnabled(mFurnitureGroup && remove);
     ui->actionClearTiles->setEnabled(clear);
     ui->actionExpertMode->setEnabled(mFurnitureGroup == 0);
+
+    mEntryOffsetUI->setVisible(mExpertMode && !mFurnitureGroup);
+    mEntryOffsetUI->setEnabled(clear); // valid selection
 
     QModelIndex current = ui->furnitureView->currentIndex();
     int index = current.isValid() ? current.row() : -1;
@@ -1355,6 +1441,21 @@ void BuildingTilesDialog::entryActivated(const QModelIndex &index)
     if (BuildingTileEntry *entry = m->entryAt(index)) {
         int e = m->enumAt(index);
         displayTileInTileset(entry->tile(e));
+    }
+}
+
+void BuildingTilesDialog::entryOffsetChanged()
+{
+    if (!mCategory || mSynching)
+        return;
+    QModelIndex index = ui->categoryView->currentIndex();
+    TileCategoryModel *m = ui->categoryView->model();
+    if (BuildingTileEntry *entry = m->entryAt(index)) {
+        int e = m->enumAt(index);
+        QPoint offset(mEntryOffsetSpinX->value(), mEntryOffsetSpinY->value());
+        if (offset != entry->offset(e)) {
+            mUndoStack->push(new ChangeEntryOffset(this, entry, e, offset));
+        }
     }
 }
 

@@ -638,11 +638,16 @@ BuildingTile *BuildingTileEntry::tile(int n) const
     return mTiles[n];
 }
 
-QPoint BuildingTileEntry::offset(int n) const
+void BuildingTileEntry::setOffset(int e, const QPoint &offset)
 {
-    if (n < 0 || n >= mOffsets.size())
+    mOffsets[e] = offset;
+}
+
+QPoint BuildingTileEntry::offset(int e) const
+{
+    if (e < 0 || e >= mOffsets.size())
         return QPoint();
-    return mOffsets[n];
+    return mOffsets[e];
 }
 
 bool BuildingTileEntry::usesTile(BuildingTile *btile) const
@@ -1112,7 +1117,7 @@ BuildingTileEntry *BTC_RoofTops::createEntryFromSingleTile(const QString &tileNa
 
 int BTC_RoofTops::shadowToEnum(int shadowIndex)
 {
-    const int map[EnumCount] = {
+    const int map[3] = {
         West3, West1, West2
     };
     return map[shadowIndex];

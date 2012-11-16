@@ -86,7 +86,8 @@ public:
       *visual* position.  Ideally, every roof tile would be created so that
       it doesn't need to be offset from its actual x,y position in the map.
       */
-    QPoint offset(int n) const;
+    void setOffset(int e, const QPoint &offset);
+    QPoint offset(int e) const;
 
     bool usesTile(BuildingTile *btile) const;
 

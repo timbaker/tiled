@@ -37,7 +37,7 @@
        </layout>
       </widget>
       <widget class="QWidget" name="layoutWidget">
-       <layout class="QVBoxLayout" name="verticalLayout_4">
+       <layout class="QVBoxLayout" name="categoryLayout">
         <item>
          <widget class="QStackedWidget" name="categoryStack">
           <widget class="QWidget" name="page">
@@ -157,7 +157,7 @@
     <string>Toggle corners</string>
    </property>
    <property name="toolTip">
-    <string>Switch between corners and edges</string>
+    <string>Show or hide corners for selected furniture</string>
    </property>
   </action>
   <action name="actionMoveCategoryUp">
@@ -205,7 +205,7 @@
     <string>Clear Tiles</string>
    </property>
    <property name="toolTip">
-    <string>Clear tiles from selected furniture</string>
+    <string>Clear selected tiles</string>
    </property>
   </action>
   <action name="actionRemoveTileset">
