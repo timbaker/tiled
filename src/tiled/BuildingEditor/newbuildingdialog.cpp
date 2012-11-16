@@ -21,6 +21,10 @@
 #include "buildingeditorwindow.h"
 #include "buildingtemplates.h"
 
+#include <QSettings>
+
+static const char *KEY_TEMPLATE = "BuildingEditor/NewBuildingDialog/Template";
+
 using namespace BuildingEditor;
 
 NewBuildingDialog::NewBuildingDialog(QWidget *parent) :
@@ -29,9 +33,16 @@ NewBuildingDialog::NewBuildingDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    QSettings settings;
+    QString templateName = settings.value(QLatin1String(KEY_TEMPLATE)).toString();
+
     ui->comboBox->addItem(QLatin1String("<None>"));
-    foreach (BuildingTemplate *def, BuildingTemplates::instance()->templates())
+    foreach (BuildingTemplate *def, BuildingTemplates::instance()->templates()) {
         ui->comboBox->addItem(def->name());
+        if (templateName == def->name()) {
+            ui->comboBox->setCurrentIndex(ui->comboBox->count() - 1);
+        }
+    }
 }
 
 NewBuildingDialog::~NewBuildingDialog()
@@ -57,5 +68,10 @@ BuildingTemplate *NewBuildingDialog::buildingTemplate() const
 
 void NewBuildingDialog::accept()
 {
+    QSettings settings;
+    BuildingTemplate *btemplate = buildingTemplate();
+    settings.setValue(QLatin1String(KEY_TEMPLATE),
+                      btemplate ? btemplate->name() : QString());
+
     QDialog::accept();
 }
