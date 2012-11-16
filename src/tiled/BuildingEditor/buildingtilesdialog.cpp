@@ -909,7 +909,12 @@ void BuildingTilesDialog::setCategoryTiles()
     QList<Tiled::Tile*> tiles;
     QList<void*> userData;
     if (mCategory && !expertMode) {
+        QMap<QString,BuildingTileEntry*> entryMap;
         foreach (BuildingTileEntry *entry, mCategory->entries()) {
+            QString key = entry->displayTile()->name() + QString::number((qulonglong)entry);
+            entryMap[key] = entry;
+        }
+        foreach (BuildingTileEntry *entry, entryMap.values()) {
             if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile())) {
                 tiles += tile;
                 userData += entry;
