@@ -1138,7 +1138,7 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mObject = new RoofObject(mEditor->document()->currentFloor(),
                                  mStartPos.x(), mStartPos.y(),
                                  /*width=*/2, /*height=*/2,
-                                 /*type=*/mRoofType,
+                                 /*type=*/mRoofType, /*depth=*/RoofObject::InvalidDepth,
                                  /*cappedW=*/true, /*cappedN=*/true,
                                  /*cappedE=*/true, /*cappedS=*/true);
         mItem = new GraphicsObjectItem(mEditor, mObject);

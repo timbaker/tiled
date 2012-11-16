@@ -298,13 +298,13 @@ void FurnitureObject::setFurnitureTile(FurnitureTile *tile)
 /////
 
 RoofObject::RoofObject(BuildingFloor *floor, int x, int y, int width, int height,
-                       RoofType type,
+                       RoofType type, RoofDepth depth,
                        bool cappedW, bool cappedN, bool cappedE, bool cappedS) :
     BuildingObject(floor, x, y, BuildingObject::Invalid),
     mWidth(width),
     mHeight(height),
     mType(type),
-    mDepth(InvalidDepth),
+    mDepth(depth),
     mCappedW(cappedW),
     mCappedN(cappedN),
     mCappedE(cappedE),

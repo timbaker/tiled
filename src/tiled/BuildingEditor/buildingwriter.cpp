@@ -33,6 +33,10 @@
 
 using namespace BuildingEditor;
 
+#define VERSION1 1
+#define VERSION2 2
+#define VERSION_LATEST VERSION2
+
 class BuildingEditor::BuildingWriterPrivate
 {
     Q_DECLARE_TR_FUNCTIONS(BuildingWriterPrivate)
@@ -75,7 +79,7 @@ public:
 
         initBuildingTileEntries();
 
-        w.writeAttribute(QLatin1String("version"), QLatin1String("1.0"));
+        w.writeAttribute(QLatin1String("version"), QString::number(VERSION_LATEST));
         w.writeAttribute(QLatin1String("width"), QString::number(building->width()));
         w.writeAttribute(QLatin1String("height"), QString::number(building->height()));
 

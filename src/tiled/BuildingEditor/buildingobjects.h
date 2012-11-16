@@ -257,7 +257,7 @@ public:
     };
 
     RoofObject(BuildingFloor *floor, int x, int y, int width, int height,
-               RoofType type,
+               RoofType type, RoofDepth depth,
                bool cappedW, bool cappedN, bool cappedE, bool cappedS);
 
     QRect bounds() const;

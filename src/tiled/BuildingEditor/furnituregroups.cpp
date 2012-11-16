@@ -360,6 +360,12 @@ const QVector<BuildingTile *> &FurnitureTile::resolvedTiles() const
     return mTiles;
 }
 
+bool FurnitureTile::isCornerOrient(FurnitureTile::FurnitureOrientation orient)
+{
+    return orient == FurnitureSW || orient == FurnitureSE ||
+            orient == FurnitureNW || orient == FurnitureNE;
+}
+
 /////
 
 FurnitureTiles::FurnitureTiles(bool corners) :

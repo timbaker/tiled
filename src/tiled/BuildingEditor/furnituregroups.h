@@ -90,6 +90,8 @@ public:
 
     const QVector<BuildingTile*> &resolvedTiles() const;
 
+    static bool isCornerOrient(FurnitureOrientation orient);
+
 private:
     FurnitureTiles *mOwner;
     FurnitureOrientation mOrient;
