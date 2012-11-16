@@ -1020,6 +1020,30 @@ void FurnitureTool::updateCursorObject()
         case OrientS: orient = FurnitureTile::FurnitureS; break;
         }
 
+        // If the furniture is larger than one tile adjust the position to
+        // keep it aligned with the wall.
+        QSize size = ftiles->tile(orient)->size();
+        if (size.width() > 1) {
+            switch (wallOrient) {
+            case OrientE:
+            case OrientNE:
+            case OrientSE:
+                x -= size.width() - 1;
+                break;
+            default:
+                break;
+            }
+        }
+        if (size.height() > 1) {
+            switch (wallOrient) {
+            case OrientS:
+            case OrientSE:
+            case OrientSW:
+                y -= size.height() - 1;
+                break;
+            default:
+                break;
+            }
         }
     }
     mCursorObject->asFurniture()->setFurnitureTile(ftiles->tile(orient));
