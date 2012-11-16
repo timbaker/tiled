@@ -513,6 +513,14 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
             for (int y = 0; y <= floor->height(); y++) {
                 const BuildingFloor::Square &square = floor->squares[x][y];
                 BuildingFloor::Square::SquareSection section = layerToSection[index];
+                if (index == LayerIndexFurniture || index == LayerIndexFurniture2) {
+                    BuildingTile *btile = square.mFurniture[index-LayerIndexFurniture];
+                    if (!btile || btile->isNone())
+                        continue;
+                    if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(btile))
+                        tl->setCell(x + offset, y + offset, Cell(tile));
+                    continue;
+                }
                 if (BuildingTileEntry *entry = square.mTiles[section]) {
                     int tileOffset = square.mTileOffset[section];
                     if (entry->isNone() || entry->tile(tileOffset)->isNone())

@@ -78,6 +78,7 @@ public:
         int mTileOffset[MaxSection];
         WallOrientation mWallOrientation;
         bool mExterior;
+        BuildingTile *mFurniture[2];
 
         bool IsWallOrient(WallOrientation orient)
         { return mTiles[SectionWall] && (mWallOrientation == orient); }
@@ -88,6 +89,7 @@ public:
         void ReplaceFrame(BuildingTileEntry *tile, int offset);
         void ReplaceCurtains(Window *window, bool exterior);
         void ReplaceFurniture(BuildingTileEntry *tile, int offset = 0);
+        void ReplaceFurniture(BuildingTile *tile);
         void ReplaceRoof(BuildingTileEntry *tile, int offset = 0);
         void ReplaceRoofCap(BuildingTileEntry *tile, int offset = 0);
 #ifdef ROOF_TOPS

@@ -178,13 +178,11 @@ static void ReplaceFurniture(int x, int y,
                              QVector<QVector<BuildingFloor::Square> > &squares,
                              BuildingTile *btile)
 {
-#if 0
     if (!btile)
         return;
     QRect bounds(0, 0, squares.size() - 1, squares[0].size() - 1);
     if (bounds.contains(x, y))
         squares[x][y].ReplaceFurniture(btile);
-#endif
 }
 
 void BuildingFloor::LayoutToSquares()
@@ -852,6 +850,7 @@ BuildingFloor::Square::Square() :
         mTiles[i] = 0;
         mTileOffset[i] = 0;
     }
+    mFurniture[0] = mFurniture[1] = 0;
 }
 
 
@@ -914,6 +913,17 @@ void BuildingFloor::Square::ReplaceFurniture(BuildingTileEntry *tile, int offset
     }
     mTiles[SectionFurniture] = tile;
     mTileOffset[SectionFurniture] = offset;
+}
+
+void BuildingFloor::Square::ReplaceFurniture(BuildingTile *tile)
+{
+    if (mFurniture[0] && !mFurniture[0]->isNone()) {
+        mFurniture[1] = tile;
+        mTileOffset[SectionFurniture2] = 0;
+        return;
+    }
+    mFurniture[0] = tile;
+    mTileOffset[SectionFurniture] = 0;
 }
 
 void BuildingFloor::Square::ReplaceRoof(BuildingTileEntry *tile, int offset)
