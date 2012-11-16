@@ -216,16 +216,19 @@ void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     mErasing = controlModifier();
     if (mEditor->currentFloorContains(tilePos)) {
         if (mErasing) {
-            if (floor()->GetRoomAt(tilePos) != 0)
+            if (floor()->GetRoomAt(tilePos) != 0) {
                 undoStack()->push(new EraseRoom(mEditor->document(), floor(),
                                                 tilePos));
+                mInitialPaint = false;
+            }
         } else {
             Room *room = BuildingEditorWindow::instance()->currentRoom();
-            if (floor()->GetRoomAt(tilePos) != room)
+            if (floor()->GetRoomAt(tilePos) != room) {
                 undoStack()->push(new PaintRoom(mEditor->document(), floor(),
                                                 tilePos, room));
+                mInitialPaint = false;
+            }
         }
-        mInitialPaint = false;
     }
     mMouseDown = true;
 }
