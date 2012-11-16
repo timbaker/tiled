@@ -295,40 +295,43 @@ void BuildingFloor::LayoutToSquares()
         }
     }
 
-    for (int x = 0; x < width() + 1; x++) {
-        for (int y = 0; y < height() + 1; y++) {
-            if (Door *door = GetDoorAt(x, y)) {
-                squares[x][y].ReplaceDoor(door->tile(),
-                                          door->isW() ? BTC_Doors::West
-                                                      : BTC_Doors::North);
-                squares[x][y].ReplaceFrame(door->frameTile(),
-                                           door->isW() ? BTC_DoorFrames::West
-                                                       : BTC_DoorFrames::North);
-            }
+    foreach (BuildingObject *object, mObjects) {
+        int x = object->x();
+        int y = object->y();
+        if (Door *door = object->asDoor()) {
+            squares[x][y].ReplaceDoor(door->tile(),
+                                      door->isW() ? BTC_Doors::West
+                                                  : BTC_Doors::North);
+            squares[x][y].ReplaceFrame(door->frameTile(),
+                                       door->isW() ? BTC_DoorFrames::West
+                                                   : BTC_DoorFrames::North);
+        }
+        if (Window *window = object->asWindow()) {
+            squares[x][y].ReplaceFrame(window->tile(),
+                                       window->isW() ? BTC_Windows::West
+                                                     : BTC_Windows::North);
 
-            if (Window *window = GetWindowAt(x, y)) {
-                squares[x][y].ReplaceFrame(window->tile(),
-                                           window->isW() ? BTC_Windows::West
-                                                         : BTC_Windows::North);
-
-                // Window curtains on exterior walls must be *inside* the
-                // room.
-                if (squares[x][y].mExterior) {
-                    int dx = window->isW() ? 1 : 0;
-                    int dy = window->isN() ? 1 : 0;
-                    squares[x - dx][y - dy].ReplaceCurtains(window, true);
-                } else
-                    squares[x][y].ReplaceCurtains(window, false);
-            }
-
-            if (Stairs *stairs = GetStairsAt(x, y)) {
-                squares[x][y].ReplaceFurniture(stairs->tile(),
-                                               stairs->getOffset(x, y));
+            // Window curtains on exterior walls must be *inside* the
+            // room.
+            if (squares[x][y].mExterior) {
+                int dx = window->isW() ? 1 : 0;
+                int dy = window->isN() ? 1 : 0;
+                squares[x - dx][y - dy].ReplaceCurtains(window, true);
+            } else
+                squares[x][y].ReplaceCurtains(window, false);
+        }
+        if (Stairs *stairs = object->asStairs()) {
+            // Stair objects are 5 tiles long but only have 3 tiles.
+            if (stairs->isN()) {
+                for (int i = 1; i <= 3; i++)
+                    squares[x][y + i].ReplaceFurniture(stairs->tile(),
+                                                       stairs->getOffset(x, y + i));
+            } else {
+                for (int i = 1; i <= 3; i++)
+                    squares[x + i][y].ReplaceFurniture(stairs->tile(),
+                                                       stairs->getOffset(x + i, y));
             }
         }
-    }
-
-    foreach (BuildingObject *object, mObjects) {
         if (FurnitureObject *fo = object->asFurniture()) {
             int x = fo->x();
             int y = fo->y();
