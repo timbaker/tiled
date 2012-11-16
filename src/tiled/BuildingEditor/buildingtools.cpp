@@ -281,7 +281,19 @@ void PencilTool::updateCursor(const QPointF &scenePos)
         mCursor = new QGraphicsRectItem;
         mCursor->setZValue(FloorEditor::ZVALUE_CURSOR);
     }
-    mCursor->setRect(mEditor->tileToSceneRect(tilePos).adjusted(0,0,-1,-1));
+
+    // This crap is all to work around a bug when the view was scrolled and
+    // then the item moves which led to areas not being repainted.  Each item
+    // remembers where it was last drawn in a view, but those rectangles are
+    // not updated when the view scrolls.
+    QRectF rect = mEditor->tileToSceneRect(tilePos).adjusted(0,0,-1,-1);
+    QRectF viewRect = mEditor->views()[0]->mapFromScene(rect).boundingRect();
+    if (viewRect != mCursorViewRect) {
+        mCursorViewRect = viewRect;
+        mCursor->update();
+    }
+
+    mCursor->setRect(rect);
     mCursor->setBrush(QColor(BuildingEditorWindow::instance()->currentRoom()->Color));
     mCursor->setVisible(mEditor->currentFloorContains(tilePos));
 }
@@ -368,6 +380,18 @@ void EraserTool::updateCursor(const QPointF &scenePos)
         mCursor->setPen(pen);
         mCursor->setZValue(FloorEditor::ZVALUE_CURSOR);
     }
+
+    // This crap is all to work around a bug when the view was scrolled and
+    // then the item moves which led to areas not being repainted.  Each item
+    // remembers where it was last drawn in a view, but those rectangles are
+    // not updated when the view scrolls.
+    QRectF rect = mEditor->tileToSceneRect(tilePos).adjusted(0,0,-1,-1);
+    QRectF viewRect = mEditor->views()[0]->mapFromScene(rect).boundingRect();
+    if (viewRect != mCursorViewRect) {
+        mCursorViewRect = viewRect;
+        mCursor->update();
+    }
+
     mCursor->setRect(mEditor->tileToSceneRect(tilePos).adjusted(0,0,-1,-1));
     mCursor->setVisible(mEditor->currentFloorContains(tilePos));
 }
@@ -942,8 +966,8 @@ void FurnitureTool::placeObject()
                                                   mCursorObject->x(),
                                                   mCursorObject->y());
     object->setFurnitureTile(mCursorObject->asFurniture()->furnitureTile());
-   undoStack()->push(new AddObject(mEditor->document(), floor,
-                                   floor->objectCount(), object));
+    undoStack()->push(new AddObject(mEditor->document(), floor,
+                                    floor->objectCount(), object));
 }
 
 void FurnitureTool::updateCursorObject()
@@ -1142,6 +1166,18 @@ void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
             mCursorItem->setBrush(QColor(0,255,0,128));
             mEditor->addItem(mCursorItem);
         }
+
+        // This crap is all to work around a bug when the view was scrolled and
+        // then the item moves which led to areas not being repainted.  Each item
+        // remembers where it was last drawn in a view, but those rectangles are
+        // not updated when the view scrolls.
+        QRectF rect = mEditor->tileToSceneRect(mCurrentPos).adjusted(0,0,-1,-1);
+        QRectF viewRect = mEditor->views()[0]->mapFromScene(rect).boundingRect();
+        if (viewRect != mCursorViewRect) {
+            mCursorViewRect = viewRect;
+            mCursorItem->update();
+        }
+
         mCursorItem->setRect(mEditor->tileToSceneRect(mCurrentPos));
 
         updateHandle(event->scenePos());

@@ -166,6 +166,7 @@ private:
     bool mInitialPaint;
     bool mErasing;
     QGraphicsRectItem *mCursor;
+    QRectF mCursorViewRect;
 };
 
 class EraserTool : public BaseTool
@@ -193,6 +194,7 @@ private:
     bool mMouseDown;
     bool mInitialPaint;
     QGraphicsRectItem *mCursor;
+    QRectF mCursorViewRect;
 };
 
 /////
@@ -436,6 +438,7 @@ private:
     RoofObject *mObject;
     GraphicsObjectItem *mItem;
     QGraphicsRectItem *mCursorItem;
+    QRectF mCursorViewRect;
 
     GraphicsRoofItem *mObjectItem; // item for roof object mouse is over
     RoofObject *mHandleObject; // roof object mouse is over
