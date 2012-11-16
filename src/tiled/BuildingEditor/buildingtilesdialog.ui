@@ -62,6 +62,9 @@
           </widget>
           <widget class="QWidget" name="page_3">
            <layout class="QVBoxLayout" name="verticalLayout">
+            <property name="margin">
+             <number>0</number>
+            </property>
             <item>
              <widget class="BuildingEditor::TileCategoryView" name="categoryView"/>
             </item>

@@ -19,6 +19,7 @@
 #define BUILDINGTOOLS_H
 
 #include "buildingobjects.h" // need RoofType enum
+
 #include <QObject>
 #include <QPointF>
 #include <QRegion>
@@ -31,6 +32,7 @@ class QGraphicsPathItem;
 class QGraphicsRectItem;
 class QGraphicsSceneMouseEvent;
 class QImage;
+class QUndoStack;
 
 namespace BuildingEditor {
 
@@ -66,12 +68,20 @@ public:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) = 0;
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) = 0;
 
+    virtual void currentModifiersChanged(Qt::KeyboardModifiers modifiers)
+    { Q_UNUSED(modifiers) }
+
+    Qt::KeyboardModifiers keyboardModifiers() const;
+
+    bool controlModifier() const;
+
     QString statusText() const
     { return mStatusText; }
 
     void setStatusText(const QString &text);
 
     BuildingFloor *floor() const;
+    QUndoStack *undoStack() const;
 
     bool isCurrent();
 
@@ -108,6 +118,11 @@ public:
     BaseTool *currentTool() const
     { return mCurrentTool; }
 
+    void checkKeyboardModifiers(Qt::KeyboardModifiers modifiers);
+
+    Qt::KeyboardModifiers keyboardModifiers()
+    { return mCurrentModifiers; }
+
 signals:
     void currentToolChanged(BaseTool *tool);
     void statusTextChanged(BaseTool *tool);
@@ -119,6 +134,7 @@ private:
     static ToolManager *mInstance;
     QList<BaseTool*> mTools;
     BaseTool *mCurrentTool;
+    Qt::KeyboardModifiers mCurrentModifiers;
 };
 
 /////
@@ -148,6 +164,7 @@ private:
     static PencilTool *mInstance;
     bool mMouseDown;
     bool mInitialPaint;
+    bool mErasing;
     QGraphicsRectItem *mCursor;
 };
 
@@ -317,6 +334,8 @@ public:
 
     FurnitureTool();
 
+    void currentModifiersChanged(Qt::KeyboardModifiers modifiers);
+
     void placeObject();
     void updateCursorObject();
 
@@ -324,6 +343,23 @@ public:
 
     FurnitureTile *currentTile() const
     { return mCurrentTile; }
+
+    enum Orient {
+        OrientW,
+        OrientN,
+        OrientE,
+        OrientS,
+        OrientNW,
+        OrientNE,
+        OrientSW,
+        OrientSE,
+        OrientNone
+    };
+private:
+    Orient calcOrient(int x, int y);
+
+    Orient calcOrient(const QPoint &tilePos)
+    { return calcOrient(tilePos.x(), tilePos.y()); }
 
 private:
     static FurnitureTool *mInstance;

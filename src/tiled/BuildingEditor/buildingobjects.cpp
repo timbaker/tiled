@@ -196,13 +196,27 @@ void FurnitureObject::rotate(bool right)
 
     FurnitureTile *oldTile = mFurnitureTile;
     FurnitureTile *newTile = mFurnitureTile;
+    FurnitureTile::FurnitureOrientation map[8];
     if (right) {
-        int index = FurnitureTiles::orientIndex(oldTile->mOrient) + 1;
-        newTile = oldTile->owner()->mTiles[index % 4];
+        map[FurnitureTile::FurnitureW] = FurnitureTile::FurnitureN;
+        map[FurnitureTile::FurnitureN] = FurnitureTile::FurnitureE;
+        map[FurnitureTile::FurnitureE] = FurnitureTile::FurnitureS;
+        map[FurnitureTile::FurnitureS] = FurnitureTile::FurnitureW;
+        map[FurnitureTile::FurnitureSW] = FurnitureTile::FurnitureNW;
+        map[FurnitureTile::FurnitureNW] = FurnitureTile::FurnitureNE;
+        map[FurnitureTile::FurnitureNE] = FurnitureTile::FurnitureSE;
+        map[FurnitureTile::FurnitureSE] = FurnitureTile::FurnitureSW;
     } else {
-        int index = 4 + FurnitureTiles::orientIndex(oldTile->mOrient) - 1;
-        newTile = oldTile->owner()->mTiles[index % 4];
+        map[FurnitureTile::FurnitureW] = FurnitureTile::FurnitureS;
+        map[FurnitureTile::FurnitureS] = FurnitureTile::FurnitureE;
+        map[FurnitureTile::FurnitureE] = FurnitureTile::FurnitureN;
+        map[FurnitureTile::FurnitureN] = FurnitureTile::FurnitureW;
+        map[FurnitureTile::FurnitureSW] = FurnitureTile::FurnitureSE;
+        map[FurnitureTile::FurnitureSE] = FurnitureTile::FurnitureNE;
+        map[FurnitureTile::FurnitureNE] = FurnitureTile::FurnitureNW;
+        map[FurnitureTile::FurnitureNW] = FurnitureTile::FurnitureSW;
     }
+    newTile = oldTile->owner()->tile(map[oldTile->orient()]);
 
     if (right) {
         int x = mX;
@@ -230,35 +244,30 @@ void FurnitureObject::rotate(bool right)
 
 void FurnitureObject::flip(bool horizontal)
 {
+    FurnitureTile::FurnitureOrientation map[8];
     if (horizontal) {
         int oldWidth = mFurnitureTile->size().width();
-        if (mFurnitureTile->isW())
-            mFurnitureTile = mFurnitureTile->owner()->mTiles[FurnitureTile::FurnitureE];
-        else if (mFurnitureTile->isE())
-            mFurnitureTile = mFurnitureTile->owner()->mTiles[FurnitureTile::FurnitureW];
-        else if (mFurnitureTile->isNW())
-            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureNE);
-        else if (mFurnitureTile->isNE())
-            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureNW);
-        else if (mFurnitureTile->isSW())
-            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureSE);
-        else if (mFurnitureTile->isSE())
-            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureSW);
+        map[FurnitureTile::FurnitureW] = FurnitureTile::FurnitureE;
+        map[FurnitureTile::FurnitureN] = FurnitureTile::FurnitureN;
+        map[FurnitureTile::FurnitureE] = FurnitureTile::FurnitureW;
+        map[FurnitureTile::FurnitureS] = FurnitureTile::FurnitureS;
+        map[FurnitureTile::FurnitureSW] = FurnitureTile::FurnitureSE;
+        map[FurnitureTile::FurnitureNW] = FurnitureTile::FurnitureNE;
+        map[FurnitureTile::FurnitureNE] = FurnitureTile::FurnitureNW;
+        map[FurnitureTile::FurnitureSE] = FurnitureTile::FurnitureSW;
+        mFurnitureTile = mFurnitureTile->owner()->tile(map[mFurnitureTile->orient()]);
         mX = mFloor->width() - mX - qMax(oldWidth, mFurnitureTile->size().width());
     } else {
         int oldHeight = mFurnitureTile->size().height();
-        if (mFurnitureTile->isN())
-            mFurnitureTile = mFurnitureTile->owner()->mTiles[FurnitureTile::FurnitureS];
-        else if (mFurnitureTile->isS())
-            mFurnitureTile = mFurnitureTile->owner()->mTiles[FurnitureTile::FurnitureN];
-        else if (mFurnitureTile->isNW())
-            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureSW);
-        else if (mFurnitureTile->isSW())
-            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureNW);
-        else if (mFurnitureTile->isNE())
-            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureSE);
-        else if (mFurnitureTile->isSE())
-            mFurnitureTile = mFurnitureTile->owner()->tile(FurnitureTile::FurnitureNE);
+        map[FurnitureTile::FurnitureW] = FurnitureTile::FurnitureW;
+        map[FurnitureTile::FurnitureN] = FurnitureTile::FurnitureS;
+        map[FurnitureTile::FurnitureE] = FurnitureTile::FurnitureE;
+        map[FurnitureTile::FurnitureS] = FurnitureTile::FurnitureN;
+        map[FurnitureTile::FurnitureSW] = FurnitureTile::FurnitureNW;
+        map[FurnitureTile::FurnitureNW] = FurnitureTile::FurnitureSW;
+        map[FurnitureTile::FurnitureNE] = FurnitureTile::FurnitureSE;
+        map[FurnitureTile::FurnitureSE] = FurnitureTile::FurnitureNE;
+        mFurnitureTile = mFurnitureTile->owner()->tile(map[mFurnitureTile->orient()]);
         mY = mFloor->height() - mY - qMax(oldHeight, mFurnitureTile->size().height());
     }
 }

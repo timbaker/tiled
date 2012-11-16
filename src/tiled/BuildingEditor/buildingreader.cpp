@@ -171,12 +171,18 @@ FurnitureTiles *BuildingReaderPrivate::readFurnitureTiles()
 {
     Q_ASSERT(xml.isStartElement() && xml.name() == "furniture");
 
-    FurnitureTiles *ftiles = new FurnitureTiles;
+    const QXmlStreamAttributes atts = xml.attributes();
+    QString cornersString = atts.value(QLatin1String("corners")).toString();
+    bool corners = false;
+    if (cornersString.length() && !booleanFromString(cornersString, corners))
+        return 0;
+
+    FurnitureTiles *ftiles = new FurnitureTiles(corners);
 
     while (xml.readNextStartElement()) {
         if (xml.name() == "entry") {
             if (FurnitureTile *ftile = readFurnitureTile(ftiles))
-                ftiles->mTiles[ftiles->orientIndex(ftile->mOrient)] = ftile;
+                ftiles->setTile(ftile);
         } else
             readUnknownElement();
     }
@@ -214,7 +220,7 @@ FurnitureTile *BuildingReaderPrivate::readFurnitureTile(FurnitureTiles *ftiles)
         if (xml.name() == "tile") {
             QPoint pos;
             if (BuildingTile *btile = readFurnitureTile(ftile, pos))
-                ftile->mTiles[pos.x() + pos.y() * 2] = btile;
+                ftile->setTile(pos.x() + pos.y() * 2, btile);
         } else
             readUnknownElement();
     }

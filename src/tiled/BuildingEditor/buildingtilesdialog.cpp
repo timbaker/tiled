@@ -742,9 +742,9 @@ QString BuildingTilesDialog::changeFurnitureTile(FurnitureTile *ftile,
                                                  int index,
                                                  const QString &tileName)
 {
-    QString old = ftile->mTiles[index] ? ftile->mTiles[index]->name() : QString();
-    ftile->mTiles[index] = tileName.isEmpty() ? 0
-                                              : BuildingTilesMgr::instance()->get(tileName);
+    QString old = ftile->tile(index) ? ftile->tile(index)->name() : QString();
+    ftile->setTile(index, tileName.isEmpty()
+                   ? 0 : BuildingTilesMgr::instance()->get(tileName));
 
     FurnitureGroups::instance()->tileChanged(ftile);
 
@@ -760,7 +760,7 @@ void BuildingTilesDialog::reorderFurniture(FurnitureGroup *category,
 
     setFurnitureTiles();
     ui->furnitureView->setCurrentIndex(
-                ui->furnitureView->model()->index(ftiles->mTiles[0]));
+                ui->furnitureView->model()->index(ftiles->tile(FurnitureTile::FurnitureW)));
 }
 
 void BuildingTilesDialog::toggleCorners(FurnitureTiles *ftiles)
@@ -768,10 +768,7 @@ void BuildingTilesDialog::toggleCorners(FurnitureTiles *ftiles)
     ftiles->toggleCorners();
 
     FurnitureView *v = ui->furnitureView;
-    v->update(v->model()->index(ftiles->mTiles[0]));
-    v->update(v->model()->index(ftiles->mTiles[1]));
-    v->update(v->model()->index(ftiles->mTiles[2]));
-    v->update(v->model()->index(ftiles->mTiles[3]));
+    v->model()->toggleCorners(ftiles);
 }
 
 QString BuildingTilesDialog::renameFurnitureCategory(FurnitureGroup *category,
@@ -950,6 +947,7 @@ void BuildingTilesDialog::synchUI()
 
     ui->actionToggleCorners->setEnabled(mFurnitureGroup && remove);
     ui->actionClearTiles->setEnabled(clear);
+    ui->actionExpertMode->setEnabled(mFurnitureGroup == 0);
 
     QModelIndex current = ui->furnitureView->currentIndex();
     int index = current.isValid() ? current.row() : -1;
@@ -1017,11 +1015,7 @@ void BuildingTilesDialog::tilesetSelectionChanged()
 void BuildingTilesDialog::addTiles()
 {
     if (mFurnitureGroup != 0) {
-        FurnitureTiles *tiles = new FurnitureTiles;
-        tiles->mTiles[0] = new FurnitureTile(tiles, FurnitureTile::FurnitureW);
-        tiles->mTiles[1] = new FurnitureTile(tiles, FurnitureTile::FurnitureN);
-        tiles->mTiles[2] = new FurnitureTile(tiles, FurnitureTile::FurnitureE);
-        tiles->mTiles[3] = new FurnitureTile(tiles, FurnitureTile::FurnitureS);
+        FurnitureTiles *tiles = new FurnitureTiles(false);
         mUndoStack->push(new AddFurnitureTiles(this, mFurnitureGroup,
                                                mFurnitureGroup->mTiles.count(),
                                                tiles));
@@ -1135,7 +1129,7 @@ void BuildingTilesDialog::clearTiles()
         mUndoStack->beginMacro(tr("Clear Furniture Tiles"));
         foreach (FurnitureTile* ftile, clear) {
             for (int i = 0; i < 4; i++) {
-                if (ftile->mTiles[i])
+                if (ftile->tile(i))
                     mUndoStack->push(new ChangeFurnitureTile(this, ftile, i));
             }
         }

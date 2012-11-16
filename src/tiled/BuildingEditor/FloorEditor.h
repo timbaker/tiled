@@ -236,6 +236,8 @@ public:
 
     explicit FloorEditor(QWidget *parent = 0);
 
+    bool eventFilter(QObject *watched, QEvent *event);
+
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
     { mousePressEvent(event); }
 

@@ -62,7 +62,8 @@ public:
 
     FurnitureTile *tileAt(const QModelIndex &index) const;
 
-    void removeTiles(FurnitureTiles *tiles);
+    void toggleCorners(FurnitureTiles *ftiles);
+    void removeTiles(FurnitureTiles *ftiles);
 
     void scaleChanged(qreal scale);
 

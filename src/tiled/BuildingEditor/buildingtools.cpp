@@ -62,6 +62,16 @@ void BaseTool::setEnabled(bool enabled)
     }
 }
 
+Qt::KeyboardModifiers BaseTool::keyboardModifiers() const
+{
+    return ToolManager::instance()->keyboardModifiers();
+}
+
+bool BaseTool::controlModifier() const
+{
+    return (keyboardModifiers() & Qt::ControlModifier) != 0;
+}
+
 void BaseTool::setStatusText(const QString &text)
 {
     mStatusText = text;
@@ -71,6 +81,11 @@ void BaseTool::setStatusText(const QString &text)
 BuildingFloor *BaseTool::floor() const
 {
     return mEditor->document()->currentFloor();
+}
+
+QUndoStack *BaseTool::undoStack() const
+{
+    return mEditor->document()->undoStack();
 }
 
 bool BaseTool::isCurrent()
@@ -139,6 +154,15 @@ void ToolManager::toolEnabledChanged(BaseTool *tool, bool enabled)
     }
 }
 
+void ToolManager::checkKeyboardModifiers(Qt::KeyboardModifiers modifiers)
+{
+    if (modifiers == mCurrentModifiers)
+        return;
+    mCurrentModifiers = modifiers;
+    if (mCurrentTool)
+        mCurrentTool->currentModifiersChanged(modifiers);
+}
+
 void ToolManager::currentToolStatusTextChanged()
 {
     emit statusTextChanged(mCurrentTool);
@@ -160,7 +184,7 @@ PencilTool::PencilTool() :
     mMouseDown(false),
     mCursor(0)
 {
-    setStatusText(tr("Left-click to draw a room.  Right-click to switch to room under pointer."));
+    setStatusText(tr("Left-click to draw a room.  CTRL-Left-click to erase.  Right-click to switch to room under pointer."));
 }
 
 void PencilTool::documentChanged()
@@ -184,12 +208,18 @@ void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     }
 
     mInitialPaint = true;
-    if (mEditor->currentFloorContains(tilePos) &&
-            mEditor->document()->currentFloor()->GetRoomAt(tilePos) != BuildingEditorWindow::instance()->currentRoom()) {
-        mEditor->document()->undoStack()->push(new PaintRoom(mEditor->document(),
-                                                             mEditor->document()->currentFloor(),
-                                                             tilePos,
-                                                             BuildingEditorWindow::instance()->currentRoom()));
+    mErasing = controlModifier();
+    if (mEditor->currentFloorContains(tilePos)) {
+        if (mErasing) {
+            if (floor()->GetRoomAt(tilePos) != 0)
+                undoStack()->push(new EraseRoom(mEditor->document(), floor(),
+                                                tilePos));
+        } else {
+            Room *room = BuildingEditorWindow::instance()->currentRoom();
+            if (floor()->GetRoomAt(tilePos) != room)
+                undoStack()->push(new PaintRoom(mEditor->document(), floor(),
+                                                tilePos, room));
+        }
         mInitialPaint = false;
     }
     mMouseDown = true;
@@ -201,15 +231,25 @@ void PencilTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
     if (mMouseDown) {
         QPoint tilePos = mEditor->sceneToTile(event->scenePos());
-        if (mEditor->currentFloorContains(tilePos) &&
-                mEditor->document()->currentFloor()->GetRoomAt(tilePos) != BuildingEditorWindow::instance()->currentRoom()) {
-            PaintRoom *cmd = new PaintRoom(mEditor->document(),
-                                           mEditor->document()->currentFloor(),
-                                           tilePos,
-                                           BuildingEditorWindow::instance()->currentRoom());
-            cmd->setMergeable(!mInitialPaint);
-            mEditor->document()->undoStack()->push(cmd);
-            mInitialPaint = false;
+        if (mEditor->currentFloorContains(tilePos)) {
+            if (mErasing) {
+                if (floor()->GetRoomAt(tilePos) != 0) {
+                    EraseRoom *cmd = new EraseRoom(mEditor->document(), floor(),
+                                                   tilePos);
+                    cmd->setMergeable(!mInitialPaint);
+                    undoStack()->push(cmd);
+                    mInitialPaint = false;
+                }
+            } else {
+                Room *room = BuildingEditorWindow::instance()->currentRoom();
+                if (floor()->GetRoomAt(tilePos) != room) {
+                    PaintRoom *cmd = new PaintRoom(mEditor->document(), floor(),
+                                                   tilePos, room);
+                    cmd->setMergeable(!mInitialPaint);
+                    undoStack()->push(cmd);
+                    mInitialPaint = false;
+                }
+            }
         }
     }
 }
@@ -275,10 +315,8 @@ void EraserTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     mInitialPaint = true;
     QPoint tilePos = mEditor->sceneToTile(event->scenePos());
     if (mEditor->currentFloorContains(tilePos) &&
-            mEditor->document()->currentFloor()->GetRoomAt(tilePos) != 0) {
-        mEditor->document()->undoStack()->push(new EraseRoom(mEditor->document(),
-                                                             mEditor->document()->currentFloor(),
-                                                             tilePos));
+            floor()->GetRoomAt(tilePos) != 0) {
+        undoStack()->push(new EraseRoom(mEditor->document(), floor(), tilePos));
         mInitialPaint = false;
     }
     mMouseDown = true;
@@ -291,12 +329,10 @@ void EraserTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     if (mMouseDown) {
         QPoint tilePos = mEditor->sceneToTile(event->scenePos());
         if (mEditor->currentFloorContains(tilePos) &&
-                mEditor->document()->currentFloor()->GetRoomAt(tilePos) != 0) {
-            EraseRoom *cmd = new EraseRoom(mEditor->document(),
-                                                      mEditor->document()->currentFloor(),
-                                                      tilePos);
+                floor()->GetRoomAt(tilePos) != 0) {
+            EraseRoom *cmd = new EraseRoom(mEditor->document(), floor(), tilePos);
             cmd->setMergeable(!mInitialPaint);
-            mEditor->document()->undoStack()->push(cmd);
+            undoStack()->push(cmd);
             mInitialPaint = false;
         }
     }
@@ -473,7 +509,7 @@ void SelectMoveRoomsTool::deactivate()
 }
 
 void SelectMoveRoomsTool::updateSelection(const QPointF &pos,
-                                           Qt::KeyboardModifiers modifiers)
+                                          Qt::KeyboardModifiers modifiers)
 {
     Q_UNUSED(pos)
     Q_UNUSED(modifiers)
@@ -507,7 +543,7 @@ void SelectMoveRoomsTool::startMoving()
 }
 
 void SelectMoveRoomsTool::updateMovingItems(const QPointF &pos,
-                                             Qt::KeyboardModifiers modifiers)
+                                            Qt::KeyboardModifiers modifiers)
 {
     Q_UNUSED(modifiers)
 
@@ -586,8 +622,7 @@ void SelectMoveRoomsTool::finishMoving(const QPointF &pos)
     // Final position of the selection.
     mSelectedArea.translate(mDragOffset);
 
-    mEditor->document()->undoStack()->push(new SwapFloorGrid(mEditor->document(),
-                                                             floor, grid));
+    undoStack()->push(new SwapFloorGrid(mEditor->document(), floor, grid));
 }
 
 void SelectMoveRoomsTool::cancelMoving()
@@ -622,10 +657,8 @@ void BaseObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::RightButton) {
         if (BuildingObject *object = mEditor->topmostObjectAt(event->scenePos())) {
-            BuildingFloor *floor = mEditor->document()->currentFloor();
-            mEditor->document()->undoStack()->push(new RemoveObject(mEditor->document(),
-                                                                    floor,
-                                                                    floor->indexOf(object)));
+            undoStack()->push(new RemoveObject(mEditor->document(), floor(),
+                                               object->index()));
         }
         return;
     }
@@ -712,15 +745,13 @@ DoorTool::DoorTool() :
 
 void DoorTool::placeObject()
 {
-    BuildingFloor *floor = mEditor->document()->currentFloor();
+    BuildingFloor *floor = this->floor();
     Door *door = new Door(floor, mCursorObject->x(), mCursorObject->y(),
                           mCursorObject->dir());
     door->setTile(mEditor->building()->doorTile());
     door->setTile(mEditor->building()->doorFrameTile(), 1);
-    mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
-                                                         floor,
-                                                         floor->objectCount(),
-                                                         door));
+    undoStack()->push(new AddObject(mEditor->document(), floor,
+                                    floor->objectCount(), door));
 }
 
 void DoorTool::updateCursorObject()
@@ -776,15 +807,13 @@ WindowTool::WindowTool() :
 
 void WindowTool::placeObject()
 {
-    BuildingFloor *floor = mEditor->document()->currentFloor();
+    BuildingFloor *floor = this->floor();
     Window *window = new Window(floor, mCursorObject->x(), mCursorObject->y(),
                                 mCursorObject->dir());
     window->setTile(mEditor->building()->windowTile());
     window->setTile(mEditor->building()->curtainsTile(), 1);
-    mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
-                                                         floor,
-                                                         floor->objectCount(),
-                                                         window));
+    undoStack()->push(new AddObject(mEditor->document(), floor,
+                                    floor->objectCount(), window));
 }
 
 void WindowTool::updateCursorObject()
@@ -840,14 +869,12 @@ StairsTool::StairsTool() :
 
 void StairsTool::placeObject()
 {
-    BuildingFloor *floor = mEditor->document()->currentFloor();
+    BuildingFloor *floor = this->floor();
     Stairs *stairs = new Stairs(floor, mCursorObject->x(), mCursorObject->y(),
                                 mCursorObject->dir());
     stairs->setTile(mEditor->building()->stairsTile());
-    mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
-                                                         floor,
-                                                         floor->objectCount(),
-                                                         stairs));
+    undoStack()->push(new AddObject(mEditor->document(), floor,
+                                    floor->objectCount(), stairs));
 }
 
 void StairsTool::updateCursorObject()
@@ -899,20 +926,24 @@ FurnitureTool::FurnitureTool() :
     BaseObjectTool(),
     mCurrentTile(0)
 {
-    setStatusText(tr("Left-click to place furniture.  Right-click to remove any object."));
+    setStatusText(tr("Left-click to place furniture.  Right-click to remove any object.  CTRL toggles auto-align."));
+}
+
+void FurnitureTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
+{
+    Q_UNUSED(modifiers)
+    updateCursorObject();
 }
 
 void FurnitureTool::placeObject()
 {
-    BuildingFloor *floor = mEditor->document()->currentFloor();
+    BuildingFloor *floor = this->floor();
     FurnitureObject *object = new FurnitureObject(floor,
                                                   mCursorObject->x(),
                                                   mCursorObject->y());
-    object->setFurnitureTile(mCurrentTile);
-    mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
-                                                         floor,
-                                                         floor->objectCount(),
-                                                         object));
+    object->setFurnitureTile(mCursorObject->asFurniture()->furnitureTile());
+   undoStack()->push(new AddObject(mEditor->document(), floor,
+                                   floor->objectCount(), object));
 }
 
 void FurnitureTool::updateCursorObject()
@@ -930,9 +961,30 @@ void FurnitureTool::updateCursorObject()
     if (!mCursorObject) {
         BuildingFloor *floor = 0; //mEditor->document()->currentFloor();
         FurnitureObject *object = new FurnitureObject(floor, x, y);
-        object->setFurnitureTile(mCurrentTile);
         mCursorObject = object;
     }
+
+    FurnitureTiles *ftiles = mCurrentTile->owner();
+    FurnitureTile::FurnitureOrientation orient = mCurrentTile->orient();
+    if (!controlModifier()) {
+        switch (calcOrient(x, y)) {
+        case OrientNone: break;
+        case OrientNW: orient = ftiles->hasCorners()
+                    ? FurnitureTile::FurnitureNW : FurnitureTile::FurnitureN; break;
+        case OrientN: orient = FurnitureTile::FurnitureN; break;
+        case OrientNE: orient = ftiles->hasCorners()
+                    ? FurnitureTile::FurnitureNE : FurnitureTile::FurnitureN; break;
+        case OrientW: orient = FurnitureTile::FurnitureW; break;
+        case OrientE: orient = FurnitureTile::FurnitureE; break;
+        case OrientSW: orient = ftiles->hasCorners()
+                    ? FurnitureTile::FurnitureSW : FurnitureTile::FurnitureS; break;
+        case OrientS: orient = FurnitureTile::FurnitureS; break;
+        case OrientSE: orient = ftiles->hasCorners()
+                    ? FurnitureTile::FurnitureSE : FurnitureTile::FurnitureS; break;
+        }
+    }
+    mCursorObject->asFurniture()->setFurnitureTile(ftiles->tile(orient));
+
     // mCursorDoor->setFloor()
     mCursorObject->setPos(x, y);
 
@@ -944,6 +996,52 @@ void FurnitureTool::setCurrentTile(FurnitureTile *tile)
     mCurrentTile = tile;
     if (mCursorObject)
         mCursorObject->asFurniture()->setFurnitureTile(tile);
+}
+
+static FurnitureTool::Orient wallOrient(const BuildingFloor::Square &square)
+{
+    if (square.mTiles[BuildingFloor::Square::SectionWall])
+        switch (square.mWallOrientation) {
+        case BuildingFloor::Square::WallOrientW:
+            return FurnitureTool::OrientW;
+        case BuildingFloor::Square::WallOrientN:
+            return FurnitureTool::OrientN;
+        case BuildingFloor::Square::WallOrientNW:
+            return FurnitureTool::OrientNW;
+        case BuildingFloor::Square::WallOrientSE:
+            return FurnitureTool::OrientSE;
+        }
+    return FurnitureTool::OrientNone;
+}
+
+FurnitureTool::Orient FurnitureTool::calcOrient(int x, int y)
+{
+    BuildingFloor *floor = this->floor();
+    Orient orient[9];
+    orient[OrientNW] = (x &&y) ? wallOrient(floor->squares[x-1][y-1]) : OrientNone;
+    orient[OrientN] = y ? wallOrient(floor->squares[x][y-1]) : OrientNone;
+    orient[OrientNE] = y ? wallOrient(floor->squares[x+1][y-1]) : OrientNone;
+    orient[OrientW] = x ? wallOrient(floor->squares[x-1][y]) : OrientNone;
+    orient[OrientNone] = wallOrient(floor->squares[x][y]);
+    orient[OrientE] = wallOrient(floor->squares[x+1][y]);
+    orient[OrientSW] = x ? wallOrient(floor->squares[x-1][y+1]) : OrientNone;
+    orient[OrientS] = wallOrient(floor->squares[x][y+1]);
+    orient[OrientSE] = wallOrient(floor->squares[x+1][y+1]);
+
+    if (orient[OrientNone] == OrientNW) return OrientNW;
+    if (orient[OrientSE] == OrientSE) return OrientSE;
+    if (orient[OrientNone] == OrientN && (orient[OrientE] == OrientW || orient[OrientE] == OrientNW)) return OrientNE;
+    if (orient[OrientNone] == OrientN) return OrientN;
+    if (orient[OrientNone] == OrientW && (orient[OrientS] == OrientN || orient[OrientS] == OrientNW)) return OrientSW;
+    if (orient[OrientNone] == OrientW) return OrientW;
+
+//    if (orient[OrientN] == OrientN && orient[OrientE] == OrientW) return OrientNE;
+//    if (orient[OrientS] == OrientN && orient[OrientE] == OrientW) return OrientSE;
+
+    if (orient[OrientE] == OrientW || orient[OrientE] == OrientNW) return OrientE;
+    if (orient[OrientS] == OrientN || orient[OrientS] == OrientNW) return OrientS;
+
+    return OrientNone;
 }
 
 /////
@@ -1027,10 +1125,8 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     if (event->button() == Qt::RightButton) {
         if (BuildingObject *object = mEditor->topmostObjectAt(event->scenePos())) {
-            BuildingFloor *floor = mEditor->document()->currentFloor();
-            mEditor->document()->undoStack()->push(new RemoveObject(mEditor->document(),
-                                                                    floor,
-                                                                    floor->indexOf(object)));
+            undoStack()->push(new RemoveObject(mEditor->document(), floor(),
+                                               object->index()));
         }
     }
 }
@@ -1101,9 +1197,8 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         mMode = NoMode;
         int width = mHandleObject->width(), height = mHandleObject->height();
         mHandleObject->resize(mOriginalWidth, mOriginalHeight);
-        mEditor->document()->undoStack()->push(new ResizeRoof(mEditor->document(),
-                                                              mHandleObject,
-                                                              width, height));
+        undoStack()->push(new ResizeRoof(mEditor->document(), mHandleObject,
+                                         width, height));
         return;
     }
 
@@ -1114,11 +1209,9 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             mObject->setCapTiles(RoofTool::instance()->currentCapTiles());
             mObject->setSlopeTiles(RoofTool::instance()->currentSlopeTiles());
             mObject->setTopTiles(RoofTool::instance()->currentTopTiles());
-            BuildingFloor *floor = mEditor->document()->currentFloor();
-            mEditor->document()->undoStack()->push(new AddObject(mEditor->document(),
-                                                                 floor,
-                                                                 floor->objectCount(),
-                                                                 mObject));
+            BuildingFloor *floor = this->floor();
+            undoStack()->push(new AddObject(mEditor->document(), floor,
+                                            floor->objectCount(), mObject));
         } else
             delete mObject;
         mObject = 0;
@@ -1233,48 +1326,42 @@ void RoofTool::resizeRoof(int width, int height)
 
 void RoofTool::toggleCappedW()
 {
-    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(),
-                                                          mHandleObject,
-                                                          HandleRoof::ToggleCappedW));
+    undoStack()->push(new HandleRoof(mEditor->document(), mHandleObject,
+                                     HandleRoof::ToggleCappedW));
 }
 
 void RoofTool::toggleCappedN()
 {
-    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(),
-                                                          mHandleObject,
-                                                          HandleRoof::ToggleCappedN));
+    undoStack()->push(new HandleRoof(mEditor->document(), mHandleObject,
+                                     HandleRoof::ToggleCappedN));
 }
 
 void RoofTool::toggleCappedE()
 {
-    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(),
-                                                          mHandleObject,
-                                                          HandleRoof::ToggleCappedE));
+    undoStack()->push(new HandleRoof(mEditor->document(), mHandleObject,
+                                     HandleRoof::ToggleCappedE));
 }
 
 void RoofTool::toggleCappedS()
 {
-    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(),
-                                                          mHandleObject,
-                                                          HandleRoof::ToggleCappedS));
+    undoStack()->push(new HandleRoof(mEditor->document(), mHandleObject,
+                                     HandleRoof::ToggleCappedS));
 }
 
 void RoofTool::depthUp()
 {
     if (mHandleObject->isDepthMax())
         return;
-    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(),
-                                                          mHandleObject,
-                                                          HandleRoof::IncrDepth));
+    undoStack()->push(new HandleRoof(mEditor->document(), mHandleObject,
+                                     HandleRoof::IncrDepth));
 }
 
 void RoofTool::depthDown()
 {
     if (mHandleObject->isDepthMin())
         return;
-    mEditor->document()->undoStack()->push(new HandleRoof(mEditor->document(),
-                                                          mHandleObject,
-                                                          HandleRoof::DecrDepth));
+    undoStack()->push(new HandleRoof(mEditor->document(), mHandleObject,
+                                     HandleRoof::DecrDepth));
 }
 
 /////
@@ -1496,13 +1583,13 @@ void SelectMoveObjectTool::finishMoving(const QPointF &pos)
     if (mDragOffset.isNull()) // Move is a no-op
         return;
 
-    QUndoStack *undoStack = mEditor->document()->undoStack();
+    QUndoStack *undoStack = this->undoStack();
     undoStack->beginMacro(tr("Move %n Object(s)", "", mMovingObjects.size()));
     foreach (BuildingObject *object, mMovingObjects) {
         if (!object->isValidPos(mDragOffset))
             undoStack->push(new RemoveObject(mEditor->document(),
                                              object->floor(),
-                                             object->floor()->indexOf(object)));
+                                             object->index()));
         else
             undoStack->push(new MoveObject(mEditor->document(), object,
                                            object->pos() + mDragOffset));

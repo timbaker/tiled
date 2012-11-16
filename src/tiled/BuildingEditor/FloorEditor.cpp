@@ -251,7 +251,7 @@ void GraphicsObjectItem::paint(QPainter *painter,
         r.adjust(2, 2, -2, -2);
 
         bool lineW = false, lineN = false, lineE = false, lineS = false;
-        switch (object->furnitureTile()->mOrient) {
+        switch (object->furnitureTile()->orient()) {
         case FurnitureTile::FurnitureN:
             lineN = true;
             break;
@@ -636,6 +636,27 @@ FloorEditor::FloorEditor(QWidget *parent) :
 
     connect(ToolManager::instance(), SIGNAL(currentToolChanged(BaseTool*)),
             SLOT(currentToolChanged(BaseTool*)));
+
+    // Install an event filter so that we can get key events on behalf of the
+    // active tool without having to have the current focus.
+    qApp->installEventFilter(this);
+}
+
+bool FloorEditor::eventFilter(QObject *watched, QEvent *event)
+{
+    Q_UNUSED(watched)
+    switch (event->type()) {
+    case QEvent::KeyPress:
+    case QEvent::KeyRelease: {
+            QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+            ToolManager::instance()->checkKeyboardModifiers(keyEvent->modifiers());
+        }
+        break;
+    default:
+        break;
+    }
+
+    return false;
 }
 
 void FloorEditor::mousePressEvent(QGraphicsSceneMouseEvent *event)

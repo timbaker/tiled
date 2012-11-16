@@ -124,22 +124,32 @@ public:
 
         foreach (FurnitureTiles *ftiles, mFurnitureTiles) {
             w.writeStartElement(QLatin1String("furniture"));
-            writeFurnitureTile(w, ftiles->mTiles[0]);
-            writeFurnitureTile(w, ftiles->mTiles[1]);
-            writeFurnitureTile(w, ftiles->mTiles[2]);
-            writeFurnitureTile(w, ftiles->mTiles[3]);
+            if (ftiles->hasCorners())
+                writeBoolean(w, QLatin1String("corners"), ftiles->hasCorners());
+            writeFurnitureTile(w, ftiles->tile(FurnitureTile::FurnitureW));
+            writeFurnitureTile(w, ftiles->tile(FurnitureTile::FurnitureN));
+            writeFurnitureTile(w, ftiles->tile(FurnitureTile::FurnitureE));
+            writeFurnitureTile(w, ftiles->tile(FurnitureTile::FurnitureS));
+            if (ftiles->hasCorners()) {
+                writeFurnitureTile(w, ftiles->tile(FurnitureTile::FurnitureSW));
+                writeFurnitureTile(w, ftiles->tile(FurnitureTile::FurnitureNW));
+                writeFurnitureTile(w, ftiles->tile(FurnitureTile::FurnitureNE));
+                writeFurnitureTile(w, ftiles->tile(FurnitureTile::FurnitureSE));
+            }
             w.writeEndElement(); // </furniture>
         }
     }
 
     void writeFurnitureTile(QXmlStreamWriter &w, FurnitureTile *ftile)
     {
+        if (ftile->isEmpty())
+            return;
         w.writeStartElement(QLatin1String("entry"));
         w.writeAttribute(QLatin1String("orient"), ftile->orientToString());
-        writeFurnitureTile(w, 0, 0, ftile->mTiles[0]);
-        writeFurnitureTile(w, 1, 0, ftile->mTiles[1]);
-        writeFurnitureTile(w, 0, 1, ftile->mTiles[2]);
-        writeFurnitureTile(w, 1, 1, ftile->mTiles[3]);
+        writeFurnitureTile(w, 0, 0, ftile->tile(0));
+        writeFurnitureTile(w, 1, 0, ftile->tile(1));
+        writeFurnitureTile(w, 0, 1, ftile->tile(2));
+        writeFurnitureTile(w, 1, 1, ftile->tile(3));
         w.writeEndElement(); // </entry>
     }
 

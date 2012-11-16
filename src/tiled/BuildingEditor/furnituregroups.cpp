@@ -120,7 +120,8 @@ bool FurnitureGroups::readTxt()
             group->mLabel = block.value("label");
             foreach (SimpleFileBlock furnitureBlock, block.blocks) {
                 if (furnitureBlock.name == QLatin1String("furniture")) {
-                    FurnitureTiles *tiles = new FurnitureTiles;
+                    bool corners = furnitureBlock.value("corners") == QLatin1String("true");
+                    FurnitureTiles *tiles = new FurnitureTiles(corners);
                     foreach (SimpleFileBlock entryBlock, furnitureBlock.blocks) {
                         if (entryBlock.name == QLatin1String("entry")) {
                             FurnitureTile::FurnitureOrientation orient
@@ -144,10 +145,10 @@ bool FurnitureGroups::readTxt()
                                     mError = tr("Can't parse tile name '%1'").arg(kv.value);
                                     return false;
                                 }
-                                tile->mTiles[x + y * 2] = BuildingTilesMgr::instance()->get(kv.value);
+                                tile->setTile(x + y * 2, BuildingTilesMgr::instance()->get(kv.value));
 
                             }
-                            tiles->mTiles[FurnitureTiles::orientIndex(tile->mOrient)] = tile;
+                            tiles->setTile(tile);
                         } else {
                             mError = tr("Unknown block name '%1'.\n%2")
                                     .arg(block.name)
@@ -214,23 +215,28 @@ bool FurnitureGroups::writeTxt()
         groupBlock.name = QLatin1String("group");
         groupBlock.values += SimpleFileKeyValue(QLatin1String("label"),
                                                    group->mLabel);
-        foreach (FurnitureTiles *tiles, group->mTiles) {
+        foreach (FurnitureTiles *ftiles, group->mTiles) {
             SimpleFileBlock furnitureBlock;
             furnitureBlock.name = QLatin1String("furniture");
-            for (int i = 0; i < 4; i++) {
-                FurnitureTile *tile = tiles->mTiles[i];
+            if (ftiles->hasCorners())
+                furnitureBlock.addValue("corners", QLatin1String("true"));
+            foreach (FurnitureTile *ftile, ftiles->tiles()) {
+                if (ftile->isEmpty())
+                    continue;
                 SimpleFileBlock entryBlock;
                 entryBlock.name = QLatin1String("entry");
                 entryBlock.values += SimpleFileKeyValue(QLatin1String("orient"),
-                                                        tile->orientToString());
-                for (int j = 0; j < 4; j++) {
-                    if (!tile->mTiles[j])
+                                                        ftile->orientToString());
+                int j = -1;
+                foreach (BuildingTile *btile, ftile->tiles()) {
+                    ++j;
+                    if (btile == 0)
                         continue;
                     int x = j % 2;
                     int y = j / 2;
                     entryBlock.values += SimpleFileKeyValue(
                                 QString(QLatin1String("%1,%2")).arg(x).arg(y),
-                                tile->mTiles[j]->name());
+                                btile->name());
                 }
                 furnitureBlock.blocks += entryBlock;
             }
@@ -313,6 +319,13 @@ bool FurnitureGroups::upgradeTxt()
 
 /////
 
+FurnitureTile::FurnitureTile(FurnitureTiles *ftiles, FurnitureTile::FurnitureOrientation orient) :
+    mOwner(ftiles),
+    mOrient(orient),
+    mTiles(4, 0)
+{
+}
+
 QSize FurnitureTile::size() const
 {
     int width = (resolvedTiles()[1] || resolvedTiles()[3]) ? 2 : 1;
@@ -320,23 +333,28 @@ QSize FurnitureTile::size() const
     return QSize(width, height);
 }
 
-bool FurnitureTile::equals(FurnitureTile *other)
+bool FurnitureTile::equals(FurnitureTile *other) const
 {
     return other->mTiles == mTiles &&
             other->mOrient == mOrient;
+}
+
+bool FurnitureTile::isEmpty() const
+{
+    return !(mTiles[0] || mTiles[1] || mTiles[2] || mTiles[3]);
 }
 
 const QVector<BuildingTile *> &FurnitureTile::resolvedTiles() const
 {
     if (isEmpty()) {
         if (mOrient == FurnitureE)
-            return mOwner->mTiles[FurnitureW]->mTiles;
+            return mOwner->tile(FurnitureW)->tiles();
         if (mOrient == FurnitureN)
-            return mOwner->mTiles[FurnitureW]->mTiles;
+            return mOwner->tile(FurnitureW)->tiles();
         if (mOrient == FurnitureS) {
-            if (!mOwner->mTiles[FurnitureN]->isEmpty())
-                return mOwner->mTiles[FurnitureN]->mTiles;
-            return mOwner->mTiles[FurnitureW]->mTiles;
+            if (!mOwner->tile(FurnitureN)->isEmpty())
+                return mOwner->tile(FurnitureN)->tiles();
+            return mOwner->tile(FurnitureW)->tiles();
         }
     }
     return mTiles;
@@ -344,43 +362,50 @@ const QVector<BuildingTile *> &FurnitureTile::resolvedTiles() const
 
 /////
 
-bool FurnitureTiles::isCorners() const
+FurnitureTiles::FurnitureTiles(bool corners) :
+    mTiles(8, 0),
+    mCorners(corners)
 {
-    return mTiles[0]->isSW();
+    mTiles[FurnitureTile::FurnitureW] = new FurnitureTile(this, FurnitureTile::FurnitureW);
+    mTiles[FurnitureTile::FurnitureN] = new FurnitureTile(this, FurnitureTile::FurnitureN);
+    mTiles[FurnitureTile::FurnitureE] = new FurnitureTile(this, FurnitureTile::FurnitureE);
+    mTiles[FurnitureTile::FurnitureS] = new FurnitureTile(this, FurnitureTile::FurnitureS);
+    mTiles[FurnitureTile::FurnitureSW] = new FurnitureTile(this, FurnitureTile::FurnitureSW);
+    mTiles[FurnitureTile::FurnitureNW] = new FurnitureTile(this, FurnitureTile::FurnitureNW);
+    mTiles[FurnitureTile::FurnitureNE] = new FurnitureTile(this, FurnitureTile::FurnitureNE);
+    mTiles[FurnitureTile::FurnitureSE] = new FurnitureTile(this, FurnitureTile::FurnitureSE);
 }
 
-void FurnitureTiles::toggleCorners()
+FurnitureTiles::~FurnitureTiles()
 {
-    if (isCorners()) {
-        mTiles[0]->mOrient = FurnitureTile::FurnitureW;
-        mTiles[1]->mOrient = FurnitureTile::FurnitureN;
-        mTiles[2]->mOrient = FurnitureTile::FurnitureE;
-        mTiles[3]->mOrient = FurnitureTile::FurnitureS;
-    } else {
-        mTiles[0]->mOrient = FurnitureTile::FurnitureSW;
-        mTiles[1]->mOrient = FurnitureTile::FurnitureNW;
-        mTiles[2]->mOrient = FurnitureTile::FurnitureNE;
-        mTiles[3]->mOrient = FurnitureTile::FurnitureSE;
-    }
+    qDeleteAll(mTiles);
+}
+
+bool FurnitureTiles::isEmpty() const
+{
+    for (int i = 0; i < mTiles.size(); i++)
+        if (!mTiles.isEmpty())
+            return false;
+    return true;
+}
+
+void FurnitureTiles::setTile(FurnitureTile *ftile)
+{
+    delete mTiles[ftile->orient()];
+    mTiles[ftile->orient()] = ftile;
 }
 
 FurnitureTile *FurnitureTiles::tile(FurnitureTile::FurnitureOrientation orient) const
 {
-    return mTiles[orientIndex(orient)];
+    return mTiles[orient];
 }
 
 bool FurnitureTiles::equals(const FurnitureTiles *other)
 {
-    return other->mTiles[0]->equals(mTiles[0]) &&
-            other->mTiles[1]->equals(mTiles[1]) &&
-            other->mTiles[2]->equals(mTiles[2]) &&
-            other->mTiles[3]->equals(mTiles[3]);
-}
-
-int FurnitureTiles::orientIndex(FurnitureTile::FurnitureOrientation orient)
-{
-    int index[9] = {0, 1, 2, 3, 0, 1, 2, 3, -1};
-    return index[orient];
+    for (int i = 0; i < mTiles.size(); i++)
+        if (!other->mTiles[i]->equals(mTiles[i]))
+            return false;
+    return true;
 }
 
 /////

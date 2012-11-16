@@ -94,7 +94,7 @@ void FurnitureTileDelegate::paint(QPainter *painter,
 
     // Draw the tile images.
     const QVector<BuildingTile*> btiles = mView->acceptDrops()
-            ? ftile->mTiles
+            ? ftile->tiles()
             : ftile->resolvedTiles();
     for (int y = 0; y < 2; y++) {
         for (int x = 0; x < 2; x++) {
@@ -157,7 +157,7 @@ void FurnitureTileDelegate::paint(QPainter *painter,
                       &textRect);
 
     // Draw resolved-tiles indicator
-    if (!mView->acceptDrops() && (ftile->mTiles != ftile->resolvedTiles()))
+    if (!mView->acceptDrops() && (ftile->tiles() != ftile->resolvedTiles()))
         painter->fillRect(textRect.right() + 3, textRect.center().y()-2, 4, 4, Qt::gray);
 }
 
@@ -440,11 +440,17 @@ bool FurnitureModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
 void FurnitureModel::setTiles(const QList<FurnitureTiles *> &tilesList)
 {
     mTiles.clear();
-    foreach (FurnitureTiles *tiles, tilesList) {
-        mTiles += tiles->mTiles[0];
-        mTiles += tiles->mTiles[1];
-        mTiles += tiles->mTiles[2];
-        mTiles += tiles->mTiles[3];
+    foreach (FurnitureTiles *ftiles, tilesList) {
+        mTiles += ftiles->tile(FurnitureTile::FurnitureW);
+        mTiles += ftiles->tile(FurnitureTile::FurnitureN);
+        mTiles += ftiles->tile(FurnitureTile::FurnitureE);
+        mTiles += ftiles->tile(FurnitureTile::FurnitureS);
+        if (ftiles->hasCorners()) {
+            mTiles += ftiles->tile(FurnitureTile::FurnitureSW);
+            mTiles += ftiles->tile(FurnitureTile::FurnitureNW);
+            mTiles += ftiles->tile(FurnitureTile::FurnitureNE);
+            mTiles += ftiles->tile(FurnitureTile::FurnitureSE);
+        }
     }
     reset();
 }
@@ -457,20 +463,45 @@ FurnitureTile *FurnitureModel::tileAt(const QModelIndex &index) const
     return mTiles.at(i);
 }
 
-void FurnitureModel::removeTiles(FurnitureTiles *tiles)
+void FurnitureModel::toggleCorners(FurnitureTiles *ftiles)
 {
-    for (int i = 0; i < mTiles.count(); i++) {
-        if (mTiles[i]->owner() == tiles) {
-            int row = index(mTiles[i]).row();
-            beginRemoveRows(QModelIndex(), row, row);
-            mTiles.takeAt(i);
-            mTiles.takeAt(i);
-            mTiles.takeAt(i);
-            mTiles.takeAt(i);
-            endRemoveRows();
-            return;
-        }
+    int n = mTiles.indexOf(ftiles->tile(FurnitureTile::FurnitureW));
+    int row = n / columnCount() + 1;
+    if (ftiles->hasCorners()) {
+        beginInsertRows(QModelIndex(), row, row);
+        mTiles.insert(n + 4, ftiles->tile(FurnitureTile::FurnitureSW));
+        mTiles.insert(n + 5, ftiles->tile(FurnitureTile::FurnitureNW));
+        mTiles.insert(n + 6, ftiles->tile(FurnitureTile::FurnitureNE));
+        mTiles.insert(n + 7, ftiles->tile(FurnitureTile::FurnitureSE));
+        endInsertRows();
+    } else {
+        beginRemoveRows(QModelIndex(), row, row);
+        mTiles.takeAt(n + 4);
+        mTiles.takeAt(n + 4);
+        mTiles.takeAt(n + 4);
+        mTiles.takeAt(n + 4);
+        endRemoveRows();
     }
+}
+
+void FurnitureModel::removeTiles(FurnitureTiles *ftiles)
+{
+    QModelIndex index = this->index(ftiles->tile(FurnitureTile::FurnitureW));
+    int row = index.row();
+    beginRemoveRows(QModelIndex(), row, row + (ftiles->hasCorners() ? 1 : 0));
+    int i = mTiles.indexOf(ftiles->tile(FurnitureTile::FurnitureW));
+    mTiles.takeAt(i);
+    mTiles.takeAt(i);
+    mTiles.takeAt(i);
+    mTiles.takeAt(i);
+    if (ftiles->hasCorners()) {
+        mTiles.takeAt(i);
+        mTiles.takeAt(i);
+        mTiles.takeAt(i);
+        mTiles.takeAt(i);
+    }
+    endRemoveRows();
+    return;
 }
 
 void FurnitureModel::scaleChanged(qreal scale)

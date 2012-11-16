@@ -44,23 +44,20 @@ public:
         FurnitureUnknown
     };
 
-    FurnitureTile(FurnitureTiles *tiles, FurnitureOrientation orient) :
-        mOwner(tiles),
-        mOrient(orient),
-        mTiles(4, 0)
-    {
-    }
+    FurnitureTile(FurnitureTiles *ftiles, FurnitureOrientation orient);
 
     FurnitureTiles *owner() const
     { return mOwner; }
 
     void clear()
     {
-        mTiles[0] = mTiles[1] = mTiles[2] = mTiles[3] = 0;
+        mTiles.fill(0);
     }
 
-    bool isEmpty() const
-    { return !(mTiles[0] || mTiles[1] || mTiles[2] || mTiles[3]); }
+    bool isEmpty() const;
+
+    FurnitureOrientation orient() const
+    { return mOrient; }
 
     bool isW() const { return mOrient == FurnitureW; }
     bool isN() const { return mOrient == FurnitureN; }
@@ -80,45 +77,50 @@ public:
 
     QSize size() const;
 
-    bool equals(FurnitureTile *other);
+    bool equals(FurnitureTile *other) const;
+
+    void setTile(int n, BuildingTile *btile)
+    { mTiles[n] = btile; }
+
+    BuildingTile *tile(int n) const
+    { return mTiles[n]; }
+
+    const QVector<BuildingTile*> &tiles() const
+    { return mTiles; }
 
     const QVector<BuildingTile*> &resolvedTiles() const;
 
+private:
     FurnitureTiles *mOwner;
     FurnitureOrientation mOrient;
-    QVector<BuildingTile*> mTiles; // W N E S or SW NW NE SE
+    QVector<BuildingTile*> mTiles;
 };
 
 class FurnitureTiles
 {
 public:
-    FurnitureTiles() :
-        mTiles(4, 0)
-    {
-    }
+    FurnitureTiles(bool corners);
+    ~FurnitureTiles();
 
-    ~FurnitureTiles()
-    {
-        delete mTiles[0];
-        delete mTiles[1];
-        delete mTiles[2];
-        delete mTiles[3];
-    }
+    bool isEmpty() const;
 
-    bool isEmpty() const
-    { return mTiles[0]->isEmpty() && mTiles[1]->isEmpty() &&
-                mTiles[2]->isEmpty() && mTiles[3]->isEmpty(); }
+    bool hasCorners() const
+    { return mCorners; }
 
-    bool isCorners() const;
-    void toggleCorners();
+    void toggleCorners()
+    { mCorners = !mCorners; }
 
+    void setTile(FurnitureTile *ftile);
     FurnitureTile *tile(FurnitureTile::FurnitureOrientation orient) const;
+
+    const QVector<FurnitureTile*> &tiles() const
+    { return mTiles; }
 
     bool equals(const FurnitureTiles *other);
 
-    static int orientIndex(FurnitureTile::FurnitureOrientation orient);
-
+private:
     QVector<FurnitureTile*> mTiles;
+    bool mCorners;
 };
 
 class FurnitureGroup

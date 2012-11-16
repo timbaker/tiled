@@ -1113,7 +1113,7 @@ BuildingTileEntry *BTC_RoofTops::createEntryFromSingleTile(const QString &tileNa
 int BTC_RoofTops::shadowToEnum(int shadowIndex)
 {
     const int map[EnumCount] = {
-        West1, West2, West3
+        West3, West1, West2
     };
     return map[shadowIndex];
 }
