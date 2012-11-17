@@ -117,9 +117,7 @@ private:
     void currentWindowChanged(BuildingTileEntry *entry);
     void currentCurtainsChanged(BuildingTileEntry *entry);
     void currentStairsChanged(BuildingTileEntry *entry);
-    void currentRoofCapChanged(BuildingTileEntry *entry);
-    void currentRoofSlopeChanged(BuildingTileEntry *entry);
-    void currentRoofTopChanged(BuildingTileEntry *entry);
+    void currentRoofTileChanged(BuildingTileEntry *entry, int which);
 
     void selectCurrentCategoryTile();
 

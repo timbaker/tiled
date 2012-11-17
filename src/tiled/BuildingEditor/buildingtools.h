@@ -390,24 +390,6 @@ public:
     void activate();
     void deactivate();
 
-    void setCurrentCapTiles(BuildingTileEntry *tiles)
-    { mCurrentCapTiles = tiles; }
-
-    BuildingTileEntry *currentCapTiles() const
-    { return mCurrentCapTiles; }
-
-    void setCurrentSlopeTiles(BuildingTileEntry *tiles)
-    { mCurrentSlopeTiles = tiles; }
-
-    BuildingTileEntry *currentSlopeTiles() const
-    { return mCurrentSlopeTiles; }
-
-    void setCurrentTopTiles(BuildingTileEntry *tiles)
-    { mCurrentTopTiles = tiles; }
-
-    BuildingTileEntry *currentTopTiles() const
-    { return mCurrentTopTiles; }
-
     void setRoofType(RoofObject::RoofType type)
     { mRoofType = type; }
 
@@ -427,9 +409,6 @@ private:
 
 private:
     static RoofTool *mInstance;
-    BuildingTileEntry *mCurrentCapTiles;
-    BuildingTileEntry *mCurrentSlopeTiles;
-    BuildingTileEntry *mCurrentTopTiles;
     RoofObject::RoofType mRoofType;
 
     enum Mode {

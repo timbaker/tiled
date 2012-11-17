@@ -265,6 +265,7 @@ void PencilTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void PencilTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
 {
+    Q_UNUSED(modifiers)
     if (!mMouseDown) {
         mErasing = controlModifier();
         updateCursor(mMouseScenePos);
@@ -1153,9 +1154,6 @@ RoofTool *RoofTool::instance()
 
 RoofTool::RoofTool() :
     BaseTool(),
-    mCurrentCapTiles(BuildingTilesMgr::instance()->noneTileEntry()),
-    mCurrentSlopeTiles(BuildingTilesMgr::instance()->noneTileEntry()),
-    mCurrentTopTiles(BuildingTilesMgr::instance()->noneTileEntry()),
     mRoofType(RoofObject::PeakNS),
     mMode(NoMode),
     mObject(0),
@@ -1313,10 +1311,9 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     if (mMode == Create) {
         mMode = NoMode;
         if (mObject->isValidPos()) {
-            // Using instance() because there are two tools for roofs.
-            mObject->setCapTiles(RoofTool::instance()->currentCapTiles());
-            mObject->setSlopeTiles(RoofTool::instance()->currentSlopeTiles());
-            mObject->setTopTiles(RoofTool::instance()->currentTopTiles());
+            mObject->setCapTiles(mEditor->building()->roofCapTile());
+            mObject->setSlopeTiles(mEditor->building()->roofSlopeTile());
+            mObject->setTopTiles(mEditor->building()->roofTopTile());
             BuildingFloor *floor = this->floor();
             undoStack()->push(new AddObject(mEditor->document(), floor,
                                             floor->objectCount(), mObject));

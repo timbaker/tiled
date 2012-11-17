@@ -256,6 +256,13 @@ public:
         InvalidDepth
     };
 
+    /* Enum for setTile() and tile() 'alternate' argument. */
+    enum RoofObjectTiles {
+        TileCap,
+        TileSlope,
+        TileTop
+    };
+
     RoofObject(BuildingFloor *floor, int x, int y, int width, int height,
                RoofType type, RoofDepth depth,
                bool cappedW, bool cappedN, bool cappedE, bool cappedS);

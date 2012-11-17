@@ -488,9 +488,6 @@ bool BuildingEditorWindow::Startup()
         }
     }
 #endif
-    RoofTool::instance()->setCurrentCapTiles(BuildingTilesMgr::instance()->defaultRoofCapTiles());
-    RoofTool::instance()->setCurrentSlopeTiles(BuildingTilesMgr::instance()->defaultRoofSlopeTiles());
-    RoofTool::instance()->setCurrentTopTiles(BuildingTilesMgr::instance()->defaultRoofTopTiles());
 
     connect(BuildingTilesMgr::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
             SLOT(tilesetAdded(Tiled::Tileset*)));
@@ -707,7 +704,7 @@ void BuildingEditorWindow::tileSelectionChanged()
     QModelIndexList indexes = ui->tilesetView->selectionModel()->selectedIndexes();
     if (indexes.count() == 1) {
         QModelIndex index = indexes.first();
-        if (Tile *tile = ui->tilesetView->model()->tileAt(index)) {
+        if (ui->tilesetView->model()->tileAt(index)) {
             BuildingTileEntry *entry = static_cast<BuildingTileEntry*>(
                         ui->tilesetView->model()->userDataAt(index));
             if (mCategory->asExteriorWalls())
@@ -727,11 +724,11 @@ void BuildingEditorWindow::tileSelectionChanged()
             else if (mCategory->asStairs())
                 currentStairsChanged(entry);
             else if (mCategory->asRoofCaps())
-                currentRoofCapChanged(entry);
+                currentRoofTileChanged(entry, RoofObject::TileCap);
             else if (mCategory->asRoofSlopes())
-                currentRoofSlopeChanged(entry);
+                currentRoofTileChanged(entry, RoofObject::TileSlope);
             else if (mCategory->asRoofTops())
-                currentRoofTopChanged(entry);
+                currentRoofTileChanged(entry, RoofObject::TileTop);
             else
                 qFatal("unhandled category in BuildingEditorWindow::tileSelectionChanged()");
         }
@@ -901,6 +898,7 @@ void BuildingEditorWindow::currentStairsChanged(BuildingTileEntry *entry)
 {
     // New stairs will be created with this tile
     currentBuilding()->setStairsTile(entry);
+
     // Assign the new tile to selected stairs
     QList<Stairs*> stairsList;
     foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
@@ -921,91 +919,38 @@ void BuildingEditorWindow::currentStairsChanged(BuildingTileEntry *entry)
     }
 }
 
-void BuildingEditorWindow::currentRoofCapChanged(BuildingTileEntry *entry)
+void BuildingEditorWindow::currentRoofTileChanged(BuildingTileEntry *entry, int which)
 {
     // New roofs will be created with these tiles
-    currentBuilding()->setRoofCapTile(entry);
-    RoofTool::instance()->setCurrentCapTiles(entry);
+    switch (which) {
+    case RoofObject::TileCap: currentBuilding()->setRoofCapTile(entry); break;
+    case RoofObject::TileSlope: currentBuilding()->setRoofSlopeTile(entry); break;
+    case RoofObject::TileTop: currentBuilding()->setRoofTopTile(entry); break;
+    default:
+        qFatal("bogus 'which' passed to BuildingEditorWindow::currentRoofTileChanged");
+        break;
+    }
+
     updateActions(); // in case the roof tools should be enabled
 
     QList<RoofObject*> objectList;
-    // Change the cap tiles for each roof object.
+    // Change the tiles for each roof object.
     foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
         foreach (BuildingObject *object, floor->objects()) {
             if (RoofObject *roof = object->asRoof())
-                if (roof->capTiles() != entry)
+                if (roof->tile(which) != entry)
                     objectList += roof;
         }
     }
 
     if (objectList.count()) {
         if (objectList.count() > 1)
-            mCurrentDocument->undoStack()->beginMacro(tr("Change Roof Cap Tiles"));
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Roof Tiles"));
         foreach (RoofObject *roof, objectList)
             mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
                                                                      roof,
                                                                      entry,
-                                                                     0));
-        if (objectList.count() > 1)
-            mCurrentDocument->undoStack()->endMacro();
-    }
-}
-
-void BuildingEditorWindow::currentRoofSlopeChanged(BuildingTileEntry *entry)
-{
-    // New roofs will be created with these tiles
-    currentBuilding()->setRoofSlopeTile(entry);
-    RoofTool::instance()->setCurrentSlopeTiles(entry);
-    updateActions(); // in case the roof tools should be enabled
-
-    QList<RoofObject*> objectList;
-    // Change the slope tiles for each roof object.
-    foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
-        foreach (BuildingObject *object, floor->objects()) {
-            if (RoofObject *roof = object->asRoof())
-                if (roof->slopeTiles() != entry)
-                    objectList += roof;
-        }
-    }
-
-    if (objectList.count()) {
-        if (objectList.count() > 1)
-            mCurrentDocument->undoStack()->beginMacro(tr("Change Roof Slope Tiles"));
-        foreach (RoofObject *roof, objectList)
-            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
-                                                                     roof,
-                                                                     entry,
-                                                                     1));
-        if (objectList.count() > 1)
-            mCurrentDocument->undoStack()->endMacro();
-    }
-}
-
-void BuildingEditorWindow::currentRoofTopChanged(BuildingTileEntry *entry)
-{
-    // New roofs will be created with these tiles
-    currentBuilding()->setRoofTopTile(entry);
-//    RoofTool::instance()->setCurrentTopTiles(entry);
-    updateActions(); // in case the roof tools should be enabled
-
-    QList<RoofObject*> objectList;
-    // Change the top tiles for each roof object.
-    foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
-        foreach (BuildingObject *object, floor->objects()) {
-            if (RoofObject *roof = object->asRoof())
-                if (roof->topTiles() != entry)
-                    objectList += roof;
-        }
-    }
-
-    if (objectList.count()) {
-        if (objectList.count() > 1)
-            mCurrentDocument->undoStack()->beginMacro(tr("Change Roof Top Tiles"));
-        foreach (RoofObject *roof, objectList)
-            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
-                                                                     roof,
-                                                                     entry,
-                                                                     2));
+                                                                     which));
         if (objectList.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
@@ -1262,6 +1207,16 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
     mCurrentDocument->setCurrentFloor(building->floor(0));
     mUndoGroup->addStack(mCurrentDocument->undoStack());
     mUndoGroup->setActiveStack(mCurrentDocument->undoStack());
+
+    // Roof tiles need to be non-none to enable the roof tools.
+    // Old templates will have 'none' for these tiles.
+    BuildingTilesMgr *btiles = BuildingTilesMgr::instance();
+    if (building->roofCapTile()->isNone())
+        building->setRoofCapTile(btiles->defaultRoofCapTiles());
+    if (building->roofSlopeTile()->isNone())
+        building->setRoofSlopeTile(btiles->defaultRoofSlopeTiles());
+    if (building->roofTopTile()->isNone())
+        building->setRoofTopTile(btiles->defaultRoofTopTiles());
 
     roomEditor->setDocument(mCurrentDocument);
 
@@ -1707,9 +1662,9 @@ void BuildingEditorWindow::updateActions()
     StairsTool::instance()->setEnabled(hasDoc && showObjects);
     FurnitureTool::instance()->setEnabled(hasDoc && showObjects &&
             FurnitureTool::instance()->currentTile() != 0);
-    bool roofTilesOK = RoofTool::instance()->currentCapTiles()->asRoofCap() &&
-            RoofTool::instance()->currentSlopeTiles()->asRoofSlope() &&
-            RoofTool::instance()->currentTopTiles()->asRoofTop();
+    bool roofTilesOK = hasDoc && currentBuilding()->roofCapTile()->asRoofCap() &&
+            currentBuilding()->roofSlopeTile()->asRoofSlope() &&
+            currentBuilding()->roofTopTile()->asRoofTop();
     RoofTool::instance()->setEnabled(hasDoc && showObjects && roofTilesOK);
     RoofCornerTool::instance()->setEnabled(hasDoc && showObjects && roofTilesOK);
     SelectMoveObjectTool::instance()->setEnabled(hasDoc && showObjects);

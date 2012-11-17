@@ -463,19 +463,19 @@ bool RoofObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
 
 void RoofObject::setTile(BuildingTileEntry *tile, int alternate)
 {
-    if ((alternate == 0) && (/*tile->isNone() || */tile->asRoofCap()))
+    if ((alternate == TileCap) && (/*tile->isNone() || */tile->asRoofCap()))
         mCapTiles = tile;
-    else if ((alternate == 1) && (/*tile->isNone() || */tile->asRoofSlope()))
+    else if ((alternate == TileSlope) && (/*tile->isNone() || */tile->asRoofSlope()))
         mSlopeTiles = tile;
-    else if ((alternate == 2) && (/*tile->isNone() || */tile->asRoofTop()))
+    else if ((alternate == TileTop) && (/*tile->isNone() || */tile->asRoofTop()))
         mTopTiles = tile;
 }
 
 BuildingTileEntry *RoofObject::tile(int alternate) const
 {
-    if (alternate == 0) return mCapTiles;
-    if (alternate == 1) return mSlopeTiles;
-    if (alternate == 2) return mTopTiles;
+    if (alternate == TileCap) return mCapTiles;
+    if (alternate == TileSlope) return mSlopeTiles;
+    if (alternate == TileTop) return mTopTiles;
     return 0;
 }
 
