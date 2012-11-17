@@ -159,7 +159,7 @@ void FurnitureTileDelegate::paint(QPainter *painter,
     QRectF textRect;
     painter->drawText(option.rect.adjusted(extra, extra, 0, 0),
                       Qt::AlignTop | Qt::AlignLeft,
-                      ftile->orientToString(),
+                      original->orientToString(),
                       &textRect);
 
     // Draw resolved-tiles indicator
