@@ -1101,6 +1101,9 @@ FurnitureTool::Orient FurnitureTool::calcOrient(int x, int y)
 //    if (orient[OrientN] == OrientN && orient[OrientE] == OrientW) return OrientNE;
 //    if (orient[OrientS] == OrientN && orient[OrientE] == OrientW) return OrientSE;
 
+    if ((orient[OrientS] == OrientN || orient[OrientS] == OrientNW)
+            && (orient[OrientE] == OrientW || orient[OrientE] == OrientNW))
+        return OrientSE;
     if (orient[OrientE] == OrientW || orient[OrientE] == OrientNW) return OrientE;
     if (orient[OrientS] == OrientN || orient[OrientS] == OrientNW) return OrientS;
 
