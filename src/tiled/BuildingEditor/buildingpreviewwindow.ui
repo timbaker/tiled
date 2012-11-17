@@ -73,6 +73,21 @@
    </widget>
    <addaction name="menuView"/>
   </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextBesideIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionShowWalls"/>
+  </widget>
   <action name="actionZoomIn">
    <property name="icon">
     <iconset resource="../tiled.qrc">
@@ -104,6 +119,10 @@
    <property name="checkable">
     <bool>true</bool>
    </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_roof_peakNS.png</normaloff>:/BuildingEditor/icons/icon_roof_peakNS.png</iconset>
+   </property>
    <property name="text">
     <string>Show Walls and Roofs</string>
    </property>
@@ -132,6 +151,7 @@
  </customwidgets>
  <resources>
   <include location="../tiled.qrc"/>
+  <include location="buildingeditor.qrc"/>
  </resources>
  <connections/>
 </ui>
