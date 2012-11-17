@@ -1198,10 +1198,12 @@ void BuildingTilesDialog::tilesetSelectionChanged()
 void BuildingTilesDialog::addTiles()
 {
     if (mFurnitureGroup != 0) {
+        int index = mFurnitureGroup->mTiles.count();
+        if (mCurrentFurniture)
+            index = mFurnitureGroup->mTiles.indexOf(mCurrentFurniture->owner()) + 1;
         FurnitureTiles *tiles = new FurnitureTiles(false);
         mUndoStack->push(new AddFurnitureTiles(this, mFurnitureGroup,
-                                               mFurnitureGroup->mTiles.count(),
-                                               tiles));
+                                               index, tiles));
         return;
     }
 
@@ -1209,10 +1211,13 @@ void BuildingTilesDialog::addTiles()
         return;
 
     if (mExpertMode && !mCategory->shadowImage().isNull()) {
+        int index = mCategory->entryCount();
+        if (mCurrentEntry)
+            index = mCategory->indexOf(mCurrentEntry) + 1;
         // Create a new blank entry in the category.
         BuildingTileEntry *entry = new BuildingTileEntry(mCategory);
         mUndoStack->push(new AddTileToCategory(this, mCategory,
-                                               mCategory->entryCount(), entry));
+                                               index, entry));
         return;
     }
 
