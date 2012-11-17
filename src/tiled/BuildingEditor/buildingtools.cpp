@@ -187,9 +187,10 @@ PencilTool *PencilTool::instance()
 PencilTool::PencilTool() :
     BaseTool(),
     mMouseDown(false),
+    mErasing(false),
     mCursor(0)
 {
-    setStatusText(tr("Left-click to draw a room.  CTRL-Left-click to erase.  Right-click to switch to room under pointer."));
+    updateStatusText();
 }
 
 void PencilTool::documentChanged()
@@ -202,71 +203,71 @@ void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     QPoint tilePos = mEditor->sceneToTile(event->scenePos());
 
     if (event->button() == Qt::RightButton) {
+        // Right-click to cancel drawing/erasing.
+        if (mMouseDown) {
+            mMouseDown = false;
+            updateCursor(event->scenePos());
+            updateStatusText();
+            return;
+        }
         if (!mEditor->currentFloorContains(tilePos))
             return;
-        Room *room = mEditor->document()->currentFloor()->GetRoomAt(tilePos);
-        if (room) {
+        if (Room *room = floor()->GetRoomAt(tilePos)) {
             BuildingEditorWindow::instance()->setCurrentRoom(room);
             updateCursor(event->scenePos());
         }
         return;
     }
 
-    mInitialPaint = true;
     mErasing = controlModifier();
-    if (mEditor->currentFloorContains(tilePos)) {
-        if (mErasing) {
-            if (floor()->GetRoomAt(tilePos) != 0) {
-                undoStack()->push(new EraseRoom(mEditor->document(), floor(),
-                                                tilePos));
-                mInitialPaint = false;
-            }
-        } else {
-            Room *room = BuildingEditorWindow::instance()->currentRoom();
-            if (floor()->GetRoomAt(tilePos) != room) {
-                undoStack()->push(new PaintRoom(mEditor->document(), floor(),
-                                                tilePos, room));
-                mInitialPaint = false;
-            }
-        }
-    }
+    mStartTilePos = mEditor->sceneToTile(event->scenePos());
+    mCursorTileBounds = QRect(mStartTilePos, QSize(1, 1));
     mMouseDown = true;
+    updateStatusText();
 }
 
 void PencilTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    mMouseScenePos = event->scenePos();
     updateCursor(event->scenePos());
-
-    if (mMouseDown) {
-        QPoint tilePos = mEditor->sceneToTile(event->scenePos());
-        if (mEditor->currentFloorContains(tilePos)) {
-            if (mErasing) {
-                if (floor()->GetRoomAt(tilePos) != 0) {
-                    EraseRoom *cmd = new EraseRoom(mEditor->document(), floor(),
-                                                   tilePos);
-                    cmd->setMergeable(!mInitialPaint);
-                    undoStack()->push(cmd);
-                    mInitialPaint = false;
-                }
-            } else {
-                Room *room = BuildingEditorWindow::instance()->currentRoom();
-                if (floor()->GetRoomAt(tilePos) != room) {
-                    PaintRoom *cmd = new PaintRoom(mEditor->document(), floor(),
-                                                   tilePos, room);
-                    cmd->setMergeable(!mInitialPaint);
-                    undoStack()->push(cmd);
-                    mInitialPaint = false;
-                }
-            }
-        }
-    }
 }
 
 void PencilTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_UNUSED(event)
     if (mMouseDown) {
+        QRect r = mCursorTileBounds;
+        bool changed = false;
+        QVector<QVector<Room*> > grid = floor()->grid();
+        for (int x = r.left(); x <= r.right(); x++) {
+            for (int y = r.top(); y <= r.bottom(); y++) {
+                if (mErasing) {
+                    if (grid[x][y] != 0) {
+                        grid[x][y] = 0;
+                        changed = true;
+                    }
+                } else {
+                    if (grid[x][y] != BuildingEditorWindow::instance()->currentRoom()) {
+                        grid[x][y] = BuildingEditorWindow::instance()->currentRoom();
+                        changed = true;
+                    }
+                }
+            }
+        }
+        if (changed)
+            undoStack()->push(new SwapFloorGrid(mEditor->document(), floor(),
+                                                grid));
         mMouseDown = false;
+        updateCursor(event->scenePos());
+        updateStatusText();
+    }
+}
+
+void PencilTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
+{
+    if (!mMouseDown) {
+        mErasing = controlModifier();
+        updateCursor(mMouseScenePos);
     }
 }
 
@@ -290,11 +291,22 @@ void PencilTool::updateCursor(const QPointF &scenePos)
         mCursor->setZValue(FloorEditor::ZVALUE_CURSOR);
     }
 
+    QRectF rect;
+    if (mMouseDown) {
+        mCursorTileBounds = QRect(QPoint(qMin(mStartTilePos.x(), tilePos.x()),
+                                  qMin(mStartTilePos.y(), tilePos.y())),
+                                  QPoint(qMax(mStartTilePos.x(), tilePos.x()),
+                                  qMax(mStartTilePos.y(), tilePos.y())));
+        mCursorTileBounds &= floor()->bounds();
+        rect = mEditor->tileToSceneRect(mCursorTileBounds);
+        updateStatusText();
+    } else
+        rect = mEditor->tileToSceneRect(tilePos);
+
     // This crap is all to work around a bug when the view was scrolled and
     // then the item moves which led to areas not being repainted.  Each item
     // remembers where it was last drawn in a view, but those rectangles are
     // not updated when the view scrolls.
-    QRectF rect = mEditor->tileToSceneRect(tilePos).adjusted(0,0,-1,-1);
     QRectF viewRect = mEditor->views()[0]->mapFromScene(rect).boundingRect();
     if (viewRect != mCursorViewRect) {
         mCursorViewRect = viewRect;
@@ -302,8 +314,26 @@ void PencilTool::updateCursor(const QPointF &scenePos)
     }
 
     mCursor->setRect(rect);
-    mCursor->setBrush(QColor(BuildingEditorWindow::instance()->currentRoom()->Color));
-    mCursor->setVisible(mEditor->currentFloorContains(tilePos));
+    if (mErasing) {
+        QPen pen(QColor(255,0,0,128));
+        pen.setWidth(3);
+        mCursor->setBrush(QColor(0,0,0,128));
+        mCursor->setPen(pen);
+    } else {
+        mCursor->setPen(QColor(Qt::black));
+        mCursor->setBrush(QColor(BuildingEditorWindow::instance()->currentRoom()->Color));
+    }
+    mCursor->setVisible(mMouseDown || mEditor->currentFloorContains(tilePos));
+}
+
+void PencilTool::updateStatusText()
+{
+    if (mMouseDown)
+        setStatusText(tr("Width,Height = %1,%2.  Right-click to cancel.")
+                      .arg(mCursorTileBounds.width())
+                      .arg(mCursorTileBounds.height()));
+    else
+        setStatusText(tr("Left-click to draw a room.  CTRL-Left-click to erase.  Right-click to switch to room under pointer."));
 }
 
 /////

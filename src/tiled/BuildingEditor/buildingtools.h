@@ -154,18 +154,23 @@ public:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
+    void currentModifiersChanged(Qt::KeyboardModifiers modifiers);
+
 public slots:
     void activate();
     void deactivate();
 
 private:
     void updateCursor(const QPointF &scenePos);
+    void updateStatusText();
 
 private:
     static PencilTool *mInstance;
     bool mMouseDown;
-    bool mInitialPaint;
     bool mErasing;
+    QPointF mMouseScenePos;
+    QPoint mStartTilePos;
+    QRect mCursorTileBounds;
     QGraphicsRectItem *mCursor;
     QRectF mCursorViewRect;
 };
