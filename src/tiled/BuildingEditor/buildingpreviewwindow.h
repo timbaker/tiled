@@ -118,6 +118,7 @@ public:
         LayerIndexDoor,
         LayerIndexFurniture,
         LayerIndexFurniture2,
+        LayerIndexCurtains2,
         LayerIndexRoofCap,
         LayerIndexRoofCap2,
         LayerIndexRoof,

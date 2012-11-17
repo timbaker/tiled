@@ -52,6 +52,7 @@ public:
             SectionDoor,
             SectionFurniture,
             SectionFurniture2,
+            SectionCurtains2,
             SectionRoofCap,
             SectionRoofCap2,
             SectionRoof,

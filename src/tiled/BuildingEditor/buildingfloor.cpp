@@ -895,8 +895,8 @@ void BuildingFloor::Square::ReplaceFrame(BuildingTileEntry *tile, int offset)
 
 void BuildingFloor::Square::ReplaceCurtains(Window *window, bool exterior)
 {
-    mTiles[SectionCurtains] = window->curtainsTile();
-    mTileOffset[SectionCurtains] = window->isW()
+    mTiles[exterior ? SectionCurtains2 : SectionCurtains] = window->curtainsTile();
+    mTileOffset[exterior ? SectionCurtains2 : SectionCurtains] = window->isW()
             ? (exterior ? BTC_Curtains::East : BTC_Curtains::West)
             : (exterior ? BTC_Curtains::South : BTC_Curtains::North);
 }
