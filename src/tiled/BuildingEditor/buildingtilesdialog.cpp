@@ -274,6 +274,34 @@ public:
     QPoint mOffset;
 };
 
+class ReorderEntry : public QUndoCommand
+{
+public:
+    ReorderEntry(BuildingTilesDialog *d, BuildingTileCategory *category,
+                 int oldIndex, int newIndex) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Reorder Entry")),
+        mDialog(d),
+        mCategory(category),
+        mOldIndex(oldIndex),
+        mNewIndex(newIndex)
+    {
+    }
+
+    void undo()
+    {
+        mDialog->reorderEntry(mCategory, mNewIndex, mOldIndex);
+    }
+
+    void redo()
+    {
+        mDialog->reorderEntry(mCategory, mOldIndex, mNewIndex);
+    }
+
+    BuildingTilesDialog *mDialog;
+    BuildingTileCategory *mCategory;
+    int mOldIndex;
+    int mNewIndex;
+};
 
 class ChangeFurnitureTile : public QUndoCommand
 {
@@ -509,7 +537,9 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     ui(new Ui::BuildingTilesDialog),
     mZoomable(new Zoomable(this)),
     mCategory(0),
+    mCurrentEntry(0),
     mFurnitureGroup(0),
+    mCurrentFurniture(0),
     mUndoGroup(new QUndoGroup(this)),
     mUndoStack(new QUndoStack(this)),
     mSynching(false),
@@ -524,7 +554,11 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     mZoomable->setScale(BuildingPreferences::instance()->tileScale());
 
     ui->categoryTilesView->setZoomable(mZoomable);
+    ui->categoryTilesView->setAcceptDrops(true);
+    ui->categoryTilesView->setDropIndicatorShown(false);
     ui->categoryTilesView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    connect(ui->categoryTilesView->model(), SIGNAL(tileDropped(QString,int)),
+            SLOT(tileDropped(QString,int)));
     connect(ui->categoryTilesView->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(synchUI()));
@@ -620,16 +654,16 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     toolBar->setIconSize(QSize(16, 16));
     toolBar->addAction(ui->actionToggleCorners);
     toolBar->addAction(ui->actionClearTiles);
-    toolBar->addAction(ui->actionMoveFurnitureUp);
-    toolBar->addAction(ui->actionMoveFurnitureDown);
+    toolBar->addAction(ui->actionMoveTileUp);
+    toolBar->addAction(ui->actionMoveTileDown);
     toolBar->addSeparator();
     toolBar->addAction(ui->actionAddTiles);
     toolBar->addAction(ui->actionRemoveTiles);
     toolBar->addAction(ui->actionExpertMode);
     connect(ui->actionToggleCorners, SIGNAL(triggered()), SLOT(toggleCorners()));
     connect(ui->actionClearTiles, SIGNAL(triggered()), SLOT(clearTiles()));
-    connect(ui->actionMoveFurnitureUp, SIGNAL(triggered()), SLOT(moveFurnitureUp()));
-    connect(ui->actionMoveFurnitureDown, SIGNAL(triggered()), SLOT(moveFurnitureDown()));
+    connect(ui->actionMoveTileUp, SIGNAL(triggered()), SLOT(moveTileUp()));
+    connect(ui->actionMoveTileDown, SIGNAL(triggered()), SLOT(moveTileDown()));
     connect(ui->actionAddTiles, SIGNAL(triggered()), SLOT(addTiles()));
     connect(ui->actionRemoveTiles, SIGNAL(triggered()), SLOT(removeTiles()));
     connect(ui->actionExpertMode, SIGNAL(toggled(bool)), SLOT(setExpertMode(bool)));
@@ -727,6 +761,15 @@ void BuildingTilesDialog::addTile(BuildingTileCategory *category,
     tilesetSelectionChanged();
     setCategoryTiles();
     synchUI(); // model calling reset() doesn't generate selectionChanged signal
+
+    if (mExpertMode) {
+        ui->categoryView->scrollTo(
+                    ui->categoryView->model()->index(
+                        entry, category->shadowToEnum(0)));
+    } else {
+        ui->categoryTilesView->scrollTo(
+                    ui->categoryTilesView->model()->index((void*)entry));
+    }
 }
 
 BuildingTileEntry *BuildingTilesDialog::removeTile(BuildingTileCategory *category, int index)
@@ -794,6 +837,18 @@ QPoint BuildingTilesDialog::changeEntryOffset(BuildingTileEntry *entry, int e,
     BuildingTilesMgr::instance()->entryTileChanged(entry, e);
     ui->categoryView->update(ui->categoryView->model()->index(entry, e));
     return old;
+}
+
+void BuildingTilesDialog::reorderEntry(BuildingTileCategory *category,
+                                       int oldIndex, int newIndex)
+{
+    BuildingTileEntry *entry = category->removeEntry(oldIndex);
+    category->insertEntry(newIndex, entry);
+
+    setCategoryTiles();
+    ui->categoryTilesView->setCurrentIndex(
+                ui->categoryTilesView->model()->index(
+                    (void*)category->entry(newIndex)));
 }
 
 void BuildingTilesDialog::insertFurnitureTiles(FurnitureGroup *category,
@@ -1001,27 +1056,61 @@ void BuildingTilesDialog::synchUI()
     bool add = false;
     bool remove = false;
     bool clear = false;
+    bool moveUp = false;
+    bool moveDown = false;
+    mCurrentEntry = 0;
+    mCurrentFurniture = 0;
     if (mFurnitureGroup) {
+        int numSelected = ui->furnitureView->selectionModel()->selectedIndexes().count();
         add = true;
-        remove = ui->furnitureView->selectionModel()->selectedIndexes().count();
-        clear = remove;
+        remove = numSelected > 0;
+        clear = numSelected > 0;
+        if (numSelected == 1) {
+            QModelIndex current = ui->furnitureView->currentIndex();
+            if (FurnitureTile *ftile = ui->furnitureView->model()->tileAt(current)) {
+                mCurrentFurniture = ftile;
+                moveUp = ftile->owner() != mFurnitureGroup->mTiles.first();
+                moveDown = ftile->owner() !=  mFurnitureGroup->mTiles.last();
+            }
+        }
     } else if (mCategory) {
         if (mExpertMode && !mCategory->shadowImage().isNull()) {
+            int numSelected = ui->categoryView->selectionModel()->selectedIndexes().count();
             add = true;
-            remove = ui->categoryView->selectionModel()->selectedIndexes().count();
-            clear = remove;
-            TileCategoryModel *m = ui->categoryView->model();
-            QModelIndex current = ui->categoryView->currentIndex();
-            if (BuildingTileEntry *entry = m->entryAt(current)) {
-                int e = m->enumAt(current);
-                mSynching = true;
-                mEntryOffsetSpinX->setValue(entry->offset(e).x());
-                mEntryOffsetSpinY->setValue(entry->offset(e).y());
-                mSynching = false;
+            remove = numSelected > 0;
+            clear = numSelected > 0;
+            if (numSelected == 1) {
+                QModelIndex current = ui->categoryView->currentIndex();
+                TileCategoryModel *m = ui->categoryView->model();
+                if (BuildingTileEntry *entry = m->entryAt(current)) {
+                    mCurrentEntry = entry;
+                    mCurrentEntryEnum = m->enumAt(current);
+#if 0
+                    moveUp = entry != mCategory->entries().first();
+                    moveDown = entry != mCategory->entries().last();
+#endif
+                    int e = m->enumAt(current);
+                    mSynching = true;
+                    mEntryOffsetSpinX->setValue(entry->offset(e).x());
+                    mEntryOffsetSpinY->setValue(entry->offset(e).y());
+                    mSynching = false;
+                }
             }
         } else {
-            add = ui->tilesetTilesView->selectionModel()->selectedIndexes().count();
-            remove = ui->categoryTilesView->selectionModel()->selectedIndexes().count();
+            int numSelected = ui->categoryTilesView->selectionModel()->selectedIndexes().count();
+            add = ui->tilesetTilesView->selectionModel()->selectedIndexes().count();;
+            remove = numSelected > 0;
+            if (numSelected == 1) {
+                QModelIndex current = ui->categoryTilesView->currentIndex();
+                MixedTilesetModel *m = ui->categoryTilesView->model();
+                if (BuildingTileEntry *entry = static_cast<BuildingTileEntry*>(m->userDataAt(current))) {
+                    mCurrentEntry = entry;
+#if 0
+                    moveUp = entry != mCategory->entries().first();
+                    moveDown = entry != mCategory->entries().last();
+#endif
+                }
+            }
         }
     }
     ui->actionAddTiles->setEnabled(add);
@@ -1038,13 +1127,10 @@ void BuildingTilesDialog::synchUI()
     ui->actionExpertMode->setEnabled(mFurnitureGroup == 0);
 
     mEntryOffsetUI->setVisible(mExpertMode && !mFurnitureGroup);
-    mEntryOffsetUI->setEnabled(clear); // valid selection
+    mEntryOffsetUI->setEnabled(clear); // single item selected
 
-    QModelIndex current = ui->furnitureView->currentIndex();
-    int index = current.isValid() ? current.row() : -1;
-    ui->actionMoveFurnitureUp->setEnabled(mFurnitureGroup && (index > 0));
-    ui->actionMoveFurnitureDown->setEnabled(mFurnitureGroup && (index >= 0) &&
-                                            (index < mFurnitureGroup->mTiles.count()));
+    ui->actionMoveTileUp->setEnabled(moveUp);
+    ui->actionMoveTileDown->setEnabled(moveDown);
 
     ui->actionRemoveTileset->setEnabled(ui->tilesetList->currentRow() >= 0);
 }
@@ -1253,8 +1339,48 @@ void BuildingTilesDialog::setExpertMode(bool expert)
 {
     if (expert != mExpertMode) {
         mExpertMode = expert;
+        BuildingTileEntry *entry = mCurrentEntry;
         categoryChanged(ui->categoryList->currentRow());
+        if (entry) {
+            if (mExpertMode) {
+                TileCategoryView *v = ui->categoryView;
+                QModelIndex index = v->model()->index(
+                            entry, entry->category()->shadowToEnum(0));
+                v->setCurrentIndex(index);
+                v->scrollTo(index);
+            } else {
+                MixedTilesetView *v = ui->categoryTilesView;
+                v->setCurrentIndex(v->model()->index((void*)entry));
+                v->scrollTo(v->currentIndex());
+            }
+        }
     }
+}
+
+void BuildingTilesDialog::tileDropped(const QString &tilesetName, int tileId)
+{
+    if (!mCategory)
+        return;
+
+    QString tileName = BuildingTilesMgr::instance()->nameForTile(tilesetName, tileId);
+
+    BuildingTileEntry *entry = mCategory->createEntryFromSingleTile(tileName);
+    if (mCategory->findMatch(entry))
+        return; // Don't allow the same entry twice (can add duplicate in expert mode)
+
+    // Keep tiles from same tileset together.
+    int index = 0;
+    foreach (BuildingTileEntry *entry2, mCategory->entries()) {
+        if (entry2->displayTile()->mTilesetName == entry->displayTile()->mTilesetName) {
+            if (entry2->displayTile()->mIndex > entry->displayTile()->mIndex)
+                break;
+        }
+        if (entry2->displayTile()->mTilesetName > entry->displayTile()->mTilesetName)
+            break;
+        ++index;
+    }
+
+    mUndoStack->push(new AddTileToCategory(this, mCategory, index, entry));
 }
 
 void BuildingTilesDialog::entryTileDropped(BuildingTileEntry *entry, int e, const QString &tileName)
@@ -1326,34 +1452,40 @@ void BuildingTilesDialog::moveCategoryDown()
     mUndoStack->push(new ReorderCategory(this, index, index + 1));
 }
 
-void BuildingTilesDialog::moveFurnitureUp()
+void BuildingTilesDialog::moveTileUp()
 {
-    if (!mFurnitureGroup)
-         return;
-    FurnitureView *v = ui->furnitureView;
-    QModelIndex current = v->currentIndex();
-    if (!current.isValid())
-        return;
-    FurnitureTiles *ftiles = v->model()->tileAt(current)->owner();
-    int index = mFurnitureGroup->mTiles.indexOf(ftiles);
-    if (index == 0)
-        return;
-    mUndoStack->push(new ReorderFurniture(this, mFurnitureGroup, index, index - 1));
+    if (mCurrentFurniture) {
+        FurnitureTiles *ftiles = mCurrentFurniture->owner();
+        int index = mFurnitureGroup->mTiles.indexOf(ftiles);
+        if (index == 0)
+            return;
+        mUndoStack->push(new ReorderFurniture(this, mFurnitureGroup, index, index - 1));
+    }
+
+    if (mCurrentEntry) {
+        int index = mCategory->indexOf(mCurrentEntry);
+        if (index == 0)
+            return;
+        mUndoStack->push(new ReorderEntry(this, mCategory, index, index - 1));
+    }
 }
 
-void BuildingTilesDialog::moveFurnitureDown()
+void BuildingTilesDialog::moveTileDown()
 {
-    if (!mFurnitureGroup)
-         return;
-    FurnitureView *v = ui->furnitureView;
-    QModelIndex current = v->currentIndex();
-    if (!current.isValid())
-        return;
-    FurnitureTiles *ftiles = v->model()->tileAt(current)->owner();
-    int index = mFurnitureGroup->mTiles.indexOf(ftiles);
-    if (index == mFurnitureGroup->mTiles.count() - 1)
-        return;
-    mUndoStack->push(new ReorderFurniture(this, mFurnitureGroup, index, index + 1));
+    if (mCurrentFurniture) {
+        FurnitureTiles *ftiles = mCurrentFurniture->owner();
+        int index = mFurnitureGroup->mTiles.indexOf(ftiles);
+        if (index == mFurnitureGroup->mTiles.count() - 1)
+            return;
+        mUndoStack->push(new ReorderFurniture(this, mFurnitureGroup, index, index + 1));
+    }
+
+    if (mCurrentEntry) {
+        int index = mCategory->indexOf(mCurrentEntry);
+        if (index == mCategory->entryCount() - 1)
+            return;
+        mUndoStack->push(new ReorderEntry(this, mCategory, index, index + 1));
+    }
 }
 
 void BuildingTilesDialog::toggleCorners()
@@ -1451,16 +1583,12 @@ void BuildingTilesDialog::entryActivated(const QModelIndex &index)
 
 void BuildingTilesDialog::entryOffsetChanged()
 {
-    if (!mCategory || mSynching)
+    if (!mExpertMode || !mCurrentEntry || mSynching)
         return;
-    QModelIndex index = ui->categoryView->currentIndex();
-    TileCategoryModel *m = ui->categoryView->model();
-    if (BuildingTileEntry *entry = m->entryAt(index)) {
-        int e = m->enumAt(index);
-        QPoint offset(mEntryOffsetSpinX->value(), mEntryOffsetSpinY->value());
-        if (offset != entry->offset(e)) {
-            mUndoStack->push(new ChangeEntryOffset(this, entry, e, offset));
-        }
+    QPoint offset(mEntryOffsetSpinX->value(), mEntryOffsetSpinY->value());
+    if (offset != mCurrentEntry->offset(mCurrentEntryEnum)) {
+        mUndoStack->push(new ChangeEntryOffset(this, mCurrentEntry,
+                                               mCurrentEntryEnum, offset));
     }
 }
 

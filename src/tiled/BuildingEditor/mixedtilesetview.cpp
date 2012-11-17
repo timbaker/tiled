@@ -258,6 +258,8 @@ Qt::ItemFlags MixedTilesetModel::flags(const QModelIndex &index) const
         flags &= ~(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
     else
         flags |= Qt::ItemIsDragEnabled;
+    if (!index.isValid())
+        flags |= Qt::ItemIsDropEnabled;
     return flags;
 }
 
@@ -334,6 +336,33 @@ QMimeData *MixedTilesetModel::mimeData(const QModelIndexList &indexes) const
 
     mimeData->setData(mMimeType, encodedData);
     return mimeData;
+}
+
+bool MixedTilesetModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
+                                  int row, int column, const QModelIndex &parent)
+ {
+    Q_UNUSED(row)
+    Q_UNUSED(column)
+    Q_UNUSED(parent)
+
+    if (action == Qt::IgnoreAction)
+         return true;
+
+     if (!data->hasFormat(mMimeType))
+         return false;
+
+     QByteArray encodedData = data->data(mMimeType);
+     QDataStream stream(&encodedData, QIODevice::ReadOnly);
+
+     while (!stream.atEnd()) {
+         QString tilesetName;
+         stream >> tilesetName;
+         int tileId;
+         stream >> tileId;
+         emit tileDropped(tilesetName, tileId);
+     }
+
+     return true;
 }
 
 void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,

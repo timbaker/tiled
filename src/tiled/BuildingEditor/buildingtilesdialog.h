@@ -68,6 +68,7 @@ public:
     FurnitureGroup *removeCategory(int index);
     QString changeEntryTile(BuildingTileEntry *entry, int e, const QString &tileName);
     QPoint changeEntryOffset(BuildingTileEntry *entry, int e, const QPoint &offset);
+    void reorderEntry(BuildingTileCategory *category, int oldIndex, int newIndex);
 
     void insertFurnitureTiles(FurnitureGroup *category, int index,
                               FurnitureTiles *ftiles);
@@ -106,6 +107,7 @@ private slots:
 
     void setExpertMode(bool expert);
 
+    void tileDropped(const QString &tilesetName, int tileId);
     void entryTileDropped(BuildingTileEntry *entry, int e, const QString &tileName);
 
     void furnitureTileDropped(FurnitureTile *ftile, int index,
@@ -119,8 +121,8 @@ private slots:
     void moveCategoryUp();
     void moveCategoryDown();
 
-    void moveFurnitureUp();
-    void moveFurnitureDown();
+    void moveTileUp();
+    void moveTileDown();
 
     void toggleCorners();
 
@@ -141,7 +143,10 @@ private:
     Ui::BuildingTilesDialog *ui;
     Tiled::Internal::Zoomable *mZoomable;
     BuildingTileCategory *mCategory;
+    BuildingTileEntry *mCurrentEntry;
+    int mCurrentEntryEnum;
     FurnitureGroup *mFurnitureGroup;
+    FurnitureTile *mCurrentFurniture;
     QUndoGroup *mUndoGroup;
     QUndoStack *mUndoStack;
     QToolButton *mUndoButton;

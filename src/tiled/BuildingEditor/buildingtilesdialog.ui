@@ -238,28 +238,28 @@
     <string>Remove Tiles</string>
    </property>
   </action>
-  <action name="actionMoveFurnitureUp">
+  <action name="actionMoveTileUp">
    <property name="icon">
     <iconset resource="../tiled.qrc">
      <normaloff>:/images/16x16/go-up.png</normaloff>:/images/16x16/go-up.png</iconset>
    </property>
    <property name="text">
-    <string>Move Furniture Up</string>
+    <string>Move Tile Up</string>
    </property>
    <property name="toolTip">
-    <string>Move selected furniture up the list</string>
+    <string>Move selected tile up the list</string>
    </property>
   </action>
-  <action name="actionMoveFurnitureDown">
+  <action name="actionMoveTileDown">
    <property name="icon">
     <iconset resource="../tiled.qrc">
      <normaloff>:/images/16x16/go-down.png</normaloff>:/images/16x16/go-down.png</iconset>
    </property>
    <property name="text">
-    <string>Move Furniture Down</string>
+    <string>Move Tile Down</string>
    </property>
    <property name="toolTip">
-    <string>Move selected furniture down the list</string>
+    <string>Move selected tile down the list</string>
    </property>
   </action>
   <action name="actionExpertMode">

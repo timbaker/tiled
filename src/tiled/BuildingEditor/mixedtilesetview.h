@@ -32,6 +32,7 @@ class Zoomable;
 
 class MixedTilesetModel : public QAbstractListModel
 {
+    Q_OBJECT
 public:
     MixedTilesetModel(QObject *parent = 0);
 
@@ -55,6 +56,8 @@ public:
 
     QStringList mimeTypes() const;
     QMimeData *mimeData(const QModelIndexList &indexes) const;
+    bool dropMimeData(const QMimeData *data, Qt::DropAction action,
+                      int row, int column, const QModelIndex &parent);
 
     void setTiles(const QList<Tile*> &tiles,
                   const QList<void*> &userData = QList<void*>());
@@ -70,6 +73,9 @@ public:
     void scaleChanged(qreal scale);
 
     void setShowHeaders(bool show);
+
+signals:
+    void tileDropped(const QString &tilesetName, int tileId);
 
 private:
     class Item
