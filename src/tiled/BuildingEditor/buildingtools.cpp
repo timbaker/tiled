@@ -840,7 +840,7 @@ void DoorTool::updateCursorObject()
         y++;
 
     if (!mCursorObject) {
-        BuildingFloor *floor = 0; //mEditor->document()->currentFloor();
+        BuildingFloor *floor = 0; //floor();
         mCursorObject = new Door(floor, x, y, dir);
     }
     // mCursorDoor->setFloor()
@@ -902,7 +902,7 @@ void WindowTool::updateCursorObject()
         y++;
 
     if (!mCursorObject) {
-        BuildingFloor *floor = 0; //mEditor->document()->currentFloor();
+        BuildingFloor *floor = 0; //floor();
         mCursorObject = new Window(floor, x, y, dir);
     }
     // mCursorDoor->setFloor()
@@ -963,7 +963,7 @@ void StairsTool::updateCursorObject()
         y++;
 
     if (!mCursorObject) {
-        BuildingFloor *floor = 0; //mEditor->document()->currentFloor();
+        BuildingFloor *floor = 0; //floor();
         mCursorObject = new Stairs(floor, x, y, dir);
     }
     // mCursorDoor->setFloor()
@@ -1021,7 +1021,7 @@ void FurnitureTool::updateCursorObject()
 
     int x = mTilePos.x(), y = mTilePos.y();
     if (!mCursorObject) {
-        BuildingFloor *floor = 0; //mEditor->document()->currentFloor();
+        BuildingFloor *floor = 0; //floor();
         FurnitureObject *object = new FurnitureObject(floor, x, y);
         mCursorObject = object;
     }
@@ -1207,7 +1207,7 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         }
         if (!mEditor->currentFloorContains(mCurrentPos))
             return;
-        mObject = new RoofObject(mEditor->document()->currentFloor(),
+        mObject = new RoofObject(floor(),
                                  mStartPos.x(), mStartPos.y(),
                                  /*width=*/2, /*height=*/2,
                                  /*type=*/mRoofType, /*depth=*/RoofObject::InvalidDepth,
@@ -1266,10 +1266,10 @@ void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
             diff.setX(mHandleObject->x() - mStartPos.x() + (mHandleObject->isN() ? 1 : 0));
         if (mCurrentPos.y() < mHandleObject->y())
             diff.setY(mHandleObject->y() - mStartPos.y() + (mHandleObject->isW() ? 1 : 0));
-        if (mCurrentPos.x() >= mEditor->document()->currentFloor()->width())
-            diff.setX(mEditor->document()->currentFloor()->width() - mStartPos.x() - 1);
-        if (mCurrentPos.y() >= mEditor->document()->currentFloor()->height())
-            diff.setY(mEditor->document()->currentFloor()->height() - mStartPos.y() - 1);
+        if (mCurrentPos.x() >= floor()->width())
+            diff.setX(floor()->width() - mStartPos.x() - 1);
+        if (mCurrentPos.y() >= floor()->height())
+            diff.setY(floor()->height() - mStartPos.y() - 1);
 
         resizeRoof(mHandleObject->width() + diff.x(),
                    mHandleObject->height() + diff.y());
@@ -1369,7 +1369,7 @@ RoofObject *RoofTool::topmostRoofAt(const QPointF &scenePos)
 {
     foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
         if (GraphicsRoofItem *roofItem = dynamic_cast<GraphicsRoofItem*>(item)) {
-            if (roofItem->object()->floor() == mEditor->document()->currentFloor()) {
+            if (roofItem->object()->floor() == floor()) {
                 return roofItem->object()->asRoof();
             }
         }
