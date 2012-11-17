@@ -307,28 +307,30 @@ class ChangeFurnitureTile : public QUndoCommand
 {
 public:
     ChangeFurnitureTile(BuildingTilesDialog *d, FurnitureTile *ftile,
-                        int index, const QString &tileName = QString()) :
+                        int x, int y, const QString &tileName = QString()) :
         QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Furniture Tile")),
         mDialog(d),
         mTile(ftile),
-        mIndex(index),
+        mX(x),
+        mY(y),
         mTileName(tileName)
     {
     }
 
     void undo()
     {
-        mTileName = mDialog->changeFurnitureTile(mTile, mIndex, mTileName);
+        mTileName = mDialog->changeFurnitureTile(mTile, mX, mY, mTileName);
     }
 
     void redo()
     {
-        mTileName = mDialog->changeFurnitureTile(mTile, mIndex, mTileName);
+        mTileName = mDialog->changeFurnitureTile(mTile, mX, mY, mTileName);
     }
 
     BuildingTilesDialog *mDialog;
     FurnitureTile *mTile;
-    int mIndex;
+    int mX;
+    int mY;
     QString mTileName;
 };
 
@@ -580,8 +582,8 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     ui->furnitureView->setAcceptDrops(true);
     ui->furnitureView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     connect(ui->furnitureView->model(),
-            SIGNAL(furnitureTileDropped(FurnitureTile*,int,QString)),
-            SLOT(furnitureTileDropped(FurnitureTile*,int,QString)));
+            SIGNAL(furnitureTileDropped(FurnitureTile*,int,int,QString)),
+            SLOT(furnitureTileDropped(FurnitureTile*,int,int,QString)));
     connect(ui->furnitureView->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(synchUI()));
@@ -868,14 +870,18 @@ FurnitureTiles *BuildingTilesDialog::removeFurnitureTiles(FurnitureGroup *catego
 }
 
 QString BuildingTilesDialog::changeFurnitureTile(FurnitureTile *ftile,
-                                                 int index,
+                                                 int x, int y,
                                                  const QString &tileName)
 {
-    QString old = ftile->tile(index) ? ftile->tile(index)->name() : QString();
-    ftile->setTile(index, tileName.isEmpty()
+    QString old = ftile->tile(x, y) ? ftile->tile(x, y)->name() : QString();
+    QSize oldSize = ftile->size();
+    ftile->setTile(x, y, tileName.isEmpty()
                    ? 0 : BuildingTilesMgr::instance()->get(tileName));
 
     FurnitureGroups::instance()->tileChanged(ftile);
+
+    if (ftile->size() != oldSize)
+        ui->furnitureView->furnitureTileResized(ftile);
 
     ui->furnitureView->update(ui->furnitureView->model()->index(ftile));
     return old;
@@ -1305,9 +1311,11 @@ void BuildingTilesDialog::clearTiles()
             return;
         mUndoStack->beginMacro(tr("Clear Furniture Tiles"));
         foreach (FurnitureTile* ftile, clear) {
-            for (int i = 0; i < 4; i++) {
-                if (ftile->tile(i))
-                    mUndoStack->push(new ChangeFurnitureTile(this, ftile, i));
+            for (int x = 0; x < ftile->width(); x++) {
+                for (int y = 0; y < ftile->height(); y++) {
+                    if (ftile->tile(x, y))
+                        mUndoStack->push(new ChangeFurnitureTile(this, ftile, x, y));
+                }
             }
         }
         mUndoStack->endMacro();
@@ -1388,10 +1396,10 @@ void BuildingTilesDialog::entryTileDropped(BuildingTileEntry *entry, int e, cons
     mUndoStack->push(new ChangeEntryTile(this, entry, e, tileName));
 }
 
-void BuildingTilesDialog::furnitureTileDropped(FurnitureTile *ftile, int index,
+void BuildingTilesDialog::furnitureTileDropped(FurnitureTile *ftile, int x, int y,
                                                const QString &tileName)
 {
-    mUndoStack->push(new ChangeFurnitureTile(this, ftile, index, tileName));
+    mUndoStack->push(new ChangeFurnitureTile(this, ftile, x, y, tileName));
 }
 
 void BuildingTilesDialog::categoryNameEdited(QListWidgetItem *item)

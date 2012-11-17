@@ -60,12 +60,14 @@ public:
     QSize sizeHint(const QStyleOptionViewItem &option,
                    const QModelIndex &index) const;
 
-    QPointF pixelToTileCoords(qreal x, qreal y) const;
+    QPointF pixelToTileCoords(int mapWidth, int mapHeight, qreal x, qreal y) const;
     QPoint dropCoords(const QPoint &dragPos, const QModelIndex &index);
-    QPointF tileToPixelCoords(qreal x, qreal y) const;
+    QPointF tileToPixelCoords(int mapWidth, int mapHeight, qreal x, qreal y) const;
 
     qreal scale() const
     { return mView->zoomable()->scale(); }
+
+    void itemResized(const QModelIndex &index);
 
 private:
     FurnitureView *mView;
@@ -81,6 +83,10 @@ void FurnitureTileDelegate::paint(QPainter *painter,
     if (!ftile)
         return;
 
+    FurnitureTile *original = ftile;
+    if (!mView->acceptDrops())
+        ftile = ftile->resolved();
+
     if (mView->zoomable()->smoothTransform())
         painter->setRenderHint(QPainter::SmoothPixmapTransform);
 
@@ -91,18 +97,18 @@ void FurnitureTileDelegate::paint(QPainter *painter,
     qreal tileHeight = 32 * scale;
     qreal imageHeight = 128 * scale;
     QPointF tileMargins(0, imageHeight - tileHeight);
+    int mapWidth = ftile->width();
+    int mapHeight = ftile->height();
+    if (mView->acceptDrops())
+        mapWidth += 1, mapHeight += 1;
 
     // Draw the tile images.
-    const QVector<BuildingTile*> btiles = mView->acceptDrops()
-            ? ftile->tiles()
-            : ftile->resolvedTiles();
-    for (int y = 0; y < 2; y++) {
-        for (int x = 0; x < 2; x++) {
-            int i = x + y * 2;
+    for (int y = 0; y < ftile->height(); y++) {
+        for (int x = 0; x < ftile->width(); x++) {
             QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-            if (BuildingTile *btile = btiles[i]) {
+            if (BuildingTile *btile = ftile->tile(x, y)) {
                 if (Tile *tile = BuildingTilesMgr::instance()->tileFor(btile)) { // FIXME: calc this elsewhere
-                    QPointF p1 = tileToPixelCoords(x, y) + tileMargins + r.topLeft();
+                    QPointF p1 = tileToPixelCoords(mapWidth, mapHeight, x, y) + tileMargins + r.topLeft();
                     QRect r((p1 - QPointF(tileWidth/2, imageHeight - tileHeight)).toPoint(),
                             QSize(tileWidth, imageHeight));
                     painter->drawPixmap(r, tile->image());
@@ -113,13 +119,13 @@ void FurnitureTileDelegate::paint(QPainter *painter,
 
     if (mView->acceptDrops()) {
         // Draw the tile grid.
-        for (int y = 0; y < 2; y++) {
-            for (int x = 0; x < 2; x++) {
+        for (int y = 0; y < mapHeight; y++) {
+            for (int x = 0; x < mapWidth; x++) {
                 QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-                QPointF p1 = tileToPixelCoords(x, y) + tileMargins + r.topLeft();
-                QPointF p2 = tileToPixelCoords(x+1, y) + tileMargins + r.topLeft();
-                QPointF p3 = tileToPixelCoords(x, y+1) + tileMargins + r.topLeft();
-                QPointF p4 = tileToPixelCoords(x+1, y+1) + tileMargins + r.topLeft();
+                QPointF p1 = tileToPixelCoords(mapWidth, mapHeight, x, y) + tileMargins + r.topLeft();
+                QPointF p2 = tileToPixelCoords(mapWidth, mapHeight, x+1, y) + tileMargins + r.topLeft();
+                QPointF p3 = tileToPixelCoords(mapWidth, mapHeight, x, y+1) + tileMargins + r.topLeft();
+                QPointF p4 = tileToPixelCoords(mapWidth, mapHeight, x+1, y+1) + tileMargins + r.topLeft();
 
                 if (QPoint(x,y) == m->dropCoords() && index == m->dropIndex()) {
                     QBrush brush(Qt::gray, Qt::Dense4Pattern);
@@ -157,7 +163,7 @@ void FurnitureTileDelegate::paint(QPainter *painter,
                       &textRect);
 
     // Draw resolved-tiles indicator
-    if (!mView->acceptDrops() && (ftile->tiles() != ftile->resolvedTiles()))
+    if (!mView->acceptDrops() && (ftile != original))
         painter->fillRect(textRect.right() + 3, textRect.center().y()-2, 4, 4, Qt::gray);
 }
 
@@ -166,34 +172,60 @@ QSize FurnitureTileDelegate::sizeHint(const QStyleOptionViewItem & option,
 {
     Q_UNUSED(option)
     Q_UNUSED(index)
-//    const FurnitureModel *m = static_cast<const FurnitureModel*>(index.model());
+    int width = 2, height = 2;
+    const FurnitureModel *m = static_cast<const FurnitureModel*>(index.model());
+    FurnitureTile *ftile = m->tileAt(index);
+    int d = 0;
+    if (ftile) {
+        if (mView->acceptDrops()) {
+            d = 1;
+        } else {
+            ftile = ftile->resolved();
+        }
+        width = ftile->width() + d;
+        height = ftile->height() + d;
+    }
     const qreal zoom = scale();
     const int extra = 2;
-//    FurnitureTile *tile = m->tileAt(index);
     int tileWidth = 64, tileHeight = 32;
-    return isometricSize(2, 2, tileWidth, tileHeight) * zoom + QSize(extra * 2, extra * 2);
+    QSize size = isometricSize(width, height, tileWidth, tileHeight)
+            * zoom + QSize(extra * 2, extra * 2);
+
+    if (ftile) {
+        width = mView->model()->maxTileSize(ftile->orient()).width() + d;
+        height = mView->model()->maxTileSize(ftile->orient()).height() + d;
+        QSize sizeMax = isometricSize(width, height, tileWidth, tileHeight)
+                * zoom + QSize(extra * 2, extra * 2);
+        size.setWidth(qMax(size.width(), sizeMax.width()));
+    }
+
+    return size;
 }
 
 QPoint FurnitureTileDelegate::dropCoords(const QPoint &dragPos,
                                         const QModelIndex &index)
 {
+    const FurnitureModel *m = static_cast<const FurnitureModel*>(index.model());
+    FurnitureTile *ftile = m->tileAt(index);
+    if (!mView->acceptDrops())
+        ftile = ftile->resolved();
     QRect r = mView->visualRect(index);
     const int extra = 2;
     qreal x = dragPos.x() - r.left() - extra;
     qreal y = dragPos.y() - r.top() - extra - (128 - 32) * scale();
-    QPointF tileCoords = pixelToTileCoords(x, y);
+    QPointF tileCoords = pixelToTileCoords(ftile->width() + 1, ftile->height() + 1, x, y);
     if (tileCoords.x() < 0 || tileCoords.y() < 0)
         return QPoint(-1, -1);
     return QPoint(tileCoords.x(), tileCoords.y()); // don't use toPoint, it rounds up
 }
 
-QPointF FurnitureTileDelegate::pixelToTileCoords(qreal x, qreal y) const
+QPointF FurnitureTileDelegate::pixelToTileCoords(int mapWidth, int mapHeight, qreal x, qreal y) const
 {
+    Q_UNUSED(mapWidth)
     const int tileWidth = 64 * scale();
     const int tileHeight = 32 * scale();
     const qreal ratio = (qreal) tileWidth / tileHeight;
 
-    const int mapHeight = 2;
     x -= mapHeight * tileWidth / 2;
     const qreal mx = y + (x / ratio);
     const qreal my = y - (x / ratio);
@@ -202,15 +234,20 @@ QPointF FurnitureTileDelegate::pixelToTileCoords(qreal x, qreal y) const
                    my / tileHeight);
 }
 
-QPointF FurnitureTileDelegate::tileToPixelCoords(qreal x, qreal y) const
+QPointF FurnitureTileDelegate::tileToPixelCoords(int mapWidth, int mapHeight, qreal x, qreal y) const
 {
+    Q_UNUSED(mapWidth)
     const int tileWidth = 64 * scale();
     const int tileHeight = 32 * scale();
-    const int mapHeight = 2;
     const int originX = mapHeight * tileWidth / 2;
 
     return QPointF((x - y) * tileWidth / 2 + originX,
                    (x + y) * tileHeight / 2);
+}
+
+void FurnitureTileDelegate::itemResized(const QModelIndex &index)
+{
+    emit sizeHintChanged(index);
 }
 
 } // namespace BuildingEditor
@@ -247,9 +284,9 @@ void FurnitureView::dragMoveEvent(QDragMoveEvent *event)
 
     if (event->isAccepted()) {
         QModelIndex index = indexAt(event->pos());
-        if (model()->tileAt(index)) {
+        if (FurnitureTile *ftile = model()->tileAt(index)) {
             QPoint dropCoords = mDelegate->dropCoords(event->pos(), index);
-            if (!QRect(0, 0, 2, 2).contains(dropCoords)) {
+            if (!QRect(0, 0, ftile->width() + 1, ftile->height() + 1).contains(dropCoords)) {
                 model()->setDropCoords(QPoint(-1,-1), QModelIndex());
 //                update(index);
                 event->ignore();
@@ -281,6 +318,12 @@ void FurnitureView::setZoomable(Zoomable *zoomable)
     mZoomable = zoomable;
     if (zoomable)
         connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(scaleChanged(qreal)));
+}
+
+void FurnitureView::furnitureTileResized(FurnitureTile *ftile)
+{
+    model()->calcMaxTileSize();
+    mDelegate->itemResized(model()->index(ftile));
 }
 
 void FurnitureView::scaleChanged(qreal scale)
@@ -418,9 +461,8 @@ bool FurnitureModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
      if (!tile)
          return false;
 
-     if (!QRect(0, 0, 2, 2).contains(mDropCoords))
+     if (!QRect(0, 0, tile->width() + 1, tile->height() + 1).contains(mDropCoords))
          return false;
-     int n = mDropCoords.x() + mDropCoords.y() * 2;
 
      QByteArray encodedData = data->data(mMimeType);
      QDataStream stream(&encodedData, QIODevice::ReadOnly);
@@ -431,7 +473,7 @@ bool FurnitureModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
          int tileId;
          stream >> tileId;
          QString tileName = BuildingTilesMgr::nameForTile(tilesetName, tileId);
-         emit furnitureTileDropped(tile, n, tileName);
+         emit furnitureTileDropped(tile, mDropCoords.x(), mDropCoords.y(), tileName);
      }
 
      return true;
@@ -452,6 +494,7 @@ void FurnitureModel::setTiles(const QList<FurnitureTiles *> &tilesList)
             mTiles += ftiles->tile(FurnitureTile::FurnitureSE);
         }
     }
+    calcMaxTileSize();
     reset();
 }
 
@@ -473,6 +516,7 @@ void FurnitureModel::toggleCorners(FurnitureTiles *ftiles)
         mTiles.insert(n + 5, ftiles->tile(FurnitureTile::FurnitureNW));
         mTiles.insert(n + 6, ftiles->tile(FurnitureTile::FurnitureNE));
         mTiles.insert(n + 7, ftiles->tile(FurnitureTile::FurnitureSE));
+        calcMaxTileSize();
         endInsertRows();
     } else {
         beginRemoveRows(QModelIndex(), row, row);
@@ -480,6 +524,7 @@ void FurnitureModel::toggleCorners(FurnitureTiles *ftiles)
         mTiles.takeAt(n + 4);
         mTiles.takeAt(n + 4);
         mTiles.takeAt(n + 4);
+        calcMaxTileSize();
         endRemoveRows();
     }
 }
@@ -500,6 +545,7 @@ void FurnitureModel::removeTiles(FurnitureTiles *ftiles)
         mTiles.takeAt(i);
         mTiles.takeAt(i);
     }
+    calcMaxTileSize();
     endRemoveRows();
     return;
 }
@@ -508,4 +554,14 @@ void FurnitureModel::scaleChanged(qreal scale)
 {
     Q_UNUSED(scale)
     reset();
+}
+
+void FurnitureModel::calcMaxTileSize()
+{
+    mMaxTileSize.fill(QSize(1, 1), FurnitureTile::OrientCount);
+    foreach (FurnitureTile *ftile, mTiles) {
+        int n = ftile->orient();
+        mMaxTileSize[n].setWidth( qMax(mMaxTileSize[n].width(), ftile->width()) );
+        mMaxTileSize[n].setHeight( qMax(mMaxTileSize[n].height(), ftile->height()) );
+    }
 }

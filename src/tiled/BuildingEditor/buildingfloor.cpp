@@ -333,13 +333,12 @@ void BuildingFloor::LayoutToSquares()
             }
         }
         if (FurnitureObject *fo = object->asFurniture()) {
-            int x = fo->x();
-            int y = fo->y();
-            FurnitureTile *ftile = fo->furnitureTile();
-            ReplaceFurniture(x, y, squares, ftile->resolvedTiles()[0]);
-            ReplaceFurniture(x+1, y, squares, ftile->resolvedTiles()[1]);
-            ReplaceFurniture(x, y+1, squares, ftile->resolvedTiles()[2]);
-            ReplaceFurniture(x+1, y+1, squares, ftile->resolvedTiles()[3]);
+            FurnitureTile *ftile = fo->furnitureTile()->resolved();
+            for (int i = 0; i < ftile->size().height(); i++) {
+                for (int j = 0; j < ftile->size().width(); j++) {
+                    ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i));
+                }
+            }
         }
         if (RoofObject *ro = object->asRoof()) {
             QRect r = ro->bounds();

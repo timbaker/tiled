@@ -73,7 +73,7 @@ public:
     void insertFurnitureTiles(FurnitureGroup *category, int index,
                               FurnitureTiles *ftiles);
     FurnitureTiles* removeFurnitureTiles(FurnitureGroup *category, int index);
-    QString changeFurnitureTile(FurnitureTile *ftile, int index,
+    QString changeFurnitureTile(FurnitureTile *ftile, int x, int y,
                                 const QString &tileName);
     void reorderFurniture(FurnitureGroup *category, int oldIndex, int newIndex);
     void toggleCorners(FurnitureTiles *ftiles);
@@ -110,7 +110,7 @@ private slots:
     void tileDropped(const QString &tilesetName, int tileId);
     void entryTileDropped(BuildingTileEntry *entry, int e, const QString &tileName);
 
-    void furnitureTileDropped(FurnitureTile *ftile, int index,
+    void furnitureTileDropped(FurnitureTile *ftile, int x, int y,
                               const QString &tileName);
 
     void categoryNameEdited(QListWidgetItem *item);

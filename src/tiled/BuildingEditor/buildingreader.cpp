@@ -266,7 +266,7 @@ FurnitureTile *BuildingReaderPrivate::readFurnitureTile(FurnitureTiles *ftiles)
         if (xml.name() == "tile") {
             QPoint pos;
             if (BuildingTile *btile = readFurnitureTile(ftile, pos))
-                ftile->setTile(pos.x() + pos.y() * 2, btile);
+                ftile->setTile(pos.x(), pos.y(), btile);
         } else
             readUnknownElement();
     }

@@ -76,8 +76,13 @@ public:
     QModelIndex dropIndex() const
     { return mDropIndex; }
 
+    void calcMaxTileSize();
+
+    QSize maxTileSize(int n) const
+    { return mMaxTileSize[n]; }
+
 signals:
-    void furnitureTileDropped(FurnitureTile *ftile, int index,
+    void furnitureTileDropped(FurnitureTile *ftile, int x, int y,
                               const QString &tileName);
 
 private:
@@ -85,6 +90,7 @@ private:
     static QString mMimeType;
     QPoint mDropCoords;
     QModelIndex mDropIndex;
+    QVector<QSize> mMaxTileSize;
 };
 
 class FurnitureView : public QTableView
@@ -110,6 +116,8 @@ public:
 
     Tiled::Internal::Zoomable *zoomable() const
     { return mZoomable; }
+
+    void furnitureTileResized(FurnitureTile *ftile);
 
 signals:
 

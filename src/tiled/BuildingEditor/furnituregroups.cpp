@@ -134,7 +134,7 @@ bool FurnitureGroups::readTxt()
                                                                    QString::SkipEmptyParts);
                                 int x = values[0].toInt();
                                 int y = values[1].toInt();
-                                if (x < 0 || x >= 2 || y < 0 || y >= 2) {
+                                if (x < 0 || x >= 50 || y < 0 || y >= 50) {
                                     mError = tr("Invalid tile coordinates (%1,%2)")
                                             .arg(x).arg(y);
                                     return false;
@@ -145,8 +145,7 @@ bool FurnitureGroups::readTxt()
                                     mError = tr("Can't parse tile name '%1'").arg(kv.value);
                                     return false;
                                 }
-                                tile->setTile(x + y * 2, BuildingTilesMgr::instance()->get(kv.value));
-
+                                tile->setTile(x, y, BuildingTilesMgr::instance()->get(kv.value));
                             }
                             tiles->setTile(tile);
                         } else {
@@ -227,16 +226,14 @@ bool FurnitureGroups::writeTxt()
                 entryBlock.name = QLatin1String("entry");
                 entryBlock.values += SimpleFileKeyValue(QLatin1String("orient"),
                                                         ftile->orientToString());
-                int j = -1;
-                foreach (BuildingTile *btile, ftile->tiles()) {
-                    ++j;
-                    if (btile == 0)
-                        continue;
-                    int x = j % 2;
-                    int y = j / 2;
-                    entryBlock.values += SimpleFileKeyValue(
-                                QString(QLatin1String("%1,%2")).arg(x).arg(y),
-                                btile->name());
+                for (int x = 0; x < ftile->width(); x++) {
+                    for (int y = 0; y < ftile->height(); y++) {
+                        if (BuildingTile *btile = ftile->tile(x, y)) {
+                            entryBlock.values += SimpleFileKeyValue(
+                                        QString(QLatin1String("%1,%2")).arg(x).arg(y),
+                                        btile->name());
+                        }
+                    }
                 }
                 furnitureBlock.blocks += entryBlock;
             }
@@ -319,51 +316,114 @@ bool FurnitureGroups::upgradeTxt()
 
 /////
 
-FurnitureTile::FurnitureTile(FurnitureTiles *ftiles, FurnitureTile::FurnitureOrientation orient) :
+FurnitureTile::FurnitureTile(FurnitureTiles *ftiles, FurnitureOrientation orient) :
     mOwner(ftiles),
     mOrient(orient),
-    mTiles(4, 0)
+    mSize(1, 1),
+    mTiles(1, 0)
 {
+}
+
+void FurnitureTile::clear()
+{
+    mTiles.fill(0, 1);
+    mSize = QSize(1, 1);
 }
 
 QSize FurnitureTile::size() const
 {
-    int width = (resolvedTiles()[1] || resolvedTiles()[3]) ? 2 : 1;
-    int height = (resolvedTiles()[2] || resolvedTiles()[3]) ? 2 : 1;
-    return QSize(width, height);
+    return mSize;
 }
 
 bool FurnitureTile::equals(FurnitureTile *other) const
 {
     return other->mTiles == mTiles &&
-            other->mOrient == mOrient;
+            other->mOrient == mOrient &&
+            other->mSize == mSize;
+}
+
+void FurnitureTile::setTile(int x, int y, BuildingTile *btile)
+{
+    // Get larger if needed
+    if ((btile != 0) && (x >= mSize.width() || y >= mSize.height())) {
+        resize(qMax(mSize.width(), x + 1), qMax(mSize.height(), y + 1));
+    }
+
+    mTiles[x + y * mSize.width()] = btile;
+
+    // Get smaller if needed
+    if ((btile == 0) && (x == mSize.width() - 1 || y == mSize.height() - 1)) {
+        int width = mSize.width(), height = mSize.height();
+        while (width > 1 && columnEmpty(width - 1))
+            width--;
+        while (height > 1 && rowEmpty(height - 1))
+            height--;
+        if (width < mSize.width() || height < mSize.height())
+            resize(width, height);
+    }
+}
+
+BuildingTile *FurnitureTile::tile(int x, int y) const
+{
+    if (x + y * mSize.width() >= mTiles.size())
+        return 0;
+    return mTiles[x + y * mSize.width()];
 }
 
 bool FurnitureTile::isEmpty() const
 {
-    return !(mTiles[0] || mTiles[1] || mTiles[2] || mTiles[3]);
+    foreach (BuildingTile *btile, mTiles)
+        if (btile != 0)
+            return false;
+    return true;
 }
 
-const QVector<BuildingTile *> &FurnitureTile::resolvedTiles() const
+FurnitureTile *FurnitureTile::resolved()
 {
     if (isEmpty()) {
         if (mOrient == FurnitureE)
-            return mOwner->tile(FurnitureW)->tiles();
+            return mOwner->tile(FurnitureW);
         if (mOrient == FurnitureN)
-            return mOwner->tile(FurnitureW)->tiles();
+            return mOwner->tile(FurnitureW);
         if (mOrient == FurnitureS) {
             if (!mOwner->tile(FurnitureN)->isEmpty())
-                return mOwner->tile(FurnitureN)->tiles();
-            return mOwner->tile(FurnitureW)->tiles();
+                return mOwner->tile(FurnitureN);
+            return mOwner->tile(FurnitureW);
         }
     }
-    return mTiles;
+    return this;
 }
 
 bool FurnitureTile::isCornerOrient(FurnitureTile::FurnitureOrientation orient)
 {
     return orient == FurnitureSW || orient == FurnitureSE ||
             orient == FurnitureNW || orient == FurnitureNE;
+}
+
+void FurnitureTile::resize(int width, int height)
+{
+    QVector<BuildingTile*> newTiles(width * height);
+    for (int i = 0; i < qMin(width, mSize.width()); i++)
+        for (int j = 0; j < qMin(height, mSize.height()); j++)
+            newTiles[i + j * width] = mTiles[i + j * mSize.width()];
+    mTiles = newTiles;
+    mSize = QSize(width, height);
+}
+
+bool FurnitureTile::columnEmpty(int x)
+{
+    for (int y = 0; y < mSize.height(); y++)
+        if (tile(x, y))
+            return false;
+    return true;
+}
+
+bool FurnitureTile::rowEmpty(int y)
+{
+    for (int x = 0; x < mSize.width(); x++)
+        if (tile(x, y))
+            return false;
+    return true;
 }
 
 /////

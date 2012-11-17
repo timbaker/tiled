@@ -33,6 +33,7 @@ class FurnitureTile
 {
 public:
     enum FurnitureOrientation {
+        FurnitureUnknown = -1,
         FurnitureW,
         FurnitureN,
         FurnitureE,
@@ -41,7 +42,7 @@ public:
         FurnitureNW,
         FurnitureNE,
         FurnitureSE,
-        FurnitureUnknown
+        OrientCount
     };
 
     FurnitureTile(FurnitureTiles *ftiles, FurnitureOrientation orient);
@@ -49,10 +50,7 @@ public:
     FurnitureTiles *owner() const
     { return mOwner; }
 
-    void clear()
-    {
-        mTiles.fill(0);
-    }
+    void clear();
 
     bool isEmpty() const;
 
@@ -76,25 +74,33 @@ public:
     }
 
     QSize size() const;
+    int width() const { return size().width(); }
+    int height() const { return size().height(); }
 
     bool equals(FurnitureTile *other) const;
 
-    void setTile(int n, BuildingTile *btile)
-    { mTiles[n] = btile; }
+    void setTile(int x, int y, BuildingTile *btile);
 
-    BuildingTile *tile(int n) const
-    { return mTiles[n]; }
+//    BuildingTile *tile(int n) const;
+
+    BuildingTile *tile(int x, int y) const;
 
     const QVector<BuildingTile*> &tiles() const
     { return mTiles; }
 
-    const QVector<BuildingTile*> &resolvedTiles() const;
+    FurnitureTile *resolved();
 
     static bool isCornerOrient(FurnitureOrientation orient);
 
 private:
+    void resize(int width, int height);
+    bool columnEmpty(int x);
+    bool rowEmpty(int y);
+
+private:
     FurnitureTiles *mOwner;
     FurnitureOrientation mOrient;
+    QSize mSize;
     QVector<BuildingTile*> mTiles;
 };
 

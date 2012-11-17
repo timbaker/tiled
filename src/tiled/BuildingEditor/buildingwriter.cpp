@@ -150,10 +150,9 @@ public:
             return;
         w.writeStartElement(QLatin1String("entry"));
         w.writeAttribute(QLatin1String("orient"), ftile->orientToString());
-        writeFurnitureTile(w, 0, 0, ftile->tile(0));
-        writeFurnitureTile(w, 1, 0, ftile->tile(1));
-        writeFurnitureTile(w, 0, 1, ftile->tile(2));
-        writeFurnitureTile(w, 1, 1, ftile->tile(3));
+        for (int x = 0; x < ftile->width(); x++)
+            for (int y = 0; y < ftile->height(); y++)
+                writeFurnitureTile(w, x, y, ftile->tile(x, y));
         w.writeEndElement(); // </entry>
     }
 
