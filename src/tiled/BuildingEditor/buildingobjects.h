@@ -347,6 +347,8 @@ public:
     void toggleCappedE();
     void toggleCappedS();
 
+    void setDefaultCaps();
+
     enum RoofTile {
         SlopeS1, SlopeS2, SlopeS3,
         SlopeE1, SlopeE2, SlopeE3,

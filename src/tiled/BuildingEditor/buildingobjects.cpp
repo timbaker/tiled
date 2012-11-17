@@ -870,6 +870,25 @@ void RoofObject::toggleCappedS()
     mCappedS = !mCappedS;
 }
 
+void RoofObject::setDefaultCaps()
+{
+    mCappedW = mCappedN = mCappedE = mCappedS = true;
+    switch (mType) {
+    case SlopeW: mCappedE = false; break;
+    case SlopeN: mCappedS = false; break;
+    case SlopeE: mCappedW = false; break;
+    case SlopeS: mCappedN = false; break;
+    case CornerInnerSW: mCappedW = mCappedS = false; break;
+    case CornerInnerNW: mCappedW = mCappedN = false; break;
+    case CornerInnerNE: mCappedE = mCappedN = false; break;
+    case CornerInnerSE: mCappedE = mCappedS = false; break;
+    case CornerOuterSW: mCappedE = mCappedN = false; break;
+    case CornerOuterNW: mCappedE = mCappedS = false; break;
+    case CornerOuterNE: mCappedW = mCappedS = false; break;
+    case CornerOuterSE: mCappedW = mCappedN = false; break;
+    }
+}
+
 int RoofObject::getOffset(RoofObject::RoofTile tile) const
 {
     static const BTC_RoofSlopes::TileEnum mapSlope[] = {

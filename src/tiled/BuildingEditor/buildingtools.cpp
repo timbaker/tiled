@@ -1314,6 +1314,7 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             mObject->setCapTiles(mEditor->building()->roofCapTile());
             mObject->setSlopeTiles(mEditor->building()->roofSlopeTile());
             mObject->setTopTiles(mEditor->building()->roofTopTile());
+            mObject->setDefaultCaps();
             BuildingFloor *floor = this->floor();
             undoStack()->push(new AddObject(mEditor->document(), floor,
                                             floor->objectCount(), mObject));
