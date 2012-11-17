@@ -42,10 +42,10 @@ category
         North = location_restaurant_diner_01_001
         NorthWest = location_restaurant_diner_01_002
         SouthEast = location_restaurant_diner_01_003
-        WestWindow = location_restaurant_diner_01_008
-        NorthWindow = location_restaurant_diner_01_009
-        WestDoor = location_restaurant_diner_01_010
-        NorthDoor = location_restaurant_diner_01_011
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = location_restaurant_diner_01_004
+        NorthDoor = location_restaurant_diner_01_005
     }
     entry
     {
@@ -135,11 +135,44 @@ category
         WestDoor = walls_exterior_wooden_01_034
         NorthDoor = walls_exterior_wooden_01_035
     }
+    entry
+    {
+        West = location_restaurant_spiffos_01_000
+        North = location_restaurant_spiffos_01_001
+        NorthWest = location_restaurant_spiffos_01_007
+        SouthEast = location_restaurant_spiffos_01_022
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = location_restaurant_spiffos_01_002
+        NorthDoor = location_restaurant_spiffos_01_003
+    }
 }
 category
 {
     label = Interior Walls
     name = interior_walls
+    entry
+    {
+        West = location_restaurant_seahorse_01_001
+        North = location_restaurant_seahorse_01_000
+        NorthWest = location_restaurant_seahorse_01_002
+        SouthEast = location_restaurant_seahorse_01_003
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = 
+        NorthDoor = 
+    }
+    entry
+    {
+        West = location_restaurant_seahorse_01_005
+        North = location_restaurant_seahorse_01_004
+        NorthWest = location_restaurant_seahorse_01_006
+        SouthEast = location_restaurant_seahorse_01_007
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = 
+        NorthDoor = 
+    }
     entry
     {
         West = location_barn_01_000
@@ -201,10 +234,10 @@ category
         North = location_restaurant_diner_01_001
         NorthWest = location_restaurant_diner_01_002
         SouthEast = location_restaurant_diner_01_003
-        WestWindow = location_restaurant_diner_01_008
-        NorthWindow = location_restaurant_diner_01_009
-        WestDoor = location_restaurant_diner_01_010
-        NorthDoor = location_restaurant_diner_01_011
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = location_restaurant_diner_01_004
+        NorthDoor = location_restaurant_diner_01_005
     }
     entry
     {
@@ -481,6 +514,39 @@ category
         WestDoor = walls_interior_house_03_026
         NorthDoor = walls_interior_house_03_027
     }
+    entry
+    {
+        West = location_restaurant_bar_01_017
+        North = location_restaurant_bar_01_016
+        NorthWest = location_restaurant_bar_01_018
+        SouthEast = location_restaurant_bar_01_023
+        WestWindow = location_restaurant_bar_01_019
+        NorthWindow = location_restaurant_bar_01_020
+        WestDoor = location_restaurant_bar_01_021
+        NorthDoor = location_restaurant_bar_01_022
+    }
+    entry
+    {
+        West = location_restaurant_spiffos_01_008
+        North = location_restaurant_spiffos_01_009
+        NorthWest = location_restaurant_spiffos_01_015
+        SouthEast = location_restaurant_spiffos_01_023
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = location_restaurant_spiffos_01_010
+        NorthDoor = location_restaurant_spiffos_01_011
+    }
+    entry
+    {
+        West = location_restaurant_spiffos_01_040
+        North = location_restaurant_spiffos_01_041
+        NorthWest = location_restaurant_spiffos_01_042
+        SouthEast = location_restaurant_spiffos_01_043
+        WestWindow = location_restaurant_spiffos_01_044
+        NorthWindow = location_restaurant_spiffos_01_045
+        WestDoor = location_restaurant_spiffos_01_046
+        NorthDoor = location_restaurant_spiffos_01_047
+    }
 }
 category
 {
@@ -634,11 +700,22 @@ category
     {
         Floor = location_restaurant_diner_01_040
     }
+    entry
+    {
+        Floor = location_restaurant_spiffos_01_038
+    }
 }
 category
 {
     label = Doors
     name = doors
+    entry
+    {
+        West = location_restaurant_seahorse_01_044
+        North = location_restaurant_seahorse_01_045
+        WestOpen = location_restaurant_seahorse_01_046
+        NorthOpen = location_restaurant_seahorse_01_047
+    }
     entry
     {
         West = fixtures_doors_01_000
@@ -736,6 +813,20 @@ category
         North = fixtures_doors_01_053
         WestOpen = fixtures_doors_01_054
         NorthOpen = fixtures_doors_01_055
+    }
+    entry
+    {
+        West = location_restaurant_spiffos_01_048
+        North = location_restaurant_spiffos_01_049
+        WestOpen = location_restaurant_spiffos_01_050
+        NorthOpen = location_restaurant_spiffos_01_051
+    }
+    entry
+    {
+        West = location_restaurant_spiffos_01_052
+        North = location_restaurant_spiffos_01_053
+        WestOpen = location_restaurant_spiffos_01_054
+        NorthOpen = location_restaurant_spiffos_01_055
     }
 }
 category
@@ -947,6 +1038,33 @@ category
     name = roof_caps
     entry
     {
+        CapRiseE1 = location_barn_01_024
+        CapRiseE2 = location_barn_01_025
+        CapRiseE3 = location_barn_01_026
+        CapFallE1 = location_barn_01_032
+        CapFallE2 = location_barn_01_033
+        CapFallE3 = location_barn_01_034
+        CapRiseS1 = location_barn_01_037
+        CapRiseS2 = location_barn_01_036
+        CapRiseS3 = location_barn_01_035
+        CapFallS1 = location_barn_01_029
+        CapFallS2 = location_barn_01_028
+        CapFallS3 = location_barn_01_027
+        PeakPt5S = location_barn_01_031
+        PeakPt5E = location_barn_01_039
+        PeakOnePt5S = location_barn_01_030
+        PeakOnePt5E = location_barn_01_038
+        PeakTwoPt5S = location_barn_01_041
+        PeakTwoPt5E = location_barn_01_040
+        CapGapS1 = 
+        CapGapS2 = 
+        CapGapS3 = location_barn_01_001
+        CapGapE1 = 
+        CapGapE2 = 
+        CapGapE3 = location_barn_01_000
+    }
+    entry
+    {
         CapRiseE1 = walls_exterior_roofs_01_000
         CapRiseE2 = walls_exterior_roofs_01_001
         CapRiseE3 = walls_exterior_roofs_01_002
@@ -998,33 +1116,6 @@ category
         CapGapE1 = 
         CapGapE2 = 
         CapGapE3 = 
-    }
-    entry
-    {
-        CapRiseE1 = location_barn_01_024
-        CapRiseE2 = location_barn_01_025
-        CapRiseE3 = location_barn_01_026
-        CapFallE1 = location_barn_01_032
-        CapFallE2 = location_barn_01_033
-        CapFallE3 = location_barn_01_034
-        CapRiseS1 = location_barn_01_037
-        CapRiseS2 = location_barn_01_036
-        CapRiseS3 = location_barn_01_035
-        CapFallS1 = location_barn_01_029
-        CapFallS2 = location_barn_01_028
-        CapFallS3 = location_barn_01_027
-        PeakPt5S = location_barn_01_031
-        PeakPt5E = location_barn_01_039
-        PeakOnePt5S = location_barn_01_030
-        PeakOnePt5E = location_barn_01_038
-        PeakTwoPt5S = location_barn_01_041
-        PeakTwoPt5E = location_barn_01_040
-        CapGapS1 = 
-        CapGapS2 = 
-        CapGapS3 = location_barn_01_001
-        CapGapE1 = 
-        CapGapE2 = 
-        CapGapE3 = location_barn_01_000
     }
     entry
     {
@@ -1219,5 +1310,16 @@ category
         offset = West2 -2 -2
         offset = North1 -1 -1
         offset = North2 -2 -2
+    }
+    entry
+    {
+        West1 = floors_exterior_street_01_018
+        West2 = floors_exterior_street_01_018
+        West3 = floors_exterior_street_01_018
+        North1 = 
+        North2 = 
+        North3 = 
+        offset = West1 -1 -1
+        offset = West2 -2 -2
     }
 }

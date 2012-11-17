@@ -15,6 +15,14 @@ TileEntry
 }
 TileEntry
 {
+    category = doors
+    West = location_restaurant_spiffos_01_052
+    North = location_restaurant_spiffos_01_053
+    WestOpen = location_restaurant_spiffos_01_054
+    NorthOpen = location_restaurant_spiffos_01_055
+}
+TileEntry
+{
     category = exterior_walls
     West = walls_exterior_house_01_016
     North = walls_exterior_house_01_017
@@ -51,6 +59,18 @@ TileEntry
 }
 TileEntry
 {
+    category = exterior_walls
+    West = location_restaurant_spiffos_01_000
+    North = location_restaurant_spiffos_01_001
+    NorthWest = location_restaurant_spiffos_01_007
+    SouthEast = location_restaurant_spiffos_01_022
+    WestWindow = 
+    NorthWindow = 
+    WestDoor = location_restaurant_spiffos_01_002
+    NorthDoor = location_restaurant_spiffos_01_003
+}
+TileEntry
+{
     category = floors
     Floor = floors_interior_carpet_01_000
 }
@@ -82,12 +102,27 @@ TileEntry
 TileEntry
 {
     category = floors
+    Floor = floors_interior_tilesandwood_01_016
+}
+TileEntry
+{
+    category = floors
+    Floor = floors_interior_tilesandwood_01_017
+}
+TileEntry
+{
+    category = floors
     Floor = floors_interior_tilesandwood_01_042
 }
 TileEntry
 {
     category = floors
     Floor = floors_interior_tilesandwood_01_043
+}
+TileEntry
+{
+    category = floors
+    Floor = location_restaurant_spiffos_01_038
 }
 TileEntry
 {
@@ -124,6 +159,18 @@ TileEntry
     NorthWindow = walls_exterior_wooden_01_033
     WestDoor = walls_exterior_wooden_01_034
     NorthDoor = walls_exterior_wooden_01_035
+}
+TileEntry
+{
+    category = interior_walls
+    West = walls_interior_bathroom_01_000
+    North = walls_interior_bathroom_01_001
+    NorthWest = walls_interior_bathroom_01_002
+    SouthEast = walls_interior_bathroom_01_003
+    WestWindow = walls_interior_bathroom_01_008
+    NorthWindow = walls_interior_bathroom_01_009
+    WestDoor = walls_interior_bathroom_01_010
+    NorthDoor = walls_interior_bathroom_01_011
 }
 TileEntry
 {
@@ -211,6 +258,122 @@ TileEntry
 }
 TileEntry
 {
+    category = interior_walls
+    West = location_restaurant_spiffos_01_008
+    North = location_restaurant_spiffos_01_009
+    NorthWest = location_restaurant_spiffos_01_015
+    SouthEast = location_restaurant_spiffos_01_023
+    WestWindow = 
+    NorthWindow = 
+    WestDoor = location_restaurant_spiffos_01_010
+    NorthDoor = location_restaurant_spiffos_01_011
+}
+TileEntry
+{
+    category = interior_walls
+    West = location_restaurant_spiffos_01_040
+    North = location_restaurant_spiffos_01_041
+    NorthWest = location_restaurant_spiffos_01_042
+    SouthEast = location_restaurant_spiffos_01_043
+    WestWindow = location_restaurant_spiffos_01_044
+    NorthWindow = location_restaurant_spiffos_01_045
+    WestDoor = location_restaurant_spiffos_01_046
+    NorthDoor = location_restaurant_spiffos_01_047
+}
+TileEntry
+{
+    category = roof_caps
+    CapRiseE1 = location_barn_01_024
+    CapRiseE2 = location_barn_01_025
+    CapRiseE3 = location_barn_01_026
+    CapFallE1 = location_barn_01_032
+    CapFallE2 = location_barn_01_033
+    CapFallE3 = location_barn_01_034
+    CapRiseS1 = location_barn_01_037
+    CapRiseS2 = location_barn_01_036
+    CapRiseS3 = location_barn_01_035
+    CapFallS1 = location_barn_01_029
+    CapFallS2 = location_barn_01_028
+    CapFallS3 = location_barn_01_027
+    PeakPt5S = location_barn_01_031
+    PeakPt5E = location_barn_01_039
+    PeakOnePt5S = location_barn_01_030
+    PeakOnePt5E = location_barn_01_038
+    PeakTwoPt5S = location_barn_01_041
+    PeakTwoPt5E = location_barn_01_040
+    CapGapS1 = 
+    CapGapS2 = 
+    CapGapS3 = location_barn_01_001
+    CapGapE1 = 
+    CapGapE2 = 
+    CapGapE3 = location_barn_01_000
+}
+TileEntry
+{
+    category = roof_slopes
+    SlopeS1 = roofs_01_000
+    SlopeS2 = roofs_01_001
+    SlopeS3 = roofs_01_002
+    SlopeE1 = roofs_01_005
+    SlopeE2 = roofs_01_004
+    SlopeE3 = roofs_01_003
+    SlopePt5S = roofs_01_015
+    SlopePt5E = roofs_01_014
+    SlopeOnePt5S = roofs_01_015
+    SlopeOnePt5E = roofs_01_014
+    SlopeTwoPt5S = roofs_01_015
+    SlopeTwoPt5E = roofs_01_014
+    Inner1 = roofs_01_011
+    Inner2 = roofs_01_012
+    Inner3 = roofs_01_013
+    Outer1 = roofs_01_008
+    Outer2 = roofs_01_009
+    Outer3 = roofs_01_010
+    offset = SlopePt5S 1 1
+    offset = SlopePt5E 1 1
+    offset = SlopeTwoPt5S -1 -1
+    offset = SlopeTwoPt5E -1 -1
+}
+TileEntry
+{
+    category = roof_slopes
+    SlopeS1 = roofs_01_024
+    SlopeS2 = roofs_01_025
+    SlopeS3 = roofs_01_026
+    SlopeE1 = roofs_01_029
+    SlopeE2 = roofs_01_028
+    SlopeE3 = roofs_01_027
+    SlopePt5S = roofs_01_039
+    SlopePt5E = roofs_01_038
+    SlopeOnePt5S = roofs_01_039
+    SlopeOnePt5E = roofs_01_038
+    SlopeTwoPt5S = roofs_01_039
+    SlopeTwoPt5E = roofs_01_038
+    Inner1 = roofs_01_035
+    Inner2 = roofs_01_036
+    Inner3 = roofs_01_037
+    Outer1 = roofs_01_032
+    Outer2 = roofs_01_033
+    Outer3 = roofs_01_034
+    offset = SlopePt5S 1 1
+    offset = SlopePt5E 1 1
+    offset = SlopeTwoPt5S -1 -1
+    offset = SlopeTwoPt5E -1 -1
+}
+TileEntry
+{
+    category = roof_tops
+    West1 = floors_exterior_street_01_018
+    West2 = floors_exterior_street_01_018
+    West3 = floors_exterior_street_01_018
+    North1 = 
+    North2 = 
+    North3 = 
+    offset = West1 -1 -1
+    offset = West2 -2 -2
+}
+TileEntry
+{
     category = stairs
     West1 = fixtures_stairs_01_000
     West2 = fixtures_stairs_01_001
@@ -225,21 +388,184 @@ TileEntry
     West = fixtures_windows_01_000
     North = fixtures_windows_01_001
 }
+TileEntry
+{
+    category = windows
+    West = fixtures_windows_01_016
+    North = fixtures_windows_01_017
+}
 Template
 {
     Name = Old Suburban
-    Wall = 4
+    ExteriorWall = 5
     Door = 2
     DoorFrame = 1
-    Window = 25
+    Window = 37
     Curtains = 0
-    Stairs = 24
+    Stairs = 36
+    RoofCap = 0
+    RoofSlope = 0
+    RoofTop = 0
     Room
     {
         Name = Foyer
         Color = 255 255 255
         InternalName = foyer
-        Wall = 15
+        Wall = 20
+        Floor = 17
+    }
+    Room
+    {
+        Name = Hall
+        Color = 200 200 200
+        InternalName = hall
+        Wall = 20
+        Floor = 17
+    }
+    Room
+    {
+        Name = Living Room
+        Color = 255 0 0
+        InternalName = livingroom
+        Wall = 20
+        Floor = 17
+    }
+    Room
+    {
+        Name = Dining Room
+        Color = 255 0 128
+        InternalName = diningroom
+        Wall = 20
+        Floor = 17
+    }
+    Room
+    {
+        Name = Bathroom
+        Color = 255 128 0
+        InternalName = bathroom
+        Wall = 20
+        Floor = 17
+    }
+    Room
+    {
+        Name = Kitchen
+        Color = 0 255 0
+        InternalName = kitchen
+        Wall = 20
+        Floor = 17
+    }
+    Room
+    {
+        Name = Bedroom1
+        Color = 0 0 255
+        InternalName = bedroom
+        Wall = 19
+        Floor = 17
+    }
+    Room
+    {
+        Name = Bedroom2
+        Color = 0 64 255
+        InternalName = bedroom
+        Wall = 19
+        Floor = 17
+    }
+    Room
+    {
+        Name = Bedroom3
+        Color = 0 128 255
+        InternalName = bedroom
+        Wall = 19
+        Floor = 17
+    }
+}
+Template
+{
+    Name = Suburban 1
+    ExteriorWall = 5
+    Door = 2
+    DoorFrame = 1
+    Window = 37
+    Curtains = 0
+    Stairs = 36
+    RoofCap = 0
+    RoofSlope = 0
+    RoofTop = 0
+    Room
+    {
+        Name = Living Room
+        Color = 255 0 0
+        InternalName = livingroom
+        Wall = 23
+        Floor = 16
+    }
+    Room
+    {
+        Name = Dining Room
+        Color = 255 0 128
+        InternalName = diningroom
+        Wall = 23
+        Floor = 16
+    }
+    Room
+    {
+        Name = Bathroom
+        Color = 255 128 0
+        InternalName = bathroom
+        Wall = 24
+        Floor = 12
+    }
+    Room
+    {
+        Name = Kitchen
+        Color = 0 255 0
+        InternalName = kitchen
+        Wall = 25
+        Floor = 12
+    }
+    Room
+    {
+        Name = Bedroom1
+        Color = 0 0 255
+        InternalName = bedroom
+        Wall = 26
+        Floor = 8
+    }
+    Room
+    {
+        Name = Bedroom2
+        Color = 0 64 255
+        InternalName = bedroom
+        Wall = 28
+        Floor = 8
+    }
+    Room
+    {
+        Name = Bedroom3
+        Color = 0 128 255
+        InternalName = bedroom
+        Wall = 28
+        Floor = 8
+    }
+}
+Template
+{
+    Name = Suburban 2
+    ExteriorWall = 4
+    Door = 2
+    DoorFrame = 1
+    Window = 37
+    Curtains = 0
+    Stairs = 36
+    RoofCap = 0
+    RoofSlope = 0
+    RoofTop = 0
+    Room
+    {
+        Name = Foyer
+        Color = 255 255 255
+        InternalName = hall
+        Wall = 29
         Floor = 13
     }
     Room
@@ -247,7 +573,7 @@ Template
         Name = Hall
         Color = 200 200 200
         InternalName = hall
-        Wall = 15
+        Wall = 29
         Floor = 13
     }
     Room
@@ -255,140 +581,77 @@ Template
         Name = Living Room
         Color = 255 0 0
         InternalName = livingroom
-        Wall = 15
-        Floor = 13
+        Wall = 29
+        Floor = 11
     }
     Room
     {
         Name = Dining Room
         Color = 255 0 128
         InternalName = diningroom
-        Wall = 15
-        Floor = 13
+        Wall = 29
+        Floor = 11
     }
     Room
     {
         Name = Bathroom
         Color = 255 128 0
         InternalName = bathroom
-        Wall = 15
-        Floor = 13
+        Wall = 28
+        Floor = 12
     }
     Room
     {
         Name = Kitchen
         Color = 0 255 0
         InternalName = kitchen
-        Wall = 15
-        Floor = 13
+        Wall = 25
+        Floor = 12
     }
     Room
     {
         Name = Bedroom1
         Color = 0 0 255
         InternalName = bedroom
-        Wall = 14
-        Floor = 13
+        Wall = 27
+        Floor = 9
     }
     Room
     {
         Name = Bedroom2
         Color = 0 64 255
         InternalName = bedroom
-        Wall = 14
-        Floor = 13
+        Wall = 29
+        Floor = 9
     }
     Room
     {
         Name = Bedroom3
         Color = 0 128 255
         InternalName = bedroom
-        Wall = 14
-        Floor = 13
+        Wall = 29
+        Floor = 9
     }
 }
 Template
 {
-    Name = Suburban 1
-    Wall = 4
+    Name = Wooden Shack
+    ExteriorWall = 6
     Door = 2
     DoorFrame = 1
-    Window = 25
+    Window = 37
     Curtains = 0
-    Stairs = 24
-    Room
-    {
-        Name = Living Room
-        Color = 255 0 0
-        InternalName = livingroom
-        Wall = 17
-        Floor = 12
-    }
-    Room
-    {
-        Name = Dining Room
-        Color = 255 0 128
-        InternalName = diningroom
-        Wall = 17
-        Floor = 12
-    }
-    Room
-    {
-        Name = Bathroom
-        Color = 255 128 0
-        InternalName = bathroom
-        Wall = 18
-        Floor = 10
-    }
-    Room
-    {
-        Name = Kitchen
-        Color = 0 255 0
-        InternalName = kitchen
-        Wall = 19
-        Floor = 10
-    }
-    Room
-    {
-        Name = Bedroom1
-        Color = 0 0 255
-        InternalName = bedroom
-        Wall = 20
-        Floor = 6
-    }
-    Room
-    {
-        Name = Bedroom2
-        Color = 0 64 255
-        InternalName = bedroom
-        Wall = 22
-        Floor = 6
-    }
-    Room
-    {
-        Name = Bedroom3
-        Color = 0 128 255
-        InternalName = bedroom
-        Wall = 22
-        Floor = 6
-    }
-}
-Template
-{
-    Name = Suburban 2
-    Wall = 3
-    Door = 2
-    DoorFrame = 1
-    Window = 25
-    Curtains = 0
-    Stairs = 24
+    Stairs = 36
+    RoofCap = 0
+    RoofSlope = 34
+    RoofTop = 0
     Room
     {
         Name = Foyer
         Color = 255 255 255
         InternalName = hall
         Wall = 23
-        Floor = 11
+        Floor = 16
     }
     Room
     {
@@ -396,30 +659,30 @@ Template
         Color = 200 200 200
         InternalName = hall
         Wall = 23
-        Floor = 11
+        Floor = 16
     }
     Room
     {
         Name = Living Room
         Color = 255 0 0
         InternalName = livingroom
-        Wall = 23
-        Floor = 9
+        Wall = 21
+        Floor = 10
     }
     Room
     {
         Name = Dining Room
         Color = 255 0 128
         InternalName = diningroom
-        Wall = 23
-        Floor = 9
+        Wall = 21
+        Floor = 10
     }
     Room
     {
         Name = Bathroom
         Color = 255 128 0
         InternalName = bathroom
-        Wall = 22
+        Wall = 21
         Floor = 10
     }
     Room
@@ -427,7 +690,7 @@ Template
         Name = Kitchen
         Color = 0 255 0
         InternalName = kitchen
-        Wall = 19
+        Wall = 21
         Floor = 10
     }
     Room
@@ -436,104 +699,67 @@ Template
         Color = 0 0 255
         InternalName = bedroom
         Wall = 21
-        Floor = 7
+        Floor = 10
     }
     Room
     {
         Name = Bedroom2
         Color = 0 64 255
         InternalName = bedroom
-        Wall = 23
-        Floor = 7
+        Wall = 21
+        Floor = 10
     }
     Room
     {
         Name = Bedroom3
         Color = 0 128 255
         InternalName = bedroom
-        Wall = 23
-        Floor = 7
+        Wall = 21
+        Floor = 10
     }
 }
 Template
 {
-    Name = Wooden Shack
-    Wall = 5
-    Door = 2
-    DoorFrame = 1
-    Window = 25
+    Name = Spiffo's
+    ExteriorWall = 7
+    Door = 3
+    DoorFrame = 0
+    Window = 38
     Curtains = 0
-    Stairs = 24
+    Stairs = 36
+    RoofCap = 32
+    RoofSlope = 33
+    RoofTop = 35
     Room
     {
-        Name = Foyer
-        Color = 255 255 255
-        InternalName = hall
-        Wall = 17
-        Floor = 12
-    }
-    Room
-    {
-        Name = Hall
+        Name = Dining
         Color = 200 200 200
-        InternalName = hall
-        Wall = 17
-        Floor = 12
-    }
-    Room
-    {
-        Name = Living Room
-        Color = 255 0 0
-        InternalName = livingroom
-        Wall = 16
-        Floor = 8
-    }
-    Room
-    {
-        Name = Dining Room
-        Color = 255 0 128
-        InternalName = diningroom
-        Wall = 16
-        Floor = 8
+        InternalName = dining
+        Wall = 30
+        Floor = 18
     }
     Room
     {
         Name = Bathroom
-        Color = 255 128 0
+        Color = 128 128 128
         InternalName = bathroom
-        Wall = 16
-        Floor = 8
+        Wall = 22
+        Floor = 15
     }
     Room
     {
         Name = Kitchen
-        Color = 0 255 0
+        Color = 255 0 0
         InternalName = kitchen
-        Wall = 16
-        Floor = 8
+        Wall = 31
+        Floor = 14
     }
     Room
     {
-        Name = Bedroom1
-        Color = 0 0 255
-        InternalName = bedroom
-        Wall = 16
-        Floor = 8
-    }
-    Room
-    {
-        Name = Bedroom2
-        Color = 0 64 255
-        InternalName = bedroom
-        Wall = 16
-        Floor = 8
-    }
-    Room
-    {
-        Name = Bedroom3
-        Color = 0 128 255
-        InternalName = bedroom
-        Wall = 16
-        Floor = 8
+        Name = Bathroom 2
+        Color = 0 255 0
+        InternalName = bathroom
+        Wall = 22
+        Floor = 15
     }
 }
