@@ -695,15 +695,11 @@ void RoofObject::depthUp()
         }
         break;
     case FlatTop:
-#ifdef ROOF_TOPS
         switch (mDepth) {
         case Zero: mDepth = One; break;
         case One: mDepth = Two; break;
         case Two: mDepth = Three; break;
         }
-#else
-        // depth can only be Three
-#endif
         break;
     case CornerInnerSW:
     case CornerInnerNW:
@@ -740,15 +736,11 @@ void RoofObject::depthDown()
         }
         break;
     case FlatTop:
-#ifdef ROOF_TOPS
         switch (mDepth) {
         case One: mDepth = Zero; break;
         case Two: mDepth = One; break;
         case Three: mDepth = Two; break;
         }
-#else
-        // depth can only be Three
-#endif
         break;
     case CornerInnerSW:
     case CornerInnerNW:
@@ -784,11 +776,7 @@ bool RoofObject::isDepthMax()
         }
         break;
     case FlatTop:
-#ifdef ROOF_TOPS
         return mDepth == Three;
-#else
-        return true; // depth can only be Three
-#endif
         break;
     case CornerInnerSW:
     case CornerInnerNW:
@@ -821,11 +809,7 @@ bool RoofObject::isDepthMin()
         }
         break;
     case FlatTop:
-#ifdef ROOF_TOPS
         return mDepth == Zero;
-#else
-        return true; // depth can only be Three
-#endif
         break;
     case CornerInnerSW:
     case CornerInnerNW:

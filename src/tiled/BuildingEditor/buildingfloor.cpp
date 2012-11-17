@@ -153,13 +153,9 @@ static void ReplaceRoofTop(RoofObject *ro, const QRect &r,
     QRect rOffset = r.translated(tileOffset) & bounds;
     for (int x = rOffset.left(); x <= rOffset.right(); x++)
         for (int y = rOffset.top(); y <= rOffset.bottom(); y++)
-#ifdef ROOF_TOPS
             (ro->depth() == RoofObject::Zero || ro->depth() == RoofObject::Three)
                 ? squares[x][y].ReplaceFloor(ro->topTiles(), offset)
                 : squares[x][y].ReplaceRoofTop(ro->topTiles(), offset);
-#else
-            squares[x][y].ReplaceFloor(roofTile.tile());
-#endif
 }
 
 static void ReplaceRoofCorner(RoofObject *ro, int x, int y,
@@ -480,12 +476,11 @@ void BuildingFloor::LayoutToSquares()
                     (eg.adjusted(0,0,0,1).bottomLeft() == sg.adjusted(0,0,1,0).topRight()))
                 ReplaceRoofCap(ro, r.right()+1, r.bottom()+1, squares, RoofObject::CapGapE3, 3);
 #endif
-#ifdef ROOF_TOPS
+
             // Roof tops with depth of 3 are placed in the floor layer of the
             // floor above.
             if (ro->depth() != RoofObject::Three)
                 ReplaceRoofTop(ro, ro->flatTop(), squares);
-#endif
 
             // East cap
             if (ro->isCappedE()) {
@@ -846,12 +841,10 @@ void BuildingFloor::flip(bool horizontal)
 /////
 
 BuildingFloor::Square::Square() :
+    mTiles(MaxSection, 0),
+    mTileOffset(MaxSection, 0),
     mExterior(false)
 {
-    for (int i = 0; i < MaxSection; i++) {
-        mTiles[i] = 0;
-        mTileOffset[i] = 0;
-    }
     mFurniture[0] = mFurniture[1] = 0;
 }
 
@@ -950,13 +943,11 @@ void BuildingFloor::Square::ReplaceRoofCap(BuildingTileEntry *tile, int offset)
     mTileOffset[SectionRoofCap] = offset;
 }
 
-#ifdef ROOF_TOPS
 void BuildingFloor::Square::ReplaceRoofTop(BuildingTileEntry *tile, int offset)
 {
     mTiles[SectionRoofTop] = tile;
     mTileOffset[SectionRoofTop] = offset;
 }
-#endif
 
 int BuildingFloor::Square::getWallOffset()
 {

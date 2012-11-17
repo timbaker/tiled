@@ -47,9 +47,9 @@ public:
         {
             SectionFloor,
             SectionWall,
+            SectionDoor,
             SectionFrame,
             SectionCurtains,
-            SectionDoor,
             SectionFurniture,
             SectionFurniture2,
             SectionCurtains2,
@@ -57,10 +57,7 @@ public:
             SectionRoofCap2,
             SectionRoof,
             SectionRoof2,
-#define ROOF_TOPS 1
-#ifdef ROOF_TOPS
             SectionRoofTop,
-#endif
             MaxSection
         };
 
@@ -75,8 +72,8 @@ public:
         Square();
         ~Square();
 
-        BuildingTileEntry *mTiles[MaxSection];
-        int mTileOffset[MaxSection];
+        QVector<BuildingTileEntry*> mTiles;
+        QVector<int> mTileOffset;
         WallOrientation mWallOrientation;
         bool mExterior;
         BuildingTile *mFurniture[2];
@@ -93,9 +90,8 @@ public:
         void ReplaceFurniture(BuildingTile *tile);
         void ReplaceRoof(BuildingTileEntry *tile, int offset = 0);
         void ReplaceRoofCap(BuildingTileEntry *tile, int offset = 0);
-#ifdef ROOF_TOPS
         void ReplaceRoofTop(BuildingTileEntry *tile, int offset);
-#endif
+
         int getWallOffset();
         int getTileIndexForDoor();
     };

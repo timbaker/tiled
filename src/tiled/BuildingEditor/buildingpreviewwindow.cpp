@@ -193,6 +193,7 @@ bool BuildingPreviewWindow::exportTMX(const QString &fileName)
 void BuildingPreviewWindow::updateActions()
 {
     ui->actionShowWalls->setEnabled(mDocument != 0);
+    ui->actionHighlightFloor->setEnabled(mDocument != 0);
     ui->actionZoomIn->setEnabled(mView->zoomable()->canZoomIn());
     ui->actionZoomOut->setEnabled(mView->zoomable()->canZoomOut());
     ui->actionNormalSize->setEnabled(mView->zoomable()->scale() != 1.0);
@@ -433,20 +434,20 @@ void BuildingPreviewScene::BuildingToMap()
     const char *layerNames[] = {
         "Floor",
         "Walls",
+        "Doors",
         "Frames",
         "Curtains",
-        "Doors",
         "Furniture",
         "Furniture2",
+        "Curtains2",
         "RoofCap",
         "RoofCap2",
         "Roof",
         "Roof2",
-#ifdef ROOF_TOPS
         "RoofTop",
-#endif
         0
     };
+    Q_ASSERT(sizeof(layerNames)/sizeof(layerNames[0]) == BuildingFloor::Square::MaxSection + 1);
 
     foreach (BuildingFloor *floor, mDocument->building()->floors()) {
         for (int i = 0; layerNames[i]; i++) {
@@ -489,33 +490,15 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
 {
     int offset = (mMapComposite->maxLevel() - floor->level()) * 3; // FIXME: not for LevelIsometric
 
-    static BuildingFloor::Square::SquareSection layerToSection[] = {
-        BuildingFloor::Square::SectionFloor,
-        BuildingFloor::Square::SectionWall,
-        BuildingFloor::Square::SectionDoor,
-        BuildingFloor::Square::SectionFrame,
-        BuildingFloor::Square::SectionCurtains,
-        BuildingFloor::Square::SectionFurniture,
-        BuildingFloor::Square::SectionFurniture2,
-        BuildingFloor::Square::SectionCurtains2,
-        BuildingFloor::Square::SectionRoofCap,
-        BuildingFloor::Square::SectionRoofCap2,
-        BuildingFloor::Square::SectionRoof,
-        BuildingFloor::Square::SectionRoof2,
-    #if ROOF_TOPS
-        BuildingFloor::Square::SectionRoofTop
-    #endif
-    };
-
-    int index = 0;
+    int section = 0;
     foreach (TileLayer *tl, layers) {
         tl->erase(QRegion(0, 0, tl->width(), tl->height()));
         for (int x = 0; x <= floor->width(); x++) {
             for (int y = 0; y <= floor->height(); y++) {
                 const BuildingFloor::Square &square = floor->squares[x][y];
-                BuildingFloor::Square::SquareSection section = layerToSection[index];
-                if (index == LayerIndexFurniture || index == LayerIndexFurniture2) {
-                    BuildingTile *btile = square.mFurniture[index-LayerIndexFurniture];
+                if (section == BuildingFloor::Square::SectionFurniture
+                        || section == BuildingFloor::Square::SectionFurniture2) {
+                    BuildingTile *btile = square.mFurniture[section-BuildingFloor::Square::SectionFurniture];
                     if (btile && !btile->isNone()) {
                         if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(btile))
                             tl->setCell(x + offset, y + offset, Cell(tile));
@@ -531,7 +514,7 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
 
             }
         }
-        index++;
+        section++;
     }
 }
 
@@ -545,11 +528,12 @@ void BuildingPreviewScene::synchWithShowWalls()
     foreach (BuildingFloor *floor, mDocument->building()->floors()) {
         bool visible = mShowWalls || floor->level() < mDocument->currentFloor()->level();
         CompositeLayerGroup *layerGroup = mMapComposite->layerGroupForLevel(floor->level());
-        layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexWall], visible);
-        layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexRoofCap], visible);
-        layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexRoofCap2], visible);
-        layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexRoof], visible);
-        layerGroup->setLayerVisibility(layerGroup->layers()[LayerIndexRoof2], visible);
+        layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionWall], visible);
+        layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionRoofCap], visible);
+        layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionRoofCap2], visible);
+        layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionRoof], visible);
+        layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionRoof2], visible);
+        layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionRoofTop], visible);
         itemForFloor(floor)->synchWithTileLayers();
         itemForFloor(floor)->updateBounds();
     }
