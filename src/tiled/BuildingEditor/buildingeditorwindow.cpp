@@ -1253,6 +1253,7 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         removeAutoSaveFile();
         if (mAutoSaveTimer->isActive())
             mAutoSaveTimer->stop();
+        mRoomComboBox->clear();
     }
 
     mCurrentDocument = doc;
