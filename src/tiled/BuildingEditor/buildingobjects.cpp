@@ -185,7 +185,7 @@ FurnitureObject::FurnitureObject(BuildingFloor *floor, int x, int y) :
 
 QRect FurnitureObject::bounds() const
 {
-    return mFurnitureTile ? QRect(pos(), mFurnitureTile->size())
+    return mFurnitureTile ? QRect(pos(), mFurnitureTile->resolved()->size())
                            : QRect(mX, mY, 1, 1);
 }
 
@@ -220,14 +220,15 @@ void FurnitureObject::rotate(bool right)
 
     if (right) {
         int x = mX;
-        mX = oldHeight - mY - newTile->size().width();
+        mX = oldHeight - mY - newTile->resolved()->size().width();
         mY = x;
     } else {
         int x = mX;
         mX = mY;
-        mY = oldWidth - x - newTile->size().height();
+        mY = oldWidth - x - newTile->resolved()->size().height();
     }
 
+#if 0
     // Stop things going out of bounds, which can happen if the furniture
     // is asymmetric.
     if (mX < 0)
@@ -238,6 +239,7 @@ void FurnitureObject::rotate(bool right)
         mY = 0;
     if (mY + newTile->size().height() > mFloor->height())
         mY = mFloor->height() - newTile->size().height();
+#endif
 
     mFurnitureTile = newTile;
 }
@@ -246,7 +248,7 @@ void FurnitureObject::flip(bool horizontal)
 {
     FurnitureTile::FurnitureOrientation map[8];
     if (horizontal) {
-        int oldWidth = mFurnitureTile->size().width();
+        int oldWidth = mFurnitureTile->resolved()->size().width();
         map[FurnitureTile::FurnitureW] = FurnitureTile::FurnitureE;
         map[FurnitureTile::FurnitureN] = FurnitureTile::FurnitureN;
         map[FurnitureTile::FurnitureE] = FurnitureTile::FurnitureW;
@@ -256,7 +258,7 @@ void FurnitureObject::flip(bool horizontal)
         map[FurnitureTile::FurnitureNE] = FurnitureTile::FurnitureNW;
         map[FurnitureTile::FurnitureSE] = FurnitureTile::FurnitureSW;
         mFurnitureTile = mFurnitureTile->owner()->tile(map[mFurnitureTile->orient()]);
-        mX = mFloor->width() - mX - qMax(oldWidth, mFurnitureTile->size().width());
+        mX = mFloor->width() - mX - qMax(oldWidth, mFurnitureTile->resolved()->size().width());
     } else {
         int oldHeight = mFurnitureTile->size().height();
         map[FurnitureTile::FurnitureW] = FurnitureTile::FurnitureW;
@@ -268,7 +270,7 @@ void FurnitureObject::flip(bool horizontal)
         map[FurnitureTile::FurnitureNE] = FurnitureTile::FurnitureSE;
         map[FurnitureTile::FurnitureSE] = FurnitureTile::FurnitureNE;
         mFurnitureTile = mFurnitureTile->owner()->tile(map[mFurnitureTile->orient()]);
-        mY = mFloor->height() - mY - qMax(oldHeight, mFurnitureTile->size().height());
+        mY = mFloor->height() - mY - qMax(oldHeight, mFurnitureTile->resolved()->size().height());
     }
 }
 
@@ -285,13 +287,14 @@ bool FurnitureObject::isValidPos(const QPoint &offset, BuildingFloor *floor) con
 
 void FurnitureObject::setFurnitureTile(FurnitureTile *tile)
 {
+#if 0
     // FIXME: the object might change size and go out of bounds.
     QSize oldSize = mFurnitureTile ? mFurnitureTile->size() : QSize(0, 0);
     QSize newSize = tile ? tile->size() : QSize(0, 0);
     if (oldSize != newSize) {
 
     }
-
+#endif
     mFurnitureTile = tile;
 }
 

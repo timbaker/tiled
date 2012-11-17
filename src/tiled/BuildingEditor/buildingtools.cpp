@@ -1021,8 +1021,8 @@ void FurnitureTool::updateCursorObject()
         }
 
         // If the furniture is larger than one tile adjust the position to
-        // keep it aligned with the wall.
-        QSize size = ftiles->tile(orient)->size();
+        // keep it aligned with the wall under the mouse pointer.
+        QSize size = ftiles->tile(orient)->resolved()->size();
         if (size.width() > 1) {
             switch (wallOrient) {
             case OrientE:
