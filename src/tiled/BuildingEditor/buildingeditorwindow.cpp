@@ -934,12 +934,21 @@ void BuildingEditorWindow::currentRoofTileChanged(BuildingTileEntry *entry, int 
     updateActions(); // in case the roof tools should be enabled
 
     QList<RoofObject*> objectList;
-    // Change the tiles for each roof object.
-    foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
-        foreach (BuildingObject *object, floor->objects()) {
+    bool selectedOnly = (which == RoofObject::TileTop);
+    if (selectedOnly) {
+        foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
             if (RoofObject *roof = object->asRoof())
                 if (roof->tile(which) != entry)
                     objectList += roof;
+        }
+    } else {
+    // Change the tiles for each roof object.
+        foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
+            foreach (BuildingObject *object, floor->objects()) {
+                if (RoofObject *roof = object->asRoof())
+                    if (roof->tile(which) != entry)
+                        objectList += roof;
+            }
         }
     }
 
@@ -1663,8 +1672,8 @@ void BuildingEditorWindow::updateActions()
     FurnitureTool::instance()->setEnabled(hasDoc && showObjects &&
             FurnitureTool::instance()->currentTile() != 0);
     bool roofTilesOK = hasDoc && currentBuilding()->roofCapTile()->asRoofCap() &&
-            currentBuilding()->roofSlopeTile()->asRoofSlope() &&
-            currentBuilding()->roofTopTile()->asRoofTop();
+            currentBuilding()->roofSlopeTile()->asRoofSlope() /*&&
+            currentBuilding()->roofTopTile()->asRoofTop()*/;
     RoofTool::instance()->setEnabled(hasDoc && showObjects && roofTilesOK);
     RoofCornerTool::instance()->setEnabled(hasDoc && showObjects && roofTilesOK);
     SelectMoveObjectTool::instance()->setEnabled(hasDoc && showObjects);

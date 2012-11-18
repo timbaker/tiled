@@ -467,7 +467,7 @@ void RoofObject::setTile(BuildingTileEntry *tile, int alternate)
         mCapTiles = tile;
     else if ((alternate == TileSlope) && (/*tile->isNone() || */tile->asRoofSlope()))
         mSlopeTiles = tile;
-    else if ((alternate == TileTop) && (/*tile->isNone() || */tile->asRoofTop()))
+    else if ((alternate == TileTop) && (tile->isNone() || tile->asRoofTop()))
         mTopTiles = tile;
 }
 
@@ -499,7 +499,9 @@ void RoofObject::setSlopeTiles(BuildingTileEntry *entry)
 
 void RoofObject::setTopTiles(BuildingTileEntry *entry)
 {
-    if (!entry->asRoofTop()) {
+    if (!entry)
+        entry = BuildingTilesMgr::instance()->noneTileEntry();
+    if (!entry->isNone() && !entry->asRoofTop()) {
         qFatal("wrong type of tiles passed to RoofObject::setTopTiles");
         return;
     }

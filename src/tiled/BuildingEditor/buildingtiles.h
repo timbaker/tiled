@@ -494,6 +494,9 @@ public:
 
     BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
 
+    bool canAssignNone() const
+    { return true; }
+
     BuildingTileCategory *asRoofTops() { return this; }
 
     int shadowCount() const { return 3; }
