@@ -181,7 +181,7 @@ bool BuildingTemplates::readTxt()
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("TileEntry")) {
             if (BuildingTileEntry *entry = readTileEntry(block, mError))
-                addEntry(entry);
+                addEntry(entry, false);
             else
                 return false;
             continue;
@@ -378,12 +378,15 @@ bool BuildingTemplates::upgradeTxt()
     return true;
 }
 
-void BuildingTemplates::addEntry(BuildingTileEntry *entry)
+void BuildingTemplates::addEntry(BuildingTileEntry *entry, bool sort)
 {
     if (entry && !entry->isNone() && !mEntries.contains(entry)) {
         mEntriesByCategoryName[entry->category()->name()
                 + QString::number((qulonglong)entry)] = entry;
-        mEntries = mEntriesByCategoryName.values(); // sorted
+        if (sort)
+            mEntries = mEntriesByCategoryName.values();
+        else
+            mEntries += entry;
     }
 }
 

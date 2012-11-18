@@ -169,7 +169,7 @@ public:
 private:
     bool upgradeTxt();
 
-    void addEntry(BuildingTileEntry *entry);
+    void addEntry(BuildingTileEntry *entry, bool sort = true);
     QString entryIndex(BuildingTileEntry *entry);
     BuildingTileEntry *getEntry(const QString &s);
 
