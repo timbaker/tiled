@@ -540,7 +540,7 @@ void RoofObject::setWidth(int width)
             mDepth = Three;
         break;
     case PeakNS:
-        mWidth = qBound(1, width, 6);
+        mWidth = width; //qBound(1, width, 6);
         switch (mWidth) {
         case 1:
             mDepth = Point5;
@@ -609,7 +609,7 @@ void RoofObject::setHeight(int height)
         }
         break;
     case PeakWE:
-        mHeight = qBound(1, height, 6);
+        mHeight = height; //qBound(1, height, 6);
         switch (mHeight) {
         case 1:
             mDepth = Point5;
@@ -834,6 +834,21 @@ int RoofObject::actualHeight() const
     return mHeight;
 }
 
+int RoofObject::slopeThickness() const
+{
+    if (mType == PeakWE)
+        return qCeil(qreal(qMin(mHeight, 6)) / 2);
+    if (mType == PeakNS)
+        return qCeil(qreal(qMin(mWidth, 6)) / 2);
+
+    return 0;
+}
+
+bool RoofObject::isHalfDepth() const
+{
+    return mDepth == Point5 || mDepth == OnePoint5 || mDepth == TwoPoint5;
+}
+
 void RoofObject::toggleCappedW()
 {
     mCappedW = !mCappedW;
@@ -914,9 +929,8 @@ QRect RoofObject::westEdge()
         return QRect(r.left(), r.top(),
                      actualWidth(), r.height());
     if (mType == PeakNS) {
-        int slopeThickness = qCeil(qreal(mWidth) / 2);
         return QRect(r.left(), r.top(),
-                     slopeThickness, r.height());
+                     slopeThickness(), r.height());
     }
     return QRect();
 }
@@ -928,9 +942,8 @@ QRect RoofObject::northEdge()
         return QRect(r.left(), r.top(),
                      r.width(), actualHeight());
     if (mType == PeakWE) {
-        int slopeThickness = qCeil(qreal(mHeight) / 2);
         return QRect(r.left(), r.top(),
-                     r.width(), slopeThickness);
+                     r.width(), slopeThickness());
     }
     return QRect();
 }
@@ -942,9 +955,8 @@ QRect RoofObject::eastEdge()
         return QRect(r.right() - actualWidth() + 1, r.top(),
                      actualWidth(), r.height());
     if (mType == PeakNS) {
-        int slopeThickness = qCeil(qreal(mWidth) / 2);
-        return QRect(r.right() - slopeThickness + 1, r.top(),
-                     slopeThickness, r.height());
+        return QRect(r.right() - slopeThickness() + 1, r.top(),
+                     slopeThickness(), r.height());
     }
     return QRect();
 }
@@ -956,9 +968,8 @@ QRect RoofObject::southEdge()
         return QRect(r.left(), r.bottom() - actualHeight() + 1,
                      r.width(), actualHeight());
     if (mType == PeakWE) {
-        int slopeThickness = qCeil(qreal(mHeight) / 2);
-        return QRect(r.left(), r.bottom() - slopeThickness + 1,
-                     r.width(), slopeThickness);
+        return QRect(r.left(), r.bottom() - slopeThickness() + 1,
+                     r.width(), slopeThickness());
     }
     return QRect();
 }
@@ -973,6 +984,8 @@ QRect RoofObject::eastGap(RoofDepth depth)
             || mType == CornerInnerNE) {
         return QRect(r.right() + 1, r.top(), 1, r.height());
     }
+    if (mType == PeakWE && mHeight > 6)
+        return QRect(r.right() + 1, r.top() + 3, 1, r.height() - 6);
     return QRect();
 }
 
@@ -986,6 +999,8 @@ QRect RoofObject::southGap(RoofDepth depth)
             || mType == CornerInnerSW) {
         return QRect(r.left(), r.bottom() + 1, r.width(), 1);
     }
+    if (mType == PeakNS && mWidth > 6)
+        return QRect(r.left() + 3, r.bottom() + 1, r.width() - 6, 1);
     return QRect();
 }
 
@@ -994,6 +1009,10 @@ QRect RoofObject::flatTop()
     QRect r = bounds();
     if (mType == FlatTop)
         return r;
+    if (mType == PeakWE && mHeight > 6)
+        return QRect(r.left(), r.top() + 3, r.width(), r.height() - 6);
+    if (mType == PeakNS && mWidth > 6)
+        return QRect(r.left() + 3, r.top(), r.width() - 6, r.height());
     return QRect();
 }
 

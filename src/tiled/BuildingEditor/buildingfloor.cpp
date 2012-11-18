@@ -579,18 +579,18 @@ void BuildingFloor::LayoutToSquares()
                         break;
                     case RoofObject::One:
                         ReplaceRoofCap(ro, r.left(), r.bottom()+1, squares, RoofObject::CapRiseS1);
-                        ReplaceRoofCap(ro, r.left()+1, r.bottom()+1, squares, RoofObject::CapFallS1);
+                        ReplaceRoofCap(ro, r.right(), r.bottom()+1, squares, RoofObject::CapFallS1);
                         break;
                     case RoofObject::OnePoint5:
                         ReplaceRoofCap(ro, r.left(), r.bottom()+1, squares, RoofObject::CapRiseS1);
                         ReplaceRoofCap(ro, r.left()+1, r.bottom()+1, squares, RoofObject::PeakOnePt5S);
-                        ReplaceRoofCap(ro, r.left()+2, r.bottom()+1, squares, RoofObject::CapFallS1);
+                        ReplaceRoofCap(ro, r.right(), r.bottom()+1, squares, RoofObject::CapFallS1);
                         break;
                     case RoofObject::Two:
                         ReplaceRoofCap(ro, r.left(), r.bottom()+1, squares, RoofObject::CapRiseS1);
                         ReplaceRoofCap(ro, r.left()+1, r.bottom()+1, squares, RoofObject::CapRiseS2);
-                        ReplaceRoofCap(ro, r.left()+2, r.bottom()+1, squares, RoofObject::CapFallS2);
-                        ReplaceRoofCap(ro, r.left()+3, r.bottom()+1, squares, RoofObject::CapFallS1);
+                        ReplaceRoofCap(ro, r.right()-1, r.bottom()+1, squares, RoofObject::CapFallS2);
+                        ReplaceRoofCap(ro, r.right(), r.bottom()+1, squares, RoofObject::CapFallS1);
                         break;
                     case RoofObject::TwoPoint5:
                         ReplaceRoofCap(ro, r.left(), r.bottom()+1, squares, RoofObject::CapRiseS1);
@@ -603,9 +603,9 @@ void BuildingFloor::LayoutToSquares()
                         ReplaceRoofCap(ro, r.left(), r.bottom()+1, squares, RoofObject::CapRiseS1);
                         ReplaceRoofCap(ro, r.left()+1, r.bottom()+1, squares, RoofObject::CapRiseS2);
                         ReplaceRoofCap(ro, r.left()+2, r.bottom()+1, squares, RoofObject::CapRiseS3);
-                        ReplaceRoofCap(ro, r.left()+3, r.bottom()+1, squares, RoofObject::CapFallS3);
-                        ReplaceRoofCap(ro, r.left()+4, r.bottom()+1, squares, RoofObject::CapFallS2);
-                        ReplaceRoofCap(ro, r.left()+5, r.bottom()+1, squares, RoofObject::CapFallS1);
+                        ReplaceRoofCap(ro, r.right()-2, r.bottom()+1, squares, RoofObject::CapFallS3);
+                        ReplaceRoofCap(ro, r.right()-1, r.bottom()+1, squares, RoofObject::CapFallS2);
+                        ReplaceRoofCap(ro, r.right(), r.bottom()+1, squares, RoofObject::CapFallS1);
                         break;
                     }
                     break;

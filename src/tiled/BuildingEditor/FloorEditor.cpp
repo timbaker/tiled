@@ -293,20 +293,23 @@ void GraphicsObjectItem::paint(QPainter *painter,
     }
 
     if (RoofObject *roof = mObject->asRoof()) {
-        painter->fillRect(mEditor->tileToSceneRectF(roof->northEdge().translated(dragOffset)), Qt::darkGray);
-        painter->fillRect(mEditor->tileToSceneRectF(roof->westEdge().translated(dragOffset)), Qt::darkGray);
-        painter->fillRect(mEditor->tileToSceneRectF(roof->eastEdge().translated(dragOffset)), Qt::lightGray);
-        painter->fillRect(mEditor->tileToSceneRectF(roof->southEdge().translated(dragOffset)), Qt::lightGray);
+        QRectF ne = roof->northEdge().translated(dragOffset);
+        QRectF se = roof->southEdge().translated(dragOffset);
+        if ((roof->roofType() == RoofObject::PeakWE) && roof->isHalfDepth()) {
+            ne.adjust(0,0,0,-0.5);
+            se.adjust(0,0.5,0,0);
+        }
+        painter->fillRect(mEditor->tileToSceneRectF(ne), Qt::darkGray);
+        painter->fillRect(mEditor->tileToSceneRectF(se), Qt::lightGray);
+        QRectF we = roof->westEdge().translated(dragOffset);
+        QRectF ee = roof->eastEdge().translated(dragOffset);
+        if ((roof->roofType() == RoofObject::PeakNS) && roof->isHalfDepth()) {
+            we.adjust(0,0,-0.5,0);
+            ee.adjust(0.5,0,0,0);
+        }
+        painter->fillRect(mEditor->tileToSceneRectF(we), Qt::darkGray);
+        painter->fillRect(mEditor->tileToSceneRectF(ee), Qt::lightGray);
         painter->fillRect(mEditor->tileToSceneRectF(roof->flatTop().translated(dragOffset)), Qt::gray);
-
-        if ((roof->roofType() == RoofObject::PeakNS) && (roof->width() & 1)) {
-            QRectF we = roof->westEdge().translated(dragOffset);
-            painter->fillRect(mEditor->tileToSceneRectF(we.adjusted(0,0,-0.5,0)), Qt::darkGray);
-        }
-        if ((roof->roofType() == RoofObject::PeakWE) && (roof->height() & 1)) {
-            QRectF ne = roof->northEdge().translated(dragOffset);
-            painter->fillRect(mEditor->tileToSceneRectF(ne.adjusted(0,0,0,-0.5)), Qt::darkGray);
-        }
     }
 
     painter->setPen(pen);

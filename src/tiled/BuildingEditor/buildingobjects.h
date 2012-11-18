@@ -330,6 +330,9 @@ public:
     int actualWidth() const;
     int actualHeight() const;
 
+    int slopeThickness() const;
+    bool isHalfDepth() const;
+
     bool isCappedW() const
     { return mCappedW; }
 
