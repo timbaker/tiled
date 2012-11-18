@@ -47,14 +47,14 @@ public:
         {
             SectionFloor,
             SectionWall,
-            SectionDoor,
-            SectionFrame,
-            SectionCurtains,
-            SectionFurniture,
-            SectionFurniture2,
-            SectionCurtains2,
             SectionRoofCap,
             SectionRoofCap2,
+            SectionDoor,
+            SectionFrame,
+            SectionCurtains, // West, North windows
+            SectionFurniture,
+            SectionFurniture2,
+            SectionCurtains2, // East, South windows
             SectionRoof,
             SectionRoof2,
             SectionRoofTop,
