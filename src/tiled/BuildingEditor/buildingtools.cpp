@@ -206,6 +206,7 @@ void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         // Right-click to cancel drawing/erasing.
         if (mMouseDown) {
             mMouseDown = false;
+            mErasing = controlModifier();
             updateCursor(event->scenePos());
             updateStatusText();
             return;
@@ -258,6 +259,7 @@ void PencilTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             undoStack()->push(new SwapFloorGrid(mEditor->document(), floor(),
                                                 grid));
         mMouseDown = false;
+        mErasing = controlModifier();
         updateCursor(event->scenePos());
         updateStatusText();
     }
