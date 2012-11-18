@@ -49,8 +49,8 @@ public:
             SectionWall,
             SectionRoofCap,
             SectionRoofCap2,
-            SectionDoor,
             SectionFrame,
+            SectionDoor,
             SectionCurtains, // West, North windows
             SectionFurniture,
             SectionFurniture2,
