@@ -77,6 +77,12 @@
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
+   <property name="iconSize">
+    <size>
+     <width>18</width>
+     <height>18</height>
+    </size>
+   </property>
    <property name="toolButtonStyle">
     <enum>Qt::ToolButtonTextBesideIcon</enum>
    </property>
@@ -87,6 +93,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionShowWalls"/>
+   <addaction name="actionHighlightFloor"/>
   </widget>
   <action name="actionZoomIn">
    <property name="icon">
@@ -133,6 +140,10 @@
   <action name="actionHighlightFloor">
    <property name="checkable">
     <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/show_hide_others.png</normaloff>:/images/16x16/show_hide_others.png</iconset>
    </property>
    <property name="text">
     <string>Highlight Current Floor</string>
