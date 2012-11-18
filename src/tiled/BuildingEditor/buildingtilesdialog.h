@@ -138,6 +138,7 @@ private slots:
     void entryOffsetChanged();
 
     void accept();
+    void reject();
 
 private:
     Ui::BuildingTilesDialog *ui;

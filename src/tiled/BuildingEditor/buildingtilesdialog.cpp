@@ -1646,3 +1646,11 @@ void BuildingTilesDialog::accept()
 
     QDialog::accept();
 }
+
+void BuildingTilesDialog::reject()
+{
+    // There's no 'Cancel' button, so changes are always accepted.
+    // But closing the dialog by the titlebar close-box or pressing the Escape
+    // key calls reject().
+    QDialog::accept();
+}
