@@ -1199,6 +1199,7 @@ bool BuildingEditorWindow::confirmSave()
 void BuildingEditorWindow::addDocument(BuildingDocument *doc)
 {
     if (mCurrentDocument) {
+        mRoomComboBox->clear();
         roomEditor->clearDocument();
         mPreviewWin->clearDocument();
         mUndoGroup->removeStack(mCurrentDocument->undoStack());
@@ -1207,7 +1208,6 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         removeAutoSaveFile();
         if (mAutoSaveTimer->isActive())
             mAutoSaveTimer->stop();
-        mRoomComboBox->clear();
     }
 
     mCurrentDocument = doc;
@@ -1224,8 +1224,10 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         building->setRoofCapTile(btiles->defaultRoofCapTiles());
     if (building->roofSlopeTile()->isNone())
         building->setRoofSlopeTile(btiles->defaultRoofSlopeTiles());
+#if 0
     if (building->roofTopTile()->isNone())
         building->setRoofTopTile(btiles->defaultRoofTopTiles());
+#endif
 
     roomEditor->setDocument(mCurrentDocument);
 
