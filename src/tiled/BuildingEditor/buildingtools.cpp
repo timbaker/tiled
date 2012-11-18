@@ -1220,6 +1220,8 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     }
 
     if (event->button() == Qt::RightButton) {
+        if (mMode != NoMode)
+            return; // ignore clicks when creating/resizing
         if (BuildingObject *object = mEditor->topmostObjectAt(event->scenePos())) {
             undoStack()->push(new RemoveObject(mEditor->document(), floor(),
                                                object->index()));
