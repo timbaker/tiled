@@ -1078,8 +1078,11 @@ QString RoofObject::depthToString(RoofObject::RoofDepth depth)
     case One: return QLatin1String("One");
     case OnePoint5: return QLatin1String("OnePoint5");
     case Two: return QLatin1String("Two");
+    case TwoPoint5: return QLatin1String("TwoPoint5");
     case Three: return QLatin1String("Three");
     }
+
+    qFatal("unhandled roof object depth");
 
     return QLatin1String("Invalid");
 }
@@ -1091,6 +1094,7 @@ RoofObject::RoofDepth RoofObject::depthFromString(const QString &s)
     if (s == QLatin1String("One")) return One;
     if (s == QLatin1String("OnePoint5")) return OnePoint5;
     if (s == QLatin1String("Two")) return Two;
+    if (s == QLatin1String("TwoPoint5")) return OnePoint5;
     if (s == QLatin1String("Three")) return Three;
 
     return InvalidDepth;
