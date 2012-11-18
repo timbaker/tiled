@@ -51,6 +51,7 @@ RoomsDialog::RoomsDialog(const QList<Room*> &rooms, QWidget *parent) :
             SLOT(roomSelectionChanged()));
     connect(ui->add, SIGNAL(clicked()), SLOT(addRoom()));
     connect(ui->remove, SIGNAL(clicked()), SLOT(removeRoom()));
+    connect(ui->duplicate, SIGNAL(clicked()), SLOT(duplicateRoom()));
     connect(ui->moveUp, SIGNAL(clicked()), SLOT(moveRoomUp()));
     connect(ui->moveDown, SIGNAL(clicked()), SLOT(moveRoomDown()));
 
@@ -96,6 +97,7 @@ void RoomsDialog::synchUI()
     ui->remove->setEnabled(mRoom != 0);
     ui->moveUp->setEnabled(roomIndex > 0);
     ui->moveDown->setEnabled(roomIndex >= 0 && roomIndex < mRooms.count() - 1);
+    ui->duplicate->setEnabled(mRoom != 0);
 
     ui->name->setEnabled(mRoom != 0);
     ui->internalName->setEnabled(mRoom != 0);
@@ -130,26 +132,6 @@ void RoomsDialog::roomSelectionChanged()
 
 void RoomsDialog::addRoom()
 {
-    // Pick an unused color from this default list of room colors.
-    // TODO: Add more colors.
-    QList<QRgb> colors;
-    colors += qRgb(200, 200, 200);
-    colors += qRgb(128, 128, 128);
-    colors += qRgb(255, 0, 0);
-    colors += qRgb(0, 255, 0);
-    colors += qRgb(0, 0, 255);
-    colors += qRgb(0, 255, 255);
-    colors += qRgb(255, 255, 0);
-    colors += qRgb(255, 200, 0);
-    colors += qRgb(255, 150, 0);
-    colors += qRgb(255, 110, 0);
-
-    QRgb color = qRgb(255,255,255);
-    foreach (Room *room, mRooms)
-        colors.removeOne(room->Color);
-    if (colors.count())
-        color = colors.first();
-
     // Pick a default unused name for the new room.
     QStringList names;
     foreach (Room *room, mRooms)
@@ -161,7 +143,7 @@ void RoomsDialog::addRoom()
     Room *room = new Room;
     room->Name = tr("Room %1").arg(n);
     room->internalName = tr("room%1").arg(n);
-    room->Color = color;
+    room->Color = pickColorForNewRoom();
     room->Wall = BuildingTilesMgr::instance()->defaultInteriorWall();
     room->Floor = BuildingTilesMgr::instance()->defaultFloorTile();
 
@@ -190,6 +172,25 @@ void RoomsDialog::removeRoom()
     if (index == mRooms.count())
         index = mRooms.count() - 1;
     ui->listWidget->setCurrentRow(index);
+}
+
+void RoomsDialog::duplicateRoom()
+{
+    if (!mRoom)
+        return;
+
+    int index = mRooms.indexOf(mRoom);
+
+    Room *room = new Room(mRoom);
+    room->Color = pickColorForNewRoom();
+    mRooms.insert(index + 1, room);
+    mRoomsMap[room] = 0;
+
+    setRoomsList();
+    ui->listWidget->setCurrentRow(index + 1);
+
+    ui->name->setFocus();
+    ui->name->selectAll();
 }
 
 void RoomsDialog::moveRoomUp()
@@ -272,6 +273,31 @@ BuildingTileEntry *RoomsDialog::selectedTile()
     }
 
     return 0;
+}
+
+QRgb RoomsDialog::pickColorForNewRoom()
+{
+    // Pick an unused color from this default list of room colors.
+    // TODO: Add more colors.
+    QList<QRgb> colors;
+    colors += qRgb(200, 200, 200);
+    colors += qRgb(128, 128, 128);
+    colors += qRgb(255, 0, 0);
+    colors += qRgb(0, 255, 0);
+    colors += qRgb(0, 0, 255);
+    colors += qRgb(0, 255, 255);
+    colors += qRgb(255, 255, 0);
+    colors += qRgb(255, 200, 0);
+    colors += qRgb(255, 150, 0);
+    colors += qRgb(255, 110, 0);
+
+    QRgb color = qRgb(255,255,255);
+    foreach (Room *room, mRooms)
+        colors.removeOne(room->Color);
+    if (colors.count())
+        color = colors.first();
+
+    return color;
 }
 
 void RoomsDialog::chooseTile()

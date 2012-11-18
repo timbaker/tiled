@@ -50,11 +50,13 @@ private:
     void synchUI();
     void setTilePixmap();
     BuildingEditor::BuildingTileEntry *selectedTile();
+    QRgb pickColorForNewRoom();
 
 private slots:
     void roomSelectionChanged();
     void addRoom();
     void removeRoom();
+    void duplicateRoom();
     void moveRoomUp();
     void moveRoomDown();
 
