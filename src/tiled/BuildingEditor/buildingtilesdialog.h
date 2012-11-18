@@ -147,6 +147,7 @@ private:
     int mCurrentEntryEnum;
     FurnitureGroup *mFurnitureGroup;
     FurnitureTile *mCurrentFurniture;
+    Tiled::Tileset *mCurrentTileset;
     QUndoGroup *mUndoGroup;
     QUndoStack *mUndoStack;
     QToolButton *mUndoButton;

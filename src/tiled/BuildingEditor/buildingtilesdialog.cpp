@@ -542,6 +542,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     mCurrentEntry(0),
     mFurnitureGroup(0),
     mCurrentFurniture(0),
+    mCurrentTileset(0),
     mUndoGroup(new QUndoGroup(this)),
     mUndoStack(new QUndoStack(this)),
     mSynching(false),
@@ -735,6 +736,13 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
         int index = FurnitureGroups::instance()->indexOf(furnitureGroupName);
         if (index >= 0)
             ui->categoryList->setCurrentRow(numTileCategories() + index);
+    }
+    QString tilesetName = settings.value(QLatin1String("SelectedTileset")).toString();
+    if (!tilesetName.isEmpty()) {
+        if (Tiled::Tileset *tileset = BuildingTilesMgr::instance()->tilesetFor(tilesetName)) {
+            int index = BuildingTilesMgr::instance()->tilesets().indexOf(tileset);
+            ui->tilesetList->setCurrentRow(index);
+        }
     }
     settings.endGroup();
 
@@ -1172,6 +1180,7 @@ void BuildingTilesDialog::tilesetSelectionChanged()
 {
     QList<QListWidgetItem*> selection = ui->tilesetList->selectedItems();
     QListWidgetItem *item = selection.count() ? selection.first() : 0;
+    mCurrentTileset = 0;
     if (item) {
 #if 0
         QRect bounds;
@@ -1180,8 +1189,8 @@ void BuildingTilesDialog::tilesetSelectionChanged()
 #endif
         int row = ui->tilesetList->row(item);
         MixedTilesetModel *model = ui->tilesetTilesView->model();
-        Tileset *tileset = BuildingTilesMgr::instance()->tilesets().at(row);
-        model->setTileset(tileset);
+        mCurrentTileset = BuildingTilesMgr::instance()->tilesets().at(row);
+        model->setTileset(mCurrentTileset);
 #if 0
         for (int i = 0; i < tileset->tileCount(); i++) {
             Tile *tile = tileset->tileAt(i);
@@ -1627,6 +1636,8 @@ void BuildingTilesDialog::accept()
     settings.setValue(QLatin1String("SelectedFurnitureGroup"),
                       mFurnitureGroup ? mFurnitureGroup->mLabel : QString());
     settings.setValue(QLatin1String("ExpertMode"), mExpertMode);
+    settings.setValue(QLatin1String("SelectedTileset"),
+                      mCurrentTileset ? mCurrentTileset->name() : QString());
     settings.endGroup();
 
     saveSplitterSizes(ui->overallSplitter);
