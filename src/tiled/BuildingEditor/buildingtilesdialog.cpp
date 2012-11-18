@@ -30,6 +30,7 @@
 #include "tileset.h"
 #include "utils.h"
 
+#include <QComboBox>
 #include <QCoreApplication>
 #include <QDebug>
 #include <QFileDialog>
@@ -554,7 +555,9 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     mExpertMode = settings.value(QLatin1String("BuildingEditor/BuildingTilesDialog/ExpertMode"), false).toBool();
     ui->actionExpertMode->setChecked(mExpertMode);
 
-    mZoomable->setScale(BuildingPreferences::instance()->tileScale());
+    qreal scale = settings.value(QLatin1String("BuildingEditor/BuildingTilesDialog/TileScale"),
+                                 BuildingPreferences::instance()->tileScale()).toReal();
+    mZoomable->setScale(scale);
 
     ui->categoryTilesView->setZoomable(mZoomable);
     ui->categoryTilesView->setAcceptDrops(true);
@@ -672,7 +675,12 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     connect(ui->actionAddTiles, SIGNAL(triggered()), SLOT(addTiles()));
     connect(ui->actionRemoveTiles, SIGNAL(triggered()), SLOT(removeTiles()));
     connect(ui->actionExpertMode, SIGNAL(toggled(bool)), SLOT(setExpertMode(bool)));
-    ui->categoryToolbarLayout->addWidget(toolBar);
+    ui->categoryToolbarLayout->addWidget(toolBar, 1);
+
+    QComboBox *scaleComboBox = new QComboBox;
+    mZoomable->connectToComboBox(scaleComboBox);
+//    scaleComboBox->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
+    ui->categoryToolbarLayout->addWidget(scaleComboBox);
     /////
 
     QAction *undoAction = mUndoGroup->createUndoAction(this, tr("Undo"));
@@ -1653,6 +1661,7 @@ void BuildingTilesDialog::accept()
     settings.setValue(QLatin1String("ExpertMode"), mExpertMode);
     settings.setValue(QLatin1String("SelectedTileset"),
                       mCurrentTileset ? mCurrentTileset->name() : QString());
+    settings.setValue(QLatin1String("TileScale"), mZoomable->scale());
     settings.endGroup();
 
     saveSplitterSizes(ui->overallSplitter);
