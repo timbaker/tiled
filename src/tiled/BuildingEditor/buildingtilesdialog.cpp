@@ -588,6 +588,8 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     connect(ui->furnitureView->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(synchUI()));
+    connect(ui->furnitureView, SIGNAL(activated(QModelIndex)),
+            SLOT(furnitureActivated(QModelIndex)));
 
     connect(ui->categoryList, SIGNAL(currentRowChanged(int)),
             SLOT(categoryChanged(int)));
@@ -1600,6 +1602,19 @@ void BuildingTilesDialog::entryActivated(const QModelIndex &index)
     if (BuildingTileEntry *entry = m->entryAt(index)) {
         int e = m->enumAt(index);
         displayTileInTileset(entry->tile(e));
+    }
+}
+
+void BuildingTilesDialog::furnitureActivated(const QModelIndex &index)
+{
+    FurnitureModel *m = ui->furnitureView->model();
+    if (FurnitureTile *ftile = m->tileAt(index)) {
+        foreach (BuildingTile *btile, ftile->tiles()) {
+            if (btile) {
+                displayTileInTileset(btile);
+                break;
+            }
+        }
     }
 }
 

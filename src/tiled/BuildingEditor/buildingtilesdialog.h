@@ -134,6 +134,7 @@ private slots:
 
     void tileActivated(const QModelIndex &index);
     void entryActivated(const QModelIndex &index);
+    void furnitureActivated(const QModelIndex &index);
 
     void entryOffsetChanged();
 
