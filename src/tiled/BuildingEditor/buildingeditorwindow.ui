@@ -570,10 +570,10 @@
      <normaloff>:/images/22x22/stock-tool-rect-select.png</normaloff>:/images/22x22/stock-tool-rect-select.png</iconset>
    </property>
    <property name="text">
-    <string>Select Rooms</string>
+    <string>Select and Move Rooms</string>
    </property>
    <property name="toolTip">
-    <string>Select and move rooms</string>
+    <string>Select and Move Rooms</string>
    </property>
   </action>
   <action name="actionRoofCorner">
