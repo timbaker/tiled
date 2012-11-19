@@ -21,9 +21,12 @@
 #include "tileset.h"
 #include "zoomable.h"
 
+#include <QApplication>
 #include <QHeaderView>
 #include <QMimeData>
+#include <QMouseEvent>
 #include <QPainter>
+#include <QStyleOption>
 
 using namespace Tiled;
 using namespace Internal;
@@ -132,6 +135,22 @@ void TileDelegate::paint(QPainter *painter,
         painter->fillRect(option.rect.adjusted(extra, extra, -extra, -extra),
                           option.palette.highlight());
         painter->setOpacity(opacity);
+    }
+
+    // Focus rect around 'current' item
+    if (option.state & QStyle::State_HasFocus) {
+        QStyleOptionFocusRect o;
+        o.QStyleOption::operator=(option);
+        o.rect = option.rect.adjusted(1,1,-1,-1);
+        o.state |= QStyle::State_KeyboardFocusChange;
+        o.state |= QStyle::State_Item;
+        QPalette::ColorGroup cg = (option.state & QStyle::State_Enabled)
+                                  ? QPalette::Normal : QPalette::Disabled;
+        o.backgroundColor = option.palette.color(cg, (option.state & QStyle::State_Selected)
+                                                 ? QPalette::Highlight : QPalette::Window);
+        const QWidget *widget = 0/*d->widget(option)*/;
+        QStyle *style = /*widget ? widget->style() :*/ QApplication::style();
+        style->drawPrimitive(QStyle::PE_FrameFocusRect, &o, painter, widget);
     }
 }
 

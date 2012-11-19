@@ -24,11 +24,13 @@
 #include "tileset.h"
 #include "zoomable.h"
 
+#include <QApplication>
 #include <QDebug>
 #include <QDragMoveEvent>
 #include <QHeaderView>
 #include <QMimeData>
 #include <QPainter>
+#include <QStyleOption>
 
 using namespace BuildingEditor;
 using namespace Tiled;
@@ -165,6 +167,22 @@ void FurnitureTileDelegate::paint(QPainter *painter,
     // Draw resolved-tiles indicator
     if (!mView->acceptDrops() && (ftile != original))
         painter->fillRect(textRect.right() + 3, textRect.center().y()-2, 4, 4, Qt::gray);
+
+    // Focus rect around 'current' item
+    if (option.state & QStyle::State_HasFocus) {
+        QStyleOptionFocusRect o;
+        o.QStyleOption::operator=(option);
+        o.rect = option.rect.adjusted(1,1,-1,-1);
+        o.state |= QStyle::State_KeyboardFocusChange;
+        o.state |= QStyle::State_Item;
+        QPalette::ColorGroup cg = (option.state & QStyle::State_Enabled)
+                                  ? QPalette::Normal : QPalette::Disabled;
+        o.backgroundColor = option.palette.color(cg, (option.state & QStyle::State_Selected)
+                                                 ? QPalette::Highlight : QPalette::Window);
+        const QWidget *widget = 0/*d->widget(option)*/;
+        QStyle *style = /*widget ? widget->style() :*/ QApplication::style();
+        style->drawPrimitive(QStyle::PE_FrameFocusRect, &o, painter, widget);
+    }
 }
 
 QSize FurnitureTileDelegate::sizeHint(const QStyleOptionViewItem & option,
