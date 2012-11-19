@@ -148,6 +148,7 @@ signals:
 private slots:
     void entryTileChanged(BuildingTileEntry *entry);
     void furnitureTileChanged(FurnitureTile *ftile);
+    void furnitureLayerChanged(FurnitureTiles *ftiles);
     
 private:
     Building *mBuilding;

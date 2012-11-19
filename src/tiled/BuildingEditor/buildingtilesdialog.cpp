@@ -980,6 +980,7 @@ int BuildingTilesDialog::changeFurnitureLayer(FurnitureTiles *ftiles, int layer)
 {
     int old = ftiles->layer();
     ftiles->setLayer(static_cast<FurnitureTiles::FurnitureLayer>(layer));
+    FurnitureGroups::instance()->layerChanged(ftiles);
     return old;
 }
 

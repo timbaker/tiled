@@ -277,6 +277,11 @@ void FurnitureGroups::tileChanged(FurnitureTile *ftile)
     emit furnitureTileChanged(ftile);
 }
 
+void FurnitureGroups::layerChanged(FurnitureTiles *ftiles)
+{
+    emit furnitureLayerChanged(ftiles);
+}
+
 FurnitureTile::FurnitureOrientation FurnitureGroups::orientFromString(const QString &s)
 {
     if (s == QLatin1String("W")) return FurnitureTile::FurnitureW;

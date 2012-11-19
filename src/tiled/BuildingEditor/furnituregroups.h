@@ -217,10 +217,12 @@ public:
     { return mError; }
 
     void tileChanged(FurnitureTile *ftile);
+    void layerChanged(FurnitureTiles *ftiles);
 
     static FurnitureTile::FurnitureOrientation orientFromString(const QString &s);
 
 signals:
+    void furnitureLayerChanged(FurnitureTiles *ftiles);
     void furnitureTileChanged(FurnitureTile *ftile);
 
 private:

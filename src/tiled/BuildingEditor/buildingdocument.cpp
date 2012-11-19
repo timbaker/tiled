@@ -44,6 +44,9 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
     connect(FurnitureGroups::instance(),
             SIGNAL(furnitureTileChanged(FurnitureTile*)),
             SLOT(furnitureTileChanged(FurnitureTile*)));
+    connect(FurnitureGroups::instance(),
+            SIGNAL(furnitureLayerChanged(FurnitureTiles*)),
+            SLOT(furnitureLayerChanged(FurnitureTiles*)));
 }
 
 BuildingDocument *BuildingDocument::read(const QString &fileName, QString &error)
@@ -301,6 +304,12 @@ void BuildingDocument::furnitureTileChanged(FurnitureTile *ftile)
             }
         }
     }
+}
+
+void BuildingDocument::furnitureLayerChanged(FurnitureTiles *ftiles)
+{
+    foreach (FurnitureTile *ftile, ftiles->tiles())
+        furnitureTileChanged(ftile);
 }
 
 void BuildingDocument::entryTileChanged(BuildingTileEntry *entry)
