@@ -128,6 +128,9 @@ public:
 
     QSize sizeHint() const;
 
+    void mousePressEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+
     MixedTilesetModel *model() const
     { return mModel; }
 
@@ -136,7 +139,12 @@ public:
     Zoomable *zoomable() const
     { return mZoomable; }
 
+    bool mouseDown() const
+    { return mMousePressed; }
+
 signals:
+    void mousePressed();
+    void mouseReleased();
     
 public slots:
     void scaleChanged(qreal scale);
@@ -147,6 +155,7 @@ private:
 private:
     MixedTilesetModel *mModel;
     Zoomable *mZoomable;
+    bool mMousePressed;
 };
 
 } // namespace Internal

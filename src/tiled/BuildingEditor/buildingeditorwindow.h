@@ -109,15 +109,15 @@ private:
     void addDocument(BuildingDocument *doc);
     void clearDocument();
 
-    void currentEWallChanged(BuildingTileEntry *entry);
-    void currentIWallChanged(BuildingTileEntry *entry);
-    void currentFloorChanged(BuildingTileEntry *entry);
-    void currentDoorChanged(BuildingTileEntry *entry);
-    void currentDoorFrameChanged(BuildingTileEntry *entry);
-    void currentWindowChanged(BuildingTileEntry *entry);
-    void currentCurtainsChanged(BuildingTileEntry *entry);
-    void currentStairsChanged(BuildingTileEntry *entry);
-    void currentRoofTileChanged(BuildingTileEntry *entry, int which);
+    void currentEWallChanged(BuildingTileEntry *entry, bool mergeable);
+    void currentIWallChanged(BuildingTileEntry *entry, bool mergeable);
+    void currentFloorChanged(BuildingTileEntry *entry, bool mergeable);
+    void currentDoorChanged(BuildingTileEntry *entry, bool mergeable);
+    void currentDoorFrameChanged(BuildingTileEntry *entry, bool mergeable);
+    void currentWindowChanged(BuildingTileEntry *entry, bool mergeable);
+    void currentCurtainsChanged(BuildingTileEntry *entry, bool mergeable);
+    void currentStairsChanged(BuildingTileEntry *entry, bool mergeable);
+    void currentRoofTileChanged(BuildingTileEntry *entry, int which, bool mergeable);
 
     void selectCurrentCategoryTile();
 
@@ -128,6 +128,8 @@ private slots:
 
     void roomIndexChanged(int index);
     void categoryScaleChanged(qreal scale);
+
+    void categoryViewMousePressed();
 
     void categorySelectionChanged();
     void tileSelectionChanged();
@@ -197,6 +199,7 @@ private:
     BuildingTileCategory *mCategory;
     FurnitureGroup *mFurnitureGroup;
     bool mSynching;
+    bool mInitialCategoryViewSelectionEvent;
     QTimer *mAutoSaveTimer;
     QString mAutoSaveFileName;
 };

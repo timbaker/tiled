@@ -88,6 +88,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mCategory(0),
     mFurnitureGroup(0),
     mSynching(false),
+    mInitialCategoryViewSelectionEvent(false),
     mAutoSaveTimer(new QTimer(this))
 {
     ui->setupUi(this);
@@ -325,6 +326,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->tilesetView->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(tileSelectionChanged()));
+    connect(ui->tilesetView, SIGNAL(mousePressed()), SLOT(categoryViewMousePressed()));
 
     ui->furnitureView->setZoomable(mCategoryZoomable);
     connect(ui->furnitureView->selectionModel(),
@@ -654,6 +656,11 @@ void BuildingEditorWindow::categoryScaleChanged(qreal scale)
     Q_UNUSED(scale)
 }
 
+void BuildingEditorWindow::categoryViewMousePressed()
+{
+    mInitialCategoryViewSelectionEvent = false;
+}
+
 void BuildingEditorWindow::categorySelectionChanged()
 {
     mCategory = 0;
@@ -707,28 +714,32 @@ void BuildingEditorWindow::tileSelectionChanged()
         if (ui->tilesetView->model()->tileAt(index)) {
             BuildingTileEntry *entry = static_cast<BuildingTileEntry*>(
                         ui->tilesetView->model()->userDataAt(index));
+            bool mergeable = ui->tilesetView->mouseDown() &&
+                    mInitialCategoryViewSelectionEvent;
+            qDebug() << "mergeable=" << mergeable;
+            mInitialCategoryViewSelectionEvent = true;
             if (mCategory->asExteriorWalls())
-                currentEWallChanged(entry);
+                currentEWallChanged(entry, mergeable);
             else if (mCategory->asInteriorWalls())
-                currentIWallChanged(entry);
+                currentIWallChanged(entry, mergeable);
             else if (mCategory->asFloors())
-                currentFloorChanged(entry);
+                currentFloorChanged(entry, mergeable);
             else if (mCategory->asDoors())
-                currentDoorChanged(entry);
+                currentDoorChanged(entry, mergeable);
             else if (mCategory->asDoorFrames())
-                currentDoorFrameChanged(entry);
+                currentDoorFrameChanged(entry, mergeable);
             else if (mCategory->asWindows())
-                currentWindowChanged(entry);
+                currentWindowChanged(entry, mergeable);
             else if (mCategory->asCurtains())
-                currentCurtainsChanged(entry);
+                currentCurtainsChanged(entry, mergeable);
             else if (mCategory->asStairs())
-                currentStairsChanged(entry);
+                currentStairsChanged(entry, mergeable);
             else if (mCategory->asRoofCaps())
-                currentRoofTileChanged(entry, RoofObject::TileCap);
+                currentRoofTileChanged(entry, RoofObject::TileCap, mergeable);
             else if (mCategory->asRoofSlopes())
-                currentRoofTileChanged(entry, RoofObject::TileSlope);
+                currentRoofTileChanged(entry, RoofObject::TileSlope, mergeable);
             else if (mCategory->asRoofTops())
-                currentRoofTileChanged(entry, RoofObject::TileTop);
+                currentRoofTileChanged(entry, RoofObject::TileTop, mergeable);
             else
                 qFatal("unhandled category in BuildingEditorWindow::tileSelectionChanged()");
         }
@@ -769,32 +780,33 @@ void BuildingEditorWindow::furnitureSelectionChanged()
     updateActions();
 }
 
-void BuildingEditorWindow::currentEWallChanged(BuildingTileEntry *entry)
+void BuildingEditorWindow::currentEWallChanged(BuildingTileEntry *entry, bool mergeable)
 {
-    mCurrentDocument->undoStack()->push(new ChangeEWall(mCurrentDocument, entry));
+    mCurrentDocument->undoStack()->push(new ChangeEWall(mCurrentDocument, entry,
+                                                        mergeable));
 }
 
-void BuildingEditorWindow::currentIWallChanged(BuildingTileEntry *entry)
+void BuildingEditorWindow::currentIWallChanged(BuildingTileEntry *entry, bool mergeable)
 {
     if (!currentRoom())
         return;
 
     mCurrentDocument->undoStack()->push(new ChangeWallForRoom(mCurrentDocument,
                                                               currentRoom(),
-                                                              entry));
+                                                              entry, mergeable));
 }
 
-void BuildingEditorWindow::currentFloorChanged(BuildingTileEntry *entry)
+void BuildingEditorWindow::currentFloorChanged(BuildingTileEntry *entry, bool mergeable)
 {
     if (!currentRoom())
         return;
 
     mCurrentDocument->undoStack()->push(new ChangeFloorForRoom(mCurrentDocument,
                                                                currentRoom(),
-                                                               entry));
+                                                               entry, mergeable));
 }
 
-void BuildingEditorWindow::currentDoorChanged(BuildingTileEntry *entry)
+void BuildingEditorWindow::currentDoorChanged(BuildingTileEntry *entry, bool mergeable)
 {
     currentBuilding()->setDoorTile(entry);
 
@@ -811,14 +823,16 @@ void BuildingEditorWindow::currentDoorChanged(BuildingTileEntry *entry)
             mCurrentDocument->undoStack()->beginMacro(tr("Change Door Tile"));
         foreach (Door *door, doors)
             mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
-                                                                   door,
-                                                                   entry));
+                                                                     door,
+                                                                     entry,
+                                                                     mergeable,
+                                                                     0));
         if (doors.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
 }
 
-void BuildingEditorWindow::currentDoorFrameChanged(BuildingTileEntry *entry)
+void BuildingEditorWindow::currentDoorFrameChanged(BuildingTileEntry *entry, bool mergeable)
 {
     currentBuilding()->setDoorFrameTile(entry);
 
@@ -835,15 +849,16 @@ void BuildingEditorWindow::currentDoorFrameChanged(BuildingTileEntry *entry)
             mCurrentDocument->undoStack()->beginMacro(tr("Change Door Frame Tile"));
         foreach (Door *door, doors)
             mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
-                                                                   door,
-                                                                   entry,
-                                                                   1));
+                                                                     door,
+                                                                     entry,
+                                                                     mergeable,
+                                                                     1));
         if (doors.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
 }
 
-void BuildingEditorWindow::currentWindowChanged(BuildingTileEntry *entry)
+void BuildingEditorWindow::currentWindowChanged(BuildingTileEntry *entry, bool mergeable)
 {
     // New windows will be created with this tile
     currentBuilding()->setWindowTile(entry);
@@ -862,13 +877,15 @@ void BuildingEditorWindow::currentWindowChanged(BuildingTileEntry *entry)
         foreach (Window *window, windows)
             mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
                                                                      window,
-                                                                     entry));
+                                                                     entry,
+                                                                     mergeable,
+                                                                     0));
         if (windows.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
 }
 
-void BuildingEditorWindow::currentCurtainsChanged(BuildingTileEntry *entry)
+void BuildingEditorWindow::currentCurtainsChanged(BuildingTileEntry *entry, bool mergeable)
 {
     // New windows will be created with this tile
     currentBuilding()->setCurtainsTile(entry);
@@ -888,13 +905,14 @@ void BuildingEditorWindow::currentCurtainsChanged(BuildingTileEntry *entry)
             mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
                                                                      window,
                                                                      entry,
+                                                                     mergeable,
                                                                      1));
         if (windows.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
 }
 
-void BuildingEditorWindow::currentStairsChanged(BuildingTileEntry *entry)
+void BuildingEditorWindow::currentStairsChanged(BuildingTileEntry *entry, bool mergeable)
 {
     // New stairs will be created with this tile
     currentBuilding()->setStairsTile(entry);
@@ -913,13 +931,15 @@ void BuildingEditorWindow::currentStairsChanged(BuildingTileEntry *entry)
         foreach (Stairs *stairs, stairsList)
             mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
                                                                      stairs,
-                                                                     entry));
+                                                                     entry,
+                                                                     mergeable,
+                                                                     0));
         if (stairsList.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
 }
 
-void BuildingEditorWindow::currentRoofTileChanged(BuildingTileEntry *entry, int which)
+void BuildingEditorWindow::currentRoofTileChanged(BuildingTileEntry *entry, int which, bool mergeable)
 {
     // New roofs will be created with these tiles
     switch (which) {
@@ -942,7 +962,7 @@ void BuildingEditorWindow::currentRoofTileChanged(BuildingTileEntry *entry, int 
                     objectList += roof;
         }
     } else {
-    // Change the tiles for each roof object.
+        // Change the tiles for each roof object.
         foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
             foreach (BuildingObject *object, floor->objects()) {
                 if (RoofObject *roof = object->asRoof())
@@ -959,6 +979,7 @@ void BuildingEditorWindow::currentRoofTileChanged(BuildingTileEntry *entry, int 
             mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
                                                                      roof,
                                                                      entry,
+                                                                     mergeable,
                                                                      which));
         if (objectList.count() > 1)
             mCurrentDocument->undoStack()->endMacro();

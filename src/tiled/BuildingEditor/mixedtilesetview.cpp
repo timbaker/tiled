@@ -196,6 +196,26 @@ QSize MixedTilesetView::sizeHint() const
     return QSize(64 * 4, 128);
 }
 
+void MixedTilesetView::mousePressEvent(QMouseEvent *event)
+{
+    if ((event->button() == Qt::LeftButton) && !mMousePressed) {
+        mMousePressed = true;
+        emit mousePressed();
+    }
+
+    QTableView::mousePressEvent(event);
+}
+
+void MixedTilesetView::mouseReleaseEvent(QMouseEvent *event)
+{
+    if ((event->button() == Qt::LeftButton) && mMousePressed) {
+        mMousePressed = false;
+        emit mouseReleased();
+    }
+
+    QTableView::mouseReleaseEvent(event);
+}
+
 void MixedTilesetView::setZoomable(Zoomable *zoomable)
 {
     mZoomable = zoomable;
@@ -234,6 +254,8 @@ void MixedTilesetView::init()
     setModel(mModel);
 
     connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(scaleChanged(qreal)));
+
+    mMousePressed = false;
 }
 
 /////
