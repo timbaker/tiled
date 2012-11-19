@@ -154,6 +154,7 @@ private:
     Building *mBuilding;
     QString mFileName;
     QUndoStack *mUndoStack;
+    bool mTileChanges;
     BuildingFloor *mCurrentFloor;
     QSet<BuildingObject*> mSelectedObjects;
 };

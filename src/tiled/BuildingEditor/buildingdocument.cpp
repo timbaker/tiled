@@ -37,7 +37,8 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
     QObject(),
     mBuilding(building),
     mFileName(fileName),
-    mUndoStack(new QUndoStack(this))
+    mUndoStack(new QUndoStack(this)),
+    mTileChanges(false)
 {
     connect(BuildingTilesMgr::instance(), SIGNAL(entryTileChanged(BuildingTileEntry*)),
             SLOT(entryTileChanged(BuildingTileEntry*)));
@@ -71,6 +72,7 @@ bool BuildingDocument::write(const QString &fileName, QString &error)
         return true;
     mFileName = fileName;
     mUndoStack->setClean();
+    mTileChanges = false; // Hack
     return true;
 }
 
@@ -98,7 +100,8 @@ bool BuildingDocument::currentFloorIsBottom()
 
 bool BuildingDocument::isModified() const
 {
-    return !mUndoStack->isClean();
+    // Editing tiles in the Tiles dialog might mean we must save the document.
+    return !mUndoStack->isClean() || mTileChanges;
 }
 
 void BuildingDocument::setSelectedObjects(const QSet<BuildingObject *> &selection)
@@ -300,6 +303,7 @@ void BuildingDocument::furnitureTileChanged(FurnitureTile *ftile)
             if (FurnitureObject *furniture = object->asFurniture()) {
                 if (furniture->furnitureTile() == ftile) {
                     emit objectTileChanged(furniture);
+                    mTileChanges = true; // Hack
                 }
             }
         }
@@ -320,6 +324,7 @@ void BuildingDocument::entryTileChanged(BuildingTileEntry *entry)
                     object->tile(1) == entry ||
                     object->tile(2) == entry) {
                 emit objectTileChanged(object);
+                mTileChanges = true; // Hack
             }
         }
     }
