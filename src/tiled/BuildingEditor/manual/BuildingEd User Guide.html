@@ -1,0 +1,196 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>BuildingEd Tools</title>
+  <meta content="Tim &quot;EasyPickins&quot; Baker" name="author"></head><body>
+<h2><span style="font-weight: bold;"></span>BuildingEd Tools</h2>
+<img style="width: 675px; height: 35px;" alt="Toolbar" title="Toolbar" src="images/toolbar.png"><br>
+<h4>Pencil Tool&nbsp;  <img style="width: 24px; height: 24px;" alt="Pencil tool" src="images/icon_pencil.png"><br>
+</h4>
+Use the Pencil Tool to draw and erase rooms.<br>
+<ul>
+  <li>Left-click-drag to draw a rectangle.&nbsp; The area of the
+rectangle will be filled with room tiles.&nbsp; The size of the
+rectangle is displayed in the statusbar.&nbsp; Right-click to cancel the operation.</li>
+  <li>Holding down the CTRL key activates the eraser mode.&nbsp;
+CTRL-Left-click-drag to draw a rectangle.&nbsp; Room tiles in the area
+of the rectangle will be erased.&nbsp;Right-click to cancel the operation. </li>
+  <li>Right-click when the mouse pointer is over a room to switch to that room.<br>
+  </li>
+</ul>
+<hr style="width: 100%; height: 2px;">
+<h4>Eraser&nbsp; Tool <img style="width: 24px; height: 24px;" alt="Eraser tool" src="images/icon_eraser.png"></h4>
+Use the eraser tool to erase rooms.&nbsp; This tool is sort of obsolete since the Pencil tool also erases rooms.<br>
+<h4>Select and Move Rooms&nbsp; Tool <img style="width: 22px; height: 22px;" alt="Select and move rooms tool" src="images/stock-tool-rect-select.png"><br>
+</h4>
+This tool allows you to select and move rooms.<br>
+<ul>
+  <li>Left-click-drag to draw a selection rectangle.</li>
+  <li>Left-click inside the selection rectangle and drag the mouse to move the parts of rooms in the selected area.</li>
+  <li>Left-click outside the selection rectangle to clear the selection.</li>
+</ul>
+<hr style="width: 100%; height: 2px;">
+<h4>Door&nbsp; Tool <img style="width: 24px; height: 24px;" alt="Door tool" src="images/icon_door.png"><br>
+</h4>
+Use the Door Tool to place a door object.&nbsp; Doors must be placed on
+the edge of a grid cell.&nbsp; Door objects have both a door tile and a
+door frame tile assigned to them, either of which may be set to
+"none".&nbsp; By placing a door on the edge of a room, the correct wall
+tile is automatically chosen to leave a hole for the door.<br>
+<ul>
+<li>Left-click to place a door.&nbsp; When the mouse pointer is near the
+left or right edge of a grid cell, the door will be a west- or
+east-side door.&nbsp; When the mouse pointer is near the top or bottom edge
+of&nbsp; a grid cell, the door will be a north- or south-side door.</li><li>Right-click to delete the door (or any other kind of object) that is under the mouse pointer.</li>
+</ul>
+
+<div style="margin-left: 40px;">
+<img style="width: 102px; height: 103px;" alt="" src="images/north-door.png">&nbsp;&nbsp; <img style="width: 23px; height: 86px;" alt="" src="images/north-door-tile.png">&nbsp; A north (or south) door.<br>
+</div>
+ 
+<div style="margin-left: 40px;"><img style="width: 102px; height: 103px;" alt="" src="images/west-door.png">&nbsp;&nbsp; <img style="width: 23px; height: 86px;" alt="" src="images/west-door-tile.png">&nbsp; A west (or east) door.<br>
+</div>
+<hr style="width: 100%; height: 2px;">
+<h4>Window&nbsp; Tool <img style="width: 24px; height: 24px;" alt="Window tool" src="images/icon_window.png"><br>
+</h4>
+Use the Window Tool to place a window object.&nbsp; Windows must be
+placed on th edge of a grid cell.&nbsp; Window objects have both a
+window tile and a curtains tile, either of which may be set to
+"none".&nbsp; By placing a window on the edge of a room, the correct
+wall tile is automatically chosen to leave a hole for the window.<br>
+<ul>
+<li>Left-click to place a window.&nbsp; When the mouse pointer is near the
+left or right edge of a grid cell, the window will be a west- or east-side window.&nbsp;
+When the mouse pointer is near the top or bottom edge of&nbsp; a grid cell,
+the window will be a north- or south-side window.</li><li>Right-click to delete the window (or any other kind of object) that is under the mouse pointer.</li>
+</ul>
+
+<div style="margin-left: 40px;"><img style="width: 98px; height: 99px;" alt="" src="images/north-window.png">&nbsp;&nbsp; <img style="width: 21px; height: 49px;" alt="" src="images/north-window-tile.png">&nbsp;&nbsp; A north (or south) window.<br>
+</div>
+<div style="margin-left: 40px;"><img style="width: 98px; height: 102px;" alt="" src="images/west-window.png">&nbsp;&nbsp; <img style="width: 21px; height: 49px;" alt="" src="images/west-window-tile.png">&nbsp; A west (or east) window.<br>
+</div>
+<hr style="width: 100%; height: 2px;">
+<h4>Stairs&nbsp; Tool&nbsp; <img style="width: 24px; height: 24px;" alt="Stairs tool" src="images/icon_stair.png"><br>
+</h4>
+Use the Stairs Tool to place a staircase object.&nbsp; A staircase is
+just tall enough (along the Z-axis) to reach the next floor.&nbsp; By
+placing a staircase on a floor, the floor tiles on the floor <span style="font-style: italic;">above</span>
+the staircase are erased automatically.&nbsp; Note that there are only
+3 tiles in a staircase, but the object itself occupies 5 tiles to
+remind you to leave a spot for the player to enter and exit the
+staircase.<br>
+<ul>
+<li>Left-click to place a staircase.&nbsp; When the mouse pointer is near the
+left or right edge of a grid cell, the staircase will be horizontal.&nbsp;
+When the mouse pointer is near the top or bottom edge of&nbsp; a grid cell,
+the staircase will be vertical.</li>
+  <li>Right-click to delete the staircase (or any other kind of object) that is under the mouse pointer.</li>
+</ul>
+
+<img style="width: 104px; height: 224px;" alt="" src="images/vertical-stairs.png">&nbsp; <img style="width: 126px; height: 160px;" alt="" src="images/vertical-stairs-tiles.png">&nbsp; A vertical staircase.<br>
+<img style="width: 222px; height: 102px;" alt="" src="images/horizontal-stairs.png">&nbsp; <img style="width: 127px; height: 160px;" alt="" src="images/horizontal-stairs-tiles.png">&nbsp; A horizontal staircase.<br>
+<hr style="width: 100%; height: 2px;">
+<h4>Roof Tool&nbsp; <br>
+</h4>
+Use the roof tool to create roof objects.&nbsp; All roof objects are
+created by left-click-dragging to draw a rectangle defining the area of
+the roof object.&nbsp; Some roof objects are restricted to how wide or
+tall they may be.<br>
+<img style="width: 173px; height: 201px;" alt="" src="images/roof-tool.png"><br>
+<br>
+<span style="font-weight: bold;"></span>Slope (West) and Slope (East) roof objects may be 1, 2, or 3 tiles wide and any height.<br>
+<div style="text-align: center;"><img style="width: 554px; height: 180px;" alt="" src="images/roof-slope-west.png"><br>
+</div>
+<div style="text-align: center;"><img style="width: 632px; height: 206px;" alt="" src="images/roof-slope-east.png"><br>
+<div style="text-align: left;"><br>
+Slope (North) and Slope (South) roof objects may be 1, 2, or 3 tiles tall and any width.<br>
+</div>
+</div>
+<div style="text-align: center;"><img style="width: 356px; height: 310px;" alt="" src="images/roof-slope-north.png">&nbsp;&nbsp;&nbsp;&nbsp; <img style="width: 447px; height: 311px;" alt="" src="images/roof-slope-south.png"><br>
+</div>
+<br>
+Peak (Vertical) roof objects may be any height and width.&nbsp; When
+wider than 6 tiles, the gap is filled in with a flat section.<br>
+<img style="width: 1359px; height: 373px;" alt="" src="images/roof-peak-ns.png"><br>
+<br>
+Peak (Horizontal) roof objects may be any size.&nbsp; When taller than 6 tiles, the gap is filled in with a flat section.<br>
+<div style="text-align: left;"><img style="width: 1270px; height: 435px;" alt="" src="images/roof-peak-we.png"><br>
+<br>
+Flat Top roof objects may be any size.&nbsp; The depth along the Z-axis
+of Flat Top roof objects can be set to Zero, One, Two, or Three.&nbsp;
+When the depth is Zero, the flat top is drawn into the "Floor"
+tile-layer of the floor the roof object is on.&nbsp; When the depth is
+Three, the flat top is drawn into the "Floor" layer of the floor <span style="font-style: italic;">above</span> the floor the object is on.<br>
+</div>
+<div style="text-align: center;"><img style="width: 541px; height: 227px;" alt="" src="images/roof-flat.png"><br>
+</div>
+<h4>Roof Corner Tool<br>
+</h4>
+Use the Roof Corner Tool to place roof-corner objects.&nbsp;
+Roof-corner objects may be used to join other roof objects together
+visually.&nbsp; Roof-corner objects are created by left-click-dragging
+to draw a rectangle defining the area of the object.&nbsp; Roof-corner
+objects may be 1x1, 2x2, or 3x3 tiles in size.<br>
+<img style="width: 140px; height: 219px;" alt="" src="images/roof-corner-tool.png"><br>
+Typically, only the Inner (North-West) and Outer (South-East)
+roof-corner objects are used, but the other types may be used if you
+later want to rotate or flip the building and end up with the correct
+appearance for the rotated corners.<br>
+<div style="text-align: center;"><img style="width: 717px; height: 348px;" alt="" src="images/roof-corners.png"><br>
+</div>
+<h4>Furniture&nbsp; Tool <img style="width: 24px; height: 24px;" alt="" src="images/icon_furniture.png"><br>
+</h4>
+Use the Furniture Tool to place furniture objects.&nbsp; Furniture
+objects are assigned a "furniture tile" which may be composed of
+multiple individual tile images. Some furniture tiles, for example for
+a table lamp, have only a single tile image, while other furniture
+tiles, such as for a double-bed, have 4 tile images.<br>
+<ul>
+<li>Left-click to place a furniture object.</li>
+  <li>When next to
+the edge or corner of a room, the furniture object's orientation will
+automatically be chosen.&nbsp; If you want to disable the chosen
+orientation, hold down the CTRL key.</li>
+  <li>In the corners of a room, 2 possible orientations could be
+chosen.&nbsp; The Furniture Tool prefers the north and south
+orientations in these cases.&nbsp; To use the alternate (west or east)
+orientation, hold down the SHIFT key.&nbsp; Some furniture tiles, such
+as for kitchen counters, already have valid corner orientations, in
+which case those are used and the SHIFT key does nothing.<br>
+  </li>
+<li>Right-click to delete the furniture object (or any other kind of object) that is under the mouse pointer.</li>
+</ul>
+
+<div style="text-align: center;"><img style="width: 425px; height: 220px;" alt="" src="images/furniture.png"><br>
+</div>
+<h4>Select and Move Objects Tool&nbsp; <img style="width: 22px; height: 22px;" alt="" src="images/tool-select-objects.png"></h4>
+Use the Select and Move Objects Tool to select, deselect, and move
+objects.&nbsp; Only objects on the current floor may be selected.&nbsp;
+If the current floor changes for any reason, any selected objects are
+first deselected.<br>
+<ul>
+  <li>Left-click on an object to select it, clearing any previous selection.</li>
+  <li>SHIFT-left-click on an object to add it to the selection.<br>
+  </li>
+
+  <li>CTRL-left-click on an object to add it to the selection if it
+wasn't already, or remove it from the selection if it was already
+selected.</li>
+  <li>Left-click-drag on any selected object to move all the selected objects to a new position.</li>
+  <li>Left-click-drag on an unselected object will first clear the
+selection, select the clicked object, then drag the clicked object to a
+new position.<br>
+  </li>
+  <li>Left-click-drag
+outside any object to draw a selection rectangle.&nbsp; When the left
+mouse button is released, any objects touching the selection rectangle
+will be affected the same as if clicking on those objects one at a
+time. That is, the CTRL key will toggle the selected state of objects
+in the selection rectangle, while the SHIFT key will always add
+deselected objects to the selection.<br>
+</li><li>Right-click while dragging objects to cancel the operation.<br>
+  </li>
+</ul>
+<div style="text-align: center;"><img style="width: 195px; height: 222px;" alt="" src="images/select-objects-tool.png"><br>
+</div>
+If objects are dragged outside the grid (or to any invalid position), those objects will be deleted.<br>
+</body></html>
