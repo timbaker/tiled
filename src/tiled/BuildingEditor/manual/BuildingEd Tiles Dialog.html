@@ -1,7 +1,107 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>BuildingEd Tiles Dialog</title>
-  <meta content="Tim &quot;EasyPickins&quot; Baker" name="author">
-</head><body>
-  <br>
+<html><head>
+
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>BuildingEd Tiles Dialog</title>
+  <meta content="Tim &quot;EasyPickins&quot; Baker" name="author"></head><body>
+<h2>BuildingEd Tiles Dialog</h2>
+<img style="width: 912px; height: 595px;" alt="" src="images/tiles-dialog.png"><br>
+<br>
+<img src="images/blue-one.png" alt="" style="width: 47px; height: 47px;">This list shows 2 things:
+<ol>
+  <li>The non-furniture categories from "Exterior Walls" to "Roof
+Tops". The buttons below this list are all disabled when one of these
+categories is selected.<br>
+  </li>
+  <li>The furniture categories all created by the user.&nbsp; These are
+always listed after the non-furniture categories. Furniture categories
+may be added, removed and reordered using the buttons below this list. <br>
+  </li>
+</ol>
+Selecting an item in this list will cause the entries in the selected category to be displayed in <img style="width: 24px; height: 24px;" alt="" src="images/blue-two.png">.
+<hr style="width: 100%; height: 2px;"><img style="width: 47px; height: 47px;" alt="" src="images/blue-two.png">This list shows the entries for the category that is selected in <img style="width: 24px; height: 24px;" alt="" src="images/blue-one.png">.<br>
+<h3>Non-furniture category entries</h3>
+The non-furniture categories from "Exterior Walls" to "Roof Tops" are used to choose tiles for the exported TMX file.<br>
+<ul>
+  <li>One entry from the "Exterior Walls" category is assigned to a
+building.&nbsp; The entry is used to choose the exterior wall tiles of
+the entire building.</li>
+  <li>One entry from the "Interior Walls" category is assigned to each room in a building.&nbsp; Each room may have a different entry.<br>
+  </li>
+  <li>One entry from the "Floors" category is assigned to each room in a building.&nbsp; Each room may have a different entry.</li>
+  <li>Every door object has one entry from "Doors" and one entry from
+"Door Frames" assigned.&nbsp; Different entries may be assigned to each
+individual door object, and either entry may be set to "none".<br>
+  </li>
+  <li>Every
+window object has one entry from "Windows" and one entry from
+"Curtains" assigned.&nbsp; Different entries may be assigned to each
+individual window object, and either entry may be set to "none".</li>
+  <li>Every
+stairs object has one entry from "Stairs" assigned.&nbsp; Different
+entries may be assigned to each individual stairs object.</li>
+  <li>One entry from "Roof Caps" and one entry from "Roof Slopes" is
+assigned to the current building.&nbsp; Every roof object and
+roof-corner object uses the same tiles.<br>
+  </li>
+  <li>Every
+roof object has one entry from "Roof Tops" assigned, which may be set
+to "none". Different entries may be assigned to each individual roof
+object.</li>
+</ul>
+There are 2 ways to view the entries in the non-furniture
+categories.&nbsp; You can switch to and from Expert Mode by clicking
+the <img style="width: 16px; height: 16px;" alt="" src="images/icon_expert_mode.png"> button below the list.<br>
+<h4>Normal Mode</h4>
+
+When not in Expert Mode, each entry is represented by a single tile
+image.&nbsp; The entries are grouped by tileset name.&nbsp; In this
+mode you can add a new entry by dragging a tile from <img style="width: 24px; height: 24px;" alt="" src="images/blue-four.png">.&nbsp; This requires the tiles to be in a very specific order in the tileset (which they usually are but not always).<br>
+<h4>Expert Mode</h4>
+In Expert Mode, all of the predefined slots that make up an individual
+entry are shown.&nbsp; Consider this picture of the "Stairs" category
+in Expert Mode:<br>
+<div style="text-align: center;"><img style="width: 328px; height: 294px;" alt="" src="images/expert-mode-stairs.png"><br>
+</div>
+Here you can see all of the 6 tiles that are needed by each entry in
+the "Stairs" category.&nbsp; The pink outline gives you an idea about
+the tiles that should be assigned to an entry. You can assign a tile to
+each spot by drag-and-dropping one from <img style="width: 24px; height: 24px;" alt="" src="images/blue-four.png">.&nbsp; Use Expert Mode when tiles are not in the expected order in the tileset image.&nbsp; Clicking the <img style="width: 22px; height: 22px;" alt="" src="images/add.png">will add a new entry below the current one.&nbsp; Clicking the <img style="width: 22px; height: 22px;" alt="" src="images/remove.png">will remove all the selected entries.<br>
+<h4>Tile Offsets</h4>
+Sometimes the tiles in an entry must be placed at an offset in the
+TMX.&nbsp; This happens with some sloped roof tiles.&nbsp; So instead
+of placing the image at the correct x,y position it must be placed at
+an offset to appear in the correct position visually.&nbsp; You can
+adjust this offset for each tile in an entry in Expert Mode using the x
+and y spinboxes below the list.<br>
+<h3>Furniture category entries</h3>
+Furniture category entries are used by furniture objects.&nbsp; Each
+entry has either 4 or 8 different "furniture tiles", one for each
+different orientation.&nbsp; Most furniture tiles only use West, North,
+East and South orientations, but others furniture tiles like kitchen
+counters also have South-West, North-West, North-East and South-East
+orientations for corners.<br>
+<div style="text-align: center;"><img style="width: 426px; height: 292px;" alt="" src="images/furniture-category.png"><br>
+</div>
+<h4>Furniture layers</h4>
+Some furniture goes on the ground (like tables) while other furniture
+goes on the walls (like light switches).&nbsp; Furniture category
+entries can be assigned to different layers using the "Layer:" combobox
+below the list. There is the default "Furniture" layer, a
+"WallFurniture" layer, and a "WallOverlay" layer for things like the
+Fossoil painted logos.<br>
+<h4>Assigning tiles to furniture<br>
+</h4>
+Each furniture tile can be made up of 1 or more tile images.&nbsp; Tiles are assigned by drag-and-dropping one from <img style="width: 24px; height: 24px;" alt="" src="images/blue-four.png">.&nbsp; Here is an example of 2 extra-large furniture tiles:<br>
+<div style="text-align: center;"><img style="width: 302px; height: 128px;" alt="" src="images/jumbo-furniture.png"><br>
+</div>
+The tile grid grows larger as new tiles are dropped.&nbsp; You can
+clear all the tiles from selected furniture tiles by clicking the <img style="width: 16px; height: 16px;" alt="" src="images/edit-clear.png"> button below the list.<br>
+<hr style="width: 100%; height: 2px;"><img style="width: 47px; height: 47px;" alt="" src="images/blue-three.png">This
+list shows the names of all the tilesets that have been added.&nbsp;
+These tilesets are added to exported TMX files.&nbsp; Tilesets may be
+added or removed using the 2 buttons below this list.<br>
+<hr style="width: 100%; height: 2px;"><img style="width: 47px; height: 47px;" alt="" src="images/blue-four.png">This list shows all the tiles in the tileset that is selected in <img style="width: 24px; height: 24px;" alt="" src="images/blue-three.png">.<br>
+<br>
+
 
 </body></html>
