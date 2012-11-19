@@ -389,6 +389,18 @@ QPainterPath GraphicsObjectItem::calcShape()
 
     if (FurnitureObject *object = mObject->asFurniture()) {
         QRectF r = mEditor->tileToSceneRect(object->bounds().translated(dragOffset));
+        if (object->inWallLayer()) {
+            if (object->furnitureTile()->isW())
+                r.setRight(r.left() + 10);
+            else if (object->furnitureTile()->isN())
+                r.setBottom(r.top() + 10);
+            else if (object->furnitureTile()->isE())
+                r.setLeft(r.right() - 10);
+            else if (object->furnitureTile()->isS())
+                r.setTop(r.bottom() - 10);
+            path.addRect(r);
+            return path;
+        }
         r.adjust(2, 2, -2, -2);
         path.addRect(r);
     }

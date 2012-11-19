@@ -210,13 +210,24 @@ FurnitureTiles *BuildingReaderPrivate::readFurnitureTiles()
 
     const QXmlStreamAttributes atts = xml.attributes();
     bool corners = false;
+    FurnitureTiles::FurnitureLayer layer = FurnitureTiles::LayerFurniture;
     if (mVersion >= VERSION2) {
         QString cornersString = atts.value(QLatin1String("corners")).toString();
         if (cornersString.length() && !booleanFromString(cornersString, corners))
             return 0;
+
+        QString layerString = atts.value(QLatin1String("layer")).toString();
+        if (layerString.length()) {
+            layer = FurnitureTiles::layerFromString(layerString);
+            if (layer == FurnitureTiles::InvalidLayer) {
+                xml.raiseError(tr("Unknown furniture layer '%1'").arg(layerString));
+                return 0;
+            }
+        }
     }
 
     FurnitureTiles *ftiles = new FurnitureTiles(corners);
+    ftiles->setLayer(layer);
 
     while (xml.readNextStartElement()) {
         if (xml.name() == "entry") {

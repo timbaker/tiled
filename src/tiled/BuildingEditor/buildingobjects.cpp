@@ -176,6 +176,8 @@ int Stairs::getOffset(int x, int y)
     return -1;
 }
 
+/////
+
 FurnitureObject::FurnitureObject(BuildingFloor *floor, int x, int y) :
     BuildingObject(floor, x, y, Invalid),
     mFurnitureTile(0)
@@ -296,6 +298,12 @@ void FurnitureObject::setFurnitureTile(FurnitureTile *tile)
     }
 #endif
     mFurnitureTile = tile;
+}
+
+bool FurnitureObject::inWallLayer() const
+{
+    return mFurnitureTile->owner()->layer() == FurnitureTiles::LayerWallOverlay
+            || mFurnitureTile->owner()->layer() == FurnitureTiles::LayerWallFurniture;
 }
 
 /////

@@ -219,6 +219,8 @@ public:
     FurnitureTile *furnitureTile() const
     { return mFurnitureTile; }
 
+    bool inWallLayer() const;
+
 private:
     FurnitureTile *mFurnitureTile;
 };

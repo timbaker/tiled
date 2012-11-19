@@ -21,6 +21,7 @@
 #include <QDialog>
 #include <QModelIndex>
 
+class QComboBox;
 class QListWidgetItem;
 class QSpinBox;
 class QSplitter;
@@ -77,6 +78,7 @@ public:
                                 const QString &tileName);
     void reorderFurniture(FurnitureGroup *category, int oldIndex, int newIndex);
     void toggleCorners(FurnitureTiles *ftiles);
+    int changeFurnitureLayer(FurnitureTiles *ftiles, int layer);
 
     QString renameFurnitureCategory(FurnitureGroup *category, const QString &name);
     void reorderCategory(int oldIndex, int newIndex);
@@ -132,11 +134,17 @@ private slots:
     void undoTextChanged(const QString &text);
     void redoTextChanged(const QString &text);
 
+    void tileSelectionChanged();
+    void entrySelectionChanged();
+    void furnitureSelectionChanged();
+
     void tileActivated(const QModelIndex &index);
     void entryActivated(const QModelIndex &index);
     void furnitureActivated(const QModelIndex &index);
 
     void entryOffsetChanged();
+
+    void furnitureLayerChanged(int index);
 
     void accept();
     void reject();
@@ -159,6 +167,9 @@ private:
     QSpinBox *mEntryOffsetSpinX;
     QSpinBox *mEntryOffsetSpinY;
     bool mSynching;
+
+    QWidget *mFurnitureLayerUI;
+    QComboBox *mFurnitureLayerComboBox;
 
     bool mExpertMode;
 };

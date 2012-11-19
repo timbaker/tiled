@@ -436,6 +436,9 @@ void BuildingPreviewScene::BuildingToMap()
         "Walls",
         "RoofCap",
         "RoofCap2",
+        "WallOverlay",
+        "WallOverlay2",
+        "WallFurniture",
         "Frames",
         "Doors",
         "Curtains",
@@ -496,16 +499,15 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
         for (int x = 0; x <= floor->width(); x++) {
             for (int y = 0; y <= floor->height(); y++) {
                 const BuildingFloor::Square &square = floor->squares[x][y];
-                if (section == BuildingFloor::Square::SectionFurniture
-                        || section == BuildingFloor::Square::SectionFurniture2) {
-                    BuildingTile *btile = square.mFurniture[section-BuildingFloor::Square::SectionFurniture];
-                    if (btile && !btile->isNone()) {
+                if (BuildingTile *btile = square.mTiles[section]) {
+                    if (!btile->isNone()) {
                         if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(btile))
                             tl->setCell(x + offset, y + offset, Cell(tile));
                     }
+                    continue;
                 }
-                if (BuildingTileEntry *entry = square.mTiles[section]) {
-                    int tileOffset = square.mTileOffset[section];
+                if (BuildingTileEntry *entry = square.mEntries[section]) {
+                    int tileOffset = square.mEntryEnum[section];
                     if (entry->isNone() || entry->tile(tileOffset)->isNone())
                         continue;
                     if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->tile(tileOffset)))

@@ -1096,7 +1096,7 @@ void FurnitureTool::setCurrentTile(FurnitureTile *tile)
 
 static FurnitureTool::Orient wallOrient(const BuildingFloor::Square &square)
 {
-    if (square.mTiles[BuildingFloor::Square::SectionWall])
+    if (square.mEntries[BuildingFloor::Square::SectionWall])
         switch (square.mWallOrientation) {
         case BuildingFloor::Square::WallOrientW:
             return FurnitureTool::OrientW;

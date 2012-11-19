@@ -49,6 +49,9 @@ public:
             SectionWall,
             SectionRoofCap,
             SectionRoofCap2,
+            SectionWallOverlay,
+            SectionWallOverlay2,
+            SectionWallFurniture,
             SectionFrame,
             SectionDoor,
             SectionCurtains, // West, North windows
@@ -72,14 +75,14 @@ public:
         Square();
         ~Square();
 
-        QVector<BuildingTileEntry*> mTiles;
-        QVector<int> mTileOffset;
+        QVector<BuildingTileEntry*> mEntries;
+        QVector<int> mEntryEnum;
         WallOrientation mWallOrientation;
         bool mExterior;
-        BuildingTile *mFurniture[2];
+        QVector<BuildingTile*> mTiles;
 
         bool IsWallOrient(WallOrientation orient)
-        { return mTiles[SectionWall] && (mWallOrientation == orient); }
+        { return mEntries[SectionWall] && (mWallOrientation == orient); }
 
         void ReplaceFloor(BuildingTileEntry *tile, int offset);
         void ReplaceWall(BuildingTileEntry *tile, WallOrientation orient, bool exterior = true);
@@ -87,13 +90,12 @@ public:
         void ReplaceFrame(BuildingTileEntry *tile, int offset);
         void ReplaceCurtains(Window *window, bool exterior);
         void ReplaceFurniture(BuildingTileEntry *tile, int offset = 0);
-        void ReplaceFurniture(BuildingTile *tile);
+        void ReplaceFurniture(BuildingTile *tile, SquareSection section);
         void ReplaceRoof(BuildingTileEntry *tile, int offset = 0);
         void ReplaceRoofCap(BuildingTileEntry *tile, int offset = 0);
         void ReplaceRoofTop(BuildingTileEntry *tile, int offset);
 
         int getWallOffset();
-        int getTileIndexForDoor();
     };
 
     QVector<QVector<Square> > squares;

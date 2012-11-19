@@ -172,13 +172,14 @@ static void ReplaceRoofCorner(RoofObject *ro, int x, int y,
 
 static void ReplaceFurniture(int x, int y,
                              QVector<QVector<BuildingFloor::Square> > &squares,
-                             BuildingTile *btile)
+                             BuildingTile *btile,
+                             BuildingFloor::Square::SquareSection section)
 {
     if (!btile)
         return;
     QRect bounds(0, 0, squares.size() - 1, squares[0].size() - 1);
     if (bounds.contains(x, y))
-        squares[x][y].ReplaceFurniture(btile);
+        squares[x][y].ReplaceFurniture(btile, section);
 }
 
 void BuildingFloor::LayoutToSquares()
@@ -272,7 +273,7 @@ void BuildingFloor::LayoutToSquares()
         {
             if (x > 0 && y > 0)
             {
-                if (squares[x][y].mTiles[Square::SectionWall]) // if (squares[x][y].walls.count() > 0)
+                if (squares[x][y].mEntries[Square::SectionWall]) // if (squares[x][y].walls.count() > 0)
                     continue;
                 if (x < width() && mIndexAtPos[x][y - 1] >= 0)
                     wtype = interiorWalls[mIndexAtPos[x][y - 1]];
@@ -332,7 +333,20 @@ void BuildingFloor::LayoutToSquares()
             FurnitureTile *ftile = fo->furnitureTile()->resolved();
             for (int i = 0; i < ftile->size().height(); i++) {
                 for (int j = 0; j < ftile->size().width(); j++) {
-                    ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i));
+                    switch (ftile->owner()->layer()) {
+                    case FurnitureTiles::LayerFurniture:
+                        ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
+                                         Square::SectionFurniture);
+                        break;
+                    case FurnitureTiles::LayerWallOverlay:
+                        ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
+                                         Square::SectionWallOverlay);
+                        break;
+                    case FurnitureTiles::LayerWallFurniture:
+                        ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
+                                         Square::SectionWallFurniture);
+                        break;
+                    }
                 }
             }
         }
@@ -662,7 +676,7 @@ void BuildingFloor::LayoutToSquares()
     for (int x = 0; x < width(); x++) {
         for (int y = 0; y < height(); y++) {
             if (mIndexAtPos[x][y] >= 0)
-                squares[x][y].mTiles[Square::SectionFloor] = floors[mIndexAtPos[x][y]];
+                squares[x][y].mEntries[Square::SectionFloor] = floors[mIndexAtPos[x][y]];
         }
     }
 
@@ -684,16 +698,16 @@ void BuildingFloor::LayoutToSquares()
                 if (stairs->isW()) {
                     if (x + 1 < 0 || x + 3 >= width() || y < 0 || y >= height())
                         continue;
-                    squares[x+1][y].mTiles[Square::SectionFloor] = 0;
-                    squares[x+2][y].mTiles[Square::SectionFloor] = 0;
-                    squares[x+3][y].mTiles[Square::SectionFloor] = 0;
+                    squares[x+1][y].mEntries[Square::SectionFloor] = 0;
+                    squares[x+2][y].mEntries[Square::SectionFloor] = 0;
+                    squares[x+3][y].mEntries[Square::SectionFloor] = 0;
                 }
                 if (stairs->isN()) {
                     if (x < 0 || x >= width() || y + 1 < 0 || y + 3 >= height())
                         continue;
-                    squares[x][y+1].mTiles[Square::SectionFloor] = 0;
-                    squares[x][y+2].mTiles[Square::SectionFloor] = 0;
-                    squares[x][y+3].mTiles[Square::SectionFloor] = 0;
+                    squares[x][y+1].mEntries[Square::SectionFloor] = 0;
+                    squares[x][y+2].mEntries[Square::SectionFloor] = 0;
+                    squares[x][y+3].mEntries[Square::SectionFloor] = 0;
                 }
             }
         }
@@ -841,11 +855,11 @@ void BuildingFloor::flip(bool horizontal)
 /////
 
 BuildingFloor::Square::Square() :
-    mTiles(MaxSection, 0),
-    mTileOffset(MaxSection, 0),
-    mExterior(false)
+    mEntries(MaxSection, 0),
+    mEntryEnum(MaxSection, 0),
+    mExterior(false),
+    mTiles(MaxSection, 0)
 {
-    mFurniture[0] = mFurniture[1] = 0;
 }
 
 
@@ -858,38 +872,38 @@ BuildingFloor::Square::~Square()
 
 void BuildingFloor::Square::ReplaceFloor(BuildingTileEntry *tile, int offset)
 {
-    mTiles[SectionFloor] = tile;
-    mTileOffset[SectionFloor] = offset;
+    mEntries[SectionFloor] = tile;
+    mEntryEnum[SectionFloor] = offset;
 }
 
 void BuildingFloor::Square::ReplaceWall(BuildingTileEntry *tile,
                                         Square::WallOrientation orient,
                                         bool exterior)
 {
-    mTiles[SectionWall] = tile;
+    mEntries[SectionWall] = tile;
     mWallOrientation = orient; // Must set this before getWallOffset() is called
-    mTileOffset[SectionWall] = getWallOffset();
+    mEntryEnum[SectionWall] = getWallOffset();
     mExterior = exterior;
 }
 
 void BuildingFloor::Square::ReplaceDoor(BuildingTileEntry *tile, int offset)
 {
-    mTiles[SectionDoor] = tile;
-    mTileOffset[SectionDoor] = offset;
-    mTileOffset[SectionWall] = getWallOffset();
+    mEntries[SectionDoor] = tile;
+    mEntryEnum[SectionDoor] = offset;
+    mEntryEnum[SectionWall] = getWallOffset();
 }
 
 void BuildingFloor::Square::ReplaceFrame(BuildingTileEntry *tile, int offset)
 {
-    mTiles[SectionFrame] = tile;
-    mTileOffset[SectionFrame] = offset;
-    mTileOffset[SectionWall] = getWallOffset();
+    mEntries[SectionFrame] = tile;
+    mEntryEnum[SectionFrame] = offset;
+    mEntryEnum[SectionWall] = getWallOffset();
 }
 
 void BuildingFloor::Square::ReplaceCurtains(Window *window, bool exterior)
 {
-    mTiles[exterior ? SectionCurtains2 : SectionCurtains] = window->curtainsTile();
-    mTileOffset[exterior ? SectionCurtains2 : SectionCurtains] = window->isW()
+    mEntries[exterior ? SectionCurtains2 : SectionCurtains] = window->curtainsTile();
+    mEntryEnum[exterior ? SectionCurtains2 : SectionCurtains] = window->isW()
             ? (exterior ? BTC_Curtains::East : BTC_Curtains::West)
             : (exterior ? BTC_Curtains::South : BTC_Curtains::North);
 }
@@ -897,61 +911,61 @@ void BuildingFloor::Square::ReplaceCurtains(Window *window, bool exterior)
 void BuildingFloor::Square::ReplaceFurniture(BuildingTileEntry *tile, int offset)
 {
     if (offset < 0) { // see getStairsOffset
-        mTiles[SectionFurniture] = 0;
-        mTileOffset[SectionFurniture] = 0;
+        mEntries[SectionFurniture] = 0;
+        mEntryEnum[SectionFurniture] = 0;
         return;
     }
-    if (mTiles[SectionFurniture] && !mTiles[SectionFurniture]->isNone()) {
-        mTiles[SectionFurniture2] = tile;
-        mTileOffset[SectionFurniture2] = offset;
+    if (mEntries[SectionFurniture] && !mEntries[SectionFurniture]->isNone()) {
+        mEntries[SectionFurniture2] = tile;
+        mEntryEnum[SectionFurniture2] = offset;
         return;
     }
-    mTiles[SectionFurniture] = tile;
-    mTileOffset[SectionFurniture] = offset;
+    mEntries[SectionFurniture] = tile;
+    mEntryEnum[SectionFurniture] = offset;
 }
 
-void BuildingFloor::Square::ReplaceFurniture(BuildingTile *tile)
+void BuildingFloor::Square::ReplaceFurniture(BuildingTile *tile, SquareSection section)
 {
-    if (mFurniture[0] && !mFurniture[0]->isNone()) {
-        mFurniture[1] = tile;
-        mTileOffset[SectionFurniture2] = 0;
+    if (mTiles[section] && !mTiles[section]->isNone()) {
+        mTiles[section + 1] = tile;
+        mEntryEnum[section + 1] = 0;
         return;
     }
-    mFurniture[0] = tile;
-    mTileOffset[SectionFurniture] = 0;
+    mTiles[section] = tile;
+    mEntryEnum[section] = 0;
 }
 
 void BuildingFloor::Square::ReplaceRoof(BuildingTileEntry *tile, int offset)
 {
-    if (mTiles[SectionRoof] && !mTiles[SectionRoof]->isNone()) {
-        mTiles[SectionRoof2] = tile;
-        mTileOffset[SectionRoof2] = offset;
+    if (mEntries[SectionRoof] && !mEntries[SectionRoof]->isNone()) {
+        mEntries[SectionRoof2] = tile;
+        mEntryEnum[SectionRoof2] = offset;
         return;
     }
-    mTiles[SectionRoof] = tile;
-    mTileOffset[SectionRoof] = offset;
+    mEntries[SectionRoof] = tile;
+    mEntryEnum[SectionRoof] = offset;
 }
 
 void BuildingFloor::Square::ReplaceRoofCap(BuildingTileEntry *tile, int offset)
 {
-    if (mTiles[SectionRoofCap] && !mTiles[SectionRoofCap]->isNone()) {
-        mTiles[SectionRoofCap2] = tile;
-        mTileOffset[SectionRoofCap2] = offset;
+    if (mEntries[SectionRoofCap] && !mEntries[SectionRoofCap]->isNone()) {
+        mEntries[SectionRoofCap2] = tile;
+        mEntryEnum[SectionRoofCap2] = offset;
         return;
     }
-    mTiles[SectionRoofCap] = tile;
-    mTileOffset[SectionRoofCap] = offset;
+    mEntries[SectionRoofCap] = tile;
+    mEntryEnum[SectionRoofCap] = offset;
 }
 
 void BuildingFloor::Square::ReplaceRoofTop(BuildingTileEntry *tile, int offset)
 {
-    mTiles[SectionRoofTop] = tile;
-    mTileOffset[SectionRoofTop] = offset;
+    mEntries[SectionRoofTop] = tile;
+    mEntryEnum[SectionRoofTop] = offset;
 }
 
 int BuildingFloor::Square::getWallOffset()
 {
-    BuildingTileEntry *tile = mTiles[SectionWall];
+    BuildingTileEntry *tile = mEntries[SectionWall];
     if (!tile)
         return -1;
 
@@ -959,9 +973,9 @@ int BuildingFloor::Square::getWallOffset()
 
     switch (mWallOrientation) {
     case WallOrientN:
-        if (mTiles[SectionDoor] != 0)
+        if (mEntries[SectionDoor] != 0)
             offset = BTC_Walls::NorthDoor;
-        else if (mTiles[SectionFrame] != 0)
+        else if (mEntries[SectionFrame] != 0)
             offset = BTC_Walls::NorthWindow;
         else
             offset = BTC_Walls::North;
@@ -970,9 +984,9 @@ int BuildingFloor::Square::getWallOffset()
         offset = BTC_Walls::NorthWest;
         break;
     case  WallOrientW:
-        if (mTiles[SectionDoor] != 0)
+        if (mEntries[SectionDoor] != 0)
             offset = BTC_Walls::WestDoor;
-        else if (mTiles[SectionFrame] != 0)
+        else if (mEntries[SectionFrame] != 0)
             offset = BTC_Walls::WestWindow;
         break;
     case  WallOrientSE:

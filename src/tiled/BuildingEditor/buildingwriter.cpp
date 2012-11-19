@@ -130,6 +130,8 @@ public:
             w.writeStartElement(QLatin1String("furniture"));
             if (ftiles->hasCorners())
                 writeBoolean(w, QLatin1String("corners"), ftiles->hasCorners());
+            if (ftiles->layer() != FurnitureTiles::LayerFurniture)
+                w.writeAttribute(QLatin1String("layer"), ftiles->layerToString());
             writeFurnitureTile(w, ftiles->tile(FurnitureTile::FurnitureW));
             writeFurnitureTile(w, ftiles->tile(FurnitureTile::FurnitureN));
             writeFurnitureTile(w, ftiles->tile(FurnitureTile::FurnitureE));

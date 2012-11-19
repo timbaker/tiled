@@ -121,7 +121,17 @@ bool FurnitureGroups::readTxt()
             foreach (SimpleFileBlock furnitureBlock, block.blocks) {
                 if (furnitureBlock.name == QLatin1String("furniture")) {
                     bool corners = furnitureBlock.value("corners") == QLatin1String("true");
+
+                    QString layerString = furnitureBlock.value("layer");
+                    FurnitureTiles::FurnitureLayer layer = layerString.isEmpty() ?
+                            FurnitureTiles::LayerFurniture : FurnitureTiles::layerFromString(layerString);
+                    if (layer == FurnitureTiles::InvalidLayer) {
+                        mError = tr("Invalid furniture layer '%1'").arg(layerString);
+                        return false;
+                    }
+
                     FurnitureTiles *tiles = new FurnitureTiles(corners);
+                    tiles->setLayer(layer);
                     foreach (SimpleFileBlock entryBlock, furnitureBlock.blocks) {
                         if (entryBlock.name == QLatin1String("entry")) {
                             FurnitureTile::FurnitureOrientation orient
@@ -219,6 +229,8 @@ bool FurnitureGroups::writeTxt()
             furnitureBlock.name = QLatin1String("furniture");
             if (ftiles->hasCorners())
                 furnitureBlock.addValue("corners", QLatin1String("true"));
+            if (ftiles->layer() != FurnitureTiles::LayerFurniture)
+                furnitureBlock.addValue("layer", ftiles->layerToString());
             foreach (FurnitureTile *ftile, ftiles->tiles()) {
                 if (ftile->isEmpty())
                     continue;
@@ -430,7 +442,8 @@ bool FurnitureTile::rowEmpty(int y)
 
 FurnitureTiles::FurnitureTiles(bool corners) :
     mTiles(8, 0),
-    mCorners(corners)
+    mCorners(corners),
+    mLayer(LayerFurniture)
 {
     mTiles[FurnitureTile::FurnitureW] = new FurnitureTile(this, FurnitureTile::FurnitureW);
     mTiles[FurnitureTile::FurnitureN] = new FurnitureTile(this, FurnitureTile::FurnitureN);
@@ -468,10 +481,45 @@ FurnitureTile *FurnitureTiles::tile(FurnitureTile::FurnitureOrientation orient) 
 
 bool FurnitureTiles::equals(const FurnitureTiles *other)
 {
+    if (other->mLayer != mLayer)
+        return false;
+
     for (int i = 0; i < mTiles.size(); i++)
         if (!other->mTiles[i]->equals(mTiles[i]))
             return false;
     return true;
+}
+
+QString FurnitureTiles::layerToString(FurnitureTiles::FurnitureLayer layer)
+{
+    switch (layer) {
+    case LayerFurniture:
+    case LayerWallOverlay:
+    case LayerWallFurniture:
+        initNames();
+        return mLayerNames[layer];
+    default:
+        return QLatin1String("Invalid");
+    }
+}
+
+FurnitureTiles::FurnitureLayer FurnitureTiles::layerFromString(const QString &s)
+{
+    if (s == QLatin1String("Furniture")) return LayerFurniture;
+    if (s == QLatin1String("WallOverlay")) return LayerWallOverlay;
+    if (s == QLatin1String("WallFurniture")) return LayerWallFurniture;
+    return InvalidLayer;
+}
+
+QStringList FurnitureTiles::mLayerNames;
+
+void FurnitureTiles::initNames()
+{
+    if (mLayerNames.size())
+        return;
+    mLayerNames += QLatin1String("Furniture");
+    mLayerNames += QLatin1String("WallOverlay");
+    mLayerNames += QLatin1String("WallFurniture");
 }
 
 /////

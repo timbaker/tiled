@@ -21,7 +21,7 @@
 #include <QCoreApplication>
 #include <QList>
 #include <QSize>
-#include <QString>
+#include <QStringList>
 #include <QVector>
 
 namespace BuildingEditor {
@@ -107,6 +107,14 @@ private:
 class FurnitureTiles
 {
 public:
+    enum FurnitureLayer {
+        InvalidLayer = -1,
+        LayerFurniture,
+        LayerWallOverlay,
+        LayerWallFurniture,
+        LayerCount
+    };
+
     FurnitureTiles(bool corners);
     ~FurnitureTiles();
 
@@ -126,9 +134,35 @@ public:
 
     bool equals(const FurnitureTiles *other);
 
+    void setLayer(FurnitureLayer layer)
+    { mLayer = layer; }
+
+    FurnitureLayer layer() const
+    { return mLayer; }
+
+    static int layerCount()
+    { return LayerCount; }
+
+    QString layerToString() const
+    { return layerToString(mLayer); }
+
+    static QString layerToString(FurnitureLayer layer);
+    static FurnitureLayer layerFromString(const QString &s);
+
+    static QStringList layerNames()
+    {
+        initNames();
+        return mLayerNames;
+    }
+
+private:
+    static void initNames();
+
 private:
     QVector<FurnitureTile*> mTiles;
     bool mCorners;
+    FurnitureLayer mLayer;
+    static QStringList mLayerNames;
 };
 
 class FurnitureGroup
