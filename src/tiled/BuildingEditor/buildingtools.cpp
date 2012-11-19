@@ -1209,7 +1209,7 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             return;
         mObject = new RoofObject(floor(),
                                  mStartPos.x(), mStartPos.y(),
-                                 /*width=*/2, /*height=*/2,
+                                 /*width=*/1, /*height=*/1,
                                  /*type=*/mRoofType, /*depth=*/RoofObject::InvalidDepth,
                                  /*cappedW=*/true, /*cappedN=*/true,
                                  /*cappedE=*/true, /*cappedS=*/true);
@@ -1565,7 +1565,9 @@ void SelectMoveObjectTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         if (mClickedObject) {
             QSet<BuildingObject*> selection = mEditor->document()->selectedObjects();
             const Qt::KeyboardModifiers modifiers = event->modifiers();
-            if (modifiers & (Qt::ShiftModifier | Qt::ControlModifier)) {
+            if (modifiers & Qt::ShiftModifier) {
+                selection.insert(mClickedObject);
+            } else if (modifiers & Qt::ControlModifier) {
                 if (selection.contains(mClickedObject))
                     selection.remove(mClickedObject);
                 else
@@ -1627,8 +1629,17 @@ void SelectMoveObjectTool::updateSelection(const QPointF &pos,
     const QSet<BuildingObject*> oldSelection = mEditor->document()->selectedObjects();
     QSet<BuildingObject*> newSelection;
 
-    if (modifiers & (Qt::ControlModifier | Qt::ShiftModifier)) {
+    if (modifiers & Qt::ShiftModifier) {
         newSelection = oldSelection | selectedObjects;
+    } else if (modifiers & Qt::ControlModifier) {
+        QSet<BuildingObject*> select, deselect;
+        foreach (BuildingObject *object, selectedObjects) {
+            if (oldSelection.contains(object))
+                deselect.insert(object);
+            else
+                select.insert(object);
+        }
+        newSelection = oldSelection - deselect + select;
     } else {
         newSelection = selectedObjects;
     }
