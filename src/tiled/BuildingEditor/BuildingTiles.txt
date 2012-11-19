@@ -146,11 +146,66 @@ category
         WestDoor = location_restaurant_spiffos_01_002
         NorthDoor = location_restaurant_spiffos_01_003
     }
+    entry
+    {
+        West = location_shop_fossoil_01_006
+        North = location_shop_fossoil_01_005
+        NorthWest = location_shop_fossoil_01_004
+        SouthEast = location_shop_fossoil_01_007
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = location_shop_fossoil_01_008
+        NorthDoor = location_shop_fossoil_01_009
+    }
 }
 category
 {
     label = Interior Walls
     name = interior_walls
+    entry
+    {
+        West = location_community_church_small_01_000
+        North = location_community_church_small_01_001
+        NorthWest = location_community_church_small_01_002
+        SouthEast = location_community_church_small_01_003
+        WestWindow = location_community_church_small_01_008
+        NorthWindow = location_community_church_small_01_009
+        WestDoor = location_community_church_small_01_010
+        NorthDoor = location_community_church_small_01_011
+    }
+    entry
+    {
+        West = location_community_church_small_01_004
+        North = location_community_church_small_01_005
+        NorthWest = location_community_church_small_01_006
+        SouthEast = location_community_church_small_01_007
+        WestWindow = location_community_church_small_01_012
+        NorthWindow = location_community_church_small_01_013
+        WestDoor = location_community_church_small_01_014
+        NorthDoor = location_community_church_small_01_015
+    }
+    entry
+    {
+        West = location_hospitality_sunstarmotel_02_008
+        North = location_hospitality_sunstarmotel_02_009
+        NorthWest = location_hospitality_sunstarmotel_02_010
+        SouthEast = location_hospitality_sunstarmotel_02_011
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = location_hospitality_sunstarmotel_02_018
+        NorthDoor = location_hospitality_sunstarmotel_02_019
+    }
+    entry
+    {
+        West = location_restaurant_pie_01_000
+        North = location_restaurant_pie_01_001
+        NorthWest = location_restaurant_pie_01_002
+        SouthEast = location_restaurant_pie_01_003
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = location_restaurant_pie_01_014
+        NorthDoor = location_restaurant_pie_01_015
+    }
     entry
     {
         West = location_restaurant_seahorse_01_001
@@ -547,6 +602,17 @@ category
         WestDoor = location_restaurant_spiffos_01_046
         NorthDoor = location_restaurant_spiffos_01_047
     }
+    entry
+    {
+        West = location_shop_fossoil_01_006
+        North = location_shop_fossoil_01_005
+        NorthWest = location_shop_fossoil_01_004
+        SouthEast = location_shop_fossoil_01_007
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = location_shop_fossoil_01_008
+        NorthDoor = location_shop_fossoil_01_009
+    }
 }
 category
 {
@@ -698,7 +764,27 @@ category
     }
     entry
     {
+        Floor = location_hospitality_sunstarmotel_01_056
+    }
+    entry
+    {
+        Floor = location_hospitality_sunstarmotel_01_057
+    }
+    entry
+    {
+        Floor = location_hospitality_sunstarmotel_02_016
+    }
+    entry
+    {
+        Floor = location_restaurant_bar_01_024
+    }
+    entry
+    {
         Floor = location_restaurant_diner_01_040
+    }
+    entry
+    {
+        Floor = location_restaurant_pie_01_007
     }
     entry
     {
@@ -827,6 +913,13 @@ category
         North = location_restaurant_spiffos_01_053
         WestOpen = location_restaurant_spiffos_01_054
         NorthOpen = location_restaurant_spiffos_01_055
+    }
+    entry
+    {
+        West = location_shop_fossoil_01_060
+        North = location_shop_fossoil_01_061
+        WestOpen = location_shop_fossoil_01_062
+        NorthOpen = location_shop_fossoil_01_063
     }
 }
 category
@@ -1264,11 +1357,11 @@ category
         SlopeE2 = roofs_01_028
         SlopeE3 = roofs_01_027
         SlopePt5S = roofs_01_039
-        SlopePt5E = roofs_01_038
+        SlopePt5E = roofs_01_031
         SlopeOnePt5S = roofs_01_039
-        SlopeOnePt5E = roofs_01_038
+        SlopeOnePt5E = roofs_01_031
         SlopeTwoPt5S = roofs_01_039
-        SlopeTwoPt5E = roofs_01_038
+        SlopeTwoPt5E = roofs_01_031
         Inner1 = roofs_01_035
         Inner2 = roofs_01_036
         Inner3 = roofs_01_037
@@ -1276,9 +1369,9 @@ category
         Outer2 = roofs_01_033
         Outer3 = roofs_01_034
         offset = SlopePt5S 1 1
-        offset = SlopePt5E 1 1
+        offset = SlopePt5E 2 2
+        offset = SlopeOnePt5E 1 1
         offset = SlopeTwoPt5S -1 -1
-        offset = SlopeTwoPt5E -1 -1
     }
 }
 category
@@ -1316,6 +1409,28 @@ category
         West1 = floors_exterior_street_01_018
         West2 = floors_exterior_street_01_018
         West3 = floors_exterior_street_01_018
+        North1 = 
+        North2 = 
+        North3 = 
+        offset = West1 -1 -1
+        offset = West2 -2 -2
+    }
+    entry
+    {
+        West1 = floors_interior_tilesandwood_01_040
+        West2 = floors_interior_tilesandwood_01_040
+        West3 = floors_interior_tilesandwood_01_040
+        North1 = 
+        North2 = 
+        North3 = 
+        offset = West1 -1 -1
+        offset = West2 -2 -2
+    }
+    entry
+    {
+        West1 = location_shop_fossoil_01_038
+        West2 = location_shop_fossoil_01_038
+        West3 = location_shop_fossoil_01_038
         North1 = 
         North2 = 
         North3 = 

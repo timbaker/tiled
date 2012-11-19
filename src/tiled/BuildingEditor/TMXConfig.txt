@@ -82,13 +82,20 @@ layers
     tile = Floor
     tile = 0_Vegetation
     tile = Walls
+    tile = RoofCap
+    tile = RoofCap2
+    tile = WallOverlay
+    tile = WallOverlay2
+    tile = WallFurniture
     tile = Frames
-    tile = Curtains
     tile = Doors
+    tile = Curtains
     tile = Furniture
     tile = Furniture2
+    tile = Curtains2
     tile = RoofCap
     tile = RoofCap2
     tile = Roof
     tile = Roof2
+    tile = RoofTop
 }

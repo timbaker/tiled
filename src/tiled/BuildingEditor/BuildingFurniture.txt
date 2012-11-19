@@ -630,194 +630,6 @@ group
             0,0 = fixtures_counters_01_032
         }
     }
-    furniture
-    {
-        corners = true
-        entry
-        {
-            orient = W
-            0,0 = location_restaurant_bar_01_006
-        }
-        entry
-        {
-            orient = N
-            0,0 = location_restaurant_bar_01_004
-        }
-        entry
-        {
-            orient = E
-            0,0 = location_restaurant_bar_01_002
-        }
-        entry
-        {
-            orient = S
-            0,0 = location_restaurant_bar_01_000
-        }
-        entry
-        {
-            orient = SW
-            0,0 = location_restaurant_bar_01_007
-        }
-        entry
-        {
-            orient = NW
-            0,0 = location_restaurant_bar_01_005
-        }
-        entry
-        {
-            orient = NE
-            0,0 = location_restaurant_bar_01_003
-        }
-        entry
-        {
-            orient = SE
-            0,0 = location_restaurant_bar_01_001
-        }
-    }
-    furniture
-    {
-        corners = true
-        entry
-        {
-            orient = W
-            0,0 = location_restaurant_seahorse_01_043
-        }
-        entry
-        {
-            orient = N
-            0,0 = location_restaurant_seahorse_01_049
-        }
-        entry
-        {
-            orient = E
-            0,0 = location_restaurant_seahorse_01_051
-        }
-        entry
-        {
-            orient = S
-            0,0 = location_restaurant_seahorse_01_041
-        }
-        entry
-        {
-            orient = SW
-            0,0 = location_restaurant_seahorse_01_042
-        }
-        entry
-        {
-            orient = NW
-            0,0 = location_restaurant_seahorse_01_048
-        }
-        entry
-        {
-            orient = NE
-            0,0 = location_restaurant_seahorse_01_050
-        }
-        entry
-        {
-            orient = SE
-            0,0 = location_restaurant_seahorse_01_040
-        }
-    }
-    furniture
-    {
-        corners = true
-        entry
-        {
-            orient = W
-            0,0 = fixtures_counters_01_003
-            0,1 = fixtures_counters_01_003
-        }
-        entry
-        {
-            orient = N
-            0,0 = fixtures_counters_01_005
-            1,0 = fixtures_counters_01_005
-        }
-        entry
-        {
-            orient = E
-            0,0 = fixtures_counters_01_007
-            0,1 = fixtures_counters_01_007
-        }
-        entry
-        {
-            orient = S
-            0,0 = fixtures_counters_01_001
-            1,0 = fixtures_counters_01_001
-        }
-        entry
-        {
-            orient = SW
-            0,0 = fixtures_counters_01_003
-            0,1 = fixtures_counters_01_002
-            1,1 = fixtures_counters_01_001
-        }
-        entry
-        {
-            orient = NW
-            0,0 = fixtures_counters_01_004
-            0,1 = fixtures_counters_01_003
-            1,0 = fixtures_counters_01_005
-        }
-        entry
-        {
-            orient = NE
-            0,0 = fixtures_counters_01_005
-            1,0 = fixtures_counters_01_006
-            1,1 = fixtures_counters_01_007
-        }
-        entry
-        {
-            orient = SE
-            0,1 = fixtures_counters_01_001
-            1,0 = fixtures_counters_01_007
-            1,1 = fixtures_counters_01_000
-        }
-    }
-    furniture
-    {
-        corners = true
-        entry
-        {
-            orient = W
-            0,0 = location_restaurant_spiffos_01_059
-        }
-        entry
-        {
-            orient = N
-            0,0 = location_restaurant_spiffos_01_061
-        }
-        entry
-        {
-            orient = E
-            0,0 = location_restaurant_spiffos_01_063
-        }
-        entry
-        {
-            orient = S
-            0,0 = location_restaurant_spiffos_01_057
-        }
-        entry
-        {
-            orient = SW
-            0,0 = location_restaurant_spiffos_01_056
-        }
-        entry
-        {
-            orient = NW
-            0,0 = location_restaurant_spiffos_01_060
-        }
-        entry
-        {
-            orient = NE
-            0,0 = location_restaurant_spiffos_01_062
-        }
-        entry
-        {
-            orient = SE
-            0,0 = location_restaurant_spiffos_01_058
-        }
-    }
 }
 group
 {
@@ -883,6 +695,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -896,6 +709,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -1435,6 +1249,7 @@ group
     furniture
     {
         corners = true
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -1764,6 +1579,7 @@ group
     label = Lighting - Indoor
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -1787,6 +1603,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -1899,6 +1716,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -1912,6 +1730,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -1925,6 +1744,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -1938,6 +1758,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -1951,6 +1772,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -1998,6 +1820,63 @@ group
         entry
         {
             orient = W
+            0,0 = location_business_office_generic_01_001
+            0,1 = location_business_office_generic_01_002
+            0,2 = location_business_office_generic_01_000
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_business_office_generic_01_005
+            1,0 = location_business_office_generic_01_004
+            2,0 = location_business_office_generic_01_006
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_business_office_generic_01_014
+            0,1 = location_business_office_generic_01_012
+            0,2 = location_business_office_generic_01_013
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_business_office_generic_01_008
+            1,0 = location_business_office_generic_01_009
+            2,0 = location_business_office_generic_01_010
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_business_office_generic_01_003
+            0,1 = location_business_office_generic_01_002
+            0,2 = location_business_office_generic_01_000
+            1,0 = location_business_office_generic_01_004
+            2,0 = location_business_office_generic_01_006
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_business_office_generic_01_003
+            0,1 = location_business_office_generic_01_002
+            0,2 = location_business_office_generic_01_001
+            0,3 = location_business_office_generic_01_000
+            1,0 = location_business_office_generic_01_004
+            2,0 = location_business_office_generic_01_004
+            3,0 = location_business_office_generic_01_006
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
             0,0 = location_business_office_generic_01_017
         }
         entry
@@ -2037,6 +1916,297 @@ group
         {
             orient = S
             0,0 = location_business_office_generic_01_034
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_business_office_generic_01_037
+            0,1 = location_business_office_generic_01_036
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_business_office_generic_01_038
+            1,0 = location_business_office_generic_01_039
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_business_office_generic_01_015
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_business_office_generic_01_007
+        }
+    }
+}
+group
+{
+    label = Location - Community - Church - Small
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_community_church_small_01_043
+            0,1 = location_community_church_small_01_042
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_community_church_small_01_040
+            1,0 = location_community_church_small_01_041
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_community_church_small_01_045
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_community_church_small_01_044
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_community_church_small_01_047
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_community_church_small_01_046
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_community_church_small_01_050
+            0,1 = location_community_church_small_01_049
+            0,2 = location_community_church_small_01_048
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_community_church_small_01_051
+            1,0 = location_community_church_small_01_052
+            2,0 = location_community_church_small_01_053
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_community_church_small_01_061
+            0,1 = location_community_church_small_01_060
+            0,2 = location_community_church_small_01_059
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_community_church_small_01_056
+            1,0 = location_community_church_small_01_057
+            2,0 = location_community_church_small_01_058
+        }
+    }
+}
+group
+{
+    label = Location - Hospitality - SunStar Motel
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_hospitality_sunstarmotel_02_013
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_hospitality_sunstarmotel_02_014
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_hospitality_sunstarmotel_02_015
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_hospitality_sunstarmotel_02_012
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_hospitality_sunstarmotel_02_021
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_hospitality_sunstarmotel_02_022
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_hospitality_sunstarmotel_02_023
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_hospitality_sunstarmotel_02_020
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,0 = location_hospitality_sunstarmotel_02_002
+            1,0 = location_hospitality_sunstarmotel_02_003
+            2,0 = location_hospitality_sunstarmotel_02_004
+            3,0 = location_hospitality_sunstarmotel_02_005
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,0 = location_hospitality_sunstarmotel_02_006
+            1,0 = location_hospitality_sunstarmotel_02_007
+        }
+    }
+}
+group
+{
+    label = Location - Restaurant - Bar
+    furniture
+    {
+        corners = true
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_bar_01_006
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_bar_01_004
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_restaurant_bar_01_002
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_bar_01_000
+        }
+        entry
+        {
+            orient = SW
+            0,0 = location_restaurant_bar_01_007
+        }
+        entry
+        {
+            orient = NW
+            0,0 = location_restaurant_bar_01_005
+        }
+        entry
+        {
+            orient = NE
+            0,0 = location_restaurant_bar_01_003
+        }
+        entry
+        {
+            orient = SE
+            0,0 = location_restaurant_bar_01_001
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_bar_01_013
+            0,1 = location_restaurant_bar_01_012
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_bar_01_014
+            1,0 = location_restaurant_bar_01_015
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_restaurant_bar_01_011
+            0,1 = location_restaurant_bar_01_010
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_bar_01_008
+            1,0 = location_restaurant_bar_01_009
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_bar_01_025
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_bar_01_026
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_bar_01_027
+            1,0 = location_restaurant_bar_01_028
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_bar_01_039
+            0,1 = location_restaurant_bar_01_038
+            0,2 = location_restaurant_bar_01_037
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_bar_01_029
+            1,0 = location_restaurant_bar_01_030
+            2,0 = location_restaurant_bar_01_031
         }
     }
 }
@@ -2135,7 +2305,288 @@ group
 }
 group
 {
+    label = Location - Restaurant - Seahorse
+    furniture
+    {
+        corners = true
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_seahorse_01_043
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_seahorse_01_049
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_restaurant_seahorse_01_051
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_seahorse_01_041
+        }
+        entry
+        {
+            orient = SW
+            0,0 = location_restaurant_seahorse_01_042
+        }
+        entry
+        {
+            orient = NW
+            0,0 = location_restaurant_seahorse_01_048
+        }
+        entry
+        {
+            orient = NE
+            0,0 = location_restaurant_seahorse_01_050
+        }
+        entry
+        {
+            orient = SE
+            0,0 = location_restaurant_seahorse_01_040
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_seahorse_01_038
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_seahorse_01_053
+            0,1 = location_restaurant_seahorse_01_052
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_seahorse_01_054
+            1,0 = location_restaurant_seahorse_01_055
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_seahorse_01_059
+            0,1 = location_restaurant_seahorse_01_058
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_seahorse_01_056
+            1,0 = location_restaurant_seahorse_01_057
+        }
+    }
+}
+group
+{
+    label = Location - Restaurant - Pie
+    furniture
+    {
+        corners = true
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_pie_01_043
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pie_01_045
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_restaurant_pie_01_047
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_pie_01_041
+        }
+        entry
+        {
+            orient = SW
+            0,0 = location_restaurant_pie_01_042
+        }
+        entry
+        {
+            orient = NW
+            0,0 = location_restaurant_pie_01_044
+        }
+        entry
+        {
+            orient = NE
+            0,0 = location_restaurant_pie_01_046
+        }
+        entry
+        {
+            orient = SE
+            0,0 = location_restaurant_pie_01_040
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pie_01_050
+            1,0 = location_restaurant_pie_01_051
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_pie_01_053
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pie_01_052
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_restaurant_pie_01_055
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_pie_01_054
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_pie_01_023
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pie_01_022
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_pie_01_063
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pie_01_056
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_pie_01_062
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pie_01_057
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_pie_01_061
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pie_01_058
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_pie_01_060
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pie_01_059
+        }
+    }
+}
+group
+{
     label = Location - Restaurant - Spiffos
+    furniture
+    {
+        corners = true
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_spiffos_01_059
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_spiffos_01_061
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_restaurant_spiffos_01_063
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_spiffos_01_057
+        }
+        entry
+        {
+            orient = SW
+            0,0 = location_restaurant_spiffos_01_056
+        }
+        entry
+        {
+            orient = NW
+            0,0 = location_restaurant_spiffos_01_060
+        }
+        entry
+        {
+            orient = NE
+            0,0 = location_restaurant_spiffos_01_062
+        }
+        entry
+        {
+            orient = SE
+            0,0 = location_restaurant_spiffos_01_058
+        }
+    }
     furniture
     {
         entry
@@ -2231,6 +2682,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -2286,6 +2738,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -2314,6 +2767,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -2478,6 +2932,153 @@ group
 }
 group
 {
+    label = Location - Shop - Fossoil
+    furniture
+    {
+        layer = WallOverlay
+        entry
+        {
+            orient = W
+            0,0 = location_shop_fossoil_01_046
+            0,1 = location_shop_fossoil_01_045
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_fossoil_01_053
+            1,0 = location_shop_fossoil_01_054
+        }
+    }
+    furniture
+    {
+        layer = WallOverlay
+        entry
+        {
+            orient = W
+            0,0 = location_shop_fossoil_01_026
+            0,1 = location_shop_fossoil_01_025
+            0,2 = location_shop_fossoil_01_024
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_fossoil_01_029
+            1,0 = location_shop_fossoil_01_030
+            2,0 = location_shop_fossoil_01_031
+        }
+    }
+    furniture
+    {
+        layer = WallOverlay
+        entry
+        {
+            orient = W
+            0,0 = location_shop_fossoil_01_041
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_fossoil_01_040
+        }
+    }
+    furniture
+    {
+        corners = true
+        entry
+        {
+            orient = W
+            0,0 = location_shop_fossoil_01_019
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_fossoil_01_021
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_shop_fossoil_01_023
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_shop_fossoil_01_017
+        }
+        entry
+        {
+            orient = SW
+            0,0 = location_shop_fossoil_01_018
+        }
+        entry
+        {
+            orient = NW
+            0,0 = location_shop_fossoil_01_020
+        }
+        entry
+        {
+            orient = NE
+            0,0 = location_shop_fossoil_01_022
+        }
+        entry
+        {
+            orient = SE
+            0,0 = location_shop_fossoil_01_016
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_fossoil_01_037
+            0,1 = location_shop_fossoil_01_036
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_fossoil_01_035
+            1,0 = location_shop_fossoil_01_034
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_fossoil_01_013
+            0,1 = location_shop_fossoil_01_012
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_fossoil_01_015
+            1,0 = location_shop_fossoil_01_014
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,0 = location_shop_fossoil_01_010
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_fossoil_01_033
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_fossoil_01_032
+        }
+    }
+}
+group
+{
     label = Location - Trailer
     furniture
     {
@@ -2536,6 +3137,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -3305,6 +3907,7 @@ group
     label = Walls - Decoration
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -3320,6 +3923,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -3333,6 +3937,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -3346,6 +3951,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -3359,6 +3965,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -3372,6 +3979,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -3387,6 +3995,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -3400,6 +4009,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -3413,6 +4023,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -3428,6 +4039,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -3443,6 +4055,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = N
