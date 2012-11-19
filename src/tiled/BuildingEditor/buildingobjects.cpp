@@ -546,8 +546,8 @@ void RoofObject::setWidth(int width)
         break;
     case FlatTop:
         mWidth = width;
-        if (mDepth == InvalidDepth)
-            mDepth = Three;
+        if (mDepth == InvalidDepth) // true when creating the object
+            mDepth = Zero;
         break;
     case PeakNS:
         mWidth = width; //qBound(1, width, 6);
