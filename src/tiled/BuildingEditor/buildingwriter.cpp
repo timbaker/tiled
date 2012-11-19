@@ -316,11 +316,25 @@ public:
         w.writeAttribute(name, value);
     }
 
+    QString nameForEntry(BuildingTileEntry *entry)
+    {
+        QString name = entry->category()->name();
+        for (int i = 0; i < entry->category()->enumCount(); i++)
+            name += entry->category()->enumToString(i)
+                    + entry->tile(i)->name();
+
+        QString key = name + QLatin1Char('#');
+        int n = 1;
+        while (mEntriesByCategoryName.contains(key + QString::number(n)))
+            n++;
+
+        return name;
+    }
+
     void addEntry(BuildingTileEntry *entry)
     {
         if (entry && !entry->isNone() && !mTileEntries.contains(entry)) {
-            mEntriesByCategoryName[entry->category()->name()
-                    + QString::number((qulonglong)entry)] = entry;
+            mEntriesByCategoryName[nameForEntry(entry)] = entry;
             mTileEntries = mEntriesByCategoryName.values(); // sorted
         }
     }

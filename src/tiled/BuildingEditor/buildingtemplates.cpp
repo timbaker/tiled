@@ -378,11 +378,25 @@ bool BuildingTemplates::upgradeTxt()
     return true;
 }
 
+QString BuildingTemplates::nameForEntry(BuildingTileEntry *entry)
+{
+    QString name = entry->category()->name();
+    for (int i = 0; i < entry->category()->enumCount(); i++)
+        name += entry->category()->enumToString(i)
+                + entry->tile(i)->name();
+
+    QString key = name + QLatin1Char('#');
+    int n = 1;
+    while (mEntriesByCategoryName.contains(key + QString::number(n)))
+        n++;
+
+    return name;
+}
+
 void BuildingTemplates::addEntry(BuildingTileEntry *entry, bool sort)
 {
     if (entry && !entry->isNone() && !mEntries.contains(entry)) {
-        mEntriesByCategoryName[entry->category()->name()
-                + QString::number((qulonglong)entry)] = entry;
+        mEntriesByCategoryName[nameForEntry(entry)] = entry;
         if (sort)
             mEntries = mEntriesByCategoryName.values();
         else
