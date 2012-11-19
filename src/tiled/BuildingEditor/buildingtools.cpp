@@ -154,7 +154,7 @@ void ToolManager::toolEnabledChanged(BaseTool *tool, bool enabled)
                 return;
             }
         }
-        mCurrentTool = 0;
+        activateTool(0);
         emit currentToolChanged(mCurrentTool);
     }
 }
