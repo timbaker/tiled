@@ -222,7 +222,7 @@ void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     mErasing = controlModifier();
     mStartTilePos = mEditor->sceneToTile(event->scenePos());
-    mCursorTileBounds = QRect(mStartTilePos, QSize(1, 1));
+    mCursorTileBounds = QRect(mStartTilePos, QSize(1, 1)) & floor()->bounds();
     mMouseDown = true;
     updateStatusText();
 }
