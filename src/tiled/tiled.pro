@@ -316,7 +316,6 @@ HEADERS += aboutdialog.h \
     BuildingEditor/furnituregroups.h \
     BuildingEditor/buildingpreferences.h \
     BuildingEditor/buildingtmx.h \
-    BuildingEditor/rooftiles.h \
     BuildingEditor/tilecategoryview.h
 
 macx {
