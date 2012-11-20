@@ -131,6 +131,10 @@ int main(int argc, char *argv[])
 
     TiledApplication a(argc, argv);
 
+#ifdef ZOMBOID
+    Q_INIT_RESOURCE(buildingeditor);
+#endif
+
     a.setOrganizationDomain(QLatin1String("mapeditor.org"));
     a.setApplicationName(QLatin1String("Tiled"));
 #ifdef BUILD_INFO_VERSION

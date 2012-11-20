@@ -282,7 +282,9 @@ MACRO_ADD_FILE_DEPENDENCIES(${_abs_FILE} ${_moc})
 
 set(ALL_HDRS ${Tiled_HDRS} ${Tiled_MOCS})
 
-add_executable ( TileZed ${Tiled_SRCS} tiled.rc ${UIS} ${RSCS} ${TRS} ${MOCS} ${ALL_HDRS})
-target_link_libraries ( TileZed libtiled ${QT_QTOPENGL_LIBRARY} ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
+add_subdirectory( BuildingEditor )
+
+add_executable ( TileZed ${Tiled_SRCS} tiled.rc ${UIS} ${RSCS} ${TRS} ${MOCS} ${ALL_HDRS} )
+target_link_libraries ( TileZed BuildingEd libtiled ${QT_QTOPENGL_LIBRARY} ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
 
 INSTALL(TARGETS TileZed DESTINATION ".")

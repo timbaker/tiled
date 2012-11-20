@@ -33,9 +33,9 @@ install(FILES ${QT_BINARY_DIR}/QtCore4.dll DESTINATION . CONFIGURATIONS MinSizeR
 install(FILES ${QT_BINARY_DIR}/QtGui4.dll DESTINATION . CONFIGURATIONS MinSizeRel Release RelWithDebInfo)
 install(FILES ${QT_BINARY_DIR}/QtOpenGL4.dll DESTINATION . CONFIGURATIONS MinSizeRel Release RelWithDebInfo)
 
-install(FILES ${QT_BINARY_DIR}/QtCore4d.dll DESTINATION . CONFIGURATIONS Debug)
-install(FILES ${QT_BINARY_DIR}/QtGui4d.dll DESTINATION . CONFIGURATIONS Debug)
-install(FILES ${QT_BINARY_DIR}/QtOpenGL4d.dll DESTINATION . CONFIGURATIONS Debug)
+install(FILES ${QT_BINARY_DIR}/QtCored4.dll DESTINATION . CONFIGURATIONS Debug)
+install(FILES ${QT_BINARY_DIR}/QtGuid4.dll DESTINATION . CONFIGURATIONS Debug)
+install(FILES ${QT_BINARY_DIR}/QtOpenGLd4.dll DESTINATION . CONFIGURATIONS Debug)
 
 #--------------------------------------------------------------------------------
 # install Qt imageformats plugins
