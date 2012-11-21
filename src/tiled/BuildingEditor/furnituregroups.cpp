@@ -499,6 +499,7 @@ QString FurnitureTiles::layerToString(FurnitureTiles::FurnitureLayer layer)
 {
     switch (layer) {
     case LayerFurniture:
+    case LayerWalls:
     case LayerWallOverlay:
     case LayerWallFurniture:
         initNames();
@@ -511,6 +512,7 @@ QString FurnitureTiles::layerToString(FurnitureTiles::FurnitureLayer layer)
 FurnitureTiles::FurnitureLayer FurnitureTiles::layerFromString(const QString &s)
 {
     if (s == QLatin1String("Furniture")) return LayerFurniture;
+    if (s == QLatin1String("Walls")) return LayerWalls;
     if (s == QLatin1String("WallOverlay")) return LayerWallOverlay;
     if (s == QLatin1String("WallFurniture")) return LayerWallFurniture;
     return InvalidLayer;
@@ -523,6 +525,7 @@ void FurnitureTiles::initNames()
     if (mLayerNames.size())
         return;
     mLayerNames += QLatin1String("Furniture");
+    mLayerNames += QLatin1String("Walls");
     mLayerNames += QLatin1String("WallOverlay");
     mLayerNames += QLatin1String("WallFurniture");
 }

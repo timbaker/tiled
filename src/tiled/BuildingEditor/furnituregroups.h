@@ -110,6 +110,7 @@ public:
     enum FurnitureLayer {
         InvalidLayer = -1,
         LayerFurniture,
+        LayerWalls,
         LayerWallOverlay,
         LayerWallFurniture,
         LayerCount

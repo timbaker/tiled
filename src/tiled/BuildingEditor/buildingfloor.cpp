@@ -292,6 +292,8 @@ void BuildingFloor::LayoutToSquares()
         }
     }
 
+    QList<FurnitureObject*> wallReplacement;
+
     foreach (BuildingObject *object, mObjects) {
         int x = object->x();
         int y = object->y();
@@ -331,12 +333,19 @@ void BuildingFloor::LayoutToSquares()
         }
         if (FurnitureObject *fo = object->asFurniture()) {
             FurnitureTile *ftile = fo->furnitureTile()->resolved();
+            if (ftile->owner()->layer() == FurnitureTiles::LayerWalls) {
+                wallReplacement += fo;
+                continue;
+            }
             for (int i = 0; i < ftile->size().height(); i++) {
                 for (int j = 0; j < ftile->size().width(); j++) {
                     switch (ftile->owner()->layer()) {
                     case FurnitureTiles::LayerFurniture:
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
                                          Square::SectionFurniture);
+                        break;
+                    case FurnitureTiles::LayerWalls:
+                        // Handled after all the door/window objects
                         break;
                     case FurnitureTiles::LayerWallOverlay:
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
@@ -667,6 +676,52 @@ void BuildingFloor::LayoutToSquares()
                         break;
                     }
                     break;
+                }
+            }
+        }
+    }
+
+    foreach (FurnitureObject *fo, wallReplacement) {
+        FurnitureTile *ftile = fo->furnitureTile()->resolved();
+        int x = fo->x(), y = fo->y();
+        int dx = 0, dy = 0;
+        switch (fo->furnitureTile()->orient()) {
+        case FurnitureTile::FurnitureW:
+            break;
+        case FurnitureTile::FurnitureE:
+            dx = 1;
+            break;
+        case FurnitureTile::FurnitureN:
+            break;
+        case FurnitureTile::FurnitureS:
+            dy = 1;
+            break;
+#if 0
+        case FurnitureTile::FurnitureNW:
+            s.mWallOrientation = Square::WallOrientNW;
+            break;
+        case FurnitureTile::FurnitureSE:
+            s.mWallOrientation = Square::WallOrientSE;
+            break;
+#endif
+        }
+        for (int i = 0; i < ftile->size().height(); i++) {
+            for (int j = 0; j < ftile->size().width(); j++) {
+                if (bounds().adjusted(0,0,1,1).contains(x + j + dx, y + i + dy)) {
+                    Square &s = squares[x + j + dx][y + i + dy];
+                    s.mTiles[Square::SectionWall] = ftile->tile(j, i);
+                    s.mEntries[Square::SectionWall] = 0;
+                    s.mEntryEnum[Square::SectionWall] = 0;
+                    switch (fo->furnitureTile()->orient()) {
+                    case FurnitureTile::FurnitureW:
+                    case FurnitureTile::FurnitureE:
+                        s.mWallOrientation = Square::WallOrientW;
+                        break;
+                    case FurnitureTile::FurnitureN:
+                    case FurnitureTile::FurnitureS:
+                        s.mWallOrientation = Square::WallOrientN;
+                        break;
+                    }
                 }
             }
         }
