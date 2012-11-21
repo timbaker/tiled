@@ -229,12 +229,9 @@ void BuildingFloor::LayoutToSquares()
         }
     }
 
-    for (int x = 0; x < width()+1; x++)
-    {
-        for (int y = 0; y < height(); y++)
-        {
-            if (x == width() && mIndexAtPos[x - 1][y] >= 0)
-            {
+    for (int x = 0; x < width()+1; x++) {
+        for (int y = 0; y < height(); y++) {
+            if (x == width() && mIndexAtPos[x - 1][y] >= 0) {
                 wtype = exteriorWall;
                 // If already contains a north, put in a west...
                 if (squares[x][y].IsWallOrient(Square::WallOrientN))
@@ -242,9 +239,7 @@ void BuildingFloor::LayoutToSquares()
                 else
                     // put W wall here...
                     squares[x][y].ReplaceWall(wtype, Square::WallOrientW);
-            }
-            else if (x < width() && mIndexAtPos[x][y] < 0 && x > 0 && mIndexAtPos[x - 1][y] != mIndexAtPos[x][y])
-            {
+            } else if (x < width() && mIndexAtPos[x][y] < 0 && x > 0 && mIndexAtPos[x - 1][y] != mIndexAtPos[x][y]) {
                 wtype = exteriorWall;
                 // If already contains a north, put in a west...
                 if (squares[x][y].IsWallOrient(Square::WallOrientN))
@@ -252,9 +247,7 @@ void BuildingFloor::LayoutToSquares()
                 else
                     // put W wall here...
                     squares[x][y].ReplaceWall(wtype, Square::WallOrientW);
-            }
-            else if (x < width() && mIndexAtPos[x][y] >= 0 && (x == 0 || mIndexAtPos[x - 1][y] != mIndexAtPos[x][y]))
-            {
+            } else if (x < width() && mIndexAtPos[x][y] >= 0 && (x == 0 || mIndexAtPos[x - 1][y] != mIndexAtPos[x][y])) {
                 wtype = interiorWalls[mIndexAtPos[x][y]];
                 // If already contains a north, put in a west...
                 if(squares[x][y].IsWallOrient(Square::WallOrientN))
@@ -263,32 +256,26 @@ void BuildingFloor::LayoutToSquares()
                     // put W wall here...
                     squares[x][y].ReplaceWall(wtype, BuildingFloor::Square::WallOrientW, false);
             }
-
         }
     }
 
-    for (int x = 0; x < width() + 1; x++)
-    {
-        for (int y = 0; y < height() + 1; y++)
-        {
-            if (x > 0 && y > 0)
-            {
-                if (squares[x][y].mEntries[Square::SectionWall]) // if (squares[x][y].walls.count() > 0)
-                    continue;
+    for (int x = 1; x < width() + 1; x++) {
+        for (int y = 1; y < height() + 1; y++) {
+            if (squares[x][y].mEntries[Square::SectionWall])
+                continue;
+            // Put in the SE piece...
+            if ((squares[x][y - 1].IsWallOrient(Square::WallOrientW) ||
+                 squares[x][y - 1].IsWallOrient(Square::WallOrientNW)) &&
+                    (squares[x - 1][y].IsWallOrient(Square::WallOrientN) ||
+                     squares[x - 1][y].IsWallOrient(Square::WallOrientNW))) {
                 if (x < width() && mIndexAtPos[x][y - 1] >= 0)
                     wtype = interiorWalls[mIndexAtPos[x][y - 1]];
                 else if (y < height() &&  mIndexAtPos[x-1][y] >= 0)
                     wtype = interiorWalls[mIndexAtPos[x - 1][y]];
                 else
                     wtype = exteriorWall;
-                // Put in the SE piece...
-                if ((squares[x][y - 1].IsWallOrient(Square::WallOrientW) ||
-                     squares[x][y - 1].IsWallOrient(Square::WallOrientNW)) &&
-                        (squares[x - 1][y].IsWallOrient(Square::WallOrientN) ||
-                         squares[x - 1][y].IsWallOrient(Square::WallOrientNW)))
-                    squares[x][y].ReplaceWall(wtype, Square::WallOrientSE);
+                squares[x][y].ReplaceWall(wtype, Square::WallOrientSE);
             }
-
         }
     }
 
