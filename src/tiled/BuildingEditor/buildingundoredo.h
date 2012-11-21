@@ -299,7 +299,7 @@ class SwapFloorGrid : public QUndoCommand
 {
 public:
     SwapFloorGrid(BuildingDocument *doc, BuildingFloor *floor,
-                  const QVector<QVector<Room*> > &grid);
+                  const QVector<QVector<Room*> > &grid, char *undoText);
 
     void undo() { swap(); }
     void redo() { swap(); }

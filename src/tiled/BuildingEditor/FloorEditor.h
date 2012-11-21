@@ -75,6 +75,9 @@ public:
 
     void setDragBmp(QImage *bmp);
 
+    QImage *dragBmp() const
+    { return mDragBmp; }
+
     void showObjectsChanged(bool show);
 
 private:

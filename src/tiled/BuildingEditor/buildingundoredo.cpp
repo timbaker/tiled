@@ -322,8 +322,8 @@ void ChangeRoom::swap()
 /////
 
 SwapFloorGrid::SwapFloorGrid(BuildingDocument *doc, BuildingFloor *floor,
-                             const QVector<QVector<Room *> > &grid) :
-    QUndoCommand(QCoreApplication::translate("Undo Commands", "Swap Floor Grid")),
+                             const QVector<QVector<Room *> > &grid, char *undoText) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", undoText)),
     mDocument(doc),
     mFloor(floor),
     mGrid(grid)

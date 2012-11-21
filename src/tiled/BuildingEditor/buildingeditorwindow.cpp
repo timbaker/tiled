@@ -1419,7 +1419,8 @@ void BuildingEditorWindow::roomsDialog()
             if (changed) {
                 mCurrentDocument->undoStack()->push(new SwapFloorGrid(mCurrentDocument,
                                                                       floor,
-                                                                      grid));
+                                                                      grid,
+                                                                      "Remove Room From Floor"));
             }
         }
         mCurrentDocument->undoStack()->push(new RemoveRoom(mCurrentDocument,

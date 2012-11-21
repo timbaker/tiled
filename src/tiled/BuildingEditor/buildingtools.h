@@ -217,6 +217,10 @@ public:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
+    void currentModifiersChanged(Qt::KeyboardModifiers modifiers);
+
+    QRegion setSelectedArea(const QRegion &selectedArea);
+
 public slots:
     void documentChanged();
     void activate();
@@ -236,10 +240,13 @@ private:
     void startSelecting();
 
     void startMoving();
-    void updateMovingItems(const QPointF &pos,
-                           Qt::KeyboardModifiers modifiers);
+    void updateMovingItems();
     void finishMoving(const QPointF &pos);
     void cancelMoving();
+
+    void finishMovingFloor(BuildingFloor *floor);
+
+    void updateStatusText();
 
     static SelectMoveRoomsTool *mInstance;
 
@@ -250,7 +257,6 @@ private:
     QPoint mDragOffset;
     QGraphicsPathItem *mSelectionItem;
     QRegion mSelectedArea;
-    QImage *mBmp;
 };
 
 /////
