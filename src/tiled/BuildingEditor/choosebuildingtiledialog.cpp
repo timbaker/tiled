@@ -121,6 +121,8 @@ void ChooseBuildingTileDialog::setTilesList(BuildingTileCategory *category,
 void ChooseBuildingTileDialog::tilesDialog()
 {
     BuildingTilesDialog *dialog = BuildingTilesDialog::instance();
+    dialog->selectCategory(mCategory);
+
     QWidget *saveParent = dialog->parentWidget();
     dialog->reparent(this);
     dialog->exec();
