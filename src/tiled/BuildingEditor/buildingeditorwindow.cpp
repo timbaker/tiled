@@ -321,6 +321,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 
     connect(ui->categoryList, SIGNAL(itemSelectionChanged()),
             SLOT(categorySelectionChanged()));
+    connect(ui->categoryList, SIGNAL(activated(QModelIndex)),
+            SLOT(categoryActivated(QModelIndex)));
 
     ui->tilesetView->setZoomable(mCategoryZoomable);
     connect(ui->tilesetView->selectionModel(),
@@ -659,6 +661,19 @@ void BuildingEditorWindow::categoryScaleChanged(qreal scale)
 void BuildingEditorWindow::categoryViewMousePressed()
 {
     mInitialCategoryViewSelectionEvent = false;
+}
+
+void BuildingEditorWindow::categoryActivated(const QModelIndex &index)
+{
+    BuildingTileCategory *category = 0;
+    FurnitureGroup *furnitureGroup = 0;
+    int numTileCategories = BuildingTilesMgr::instance()->categoryCount();
+    if (index.row() >= 0 && index.row() < numTileCategories)
+        category = BuildingTilesMgr::instance()->category(index.row());
+    else if (index.row() >= numTileCategories
+             && index.row() < ui->categoryList->count())
+        furnitureGroup = FurnitureGroups::instance()->group(index.row() - numTileCategories);
+    tilesDialog(category, furnitureGroup);
 }
 
 void BuildingEditorWindow::categorySelectionChanged()
@@ -1506,9 +1521,10 @@ void BuildingEditorWindow::templatesDialog()
     BuildingTemplates::instance()->writeTxt(this);
 }
 
-void BuildingEditorWindow::tilesDialog()
+void BuildingEditorWindow::tilesDialog(BuildingTileCategory *category,
+                                       FurnitureGroup *furnitureGroup)
 {
-    BuildingTilesDialog dialog(this);
+    BuildingTilesDialog dialog(category, furnitureGroup, this);
     dialog.exec();
 
     if (dialog.changes()) {

@@ -120,7 +120,7 @@ void ChooseBuildingTileDialog::setTilesList(BuildingTileCategory *category,
 
 void ChooseBuildingTileDialog::tilesDialog()
 {
-    BuildingTilesDialog dialog(this);
+    BuildingTilesDialog dialog(0, 0, this);
     dialog.exec();
 
     if (dialog.changes()) {

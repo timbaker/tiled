@@ -55,7 +55,9 @@ class BuildingTilesDialog : public QDialog
     Q_OBJECT
     
 public:
-    explicit BuildingTilesDialog(QWidget *parent = 0);
+    explicit BuildingTilesDialog(BuildingTileCategory *initialCategory = 0,
+                                 FurnitureGroup *initialFurnitureGroup = 0,
+                                 QWidget *parent = 0);
     ~BuildingTilesDialog();
 
     bool changes() const;

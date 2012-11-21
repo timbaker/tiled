@@ -131,6 +131,8 @@ private slots:
 
     void categoryViewMousePressed();
 
+    void categoryActivated(const QModelIndex &index);
+
     void categorySelectionChanged();
     void tileSelectionChanged();
     void furnitureSelectionChanged();
@@ -163,7 +165,8 @@ private slots:
     void rotateLeft();
 
     void templatesDialog();
-    void tilesDialog();
+    void tilesDialog(BuildingTileCategory *category = 0,
+                     FurnitureGroup *furnitureGroup = 0);
     void templateFromBuilding();
 
     void mouseCoordinateChanged(const QPoint &tilePos);

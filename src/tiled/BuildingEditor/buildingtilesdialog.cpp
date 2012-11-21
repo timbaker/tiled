@@ -562,7 +562,9 @@ public:
 
 /////
 
-BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
+BuildingTilesDialog::BuildingTilesDialog(BuildingTileCategory *initialCategory,
+                                         FurnitureGroup *initialFurnitureGroup,
+                                         QWidget *parent) :
     QDialog(parent),
     ui(new Ui::BuildingTilesDialog),
     mZoomable(new Zoomable(this)),
@@ -785,17 +787,25 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
     if (!geom.isEmpty())
         restoreGeometry(geom);
-    QString categoryName = settings.value(QLatin1String("SelectedCategory")).toString();
-    if (!categoryName.isEmpty()) {
-        int index = BuildingTilesMgr::instance()->indexOf(categoryName);
-        if (index >= 0)
-            ui->categoryList->setCurrentRow(index);
-    }
-    QString furnitureGroupName = settings.value(QLatin1String("SelectedFurnitureGroup")).toString();
-    if (!furnitureGroupName.isEmpty()) {
-        int index = FurnitureGroups::instance()->indexOf(furnitureGroupName);
-        if (index >= 0)
-            ui->categoryList->setCurrentRow(numTileCategories() + index);
+    if (initialCategory) {
+        int index = BuildingTilesMgr::instance()->indexOf(initialCategory);
+        ui->categoryList->setCurrentRow(index);
+    } else if (initialFurnitureGroup) {
+        int index = FurnitureGroups::instance()->indexOf(initialFurnitureGroup);
+        ui->categoryList->setCurrentRow(numTileCategories() + index);
+    } else {
+        QString categoryName = settings.value(QLatin1String("SelectedCategory")).toString();
+        if (!categoryName.isEmpty()) {
+            int index = BuildingTilesMgr::instance()->indexOf(categoryName);
+            if (index >= 0)
+                ui->categoryList->setCurrentRow(index);
+        }
+        QString furnitureGroupName = settings.value(QLatin1String("SelectedFurnitureGroup")).toString();
+        if (!furnitureGroupName.isEmpty()) {
+            int index = FurnitureGroups::instance()->indexOf(furnitureGroupName);
+            if (index >= 0)
+                ui->categoryList->setCurrentRow(numTileCategories() + index);
+        }
     }
     QString tilesetName = settings.value(QLatin1String("SelectedTileset")).toString();
     if (!tilesetName.isEmpty()) {
@@ -1060,6 +1070,7 @@ void BuildingTilesDialog::setCategoryTiles()
             }
         }
     }
+    mCurrentEntry = 0;
     ui->categoryTilesView->model()->setTiles(tiles, userData);
     ui->categoryView->model()->setCategory(expertMode ? mCategory : 0);
 }
@@ -1069,6 +1080,7 @@ void BuildingTilesDialog::setFurnitureTiles()
     QList<FurnitureTiles*> ftiles;
     if (mFurnitureGroup)
         ftiles = mFurnitureGroup->mTiles;
+    mCurrentFurniture = 0;
     ui->furnitureView->model()->setTiles(ftiles);
 }
 
@@ -1204,6 +1216,7 @@ void BuildingTilesDialog::synchUI()
 void BuildingTilesDialog::categoryChanged(int index)
 {
     mCategory = 0;
+    mCurrentEntry = 0;
     mFurnitureGroup = 0;
     mCurrentFurniture = 0;
     if (index < 0) {
