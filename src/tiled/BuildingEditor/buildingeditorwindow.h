@@ -165,8 +165,8 @@ private slots:
     void rotateLeft();
 
     void templatesDialog();
-    void tilesDialog(BuildingTileCategory *category = 0,
-                     FurnitureGroup *furnitureGroup = 0);
+    void tilesDialog();
+    void tilesDialogEdited();
     void templateFromBuilding();
 
     void mouseCoordinateChanged(const QPoint &tilePos);

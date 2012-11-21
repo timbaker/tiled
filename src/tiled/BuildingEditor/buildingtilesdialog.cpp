@@ -562,9 +562,22 @@ public:
 
 /////
 
-BuildingTilesDialog::BuildingTilesDialog(BuildingTileCategory *initialCategory,
-                                         FurnitureGroup *initialFurnitureGroup,
-                                         QWidget *parent) :
+BuildingTilesDialog *BuildingTilesDialog::mInstance = 0;
+
+BuildingTilesDialog *BuildingTilesDialog::instance()
+{
+    if (!mInstance)
+        mInstance = new BuildingTilesDialog();
+    return mInstance;
+}
+
+void BuildingTilesDialog::deleteInstance()
+{
+    delete mInstance;
+    mInstance = 0;
+}
+
+BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::BuildingTilesDialog),
     mZoomable(new Zoomable(this)),
@@ -787,26 +800,21 @@ BuildingTilesDialog::BuildingTilesDialog(BuildingTileCategory *initialCategory,
     QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
     if (!geom.isEmpty())
         restoreGeometry(geom);
-    if (initialCategory) {
-        int index = BuildingTilesMgr::instance()->indexOf(initialCategory);
-        ui->categoryList->setCurrentRow(index);
-    } else if (initialFurnitureGroup) {
-        int index = FurnitureGroups::instance()->indexOf(initialFurnitureGroup);
-        ui->categoryList->setCurrentRow(numTileCategories() + index);
-    } else {
-        QString categoryName = settings.value(QLatin1String("SelectedCategory")).toString();
-        if (!categoryName.isEmpty()) {
-            int index = BuildingTilesMgr::instance()->indexOf(categoryName);
-            if (index >= 0)
-                ui->categoryList->setCurrentRow(index);
-        }
-        QString furnitureGroupName = settings.value(QLatin1String("SelectedFurnitureGroup")).toString();
-        if (!furnitureGroupName.isEmpty()) {
-            int index = FurnitureGroups::instance()->indexOf(furnitureGroupName);
-            if (index >= 0)
-                ui->categoryList->setCurrentRow(numTileCategories() + index);
-        }
+
+    QString categoryName = settings.value(QLatin1String("SelectedCategory")).toString();
+    if (!categoryName.isEmpty()) {
+        int index = BuildingTilesMgr::instance()->indexOf(categoryName);
+        if (index >= 0)
+            ui->categoryList->setCurrentRow(index);
     }
+
+    QString furnitureGroupName = settings.value(QLatin1String("SelectedFurnitureGroup")).toString();
+    if (!furnitureGroupName.isEmpty()) {
+        int index = FurnitureGroups::instance()->indexOf(furnitureGroupName);
+        if (index >= 0)
+            ui->categoryList->setCurrentRow(numTileCategories() + index);
+    }
+
     QString tilesetName = settings.value(QLatin1String("SelectedTileset")).toString();
     if (!tilesetName.isEmpty()) {
         if (Tiled::Tileset *tileset = BuildingTilesMgr::instance()->tilesetFor(tilesetName)) {
@@ -829,6 +837,25 @@ BuildingTilesDialog::~BuildingTilesDialog()
 bool BuildingTilesDialog::changes() const
 {
     return !mUndoStack->isClean();
+}
+
+void BuildingTilesDialog::selectCategory(BuildingTileCategory *category)
+{
+    int index = BuildingTilesMgr::instance()->indexOf(category);
+    ui->categoryList->setCurrentRow(index);
+}
+
+void BuildingTilesDialog::selectCategory(FurnitureGroup *furnitureGroup)
+{
+    int index = FurnitureGroups::instance()->indexOf(furnitureGroup);
+    ui->categoryList->setCurrentRow(numTileCategories() + index);
+}
+
+void BuildingTilesDialog::reparent(QWidget *parent)
+{
+    QPoint savePosition = pos();
+    setParent(parent, windowFlags());
+    move(savePosition);
 }
 
 void BuildingTilesDialog::addTile(BuildingTileCategory *category,
@@ -991,6 +1018,7 @@ int BuildingTilesDialog::changeFurnitureLayer(FurnitureTiles *ftiles, int layer)
     int old = ftiles->layer();
     ftiles->setLayer(static_cast<FurnitureTiles::FurnitureLayer>(layer));
     FurnitureGroups::instance()->layerChanged(ftiles);
+    synchUI(); // update the layer combobox
     return old;
 }
 
@@ -1777,6 +1805,9 @@ void BuildingTilesDialog::accept()
             QMessageBox::warning(this, tr("It's no good, Jim!"),
                                  BuildingTMX::instance()->errorString());
         }
+        mUndoStack->setClean();
+
+        emit edited();
     }
 
     QSettings settings;

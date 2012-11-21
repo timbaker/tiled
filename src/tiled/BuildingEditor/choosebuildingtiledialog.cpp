@@ -120,10 +120,13 @@ void ChooseBuildingTileDialog::setTilesList(BuildingTileCategory *category,
 
 void ChooseBuildingTileDialog::tilesDialog()
 {
-    BuildingTilesDialog dialog(0, 0, this);
-    dialog.exec();
+    BuildingTilesDialog *dialog = BuildingTilesDialog::instance();
+    QWidget *saveParent = dialog->parentWidget();
+    dialog->reparent(this);
+    dialog->exec();
+    dialog->reparent(saveParent);
 
-    if (dialog.changes()) {
+    if (dialog->changes()) {
         setTilesList(mCategory);
     }
 }

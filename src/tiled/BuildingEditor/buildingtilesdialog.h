@@ -55,12 +55,17 @@ class BuildingTilesDialog : public QDialog
     Q_OBJECT
     
 public:
-    explicit BuildingTilesDialog(BuildingTileCategory *initialCategory = 0,
-                                 FurnitureGroup *initialFurnitureGroup = 0,
-                                 QWidget *parent = 0);
+    static BuildingTilesDialog *instance();
+    static void deleteInstance();
+
+    explicit BuildingTilesDialog(QWidget *parent = 0);
     ~BuildingTilesDialog();
 
     bool changes() const;
+
+    void selectCategory(BuildingTileCategory *category);
+    void selectCategory(FurnitureGroup *furnitureGroup);
+    void reparent(QWidget *parent);
 
     //+ UNDO/REDO
     void addTile(BuildingTileCategory *category, int index, BuildingTileEntry *entry);
@@ -88,6 +93,9 @@ public:
     void addTileset(Tiled::Tileset *tileset);
     void removeTileset(Tiled::Tileset *tileset);
     //- UNDO/REDO
+
+signals:
+    void edited();
 
 private:
     void setCategoryList();
@@ -152,6 +160,8 @@ private slots:
     void reject();
 
 private:
+    static BuildingTilesDialog *mInstance;
+
     Ui::BuildingTilesDialog *ui;
     Tiled::Internal::Zoomable *mZoomable;
     BuildingTileCategory *mCategory;

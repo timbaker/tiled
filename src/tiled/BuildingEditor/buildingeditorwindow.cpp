@@ -349,6 +349,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 BuildingEditorWindow::~BuildingEditorWindow()
 {
     BuildingTemplates::deleteInstance();
+    BuildingTilesDialog::deleteInstance();
     BuildingTilesMgr::deleteInstance(); // Ensure all the tilesets are released
     BuildingTMX::deleteInstance();
     BuildingPreferences::deleteInstance();
@@ -510,6 +511,11 @@ bool BuildingEditorWindow::Startup()
     mPreviewWin = new BuildingPreviewWindow(this);
     mPreviewWin->show();
 
+    // This will create the Tiles dialog.  It must come after reading all the
+    // config files above.
+    connect(BuildingTilesDialog::instance(), SIGNAL(edited()),
+            SLOT(tilesDialogEdited()));
+
     return true;
 }
 
@@ -665,15 +671,15 @@ void BuildingEditorWindow::categoryViewMousePressed()
 
 void BuildingEditorWindow::categoryActivated(const QModelIndex &index)
 {
-    BuildingTileCategory *category = 0;
-    FurnitureGroup *furnitureGroup = 0;
+    BuildingTilesDialog *dialog = BuildingTilesDialog::instance();
+
     int numTileCategories = BuildingTilesMgr::instance()->categoryCount();
     if (index.row() >= 0 && index.row() < numTileCategories)
-        category = BuildingTilesMgr::instance()->category(index.row());
+        dialog->selectCategory(BuildingTilesMgr::instance()->category(index.row()));
     else if (index.row() >= numTileCategories
              && index.row() < ui->categoryList->count())
-        furnitureGroup = FurnitureGroups::instance()->group(index.row() - numTileCategories);
-    tilesDialog(category, furnitureGroup);
+        dialog->selectCategory(FurnitureGroups::instance()->group(index.row() - numTileCategories));
+    tilesDialog();
 }
 
 void BuildingEditorWindow::categorySelectionChanged()
@@ -1521,18 +1527,19 @@ void BuildingEditorWindow::templatesDialog()
     BuildingTemplates::instance()->writeTxt(this);
 }
 
-void BuildingEditorWindow::tilesDialog(BuildingTileCategory *category,
-                                       FurnitureGroup *furnitureGroup)
+void BuildingEditorWindow::tilesDialog()
 {
-    BuildingTilesDialog dialog(category, furnitureGroup, this);
-    dialog.exec();
+    BuildingTilesDialog *dialog = BuildingTilesDialog::instance();
+    dialog->reparent(this);
+    dialog->exec();
+}
 
-    if (dialog.changes()) {
-        int row = ui->categoryList->currentRow();
-        setCategoryList();
-        row = qMin(row, ui->categoryList->count() - 1);
-        ui->categoryList->setCurrentRow(row);
-    }
+void BuildingEditorWindow::tilesDialogEdited()
+{
+    int row = ui->categoryList->currentRow();
+    setCategoryList();
+    row = qMin(row, ui->categoryList->count() - 1);
+    ui->categoryList->setCurrentRow(row);
 }
 
 void BuildingEditorWindow::templateFromBuilding()
