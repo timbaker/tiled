@@ -72,7 +72,10 @@ bool BuildingDocument::write(const QString &fileName, QString &error)
         return true;
     mFileName = fileName;
     mUndoStack->setClean();
-    mTileChanges = false; // Hack
+    if (mTileChanges) {
+        mTileChanges = false;
+        emit cleanChanged();
+    }
     return true;
 }
 
@@ -303,7 +306,10 @@ void BuildingDocument::furnitureTileChanged(FurnitureTile *ftile)
             if (FurnitureObject *furniture = object->asFurniture()) {
                 if (furniture->furnitureTile() == ftile) {
                     emit objectTileChanged(furniture);
-                    mTileChanges = true; // Hack
+                    if (!mTileChanges) {
+                        mTileChanges = true;
+                        emit cleanChanged();
+                    }
                 }
             }
         }
@@ -324,7 +330,10 @@ void BuildingDocument::entryTileChanged(BuildingTileEntry *entry)
                     object->tile(1) == entry ||
                     object->tile(2) == entry) {
                 emit objectTileChanged(object);
-                mTileChanges = true; // Hack
+                if (!mTileChanges) {
+                    mTileChanges = true;
+                    emit cleanChanged();
+                }
             }
         }
     }

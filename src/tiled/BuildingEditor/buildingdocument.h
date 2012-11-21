@@ -145,6 +145,8 @@ signals:
 
     void selectedObjectsChanged();
 
+    void cleanChanged();
+
 private slots:
     void entryTileChanged(BuildingTileEntry *entry);
     void furnitureTileChanged(FurnitureTile *ftile);

@@ -1268,6 +1268,8 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
     connect(mCurrentDocument, SIGNAL(currentFloorChanged()),
             SLOT(updateActions()));
 
+    connect(mCurrentDocument, SIGNAL(cleanChanged()), SLOT(updateWindowTitle()));
+
     mPreviewWin->setDocument(currentDocument());
 
     updateActions();
