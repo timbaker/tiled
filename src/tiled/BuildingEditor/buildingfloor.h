@@ -45,6 +45,7 @@ public:
     public:
         enum SquareSection
         {
+            SectionInvalid = -1,
             SectionFloor,
             SectionWall,
             SectionRoofCap,
@@ -90,7 +91,8 @@ public:
         void ReplaceFrame(BuildingTileEntry *tile, int offset);
         void ReplaceCurtains(Window *window, bool exterior);
         void ReplaceFurniture(BuildingTileEntry *tile, int offset = 0);
-        void ReplaceFurniture(BuildingTile *tile, SquareSection section);
+        void ReplaceFurniture(BuildingTile *tile, SquareSection section,
+                              SquareSection section2 = SectionInvalid);
         void ReplaceRoof(BuildingTileEntry *tile, int offset = 0);
         void ReplaceRoofCap(BuildingTileEntry *tile, int offset = 0);
         void ReplaceRoofTop(BuildingTileEntry *tile, int offset);

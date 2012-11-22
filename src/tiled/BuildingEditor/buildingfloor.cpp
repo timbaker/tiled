@@ -173,13 +173,15 @@ static void ReplaceRoofCorner(RoofObject *ro, int x, int y,
 static void ReplaceFurniture(int x, int y,
                              QVector<QVector<BuildingFloor::Square> > &squares,
                              BuildingTile *btile,
-                             BuildingFloor::Square::SquareSection section)
+                             BuildingFloor::Square::SquareSection section,
+                             BuildingFloor::Square::SquareSection section2
+                             = BuildingFloor::Square::SectionInvalid)
 {
     if (!btile)
         return;
     QRect bounds(0, 0, squares.size() - 1, squares[0].size() - 1);
     if (bounds.contains(x, y))
-        squares[x][y].ReplaceFurniture(btile, section);
+        squares[x][y].ReplaceFurniture(btile, section, section2);
 }
 
 void BuildingFloor::LayoutToSquares()
@@ -310,12 +312,16 @@ void BuildingFloor::LayoutToSquares()
             // Stair objects are 5 tiles long but only have 3 tiles.
             if (stairs->isN()) {
                 for (int i = 1; i <= 3; i++)
-                    squares[x][y + i].ReplaceFurniture(stairs->tile(),
-                                                       stairs->getOffset(x, y + i));
+                    ReplaceFurniture(x, y + i, squares,
+                                     stairs->tile()->tile(stairs->getOffset(x, y + i)),
+                                     Square::SectionFurniture,
+                                     Square::SectionFurniture2);
             } else {
                 for (int i = 1; i <= 3; i++)
-                    squares[x + i][y].ReplaceFurniture(stairs->tile(),
-                                                       stairs->getOffset(x + i, y));
+                    ReplaceFurniture(x + i, y, squares,
+                                     stairs->tile()->tile(stairs->getOffset(x + i, y)),
+                                     Square::SectionFurniture,
+                                     Square::SectionFurniture2);
             }
         }
         if (FurnitureObject *fo = object->asFurniture()) {
@@ -329,14 +335,16 @@ void BuildingFloor::LayoutToSquares()
                     switch (ftile->owner()->layer()) {
                     case FurnitureTiles::LayerFurniture:
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
-                                         Square::SectionFurniture);
+                                         Square::SectionFurniture,
+                                         Square::SectionFurniture2);
                         break;
                     case FurnitureTiles::LayerWalls:
                         // Handled after all the door/window objects
                         break;
                     case FurnitureTiles::LayerWallOverlay:
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
-                                         Square::SectionWallOverlay);
+                                         Square::SectionWallOverlay,
+                                         Square::SectionWallOverlay2);
                         break;
                     case FurnitureTiles::LayerWallFurniture:
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
@@ -966,9 +974,11 @@ void BuildingFloor::Square::ReplaceFurniture(BuildingTileEntry *tile, int offset
     mEntryEnum[SectionFurniture] = offset;
 }
 
-void BuildingFloor::Square::ReplaceFurniture(BuildingTile *tile, SquareSection section)
+void BuildingFloor::Square::ReplaceFurniture(BuildingTile *tile,
+                                             SquareSection section,
+                                             SquareSection section2)
 {
-    if (mTiles[section] && !mTiles[section]->isNone()) {
+    if (mTiles[section] && !mTiles[section]->isNone() && (section2 != SectionInvalid)) {
         mTiles[section + 1] = tile;
         mEntryEnum[section + 1] = 0;
         return;
