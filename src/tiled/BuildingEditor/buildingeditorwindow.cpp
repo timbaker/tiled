@@ -511,6 +511,23 @@ bool BuildingEditorWindow::Startup()
     mPreviewWin = new BuildingPreviewWindow(this);
     mPreviewWin->show();
 
+    mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
+    QString categoryName = mSettings.value(QLatin1String("SelectedCategory")).toString();
+    if (!categoryName.isEmpty()) {
+        int index = BuildingTilesMgr::instance()->indexOf(categoryName);
+        if (index >= 0)
+            ui->categoryList->setCurrentRow(index);
+    }
+    QString fGroupName = mSettings.value(QLatin1String("SelectedFurnitureGroup")).toString();
+    if (!fGroupName.isEmpty()) {
+        int index = FurnitureGroups::instance()->indexOf(fGroupName);
+        if (index >= 0) {
+            int numTileCategories = BuildingTilesMgr::instance()->categoryCount();
+            ui->categoryList->setCurrentRow(numTileCategories + index);
+        }
+    }
+    mSettings.endGroup();
+
     // This will create the Tiles dialog.  It must come after reading all the
     // config files above.
     connect(BuildingTilesDialog::instance(), SIGNAL(edited()),
@@ -602,6 +619,10 @@ void BuildingEditorWindow::writeSettings()
     mSettings.setValue(QLatin1String("geometry"), saveGeometry());
     mSettings.setValue(QLatin1String("state"), saveState());
     mSettings.setValue(QLatin1String("EditorScale"), mView->zoomable()->scale());
+    mSettings.setValue(QLatin1String("SelectedCategory"),
+                       mCategory ? mCategory->name() : QString());
+    mSettings.setValue(QLatin1String("SelectedFurnitureGroup"),
+                       mFurnitureGroup ? mFurnitureGroup->mLabel : QString());
     mSettings.endGroup();
 
     saveSplitterSizes(ui->categorySplitter);
