@@ -726,7 +726,7 @@ void BuildingFloor::LayoutToSquares()
     for (int x = 0; x < width(); x++) {
         for (int y = 0; y < height(); y++) {
             if (mIndexAtPos[x][y] >= 0)
-                squares[x][y].mEntries[Square::SectionFloor] = floors[mIndexAtPos[x][y]];
+                squares[x][y].ReplaceFloor(floors[mIndexAtPos[x][y]], 0);
         }
     }
 
@@ -748,16 +748,16 @@ void BuildingFloor::LayoutToSquares()
                 if (stairs->isW()) {
                     if (x + 1 < 0 || x + 3 >= width() || y < 0 || y >= height())
                         continue;
-                    squares[x+1][y].mEntries[Square::SectionFloor] = 0;
-                    squares[x+2][y].mEntries[Square::SectionFloor] = 0;
-                    squares[x+3][y].mEntries[Square::SectionFloor] = 0;
+                    squares[x+1][y].ReplaceFloor(0, 0);
+                    squares[x+2][y].ReplaceFloor(0, 0);
+                    squares[x+3][y].ReplaceFloor(0, 0);
                 }
                 if (stairs->isN()) {
                     if (x < 0 || x >= width() || y + 1 < 0 || y + 3 >= height())
                         continue;
-                    squares[x][y+1].mEntries[Square::SectionFloor] = 0;
-                    squares[x][y+2].mEntries[Square::SectionFloor] = 0;
-                    squares[x][y+3].mEntries[Square::SectionFloor] = 0;
+                    squares[x][y+1].ReplaceFloor(0, 0);
+                    squares[x][y+2].ReplaceFloor(0, 0);
+                    squares[x][y+3].ReplaceFloor(0, 0);
                 }
             }
         }
