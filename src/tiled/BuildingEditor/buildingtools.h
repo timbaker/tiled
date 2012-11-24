@@ -244,7 +244,7 @@ private:
     void finishMoving(const QPointF &pos);
     void cancelMoving();
 
-    void finishMovingFloor(BuildingFloor *floor);
+    void finishMovingFloor(BuildingFloor *floor, bool objectsToo);
 
     void updateStatusText();
 

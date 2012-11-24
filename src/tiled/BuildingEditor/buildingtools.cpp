@@ -721,6 +721,9 @@ void SelectMoveRoomsTool::finishMoving(const QPointF &pos)
     Q_ASSERT(mMode == Moving);
     mMode = NoMode;
 
+    bool allFloors = controlModifier();
+    bool objectsToo = shiftModifier();
+
     foreach (BuildingFloor *floor, mEditor->building()->floors()) {
         GraphicsFloorItem *item = mEditor->itemForFloor(floor);
         delete item->dragBmp();
@@ -735,11 +738,11 @@ void SelectMoveRoomsTool::finishMoving(const QPointF &pos)
     undoStack()->beginMacro(tr(shiftModifier() ? "Move Rooms and Objects"
                                                : "Move Rooms"));
 
-    if (controlModifier()) {
+    if (allFloors) {
         foreach (BuildingFloor *floor, mEditor->building()->floors())
-            finishMovingFloor(floor);
+            finishMovingFloor(floor, objectsToo);
     } else {
-        finishMovingFloor(floor());
+        finishMovingFloor(floor(), objectsToo);
     }
 
     // Final position of the selection.
@@ -765,7 +768,7 @@ void SelectMoveRoomsTool::cancelMoving()
     mMode = CancelMoving;
 }
 
-void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor)
+void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor, bool objectsToo)
 {
     QVector<QVector<Room*> > grid = floor->grid();
 
@@ -793,7 +796,7 @@ void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor)
     undoStack()->push(new SwapFloorGrid(mEditor->document(), floor, grid,
                                         "Move Rooms"));
 
-    if (shiftModifier()) {
+    if (objectsToo) {
         QList<BuildingObject*> objects = floor->objects();
         foreach (BuildingObject *object, objects) {
             if (mSelectedArea.intersects(object->bounds())) {
