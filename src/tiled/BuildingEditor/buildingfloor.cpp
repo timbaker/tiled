@@ -350,6 +350,14 @@ void BuildingFloor::LayoutToSquares()
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
                                          Square::SectionWallFurniture);
                         break;
+                    case FurnitureTiles::LayerFrames: {
+                        int dx = 0, dy = 0;
+                        if (fo->furnitureTile()->isE()) ++dx;
+                        if (fo->furnitureTile()->isS()) ++dy;
+                        ReplaceFurniture(x + j + dx, y + i + dy, squares, ftile->tile(j, i),
+                                         Square::SectionFrame);
+                        break;
+                    }
                     }
                 }
             }

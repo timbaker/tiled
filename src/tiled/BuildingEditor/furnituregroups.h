@@ -113,6 +113,7 @@ public:
         LayerWalls,
         LayerWallOverlay,
         LayerWallFurniture,
+        LayerFrames,
         LayerCount
     };
 

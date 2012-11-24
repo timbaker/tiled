@@ -280,6 +280,11 @@ void GraphicsObjectItem::paint(QPainter *painter,
             break;
         }
 
+        FurnitureTiles::FurnitureLayer layer = object->furnitureTile()->owner()->layer();
+        if (layer == FurnitureTiles::LayerFrames ||
+                layer == FurnitureTiles::LayerWalls)
+            lineW = lineN = lineE = lineS = false;
+
         QPainterPath path2;
         if (lineW)
             path2.addRect(r.left() + 2, r.top() + 2, 2, r.height() - 4);
@@ -398,6 +403,45 @@ QPainterPath GraphicsObjectItem::calcShape()
                 r.setLeft(r.right() - 10);
             else if (object->furnitureTile()->isS())
                 r.setTop(r.bottom() - 10);
+            path.addRect(r);
+            return path;
+        }
+        if (object->furnitureTile()->owner()->layer() == FurnitureTiles::LayerWalls) {
+            if (object->furnitureTile()->isW()) {
+                r.setRight(r.left() + 10);
+                r.translate(-5, 0);
+            } else if (object->furnitureTile()->isE()) {
+                r.setLeft(r.right() - 10);
+                r.translate(5, 0);
+            } else if (object->furnitureTile()->isN()) {
+                r.setBottom(r.top() + 10);
+                r.translate(0, -5);
+            } else if (object->furnitureTile()->isS()) {
+                r.setTop(r.bottom() - 10);
+                r.translate(0, 5);
+            }
+            path.addRect(r);
+            return path;
+        }
+        if (object->furnitureTile()->owner()->layer() == FurnitureTiles::LayerFrames) {
+            // Mimic window shape
+            if (object->furnitureTile()->isW()) {
+                r.setRight(r.left() + 6);
+                r.adjust(0,7,0,-7);
+                r.translate(-3, 0);
+            } else if (object->furnitureTile()->isE()) {
+                r.setLeft(r.right() - 6);
+                r.adjust(0,7,0,-7);
+                r.translate(3, 0);
+            } else if (object->furnitureTile()->isN()) {
+                r.adjust(7,0,-7,0);
+                r.setBottom(r.top() + 6);
+                r.translate(0, -3);
+            } else if (object->furnitureTile()->isS()) {
+                r.adjust(7,0,-7,0);
+                r.setTop(r.bottom() - 6);
+                r.translate(0, 3);
+            }
             path.addRect(r);
             return path;
         }
