@@ -382,8 +382,8 @@ void FurnitureTile::setTile(int x, int y, BuildingTile *btile)
 
 BuildingTile *FurnitureTile::tile(int x, int y) const
 {
-    if (x + y * mSize.width() >= mTiles.size())
-        return 0;
+    if (x < 0 || x >= mSize.width()) return 0;
+    if (y < 0 || y >= mSize.height()) return 0;
     return mTiles[x + y * mSize.width()];
 }
 
@@ -420,9 +420,9 @@ bool FurnitureTile::isCornerOrient(FurnitureTile::FurnitureOrientation orient)
 void FurnitureTile::resize(int width, int height)
 {
     QVector<BuildingTile*> newTiles(width * height);
-    for (int i = 0; i < qMin(width, mSize.width()); i++)
-        for (int j = 0; j < qMin(height, mSize.height()); j++)
-            newTiles[i + j * width] = mTiles[i + j * mSize.width()];
+    for (int x = 0; x < qMin(width, mSize.width()); x++)
+        for (int y = 0; y < qMin(height, mSize.height()); y++)
+            newTiles[x + y * width] = mTiles[x + y * mSize.width()];
     mTiles = newTiles;
     mSize = QSize(width, height);
 }
