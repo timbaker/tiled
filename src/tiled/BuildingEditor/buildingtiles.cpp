@@ -380,7 +380,7 @@ bool BuildingTilesMgr::readTxt()
             return false;
         }
     }
-
+#if 0
     // Check that all the tiles exist
     foreach (BuildingTileCategory *category, categories()) {
         foreach (BuildingTileEntry *entry, category->entries()) {
@@ -394,7 +394,7 @@ bool BuildingTilesMgr::readTxt()
             }
         }
     }
-
+#endif
     foreach (BuildingTileCategory *category, mCategories)
         category->setDefaultEntry(category->entry(0));
     mCatCurtains->setDefaultEntry(noneTileEntry());

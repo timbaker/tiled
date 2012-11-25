@@ -85,6 +85,6 @@ private:
     QString mError;
 };
 
-} // BuildingEditor
+} // namespace BuildingEditor
 
 #endif // BUILDINGTMX_H

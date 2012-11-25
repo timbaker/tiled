@@ -18,10 +18,12 @@
 #include "buildingtmx.h"
 
 #include "building.h"
+#include "buildingeditorwindow.h"
 #include "buildingfloor.h"
 #include "buildingpreferences.h"
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
+#include "listofstringsdialog.h"
 #include "simplefile.h"
 
 #include "mapcomposite.h"
@@ -180,6 +182,8 @@ bool BuildingTMX::readTxt()
         return false;
     }
 
+    QStringList missingTilesets;
+
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("tilesets")) {
             foreach (SimpleFileKeyValue kv, block.values) {
@@ -188,32 +192,17 @@ bool BuildingTMX::readTxt()
                             + QLatin1String(".png");
                     QFileInfo info(source);
                     if (!info.exists()) {
-                        mError = tr("Tileset in %1 doesn't exist.\n%2")
-                                .arg(txtName()).arg(source);
-                        return false;
+                        Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
+                        BuildingTilesMgr::instance()->addTileset(ts);
+                        mTilesets += ts->name();
+                        missingTilesets += QDir::toNativeSeparators(info.absoluteFilePath());
+                        continue;
                     }
                     source = info.canonicalFilePath();
-#if 1
                     Tileset *ts = loadTileset(source);
                     if (!ts)
                         return false;
-#else
-                    Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
-
-                    TilesetImageCache *cache = TilesetManager::instance()->imageCache();
-                    Tileset *cached = cache->findMatch(ts, source);
-                    if (!cached || !ts->loadFromCache(cached)) {
-                        const QImage tilesetImage = QImage(source);
-                        if (ts->loadFromImage(tilesetImage, source))
-                            cache->addTileset(ts);
-                        else {
-                            mError = tr("Error loading tileset image:\n'%1'").arg(source);
-                            return false;
-                        }
-                    }
-#endif
                     BuildingTilesMgr::instance()->addTileset(ts);
-
                     mTilesets += ts->name();
                 } else {
                     mError = tr("Unknown value name '%1'.\n%2")
@@ -241,6 +230,14 @@ bool BuildingTMX::readTxt()
                     .arg(path);
             return false;
         }
+    }
+
+    if (missingTilesets.size()) {
+        ListOfStringsDialog dialog(tr("The following tileset files were not found."),
+                                   missingTilesets,
+                                   BuildingEditorWindow::instance());
+        dialog.setWindowTitle(tr("Missing Tilesets"));
+        dialog.exec();
     }
 
     return true;

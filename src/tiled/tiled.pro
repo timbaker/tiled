@@ -175,7 +175,8 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/furnituregroups.cpp \
     BuildingEditor/buildingpreferences.cpp \
     BuildingEditor/buildingtmx.cpp \
-    BuildingEditor/tilecategoryview.cpp
+    BuildingEditor/tilecategoryview.cpp \
+    BuildingEditor/listofstringsdialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -316,7 +317,8 @@ HEADERS += aboutdialog.h \
     BuildingEditor/furnituregroups.h \
     BuildingEditor/buildingpreferences.h \
     BuildingEditor/buildingtmx.h \
-    BuildingEditor/tilecategoryview.h
+    BuildingEditor/tilecategoryview.h \
+    BuildingEditor/listofstringsdialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -345,7 +347,8 @@ FORMS += aboutdialog.ui \
     BuildingEditor/roomsdialog.ui \
     BuildingEditor/buildingtilesdialog.ui \
     BuildingEditor/templatefrombuildingdialog.ui \
-    BuildingEditor/resizebuildingdialog.ui
+    BuildingEditor/resizebuildingdialog.ui \
+    BuildingEditor/listofstringsdialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc
