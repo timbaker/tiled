@@ -608,7 +608,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     connect(ui->categoryTilesView->model(), SIGNAL(tileDropped(QString,int)),
             SLOT(tileDropped(QString,int)));
     connect(ui->categoryTilesView->selectionModel(),
-            SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            SIGNAL(currentChanged(QModelIndex,QModelIndex)),
             SLOT(tileSelectionChanged()));
     connect(ui->categoryTilesView, SIGNAL(activated(QModelIndex)),
             SLOT(tileActivated(QModelIndex)));
@@ -619,7 +619,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     connect(ui->categoryView->model(), SIGNAL(tileDropped(BuildingTileEntry*,int,QString)),
             SLOT(entryTileDropped(BuildingTileEntry*,int,QString)));
     connect(ui->categoryView->selectionModel(),
-            SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            SIGNAL(currentChanged(QModelIndex,QModelIndex)),
             SLOT(entrySelectionChanged()));
     connect(ui->categoryView, SIGNAL(activated(QModelIndex)),
             SLOT(entryActivated(QModelIndex)));
@@ -631,7 +631,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
             SIGNAL(furnitureTileDropped(FurnitureTile*,int,int,QString)),
             SLOT(furnitureTileDropped(FurnitureTile*,int,int,QString)));
     connect(ui->furnitureView->selectionModel(),
-            SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            SIGNAL(currentChanged(QModelIndex,QModelIndex)),
             SLOT(furnitureSelectionChanged()));
     connect(ui->furnitureView, SIGNAL(activated(QModelIndex)),
             SLOT(furnitureActivated(QModelIndex)));
@@ -1686,13 +1686,10 @@ void BuildingTilesDialog::tileSelectionChanged()
     if (mExpertMode)
         return;
     mCurrentEntry = 0;
-    int numSelected = ui->categoryTilesView->selectionModel()->selectedIndexes().count();
-    if (numSelected > 0) {
-        QModelIndex current = ui->categoryTilesView->currentIndex();
-        MixedTilesetModel *m = ui->categoryTilesView->model();
-        if (BuildingTileEntry *entry = static_cast<BuildingTileEntry*>(m->userDataAt(current))) {
-            mCurrentEntry = entry;
-        }
+    QModelIndex current = ui->categoryTilesView->currentIndex();
+    MixedTilesetModel *m = ui->categoryTilesView->model();
+    if (BuildingTileEntry *entry = static_cast<BuildingTileEntry*>(m->userDataAt(current))) {
+        mCurrentEntry = entry;
     }
     synchUI();
 }
@@ -1702,14 +1699,11 @@ void BuildingTilesDialog::entrySelectionChanged()
     if (!mExpertMode)
         return;
     mCurrentEntry = 0;
-    int numSelected = ui->categoryView->selectionModel()->selectedIndexes().count();
-    if (numSelected > 0) {
-        QModelIndex current = ui->categoryView->currentIndex();
-        TileCategoryModel *m = ui->categoryView->model();
-        if (BuildingTileEntry *entry = m->entryAt(current)) {
-            mCurrentEntry = entry;
-            mCurrentEntryEnum = m->enumAt(current);
-        }
+    QModelIndex current = ui->categoryView->currentIndex();
+    TileCategoryModel *m = ui->categoryView->model();
+    if (BuildingTileEntry *entry = m->entryAt(current)) {
+        mCurrentEntry = entry;
+        mCurrentEntryEnum = m->enumAt(current);
     }
     synchUI();
 }
@@ -1717,12 +1711,9 @@ void BuildingTilesDialog::entrySelectionChanged()
 void BuildingTilesDialog::furnitureSelectionChanged()
 {
     mCurrentFurniture = 0;
-    int numSelected = ui->furnitureView->selectionModel()->selectedIndexes().count();
-    if (numSelected > 0) {
-        QModelIndex current = ui->furnitureView->currentIndex();
-        if (FurnitureTile *ftile = ui->furnitureView->model()->tileAt(current)) {
-            mCurrentFurniture = ftile;
-        }
+    QModelIndex current = ui->furnitureView->currentIndex();
+    if (FurnitureTile *ftile = ui->furnitureView->model()->tileAt(current)) {
+        mCurrentFurniture = ftile;
     }
     synchUI();
 }
