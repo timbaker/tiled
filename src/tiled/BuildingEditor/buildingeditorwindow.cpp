@@ -1106,6 +1106,7 @@ void BuildingEditorWindow::insertFloorAbove()
     mCurrentDocument->undoStack()->push(new InsertFloor(mCurrentDocument,
                                                         newFloor->level(),
                                                         newFloor));
+    mCurrentDocument->setSelectedObjects(QSet<BuildingObject*>());
     mCurrentDocument->setCurrentFloor(newFloor);
 }
 
@@ -1119,6 +1120,7 @@ void BuildingEditorWindow::insertFloorBelow()
     mCurrentDocument->undoStack()->push(new InsertFloor(mCurrentDocument,
                                                         newFloor->level(),
                                                         newFloor));
+    mCurrentDocument->setSelectedObjects(QSet<BuildingObject*>());
     mCurrentDocument->setCurrentFloor(newFloor);
 }
 
