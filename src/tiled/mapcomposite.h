@@ -44,17 +44,22 @@ public:
     void removeTileLayer(Tiled::TileLayer *layer);
 
     void prepareDrawing(const Tiled::MapRenderer *renderer, const QRect &rect);
-    bool orderedCellsAt(const QPoint &pos, QVector<const Tiled::Cell*>& cells) const;
+    bool orderedCellsAt(const QPoint &pos, QVector<const Tiled::Cell*>& cells,
+                        QVector<qreal> &opacities) const;
 
     QRect bounds() const;
     QMargins drawMargins() const;
 
     QRectF boundingRect(const Tiled::MapRenderer *renderer);
 
-    void setLayerVisibility(const QString &layerName, bool visible);
-    void setLayerVisibility(Tiled::TileLayer *tl, bool visible);
+    bool setLayerVisibility(const QString &layerName, bool visible);
+    bool setLayerVisibility(Tiled::TileLayer *tl, bool visible);
     bool isLayerVisible(Tiled::TileLayer *tl);
     void layerRenamed(Tiled::TileLayer *layer);
+
+    bool setLayerOpacity(const QString &layerName, qreal opacity);
+    bool setLayerOpacity(Tiled::TileLayer *tl, qreal opacity);
+    void synchSubMapLayerOpacity(const QString &layerName, qreal opacity);
 
     MapComposite *owner() const { return mOwner; }
 
@@ -64,8 +69,11 @@ public:
     bool needsSynch() const { return mNeedsSynch; }
     void synch();
 
+    // Used when generating map images.
     void saveVisibility();
     void restoreVisibility();
+    void saveOpacity();
+    void restoreOpacity();
 
 private:
     MapComposite *mOwner;
@@ -76,8 +84,10 @@ private:
     QMargins mDrawMargins;
     QVector<bool> mVisibleLayers;
     QVector<bool> mEmptyLayers;
+    QVector<qreal> mLayerOpacity;
     QMap<QString,QVector<Tiled::Layer*> > mLayersByName;
     QVector<bool> mSavedVisibleLayers;
+    QVector<qreal> mSavedOpacity;
 
     struct SubMapLayers
     {
@@ -171,6 +181,8 @@ public:
       */
     void saveVisibility();
     void restoreVisibility();
+    void saveOpacity();
+    void restoreOpacity();
 
     void ensureMaxLevels(int maxLevel);
 

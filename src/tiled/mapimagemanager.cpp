@@ -178,12 +178,14 @@ MapImageManager::ImageData MapImageManager::generateMapImage(MapComposite *mapCo
     }
 
     mapComposite->saveVisibility();
+    mapComposite->saveOpacity();
     foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups()) {
         foreach (TileLayer *tl, layerGroup->layers()) {
             bool isVisible = true;
             if (tl->name().contains(QLatin1String("NoRender")))
                 isVisible = false;
             layerGroup->setLayerVisibility(tl, isVisible);
+            layerGroup->setLayerOpacity(tl, 1.0f);
         }
         layerGroup->synch();
     }
@@ -223,6 +225,7 @@ MapImageManager::ImageData MapImageManager::generateMapImage(MapComposite *mapCo
     }
 
     mapComposite->restoreVisibility();
+    mapComposite->restoreOpacity();
     foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups())
         layerGroup->synch();
 

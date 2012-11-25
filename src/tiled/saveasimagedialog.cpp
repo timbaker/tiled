@@ -51,6 +51,7 @@ static const char * const OBJECT_LAYERS_KEY = "SaveAsImage/ObjectLayers";
 static const char * const NORENDER_KEY = "SaveAsImage/NoRender";
 static const char * const LOTS_KEY = "SaveAsImage/Lots";
 static const char * const IMAGE_WIDTH_KEY = "SaveAsImage/ImageWidth";
+static const char * const OPACITY_KEY = "SaveAsImage/IgnoreOpacity";
 #endif
 
 using namespace Tiled;
@@ -129,6 +130,10 @@ SaveAsImageDialog::SaveAsImageDialog(MapDocument *mapDocument,
             s->value(QLatin1String(LOTS_KEY), true).toBool();
     mUi->drawLots->setChecked(drawLots);
 
+    const bool forceOpacity =
+            s->value(QLatin1String(OPACITY_KEY), true).toBool();
+    mUi->forceOpacity->setChecked(forceOpacity);
+
     const int customImageWidth =
             s->value(QLatin1String(IMAGE_WIDTH_KEY), 512).toInt();
     mUi->imageWidthSpinBox->setValue(customImageWidth);
@@ -176,10 +181,12 @@ void SaveAsImageDialog::accept()
     const bool drawObjectLayers = mUi->drawObjectLayers->isChecked();
     const bool drawNoRender = mUi->drawNoRender->isChecked();
     const bool drawLots = mUi->drawLots->isChecked();
+    const bool forceOpacity = mUi->forceOpacity->isChecked();
     const int customImageWidth = mUi->imageWidthSpinBox->value();
 
     MapComposite *mapComposite = mMapDocument->mapComposite();
     mapComposite->saveVisibility();
+    mapComposite->saveOpacity();
     if (!drawLots) {
         foreach (MapComposite *lot, mapComposite->subMaps())
             lot->setVisible(false);
@@ -192,6 +199,8 @@ void SaveAsImageDialog::accept()
                 if (!drawNoRender && tl->name().contains(QLatin1String("NoRender")))
                     isVisible = false;
                 layerGroup->setLayerVisibility(tl, isVisible);
+                if (forceOpacity)
+                    layerGroup->setLayerOpacity(tl, 1.0f);
             }
         }
         layerGroup->synch();
@@ -258,6 +267,7 @@ void SaveAsImageDialog::accept()
     }
 
     mapComposite->restoreVisibility();
+    mapComposite->restoreOpacity();
     renderer->setMaxLevel(savedMaxLevel);
     foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups())
         layerGroup->synch();
@@ -345,6 +355,7 @@ void SaveAsImageDialog::accept()
     s->setValue(QLatin1String(OBJECT_LAYERS_KEY), drawObjectLayers);
     s->setValue(QLatin1String(NORENDER_KEY), drawNoRender);
     s->setValue(QLatin1String(LOTS_KEY), drawLots);
+    s->setValue(QLatin1String(OPACITY_KEY), forceOpacity);
     s->setValue(QLatin1String(IMAGE_WIDTH_KEY), customImageWidth);
 #endif
 

@@ -101,6 +101,8 @@ void CompositeLayerGroup::addTileLayer(TileLayer *layer, int index)
 
     index = mLayers.indexOf(layer);
     mVisibleLayers.insert(index, layer->isVisible());
+    mLayerOpacity.insert(index, mOwner->mapInfo()->isBeingEdited()
+                         ? layer->opacity() : 1.0f);
 
     // To optimize drawing of submaps, remember which layers are totally empty.
     // But don't do this for the top-level map (the one being edited).
@@ -115,6 +117,7 @@ void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
 {
     int index = mLayers.indexOf(layer);
     mVisibleLayers.remove(index);
+    mLayerOpacity.remove(index);
     mEmptyLayers.remove(index);
 
     // Hack -- only a map being edited can set a TileLayer's group.
@@ -145,7 +148,9 @@ void CompositeLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRec
     }
 }
 
-bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos, QVector<const Cell *> &cells) const
+bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
+                                         QVector<const Cell *> &cells,
+                                         QVector<qreal> &opacities) const
 {
     bool cleared = false;
     int index = -1;
@@ -164,16 +169,19 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos, QVector<const Cell *
             if (!cell->isEmpty()) {
                 if (!cleared) {
                     cells.clear();
+                    opacities.resize(0);
                     cleared = true;
                 }
                 cells.append(cell);
+                opacities.append(mLayerOpacity[index]);
             }
         }
     }
 
     // Overwrite map cells with sub-map cells at this location
     foreach (const SubMapLayers& subMapLayer, mPreparedSubMapLayers)
-        subMapLayer.mLayerGroup->orderedCellsAt(pos - subMapLayer.mSubMap->origin(), cells);
+        subMapLayer.mLayerGroup->orderedCellsAt(pos - subMapLayer.mSubMap->origin(),
+                                                cells, opacities);
 
     return !cells.isEmpty();
 }
@@ -248,6 +256,16 @@ void CompositeLayerGroup::restoreVisibility()
     mVisibleLayers = mSavedVisibleLayers;
 }
 
+void CompositeLayerGroup::saveOpacity()
+{
+    mSavedOpacity = mLayerOpacity;
+}
+
+void CompositeLayerGroup::restoreOpacity()
+{
+    mLayerOpacity = mSavedOpacity;
+}
+
 QRect CompositeLayerGroup::bounds() const
 {
     QRect bounds;
@@ -260,18 +278,17 @@ QMargins CompositeLayerGroup::drawMargins() const
     return mDrawMargins;
 }
 
-void CompositeLayerGroup::setLayerVisibility(const QString &layerName, bool visible)
+bool CompositeLayerGroup::setLayerVisibility(const QString &layerName, bool visible)
 {
     const QString name = MapComposite::layerNameWithoutPrefix(layerName);
     if (!mLayersByName.contains(name))
-        return;
-    foreach (Layer *layer, mLayersByName[name]) {
-        mVisibleLayers[mLayers.indexOf(layer->asTileLayer())] = visible;
-        mNeedsSynch = true;
-    }
+        return false;
+    foreach (Layer *layer, mLayersByName[name])
+        setLayerVisibility(layer->asTileLayer(), visible);
+    return mNeedsSynch;
 }
 
-void CompositeLayerGroup::setLayerVisibility(TileLayer *tl, bool visible)
+bool CompositeLayerGroup::setLayerVisibility(TileLayer *tl, bool visible)
 {
     int index = mLayers.indexOf(tl);
     Q_ASSERT(index != -1);
@@ -279,6 +296,7 @@ void CompositeLayerGroup::setLayerVisibility(TileLayer *tl, bool visible)
         mVisibleLayers[index] = visible;
         mNeedsSynch = true;
     }
+    return mNeedsSynch;
 }
 
 bool CompositeLayerGroup::isLayerVisible(TileLayer *tl)
@@ -303,6 +321,42 @@ void CompositeLayerGroup::layerRenamed(TileLayer *layer)
 
     const QString name = MapComposite::layerNameWithoutPrefix(layer);
     mLayersByName[name].append(layer);
+}
+
+bool CompositeLayerGroup::setLayerOpacity(const QString &layerName, qreal opacity)
+{
+    const QString name = MapComposite::layerNameWithoutPrefix(layerName);
+    if (!mLayersByName.contains(name))
+        return false;
+    bool changed = false;
+    foreach (Layer *layer, mLayersByName[name]) {
+        if (setLayerOpacity(layer->asTileLayer(), opacity))
+            changed = true;
+    }
+    return changed;
+}
+
+bool CompositeLayerGroup::setLayerOpacity(TileLayer *tl, qreal opacity)
+{
+    int index = mLayers.indexOf(tl);
+    Q_ASSERT(index != -1);
+    if (mLayerOpacity[index] != opacity) {
+        mLayerOpacity[index] = opacity;
+        return true;
+    }
+    return false;
+}
+
+void CompositeLayerGroup::synchSubMapLayerOpacity(const QString &layerName, qreal opacity)
+{
+    foreach (MapComposite *subMap, mOwner->subMaps()) {
+        CompositeLayerGroup *layerGroup =
+                subMap->tileLayersForLevel(mLevel - subMap->levelOffset());
+        if (layerGroup) {
+            layerGroup->setLayerOpacity(layerName, opacity);
+            layerGroup->synchSubMapLayerOpacity(layerName, opacity);
+        }
+    }
 }
 
 bool CompositeLayerGroup::regionAltered(Tiled::TileLayer *tl)
@@ -486,8 +540,14 @@ MapComposite *MapComposite::addMap(MapInfo *mapInfo, const QPoint &pos, int leve
 
     ensureMaxLevels(levelOffset + subMap->maxLevel());
 
-    foreach (CompositeLayerGroup *layerGroup, mLayerGroups)
+    foreach (CompositeLayerGroup *layerGroup, mLayerGroups) {
         layerGroup->setNeedsSynch(true);
+
+        if (CompositeLayerGroup *subMapLayerGroup = subMap->tileLayersForLevel(layerGroup->level() - levelOffset)) {
+            foreach (TileLayer *tl, layerGroup->layers())
+                subMapLayerGroup->setLayerOpacity(tl->name(), tl->opacity());
+        }
+    }
 
     return subMap;
 }
@@ -717,6 +777,24 @@ void MapComposite::restoreVisibility()
 
     foreach (MapComposite *subMap, mSubMaps)
         subMap->restoreVisibility();
+}
+
+void MapComposite::saveOpacity()
+{
+    foreach (CompositeLayerGroup *layerGroup, mLayerGroups)
+        layerGroup->saveOpacity();
+
+    foreach (MapComposite *subMap, mSubMaps)
+        subMap->saveOpacity();
+}
+
+void MapComposite::restoreOpacity()
+{
+    foreach (CompositeLayerGroup *layerGroup, mLayerGroups)
+        layerGroup->restoreOpacity();
+
+    foreach (MapComposite *subMap, mSubMaps)
+        subMap->restoreOpacity();
 }
 
 void MapComposite::ensureMaxLevels(int maxLevel)

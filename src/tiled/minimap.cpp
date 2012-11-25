@@ -128,12 +128,14 @@ void MiniMapItem::updateImage(const QRectF &dirtyRect)
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
     mMapComposite->saveVisibility();
+    mMapComposite->saveOpacity();
     foreach (CompositeLayerGroup *layerGroup, mMapComposite->sortedLayerGroups()) {
         foreach (TileLayer *tl, layerGroup->layers()) {
             bool isVisible = true;
             if (tl->name().contains(QLatin1String("NoRender")))
                 isVisible = false;
             layerGroup->setLayerVisibility(tl, isVisible);
+            layerGroup->setLayerOpacity(tl, 1.0f);
         }
         layerGroup->synch();
     }
@@ -150,6 +152,7 @@ void MiniMapItem::updateImage(const QRectF &dirtyRect)
     }
 
     mMapComposite->restoreVisibility();
+    mMapComposite->restoreOpacity();
     foreach (CompositeLayerGroup *layerGroup, mMapComposite->sortedLayerGroups())
         layerGroup->synch();
 }

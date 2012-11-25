@@ -109,7 +109,8 @@ public:
         AllGroups = 0x01,
         Bounds = 0x02,
         Synch = 0x04,
-        ZOrder = 0x08
+        ZOrder = 0x08,
+        Paint = 0x10
     };
     Q_DECLARE_FLAGS(PendingFlags, Pending)
 

@@ -298,32 +298,18 @@ void ZomboidScene::layerRemoved(int index)
  */
 void ZomboidScene::layerChanged(int index)
 {
-    // This gateway var isn't needed since I'm not going through LayerModel when setting opacity,
-    // so no layerChanged signals are emitted, so no recursion happens here.
-    static bool changingOpacity = false;
-    if (changingOpacity)
-        return;
-
     MapScene::layerChanged(index);
 
     Layer *layer = mMapDocument->map()->layerAt(index);
     if (TileLayer *tl = layer->asTileLayer()) {
         if (tl->group() && mTileLayerGroupItems.contains(tl->level())) {
             CompositeLayerGroupItem *layerGroupItem = mTileLayerGroupItems[tl->level()];
-            // Set the group item's opacity whenever the opacity of any owned layer changes
-            if (layer->opacity() != layerGroupItem->opacity()) {
-                layerGroupItem->setOpacity(layer->opacity());
-                // Set the opacity of all the other layers in this group so the opacity slider
-                // reflects the change when a new layer is selected.
-                changingOpacity = true; // HACK - prevent recursion (see note above)
-                foreach (TileLayer *tileLayer, layerGroupItem->layerGroup()->mLayers) {
-                    if (tileLayer != tl)
-                        tileLayer->setOpacity(layer->opacity()); // FIXME: should I do what LayerDock::setLayerOpacity does (which will be recursive)?
-                }
-                changingOpacity = false;
+            if (layerGroupItem->layerGroup()->setLayerVisibility(tl, tl->isVisible()))
+                updateLayerGroupLater(tl->level(), Synch | Bounds);
+            if (layerGroupItem->layerGroup()->setLayerOpacity(tl, tl->opacity())) {
+                layerGroupItem->layerGroup()->synchSubMapLayerOpacity(tl->name(), tl->opacity());
+                updateLayerGroupLater(tl->level(), Paint);
             }
-            layerGroupItem->layerGroup()->setLayerVisibility(tl, tl->isVisible());
-            updateLayerGroupLater(tl->level(), Synch | Bounds);
         }
     } else if (ObjectGroup *og = layer->asObjectGroup()) {
         bool synch = false;
@@ -580,6 +566,10 @@ void ZomboidScene::handlePendingUpdates()
     }
     if (mPendingFlags & ZOrder)
         setGraphicsSceneZOrder();
+    if (mPendingFlags & Paint) {
+        foreach (CompositeLayerGroupItem *item, mPendingGroupItems)
+            item->update();
+    }
 
     mPendingFlags = None;
     mPendingGroupItems.clear();
