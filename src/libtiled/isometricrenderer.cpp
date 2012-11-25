@@ -389,7 +389,7 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *l
         QPoint columnItr = rowItr;
 
         for (int x = startPos.x(); x < rect.right(); x += tileWidth) {
-            cells.clear();
+            cells.resize(0);
             if (layerGroup->orderedCellsAt(columnItr, cells, opacities)) {
                 for (int i = 0; i < cells.size(); i++) {
                     const Cell *cell = cells[i];

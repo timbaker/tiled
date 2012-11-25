@@ -189,10 +189,9 @@ void BuildingFloor::LayoutToSquares()
     int w = width() + 1;
     int h = height() + 1;
     // +1 for the outside walls;
-    squares.clear();
     squares.resize(w);
     for (int x = 0; x < w; x++)
-        squares[x].resize(h);
+        squares[x].fill(Square(), h);
 
     BuildingTileEntry *wtype = 0;
 

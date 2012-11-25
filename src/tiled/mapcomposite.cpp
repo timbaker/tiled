@@ -133,7 +133,7 @@ void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
 
 void CompositeLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRect &rect)
 {
-    mPreparedSubMapLayers.clear();
+    mPreparedSubMapLayers.resize(0);
     if (mAnyVisibleLayers == false)
         return;
     foreach (const SubMapLayers &subMapLayer, mVisibleSubMapLayers) {
@@ -168,7 +168,7 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
             const Cell *cell = &tl->cellAt(subPos);
             if (!cell->isEmpty()) {
                 if (!cleared) {
-                    cells.clear();
+                    cells.resize(0);
                     opacities.resize(0);
                     cleared = true;
                 }
@@ -212,7 +212,7 @@ void CompositeLayerGroup::synch()
     mTileBounds = r;
 
     r = QRect();
-    mVisibleSubMapLayers.clear();
+    mVisibleSubMapLayers.resize(0);
 
     foreach (MapComposite *subMap, mOwner->subMaps()) {
         if (!subMap->isGroupVisible() || !subMap->isVisible())
