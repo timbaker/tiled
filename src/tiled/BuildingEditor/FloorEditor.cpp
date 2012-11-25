@@ -282,7 +282,10 @@ void GraphicsObjectItem::paint(QPainter *painter,
 
         FurnitureTiles::FurnitureLayer layer = object->furnitureTile()->owner()->layer();
         if (layer == FurnitureTiles::LayerFrames ||
-                layer == FurnitureTiles::LayerWalls)
+                layer == FurnitureTiles::LayerDoors ||
+                layer == FurnitureTiles::LayerWalls ||
+                layer == FurnitureTiles::LayerRoofCap ||
+                layer == FurnitureTiles::LayerRoof)
             lineW = lineN = lineE = lineS = false;
 
         QPainterPath path2;
@@ -394,6 +397,8 @@ QPainterPath GraphicsObjectItem::calcShape()
 
     if (FurnitureObject *object = mObject->asFurniture()) {
         QRectF r = mEditor->tileToSceneRect(object->bounds().translated(dragOffset));
+        FurnitureTiles::FurnitureLayer layer =
+                object->furnitureTile()->owner()->layer();
         if (object->inWallLayer()) {
             if (object->furnitureTile()->isW())
                 r.setRight(r.left() + 10);
@@ -406,24 +411,25 @@ QPainterPath GraphicsObjectItem::calcShape()
             path.addRect(r);
             return path;
         }
-        if (object->furnitureTile()->owner()->layer() == FurnitureTiles::LayerWalls) {
+        if (layer == FurnitureTiles::LayerWalls ||
+                layer == FurnitureTiles::LayerRoofCap) {
             if (object->furnitureTile()->isW()) {
-                r.setRight(r.left() + 10);
-                r.translate(-5, 0);
+                r.setRight(r.left() + 12);
+                r.translate(-6, 0);
             } else if (object->furnitureTile()->isE()) {
-                r.setLeft(r.right() - 10);
-                r.translate(5, 0);
+                r.setLeft(r.right() - 12);
+                r.translate(6, 0);
             } else if (object->furnitureTile()->isN()) {
-                r.setBottom(r.top() + 10);
-                r.translate(0, -5);
+                r.setBottom(r.top() + 12);
+                r.translate(0, -6);
             } else if (object->furnitureTile()->isS()) {
-                r.setTop(r.bottom() - 10);
-                r.translate(0, 5);
+                r.setTop(r.bottom() - 12);
+                r.translate(0, 6);
             }
             path.addRect(r);
             return path;
         }
-        if (object->furnitureTile()->owner()->layer() == FurnitureTiles::LayerFrames) {
+        if (layer == FurnitureTiles::LayerFrames) {
             // Mimic window shape
             if (object->furnitureTile()->isW()) {
                 r.setRight(r.left() + 6);
@@ -441,6 +447,24 @@ QPainterPath GraphicsObjectItem::calcShape()
                 r.adjust(7,0,-7,0);
                 r.setTop(r.bottom() - 6);
                 r.translate(0, 3);
+            }
+            path.addRect(r);
+            return path;
+        }
+        if (layer == FurnitureTiles::LayerDoors) {
+            // Mimic door shape
+            if (object->furnitureTile()->isW()) {
+                r.setRight(r.left() + 10);
+                r.translate(-5, 0);
+            } else if (object->furnitureTile()->isE()) {
+                r.setLeft(r.right() - 10);
+                r.translate(5, 0);
+            } else if (object->furnitureTile()->isN()) {
+                r.setBottom(r.top() + 10);
+                r.translate(0, -5);
+            } else if (object->furnitureTile()->isS()) {
+                r.setTop(r.bottom() - 10);
+                r.translate(0, 5);
             }
             path.addRect(r);
             return path;

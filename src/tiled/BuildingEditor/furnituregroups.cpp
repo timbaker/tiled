@@ -497,26 +497,18 @@ bool FurnitureTiles::equals(const FurnitureTiles *other)
 
 QString FurnitureTiles::layerToString(FurnitureTiles::FurnitureLayer layer)
 {
-    switch (layer) {
-    case LayerFurniture:
-    case LayerWalls:
-    case LayerWallOverlay:
-    case LayerWallFurniture:
-    case LayerFrames:
+    if (layer >= 0 && layer < mLayerNames.size()) {
         initNames();
         return mLayerNames[layer];
-    default:
-        return QLatin1String("Invalid");
     }
+    return QLatin1String("Invalid");
 }
 
 FurnitureTiles::FurnitureLayer FurnitureTiles::layerFromString(const QString &s)
 {
-    if (s == QLatin1String("Furniture")) return LayerFurniture;
-    if (s == QLatin1String("Walls")) return LayerWalls;
-    if (s == QLatin1String("WallOverlay")) return LayerWallOverlay;
-    if (s == QLatin1String("WallFurniture")) return LayerWallFurniture;
-    if (s == QLatin1String("Frames")) return LayerFrames;
+    initNames();
+    if (mLayerNames.contains(s))
+        return static_cast<FurnitureLayer>(mLayerNames.indexOf(s));
     return InvalidLayer;
 }
 
@@ -526,11 +518,18 @@ void FurnitureTiles::initNames()
 {
     if (mLayerNames.size())
         return;
-    mLayerNames += QLatin1String("Furniture");
+
+    // Order must match FurnitureLayer enum
     mLayerNames += QLatin1String("Walls");
+    mLayerNames += QLatin1String("RoofCap");
     mLayerNames += QLatin1String("WallOverlay");
     mLayerNames += QLatin1String("WallFurniture");
+    mLayerNames += QLatin1String("Furniture");
     mLayerNames += QLatin1String("Frames");
+    mLayerNames += QLatin1String("Doors");
+    mLayerNames += QLatin1String("Roof");
+
+    Q_ASSERT(mLayerNames.size() == LayerCount);
 }
 
 /////

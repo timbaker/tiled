@@ -109,11 +109,14 @@ class FurnitureTiles
 public:
     enum FurnitureLayer {
         InvalidLayer = -1,
-        LayerFurniture,
         LayerWalls,
+        LayerRoofCap,
         LayerWallOverlay,
         LayerWallFurniture,
+        LayerFurniture,
         LayerFrames,
+        LayerDoors,
+        LayerRoof,
         LayerCount
     };
 

@@ -333,14 +333,19 @@ void BuildingFloor::LayoutToSquares()
             for (int i = 0; i < ftile->size().height(); i++) {
                 for (int j = 0; j < ftile->size().width(); j++) {
                     switch (ftile->owner()->layer()) {
-                    case FurnitureTiles::LayerFurniture:
-                        ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
-                                         Square::SectionFurniture,
-                                         Square::SectionFurniture2);
-                        break;
                     case FurnitureTiles::LayerWalls:
                         // Handled after all the door/window objects
                         break;
+                    case FurnitureTiles::LayerRoofCap: {
+                        int dx = 0, dy = 0;
+                        if (fo->furnitureTile()->isE()) ++dx;
+                        if (fo->furnitureTile()->isS()) ++dy;
+                        ReplaceFurniture(x + j + dx, y + i + dy,
+                                         squares, ftile->tile(j, i),
+                                         Square::SectionRoofCap,
+                                         Square::SectionRoofCap2);
+                        break;
+                    }
                     case FurnitureTiles::LayerWallOverlay:
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
                                          Square::SectionWallOverlay,
@@ -354,10 +359,30 @@ void BuildingFloor::LayoutToSquares()
                         int dx = 0, dy = 0;
                         if (fo->furnitureTile()->isE()) ++dx;
                         if (fo->furnitureTile()->isS()) ++dy;
-                        ReplaceFurniture(x + j + dx, y + i + dy, squares, ftile->tile(j, i),
+                        ReplaceFurniture(x + j + dx, y + i + dy,
+                                         squares, ftile->tile(j, i),
                                          Square::SectionFrame);
                         break;
                     }
+                    case FurnitureTiles::LayerDoors: {
+                        int dx = 0, dy = 0;
+                        if (fo->furnitureTile()->isE()) ++dx;
+                        if (fo->furnitureTile()->isS()) ++dy;
+                        ReplaceFurniture(x + j + dx, y + i + dy,
+                                         squares, ftile->tile(j, i),
+                                         Square::SectionDoor);
+                        break;
+                    }
+                    case FurnitureTiles::LayerFurniture:
+                        ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
+                                         Square::SectionFurniture,
+                                         Square::SectionFurniture2);
+                        break;
+                    case FurnitureTiles::LayerRoof:
+                        ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
+                                         Square::SectionRoof,
+                                         Square::SectionRoof2);
+                        break;
                     }
                 }
             }
