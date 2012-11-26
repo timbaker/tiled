@@ -27,6 +27,7 @@
 #include "tileset.h"
 
 #include <QCoreApplication>
+#include <QDebug>
 #include <QMessageBox>
 
 using namespace BuildingEditor;
@@ -327,6 +328,9 @@ bool BuildingTilesMgr::readTxt()
     if (!upgradeTxt())
         return false;
 
+    if (!mergeTxt())
+        return false;
+
     QString path = info.canonicalFilePath();
     SimpleFile simple;
     if (!simple.read(path)) {
@@ -339,6 +343,9 @@ bool BuildingTilesMgr::readTxt()
                 .arg(txtName()).arg(VERSION_LATEST).arg(simple.version());
         return false;
     }
+
+    mRevision = simple.value("revision").toInt();
+    mSourceRevision = simple.value("source_revision").toInt();
 
     static const char *validCategoryNamesC[] = {
         "exterior_walls", "interior_walls", "floors", "doors", "door_frames",
@@ -421,6 +428,8 @@ void BuildingTilesMgr::writeTxt(QWidget *parent)
     QString fileName = BuildingPreferences::instance()
             ->configPath(QLatin1String(TXT_FILE));
     simpleFile.setVersion(VERSION_LATEST);
+    simpleFile.replaceValue("revision", QString::number(++mRevision));
+    simpleFile.replaceValue("source_revision", QString::number(mSourceRevision));
     if (!simpleFile.write(fileName)) {
         QMessageBox::warning(parent, tr("It's no good, Jim!"),
                              simpleFile.errorString());
@@ -506,6 +515,99 @@ bool BuildingTilesMgr::upgradeTxt()
         userFile.blocks = newFile.blocks;
         userFile.values = newFile.values;
     }
+
+    userFile.setVersion(VERSION_LATEST);
+    if (!userFile.write(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+    return true;
+}
+
+bool BuildingTilesMgr::mergeTxt()
+{
+    QString userPath = txtPath();
+
+    SimpleFile userFile;
+    if (!userFile.read(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+    Q_ASSERT(userFile.version() == VERSION_LATEST);
+
+    QString sourcePath = QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + txtName();
+
+    SimpleFile sourceFile;
+    if (!sourceFile.read(sourcePath)) {
+        mError = sourceFile.errorString();
+        return false;
+    }
+    Q_ASSERT(sourceFile.version() == VERSION_LATEST);
+
+    int userSourceRevision = userFile.value("source_revision").toInt();
+    int sourceRevision = sourceFile.value("revision").toInt();
+    if (sourceRevision == userSourceRevision)
+        return true;
+
+    // MERGE HERE
+
+    QMap<QString,SimpleFileBlock> userCategoriesByName;
+    QMap<QString,int> userCategoryIndexByName;
+    QMap<QString,QStringList> userEntriesByCategoryName;
+    int index = 0;
+    foreach (SimpleFileBlock b, userFile.blocks) {
+        QString name = b.value("name");
+        userCategoriesByName[name] = b;
+        userCategoryIndexByName[name] = index++;
+        foreach (SimpleFileBlock b2, b.blocks)
+            userEntriesByCategoryName[name] += b2.toString();
+    }
+
+    QMap<QString,SimpleFileBlock> sourceCategoriesByName;
+    QMap<QString,QStringList> sourceEntriesByCategoryName;
+    foreach (SimpleFileBlock b, sourceFile.blocks) {
+        QString name = b.value("name");
+        sourceCategoriesByName[name] = b;
+        foreach (SimpleFileBlock b2, b.blocks)
+            sourceEntriesByCategoryName[name] += b2.toString();
+    }
+
+    foreach (QString categoryName, sourceCategoriesByName.keys()) {
+        if (userCategoriesByName.contains(categoryName)) {
+            // A user-category with the same name as a source-category exists.
+            // Copy unique source-entries to the user-category.
+            int userGroupIndex = userCategoryIndexByName[categoryName];
+            int userEntryIndex = userEntriesByCategoryName[categoryName].size();
+            int sourceEntryIndex = 0;
+            foreach (QString f, sourceEntriesByCategoryName[categoryName]) {
+                if (userEntriesByCategoryName[categoryName].contains(f)) {
+                    userEntryIndex = userEntriesByCategoryName[categoryName].indexOf(f) + 1;
+                } else {
+                    userEntriesByCategoryName[categoryName].insert(userEntryIndex, f);
+                    SimpleFileBlock entryBlock = sourceCategoriesByName[categoryName].blocks.at(sourceEntryIndex);
+                    userFile.blocks[userGroupIndex].blocks.insert(userEntryIndex, entryBlock);
+                    qDebug() << "BuildingTiles.txt merge: inserted entry in category" << categoryName << "at" << userEntryIndex;
+                }
+                ++sourceEntryIndex;
+            }
+        } else {
+            // The source-category doesn't exist in the user-file.
+            // Copy the source-category to the user-file.
+            userCategoriesByName[categoryName] = sourceCategoriesByName[categoryName];
+            int index = userCategoriesByName.keys().indexOf(categoryName); // insert group alphabetically
+            userFile.blocks.insert(index, userCategoriesByName[categoryName]);
+            foreach (QString label, userCategoriesByName.keys()) {
+                if (userCategoryIndexByName[label] >= index)
+                    userCategoryIndexByName[label]++;
+            }
+            userCategoryIndexByName[categoryName] = index;
+            qDebug() << "BuildingTiles.txt merge: inserted category" << categoryName << "at" << index;
+        }
+    }
+
+    userFile.replaceValue("revision", QString::number(sourceRevision + 1));
+    userFile.replaceValue("source_revision", QString::number(sourceRevision));
 
     userFile.setVersion(VERSION_LATEST);
     if (!userFile.write(userPath)) {

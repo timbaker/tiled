@@ -218,6 +218,27 @@ SimpleFileBlock SimpleFileBlock::block(const QString &name)
     return SimpleFileBlock();
 }
 
+QString SimpleFileBlock::toString(int depth)
+{
+    QString result;
+    QTextStream ts(&result);
+    write(ts, depth);
+    return result;
+}
+
+void SimpleFileBlock::write(QTextStream &ts, int depth)
+{
+    INDENT indent(depth);
+    foreach (SimpleFileKeyValue kv, values) {
+        ts << indent.text() << kv.name << " = " << kv.value << "\n";
+    }
+    foreach (SimpleFileBlock child, blocks) {
+        ts << indent.text() << child.name << "\n" << indent.text() << "{\n";
+        child.write(ts, depth);
+        ts << indent.text() << "}\n";
+    }
+}
+
 void SimpleFileBlock::print()
 {
     qDebug() << "block" << name;

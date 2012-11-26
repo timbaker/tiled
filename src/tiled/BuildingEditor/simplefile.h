@@ -72,7 +72,30 @@ public:
 
     SimpleFileBlock block(const QString &name);
 
+    QString toString(int depth = -1);
+    void write(QTextStream &ts, int indent);
+
     void print();
+
+    class INDENT
+    {
+    public:
+        INDENT(int &depth) :
+            mDepth(depth)
+        {
+            ++mDepth;
+        }
+        ~INDENT()
+        {
+            --mDepth;
+        }
+
+        QString text() const
+        { return QString(QLatin1Char(' ')).repeated(mDepth * 4); }
+
+    private:
+        int &mDepth;
+    };
 };
 
 class SimpleFile : public SimpleFileBlock
@@ -99,26 +122,6 @@ private:
 
     QString mError;
     int mVersion;
-
-    class INDENT
-    {
-    public:
-        INDENT(int &depth) :
-            mDepth(depth)
-        {
-            ++mDepth;
-        }
-        ~INDENT()
-        {
-            --mDepth;
-        }
-
-        QString text() const
-        { return QString(QLatin1Char(' ')).repeated(mDepth * 4); }
-
-    private:
-        int &mDepth;
-    };
 
     int mIndent;
 };

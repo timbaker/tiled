@@ -1,4 +1,5 @@
 version = 0
+revision = 6
 group
 {
     label = Appliances - Cooking
@@ -749,6 +750,123 @@ group
             0,0 = fixtures_bathroom_01_032
         }
     }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = fixtures_bathroom_01_033
+            0,1 = fixtures_bathroom_01_035
+            1,0 = fixtures_bathroom_01_034
+            1,1 = fixtures_bathroom_01_036
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_bathroom_01_032
+            0,1 = fixtures_bathroom_01_035
+            1,0 = fixtures_bathroom_01_034
+            1,1 = fixtures_bathroom_01_036
+        }
+    }
+}
+group
+{
+    label = Fixture - Railings
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = fixtures_railings_01_002
+            1,0 = fixtures_railings_01_001
+            2,0 = fixtures_railings_01_000
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = fixtures_railings_01_003
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,0 = fixtures_railings_01_010
+            0,1 = fixtures_railings_01_009
+            0,2 = fixtures_railings_01_008
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,0 = fixtures_railings_01_016
+            0,1 = fixtures_railings_01_013
+            0,2 = fixtures_railings_01_011
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,0 = fixtures_railings_01_019
+            0,1 = fixtures_railings_01_011
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,0 = fixtures_railings_01_010
+            0,1 = fixtures_railings_01_009
+            0,2 = fixtures_railings_01_008
+            1,0 = fixtures_railings_01_010
+            1,1 = fixtures_railings_01_009
+            1,2 = fixtures_railings_01_008
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,0 = fixtures_railings_01_019
+            0,1 = fixtures_railings_01_016
+            1,0 = fixtures_railings_01_019
+            1,1 = fixtures_railings_01_016
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,0 = fixtures_railings_01_016
+            0,1 = fixtures_railings_01_013
+            0,2 = fixtures_railings_01_011
+            1,1 = fixtures_railings_01_019
+            1,2 = fixtures_railings_01_011
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,2 = fixtures_railings_01_017
+            1,0 = fixtures_railings_01_016
+            1,1 = fixtures_railings_01_016
+            1,2 = fixtures_railings_01_018
+        }
+    }
 }
 group
 {
@@ -905,6 +1023,42 @@ group
         {
             orient = N
             0,0 = fixtures_sinks_01_024
+        }
+    }
+}
+group
+{
+    label = Fixtures - Windows
+    furniture
+    {
+        layer = Frames
+        entry
+        {
+            orient = W
+            0,0 = fixtures_windows_01_041
+            0,1 = fixtures_windows_01_040
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_windows_01_042
+            1,0 = fixtures_windows_01_043
+        }
+    }
+    furniture
+    {
+        layer = Frames
+        entry
+        {
+            orient = W
+            0,0 = fixtures_windows_01_049
+            0,1 = fixtures_windows_01_048
+        }
+        entry
+        {
+            orient = N
+            0,0 = fixtures_windows_01_050
+            1,0 = fixtures_windows_01_051
         }
     }
 }
@@ -1787,6 +1941,26 @@ group
 }
 group
 {
+    label = Location - Barn
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = E
+            0,0 = location_barn_01_005
+            0,1 = location_barn_01_004
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_barn_01_006
+            1,0 = location_barn_01_007
+        }
+    }
+}
+group
+{
     label = Location - Business - Office - Generic
     furniture
     {
@@ -1954,6 +2128,100 @@ group
     label = Location - Community - Church - Small
     furniture
     {
+        layer = Walls
+        entry
+        {
+            orient = E
+            0,0 = location_community_church_small_01_017
+            0,1 = location_community_church_small_01_016
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_community_church_small_01_018
+            1,0 = location_community_church_small_01_019
+        }
+    }
+    furniture
+    {
+        layer = Doors
+        entry
+        {
+            orient = W
+            0,0 = location_community_church_small_01_024
+            0,1 = location_community_church_small_01_026
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_community_church_small_01_028
+            1,0 = location_community_church_small_01_030
+        }
+    }
+    furniture
+    {
+        layer = RoofCap
+        entry
+        {
+            orient = E
+            0,0 = location_community_church_small_01_020
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_community_church_small_01_021
+        }
+    }
+    furniture
+    {
+        layer = Roof
+        entry
+        {
+            orient = W
+            0,0 = location_community_church_small_01_034
+        }
+    }
+    furniture
+    {
+        layer = Roof
+        entry
+        {
+            orient = W
+            0,0 = location_community_church_small_01_035
+        }
+    }
+    furniture
+    {
+        layer = Roof
+        entry
+        {
+            orient = W
+            0,1 = location_community_church_small_02_017
+        }
+        entry
+        {
+            orient = N
+            1,0 = location_community_church_small_02_016
+        }
+    }
+    furniture
+    {
+        layer = Roof
+        entry
+        {
+            orient = W
+            0,0 = location_community_church_small_02_027
+            0,1 = location_community_church_small_02_026
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_community_church_small_02_024
+            1,0 = location_community_church_small_02_025
+        }
+    }
+    furniture
+    {
         entry
         {
             orient = W
@@ -2024,7 +2292,55 @@ group
 }
 group
 {
-    label = Location - Hospitality - SunStar Motel
+    label = Location - Hospitality - Sunstar Motel
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = W
+            0,0 = location_hospitality_sunstarmotel_01_017
+            0,1 = location_hospitality_sunstarmotel_01_016
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_hospitality_sunstarmotel_01_018
+            1,0 = location_hospitality_sunstarmotel_01_019
+        }
+    }
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = W
+            0,0 = location_hospitality_sunstarmotel_01_021
+            0,1 = location_hospitality_sunstarmotel_01_020
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_hospitality_sunstarmotel_01_022
+            1,0 = location_hospitality_sunstarmotel_01_023
+        }
+    }
+    furniture
+    {
+        layer = Frames
+        entry
+        {
+            orient = W
+            0,0 = location_hospitality_sunstarmotel_01_029
+            0,1 = location_hospitality_sunstarmotel_01_028
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_hospitality_sunstarmotel_01_030
+            1,0 = location_hospitality_sunstarmotel_01_031
+        }
+    }
     furniture
     {
         entry
@@ -2209,10 +2525,41 @@ group
             2,0 = location_restaurant_bar_01_031
         }
     }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_bar_01_014
+            0,1 = location_restaurant_bar_01_027
+            0,2 = location_restaurant_bar_01_008
+            1,0 = location_restaurant_bar_01_015
+            1,1 = location_restaurant_bar_01_028
+            1,2 = location_restaurant_bar_01_009
+        }
+    }
 }
 group
 {
     label = Location - Restaurant - Diner
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_diner_01_010
+            0,1 = location_restaurant_diner_01_009
+            0,2 = location_restaurant_diner_01_008
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_diner_01_011
+            1,0 = location_restaurant_diner_01_012
+            2,0 = location_restaurant_diner_01_013
+        }
+    }
     furniture
     {
         entry
@@ -2302,10 +2649,84 @@ group
             0,0 = location_restaurant_diner_01_024
         }
     }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_diner_01_051
+            0,1 = location_restaurant_diner_01_050
+            0,2 = location_restaurant_diner_01_049
+            0,3 = location_restaurant_diner_01_048
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_diner_01_052
+            1,0 = location_restaurant_diner_01_053
+            2,0 = location_restaurant_diner_01_054
+            3,0 = location_restaurant_diner_01_055
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_diner_01_035
+            0,1 = location_restaurant_diner_01_034
+            1,0 = location_restaurant_diner_01_015
+            1,1 = location_restaurant_diner_01_014
+            2,0 = location_restaurant_diner_01_039
+            2,1 = location_restaurant_diner_01_038
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_diner_01_032
+            0,1 = location_restaurant_diner_01_006
+            0,2 = location_restaurant_diner_01_036
+            1,0 = location_restaurant_diner_01_033
+            1,1 = location_restaurant_diner_01_007
+            1,2 = location_restaurant_diner_01_037
+        }
+    }
 }
 group
 {
     label = Location - Restaurant - Seahorse
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_seahorse_01_013
+            0,1 = location_restaurant_seahorse_01_012
+            0,2 = location_restaurant_seahorse_01_011
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_seahorse_01_008
+            1,0 = location_restaurant_seahorse_01_009
+            2,0 = location_restaurant_seahorse_01_010
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_restaurant_seahorse_01_021
+            0,1 = location_restaurant_seahorse_01_020
+            0,2 = location_restaurant_seahorse_01_019
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_seahorse_01_016
+            1,0 = location_restaurant_seahorse_01_017
+            2,0 = location_restaurant_seahorse_01_018
+        }
+    }
     furniture
     {
         corners = true
@@ -2387,6 +2808,23 @@ group
             orient = N
             0,0 = location_restaurant_seahorse_01_056
             1,0 = location_restaurant_seahorse_01_057
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = furniture_seating_indoor_02_005
+            0,1 = furniture_tables_high_01_006
+            0,2 = furniture_seating_indoor_02_007
+        }
+        entry
+        {
+            orient = N
+            0,0 = furniture_seating_indoor_02_004
+            1,0 = furniture_tables_high_01_006
+            2,0 = furniture_seating_indoor_02_006
         }
     }
 }
@@ -2542,7 +2980,39 @@ group
 }
 group
 {
-    label = Location - Restaurant - Spiffos
+    label = Location - Restaurant - Spiffo's
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_spiffos_01_014
+            0,1 = location_restaurant_spiffos_01_013
+            0,2 = location_restaurant_spiffos_01_012
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_spiffos_01_019
+            1,0 = location_restaurant_spiffos_01_020
+            2,0 = location_restaurant_spiffos_01_021
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_restaurant_spiffos_01_006
+            0,1 = location_restaurant_spiffos_01_005
+            0,2 = location_restaurant_spiffos_01_004
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_spiffos_01_016
+            1,0 = location_restaurant_spiffos_01_017
+            2,0 = location_restaurant_spiffos_01_018
+        }
+    }
     furniture
     {
         corners = true
@@ -2779,6 +3249,95 @@ group
             0,0 = location_restaurant_spiffos_02_006
         }
     }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_spiffos_02_017
+            0,1 = location_restaurant_spiffos_02_016
+            1,0 = location_restaurant_spiffos_02_037
+            1,1 = location_restaurant_spiffos_02_036
+            2,0 = location_restaurant_spiffos_02_019
+            2,1 = location_restaurant_spiffos_02_018
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_spiffos_02_020
+            0,1 = location_restaurant_spiffos_02_038
+            0,2 = location_restaurant_spiffos_02_022
+            1,0 = location_restaurant_spiffos_02_021
+            1,1 = location_restaurant_spiffos_02_039
+            1,2 = location_restaurant_spiffos_02_023
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_spiffos_02_017
+            0,1 = location_restaurant_spiffos_02_016
+            1,0 = location_restaurant_spiffos_02_037
+            1,1 = location_restaurant_spiffos_02_036
+            2,0 = location_restaurant_spiffos_02_027
+            2,1 = location_restaurant_spiffos_02_027
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_spiffos_02_020
+            0,1 = location_restaurant_spiffos_02_038
+            0,2 = location_restaurant_spiffos_02_026
+            1,0 = location_restaurant_spiffos_02_021
+            1,1 = location_restaurant_spiffos_02_039
+            1,2 = location_restaurant_spiffos_02_026
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_restaurant_spiffos_02_025
+            0,1 = location_restaurant_spiffos_02_025
+            1,0 = location_restaurant_spiffos_02_037
+            1,1 = location_restaurant_spiffos_02_036
+            2,0 = location_restaurant_spiffos_02_019
+            2,1 = location_restaurant_spiffos_02_018
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_spiffos_02_024
+            0,1 = location_restaurant_spiffos_02_038
+            0,2 = location_restaurant_spiffos_02_022
+            1,0 = location_restaurant_spiffos_02_024
+            1,1 = location_restaurant_spiffos_02_039
+            1,2 = location_restaurant_spiffos_02_023
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_spiffos_02_025
+            0,1 = location_restaurant_spiffos_02_025
+            1,0 = location_restaurant_spiffos_02_035
+            1,1 = location_restaurant_spiffos_02_034
+            2,0 = location_restaurant_spiffos_02_027
+            2,1 = location_restaurant_spiffos_02_027
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_spiffos_02_024
+            0,1 = location_restaurant_spiffos_02_032
+            0,2 = location_restaurant_spiffos_02_026
+            1,0 = location_restaurant_spiffos_02_024
+            1,1 = location_restaurant_spiffos_02_033
+            1,2 = location_restaurant_spiffos_02_026
+        }
+    }
 }
 group
 {
@@ -2935,6 +3494,30 @@ group
     label = Location - Shop - Fossoil
     furniture
     {
+        layer = Walls
+        entry
+        {
+            orient = W
+            0,0 = location_shop_fossoil_01_002
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_fossoil_01_000
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_shop_fossoil_01_002
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_shop_fossoil_01_000
+        }
+    }
+    furniture
+    {
         layer = WallOverlay
         entry
         {
@@ -2965,6 +3548,20 @@ group
             0,0 = location_shop_fossoil_01_029
             1,0 = location_shop_fossoil_01_030
             2,0 = location_shop_fossoil_01_031
+        }
+    }
+    furniture
+    {
+        layer = WallOverlay
+        entry
+        {
+            orient = W
+            0,0 = location_shop_fossoil_01_027
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_fossoil_01_028
         }
     }
     furniture
@@ -3082,6 +3679,148 @@ group
     label = Location - Trailer
     furniture
     {
+        layer = Walls
+        entry
+        {
+            orient = W
+            0,0 = location_trailer_01_013
+            0,1 = location_trailer_01_012
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_trailer_01_014
+            1,0 = location_trailer_01_015
+        }
+    }
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = W
+            0,0 = location_trailer_01_037
+            0,1 = location_trailer_01_036
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_trailer_01_038
+            1,0 = location_trailer_01_039
+        }
+    }
+    furniture
+    {
+        layer = RoofCap
+        entry
+        {
+            orient = W
+            0,0 = location_trailer_01_051
+            0,1 = location_trailer_01_050
+            0,2 = location_trailer_01_049
+            0,3 = location_trailer_01_048
+            0,4 = location_trailer_01_056
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_trailer_01_040
+            1,0 = location_trailer_01_041
+            2,0 = location_trailer_01_042
+            3,0 = location_trailer_01_043
+            4,0 = location_trailer_01_059
+        }
+    }
+    furniture
+    {
+        layer = Roof
+        entry
+        {
+            orient = W
+            0,0 = location_trailer_01_055
+            0,1 = location_trailer_01_054
+            0,2 = location_trailer_01_053
+            0,3 = location_trailer_01_052
+            0,4 = location_trailer_01_057
+            1,0 = location_trailer_01_055
+            1,1 = location_trailer_01_054
+            1,2 = location_trailer_01_053
+            1,3 = location_trailer_01_052
+            1,4 = location_trailer_01_057
+            2,0 = location_trailer_01_055
+            2,1 = location_trailer_01_054
+            2,2 = location_trailer_01_053
+            2,3 = location_trailer_01_052
+            2,4 = location_trailer_01_057
+            3,0 = location_trailer_01_055
+            3,1 = location_trailer_01_054
+            3,2 = location_trailer_01_053
+            3,3 = location_trailer_01_052
+            3,4 = location_trailer_01_057
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_trailer_01_063
+            0,1 = location_trailer_01_063
+            0,2 = location_trailer_01_063
+            0,3 = location_trailer_01_063
+            1,0 = location_trailer_01_062
+            1,1 = location_trailer_01_062
+            1,2 = location_trailer_01_062
+            1,3 = location_trailer_01_062
+            2,0 = location_trailer_01_061
+            2,1 = location_trailer_01_061
+            2,2 = location_trailer_01_061
+            2,3 = location_trailer_01_061
+            3,0 = location_trailer_01_060
+            3,1 = location_trailer_01_060
+            3,2 = location_trailer_01_060
+            3,3 = location_trailer_01_060
+            4,0 = location_trailer_01_058
+            4,1 = location_trailer_01_058
+            4,2 = location_trailer_01_058
+            4,3 = location_trailer_01_058
+        }
+    }
+    furniture
+    {
+        layer = Roof
+        entry
+        {
+            orient = W
+            0,0 = location_trailer_01_055
+            0,1 = location_trailer_01_054
+            0,2 = location_trailer_01_053
+            0,3 = location_trailer_01_052
+            0,4 = location_trailer_01_057
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_trailer_01_063
+            1,0 = location_trailer_01_062
+            2,0 = location_trailer_01_061
+            3,0 = location_trailer_01_060
+            4,0 = location_trailer_01_058
+        }
+    }
+    furniture
+    {
+        layer = WallOverlay
+        entry
+        {
+            orient = W
+            0,0 = location_trailer_01_004
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_trailer_01_005
+        }
+    }
+    furniture
+    {
         entry
         {
             orient = W
@@ -3183,6 +3922,50 @@ group
         {
             orient = S
             0,0 = location_trailer_02_020
+        }
+    }
+}
+group
+{
+    label = Recreational
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = recreational_01_000
+        }
+        entry
+        {
+            orient = N
+            0,0 = recreational_01_001
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,0 = recreational_01_002
+            1,0 = recreational_01_003
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,0 = recreational_01_008
+            1,0 = recreational_01_009
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = N
+            0,0 = recreational_01_010
+            1,0 = recreational_01_011
         }
     }
 }
@@ -3639,25 +4422,25 @@ group
         {
             orient = W
             0,0 = furniture_seating_outdoor_01_026
-            0,1 = furniture_seating_outdoor_01_027
+            1,0 = furniture_seating_outdoor_01_027
         }
         entry
         {
             orient = N
             0,0 = furniture_seating_outdoor_01_025
-            1,0 = furniture_seating_outdoor_01_024
+            0,1 = furniture_seating_outdoor_01_024
         }
         entry
         {
             orient = E
             0,0 = furniture_seating_outdoor_01_030
-            0,1 = furniture_seating_outdoor_01_031
+            1,0 = furniture_seating_outdoor_01_031
         }
         entry
         {
             orient = S
             0,0 = furniture_seating_outdoor_01_029
-            1,0 = furniture_seating_outdoor_01_028
+            0,1 = furniture_seating_outdoor_01_028
         }
     }
 }
@@ -3904,6 +4687,24 @@ group
 }
 group
 {
+    label = Walls - Commerical
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = W
+            0,0 = walls_commercial_01_048
+        }
+        entry
+        {
+            orient = N
+            0,0 = walls_commercial_01_049
+        }
+    }
+}
+group
+{
     label = Walls - Decoration
     furniture
     {
@@ -4061,6 +4862,82 @@ group
             orient = N
             0,0 = walls_decoration_01_044
             1,0 = walls_decoration_01_045
+        }
+    }
+}
+group
+{
+    label = Walls - Garage
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = E
+            0,0 = walls_garage_01_002
+            0,1 = walls_garage_01_001
+            0,2 = walls_garage_01_000
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_garage_01_003
+            1,0 = walls_garage_01_004
+            2,0 = walls_garage_01_005
+        }
+    }
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = E
+            0,0 = walls_garage_01_010
+            0,1 = walls_garage_01_009
+            0,2 = walls_garage_01_008
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_garage_01_011
+            1,0 = walls_garage_01_012
+            2,0 = walls_garage_01_013
+        }
+    }
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = E
+            0,0 = walls_garage_01_018
+            0,1 = walls_garage_01_017
+            0,2 = walls_garage_01_016
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_garage_01_019
+            1,0 = walls_garage_01_020
+            2,0 = walls_garage_01_021
+        }
+    }
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = E
+            0,0 = walls_garage_01_026
+            0,1 = walls_garage_01_025
+            0,2 = walls_garage_01_024
+        }
+        entry
+        {
+            orient = S
+            0,0 = walls_garage_01_027
+            1,0 = walls_garage_01_028
+            2,0 = walls_garage_01_029
         }
     }
 }

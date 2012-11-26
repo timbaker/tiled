@@ -638,6 +638,7 @@ public:
 
 private:
     bool upgradeTxt();
+    bool mergeTxt();
 
 signals:
     void tilesetAdded(Tiled::Tileset *tileset);
@@ -664,6 +665,9 @@ private:
 
     BuildingTileCategory *mNoneCategory;
     BuildingTileEntry *mNoneTileEntry;
+
+    int mRevision;
+    int mSourceRevision;
 
     QString mError;
 

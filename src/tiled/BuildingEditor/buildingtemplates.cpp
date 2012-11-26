@@ -163,6 +163,9 @@ bool BuildingTemplates::readTxt()
     if (!upgradeTxt())
         return false;
 
+    if (!mergeTxt())
+        return false;
+
     QString path = info.absoluteFilePath();
     SimpleFile simple;
     if (!simple.read(path)) {
@@ -175,6 +178,9 @@ bool BuildingTemplates::readTxt()
                 .arg(txtName()).arg(VERSION_LATEST).arg(simple.version());
         return false;
     }
+
+    mRevision = simple.value("revision").toInt();
+    mSourceRevision = simple.value("source_revision").toInt();
 
     mEntries.clear();
     mEntriesByCategoryName.clear();
@@ -262,6 +268,8 @@ void BuildingTemplates::writeTxt(QWidget *parent)
         simpleFile.blocks += templateBlock;
     }
     simpleFile.setVersion(VERSION_LATEST);
+    simpleFile.replaceValue("revision", QString::number(++mRevision));
+    simpleFile.replaceValue("source_revision", QString::number(mSourceRevision));
     if (!simpleFile.write(txtPath())) {
         QMessageBox::warning(parent, tr("It's no good, Jim!"),
                              simpleFile.errorString());
@@ -369,6 +377,118 @@ bool BuildingTemplates::upgradeTxt()
         userFile.blocks = newFile.blocks;
         userFile.values = newFile.values;
     }
+
+    userFile.setVersion(VERSION_LATEST);
+    if (!userFile.write(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+    return true;
+}
+
+bool BuildingTemplates::mergeTxt()
+{
+    QString userPath = txtPath();
+
+    SimpleFile userFile;
+    if (!userFile.read(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+    Q_ASSERT(userFile.version() == VERSION_LATEST);
+
+    QString sourcePath = QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + txtName();
+
+    SimpleFile sourceFile;
+    if (!sourceFile.read(sourcePath)) {
+        mError = sourceFile.errorString();
+        return false;
+    }
+    Q_ASSERT(sourceFile.version() == VERSION_LATEST);
+
+    int userSourceRevision = userFile.value("source_revision").toInt();
+    int sourceRevision = sourceFile.value("revision").toInt();
+    if (sourceRevision == userSourceRevision)
+        return true;
+
+    // MERGE HERE
+
+    QStringList userEntries;
+    QMap<QString,int> userEntryIndexMap;
+    QList<SimpleFileBlock> userTemplates;
+    QMap<QString,int> userTemplateIndexByName;
+    foreach (SimpleFileBlock b, userFile.blocks) {
+        if (b.name == QLatin1String("TileEntry")) {
+            QString entryText = b.toString();
+            userEntries += entryText;
+            userEntryIndexMap[entryText] = userEntries.size() - 1;
+        }
+        if (b.name == QLatin1String("Template")) {
+            userTemplates += b;
+            userTemplateIndexByName[b.value("Name")] = userTemplates.size() - 1;
+        }
+    }
+
+    QStringList sourceEntries;
+    QList<SimpleFileBlock> sourceTemplates;
+    foreach (SimpleFileBlock b, sourceFile.blocks) {
+        if (b.name == QLatin1String("TileEntry"))
+            sourceEntries += b.toString();
+        if (b.name == QLatin1String("Template"))
+            sourceTemplates += b;
+    }
+
+    QMap<int,int> sourceToUserEntryIndexMap;
+    foreach (SimpleFileBlock b, sourceTemplates) {
+        if (!userTemplateIndexByName.contains(b.value("Name"))) {
+            // The user-file doesn't have any template with the same name as
+            // a source-template.  Append the source-template to the user-file
+            // and append any missing TileEntrys to the user-file.
+            for (int i = 0; i < BuildingTemplate::TileCount; i++) {
+                QString key = BuildingTemplate::enumToString(i);
+                int entryIndex = b.value(key).toInt() - 1;
+                if (entryIndex < 0) continue; // handle "0"
+                QString entryText = sourceEntries.at(entryIndex);
+                if (userEntryIndexMap.contains(entryText)) {
+                    sourceToUserEntryIndexMap[entryIndex] = userEntryIndexMap[entryText];
+                } else {
+                    userFile.blocks.insert(userEntries.size(), sourceFile.blocks.at(entryIndex));
+                    userEntries += entryText;
+                    userEntryIndexMap[entryText] = userEntries.size() - 1;
+                    sourceToUserEntryIndexMap[entryIndex] = userEntries.size() - 1;
+                }
+                b.replaceValue(key, QString::number(sourceToUserEntryIndexMap[entryIndex] + 1));
+            }
+            int blockIndex = 0;
+            foreach (SimpleFileBlock b2, b.blocks) {
+                if (b2.name == QLatin1String("Room")) {
+                    QStringList keys;
+                    keys << QLatin1String("Wall") << QLatin1String("Floor");
+                    foreach (QString key, keys) {
+                        int entryIndex = b2.value(key).toInt() - 1;
+                        if (entryIndex < 0) continue; // handle "0"
+                        QString entryText = sourceEntries.at(entryIndex);
+                        if (userEntryIndexMap.contains(entryText)) {
+                            sourceToUserEntryIndexMap[entryIndex] = userEntryIndexMap[entryText];
+                        } else {
+                            userFile.blocks.insert(userEntries.size(), sourceFile.blocks.at(entryIndex));
+                            userEntries += entryText;
+                            userEntryIndexMap[entryText] = userEntries.size() - 1;
+                            sourceToUserEntryIndexMap[entryIndex] = userEntries.size() - 1;
+                        }
+                        b2.replaceValue(key, QString::number(sourceToUserEntryIndexMap[entryIndex] + 1));
+                    }
+                    b.blocks.replace(blockIndex, b2);
+                }
+                ++blockIndex;
+            }
+            userFile.blocks += b;
+        }
+    }
+
+    userFile.replaceValue("revision", QString::number(sourceRevision + 1));
+    userFile.replaceValue("source_revision", QString::number(sourceRevision));
 
     userFile.setVersion(VERSION_LATEST);
     if (!userFile.write(userPath)) {

@@ -22,6 +22,7 @@
 #include "simplefile.h"
 
 #include <QCoreApplication>
+#include <QDebug>
 #include <QFileInfo>
 
 using namespace BuildingEditor;
@@ -101,6 +102,9 @@ bool FurnitureGroups::readTxt()
     if (!upgradeTxt())
         return false;
 
+    if (!mergeTxt())
+        return false;
+
     QString path = info.canonicalFilePath();
     SimpleFile simple;
     if (!simple.read(path)) {
@@ -113,6 +117,9 @@ bool FurnitureGroups::readTxt()
                 .arg(txtName()).arg(VERSION_LATEST).arg(simple.version());
         return false;
     }
+
+    mRevision = simple.value("revision").toInt();
+    mSourceRevision = simple.value("source_revision").toInt();
 
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("group")) {
@@ -254,6 +261,8 @@ bool FurnitureGroups::writeTxt()
         simpleFile.blocks += groupBlock;
     }
     simpleFile.setVersion(VERSION_LATEST);
+    simpleFile.replaceValue("revision", QString::number(++mRevision));
+    simpleFile.replaceValue("source_revision", QString::number(mSourceRevision));
     if (!simpleFile.write(txtPath())) {
         mError = simpleFile.errorString();
         return false;
@@ -322,6 +331,99 @@ bool FurnitureGroups::upgradeTxt()
     Q_ASSERT(sourceFile.version() == VERSION_LATEST);
 
     // UPGRADE HERE
+
+    userFile.setVersion(VERSION_LATEST);
+    if (!userFile.write(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+    return true;
+}
+
+bool FurnitureGroups::mergeTxt()
+{
+    QString userPath = txtPath();
+
+    SimpleFile userFile;
+    if (!userFile.read(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+    Q_ASSERT(userFile.version() == VERSION_LATEST);
+
+    QString sourcePath = QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + txtName();
+
+    SimpleFile sourceFile;
+    if (!sourceFile.read(sourcePath)) {
+        mError = sourceFile.errorString();
+        return false;
+    }
+    Q_ASSERT(sourceFile.version() == VERSION_LATEST);
+
+    int userSourceRevision = userFile.value("source_revision").toInt();
+    int sourceRevision = sourceFile.value("revision").toInt();
+    if (sourceRevision == userSourceRevision)
+        return true;
+
+    // MERGE HERE
+
+    QMap<QString,SimpleFileBlock> userGroupsByName;
+    QMap<QString,int> userGroupIndexByName;
+    QMap<QString,QStringList> userFurnitureByGroupName;
+    int index = 0;
+    foreach (SimpleFileBlock b, userFile.blocks) {
+        QString label = b.value("label");
+        userGroupsByName[label] = b;
+        userGroupIndexByName[label] = index++;
+        foreach (SimpleFileBlock b2, b.blocks)
+            userFurnitureByGroupName[label] += b2.toString();
+    }
+
+    QMap<QString,SimpleFileBlock> sourceGroupsByName;
+    QMap<QString,QStringList> sourceFurnitureByGroupName;
+    foreach (SimpleFileBlock b, sourceFile.blocks) {
+        QString label = b.value("label");
+        sourceGroupsByName[label] = b;
+        foreach (SimpleFileBlock b2, b.blocks)
+            sourceFurnitureByGroupName[label] += b2.toString();
+    }
+
+    foreach (QString label, sourceGroupsByName.keys()) {
+        if (userGroupsByName.contains(label)) {
+            // A user-group with the same name as a source-group exists.
+            // Copy unique source-furniture to the user-group.
+            int userGroupIndex = userGroupIndexByName[label];
+            int userFurnitureIndex = userFurnitureByGroupName[label].size();
+            int sourceFurnitureIndex = 0;
+            foreach (QString f, sourceFurnitureByGroupName[label]) {
+                if (userFurnitureByGroupName[label].contains(f)) {
+                    userFurnitureIndex = userFurnitureByGroupName[label].indexOf(f) + 1;
+                } else {
+                    userFurnitureByGroupName[label].insert(userFurnitureIndex, f);
+                    SimpleFileBlock furnitureBlock = sourceGroupsByName[label].blocks.at(sourceFurnitureIndex);
+                    userFile.blocks[userGroupIndex].blocks.insert(userFurnitureIndex, furnitureBlock);
+                    qDebug() << "FurnitureGroups.txt merge: inserted furniture in group" << label << "at" << userFurnitureIndex;
+                }
+                ++sourceFurnitureIndex;
+            }
+        } else {
+            // The source-group doesn't exist in the user-file.
+            // Copy the source-group to the user-file.
+            userGroupsByName[label] = sourceGroupsByName[label];
+            int index = userGroupsByName.keys().indexOf(label); // insert group alphabetically
+            userFile.blocks.insert(index, userGroupsByName[label]);
+            foreach (QString label, userGroupsByName.keys()) {
+                if (userGroupIndexByName[label] >= index)
+                    userGroupIndexByName[label]++;
+            }
+            userGroupIndexByName[label] = index;
+            qDebug() << "FurnitureGroups.txt merge: inserted group" << label << "at" << index;
+        }
+    }
+
+    userFile.replaceValue("revision", QString::number(sourceRevision + 1));
+    userFile.replaceValue("source_revision", QString::number(sourceRevision));
 
     userFile.setVersion(VERSION_LATEST);
     if (!userFile.write(userPath)) {

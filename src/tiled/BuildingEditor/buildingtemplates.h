@@ -168,6 +168,7 @@ public:
 
 private:
     bool upgradeTxt();
+    bool mergeTxt();
 
     QString nameForEntry(BuildingTileEntry *entry);
     void addEntry(BuildingTileEntry *entry, bool sort = true);
@@ -180,6 +181,8 @@ private:
 private:
     static BuildingTemplates *mInstance;
     QList<BuildingTemplate*> mTemplates;
+    int mRevision;
+    int mSourceRevision;
     QString mError;
 
     QList<BuildingTileEntry*> mEntries; // Used during readTxt()/writeTxt()

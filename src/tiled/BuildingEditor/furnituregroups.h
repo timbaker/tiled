@@ -232,10 +232,13 @@ signals:
 
 private:
     bool upgradeTxt();
+    bool mergeTxt();
 
 private:
     static FurnitureGroups *mInstance;
     QList<FurnitureGroup*> mGroups;
+    int mRevision;
+    int mSourceRevision;
     QString mError;
 };
 

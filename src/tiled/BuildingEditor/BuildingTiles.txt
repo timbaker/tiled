@@ -1,4 +1,5 @@
 version = 2
+revision = 1
 category
 {
     label = Exterior Walls
@@ -38,6 +39,17 @@ category
     }
     entry
     {
+        West = location_hospitality_sunstarmotel_01_024
+        North = location_hospitality_sunstarmotel_01_025
+        NorthWest = location_hospitality_sunstarmotel_01_026
+        SouthEast = location_hospitality_sunstarmotel_01_027
+        WestWindow = location_hospitality_sunstarmotel_01_032
+        NorthWindow = location_hospitality_sunstarmotel_01_033
+        WestDoor = location_hospitality_sunstarmotel_01_034
+        NorthDoor = location_hospitality_sunstarmotel_01_035
+    }
+    entry
+    {
         West = location_restaurant_diner_01_000
         North = location_restaurant_diner_01_001
         NorthWest = location_restaurant_diner_01_002
@@ -46,6 +58,83 @@ category
         NorthWindow = 
         WestDoor = location_restaurant_diner_01_004
         NorthDoor = location_restaurant_diner_01_005
+    }
+    entry
+    {
+        West = location_restaurant_seahorse_01_005
+        North = location_restaurant_seahorse_01_004
+        NorthWest = location_restaurant_seahorse_01_006
+        SouthEast = location_restaurant_seahorse_01_007
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = location_restaurant_seahorse_01_014
+        NorthDoor = location_restaurant_seahorse_01_015
+    }
+    entry
+    {
+        West = location_trailer_01_000
+        North = location_trailer_01_001
+        NorthWest = location_trailer_01_002
+        SouthEast = location_trailer_01_003
+        WestWindow = location_trailer_01_008
+        NorthWindow = location_trailer_01_009
+        WestDoor = location_trailer_01_010
+        NorthDoor = location_trailer_01_011
+    }
+    entry
+    {
+        West = location_trailer_01_024
+        North = location_trailer_01_025
+        NorthWest = location_trailer_01_026
+        SouthEast = location_trailer_01_027
+        WestWindow = location_trailer_01_032
+        NorthWindow = location_trailer_01_033
+        WestDoor = location_trailer_01_034
+        NorthDoor = location_trailer_01_035
+    }
+    entry
+    {
+        West = walls_commercial_01_000
+        North = walls_commercial_01_001
+        NorthWest = 
+        SouthEast = walls_commercial_01_002
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = walls_commercial_01_008
+        NorthDoor = walls_commercial_01_009
+    }
+    entry
+    {
+        West = walls_commercial_01_016
+        North = walls_commercial_01_017
+        NorthWest = walls_commercial_01_018
+        SouthEast = walls_commercial_01_019
+        WestWindow = walls_commercial_01_024
+        NorthWindow = walls_commercial_01_025
+        WestDoor = walls_commercial_01_026
+        NorthDoor = walls_commercial_01_027
+    }
+    entry
+    {
+        West = walls_commercial_01_032
+        North = walls_commercial_01_033
+        NorthWest = walls_commercial_01_034
+        SouthEast = walls_commercial_01_035
+        WestWindow = walls_commercial_01_040
+        NorthWindow = walls_commercial_01_041
+        WestDoor = walls_commercial_01_042
+        NorthDoor = walls_commercial_01_043
+    }
+    entry
+    {
+        West = walls_commercial_01_048
+        North = walls_commercial_01_049
+        NorthWest = walls_commercial_01_050
+        SouthEast = walls_commercial_01_051
+        WestWindow = walls_commercial_01_056
+        NorthWindow = walls_commercial_01_057
+        WestDoor = walls_commercial_01_058
+        NorthDoor = walls_commercial_01_059
     }
     entry
     {
@@ -164,17 +253,6 @@ category
     name = interior_walls
     entry
     {
-        West = location_community_church_small_01_000
-        North = location_community_church_small_01_001
-        NorthWest = location_community_church_small_01_002
-        SouthEast = location_community_church_small_01_003
-        WestWindow = location_community_church_small_01_008
-        NorthWindow = location_community_church_small_01_009
-        WestDoor = location_community_church_small_01_010
-        NorthDoor = location_community_church_small_01_011
-    }
-    entry
-    {
         West = location_community_church_small_01_004
         North = location_community_church_small_01_005
         NorthWest = location_community_church_small_01_006
@@ -214,8 +292,8 @@ category
         SouthEast = location_restaurant_seahorse_01_003
         WestWindow = 
         NorthWindow = 
-        WestDoor = 
-        NorthDoor = 
+        WestDoor = location_restaurant_seahorse_01_022
+        NorthDoor = location_restaurant_seahorse_01_023
     }
     entry
     {
@@ -225,8 +303,8 @@ category
         SouthEast = location_restaurant_seahorse_01_007
         WestWindow = 
         NorthWindow = 
-        WestDoor = 
-        NorthDoor = 
+        WestDoor = location_restaurant_seahorse_01_014
+        NorthDoor = location_restaurant_seahorse_01_015
     }
     entry
     {
@@ -315,6 +393,28 @@ category
         NorthWindow = location_trailer_01_033
         WestDoor = location_trailer_01_034
         NorthDoor = location_trailer_01_035
+    }
+    entry
+    {
+        West = walls_commercial_01_016
+        North = walls_commercial_01_017
+        NorthWest = walls_commercial_01_018
+        SouthEast = walls_commercial_01_019
+        WestWindow = walls_commercial_01_024
+        NorthWindow = walls_commercial_01_025
+        WestDoor = walls_commercial_01_026
+        NorthDoor = walls_commercial_01_027
+    }
+    entry
+    {
+        West = walls_commercial_01_048
+        North = walls_commercial_01_049
+        NorthWest = walls_commercial_01_050
+        SouthEast = walls_commercial_01_051
+        WestWindow = walls_commercial_01_056
+        NorthWindow = walls_commercial_01_057
+        WestDoor = walls_commercial_01_058
+        NorthDoor = walls_commercial_01_059
     }
     entry
     {
