@@ -772,7 +772,7 @@ group
 }
 group
 {
-    label = Fixture - Railings
+    label = Fixtures - Railings
     furniture
     {
         entry
@@ -2292,7 +2292,7 @@ group
 }
 group
 {
-    label = Location - Hospitality - Sunstar Motel
+    label = Location - Hospitality - SunStar Motel
     furniture
     {
         layer = Walls
@@ -2815,16 +2815,16 @@ group
         entry
         {
             orient = W
-            0,0 = furniture_seating_indoor_02_005
-            0,1 = furniture_tables_high_01_006
-            0,2 = furniture_seating_indoor_02_007
+            0,0 = furniture_seating_indoor_02_004
+            1,0 = furniture_tables_high_01_006
+            2,0 = furniture_seating_indoor_02_006
         }
         entry
         {
             orient = N
-            0,0 = furniture_seating_indoor_02_004
-            1,0 = furniture_tables_high_01_006
-            2,0 = furniture_seating_indoor_02_006
+            0,0 = furniture_seating_indoor_02_005
+            0,1 = furniture_tables_high_01_006
+            0,2 = furniture_seating_indoor_02_007
         }
     }
 }
@@ -2980,7 +2980,7 @@ group
 }
 group
 {
-    label = Location - Restaurant - Spiffo's
+    label = Location - Restaurant - Spiffos
     furniture
     {
         layer = Walls
@@ -4687,7 +4687,7 @@ group
 }
 group
 {
-    label = Walls - Commerical
+    label = Walls - Commercial
     furniture
     {
         layer = Walls

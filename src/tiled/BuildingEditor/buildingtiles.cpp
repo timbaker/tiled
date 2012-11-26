@@ -588,6 +588,7 @@ bool BuildingTilesMgr::mergeTxt()
                     SimpleFileBlock entryBlock = sourceCategoriesByName[categoryName].blocks.at(sourceEntryIndex);
                     userFile.blocks[userGroupIndex].blocks.insert(userEntryIndex, entryBlock);
                     qDebug() << "BuildingTiles.txt merge: inserted entry in category" << categoryName << "at" << userEntryIndex;
+                    userEntryIndex++;
                 }
                 ++sourceEntryIndex;
             }

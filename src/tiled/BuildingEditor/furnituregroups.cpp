@@ -394,7 +394,7 @@ bool FurnitureGroups::mergeTxt()
             // A user-group with the same name as a source-group exists.
             // Copy unique source-furniture to the user-group.
             int userGroupIndex = userGroupIndexByName[label];
-            int userFurnitureIndex = userFurnitureByGroupName[label].size();
+            int userFurnitureIndex = 0;
             int sourceFurnitureIndex = 0;
             foreach (QString f, sourceFurnitureByGroupName[label]) {
                 if (userFurnitureByGroupName[label].contains(f)) {
@@ -404,6 +404,7 @@ bool FurnitureGroups::mergeTxt()
                     SimpleFileBlock furnitureBlock = sourceGroupsByName[label].blocks.at(sourceFurnitureIndex);
                     userFile.blocks[userGroupIndex].blocks.insert(userFurnitureIndex, furnitureBlock);
                     qDebug() << "FurnitureGroups.txt merge: inserted furniture in group" << label << "at" << userFurnitureIndex;
+                    ++userFurnitureIndex;
                 }
                 ++sourceFurnitureIndex;
             }

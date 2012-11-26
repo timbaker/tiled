@@ -61,6 +61,7 @@ public:
 
 private:
     bool upgradeTxt();
+    bool mergeTxt();
 
     class LayerInfo
     {
@@ -82,6 +83,8 @@ private:
     static BuildingTMX *mInstance;
     QStringList mTilesets;
     QList<LayerInfo> mLayers;
+    int mRevision;
+    int mSourceRevision;
     QString mError;
 };
 

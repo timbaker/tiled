@@ -37,6 +37,7 @@
 #include "tilelayer.h"
 #include "tileset.h"
 
+#include <QDebug>
 #include <QDir>
 #include <QImage>
 
@@ -169,6 +170,9 @@ bool BuildingTMX::readTxt()
     if (!upgradeTxt())
         return false;
 
+    if (!mergeTxt())
+        return false;
+
     QString path = info.canonicalFilePath();
     SimpleFile simple;
     if (!simple.read(path)) {
@@ -181,6 +185,9 @@ bool BuildingTMX::readTxt()
                 .arg(txtName()).arg(VERSION_LATEST).arg(simple.version());
         return false;
     }
+
+    mRevision = simple.value("revision").toInt();
+    mSourceRevision = simple.value("source_revision").toInt();
 
     QStringList missingTilesets;
 
@@ -270,6 +277,8 @@ bool BuildingTMX::writeTxt()
     simpleFile.blocks += layersBlock;
 
     simpleFile.setVersion(VERSION_LATEST);
+    simpleFile.replaceValue("revision", QString::number(++mRevision));
+    simpleFile.replaceValue("source_revision", QString::number(mSourceRevision));
     if (!simpleFile.write(txtPath())) {
         mError = simpleFile.errorString();
         return false;
@@ -312,6 +321,11 @@ bool BuildingTMX::upgradeTxt()
     if (userVersion == VERSION_LATEST)
         return true;
 
+    if (userVersion > VERSION_LATEST) {
+        mError = tr("%1 is from a newer version of TileZed").arg(txtName());
+        return false;
+    }
+
     // Not the latest version -> upgrade it.
 
     QString sourcePath = QCoreApplication::applicationDirPath() + QLatin1Char('/')
@@ -325,6 +339,88 @@ bool BuildingTMX::upgradeTxt()
     Q_ASSERT(sourceFile.version() == VERSION_LATEST);
 
     // UPGRADE HERE
+
+    userFile.setVersion(VERSION_LATEST);
+    if (!userFile.write(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+    return true;
+}
+
+bool BuildingTMX::mergeTxt()
+{
+    QString userPath = txtPath();
+
+    SimpleFile userFile;
+    if (!userFile.read(userPath)) {
+        mError = userFile.errorString();
+        return false;
+    }
+    Q_ASSERT(userFile.version() == VERSION_LATEST);
+
+    QString sourcePath = QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + txtName();
+
+    SimpleFile sourceFile;
+    if (!sourceFile.read(sourcePath)) {
+        mError = sourceFile.errorString();
+        return false;
+    }
+    Q_ASSERT(sourceFile.version() == VERSION_LATEST);
+
+    int userSourceRevision = userFile.value("source_revision").toInt();
+    int sourceRevision = sourceFile.value("revision").toInt();
+    if (sourceRevision == userSourceRevision)
+        return true;
+
+    // MERGE HERE
+
+    int tilesetBlock = -1;
+    int layersBlock = -1;
+    QMap<QString,SimpleFileKeyValue> userTilesetMap;
+    QMap<QString,int> userLayersMap;
+    int blockIndex = 0;
+    foreach (SimpleFileBlock b, userFile.blocks) {
+        if (b.name == QLatin1String("tilesets")) {
+            foreach (SimpleFileKeyValue kv, b.values) {
+                userTilesetMap[kv.value] = kv;
+            }
+            tilesetBlock = blockIndex;
+        } else if (b.name == QLatin1String("layers"))  {
+            int layerIndex = 0;
+            foreach (SimpleFileKeyValue kv, b.values)
+                userLayersMap[kv.value] = layerIndex++;
+            layersBlock = blockIndex;
+        }
+        ++blockIndex;
+    }
+
+    foreach (SimpleFileBlock b, sourceFile.blocks) {
+        if (b.name == QLatin1String("tilesets")) {
+            foreach (SimpleFileKeyValue kv, b.values) {
+                if (!userTilesetMap.contains(kv.value)) {
+                    userFile.blocks[tilesetBlock].values += kv;
+                    qDebug() << "TMXConfig.txt merge: added tileset" << kv.value;
+                }
+            }
+        } else if (b.name == QLatin1String("layers"))  {
+            int insertIndex = 0;
+            foreach (SimpleFileKeyValue kv, b.values) {
+                if (userLayersMap.contains(kv.value)) {
+                    insertIndex = userLayersMap[kv.value] + 1;
+                } else {
+                    userFile.blocks[layersBlock].values.insert(insertIndex, kv);
+                    userLayersMap[kv.value] = insertIndex;
+                    qDebug() << "TMXConfig.txt merge: added layer" << kv.value << "at" << insertIndex;
+                    insertIndex++;
+                }
+            }
+        }
+    }
+
+    userFile.replaceValue("revision", QString::number(sourceRevision + 1));
+    userFile.replaceValue("source_revision", QString::number(sourceRevision));
 
     userFile.setVersion(VERSION_LATEST);
     if (!userFile.write(userPath)) {

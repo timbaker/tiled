@@ -22,6 +22,7 @@
 #include "simplefile.h"
 
 #include <QCoreApplication>
+#include <QDebug>
 #include <QFileInfo>
 #include <QMessageBox>
 
@@ -457,6 +458,7 @@ bool BuildingTemplates::mergeTxt()
                     userEntries += entryText;
                     userEntryIndexMap[entryText] = userEntries.size() - 1;
                     sourceToUserEntryIndexMap[entryIndex] = userEntries.size() - 1;
+                    qDebug() << "BuildingTemplates.txt merge: added entry" << key << "for template" << b.value("Name");
                 }
                 b.replaceValue(key, QString::number(sourceToUserEntryIndexMap[entryIndex] + 1));
             }
@@ -476,6 +478,7 @@ bool BuildingTemplates::mergeTxt()
                             userEntries += entryText;
                             userEntryIndexMap[entryText] = userEntries.size() - 1;
                             sourceToUserEntryIndexMap[entryIndex] = userEntries.size() - 1;
+                            qDebug() << "BuildingTemplates.txt merge: added entry" << key << "for room" << b2.value("Name") << "in template" << b.value("Name");
                         }
                         b2.replaceValue(key, QString::number(sourceToUserEntryIndexMap[entryIndex] + 1));
                     }
@@ -484,6 +487,7 @@ bool BuildingTemplates::mergeTxt()
                 ++blockIndex;
             }
             userFile.blocks += b;
+            qDebug() << "BuildingTemplates.txt merge: added template" << b.value("Name");
         }
     }
 
