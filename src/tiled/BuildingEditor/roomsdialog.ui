@@ -55,6 +55,9 @@
         </item>
         <item>
          <widget class="QToolButton" name="duplicate">
+          <property name="toolTip">
+           <string>Duplicate the selected room</string>
+          </property>
           <property name="text">
            <string>...</string>
           </property>
