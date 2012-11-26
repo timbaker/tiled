@@ -133,6 +133,7 @@ public:
 
     void setTile(FurnitureTile *ftile);
     FurnitureTile *tile(FurnitureTile::FurnitureOrientation orient) const;
+    FurnitureTile *tile(int orient) const;
 
     const QVector<FurnitureTile*> &tiles() const
     { return mTiles; }

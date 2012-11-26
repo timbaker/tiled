@@ -586,6 +586,14 @@ FurnitureTile *FurnitureTiles::tile(FurnitureTile::FurnitureOrientation orient) 
     return mTiles[orient];
 }
 
+FurnitureTile *FurnitureTiles::tile(int orient) const
+{
+    Q_ASSERT(orient >= 0 && orient < FurnitureTile::OrientCount);
+    if (orient >= 0 && orient < FurnitureTile::OrientCount)
+        return mTiles[orient];
+    return 0;
+}
+
 bool FurnitureTiles::equals(const FurnitureTiles *other)
 {
     if (other->mLayer != mLayer)

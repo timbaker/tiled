@@ -210,11 +210,24 @@ QSize FurnitureTileDelegate::sizeHint(const QStyleOptionViewItem & option,
             * zoom + QSize(extra * 2, extra * 2);
 
     if (ftile) {
+        // QTableView doesn't ask for the sizeHint of out-of-view items.
         width = mView->model()->maxTileSize(ftile->orient()).width() + d;
         height = mView->model()->maxTileSize(ftile->orient()).height() + d;
         QSize sizeMax = isometricSize(width, height, tileWidth, tileHeight)
                 * zoom + QSize(extra * 2, extra * 2);
         size.setWidth(qMax(size.width(), sizeMax.width()));
+
+        // Calc the max height of tiles in this row.
+        int maxHeight = 0;
+        for (int i = 0; i < 4; i++) {
+            int e = ftile->isCornerOrient(ftile->orient()) ? i + 4 : i;
+            width = ftile->owner()->tile(e)->size().width() + d;
+            height = ftile->owner()->tile(e)->size().height() + d;
+            QSize size = isometricSize(width, height, tileWidth, tileHeight)
+                    * zoom + QSize(extra * 2, extra * 2);
+            maxHeight = qMax(maxHeight, size.height());
+        }
+        size.setHeight(qMax(size.height(), maxHeight));
     }
 
     return size;
