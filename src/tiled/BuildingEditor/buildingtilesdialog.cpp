@@ -966,6 +966,8 @@ void BuildingTilesDialog::insertFurnitureTiles(FurnitureGroup *category,
 {
     category->mTiles.insert(index, ftiles);
     ui->furnitureView->model()->setTiles(category->mTiles);
+    mCurrentFurniture = 0;
+    synchUI(); // model calling reset() doesn't generate selectionChanged signal
 }
 
 FurnitureTiles *BuildingTilesDialog::removeFurnitureTiles(FurnitureGroup *category,
