@@ -300,6 +300,11 @@ bool BuildingTemplates::upgradeTxt()
     if (userVersion == VERSION_LATEST)
         return true;
 
+    if (userVersion > VERSION_LATEST) {
+        mError = tr("%1 is from a newer version of TileZed").arg(txtName());
+        return false;
+    }
+
     // Not the latest version -> upgrade it.
 
     QString sourcePath = QCoreApplication::applicationDirPath() + QLatin1Char('/')

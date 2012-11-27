@@ -317,9 +317,7 @@ static BuildingTileEntry *readTileEntry(BuildingTileCategory *category,
 
 bool BuildingTilesMgr::readTxt()
 {
-    QString fileName = BuildingPreferences::instance()
-            ->configPath(QLatin1String(TXT_FILE));
-    QFileInfo info(fileName);
+    QFileInfo info(txtPath());
     if (!info.exists()) {
         mError = tr("The %1 file doesn't exist.").arg(txtName());
         return false;
@@ -425,12 +423,10 @@ void BuildingTilesMgr::writeTxt(QWidget *parent)
 
         simpleFile.blocks += categoryBlock;
     }
-    QString fileName = BuildingPreferences::instance()
-            ->configPath(QLatin1String(TXT_FILE));
     simpleFile.setVersion(VERSION_LATEST);
     simpleFile.replaceValue("revision", QString::number(++mRevision));
     simpleFile.replaceValue("source_revision", QString::number(mSourceRevision));
-    if (!simpleFile.write(fileName)) {
+    if (!simpleFile.write(txtPath())) {
         QMessageBox::warning(parent, tr("It's no good, Jim!"),
                              simpleFile.errorString());
     }
@@ -455,8 +451,7 @@ static SimpleFileBlock findCategoryBlock(const SimpleFileBlock &parent,
 
 bool BuildingTilesMgr::upgradeTxt()
 {
-    QString userPath = BuildingPreferences::instance()
-            ->configPath(QLatin1String(TXT_FILE));
+    QString userPath = txtPath();
 
     SimpleFile userFile;
     if (!userFile.read(userPath)) {
@@ -468,10 +463,15 @@ bool BuildingTilesMgr::upgradeTxt()
     if (userVersion == VERSION_LATEST)
         return true;
 
+    if (userVersion > VERSION_LATEST) {
+        mError = tr("%1 is from a newer version of TileZed").arg(txtName());
+        return false;
+    }
+
     // Not the latest version -> upgrade it.
 
     QString sourcePath = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + QLatin1String(TXT_FILE);
+            + txtName();
 
     SimpleFile sourceFile;
     if (!sourceFile.read(sourcePath)) {
