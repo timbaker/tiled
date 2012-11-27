@@ -2011,6 +2011,7 @@ group
     label = Location - Business - Bank
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -3273,12 +3274,12 @@ group
         entry
         {
             orient = W
-            0,0 = location_restaurant_spiffos_01_030
+            0,0 = location_restaurant_spiffos_01_031
         }
         entry
         {
             orient = N
-            0,0 = location_restaurant_spiffos_01_031
+            0,0 = location_restaurant_spiffos_01_030
         }
     }
     furniture
