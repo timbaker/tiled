@@ -28,8 +28,6 @@ namespace BuildingEditor {
 
 class ListOfStringsDialog : public QDialog
 {
-    Q_OBJECT
-    
 public:
     explicit ListOfStringsDialog(const QString &message, const QStringList &strings,
                                  QWidget *parent = 0);

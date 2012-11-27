@@ -5,6 +5,7 @@ set ( BuildingEd_UIS
     buildingtemplatesdialog.ui
     buildingtilesdialog.ui
     choosebuildingtiledialog.ui
+    listofstringsdialog.ui
     newbuildingdialog.ui
     resizebuildingdialog.ui
     roomsdialog.ui
@@ -22,36 +23,38 @@ set ( BuildingEd_HDRS
     buildingwriter.h
     buildingreader.h
     buildingtmx.h
+    listofstringsdialog.h
 )
 
 set ( BuildingEd_SRCS
-    buildingeditorwindow.cpp
-    simplefile.cpp
-    buildingtools.cpp
-    FloorEditor.cpp
-    buildingdocument.cpp
     building.cpp
+    buildingdocument.cpp
+    buildingeditorwindow.cpp
     buildingfloor.cpp
-    buildingundoredo.cpp
-    buildingpreviewwindow.cpp
-    mixedtilesetview.cpp
-    newbuildingdialog.cpp
-    buildingpreferencesdialog.cpp
     buildingobjects.cpp
+    buildingpreferences.cpp
+    buildingpreferencesdialog.cpp
+    buildingpreviewwindow.cpp
+    buildingreader.cpp
     buildingtemplates.cpp
     buildingtemplatesdialog.cpp
-    choosebuildingtiledialog.cpp
-    roomsdialog.cpp
-    buildingtilesdialog.cpp
     buildingtiles.cpp
-    templatefrombuildingdialog.cpp
-    buildingwriter.cpp
-    buildingreader.cpp
-    resizebuildingdialog.cpp
-    furnitureview.cpp
-    furnituregroups.cpp
-    buildingpreferences.cpp
+    buildingtilesdialog.cpp
     buildingtmx.cpp
+    buildingtools.cpp
+    buildingundoredo.cpp
+    buildingwriter.cpp
+    choosebuildingtiledialog.cpp
+    FloorEditor.cpp
+    furnituregroups.cpp
+    furnitureview.cpp
+    listofstringsdialog.cpp
+    mixedtilesetview.cpp
+    newbuildingdialog.cpp
+    resizebuildingdialog.cpp
+    roomsdialog.cpp
+    simplefile.cpp
+    templatefrombuildingdialog.cpp
     tilecategoryview.cpp
 )
 
@@ -90,6 +93,12 @@ include_directories ( ${CMAKE_CURRENT_BINARY_DIR} )
 
 add_library ( BuildingEd STATIC ${BuildingEd_SRCS} ${BuildingEd_HDRS}
               ${BuildingEd_MOCS} ${localUIS} ${localMOCS} ${localRSCS} )
+
+file ( COPY BuildingFurniture.txt BuildingTemplates.txt BuildingTiles.txt
+          TMXConfig.txt DESTINATION ${CMAKE_BINARY_DIR}/Debug )
+
+file ( COPY BuildingFurniture.txt BuildingTemplates.txt BuildingTiles.txt
+          TMXConfig.txt DESTINATION ${CMAKE_BINARY_DIR}/Release )
 
 install ( FILES BuildingFurniture.txt BuildingTemplates.txt BuildingTiles.txt
           TMXConfig.txt DESTINATION . )
