@@ -439,7 +439,10 @@ bool BuildingEditorWindow::Startup()
 
     if (!LoadTMXConfig()) {
         if (!mError.isEmpty()) // Empty when user cancelled choosing Tiles directory.
-            QMessageBox::critical(this, tr("It's no good, Jim!"), mError);
+            QMessageBox::critical(this, tr("It's no good, Jim!"),
+                                  tr("Error while reading %1\n%2")
+                                  .arg(BuildingTMX::instance()->txtName())
+                                  .arg(mError));
         return false;
     }
 
