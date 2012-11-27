@@ -2,6 +2,7 @@
 <html><head>
 
 
+
 <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>BuildingEd Tiles Dialog</title>
   <meta content="Tim &quot;EasyPickins&quot; Baker" name="author"></head><body>
 <h2>BuildingEd Tiles Dialog</h2>
@@ -15,7 +16,7 @@ categories is selected.<br>
   </li>
   <li>The furniture categories all created by the user.&nbsp; These are
 always listed after the non-furniture categories. Furniture categories
-may be added, removed and reordered using the buttons below this list. <br>
+may be added, removed and reordered using the buttons below this list. Double-click on a category to change its name.<br>
   </li>
 </ol>
 Selecting an item in this list will cause the entries in the selected category to be displayed in <img style="width: 24px; height: 24px;" alt="" src="images/blue-two.png">.
@@ -86,15 +87,29 @@ orientations for corners.<br>
 Some furniture goes on the ground (like tables) while other furniture
 goes on the walls (like light switches).&nbsp; Furniture category
 entries can be assigned to different layers using the "Layer:" combobox
-below the list. There is the default "Furniture" layer, a "Walls" layer, a
-"WallFurniture" layer, and a "WallOverlay" layer.<br>
-<br>
-The "WallOverlay" layer can be used for things like the
-Fossoil painted logos.<br>
-<br>
-Furniture tiles assigned to the "Walls" layer will replace building
-wall tiles with the furniture tiles.&nbsp; This can be used for things
-such as garage doors and extra-wide windows.<br>
+below the list. The "Furniture" layer is the default.<br>
+<ul>
+  <li>The "Walls" layer is used for things like garage doors and wide shop windows.&nbsp; When furniture is assigned to the "Walls" layer, its tiles replace a room's wall tiles.&nbsp; Use this if you want to leave a hole for an extra-wide window or door, or replace a section of wall with another tile.<br>
+  </li>
+  <li>
+The "WallOverlay" layer is used for things like the
+Fossoil painted logos, stuff that goes on a wall but behind any furniture.</li>
+  <li>The "Frames" layer is used for multi-tile windows.&nbsp; Note
+that to leave a hole in a wall for a multi-tile window you must first
+place another furniture object whose tile is assigned to the "Walls" layer.&nbsp; See the "Fixtures - Windows" furniture category for an examples.<br>
+  </li>
+  <li>The "Doors" layer is used for multi-tile doors.&nbsp; Note that
+to leave a hole in a wall for a multi-tile door you must first place
+another furniture object whose tile is assigned to the "Walls"
+layer.&nbsp; See the "Location - Community - Church - Small" furniture
+category for an example.<br>
+  </li>
+  <li>The "RoofCap" layer is used for wall-like tiles at the ends of roofs.&nbsp; See the "Location - Trailer" furniture category for an example.<br>
+  </li>
+  <li>The "Roof" layer is for tiles you consider part of a roof.&nbsp; See the "Location - Trailer" furniture category for an example.</li>
+</ul>
+
+
 <h4>Assigning tiles to furniture<br>
 </h4>
 Each furniture tile can be made up of 1 or more tile images.&nbsp; Tiles are assigned by drag-and-dropping one from <img style="width: 24px; height: 24px;" alt="" src="images/blue-four.png">.&nbsp; Here is an example of 2 extra-large furniture tiles:<br>
