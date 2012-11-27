@@ -498,6 +498,52 @@ group
 }
 group
 {
+    label = Camping
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = camping_01_002
+            1,0 = camping_01_003
+        }
+        entry
+        {
+            orient = N
+            0,0 = camping_01_001
+            0,1 = camping_01_000
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = camping_01_015
+            0,1 = camping_01_012
+            1,0 = camping_01_014
+            1,1 = camping_01_013
+        }
+        entry
+        {
+            orient = N
+            0,0 = camping_01_009
+            0,1 = camping_01_008
+            1,0 = camping_01_011
+            1,1 = camping_01_010
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = camping_01_016
+        }
+    }
+}
+group
+{
     label = Fixtures - Counters
     furniture
     {
@@ -1857,6 +1903,7 @@ group
     }
     furniture
     {
+        layer = WallFurniture
         entry
         {
             orient = W
@@ -1956,6 +2003,40 @@ group
             orient = S
             0,0 = location_barn_01_006
             1,0 = location_barn_01_007
+        }
+    }
+}
+group
+{
+    label = Location - Business - Bank
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_business_bank_01_022
+            0,1 = location_business_bank_01_021
+            0,2 = location_business_bank_01_020
+            0,3 = location_business_bank_01_019
+            0,4 = location_business_bank_01_018
+            0,5 = location_business_bank_01_017
+            0,6 = location_business_bank_01_016
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_business_bank_01_024
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_business_bank_01_025
         }
     }
 }
@@ -2833,6 +2914,56 @@ group
     label = Location - Restaurant - Pie
     furniture
     {
+        layer = Walls
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_pie_01_029
+            0,1 = location_restaurant_pie_01_028
+            0,2 = location_restaurant_pie_01_027
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pie_01_024
+            1,0 = location_restaurant_pie_01_025
+            2,0 = location_restaurant_pie_01_026
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_restaurant_pie_01_013
+            0,1 = location_restaurant_pie_01_012
+            0,2 = location_restaurant_pie_01_011
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_pie_01_008
+            1,0 = location_restaurant_pie_01_009
+            2,0 = location_restaurant_pie_01_010
+        }
+    }
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_pie_01_029
+            0,1 = location_restaurant_pie_01_028
+            0,2 = location_restaurant_pie_01_027
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pie_01_024
+            1,0 = location_restaurant_pie_01_025
+            2,0 = location_restaurant_pie_01_026
+        }
+    }
+    furniture
+    {
         corners = true
         entry
         {
@@ -3486,6 +3617,243 @@ group
         {
             orient = SE
             0,0 = location_shop_generic_01_016
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_generic_01_003
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_generic_01_002
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_generic_01_000
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_generic_01_001
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_generic_01_008
+            1,0 = location_shop_generic_01_009
+            2,0 = location_shop_generic_01_009
+            3,0 = location_shop_generic_01_009
+            4,0 = location_shop_generic_01_009
+            5,0 = location_shop_generic_01_009
+            6,0 = location_shop_generic_01_009
+            7,0 = location_shop_generic_01_011
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_generic_01_008
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_generic_01_009
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_generic_01_011
+        }
+    }
+}
+group
+{
+    label = Location - Shop - Greene's
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = W
+            0,0 = location_shop_greenes_01_023
+            0,1 = location_shop_greenes_01_022
+            0,2 = location_shop_greenes_01_021
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_greenes_01_013
+            1,0 = location_shop_greenes_01_014
+            2,0 = location_shop_greenes_01_015
+        }
+    }
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = W
+            0,0 = location_shop_greenes_01_009
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_greenes_01_008
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_greenes_01_004
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_greenes_01_005
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_greenes_01_006
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_greenes_01_007
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_greenes_01_025
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_greenes_01_024
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_shop_greenes_01_026
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_shop_greenes_01_027
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_greenes_01_029
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_greenes_01_028
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_shop_greenes_01_030
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_shop_greenes_01_031
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_greenes_01_035
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_greenes_01_036
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_greenes_01_037
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_greenes_01_038
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_greenes_01_045
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_greenes_01_046
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_shop_greenes_01_044
+            0,1 = location_shop_greenes_01_043
+            0,2 = location_shop_greenes_01_042
+            0,3 = location_shop_greenes_01_041
+            0,4 = location_shop_greenes_01_040
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_greenes_01_048
+            1,0 = location_shop_greenes_01_049
+            2,0 = location_shop_greenes_01_050
+            3,0 = location_shop_greenes_01_051
+            4,0 = location_shop_greenes_01_052
         }
     }
 }
@@ -4682,6 +5050,118 @@ group
             orient = N
             0,0 = furniture_tables_low_01_008
             1,0 = furniture_tables_low_01_009
+        }
+    }
+}
+group
+{
+    label = Trash Containers
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = trashcontainers_01_001
+        }
+        entry
+        {
+            orient = N
+            0,0 = trashcontainers_01_000
+        }
+        entry
+        {
+            orient = E
+            0,0 = trashcontainers_01_003
+        }
+        entry
+        {
+            orient = S
+            0,0 = trashcontainers_01_002
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = trashcontainers_01_009
+            0,1 = trashcontainers_01_008
+        }
+        entry
+        {
+            orient = N
+            0,0 = trashcontainers_01_010
+            1,0 = trashcontainers_01_011
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = trashcontainers_01_013
+            0,1 = trashcontainers_01_012
+        }
+        entry
+        {
+            orient = N
+            0,0 = trashcontainers_01_014
+            1,0 = trashcontainers_01_015
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = trashcontainers_01_016
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = trashcontainers_01_017
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = trashcontainers_01_019
+        }
+        entry
+        {
+            orient = N
+            0,0 = trashcontainers_01_018
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = trashcontainers_01_024
+        }
+        entry
+        {
+            orient = N
+            0,0 = trashcontainers_01_025
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = trashcontainers_01_026
+        }
+        entry
+        {
+            orient = N
+            0,0 = trashcontainers_01_027
         }
     }
 }

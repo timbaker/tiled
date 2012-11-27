@@ -61,6 +61,17 @@ category
     }
     entry
     {
+        West = location_restaurant_pie_01_000
+        North = location_restaurant_pie_01_001
+        NorthWest = location_restaurant_pie_01_002
+        SouthEast = location_restaurant_pie_01_003
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = location_restaurant_pie_01_014
+        NorthDoor = location_restaurant_pie_01_015
+    }
+    entry
+    {
         West = location_restaurant_seahorse_01_005
         North = location_restaurant_seahorse_01_004
         NorthWest = location_restaurant_seahorse_01_006
@@ -69,6 +80,17 @@ category
         NorthWindow = 
         WestDoor = location_restaurant_seahorse_01_014
         NorthDoor = location_restaurant_seahorse_01_015
+    }
+    entry
+    {
+        West = location_shop_greenes_01_000
+        North = location_shop_greenes_01_001
+        NorthWest = location_shop_greenes_01_002
+        SouthEast = location_shop_greenes_01_003
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = location_shop_greenes_01_010
+        NorthDoor = location_shop_greenes_01_011
     }
     entry
     {
@@ -131,10 +153,21 @@ category
         North = walls_commercial_01_049
         NorthWest = walls_commercial_01_050
         SouthEast = walls_commercial_01_051
-        WestWindow = walls_commercial_01_056
-        NorthWindow = walls_commercial_01_057
+        WestWindow = 
+        NorthWindow = 
         WestDoor = walls_commercial_01_058
         NorthDoor = walls_commercial_01_059
+    }
+    entry
+    {
+        West = walls_commercial_02_000
+        North = walls_commercial_02_001
+        NorthWest = walls_commercial_02_002
+        SouthEast = walls_commercial_02_003
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = 
+        NorthDoor = 
     }
     entry
     {
@@ -889,6 +922,18 @@ category
     entry
     {
         Floor = location_restaurant_spiffos_01_038
+    }
+    entry
+    {
+        Floor = location_shop_greenes_01_032
+    }
+    entry
+    {
+        Floor = location_shop_greenes_01_033
+    }
+    entry
+    {
+        Floor = location_shop_greenes_01_034
     }
 }
 category
