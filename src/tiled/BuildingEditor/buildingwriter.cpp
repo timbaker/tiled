@@ -341,7 +341,7 @@ public:
 
     QString entryIndex(BuildingTileEntry *entry)
     {
-        if (entry)
+        if (entry && !entry->isNone())
             return QString::number(mTileEntries.indexOf(entry) + 1);
         return QString::number(0);
     }

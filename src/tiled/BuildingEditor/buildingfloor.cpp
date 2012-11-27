@@ -970,14 +970,16 @@ void BuildingFloor::Square::ReplaceWall(BuildingTileEntry *tile,
 
 void BuildingFloor::Square::ReplaceDoor(BuildingTileEntry *tile, int offset)
 {
-    mEntries[SectionDoor] = tile;
+    // Must put a non-zero tile here.  See getWallOffset().
+    mEntries[SectionDoor] = tile ? tile : BuildingTilesMgr::instance()->noneTileEntry();
     mEntryEnum[SectionDoor] = offset;
     mEntryEnum[SectionWall] = getWallOffset();
 }
 
 void BuildingFloor::Square::ReplaceFrame(BuildingTileEntry *tile, int offset)
 {
-    mEntries[SectionFrame] = tile;
+    // Must put a non-zero tile here.  See getWallOffset().
+    mEntries[SectionFrame] = tile ? tile : BuildingTilesMgr::instance()->noneTileEntry();
     mEntryEnum[SectionFrame] = offset;
     mEntryEnum[SectionWall] = getWallOffset();
 }
