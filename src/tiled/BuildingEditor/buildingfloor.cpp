@@ -904,16 +904,45 @@ QRect BuildingFloor::bounds() const
     return mBuilding->bounds();
 }
 
-QRegion BuildingFloor::roomRegion(Room *room)
+QVector<QRect> BuildingFloor::roomRegion(Room *room)
 {
     QRegion region;
     for (int y = 0; y < height(); y++) {
-    for (int x = 0; x < width(); x++) {
+        for (int x = 0; x < width(); x++) {
             if (mRoomAtPos[x][y] == room)
-                region |= QRegion(x, y, 1, 1);
+                region += QRect(x, y, 1, 1);
         }
     }
-    return region;
+
+    // Clean up the region by merging vertically-adjacent rectangles of the
+    // same width.
+    QVector<QRect> rects = region.rects();
+    for (int i = 0; i < rects.size(); i++) {
+        QRect r = rects[i];
+        if (!r.isValid()) continue;
+        for (int j = 0; j < rects.size(); j++) {
+            if (i == j) continue;
+            QRect r2 = rects.at(j);
+            if (!r2.isValid()) continue;
+            if (r2.left() == r.left() && r2.right() == r.right()) {
+                if (r.bottom() + 1 == r2.top()) {
+                    r.setBottom(r2.bottom());
+                    rects[j] = QRect();
+                } else if (r.top() == r2.bottom() + 1) {
+                    r.setTop(r2.top());
+                    rects[j] = QRect();
+                }
+            }
+        }
+        rects[i] = r;
+    }
+
+    QVector<QRect> result;
+    foreach (QRect r, rects) {
+        if (r.isValid())
+            result += r;
+    }
+    return result;
 }
 
 QVector<QVector<Room *> > BuildingFloor::resized(const QSize &newSize) const

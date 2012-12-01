@@ -117,8 +117,7 @@ bool BuildingTMX::exportTMX(Building *building, const MapComposite *mapComposite
         int delta = (mapComposite->maxLevel() - floor->level()) * 3;
         QPoint offset(delta, delta); // FIXME: not for LevelIsometric
         foreach (Room *room, building->rooms()) {
-            QRegion roomRegion = floor->roomRegion(room);
-            foreach (QRect rect, roomRegion.rects()) {
+            foreach (QRect rect, floor->roomRegion(room)) {
                 MapObject *mapObject = new MapObject(room->internalName, tr("room"),
                                                      rect.topLeft() + offset,
                                                      rect.size());

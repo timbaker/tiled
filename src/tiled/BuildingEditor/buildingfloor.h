@@ -165,7 +165,7 @@ public:
     int level() const
     { return mLevel; }
 
-    QRegion roomRegion(Room *room);
+    QVector<QRect> roomRegion(Room *room);
 
     QVector<QVector<Room*> > resized(const QSize &newSize) const;
 
