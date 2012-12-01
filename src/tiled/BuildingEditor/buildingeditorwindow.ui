@@ -139,6 +139,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionPecil"/>
+   <addaction name="actionWall"/>
    <addaction name="actionEraser"/>
    <addaction name="actionSelectRooms"/>
    <addaction name="separator"/>
@@ -597,6 +598,21 @@
    </property>
    <property name="text">
     <string>Show Objects</string>
+   </property>
+  </action>
+  <action name="actionWall">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_wall.png</normaloff>:/BuildingEditor/icons/icon_wall.png</iconset>
+   </property>
+   <property name="text">
+    <string>Wall</string>
+   </property>
+   <property name="toolTip">
+    <string>Place Wall</string>
    </property>
   </action>
  </widget>

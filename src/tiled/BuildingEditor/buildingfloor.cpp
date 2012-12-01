@@ -251,11 +251,46 @@ void BuildingFloor::LayoutToSquares()
             } else if (x < width() && mIndexAtPos[x][y] >= 0 && (x == 0 || mIndexAtPos[x - 1][y] != mIndexAtPos[x][y])) {
                 wtype = interiorWalls[mIndexAtPos[x][y]];
                 // If already contains a north, put in a west...
-                if(squares[x][y].IsWallOrient(Square::WallOrientN))
+                if (squares[x][y].IsWallOrient(Square::WallOrientN))
                     squares[x][y].ReplaceWall(wtype, Square::WallOrientNW, false);
                 else
                     // put W wall here...
                     squares[x][y].ReplaceWall(wtype, BuildingFloor::Square::WallOrientW, false);
+            }
+        }
+    }
+
+    foreach (BuildingObject *object, mObjects) {
+        if (WallObject *wall = object->asWall()) {
+            int x = wall->x(), y = wall->y();
+            wtype = wall->tile();
+            if (wall->isN()) {
+                for (; y < wall->y() + wall->length(); y++) {
+                    // If already contains a N, put in a NW.
+                    if (squares[x][y].IsWallOrient(Square::WallOrientN))
+                        squares[x][y].ReplaceWall(wtype, Square::WallOrientNW);
+                    // If already contains NW, keep 'exterior' and NW.
+                    else if (squares[x][y].mEntries[Square::SectionWall] &&
+                             !squares[x][y].mEntries[Square::SectionWall]->isNone())
+                        squares[x][y].mEntries[Square::SectionWall] = wtype;
+                    // New W wall. FIXME: exterior or interior (for curtains).
+                    else
+                        squares[x][y].ReplaceWall(wtype, Square::WallOrientW);
+                }
+            } else {
+                for (; x < wall->x() + wall->length(); x++) {
+                    // If already contains a W, put in a NW.
+                    if (squares[x][y].IsWallOrient(Square::WallOrientW))
+                        squares[x][y].ReplaceWall(wtype, Square::WallOrientNW);
+                    // If already contains NW, keep 'exterior' and NW.
+                    else if (squares[x][y].mEntries[Square::SectionWall] &&
+                             !squares[x][y].mEntries[Square::SectionWall]->isNone())
+                        squares[x][y].mEntries[Square::SectionWall] = wtype;
+                    // New N wall.
+                    else
+                        squares[x][y].ReplaceWall(wtype, Square::WallOrientN);
+                }
+
             }
         }
     }
@@ -269,12 +304,16 @@ void BuildingFloor::LayoutToSquares()
                  squares[x][y - 1].IsWallOrient(Square::WallOrientNW)) &&
                     (squares[x - 1][y].IsWallOrient(Square::WallOrientN) ||
                      squares[x - 1][y].IsWallOrient(Square::WallOrientNW))) {
+#if 1
+                wtype = squares[x][y - 1].mEntries[Square::SectionWall];
+#else
                 if (x < width() && mIndexAtPos[x][y - 1] >= 0)
                     wtype = interiorWalls[mIndexAtPos[x][y - 1]];
                 else if (y < height() &&  mIndexAtPos[x-1][y] >= 0)
                     wtype = interiorWalls[mIndexAtPos[x - 1][y]];
                 else
                     wtype = exteriorWall;
+#endif
                 squares[x][y].ReplaceWall(wtype, Square::WallOrientSE);
             }
         }
@@ -950,6 +989,13 @@ BuildingFloor::Square::~Square()
     // mTiles are owned by BuildingTiles
 //    for (int i = 0; i < MaxSection; i++)
     //        delete mTiles[i];
+}
+
+bool BuildingFloor::Square::IsWallOrient(BuildingFloor::Square::WallOrientation orient)
+{
+    return mEntries[SectionWall] &&
+            !mEntries[SectionWall]->isNone() &&
+            (mWallOrientation == orient);
 }
 
 void BuildingFloor::Square::ReplaceFloor(BuildingTileEntry *tile, int offset)

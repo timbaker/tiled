@@ -895,6 +895,7 @@ void BaseObjectTool::setCursorObject(BuildingObject *object)
     mCursorObject = object;
     if (!mCursorItem) {
         mCursorItem = new GraphicsObjectItem(mEditor, mCursorObject);
+        mCursorItem->synchWithObject();
         mCursorItem->setZValue(FloorEditor::ZVALUE_CURSOR);
         mEditor->addItem(mCursorItem);
     }
@@ -1325,6 +1326,7 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                                  /*cappedW=*/true, /*cappedN=*/true,
                                  /*cappedE=*/true, /*cappedS=*/true);
         mItem = new GraphicsObjectItem(mEditor, mObject);
+        mItem->synchWithObject();
         mItem->setZValue(FloorEditor::ZVALUE_CURSOR);
         mEditor->addItem(mItem);
         mMode = Create;
@@ -1843,3 +1845,294 @@ void SelectMoveObjectTool::cancelMoving()
 }
 
 /////
+
+/////
+
+WallTool *WallTool::mInstance = 0;
+
+WallTool *WallTool::instance()
+{
+    if (!mInstance)
+        mInstance = new WallTool;
+    return mInstance;
+}
+
+WallTool::WallTool() :
+    BaseTool(),
+    mMode(NoMode),
+    mObject(0),
+    mItem(0),
+    mCursorItem(0),
+    mObjectItem(0),
+    mHandleObject(0),
+    mHandleItem(0),
+    mMouseOverHandle(false),
+    mCurrentTile(BuildingTilesMgr::instance()->noneTileEntry())
+{
+}
+
+void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+        if (mMode != NoMode)
+            return; // ignore clicks when creating/resizing
+
+    if (event->button() == Qt::LeftButton) {
+        mStartPos = mCurrentPos;
+        if (mMouseOverHandle) {
+            mOriginalLength = mHandleObject->length();
+            mMode = Resize;
+            return;
+        }
+        if (!floor()->bounds().adjusted(0,0,1,1).contains(mCurrentPos))
+            return;
+        mObject = new WallObject(floor(),
+                                 mStartPos.x(), mStartPos.y(),
+                                 BuildingObject::W,
+                                 /*length=*/1);
+        mItem = new GraphicsWallItem(mEditor, mObject);
+        mItem->setZValue(FloorEditor::ZVALUE_CURSOR);
+        mEditor->addItem(mItem);
+        mMode = Create;
+    }
+
+    if (event->button() == Qt::RightButton) {
+        if (BuildingObject *object = mEditor->topmostObjectAt(event->scenePos())) {
+            undoStack()->push(new RemoveObject(mEditor->document(), floor(),
+                                               object->index()));
+        }
+    }
+}
+
+void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    mCurrentPos = mEditor->sceneToTile(event->scenePos());
+    QPointF p = mEditor->sceneToTileF(event->scenePos());
+    QPointF m(p.x() - int(p.x()), p.y() - int(p.y()));
+    if (m.x() > 0.5)
+        mCurrentPos.setX(mCurrentPos.x() + 1);
+    if (m.y() >= 0.5)
+        mCurrentPos.setY(mCurrentPos.y() + 1);
+
+    if (mMode == NoMode) {
+        if (!mCursorItem) {
+            mCursorItem = new QGraphicsRectItem;
+            mCursorItem->setZValue(FloorEditor::ZVALUE_CURSOR);
+            mCursorItem->setBrush(QColor(0,255,0,128));
+            mEditor->addItem(mCursorItem);
+        }
+
+        // This crap is all to work around a bug when the view was scrolled and
+        // then the item moves which led to areas not being repainted.  Each item
+        // remembers where it was last drawn in a view, but those rectangles are
+        // not updated when the view scrolls.
+        p = mEditor->tileToScene(mCurrentPos);
+        QRectF rect(p.x() - 6, p.y() - 6, 12, 12);
+        QRectF viewRect = mEditor->views()[0]->mapFromScene(rect).boundingRect();
+        if (viewRect != mCursorViewRect) {
+            mCursorViewRect = viewRect;
+            mCursorItem->update();
+        }
+
+        mCursorItem->setRect(rect);
+
+        updateHandle(event->scenePos());
+
+        mCursorItem->setVisible(floor()->bounds().adjusted(0,0,1,1).contains(mCurrentPos) &&
+                                !mMouseOverHandle);
+        return;
+    }
+
+    QPoint diff = mCurrentPos - mStartPos;
+
+    if (mMode == Resize) {
+        if (mHandleObject->isN()) {
+            if (mCurrentPos.y() < mHandleObject->y())
+                diff.setY(0 - mHandleObject->length() - 1);
+            if (mCurrentPos.y() >= floor()->height())
+                diff.setY(floor()->height() - mStartPos.y());
+            resizeWall(mHandleObject->length() + diff.y());
+        } else {
+            if (mCurrentPos.x() < mHandleObject->x())
+                diff.setX(0 - mHandleObject->length() - 1);
+            if (mCurrentPos.x() >= floor()->width())
+                diff.setX(floor()->width() - mStartPos.x());
+            resizeWall(mHandleObject->length() + diff.x());
+        }
+        return;
+    }
+
+    if (mMode == Create) {
+        if (!floor()->bounds().adjusted(0,0,1,1).contains(mCurrentPos))
+            return;
+
+        QPoint pos = mStartPos;
+
+        if (qAbs(diff.x()) >= qAbs(diff.y())) {
+            mObject->setDir(BuildingObject::W);
+            mObject->setLength(qMax(1, qAbs(diff.x())));
+        } else {
+            mObject->setDir(BuildingObject::N);
+            mObject->setLength(qMax(1, qAbs(diff.y())));
+        }
+
+        if (mObject->isW() && diff.x() < 0) {
+            pos.setX(mStartPos.x() - mObject->length());
+        }
+        if (mObject->isN() && diff.y() < 0) {
+            pos.setY(mStartPos.y() - mObject->length());
+        }
+        mObject->setPos(pos);
+
+        mItem->synchWithObject();
+        mItem->update();
+    }
+}
+
+void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button() != Qt::LeftButton)
+        return;
+
+    if (mMode == Resize) {
+        mMode = NoMode;
+        int length = mHandleObject->length();
+        if (length == mOriginalLength)
+            return;
+        mHandleObject->setLength(mOriginalLength);
+        undoStack()->push(new ResizeWall(mEditor->document(), mHandleObject,
+                                         length));
+        return;
+    }
+
+    if (mMode == Create) {
+        mMode = NoMode;
+        if (mObject->isValidPos()) {
+            mObject->setTile(mCurrentTile);
+            BuildingFloor *floor = this->floor();
+            undoStack()->push(new AddObject(mEditor->document(), floor,
+                                            floor->objectCount(), mObject));
+        } else
+            delete mObject;
+        mObject = 0;
+        delete mItem;
+        mItem = 0;
+    }
+}
+
+void WallTool::documentChanged()
+{
+    // When the document changes, the scene is cleared, deleting our items.
+    mItem = 0;
+    mCursorItem = 0;
+    mHandleItem = 0;
+    mObjectItem = 0;
+
+    if (mEditor->document())
+        connect(mEditor->document(),
+                SIGNAL(objectAboutToBeRemoved(BuildingObject*)),
+                SLOT(objectAboutToBeRemoved(BuildingObject*)));
+}
+
+void WallTool::activate()
+{
+    updateStatusText();
+    if (mCursorItem)
+        mEditor->addItem(mCursorItem);
+}
+
+void WallTool::deactivate()
+{
+    if (mCursorItem)
+        mEditor->removeItem(mCursorItem);
+}
+
+void WallTool::objectAboutToBeRemoved(BuildingObject *object)
+{
+    if (object == mHandleObject) {
+        mHandleObject = 0;
+        mObjectItem = 0;
+        mMouseOverHandle = false;
+        mMode = NoMode;
+    }
+}
+
+WallObject *WallTool::topmostWallAt(const QPointF &scenePos)
+{
+    foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
+        if (GraphicsWallItem *wallItem = dynamic_cast<GraphicsWallItem*>(item)) {
+            if (wallItem->object()->floor() == floor()) {
+                return wallItem->object()->asWall();
+            }
+        }
+    }
+    return 0;
+}
+
+void WallTool::updateHandle(const QPointF &scenePos)
+{
+    WallObject *wall = topmostWallAt(scenePos);
+
+    if (mMouseOverHandle) {
+        mHandleItem->setHighlight(false);
+        mMouseOverHandle = false;
+        updateStatusText();
+    }
+    mHandleItem = 0;
+    if (wall && (wall == mHandleObject)) {
+        foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
+            if (GraphicsWallHandleItem *handle = dynamic_cast<GraphicsWallHandleItem*>(item)) {
+                if (handle->parentItem() == mObjectItem) {
+                    mHandleItem = handle;
+                    mMouseOverHandle = true;
+                    mHandleItem->setHighlight(true);
+                    updateStatusText();
+                    break;
+                }
+            }
+        }
+        return;
+    }
+
+    if (mObjectItem) {
+        mObjectItem->setShowHandles(false);
+        mObjectItem->setZValue(mObjectItem->object()->index());
+        mObjectItem = 0;
+    }
+
+    if (wall) {
+        mObjectItem = mEditor->itemForObject(wall)->asWall();
+        mObjectItem->setShowHandles(true);
+        mObjectItem->setZValue(wall->floor()->objectCount());
+    }
+    mHandleObject = wall;
+}
+
+void WallTool::updateStatusText()
+{
+    if (mMouseOverHandle)
+        setStatusText(tr("Left-click-drag to resize wall."));
+    else if (mMode == Create)
+        setStatusText(tr("Right-click to cancel."));
+    else
+        setStatusText(tr("Left-click-drag to place a wall."));
+}
+
+void WallTool::resizeWall(int length)
+{
+    if (length < 1)
+        return;
+
+    WallObject *wall = mHandleObject;
+
+    int oldLength = wall->length();
+    wall->setLength(length);
+    if (!wall->isValidPos()) {
+        wall->setLength(oldLength);
+        return;
+    }
+
+    mEditor->itemForObject(wall)->synchWithObject();
+    mStartPos = wall->pos() + (wall ->isN()
+            ? QPoint(0, wall->length())
+            : QPoint(wall->length(), 0));
+}

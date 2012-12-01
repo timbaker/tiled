@@ -545,3 +545,18 @@ void HandleRoof::swap()
 }
 
 /////
+
+ResizeWall::ResizeWall(BuildingDocument *doc, WallObject *wall, int length) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Wall")),
+    mDocument(doc),
+    mObject(wall),
+    mLength(length)
+{
+}
+
+void ResizeWall::swap()
+{
+    mLength = mDocument->resizeWall(mObject, mLength);
+}
+
+/////

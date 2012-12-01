@@ -64,7 +64,6 @@ bool BuildingObject::isValidPos(const QPoint &offset, BuildingFloor *floor) cons
 
 void BuildingObject::rotate(bool right)
 {
-    Q_UNUSED(right)
     mDir = (mDir == N) ? W : N;
 
     int oldWidth = mFloor->height();
@@ -1106,6 +1105,47 @@ RoofObject::RoofDepth RoofObject::depthFromString(const QString &s)
     if (s == QLatin1String("Three")) return Three;
 
     return InvalidDepth;
+}
+
+/////
+
+WallObject::WallObject(BuildingFloor *floor, int x, int y,
+                       Direction dir, int length) :
+    BuildingObject(floor, x, y, dir),
+    mLength(length)
+{
+}
+
+QRect WallObject::bounds() const
+{
+    return QRect(mX, mY, isW() ? mLength : 1, isW() ? 1 : mLength);
+}
+
+void WallObject::rotate(bool right)
+{
+    int oldFloorWidth = mFloor->height();
+    int oldFloorHeight = mFloor->width();
+
+    if (right) {
+        int x = mX;
+        mX = oldFloorHeight - mY - (isN() ? mLength: 0);
+        mY = x;
+    } else {
+        int x = mX;
+        mX = mY;
+        mY = oldFloorWidth - x - (isW() ? mLength: 0);
+    }
+
+    mDir = isN() ? W : N;
+}
+
+void WallObject::flip(bool horizontal)
+{
+    if (horizontal) {
+        mX = mFloor->width() - mX - (isW() ? mLength: 0);
+    } else {
+        mY = mFloor->height() - mY - (isN() ? mLength: 0);
+    }
 }
 
 /////

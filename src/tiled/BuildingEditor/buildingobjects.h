@@ -30,11 +30,10 @@ class BuildingTileEntry;
 class Door;
 class FurnitureObject;
 class FurnitureTile;
-class RoofCapTiles;
 class RoofObject;
-class RoofSlopeTiles;
 class RoofTile;
 class Stairs;
+class WallObject;
 class Window;
 
 class BuildingObject
@@ -111,6 +110,7 @@ public:
     virtual Stairs *asStairs() { return 0; }
     virtual FurnitureObject *asFurniture() { return 0; }
     virtual RoofObject *asRoof() { return 0; }
+    virtual WallObject *asWall() { return 0; }
 
 protected:
     BuildingFloor *mFloor;
@@ -169,6 +169,28 @@ public:
     Stairs *asStairs() { return this; }
 
     int getOffset(int x, int y);
+};
+
+class WallObject : public BuildingObject
+{
+public:
+    WallObject(BuildingFloor *floor, int x, int y, Direction dir, int length);
+
+    QRect bounds() const;
+
+    void rotate(bool right);
+    void flip(bool horizontal);
+
+    WallObject *asWall() { return this; }
+
+    void setLength(int length)
+    { mLength = length; }
+
+    int length() const
+    { return mLength; }
+
+private:
+    int mLength;
 };
 
 class Window : public BuildingObject

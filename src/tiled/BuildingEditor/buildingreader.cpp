@@ -529,6 +529,15 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
         roof->setSlopeTiles(slopeTiles);
         roof->setTopTiles(topTiles);
         object = roof;
+    } else if (type == QLatin1String("wall")) {
+        int length = atts.value(QLatin1String("length")).toString().toInt();
+        WallObject *wall = new WallObject(floor, x, y, dir, length);
+        BuildingTileEntry *entry = getEntry(tile);
+        if (entry->asExteriorWall() || entry->asInteriorWall())
+            wall->setTile(entry);
+        else
+            wall->setTile(BuildingTilesMgr::instance()->noneTileEntry());
+        object = wall;
     } else {
         xml.raiseError(tr("Unknown object type '%1'").arg(type));
         return 0;

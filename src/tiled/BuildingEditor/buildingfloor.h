@@ -82,8 +82,7 @@ public:
         bool mExterior;
         QVector<BuildingTile*> mTiles;
 
-        bool IsWallOrient(WallOrientation orient)
-        { return mEntries[SectionWall] && (mWallOrientation == orient); }
+        bool IsWallOrient(WallOrientation orient);
 
         void ReplaceFloor(BuildingTileEntry *tile, int offset);
         void ReplaceWall(BuildingTileEntry *tile, WallOrientation orient, bool exterior = true);

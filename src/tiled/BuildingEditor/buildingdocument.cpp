@@ -299,6 +299,14 @@ void BuildingDocument::resizeRoof(RoofObject *roof, int &width, int &height)
     height = oldHeight;
 }
 
+int BuildingDocument::resizeWall(WallObject *wall, int length)
+{
+    int old = wall->length();
+    wall->setLength(length);
+    emit objectMoved(wall);
+    return old;
+}
+
 void BuildingDocument::furnitureTileChanged(FurnitureTile *ftile)
 {
     foreach (BuildingFloor *floor, mBuilding->floors()) {

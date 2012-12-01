@@ -46,5 +46,6 @@
         <file>icons/shadow_floors.png</file>
         <file>icons/shadow_roof_tops.png</file>
         <file>icons/shadow_curtains.png</file>
+        <file>icons/icon_wall.png</file>
     </qresource>
 </RCC>

@@ -209,7 +209,6 @@ GraphicsObjectItem::GraphicsObjectItem(FloorEditor *editor, BuildingObject *obje
     mDragging(false),
     mValidPos(true)
 {
-    synchWithObject();
 }
 
 QPainterPath GraphicsObjectItem::shape() const
@@ -707,6 +706,97 @@ void GraphicsRoofItem::setShowHandles(bool show)
 
 /////
 
+GraphicsWallHandleItem::GraphicsWallHandleItem(GraphicsWallItem *wallItem) :
+    QGraphicsItem(wallItem),
+    mWallItem(wallItem),
+    mHighlight(false)
+{
+    setCursor(Qt::SizeAllCursor);
+}
+
+QRectF GraphicsWallHandleItem::boundingRect() const
+{
+    return mBoundingRect;
+}
+
+void GraphicsWallHandleItem::paint(QPainter *painter,
+                                   const QStyleOptionGraphicsItem *option,
+                                   QWidget *widget)
+{
+    Q_UNUSED(option)
+    Q_UNUSED(widget)
+    QRectF r = mBoundingRect;
+    painter->fillRect(r, mHighlight ? Qt::white : Qt::gray);
+    painter->drawRect(r);
+}
+
+void GraphicsWallHandleItem::synchWithObject()
+{
+    QRectF r = calcBoundingRect();
+    if (r != mBoundingRect) {
+        prepareGeometryChange();
+        mBoundingRect = r;
+    }
+
+    setVisible(mWallItem->handlesVisible());
+}
+
+void GraphicsWallHandleItem::setHighlight(bool highlight)
+{
+    if (highlight == mHighlight)
+        return;
+    mHighlight = highlight;
+    update();
+}
+
+QRectF GraphicsWallHandleItem::calcBoundingRect()
+{
+    QRectF r = mWallItem->boundingRect().translated(-mWallItem->pos());
+
+    r.setLeft(r.right() - 12);
+    r.setTop(r.bottom() - 12);
+
+    return r;
+}
+
+/////
+
+GraphicsWallItem::GraphicsWallItem(FloorEditor *editor, WallObject *wall) :
+    GraphicsObjectItem(editor, wall),
+    mShowHandles(false),
+    mResizeItem(new GraphicsWallHandleItem(this))
+{
+}
+
+void GraphicsWallItem::synchWithObject()
+{
+    GraphicsObjectItem::synchWithObject();
+    mResizeItem->synchWithObject();
+}
+
+QPainterPath GraphicsWallItem::calcShape()
+{
+    QPainterPath path;
+    QPoint dragOffset = mDragging ? mDragOffset : QPoint();
+    WallObject *wall = mObject->asWall();
+    QPointF p = mEditor->tileToScene(wall->pos() + dragOffset);
+    if (mObject->isN())
+        path.addRect(p.x() - 6, p.y(), 12, wall->length() * 30);
+    else
+        path.addRect(p.x(), p.y() - 6, wall->length() * 30, 12);
+    return path;
+}
+
+void GraphicsWallItem::setShowHandles(bool show)
+{
+    if (mShowHandles == show)
+        return;
+    mShowHandles = show;
+    synchWithObject();
+}
+
+/////
+
 const int FloorEditor::ZVALUE_GRID = 20;
 const int FloorEditor::ZVALUE_CURSOR = 100;
 
@@ -1002,8 +1092,11 @@ void FloorEditor::objectAdded(BuildingObject *object)
     GraphicsObjectItem *item;
     if (RoofObject *roof = object->asRoof())
         item = new GraphicsRoofItem(this, roof);
+    else if (WallObject *wall = object->asWall())
+        item = new GraphicsWallItem(this, wall);
     else
         item = new GraphicsObjectItem(this, object);
+    item->synchWithObject();
     itemForFloor(object->floor())->objectAdded(item);
 }
 
@@ -1180,4 +1273,5 @@ void FloorView::adjustScale(qreal scale)
     setRenderHint(QPainter::SmoothPixmapTransform,
                   mZoomable->smoothTransform());
 }
+
 /////

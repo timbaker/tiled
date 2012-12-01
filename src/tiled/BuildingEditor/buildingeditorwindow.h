@@ -55,8 +55,6 @@ class Door;
 class FloorEditor;
 class FloorView;
 class FurnitureGroup;
-class RoofCapTiles;
-class RoofSlopeTiles;
 class Room;
 class Window;
 class Stairs;

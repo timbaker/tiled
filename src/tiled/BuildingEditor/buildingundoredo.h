@@ -33,10 +33,9 @@ class BuildingTileEntry;
 class Door;
 class FurnitureObject;
 class FurnitureTile;
-class RoofCapTiles;
 class RoofObject;
-class RoofSlopeTiles;
 class Room;
+class WallObject;
 class Window;
 
 enum {
@@ -490,6 +489,23 @@ private:
     BuildingDocument *mDocument;
     RoofObject *mObject;
     Handle mHandle;
+};
+
+
+class ResizeWall : public QUndoCommand
+{
+public:
+    ResizeWall(BuildingDocument *doc, WallObject *wall, int length);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    WallObject *mObject;
+    int mLength;
 };
 
 } // namespace BuildingEditor

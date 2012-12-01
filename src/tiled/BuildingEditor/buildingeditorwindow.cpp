@@ -139,6 +139,11 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     DoorTool::instance()->setEditor(roomEditor);
     DoorTool::instance()->setAction(ui->actionDoor);
 
+    connect(ui->actionWall, SIGNAL(triggered()),
+            WallTool::instance(), SLOT(makeCurrent()));
+    WallTool::instance()->setEditor(roomEditor);
+    WallTool::instance()->setAction(ui->actionWall);
+
     connect(ui->actionWindow, SIGNAL(triggered()),
             WindowTool::instance(), SLOT(makeCurrent()));
     WindowTool::instance()->setEditor(roomEditor);
@@ -827,12 +832,64 @@ void BuildingEditorWindow::furnitureSelectionChanged()
 
 void BuildingEditorWindow::currentEWallChanged(BuildingTileEntry *entry, bool mergeable)
 {
+    // Assign the new tile to selected wall objects.
+    QList<WallObject*> objects;
+    foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
+        if (WallObject *wall = object->asWall()) {
+            if (wall->tile() != entry)
+                objects += wall;
+        }
+    }
+    if (objects.size()) {
+        if (objects.count() > 1)
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Wall Object Tile"));
+        foreach (WallObject *wall, objects)
+            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
+                                                                     wall,
+                                                                     entry,
+                                                                     mergeable,
+                                                                     0));
+        if (objects.count() > 1)
+            mCurrentDocument->undoStack()->endMacro();
+        return;
+    }
+    if (WallTool::instance()->isCurrent()) {
+        WallTool::instance()->setCurrentWallTile(entry);
+        return;
+    }
+
     mCurrentDocument->undoStack()->push(new ChangeEWall(mCurrentDocument, entry,
                                                         mergeable));
 }
 
 void BuildingEditorWindow::currentIWallChanged(BuildingTileEntry *entry, bool mergeable)
 {
+    // Assign the new tile to selected wall objects.
+    QList<WallObject*> objects;
+    foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
+        if (WallObject *wall = object->asWall()) {
+            if (wall->tile() != entry)
+                objects += wall;
+        }
+    }
+    if (objects.size()) {
+        if (objects.count() > 1)
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Wall Object Tile"));
+        foreach (WallObject *wall, objects)
+            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
+                                                                     wall,
+                                                                     entry,
+                                                                     mergeable,
+                                                                     0));
+        if (objects.count() > 1)
+            mCurrentDocument->undoStack()->endMacro();
+        return;
+    }
+    if (WallTool::instance()->isCurrent()) {
+        WallTool::instance()->setCurrentWallTile(entry);
+        return;
+    }
+
     if (!currentRoom())
         return;
 
@@ -1036,10 +1093,18 @@ void BuildingEditorWindow::selectCurrentCategoryTile()
     if (!mCurrentDocument || !mCategory)
         return;
     BuildingTileEntry *currentTile = 0;
-    if (mCategory->asExteriorWalls())
-        currentTile = mCurrentDocument->building()->exteriorWall();
-    if (currentRoom() && mCategory->asInteriorWalls())
-        currentTile = currentRoom()->Wall;
+    if (mCategory->asExteriorWalls()) {
+        if (WallTool::instance()->isCurrent())
+            currentTile = WallTool::instance()->currentWallTile();
+        else
+            currentTile = mCurrentDocument->building()->exteriorWall();
+    }
+    if (mCategory->asInteriorWalls()) {
+        if (WallTool::instance()->isCurrent())
+            currentTile = WallTool::instance()->currentWallTile();
+        else if (currentRoom())
+            currentTile = currentRoom()->Wall;
+    }
     if (currentRoom() && mCategory->asFloors())
         currentTile = currentRoom()->Floor;
     if (mCategory->asDoors())
@@ -1739,6 +1804,7 @@ void BuildingEditorWindow::updateActions()
 
     PencilTool::instance()->setEnabled(hasDoc &&
             currentRoom() != 0);
+    WallTool::instance()->setEnabled(hasDoc);
     EraserTool::instance()->setEnabled(hasDoc);
     SelectMoveRoomsTool::instance()->setEnabled(hasDoc);
     DoorTool::instance()->setEnabled(hasDoc && showObjects);

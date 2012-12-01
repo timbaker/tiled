@@ -377,6 +377,9 @@ public:
         BTC_Walls(QLatin1String("exterior_walls"), label)
     {}
 
+    bool canAssignNone() const
+    { return true; }
+
     BuildingTileCategory *asExteriorWalls() { return this; }
 };
 
@@ -386,6 +389,9 @@ public:
     BTC_IWalls(const QString &label) :
         BTC_Walls(QLatin1String("interior_walls"), label)
     {}
+
+    bool canAssignNone() const
+    { return true; }
 
     BuildingTileCategory *asInteriorWalls() { return this; }
 };

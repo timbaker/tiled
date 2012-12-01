@@ -40,11 +40,13 @@ class BuildingFloor;
 class FloorEditor;
 class RoofObject;
 class Room;
+class WallObject;
 
 class GraphicsObjectItem;
 class GraphicsRoofBaseItem;
 class GraphicsRoofCornerItem;
 class GraphicsRoofItem;
+class GraphicsWallItem;
 
 /////
 
@@ -119,7 +121,7 @@ public:
     { return mObject; }
 
     virtual void synchWithObject();
-    QPainterPath calcShape();
+    virtual QPainterPath calcShape();
 
     void setSelected(bool selected);
 
@@ -134,6 +136,10 @@ public:
 
     virtual GraphicsRoofItem *asRoof() { return 0; }
     virtual GraphicsRoofCornerItem *asRoofCorner() { return 0; }
+    virtual GraphicsWallItem *asWall() { return 0; }
+
+protected:
+    void initialize();
 
 protected:
     FloorEditor *mEditor;
@@ -227,6 +233,51 @@ private:
     GraphicsRoofHandleItem *mCappedNItem;
     GraphicsRoofHandleItem *mCappedEItem;
     GraphicsRoofHandleItem *mCappedSItem;
+};
+
+class GraphicsWallHandleItem : public QGraphicsItem
+{
+public:
+    GraphicsWallHandleItem(GraphicsWallItem *wallItem);
+
+    QRectF boundingRect() const;
+
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+    void synchWithObject();
+
+    void setHighlight(bool highlight);
+
+private:
+    QRectF calcBoundingRect();
+
+private:
+    GraphicsWallItem *mWallItem;
+    bool mHighlight;
+    QRectF mBoundingRect;
+};
+
+class GraphicsWallItem : public GraphicsObjectItem
+{
+public:
+    GraphicsWallItem(FloorEditor *editor, WallObject *wall);
+
+    void synchWithObject();
+    QPainterPath calcShape();
+
+    GraphicsWallItem *asWall() { return this; }
+
+    void setShowHandles(bool show);
+
+    bool handlesVisible() const
+    { return mShowHandles; }
+
+    GraphicsWallHandleItem *resizeHandle() const
+    { return mResizeItem; }
+
+private:
+    bool mShowHandles;
+    GraphicsWallHandleItem *mResizeItem;
 };
 
 class FloorEditor : public QGraphicsScene

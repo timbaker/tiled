@@ -45,6 +45,9 @@ class GraphicsObjectItem;
 class GraphicsRoofItem;
 class GraphicsRoofCornerItem;
 class GraphicsRoofHandleItem;
+class GraphicsWallItem;
+class GraphicsWallHandleItem;
+class WallObject;
 
 /////
 
@@ -498,6 +501,65 @@ private:
     BuildingObject *mClickedObject;
     QSet<BuildingObject*> mMovingObjects;
     QGraphicsRectItem *mSelectionRectItem;
+};
+
+/////
+
+class WallTool : public BaseTool
+{
+    Q_OBJECT
+public:
+    static WallTool *instance();
+
+    WallTool();
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
+    void documentChanged();
+    void activate();
+    void deactivate();
+
+    void setCurrentWallTile(BuildingTileEntry *entry)
+    { mCurrentTile = entry; }
+
+    BuildingTileEntry *currentWallTile() const
+    { return mCurrentTile; }
+
+private slots:
+    void objectAboutToBeRemoved(BuildingObject *object);
+
+private:
+    WallObject *topmostWallAt(const QPointF &scenePos);
+    void updateHandle(const QPointF &scenePos);
+    void updateStatusText();
+    void resizeWall(int length);
+
+private:
+    static WallTool *mInstance;
+
+    enum Mode {
+        NoMode,
+        Create,
+        Resize
+    };
+    Mode mMode;
+
+    QPoint mStartPos;
+    QPoint mCurrentPos;
+    WallObject *mObject;
+    GraphicsObjectItem *mItem;
+    QGraphicsRectItem *mCursorItem;
+    QRectF mCursorViewRect;
+
+    GraphicsWallItem *mObjectItem; // item for object mouse is over
+    WallObject *mHandleObject; // object mouse is over
+    GraphicsWallHandleItem *mHandleItem;
+    bool mMouseOverHandle;
+    int mOriginalLength;
+
+    BuildingTileEntry *mCurrentTile;
 };
 
 } // namespace BuildingEditor

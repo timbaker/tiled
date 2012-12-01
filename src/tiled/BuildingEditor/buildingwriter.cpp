@@ -288,6 +288,9 @@ public:
             w.writeAttribute(QLatin1String("TopTiles"), entryIndex(roof->topTiles()));
             writeDir = false;
             writeTile = false;
+        } else if (WallObject *wall = object->asWall()) {
+            w.writeAttribute(QLatin1String("type"), QLatin1String("wall"));
+            w.writeAttribute(QLatin1String("length"), QString::number(wall->length()));
         } else {
             qFatal("Unhandled object type in BuildingWriter::writeObject");
         }
