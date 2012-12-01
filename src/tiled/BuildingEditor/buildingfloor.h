@@ -48,6 +48,7 @@ public:
             SectionInvalid = -1,
             SectionFloor,
             SectionWall,
+            SectionWall2,
             SectionRoofCap,
             SectionRoofCap2,
             SectionWallOverlay,
@@ -86,6 +87,7 @@ public:
 
         void ReplaceFloor(BuildingTileEntry *tile, int offset);
         void ReplaceWall(BuildingTileEntry *tile, WallOrientation orient, bool exterior = true);
+        void ReplaceWall2(BuildingTileEntry *tile, WallOrientation orient, bool exterior = true);
         void ReplaceDoor(BuildingTileEntry *tile, int offset);
         void ReplaceFrame(BuildingTileEntry *tile, int offset);
         void ReplaceCurtains(Window *window, bool exterior);

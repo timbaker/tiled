@@ -434,6 +434,7 @@ void BuildingPreviewScene::BuildingToMap()
     const char *layerNames[] = {
         "Floor",
         "Walls",
+        "Walls2",
         "RoofCap",
         "RoofCap2",
         "WallOverlay",
