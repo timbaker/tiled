@@ -392,6 +392,7 @@ bool BuildingEditorWindow::confirmAllSave()
 bool BuildingEditorWindow::closeYerself()
 {
     if (confirmAllSave()) {
+        clearDocument();
         writeSettings();
         if (mPreviewWin)
             mPreviewWin->writeSettings();
