@@ -1124,7 +1124,7 @@ void BuildingEditorWindow::selectCurrentCategoryTile()
         currentTile = mCurrentDocument->building()->roofSlopeTile();
     if (mCategory->asRoofTops())
         currentTile = mCurrentDocument->building()->roofTopTile();
-    if (currentTile) {
+    if (currentTile && (currentTile->isNone() || (currentTile->category() == mCategory))) {
         if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(currentTile->displayTile())) {
             QModelIndex index = ui->tilesetView->model()->index(tile);
             mSynching = true;
