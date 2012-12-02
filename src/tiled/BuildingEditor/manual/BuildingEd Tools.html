@@ -1,6 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
 
+
 <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>BuildingEd Tools</title>
   <meta content="Tim &quot;EasyPickins&quot; Baker" name="author"></head><body>
 <h2><span style="font-weight: bold;"></span>BuildingEd Tools</h2>
@@ -22,8 +23,34 @@ of the rectangle will be erased.&nbsp;Right-click to cancel the operation. </li>
 <h4>Eraser&nbsp; Tool <img style="width: 24px; height: 24px;" alt="Eraser tool" src="images/icon_eraser.png"></h4>
 Use the eraser tool to erase rooms.&nbsp; This tool is sort of obsolete since the Pencil tool also erases rooms.<br>
 <hr style="width: 100%; height: 2px;">
+<h4>Wall Tool&nbsp; <img style="width: 24px; height: 24px;" alt="" src="images/icon_wall.png"><br>
+</h4>
+Use the Wall Tool to replace sections of walls with a different tile,
+to remove sections of walls, or to add walls inside rooms. With the
+Wall Tool current, choosing a tile from the 'Exterior Walls' or
+'Interior Walls' category changes which wall tile is assigned to Wall
+Objects created later by the Wall Tool.&nbsp; If the special "none"
+tile is assigned to a Wall Object, no wall will be drawn, making it
+possible to remove sections of walls between rooms.<br>
+<ul>
+  <li>Left-click-drag to create a horizontal or vertical Wall Object.&nbsp; Wall Objects may be 1 or more tiles in length.</li>
+  <li>Hover the mouse pointer over an existing Wall Object to see its
+resize handle.&nbsp; Left-click-drag the resize handle to change the
+length of the Wall Object.</li>
+  <li>Wall objects may stack on top of each other.&nbsp; The top-most
+Wall Object at a given position determines which wall tile is used.</li>
+  <li>When two Wall Objects intersect, the correct North-West or South-East corner-tile will be chosen if both Wall Objects
+use the same wall tile.&nbsp; If the tiles differ at a NW intersection,
+both wall tiles are used, one in the Walls layer and one in the Walls2
+layer.&nbsp; If the tiles differ at a SE intersection, the thin SE
+corner tile is chosen to match the west-facing wall.<br>
+  </li>
+</ul>
+
+<hr style="width: 100%; height: 2px;">
 <h4>Select and Move Rooms Tool <img style="width: 22px; height: 22px;" alt="Select and move rooms tool" src="images/stock-tool-rect-select.png"><br>
 </h4>
+
 
 This tool allows you to select and move rooms and objects.<br>
 <ul>
