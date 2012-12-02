@@ -83,11 +83,17 @@ public:
         bool mExterior;
         QVector<BuildingTile*> mTiles;
 
+        struct {
+            BuildingTileEntry *entry;
+            bool exterior;
+        } mWallN, mWallW;
+        void SetWallN(BuildingTileEntry *tile, bool exterior = true);
+        void SetWallW(BuildingTileEntry *tile, bool exterior = true);
+
         bool IsWallOrient(WallOrientation orient);
 
         void ReplaceFloor(BuildingTileEntry *tile, int offset);
         void ReplaceWall(BuildingTileEntry *tile, WallOrientation orient, bool exterior = true);
-        void ReplaceWall2(BuildingTileEntry *tile, WallOrientation orient, bool exterior = true);
         void ReplaceDoor(BuildingTileEntry *tile, int offset);
         void ReplaceFrame(BuildingTileEntry *tile, int offset);
         void ReplaceCurtains(Window *window, bool exterior);
