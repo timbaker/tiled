@@ -1,5 +1,5 @@
 version = 0
-revision = 1
+revision = 2
 tilesets
 {
     tileset = appliances_cooking_01
@@ -86,6 +86,7 @@ layers
     tile = Floor
     tile = 0_Vegetation
     tile = Walls
+    tile = Walls2
     tile = RoofCap
     tile = RoofCap2
     tile = WallOverlay

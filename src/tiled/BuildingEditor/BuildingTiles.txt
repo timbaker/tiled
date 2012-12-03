@@ -83,6 +83,17 @@ category
     }
     entry
     {
+        West = location_shop_fossoil_01_002
+        North = location_shop_fossoil_01_000
+        NorthWest = location_shop_fossoil_01_004
+        SouthEast = location_shop_fossoil_01_007
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = 
+        NorthDoor = 
+    }
+    entry
+    {
         West = location_shop_greenes_01_000
         North = location_shop_greenes_01_001
         NorthWest = location_shop_greenes_01_002
@@ -138,6 +149,17 @@ category
     }
     entry
     {
+        West = walls_commercial_01_028
+        North = walls_commercial_01_029
+        NorthWest = walls_commercial_01_030
+        SouthEast = walls_commercial_01_031
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = 
+        NorthDoor = 
+    }
+    entry
+    {
         West = walls_commercial_01_032
         North = walls_commercial_01_033
         NorthWest = walls_commercial_01_034
@@ -146,6 +168,17 @@ category
         NorthWindow = walls_commercial_01_041
         WestDoor = walls_commercial_01_042
         NorthDoor = walls_commercial_01_043
+    }
+    entry
+    {
+        West = walls_commercial_01_040
+        North = walls_commercial_01_041
+        NorthWest = walls_commercial_01_034
+        SouthEast = walls_commercial_01_035
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = walls_commercial_01_026
+        NorthDoor = walls_commercial_01_027
     }
     entry
     {
@@ -407,6 +440,17 @@ category
     }
     entry
     {
+        West = location_shop_fossoil_01_002
+        North = location_shop_fossoil_01_000
+        NorthWest = location_shop_fossoil_01_004
+        SouthEast = location_shop_fossoil_01_007
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = 
+        NorthDoor = 
+    }
+    entry
+    {
         West = location_trailer_01_000
         North = location_trailer_01_001
         NorthWest = location_trailer_01_002
@@ -435,6 +479,28 @@ category
         SouthEast = walls_commercial_01_019
         WestWindow = walls_commercial_01_024
         NorthWindow = walls_commercial_01_025
+        WestDoor = walls_commercial_01_026
+        NorthDoor = walls_commercial_01_027
+    }
+    entry
+    {
+        West = walls_commercial_01_032
+        North = walls_commercial_01_033
+        NorthWest = walls_commercial_01_034
+        SouthEast = walls_commercial_01_035
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = walls_commercial_01_042
+        NorthDoor = walls_commercial_01_043
+    }
+    entry
+    {
+        West = walls_commercial_01_040
+        North = walls_commercial_01_041
+        NorthWest = walls_commercial_01_034
+        SouthEast = walls_commercial_01_035
+        WestWindow = 
+        NorthWindow = 
         WestDoor = walls_commercial_01_026
         NorthDoor = walls_commercial_01_027
     }
@@ -745,6 +811,17 @@ category
         NorthWindow = 
         WestDoor = location_shop_fossoil_01_008
         NorthDoor = location_shop_fossoil_01_009
+    }
+    entry
+    {
+        West = walls_commercial_01_028
+        North = walls_commercial_01_029
+        NorthWest = walls_commercial_01_030
+        SouthEast = walls_commercial_01_031
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = 
+        NorthDoor = 
     }
 }
 category

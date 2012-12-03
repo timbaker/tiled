@@ -4706,6 +4706,32 @@ group
         entry
         {
             orient = W
+            0,0 = furniture_seating_indoor_02_016
+        }
+        entry
+        {
+            orient = N
+            0,0 = furniture_seating_indoor_02_019
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = furniture_seating_indoor_02_017
+        }
+        entry
+        {
+            orient = N
+            0,0 = furniture_seating_indoor_02_018
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
             0,0 = furniture_seating_indoor_02_017
             0,1 = furniture_seating_indoor_02_016
         }
