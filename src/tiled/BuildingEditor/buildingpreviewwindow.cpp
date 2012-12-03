@@ -532,6 +532,7 @@ void BuildingPreviewScene::synchWithShowWalls()
         bool visible = mShowWalls || floor->level() < mDocument->currentFloor()->level();
         CompositeLayerGroup *layerGroup = mMapComposite->layerGroupForLevel(floor->level());
         layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionWall], visible);
+        layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionWall2], visible);
         layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionRoofCap], visible);
         layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionRoofCap2], visible);
         layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionRoof], visible);
