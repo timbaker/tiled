@@ -255,6 +255,7 @@ private:
 
     Mode mMode;
     bool mMouseDown;
+    bool mMouseOverSelection;
     QPointF mStartScenePos;
     QPoint mStartTilePos;
     QPoint mDragOffset;
@@ -493,10 +494,14 @@ private:
     void finishMoving(const QPointF &pos);
     void cancelMoving();
 
+    void updateStatusText();
+
     static SelectMoveObjectTool *mInstance;
 
     Mode mMode;
     bool mMouseDown;
+    bool mMouseOverObject;
+    bool mMouseOverSelection;
     QPointF mStartScenePos;
     QPoint mDragOffset;
     BuildingObject *mClickedObject;

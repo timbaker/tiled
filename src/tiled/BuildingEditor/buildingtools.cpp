@@ -472,6 +472,7 @@ SelectMoveRoomsTool::SelectMoveRoomsTool() :
     BaseTool(),
     mMode(NoMode),
     mMouseDown(false),
+    mMouseOverSelection(false),
     mSelectionItem(0)
 {
     updateStatusText();
@@ -497,6 +498,12 @@ void SelectMoveRoomsTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     QPointF pos = event->scenePos();
 
+    bool mouseOverSelection = mSelectedArea.contains(mEditor->sceneToTile(pos));
+    if (mouseOverSelection != mMouseOverSelection) {
+        mMouseOverSelection = mouseOverSelection;
+        updateStatusText();
+    }
+
     if (mMode == NoMode && mMouseDown) {
         const int dragDistance = (mStartScenePos - pos).manhattanLength();
         if (dragDistance >= QApplication::startDragDistance()) {
@@ -515,8 +522,11 @@ void SelectMoveRoomsTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
                                   qMin(mStartTilePos.y(), tilePos.y())),
                                   QPoint(qMax(mStartTilePos.x(), tilePos.x()),
                                   qMax(mStartTilePos.y(), tilePos.y())));
-
-        setSelectedArea(QRegion(tileBounds));
+        QRegion selection = QRegion(tileBounds);
+        if (selection != mSelectedArea) {
+            setSelectedArea(selection);
+            updateStatusText();
+        }
         break;
     }
     case Moving: {
@@ -618,10 +628,16 @@ QRegion SelectMoveRoomsTool::setSelectedArea(const QRegion &selectedArea)
 
 void SelectMoveRoomsTool::updateStatusText()
 {
-    if (mMouseDown && (mMode != Selecting)) {
+    if (mMode == Moving) {
         setStatusText(tr("CTRL moves rooms on all floors.  SHIFT moves objects as well.  Right-click to cancel."));
+    } else if (mMode == Selecting) {
+        setStatusText(tr("Width,Height=%1,%2")
+                      .arg(mSelectionItem->boundingRect().width())
+                      .arg(mSelectionItem->boundingRect().height()));
+    } else if (mMouseOverSelection) {
+        setStatusText(tr("Left-click-drag selection to move rooms."));
     } else {
-        setStatusText(tr("Left-click to select.  Left-click-drag selection to move rooms."));
+        setStatusText(tr("Left-click-drag to select."));
     }
 }
 
@@ -1662,10 +1678,12 @@ SelectMoveObjectTool::SelectMoveObjectTool() :
     BaseTool(),
     mMode(NoMode),
     mMouseDown(false),
+    mMouseOverObject(false),
+    mMouseOverSelection(false),
     mClickedObject(0),
     mSelectionRectItem(0)
 {
-    setStatusText(tr("Left-click to select.  Left-click-drag to move objects."));
+    updateStatusText();
 }
 
 void SelectMoveObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -1686,6 +1704,16 @@ void SelectMoveObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 void SelectMoveObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     QPointF pos = event->scenePos();
+
+    BuildingObject *object = mEditor->topmostObjectAt(pos);
+    bool mouseOverObject = object != 0;
+    bool mouseOverSelection = object && mEditor->document()->selectedObjects().contains(object);
+    if (mouseOverObject != mMouseOverObject ||
+            mouseOverSelection != mMouseOverSelection) {
+        mMouseOverObject = mouseOverObject;
+        mMouseOverSelection = mouseOverSelection;
+        updateStatusText();
+    }
 
     if (mMode == NoMode && mMouseDown) {
         const int dragDistance = (mStartScenePos - pos).manhattanLength();
@@ -1753,6 +1781,7 @@ void SelectMoveObjectTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
     mMouseDown = false;
     mClickedObject = 0;
+    updateStatusText();
 }
 
 void SelectMoveObjectTool::documentChanged()
@@ -1813,6 +1842,7 @@ void SelectMoveObjectTool::startSelecting()
         mSelectionRectItem->setZValue(FloorEditor::ZVALUE_CURSOR);
     }
     mEditor->addItem(mSelectionRectItem);
+    updateStatusText();
 }
 
 void SelectMoveObjectTool::startMoving()
@@ -1828,6 +1858,7 @@ void SelectMoveObjectTool::startMoving()
 
     mMode = Moving;
     mDragOffset = QPoint();
+    updateStatusText();
 }
 
 void SelectMoveObjectTool::updateMovingItems(const QPointF &pos,
@@ -1885,6 +1916,20 @@ void SelectMoveObjectTool::cancelMoving()
     mMovingObjects.clear();
 
     mMode = CancelMoving;
+}
+
+void SelectMoveObjectTool::updateStatusText()
+{
+    if (mMode == Moving) {
+        setStatusText(tr("Right-click to cancel."));
+    } else if (mMode == Selecting) {
+        setStatusText(tr("CTRL to toggle selected state.  SHIFT to add to selection."));
+    } else if (mMouseOverSelection) {
+        setStatusText(tr("Left-click-drag to move selected objects."));
+    } else if (mMouseOverObject) {
+        setStatusText(tr("Left-click to select.  Left-click-drag to select and move.  CTRL-left-click toggles selected state.  SHIFT-left-click adds to selection."));
+    } else
+        setStatusText(tr("Left-click-drag to select."));
 }
 
 /////
