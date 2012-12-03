@@ -178,8 +178,17 @@ public:
 
     QRect bounds() const;
 
+    void setTile(BuildingTileEntry *tile, int alternate = 0)
+    { alternate ? mInteriorTile = tile : mTile = tile; }
+
+    BuildingTileEntry *tile(int alternate = 0) const
+    { return alternate ? mInteriorTile : mTile; }
+
     void rotate(bool right);
     void flip(bool horizontal);
+
+    bool isValidPos(const QPoint &offset = QPoint(),
+                    BuildingEditor::BuildingFloor *floor = 0) const;
 
     WallObject *asWall() { return this; }
 
@@ -191,6 +200,7 @@ public:
 
 private:
     int mLength;
+    BuildingTileEntry *mInteriorTile;
 };
 
 class Window : public BuildingObject

@@ -1910,7 +1910,8 @@ WallTool::WallTool() :
     mHandleObject(0),
     mHandleItem(0),
     mMouseOverHandle(false),
-    mCurrentTile(BuildingTilesMgr::instance()->noneTileEntry())
+    mCurrentExteriorTile(BuildingTilesMgr::instance()->noneTileEntry()),
+    mCurrentInteriorTile(BuildingTilesMgr::instance()->noneTileEntry())
 {
 }
 
@@ -2070,7 +2071,8 @@ void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     if (mMode == Create) {
         mMode = NoMode;
         if (mObject->isValidPos()) {
-            mObject->setTile(mCurrentTile);
+            mObject->setTile(mCurrentExteriorTile, 0);
+            mObject->setTile(mCurrentInteriorTile, 1);
             BuildingFloor *floor = this->floor();
             undoStack()->push(new AddObject(mEditor->document(), floor,
                                             floor->objectCount(), mObject));

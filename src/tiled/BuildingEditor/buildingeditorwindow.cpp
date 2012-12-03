@@ -843,7 +843,7 @@ void BuildingEditorWindow::currentEWallChanged(BuildingTileEntry *entry, bool me
     }
     if (objects.size()) {
         if (objects.count() > 1)
-            mCurrentDocument->undoStack()->beginMacro(tr("Change Wall Object Tile"));
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Wall Object Exterior Tile"));
         foreach (WallObject *wall, objects)
             mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
                                                                      wall,
@@ -852,10 +852,9 @@ void BuildingEditorWindow::currentEWallChanged(BuildingTileEntry *entry, bool me
                                                                      0));
         if (objects.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
-        return;
     }
-    if (WallTool::instance()->isCurrent()) {
-        WallTool::instance()->setCurrentWallTile(entry);
+    if (objects.size() || WallTool::instance()->isCurrent()) {
+        WallTool::instance()->setCurrentExteriorTile(entry);
         return;
     }
 
@@ -875,19 +874,18 @@ void BuildingEditorWindow::currentIWallChanged(BuildingTileEntry *entry, bool me
     }
     if (objects.size()) {
         if (objects.count() > 1)
-            mCurrentDocument->undoStack()->beginMacro(tr("Change Wall Object Tile"));
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Wall Object Interior Tile"));
         foreach (WallObject *wall, objects)
             mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
                                                                      wall,
                                                                      entry,
                                                                      mergeable,
-                                                                     0));
+                                                                     1));
         if (objects.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
-        return;
     }
-    if (WallTool::instance()->isCurrent()) {
-        WallTool::instance()->setCurrentWallTile(entry);
+    if (objects.size() || WallTool::instance()->isCurrent()) {
+        WallTool::instance()->setCurrentInteriorTile(entry);
         return;
     }
 
@@ -1096,13 +1094,13 @@ void BuildingEditorWindow::selectCurrentCategoryTile()
     BuildingTileEntry *currentTile = 0;
     if (mCategory->asExteriorWalls()) {
         if (WallTool::instance()->isCurrent())
-            currentTile = WallTool::instance()->currentWallTile();
+            currentTile = WallTool::instance()->currentExteriorTile();
         else
             currentTile = mCurrentDocument->building()->exteriorWall();
     }
     if (mCategory->asInteriorWalls()) {
         if (WallTool::instance()->isCurrent())
-            currentTile = WallTool::instance()->currentWallTile();
+            currentTile = WallTool::instance()->currentInteriorTile();
         else if (currentRoom())
             currentTile = currentRoom()->Wall;
     }
@@ -1666,6 +1664,7 @@ void BuildingEditorWindow::mouseCoordinateChanged(const QPoint &tilePos)
 
 void BuildingEditorWindow::currentToolChanged(BaseTool *tool)
 {
+    Q_UNUSED(tool)
     selectCurrentCategoryTile();
     updateToolStatusText();
 }

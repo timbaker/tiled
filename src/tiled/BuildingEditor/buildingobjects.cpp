@@ -1112,7 +1112,8 @@ RoofObject::RoofDepth RoofObject::depthFromString(const QString &s)
 WallObject::WallObject(BuildingFloor *floor, int x, int y,
                        Direction dir, int length) :
     BuildingObject(floor, x, y, dir),
-    mLength(length)
+    mLength(length),
+    mInteriorTile(0)
 {
 }
 
@@ -1146,6 +1147,22 @@ void WallObject::flip(bool horizontal)
     } else {
         mY = mFloor->height() - mY - (isN() ? mLength: 0);
     }
+}
+
+bool WallObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
+{
+    if (!floor)
+        floor = mFloor;
+
+    // Horizontal walls can't go past the right edge of the building.
+    // Vertical walls can't go past the bottom edge of the building.
+    QRect floorBounds = floor->bounds();
+    QRect objectBounds = bounds().translated(offset);
+    if (isN())
+        floorBounds.adjust(0,0,1,0);
+    else
+        floorBounds.adjust(0,0,0,1);
+    return (floorBounds & objectBounds) == objectBounds;
 }
 
 /////

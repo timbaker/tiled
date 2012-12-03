@@ -522,11 +522,17 @@ public:
     void activate();
     void deactivate();
 
-    void setCurrentWallTile(BuildingTileEntry *entry)
-    { mCurrentTile = entry; }
+    void setCurrentExteriorTile(BuildingTileEntry *entry)
+    { mCurrentExteriorTile = entry; }
 
-    BuildingTileEntry *currentWallTile() const
-    { return mCurrentTile; }
+    void setCurrentInteriorTile(BuildingTileEntry *entry)
+    { mCurrentInteriorTile = entry; }
+
+    BuildingTileEntry *currentExteriorTile() const
+    { return mCurrentExteriorTile; }
+
+    BuildingTileEntry *currentInteriorTile() const
+    { return mCurrentInteriorTile; }
 
 private slots:
     void objectAboutToBeRemoved(BuildingObject *object);
@@ -560,7 +566,8 @@ private:
     bool mMouseOverHandle;
     int mOriginalLength;
 
-    BuildingTileEntry *mCurrentTile;
+    BuildingTileEntry *mCurrentExteriorTile;
+    BuildingTileEntry *mCurrentInteriorTile;
 };
 
 } // namespace BuildingEditor

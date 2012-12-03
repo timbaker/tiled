@@ -532,11 +532,17 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
     } else if (type == QLatin1String("wall")) {
         int length = atts.value(QLatin1String("length")).toString().toInt();
         WallObject *wall = new WallObject(floor, x, y, dir, length);
+
         BuildingTileEntry *entry = getEntry(tile);
-        if (entry->asExteriorWall() || entry->asInteriorWall())
-            wall->setTile(entry);
-        else
-            wall->setTile(BuildingTilesMgr::instance()->noneTileEntry());
+        if (!entry->asExteriorWall())
+            entry = BuildingTilesMgr::instance()->noneTileEntry();
+        wall->setTile(entry);
+
+        QString interiorTileString = atts.value(QLatin1String("InteriorTile")).toString();
+        entry = getEntry(interiorTileString);
+        if (!entry->asInteriorWall())
+            entry = BuildingTilesMgr::instance()->noneTileEntry();
+        wall->setTile(entry, 1);
         object = wall;
     } else {
         xml.raiseError(tr("Unknown object type '%1'").arg(type));

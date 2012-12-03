@@ -242,13 +242,16 @@ void BuildingFloor::LayoutToSquares()
     foreach (BuildingObject *object, mObjects) {
         if (WallObject *wall = object->asWall()) {
             int x = wall->x(), y = wall->y();
-            wtype = wall->tile();
             if (wall->isN()) {
-                for (; y < wall->y() + wall->length(); y++)
-                    squares[x][y].SetWallW(wtype, wtype->category() == BuildingTilesMgr::instance()->catEWalls());
+                for (; y < wall->y() + wall->length(); y++) {
+                    bool exterior = (x < width()) ? mIndexAtPos[x][y] < 0 : true;
+                    squares[x][y].SetWallW(wall->tile(exterior ? 0 : 1), exterior);
+                }
             } else {
-                for (; x < wall->x() + wall->length(); x++)
-                    squares[x][y].SetWallN(wtype, wtype->category() == BuildingTilesMgr::instance()->catEWalls());
+                for (; x < wall->x() + wall->length(); x++) {
+                    bool exterior = (y < height()) ? mIndexAtPos[x][y] < 0 : true;
+                    squares[x][y].SetWallN(wall->tile(exterior ? 0 : 1), exterior);
+                }
             }
         }
     }

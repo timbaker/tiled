@@ -2,6 +2,8 @@
 <html><head>
 
 
+
+
 <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>BuildingEd Tools</title>
   <meta content="Tim &quot;EasyPickins&quot; Baker" name="author"></head><body>
 <h2><span style="font-weight: bold;"></span>BuildingEd Tools</h2>
@@ -25,21 +27,34 @@ Use the eraser tool to erase rooms.&nbsp; This tool is sort of obsolete since th
 <hr style="width: 100%; height: 2px;">
 <h4>Wall Tool&nbsp; <img style="width: 24px; height: 24px;" alt="" src="images/icon_wall.png"><br>
 </h4>
-Use the Wall Tool to replace sections of walls with a different tile,
-to remove sections of walls, or to add walls inside rooms. With the
-Wall Tool current, choosing a tile from the 'Exterior Walls' or
-'Interior Walls' category changes which wall tile is assigned to Wall
-Objects created later by the Wall Tool.&nbsp; If the special "none"
+Use the Wall Tool to create Wall Objects.&nbsp; Wall Objects may be
+used to replace sections of a building's walls with a different tile,
+to remove sections of walls, or to add free-standing walls to a
+building.<br>
+<br>
+Wall Objects have 2 tiles, an exterior wall tile and and interior wall
+tile.&nbsp; Which of the 2 tiles gets displayed depends on whether the
+wall is facing the inside of a room or not. When the
+Wall Tool is active, choosing a tile from the 'Exterior Walls' or
+'Interior Walls' category changes which tiles newly-created Wall
+Objects will have.&nbsp; If the special "none"
 tile is assigned to a Wall Object, no wall will be drawn, making it
-possible to remove sections of walls between rooms.<br>
+possible to remove sections of walls between rooms or on the outside of
+a building.<br>
 <ul>
-  <li>Left-click-drag to create a horizontal or vertical Wall Object.&nbsp; Wall Objects may be 1 or more tiles in length.</li>
+  <li>Left-click-drag to create a horizontal or vertical Wall
+Object.&nbsp; Wall Objects may be 1 or more tiles in length.&nbsp;
+Right-click while creating an object to cancel.<br>
+</li>
   <li>Hover the mouse pointer over an existing Wall Object to see its
 resize handle.&nbsp; Left-click-drag the resize handle to change the
-length of the Wall Object.</li>
+length of the Wall Object.&nbsp; Right-click while resizing to cancel.<br>
+</li>
   <li>Wall objects may stack on top of each other.&nbsp; The top-most
 Wall Object at a given position determines which wall tile is used.</li>
-  <li>When two Wall Objects intersect, the correct North-West or South-East corner-tile will be chosen if both Wall Objects
+  <li>Where
+a horizontal and vertical Wall Object intersect, the correct North-West
+or South-East corner-tile will be chosen if both Wall Objects
 use the same wall tile.&nbsp; If the tiles differ at a NW intersection,
 both wall tiles are used, one in the Walls layer and one in the Walls2
 layer.&nbsp; If the tiles differ at a SE intersection, the thin SE
