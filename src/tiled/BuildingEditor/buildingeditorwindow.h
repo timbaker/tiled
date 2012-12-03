@@ -170,6 +170,7 @@ private slots:
     void mouseCoordinateChanged(const QPoint &tilePos);
 
     void currentToolChanged(BaseTool *tool);
+    void updateToolStatusText();
 
     void roofTypeChanged(QAction *action);
     void roofCornerTypeChanged(QAction *action);

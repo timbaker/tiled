@@ -224,7 +224,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ToolManager::instance(), SIGNAL(currentToolChanged(BaseTool*)),
             SLOT(currentToolChanged(BaseTool*)));
     connect(ToolManager::instance(), SIGNAL(statusTextChanged(BaseTool*)),
-            SLOT(currentToolChanged(BaseTool*)));
+            SLOT(updateToolStatusText()));
 
     connect(mRoomComboBox, SIGNAL(currentIndexChanged(int)),
             SLOT(roomIndexChanged(int)));
@@ -1666,7 +1666,13 @@ void BuildingEditorWindow::mouseCoordinateChanged(const QPoint &tilePos)
 
 void BuildingEditorWindow::currentToolChanged(BaseTool *tool)
 {
-    if (tool)
+    selectCurrentCategoryTile();
+    updateToolStatusText();
+}
+
+void BuildingEditorWindow::updateToolStatusText()
+{
+    if (BaseTool *tool = ToolManager::instance()->currentTool())
         ui->statusLabel->setText(tool->statusText());
     else
         ui->statusLabel->clear();
