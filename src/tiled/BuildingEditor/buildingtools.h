@@ -415,6 +415,7 @@ private:
     void toggleCappedS();
     void depthUp();
     void depthDown();
+    void updateStatusText();
 
 private:
     static RoofTool *mInstance;

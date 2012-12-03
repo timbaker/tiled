@@ -619,7 +619,7 @@ QRegion SelectMoveRoomsTool::setSelectedArea(const QRegion &selectedArea)
 void SelectMoveRoomsTool::updateStatusText()
 {
     if (mMouseDown && (mMode != Selecting)) {
-        setStatusText(tr("CTRL moves rooms on all floors.  SHIFT moves objects as well."));
+        setStatusText(tr("CTRL moves rooms on all floors.  SHIFT moves objects as well.  Right-click to cancel."));
     } else {
         setStatusText(tr("Left-click to select.  Left-click-drag selection to move rooms."));
     }
@@ -1316,6 +1316,7 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             mOriginalWidth = mHandleObject->width();
             mOriginalHeight = mHandleObject->height();
             mMode = Resize;
+            updateStatusText();
             return;
         }
         if (!mEditor->currentFloorContains(mCurrentPos))
@@ -1331,9 +1332,26 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mItem->setZValue(FloorEditor::ZVALUE_CURSOR);
         mEditor->addItem(mItem);
         mMode = Create;
+        updateStatusText();
     }
 
     if (event->button() == Qt::RightButton) {
+        if (mMode == Resize) {
+            mHandleObject->resize(mOriginalWidth, mOriginalHeight);
+            mObjectItem->synchWithObject();
+            mMode = NoMode;
+            updateStatusText();
+            return;
+        }
+        if (mMode == Create) {
+            delete mObject;
+            mObject = 0;
+            delete mItem;
+            mItem = 0;
+            mMode = NoMode;
+            updateStatusText();
+            return;
+        }
         if (mMode != NoMode)
             return; // ignore clicks when creating/resizing
         if (BuildingObject *object = mEditor->topmostObjectAt(event->scenePos())) {
@@ -1389,6 +1407,7 @@ void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
         resizeRoof(mHandleObject->width() + diff.x(),
                    mHandleObject->height() + diff.y());
+        updateStatusText();
         return;
     }
 
@@ -1409,6 +1428,8 @@ void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
         mItem->synchWithObject();
         mItem->update();
+
+        updateStatusText();
     }
 }
 
@@ -1423,7 +1444,6 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         mHandleObject->resize(mOriginalWidth, mOriginalHeight);
         undoStack()->push(new ResizeRoof(mEditor->document(), mHandleObject,
                                          width, height));
-        return;
     }
 
     if (mMode == Create) {
@@ -1442,6 +1462,9 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         delete mItem;
         mItem = 0;
     }
+
+    updateHandle(event->scenePos());
+    updateStatusText();
 }
 
 void RoofTool::documentChanged()
@@ -1460,7 +1483,7 @@ void RoofTool::documentChanged()
 
 void RoofTool::activate()
 {
-    setStatusText(tr("Left-click-drag to place a roof.  Right-click to remove any object."));
+    updateStatusText();
     if (mCursorItem)
         mEditor->addItem(mCursorItem);
 }
@@ -1500,17 +1523,17 @@ void RoofTool::updateHandle(const QPointF &scenePos)
     if (mMouseOverHandle) {
         mHandleItem->setHighlight(false);
         mMouseOverHandle = false;
-        setStatusText(tr("Left-click-drag to place a roof."));
+        updateStatusText();
     }
     mHandleItem = 0;
     if (ro && (ro == mHandleObject)) {
         foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
             if (GraphicsRoofHandleItem *handle = dynamic_cast<GraphicsRoofHandleItem*>(item)) {
                 if (handle->parentItem() == mObjectItem) {
-                    setStatusText(handle->statusText());
                     mHandleItem = handle;
                     mMouseOverHandle = true;
                     mHandleItem->setHighlight(true);
+                    updateStatusText();
                     break;
                 }
             }
@@ -1520,12 +1543,14 @@ void RoofTool::updateHandle(const QPointF &scenePos)
 
     if (mObjectItem) {
         mObjectItem->setShowHandles(false);
+        mObjectItem->setZValue(mObjectItem->object()->index());
         mObjectItem = 0;
     }
 
     if (ro) {
         mObjectItem = mEditor->itemForObject(ro)->asRoof();
         mObjectItem->setShowHandles(true);
+        mObjectItem->setZValue(mObjectItem->object()->floor()->objectCount());
     }
     mHandleObject = ro;
 }
@@ -1586,6 +1611,23 @@ void RoofTool::depthDown()
         return;
     undoStack()->push(new HandleRoof(mEditor->document(), mHandleObject,
                                      HandleRoof::DecrDepth));
+}
+
+void RoofTool::updateStatusText()
+{
+    if (mMode == Create)
+        setStatusText(tr("Width,Height=%1,%2.  Right-click to cancel.")
+                      .arg(mObject->width())
+                      .arg(mObject->height()));
+    else if (mMode == Resize)
+        setStatusText(tr("Width,Height=%1,%2.  Right-click to cancel.")
+                      .arg(mHandleObject->width())
+                      .arg(mHandleObject->height()));
+    else if (mMouseOverHandle)
+        setStatusText(mHandleItem->statusText());
+    else
+        setStatusText(tr("Left-click-drag to place a roof.  Right-click to remove any object."));
+
 }
 
 /////
@@ -1874,14 +1916,14 @@ WallTool::WallTool() :
 
 void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
+    if (event->button() == Qt::LeftButton) {
         if (mMode != NoMode)
             return; // ignore clicks when creating/resizing
-
-    if (event->button() == Qt::LeftButton) {
         mStartPos = mCurrentPos;
         if (mMouseOverHandle) {
             mOriginalLength = mHandleObject->length();
             mMode = Resize;
+            updateStatusText();
             return;
         }
         if (!floor()->bounds().adjusted(0,0,1,1).contains(mCurrentPos))
@@ -1894,9 +1936,28 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mItem->setZValue(FloorEditor::ZVALUE_CURSOR);
         mEditor->addItem(mItem);
         mMode = Create;
+        updateStatusText();
     }
 
     if (event->button() == Qt::RightButton) {
+        if (mMode == Create) {
+            delete mObject;
+            mObject = 0;
+            delete mItem;
+            mItem = 0;
+            mMode = NoMode;
+            updateStatusText();
+            return;
+        }
+        if (mMode == Resize) {
+            mHandleObject->setLength(mOriginalLength);
+            mObjectItem->synchWithObject();
+            mMode = NoMode;
+            updateStatusText();
+            return;
+        }
+        if (mMode != NoMode)
+            return; // ignore clicks when creating/resizing
         if (BuildingObject *object = mEditor->topmostObjectAt(event->scenePos())) {
             undoStack()->push(new RemoveObject(mEditor->document(), floor(),
                                                object->index()));
@@ -2002,6 +2063,7 @@ void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         mHandleObject->setLength(mOriginalLength);
         undoStack()->push(new ResizeWall(mEditor->document(), mHandleObject,
                                          length));
+        updateStatusText();
         return;
     }
 
@@ -2017,6 +2079,7 @@ void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         mObject = 0;
         delete mItem;
         mItem = 0;
+        updateStatusText();
     }
 }
 
@@ -2110,10 +2173,10 @@ void WallTool::updateHandle(const QPointF &scenePos)
 
 void WallTool::updateStatusText()
 {
-    if (mMouseOverHandle)
-        setStatusText(tr("Left-click-drag to resize wall."));
-    else if (mMode == Create)
+    if (mMode == Create || mMode == Resize)
         setStatusText(tr("Right-click to cancel."));
+    else if (mMouseOverHandle)
+        setStatusText(tr("Left-click-drag to resize wall."));
     else
         setStatusText(tr("Left-click-drag to place a wall."));
 }
