@@ -122,11 +122,19 @@
     <addaction name="actionInsertFloorBelow"/>
     <addaction name="actionRemoveFloor"/>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionHelp"/>
+    <addaction name="actionAboutQt"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuBuilding"/>
    <addaction name="menuFloor"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
@@ -409,6 +417,9 @@
    <property name="text">
     <string>Preferences...</string>
    </property>
+   <property name="menuRole">
+    <enum>QAction::PreferencesRole</enum>
+   </property>
   </action>
   <action name="actionSaveAs">
    <property name="icon">
@@ -597,6 +608,19 @@
    </property>
    <property name="toolTip">
     <string>Place Wall</string>
+   </property>
+  </action>
+  <action name="actionAboutQt">
+   <property name="text">
+    <string>About Qt</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::AboutQtRole</enum>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="text">
+    <string>BuildingEd Help</string>
    </property>
   </action>
  </widget>

@@ -54,6 +54,7 @@
 #include <QCloseEvent>
 #include <QComboBox>
 #include <QDebug>
+#include <QDesktopServices>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -65,6 +66,7 @@
 #include <QShowEvent>
 #include <QToolButton>
 #include <QUndoGroup>
+#include <QUrl>
 #include <QXmlStreamReader>
 
 using namespace BuildingEditor;
@@ -310,6 +312,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionTiles, SIGNAL(triggered()), SLOT(tilesDialog()));
     connect(ui->actionTemplateFromBuilding, SIGNAL(triggered()),
             SLOT(templateFromBuilding()));
+
+    connect(ui->actionHelp, SIGNAL(triggered()), SLOT(help()));
+    connect(ui->actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
     mCategoryZoomable->connectToComboBox(ui->scaleComboBox);
     connect(mCategoryZoomable, SIGNAL(scaleChanged(qreal)),
@@ -1857,4 +1862,12 @@ void BuildingEditorWindow::updateActions()
                              .arg(mCurrentDocument->building()->floorCount()));
     else
         mFloorLabel->clear();
+}
+
+void BuildingEditorWindow::help()
+{
+    QString path = QLatin1String("file:///") +
+            QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + QLatin1String("docs/BuildingEd/index.html");
+    QDesktopServices::openUrl(QUrl(path, QUrl::TolerantMode));
 }

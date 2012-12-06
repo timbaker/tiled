@@ -184,6 +184,8 @@ private slots:
 
     void updateActions();
 
+    void help();
+
 private:
     static BuildingEditorWindow *mInstance;
     Ui::BuildingEditorWindow *ui;
