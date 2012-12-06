@@ -178,34 +178,6 @@ private:
     QRectF mCursorViewRect;
 };
 
-class EraserTool : public BaseTool
-{
-    Q_OBJECT
-public:
-    static EraserTool *instance();
-
-    EraserTool();
-
-    void documentChanged();
-
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-private:
-    void updateCursor(const QPointF &scenePos);
-
-public slots:
-    void activate();
-    void deactivate();
-
-private:
-    static EraserTool *mInstance;
-    bool mMouseDown;
-    bool mInitialPaint;
-    QGraphicsRectItem *mCursor;
-    QRectF mCursorViewRect;
-};
-
 /////
 
 class SelectMoveRoomsTool : public BaseTool

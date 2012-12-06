@@ -140,7 +140,6 @@
    </attribute>
    <addaction name="actionPecil"/>
    <addaction name="actionWall"/>
-   <addaction name="actionEraser"/>
    <addaction name="actionSelectRooms"/>
    <addaction name="separator"/>
    <addaction name="actionDoor"/>
@@ -291,21 +290,6 @@
    </property>
    <property name="toolTip">
     <string>Draw Room</string>
-   </property>
-  </action>
-  <action name="actionEraser">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="buildingeditor.qrc">
-     <normaloff>:/BuildingEditor/icons/icon_eraser.png</normaloff>:/BuildingEditor/icons/icon_eraser.png</iconset>
-   </property>
-   <property name="text">
-    <string>Eraser</string>
-   </property>
-   <property name="toolTip">
-    <string>Erase Room</string>
    </property>
   </action>
   <action name="actionDoor">

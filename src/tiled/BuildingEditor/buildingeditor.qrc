@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/BuildingEditor">
         <file>icons/icon_door.png</file>
-        <file>icons/icon_eraser.png</file>
         <file>icons/icon_floordn.png</file>
         <file>icons/icon_floorup.png</file>
         <file>icons/icon_pencil.png</file>

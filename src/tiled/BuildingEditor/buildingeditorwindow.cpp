@@ -124,11 +124,6 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     PencilTool::instance()->setEditor(roomEditor);
     PencilTool::instance()->setAction(ui->actionPecil);
 
-    connect(ui->actionEraser, SIGNAL(triggered()),
-            EraserTool::instance(), SLOT(makeCurrent()));
-    EraserTool::instance()->setEditor(roomEditor);
-    EraserTool::instance()->setAction(ui->actionEraser);
-
     connect(ui->actionSelectRooms, SIGNAL(triggered()),
             SelectMoveRoomsTool::instance(), SLOT(makeCurrent()));
     SelectMoveRoomsTool::instance()->setEditor(roomEditor);
@@ -1811,7 +1806,6 @@ void BuildingEditorWindow::updateActions()
     PencilTool::instance()->setEnabled(hasDoc &&
             currentRoom() != 0);
     WallTool::instance()->setEnabled(hasDoc);
-    EraserTool::instance()->setEnabled(hasDoc);
     SelectMoveRoomsTool::instance()->setEnabled(hasDoc);
     DoorTool::instance()->setEnabled(hasDoc && showObjects);
     WindowTool::instance()->setEnabled(hasDoc && showObjects);
