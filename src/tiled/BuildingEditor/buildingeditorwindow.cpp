@@ -1766,8 +1766,9 @@ void BuildingEditorWindow::autoSaveTimeout()
     if (!mCurrentDocument)
         return;
     QString fileName = mCurrentDocument->fileName();
-    if (fileName.isEmpty())
-        return; // where to save it?
+    if (fileName.isEmpty()) {
+        fileName = BuildingPreferences::instance()->configPath(QLatin1String("untitled.tbx"));
+    }
     fileName += QLatin1String(".autosave");
     writeBuilding(mCurrentDocument, fileName);
     mAutoSaveFileName = fileName;

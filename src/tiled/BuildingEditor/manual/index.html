@@ -1,11 +1,31 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
+
 <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>BuildingEd</title>
   <meta content="Tim Baker" name="author"></head><body>
 <h1>BuildingEd - The Building Editor</h1>
-
 <a href="BuildingEd%20Tiles%20Dialog.html">Tiles Dialog</a><br>
 <a href="BuildingEd%20Tools.html">Tools</a><br>
-<br>
 
+<h2>Autosaving</h2>
+To avoid losing too much work in the event the editor crashes, every
+2.5 minutes BuildingEd will save the current building if it has unsaved
+changes.&nbsp; The name of the auto-saved file will end with the
+".autosave" extension.<br>
+<ul>
+  <li>If the building is new and has never been saved, the autosave
+file will be in the .TileZed directory in the user's home
+directory.&nbsp; On Windows, this will usually be
+C:\Users\USERNAME\.TileZed.&nbsp; The name of the file will be
+"untitled.autosave".<br>
+  </li>
+  <li>If the building was loaded from an existing .tbx file, the name
+of the autosave file will be the same as the .tbx file plus ".autosave"
+in the same directory as the .tbx file.&nbsp; For example, if the
+current building was loaded from "C:\MyBuildings\MyCoolBuilding.tbx",
+the autosave file will be named
+"C:\MyBuildings\MyCoolBuilding.tbx.autosave".</li>
+</ul>
+The autosave file will be deleted if the building is saved by the user,
+if a new building is created/opened, or if BuildingEd is closed.<br>
 </body></html>
