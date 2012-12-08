@@ -61,7 +61,7 @@ public:
     explicit BuildingTilesDialog(QWidget *parent = 0);
     ~BuildingTilesDialog();
 
-    bool changes() const;
+    bool changes();
 
     void selectCategory(BuildingTileCategory *category);
     void selectCategory(FurnitureGroup *furnitureGroup);
@@ -184,6 +184,7 @@ private:
     QComboBox *mFurnitureLayerComboBox;
 
     bool mExpertMode;
+    bool mChanges;
 };
 
 } // namespace BuildingEditor

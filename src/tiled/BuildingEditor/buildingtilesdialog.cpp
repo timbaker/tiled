@@ -834,9 +834,11 @@ BuildingTilesDialog::~BuildingTilesDialog()
     delete ui;
 }
 
-bool BuildingTilesDialog::changes() const
+bool BuildingTilesDialog::changes()
 {
-    return !mUndoStack->isClean();
+    bool changes = mChanges;
+    mChanges = false;
+    return changes;
 }
 
 void BuildingTilesDialog::selectCategory(BuildingTileCategory *category)
@@ -1788,7 +1790,7 @@ void BuildingTilesDialog::furnitureLayerChanged(int index)
 
 void BuildingTilesDialog::accept()
 {
-    if (changes()) {
+    if (mChanges = !mUndoStack->isClean()) {
         BuildingTilesMgr::instance()->writeTxt(this);
         if (!FurnitureGroups::instance()->writeTxt()) {
             QMessageBox::warning(this, tr("It's no good, Jim!"),
