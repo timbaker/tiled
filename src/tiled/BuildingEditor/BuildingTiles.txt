@@ -1,5 +1,5 @@
 version = 2
-revision = 1
+revision = 2
 category
 {
     label = Exterior Walls
@@ -259,6 +259,17 @@ category
     }
     entry
     {
+        West = walls_exterior_house_01_036
+        North = walls_exterior_house_01_037
+        NorthWest = walls_exterior_house_01_038
+        SouthEast = walls_exterior_house_01_039
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = 
+        NorthDoor = 
+    }
+    entry
+    {
         West = walls_exterior_house_01_048
         North = walls_exterior_house_01_049
         NorthWest = walls_exterior_house_01_050
@@ -514,6 +525,28 @@ category
         NorthWindow = walls_commercial_01_057
         WestDoor = walls_commercial_01_058
         NorthDoor = walls_commercial_01_059
+    }
+    entry
+    {
+        West = walls_exterior_house_01_004
+        North = walls_exterior_house_01_005
+        NorthWest = walls_exterior_house_01_006
+        SouthEast = walls_exterior_house_01_007
+        WestWindow = walls_exterior_house_01_012
+        NorthWindow = walls_exterior_house_01_013
+        WestDoor = walls_exterior_house_01_014
+        NorthDoor = walls_exterior_house_01_015
+    }
+    entry
+    {
+        West = walls_exterior_house_01_036
+        North = walls_exterior_house_01_037
+        NorthWest = walls_exterior_house_01_038
+        SouthEast = walls_exterior_house_01_039
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = 
+        NorthDoor = 
     }
     entry
     {
@@ -1600,6 +1633,19 @@ category
 {
     label = Roof Tops
     name = roof_tops
+    entry
+    {
+        West1 = floors_exterior_street_01_016
+        West2 = floors_exterior_street_01_016
+        West3 = floors_exterior_street_01_016
+        North1 = floors_exterior_street_01_016
+        North2 = floors_exterior_street_01_016
+        North3 = floors_exterior_street_01_016
+        offset = West1 -1 -1
+        offset = West2 -2 -2
+        offset = North1 -1 -1
+        offset = North2 -2 -2
+    }
     entry
     {
         West1 = roofs_01_022

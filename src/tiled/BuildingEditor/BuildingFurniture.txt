@@ -1,5 +1,5 @@
 version = 0
-revision = 6
+revision = 7
 group
 {
     label = Appliances - Cooking
@@ -5189,24 +5189,6 @@ group
         {
             orient = N
             0,0 = trashcontainers_01_027
-        }
-    }
-}
-group
-{
-    label = Walls - Commercial
-    furniture
-    {
-        layer = Walls
-        entry
-        {
-            orient = W
-            0,0 = walls_commercial_01_048
-        }
-        entry
-        {
-            orient = N
-            0,0 = walls_commercial_01_049
         }
     }
 }
