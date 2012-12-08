@@ -337,7 +337,8 @@ void BuildingFloor::LayoutToSquares()
             if (squares[x][y].mExterior) {
                 int dx = window->isW() ? 1 : 0;
                 int dy = window->isN() ? 1 : 0;
-                squares[x - dx][y - dy].ReplaceCurtains(window, true);
+                if ((x - dx >= 0) && (y - dy >= 0))
+                    squares[x - dx][y - dy].ReplaceCurtains(window, true);
             } else
                 squares[x][y].ReplaceCurtains(window, false);
         }
