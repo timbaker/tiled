@@ -597,19 +597,27 @@ void GraphicsRoofHandleItem::synchWithObject()
         break;
     case CappedW:
         visible = roof->roofType() != RoofObject::SlopeW &&
-                roof->roofType() != RoofObject::PeakNS;
+                roof->roofType() != RoofObject::PeakNS &&
+                roof->roofType() != RoofObject::CornerOuterNW &&
+                roof->roofType() != RoofObject::CornerOuterSW;
         break;
     case CappedN:
         visible = roof->roofType() != RoofObject::SlopeN &&
-                roof->roofType() != RoofObject::PeakWE;
+                roof->roofType() != RoofObject::PeakWE &&
+                roof->roofType() != RoofObject::CornerOuterNW &&
+                roof->roofType() != RoofObject::CornerOuterNE;
         break;
     case CappedE:
         visible = roof->roofType() != RoofObject::SlopeE &&
-                roof->roofType() != RoofObject::PeakNS;
+                roof->roofType() != RoofObject::PeakNS &&
+                roof->roofType() != RoofObject::CornerOuterNE &&
+                roof->roofType() != RoofObject::CornerOuterSE;
         break;
     case CappedS:
         visible = roof->roofType() != RoofObject::SlopeS &&
-                roof->roofType() != RoofObject::PeakWE;
+                roof->roofType() != RoofObject::PeakWE &&
+                roof->roofType() != RoofObject::CornerOuterSW &&
+                roof->roofType() != RoofObject::CornerOuterSE;
         break;
     case Orient:
         break;

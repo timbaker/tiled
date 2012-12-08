@@ -417,6 +417,8 @@ public:
     QRect northEdge();
     QRect eastEdge();
     QRect southEdge();
+    QRect westGap(RoofDepth depth);
+    QRect northGap(RoofDepth depth);
     QRect eastGap(RoofDepth depth);
     QRect southGap(RoofDepth depth);
     QRect flatTop();

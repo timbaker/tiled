@@ -886,14 +886,18 @@ void RoofObject::setDefaultCaps()
     case SlopeN: mCappedS = false; break;
     case SlopeE: mCappedW = false; break;
     case SlopeS: mCappedN = false; break;
-    case CornerInnerSW: mCappedW = mCappedS = false; break;
-    case CornerInnerNW: mCappedW = mCappedN = false; break;
-    case CornerInnerNE: mCappedE = mCappedN = false; break;
-    case CornerInnerSE: mCappedE = mCappedS = false; break;
-    case CornerOuterSW: mCappedE = mCappedN = false; break;
-    case CornerOuterNW: mCappedE = mCappedS = false; break;
-    case CornerOuterNE: mCappedW = mCappedS = false; break;
-    case CornerOuterSE: mCappedW = mCappedN = false; break;
+    case CornerInnerSW:
+    case CornerInnerNW:
+    case CornerInnerNE:
+    case CornerInnerSE:
+        mCappedW = mCappedN = mCappedE = mCappedS = false;
+        break;
+    case CornerOuterSW:
+    case CornerOuterNW:
+    case CornerOuterNE:
+    case CornerOuterSE:
+        mCappedW = mCappedN = mCappedE = mCappedS = false;
+        break;
     }
 }
 
@@ -980,6 +984,36 @@ QRect RoofObject::southEdge()
         return QRect(r.left(), r.bottom() - slopeThickness() + 1,
                      r.width(), slopeThickness());
     }
+    return QRect();
+}
+
+QRect RoofObject::westGap(RoofDepth depth)
+{
+    if (depth != mDepth || !mCappedW)
+        return QRect();
+    QRect r = bounds();
+    if (mType == SlopeE || mType == FlatTop
+            || mType == CornerInnerSW
+            || mType == CornerInnerNW) {
+        return QRect(r.left(), r.top(), 1, r.height());
+    }
+    if (mType == PeakWE && mHeight > 6)
+        return QRect(r.left(), r.top() + 3, 1, r.height() - 6);
+    return QRect();
+}
+
+QRect RoofObject::northGap(RoofDepth depth)
+{
+    if (depth != mDepth || !mCappedN)
+        return QRect();
+    QRect r = bounds();
+    if (mType == SlopeS || mType == FlatTop
+            || mType == CornerInnerNW
+            || mType == CornerInnerNE) {
+        return QRect(r.left(), r.top(), r.width(), 1);
+    }
+    if (mType == PeakNS && mWidth > 6)
+        return QRect(r.left() + 3, r.top(), r.width() - 6, 1);
     return QRect();
 }
 
