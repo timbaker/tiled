@@ -103,4 +103,4 @@ file ( COPY BuildingFurniture.txt BuildingTemplates.txt BuildingTiles.txt
 install ( FILES BuildingFurniture.txt BuildingTemplates.txt BuildingTiles.txt
           TMXConfig.txt DESTINATION . )
           
-install ( DIRECTORY manual DESTINATION docs )
+install ( DIRECTORY manual/ DESTINATION docs/BuildingEd )
