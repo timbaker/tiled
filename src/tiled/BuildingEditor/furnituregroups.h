@@ -27,6 +27,7 @@
 namespace BuildingEditor {
 
 class BuildingTile;
+class FurnitureGroup;
 class FurnitureTiles;
 
 class FurnitureTile
@@ -123,6 +124,12 @@ public:
     FurnitureTiles(bool corners);
     ~FurnitureTiles();
 
+    void setGroup(FurnitureGroup *group)
+    { mGroup = group; }
+
+    FurnitureGroup *group() const
+    { return mGroup; }
+
     bool isEmpty() const;
 
     bool hasCorners() const
@@ -165,6 +172,7 @@ private:
     static void initNames();
 
 private:
+    FurnitureGroup *mGroup;
     QVector<FurnitureTile*> mTiles;
     bool mCorners;
     FurnitureLayer mLayer;

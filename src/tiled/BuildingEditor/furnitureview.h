@@ -61,6 +61,7 @@ public:
     void setTiles(const QList<FurnitureTiles*> &tilesList);
 
     FurnitureTile *tileAt(const QModelIndex &index) const;
+    QString headerAt(const QModelIndex &index) const;
 
     void toggleCorners(FurnitureTiles *ftiles);
     void removeTiles(FurnitureTiles *ftiles);
@@ -86,11 +87,38 @@ signals:
                               const QString &tileName);
 
 private:
+    class Item
+    {
+    public:
+        Item() :
+            mTile(0)
+        {
+        }
+
+        Item(FurnitureTile *ftile) :
+            mTile(ftile)
+        {
+        }
+        Item(const QString &heading) :
+            mTile(0),
+            mHeading(heading)
+        {
+        }
+
+        FurnitureTile *mTile;
+        QString mHeading;
+    };
+
+    Item *toItem(const QModelIndex &index) const;
+    Item *toItem(FurnitureTile *ftile) const;
+
+    QList<Item*> mItems;
     QList<FurnitureTile*> mTiles;
     static QString mMimeType;
     QPoint mDropCoords;
     QModelIndex mDropIndex;
     QVector<QSize> mMaxTileSize;
+    bool mShowHeaders;
 };
 
 class FurnitureView : public QTableView

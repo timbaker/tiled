@@ -1234,7 +1234,8 @@ BuildingTileCategory::BuildingTileCategory(const QString &name,
     mName(name),
     mLabel(label),
     mDisplayIndex(displayIndex),
-    mDefaultEntry(0)
+    mDefaultEntry(0),
+    mNoneTileEntry(0)
 {
 }
 
@@ -1256,6 +1257,13 @@ void BuildingTileCategory::insertEntry(int index, BuildingTileEntry *entry)
 BuildingTileEntry *BuildingTileCategory::removeEntry(int index)
 {
     return mEntries.takeAt(index);
+}
+
+BuildingTileEntry *BuildingTileCategory::noneTileEntry()
+{
+    if (!mNoneTileEntry && canAssignNone())
+        mNoneTileEntry = new NoneBuildingTileEntry(this);
+    return mNoneTileEntry;
 }
 
 QString BuildingTileCategory::enumToString(int index) const

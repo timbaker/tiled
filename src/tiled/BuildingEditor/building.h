@@ -28,6 +28,7 @@ namespace BuildingEditor {
 class BuildingFloor;
 class BuildingTemplate;
 class BuildingTileEntry;
+class FurnitureTiles;
 class Room;
 
 class Building
@@ -90,6 +91,18 @@ public:
 
     BuildingTileEntry *tile(int n)
     { return mTiles[n]; }
+
+    void setUsedTiles(const QList<BuildingTileEntry*> &tiles)
+    { mUsedTiles = tiles; }
+
+    const QList<BuildingTileEntry*> &usedTiles() const
+    { return mUsedTiles; }
+
+    void setUsedFurniture(const QList<FurnitureTiles*> &tiles)
+    { mUsedFurniture = tiles; }
+
+    const QList<FurnitureTiles*> &usedFurniture() const
+    { return mUsedFurniture; }
 
     QString enumToString(int n);
     int categoryEnum(int n);
@@ -157,6 +170,8 @@ private:
     QList<BuildingFloor*> mFloors;
     QList<Room*> mRooms;
     QVector<BuildingTileEntry*> mTiles;
+    QList<BuildingTileEntry*> mUsedTiles;
+    QList<FurnitureTiles*> mUsedFurniture;
 };
 
 } // namespace BuildingEditor

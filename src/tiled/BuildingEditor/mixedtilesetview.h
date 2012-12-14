@@ -60,7 +60,8 @@ public:
                       int row, int column, const QModelIndex &parent);
 
     void setTiles(const QList<Tile*> &tiles,
-                  const QList<void*> &userData = QList<void*>());
+                  const QList<void*> &userData = QList<void*>(),
+                  const QStringList &headers = QStringList());
     void setTileset(Tileset *tileset);
 
     Tile *tileAt(const QModelIndex &index) const;

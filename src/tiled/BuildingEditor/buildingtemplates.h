@@ -30,6 +30,7 @@ namespace BuildingEditor {
 
 class BuildingTileCategory;
 class BuildingTileEntry;
+class FurnitureTiles;
 
 class Room
 {
@@ -83,13 +84,7 @@ public:
 
     BuildingTemplate();
 
-    BuildingTemplate(BuildingTemplate *other)
-    {
-        Name = other->Name;
-        mTiles = other->mTiles;
-        foreach (Room *room, other->RoomList)
-            RoomList += new Room(room);
-    }
+    BuildingTemplate(BuildingTemplate *other);
 
     ~BuildingTemplate()
     {
@@ -110,6 +105,18 @@ public:
 
     const QVector<BuildingTileEntry*> &tiles() const
     { return mTiles; }
+
+    void setUsedTiles(const QList<BuildingTileEntry*> &tiles)
+    { mUsedTiles = tiles; }
+
+    const QList<BuildingTileEntry*> &usedTiles() const
+    { return mUsedTiles; }
+
+    void setUsedFurniture(const QList<FurnitureTiles*> &tiles)
+    { mUsedFurniture = tiles; }
+
+    const QList<FurnitureTiles*> &usedFurniture() const
+    { return mUsedFurniture; }
 
     static int categoryEnum(int n);
 
@@ -132,6 +139,8 @@ private:
     QVector<BuildingTileEntry*> mTiles;
     static QStringList mEnumNames;
     QList<Room*> RoomList;
+    QList<BuildingTileEntry*> mUsedTiles;
+    QList<FurnitureTiles*> mUsedFurniture;
 };
 
 class BuildingTemplates : public QObject
@@ -178,6 +187,10 @@ private:
     void addEntry(BuildingTileCategory *category, const QString &tileName);
     QString entryIndex(BuildingTileCategory *category, const QString &tileName);
 
+    void addFurniture(FurnitureTiles *ftiles);
+    QString furnitureIndex(FurnitureTiles *ftiles);
+    FurnitureTiles *getFurnitureTiles(const QString &s);
+
 private:
     static BuildingTemplates *mInstance;
     QList<BuildingTemplate*> mTemplates;
@@ -188,6 +201,7 @@ private:
     QList<BuildingTileEntry*> mEntries; // Used during readTxt()/writeTxt()
     QMap<QString,BuildingTileEntry*> mEntriesByCategoryName;
     QMap<QPair<BuildingTileCategory*,QString>,BuildingTileEntry*> mEntryMap;
+    QList<FurnitureTiles*> mFurnitureTiles;
 };
 
 } // namespace BuildingEditor

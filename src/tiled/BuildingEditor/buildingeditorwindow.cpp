@@ -460,19 +460,19 @@ bool BuildingEditorWindow::Startup()
         return false;
     }
 
-    if (!BuildingTemplates::instance()->readTxt()) {
-        QMessageBox::critical(this, tr("It's no good, Jim!"),
-                              tr("Error while reading %1\n%2")
-                              .arg(BuildingTemplates::instance()->txtName())
-                              .arg(BuildingTemplates::instance()->errorString()));
-        return false;
-    }
-
     if (!FurnitureGroups::instance()->readTxt()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),
                               tr("Error while reading %1\n%2")
                               .arg(FurnitureGroups::instance()->txtName())
                               .arg(FurnitureGroups::instance()->errorString()));
+        return false;
+    }
+
+    if (!BuildingTemplates::instance()->readTxt()) {
+        QMessageBox::critical(this, tr("It's no good, Jim!"),
+                              tr("Error while reading %1\n%2")
+                              .arg(BuildingTemplates::instance()->txtName())
+                              .arg(BuildingTemplates::instance()->errorString()));
         return false;
     }
 
@@ -704,12 +704,19 @@ void BuildingEditorWindow::categoryActivated(const QModelIndex &index)
     BuildingTilesDialog *dialog = BuildingTilesDialog::instance();
 
     int numTileCategories = BuildingTilesMgr::instance()->categoryCount();
-    if (index.row() >= 0 && index.row() < numTileCategories)
-        dialog->selectCategory(BuildingTilesMgr::instance()->category(index.row()));
-    else if (index.row() >= numTileCategories
+    if (index.row() >= 0 && index.row() < 2)
+        ;
+    else if (index.row() >= 2 && index.row() < 2 + numTileCategories)
+        dialog->selectCategory(BuildingTilesMgr::instance()->category(index.row() - 2));
+    else if (index.row() >= 2 + numTileCategories
              && index.row() < ui->categoryList->count())
-        dialog->selectCategory(FurnitureGroups::instance()->group(index.row() - numTileCategories));
+        dialog->selectCategory(FurnitureGroups::instance()->group(index.row() - numTileCategories - 2));
     tilesDialog();
+}
+
+static QString paddedNumber(int number)
+{
+    return QString(QLatin1String("%1")).arg(number, 3, 10, QLatin1Char('0'));
 }
 
 void BuildingEditorWindow::categorySelectionChanged()
@@ -717,10 +724,66 @@ void BuildingEditorWindow::categorySelectionChanged()
     mCategory = 0;
     mFurnitureGroup = 0;
 
+    ui->tilesetView->model()->setTiles(QList<Tile*>());
+    ui->furnitureView->model()->setTiles(QList<FurnitureTiles*>());
+
     QList<QListWidgetItem*> selected = ui->categoryList->selectedItems();
     if (selected.count() == 1) {
         int row = ui->categoryList->row(selected.first());
-        if (row < BuildingTilesMgr::instance()->categoryCount()) {
+        if (row == 0) { // Used Tiles
+            if (!mCurrentDocument) return;
+
+            // Sort by category + index
+            QList<BuildingTileCategory*> categories;
+            QMap<QString,BuildingTileEntry*> entryMap;
+            foreach (BuildingTileEntry *entry, currentBuilding()->usedTiles()) {
+                BuildingTileCategory *category = entry->category();
+                int categoryIndex = BuildingTilesMgr::instance()->indexOf(category);
+                int index = category->indexOf(entry) + 1;
+                QString key = paddedNumber(categoryIndex) + QLatin1String("_") + paddedNumber(index);
+                entryMap[key] = entry;
+                if (!categories.contains(category) && category->canAssignNone())
+                    categories += entry->category();
+            }
+
+            // Add "none" tile first in each category where it is allowed.
+            foreach (BuildingTileCategory *category, categories) {
+                int categoryIndex = BuildingTilesMgr::instance()->indexOf(category);
+                QString key = paddedNumber(categoryIndex) + QLatin1String("_") + paddedNumber(0);
+                entryMap[key] = category->noneTileEntry();
+            }
+
+            QList<Tiled::Tile*> tiles;
+            QList<void*> userData;
+            QStringList headers;
+            foreach (BuildingTileEntry *entry, entryMap.values()) {
+                if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile())) {
+                    tiles += tile;
+                    userData += entry;
+                    headers += entry->category()->label();
+                }
+            }
+            ui->tilesetView->model()->setTiles(tiles, userData, headers);
+            ui->tilesetView->scrollToTop();
+            ui->categoryStack->setCurrentIndex(0);
+        } else if (row == 1) { // Used Furniture
+            if (!mCurrentDocument) return;
+            QMap<QString,FurnitureTiles*> furnitureMap;
+            int index = 0;
+            foreach (FurnitureTiles *ftiles, currentBuilding()->usedFurniture()) {
+                // Sort by category name + index
+                QString key = tr("<No Group>") + QString::number(index++);
+                if (FurnitureGroup *g = ftiles->group()) {
+                    key = g->mLabel + QString::number(g->mTiles.indexOf(ftiles));
+                }
+                if (!furnitureMap.contains(key))
+                    furnitureMap[key] = ftiles;
+            }
+            ui->furnitureView->model()->setTiles(furnitureMap.values());
+            ui->furnitureView->scrollToTop();
+            ui->categoryStack->setCurrentIndex(1);
+        } else if (row < 2 + BuildingTilesMgr::instance()->categoryCount()) {
+            row -= 2;
             mCategory = BuildingTilesMgr::instance()->category(row);
             QList<Tiled::Tile*> tiles;
             QList<void*> userData;
@@ -745,7 +808,7 @@ void BuildingEditorWindow::categorySelectionChanged()
 
             selectCurrentCategoryTile();
         } else {
-            row -= BuildingTilesMgr::instance()->categoryCount();
+            row -= 2 + BuildingTilesMgr::instance()->categoryCount();
             mFurnitureGroup = FurnitureGroups::instance()->group(row);
             ui->furnitureView->model()->setTiles(mFurnitureGroup->mTiles);
             ui->furnitureView->scrollToTop();
@@ -769,27 +832,30 @@ void BuildingEditorWindow::tileSelectionChanged()
                     mInitialCategoryViewSelectionEvent;
             qDebug() << "mergeable=" << mergeable;
             mInitialCategoryViewSelectionEvent = true;
-            if (mCategory->asExteriorWalls())
+            BuildingTileCategory *category = mCategory ? mCategory : entry->category();
+            if (category->isNone())
+                ; // never happens
+            else if (category->asExteriorWalls())
                 currentEWallChanged(entry, mergeable);
-            else if (mCategory->asInteriorWalls())
+            else if (category->asInteriorWalls())
                 currentIWallChanged(entry, mergeable);
-            else if (mCategory->asFloors())
+            else if (category->asFloors())
                 currentFloorChanged(entry, mergeable);
-            else if (mCategory->asDoors())
+            else if (category->asDoors())
                 currentDoorChanged(entry, mergeable);
-            else if (mCategory->asDoorFrames())
+            else if (category->asDoorFrames())
                 currentDoorFrameChanged(entry, mergeable);
-            else if (mCategory->asWindows())
+            else if (category->asWindows())
                 currentWindowChanged(entry, mergeable);
-            else if (mCategory->asCurtains())
+            else if (category->asCurtains())
                 currentCurtainsChanged(entry, mergeable);
-            else if (mCategory->asStairs())
+            else if (category->asStairs())
                 currentStairsChanged(entry, mergeable);
-            else if (mCategory->asRoofCaps())
+            else if (category->asRoofCaps())
                 currentRoofTileChanged(entry, RoofObject::TileCap, mergeable);
-            else if (mCategory->asRoofSlopes())
+            else if (category->asRoofSlopes())
                 currentRoofTileChanged(entry, RoofObject::TileSlope, mergeable);
-            else if (mCategory->asRoofTops())
+            else if (category->asRoofTops())
                 currentRoofTileChanged(entry, RoofObject::TileTop, mergeable);
             else
                 qFatal("unhandled category in BuildingEditorWindow::tileSelectionChanged()");
@@ -829,6 +895,18 @@ void BuildingEditorWindow::furnitureSelectionChanged()
         }
     }
     updateActions();
+}
+
+void BuildingEditorWindow::usedTilesChanged()
+{
+    if (ui->categoryList->currentRow() == 0)
+        categorySelectionChanged();
+}
+
+void BuildingEditorWindow::usedFurnitureChanged()
+{
+    if (ui->categoryList->currentRow() == 1)
+        categorySelectionChanged();
 }
 
 void BuildingEditorWindow::currentEWallChanged(BuildingTileEntry *entry, bool mergeable)
@@ -1361,11 +1439,52 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         building->setRoofTopTile(btiles->defaultRoofTopTiles());
 #endif
 
+    //  Handle reading old buildings
+    if (building->usedTiles().isEmpty()) {
+        QList<BuildingTileEntry*> entries;
+        QList<FurnitureTiles*> furniture;
+        foreach (BuildingFloor *floor, building->floors()) {
+            foreach (BuildingObject *object, floor->objects()) {
+                if (FurnitureObject *fo = object->asFurniture()) {
+                    if (FurnitureTile *ftile = fo->furnitureTile()) {
+                        if (!furniture.contains(ftile->owner()))
+                            furniture += ftile->owner();
+                    }
+                    continue;
+                }
+                for (int i = 0; i < 3; i++) {
+                    if (object->tile(i) && !object->tile(i)->isNone()
+                            && !entries.contains(object->tile(i)))
+                        entries += object->tile(i);
+                }
+            }
+        }
+        BuildingTileEntry *entry = building->exteriorWall();
+        if (entry && !entry->isNone() && !entries.contains(entry))
+            entries += entry;
+        foreach (Room *room, building->rooms()) {
+            if (room->Wall && !room->Wall->isNone() && !entries.contains(room->Wall))
+                entries += room->Wall;
+        }
+
+        building->setUsedTiles(entries);
+        building->setUsedFurniture(furniture);
+    }
+
+    if (ui->categoryList->currentRow() < 2)
+        categorySelectionChanged();
+
     roomEditor->setDocument(mCurrentDocument);
 
     updateRoomComboBox();
 
     resizeCoordsLabel();
+
+    // Redisplay "Used Tiles" and "Used Furniture"
+    connect(mCurrentDocument, SIGNAL(usedFurnitureChanged()),
+            SLOT(usedFurnitureChanged()));
+    connect(mCurrentDocument, SIGNAL(usedTilesChanged()),
+            SLOT(usedTilesChanged()));
 
     connect(mCurrentDocument, SIGNAL(roomAdded(Room*)), SLOT(roomAdded(Room*)));
     connect(mCurrentDocument, SIGNAL(roomRemoved(Room*)), SLOT(roomRemoved(Room*)));
@@ -1650,6 +1769,9 @@ void BuildingEditorWindow::templateFromBuilding()
     foreach (Room *room, building->rooms())
         btemplate->addRoom(new Room(room));
 
+    btemplate->setUsedTiles(building->usedTiles());
+    btemplate->setUsedFurniture(building->usedFurniture());
+
     BuildingTemplates::instance()->addTemplate(btemplate);
 
     BuildingTemplates::instance()->writeTxt(this);
@@ -1792,6 +1914,9 @@ void BuildingEditorWindow::setCategoryList()
     mSynching = true;
 
     ui->categoryList->clear();
+
+    ui->categoryList->addItem(tr("Used Tiles"));
+    ui->categoryList->addItem(tr("Used Furniture"));
 
     foreach (BuildingTileCategory *category, BuildingTilesMgr::instance()->categories()) {
         ui->categoryList->addItem(category->label());

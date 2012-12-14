@@ -135,6 +135,9 @@ private slots:
     void tileSelectionChanged();
     void furnitureSelectionChanged();
 
+    void usedTilesChanged();
+    void usedFurnitureChanged();
+
     void upLevel();
     void downLevel();
 

@@ -19,6 +19,7 @@
 
 #include "buildingtiles.h"
 #include "buildingpreferences.h"
+#include "furnituregroups.h"
 #include "simplefile.h"
 
 #include <QCoreApplication>
@@ -146,6 +147,26 @@ static BuildingTileEntry *readTileEntry(SimpleFileBlock &block, QString &error)
     return 0;
 }
 
+static FurnitureTiles *readFurnitureTiles(SimpleFileBlock &block, QString &error)
+{
+    extern FurnitureTiles *furnitureTilesFromSFB(SimpleFileBlock &block, QString &error);
+    if (FurnitureTiles *result = furnitureTilesFromSFB(block, error)) {
+        FurnitureTiles *match = FurnitureGroups::instance()->findMatch(result);
+        if (match) {
+            delete result;
+            result = match;
+        }
+        return result;
+    }
+    return 0;
+}
+
+static void writeFurnitureTiles(SimpleFileBlock &block, FurnitureTiles *ftiles)
+{
+    extern SimpleFileBlock furnitureTilesToSFB(FurnitureTiles *ftiles);
+    block.blocks += furnitureTilesToSFB(ftiles);
+}
+
 #define VERSION0 0
 
 // VERSION1
@@ -185,10 +206,19 @@ bool BuildingTemplates::readTxt()
 
     mEntries.clear();
     mEntriesByCategoryName.clear();
+    mFurnitureTiles.clear();
+
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("TileEntry")) {
             if (BuildingTileEntry *entry = readTileEntry(block, mError))
                 addEntry(entry, false);
+            else
+                return false;
+            continue;
+        }
+        if (block.name == QLatin1String("furniture")) {
+            if (FurnitureTiles *ftiles = readFurnitureTiles(block, mError))
+                addFurniture(ftiles);
             else
                 return false;
             continue;
@@ -198,6 +228,21 @@ bool BuildingTemplates::readTxt()
             def->setName(block.value("Name"));
             for (int i = 0; i < BuildingTemplate::TileCount; i++)
                 def->setTile(i, getEntry(block.value(def->enumToString(i))));
+
+            QList<BuildingTileEntry*> usedTiles;
+            foreach (QString s, block.value("UsedTiles").split(QLatin1Char(' '))) {
+                if (BuildingTileEntry *entry = getEntry(s))
+                    usedTiles += entry;
+            }
+            def->setUsedTiles(usedTiles);
+
+            QList<FurnitureTiles*> usedFurniture;
+            foreach (QString s, block.value("UsedFurniture").split(QLatin1Char(' '))) {
+                if (FurnitureTiles *ftiles = getFurnitureTiles(s))
+                    usedFurniture += ftiles;
+            }
+            def->setUsedFurniture(usedFurniture);
+
             foreach (SimpleFileBlock roomBlock, block.blocks) {
                 if (roomBlock.name == QLatin1String("Room")) {
                     Room *room = new Room;
@@ -233,6 +278,7 @@ void BuildingTemplates::writeTxt(QWidget *parent)
 {
     mEntries.clear();
     mEntriesByCategoryName.clear();
+    mFurnitureTiles.clear();
     foreach (BuildingTemplate *btemplate, BuildingTemplates::instance()->templates()) {
         foreach (BuildingTileEntry *entry, btemplate->tiles())
             addEntry(entry);
@@ -240,11 +286,17 @@ void BuildingTemplates::writeTxt(QWidget *parent)
             addEntry(room->Floor);
             addEntry(room->Wall);
         }
+        foreach (BuildingTileEntry *entry, btemplate->usedTiles())
+            addEntry(entry);
+        foreach (FurnitureTiles *ftiles, btemplate->usedFurniture())
+            addFurniture(ftiles);
     }
 
     SimpleFile simpleFile;
     foreach (BuildingTileEntry *entry, mEntries)
         writeTileEntry(simpleFile, entry);
+    foreach (FurnitureTiles *ftiles, mFurnitureTiles)
+        writeFurnitureTiles(simpleFile, ftiles);
 
     foreach (BuildingTemplate *btemplate, BuildingTemplates::instance()->templates()) {
         SimpleFileBlock templateBlock;
@@ -266,6 +318,17 @@ void BuildingTemplates::writeTxt(QWidget *parent)
             roomBlock.addValue("Floor", entryIndex(room->Floor));
             templateBlock.blocks += roomBlock;
         }
+
+        QStringList usedTiles;
+        foreach (BuildingTileEntry *entry, btemplate->usedTiles())
+            usedTiles += entryIndex(entry);
+        templateBlock.addValue("UsedTiles", usedTiles.join(QLatin1String(" ")));
+
+        QStringList usedFurniture;
+        foreach (FurnitureTiles *ftiles, btemplate->usedFurniture())
+            usedFurniture += furnitureIndex(ftiles);
+        templateBlock.addValue("UsedFurniture", usedFurniture.join(QLatin1String(" ")));
+
         simpleFile.blocks += templateBlock;
     }
     simpleFile.setVersion(VERSION_LATEST);
@@ -284,6 +347,28 @@ QString BuildingTemplates::entryIndex(BuildingTileCategory *category,
         return QString::number(0);
     BuildingTileEntry *entry = mEntryMap[qMakePair(category,tileName)];
     return QString::number(mEntries.indexOf(entry) + 1);
+}
+
+void BuildingTemplates::addFurniture(FurnitureTiles *ftiles)
+{
+    if (!ftiles)
+        return;
+    if (!mFurnitureTiles.contains(ftiles))
+        mFurnitureTiles += ftiles;
+}
+
+QString BuildingTemplates::furnitureIndex(FurnitureTiles *ftiles)
+{
+    int index = mFurnitureTiles.indexOf(ftiles);
+    return QString::number(index + 1);
+}
+
+FurnitureTiles *BuildingTemplates::getFurnitureTiles(const QString &s)
+{
+    int index = s.toInt();
+    if (index >= 1 && index <= mFurnitureTiles.size())
+        return mFurnitureTiles[index - 1];
+    return 0;
 }
 
 bool BuildingTemplates::upgradeTxt()
@@ -570,6 +655,16 @@ QStringList BuildingTemplate::mEnumNames;
 BuildingTemplate::BuildingTemplate() :
     mTiles(TileCount)
 {
+}
+
+BuildingTemplate::BuildingTemplate(BuildingTemplate *other)
+{
+    Name = other->Name;
+    mTiles = other->mTiles;
+    foreach (Room *room, other->RoomList)
+        RoomList += new Room(room);
+    mUsedTiles = other->mUsedTiles;
+    mUsedFurniture = other->mUsedFurniture;
 }
 
 void BuildingTemplate::setTile(int n, BuildingTileEntry *entry)

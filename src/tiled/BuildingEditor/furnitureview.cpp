@@ -81,6 +81,29 @@ void FurnitureTileDelegate::paint(QPainter *painter,
 {
     const FurnitureModel *m = static_cast<const FurnitureModel*>(index.model());
 
+    QString header = m->headerAt(index);
+    if (!header.isEmpty()) {
+        if (index.row() > 0) {
+            painter->setPen(Qt::darkGray);
+            painter->drawLine(option.rect.topLeft(), option.rect.topRight());
+            painter->setPen(Qt::black);
+        }
+        // One slice of the tileset name is drawn in each column.
+        if (index.column() == 0)
+            painter->drawText(option.rect.adjusted(2, 2, 0, 0), Qt::AlignLeft, header);
+        else {
+            QModelIndex indexColumn0 = m->index(index.row(), 0);
+            int left = mView->visualRect(indexColumn0).left();
+            QRect r = option.rect;
+            r.setLeft(left);
+            painter->save();
+            painter->setClipRect(option.rect);
+            painter->drawText(r.adjusted(2, 2, 0, 0), Qt::AlignLeft, header);
+            painter->restore();
+        }
+        return;
+    }
+
     FurnitureTile *ftile = m->tileAt(index);
     if (!ftile)
         return;
@@ -192,6 +215,10 @@ QSize FurnitureTileDelegate::sizeHint(const QStyleOptionViewItem & option,
     Q_UNUSED(index)
     int width = 2, height = 2;
     const FurnitureModel *m = static_cast<const FurnitureModel*>(index.model());
+    const qreal zoom = scale();
+    const int extra = 2;
+    if (m->headerAt(index).length())
+        return QSize(64 * zoom + extra, option.fontMetrics.lineSpacing() + 2);
     FurnitureTile *ftile = m->tileAt(index);
     int d = 0;
     if (ftile) {
@@ -203,8 +230,6 @@ QSize FurnitureTileDelegate::sizeHint(const QStyleOptionViewItem & option,
         width = ftile->width() + d;
         height = ftile->height() + d;
     }
-    const qreal zoom = scale();
-    const int extra = 2;
     int tileWidth = 64, tileHeight = 32;
     QSize size = isometricSize(width, height, tileWidth, tileHeight)
             * zoom + QSize(extra * 2, extra * 2);
@@ -395,7 +420,8 @@ void FurnitureView::init()
 #define COLUMN_COUNT 4 // W, N, E, S
 
 FurnitureModel::FurnitureModel(QObject *parent) :
-    QAbstractListModel(parent)
+    QAbstractListModel(parent),
+    mShowHeaders(true)
 {
 }
 
@@ -404,7 +430,7 @@ int FurnitureModel::rowCount(const QModelIndex &parent) const
     if (parent.isValid())
         return 0;
 
-    const int tiles = mTiles.count();
+    const int tiles = mItems.count();
     const int columns = columnCount();
 
     int rows = 1;
@@ -454,15 +480,15 @@ QModelIndex FurnitureModel::index(int row, int column, const QModelIndex &parent
         return QModelIndex();
 
     int tileIndex = row * columnCount() + column;
-    if (tileIndex >= mTiles.count())
+    if (tileIndex >= mItems.count())
         return QModelIndex();
 
-    return createIndex(row, column);
+    return createIndex(row, column, mItems.at(tileIndex));
 }
 
 QModelIndex FurnitureModel::index(FurnitureTile *tile)
 {
-    int tileIndex = mTiles.indexOf(tile);
+    int tileIndex = mItems.indexOf(toItem(tile));
     if (tileIndex != -1)
         return index(tileIndex / columnCount(), tileIndex % columnCount());
     return QModelIndex();
@@ -512,17 +538,31 @@ bool FurnitureModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
 
 void FurnitureModel::setTiles(const QList<FurnitureTiles *> &tilesList)
 {
+    qDeleteAll(mItems);
+    mItems.clear();
     mTiles.clear();
+
+    QString header;
     foreach (FurnitureTiles *ftiles, tilesList) {
-        mTiles += ftiles->tile(FurnitureTile::FurnitureW);
-        mTiles += ftiles->tile(FurnitureTile::FurnitureN);
-        mTiles += ftiles->tile(FurnitureTile::FurnitureE);
-        mTiles += ftiles->tile(FurnitureTile::FurnitureS);
+        QString label = ftiles->group()
+                ? ftiles->group()->mLabel
+                : QLatin1String("<No Group>");
+        if (mShowHeaders && (label != header)) {
+            while (mItems.count() % columnCount())
+                mItems += new Item(); // filler after previous tile
+            header = label;
+            for (int i = 0; i < columnCount(); i++)
+                mItems += new Item(header);
+        }
+        mItems += new Item(ftiles->tile(FurnitureTile::FurnitureW));
+        mItems += new Item(ftiles->tile(FurnitureTile::FurnitureN));
+        mItems += new Item(ftiles->tile(FurnitureTile::FurnitureE));
+        mItems += new Item(ftiles->tile(FurnitureTile::FurnitureS));
         if (ftiles->hasCorners()) {
-            mTiles += ftiles->tile(FurnitureTile::FurnitureSW);
-            mTiles += ftiles->tile(FurnitureTile::FurnitureNW);
-            mTiles += ftiles->tile(FurnitureTile::FurnitureNE);
-            mTiles += ftiles->tile(FurnitureTile::FurnitureSE);
+            mItems += new Item(ftiles->tile(FurnitureTile::FurnitureSW));
+            mItems += new Item(ftiles->tile(FurnitureTile::FurnitureNW));
+            mItems += new Item(ftiles->tile(FurnitureTile::FurnitureNE));
+            mItems += new Item(ftiles->tile(FurnitureTile::FurnitureSE));
         }
     }
     calcMaxTileSize();
@@ -531,30 +571,37 @@ void FurnitureModel::setTiles(const QList<FurnitureTiles *> &tilesList)
 
 FurnitureTile *FurnitureModel::tileAt(const QModelIndex &index) const
 {
-    if (!index.isValid())
-        return 0;
-    int i = index.column() + index.row() * columnCount();
-    return mTiles.at(i);
+    if (Item *item = toItem(index))
+        return item->mTile;
+    return 0;
+}
+
+QString FurnitureModel::headerAt(const QModelIndex &index) const
+{
+    if (Item *item = toItem(index))
+        return item->mHeading;
+    return 0;
 }
 
 void FurnitureModel::toggleCorners(FurnitureTiles *ftiles)
 {
-    int n = mTiles.indexOf(ftiles->tile(FurnitureTile::FurnitureW));
+    Item *item = toItem(ftiles->tile(FurnitureTile::FurnitureW));
+    int n = mItems.indexOf(item);
     int row = n / columnCount() + 1;
     if (ftiles->hasCorners()) {
         beginInsertRows(QModelIndex(), row, row);
-        mTiles.insert(n + 4, ftiles->tile(FurnitureTile::FurnitureSW));
-        mTiles.insert(n + 5, ftiles->tile(FurnitureTile::FurnitureNW));
-        mTiles.insert(n + 6, ftiles->tile(FurnitureTile::FurnitureNE));
-        mTiles.insert(n + 7, ftiles->tile(FurnitureTile::FurnitureSE));
+        mItems.insert(n + 4, new Item(ftiles->tile(FurnitureTile::FurnitureSW)));
+        mItems.insert(n + 5, new Item(ftiles->tile(FurnitureTile::FurnitureNW)));
+        mItems.insert(n + 6, new Item(ftiles->tile(FurnitureTile::FurnitureNE)));
+        mItems.insert(n + 7, new Item(ftiles->tile(FurnitureTile::FurnitureSE)));
         calcMaxTileSize();
         endInsertRows();
     } else {
         beginRemoveRows(QModelIndex(), row, row);
-        mTiles.takeAt(n + 4);
-        mTiles.takeAt(n + 4);
-        mTiles.takeAt(n + 4);
-        mTiles.takeAt(n + 4);
+        delete mItems.takeAt(n + 4);
+        delete mItems.takeAt(n + 4);
+        delete mItems.takeAt(n + 4);
+        delete mItems.takeAt(n + 4);
         calcMaxTileSize();
         endRemoveRows();
     }
@@ -562,19 +609,19 @@ void FurnitureModel::toggleCorners(FurnitureTiles *ftiles)
 
 void FurnitureModel::removeTiles(FurnitureTiles *ftiles)
 {
-    QModelIndex index = this->index(ftiles->tile(FurnitureTile::FurnitureW));
-    int row = index.row();
+    Item *item = toItem(ftiles->tile(FurnitureTile::FurnitureW));
+    int row = mItems.indexOf(item) / columnCount();
     beginRemoveRows(QModelIndex(), row, row + (ftiles->hasCorners() ? 1 : 0));
-    int i = mTiles.indexOf(ftiles->tile(FurnitureTile::FurnitureW));
-    mTiles.takeAt(i);
-    mTiles.takeAt(i);
-    mTiles.takeAt(i);
-    mTiles.takeAt(i);
+    int i = mItems.indexOf(item);
+    delete mItems.takeAt(i);
+    delete mItems.takeAt(i);
+    delete mItems.takeAt(i);
+    delete mItems.takeAt(i);
     if (ftiles->hasCorners()) {
-        mTiles.takeAt(i);
-        mTiles.takeAt(i);
-        mTiles.takeAt(i);
-        mTiles.takeAt(i);
+        delete mItems.takeAt(i);
+        delete mItems.takeAt(i);
+        delete mItems.takeAt(i);
+        delete mItems.takeAt(i);
     }
     calcMaxTileSize();
     endRemoveRows();
@@ -590,9 +637,26 @@ void FurnitureModel::scaleChanged(qreal scale)
 void FurnitureModel::calcMaxTileSize()
 {
     mMaxTileSize.fill(QSize(1, 1), FurnitureTile::OrientCount);
-    foreach (FurnitureTile *ftile, mTiles) {
-        int n = ftile->orient();
-        mMaxTileSize[n].setWidth( qMax(mMaxTileSize[n].width(), ftile->width()) );
-        mMaxTileSize[n].setHeight( qMax(mMaxTileSize[n].height(), ftile->height()) );
+    foreach (Item *item, mItems) {
+        if (FurnitureTile *ftile = item->mTile) {
+            int n = ftile->orient();
+            mMaxTileSize[n].setWidth( qMax(mMaxTileSize[n].width(), ftile->width()) );
+            mMaxTileSize[n].setHeight( qMax(mMaxTileSize[n].height(), ftile->height()) );
+        }
     }
+}
+
+FurnitureModel::Item *FurnitureModel::toItem(const QModelIndex &index) const
+{
+    if (index.isValid())
+        return static_cast<Item*>(index.internalPointer());
+    return 0;
+}
+
+FurnitureModel::Item *FurnitureModel::toItem(FurnitureTile *ftile) const
+{
+    foreach (Item *item, mItems)
+        if (item->mTile == ftile)
+            return item;
+    return 0;
 }

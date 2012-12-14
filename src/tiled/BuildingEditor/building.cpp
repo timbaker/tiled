@@ -32,6 +32,8 @@ Building::Building(int width, int height, BuildingTemplate *btemplate) :
         mTiles = btemplate->tiles();
         foreach (Room *room, btemplate->rooms())
             insertRoom(mRooms.count(), new Room(room));
+        mUsedTiles = btemplate->usedTiles();
+        mUsedFurniture = btemplate->usedFurniture();
     } else {
         for (int i = 0; i < TileCount; i++)
             mTiles[i] = BuildingTilesMgr::instance()->defaultCategoryTile(categoryEnum(i));

@@ -168,6 +168,8 @@ public:
     void insertEntry(int index, BuildingTileEntry *entry);
     BuildingTileEntry *removeEntry(int index);
 
+    BuildingTileEntry *noneTileEntry();
+
     int enumCount() const
     { return mEnumNames.size(); }
 
@@ -220,6 +222,7 @@ protected:
     QList<BuildingTileEntry*> mEntries;
     QStringList mEnumNames;
     BuildingTileEntry *mDefaultEntry;
+    NoneBuildingTileEntry *mNoneTileEntry;
     QImage mShadowImage;
 };
 

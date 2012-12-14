@@ -70,6 +70,9 @@ private:
 
     BuildingTileEntry *readTileEntry();
 
+    QList<BuildingTileEntry*> readUsedTiles();
+    QList<FurnitureTiles*> readUsedFurniture();
+
     Room *readRoom();
 
     BuildingFloor *readFloor();
@@ -84,6 +87,8 @@ private:
     BuildingTileEntry *getEntry(const QString &s);
     QString version1TileToEntry(BuildingTileCategory *category,
                                 const QString &tileName);
+
+    FurnitureTiles *getFurniture(const QString &s);
 
     BuildingReader *p;
 
@@ -167,6 +172,10 @@ Building *BuildingReaderPrivate::readBuilding()
         } else if (xml.name() == "tile_entry") {
             if (BuildingTileEntry *entry = readTileEntry())
                 mEntries += entry;
+        } else if (xml.name() == "used_tiles") {
+            mBuilding->setUsedTiles(readUsedTiles());
+        } else if (xml.name() == "used_furniture") {
+            mBuilding->setUsedFurniture(readUsedFurniture());
         } else if (xml.name() == "room") {
             if (Room *room = readRoom())
                 mBuilding->insertRoom(mBuilding->roomCount(), room);
@@ -353,6 +362,55 @@ BuildingTileEntry *BuildingReaderPrivate::readTileEntry()
     }
 
     return entry;
+}
+
+QList<BuildingTileEntry *> BuildingReaderPrivate::readUsedTiles()
+{
+    Q_ASSERT(xml.isStartElement() && xml.name() == "used_tiles");
+
+    QList<BuildingTileEntry *> result;
+
+    while (xml.readNext() != QXmlStreamReader::Invalid) {
+        if (xml.isEndElement())
+            break;
+        if (xml.isCharacters() && !xml.isWhitespace()) {
+            QStringList used = xml.text().toString().split(QLatin1Char(' '), QString::SkipEmptyParts);
+            foreach (QString s, used) {
+                if (BuildingTileEntry *entry = getEntry(s))
+                    if (!entry->isNone())
+                        result += entry;
+            }
+            break;
+        }
+    }
+
+    xml.skipCurrentElement();
+
+    return result;
+}
+
+QList<FurnitureTiles *> BuildingReaderPrivate::readUsedFurniture()
+{
+    Q_ASSERT(xml.isStartElement() && xml.name() == "used_furniture");
+
+    QList<FurnitureTiles *> result;
+
+    while (xml.readNext() != QXmlStreamReader::Invalid) {
+        if (xml.isEndElement())
+            break;
+        if (xml.isCharacters() && !xml.isWhitespace()) {
+            QStringList used = xml.text().toString().split(QLatin1Char(' '), QString::SkipEmptyParts);
+            foreach (QString s, used) {
+                if (FurnitureTiles *ftiles = getFurniture(s))
+                    result += ftiles;
+            }
+            break;
+        }
+    }
+
+    xml.skipCurrentElement();
+
+    return result;
 }
 
 Room *BuildingReaderPrivate::readRoom()
@@ -610,6 +668,14 @@ QString BuildingReaderPrivate::version1TileToEntry(BuildingTileCategory *categor
     mEntryMap[key] = entry;
     mEntries += entry;
     return QString::number(mEntries.indexOf(entry) + 1);
+}
+
+FurnitureTiles *BuildingReaderPrivate::getFurniture(const QString &s)
+{
+    int index = s.toInt();
+    if (index >= 0 && index < mFurnitureTiles.size())
+        return mFurnitureTiles[index];
+    return 0;
 }
 
 void BuildingReaderPrivate::decodeCSVFloorData(BuildingFloor *floor,

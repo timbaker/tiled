@@ -88,6 +88,59 @@ QString FurnitureGroups::txtPath()
     return BuildingPreferences::instance()->configPath(txtName());
 }
 
+FurnitureTiles *furnitureTilesFromSFB(SimpleFileBlock &furnitureBlock, QString &error)
+{
+    bool corners = furnitureBlock.value("corners") == QLatin1String("true");
+
+    QString layerString = furnitureBlock.value("layer");
+    FurnitureTiles::FurnitureLayer layer = layerString.isEmpty() ?
+            FurnitureTiles::LayerFurniture : FurnitureTiles::layerFromString(layerString);
+    if (layer == FurnitureTiles::InvalidLayer) {
+        error = FurnitureGroups::tr("Invalid furniture layer '%1'.").arg(layerString);
+        return 0;
+    }
+
+    FurnitureTiles *tiles = new FurnitureTiles(corners);
+    tiles->setLayer(layer);
+    foreach (SimpleFileBlock entryBlock, furnitureBlock.blocks) {
+        if (entryBlock.name == QLatin1String("entry")) {
+            FurnitureTile::FurnitureOrientation orient
+                    = FurnitureGroups::orientFromString(entryBlock.value(QLatin1String("orient")));
+            FurnitureTile *tile = new FurnitureTile(tiles, orient);
+            foreach (SimpleFileKeyValue kv, entryBlock.values) {
+                if (!kv.name.contains(QLatin1Char(',')))
+                    continue;
+                QStringList values = kv.name.split(QLatin1Char(','),
+                                                   QString::SkipEmptyParts);
+                int x = values[0].toInt();
+                int y = values[1].toInt();
+                if (x < 0 || x >= 50 || y < 0 || y >= 50) {
+                    error = FurnitureGroups::tr("Invalid tile coordinates (%1,%2).")
+                            .arg(x).arg(y);
+                    delete tiles;
+                    return 0;
+                }
+                QString tilesetName;
+                int tileIndex;
+                if (!BuildingTilesMgr::parseTileName(kv.value, tilesetName, tileIndex)) {
+                    error = FurnitureGroups::tr("Can't parse tile name '%1'.").arg(kv.value);
+                    delete tiles;
+                    return 0;
+                }
+                tile->setTile(x, y, BuildingTilesMgr::instance()->get(kv.value));
+            }
+            tiles->setTile(tile);
+        } else {
+            error = FurnitureGroups::tr("Unknown block name '%1'.")
+                    .arg(entryBlock.name);
+            delete tiles;
+            return 0;
+        }
+    }
+
+    return tiles;
+}
+
 #define VERSION0 0
 #define VERSION_LATEST VERSION0
 
@@ -127,6 +180,11 @@ bool FurnitureGroups::readTxt()
             group->mLabel = block.value("label");
             foreach (SimpleFileBlock furnitureBlock, block.blocks) {
                 if (furnitureBlock.name == QLatin1String("furniture")) {
+#if 1
+                    FurnitureTiles *tiles = furnitureTilesFromSFB(furnitureBlock, mError);
+                    if (!tiles)
+                        return false;
+#else
                     bool corners = furnitureBlock.value("corners") == QLatin1String("true");
 
                     QString layerString = furnitureBlock.value("layer");
@@ -167,12 +225,14 @@ bool FurnitureGroups::readTxt()
                             tiles->setTile(tile);
                         } else {
                             mError = tr("Unknown block name '%1'.\n%2")
-                                    .arg(block.name)
+                                    .arg(entryBlock.name)
                                     .arg(path);
                             return false;
                         }
                     }
+#endif
                     group->mTiles += tiles;
+                    tiles->setGroup(group);
                 } else {
                     mError = tr("Unknown block name '%1'.\n%2")
                             .arg(block.name)
@@ -223,6 +283,35 @@ bool FurnitureGroups::readTxt()
 #endif
 }
 
+SimpleFileBlock furnitureTilesToSFB(FurnitureTiles *ftiles)
+{
+    SimpleFileBlock furnitureBlock;
+    furnitureBlock.name = QLatin1String("furniture");
+    if (ftiles->hasCorners())
+        furnitureBlock.addValue("corners", QLatin1String("true"));
+    if (ftiles->layer() != FurnitureTiles::LayerFurniture)
+        furnitureBlock.addValue("layer", ftiles->layerToString());
+    foreach (FurnitureTile *ftile, ftiles->tiles()) {
+        if (ftile->isEmpty())
+            continue;
+        SimpleFileBlock entryBlock;
+        entryBlock.name = QLatin1String("entry");
+        entryBlock.values += SimpleFileKeyValue(QLatin1String("orient"),
+                                                ftile->orientToString());
+        for (int x = 0; x < ftile->width(); x++) {
+            for (int y = 0; y < ftile->height(); y++) {
+                if (BuildingTile *btile = ftile->tile(x, y)) {
+                    entryBlock.values += SimpleFileKeyValue(
+                                QString(QLatin1String("%1,%2")).arg(x).arg(y),
+                                btile->name());
+                }
+            }
+        }
+        furnitureBlock.blocks += entryBlock;
+    }
+    return furnitureBlock;
+}
+
 bool FurnitureGroups::writeTxt()
 {
     SimpleFile simpleFile;
@@ -232,6 +321,9 @@ bool FurnitureGroups::writeTxt()
         groupBlock.values += SimpleFileKeyValue(QLatin1String("label"),
                                                    group->mLabel);
         foreach (FurnitureTiles *ftiles, group->mTiles) {
+#if 1
+            SimpleFileBlock furnitureBlock = furnitureTilesToSFB(ftiles);
+#else
             SimpleFileBlock furnitureBlock;
             furnitureBlock.name = QLatin1String("furniture");
             if (ftiles->hasCorners())
@@ -256,6 +348,7 @@ bool FurnitureGroups::writeTxt()
                 }
                 furnitureBlock.blocks += entryBlock;
             }
+#endif
             groupBlock.blocks += furnitureBlock;
         }
         simpleFile.blocks += groupBlock;
@@ -554,6 +647,7 @@ bool FurnitureTile::rowEmpty(int y)
 /////
 
 FurnitureTiles::FurnitureTiles(bool corners) :
+    mGroup(0),
     mTiles(8, 0),
     mCorners(corners),
     mLayer(LayerFurniture)

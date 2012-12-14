@@ -90,6 +90,20 @@ public:
 
         writeFurniture(w);
 
+        w.writeStartElement(QLatin1String("used_tiles"));
+        QStringList usedTiles;
+        foreach (BuildingTileEntry *entry, mBuilding->usedTiles())
+            usedTiles += entryIndex(entry);
+        w.writeCharacters(usedTiles.join(QLatin1String(" ")));
+        w.writeEndElement();
+
+        w.writeStartElement(QLatin1String("used_furniture"));
+        QStringList usedFurniture;
+        foreach (FurnitureTiles *ftiles, mBuilding->usedFurniture())
+            usedFurniture += furnitureIndex(ftiles);
+        w.writeCharacters(usedFurniture.join(QLatin1String(" ")));
+        w.writeEndElement();
+
         foreach (Room *room, building->rooms())
             writeRoom(w, room);
 
@@ -124,6 +138,11 @@ public:
                         mFurnitureTiles += ftiles;
                 }
             }
+        }
+
+        foreach (FurnitureTiles *ftiles, mBuilding->usedFurniture()) {
+            if (!mFurnitureTiles.contains(ftiles))
+                mFurnitureTiles += ftiles;
         }
 
         foreach (FurnitureTiles *ftiles, mFurnitureTiles) {
@@ -196,6 +215,8 @@ public:
             }
         }
 
+        foreach (BuildingTileEntry *entry, mBuilding->usedTiles())
+            addEntry(entry);
     }
 
     void writeBuildingTileEntries(QXmlStreamWriter &w)
@@ -269,8 +290,7 @@ public:
             w.writeAttribute(QLatin1String("type"), QLatin1String("furniture"));
 
             FurnitureTile *ftile = furniture->furnitureTile();
-            int index = mFurnitureTiles.indexOf(ftile->owner());
-            w.writeAttribute(QLatin1String("FurnitureTiles"), QString::number(index));
+            w.writeAttribute(QLatin1String("FurnitureTiles"), furnitureIndex(ftile->owner()));
             w.writeAttribute(QLatin1String("orient"), ftile->orientToString());
 
             writeDir = false;
@@ -350,6 +370,13 @@ public:
         if (entry && !entry->isNone())
             return QString::number(mTileEntries.indexOf(entry) + 1);
         return QString::number(0);
+    }
+
+    QString furnitureIndex(FurnitureTiles *ftiles)
+    {
+        int index = mFurnitureTiles.indexOf(ftiles);
+        Q_ASSERT(index >= 0);
+        return QString::number(index);
     }
 
     Building *mBuilding;

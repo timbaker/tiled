@@ -69,13 +69,14 @@ void TileDelegate::paint(QPainter *painter,
         }
         // One slice of the tileset name is drawn in each column.
         if (index.column() == 0)
-            painter->drawText(option.rect.adjusted(2, 2, 0, 0), tilesetName);
+            painter->drawText(option.rect.adjusted(2, 2, 0, 0), Qt::AlignLeft,
+                              tilesetName);
         else {
             QRect r = option.rect.adjusted(-index.column() * option.rect.width(),
                                            0, 0, 0);
             painter->save();
             painter->setClipRect(option.rect);
-            painter->drawText(r.adjusted(2, 2, 0, 0), tilesetName);
+            painter->drawText(r.adjusted(2, 2, 0, 0), Qt::AlignLeft, tilesetName);
             painter->restore();
         }
         return;
@@ -407,7 +408,8 @@ bool MixedTilesetModel::dropMimeData(const QMimeData *data, Qt::DropAction actio
 }
 
 void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
-                                 const QList<void *> &userData)
+                                 const QList<void *> &userData,
+                                 const QStringList &headers)
 {
     mTiles = tiles;
     mUserData = userData;
@@ -416,15 +418,21 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
 
     qDeleteAll(mItems);
     mItems.clear();
-    QString tilesetName;
+    QString header;
     int index = 0;
+
     foreach (Tile *tile, mTiles) {
-        if (mShowHeaders && tile->tileset()->name() != tilesetName) {
-            while (mItems.count() % columnCount())
-                mItems += new Item(); // filler after previous tile
-            tilesetName = tile->tileset()->name();
-            for (int i = 0; i < columnCount(); i++)
-                mItems += new Item(tilesetName);
+        if (mShowHeaders) {
+            QString name = tile->tileset()->name();
+            if (!headers.isEmpty())
+                name = headers[index];
+            if (name != header) {
+                while (mItems.count() % columnCount())
+                    mItems += new Item(); // filler after previous tile
+                header = name;
+                for (int i = 0; i < columnCount(); i++)
+                    mItems += new Item(header);
+            }
         }
         mItems += new Item(tile, userData.at(index));
         index++;
