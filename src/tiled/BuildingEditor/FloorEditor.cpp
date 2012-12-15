@@ -1097,13 +1097,7 @@ void FloorEditor::floorEdited(BuildingFloor *floor)
 void FloorEditor::objectAdded(BuildingObject *object)
 {
     Q_ASSERT(!itemForObject(object));
-    GraphicsObjectItem *item;
-    if (RoofObject *roof = object->asRoof())
-        item = new GraphicsRoofItem(this, roof);
-    else if (WallObject *wall = object->asWall())
-        item = new GraphicsWallItem(this, wall);
-    else
-        item = new GraphicsObjectItem(this, object);
+    GraphicsObjectItem *item = createItemForObject(object);
     item->synchWithObject();
     itemForFloor(object->floor())->objectAdded(item);
 }
@@ -1140,6 +1134,18 @@ void FloorEditor::objectChanged(BuildingObject *object)
     GraphicsObjectItem *item = itemForObject(object);
     Q_ASSERT(item);
     item->update();
+}
+
+GraphicsObjectItem *FloorEditor::createItemForObject(BuildingObject *object)
+{
+    GraphicsObjectItem *item;
+    if (RoofObject *roof = object->asRoof())
+        item = new GraphicsRoofItem(this, roof);
+    else if (WallObject *wall = object->asWall())
+        item = new GraphicsWallItem(this, wall);
+    else
+        item = new GraphicsObjectItem(this, object);
+    return item;
 }
 
 void FloorEditor::selectedObjectsChanged()

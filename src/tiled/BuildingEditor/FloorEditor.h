@@ -325,6 +325,8 @@ public:
 
     BuildingObject *topmostObjectAt(const QPointF &scenePos);
 
+    GraphicsObjectItem *createItemForObject(BuildingObject *object);
+
 signals:
     void documentChanged();
 

@@ -442,6 +442,8 @@ public:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
+    void currentModifiersChanged(Qt::KeyboardModifiers modifiers);
+
 public slots:
     void documentChanged();
     void activate();
@@ -479,6 +481,7 @@ private:
     BuildingObject *mClickedObject;
     QSet<BuildingObject*> mMovingObjects;
     QGraphicsRectItem *mSelectionRectItem;
+    QList<GraphicsObjectItem*> mClones;
 };
 
 /////

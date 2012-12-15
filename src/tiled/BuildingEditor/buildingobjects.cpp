@@ -107,6 +107,16 @@ int BuildingObject::index()
 
 /////
 
+BuildingObject *Door::clone() const
+{
+    Door *clone = new Door(mFloor, mX, mY, mDir);
+    clone->mTile = mTile;
+    clone->mFrameTile = mFrameTile;
+    return clone;
+}
+
+/////
+
 QRect Stairs::bounds() const
 {
     if (mDir == N)
@@ -146,6 +156,13 @@ bool Stairs::isValidPos(const QPoint &offset, BuildingFloor *floor) const
     QRect floorBounds = floor->bounds();
     QRect objectBounds = bounds().translated(offset);
     return (floorBounds & objectBounds) == objectBounds;
+}
+
+BuildingObject *Stairs::clone() const
+{
+    Stairs *clone = new Stairs(mFloor, mX, mY, mDir);
+    clone->mTile = mTile;
+    return clone;
 }
 
 int Stairs::getOffset(int x, int y)
@@ -284,6 +301,13 @@ bool FurnitureObject::isValidPos(const QPoint &offset, BuildingFloor *floor) con
     QRect floorBounds = floor->bounds();
     QRect objectBounds = bounds().translated(offset);
     return (floorBounds & objectBounds) == objectBounds;
+}
+
+BuildingObject *FurnitureObject::clone() const
+{
+    FurnitureObject *clone = new FurnitureObject(mFloor, mX, mY);
+    clone->mFurnitureTile = mFurnitureTile;
+    return clone;
 }
 
 void FurnitureObject::setFurnitureTile(FurnitureTile *tile)
@@ -484,6 +508,16 @@ BuildingTileEntry *RoofObject::tile(int alternate) const
     if (alternate == TileSlope) return mSlopeTiles;
     if (alternate == TileTop) return mTopTiles;
     return 0;
+}
+
+BuildingObject *RoofObject::clone() const
+{
+    RoofObject *clone = new RoofObject(mFloor, mX, mY, mWidth, mHeight, mType, mDepth,
+                                 mCappedW, mCappedN, mCappedE, mCappedS);
+    clone->mCapTiles = mCapTiles;
+    clone->mSlopeTiles = mSlopeTiles;
+    clone->mTopTiles = mTopTiles;
+    return clone;
 }
 
 void RoofObject::setCapTiles(BuildingTileEntry *entry)
@@ -1197,6 +1231,24 @@ bool WallObject::isValidPos(const QPoint &offset, BuildingFloor *floor) const
     else
         floorBounds.adjust(0,0,0,1);
     return (floorBounds & objectBounds) == objectBounds;
+}
+
+BuildingObject *WallObject::clone() const
+{
+    WallObject *clone = new WallObject(mFloor, mX, mY, mDir, mLength);
+    clone->mTile = mTile;
+    clone->mInteriorTile = mInteriorTile;
+    return clone;
+}
+
+/////
+
+BuildingObject *Window::clone() const
+{
+    Window *clone = new Window(mFloor, mX, mY, mDir);
+    clone->mTile = mTile;
+    clone->mCurtainsTile = mCurtainsTile;
+    return clone;
 }
 
 /////

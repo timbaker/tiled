@@ -1567,6 +1567,31 @@ RoofCornerTool::RoofCornerTool()
 
 /////
 
+class SetSelectedObjects : public QUndoCommand
+{
+public:
+    SetSelectedObjects(BuildingDocument *doc, const QSet<BuildingObject*> &selection) :
+        mDocument(doc),
+        mSelectedObjects(selection)
+    {}
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap()
+    {
+        QSet<BuildingObject*> old = mDocument->selectedObjects();
+        mDocument->setSelectedObjects(mSelectedObjects);
+        mSelectedObjects = old;
+    }
+
+    BuildingDocument *mDocument;
+    QSet<BuildingObject*> mSelectedObjects;
+};
+
+/////
+
 SelectMoveObjectTool *SelectMoveObjectTool::mInstance = 0;
 
 SelectMoveObjectTool *SelectMoveObjectTool::instance()
@@ -1686,6 +1711,33 @@ void SelectMoveObjectTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     updateStatusText();
 }
 
+void SelectMoveObjectTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
+{
+    if (mMode == Moving) {
+        bool duplicate = controlModifier();
+        if (duplicate && mClones.isEmpty()) {
+            foreach (BuildingObject *object, mMovingObjects) {
+                GraphicsObjectItem *item = mEditor->createItemForObject(object);
+                item->setSelected(true);
+                item->setDragging(true);
+                item->setZValue(mEditor->ZVALUE_CURSOR + object->index());
+                mEditor->addItem(item);
+                mClones += item;
+            }
+        }
+        foreach (BuildingObject *object, mMovingObjects) {
+            GraphicsObjectItem *item = mEditor->itemForObject(object);
+            item->setSelected(!duplicate);
+            item->setDragging(!duplicate);
+            item->setDragOffset(mDragOffset);
+        }
+        foreach (GraphicsObjectItem *item, mClones) {
+            item->setVisible(duplicate);
+            item->setDragOffset(mDragOffset);
+        }
+    }
+}
+
 void SelectMoveObjectTool::documentChanged()
 {
     mSelectionRectItem = 0;
@@ -1772,11 +1824,7 @@ void SelectMoveObjectTool::updateMovingItems(const QPointF &pos,
     QPoint currentTilePos = mEditor->sceneToTile(pos);
     mDragOffset = currentTilePos - startTilePos;
 
-    foreach (BuildingObject *object, mMovingObjects) {
-        GraphicsObjectItem *item = mEditor->itemForObject(object);
-        item->setDragging(true);
-        item->setDragOffset(mDragOffset);
-    }
+    currentModifiersChanged(modifiers);
 }
 
 void SelectMoveObjectTool::finishMoving(const QPointF &pos)
@@ -1787,24 +1835,45 @@ void SelectMoveObjectTool::finishMoving(const QPointF &pos)
     mMode = NoMode;
 
     foreach (BuildingObject *object, mMovingObjects) {
-        mEditor->itemForObject(object)->setDragging(false);
+        GraphicsObjectItem *item = mEditor->itemForObject(object);
+        item->setDragging(false);
+        item->setSelected(true);
     }
+    qDeleteAll(mClones);
+    mClones.clear();
 
     if (mDragOffset.isNull()) // Move is a no-op
         return;
 
     QUndoStack *undoStack = this->undoStack();
-    undoStack->beginMacro(tr("Move %n Object(s)", "", mMovingObjects.size()));
-    foreach (BuildingObject *object, mMovingObjects) {
-        if (!object->isValidPos(mDragOffset))
-            undoStack->push(new RemoveObject(mEditor->document(),
-                                             object->floor(),
-                                             object->index()));
-        else
-            undoStack->push(new MoveObject(mEditor->document(), object,
-                                           object->pos() + mDragOffset));
+    if (controlModifier()) {
+        undoStack->beginMacro(tr("Copy %n Object(s)", "", mMovingObjects.size()));
+        QSet<BuildingObject*> clones;
+        foreach (BuildingObject *object, mMovingObjects) {
+            if (object->isValidPos(mDragOffset)) {
+                BuildingObject *clone = object->clone();
+                clone->setPos(object->pos() + mDragOffset);
+                undoStack->push(new AddObject(mEditor->document(), object->floor(),
+                                              object->floor()->objectCount(),
+                                              clone));
+                clones.insert(clone);
+            }
+        }
+        undoStack->push(new SetSelectedObjects(mEditor->document(), clones));
+        undoStack->endMacro();
+    } else {
+        undoStack->beginMacro(tr("Move %n Object(s)", "", mMovingObjects.size()));
+        foreach (BuildingObject *object, mMovingObjects) {
+            if (!object->isValidPos(mDragOffset))
+                undoStack->push(new RemoveObject(mEditor->document(),
+                                                 object->floor(),
+                                                 object->index()));
+            else
+                undoStack->push(new MoveObject(mEditor->document(), object,
+                                               object->pos() + mDragOffset));
+        }
+        undoStack->endMacro();
     }
-    undoStack->endMacro();
 
     mMovingObjects.clear();
 }
@@ -1812,8 +1881,12 @@ void SelectMoveObjectTool::finishMoving(const QPointF &pos)
 void SelectMoveObjectTool::cancelMoving()
 {
     foreach (BuildingObject *object, mMovingObjects) {
-        mEditor->itemForObject(object)->setDragging(false);
+        GraphicsObjectItem *item = mEditor->itemForObject(object);
+        item->setDragging(false);
+        item->setSelected(true);
     }
+    qDeleteAll(mClones);
+    mClones.clear();
 
     mMovingObjects.clear();
 
@@ -1823,11 +1896,11 @@ void SelectMoveObjectTool::cancelMoving()
 void SelectMoveObjectTool::updateStatusText()
 {
     if (mMode == Moving) {
-        setStatusText(tr("Right-click to cancel."));
+        setStatusText(tr("CTRL to duplicate objects.  Right-click to cancel."));
     } else if (mMode == Selecting) {
         setStatusText(tr("CTRL to toggle selected state.  SHIFT to add to selection."));
     } else if (mMouseOverSelection) {
-        setStatusText(tr("Left-click-drag to move selected objects."));
+        setStatusText(tr("Left-click-drag to move selected objects.  CTRL to duplicate objects."));
     } else if (mMouseOverObject) {
         setStatusText(tr("Left-click to select.  Left-click-drag to select and move.  CTRL-left-click toggles selected state.  SHIFT-left-click adds to selection."));
     } else

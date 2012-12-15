@@ -105,6 +105,8 @@ public:
 
     virtual bool affectsFloorAbove() const { return false; }
 
+    virtual BuildingObject *clone() const = 0;
+
     virtual Door *asDoor() { return 0; }
     virtual Window *asWindow() { return 0; }
     virtual Stairs *asStairs() { return 0; }
@@ -130,6 +132,8 @@ public:
 
     }
 
+    BuildingObject *clone() const;
+
     Door *asDoor() { return this; }
 
     int getOffset()
@@ -143,7 +147,6 @@ public:
 
     BuildingTileEntry *frameTile() const
     { return mFrameTile; }
-
 private:
     BuildingTileEntry *mFrameTile;
 };
@@ -165,6 +168,8 @@ public:
                     BuildingEditor::BuildingFloor *floor = 0) const;
 
     bool affectsFloorAbove() const { return true; }
+
+    BuildingObject *clone() const;
 
     Stairs *asStairs() { return this; }
 
@@ -189,6 +194,8 @@ public:
 
     bool isValidPos(const QPoint &offset = QPoint(),
                     BuildingEditor::BuildingFloor *floor = 0) const;
+
+    BuildingObject *clone() const;
 
     WallObject *asWall() { return this; }
 
@@ -219,6 +226,8 @@ public:
     BuildingTileEntry *tile(int alternate = 0) const
     { return alternate ? mCurtainsTile : mTile; }
 
+    BuildingObject *clone() const;
+
     Window *asWindow() { return this; }
 
     int getOffset() const
@@ -243,6 +252,8 @@ public:
 
     bool isValidPos(const QPoint &offset = QPoint(),
                     BuildingEditor::BuildingFloor *floor = 0) const;
+
+    BuildingObject *clone() const;
 
     FurnitureObject *asFurniture() { return this; }
 
@@ -314,6 +325,8 @@ public:
     BuildingTileEntry *tile(int alternate = 0) const;
 
     bool affectsFloorAbove() const { return true; }
+
+    BuildingObject *clone() const;
 
     RoofObject *asRoof() { return this; }
 
