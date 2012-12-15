@@ -127,15 +127,7 @@ BuildingTileEntry *BuildingDocument::changeEWall(BuildingTileEntry *tile)
     mBuilding->setExteriorWall(tile);
     emit roomDefinitionChanged();
 
-    QList<BuildingTileEntry*> used = mBuilding->usedTiles();
-    if (tile && !tile->isNone() && !used.contains(tile)) {
-        mBuilding->setUsedTiles(used << tile);
-        emit usedTilesChanged();
-        if (!mTileChanges) {
-            mTileChanges = true;
-            emit cleanChanged();
-        }
-    }
+    checkUsedTile(tile);
 
     return old;
 }
@@ -146,15 +138,7 @@ BuildingTileEntry *BuildingDocument::changeWallForRoom(Room *room, BuildingTileE
     room->Wall = tile;
     emit roomDefinitionChanged();
 
-    QList<BuildingTileEntry*> used = mBuilding->usedTiles();
-    if (tile && !tile->isNone() && !used.contains(tile)) {
-        mBuilding->setUsedTiles(used << tile);
-        emit usedTilesChanged();
-        if (!mTileChanges) {
-            mTileChanges = true;
-            emit cleanChanged();
-        }
-    }
+    checkUsedTile(tile);
 
     return old;
 }
@@ -164,6 +148,9 @@ BuildingTileEntry *BuildingDocument::changeFloorForRoom(Room *room, BuildingTile
     BuildingTileEntry *old = room->Floor;
     room->Floor = tile;
     emit roomDefinitionChanged();
+
+    checkUsedTile(tile);
+
     return old;
 }
 
@@ -192,29 +179,12 @@ void BuildingDocument::insertObject(BuildingFloor *floor, int index, BuildingObj
     floor->insertObject(index, object);
 
     if (FurnitureObject *fo = object->asFurniture()) {
-        QList<FurnitureTiles*> used = mBuilding->usedFurniture();
         FurnitureTiles *ftiles = fo->furnitureTile() ? fo->furnitureTile()->owner() : 0;
-        if (ftiles && !used.contains(ftiles)) {
-            mBuilding->setUsedFurniture(used << ftiles);
-            emit usedFurnitureChanged();
-            if (!mTileChanges) {
-                mTileChanges = true;
-                emit cleanChanged();
-            }
-        }
+        checkUsedFurniture(ftiles);
     } else {
-        QList<BuildingTileEntry*> used = mBuilding->usedTiles();
         for (int i = 0; i < 3; i++) {
-            if (BuildingTileEntry *entry = object->tile(i)) {
-                if (!entry->isNone() && !used.contains(entry)) {
-                    mBuilding->setUsedTiles(used << entry);
-                    emit usedTilesChanged();
-                    if (!mTileChanges) {
-                        mTileChanges = true;
-                        emit cleanChanged();
-                    }
-                }
-            }
+            if (BuildingTileEntry *entry = object->tile(i))
+                checkUsedTile(entry);
         }
     }
 
@@ -250,18 +220,10 @@ BuildingTileEntry *BuildingDocument::changeObjectTile(BuildingObject *object,
 {
     BuildingTileEntry *old = object->tile(alternate);
     object->setTile(tile, alternate);
-
-    QList<BuildingTileEntry*> used = mBuilding->usedTiles();
-    if (tile && !tile->isNone() && !used.contains(tile)) {
-        mBuilding->setUsedTiles(used << tile);
-        emit usedTilesChanged();
-        if (!mTileChanges) {
-            mTileChanges = true;
-            emit cleanChanged();
-        }
-    }
-
     emit objectTileChanged(object);
+
+    checkUsedTile(tile);
+
     return old;
 }
 
@@ -269,6 +231,9 @@ void BuildingDocument::insertRoom(int index, Room *room)
 {
     mBuilding->insertRoom(index, room);
     emit roomAdded(room);
+
+    checkUsedTile(room->Wall);
+    checkUsedTile(room->Floor);
 }
 
 Room *BuildingDocument::removeRoom(int index)
@@ -295,6 +260,10 @@ Room *BuildingDocument::changeRoom(Room *room, const Room *data)
     room->copy(data);
     emit roomChanged(room);
     delete data;
+
+    checkUsedTile(room->Wall);
+    checkUsedTile(room->Floor);
+
     return old;
 }
 
@@ -343,18 +312,8 @@ FurnitureTile *BuildingDocument::changeFurnitureTile(FurnitureObject *object,
 {
     FurnitureTile *old = object->furnitureTile();
     object->setFurnitureTile(ftile);
-
-    QList<FurnitureTiles*> used = mBuilding->usedFurniture();
-    if (ftile && !used.contains(ftile->owner())) {
-        mBuilding->setUsedFurniture(used << ftile->owner());
-        emit usedFurnitureChanged();
-        if (!mTileChanges) {
-            mTileChanges = true;
-            emit cleanChanged();
-        }
-    }
-
     emit objectTileChanged(object);
+    checkUsedFurniture(ftile->owner());
     return old;
 }
 
@@ -428,6 +387,32 @@ void BuildingDocument::entryTileChanged(BuildingTileEntry *entry)
 
     if (mBuilding->usedTiles().contains(entry)) {
         emit usedTilesChanged();
+        if (!mTileChanges) {
+            mTileChanges = true;
+            emit cleanChanged();
+        }
+    }
+}
+
+void BuildingDocument::checkUsedTile(BuildingTileEntry *tile)
+{
+    QList<BuildingTileEntry*> used = mBuilding->usedTiles();
+    if (tile && !tile->isNone() && !used.contains(tile)) {
+        mBuilding->setUsedTiles(used << tile);
+        emit usedTilesChanged();
+        if (!mTileChanges) {
+            mTileChanges = true;
+            emit cleanChanged();
+        }
+    }
+}
+
+void BuildingDocument::checkUsedFurniture(FurnitureTiles *ftiles)
+{
+    QList<FurnitureTiles*> used = mBuilding->usedFurniture();
+    if (ftiles && !used.contains(ftiles)) {
+        mBuilding->setUsedFurniture(used << ftiles);
+        emit usedFurnitureChanged();
         if (!mTileChanges) {
             mTileChanges = true;
             emit cleanChanged();

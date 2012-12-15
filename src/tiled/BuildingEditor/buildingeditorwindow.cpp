@@ -1439,7 +1439,7 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         building->setRoofTopTile(btiles->defaultRoofTopTiles());
 #endif
 
-    //  Handle reading old buildings
+    // Handle reading old buildings
     if (building->usedTiles().isEmpty()) {
         QList<BuildingTileEntry*> entries;
         QList<FurnitureTiles*> furniture;
@@ -1463,6 +1463,8 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         if (entry && !entry->isNone() && !entries.contains(entry))
             entries += entry;
         foreach (Room *room, building->rooms()) {
+            if (room->Floor && !room->Floor->isNone() && !entries.contains(room->Floor))
+                entries += room->Floor;
             if (room->Wall && !room->Wall->isNone() && !entries.contains(room->Wall))
                 entries += room->Wall;
         }

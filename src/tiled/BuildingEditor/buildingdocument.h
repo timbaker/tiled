@@ -151,6 +151,10 @@ signals:
     void usedTilesChanged();
     void usedFurnitureChanged();
 
+private:
+    void checkUsedTile(BuildingTileEntry *entry);
+    void checkUsedFurniture(FurnitureTiles *ftiles);
+
 private slots:
     void entryTileChanged(BuildingTileEntry *entry);
     void furnitureTileChanged(FurnitureTile *ftile);
