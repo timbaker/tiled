@@ -84,6 +84,16 @@ public:
                        const MapObject *object,
                        const QColor &color) const;
 
+#ifdef ZOMBOID
+    virtual QPainterPath shape(const Path *path,
+                               const QPoint &offset) const;
+
+    virtual void drawPath(QPainter *painter,
+                          const Path *path,
+                          const QColor &color,
+                          const QPoint &offset) const;
+#endif
+
     void drawImageLayer(QPainter *painter,
                         const ImageLayer *layer,
                         const QRectF &exposed = QRectF()) const;

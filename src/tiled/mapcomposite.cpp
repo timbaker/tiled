@@ -21,6 +21,7 @@
 #include "mapobject.h"
 #include "maprenderer.h"
 #include "objectgroup.h"
+#include "pathlayer.h"
 #include "tilelayer.h"
 
 #include <QDebug>
@@ -111,6 +112,8 @@ void CompositeLayerGroup::addTileLayer(TileLayer *layer, int index)
             ? false
             : layer->isEmpty() || layer->name().contains(QLatin1String("NoRender"));
     mEmptyLayers.insert(index, empty);
+
+    mPathTileLayers.insert(index, layer->clone()->asTileLayer());
 }
 
 void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
@@ -119,6 +122,8 @@ void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
     mVisibleLayers.remove(index);
     mLayerOpacity.remove(index);
     mEmptyLayers.remove(index);
+
+    mPathTileLayers.remove(index);
 
     // Hack -- only a map being edited can set a TileLayer's group.
     ZTileLayerGroup *oldGroup = layer->group();
@@ -146,6 +151,8 @@ void CompositeLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRec
             layerGroup->prepareDrawing(renderer, rect);
         }
     }
+
+    pathsGenerate();
 }
 
 bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
@@ -174,6 +181,17 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                 }
                 cells.append(cell);
                 opacities.append(mLayerOpacity[index]);
+            }
+            else {
+                const Cell *cell = &mPathTileLayers[index]->cellAt(subPos);
+                if (!cell->isEmpty()) {
+                    if (!cleared) {
+                        cells.resize(0);
+                        cleared = true;
+                    }
+                    cells.append(cell);
+                    opacities.append(mLayerOpacity[index]);
+                }
             }
         }
     }
@@ -264,6 +282,17 @@ void CompositeLayerGroup::saveOpacity()
 void CompositeLayerGroup::restoreOpacity()
 {
     mLayerOpacity = mSavedOpacity;
+}
+
+void CompositeLayerGroup::pathsGenerate()
+{
+    foreach (TileLayer *tl, mPathTileLayers)
+        tl->erase(QRegion(tl->x(), tl->y(), tl->width(), tl->height()));
+    foreach (PathLayer *pl, mOwner->map()->pathLayers()) {
+        if (pl->level() != level())
+            continue;
+        pl->generate(mPathTileLayers);
+    }
 }
 
 QRect CompositeLayerGroup::bounds() const

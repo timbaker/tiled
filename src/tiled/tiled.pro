@@ -176,7 +176,17 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/buildingpreferences.cpp \
     BuildingEditor/buildingtmx.cpp \
     BuildingEditor/tilecategoryview.cpp \
-    BuildingEditor/listofstringsdialog.cpp
+    BuildingEditor/listofstringsdialog.cpp \
+    pathitem.cpp \
+    pathlayeritem.cpp \
+    abstractpathtool.cpp \
+    addremovepath.cpp \
+    pathmodel.cpp \
+    selectpathtool.cpp \
+    createpathtool.cpp \
+    movepath.cpp \
+    editpathtool.cpp \
+    changepathpolygon.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -318,7 +328,17 @@ HEADERS += aboutdialog.h \
     BuildingEditor/buildingpreferences.h \
     BuildingEditor/buildingtmx.h \
     BuildingEditor/tilecategoryview.h \
-    BuildingEditor/listofstringsdialog.h
+    BuildingEditor/listofstringsdialog.h \
+    pathitem.h \
+    pathlayeritem.h \
+    createpathtool.h \
+    abstractpathtool.h \
+    addremovepath.h \
+    pathmodel.h \
+    selectpathtool.h \
+    movepath.h \
+    editpathtool.h \
+    changepathpolygon.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

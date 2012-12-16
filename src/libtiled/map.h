@@ -174,6 +174,11 @@ public:
     int imageLayerCount() const
     { return layerCount(Layer::ImageLayerType); }
 
+#ifdef ZOMBOID
+    int pathLayerCount() const
+    { return layerCount(Layer::PathLayerType); }
+#endif
+
     /**
      * Returns the layer at the specified index.
      */
@@ -189,6 +194,9 @@ public:
     QList<Layer*> layers(Layer::Type type) const;
     QList<ObjectGroup*> objectGroups() const;
     QList<TileLayer*> tileLayers() const;
+#ifdef ZOMBOID
+    QList<PathLayer*> pathLayers() const;
+#endif
 
     /**
      * Adds a layer to this map.

@@ -57,6 +57,9 @@ MapDocumentActionHandler::MapDocumentActionHandler(QObject *parent)
     mActionAddTileLayer = new QAction(this);
     mActionAddObjectGroup = new QAction(this);
     mActionAddImageLayer = new QAction(this);
+#ifdef ZOMBOID
+    mActionAddPathLayer = new QAction(this);
+#endif
 
     mActionDuplicateLayer = new QAction(this);
     mActionDuplicateLayer->setShortcut(tr("Ctrl+Shift+D"));
@@ -110,6 +113,9 @@ MapDocumentActionHandler::MapDocumentActionHandler(QObject *parent)
     connect(mActionAddObjectGroup, SIGNAL(triggered()),
             SLOT(addObjectGroup()));
     connect(mActionAddImageLayer, SIGNAL(triggered()), SLOT(addImageLayer()));
+#ifdef ZOMBOID
+    connect(mActionAddPathLayer, SIGNAL(triggered()), SLOT(addPathLayer()));
+#endif
     connect(mActionDuplicateLayer, SIGNAL(triggered()),
             SLOT(duplicateLayer()));
     connect(mActionMergeLayerDown, SIGNAL(triggered()),
@@ -142,6 +148,9 @@ void MapDocumentActionHandler::retranslateUi()
     mActionAddTileLayer->setText(tr("Add &Tile Layer"));
     mActionAddObjectGroup->setText(tr("Add &Object Layer"));
     mActionAddImageLayer->setText(tr("Add &Image Layer"));
+#ifdef ZOMBOID
+    mActionAddPathLayer->setText(tr("Add Path Layer"));
+#endif
     mActionDuplicateLayer->setText(tr("&Duplicate Layer"));
     mActionMergeLayerDown->setText(tr("&Merge Layer Down"));
     mActionRemoveLayer->setText(tr("&Remove Layer"));
@@ -250,6 +259,14 @@ void MapDocumentActionHandler::addImageLayer()
      if (mMapDocument)
          mMapDocument->addLayer(Layer::ImageLayerType);
 }
+
+#ifdef ZOMBOID
+void MapDocumentActionHandler::addPathLayer()
+{
+     if (mMapDocument)
+         mMapDocument->addLayer(Layer::PathLayerType);
+}
+#endif
 
 void MapDocumentActionHandler::duplicateLayer()
 {

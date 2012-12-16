@@ -28,6 +28,7 @@
 #include "map.h"
 #include "mapobject.h"
 #include "objectgroup.h"
+#include "pathlayer.h"
 #include "tile.h"
 #include "tilelayer.h"
 #include "tileset.h"
@@ -568,6 +569,35 @@ void ZLevelRenderer::drawMapObject(QPainter *painter,
     }
 
     painter->restore();
+}
+
+QPainterPath ZLevelRenderer::shape(const Path *tilePath, const QPoint &offset) const
+{
+    QPainterPath path;
+
+    const QPolygonF polygon = tilePath->polygonf().translated(offset);
+    const QPolygonF screenPolygon = tileToPixelCoords(polygon);
+    if (tilePath->isClosed()) {
+        path.addPolygon(screenPolygon);
+    } else {
+        for (int i = 1; i < screenPolygon.size(); ++i) {
+            path.addPolygon(lineToPolygon(screenPolygon[i - 1],
+                                          screenPolygon[i]));
+        }
+        path.setFillRule(Qt::WindingFill);
+    }
+    return path;
+}
+
+void ZLevelRenderer::drawPath(QPainter *painter,
+                              const Path *path,
+                              const QColor &color,
+                              const QPoint &offset) const
+{
+    Q_UNUSED(painter)
+    Q_UNUSED(path)
+    Q_UNUSED(color)
+    Q_UNUSED(offset)
 }
 
 void ZLevelRenderer::drawFancyRectangle(QPainter *painter,

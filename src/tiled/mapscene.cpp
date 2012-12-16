@@ -41,6 +41,9 @@
 #include "tilesetmanager.h"
 #ifdef ZOMBOID
 #include "mapcomposite.h"
+#include "pathitem.h"
+#include "pathlayer.h"
+#include "pathlayeritem.h"
 #include "zgriditem.h"
 #endif
 
@@ -148,6 +151,16 @@ void MapScene::setMapDocument(MapDocument *mapDocument)
                 this, SLOT(objectsChanged(QList<MapObject*>)));
         connect(mMapDocument, SIGNAL(selectedObjectsChanged()),
                 this, SLOT(updateSelectedObjectItems()));
+#ifdef ZOMBOID
+        connect(mMapDocument, SIGNAL(pathsAdded(QList<Path*>)),
+                SLOT(pathsAdded(QList<Path*>)));
+        connect(mMapDocument, SIGNAL(pathsRemoved(QList<Path*>)),
+                SLOT(pathsRemoved(QList<Path*>)));
+        connect(mMapDocument, SIGNAL(pathsChanged(QList<Path*>)),
+                SLOT(pathsChanged(QList<Path*>)));
+        connect(mMapDocument, SIGNAL(selectedPathsChanged()),
+                SLOT(updateSelectedPathItems()));
+#endif
     }
 }
 
@@ -163,6 +176,19 @@ void MapScene::setSelectedObjectItems(const QSet<MapObjectItem *> &items)
     mMapDocument->setSelectedObjects(selectedObjects);
 }
 
+#ifdef ZOMBOID
+void MapScene::setSelectedPathItems(const QSet<PathItem *> &items)
+{
+    // Inform the map document about the newly selected paths
+    QList<Path*> selectedPaths;
+    selectedPaths.reserve(items.size());
+
+    foreach (const PathItem *item, items)
+        selectedPaths.append(item->path());
+    mMapDocument->setSelectedPaths(selectedPaths);
+}
+#endif
+
 void MapScene::setSelectedTool(AbstractTool *tool)
 {
     mSelectedTool = tool;
@@ -172,6 +198,9 @@ void MapScene::refreshScene()
 {
     mLayerItems.clear();
     mObjectItems.clear();
+#ifdef ZOMBOID
+    mPathItems.clear();
+#endif
 
 #ifdef ZOMBOID
     removeItem(mGridItem);
@@ -235,6 +264,15 @@ QGraphicsItem *MapScene::createLayerItem(Layer *layer)
             mObjectItems.insert(object, item);
         }
         layerItem = ogItem;
+#ifdef ZOMBOID
+    } else if (PathLayer *pl = layer->asPathLayer()) {
+        PathLayerItem *plItem = new PathLayerItem(pl);
+        foreach (Path *path, pl->paths()) {
+            PathItem *item = new PathItem(path, mMapDocument, plItem);
+            mPathItems.insert(path, item);
+        }
+        layerItem = plItem;
+#endif
     } else if (ImageLayer *il = layer->asImageLayer()) {
         layerItem = new ImageLayerItem(il, mMapDocument->renderer());
     }
@@ -404,6 +442,10 @@ void MapScene::layerAboutToBeRemoved(int index)
             mObjectItems.remove(o);
         }
     }
+    if (PathLayer *pl = layer->asPathLayer()) {
+        foreach (Path *p, pl->paths())
+            mPathItems.remove(p);
+    }
 }
 #endif
 
@@ -520,6 +562,73 @@ void MapScene::syncAllObjectItems()
     foreach (MapObjectItem *item, mObjectItems)
         item->syncWithMapObject();
 }
+
+#ifdef ZOMBOID
+void MapScene::pathsAdded(const QList<Path *> &paths)
+{
+    foreach (Path *path, paths) {
+        PathLayer *pathLayer = path->pathLayer();
+        PathLayerItem *pathLayerItem = 0;
+
+        // Find the object group item for the map object's object group
+        foreach (QGraphicsItem *item, mLayerItems) {
+            if (PathLayerItem *pli = dynamic_cast<PathLayerItem*>(item)) {
+                if (pli->pathLayer() == pathLayer) {
+                    pathLayerItem = pli;
+                    break;
+                }
+            }
+        }
+
+        Q_ASSERT(pathLayerItem);
+        PathItem *item = new PathItem(path, mMapDocument, pathLayerItem);
+        mPathItems.insert(path, item);
+    }
+}
+
+void MapScene::pathsRemoved(const QList<Path *> &paths)
+{
+    foreach (Path *path, paths) {
+        PathItems::iterator i = mPathItems.find(path);
+        Q_ASSERT(i != mPathItems.end());
+
+        mSelectedPathItems.remove(i.value());
+        delete i.value();
+        mPathItems.erase(i);
+    }
+}
+
+void MapScene::pathsChanged(const QList<Path *> &paths)
+{
+    foreach (Path *path, paths) {
+        PathItem *pathItem = itemForPath(path);
+        Q_ASSERT(pathItem);
+        pathItem->syncWithPath();
+    }
+}
+
+void MapScene::updateSelectedPathItems()
+{
+    const QList<Path*> &paths = mMapDocument->selectedPaths();
+
+    QSet<PathItem*> items;
+    foreach (Path *path, paths) {
+        PathItem *item = itemForPath(path);
+        Q_ASSERT(item);
+
+        items.insert(item);
+    }
+
+    // Update the editable state of the items
+    foreach (PathItem *item, mSelectedPathItems - items)
+        item->setEditable(false);
+    foreach (PathItem *item, items - mSelectedPathItems)
+        item->setEditable(true);
+
+    mSelectedPathItems = items;
+    emit selectedPathItemsChanged();
+}
+#endif
 
 void MapScene::setGridVisible(bool visible)
 {

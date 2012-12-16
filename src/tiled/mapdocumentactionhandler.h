@@ -56,6 +56,9 @@ public:
     QAction *actionAddTileLayer() const { return mActionAddTileLayer; }
     QAction *actionAddObjectGroup() const { return mActionAddObjectGroup; }
     QAction *actionAddImageLayer() const { return mActionAddImageLayer; }
+#ifdef ZOMBOID
+    QAction *actionAddPathLayer() const { return mActionAddPathLayer; }
+#endif
     QAction *actionDuplicateLayer() const { return mActionDuplicateLayer; }
     QAction *actionMergeLayerDown() const { return mActionMergeLayerDown; }
     QAction *actionRemoveLayer() const { return mActionRemoveLayer; }
@@ -83,6 +86,9 @@ public slots:
     void addTileLayer();
     void addObjectGroup();
     void addImageLayer();
+#ifdef ZOMBOID
+    void addPathLayer();
+#endif
     void duplicateLayer();
     void mergeLayerDown();
     void selectPreviousLayer();
@@ -105,6 +111,9 @@ private:
     QAction *mActionAddTileLayer;
     QAction *mActionAddObjectGroup;
     QAction *mActionAddImageLayer;
+#ifdef ZOMBOID
+    QAction *mActionAddPathLayer;
+#endif
     QAction *mActionDuplicateLayer;
     QAction *mActionMergeLayerDown;
     QAction *mActionRemoveLayer;

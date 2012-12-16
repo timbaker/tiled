@@ -48,6 +48,7 @@ class MapObject;
 class MapRenderer;
 class Tileset;
 #ifdef ZOMBOID
+class Path;
 class Tile;
 #endif
 
@@ -57,6 +58,7 @@ class LayerModel;
 class TileSelectionModel;
 class MapObjectModel;
 #ifdef ZOMBOID
+class PathModel;
 class ZLevelsModel;
 #endif
 
@@ -187,6 +189,8 @@ public:
 
     MapObjectModel *mapObjectModel() const { return mMapObjectModel; }
 #ifdef ZOMBOID
+    PathModel *pathModel() const { return mPathModel; }
+
     ZLevelsModel *levelsModel() const { return mLevelsModel; }
 
     void setLayerGroupVisibility(CompositeLayerGroup *layerGroup, bool visible);
@@ -224,6 +228,13 @@ public:
      * signal.
      */
     void setSelectedObjects(const QList<MapObject*> &selectedObjects);
+
+#ifdef ZOMBOID
+    const QList<Path*> &selectedPaths() const
+    { return mSelectedPaths; }
+
+    void setSelectedPaths(const QList<Path*> &paths);
+#endif
 
     /**
      * Makes sure the all tilesets which are used at the given \a map will be
@@ -311,6 +322,8 @@ signals:
     void layerRemovedFromGroup(int index, CompositeLayerGroup *oldGroup);
 
     void layerLevelChanged(int index, int oldLevel);
+
+    void selectedPathsChanged();
 #endif
 
     /**
@@ -366,6 +379,11 @@ signals:
     void objectsChanged(const QList<MapObject*> &objects);
 
 #ifdef ZOMBOID
+    void pathsAdded(const QList<Path*> &paths);
+    void pathsAboutToBeRemoved(const QList<Path*> &paths);
+    void pathsRemoved(const QList<Path*> &paths);
+    void pathsChanged(const QList<Path*> &paths);
+
     void mapCompositeChanged();
 #endif
 
@@ -378,12 +396,17 @@ private slots:
 #ifdef ZOMBOID
     void onLayerRenamed(int index);
 
+    void onPathsRemoved(const QList<Path*> &paths);
+
     void onMapAboutToChange(MapInfo *mapInfo);
     void onMapFileChanged(MapInfo *mapInfo);
 #endif
 
 private:
     void deselectObjects(const QList<MapObject*> &objects);
+#ifdef ZOMBOID
+    void deselectPaths(const QList<Path*> &paths);
+#endif
 
     QString mFileName;
     Map *mMap;
@@ -394,9 +417,11 @@ private:
     int mCurrentLayerIndex;
     MapObjectModel *mMapObjectModel;
 #ifdef ZOMBOID
+    PathModel *mPathModel;
     ZLevelsModel *mLevelsModel;
     int mMaxVisibleLayer;
     MapComposite *mMapComposite;
+    QList<Path*> mSelectedPaths;
 #endif
     QUndoStack *mUndoStack;
 };

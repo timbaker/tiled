@@ -75,6 +75,8 @@ public:
     void saveOpacity();
     void restoreOpacity();
 
+    void pathsGenerate();
+
 private:
     MapComposite *mOwner;
     bool mAnyVisibleLayers;
@@ -107,6 +109,8 @@ private:
 
     QVector<SubMapLayers> mPreparedSubMapLayers;
     QVector<SubMapLayers> mVisibleSubMapLayers;
+
+    QVector<Tiled::TileLayer*> mPathTileLayers;
 };
 
 class MapComposite : public QObject

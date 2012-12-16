@@ -43,6 +43,9 @@ namespace Tiled {
 class Map;
 class ImageLayer;
 class ObjectGroup;
+#ifdef ZOMBOID
+class PathLayer;
+#endif
 class TileLayer;
 class Tileset;
 
@@ -56,6 +59,9 @@ public:
         TileLayerType   = 0x01,
         ObjectGroupType = 0x02,
         ImageLayerType  = 0x04,
+#ifdef ZOMBOID
+        PathLayerType   = 0x08,
+#endif
         AnyLayerType    = 0xFF
     };
 
@@ -218,11 +224,17 @@ public:
     bool isTileLayer() const { return mType == TileLayerType; }
     bool isObjectGroup() const { return mType == ObjectGroupType; }
     bool isImageLayer() const { return mType == ImageLayerType; }
+#ifdef ZOMBOID
+    bool isPathLayer() const { return mType == PathLayerType; }
+#endif
 
     // These actually return this layer cast to one of its subclasses.
     TileLayer *asTileLayer();
     ObjectGroup *asObjectGroup();
     ImageLayer *asImageLayer();
+#ifdef ZOMBOID
+    PathLayer *asPathLayer();
+#endif
 
 protected:
     Layer *initializeClone(Layer *clone) const;

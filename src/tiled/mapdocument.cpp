@@ -33,6 +33,8 @@
 #ifdef ZOMBOID
 #include "mapcomposite.h"
 #include "mapmanager.h"
+#include "pathlayer.h"
+#include "pathmodel.h"
 #include "zlevelrenderer.h"
 #include "zlevelsmodel.h"
 #endif
@@ -65,6 +67,7 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     mLayerModel(new LayerModel(this)),
     mMapObjectModel(new MapObjectModel(this)),
 #ifdef ZOMBOID
+    mPathModel(new PathModel(this)),
     mLevelsModel(new ZLevelsModel(this)),
     mMapComposite(0),
 #endif
@@ -125,6 +128,7 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
 
 #ifdef ZOMBOID
     mLevelsModel->setMapDocument(this);
+    mPathModel->setMapDocument(this);
 #endif
 
     // Forward signals emitted from the map object model
@@ -137,6 +141,18 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
             SIGNAL(objectsAboutToBeRemoved(QList<MapObject*>)));
     connect(mMapObjectModel, SIGNAL(objectsRemoved(QList<MapObject*>)),
             SLOT(onObjectsRemoved(QList<MapObject*>)));
+
+#ifdef ZOMBOID
+    // Forward signals emitted from the path model
+    connect(mPathModel, SIGNAL(pathsAdded(QList<Path*>)),
+            SIGNAL(pathsAdded(QList<Path*>)));
+    connect(mPathModel, SIGNAL(pathsChanged(QList<Path*>)),
+            SIGNAL(pathsChanged(QList<Path*>)));
+    connect(mPathModel, SIGNAL(pathsAboutToBeRemoved(QList<Path*>)),
+            SIGNAL(pathsAboutToBeRemoved(QList<Path*>)));
+    connect(mPathModel, SIGNAL(pathsRemoved(QList<Path*>)),
+            SLOT(onPathsRemoved(QList<Path*>)));
+#endif
 
     connect(mUndoStack, SIGNAL(cleanChanged(bool)), SIGNAL(modifiedChanged()));
 
@@ -155,6 +171,7 @@ MapDocument::~MapDocument()
     // Paranoia
     mLevelsModel->setMapDocument(0);
     mMapObjectModel->setMapDocument(0);
+    mPathModel->setMapDocument(0);
     delete mMapComposite;
 #endif
 
@@ -309,6 +326,12 @@ void MapDocument::addLayer(Layer::Type layerType)
         name = tr("Image Layer %1").arg(mMap->imageLayerCount() + 1);
         layer = new ImageLayer(name, 0, 0, mMap->width(), mMap->height());
         break;
+#ifdef ZOMBOID
+    case Layer::PathLayerType:
+        name = tr("Path Layer %1").arg(mMap->pathLayerCount() + 1);
+        layer = new PathLayer(name, 0, 0, mMap->width(), mMap->height());
+        break;
+#endif
     case Layer::AnyLayerType:
         break; // Q_ASSERT below will fail.
     }
@@ -464,6 +487,14 @@ void MapDocument::setSelectedObjects(const QList<MapObject *> &selectedObjects)
     emit selectedObjectsChanged();
 }
 
+#ifdef ZOMBOID
+void MapDocument::setSelectedPaths(const QList<Path *> &paths)
+{
+    mSelectedPaths = paths;
+    emit selectedPathsChanged();
+}
+#endif
+
 /**
  * Makes sure the all tilesets which are used at the given \a map will be
  * present in the map document.
@@ -617,6 +648,12 @@ void MapDocument::onLayerRenamed(int index)
     emit layerRenamed(index);
 }
 
+void MapDocument::onPathsRemoved(const QList<Path *> &paths)
+{
+    deselectPaths(paths);
+    emit pathsRemoved(paths);
+}
+
 void MapDocument::onMapAboutToChange(MapInfo *mapInfo)
 {
     mMapComposite->mapAboutToChange(mapInfo);
@@ -638,6 +675,18 @@ void MapDocument::deselectObjects(const QList<MapObject *> &objects)
     if (removedCount > 0)
         emit selectedObjectsChanged();
 }
+
+#ifdef ZOMBOID
+void MapDocument::deselectPaths(const QList<Path *> &paths)
+{
+    int removedCount = 0;
+    foreach (Path *path, paths)
+        removedCount += mSelectedPaths.removeAll(path);
+
+    if (removedCount > 0)
+        emit selectedPathsChanged();
+}
+#endif
 
 void MapDocument::setTilesetFileName(Tileset *tileset,
                                      const QString &fileName)

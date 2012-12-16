@@ -26,6 +26,9 @@
 #include "tilelayer.h"
 #include "tileset.h"
 #include "imagelayer.h"
+#ifdef ZOMBOID
+#include "pathlayer.h"
+#endif
 
 #include <cmath>
 
@@ -290,6 +293,38 @@ void StaggeredRenderer::drawMapObject(QPainter *painter,
 }
 
 #ifdef ZOMBOID
+QPainterPath StaggeredRenderer::shape(const Path *tilePath, const QPoint &offset) const
+{
+    Q_UNUSED(offset)
+
+    QPainterPath path;
+
+    const QPolygonF polygon = tilePath->polygonf();
+    const QPolygonF screenPolygon = tileToPixelCoords(polygon);
+    if (tilePath->isClosed()) {
+        path.addPolygon(screenPolygon);
+    } else {
+        for (int i = 1; i < screenPolygon.size(); ++i) {
+            path.addPolygon(lineToPolygon(screenPolygon[i - 1],
+                                          screenPolygon[i]));
+        }
+        path.setFillRule(Qt::WindingFill);
+    }
+    return path;
+}
+
+void StaggeredRenderer::drawPath(QPainter *painter,
+                                 const Path *path,
+                                 const QColor &color,
+                                 const QPoint &offset) const
+{
+    Q_UNUSED(painter)
+    Q_UNUSED(path)
+    Q_UNUSED(color)
+    Q_UNUSED(offset)
+    // TODO
+}
+
 void StaggeredRenderer::drawFancyRectangle(QPainter *painter,
                                            const QRectF &tileBounds,
                                            const QColor &color,
