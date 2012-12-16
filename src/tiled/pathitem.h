@@ -47,6 +47,7 @@ private:
     bool mEditable;
     bool mDragging;
     QPoint mDragOffset;
+    QPolygon mPolygon;
 };
 
 } // namespace Internal

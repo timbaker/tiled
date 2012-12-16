@@ -82,6 +82,11 @@ void PathItem::syncWithPath()
 {
     setVisible(mPath->isVisible());
 
+    if (mPolygon != mPath->polygon()) {
+        mPolygon = mPath->polygon();
+        update();
+    }
+
     // FIXME: the bounds must include any tiles generated!
     QRectF bounds = shape().boundingRect().adjusted(-2, -2, 3, 3);;
     if (bounds != mBoundingRect) {
