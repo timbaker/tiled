@@ -185,6 +185,20 @@ void TileLayer::erase(const QRegion &area)
                 setCell(x, y, emptyCell);
 }
 
+#ifdef ZOMBOID
+void TileLayer::erase()
+{
+#if SPARSE_TILELAYER
+    mGrid.clear();
+#else
+    const Cell emptyCell;
+    for (int x = 0; x <= mWidth; ++x)
+        for (int y = 0; y <= mHeight; ++y)
+            setCell(x, y, emptyCell);
+#endif
+}
+#endif
+
 void TileLayer::flip(FlipDirection direction)
 {
 #if SPARSE_TILELAYER

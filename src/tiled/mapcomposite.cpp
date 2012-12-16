@@ -308,7 +308,7 @@ void CompositeLayerGroup::restoreOpacity()
 void CompositeLayerGroup::pathsGenerate()
 {
     foreach (TileLayer *tl, mPathTileLayers)
-        tl->erase(QRegion(tl->x(), tl->y(), tl->width(), tl->height()));
+        tl->erase();
     foreach (PathLayer *pl, mOwner->map()->pathLayers()) {
         if (pl->level() != level())
             continue;
