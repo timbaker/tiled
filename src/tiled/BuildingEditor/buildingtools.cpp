@@ -1713,6 +1713,8 @@ void SelectMoveObjectTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void SelectMoveObjectTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
 {
+    Q_UNUSED(modifiers)
+
     if (mMode == Moving) {
         bool duplicate = controlModifier();
         if (duplicate && mClones.isEmpty()) {

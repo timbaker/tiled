@@ -211,6 +211,8 @@ public:
     virtual BuildingTileCategory *asWindows() { return 0; }
     virtual BuildingTileCategory *asCurtains() { return 0; }
     virtual BuildingTileCategory *asStairs() { return 0; }
+    virtual BuildingTileCategory *asGrimeFloor() { return 0; }
+    virtual BuildingTileCategory *asGrimeWall() { return 0; }
     virtual BuildingTileCategory *asRoofCaps() { return 0; }
     virtual BuildingTileCategory *asRoofSlopes() { return 0; }
     virtual BuildingTileCategory *asRoofTops() { return 0; }
@@ -512,6 +514,65 @@ public:
     int shadowToEnum(int shadowIndex);
 };
 
+class BTC_GrimeFloor : public BuildingTileCategory
+{
+public:
+    enum TileEnum
+    {
+        West,
+        North,
+        East,
+        South,
+        SouthWest,
+        NorthWest,
+        NorthEast,
+        SouthEast,
+        EnumCount
+    };
+
+    BTC_GrimeFloor(const QString &label);
+
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
+
+    bool canAssignNone() const
+    { return true; }
+
+    BuildingTileCategory *asGrimeFloor() { return this; }
+
+    int shadowCount() const { return 8; }
+    int shadowToEnum(int shadowIndex);
+};
+
+
+class BTC_GrimeWall : public BuildingTileCategory
+{
+public:
+    enum TileEnum
+    {
+        West,
+        North,
+        NorthWest,
+        SouthEast,
+        WestWindow,
+        NorthWindow,
+        WestDoor,
+        NorthDoor,
+        EnumCount
+    };
+
+    BTC_GrimeWall(const QString &label);
+
+    BuildingTileEntry *createEntryFromSingleTile(const QString &tileName);
+
+    bool canAssignNone() const
+    { return true; }
+
+    BuildingTileCategory *asGrimeWall() { return this; }
+
+    int shadowCount() const { return 8; }
+    int shadowToEnum(int shadowIndex);
+};
+
 class BuildingTilesMgr : public QObject
 {
     Q_OBJECT
@@ -525,6 +586,8 @@ public:
         Windows,
         Curtains,
         Stairs,
+        GrimeFloor,
+        GrimeWall,
         RoofCaps,
         RoofSlopes,
         RoofTops,
@@ -689,6 +752,8 @@ private:
     BTC_EWalls *mCatEWalls;
     BTC_IWalls *mCatIWalls;
     BTC_Windows *mCatWindows;
+    BTC_GrimeFloor *mCatGrimeFloor;
+    BTC_GrimeWall *mCatGrimeWall;
 
     BTC_RoofCaps *mCatRoofCaps;
     BTC_RoofSlopes *mCatRoofSlopes;

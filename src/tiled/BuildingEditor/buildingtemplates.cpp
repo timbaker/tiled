@@ -172,7 +172,11 @@ static void writeFurnitureTiles(SimpleFileBlock &block, FurnitureTiles *ftiles)
 // VERSION1
 // Massive rewrite -> BuildingTileEntry
 #define VERSION1 1
-#define VERSION_LATEST VERSION1
+
+// VERSION2
+// Renamed Room.Wall -> Room.InteriorWall
+#define VERSION2 2
+#define VERSION_LATEST VERSION2
 
 bool BuildingTemplates::readTxt()
 {
@@ -251,8 +255,8 @@ bool BuildingTemplates::readTxt()
                     room->Color = qRgb(rgb.at(0).toInt(),
                                        rgb.at(1).toInt(),
                                        rgb.at(2).toInt());
-                    room->Wall = getEntry(roomBlock.value("Wall"))->asInteriorWall();
-                    room->Floor = getEntry(roomBlock.value("Floor"))->asFloor();
+                    for (int i = 0; i < Room::TileCount; i++)
+                        room->setTile(i, getEntry(roomBlock.value(room->enumToString(i))));
                     room->internalName = roomBlock.value("InternalName");
                     def->addRoom(room);
                 } else {
@@ -283,8 +287,8 @@ void BuildingTemplates::writeTxt(QWidget *parent)
         foreach (BuildingTileEntry *entry, btemplate->tiles())
             addEntry(entry);
         foreach (Room *room, btemplate->rooms()) {
-            addEntry(room->Floor);
-            addEntry(room->Wall);
+            foreach (BuildingTileEntry *entry, room->tiles())
+                addEntry(entry);
         }
         foreach (BuildingTileEntry *entry, btemplate->usedTiles())
             addEntry(entry);
@@ -314,8 +318,8 @@ void BuildingTemplates::writeTxt(QWidget *parent)
                     .arg(qBlue(room->Color));
             roomBlock.addValue("Color", colorString);
             roomBlock.addValue("InternalName", room->internalName);
-            roomBlock.addValue("Wall", entryIndex(room->Wall));
-            roomBlock.addValue("Floor", entryIndex(room->Floor));
+            for (int i = 0; i < Room::TileCount; i++)
+                roomBlock.addValue(room->enumToString(i), entryIndex(room->tile(i)));
             templateBlock.blocks += roomBlock;
         }
 
@@ -402,7 +406,7 @@ bool BuildingTemplates::upgradeTxt()
     }
     Q_ASSERT(sourceFile.version() == VERSION_LATEST);
 
-    if (VERSION_LATEST == VERSION1) {
+    if (userVersion < VERSION1) {
         // Massive rewrite -> BuildingTileEntry stuff
 
         // Step 1: read all the single-tile assignments and convert them to
@@ -467,6 +471,21 @@ bool BuildingTemplates::upgradeTxt()
 
         userFile.blocks = newFile.blocks;
         userFile.values = newFile.values;
+    }
+
+    if (userVersion < VERSION2) {
+        // Rename Room.Wall -> Room.InteriorWall
+        for (int i = 0; i < userFile.blocks.size(); i++) {
+            SimpleFileBlock &block = userFile.blocks[i];
+            if (block.name == QLatin1String("Template")) {
+                for (int j = 0; j < block.blocks.size(); j++) {
+                    SimpleFileBlock &roomBlock = block.blocks[j];
+                    if (roomBlock.name == QLatin1String("Room")) {
+                        roomBlock.renameValue("Wall", QLatin1String("InteriorWall"));
+                    }
+                }
+            }
+        }
     }
 
     userFile.setVersion(VERSION_LATEST);
@@ -723,4 +742,52 @@ void BuildingTemplate::initNames()
     mEnumNames += QLatin1String("RoofCap");
     mEnumNames += QLatin1String("RoofSlope");
     mEnumNames += QLatin1String("RoofTop");
+    Q_ASSERT(mEnumNames.size() == TileCount);
+}
+
+/////
+
+QStringList Room::mEnumNames;
+
+void Room::setTile(int n, BuildingTileEntry *entry)
+{
+    if (entry)
+        entry = entry->asCategory(categoryEnum(n));
+
+    if (!entry)
+        entry = BuildingTilesMgr::instance()->noneTileEntry();
+
+    mTiles[n] = entry;
+}
+
+QString Room::enumToString(int n)
+{
+    initNames();
+    return mEnumNames[n];
+}
+
+int Room::categoryEnum(int n)
+{
+    switch (n) {
+    case InteriorWall: return BuildingTilesMgr::InteriorWalls;
+    case Floor: return BuildingTilesMgr::Floors;
+    case GrimeFloor: return BuildingTilesMgr::GrimeFloor;
+    case GrimeWall: return BuildingTilesMgr::GrimeWall;
+    default:
+        qFatal("Invalid enum passed to Room::categoryEnum");
+        break;
+    }
+    return 0;
+}
+
+void Room::initNames()
+{
+    if (!mEnumNames.isEmpty())
+        return;
+    mEnumNames.reserve(TileCount);
+    mEnumNames += QLatin1String("InteriorWall");
+    mEnumNames += QLatin1String("Floor");
+    mEnumNames += QLatin1String("GrimeFloor");
+    mEnumNames += QLatin1String("GrimeWall");
+    Q_ASSERT(mEnumNames.size() == TileCount);
 }

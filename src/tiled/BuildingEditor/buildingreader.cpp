@@ -421,13 +421,16 @@ Room *BuildingReaderPrivate::readRoom()
     const QString name = atts.value(QLatin1String("Name")).toString();
     const QString internalName = atts.value(QLatin1String("InternalName")).toString();
     const QString color = atts.value(QLatin1String("Color")).toString();
-    QString interiorWall = atts.value(QLatin1String("InteriorWall")).toString();
-    QString floor = atts.value(QLatin1String("Floor")).toString();
+    QMap<int,QString> tiles;
+    for (int i = 0; i < Room::TileCount; i++)
+        tiles[i] = atts.value(Room::enumToString(i)).toString();
 
     if (mVersion == VERSION1) {
         BuildingTilesMgr *btiles = BuildingTilesMgr::instance();
-        interiorWall = version1TileToEntry(btiles->catIWalls(), interiorWall);
-        floor = version1TileToEntry(btiles->catFloors(), floor);
+        tiles[Room::InteriorWall] = version1TileToEntry(btiles->catIWalls(),
+                                                        tiles[Room::InteriorWall]);
+        tiles[Room::Floor] = version1TileToEntry(btiles->catFloors(),
+                                                 tiles[Room::Floor]);
     }
 
     Room *room = new Room();
@@ -435,8 +438,8 @@ Room *BuildingReaderPrivate::readRoom()
     room->internalName = internalName;
     QStringList rgb = color.split(QLatin1Char(' '), QString::SkipEmptyParts);
     room->Color = qRgb(rgb[0].toInt(), rgb[1].toInt(), rgb[2].toInt());
-    room->Wall = getEntry(interiorWall)->asInteriorWall();
-    room->Floor = getEntry(floor)->asFloor();
+    for (int i = 0; i < Room::TileCount; i++)
+        room->setTile(i, getEntry(tiles[i]));
 
     xml.skipCurrentElement();
 

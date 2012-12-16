@@ -132,21 +132,11 @@ BuildingTileEntry *BuildingDocument::changeEWall(BuildingTileEntry *tile)
     return old;
 }
 
-BuildingTileEntry *BuildingDocument::changeWallForRoom(Room *room, BuildingTileEntry *tile)
+BuildingTileEntry *BuildingDocument::changeRoomTile(Room *room, int tileEnum,
+                                                    BuildingTileEntry *tile)
 {
-    BuildingTileEntry *old = room->Wall;
-    room->Wall = tile;
-    emit roomDefinitionChanged();
-
-    checkUsedTile(tile);
-
-    return old;
-}
-
-BuildingTileEntry *BuildingDocument::changeFloorForRoom(Room *room, BuildingTileEntry *tile)
-{
-    BuildingTileEntry *old = room->Floor;
-    room->Floor = tile;
+    BuildingTileEntry *old = room->tile(tileEnum);
+    room->setTile(tileEnum, tile);
     emit roomDefinitionChanged();
 
     checkUsedTile(tile);
@@ -232,8 +222,8 @@ void BuildingDocument::insertRoom(int index, Room *room)
     mBuilding->insertRoom(index, room);
     emit roomAdded(room);
 
-    checkUsedTile(room->Wall);
-    checkUsedTile(room->Floor);
+    foreach (BuildingTileEntry *entry, room->tiles())
+        checkUsedTile(entry);
 }
 
 Room *BuildingDocument::removeRoom(int index)
@@ -261,8 +251,8 @@ Room *BuildingDocument::changeRoom(Room *room, const Room *data)
     emit roomChanged(room);
     delete data;
 
-    checkUsedTile(room->Wall);
-    checkUsedTile(room->Floor);
+    foreach (BuildingTileEntry *entry, room->tiles())
+        checkUsedTile(entry);
 
     return old;
 }

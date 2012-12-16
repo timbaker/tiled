@@ -863,6 +863,18 @@ category
     name = floors
     entry
     {
+        Floor = floors_exterior_street_01_016
+    }
+    entry
+    {
+        Floor = floors_exterior_street_01_017
+    }
+    entry
+    {
+        Floor = floors_exterior_street_01_018
+    }
+    entry
+    {
         Floor = floors_exterior_tilesandstone_01_000
     }
     entry
@@ -1378,6 +1390,49 @@ category
         North1 = location_hospitality_sunstarmotel_01_048
         North2 = location_hospitality_sunstarmotel_01_049
         North3 = location_hospitality_sunstarmotel_01_050
+    }
+}
+category
+{
+    label = Grime - Floors
+    name = grime_floor
+    entry
+    {
+        West = overlay_grime_floor_01_000
+        North = overlay_grime_floor_01_001
+        East = overlay_grime_floor_01_009
+        South = overlay_grime_floor_01_008
+        SouthWest = overlay_grime_floor_01_011
+        NorthWest = overlay_grime_floor_01_002
+        NorthEast = overlay_grime_floor_01_003
+        SouthEast = overlay_grime_floor_01_010
+    }
+}
+category
+{
+    label = Grime - Walls
+    name = grime_wall
+    entry
+    {
+        West = overlay_grime_wall_01_000
+        North = overlay_grime_wall_01_001
+        NorthWest = overlay_grime_wall_01_002
+        SouthEast = overlay_grime_wall_01_003
+        WestWindow = overlay_grime_wall_01_008
+        NorthWindow = overlay_grime_wall_01_009
+        WestDoor = overlay_grime_wall_01_010
+        NorthDoor = overlay_grime_wall_01_011
+    }
+    entry
+    {
+        West = overlay_grime_wall_01_016
+        North = overlay_grime_wall_01_017
+        NorthWest = overlay_grime_wall_01_018
+        SouthEast = overlay_grime_wall_01_019
+        WestWindow = overlay_grime_wall_01_024
+        NorthWindow = overlay_grime_wall_01_025
+        WestDoor = overlay_grime_wall_01_026
+        NorthDoor = overlay_grime_wall_01_027
     }
 }
 category

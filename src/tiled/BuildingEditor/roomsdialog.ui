@@ -213,6 +213,16 @@
               <string>Floor</string>
              </property>
             </item>
+            <item>
+             <property name="text">
+              <string>Grime - Floors</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Grime - Walls</string>
+             </property>
+            </item>
            </widget>
           </item>
           <item>

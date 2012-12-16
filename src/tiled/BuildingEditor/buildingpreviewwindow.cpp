@@ -433,12 +433,15 @@ void BuildingPreviewScene::BuildingToMap()
     // The order must match the LayerIndexXXX constants.
     const char *layerNames[] = {
         "Floor",
+        "FloorGrime",
+        "FloorGrime2",
         "Walls",
         "Walls2",
         "RoofCap",
         "RoofCap2",
         "WallOverlay",
         "WallOverlay2",
+        "WallGrime",
         "WallFurniture",
         "Frames",
         "Doors",
@@ -533,6 +536,7 @@ void BuildingPreviewScene::synchWithShowWalls()
         CompositeLayerGroup *layerGroup = mMapComposite->layerGroupForLevel(floor->level());
         layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionWall], visible);
         layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionWall2], visible);
+        layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionWallGrime], visible);
         layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionRoofCap], visible);
         layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionRoofCap2], visible);
         layerGroup->setLayerVisibility(layerGroup->layers()[BuildingFloor::Square::SectionRoof], visible);

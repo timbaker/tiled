@@ -115,6 +115,7 @@ private:
     void currentWindowChanged(BuildingTileEntry *entry, bool mergeable);
     void currentCurtainsChanged(BuildingTileEntry *entry, bool mergeable);
     void currentStairsChanged(BuildingTileEntry *entry, bool mergeable);
+    void currentRoomTileChanged(int entryEnum, BuildingTileEntry *entry, bool mergeable);
     void currentRoofTileChanged(BuildingTileEntry *entry, int which, bool mergeable);
 
     void selectCurrentCategoryTile();

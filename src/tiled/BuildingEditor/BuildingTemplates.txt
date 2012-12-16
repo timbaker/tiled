@@ -1,5 +1,13 @@
-version = 1
-revision = 2
+version = 2
+revision = 3
+TileEntry
+{
+    category = curtains
+    West = fixtures_windows_curtains_01_032
+    East = fixtures_windows_curtains_01_033
+    North = fixtures_windows_curtains_01_034
+    South = fixtures_windows_curtains_01_035
+}
 TileEntry
 {
     category = door_frames
@@ -65,14 +73,14 @@ TileEntry
 TileEntry
 {
     category = exterior_walls
-    West = location_trailer_01_000
-    North = location_trailer_01_001
-    NorthWest = location_trailer_01_002
-    SouthEast = location_trailer_01_003
-    WestWindow = location_trailer_01_008
-    NorthWindow = location_trailer_01_009
-    WestDoor = location_trailer_01_010
-    NorthDoor = location_trailer_01_011
+    West = location_trailer_01_024
+    North = location_trailer_01_025
+    NorthWest = location_trailer_01_026
+    SouthEast = location_trailer_01_027
+    WestWindow = location_trailer_01_032
+    NorthWindow = location_trailer_01_033
+    WestDoor = location_trailer_01_034
+    NorthDoor = location_trailer_01_035
 }
 TileEntry
 {
@@ -464,470 +472,970 @@ TileEntry
     West = fixtures_windows_01_032
     North = fixtures_windows_01_033
 }
+furniture
+{
+    layer = Walls
+    entry
+    {
+        orient = W
+        0,0 = location_trailer_01_037
+        0,1 = location_trailer_01_036
+    }
+    entry
+    {
+        orient = N
+        0,0 = location_trailer_01_038
+        1,0 = location_trailer_01_039
+    }
+}
+furniture
+{
+    layer = Frames
+    entry
+    {
+        orient = W
+        0,0 = fixtures_windows_01_049
+        0,1 = fixtures_windows_01_048
+    }
+    entry
+    {
+        orient = N
+        0,0 = fixtures_windows_01_050
+        1,0 = fixtures_windows_01_051
+    }
+}
+furniture
+{
+    entry
+    {
+        orient = W
+        0,0 = location_trailer_02_001
+        0,1 = location_trailer_02_000
+    }
+    entry
+    {
+        orient = N
+        0,0 = location_trailer_02_002
+        1,0 = location_trailer_02_003
+    }
+    entry
+    {
+        orient = E
+        0,0 = location_trailer_02_005
+        0,1 = location_trailer_02_004
+    }
+    entry
+    {
+        orient = S
+        0,0 = location_trailer_02_006
+        1,0 = location_trailer_02_007
+    }
+}
+furniture
+{
+    entry
+    {
+        orient = W
+        0,0 = location_trailer_02_015
+        0,1 = location_trailer_02_014
+    }
+    entry
+    {
+        orient = N
+        0,0 = location_trailer_02_012
+        1,0 = location_trailer_02_013
+    }
+}
+furniture
+{
+    entry
+    {
+        orient = W
+        0,0 = fixtures_bathroom_01_001
+    }
+    entry
+    {
+        orient = N
+        0,0 = fixtures_bathroom_01_000
+    }
+    entry
+    {
+        orient = E
+        0,0 = fixtures_bathroom_01_002
+    }
+    entry
+    {
+        orient = S
+        0,0 = fixtures_bathroom_01_003
+    }
+}
+furniture
+{
+    entry
+    {
+        orient = W
+        0,0 = location_trailer_02_019
+    }
+    entry
+    {
+        orient = N
+        0,0 = location_trailer_02_018
+    }
+    entry
+    {
+        orient = E
+        0,0 = location_trailer_02_021
+    }
+    entry
+    {
+        orient = S
+        0,0 = location_trailer_02_020
+    }
+}
+furniture
+{
+    entry
+    {
+        orient = W
+        0,0 = fixtures_sinks_01_001
+    }
+    entry
+    {
+        orient = N
+        0,0 = fixtures_sinks_01_002
+    }
+    entry
+    {
+        orient = E
+        0,0 = fixtures_sinks_01_003
+    }
+    entry
+    {
+        orient = S
+        0,0 = fixtures_sinks_01_000
+    }
+}
+furniture
+{
+    entry
+    {
+        orient = W
+        0,0 = fixtures_bathroom_01_033
+    }
+    entry
+    {
+        orient = N
+        0,0 = fixtures_bathroom_01_032
+    }
+}
+furniture
+{
+    entry
+    {
+        orient = W
+        0,0 = location_trailer_02_017
+    }
+    entry
+    {
+        orient = N
+        0,0 = location_trailer_02_016
+    }
+}
+furniture
+{
+    entry
+    {
+        orient = W
+        0,0 = appliances_cooking_01_000
+    }
+    entry
+    {
+        orient = N
+        0,0 = appliances_cooking_01_001
+    }
+    entry
+    {
+        orient = E
+        0,0 = appliances_cooking_01_002
+    }
+    entry
+    {
+        orient = S
+        0,0 = appliances_cooking_01_003
+    }
+}
+furniture
+{
+    entry
+    {
+        orient = W
+        0,0 = furniture_bedding_01_043
+        0,1 = furniture_bedding_01_040
+        1,0 = furniture_bedding_01_042
+        1,1 = furniture_bedding_01_041
+    }
+    entry
+    {
+        orient = N
+        0,0 = furniture_bedding_01_047
+        0,1 = furniture_bedding_01_046
+        1,0 = furniture_bedding_01_044
+        1,1 = furniture_bedding_01_045
+    }
+    entry
+    {
+        orient = E
+        0,0 = furniture_bedding_01_050
+        0,1 = furniture_bedding_01_048
+        1,0 = furniture_bedding_01_051
+        1,1 = furniture_bedding_01_049
+    }
+    entry
+    {
+        orient = S
+        0,0 = furniture_bedding_01_053
+        0,1 = furniture_bedding_01_052
+        1,0 = furniture_bedding_01_055
+        1,1 = furniture_bedding_01_054
+    }
+}
+furniture
+{
+    entry
+    {
+        orient = W
+        0,0 = furniture_storage_01_049
+    }
+    entry
+    {
+        orient = N
+        0,0 = furniture_storage_01_048
+    }
+    entry
+    {
+        orient = E
+        0,0 = furniture_storage_01_050
+    }
+    entry
+    {
+        orient = S
+        0,0 = furniture_storage_01_051
+    }
+}
+furniture
+{
+    entry
+    {
+        orient = W
+        0,0 = furniture_storage_01_046
+    }
+    entry
+    {
+        orient = N
+        0,0 = furniture_storage_01_047
+    }
+    entry
+    {
+        orient = E
+        0,0 = furniture_storage_01_044
+    }
+    entry
+    {
+        orient = S
+        0,0 = furniture_storage_01_045
+    }
+}
+furniture
+{
+    entry
+    {
+        orient = W
+        0,0 = furniture_seating_indoor_01_036
+    }
+    entry
+    {
+        orient = N
+        0,0 = furniture_seating_indoor_01_037
+    }
+    entry
+    {
+        orient = E
+        0,0 = furniture_seating_indoor_01_038
+    }
+    entry
+    {
+        orient = S
+        0,0 = furniture_seating_indoor_01_039
+    }
+}
+furniture
+{
+    layer = RoofCap
+    entry
+    {
+        orient = W
+        0,0 = location_trailer_01_051
+        0,1 = location_trailer_01_050
+        0,2 = location_trailer_01_049
+        0,3 = location_trailer_01_048
+        0,4 = location_trailer_01_056
+    }
+    entry
+    {
+        orient = N
+        0,0 = location_trailer_01_040
+        1,0 = location_trailer_01_041
+        2,0 = location_trailer_01_042
+        3,0 = location_trailer_01_043
+        4,0 = location_trailer_01_059
+    }
+}
+furniture
+{
+    layer = Roof
+    entry
+    {
+        orient = W
+        0,0 = location_trailer_01_055
+        0,1 = location_trailer_01_054
+        0,2 = location_trailer_01_053
+        0,3 = location_trailer_01_052
+        0,4 = location_trailer_01_057
+        1,0 = location_trailer_01_055
+        1,1 = location_trailer_01_054
+        1,2 = location_trailer_01_053
+        1,3 = location_trailer_01_052
+        1,4 = location_trailer_01_057
+        2,0 = location_trailer_01_055
+        2,1 = location_trailer_01_054
+        2,2 = location_trailer_01_053
+        2,3 = location_trailer_01_052
+        2,4 = location_trailer_01_057
+        3,0 = location_trailer_01_055
+        3,1 = location_trailer_01_054
+        3,2 = location_trailer_01_053
+        3,3 = location_trailer_01_052
+        3,4 = location_trailer_01_057
+    }
+    entry
+    {
+        orient = N
+        0,0 = location_trailer_01_063
+        0,1 = location_trailer_01_063
+        0,2 = location_trailer_01_063
+        0,3 = location_trailer_01_063
+        1,0 = location_trailer_01_062
+        1,1 = location_trailer_01_062
+        1,2 = location_trailer_01_062
+        1,3 = location_trailer_01_062
+        2,0 = location_trailer_01_061
+        2,1 = location_trailer_01_061
+        2,2 = location_trailer_01_061
+        2,3 = location_trailer_01_061
+        3,0 = location_trailer_01_060
+        3,1 = location_trailer_01_060
+        3,2 = location_trailer_01_060
+        3,3 = location_trailer_01_060
+        4,0 = location_trailer_01_058
+        4,1 = location_trailer_01_058
+        4,2 = location_trailer_01_058
+        4,3 = location_trailer_01_058
+    }
+}
+furniture
+{
+    layer = Roof
+    entry
+    {
+        orient = W
+        0,0 = location_trailer_01_055
+        0,1 = location_trailer_01_054
+        0,2 = location_trailer_01_053
+        0,3 = location_trailer_01_052
+        0,4 = location_trailer_01_057
+    }
+    entry
+    {
+        orient = N
+        0,0 = location_trailer_01_063
+        1,0 = location_trailer_01_062
+        2,0 = location_trailer_01_061
+        3,0 = location_trailer_01_060
+        4,0 = location_trailer_01_058
+    }
+}
 Template
 {
     Name = Old Suburban
-    ExteriorWall = 10
-    Door = 2
-    DoorFrame = 1
-    Window = 45
+    ExteriorWall = 11
+    Door = 3
+    DoorFrame = 2
+    Window = 46
     Curtains = 0
-    Stairs = 44
+    Stairs = 45
     RoofCap = 0
     RoofSlope = 0
     RoofTop = 0
+    UsedTiles = 0
+    UsedFurniture = 
     Room
     {
         Name = Foyer
         Color = 255 255 255
         InternalName = foyer
-        Wall = 25
-        Floor = 22
+        InteriorWall = 26
+        Floor = 23
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Hall
         Color = 200 200 200
         InternalName = hall
-        Wall = 25
-        Floor = 22
+        InteriorWall = 26
+        Floor = 23
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Living Room
         Color = 255 0 0
         InternalName = livingroom
-        Wall = 25
-        Floor = 22
+        InteriorWall = 26
+        Floor = 23
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Dining Room
         Color = 255 0 128
         InternalName = diningroom
-        Wall = 25
-        Floor = 22
+        InteriorWall = 26
+        Floor = 23
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bathroom
         Color = 255 128 0
         InternalName = bathroom
-        Wall = 25
-        Floor = 22
+        InteriorWall = 26
+        Floor = 23
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Kitchen
         Color = 0 255 0
         InternalName = kitchen
-        Wall = 25
-        Floor = 22
+        InteriorWall = 26
+        Floor = 23
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bedroom1
         Color = 0 0 255
         InternalName = bedroom
-        Wall = 24
-        Floor = 22
+        InteriorWall = 25
+        Floor = 23
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bedroom2
         Color = 0 64 255
         InternalName = bedroom
-        Wall = 24
-        Floor = 22
+        InteriorWall = 25
+        Floor = 23
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bedroom3
         Color = 0 128 255
         InternalName = bedroom
-        Wall = 24
-        Floor = 22
+        InteriorWall = 25
+        Floor = 23
+        GrimeFloor = 0
+        GrimeWall = 0
     }
 }
 Template
 {
     Name = Suburban 1
-    ExteriorWall = 10
-    Door = 2
-    DoorFrame = 1
-    Window = 45
+    ExteriorWall = 11
+    Door = 3
+    DoorFrame = 2
+    Window = 46
     Curtains = 0
-    Stairs = 44
+    Stairs = 45
     RoofCap = 0
     RoofSlope = 0
     RoofTop = 0
+    UsedTiles = 0
+    UsedFurniture = 
     Room
     {
         Name = Living Room
         Color = 255 0 0
         InternalName = livingroom
-        Wall = 33
-        Floor = 21
+        InteriorWall = 34
+        Floor = 22
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Dining Room
         Color = 255 0 128
         InternalName = diningroom
-        Wall = 33
-        Floor = 21
+        InteriorWall = 34
+        Floor = 22
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bathroom
         Color = 255 128 0
         InternalName = bathroom
-        Wall = 34
-        Floor = 16
+        InteriorWall = 35
+        Floor = 17
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Kitchen
         Color = 0 255 0
         InternalName = kitchen
-        Wall = 35
-        Floor = 16
+        InteriorWall = 36
+        Floor = 17
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bedroom1
         Color = 0 0 255
         InternalName = bedroom
-        Wall = 36
-        Floor = 12
+        InteriorWall = 37
+        Floor = 13
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bedroom2
         Color = 0 64 255
         InternalName = bedroom
-        Wall = 38
-        Floor = 12
+        InteriorWall = 39
+        Floor = 13
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bedroom3
         Color = 0 128 255
         InternalName = bedroom
-        Wall = 38
-        Floor = 12
+        InteriorWall = 39
+        Floor = 13
+        GrimeFloor = 0
+        GrimeWall = 0
     }
 }
 Template
 {
     Name = Suburban 2
-    ExteriorWall = 9
-    Door = 2
-    DoorFrame = 1
-    Window = 45
+    ExteriorWall = 10
+    Door = 3
+    DoorFrame = 2
+    Window = 46
     Curtains = 0
-    Stairs = 44
+    Stairs = 45
     RoofCap = 0
     RoofSlope = 0
     RoofTop = 0
+    UsedTiles = 0
+    UsedFurniture = 
     Room
     {
         Name = Foyer
         Color = 255 255 255
         InternalName = hall
-        Wall = 39
-        Floor = 18
+        InteriorWall = 40
+        Floor = 19
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Hall
         Color = 200 200 200
         InternalName = hall
-        Wall = 39
-        Floor = 18
+        InteriorWall = 40
+        Floor = 19
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Living Room
         Color = 255 0 0
         InternalName = livingroom
-        Wall = 39
-        Floor = 15
+        InteriorWall = 40
+        Floor = 16
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Dining Room
         Color = 255 0 128
         InternalName = diningroom
-        Wall = 39
-        Floor = 15
+        InteriorWall = 40
+        Floor = 16
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bathroom
         Color = 255 128 0
         InternalName = bathroom
-        Wall = 38
-        Floor = 16
+        InteriorWall = 39
+        Floor = 17
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Kitchen
         Color = 0 255 0
         InternalName = kitchen
-        Wall = 35
-        Floor = 16
+        InteriorWall = 36
+        Floor = 17
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bedroom1
         Color = 0 0 255
         InternalName = bedroom
-        Wall = 37
-        Floor = 13
+        InteriorWall = 38
+        Floor = 14
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bedroom2
         Color = 0 64 255
         InternalName = bedroom
-        Wall = 39
-        Floor = 13
+        InteriorWall = 40
+        Floor = 14
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bedroom3
         Color = 0 128 255
         InternalName = bedroom
-        Wall = 39
-        Floor = 13
+        InteriorWall = 40
+        Floor = 14
+        GrimeFloor = 0
+        GrimeWall = 0
     }
 }
 Template
 {
     Name = Wooden Shack
-    ExteriorWall = 11
-    Door = 2
-    DoorFrame = 1
-    Window = 45
+    ExteriorWall = 12
+    Door = 3
+    DoorFrame = 2
+    Window = 46
     Curtains = 0
-    Stairs = 44
+    Stairs = 45
     RoofCap = 0
     RoofSlope = 0
     RoofTop = 0
+    UsedTiles = 0
+    UsedFurniture = 
     Room
     {
         Name = Foyer
         Color = 255 255 255
         InternalName = hall
-        Wall = 33
-        Floor = 21
+        InteriorWall = 34
+        Floor = 22
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Hall
         Color = 200 200 200
         InternalName = hall
-        Wall = 33
-        Floor = 21
+        InteriorWall = 34
+        Floor = 22
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Living Room
         Color = 255 0 0
         InternalName = livingroom
-        Wall = 31
-        Floor = 14
+        InteriorWall = 32
+        Floor = 15
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Dining Room
         Color = 255 0 128
         InternalName = diningroom
-        Wall = 31
-        Floor = 14
+        InteriorWall = 32
+        Floor = 15
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bathroom
         Color = 255 128 0
         InternalName = bathroom
-        Wall = 31
-        Floor = 14
+        InteriorWall = 32
+        Floor = 15
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Kitchen
         Color = 0 255 0
         InternalName = kitchen
-        Wall = 31
-        Floor = 14
+        InteriorWall = 32
+        Floor = 15
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bedroom1
         Color = 0 0 255
         InternalName = bedroom
-        Wall = 31
-        Floor = 14
+        InteriorWall = 32
+        Floor = 15
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bedroom2
         Color = 0 64 255
         InternalName = bedroom
-        Wall = 31
-        Floor = 14
+        InteriorWall = 32
+        Floor = 15
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bedroom3
         Color = 0 128 255
         InternalName = bedroom
-        Wall = 31
-        Floor = 14
+        InteriorWall = 32
+        Floor = 15
+        GrimeFloor = 0
+        GrimeWall = 0
     }
 }
 Template
 {
     Name = Spiffo's
-    ExteriorWall = 7
-    Door = 5
+    ExteriorWall = 8
+    Door = 6
     DoorFrame = 0
-    Window = 45
+    Window = 46
     Curtains = 0
-    Stairs = 44
-    RoofCap = 40
-    RoofSlope = 41
-    RoofTop = 42
+    Stairs = 45
+    RoofCap = 41
+    RoofSlope = 42
+    RoofTop = 43
+    UsedTiles = 0
+    UsedFurniture = 
     Room
     {
         Name = Dining
         Color = 200 200 200
         InternalName = dining
-        Wall = 28
-        Floor = 23
+        InteriorWall = 29
+        Floor = 24
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Kitchen
         Color = 128 128 128
         InternalName = kitchen
-        Wall = 29
-        Floor = 19
+        InteriorWall = 30
+        Floor = 20
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bathroom
         Color = 255 0 0
         InternalName = bathroom
-        Wall = 32
-        Floor = 20
+        InteriorWall = 33
+        Floor = 21
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bathroom 2
         Color = 0 0 255
         InternalName = bathroom
-        Wall = 32
-        Floor = 20
+        InteriorWall = 33
+        Floor = 21
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Hall
         Color = 0 255 0
         InternalName = hall
-        Wall = 28
-        Floor = 23
+        InteriorWall = 29
+        Floor = 24
+        GrimeFloor = 0
+        GrimeWall = 0
     }
 }
 Template
 {
     Name = Seahorse
-    ExteriorWall = 6
-    Door = 4
+    ExteriorWall = 7
+    Door = 5
     DoorFrame = 0
-    Window = 45
+    Window = 46
     Curtains = 0
-    Stairs = 44
-    RoofCap = 40
-    RoofSlope = 41
-    RoofTop = 42
+    Stairs = 45
+    RoofCap = 41
+    RoofSlope = 42
+    RoofTop = 43
+    UsedTiles = 0
+    UsedFurniture = 
     Room
     {
         Name = Dining
         Color = 200 200 200
         InternalName = dining
-        Wall = 26
-        Floor = 21
+        InteriorWall = 27
+        Floor = 22
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Kitchen
         Color = 128 128 128
         InternalName = kitchen
-        Wall = 27
-        Floor = 17
+        InteriorWall = 28
+        Floor = 18
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bathroom 1
         Color = 255 0 0
         InternalName = bathroom
-        Wall = 35
-        Floor = 19
+        InteriorWall = 36
+        Floor = 20
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bathroom 2
         Color = 0 255 0
         InternalName = bathroom
-        Wall = 35
-        Floor = 19
+        InteriorWall = 36
+        Floor = 20
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Hall
         Color = 0 0 255
         InternalName = hall
-        Wall = 26
-        Floor = 21
+        InteriorWall = 27
+        Floor = 22
+        GrimeFloor = 0
+        GrimeWall = 0
     }
 }
 Template
 {
     Name = Trailer
-    ExteriorWall = 8
-    Door = 3
+    ExteriorWall = 9
+    Door = 4
     DoorFrame = 0
-    Window = 46
-    Curtains = 0
-    Stairs = 44
-    RoofCap = 40
-    RoofSlope = 41
-    RoofTop = 43
+    Window = 47
+    Curtains = 1
+    Stairs = 45
+    RoofCap = 41
+    RoofSlope = 42
+    RoofTop = 44
+    UsedTiles = 47 4 1
+    UsedFurniture = 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
     Room
     {
         Name = Living Room
         Color = 200 200 200
         InternalName = livingroom
-        Wall = 30
-        Floor = 19
+        InteriorWall = 31
+        Floor = 20
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bathroom
         Color = 128 128 128
         InternalName = bathroom
-        Wall = 30
-        Floor = 19
+        InteriorWall = 31
+        Floor = 20
+        GrimeFloor = 0
+        GrimeWall = 0
     }
     Room
     {
         Name = Bedroom
         Color = 255 0 0
         InternalName = bedroom
-        Wall = 30
-        Floor = 19
+        InteriorWall = 31
+        Floor = 20
+        GrimeFloor = 0
+        GrimeWall = 0
     }
 }

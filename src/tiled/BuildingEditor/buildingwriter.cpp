@@ -123,8 +123,8 @@ public:
                 .arg(qGreen(room->Color))
                 .arg(qBlue(room->Color));
         w.writeAttribute(QLatin1String("Color"), colorString);
-        w.writeAttribute(QLatin1String("InteriorWall"), entryIndex(room->Wall));
-        w.writeAttribute(QLatin1String("Floor"), entryIndex(room->Floor));
+        for (int i = 0; i < Room::TileCount; i++)
+            w.writeAttribute(room->enumToString(i), entryIndex(room->tile(i)));
         w.writeEndElement(); // </room>
     }
 
@@ -194,8 +194,8 @@ public:
             addEntry(entry);
 
         foreach (Room *room, mBuilding->rooms()) {
-            addEntry(room->Floor);
-            addEntry(room->Wall);
+            foreach (BuildingTileEntry *entry, room->tiles())
+                addEntry(entry);
         }
 
         foreach (BuildingFloor *floor, mBuilding->floors()) {

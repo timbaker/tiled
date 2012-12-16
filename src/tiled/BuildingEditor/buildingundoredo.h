@@ -113,11 +113,11 @@ private:
     bool mMergeable;
 };
 
-class ChangeWallForRoom : public QUndoCommand
+class ChangeRoomTile : public QUndoCommand
 {
 public:
-    ChangeWallForRoom(BuildingDocument *doc, Room *room, BuildingTileEntry *tile,
-                      bool mergeable);
+    ChangeRoomTile(BuildingDocument *doc, Room *room, int tileEnum,
+                   BuildingTileEntry *tile, bool mergeable);
 
     int id() const { return UndoCmd_ChangeWallForRoom; }
     bool mergeWith(const QUndoCommand *other);
@@ -130,27 +130,7 @@ private:
 
     BuildingDocument *mDocument;
     Room *mRoom;
-    BuildingTileEntry *mTile;
-    bool mMergeable;
-};
-
-class ChangeFloorForRoom : public QUndoCommand
-{
-public:
-    ChangeFloorForRoom(BuildingDocument *doc, Room *room, BuildingTileEntry *tile,
-                       bool mergeable);
-
-    int id() const { return UndoCmd_ChangeFloorForRoom; }
-    bool mergeWith(const QUndoCommand *other);
-
-    void undo() { swap(); }
-    void redo() { swap(); }
-
-private:
-    void swap();
-
-    BuildingDocument *mDocument;
-    Room *mRoom;
+    int mEnum;
     BuildingTileEntry *mTile;
     bool mMergeable;
 };

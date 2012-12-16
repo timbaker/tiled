@@ -144,8 +144,8 @@ void RoomsDialog::addRoom()
     room->Name = tr("Room %1").arg(n);
     room->internalName = tr("room%1").arg(n);
     room->Color = pickColorForNewRoom();
-    room->Wall = BuildingTilesMgr::instance()->defaultInteriorWall();
-    room->Floor = BuildingTilesMgr::instance()->defaultFloorTile();
+    room->setTile(Room::InteriorWall, BuildingTilesMgr::instance()->defaultInteriorWall());
+    room->setTile(Room::Floor, BuildingTilesMgr::instance()->defaultFloorTile());
 
     mRooms += room;
     mRoomsMap[room] = 0;
@@ -267,12 +267,7 @@ BuildingTileEntry *RoomsDialog::selectedTile()
     if (mRoom == 0 || mTileRow == -1)
         return 0;
 
-    switch (mTileRow) {
-    case 0: return mRoom->Wall;
-    case 1: return mRoom->Floor;
-    }
-
-    return 0;
+    return mRoom->tile(mTileRow);
 }
 
 QRgb RoomsDialog::pickColorForNewRoom()
@@ -302,9 +297,8 @@ QRgb RoomsDialog::pickColorForNewRoom()
 
 void RoomsDialog::chooseTile()
 {
-    BuildingTileCategory *category = mTileRow
-            ? BuildingTilesMgr::instance()->catFloors()
-            : BuildingTilesMgr::instance()->catIWalls();
+    BuildingTileCategory *category = BuildingTilesMgr::instance()->category(
+                mRoom->categoryEnum(mTileRow));
     ChooseBuildingTileDialog dialog(tr("Choose %1 tile for '%2'")
                                     .arg(category->label())
                                     .arg(mRoom->Name),
@@ -312,10 +306,7 @@ void RoomsDialog::chooseTile()
                                     selectedTile(), this);
     if (dialog.exec() == QDialog::Accepted) {
         if (BuildingTileEntry *entry = dialog.selectedTile()) {
-            switch (mTileRow) {
-            case 0: mRoom->Wall = entry; break;
-            case 1: mRoom->Floor = entry; break;
-            }
+            mRoom->setTile(mTileRow, entry);
             setTilePixmap();
         }
     }

@@ -851,6 +851,10 @@ void BuildingEditorWindow::tileSelectionChanged()
                 currentCurtainsChanged(entry, mergeable);
             else if (category->asStairs())
                 currentStairsChanged(entry, mergeable);
+            else if (category->asGrimeFloor())
+                currentRoomTileChanged(Room::GrimeFloor, entry, mergeable);
+            else if (category->asGrimeWall())
+                currentRoomTileChanged(Room::GrimeWall, entry, mergeable);
             else if (category->asRoofCaps())
                 currentRoofTileChanged(entry, RoofObject::TileCap, mergeable);
             else if (category->asRoofSlopes())
@@ -970,9 +974,10 @@ void BuildingEditorWindow::currentIWallChanged(BuildingTileEntry *entry, bool me
     if (!currentRoom())
         return;
 
-    mCurrentDocument->undoStack()->push(new ChangeWallForRoom(mCurrentDocument,
-                                                              currentRoom(),
-                                                              entry, mergeable));
+    mCurrentDocument->undoStack()->push(new ChangeRoomTile(mCurrentDocument,
+                                                           currentRoom(),
+                                                           Room::InteriorWall,
+                                                           entry, mergeable));
 }
 
 void BuildingEditorWindow::currentFloorChanged(BuildingTileEntry *entry, bool mergeable)
@@ -980,9 +985,10 @@ void BuildingEditorWindow::currentFloorChanged(BuildingTileEntry *entry, bool me
     if (!currentRoom())
         return;
 
-    mCurrentDocument->undoStack()->push(new ChangeFloorForRoom(mCurrentDocument,
-                                                               currentRoom(),
-                                                               entry, mergeable));
+    mCurrentDocument->undoStack()->push(new ChangeRoomTile(mCurrentDocument,
+                                                           currentRoom(),
+                                                           Room::Floor,
+                                                           entry, mergeable));
 }
 
 void BuildingEditorWindow::currentDoorChanged(BuildingTileEntry *entry, bool mergeable)
@@ -1118,6 +1124,19 @@ void BuildingEditorWindow::currentStairsChanged(BuildingTileEntry *entry, bool m
     }
 }
 
+void BuildingEditorWindow::currentRoomTileChanged(int entryEnum,
+                                                  BuildingTileEntry *entry,
+                                                  bool mergeable)
+{
+    if (!currentRoom())
+        return;
+
+    mCurrentDocument->undoStack()->push(new ChangeRoomTile(mCurrentDocument,
+                                                           currentRoom(),
+                                                           entryEnum,
+                                                           entry, mergeable));
+}
+
 void BuildingEditorWindow::currentRoofTileChanged(BuildingTileEntry *entry, int which, bool mergeable)
 {
     // New roofs will be created with these tiles
@@ -1180,10 +1199,10 @@ void BuildingEditorWindow::selectCurrentCategoryTile()
         if (WallTool::instance()->isCurrent())
             currentTile = WallTool::instance()->currentInteriorTile();
         else if (currentRoom())
-            currentTile = currentRoom()->Wall;
+            currentTile = currentRoom()->tile(Room::InteriorWall);
     }
     if (currentRoom() && mCategory->asFloors())
-        currentTile = currentRoom()->Floor;
+        currentTile = currentRoom()->tile(Room::Floor);
     if (mCategory->asDoors())
         currentTile = mCurrentDocument->building()->doorTile();
     if (mCategory->asDoorFrames())
@@ -1463,12 +1482,11 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         if (entry && !entry->isNone() && !entries.contains(entry))
             entries += entry;
         foreach (Room *room, building->rooms()) {
-            if (room->Floor && !room->Floor->isNone() && !entries.contains(room->Floor))
-                entries += room->Floor;
-            if (room->Wall && !room->Wall->isNone() && !entries.contains(room->Wall))
-                entries += room->Wall;
+            foreach (BuildingTileEntry *entry, room->tiles()) {
+                if (entry && !entry->isNone() && !entries.contains(entry))
+                    entries += entry;
+            }
         }
-
         building->setUsedTiles(entries);
         building->setUsedFurniture(furniture);
     }

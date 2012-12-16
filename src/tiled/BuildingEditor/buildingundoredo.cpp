@@ -114,51 +114,28 @@ void ChangeEWall::swap()
 
 /////
 
-ChangeWallForRoom::ChangeWallForRoom(BuildingDocument *doc, Room *room, BuildingTileEntry *tile, bool mergeable) :
-    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Room's Wall")),
+ChangeRoomTile::ChangeRoomTile(BuildingDocument *doc, Room *room, int tileEnum,
+                               BuildingTileEntry *tile, bool mergeable) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Room's Tile")),
     mDocument(doc),
     mRoom(room),
+    mEnum(tileEnum),
     mTile(tile),
     mMergeable(mergeable)
 {
 }
 
-bool ChangeWallForRoom::mergeWith(const QUndoCommand *other)
+bool ChangeRoomTile::mergeWith(const QUndoCommand *other)
 {
-    const ChangeWallForRoom *o = static_cast<const ChangeWallForRoom*>(other);
-    if (!o->mMergeable)
+    const ChangeRoomTile *o = static_cast<const ChangeRoomTile*>(other);
+    if (!(o->mMergeable && (o->mEnum == mEnum)))
         return false;
     return true;
 }
 
-void ChangeWallForRoom::swap()
+void ChangeRoomTile::swap()
 {
-    mTile = mDocument->changeWallForRoom(mRoom, mTile);
-}
-
-/////
-
-ChangeFloorForRoom::ChangeFloorForRoom(BuildingDocument *doc, Room *room, BuildingTileEntry *tile,
-                                       bool mergeable) :
-    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Room's Floor")),
-    mDocument(doc),
-    mRoom(room),
-    mTile(tile),
-    mMergeable(mergeable)
-{
-}
-
-bool ChangeFloorForRoom::mergeWith(const QUndoCommand *other)
-{
-    const ChangeFloorForRoom *o = static_cast<const ChangeFloorForRoom*>(other);
-    if (!o->mMergeable)
-        return false;
-    return true;
-}
-
-void ChangeFloorForRoom::swap()
-{
-    mTile = mDocument->changeFloorForRoom(mRoom, mTile);
+    mTile = mDocument->changeRoomTile(mRoom, mEnum, mTile);
 }
 
 /////

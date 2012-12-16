@@ -35,7 +35,16 @@ class FurnitureTiles;
 class Room
 {
 public:
-    Room()
+    enum Tiles {
+        InteriorWall,
+        Floor,
+        GrimeFloor,
+        GrimeWall,
+        TileCount
+    };
+
+    Room() :
+        mTiles(TileCount)
     {
     }
 
@@ -43,6 +52,17 @@ public:
     {
         *this = *room;
     }
+
+    void setTile(int n, BuildingTileEntry *entry);
+
+    BuildingTileEntry *tile(int n)
+    { return mTiles[n]; }
+
+    const QVector<BuildingTileEntry*> &tiles() const
+    { return mTiles; }
+
+    static QString enumToString(int n);
+    static int categoryEnum(int n);
 
     void copy(const Room *other)
     {
@@ -54,15 +74,21 @@ public:
         return !(Name == other.Name &&
                  Color == other.Color &&
                  internalName == other.internalName &&
-                 Floor == other.Floor &&
-                 Wall == other.Wall);
+                 mTiles == other.mTiles);
     }
 
+private:
+    static void initNames();
+
+    static QStringList mEnumNames;
+
+public:
     QString Name;
     QRgb Color;
     QString internalName;
-    BuildingTileEntry *Floor;
-    BuildingTileEntry *Wall;
+
+private:
+    QVector<BuildingTileEntry*> mTiles;
 };
 
 class BuildingTemplate

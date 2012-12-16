@@ -84,6 +84,7 @@ tilesets
 layers
 {
     tile = Floor
+    tile = FloorGrime
     tile = 0_Vegetation
     tile = Walls
     tile = Walls2
@@ -91,6 +92,7 @@ layers
     tile = RoofCap2
     tile = WallOverlay
     tile = WallOverlay2
+    tile = WallGrime
     tile = WallFurniture
     tile = Frames
     tile = Doors
