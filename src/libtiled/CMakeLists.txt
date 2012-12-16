@@ -31,6 +31,8 @@ set ( tiled_HDRS
 	tileset.h
 	gidmapper.h
 
+	pathlayer.h
+	pathgenerator.h
 	zlevelrenderer.h
 	ztilelayergroup.h
 	)
@@ -53,6 +55,8 @@ set ( tiled_SRCS
 	tileset.cpp
 	gidmapper.cpp
 
+	pathlayer.cpp;
+	pathgenerator.cpp
 	zlevelrenderer.cpp
 	ztilelayergroup.cpp
 	)

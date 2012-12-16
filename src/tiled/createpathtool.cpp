@@ -147,8 +147,8 @@ void CreatePathTool::mouseMoved(const QPointF &pos,
     }
     }
 
-    mNewPathItem->update();
-    mOverlayItem->update();
+    mNewPathItem->syncWithPath();
+    mOverlayItem->syncWithPath();
 }
 
 void CreatePathTool::mousePressed(QGraphicsSceneMouseEvent *event)
@@ -227,15 +227,15 @@ void CreatePathTool::languageChanged()
     switch (mMode) {
     case CreateArea:
         setName(tr("Create Rectangle"));
-//        setShortcut(QKeySequence(tr("O")));
+        setShortcut(QKeySequence(tr("O")));
         break;
     case CreatePolygon:
         setName(tr("Create Polygon"));
-//        setShortcut(QKeySequence(tr("P")));
+        setShortcut(QKeySequence(tr("P")));
         break;
     case CreatePolyline:
         setName(tr("Create Polyline"));
-//        setShortcut(QKeySequence(tr("L")));
+        setShortcut(QKeySequence(tr("L")));
         break;
     }
 }

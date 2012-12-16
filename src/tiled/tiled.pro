@@ -186,7 +186,9 @@ SOURCES += aboutdialog.cpp \
     createpathtool.cpp \
     movepath.cpp \
     editpathtool.cpp \
-    changepathpolygon.cpp
+    changepathpolygon.cpp \
+    pathsdock.cpp \
+    movepathtolayer.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -338,7 +340,9 @@ HEADERS += aboutdialog.h \
     selectpathtool.h \
     movepath.h \
     editpathtool.h \
-    changepathpolygon.h
+    changepathpolygon.h \
+    pathsdock.h \
+    movepathtolayer.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

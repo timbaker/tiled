@@ -85,6 +85,7 @@
 #include "mapcomposite.h"
 #include "mapmanager.h"
 #include "mapsdock.h"
+#include "pathsdock.h"
 #include "selectpathtool.h"
 #include "zlevelsdock.h"
 #include "zprogress.h"
@@ -125,6 +126,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 #ifdef ZOMBOID
     , mLevelsDock(new ZLevelsDock(this))
     , mMapsDock(new MapsDock(this))
+    , mPathsDock(new PathsDock(this))
 #endif
     , mTilesetDock(new TilesetDock(this))
 #ifdef ZOMBOID
@@ -198,12 +200,14 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     addDockWidget(Qt::RightDockWidgetArea, mLayerDock);
     addDockWidget(Qt::RightDockWidgetArea, mLevelsDock);
     addDockWidget(Qt::RightDockWidgetArea, mObjectsDock);
+    addDockWidget(Qt::RightDockWidgetArea, mPathsDock);
     addDockWidget(Qt::RightDockWidgetArea, mMapsDock);
     addDockWidget(Qt::RightDockWidgetArea, undoDock);
     addDockWidget(Qt::RightDockWidgetArea, mTilesetDock);
     tabifyDockWidget(mLayerDock, mLevelsDock);
     tabifyDockWidget(mLevelsDock, mObjectsDock);
-    tabifyDockWidget(mObjectsDock, mMapsDock);
+    tabifyDockWidget(mObjectsDock, mPathsDock);
+    tabifyDockWidget(mPathsDock, mMapsDock);
     tabifyDockWidget(undoDock, mTilesetDock);
 
     setStatusBar(0);
@@ -482,6 +486,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 #ifdef ZOMBOID
     mUi->menuView->addAction(mLevelsDock->toggleViewAction());
     mUi->menuView->addAction(mMapsDock->toggleViewAction());
+    mUi->menuView->addAction(mObjectsDock->toggleViewAction());
 #endif
 
     connect(mClipboardManager, SIGNAL(hasMapChanged()), SLOT(updateActions()));
@@ -1947,6 +1952,7 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
     mObjectsDock->setMapDocument(mMapDocument);
 #ifdef ZOMBOID
     mLevelsDock->setMapDocument(mMapDocument);
+    mPathsDock->setMapDocument(mMapDocument);
 #endif
     mTilesetDock->setMapDocument(mMapDocument);
     AutomappingManager::instance()->setMapDocument(mMapDocument);

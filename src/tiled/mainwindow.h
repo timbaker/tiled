@@ -66,6 +66,7 @@ class Zoomable;
 #ifdef ZOMBOID
 class ZLevelsDock;
 class MapsDock;
+class PathsDock;
 #endif
 
 /**
@@ -239,6 +240,7 @@ private:
 #ifdef ZOMBOID
     ZLevelsDock *mLevelsDock;
     MapsDock *mMapsDock;
+    PathsDock *mPathsDock;
 #endif
     TilesetDock *mTilesetDock;
 #ifdef ZOMBOID
