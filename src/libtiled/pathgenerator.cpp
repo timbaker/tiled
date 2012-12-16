@@ -66,22 +66,7 @@ TileLayer *findTileLayer(const QString &name, const QVector<TileLayer*> &layers)
         if (layerNameWithoutPrefix(tl->name()) == name)
             return tl;
     }
-}
-
-void PathGenerator::generate(Map *map, QVector<TileLayer *> &layers)
-{
-    if (!map->tilesets().count())
-        return;
-    if (!mPath->points().size())
-        return;
-
-    TileLayer *tl = findTileLayer(QLatin1String("Floor"), layers);
-    if (!tl) return;
-    Tileset *ts = findTileset(QLatin1String("floors_exterior_street_01"), map->tilesets());
-    if (!ts) return;
-    outlineWidth(ts->tileAt(18), tl, 4);
-
-//    fill(ts->tileAt(3), layers.first());
+    return 0;
 }
 
 /**
@@ -200,6 +185,222 @@ void PathGenerator::fill(Tile *tile, TileLayer *tl)
                     continue;
                 Cell cell(tile);
                 tl->setCell(pt.x(), pt.y(), cell);
+            }
+        }
+    }
+}
+
+/////
+
+PG_SingleTile::PG_SingleTile(Path *path) :
+    PathGenerator(0, path),
+    mLayerName(QLatin1String("Floor")),
+    mTilesetName(QLatin1String("floors_exterior_street_01")),
+    mTileID(18)
+{
+}
+
+void PG_SingleTile::generate(int level, QVector<TileLayer *> &layers)
+{
+    if (level != mPath->level())
+        return;
+    if (!mPath->points().size())
+        return;
+
+    TileLayer *tl = findTileLayer(mLayerName, layers);
+    if (!tl) return;
+
+    Tileset *ts = findTileset(mTilesetName, tl->map()->tilesets());
+    if (!ts) return;
+
+    if (mPath->isClosed())
+        fill(ts->tileAt(mTileID), tl);
+
+    outline(ts->tileAt(mTileID), tl);
+}
+
+/////
+
+PG_Fence::PG_Fence(Path *path) :
+    PathGenerator(0, path),
+    mLayerName(QLatin1String("Furniture")),
+    mLayerName2(QLatin1String("Furniture2")),
+    mTilesetName(TileCount),
+    mTileID(TileCount)
+{
+    // Tall wooden
+    mTilesetName[West1] = QLatin1String("fencing_01");
+    mTileID[West1] = 11;
+    mTilesetName[West2] = QLatin1String("fencing_01");
+    mTileID[West2] = 10;
+    mTilesetName[North1] = QLatin1String("fencing_01");
+    mTileID[North1] = 8;
+    mTilesetName[North2] = QLatin1String("fencing_01");
+    mTileID[North2] = 9;
+    mTilesetName[NorthWest] = QLatin1String("fencing_01");
+    mTileID[NorthWest] = 12;
+    mTilesetName[SouthEast] = QLatin1String("fencing_01");
+    mTileID[SouthEast] = 13;
+
+#if 1
+    for (int i = 0; i < TileCount; i++)
+        mTileID[i] += 16; // Chainlink
+#elif 0
+    for (int i = 0; i < TileCount; i++)
+        mTileID[i] += 16 + 8; // Short wooden
+#elif 0
+    // Black metal
+    mTileID[West1] = mTileID[West2] = 2;
+    mTileID[North1] = mTileID[North2] = 1;
+    mTileID[NorthWest] = 3;
+    mTileID[SouthEast] = 0;
+#elif 0
+    // White picket
+    mTileID[West1] = mTileID[West2] = 4;
+    mTileID[North1] = mTileID[North2] = 5;
+    mTileID[NorthWest] = 6;
+    mTileID[SouthEast] = 7;
+#endif
+}
+
+void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
+{
+    if (level != mPath->level())
+        return;
+    if (mPath->points().size() < 2)
+        return;
+
+    TileLayer *tl = findTileLayer(mLayerName, layers);
+    if (!tl) return;
+
+    QVector<Tile*> tiles(TileCount);
+    for (int i = 0; i < TileCount; i++) {
+        Tileset *ts = findTileset(mTilesetName[i], tl->map()->tilesets());
+        if (!ts) return;
+        tiles[i] = ts->tileAt(mTileID[i]);
+        if (!tiles[i]) return;
+    }
+
+    PathPoints points = mPath->points();
+    if (mPath->isClosed())
+        points += points.first();
+
+    for (int i = 0; i < points.size() - 1; i++) {
+        bool vert = points[i].x() == points[i+1].x();
+        bool horiz = points[i].y() == points[i+1].y();
+        int alternate = 0;
+        if (horiz) {
+            foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
+                                              points[i+1].x(), points[i+1].y())) {
+                if (pt.x() == qMax(points[i].x(), points[i+1].x())) {
+                    if (tl->contains(pt.x(), pt.y() - 1)) {
+                        if (tl->cellAt(pt.x(), pt.y() - 1).tile == tiles[West2])
+                            tl->setCell(pt.x(), pt.y(), Cell(tiles[SouthEast]));
+                    }
+                    break;
+                }
+                if (tl->contains(pt)) {
+                    Tile *tile = tl->cellAt(pt).tile;
+                    if (tile == tiles[West1])
+                        tl->setCell(pt.x(), pt.y(), Cell(tiles[NorthWest]));
+                    else
+                        tl->setCell(pt.x(), pt.y(), Cell(tiles[North1 + alternate]));
+                }
+                alternate = !alternate;
+            }
+        } else if (vert) {
+            foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
+                                              points[i+1].x(), points[i+1].y())) {
+                if (pt.y() == qMax(points[i].y(), points[i+1].y())) {
+                    if (tl->contains(pt.x() - 1, pt.y())) {
+                        if (tl->cellAt(pt.x() - 1, pt.y()).tile == tiles[North2])
+                            tl->setCell(pt.x(), pt.y(), Cell(tiles[SouthEast]));
+                    }
+                    break;
+                }
+                if (tl->contains(pt)) {
+                    Tile *tile = tl->cellAt(pt).tile;
+                    if (tile == tiles[North1])
+                        tl->setCell(pt.x(), pt.y(), Cell(tiles[NorthWest]));
+                    else
+                        tl->setCell(pt.x(), pt.y(), Cell(tiles[West1 + alternate]));
+                }
+                alternate = !alternate;
+            }
+        }
+    }
+}
+
+/////
+
+PG_StreetLight::PG_StreetLight(Path *path) :
+    PathGenerator(0, path),
+    mGap(10),
+    mLayerName(QLatin1String("Furniture")),
+    mLayerName2(QLatin1String("Furniture2")),
+    mTilesetName(TileCount),
+    mTileID(TileCount)
+{
+    mTilesetName[West] = QLatin1String("lighting_outdoor_01");
+    mTileID[West] = 9;
+    mTilesetName[North] = QLatin1String("lighting_outdoor_01");
+    mTileID[North] = 10;
+    mTilesetName[East] = QLatin1String("lighting_outdoor_01");
+    mTileID[East] = 11;
+    mTilesetName[South] = QLatin1String("lighting_outdoor_01");
+    mTileID[South] = 8;
+    mTilesetName[Base] = QLatin1String("lighting_outdoor_01");
+    mTileID[Base] = 16;
+}
+
+void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
+{
+    bool level0 = level == mPath->level();
+    bool level1 = level == mPath->level() + 1;
+    if (!level0 && !level1)
+        return;
+    if (mPath->points().size() < 2)
+        return;
+
+    TileLayer *tl = findTileLayer(mLayerName, layers);
+    if (!tl) return;
+
+    QVector<Tile*> tiles(TileCount);
+    for (int i = 0; i < TileCount; i++) {
+        Tileset *ts = findTileset(mTilesetName[i], tl->map()->tilesets());
+        if (!ts) return;
+        tiles[i] = ts->tileAt(mTileID[i]);
+        if (!tiles[i]) return;
+    }
+
+    PathPoints points = mPath->points();
+    if (mPath->isClosed())
+        points += points.first();
+
+    if (tl->map()->orientation() == Map::Isometric && level1) {
+        for (int i = 0; i < points.size(); i++)
+            points[i].translate(QPoint(-3, -3));
+    }
+
+    for (int i = 0; i < points.size() - 1; i++) {
+        bool vert = points[i].x() == points[i+1].x();
+        bool horiz = points[i].y() == points[i+1].y();
+        int distance = 0;
+        if (horiz) {
+            foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
+                                              points[i+1].x(), points[i+1].y())) {
+                if (tl->contains(pt) && !(distance % mGap)) {
+                    tl->setCell(pt.x(), pt.y(), Cell(tiles[level1 ? North : Base]));
+                }
+                ++distance;
+            }
+        } else if (vert) {
+            foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
+                                              points[i+1].x(), points[i+1].y())) {
+                if (tl->contains(pt) && !(distance % mGap)) {
+                    tl->setCell(pt.x(), pt.y(), Cell(tiles[level1 ? West : Base]));
+                }
+                ++distance;
             }
         }
     }

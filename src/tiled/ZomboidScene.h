@@ -125,6 +125,7 @@ protected:
     // MapScene
     virtual QGraphicsItem *createLayerItem(Layer *layer);
     virtual void updateCurrentLayerHighlight();
+    void pathsGenerate();
 
     void updateLayerGroupsLater(PendingFlags flags);
     void updateLayerGroupLater(int level, PendingFlags flags);

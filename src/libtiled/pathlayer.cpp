@@ -9,11 +9,19 @@
 
 using namespace Tiled;
 
-Path::Path()
-    : mIsClosed(false)
-    , mVisible(true)
+Path::Path() :
+    mLayer(0),
+    mIsClosed(false),
+    mVisible(true)
 {
-    addGenerator(new PathGenerator(0, this));
+//    addGenerator(new PG_SingleTile(this));
+//    addGenerator(new PG_Fence(this));
+    addGenerator(new PG_StreetLight(this));
+}
+
+int Path::level() const
+{
+    return mLayer ? mLayer->level() : 0;
 }
 
 void Path::setPoints(const PathPoints &points)
@@ -53,51 +61,10 @@ QPolygonF Path::polygonf() const
     return poly;
 }
 
-void Path::generate(Map *map, QVector<TileLayer *> &layers) const
+void Path::generate(int level, QVector<TileLayer *> &layers) const
 {
-#if 1
     foreach (PathGenerator *pathGen, mGenerators)
-        pathGen->generate(map, layers);
-#else
-    if (!map->tilesets().count())
-        return;
-    if (!mPoints.size())
-        return;
-
-    Tileset *ts = map->tilesets().first();
-    PathPoints points = mPoints;
-    if (mIsClosed)
-        points += points.first();
-    for (int i = 0; i < points.size() - 1; i++) {
-        foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
-                                          points[i+1].x(), points[i+1].y())) {
-            if (!layers[0]->contains(pt))
-                continue;
-            Cell cell(ts->tileAt(3));
-            layers[0]->setCell(pt.x(), pt.y(), cell);
-        }
-    }
-
-    if (!mIsClosed)
-        return;
-
-    QRect bounds(mPoints.first().x(), mPoints.first().y(), 1, 1);
-    foreach (const PathPoint &pt, mPoints) {
-        bounds |= QRect(pt.x(), pt.y(), 1, 1);
-    }
-
-    QPolygonF polygon = this->polygonf();
-    for (int x = bounds.left(); x <= bounds.right(); x++)
-        for (int y = bounds.top(); y <= bounds.bottom(); y++) {
-            QPointF pt(x + 0.5, y + 0.5);
-            if (polygon.containsPoint(pt, Qt::WindingFill)) {
-                if (!layers[0]->contains(pt.toPoint()))
-                    continue;
-                Cell cell(ts->tileAt(3));
-                layers[0]->setCell(pt.x(), pt.y(), cell);
-            }
-        }
-#endif
+        pathGen->generate(level, layers);
 }
 
 Path *Path::clone() const
@@ -177,14 +144,14 @@ int PathLayer::removePath(Path *path)
     return index;
 }
 
-void PathLayer::generate(QVector<TileLayer *> &layers) const
+void PathLayer::generate(int level, QVector<TileLayer*> &layers) const
 {
     if (!isVisible())
         return;
     foreach (Path *path, mPaths) {
         if (!path->isVisible())
             continue;
-        path->generate(map(), layers);
+        path->generate(level, layers);
     }
 }
 

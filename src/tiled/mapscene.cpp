@@ -479,6 +479,8 @@ void MapScene::layerChanged(int index)
 void MapScene::layerRenamed(int index)
 {
     Q_UNUSED(index)
+
+    pathsGenerate();
 }
 #endif
 
@@ -564,6 +566,19 @@ void MapScene::syncAllObjectItems()
 }
 
 #ifdef ZOMBOID
+void MapScene::pathsGenerate()
+{
+    foreach (CompositeLayerGroup *layerGroup, mMapDocument->mapComposite()->layerGroups()) {
+        foreach (TileLayer *tl, layerGroup->pathTileLayers())
+            tl->erase();
+    }
+    foreach (PathLayer *pl, mMapDocument->map()->pathLayers()) {
+        foreach (CompositeLayerGroup *layerGroup, mMapDocument->mapComposite()->layerGroups()) {
+            pl->generate(layerGroup->level(), layerGroup->pathTileLayers());
+        }
+    }
+}
+
 void MapScene::pathsAdded(const QList<Path *> &paths)
 {
     foreach (Path *path, paths) {
@@ -584,6 +599,8 @@ void MapScene::pathsAdded(const QList<Path *> &paths)
         PathItem *item = new PathItem(path, mMapDocument, pathLayerItem);
         mPathItems.insert(path, item);
     }
+
+    pathsGenerate();
 }
 
 void MapScene::pathsRemoved(const QList<Path *> &paths)
@@ -596,6 +613,8 @@ void MapScene::pathsRemoved(const QList<Path *> &paths)
         delete i.value();
         mPathItems.erase(i);
     }
+
+    pathsGenerate();
 }
 
 void MapScene::pathsChanged(const QList<Path *> &paths)
@@ -605,6 +624,8 @@ void MapScene::pathsChanged(const QList<Path *> &paths)
         Q_ASSERT(pathItem);
         pathItem->syncWithPath();
     }
+
+    pathsGenerate();
 }
 
 void MapScene::updateSelectedPathItems()

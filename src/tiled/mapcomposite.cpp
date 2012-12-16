@@ -113,7 +113,10 @@ void CompositeLayerGroup::addTileLayer(TileLayer *layer, int index)
             : layer->isEmpty() || layer->name().contains(QLatin1String("NoRender"));
     mEmptyLayers.insert(index, empty);
 
-    mPathTileLayers.insert(index, layer->clone()->asTileLayer());
+    TileLayer *pathTileLayer = new TileLayer(layer->name(), layer->x(), layer->y(),
+                                             layer->width(), layer->height());
+    pathTileLayer->setMap(layer->map());
+    mPathTileLayers.insert(index, pathTileLayer);
 }
 
 void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
@@ -151,8 +154,6 @@ void CompositeLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRec
             layerGroup->prepareDrawing(renderer, rect);
         }
     }
-
-    pathsGenerate();
 }
 
 bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
@@ -165,34 +166,19 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
         ++index;
 #if SPARSE_TILELAYER
         // Checking isEmpty() and mEmptyLayers to catch hidden NoRender layers in submaps
-        if (!mVisibleLayers[index] || mEmptyLayers[index] || tl->isEmpty())
+        bool empty = !mVisibleLayers[index] || mEmptyLayers[index] || tl->isEmpty();
 #else
-        if (!mVisibleLayers[index] || mEmptyLayers[index])
+        bool empty = !mVisibleLayers[index] || mEmptyLayers[index];
 #endif
+        if (mVisibleLayers[index] && !mPathTileLayers[index]->isEmpty()) // Slow without SPARSE_TILELAYER
+            empty = false;
+        if (empty)
             continue;
         QPoint subPos = pos - mOwner->orientAdjustTiles() * mLevel - tl->position();
         if (tl->contains(subPos)) {
-#if 1
-            const Cell *cell = &mPathTileLayers[index]->cellAt(subPos);
-            if (!cell->isEmpty()) {
-                if (!cleared) {
-                    cells.clear();
-                    cleared = true;
-                }
-                cells.append(cell);
-            }
-            else {
-                const Cell *cell = &tl->cellAt(subPos);
-                if (!cell->isEmpty()) {
-                    if (!cleared) {
-                        cells.clear();
-                        cleared = true;
-                    }
-                    cells.append(cell);
-                }
-            }
-#else
             const Cell *cell = &tl->cellAt(subPos);
+            if (cell->isEmpty())
+                cell = &mPathTileLayers[index]->cellAt(subPos);
             if (!cell->isEmpty()) {
                 if (!cleared) {
                     cells.resize(0);
@@ -202,18 +188,6 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                 cells.append(cell);
                 opacities.append(mLayerOpacity[index]);
             }
-            else {
-                const Cell *cell = &mPathTileLayers[index]->cellAt(subPos);
-                if (!cell->isEmpty()) {
-                    if (!cleared) {
-                        cells.resize(0);
-                        cleared = true;
-                    }
-                    cells.append(cell);
-                    opacities.append(mLayerOpacity[index]);
-                }
-            }
-#endif
         }
     }
 
@@ -237,10 +211,13 @@ void CompositeLayerGroup::synch()
     foreach (TileLayer *tl, mLayers) {
 #if SPARSE_TILELAYER
         // Checking isEmpty() and mEmptyLayers to catch hidden NoRender layers in submaps
-        if (mVisibleLayers[index] && !mEmptyLayers[index] && !tl->isEmpty()) {
+        bool empty = !mVisibleLayers[index] || mEmptyLayers[index] || tl->isEmpty();
 #else
-        if (mVisibleLayers[index] && !mEmptyLayers[index]) {
+        bool empty = !mVisibleLayers[index] || mEmptyLayers[index];
 #endif
+        if (mVisibleLayers[index] && !mPathTileLayers[index]->isEmpty())
+            empty = false;
+        if (!empty) {
             unionTileRects(r, tl->bounds().translated(mOwner->orientAdjustTiles() * mLevel), r);
             maxMargins(m, tl->drawMargins(), m);
             mAnyVisibleLayers = true;
@@ -305,17 +282,6 @@ void CompositeLayerGroup::restoreOpacity()
     mLayerOpacity = mSavedOpacity;
 }
 
-void CompositeLayerGroup::pathsGenerate()
-{
-    foreach (TileLayer *tl, mPathTileLayers)
-        tl->erase();
-    foreach (PathLayer *pl, mOwner->map()->pathLayers()) {
-        if (pl->level() != level())
-            continue;
-        pl->generate(mPathTileLayers);
-    }
-}
-
 QRect CompositeLayerGroup::bounds() const
 {
     QRect bounds;
@@ -371,6 +337,9 @@ void CompositeLayerGroup::layerRenamed(TileLayer *layer)
 
     const QString name = MapComposite::layerNameWithoutPrefix(layer);
     mLayersByName[name].append(layer);
+
+    int index = mLayers.indexOf(layer);
+    mPathTileLayers[index]->setName(layer->name());
 }
 
 bool CompositeLayerGroup::setLayerOpacity(const QString &layerName, qreal opacity)

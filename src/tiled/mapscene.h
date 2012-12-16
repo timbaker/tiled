@@ -161,6 +161,10 @@ protected:
     void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
 
 #ifdef ZOMBOID
+    virtual void pathsGenerate();
+#endif
+
+#ifdef ZOMBOID
 protected slots:
 #else
 private slots:

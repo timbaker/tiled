@@ -27,6 +27,7 @@
 #define PATHGENERATOR_H
 
 #include <QString>
+#include <QVector>
 
 namespace Tiled {
 
@@ -49,16 +50,76 @@ class PathGenerator
 public:
     PathGenerator(PathGeneratorType *type, Path *path);
 
-    void generate(Map *map, QVector<TileLayer *> &layers);
+    virtual void generate(int level, QVector<TileLayer *> &layers) = 0;
 
     void outline(Tile *tile, TileLayer *tl);
     void outlineWidth(Tile *tile, TileLayer *tl, int width);
     void fill(Tile *tile, TileLayer *tl);
 
-private:
+protected:
     PathGeneratorType *mType;
     Path *mPath;
 
+};
+
+class PG_SingleTile : public PathGenerator
+{
+public:
+    PG_SingleTile(Path *path);
+
+    void generate(int level, QVector<TileLayer*> &layers);
+
+    QString mLayerName;
+    QString mTilesetName;
+    int mTileID;
+};
+
+class PG_Fence : public PathGenerator
+{
+public:
+    PG_Fence(Path *path);
+
+    void generate(int level, QVector<TileLayer*> &layers);
+
+    enum TileNames
+    {
+        West1,
+        West2,
+        North1,
+        North2,
+        NorthWest,
+        SouthEast,
+        TileCount
+    };
+
+    QString mLayerName;
+    QString mLayerName2;
+    QVector<QString> mTilesetName;
+    QVector<int> mTileID;
+};
+
+class PG_StreetLight : public PathGenerator
+{
+public:
+    PG_StreetLight(Path *path);
+
+    void generate(int level, QVector<TileLayer*> &layers);
+
+    enum TileNames
+    {
+        West,
+        North,
+        East,
+        South,
+        Base,
+        TileCount
+    };
+
+    int mGap;
+    QString mLayerName;
+    QString mLayerName2;
+    QVector<QString> mTilesetName;
+    QVector<int> mTileID;
 };
 
 } // namespace Tiled

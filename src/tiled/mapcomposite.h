@@ -75,7 +75,8 @@ public:
     void saveOpacity();
     void restoreOpacity();
 
-    void pathsGenerate();
+    QVector<Tiled::TileLayer*> &pathTileLayers()
+    { return mPathTileLayers; }
 
 private:
     MapComposite *mOwner;

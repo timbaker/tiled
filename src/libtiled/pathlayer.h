@@ -41,6 +41,9 @@ public:
     void translate(const QPoint &delta)
     { mX += delta.x(), mY += delta.y(); }
 
+    QPoint toPoint() const
+    { return QPoint(mX, mY); }
+
 private:
     int mX, mY;
 };
@@ -57,6 +60,8 @@ public:
 
     void setPathLayer(PathLayer *pathLayer)
     { mLayer = pathLayer; }
+
+    int level() const;
 
     void setPoints(const PathPoints &points);
     void setPoint(int index, const PathPoint &point);
@@ -85,7 +90,7 @@ public:
 
     QPolygonF polygonf() const;
 
-    void generate(Map *map, QVector<TileLayer *> &layers) const;
+    void generate(int level, QVector<TileLayer*> &layers) const;
 
     Path *clone() const;
 
@@ -138,7 +143,7 @@ public:
     const QColor &color() const { return mColor; }
     void setColor(const QColor &color) {  mColor = color; }
 
-    void generate(QVector<TileLayer*> &layers) const;
+    void generate(int level, QVector<TileLayer*> &layers) const;
 
 protected:
     PathLayer *initializeClone(PathLayer *clone) const;

@@ -278,6 +278,13 @@ void ZomboidScene::updateCurrentLayerHighlight()
     mDarkRectangle->setVisible(true);
 }
 
+void ZomboidScene::pathsGenerate()
+{
+    MapScene::pathsGenerate();
+
+    updateLayerGroupsLater(Synch | Bounds | Paint);
+}
+
 void ZomboidScene::layerAdded(int index)
 {
     MapScene::layerAdded(index);
