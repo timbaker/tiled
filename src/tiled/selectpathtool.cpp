@@ -1,9 +1,6 @@
 /*
- * selectpathtool.cpp
  * Copyright 2010, Thorbjørn Lindeijer <thorbjorn@lindeijer.nl>
  * Copyright 2012, Tim Baker
- *
- * This file is part of Tiled.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free

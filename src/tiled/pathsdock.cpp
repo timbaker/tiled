@@ -1,8 +1,5 @@
 /*
- * pathsdock.cpp
- * Copyright 2012, Tim Baker <treectrl@hotmail.com>
- *
- * This file is part of Tiled.
+ * Copyright 2012, Tim Baker <treectrl@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
