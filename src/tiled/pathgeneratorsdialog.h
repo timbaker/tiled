@@ -45,6 +45,7 @@ private slots:
     void currentGeneratorTemplateChanged(int row);
 
     void nameEdited(const QString &text);
+    void booleanToggled(bool newValue);
     void integerValueChanged(int newValue);
 
     void addGenerator();

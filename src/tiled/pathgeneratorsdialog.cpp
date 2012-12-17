@@ -45,6 +45,7 @@ PathGeneratorsDialog::PathGeneratorsDialog(QWidget *parent) :
             SLOT(currentPropertyChanged(int)));
     connect(ui->generatorTypesList, SIGNAL(currentRowChanged(int)),
             SLOT(currentGeneratorTemplateChanged(int)));
+    connect(ui->checkBox, SIGNAL(toggled(bool)), SLOT(booleanToggled(bool)));
     connect(ui->integerSpinBox, SIGNAL(valueChanged(int)),
             SLOT(integerValueChanged(int)));
     connect(ui->addGenerator, SIGNAL(clicked()), SLOT(addGenerator()));
@@ -104,6 +105,15 @@ void PathGeneratorsDialog::nameEdited(const QString &text)
     int row = mGenerators.indexOf(mCurrentGenerator);
     setGeneratorsList();
     ui->generatorsList->setCurrentRow(row);
+}
+
+void PathGeneratorsDialog::booleanToggled(bool newValue)
+{
+    if (mSynching || !mCurrentProperty)
+        return;
+    if (PGP_Boolean *p = mCurrentProperty->asBoolean()) {
+        p->mValue = newValue;
+    }
 }
 
 void PathGeneratorsDialog::integerValueChanged(int newValue)
