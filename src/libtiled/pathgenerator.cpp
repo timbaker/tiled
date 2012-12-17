@@ -41,6 +41,22 @@ void PGP_Boolean::clone(PathGeneratorProperty *other)
     mValue = other->asBoolean()->mValue;
 }
 
+QString PGP_Boolean::valueToString() const
+{
+    return QLatin1String(mValue ? "true" : "false");
+}
+
+bool PGP_Boolean::valueFromString(const QString &s)
+{
+    if (s == QLatin1String("true"))
+        mValue = true;
+    else if (s == QLatin1String("false"))
+        mValue = false;
+    else
+        return false;
+    return true;
+}
+
 PGP_Integer::PGP_Integer(const QString &name) :
     PathGeneratorProperty(name, QLatin1String("Integer")),
     mValue(1),
@@ -54,6 +70,22 @@ void PGP_Integer::clone(PathGeneratorProperty *other)
     mValue = other->asInteger()->mValue;
 }
 
+QString PGP_Integer::valueToString() const
+{
+    return QString::number(mValue);
+}
+
+bool PGP_Integer::valueFromString(const QString &s)
+{
+    bool ok;
+    int value = s.toInt(&ok);
+    if (ok && value >= mMin && value <= mMax) {
+        mValue = value;
+        return true;
+    }
+    return false;
+}
+
 PGP_String::PGP_String(const QString &name) :
     PathGeneratorProperty(name, QLatin1String("String"))
 {
@@ -64,6 +96,17 @@ void PGP_String::clone(PathGeneratorProperty *other)
     mValue = other->asString()->mValue;
 }
 
+QString PGP_String::valueToString() const
+{
+    return mValue;
+}
+
+bool PGP_String::valueFromString(const QString &s)
+{
+    mValue = s;
+    return true;
+}
+
 PGP_Layer::PGP_Layer(const QString &name) :
     PathGeneratorProperty(name, QLatin1String("Layer"))
 {
@@ -72,6 +115,17 @@ PGP_Layer::PGP_Layer(const QString &name) :
 void PGP_Layer::clone(PathGeneratorProperty *other)
 {
     mValue = other->asLayer()->mValue;
+}
+
+QString PGP_Layer::valueToString() const
+{
+    return mValue;
+}
+
+bool PGP_Layer::valueFromString(const QString &s)
+{
+    mValue = s;
+    return true;
 }
 
 PGP_Tile::PGP_Tile(const QString &name) :
@@ -85,11 +139,52 @@ void PGP_Tile::clone(PathGeneratorProperty *other)
     mTileID = other->asTile()->mTileID;
 }
 
+QString PGP_Tile::valueToString() const
+{
+    if (mTilesetName.isEmpty())
+        return QString();
+    return mTilesetName + QLatin1Char('_') + QString::number(mTileID);
+}
+
+static bool parseTileName(const QString &tileName, QString &tilesetName, int &index)
+{
+    tilesetName = tileName.mid(0, tileName.lastIndexOf(QLatin1Char('_')));
+    QString indexString = tileName.mid(tileName.lastIndexOf(QLatin1Char('_')) + 1);
+
+    // Strip leading zeroes from the tile index
+    int i = 0;
+    while (i < indexString.length() - 1 && indexString[i] == QLatin1Char('0'))
+        i++;
+    indexString.remove(0, i);
+
+    bool ok;
+    index = indexString.toInt(&ok);
+    return ok;
+}
+
+bool PGP_Tile::valueFromString(const QString &s)
+{
+    if (s.isEmpty()) {
+        mTilesetName.clear();
+        mTileID = 0;
+        return true;
+    }
+    QString tilesetName;
+    int index;
+    if (parseTileName(s, tilesetName, index)) {
+        mTilesetName = tilesetName;
+        mTileID = index;
+        return true;
+    }
+    return false;
+}
+
 /////
 
 PathGenerator::PathGenerator(const QString &label, const QString &type) :
     mLabel(label),
     mType(type),
+    mRefCount(0),
     mPath(0)
 {
 }
@@ -481,6 +576,10 @@ PG_StreetLight::PG_StreetLight(const QString &label) :
     PGP_Integer *prop3 = new PGP_Integer(QLatin1String("Spacing"));
     prop3->mMin = 1, prop3->mMax = 300, prop3->mValue = 10;
     mProperties[Spacing] = prop3;
+
+    PGP_Boolean *prop4 = new PGP_Boolean(QLatin1String("Reverse"));
+    prop4->mValue = false;
+    mProperties[Reverse] = prop4;
 }
 
 PathGenerator *PG_StreetLight::clone() const
@@ -522,6 +621,7 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
     }
 
     int spacing = mProperties[Spacing]->asInteger()->mValue;
+    bool reverse = mProperties[Reverse]->asBoolean()->mValue;
 
     for (int i = 0; i < points.size() - 1; i++) {
         bool vert = points[i].x() == points[i+1].x();
@@ -531,7 +631,7 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
             foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
                                               points[i+1].x(), points[i+1].y())) {
                 if (tl->contains(pt) && !(distance % spacing)) {
-                    tl->setCell(pt.x(), pt.y(), Cell(tiles[level1 ? North : Base]));
+                    tl->setCell(pt.x(), pt.y(), Cell(tiles[level1 ? (reverse ? South : North) : Base]));
                 }
                 ++distance;
             }
@@ -539,7 +639,7 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
             foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
                                               points[i+1].x(), points[i+1].y())) {
                 if (tl->contains(pt) && !(distance % spacing)) {
-                    tl->setCell(pt.x(), pt.y(), Cell(tiles[level1 ? West : Base]));
+                    tl->setCell(pt.x(), pt.y(), Cell(tiles[level1 ? (reverse ? East : West) : Base]));
                 }
                 ++distance;
             }

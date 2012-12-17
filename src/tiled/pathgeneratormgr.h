@@ -41,14 +41,28 @@ public:
     const QList<PathGenerator*> &generators() const
     { return mGenerators; }
 
+    const QList<PathGenerator*> &generatorTypes() const
+    { return mGeneratorTypes; }
+
     const QList<Tileset*> &tilesets() const
     { return mTilesets; }
 
+    QString txtName();
+    QString txtPath();
+
     bool readTxt();
     bool writeTxt();
+    bool upgradeTxt();
+    bool mergeTxt();
+
+    QString errorString() const
+    { return mError; }
+
+    bool Startup();
 
 private:
     Tileset *loadTileset(const QString &source);
+    PathGenerator *findGeneratorType(const QString &type);
     
 private:
     explicit PathGeneratorMgr(QObject *parent = 0);
@@ -57,6 +71,10 @@ private:
     QList<PathGenerator*> mGenerators;
     QList<PathGenerator*> mGeneratorTypes;
     QList<Tileset*> mTilesets;
+
+    int mRevision;
+    int mSourceRevision;
+    QString mError;
 };
 
 } // namespace Internal;

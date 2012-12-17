@@ -52,6 +52,8 @@ private slots:
 
     void synchUI();
 
+    void accept();
+
 private:
     void setGeneratorsList();
     void setPropertyList();

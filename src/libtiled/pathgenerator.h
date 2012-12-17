@@ -47,7 +47,6 @@ public:
     QString type() const
     { return mType; }
 
-//    virtual QString valueToString() const = 0;
 
     virtual PGP_Boolean *asBoolean() { return 0; }
     virtual PGP_Integer *asInteger() { return 0; }
@@ -56,6 +55,9 @@ public:
     virtual PGP_Tile *asTile() { return 0; }
 
     virtual void clone(PathGeneratorProperty *other) = 0;
+
+    virtual QString valueToString() const = 0;
+    virtual bool valueFromString(const QString &s) = 0;
 
     QString mName; // West, Layer1
     QString mType; // String, Tile, Integer
@@ -66,11 +68,12 @@ class TILEDSHARED_EXPORT PGP_Boolean : public PathGeneratorProperty
 public:
     PGP_Boolean(const QString &name);
 
-    QString valueToString() const;
-
     PGP_Boolean *asBoolean() { return this; }
 
     void clone(PathGeneratorProperty *other);
+
+    QString valueToString() const;
+    bool valueFromString(const QString &s);
 
     bool mValue;
 };
@@ -80,11 +83,12 @@ class TILEDSHARED_EXPORT PGP_Integer : public PathGeneratorProperty
 public:
     PGP_Integer(const QString &name);
 
-    QString valueToString() const;
-
     PGP_Integer *asInteger() { return this; }
 
     void clone(PathGeneratorProperty *other);
+
+    QString valueToString() const;
+    bool valueFromString(const QString &s);
 
     int mValue;
     int mMin;
@@ -100,6 +104,9 @@ public:
 
     void clone(PathGeneratorProperty *other);
 
+    QString valueToString() const;
+    bool valueFromString(const QString &s);
+
     QString mValue;
 };
 
@@ -112,6 +119,9 @@ public:
 
     void clone(PathGeneratorProperty *other);
 
+    QString valueToString() const;
+    bool valueFromString(const QString &s);
+
     QString mValue;
 };
 
@@ -123,6 +133,9 @@ public:
     PGP_Tile *asTile() { return this; }
 
     void clone(PathGeneratorProperty *other);
+
+    QString valueToString() const;
+    bool valueFromString(const QString &s);
 
     QString mTilesetName;
     int mTileID;
@@ -236,6 +249,7 @@ public:
     {
         LayerName = TileCount,
         Spacing,
+        Reverse,
         PropertyCount
     };
 };

@@ -25,6 +25,8 @@
 #include "tile.h"
 #include "tileset.h"
 
+#include <QMessageBox>
+
 using namespace Tiled;
 using namespace Internal;
 
@@ -143,6 +145,15 @@ void PathGeneratorsDialog::synchUI()
     ui->moveUp->setEnabled(mCurrentGenerator && ui->generatorsList->currentRow() > 0);
     ui->moveDown->setEnabled(mCurrentGenerator && ui->generatorsList->currentRow() < mGenerators.size() - 1);
     ui->addGenerator->setEnabled(mCurrentGeneratorTemplate != 0);
+}
+
+void PathGeneratorsDialog::accept()
+{
+    if (!PathGeneratorMgr::instance()->writeTxt()) {
+        QMessageBox::warning(this, tr("It's no good, Jim!"),
+                             PathGeneratorMgr::instance()->errorString());
+    }
+    QDialog::accept();
 }
 
 void PathGeneratorsDialog::setGeneratorsList()

@@ -26,6 +26,7 @@
 #include "preferences.h"
 #include "tiledapplication.h"
 #ifdef ZOMBOID
+#include "pathgeneratormgr.h"
 #include "zprogress.h"
 #endif
 
@@ -166,6 +167,9 @@ int main(int argc, char *argv[])
     w.show();
 #ifdef ZOMBOID
     w.readSettings();
+
+    if (!PathGeneratorMgr::instance()->Startup())
+        return 0;
 #endif
     QObject::connect(&a, SIGNAL(fileOpenRequest(QString)),
                      &w, SLOT(openFile(QString)));

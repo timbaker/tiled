@@ -1,0 +1,58 @@
+version = 0
+revision = 2
+source_revision = 0
+tilesets
+{
+    tileset = fencing_01
+    tileset = lighting_outdoor_01
+}
+Generator
+{
+    label = Fence - Tall Wooden
+    type = Fence
+    West1 = fencing_01_11
+    West2 = fencing_01_10
+    North1 = fencing_01_8
+    North2 = fencing_01_9
+    NorthWest = fencing_01_12
+    SouthEast = fencing_01_13
+    Layer = Furniture
+}
+Generator
+{
+    label = Fence - Short Wooden
+    type = Fence
+    West1 = fencing_01_35
+    West2 = fencing_01_34
+    North1 = fencing_01_32
+    North2 = fencing_01_33
+    NorthWest = fencing_01_36
+    SouthEast = fencing_01_37
+    Layer = Furniture
+}
+Generator
+{
+    label = Street Light - West & North
+    type = StreetLight
+    West = lighting_outdoor_01_9
+    North = lighting_outdoor_01_10
+    East = lighting_outdoor_01_11
+    South = lighting_outdoor_01_8
+    Base = lighting_outdoor_01_16
+    Layer = Furniture
+    Spacing = 10
+    Reverse = false
+}
+Generator
+{
+    label = Street Light - East & South
+    type = StreetLight
+    West = lighting_outdoor_01_9
+    North = lighting_outdoor_01_10
+    East = lighting_outdoor_01_11
+    South = lighting_outdoor_01_8
+    Base = lighting_outdoor_01_16
+    Layer = Furniture
+    Spacing = 10
+    Reverse = true
+}
