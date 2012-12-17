@@ -129,7 +129,7 @@ void PathPropertiesDialog::unlink()
     if (isCurrentGeneratorShared()) {
         PathGenerator *clone = mCurrentGenerator->clone();
         int index = mPath->generators().indexOf(mCurrentGenerator);
-        delete mPath->removeGenerator(index);
+        mPath->removeGenerator(index);
         mPath->insertGenerator(index, clone);
         mCurrentGenerator = clone;
         synchUI();
@@ -256,6 +256,6 @@ void PathPropertiesDialog::setPropertyPage()
 
 bool PathPropertiesDialog::isCurrentGeneratorShared()
 {
-    return mCurrentGenerator &&
-            PathGeneratorMgr::instance()->generators().contains(mCurrentGenerator);
+    return mCurrentGenerator && (mCurrentGenerator->refCount() > 1);
+            /*PathGeneratorMgr::instance()->generators().contains(mCurrentGenerator)*/;
 }

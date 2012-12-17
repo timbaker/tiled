@@ -29,9 +29,14 @@ Path::Path() :
     mIsClosed(false),
     mVisible(true)
 {
-//    addGenerator(new PG_SingleTile(this));
-//    addGenerator(new PG_Fence(this));
-    insertGenerator(0, new PG_StreetLight(QLatin1String("StreetLight X")));
+}
+
+Path::~Path()
+{
+    foreach (PathGenerator *pathGen, mGenerators) {
+        if (pathGen->refCount() == 1)
+            delete pathGen;
+    }
 }
 
 int Path::level() const
@@ -89,6 +94,12 @@ Path *Path::clone() const
     klone->setPoints(mPoints);
     klone->setClosed(mIsClosed);
     klone->setVisible(mVisible);
+    foreach (PathGenerator *pathGen, mGenerators) {
+        if (pathGen->refCount() == 1) // Not global
+            pathGen = pathGen->clone();
+        pathGen->refCountUp();
+        klone->mGenerators += pathGen;
+    }
     return klone;
 }
 
@@ -101,11 +112,13 @@ void Path::translate(const QPoint &delta)
 
 void Path::insertGenerator(int index, PathGenerator *pathGen)
 {
+    pathGen->refCountUp();
     mGenerators.insert(index, pathGen);
 }
 
 PathGenerator *Path::removeGenerator(int index)
 {
+    mGenerators.at(index)->refCountDown();
     return mGenerators.takeAt(index);
 }
 

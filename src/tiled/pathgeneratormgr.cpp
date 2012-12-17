@@ -46,11 +46,13 @@ void PathGeneratorMgr::deleteInstance()
 void PathGeneratorMgr::insertGenerator(int index, PathGenerator *pgen)
 {
     Q_ASSERT(pgen && !mGenerators.contains(pgen));
+    pgen->refCountUp();
     mGenerators.insert(index, pgen);
 }
 
 PathGenerator *PathGeneratorMgr::removeGenerator(int index)
 {
+    mGenerators.at(index)->refCountDown();
     return mGenerators.takeAt(index);
 }
 

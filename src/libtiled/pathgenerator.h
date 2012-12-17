@@ -154,6 +154,10 @@ public:
     void outlineWidth(Tile *tile, TileLayer *tl, int width);
     void fill(Tile *tile, TileLayer *tl);
 
+    void refCountUp() { ++mRefCount;}
+    void refCountDown() {  Q_ASSERT(mRefCount); --mRefCount; }
+    int refCount() const { return mRefCount; }
+
 protected:
     void cloneProperties(const PathGenerator *other);
 
@@ -161,6 +165,10 @@ protected:
     QString mLabel;
     QString mType;
     QVector<PathGeneratorProperty*> mProperties;
+    int mRefCount;
+
+    // This is used only during a call to generate().  Since PathGenerators
+    // are shared, there is no Path attached to a generator.
     const Path *mPath;
 };
 

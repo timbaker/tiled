@@ -71,6 +71,8 @@ class TILEDSHARED_EXPORT Path
 public:
     Path();
 
+    ~Path();
+
     PathLayer *pathLayer() const
     { return mLayer; }
 
