@@ -52,6 +52,7 @@
 #include "newmapdialog.h"
 #include "newtilesetdialog.h"
 #include "pathgeneratorsdialog.h"
+#include "pathmodel.h"
 #include "pluginmanager.h"
 #include "propertiesdialog.h"
 #include "resizedialog.h"
@@ -1320,6 +1321,8 @@ void MainWindow::pathGeneratorsDialog()
 {
     PathGeneratorsDialog dialog(this);
     dialog.exec();
+    foreach (MapDocument *mapDocument, DocumentManager::instance()->documents())
+        mapDocument->pathModel()->emitPathsChanged(QList<Path*>());
 }
 #endif
 
