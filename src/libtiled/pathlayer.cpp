@@ -31,7 +31,7 @@ Path::Path() :
 {
 //    addGenerator(new PG_SingleTile(this));
 //    addGenerator(new PG_Fence(this));
-    addGenerator(new PG_StreetLight(this));
+    insertGenerator(0, new PG_StreetLight(QLatin1String("StreetLight X")));
 }
 
 int Path::level() const
@@ -79,7 +79,7 @@ QPolygonF Path::polygonf() const
 void Path::generate(int level, QVector<TileLayer *> &layers) const
 {
     foreach (PathGenerator *pathGen, mGenerators)
-        pathGen->generate(level, layers);
+        pathGen->generate(this, level, layers);
 }
 
 Path *Path::clone() const
@@ -99,9 +99,9 @@ void Path::translate(const QPoint &delta)
     }
 }
 
-void Path::addGenerator(PathGenerator *pathGen)
+void Path::insertGenerator(int index, PathGenerator *pathGen)
 {
-    mGenerators.append(pathGen);
+    mGenerators.insert(index, pathGen);
 }
 
 PathGenerator *Path::removeGenerator(int index)

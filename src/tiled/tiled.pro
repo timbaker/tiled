@@ -188,7 +188,10 @@ SOURCES += aboutdialog.cpp \
     editpathtool.cpp \
     changepathpolygon.cpp \
     pathsdock.cpp \
-    movepathtolayer.cpp
+    movepathtolayer.cpp \
+    pathpropertiesdialog.cpp \
+    pathgeneratorsdialog.cpp \
+    pathgeneratormgr.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -342,7 +345,10 @@ HEADERS += aboutdialog.h \
     editpathtool.h \
     changepathpolygon.h \
     pathsdock.h \
-    movepathtolayer.h
+    movepathtolayer.h \
+    pathpropertiesdialog.h \
+    pathgeneratorsdialog.h \
+    pathgeneratormgr.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -372,7 +378,9 @@ FORMS += aboutdialog.ui \
     BuildingEditor/buildingtilesdialog.ui \
     BuildingEditor/templatefrombuildingdialog.ui \
     BuildingEditor/resizebuildingdialog.ui \
-    BuildingEditor/listofstringsdialog.ui
+    BuildingEditor/listofstringsdialog.ui \
+    pathpropertiesdialog.ui \
+    pathgeneratorsdialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

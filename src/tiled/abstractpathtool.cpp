@@ -26,10 +26,11 @@
 #include "mapdocument.h"
 #include "pathlayer.h"
 #include "pathitem.h"
+#include "pathmodel.h"
 #include "maprenderer.h"
 #include "mapscene.h"
-//#include "movepathtolayer.h"
-//#include "objectpropertiesdialog.h"
+#include "movepathtolayer.h"
+#include "pathpropertiesdialog.h"
 #include "utils.h"
 
 #include <QMenu>
@@ -171,13 +172,13 @@ void AbstractPathTool::showContextMenu(PathItem *clickedPathItem,
     else if (selectedAction == removeAction) {
         removePaths(selectedPaths);
     }
-#if 0
     else if (selectedAction == propertiesAction) {
         Path *path = selectedPaths.first();
-        PathPropertiesDialog propertiesDialog(mapDocument(), path, parent);
-        propertiesDialog.exec();
+        PathPropertiesDialog dialog(parent);
+        dialog.setPath(mapDocument(), path);
+        dialog.exec();
+        mapDocument()->pathModel()->emitPathsChanged(QList<Path*>() << path);
     }
-#endif
 
     MoveToLayerActionMap::const_iterator i =
             moveToLayerActions.find(selectedAction);
@@ -218,9 +219,6 @@ void AbstractPathTool::removePaths(const QList<Path *> &paths)
 void AbstractPathTool::movePathsToLayer(const QList<Path *> &paths,
                                         PathLayer *pathLayer)
 {
-    Q_UNUSED(paths)
-    Q_UNUSED(pathLayer)
-#if 0
     QUndoStack *undoStack = mapDocument()->undoStack();
     undoStack->beginMacro(tr("Move %n Path(s) to Layer", "", paths.size()));
     foreach (Path *path, paths) {
@@ -229,5 +227,4 @@ void AbstractPathTool::movePathsToLayer(const QList<Path *> &paths,
         undoStack->push(new MovePathToLayer(mapDocument(), path, pathLayer));
     }
     undoStack->endMacro();
-#endif
 }

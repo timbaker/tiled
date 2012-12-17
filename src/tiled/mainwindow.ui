@@ -127,6 +127,7 @@
     </property>
     <addaction name="actionBuildingEditor"/>
     <addaction name="actionConvertOrientation"/>
+    <addaction name="actionPathGenerators"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -456,6 +457,11 @@
    </property>
    <property name="text">
     <string>Building Editor</string>
+   </property>
+  </action>
+  <action name="actionPathGenerators">
+   <property name="text">
+    <string>Path Generators...</string>
    </property>
   </action>
  </widget>

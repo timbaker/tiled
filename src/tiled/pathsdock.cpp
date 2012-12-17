@@ -25,7 +25,7 @@
 #include "movepathtolayer.h"
 #include "pathlayer.h"
 #include "pathmodel.h"
-//#include "pathpropertiesdialog.h"
+#include "pathpropertiesdialog.h"
 #include "utils.h"
 
 #include <QBoxLayout>
@@ -256,10 +256,11 @@ void PathsDock::pathProperties()
     const QList<Path *> &selectedPaths = mMapDocument->selectedPaths();
 
     Path *path = selectedPaths.first();
-#if 0
-    PathPropertiesDialog propertiesDialog(mMapDocument, path, 0);
-    propertiesDialog.exec();
-#endif
+
+    PathPropertiesDialog dialog(window());
+    dialog.setPath(mMapDocument, path);
+    dialog.exec();
+    mMapDocument->pathModel()->emitPathsChanged(QList<Path*>());
 }
 
 void PathsDock::saveExpandedGroups(MapDocument *mapDoc)

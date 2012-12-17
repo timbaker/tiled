@@ -112,8 +112,11 @@ public:
 
     void translate(const QPoint &delta);
 
-    void addGenerator(PathGenerator *pathGen);
+    void insertGenerator(int index, PathGenerator *pathGen);
     PathGenerator *removeGenerator(int index);
+
+    const QList<PathGenerator*> &generators() const
+    { return mGenerators; }
 
 private:
     PathLayer *mLayer;

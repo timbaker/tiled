@@ -51,6 +51,7 @@
 #include "mapscene.h"
 #include "newmapdialog.h"
 #include "newtilesetdialog.h"
+#include "pathgeneratorsdialog.h"
 #include "pluginmanager.h"
 #include "propertiesdialog.h"
 #include "resizedialog.h"
@@ -522,6 +523,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 #ifdef ZOMBOID
     connect(mUi->actionBuildingEditor, SIGNAL(triggered()),
             SLOT(showBuildingEditor()));
+    connect(mUi->actionPathGenerators, SIGNAL(triggered()),
+            SLOT(pathGeneratorsDialog()));
 #endif
 
     updateActions();
@@ -1304,6 +1307,12 @@ void MainWindow::showBuildingEditor()
 
     mBuildingEditor->show();
     mBuildingEditor->raise();
+}
+
+void MainWindow::pathGeneratorsDialog()
+{
+    PathGeneratorsDialog dialog(this);
+    dialog.exec();
 }
 #endif
 

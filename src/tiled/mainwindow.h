@@ -179,6 +179,7 @@ public slots:
 
 #ifdef ZOMBOID
     void showBuildingEditor();
+    void pathGeneratorsDialog();
 #endif
 
 private:

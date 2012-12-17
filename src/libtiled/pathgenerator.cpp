@@ -24,19 +24,83 @@
 
 using namespace Tiled;
 
-PathGeneratorType::PathGeneratorType(const QString &name)
+PathGeneratorProperty::PathGeneratorProperty(const QString &name, const QString &type) :
+    mName(name),
+    mType(type)
 {
+}
+
+PGP_Boolean::PGP_Boolean(const QString &name) :
+    PathGeneratorProperty(name, QLatin1String("Boolean")),
+    mValue(false)
+{
+}
+
+void PGP_Boolean::clone(PathGeneratorProperty *other)
+{
+    mValue = other->asBoolean()->mValue;
+}
+
+PGP_Integer::PGP_Integer(const QString &name) :
+    PathGeneratorProperty(name, QLatin1String("Integer")),
+    mValue(1),
+    mMin(1),
+    mMax(100)
+{
+}
+
+void PGP_Integer::clone(PathGeneratorProperty *other)
+{
+    mValue = other->asInteger()->mValue;
+}
+
+PGP_String::PGP_String(const QString &name) :
+    PathGeneratorProperty(name, QLatin1String("String"))
+{
+}
+
+void PGP_String::clone(PathGeneratorProperty *other)
+{
+    mValue = other->asString()->mValue;
+}
+
+PGP_Layer::PGP_Layer(const QString &name) :
+    PathGeneratorProperty(name, QLatin1String("Layer"))
+{
+}
+
+void PGP_Layer::clone(PathGeneratorProperty *other)
+{
+    mValue = other->asLayer()->mValue;
+}
+
+PGP_Tile::PGP_Tile(const QString &name) :
+    PathGeneratorProperty(name, QLatin1String("Tile"))
+{
+}
+
+void PGP_Tile::clone(PathGeneratorProperty *other)
+{
+    mTilesetName = other->asTile()->mTilesetName;
+    mTileID = other->asTile()->mTileID;
 }
 
 /////
 
-PathGenerator::PathGenerator(PathGeneratorType *type, Path *path)
-    : mType(type)
-    , mPath(path)
+PathGenerator::PathGenerator(const QString &label, const QString &type) :
+    mLabel(label),
+    mType(type),
+    mPath(0)
 {
 }
 
-Tileset *findTileset(const QString &name, const QList<Tileset*> &tilesets)
+void PathGenerator::generate(const Path *path, int level, QVector<TileLayer *> &layers)
+{
+    mPath = path;
+    generate(level, layers);
+}
+
+static Tileset *findTileset(const QString &name, const QList<Tileset*> &tilesets)
 {
     foreach (Tileset *ts, tilesets) {
         if (ts->name() == name)
@@ -45,7 +109,7 @@ Tileset *findTileset(const QString &name, const QList<Tileset*> &tilesets)
     return 0;
 }
 
-QString layerNameWithoutPrefix(const QString &name)
+static QString layerNameWithoutPrefix(const QString &name)
 {
     int pos = name.indexOf(QLatin1Char('_')) + 1; // Could be "-1 + 1 == 0"
     return name.mid(pos);
@@ -182,14 +246,27 @@ void PathGenerator::fill(Tile *tile, TileLayer *tl)
     }
 }
 
+void PathGenerator::cloneProperties(const PathGenerator *other)
+{
+    for (int i = 0; i < mProperties.size(); i++)
+        mProperties[i]->clone(other->mProperties[i]);
+}
+
 /////
 
-PG_SingleTile::PG_SingleTile(Path *path) :
-    PathGenerator(0, path),
+PG_SingleTile::PG_SingleTile(const QString &label) :
+    PathGenerator(label, QLatin1String("SingleTile")),
     mLayerName(QLatin1String("Floor")),
     mTilesetName(QLatin1String("floors_exterior_street_01")),
     mTileID(18)
 {
+}
+
+PathGenerator *PG_SingleTile::clone() const
+{
+    PG_SingleTile *clone = new PG_SingleTile(mLabel);
+    clone->cloneProperties(this);
+    return clone;
 }
 
 void PG_SingleTile::generate(int level, QVector<TileLayer *> &layers)
@@ -213,13 +290,46 @@ void PG_SingleTile::generate(int level, QVector<TileLayer *> &layers)
 
 /////
 
-PG_Fence::PG_Fence(Path *path) :
-    PathGenerator(0, path),
-    mLayerName(QLatin1String("Furniture")),
-    mLayerName2(QLatin1String("Furniture2")),
-    mTilesetName(TileCount),
-    mTileID(TileCount)
+PG_Fence::PG_Fence(const QString &label) :
+    PathGenerator(label, QLatin1String("Fence"))
 {
+    mProperties.resize(PropertyCount);
+
+    PGP_Tile *prop = new PGP_Tile(QLatin1String("West1"));
+    prop->mTilesetName = QLatin1String("fencing_01");
+    prop->mTileID = 11;
+    mProperties[West1] = prop;
+
+    prop = new PGP_Tile(QLatin1String("West2"));
+    prop->mTilesetName = QLatin1String("fencing_01");
+    prop->mTileID = 10;
+    mProperties[West2] = prop;
+
+    prop = new PGP_Tile(QLatin1String("North1"));
+    prop->mTilesetName = QLatin1String("fencing_01");
+    prop->mTileID = 8;
+    mProperties[North1] = prop;
+
+    prop = new PGP_Tile(QLatin1String("North2"));
+    prop->mTilesetName = QLatin1String("fencing_01");
+    prop->mTileID = 9;
+    mProperties[North2] = prop;
+
+    prop = new PGP_Tile(QLatin1String("NorthWest"));
+    prop->mTilesetName = QLatin1String("fencing_01");
+    prop->mTileID = 12;
+    mProperties[NorthWest] = prop;
+
+    prop = new PGP_Tile(QLatin1String("SouthEast"));
+    prop->mTilesetName = QLatin1String("fencing_01");
+    prop->mTileID = 13;
+    mProperties[SouthEast] = prop;
+
+    PGP_Layer *prop2 = new PGP_Layer(QLatin1String("Layer"));
+    prop2->mValue = QLatin1String("Furniture");
+    mProperties[LayerName] = prop2;
+
+#if 0
     // Tall wooden
     mTilesetName[West1] = QLatin1String("fencing_01");
     mTileID[West1] = 11;
@@ -233,8 +343,9 @@ PG_Fence::PG_Fence(Path *path) :
     mTileID[NorthWest] = 12;
     mTilesetName[SouthEast] = QLatin1String("fencing_01");
     mTileID[SouthEast] = 13;
+#endif
 
-#if 1
+#if 0
     for (int i = 0; i < TileCount; i++)
         mTileID[i] += 16; // Chainlink
 #elif 0
@@ -255,6 +366,13 @@ PG_Fence::PG_Fence(Path *path) :
 #endif
 }
 
+PathGenerator *PG_Fence::clone() const
+{
+    PG_Fence *clone = new PG_Fence(mLabel);
+    clone->cloneProperties(this);
+    return clone;
+}
+
 void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
 {
     if (level != mPath->level())
@@ -262,14 +380,15 @@ void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
     if (mPath->points().size() < 2)
         return;
 
-    TileLayer *tl = findTileLayer(mLayerName, layers);
+    TileLayer *tl = findTileLayer(mProperties[LayerName]->asLayer()->mValue, layers);
     if (!tl) return;
 
     QVector<Tile*> tiles(TileCount);
     for (int i = 0; i < TileCount; i++) {
-        Tileset *ts = findTileset(mTilesetName[i], tl->map()->tilesets());
+        PGP_Tile *prop = mProperties[i]->asTile();
+        Tileset *ts = findTileset(prop->mTilesetName, tl->map()->tilesets());
         if (!ts) return;
-        tiles[i] = ts->tileAt(mTileID[i]);
+        tiles[i] = ts->tileAt(prop->mTileID);
         if (!tiles[i]) return;
     }
 
@@ -325,24 +444,50 @@ void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
 
 /////
 
-PG_StreetLight::PG_StreetLight(Path *path) :
-    PathGenerator(0, path),
-    mGap(10),
-    mLayerName(QLatin1String("Furniture")),
-    mLayerName2(QLatin1String("Furniture2")),
-    mTilesetName(TileCount),
-    mTileID(TileCount)
+PG_StreetLight::PG_StreetLight(const QString &label) :
+    PathGenerator(label, QLatin1String("StreetLight"))
 {
-    mTilesetName[West] = QLatin1String("lighting_outdoor_01");
-    mTileID[West] = 9;
-    mTilesetName[North] = QLatin1String("lighting_outdoor_01");
-    mTileID[North] = 10;
-    mTilesetName[East] = QLatin1String("lighting_outdoor_01");
-    mTileID[East] = 11;
-    mTilesetName[South] = QLatin1String("lighting_outdoor_01");
-    mTileID[South] = 8;
-    mTilesetName[Base] = QLatin1String("lighting_outdoor_01");
-    mTileID[Base] = 16;
+    mProperties.resize(PropertyCount);
+
+    PGP_Tile *prop = new PGP_Tile(QLatin1String("West"));
+    prop->mTilesetName = QLatin1String("lighting_outdoor_01");
+    prop->mTileID = 9;
+    mProperties[West] = prop;
+
+    prop = new PGP_Tile(QLatin1String("North"));
+    prop->mTilesetName = QLatin1String("lighting_outdoor_01");
+    prop->mTileID = 10;
+    mProperties[North] = prop;
+
+    prop = new PGP_Tile(QLatin1String("East"));
+    prop->mTilesetName = QLatin1String("lighting_outdoor_01");
+    prop->mTileID = 11;
+    mProperties[East] = prop;
+
+    prop = new PGP_Tile(QLatin1String("South"));
+    prop->mTilesetName = QLatin1String("lighting_outdoor_01");
+    prop->mTileID = 8;
+    mProperties[South] = prop;
+
+    prop = new PGP_Tile(QLatin1String("Base"));
+    prop->mTilesetName = QLatin1String("lighting_outdoor_01");
+    prop->mTileID = 16;
+    mProperties[Base] = prop;
+
+    PGP_Layer *prop2 = new PGP_Layer(QLatin1String("Layer"));
+    prop2->mValue = QLatin1String("Furniture");
+    mProperties[LayerName] = prop2;
+
+    PGP_Integer *prop3 = new PGP_Integer(QLatin1String("Spacing"));
+    prop3->mMin = 1, prop3->mMax = 300, prop3->mValue = 10;
+    mProperties[Spacing] = prop3;
+}
+
+PathGenerator *PG_StreetLight::clone() const
+{
+    PG_StreetLight *clone = new PG_StreetLight(mLabel);
+    clone->cloneProperties(this);
+    return clone;
 }
 
 void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
@@ -354,14 +499,16 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
     if (mPath->points().size() < 2)
         return;
 
-    TileLayer *tl = findTileLayer(mLayerName, layers);
+    PGP_Layer *prop = mProperties[LayerName]->asLayer();
+    TileLayer *tl = findTileLayer(prop->mValue, layers);
     if (!tl) return;
 
     QVector<Tile*> tiles(TileCount);
     for (int i = 0; i < TileCount; i++) {
-        Tileset *ts = findTileset(mTilesetName[i], tl->map()->tilesets());
+        PGP_Tile *prop = mProperties[i]->asTile();
+        Tileset *ts = findTileset(prop->mTilesetName, tl->map()->tilesets());
         if (!ts) return;
-        tiles[i] = ts->tileAt(mTileID[i]);
+        tiles[i] = ts->tileAt(prop->mTileID);
         if (!tiles[i]) return;
     }
 
@@ -374,6 +521,8 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
             points[i].translate(QPoint(-3, -3));
     }
 
+    int spacing = mProperties[Spacing]->asInteger()->mValue;
+
     for (int i = 0; i < points.size() - 1; i++) {
         bool vert = points[i].x() == points[i+1].x();
         bool horiz = points[i].y() == points[i+1].y();
@@ -381,7 +530,7 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
         if (horiz) {
             foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
                                               points[i+1].x(), points[i+1].y())) {
-                if (tl->contains(pt) && !(distance % mGap)) {
+                if (tl->contains(pt) && !(distance % spacing)) {
                     tl->setCell(pt.x(), pt.y(), Cell(tiles[level1 ? North : Base]));
                 }
                 ++distance;
@@ -389,7 +538,7 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
         } else if (vert) {
             foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
                                               points[i+1].x(), points[i+1].y())) {
-                if (tl->contains(pt) && !(distance % mGap)) {
+                if (tl->contains(pt) && !(distance % spacing)) {
                     tl->setCell(pt.x(), pt.y(), Cell(tiles[level1 ? West : Base]));
                 }
                 ++distance;

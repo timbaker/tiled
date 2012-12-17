@@ -18,6 +18,8 @@
 #ifndef PATHGENERATOR_H
 #define PATHGENERATOR_H
 
+#include "tiled_global.h"
+
 #include <QString>
 #include <QVector>
 
@@ -28,20 +30,124 @@ class Path;
 class Tile;
 class TileLayer;
 
-class PathGeneratorType
+class PGP_Boolean;
+class PGP_Integer;
+class PGP_String;
+class PGP_Layer;
+class PGP_Tile;
+
+class TILEDSHARED_EXPORT PathGeneratorProperty
 {
 public:
-    PathGeneratorType(const QString &name);
+    PathGeneratorProperty(const QString &name, const QString &type);
 
-private:
-    QString mName;
+    QString name() const
+    { return mName; }
+
+    QString type() const
+    { return mType; }
+
+//    virtual QString valueToString() const = 0;
+
+    virtual PGP_Boolean *asBoolean() { return 0; }
+    virtual PGP_Integer *asInteger() { return 0; }
+    virtual PGP_String *asString() { return 0; }
+    virtual PGP_Layer *asLayer() { return 0; }
+    virtual PGP_Tile *asTile() { return 0; }
+
+    virtual void clone(PathGeneratorProperty *other) = 0;
+
+    QString mName; // West, Layer1
+    QString mType; // String, Tile, Integer
 };
 
-class PathGenerator
+class TILEDSHARED_EXPORT PGP_Boolean : public PathGeneratorProperty
 {
 public:
-    PathGenerator(PathGeneratorType *type, Path *path);
+    PGP_Boolean(const QString &name);
 
+    QString valueToString() const;
+
+    PGP_Boolean *asBoolean() { return this; }
+
+    void clone(PathGeneratorProperty *other);
+
+    bool mValue;
+};
+
+class TILEDSHARED_EXPORT PGP_Integer : public PathGeneratorProperty
+{
+public:
+    PGP_Integer(const QString &name);
+
+    QString valueToString() const;
+
+    PGP_Integer *asInteger() { return this; }
+
+    void clone(PathGeneratorProperty *other);
+
+    int mValue;
+    int mMin;
+    int mMax;
+};
+
+class TILEDSHARED_EXPORT PGP_String : public PathGeneratorProperty
+{
+public:
+    PGP_String(const QString &name);
+
+    PGP_String *asString() { return this; }
+
+    void clone(PathGeneratorProperty *other);
+
+    QString mValue;
+};
+
+class TILEDSHARED_EXPORT PGP_Layer : public PathGeneratorProperty
+{
+public:
+    PGP_Layer(const QString &name);
+
+    PGP_Layer *asLayer() { return this; }
+
+    void clone(PathGeneratorProperty *other);
+
+    QString mValue;
+};
+
+class TILEDSHARED_EXPORT PGP_Tile : public PathGeneratorProperty
+{
+public:
+    PGP_Tile(const QString &name);
+
+    PGP_Tile *asTile() { return this; }
+
+    void clone(PathGeneratorProperty *other);
+
+    QString mTilesetName;
+    int mTileID;
+};
+
+class TILEDSHARED_EXPORT PathGenerator
+{
+public:
+    PathGenerator(const QString &label, const QString &type);
+
+    void setLabel(const QString &label)
+    { mLabel = label; }
+
+    QString label() const
+    { return mLabel; }
+
+    QString type() const
+    { return mType; }
+
+    const QVector<PathGeneratorProperty*> &properties() const
+    { return mProperties; }
+
+    virtual PathGenerator *clone() const = 0;
+
+    virtual void generate(const Path *path, int level, QVector<TileLayer *> &layers);
     virtual void generate(int level, QVector<TileLayer *> &layers) = 0;
 
     void outline(Tile *tile, TileLayer *tl);
@@ -49,15 +155,21 @@ public:
     void fill(Tile *tile, TileLayer *tl);
 
 protected:
-    PathGeneratorType *mType;
-    Path *mPath;
+    void cloneProperties(const PathGenerator *other);
 
+protected:
+    QString mLabel;
+    QString mType;
+    QVector<PathGeneratorProperty*> mProperties;
+    const Path *mPath;
 };
 
-class PG_SingleTile : public PathGenerator
+class TILEDSHARED_EXPORT PG_SingleTile : public PathGenerator
 {
 public:
-    PG_SingleTile(Path *path);
+    PG_SingleTile(const QString &label);
+
+    PathGenerator *clone() const;
 
     void generate(int level, QVector<TileLayer*> &layers);
 
@@ -66,10 +178,12 @@ public:
     int mTileID;
 };
 
-class PG_Fence : public PathGenerator
+class TILEDSHARED_EXPORT PG_Fence : public PathGenerator
 {
 public:
-    PG_Fence(Path *path);
+    PG_Fence(const QString &label);
+
+    PathGenerator *clone() const;
 
     void generate(int level, QVector<TileLayer*> &layers);
 
@@ -84,16 +198,19 @@ public:
         TileCount
     };
 
-    QString mLayerName;
-    QString mLayerName2;
-    QVector<QString> mTilesetName;
-    QVector<int> mTileID;
+    enum Properties
+    {
+        LayerName = TileCount,
+        PropertyCount
+    };
 };
 
-class PG_StreetLight : public PathGenerator
+class TILEDSHARED_EXPORT PG_StreetLight : public PathGenerator
 {
 public:
-    PG_StreetLight(Path *path);
+    PG_StreetLight(const QString &label);
+
+    PathGenerator *clone() const;
 
     void generate(int level, QVector<TileLayer*> &layers);
 
@@ -107,11 +224,12 @@ public:
         TileCount
     };
 
-    int mGap;
-    QString mLayerName;
-    QString mLayerName2;
-    QVector<QString> mTilesetName;
-    QVector<int> mTileID;
+    enum Properties
+    {
+        LayerName = TileCount,
+        Spacing,
+        PropertyCount
+    };
 };
 
 } // namespace Tiled
