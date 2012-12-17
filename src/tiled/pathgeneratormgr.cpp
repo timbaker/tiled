@@ -52,18 +52,6 @@ void PathGeneratorMgr::deleteInstance()
     mInstance = 0;
 }
 
-void PathGeneratorMgr::insertGenerator(int index, PathGenerator *pgen)
-{
-    Q_ASSERT(pgen && !mGenerators.contains(pgen));
-    pgen->refCountUp();
-    mGenerators.insert(index, pgen);
-}
-
-PathGenerator *PathGeneratorMgr::removeGenerator(int index)
-{
-    mGenerators.at(index)->refCountDown();
-    return mGenerators.takeAt(index);
-}
 
 PathGeneratorMgr::PathGeneratorMgr(QObject *parent) :
     QObject(parent)
@@ -105,6 +93,19 @@ PathGeneratorMgr::PathGeneratorMgr(QObject *parent) :
     if (Tileset *ts = loadTileset(QLatin1String("C:\\Users\\Tim\\Desktop\\ProjectZomboid\\FromLemmy\\Maps\\Tiles\\lighting_outdoor_01.png")))
         mTilesets += ts;
 #endif
+}
+
+void PathGeneratorMgr::insertGenerator(int index, PathGenerator *pgen)
+{
+    Q_ASSERT(pgen && !mGenerators.contains(pgen));
+    pgen->refCountUp();
+    mGenerators.insert(index, pgen);
+}
+
+PathGenerator *PathGeneratorMgr::removeGenerator(int index)
+{
+    mGenerators.at(index)->refCountDown();
+    return mGenerators.takeAt(index);
 }
 
 QString PathGeneratorMgr::txtName()
