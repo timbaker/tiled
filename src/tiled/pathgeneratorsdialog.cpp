@@ -54,7 +54,7 @@ PathGeneratorsDialog::PathGeneratorsDialog(QWidget *parent) :
     setGeneratorsList();
 
     ui->generatorTypesList->clear();
-    foreach (PathGenerator *pgen, PathGeneratorMgr::instance()->generators())
+    foreach (PathGenerator *pgen, PathGeneratorMgr::instance()->generatorTypes())
         ui->generatorTypesList->addItem(pgen->type());
 
     ui->generatorsList->setCurrentRow(0);
@@ -92,7 +92,7 @@ void PathGeneratorsDialog::currentGeneratorTemplateChanged(int row)
 {
     mCurrentGeneratorTemplate = 0;
     if (row >= 0) {
-        mCurrentGeneratorTemplate = PathGeneratorMgr::instance()->generators().at(row);
+        mCurrentGeneratorTemplate = PathGeneratorMgr::instance()->generatorTypes().at(row);
     }
     synchUI();
 }

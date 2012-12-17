@@ -55,6 +55,7 @@ private:
     static PathGeneratorMgr *mInstance;
 
     QList<PathGenerator*> mGenerators;
+    QList<PathGenerator*> mGeneratorTypes;
     QList<Tileset*> mTilesets;
 };
 
