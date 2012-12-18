@@ -134,9 +134,11 @@ void PathGeneratorTilesDialog::addTileset()
     }
 #if 1
     foreach (QFileInfo info, add) {
-        if (Tiled::Tileset *ts = PathGeneratorMgr::instance()->loadTileset(info.canonicalFilePath()))
+        if (Tiled::Tileset *ts = PathGeneratorMgr::instance()->loadTileset(info.canonicalFilePath())) {
             PathGeneratorMgr::instance()->addTileset(ts);
-        else {
+            setTilesetList();
+            ui->tilesets->setCurrentRow(PathGeneratorMgr::instance()->indexOf(ts));
+        } else {
             QMessageBox::warning(this, tr("It's no good, Jim!"),
                                  PathGeneratorMgr::instance()->errorString());
         }
