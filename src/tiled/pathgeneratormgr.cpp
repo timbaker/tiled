@@ -59,6 +59,7 @@ PathGeneratorMgr::PathGeneratorMgr(QObject *parent) :
     // This is a list of all possible generators.
     mGeneratorTypes += new PG_Fence(QLatin1String("Fence"));
     mGeneratorTypes += new PG_StreetLight(QLatin1String("Street Light"));
+    mGeneratorTypes += new PG_WithCorners(QLatin1String("With Corners"));
     foreach (PathGenerator *pgen, mGeneratorTypes)
         pgen->refCountUp();
 

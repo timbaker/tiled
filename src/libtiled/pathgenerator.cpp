@@ -386,6 +386,21 @@ void PathGenerator::cloneProperties(const PathGenerator *other)
         mProperties[i]->clone(other->mProperties[i]);
 }
 
+PathGenerator::Direction PathGenerator::direction(QPoint p0, QPoint p1)
+{
+    if (p0.x() == p1.x()) {
+        if (p0.y() < p1.y()) return NorthSouth;
+        else return SouthNorth;
+    }
+
+    if (p0.y() == p1.y()) {
+        if (p0.x() < p1.x()) return WestEast;
+        else return EastWest;
+    }
+
+    return Angled;
+}
+
 /////
 
 PG_SingleTile::PG_SingleTile(const QString &label) :
@@ -681,35 +696,66 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
     int spacing = mProperties[Spacing]->asInteger()->mValue;
     bool reverse = mProperties[Reverse]->asBoolean()->mValue;
 
+    int orient = -1;
     int distance = -offset;
     for (int i = 0; i < points.size() - 1; i++) {
-        bool vert = points[i].x() == points[i+1].x();
-        bool horiz = points[i].y() == points[i+1].y();
-        if (horiz) {
-            Tile *tile = tiles[level1 ? (reverse ? South : North) : Base];
-            if (!tile)
-                continue;
-            foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
-                                              points[i+1].x(), points[i+1].y())) {
-                if (i > 0 && pt == points[i].toPoint())
-                    continue; // skip shared point
-                if (tl->contains(pt) && (distance >= 0) && !(distance % spacing)) {
-                    tl->setCell(pt.x(), pt.y(), Cell(tile));
+        QPoint p0 = points[i].toPoint(), p1 = points[i + 1].toPoint();
+        Direction dir = direction(p0, p1);
+        if (dir == WestEast || dir == EastWest) {
+            if (orient == -1) orient = reverse ? South : North;
+            if (Tile *tile = tiles[level1 ? orient : Base]) {
+                foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
+                                                  points[i+1].x(), points[i+1].y())) {
+                    if (i > 0 && pt == points[i].toPoint())
+                        continue; // skip shared point
+                    if (tl->contains(pt) && (distance >= 0) && !(distance % spacing)) {
+                        tl->setCell(pt.x(), pt.y(), Cell(tile));
+                    }
+                    ++distance;
                 }
-                ++distance;
             }
-        } else if (vert) {
-            Tile *tile = tiles[level1 ? (reverse ? East : West) : Base];
-            if (!tile)
-                continue;
-            foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
-                                              points[i+1].x(), points[i+1].y())) {
-                if (i > 0 && pt == points[i].toPoint())
-                    continue; // skip shared point
-                if (tl->contains(pt) && (distance >= 0) && !(distance % spacing)) {
-                    tl->setCell(pt.x(), pt.y(), Cell(tile));
+            if (i + 1 < points.size() - 1) {
+                QPoint p2 = points[i+2].toPoint();
+                Direction dir2 = direction(p1, p2);
+                if (dir == WestEast) {
+                    if (dir2 == NorthSouth)
+                        orient = (orient == South) ? West : East;
+                    else if (dir2 == SouthNorth)
+                        orient = (orient == South) ? East : West;
+                } else {
+                    if (dir2 == NorthSouth)
+                        orient = (orient == South) ? East : West;
+                    else if (dir2 == SouthNorth)
+                        orient = (orient == South) ? West : East;
                 }
-                ++distance;
+            }
+        } else if (dir == NorthSouth || dir == SouthNorth) {
+            if (orient == -1) orient = reverse ? East : West;
+            if (Tile *tile = tiles[level1 ? orient : Base]) {
+                foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
+                                                  points[i+1].x(), points[i+1].y())) {
+                    if (i > 0 && pt == points[i].toPoint())
+                        continue; // skip shared point
+                    if (tl->contains(pt) && (distance >= 0) && !(distance % spacing)) {
+                        tl->setCell(pt.x(), pt.y(), Cell(tile));
+                    }
+                    ++distance;
+                }
+            }
+            if (i + 1 < points.size() - 1) {
+                QPoint p2 = points[i+2].toPoint();
+                Direction dir2 = direction(p1, p2);
+                if (dir == NorthSouth) {
+                    if (dir2 == WestEast)
+                        orient = (orient == East) ? North : South;
+                    else if (dir2 == EastWest)
+                        orient = (orient == East) ? South : North;
+                } else {
+                    if (dir2 == WestEast)
+                        orient = (orient == East) ? South : North;
+                    else if (dir2 == EastWest)
+                        orient = (orient == East) ? North : South;
+                }
             }
         } else {
             Tile *tile = tiles[level1 ? (reverse ? East : West) : Base];
@@ -725,5 +771,237 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
                 ++distance;
             }
         }
+    }
+}
+
+/////
+
+PG_WithCorners::PG_WithCorners(const QString &label) :
+    PathGenerator(label, QLatin1String("WithCorners"))
+{
+    mProperties.resize(PropertyCount);
+
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("West"))) {
+        mProperties[West] = prop;
+    }
+
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("North"))) {
+        mProperties[North] = prop;
+    }
+
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("East"))) {
+        mProperties[East] = prop;
+    }
+
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("South"))) {
+        mProperties[South] = prop;
+    }
+
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("OuterSouthWest"))) {
+        mProperties[OuterSouthWest] = prop;
+    }
+
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("OuterNorthWest"))) {
+        mProperties[OuterNorthWest] = prop;
+    }
+
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("OuterNorthEast"))) {
+        mProperties[OuterNorthEast] = prop;
+    }
+
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("OuterSouthEast"))) {
+        mProperties[OuterSouthEast] = prop;
+    }
+
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("InnerSouthWest"))) {
+        mProperties[InnerSouthWest] = prop;
+    }
+
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("InnerNorthWest"))) {
+        mProperties[InnerNorthWest] = prop;
+    }
+
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("InnerNorthEast"))) {
+        mProperties[InnerNorthEast] = prop;
+    }
+
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("InnerSouthEast"))) {
+        mProperties[InnerSouthEast] = prop;
+    }
+
+
+    if (PGP_Layer *prop = new PGP_Layer(QLatin1String("LayerWest"))) {
+        mProperties[LayerWest] = prop;
+    }
+
+    if (PGP_Layer *prop = new PGP_Layer(QLatin1String("LayerNorth"))) {
+        mProperties[LayerNorth] = prop;
+    }
+
+    if (PGP_Layer *prop = new PGP_Layer(QLatin1String("LayerEast"))) {
+        mProperties[LayerEast] = prop;
+    }
+
+    if (PGP_Layer *prop = new PGP_Layer(QLatin1String("LayerSouth"))) {
+        mProperties[LayerSouth] = prop;
+    }
+
+    if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("Reverse"))) {
+        mProperties[Reverse] = prop;
+    }
+}
+
+PathGenerator *PG_WithCorners::clone() const
+{
+    PG_WithCorners *clone = new PG_WithCorners(mLabel);
+    clone->cloneProperties(this);
+    return clone;
+}
+
+void PG_WithCorners::generate(int level, QVector<TileLayer *> &layers)
+{
+    if (level != mPath->level())
+        return;
+
+    QVector<TileLayer*> tl(4);
+    for (int i = 0; i < 4; i++) {
+        if (PGP_Layer *prop = mProperties[LayerWest+i]->asLayer()) {
+            tl[i] = findTileLayer(prop->mValue, layers);
+            if (!tl[i]) return;
+        }
+    }
+
+    QVector<Tile*> tiles(TileCount);
+    for (int i = 0; i < TileCount; i++) {
+        PGP_Tile *prop = mProperties[i]->asTile();
+        if (prop->mTilesetName.isEmpty())
+            continue;
+        Tileset *ts = findTileset(prop->mTilesetName, tl[0]->map()->tilesets());
+        if (!ts) return;
+        tiles[i] = ts->tileAt(prop->mTileID);
+        if (!tiles[i]) return;
+    }
+
+    bool reverse = false;
+    if (PGP_Boolean *prop = mProperties[Reverse]->asBoolean())
+        reverse = prop->mValue;
+
+    PathPoints points = mPath->points();
+    if (mPath->isClosed())
+        points += points.first();
+
+    int orient = -1;
+    for (int i = 0; i < points.size() - 1; i++) {
+        QPoint p0 = points[i].toPoint(), p1 = points[i + 1].toPoint();
+        Direction dir = direction(p0, p1);
+        if (dir == WestEast) {
+            if (orient == -1) orient = reverse ? South : North;
+            Q_ASSERT(orient == South || orient == North);
+            foreach (QPoint pt, calculateLine(p0.x(), p0.y(),
+                                              p1.x(), p1.y())) {
+                setCell(tl, pt, orient, tiles);
+            }
+            if (i + 1 < points.size() - 1) {
+                QPoint p2 = points[i+2].toPoint();
+                Direction dir2 = direction(p1, p2);
+                if (dir2 == NorthSouth)
+                    orient = (orient == South) ? West : East;
+                else if (dir2 == SouthNorth)
+                    orient = (orient == South) ? East : West;
+            }
+        } else if (dir == EastWest) {
+            if (orient == -1) orient = reverse ? South : North;
+            Q_ASSERT(orient == South || orient == North);
+            foreach (QPoint pt, calculateLine(p0.x(), p0.y(),
+                                              p1.x(), p1.y())) {
+                setCell(tl, pt, orient, tiles);
+            }
+            if (i + 1 < points.size() - 1) {
+                QPoint p2 = points[i+2].toPoint();
+                Direction dir2 = direction(p1, p2);
+                if (dir2 == NorthSouth)
+                    orient = (orient == South) ? East : West;
+                else if (dir2 == SouthNorth)
+                    orient = (orient == South) ? West : East;
+            }
+        } else if (dir == NorthSouth) {
+            if (orient == -1) orient = reverse ? East : West;
+            Q_ASSERT(orient == East || orient == West);
+            foreach (QPoint pt, calculateLine(p0.x(), p0.y(),
+                                              p1.x(), p1.y())) {
+                setCell(tl, pt, orient, tiles);
+            }
+            if (i + 1 < points.size() - 1) {
+                QPoint p2 = points[i+2].toPoint();
+                Direction dir2 = direction(p1, p2);
+                if (dir2 == WestEast)
+                    orient = (orient == East) ? North : South;
+                else if (dir2 == EastWest)
+                    orient = (orient == East) ? South : North;
+            }
+        } else if (dir == SouthNorth) {
+            if (orient == -1) orient = reverse ? East : West;
+            Q_ASSERT(orient == East || orient == West);
+            foreach (QPoint pt, calculateLine(p0.x(), p0.y(),
+                                              p1.x(), p1.y())) {
+                setCell(tl, pt, orient, tiles);
+            }
+            if (i + 1 < points.size() - 1) {
+                QPoint p2 = points[i+2].toPoint();
+                Direction dir2 = direction(p1, p2);
+                if (dir2 == WestEast)
+                    orient = (orient == East) ? South : North;
+                else if (dir2 == EastWest)
+                    orient = (orient == East) ? North : South;
+            }
+        }
+    }
+}
+
+int PG_WithCorners::tileAt(QVector<TileLayer *> &layers, int x, int y,
+                           QVector<Tile*> &tiles)
+{
+    foreach (TileLayer *tl, layers) {
+        if (tl->contains(x, y)) {
+            for (int i = 0; i < TileCount; i++) {
+                if (tiles[i] && tiles[i] == tl->cellAt(x, y).tile)
+                    return i;
+            }
+        }
+    }
+    return -1;
+}
+
+void PG_WithCorners::setCell(QVector<TileLayer *> layers, QPoint p,
+                             int tileEnum, QVector<Tile *> &tiles)
+{
+    if (layers[0]->contains(p)) {
+        int tileCur = tileAt(layers, p.x(), p.y(), tiles);
+        if ((tileEnum == East && tileCur == South) || (tileEnum == South && tileCur == East)) {
+            int tileE = tileAt(layers, p.x()+1,p.y(), tiles);
+            int tileS = tileAt(layers,p.x(),p.y()+1, tiles);
+            bool inner = (tileE == South) || (tileE == OuterSouthEast) ||
+                    (tileS == East) || (tileS == OuterSouthEast);
+            layers[0]->setCell(p.x(), p.y(), Cell(tiles[inner ? InnerNorthWest : OuterSouthEast]));
+        } else if ((tileEnum == East && tileCur == North) || (tileEnum == North && tileCur == East)){
+            int tileE = tileAt(layers, p.x()+1,p.y(), tiles);
+            int tileN = tileAt(layers,p.x(),p.y()-1,tiles);
+            bool inner = (tileE == North) || (tileE == OuterNorthEast) ||
+                    (tileN == East) || (tileN == OuterNorthEast);
+            layers[0]->setCell(p.x(), p.y(), Cell(tiles[inner ? InnerSouthWest : OuterNorthEast]));
+        } else if ((tileEnum == West && tileCur == South) || (tileEnum == South && tileCur == West)) {
+            int tileW = tileAt(layers,p.x()-1,p.y(),tiles);
+            int tileS = tileAt(layers,p.x(),p.y()+1,tiles);
+            bool inner = (tileW == South) || (tileW == OuterSouthWest) ||
+                    (tileS == West) || (tileS == OuterSouthWest);
+            layers[0]->setCell(p.x(), p.y(), Cell(tiles[inner ? InnerNorthEast : OuterSouthWest]));
+        } else if ((tileEnum == West && tileCur == North) || (tileEnum == North && tileCur == West)) {
+            int tileW = tileAt(layers,p.x()-1,p.y(),tiles);
+            int tileN = tileAt(layers,p.x(),p.y()-1,tiles);
+            bool inner = (tileW == North) || (tileW == OuterNorthWest) ||
+                    (tileN == West) || (tileN == OuterNorthWest);
+            layers[0]->setCell(p.x(), p.y(), Cell(tiles[inner ? InnerSouthEast : OuterNorthWest]));
+        }
+        else layers[0]->setCell(p.x(), p.y(), Cell(tiles[tileEnum]));
     }
 }

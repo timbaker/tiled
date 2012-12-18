@@ -175,6 +175,17 @@ public:
     void refCountDown() {  Q_ASSERT(mRefCount); --mRefCount; }
     int refCount() const { return mRefCount; }
 
+    enum Direction
+    {
+        WestEast,
+        EastWest,
+        NorthSouth,
+        SouthNorth,
+        Angled
+    };
+
+    Direction direction(QPoint p0, QPoint p1);
+
 protected:
     void cloneProperties(const PathGenerator *other);
 
@@ -257,6 +268,47 @@ public:
         Reverse,
         PropertyCount
     };
+};
+
+class TILEDSHARED_EXPORT PG_WithCorners : public PathGenerator
+{
+public:
+    PG_WithCorners(const QString &label);
+
+    PathGenerator *clone() const;
+
+    void generate(int level, QVector<TileLayer*> &layers);
+
+    enum TileNames
+    {
+        West,
+        North,
+        East,
+        South,
+        OuterSouthWest,
+        OuterNorthWest,
+        OuterNorthEast,
+        OuterSouthEast,
+        InnerSouthWest,
+        InnerNorthWest,
+        InnerNorthEast,
+        InnerSouthEast,
+        TileCount
+    };
+
+    int tileAt(QVector<TileLayer*> &layers, int x, int y, QVector<Tile *> &tiles);
+
+    enum Properties
+    {
+        LayerWest = TileCount,
+        LayerNorth,
+        LayerEast,
+        LayerSouth,
+        Reverse,
+        PropertyCount
+    };
+
+    void setCell(QVector<TileLayer*> layers, QPoint p, int tileEnum, QVector<Tile*> &tiles);
 };
 
 } // namespace Tiled

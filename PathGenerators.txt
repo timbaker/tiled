@@ -1,10 +1,25 @@
 version = 0
-revision = 19
+revision = 35
 source_revision = 0
 tilesets
 {
     tileset = fencing_01
+    tileset = floors_exterior_street_01
     tileset = lighting_outdoor_01
+    tileset = street_trafficlines_01
+    tileset = walls_exterior_house_01
+}
+Generator
+{
+    label = Fence - Chain Link
+    type = Fence
+    West1 = fencing_01_27
+    West2 = fencing_01_26
+    North1 = fencing_01_24
+    North2 = fencing_01_25
+    NorthWest = fencing_01_28
+    SouthEast = fencing_01_29
+    Layer = Furniture
 }
 Generator
 {
@@ -41,6 +56,42 @@ Generator
     NorthWest = fencing_01_6
     SouthEast = fencing_01_7
     Layer = Furniture
+}
+Generator
+{
+    label = Sidewalk
+    type = WithCorners
+    West = floors_exterior_street_01_0
+    North = floors_exterior_street_01_1
+    East = floors_exterior_street_01_2
+    South = floors_exterior_street_01_3
+    OuterSouthWest = floors_exterior_street_01_7
+    OuterNorthWest = floors_exterior_street_01_4
+    OuterNorthEast = floors_exterior_street_01_5
+    OuterSouthEast = floors_exterior_street_01_6
+    InnerSouthWest = 
+    InnerNorthWest = 
+    InnerNorthEast = 
+    InnerSouthEast = 
+    LayerWest = Floor
+    LayerNorth = Floor
+    LayerEast = Floor
+    LayerSouth = Floor
+    Reverse = false
+}
+Generator
+{
+    label = Street Light
+    type = StreetLight
+    West = lighting_outdoor_01_9
+    North = lighting_outdoor_01_10
+    East = lighting_outdoor_01_11
+    South = lighting_outdoor_01_8
+    Base = lighting_outdoor_01_16
+    Layer = Furniture
+    Offset = 0
+    Spacing = 10
+    Reverse = false
 }
 Generator
 {
@@ -83,32 +134,4 @@ Generator
     Offset = 0
     Spacing = 10
     Reverse = false
-}
-Generator
-{
-    label = Street Light - West & North
-    type = StreetLight
-    West = lighting_outdoor_01_9
-    North = lighting_outdoor_01_10
-    East = lighting_outdoor_01_11
-    South = lighting_outdoor_01_8
-    Base = lighting_outdoor_01_16
-    Layer = Furniture
-    Offset = 0
-    Spacing = 10
-    Reverse = false
-}
-Generator
-{
-    label = Street Light - East & South
-    type = StreetLight
-    West = lighting_outdoor_01_9
-    North = lighting_outdoor_01_10
-    East = lighting_outdoor_01_11
-    South = lighting_outdoor_01_8
-    Base = lighting_outdoor_01_16
-    Layer = Furniture
-    Offset = 0
-    Spacing = 10
-    Reverse = true
 }

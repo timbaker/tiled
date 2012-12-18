@@ -58,6 +58,9 @@ public:
     QList<Tileset*> tilesets() const
     { return mTilesetByName.values(); }
 
+    int indexOf(Tileset *ts)
+    { return tilesets().indexOf(ts); }
+
     QString txtName();
     QString txtPath();
 
