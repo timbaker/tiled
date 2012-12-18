@@ -231,6 +231,8 @@ PathGeneratorsDialog::PathGeneratorsDialog(QWidget *parent) :
             SLOT(propertyActivated(QModelIndex)));
     connect(ui->generatorTypesList, SIGNAL(currentRowChanged(int)),
             SLOT(currentGeneratorTemplateChanged(int)));
+    connect(ui->generatorTypesList, SIGNAL(activated(QModelIndex)),
+            SLOT(addGenerator()));
 
     connect(ui->removeGenerator, SIGNAL(clicked()), SLOT(removeGenerator()));
     connect(ui->duplicate, SIGNAL(clicked()), SLOT(duplicate()));
