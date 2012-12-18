@@ -51,6 +51,7 @@
 #include "mapscene.h"
 #include "newmapdialog.h"
 #include "newtilesetdialog.h"
+#include "pathgeneratormgr.h"
 #include "pathgeneratorsdialog.h"
 #include "pathmodel.h"
 #include "pluginmanager.h"
@@ -562,6 +563,7 @@ MainWindow::~MainWindow()
     ToolManager::deleteInstance();
 #ifdef ZOMBOID
     MapManager::deleteInstance();
+    PathGeneratorMgr::deleteInstance();
 #endif
     TilesetManager::deleteInstance();
     DocumentManager::deleteInstance();

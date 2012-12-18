@@ -95,6 +95,12 @@ PathGeneratorMgr::PathGeneratorMgr(QObject *parent) :
 #endif
 }
 
+PathGeneratorMgr::~PathGeneratorMgr()
+{
+    TilesetManager::instance()->removeReferences(tilesets());
+    TilesetManager::instance()->removeReferences(mRemovedTilesets);
+}
+
 void PathGeneratorMgr::insertGenerator(int index, PathGenerator *pgen)
 {
     Q_ASSERT(pgen && !mGenerators.contains(pgen));
@@ -171,7 +177,7 @@ bool PathGeneratorMgr::readTxt()
                     QFileInfo info(source);
                     if (!info.exists()) {
                         Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
-                        mTilesets += ts;
+                        addTileset(ts);
                         missingTilesets += QDir::toNativeSeparators(info.absoluteFilePath());
                         continue;
                     }
@@ -179,7 +185,7 @@ bool PathGeneratorMgr::readTxt()
                     Tileset *ts = loadTileset(source);
                     if (!ts)
                         return false;
-                    mTilesets += ts;
+                    addTileset(ts);
                 } else {
                     mError = tr("Unknown value name '%1'.\n%2")
                             .arg(kv.name)
@@ -193,6 +199,8 @@ bool PathGeneratorMgr::readTxt()
                 pgen = pgen->clone();
                 pgen->setLabel(block.value("label"));
                 foreach (PathGeneratorProperty *prop, pgen->properties()) {
+                    if (block.findValue(prop->name()) < 0)
+                        continue;
                     QString value = block.value(prop->name());
                     if (!prop->valueFromString(value)) {
                         mError = tr("Error with '%1' property '%2 = %3'")
@@ -231,7 +239,7 @@ bool PathGeneratorMgr::writeTxt()
     QDir tilesDir(BuildingEditor::BuildingPreferences::instance()->tilesDirectory());
     SimpleFileBlock tilesetBlock;
     tilesetBlock.name = QLatin1String("tilesets");
-    foreach (Tiled::Tileset *tileset, mTilesets) {
+    foreach (Tiled::Tileset *tileset, tilesets()) {
         QString relativePath = tilesDir.relativeFilePath(tileset->imageSource());
         relativePath.truncate(relativePath.length() - 4); // remove .png
         tilesetBlock.values += SimpleFileKeyValue(QLatin1String("tileset"), relativePath);
@@ -340,6 +348,30 @@ Tileset *PathGeneratorMgr::loadTileset(const QString &source)
     }
 
     return ts;
+}
+
+void PathGeneratorMgr::addTileset(Tileset *tileset)
+{
+    Q_ASSERT(mTilesetByName.contains(tileset->name()) == false);
+    mTilesetByName[tileset->name()] = tileset;
+    if (!mRemovedTilesets.contains(tileset))
+        TilesetManager::instance()->addReference(tileset);
+    mRemovedTilesets.removeAll(tileset);
+//    emit tilesetAdded(tileset);
+}
+
+void PathGeneratorMgr::removeTileset(Tileset *tileset)
+{
+    Q_ASSERT(mTilesetByName.contains(tileset->name()));
+    Q_ASSERT(mRemovedTilesets.contains(tileset) == false);
+//    emit tilesetAboutToBeRemoved(tileset);
+    mTilesetByName.remove(tileset->name());
+//    emit tilesetRemoved(tileset);
+
+    // Don't remove references now, that will delete the tileset, and the
+    // user might undo the removal.
+    mRemovedTilesets += tileset;
+    //    TilesetManager::instance()->removeReference(tileset);
 }
 
 PathGenerator *PathGeneratorMgr::findGeneratorType(const QString &type)

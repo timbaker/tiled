@@ -141,9 +141,7 @@ void PGP_Tile::clone(PathGeneratorProperty *other)
 
 QString PGP_Tile::valueToString() const
 {
-    if (mTilesetName.isEmpty())
-        return QString();
-    return mTilesetName + QLatin1Char('_') + QString::number(mTileID);
+    return tileName(mTilesetName, mTileID);
 }
 
 static bool parseTileName(const QString &tileName, QString &tilesetName, int &index)
@@ -177,6 +175,13 @@ bool PGP_Tile::valueFromString(const QString &s)
         return true;
     }
     return false;
+}
+
+QString PGP_Tile::tileName(const QString &tilesetName, int tileID) const
+{
+    if (tilesetName.isEmpty())
+        return QString();
+    return tilesetName + QLatin1Char('_') + QString::number(tileID);
 }
 
 /////
@@ -237,9 +242,11 @@ static QVector<QPoint> calculateLine(int x0, int y0, int x1, int y1)
         qSwap(x0, y0);
         qSwap(x1, y1);
     }
+    bool swapped = false;
     if (x0 > x1) {
         qSwap(x0, x1);
         qSwap(y0, y1);
+        swapped = true;
     }
     const int deltax = x1 - x0;
     const int deltay = qAbs(y1 - y0);
@@ -252,11 +259,20 @@ static QVector<QPoint> calculateLine(int x0, int y0, int x1, int y1)
     else
         ystep = -1;
 
+    ret.reserve(x1 + 1 - x0 + 1);
+
     for (int x = x0; x < x1 + 1 ; x++) {
-        if (steep)
-            ret += QPoint(y, x);
-        else
-            ret += QPoint(x, y);
+        if (swapped) {
+            if (steep)
+                ret.prepend( QPoint(y, x) );
+            else
+                ret.prepend( QPoint(x, y) );
+        } else {
+            if (steep)
+                ret += QPoint(y, x);
+            else
+                ret += QPoint(x, y);
+        }
         error = error - deltay;
         if (error < 0) {
              y = y + ystep;
@@ -339,6 +355,29 @@ void PathGenerator::fill(Tile *tile, TileLayer *tl)
             }
         }
     }
+}
+
+QVector<QPoint> PathGenerator::pointsAlongPath(int offset, int spacing)
+{
+    PathPoints points = mPath->points();
+    if (mPath->isClosed())
+        points += points.first();
+
+    QVector<QPoint> ret;
+
+    int distance = -offset;
+    for (int i = 0; i < points.size() - 1; i++) {
+        QVector<QPoint> pts = calculateLine(points[i].x(), points[i].y(),
+                                            points[i+1].x(), points[i+1].y());
+        for (int j = 0; j < pts.size(); j++) {
+            if (i > 0 || j == 0)
+                continue; // skip shared point
+            if (distance >= 0 && !(distance % spacing))
+                ret += pts[j];
+        }
+    }
+
+    return ret;
 }
 
 void PathGenerator::cloneProperties(const PathGenerator *other)
@@ -492,18 +531,24 @@ void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
         points += points.first();
 
     for (int i = 0; i < points.size() - 1; i++) {
-        bool vert = points[i].x() == points[i+1].x();
-        bool horiz = points[i].y() == points[i+1].y();
+        QPoint pt0 = points[i].toPoint(), pt1 = points[i+1].toPoint();
+        bool vert = pt0.x() == pt1.x();
+        bool horiz = pt0.y() == pt1.y();
         int alternate = 0;
         if (horiz) {
-            foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
-                                              points[i+1].x(), points[i+1].y())) {
-                if (pt.x() == qMax(points[i].x(), points[i+1].x())) {
+            if (pt0.x() > pt1.x())
+                qSwap(pt0, pt1);
+            foreach (QPoint pt, calculateLine(pt0.x(), pt0.y(),
+                                              pt1.x(), pt1.y())) {
+                if (pt == pt1) {
                     if (tl->contains(pt.x(), pt.y() - 1)) {
-                        if (tl->cellAt(pt.x(), pt.y() - 1).tile == tiles[West2])
+                        if (tl->cellAt(pt.x(), pt.y() - 1).tile == tiles[West2]) {
                             tl->setCell(pt.x(), pt.y(), Cell(tiles[SouthEast]));
+                            continue;
+                        }
                     }
-                    break;
+                    if (pt != points.first().toPoint() && pt != points.last().toPoint())
+                        continue; // another segment precedes/follows
                 }
                 if (tl->contains(pt)) {
                     Tile *tile = tl->cellAt(pt).tile;
@@ -515,14 +560,19 @@ void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
                 alternate = !alternate;
             }
         } else if (vert) {
-            foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
-                                              points[i+1].x(), points[i+1].y())) {
-                if (pt.y() == qMax(points[i].y(), points[i+1].y())) {
+            if (pt0.y() > pt1.y())
+                qSwap(pt0, pt1);
+            foreach (QPoint pt, calculateLine(pt0.x(), pt0.y(),
+                                              pt1.x(), pt1.y())) {
+                if (pt == pt1) {
                     if (tl->contains(pt.x() - 1, pt.y())) {
-                        if (tl->cellAt(pt.x() - 1, pt.y()).tile == tiles[North2])
+                        if (tl->cellAt(pt.x() - 1, pt.y()).tile == tiles[North2]) {
                             tl->setCell(pt.x(), pt.y(), Cell(tiles[SouthEast]));
+                            continue;
+                        }
                     }
-                    break;
+                    if (pt != points.first().toPoint() && pt != points.last().toPoint())
+                        continue; // another segment precedes/follows
                 }
                 if (tl->contains(pt)) {
                     Tile *tile = tl->cellAt(pt).tile;
@@ -573,6 +623,11 @@ PG_StreetLight::PG_StreetLight(const QString &label) :
     prop2->mValue = QLatin1String("Furniture");
     mProperties[LayerName] = prop2;
 
+    if (PGP_Integer *prop = new PGP_Integer(QLatin1String("Offset"))) {
+        prop->mMin = 0, prop->mMax = 300, prop->mValue = 0;
+        mProperties[Offset] = prop;
+    }
+
     PGP_Integer *prop3 = new PGP_Integer(QLatin1String("Spacing"));
     prop3->mMin = 1, prop3->mMax = 300, prop3->mValue = 10;
     mProperties[Spacing] = prop3;
@@ -605,6 +660,8 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
     QVector<Tile*> tiles(TileCount);
     for (int i = 0; i < TileCount; i++) {
         PGP_Tile *prop = mProperties[i]->asTile();
+        if (prop->mTilesetName.isEmpty())
+            continue;
         Tileset *ts = findTileset(prop->mTilesetName, tl->map()->tilesets());
         if (!ts) return;
         tiles[i] = ts->tileAt(prop->mTileID);
@@ -620,26 +677,50 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
             points[i].translate(QPoint(-3, -3));
     }
 
+    int offset = mProperties[Offset]->asInteger()->mValue;
     int spacing = mProperties[Spacing]->asInteger()->mValue;
     bool reverse = mProperties[Reverse]->asBoolean()->mValue;
 
+    int distance = -offset;
     for (int i = 0; i < points.size() - 1; i++) {
         bool vert = points[i].x() == points[i+1].x();
         bool horiz = points[i].y() == points[i+1].y();
-        int distance = 0;
         if (horiz) {
+            Tile *tile = tiles[level1 ? (reverse ? South : North) : Base];
+            if (!tile)
+                continue;
             foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
                                               points[i+1].x(), points[i+1].y())) {
-                if (tl->contains(pt) && !(distance % spacing)) {
-                    tl->setCell(pt.x(), pt.y(), Cell(tiles[level1 ? (reverse ? South : North) : Base]));
+                if (i > 0 && pt == points[i].toPoint())
+                    continue; // skip shared point
+                if (tl->contains(pt) && (distance >= 0) && !(distance % spacing)) {
+                    tl->setCell(pt.x(), pt.y(), Cell(tile));
                 }
                 ++distance;
             }
         } else if (vert) {
+            Tile *tile = tiles[level1 ? (reverse ? East : West) : Base];
+            if (!tile)
+                continue;
             foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
                                               points[i+1].x(), points[i+1].y())) {
-                if (tl->contains(pt) && !(distance % spacing)) {
-                    tl->setCell(pt.x(), pt.y(), Cell(tiles[level1 ? (reverse ? East : West) : Base]));
+                if (i > 0 && pt == points[i].toPoint())
+                    continue; // skip shared point
+                if (tl->contains(pt) && (distance >= 0) && !(distance % spacing)) {
+                    tl->setCell(pt.x(), pt.y(), Cell(tile));
+                }
+                ++distance;
+            }
+        } else {
+            Tile *tile = tiles[level1 ? (reverse ? East : West) : Base];
+            if (!tile)
+                continue;
+            foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
+                                              points[i+1].x(), points[i+1].y())) {
+                if (i > 0 && pt == points[i].toPoint())
+                    continue; // skip shared point
+                if (tl->contains(pt) && (distance >= 0) && !(distance % spacing)) {
+                    tl->setCell(pt.x(), pt.y(), Cell(tile));
                 }
                 ++distance;
             }

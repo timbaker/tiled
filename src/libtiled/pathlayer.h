@@ -120,6 +120,11 @@ public:
     const QList<PathGenerator*> &generators() const
     { return mGenerators; }
 
+    PathGenerator *generator(int index);
+
+    int indexOf(PathGenerator *pgen)
+    { return mGenerators.indexOf(pgen); }
+
 private:
     PathLayer *mLayer;
     PathPoints mPoints;

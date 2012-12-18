@@ -49,6 +49,8 @@ class MapRenderer;
 class Tileset;
 #ifdef ZOMBOID
 class Path;
+class PathGenerator;
+class PathGeneratorProperty;
 class Tile;
 #endif
 
@@ -286,6 +288,17 @@ public:
     inline void emitEditLayerNameRequested()
     { emit editLayerNameRequested(); }
 
+#ifdef ZOMBOID
+    // +UNDO/REDO
+    void addPathGenerator(Path *path, int index, PathGenerator *pgen);
+    PathGenerator *removePathGenerator(Path *path, int index);
+    void reorderPathGenerator(Path *path, int oldIndex, int newIndex);
+    QString changePathGeneratorPropertyValue(Path *path,
+                                             PathGeneratorProperty *prop,
+                                             const QString &newValue);
+    // -UNDO/REDO
+#endif // ZOMBOID
+
 signals:
     void fileNameChanged();
     void modifiedChanged();
@@ -383,6 +396,11 @@ signals:
     void pathsAboutToBeRemoved(const QList<Path*> &paths);
     void pathsRemoved(const QList<Path*> &paths);
     void pathsChanged(const QList<Path*> &paths);
+
+    void pathGeneratorAdded(Path *path, int index);
+    void pathGeneratorRemoved(Path *path, int index);
+    void pathGeneratorReordered(Path *path, int oldIndex, int newIndex);
+    void pathGeneratorPropertyChanged(Path *path, PathGeneratorProperty *prop);
 
     void mapCompositeChanged();
 #endif

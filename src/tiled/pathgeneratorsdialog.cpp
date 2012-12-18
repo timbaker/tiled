@@ -19,6 +19,8 @@
 #include "ui_pathgeneratorsdialog.h"
 
 #include "pathgeneratormgr.h"
+#include "pathgeneratortilesdialog.h"
+#include "utils.h"
 
 #include "map.h"
 #include "pathgenerator.h"
@@ -26,9 +28,149 @@
 #include "tileset.h"
 
 #include <QMessageBox>
+#include <QUndoGroup>
+#include <QUndoStack>
 
 using namespace Tiled;
 using namespace Internal;
+
+namespace PathGeneratorUndoRedo
+{
+
+enum {
+    Cmd_ChangePropertyValue = 1000
+};
+
+class AddGenerator : public QUndoCommand
+{
+public:
+    AddGenerator(PathGeneratorsDialog *d, int index, PathGenerator *pgen) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Add Generator")),
+        mDialog(d),
+        mIndex(index),
+        mGenerator(pgen)
+    {
+    }
+
+    ~AddGenerator()
+    {
+        // FIXME: delete mGenerator
+    }
+
+    void undo()
+    {
+        mGenerator = mDialog->removeGenerator(mIndex);
+    }
+
+    void redo()
+    {
+        mDialog->addGenerator(mIndex, mGenerator);
+        mGenerator = 0;
+    }
+
+    PathGeneratorsDialog *mDialog;
+    int mIndex;
+    PathGenerator *mGenerator;
+};
+
+class RemoveGenerator : public QUndoCommand
+{
+public:
+    RemoveGenerator(PathGeneratorsDialog *d, int index) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Remove Generator")),
+        mDialog(d),
+        mIndex(index),
+        mGenerator(0)
+    {
+    }
+
+    ~RemoveGenerator()
+    {
+        // FIXME: delete mGenerator
+    }
+
+    void undo()
+    {
+        mDialog->addGenerator(mIndex, mGenerator);
+        mGenerator = 0;
+    }
+
+    void redo()
+    {
+        mGenerator = mDialog->removeGenerator(mIndex);
+    }
+
+    PathGeneratorsDialog *mDialog;
+    int mIndex;
+    PathGenerator *mGenerator;
+};
+
+class ReorderGenerator : public QUndoCommand
+{
+public:
+    ReorderGenerator(PathGeneratorsDialog *d, int oldIndex, int newIndex) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Reorder Generator")),
+        mDialog(d),
+        mOldIndex(oldIndex),
+        mNewIndex(newIndex)
+    {
+    }
+
+    void undo()
+    {
+        mDialog->reorderGenerator(mNewIndex, mOldIndex);
+    }
+
+    void redo()
+    {
+        mDialog->reorderGenerator(mOldIndex, mNewIndex);
+    }
+
+    PathGeneratorsDialog *mDialog;
+    int mOldIndex;
+    int mNewIndex;
+};
+
+class ChangePropertyValue : public QUndoCommand
+{
+public:
+    ChangePropertyValue(PathGeneratorsDialog *d, PathGeneratorProperty *prop,
+                        const QString &newValue, bool mergeable = false) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Property Value")),
+        mDialog(d),
+        mProperty(prop),
+        mValue(newValue),
+        mMergeable(mergeable)
+    {
+    }
+
+    int id() const { return Cmd_ChangePropertyValue; }
+
+    bool mergeWith(const QUndoCommand *other)
+    {
+        const ChangePropertyValue *o = static_cast<const ChangePropertyValue*>(other);
+        if (!(o && mMergeable && o->mProperty == mProperty))
+            return false;
+        return true;
+    }
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+    void swap()
+    {
+        mValue = mDialog->changePropertyValue(mProperty, mValue);
+    }
+
+    PathGeneratorsDialog *mDialog;
+    PathGeneratorProperty *mProperty;
+    QString mValue;
+    bool mMergeable;
+};
+
+} // namespace PathGeneratorUndoRedo
+
+using namespace PathGeneratorUndoRedo;
 
 PathGeneratorsDialog::PathGeneratorsDialog(QWidget *parent) :
     QDialog(parent),
@@ -37,21 +179,73 @@ PathGeneratorsDialog::PathGeneratorsDialog(QWidget *parent) :
     mCurrentProperty(0),
     mCurrentGeneratorTemplate(0),
     mSynching(false),
+    mUndoGroup(new QUndoGroup(this)),
+    mUndoStack(new QUndoStack(this)),
+    mWasEditingString(false),
     ui(new Ui::PathGeneratorsDialog)
 {
     ui->setupUi(this);
+
+    /////
+
+    QAction *undoAction = mUndoGroup->createUndoAction(this, tr("Undo"));
+    QAction *redoAction = mUndoGroup->createRedoAction(this, tr("Redo"));
+    QIcon undoIcon(QLatin1String(":images/16x16/edit-undo.png"));
+    QIcon redoIcon(QLatin1String(":images/16x16/edit-redo.png"));
+    mUndoGroup->addStack(mUndoStack);
+    mUndoGroup->setActiveStack(mUndoStack);
+
+    QToolButton *button = new QToolButton(this);
+    button->setIcon(undoIcon);
+    Utils::setThemeIcon(button, "edit-undo");
+    button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    button->setText(undoAction->text());
+    button->setEnabled(mUndoGroup->canUndo());
+    button->setShortcut(QKeySequence::Undo);
+    mUndoButton = button;
+    ui->undoRedoLayout->addWidget(button);
+    connect(mUndoGroup, SIGNAL(canUndoChanged(bool)), button, SLOT(setEnabled(bool)));
+    connect(mUndoGroup, SIGNAL(undoTextChanged(QString)), SLOT(undoTextChanged(QString)));
+    connect(mUndoGroup, SIGNAL(redoTextChanged(QString)), SLOT(redoTextChanged(QString)));
+    connect(button, SIGNAL(clicked()), undoAction, SIGNAL(triggered()));
+
+    button = new QToolButton(this);
+    button->setIcon(redoIcon);
+    button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    Utils::setThemeIcon(button, "edit-redo");
+    button->setText(redoAction->text());
+    button->setEnabled(mUndoGroup->canRedo());
+    button->setShortcut(QKeySequence::Redo);
+    mRedoButton = button;
+    ui->undoRedoLayout->addWidget(button);
+    connect(mUndoGroup, SIGNAL(canRedoChanged(bool)), button, SLOT(setEnabled(bool)));
+    connect(button, SIGNAL(clicked()), redoAction, SIGNAL(triggered()));
+
+    /////
 
     connect(ui->generatorsList, SIGNAL(currentRowChanged(int)),
             SLOT(currentGeneratorChanged(int)));
     connect(ui->propertyList, SIGNAL(currentRowChanged(int)),
             SLOT(currentPropertyChanged(int)));
+    connect(ui->propertyList, SIGNAL(activated(QModelIndex)),
+            SLOT(propertyActivated(QModelIndex)));
     connect(ui->generatorTypesList, SIGNAL(currentRowChanged(int)),
             SLOT(currentGeneratorTemplateChanged(int)));
+
+    connect(ui->removeGenerator, SIGNAL(clicked()), SLOT(removeGenerator()));
+    connect(ui->duplicate, SIGNAL(clicked()), SLOT(duplicate()));
+    connect(ui->moveUp, SIGNAL(clicked()), SLOT(moveUp()));
+    connect(ui->moveDown, SIGNAL(clicked()), SLOT(moveDown()));
+
+    connect(ui->nameEdit, SIGNAL(textEdited(QString)), SLOT(nameEdited(QString)));
     connect(ui->checkBox, SIGNAL(toggled(bool)), SLOT(booleanToggled(bool)));
     connect(ui->integerSpinBox, SIGNAL(valueChanged(int)),
             SLOT(integerValueChanged(int)));
+    connect(ui->chooseTile, SIGNAL(clicked()), SLOT(chooseTile()));
+    connect(ui->clearTile, SIGNAL(clicked()), SLOT(clearTile()));
+    connect(ui->stringEdit, SIGNAL(textEdited(QString)), SLOT(stringEdited(QString)));
+
     connect(ui->addGenerator, SIGNAL(clicked()), SLOT(addGenerator()));
-    connect(ui->nameEdit, SIGNAL(textEdited(QString)), SLOT(nameEdited(QString)));
 
     setGeneratorsList();
 
@@ -77,6 +271,7 @@ void PathGeneratorsDialog::currentGeneratorChanged(int row)
         setPropertyList();
     }
     synchUI();
+    mWasEditingString = false;
 }
 
 void PathGeneratorsDialog::currentPropertyChanged(int row)
@@ -88,6 +283,7 @@ void PathGeneratorsDialog::currentPropertyChanged(int row)
     }
     setPropertyPage();
     synchUI();
+    mWasEditingString = false;
 }
 
 void PathGeneratorsDialog::currentGeneratorTemplateChanged(int row)
@@ -99,14 +295,58 @@ void PathGeneratorsDialog::currentGeneratorTemplateChanged(int row)
     synchUI();
 }
 
+void PathGeneratorsDialog::removeGenerator()
+{
+    if (!mCurrentGenerator)
+         return;
+    int index = mGenerators.indexOf(mCurrentGenerator);
+    mUndoStack->push(new RemoveGenerator(this, index));
+}
+
+void PathGeneratorsDialog::duplicate()
+{
+    if (!mCurrentGenerator)
+         return;
+    PathGenerator *clone = mCurrentGenerator->clone();
+    int index = mGenerators.indexOf(mCurrentGenerator);
+    mUndoStack->push(new AddGenerator(this, index + 1, clone));
+}
+
+void PathGeneratorsDialog::moveUp()
+{
+    if (!mCurrentGenerator)
+         return;
+    int index = mGenerators.indexOf(mCurrentGenerator);
+    if (index == 0)
+        return;
+    mUndoStack->push(new ReorderGenerator(this, index, index - 1));
+}
+
+void PathGeneratorsDialog::moveDown()
+{
+    if (!mCurrentGenerator)
+         return;
+    int index = mGenerators.indexOf(mCurrentGenerator);
+    if (index == mGenerators.size() - 1)
+        return;
+    mUndoStack->push(new ReorderGenerator(this, index, index + 1));
+}
+
+void PathGeneratorsDialog::propertyActivated(const QModelIndex &index)
+{
+    if (!mCurrentProperty)
+        return;
+    if (PGP_Tile *prop = mCurrentProperty->asTile())
+        chooseTile();
+}
+
 void PathGeneratorsDialog::nameEdited(const QString &text)
 {
     if (mSynching || !mCurrentGenerator)
         return;
     mCurrentGenerator->setLabel(text);
     int row = mGenerators.indexOf(mCurrentGenerator);
-    setGeneratorsList();
-    ui->generatorsList->setCurrentRow(row);
+    ui->generatorsList->item(row)->setText(text);
 }
 
 void PathGeneratorsDialog::booleanToggled(bool newValue)
@@ -114,7 +354,10 @@ void PathGeneratorsDialog::booleanToggled(bool newValue)
     if (mSynching || !mCurrentProperty)
         return;
     if (PGP_Boolean *p = mCurrentProperty->asBoolean()) {
-        p->mValue = newValue;
+        mUndoStack->push(new ChangePropertyValue(this, p,
+                                                 QLatin1String(newValue
+                                                               ? "true"
+                                                               : "false")));
     }
 }
 
@@ -123,7 +366,46 @@ void PathGeneratorsDialog::integerValueChanged(int newValue)
     if (mSynching || !mCurrentProperty)
         return;
     if (PGP_Integer *p = mCurrentProperty->asInteger()) {
-        p->mValue = newValue;
+        mUndoStack->push(new ChangePropertyValue(this, p, QString::number(newValue)));
+    }
+}
+
+void PathGeneratorsDialog::chooseTile()
+{
+    PGP_Tile *prop = mCurrentProperty->asTile();
+
+    PathGeneratorTilesDialog *dialog = PathGeneratorTilesDialog::instance();
+    QWidget *saveParent = dialog->parentWidget();
+    dialog->reparent(this);
+
+    dialog->setInitialTile(prop->mTilesetName, prop->mTileID);
+    if (dialog->exec() == QDialog::Accepted) {
+        if (Tile *tile = dialog->selectedTile()) {
+            mUndoStack->push(new ChangePropertyValue(this, prop,
+                                                     prop->tileName(
+                                                         tile->tileset()->name(),
+                                                         tile->id())));
+        }
+    }
+
+    dialog->reparent(saveParent);
+}
+
+void PathGeneratorsDialog::clearTile()
+{
+    PGP_Tile *prop = mCurrentProperty->asTile();
+    mUndoStack->push(new ChangePropertyValue(this, prop, QString()));
+}
+
+void PathGeneratorsDialog::stringEdited(const QString &text)
+{
+    if (mSynching || !mCurrentProperty)
+        return;
+    // FIXME: merge these undo commands
+    if (mCurrentProperty->asString() || mCurrentProperty->asLayer()) {
+        mUndoStack->push(new ChangePropertyValue(this, mCurrentProperty, text,
+                                                 !mWasEditingString));
+        mWasEditingString = true;
     }
 }
 
@@ -133,15 +415,23 @@ void PathGeneratorsDialog::addGenerator()
     if (index == 0)
         index = PathGeneratorMgr::instance()->generators().size();
     PathGenerator *clone = mCurrentGeneratorTemplate->clone();
-    PathGeneratorMgr::instance()->insertGenerator(index, clone);
-    mGenerators = PathGeneratorMgr::instance()->generators();
-    setGeneratorsList();
-    ui->generatorsList->setCurrentRow(index);
+    mUndoStack->push(new AddGenerator(this, index, clone));
+}
+
+void PathGeneratorsDialog::undoTextChanged(const QString &text)
+{
+    mUndoButton->setToolTip(text);
+}
+
+void PathGeneratorsDialog::redoTextChanged(const QString &text)
+{
+    mRedoButton->setToolTip(text);
 }
 
 void PathGeneratorsDialog::synchUI()
 {
     ui->nameEdit->setText(mCurrentGenerator ? mCurrentGenerator->label() : QString());
+    ui->duplicate->setEnabled(mCurrentGenerator != 0);
     ui->moveUp->setEnabled(mCurrentGenerator && ui->generatorsList->currentRow() > 0);
     ui->moveDown->setEnabled(mCurrentGenerator && ui->generatorsList->currentRow() < mGenerators.size() - 1);
     ui->addGenerator->setEnabled(mCurrentGeneratorTemplate != 0);
@@ -195,6 +485,7 @@ void PathGeneratorsDialog::setPropertyPage()
         ui->propertyStack->setEnabled(false);
         if (!ui->nameEdit->text().isEmpty()) {
             ui->nameEdit->clear();
+            ui->tileName->clear();
             ui->tileLabel->clear();
             ui->integerSpinBox->clear();
             ui->stringEdit->clear();
@@ -207,9 +498,11 @@ void PathGeneratorsDialog::setPropertyPage()
                 pixmap = tile->image();
         }
         ui->tileLabel->setPixmap(pixmap);
+        ui->tileName->setText(p->valueToString());
     } else if (PGP_Boolean *p = mCurrentProperty->asBoolean()) {
         ui->propertyStack->setCurrentWidget(ui->Boolean);
         ui->checkBox->setChecked(p->mValue);
+        ui->checkBox->setText(p->name());
     } else if (PGP_Integer *p = mCurrentProperty->asInteger()) {
         ui->propertyStack->setCurrentWidget(ui->Integer);
         ui->integerSpinBox->setRange(p->mMin, p->mMax);
@@ -223,4 +516,38 @@ void PathGeneratorsDialog::setPropertyPage()
     }
 
     mSynching = false;
+}
+
+void PathGeneratorsDialog::addGenerator(int index, PathGenerator *pgen)
+{
+    PathGeneratorMgr::instance()->insertGenerator(index, pgen);
+    mGenerators = PathGeneratorMgr::instance()->generators();
+    setGeneratorsList();
+    ui->generatorsList->setCurrentRow(index);
+}
+
+PathGenerator *PathGeneratorsDialog::removeGenerator(int index)
+{
+    PathGenerator *pgen = PathGeneratorMgr::instance()->removeGenerator(index);
+    mGenerators = PathGeneratorMgr::instance()->generators();
+    setGeneratorsList();
+    ui->generatorsList->setCurrentRow(index);
+    return pgen;
+}
+
+void PathGeneratorsDialog::reorderGenerator(int oldIndex, int newIndex)
+{
+    PathGenerator *pgen = PathGeneratorMgr::instance()->removeGenerator(oldIndex);
+    PathGeneratorMgr::instance()->insertGenerator(newIndex, pgen);
+    mGenerators = PathGeneratorMgr::instance()->generators();
+    setGeneratorsList();
+    ui->generatorsList->setCurrentRow(newIndex);
+}
+
+QString PathGeneratorsDialog::changePropertyValue(PathGeneratorProperty *prop, const QString &newValue)
+{
+    QString old = prop->valueToString();
+    prop->valueFromString(newValue);
+    setPropertyPage();
+    return old;
 }

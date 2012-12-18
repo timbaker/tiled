@@ -122,6 +122,13 @@ PathGenerator *Path::removeGenerator(int index)
     return mGenerators.takeAt(index);
 }
 
+PathGenerator *Path::generator(int index)
+{
+    if (index >= 0 && index < mGenerators.size())
+        return mGenerators.at(index);
+    return 0;
+}
+
 /////
 
 PathLayer::PathLayer()

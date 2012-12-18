@@ -1,5 +1,5 @@
 version = 0
-revision = 2
+revision = 19
 source_revision = 0
 tilesets
 {
@@ -32,6 +32,60 @@ Generator
 }
 Generator
 {
+    label = Fence - White Picket
+    type = Fence
+    West1 = fencing_01_4
+    West2 = fencing_01_4
+    North1 = fencing_01_5
+    North2 = fencing_01_5
+    NorthWest = fencing_01_6
+    SouthEast = fencing_01_7
+    Layer = Furniture
+}
+Generator
+{
+    label = Street Light - Black Flat
+    type = StreetLight
+    West = 
+    North = 
+    East = 
+    South = 
+    Base = lighting_outdoor_01_0
+    Layer = Furniture
+    Offset = 0
+    Spacing = 10
+    Reverse = false
+}
+Generator
+{
+    label = Street Light - Black Round
+    type = StreetLight
+    West = 
+    North = 
+    East = 
+    South = 
+    Base = lighting_outdoor_01_1
+    Layer = Furniture
+    Offset = 0
+    Spacing = 10
+    Reverse = false
+}
+Generator
+{
+    label = Street Light - Gray Flat
+    type = StreetLight
+    West = 
+    North = 
+    East = 
+    South = 
+    Base = lighting_outdoor_01_2
+    Layer = Furniture
+    Offset = 0
+    Spacing = 10
+    Reverse = false
+}
+Generator
+{
     label = Street Light - West & North
     type = StreetLight
     West = lighting_outdoor_01_9
@@ -40,6 +94,7 @@ Generator
     South = lighting_outdoor_01_8
     Base = lighting_outdoor_01_16
     Layer = Furniture
+    Offset = 0
     Spacing = 10
     Reverse = false
 }
@@ -53,6 +108,7 @@ Generator
     South = lighting_outdoor_01_8
     Base = lighting_outdoor_01_16
     Layer = Furniture
+    Offset = 0
     Spacing = 10
     Reverse = true
 }

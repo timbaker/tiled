@@ -137,6 +137,8 @@ public:
     QString valueToString() const;
     bool valueFromString(const QString &s);
 
+    QString tileName(const QString &tilesetName, int tileID) const;
+
     QString mTilesetName;
     int mTileID;
 };
@@ -166,6 +168,8 @@ public:
     void outline(Tile *tile, TileLayer *tl);
     void outlineWidth(Tile *tile, TileLayer *tl, int width);
     void fill(Tile *tile, TileLayer *tl);
+
+    QVector<QPoint> pointsAlongPath(int offset, int spacing);
 
     void refCountUp() { ++mRefCount;}
     void refCountDown() {  Q_ASSERT(mRefCount); --mRefCount; }
@@ -248,6 +252,7 @@ public:
     enum Properties
     {
         LayerName = TileCount,
+        Offset,
         Spacing,
         Reverse,
         PropertyCount

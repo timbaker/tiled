@@ -34,6 +34,7 @@
 #include "mapcomposite.h"
 #include "mapmanager.h"
 #include "pathlayer.h"
+#include "pathgenerator.h"
 #include "pathmodel.h"
 #include "zlevelrenderer.h"
 #include "zlevelsmodel.h"
@@ -583,6 +584,42 @@ void MapDocument::setTileLayerName(Tile *tile, const QString &name)
 {
     TilesetManager::instance()->setLayerName(tile, name);
     emit tileLayerNameChanged(tile);
+}
+#endif // ZOMBOID
+
+#ifdef ZOMBOID
+void MapDocument::addPathGenerator(Path *path, int index, PathGenerator *pgen)
+{
+    path->insertGenerator(index, pgen);
+    emit pathGeneratorAdded(path, index);
+    mPathModel->emitPathsChanged(QList<Path*>() << path);
+}
+
+PathGenerator *MapDocument::removePathGenerator(Path *path, int index)
+{
+    PathGenerator *pgen = path->removeGenerator(index);
+    emit pathGeneratorRemoved(path, index);
+    mPathModel->emitPathsChanged(QList<Path*>() << path);
+    return pgen;
+}
+
+void MapDocument::reorderPathGenerator(Path *path, int oldIndex, int newIndex)
+{
+    PathGenerator *pgen = path->removeGenerator(oldIndex);
+    path->insertGenerator(newIndex, pgen);
+    emit pathGeneratorReordered(path, oldIndex, newIndex);
+    mPathModel->emitPathsChanged(QList<Path*>() << path);
+}
+
+QString MapDocument::changePathGeneratorPropertyValue(Path *path,
+                                                      PathGeneratorProperty *prop,
+                                                      const QString &newValue)
+{
+    QString old = prop->valueToString();
+    prop->valueFromString(newValue);
+    emit pathGeneratorPropertyChanged(path, prop);
+    mPathModel->emitPathsChanged(QList<Path*>() << path);
+    return old;
 }
 #endif // ZOMBOID
 

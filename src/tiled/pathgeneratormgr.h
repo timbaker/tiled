@@ -19,6 +19,7 @@
 #define PATHGENERATORMGR_H
 
 #include <QList>
+#include <QMap>
 #include <QObject>
 
 namespace Tiled {
@@ -44,8 +45,18 @@ public:
     const QList<PathGenerator*> &generatorTypes() const
     { return mGeneratorTypes; }
 
-    const QList<Tileset*> &tilesets() const
-    { return mTilesets; }
+    Tiled::Tileset *tilesetFor(const QString &tilesetName)
+    {
+        if (mTilesetByName.contains(tilesetName))
+            return mTilesetByName[tilesetName];
+        return 0;
+    }
+
+    const QMap<QString,Tiled::Tileset*> &tilesetsMap() const
+    { return mTilesetByName; }
+
+    QList<Tileset*> tilesets() const
+    { return mTilesetByName.values(); }
 
     QString txtName();
     QString txtPath();
@@ -60,17 +71,23 @@ public:
 
     bool Startup();
 
-private:
     Tileset *loadTileset(const QString &source);
+    void addTileset(Tileset *ts);
+    void removeTileset(Tileset *ts);
+
+private:
     PathGenerator *findGeneratorType(const QString &type);
     
 private:
     explicit PathGeneratorMgr(QObject *parent = 0);
+    ~PathGeneratorMgr();
     static PathGeneratorMgr *mInstance;
 
     QList<PathGenerator*> mGenerators;
     QList<PathGenerator*> mGeneratorTypes;
-    QList<Tileset*> mTilesets;
+
+    QMap<QString,Tiled::Tileset*> mTilesetByName;
+    QList<Tiled::Tileset*> mRemovedTilesets;
 
     int mRevision;
     int mSourceRevision;

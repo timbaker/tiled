@@ -19,6 +19,11 @@
 #define PATHGENERATORSDIALOG_H
 
 #include <QDialog>
+#include <QModelIndex>
+
+class QToolButton;
+class QUndoGroup;
+class QUndoStack;
 
 namespace Ui {
 class PathGeneratorsDialog;
@@ -44,15 +49,36 @@ private slots:
     void currentPropertyChanged(int row);
     void currentGeneratorTemplateChanged(int row);
 
+    void removeGenerator();
+    void duplicate();
+    void moveUp();
+    void moveDown();
+
+    void propertyActivated(const QModelIndex &index);
+
     void nameEdited(const QString &text);
     void booleanToggled(bool newValue);
     void integerValueChanged(int newValue);
+    void chooseTile();
+    void clearTile();
+    void stringEdited(const QString &text);
 
     void addGenerator();
+
+    void undoTextChanged(const QString &text);
+    void redoTextChanged(const QString &text);
 
     void synchUI();
 
     void accept();
+
+public:
+    // +UNDO/REDO
+    void addGenerator(int index, PathGenerator *pgen);
+    PathGenerator *removeGenerator(int index);
+    void reorderGenerator(int oldIndex, int newIndex);
+    QString changePropertyValue(PathGeneratorProperty *prop, const QString &newValue);
+    // -UNDO/REDO
 
 private:
     void setGeneratorsList();
@@ -67,6 +93,12 @@ private:
     PathGenerator *mCurrentGeneratorTemplate;
     QString mPropertyName;
     bool mSynching;
+
+    QUndoGroup *mUndoGroup;
+    QUndoStack *mUndoStack;
+    QToolButton *mUndoButton;
+    QToolButton *mRedoButton;
+    bool mWasEditingString;
 };
 
 } // namespace Internal;

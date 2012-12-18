@@ -19,6 +19,9 @@
 #define PATHPROPERTIESDIALOG_H
 
 #include <QDialog>
+#include <QModelIndex>
+
+class QToolButton;
 
 namespace Ui {
 class PathPropertiesDialog;
@@ -48,12 +51,19 @@ private slots:
     void currentPropertyChanged(int row);
     void currentGeneratorTemplateChanged(int row);
 
+    void propertyActivated(const QModelIndex &index);
+    void templateActivated(const QModelIndex &index);
+
     void nameEdited(const QString &text);
     void booleanToggled(bool newValue);
     void integerValueChanged(int newValue);
+    void chooseTile();
+    void clearTile();
 
-    void unlink();
     void removeGenerator();
+    void moveUp();
+    void moveDown();
+
     void addGenerator();
 
     void synchUI();
@@ -66,7 +76,11 @@ private:
     void setPropertyList();
     void setPropertyPage();
 
-    bool isCurrentGeneratorShared();
+private slots:
+    void pathGeneratorAdded(Path *path, int index);
+    void pathGeneratorRemoved(Path *path, int index);
+    void pathGeneratorReordered(Path *path, int oldIndex, int newIndex);
+    void pathGeneratorPropertyChanged(Path *path, PathGeneratorProperty *prop);
 
 private:
     Ui::PathPropertiesDialog *ui;
@@ -77,6 +91,10 @@ private:
     PathGenerator *mCurrentGeneratorTemplate;
     QString mPropertyName;
     bool mSynching;
+
+    QToolButton *mUndoButton;
+    QToolButton *mRedoButton;
+    int mUndoIndex;
 };
 
 } // namespace Internal;
