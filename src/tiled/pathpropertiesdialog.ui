@@ -28,6 +28,17 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
+           <widget class="QToolButton" name="duplicate">
+            <property name="text">
+             <string>...</string>
+            </property>
+            <property name="icon">
+             <iconset resource="tiled.qrc">
+              <normaloff>:/images/16x16/stock-duplicate-16.png</normaloff>:/images/16x16/stock-duplicate-16.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QToolButton" name="moveUp">
             <property name="text">
              <string>...</string>

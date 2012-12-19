@@ -59,10 +59,12 @@ private slots:
     void integerValueChanged(int newValue);
     void chooseTile();
     void clearTile();
+    void stringEdited(const QString &text);
 
-    void removeGenerator();
+    void duplicate();
     void moveUp();
     void moveDown();
+    void removeGenerator();
 
     void addGenerator();
 
@@ -94,6 +96,7 @@ private:
 
     QToolButton *mUndoButton;
     QToolButton *mRedoButton;
+    bool mWasEditingString;
     int mUndoIndex;
 };
 

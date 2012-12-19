@@ -188,6 +188,7 @@ PathPropertiesDialog::PathPropertiesDialog(QWidget *parent) :
     mCurrentGenerator(0),
     mCurrentProperty(0),
     mCurrentGeneratorTemplate(0),
+    mWasEditingString(false),
     ui(new Ui::PathPropertiesDialog)
 {
     ui->setupUi(this);
@@ -231,7 +232,9 @@ PathPropertiesDialog::PathPropertiesDialog(QWidget *parent) :
             SLOT(integerValueChanged(int)));
     connect(ui->chooseTile, SIGNAL(clicked()), SLOT(chooseTile()));
     connect(ui->clearTile, SIGNAL(clicked()), SLOT(clearTile()));
+    connect(ui->stringEdit, SIGNAL(textEdited(QString)), SLOT(stringEdited(QString)));
 
+    connect(ui->duplicate, SIGNAL(clicked()), SLOT(duplicate()));
     connect(ui->moveUp, SIGNAL(clicked()), SLOT(moveUp()));
     connect(ui->moveDown, SIGNAL(clicked()), SLOT(moveDown()));
     connect(ui->removeGenerator, SIGNAL(clicked()), SLOT(removeGenerator()));
@@ -287,6 +290,7 @@ void PathPropertiesDialog::currentGeneratorChanged(int row)
         setPropertyList();
     }
     synchUI();
+    mWasEditingString = false;
 }
 
 void PathPropertiesDialog::currentPropertyChanged(int row)
@@ -298,6 +302,7 @@ void PathPropertiesDialog::currentPropertyChanged(int row)
     }
     setPropertyPage();
     synchUI();
+    mWasEditingString = false;
 }
 
 void PathPropertiesDialog::currentGeneratorTemplateChanged(int row)
@@ -384,6 +389,29 @@ void PathPropertiesDialog::clearTile()
                                                             prop, QString()));
 }
 
+void PathPropertiesDialog::stringEdited(const QString &text)
+{
+    if (mSynching || !mCurrentProperty)
+        return;
+    if (mCurrentProperty->asString() || mCurrentProperty->asLayer()) {
+        mMapDocument->undoStack()->push(new ChangePropertyValue(mMapDocument,
+                                                                mPath,
+                                                                mCurrentProperty,
+                                                                text,
+                                                                !mWasEditingString));
+        mWasEditingString = true;
+    }
+}
+
+void PathPropertiesDialog::duplicate()
+{
+    if (mCurrentGenerator) {
+        int index = ui->generatorsList->currentRow() + 1;
+        mMapDocument->undoStack()->push(new AddGenerator(mMapDocument, mPath, index,
+                                                         mCurrentGenerator->clone()));
+    }
+}
+
 void PathPropertiesDialog::removeGenerator()
 {
     if (mCurrentGenerator) {
@@ -437,9 +465,10 @@ void PathPropertiesDialog::synchUI()
     ui->nameEdit->setText(mCurrentGenerator ? mCurrentGenerator->label() : QString());
     ui->nameEdit->setEnabled(mCurrentGenerator != 0);
 
+    ui->duplicate->setEnabled(mCurrentGenerator != 0);
     ui->moveUp->setEnabled(mCurrentGenerator && ui->generatorsList->currentRow() > 0);
     ui->moveDown->setEnabled(mCurrentGenerator && ui->generatorsList->currentRow() < mPath->generators().size() - 1);
-    ui->removeGenerator->setEnabled(mCurrentGenerator);
+    ui->removeGenerator->setEnabled(mCurrentGenerator != 0);
     ui->addGenerator->setEnabled(mCurrentGeneratorTemplate);
 
     ui->propertyStack->setEnabled(mCurrentProperty);
@@ -549,6 +578,8 @@ void PathPropertiesDialog::pathGeneratorRemoved(Path *path, int index)
     if (path != mPath)
         return;
     delete ui->generatorsList->takeItem(index);
+    if (index == ui->generatorsList->currentRow())
+        currentGeneratorChanged(index);
 }
 
 void PathPropertiesDialog::pathGeneratorReordered(Path *path, int oldIndex, int newIndex)
@@ -557,6 +588,7 @@ void PathPropertiesDialog::pathGeneratorReordered(Path *path, int oldIndex, int 
         return;
     ui->generatorsList->item(oldIndex)->setText(path->generator(oldIndex)->label());
     ui->generatorsList->item(newIndex)->setText(path->generator(newIndex)->label());
+    ui->generatorsList->setCurrentRow(newIndex);
 }
 
 void PathPropertiesDialog::pathGeneratorPropertyChanged(Path *path,
