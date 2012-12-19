@@ -431,6 +431,9 @@ void MapScene::layerAdded(int index)
     foreach (QGraphicsItem *item, mLayerItems)
         item->setZValue(z++);
 #endif
+#ifdef ZOMBOID
+    pathsGenerate();
+#endif
 }
 
 #ifdef ZOMBOID
@@ -453,6 +456,10 @@ void MapScene::layerRemoved(int index)
 {
     delete mLayerItems.at(index);
     mLayerItems.remove(index);
+
+#ifdef ZOMBOID
+    pathsGenerate();
+#endif
 }
 
 /**
