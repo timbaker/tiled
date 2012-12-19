@@ -66,7 +66,7 @@ private:
 
 typedef QVector<PathPoint> PathPoints;
 
-class TILEDSHARED_EXPORT Path
+class TILEDSHARED_EXPORT Path : public Object
 {
 public:
     Path();
