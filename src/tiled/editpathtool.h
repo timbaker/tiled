@@ -31,9 +31,9 @@ class QGraphicsItem;
 namespace Tiled {
 namespace Internal {
 
+class BetterSelectionRectangle;
 class PathItem;
 class PathPointHandle;
-class SelectionRectangle;
 
 /**
  * A tool that allows dragging around the points of a path.
@@ -89,7 +89,7 @@ private:
 
     void showHandleContextMenu(PathPointHandle *clickedHandle, QPoint screenPos);
 
-    SelectionRectangle *mSelectionRectangle;
+    BetterSelectionRectangle *mSelectionRectangle;
     bool mMousePressed;
     PathPointHandle *mClickedHandle;
     PathItem *mClickedPathItem;

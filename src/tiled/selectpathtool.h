@@ -30,7 +30,7 @@ namespace Tiled {
 namespace Internal {
 
 class PathItem;
-class SelectionRectangle;
+class BetterSelectionRectangle;
 
 class SelectPathTool : public AbstractPathTool
 {
@@ -39,6 +39,8 @@ class SelectPathTool : public AbstractPathTool
 public:
     explicit SelectPathTool(QObject *parent = 0);
     ~SelectPathTool();
+
+    void activate(MapScene *scene);
 
     void mouseEntered();
     void mouseMoved(const QPointF &pos,
@@ -68,7 +70,7 @@ private:
     void finishMoving(const QPointF &pos);
     void cancelMoving();
 
-    SelectionRectangle *mSelectionRectangle;
+    BetterSelectionRectangle *mSelectionRectangle;
     bool mMousePressed;
     PathItem *mClickedItem;
     QSet<PathItem*> mMovingItems;

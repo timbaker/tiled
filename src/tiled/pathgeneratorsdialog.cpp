@@ -403,7 +403,6 @@ void PathGeneratorsDialog::stringEdited(const QString &text)
 {
     if (mSynching || !mCurrentProperty)
         return;
-    // FIXME: merge these undo commands
     if (mCurrentProperty->asString() || mCurrentProperty->asLayer()) {
         mUndoStack->push(new ChangePropertyValue(this, mCurrentProperty, text,
                                                  !mWasEditingString));

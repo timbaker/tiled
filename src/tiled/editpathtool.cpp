@@ -22,6 +22,7 @@
 #include "editpathtool.h"
 
 #include "addremovepath.h"
+#include "betterselectionrectangle.h"
 #include "changepathpolygon.h"
 #include "layer.h"
 #include "map.h"
@@ -33,7 +34,6 @@
 #include "pathlayer.h"
 #include "preferences.h"
 #include "rangeset.h"
-#include "selectionrectangle.h"
 #include "utils.h"
 
 #include <QApplication>
@@ -155,7 +155,7 @@ EditPathTool::EditPathTool(QObject *parent)
           QIcon(QLatin1String(":images/24x24/tool-edit-polygons.png")),
           QKeySequence(tr("E")),
           parent)
-    , mSelectionRectangle(new SelectionRectangle)
+    , mSelectionRectangle(new BetterSelectionRectangle)
     , mMousePressed(false)
     , mClickedHandle(0)
     , mClickedPathItem(0)
@@ -171,6 +171,8 @@ EditPathTool::~EditPathTool()
 void EditPathTool::activate(MapScene *scene)
 {
     AbstractPathTool::activate(scene);
+
+    mSelectionRectangle->setRenderer(scene->mapDocument()->renderer());
 
     updateHandles();
 
@@ -225,9 +227,12 @@ void EditPathTool::mouseMoved(const QPointF &pos,
     }
 
     switch (mMode) {
-    case Selecting:
-        mSelectionRectangle->setRectangle(QRectF(mStart, pos).normalized());
+    case Selecting: {
+        QPointF p0 = mapDocument()->renderer()->pixelToTileCoords(mStart);
+        QPointF p1 = mapDocument()->renderer()->pixelToTileCoords(pos);
+        mSelectionRectangle->setRectangle(QRectF(p0, p1).normalized());
         break;
+    }
     case Moving:
         updateMovingItems(pos, modifiers);
         break;
@@ -437,11 +442,7 @@ void EditPathTool::pathsRemoved(const QList<Path *> &paths)
 void EditPathTool::updateSelection(const QPointF &pos,
                                       Qt::KeyboardModifiers modifiers)
 {
-    QRectF rect = QRectF(mStart, pos).normalized();
-
-    // Make sure the rect has some contents, otherwise intersects returns false
-    rect.setWidth(qMax(qreal(1), rect.width()));
-    rect.setHeight(qMax(qreal(1), rect.height()));
+    Q_UNUSED(pos)
 
     const QSet<PathItem*> oldSelection = mapScene()->selectedPathItems();
 
@@ -449,12 +450,11 @@ void EditPathTool::updateSelection(const QPointF &pos,
         // Allow selecting some map paths only when there aren't any selected
         QSet<PathItem*> selectedItems;
 
-        foreach (QGraphicsItem *item, mapScene()->items(rect)) {
+        foreach (QGraphicsItem *item, mapScene()->items(mSelectionRectangle->polygon())) {
             PathItem *pathItem = dynamic_cast<PathItem*>(item);
             if (pathItem)
                 selectedItems.insert(pathItem);
         }
-
 
         QSet<PathItem*> newSelection;
 
@@ -470,7 +470,7 @@ void EditPathTool::updateSelection(const QPointF &pos,
         // Update the selected handles
         QSet<PathPointHandle*> selectedHandles;
 
-        foreach (QGraphicsItem *item, mapScene()->items(rect)) {
+        foreach (QGraphicsItem *item, mapScene()->items(mSelectionRectangle->polygon())) {
             if (PathPointHandle *handle = dynamic_cast<PathPointHandle*>(item))
                 selectedHandles.insert(handle);
         }

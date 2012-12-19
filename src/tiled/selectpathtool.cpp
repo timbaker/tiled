@@ -18,6 +18,7 @@
 
 #include "selectpathtool.h"
 
+#include "betterselectionrectangle.h"
 #include "layer.h"
 #include "map.h"
 #include "mapdocument.h"
@@ -27,21 +28,23 @@
 #include "pathitem.h"
 #include "pathlayer.h"
 #include "preferences.h"
-#include "selectionrectangle.h"
 
 #include <QApplication>
 #include <QGraphicsItem>
+#include <QPalette>
 #include <QUndoStack>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
+
+/////
 
 SelectPathTool::SelectPathTool(QObject *parent)
     : AbstractPathTool(tr("Select Paths"),
           QIcon(QLatin1String(":images/22x22/tool-select-objects.png")),
           QKeySequence(tr("S")),
           parent)
-    , mSelectionRectangle(new SelectionRectangle)
+    , mSelectionRectangle(new BetterSelectionRectangle)
     , mMousePressed(false)
     , mClickedItem(0)
     , mMode(NoMode)
@@ -51,6 +54,12 @@ SelectPathTool::SelectPathTool(QObject *parent)
 SelectPathTool::~SelectPathTool()
 {
     delete mSelectionRectangle;
+}
+
+void SelectPathTool::activate(MapScene *scene)
+{
+    AbstractPathTool::activate(scene);
+    mSelectionRectangle->setRenderer(scene->mapDocument()->renderer());
 }
 
 void SelectPathTool::mouseEntered()
@@ -73,9 +82,12 @@ void SelectPathTool::mouseMoved(const QPointF &pos,
     }
 
     switch (mMode) {
-    case Selecting:
-        mSelectionRectangle->setRectangle(QRectF(mStartPos, pos).normalized());
+    case Selecting: {
+        QPointF p0 = mapDocument()->renderer()->pixelToTileCoords(mStartPos);
+        QPointF p1 = mapDocument()->renderer()->pixelToTileCoords(pos);
+        mSelectionRectangle->setRectangle(QRectF(p0, p1).normalized());
         break;
+    }
     case Moving:
         updateMovingItems(pos, modifiers);
         break;
@@ -167,6 +179,12 @@ void SelectPathTool::languageChanged()
 void SelectPathTool::updateSelection(const QPointF &pos,
                                      Qt::KeyboardModifiers modifiers)
 {
+    Q_UNUSED(pos)
+#if 1
+    QSet<PathItem*> selectedItems;
+
+    foreach (QGraphicsItem *item, mapScene()->items(mSelectionRectangle->polygon())) {
+#else
     QRectF rect = QRectF(mStartPos, pos).normalized();
 
     // Make sure the rect has some contents, otherwise intersects returns false
@@ -176,6 +194,7 @@ void SelectPathTool::updateSelection(const QPointF &pos,
     QSet<PathItem*> selectedItems;
 
     foreach (QGraphicsItem *item, mapScene()->items(rect)) {
+#endif
         PathItem *pathItem = dynamic_cast<PathItem*>(item);
         if (pathItem)
             selectedItems.insert(pathItem);

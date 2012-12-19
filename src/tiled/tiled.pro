@@ -192,7 +192,8 @@ SOURCES += aboutdialog.cpp \
     pathpropertiesdialog.cpp \
     pathgeneratorsdialog.cpp \
     pathgeneratormgr.cpp \
-    pathgeneratortilesdialog.cpp
+    pathgeneratortilesdialog.cpp \
+    betterselectionrectangle.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -350,7 +351,8 @@ HEADERS += aboutdialog.h \
     pathpropertiesdialog.h \
     pathgeneratorsdialog.h \
     pathgeneratormgr.h \
-    pathgeneratortilesdialog.h
+    pathgeneratortilesdialog.h \
+    betterselectionrectangle.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
