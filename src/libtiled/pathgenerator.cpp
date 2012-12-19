@@ -380,10 +380,16 @@ QVector<QPoint> PathGenerator::pointsAlongPath(int offset, int spacing)
     return ret;
 }
 
-void PathGenerator::cloneProperties(const PathGenerator *other)
+PathGenerator::Direction PathGenerator::direction(int segment)
 {
-    for (int i = 0; i < mProperties.size(); i++)
-        mProperties[i]->clone(other->mProperties[i]);
+    PathPoints pts = mPath->points();
+    if (pts.isEmpty())
+        return Angled;
+    if (mPath->isClosed())
+        pts += pts[0];
+    if (segment >= 0 && segment < pts.size() - 1)
+        return direction(pts[segment].toPoint(), pts[segment+1].toPoint());
+    return Angled;
 }
 
 PathGenerator::Direction PathGenerator::direction(QPoint p0, QPoint p1)
@@ -399,6 +405,12 @@ PathGenerator::Direction PathGenerator::direction(QPoint p0, QPoint p1)
     }
 
     return Angled;
+}
+
+void PathGenerator::cloneProperties(const PathGenerator *other)
+{
+    for (int i = 0; i < mProperties.size(); i++)
+        mProperties[i]->clone(other->mProperties[i]);
 }
 
 /////
@@ -444,39 +456,67 @@ PG_Fence::PG_Fence(const QString &label) :
 {
     mProperties.resize(PropertyCount);
 
-    PGP_Tile *prop = new PGP_Tile(QLatin1String("West1"));
-    prop->mTilesetName = QLatin1String("fencing_01");
-    prop->mTileID = 11;
-    mProperties[West1] = prop;
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("West1"))) {
+        prop->mTilesetName = QLatin1String("fencing_01");
+        prop->mTileID = 11;
+        mProperties[West1] = prop;
+    }
 
-    prop = new PGP_Tile(QLatin1String("West2"));
-    prop->mTilesetName = QLatin1String("fencing_01");
-    prop->mTileID = 10;
-    mProperties[West2] = prop;
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("West2"))) {
+        prop->mTilesetName = QLatin1String("fencing_01");
+        prop->mTileID = 10;
+        mProperties[West2] = prop;
+    }
 
-    prop = new PGP_Tile(QLatin1String("North1"));
-    prop->mTilesetName = QLatin1String("fencing_01");
-    prop->mTileID = 8;
-    mProperties[North1] = prop;
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("North1"))) {
+        prop->mTilesetName = QLatin1String("fencing_01");
+        prop->mTileID = 8;
+        mProperties[North1] = prop;
+    }
 
-    prop = new PGP_Tile(QLatin1String("North2"));
-    prop->mTilesetName = QLatin1String("fencing_01");
-    prop->mTileID = 9;
-    mProperties[North2] = prop;
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("North2"))) {
+        prop->mTilesetName = QLatin1String("fencing_01");
+        prop->mTileID = 9;
+        mProperties[North2] = prop;
+    }
 
-    prop = new PGP_Tile(QLatin1String("NorthWest"));
-    prop->mTilesetName = QLatin1String("fencing_01");
-    prop->mTileID = 12;
-    mProperties[NorthWest] = prop;
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("NorthWest"))) {
+        prop->mTilesetName = QLatin1String("fencing_01");
+        prop->mTileID = 12;
+        mProperties[NorthWest] = prop;
+    }
 
-    prop = new PGP_Tile(QLatin1String("SouthEast"));
-    prop->mTilesetName = QLatin1String("fencing_01");
-    prop->mTileID = 13;
-    mProperties[SouthEast] = prop;
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("Post"))) {
+        prop->mTilesetName = QLatin1String("fencing_01");
+        prop->mTileID = 13;
+        mProperties[Post] = prop;
+    }
 
-    PGP_Layer *prop2 = new PGP_Layer(QLatin1String("Layer"));
-    prop2->mValue = QLatin1String("Furniture");
-    mProperties[LayerName] = prop2;
+    if (PGP_Layer *prop = new PGP_Layer(QLatin1String("Layer1"))) {
+        prop->mValue = QLatin1String("Furniture");
+        mProperties[Layer1] = prop;
+    }
+
+    if (PGP_Layer *prop = new PGP_Layer(QLatin1String("Layer2"))) {
+        prop->mValue = QLatin1String("Furniture2");
+        mProperties[Layer2] = prop;
+    }
+
+    if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("PostSouthWest"))) {
+        mProperties[PostSouthWest] = prop;
+    }
+
+    if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("PostNorthEast"))) {
+        mProperties[PostNorthEast] = prop;
+    }
+
+    if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("PostStart"))) {
+        mProperties[PostStart] = prop;
+    }
+
+    if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("PostEnd"))) {
+        mProperties[PostEnd] = prop;
+    }
 
 #if 0
     // Tall wooden
@@ -529,76 +569,139 @@ void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
     if (mPath->points().size() < 2)
         return;
 
-    TileLayer *tl = findTileLayer(mProperties[LayerName]->asLayer()->mValue, layers);
+    TileLayer *tl = findTileLayer(mProperties[Layer1]->asLayer()->mValue, layers);
     if (!tl) return;
+    TileLayer *tl2 = findTileLayer(mProperties[Layer2]->asLayer()->mValue, layers);
+    if (!tl2) return;
 
     QVector<Tile*> tiles(TileCount);
     for (int i = 0; i < TileCount; i++) {
         PGP_Tile *prop = mProperties[i]->asTile();
+        if (prop->mTilesetName.isEmpty())
+            continue;
         Tileset *ts = findTileset(prop->mTilesetName, tl->map()->tilesets());
         if (!ts) return;
         tiles[i] = ts->tileAt(prop->mTileID);
         if (!tiles[i]) return;
     }
 
+    bool postSW = mProperties[PostSouthWest]->asBoolean()->mValue && tiles[Post];
+    bool postNE = mProperties[PostNorthEast]->asBoolean()->mValue && tiles[Post];
+
     PathPoints points = mPath->points();
     if (mPath->isClosed())
         points += points.first();
 
     for (int i = 0; i < points.size() - 1; i++) {
-        QPoint pt0 = points[i].toPoint(), pt1 = points[i+1].toPoint();
-        bool vert = pt0.x() == pt1.x();
-        bool horiz = pt0.y() == pt1.y();
+        QPoint p0 = points[i].toPoint(), p1 = points[i + 1].toPoint();
+        Direction dir = direction(p0, p1);
         int alternate = 0;
-        if (horiz) {
-            if (pt0.x() > pt1.x())
-                qSwap(pt0, pt1);
-            foreach (QPoint pt, calculateLine(pt0.x(), pt0.y(),
-                                              pt1.x(), pt1.y())) {
-                if (pt == pt1) {
+        if (dir == WestEast || dir == EastWest) {
+            if (dir == EastWest)
+                qSwap(p0, p1);
+            foreach (QPoint pt, calculateLine(p0.x(), p0.y(),
+                                              p1.x(), p1.y())) {
+                if (pt == p1) {
                     if (tl->contains(pt.x(), pt.y() - 1)) {
+                        // Place SE post
                         if (tl->cellAt(pt.x(), pt.y() - 1).tile == tiles[West2]) {
-                            tl->setCell(pt.x(), pt.y(), Cell(tiles[SouthEast]));
+                            if (tl2->contains(pt))
+                                tl2->setCell(pt.x(), pt.y(), Cell(tiles[Post]));
                             continue;
                         }
                     }
-                    if (pt != points.first().toPoint() && pt != points.last().toPoint())
+                    if (postNE) {
+                        if (tl->contains(pt.x(), pt.y()) && tl->cellAt(pt.x(), pt.y()).tile==tiles[West1])
+                            tl2->setCell(pt.x(), pt.y(), Cell(tiles[Post]));
+                    }
+//                    if (pt != points.first().toPoint() && pt != points.last().toPoint())
                         continue; // another segment precedes/follows
                 }
                 if (tl->contains(pt)) {
                     Tile *tile = tl->cellAt(pt).tile;
-                    if (tile == tiles[West1])
+                    if (tile == tiles[West1]) {
                         tl->setCell(pt.x(), pt.y(), Cell(tiles[NorthWest]));
-                    else
+                        // Remove any post that might have been put there by
+                        // another generator.
+                        if (tl2->cellAt(pt).tile == tiles[Post])
+                            tl2->setCell(pt.x(), pt.y(), Cell());
+                    } else
                         tl->setCell(pt.x(), pt.y(), Cell(tiles[North1 + alternate]));
+                    if (postSW && (pt == p0)) {
+                        if (tl->contains(pt.x(), pt.y()-1)) {
+                            Tile *tileN = tl->cellAt(pt.x(), pt.y()-1).tile;
+                            if (tileN == tiles[West2]) {
+                                tl2->setCell(pt.x(), pt.y(), Cell(tiles[Post]));
+                            }
+                        }
+                    }
                 }
                 alternate = !alternate;
             }
-        } else if (vert) {
-            if (pt0.y() > pt1.y())
-                qSwap(pt0, pt1);
-            foreach (QPoint pt, calculateLine(pt0.x(), pt0.y(),
-                                              pt1.x(), pt1.y())) {
-                if (pt == pt1) {
+
+        } else if (dir == NorthSouth || dir == SouthNorth) {
+            if (dir == SouthNorth)
+                qSwap(p0, p1);
+            foreach (QPoint pt, calculateLine(p0.x(), p0.y(),
+                                              p1.x(), p1.y())) {
+                if (pt == p1) {
                     if (tl->contains(pt.x() - 1, pt.y())) {
-                        if (tl->cellAt(pt.x() - 1, pt.y()).tile == tiles[North2]) {
-                            tl->setCell(pt.x(), pt.y(), Cell(tiles[SouthEast]));
+                        Tile *tileW = tl->cellAt(pt.x() - 1, pt.y()).tile;
+                        // Place SE post.
+                        if (tileW == tiles[North2] || tileW == tiles[NorthWest]) {
+                            if (tl2->contains(pt))
+                                tl2->setCell(pt.x(), pt.y(), Cell(tiles[Post]));
                             continue;
                         }
                     }
-                    if (pt != points.first().toPoint() && pt != points.last().toPoint())
+                    if (postSW) {
+                        if (tl->contains(pt.x(), pt.y()) && tl->cellAt(pt.x(), pt.y()).tile==tiles[North1])
+                            tl2->setCell(pt.x(), pt.y(), Cell(tiles[Post]));
+                    }
+//                    if (pt != points.first().toPoint() && pt != points.last().toPoint())
                         continue; // another segment precedes/follows
                 }
                 if (tl->contains(pt)) {
                     Tile *tile = tl->cellAt(pt).tile;
-                    if (tile == tiles[North1])
+                    if (tile == tiles[North1]) {
                         tl->setCell(pt.x(), pt.y(), Cell(tiles[NorthWest]));
-                    else
+                        // Remove any post that might have been put there by
+                        // another generator.
+                        if (tl2->cellAt(pt).tile == tiles[Post])
+                            tl2->setCell(pt.x(), pt.y(), Cell());
+                    } else
                         tl->setCell(pt.x(), pt.y(), Cell(tiles[West1 + alternate]));
+                    if (postNE && (pt == p0)) {
+                        if (tl->contains(pt.x()-1, pt.y())) {
+                            Tile *tileW = tl->cellAt(pt.x()-1, pt.y()).tile;
+                            if (tileW == tiles[North2] || tileW == tiles[NorthWest]) {
+                                tl2->setCell(pt.x(), pt.y(), Cell(tiles[Post]));
+                            }
+                        }
+                    }
                 }
                 alternate = !alternate;
             }
         }
+    }
+
+    if (mProperties[PostStart]->asBoolean()->mValue && tiles[Post]) {
+        int dx = 0; //direction(0) == EastWest;
+        int dy = 0; //direction(0) == SouthNorth;
+        PathPoint p = points[0];
+        if (tl2->contains(p.x() + dx, p.y() + dy) &&
+                (tl->cellAt(p.x() + dx, p.y() + dy).tile != tiles[NorthWest])) {
+            tl2->setCell(p.x() + dx, p.y() + dy, Cell(tiles[Post]));
+        }
+    }
+
+    if (mProperties[PostEnd]->asBoolean()->mValue && tiles[Post]) {
+        int dx = 0; // direction(points.size()-2) == WestEast;
+        int dy = 0; // direction(points.size()-2) == NorthSouth;
+        PathPoint p = points.last();
+        if (tl2->contains(p.x() + dx, p.y() + dy) &&
+                (tl->cellAt(p.x() + dx, p.y() + dy).tile != tiles[NorthWest]))
+            tl2->setCell(p.x() + dx, p.y() + dy, Cell(tiles[Post]));
     }
 }
 
@@ -846,6 +949,10 @@ PG_WithCorners::PG_WithCorners(const QString &label) :
         mProperties[LayerSouth] = prop;
     }
 
+    if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("BlendInner"))) {
+        mProperties[BlendInner] = prop;
+    }
+
     if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("Reverse"))) {
         mProperties[Reverse] = prop;
     }
@@ -958,49 +1065,85 @@ void PG_WithCorners::generate(int level, QVector<TileLayer *> &layers)
     }
 }
 
-int PG_WithCorners::tileAt(QVector<TileLayer *> &layers, int x, int y,
+QVector<int> PG_WithCorners::tileAt(QVector<TileLayer *> &layers, int x, int y,
                            QVector<Tile*> &tiles)
 {
+    QVector<int> ret;
     foreach (TileLayer *tl, layers) {
         if (tl->contains(x, y)) {
             for (int i = 0; i < TileCount; i++) {
                 if (tiles[i] && tiles[i] == tl->cellAt(x, y).tile)
-                    return i;
+                    ret += i;
             }
         }
     }
-    return -1;
+    return ret;
 }
 
 void PG_WithCorners::setCell(QVector<TileLayer *> layers, QPoint p,
                              int tileEnum, QVector<Tile *> &tiles)
 {
     if (layers[0]->contains(p)) {
-        int tileCur = tileAt(layers, p.x(), p.y(), tiles);
-        if ((tileEnum == East && tileCur == South) || (tileEnum == South && tileCur == East)) {
-            int tileE = tileAt(layers, p.x()+1,p.y(), tiles);
-            int tileS = tileAt(layers,p.x(),p.y()+1, tiles);
-            bool inner = (tileE == South) || (tileE == OuterSouthEast) ||
-                    (tileS == East) || (tileS == OuterSouthEast);
-            layers[0]->setCell(p.x(), p.y(), Cell(tiles[inner ? InnerNorthWest : OuterSouthEast]));
-        } else if ((tileEnum == East && tileCur == North) || (tileEnum == North && tileCur == East)){
-            int tileE = tileAt(layers, p.x()+1,p.y(), tiles);
-            int tileN = tileAt(layers,p.x(),p.y()-1,tiles);
-            bool inner = (tileE == North) || (tileE == OuterNorthEast) ||
-                    (tileN == East) || (tileN == OuterNorthEast);
-            layers[0]->setCell(p.x(), p.y(), Cell(tiles[inner ? InnerSouthWest : OuterNorthEast]));
-        } else if ((tileEnum == West && tileCur == South) || (tileEnum == South && tileCur == West)) {
-            int tileW = tileAt(layers,p.x()-1,p.y(),tiles);
-            int tileS = tileAt(layers,p.x(),p.y()+1,tiles);
-            bool inner = (tileW == South) || (tileW == OuterSouthWest) ||
-                    (tileS == West) || (tileS == OuterSouthWest);
-            layers[0]->setCell(p.x(), p.y(), Cell(tiles[inner ? InnerNorthEast : OuterSouthWest]));
-        } else if ((tileEnum == West && tileCur == North) || (tileEnum == North && tileCur == West)) {
-            int tileW = tileAt(layers,p.x()-1,p.y(),tiles);
-            int tileN = tileAt(layers,p.x(),p.y()-1,tiles);
-            bool inner = (tileW == North) || (tileW == OuterNorthWest) ||
-                    (tileN == West) || (tileN == OuterNorthWest);
-            layers[0]->setCell(p.x(), p.y(), Cell(tiles[inner ? InnerSouthEast : OuterNorthWest]));
+        QVector<int> tileCur = tileAt(layers, p.x(), p.y(), tiles);
+        if ((tileEnum == East && tileCur.contains(South)) || (tileEnum == South && tileCur.contains(East))) {
+            QVector<int> tileE = tileAt(layers, p.x()+1,p.y(), tiles);
+            QVector<int> tileS = tileAt(layers,p.x(),p.y()+1, tiles);
+            bool inner = tileE.contains(South) || tileE.contains(OuterSouthEast) ||
+                    tileS.contains(East) || tileS.contains(OuterSouthEast);
+            if (inner) {
+                if (mProperties[BlendInner]->asBoolean()->mValue) {
+                    layers[2]->setCell(p.x(), p.y(), Cell(tiles[East]));
+                    layers[3]->setCell(p.x(), p.y(), Cell(tiles[South]));
+                }
+                else
+                    layers[0]->setCell(p.x(), p.y(), Cell(tiles[InnerNorthWest]));
+            } else
+                layers[0]->setCell(p.x(), p.y(), Cell(tiles[OuterSouthEast]));
+
+        } else if ((tileEnum == East && tileCur.contains(North)) || (tileEnum == North && tileCur.contains(East))) {
+            QVector<int> tileE = tileAt(layers, p.x()+1,p.y(), tiles);
+            QVector<int> tileN = tileAt(layers,p.x(),p.y()-1,tiles);
+            bool inner = tileE.contains(North) || tileE.contains(OuterNorthEast) ||
+                    tileN.contains(East) || tileN.contains(OuterNorthEast);
+            if (inner) {
+                if (mProperties[BlendInner]->asBoolean()->mValue) {
+                    layers[1]->setCell(p.x(), p.y(), Cell(tiles[North]));
+                    layers[2]->setCell(p.x(), p.y(), Cell(tiles[East]));
+                }
+                else
+                    layers[0]->setCell(p.x(), p.y(), Cell(tiles[InnerSouthWest]));
+            } else
+                layers[0]->setCell(p.x(), p.y(), Cell(tiles[OuterNorthEast]));
+
+        } else if ((tileEnum == West && tileCur.contains(South)) || (tileEnum == South && tileCur.contains(West))) {
+            QVector<int> tileW = tileAt(layers,p.x()-1,p.y(),tiles);
+            QVector<int> tileS = tileAt(layers,p.x(),p.y()+1,tiles);
+            bool inner = tileW.contains(South) || tileW.contains(OuterSouthWest) ||
+                    tileS.contains(West) || tileS.contains(OuterSouthWest);
+            if (inner) {
+                if (mProperties[BlendInner]->asBoolean()->mValue) {
+                    layers[0]->setCell(p.x(), p.y(), Cell(tiles[West]));
+                    layers[3]->setCell(p.x(), p.y(), Cell(tiles[South]));
+                }
+                else
+                    layers[0]->setCell(p.x(), p.y(), Cell(tiles[InnerNorthEast]));
+            } else
+                layers[0]->setCell(p.x(), p.y(), Cell(tiles[OuterSouthWest]));
+
+        } else if ((tileEnum == West && tileCur.contains(North)) || (tileEnum == North && tileCur.contains(West))) {
+            QVector<int> tileW = tileAt(layers,p.x()-1,p.y(),tiles);
+            QVector<int> tileN = tileAt(layers,p.x(),p.y()-1,tiles);
+            bool inner = tileW.contains(North) || tileW.contains(OuterNorthWest) ||
+                    tileN.contains(West) || tileN.contains(OuterNorthWest);
+            if (inner) {
+                if (mProperties[BlendInner]->asBoolean()->mValue) {
+                    layers[0]->setCell(p.x(), p.y(), Cell(tiles[West]));
+                    layers[1]->setCell(p.x(), p.y(), Cell(tiles[North]));
+                }
+                else
+                    layers[0]->setCell(p.x(), p.y(), Cell(tiles[InnerSouthEast]));
+            } else
+                layers[0]->setCell(p.x(), p.y(), Cell(tiles[OuterNorthWest]));
         }
         else layers[0]->setCell(p.x(), p.y(), Cell(tiles[tileEnum]));
     }

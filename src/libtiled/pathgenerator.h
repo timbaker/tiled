@@ -184,6 +184,7 @@ public:
         Angled
     };
 
+    Direction direction(int segment);
     Direction direction(QPoint p0, QPoint p1);
 
 protected:
@@ -230,13 +231,18 @@ public:
         North1,
         North2,
         NorthWest,
-        SouthEast,
+        Post,
         TileCount
     };
 
     enum Properties
     {
-        LayerName = TileCount,
+        Layer1 = TileCount,
+        Layer2,
+        PostNorthEast,
+        PostSouthWest,
+        PostStart,
+        PostEnd,
         PropertyCount
     };
 };
@@ -296,7 +302,7 @@ public:
         TileCount
     };
 
-    int tileAt(QVector<TileLayer*> &layers, int x, int y, QVector<Tile *> &tiles);
+    QVector<int> tileAt(QVector<TileLayer*> &layers, int x, int y, QVector<Tile *> &tiles);
 
     enum Properties
     {
@@ -304,6 +310,7 @@ public:
         LayerNorth,
         LayerEast,
         LayerSouth,
+        BlendInner,
         Reverse,
         PropertyCount
     };
