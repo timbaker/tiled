@@ -36,6 +36,9 @@
 #include "mapobject.h"
 #include "imagelayer.h"
 #include "objectgroup.h"
+#ifdef ZOMBOID
+#include "pathlayer.h"
+#endif
 #include "tile.h"
 #include "tilelayer.h"
 #include "tileset.h"
@@ -78,6 +81,10 @@ private:
     void writeObjectGroup(QXmlStreamWriter &w, const ObjectGroup *objectGroup);
     void writeObject(QXmlStreamWriter &w, const MapObject *mapObject);
     void writeImageLayer(QXmlStreamWriter &w, const ImageLayer *imageLayer);
+#ifdef ZOMBOID
+    void writePathLayer(QXmlStreamWriter &w, const PathLayer *pathLayer);
+    void writePath(QXmlStreamWriter &w, const Path *path);
+#endif
     void writeProperties(QXmlStreamWriter &w,
                          const Properties &properties);
 
@@ -188,6 +195,10 @@ void MapWriterPrivate::writeMap(QXmlStreamWriter &w, const Map *map)
             writeObjectGroup(w, static_cast<const ObjectGroup*>(layer));
         else if (type == Layer::ImageLayerType)
             writeImageLayer(w, static_cast<const ImageLayer*>(layer));
+#ifdef ZOMBOID
+        else if (type == Layer::PathLayerType)
+            writePathLayer(w, static_cast<const PathLayer*>(layer));
+#endif
     }
 
     w.writeEndElement();
@@ -507,6 +518,62 @@ void MapWriterPrivate::writeImageLayer(QXmlStreamWriter &w,
 
     w.writeEndElement();
 }
+
+
+#ifdef ZOMBOID
+void MapWriterPrivate::writePathLayer(QXmlStreamWriter &w,
+                                      const PathLayer *pathLayer)
+{
+    w.writeStartElement(QLatin1String("pathlayer"));
+
+    if (pathLayer->color().isValid())
+        w.writeAttribute(QLatin1String("color"),
+                         pathLayer->color().name());
+
+    writeLayerAttributes(w, pathLayer);
+    writeProperties(w, pathLayer->properties());
+
+    foreach (const Path *path, pathLayer->paths())
+        writePath(w, path);
+
+    w.writeEndElement();
+}
+
+void MapWriterPrivate::writePath(QXmlStreamWriter &w, const Path *path)
+{
+    w.writeStartElement(QLatin1String("path"));
+#if 0
+    const QString &name = mapObject->name();
+    const QString &type = mapObject->type();
+    if (!name.isEmpty())
+        w.writeAttribute(QLatin1String("name"), name);
+    if (!type.isEmpty())
+        w.writeAttribute(QLatin1String("type"), type);
+#endif
+
+    if (!path->isVisible())
+        w.writeAttribute(QLatin1String("visible"), QLatin1String("false"));
+
+    writeProperties(w, path->properties());
+
+    const QPolygon &polygon = path->polygon();
+    if (!polygon.isEmpty()) {
+        w.writeStartElement(QLatin1String("polygon"));
+        QString points;
+        foreach (const QPointF &point, polygon) {
+            points.append(QString::number(point.x()));
+            points.append(QLatin1Char(','));
+            points.append(QString::number(point.y()));
+            points.append(QLatin1Char(' '));
+        }
+        points.chop(1);
+        w.writeAttribute(QLatin1String("points"), points);
+        w.writeEndElement();
+    }
+
+    w.writeEndElement();
+}
+#endif
 
 void MapWriterPrivate::writeProperties(QXmlStreamWriter &w,
                                        const Properties &properties)

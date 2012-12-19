@@ -36,6 +36,9 @@
 #include "objectgroup.h"
 #include "map.h"
 #include "mapobject.h"
+#ifdef ZOMBOID
+#include "pathlayer.h"
+#endif
 #include "tile.h"
 #include "tilelayer.h"
 #include "tileset.h"
@@ -103,8 +106,19 @@ private:
     MapObject *readObject();
     QPolygonF readPolygon();
 
+#ifdef ZOMBOID
+    PathLayer *readPathLayer();
+    Path *readPath();
+    QPolygon readPathPolygon();
+#endif
+
     Properties readProperties();
     void readProperty(Properties *properties);
+
+#ifdef ZOMBOID
+    bool readBoolean(const QXmlStreamAttributes &atts, const QString &key,
+                     bool defaultValue, bool &result);
+#endif
 
     MapReader *p;
 
@@ -224,6 +238,10 @@ Map *MapReaderPrivate::readMap()
             mMap->addLayer(readObjectGroup());
         else if (xml.name() == "imagelayer")
             mMap->addLayer(readImageLayer());
+#ifdef ZOMBOID
+        else if (xml.name() == "pathlayer")
+            mMap->addLayer(readPathLayer());
+#endif
         else
             readUnknownElement();
     }
@@ -850,6 +868,105 @@ QPolygonF MapReaderPrivate::readPolygon()
     return polygon;
 }
 
+#ifdef ZOMBOID
+PathLayer *MapReaderPrivate::readPathLayer()
+{
+    Q_ASSERT(xml.isStartElement() && xml.name() == "pathlayer");
+
+    const QXmlStreamAttributes atts = xml.attributes();
+    const QString name = atts.value(QLatin1String("name")).toString();
+    const int x = atts.value(QLatin1String("x")).toString().toInt();
+    const int y = atts.value(QLatin1String("y")).toString().toInt();
+    const int width = atts.value(QLatin1String("width")).toString().toInt();
+    const int height = atts.value(QLatin1String("height")).toString().toInt();
+
+    PathLayer *pathLayer = new PathLayer(name, x, y, width, height);
+    readLayerAttributes(pathLayer, atts);
+
+    const QString color = atts.value(QLatin1String("color")).toString();
+    if (!color.isEmpty())
+        pathLayer->setColor(color);
+
+    while (xml.readNextStartElement()) {
+        if (xml.name() == "path") {
+            if (Path *path = readPath())
+                pathLayer->addPath(path);
+        } else if (xml.name() == "properties")
+            pathLayer->mergeProperties(readProperties());
+        else
+            readUnknownElement();
+    }
+
+    return pathLayer;
+}
+
+Path *MapReaderPrivate::readPath()
+{
+    Q_ASSERT(xml.isStartElement() && xml.name() == "path");
+
+    const QXmlStreamAttributes atts = xml.attributes();
+#if 0
+    const QString name = atts.value(QLatin1String("name")).toString();
+    const QString type = atts.value(QLatin1String("type")).toString();
+#endif
+
+    bool visible;
+    if (!readBoolean(atts, QLatin1String("visible"), true, visible))
+        return 0;
+
+    Path *path = new Path();
+    path->setVisible(visible);
+
+    while (xml.readNextStartElement()) {
+        if (xml.name() == "properties") {
+            path->mergeProperties(readProperties());
+        } else if (xml.name() == "polygon") {
+            path->setPolygon(readPathPolygon());
+        } else {
+            readUnknownElement();
+        }
+    }
+
+    return path;
+}
+
+QPolygon MapReaderPrivate::readPathPolygon()
+{
+    Q_ASSERT(xml.isStartElement() && (xml.name() == "polygon"));
+
+    const QXmlStreamAttributes atts = xml.attributes();
+    const QString points = atts.value(QLatin1String("points")).toString();
+    const QStringList pointsList = points.split(QLatin1Char(' '),
+                                                QString::SkipEmptyParts);
+
+    QPolygon polygon;
+    bool ok = true;
+
+    foreach (const QString &point, pointsList) {
+        const int commaPos = point.indexOf(QLatin1Char(','));
+        if (commaPos == -1) {
+            ok = false;
+            break;
+        }
+
+        const int x = point.left(commaPos).toInt(&ok);
+        if (!ok)
+            break;
+        const int y = point.mid(commaPos + 1).toInt(&ok);
+        if (!ok)
+            break;
+
+        polygon.append(QPoint(x, y));
+    }
+
+    if (!ok)
+        xml.raiseError(tr("Invalid points data for polygon"));
+
+    xml.skipCurrentElement();
+    return polygon;
+}
+#endif // ZOMBOID
+
 Properties MapReaderPrivate::readProperties()
 {
     Q_ASSERT(xml.isStartElement() && xml.name() == "properties");
@@ -888,6 +1005,29 @@ void MapReaderPrivate::readProperty(Properties *properties)
     properties->insert(propertyName, propertyValue);
 }
 
+#ifdef ZOMBOID
+bool MapReaderPrivate::readBoolean(const QXmlStreamAttributes &atts,
+                                   const QString &key, bool defaultValue,
+                                   bool &result)
+{
+    QString value = atts.value(key).toString();
+    if (value.isEmpty()) {
+        result = defaultValue;
+        return true;
+    }
+    if (value == QLatin1String("true")) {
+        result = true;
+        return true;
+    }
+    if (value == QLatin1String("false")) {
+        result = false;
+        return true;
+    }
+    xml.raiseError(tr("Expected boolean for attribute '%1' but got '%2'")
+                   .arg(key).arg(value));
+    return false;
+}
+#endif
 
 MapReader::MapReader()
     : d(new MapReaderPrivate(this))
