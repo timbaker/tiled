@@ -518,6 +518,10 @@ PG_Fence::PG_Fence(const QString &label) :
         mProperties[PostEnd] = prop;
     }
 
+    if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("SouthEastFixup"))) {
+        mProperties[SouthEastFixup] = prop;
+    }
+
 #if 0
     // Tall wooden
     mTilesetName[West1] = QLatin1String("fencing_01");
@@ -601,18 +605,26 @@ void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
                 qSwap(p0, p1);
             foreach (QPoint pt, calculateLine(p0.x(), p0.y(),
                                               p1.x(), p1.y())) {
+                int x = pt.x(), y = pt.y();
                 if (pt == p1) {
-                    if (tl->contains(pt.x(), pt.y() - 1)) {
+                    if (tl->contains(x, y - 1)) {
                         // Place SE post
-                        if (tl->cellAt(pt.x(), pt.y() - 1).tile == tiles[West2]) {
+                        if (tl->cellAt(x, y - 1).tile == tiles[West2]) {
                             if (tl2->contains(pt))
-                                tl2->setCell(pt.x(), pt.y(), Cell(tiles[Post]));
+                                tl2->setCell(x, y, Cell(tiles[Post]));
+                            // This is a hack for the "farm" fence which has
+                            // West1/Post/North1 tiles at the SE corner.
+                            if (mProperties[SouthEastFixup]->asBoolean()->mValue) {
+                                tl->setCell(x, y - 1, Cell(tiles[West1]));
+                                if (tl->contains(x - 1, y))
+                                    tl->setCell(x - 1, y, Cell(tiles[North1]));
+                            }
                             continue;
                         }
                     }
                     if (postNE) {
-                        if (tl->contains(pt.x(), pt.y()) && tl->cellAt(pt.x(), pt.y()).tile==tiles[West1])
-                            tl2->setCell(pt.x(), pt.y(), Cell(tiles[Post]));
+                        if (tl->contains(x, y) && tl->cellAt(x, y).tile==tiles[West1])
+                            tl2->setCell(x, y, Cell(tiles[Post]));
                     }
 //                    if (pt != points.first().toPoint() && pt != points.last().toPoint())
                         continue; // another segment precedes/follows
@@ -620,18 +632,18 @@ void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
                 if (tl->contains(pt)) {
                     Tile *tile = tl->cellAt(pt).tile;
                     if (tile == tiles[West1]) {
-                        tl->setCell(pt.x(), pt.y(), Cell(tiles[NorthWest]));
+                        tl->setCell(x, y, Cell(tiles[NorthWest]));
                         // Remove any post that might have been put there by
                         // another generator.
                         if (tl2->cellAt(pt).tile == tiles[Post])
-                            tl2->setCell(pt.x(), pt.y(), Cell());
+                            tl2->setCell(x, y, Cell());
                     } else
-                        tl->setCell(pt.x(), pt.y(), Cell(tiles[North1 + alternate]));
+                        tl->setCell(x, y, Cell(tiles[North1 + alternate]));
                     if (postSW && (pt == p0)) {
-                        if (tl->contains(pt.x(), pt.y()-1)) {
-                            Tile *tileN = tl->cellAt(pt.x(), pt.y()-1).tile;
+                        if (tl->contains(x, y-1)) {
+                            Tile *tileN = tl->cellAt(x, y-1).tile;
                             if (tileN == tiles[West2]) {
-                                tl2->setCell(pt.x(), pt.y(), Cell(tiles[Post]));
+                                tl2->setCell(x, y, Cell(tiles[Post]));
                             }
                         }
                     }
@@ -644,19 +656,27 @@ void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
                 qSwap(p0, p1);
             foreach (QPoint pt, calculateLine(p0.x(), p0.y(),
                                               p1.x(), p1.y())) {
+                int x = pt.x(), y = pt.y();
                 if (pt == p1) {
-                    if (tl->contains(pt.x() - 1, pt.y())) {
-                        Tile *tileW = tl->cellAt(pt.x() - 1, pt.y()).tile;
+                    if (tl->contains(x - 1, y)) {
+                        Tile *tileW = tl->cellAt(x - 1, y).tile;
                         // Place SE post.
                         if (tileW == tiles[North2] || tileW == tiles[NorthWest]) {
                             if (tl2->contains(pt))
-                                tl2->setCell(pt.x(), pt.y(), Cell(tiles[Post]));
+                                tl2->setCell(x, y, Cell(tiles[Post]));
+                            // This is a hack for the "farm" fence which has
+                            // West1/Post/North1 tiles at the SE corner.
+                            if (mProperties[SouthEastFixup]->asBoolean()->mValue) {
+                                tl->setCell(x - 1, y, Cell(tiles[North1]));
+                                if (tl->contains(x, y - 1))
+                                    tl->setCell(x, y - 1, Cell(tiles[West1]));
+                            }
                             continue;
                         }
                     }
                     if (postSW) {
-                        if (tl->contains(pt.x(), pt.y()) && tl->cellAt(pt.x(), pt.y()).tile==tiles[North1])
-                            tl2->setCell(pt.x(), pt.y(), Cell(tiles[Post]));
+                        if (tl->contains(x, y) && tl->cellAt(x, y).tile==tiles[North1])
+                            tl2->setCell(x, y, Cell(tiles[Post]));
                     }
 //                    if (pt != points.first().toPoint() && pt != points.last().toPoint())
                         continue; // another segment precedes/follows
@@ -664,18 +684,18 @@ void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
                 if (tl->contains(pt)) {
                     Tile *tile = tl->cellAt(pt).tile;
                     if (tile == tiles[North1]) {
-                        tl->setCell(pt.x(), pt.y(), Cell(tiles[NorthWest]));
+                        tl->setCell(x, y, Cell(tiles[NorthWest]));
                         // Remove any post that might have been put there by
                         // another generator.
                         if (tl2->cellAt(pt).tile == tiles[Post])
-                            tl2->setCell(pt.x(), pt.y(), Cell());
+                            tl2->setCell(x, y, Cell());
                     } else
-                        tl->setCell(pt.x(), pt.y(), Cell(tiles[West1 + alternate]));
+                        tl->setCell(x, y, Cell(tiles[West1 + alternate]));
                     if (postNE && (pt == p0)) {
-                        if (tl->contains(pt.x()-1, pt.y())) {
-                            Tile *tileW = tl->cellAt(pt.x()-1, pt.y()).tile;
+                        if (tl->contains(x-1, y)) {
+                            Tile *tileW = tl->cellAt(x-1, y).tile;
                             if (tileW == tiles[North2] || tileW == tiles[NorthWest]) {
-                                tl2->setCell(pt.x(), pt.y(), Cell(tiles[Post]));
+                                tl2->setCell(x, y, Cell(tiles[Post]));
                             }
                         }
                     }
@@ -686,22 +706,16 @@ void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
     }
 
     if (mProperties[PostStart]->asBoolean()->mValue && tiles[Post]) {
-        int dx = 0; //direction(0) == EastWest;
-        int dy = 0; //direction(0) == SouthNorth;
-        PathPoint p = points[0];
-        if (tl2->contains(p.x() + dx, p.y() + dy) &&
-                (tl->cellAt(p.x() + dx, p.y() + dy).tile != tiles[NorthWest])) {
-            tl2->setCell(p.x() + dx, p.y() + dy, Cell(tiles[Post]));
+        QPoint p = points[0].toPoint();
+        if (tl2->contains(p) && (tl->cellAt(p).tile != tiles[NorthWest])) {
+            tl2->setCell(p, Cell(tiles[Post]));
         }
     }
 
     if (mProperties[PostEnd]->asBoolean()->mValue && tiles[Post]) {
-        int dx = 0; // direction(points.size()-2) == WestEast;
-        int dy = 0; // direction(points.size()-2) == NorthSouth;
-        PathPoint p = points.last();
-        if (tl2->contains(p.x() + dx, p.y() + dy) &&
-                (tl->cellAt(p.x() + dx, p.y() + dy).tile != tiles[NorthWest]))
-            tl2->setCell(p.x() + dx, p.y() + dy, Cell(tiles[Post]));
+        QPoint p = points.last().toPoint();
+        if (tl2->contains(p) && (tl->cellAt(p).tile != tiles[NorthWest]))
+            tl2->setCell(p, Cell(tiles[Post]));
     }
 }
 

@@ -261,6 +261,11 @@ public:
      */
     void setCell(int x, int y, const Cell &cell);
 
+#ifdef ZOMBOID
+    void setCell(const QPoint &point, const Cell &cell)
+    { setCell(point.x(), point.y(), cell); }
+#endif
+
     /**
      * Returns a copy of the area specified by the given \a region. The
      * caller is responsible for the returned tile layer.

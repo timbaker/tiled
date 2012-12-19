@@ -243,6 +243,7 @@ public:
         PostSouthWest,
         PostStart,
         PostEnd,
+        SouthEastFixup,
         PropertyCount
     };
 };
