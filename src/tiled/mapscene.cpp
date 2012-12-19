@@ -44,6 +44,7 @@
 #include "pathitem.h"
 #include "pathlayer.h"
 #include "pathlayeritem.h"
+#include "pathmodel.h"
 #include "zgriditem.h"
 #endif
 
@@ -470,6 +471,14 @@ void MapScene::layerChanged(int index)
 {
     const Layer *layer = mMapDocument->map()->layerAt(index);
     QGraphicsItem *layerItem = mLayerItems.at(index);
+
+#if defined(ZOMBOID)
+    PathLayer *pathLayer = mMapDocument->map()->layerAt(index)->asPathLayer();
+    if (pathLayer && (layer->isVisible() != layerItem->isVisible())) {
+        PathLayerItem *item = static_cast<PathLayerItem*>(layerItem);
+        mapDocument()->pathModel()->emitPathsChanged(pathLayer->paths());
+    }
+#endif
 
     layerItem->setVisible(layer->isVisible());
 
