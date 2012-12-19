@@ -260,7 +260,7 @@ void PathsDock::pathProperties()
     PathPropertiesDialog dialog(window());
     dialog.setPath(mMapDocument, path);
     dialog.exec();
-    mMapDocument->pathModel()->emitPathsChanged(QList<Path*>());
+//    mMapDocument->pathModel()->emitPathsChanged(QList<Path*>());
 }
 
 void PathsDock::saveExpandedGroups(MapDocument *mapDoc)
@@ -363,18 +363,23 @@ void PathsView::selectionChanged(const QItemSelection &selected,
 
     QList<Path*> selectedPaths;
     foreach (const QModelIndex &index, selectedRows) {
-        if (PathLayer *og = model()->toLayer(index)) {
-            int index = mMapDocument->map()->layers().indexOf(og);
+        PathLayer *pathLayer = 0;
+        if (PathLayer *pathLayer = model()->toLayer(index)) {
+        }
+        if (Path *path = model()->toPath(index)) {
+            selectedPaths.append(path);
+            pathLayer = path->pathLayer();
+        }
+        if (pathLayer) {
+            int index = mMapDocument->map()->layers().indexOf(pathLayer);
             if (currentLayerIndex == -1)
                 currentLayerIndex = index;
             else if (currentLayerIndex != index)
                 currentLayerIndex = -2;
         }
-        if (Path *o = model()->toPath(index))
-            selectedPaths.append(o);
     }
 
-    // Switch the current object layer if only one object layer (and/or its paths)
+    // Switch the current path layer if only one path layer (and/or its paths)
     // are included in the current selection.
     if (currentLayerIndex >= 0 && currentLayerIndex != mMapDocument->currentLayerIndex())
         mMapDocument->setCurrentLayerIndex(currentLayerIndex);
@@ -382,8 +387,8 @@ void PathsView::selectionChanged(const QItemSelection &selected,
     if (selectedPaths != mMapDocument->selectedPaths()) {
         mSynching = true;
         if (selectedPaths.count() == 1) {
-            Path *o = selectedPaths.first();
-            QRect bounds = o->polygon().boundingRect();
+            Path *path = selectedPaths.first();
+            QRect bounds = path->polygon().boundingRect();
             DocumentManager::instance()->centerViewOn(bounds.center().x(),
                                                       bounds.center().y());
         }
