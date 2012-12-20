@@ -137,10 +137,13 @@ void AbstractPathTool::showContextMenu(PathItem *clickedPathItem,
     QIcon dupIcon(QLatin1String(":images/16x16/stock-duplicate-16.png"));
     QIcon delIcon(QLatin1String(":images/16x16/edit-delete.png"));
     QIcon propIcon(QLatin1String(":images/16x16/document-properties.png"));
+    QIcon bakeIcon(QLatin1String(":images/22x22/stock-tool-clone.png"));
     QString dupText = tr("Duplicate %n Path(s)", "", selectedPaths.size());
     QString removeText = tr("Remove %n Path(s)", "", selectedPaths.size());
+    QString bakeText = tr("Bake %n Path(s) To Tile Layers", "", selectedPaths.size());
     QAction *dupAction = menu.addAction(dupIcon, dupText);
     QAction *removeAction = menu.addAction(delIcon, removeText);
+    QAction *bakeAction = menu.addAction(bakeIcon, bakeText);
 
     typedef QMap<QAction*, PathLayer*> MoveToLayerActionMap;
     MoveToLayerActionMap moveToLayerActions;
@@ -172,7 +175,9 @@ void AbstractPathTool::showContextMenu(PathItem *clickedPathItem,
     else if (selectedAction == removeAction) {
         removePaths(selectedPaths);
     }
-    else if (selectedAction == propertiesAction) {
+    else if (selectedAction == bakeAction) {
+        bakePaths(selectedPaths);
+    } else if (selectedAction == propertiesAction) {
         Path *path = selectedPaths.first();
         PathPropertiesDialog dialog(parent);
         dialog.setPath(mapDocument(), path);
@@ -227,4 +232,46 @@ void AbstractPathTool::movePathsToLayer(const QList<Path *> &paths,
         undoStack->push(new MovePathToLayer(mapDocument(), path, pathLayer));
     }
     undoStack->endMacro();
+}
+
+#include "mapcomposite.h"
+#include "painttilelayer.h"
+#include "tilelayer.h"
+void AbstractPathTool::bakePaths(const QList<Path *> &paths)
+{
+    MapComposite *mapComposite = mapDocument()->mapComposite();
+    foreach (CompositeLayerGroup *layerGroup, mapComposite->layerGroups()) {
+        foreach (TileLayer *tl, layerGroup->pathTileLayers())
+            tl->erase();
+    }
+    foreach (Path *path, paths) {
+        foreach (CompositeLayerGroup *layerGroup, mapComposite->layerGroups()) {
+            path->generate(layerGroup->level(), layerGroup->pathTileLayers());
+        }
+    }
+
+    QUndoStack *undoStack = mapDocument()->undoStack();
+    undoStack->beginMacro(tr("Bake %n Path(s)", "", paths.size()));
+    foreach (CompositeLayerGroup *layerGroup, mapComposite->layerGroups()) {
+        for (int i = 0; i < layerGroup->layerCount(); i++) {
+            TileLayer *tl = layerGroup->pathTileLayers().at(i);
+            if (!tl->isEmpty()) {
+                undoStack->push(new PaintTileLayer(mapDocument(),
+                                                   layerGroup->layers().at(i),
+                                                   tl->x(), tl->y(), tl,
+                                                   tl->region()));
+            }
+        }
+    }
+    undoStack->endMacro();
+
+    foreach (CompositeLayerGroup *layerGroup, mapComposite->layerGroups()) {
+        foreach (TileLayer *tl, layerGroup->pathTileLayers())
+            tl->erase();
+    }
+    foreach (PathLayer *pl, mapComposite->map()->pathLayers()) {
+        foreach (CompositeLayerGroup *layerGroup, mapComposite->layerGroups()) {
+            pl->generate(layerGroup->level(), layerGroup->pathTileLayers());
+        }
+    }
 }
