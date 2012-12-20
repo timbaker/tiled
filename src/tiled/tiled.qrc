@@ -70,5 +70,6 @@
         <file>images/16x16/show_hide_others.png</file>
         <file>images/24x24/dice.png</file>
         <file>images/16x16/sort-by-name.png</file>
+        <file>images/16x16/layer-path.png</file>
     </qresource>
 </RCC>

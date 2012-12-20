@@ -39,7 +39,7 @@ LayerModel::LayerModel(QObject *parent):
     mImageLayerIcon(QLatin1String(":/images/16x16/layer-image.png"))
 #ifdef ZOMBOID
     ,
-    mPathLayerIcon(QLatin1String(":/images/16x16/layer-tile-stop.png"))
+    mPathLayerIcon(QLatin1String(":/images/16x16/layer-path.png"))
 #endif
 {
 }

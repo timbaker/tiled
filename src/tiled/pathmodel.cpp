@@ -35,7 +35,7 @@ PathModel::PathModel(QObject *parent):
     mMapDocument(0),
     mMap(0),
     mRootItem(0),
-    mPathLayerIcon(QLatin1String(":/images/16x16/layer-tile-stop.png"))
+    mPathLayerIcon(QLatin1String(":/images/16x16/layer-path.png"))
 {
 }
 
