@@ -32,8 +32,8 @@ PathItem::PathItem(Path *path, MapDocument *mapDocument, PathLayerItem *parent)
     , mEditable(false)
     , mDragging(false)
 {
-    mBoundingRect = shape().boundingRect().adjusted(-2, -2, 3, 3);;
     mColor = Qt::lightGray;
+    syncWithPath();
 }
 
 QRectF PathItem::boundingRect() const
@@ -97,7 +97,11 @@ void PathItem::setDragOffset(const QPoint &offset)
 
 void PathItem::syncWithPath()
 {
-    setVisible(mPath->isVisible());
+    // Figure out if this is the mOverlayPath used by CreatePathTool.
+    bool isToolPath = mPath->pathLayer()->map() == 0;
+
+    setVisible(mPath->isVisible() && (isToolPath ||
+               mPath->pathLayer() == mMapDocument->currentLayer()));
 
     if (mPolygon != mPath->polygon()) {
         mPolygon = mPath->polygon();

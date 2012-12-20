@@ -72,7 +72,8 @@ MapScene::MapScene(QObject *parent):
     mDarkRectangle(new QGraphicsRectItem)
 #ifdef ZOMBOID
     ,
-    mGridItem(new ZGridItem)
+    mGridItem(new ZGridItem),
+    mCurrentPathLayer(0)
 #endif
 {
     setBackgroundBrush(Qt::darkGray);
@@ -378,6 +379,21 @@ void MapScene::currentLayerIndexChanged()
 #ifdef ZOMBOID
     // LevelIsometric orientation may move the grid
     mGridItem->currentLayerIndexChanged();
+
+    // Path outlines are hidden when the current layer isn't the Path's layer.
+    // Don't allow paths not in the current layer to be selected.
+    if (mCurrentPathLayer && mCurrentPathLayer != mMapDocument->currentLayer()) {
+        foreach (Path *path, mCurrentPathLayer->paths())
+            mPathItems[path]->syncWithPath();
+        mMapDocument->setSelectedPaths(QList<Path*>());
+        mCurrentPathLayer = 0;
+    }
+    if (mMapDocument->currentLayer()) {
+        if (mCurrentPathLayer = mMapDocument->currentLayer()->asPathLayer()) {
+            foreach (Path *path, mCurrentPathLayer->paths())
+                mPathItems[path]->syncWithPath();
+        }
+    }
 #endif
 }
 
@@ -449,6 +465,8 @@ void MapScene::layerAboutToBeRemoved(int index)
     if (PathLayer *pl = layer->asPathLayer()) {
         foreach (Path *p, pl->paths())
             mPathItems.remove(p);
+        if (pl == mCurrentPathLayer)
+            mCurrentPathLayer = 0;
     }
 }
 #endif

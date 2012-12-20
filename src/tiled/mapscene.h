@@ -35,6 +35,7 @@ class MapObject;
 class Tileset;
 #ifdef ZOMBOID
 class Path;
+class PathLayer;
 #endif
 
 namespace Internal {
@@ -260,6 +261,7 @@ private:
     typedef QMap<Path*, PathItem*> PathItems;
     PathItems mPathItems;
     QSet<PathItem*> mSelectedPathItems;
+    PathLayer *mCurrentPathLayer;
 #endif
 };
 
