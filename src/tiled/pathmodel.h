@@ -88,6 +88,10 @@ private slots:
     void layerChanged(int index);
     void layerAboutToBeRemoved(int index);
 
+    void pathGeneratorAdded(Path *path, int index);
+    void pathGeneratorRemoved(Path *path, int index);
+    void pathGeneratorReordered(Path *path, int oldIndex, int newIndex);
+
 private:
     class Item
     {

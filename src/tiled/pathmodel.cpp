@@ -21,6 +21,7 @@
 #include "layermodel.h"
 #include "map.h"
 #include "mapdocument.h"
+#include "pathgenerator.h"
 #include "pathlayer.h"
 #include "renamelayer.h"
 
@@ -85,16 +86,21 @@ int PathModel::rowCount(const QModelIndex &parent) const
 int PathModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
-    return 2; // Path name|type
+    return 1; // List of generator labels
 }
 
 QVariant PathModel::data(const QModelIndex &index, int role) const
 {
     if (Path *path = toPath(index)) {
         switch (role) {
-        case Qt::DisplayRole:
+        case Qt::DisplayRole: {
+            QStringList labels;
+            foreach (PathGenerator *pgen, path->generators())
+                labels += pgen->label();
+            return labels.join(QLatin1String(", "));
+        }
         case Qt::EditRole:
-            return index.column() ? QLatin1String("type") : QLatin1String("name");
+            return QVariant();
         case Qt::DecorationRole:
             return QVariant(); // no icon -> maybe the color?
         case Qt::CheckStateRole:
@@ -153,7 +159,7 @@ bool PathModel::setData(const QModelIndex &index, const QVariant &value,
                 undo->endMacro();
             }
 #endif
-            return true;
+            return false;
         }
         }
         return false;
@@ -257,6 +263,13 @@ void PathModel::setMapDocument(MapDocument *mapDocument)
         connect(mMapDocument, SIGNAL(layerAboutToBeRemoved(int)),
                 this, SLOT(layerAboutToBeRemoved(int)));
 
+        connect(mMapDocument, SIGNAL(pathGeneratorAdded(Path*,int)),
+                SLOT(pathGeneratorAdded(Path*,int)));
+        connect(mMapDocument, SIGNAL(pathGeneratorRemoved(Path*,int)),
+                SLOT(pathGeneratorRemoved(Path*,int)));
+        connect(mMapDocument, SIGNAL(pathGeneratorReordered(Path*,int,int)),
+                SLOT(pathGeneratorReordered(Path*,int,int)));
+
         mRootItem = new Item();
 
         foreach (PathLayer *pathLayer, mMap->pathLayers()) {
@@ -301,6 +314,24 @@ void PathModel::layerAboutToBeRemoved(int index)
             endRemoveRows();
         }
     }
+}
+
+void PathModel::pathGeneratorAdded(Path *path, int index)
+{
+    QModelIndex i = this->index(path);
+    emit dataChanged(i, i);
+}
+
+void PathModel::pathGeneratorRemoved(Path *path, int index)
+{
+    QModelIndex i = this->index(path);
+    emit dataChanged(i, i);
+}
+
+void PathModel::pathGeneratorReordered(Path *path, int oldIndex, int newIndex)
+{
+    QModelIndex i = this->index(path);
+    emit dataChanged(i, i);
 }
 
 void PathModel::insertPath(PathLayer *pathLayer, int index, Path *path)
