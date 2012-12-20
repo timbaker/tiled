@@ -89,6 +89,7 @@
 #include "mapmanager.h"
 #include "mapsdock.h"
 #include "pathsdock.h"
+#include "pathlayer.h"
 #include "selectpathtool.h"
 #include "zlevelsdock.h"
 #include "zprogress.h"
@@ -1738,6 +1739,23 @@ void MainWindow::aboutToShowLayerMenu()
             before = action;
         }
     }
+
+    QIcon pathIcon(QLatin1String(":/images/16x16/layer-path.png"));
+    foreach (PathLayer *pathLayer, mMapDocument->map()->pathLayers()) {
+        if (pathLayer->level() == level) {
+            QAction *action = new QAction(pathLayer->name(), mCurrentLayerMenu);
+            action->setData(QVariant::fromValue(pathLayer));
+            mCurrentLayerMenu->insertAction(before, action);
+            if (pathLayer == mMapDocument->currentLayer()) {
+                action->setCheckable(true);
+                action->setChecked(true);
+                action->setEnabled(false);
+            }
+            else
+                action->setIcon(pathIcon);
+            before = action;
+        }
+    }
 }
 
 void MainWindow::triggeredLevelMenu(QAction *action)
@@ -1745,6 +1763,22 @@ void MainWindow::triggeredLevelMenu(QAction *action)
     if (!mMapDocument) return;
     int level = action->text().toInt();
     if (CompositeLayerGroup *layerGroup = mMapDocument->mapComposite()->tileLayersForLevel(level)) {
+#if 1
+        if (Layer *currentLayer = mMapDocument->currentLayer()) {
+            // Try to switch to a layer with the same name and type in the new level.
+            QString name = MapComposite::layerNameWithoutPrefix(currentLayer);
+            foreach (Layer *layer, mMapDocument->map()->layers(currentLayer->type())) {
+                if (layer->level() == level) {
+                    QString name2 = MapComposite::layerNameWithoutPrefix(layer);
+                    if (name == name2) {
+                        int index = mMapDocument->map()->layers().indexOf(layer);
+                        mMapDocument->setCurrentLayerIndex(index);
+                        return;
+                    }
+                }
+            }
+        }
+#else
         if (Layer *layer = mMapDocument->currentLayer()) {
             // Try to switch to a layer with the same name in the new level
             QString name = MapComposite::layerNameWithoutPrefix(layer);
@@ -1768,8 +1802,20 @@ void MainWindow::triggeredLevelMenu(QAction *action)
                         }
                     }
                 }
+            } else if (layer->isPathLayer()) {
+                foreach (PathLayer *pl, mMapDocument->map()->pathLayers()) {
+                    if (pl->level() == level) {
+                        QString name2 = MapComposite::layerNameWithoutPrefix(pl);
+                        if (name == name2) {
+                            int index = mMapDocument->map()->layers().indexOf(pl);
+                            mMapDocument->setCurrentLayerIndex(index);
+                            return;
+                        }
+                    }
+                }
             }
         }
+#endif
     }
     int index = 0;
     foreach (Layer *layer, mMapDocument->map()->layers()) {
@@ -1784,9 +1830,10 @@ void MainWindow::triggeredLevelMenu(QAction *action)
 void MainWindow::triggeredLayerMenu(QAction *action)
 {
     if (!mMapDocument) return;
-    ObjectGroup *og = action->data().value<ObjectGroup*>();
-    TileLayer *tl = action->data().value<TileLayer*>();
-    if (Layer *layer = og ? (Layer*)og : (Layer*)tl) {
+    Layer *layer;
+    if ((layer = action->data().value<PathLayer*>()) ||
+            (layer = action->data().value<ObjectGroup*>()) ||
+            (layer = action->data().value<TileLayer*>())) {
         int index = mMapDocument->map()->layers().indexOf(layer);
         mMapDocument->setCurrentLayerIndex(index);
     }
