@@ -303,7 +303,7 @@ public:
         TileCount
     };
 
-    QVector<int> tileAt(QVector<TileLayer*> &layers, int x, int y, QVector<Tile *> &tiles);
+    int tileAt(QVector<TileLayer*> &layers, int x, int y, QVector<Tile *> &tiles);
 
     enum Properties
     {
@@ -316,6 +316,8 @@ public:
         PropertyCount
     };
 
+    int layerForTile(int tile);
+    void setTile(QVector<TileLayer*> layers, QPoint p, int tileEnum, QVector<Tile*> &tiles);
     void setCell(QVector<TileLayer*> layers, QPoint p, int tileEnum, QVector<Tile*> &tiles);
 };
 

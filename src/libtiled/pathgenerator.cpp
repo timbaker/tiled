@@ -311,8 +311,6 @@ void PathGenerator::outlineWidth(Tile *tile, TileLayer *tl, int width)
         bool horiz = points[i].y() == points[i+1].y();
         int dx = horiz ? width-width/2 : 0;
         int dy = vert ? width-width/2 : 0;
-        bool firstSeg = i == 0;
-        bool lastSeg = i < points.size() - 1;
         foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
                                           points[i+1].x()+ dx, points[i+1].y() + dy)) {
             Cell cell(tile);
@@ -1079,86 +1077,121 @@ void PG_WithCorners::generate(int level, QVector<TileLayer *> &layers)
     }
 }
 
-QVector<int> PG_WithCorners::tileAt(QVector<TileLayer *> &layers, int x, int y,
+int PG_WithCorners::tileAt(QVector<TileLayer *> &layers, int x, int y,
                            QVector<Tile*> &tiles)
 {
-    QVector<int> ret;
-    foreach (TileLayer *tl, layers) {
-        if (tl->contains(x, y)) {
-            for (int i = 0; i < TileCount; i++) {
-                if (tiles[i] && tiles[i] == tl->cellAt(x, y).tile)
-                    ret += i;
-            }
+    if (!layers[0]->contains(x, y))
+        return -1;
+
+    if (mProperties[BlendInner]->asBoolean()->mValue) {
+        TileLayer *tW = layers.at(layerForTile(West)-LayerWest);
+        TileLayer *tS = layers.at(layerForTile(South)-LayerWest);
+        if (tW->cellAt(x, y).tile == tiles[West] && tS->cellAt(x, y).tile == tiles[South])
+            return InnerNorthEast;
+        TileLayer *tN = layers.at(layerForTile(South)-LayerWest);
+        if (tW->cellAt(x, y).tile == tiles[West] && tN->cellAt(x, y).tile == tiles[North])
+            return InnerSouthEast;
+        TileLayer *tE = layers.at(layerForTile(South)-LayerWest);
+        if (tE->cellAt(x, y).tile == tiles[East] && tN->cellAt(x, y).tile == tiles[North])
+            return InnerSouthWest;
+        if (tE->cellAt(x, y).tile == tiles[East] && tS->cellAt(x, y).tile == tiles[South])
+            return InnerNorthWest;
+    }
+
+    for (int i = 0; i < TileCount; i++) {
+        TileLayer *tl = layers.at(layerForTile(i)-LayerWest);
+        if (tl->contains(x, y) && tl->cellAt(x, y).tile == tiles[i]) {
+            return i;
         }
     }
-    return ret;
+
+    return -1;
+}
+
+int PG_WithCorners::layerForTile(int tile)
+{
+    switch (tile) {
+    case West:
+        return LayerWest;
+    case North:
+    case OuterNorthWest:
+    case OuterNorthEast:
+    case InnerNorthWest:
+    case InnerNorthEast:
+        return LayerNorth;
+    case East:
+        return LayerEast;
+    case South:
+    case OuterSouthWest:
+    case OuterSouthEast:
+    case InnerSouthWest:
+    case InnerSouthEast:
+        return LayerSouth;
+    }
+    Q_ASSERT_X(false, "PG_WithCorners::layerForTile", "unhandled tile");
+    return LayerWest;
+}
+
+void PG_WithCorners::setTile(QVector<TileLayer *> layers, QPoint p,
+                             int tileEnum, QVector<Tile *> &tiles)
+{
+    foreach (TileLayer *tl, layers)
+        tl->setCell(p, Cell());
+    if (mProperties[BlendInner]->asBoolean()->mValue) {
+        if (tileEnum == InnerSouthWest) {
+            layers[layerForTile(North)-LayerWest]->setCell(p.x(), p.y(), Cell(tiles[North]));
+            layers[layerForTile(East)-LayerWest]->setCell(p.x(), p.y(), Cell(tiles[East]));
+            return;
+        } else if (tileEnum == InnerNorthWest) {
+            layers[layerForTile(East)-LayerWest]->setCell(p.x(), p.y(), Cell(tiles[East]));
+            layers[layerForTile(South)-LayerWest]->setCell(p.x(), p.y(), Cell(tiles[South]));
+        } else if (tileEnum == InnerNorthEast) {
+            layers[layerForTile(West)-LayerWest]->setCell(p.x(), p.y(), Cell(tiles[West]));
+            layers[layerForTile(South)-LayerWest]->setCell(p.x(), p.y(), Cell(tiles[South]));
+            return;
+        } else if (tileEnum == InnerSouthEast) {
+            layers[layerForTile(West)-LayerWest]->setCell(p.x(), p.y(), Cell(tiles[West]));
+            layers[layerForTile(North)-LayerWest]->setCell(p.x(), p.y(), Cell(tiles[North]));
+            return;
+        }
+    }
+    int layerIndex = layerForTile(tileEnum) - LayerWest;
+    layers[layerIndex]->setCell(p, Cell(tiles[tileEnum]));
 }
 
 void PG_WithCorners::setCell(QVector<TileLayer *> layers, QPoint p,
                              int tileEnum, QVector<Tile *> &tiles)
 {
     if (layers[0]->contains(p)) {
-        QVector<int> tileCur = tileAt(layers, p.x(), p.y(), tiles);
-        if ((tileEnum == East && tileCur.contains(South)) || (tileEnum == South && tileCur.contains(East))) {
-            QVector<int> tileE = tileAt(layers, p.x()+1,p.y(), tiles);
-            QVector<int> tileS = tileAt(layers,p.x(),p.y()+1, tiles);
-            bool inner = tileE.contains(South) || tileE.contains(OuterSouthEast) ||
-                    tileS.contains(East) || tileS.contains(OuterSouthEast);
-            if (inner) {
-                if (mProperties[BlendInner]->asBoolean()->mValue) {
-                    layers[2]->setCell(p.x(), p.y(), Cell(tiles[East]));
-                    layers[3]->setCell(p.x(), p.y(), Cell(tiles[South]));
-                }
-                else
-                    layers[0]->setCell(p.x(), p.y(), Cell(tiles[InnerNorthWest]));
-            } else
-                layers[0]->setCell(p.x(), p.y(), Cell(tiles[OuterSouthEast]));
+        int tileCur = tileAt(layers, p.x(), p.y(), tiles);
+        if ((tileEnum == East && tileCur == South) || (tileEnum == South && tileCur == East)) {
+            int tileE = tileAt(layers, p.x()+1,p.y(), tiles);
+            int tileS = tileAt(layers,p.x(),p.y()+1, tiles);
+            bool inner = tileE == South || tileE == OuterSouthEast ||
+                    tileS == East || tileS == OuterSouthEast;
+            setTile(layers, p, inner ? InnerNorthWest : OuterSouthEast, tiles);
 
-        } else if ((tileEnum == East && tileCur.contains(North)) || (tileEnum == North && tileCur.contains(East))) {
-            QVector<int> tileE = tileAt(layers, p.x()+1,p.y(), tiles);
-            QVector<int> tileN = tileAt(layers,p.x(),p.y()-1,tiles);
-            bool inner = tileE.contains(North) || tileE.contains(OuterNorthEast) ||
-                    tileN.contains(East) || tileN.contains(OuterNorthEast);
-            if (inner) {
-                if (mProperties[BlendInner]->asBoolean()->mValue) {
-                    layers[1]->setCell(p.x(), p.y(), Cell(tiles[North]));
-                    layers[2]->setCell(p.x(), p.y(), Cell(tiles[East]));
-                }
-                else
-                    layers[0]->setCell(p.x(), p.y(), Cell(tiles[InnerSouthWest]));
-            } else
-                layers[0]->setCell(p.x(), p.y(), Cell(tiles[OuterNorthEast]));
+        } else if ((tileEnum == East && tileCur == North) || (tileEnum == North && tileCur == East)) {
+            int tileE = tileAt(layers, p.x()+1,p.y(), tiles);
+            int tileN = tileAt(layers,p.x(),p.y()-1,tiles);
+            bool inner = tileE == North || tileE == OuterNorthEast ||
+                    tileN == East || tileN == OuterNorthEast;
+            setTile(layers, p, inner ? InnerSouthWest : OuterNorthEast, tiles);
+        } else if ((tileEnum == West && tileCur == South) || (tileEnum == South && tileCur == West)) {
+            int tileW = tileAt(layers,p.x()-1,p.y(),tiles);
+            int tileS = tileAt(layers,p.x(),p.y()+1,tiles);
+            bool inner = tileW == South || tileW == OuterSouthWest ||
+                    tileS == West || tileS == OuterSouthWest;
+            setTile(layers, p, inner ? InnerNorthEast : OuterSouthWest, tiles);
 
-        } else if ((tileEnum == West && tileCur.contains(South)) || (tileEnum == South && tileCur.contains(West))) {
-            QVector<int> tileW = tileAt(layers,p.x()-1,p.y(),tiles);
-            QVector<int> tileS = tileAt(layers,p.x(),p.y()+1,tiles);
-            bool inner = tileW.contains(South) || tileW.contains(OuterSouthWest) ||
-                    tileS.contains(West) || tileS.contains(OuterSouthWest);
-            if (inner) {
-                if (mProperties[BlendInner]->asBoolean()->mValue) {
-                    layers[0]->setCell(p.x(), p.y(), Cell(tiles[West]));
-                    layers[3]->setCell(p.x(), p.y(), Cell(tiles[South]));
-                }
-                else
-                    layers[0]->setCell(p.x(), p.y(), Cell(tiles[InnerNorthEast]));
-            } else
-                layers[0]->setCell(p.x(), p.y(), Cell(tiles[OuterSouthWest]));
-
-        } else if ((tileEnum == West && tileCur.contains(North)) || (tileEnum == North && tileCur.contains(West))) {
-            QVector<int> tileW = tileAt(layers,p.x()-1,p.y(),tiles);
-            QVector<int> tileN = tileAt(layers,p.x(),p.y()-1,tiles);
-            bool inner = tileW.contains(North) || tileW.contains(OuterNorthWest) ||
-                    tileN.contains(West) || tileN.contains(OuterNorthWest);
-            if (inner) {
-                if (mProperties[BlendInner]->asBoolean()->mValue) {
-                    layers[0]->setCell(p.x(), p.y(), Cell(tiles[West]));
-                    layers[1]->setCell(p.x(), p.y(), Cell(tiles[North]));
-                }
-                else
-                    layers[0]->setCell(p.x(), p.y(), Cell(tiles[InnerSouthEast]));
-            } else
-                layers[0]->setCell(p.x(), p.y(), Cell(tiles[OuterNorthWest]));
+        } else if ((tileEnum == West && tileCur == North) || (tileEnum == North && tileCur == West)) {
+            int tileW = tileAt(layers,p.x()-1,p.y(),tiles);
+            int tileN = tileAt(layers,p.x(),p.y()-1,tiles);
+            bool inner = tileW == North || tileW == OuterNorthWest ||
+                    tileN == West || tileN == OuterNorthWest;
+            setTile(layers, p, inner ? InnerSouthEast : OuterNorthWest, tiles);
+        } else {
+            setTile(layers, p, tileEnum, tiles);
         }
-        else layers[0]->setCell(p.x(), p.y(), Cell(tiles[tileEnum]));
     }
 }
