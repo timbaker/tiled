@@ -239,13 +239,31 @@ public:
     {
         Layer1 = TileCount,
         Layer2,
-        PostNorthEast,
-        PostSouthWest,
+        PostJoin,
         PostStart,
         PostEnd,
         SouthEastFixup,
         PropertyCount
     };
+
+    enum TileOrientation
+    {
+        OrientW,
+        OrientN,
+        OrientE,
+        OrientS,
+        OrientSW,
+        OrientNW,
+        OrientNE,
+        OrientSE
+    };
+
+    int layerForTile(int tile);
+    int tileAt(QVector<TileLayer*> layers, int x, int y, QVector<Tile *> &tiles);
+    void setTile(QVector<TileLayer*> layers, int x, int y, int tileEnum,
+                 QVector<Tile*> &tiles, bool clear = true);
+    void setCell(TileOrientation orient, int alternate,
+                 QVector<TileLayer*> layers, int x, int y, QVector<Tile *> &tiles);
 };
 
 class TILEDSHARED_EXPORT PG_StreetLight : public PathGenerator

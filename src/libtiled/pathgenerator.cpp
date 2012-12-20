@@ -500,12 +500,8 @@ PG_Fence::PG_Fence(const QString &label) :
         mProperties[Layer2] = prop;
     }
 
-    if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("PostSouthWest"))) {
-        mProperties[PostSouthWest] = prop;
-    }
-
-    if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("PostNorthEast"))) {
-        mProperties[PostNorthEast] = prop;
+    if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("PostJoin"))) {
+        mProperties[PostJoin] = prop;
     }
 
     if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("PostStart"))) {
@@ -571,24 +567,22 @@ void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
     if (mPath->points().size() < 2)
         return;
 
-    TileLayer *tl = findTileLayer(mProperties[Layer1]->asLayer()->mValue, layers);
-    if (!tl) return;
-    TileLayer *tl2 = findTileLayer(mProperties[Layer2]->asLayer()->mValue, layers);
-    if (!tl2) return;
+    QVector<TileLayer*> tl;
+    tl += findTileLayer(mProperties[Layer1]->asLayer()->mValue, layers);
+    if (!tl[0]) return;
+    tl += findTileLayer(mProperties[Layer2]->asLayer()->mValue, layers);
+    if (!tl[1]) return;
 
     QVector<Tile*> tiles(TileCount);
     for (int i = 0; i < TileCount; i++) {
         PGP_Tile *prop = mProperties[i]->asTile();
         if (prop->mTilesetName.isEmpty())
             continue;
-        Tileset *ts = findTileset(prop->mTilesetName, tl->map()->tilesets());
+        Tileset *ts = findTileset(prop->mTilesetName, layers[0]->map()->tilesets());
         if (!ts) return;
         tiles[i] = ts->tileAt(prop->mTileID);
         if (!tiles[i]) return;
     }
-
-    bool postSW = mProperties[PostSouthWest]->asBoolean()->mValue && tiles[Post];
-    bool postNE = mProperties[PostNorthEast]->asBoolean()->mValue && tiles[Post];
 
     PathPoints points = mPath->points();
     if (mPath->isClosed())
@@ -605,47 +599,20 @@ void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
                                               p1.x(), p1.y())) {
                 int x = pt.x(), y = pt.y();
                 if (pt == p1) {
-                    if (tl->contains(x, y - 1)) {
-                        // Place SE post
-                        if (tl->cellAt(x, y - 1).tile == tiles[West2]) {
-                            if (tl2->contains(pt))
-                                tl2->setCell(x, y, Cell(tiles[Post]));
-                            // This is a hack for the "farm" fence which has
-                            // West1/Post/North1 tiles at the SE corner.
-                            if (mProperties[SouthEastFixup]->asBoolean()->mValue) {
-                                tl->setCell(x, y - 1, Cell(tiles[West1]));
-                                if (tl->contains(x - 1, y))
-                                    tl->setCell(x - 1, y, Cell(tiles[North1]));
-                            }
-                            continue;
-                        }
+
+                    // Place SE post
+                    int tileN = tileAt(tl, x, y - 1, tiles);
+                    if (tileN == West2 || (tileN == West1 && tiles[West1] == tiles[West2])) {
+                        setCell(OrientSE, alternate, tl, x, y, tiles);
+                        continue;
                     }
-                    if (postNE) {
-                        if (tl->contains(x, y) && tl->cellAt(x, y).tile==tiles[West1])
-                            tl2->setCell(x, y, Cell(tiles[Post]));
-                    }
-//                    if (pt != points.first().toPoint() && pt != points.last().toPoint())
-                        continue; // another segment precedes/follows
+                    continue;
                 }
-                if (tl->contains(pt)) {
-                    Tile *tile = tl->cellAt(pt).tile;
-                    if (tile == tiles[West1]) {
-                        tl->setCell(x, y, Cell(tiles[NorthWest]));
-                        // Remove any post that might have been put there by
-                        // another generator.
-                        if (tl2->cellAt(pt).tile == tiles[Post])
-                            tl2->setCell(x, y, Cell());
-                    } else
-                        tl->setCell(x, y, Cell(tiles[North1 + alternate]));
-                    if (postSW && (pt == p0)) {
-                        if (tl->contains(x, y-1)) {
-                            Tile *tileN = tl->cellAt(x, y-1).tile;
-                            if (tileN == tiles[West2]) {
-                                tl2->setCell(x, y, Cell(tiles[Post]));
-                            }
-                        }
-                    }
-                }
+
+                if (tileAt(tl, x, y, tiles) == West1)
+                    setCell(OrientNW, alternate, tl, x, y, tiles);
+                else
+                    setCell(OrientN, alternate, tl, x, y, tiles);
                 alternate = !alternate;
             }
 
@@ -656,64 +623,127 @@ void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
                                               p1.x(), p1.y())) {
                 int x = pt.x(), y = pt.y();
                 if (pt == p1) {
-                    if (tl->contains(x - 1, y)) {
-                        Tile *tileW = tl->cellAt(x - 1, y).tile;
-                        // Place SE post.
-                        if (tileW == tiles[North2] || tileW == tiles[NorthWest]) {
-                            if (tl2->contains(pt))
-                                tl2->setCell(x, y, Cell(tiles[Post]));
-                            // This is a hack for the "farm" fence which has
-                            // West1/Post/North1 tiles at the SE corner.
-                            if (mProperties[SouthEastFixup]->asBoolean()->mValue) {
-                                tl->setCell(x - 1, y, Cell(tiles[North1]));
-                                if (tl->contains(x, y - 1))
-                                    tl->setCell(x, y - 1, Cell(tiles[West1]));
-                            }
-                            continue;
-                        }
+
+                    int tileW = tileAt(tl, x - 1, y, tiles);
+                    // Place SE post.
+                    if (tileW == North2 || (tileW == North1 && tiles[North1] == tiles[North2]) || tileW == NorthWest) {
+                        setCell(OrientSE, alternate, tl, x, y, tiles);
+                        continue;
                     }
-                    if (postSW) {
-                        if (tl->contains(x, y) && tl->cellAt(x, y).tile==tiles[North1])
-                            tl2->setCell(x, y, Cell(tiles[Post]));
-                    }
-//                    if (pt != points.first().toPoint() && pt != points.last().toPoint())
-                        continue; // another segment precedes/follows
+                    continue;
                 }
-                if (tl->contains(pt)) {
-                    Tile *tile = tl->cellAt(pt).tile;
-                    if (tile == tiles[North1]) {
-                        tl->setCell(x, y, Cell(tiles[NorthWest]));
-                        // Remove any post that might have been put there by
-                        // another generator.
-                        if (tl2->cellAt(pt).tile == tiles[Post])
-                            tl2->setCell(x, y, Cell());
-                    } else
-                        tl->setCell(x, y, Cell(tiles[West1 + alternate]));
-                    if (postNE && (pt == p0)) {
-                        if (tl->contains(x-1, y)) {
-                            Tile *tileW = tl->cellAt(x-1, y).tile;
-                            if (tileW == tiles[North2] || tileW == tiles[NorthWest]) {
-                                tl2->setCell(x, y, Cell(tiles[Post]));
-                            }
-                        }
-                    }
-                }
+
+                if (tileAt(tl, x, y, tiles) == North1)
+                    setCell(OrientNW, alternate, tl, x, y, tiles);
+                else
+                    setCell(OrientW, alternate, tl, x, y, tiles);
                 alternate = !alternate;
             }
         }
     }
 
     if (mProperties[PostStart]->asBoolean()->mValue && tiles[Post]) {
-        QPoint p = points[0].toPoint();
-        if (tl2->contains(p) && (tl->cellAt(p).tile != tiles[NorthWest])) {
-            tl2->setCell(p, Cell(tiles[Post]));
-        }
+        PathPoint p = points[0];
+        int tile = tileAt(tl, p.x(), p.y(), tiles);
+        if (tile != NorthWest)
+            setTile(tl, p.x(), p.y(), Post, tiles, false);
     }
 
     if (mProperties[PostEnd]->asBoolean()->mValue && tiles[Post]) {
-        QPoint p = points.last().toPoint();
-        if (tl2->contains(p) && (tl->cellAt(p).tile != tiles[NorthWest]))
-            tl2->setCell(p, Cell(tiles[Post]));
+        PathPoint p = points.last();
+        if (tileAt(tl, p.x(), p.y(), tiles) != NorthWest)
+            setTile(tl, p.x(), p.y(), Post, tiles, false);
+    }
+}
+
+int PG_Fence::layerForTile(int tile)
+{
+    if (tile == Post)
+        return Layer2;
+    return Layer1;
+}
+
+int PG_Fence::tileAt(QVector<TileLayer *> layers, int x, int y, QVector<Tile *> &tiles)
+{
+    if (!layers[0]->contains(x, y))
+        return -1;
+    for (int i = 0; i < TileCount; i++) {
+        if (i == Post) continue;
+        if (!tiles[i]) continue;
+        if (layers[layerForTile(i) - Layer1]->cellAt(x, y).tile == tiles[i])
+            return i;
+    }
+    return -1;
+}
+
+void PG_Fence::setTile(QVector<TileLayer *> layers, int x, int y, int tileEnum,
+                       QVector<Tile *> &tiles, bool clear)
+{
+    if (!layers[0]->contains(x, y))
+        return;
+
+    if (clear) {
+        foreach (TileLayer *tl, layers)
+            tl->setCell(x, y, Cell());
+    }
+
+    int layerIndex = layerForTile(tileEnum) - Layer1;
+    layers[layerIndex]->setCell(x, y, Cell(tiles[tileEnum]));
+}
+
+void PG_Fence::setCell(TileOrientation orient, int alternate,
+                       QVector<TileLayer *> layers,  int x, int y,
+                       QVector<Tile *> &tiles)
+{
+    bool postJoin = mProperties[PostJoin]->asBoolean()->mValue && tiles[Post];
+
+    switch (orient) {
+    case OrientW:
+        setTile(layers, x, y, West1 + alternate, tiles);
+        if (postJoin) {
+            int tileW = tileAt(layers, x - 1, y, tiles);
+            if (tileW == North2 || (tileW == North1 && tiles[North1] == tiles[North2]) || tileW == NorthWest)
+                setTile(layers, x, y, Post, tiles, false); // NE
+            int tileS = tileAt(layers, x, y + 1, tiles);
+            if (tileS == North2 || (tileS == North1 && tiles[North1] == tiles[North2]))
+                setTile(layers, x, y + 1, Post, tiles, false); // SW
+        }
+        break;
+    case OrientN:
+        setTile(layers, x, y, North1 + alternate, tiles);
+        if (mProperties[SouthEastFixup]->asBoolean()->mValue) {
+            if (alternate && tileAt(layers, x + 1, y, tiles) == NorthWest)
+                setTile(layers, x, y, North1, tiles, false);
+        }
+        if (postJoin) {
+            int tileN = tileAt(layers, x, y - 1, tiles);
+            if (tileN == West2 || (tileN == West1 && tiles[West1] == tiles[West2]))
+                setTile(layers, x, y, Post, tiles, false); // SW
+            int tileE = tileAt(layers, x + 1, y, tiles);
+            if (tileE == West1)
+                setTile(layers, x + 1, y, Post, tiles, false); // NE
+        }
+        break;
+    case OrientSW:
+        break;
+    case OrientNW:
+        setTile(layers, x, y, NorthWest, tiles);
+        if (mProperties[SouthEastFixup]->asBoolean()->mValue) {
+            if (tileAt(layers, x - 1, y, tiles) == North2)
+                setTile(layers, x - 1, y, North1, tiles, false);
+        }
+        break;
+    case OrientNE:
+        break;
+    case OrientSE:
+        setTile(layers, x, y, Post, tiles, false);
+        // This is a hack for the "farm" fence which has
+        // West1/Post/North1 tiles at the SE corner.
+        if (mProperties[SouthEastFixup]->asBoolean()->mValue) {
+            setTile(layers, x, y - 1, West1, tiles, false);
+            setTile(layers, x - 1, y, North1, tiles, false);
+        }
+        break;
     }
 }
 
