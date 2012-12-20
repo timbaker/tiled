@@ -296,7 +296,9 @@ void PathModel::layerAdded(int index)
     if (PathLayer *pathLayer = layer->asPathLayer()) {
         int row = mMap->pathLayerCount() - mMap->pathLayers().indexOf(pathLayer) - 1;
         beginInsertRows(QModelIndex(), row, row);
-        new Item(mRootItem, row, pathLayer);
+        Item *parent = new Item(mRootItem, row, pathLayer);
+        foreach (Path *path, pathLayer->paths())
+            new Item(parent, 0, path);
         endInsertRows();
     }
 }
