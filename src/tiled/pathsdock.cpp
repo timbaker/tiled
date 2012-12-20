@@ -344,11 +344,10 @@ void PathsView::setMapDocument(MapDocument *mapDoc)
 
 void PathsView::onActivated(const QModelIndex &index)
 {
-    if (Path *o = model()->toPath(index)) {
-#if 0
-        PathPropertiesDialog propertiesDialog(mMapDocument, o, 0);
-        propertiesDialog.exec();
-#endif
+    if (Path *path = model()->toPath(index)) {
+        PathPropertiesDialog dialog(window());
+        dialog.setPath(mMapDocument, path);
+        dialog.exec();
     }
 }
 

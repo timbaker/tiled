@@ -192,10 +192,18 @@ bool PathModel::setData(const QModelIndex &index, const QVariant &value,
 Qt::ItemFlags PathModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags rc = QAbstractItemModel::flags(index);
+#if 1
+    if (index.column() == 0) {
+        rc |= Qt::ItemIsUserCheckable;
+        if (toLayer(index))
+            rc |= Qt::ItemIsEditable; // Layer name
+    }
+#else
     if (index.column() == 0)
         rc |= Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
     else if (index.parent().isValid())
         rc |= Qt::ItemIsEditable; // Path type
+#endif
     return rc;
 }
 
