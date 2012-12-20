@@ -160,6 +160,8 @@ public:
     const QVector<PathGeneratorProperty*> &properties() const
     { return mProperties; }
 
+    PathGeneratorProperty *property(const QString &name) const;
+
     virtual PathGenerator *clone() const = 0;
 
     virtual void generate(const Path *path, int level, QVector<TileLayer *> &layers);
@@ -337,6 +339,26 @@ public:
     int layerForTile(int tile);
     void setTile(QVector<TileLayer*> layers, QPoint p, int tileEnum, QVector<Tile*> &tiles);
     void setCell(QVector<TileLayer*> layers, QPoint p, int tileEnum, QVector<Tile*> &tiles);
+};
+
+class TILEDSHARED_EXPORT PathGeneratorTypes
+{
+public:
+    static PathGeneratorTypes *instance();
+    static void deleteInstance();
+
+    const QList<PathGenerator*> &types() const
+    { return mTypes; }
+
+    PathGenerator *type(const QString &type);
+
+private:
+    Q_DISABLE_COPY(PathGeneratorTypes)
+    static PathGeneratorTypes *mInstance;
+    PathGeneratorTypes();
+    ~PathGeneratorTypes();
+
+    QList<PathGenerator*> mTypes;
 };
 
 } // namespace Tiled

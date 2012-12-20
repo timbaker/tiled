@@ -42,8 +42,7 @@ public:
     const QList<PathGenerator*> &generators() const
     { return mGenerators; }
 
-    const QList<PathGenerator*> &generatorTypes() const
-    { return mGeneratorTypes; }
+    const QList<PathGenerator*> &generatorTypes() const;
 
     Tiled::Tileset *tilesetFor(const QString &tilesetName)
     {
@@ -87,7 +86,6 @@ private:
     static PathGeneratorMgr *mInstance;
 
     QList<PathGenerator*> mGenerators;
-    QList<PathGenerator*> mGeneratorTypes;
 
     QMap<QString,Tiled::Tileset*> mTilesetByName;
     QList<Tiled::Tileset*> mRemovedTilesets;

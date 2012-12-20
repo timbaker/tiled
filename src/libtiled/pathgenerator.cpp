@@ -194,6 +194,15 @@ PathGenerator::PathGenerator(const QString &label, const QString &type) :
 {
 }
 
+PathGeneratorProperty *PathGenerator::property(const QString &name) const
+{
+    foreach (PathGeneratorProperty *prop, mProperties) {
+        if (prop->name() == name)
+            return prop;
+    }
+    return 0;
+}
+
 void PathGenerator::generate(const Path *path, int level, QVector<TileLayer *> &layers)
 {
     mPath = path;
@@ -1226,4 +1235,40 @@ void PG_WithCorners::setCell(QVector<TileLayer *> layers, QPoint p,
             setTile(layers, p, tileEnum, tiles);
         }
     }
+}
+
+/////
+
+PathGeneratorTypes *PathGeneratorTypes::mInstance = 0;
+
+PathGeneratorTypes *PathGeneratorTypes::instance()
+{
+    if (!mInstance)
+        mInstance = new PathGeneratorTypes;
+    return mInstance;
+}
+
+PathGeneratorTypes::PathGeneratorTypes()
+{
+    // This is a list of all possible generators.
+    mTypes += new PG_SingleTile(QLatin1String("Single Tile"));
+    mTypes += new PG_Fence(QLatin1String("Fence"));
+    mTypes += new PG_StreetLight(QLatin1String("Street Light"));
+    mTypes += new PG_WithCorners(QLatin1String("With Corners"));
+    foreach (PathGenerator *pgen, mTypes)
+        pgen->refCountUp();
+}
+
+PathGeneratorTypes::~PathGeneratorTypes()
+{
+    qDeleteAll(mTypes);
+}
+
+PathGenerator *PathGeneratorTypes::type(const QString &type)
+{
+    foreach (PathGenerator *pgen, mTypes) {
+        if (pgen->type() == type)
+            return pgen;
+    }
+    return 0;
 }

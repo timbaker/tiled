@@ -56,12 +56,6 @@ void PathGeneratorMgr::deleteInstance()
 PathGeneratorMgr::PathGeneratorMgr(QObject *parent) :
     QObject(parent)
 {
-    // This is a list of all possible generators.
-    mGeneratorTypes += new PG_Fence(QLatin1String("Fence"));
-    mGeneratorTypes += new PG_StreetLight(QLatin1String("Street Light"));
-    mGeneratorTypes += new PG_WithCorners(QLatin1String("With Corners"));
-    foreach (PathGenerator *pgen, mGeneratorTypes)
-        pgen->refCountUp();
 
 #if 0
     // readTxt() gives us user-defined generators.
@@ -113,6 +107,11 @@ PathGenerator *PathGeneratorMgr::removeGenerator(int index)
 {
     mGenerators.at(index)->refCountDown();
     return mGenerators.takeAt(index);
+}
+
+const QList<PathGenerator *> &PathGeneratorMgr::generatorTypes() const
+{
+    return PathGeneratorTypes::instance()->types();
 }
 
 QString PathGeneratorMgr::txtName()
@@ -377,9 +376,5 @@ void PathGeneratorMgr::removeTileset(Tileset *tileset)
 
 PathGenerator *PathGeneratorMgr::findGeneratorType(const QString &type)
 {
-    foreach (PathGenerator *pgen, mGeneratorTypes) {
-        if (pgen->type() == type)
-            return pgen;
-    }
-    return 0;
+    return PathGeneratorTypes::instance()->type(type);
 }

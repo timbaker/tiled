@@ -37,6 +37,7 @@
 #include "map.h"
 #include "mapobject.h"
 #ifdef ZOMBOID
+#include "pathgenerator.h"
 #include "pathlayer.h"
 #endif
 #include "tile.h"
@@ -110,6 +111,7 @@ private:
     PathLayer *readPathLayer();
     Path *readPath();
     QPolygon readPathPolygon();
+    PathGenerator *readPathGenerator();
 #endif
 
     Properties readProperties();
@@ -922,6 +924,9 @@ Path *MapReaderPrivate::readPath()
             path->mergeProperties(readProperties());
         } else if (xml.name() == "polygon") {
             path->setPolygon(readPathPolygon());
+        } else if (xml.name() == "generator") {
+            if (PathGenerator *pgen = readPathGenerator())
+                path->insertGenerator(path->generators().size(), pgen);
         } else {
             readUnknownElement();
         }
@@ -964,6 +969,49 @@ QPolygon MapReaderPrivate::readPathPolygon()
 
     xml.skipCurrentElement();
     return polygon;
+}
+
+PathGenerator *MapReaderPrivate::readPathGenerator()
+{
+    Q_ASSERT(xml.isStartElement() && (xml.name() == "generator"));
+
+    const QXmlStreamAttributes atts = xml.attributes();
+    const QString type = atts.value(QLatin1String("type")).toString();
+    PathGenerator *pgenType = PathGeneratorTypes::instance()->type(type);
+    if (!pgenType) {
+        xml.raiseError(tr("Unknown generator type '%1'.").arg(type));
+        return 0;
+    }
+
+    PathGenerator *pgen = pgenType->clone();
+
+    foreach (QXmlStreamAttribute att, atts) {
+        if (att.name() == "type") {
+            //
+        } else if (att.name() == "label") {
+            pgen->setLabel(att.value().toString());
+        } else if (att.name() == "version") {
+            bool ok;
+            int version = att.value().toString().toInt(&ok);
+            if (!ok) {
+                xml.raiseError(tr("Invalid generator version '%1'").arg(att.value().toString()));
+                delete pgen;
+                return 0;
+            }
+        } else if (PathGeneratorProperty *prop = pgen->property(att.name().toString())) {
+            if (!prop->valueFromString(att.value().toString())) {
+                xml.raiseError(tr("Error with generator property %1 = %2")
+                               .arg(att.name().toString()).arg(att.value().toString()));
+                delete pgen;
+                return 0;
+            }
+        } else {
+            xml.raiseError(tr("Unknown generator attribute '%1'")
+                           .arg(att.name().toString()));
+        }
+    }
+
+    return pgen;
 }
 #endif // ZOMBOID
 

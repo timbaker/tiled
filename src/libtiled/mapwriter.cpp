@@ -37,6 +37,7 @@
 #include "imagelayer.h"
 #include "objectgroup.h"
 #ifdef ZOMBOID
+#include "pathgenerator.h"
 #include "pathlayer.h"
 #endif
 #include "tile.h"
@@ -84,6 +85,7 @@ private:
 #ifdef ZOMBOID
     void writePathLayer(QXmlStreamWriter &w, const PathLayer *pathLayer);
     void writePath(QXmlStreamWriter &w, const Path *path);
+    void writePathGenerator(QXmlStreamWriter &w, const PathGenerator *pgen);
 #endif
     void writeProperties(QXmlStreamWriter &w,
                          const Properties &properties);
@@ -571,6 +573,20 @@ void MapWriterPrivate::writePath(QXmlStreamWriter &w, const Path *path)
         w.writeEndElement();
     }
 
+    foreach (PathGenerator *pgen, path->generators())
+        writePathGenerator(w, pgen);
+
+    w.writeEndElement();
+}
+
+void MapWriterPrivate::writePathGenerator(QXmlStreamWriter &w, const PathGenerator *pgen)
+{
+    w.writeStartElement(QLatin1String("generator"));
+    w.writeAttribute(QLatin1String("version"), QString::number(0));
+    w.writeAttribute(QLatin1String("type"), pgen->type());
+    w.writeAttribute(QLatin1String("label"), pgen->label());
+    foreach (PathGeneratorProperty *prop, pgen->properties())
+        w.writeAttribute(prop->name(), prop->valueToString());
     w.writeEndElement();
 }
 #endif
