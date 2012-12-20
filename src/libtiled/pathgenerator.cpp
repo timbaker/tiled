@@ -1129,6 +1129,7 @@ int PG_WithCorners::tileAt(QVector<TileLayer *> &layers, int x, int y,
     }
 
     for (int i = 0; i < TileCount; i++) {
+        if (!tiles[i]) continue;
         TileLayer *tl = layers.at(layerForTile(i)-LayerWest);
         if (tl->contains(x, y) && tl->cellAt(x, y).tile == tiles[i]) {
             return i;
@@ -1146,16 +1147,16 @@ int PG_WithCorners::layerForTile(int tile)
     case North:
     case OuterNorthWest:
     case OuterNorthEast:
-    case InnerNorthWest:
-    case InnerNorthEast:
+    case InnerSouthWest: // N + E
+    case InnerSouthEast: // N + W
         return LayerNorth;
     case East:
         return LayerEast;
     case South:
     case OuterSouthWest:
     case OuterSouthEast:
-    case InnerSouthWest:
-    case InnerSouthEast:
+    case InnerNorthWest: // S + E
+    case InnerNorthEast: // S + W
         return LayerSouth;
     }
     Q_ASSERT_X(false, "PG_WithCorners::layerForTile", "unhandled tile");
@@ -1175,6 +1176,7 @@ void PG_WithCorners::setTile(QVector<TileLayer *> layers, QPoint p,
         } else if (tileEnum == InnerNorthWest) {
             layers[layerForTile(East)-LayerWest]->setCell(p.x(), p.y(), Cell(tiles[East]));
             layers[layerForTile(South)-LayerWest]->setCell(p.x(), p.y(), Cell(tiles[South]));
+            return;
         } else if (tileEnum == InnerNorthEast) {
             layers[layerForTile(West)-LayerWest]->setCell(p.x(), p.y(), Cell(tiles[West]));
             layers[layerForTile(South)-LayerWest]->setCell(p.x(), p.y(), Cell(tiles[South]));
