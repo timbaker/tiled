@@ -305,9 +305,10 @@ void PathModel::layerAboutToBeRemoved(int index)
 
 void PathModel::insertPath(PathLayer *pathLayer, int index, Path *path)
 {
-    const int row = (index >= 0) ? index : pathLayer->pathCount();
+    int row = (index >= 0) ? index : pathLayer->pathCount();
+    row = pathLayer->pathCount() - row;
     beginInsertRows(this->index(pathLayer), row, row);
-    pathLayer->insertPath(row, path);
+    pathLayer->insertPath(index, path);
     new Item(toItem(pathLayer), row, path);
     endInsertRows();
     emit pathsAdded(QList<Path*>() << path);
