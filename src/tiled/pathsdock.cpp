@@ -332,6 +332,8 @@ void PathsView::setMapDocument(MapDocument *mapDoc)
 
         connect(mMapDocument, SIGNAL(selectedPathsChanged()),
                 this, SLOT(selectedPathsChanged()));
+        connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
+                SLOT(currentLayerIndexChanged(int)));
     } else {
         if (model())
             model()->setMapDocument(0);
@@ -363,9 +365,7 @@ void PathsView::selectionChanged(const QItemSelection &selected,
 
     QList<Path*> selectedPaths;
     foreach (const QModelIndex &index, selectedRows) {
-        PathLayer *pathLayer = 0;
-        if (PathLayer *pathLayer = model()->toLayer(index)) {
-        }
+        PathLayer *pathLayer = model()->toLayer(index);
         if (Path *path = model()->toPath(index)) {
             selectedPaths.append(path);
             pathLayer = path->pathLayer();
@@ -420,3 +420,25 @@ void PathsView::selectedPathsChanged()
         scrollTo(model()->index(o));
     }
 }
+
+void PathsView::currentLayerIndexChanged(int index)
+{
+    if (mSynching)
+        return;
+
+    if (index > -1) {
+        Layer *layer = mMapDocument->currentLayer();
+        if (PathLayer *pathLayer = layer->asPathLayer()) {
+            mSynching = true;
+            setCurrentIndex(model()->index(pathLayer));
+            mSynching = false;
+            return;
+        }
+    }
+
+    // Selected no layer, or not a PathLayer
+    mSynching = true;
+    setCurrentIndex(QModelIndex());
+    mSynching = false;
+}
+

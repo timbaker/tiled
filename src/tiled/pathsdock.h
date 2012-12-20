@@ -93,6 +93,7 @@ protected slots:
 private slots:
     void onActivated(const QModelIndex &index);
     void selectedPathsChanged();
+    void currentLayerIndexChanged(int index);
 
 private:
     MapDocument *mMapDocument;
