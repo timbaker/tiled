@@ -212,9 +212,19 @@ public:
 
     void generate(int level, QVector<TileLayer*> &layers);
 
-    QString mLayerName;
-    QString mTilesetName;
-    int mTileID;
+    enum TileNames
+    {
+        Tile1,
+        TileCount
+    };
+
+    enum Properties
+    {
+        Layer1 = TileCount,
+        Filled,
+        Thickness,
+        PropertyCount
+    };
 };
 
 class TILEDSHARED_EXPORT PG_Fence : public PathGenerator
@@ -332,6 +342,7 @@ public:
         LayerEast,
         LayerSouth,
         BlendInner,
+        PathOffset,
         Reverse,
         PropertyCount
     };

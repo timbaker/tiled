@@ -68,6 +68,9 @@ private slots:
 
     void addGenerator();
 
+    void setClosed(bool closed);
+    void setCenters(bool centers);
+
     void synchUI();
 
     void generatorsDialog();

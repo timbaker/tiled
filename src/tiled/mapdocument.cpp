@@ -621,6 +621,22 @@ QString MapDocument::changePathGeneratorPropertyValue(Path *path,
     mPathModel->emitPathsChanged(QList<Path*>() << path);
     return old;
 }
+
+bool MapDocument::changePathIsClosed(Path *path, bool closed)
+{
+    bool old = path->isClosed();
+    path->setClosed(closed);
+    mPathModel->emitPathsChanged(QList<Path*>() << path);
+    return old;
+}
+
+bool MapDocument::changePathCenters(Path *path, bool centers)
+{
+    bool old = path->centers();
+    path->setCenters(centers);
+    mPathModel->emitPathsChanged(QList<Path*>() << path);
+    return old;
+}
 #endif // ZOMBOID
 
 /**

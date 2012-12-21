@@ -182,7 +182,7 @@ void AbstractPathTool::showContextMenu(PathItem *clickedPathItem,
         PathPropertiesDialog dialog(parent);
         dialog.setPath(mapDocument(), path);
         dialog.exec();
-        mapDocument()->pathModel()->emitPathsChanged(QList<Path*>() << path);
+//        mapDocument()->pathModel()->emitPathsChanged(QList<Path*>() << path);
     }
 
     MoveToLayerActionMap::const_iterator i =

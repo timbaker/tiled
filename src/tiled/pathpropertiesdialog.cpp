@@ -177,6 +177,54 @@ public:
     bool mMergeable;
 };
 
+class ChangePathClosed : public QUndoCommand
+{
+public:
+    ChangePathClosed(MapDocument *mapDoc, Path *path, bool closed) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Path is Closed")),
+        mMapDocument(mapDoc),
+        mPath(path),
+        mClosed(closed)
+    {
+    }
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+    void swap()
+    {
+        mClosed = mMapDocument->changePathIsClosed(mPath, mClosed);
+    }
+
+    MapDocument *mMapDocument;
+    Path *mPath;
+    bool mClosed;
+};
+
+class ChangePathCenters : public QUndoCommand
+{
+public:
+    ChangePathCenters(MapDocument *mapDoc, Path *path, bool centers) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Path Centers")),
+        mMapDocument(mapDoc),
+        mPath(path),
+        mCenters(centers)
+    {
+    }
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+    void swap()
+    {
+        mCenters = mMapDocument->changePathCenters(mPath, mCenters);
+    }
+
+    MapDocument *mMapDocument;
+    Path *mPath;
+    bool mCenters;
+};
+
 } // namespace PathUndoRedo
 
 using namespace PathUndoRedo;
@@ -242,6 +290,9 @@ PathPropertiesDialog::PathPropertiesDialog(QWidget *parent) :
     connect(ui->addGenerator, SIGNAL(clicked()), SLOT(addGenerator()));
     connect(ui->generatorsDialog, SIGNAL(clicked()), SLOT(generatorsDialog()));
     connect(ui->nameEdit, SIGNAL(textEdited(QString)), SLOT(nameEdited(QString)));
+
+    connect(ui->closed, SIGNAL(toggled(bool)), SLOT(setClosed(bool)));
+    connect(ui->centers, SIGNAL(toggled(bool)), SLOT(setCenters(bool)));
 
     setGeneratorTypesList();
 
@@ -458,10 +509,29 @@ void PathPropertiesDialog::addGenerator()
         index = mPath->generators().size();
     mMapDocument->undoStack()->push(new AddGenerator(mMapDocument, mPath, index,
                                                      mCurrentGeneratorTemplate->clone()));
+
+void PathPropertiesDialog::setClosed(bool closed)
+{
+    if (mSynching || !mPath)
+        return;
+
+    mMapDocument->undoStack()->push(new ChangePathClosed(mMapDocument, mPath,
+                                                         closed));
+}
+
+void PathPropertiesDialog::setCenters(bool centers)
+{
+    if (mSynching || !mPath)
+        return;
+
+    mMapDocument->undoStack()->push(new ChangePathCenters(mMapDocument, mPath,
+                                                          centers));
 }
 
 void PathPropertiesDialog::synchUI()
 {
+    mSynching = true;
+
     ui->nameEdit->setText(mCurrentGenerator ? mCurrentGenerator->label() : QString());
     ui->nameEdit->setEnabled(mCurrentGenerator != 0);
 
@@ -478,6 +548,11 @@ void PathPropertiesDialog::synchUI()
     mRedoButton->setEnabled(mMapDocument &&
                             mMapDocument->undoStack()->index() <
                             mMapDocument->undoStack()->count());
+
+    ui->closed->setChecked(mPath->isClosed());
+    ui->centers->setChecked(mPath->centers());
+
+    mSynching = false;
 }
 
 void PathPropertiesDialog::generatorsDialog()

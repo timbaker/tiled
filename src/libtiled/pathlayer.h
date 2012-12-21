@@ -102,6 +102,12 @@ public:
     void setVisible(bool visible)
     { mVisible = visible; }
 
+    bool centers() const
+    { return mCenters; }
+
+    void setCenters(bool centers)
+    { mCenters = centers; }
+
     void setPolygon(const QPolygon &polygon);
 
     QPolygon polygon() const;
@@ -130,6 +136,7 @@ private:
     PathPoints mPoints;
     bool mIsClosed;
     bool mVisible;
+    bool mCenters;
 
     QList<PathGenerator*> mGenerators;
 };

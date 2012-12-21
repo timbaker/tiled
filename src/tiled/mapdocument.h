@@ -296,6 +296,8 @@ public:
     QString changePathGeneratorPropertyValue(Path *path,
                                              PathGeneratorProperty *prop,
                                              const QString &newValue);
+    bool changePathIsClosed(Path *path, bool closed);
+    bool changePathCenters(Path *path, bool centers);
     // -UNDO/REDO
 #endif // ZOMBOID
 

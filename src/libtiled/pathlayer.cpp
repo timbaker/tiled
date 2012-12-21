@@ -27,7 +27,8 @@ using namespace Tiled;
 Path::Path() :
     mLayer(0),
     mIsClosed(false),
-    mVisible(true)
+    mVisible(true),
+    mCenters(false)
 {
 }
 
@@ -76,7 +77,7 @@ QPolygonF Path::polygonf() const
     QPolygonF poly;
 
     foreach (PathPoint pt, mPoints)
-        poly.append(QPointF(pt.x() + 0.5, pt.y() + 0.5));
+        poly.append(QPointF(pt.x() + (mCenters ? 0.5 : 0), pt.y() + (mCenters ? 0.5 : 0)));
 
     return poly;
 }
@@ -95,7 +96,7 @@ Path *Path::clone() const
     klone->setClosed(mIsClosed);
     klone->setVisible(mVisible);
     foreach (PathGenerator *pathGen, mGenerators) {
-        if (pathGen->refCount() == 1) // Not global
+//        if (pathGen->refCount() == 1) // Not global
             pathGen = pathGen->clone();
         pathGen->refCountUp();
         klone->mGenerators += pathGen;

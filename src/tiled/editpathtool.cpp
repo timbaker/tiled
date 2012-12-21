@@ -517,7 +517,8 @@ void EditPathTool::updateMovingItems(const QPointF &pos,
     foreach (PathPointHandle *handle, mSelectedHandles) {
         handle->setDragging(true);
         handle->setDragOffset(diff);
-        QPointF newScenePos = renderer->tileToPixelCoords(handle->startPosition() + diff + QPointF(0.5, 0.5),
+        QPointF offset = handle->path()->centers() ? QPointF(0.5, 0.5) : QPointF();
+        QPointF newScenePos = renderer->tileToPixelCoords(handle->startPosition() + diff + offset,
                                                           handle->path()->pathLayer()->level());
         handle->setPos(newScenePos);
         handle->setPointPosition(handle->startPosition() + diff);

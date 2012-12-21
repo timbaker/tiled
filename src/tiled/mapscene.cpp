@@ -250,6 +250,10 @@ void MapScene::refreshScene()
     addItem(selectionItem);
 
     updateCurrentLayerHighlight();
+
+#ifdef ZOMBOID
+    pathsGenerate();
+#endif
 }
 
 QGraphicsItem *MapScene::createLayerItem(Layer *layer)
