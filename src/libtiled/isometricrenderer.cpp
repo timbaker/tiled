@@ -620,6 +620,18 @@ void IsometricRenderer::drawPath(QPainter *painter,
             screenPolygon.translate(0, -1);
 
             painter->drawPolygon(screenPolygon);
+
+#if 1
+        // Highlight the first segment and its start-point
+        if (screenPolygon.size() > 1) {
+            pen.setColor(color.lighter());
+            painter->setPen(pen);
+            painter->drawPolyline(screenPolygon.mid(0, 2));
+
+            painter->drawEllipse(screenPolygon[0], 4, 4);
+
+        }
+#endif
         } else {
             painter->drawPolyline(screenPolygon);
 
@@ -628,6 +640,18 @@ void IsometricRenderer::drawPath(QPainter *painter,
             screenPolygon.translate(0, -1);
 
             painter->drawPolyline(screenPolygon);
+
+#if 1
+        // Highlight the first segment and its start-point
+        if (screenPolygon.size() > 1) {
+            pen.setColor(color.lighter());
+            painter->setPen(pen);
+            painter->drawPolyline(screenPolygon.mid(0, 2));
+
+            painter->drawEllipse(screenPolygon[0], 4, 4);
+
+        }
+#endif
         }
     }
 
