@@ -82,6 +82,9 @@ PathGeneratorTilesDialog::PathGeneratorTilesDialog(QWidget *parent) :
     connect(ui->addTileset, SIGNAL(clicked()), SLOT(addTileset()));
     connect(ui->removeTileset, SIGNAL(clicked()), SLOT(removeTileset()));
 
+    ui->directory->setText(PathGeneratorMgr::instance()->tilesDirectory());
+    connect(ui->chooseDirectory, SIGNAL(clicked()), SLOT(chooseTilesDirectory()));
+
     setTilesetList();
 
     QSettings settings;
@@ -118,7 +121,7 @@ void PathGeneratorTilesDialog::setTilesList()
 
 void PathGeneratorTilesDialog::addTileset()
 {
-    const QString tilesDir = BuildingEditor::BuildingPreferences::instance()->tilesDirectory();
+    const QString tilesDir = PathGeneratorMgr::instance()->tilesDirectory();
     const QString filter = Utils::readableImageFormatsFilter();
     QStringList fileNames = QFileDialog::getOpenFileNames(this,
                                                           tr("Tileset Image"),
@@ -128,14 +131,17 @@ void PathGeneratorTilesDialog::addTileset()
     foreach (QString f, fileNames) {
         QFileInfo info(f);
         QString name = info.completeBaseName();
-        if (PathGeneratorMgr::instance()->tilesetFor(name))
-            continue; // FIXME: duplicate tileset names not allowed, even in different directories
+        if (Tileset * ts = PathGeneratorMgr::instance()->tilesetFor(name)) {
+            // If the tileset was missing, then we will try to load it again.
+            if (!ts->isMissing())
+                continue; // FIXME: duplicate tileset names not allowed, even in different directories
+        }
         add += info;
     }
-#if 1
+
     foreach (QFileInfo info, add) {
         if (Tiled::Tileset *ts = PathGeneratorMgr::instance()->loadTileset(info.canonicalFilePath())) {
-            PathGeneratorMgr::instance()->addTileset(ts);
+            PathGeneratorMgr::instance()->addOrReplaceTileset(ts);
             setTilesetList();
             ui->tilesets->setCurrentRow(PathGeneratorMgr::instance()->indexOf(ts));
         } else {
@@ -143,20 +149,6 @@ void PathGeneratorTilesDialog::addTileset()
                                  PathGeneratorMgr::instance()->errorString());
         }
     }
-#else
-    if (add.count() > 1)
-        mUndoStack->beginMacro(tr("Add Tilesets"));
-    foreach (QFileInfo info, add) {
-        if (Tiled::Tileset *ts = BuildingTMX::instance()->loadTileset(info.canonicalFilePath()))
-            mUndoStack->push(new AddBuildingTileset(this, ts));
-        else {
-            QMessageBox::warning(this, tr("It's no good, Jim!"),
-                                 BuildingTMX::instance()->errorString());
-        }
-    }
-    if (add.count() > 1)
-        mUndoStack->endMacro();
-#endif
 }
 
 void PathGeneratorTilesDialog::removeTileset()
@@ -170,12 +162,8 @@ void PathGeneratorTilesDialog::removeTileset()
                                   tr("Really remove the tileset '%1'?").arg(tileset->name()),
                                   QMessageBox::Ok, QMessageBox::Cancel) == QMessageBox::Cancel)
             return;
-#if 1
         PathGeneratorMgr::instance()->removeTileset(tileset);
         delete item;
-#else
-        mUndoStack->push(new RemoveBuildingTileset(this, tileset));
-#endif
     }
 }
 
@@ -222,6 +210,16 @@ void PathGeneratorTilesDialog::currentTileChanged(const QModelIndex &index)
 void PathGeneratorTilesDialog::tileActivated(const QModelIndex &index)
 {
     accept();
+}
+
+void PathGeneratorTilesDialog::chooseTilesDirectory()
+{
+    QString f = QFileDialog::getExistingDirectory(this, tr("Directory"),
+                                                  ui->chooseDirectory->text());
+    if (!f.isEmpty()) {
+        ui->directory->setText(QDir::toNativeSeparators(f));
+        PathGeneratorMgr::instance()->setTilesDirectory(f);
+    }
 }
 
 void PathGeneratorTilesDialog::updateUI()

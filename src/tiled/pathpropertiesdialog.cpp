@@ -18,6 +18,7 @@
 #include "pathpropertiesdialog.h"
 #include "ui_pathpropertiesdialog.h"
 
+#include "addremovetileset.h"
 #include "mapdocument.h"
 #include "pathgeneratorsdialog.h"
 #include "pathgeneratormgr.h"
@@ -30,6 +31,7 @@
 #include "tile.h"
 #include "tileset.h"
 
+#include <QDebug>
 #include <QUndoCommand>
 
 using namespace Tiled;
@@ -330,6 +332,10 @@ void PathPropertiesDialog::setPath(MapDocument *doc, Path *path)
 
     mPath = path;
     setGeneratorsList();
+
+    synchUI();
+
+    PathGeneratorMgr::instance()->loadTilesets(); // FIXME: move this
 }
 
 void PathPropertiesDialog::currentGeneratorChanged(int row)
@@ -423,11 +429,14 @@ void PathPropertiesDialog::chooseTile()
     dialog->setInitialTile(prop->mTilesetName, prop->mTileID);
     if (dialog->exec() == QDialog::Accepted) {
         if (Tile *tile = dialog->selectedTile()) {
+            mMapDocument->undoStack()->beginMacro(tr("Change Generator Tile"));
+            addTilesetIfNeeded(tile->tileset()->name());
             mMapDocument->undoStack()->push(
                         new ChangePropertyValue(mMapDocument, mPath, prop,
                                                 prop->tileName(
                                                     tile->tileset()->name(),
                                                     tile->id())));
+            mMapDocument->undoStack()->endMacro();
         }
     }
     dialog->reparent(saveParent);
@@ -504,11 +513,46 @@ void PathPropertiesDialog::moveDown()
 
 void PathPropertiesDialog::addGenerator()
 {
+    mMapDocument->undoStack()->beginMacro(tr("Add Generator to Path"));
+
+    // Add tilesets used by the generator to the map, if needed.
+    foreach (PathGeneratorProperty *prop, mCurrentGeneratorTemplate->properties()) {
+        if (PGP_Tile *tile = prop->asTile())
+            addGeneratorTilesets(tile);
+    }
+
     int index = ui->generatorsList->currentRow() + 1;
     if (index == 0)
         index = mPath->generators().size();
     mMapDocument->undoStack()->push(new AddGenerator(mMapDocument, mPath, index,
                                                      mCurrentGeneratorTemplate->clone()));
+
+    mMapDocument->undoStack()->endMacro();
+}
+
+void PathPropertiesDialog::addGeneratorTilesets(PGP_Tile *prop)
+{
+    if (!prop->mTilesetName.isEmpty())
+        addTilesetIfNeeded(prop->mTilesetName);
+}
+
+void PathPropertiesDialog::addTilesetIfNeeded(const QString &tilesetName)
+{
+    if (Tileset *ts = PathGeneratorMgr::instance()->tilesetFor(tilesetName)) {
+        bool found = false;
+        foreach (Tileset *mapTileset, mMapDocument->map()->tilesets()) {
+            if (mapTileset->name() == tilesetName &&
+                    mapTileset->imageSource() == ts->imageSource()) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            qDebug() << "added generator tileset" << tilesetName;
+            mMapDocument->undoStack()->push(new AddTileset(mMapDocument, ts));
+        }
+    }
+}
 
 void PathPropertiesDialog::setClosed(bool closed)
 {

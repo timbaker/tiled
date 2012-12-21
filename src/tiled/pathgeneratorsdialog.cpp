@@ -257,6 +257,8 @@ PathGeneratorsDialog::PathGeneratorsDialog(QWidget *parent) :
 
     ui->generatorsList->setCurrentRow(0);
     ui->propertyList->setCurrentRow(0);
+
+    PathGeneratorMgr::instance()->loadTilesets(); // FIXME: move this
 }
 
 PathGeneratorsDialog::~PathGeneratorsDialog()

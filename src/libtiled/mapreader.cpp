@@ -379,18 +379,31 @@ void MapReaderPrivate::readTilesetImage(Tileset *tileset)
             const QImage tilesetImage = p->readExternalImage(source);
             if (tileset->loadFromImage(tilesetImage, source))
                 p->tilesetImageCache()->addTileset(tileset);
-            else
-                xml.raiseError(tr("Error loading tileset image:\n'%1'").arg(source));
+            else {
+                const int height = atts.value(QLatin1String("height")).toString().toInt();
+                QImage image(width, height, QImage::Format_ARGB32);
+                image.fill(Qt::red);
+                tileset->loadFromImage(image, source);
+                tileset->setMissing(true);
+            }
         }
         xml.skipCurrentElement();
         return;
+    } else {
+        const QImage tilesetImage = p->readExternalImage(source);
+        if (!tileset->loadFromImage(tilesetImage, source)) {
+            const int height = atts.value(QLatin1String("height")).toString().toInt();
+            QImage image(width, height, QImage::Format_ARGB32);
+            image.fill(Qt::red);
+            tileset->loadFromImage(image, source);
+            tileset->setMissing(true);
+        }
     }
-#endif
-
+#else
     const QImage tilesetImage = p->readExternalImage(source);
     if (!tileset->loadFromImage(tilesetImage, source))
         xml.raiseError(tr("Error loading tileset image:\n'%1'").arg(source));
-
+#endif
     xml.skipCurrentElement();
 }
 
@@ -916,8 +929,18 @@ Path *MapReaderPrivate::readPath()
     if (!readBoolean(atts, QLatin1String("visible"), true, visible))
         return 0;
 
+    bool closed;
+    if (!readBoolean(atts, QLatin1String("closed"), false, closed))
+        return 0;
+
+    bool centers;
+    if (!readBoolean(atts, QLatin1String("centers"), false, centers))
+        return 0;
+
     Path *path = new Path();
     path->setVisible(visible);
+    path->setClosed(closed);
+    path->setCenters(centers);
 
     while (xml.readNextStartElement()) {
         if (xml.name() == "properties") {
@@ -1010,6 +1033,8 @@ PathGenerator *MapReaderPrivate::readPathGenerator()
                            .arg(att.name().toString()));
         }
     }
+
+    xml.skipCurrentElement();
 
     return pgen;
 }

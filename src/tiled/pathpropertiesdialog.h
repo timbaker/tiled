@@ -32,6 +32,7 @@ namespace Tiled {
 class Path;
 class PathGenerator;
 class PathGeneratorProperty;
+class PGP_Tile;
 
 namespace Internal {
 class MapDocument;
@@ -67,6 +68,8 @@ private slots:
     void removeGenerator();
 
     void addGenerator();
+    void addGeneratorTilesets(PGP_Tile *prop);
+    void addTilesetIfNeeded(const QString &tilesetName);
 
     void setClosed(bool closed);
     void setCenters(bool centers);

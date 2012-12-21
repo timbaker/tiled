@@ -59,6 +59,8 @@ private slots:
     void currentTileChanged(const QModelIndex &index);
     void tileActivated(const QModelIndex &index);
 
+    void chooseTilesDirectory();
+
     void updateUI();
 
     void accept();

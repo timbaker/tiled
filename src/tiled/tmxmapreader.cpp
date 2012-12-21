@@ -26,6 +26,10 @@
 #include "tileset.h"
 #include "tilesetmanager.h"
 #include "mapreader.h"
+#ifdef ZOMBOID
+#include "pathgeneratormgr.h"
+#include "tile.h"
+#endif
 
 #include <QBuffer>
 #include <QFileInfo>
@@ -82,6 +86,21 @@ Map *TmxMapReader::read(const QString &fileName)
     Map *map = reader.readMap(fileName);
     if (!map)
         mError = reader.errorString();
+
+#ifdef ZOMBOID
+    if (map) {
+        foreach (Tileset *tileset, map->tilesets()) {
+            if (tileset->isMissing()
+                    && tileset->tileHeight() == 128
+                    && tileset->tileWidth() == 64) {
+                // Replace the all-red image with something nicer.
+                Tile *missingTile = PathGeneratorMgr::instance()->missingTile();
+                for (int i = 0; i < tileset->tileCount(); i++)
+                    tileset->tileAt(i)->setImage(missingTile->image());
+            }
+        }
+    }
+#endif
 
     return map;
 }

@@ -25,6 +25,7 @@
 namespace Tiled {
 
 class PathGenerator;
+class Tile;
 class Tileset;
 
 namespace Internal {
@@ -43,6 +44,9 @@ public:
     { return mGenerators; }
 
     const QList<PathGenerator*> &generatorTypes() const;
+
+    QString tilesDirectory() const;
+    void setTilesDirectory(const QString &path);
 
     Tiled::Tileset *tilesetFor(const QString &tilesetName)
     {
@@ -73,9 +77,16 @@ public:
 
     bool Startup();
 
+    void addOrReplaceTileset(Tileset *ts);
     Tileset *loadTileset(const QString &source);
+    bool loadTilesetImage(Tileset *ts, const QString &source);
     void addTileset(Tileset *ts);
     void removeTileset(Tileset *ts);
+
+    void loadTilesets(); // this shouldn't be public
+
+    Tile *missingTile() const
+    { return mMissingTile; }
 
 private:
     PathGenerator *findGeneratorType(const QString &type);
@@ -87,6 +98,8 @@ private:
 
     QList<PathGenerator*> mGenerators;
 
+    Tileset *mMissingTileset;
+    Tile *mMissingTile;
     QMap<QString,Tiled::Tileset*> mTilesetByName;
     QList<Tiled::Tileset*> mRemovedTilesets;
 

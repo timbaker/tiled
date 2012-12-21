@@ -555,6 +555,10 @@ void MapWriterPrivate::writePath(QXmlStreamWriter &w, const Path *path)
 
     if (!path->isVisible())
         w.writeAttribute(QLatin1String("visible"), QLatin1String("false"));
+    if (path->isClosed())
+        w.writeAttribute(QLatin1String("closed"), QLatin1String("true"));
+    if (path->centers())
+        w.writeAttribute(QLatin1String("centers"), QLatin1String("true"));
 
     writeProperties(w, path->properties());
 
