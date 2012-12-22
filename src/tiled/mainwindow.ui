@@ -127,6 +127,7 @@
     </property>
     <addaction name="actionBuildingEditor"/>
     <addaction name="actionConvertOrientation"/>
+    <addaction name="actionTilesetMetaInfo"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -456,6 +457,11 @@
    </property>
    <property name="text">
     <string>Building Editor</string>
+   </property>
+  </action>
+  <action name="actionTilesetMetaInfo">
+   <property name="text">
+    <string>Tileset Meta Info...</string>
    </property>
   </action>
  </widget>

@@ -176,7 +176,9 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/buildingpreferences.cpp \
     BuildingEditor/buildingtmx.cpp \
     BuildingEditor/tilecategoryview.cpp \
-    BuildingEditor/listofstringsdialog.cpp
+    BuildingEditor/listofstringsdialog.cpp \
+    tilemetainfodialog.cpp \
+    tilemetainfomgr.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -318,7 +320,9 @@ HEADERS += aboutdialog.h \
     BuildingEditor/buildingpreferences.h \
     BuildingEditor/buildingtmx.h \
     BuildingEditor/tilecategoryview.h \
-    BuildingEditor/listofstringsdialog.h
+    BuildingEditor/listofstringsdialog.h \
+    tilemetainfodialog.h \
+    tilemetainfomgr.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -348,7 +352,8 @@ FORMS += aboutdialog.ui \
     BuildingEditor/buildingtilesdialog.ui \
     BuildingEditor/templatefrombuildingdialog.ui \
     BuildingEditor/resizebuildingdialog.ui \
-    BuildingEditor/listofstringsdialog.ui
+    BuildingEditor/listofstringsdialog.ui \
+    tilemetainfodialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

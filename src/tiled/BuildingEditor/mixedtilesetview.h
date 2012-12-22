@@ -62,7 +62,7 @@ public:
     void setTiles(const QList<Tile*> &tiles,
                   const QList<void*> &userData = QList<void*>(),
                   const QStringList &headers = QStringList());
-    void setTileset(Tileset *tileset);
+    void setTileset(Tileset *tileset, const QStringList &labels = QStringList());
 
     Tile *tileAt(const QModelIndex &index) const;
     QString headerAt(const QModelIndex &index) const;
@@ -74,6 +74,10 @@ public:
     void scaleChanged(qreal scale);
 
     void setShowHeaders(bool show);
+
+    void setShowLabels(bool show) { mShowLabels = show; }
+    bool showLabels() const { return mShowLabels; }
+    void setLabel(Tile *tile, const QString &label);
 
 signals:
     void tileDropped(const QString &tilesetName, int tileId);
@@ -105,6 +109,7 @@ private:
         Tiled::Tile *mTile;
         void *mUserData;
         QString mTilesetName;
+        QString mLabel;
     };
 
     Item *toItem(const QModelIndex &index) const;
@@ -118,6 +123,7 @@ private:
     QMap<Tiled::Tile*,QRect> mCategoryBounds;
     static QString mMimeType;
     bool mShowHeaders;
+    bool mShowLabels;
 };
 
 class MixedTilesetView : public QTableView
