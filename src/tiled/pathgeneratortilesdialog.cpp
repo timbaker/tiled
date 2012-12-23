@@ -106,7 +106,10 @@ void PathGeneratorTilesDialog::setTilesetList()
 {
     ui->tilesets->clear();
     foreach (Tileset *ts, PathGeneratorMgr::instance()->tilesets()) {
-        ui->tilesets->addItem(ts->name());
+        QListWidgetItem *item = new QListWidgetItem(ts->name());
+        if (ts->isMissing())
+            item->setForeground(Qt::red);
+        ui->tilesets->addItem(item);
     }
 }
 
