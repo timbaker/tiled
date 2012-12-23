@@ -338,6 +338,7 @@ void PathGeneratorsDialog::moveDown()
 
 void PathGeneratorsDialog::propertyActivated(const QModelIndex &index)
 {
+    Q_UNUSED(index)
     if (!mCurrentProperty)
         return;
     if (PGP_Tile *prop = mCurrentProperty->asTile())
@@ -376,29 +377,36 @@ void PathGeneratorsDialog::integerValueChanged(int newValue)
 
 void PathGeneratorsDialog::chooseTile()
 {
-    PGP_Tile *prop = mCurrentProperty->asTile();
+    if (PGP_TileEntry *prop = mCurrentProperty->asTileEntry()) {
 
-    PathGeneratorTilesDialog *dialog = PathGeneratorTilesDialog::instance();
-    QWidget *saveParent = dialog->parentWidget();
-    dialog->reparent(this);
-
-    dialog->setInitialTile(prop->mTilesetName, prop->mTileID);
-    if (dialog->exec() == QDialog::Accepted) {
-        if (Tile *tile = dialog->selectedTile()) {
-            mUndoStack->push(new ChangePropertyValue(this, prop,
-                                                     prop->tileName(
-                                                         tile->tileset()->name(),
-                                                         tile->id())));
-        }
     }
 
-    dialog->reparent(saveParent);
+    if (PGP_Tile *prop = mCurrentProperty->asTile()) {
+        PathGeneratorTilesDialog *dialog = PathGeneratorTilesDialog::instance();
+        QWidget *saveParent = dialog->parentWidget();
+        dialog->reparent(this);
+
+        dialog->setInitialTile(prop->mTilesetName, prop->mTileID);
+        if (dialog->exec() == QDialog::Accepted) {
+            if (Tile *tile = dialog->selectedTile()) {
+                mUndoStack->push(new ChangePropertyValue(this, prop,
+                                                         prop->tileName(
+                                                             tile->tileset()->name(),
+                                                             tile->id())));
+            }
+        }
+
+        dialog->reparent(saveParent);
+    }
 }
 
 void PathGeneratorsDialog::clearTile()
 {
-    PGP_Tile *prop = mCurrentProperty->asTile();
-    mUndoStack->push(new ChangePropertyValue(this, prop, QString()));
+    if (PGP_TileEntry *prop = mCurrentProperty->asTileEntry()) {
+
+    }
+    if (PGP_Tile *prop = mCurrentProperty->asTile())
+        mUndoStack->push(new ChangePropertyValue(this, prop, QString()));
 }
 
 void PathGeneratorsDialog::stringEdited(const QString &text)
@@ -494,6 +502,16 @@ void PathGeneratorsDialog::setPropertyPage()
             ui->stringEdit->clear();
         }
     } else if (PGP_Tile *p = mCurrentProperty->asTile()) {
+        ui->propertyStack->setCurrentWidget(ui->Tile);
+        QPixmap pixmap;
+        if (Tileset *ts = findTileset(p->mTilesetName, PathGeneratorMgr::instance()->tilesets())) {
+            if (Tile *tile = ts->tileAt(p->mTileID))
+                pixmap = tile->image();
+        }
+        ui->tileLabel->setPixmap(pixmap);
+        ui->tileName->setText(p->valueToString());
+    } else if (PGP_TileEntry *p0 = mCurrentProperty->asTileEntry()) {
+        PGP_Tile *p = p0->properties()[p0->mDisplayIndex]->asTile();
         ui->propertyStack->setCurrentWidget(ui->Tile);
         QPixmap pixmap;
         if (Tileset *ts = findTileset(p->mTilesetName, PathGeneratorMgr::instance()->tilesets())) {

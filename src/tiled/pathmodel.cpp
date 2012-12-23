@@ -328,18 +328,22 @@ void PathModel::layerAboutToBeRemoved(int index)
 
 void PathModel::pathGeneratorAdded(Path *path, int index)
 {
+    Q_UNUSED(index)
     QModelIndex i = this->index(path);
     emit dataChanged(i, i);
 }
 
 void PathModel::pathGeneratorRemoved(Path *path, int index)
 {
+    Q_UNUSED(index)
     QModelIndex i = this->index(path);
     emit dataChanged(i, i);
 }
 
 void PathModel::pathGeneratorReordered(Path *path, int oldIndex, int newIndex)
 {
+    Q_UNUSED(oldIndex)
+    Q_UNUSED(newIndex)
     QModelIndex i = this->index(path);
     emit dataChanged(i, i);
 }

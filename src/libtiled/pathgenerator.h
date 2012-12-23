@@ -35,6 +35,7 @@ class PGP_Integer;
 class PGP_String;
 class PGP_Layer;
 class PGP_Tile;
+class PGP_TileEntry;
 
 class TILEDSHARED_EXPORT PathGeneratorProperty
 {
@@ -55,6 +56,7 @@ public:
     virtual PGP_String *asString() { return 0; }
     virtual PGP_Layer *asLayer() { return 0; }
     virtual PGP_Tile *asTile() { return 0; }
+    virtual PGP_TileEntry *asTileEntry() { return 0; }
 
     virtual void clone(PathGeneratorProperty *other);
 
@@ -145,6 +147,22 @@ public:
 
     QString mTilesetName;
     int mTileID;
+};
+
+
+class TILEDSHARED_EXPORT PGP_TileEntry : public PathGeneratorProperty
+{
+public:
+    PGP_TileEntry(const QString &name);
+
+    PGP_TileEntry *asTileEntry() { return this; }
+
+    void clone(PathGeneratorProperty *other);
+
+    void setTiles(int displayIndex, const QStringList &names);
+
+    QString mCategory;
+    int mDisplayIndex;
 };
 
 class TILEDSHARED_EXPORT PathGenerator
@@ -356,6 +374,39 @@ public:
     int layerForTile(int tile);
     void setTile(QVector<TileLayer*> layers, QPoint p, int tileEnum, QVector<Tile*> &tiles);
     void setCell(QVector<TileLayer*> layers, QPoint p, int tileEnum, QVector<Tile*> &tiles);
+};
+
+class PG_Wall : public PathGenerator
+{
+public:
+    PG_Wall(const QString &label);
+
+    PathGenerator *clone() const;
+
+    void generate(int level, QVector<TileLayer*> &layers);
+
+    enum TileNames
+    {
+        West,
+        North,
+        NorthWest,
+        SouthEast,
+        WestWindow,
+        NorthWindow,
+        WestDoor,
+        NorthDoor,
+        TileCount
+    };
+
+    enum Properties
+    {
+        Tile = 0, // PGP_TileEntry
+        Layer1,
+        Layer2,
+        PathOffset,
+        PropertyCount
+    };
+
 };
 
 class TILEDSHARED_EXPORT PathGeneratorTypes

@@ -373,6 +373,7 @@ void PathPropertiesDialog::currentGeneratorTemplateChanged(int row)
 
 void PathPropertiesDialog::propertyActivated(const QModelIndex &index)
 {
+    Q_UNUSED(index)
     if (!mCurrentProperty)
         return;
     if (PGP_Tile *prop = mCurrentProperty->asTile())
@@ -381,6 +382,7 @@ void PathPropertiesDialog::propertyActivated(const QModelIndex &index)
 
 void PathPropertiesDialog::templateActivated(const QModelIndex &index)
 {
+    Q_UNUSED(index)
     addGenerator();
 }
 

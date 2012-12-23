@@ -193,6 +193,31 @@ QString PGP_Tile::tileName(const QString &tilesetName, int tileID) const
 
 /////
 
+
+PGP_TileEntry::PGP_TileEntry(const QString &name) :
+    PathGeneratorProperty(name, QLatin1String("TileEntry")),
+    mDisplayIndex(0)
+{
+}
+
+void PGP_TileEntry::clone(PathGeneratorProperty *other)
+{
+    PathGeneratorProperty::clone(other);
+    mCategory = other->asTileEntry()->mCategory;
+}
+
+void PGP_TileEntry::setTiles(int displayIndex, const QStringList &names)
+{
+    mProperties.resize(names.size());
+    for (int i = 0; i < names.size(); i++)
+        mProperties[i] = new PGP_Tile(names[i]);
+
+    Q_ASSERT(displayIndex >= 0 && displayIndex < mProperties.size());
+    mDisplayIndex = displayIndex;
+}
+
+/////
+
 PathGenerator::PathGenerator(const QString &label, const QString &type) :
     mLabel(label),
     mType(type),
@@ -1860,6 +1885,57 @@ void PG_WithCorners::setCell(QVector<TileLayer *> layers, QPoint p,
 
 /////
 
+
+PG_Wall::PG_Wall(const QString &label) :
+    PathGenerator(label, QLatin1String("Wall"))
+{
+    mProperties.resize(PropertyCount);
+
+    if (PGP_TileEntry *prop = new PGP_TileEntry(QLatin1String("Tile"))) {
+        prop->mCategory = QLatin1String("wall");
+        QStringList tileNames;
+        tileNames
+                << QLatin1String("West")
+                << QLatin1String("North")
+                << QLatin1String("NorthWest")
+                << QLatin1String("SouthEast")
+                << QLatin1String("WestWindow")
+                << QLatin1String("NorthWindow")
+                << QLatin1String("WestDoor")
+                << QLatin1String("NorthDoor");
+        prop->setTiles(West, tileNames);
+        mProperties[Tile] = prop;
+    }
+
+    if (PGP_Layer *prop = new PGP_Layer(QLatin1String("Layer1"))) {
+        mProperties[Layer1] = prop;
+    }
+
+    if (PGP_Layer *prop = new PGP_Layer(QLatin1String("Layer2"))) {
+        mProperties[Layer2] = prop;
+    }
+
+    if (PGP_Integer *prop = new PGP_Integer(QLatin1String("PathOffset"))) {
+        prop->mMin = -100, prop->mMax = 100, prop->mValue = 0;
+        mProperties[PathOffset] = prop;
+    }
+}
+
+PathGenerator *PG_Wall::clone() const
+{
+    PG_Wall *clone = new PG_Wall(mLabel);
+    clone->cloneProperties(this);
+    return clone;
+}
+
+void PG_Wall::generate(int level, QVector<TileLayer *> &layers)
+{
+    if (level != mPath->level())
+        return;
+}
+
+/////
+
 PathGeneratorTypes *PathGeneratorTypes::mInstance = 0;
 
 PathGeneratorTypes *PathGeneratorTypes::instance()
@@ -1875,6 +1951,7 @@ PathGeneratorTypes::PathGeneratorTypes()
     mTypes += new PG_SingleTile(QLatin1String("Single Tile"));
     mTypes += new PG_Fence(QLatin1String("Fence"));
     mTypes += new PG_StreetLight(QLatin1String("Street Light"));
+    mTypes += new PG_Wall(QLatin1String("Wall"));
     mTypes += new PG_WithCorners(QLatin1String("With Corners"));
     foreach (PathGenerator *pgen, mTypes)
         pgen->refCountUp();
