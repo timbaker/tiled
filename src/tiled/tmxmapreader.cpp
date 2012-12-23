@@ -88,12 +88,10 @@ Map *TmxMapReader::read(const QString &fileName)
 
 #ifdef ZOMBOID
     if (map) {
-        foreach (Tileset *tileset, map->tilesets()) {
-            if (tileset->isMissing()
-                    && tileset->tileHeight() == 128
-                    && tileset->tileWidth() == 64) {
+        Tile *missingTile = TilesetManager::instance()->missingTile();
+        foreach (Tileset *tileset, map->missingTilesets()) {
+            if (tileset->tileHeight() == 128 && tileset->tileWidth() == 64) {
                 // Replace the all-red image with something nicer.
-                Tile *missingTile = TilesetManager::instance()->missingTile();
                 for (int i = 0; i < tileset->tileCount(); i++)
                     tileset->tileAt(i)->setImage(missingTile->image());
             }
