@@ -1526,9 +1526,15 @@ void PG_WithCorners::generate(int level, QVector<TileLayer *> &layers)
         stroker.build(mPath, thickness, outlineFwd, outlineBwd);
 
         if (mPath->isClosed()) {
-            // Separate outlines
-            outlineFwd += outlineFwd.first();
-            outlineBwd += outlineBwd.first();
+            // With a closed path we get 2 complete outlines.
+            // The first point on the forward path is at the end of the first
+            // segment, but we want to start at the beginning of the first segment
+            // to avoid flipping the path orientation.
+            outlineFwd.prepend(outlineFwd.last());
+            outlineFwd.replace(outlineFwd.size() - 1, outlineFwd.first());
+
+            outlineBwd.prepend(outlineBwd.last());
+            outlineBwd.replace(outlineBwd.size() - 1, outlineBwd.first());
         } else {
             // Move the first/last cap points to the backward outline.
             outlineBwd.prepend(outlineFwd.last());
