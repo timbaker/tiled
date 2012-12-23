@@ -691,6 +691,15 @@ CompositeLayerGroup *MapComposite::layerGroupForLayer(TileLayer *tl) const
     return tileLayersForLevel(tl->level());
 }
 
+const QList<MapComposite *> MapComposite::maps()
+{
+    QList<MapComposite*> ret;
+    ret += this;
+    foreach (MapComposite *subMap, mSubMaps)
+        ret += subMap->maps();
+    return ret;
+}
+
 void MapComposite::setOrigin(const QPoint &origin)
 {
     mPos = origin;

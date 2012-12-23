@@ -83,18 +83,23 @@ public:
       */
     MapImage *newFromMap(MapComposite *mapComposite);
 
+    QString errorString() const
+    { return mError; }
+
 protected:
     struct ImageData
     {
-        ImageData()
-            : scale(0)
-            , valid(false)
+        ImageData() :
+            scale(0),
+            valid(false),
+            missingTilesets(false)
         {}
         qreal scale;
         QRectF levelZeroBounds;
         QImage image;
         bool valid;
         QStringList sources;
+        bool missingTilesets;
     };
 
     ImageData generateMapImage(const QString &mapFilePath);
@@ -115,6 +120,7 @@ private:
     QFileInfo imageDataFileInfo(const QFileInfo &imageFileInfo);
 
     QMap<QString,MapImage*> mMapImages;
+    QString mError;
 
     static MapImageManager *mInstance;
 };
