@@ -119,6 +119,11 @@ MapImageManager::ImageData MapImageManager::generateMapImage(const QString &mapF
                                  tr("An error occurred trying to read a map thumbnail image.\n") + imageInfo.absoluteFilePath());
         if (image.width() == IMAGE_WIDTH) {
             ImageData data = readImageData(imageDataInfo);
+            // If the image was originally created with some tilesets missing,
+            // try to recreate the image in case those tileset issues were
+            // resolved.
+            if (data.missingTilesets)
+                data.valid = false;
 #if 1
             if (data.valid) {
                 foreach (QString source, data.sources) {
@@ -140,13 +145,23 @@ MapImageManager::ImageData MapImageManager::generateMapImage(const QString &mapF
     PROGRESS progress(tr("Generating thumbnail for %1").arg(fileInfo.completeBaseName()));
 
     MapInfo *mapInfo = MapManager::instance()->loadMap(mapFilePath);
+    if (!mapInfo) {
+        mError = MapManager::instance()->errorString();
     if (!mapInfo)
         return ImageData(); // TODO: Add error handling
+    }
 
     progress.update(tr("Generating thumbnail for %1").arg(fileInfo.completeBaseName()));
 
     MapComposite mapComposite(mapInfo);
     ImageData data = generateMapImage(&mapComposite);
+
+    foreach (MapComposite *mc, mapComposite.maps()) {
+        if (mc->map()->hasMissingTilesets()) {
+            data.missingTilesets = true;
+            break;
+        }
+    }
 
     data.image.save(imageInfo.absoluteFilePath());
     writeImageData(imageDataInfo, data);
@@ -243,7 +258,7 @@ MapImageManager::ImageData MapImageManager::generateMapImage(MapComposite *mapCo
 }
 
 #define IMAGE_DATA_MAGIC 0xB15B00B5
-#define IMAGE_DATA_VERSION 2
+#define IMAGE_DATA_VERSION 3
 
 MapImageManager::ImageData MapImageManager::readImageData(const QFileInfo &imageDataFileInfo)
 {
@@ -278,6 +293,8 @@ MapImageManager::ImageData MapImageManager::readImageData(const QFileInfo &image
         data.sources += source;
     }
 
+    in >> data.missingTilesets;
+
     // TODO: sanity-check the values
     data.valid = true;
 
@@ -300,6 +317,7 @@ void MapImageManager::writeImageData(const QFileInfo &imageDataFileInfo, const M
     out << qint32(data.sources.length());
     foreach (QString source, data.sources)
         out << source;
+    out << data.missingTilesets;
 }
 
 void MapImageManager::mapFileChanged(MapInfo *mapInfo)
@@ -321,7 +339,7 @@ void MapImageManager::mapFileChanged(MapInfo *mapInfo)
                 return;
             mapImage->mapFileChanged(data.image, data.scale,
                                      data.levelZeroBounds);
-#if 1
+
             // Set up file modification tracking on each TMX that makes
             // up this image.
             QList<MapInfo*> sources;
@@ -329,7 +347,7 @@ void MapImageManager::mapFileChanged(MapInfo *mapInfo)
                 if (MapInfo *sourceInfo = MapManager::instance()->mapInfo(source))
                     sources += sourceInfo;
             mapImage->setSources(sources);
-#endif
+
             emit mapImageChanged(mapImage);
         }
     }
