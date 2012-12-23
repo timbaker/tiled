@@ -317,8 +317,6 @@ void PathGenerator::outlineWidth(Tile *tile, TileLayer *tl, int width)
 
     qreal radius = width / 2.0;
     for (int i = 0; i < points.size() - 1; i++) {
-        bool vert = points[i].x() == points[i+1].x();
-        bool horiz = points[i].y() == points[i+1].y();
         int dx = 0;// horiz ? width-width/2 : 0;
         int dy = 0;//vert ? width-width/2 : 0;
         foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
@@ -636,6 +634,15 @@ public:
                   qreal dx2, qreal dy2,
                   qreal width,
                   qreal approximation_scale) {
+        Q_UNUSED(verts)
+        Q_UNUSED(x)
+        Q_UNUSED(y)
+        Q_UNUSED(dx1)
+        Q_UNUSED(dy1)
+        Q_UNUSED(dx2)
+        Q_UNUSED(dy2)
+        Q_UNUSED(width)
+        Q_UNUSED(approximation_scale)
     }
 
     void calc_miter( QVector<v2_t>& verts, v2_t v0, v2_t v1, v2_t v2, qreal dx1, qreal dy1, qreal dx2, qreal dy2, qreal strokeRadius, VGJoinStyle joinStyle, qreal miter_limit ) {
@@ -651,9 +658,11 @@ public:
                              v2.x + dx2, v2.y - dy2,
                              &xi, &yi))
         {
+#if 0
             qreal d1 = calc_distance(v1.x, v1.y, xi, yi);
             qreal lim = strokeRadius * miter_limit;
-            //            if(d1 <= lim)
+            if (d1 <= lim)
+#endif
             {
                 // Inside the miter limit
                 //---------------------
@@ -797,7 +806,7 @@ public:
 
 /////
 
-void PathGenerator::points(qreal offset, QVector<QPoint> &forward, QVector<QPoint> &backward)
+qreal PathGenerator::points(qreal offset, QVector<QPoint> &forward, QVector<QPoint> &backward)
 {
     forward.resize(0);
     backward.resize(0);
@@ -852,6 +861,8 @@ void PathGenerator::points(qreal offset, QVector<QPoint> &forward, QVector<QPoin
             backward += backward.first();
         }
     }
+
+    return offset;
 }
 
 /////
@@ -905,6 +916,7 @@ void PG_SingleTile::generate(int level, QVector<TileLayer *> &layers)
         if (!tiles[i]) return;
     }
 
+    /* Get an outline of the path, keeping the cap points. */
     PathStroke stroker;
     int thickness = mProperties[Thickness]->asInteger()->mValue;
     QVector<PathStroke::v2_t> outlineFwd, outlineBkwd;
@@ -1318,6 +1330,11 @@ PG_StreetLight::PG_StreetLight(const QString &label) :
     prop3->mMin = 1, prop3->mMax = 300, prop3->mValue = 10;
     mProperties[Spacing] = prop3;
 
+    if (PGP_Integer *prop = new PGP_Integer(QLatin1String("PathOffset"))) {
+        prop->mMin = -100, prop->mMax = 100, prop->mValue = 0;
+        mProperties[PathOffset] = prop;
+    }
+
     PGP_Boolean *prop4 = new PGP_Boolean(QLatin1String("Reverse"));
     prop4->mValue = false;
     mProperties[Reverse] = prop4;
@@ -1354,13 +1371,15 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
         if (!tiles[i]) return;
     }
 
-    PathPoints points = mPath->points();
-    if (mPath->isClosed())
-        points += points.first();
+    qreal pathOffset = mProperties[PathOffset]->asInteger()->mValue;
 
-    if (tl->map()->orientation() == Map::Isometric && level1) {
+    QVector<QPoint> forward, backward;
+    pathOffset = points(pathOffset, forward, backward);
+    QVector<QPoint> &points = (pathOffset >= 0) ? forward : backward;
+
+    if ((tl->map()->orientation() == Map::Isometric) && level1) {
         for (int i = 0; i < points.size(); i++)
-            points[i].translate(QPoint(-3, -3));
+            points[i] += QPoint(-3, -3);
     }
 
     int offset = mProperties[Offset]->asInteger()->mValue;
@@ -1370,14 +1389,14 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
     int orient = -1;
     int distance = -offset;
     for (int i = 0; i < points.size() - 1; i++) {
-        QPoint p0 = points[i].toPoint(), p1 = points[i + 1].toPoint();
+        QPoint p0 = points[i], p1 = points[i + 1];
         Direction dir = direction(p0, p1);
         if (dir == WestEast || dir == EastWest) {
             if (orient == -1) orient = reverse ? South : North;
             if (Tile *tile = tiles[level1 ? orient : Base]) {
                 foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
                                                   points[i+1].x(), points[i+1].y())) {
-                    if (i > 0 && pt == points[i].toPoint())
+                    if (i > 0 && pt == points[i])
                         continue; // skip shared point
                     if (tl->contains(pt) && (distance >= 0) && !(distance % spacing)) {
                         tl->setCell(pt.x(), pt.y(), Cell(tile));
@@ -1386,7 +1405,7 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
                 }
             }
             if (i + 1 < points.size() - 1) {
-                QPoint p2 = points[i+2].toPoint();
+                QPoint p2 = points[i+2];
                 Direction dir2 = direction(p1, p2);
                 if (dir == WestEast) {
                     if (dir2 == NorthSouth)
@@ -1405,7 +1424,7 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
             if (Tile *tile = tiles[level1 ? orient : Base]) {
                 foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
                                                   points[i+1].x(), points[i+1].y())) {
-                    if (i > 0 && pt == points[i].toPoint())
+                    if (i > 0 && pt == points[i])
                         continue; // skip shared point
                     if (tl->contains(pt) && (distance >= 0) && !(distance % spacing)) {
                         tl->setCell(pt.x(), pt.y(), Cell(tile));
@@ -1414,7 +1433,7 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
                 }
             }
             if (i + 1 < points.size() - 1) {
-                QPoint p2 = points[i+2].toPoint();
+                QPoint p2 = points[i+2];
                 Direction dir2 = direction(p1, p2);
                 if (dir == NorthSouth) {
                     if (dir2 == WestEast)
@@ -1434,7 +1453,7 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
                 continue;
             foreach (QPoint pt, calculateLine(points[i].x(), points[i].y(),
                                               points[i+1].x(), points[i+1].y())) {
-                if (i > 0 && pt == points[i].toPoint())
+                if (i > 0 && pt == points[i])
                     continue; // skip shared point
                 if (tl->contains(pt) && (distance >= 0) && !(distance % spacing)) {
                     tl->setCell(pt.x(), pt.y(), Cell(tile));
@@ -1567,10 +1586,10 @@ void PG_WithCorners::generate(int level, QVector<TileLayer *> &layers)
         reverse = prop->mValue;
 
 #if 1
-    int offset = mProperties[PathOffset]->asInteger()->mValue;
+    qreal offset = mProperties[PathOffset]->asInteger()->mValue;
 
     QVector<QPoint> forward, backward;
-    points(offset, forward, backward);
+    offset = this->points(offset, forward, backward);
     QVector<QPoint> &points = (offset >= 0) ? forward : backward;
 #elif 0
     PathPoints points;
