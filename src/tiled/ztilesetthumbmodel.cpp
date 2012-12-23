@@ -62,6 +62,11 @@ QVariant ZTilesetThumbModel::data(const QModelIndex &index, int role) const
         if (Tileset *ts = tilesetAt(index))
             return ts->name();
     }
+    if (role == Qt::ForegroundRole) {
+        if (Tileset *ts = tilesetAt(index))
+            if (ts->isMissing())
+                return Qt::red;
+    }
 
     return QVariant();
 }
