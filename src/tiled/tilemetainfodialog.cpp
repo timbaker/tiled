@@ -375,7 +375,10 @@ void TileMetaInfoDialog::setTilesetList()
 
     ui->tilesets->clear();
     foreach (Tileset *ts, TileMetaInfoMgr::instance()->tilesets()) {
-        ui->tilesets->addItem(ts->name());
+        QListWidgetItem *item = new QListWidgetItem(ts->name());
+        if (ts->isMissing())
+            item->setForeground(Qt::red);
+        ui->tilesets->addItem(item);
         maxWidth = qMax(maxWidth, fm.width(ts->name()));
     }
     ui->tilesets->setFixedWidth(maxWidth +
