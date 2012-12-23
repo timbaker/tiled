@@ -150,6 +150,31 @@ QString PathGeneratorMgr::txtPath()
 #define VERSION0 0
 #define VERSION_LATEST VERSION0
 
+static bool readProperty(const SimpleFileBlock &block, PathGeneratorProperty *prop,
+                         QString &error)
+{
+    int index;
+    if (prop->properties().size()) {
+        if ((index = block.findBlock(prop->name())) < 0)
+            return true;
+        const SimpleFileBlock &block2 = block.blocks[index];
+        foreach (PathGeneratorProperty *prop2, prop->properties()) {
+            if (!readProperty(block2, prop2, error))
+                return false;
+        }
+    } else {
+        if ((index = block.findValue(prop->name())) < 0)
+            return true;
+        QString value = block.values[index].value;
+        if (!prop->valueFromString(value)) {
+            error = PathGeneratorMgr::instance()->tr("Error with property '%2 = %3'")
+                    .arg(prop->name()).arg(value);
+            return false;
+        }
+    }
+    return true;
+}
+
 bool PathGeneratorMgr::readTxt()
 {
     // Make sure the user has chosen the Tiles directory.
@@ -237,6 +262,10 @@ bool PathGeneratorMgr::readTxt()
                 pgen = pgen->clone();
                 pgen->setLabel(block.value("label"));
                 foreach (PathGeneratorProperty *prop, pgen->properties()) {
+#if 1
+                    if (!readProperty(block, prop, mError))
+                        return false;
+#else
                     if (block.findValue(prop->name()) < 0)
                         continue;
                     QString value = block.value(prop->name());
@@ -245,6 +274,7 @@ bool PathGeneratorMgr::readTxt()
                                 .arg(pgen->label()).arg(prop->name()).arg(value);
                         return false;
                     }
+#endif
                 }
                 insertGenerator(mGenerators.size(), pgen);
             } else {
@@ -270,6 +300,19 @@ bool PathGeneratorMgr::readTxt()
     return true;
 }
 
+static void writeProperty(SimpleFileBlock &block, PathGeneratorProperty *prop)
+{
+    if (prop->properties().size()) {
+        SimpleFileBlock block2;
+        block2.name = prop->name();
+        foreach (PathGeneratorProperty *prop2, prop->properties())
+            writeProperty(block2, prop2);
+        block.blocks += block2;
+    } else {
+        block.addValue(prop->name(), prop->valueToString());
+    }
+}
+
 bool PathGeneratorMgr::writeTxt()
 {
     SimpleFile simpleFile;
@@ -289,9 +332,8 @@ bool PathGeneratorMgr::writeTxt()
         generatorBlock.name = QLatin1String("Generator");
         generatorBlock.addValue("label", pgen->label());
         generatorBlock.addValue("type", pgen->type());
-        foreach (PathGeneratorProperty *prop, pgen->properties()) {
-            generatorBlock.addValue(prop->name(), prop->valueToString());
-        }
+        foreach (PathGeneratorProperty *prop, pgen->properties())
+            writeProperty(generatorBlock, prop);
         simpleFile.blocks += generatorBlock;
     }
 

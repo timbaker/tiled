@@ -184,6 +184,8 @@ void PathGeneratorTilesDialog::setInitialTile(const QString &tilesetName, int ti
         ui->tilesets->setCurrentRow(row);
         if (Tile *tile = ts->tileAt(tileID))
             ui->tiles->setCurrentIndex(ui->tiles->model()->index(tile));
+    } else {
+        ui->tiles->setCurrentIndex(QModelIndex());
     }
 }
 

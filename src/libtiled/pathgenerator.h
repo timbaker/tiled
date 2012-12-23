@@ -47,6 +47,8 @@ public:
     QString type() const
     { return mType; }
 
+    const QVector<PathGeneratorProperty*> &properties() const
+    { return mProperties; }
 
     virtual PGP_Boolean *asBoolean() { return 0; }
     virtual PGP_Integer *asInteger() { return 0; }
@@ -54,13 +56,15 @@ public:
     virtual PGP_Layer *asLayer() { return 0; }
     virtual PGP_Tile *asTile() { return 0; }
 
-    virtual void clone(PathGeneratorProperty *other) = 0;
+    virtual void clone(PathGeneratorProperty *other);
 
-    virtual QString valueToString() const = 0;
-    virtual bool valueFromString(const QString &s) = 0;
+    virtual QString valueToString() const { return QString(); }
+    virtual bool valueFromString(const QString &s)
+    { Q_UNUSED(s); return false; }
 
     QString mName; // West, Layer1
     QString mType; // String, Tile, Integer
+    QVector<PathGeneratorProperty*> mProperties;
 };
 
 class TILEDSHARED_EXPORT PGP_Boolean : public PathGeneratorProperty

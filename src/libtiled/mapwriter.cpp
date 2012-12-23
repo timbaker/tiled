@@ -86,6 +86,7 @@ private:
     void writePathLayer(QXmlStreamWriter &w, const PathLayer *pathLayer);
     void writePath(QXmlStreamWriter &w, const Path *path);
     void writePathGenerator(QXmlStreamWriter &w, const PathGenerator *pgen);
+    void writePathGeneratorProperty(QXmlStreamWriter &w, const PathGeneratorProperty *prop);
 #endif
     void writeProperties(QXmlStreamWriter &w,
                          const Properties &properties);
@@ -590,8 +591,21 @@ void MapWriterPrivate::writePathGenerator(QXmlStreamWriter &w, const PathGenerat
     w.writeAttribute(QLatin1String("type"), pgen->type());
     w.writeAttribute(QLatin1String("label"), pgen->label());
     foreach (PathGeneratorProperty *prop, pgen->properties())
-        w.writeAttribute(prop->name(), prop->valueToString());
+        writePathGeneratorProperty(w, prop);
     w.writeEndElement();
+}
+
+void MapWriterPrivate::writePathGeneratorProperty(QXmlStreamWriter &w,
+                                                  const PathGeneratorProperty *prop)
+{
+    if (prop->properties().size()) {
+        w.writeStartElement(prop->name());
+        foreach (PathGeneratorProperty *childProp, prop->properties())
+            writePathGeneratorProperty(w, childProp);
+        w.writeEndElement();
+    } else {
+        w.writeAttribute(prop->name(), prop->valueToString());
+    }
 }
 #endif
 

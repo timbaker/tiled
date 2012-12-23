@@ -30,6 +30,13 @@ PathGeneratorProperty::PathGeneratorProperty(const QString &name, const QString 
 {
 }
 
+void PathGeneratorProperty::clone(PathGeneratorProperty *other)
+{
+    Q_ASSERT(mType == other->mType);
+    for(int i = 0; i < other->properties().size(); i++)
+        mProperties[i]->clone(other->mProperties[i]);
+}
+
 PGP_Boolean::PGP_Boolean(const QString &name) :
     PathGeneratorProperty(name, QLatin1String("Boolean")),
     mValue(false)
