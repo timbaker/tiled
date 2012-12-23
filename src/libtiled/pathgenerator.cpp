@@ -797,6 +797,65 @@ public:
 
 /////
 
+void PathGenerator::points(qreal offset, QVector<QPoint> &forward, QVector<QPoint> &backward)
+{
+    forward.resize(0);
+    backward.resize(0);
+
+    // When the Path points are not at the center of tiles, keep the tiles on
+    // one side of the path by constructing a path that is offset from the
+    // original path and passes through tile centers.  For a closed path with
+    // PathOffset=0, this puts the tiles just inside the path.  If you want
+    // to put the tiles just outside a closed path, use offset += 0.5.
+    if (!mPath->centers())
+        offset -= 0.5;
+
+    if (offset != 0) {
+        PathStroke stroker;
+        qreal thickness = qAbs(offset) * 2;
+        QVector<PathStroke::v2_t> outlineFwd, outlineBwd;
+        stroker.build(mPath, thickness, outlineFwd, outlineBwd);
+
+        if (mPath->isClosed()) {
+            // With a closed path we get 2 complete outlines.
+            // The first point on the forward path is at the end of the first
+            // segment, but we want to start at the beginning of the first segment
+            // to avoid flipping the path orientation.
+            outlineFwd.prepend(outlineFwd.last());
+            outlineFwd.replace(outlineFwd.size() - 1, outlineFwd.first());
+
+            outlineBwd.prepend(outlineBwd.last());
+            outlineBwd.replace(outlineBwd.size() - 1, outlineBwd.first());
+        } else {
+            // Move the first/last cap points to the backward outline.
+            outlineBwd.prepend(outlineFwd.last());
+            outlineBwd.append(outlineFwd.first());
+            outlineFwd.remove(0);
+            outlineFwd.remove(outlineFwd.size() - 1);
+        }
+
+        foreach (PathStroke::v2_t v, outlineFwd)
+            forward += QPoint(v.x, v.y);
+
+        // Reverse the order of the backward path to avoid flipping
+        // the inner/outer behavior.
+        foreach (PathStroke::v2_t v, outlineBwd)
+            backward.prepend(QPoint(v.x, v.y));
+
+    } else {
+        foreach (PathPoint v, mPath->points()) {
+            forward += v.toPoint();
+            backward += v.toPoint();
+        }
+        if (mPath->isClosed()) {
+            forward += forward.first();
+            backward += backward.first();
+        }
+    }
+}
+
+/////
+
 PG_SingleTile::PG_SingleTile(const QString &label) :
     PathGenerator(label, QLatin1String("SingleTile"))
 {
@@ -1508,6 +1567,12 @@ void PG_WithCorners::generate(int level, QVector<TileLayer *> &layers)
         reverse = prop->mValue;
 
 #if 1
+    int offset = mProperties[PathOffset]->asInteger()->mValue;
+
+    QVector<QPoint> forward, backward;
+    points(offset, forward, backward);
+    QVector<QPoint> &points = (offset >= 0) ? forward : backward;
+#elif 0
     PathPoints points;
     qreal offset = mProperties[PathOffset]->asInteger()->mValue;
 
@@ -1571,7 +1636,7 @@ void PG_WithCorners::generate(int level, QVector<TileLayer *> &layers)
 
     int orient = -1;
     for (int i = 0; i < points.size() - 1; i++) {
-        QPoint p0 = points[i].toPoint(), p1 = points[i + 1].toPoint();
+        QPoint p0 = points[i]/*.toPoint()*/, p1 = points[i + 1]/*.toPoint()*/;
         Direction dir = direction(p0, p1);
         if (dir == WestEast) {
             if (orient == -1) orient = reverse ? South : North;
@@ -1583,7 +1648,7 @@ void PG_WithCorners::generate(int level, QVector<TileLayer *> &layers)
                 setCell(tl, pt, orient, tiles);
             }
             if (i + 1 < points.size() - 1) {
-                QPoint p2 = points[i+2].toPoint();
+                QPoint p2 = points[i+2]/*.toPoint()*/;
                 Direction dir2 = direction(p1, p2);
                 if (dir2 == NorthSouth)
                     orient = (orient == South) ? West : East;
@@ -1600,7 +1665,7 @@ void PG_WithCorners::generate(int level, QVector<TileLayer *> &layers)
                 setCell(tl, pt, orient, tiles);
             }
             if (i + 1 < points.size() - 1) {
-                QPoint p2 = points[i+2].toPoint();
+                QPoint p2 = points[i+2]/*.toPoint()*/;
                 Direction dir2 = direction(p1, p2);
                 if (dir2 == NorthSouth)
                     orient = (orient == South) ? East : West;
@@ -1617,7 +1682,7 @@ void PG_WithCorners::generate(int level, QVector<TileLayer *> &layers)
                 setCell(tl, pt, orient, tiles);
             }
             if (i + 1 < points.size() - 1) {
-                QPoint p2 = points[i+2].toPoint();
+                QPoint p2 = points[i+2]/*.toPoint()*/;
                 Direction dir2 = direction(p1, p2);
                 if (dir2 == WestEast)
                     orient = (orient == East) ? North : South;
@@ -1634,7 +1699,7 @@ void PG_WithCorners::generate(int level, QVector<TileLayer *> &layers)
                 setCell(tl, pt, orient, tiles);
             }
             if (i + 1 < points.size() - 1) {
-                QPoint p2 = points[i+2].toPoint();
+                QPoint p2 = points[i+2]/*.toPoint()*/;
                 Direction dir2 = direction(p1, p2);
                 if (dir2 == WestEast)
                     orient = (orient == East) ? South : North;

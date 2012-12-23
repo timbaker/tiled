@@ -172,6 +172,7 @@ public:
     void fill(Tile *tile, TileLayer *tl);
 
     QVector<QPoint> pointsAlongPath(int offset, int spacing);
+    void points(qreal offset, QVector<QPoint> &forward, QVector<QPoint> &backward);
 
     void refCountUp() { ++mRefCount;}
     void refCountDown() {  Q_ASSERT(mRefCount); --mRefCount; }
