@@ -74,6 +74,7 @@ private:
 
     void duplicatePaths(const QList<Path*> &paths);
     void removePaths(const QList<Path*> &paths);
+    void reversePaths(const QList<Path*> &paths);
     void movePathsToLayer(const QList<Path*> &paths,
                           PathLayer *pathLayer);
     void bakePaths(const QList<Path*> &paths);

@@ -22,6 +22,7 @@
 #include "abstractpathtool.h"
 
 #include "addremovepath.h"
+#include "changepathpolygon.h"
 #include "map.h"
 #include "mapdocument.h"
 #include "pathlayer.h"
@@ -143,6 +144,7 @@ void AbstractPathTool::showContextMenu(PathItem *clickedPathItem,
     QString bakeText = tr("Bake %n Path(s) To Tile Layers", "", selectedPaths.size());
     QAction *dupAction = menu.addAction(dupIcon, dupText);
     QAction *removeAction = menu.addAction(delIcon, removeText);
+    QAction *reverseAction = menu.addAction(tr("Reverse Path Direction"));
     QAction *bakeAction = menu.addAction(bakeIcon, bakeText);
 
     typedef QMap<QAction*, PathLayer*> MoveToLayerActionMap;
@@ -174,6 +176,9 @@ void AbstractPathTool::showContextMenu(PathItem *clickedPathItem,
     }
     else if (selectedAction == removeAction) {
         removePaths(selectedPaths);
+    }
+    else if (selectedAction == reverseAction) {
+        reversePaths(selectedPaths);
     }
     else if (selectedAction == bakeAction) {
         bakePaths(selectedPaths);
@@ -218,6 +223,21 @@ void AbstractPathTool::removePaths(const QList<Path *> &paths)
     undoStack->beginMacro(tr("Remove %n Path(s)", "", paths.size()));
     foreach (Path *path, paths)
         undoStack->push(new RemovePath(mapDocument(), path));
+    undoStack->endMacro();
+}
+
+void AbstractPathTool::reversePaths(const QList<Path *> &paths)
+{
+    QUndoStack *undoStack = mapDocument()->undoStack();
+    undoStack->beginMacro(tr("Reverse %n Path(s)", "", paths.size()));
+    foreach (Path *path, paths) {
+        QPolygon oldPolygon = path->polygon();
+        QPolygon newPolygon;
+        foreach (QPoint pt, oldPolygon)
+            newPolygon.prepend(pt);
+        path->setPolygon(newPolygon); // bit of weirdness with this undo command
+        undoStack->push(new ChangePathPolygon(mapDocument(), path, oldPolygon));
+    }
     undoStack->endMacro();
 }
 
