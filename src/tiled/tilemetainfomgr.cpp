@@ -53,7 +53,9 @@ void TileMetaInfoMgr::deleteInstance()
 }
 
 TileMetaInfoMgr::TileMetaInfoMgr(QObject *parent) :
-    QObject(parent)
+    QObject(parent),
+    mRevision(0),
+    mSourceRevision(0)
 {
 }
 
@@ -287,21 +289,6 @@ bool TileMetaInfoMgr::upgradeTxt()
 bool TileMetaInfoMgr::mergeTxt()
 {
     return true;
-}
-
-void TileMetaInfoMgr::addOrReplaceTileset(Tileset *ts)
-{
-    if (mTilesetByName.contains(ts->name())) {
-        Tileset *old = mTilesetByName[ts->name()];
-        if (!mRemovedTilesets.contains(old))
-            mRemovedTilesets += old;
-        if (!mRemovedTilesets.contains(ts)) // always true
-            TilesetManager::instance()->addReference(ts);
-        mRemovedTilesets.removeAll(ts);
-        mTilesetByName[ts->name()] = ts;
-    } else {
-        addTileset(ts);
-    }
 }
 
 Tileset *TileMetaInfoMgr::loadTileset(const QString &source)

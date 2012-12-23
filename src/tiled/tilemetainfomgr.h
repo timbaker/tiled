@@ -90,7 +90,6 @@ public:
     QString errorString() const
     { return mError; }
 
-    void addOrReplaceTileset(Tileset *ts);
     Tileset *loadTileset(const QString &source);
     bool loadTilesetImage(Tileset *ts, const QString &source);
     void addTileset(Tileset *ts);

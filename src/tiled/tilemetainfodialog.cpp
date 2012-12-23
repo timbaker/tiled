@@ -217,22 +217,18 @@ void TileMetaInfoDialog::addTileset()
                                                           tr("Tileset Image"),
                                                           tilesDir,
                                                           filter);
-    QFileInfoList add;
-    foreach (QString f, fileNames) {
-        QFileInfo info(f);
-        QString name = info.completeBaseName();
-        if (Tileset * ts = TileMetaInfoMgr::instance()->tileset(name)) {
-            // If the tileset was missing, then we will try to load it again.
-            if (!ts->isMissing())
-                continue; // FIXME: duplicate tileset names not allowed, even in different directories
-        }
-        add += info;
-    }
 
     mUndoStack->beginMacro(tr("Add Tilesets"));
 
-    foreach (QFileInfo info, add) {
+    foreach (QString f, fileNames) {
+        QFileInfo info(f);
         if (Tiled::Tileset *ts = TileMetaInfoMgr::instance()->loadTileset(info.canonicalFilePath())) {
+            QString name = info.completeBaseName();
+            // Replace any current tileset with the same name as an existing one.
+            // This will NOT replace the meta-info for the old tileset, it will
+            // be used by the new tileset as well.
+            if (Tileset *old = TileMetaInfoMgr::instance()->tileset(name))
+                mUndoStack->push(new RemoveTileset(this, old));
             mUndoStack->push(new AddTileset(this, ts));
         } else {
             QMessageBox::warning(this, tr("It's no good, Jim!"),
@@ -261,7 +257,7 @@ void TileMetaInfoDialog::removeTileset()
 
 void TileMetaInfoDialog::addTileset(Tileset *ts)
 {
-    TileMetaInfoMgr::instance()->addOrReplaceTileset(ts);
+    TileMetaInfoMgr::instance()->addTileset(ts);
     setTilesetList();
     int row = TileMetaInfoMgr::instance()->indexOf(ts);
     ui->tilesets->setCurrentRow(row);
