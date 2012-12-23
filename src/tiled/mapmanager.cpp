@@ -19,15 +19,16 @@
 
 #include "mapcomposite.h"
 #include "preferences.h"
+#include "tilesetmanager.h"
 #include "zprogress.h"
 
 #include "map.h"
 #include "mapreader.h"
 #include "mapobject.h"
 #include "objectgroup.h"
+#include "tile.h"
 #include "tilelayer.h"
 #include "tileset.h"
-#include "tilesetmanager.h"
 
 #include <QDebug>
 #include <QDir>
@@ -159,8 +160,10 @@ public:
 MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo)
 {
     QString mapFilePath = pathForMap(mapName, relativeTo);
-    if (mapFilePath.isEmpty())
+    if (mapFilePath.isEmpty()) {
+        mError = tr("A map file couldn't be found!\n%1").arg(mapName);
         return 0;
+    }
 
     if (mMapInfo.contains(mapFilePath) && mMapInfo[mapFilePath]->map()) {
         return mMapInfo[mapFilePath];
@@ -187,6 +190,14 @@ MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo)
         return 0; // TODO: Add error handling
     }
 
+    Tile *missingTile = TilesetManager::instance()->missingTile();
+    foreach (Tileset *tileset, map->missingTilesets()) {
+        if (tileset->tileHeight() == 128 && tileset->tileWidth() == 64) {
+            // Replace the all-red image with something nicer.
+            for (int i = 0; i < tileset->tileCount(); i++)
+                tileset->tileAt(i)->setImage(missingTile->image());
+        }
+    }
     TilesetManager::instance()->addReferences(map->tilesets());
 
     if (!mMapInfo.contains(mapFilePath)) {
