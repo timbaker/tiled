@@ -109,7 +109,7 @@ void PathItem::syncWithPath()
     }
 
     // FIXME: the bounds must include any tiles generated!
-    QRectF bounds = shape().boundingRect().adjusted(-2, -2, 3, 3);;
+    QRectF bounds = shape().boundingRect().adjusted(-5, -5, 5, 5);
     if (bounds != mBoundingRect) {
         prepareGeometryChange();
         mBoundingRect = bounds;
