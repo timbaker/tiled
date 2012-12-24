@@ -94,7 +94,7 @@ void CreatePathTool::mouseEntered()
 }
 
 void CreatePathTool::mouseMoved(const QPointF &pos,
-                                  Qt::KeyboardModifiers modifiers)
+                                Qt::KeyboardModifiers modifiers)
 {
     AbstractPathTool::mouseMoved(pos, modifiers);
 
@@ -109,8 +109,8 @@ void CreatePathTool::mouseMoved(const QPointF &pos,
 
     switch (mMode) {
     case CreateArea: {
-        const QPoint tileCoords = renderer->pixelToTileCoordsInt(pos,
-                                      currentPathLayer()->level());
+        QPoint tileCoords = renderer->pixelToTileCoordsInt(pos,
+                                                           currentPathLayer()->level());
 
         // Update the size of the new path
         const PathPoint topLeft = mNewPathItem->path()->points().first();
@@ -135,10 +135,10 @@ void CreatePathTool::mouseMoved(const QPointF &pos,
     }
     case CreatePolygon:
     case CreatePolyline: {
-        QPoint tileCoords = renderer->pixelToTileCoordsInt(pos, currentPathLayer()->level());
+        QPointF tileCoords = renderer->pixelToTileCoords(pos, currentPathLayer()->level());
 
-//        if (snapToGrid)
-//            tileCoords = tileCoords.toPoint();
+        if (!mNewPathItem->path()->centers())
+            tileCoords = QPointF(tileCoords.toPoint());
 
         PathPoints points = mOverlayPath->points();
         points.last() = PathPoint(tileCoords.x(), tileCoords.y());
@@ -200,17 +200,18 @@ void CreatePathTool::mousePressed(QGraphicsSceneMouseEvent *event)
         return;
 
     const MapRenderer *renderer = mapDocument()->renderer();
-    QPointF tileCoords = renderer->pixelToTileCoordsInt(event->scenePos(),
-                                                        pathLayer->level());
+    QPointF tileCoords = renderer->pixelToTileCoords(event->scenePos(),
+                                                     pathLayer->level());
 
-    bool snapToGrid = Preferences::instance()->snapToGrid();
-    if (event->modifiers() & Qt::ControlModifier)
-        snapToGrid = !snapToGrid;
+    bool centers = (event->modifiers() & Qt::ControlModifier) != 0;
 
-    if (snapToGrid)
-        tileCoords = tileCoords.toPoint();
+    if (!centers && (mMode != CreateArea))
+        tileCoords = tileCoords.toPoint(); // rounds to nearest integer
 
     startNewPath(tileCoords, pathLayer);
+
+    mNewPathItem->path()->setCenters(centers);
+    mOverlayPath->setCenters(centers);
 }
 
 void CreatePathTool::mouseReleased(QGraphicsSceneMouseEvent *event)
