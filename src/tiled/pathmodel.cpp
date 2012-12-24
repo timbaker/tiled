@@ -350,8 +350,9 @@ void PathModel::pathGeneratorReordered(Path *path, int oldIndex, int newIndex)
 
 void PathModel::insertPath(PathLayer *pathLayer, int index, Path *path)
 {
-    int row = (index >= 0) ? index : pathLayer->pathCount();
-    row = pathLayer->pathCount() - row;
+    if (index < 0)
+        index = pathLayer->pathCount();
+    int row = pathLayer->pathCount() - index;
     beginInsertRows(this->index(pathLayer), row, row);
     pathLayer->insertPath(index, path);
     new Item(toItem(pathLayer), row, path);
