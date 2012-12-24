@@ -568,6 +568,8 @@ void PathPropertiesDialog::addGenerator()
     foreach (PathGeneratorProperty *prop, mCurrentGeneratorTemplate->properties()) {
         if (PGP_Tile *tile = prop->asTile())
             addGeneratorTilesets(tile);
+        else if (PGP_TileEntry *entry = prop->asTileEntry())
+            addGeneratorTilesets(entry);
     }
 
     int index = ui->generatorsList->currentRow() + 1;
@@ -583,6 +585,14 @@ void PathPropertiesDialog::addGeneratorTilesets(PGP_Tile *prop)
 {
     if (!prop->mTilesetName.isEmpty())
         addTilesetIfNeeded(prop->mTilesetName);
+}
+
+void PathPropertiesDialog::addGeneratorTilesets(PGP_TileEntry *prop)
+{
+    foreach (PathGeneratorProperty *prop2, prop->properties()) {
+        if (PGP_Tile *tile = prop2->asTile())
+            addGeneratorTilesets(tile);
+    }
 }
 
 void PathPropertiesDialog::addTilesetIfNeeded(const QString &tilesetName)

@@ -33,6 +33,7 @@ class Path;
 class PathGenerator;
 class PathGeneratorProperty;
 class PGP_Tile;
+class PGP_TileEntry;
 
 namespace Internal {
 class MapDocument;
@@ -69,6 +70,7 @@ private slots:
 
     void addGenerator();
     void addGeneratorTilesets(PGP_Tile *prop);
+    void addGeneratorTilesets(PGP_TileEntry *prop);
     void addTilesetIfNeeded(const QString &tilesetName);
 
     void setClosed(bool closed);
