@@ -51,6 +51,7 @@ class Tileset;
 class Path;
 class PathGenerator;
 class PathGeneratorProperty;
+class PGP_TileEntry;
 class Tile;
 #endif
 
@@ -296,6 +297,9 @@ public:
     QString changePathGeneratorPropertyValue(Path *path,
                                              PathGeneratorProperty *prop,
                                              const QString &newValue);
+    void changePathGeneratorPropertyTileEntry(Path *path,
+                                              PGP_TileEntry *prop,
+                                              PGP_TileEntry *other);
     bool changePathIsClosed(Path *path, bool closed);
     bool changePathCenters(Path *path, bool centers);
     // -UNDO/REDO

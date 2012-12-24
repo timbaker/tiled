@@ -30,6 +30,15 @@ PathGeneratorProperty::PathGeneratorProperty(const QString &name, const QString 
 {
 }
 
+PathGeneratorProperty *PathGeneratorProperty::property(const QString &name) const
+{
+    foreach (PathGeneratorProperty *prop, mProperties) {
+        if (prop->name() == name)
+            return prop;
+    }
+    return 0;
+}
+
 void PathGeneratorProperty::clone(PathGeneratorProperty *other)
 {
     Q_ASSERT(mType == other->mType);
@@ -188,7 +197,10 @@ QString PGP_Tile::tileName(const QString &tilesetName, int tileID) const
 {
     if (tilesetName.isEmpty())
         return QString();
-    return tilesetName + QLatin1Char('_') + QString::number(tileID);
+    // The only reason I'm padding the tile index is so that the tiles are sorted
+    // by increasing tileset name and index.
+    return tilesetName + QLatin1Char('_') +
+            QString(QLatin1String("%1")).arg(tileID, 3, 10, QLatin1Char('0'));
 }
 
 /////
@@ -202,8 +214,35 @@ PGP_TileEntry::PGP_TileEntry(const QString &name) :
 
 void PGP_TileEntry::clone(PathGeneratorProperty *other)
 {
+    if (mCategory != other->asTileEntry()->mCategory)
+        setCategory(other->asTileEntry()->mCategory);
     PathGeneratorProperty::clone(other);
-    mCategory = other->asTileEntry()->mCategory;
+}
+
+void PGP_TileEntry::setCategory(const QString &category)
+{
+    if (mCategory != category) {
+        qDeleteAll(mProperties);
+        mProperties.clear();
+    }
+    QStringList tileNames;
+    int index;
+    if (category == QLatin1String("walls")) {
+        tileNames
+                << QLatin1String("West")
+                << QLatin1String("North")
+                << QLatin1String("NorthWest")
+                << QLatin1String("SouthEast")
+                << QLatin1String("WestWindow")
+                << QLatin1String("NorthWindow")
+                << QLatin1String("WestDoor")
+                << QLatin1String("NorthDoor");
+        index = 0;
+    } else {
+        qFatal("unhandled PGP_TileEntry category");
+    }
+    mCategory = category;
+    setTiles(index, tileNames);
 }
 
 void PGP_TileEntry::setTiles(int displayIndex, const QStringList &names)
@@ -214,6 +253,11 @@ void PGP_TileEntry::setTiles(int displayIndex, const QStringList &names)
 
     Q_ASSERT(displayIndex >= 0 && displayIndex < mProperties.size());
     mDisplayIndex = displayIndex;
+}
+
+PGP_Tile *PGP_TileEntry::displayTile() const
+{
+    return mProperties[mDisplayIndex]->asTile();
 }
 
 /////
@@ -1892,18 +1936,7 @@ PG_Wall::PG_Wall(const QString &label) :
     mProperties.resize(PropertyCount);
 
     if (PGP_TileEntry *prop = new PGP_TileEntry(QLatin1String("Tile"))) {
-        prop->mCategory = QLatin1String("wall");
-        QStringList tileNames;
-        tileNames
-                << QLatin1String("West")
-                << QLatin1String("North")
-                << QLatin1String("NorthWest")
-                << QLatin1String("SouthEast")
-                << QLatin1String("WestWindow")
-                << QLatin1String("NorthWindow")
-                << QLatin1String("WestDoor")
-                << QLatin1String("NorthDoor");
-        prop->setTiles(West, tileNames);
+        prop->setCategory(QLatin1String("walls"));
         mProperties[Tile] = prop;
     }
 

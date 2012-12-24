@@ -51,6 +51,11 @@ public:
     const QVector<PathGeneratorProperty*> &properties() const
     { return mProperties; }
 
+    PathGeneratorProperty *property(int n) const
+    { return (n >= 0 && n < mProperties.size()) ? mProperties[n] : 0; }
+
+    PathGeneratorProperty *property(const QString &name) const;
+
     virtual PGP_Boolean *asBoolean() { return 0; }
     virtual PGP_Integer *asInteger() { return 0; }
     virtual PGP_String *asString() { return 0; }
@@ -143,6 +148,9 @@ public:
     QString valueToString() const;
     bool valueFromString(const QString &s);
 
+    QString tileName() const
+    { return tileName(mTilesetName, mTileID); }
+
     QString tileName(const QString &tilesetName, int tileID) const;
 
     QString mTilesetName;
@@ -159,7 +167,10 @@ public:
 
     void clone(PathGeneratorProperty *other);
 
+    void setCategory(const QString &category);
     void setTiles(int displayIndex, const QStringList &names);
+
+    PGP_Tile *displayTile() const;
 
     QString mCategory;
     int mDisplayIndex;

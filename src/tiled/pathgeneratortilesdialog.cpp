@@ -214,6 +214,7 @@ void PathGeneratorTilesDialog::currentTileChanged(const QModelIndex &index)
 
 void PathGeneratorTilesDialog::tileActivated(const QModelIndex &index)
 {
+    Q_UNUSED(index)
     accept();
 }
 

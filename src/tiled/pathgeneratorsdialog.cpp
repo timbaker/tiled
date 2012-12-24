@@ -20,6 +20,7 @@
 
 #include "pathgeneratormgr.h"
 #include "pathgeneratortilesdialog.h"
+#include "pathtileentrydialog.h"
 #include "utils.h"
 
 #include "map.h"
@@ -166,6 +167,32 @@ public:
     PathGeneratorProperty *mProperty;
     QString mValue;
     bool mMergeable;
+};
+
+class ChangePropertyTileEntry : public QUndoCommand
+{
+public:
+    ChangePropertyTileEntry(PathGeneratorsDialog *d, PGP_TileEntry *prop, PGP_TileEntry *other) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Property TileEntry")),
+        mDialog(d),
+        mProperty(prop),
+        mOther(prop->name())
+    {
+        mOther.clone(other);
+        Q_ASSERT(mOther.name() == prop->name());
+    }
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+    void swap()
+    {
+        mDialog->changePropertyTileEntry(mProperty, &mOther);
+    }
+
+    PathGeneratorsDialog *mDialog;
+    PGP_TileEntry *mProperty;
+    PGP_TileEntry mOther; // This just holds the value
 };
 
 } // namespace PathGeneratorUndoRedo
@@ -341,7 +368,7 @@ void PathGeneratorsDialog::propertyActivated(const QModelIndex &index)
     Q_UNUSED(index)
     if (!mCurrentProperty)
         return;
-    if (PGP_Tile *prop = mCurrentProperty->asTile())
+    if (mCurrentProperty->asTile() || mCurrentProperty->asTileEntry())
         chooseTile();
 }
 
@@ -378,7 +405,14 @@ void PathGeneratorsDialog::integerValueChanged(int newValue)
 void PathGeneratorsDialog::chooseTile()
 {
     if (PGP_TileEntry *prop = mCurrentProperty->asTileEntry()) {
-
+        PathTileEntryDialog dialog(tr("Choose tiles for '%1':").arg(prop->name()),
+                                   prop->mCategory, prop, this);
+        if (dialog.exec() == QDialog::Accepted) {
+            if (PGP_TileEntry *entry = dialog.selectedEntry()) {
+                mUndoStack->push(new ChangePropertyTileEntry(this, prop, entry));
+            }
+        }
+        return;
     }
 
     if (PGP_Tile *prop = mCurrentProperty->asTile()) {
@@ -571,4 +605,15 @@ QString PathGeneratorsDialog::changePropertyValue(PathGeneratorProperty *prop, c
     prop->valueFromString(newValue);
     setPropertyPage();
     return old;
+}
+
+void PathGeneratorsDialog::changePropertyTileEntry(PGP_TileEntry *prop, PGP_TileEntry *other)
+{
+    PGP_TileEntry old(prop->name());
+    old.clone(prop);
+    Q_ASSERT(old.name() == prop->name());
+
+    prop->clone(other);
+    other->clone(&old);
+    setPropertyPage();
 }

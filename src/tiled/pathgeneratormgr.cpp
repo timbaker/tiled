@@ -137,6 +137,13 @@ void PathGeneratorMgr::setTilesDirectory(const QString &path)
     loadTilesets();
 }
 
+Tile *PathGeneratorMgr::tileFor(const QString &tilesetName, int tileID)
+{
+    if (tilesetName.isEmpty() || !mTilesetByName.contains(tilesetName))
+        return 0;
+    return mTilesetByName[tilesetName]->tileAt(tileID);
+}
+
 QString PathGeneratorMgr::txtName()
 {
     return QLatin1String(TXT_FILE);

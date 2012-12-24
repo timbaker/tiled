@@ -33,6 +33,7 @@ namespace Tiled {
 
 class PathGenerator;
 class PathGeneratorProperty;
+class PGP_TileEntry;
 
 namespace Internal {
 
@@ -78,6 +79,7 @@ public:
     PathGenerator *removeGenerator(int index);
     void reorderGenerator(int oldIndex, int newIndex);
     QString changePropertyValue(PathGeneratorProperty *prop, const QString &newValue);
+    void changePropertyTileEntry(PGP_TileEntry *prop, PGP_TileEntry *other);
     // -UNDO/REDO
 
 private:

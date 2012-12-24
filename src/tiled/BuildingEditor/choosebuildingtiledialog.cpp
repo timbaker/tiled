@@ -99,8 +99,9 @@ void ChooseBuildingTileDialog::setTilesList(BuildingTileCategory *category,
 
     MixedTilesetView *v = ui->tableView;
     QMap<QString,BuildingTileEntry*> entryMap;
+    int i = 0;
     foreach (BuildingTileEntry *entry, category->entries()) {
-        QString key = entry->displayTile()->name() + QString::number((qulonglong)entry);
+        QString key = entry->displayTile()->name() + QString::number(i++);
         entryMap[key] = entry;
     }
     foreach (BuildingTileEntry *entry, entryMap.values()) {

@@ -622,6 +622,19 @@ QString MapDocument::changePathGeneratorPropertyValue(Path *path,
     return old;
 }
 
+void MapDocument::changePathGeneratorPropertyTileEntry(Path *path, PGP_TileEntry *prop,
+                                                       PGP_TileEntry *other)
+{
+    PGP_TileEntry old(prop->name());
+    old.clone(prop);
+    Q_ASSERT(old.name() == prop->name());
+
+    prop->clone(other);
+    other->clone(&old);
+    emit pathGeneratorPropertyChanged(path, prop);
+    mPathModel->emitPathsChanged(QList<Path*>() << path);
+}
+
 bool MapDocument::changePathIsClosed(Path *path, bool closed)
 {
     bool old = path->isClosed();

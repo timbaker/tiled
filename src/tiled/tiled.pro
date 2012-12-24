@@ -193,7 +193,8 @@ SOURCES += aboutdialog.cpp \
     pathgeneratorsdialog.cpp \
     pathgeneratormgr.cpp \
     pathgeneratortilesdialog.cpp \
-    betterselectionrectangle.cpp
+    betterselectionrectangle.cpp \
+    pathtileentrydialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -352,7 +353,8 @@ HEADERS += aboutdialog.h \
     pathgeneratorsdialog.h \
     pathgeneratormgr.h \
     pathgeneratortilesdialog.h \
-    betterselectionrectangle.h
+    betterselectionrectangle.h \
+    pathtileentrydialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -385,7 +387,8 @@ FORMS += aboutdialog.ui \
     BuildingEditor/listofstringsdialog.ui \
     pathpropertiesdialog.ui \
     pathgeneratorsdialog.ui \
-    pathgeneratortilesdialog.ui
+    pathgeneratortilesdialog.ui \
+    pathtileentrydialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

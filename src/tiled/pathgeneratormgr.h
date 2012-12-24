@@ -64,6 +64,8 @@ public:
     int indexOf(Tileset *ts)
     { return tilesets().indexOf(ts); }
 
+    Tile *tileFor(const QString &tilesetName, int tileID);
+
     QString txtName();
     QString txtPath();
 
