@@ -1965,6 +1965,145 @@ void PG_Wall::generate(int level, QVector<TileLayer *> &layers)
 {
     if (level != mPath->level())
         return;
+
+    if (mPath->points().size() < 2)
+        return;
+
+    QVector<TileLayer*> tl(2);
+    PGP_Layer *prop = mProperties[Layer1]->asLayer();
+    tl[0] = findTileLayer(prop->mValue, layers);
+    if (!tl[0]) return;
+    prop = mProperties[Layer2]->asLayer();
+    tl[1] = findTileLayer(prop->mValue, layers);
+    if (!tl[1]) return;
+
+    QVector<Tiled::Tile*> tiles(TileCount);
+    PGP_TileEntry *entry = mProperties[Tile]->asTileEntry();
+    for (int i = 0; i < TileCount; i++) {
+        PGP_Tile *prop = entry->mProperties[i]->asTile();
+        if (prop->mTilesetName.isEmpty())
+            continue;
+        Tileset *ts = findTileset(prop->mTilesetName, tl[0]->map()->tilesets());
+        if (!ts) return;
+        tiles[i] = ts->tileAt(prop->mTileID);
+        if (!tiles[i]) return;
+    }
+
+    qreal pathOffset = mProperties[PathOffset]->asInteger()->mValue;
+
+    QVector<QPoint> forward, backward;
+    pathOffset = points(pathOffset, forward, backward);
+    QVector<QPoint> &points = (pathOffset >= 0) ? forward : backward;
+#if 0 // TODO: Let walls go up levels
+    if ((tl->map()->orientation() == Map::Isometric) && level1) {
+        for (int i = 0; i < points.size(); i++)
+            points[i] += QPoint(-3, -3);
+    }
+#endif
+
+    QPolygon polygon(points);
+    QRect bounds = polygon.boundingRect();
+    QVector<QVector<QVector<int> > > grid(bounds.width());
+    for (int x = 0; x < bounds.width(); x++) {
+        grid[x].resize(bounds.height());
+        for (int y = 0; y < bounds.height(); y++) {
+            grid[x][y].fill(-1, 2);
+        }
+    }
+
+    // Get existing tiles so we merge with them appropriately.
+    for (int x = bounds.left(); x <= bounds.right(); x++) {
+        for (int y = bounds.top(); y <= bounds.bottom(); y++) {
+            int tile = tileAt(tl, tiles, x, y);
+            if (tile == NorthWest) {
+                grid[x-bounds.left()][y-bounds.y()][0] = North;
+                grid[x-bounds.left()][y-bounds.y()][1] = West;
+            } else if (tile == North)
+                grid[x-bounds.left()][y-bounds.y()][0] = North;
+            else if (tile == West)
+                grid[x-bounds.left()][y-bounds.y()][1] = West;
+        }
+    }
+
+    for (int i = 0; i < points.size() - 1; i++) {
+        QPoint p0 = points[i], p1 = points[i + 1];
+        Direction dir = direction(p0, p1);
+        if (dir == WestEast || dir == EastWest) {
+            foreach (QPoint pt, calculateLine(p0.x(), p0.y(),
+                                              p1.x(), p1.y())) {
+                // Discard the right-most point if it isn't on the line.
+                if (dir == WestEast && !mPath->isClosed() && !mPath->centers() && i == points.size() - 2 && pt == p1) continue;
+                if (dir == EastWest && !mPath->isClosed() && !mPath->centers() && i == 0 && pt == p0) continue;
+                grid[pt.x() - bounds.x()][pt.y() - bounds.y()][0] = North;
+            }
+        } else if (dir == NorthSouth || dir == SouthNorth) {
+            foreach (QPoint pt, calculateLine(p0.x(), p0.y(),
+                                              p1.x(), p1.y())) {
+                // Discard the bottom-most point if it isn't on the line.
+                if (dir == NorthSouth && !mPath->isClosed() && !mPath->centers() && i == points.size() - 2 && pt == p1) continue;
+                if (dir == SouthNorth && !mPath->isClosed() && !mPath->centers() && i == 0 && pt == p0) continue;
+                grid[pt.x() - bounds.x()][pt.y() - bounds.y()][1] = West;
+            }
+        }
+    }
+
+    for (int x = 0; x < bounds.width(); x++) {
+        for (int y = 0; y < bounds.height(); y++) {
+            if (grid[x][y][0] == North && grid[x][y][1] == West)
+                setCell(tl, tiles, bounds.x() + x, bounds.y() + y, NorthWest);
+            else if (grid[x][y][0] == North)
+                setCell(tl, tiles, bounds.x() + x, bounds.y() + y, North);
+            else if (grid[x][y][1] == West)
+                setCell(tl, tiles, bounds.x() + x, bounds.y() + y, West);
+        }
+    }
+    for (int x = bounds.left(); x <= bounds.right(); x++) {
+        for (int y = bounds.top(); y <= bounds.bottom(); y++) {
+            if (grid[x-bounds.x()][y-bounds.y()][0] == North && grid[x-bounds.x()][y-bounds.y()][1] == West) {
+                int tileW = tileAt(tl, tiles, x - 1, y);
+                int tileE = tileAt(tl, tiles, x + 1, y);
+                int tileN = tileAt(tl, tiles, x, y - 1);
+                int tileS = tileAt(tl, tiles, x, y + 1);
+                if (tileE == -1 && tileS == -1)
+                    setCell(tl, tiles, x, y, SouthEast);
+                else if (tileS == -1)
+                    setCell(tl, tiles, x, y, North);
+                else if (tileE == -1)
+                    setCell(tl, tiles, x, y, West);
+            }
+        }
+    }
+}
+
+void PG_Wall::setCell(QVector<TileLayer *> &layers, QVector<Tiled::Tile *> &tiles,
+                      int x, int y, int tileEnum)
+{
+    foreach (TileLayer *tl, layers) {
+        if (tl->contains(x, y)) {
+            Tiled::Tile *tile = tl->cellAt(x, y).tile;
+            if (!tile || tiles.contains(tile)) {
+                tl->setCell(x, y, Cell(tiles[tileEnum]));
+                return;
+            }
+        }
+    }
+}
+
+int PG_Wall::tileAt(QVector<TileLayer *> &layers, QVector<Tiled::Tile*> &tiles, int x, int y)
+{
+    if (!layers[0]->contains(x, y))
+        return -1;
+
+    foreach (TileLayer *tl, layers) {
+        if (!tl->contains(x, y))
+            continue;
+        if (Tiled::Tile *tile = tl->cellAt(x, y).tile) {
+            int index = tiles.indexOf(tile);
+            if (index >= 0)
+                return index;
+        }
+    }
+    return -1;
 }
 
 /////
@@ -1981,7 +2120,7 @@ PathGeneratorTypes *PathGeneratorTypes::instance()
 PathGeneratorTypes::PathGeneratorTypes()
 {
     // This is a list of all possible generators.
-    mTypes += new PG_SingleTile(QLatin1String("Single Tile"));
+    mTypes += new PG_Line(QLatin1String("Line"));
     mTypes += new PG_Fence(QLatin1String("Fence"));
     mTypes += new PG_StreetLight(QLatin1String("Street Light"));
     mTypes += new PG_Wall(QLatin1String("Wall"));

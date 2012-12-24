@@ -418,6 +418,8 @@ public:
         PropertyCount
     };
 
+    void setCell(QVector<TileLayer*> &layers, QVector<Tiled::Tile*> &tiles, int x, int y, int tileEnum);
+    int tileAt(QVector<TileLayer*> &layers, QVector<Tiled::Tile *> &tiles, int x, int y);
 };
 
 class TILEDSHARED_EXPORT PathGeneratorTypes
