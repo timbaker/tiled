@@ -237,10 +237,10 @@ protected:
     const Path *mPath;
 };
 
-class TILEDSHARED_EXPORT PG_SingleTile : public PathGenerator
+class TILEDSHARED_EXPORT PG_Line : public PathGenerator
 {
 public:
-    PG_SingleTile(const QString &label);
+    PG_Line(const QString &label);
 
     PathGenerator *clone() const;
 

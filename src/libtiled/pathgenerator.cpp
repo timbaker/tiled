@@ -943,8 +943,8 @@ qreal PathGenerator::points(qreal offset, QVector<QPoint> &forward, QVector<QPoi
 
 /////
 
-PG_SingleTile::PG_SingleTile(const QString &label) :
-    PathGenerator(label, QLatin1String("SingleTile"))
+PG_Line::PG_Line(const QString &label) :
+    PathGenerator(label, QLatin1String("Line"))
 {
     mProperties.resize(PropertyCount);
 
@@ -964,14 +964,14 @@ PG_SingleTile::PG_SingleTile(const QString &label) :
     }
 }
 
-PathGenerator *PG_SingleTile::clone() const
+PathGenerator *PG_Line::clone() const
 {
-    PG_SingleTile *clone = new PG_SingleTile(mLabel);
+    PG_Line *clone = new PG_Line(mLabel);
     clone->cloneProperties(this);
     return clone;
 }
 
-void PG_SingleTile::generate(int level, QVector<TileLayer *> &layers)
+void PG_Line::generate(int level, QVector<TileLayer *> &layers)
 {
     if (level != mPath->level())
         return;
@@ -994,7 +994,7 @@ void PG_SingleTile::generate(int level, QVector<TileLayer *> &layers)
 
     /* Get an outline of the path, keeping the cap points. */
     PathStroke stroker;
-    int thickness = mProperties[Thickness]->asInteger()->mValue;
+    qreal thickness = mProperties[Thickness]->asInteger()->mValue;
     QVector<PathStroke::v2_t> outlineFwd, outlineBkwd;
     stroker.build(mPath, thickness, outlineFwd, outlineBkwd);
     if (tiles[Tile1]) {
