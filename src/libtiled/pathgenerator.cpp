@@ -882,7 +882,7 @@ public:
 
 /////
 
-qreal PathGenerator::points(qreal offset, QVector<QPoint> &forward, QVector<QPoint> &backward)
+qreal PathGenerator::points(qreal offset, QVector<QPointF> &forward, QVector<QPointF> &backward)
 {
     forward.resize(0);
     backward.resize(0);
@@ -920,22 +920,21 @@ qreal PathGenerator::points(qreal offset, QVector<QPoint> &forward, QVector<QPoi
         }
 
         foreach (PathStroke::v2_t v, outlineFwd)
-            forward += QPoint(v.x, v.y);
+            forward += QPointF(v.x, v.y);
 
         // Reverse the order of the backward path to avoid flipping
         // the inner/outer behavior.
         foreach (PathStroke::v2_t v, outlineBwd)
-            backward.prepend(QPoint(v.x, v.y));
+            backward.prepend(QPointF(v.x, v.y));
 
     } else {
         foreach (PathPoint v, mPath->points()) {
-            forward += v.toPoint();
-            backward += v.toPoint();
+            forward +=  mPath->centers() ? QPointF(v.x() + 0.5, v.y() + 0.5) : v.toPoint();
         }
         if (mPath->isClosed()) {
             forward += forward.first();
-            backward += backward.first();
         }
+        backward = forward;
     }
 
     return offset;
@@ -954,9 +953,6 @@ PG_Line::PG_Line(const QString &label) :
 
     if (PGP_Layer *prop = new PGP_Layer(QLatin1String("Layer")))
         mProperties[Layer1] = prop;
-
-    if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("Filled")))
-        mProperties[Filled] = prop;
 
     if (PGP_Integer *prop = new PGP_Integer(QLatin1String("Thickness"))) {
         prop->mMin = 1, prop->mMax = 100, prop->mValue = 1;
@@ -1058,6 +1054,91 @@ void PG_Line::generate(int level, QVector<TileLayer *> &layers)
             }
         }
 #endif
+    }
+}
+
+/////
+
+PG_Filled::PG_Filled(const QString &label) :
+    PathGenerator(label, QLatin1String("Filled"))
+{
+    mProperties.resize(PropertyCount);
+
+    if (PGP_Tile *prop = new PGP_Tile(QLatin1String("Tile")))
+        mProperties[Tile1] = prop;
+
+    if (PGP_Layer *prop = new PGP_Layer(QLatin1String("Layer")))
+        mProperties[Layer1] = prop;
+
+    if (PGP_Integer *prop = new PGP_Integer(QLatin1String("PathOffset"))) {
+        prop->mMin = -100, prop->mMax = 100, prop->mValue = 0;
+        mProperties[PathOffset] = prop;
+    }
+
+    if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("Reverse"))) {
+        prop->mValue = false;
+        mProperties[Reverse] = prop;
+    }
+}
+
+PathGenerator *PG_Filled::clone() const
+{
+    PG_Filled *clone = new PG_Filled(mLabel);
+    clone->cloneProperties(this);
+    return clone;
+}
+
+void PG_Filled::generate(int level, QVector<TileLayer *> &layers)
+{
+    if (level != mPath->level())
+        return;
+    if (mPath->points().size() < 2)
+        return;
+
+    TileLayer *tl = findTileLayer(mProperties[Layer1]->asLayer()->mValue, layers);
+    if (!tl) return;
+
+    QVector<Tile*> tiles(TileCount);
+    for (int i = 0; i < TileCount; i++) {
+        PGP_Tile *prop = mProperties[i]->asTile();
+        if (prop->mTilesetName.isEmpty())
+            continue;
+        Tileset *ts = findTileset(prop->mTilesetName, layers[0]->map()->tilesets());
+        if (!ts) return;
+        tiles[i] = ts->tileAt(prop->mTileID);
+        if (!tiles[i]) return;
+    }
+
+    QVector<QPointF> forward, backward;
+    qreal offset = mProperties[PathOffset]->asInteger()->mValue;
+    offset = this->points(offset, forward, backward);
+    bool reverse = mProperties[Reverse]->asBoolean()->mValue;
+    if (reverse)
+        forward.swap(backward);
+    QVector<QPointF> &points = (offset >= 0) ? forward : backward;
+    if (!mPath->isClosed())
+        points += points.first();
+
+    if (tiles[Tile1]) {
+        Cell cell(tiles[Tile1]);
+
+        QPainterPath path;
+        QPolygonF polygon(points);
+        path.addPolygon(polygon);
+
+        QRectF bounds = path.boundingRect();
+
+        for (int x = bounds.left(); x <= qCeil(bounds.right()); x++) {
+            for (int y = bounds.top(); y <= qCeil(bounds.bottom()); y++) {
+                QPointF pt(x + 0.5, y + 0.5);
+                QRectF test(pt.x() - 0.001, pt.y() - 0.001, .002, .002);
+                if (path.intersects(test)) {
+                    QPoint p(pt.x(), pt.y());
+                    if (tl->contains(p))
+                        tl->setCell(p, cell);
+                }
+            }
+        }
     }
 }
 
@@ -1411,9 +1492,10 @@ PG_StreetLight::PG_StreetLight(const QString &label) :
         mProperties[PathOffset] = prop;
     }
 
-    PGP_Boolean *prop4 = new PGP_Boolean(QLatin1String("Reverse"));
-    prop4->mValue = false;
-    mProperties[Reverse] = prop4;
+    if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("Reverse"))) {
+        prop->mValue = false;
+        mProperties[Reverse] = prop;
+    }
 }
 
 PathGenerator *PG_StreetLight::clone() const
@@ -1449,9 +1531,12 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
 
     qreal pathOffset = mProperties[PathOffset]->asInteger()->mValue;
 
-    QVector<QPoint> forward, backward;
+    QVector<QPointF> forward, backward;
     pathOffset = points(pathOffset, forward, backward);
-    QVector<QPoint> &points = (pathOffset >= 0) ? forward : backward;
+    QVector<QPointF> &pointsF = (pathOffset >= 0) ? forward : backward;
+    QVector<QPoint> points(pointsF.size());
+    for (int i = 0; i < points.size(); i++)
+        points[i] = QPoint(pointsF[i].x(), pointsF[i].y()); // don't call toPoint, it rounds up
 
     if ((tl->map()->orientation() == Map::Isometric) && level1) {
         for (int i = 0; i < points.size(); i++)
@@ -1661,73 +1746,14 @@ void PG_Edges::generate(int level, QVector<TileLayer *> &layers)
     if (PGP_Boolean *prop = mProperties[Reverse]->asBoolean())
         reverse = prop->mValue;
 
-#if 1
     qreal offset = mProperties[PathOffset]->asInteger()->mValue;
 
-    QVector<QPoint> forward, backward;
+    QVector<QPointF> forward, backward;
     offset = this->points(offset, forward, backward);
-    QVector<QPoint> &points = (offset >= 0) ? forward : backward;
-#elif 0
-    PathPoints points;
-    qreal offset = mProperties[PathOffset]->asInteger()->mValue;
-
-    // When the Path points are not at the center of tiles, keep the tiles on
-    // one side of the path by constructing a path that is offset from the
-    // original path and passes through tile centers.  For a closed path with
-    // PathOffset=0, this puts the tiles just inside the path.  If you want
-    // to put the tiles just outside a closed path, use offset += 0.5.
-    if (!mPath->centers())
-        offset -= 0.5;
-
-    if (offset != 0) {
-        PathStroke stroker;
-        qreal thickness = qAbs(offset) * 2;
-        QVector<PathStroke::v2_t> outlineFwd, outlineBwd;
-        stroker.build(mPath, thickness, outlineFwd, outlineBwd);
-
-        if (mPath->isClosed()) {
-            // With a closed path we get 2 complete outlines.
-            // The first point on the forward path is at the end of the first
-            // segment, but we want to start at the beginning of the first segment
-            // to avoid flipping the path orientation.
-            outlineFwd.prepend(outlineFwd.last());
-            outlineFwd.replace(outlineFwd.size() - 1, outlineFwd.first());
-
-            outlineBwd.prepend(outlineBwd.last());
-            outlineBwd.replace(outlineBwd.size() - 1, outlineBwd.first());
-        } else {
-            // Move the first/last cap points to the backward outline.
-            outlineBwd.prepend(outlineFwd.last());
-            outlineBwd.append(outlineFwd.first());
-            outlineFwd.remove(0);
-            outlineFwd.remove(outlineFwd.size() - 1);
-        }
-
-        if (offset/*mProperties[PathOffset]->asInteger()->mValue*/ > 0) {
-            foreach (PathStroke::v2_t v, outlineFwd) {
-                points += PathPoint(v.x, v.y);
-            }
-        } else {
-#if 0
-            foreach (PathStroke::v2_t v, outlineBwd)
-                points += PathPoint(v.x, v.y);
-#else
-            // Reverse the order of the backward path to avoid flipping
-            // the inner/outer behavior.
-            for (int i = outlineBwd.size() - 1; i >= 0; i--)
-                points += PathPoint(outlineBwd[i].x, outlineBwd[i].y);
-#endif
-        }
-    } else {
-        points = mPath->points();
-        if (mPath->isClosed())
-            points += points.first();
-    }
-#else
-    PathPoints points = mPath->points();
-    if (mPath->isClosed())
-        points += points.first();
-#endif
+    QVector<QPointF> &pointsF = (offset >= 0) ? forward : backward;
+    QVector<QPoint> points(pointsF.size());
+    for (int i = 0; i < points.size(); i++)
+        points[i] = QPoint(pointsF[i].x(), pointsF[i].y()); // don't call toPoint(), it rounds up
 
     int orient = -1;
     for (int i = 0; i < points.size() - 1; i++) {
@@ -1991,9 +2017,13 @@ void PG_Wall::generate(int level, QVector<TileLayer *> &layers)
 
     qreal pathOffset = mProperties[PathOffset]->asInteger()->mValue;
 
-    QVector<QPoint> forward, backward;
+    QVector<QPointF> forward, backward;
     pathOffset = points(pathOffset, forward, backward);
-    QVector<QPoint> &points = (pathOffset >= 0) ? forward : backward;
+    QVector<QPointF> &pointsF = (pathOffset >= 0) ? forward : backward;
+    QVector<QPoint> points(pointsF.size());
+    for (int i = 0; i < points.size(); i++)
+        points[i] = QPoint(pointsF[i].x(), pointsF[i].y()); // don't call toPoint(), it rounds up
+
 #if 0 // TODO: Let walls go up levels
     if ((tl->map()->orientation() == Map::Isometric) && level1) {
         for (int i = 0; i < points.size(); i++)
@@ -2060,9 +2090,9 @@ void PG_Wall::generate(int level, QVector<TileLayer *> &layers)
     for (int x = bounds.left(); x <= bounds.right(); x++) {
         for (int y = bounds.top(); y <= bounds.bottom(); y++) {
             if (grid[x-bounds.x()][y-bounds.y()][0] == North && grid[x-bounds.x()][y-bounds.y()][1] == West) {
-                int tileW = tileAt(tl, tiles, x - 1, y);
+//                int tileW = tileAt(tl, tiles, x - 1, y);
                 int tileE = tileAt(tl, tiles, x + 1, y);
-                int tileN = tileAt(tl, tiles, x, y - 1);
+//                int tileN = tileAt(tl, tiles, x, y - 1);
                 int tileS = tileAt(tl, tiles, x, y + 1);
                 if (tileE == -1 && tileS == -1)
                     setCell(tl, tiles, x, y, SouthEast);
@@ -2121,8 +2151,9 @@ PathGeneratorTypes::PathGeneratorTypes()
 {
     // This is a list of all possible generators.
     mTypes += new PG_Edges(QLatin1String("Edges"));
-    mTypes += new PG_Line(QLatin1String("Line"));
     mTypes += new PG_Fence(QLatin1String("Fence"));
+    mTypes += new PG_Filled(QLatin1String("Filled"));
+    mTypes += new PG_Line(QLatin1String("Line"));
     mTypes += new PG_StreetLight(QLatin1String("Street Light"));
     mTypes += new PG_Wall(QLatin1String("Wall"));
     foreach (PathGenerator *pgen, mTypes)

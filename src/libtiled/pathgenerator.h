@@ -205,7 +205,7 @@ public:
     void fill(Tile *tile, TileLayer *tl);
 
     QVector<QPoint> pointsAlongPath(int offset, int spacing);
-    qreal points(qreal offset, QVector<QPoint> &forward, QVector<QPoint> &backward);
+    qreal points(qreal offset, QVector<QPointF> &forward, QVector<QPointF> &backward);
 
     void refCountUp() { ++mRefCount;}
     void refCountDown() {  Q_ASSERT(mRefCount); --mRefCount; }
@@ -255,8 +255,31 @@ public:
     enum Properties
     {
         Layer1 = TileCount,
-        Filled,
         Thickness,
+        PropertyCount
+    };
+};
+
+class TILEDSHARED_EXPORT PG_Filled : public PathGenerator
+{
+public:
+    PG_Filled(const QString &label);
+
+    PathGenerator *clone() const;
+
+    void generate(int level, QVector<TileLayer*> &layers);
+
+    enum TileNames
+    {
+        Tile1,
+        TileCount
+    };
+
+    enum Properties
+    {
+        Layer1 = TileCount,
+        PathOffset,
+        Reverse,
         PropertyCount
     };
 };
