@@ -372,10 +372,9 @@ void PathPropertiesDialog::currentGeneratorChanged(int row)
 {
     mCurrentGenerator = 0;
     mCurrentProperty = 0;
-    if (row >= 0) {
+    if (row >= 0)
         mCurrentGenerator = mPath->generator(row);
-        setPropertyList();
-    }
+    setPropertyList();
     synchUI();
     mWasEditingString = false;
 }
@@ -396,7 +395,7 @@ void PathPropertiesDialog::currentGeneratorTemplateChanged(int row)
 {
     mCurrentGeneratorTemplate = 0;
     if (row >= 0) {
-        mCurrentGeneratorTemplate = PathGeneratorMgr::instance()->generators().at(row);
+        mCurrentGeneratorTemplate = mGeneratorTemplates.at(row);
     }
     synchUI();
 }
@@ -527,14 +526,6 @@ void PathPropertiesDialog::removeGenerator()
         int index = mPath->generators().indexOf(mCurrentGenerator);
         mMapDocument->undoStack()->push(new RemoveGenerator(mMapDocument,
                                                             mPath, index));
-#if 0
-        mPath->removeGenerator(index);
-        Q_ASSERT(mCurrentGenerator->refCount() == 0);
-        delete mCurrentGenerator;
-        setGeneratorsList();
-        index = qMin(index, ui->generatorsList->count() - 1);
-        ui->generatorsList->setCurrentRow(index);
-#endif
     }
 }
 
@@ -675,8 +666,19 @@ void PathPropertiesDialog::setGeneratorsList()
 void PathPropertiesDialog::setGeneratorTypesList()
 {
     ui->allGeneratorsList->clear();
-    foreach (PathGenerator *pgen, PathGeneratorMgr::instance()->generators())
-        ui->allGeneratorsList->addItem(pgen->label());
+    mGeneratorTemplates.clear();
+    mGeneratorTemplates += PathGeneratorTypes::instance()->types();
+    mGeneratorTemplates += 0; // divider
+    mGeneratorTemplates += PathGeneratorMgr::instance()->generators();
+    foreach (PathGenerator *pgen, mGeneratorTemplates) {
+        if (pgen)
+            ui->allGeneratorsList->addItem(pgen->label());
+        else {
+            QListWidgetItem *item = new QListWidgetItem(QLatin1String("   ----------   "));
+            item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+            ui->allGeneratorsList->addItem(item);
+        }
+    }
 }
 
 void PathPropertiesDialog::setPropertyList()

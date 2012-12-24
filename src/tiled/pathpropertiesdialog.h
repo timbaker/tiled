@@ -99,6 +99,7 @@ private:
     PathGenerator *mCurrentGenerator;
     PathGeneratorProperty *mCurrentProperty;
     PathGenerator *mCurrentGeneratorTemplate;
+    QList<PathGenerator*> mGeneratorTemplates;
     QString mPropertyName;
     bool mSynching;
 
