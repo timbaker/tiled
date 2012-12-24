@@ -112,6 +112,8 @@ private:
     Path *readPath();
     QPolygon readPathPolygon();
     PathGenerator *readPathGenerator();
+    void readPathGeneratorProperty(PathGenerator *pgen);
+    void readPathGeneratorProperty(PathGeneratorProperty *parent);
 #endif
 
     Properties readProperties();
@@ -1000,43 +1002,95 @@ PathGenerator *MapReaderPrivate::readPathGenerator()
 
     const QXmlStreamAttributes atts = xml.attributes();
     const QString type = atts.value(QLatin1String("type")).toString();
+    const QString label = atts.value(QLatin1String("label")).toString();
+    const QString versionStr = atts.value(QLatin1String("version")).toString();
     PathGenerator *pgenType = PathGeneratorTypes::instance()->type(type);
     if (!pgenType) {
         xml.raiseError(tr("Unknown generator type '%1'.").arg(type));
         return 0;
     }
-
     PathGenerator *pgen = pgenType->clone();
+    pgen->setLabel(label);
 
-    foreach (QXmlStreamAttribute att, atts) {
-        if (att.name() == "type") {
-            //
-        } else if (att.name() == "label") {
-            pgen->setLabel(att.value().toString());
-        } else if (att.name() == "version") {
-            bool ok;
-            int version = att.value().toString().toInt(&ok);
-            if (!ok) {
-                xml.raiseError(tr("Invalid generator version '%1'").arg(att.value().toString()));
-                delete pgen;
-                return 0;
-            }
-        } else if (PathGeneratorProperty *prop = pgen->property(att.name().toString())) {
-            if (!prop->valueFromString(att.value().toString())) {
-                xml.raiseError(tr("Error with generator property %1 = %2")
-                               .arg(att.name().toString()).arg(att.value().toString()));
+    bool ok;
+    int version = versionStr.toInt(&ok);
+    if (!ok) {
+        xml.raiseError(tr("Invalid generator version '%1'").arg(versionStr));
+        delete pgen;
+        return 0;
+    }
+
+    while (xml.readNextStartElement()) {
+        if (xml.name() == "property") {
+            readPathGeneratorProperty(pgen);
+            if (xml.hasError()) {
                 delete pgen;
                 return 0;
             }
         } else {
-            xml.raiseError(tr("Unknown generator attribute '%1'")
-                           .arg(att.name().toString()));
+            readUnknownElement();
         }
     }
 
-    xml.skipCurrentElement();
-
     return pgen;
+}
+
+void MapReaderPrivate::readPathGeneratorProperty(PathGenerator *pgen)
+{
+    Q_ASSERT(xml.isStartElement() && (xml.name() == "property"));
+
+    const QXmlStreamAttributes atts = xml.attributes();
+    const QString name = atts.value(QLatin1String("name")).toString();
+    if (PathGeneratorProperty *prop = pgen->property(name)) {
+        if (prop->properties().size()) {
+            while (xml.readNextStartElement()) {
+                if (xml.name() == "property") {
+                    readPathGeneratorProperty(prop);
+                } else {
+                    readUnknownElement();
+                }
+            }
+        } else {
+            const QString value = atts.value(QLatin1String("value")).toString();
+            if (!prop->valueFromString(value)) {
+                xml.raiseError(tr("Error with generator property %1 = %2")
+                               .arg(name).arg(value));
+            }
+            xml.skipCurrentElement();
+        }
+    } else {
+        xml.raiseError(tr("Unknown property '%1' for generator type '%2'")
+                       .arg(name).arg(pgen->type()));
+    }
+}
+
+void MapReaderPrivate::readPathGeneratorProperty(PathGeneratorProperty *parent)
+{
+    Q_ASSERT(xml.isStartElement() && (xml.name() == "property"));
+
+    const QXmlStreamAttributes atts = xml.attributes();
+    const QString name = atts.value(QLatin1String("name")).toString();
+    if (PathGeneratorProperty *prop = parent->property(name)) {
+        if (prop->properties().size()) {
+            while (xml.readNextStartElement()) {
+                if (xml.name() == "property") {
+                    readPathGeneratorProperty(prop);
+                } else {
+                    readUnknownElement();
+                }
+            }
+        } else {
+            const QString value = atts.value(QLatin1String("value")).toString();
+            if (!prop->valueFromString(value)) {
+                xml.raiseError(tr("Error with generator property %1 = %2")
+                               .arg(name).arg(value));
+            }
+            xml.skipCurrentElement();
+        }
+    } else {
+        xml.raiseError(tr("Unknown property '%1' for property '%2'")
+                       .arg(name).arg(parent->name()));
+    }
 }
 #endif // ZOMBOID
 

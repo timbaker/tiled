@@ -598,14 +598,15 @@ void MapWriterPrivate::writePathGenerator(QXmlStreamWriter &w, const PathGenerat
 void MapWriterPrivate::writePathGeneratorProperty(QXmlStreamWriter &w,
                                                   const PathGeneratorProperty *prop)
 {
+    w.writeStartElement(QLatin1String("property"));
+    w.writeAttribute(QLatin1String("name"), prop->name());
     if (prop->properties().size()) {
-        w.writeStartElement(prop->name());
         foreach (PathGeneratorProperty *childProp, prop->properties())
             writePathGeneratorProperty(w, childProp);
-        w.writeEndElement();
     } else {
-        w.writeAttribute(prop->name(), prop->valueToString());
+        w.writeAttribute(QLatin1String("value"), prop->valueToString());
     }
+    w.writeEndElement();
 }
 #endif
 
