@@ -342,10 +342,10 @@ public:
     };
 };
 
-class TILEDSHARED_EXPORT PG_WithCorners : public PathGenerator
+class TILEDSHARED_EXPORT PG_Edges : public PathGenerator
 {
 public:
-    PG_WithCorners(const QString &label);
+    PG_Edges(const QString &label);
 
     PathGenerator *clone() const;
 

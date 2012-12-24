@@ -1542,8 +1542,8 @@ void PG_StreetLight::generate(int level, QVector<TileLayer *> &layers)
 
 /////
 
-PG_WithCorners::PG_WithCorners(const QString &label) :
-    PathGenerator(label, QLatin1String("WithCorners"))
+PG_Edges::PG_Edges(const QString &label) :
+    PathGenerator(label, QLatin1String("Edges"))
 {
     mProperties.resize(PropertyCount);
 
@@ -1626,14 +1626,14 @@ PG_WithCorners::PG_WithCorners(const QString &label) :
     }
 }
 
-PathGenerator *PG_WithCorners::clone() const
+PathGenerator *PG_Edges::clone() const
 {
-    PG_WithCorners *clone = new PG_WithCorners(mLabel);
+    PG_Edges *clone = new PG_Edges(mLabel);
     clone->cloneProperties(this);
     return clone;
 }
 
-void PG_WithCorners::generate(int level, QVector<TileLayer *> &layers)
+void PG_Edges::generate(int level, QVector<TileLayer *> &layers)
 {
     if (level != mPath->level())
         return;
@@ -1806,7 +1806,7 @@ void PG_WithCorners::generate(int level, QVector<TileLayer *> &layers)
     }
 }
 
-int PG_WithCorners::tileAt(QVector<TileLayer *> &layers, int x, int y,
+int PG_Edges::tileAt(QVector<TileLayer *> &layers, int x, int y,
                            QVector<Tile*> &tiles)
 {
     if (!layers[0]->contains(x, y))
@@ -1838,7 +1838,7 @@ int PG_WithCorners::tileAt(QVector<TileLayer *> &layers, int x, int y,
     return -1;
 }
 
-int PG_WithCorners::layerForTile(int tile)
+int PG_Edges::layerForTile(int tile)
 {
     switch (tile) {
     case West:
@@ -1862,7 +1862,7 @@ int PG_WithCorners::layerForTile(int tile)
     return LayerWest;
 }
 
-void PG_WithCorners::setTile(QVector<TileLayer *> layers, QPoint p,
+void PG_Edges::setTile(QVector<TileLayer *> layers, QPoint p,
                              int tileEnum, QVector<Tile *> &tiles)
 {
     foreach (TileLayer *tl, layers)
@@ -1890,7 +1890,7 @@ void PG_WithCorners::setTile(QVector<TileLayer *> layers, QPoint p,
     layers[layerIndex]->setCell(p, Cell(tiles[tileEnum]));
 }
 
-void PG_WithCorners::setCell(QVector<TileLayer *> layers, QPoint p,
+void PG_Edges::setCell(QVector<TileLayer *> layers, QPoint p,
                              int tileEnum, QVector<Tile *> &tiles)
 {
     if (layers[0]->contains(p)) {
@@ -2120,11 +2120,11 @@ PathGeneratorTypes *PathGeneratorTypes::instance()
 PathGeneratorTypes::PathGeneratorTypes()
 {
     // This is a list of all possible generators.
+    mTypes += new PG_Edges(QLatin1String("Edges"));
     mTypes += new PG_Line(QLatin1String("Line"));
     mTypes += new PG_Fence(QLatin1String("Fence"));
     mTypes += new PG_StreetLight(QLatin1String("Street Light"));
     mTypes += new PG_Wall(QLatin1String("Wall"));
-    mTypes += new PG_WithCorners(QLatin1String("With Corners"));
     foreach (PathGenerator *pgen, mTypes)
         pgen->refCountUp();
 }
