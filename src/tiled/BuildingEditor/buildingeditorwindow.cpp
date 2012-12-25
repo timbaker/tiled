@@ -35,6 +35,7 @@
 #include "FloorEditor.h"
 #include "furnituregroups.h"
 #include "furnitureview.h"
+#include "horizontallinedelegate.h"
 #include "mixedtilesetview.h"
 #include "newbuildingdialog.h"
 #include "resizebuildingdialog.h"
@@ -525,15 +526,13 @@ bool BuildingEditorWindow::Startup()
     if (!categoryName.isEmpty()) {
         int index = BuildingTilesMgr::instance()->indexOf(categoryName);
         if (index >= 0)
-            ui->categoryList->setCurrentRow(index);
+            ui->categoryList->setCurrentRow(mRowOfFirstCategory + index);
     }
     QString fGroupName = mSettings.value(QLatin1String("SelectedFurnitureGroup")).toString();
     if (!fGroupName.isEmpty()) {
         int index = FurnitureGroups::instance()->indexOf(fGroupName);
-        if (index >= 0) {
-            int numTileCategories = BuildingTilesMgr::instance()->categoryCount();
-            ui->categoryList->setCurrentRow(numTileCategories + index);
-        }
+        if (index >= 0)
+            ui->categoryList->setCurrentRow(mRowOfFirstFurnitureGroup + index);
     }
     mSettings.endGroup();
 
@@ -703,14 +702,14 @@ void BuildingEditorWindow::categoryActivated(const QModelIndex &index)
 {
     BuildingTilesDialog *dialog = BuildingTilesDialog::instance();
 
-    int numTileCategories = BuildingTilesMgr::instance()->categoryCount();
-    if (index.row() >= 0 && index.row() < 2)
+    int row = index.row();
+    if (row >= 0 && row < 2)
         ;
-    else if (index.row() >= 2 && index.row() < 2 + numTileCategories)
-        dialog->selectCategory(BuildingTilesMgr::instance()->category(index.row() - 2));
-    else if (index.row() >= 2 + numTileCategories
-             && index.row() < ui->categoryList->count())
-        dialog->selectCategory(FurnitureGroups::instance()->group(index.row() - numTileCategories - 2));
+    else if (BuildingTileCategory *category = categoryAt(row)) {
+        dialog->selectCategory(category);
+    } else if (FurnitureGroup *group = furnitureGroupAt(row)) {
+        dialog->selectCategory(group);
+    }
     tilesDialog();
 }
 
@@ -782,9 +781,7 @@ void BuildingEditorWindow::categorySelectionChanged()
             ui->furnitureView->model()->setTiles(furnitureMap.values());
             ui->furnitureView->scrollToTop();
             ui->categoryStack->setCurrentIndex(1);
-        } else if (row < 2 + BuildingTilesMgr::instance()->categoryCount()) {
-            row -= 2;
-            mCategory = BuildingTilesMgr::instance()->category(row);
+        } else if (mCategory = categoryAt(row)) {
             QList<Tiled::Tile*> tiles;
             QList<void*> userData;
             if (mCategory->canAssignNone()) {
@@ -807,9 +804,7 @@ void BuildingEditorWindow::categorySelectionChanged()
             ui->categoryStack->setCurrentIndex(0);
 
             selectCurrentCategoryTile();
-        } else {
-            row -= 2 + BuildingTilesMgr::instance()->categoryCount();
-            mFurnitureGroup = FurnitureGroups::instance()->group(row);
+        } else if (mFurnitureGroup = furnitureGroupAt(row)) {
             ui->furnitureView->model()->setTiles(mFurnitureGroup->mTiles);
             ui->furnitureView->scrollToTop();
             ui->categoryStack->setCurrentIndex(1);
@@ -1239,6 +1234,22 @@ void BuildingEditorWindow::removeAutoSaveFile()
         qDebug() << "BuildingEd autosave deleted:" << mAutoSaveFileName;
     }
     mAutoSaveFileName.clear();
+}
+
+BuildingTileCategory *BuildingEditorWindow::categoryAt(int row)
+{
+    if (row >= mRowOfFirstCategory &&
+            row < mRowOfFirstCategory + BuildingTilesMgr::instance()->categoryCount())
+        return BuildingTilesMgr::instance()->category(row - mRowOfFirstCategory);
+    return 0;
+}
+
+FurnitureGroup *BuildingEditorWindow::furnitureGroupAt(int row)
+{
+    if (row >= mRowOfFirstFurnitureGroup &&
+            row < mRowOfFirstFurnitureGroup + FurnitureGroups::instance()->groupCount())
+        return FurnitureGroups::instance()->group(row - mRowOfFirstFurnitureGroup);
+    return 0;
 }
 
 void BuildingEditorWindow::upLevel()
@@ -1938,10 +1949,16 @@ void BuildingEditorWindow::setCategoryList()
     ui->categoryList->addItem(tr("Used Tiles"));
     ui->categoryList->addItem(tr("Used Furniture"));
 
+    HorizontalLineDelegate::instance()->addToList(ui->categoryList);
+
+    mRowOfFirstCategory = ui->categoryList->count();
     foreach (BuildingTileCategory *category, BuildingTilesMgr::instance()->categories()) {
         ui->categoryList->addItem(category->label());
     }
 
+    HorizontalLineDelegate::instance()->addToList(ui->categoryList);
+
+    mRowOfFirstFurnitureGroup = ui->categoryList->count();
     foreach (FurnitureGroup *group, FurnitureGroups::instance()->groups()) {
         ui->categoryList->addItem(group->mLabel);
     }

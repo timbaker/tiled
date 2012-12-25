@@ -178,7 +178,8 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/tilecategoryview.cpp \
     BuildingEditor/listofstringsdialog.cpp \
     tilemetainfodialog.cpp \
-    tilemetainfomgr.cpp
+    tilemetainfomgr.cpp \
+    BuildingEditor/horizontallinedelegate.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -322,7 +323,8 @@ HEADERS += aboutdialog.h \
     BuildingEditor/tilecategoryview.h \
     BuildingEditor/listofstringsdialog.h \
     tilemetainfodialog.h \
-    tilemetainfomgr.h
+    tilemetainfomgr.h \
+    BuildingEditor/horizontallinedelegate.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

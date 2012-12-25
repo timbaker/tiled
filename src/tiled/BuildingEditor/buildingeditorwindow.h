@@ -122,6 +122,9 @@ private:
 
     void removeAutoSaveFile();
 
+    BuildingTileCategory *categoryAt(int row);
+    FurnitureGroup *furnitureGroupAt(int row);
+
 private slots:
     void updateWindowTitle();
 
@@ -206,6 +209,8 @@ private:
     Tiled::Internal::Zoomable *mCategoryZoomable;
     BuildingTileCategory *mCategory;
     FurnitureGroup *mFurnitureGroup;
+    int mRowOfFirstCategory;
+    int mRowOfFirstFurnitureGroup;
     bool mSynching;
     bool mInitialCategoryViewSelectionEvent;
     QTimer *mAutoSaveTimer;
