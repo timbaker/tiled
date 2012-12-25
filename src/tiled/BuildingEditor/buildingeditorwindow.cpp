@@ -1208,6 +1208,10 @@ void BuildingEditorWindow::selectCurrentCategoryTile()
         currentTile = mCurrentDocument->building()->curtainsTile();
     if (mCategory->asStairs())
         currentTile = mCurrentDocument->building()->stairsTile();
+    if (mCategory->asGrimeFloor() && currentRoom())
+        currentTile = currentRoom()->tile(Room::GrimeFloor);
+    if (mCategory->asGrimeWall() && currentRoom())
+        currentTile = currentRoom()->tile(Room::GrimeWall);
     if (mCategory->asRoofCaps())
         currentTile = mCurrentDocument->building()->roofCapTile();
     if (mCategory->asRoofSlopes())
