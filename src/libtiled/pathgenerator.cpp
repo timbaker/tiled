@@ -988,14 +988,13 @@ void PG_Line::generate(int level, QVector<TileLayer *> &layers)
         if (!tiles[i]) return;
     }
 
-    /* Get an outline of the path, keeping the cap points. */
+    // Get an outline of the path, keeping the cap points.
     PathStroke stroker;
     qreal thickness = mProperties[Thickness]->asInteger()->mValue;
     QVector<PathStroke::v2_t> outlineFwd, outlineBkwd;
     stroker.build(mPath, thickness, outlineFwd, outlineBkwd);
     if (tiles[Tile1]) {
-
-//        outline(tiles[Tile1], tl);
+        Cell cell(tiles[Tile1]);
 
         if (mPath->isClosed()) {
             // Separate outlines
@@ -1007,7 +1006,7 @@ void PG_Line::generate(int level, QVector<TileLayer *> &layers)
             outlineFwd += outlineFwd.first();
             outlineBkwd.clear();
         }
-#if 1
+
         QPainterPath path;
         if (outlineFwd.size()) {
             QPolygonF polygon;
@@ -1031,29 +1030,10 @@ void PG_Line::generate(int level, QVector<TileLayer *> &layers)
                 if (path.intersects(test)) {
                     if (!tl->contains(pt.toPoint()))
                         continue;
-                    Cell cell(tiles[Tile1]);
                     tl->setCell(pt.x(), pt.y(), cell);
                 }
             }
         }
-#else
-        for (int i = 0; i < outlineFwd.size() - 1; i++) {
-            foreach (QPoint pt, calculateLine(outlineFwd[i].x, outlineFwd[i].y,
-                                              outlineFwd[i+1].x, outlineFwd[i+1].y)) {
-                if (!tl->contains(pt))
-                    continue;
-                tl->setCell(pt.x(), pt.y(), Cell(tiles[Tile1]));
-            }
-        }
-        for (int i = 0; i < outlineBkwd.size() - 1; i++) {
-            foreach (QPoint pt, calculateLine(outlineBkwd[i].x, outlineBkwd[i].y,
-                                              outlineBkwd[i+1].x, outlineBkwd[i+1].y)) {
-                if (!tl->contains(pt))
-                    continue;
-                tl->setCell(pt.x(), pt.y(), Cell(tiles[Tile1]));
-            }
-        }
-#endif
     }
 }
 
