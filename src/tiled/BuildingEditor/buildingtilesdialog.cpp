@@ -1306,7 +1306,10 @@ void BuildingTilesDialog::tilesetSelectionChanged()
         int row = ui->tilesetList->row(item);
         MixedTilesetModel *model = ui->tilesetTilesView->model();
         mCurrentTileset = BuildingTilesMgr::instance()->tilesets().at(row);
-        model->setTileset(mCurrentTileset);
+        if (mCurrentTileset->isMissing())
+            model->setTiles(QList<Tile*>());
+        else
+            model->setTileset(mCurrentTileset);
 #if 0
         for (int i = 0; i < tileset->tileCount(); i++) {
             Tile *tile = tileset->tileAt(i);

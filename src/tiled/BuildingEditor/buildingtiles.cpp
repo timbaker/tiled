@@ -618,9 +618,10 @@ Tile *BuildingTilesMgr::tileFor(BuildingTile *tile, int offset)
         return mNoneTiledTile;
     if (!mTilesetByName.contains(tile->mTilesetName))
         return mMissingTile;
-    if (tile->mIndex + offset >= mTilesetByName[tile->mTilesetName]->tileCount())
-        return mMissingTile;
-    return mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + offset);
+    Tileset *tileset = mTilesetByName[tile->mTilesetName];
+    if (tile->mIndex + offset >= tileset->tileCount())
+        return tileset->isMissing() ? tileset->tileAt(0) : mMissingTile;
+    return tileset->tileAt(tile->mIndex + offset);
 }
 
 BuildingTile *BuildingTilesMgr::fromTiledTile(Tile *tile)
