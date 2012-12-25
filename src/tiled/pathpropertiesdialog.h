@@ -73,6 +73,9 @@ private slots:
     void addGeneratorTilesets(PGP_TileEntry *prop);
     void addTilesetIfNeeded(const QString &tilesetName);
 
+    void undoTextChanged(const QString &text);
+    void redoTextChanged(const QString &text);
+
     void setClosed(bool closed);
     void setCenters(bool centers);
 

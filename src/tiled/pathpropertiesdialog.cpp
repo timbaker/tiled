@@ -339,6 +339,9 @@ PathPropertiesDialog::~PathPropertiesDialog()
 
 void PathPropertiesDialog::setPath(MapDocument *doc, Path *path)
 {
+    // FIXME: If this dialog is made persistent, then these signals/slots must be
+    // disconnected when changing the document.
+
     mMapDocument = doc;
 
     connect(mMapDocument, SIGNAL(pathGeneratorAdded(Path*,int)),
@@ -354,6 +357,11 @@ void PathPropertiesDialog::setPath(MapDocument *doc, Path *path)
     mUndoIndex = mMapDocument->undoStack()->index();
     connect(mMapDocument->undoStack(), SIGNAL(indexChanged(int)),
             SLOT(synchUI()));
+
+    connect(mMapDocument->undoStack(), SIGNAL(undoTextChanged(QString)),
+            SLOT(undoTextChanged(QString)));
+    connect(mMapDocument->undoStack(), SIGNAL(redoTextChanged(QString)),
+            SLOT(redoTextChanged(QString)));
 
     connect(mUndoButton, SIGNAL(clicked()),
             mMapDocument->undoStack(), SLOT(undo()));
@@ -602,6 +610,16 @@ void PathPropertiesDialog::addTilesetIfNeeded(const QString &tilesetName)
             mMapDocument->undoStack()->push(new AddTileset(mMapDocument, ts));
         }
     }
+}
+
+void PathPropertiesDialog::undoTextChanged(const QString &text)
+{
+    mUndoButton->setToolTip(text);
+}
+
+void PathPropertiesDialog::redoTextChanged(const QString &text)
+{
+    mRedoButton->setToolTip(text);
 }
 
 void PathPropertiesDialog::setClosed(bool closed)
