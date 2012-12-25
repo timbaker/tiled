@@ -237,6 +237,18 @@ void MixedTilesetView::mouseReleaseEvent(QMouseEvent *event)
     QTableView::mouseReleaseEvent(event);
 }
 
+void MixedTilesetView::wheelEvent(QWheelEvent *event)
+{
+    if (event->modifiers() & Qt::ControlModifier
+        && event->orientation() == Qt::Vertical)
+    {
+        mZoomable->handleWheelDelta(event->delta());
+        return;
+    }
+
+    QTableView::wheelEvent(event);
+}
+
 void MixedTilesetView::setZoomable(Zoomable *zoomable)
 {
     mZoomable = zoomable;

@@ -130,6 +130,8 @@ public:
 
     QSize sizeHint() const;
 
+    void wheelEvent(QWheelEvent *event);
+
     void dragMoveEvent(QDragMoveEvent *event);
     void dragLeaveEvent(QDragLeaveEvent *event);
     void dropEvent(QDropEvent *event);
