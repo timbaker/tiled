@@ -199,6 +199,7 @@ bool BuildingTMX::readTxt()
                     QFileInfo info(source);
                     if (!info.exists()) {
                         Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
+                        ts->setMissing(true);
                         BuildingTilesMgr::instance()->addTileset(ts);
                         mTilesets += ts->name();
                         missingTilesets += QDir::toNativeSeparators(info.absoluteFilePath());

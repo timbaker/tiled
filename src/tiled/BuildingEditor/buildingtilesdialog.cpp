@@ -1132,6 +1132,8 @@ void BuildingTilesDialog::setTilesetList()
     foreach (Tileset *tileset, BuildingTilesMgr::instance()->tilesets()) {
         QListWidgetItem *item = new QListWidgetItem();
         item->setText(tileset->name());
+        if (tileset->isMissing())
+            item->setForeground(Qt::red);
         ui->tilesetList->addItem(item);
         width = qMax(width, fm.width(tileset->name()));
     }
