@@ -94,6 +94,7 @@ Path *Path::clone() const
     klone->setPathLayer(mLayer);
     klone->setPoints(mPoints);
     klone->setClosed(mIsClosed);
+    klone->setCenters(mCenters);
     klone->setVisible(mVisible);
     foreach (PathGenerator *pathGen, mGenerators) {
 //        if (pathGen->refCount() == 1) // Not global
