@@ -38,6 +38,18 @@ TilesetManager::TilesetManager():
     mWatcher(new FileSystemWatcher(this)),
     mReloadTilesetsOnChange(false)
 {
+#ifdef ZOMBOID
+    mMissingTileset = new Tileset(QLatin1String("missing"), 64, 128);
+    mMissingTileset->setTransparentColor(Qt::white);
+    QString fileName = QLatin1String(":/BuildingEditor/icons/missing-tile.png");
+    if (!mMissingTileset->loadFromImage(QImage(fileName), fileName)) {
+        QImage image(64, 128, QImage::Format_ARGB32);
+        image.fill(Qt::red);
+        mMissingTileset->loadFromImage(image, fileName);
+    }
+    mMissingTile = mMissingTileset->tileAt(0);
+#endif
+
     connect(mWatcher, SIGNAL(fileChanged(QString)),
             this, SLOT(fileChanged(QString)));
 
@@ -105,7 +117,11 @@ void TilesetManager::addReference(Tileset *tileset)
         mTilesets[tileset]++;
     } else {
         mTilesets.insert(tileset, 1);
+#ifdef ZOMBOID
+        if (!tileset->imageSource().isEmpty() && !tileset->isMissing())
+#else
         if (!tileset->imageSource().isEmpty())
+#endif
             mWatcher->addPath(tileset->imageSource());
     }
 #ifdef ZOMBOID
@@ -121,7 +137,11 @@ void TilesetManager::removeReference(Tileset *tileset)
 
     if (mTilesets.value(tileset) == 0) {
         mTilesets.remove(tileset);
+#ifdef ZOMBOID
+        if (!tileset->imageSource().isEmpty() && !tileset->isMissing())
+#else
         if (!tileset->imageSource().isEmpty())
+#endif
             mWatcher->removePath(tileset->imageSource());
 
         delete tileset;
@@ -207,6 +227,12 @@ void TilesetManager::fileChangedTimeout()
 }
 
 #ifdef ZOMBOID
+void TilesetManager::tilesetSourceChanged(Tileset *tileset)
+{
+    if (!tileset->imageSource().isEmpty() && !tileset->isMissing())
+        mWatcher->addPath(tileset->imageSource());
+}
+
 #include "tile.h"
 
 #include <QApplication>

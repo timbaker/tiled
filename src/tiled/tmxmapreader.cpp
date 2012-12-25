@@ -94,7 +94,7 @@ Map *TmxMapReader::read(const QString &fileName)
                     && tileset->tileHeight() == 128
                     && tileset->tileWidth() == 64) {
                 // Replace the all-red image with something nicer.
-                Tile *missingTile = PathGeneratorMgr::instance()->missingTile();
+                Tile *missingTile = TilesetManager::instance()->missingTile();
                 for (int i = 0; i < tileset->tileCount(); i++)
                     tileset->tileAt(i)->setImage(missingTile->image());
             }
