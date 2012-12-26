@@ -155,6 +155,8 @@ private slots:
     bool saveBuildingAs();
     void exportTMX();
 
+    void deleteObjects();
+
     void preferences();
 
     void roomsDialog();

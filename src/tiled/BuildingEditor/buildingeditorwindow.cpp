@@ -246,6 +246,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->menuEdit->insertAction(ui->menuEdit->actions().at(1), redoAction);
     ui->menuEdit->insertSeparator(ui->menuEdit->actions().at(2));
 
+    ui->actionDelete->setShortcuts(QKeySequence::Delete);
+    connect(ui->actionDelete, SIGNAL(triggered()), SLOT(deleteObjects()));
+
     connect(mUndoGroup, SIGNAL(cleanChanged(bool)), SLOT(updateWindowTitle()));
     connect(mUndoGroup, SIGNAL(cleanChanged(bool)), SLOT(autoSaveCheck()));
     connect(mUndoGroup, SIGNAL(indexChanged(int)), SLOT(autoSaveCheck()));
@@ -1534,6 +1537,9 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
     connect(mCurrentDocument, SIGNAL(currentFloorChanged()),
             SLOT(updateActions()));
 
+    connect(mCurrentDocument, SIGNAL(selectedObjectsChanged()),
+            SLOT(updateActions()));
+
     connect(mCurrentDocument, SIGNAL(cleanChanged()), SLOT(updateWindowTitle()));
 
     mPreviewWin->setDocument(currentDocument());
@@ -1596,6 +1602,26 @@ void BuildingEditorWindow::exportTMX()
 
     mSettings.setValue(QLatin1String("BuildingEditor/ExportDirectory"),
                        QFileInfo(fileName).absolutePath());
+}
+
+void BuildingEditorWindow::deleteObjects()
+{
+    if (!mCurrentDocument)
+        return;
+    QSet<BuildingObject*> selected = mCurrentDocument->selectedObjects();
+    if (!selected.size())
+        return;
+    if (selected.size() > 1)
+        mCurrentDocument->undoStack()->beginMacro(tr("Remove %1 Objects")
+                                                  .arg(selected.size()));
+    foreach (BuildingObject *object, selected) {
+        mCurrentDocument->undoStack()->push(new RemoveObject(mCurrentDocument,
+                                                             object->floor(),
+                                                             object->index()));
+    }
+
+    if (selected.size() > 1)
+        mCurrentDocument->undoStack()->endMacro();
 }
 
 void BuildingEditorWindow::preferences()
@@ -2023,6 +2049,8 @@ void BuildingEditorWindow::updateActions()
                                       mCurrentDocument->building()->floorCount() > 1);
 
     mRoomComboBox->setEnabled(hasDoc && currentRoom() != 0);
+
+    ui->actionDelete->setEnabled(hasDoc && mCurrentDocument->selectedObjects().size());
 
     if (mCurrentDocument)
         mFloorLabel->setText(tr("Floor %1/%2")
