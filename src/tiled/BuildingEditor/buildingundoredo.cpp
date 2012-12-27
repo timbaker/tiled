@@ -328,6 +328,34 @@ void ResizeBuilding::swap()
 
 /////
 
+ChangeUsedTiles::ChangeUsedTiles(BuildingDocument *doc, const QList<BuildingTileEntry *> &tiles) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Used Tiles")),
+    mDocument(doc),
+    mTiles(tiles)
+{
+}
+
+void ChangeUsedTiles::swap()
+{
+    mTiles = mDocument->changeUsedTiles(mTiles);
+}
+
+/////
+
+ChangeUsedFurniture::ChangeUsedFurniture(BuildingDocument *doc, const QList<FurnitureTiles *> &tiles) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Used Furniture")),
+    mDocument(doc),
+    mTiles(tiles)
+{
+}
+
+void ChangeUsedFurniture::swap()
+{
+    mTiles = mDocument->changeUsedFurniture(mTiles);
+}
+
+/////
+
 ResizeFloor::ResizeFloor(BuildingDocument *doc, BuildingFloor *floor,
                              const QSize &newSize) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Floor")),

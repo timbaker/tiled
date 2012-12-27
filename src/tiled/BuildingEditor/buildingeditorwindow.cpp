@@ -93,7 +93,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mFurnitureGroup(0),
     mSynching(false),
     mInitialCategoryViewSelectionEvent(false),
-    mAutoSaveTimer(new QTimer(this))
+    mAutoSaveTimer(new QTimer(this)),
+    mUsedContextMenu(new QMenu(this)),
+    mActionClearUsed(new QAction(this))
 {
     ui->setupUi(this);
 
@@ -345,6 +347,12 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->furnitureView->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(furnitureSelectionChanged()));
+
+    QIcon clearIcon(QLatin1String(":/images/16x16/edit-clear.png"));
+    mActionClearUsed->setIcon(clearIcon);
+    mActionClearUsed->setText(tr("Clean-up"));
+    connect(mActionClearUsed, SIGNAL(triggered()), SLOT(resetUsedTiles()));
+    mUsedContextMenu->addAction(mActionClearUsed);
 
     ui->statusLabel->clear();
 
@@ -731,6 +739,10 @@ void BuildingEditorWindow::categorySelectionChanged()
     ui->tilesetView->model()->setTiles(QList<Tile*>());
     ui->furnitureView->model()->setTiles(QList<FurnitureTiles*>());
 
+    ui->tilesetView->setContextMenu(0);
+    ui->furnitureView->setContextMenu(0);
+    mActionClearUsed->disconnect(this);
+
     QList<QListWidgetItem*> selected = ui->categoryList->selectedItems();
     if (selected.count() == 1) {
         int row = ui->categoryList->row(selected.first());
@@ -770,6 +782,9 @@ void BuildingEditorWindow::categorySelectionChanged()
             ui->tilesetView->model()->setTiles(tiles, userData, headers);
             ui->tilesetView->scrollToTop();
             ui->categoryStack->setCurrentIndex(0);
+
+            connect(mActionClearUsed, SIGNAL(triggered()), SLOT(resetUsedTiles()));
+            ui->tilesetView->setContextMenu(mUsedContextMenu);
         } else if (row == 1) { // Used Furniture
             if (!mCurrentDocument) return;
             QMap<QString,FurnitureTiles*> furnitureMap;
@@ -786,6 +801,9 @@ void BuildingEditorWindow::categorySelectionChanged()
             ui->furnitureView->model()->setTiles(furnitureMap.values());
             ui->furnitureView->scrollToTop();
             ui->categoryStack->setCurrentIndex(1);
+
+            connect(mActionClearUsed, SIGNAL(triggered()), SLOT(resetUsedFurniture()));
+            ui->furnitureView->setContextMenu(mUsedContextMenu);
         } else if (mCategory = categoryAt(row)) {
             QList<Tiled::Tile*> tiles;
             QList<void*> userData;
@@ -912,6 +930,60 @@ void BuildingEditorWindow::usedFurnitureChanged()
 {
     if (ui->categoryList->currentRow() == 1)
         categorySelectionChanged();
+}
+
+
+void BuildingEditorWindow::resetUsedTiles()
+{
+    Building *building = currentBuilding();
+    if (!building)
+        return;
+
+    QList<BuildingTileEntry*> entries;
+    foreach (BuildingFloor *floor, building->floors()) {
+        foreach (BuildingObject *object, floor->objects()) {
+            if (object->asFurniture())
+                continue;
+            for (int i = 0; i < 3; i++) {
+                if (object->tile(i) && !object->tile(i)->isNone()
+                        && !entries.contains(object->tile(i)))
+                    entries += object->tile(i);
+            }
+        }
+    }
+    BuildingTileEntry *entry = building->exteriorWall();
+    if (entry && !entry->isNone() && !entries.contains(entry))
+        entries += entry;
+    foreach (Room *room, building->rooms()) {
+        foreach (BuildingTileEntry *entry, room->tiles()) {
+            if (entry && !entry->isNone() && !entries.contains(entry))
+                entries += entry;
+        }
+    }
+    mCurrentDocument->undoStack()->push(new ChangeUsedTiles(mCurrentDocument,
+                                                            entries));
+}
+
+void BuildingEditorWindow::resetUsedFurniture()
+{
+    Building *building = currentBuilding();
+    if (!building)
+        return;
+
+    QList<FurnitureTiles*> furniture;
+    foreach (BuildingFloor *floor, building->floors()) {
+        foreach (BuildingObject *object, floor->objects()) {
+            if (FurnitureObject *fo = object->asFurniture()) {
+                if (FurnitureTile *ftile = fo->furnitureTile()) {
+                    if (!furniture.contains(ftile->owner()))
+                        furniture += ftile->owner();
+                }
+            }
+        }
+    }
+
+    mCurrentDocument->undoStack()->push(new ChangeUsedFurniture(mCurrentDocument,
+                                                                furniture));
 }
 
 void BuildingEditorWindow::currentEWallChanged(BuildingTileEntry *entry, bool mergeable)

@@ -28,6 +28,7 @@
 #include <QDebug>
 #include <QDragMoveEvent>
 #include <QHeaderView>
+#include <QMenu>
 #include <QMimeData>
 #include <QPainter>
 #include <QStyleOption>
@@ -315,7 +316,8 @@ FurnitureView::FurnitureView(QWidget *parent) :
     QTableView(parent),
     mModel(new FurnitureModel(this)),
     mDelegate(new FurnitureTileDelegate(this, this)),
-    mZoomable(new Zoomable(this))
+    mZoomable(new Zoomable(this)),
+    mContextMenu(0)
 {
     init();
 }
@@ -324,7 +326,8 @@ FurnitureView::FurnitureView(Zoomable *zoomable, QWidget *parent) :
     QTableView(parent),
     mModel(new FurnitureModel(this)),
     mDelegate(new FurnitureTileDelegate(this, this)),
-    mZoomable(zoomable)
+    mZoomable(zoomable),
+    mContextMenu(0)
 {
     init();
 }
@@ -392,6 +395,12 @@ void FurnitureView::furnitureTileResized(FurnitureTile *ftile)
 {
     model()->calcMaxTileSize();
     mDelegate->itemResized(model()->index(ftile));
+}
+
+void FurnitureView::contextMenuEvent(QContextMenuEvent *event)
+{
+    if (mContextMenu)
+        mContextMenu->exec(event->globalPos());
 }
 
 void FurnitureView::scaleChanged(qreal scale)

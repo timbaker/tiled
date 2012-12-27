@@ -21,6 +21,8 @@
 #include <QAbstractListModel>
 #include <QTableView>
 
+class QMenu;
+
 namespace Tiled {
 
 class Tile;
@@ -150,6 +152,10 @@ public:
     bool mouseDown() const
     { return mMousePressed; }
 
+    void contextMenuEvent(QContextMenuEvent *event);
+    void setContextMenu(QMenu *menu)
+    { mContextMenu = menu; }
+
 signals:
     void mousePressed();
     void mouseReleased();
@@ -164,6 +170,7 @@ private:
     MixedTilesetModel *mModel;
     Zoomable *mZoomable;
     bool mMousePressed;
+    QMenu *mContextMenu;
 };
 
 } // namespace Internal

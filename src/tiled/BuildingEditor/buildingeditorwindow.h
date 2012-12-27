@@ -141,6 +141,8 @@ private slots:
 
     void usedTilesChanged();
     void usedFurnitureChanged();
+    void resetUsedTiles();
+    void resetUsedFurniture();
 
     void upLevel();
     void downLevel();
@@ -218,6 +220,8 @@ private:
     bool mInitialCategoryViewSelectionEvent;
     QTimer *mAutoSaveTimer;
     QString mAutoSaveFileName;
+    QMenu *mUsedContextMenu;
+    QAction *mActionClearUsed;
 };
 
 } // namespace BuildingEditor

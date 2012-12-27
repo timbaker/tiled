@@ -334,6 +334,22 @@ int BuildingDocument::resizeWall(WallObject *wall, int length)
     return old;
 }
 
+QList<BuildingTileEntry *> BuildingDocument::changeUsedTiles(const QList<BuildingTileEntry *> &tiles)
+{
+    QList<BuildingTileEntry *> old = mBuilding->usedTiles();
+    mBuilding->setUsedTiles(tiles);
+    emit usedTilesChanged();
+    return old;
+}
+
+QList<FurnitureTiles *> BuildingDocument::changeUsedFurniture(const QList<FurnitureTiles *> &tiles)
+{
+    QList<FurnitureTiles *> old = mBuilding->usedFurniture();
+    mBuilding->setUsedFurniture(tiles);
+    emit usedFurnitureChanged();
+    return old;
+}
+
 void BuildingDocument::furnitureTileChanged(FurnitureTile *ftile)
 {
     foreach (BuildingFloor *floor, mBuilding->floors()) {

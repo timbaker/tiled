@@ -116,6 +116,9 @@ public:
     void resizeRoof(RoofObject *roof, int &width, int &height);
 
     int resizeWall(WallObject *wall, int length);
+
+    QList<BuildingTileEntry*> changeUsedTiles(const QList<BuildingTileEntry*> &tiles);
+    QList<FurnitureTiles *> changeUsedFurniture(const QList<FurnitureTiles *> &tiles);
     // -UNDO/REDO
     
 signals:

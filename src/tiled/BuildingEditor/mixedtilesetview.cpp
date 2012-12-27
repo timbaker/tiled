@@ -23,6 +23,7 @@
 
 #include <QApplication>
 #include <QHeaderView>
+#include <QMenu>
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QPainter>
@@ -199,7 +200,8 @@ QSize TileDelegate::sizeHint(const QStyleOptionViewItem & option,
 MixedTilesetView::MixedTilesetView(QWidget *parent) :
     QTableView(parent),
     mModel(new MixedTilesetModel(this)),
-    mZoomable(new Zoomable(this))
+    mZoomable(new Zoomable(this)),
+    mContextMenu(0)
 {
     init();
 }
@@ -207,7 +209,8 @@ MixedTilesetView::MixedTilesetView(QWidget *parent) :
 MixedTilesetView::MixedTilesetView(Zoomable *zoomable, QWidget *parent) :
     QTableView(parent),
     mModel(new MixedTilesetModel(this)),
-    mZoomable(zoomable)
+    mZoomable(zoomable),
+    mContextMenu(0)
 {
     init();
 }
@@ -254,6 +257,12 @@ void MixedTilesetView::setZoomable(Zoomable *zoomable)
     mZoomable = zoomable;
     if (zoomable)
         connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(scaleChanged(qreal)));
+}
+
+void MixedTilesetView::contextMenuEvent(QContextMenuEvent *event)
+{
+    if (mContextMenu)
+        mContextMenu->exec(event->globalPos());
 }
 
 void MixedTilesetView::scaleChanged(qreal scale)

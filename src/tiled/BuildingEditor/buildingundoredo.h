@@ -33,6 +33,7 @@ class BuildingTileEntry;
 class Door;
 class FurnitureObject;
 class FurnitureTile;
+class FurnitureTiles;
 class RoofObject;
 class Room;
 class WallObject;
@@ -306,6 +307,36 @@ private:
     QSize mSize;
 };
 
+class ChangeUsedTiles : public QUndoCommand
+{
+public:
+    ChangeUsedTiles(BuildingDocument *doc, const QList<BuildingTileEntry*> &tiles);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    QList<BuildingTileEntry*> mTiles;
+};
+
+class ChangeUsedFurniture : public QUndoCommand
+{
+public:
+    ChangeUsedFurniture(BuildingDocument *doc, const QList<FurnitureTiles*> &tiles);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    QList<FurnitureTiles*> mTiles;
+};
+
 class ResizeFloor : public QUndoCommand
 {
 public:
@@ -487,7 +518,6 @@ private:
     RoofObject *mObject;
     Handle mHandle;
 };
-
 
 class ResizeWall : public QUndoCommand
 {
