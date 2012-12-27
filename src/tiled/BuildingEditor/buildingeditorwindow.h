@@ -158,6 +158,8 @@ private slots:
     bool saveBuildingAs();
     void exportTMX();
 
+    void selectAll();
+    void selectNone();
     void deleteObjects();
 
     void preferences();

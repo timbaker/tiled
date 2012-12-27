@@ -249,7 +249,11 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->menuEdit->insertAction(ui->menuEdit->actions().at(1), redoAction);
     ui->menuEdit->insertSeparator(ui->menuEdit->actions().at(2));
 
+    ui->actionSelectAll->setShortcuts(QKeySequence::SelectAll);
+    ui->actionSelectNone->setShortcut(tr("Ctrl+Shift+A"));
     ui->actionDelete->setShortcuts(QKeySequence::Delete);
+    connect(ui->actionSelectAll, SIGNAL(triggered()), SLOT(selectAll()));
+    connect(ui->actionSelectNone, SIGNAL(triggered()), SLOT(selectNone()));
     connect(ui->actionDelete, SIGNAL(triggered()), SLOT(deleteObjects()));
 
     connect(mUndoGroup, SIGNAL(cleanChanged(bool)), SLOT(updateWindowTitle()));
@@ -1687,6 +1691,21 @@ void BuildingEditorWindow::exportTMX()
                        QFileInfo(fileName).absolutePath());
 }
 
+void BuildingEditorWindow::selectAll()
+{
+    if (!mCurrentDocument)
+        return;
+    QSet<BuildingObject*> objects = mCurrentDocument->currentFloor()->objects().toSet();
+    mCurrentDocument->setSelectedObjects(objects);
+}
+
+void BuildingEditorWindow::selectNone()
+{
+    if (!mCurrentDocument)
+        return;
+    mCurrentDocument->setSelectedObjects(QSet<BuildingObject*>());
+}
+
 void BuildingEditorWindow::deleteObjects()
 {
     if (!mCurrentDocument)
@@ -2134,6 +2153,8 @@ void BuildingEditorWindow::updateActions()
 
     mRoomComboBox->setEnabled(hasDoc && currentRoom() != 0);
 
+    ui->actionSelectAll->setEnabled(hasDoc);
+    ui->actionSelectNone->setEnabled(hasDoc && mCurrentDocument->selectedObjects().size());
     ui->actionDelete->setEnabled(hasDoc && mCurrentDocument->selectedObjects().size());
 
     if (mCurrentDocument)
