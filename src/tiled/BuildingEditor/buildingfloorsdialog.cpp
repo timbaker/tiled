@@ -77,6 +77,13 @@ BuildingFloorsDialog::BuildingFloorsDialog(BuildingDocument *doc, QWidget *paren
     toolBar->addAction(ui->actionAdd);
     toolBar->addAction(ui->actionDuplicate);
     toolBar->addAction(ui->actionRemove);
+#if 1
+    toolBar->addSeparator();
+#else
+    QWidget *spacerWidget = new QWidget(this);
+    spacerWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    toolBar->addWidget(spacerWidget);
+#endif
     toolBar->addAction(ui->actionMoveUp);
     toolBar->addAction(ui->actionMoveDown);
     ui->toolbarLayout->addWidget(toolBar);

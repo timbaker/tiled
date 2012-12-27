@@ -57,6 +57,9 @@
    <property name="text">
     <string>Move Up</string>
    </property>
+   <property name="toolTip">
+    <string>Raise the selected floor</string>
+   </property>
   </action>
   <action name="actionMoveDown">
    <property name="icon">
@@ -65,6 +68,9 @@
    </property>
    <property name="text">
     <string>Move Down</string>
+   </property>
+   <property name="toolTip">
+    <string>Lower the selected floor</string>
    </property>
   </action>
   <action name="actionRemove">
@@ -75,6 +81,9 @@
    <property name="text">
     <string>Remove</string>
    </property>
+   <property name="toolTip">
+    <string>Remove the selected floor</string>
+   </property>
   </action>
   <action name="actionDuplicate">
    <property name="icon">
@@ -84,6 +93,9 @@
    <property name="text">
     <string>Duplicate</string>
    </property>
+   <property name="toolTip">
+    <string>Duplicate the selected floor</string>
+   </property>
   </action>
   <action name="actionAdd">
    <property name="icon">
@@ -92,6 +104,9 @@
    </property>
    <property name="text">
     <string>Add</string>
+   </property>
+   <property name="toolTip">
+    <string>Add a new floor</string>
    </property>
   </action>
  </widget>
