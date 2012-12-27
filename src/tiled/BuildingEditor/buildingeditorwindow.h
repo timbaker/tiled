@@ -148,6 +148,7 @@ private slots:
     void insertFloorAbove();
     void insertFloorBelow();
     void removeFloor();
+    void floorsDialog();
 
     void newBuilding();
     void openBuilding();

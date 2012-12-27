@@ -50,6 +50,9 @@ public:
 
     BuildingObject(BuildingFloor *floor, int x, int y, Direction mDir);
 
+    void setFloor(BuildingFloor *floor)
+    { mFloor = floor; }
+
     BuildingFloor *floor() const
     { return mFloor; }
 

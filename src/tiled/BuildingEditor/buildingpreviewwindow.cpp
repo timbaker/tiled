@@ -82,6 +82,8 @@ BuildingPreviewWindow::BuildingPreviewWindow(QWidget *parent) :
             prefs, SLOT(setHighlightFloor(bool)));
     connect(prefs, SIGNAL(highlightFloorChanged(bool)),
             mScene, SLOT(highlightFloorChanged(bool)));
+    connect(prefs, SIGNAL(highlightFloorChanged(bool)),
+            ui->actionHighlightFloor, SLOT(setChecked(bool)));
 
     QList<QKeySequence> keys = QKeySequence::keyBindings(QKeySequence::ZoomIn);
     keys += QKeySequence(tr("+"));

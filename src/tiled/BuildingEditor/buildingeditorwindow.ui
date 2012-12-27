@@ -123,6 +123,7 @@
     <addaction name="actionInsertFloorAbove"/>
     <addaction name="actionInsertFloorBelow"/>
     <addaction name="actionRemoveFloor"/>
+    <addaction name="actionFloors"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -632,6 +633,11 @@
    </property>
    <property name="text">
     <string>Delete</string>
+   </property>
+  </action>
+  <action name="actionFloors">
+   <property name="text">
+    <string>Floors...</string>
    </property>
   </action>
  </widget>

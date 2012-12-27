@@ -89,6 +89,7 @@ public:
 
     void insertFloor(int index, BuildingFloor *floor);
     BuildingFloor *removeFloor(int index);
+    void reorderFloor(int oldIndex, int newIndex);
 
     void insertObject(BuildingFloor *floor, int index, BuildingObject *object);
     BuildingObject *removeObject(BuildingFloor *floor, int index);

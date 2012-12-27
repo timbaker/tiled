@@ -359,6 +359,23 @@ private:
     BuildingFloor *mFloor;
 };
 
+class ReorderFloor : public QUndoCommand
+{
+public:
+    ReorderFloor(BuildingDocument *doc, int oldIndex, int newIndex);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    int mOldIndex;
+    int mNewIndex;
+    BuildingFloor *mFloor;
+};
+
 class ResizeBuildingBefore : public QUndoCommand
 {
 public:

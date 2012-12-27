@@ -395,6 +395,22 @@ void RemoveFloor::remove()
     mFloor = mDocument->removeFloor(mIndex);
 }
 
+/////
+
+ReorderFloor::ReorderFloor(BuildingDocument *doc, int oldIndex, int newIndex) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Reorder Floor")),
+    mDocument(doc),
+    mOldIndex(oldIndex),
+    mNewIndex(newIndex),
+    mFloor(0)
+{
+}
+
+void ReorderFloor::swap()
+{
+    mDocument->reorderFloor(mOldIndex, mNewIndex);
+    qSwap(mOldIndex, mNewIndex);
+}
 
 /////
 

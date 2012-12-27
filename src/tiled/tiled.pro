@@ -179,7 +179,8 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/listofstringsdialog.cpp \
     tilemetainfodialog.cpp \
     tilemetainfomgr.cpp \
-    BuildingEditor/horizontallinedelegate.cpp
+    BuildingEditor/horizontallinedelegate.cpp \
+    BuildingEditor/buildingfloorsdialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -324,7 +325,8 @@ HEADERS += aboutdialog.h \
     BuildingEditor/listofstringsdialog.h \
     tilemetainfodialog.h \
     tilemetainfomgr.h \
-    BuildingEditor/horizontallinedelegate.h
+    BuildingEditor/horizontallinedelegate.h \
+    BuildingEditor/buildingfloorsdialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -355,7 +357,8 @@ FORMS += aboutdialog.ui \
     BuildingEditor/templatefrombuildingdialog.ui \
     BuildingEditor/resizebuildingdialog.ui \
     BuildingEditor/listofstringsdialog.ui \
-    tilemetainfodialog.ui
+    tilemetainfodialog.ui \
+    BuildingEditor/buildingfloorsdialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

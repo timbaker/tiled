@@ -21,6 +21,7 @@
 #include "building.h"
 #include "buildingdocument.h"
 #include "buildingfloor.h"
+#include "buildingfloorsdialog.h"
 #include "buildingobjects.h"
 #include "buildingpreferences.h"
 #include "buildingpreferencesdialog.h"
@@ -310,6 +311,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionInsertFloorAbove, SIGNAL(triggered()), SLOT(insertFloorAbove()));
     connect(ui->actionInsertFloorBelow, SIGNAL(triggered()), SLOT(insertFloorBelow()));
     connect(ui->actionRemoveFloor, SIGNAL(triggered()), SLOT(removeFloor()));
+    connect(ui->actionFloors, SIGNAL(triggered()), SLOT(floorsDialog()));
 
     connect(ui->actionRooms, SIGNAL(triggered()), SLOT(roomsDialog()));
     connect(ui->actionTemplates, SIGNAL(triggered()), SLOT(templatesDialog()));
@@ -1317,6 +1319,15 @@ void BuildingEditorWindow::removeFloor()
                                                         index));
 }
 
+void BuildingEditorWindow::floorsDialog()
+{
+    if (!mCurrentDocument)
+        return;
+
+    BuildingFloorsDialog dialog(mCurrentDocument, this);
+    dialog.exec();
+}
+
 void BuildingEditorWindow::newBuilding()
 {
     if (!confirmSave())
@@ -2047,6 +2058,7 @@ void BuildingEditorWindow::updateActions()
     ui->actionInsertFloorBelow->setEnabled(hasDoc);
     ui->actionRemoveFloor->setEnabled(hasDoc &&
                                       mCurrentDocument->building()->floorCount() > 1);
+    ui->actionFloors->setEnabled(hasDoc);
 
     mRoomComboBox->setEnabled(hasDoc && currentRoom() != 0);
 

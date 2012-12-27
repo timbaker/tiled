@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>BuildingFloorsDialog</class>
+ <widget class="QDialog" name="BuildingFloorsDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>248</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Floors</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0" colspan="2">
+    <widget class="QListWidget" name="floors"/>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="toolbarLayout"/>
+   </item>
+   <item row="2" column="0" colspan="2">
+    <widget class="QCheckBox" name="highlight">
+     <property name="text">
+      <string>Highlight current floor</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="undoRedoLayout">
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="3" column="0" colspan="2">
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+  </layout>
+  <action name="actionMoveUp">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/go-up.png</normaloff>:/images/16x16/go-up.png</iconset>
+   </property>
+   <property name="text">
+    <string>Move Up</string>
+   </property>
+  </action>
+  <action name="actionMoveDown">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/go-down.png</normaloff>:/images/16x16/go-down.png</iconset>
+   </property>
+   <property name="text">
+    <string>Move Down</string>
+   </property>
+  </action>
+  <action name="actionRemove">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>Remove</string>
+   </property>
+  </action>
+  <action name="actionDuplicate">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/stock-duplicate-16.png</normaloff>:/images/16x16/stock-duplicate-16.png</iconset>
+   </property>
+   <property name="text">
+    <string>Duplicate</string>
+   </property>
+  </action>
+  <action name="actionAdd">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/22x22/add.png</normaloff>:/images/22x22/add.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="../tiled.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>BuildingFloorsDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>BuildingFloorsDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

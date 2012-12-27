@@ -163,6 +163,12 @@ BuildingFloor *BuildingDocument::removeFloor(int index)
     return floor;
 }
 
+void BuildingDocument::reorderFloor(int oldIndex, int newIndex)
+{
+    BuildingFloor *floor = removeFloor(oldIndex);
+    insertFloor(newIndex, floor);
+}
+
 void BuildingDocument::insertObject(BuildingFloor *floor, int index, BuildingObject *object)
 {
     Q_ASSERT(object->floor() == floor);
