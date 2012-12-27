@@ -380,11 +380,10 @@ QList<BuildingTileEntry *> BuildingReaderPrivate::readUsedTiles()
                     if (!entry->isNone())
                         result += entry;
             }
+            xml.skipCurrentElement();
             break;
         }
     }
-
-    xml.skipCurrentElement();
 
     return result;
 }
@@ -404,11 +403,10 @@ QList<FurnitureTiles *> BuildingReaderPrivate::readUsedFurniture()
                 if (FurnitureTiles *ftiles = getFurniture(s))
                     result += ftiles;
             }
+            xml.skipCurrentElement();
             break;
         }
     }
-
-    xml.skipCurrentElement();
 
     return result;
 }
