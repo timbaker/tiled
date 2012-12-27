@@ -414,6 +414,7 @@ void SelectMoveRoomsTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
                 startMoving();
             else
                 startSelecting();
+            updateStatusText();
         }
     }
 
