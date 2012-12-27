@@ -96,21 +96,11 @@ BuildingTilesMgr::BuildingTilesMgr() :
     mCatRoofSlopes->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_roof_slopes.png")));
     mCatRoofTops->setShadowImage(QImage(QLatin1String(":/BuildingEditor/icons/shadow_roof_tops.png")));
 
-    Tileset *tileset = new Tileset(QLatin1String("missing"), 64, 128);
-    tileset->setTransparentColor(Qt::white);
-    QString fileName = QLatin1String(":/BuildingEditor/icons/missing-tile.png");
-    if (tileset->loadFromImage(QImage(fileName), fileName))
-        mMissingTile = tileset->tileAt(0);
-    else {
-        QImage image(64, 128, QImage::Format_ARGB32);
-        image.fill(Qt::red);
-        tileset->loadFromImage(image, fileName);
-        mMissingTile = tileset->tileAt(0);
-    }
+    mMissingTile = TilesetManager::instance()->missingTile();
 
-    tileset = new Tileset(QLatin1String("none"), 64, 128);
+    Tileset *tileset = new Tileset(QLatin1String("none"), 64, 128);
     tileset->setTransparentColor(Qt::white);
-    fileName = QLatin1String(":/BuildingEditor/icons/none-tile.png");
+    QString fileName = QLatin1String(":/BuildingEditor/icons/none-tile.png");
     if (tileset->loadFromImage(QImage(fileName), fileName))
         mNoneTiledTile = tileset->tileAt(0);
     else {
@@ -131,8 +121,6 @@ BuildingTilesMgr::~BuildingTilesMgr()
     TilesetManager::instance()->removeReferences(tilesets());
     TilesetManager::instance()->removeReferences(mRemovedTilesets);
     qDeleteAll(mCategories);
-    if (mMissingTile)
-        delete mMissingTile->tileset();
     if (mNoneTiledTile)
         delete mNoneTiledTile->tileset();
     delete mNoneBuildingTile;
@@ -630,9 +618,10 @@ Tile *BuildingTilesMgr::tileFor(BuildingTile *tile, int offset)
         return mNoneTiledTile;
     if (!mTilesetByName.contains(tile->mTilesetName))
         return mMissingTile;
-    if (tile->mIndex + offset >= mTilesetByName[tile->mTilesetName]->tileCount())
-        return mMissingTile;
-    return mTilesetByName[tile->mTilesetName]->tileAt(tile->mIndex + offset);
+    Tileset *tileset = mTilesetByName[tile->mTilesetName];
+    if (tile->mIndex + offset >= tileset->tileCount())
+        return tileset->isMissing() ? tileset->tileAt(0) : mMissingTile;
+    return tileset->tileAt(tile->mIndex + offset);
 }
 
 BuildingTile *BuildingTilesMgr::fromTiledTile(Tile *tile)

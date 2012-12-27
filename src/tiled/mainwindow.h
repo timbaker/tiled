@@ -185,6 +185,7 @@ public slots:
 #ifdef ZOMBOID
     void showBuildingEditor();
     void pathGeneratorsDialog();
+    void tilesetMetaInfoDialog();
 #endif
 
 private:

@@ -163,6 +163,12 @@ BuildingFloor *BuildingDocument::removeFloor(int index)
     return floor;
 }
 
+void BuildingDocument::reorderFloor(int oldIndex, int newIndex)
+{
+    BuildingFloor *floor = removeFloor(oldIndex);
+    insertFloor(newIndex, floor);
+}
+
 void BuildingDocument::insertObject(BuildingFloor *floor, int index, BuildingObject *object)
 {
     Q_ASSERT(object->floor() == floor);
@@ -325,6 +331,22 @@ int BuildingDocument::resizeWall(WallObject *wall, int length)
     int old = wall->length();
     wall->setLength(length);
     emit objectMoved(wall);
+    return old;
+}
+
+QList<BuildingTileEntry *> BuildingDocument::changeUsedTiles(const QList<BuildingTileEntry *> &tiles)
+{
+    QList<BuildingTileEntry *> old = mBuilding->usedTiles();
+    mBuilding->setUsedTiles(tiles);
+    emit usedTilesChanged();
+    return old;
+}
+
+QList<FurnitureTiles *> BuildingDocument::changeUsedFurniture(const QList<FurnitureTiles *> &tiles)
+{
+    QList<FurnitureTiles *> old = mBuilding->usedFurniture();
+    mBuilding->setUsedFurniture(tiles);
+    emit usedFurnitureChanged();
     return old;
 }
 

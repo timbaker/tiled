@@ -25,6 +25,8 @@
 
 #include "tile.h"
 
+#include <QToolBar>
+
 using namespace BuildingEditor;
 
 RoomsDialog::RoomsDialog(const QList<Room*> &rooms, QWidget *parent) :
@@ -35,6 +37,22 @@ RoomsDialog::RoomsDialog(const QList<Room*> &rooms, QWidget *parent) :
     mTileRow(-1)
 {
     ui->setupUi(this);
+
+    QToolBar *toolBar = new QToolBar(this);
+    toolBar->setIconSize(QSize(16, 16));
+    toolBar->addAction(ui->actionAdd);
+    toolBar->addAction(ui->actionDuplicate);
+    toolBar->addAction(ui->actionRemove);
+#if 1
+    toolBar->addSeparator();
+#else
+    QWidget *spacerWidget = new QWidget(this);
+    spacerWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    toolBar->addWidget(spacerWidget);
+#endif
+    toolBar->addAction(ui->actionMoveUp);
+    toolBar->addAction(ui->actionMoveDown);
+    ui->toolBarLayout->addWidget(toolBar);
 
     foreach (Room *room, rooms) {
         Room *copy = new Room();
@@ -49,11 +67,11 @@ RoomsDialog::RoomsDialog(const QList<Room*> &rooms, QWidget *parent) :
 
     connect(ui->listWidget, SIGNAL(itemSelectionChanged()),
             SLOT(roomSelectionChanged()));
-    connect(ui->add, SIGNAL(clicked()), SLOT(addRoom()));
-    connect(ui->remove, SIGNAL(clicked()), SLOT(removeRoom()));
-    connect(ui->duplicate, SIGNAL(clicked()), SLOT(duplicateRoom()));
-    connect(ui->moveUp, SIGNAL(clicked()), SLOT(moveRoomUp()));
-    connect(ui->moveDown, SIGNAL(clicked()), SLOT(moveRoomDown()));
+    connect(ui->actionAdd, SIGNAL(triggered()), SLOT(addRoom()));
+    connect(ui->actionDuplicate, SIGNAL(triggered()), SLOT(duplicateRoom()));
+    connect(ui->actionRemove, SIGNAL(triggered()), SLOT(removeRoom()));
+    connect(ui->actionMoveUp, SIGNAL(triggered()), SLOT(moveRoomUp()));
+    connect(ui->actionMoveDown, SIGNAL(triggered()), SLOT(moveRoomDown()));
 
     connect(ui->name, SIGNAL(textEdited(QString)), SLOT(nameEdited(QString)));
     connect(ui->internalName, SIGNAL(textEdited(QString)), SLOT(internalNameEdited(QString)));
@@ -94,10 +112,10 @@ void RoomsDialog::setRoomsList()
 void RoomsDialog::synchUI()
 {
     int roomIndex = mRoom ? mRooms.indexOf(mRoom) : -1;
-    ui->remove->setEnabled(mRoom != 0);
-    ui->moveUp->setEnabled(roomIndex > 0);
-    ui->moveDown->setEnabled(roomIndex >= 0 && roomIndex < mRooms.count() - 1);
-    ui->duplicate->setEnabled(mRoom != 0);
+    ui->actionDuplicate->setEnabled(mRoom != 0);
+    ui->actionRemove->setEnabled(mRoom != 0);
+    ui->actionMoveUp->setEnabled(roomIndex > 0);
+    ui->actionMoveDown->setEnabled(roomIndex >= 0 && roomIndex < mRooms.count() - 1);
 
     ui->name->setEnabled(mRoom != 0);
     ui->internalName->setEnabled(mRoom != 0);

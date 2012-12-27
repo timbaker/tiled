@@ -128,6 +128,7 @@
     <addaction name="actionBuildingEditor"/>
     <addaction name="actionConvertOrientation"/>
     <addaction name="actionPathGenerators"/>
+    <addaction name="actionTilesetMetaInfo"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -462,6 +463,11 @@
   <action name="actionPathGenerators">
    <property name="text">
     <string>Path Generators...</string>
+   </property>
+  </action>
+  <action name="actionTilesetMetaInfo">
+   <property name="text">
+    <string>Tileset Meta Info...</string>
    </property>
   </action>
  </widget>

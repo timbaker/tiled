@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TileMetaInfoDialog</class>
+ <widget class="QDialog" name="TileMetaInfoDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>640</width>
+    <height>519</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Tile Meta-Info</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_XXX" stretch="0,1">
+     <item>
+      <layout class="QVBoxLayout" name="tilesetLayout">
+       <item>
+        <widget class="QListWidget" name="tilesets">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QToolButton" name="addTileset">
+           <property name="toolTip">
+            <string>Add tilesets</string>
+           </property>
+           <property name="text">
+            <string>...</string>
+           </property>
+           <property name="icon">
+            <iconset resource="tiled.qrc">
+             <normaloff>:/images/16x16/document-new.png</normaloff>:/images/16x16/document-new.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="removeTileset">
+           <property name="toolTip">
+            <string>Remove selected tileset</string>
+           </property>
+           <property name="text">
+            <string>...</string>
+           </property>
+           <property name="icon">
+            <iconset resource="tiled.qrc">
+             <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="tilesLayout">
+       <item>
+        <widget class="Tiled::Internal::MixedTilesetView" name="tiles"/>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QComboBox" name="enums"/>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QComboBox" name="scaleComboBox">
+           <property name="editable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0">
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <layout class="QHBoxLayout" name="undoRedoLayout"/>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Tiled::Internal::MixedTilesetView</class>
+   <extends>QTableView</extends>
+   <header>BuildingEditor/mixedtilesetview.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="tiled.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>TileMetaInfoDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>TileMetaInfoDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

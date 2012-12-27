@@ -414,6 +414,7 @@ void SelectMoveRoomsTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
                 startMoving();
             else
                 startSelecting();
+            updateStatusText();
         }
     }
 
@@ -2202,7 +2203,7 @@ void WallTool::updateStatusText()
     else if (mMouseOverHandle)
         setStatusText(tr("Left-click-drag to resize wall."));
     else
-        setStatusText(tr("Left-click-drag to place a wall."));
+        setStatusText(tr("Left-click-drag to place a wall.  Right-click to delete any object."));
 }
 
 void WallTool::resizeWall(int length)

@@ -35,6 +35,7 @@
 #include "mapobject.h"
 #include "objectgroup.h"
 #include "tilelayer.h"
+#include "tile.h"
 #include "tileset.h"
 
 #include <QDebug>
@@ -199,6 +200,12 @@ bool BuildingTMX::readTxt()
                     QFileInfo info(source);
                     if (!info.exists()) {
                         Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
+                        // I could save the tileset image height/width and create
+                        // a complete "missing" image here, instead I only have
+                        // a single tile.
+                        ts->loadFromImage(TilesetManager::instance()->missingTile()->image().toImage(),
+                                          kv.value + QLatin1String(".png"));
+                        ts->setMissing(true);
                         BuildingTilesMgr::instance()->addTileset(ts);
                         mTilesets += ts->name();
                         missingTilesets += QDir::toNativeSeparators(info.absoluteFilePath());

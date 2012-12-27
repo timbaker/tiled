@@ -1645,8 +1645,8 @@ category
         SlopePt5E = roofs_01_014
         SlopeOnePt5S = roofs_01_015
         SlopeOnePt5E = roofs_01_014
-        SlopeTwoPt5S = roofs_01_015
-        SlopeTwoPt5E = roofs_01_014
+        SlopeTwoPt5S = location_community_church_small_01_032
+        SlopeTwoPt5E = location_community_church_small_01_033
         Inner1 = roofs_01_011
         Inner2 = roofs_01_012
         Inner3 = roofs_01_013
@@ -1655,8 +1655,6 @@ category
         Outer3 = roofs_01_010
         offset = SlopePt5S 1 1
         offset = SlopePt5E 1 1
-        offset = SlopeTwoPt5S -1 -1
-        offset = SlopeTwoPt5E -1 -1
     }
     entry
     {

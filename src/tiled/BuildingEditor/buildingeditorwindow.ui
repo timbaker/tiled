@@ -86,6 +86,10 @@
     <property name="title">
      <string>Edit</string>
     </property>
+    <addaction name="actionSelectAll"/>
+    <addaction name="actionSelectNone"/>
+    <addaction name="actionDelete"/>
+    <addaction name="separator"/>
     <addaction name="actionPreferences"/>
    </widget>
    <widget class="QMenu" name="menuView">
@@ -121,6 +125,7 @@
     <addaction name="actionInsertFloorAbove"/>
     <addaction name="actionInsertFloorBelow"/>
     <addaction name="actionRemoveFloor"/>
+    <addaction name="actionFloors"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -621,6 +626,30 @@
   <action name="actionHelp">
    <property name="text">
     <string>BuildingEd Help</string>
+   </property>
+  </action>
+  <action name="actionDelete">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>Delete</string>
+   </property>
+  </action>
+  <action name="actionFloors">
+   <property name="text">
+    <string>Floors...</string>
+   </property>
+  </action>
+  <action name="actionSelectAll">
+   <property name="text">
+    <string>Select All</string>
+   </property>
+  </action>
+  <action name="actionSelectNone">
+   <property name="text">
+    <string>Select None</string>
    </property>
   </action>
  </widget>

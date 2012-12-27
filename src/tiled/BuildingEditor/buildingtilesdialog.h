@@ -104,9 +104,11 @@ private:
     void setTilesetList();
     void saveSplitterSizes(QSplitter *splitter);
     void restoreSplitterSizes(QSplitter *splitter);
-    int numTileCategories() const;
     void displayTileInTileset(Tiled::Tile *tile);
     void displayTileInTileset(BuildingTile *tile);
+
+    BuildingTileCategory *categoryAt(int row);
+    FurnitureGroup *furnitureGroupAt(int row);
 
 private slots:
     void categoryChanged(int index);
@@ -170,6 +172,8 @@ private:
     FurnitureGroup *mFurnitureGroup;
     FurnitureTile *mCurrentFurniture;
     Tiled::Tileset *mCurrentTileset;
+    int mRowOfFirstCategory;
+    int mRowOfFirstFurnitureGroup;
     QUndoGroup *mUndoGroup;
     QUndoStack *mUndoStack;
     QToolButton *mUndoButton;

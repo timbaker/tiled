@@ -208,7 +208,7 @@ private:
     QString nameForEntry(BuildingTileEntry *entry);
     void addEntry(BuildingTileEntry *entry, bool sort = true);
     QString entryIndex(BuildingTileEntry *entry);
-    BuildingTileEntry *getEntry(const QString &s);
+    BuildingTileEntry *getEntry(const QString &s, bool orNone = true);
 
     void addEntry(BuildingTileCategory *category, const QString &tileName);
     QString entryIndex(BuildingTileCategory *category, const QString &tileName);

@@ -225,6 +225,18 @@ QSize TileCategoryView::sizeHint() const
     return QSize(64 * 4, 128);
 }
 
+void TileCategoryView::wheelEvent(QWheelEvent *event)
+{
+    if (event->modifiers() & Qt::ControlModifier
+        && event->orientation() == Qt::Vertical)
+    {
+        mZoomable->handleWheelDelta(event->delta());
+        return;
+    }
+
+    QTableView::wheelEvent(event);
+}
+
 void TileCategoryView::dragMoveEvent(QDragMoveEvent *event)
 {
     QAbstractItemView::dragMoveEvent(event);

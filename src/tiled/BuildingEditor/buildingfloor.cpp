@@ -1297,6 +1297,19 @@ void BuildingFloor::flip(bool horizontal)
         object->flip(horizontal);
 }
 
+BuildingFloor *BuildingFloor::clone()
+{
+    BuildingFloor *klone = new BuildingFloor(mBuilding, mLevel);
+    klone->mIndexAtPos = mIndexAtPos;
+    klone->mRoomAtPos = mRoomAtPos;
+    foreach (BuildingObject *object, mObjects) {
+        BuildingObject *kloneObject = object->clone();
+        kloneObject->setFloor(klone);
+        klone->mObjects += kloneObject;
+    }
+    return klone;
+}
+
 /////
 
 BuildingFloor::Square::Square() :

@@ -26,6 +26,7 @@
 #include "tile.h"
 
 #include <QMessageBox>
+#include <QToolBar>
 
 using namespace BuildingEditor;
 
@@ -37,6 +38,22 @@ BuildingTemplatesDialog::BuildingTemplatesDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    QToolBar *toolBar = new QToolBar(this);
+    toolBar->setIconSize(QSize(16, 16));
+    toolBar->addAction(ui->actionAdd);
+    toolBar->addAction(ui->actionDuplicate);
+    toolBar->addAction(ui->actionRemove);
+#if 1
+    toolBar->addSeparator();
+#else
+    QWidget *spacerWidget = new QWidget(this);
+    spacerWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    toolBar->addWidget(spacerWidget);
+#endif
+    toolBar->addAction(ui->actionMoveUp);
+    toolBar->addAction(ui->actionMoveDown);
+    ui->toolBarLayout->addWidget(toolBar);
+
     foreach (BuildingTemplate *btemplate, BuildingTemplates::instance()->templates()) {
         BuildingTemplate *clone = new BuildingTemplate(btemplate);
         mTemplates += clone;
@@ -45,11 +62,11 @@ BuildingTemplatesDialog::BuildingTemplatesDialog(QWidget *parent) :
 
     connect(ui->templatesList, SIGNAL(itemSelectionChanged()),
             SLOT(templateSelectionChanged()));
-    connect(ui->add, SIGNAL(clicked()), SLOT(addTemplate()));
-    connect(ui->remove, SIGNAL(clicked()), SLOT(removeTemplate()));
-    connect(ui->duplicate, SIGNAL(clicked()), SLOT(duplicateTemplate()));
-    connect(ui->moveUp, SIGNAL(clicked()), SLOT(moveUp()));
-    connect(ui->moveDown, SIGNAL(clicked()), SLOT(moveDown()));
+    connect(ui->actionAdd, SIGNAL(triggered()), SLOT(addTemplate()));
+    connect(ui->actionRemove, SIGNAL(triggered()), SLOT(removeTemplate()));
+    connect(ui->actionDuplicate, SIGNAL(triggered()), SLOT(duplicateTemplate()));
+    connect(ui->actionMoveUp, SIGNAL(triggered()), SLOT(moveUp()));
+    connect(ui->actionMoveDown, SIGNAL(triggered()), SLOT(moveDown()));
     connect(ui->name, SIGNAL(textEdited(QString)), SLOT(nameEdited(QString)));
     connect(ui->tilesList, SIGNAL(itemSelectionChanged()),
             SLOT(tileSelectionChanged()));
@@ -202,11 +219,11 @@ void BuildingTemplatesDialog::chooseTile()
 void BuildingTemplatesDialog::synchUI()
 {
     ui->name->setEnabled(mTemplate != 0);
-    ui->remove->setEnabled(mTemplate != 0);
-    ui->duplicate->setEnabled(mTemplate != 0);
-    ui->moveUp->setEnabled(mTemplate != 0 &&
+    ui->actionRemove->setEnabled(mTemplate != 0);
+    ui->actionDuplicate->setEnabled(mTemplate != 0);
+    ui->actionMoveUp->setEnabled(mTemplate != 0 &&
             mTemplates.indexOf(mTemplate) > 0);
-    ui->moveDown->setEnabled(mTemplate != 0 &&
+    ui->actionMoveDown->setEnabled(mTemplate != 0 &&
             mTemplates.indexOf(mTemplate) < mTemplates.count() - 1);
     ui->tilesList->setEnabled(mTemplate != 0);
     ui->chooseTile->setEnabled(mTemplate != 0 && mTileRow != -1);

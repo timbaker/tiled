@@ -89,6 +89,7 @@ public:
 
     void insertFloor(int index, BuildingFloor *floor);
     BuildingFloor *removeFloor(int index);
+    void reorderFloor(int oldIndex, int newIndex);
 
     void insertObject(BuildingFloor *floor, int index, BuildingObject *object);
     BuildingObject *removeObject(BuildingFloor *floor, int index);
@@ -115,6 +116,9 @@ public:
     void resizeRoof(RoofObject *roof, int &width, int &height);
 
     int resizeWall(WallObject *wall, int length);
+
+    QList<BuildingTileEntry*> changeUsedTiles(const QList<BuildingTileEntry*> &tiles);
+    QList<FurnitureTiles *> changeUsedFurniture(const QList<FurnitureTiles *> &tiles);
     // -UNDO/REDO
     
 signals:

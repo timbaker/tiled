@@ -23,6 +23,7 @@
 #include "buildingtmx.h"
 #include "furnituregroups.h"
 #include "furnitureview.h"
+#include "horizontallinedelegate.h"
 
 #include "zoomable.h"
 
@@ -805,14 +806,14 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     if (!categoryName.isEmpty()) {
         int index = BuildingTilesMgr::instance()->indexOf(categoryName);
         if (index >= 0)
-            ui->categoryList->setCurrentRow(index);
+            ui->categoryList->setCurrentRow(mRowOfFirstCategory + index);
     }
 
     QString furnitureGroupName = settings.value(QLatin1String("SelectedFurnitureGroup")).toString();
     if (!furnitureGroupName.isEmpty()) {
         int index = FurnitureGroups::instance()->indexOf(furnitureGroupName);
         if (index >= 0)
-            ui->categoryList->setCurrentRow(numTileCategories() + index);
+            ui->categoryList->setCurrentRow(mRowOfFirstFurnitureGroup + index);
     }
 
     QString tilesetName = settings.value(QLatin1String("SelectedTileset")).toString();
@@ -844,13 +845,13 @@ bool BuildingTilesDialog::changes()
 void BuildingTilesDialog::selectCategory(BuildingTileCategory *category)
 {
     int index = BuildingTilesMgr::instance()->indexOf(category);
-    ui->categoryList->setCurrentRow(index);
+    ui->categoryList->setCurrentRow(mRowOfFirstCategory + index);
 }
 
 void BuildingTilesDialog::selectCategory(FurnitureGroup *furnitureGroup)
 {
     int index = FurnitureGroups::instance()->indexOf(furnitureGroup);
-    ui->categoryList->setCurrentRow(numTileCategories() + index);
+    ui->categoryList->setCurrentRow(mRowOfFirstFurnitureGroup + index);
 }
 
 void BuildingTilesDialog::reparent(QWidget *parent)
@@ -916,7 +917,7 @@ void BuildingTilesDialog::addCategory(int index, FurnitureGroup *category)
 
 FurnitureGroup *BuildingTilesDialog::removeCategory(int index)
 {
-    int row = numTileCategories() + index;
+    int row = mRowOfFirstFurnitureGroup + index;
     delete ui->categoryList->item(row);
     FurnitureGroup *group = FurnitureGroups::instance()->removeGroup(index);
     if (group == mFurnitureGroup) {
@@ -1033,7 +1034,7 @@ QString BuildingTilesDialog::renameFurnitureCategory(FurnitureGroup *category,
 {
     QString old = category->mLabel;
     category->mLabel = name;
-    int row = numTileCategories() + FurnitureGroups::instance()->indexOf(category);
+    int row = mRowOfFirstFurnitureGroup + FurnitureGroups::instance()->indexOf(category);
     ui->categoryList->item(row)->setText(name);
     return old;
 }
@@ -1044,7 +1045,7 @@ void BuildingTilesDialog::reorderCategory(int oldIndex, int newIndex)
     FurnitureGroups::instance()->insertGroup(newIndex, category);
 
     setCategoryList();
-    ui->categoryList->setCurrentRow(numTileCategories() + newIndex);
+    ui->categoryList->setCurrentRow(mRowOfFirstFurnitureGroup + newIndex);
 }
 
 void BuildingTilesDialog::addTileset(Tileset *tileset)
@@ -1071,6 +1072,7 @@ void BuildingTilesDialog::setCategoryList()
 {
     ui->categoryList->clear();
 
+    mRowOfFirstCategory = ui->categoryList->count();
     foreach (BuildingTileCategory *category, BuildingTilesMgr::instance()->categories()) {
         QListWidgetItem *item = new QListWidgetItem();
         item->setText(category->label());
@@ -1078,6 +1080,9 @@ void BuildingTilesDialog::setCategoryList()
         ui->categoryList->addItem(item);
     }
 
+    HorizontalLineDelegate::instance()->addToList(ui->categoryList);
+
+    mRowOfFirstFurnitureGroup = ui->categoryList->count();
     foreach (FurnitureGroup *group, FurnitureGroups::instance()->groups()) {
         QListWidgetItem *item = new QListWidgetItem();
         item->setText(group->mLabel);
@@ -1093,8 +1098,9 @@ void BuildingTilesDialog::setCategoryTiles()
     QList<void*> userData;
     if (mCategory && !expertMode) {
         QMap<QString,BuildingTileEntry*> entryMap;
+        int i = 0;
         foreach (BuildingTileEntry *entry, mCategory->entries()) {
-            QString key = entry->displayTile()->name() + QString::number((qulonglong)entry);
+            QString key = entry->displayTile()->name() + QString::number(i++);
             entryMap[key] = entry;
         }
         foreach (BuildingTileEntry *entry, entryMap.values()) {
@@ -1127,6 +1133,8 @@ void BuildingTilesDialog::setTilesetList()
     foreach (Tileset *tileset, BuildingTilesMgr::instance()->tilesets()) {
         QListWidgetItem *item = new QListWidgetItem();
         item->setText(tileset->name());
+        if (tileset->isMissing())
+            item->setForeground(Qt::red);
         ui->tilesetList->addItem(item);
         width = qMax(width, fm.width(tileset->name()));
     }
@@ -1160,11 +1168,6 @@ void BuildingTilesDialog::restoreSplitterSizes(QSplitter *splitter)
     settings.endGroup();
 }
 
-int BuildingTilesDialog::numTileCategories() const
-{
-    return BuildingTilesMgr::instance()->categoryCount();
-}
-
 void BuildingTilesDialog::displayTileInTileset(Tiled::Tile *tile)
 {
     if (!tile)
@@ -1179,6 +1182,22 @@ void BuildingTilesDialog::displayTileInTileset(Tiled::Tile *tile)
 void BuildingTilesDialog::displayTileInTileset(BuildingTile *tile)
 {
     displayTileInTileset(BuildingTilesMgr::instance()->tileFor(tile));
+}
+
+BuildingTileCategory *BuildingTilesDialog::categoryAt(int row)
+{
+    if (row >= mRowOfFirstCategory &&
+            row < mRowOfFirstCategory + BuildingTilesMgr::instance()->categoryCount())
+        return BuildingTilesMgr::instance()->category(row - mRowOfFirstCategory);
+    return 0;
+}
+
+FurnitureGroup *BuildingTilesDialog::furnitureGroupAt(int row)
+{
+    if (row >= mRowOfFirstFurnitureGroup &&
+            row < mRowOfFirstFurnitureGroup + FurnitureGroups::instance()->groupCount())
+        return FurnitureGroups::instance()->group(row - mRowOfFirstFurnitureGroup);
+    return 0;
 }
 
 void BuildingTilesDialog::synchUI()
@@ -1258,8 +1277,7 @@ void BuildingTilesDialog::categoryChanged(int index)
         setCategoryTiles();
         setFurnitureTiles();
         tilesetSelectionChanged();
-    } else if (index < numTileCategories()) {
-        mCategory = BuildingTilesMgr::instance()->category(index);
+    } else if (mCategory = categoryAt(index)) {
         if (mExpertMode && !mCategory->shadowImage().isNull()) {
             ui->categoryStack->setCurrentIndex(2);
         } else {
@@ -1267,9 +1285,7 @@ void BuildingTilesDialog::categoryChanged(int index)
         }
         setCategoryTiles();
         tilesetSelectionChanged();
-    } else {
-        index -= numTileCategories();
-        mFurnitureGroup = FurnitureGroups::instance()->group(index);
+    } else if (mFurnitureGroup = furnitureGroupAt(index)) {
         setFurnitureTiles();
         ui->categoryStack->setCurrentIndex(1);
     }
@@ -1290,7 +1306,10 @@ void BuildingTilesDialog::tilesetSelectionChanged()
         int row = ui->tilesetList->row(item);
         MixedTilesetModel *model = ui->tilesetTilesView->model();
         mCurrentTileset = BuildingTilesMgr::instance()->tilesets().at(row);
-        model->setTileset(mCurrentTileset);
+        if (mCurrentTileset->isMissing())
+            model->setTiles(QList<Tile*>());
+        else
+            model->setTileset(mCurrentTileset);
 #if 0
         for (int i = 0; i < tileset->tileCount(); i++) {
             Tile *tile = tileset->tileAt(i);
@@ -1519,16 +1538,14 @@ void BuildingTilesDialog::furnitureTileDropped(FurnitureTile *ftile, int x, int 
 void BuildingTilesDialog::categoryNameEdited(QListWidgetItem *item)
 {
     int row = ui->categoryList->row(item);
-    if (row < numTileCategories()) {
-        BuildingTileCategory *category = BuildingTilesMgr::instance()->category(row);
+    if (BuildingTileCategory *category = categoryAt(row)) {
         if (item->text() != category->label())
             mUndoStack->push(new RenameTileCategory(this, category, item->text()));
-        return;
     }
-    row -= numTileCategories();
-    FurnitureGroup *category = FurnitureGroups::instance()->group(row);
-    if (item->text() != category->mLabel)
-        mUndoStack->push(new RenameFurnitureCategory(this, category, item->text()));
+    if (FurnitureGroup *group = furnitureGroupAt(row)) {
+        if (item->text() != group->mLabel)
+            mUndoStack->push(new RenameFurnitureCategory(this, group, item->text()));
+    }
 }
 
 void BuildingTilesDialog::newCategory()
@@ -1540,7 +1557,7 @@ void BuildingTilesDialog::newCategory()
             : FurnitureGroups::instance()->groupCount();
     mUndoStack->push(new AddCategory(this, index, group));
 
-    QListWidgetItem *item = ui->categoryList->item(numTileCategories() + index);
+    QListWidgetItem *item = ui->categoryList->item(mRowOfFirstFurnitureGroup + index);
     ui->categoryList->setCurrentItem(item);
     ui->categoryList->editItem(item);
 }

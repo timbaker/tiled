@@ -183,6 +183,8 @@ public:
     void rotate(bool right);
     void flip(bool horizontal);
 
+    BuildingFloor *clone();
+
 private:
     Building *mBuilding;
     QVector<QVector<Room*> > mRoomAtPos;

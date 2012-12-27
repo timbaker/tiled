@@ -91,6 +91,8 @@
 #include "pathsdock.h"
 #include "pathlayer.h"
 #include "selectpathtool.h"
+#include "tilemetainfodialog.h"
+#include "tilemetainfomgr.h"
 #include "zlevelsdock.h"
 #include "zprogress.h"
 #include <QDebug>
@@ -535,6 +537,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
             SLOT(showBuildingEditor()));
     connect(mUi->actionPathGenerators, SIGNAL(triggered()),
             SLOT(pathGeneratorsDialog()));
+    connect(mUi->actionTilesetMetaInfo, SIGNAL(triggered()),
+            SLOT(tilesetMetaInfoDialog()));
 #endif
 
     updateActions();
@@ -1326,6 +1330,28 @@ void MainWindow::pathGeneratorsDialog()
     dialog.exec();
     foreach (MapDocument *mapDocument, DocumentManager::instance()->documents())
         mapDocument->pathModel()->emitPathsChanged(QList<Path*>());
+}
+
+void MainWindow::tilesetMetaInfoDialog()
+{
+    TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
+    if (!mgr->readTxt()) {
+        QMessageBox::warning(this, tr("It's no good, Jim!"), mgr->errorString());
+        TileMetaInfoMgr::deleteInstance();
+        return;
+    }
+
+    mgr->loadTilesets();
+
+    TileMetaInfoDialog dialog(this);
+    dialog.exec();
+
+    if (!mgr->writeTxt()) {
+        QMessageBox::warning(this, tr("It's no good, Jim!"), mgr->errorString());
+        TileMetaInfoMgr::deleteInstance();
+    }
+
+    TileMetaInfoMgr::deleteInstance();
 }
 #endif
 

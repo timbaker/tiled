@@ -21,6 +21,8 @@
 #include <QAbstractListModel>
 #include <QTableView>
 
+class QMenu;
+
 namespace Tiled {
 namespace Internal {
 class Zoomable;
@@ -130,6 +132,8 @@ public:
 
     QSize sizeHint() const;
 
+    void wheelEvent(QWheelEvent *event);
+
     void dragMoveEvent(QDragMoveEvent *event);
     void dragLeaveEvent(QDragLeaveEvent *event);
     void dropEvent(QDropEvent *event);
@@ -147,6 +151,10 @@ public:
 
     void furnitureTileResized(FurnitureTile *ftile);
 
+    void contextMenuEvent(QContextMenuEvent *event);
+    void setContextMenu(QMenu *menu)
+    { mContextMenu = menu; }
+
 signals:
 
 public slots:
@@ -159,6 +167,7 @@ private:
     FurnitureModel *mModel;
     FurnitureTileDelegate *mDelegate;
     Tiled::Internal::Zoomable *mZoomable;
+    QMenu *mContextMenu;
 };
 
 } // namespace BuildingEditor

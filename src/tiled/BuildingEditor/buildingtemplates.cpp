@@ -234,14 +234,16 @@ bool BuildingTemplates::readTxt()
                 def->setTile(i, getEntry(block.value(def->enumToString(i))));
 
             QList<BuildingTileEntry*> usedTiles;
-            foreach (QString s, block.value("UsedTiles").split(QLatin1Char(' '))) {
-                if (BuildingTileEntry *entry = getEntry(s))
+            foreach (QString s, block.value("UsedTiles").split(QLatin1Char(' '),
+                                                               QString::SkipEmptyParts)) {
+                if (BuildingTileEntry *entry = getEntry(s, false))
                     usedTiles += entry;
             }
             def->setUsedTiles(usedTiles);
 
             QList<FurnitureTiles*> usedFurniture;
-            foreach (QString s, block.value("UsedFurniture").split(QLatin1Char(' '))) {
+            foreach (QString s, block.value("UsedFurniture").split(QLatin1Char(' '),
+                                                                   QString::SkipEmptyParts)) {
                 if (FurnitureTiles *ftiles = getFurnitureTiles(s))
                     usedFurniture += ftiles;
             }
@@ -251,7 +253,8 @@ bool BuildingTemplates::readTxt()
                 if (roomBlock.name == QLatin1String("Room")) {
                     Room *room = new Room;
                     room->Name = roomBlock.value("Name");
-                    QStringList rgb = roomBlock.value("Color").split(QLatin1String(" "), QString::SkipEmptyParts);
+                    QStringList rgb = roomBlock.value("Color").split(QLatin1String(" "),
+                                                                     QString::SkipEmptyParts);
                     room->Color = qRgb(rgb.at(0).toInt(),
                                        rgb.at(1).toInt(),
                                        rgb.at(2).toInt());
@@ -659,12 +662,12 @@ QString BuildingTemplates::entryIndex(BuildingTileEntry *entry)
     return QString::number(mEntries.indexOf(entry) + 1);
 }
 
-BuildingTileEntry *BuildingTemplates::getEntry(const QString &s)
+BuildingTileEntry *BuildingTemplates::getEntry(const QString &s, bool orNone)
 {
     int index = s.toInt();
     if (index >= 1 && index <= mEntries.size())
         return mEntries[index - 1];
-    return BuildingTilesMgr::instance()->noneTileEntry();
+    return orNone ? BuildingTilesMgr::instance()->noneTileEntry() : 0;
 }
 
 /////

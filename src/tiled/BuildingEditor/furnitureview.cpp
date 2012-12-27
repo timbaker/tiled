@@ -28,6 +28,7 @@
 #include <QDebug>
 #include <QDragMoveEvent>
 #include <QHeaderView>
+#include <QMenu>
 #include <QMimeData>
 #include <QPainter>
 #include <QStyleOption>
@@ -216,7 +217,7 @@ QSize FurnitureTileDelegate::sizeHint(const QStyleOptionViewItem & option,
     int width = 2, height = 2;
     const FurnitureModel *m = static_cast<const FurnitureModel*>(index.model());
     const qreal zoom = scale();
-    const int extra = 2;
+    const int extra = 2 * 2;
     if (m->headerAt(index).length())
         return QSize(64 * zoom + extra, option.fontMetrics.lineSpacing() + 2);
     FurnitureTile *ftile = m->tileAt(index);
@@ -232,14 +233,14 @@ QSize FurnitureTileDelegate::sizeHint(const QStyleOptionViewItem & option,
     }
     int tileWidth = 64, tileHeight = 32;
     QSize size = isometricSize(width, height, tileWidth, tileHeight)
-            * zoom + QSize(extra * 2, extra * 2);
+            * zoom + QSize(extra, extra);
 
     if (ftile) {
         // QTableView doesn't ask for the sizeHint of out-of-view items.
         width = mView->model()->maxTileSize(ftile->orient()).width() + d;
         height = mView->model()->maxTileSize(ftile->orient()).height() + d;
         QSize sizeMax = isometricSize(width, height, tileWidth, tileHeight)
-                * zoom + QSize(extra * 2, extra * 2);
+                * zoom + QSize(extra, extra);
         size.setWidth(qMax(size.width(), sizeMax.width()));
 
         // Calc the max height of tiles in this row.
@@ -249,7 +250,7 @@ QSize FurnitureTileDelegate::sizeHint(const QStyleOptionViewItem & option,
             width = ftile->owner()->tile(e)->size().width() + d;
             height = ftile->owner()->tile(e)->size().height() + d;
             QSize size = isometricSize(width, height, tileWidth, tileHeight)
-                    * zoom + QSize(extra * 2, extra * 2);
+                    * zoom + QSize(extra, extra);
             maxHeight = qMax(maxHeight, size.height());
         }
         size.setHeight(qMax(size.height(), maxHeight));
@@ -315,7 +316,8 @@ FurnitureView::FurnitureView(QWidget *parent) :
     QTableView(parent),
     mModel(new FurnitureModel(this)),
     mDelegate(new FurnitureTileDelegate(this, this)),
-    mZoomable(new Zoomable(this))
+    mZoomable(new Zoomable(this)),
+    mContextMenu(0)
 {
     init();
 }
@@ -324,7 +326,8 @@ FurnitureView::FurnitureView(Zoomable *zoomable, QWidget *parent) :
     QTableView(parent),
     mModel(new FurnitureModel(this)),
     mDelegate(new FurnitureTileDelegate(this, this)),
-    mZoomable(zoomable)
+    mZoomable(zoomable),
+    mContextMenu(0)
 {
     init();
 }
@@ -332,6 +335,18 @@ FurnitureView::FurnitureView(Zoomable *zoomable, QWidget *parent) :
 QSize FurnitureView::sizeHint() const
 {
     return QSize(64 * 4, 128);
+}
+
+void FurnitureView::wheelEvent(QWheelEvent *event)
+{
+    if (event->modifiers() & Qt::ControlModifier
+        && event->orientation() == Qt::Vertical)
+    {
+        mZoomable->handleWheelDelta(event->delta());
+        return;
+    }
+
+    QTableView::wheelEvent(event);
 }
 
 void FurnitureView::dragMoveEvent(QDragMoveEvent *event)
@@ -380,6 +395,12 @@ void FurnitureView::furnitureTileResized(FurnitureTile *ftile)
 {
     model()->calcMaxTileSize();
     mDelegate->itemResized(model()->index(ftile));
+}
+
+void FurnitureView::contextMenuEvent(QContextMenuEvent *event)
+{
+    if (mContextMenu)
+        mContextMenu->exec(event->globalPos());
 }
 
 void FurnitureView::scaleChanged(qreal scale)

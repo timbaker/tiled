@@ -328,6 +328,34 @@ void ResizeBuilding::swap()
 
 /////
 
+ChangeUsedTiles::ChangeUsedTiles(BuildingDocument *doc, const QList<BuildingTileEntry *> &tiles) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Used Tiles")),
+    mDocument(doc),
+    mTiles(tiles)
+{
+}
+
+void ChangeUsedTiles::swap()
+{
+    mTiles = mDocument->changeUsedTiles(mTiles);
+}
+
+/////
+
+ChangeUsedFurniture::ChangeUsedFurniture(BuildingDocument *doc, const QList<FurnitureTiles *> &tiles) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Used Furniture")),
+    mDocument(doc),
+    mTiles(tiles)
+{
+}
+
+void ChangeUsedFurniture::swap()
+{
+    mTiles = mDocument->changeUsedFurniture(mTiles);
+}
+
+/////
+
 ResizeFloor::ResizeFloor(BuildingDocument *doc, BuildingFloor *floor,
                              const QSize &newSize) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Floor")),
@@ -395,6 +423,22 @@ void RemoveFloor::remove()
     mFloor = mDocument->removeFloor(mIndex);
 }
 
+/////
+
+ReorderFloor::ReorderFloor(BuildingDocument *doc, int oldIndex, int newIndex) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Reorder Floor")),
+    mDocument(doc),
+    mOldIndex(oldIndex),
+    mNewIndex(newIndex),
+    mFloor(0)
+{
+}
+
+void ReorderFloor::swap()
+{
+    mDocument->reorderFloor(mOldIndex, mNewIndex);
+    qSwap(mOldIndex, mNewIndex);
+}
 
 /////
 

@@ -21,6 +21,7 @@
 #include "building.h"
 #include "buildingdocument.h"
 #include "buildingfloor.h"
+#include "buildingfloorsdialog.h"
 #include "buildingobjects.h"
 #include "buildingpreferences.h"
 #include "buildingpreferencesdialog.h"
@@ -35,6 +36,7 @@
 #include "FloorEditor.h"
 #include "furnituregroups.h"
 #include "furnitureview.h"
+#include "horizontallinedelegate.h"
 #include "mixedtilesetview.h"
 #include "newbuildingdialog.h"
 #include "resizebuildingdialog.h"
@@ -91,7 +93,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mFurnitureGroup(0),
     mSynching(false),
     mInitialCategoryViewSelectionEvent(false),
-    mAutoSaveTimer(new QTimer(this))
+    mAutoSaveTimer(new QTimer(this)),
+    mUsedContextMenu(new QMenu(this)),
+    mActionClearUsed(new QAction(this))
 {
     ui->setupUi(this);
 
@@ -245,6 +249,13 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->menuEdit->insertAction(ui->menuEdit->actions().at(1), redoAction);
     ui->menuEdit->insertSeparator(ui->menuEdit->actions().at(2));
 
+    ui->actionSelectAll->setShortcuts(QKeySequence::SelectAll);
+    ui->actionSelectNone->setShortcut(tr("Ctrl+Shift+A"));
+    ui->actionDelete->setShortcuts(QKeySequence::Delete);
+    connect(ui->actionSelectAll, SIGNAL(triggered()), SLOT(selectAll()));
+    connect(ui->actionSelectNone, SIGNAL(triggered()), SLOT(selectNone()));
+    connect(ui->actionDelete, SIGNAL(triggered()), SLOT(deleteObjects()));
+
     connect(mUndoGroup, SIGNAL(cleanChanged(bool)), SLOT(updateWindowTitle()));
     connect(mUndoGroup, SIGNAL(cleanChanged(bool)), SLOT(autoSaveCheck()));
     connect(mUndoGroup, SIGNAL(indexChanged(int)), SLOT(autoSaveCheck()));
@@ -306,6 +317,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionInsertFloorAbove, SIGNAL(triggered()), SLOT(insertFloorAbove()));
     connect(ui->actionInsertFloorBelow, SIGNAL(triggered()), SLOT(insertFloorBelow()));
     connect(ui->actionRemoveFloor, SIGNAL(triggered()), SLOT(removeFloor()));
+    connect(ui->actionFloors, SIGNAL(triggered()), SLOT(floorsDialog()));
 
     connect(ui->actionRooms, SIGNAL(triggered()), SLOT(roomsDialog()));
     connect(ui->actionTemplates, SIGNAL(triggered()), SLOT(templatesDialog()));
@@ -339,6 +351,12 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->furnitureView->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(furnitureSelectionChanged()));
+
+    QIcon clearIcon(QLatin1String(":/images/16x16/edit-clear.png"));
+    mActionClearUsed->setIcon(clearIcon);
+    mActionClearUsed->setText(tr("Clean-up"));
+    connect(mActionClearUsed, SIGNAL(triggered()), SLOT(resetUsedTiles()));
+    mUsedContextMenu->addAction(mActionClearUsed);
 
     ui->statusLabel->clear();
 
@@ -525,15 +543,13 @@ bool BuildingEditorWindow::Startup()
     if (!categoryName.isEmpty()) {
         int index = BuildingTilesMgr::instance()->indexOf(categoryName);
         if (index >= 0)
-            ui->categoryList->setCurrentRow(index);
+            ui->categoryList->setCurrentRow(mRowOfFirstCategory + index);
     }
     QString fGroupName = mSettings.value(QLatin1String("SelectedFurnitureGroup")).toString();
     if (!fGroupName.isEmpty()) {
         int index = FurnitureGroups::instance()->indexOf(fGroupName);
-        if (index >= 0) {
-            int numTileCategories = BuildingTilesMgr::instance()->categoryCount();
-            ui->categoryList->setCurrentRow(numTileCategories + index);
-        }
+        if (index >= 0)
+            ui->categoryList->setCurrentRow(mRowOfFirstFurnitureGroup + index);
     }
     mSettings.endGroup();
 
@@ -703,14 +719,14 @@ void BuildingEditorWindow::categoryActivated(const QModelIndex &index)
 {
     BuildingTilesDialog *dialog = BuildingTilesDialog::instance();
 
-    int numTileCategories = BuildingTilesMgr::instance()->categoryCount();
-    if (index.row() >= 0 && index.row() < 2)
+    int row = index.row();
+    if (row >= 0 && row < 2)
         ;
-    else if (index.row() >= 2 && index.row() < 2 + numTileCategories)
-        dialog->selectCategory(BuildingTilesMgr::instance()->category(index.row() - 2));
-    else if (index.row() >= 2 + numTileCategories
-             && index.row() < ui->categoryList->count())
-        dialog->selectCategory(FurnitureGroups::instance()->group(index.row() - numTileCategories - 2));
+    else if (BuildingTileCategory *category = categoryAt(row)) {
+        dialog->selectCategory(category);
+    } else if (FurnitureGroup *group = furnitureGroupAt(row)) {
+        dialog->selectCategory(group);
+    }
     tilesDialog();
 }
 
@@ -726,6 +742,10 @@ void BuildingEditorWindow::categorySelectionChanged()
 
     ui->tilesetView->model()->setTiles(QList<Tile*>());
     ui->furnitureView->model()->setTiles(QList<FurnitureTiles*>());
+
+    ui->tilesetView->setContextMenu(0);
+    ui->furnitureView->setContextMenu(0);
+    mActionClearUsed->disconnect(this);
 
     QList<QListWidgetItem*> selected = ui->categoryList->selectedItems();
     if (selected.count() == 1) {
@@ -766,6 +786,9 @@ void BuildingEditorWindow::categorySelectionChanged()
             ui->tilesetView->model()->setTiles(tiles, userData, headers);
             ui->tilesetView->scrollToTop();
             ui->categoryStack->setCurrentIndex(0);
+
+            connect(mActionClearUsed, SIGNAL(triggered()), SLOT(resetUsedTiles()));
+            ui->tilesetView->setContextMenu(mUsedContextMenu);
         } else if (row == 1) { // Used Furniture
             if (!mCurrentDocument) return;
             QMap<QString,FurnitureTiles*> furnitureMap;
@@ -782,9 +805,10 @@ void BuildingEditorWindow::categorySelectionChanged()
             ui->furnitureView->model()->setTiles(furnitureMap.values());
             ui->furnitureView->scrollToTop();
             ui->categoryStack->setCurrentIndex(1);
-        } else if (row < 2 + BuildingTilesMgr::instance()->categoryCount()) {
-            row -= 2;
-            mCategory = BuildingTilesMgr::instance()->category(row);
+
+            connect(mActionClearUsed, SIGNAL(triggered()), SLOT(resetUsedFurniture()));
+            ui->furnitureView->setContextMenu(mUsedContextMenu);
+        } else if (mCategory = categoryAt(row)) {
             QList<Tiled::Tile*> tiles;
             QList<void*> userData;
             if (mCategory->canAssignNone()) {
@@ -792,8 +816,9 @@ void BuildingEditorWindow::categorySelectionChanged()
                 userData += BuildingTilesMgr::instance()->noneTileEntry();
             }
             QMap<QString,BuildingTileEntry*> entryMap;
+            int i = 0;
             foreach (BuildingTileEntry *entry, mCategory->entries()) {
-                QString key = entry->displayTile()->name() + QString::number((qulonglong)entry);
+                QString key = entry->displayTile()->name() + QString::number(i++);
                 entryMap[key] = entry;
             }
             foreach (BuildingTileEntry *entry, entryMap.values()) {
@@ -807,9 +832,7 @@ void BuildingEditorWindow::categorySelectionChanged()
             ui->categoryStack->setCurrentIndex(0);
 
             selectCurrentCategoryTile();
-        } else {
-            row -= 2 + BuildingTilesMgr::instance()->categoryCount();
-            mFurnitureGroup = FurnitureGroups::instance()->group(row);
+        } else if (mFurnitureGroup = furnitureGroupAt(row)) {
             ui->furnitureView->model()->setTiles(mFurnitureGroup->mTiles);
             ui->furnitureView->scrollToTop();
             ui->categoryStack->setCurrentIndex(1);
@@ -911,6 +934,60 @@ void BuildingEditorWindow::usedFurnitureChanged()
 {
     if (ui->categoryList->currentRow() == 1)
         categorySelectionChanged();
+}
+
+
+void BuildingEditorWindow::resetUsedTiles()
+{
+    Building *building = currentBuilding();
+    if (!building)
+        return;
+
+    QList<BuildingTileEntry*> entries;
+    foreach (BuildingFloor *floor, building->floors()) {
+        foreach (BuildingObject *object, floor->objects()) {
+            if (object->asFurniture())
+                continue;
+            for (int i = 0; i < 3; i++) {
+                if (object->tile(i) && !object->tile(i)->isNone()
+                        && !entries.contains(object->tile(i)))
+                    entries += object->tile(i);
+            }
+        }
+    }
+    BuildingTileEntry *entry = building->exteriorWall();
+    if (entry && !entry->isNone() && !entries.contains(entry))
+        entries += entry;
+    foreach (Room *room, building->rooms()) {
+        foreach (BuildingTileEntry *entry, room->tiles()) {
+            if (entry && !entry->isNone() && !entries.contains(entry))
+                entries += entry;
+        }
+    }
+    mCurrentDocument->undoStack()->push(new ChangeUsedTiles(mCurrentDocument,
+                                                            entries));
+}
+
+void BuildingEditorWindow::resetUsedFurniture()
+{
+    Building *building = currentBuilding();
+    if (!building)
+        return;
+
+    QList<FurnitureTiles*> furniture;
+    foreach (BuildingFloor *floor, building->floors()) {
+        foreach (BuildingObject *object, floor->objects()) {
+            if (FurnitureObject *fo = object->asFurniture()) {
+                if (FurnitureTile *ftile = fo->furnitureTile()) {
+                    if (!furniture.contains(ftile->owner()))
+                        furniture += ftile->owner();
+                }
+            }
+        }
+    }
+
+    mCurrentDocument->undoStack()->push(new ChangeUsedFurniture(mCurrentDocument,
+                                                                furniture));
 }
 
 void BuildingEditorWindow::currentEWallChanged(BuildingTileEntry *entry, bool mergeable)
@@ -1213,6 +1290,10 @@ void BuildingEditorWindow::selectCurrentCategoryTile()
         currentTile = mCurrentDocument->building()->curtainsTile();
     if (mCategory->asStairs())
         currentTile = mCurrentDocument->building()->stairsTile();
+    if (mCategory->asGrimeFloor() && currentRoom())
+        currentTile = currentRoom()->tile(Room::GrimeFloor);
+    if (mCategory->asGrimeWall() && currentRoom())
+        currentTile = currentRoom()->tile(Room::GrimeWall);
     if (mCategory->asRoofCaps())
         currentTile = mCurrentDocument->building()->roofCapTile();
     if (mCategory->asRoofSlopes())
@@ -1239,6 +1320,22 @@ void BuildingEditorWindow::removeAutoSaveFile()
         qDebug() << "BuildingEd autosave deleted:" << mAutoSaveFileName;
     }
     mAutoSaveFileName.clear();
+}
+
+BuildingTileCategory *BuildingEditorWindow::categoryAt(int row)
+{
+    if (row >= mRowOfFirstCategory &&
+            row < mRowOfFirstCategory + BuildingTilesMgr::instance()->categoryCount())
+        return BuildingTilesMgr::instance()->category(row - mRowOfFirstCategory);
+    return 0;
+}
+
+FurnitureGroup *BuildingEditorWindow::furnitureGroupAt(int row)
+{
+    if (row >= mRowOfFirstFurnitureGroup &&
+            row < mRowOfFirstFurnitureGroup + FurnitureGroups::instance()->groupCount())
+        return FurnitureGroups::instance()->group(row - mRowOfFirstFurnitureGroup);
+    return 0;
 }
 
 void BuildingEditorWindow::upLevel()
@@ -1296,6 +1393,15 @@ void BuildingEditorWindow::removeFloor()
     int index = mCurrentDocument->currentLevel();
     mCurrentDocument->undoStack()->push(new RemoveFloor(mCurrentDocument,
                                                         index));
+}
+
+void BuildingEditorWindow::floorsDialog()
+{
+    if (!mCurrentDocument)
+        return;
+
+    BuildingFloorsDialog dialog(mCurrentDocument, this);
+    dialog.exec();
 }
 
 void BuildingEditorWindow::newBuilding()
@@ -1518,6 +1624,9 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
     connect(mCurrentDocument, SIGNAL(currentFloorChanged()),
             SLOT(updateActions()));
 
+    connect(mCurrentDocument, SIGNAL(selectedObjectsChanged()),
+            SLOT(updateActions()));
+
     connect(mCurrentDocument, SIGNAL(cleanChanged()), SLOT(updateWindowTitle()));
 
     mPreviewWin->setDocument(currentDocument());
@@ -1580,6 +1689,41 @@ void BuildingEditorWindow::exportTMX()
 
     mSettings.setValue(QLatin1String("BuildingEditor/ExportDirectory"),
                        QFileInfo(fileName).absolutePath());
+}
+
+void BuildingEditorWindow::selectAll()
+{
+    if (!mCurrentDocument)
+        return;
+    QSet<BuildingObject*> objects = mCurrentDocument->currentFloor()->objects().toSet();
+    mCurrentDocument->setSelectedObjects(objects);
+}
+
+void BuildingEditorWindow::selectNone()
+{
+    if (!mCurrentDocument)
+        return;
+    mCurrentDocument->setSelectedObjects(QSet<BuildingObject*>());
+}
+
+void BuildingEditorWindow::deleteObjects()
+{
+    if (!mCurrentDocument)
+        return;
+    QSet<BuildingObject*> selected = mCurrentDocument->selectedObjects();
+    if (!selected.size())
+        return;
+    if (selected.size() > 1)
+        mCurrentDocument->undoStack()->beginMacro(tr("Remove %1 Objects")
+                                                  .arg(selected.size()));
+    foreach (BuildingObject *object, selected) {
+        mCurrentDocument->undoStack()->push(new RemoveObject(mCurrentDocument,
+                                                             object->floor(),
+                                                             object->index()));
+    }
+
+    if (selected.size() > 1)
+        mCurrentDocument->undoStack()->endMacro();
 }
 
 void BuildingEditorWindow::preferences()
@@ -1938,10 +2082,16 @@ void BuildingEditorWindow::setCategoryList()
     ui->categoryList->addItem(tr("Used Tiles"));
     ui->categoryList->addItem(tr("Used Furniture"));
 
+    HorizontalLineDelegate::instance()->addToList(ui->categoryList);
+
+    mRowOfFirstCategory = ui->categoryList->count();
     foreach (BuildingTileCategory *category, BuildingTilesMgr::instance()->categories()) {
         ui->categoryList->addItem(category->label());
     }
 
+    HorizontalLineDelegate::instance()->addToList(ui->categoryList);
+
+    mRowOfFirstFurnitureGroup = ui->categoryList->count();
     foreach (FurnitureGroup *group, FurnitureGroups::instance()->groups()) {
         ui->categoryList->addItem(group->mLabel);
     }
@@ -1999,8 +2149,13 @@ void BuildingEditorWindow::updateActions()
     ui->actionInsertFloorBelow->setEnabled(hasDoc);
     ui->actionRemoveFloor->setEnabled(hasDoc &&
                                       mCurrentDocument->building()->floorCount() > 1);
+    ui->actionFloors->setEnabled(hasDoc);
 
     mRoomComboBox->setEnabled(hasDoc && currentRoom() != 0);
+
+    ui->actionSelectAll->setEnabled(hasDoc);
+    ui->actionSelectNone->setEnabled(hasDoc && mCurrentDocument->selectedObjects().size());
+    ui->actionDelete->setEnabled(hasDoc && mCurrentDocument->selectedObjects().size());
 
     if (mCurrentDocument)
         mFloorLabel->setText(tr("Floor %1/%2")

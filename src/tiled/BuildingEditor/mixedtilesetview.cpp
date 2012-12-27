@@ -23,6 +23,7 @@
 
 #include <QApplication>
 #include <QHeaderView>
+#include <QMenu>
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QPainter>
@@ -82,7 +83,8 @@ void TileDelegate::paint(QPainter *painter,
         return;
     }
 
-    if (!m->tileAt(index)) {
+    Tile *tile;
+    if (!(tile = m->tileAt(index))) {
 #if 0
         painter->drawLine(option.rect.topLeft(), option.rect.bottomRight());
         painter->drawLine(option.rect.topRight(), option.rect.bottomLeft());
@@ -90,20 +92,24 @@ void TileDelegate::paint(QPainter *painter,
         return;
     }
 
+    const int extra = 2;
+
     QRect r = m->categoryBounds(m->tileAt(index));
-    if (r.isValid()) {
+    if (m->showLabels() && index.model()->data(index, Qt::DecorationRole).toString().length())
+        r = QRect(index.column(),index.row(),1,1);
+    if (r.isValid() && !(option.state & QStyle::State_Selected)) {
         int left = option.rect.left();
         int right = option.rect.right();
         int top = option.rect.top();
         int bottom = option.rect.bottom();
         if (index.column() == r.left())
-            ++left;
+            left += extra;
         if (index.column() == r.right())
-            --right;
+            right -= extra;
         if (index.row() == r.top())
-            ++top;
+            top += extra;
         if (index.row() == r.bottom())
-            --bottom;
+            bottom -= extra;
 
         painter->fillRect(left, top, right-left+1, bottom-top+1,
                           qRgb(220, 220, 220));
@@ -117,17 +123,29 @@ void TileDelegate::paint(QPainter *painter,
             painter->drawLine(left, top, right, top);
         if (index.row() == r.bottom())
             painter->drawLine(left, bottom, right, bottom);
+        painter->setPen(Qt::black);
     }
 
     // Draw the tile image
     const QVariant display = index.model()->data(index, Qt::DisplayRole);
     const QPixmap tileImage = display.value<QPixmap>();
-    const int extra = 2;
+    const int tileWidth = tile->tileset()->tileWidth() * mView->zoomable()->scale();
 
     if (mView->zoomable()->smoothTransform())
         painter->setRenderHint(QPainter::SmoothPixmapTransform);
 
-    painter->drawPixmap(option.rect.adjusted(extra, extra, -extra, -extra), tileImage);
+    const QFontMetrics fm = painter->fontMetrics();
+    const int labelHeight = m->showLabels() ? fm.lineSpacing() : 0;
+    const int dw = option.rect.width() - tileWidth;
+    painter->drawPixmap(option.rect.adjusted(dw/2, extra, -dw/2, -extra - labelHeight), tileImage);
+
+    if (m->showLabels()) {
+        const QVariant decoration = index.model()->data(index, Qt::DecorationRole);
+        QString label = decoration.toString();
+        QString name = fm.elidedText(label, Qt::ElideRight, option.rect.width());
+        painter->drawText(option.rect.left(), option.rect.bottom() - labelHeight,
+                          option.rect.width(), labelHeight, Qt::AlignHCenter, name);
+    }
 
     // Overlay with highlight color when selected
     if (option.state & QStyle::State_Selected) {
@@ -160,14 +178,17 @@ QSize TileDelegate::sizeHint(const QStyleOptionViewItem & option,
 {
     const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
     const qreal zoom = mView->zoomable()->scale();
-    const int extra = 4;
+    const int extra = 2 * 2;
     if (m->headerAt(index).length())
         return QSize(64 * zoom + extra, option.fontMetrics.lineSpacing() + 2);
     if (!m->tileAt(index))
         return QSize(64 * zoom + extra, 128 * zoom + extra);
     const Tileset *tileset = m->tileAt(index)->tileset();
-    return QSize(tileset->tileWidth() * zoom + extra,
-                 tileset->tileHeight() * zoom + extra);
+    const int tileWidth = tileset->tileWidth() + (m->showLabels() ? 16 : 0);
+    const QFontMetrics &fm = option.fontMetrics;
+    const int labelHeight = m->showLabels() ? fm.lineSpacing() : 0;
+    return QSize(tileWidth * zoom + extra,
+                 tileset->tileHeight() * zoom + extra + labelHeight);
 }
 
 } // namepace Internal
@@ -179,7 +200,8 @@ QSize TileDelegate::sizeHint(const QStyleOptionViewItem & option,
 MixedTilesetView::MixedTilesetView(QWidget *parent) :
     QTableView(parent),
     mModel(new MixedTilesetModel(this)),
-    mZoomable(new Zoomable(this))
+    mZoomable(new Zoomable(this)),
+    mContextMenu(0)
 {
     init();
 }
@@ -187,7 +209,8 @@ MixedTilesetView::MixedTilesetView(QWidget *parent) :
 MixedTilesetView::MixedTilesetView(Zoomable *zoomable, QWidget *parent) :
     QTableView(parent),
     mModel(new MixedTilesetModel(this)),
-    mZoomable(zoomable)
+    mZoomable(zoomable),
+    mContextMenu(0)
 {
     init();
 }
@@ -217,11 +240,29 @@ void MixedTilesetView::mouseReleaseEvent(QMouseEvent *event)
     QTableView::mouseReleaseEvent(event);
 }
 
+void MixedTilesetView::wheelEvent(QWheelEvent *event)
+{
+    if (event->modifiers() & Qt::ControlModifier
+        && event->orientation() == Qt::Vertical)
+    {
+        mZoomable->handleWheelDelta(event->delta());
+        return;
+    }
+
+    QTableView::wheelEvent(event);
+}
+
 void MixedTilesetView::setZoomable(Zoomable *zoomable)
 {
     mZoomable = zoomable;
     if (zoomable)
         connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(scaleChanged(qreal)));
+}
+
+void MixedTilesetView::contextMenuEvent(QContextMenuEvent *event)
+{
+    if (mContextMenu)
+        mContextMenu->exec(event->globalPos());
 }
 
 void MixedTilesetView::scaleChanged(qreal scale)
@@ -266,7 +307,8 @@ void MixedTilesetView::init()
 MixedTilesetModel::MixedTilesetModel(QObject *parent) :
     QAbstractListModel(parent),
     mTileset(0),
-    mShowHeaders(true)
+    mShowHeaders(true),
+    mShowLabels(false)
 {
 }
 
@@ -310,6 +352,11 @@ QVariant MixedTilesetModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole) {
         if (Tile *tile = tileAt(index))
             return tile->image();
+    }
+    if (role == Qt::DecorationRole) {
+        if (Item *item = toItem(index)) {
+            return item->mLabel;
+        }
     }
 
     return QVariant();
@@ -441,7 +488,7 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
     reset();
 }
 
-void MixedTilesetModel::setTileset(Tileset *tileset)
+void MixedTilesetModel::setTileset(Tileset *tileset, const QStringList &labels)
 {
     mTiles.clear();
     mTileset = tileset;
@@ -452,6 +499,7 @@ void MixedTilesetModel::setTileset(Tileset *tileset)
     qDeleteAll(mItems);
     mItems.clear();
     QString tilesetName;
+    int i = 0;
     foreach (Tile *tile, mTiles) {
         if (tile->tileset()->name() != tilesetName) {
             while (mItems.count() % columnCount())
@@ -460,7 +508,11 @@ void MixedTilesetModel::setTileset(Tileset *tileset)
             for (int i = 0; i < columnCount(); i++)
                 mItems += new Item(tilesetName);
         }
-        mItems += new Item(tile);
+        Item *item = new Item(tile);
+        if (labels.size() > i)
+            item->mLabel = labels[i];
+        mItems += item;
+        i++;
     }
 
     reset();
@@ -514,6 +566,15 @@ void MixedTilesetModel::scaleChanged(qreal scale)
 void MixedTilesetModel::setShowHeaders(bool show)
 {
     mShowHeaders = show;
+}
+
+void MixedTilesetModel::setLabel(Tile *tile, const QString &label)
+{
+    if (Item *item = toItem(tile)) {
+        item->mLabel = label;
+        QModelIndex index = this->index(tile);
+        emit dataChanged(index, index);
+    }
 }
 
 MixedTilesetModel::Item *MixedTilesetModel::toItem(const QModelIndex &index) const

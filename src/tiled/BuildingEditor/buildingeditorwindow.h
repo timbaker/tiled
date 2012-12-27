@@ -122,6 +122,9 @@ private:
 
     void removeAutoSaveFile();
 
+    BuildingTileCategory *categoryAt(int row);
+    FurnitureGroup *furnitureGroupAt(int row);
+
 private slots:
     void updateWindowTitle();
 
@@ -138,6 +141,8 @@ private slots:
 
     void usedTilesChanged();
     void usedFurnitureChanged();
+    void resetUsedTiles();
+    void resetUsedFurniture();
 
     void upLevel();
     void downLevel();
@@ -145,12 +150,17 @@ private slots:
     void insertFloorAbove();
     void insertFloorBelow();
     void removeFloor();
+    void floorsDialog();
 
     void newBuilding();
     void openBuilding();
     bool saveBuilding();
     bool saveBuildingAs();
     void exportTMX();
+
+    void selectAll();
+    void selectNone();
+    void deleteObjects();
 
     void preferences();
 
@@ -206,10 +216,14 @@ private:
     Tiled::Internal::Zoomable *mCategoryZoomable;
     BuildingTileCategory *mCategory;
     FurnitureGroup *mFurnitureGroup;
+    int mRowOfFirstCategory;
+    int mRowOfFirstFurnitureGroup;
     bool mSynching;
     bool mInitialCategoryViewSelectionEvent;
     QTimer *mAutoSaveTimer;
     QString mAutoSaveFileName;
+    QMenu *mUsedContextMenu;
+    QAction *mActionClearUsed;
 };
 
 } // namespace BuildingEditor

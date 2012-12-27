@@ -177,6 +177,8 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/buildingtmx.cpp \
     BuildingEditor/tilecategoryview.cpp \
     BuildingEditor/listofstringsdialog.cpp \
+    BuildingEditor/horizontallinedelegate.cpp \
+    BuildingEditor/buildingfloorsdialog.cpp \
     pathitem.cpp \
     pathlayeritem.cpp \
     abstractpathtool.cpp \
@@ -194,7 +196,10 @@ SOURCES += aboutdialog.cpp \
     pathgeneratormgr.cpp \
     pathgeneratortilesdialog.cpp \
     betterselectionrectangle.cpp \
-    pathtileentrydialog.cpp
+    pathtileentrydialog.cpp \
+    tilemetainfodialog.cpp \
+    tilemetainfomgr.cpp
+
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -337,6 +342,8 @@ HEADERS += aboutdialog.h \
     BuildingEditor/buildingtmx.h \
     BuildingEditor/tilecategoryview.h \
     BuildingEditor/listofstringsdialog.h \
+    BuildingEditor/horizontallinedelegate.h \
+    BuildingEditor/buildingfloorsdialog.h \
     pathitem.h \
     pathlayeritem.h \
     createpathtool.h \
@@ -354,7 +361,10 @@ HEADERS += aboutdialog.h \
     pathgeneratormgr.h \
     pathgeneratortilesdialog.h \
     betterselectionrectangle.h \
-    pathtileentrydialog.h
+    pathtileentrydialog.h \
+    tilemetainfodialog.h \
+    tilemetainfomgr.h
+
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -388,7 +398,9 @@ FORMS += aboutdialog.ui \
     pathpropertiesdialog.ui \
     pathgeneratorsdialog.ui \
     pathgeneratortilesdialog.ui \
-    pathtileentrydialog.ui
+    pathtileentrydialog.ui \
+    tilemetainfodialog.ui \
+    BuildingEditor/buildingfloorsdialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

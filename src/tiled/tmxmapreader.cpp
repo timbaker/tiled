@@ -27,7 +27,6 @@
 #include "tilesetmanager.h"
 #include "mapreader.h"
 #ifdef ZOMBOID
-#include "pathgeneratormgr.h"
 #include "tile.h"
 #endif
 
