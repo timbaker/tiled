@@ -501,6 +501,7 @@ void PathGeneratorMgr::loadTilesets()
                 source = info.canonicalFilePath();
                 if (loadTilesetImage(ts, source)) {
                     ts->setMissing(false); // Yay!
+                    TilesetManager::instance()->tilesetSourceChanged(ts);
                 }
             }
         }
