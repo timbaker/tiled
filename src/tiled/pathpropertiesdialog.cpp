@@ -32,6 +32,8 @@
 #include "tile.h"
 #include "tileset.h"
 
+#include "BuildingEditor/horizontallinedelegate.h"
+
 #include <QDebug>
 #include <QToolBar>
 #include <QUndoCommand>
@@ -306,6 +308,7 @@ PathPropertiesDialog::PathPropertiesDialog(QWidget *parent) :
     button->setShortcut(QKeySequence::Redo);
     mRedoButton = button;
     ui->undoRedoLayout->addWidget(button);
+    /////
 
     connect(ui->generatorsList, SIGNAL(currentRowChanged(int)),
             SLOT(currentGeneratorChanged(int)));
@@ -703,9 +706,7 @@ void PathPropertiesDialog::setGeneratorTypesList()
         if (pgen)
             ui->allGeneratorsList->addItem(pgen->label());
         else {
-            QListWidgetItem *item = new QListWidgetItem(QLatin1String("   ----------   "));
-            item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
-            ui->allGeneratorsList->addItem(item);
+            BuildingEditor::HorizontalLineDelegate::instance()->addToList(ui->allGeneratorsList);
         }
     }
 }
