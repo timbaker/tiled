@@ -20,6 +20,7 @@
 #include "tilemetainfodialog.h"
 #include "ui_tilemetainfodialog.h"
 
+#include "preferences.h"
 #include "tilemetainfomgr.h"
 #include "utils.h"
 #include "zoomable.h"
@@ -30,6 +31,7 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QScrollBar>
+#include <QToolBar>
 #include <QUndoGroup>
 #include <QUndoStack>
 
@@ -130,6 +132,12 @@ TileMetaInfoDialog::TileMetaInfoDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    QToolBar *toolBar = new QToolBar();
+    toolBar->setIconSize(QSize(16, 16));
+    toolBar->addAction(ui->actionAdd);
+    toolBar->addAction(ui->actionRemove);
+    ui->toolBarLayout->addWidget(toolBar);
+
     /////
 
     QAction *undoAction = mUndoGroup->createUndoAction(this, tr("Undo"));
@@ -177,13 +185,14 @@ TileMetaInfoDialog::TileMetaInfoDialog(QWidget *parent) :
     ui->tiles->model()->setShowHeaders(false);
     ui->tiles->model()->setShowLabels(true);
 
+    connect(ui->browseTiles, SIGNAL(clicked()), SLOT(browse()));
     connect(ui->tilesets, SIGNAL(currentRowChanged(int)),
             SLOT(currentTilesetChanged(int)));
     connect(ui->tiles->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(tileSelectionChanged()));
-    connect(ui->addTileset, SIGNAL(clicked()), SLOT(addTileset()));
-    connect(ui->removeTileset, SIGNAL(clicked()), SLOT(removeTileset()));
+    connect(ui->actionAdd, SIGNAL(triggered()), SLOT(addTileset()));
+    connect(ui->actionRemove, SIGNAL(triggered()), SLOT(removeTileset()));
     connect(ui->enums, SIGNAL(activated(int)),
             SLOT(enumChanged(int)));
 
@@ -193,6 +202,8 @@ TileMetaInfoDialog::TileMetaInfoDialog(QWidget *parent) :
     ui->enums->addItem(tr("<none>"));
     ui->enums->addItems(TileMetaInfoMgr::instance()->enumNames());
     mSynching = false;
+
+    updateUI();
 }
 
 TileMetaInfoDialog::~TileMetaInfoDialog()
@@ -330,11 +341,26 @@ void TileMetaInfoDialog::redoTextChanged(const QString &text)
     mRedoButton->setToolTip(text);
 }
 
+void TileMetaInfoDialog::browse()
+{
+    QString f = QFileDialog::getExistingDirectory(this, tr("Directory"),
+                                                  ui->editTiles->text());
+    if (!f.isEmpty()) {
+        Preferences::instance()->setTilesDirectory(f);
+        TileMetaInfoMgr::instance()->loadTilesets();
+        setTilesetList();
+        updateUI();
+    }
+}
+
 void TileMetaInfoDialog::updateUI()
 {
     mSynching = true;
 
-    ui->removeTileset->setEnabled(mCurrentTileset != 0);
+    QString tilesDir = TileMetaInfoMgr::instance()->tilesDirectory();
+    ui->editTiles->setText(QDir::toNativeSeparators(tilesDir));
+
+    ui->actionRemove->setEnabled(mCurrentTileset != 0);
     ui->enums->setEnabled(mSelectedTiles.size() > 0);
 
     QSet<QString> enums;

@@ -89,9 +89,6 @@ public:
 
     QString renameFurnitureCategory(FurnitureGroup *category, const QString &name);
     void reorderCategory(int oldIndex, int newIndex);
-
-    void addTileset(Tiled::Tileset *tileset);
-    void removeTileset(Tiled::Tileset *tileset);
     //- UNDO/REDO
 
 signals:
@@ -140,8 +137,9 @@ private slots:
 
     void toggleCorners();
 
-    void addTileset();
-    void removeTileset();
+    void manageTilesets();
+    void tilesetAdded(Tiled::Tileset *tileset);
+    void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
 
     void undoTextChanged(const QString &text);
     void redoTextChanged(const QString &text);

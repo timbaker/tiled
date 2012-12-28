@@ -1,0 +1,670 @@
+version = 0
+revision = 84
+source_revision = 0
+meta-enums
+{
+    DoorW = 1
+    DoorN = 2
+    WindowW = 3
+    WindowN = 4
+}
+tileset
+{
+    file = appliances_cooking_01
+    size = 8,8
+}
+tileset
+{
+    file = appliances_laundry_01
+    size = 8,8
+}
+tileset
+{
+    file = appliances_refrigeration_01
+    size = 8,8
+}
+tileset
+{
+    file = appliances_television_01
+    size = 8,8
+}
+tileset
+{
+    file = camping_01
+    size = 8,8
+}
+tileset
+{
+    file = carpentry_01
+    size = 8,8
+}
+tileset
+{
+    file = fencing_01
+    size = 8,8
+}
+tileset
+{
+    file = fixtures_bathroom_01
+    size = 8,8
+}
+tileset
+{
+    file = fixtures_counters_01
+    size = 8,8
+}
+tileset
+{
+    file = fixtures_doors_01
+    size = 8,8
+    tile
+    {
+        xy = 0,0
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 0,1
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 0,2
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 0,3
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 0,4
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 0,5
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 0,6
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 1,0
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 1,1
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 1,2
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 1,3
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 1,4
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 1,5
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 1,6
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 4,0
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 4,1
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 4,2
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 4,3
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 4,4
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 4,5
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 4,6
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 5,0
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 5,1
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 5,2
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 5,3
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 5,4
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 5,5
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 5,6
+        meta-enum = DoorN
+    }
+}
+tileset
+{
+    file = fixtures_doors_frames_01
+    size = 8,8
+}
+tileset
+{
+    file = fixtures_railings_01
+    size = 8,8
+}
+tileset
+{
+    file = fixtures_sinks_01
+    size = 8,8
+}
+tileset
+{
+    file = fixtures_stairs_01
+    size = 8,8
+}
+tileset
+{
+    file = fixtures_windows_01
+    size = 8,8
+}
+tileset
+{
+    file = fixtures_windows_curtains_01
+    size = 8,8
+}
+tileset
+{
+    file = floors_exterior_natural_01
+    size = 8,8
+}
+tileset
+{
+    file = floors_exterior_street_01
+    size = 8,8
+}
+tileset
+{
+    file = floors_exterior_tilesandstone_01
+    size = 8,8
+}
+tileset
+{
+    file = floors_interior_carpet_01
+    size = 8,8
+}
+tileset
+{
+    file = floors_interior_tilesandwood_01
+    size = 8,8
+}
+tileset
+{
+    file = floors_rugs_01
+    size = 8,8
+}
+tileset
+{
+    file = furniture_bedding_01
+    size = 8,8
+}
+tileset
+{
+    file = furniture_seating_indoor_01
+    size = 8,8
+}
+tileset
+{
+    file = furniture_seating_indoor_02
+    size = 8,8
+}
+tileset
+{
+    file = furniture_seating_outdoor_01
+    size = 8,8
+}
+tileset
+{
+    file = furniture_shelving_01
+    size = 8,8
+}
+tileset
+{
+    file = furniture_storage_01
+    size = 8,8
+}
+tileset
+{
+    file = furniture_tables_high_01
+    size = 8,8
+}
+tileset
+{
+    file = furniture_tables_low_01
+    size = 8,8
+}
+tileset
+{
+    file = lighting_indoor_01
+    size = 8,8
+}
+tileset
+{
+    file = lighting_outdoor_01
+    size = 8,8
+}
+tileset
+{
+    file = location_barn_01
+    size = 8,8
+}
+tileset
+{
+    file = location_business_bank_01
+    size = 8,8
+}
+tileset
+{
+    file = location_business_office_generic_01
+    size = 8,8
+}
+tileset
+{
+    file = location_community_church_small_01
+    size = 8,8
+}
+tileset
+{
+    file = location_community_church_small_02
+    size = 8,8
+}
+tileset
+{
+    file = location_hospitality_sunstarmotel_01
+    size = 8,8
+}
+tileset
+{
+    file = location_hospitality_sunstarmotel_02
+    size = 8,8
+}
+tileset
+{
+    file = location_restaurant_bar_01
+    size = 8,8
+}
+tileset
+{
+    file = location_restaurant_diner_01
+    size = 8,8
+}
+tileset
+{
+    file = location_restaurant_pie_01
+    size = 8,8
+}
+tileset
+{
+    file = location_restaurant_seahorse_01
+    size = 8,8
+}
+tileset
+{
+    file = location_restaurant_spiffos_01
+    size = 8,8
+}
+tileset
+{
+    file = location_restaurant_spiffos_02
+    size = 8,8
+}
+tileset
+{
+    file = location_sewer_01
+    size = 8,8
+}
+tileset
+{
+    file = location_shop_accessories_01
+    size = 8,8
+}
+tileset
+{
+    file = location_shop_fossoil_01
+    size = 8,8
+}
+tileset
+{
+    file = location_shop_generic_01
+    size = 8,8
+}
+tileset
+{
+    file = location_shop_greenes_01
+    size = 8,8
+}
+tileset
+{
+    file = location_trailer_01
+    size = 8,8
+}
+tileset
+{
+    file = location_trailer_02
+    size = 8,8
+}
+tileset
+{
+    file = ../../../maptools/missing_tileset_666
+    size = 8,8
+}
+tileset
+{
+    file = overlay_grime_floor_01
+    size = 8,8
+}
+tileset
+{
+    file = overlay_grime_wall_01
+    size = 8,8
+}
+tileset
+{
+    file = recreational_01
+    size = 8,8
+}
+tileset
+{
+    file = roofs_01
+    size = 8,8
+}
+tileset
+{
+    file = street_decoration_01
+    size = 8,8
+}
+tileset
+{
+    file = street_trafficlines_01
+    size = 8,8
+}
+tileset
+{
+    file = trashcontainers_01
+    size = 8,8
+}
+tileset
+{
+    file = vegetation_foliage_01
+    size = 8,8
+}
+tileset
+{
+    file = vegetation_groundcover_01
+    size = 8,8
+}
+tileset
+{
+    file = vegetation_indoor_01
+    size = 8,8
+}
+tileset
+{
+    file = vegetation_ornamental_01
+    size = 8,8
+}
+tileset
+{
+    file = vegetation_trees_01
+    size = 8,8
+}
+tileset
+{
+    file = walls_burnt_01
+    size = 8,8
+}
+tileset
+{
+    file = walls_commercial_01
+    size = 8,8
+}
+tileset
+{
+    file = walls_commercial_02
+    size = 8,8
+}
+tileset
+{
+    file = walls_decoration_01
+    size = 8,8
+}
+tileset
+{
+    file = walls_detailing_01
+    size = 8,8
+}
+tileset
+{
+    file = walls_exterior_house_01
+    size = 8,8
+    tile
+    {
+        xy = 0,1
+        meta-enum = WindowW
+    }
+    tile
+    {
+        xy = 0,3
+        meta-enum = WindowW
+    }
+    tile
+    {
+        xy = 0,5
+        meta-enum = WindowW
+    }
+    tile
+    {
+        xy = 0,7
+        meta-enum = WindowW
+    }
+    tile
+    {
+        xy = 1,1
+        meta-enum = WindowN
+    }
+    tile
+    {
+        xy = 1,3
+        meta-enum = WindowN
+    }
+    tile
+    {
+        xy = 1,5
+        meta-enum = WindowN
+    }
+    tile
+    {
+        xy = 1,7
+        meta-enum = WindowN
+    }
+    tile
+    {
+        xy = 2,1
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 2,3
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 2,5
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 2,7
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 3,1
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 3,3
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 3,5
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 3,7
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 4,1
+        meta-enum = WindowW
+    }
+    tile
+    {
+        xy = 4,3
+        meta-enum = WindowW
+    }
+    tile
+    {
+        xy = 5,1
+        meta-enum = WindowN
+    }
+    tile
+    {
+        xy = 5,3
+        meta-enum = WindowN
+    }
+    tile
+    {
+        xy = 6,1
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 6,3
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 7,1
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 7,3
+        meta-enum = DoorN
+    }
+}
+tileset
+{
+    file = walls_exterior_roofs_01
+    size = 8,8
+}
+tileset
+{
+    file = walls_exterior_roofs_02
+    size = 8,8
+}
+tileset
+{
+    file = walls_exterior_roofs_03
+    size = 8,8
+}
+tileset
+{
+    file = walls_exterior_wooden_01
+    size = 8,8
+}
+tileset
+{
+    file = walls_garage_01
+    size = 8,8
+}
+tileset
+{
+    file = walls_interior_bathroom_01
+    size = 8,8
+}
+tileset
+{
+    file = walls_interior_house_01
+    size = 8,8
+}
+tileset
+{
+    file = walls_interior_house_02
+    size = 8,8
+}
+tileset
+{
+    file = walls_interior_house_03
+    size = 8,8
+}

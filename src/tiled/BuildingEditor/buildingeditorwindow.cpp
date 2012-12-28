@@ -44,13 +44,16 @@
 #include "simplefile.h"
 #include "templatefrombuildingdialog.h"
 
+#include "preferences.h"
+#include "tilemetainfodialog.h"
+#include "tilemetainfomgr.h"
+#include "tilesetmanager.h"
+#include "utils.h"
+#include "zoomable.h"
 #include "zprogress.h"
 
 #include "tile.h"
 #include "tileset.h"
-#include "tilesetmanager.h"
-#include "utils.h"
-#include "zoomable.h"
 
 #include <QBitmap>
 #include <QCloseEvent>
@@ -461,6 +464,24 @@ bool BuildingEditorWindow::Startup()
         }
     }
 
+#if 1
+    // Read Tilesets.txt before LoadTMXConfig() in case we are upgrading
+    // TMXConfig.txt from VERSION0 to VERSION1.
+    TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
+    if (!mgr->hasReadTxt()) {
+        if (!mgr->readTxt()) {
+            QMessageBox::critical(this, tr("It's no good, Jim!"),
+                                  tr("%1\n(while reading %2)")
+                                  .arg(mgr->errorString())
+                                  .arg(mgr->txtName()));
+            TileMetaInfoMgr::deleteInstance();
+            return false;
+        }
+        PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
+        mgr->loadTilesets();
+    }
+#endif
+
     if (!LoadTMXConfig()) {
         if (!mError.isEmpty()) // Empty when user cancelled choosing Tiles directory.
             QMessageBox::critical(this, tr("It's no good, Jim!"),
@@ -564,19 +585,19 @@ bool BuildingEditorWindow::Startup()
 bool BuildingEditorWindow::LoadTMXConfig()
 {
     // Make sure the user has chosen the Tiles directory.
-    QString tilesDirectory = BuildingPreferences::instance()->tilesDirectory();
+    QString tilesDirectory = Preferences::instance()->tilesDirectory();
     QDir dir(tilesDirectory);
-    if (!dir.exists()) {
+    if (tilesDirectory.isEmpty() || !dir.exists()) {
         QMessageBox::information(this, tr("Choose Tiles Directory"),
-                                 tr("Please enter the Tiles directory in the Preferences."));
-        BuildingPreferencesDialog dialog(this);
-        if (dialog.exec() != QDialog::Accepted) {
+                                 tr("Please choose the Tiles directory in the following dialog."));
+        TileMetaInfoDialog dialog(this);
+        dialog.exec();
+        tilesDirectory = Preferences::instance()->tilesDirectory();
+        if (tilesDirectory.isEmpty() || !QDir(tilesDirectory).exists()) {
             mError.clear();
             return false;
         }
     }
-
-    PROGRESS progress(tr("Reading TMXConfig.txt tilesets"), this);
 
     bool ok = BuildingTMX::instance()->readTxt();
     mError = BuildingTMX::instance()->errorString();

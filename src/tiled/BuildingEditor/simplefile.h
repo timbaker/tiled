@@ -47,6 +47,9 @@ public:
     QList<SimpleFileKeyValue> values;
     QList<SimpleFileBlock> blocks;
 
+    int findBlock(const QString &key) const;
+    int findValue(const QString &key) const;
+
     QString value(const char *key)
     { return value(QLatin1String(key)); }
 
