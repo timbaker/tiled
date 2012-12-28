@@ -23,8 +23,6 @@
 
 #include "pathgenerator.h"
 
-//#include "buildingeditorwindow.h"
-//#include "buildingpreferences.h"
 #include "BuildingEditor/buildingtiles.h"
 #include "BuildingEditor/buildingtilesdialog.h"
 
@@ -61,6 +59,16 @@ PathTileEntryDialog::PathTileEntryDialog(const QString &prompt, const QString &c
     if (!geom.isEmpty())
         restoreGeometry(geom);
     settings.endGroup();
+
+#if 1
+    if (category == QLatin1String("grime_wall")) {
+        foreach (PGP_TileEntry *entry, getEntriesInCategory(QLatin1String("walls"))) {
+            PG_WallGrime::registerWallTiles(entry);
+            delete entry;
+        }
+    }
+
+#endif
 }
 
 PathTileEntryDialog::~PathTileEntryDialog()
@@ -127,6 +135,10 @@ QList<PGP_TileEntry *> PathTileEntryDialog::getEntriesInCategory(const QString &
             else
                 entries += entry;
         }
+    }
+    if (category == QLatin1String("grime_wall")) {
+        foreach (BuildingTileEntry *bentry, BuildingTilesMgr::instance()->catGrimeWall()->entries())
+            entries += BuildingEntryToPathEntry(bentry);
     }
     return entries;
 }

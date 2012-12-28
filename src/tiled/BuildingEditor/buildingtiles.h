@@ -686,6 +686,8 @@ public:
     BuildingTileCategory *catWindows() const { return mCatWindows; }
     BuildingTileCategory *catCurtains() const { return mCatCurtains; }
     BuildingTileCategory *catStairs() const { return mCatStairs; }
+    BuildingTileCategory *catGrimeFloor() const { return mCatGrimeFloor; }
+    BuildingTileCategory *catGrimeWall() const { return mCatGrimeWall; }
     BuildingTileCategory *catRoofCaps() const { return mCatRoofCaps; }
     BuildingTileCategory *catRoofSlopes() const { return mCatRoofSlopes; }
     BuildingTileCategory *catRoofTops() const { return mCatRoofTops; }

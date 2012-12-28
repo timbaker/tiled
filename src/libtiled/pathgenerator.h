@@ -20,6 +20,7 @@
 
 #include "tiled_global.h"
 
+#include <QHash>
 #include <QString>
 #include <QVector>
 
@@ -151,7 +152,7 @@ public:
     QString tileName() const
     { return tileName(mTilesetName, mTileID); }
 
-    QString tileName(const QString &tilesetName, int tileID) const;
+    static QString tileName(const QString &tilesetName, int tileID);
 
     QString mTilesetName;
     int mTileID;
@@ -410,7 +411,7 @@ public:
     void setCell(QVector<TileLayer*> layers, QPoint p, int tileEnum, QVector<Tile*> &tiles);
 };
 
-class PG_Wall : public PathGenerator
+class TILEDSHARED_EXPORT PG_Wall : public PathGenerator
 {
 public:
     PG_Wall(const QString &label);
@@ -443,6 +444,45 @@ public:
 
     void setCell(QVector<TileLayer*> &layers, QVector<Tiled::Tile*> &tiles, int x, int y, int tileEnum);
     int tileAt(QVector<TileLayer*> &layers, QVector<Tiled::Tile *> &tiles, int x, int y);
+};
+
+class TILEDSHARED_EXPORT PG_WallGrime : public PathGenerator
+{
+public:
+    PG_WallGrime(const QString &label);
+
+    PathGenerator *clone() const;
+
+    void generate(int level, QVector<TileLayer*> &layers);
+
+    enum TileNames
+    {
+        West,
+        North,
+        NorthWest,
+        SouthEast,
+        WestWindow,
+        NorthWindow,
+        WestDoor,
+        NorthDoor,
+        TileCount
+    };
+
+    enum Properties
+    {
+        GrimeTiles = 0, // PGP_TileEntry
+        LayerGrime,
+        LayerWall1,
+        LayerWall2,
+        PathOffset,
+        PropertyCount
+    };
+
+    // Keep a mapping of known wall tiles to TileNames enum value.
+    // When this generator sees a known wall tile it places the appropriate
+    // grime tile.
+    static void registerWallTiles(PGP_TileEntry *entry);
+    static QHash<QString,int> mTileMap;
 };
 
 class TILEDSHARED_EXPORT PathGeneratorTypes
