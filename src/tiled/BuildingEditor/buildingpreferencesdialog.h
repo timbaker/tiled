@@ -36,7 +36,6 @@ public:
     ~BuildingPreferencesDialog();
 
 public slots:
-    void browseTiles();
     void accept();
     
 private:

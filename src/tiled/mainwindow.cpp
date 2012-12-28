@@ -569,6 +569,7 @@ MainWindow::~MainWindow()
 #ifdef ZOMBOID
     MapManager::deleteInstance();
     PathGeneratorMgr::deleteInstance();
+    TileMetaInfoMgr::deleteInstance();
 #endif
     TilesetManager::deleteInstance();
     DocumentManager::deleteInstance();
@@ -1335,23 +1336,25 @@ void MainWindow::pathGeneratorsDialog()
 void MainWindow::tilesetMetaInfoDialog()
 {
     TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
-    if (!mgr->readTxt()) {
-        QMessageBox::warning(this, tr("It's no good, Jim!"), mgr->errorString());
-        TileMetaInfoMgr::deleteInstance();
-        return;
+    if (!mgr->hasReadTxt()) {
+        if (!mgr->readTxt()) {
+            QMessageBox::warning(this, tr("It's no good, Jim!"),
+                                 tr("%1\n(while reading %2)")
+                                 .arg(mgr->errorString())
+                                 .arg(mgr->txtName()));
+            TileMetaInfoMgr::deleteInstance();
+            return;
+        }
+        PROGRESS progress(tr("Loading Tilesets.txt tilesets"));
+        mgr->loadTilesets();
     }
-
-    mgr->loadTilesets();
 
     TileMetaInfoDialog dialog(this);
     dialog.exec();
 
     if (!mgr->writeTxt()) {
         QMessageBox::warning(this, tr("It's no good, Jim!"), mgr->errorString());
-        TileMetaInfoMgr::deleteInstance();
     }
-
-    TileMetaInfoMgr::deleteInstance();
 }
 #endif
 

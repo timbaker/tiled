@@ -27,7 +27,8 @@
 #include "simplefile.h"
 
 #include "mapcomposite.h"
-
+#include "preferences.h"
+#include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
 #include "tmxmapwriter.h"
 
@@ -148,14 +149,18 @@ QString BuildingTMX::txtPath()
 }
 
 #define VERSION0 0
-#define VERSION_LATEST VERSION0
+
+// VERSION1
+// Move tilesets block to Tilesets.txt
+#define VERSION1 1
+#define VERSION_LATEST VERSION1
 
 bool BuildingTMX::readTxt()
 {
     // Make sure the user has chosen the Tiles directory.
-    QString tilesDirectory = BuildingPreferences::instance()->tilesDirectory();
+    QString tilesDirectory = Preferences::instance()->tilesDirectory();
     QDir dir(tilesDirectory);
-    if (!dir.exists()) {
+    if (tilesDirectory.isEmpty() || !dir.exists()) {
         mError = tr("The Tiles directory specified in the preferences doesn't exist!\n%1")
                 .arg(tilesDirectory);
         return false;
@@ -192,6 +197,7 @@ bool BuildingTMX::readTxt()
     QStringList missingTilesets;
 
     foreach (SimpleFileBlock block, simple.blocks) {
+#if 0
         if (block.name == QLatin1String("tilesets")) {
             foreach (SimpleFileKeyValue kv, block.values) {
                 if (kv.name == QLatin1String("tileset")) {
@@ -224,7 +230,9 @@ bool BuildingTMX::readTxt()
                     return false;
                 }
             }
-        } else if (block.name == QLatin1String("layers")) {
+        } else
+#endif
+            if (block.name == QLatin1String("layers")) {
             foreach (SimpleFileKeyValue kv, block.values) {
                 if (kv.name == QLatin1String("tile")) {
                     mLayers += LayerInfo(kv.value, LayerInfo::Tile);
@@ -260,7 +268,8 @@ bool BuildingTMX::writeTxt()
 {
     SimpleFile simpleFile;
 
-    QDir tilesDir(BuildingPreferences::instance()->tilesDirectory());
+    QDir tilesDir(Preferences::instance()->tilesDirectory());
+#if 0
     SimpleFileBlock tilesetBlock;
     tilesetBlock.name = QLatin1String("tilesets");
     foreach (Tiled::Tileset *tileset, BuildingTilesMgr::instance()->tilesets()) {
@@ -269,7 +278,7 @@ bool BuildingTMX::writeTxt()
         tilesetBlock.values += SimpleFileKeyValue(QLatin1String("tileset"), relativePath);
     }
     simpleFile.blocks += tilesetBlock;
-
+#endif
     SimpleFileBlock layersBlock;
     layersBlock.name = QLatin1String("layers");
     foreach (LayerInfo layerInfo, mLayers) {
@@ -345,6 +354,26 @@ bool BuildingTMX::upgradeTxt()
     Q_ASSERT(sourceFile.version() == VERSION_LATEST);
 
     // UPGRADE HERE
+    if (userVersion == VERSION0) {
+        int index = userFile.findBlock(QLatin1String("tilesets"));
+        if (index >= 0) {
+            SimpleFileBlock tilesetsBlock = userFile.blocks[index];
+            foreach (SimpleFileKeyValue kv, tilesetsBlock.values) {
+                QString tilesetName = QFileInfo(kv.value).completeBaseName();
+                if (TileMetaInfoMgr::instance()->tileset(tilesetName) == 0) {
+                    Tileset *ts = new Tileset(tilesetName, 64, 128);
+                    // Since the tileset image height/width wasn't saved, create
+                    // a tileset with only a single tile.
+                    ts->loadFromImage(TilesetManager::instance()->missingTile()->image().toImage(),
+                                      kv.value + QLatin1String(".png"));
+                    ts->setMissing(true);
+                    TileMetaInfoMgr::instance()->addTileset(ts);
+                }
+            }
+            userFile.blocks.removeAt(index);
+            TileMetaInfoMgr::instance()->writeTxt();
+        }
+    }
 
     userFile.setVersion(VERSION_LATEST);
     if (!userFile.write(userPath)) {

@@ -467,7 +467,10 @@
   </action>
   <action name="actionTilesetMetaInfo">
    <property name="text">
-    <string>Tileset Meta Info...</string>
+    <string>Tilesets...</string>
+   </property>
+   <property name="toolTip">
+    <string>Tilesets</string>
    </property>
   </action>
  </widget>

@@ -35,9 +35,6 @@ public:
     QString configPath() const;
     QString configPath(const QString &fileName) const;
 
-    void setTilesDirectory(const QString &path);
-    QString tilesDirectory() const;
-
     bool highlightFloor() const
     { return mHighlightFloor; }
 
@@ -65,7 +62,6 @@ public slots:
 private:
     static BuildingPreferences *mInstance;
     QSettings mSettings;
-    QString mTilesDirectory;
     bool mHighlightFloor;
     bool mShowWalls;
     bool mShowObjects;

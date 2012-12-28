@@ -27,6 +27,9 @@
 #include "zprogress.h"
 #endif
 
+#ifdef ZOMBOID
+#include <QCoreApplication>
+#endif
 #include <QDesktopServices>
 #include <QFileInfo>
 #include <QSettings>
@@ -103,6 +106,19 @@ Preferences::Preferences()
     mSettings->endGroup();
 
 #ifdef ZOMBOID
+    QString KEY_TILES_DIR = QLatin1String("BuildingEditor/TilesDirectory");
+    QString oldTilesDirectory = mSettings->value(KEY_TILES_DIR).toString();
+    if (oldTilesDirectory.isEmpty()) {
+        oldTilesDirectory = QCoreApplication::applicationDirPath() +
+                QLatin1Char('/') + QLatin1String("../Tiles");
+    }
+    mSettings->beginGroup(QLatin1String("Tilesets"));
+    mTilesDirectory = mSettings->value(QLatin1String("TilesDirectory"),
+                                       oldTilesDirectory).toString();
+    mSettings->endGroup();
+    if (oldTilesDirectory.length())
+        mSettings->remove(KEY_TILES_DIR);
+
     mSettings->beginGroup(QLatin1String("MapsDirectory"));
     mMapsDirectory = mSettings->value(QLatin1String("Current"), QString()).toString();
     mSettings->endGroup();
@@ -357,6 +373,11 @@ void Preferences::setAutoSwitchLayer(bool enabled)
     emit autoSwitchLayerChanged(mAutoSwitchLayer);
 }
 
+QString Preferences::tilesDirectory() const
+{
+    return mTilesDirectory;
+}
+
 qreal Preferences::tilesetScale() const
 {
     return mTilesetScale;
@@ -365,6 +386,13 @@ qreal Preferences::tilesetScale() const
 bool Preferences::sortTilesets() const
 {
     return mSortTilesets;
+}
+
+void Preferences::setTilesDirectory(const QString &path)
+{
+    mTilesDirectory = path;
+    mSettings->setValue(QLatin1String("Tilesets/TilesDirectory"), mTilesDirectory);
+    emit tilesDirectoryChanged();
 }
 
 void Preferences::setTilesetScale(qreal scale)

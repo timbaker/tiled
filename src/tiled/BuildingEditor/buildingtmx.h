@@ -39,9 +39,6 @@ public:
 
     BuildingTMX();
 
-    const QStringList &tilesets() const
-    { return mTilesets; }
-
 //    const QList<LayerInfo> &layers() const
 //    { return mLayers; }
 
@@ -81,7 +78,6 @@ private:
     };
 
     static BuildingTMX *mInstance;
-    QStringList mTilesets;
     QList<LayerInfo> mLayers;
     int mRevision;
     int mSourceRevision;

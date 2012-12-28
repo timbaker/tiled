@@ -24,18 +24,20 @@
 #include "BuildingEditor/simplefile.h"
 
 #include "mainwindow.h"
+#include "preferences.h"
 #include "tilesetmanager.h"
 
 #include "tile.h"
 #include "tileset.h"
 
+#include <QCoreApplication>
 #include <QDir>
 #include <QImage>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
 
-static const char *TXT_FILE = "TileMetaInfo.txt";
+static const char *TXT_FILE = "Tilesets.txt";
 
 TileMetaInfoMgr* TileMetaInfoMgr::mInstance = 0;
 
@@ -55,7 +57,8 @@ void TileMetaInfoMgr::deleteInstance()
 TileMetaInfoMgr::TileMetaInfoMgr(QObject *parent) :
     QObject(parent),
     mRevision(0),
-    mSourceRevision(0)
+    mSourceRevision(0),
+    mHasReadTxt(false)
 {
 }
 
@@ -67,15 +70,7 @@ TileMetaInfoMgr::~TileMetaInfoMgr()
 
 QString TileMetaInfoMgr::tilesDirectory() const
 {
-    return BuildingEditor::BuildingPreferences::instance()->tilesDirectory();
-}
-
-void TileMetaInfoMgr::setTilesDirectory(const QString &path)
-{
-    BuildingEditor::BuildingPreferences::instance()->setTilesDirectory(path);
-
-    // Try to load any tilesets that weren't found.
-    loadTilesets();
+    return Preferences::instance()->tilesDirectory();
 }
 
 QString TileMetaInfoMgr::txtName()
@@ -85,7 +80,7 @@ QString TileMetaInfoMgr::txtName()
 
 QString TileMetaInfoMgr::txtPath()
 {
-    return tilesDirectory() + QLatin1String("/") + txtName();
+    return BuildingEditor::BuildingPreferences::instance()->configPath(txtName());
 }
 
 #define VERSION0 0
@@ -93,6 +88,37 @@ QString TileMetaInfoMgr::txtPath()
 
 bool TileMetaInfoMgr::readTxt()
 {
+#if 1
+    {
+        // Create ~/.TileZed if needed.
+        QString configPath = BuildingEditor::BuildingPreferences::instance()->configPath();
+        QDir dir(configPath);
+        if (!dir.exists()) {
+            if (!dir.mkpath(configPath)) {
+                mError = tr("Failed to create config directory:\n%1")
+                        .arg(QDir::toNativeSeparators(configPath));
+                return false;
+            }
+        }
+
+        // Copy TXT_FILE from the application directory to ~/.TileZed if it doesn't
+        // exist there.
+        QString configFile = txtName();
+        QString fileName = txtPath();
+        if (!QFileInfo(fileName).exists()) {
+            QString source = QCoreApplication::applicationDirPath() + QLatin1Char('/')
+                    + configFile;
+            if (QFileInfo(source).exists()) {
+                if (!QFile::copy(source, fileName)) {
+                    mError = tr("Failed to copy file:\nFrom: %1\nTo: %2")
+                            .arg(source).arg(fileName);
+                    return false;
+                }
+            }
+        }
+    }
+#endif
+
     // Make sure the user has chosen the Tiles directory.
     QString tilesDirectory = this->tilesDirectory();
     QDir dir(tilesDirectory);
@@ -133,30 +159,7 @@ bool TileMetaInfoMgr::readTxt()
     QStringList missingTilesets;
 
     foreach (SimpleFileBlock block, simple.blocks) {
-        if (block.name == QLatin1String("tilesets")) {
-            foreach (SimpleFileKeyValue kv, block.values) {
-                if (kv.name == QLatin1String("tileset")) {
-                    // Just get the list of names.  Don't load the tilesets yet
-                    // because the user might not have chosen the Tiles directory.
-                    // The tilesets will be loaded when other code asks for them or
-                    // when the Tiles directory is changed.
-                    QFileInfo info(kv.value); // relative to Tiles directory
-                    Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
-                    // We don't know how big the image actually is, so it only
-                    // has one tile.
-                    Tile *missingTile = TilesetManager::instance()->missingTile();
-                    ts->loadFromImage(missingTile->image().toImage(),
-                                      kv.value + QLatin1String(".png"));
-                    ts->setMissing(true);
-                    addTileset(ts);
-                } else {
-                    mError = tr("Unknown value name '%1'.\n%2")
-                            .arg(kv.name)
-                            .arg(path);
-                    return false;
-                }
-            }
-        } else if (block.name == QLatin1String("enums")) {
+        if (block.name == QLatin1String("meta-enums")) {
             foreach (SimpleFileKeyValue kv, block.values) {
                 if (mEnums.contains(kv.name)) {
                     mError = tr("Duplicate enum %1");
@@ -178,39 +181,69 @@ bool TileMetaInfoMgr::readTxt()
                 mEnums.insert(kv.name, value);
             }
         } else if (block.name == QLatin1String("tileset")) {
-            QString tilesetName = block.value("name");
+            QString tilesetFileName = block.value("file");
+            if (tilesetFileName.isEmpty()) {
+                mError = tr("No-name tilesets aren't allowed.");
+                return false;
+            }
+            tilesetFileName += QLatin1String(".png");
+            QFileInfo finfo(tilesetFileName); // relative to Tiles directory
+            QString tilesetName = finfo.completeBaseName();
             if (mTilesetInfo.contains(tilesetName)) {
                 mError = tr("Duplicate tileset '%1'.").arg(tilesetName);
                 return false;
             }
-            TilesetMetaInfo *info = new TilesetMetaInfo;
-            foreach (SimpleFileKeyValue kv, block.values) {
-                if (kv.name == QLatin1String("name")) {
-                    continue;
-                } else if (kv.name == QLatin1String("tile")) {
-                    QStringList values = kv.value.split(QLatin1Char(' '), QString::SkipEmptyParts);
-                    if (values.size() != 2) {
-tileError:
-                        mError = tr("Invalid %1 = %2").arg(kv.name).arg(kv.value);
-                        return false;
-                    }
-                    QString coordString = values[0];
-                    QStringList coords = coordString.split(QLatin1Char(','), QString::SkipEmptyParts);
-                    if (coords.size() != 2) goto tileError;
-                    bool ok;
-                    int column = coords[0].toInt(&ok);
-                    if (!ok || column < 0) goto tileError;
-                    int row = coords[1].toInt(&ok);
-                    if (!ok || row < 0) goto tileError;
-                    QString enumName = values[1];
-                    if (!mEnums.contains(enumName)) {
-                        mError = tr("Unknown enum '%1'").arg(enumName);
-                        return false;
-                    }
-                    info->mInfo[coordString].mMetaGameEnum = enumName;
-                } else {
-                    mError = tr("Unknown value name '%1'.").arg(kv.name);
+            Tileset *tileset = new Tileset(tilesetName, 64, 128);
+            {
+                QString size = block.value("size");
+                int columns, rows;
+                if (!parse2Ints(size, &columns, &rows) ||
+                        (columns < 1) || (rows < 1)) {
+                    mError = tr("Invalid tileset size '%1' for tileset '%2'")
+                            .arg(size).arg(tilesetName);
                     return false;
+                }
+
+                // Don't load the tilesets yet because the user might not have
+                // chosen the Tiles directory. The tilesets will be loaded when
+                // other code asks for them or when the Tiles directory is changed.
+                int width = columns * 64, height = rows * 128;
+                QImage image(width, height, QImage::Format_ARGB32);
+                image.fill(Qt::red);
+                tileset->loadFromImage(image, tilesetFileName);
+                Tile *missingTile = TilesetManager::instance()->missingTile();
+                for (int i = 0; i < tileset->tileCount(); i++)
+                    tileset->tileAt(i)->setImage(missingTile->image());
+                tileset->setMissing(true);
+            }
+            addTileset(tileset);
+
+            TilesetMetaInfo *info = new TilesetMetaInfo;
+            foreach (SimpleFileBlock tileBlock, block.blocks) {
+                if (tileBlock.name == QLatin1String("tile")) {
+                    QString coordString;
+                    foreach (SimpleFileKeyValue kv, tileBlock.values) {
+                        if (kv.name == QLatin1String("xy")) {
+                            int column, row;
+                            if (!parse2Ints(kv.value, &column, &row) ||
+                                    (column < 0) || (row < 0)) {
+                                mError = tr("Invalid %1 = %2").arg(kv.name).arg(kv.value);
+                                return false;
+                            }
+                            coordString = kv.value;
+                        } else if (kv.name == QLatin1String("meta-enum")) {
+                            QString enumName = kv.value;
+                            if (!mEnums.contains(enumName)) {
+                                mError = tr("Unknown enum '%1'").arg(enumName);
+                                return false;
+                            }
+                            Q_ASSERT(!coordString.isEmpty());
+                            info->mInfo[coordString].mMetaGameEnum = enumName;
+                        } else {
+                            mError = tr("Unknown value name '%1'.").arg(kv.name);
+                            return false;
+                        }
+                    }
                 }
             }
             mTilesetInfo[tilesetName] = info;
@@ -230,6 +263,8 @@ tileError:
         dialog.exec();
     }
 
+    mHasReadTxt = true;
+
     return true;
 }
 
@@ -237,36 +272,38 @@ bool TileMetaInfoMgr::writeTxt()
 {
     SimpleFile simpleFile;
 
-    QDir tilesDir(tilesDirectory());
-    SimpleFileBlock tilesetBlock;
-    tilesetBlock.name = QLatin1String("tilesets");
-    foreach (Tiled::Tileset *tileset, tilesets()) {
-        QString relativePath = tilesDir.relativeFilePath(tileset->imageSource());
-        relativePath.truncate(relativePath.length() - 4); // remove .png
-        tilesetBlock.values += SimpleFileKeyValue(QLatin1String("tileset"), relativePath);
-    }
-    simpleFile.blocks += tilesetBlock;
-
     SimpleFileBlock enumsBlock;
-    enumsBlock.name = QLatin1String("enums");
+    enumsBlock.name = QLatin1String("meta-enums");
     foreach (QString name, mEnumNames) {
         enumsBlock.addValue(name, QString::number(mEnums[name]));
     }
     simpleFile.blocks += enumsBlock;
 
+    QDir tilesDir(tilesDirectory());
     foreach (Tiled::Tileset *tileset, tilesets()) {
-        if (!mTilesetInfo.contains(tileset->name()))
-            continue;
         SimpleFileBlock tilesetBlock;
         tilesetBlock.name = QLatin1String("tileset");
-        tilesetBlock.addValue("name", tileset->name());
-        QMap<QString,TileMetaInfo> &info = mTilesetInfo[tileset->name()]->mInfo;
-        foreach (QString key, info.keys()) {
-            Q_ASSERT(info[key].mMetaGameEnum.isEmpty() == false);
-            if (info[key].mMetaGameEnum.isEmpty())
-                continue;
-            QString value = key + QLatin1String(" ") + info[key].mMetaGameEnum;
-            tilesetBlock.addValue("tile", value);
+
+        QString relativePath = tilesDir.relativeFilePath(tileset->imageSource());
+        relativePath.truncate(relativePath.length() - 4); // remove .png
+        tilesetBlock.addValue("file", relativePath);
+
+        int columns = tileset->columnCount();
+        int rows = tileset->tileCount() / columns;
+        tilesetBlock.addValue("size", QString(QLatin1String("%1,%2")).arg(columns).arg(rows));
+
+        if (mTilesetInfo.contains(tileset->name())) {
+            QMap<QString,TileMetaInfo> &info = mTilesetInfo[tileset->name()]->mInfo;
+            foreach (QString key, info.keys()) {
+                Q_ASSERT(info[key].mMetaGameEnum.isEmpty() == false);
+                if (info[key].mMetaGameEnum.isEmpty())
+                    continue;
+                SimpleFileBlock tileBlock;
+                tileBlock.name = QLatin1String("tile");
+                tileBlock.addValue("xy", key);
+                tileBlock.addValue("meta-enum", info[key].mMetaGameEnum);
+                tilesetBlock.blocks += tileBlock;
+            }
         }
         simpleFile.blocks += tilesetBlock;
     }
@@ -326,16 +363,16 @@ void TileMetaInfoMgr::addTileset(Tileset *tileset)
     if (!mRemovedTilesets.contains(tileset))
         TilesetManager::instance()->addReference(tileset);
     mRemovedTilesets.removeAll(tileset);
-//    emit tilesetAdded(tileset);
+    emit tilesetAdded(tileset);
 }
 
 void TileMetaInfoMgr::removeTileset(Tileset *tileset)
 {
     Q_ASSERT(mTilesetByName.contains(tileset->name()));
     Q_ASSERT(mRemovedTilesets.contains(tileset) == false);
-//    emit tilesetAboutToBeRemoved(tileset);
+    emit tilesetAboutToBeRemoved(tileset);
     mTilesetByName.remove(tileset->name());
-//    emit tilesetRemoved(tileset);
+    emit tilesetRemoved(tileset);
 
     // Don't remove references now, that will delete the tileset, and the
     // user might undo the removal.
@@ -348,7 +385,7 @@ void TileMetaInfoMgr::loadTilesets()
     foreach (Tileset *ts, tilesets()) {
         if (ts->isMissing()) {
             QString source = tilesDirectory() + QLatin1Char('/')
-                    // This is the name that was saved in PathGenerators.txt,
+                    // This is the name that was saved in Tilesets.txt,
                     // relative to Tiles directory, plus .png.
                     + ts->imageSource();
             QFileInfo info(source);
@@ -388,6 +425,20 @@ QString TileMetaInfoMgr::tileEnum(Tile *tile)
     if (!info->mInfo.contains(key))
         return QString();
     return info->mInfo[key].mMetaGameEnum;
+}
+
+bool TileMetaInfoMgr::parse2Ints(const QString &s, int *pa, int *pb)
+{
+    QStringList coords = s.split(QLatin1Char(','), QString::SkipEmptyParts);
+    if (coords.size() != 2)
+        return false;
+    bool ok;
+    int a = coords[0].toInt(&ok);
+    if (!ok) return false;
+    int b = coords[1].toInt(&ok);
+    if (!ok) return false;
+    *pa = a, *pb = b;
+    return true;
 }
 
 /////

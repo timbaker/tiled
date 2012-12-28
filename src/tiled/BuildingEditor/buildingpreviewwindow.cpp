@@ -29,6 +29,9 @@
 
 #include "mapcomposite.h"
 #include "mapmanager.h"
+#include "tilemetainfomgr.h"
+#include "tilesetmanager.h"
+#include "tmxmapwriter.h"
 #include "zoomable.h"
 
 #include "isometricrenderer.h"
@@ -36,10 +39,8 @@
 #include "mapobject.h"
 #include "maprenderer.h"
 #include "objectgroup.h"
-#include "tmxmapwriter.h"
 #include "tilelayer.h"
 #include "tileset.h"
-#include "tilesetmanager.h"
 #include "zlevelrenderer.h"
 
 #include <QDebug>
@@ -416,8 +417,8 @@ void BuildingPreviewScene::BuildingToMap()
                    mapSize.width(), mapSize.height(),
                    64, 32);
 
-    // Add tilesets from TMXConfig.txt
-    foreach (Tileset *ts, BuildingTilesMgr::instance()->tilesets())
+    // Add tilesets from Tilesets.txt
+    foreach (Tileset *ts, TileMetaInfoMgr::instance()->tilesets())
         mMap->addTileset(ts);
     TilesetManager::instance()->addReferences(mMap->tilesets());
 

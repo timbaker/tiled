@@ -55,7 +55,6 @@ public:
     static void deleteInstance();
 
     QString tilesDirectory() const;
-    void setTilesDirectory(const QString &path);
 
     QList<Tileset*> tilesets() const
     { return mTilesetByName.values(); }
@@ -87,6 +86,9 @@ public:
     bool upgradeTxt();
     bool mergeTxt();
 
+    bool hasReadTxt()
+    { return mHasReadTxt; }
+
     QString errorString() const
     { return mError; }
 
@@ -99,6 +101,14 @@ public:
 
     void setTileEnum(Tile *tile, const QString &enumName);
     QString tileEnum(Tile *tile);
+
+signals:
+    void tilesetAdded(Tiled::Tileset *ts);
+    void tilesetAboutToBeRemoved(Tiled::Tileset *ts);
+    void tilesetRemoved(Tiled::Tileset *ts);
+
+private:
+    bool parse2Ints(const QString &s, int *pa, int *pb);
 
 private:
     static TileMetaInfoMgr *mInstance;
@@ -115,6 +125,7 @@ private:
     int mRevision;
     int mSourceRevision;
     QString mError;
+    bool mHasReadTxt;
 };
 
 } // namespace Internal

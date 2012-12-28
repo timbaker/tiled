@@ -45,8 +45,6 @@ void BuildingPreferences::deleteInstance()
 BuildingPreferences::BuildingPreferences(QObject *parent) :
     QObject(parent)
 {
-    mTilesDirectory = mSettings.value(QLatin1String(KEY_TILES_DIR),
-                                      QLatin1String("../Tiles")).toString();
     mHighlightFloor = mSettings.value(QLatin1String(KEY_HIGHLIGHT_FLOOR),
                                       true).toBool();
     mShowWalls = mSettings.value(QLatin1String(KEY_SHOW_WALLS),
@@ -65,17 +63,6 @@ QString BuildingPreferences::configPath() const
 QString BuildingPreferences::configPath(const QString &fileName) const
 {
     return configPath() + QLatin1Char('/') + fileName;
-}
-
-void BuildingPreferences::setTilesDirectory(const QString &path)
-{
-    mTilesDirectory = path;
-    mSettings.setValue(QLatin1String(KEY_TILES_DIR), mTilesDirectory);
-}
-
-QString BuildingPreferences::tilesDirectory() const
-{
-    return mTilesDirectory;
 }
 
 void BuildingPreferences::setHighlightFloor(bool highlight)

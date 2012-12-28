@@ -65,6 +65,8 @@ private slots:
     void undoTextChanged(const QString &text);
     void redoTextChanged(const QString &text);
 
+    void browse();
+
     void updateUI();
 
     void accept();

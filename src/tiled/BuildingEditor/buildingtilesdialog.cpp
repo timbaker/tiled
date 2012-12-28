@@ -25,11 +25,13 @@
 #include "furnitureview.h"
 #include "horizontallinedelegate.h"
 
+#include "tilemetainfodialog.h"
+#include "tilemetainfomgr.h"
+#include "utils.h"
 #include "zoomable.h"
 
 #include "tile.h"
 #include "tileset.h"
-#include "utils.h"
 
 #include <QComboBox>
 #include <QCoreApplication>
@@ -503,62 +505,6 @@ public:
     QString mName;
 };
 
-class AddBuildingTileset : public QUndoCommand
-{
-public:
-    AddBuildingTileset(BuildingTilesDialog *d, Tiled::Tileset *tileset) :
-        QUndoCommand(QCoreApplication::translate("UndoCommands", "Add Tileset")),
-        mDialog(d),
-        mTileset(tileset)
-    {
-    }
-
-    ~AddBuildingTileset()
-    {
-    }
-
-    void undo()
-    {
-        mDialog->removeTileset(mTileset);
-    }
-
-    void redo()
-    {
-        mDialog->addTileset(mTileset);
-    }
-
-    BuildingTilesDialog *mDialog;
-    Tiled::Tileset *mTileset;
-};
-
-class RemoveBuildingTileset : public QUndoCommand
-{
-public:
-    RemoveBuildingTileset(BuildingTilesDialog *d, Tiled::Tileset *tileset) :
-        QUndoCommand(QCoreApplication::translate("UndoCommands", "Remove Tileset")),
-        mDialog(d),
-        mTileset(tileset)
-    {
-    }
-
-    ~RemoveBuildingTileset()
-    {
-    }
-
-    void undo()
-    {
-        mDialog->addTileset(mTileset);
-    }
-
-    void redo()
-    {
-        mDialog->removeTileset(mTileset);
-    }
-
-    BuildingTilesDialog *mDialog;
-    Tiled::Tileset *mTileset;
-};
-
 } // namespace BuildingEditor
 
 /////
@@ -647,6 +593,10 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
 //    ui->listWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
     connect(ui->tilesetList, SIGNAL(itemSelectionChanged()),
             SLOT(tilesetSelectionChanged()));
+    connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
+            SLOT(tilesetAdded(Tiled::Tileset*)));
+    connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetAboutToBeRemoved(Tiled::Tileset*)),
+            SLOT(tilesetAboutToBeRemoved(Tiled::Tileset*)));
 
     ui->tilesetTilesView->setZoomable(mZoomable);
     ui->tilesetTilesView->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -782,15 +732,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     connect(mUndoGroup, SIGNAL(canRedoChanged(bool)), button, SLOT(setEnabled(bool)));
     connect(button, SIGNAL(clicked()), redoAction, SIGNAL(triggered()));
 
-    /////
-    toolBar = new QToolBar();
-    toolBar->setIconSize(QSize(16, 16));
-    toolBar->addAction(ui->actionAddTilesets);
-    toolBar->addAction(ui->actionRemoveTileset);
-    ui->tilesetToolbarLayout->addWidget(toolBar);
-    connect(ui->actionAddTilesets, SIGNAL(triggered()), SLOT(addTileset()));
-    connect(ui->actionRemoveTileset, SIGNAL(triggered()), SLOT(removeTileset()));
-    /////
+    connect(ui->tilesetMgr, SIGNAL(clicked()), SLOT(manageTilesets()));
 
     setCategoryList();
     setTilesetList();
@@ -818,8 +760,8 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
 
     QString tilesetName = settings.value(QLatin1String("SelectedTileset")).toString();
     if (!tilesetName.isEmpty()) {
-        if (Tiled::Tileset *tileset = BuildingTilesMgr::instance()->tilesetFor(tilesetName)) {
-            int index = BuildingTilesMgr::instance()->tilesets().indexOf(tileset);
+        if (Tiled::Tileset *tileset = TileMetaInfoMgr::instance()->tileset(tilesetName)) {
+            int index = TileMetaInfoMgr::instance()->indexOf(tileset);
             ui->tilesetList->setCurrentRow(index);
         }
     }
@@ -1048,26 +990,6 @@ void BuildingTilesDialog::reorderCategory(int oldIndex, int newIndex)
     ui->categoryList->setCurrentRow(mRowOfFirstFurnitureGroup + newIndex);
 }
 
-void BuildingTilesDialog::addTileset(Tileset *tileset)
-{
-    BuildingTilesMgr::instance()->addTileset(tileset);
-
-    categoryChanged(ui->categoryList->currentRow());
-    setTilesetList();
-    synchUI();
-}
-
-void BuildingTilesDialog::removeTileset(Tileset *tileset)
-{
-    ui->categoryTilesView->model()->setTiles(QList<Tiled::Tile*>());
-
-    BuildingTilesMgr::instance()->removeTileset(tileset);
-
-    categoryChanged(ui->categoryList->currentRow());
-    setTilesetList();
-    synchUI();
-}
-
 void BuildingTilesDialog::setCategoryList()
 {
     ui->categoryList->clear();
@@ -1130,7 +1052,7 @@ void BuildingTilesDialog::setTilesetList()
     // Add the list of tilesets, and resize it to fit
     int width = 64;
     QFontMetrics fm = ui->tilesetList->fontMetrics();
-    foreach (Tileset *tileset, BuildingTilesMgr::instance()->tilesets()) {
+    foreach (Tileset *tileset, TileMetaInfoMgr::instance()->tilesets()) {
         QListWidgetItem *item = new QListWidgetItem();
         item->setText(tileset->name());
         if (tileset->isMissing())
@@ -1172,7 +1094,7 @@ void BuildingTilesDialog::displayTileInTileset(Tiled::Tile *tile)
 {
     if (!tile)
         return;
-    int row = BuildingTilesMgr::instance()->tilesets().indexOf(tile->tileset());
+    int row = TileMetaInfoMgr::instance()->indexOf(tile->tileset());
     if (row >= 0) {
         ui->tilesetList->setCurrentRow(row);
         ui->tilesetTilesView->setCurrentIndex(ui->tilesetTilesView->model()->index(tile));
@@ -1305,7 +1227,7 @@ void BuildingTilesDialog::tilesetSelectionChanged()
 #endif
         int row = ui->tilesetList->row(item);
         MixedTilesetModel *model = ui->tilesetTilesView->model();
-        mCurrentTileset = BuildingTilesMgr::instance()->tilesets().at(row);
+        mCurrentTileset = TileMetaInfoMgr::instance()->tileset(row);
         if (mCurrentTileset->isMissing())
             model->setTiles(QList<Tile*>());
         else
@@ -1649,49 +1571,25 @@ void BuildingTilesDialog::toggleCorners()
     }
 }
 
-void BuildingTilesDialog::addTileset()
+void BuildingTilesDialog::manageTilesets()
 {
-    const QString tilesDir = BuildingPreferences::instance()->tilesDirectory();
-    const QString filter = Utils::readableImageFormatsFilter();
-    QStringList fileNames = QFileDialog::getOpenFileNames(this,
-                                                          tr("Tileset Image"),
-                                                          tilesDir,
-                                                          filter);
-    QFileInfoList add;
-    foreach (QString f, fileNames) {
-        QFileInfo info(f);
-        QString name = info.completeBaseName();
-        if (BuildingTilesMgr::instance()->tilesetFor(name))
-            continue; // FIXME: duplicate tileset names not allowed, even in different directories
-        add += info;
-    }
-    if (add.count() > 1)
-        mUndoStack->beginMacro(tr("Add Tilesets"));
-    foreach (QFileInfo info, add) {
-        if (Tiled::Tileset *ts = BuildingTMX::instance()->loadTileset(info.canonicalFilePath()))
-            mUndoStack->push(new AddBuildingTileset(this, ts));
-        else {
-            QMessageBox::warning(this, tr("It's no good, Jim!"),
-                                 BuildingTMX::instance()->errorString());
-        }
-    }
-    if (add.count() > 1)
-        mUndoStack->endMacro();
+    TileMetaInfoDialog dialog(this);
+    dialog.exec();
 }
 
-void BuildingTilesDialog::removeTileset()
+void BuildingTilesDialog::tilesetAdded(Tileset *tileset)
 {
-    QList<QListWidgetItem*> selection = ui->tilesetList->selectedItems();
-    QListWidgetItem *item = selection.count() ? selection.first() : 0;
-    if (item) {
-        int row = ui->tilesetList->row(item);
-        Tileset *tileset = BuildingTilesMgr::instance()->tilesets().at(row);
-        if (QMessageBox::question(this, tr("Remove Tileset"),
-                                  tr("Really remove the tileset '%1'?").arg(tileset->name()),
-                                  QMessageBox::Ok, QMessageBox::Cancel) == QMessageBox::Cancel)
-            return;
-        mUndoStack->push(new RemoveBuildingTileset(this, tileset));
-    }
+    setTilesetList();
+    int row = TileMetaInfoMgr::instance()->indexOf(tileset);
+    ui->tilesetList->setCurrentRow(row);
+    synchUI();
+}
+
+void BuildingTilesDialog::tilesetAboutToBeRemoved(Tileset *tileset)
+{
+    int row = TileMetaInfoMgr::instance()->indexOf(tileset);
+    delete ui->tilesetList->takeItem(row);
+    synchUI();
 }
 
 void BuildingTilesDialog::undoTextChanged(const QString &text)

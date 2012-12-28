@@ -654,22 +654,6 @@ public:
     Tiled::Tile *noneTiledTile() const
     { return mNoneTiledTile; }
 
-    void addTileset(Tiled::Tileset *tileset);
-    void removeTileset(Tiled::Tileset *tileset);
-
-    Tiled::Tileset *tilesetFor(const QString &tilesetName)
-    {
-        if (mTilesetByName.contains(tilesetName))
-            return mTilesetByName[tilesetName];
-        return 0;
-    }
-
-    const QMap<QString,Tiled::Tileset*> &tilesetsMap() const
-    { return mTilesetByName; }
-
-    QList<Tiled::Tileset*> tilesets() const
-    { return mTilesetByName.values(); }
-
     void entryTileChanged(BuildingTileEntry *entry, int e);
 
     QString txtName();
@@ -727,12 +711,9 @@ private:
     QList<BuildingTileCategory*> mCategories;
     QMap<QString,BuildingTileCategory*> mCategoryByName;
 
-    QMap<QString,Tiled::Tileset*> mTilesetByName;
-
     QList<BuildingTile*> mTiles;
     QMap<QString,BuildingTile*> mTileByName;
 
-    QList<Tiled::Tileset*> mRemovedTilesets;
     Tiled::Tile *mMissingTile;
     Tiled::Tile *mNoneTiledTile;
     BuildingTile *mNoneBuildingTile;

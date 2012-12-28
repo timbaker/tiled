@@ -32,12 +32,6 @@ BuildingPreferencesDialog::BuildingPreferencesDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(ui->browseTiles, SIGNAL(clicked()), SLOT(browseTiles()));
-
-    QString tilesDir = BuildingPreferences::instance()->tilesDirectory();
-    if (QDir(tilesDir).exists())
-        ui->editTiles->setText(QDir::toNativeSeparators(tilesDir));
-
     QString configPath = BuildingPreferences::instance()->configPath();
     ui->configDirEdit->setText(QDir::toNativeSeparators(configPath));
 }
@@ -47,23 +41,7 @@ BuildingPreferencesDialog::~BuildingPreferencesDialog()
     delete ui;
 }
 
-void BuildingPreferencesDialog::browseTiles()
-{
-    QString f = QFileDialog::getExistingDirectory(this, tr("Directory"),
-                                                  ui->editTiles->text());
-    if (!f.isEmpty())
-        ui->editTiles->setText(f);
-}
-
 void BuildingPreferencesDialog::accept()
 {
-    if (ui->editTiles->text().isEmpty()) {
-        QMessageBox::warning(this, tr("It's no good, Jim!"),
-                             tr("Please choose a valid Tiles directory."));
-        return;
-    }
-
-    BuildingPreferences::instance()->setTilesDirectory(ui->editTiles->text());
-
     QDialog::accept();
 }

@@ -21,6 +21,7 @@
 #include "buildingpreferences.h"
 #include "simplefile.h"
 
+#include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
 
 #include "tile.h"
@@ -118,8 +119,6 @@ BuildingTilesMgr::BuildingTilesMgr() :
 
 BuildingTilesMgr::~BuildingTilesMgr()
 {
-    TilesetManager::instance()->removeReferences(tilesets());
-    TilesetManager::instance()->removeReferences(mRemovedTilesets);
     qDeleteAll(mCategories);
     if (mNoneTiledTile)
         delete mNoneTiledTile->tileset();
@@ -197,30 +196,6 @@ QString BuildingTilesMgr::normalizeTileName(const QString &tileName)
     int index;
     parseTileName(tileName, tilesetName, index);
     return nameForTile(tilesetName, index);
-}
-
-void BuildingTilesMgr::addTileset(Tileset *tileset)
-{
-    Q_ASSERT(mTilesetByName.contains(tileset->name()) == false);
-    mTilesetByName[tileset->name()] = tileset;
-    if (!mRemovedTilesets.contains(tileset))
-        TilesetManager::instance()->addReference(tileset);
-    mRemovedTilesets.removeAll(tileset);
-    emit tilesetAdded(tileset);
-}
-
-void BuildingTilesMgr::removeTileset(Tileset *tileset)
-{
-    Q_ASSERT(mTilesetByName.contains(tileset->name()));
-    Q_ASSERT(mRemovedTilesets.contains(tileset) == false);
-    emit tilesetAboutToBeRemoved(tileset);
-    mTilesetByName.remove(tileset->name());
-    emit tilesetRemoved(tileset);
-
-    // Don't remove references now, that will delete the tileset, and the
-    // user might undo the removal.
-    mRemovedTilesets += tileset;
-    //    TilesetManager::instance()->removeReference(tileset);
 }
 
 void BuildingTilesMgr::entryTileChanged(BuildingTileEntry *entry, int e)
@@ -605,20 +580,21 @@ Tiled::Tile *BuildingTilesMgr::tileFor(const QString &tileName)
     QString tilesetName;
     int index;
     parseTileName(tileName, tilesetName, index);
-    if (!mTilesetByName.contains(tilesetName))
+    Tileset *tileset = TileMetaInfoMgr::instance()->tileset(tilesetName);
+    if (!tileset)
         return mMissingTile;
-    if (index >= mTilesetByName[tilesetName]->tileCount())
+    if (index >= tileset->tileCount())
         return mMissingTile;
-    return mTilesetByName[tilesetName]->tileAt(index);
+    return tileset->tileAt(index);
 }
 
 Tile *BuildingTilesMgr::tileFor(BuildingTile *tile, int offset)
 {
     if (tile->isNone())
         return mNoneTiledTile;
-    if (!mTilesetByName.contains(tile->mTilesetName))
+    Tileset *tileset = TileMetaInfoMgr::instance()->tileset(tile->mTilesetName);
+    if (!tileset)
         return mMissingTile;
-    Tileset *tileset = mTilesetByName[tile->mTilesetName];
     if (tile->mIndex + offset >= tileset->tileCount())
         return tileset->isMissing() ? tileset->tileAt(0) : mMissingTile;
     return tileset->tileAt(tile->mIndex + offset);
