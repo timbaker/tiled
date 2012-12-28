@@ -140,8 +140,6 @@ SOURCES += aboutdialog.cpp \
     ZomboidScene.cpp \
     zprogress.cpp \
     ztilelayergroupitem.cpp \
-    ztilesetthumbmodel.cpp \
-    ztilesetthumbview.cpp \
     mapcomposite.cpp \
     mapmanager.cpp \
     mapimagemanager.cpp \
@@ -287,8 +285,6 @@ HEADERS += aboutdialog.h \
     zlevelsdock.h \
     zlevelsmodel.h \
     zlotmanager.h \
-    ztilesetthumbmodel.h \
-    ztilesetthumbview.h \
     zgriditem.h \
     zprogress.h \
     minimap.h \
