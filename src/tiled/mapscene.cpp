@@ -607,8 +607,13 @@ void MapScene::syncAllObjectItems()
 void MapScene::pathsGenerate()
 {
     foreach (CompositeLayerGroup *layerGroup, mMapDocument->mapComposite()->layerGroups()) {
+#if 1
+        for (int i = 0; i < layerGroup->layerCount(); i++)
+            layerGroup->pathTileLayers()[i]->fastCopy(layerGroup->layers()[i]);
+#else
         foreach (TileLayer *tl, layerGroup->pathTileLayers())
             tl->erase();
+#endif
     }
     foreach (PathLayer *pl, mMapDocument->map()->pathLayers()) {
         foreach (CompositeLayerGroup *layerGroup, mMapDocument->mapComposite()->layerGroups()) {

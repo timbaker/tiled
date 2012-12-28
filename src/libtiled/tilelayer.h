@@ -289,6 +289,8 @@ public:
 
 #ifdef ZOMBOID
     void erase();
+
+    void fastCopy(TileLayer *other);
 #endif
 
     /**

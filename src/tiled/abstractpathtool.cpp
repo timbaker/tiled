@@ -261,8 +261,13 @@ void AbstractPathTool::bakePaths(const QList<Path *> &paths)
 {
     MapComposite *mapComposite = mapDocument()->mapComposite();
     foreach (CompositeLayerGroup *layerGroup, mapComposite->layerGroups()) {
+#if 1
+        for (int i = 0; i < layerGroup->layerCount(); i++)
+            layerGroup->pathTileLayers()[i]->fastCopy(layerGroup->layers()[i]);
+#else
         foreach (TileLayer *tl, layerGroup->pathTileLayers())
             tl->erase();
+#endif
     }
     foreach (Path *path, paths) {
         foreach (CompositeLayerGroup *layerGroup, mapComposite->layerGroups()) {
@@ -286,8 +291,13 @@ void AbstractPathTool::bakePaths(const QList<Path *> &paths)
     undoStack->endMacro();
 
     foreach (CompositeLayerGroup *layerGroup, mapComposite->layerGroups()) {
+#if 1
+        for (int i = 0; i < layerGroup->layerCount(); i++)
+            layerGroup->pathTileLayers()[i]->fastCopy(layerGroup->layers()[i]);
+#else
         foreach (TileLayer *tl, layerGroup->pathTileLayers())
             tl->erase();
+#endif
     }
     foreach (PathLayer *pl, mapComposite->map()->pathLayers()) {
         foreach (CompositeLayerGroup *layerGroup, mapComposite->layerGroups()) {

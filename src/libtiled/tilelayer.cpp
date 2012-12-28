@@ -192,10 +192,17 @@ void TileLayer::erase()
     mGrid.clear();
 #else
     const Cell emptyCell;
-    for (int x = 0; x <= mWidth; ++x)
-        for (int y = 0; y <= mHeight; ++y)
-            setCell(x, y, emptyCell);
+    mGrid.fill(emptyCell);
 #endif
+}
+
+void TileLayer::fastCopy(TileLayer *other)
+{
+    Q_ASSERT(mWidth == other->mWidth && mHeight == other->mHeight);
+    if (mWidth != other->mWidth || mHeight != other->mHeight)
+        return;
+    mGrid = other->mGrid;
+    mMaxTileSize = other->mMaxTileSize;
 }
 #endif
 
