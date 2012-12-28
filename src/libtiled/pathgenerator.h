@@ -313,6 +313,7 @@ public:
         PostStart,
         PostEnd,
         SouthEastFixup,
+        PathOffset,
         PropertyCount
     };
 

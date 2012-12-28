@@ -1193,6 +1193,11 @@ PG_Fence::PG_Fence(const QString &label) :
         mProperties[SouthEastFixup] = prop;
     }
 
+    if (PGP_Integer *prop = new PGP_Integer(QLatin1String("PathOffset"))) {
+        prop->mMin = -100, prop->mMax = 100, prop->mValue = 0;
+        mProperties[PathOffset] = prop;
+    }
+
 #if 0
     // Tall wooden
     mTilesetName[West1] = QLatin1String("fencing_01");
@@ -1261,12 +1266,20 @@ void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
         if (!tiles[i]) return;
     }
 
-    PathPoints points = mPath->points();
-    if (mPath->isClosed())
-        points += points.first();
+    QVector<QPointF> forward, backward;
+    qreal offset = mProperties[PathOffset]->asInteger()->mValue;
+    offset = this->points(offset, forward, backward);
+    QVector<QPointF> &pointsF = (offset >= 0) ? forward : backward;
+    QVector<QPoint> points(pointsF.size());
+    for (int i = 0; i < points.size(); i++) {
+        qreal x = pointsF[i].x(), y = pointsF[i].y(); // don't call toPoint(), it rounds up
+        if (x < 0) x = -qCeil(-x);
+        if (y < 0) y = -qCeil(-y);
+        points[i] = QPoint(x, y);
+    }
 
     for (int i = 0; i < points.size() - 1; i++) {
-        QPoint p0 = points[i].toPoint(), p1 = points[i + 1].toPoint();
+        QPoint p0 = points[i], p1 = points[i + 1];
         Direction dir = direction(p0, p1);
         int alternate = 0;
         if (dir == WestEast || dir == EastWest) {
@@ -1320,14 +1333,14 @@ void PG_Fence::generate(int level, QVector<TileLayer *> &layers)
     }
 
     if (mProperties[PostStart]->asBoolean()->mValue && tiles[Post]) {
-        PathPoint p = points[0];
+        QPoint p = points[0];
         int tile = tileAt(tl, p.x(), p.y(), tiles);
         if (tile != NorthWest)
             setTile(tl, p.x(), p.y(), Post, tiles, false);
     }
 
     if (mProperties[PostEnd]->asBoolean()->mValue && tiles[Post]) {
-        PathPoint p = points.last();
+        QPoint p = points.last();
         if (tileAt(tl, p.x(), p.y(), tiles) != NorthWest)
             setTile(tl, p.x(), p.y(), Post, tiles, false);
     }
@@ -1728,14 +1741,17 @@ void PG_Edges::generate(int level, QVector<TileLayer *> &layers)
     if (PGP_Boolean *prop = mProperties[Reverse]->asBoolean())
         reverse = prop->mValue;
 
-    qreal offset = mProperties[PathOffset]->asInteger()->mValue;
-
     QVector<QPointF> forward, backward;
+    qreal offset = mProperties[PathOffset]->asInteger()->mValue;
     offset = this->points(offset, forward, backward);
     QVector<QPointF> &pointsF = (offset >= 0) ? forward : backward;
     QVector<QPoint> points(pointsF.size());
-    for (int i = 0; i < points.size(); i++)
-        points[i] = QPoint(pointsF[i].x(), pointsF[i].y()); // don't call toPoint(), it rounds up
+    for (int i = 0; i < points.size(); i++) {
+        qreal x = pointsF[i].x(), y = pointsF[i].y(); // don't call toPoint(), it rounds up
+        if (x < 0) x = -qCeil(-x);
+        if (y < 0) y = -qCeil(-y);
+        points[i] = QPoint(x, y);
+    }
 
     int orient = -1;
     for (int i = 0; i < points.size() - 1; i++) {
@@ -2005,8 +2021,12 @@ void PG_Wall::generate(int level, QVector<TileLayer *> &layers)
     pathOffset = points(pathOffset, forward, backward);
     QVector<QPointF> &pointsF = (pathOffset >= 0) ? forward : backward;
     QVector<QPoint> points(pointsF.size());
-    for (int i = 0; i < points.size(); i++)
-        points[i] = QPoint(pointsF[i].x(), pointsF[i].y()); // don't call toPoint(), it rounds up
+    for (int i = 0; i < points.size(); i++) {
+        qreal x = pointsF[i].x(), y = pointsF[i].y(); // don't call toPoint(), it rounds up
+        if (x < 0) x = -qCeil(-x);
+        if (y < 0) y = -qCeil(-y);
+        points[i] = QPoint(x, y);
+    }
 
 #if 0 // TODO: Let walls go up levels
     if ((tl->map()->orientation() == Map::Isometric) && level1) {
