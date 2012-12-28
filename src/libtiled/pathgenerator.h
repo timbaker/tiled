@@ -435,7 +435,7 @@ public:
 
     enum Properties
     {
-        Tile = 0, // PGP_TileEntry
+        WallTiles = 0, // PGP_TileEntry
         Layer1,
         Layer2,
         PathOffset,

@@ -1943,16 +1943,18 @@ PG_Wall::PG_Wall(const QString &label) :
 {
     mProperties.resize(PropertyCount);
 
-    if (PGP_TileEntry *prop = new PGP_TileEntry(QLatin1String("Tile"))) {
+    if (PGP_TileEntry *prop = new PGP_TileEntry(QLatin1String("WallTiles"))) {
         prop->setCategory(QLatin1String("walls"));
-        mProperties[Tile] = prop;
+        mProperties[WallTiles] = prop;
     }
 
     if (PGP_Layer *prop = new PGP_Layer(QLatin1String("Layer1"))) {
+        prop->mValue = QLatin1String("Walls");
         mProperties[Layer1] = prop;
     }
 
     if (PGP_Layer *prop = new PGP_Layer(QLatin1String("Layer2"))) {
+        prop->mValue = QLatin1String("Walls2");
         mProperties[Layer2] = prop;
     }
 
@@ -1986,7 +1988,7 @@ void PG_Wall::generate(int level, QVector<TileLayer *> &layers)
     if (!tl[1]) return;
 
     QVector<Tiled::Tile*> tiles(TileCount);
-    PGP_TileEntry *entry = mProperties[Tile]->asTileEntry();
+    PGP_TileEntry *entry = mProperties[WallTiles]->asTileEntry();
     for (int i = 0; i < TileCount; i++) {
         PGP_Tile *prop = entry->mProperties[i]->asTile();
         if (prop->mTilesetName.isEmpty())
