@@ -33,6 +33,7 @@
 #include "tileset.h"
 
 #include <QDebug>
+#include <QToolBar>
 #include <QUndoCommand>
 
 using namespace Tiled;
@@ -273,6 +274,16 @@ PathPropertiesDialog::PathPropertiesDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    QToolBar *toolBar = new QToolBar(this);
+    toolBar->setIconSize(QSize(16, 16));
+    toolBar->addAction(ui->actionDuplicate);
+    toolBar->addAction(ui->actionRemove);
+    toolBar->addSeparator();
+    toolBar->addAction(ui->actionMoveUp);
+    toolBar->addAction(ui->actionMoveDown);
+    ui->toolBarLayout->addWidget(toolBar);
+
+    /////
     QIcon undoIcon(QLatin1String(":images/16x16/edit-undo.png"));
     QIcon redoIcon(QLatin1String(":images/16x16/edit-redo.png"));
 
@@ -314,10 +325,10 @@ PathPropertiesDialog::PathPropertiesDialog(QWidget *parent) :
     connect(ui->clearTile, SIGNAL(clicked()), SLOT(clearTile()));
     connect(ui->stringEdit, SIGNAL(textEdited(QString)), SLOT(stringEdited(QString)));
 
-    connect(ui->duplicate, SIGNAL(clicked()), SLOT(duplicate()));
-    connect(ui->moveUp, SIGNAL(clicked()), SLOT(moveUp()));
-    connect(ui->moveDown, SIGNAL(clicked()), SLOT(moveDown()));
-    connect(ui->removeGenerator, SIGNAL(clicked()), SLOT(removeGenerator()));
+    connect(ui->actionDuplicate, SIGNAL(triggered()), SLOT(duplicate()));
+    connect(ui->actionMoveUp, SIGNAL(triggered()), SLOT(moveUp()));
+    connect(ui->actionMoveDown, SIGNAL(triggered()), SLOT(moveDown()));
+    connect(ui->actionRemove, SIGNAL(triggered()), SLOT(removeGenerator()));
 
     connect(ui->addGenerator, SIGNAL(clicked()), SLOT(addGenerator()));
     connect(ui->generatorsDialog, SIGNAL(clicked()), SLOT(generatorsDialog()));
@@ -647,10 +658,10 @@ void PathPropertiesDialog::synchUI()
     ui->nameEdit->setText(mCurrentGenerator ? mCurrentGenerator->label() : QString());
     ui->nameEdit->setEnabled(mCurrentGenerator != 0);
 
-    ui->duplicate->setEnabled(mCurrentGenerator != 0);
-    ui->moveUp->setEnabled(mCurrentGenerator && ui->generatorsList->currentRow() > 0);
-    ui->moveDown->setEnabled(mCurrentGenerator && ui->generatorsList->currentRow() < mPath->generators().size() - 1);
-    ui->removeGenerator->setEnabled(mCurrentGenerator != 0);
+    ui->actionDuplicate->setEnabled(mCurrentGenerator != 0);
+    ui->actionMoveUp->setEnabled(mCurrentGenerator && ui->generatorsList->currentRow() > 0);
+    ui->actionMoveDown->setEnabled(mCurrentGenerator && ui->generatorsList->currentRow() < mPath->generators().size() - 1);
+    ui->actionRemove->setEnabled(mCurrentGenerator != 0);
     ui->addGenerator->setEnabled(mCurrentGeneratorTemplate);
 
     ui->propertyStack->setEnabled(mCurrentProperty);

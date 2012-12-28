@@ -29,6 +29,7 @@
 #include "tileset.h"
 
 #include <QMessageBox>
+#include <QToolBar>
 #include <QUndoGroup>
 #include <QUndoStack>
 
@@ -213,6 +214,15 @@ PathGeneratorsDialog::PathGeneratorsDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    QToolBar *toolBar = new QToolBar(this);
+    toolBar->setIconSize(QSize(16, 16));
+    toolBar->addAction(ui->actionDuplicate);
+    toolBar->addAction(ui->actionRemove);
+    toolBar->addSeparator();
+    toolBar->addAction(ui->actionMoveUp);
+    toolBar->addAction(ui->actionMoveDown);
+    ui->toolBarLayout->addWidget(toolBar);
+
     /////
 
     QAction *undoAction = mUndoGroup->createUndoAction(this, tr("Undo"));
@@ -261,10 +271,10 @@ PathGeneratorsDialog::PathGeneratorsDialog(QWidget *parent) :
     connect(ui->generatorTypesList, SIGNAL(activated(QModelIndex)),
             SLOT(addGenerator()));
 
-    connect(ui->removeGenerator, SIGNAL(clicked()), SLOT(removeGenerator()));
-    connect(ui->duplicate, SIGNAL(clicked()), SLOT(duplicate()));
-    connect(ui->moveUp, SIGNAL(clicked()), SLOT(moveUp()));
-    connect(ui->moveDown, SIGNAL(clicked()), SLOT(moveDown()));
+    connect(ui->actionRemove, SIGNAL(triggered()), SLOT(removeGenerator()));
+    connect(ui->actionDuplicate, SIGNAL(triggered()), SLOT(duplicate()));
+    connect(ui->actionMoveUp, SIGNAL(triggered()), SLOT(moveUp()));
+    connect(ui->actionMoveDown, SIGNAL(triggered()), SLOT(moveDown()));
 
     connect(ui->nameEdit, SIGNAL(textEdited(QString)), SLOT(nameEdited(QString)));
     connect(ui->checkBox, SIGNAL(toggled(bool)), SLOT(booleanToggled(bool)));
@@ -476,9 +486,9 @@ void PathGeneratorsDialog::redoTextChanged(const QString &text)
 void PathGeneratorsDialog::synchUI()
 {
     ui->nameEdit->setText(mCurrentGenerator ? mCurrentGenerator->label() : QString());
-    ui->duplicate->setEnabled(mCurrentGenerator != 0);
-    ui->moveUp->setEnabled(mCurrentGenerator && ui->generatorsList->currentRow() > 0);
-    ui->moveDown->setEnabled(mCurrentGenerator && ui->generatorsList->currentRow() < mGenerators.size() - 1);
+    ui->actionDuplicate->setEnabled(mCurrentGenerator != 0);
+    ui->actionMoveUp->setEnabled(mCurrentGenerator && ui->generatorsList->currentRow() > 0);
+    ui->actionMoveDown->setEnabled(mCurrentGenerator && ui->generatorsList->currentRow() < mGenerators.size() - 1);
     ui->addGenerator->setEnabled(mCurrentGeneratorTemplate != 0);
 }
 
