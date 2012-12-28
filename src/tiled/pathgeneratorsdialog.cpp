@@ -21,6 +21,7 @@
 #include "pathgeneratormgr.h"
 #include "pathgeneratortilesdialog.h"
 #include "pathtileentrydialog.h"
+#include "tilemetainfomgr.h"
 #include "utils.h"
 
 #include "map.h"
@@ -294,8 +295,6 @@ PathGeneratorsDialog::PathGeneratorsDialog(QWidget *parent) :
 
     ui->generatorsList->setCurrentRow(0);
     ui->propertyList->setCurrentRow(0);
-
-    PathGeneratorMgr::instance()->loadTilesets(); // FIXME: move this
 }
 
 PathGeneratorsDialog::~PathGeneratorsDialog()
@@ -548,7 +547,7 @@ void PathGeneratorsDialog::setPropertyPage()
     } else if (PGP_Tile *p = mCurrentProperty->asTile()) {
         ui->propertyStack->setCurrentWidget(ui->Tile);
         QPixmap pixmap;
-        if (Tileset *ts = findTileset(p->mTilesetName, PathGeneratorMgr::instance()->tilesets())) {
+        if (Tileset *ts = TileMetaInfoMgr::instance()->tileset(p->mTilesetName)) {
             if (Tile *tile = ts->tileAt(p->mTileID))
                 pixmap = tile->image();
         }
@@ -558,7 +557,7 @@ void PathGeneratorsDialog::setPropertyPage()
         PGP_Tile *p = p0->properties()[p0->mDisplayIndex]->asTile();
         ui->propertyStack->setCurrentWidget(ui->Tile);
         QPixmap pixmap;
-        if (Tileset *ts = findTileset(p->mTilesetName, PathGeneratorMgr::instance()->tilesets())) {
+        if (Tileset *ts = TileMetaInfoMgr::instance()->tileset(p->mTilesetName)) {
             if (Tile *tile = ts->tileAt(p->mTileID))
                 pixmap = tile->image();
         }

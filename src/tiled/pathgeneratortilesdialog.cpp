@@ -19,8 +19,8 @@
 #include "ui_pathgeneratortilesdialog.h"
 
 #include "pathgeneratormgr.h"
-
-#include "BuildingEditor/buildingpreferences.h"
+#include "tilemetainfodialog.h"
+#include "tilemetainfomgr.h"
 
 #include "utils.h"
 #include "zoomable.h"
@@ -79,11 +79,12 @@ PathGeneratorTilesDialog::PathGeneratorTilesDialog(QWidget *parent) :
             SLOT(currentTilesetChanged(int)));
     connect(ui->tiles, SIGNAL(activated(QModelIndex)),
             SLOT(tileActivated(QModelIndex)));
-    connect(ui->addTileset, SIGNAL(clicked()), SLOT(addTileset()));
-    connect(ui->removeTileset, SIGNAL(clicked()), SLOT(removeTileset()));
+    connect(ui->tilesetMgr, SIGNAL(clicked()), SLOT(manageTilesets()));
 
-    ui->directory->setText(PathGeneratorMgr::instance()->tilesDirectory());
-    connect(ui->chooseDirectory, SIGNAL(clicked()), SLOT(chooseTilesDirectory()));
+    connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
+            SLOT(tilesetAdded(Tiled::Tileset*)));
+    connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetAboutToBeRemoved(Tiled::Tileset*)),
+            SLOT(tilesetAboutToBeRemoved(Tiled::Tileset*)));
 
     setTilesetList();
 
@@ -105,7 +106,7 @@ PathGeneratorTilesDialog::~PathGeneratorTilesDialog()
 void PathGeneratorTilesDialog::setTilesetList()
 {
     ui->tilesets->clear();
-    foreach (Tileset *ts, PathGeneratorMgr::instance()->tilesets()) {
+    foreach (Tileset *ts, TileMetaInfoMgr::instance()->tilesets()) {
         QListWidgetItem *item = new QListWidgetItem(ts->name());
         if (ts->isMissing())
             item->setForeground(Qt::red);
@@ -122,54 +123,6 @@ void PathGeneratorTilesDialog::setTilesList()
     }
 }
 
-void PathGeneratorTilesDialog::addTileset()
-{
-    const QString tilesDir = PathGeneratorMgr::instance()->tilesDirectory();
-    const QString filter = Utils::readableImageFormatsFilter();
-    QStringList fileNames = QFileDialog::getOpenFileNames(this,
-                                                          tr("Tileset Image"),
-                                                          tilesDir,
-                                                          filter);
-    QFileInfoList add;
-    foreach (QString f, fileNames) {
-        QFileInfo info(f);
-        QString name = info.completeBaseName();
-        if (Tileset * ts = PathGeneratorMgr::instance()->tilesetFor(name)) {
-            // If the tileset was missing, then we will try to load it again.
-            if (!ts->isMissing())
-                continue; // FIXME: duplicate tileset names not allowed, even in different directories
-        }
-        add += info;
-    }
-
-    foreach (QFileInfo info, add) {
-        if (Tiled::Tileset *ts = PathGeneratorMgr::instance()->loadTileset(info.canonicalFilePath())) {
-            PathGeneratorMgr::instance()->addOrReplaceTileset(ts);
-            setTilesetList();
-            ui->tilesets->setCurrentRow(PathGeneratorMgr::instance()->indexOf(ts));
-        } else {
-            QMessageBox::warning(this, tr("It's no good, Jim!"),
-                                 PathGeneratorMgr::instance()->errorString());
-        }
-    }
-}
-
-void PathGeneratorTilesDialog::removeTileset()
-{
-    QList<QListWidgetItem*> selection = ui->tilesets->selectedItems();
-    QListWidgetItem *item = selection.count() ? selection.first() : 0;
-    if (item) {
-        int row = ui->tilesets->row(item);
-        Tileset *tileset = PathGeneratorMgr::instance()->tilesets().at(row);
-        if (QMessageBox::question(this, tr("Remove Tileset"),
-                                  tr("Really remove the tileset '%1'?").arg(tileset->name()),
-                                  QMessageBox::Ok, QMessageBox::Cancel) == QMessageBox::Cancel)
-            return;
-        PathGeneratorMgr::instance()->removeTileset(tileset);
-        delete item;
-    }
-}
-
 void PathGeneratorTilesDialog::reparent(QWidget *parent)
 {
     QPoint savePosition = pos();
@@ -179,8 +132,8 @@ void PathGeneratorTilesDialog::reparent(QWidget *parent)
 
 void PathGeneratorTilesDialog::setInitialTile(const QString &tilesetName, int tileID)
 {
-    if (Tileset *ts = PathGeneratorMgr::instance()->tilesetFor(tilesetName)) {
-        int row = PathGeneratorMgr::instance()->tilesets().indexOf(ts);
+    if (Tileset *ts = TileMetaInfoMgr::instance()->tileset(tilesetName)) {
+        int row = TileMetaInfoMgr::instance()->indexOf(ts);
         ui->tilesets->setCurrentRow(row);
         if (Tile *tile = ts->tileAt(tileID))
             ui->tiles->setCurrentIndex(ui->tiles->model()->index(tile));
@@ -201,7 +154,7 @@ void PathGeneratorTilesDialog::currentTilesetChanged(int row)
 {
     mCurrentTileset = 0;
     if (row >= 0) {
-        mCurrentTileset = PathGeneratorMgr::instance()->tilesets().at(row);
+        mCurrentTileset = TileMetaInfoMgr::instance()->tileset(row);
     }
     setTilesList();
     updateUI();
@@ -218,19 +171,29 @@ void PathGeneratorTilesDialog::tileActivated(const QModelIndex &index)
     accept();
 }
 
-void PathGeneratorTilesDialog::chooseTilesDirectory()
+void PathGeneratorTilesDialog::manageTilesets()
 {
-    QString f = QFileDialog::getExistingDirectory(this, tr("Directory"),
-                                                  ui->chooseDirectory->text());
-    if (!f.isEmpty()) {
-        ui->directory->setText(QDir::toNativeSeparators(f));
-        PathGeneratorMgr::instance()->setTilesDirectory(f);
-    }
+    TileMetaInfoDialog dialog(this);
+    dialog.exec();
+}
+
+void PathGeneratorTilesDialog::tilesetAdded(Tileset *tileset)
+{
+    setTilesetList();
+    int row = TileMetaInfoMgr::instance()->indexOf(tileset);
+    ui->tilesets->setCurrentRow(row);
+    updateUI();
+}
+
+void PathGeneratorTilesDialog::tilesetAboutToBeRemoved(Tileset *tileset)
+{
+    int row = TileMetaInfoMgr::instance()->indexOf(tileset);
+    delete ui->tilesets->takeItem(row);
+    updateUI();
 }
 
 void PathGeneratorTilesDialog::updateUI()
 {
-    ui->removeTileset->setEnabled(mCurrentTileset != 0);
 }
 
 static void saveSplitterSizes(QSettings &settings, QSplitter *splitter)

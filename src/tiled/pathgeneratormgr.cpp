@@ -18,7 +18,7 @@
 #include "pathgeneratormgr.h"
 
 #include "mainwindow.h"
-#include "pathgenerator.h"
+#include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
 
 #include "pathgenerator.h"
@@ -57,16 +57,6 @@ void PathGeneratorMgr::deleteInstance()
 PathGeneratorMgr::PathGeneratorMgr(QObject *parent) :
     QObject(parent)
 {
-    mMissingTileset = new Tileset(QLatin1String("missing"), 64, 128);
-    mMissingTileset->setTransparentColor(Qt::white);
-    QString fileName = QLatin1String(":/BuildingEditor/icons/missing-tile.png");
-    if (!mMissingTileset->loadFromImage(QImage(fileName), fileName)) {
-        QImage image(64, 128, QImage::Format_ARGB32);
-        image.fill(Qt::red);
-        mMissingTileset->loadFromImage(image, fileName);
-    }
-    mMissingTile = mMissingTileset->tileAt(0);
-
 #if 0
     // readTxt() gives us user-defined generators.
     if (PathGenerator *pgen = new PG_Fence(QLatin1String("Fence - Tall Wooden"))) {
@@ -102,8 +92,6 @@ PathGeneratorMgr::PathGeneratorMgr(QObject *parent) :
 
 PathGeneratorMgr::~PathGeneratorMgr()
 {
-    TilesetManager::instance()->removeReferences(tilesets());
-    TilesetManager::instance()->removeReferences(mRemovedTilesets);
 }
 
 void PathGeneratorMgr::insertGenerator(int index, PathGenerator *pgen)
@@ -124,24 +112,12 @@ const QList<PathGenerator *> &PathGeneratorMgr::generatorTypes() const
     return PathGeneratorTypes::instance()->types();
 }
 
-QString PathGeneratorMgr::tilesDirectory() const
-{
-    return BuildingEditor::BuildingPreferences::instance()->tilesDirectory();
-}
-
-void PathGeneratorMgr::setTilesDirectory(const QString &path)
-{
-    BuildingEditor::BuildingPreferences::instance()->setTilesDirectory(path);
-
-    // Try to load any tilesets that weren't found.
-    loadTilesets();
-}
-
 Tile *PathGeneratorMgr::tileFor(const QString &tilesetName, int tileID)
 {
-    if (tilesetName.isEmpty() || !mTilesetByName.contains(tilesetName))
+    Tileset *tileset = TileMetaInfoMgr::instance()->tileset(tilesetName);
+    if (tilesetName.isEmpty() || !tileset)
         return 0;
-    return mTilesetByName[tilesetName]->tileAt(tileID);
+    return tileset->tileAt(tileID);
 }
 
 QString PathGeneratorMgr::txtName()
@@ -184,15 +160,6 @@ static bool readProperty(const SimpleFileBlock &block, PathGeneratorProperty *pr
 
 bool PathGeneratorMgr::readTxt()
 {
-    // Make sure the user has chosen the Tiles directory.
-    QString tilesDirectory = this->tilesDirectory();
-    QDir dir(tilesDirectory);
-    if (!dir.exists()) {
-        mError = tr("The Tiles directory specified in the preferences doesn't exist!\n%1")
-                .arg(tilesDirectory);
-        return false;
-    }
-
     QFileInfo info(txtPath());
     if (!info.exists()) {
         mError = tr("The %1 file doesn't exist.").arg(txtName());
@@ -221,49 +188,8 @@ bool PathGeneratorMgr::readTxt()
     mRevision = simple.value("revision").toInt();
     mSourceRevision = simple.value("source_revision").toInt();
 
-    QStringList missingTilesets;
-
     foreach (SimpleFileBlock block, simple.blocks) {
-        if (block.name == QLatin1String("tilesets")) {
-            foreach (SimpleFileKeyValue kv, block.values) {
-                if (kv.name == QLatin1String("tileset")) {
-#if 1
-                    // Just get the list of names.  Don't load the tilesets yet
-                    // because the user might not have chosen the Tiles directory.
-                    // The tilesets will be loaded when other code asks for them or
-                    // when the Tiles directory is changed.
-                    QFileInfo info(kv.value); // relative to Tiles directory
-                    Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
-                    // We don't know how big the image actually is, so it only
-                    // has one tile.
-                    ts->loadFromImage(mMissingTile->image().toImage(),
-                                      kv.value + QLatin1String(".png"));
-                    ts->setMissing(true);
-                    addTileset(ts);
-#else
-                    QString source = tilesDirectory + QLatin1Char('/') + kv.value
-                            + QLatin1String(".png");
-                    QFileInfo info(source);
-                    if (!info.exists()) {
-                        Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
-                        addTileset(ts);
-                        missingTilesets += QDir::toNativeSeparators(info.absoluteFilePath());
-                        continue;
-                    }
-                    source = info.canonicalFilePath();
-                    Tileset *ts = loadTileset(source);
-                    if (!ts)
-                        return false;
-                    addTileset(ts);
-#endif
-                } else {
-                    mError = tr("Unknown value name '%1'.\n%2")
-                            .arg(kv.name)
-                            .arg(path);
-                    return false;
-                }
-            }
-        } else if (block.name == QLatin1String("Generator")) {
+        if (block.name == QLatin1String("Generator")) {
             QString type = block.value("type");
             if (PathGenerator *pgen = findGeneratorType(type)) {
                 pgen = pgen->clone();
@@ -296,14 +222,6 @@ bool PathGeneratorMgr::readTxt()
         }
     }
 
-    if (missingTilesets.size()) {
-        BuildingEditor::ListOfStringsDialog dialog(tr("The following tileset files were not found."),
-                                                   missingTilesets,
-                                                   MainWindow::instance());
-        dialog.setWindowTitle(tr("Missing Tilesets"));
-        dialog.exec();
-    }
-
     return true;
 }
 
@@ -323,16 +241,6 @@ static void writeProperty(SimpleFileBlock &block, PathGeneratorProperty *prop)
 bool PathGeneratorMgr::writeTxt()
 {
     SimpleFile simpleFile;
-
-    QDir tilesDir(tilesDirectory());
-    SimpleFileBlock tilesetBlock;
-    tilesetBlock.name = QLatin1String("tilesets");
-    foreach (Tiled::Tileset *tileset, tilesets()) {
-        QString relativePath = tilesDir.relativeFilePath(tileset->imageSource());
-        relativePath.truncate(relativePath.length() - 4); // remove .png
-        tilesetBlock.values += SimpleFileKeyValue(QLatin1String("tileset"), relativePath);
-    }
-    simpleFile.blocks += tilesetBlock;
 
     foreach (PathGenerator *pgen, mGenerators) {
         SimpleFileBlock generatorBlock;
@@ -416,94 +324,8 @@ bool PathGeneratorMgr::Startup()
     return true;
 }
 
-void PathGeneratorMgr::addOrReplaceTileset(Tileset *ts)
-{
-    if (mTilesetByName.contains(ts->name())) {
-        Tileset *old = mTilesetByName[ts->name()];
-        if (!mRemovedTilesets.contains(old))
-            mRemovedTilesets += old;
-        if (!mRemovedTilesets.contains(ts)) // always true
-            TilesetManager::instance()->addReference(ts);
-        mRemovedTilesets.removeAll(ts);
-        mTilesetByName[ts->name()] = ts;
-    } else {
-        addTileset(ts);
-    }
-}
-
-Tileset *PathGeneratorMgr::loadTileset(const QString &source)
-{
-    QFileInfo info(source);
-    Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
-    if (!loadTilesetImage(ts, source)) {
-        delete ts;
-        return 0;
-    }
-    return ts;
-}
-
-bool PathGeneratorMgr::loadTilesetImage(Tileset *ts, const QString &source)
-{
-    TilesetImageCache *cache = TilesetManager::instance()->imageCache();
-    Tileset *cached = cache->findMatch(ts, source);
-    if (!cached || !ts->loadFromCache(cached)) {
-        const QImage tilesetImage = QImage(source);
-        if (ts->loadFromImage(tilesetImage, source))
-            cache->addTileset(ts);
-        else {
-            mError = tr("Error loading tileset image:\n'%1'").arg(source);
-            return 0;
-        }
-    }
-
-    return ts;
-}
-
-void PathGeneratorMgr::addTileset(Tileset *tileset)
-{
-    Q_ASSERT(mTilesetByName.contains(tileset->name()) == false);
-    mTilesetByName[tileset->name()] = tileset;
-    if (!mRemovedTilesets.contains(tileset))
-        TilesetManager::instance()->addReference(tileset);
-    mRemovedTilesets.removeAll(tileset);
-//    emit tilesetAdded(tileset);
-}
-
-void PathGeneratorMgr::removeTileset(Tileset *tileset)
-{
-    Q_ASSERT(mTilesetByName.contains(tileset->name()));
-    Q_ASSERT(mRemovedTilesets.contains(tileset) == false);
-//    emit tilesetAboutToBeRemoved(tileset);
-    mTilesetByName.remove(tileset->name());
-//    emit tilesetRemoved(tileset);
-
-    // Don't remove references now, that will delete the tileset, and the
-    // user might undo the removal.
-    mRemovedTilesets += tileset;
-    //    TilesetManager::instance()->removeReference(tileset);
-}
-
 PathGenerator *PathGeneratorMgr::findGeneratorType(const QString &type)
 {
     return PathGeneratorTypes::instance()->type(type);
 }
 
-void PathGeneratorMgr::loadTilesets()
-{
-    foreach (Tileset *ts, tilesets()) {
-        if (ts->isMissing()) {
-            QString source = tilesDirectory() + QLatin1Char('/')
-                    // This is the name that was saved in PathGenerators.txt,
-                    // relative to Tiles directory, plus .png.
-                    + ts->imageSource();
-            QFileInfo info(source);
-            if (info.exists()) {
-                source = info.canonicalFilePath();
-                if (loadTilesetImage(ts, source)) {
-                    ts->setMissing(false); // Yay!
-                    TilesetManager::instance()->tilesetSourceChanged(ts);
-                }
-            }
-        }
-    }
-}

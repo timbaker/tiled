@@ -19,6 +19,7 @@
 #include "ui_pathtileentrydialog.h"
 
 #include "pathgeneratormgr.h"
+#include "tilesetmanager.h"
 #include "zoomable.h"
 
 #include "pathgenerator.h"
@@ -108,7 +109,7 @@ void PathTileEntryDialog::setTilesList(const QString &category,
     foreach (PGP_TileEntry *entry, entryMap.values()) {
         PGP_Tile *prop = entry->displayTile();
         Tile *tile = PathGeneratorMgr::instance()->tileFor(prop->mTilesetName, prop->mTileID);
-        mTiles += tile ? tile : PathGeneratorMgr::instance()->missingTile();
+        mTiles += tile ? tile : TilesetManager::instance()->missingTile();
         userData += entry;
         mEntries += entry;
         if (initialEntry && matches(entry, initialEntry))

@@ -52,14 +52,13 @@ private:
     void setTilesList();
 
 private slots:
-    void addTileset();
-    void removeTileset();
-
     void currentTilesetChanged(int row);
     void currentTileChanged(const QModelIndex &index);
     void tileActivated(const QModelIndex &index);
 
-    void chooseTilesDirectory();
+    void manageTilesets();
+    void tilesetAdded(Tiled::Tileset *tileset);
+    void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
 
     void updateUI();
 

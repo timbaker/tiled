@@ -45,25 +45,6 @@ public:
 
     const QList<PathGenerator*> &generatorTypes() const;
 
-    QString tilesDirectory() const;
-    void setTilesDirectory(const QString &path);
-
-    Tiled::Tileset *tilesetFor(const QString &tilesetName)
-    {
-        if (mTilesetByName.contains(tilesetName))
-            return mTilesetByName[tilesetName];
-        return 0;
-    }
-
-    const QMap<QString,Tiled::Tileset*> &tilesetsMap() const
-    { return mTilesetByName; }
-
-    QList<Tileset*> tilesets() const
-    { return mTilesetByName.values(); }
-
-    int indexOf(Tileset *ts)
-    { return tilesets().indexOf(ts); }
-
     Tile *tileFor(const QString &tilesetName, int tileID);
 
     QString txtName();
@@ -79,17 +60,6 @@ public:
 
     bool Startup();
 
-    void addOrReplaceTileset(Tileset *ts);
-    Tileset *loadTileset(const QString &source);
-    bool loadTilesetImage(Tileset *ts, const QString &source);
-    void addTileset(Tileset *ts);
-    void removeTileset(Tileset *ts);
-
-    void loadTilesets(); // this shouldn't be public
-
-    Tile *missingTile() const
-    { return mMissingTile; }
-
 private:
     PathGenerator *findGeneratorType(const QString &type);
     
@@ -99,11 +69,6 @@ private:
     static PathGeneratorMgr *mInstance;
 
     QList<PathGenerator*> mGenerators;
-
-    Tileset *mMissingTileset;
-    Tile *mMissingTile;
-    QMap<QString,Tiled::Tileset*> mTilesetByName;
-    QList<Tiled::Tileset*> mRemovedTilesets;
 
     int mRevision;
     int mSourceRevision;

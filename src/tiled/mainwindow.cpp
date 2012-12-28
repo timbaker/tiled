@@ -1327,6 +1327,20 @@ void MainWindow::showBuildingEditor()
 
 void MainWindow::pathGeneratorsDialog()
 {
+    TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
+    if (!mgr->hasReadTxt()) {
+        if (!mgr->readTxt()) {
+            QMessageBox::warning(this, tr("It's no good, Jim!"),
+                                 tr("%1\n(while reading %2)")
+                                 .arg(mgr->errorString())
+                                 .arg(mgr->txtName()));
+            TileMetaInfoMgr::deleteInstance();
+            return;
+        }
+        PROGRESS progress(tr("Loading Tilesets.txt tilesets"));
+        mgr->loadTilesets();
+    }
+
     PathGeneratorsDialog dialog(this);
     dialog.exec();
     foreach (MapDocument *mapDocument, DocumentManager::instance()->documents())

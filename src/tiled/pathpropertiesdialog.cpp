@@ -24,7 +24,9 @@
 #include "pathgeneratormgr.h"
 #include "pathgeneratortilesdialog.h"
 #include "pathtileentrydialog.h"
+#include "tilemetainfomgr.h"
 #include "utils.h"
+#include "zprogress.h"
 
 #include "map.h"
 #include "pathgenerator.h"
@@ -35,6 +37,7 @@
 #include "BuildingEditor/horizontallinedelegate.h"
 
 #include <QDebug>
+#include <QMessageBox>
 #include <QToolBar>
 #include <QUndoCommand>
 
@@ -386,8 +389,6 @@ void PathPropertiesDialog::setPath(MapDocument *doc, Path *path)
     setGeneratorsList();
 
     synchUI();
-
-    PathGeneratorMgr::instance()->loadTilesets(); // FIXME: move this
 }
 
 void PathPropertiesDialog::currentGeneratorChanged(int row)
@@ -472,6 +473,20 @@ void PathPropertiesDialog::integerValueChanged(int newValue)
 
 void PathPropertiesDialog::chooseTile()
 {
+    TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
+    if (!mgr->hasReadTxt()) {
+        if (!mgr->readTxt()) {
+            QMessageBox::warning(this, tr("It's no good, Jim!"),
+                                 tr("%1\n(while reading %2)")
+                                 .arg(mgr->errorString())
+                                 .arg(mgr->txtName()));
+            TileMetaInfoMgr::deleteInstance();
+            return;
+        }
+        PROGRESS progress(tr("Loading Tilesets.txt tilesets"));
+        mgr->loadTilesets();
+    }
+
     QUndoStack *undoStack = mMapDocument->undoStack();
 
     if (PGP_TileEntry *prop = mCurrentProperty->asTileEntry()) {
@@ -610,7 +625,7 @@ void PathPropertiesDialog::addGeneratorTilesets(PGP_TileEntry *prop)
 
 void PathPropertiesDialog::addTilesetIfNeeded(const QString &tilesetName)
 {
-    if (Tileset *ts = PathGeneratorMgr::instance()->tilesetFor(tilesetName)) {
+    if (Tileset *ts = TileMetaInfoMgr::instance()->tileset(tilesetName)) {
         bool found = false;
         foreach (Tileset *mapTileset, mMapDocument->map()->tilesets()) {
             if (mapTileset->name() == tilesetName &&
