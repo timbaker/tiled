@@ -34,7 +34,8 @@ ZLevelsModel::ZLevelsModel(QObject *parent)
     , mRootItem(0),
     mTileLayerIcon(QLatin1String(":/images/16x16/layer-tile.png")),
     mObjectGroupIcon(QLatin1String(":/images/16x16/layer-object.png")),
-    mImageLayerIcon(QLatin1String(":/images/16x16/layer-image.png"))
+    mImageLayerIcon(QLatin1String(":/images/16x16/layer-image.png")),
+    mPathLayerIcon(QLatin1String(":/images/16x16/layer-path.png"))
 {
 }
 
@@ -110,6 +111,8 @@ QVariant ZLevelsModel::data(const QModelIndex &index, int role) const
                 return mObjectGroupIcon;
             else if (layer->isImageLayer())
                 return mImageLayerIcon;
+            else if (layer->isPathLayer())
+                return mPathLayerIcon;
             else
                 Q_ASSERT(false);
             return QVariant();

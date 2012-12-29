@@ -133,6 +133,7 @@ private:
     QIcon mTileLayerIcon;
     QIcon mObjectGroupIcon;
     QIcon mImageLayerIcon;
+    QIcon mPathLayerIcon;
 };
 
 } // namespace Internal

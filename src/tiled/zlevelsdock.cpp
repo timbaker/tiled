@@ -76,6 +76,7 @@ ZLevelsDock::ZLevelsDock(QWidget *parent) :
     QMenu *newLayerMenu = new QMenu(this);
     newLayerMenu->addAction(handler->actionAddTileLayer());
     newLayerMenu->addAction(handler->actionAddObjectGroup());
+    newLayerMenu->addAction(handler->actionAddPathLayer());
     newLayerMenu->addAction(handler->actionAddImageLayer());
 
     const QIcon newIcon(QLatin1String(":/images/16x16/document-new.png"));
