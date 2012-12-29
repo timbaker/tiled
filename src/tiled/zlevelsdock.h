@@ -75,6 +75,7 @@ protected slots:
 
 private slots:
     void currentLayerIndexChanged(int index);
+    void editLayerName();
     void onActivated(const QModelIndex &index);
 
 private:

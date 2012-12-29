@@ -181,6 +181,8 @@ void ZLevelsView::setMapDocument(MapDocument *mapDoc)
 
         connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
                 this, SLOT(currentLayerIndexChanged(int)));
+        connect(mMapDocument, SIGNAL(editLayerNameRequested()),
+                this, SLOT(editLayerName()));
     } else {
         if (model())
             model()->setMapDocument(0);
@@ -241,3 +243,11 @@ void ZLevelsView::currentLayerIndexChanged(int index)
     mSynching = false;
 }
 
+void ZLevelsView::editLayerName()
+{
+    if (!isVisible())
+        return;
+
+    const ZLevelsModel *levelsModel = mMapDocument->levelsModel();
+    edit(levelsModel->index(mMapDocument->currentLayer()));
+}
