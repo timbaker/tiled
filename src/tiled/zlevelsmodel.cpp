@@ -31,7 +31,10 @@ ZLevelsModel::ZLevelsModel(QObject *parent)
     : QAbstractItemModel(parent)
     , mMapDocument(0)
     , mMap(0)
-    , mRootItem(0)
+    , mRootItem(0),
+    mTileLayerIcon(QLatin1String(":/images/16x16/layer-tile.png")),
+    mObjectGroupIcon(QLatin1String(":/images/16x16/layer-object.png")),
+    mImageLayerIcon(QLatin1String(":/images/16x16/layer-image.png"))
 {
 }
 
@@ -90,29 +93,42 @@ int ZLevelsModel::columnCount(const QModelIndex &parent) const
 
 QVariant ZLevelsModel::data(const QModelIndex &index, int role) const
 {
-    if (TileLayer *tl = toLayer(index)) {
+    Item *item = toItem(index);
+    if (!item)
+        return QVariant();
+
+    if (Layer *layer = item->layer) {
         switch (role) {
         case Qt::DisplayRole:
-            return MapComposite::layerNameWithoutPrefix(tl);
+            return MapComposite::layerNameWithoutPrefix(layer);
         case Qt::EditRole:
-            return tl->name();
+            return layer->name();
         case Qt::DecorationRole:
+            if (layer->isTileLayer())
+                return mTileLayerIcon;
+            else if (layer->isObjectGroup())
+                return mObjectGroupIcon;
+            else if (layer->isImageLayer())
+                return mImageLayerIcon;
+            else
+                Q_ASSERT(false);
             return QVariant();
         case Qt::CheckStateRole:
-            return tl->isVisible() ? Qt::Checked : Qt::Unchecked;
+            return layer->isVisible() ? Qt::Checked : Qt::Unchecked;
         default:
             return QVariant();
         }
     }
-    if (ZTileLayerGroup *g = toLayerGroup(index)) {
+    if (item->level >= 0) {
         switch (role) {
         case Qt::DisplayRole:
         case Qt::EditRole:
-            return QString(tr("Level %1")).arg(g->level());
+            return QString(tr("Level %1")).arg(item->level);
         case Qt::DecorationRole:
             return QVariant();
         case Qt::CheckStateRole:
-            return g->isVisible() ? Qt::Checked : Qt::Unchecked;
+            if (CompositeLayerGroup *g = mMapDocument->mapComposite()->layerGroupForLevel(item->level))
+                return g->isVisible() ? Qt::Checked : Qt::Unchecked;
         default:
             return QVariant();
         }
@@ -123,42 +139,43 @@ QVariant ZLevelsModel::data(const QModelIndex &index, int role) const
 bool ZLevelsModel::setData(const QModelIndex &index, const QVariant &value,
                          int role)
 {
-    if (TileLayer *tl = toLayer(index)) {
+    Item *item = toItem(index);
+    if (!item)
+        return false;
+
+    if (Layer *layer = item->layer) {
         switch (role) {
-        case Qt::CheckStateRole:
-            {
+        case Qt::CheckStateRole: {
             LayerModel *layerModel = mMapDocument->layerModel();
-            const int layerIndex = mMap->layers().indexOf(tl);
+            const int layerIndex = mMap->layers().indexOf(layer);
             const int row = layerModel->layerIndexToRow(layerIndex);
             layerModel->setData(layerModel->index(row), value, role);
             return true;
-            }
-        case Qt::EditRole:
-            {
+        }
+        case Qt::EditRole: {
             const QString newName = value.toString();
-            if (tl->name() != newName) {
-                const int layerIndex = mMap->layers().indexOf(tl);
+            if (layer->name() != newName) {
+                const int layerIndex = mMap->layers().indexOf(layer);
                 RenameLayer *rename = new RenameLayer(mMapDocument, layerIndex, newName);
                 mMapDocument->undoStack()->push(rename);
             }
             return true;
-            }
+        }
         }
         return false;
     }
-    if (CompositeLayerGroup *g = toLayerGroup(index)) {
+    if (item->level >= 0) {
         switch (role) {
-        case Qt::CheckStateRole:
-            {
+        case Qt::CheckStateRole: {
             Qt::CheckState c = static_cast<Qt::CheckState>(value.toInt());
             bool visible = c == Qt::Checked;
-            mMapDocument->setLayerGroupVisibility(g, visible);
+            if (CompositeLayerGroup *g = mMapDocument->mapComposite()->layerGroupForLevel(item->level))
+                mMapDocument->setLayerGroupVisibility(g, visible);
             return true;
-            }
-        case Qt::EditRole:
-            {
+        }
+        case Qt::EditRole: {
             return false;
-            }
+        }
         }
         return false;
     }
@@ -173,7 +190,6 @@ Qt::ItemFlags ZLevelsModel::flags(const QModelIndex &index) const
         rc |= Qt::ItemIsEditable; // TileLayer name
     return rc;
 }
-
 QVariant ZLevelsModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
@@ -184,6 +200,13 @@ QVariant ZLevelsModel::headerData(int section, Qt::Orientation orientation, int 
     return QVariant();
 }
 
+QModelIndex ZLevelsModel::index(int level) const
+{
+    Item *item = toItem(level);
+    int row = item->parent->children.indexOf(item);
+    return createIndex(row, 0, item);
+}
+
 QModelIndex ZLevelsModel::index(CompositeLayerGroup *g) const
 {
     Item *item = toItem(g);
@@ -191,21 +214,23 @@ QModelIndex ZLevelsModel::index(CompositeLayerGroup *g) const
     return createIndex(row, 0, item);
 }
 
-QModelIndex ZLevelsModel::index(TileLayer *tl) const
+QModelIndex ZLevelsModel::index(Layer *layer) const
 {
-    Item *item = toItem(tl);
+    Item *item = toItem(layer);
     int row = item->parent->children.indexOf(item);
     return createIndex(row, 0, item);
 }
 
 CompositeLayerGroup *ZLevelsModel::toLayerGroup(const QModelIndex &index) const
 {
-    if (index.isValid())
-        return toItem(index)->group;
+    if (Item *item = toItem(index)) {
+        if (item->level >= 0)
+            return mMapDocument->mapComposite()->layerGroupForLevel(item->level);
+    }
     return 0;
 }
 
-TileLayer *ZLevelsModel::toLayer(const QModelIndex &index) const
+Layer *ZLevelsModel::toLayer(const QModelIndex &index) const
 {
     if (index.isValid())
         return toItem(index)->layer;
@@ -233,25 +258,30 @@ void ZLevelsModel::setMapDocument(MapDocument *mapDocument)
 
         connect(mMapDocument, SIGNAL(layerChanged(int)),
                 SLOT(layerChanged(int)));
-        connect(mMapDocument, SIGNAL(layerGroupAdded(int)),
-                SLOT(layerGroupAdded(int)));
         connect(mMapDocument, SIGNAL(layerGroupVisibilityChanged(CompositeLayerGroup*)),
                 SLOT(layerGroupVisibilityChanged(CompositeLayerGroup*)));
-        connect(mMapDocument, SIGNAL(layerAddedToGroup(int)),
-                SLOT(layerAddedToGroup(int)));
-        connect(mMapDocument, SIGNAL(layerAboutToBeRemovedFromGroup(int)),
-                SLOT(layerAboutToBeRemovedFromGroup(int)));
+        connect(mMapDocument, SIGNAL(layerLevelChanged(int,int)),
+                SLOT(layerLevelChanged(int,int)));
+        connect(mMapDocument, SIGNAL(layerAdded(int)),
+                SLOT(layerAdded(int)));
+        connect(mMapDocument, SIGNAL(layerAboutToBeRemoved(int)),
+                SLOT(layerAboutToBeRemoved(int)));
 
         mRootItem = new Item();
 
-        foreach (CompositeLayerGroup *g, mMapDocument->mapComposite()->sortedLayerGroups()) {
-            Item *parent = new Item(mRootItem, 0, g);
-            foreach (TileLayer *tl, g->layers())
-                new Item(parent, 0, tl);
-        }
+        foreach (Layer *layer, mMapDocument->map()->layers())
+            new Item(createLevelItemIfNeeded(layer->level()), 0, layer);
     }
 
     reset();
+}
+
+QList<int> ZLevelsModel::levels() const
+{
+    QList<int> ret;
+    foreach (Item *item, mRootItem->children)
+        ret += item->level;
+    return ret;
 }
 
 void ZLevelsModel::layerChanged(int layerIndex)
@@ -266,51 +296,76 @@ void ZLevelsModel::layerChanged(int layerIndex)
     }
 }
 
-void ZLevelsModel::layerGroupAdded(int level)
-{
-    MapComposite *mapComposite = mMapDocument->mapComposite();
-    CompositeLayerGroup *g = mapComposite->tileLayersForLevel(level);
-    Q_ASSERT(g);
-    int row = mapComposite->layerGroupCount() - mapComposite->sortedLayerGroups().indexOf(g) - 1;
-    QModelIndex parent;
-    beginInsertRows(parent, row, row);
-    new Item(mRootItem, row, g);
-    endInsertRows();
-}
-
 void ZLevelsModel::layerGroupVisibilityChanged(CompositeLayerGroup *g)
 {
     QModelIndex index = this->index(g);
     emit dataChanged(index, index);
 }
 
-void ZLevelsModel::layerAddedToGroup(int layerIndex)
+void ZLevelsModel::layerAdded(int layerIndex)
 {
+    layerLevelChanged(layerIndex, -1);
+}
+
+void ZLevelsModel::layerAboutToBeRemoved(int layerIndex)
+{
+    removeLayerFromLevel(layerIndex, mMap->layerAt(layerIndex)->level());
+}
+
+void ZLevelsModel::layerLevelChanged(int layerIndex, int oldLevel)
+{
+    if (oldLevel != -1)
+        removeLayerFromLevel(layerIndex, oldLevel);
+
     Layer *layer = mMap->layerAt(layerIndex);
-    if (TileLayer *tl = layer->asTileLayer()) {
-        CompositeLayerGroup *g = (CompositeLayerGroup*) tl->group();
-        Q_ASSERT(g);
-        Item *parentItem = toItem(g);
-        Q_ASSERT(parentItem);
-        QModelIndex parent = index(parentItem->group);
-        int row = g->layerCount() - g->layers().indexOf(tl) - 1;
+    if (Item *parentItem = createLevelItemIfNeeded(layer->level())) {
+        int row;
+        for (row = 0; row < parentItem->children.size(); row++) {
+            Layer *otherLayer = parentItem->children[row]->layer;
+            int otherIndex = mMap->layers().indexOf(otherLayer);
+            if (otherIndex < layerIndex)
+                break;
+        }
+        QModelIndex parent = index(parentItem->level);
         beginInsertRows(parent, row, row);
-        new Item(parentItem, row, tl);
+        new Item(parentItem, row, layer);
         endInsertRows();
     }
 }
 
-void ZLevelsModel::layerAboutToBeRemovedFromGroup(int layerIndex)
+ZLevelsModel::Item *ZLevelsModel::createLevelItemIfNeeded(int level)
+{
+    int index;
+    for (index = 0; index < mRootItem->children.size(); index++) {
+        Item *item = mRootItem->children[index];
+        if (item->level == level)
+            return item;
+        if (item->level < level)
+            break;
+    }
+    beginInsertRows(QModelIndex(), index, index);
+    Item *item = new Item(mRootItem, index, level);
+    endInsertRows();
+    return item;
+}
+
+void ZLevelsModel::removeLayerFromLevel(int layerIndex, int oldLevel)
 {
     Layer *layer = mMap->layerAt(layerIndex);
-    if (TileLayer *tl = layer->asTileLayer()) {
-        if (Item *item = toItem(tl)) {
-            Item *parentItem = item->parent;
-            Q_ASSERT(tl->group());
-            QModelIndex parent = index(parentItem->group);
-            int row = parentItem->children.indexOf(item);
+    if (Item *parentItem = toItem(oldLevel)) {
+        int row = parentItem->indexOf(layer);
+        Q_ASSERT(row >= 0);
+        if (row >= 0) {
+            QModelIndex parent = index(parentItem->level);
             beginRemoveRows(parent, row, row);
             delete parentItem->children.takeAt(row);
+            endRemoveRows();
+        }
+
+        if (parentItem->children.isEmpty()) {
+            row = mRootItem->children.indexOf(parentItem);
+            beginRemoveRows(QModelIndex(), row, row);
+            delete mRootItem->children.takeAt(row);
             endRemoveRows();
         }
     }
@@ -328,20 +383,28 @@ ZLevelsModel::Item *ZLevelsModel::toItem(CompositeLayerGroup *g) const
     if (!mRootItem)
         return 0;
     foreach (Item *item, mRootItem->children)
-        if (item->group == g)
+        if (item->level == g->level())
             return item;
     return 0;
 }
 
-ZLevelsModel::Item *ZLevelsModel::toItem(TileLayer *tl) const
+ZLevelsModel::Item *ZLevelsModel::toItem(int level) const
 {
     if (!mRootItem)
         return 0;
-    if (!tl->group())
+    foreach (Item *item, mRootItem->children)
+        if (item->level == level)
+            return item;
+    return 0;
+}
+
+ZLevelsModel::Item *ZLevelsModel::toItem(Layer *layer) const
+{
+    if (!mRootItem)
         return 0;
-    Item *parent = toItem((CompositeLayerGroup*)tl->group());
+    Item *parent = toItem(layer->level());
     foreach (Item *item, parent->children)
-        if (item->layer == tl)
+        if (item->layer == layer)
             return item;
     return 0;
 }

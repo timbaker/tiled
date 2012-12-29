@@ -25,6 +25,7 @@ class CompositeLayerGroup;
 
 namespace Tiled {
 
+class Layer;
 class Map;
 class TileLayer;
 
@@ -53,65 +54,85 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const;
 
+    QModelIndex index(int level) const;
     QModelIndex index(CompositeLayerGroup *og) const;
-    QModelIndex index(TileLayer *o) const;
+    QModelIndex index(Layer *layer) const;
 
     CompositeLayerGroup *toLayerGroup(const QModelIndex &index) const;
-    TileLayer *toLayer(const QModelIndex &index) const;
+    Layer *toLayer(const QModelIndex &index) const;
 
     void setMapDocument(MapDocument *mapDocument);
     MapDocument *mapDocument() const { return mMapDocument; }
 
+    QList<int> levels() const;
+
 private slots:
     void layerChanged(int index);
 
-    void layerGroupAdded(int level);
     void layerGroupVisibilityChanged(CompositeLayerGroup *g);
 
-    void layerAddedToGroup(int layerIndex);
-    void layerAboutToBeRemovedFromGroup(int layerIndex);
+    void layerAdded(int layerIndex);
+    void layerAboutToBeRemoved(int layerIndex);
+    void layerLevelChanged(int layerIndex, int oldLevel);
 
 private:
+    void removeLayerFromLevel(int layerIndex, int oldLevel);
+
     class Item
     {
     public:
         Item()
             : parent(0)
-            , group(0)
+            , level(-1)
             , layer(0)
         {
 
         }
 
-        Item(Item *parent, int indexInParent, CompositeLayerGroup *g)
+        Item(Item *parent, int indexInParent, int level)
             : parent(parent)
-            , group(g)
+            , level(level)
             , layer(0)
         {
             parent->children.insert(indexInParent, this);
         }
 
-        Item(Item *parent, int indexInParent, TileLayer *tl)
+        Item(Item *parent, int indexInParent, Layer *layer)
             : parent(parent)
-            , group(0)
-            , layer(tl)
+            , level(-1)
+            , layer(layer)
         {
             parent->children.insert(indexInParent, this);
+        }
+
+        int indexOf(Layer *layer)
+        {
+            for (int i = 0; i < children.size(); i++)
+                if (children[i]->layer == layer)
+                    return i;
+            return -1;
         }
 
         Item *parent;
         QList<Item*> children;
-        CompositeLayerGroup *group;
-        TileLayer *layer;
+        int level;
+        Layer *layer;
     };
 
     Item *toItem(const QModelIndex &index) const;
     Item *toItem(CompositeLayerGroup *g) const;
-    Item *toItem(TileLayer *tl) const;
+    Item *toItem(int level) const;
+    Item *toItem(Layer *layer) const;
+
+    Item *createLevelItemIfNeeded(int level);
 
     MapDocument *mMapDocument;
     Map *mMap;
     Item *mRootItem;
+
+    QIcon mTileLayerIcon;
+    QIcon mObjectGroupIcon;
+    QIcon mImageLayerIcon;
 };
 
 } // namespace Internal

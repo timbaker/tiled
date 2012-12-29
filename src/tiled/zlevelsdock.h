@@ -55,7 +55,7 @@ private:
 
     ZLevelsView *mView;
     MapDocument *mMapDocument;
-    QMap<MapDocument*,QList<CompositeLayerGroup*> > mExpandedLevels;
+    QMap<MapDocument*,QList<int> > mExpandedLevels;
 };
 
 class ZLevelsView : public QTreeView

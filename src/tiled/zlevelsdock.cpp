@@ -112,9 +112,9 @@ void ZLevelsDock::updateActions()
 void ZLevelsDock::saveExpandedLevels(MapDocument *mapDoc)
 {
     mExpandedLevels[mapDoc].clear();
-    foreach (CompositeLayerGroup *g, mapDoc->mapComposite()->layerGroups()) {
-        if (mView->isExpanded(mView->model()->index(g)))
-            mExpandedLevels[mapDoc].append(g);
+    foreach (int level, mView->model()->levels()) {
+        if (mView->isExpanded(mView->model()->index(level)))
+            mExpandedLevels[mapDoc].append(level);
     }
 }
 
@@ -122,8 +122,8 @@ void ZLevelsDock::restoreExpandedLevels(MapDocument *mapDoc)
 {
     if (!mExpandedLevels.contains(mapDoc))
         mView->expandAll();
-    foreach (CompositeLayerGroup *g, mExpandedLevels[mapDoc])
-        mView->setExpanded(mView->model()->index(g), true);
+    foreach (int level, mExpandedLevels[mapDoc])
+        mView->setExpanded(mView->model()->index(level), true);
     mExpandedLevels[mapDoc].clear();
 #if 0
     // Also restore the selection
@@ -207,8 +207,8 @@ void ZLevelsView::selectionChanged(const QItemSelection &selected, const QItemSe
 
     if (count == 1) {
         QModelIndex index = selectedRows.first();
-        if (TileLayer *tl = model()->toLayer(index)) {
-            int layerIndex = mMapDocument->map()->layers().indexOf(tl);
+        if (Layer *layer = model()->toLayer(index)) {
+            int layerIndex = mMapDocument->map()->layers().indexOf(layer);
             if (layerIndex != mMapDocument->currentLayerIndex()) {
                 mSynching = true;
                 mMapDocument->setCurrentLayerIndex(layerIndex);
