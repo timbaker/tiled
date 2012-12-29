@@ -297,7 +297,28 @@ void MapDocument::addLayer(Layer::Type layerType)
     QString name;
 
 #if 1
+    // Create the new layer in the same level as the current layer.
+    // Stack it with other layers of the same type in level-order.
     int level = currentLevel();
+    int index = mMap->layerCount();
+    Layer *topLayerOfSameTypeInSameLevel = 0;
+    Layer *bottomLayerOfSameTypeInGreaterLevel = 0;
+    Layer *topLayerOfSameTypeInLesserLevel = 0;
+    foreach (Layer *layer, mMap->layers(layerType)) {
+        if ((layer->level() > level) && !bottomLayerOfSameTypeInGreaterLevel)
+            bottomLayerOfSameTypeInGreaterLevel = layer;
+        if (layer->level() < level)
+            topLayerOfSameTypeInLesserLevel = layer;
+        if (layer->level() == level)
+            topLayerOfSameTypeInSameLevel = layer;
+    }
+    if (topLayerOfSameTypeInSameLevel)
+        index = mMap->layers().indexOf(topLayerOfSameTypeInSameLevel) + 1;
+    else if (bottomLayerOfSameTypeInGreaterLevel)
+        index = mMap->layers().indexOf(bottomLayerOfSameTypeInGreaterLevel);
+    else if (topLayerOfSameTypeInLesserLevel)
+        index = mMap->layers().indexOf(topLayerOfSameTypeInLesserLevel) + 1;
+
     switch (layerType) {
     case Layer::TileLayerType:
         name = tr("%1_Tile Layer %2").arg(level).arg(mMap->tileLayerCount() + 1);
@@ -314,6 +335,7 @@ void MapDocument::addLayer(Layer::Type layerType)
     case Layer::AnyLayerType:
         break; // Q_ASSERT below will fail.
     }
+    Q_ASSERT(layer);
 #else
     switch (layerType) {
     case Layer::TileLayerType:
@@ -331,10 +353,10 @@ void MapDocument::addLayer(Layer::Type layerType)
     case Layer::AnyLayerType:
         break; // Q_ASSERT below will fail.
     }
-#endif
     Q_ASSERT(layer);
 
     const int index = mMap->layerCount();
+#endif
     mUndoStack->push(new AddLayer(this, index, layer));
     setCurrentLayerIndex(index);
 
