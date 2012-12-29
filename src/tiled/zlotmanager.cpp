@@ -94,8 +94,10 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
     if (name == QLatin1String("lot") && !type.isEmpty()) {
 
         QString mapName = type/* + QLatin1String(".tmx")*/;
-        MapInfo *newMapInfo = MapManager::instance()->loadMap(mapName,
-                                                     mMapDocument->fileName());
+        QString relativeTo;
+        if (!mMapDocument->fileName().isEmpty())
+            relativeTo = QFileInfo(mMapDocument->fileName()).absolutePath();
+        MapInfo *newMapInfo = MapManager::instance()->loadMap(mapName, relativeTo);
 
         if (newMapInfo) {
             if (!currLot || (currLot->map() != newMapInfo->map())) {
