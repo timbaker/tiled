@@ -203,7 +203,7 @@ void CreatePathTool::mousePressed(QGraphicsSceneMouseEvent *event)
     QPointF tileCoords = renderer->pixelToTileCoords(event->scenePos(),
                                                      pathLayer->level());
 
-    bool centers = (event->modifiers() & Qt::ControlModifier) != 0;
+    bool centers = (event->modifiers() & Qt::ControlModifier) == 0;
 
     if (!centers && (mMode != CreateArea))
         tileCoords = tileCoords.toPoint(); // rounds to nearest integer
