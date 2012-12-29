@@ -83,6 +83,8 @@ private slots:
 
     void generatorsDialog();
 
+    void accept();
+
 private:
     void setGeneratorsList();
     void setGeneratorTypesList();

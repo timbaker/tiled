@@ -38,6 +38,7 @@
 
 #include <QDebug>
 #include <QMessageBox>
+#include <QSettings>
 #include <QToolBar>
 #include <QUndoCommand>
 
@@ -345,8 +346,12 @@ PathPropertiesDialog::PathPropertiesDialog(QWidget *parent) :
 
     setGeneratorTypesList();
 
-    ui->generatorsList->setCurrentRow(0);
-    ui->propertyList->setCurrentRow(0);
+    QSettings settings;
+    settings.beginGroup(QLatin1String("PathPropertiesDialog"));
+    QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
+    if (!geom.isEmpty())
+        restoreGeometry(geom);
+    settings.endGroup();
 }
 
 PathPropertiesDialog::~PathPropertiesDialog()
@@ -387,6 +392,8 @@ void PathPropertiesDialog::setPath(MapDocument *doc, Path *path)
 
     mPath = path;
     setGeneratorsList();
+    ui->generatorsList->setCurrentRow(0);
+    ui->propertyList->setCurrentRow(0);
 
     synchUI();
 }
@@ -839,4 +846,14 @@ void PathPropertiesDialog::pathGeneratorPropertyChanged(Path *path,
     if (path != mPath || prop != mCurrentProperty)
         return;
     setPropertyPage();
+}
+
+void PathPropertiesDialog::accept()
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("PathPropertiesDialog"));
+    settings.setValue(QLatin1String("geometry"), saveGeometry());
+    settings.endGroup();
+
+    QDialog::accept();
 }

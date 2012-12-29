@@ -30,6 +30,7 @@
 #include "tileset.h"
 
 #include <QMessageBox>
+#include <QSettings>
 #include <QToolBar>
 #include <QUndoGroup>
 #include <QUndoStack>
@@ -295,6 +296,13 @@ PathGeneratorsDialog::PathGeneratorsDialog(QWidget *parent) :
 
     ui->generatorsList->setCurrentRow(0);
     ui->propertyList->setCurrentRow(0);
+
+    QSettings settings;
+    settings.beginGroup(QLatin1String("PathGeneratorsDialog"));
+    QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
+    if (!geom.isEmpty())
+        restoreGeometry(geom);
+    settings.endGroup();
 }
 
 PathGeneratorsDialog::~PathGeneratorsDialog()
@@ -500,6 +508,12 @@ void PathGeneratorsDialog::accept()
         QMessageBox::warning(this, tr("It's no good, Jim!"),
                              PathGeneratorMgr::instance()->errorString());
     }
+
+    QSettings settings;
+    settings.beginGroup(QLatin1String("PathGeneratorsDialog"));
+    settings.setValue(QLatin1String("geometry"), saveGeometry());
+    settings.endGroup();
+
     QDialog::accept();
 }
 
