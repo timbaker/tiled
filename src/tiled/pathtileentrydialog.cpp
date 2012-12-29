@@ -128,9 +128,9 @@ QList<PGP_TileEntry *> PathTileEntryDialog::getEntriesInCategory(const QString &
     QList<PGP_TileEntry*> entries;
     if (category == QLatin1String("walls")) {
         foreach (BuildingTileEntry *bentry, BuildingTilesMgr::instance()->catEWalls()->entries())
-            entries += BuildingEntryToPathEntry(bentry);
+            entries += BuildingEntryToPathEntry(category, bentry);
         foreach (BuildingTileEntry *bentry, BuildingTilesMgr::instance()->catIWalls()->entries()) {
-            PGP_TileEntry *entry = BuildingEntryToPathEntry(bentry);
+            PGP_TileEntry *entry = BuildingEntryToPathEntry(category, bentry);
             if (matches(entry, entries))
                 delete entry;
             else
@@ -139,15 +139,16 @@ QList<PGP_TileEntry *> PathTileEntryDialog::getEntriesInCategory(const QString &
     }
     if (category == QLatin1String("grime_wall")) {
         foreach (BuildingTileEntry *bentry, BuildingTilesMgr::instance()->catGrimeWall()->entries())
-            entries += BuildingEntryToPathEntry(bentry);
+            entries += BuildingEntryToPathEntry(category, bentry);
     }
     return entries;
 }
 
-PGP_TileEntry *PathTileEntryDialog::BuildingEntryToPathEntry(BuildingTileEntry *entry)
+PGP_TileEntry *PathTileEntryDialog::BuildingEntryToPathEntry(const QString &category,
+                                                             BuildingTileEntry *entry)
 {
     PGP_TileEntry *prop = new PGP_TileEntry(QLatin1String("entry"));
-    prop->setCategory(mCategory);
+    prop->setCategory(category);
 
     for (int i = 0; i < entry->category()->enumCount(); i++) {
         QString name = entry->category()->enumToString(i);

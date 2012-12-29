@@ -55,7 +55,8 @@ private:
                       PGP_TileEntry *initialEntry);
 
     QList<PGP_TileEntry*> getEntriesInCategory(const QString &category);
-    PGP_TileEntry *BuildingEntryToPathEntry(BuildingEditor::BuildingTileEntry *entry);
+    PGP_TileEntry *BuildingEntryToPathEntry(const QString &category,
+                                            BuildingEditor::BuildingTileEntry *entry);
     bool matches(PGP_TileEntry *entry, PGP_TileEntry *other);
     bool matches(PGP_TileEntry *entry, QList<PGP_TileEntry *> &entries);
 

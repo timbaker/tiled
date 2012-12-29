@@ -262,6 +262,27 @@ PGP_Tile *PGP_TileEntry::displayTile() const
     return mProperties[mDisplayIndex]->asTile();
 }
 
+void PGP_TileEntry::clear()
+{
+    foreach (PathGeneratorProperty *prop, mProperties) {
+        if (PGP_Tile *tile = prop->asTile()) {
+            tile->mTilesetName.clear();
+            tile->mTileID = 0;
+        }
+    }
+}
+
+bool PGP_TileEntry::isNone() const
+{
+    foreach (PathGeneratorProperty *prop, mProperties) {
+        if (PGP_Tile *tile = prop->asTile()) {
+            if (!tile->mTilesetName.isEmpty())
+                return false;
+        }
+    }
+    return true;
+}
+
 /////
 
 PathGenerator::PathGenerator(const QString &label, const QString &type) :
@@ -1479,7 +1500,7 @@ PG_StreetLight::PG_StreetLight(const QString &label) :
     }
 
     PGP_Integer *prop3 = new PGP_Integer(QLatin1String("Spacing"));
-    prop3->mMin = 1, prop3->mMax = 300, prop3->mValue = 10;
+    prop3->mMin = 1, prop3->mMax = 300, prop3->mValue = 12;
     mProperties[Spacing] = prop3;
 
     if (PGP_Integer *prop = new PGP_Integer(QLatin1String("PathOffset"))) {
@@ -2112,6 +2133,14 @@ void PG_Wall::generate(int level, QVector<TileLayer *> &layers)
 void PG_Wall::setCell(QVector<TileLayer *> &layers, QVector<Tiled::Tile *> &tiles,
                       int x, int y, int tileEnum)
 {
+    // Put the tile into Layer1 or Layer2.  If an existing tile is one of this
+    // generator's wall tiles, the existing tile will be replaced.  Otherwise,
+    // the tile will only be placed if there is an empty layer, leaving existing
+    // tiles untouched. This is to handle a West wall being placed where a North
+    // wall of another type already exists.
+    // FIXME: If the existing tile couldn't co-exist with the tile being placed,
+    // the existing tile should be replaced.  For example, placing a West wall
+    // onto an existing West wall should replace the existing tile.
     foreach (TileLayer *tl, layers) {
         if (tl->contains(x, y)) {
             Tiled::Tile *tile = tl->cellAt(x, y).tile;
@@ -2143,6 +2172,7 @@ int PG_Wall::tileAt(QVector<TileLayer *> &layers, QVector<Tiled::Tile*> &tiles, 
 /////
 
 QHash<QString,int> PG_WallGrime::mTileMap;
+QHash<QString,PGP_TileEntry*> PG_WallGrime::mEntryMap;
 
 PG_WallGrime::PG_WallGrime(const QString &label) :
     PathGenerator(label, QLatin1String("WallGrime"))
@@ -2167,6 +2197,33 @@ PG_WallGrime::PG_WallGrime(const QString &label) :
     if (PGP_Layer *prop = new PGP_Layer(QLatin1String("LayerWall2"))) {
         prop->mValue = QLatin1String("Walls2");
         mProperties[LayerWall2] = prop;
+    }
+
+    if (PGP_TileEntry *prop = new PGP_TileEntry(QLatin1String("WallTiles1"))) {
+        prop->setCategory(QLatin1String("walls"));
+        mProperties[WallTiles1] = prop;
+    }
+    if (PGP_TileEntry *prop = new PGP_TileEntry(QLatin1String("WallTiles2"))) {
+        prop->setCategory(QLatin1String("walls"));
+        mProperties[WallTiles2] = prop;
+    }
+    if (PGP_TileEntry *prop = new PGP_TileEntry(QLatin1String("WallTiles3"))) {
+        prop->setCategory(QLatin1String("walls"));
+        mProperties[WallTiles3] = prop;
+    }
+    if (PGP_TileEntry *prop = new PGP_TileEntry(QLatin1String("WallTiles4"))) {
+        prop->setCategory(QLatin1String("walls"));
+        mProperties[WallTiles4] = prop;
+    }
+
+    // When this generator is first created, it is set to pick wall tiles from
+    // mTileMap.  After saving/loading however, the wall tiles are not chosen
+    // automatically.
+    mAutoWall = false;
+
+    if (PGP_Boolean *prop = new PGP_Boolean(QLatin1String("Strict"))) {
+        prop->mValue = true;
+        mProperties[Strict] = prop;
     }
 
     if (PGP_Integer *prop = new PGP_Integer(QLatin1String("PathOffset"))) {
@@ -2215,6 +2272,28 @@ void PG_WallGrime::generate(int level, QVector<TileLayer *> &layers)
         if (!tiles[i]) return;
     }
 
+    QHash<QString,int> tileMap;
+    QHash<QString,PGP_TileEntry*> entryMap;
+    QList<PGP_TileEntry*> seenEntries;
+
+    // If wall tiles were never chosen, then switch to automatically choosing.
+    if (mProperties[WallTiles1]->asTileEntry()->isNone())
+        mAutoWall = true;
+
+    if (mAutoWall) {
+        mProperties[WallTiles1]->asTileEntry()->clear();
+        mProperties[WallTiles2]->asTileEntry()->clear();
+        mProperties[WallTiles3]->asTileEntry()->clear();
+        mProperties[WallTiles4]->asTileEntry()->clear();
+        tileMap = mTileMap;
+        entryMap = mEntryMap;
+    } else {
+        registerWallTiles(mProperties[WallTiles1]->asTileEntry(), tileMap, entryMap);
+        registerWallTiles(mProperties[WallTiles2]->asTileEntry(), tileMap, entryMap);
+        registerWallTiles(mProperties[WallTiles3]->asTileEntry(), tileMap, entryMap);
+        registerWallTiles(mProperties[WallTiles4]->asTileEntry(), tileMap, entryMap);
+    }
+
     qreal pathOffset = mProperties[PathOffset]->asInteger()->mValue;
 
     QVector<QPointF> forward, backward;
@@ -2231,14 +2310,28 @@ void PG_WallGrime::generate(int level, QVector<TileLayer *> &layers)
                 if (Tile *tile1 = tl[1]->cellAt(pt).tile) {
                     QString tileName = PGP_Tile::tileName(tile1->tileset()->name(),
                                                           tile1->id());
-                    if (mTileMap.contains(tileName))
-                        tl[0]->setCell(pt, Cell(tiles[mTileMap[tileName]]));
-                    else {
+                    if (tileMap.contains(tileName)) {
+                        tl[0]->setCell(pt, Cell(tiles[tileMap[tileName]]));
+                        if (mAutoWall && !seenEntries.contains(entryMap[tileName])) {
+                            if (mProperties[WallTiles1]->asTileEntry()->isNone()) {
+                                mProperties[WallTiles1]->clone(entryMap[tileName]);
+                                seenEntries += entryMap[tileName];
+                            } else if (mProperties[WallTiles2]->asTileEntry()->isNone()) {
+                                mProperties[WallTiles2]->clone(entryMap[tileName]);
+                                seenEntries += entryMap[tileName];
+                            } else if (mProperties[WallTiles3]->asTileEntry()->isNone()) {
+                                mProperties[WallTiles3]->clone(entryMap[tileName]);
+                                seenEntries += entryMap[tileName];
+                            } else if (mProperties[WallTiles4]->asTileEntry()->isNone()) {
+                                mProperties[WallTiles4]->clone(entryMap[tileName]);
+                                seenEntries += entryMap[tileName];
+                            }
+                        }
+                    } else if (!mProperties[Strict]->asBoolean()->mValue) {
                         // Here we have an unknown tile in the Walls layer.
                         // Determine which direction the wall is facing and
                         // use the West or North grime tile.  This is for
-                        // wide shop windows.  Could add an option to disable
-                        // this.
+                        // wide shop windows.
                         Direction dir = direction(p0, p1);
                         if (dir == WestEast || dir == EastWest)
                             tl[0]->setCell(pt, Cell(tiles[North]));
@@ -2249,17 +2342,37 @@ void PG_WallGrime::generate(int level, QVector<TileLayer *> &layers)
             }
         }
     }
+
+    if (!mAutoWall)
+        qDeleteAll(entryMap.values().toSet());
 }
 
 void PG_WallGrime::registerWallTiles(PGP_TileEntry *entry)
 {
+    registerWallTiles(entry, mTileMap, mEntryMap);
+}
+
+void PG_WallGrime::registerWallTiles(PGP_TileEntry *entry,
+                                     QHash<QString, int> &tileMap,
+                                     QHash<QString, PGP_TileEntry *> &entryMap)
+{
+    if (entry->isNone())
+        return;
+
+    Q_ASSERT(entry->mCategory == QLatin1String("walls"));
+
+    PGP_TileEntry *clone = new PGP_TileEntry(entry->name());
+    clone->clone(entry);
+
     // It would be a lot faster to map a wall's Tiled::Tile to the grime tile.
     // But then we would need a mapping for each map's tilesets.
     for (int i = 0; i < TileCount; i++) {
         PGP_Tile *prop = entry->mProperties[i]->asTile();
         QString tileName = prop->tileName();
-        if (!tileName.isEmpty())
-            mTileMap[tileName] = i;
+        if (!tileName.isEmpty()) {
+            tileMap[tileName] = i;
+            entryMap[tileName] = clone;
+        }
     }
 }
 

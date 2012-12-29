@@ -173,6 +173,9 @@ public:
 
     PGP_Tile *displayTile() const;
 
+    void clear();
+    bool isNone() const;
+
     QString mCategory;
     int mDisplayIndex;
 };
@@ -475,15 +478,25 @@ public:
         LayerGrime,
         LayerWall1,
         LayerWall2,
+        WallTiles1,
+        WallTiles2,
+        WallTiles3,
+        WallTiles4,
+        Strict,
         PathOffset,
         PropertyCount
     };
+
+    bool mAutoWall;
 
     // Keep a mapping of known wall tiles to TileNames enum value.
     // When this generator sees a known wall tile it places the appropriate
     // grime tile.
     static void registerWallTiles(PGP_TileEntry *entry);
+    static void registerWallTiles(PGP_TileEntry *entry, QHash<QString,int> &tileMap,
+                                  QHash<QString,PGP_TileEntry*> &entryMap);
     static QHash<QString,int> mTileMap;
+    static QHash<QString,PGP_TileEntry*> mEntryMap;
 };
 
 class TILEDSHARED_EXPORT PathGeneratorTypes
