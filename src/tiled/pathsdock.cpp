@@ -317,9 +317,12 @@ void PathsDock::saveExpandedGroups(MapDocument *mapDoc)
 
 void PathsDock::restoreExpandedGroups(MapDocument *mapDoc)
 {
-    foreach (PathLayer *og, mExpandedGroups[mapDoc])
-        mPathsView->setExpanded(mPathsView->model()->index(og), true);
-    mExpandedGroups[mapDoc].clear();
+    if (mExpandedGroups.contains(mapDoc)) {
+        foreach (PathLayer *og, mExpandedGroups[mapDoc])
+            mPathsView->setExpanded(mPathsView->model()->index(og), true);
+        mExpandedGroups[mapDoc].clear();
+    } else
+        mPathsView->expandAll();
 
     // Also restore the selection
     foreach (Path *o, mapDoc->selectedPaths()) {

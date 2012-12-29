@@ -275,9 +275,12 @@ void ObjectsDock::saveExpandedGroups(MapDocument *mapDoc)
 
 void ObjectsDock::restoreExpandedGroups(MapDocument *mapDoc)
 {
-    foreach (ObjectGroup *og, mExpandedGroups[mapDoc])
-        mObjectsView->setExpanded(mObjectsView->model()->index(og), true);
-    mExpandedGroups[mapDoc].clear();
+    if (mExpandedGroups.contains(mapDoc)) {
+        foreach (ObjectGroup *og, mExpandedGroups[mapDoc])
+            mObjectsView->setExpanded(mObjectsView->model()->index(og), true);
+        mExpandedGroups[mapDoc].clear();
+    } else
+        mObjectsView->expandAll();
 
     // Also restore the selection
     foreach (MapObject *o, mapDoc->selectedObjects()) {
