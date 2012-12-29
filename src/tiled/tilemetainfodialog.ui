@@ -143,6 +143,15 @@
     <string>Remove selected tileset</string>
    </property>
   </action>
+  <action name="actionAddToMap">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/22x22/add.png</normaloff>:/images/22x22/add.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add tilesets to current map</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

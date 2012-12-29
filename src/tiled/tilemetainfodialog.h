@@ -33,6 +33,7 @@ class TileMetaInfoDialog;
 
 namespace Tiled {
 
+class Map;
 class Tile;
 class Tileset;
 
@@ -57,6 +58,8 @@ private slots:
     void addTileset();
     void removeTileset();
 
+    void addToMap();
+
     void currentTilesetChanged(int row);
     void tileSelectionChanged();
 
@@ -75,6 +78,8 @@ private slots:
 private:
     void setTilesetList();
     void setTilesList();
+
+    bool mapUsesTilesetImage(Map *map, const QString &source);
 
 private:
     Ui::TileMetaInfoDialog *ui;

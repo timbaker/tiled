@@ -20,11 +20,14 @@
 #include "tilemetainfodialog.h"
 #include "ui_tilemetainfodialog.h"
 
+#include "addremovetileset.h"
+#include "documentmanager.h"
 #include "preferences.h"
 #include "tilemetainfomgr.h"
 #include "utils.h"
 #include "zoomable.h"
 
+#include "map.h"
 #include "tileset.h"
 
 #include <QFileDialog>
@@ -42,11 +45,11 @@ using namespace Tiled::Internal;
 
 namespace TileMetaUndoRedo {
 
-class AddTileset : public QUndoCommand
+class AddGlobalTileset : public QUndoCommand
 {
 public:
-    AddTileset(TileMetaInfoDialog *d, Tileset *tileset) :
-        QUndoCommand(QCoreApplication::translate("UndoCommands", "Add Tileset")),
+    AddGlobalTileset(TileMetaInfoDialog *d, Tileset *tileset) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Add Global Tileset")),
         mDialog(d),
         mTileset(tileset)
     {
@@ -66,11 +69,11 @@ public:
     Tileset *mTileset;
 };
 
-class RemoveTileset : public QUndoCommand
+class RemoveGlobalTileset : public QUndoCommand
 {
 public:
-    RemoveTileset(TileMetaInfoDialog *d, Tileset *tileset) :
-        QUndoCommand(QCoreApplication::translate("UndoCommands", "Remove Tileset")),
+    RemoveGlobalTileset(TileMetaInfoDialog *d, Tileset *tileset) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Remove Global Tileset")),
         mDialog(d),
         mTileset(tileset)
     {
@@ -136,6 +139,7 @@ TileMetaInfoDialog::TileMetaInfoDialog(QWidget *parent) :
     toolBar->setIconSize(QSize(16, 16));
     toolBar->addAction(ui->actionAdd);
     toolBar->addAction(ui->actionRemove);
+    toolBar->addAction(ui->actionAddToMap);
     ui->toolBarLayout->addWidget(toolBar);
 
     /////
@@ -193,6 +197,7 @@ TileMetaInfoDialog::TileMetaInfoDialog(QWidget *parent) :
             SLOT(tileSelectionChanged()));
     connect(ui->actionAdd, SIGNAL(triggered()), SLOT(addTileset()));
     connect(ui->actionRemove, SIGNAL(triggered()), SLOT(removeTileset()));
+    connect(ui->actionAddToMap, SIGNAL(triggered()), SLOT(addToMap()));
     connect(ui->enums, SIGNAL(activated(int)),
             SLOT(enumChanged(int)));
 
@@ -239,8 +244,8 @@ void TileMetaInfoDialog::addTileset()
             // This will NOT replace the meta-info for the old tileset, it will
             // be used by the new tileset as well.
             if (Tileset *old = TileMetaInfoMgr::instance()->tileset(name))
-                mUndoStack->push(new RemoveTileset(this, old));
-            mUndoStack->push(new AddTileset(this, ts));
+                mUndoStack->push(new RemoveGlobalTileset(this, old));
+            mUndoStack->push(new AddGlobalTileset(this, ts));
         } else {
             QMessageBox::warning(this, tr("It's no good, Jim!"),
                                  TileMetaInfoMgr::instance()->errorString());
@@ -262,8 +267,41 @@ void TileMetaInfoDialog::removeTileset()
                                   .arg(tileset->name()),
                                   QMessageBox::Ok, QMessageBox::Cancel) == QMessageBox::Cancel)
             return;
-        mUndoStack->push(new RemoveTileset(this, tileset));
+        mUndoStack->push(new RemoveGlobalTileset(this, tileset));
     }
+}
+
+void TileMetaInfoDialog::addToMap()
+{
+    MapDocument *mapDocument = DocumentManager::instance()->currentDocument();
+    if (!mapDocument)
+        return;
+
+    QString text = tr("Really add all these tilesets to the current map?\nDuplicate tilesets will not be added.");
+    if (QMessageBox::question(this, tr("Add Tilesets To Map"), text,
+                              QMessageBox::Yes, QMessageBox::No) == QMessageBox::No)
+        return;
+
+    QList<Tileset*> tilesets;
+    foreach (Tileset *tileset, TileMetaInfoMgr::instance()->tilesets()) {
+        if (tileset->isMissing())
+            continue;
+        if (mapUsesTilesetImage(mapDocument->map(), tileset->imageSource()))
+            continue;
+        tilesets += tileset;
+    }
+
+    if (tilesets.size() > 0) {
+        mapDocument->undoStack()->beginMacro(tr("Add Tilesets to Map"));
+        foreach (Tileset *tileset, tilesets)
+            mapDocument->undoStack()->push(new AddTileset(mapDocument, tileset));
+        mapDocument->undoStack()->endMacro();
+    }
+
+    QMessageBox::information(this, tr("Tilesets added"),
+                             tr("%1 tilesets were added to %2.")
+                             .arg(tilesets.size())
+                             .arg(mapDocument->displayName()));
 }
 
 void TileMetaInfoDialog::addTileset(Tileset *ts)
@@ -361,6 +399,7 @@ void TileMetaInfoDialog::updateUI()
     ui->editTiles->setText(QDir::toNativeSeparators(tilesDir));
 
     ui->actionRemove->setEnabled(mCurrentTileset != 0);
+    ui->actionAddToMap->setEnabled(DocumentManager::instance()->currentDocument() != 0);
     ui->enums->setEnabled(mSelectedTiles.size() > 0);
 
     QSet<QString> enums;
@@ -426,6 +465,15 @@ void TileMetaInfoDialog::setTilesList()
     } else {
         ui->tiles->model()->setTiles(QList<Tile*>());
     }
+}
+
+bool TileMetaInfoDialog::mapUsesTilesetImage(Map *map, const QString &source)
+{
+    foreach (Tileset *tileset, map->tilesets()) {
+        if (tileset->imageSource() == source)
+            return true;
+    }
+    return false;
 }
 
 
