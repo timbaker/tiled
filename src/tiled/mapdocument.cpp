@@ -350,6 +350,10 @@ void MapDocument::addLayer(Layer::Type layerType)
         name = tr("%1_Image Layer %2").arg(level).arg(mMap->imageLayerCount() + 1);
         layer = new ImageLayer(name, 0, 0, mMap->width(), mMap->height());
         break;
+    case Layer::PathLayerType:
+        name = tr("%1_Path Layer %2").arg(level).arg(mMap->pathLayerCount() + 1);
+        layer = new PathLayer(name, 0, 0, mMap->width(), mMap->height());
+        break;
     case Layer::AnyLayerType:
         break; // Q_ASSERT below will fail.
     }
@@ -368,12 +372,6 @@ void MapDocument::addLayer(Layer::Type layerType)
         name = tr("Image Layer %1").arg(mMap->imageLayerCount() + 1);
         layer = new ImageLayer(name, 0, 0, mMap->width(), mMap->height());
         break;
-#ifdef ZOMBOID
-    case Layer::PathLayerType:
-        name = tr("Path Layer %1").arg(mMap->pathLayerCount() + 1);
-        layer = new PathLayer(name, 0, 0, mMap->width(), mMap->height());
-        break;
-#endif
     case Layer::AnyLayerType:
         break; // Q_ASSERT below will fail.
     }
