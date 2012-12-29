@@ -196,7 +196,8 @@ SOURCES += aboutdialog.cpp \
     betterselectionrectangle.cpp \
     pathtileentrydialog.cpp \
     tilemetainfodialog.cpp \
-    tilemetainfomgr.cpp
+    tilemetainfomgr.cpp \
+    reorderpath.cpp
 
 
 HEADERS += aboutdialog.h \
@@ -359,7 +360,8 @@ HEADERS += aboutdialog.h \
     betterselectionrectangle.h \
     pathtileentrydialog.h \
     tilemetainfodialog.h \
-    tilemetainfomgr.h
+    tilemetainfomgr.h \
+    reorderpath.h
 
 
 macx {

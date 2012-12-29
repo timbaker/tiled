@@ -79,6 +79,8 @@ public:
     void setPathLayer(PathLayer *pathLayer)
     { mLayer = pathLayer; }
 
+    int index();
+
     int level() const;
 
     void setPoints(const PathPoints &points);
@@ -165,6 +167,9 @@ public:
 
     const QList<Path*> &paths() const
     { return mPaths; }
+
+    Path *path(int n) const
+    { return (n >= 0 && n < mPaths.size()) ? mPaths[n] : 0; }
 
     int pathCount() const
     { return mPaths.count(); }

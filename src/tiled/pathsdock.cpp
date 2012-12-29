@@ -26,6 +26,7 @@
 #include "pathlayer.h"
 #include "pathmodel.h"
 #include "pathpropertiesdialog.h"
+#include "reorderpath.h"
 #include "utils.h"
 
 #include <QBoxLayout>
@@ -52,6 +53,12 @@ PathsDock::PathsDock(QWidget *parent)
 {
     setObjectName(QLatin1String("PathsDock"));
 
+    mActionMoveUp = new QAction(this);
+    mActionMoveUp->setIcon(QIcon(QLatin1String(":/images/16x16/go-up.png")));
+
+    mActionMoveDown = new QAction(this);
+    mActionMoveDown->setIcon(QIcon(QLatin1String(":/images/16x16/go-down.png")));
+
     mActionDuplicatePaths = new QAction(this);
     mActionDuplicatePaths->setIcon(QIcon(QLatin1String(":/images/16x16/stock-duplicate-16.png")));
 
@@ -62,9 +69,13 @@ PathsDock::PathsDock(QWidget *parent)
     mActionPathProperties->setIcon(QIcon(QLatin1String(":/images/16x16/document-properties.png")));
     mActionPathProperties->setToolTip(tr("Object Properties"));
 
+    Utils::setThemeIcon(mActionMoveUp, "go-up");
+    Utils::setThemeIcon(mActionMoveDown, "go-down");
     Utils::setThemeIcon(mActionRemovePaths, "edit-delete");
     Utils::setThemeIcon(mActionPathProperties, "document-properties");
 
+    connect(mActionMoveUp, SIGNAL(triggered()), SLOT(moveUp()));
+    connect(mActionMoveDown, SIGNAL(triggered()), SLOT(moveDown()));
     connect(mActionDuplicatePaths, SIGNAL(triggered()), SLOT(duplicatePaths()));
     connect(mActionRemovePaths, SIGNAL(triggered()), SLOT(removePaths()));
     connect(mActionPathProperties, SIGNAL(triggered()), SLOT(pathProperties()));
@@ -92,6 +103,8 @@ PathsDock::PathsDock(QWidget *parent)
     toolbar->setIconSize(QSize(16, 16));
 
     toolbar->addAction(newLayerAction);
+    toolbar->addAction(mActionMoveUp);
+    toolbar->addAction(mActionMoveDown);
     toolbar->addAction(mActionDuplicatePaths);
     toolbar->addAction(mActionRemovePaths);
 
@@ -163,6 +176,8 @@ void PathsDock::updateActions()
 {
     int count = mMapDocument ? mMapDocument->selectedPaths().count() : 0;
     bool enabled = count > 0;
+    mActionMoveUp->setEnabled(enabled);
+    mActionMoveDown->setEnabled(enabled);
     mActionDuplicatePaths->setEnabled(enabled);
     mActionRemovePaths->setEnabled(enabled);
     mActionPathProperties->setEnabled(enabled && (count == 1));
@@ -206,6 +221,34 @@ void PathsDock::triggeredMoveToMenu(QAction *action)
                                             pathLayer));
     }
     undoStack->endMacro();
+}
+
+void PathsDock::moveUp()
+{
+    // Unnecessary check is unnecessary
+    if (!mMapDocument || !mMapDocument->selectedPaths().count())
+        return;
+
+    // TODO: multiple selection is allowed so move multiple paths.
+    Path *path = mMapDocument->selectedPaths().first();
+    if (path != path->pathLayer()->paths().last()) {
+        mMapDocument->undoStack()->push(new ReorderPath(mMapDocument, path,
+                                                        path->index() + 1));
+    }
+}
+
+void PathsDock::moveDown()
+{
+    // Unnecessary check is unnecessary
+    if (!mMapDocument || !mMapDocument->selectedPaths().count())
+        return;
+
+    // TODO: multiple selection is allowed so move multiple paths.
+    Path *path = mMapDocument->selectedPaths().first();
+    if (path != path->pathLayer()->paths().first()) {
+        mMapDocument->undoStack()->push(new ReorderPath(mMapDocument, path,
+                                                        path->index() - 1));
+    }
 }
 
 void PathsDock::duplicatePaths()

@@ -52,6 +52,8 @@ private slots:
     void updateActions();
     void aboutToShowMoveToMenu();
     void triggeredMoveToMenu(QAction *action);
+    void moveUp();
+    void moveDown();
     void duplicatePaths();
     void removePaths();
     void pathProperties();
@@ -63,6 +65,8 @@ private:
     void saveExpandedGroups(MapDocument *mapDoc);
     void restoreExpandedGroups(MapDocument *mapDoc);
 
+    QAction *mActionMoveUp;
+    QAction *mActionMoveDown;
     QAction *mActionDuplicatePaths;
     QAction *mActionRemovePaths;
     QAction *mActionPathProperties;

@@ -40,6 +40,11 @@ Path::~Path()
     }
 }
 
+int Path::index()
+{
+    return mLayer ? mLayer->paths().indexOf(this) : -1;
+}
+
 int Path::level() const
 {
     return mLayer ? mLayer->level() : 0;
