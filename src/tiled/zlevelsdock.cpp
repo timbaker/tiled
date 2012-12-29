@@ -265,18 +265,16 @@ void ZLevelsDock::saveExpandedLevels(MapDocument *mapDoc)
 
 void ZLevelsDock::restoreExpandedLevels(MapDocument *mapDoc)
 {
-    if (!mExpandedLevels.contains(mapDoc))
+    if (mExpandedLevels.contains(mapDoc)) {
+        foreach (int level, mExpandedLevels[mapDoc])
+            mView->setExpanded(mView->model()->index(level), true);
+        mExpandedLevels[mapDoc].clear();
+    } else
         mView->expandAll();
-    foreach (int level, mExpandedLevels[mapDoc])
-        mView->setExpanded(mView->model()->index(level), true);
-    mExpandedLevels[mapDoc].clear();
-#if 0
+
     // Also restore the selection
-    foreach (MapObject *o, mapDoc->selectedObjects()) {
-        QModelIndex index = mView->model()->index(o);
-        mView->selectionModel()->select(index, QItemSelectionModel::Select |  QItemSelectionModel::Rows);
-    }
-#endif
+    if (Layer *layer = mapDoc->currentLayer())
+        mView->setCurrentIndex(mView->model()->index(layer));
 }
 
 void ZLevelsDock::documentAboutToClose(int index, MapDocument *mapDocument)
