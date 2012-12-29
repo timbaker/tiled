@@ -296,6 +296,25 @@ void MapDocument::addLayer(Layer::Type layerType)
     Layer *layer = 0;
     QString name;
 
+#if 1
+    int level = currentLevel();
+    switch (layerType) {
+    case Layer::TileLayerType:
+        name = tr("%1_Tile Layer %2").arg(level).arg(mMap->tileLayerCount() + 1);
+        layer = new TileLayer(name, 0, 0, mMap->width(), mMap->height());
+        break;
+    case Layer::ObjectGroupType:
+        name = tr("%1_Object Layer %2").arg(level).arg(mMap->objectGroupCount() + 1);
+        layer = new ObjectGroup(name, 0, 0, mMap->width(), mMap->height());
+        break;
+    case Layer::ImageLayerType:
+        name = tr("%1_Image Layer %2").arg(level).arg(mMap->imageLayerCount() + 1);
+        layer = new ImageLayer(name, 0, 0, mMap->width(), mMap->height());
+        break;
+    case Layer::AnyLayerType:
+        break; // Q_ASSERT below will fail.
+    }
+#else
     switch (layerType) {
     case Layer::TileLayerType:
         name = tr("Tile Layer %1").arg(mMap->tileLayerCount() + 1);
@@ -312,6 +331,7 @@ void MapDocument::addLayer(Layer::Type layerType)
     case Layer::AnyLayerType:
         break; // Q_ASSERT below will fail.
     }
+#endif
     Q_ASSERT(layer);
 
     const int index = mMap->layerCount();
@@ -330,7 +350,12 @@ void MapDocument::duplicateLayer()
         return;
 
     Layer *duplicate = mMap->layerAt(mCurrentLayerIndex)->clone();
+#ifdef ZOMBOID
+    // Duplicate the layer into the same level by preserving the N_ prefix.
+    duplicate->setName(tr("%1 copy").arg(duplicate->name()));
+#else
     duplicate->setName(tr("Copy of %1").arg(duplicate->name()));
+#endif
 
     const int index = mCurrentLayerIndex + 1;
     QUndoCommand *cmd = new AddLayer(this, index, duplicate);
