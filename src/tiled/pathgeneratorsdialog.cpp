@@ -446,7 +446,10 @@ void PathGeneratorsDialog::chooseTile()
 void PathGeneratorsDialog::clearTile()
 {
     if (PGP_TileEntry *prop = mCurrentProperty->asTileEntry()) {
-
+        PGP_TileEntry entry(prop->name());
+        entry.setCategory(prop->mCategory);
+        Q_ASSERT(entry.isNone());
+        mUndoStack->push(new ChangePropertyTileEntry(this, prop, &entry));
     }
     if (PGP_Tile *prop = mCurrentProperty->asTile())
         mUndoStack->push(new ChangePropertyValue(this, prop, QString()));

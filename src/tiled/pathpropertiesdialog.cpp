@@ -528,6 +528,13 @@ void PathPropertiesDialog::chooseTile()
 
 void PathPropertiesDialog::clearTile()
 {
+    if (PGP_TileEntry *prop = mCurrentProperty->asTileEntry()) {
+        PGP_TileEntry entry(prop->name());
+        entry.setCategory(prop->mCategory);
+        Q_ASSERT(entry.isNone());
+        mMapDocument->undoStack()->push(new ChangePropertyTileEntry(mMapDocument, mPath,
+                                                                    prop, &entry));
+    }
     if (PGP_Tile *prop = mCurrentProperty->asTile()) {
         mMapDocument->undoStack()->push(new ChangePropertyValue(mMapDocument, mPath,
                                                                 prop, QString()));
