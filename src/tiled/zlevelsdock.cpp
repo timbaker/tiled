@@ -18,10 +18,13 @@
 #include "zlevelsdock.h"
 
 #include "documentmanager.h"
+#include "layermodel.h"
 #include "map.h"
 #include "mapcomposite.h"
 #include "mapdocument.h"
+#include "mapdocumentactionhandler.h"
 #include "tilelayer.h"
+#include "utils.h"
 #include "zlevelsmodel.h"
 
 #include <QBoxLayout>
@@ -30,34 +33,94 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
+#include <QMenu>
+#include <QSlider>
 #include <QToolButton>
 #include <QToolBar>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
 
-ZLevelsDock::ZLevelsDock(QWidget *parent)
-    : QDockWidget(parent)
-    , mView(new ZLevelsView())
-    , mMapDocument(0)
+ZLevelsDock::ZLevelsDock(QWidget *parent) :
+    QDockWidget(parent),
+    mMapDocument(0),
+    mView(new ZLevelsView()),
+    mOpacityLabel(new QLabel),
+    mOpacitySlider(new QSlider(Qt::Horizontal)),
+    mVisibilityLabel(new QLabel),
+    mVisibilitySlider(new QSlider(Qt::Horizontal))
 {
     setObjectName(QLatin1String("ZLevelsDock"));
 
     QWidget *widget = new QWidget(this);
     QVBoxLayout *layout = new QVBoxLayout(widget);
     layout->setMargin(5);
+
+    QHBoxLayout *opacityLayout = new QHBoxLayout;
+    mOpacitySlider->setRange(0, 100);
+    mOpacitySlider->setEnabled(false);
+    opacityLayout->addWidget(mOpacityLabel);
+    opacityLayout->addWidget(mOpacitySlider);
+    mOpacityLabel->setBuddy(mOpacitySlider);
+
+    QHBoxLayout *visibilityLayout = new QHBoxLayout;
+    mVisibilitySlider->setRange(0, 9);
+    mVisibilitySlider->setEnabled(false);
+    visibilityLayout->addWidget(mVisibilityLabel);
+    visibilityLayout->addWidget(mVisibilitySlider);
+    mVisibilityLabel->setBuddy(mVisibilitySlider);
+
+    /////
+    MapDocumentActionHandler *handler = MapDocumentActionHandler::instance();
+
+    QMenu *newLayerMenu = new QMenu(this);
+    newLayerMenu->addAction(handler->actionAddTileLayer());
+    newLayerMenu->addAction(handler->actionAddObjectGroup());
+    newLayerMenu->addAction(handler->actionAddImageLayer());
+
+    const QIcon newIcon(QLatin1String(":/images/16x16/document-new.png"));
+    QToolButton *newLayerButton = new QToolButton;
+    newLayerButton->setPopupMode(QToolButton::InstantPopup);
+    newLayerButton->setMenu(newLayerMenu);
+    newLayerButton->setIcon(newIcon);
+    newLayerButton->setToolTip(tr("New Layer"));
+    Utils::setThemeIcon(newLayerButton, "document-new");
+
+    QToolBar *toolBar = new QToolBar;
+    toolBar->setFloatable(false);
+    toolBar->setMovable(false);
+    toolBar->setIconSize(QSize(16, 16));
+
+    toolBar->addWidget(newLayerButton);
+    toolBar->addAction(handler->actionMoveLayerUp());
+    toolBar->addAction(handler->actionMoveLayerDown());
+    toolBar->addAction(handler->actionDuplicateLayer());
+    toolBar->addAction(handler->actionRemoveLayer());
+    toolBar->addSeparator();
+    toolBar->addAction(handler->actionToggleOtherLayers());
+
+    QToolButton *button;
+    button = dynamic_cast<QToolButton*>(toolBar->widgetForAction(handler->actionMoveLayerUp()));
+    button->setAutoRepeat(true);
+    button = dynamic_cast<QToolButton*>(toolBar->widgetForAction(handler->actionMoveLayerDown()));
+    button->setAutoRepeat(true);
+    /////
+
+    layout->addLayout(opacityLayout);
+    layout->addLayout(visibilityLayout);
     layout->addWidget(mView);
+    layout->addWidget(toolBar);
 
-#if 0
-    QToolBar *toolbar = new QToolBar;
-    toolbar->setFloatable(false);
-    toolbar->setMovable(false);
-    toolbar->setIconSize(QSize(16, 16));
-
-    layout->addWidget(toolbar);
-#endif
     setWidget(widget);
     retranslateUi();
+
+    connect(mOpacitySlider, SIGNAL(valueChanged(int)),
+            SLOT(setLayerOpacity(int)));
+    updateOpacitySlider();
+
+    connect(mVisibilitySlider, SIGNAL(valueChanged(int)),
+            SLOT(setTopmostVisibleLayer(int)));
+    updateVisibilitySlider();
 
     // Workaround since a tabbed dockwidget that is not currently visible still
     // returns true for isVisible()
@@ -83,8 +146,14 @@ void ZLevelsDock::setMapDocument(MapDocument *mapDoc)
 
     if (mMapDocument) {
         restoreExpandedLevels(mMapDocument);
+        connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
+                this, SLOT(updateOpacitySlider()));
+        connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
+                this, SLOT(updateVisibilitySlider()));
     }
 
+    updateOpacitySlider();
+    updateVisibilitySlider();
     updateActions();
 }
 
@@ -103,6 +172,82 @@ void ZLevelsDock::changeEvent(QEvent *e)
 void ZLevelsDock::retranslateUi()
 {
     setWindowTitle(tr("Levels"));
+    mOpacityLabel->setText(tr("Opacity:"));
+    mVisibilityLabel->setText(tr("Visibility:"));
+}
+
+void ZLevelsDock::updateOpacitySlider()
+{
+    const bool enabled = mMapDocument &&
+                         mMapDocument->currentLayerIndex() != -1;
+
+    mOpacitySlider->setEnabled(enabled);
+    mOpacityLabel->setEnabled(enabled);
+
+    if (enabled) {
+        qreal opacity = mMapDocument->currentLayer()->opacity();
+        mOpacitySlider->setValue((int) (opacity * 100));
+    } else {
+        mOpacitySlider->setValue(100);
+    }
+}
+
+void ZLevelsDock::setLayerOpacity(int opacity)
+{
+    if (!mMapDocument)
+        return;
+
+    const int layerIndex = mMapDocument->currentLayerIndex();
+    if (layerIndex == -1)
+        return;
+
+    const Layer *layer = mMapDocument->map()->layerAt(layerIndex);
+
+    if ((int) (layer->opacity() * 100) != opacity) {
+        LayerModel *layerModel = mMapDocument->layerModel();
+        const int row = layerModel->layerIndexToRow(layerIndex);
+        layerModel->setData(layerModel->index(row),
+                            qreal(opacity) / 100,
+                            LayerModel::OpacityRole);
+    }
+}
+
+void ZLevelsDock::updateVisibilitySlider()
+{
+    const bool enabled = mMapDocument;
+    mVisibilitySlider->setEnabled(enabled);
+    mVisibilityLabel->setEnabled(enabled);
+    if (enabled) {
+        mVisibilitySlider->blockSignals(true);
+        mVisibilitySlider->setMaximum(mMapDocument->map()->layerCount());
+        mVisibilitySlider->setValue(mMapDocument->maxVisibleLayer());
+        mVisibilitySlider->blockSignals(false);
+    } else {
+        mVisibilitySlider->setValue(mVisibilitySlider->maximum());
+    }
+}
+
+void ZLevelsDock::setTopmostVisibleLayer(int layerIndex)
+{
+    if (!mMapDocument)
+        return;
+
+    LayerModel *layerModel = mMapDocument->layerModel();
+
+    int index = 0;
+    foreach (Layer *layer, mMapDocument->map()->layers()) {
+        if (layer->asTileLayer() ) {
+            bool visible = (index + 1 <= layerIndex);
+            if (visible != layer->isVisible()) {
+                 layerModel->setData(layerModel->index(mMapDocument->map()->layerCount() - index - 1),
+                                     visible ? Qt::Checked : Qt::Unchecked,
+                                     Qt::CheckStateRole);
+            }
+        }
+        index++;
+    }
+
+    mMapDocument->setMaxVisibleLayer(layerIndex);
 }
 
 void ZLevelsDock::updateActions()
