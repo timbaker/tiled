@@ -23,6 +23,9 @@
 
 class CompositeLayerGroup;
 
+class QLabel;
+class QSlider;
+
 namespace Tiled {
 
 namespace Internal {
@@ -44,6 +47,12 @@ protected:
     void changeEvent(QEvent *e);
 
 private slots:
+    void updateOpacitySlider();
+    void setLayerOpacity(int opacity);
+
+    void updateVisibilitySlider();
+    void setTopmostVisibleLayer(int layerIndex);
+
     void updateActions();
     void documentAboutToClose(int index, MapDocument *mapDocument);
 
@@ -53,9 +62,13 @@ private:
     void saveExpandedLevels(MapDocument *mapDoc);
     void restoreExpandedLevels(MapDocument *mapDoc);
 
-    ZLevelsView *mView;
     MapDocument *mMapDocument;
-    QMap<MapDocument*,QList<CompositeLayerGroup*> > mExpandedLevels;
+    ZLevelsView *mView;
+    QLabel *mOpacityLabel;
+    QSlider *mOpacitySlider;
+    QLabel *mVisibilityLabel;
+    QSlider *mVisibilitySlider;
+    QMap<MapDocument*,QList<int> > mExpandedLevels;
 };
 
 class ZLevelsView : public QTreeView
@@ -75,6 +88,7 @@ protected slots:
 
 private slots:
     void currentLayerIndexChanged(int index);
+    void editLayerName();
     void onActivated(const QModelIndex &index);
 
 private:

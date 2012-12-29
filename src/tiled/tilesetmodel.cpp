@@ -34,6 +34,9 @@ using namespace Tiled::Internal;
 
 TilesetModel::TilesetModel(Tileset *tileset, QObject *parent):
     QAbstractListModel(parent),
+#ifdef ZOMBOID
+    mMapDocument(0),
+#endif
     mTileset(tileset)
 {
 }
@@ -41,13 +44,18 @@ TilesetModel::TilesetModel(Tileset *tileset, QObject *parent):
 #ifdef ZOMBOID
 TilesetModel::~TilesetModel()
 {
-    disconnect(mMapDocument, SIGNAL(tileLayerNameChanged(Tile*)), this, SLOT(tileLayerNameChanged(Tile*)));
 }
 
 void TilesetModel::setMapDocument(MapDocument *mapDocument)
 {
+    if (mMapDocument)
+        mMapDocument->disconnect(this);
+
     mMapDocument = mapDocument;
-    connect(mMapDocument, SIGNAL(tileLayerNameChanged(Tile*)), SLOT(tileLayerNameChanged(Tile*)));
+
+    if (mMapDocument)
+        connect(mMapDocument, SIGNAL(tileLayerNameChanged(Tile*)),
+                SLOT(tileLayerNameChanged(Tile*)));
 }
 #endif
 
@@ -55,6 +63,11 @@ int TilesetModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
         return 0;
+
+#ifdef ZOMBOID
+    if (!mTileset)
+        return 0;
+#endif
 
     const int tiles = mTileset->tileCount();
     const int columns = mTileset->columnCount();
@@ -71,6 +84,10 @@ int TilesetModel::rowCount(const QModelIndex &parent) const
 
 int TilesetModel::columnCount(const QModelIndex &parent) const
 {
+#ifdef ZOMBOID
+    if (!mTileset)
+        return 0;
+#endif
     return parent.isValid() ? 0 : mTileset->columnCount();
 }
 

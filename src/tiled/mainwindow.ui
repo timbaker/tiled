@@ -106,7 +106,6 @@
     <addaction name="actionMapProperties"/>
     <addaction name="actionAutoMap"/>
     <addaction name="separator"/>
-    <addaction name="actionConvertToLot"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -126,9 +125,11 @@
      <string>Tools</string>
     </property>
     <addaction name="actionBuildingEditor"/>
-    <addaction name="actionConvertOrientation"/>
-    <addaction name="actionPathGenerators"/>
     <addaction name="actionTilesetMetaInfo"/>
+    <addaction name="actionPathGenerators"/>
+    <addaction name="separator"/>
+    <addaction name="actionConvertOrientation"/>
+    <addaction name="actionConvertToLot"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>

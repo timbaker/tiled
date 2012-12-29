@@ -23,11 +23,10 @@
 #ifndef TILESETDOCK_H
 #define TILESETDOCK_H
 
+#ifndef ZOMBOID
+
 #include <QDockWidget>
 #include <QMap>
-#ifdef ZOMBOID
-#include <QIcon>
-#endif
 
 class QComboBox;
 class QStackedWidget;
@@ -49,9 +48,6 @@ namespace Internal {
 class MapDocument;
 class TilesetView;
 class Zoomable;
-#ifdef ZOMBOID
-class ZTilesetThumbView;
-#endif
 
 /**
  * The dock widget that displays the tilesets. Also keeps track of the
@@ -120,27 +116,9 @@ private slots:
 
     void renameTileset();
 
-#ifdef ZOMBOID
-    void documentAboutToClose(int index, MapDocument *mapDocument);
-#else
     void documentCloseRequested(int index);
-#endif
 
     void refreshTilesetMenu();
-
-#ifdef ZOMBOID
-    void thumbCurrentChanged();
-    void thumbSyncWithTabs();
-
-    void moveTilesetUp();
-    void moveTilesetDown();
-
-    void sortByName();
-
-    void layerSwitchToggled();
-    void autoSwitchLayerChanged(bool enable);
-    void switchLayerForTile(Tile *tile);
-#endif
 
 private:
     void setCurrentTile(Tile *tile);
@@ -171,22 +149,162 @@ private:
 
     Zoomable *mZoomable;
     QComboBox *mZoomComboBox;
-#ifdef ZOMBOID
-    QAction *mActionNewTileset;
-    QAction *mActionZoom;
-    QAction *mActionTilesetUp;
-    QAction *mActionTilesetDown;
-    QAction *mActionSortByName;
-
-    QIcon mIconTileLayer;
-    QIcon mIconTileLayerStop;
-    QAction *mActionSwitchLayer;
-
-    ZTilesetThumbView *mThumbView;
-#endif
 };
 
 } // namespace Internal
 } // namespace Tiled
+
+#else  // ZOMBOID
+
+#include <QDockWidget>
+#include <QMap>
+#include <QIcon>
+
+class QAction;
+class QComboBox;
+class QListWidget;
+class QListWidgetItem;
+class QMenu;
+class QToolBar;
+class QToolButton;
+
+namespace Tiled {
+
+class Tile;
+class TileLayer;
+class Tileset;
+
+namespace Internal {
+
+class MapDocument;
+class TilesetView;
+class Zoomable;
+
+/**
+ * The dock widget that displays the tilesets. Also keeps track of the
+ * currently selected tile.
+ */
+class TilesetDock : public QDockWidget
+{
+    Q_OBJECT
+
+public:
+    /**
+     * Constructor.
+     */
+    TilesetDock(QWidget *parent = 0);
+
+    ~TilesetDock();
+
+    /**
+     * Sets the map for which the tilesets should be displayed.
+     */
+    void setMapDocument(MapDocument *mapDocument);
+
+    /**
+     * Returns the currently selected tile.
+     */
+    Tile *currentTile() const { return mCurrentTile; }
+
+signals:
+    /**
+     * Emitted when the current tile changed.
+     */
+    void currentTileChanged(Tile *tile);
+
+    /**
+     * Emitted when the currently selected tiles changed.
+     */
+    void currentTilesChanged(const TileLayer *tiles);
+
+    /**
+     * Emitted when files are dropped at the tileset dock.
+     */
+    void tilesetsDropped(const QStringList &paths);
+
+protected:
+    void changeEvent(QEvent *e);
+
+    void dragEnterEvent(QDragEnterEvent *);
+    void dropEvent(QDropEvent *);
+
+private slots:
+    void currentTilesetChanged(int row);
+    void tilesetItemChanged(QListWidgetItem *item);
+
+    void insertTilesetView(int index, Tileset *tileset);
+    void updateActions();
+    void updateCurrentTiles();
+    void tilesetChanged(Tileset *tileset);
+    void tilesetRemoved(Tileset *tileset);
+    void tilesetMoved(int from, int to);
+    void tilesetNameChanged(Tileset *tileset);
+
+    void removeTileset();
+    void removeTileset(int index);
+    void moveTileset(int from, int to);
+
+    void editTilesetProperties();
+    void importTileset();
+    void exportTileset();
+
+    void renameTileset();
+
+    void documentAboutToClose(int index, MapDocument *mapDocument);
+
+    void moveTilesetUp();
+    void moveTilesetDown();
+
+    void sortByName();
+
+    void layerSwitchToggled();
+    void autoSwitchLayerChanged(bool enable);
+    void switchLayerForTile(Tile *tile);
+
+private:
+    void setTilesetNamesList();
+    void setTilesetList();
+    void setCurrentTile(Tile *tile);
+    void setCurrentTiles(TileLayer *tiles);
+    void retranslateUi();
+
+    Tileset *currentTileset() const;
+
+    MapDocument *mMapDocument;
+    QList<Tileset*> mTilesets;
+    QMap<QString,Tileset*> mTilesetByName;
+    QToolBar *mToolBar;
+    Tileset *mCurrentTileset;
+    Tile *mCurrentTile;
+    TileLayer *mCurrentTiles;
+
+    QAction *mActionTilesetUp;
+    QAction *mActionTilesetDown;
+    QAction *mActionSortByName;
+
+    QAction *mActionNewTileset;
+    QAction *mActionImportTileset;
+    QAction *mActionExportTileset;
+    QAction *mActionPropertiesTileset;
+    QAction *mActionDeleteTileset;
+    QAction *mActionRenameTileset;
+    QAction *mActionSwitchLayer;
+
+    QMap<MapDocument*,QString> mCurrentTilesets;
+
+    Zoomable *mZoomable;
+    QComboBox *mZoomComboBox;
+
+    QIcon mIconTileLayer;
+    QIcon mIconTileLayerStop;
+
+    TilesetView *mTilesetView;
+    QListWidget *mTilesetNamesView;
+};
+
+} // namespace Internal
+} // namespace Tiled
+
+#endif // ZOMBOID
 
 #endif // TILESETDOCK_H

@@ -314,6 +314,47 @@ void MapDocument::addLayer(Layer::Type layerType)
     Layer *layer = 0;
     QString name;
 
+#if 1
+    // Create the new layer in the same level as the current layer.
+    // Stack it with other layers of the same type in level-order.
+    int level = currentLevel();
+    int index = mMap->layerCount();
+    Layer *topLayerOfSameTypeInSameLevel = 0;
+    Layer *bottomLayerOfSameTypeInGreaterLevel = 0;
+    Layer *topLayerOfSameTypeInLesserLevel = 0;
+    foreach (Layer *layer, mMap->layers(layerType)) {
+        if ((layer->level() > level) && !bottomLayerOfSameTypeInGreaterLevel)
+            bottomLayerOfSameTypeInGreaterLevel = layer;
+        if (layer->level() < level)
+            topLayerOfSameTypeInLesserLevel = layer;
+        if (layer->level() == level)
+            topLayerOfSameTypeInSameLevel = layer;
+    }
+    if (topLayerOfSameTypeInSameLevel)
+        index = mMap->layers().indexOf(topLayerOfSameTypeInSameLevel) + 1;
+    else if (bottomLayerOfSameTypeInGreaterLevel)
+        index = mMap->layers().indexOf(bottomLayerOfSameTypeInGreaterLevel);
+    else if (topLayerOfSameTypeInLesserLevel)
+        index = mMap->layers().indexOf(topLayerOfSameTypeInLesserLevel) + 1;
+
+    switch (layerType) {
+    case Layer::TileLayerType:
+        name = tr("%1_Tile Layer %2").arg(level).arg(mMap->tileLayerCount() + 1);
+        layer = new TileLayer(name, 0, 0, mMap->width(), mMap->height());
+        break;
+    case Layer::ObjectGroupType:
+        name = tr("%1_Object Layer %2").arg(level).arg(mMap->objectGroupCount() + 1);
+        layer = new ObjectGroup(name, 0, 0, mMap->width(), mMap->height());
+        break;
+    case Layer::ImageLayerType:
+        name = tr("%1_Image Layer %2").arg(level).arg(mMap->imageLayerCount() + 1);
+        layer = new ImageLayer(name, 0, 0, mMap->width(), mMap->height());
+        break;
+    case Layer::AnyLayerType:
+        break; // Q_ASSERT below will fail.
+    }
+    Q_ASSERT(layer);
+#else
     switch (layerType) {
     case Layer::TileLayerType:
         name = tr("Tile Layer %1").arg(mMap->tileLayerCount() + 1);
@@ -339,6 +380,7 @@ void MapDocument::addLayer(Layer::Type layerType)
     Q_ASSERT(layer);
 
     const int index = mMap->layerCount();
+#endif
     mUndoStack->push(new AddLayer(this, index, layer));
     setCurrentLayerIndex(index);
 
@@ -354,7 +396,12 @@ void MapDocument::duplicateLayer()
         return;
 
     Layer *duplicate = mMap->layerAt(mCurrentLayerIndex)->clone();
+#ifdef ZOMBOID
+    // Duplicate the layer into the same level by preserving the N_ prefix.
+    duplicate->setName(tr("%1 copy").arg(duplicate->name()));
+#else
     duplicate->setName(tr("Copy of %1").arg(duplicate->name()));
+#endif
 
     const int index = mCurrentLayerIndex + 1;
     QUndoCommand *cmd = new AddLayer(this, index, duplicate);

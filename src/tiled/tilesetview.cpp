@@ -133,10 +133,17 @@ QSize TileDelegate::sizeHint(const QStyleOptionViewItem & option,
 
 } // anonymous namespace
 
+#ifdef ZOMBOID
+TilesetView::TilesetView(Zoomable *zoomable, QWidget *parent)
+    : QTableView(parent)
+    , mZoomable(zoomable)
+    , mMapDocument(0)
+#else
 TilesetView::TilesetView(MapDocument *mapDocument, Zoomable *zoomable, QWidget *parent)
     : QTableView(parent)
     , mZoomable(zoomable)
     , mMapDocument(mapDocument)
+#endif
 {
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -169,6 +176,20 @@ TilesetView::TilesetView(MapDocument *mapDocument, Zoomable *zoomable, QWidget *
             SLOT(autoSwitchLayerChanged(bool)));
 #endif
 }
+
+#ifdef ZOMBOID
+void TilesetView::setMapDocument(MapDocument *mapDocument)
+{
+    if (mMapDocument)
+        mMapDocument->disconnect(this);
+
+    mMapDocument = mapDocument;
+    tilesetModel()->setMapDocument(mapDocument);
+
+    if (mMapDocument) {
+    }
+}
+#endif
 
 QSize TilesetView::sizeHint() const
 {
