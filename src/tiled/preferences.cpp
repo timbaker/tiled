@@ -116,8 +116,10 @@ Preferences::Preferences()
     mTilesDirectory = mSettings->value(QLatin1String("TilesDirectory"),
                                        oldTilesDirectory).toString();
     mSettings->endGroup();
-    if (oldTilesDirectory.length())
+    if (oldTilesDirectory.length()) {
+        mSettings->setValue(QLatin1String("Tilesets/TilesDirectory"), mTilesDirectory);
         mSettings->remove(KEY_TILES_DIR);
+    }
 
     mSettings->beginGroup(QLatin1String("MapsDirectory"));
     mMapsDirectory = mSettings->value(QLatin1String("Current"), QString()).toString();
