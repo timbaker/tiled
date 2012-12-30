@@ -24,6 +24,7 @@
 #include "documentmanager.h"
 #include "preferences.h"
 #include "tilemetainfomgr.h"
+#include "tilesetmanager.h"
 #include "utils.h"
 #include "zoomable.h"
 
@@ -286,9 +287,9 @@ void TileMetaInfoDialog::addToMap()
     foreach (Tileset *tileset, TileMetaInfoMgr::instance()->tilesets()) {
         if (tileset->isMissing())
             continue;
-        if (mapUsesTilesetImage(mapDocument->map(), tileset->imageSource()))
+        if (tileset->findSimilarTileset(mapDocument->map()->tilesets()))
             continue;
-        tilesets += tileset;
+        tilesets += tileset->clone();
     }
 
     if (tilesets.size() > 0) {
@@ -298,7 +299,7 @@ void TileMetaInfoDialog::addToMap()
         mapDocument->undoStack()->endMacro();
     }
 
-    QMessageBox::information(this, tr("Tilesets added"),
+    QMessageBox::information(this, tr("Add Tilesets to Map"),
                              tr("%1 tilesets were added to %2.")
                              .arg(tilesets.size())
                              .arg(mapDocument->displayName()));
@@ -466,14 +467,3 @@ void TileMetaInfoDialog::setTilesList()
         ui->tiles->model()->setTiles(QList<Tile*>());
     }
 }
-
-bool TileMetaInfoDialog::mapUsesTilesetImage(Map *map, const QString &source)
-{
-    foreach (Tileset *tileset, map->tilesets()) {
-        if (tileset->imageSource() == source)
-            return true;
-    }
-    return false;
-}
-
-

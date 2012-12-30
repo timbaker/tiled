@@ -79,8 +79,6 @@ private:
     void setTilesetList();
     void setTilesList();
 
-    bool mapUsesTilesetImage(Map *map, const QString &source);
-
 private:
     Ui::TileMetaInfoDialog *ui;
     Tileset *mCurrentTileset;
