@@ -157,6 +157,7 @@ QString BuildingTMX::txtPath()
 
 bool BuildingTMX::readTxt()
 {
+#if 0
     // Make sure the user has chosen the Tiles directory.
     QString tilesDirectory = Preferences::instance()->tilesDirectory();
     QDir dir(tilesDirectory);
@@ -165,6 +166,7 @@ bool BuildingTMX::readTxt()
                 .arg(tilesDirectory);
         return false;
     }
+#endif
 
     QFileInfo info(txtPath());
     if (!info.exists()) {
