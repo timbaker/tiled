@@ -107,6 +107,8 @@ private:
     BuildingTileCategory *categoryAt(int row);
     FurnitureGroup *furnitureGroupAt(int row);
 
+    typedef Tiled::Tileset Tileset;
+
 private slots:
     void categoryChanged(int index);
     void tilesetSelectionChanged();
@@ -140,6 +142,8 @@ private slots:
     void manageTilesets();
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
+
+    void tilesetChanged(Tileset *tileset);
 
     void undoTextChanged(const QString &text);
     void redoTextChanged(const QString &text);

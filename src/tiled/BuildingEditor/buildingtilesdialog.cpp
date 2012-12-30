@@ -27,6 +27,7 @@
 
 #include "tilemetainfodialog.h"
 #include "tilemetainfomgr.h"
+#include "tilesetmanager.h"
 #include "utils.h"
 #include "zoomable.h"
 
@@ -597,6 +598,9 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
             SLOT(tilesetAdded(Tiled::Tileset*)));
     connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetAboutToBeRemoved(Tiled::Tileset*)),
             SLOT(tilesetAboutToBeRemoved(Tiled::Tileset*)));
+
+    connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
+            SLOT(tilesetChanged(Tileset*)));
 
     ui->tilesetTilesView->setZoomable(mZoomable);
     ui->tilesetTilesView->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -1590,6 +1594,21 @@ void BuildingTilesDialog::tilesetAboutToBeRemoved(Tileset *tileset)
     int row = TileMetaInfoMgr::instance()->indexOf(tileset);
     delete ui->tilesetList->takeItem(row);
     synchUI();
+}
+
+// Called when a tileset image changes or a missing tileset was found.
+void BuildingTilesDialog::tilesetChanged(Tileset *tileset)
+{
+    if (tileset == mCurrentTileset) {
+        if (tileset->isMissing())
+            ui->tilesetTilesView->model()->setTiles(QList<Tile*>());
+        else
+            ui->tilesetTilesView->model()->setTileset(tileset);
+    }
+
+    int row = TileMetaInfoMgr::instance()->indexOf(tileset);
+    if (QListWidgetItem *item = ui->tilesetList->item(row))
+        item->setForeground(tileset->isMissing() ? Qt::red : Qt::black);
 }
 
 void BuildingTilesDialog::undoTextChanged(const QString &text)

@@ -231,6 +231,7 @@ void TilesetManager::tilesetSourceChanged(Tileset *tileset)
 {
     if (!tileset->imageSource().isEmpty() && !tileset->isMissing())
         mWatcher->addPath(tileset->imageSource());
+    emit tilesetChanged(tileset);
 }
 
 #include "tile.h"

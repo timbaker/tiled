@@ -1139,6 +1139,12 @@ void TilesetDock::tilesetChanged(Tileset *tileset)
 {
     if (tileset == mCurrentTileset)
         mTilesetView->tilesetModel()->tilesetChanged();
+
+    if (mTilesets.contains(tileset)) {
+        int row = mTilesets.indexOf(tileset);
+        if (QListWidgetItem *item = mTilesetNamesView->item(row))
+            item->setForeground(tileset->isMissing() ? Qt::red : Qt::black);
+    }
 }
 
 void TilesetDock::tilesetRemoved(Tileset *tileset)

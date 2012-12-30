@@ -125,6 +125,8 @@ private:
     BuildingTileCategory *categoryAt(int row);
     FurnitureGroup *furnitureGroupAt(int row);
 
+    typedef Tiled::Tileset Tileset;
+
 private slots:
     void updateWindowTitle();
 
@@ -192,6 +194,8 @@ private slots:
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
     void tilesetRemoved(Tiled::Tileset *tileset);
+
+    void tilesetChanged(Tileset *tileset);
 
     void autoSaveCheck();
     void autoSaveTimeout();

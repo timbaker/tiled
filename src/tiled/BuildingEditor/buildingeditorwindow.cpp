@@ -549,6 +549,9 @@ bool BuildingEditorWindow::Startup()
     connect(BuildingTilesMgr::instance(), SIGNAL(tilesetRemoved(Tiled::Tileset*)),
             SLOT(tilesetRemoved(Tiled::Tileset*)));
 
+    connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
+            SLOT(tilesetChanged(Tileset*)));
+
     /////
 
     // Add tile categories to the gui
@@ -592,11 +595,13 @@ bool BuildingEditorWindow::LoadTMXConfig()
                                  tr("Please choose the Tiles directory in the following dialog."));
         TileMetaInfoDialog dialog(this);
         dialog.exec();
+#if 0
         tilesDirectory = Preferences::instance()->tilesDirectory();
         if (tilesDirectory.isEmpty() || !QDir(tilesDirectory).exists()) {
             mError.clear();
             return false;
         }
+#endif
     }
 
     bool ok = BuildingTMX::instance()->readTxt();
@@ -2046,6 +2051,12 @@ void BuildingEditorWindow::tilesetAboutToBeRemoved(Tileset *tileset)
 }
 
 void BuildingEditorWindow::tilesetRemoved(Tileset *tileset)
+{
+    Q_UNUSED(tileset)
+    categorySelectionChanged();
+}
+
+void BuildingEditorWindow::tilesetChanged(BuildingEditorWindow::Tileset *tileset)
 {
     Q_UNUSED(tileset)
     categorySelectionChanged();
