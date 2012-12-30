@@ -22,6 +22,7 @@
 
 #include "addremovetileset.h"
 #include "documentmanager.h"
+#include "mainwindow.h"
 #include "preferences.h"
 #include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
@@ -400,7 +401,8 @@ void TileMetaInfoDialog::updateUI()
     ui->editTiles->setText(QDir::toNativeSeparators(tilesDir));
 
     ui->actionRemove->setEnabled(mCurrentTileset != 0);
-    ui->actionAddToMap->setEnabled(DocumentManager::instance()->currentDocument() != 0);
+    ui->actionAddToMap->setEnabled((parent() == MainWindow::instance()) &&
+                                   (DocumentManager::instance()->currentDocument() != 0));
     ui->enums->setEnabled(mSelectedTiles.size() > 0);
 
     QSet<QString> enums;

@@ -79,6 +79,11 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
+#ifdef ZOMBOID
+    static MainWindow *mInstance;
+    static MainWindow *instance() { return mInstance; }
+#endif
+
     MainWindow(QWidget *parent = 0, Qt::WFlags flags = 0);
     ~MainWindow();
 

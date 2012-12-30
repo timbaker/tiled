@@ -114,6 +114,10 @@ using namespace Tiled;
 using namespace Tiled::Internal;
 using namespace Tiled::Utils;
 
+#ifdef ZOMBOID
+MainWindow *MainWindow::mInstance = 0;
+#endif
+
 MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     : QMainWindow(parent, flags)
     , mUi(new Ui::MainWindow)
@@ -143,6 +147,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     , mBuildingEditor(0)
 #endif
 {
+#ifdef ZOMBOID
+    mInstance = this;
+#endif
     mUi->setupUi(this);
 #ifdef ZOMBOID
     QVBoxLayout *centralLayout = static_cast<QVBoxLayout*>(centralWidget()->layout());
