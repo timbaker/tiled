@@ -738,7 +738,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
 
     connect(ui->tilesetMgr, SIGNAL(clicked()), SLOT(manageTilesets()));
 
-    ui->overallSplitter->setStretchFactor(0, 1);
+    ui->overallSplitter->setStretchFactor(1, 1);
 
     setCategoryList();
     setTilesetList();
