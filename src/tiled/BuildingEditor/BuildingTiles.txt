@@ -171,17 +171,6 @@ category
     }
     entry
     {
-        West = walls_commercial_01_040
-        North = walls_commercial_01_041
-        NorthWest = walls_commercial_01_034
-        SouthEast = walls_commercial_01_035
-        WestWindow = 
-        NorthWindow = 
-        WestDoor = walls_commercial_01_026
-        NorthDoor = walls_commercial_01_027
-    }
-    entry
-    {
         West = walls_commercial_01_048
         North = walls_commercial_01_049
         NorthWest = walls_commercial_01_050
@@ -190,6 +179,17 @@ category
         NorthWindow = 
         WestDoor = walls_commercial_01_058
         NorthDoor = walls_commercial_01_059
+    }
+    entry
+    {
+        West = walls_commercial_01_040
+        North = walls_commercial_01_041
+        NorthWest = walls_commercial_01_034
+        SouthEast = walls_commercial_01_035
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = walls_commercial_01_026
+        NorthDoor = walls_commercial_01_027
     }
     entry
     {

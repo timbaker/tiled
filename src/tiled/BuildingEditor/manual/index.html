@@ -3,6 +3,7 @@
 
 
 
+
 <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>BuildingEd</title>
   <meta content="Tim Baker" name="author"></head><body>
 <h1>BuildingEd - The Building Editor</h1>
@@ -23,14 +24,18 @@ run for the first time, these config files will be updated as needed.<br>
 <h4 style="margin-left: 40px;">BuildingTiles.txt</h4>
 <div style="margin-left: 80px;">The BuildingTiles.txt file contains all the non-furniture tile categories defined in the Tiles Dialog.<br>
 </div>
+<h4 style="margin-left: 40px;">Tilesets.txt</h4>
+<div style="margin-left: 80px;">The Tilesets.txt file contains
+information about tilesets.&nbsp; The list of tilesets can be edited in
+the Tilesets Dialog.&nbsp;The names of the
+tileset image files are saved relative to the Tiles directory specified
+in the Tilesets Dialog.&nbsp; These tilesets are added to any .tmx
+files (i.e., TileZed map files) exported by BuildingEd. <br>
+
+</div>
 <h4 style="margin-left: 40px;">TMXConfig.txt</h4>
-<div style="margin-left: 80px;">The TMXConfig.txt file contains the
-list of tilesets defined in the Tiles Dialog.&nbsp; The names of the
-tileset image files are saved relative to the Tiles Directory specified
-in the Preferences Dialog.&nbsp; These tilesets are added to any .tmx
-files (i.e., TileZed map files) exported by BuildingEd.<br>
-<br>
-The TMXConfig.txt file also has a list layers that will be added to
+
+<div style="margin-left: 80px;">The TMXConfig.txt file contains a list layer names that will be added to
 exported .tmx files.&nbsp; Tile layers are defined with "tile = NAME"
 and object layers with "object = NAME".&nbsp; If "NAME" starts with a
 level prefix such as "0_NAME", the layer will only be added to the
