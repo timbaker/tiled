@@ -40,13 +40,13 @@
     </layout>
    </item>
    <item row="1" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_XXX" stretch="0,1">
+    <layout class="QHBoxLayout" name="horizontalLayout_XXX">
      <item>
       <layout class="QVBoxLayout" name="tilesetLayout">
        <item>
         <widget class="QListWidget" name="tilesets">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
