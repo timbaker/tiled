@@ -232,7 +232,7 @@ private slots:
     void currentTilesetChanged(int row);
     void tilesetItemChanged(QListWidgetItem *item);
 
-    void insertTilesetView(int index, Tileset *tileset);
+    void tilesetAdded(int index, Tileset *tileset);
     void updateActions();
     void updateCurrentTiles();
     void tilesetChanged(Tileset *tileset);

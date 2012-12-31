@@ -985,7 +985,7 @@ void TilesetDock::setMapDocument(MapDocument *mapDocument)
 
     if (mMapDocument) {
         connect(mMapDocument, SIGNAL(tilesetAdded(int,Tileset*)),
-                SLOT(insertTilesetView(int,Tileset*)));
+                SLOT(tilesetAdded(int,Tileset*)));
         connect(mMapDocument, SIGNAL(tilesetRemoved(Tileset*)),
                 SLOT(tilesetRemoved(Tileset*)));
         connect(mMapDocument, SIGNAL(tilesetMoved(int,int)),
@@ -1060,7 +1060,7 @@ void TilesetDock::tilesetItemChanged(QListWidgetItem *item)
     }
 }
 
-void TilesetDock::insertTilesetView(int index, Tileset *tileset)
+void TilesetDock::tilesetAdded(int index, Tileset *tileset)
 {
     Q_UNUSED(index)
     setTilesetNamesList();
@@ -1444,7 +1444,7 @@ void TilesetDock::setTilesetNamesList()
             maxWidth = qMax(maxWidth, fm.width(ts->name()));
         }
         mTilesetNamesView->setFixedWidth(maxWidth + 16 +
-                                  mTilesetNamesView->verticalScrollBar()->sizeHint().width());
+            mTilesetNamesView->verticalScrollBar()->sizeHint().width());
     }
 }
 
