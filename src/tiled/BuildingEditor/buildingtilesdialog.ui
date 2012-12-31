@@ -13,11 +13,28 @@
   <property name="windowTitle">
    <string>Building Tiles</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0" colspan="2">
+  <layout class="QGridLayout" name="gridLayout" rowstretch="1,0,0">
+   <item row="2" column="0">
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="0">
     <widget class="QSplitter" name="overallSplitter">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="childrenCollapsible">
+      <bool>false</bool>
      </property>
      <widget class="QSplitter" name="categorySplitter">
       <property name="orientation">
@@ -82,48 +99,40 @@
        </layout>
       </widget>
      </widget>
-     <widget class="QSplitter" name="tilesetSplitter">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="childrenCollapsible">
-       <bool>false</bool>
-      </property>
-      <widget class="QWidget" name="layoutWidget">
-       <layout class="QVBoxLayout" name="verticalLayout_5">
-        <item>
-         <widget class="QListWidget" name="tilesetList"/>
-        </item>
-        <item>
-         <widget class="QToolButton" name="tilesetMgr">
-          <property name="text">
-           <string>Tilesets...</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="Tiled::Internal::MixedTilesetView" name="tilesetTilesView">
-       <property name="minimumSize">
-        <size>
-         <width>256</width>
-         <height>0</height>
-        </size>
-       </property>
-      </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <layout class="QHBoxLayout" name="tilesetLayout">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <widget class="QListWidget" name="tilesetList"/>
+         </item>
+         <item>
+          <widget class="QToolButton" name="tilesetMgr">
+           <property name="text">
+            <string>Tilesets...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="Tiled::Internal::MixedTilesetView" name="tilesetTilesView">
+         <property name="minimumSize">
+          <size>
+           <width>256</width>
+           <height>0</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>
    <item row="1" column="0">
-    <layout class="QHBoxLayout" name="buttonsLayout"/>
-   </item>
-   <item row="1" column="1">
-    <widget class="QDialogButtonBox" name="buttonBox">
+    <widget class="Line" name="line">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>

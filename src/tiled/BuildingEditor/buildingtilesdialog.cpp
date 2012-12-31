@@ -718,7 +718,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     button->setEnabled(mUndoGroup->canUndo());
     button->setShortcut(QKeySequence::Undo);
     mUndoButton = button;
-    ui->buttonsLayout->addWidget(button);
+    ui->buttonsLayout->insertWidget(0, button);
     connect(mUndoGroup, SIGNAL(canUndoChanged(bool)), button, SLOT(setEnabled(bool)));
     connect(mUndoGroup, SIGNAL(undoTextChanged(QString)), SLOT(undoTextChanged(QString)));
     connect(mUndoGroup, SIGNAL(redoTextChanged(QString)), SLOT(redoTextChanged(QString)));
@@ -732,11 +732,13 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     button->setEnabled(mUndoGroup->canRedo());
     button->setShortcut(QKeySequence::Redo);
     mRedoButton = button;
-    ui->buttonsLayout->addWidget(button);
+    ui->buttonsLayout->insertWidget(1, button);
     connect(mUndoGroup, SIGNAL(canRedoChanged(bool)), button, SLOT(setEnabled(bool)));
     connect(button, SIGNAL(clicked()), redoAction, SIGNAL(triggered()));
 
     connect(ui->tilesetMgr, SIGNAL(clicked()), SLOT(manageTilesets()));
+
+    ui->overallSplitter->setStretchFactor(0, 1);
 
     setCategoryList();
     setTilesetList();
@@ -773,7 +775,6 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
 
     restoreSplitterSizes(ui->overallSplitter);
     restoreSplitterSizes(ui->categorySplitter);
-    restoreSplitterSizes(ui->tilesetSplitter);
 }
 
 BuildingTilesDialog::~BuildingTilesDialog()
@@ -1065,7 +1066,7 @@ void BuildingTilesDialog::setTilesetList()
         width = qMax(width, fm.width(tileset->name()));
     }
     int sbw = ui->tilesetList->verticalScrollBar()->sizeHint().width();
-    ui->tilesetList->setMinimumWidth(width + 16 + sbw);
+    ui->tilesetList->setFixedWidth(width + 16 + sbw);
 }
 
 void BuildingTilesDialog::saveSplitterSizes(QSplitter *splitter)
@@ -1756,7 +1757,6 @@ void BuildingTilesDialog::accept()
 
     saveSplitterSizes(ui->overallSplitter);
     saveSplitterSizes(ui->categorySplitter);
-    saveSplitterSizes(ui->tilesetSplitter);
 
     QDialog::accept();
 }
