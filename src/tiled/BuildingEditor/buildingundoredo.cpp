@@ -92,7 +92,7 @@ EraseRoom::EraseRoom(BuildingDocument *doc, BuildingFloor *floor, const QPoint &
 /////
 
 ChangeEWall::ChangeEWall(BuildingDocument *doc, BuildingTileEntry *tile, bool mergeable) :
-    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change External Wall")),
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Exterior Wall")),
     mDocument(doc),
     mTile(tile),
     mMergeable(mergeable)
