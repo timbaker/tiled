@@ -51,6 +51,7 @@ class BuildingPreviewWindow;
 class BuildingTile;
 class BuildingTileEntry;
 class BuildingTileCategory;
+class BuildingTileModeView;
 class Door;
 class FloorEditor;
 class FloorView;
@@ -124,6 +125,14 @@ private:
 
     BuildingTileCategory *categoryAt(int row);
     FurnitureGroup *furnitureGroupAt(int row);
+
+
+    enum EditMode {
+        BuildingMode,
+        TileMode
+    };
+    void switchToBuildingMode();
+    void switchToTileMode();
 
     typedef Tiled::Tileset Tileset;
 
@@ -204,6 +213,8 @@ private slots:
 
     void help();
 
+    void switchMode();
+
 private:
     static BuildingEditorWindow *mInstance;
     Ui::BuildingEditorWindow *ui;
@@ -228,6 +239,9 @@ private:
     QString mAutoSaveFileName;
     QMenu *mUsedContextMenu;
     QAction *mActionClearUsed;
+
+    EditMode mEditMode;
+    BuildingTileModeView *mTileModeView;
 };
 
 } // namespace BuildingEditor

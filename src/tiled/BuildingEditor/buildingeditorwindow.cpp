@@ -31,6 +31,7 @@
 #include "buildingtemplatesdialog.h"
 #include "buildingtiles.h"
 #include "buildingtilesdialog.h"
+#include "buildingtilemodeview.h"
 #include "buildingtmx.h"
 #include "buildingtools.h"
 #include "FloorEditor.h"
@@ -310,6 +311,12 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->actionNormalSize->setShortcuts(keys);
     mView->addAction(ui->actionNormalSize);
     ui->actionNormalSize->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+
+    mEditMode = BuildingMode;
+    mTileModeView = new BuildingTileModeView(this);
+    mTileModeView->setScene(new BuildingTileModeScene(this));
+    mTileModeView->hide();
+    connect(ui->actionSwitchEditMode, SIGNAL(triggered()), SLOT(switchMode()));
 
     connect(ui->actionResize, SIGNAL(triggered()), SLOT(resizeBuilding()));
     connect(ui->actionFlipHorizontal, SIGNAL(triggered()), SLOT(flipHorizontal()));
@@ -1364,6 +1371,16 @@ FurnitureGroup *BuildingEditorWindow::furnitureGroupAt(int row)
     return 0;
 }
 
+void BuildingEditorWindow::switchToBuildingMode()
+{
+    mEditMode = BuildingMode;
+}
+
+void BuildingEditorWindow::switchToTileMode()
+{
+    mEditMode = TileMode;
+}
+
 void BuildingEditorWindow::upLevel()
 {
     if ( mCurrentDocument->currentFloorIsTop())
@@ -1562,6 +1579,7 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
     if (mCurrentDocument) {
         mRoomComboBox->clear();
         roomEditor->clearDocument();
+        mTileModeView->scene()->clearDocument();
         mPreviewWin->clearDocument();
         mUndoGroup->removeStack(mCurrentDocument->undoStack());
         delete mCurrentDocument->building();
@@ -1627,6 +1645,7 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         categorySelectionChanged();
 
     roomEditor->setDocument(mCurrentDocument);
+    mTileModeView->scene()->setDocument(mCurrentDocument);
 
     updateRoomComboBox();
 
@@ -2203,4 +2222,25 @@ void BuildingEditorWindow::help()
             QCoreApplication::applicationDirPath() + QLatin1Char('/')
             + QLatin1String("docs/BuildingEd/index.html");
     QDesktopServices::openUrl(QUrl(path, QUrl::TolerantMode));
+}
+
+void BuildingEditorWindow::switchMode()
+{
+    if (mEditMode == BuildingMode) {
+        // Switch to TileMode
+        ui->toolBar->hide();
+        ui->floorView->hide();
+        mTileModeView->show();
+        ui->verticalLayout_2->removeWidget(ui->floorView);
+        ui->verticalLayout_2->insertWidget(0, mTileModeView, 1);
+        mEditMode = TileMode;
+    } else if (mEditMode == TileMode) {
+        // Switch to BuildingMode
+        ui->toolBar->show();
+        ui->floorView->show();
+        mTileModeView->hide();
+        ui->verticalLayout_2->removeWidget(mTileModeView);
+        ui->verticalLayout_2->insertWidget(0, ui->floorView, 1);
+        mEditMode = BuildingMode;
+    }
 }
