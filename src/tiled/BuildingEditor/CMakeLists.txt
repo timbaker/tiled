@@ -1,5 +1,6 @@
 set ( BuildingEd_UIS
     buildingeditorwindow.ui
+    buildingfloorsdialog.ui
     buildingpreferencesdialog.ui
     buildingpreviewwindow.ui
     buildingtemplatesdialog.ui
@@ -23,6 +24,7 @@ set ( BuildingEd_HDRS
     buildingwriter.h
     buildingreader.h
     buildingtmx.h
+    horizontallinedelegate.h
     listofstringsdialog.h
 )
 
@@ -31,6 +33,7 @@ set ( BuildingEd_SRCS
     buildingdocument.cpp
     buildingeditorwindow.cpp
     buildingfloor.cpp
+    buildingfloorsdialog.cpp
     buildingobjects.cpp
     buildingpreferences.cpp
     buildingpreferencesdialog.cpp
@@ -48,6 +51,7 @@ set ( BuildingEd_SRCS
     FloorEditor.cpp
     furnituregroups.cpp
     furnitureview.cpp
+    horizontallinedelegate.cpp
     listofstringsdialog.cpp
     mixedtilesetview.cpp
     newbuildingdialog.cpp
@@ -61,6 +65,7 @@ set ( BuildingEd_SRCS
 set ( BuildingEd_MOCS
     buildingdocument.h
     buildingeditorwindow.h
+    buildingfloorsdialog.h
     buildingpreferences.h
     buildingpreferencesdialog.h
     buildingpreviewwindow.h
@@ -102,5 +107,5 @@ file ( COPY BuildingFurniture.txt BuildingTemplates.txt BuildingTiles.txt
 
 install ( FILES BuildingFurniture.txt BuildingTemplates.txt BuildingTiles.txt
           TMXConfig.txt DESTINATION . )
-          
+
 install ( DIRECTORY manual/ DESTINATION docs/BuildingEd )

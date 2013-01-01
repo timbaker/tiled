@@ -101,5 +101,9 @@ Plugins = plugins
 Translations = translations\")
     " COMPONENT Runtime)
 
+#--------------------------------------------------------------------------------
+file( COPY Tilesets.txt DESTINATION ${CMAKE_BINARY_DIR}/Debug )
+file( COPY Tilesets.txt DESTINATION ${CMAKE_BINARY_DIR}/Release )
+install(FILES Tilesets.txt DESTINATION .)
 
 
