@@ -162,6 +162,8 @@ set ( Tiled_SRCS
 	mapimagemanager.cpp
 	mapmanager.cpp
 	minimap.cpp
+	tilemetainfodialog.cpp
+	tilemetainfomgr.cpp
 	zgriditem.cpp
 	zlevelsdock.cpp
 	zlevelsmodel.cpp
@@ -169,8 +171,6 @@ set ( Tiled_SRCS
 	ZomboidScene.cpp
 	zprogress.cpp
 	ztilelayergroupitem.cpp
-	ztilesetthumbmodel.cpp
-	ztilesetthumbview.cpp
 	)
 
 set ( Tiled_UIS
@@ -179,6 +179,7 @@ set ( Tiled_UIS
 	converttolotdialog.ui
 	convertorientationdialog.ui
 	mainwindow.ui
+	newimagelayerdialog.ui
 	newmapdialog.ui
 	newtilesetdialog.ui
 	objectpropertiesdialog.ui
@@ -187,7 +188,7 @@ set ( Tiled_UIS
 	propertiesdialog.ui
 	resizedialog.ui
 	saveasimagedialog.ui
-	newimagelayerdialog.ui
+	tilemetainfodialog.ui
 	)
 QT4_WRAP_UI(UIS ${Tiled_UIS})
 
@@ -262,13 +263,13 @@ set ( Tiled_MOCS
 	mapimagemanager.h
 	mapmanager.h
 	minimap.h
+	tilemetainfodialog.h
+	tilemetainfomgr.h
 	zlevelsdock.h
 	zlevelsmodel.h
 	zlotmanager.h
 	ZomboidScene.h
 	zprogress.h
-	ztilesetthumbmodel.h
-	ztilesetthumbview.h
 	)
 QT4_WRAP_CPP(MOCS ${Tiled_MOCS})
 
@@ -288,3 +289,4 @@ add_executable ( TileZed ${Tiled_SRCS} tiled.rc ${UIS} ${RSCS} ${TRS} ${MOCS} ${
 target_link_libraries ( TileZed BuildingEd libtiled ${QT_QTOPENGL_LIBRARY} ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
 
 INSTALL(TARGETS TileZed DESTINATION ".")
+

@@ -5,8 +5,6 @@ meta-enums
 {
     DoorW = 1
     DoorN = 2
-    WindowW = 3
-    WindowN = 4
 }
 tileset
 {
@@ -504,46 +502,6 @@ tileset
     size = 8,8
     tile
     {
-        xy = 0,1
-        meta-enum = WindowW
-    }
-    tile
-    {
-        xy = 0,3
-        meta-enum = WindowW
-    }
-    tile
-    {
-        xy = 0,5
-        meta-enum = WindowW
-    }
-    tile
-    {
-        xy = 0,7
-        meta-enum = WindowW
-    }
-    tile
-    {
-        xy = 1,1
-        meta-enum = WindowN
-    }
-    tile
-    {
-        xy = 1,3
-        meta-enum = WindowN
-    }
-    tile
-    {
-        xy = 1,5
-        meta-enum = WindowN
-    }
-    tile
-    {
-        xy = 1,7
-        meta-enum = WindowN
-    }
-    tile
-    {
         xy = 2,1
         meta-enum = DoorW
     }
@@ -581,26 +539,6 @@ tileset
     {
         xy = 3,7
         meta-enum = DoorN
-    }
-    tile
-    {
-        xy = 4,1
-        meta-enum = WindowW
-    }
-    tile
-    {
-        xy = 4,3
-        meta-enum = WindowW
-    }
-    tile
-    {
-        xy = 5,1
-        meta-enum = WindowN
-    }
-    tile
-    {
-        xy = 5,3
-        meta-enum = WindowN
     }
     tile
     {

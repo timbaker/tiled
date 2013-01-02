@@ -376,6 +376,10 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 
     readSettings();
 
+    // Restore visibility due to mode-switching.
+    ui->toolBar->setVisible(true);
+    ui->floorView->setVisible(true);
+
     updateActions();
 }
 

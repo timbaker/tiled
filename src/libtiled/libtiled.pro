@@ -25,7 +25,7 @@ DEFINES += QT_NO_CAST_FROM_ASCII \
 DEFINES += TILED_LIBRARY
 DEFINES += ZOMBOID
 contains(QT_CONFIG, reduce_exports): CONFIG += hide_symbols
-OBJECTS_DIR = .obj
+#OBJECTS_DIR = .obj
 SOURCES += compression.cpp \
     imagelayer.cpp \
     isometricrenderer.cpp \
