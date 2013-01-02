@@ -34,10 +34,10 @@ macx {
     QMAKE_RPATHDIR =
 }
 
-MOC_DIR = .moc
-UI_DIR = .uic
-RCC_DIR = .rcc
-OBJECTS_DIR = .obj
+#MOC_DIR = .moc
+#UI_DIR = .uic
+#RCC_DIR = .rcc
+#OBJECTS_DIR = .obj
 
 SOURCES += aboutdialog.cpp \
     abstractobjecttool.cpp \
