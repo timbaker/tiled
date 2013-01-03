@@ -314,6 +314,27 @@ void SwapFloorGrid::swap()
 
 /////
 
+PaintFloorTiles::PaintFloorTiles(BuildingDocument *doc, BuildingFloor *floor,
+                                 const QString &layerName,
+                                 const QRect &bounds,
+                                 const QVector<QVector<QString> > &grid,
+                                 char *undoText) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", undoText)),
+    mDocument(doc),
+    mFloor(floor),
+    mLayerName(layerName),
+    mBounds(bounds),
+    mGrid(grid)
+{
+}
+
+void PaintFloorTiles::swap()
+{
+    mGrid = mDocument->swapFloorTiles(mFloor, mLayerName, mBounds, mGrid);
+}
+
+/////
+
 ResizeBuilding::ResizeBuilding(BuildingDocument *doc, const QSize &newSize) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Building")),
     mDocument(doc),

@@ -111,6 +111,10 @@ void CompositeLayerGroup::addTileLayer(TileLayer *layer, int index)
             ? false
             : layer->isEmpty() || layer->name().contains(QLatin1String("NoRender"));
     mEmptyLayers.insert(index, empty);
+
+#ifdef BUILDINGED
+    mBlendLayers.insert(index, 0);
+#endif
 }
 
 void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
@@ -119,6 +123,9 @@ void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
     mVisibleLayers.remove(index);
     mLayerOpacity.remove(index);
     mEmptyLayers.remove(index);
+#ifdef BUILDINGED
+    mBlendLayers.remove(index);
+#endif
 
     // Hack -- only a map being edited can set a TileLayer's group.
     ZTileLayerGroup *oldGroup = layer->group();
@@ -148,6 +155,7 @@ void CompositeLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRec
     }
 }
 
+#ifndef BUILDINGED
 bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                                          QVector<const Cell *> &cells,
                                          QVector<qreal> &opacities) const
@@ -185,6 +193,47 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
 
     return !cells.isEmpty();
 }
+#else
+bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
+                                         QVector<const Cell *> &cells,
+                                         QVector<qreal> &opacities) const
+{
+    bool cleared = false;
+    for (int index = 0; index < mLayers.size(); index++) {
+        TileLayer *tl = mLayers[index];
+        TileLayer *tlBlend = mBlendLayers[index];
+#if SPARSE_TILELAYER
+        // Checking isEmpty() and mEmptyLayers to catch hidden NoRender layers in submaps
+        if (!mVisibleLayers[index] || ((mEmptyLayers[index] || tl->isEmpty()) && (!tlBlend || tlBlend->isEmpty())))
+#else
+        if (!mVisibleLayers[index] || mEmptyLayers[index])
+#endif
+            continue;
+        QPoint subPos = pos - mOwner->orientAdjustTiles() * mLevel - tl->position();
+        if (tl->contains(subPos)) {
+            const Cell *cell = &tl->cellAt(subPos);
+            if (cell->isEmpty() && tlBlend && tlBlend->contains(subPos))
+                cell = &tlBlend->cellAt(subPos);
+            if (!cell->isEmpty()) {
+                if (!cleared) {
+                    cells.resize(0);
+                    opacities.resize(0);
+                    cleared = true;
+                }
+                cells.append(cell);
+                opacities.append(mLayerOpacity[index]);
+            }
+        }
+    }
+
+    // Overwrite map cells with sub-map cells at this location
+    foreach (const SubMapLayers& subMapLayer, mPreparedSubMapLayers)
+        subMapLayer.mLayerGroup->orderedCellsAt(pos - subMapLayer.mSubMap->origin(),
+                                                cells, opacities);
+
+    return !cells.isEmpty();
+}
+#endif // BUILDINGED
 
 void CompositeLayerGroup::synch()
 {
@@ -208,6 +257,28 @@ void CompositeLayerGroup::synch()
         }
         ++index;
     }
+
+#ifdef BUILDINGED
+    mBlendLayers.fill(0);
+    if (MapComposite *blendOverMap = mOwner->blendOverMap()) {
+        if (CompositeLayerGroup *layerGroup = blendOverMap->tileLayersForLevel(mLevel)) {
+            for (int i = 0; i < mLayers.size(); i++) {
+                if (!mVisibleLayers[i])
+                    continue;
+                for (int j = 0; j < layerGroup->mLayers.size(); j++) {
+                    TileLayer *blendLayer = layerGroup->mLayers[j];
+                    if ((blendLayer->name() == mLayers[i]->name()) && !blendLayer->isEmpty()) {
+                        mBlendLayers[i] = blendLayer;
+                        unionTileRects(r, blendLayer->bounds().translated(mOwner->orientAdjustTiles() * mLevel), r);
+                        maxMargins(m, blendLayer->drawMargins(), m);
+                        mAnyVisibleLayers = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+#endif
 
     mTileBounds = r;
 
@@ -420,6 +491,9 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
     , mVisible(true)
     , mGroupVisible(true)
     , mHiddenDuringDrag(false)
+    #ifdef BUILDINGED
+    , mBlendOverMap(0)
+    #endif
 {
     if (mOrientRender == Map::Unknown)
         mOrientRender = mMap->orientation();

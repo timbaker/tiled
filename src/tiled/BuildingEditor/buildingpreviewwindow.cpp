@@ -253,7 +253,8 @@ void CompositeLayerGroupItem::updateBounds()
 PreviewGridItem::PreviewGridItem(Building *building, MapRenderer *renderer) :
     QGraphicsItem(),
     mBuilding(building),
-    mRenderer(renderer)
+    mRenderer(renderer),
+    mTileMode(false)
 {
     setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
     synchWithBuilding();
@@ -261,8 +262,12 @@ PreviewGridItem::PreviewGridItem(Building *building, MapRenderer *renderer) :
 
 void PreviewGridItem::synchWithBuilding()
 {
-    int offset = (mBuilding->floorCount() - 1) * 3;
-    mTileBounds = QRect(offset, offset, mBuilding->width(), mBuilding->height());
+    if (mTileMode) {
+        mTileBounds = QRect(0, 0, mBuilding->width() + 1, mBuilding->height() + 1);
+    } else {
+        int offset = (mBuilding->floorCount() - 1) * 3;
+        mTileBounds = QRect(offset, offset, mBuilding->width(), mBuilding->height());
+    }
 
     QRectF bounds = mRenderer->boundingRect(mTileBounds);
     if (bounds != mBoundingRect) {
@@ -502,7 +507,7 @@ void BuildingPreviewScene::BuildingFloorToTileLayers(BuildingFloor *floor,
 
     int section = 0;
     foreach (TileLayer *tl, layers) {
-        tl->erase(QRegion(0, 0, tl->width(), tl->height()));
+        tl->erase();
         for (int x = 0; x <= floor->width(); x++) {
             for (int y = 0; y <= floor->height(); y++) {
                 const BuildingFloor::Square &square = floor->squares[x][y];

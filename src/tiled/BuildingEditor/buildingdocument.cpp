@@ -101,6 +101,12 @@ bool BuildingDocument::currentFloorIsBottom()
     return mCurrentFloor == mBuilding->floors().first();
 }
 
+void BuildingDocument::setCurrentLayer(const QString &layerName)
+{
+    mCurrentLayerName = layerName;
+    emit currentLayerChanged();
+}
+
 bool BuildingDocument::isModified() const
 {
     // Editing tiles in the Tiles dialog might mean we must save the document.
@@ -269,6 +275,21 @@ QVector<QVector<Room*> > BuildingDocument::swapFloorGrid(BuildingFloor *floor,
     QVector<QVector<Room*> > old = floor->grid();
     floor->setGrid(grid);
     emit floorEdited(floor);
+    return old;
+}
+
+QVector<QVector<QString> > BuildingDocument::swapFloorTiles(BuildingFloor *floor,
+                                                            const QString &layerName,
+                                                            const QRect &bounds, const QVector<QVector<QString> > &grid)
+{
+    QVector<QVector<QString> > old = grid;
+    for (int x = 0; x < bounds.width(); x++) {
+        for (int y = 0; y < bounds.height(); y++) {
+            old[x][y] = floor->grimeAt(layerName, x + bounds.x(), y + bounds.y());
+            floor->setGrime(layerName, x + bounds.x(), y + bounds.y(), grid[x][y]);
+        }
+    }
+    emit floorTilesChanged(floor, layerName, bounds);
     return old;
 }
 

@@ -19,9 +19,8 @@
 #define BUILDINGDOCUMENT_H
 
 #include <QObject>
-#include <QPoint>
+#include <QRect>
 #include <QSet>
-#include <QSize>
 
 class QUndoStack;
 
@@ -65,6 +64,11 @@ public:
     bool currentFloorIsTop();
     bool currentFloorIsBottom();
 
+    void setCurrentLayer(const QString &layerName);
+
+    QString currentLayer() const
+    { return mCurrentLayerName; }
+
     QUndoStack *undoStack() const
     { return mUndoStack; }
 
@@ -105,6 +109,10 @@ public:
     QVector<QVector<Room *> > swapFloorGrid(BuildingFloor *floor,
                                             const QVector<QVector<Room *> > &grid);
 
+    QVector<QVector<QString> > swapFloorTiles(BuildingFloor *floor, const QString &layerName,
+                                              const QRect &bounds,
+                                              const QVector<QVector<QString> > &grid);
+
     QSize resizeBuilding(const QSize &newSize);
     QVector<QVector<Room *> > resizeFloor(BuildingFloor *floor,
                                           const QVector<QVector<Room *> > &grid);
@@ -124,12 +132,17 @@ public:
 signals:
     void currentFloorChanged();
 
+    void currentLayerChanged();
+
     void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
     void roomDefinitionChanged();
 
     void floorAdded(BuildingFloor *floor);
     void floorRemoved(BuildingFloor *floor);
     void floorEdited(BuildingFloor *floor);
+
+    void floorTilesChanged(BuildingFloor *floor, const QString &layerName,
+                           const QRect &bounds);
 
     void objectAdded(BuildingObject *object);
     void objectAboutToBeRemoved(BuildingObject *object);
@@ -169,6 +182,7 @@ private:
     QUndoStack *mUndoStack;
     bool mTileChanges;
     BuildingFloor *mCurrentFloor;
+    QString mCurrentLayerName;
     QSet<BuildingObject*> mSelectedObjects;
 };
 

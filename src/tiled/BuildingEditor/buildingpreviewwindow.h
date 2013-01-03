@@ -83,11 +83,15 @@ public:
     QRectF boundingRect() const;
     void paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *);
 
+    void setTileMode(bool tileMode)
+    { mTileMode = tileMode; }
+
 private:
     Building *mBuilding;
     Tiled::MapRenderer *mRenderer;
     QRect mTileBounds;
     QRectF mBoundingRect;
+    bool mTileMode;
 };
 
 class BuildingPreviewScene : public QGraphicsScene

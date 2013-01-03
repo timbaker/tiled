@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>BuildingTileModeWidget</class>
+ <widget class="QWidget" name="BuildingTileModeWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>644</width>
+    <height>536</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QSplitter" name="overallSplitter">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="childrenCollapsible">
+      <bool>false</bool>
+     </property>
+     <widget class="BuildingEditor::BuildingTileModeView" name="view"/>
+     <widget class="QSplitter" name="rightSplitter">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="childrenCollapsible">
+       <bool>false</bool>
+      </property>
+      <widget class="QWidget" name="verticalLayoutWidget">
+       <layout class="QVBoxLayout" name="layersLayout">
+        <item>
+         <widget class="QListWidget" name="layers"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="horizontalLayoutWidget">
+       <layout class="QHBoxLayout" name="tilesetsLayout">
+        <item>
+         <widget class="QListWidget" name="tilesets"/>
+        </item>
+        <item>
+         <widget class="Tiled::Internal::MixedTilesetView" name="tiles"/>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+  <action name="actionPecil">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_pencil.png</normaloff>:/BuildingEditor/icons/icon_pencil.png</iconset>
+   </property>
+   <property name="text">
+    <string>Pecil</string>
+   </property>
+   <property name="toolTip">
+    <string>Draw/Erase Tiles</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>BuildingEditor::BuildingTileModeView</class>
+   <extends>QGraphicsView</extends>
+   <header>BuildingEditor/buildingtilemodeview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Tiled::Internal::MixedTilesetView</class>
+   <extends>QTableView</extends>
+   <header>BuildingEditor/mixedtilesetview.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="buildingeditor.qrc"/>
+ </resources>
+ <connections/>
+</ui>

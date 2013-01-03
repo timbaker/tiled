@@ -107,6 +107,11 @@ private:
 
     QVector<SubMapLayers> mPreparedSubMapLayers;
     QVector<SubMapLayers> mVisibleSubMapLayers;
+
+#define BUILDINGED
+#ifdef BUILDINGED
+    QVector<Tiled::TileLayer*> mBlendLayers;
+#endif
 };
 
 class MapComposite : public QObject
@@ -204,6 +209,16 @@ public:
 
     bool mapAboutToChange(MapInfo *mapInfo);
     bool mapFileChanged(MapInfo *mapInfo);
+
+#ifdef BUILDINGED
+    void setBlendOverMap(MapComposite *mapComposite)
+    { mBlendOverMap = mapComposite; }
+
+    MapComposite *blendOverMap() const
+    { return mBlendOverMap; }
+
+    MapComposite *mBlendOverMap;
+#endif
 
 signals:
     void layerGroupAdded(int level);

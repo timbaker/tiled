@@ -22,6 +22,7 @@ class Zoomable;
 
 namespace BuildingEditor {
 
+class BaseTileTool;
 class BuildingObject;
 class Building;
 class BuildingFloor;
@@ -34,11 +35,21 @@ class BuildingTileModeScene : public QGraphicsScene
 {
     Q_OBJECT
 public:
+    static const int ZVALUE_CURSOR;
+    static const int ZVALUE_GRID;
+
     BuildingTileModeScene(QWidget *parent = 0);
     ~BuildingTileModeScene();
 
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
     void setDocument(BuildingDocument *doc);
     void clearDocument();
+
+    BuildingDocument *document() const
+    { return mDocument; }
 
     MapComposite *mapComposite() const
     { return mMapComposite; }
@@ -46,11 +57,32 @@ public:
     Tiled::Map *map() const
     { return mMap; }
 
+    int currentLevel();
+    BuildingFloor *currentFloor();
+
+    void setCurrentLayer(const QString &layerName);
+    QString currentLayerName() const;
+
+    QPoint sceneToTile(const QPointF &scenePos);
+    QPointF sceneToTileF(const QPointF &scenePos);
+    QRect sceneToTileRect(const QRectF &sceneRect);
+    QPointF tileToScene(const QPoint &tilePos);
+    QPolygonF tileToScenePolygon(const QPoint &tilePos);
+    QPolygonF tileToScenePolygon(const QRect &tileRect);
+    QPolygonF tileToScenePolygonF(const QRectF &tileRect);
+    bool currentFloorContains(const QPoint &tilePos, int dw = 0, int dh = 0);
+
 private:
     void BuildingToMap();
     void BuildingFloorToTileLayers(BuildingFloor *floor, const QVector<Tiled::TileLayer *> &layers);
 
+    void floorTilesToLayer(BuildingFloor *floor, const QString &layerName,
+                           const QRect &bounds);
+
     CompositeLayerGroupItem *itemForFloor(BuildingFloor *floor);
+
+signals:
+    void documentChanged();
 
 private slots:
     void currentFloorChanged();
@@ -64,6 +96,9 @@ private slots:
     void floorAdded(BuildingFloor *floor);
     void floorRemoved(BuildingFloor *floor);
     void floorEdited(BuildingFloor *floor);
+
+    void floorTilesChanged(BuildingFloor *floor, const QString &layerName,
+                           const QRect &bounds);
 
     void objectAdded(BuildingObject *object);
     void objectRemoved(BuildingObject *object);
@@ -79,8 +114,12 @@ private slots:
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
     void tilesetRemoved(Tiled::Tileset *tileset);
 
+    void currentToolChanged(BaseTileTool *tool);
+
 private:
     BuildingDocument *mDocument;
+    MapComposite *mBlendMapComposite;
+    Tiled::Map *mBlendMap;
     MapComposite *mMapComposite;
     Tiled::Map *mMap;
     Tiled::MapRenderer *mRenderer;
@@ -88,6 +127,7 @@ private:
     QMap<int,CompositeLayerGroupItem*> mLayerGroupItems;
     bool mLoading;
     QGraphicsRectItem *mDarkRectangle;
+    BaseTileTool *mCurrentTool;
 };
 
 class BuildingTileModeView : public QGraphicsView
@@ -104,6 +144,7 @@ public:
     { return mZoomable; }
 
     bool event(QEvent *event);
+    bool eventFilter(QObject *object, QEvent *event);
 
     void hideEvent(QHideEvent *event);
 
@@ -114,6 +155,9 @@ public:
 
     void setHandScrolling(bool handScrolling);
 
+signals:
+    void mouseCoordinateChanged(const QPoint &tilePos);
+
 private slots:
     void adjustScale(qreal scale);
 
@@ -121,6 +165,7 @@ private:
     Tiled::Internal::Zoomable *mZoomable;
     QPoint mLastMousePos;
     QPointF mLastMouseScenePos;
+    QPoint mLastMouseTilePos;
     bool mHandScrolling;
 };
 

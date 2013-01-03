@@ -1307,6 +1307,9 @@ BuildingFloor *BuildingFloor::clone()
         kloneObject->setFloor(klone);
         klone->mObjects += kloneObject;
     }
+    klone->mGrimeGrid = mGrimeGrid;
+    foreach (QString key, klone->mGrimeGrid.keys())
+        klone->mGrimeGrid[key] = new SparseTileGrid(*klone->mGrimeGrid[key]);
     return klone;
 }
 
@@ -1369,6 +1372,9 @@ void BuildingFloor::Square::ReplaceDoor(BuildingTileEntry *tile, int offset)
     // Must put a non-zero tile here.  See getWallOffset().
     mEntries[SectionDoor] = tile ? tile : BuildingTilesMgr::instance()->noneTileEntry();
     mEntryEnum[SectionDoor] = offset;
+    // FIXME: if this is a NW corner with 2 different wall tiles, this will
+    // choose the wrong wall tile.  Fix it by only changing West->WestDoor or
+    // North->NorthDoor in SectionWall or SectionWall2.  Same for ReplaceFrame.
     mEntryEnum[SectionWall] = getWallOffset();
 }
 
@@ -1462,16 +1468,16 @@ int BuildingFloor::Square::getWallOffset()
         else
             offset = BTC_Walls::North;
         break;
-    case  WallOrientNW:
+    case WallOrientNW:
         offset = BTC_Walls::NorthWest;
         break;
-    case  WallOrientW:
+    case WallOrientW:
         if (mEntries[SectionDoor] != 0)
             offset = BTC_Walls::WestDoor;
         else if (mEntries[SectionFrame] != 0)
             offset = BTC_Walls::WestWindow;
         break;
-    case  WallOrientSE:
+    case WallOrientSE:
         offset = BTC_Walls::SouthEast;
         break;
     }

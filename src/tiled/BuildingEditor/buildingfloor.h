@@ -18,9 +18,12 @@
 #ifndef BUILDINGFLOOR_H
 #define BUILDINGFLOOR_H
 
+#include <QHash>
 #include <QList>
+#include <QMap>
 #include <QRegion>
 #include <QString>
+#include <QStringList>
 #include <QVector>
 
 namespace BuildingEditor {
@@ -35,6 +38,91 @@ class FurnitureObject;
 class Room;
 class Stairs;
 class Window;
+
+class SparseTileGrid
+{
+public:
+    SparseTileGrid(int width, int height)
+        : mWidth(width)
+        , mHeight(height)
+        , mUseVector(false)
+    {
+    }
+
+    int size() const
+    { return mWidth * mHeight; }
+
+    const QString &at(int index) const
+    {
+        if (mUseVector)
+            return mCellsVector[index];
+        QHash<int,QString>::const_iterator it = mCells.find(index);
+        if (it != mCells.end())
+            return *it;
+        return mEmptyCell;
+    }
+
+    void replace(int index, const QString &tile)
+    {
+        if (mUseVector) {
+            mCellsVector[index] = tile;
+            return;
+        }
+        QHash<int,QString>::iterator it = mCells.find(index);
+        if (it == mCells.end()) {
+            if (tile.isEmpty())
+                return;
+            mCells.insert(index, tile);
+        } else if (!tile.isEmpty())
+            (*it) = tile;
+        else
+            mCells.erase(it);
+        if (mCells.size() > 300 * 300 / 3)
+            swapToVector();
+    }
+
+    void replace(int x, int y, const QString &tile)
+    {
+        int index = y * mWidth + x;
+        replace(index, tile);
+    }
+
+    void setTile(int index, const QString &tile)
+    {
+        replace(index, tile);
+    }
+
+    bool isEmpty() const
+    { return !mUseVector && mCells.isEmpty(); }
+
+    void clear()
+    {
+        if (mUseVector)
+            mCellsVector.fill(mEmptyCell);
+        else
+            mCells.clear();
+    }
+
+private:
+    void swapToVector()
+    {
+        Q_ASSERT(!mUseVector);
+        mCellsVector.resize(size());
+        QHash<int,QString>::const_iterator it = mCells.begin();
+        while (it != mCells.end()) {
+            mCellsVector[it.key()] = (*it);
+            ++it;
+        }
+        mCells.clear();
+        mUseVector = true;
+    }
+
+    int mWidth, mHeight;
+    QHash<int,QString> mCells;
+    QVector<QString> mCellsVector;
+    bool mUseVector;
+    QString mEmptyCell;
+};
 
 class BuildingFloor
 {
@@ -185,12 +273,30 @@ public:
 
     BuildingFloor *clone();
 
+    QStringList grimeLayers() const
+    { return mGrimeGrid.keys(); }
+
+    QString grimeAt(const QString &layerName, int x, int y) const
+    {
+        if (mGrimeGrid.contains(layerName))
+            return mGrimeGrid[layerName]->at(x + y * width());
+        return QString();
+    }
+
+    void setGrime(const QString &layerName, int x, int y, const QString &tileName)
+    {
+        if (!mGrimeGrid.contains(layerName))
+            mGrimeGrid[layerName] = new SparseTileGrid(width(), height());
+        mGrimeGrid[layerName]->replace(x, y, tileName);
+    }
+
 private:
     Building *mBuilding;
     QVector<QVector<Room*> > mRoomAtPos;
     QVector<QVector<int> > mIndexAtPos;
     int mLevel;
     QList<BuildingObject*> mObjects;
+    QMap<QString,SparseTileGrid*> mGrimeGrid;
 };
 
 } // namespace BuildingEditor

@@ -51,7 +51,7 @@ class BuildingPreviewWindow;
 class BuildingTile;
 class BuildingTileEntry;
 class BuildingTileCategory;
-class BuildingTileModeView;
+class BuildingTileModeWidget;
 class Door;
 class FloorEditor;
 class FloorView;
@@ -197,6 +197,8 @@ private slots:
     void currentToolChanged(BaseTool *tool);
     void updateToolStatusText();
 
+    void updateTileToolStatusText();
+
     void roofTypeChanged(QAction *action);
     void roofCornerTypeChanged(QAction *action);
 
@@ -241,7 +243,7 @@ private:
     QAction *mActionClearUsed;
 
     EditMode mEditMode;
-    BuildingTileModeView *mTileModeView;
+    BuildingTileModeWidget *mTileModeWidget;
 };
 
 } // namespace BuildingEditor

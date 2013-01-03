@@ -307,8 +307,6 @@ public:
 
     Building *building() const;
 
-    void ProcessMove(int x, int y);
-
     QPoint sceneToTile(const QPointF &scenePos);
     QPointF sceneToTileF(const QPointF &scenePos);
     QRect sceneToTileRect(const QRectF &sceneRect);

@@ -32,6 +32,8 @@
 #include "buildingtiles.h"
 #include "buildingtilesdialog.h"
 #include "buildingtilemodeview.h"
+#include "buildingtilemodewidget.h"
+#include "buildingtiletools.h"
 #include "buildingtmx.h"
 #include "buildingtools.h"
 #include "FloorEditor.h"
@@ -313,10 +315,12 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->actionNormalSize->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     mEditMode = BuildingMode;
-    mTileModeView = new BuildingTileModeView(this);
-    mTileModeView->setScene(new BuildingTileModeScene(this));
-    mTileModeView->hide();
+    mTileModeWidget = new BuildingTileModeWidget(this);
     connect(ui->actionSwitchEditMode, SIGNAL(triggered()), SLOT(switchMode()));
+    connect(TileToolManager::instance(), SIGNAL(statusTextChanged(BaseTileTool*)),
+            SLOT(updateTileToolStatusText()));
+    connect(mTileModeWidget->view(), SIGNAL(mouseCoordinateChanged(QPoint)),
+            SLOT(mouseCoordinateChanged(QPoint)));
 
     connect(ui->actionResize, SIGNAL(triggered()), SLOT(resizeBuilding()));
     connect(ui->actionFlipHorizontal, SIGNAL(triggered()), SLOT(flipHorizontal()));
@@ -377,8 +381,13 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     readSettings();
 
     // Restore visibility due to mode-switching.
-    ui->toolBar->setVisible(true);
-    ui->floorView->setVisible(true);
+    // readSettings() calls QWidget::restoreGeometry() which might change
+    // widget visibility.
+    ui->toolBar->show();
+    ui->floorView->show();
+    ui->dockWidget->show();
+    mTileModeWidget->hide();
+    mTileModeWidget->toolBar()->hide();
 
     updateActions();
 }
@@ -1583,7 +1592,7 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
     if (mCurrentDocument) {
         mRoomComboBox->clear();
         roomEditor->clearDocument();
-        mTileModeView->scene()->clearDocument();
+        mTileModeWidget->clearDocument();
         mPreviewWin->clearDocument();
         mUndoGroup->removeStack(mCurrentDocument->undoStack());
         delete mCurrentDocument->building();
@@ -1649,7 +1658,7 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         categorySelectionChanged();
 
     roomEditor->setDocument(mCurrentDocument);
-    mTileModeView->scene()->setDocument(mCurrentDocument);
+    mTileModeWidget->setDocument(mCurrentDocument);
 
     updateRoomComboBox();
 
@@ -1692,6 +1701,7 @@ void BuildingEditorWindow::clearDocument()
 {
     if (mCurrentDocument) {
         roomEditor->clearDocument();
+        mTileModeWidget->clearDocument();
         mPreviewWin->clearDocument();
         mUndoGroup->removeStack(mCurrentDocument->undoStack());
         delete mCurrentDocument->building();
@@ -2012,6 +2022,14 @@ void BuildingEditorWindow::updateToolStatusText()
         ui->statusLabel->clear();
 }
 
+void BuildingEditorWindow::updateTileToolStatusText()
+{
+    if (BaseTileTool *tool = TileToolManager::instance()->currentTool())
+        ui->statusLabel->setText(tool->statusText());
+    else
+        ui->statusLabel->clear();
+}
+
 void BuildingEditorWindow::roofTypeChanged(QAction *action)
 {
     int index = action->parentWidget()->actions().indexOf(action);
@@ -2234,16 +2252,23 @@ void BuildingEditorWindow::switchMode()
         // Switch to TileMode
         ui->toolBar->hide();
         ui->floorView->hide();
-        mTileModeView->show();
+        ui->dockWidget->hide();
+        mTileModeWidget->show();
         ui->verticalLayout_2->removeWidget(ui->floorView);
-        ui->verticalLayout_2->insertWidget(0, mTileModeView, 1);
+        ui->verticalLayout_2->insertWidget(0, mTileModeWidget, 1);
+        ui->toolBar->hide();
+        mTileModeWidget->toolBar()->show();
+        addToolBar(Qt::TopToolBarArea, mTileModeWidget->toolBar());
         mEditMode = TileMode;
+        mTileModeWidget->switchTo();
     } else if (mEditMode == TileMode) {
         // Switch to BuildingMode
+        removeToolBar(mTileModeWidget->toolBar());
+        mTileModeWidget->hide();
         ui->toolBar->show();
         ui->floorView->show();
-        mTileModeView->hide();
-        ui->verticalLayout_2->removeWidget(mTileModeView);
+        ui->dockWidget->show();
+        ui->verticalLayout_2->removeWidget(mTileModeWidget);
         ui->verticalLayout_2->insertWidget(0, ui->floorView, 1);
         mEditMode = BuildingMode;
     }

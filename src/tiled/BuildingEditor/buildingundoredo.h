@@ -18,9 +18,8 @@
 #ifndef BUILDINGUNDOREDO_H
 #define BUILDINGUNDOREDO_H
 
-#include <QPoint>
+#include <QRectF>
 #include <QUndoCommand>
-#include <QSize>
 #include <QVector>
 
 namespace BuildingEditor {
@@ -290,6 +289,27 @@ private:
     BuildingDocument *mDocument;
     BuildingFloor *mFloor;
     QVector<QVector<Room*> > mGrid;
+};
+
+class PaintFloorTiles : public QUndoCommand
+{
+public:
+    PaintFloorTiles(BuildingDocument *doc, BuildingFloor *floor,
+                    const QString &layerName,
+                    const QRect &bounds, const QVector<QVector<QString> > &grid,
+                    char *undoText);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    BuildingFloor *mFloor;
+    QString mLayerName;
+    QRect mBounds;
+    QVector<QVector<QString> > mGrid;
 };
 
 class ResizeBuilding : public QUndoCommand
