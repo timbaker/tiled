@@ -272,21 +272,16 @@ void DrawTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     if (mMouseDown) {
         QRect r = mCursorTileBounds;
         bool changed = false;
+        QString tileName = mErasing ? QString() : mTileName;
         QVector<QVector<QString> > grid;
         grid.resize(r.width());
         for (int x = 0; x < r.width(); x++)
-            grid[x].resize(r.height());
+            grid[x].fill(tileName, r.height());
         for (int x = r.left(); x <= r.right(); x++) {
             for (int y = r.top(); y <= r.bottom(); y++) {
-                if (mErasing) {
-                    if (floor()->grimeAt(layerName(), x, y) != QString()) {
-                        changed = true;
-                    }
-                } else {
-                    if (floor()->grimeAt(layerName(), x, y) != mTileName) {
-                        grid[x - r.x()][y - r.y()] = mTileName;
-                        changed = true;
-                    }
+                if (floor()->grimeAt(layerName(), x, y) != tileName) {
+                    changed = true;
+                    break;
                 }
             }
         }
