@@ -229,7 +229,6 @@ private:
     QSettings mSettings;
     QString mError;
     BuildingPreviewWindow *mPreviewWin;
-    Tiled::Internal::Zoomable *mZoomable;
     Tiled::Internal::Zoomable *mCategoryZoomable;
     BuildingTileCategory *mCategory;
     FurnitureGroup *mFurnitureGroup;

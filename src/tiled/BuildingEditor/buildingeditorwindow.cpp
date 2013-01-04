@@ -94,7 +94,6 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mRoomComboBox(new QComboBox()),
     mUndoGroup(new QUndoGroup(this)),
     mPreviewWin(0),
-    mZoomable(new Zoomable(this)),
     mCategoryZoomable(new Zoomable(this)),
     mCategory(0),
     mFurnitureGroup(0),
