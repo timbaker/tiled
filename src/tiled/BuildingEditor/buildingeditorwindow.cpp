@@ -2340,6 +2340,9 @@ void BuildingEditorWindow::switchMode()
         addToolBar(Qt::TopToolBarArea, mTileModeWidget->toolBar());
         mEditMode = TileMode;
         mTileModeWidget->switchTo();
+        mTileModeWidget->view()->setFocus();
+        mView->zoomable()->connectToComboBox(0);
+        mTileModeWidget->view()->zoomable()->connectToComboBox(ui->editorScaleComboBox);
     } else if (mEditMode == TileMode) {
         // Switch to BuildingMode
         removeToolBar(mTileModeWidget->toolBar());
@@ -2351,5 +2354,8 @@ void BuildingEditorWindow::switchMode()
         ui->floorView->show();
         ui->dockWidget->show();
         mEditMode = BuildingMode;
+        ui->floorView->setFocus();
+        mTileModeWidget->view()->zoomable()->connectToComboBox(0);
+        mView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
     }
 }
