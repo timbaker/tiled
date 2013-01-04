@@ -324,6 +324,11 @@ SwapFloorGrime::SwapFloorGrime(BuildingDocument *doc, BuildingFloor *floor,
 {
 }
 
+SwapFloorGrime::~SwapFloorGrime()
+{
+    qDeleteAll(mGrid.values());
+}
+
 void SwapFloorGrime::swap()
 {
     mGrid = mDocument->swapFloorTiles(mFloor, mGrid);

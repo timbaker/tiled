@@ -299,6 +299,8 @@ public:
     SwapFloorGrime(BuildingDocument *doc, BuildingFloor *floor,
                    const QMap<QString,SparseTileGrid*> &grid, char *undoText);
 
+    ~SwapFloorGrime();
+
     void undo() { swap(); }
     void redo() { swap(); }
 
