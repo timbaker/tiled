@@ -27,6 +27,7 @@
 #include <QDebug>
 #include <QKeyEvent>
 #include <QScrollBar>
+#include <QStyleOptionGraphicsItem>
 
 using namespace BuildingEditor;
 using namespace Tiled;
@@ -34,6 +35,42 @@ using namespace Tiled::Internal;
 
 const int BuildingTileModeScene::ZVALUE_CURSOR = 1000;
 
+/////
+
+TileModeGridItem::TileModeGridItem(BuildingDocument *doc, MapRenderer *renderer) :
+    QGraphicsItem(),
+    mDocument(doc),
+    mRenderer(renderer)
+{
+    setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
+    synchWithBuilding();
+}
+
+void TileModeGridItem::synchWithBuilding()
+{
+    mTileBounds = QRect(0, 0,
+                        mDocument->building()->width() + 1,
+                        mDocument->building()->height() + 1);
+
+    QRectF bounds = mRenderer->boundingRect(mTileBounds, mDocument->currentLevel());
+    if (bounds != mBoundingRect) {
+        prepareGeometryChange();
+        mBoundingRect = bounds;
+    }
+}
+
+QRectF TileModeGridItem::boundingRect() const
+{
+    return mBoundingRect;
+}
+
+void TileModeGridItem::paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *)
+{
+    mRenderer->drawGrid(p, option->exposedRect, Qt::black,
+                        mDocument->currentLevel(), mTileBounds);
+}
+
+/////
 BuildingTileModeScene::BuildingTileModeScene(QWidget *parent) :
     QGraphicsScene(parent),
     mDocument(0),
@@ -493,8 +530,7 @@ void BuildingTileModeScene::BuildingToMap()
         mLayerGroupItems[layerGroup->level()] = item;
     }
 
-    mGridItem = new PreviewGridItem(mDocument->building(), mRenderer);
-    mGridItem->setTileMode(true);
+    mGridItem = new TileModeGridItem(mDocument, mRenderer);
     mGridItem->synchWithBuilding();
     mGridItem->setZValue(1000);
     addItem(mGridItem);
@@ -633,6 +669,7 @@ void BuildingTileModeScene::layerVisibilityChanged(BuildingFloor *floor, const Q
 void BuildingTileModeScene::currentFloorChanged()
 {
     highlightFloorChanged(BuildingPreferences::instance()->highlightFloor());
+    mGridItem->synchWithBuilding();
 }
 
 void BuildingTileModeScene::currentLayerChanged()

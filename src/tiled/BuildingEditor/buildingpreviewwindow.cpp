@@ -254,8 +254,7 @@ void CompositeLayerGroupItem::updateBounds()
 PreviewGridItem::PreviewGridItem(Building *building, MapRenderer *renderer) :
     QGraphicsItem(),
     mBuilding(building),
-    mRenderer(renderer),
-    mTileMode(false)
+    mRenderer(renderer)
 {
     setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
     synchWithBuilding();
@@ -263,12 +262,8 @@ PreviewGridItem::PreviewGridItem(Building *building, MapRenderer *renderer) :
 
 void PreviewGridItem::synchWithBuilding()
 {
-    if (mTileMode) {
-        mTileBounds = QRect(0, 0, mBuilding->width() + 1, mBuilding->height() + 1);
-    } else {
-        int offset = (mBuilding->floorCount() - 1) * 3;
-        mTileBounds = QRect(offset, offset, mBuilding->width(), mBuilding->height());
-    }
+    int offset = (mBuilding->floorCount() - 1) * 3;
+    mTileBounds = QRect(offset, offset, mBuilding->width(), mBuilding->height());
 
     QRectF bounds = mRenderer->boundingRect(mTileBounds);
     if (bounds != mBoundingRect) {

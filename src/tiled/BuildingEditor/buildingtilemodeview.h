@@ -1,6 +1,7 @@
 #ifndef BUILDINGTILEMODEVIEW_H
 #define BUILDINGTILEMODEVIEW_H
 
+#include <QGraphicsItem>
 #include <QGraphicsScene>
 #include <QGraphicsView>
 
@@ -29,8 +30,24 @@ class Building;
 class BuildingFloor;
 class BuildingDocument;
 class CompositeLayerGroupItem;
-class PreviewGridItem;
 class Room;
+
+class TileModeGridItem : public QGraphicsItem
+{
+public:
+    TileModeGridItem(BuildingDocument *doc, Tiled::MapRenderer *renderer);
+
+    void synchWithBuilding();
+
+    QRectF boundingRect() const;
+    void paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *);
+
+private:
+    BuildingDocument *mDocument;
+    Tiled::MapRenderer *mRenderer;
+    QRect mTileBounds;
+    QRectF mBoundingRect;
+};
 
 class BuildingTileModeScene : public QGraphicsScene
 {
@@ -135,7 +152,7 @@ private:
     MapComposite *mMapComposite;
     Tiled::Map *mMap;
     Tiled::MapRenderer *mRenderer;
-    PreviewGridItem *mGridItem;
+    TileModeGridItem *mGridItem;
     QMap<int,CompositeLayerGroupItem*> mLayerGroupItems;
     bool mLoading;
     QGraphicsRectItem *mDarkRectangle;
