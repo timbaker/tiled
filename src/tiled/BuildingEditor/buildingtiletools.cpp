@@ -255,7 +255,7 @@ void DrawTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     mErasing = controlModifier();
     mStartTilePos = mEditor->sceneToTile(event->scenePos());
-    mCursorTileBounds = QRect(mStartTilePos, QSize(1, 1)) & floor()->bounds();
+    mCursorTileBounds = QRect(mStartTilePos, QSize(1, 1)) & floor()->bounds().adjusted(0, 0, 1, 1);
     mMouseDown = true;
     updateStatusText();
 }
@@ -332,12 +332,11 @@ void DrawTileTool::updateCursor(const QPointF &scenePos)
                                   qMin(mStartTilePos.y(), tilePos.y())),
                                   QPoint(qMax(mStartTilePos.x(), tilePos.x()),
                                   qMax(mStartTilePos.y(), tilePos.y())));
-        mCursorTileBounds &= floor()->bounds().adjusted(0, 0, 1, 1);
         updateStatusText();
     } else {
         mCursorTileBounds = QRect(tilePos, QSize(1, 1));
-        mCursorTileBounds &= floor()->bounds().adjusted(0, 0, 1, 1);
     }
+    mCursorTileBounds &= floor()->bounds().adjusted(0, 0, 1, 1);
 
     // This crap is all to work around a bug when the view was scrolled and
     // then the item moves which led to areas not being repainted.  Each item
