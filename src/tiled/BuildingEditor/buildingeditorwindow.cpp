@@ -286,6 +286,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->actionHighlightFloor->setChecked(BuildingPreferences::instance()->highlightFloor());
     connect(ui->actionHighlightFloor, SIGNAL(toggled(bool)),
             BuildingPreferences::instance(), SLOT(setHighlightFloor(bool)));
+    connect(BuildingPreferences::instance(), SIGNAL(highlightFloorChanged(bool)),
+            ui->actionHighlightFloor, SLOT(setChecked(bool)));
 
     ui->actionShowObjects->setChecked(prefs->showObjects());
     connect(ui->actionShowObjects, SIGNAL(toggled(bool)),
