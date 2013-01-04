@@ -123,6 +123,7 @@ private slots:
     void floorRemoved(BuildingFloor *floor);
     void floorEdited(BuildingFloor *floor);
 
+    void floorTilesChanged(BuildingFloor *floor);
     void floorTilesChanged(BuildingFloor *floor, const QString &layerName,
                            const QRect &bounds);
 

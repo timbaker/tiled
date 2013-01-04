@@ -654,8 +654,8 @@ void SelectMoveRoomsTool::finishMoving(const QPointF &pos)
     if (mDragOffset.isNull()) // Move is a no-op
         return;
 
-    undoStack()->beginMacro(tr(shiftModifier() ? "Move Rooms and Objects"
-                                               : "Move Rooms"));
+    undoStack()->beginMacro(tr(objectsToo ? "Move Rooms and Objects"
+                                          : "Move Rooms"));
 
     if (allFloors) {
         foreach (BuildingFloor *floor, mEditor->building()->floors())
@@ -689,6 +689,7 @@ void SelectMoveRoomsTool::cancelMoving()
 
 void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor, bool objectsToo)
 {
+    // Move the rooms
     QVector<QVector<Room*> > grid = floor->grid();
 
     QRect floorBounds = floor->bounds();
@@ -714,6 +715,36 @@ void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor, bool objectsTo
 
     undoStack()->push(new SwapFloorGrid(mEditor->document(), floor, grid,
                                         "Move Rooms"));
+
+    // Move the user-placed tiles
+    QMap<QString,SparseTileGrid*> grime = floor->grimeClone();
+
+    floorBounds = floor->bounds().adjusted(0, 0, 1, 1);
+    foreach (QRect src, mSelectedArea.rects()) {
+        src &= floorBounds;
+        for (int x = src.left(); x <= src.right(); x++) {
+            for (int y = src.top(); y <= src.bottom(); y++) {
+                foreach (SparseTileGrid *stg, grime.values())
+                    stg->replace(x, y, QString());
+            }
+        }
+    }
+
+    foreach (QRect src, mSelectedArea.rects()) {
+        src &= floorBounds;
+        for (int x = src.left(); x <= src.right(); x++) {
+            for (int y = src.top(); y <= src.bottom(); y++) {
+                QPoint p = QPoint(x, y) + mDragOffset;
+                if (floorBounds.contains(p)) {
+                    foreach (QString key, grime.keys())
+                        grime[key]->replace(p.x(), p.y(), floor->grimeAt(key, x, y));
+                }
+            }
+        }
+    }
+
+    undoStack()->push(new SwapFloorGrime(mEditor->document(), floor, grime,
+                                        "Move Tiles", true));
 
     if (objectsToo) {
         QList<BuildingObject*> objects = floor->objects();

@@ -202,6 +202,8 @@ void BuildingTileModeScene::setDocument(BuildingDocument *doc)
     connect(mDocument, SIGNAL(floorEdited(BuildingFloor*)),
             SLOT(floorEdited(BuildingFloor*)));
 
+    connect(mDocument, SIGNAL(floorTilesChanged(BuildingFloor*)),
+            SLOT(floorTilesChanged(BuildingFloor*)));
     connect(mDocument, SIGNAL(floorTilesChanged(BuildingFloor*,QString,QRect)),
             SLOT(floorTilesChanged(BuildingFloor*,QString,QRect)));
 
@@ -633,6 +635,23 @@ void BuildingTileModeScene::floorEdited(BuildingFloor *floor)
     mRenderer->setMaxLevel(mMapComposite->maxLevel());
     setSceneRect(mMapComposite->boundingRect(mRenderer));
     mDarkRectangle->setRect(sceneRect());
+}
+
+void BuildingTileModeScene::floorTilesChanged(BuildingFloor *floor)
+{
+    if (CompositeLayerGroupItem *item = itemForFloor(floor)) {
+        foreach (TileLayer *tl, item->layerGroup()->layers())
+            tl->erase();
+        foreach (QString layerName, floor->grimeLayers())
+            floorTilesToLayer(floor, layerName, floor->bounds().adjusted(0, 0, 1, 1));
+        item->synchWithTileLayers();
+        item->updateBounds();
+    }
+    QRectF sceneRect = mMapComposite->boundingRect(mRenderer);
+    if (sceneRect != this->sceneRect()) {
+        setSceneRect(sceneRect);
+        mDarkRectangle->setRect(sceneRect);
+    }
 }
 
 void BuildingTileModeScene::floorTilesChanged(BuildingFloor *floor,

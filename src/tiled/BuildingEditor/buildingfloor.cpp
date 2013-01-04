@@ -1327,6 +1327,15 @@ BuildingFloor *BuildingFloor::clone()
     return klone;
 }
 
+QMap<QString,SparseTileGrid*> BuildingFloor::grimeClone() const
+{
+    QMap<QString,SparseTileGrid*> clone;
+    foreach (QString key, mGrimeGrid.keys()) {
+        clone[key] = new SparseTileGrid(*mGrimeGrid[key]);
+    }
+    return clone;
+}
+
 /////
 
 BuildingFloor::Square::Square() :

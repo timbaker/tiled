@@ -297,7 +297,8 @@ class SwapFloorGrime : public QUndoCommand
 {
 public:
     SwapFloorGrime(BuildingDocument *doc, BuildingFloor *floor,
-                   const QMap<QString,SparseTileGrid*> &grid, char *undoText);
+                   const QMap<QString,SparseTileGrid*> &grid, char *undoText,
+                   bool emitSignal);
 
     ~SwapFloorGrime();
 
@@ -310,6 +311,7 @@ private:
     BuildingDocument *mDocument;
     BuildingFloor *mFloor;
     QMap<QString,SparseTileGrid*> mGrid;
+    bool mEmitSignal;
 };
 
 class PaintFloorTiles : public QUndoCommand

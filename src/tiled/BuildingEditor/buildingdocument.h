@@ -119,7 +119,8 @@ public:
                                             const QVector<QVector<Room*> > &grid);
 
     QMap<QString,SparseTileGrid*> swapFloorTiles(BuildingFloor *floor,
-                                                 const QMap<QString, SparseTileGrid *> &grid);
+                                                 const QMap<QString, SparseTileGrid *> &grid,
+                                                 bool emitSignal);
 
     QVector<QVector<QString> > swapFloorTiles(BuildingFloor *floor, const QString &layerName,
                                               const QRect &bounds,
@@ -154,6 +155,7 @@ signals:
     void floorRemoved(BuildingFloor *floor);
     void floorEdited(BuildingFloor *floor);
 
+    void floorTilesChanged(BuildingFloor *floor);
     void floorTilesChanged(BuildingFloor *floor, const QString &layerName,
                            const QRect &bounds);
 

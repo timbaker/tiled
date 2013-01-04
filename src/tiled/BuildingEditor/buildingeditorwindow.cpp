@@ -1927,8 +1927,8 @@ void BuildingEditorWindow::flipHorizontal()
     undoStack->push(new EmitRotateBuilding(mCurrentDocument, true));
     QMap<QString,SparseTileGrid*> emptyGrime;
     foreach (BuildingFloor *floor, currentBuilding()->floors()) {
-        undoStack->push( new SwapFloorGrime(mCurrentDocument, floor, emptyGrime,
-                                            "Remove All Tiles"));
+        undoStack->push(new SwapFloorGrime(mCurrentDocument, floor, emptyGrime,
+                                           "Remove All Tiles", false));
     }
     undoStack->push(new FlipBuilding(mCurrentDocument, true));
     undoStack->push(new EmitRotateBuilding(mCurrentDocument, false));
@@ -1946,7 +1946,7 @@ void BuildingEditorWindow::flipVertical()
     QMap<QString,SparseTileGrid*> emptyGrime;
     foreach (BuildingFloor *floor, currentBuilding()->floors()) {
         undoStack->push(new SwapFloorGrime(mCurrentDocument, floor, emptyGrime,
-                                           "Remove All Tiles"));
+                                           "Remove All Tiles", false));
     }
     undoStack->push(new FlipBuilding(mCurrentDocument, false));
     undoStack->push(new EmitRotateBuilding(mCurrentDocument, false));
@@ -1963,9 +1963,8 @@ void BuildingEditorWindow::rotateRight()
     undoStack->push(new EmitRotateBuilding(mCurrentDocument, true));
     QMap<QString,SparseTileGrid*> emptyGrime;
     foreach (BuildingFloor *floor, currentBuilding()->floors()) {
-        undoStack->push(
-                    new SwapFloorGrime(mCurrentDocument, floor, emptyGrime,
-                                       "Remove All Tiles"));
+        undoStack->push(new SwapFloorGrime(mCurrentDocument, floor, emptyGrime,
+                                           "Remove All Tiles", false));
     }
     undoStack->push(new RotateBuilding(mCurrentDocument, true));
     undoStack->push(new EmitRotateBuilding(mCurrentDocument, false));
@@ -1982,9 +1981,8 @@ void BuildingEditorWindow::rotateLeft()
     undoStack->push(new EmitRotateBuilding(mCurrentDocument, true));
     QMap<QString,SparseTileGrid*> emptyGrime;
     foreach (BuildingFloor *floor, currentBuilding()->floors()) {
-        undoStack->push(
-                    new SwapFloorGrime(mCurrentDocument, floor, emptyGrime,
-                                       "Remove All Tiles"));
+        undoStack->push(new SwapFloorGrime(mCurrentDocument, floor, emptyGrime,
+                                           "Remove All Tiles", false));
     }
     undoStack->push(new RotateBuilding(mCurrentDocument, false));
     undoStack->push(new EmitRotateBuilding(mCurrentDocument, false));

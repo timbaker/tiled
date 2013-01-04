@@ -284,6 +284,9 @@ public:
 
     BuildingFloor *clone();
 
+    const QMap<QString,SparseTileGrid*> &grime() const
+    { return mGrimeGrid; }
+
     QStringList grimeLayers() const
     { return mGrimeGrid.keys(); }
 
@@ -300,6 +303,8 @@ public:
         mGrimeGrid = grime;
         return old;
     }
+
+    QMap<QString,SparseTileGrid*> grimeClone() const;
 
     void setGrime(const QString &layerName, int x, int y, const QString &tileName)
     {

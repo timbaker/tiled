@@ -316,11 +316,12 @@ void SwapFloorGrid::swap()
 
 SwapFloorGrime::SwapFloorGrime(BuildingDocument *doc, BuildingFloor *floor,
                                const QMap<QString, SparseTileGrid *> &grid,
-                               char *undoText) :
+                               char *undoText, bool emitSignal) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", undoText)),
     mDocument(doc),
     mFloor(floor),
-    mGrid(grid)
+    mGrid(grid),
+    mEmitSignal(emitSignal)
 {
 }
 
@@ -331,7 +332,7 @@ SwapFloorGrime::~SwapFloorGrime()
 
 void SwapFloorGrime::swap()
 {
-    mGrid = mDocument->swapFloorTiles(mFloor, mGrid);
+    mGrid = mDocument->swapFloorTiles(mFloor, mGrid, mEmitSignal);
 }
 
 /////
