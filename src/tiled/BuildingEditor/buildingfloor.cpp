@@ -1429,8 +1429,8 @@ void BuildingFloor::Square::ReplaceFurniture(BuildingTile *tile,
                                              SquareSection section2)
 {
     if (mTiles[section] && !mTiles[section]->isNone() && (section2 != SectionInvalid)) {
-        mTiles[section + 1] = tile;
-        mEntryEnum[section + 1] = 0;
+        mTiles[section2] = tile;
+        mEntryEnum[section2] = 0;
         return;
     }
     mTiles[section] = tile;
