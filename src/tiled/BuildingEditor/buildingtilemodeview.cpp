@@ -186,6 +186,8 @@ void BuildingTileModeScene::setDocument(BuildingDocument *doc)
 
     connect(mDocument, SIGNAL(currentFloorChanged()),
             SLOT(currentFloorChanged()));
+    connect(mDocument, SIGNAL(currentLayerChanged()),
+            SLOT(currentLayerChanged()));
 
     connect(mDocument, SIGNAL(roomAtPositionChanged(BuildingFloor*,QPoint)),
             SLOT(roomAtPositionChanged(BuildingFloor*,QPoint)));
@@ -675,6 +677,8 @@ void BuildingTileModeScene::currentFloorChanged()
 void BuildingTileModeScene::currentLayerChanged()
 {
     if (CompositeLayerGroupItem *item = itemForFloor(currentFloor())) {
+        QRectF bounds = item->boundingRect();
+
         if (!mNonEmptyLayer.isEmpty())
             item->layerGroup()->setLayerNonEmpty(mNonEmptyLayer, false);
         QString layerName = currentLayerName();
@@ -682,8 +686,15 @@ void BuildingTileModeScene::currentLayerChanged()
             item->layerGroup()->setLayerNonEmpty(layerName, true);
         mNonEmptyLayer = layerName;
 
-        item->synchWithTileLayers();
-        item->updateBounds();
+        if (bounds.isEmpty()) {
+            item->synchWithTileLayers();
+            item->updateBounds();
+        }
+        QRectF sceneRect = mMapComposite->boundingRect(mRenderer);
+        if (sceneRect != this->sceneRect()) {
+            setSceneRect(sceneRect);
+            mDarkRectangle->setRect(sceneRect);
+        }
     }
 }
 
