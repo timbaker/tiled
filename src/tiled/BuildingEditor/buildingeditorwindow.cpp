@@ -293,12 +293,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
             prefs, SLOT(setShowObjects(bool)));
     connect(prefs, SIGNAL(showObjectsChanged(bool)), SLOT(updateActions()));
 
-    connect(ui->actionZoomIn, SIGNAL(triggered()),
-            mView->zoomable(), SLOT(zoomIn()));
-    connect(ui->actionZoomOut, SIGNAL(triggered()),
-            mView->zoomable(), SLOT(zoomOut()));
-    connect(ui->actionNormalSize, SIGNAL(triggered()),
-            mView->zoomable(), SLOT(resetZoom()));
+    connect(ui->actionZoomIn, SIGNAL(triggered()), SLOT(zoomIn()));
+    connect(ui->actionZoomOut, SIGNAL(triggered()), SLOT(zoomOut()));
+    connect(ui->actionNormalSize, SIGNAL(triggered()), SLOT(resetZoom()));
 
     QList<QKeySequence> keys = QKeySequence::keyBindings(QKeySequence::ZoomIn);
 //    keys += QKeySequence(tr("Ctrl+="));
@@ -323,6 +320,13 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     /////
     mEditMode = BuildingMode;
     mTileModeWidget = new BuildingTileModeWidget(this);
+    // These three actions are only active when the view widget (or a child)
+    // has the focus.
+    mTileModeWidget->view()->addAction(ui->actionZoomIn);
+    mTileModeWidget->view()->addAction(ui->actionZoomOut);
+    mTileModeWidget->view()->addAction(ui->actionNormalSize);
+    connect(mTileModeWidget->view()->zoomable(), SIGNAL(scaleChanged(qreal)),
+            SLOT(updateActions()));
     connect(ui->actionSwitchEditMode, SIGNAL(triggered()), SLOT(switchMode()));
     connect(TileToolManager::instance(), SIGNAL(statusTextChanged(BaseTileTool*)),
             SLOT(updateTileToolStatusText()));
@@ -2041,6 +2045,30 @@ void BuildingEditorWindow::templateFromBuilding()
     templatesDialog();
 }
 
+void BuildingEditorWindow::zoomIn()
+{
+    if (mEditMode == BuildingMode)
+        mView->zoomable()->zoomIn();
+    else if (mEditMode == TileMode)
+        mTileModeWidget->view()->zoomable()->zoomIn();
+}
+
+void BuildingEditorWindow::zoomOut()
+{
+    if (mEditMode == BuildingMode)
+        mView->zoomable()->zoomOut();
+    else if (mEditMode == TileMode)
+        mTileModeWidget->view()->zoomable()->zoomOut();
+}
+
+void BuildingEditorWindow::resetZoom()
+{
+    if (mEditMode == BuildingMode)
+        mView->zoomable()->resetZoom();
+    else if (mEditMode == TileMode)
+        mTileModeWidget->view()->zoomable()->resetZoom();
+}
+
 void BuildingEditorWindow::mouseCoordinateChanged(const QPoint &tilePos)
 {
     ui->coordLabel->setText(tr("%1,%2").arg(tilePos.x()).arg(tilePos.y()));
@@ -2282,9 +2310,11 @@ void BuildingEditorWindow::updateActions()
 
     ui->actionShowObjects->setEnabled(hasDoc);
 
-    ui->actionZoomIn->setEnabled(hasDoc && mView->zoomable()->canZoomIn());
-    ui->actionZoomOut->setEnabled(hasDoc && mView->zoomable()->canZoomOut());
-    ui->actionNormalSize->setEnabled(hasDoc && mView->zoomable()->scale() != 1.0);
+    Zoomable *zoomable = (mEditMode == BuildingMode) ? mView->zoomable()
+                                                     : mTileModeWidget->view()->zoomable();
+    ui->actionZoomIn->setEnabled(hasDoc && zoomable->canZoomIn());
+    ui->actionZoomOut->setEnabled(hasDoc && zoomable->canZoomOut());
+    ui->actionNormalSize->setEnabled(hasDoc && zoomable->scale() != 1.0);
 
     ui->actionRooms->setEnabled(hasDoc);
     ui->actionTemplateFromBuilding->setEnabled(hasDoc);
@@ -2356,4 +2386,6 @@ void BuildingEditorWindow::switchMode()
         mTileModeWidget->view()->zoomable()->connectToComboBox(0);
         mView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
     }
+
+    updateActions();
 }

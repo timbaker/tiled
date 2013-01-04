@@ -190,6 +190,10 @@ private slots:
     void tilesDialogEdited();
     void templateFromBuilding();
 
+    void zoomIn();
+    void zoomOut();
+    void resetZoom();
+
     void mouseCoordinateChanged(const QPoint &tilePos);
 
     void currentToolChanged(BaseTool *tool);
