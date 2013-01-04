@@ -314,6 +314,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mView->addAction(ui->actionNormalSize);
     ui->actionNormalSize->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
+    /////
     mEditMode = BuildingMode;
     mTileModeWidget = new BuildingTileModeWidget(this);
     connect(ui->actionSwitchEditMode, SIGNAL(triggered()), SLOT(switchMode()));
@@ -321,6 +322,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
             SLOT(updateTileToolStatusText()));
     connect(mTileModeWidget->view(), SIGNAL(mouseCoordinateChanged(QPoint)),
             SLOT(mouseCoordinateChanged(QPoint)));
+    /////
 
     connect(ui->actionResize, SIGNAL(triggered()), SLOT(resizeBuilding()));
     connect(ui->actionFlipHorizontal, SIGNAL(triggered()), SLOT(flipHorizontal()));
@@ -388,6 +390,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->dockWidget->show();
     mTileModeWidget->hide();
     mTileModeWidget->toolBar()->hide();
+    mTileModeWidget->switchAway(); // yuck
 
     updateActions();
 }
@@ -2256,6 +2259,7 @@ void BuildingEditorWindow::switchMode()
         removeToolBar(mTileModeWidget->toolBar());
         mTileModeWidget->hide();
         ui->verticalLayout_2->removeWidget(mTileModeWidget);
+        mTileModeWidget->switchAway();
         ui->verticalLayout_2->insertWidget(0, ui->floorView, 1);
         ui->toolBar->show();
         ui->floorView->show();

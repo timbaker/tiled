@@ -30,6 +30,7 @@
 #include "preferences.h"
 #include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
+#include "zoomable.h"
 
 #include "tilelayer.h"
 #include "tileset.h"
@@ -46,6 +47,7 @@ BuildingTileModeWidget::BuildingTileModeWidget(QWidget *parent) :
     ui(new Ui::BuildingTileModeWidget),
     mDocument(0),
     mCurrentTileset(0),
+    mZoomable(new Zoomable(this)),
     mFloorLabel(new QLabel),
     mSynching(false)
 {
@@ -65,7 +67,15 @@ BuildingTileModeWidget::BuildingTileModeWidget(QWidget *parent) :
 
     ui->view->setScene(new BuildingTileModeScene(this));
 
-    ui->overallSplitter->setStretchFactor(0, 1);
+    mZoomable->connectToComboBox(ui->scaleComboBox);
+    ui->tiles->setZoomable(mZoomable);
+
+    ui->dockLayers->hide();
+    ui->dockTilesets->hide();
+    dynamic_cast<QMainWindow*>(parent)->addDockWidget(Qt::RightDockWidgetArea,
+                                                      ui->dockLayers);
+    dynamic_cast<QMainWindow*>(parent)->addDockWidget(Qt::RightDockWidgetArea,
+                                                      ui->dockTilesets);
 
     connect(ui->actionPecil, SIGNAL(triggered()),
             DrawTileTool::instance(), SLOT(makeCurrent()));
@@ -147,8 +157,17 @@ void BuildingTileModeWidget::clearDocument()
 
 void BuildingTileModeWidget::switchTo()
 {
+    ui->dockLayers->show(); // FIXME: unless the user hid it
+    ui->dockTilesets->show(); // FIXME: unless the user hid it
+
     if (!ui->tilesets->count())
         setTilesetList();
+}
+
+void BuildingTileModeWidget::switchAway()
+{
+    ui->dockLayers->hide();
+    ui->dockTilesets->hide();
 }
 
 void BuildingTileModeWidget::setLayersList()

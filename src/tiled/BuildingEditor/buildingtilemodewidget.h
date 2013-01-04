@@ -14,6 +14,10 @@ class BuildingTileModeWidget;
 namespace Tiled {
 class Tile;
 class Tileset;
+
+namespace Internal {
+class Zoomable;
+}
 }
 
 namespace BuildingEditor {
@@ -35,6 +39,7 @@ public:
     void clearDocument();
 
     void switchTo();
+    void switchAway();
 
     QToolBar *toolBar() const
     { return mToolBar; }
@@ -76,6 +81,7 @@ private:
     QToolBar *mToolBar;
     BuildingDocument *mDocument;
     Tiled::Tileset *mCurrentTileset;
+    Tiled::Internal::Zoomable *mZoomable;
     QLabel *mFloorLabel;
     bool mSynching;
 };
