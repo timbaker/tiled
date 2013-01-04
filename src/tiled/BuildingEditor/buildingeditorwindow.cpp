@@ -40,6 +40,7 @@
 #include "furnituregroups.h"
 #include "furnitureview.h"
 #include "horizontallinedelegate.h"
+#include "listofstringsdialog.h"
 #include "mixedtilesetview.h"
 #include "newbuildingdialog.h"
 #include "resizebuildingdialog.h"
@@ -1692,6 +1693,8 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         PencilTool::instance()->makeCurrent();
 
     updateWindowTitle();
+
+    reportMissingTilesets();
 }
 
 void BuildingEditorWindow::clearDocument()
@@ -2129,6 +2132,44 @@ void BuildingEditorWindow::autoSaveTimeout()
     writeBuilding(mCurrentDocument, fileName);
     mAutoSaveFileName = fileName;
     qDebug() << "BuildingEd auto-saved:" << fileName;
+}
+
+void BuildingEditorWindow::reportMissingTilesets()
+{
+    Building *building = currentBuilding();
+
+    QSet<QString> missingTilesets;
+    foreach (BuildingTileEntry *entry, building->usedTiles()) {
+        if (!entry || entry->isNone())
+            continue;
+        for (int i = 0; i < entry->category()->enumCount(); i++) {
+            BuildingTile *btile = entry->tile(i);
+            if (btile->mTilesetName.isEmpty())
+                continue;
+            if (!TileMetaInfoMgr::instance()->tileset(btile->mTilesetName))
+                missingTilesets.insert(btile->mTilesetName);
+        }
+    }
+    foreach (FurnitureTiles *ftiles, building->usedFurniture()) {
+        foreach (FurnitureTile *ftile, ftiles->tiles()) {
+            if (!ftile || ftile->isEmpty())
+                continue;
+            foreach (BuildingTile *btile, ftile->tiles()) {
+                if (btile->mTilesetName.isEmpty())
+                    continue;
+                if (!TileMetaInfoMgr::instance()->tileset(btile->mTilesetName))
+                    missingTilesets.insert(btile->mTilesetName);
+            }
+        }
+    }
+    if (missingTilesets.size()) {
+        QStringList tilesets(missingTilesets.values());
+        tilesets.sort();
+        ListOfStringsDialog dialog(tr("The following tileset files were not found."),
+                                   tilesets, this);
+        dialog.setWindowTitle(tr("Missing Tilesets"));
+        dialog.exec();
+    }
 }
 
 void BuildingEditorWindow::resizeCoordsLabel()

@@ -209,6 +209,8 @@ private slots:
     void autoSaveCheck();
     void autoSaveTimeout();
 
+    void reportMissingTilesets();
+
     void updateActions();
 
     void help();
