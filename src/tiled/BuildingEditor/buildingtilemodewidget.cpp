@@ -141,6 +141,9 @@ void BuildingTileModeWidget::setDocument(BuildingDocument *doc)
                 SLOT(currentFloorChanged()));
         connect(mDocument, SIGNAL(currentLayerChanged()),
                 SLOT(currentLayerChanged()));
+
+        connect(mDocument, SIGNAL(floorRemoved(BuildingFloor*)),
+                SLOT(updateActions())); // floor 1/N
     }
 
     setLayersList();
