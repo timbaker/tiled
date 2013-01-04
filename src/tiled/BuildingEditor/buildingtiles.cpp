@@ -115,6 +115,14 @@ BuildingTilesMgr::BuildingTilesMgr() :
 
     mNoneCategory = new NoneBuildingTileCategory();
     mNoneTileEntry = new NoneBuildingTileEntry(mNoneCategory);
+
+    // Forward these signals (backwards compatibility).
+    connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
+            SIGNAL(tilesetAdded(Tiled::Tileset*)));
+    connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetAboutToBeRemoved(Tiled::Tileset*)),
+            SIGNAL(tilesetAboutToBeRemoved(Tiled::Tileset*)));
+    connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetRemoved(Tiled::Tileset*)),
+             SIGNAL(tilesetRemoved(Tiled::Tileset*)));
 }
 
 BuildingTilesMgr::~BuildingTilesMgr()
