@@ -391,8 +391,12 @@ void TileMetaInfoDialog::browse()
     QString f = QFileDialog::getExistingDirectory(this, tr("Directory"),
                                                   ui->editTiles->text());
     if (!f.isEmpty()) {
+#if 1
+        TileMetaInfoMgr::instance()->changeTilesDirectory(f);
+#else
         Preferences::instance()->setTilesDirectory(f);
         TileMetaInfoMgr::instance()->loadTilesets();
+#endif
         setTilesetList();
         updateUI();
     }
