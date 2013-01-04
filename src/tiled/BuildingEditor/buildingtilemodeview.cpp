@@ -826,10 +826,16 @@ void BuildingTileModeScene::buildingRotated()
                 1 : mMapComposite->maxLevel() * 3 + 1;
     int width = mDocument->building()->width() + extra;
     int height = mDocument->building()->height() + extra;
+
     foreach (Layer *layer, mMap->layers())
         layer->resize(QSize(width, height), QPoint());
     mMap->setWidth(width);
     mMap->setHeight(height);
+
+    foreach (Layer *layer, mBlendMap->layers())
+        layer->resize(QSize(width, height), QPoint());
+    mBlendMap->setWidth(width);
+    mBlendMap->setHeight(height);
 
     foreach (BuildingFloor *floor, mDocument->building()->floors()) {
         // If floor mGrimeGrid is set to empty, we don't know which layers had
