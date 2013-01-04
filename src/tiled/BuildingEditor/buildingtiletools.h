@@ -20,10 +20,10 @@
 
 #include <QObject>
 
+#include <QGraphicsPolygonItem>
 #include <QRectF>
 
 class QAction;
-class QGraphicsPolygonItem;
 class QGraphicsSceneMouseEvent;
 class QUndoStack;
 
@@ -128,6 +128,22 @@ private:
 
 /////
 
+class DrawTileToolCursor : public QGraphicsPolygonItem
+{
+public:
+    DrawTileToolCursor(BuildingTileModeScene *scene, QGraphicsItem *parent = 0);
+
+    QRectF boundingRect() const;
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+               QWidget *widget);
+
+    void setPolygonFromTileRect(const QRect &tileRect);
+
+private:
+    BuildingTileModeScene *mScene;
+    QRectF mBoundingRect;
+};
+
 class DrawTileTool : public BaseTileTool
 {
     Q_OBJECT
@@ -147,6 +163,9 @@ public:
     void setTile(const QString &tileName)
     { mTileName = tileName; }
 
+    QString currentTile() const
+    { return mTileName; }
+
 public slots:
     void activate();
     void deactivate();
@@ -162,7 +181,7 @@ private:
     QPointF mMouseScenePos;
     QPoint mStartTilePos;
     QRect mCursorTileBounds;
-    QGraphicsPolygonItem *mCursor;
+    DrawTileToolCursor *mCursor;
     QRectF mCursorViewRect;
 
     QString mTileName;

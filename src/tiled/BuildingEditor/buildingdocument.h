@@ -69,6 +69,11 @@ public:
     QString currentLayer() const
     { return mCurrentLayerName; }
 
+    void setLayerOpacity(BuildingFloor *floor, const QString &layerName,
+                         qreal opacity);
+    void setLayerVisibility(BuildingFloor *floor, const QString &layerName,
+                            bool visible);
+
     QUndoStack *undoStack() const
     { return mUndoStack; }
 
@@ -143,6 +148,9 @@ signals:
 
     void floorTilesChanged(BuildingFloor *floor, const QString &layerName,
                            const QRect &bounds);
+
+    void layerOpacityChanged(BuildingFloor *floor, const QString &layerName);
+    void layerVisibilityChanged(BuildingFloor *floor, const QString &layerName);
 
     void objectAdded(BuildingObject *object);
     void objectAboutToBeRemoved(BuildingObject *object);

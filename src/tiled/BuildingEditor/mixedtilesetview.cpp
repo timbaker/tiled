@@ -94,8 +94,10 @@ void TileDelegate::paint(QPainter *painter,
 
     const int extra = 2;
 
+    QString label = index.model()->data(index, Qt::DecorationRole).toString();
+
     QRect r = m->categoryBounds(m->tileAt(index));
-    if (m->showLabels() && index.model()->data(index, Qt::DecorationRole).toString().length())
+    if (m->showLabels() && m->highlightLabelledItems() && label.length())
         r = QRect(index.column(),index.row(),1,1);
     if (r.isValid() && !(option.state & QStyle::State_Selected)) {
         int left = option.rect.left();
@@ -140,8 +142,6 @@ void TileDelegate::paint(QPainter *painter,
     painter->drawPixmap(option.rect.adjusted(dw/2, extra, -dw/2, -extra - labelHeight), tileImage);
 
     if (m->showLabels()) {
-        const QVariant decoration = index.model()->data(index, Qt::DecorationRole);
-        QString label = decoration.toString();
         QString name = fm.elidedText(label, Qt::ElideRight, option.rect.width());
         painter->drawText(option.rect.left(), option.rect.bottom() - labelHeight,
                           option.rect.width(), labelHeight, Qt::AlignHCenter, name);
@@ -308,7 +308,8 @@ MixedTilesetModel::MixedTilesetModel(QObject *parent) :
     QAbstractListModel(parent),
     mTileset(0),
     mShowHeaders(true),
-    mShowLabels(false)
+    mShowLabels(false),
+    mHighlightLabelledItems(false)
 {
 }
 
@@ -566,6 +567,12 @@ void MixedTilesetModel::scaleChanged(qreal scale)
 void MixedTilesetModel::setShowHeaders(bool show)
 {
     mShowHeaders = show;
+}
+
+void MixedTilesetModel::setShowLabels(bool show)
+{
+    mShowLabels = show;
+    reset();
 }
 
 void MixedTilesetModel::setLabel(Tile *tile, const QString &label)

@@ -6,6 +6,7 @@
 
 #include <QMap>
 
+class CompositeLayerGroup;
 class MapComposite;
 
 namespace Tiled {
@@ -60,7 +61,7 @@ public:
     int currentLevel();
     BuildingFloor *currentFloor();
 
-    void setCurrentLayer(const QString &layerName);
+    QStringList layerNames() const;
     QString currentLayerName() const;
 
     QPoint sceneToTile(const QPointF &scenePos);
@@ -71,6 +72,12 @@ public:
     QPolygonF tileToScenePolygon(const QRect &tileRect);
     QPolygonF tileToScenePolygonF(const QRectF &tileRect);
     bool currentFloorContains(const QPoint &tilePos, int dw = 0, int dh = 0);
+
+    void setToolTiles(const QVector<QVector<QString> > &tiles,
+                      const QPoint &pos, const QString &layerName);
+    void clearToolTiles();
+
+    QString buildingTileAt(int x, int y);
 
 private:
     void BuildingToMap();
@@ -100,6 +107,9 @@ private slots:
     void floorTilesChanged(BuildingFloor *floor, const QString &layerName,
                            const QRect &bounds);
 
+    void layerOpacityChanged(BuildingFloor *floor, const QString &layerName);
+    void layerVisibilityChanged(BuildingFloor *floor, const QString &layerName);
+
     void objectAdded(BuildingObject *object);
     void objectRemoved(BuildingObject *object);
     void objectMoved(BuildingObject *object);
@@ -128,6 +138,7 @@ private:
     bool mLoading;
     QGraphicsRectItem *mDarkRectangle;
     BaseTileTool *mCurrentTool;
+    CompositeLayerGroup *mLayerGroupWithToolTiles;
 };
 
 class BuildingTileModeView : public QGraphicsView

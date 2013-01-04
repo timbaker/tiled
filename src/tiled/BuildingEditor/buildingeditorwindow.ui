@@ -359,6 +359,9 @@
    <property name="text">
     <string>Up One Level</string>
    </property>
+   <property name="shortcut">
+    <string>PgUp</string>
+   </property>
   </action>
   <action name="actionDownLevel">
    <property name="icon">
@@ -367,6 +370,9 @@
    </property>
    <property name="text">
     <string>Down One Level</string>
+   </property>
+   <property name="shortcut">
+    <string>PgDown</string>
    </property>
   </action>
   <action name="actionSelectObject">
@@ -656,6 +662,9 @@
   <action name="actionSwitchEditMode">
    <property name="text">
     <string>Switch Edit Mode</string>
+   </property>
+   <property name="shortcut">
+    <string>Esc</string>
    </property>
   </action>
  </widget>

@@ -1384,16 +1384,6 @@ FurnitureGroup *BuildingEditorWindow::furnitureGroupAt(int row)
     return 0;
 }
 
-void BuildingEditorWindow::switchToBuildingMode()
-{
-    mEditMode = BuildingMode;
-}
-
-void BuildingEditorWindow::switchToTileMode()
-{
-    mEditMode = TileMode;
-}
-
 void BuildingEditorWindow::upLevel()
 {
     if ( mCurrentDocument->currentFloorIsTop())
@@ -2253,10 +2243,10 @@ void BuildingEditorWindow::switchMode()
         ui->toolBar->hide();
         ui->floorView->hide();
         ui->dockWidget->hide();
-        mTileModeWidget->show();
+        ui->toolBar->hide();
         ui->verticalLayout_2->removeWidget(ui->floorView);
         ui->verticalLayout_2->insertWidget(0, mTileModeWidget, 1);
-        ui->toolBar->hide();
+        mTileModeWidget->show();
         mTileModeWidget->toolBar()->show();
         addToolBar(Qt::TopToolBarArea, mTileModeWidget->toolBar());
         mEditMode = TileMode;
@@ -2265,11 +2255,11 @@ void BuildingEditorWindow::switchMode()
         // Switch to BuildingMode
         removeToolBar(mTileModeWidget->toolBar());
         mTileModeWidget->hide();
+        ui->verticalLayout_2->removeWidget(mTileModeWidget);
+        ui->verticalLayout_2->insertWidget(0, ui->floorView, 1);
         ui->toolBar->show();
         ui->floorView->show();
         ui->dockWidget->show();
-        ui->verticalLayout_2->removeWidget(mTileModeWidget);
-        ui->verticalLayout_2->insertWidget(0, ui->floorView, 1);
         mEditMode = BuildingMode;
     }
 }

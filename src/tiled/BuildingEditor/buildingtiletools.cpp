@@ -24,6 +24,7 @@
 #include "buildingundoredo.h"
 
 #include <QAction>
+#include <QDebug>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsPolygonItem>
 #include <QUndoStack>
@@ -144,6 +145,9 @@ void TileToolManager::activateTool(BaseTileTool *tool)
 
 void TileToolManager::toolEnabledChanged(BaseTileTool *tool, bool enabled)
 {
+    if (enabled && !mCurrentTool)
+        activateTool(tool);
+
     if (!enabled && tool == mCurrentTool) {
         foreach (BaseTileTool *tool2, mTools) {
             if (tool2 != tool && tool2->action()->isEnabled()) {
@@ -152,7 +156,7 @@ void TileToolManager::toolEnabledChanged(BaseTileTool *tool, bool enabled)
             }
         }
         activateTool(0);
-        emit currentToolChanged(mCurrentTool);
+//        emit currentToolChanged(mCurrentTool);
     }
 }
 
@@ -168,6 +172,42 @@ void TileToolManager::checkKeyboardModifiers(Qt::KeyboardModifiers modifiers)
 void TileToolManager::currentToolStatusTextChanged()
 {
     emit statusTextChanged(mCurrentTool);
+}
+
+/////
+
+DrawTileToolCursor::DrawTileToolCursor(BuildingTileModeScene *scene,
+                                       QGraphicsItem *parent) :
+    QGraphicsPolygonItem(parent),
+    mScene(scene)
+{
+}
+
+QRectF DrawTileToolCursor::boundingRect() const
+{
+    return mBoundingRect;
+}
+
+void DrawTileToolCursor::paint(QPainter *painter,
+                               const QStyleOptionGraphicsItem *option,
+                               QWidget *widget)
+{
+    QGraphicsPolygonItem::paint(painter, option, widget);
+}
+
+void DrawTileToolCursor::setPolygonFromTileRect(const QRect &tileRect)
+{
+    QPolygonF polygon = mScene->tileToScenePolygon(tileRect);
+    QRectF bounds = polygon.boundingRect();
+
+    // Add tile bounds to the shape.
+    bounds.adjust(-4, -(128-32), 4, 4);
+    if (bounds != mBoundingRect) {
+        prepareGeometryChange();
+        mBoundingRect = bounds;
+    }
+
+    QGraphicsPolygonItem::setPolygon(polygon);
 }
 
 /////
@@ -192,7 +232,7 @@ DrawTileTool::DrawTileTool() :
 
 void DrawTileTool::documentChanged()
 {
-    mCursor = 0; // it was deleted from the editor
+//    mCursor = 0; // it was deleted from the editor
 }
 
 void DrawTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -281,39 +321,42 @@ void DrawTileTool::deactivate()
 {
     if (mCursor)
         mEditor->removeItem(mCursor);
+    mMouseDown = false;
 }
 
 void DrawTileTool::updateCursor(const QPointF &scenePos)
 {
     QPoint tilePos = mEditor->sceneToTile(scenePos);
     if (!mCursor) {
-        mCursor = new QGraphicsPolygonItem;
+        mCursor = new DrawTileToolCursor(mEditor);
         mCursor->setZValue(mEditor->ZVALUE_CURSOR);
     }
 
-    QPolygonF polygon;
     if (mMouseDown) {
         mCursorTileBounds = QRect(QPoint(qMin(mStartTilePos.x(), tilePos.x()),
                                   qMin(mStartTilePos.y(), tilePos.y())),
                                   QPoint(qMax(mStartTilePos.x(), tilePos.x()),
                                   qMax(mStartTilePos.y(), tilePos.y())));
         mCursorTileBounds &= floor()->bounds().adjusted(0, 0, 1, 1);
-        polygon = mEditor->tileToScenePolygon(mCursorTileBounds);
         updateStatusText();
-    } else
-        polygon = mEditor->tileToScenePolygon(tilePos);
+    } else {
+        mCursorTileBounds = QRect(tilePos, QSize(1, 1));
+        mCursorTileBounds &= floor()->bounds().adjusted(0, 0, 1, 1);
+    }
 
     // This crap is all to work around a bug when the view was scrolled and
     // then the item moves which led to areas not being repainted.  Each item
     // remembers where it was last drawn in a view, but those rectangles are
     // not updated when the view scrolls.
-    QRectF viewRect = mEditor->views()[0]->mapFromScene(polygon.boundingRect()).boundingRect();
+    QPolygonF polygon = mEditor->tileToScenePolygon(mCursorTileBounds);
+    QRectF sceneRect = polygon.boundingRect().adjusted(-4, -(128-32), 4, 4);
+    QRectF viewRect = mEditor->views()[0]->mapFromScene(sceneRect).boundingRect();
     if (viewRect != mCursorViewRect) {
         mCursorViewRect = viewRect;
         mCursor->update();
     }
 
-    mCursor->setPolygon(polygon);
+    mCursor->setPolygonFromTileRect(mCursorTileBounds);
     if (mErasing) {
         QPen pen(QColor(255,0,0,128));
         mCursor->setBrush(QColor(0,0,0,128));
@@ -322,9 +365,24 @@ void DrawTileTool::updateCursor(const QPointF &scenePos)
         QPen pen(qRgba(0, 0, 255, 200));
         pen.setWidth(3);
         mCursor->setPen(pen);
-//        mCursor->setBrush(Qt::blue);
+        mCursor->setBrush(QColor(0,0,255,128));
     }
     mCursor->setVisible(mMouseDown || mEditor->currentFloorContains(tilePos, 1, 1));
+
+
+    QRect r = mCursorTileBounds;
+    QVector<QVector<QString> > tiles(r.width());
+    if (mErasing) {
+        for (int x = 0; x < r.width(); x++) {
+            tiles[x].resize(r.height());
+            for (int y = 0; y < r.height(); y++)
+                tiles[x][y] = mEditor->buildingTileAt(r.x() + x, r.y() + y);
+        }
+    } else {
+        for (int x = 0; x < r.width(); x++)
+            tiles[x].fill(mTileName, r.height());
+    }
+    mEditor->setToolTiles(tiles, mCursorTileBounds.topLeft(), layerName());
 }
 
 void DrawTileTool::updateStatusText()

@@ -83,6 +83,9 @@ CompositeLayerGroup::CompositeLayerGroup(MapComposite *owner, int level)
     , mOwner(owner)
     , mAnyVisibleLayers(false)
     , mNeedsSynch(true)
+    #ifdef BUILDINGED
+    , mToolTileLayer(0)
+    #endif
 {
 
 }
@@ -204,7 +207,9 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
         TileLayer *tlBlend = mBlendLayers[index];
 #if SPARSE_TILELAYER
         // Checking isEmpty() and mEmptyLayers to catch hidden NoRender layers in submaps
-        if (!mVisibleLayers[index] || ((mEmptyLayers[index] || tl->isEmpty()) && (!tlBlend || tlBlend->isEmpty())))
+        if (!mVisibleLayers[index] || ((mEmptyLayers[index] || tl->isEmpty())
+                                       && (!tlBlend || tlBlend->isEmpty())
+                                       && (mToolTileLayer != tl || mToolTiles.isEmpty())))
 #else
         if (!mVisibleLayers[index] || mEmptyLayers[index])
 #endif
@@ -212,7 +217,11 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
         QPoint subPos = pos - mOwner->orientAdjustTiles() * mLevel - tl->position();
         if (tl->contains(subPos)) {
             const Cell *cell = &tl->cellAt(subPos);
-            if (cell->isEmpty() && tlBlend && tlBlend->contains(subPos))
+            // Use an empty tool tile if given during erasing.
+            if ((mToolTileLayer == tl) && !mToolTiles.isEmpty() &&
+                    QRect(mToolTilesPos, QSize(mToolTiles.size(), mToolTiles[0].size())).contains(subPos))
+                cell = &mToolTiles[subPos.x()-mToolTilesPos.x()][subPos.y()-mToolTilesPos.y()];
+            else if (cell->isEmpty() && tlBlend && tlBlend->contains(subPos))
                 cell = &tlBlend->cellAt(subPos);
             if (!cell->isEmpty()) {
                 if (!cleared) {

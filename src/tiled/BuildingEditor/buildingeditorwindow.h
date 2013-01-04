@@ -131,8 +131,6 @@ private:
         BuildingMode,
         TileMode
     };
-    void switchToBuildingMode();
-    void switchToTileMode();
 
     typedef Tiled::Tileset Tileset;
 

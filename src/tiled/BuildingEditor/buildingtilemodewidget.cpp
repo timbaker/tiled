@@ -18,13 +18,16 @@
 #include "buildingtilemodewidget.h"
 #include "ui_buildingtilemodewidget.h"
 
+#include "building.h"
 #include "buildingdocument.h"
 #include "buildingeditorwindow.h"
+#include "buildingfloor.h"
 #include "buildingtilemodeview.h"
 #include "buildingtiles.h"
 #include "buildingtiletools.h"
 
 #include "mapcomposite.h"
+#include "preferences.h"
 #include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
 
@@ -42,13 +45,23 @@ BuildingTileModeWidget::BuildingTileModeWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::BuildingTileModeWidget),
     mDocument(0),
-    mCurrentTileset(0)
+    mCurrentTileset(0),
+    mFloorLabel(new QLabel),
+    mSynching(false)
 {
     ui->setupUi(this);
 
     mToolBar = new QToolBar;
     mToolBar->setObjectName(QString::fromUtf8("ToolBar"));
     mToolBar->addAction(ui->actionPecil);
+
+    mToolBar->addSeparator();
+    mFloorLabel->setMinimumWidth(90);
+    mFloorLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    mToolBar->addWidget(mFloorLabel);
+
+    mToolBar->addAction(ui->actionUpLevel);
+    mToolBar->addAction(ui->actionDownLevel);
 
     ui->view->setScene(new BuildingTileModeScene(this));
 
@@ -59,12 +72,24 @@ BuildingTileModeWidget::BuildingTileModeWidget(QWidget *parent) :
     DrawTileTool::instance()->setEditor(view()->scene());
     DrawTileTool::instance()->setAction(ui->actionPecil);
 
+    connect(ui->actionUpLevel, SIGNAL(triggered()), SLOT(upLevel()));
+    connect(ui->actionDownLevel, SIGNAL(triggered()), SLOT(downLevel()));
+
+    connect(ui->opacity, SIGNAL(valueChanged(int)), SLOT(opacityChanged(int)));
+
     connect(ui->layers, SIGNAL(currentRowChanged(int)),
             SLOT(currentLayerChanged(int)));
+    connect(ui->layers, SIGNAL(itemChanged(QListWidgetItem*)),
+            SLOT(layerItemChanged(QListWidgetItem*)));
+
     connect(ui->tilesets, SIGNAL(currentRowChanged(int)),
             SLOT(currentTilesetChanged(int)));
+
+    ui->tiles->model()->setShowHeaders(false);
     connect(ui->tiles->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(tileSelectionChanged()));
+    connect(Preferences::instance(), SIGNAL(autoSwitchLayerChanged(bool)),
+            SLOT(autoSwitchLayerChanged(bool)));
 
     connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
             SLOT(tilesetAdded(Tiled::Tileset*)));
@@ -73,6 +98,8 @@ BuildingTileModeWidget::BuildingTileModeWidget(QWidget *parent) :
 
     connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
             SLOT(tilesetChanged(Tileset*)));
+
+    updateActions();
 }
 
 BuildingTileModeWidget::~BuildingTileModeWidget()
@@ -87,16 +114,35 @@ BuildingTileModeView *BuildingTileModeWidget::view()
 
 void BuildingTileModeWidget::setDocument(BuildingDocument *doc)
 {
+    if (mDocument)
+        mDocument->disconnect(this);
+
     mDocument = doc;
     view()->scene()->setDocument(doc);
+
+    if (mDocument) {
+        connect(mDocument, SIGNAL(currentFloorChanged()),
+                SLOT(currentFloorChanged()));
+        connect(mDocument, SIGNAL(currentLayerChanged()),
+                SLOT(currentLayerChanged()));
+    }
+
     setLayersList();
+    updateActions();
+
+    if (ui->actionPecil->isEnabled() && !TileToolManager::instance()->currentTool())
+        DrawTileTool::instance()->makeCurrent();
+
 }
 
 void BuildingTileModeWidget::clearDocument()
 {
+    if (mDocument)
+        mDocument->disconnect(this);
     mDocument = 0;
     view()->scene()->clearDocument();
     setLayersList();
+    updateActions();
 }
 
 void BuildingTileModeWidget::switchTo()
@@ -109,15 +155,12 @@ void BuildingTileModeWidget::setLayersList()
 {
     ui->layers->clear();
     if (mDocument) {
-        int level = mDocument->currentLevel();
-        if (CompositeLayerGroup *lg = view()->scene()->mapComposite()->layerGroupForLevel(level)) {
-            foreach (TileLayer *tl, lg->layers()) {
-                QListWidgetItem *item = new QListWidgetItem;
-                item->setText(MapComposite::layerNameWithoutPrefix(tl));
-                item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-                item->setCheckState(Qt::Checked);
-                ui->layers->insertItem(0, item);
-            }
+        foreach (QString layerName, view()->scene()->layerNames()) {
+            QListWidgetItem *item = new QListWidgetItem;
+            item->setText(layerName);
+            item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+            item->setCheckState(Qt::Checked);
+            ui->layers->insertItem(0, item);
         }
     }
 }
@@ -143,10 +186,30 @@ void BuildingTileModeWidget::setTilesetList()
 void BuildingTileModeWidget::setTilesList()
 {
     MixedTilesetModel *model = ui->tiles->model();
+    model->setShowLabels(Preferences::instance()->autoSwitchLayer());
+
     if (!mCurrentTileset || mCurrentTileset->isMissing())
         model->setTiles(QList<Tile*>());
-    else
-        model->setTileset(mCurrentTileset);
+    else {
+        QStringList labels;
+        for (int i = 0; i < mCurrentTileset->tileCount(); i++) {
+            Tile *tile = mCurrentTileset->tileAt(i);
+            QString label = TilesetManager::instance()->layerName(tile);
+            if (label.isEmpty())
+                label = tr("???");
+            labels += label;
+        }
+        model->setTileset(mCurrentTileset, labels);
+    }
+}
+
+void BuildingTileModeWidget::switchLayerForTile(Tiled::Tile *tile)
+{
+    QString layerName = TilesetManager::instance()->layerName(tile);
+    if (!layerName.isEmpty()) {
+        if (view()->scene()->layerNames().contains(layerName))
+            mDocument->setCurrentLayer(layerName);
+    }
 }
 
 void BuildingTileModeWidget::currentLayerChanged(int row)
@@ -175,8 +238,31 @@ void BuildingTileModeWidget::tileSelectionChanged()
         if (Tile *tile = ui->tiles->model()->tileAt(index)) {
             QString tileName = BuildingTilesMgr::instance()->nameForTile(tile);
             DrawTileTool::instance()->setTile(tileName);
+
+            switchLayerForTile(tile);
         }
     }
+    updateActions();
+}
+
+void BuildingTileModeWidget::opacityChanged(int value)
+{
+    if (mSynching || !mDocument)
+        return;
+
+    mDocument->setLayerOpacity(mDocument->currentFloor(),
+                               mDocument->currentLayer(),
+                               qreal(value) / ui->opacity->maximum());
+}
+
+void BuildingTileModeWidget::layerItemChanged(QListWidgetItem *item)
+{
+    if (mSynching || !mDocument)
+        return;
+
+    mDocument->setLayerVisibility(mDocument->currentFloor(),
+                                  item->text(),
+                                  item->checkState() == Qt::Checked);
 }
 
 void BuildingTileModeWidget::tilesetAdded(Tileset *tileset)
@@ -201,4 +287,83 @@ void BuildingTileModeWidget::tilesetChanged(Tileset *tileset)
     int row = TileMetaInfoMgr::instance()->indexOf(tileset);
     if (QListWidgetItem *item = ui->tilesets->item(row))
         item->setForeground(tileset->isMissing() ? Qt::red : Qt::black);
+}
+
+void BuildingTileModeWidget::autoSwitchLayerChanged(bool autoSwitch)
+{
+    ui->tiles->model()->setShowLabels(autoSwitch);
+}
+
+void BuildingTileModeWidget::currentFloorChanged()
+{
+    QString layerName = mDocument->currentLayer();
+    setLayersList();
+    if (mDocument) {
+        if (view()->scene()->layerNames().contains(layerName)) {
+            int index = view()->scene()->layerNames().indexOf(layerName);
+            int row = ui->layers->count() - index - 1;
+            ui->layers->setCurrentRow(row);
+        } else {
+            ui->layers->setCurrentRow(ui->layers->count() - 1);
+        }
+    }
+    updateActions();
+}
+
+void BuildingTileModeWidget::currentLayerChanged()
+{
+    if (mDocument) {
+        int index = view()->scene()->layerNames().indexOf(mDocument->currentLayer());
+        if (index >= 0) {
+            int row = ui->layers->count() - index - 1;
+            ui->layers->setCurrentRow(row);
+        }
+    }
+    updateActions();
+}
+
+void BuildingTileModeWidget::upLevel()
+{
+    if ( mDocument->currentFloorIsTop())
+        return;
+    int level = mDocument->currentLevel() + 1;
+    mDocument->setSelectedObjects(QSet<BuildingObject*>());
+    mDocument->setCurrentFloor(mDocument->building()->floor(level));
+}
+
+void BuildingTileModeWidget::downLevel()
+{
+    if ( mDocument->currentFloorIsBottom())
+        return;
+    int level = mDocument->currentLevel() - 1;
+    mDocument->setSelectedObjects(QSet<BuildingObject*>());
+    mDocument->setCurrentFloor(mDocument->building()->floor(level));
+}
+
+void BuildingTileModeWidget::updateActions()
+{
+    mSynching = true;
+
+    QString currentLayerName = mDocument ? mDocument->currentLayer() : QString();
+    qreal opacity = 1.0f;
+    if (mDocument)
+        opacity = mDocument->currentFloor()->layerOpacity(currentLayerName);
+    ui->opacity->setValue(ui->opacity->maximum() * opacity);
+    ui->opacity->setEnabled(!currentLayerName.isEmpty());
+
+    DrawTileTool::instance()->setEnabled(!currentLayerName.isEmpty() &&
+            !DrawTileTool::instance()->currentTile().isEmpty());
+    ui->actionUpLevel->setEnabled(mDocument != 0 &&
+            !mDocument->currentFloorIsTop());
+    ui->actionDownLevel->setEnabled(mDocument != 0 &&
+            !mDocument->currentFloorIsBottom());
+
+    if (mDocument)
+        mFloorLabel->setText(tr("Floor %1/%2")
+                             .arg(mDocument->currentLevel() + 1)
+                             .arg(mDocument->building()->floorCount()));
+    else
+        mFloorLabel->clear();
+
+    mSynching = false;
 }

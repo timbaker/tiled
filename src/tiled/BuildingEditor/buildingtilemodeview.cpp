@@ -44,7 +44,8 @@ BuildingTileModeScene::BuildingTileModeScene(QWidget *parent) :
     mRenderer(0),
     mGridItem(0),
     mDarkRectangle(new QGraphicsRectItem),
-    mCurrentTool(0)
+    mCurrentTool(0),
+    mLayerGroupWithToolTiles(0)
 {
     setBackgroundBrush(Qt::darkGray);
 
@@ -111,16 +112,26 @@ void BuildingTileModeScene::setDocument(BuildingDocument *doc)
     if (mMap) {
         delete mMapComposite->mapInfo();
         delete mMapComposite;
+        mMapComposite = 0;
         TilesetManager::instance()->removeReferences(mMap->tilesets());
         delete mMap;
+        mMap = 0;
+
+        delete mBlendMapComposite->mapInfo();
+        delete mBlendMapComposite;
+        mBlendMapComposite = 0;
+        TilesetManager::instance()->removeReferences(mBlendMap->tilesets());
+        delete mBlendMap;
+        mBlendMap = 0;
+
         delete mRenderer;
         qDeleteAll(mLayerGroupItems);
         mLayerGroupItems.clear();
         delete mGridItem;
 
-        mMapComposite = 0;
-        mMap = 0;
         mRenderer = 0;
+
+        mLayerGroupWithToolTiles = 0;
     }
 
     if (!mDocument)
@@ -154,6 +165,11 @@ void BuildingTileModeScene::setDocument(BuildingDocument *doc)
 
     connect(mDocument, SIGNAL(floorTilesChanged(BuildingFloor*,QString,QRect)),
             SLOT(floorTilesChanged(BuildingFloor*,QString,QRect)));
+
+    connect(mDocument, SIGNAL(layerOpacityChanged(BuildingFloor*,QString)),
+            SLOT(layerOpacityChanged(BuildingFloor*,QString)));
+    connect(mDocument, SIGNAL(layerVisibilityChanged(BuildingFloor*,QString)),
+            SLOT(layerVisibilityChanged(BuildingFloor*,QString)));
 
     connect(mDocument, SIGNAL(objectAdded(BuildingObject*)),
             SLOT(objectAdded(BuildingObject*)));
@@ -190,6 +206,20 @@ int BuildingTileModeScene::currentLevel()
 BuildingFloor *BuildingTileModeScene::currentFloor()
 {
     return mDocument ? mDocument->currentFloor() : 0;
+}
+
+QStringList BuildingTileModeScene::layerNames() const
+{
+    if (!mDocument)
+        return QStringList();
+
+    QStringList ret;
+    int level = mDocument->currentLevel();
+    if (CompositeLayerGroup *lg = mMapComposite->layerGroupForLevel(level)) {
+        foreach (TileLayer *tl, lg->layers())
+            ret += MapComposite::layerNameWithoutPrefix(tl);
+    }
+    return ret;
 }
 
 QString BuildingTileModeScene::currentLayerName() const
@@ -267,6 +297,79 @@ bool BuildingTileModeScene::currentFloorContains(const QPoint &tilePos, int dw, 
     return result;
 }
 
+void BuildingTileModeScene::setToolTiles(const QVector<QVector<QString> > &tiles,
+                                         const QPoint &pos, const QString &layerName)
+{
+    clearToolTiles();
+
+    CompositeLayerGroup *layerGroup = itemForFloor(currentFloor())->layerGroup();
+
+    TileLayer *layer = 0;
+    foreach (TileLayer *tl, layerGroup->layers()) {
+        if (layerName == MapComposite::layerNameWithoutPrefix(tl)) {
+            layer = tl;
+            break;
+        }
+    }
+
+    QMap<QString,Tileset*> tilesetByName;
+    foreach (Tileset *ts, mMap->tilesets())
+        tilesetByName[ts->name()] = ts;
+
+    QVector<QVector<Tiled::Cell> > cells(tiles.size());
+    for (int x = 0; x < tiles.size(); x++)
+        cells[x].resize(tiles[x].size());
+
+    for (int x = 0; x < tiles.size(); x++) {
+        for (int y = 0; y < tiles[x].size(); y++) {
+            QString tileName = tiles[x][y];
+            Tile *tile = 0;
+            if (!tileName.isEmpty()) {
+                tile = TilesetManager::instance()->missingTile();
+                QString tilesetName;
+                int index;
+                if (BuildingTilesMgr::parseTileName(tileName, tilesetName, index)) {
+                    if (tilesetByName.contains(tilesetName))
+                        tile = tilesetByName[tilesetName]->tileAt(index);
+                }
+            }
+            cells[x][y] = Cell(tile);
+        }
+    }
+
+    layerGroup->setToolTiles(cells, pos, layer);
+    mLayerGroupWithToolTiles = layerGroup;
+}
+
+void BuildingTileModeScene::clearToolTiles()
+{
+    if (mLayerGroupWithToolTiles) {
+        mLayerGroupWithToolTiles->clearToolTiles();
+        mLayerGroupWithToolTiles = 0;
+    }
+}
+
+QString BuildingTileModeScene::buildingTileAt(int x, int y)
+{
+    CompositeLayerGroup *layerGroup = mBlendMapComposite->layerGroupForLevel(currentLevel());
+
+    QString tileName;
+
+    foreach (TileLayer *tl, layerGroup->layers()) {
+        if (currentLayerName() == MapComposite::layerNameWithoutPrefix(tl)) {
+            if (tl->contains(x, y)) {
+                Tile *tile = tl->cellAt(x, y).tile;
+                if (tile) {
+                    tileName = BuildingTilesMgr::nameForTile(tile);
+                }
+            }
+            break;
+        }
+    }
+
+    return tileName;
+}
+
 void BuildingTileModeScene::BuildingToMap()
 {
     if (mMapComposite) {
@@ -284,6 +387,8 @@ void BuildingTileModeScene::BuildingToMap()
         qDeleteAll(mLayerGroupItems);
         mLayerGroupItems.clear();
         delete mGridItem;
+
+        mLayerGroupWithToolTiles = 0;
     }
 
     Map::Orientation orient = Map::LevelIsometric;
@@ -361,11 +466,21 @@ void BuildingTileModeScene::BuildingToMap()
     mBlendMapComposite = new MapComposite(mapInfo);
     mMapComposite->setBlendOverMap(mBlendMapComposite);
 
+    // Set the automatically-generated tiles.
     foreach (CompositeLayerGroup *layerGroup, mBlendMapComposite->layerGroups()) {
         BuildingFloor *floor = mDocument->building()->floor(layerGroup->level());
         floor->LayoutToSquares();
         BuildingFloorToTileLayers(floor, layerGroup->layers());
     }
+
+    // Set the user-drawn tiles.
+    foreach (BuildingFloor *floor, mDocument->building()->floors()) {
+        foreach (QString layerName, floor->grimeLayers())
+            floorTilesToLayer(floor, layerName, floor->bounds().adjusted(0, 0, 1, 1));
+    }
+
+    // Do this before calculating the bounds of CompositeLayerGroupItem
+    mRenderer->setMaxLevel(mMapComposite->maxLevel());
 
     foreach (CompositeLayerGroup *layerGroup, mMapComposite->layerGroups()) {
         CompositeLayerGroupItem *item = new CompositeLayerGroupItem(layerGroup, mRenderer);
@@ -382,7 +497,6 @@ void BuildingTileModeScene::BuildingToMap()
     mGridItem->setZValue(1000);
     addItem(mGridItem);
 
-    mRenderer->setMaxLevel(mMapComposite->maxLevel());
     setSceneRect(mMapComposite->boundingRect(mRenderer));
     mDarkRectangle->setRect(sceneRect());
 }
@@ -433,6 +547,10 @@ void BuildingTileModeScene::floorTilesToLayer(BuildingFloor *floor,
         }
     }
 
+    QMap<QString,Tileset*> tilesetByName;
+    foreach (Tileset *ts, mMap->tilesets())
+        tilesetByName[ts->name()] = ts;
+
     for (int x = bounds.left(); x <= bounds.right(); x++) {
         for (int y = bounds.top(); y <= bounds.bottom(); y++) {
             QString tileName = floor->grimeAt(layerName, x, y);
@@ -442,8 +560,8 @@ void BuildingTileModeScene::floorTilesToLayer(BuildingFloor *floor,
                 QString tilesetName;
                 int index;
                 if (BuildingTilesMgr::parseTileName(tileName, tilesetName, index)) {
-                    if (Tileset *ts = TileMetaInfoMgr::instance()->tileset(tilesetName)) {
-                        tile = ts->tileAt(index);
+                    if (tilesetByName.contains(tilesetName)) {
+                        tile = tilesetByName[tilesetName]->tileAt(index);
                     }
                 }
             }
@@ -454,7 +572,9 @@ void BuildingTileModeScene::floorTilesToLayer(BuildingFloor *floor,
 
 CompositeLayerGroupItem *BuildingTileModeScene::itemForFloor(BuildingFloor *floor)
 {
-    return mLayerGroupItems[floor->level()];
+    if (mLayerGroupItems.contains(floor->level()))
+        return mLayerGroupItems[floor->level()];
+    return 0;
 }
 
 void BuildingTileModeScene::floorEdited(BuildingFloor *floor)
@@ -483,6 +603,25 @@ void BuildingTileModeScene::floorTilesChanged(BuildingFloor *floor,
     itemForFloor(floor)->synchWithTileLayers();
     itemForFloor(floor)->updateBounds();
 
+}
+
+void BuildingTileModeScene::layerOpacityChanged(BuildingFloor *floor,
+                                                const QString &layerName)
+{
+    if (CompositeLayerGroupItem *item = itemForFloor(floor)) {
+        if (item->layerGroup()->setLayerOpacity(layerName, floor->layerOpacity(layerName)))
+            item->update();
+    }
+}
+
+void BuildingTileModeScene::layerVisibilityChanged(BuildingFloor *floor, const QString &layerName)
+{
+    if (CompositeLayerGroupItem *item = itemForFloor(floor)) {
+        if (item->layerGroup()->setLayerVisibility(layerName, floor->layerVisibility(layerName))) {
+            item->synchWithTileLayers();
+            item->updateBounds();
+        }
+    }
 }
 
 void BuildingTileModeScene::currentFloorChanged()
@@ -657,6 +796,8 @@ void BuildingTileModeScene::tilesetRemoved(Tileset *tileset)
 
 void BuildingTileModeScene::currentToolChanged(BaseTileTool *tool)
 {
+    if (mCurrentTool == DrawTileTool::instance())
+        clearToolTiles();
     mCurrentTool = tool;
 }
 
@@ -697,6 +838,7 @@ bool BuildingTileModeView::event(QEvent *e)
 
 bool BuildingTileModeView::eventFilter(QObject *object, QEvent *event)
 {
+    Q_UNUSED(object)
     switch (event->type()) {
     case QEvent::KeyPress:
     case QEvent::KeyRelease: {
@@ -745,6 +887,9 @@ void BuildingTileModeView::mouseMoveEvent(QMouseEvent *event)
 
     mLastMousePos = event->globalPos();
     mLastMouseScenePos = mapToScene(viewport()->mapFromGlobal(mLastMousePos));
+
+    if (!scene()->document())
+        return;
 
     QPoint tilePos = scene()->sceneToTile(mLastMouseScenePos);
     if (tilePos != mLastMouseTilePos) {

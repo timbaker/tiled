@@ -14,6 +14,9 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="margin">
+    <number>0</number>
+   </property>
    <item row="0" column="0">
     <widget class="QSplitter" name="overallSplitter">
      <property name="orientation">
@@ -32,6 +35,33 @@
       </property>
       <widget class="QWidget" name="verticalLayoutWidget">
        <layout class="QVBoxLayout" name="layersLayout">
+        <property name="topMargin">
+         <number>4</number>
+        </property>
+        <property name="rightMargin">
+         <number>4</number>
+        </property>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Opacity:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="opacity">
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
         <item>
          <widget class="QListWidget" name="layers"/>
         </item>
@@ -39,6 +69,9 @@
       </widget>
       <widget class="QWidget" name="horizontalLayoutWidget">
        <layout class="QHBoxLayout" name="tilesetsLayout">
+        <property name="rightMargin">
+         <number>4</number>
+        </property>
         <item>
          <widget class="QListWidget" name="tilesets"/>
         </item>
@@ -66,17 +99,41 @@
     <string>Draw/Erase Tiles</string>
    </property>
   </action>
+  <action name="actionUpLevel">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_floorup.png</normaloff>:/BuildingEditor/icons/icon_floorup.png</iconset>
+   </property>
+   <property name="text">
+    <string>Up One Level</string>
+   </property>
+   <property name="shortcut">
+    <string>PgUp</string>
+   </property>
+  </action>
+  <action name="actionDownLevel">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_floordn.png</normaloff>:/BuildingEditor/icons/icon_floordn.png</iconset>
+   </property>
+   <property name="text">
+    <string>Down One Level</string>
+   </property>
+   <property name="shortcut">
+    <string>PgDown</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>Tiled::Internal::MixedTilesetView</class>
+   <extends>QTableWidget</extends>
+   <header>BuildingEditor/mixedtilesetview.h</header>
+  </customwidget>
   <customwidget>
    <class>BuildingEditor::BuildingTileModeView</class>
    <extends>QGraphicsView</extends>
    <header>BuildingEditor/buildingtilemodeview.h</header>
-  </customwidget>
-  <customwidget>
-   <class>Tiled::Internal::MixedTilesetView</class>
-   <extends>QTableView</extends>
-   <header>BuildingEditor/mixedtilesetview.h</header>
   </customwidget>
  </customwidgets>
  <resources>

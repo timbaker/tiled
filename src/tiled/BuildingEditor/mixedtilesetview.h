@@ -77,9 +77,12 @@ public:
 
     void setShowHeaders(bool show);
 
-    void setShowLabels(bool show) { mShowLabels = show; }
+    void setShowLabels(bool show);
     bool showLabels() const { return mShowLabels; }
     void setLabel(Tile *tile, const QString &label);
+
+    void setHighlightLabelledItems(bool highlight) { mHighlightLabelledItems = highlight; }
+    bool highlightLabelledItems() const { return mHighlightLabelledItems; }
 
 signals:
     void tileDropped(const QString &tilesetName, int tileId);
@@ -126,6 +129,7 @@ private:
     static QString mMimeType;
     bool mShowHeaders;
     bool mShowLabels;
+    bool mHighlightLabelledItems;
 };
 
 class MixedTilesetView : public QTableView

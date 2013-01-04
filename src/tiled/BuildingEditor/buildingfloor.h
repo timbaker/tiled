@@ -290,6 +290,27 @@ public:
         mGrimeGrid[layerName]->replace(x, y, tileName);
     }
 
+    void setLayerOpacity(const QString &layerName, qreal opacity)
+    { mLayerOpacity[layerName] = opacity; }
+
+    qreal layerOpacity(const QString &layerName) const
+    {
+        if (mLayerOpacity.contains(layerName))
+            return mLayerOpacity[layerName];
+        return 1.0f;
+    }
+
+    void setLayerVisibility(const QString &layerName, bool visible)
+    { mLayerVisibility[layerName] = visible; }
+
+    bool layerVisibility(const QString &layerName) const
+    {
+        if (mLayerVisibility.contains(layerName))
+            return mLayerVisibility[layerName];
+        return 1.0f;
+    }
+
+
 private:
     Building *mBuilding;
     QVector<QVector<Room*> > mRoomAtPos;
@@ -297,6 +318,8 @@ private:
     int mLevel;
     QList<BuildingObject*> mObjects;
     QMap<QString,SparseTileGrid*> mGrimeGrid;
+    QMap<QString,qreal> mLayerOpacity;
+    QMap<QString,bool> mLayerVisibility;
 };
 
 } // namespace BuildingEditor

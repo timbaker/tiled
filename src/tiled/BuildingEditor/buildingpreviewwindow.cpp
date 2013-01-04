@@ -228,6 +228,7 @@ void CompositeLayerGroupItem::paint(QPainter *p, const QStyleOptionGraphicsItem 
 
     mRenderer->drawTileLayerGroup(p, mLayerGroup, option->exposedRect);
 #if 0 && defined(_DEBUG)
+    p->setPen(Qt::white);
     p->drawRect(mBoundingRect);
 #endif
 }

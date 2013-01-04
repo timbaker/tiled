@@ -107,6 +107,24 @@ void BuildingDocument::setCurrentLayer(const QString &layerName)
     emit currentLayerChanged();
 }
 
+void BuildingDocument::setLayerOpacity(BuildingFloor *floor,
+                                       const QString &layerName, qreal opacity)
+{
+    if (floor->layerOpacity(layerName) != opacity) {
+        floor->setLayerOpacity(layerName, opacity);
+        emit layerOpacityChanged(floor, layerName);
+    }
+}
+
+void BuildingDocument::setLayerVisibility(BuildingFloor *floor,
+                                          const QString &layerName, bool visible)
+{
+    if (floor->layerVisibility(layerName) != visible) {
+        floor->setLayerVisibility(layerName, visible);
+        emit layerVisibilityChanged(floor, layerName);
+    }
+}
+
 bool BuildingDocument::isModified() const
 {
     // Editing tiles in the Tiles dialog might mean we must save the document.

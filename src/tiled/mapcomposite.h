@@ -19,6 +19,10 @@
 #define MAPCOMPOSITE_H
 
 #include "map.h"
+#define BUILDINGED
+#ifdef BUILDINGED
+#include "tilelayer.h"
+#endif
 #include "ztilelayergroup.h"
 
 #include <QObject>
@@ -75,6 +79,20 @@ public:
     void saveOpacity();
     void restoreOpacity();
 
+#ifdef BUILDINGED
+    void setToolTiles(const QVector<QVector<Tiled::Cell> > &tiles,
+                      const QPoint &pos, Tiled::TileLayer *layer)
+    {
+        mToolTiles = tiles;
+        mToolTilesPos = pos;
+        mToolTileLayer = layer;
+    }
+
+    void clearToolTiles()
+    { mToolTiles.clear(); mToolTileLayer = 0; mToolTilesPos = QPoint(-1, -1); }
+
+#endif
+
 private:
     MapComposite *mOwner;
     bool mAnyVisibleLayers;
@@ -108,9 +126,11 @@ private:
     QVector<SubMapLayers> mPreparedSubMapLayers;
     QVector<SubMapLayers> mVisibleSubMapLayers;
 
-#define BUILDINGED
 #ifdef BUILDINGED
     QVector<Tiled::TileLayer*> mBlendLayers;
+    QVector<QVector<Tiled::Cell> > mToolTiles;
+    QPoint mToolTilesPos;
+    Tiled::TileLayer *mToolTileLayer;
 #endif
 };
 

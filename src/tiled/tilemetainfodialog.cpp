@@ -190,6 +190,7 @@ TileMetaInfoDialog::TileMetaInfoDialog(QWidget *parent) :
     ui->tiles->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ui->tiles->model()->setShowHeaders(false);
     ui->tiles->model()->setShowLabels(true);
+    ui->tiles->model()->setHighlightLabelledItems(true);
 
     connect(ui->browseTiles, SIGNAL(clicked()), SLOT(browse()));
     connect(ui->tilesets, SIGNAL(currentRowChanged(int)),
