@@ -763,7 +763,7 @@ void BuildingEditorWindow::roomIndexChanged(int index)
 
 void BuildingEditorWindow::categoryScaleChanged(qreal scale)
 {
-    Q_UNUSED(scale)
+    mCategoryZoomable->setScale(scale);
 }
 
 void BuildingEditorWindow::categoryViewMousePressed()

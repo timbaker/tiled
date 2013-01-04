@@ -22,6 +22,7 @@
 #include "buildingdocument.h"
 #include "buildingeditorwindow.h"
 #include "buildingfloor.h"
+#include "buildingpreferences.h"
 #include "buildingtilemodeview.h"
 #include "buildingtiles.h"
 #include "buildingtiletools.h"
@@ -67,8 +68,13 @@ BuildingTileModeWidget::BuildingTileModeWidget(QWidget *parent) :
 
     ui->view->setScene(new BuildingTileModeScene(this));
 
+    mZoomable->setScale(BuildingPreferences::instance()->tileScale());
     mZoomable->connectToComboBox(ui->scaleComboBox);
     ui->tiles->setZoomable(mZoomable);
+    connect(mZoomable, SIGNAL(scaleChanged(qreal)),
+            BuildingPreferences::instance(), SLOT(setTileScale(qreal)));
+    connect(BuildingPreferences::instance(), SIGNAL(tileScaleChanged(qreal)),
+            SLOT(tileScaleChanged(qreal)));
 
     ui->dockLayers->hide();
     ui->dockTilesets->hide();
@@ -357,6 +363,11 @@ void BuildingTileModeWidget::downLevel()
     int level = mDocument->currentLevel() - 1;
     mDocument->setSelectedObjects(QSet<BuildingObject*>());
     mDocument->setCurrentFloor(mDocument->building()->floor(level));
+}
+
+void BuildingTileModeWidget::tileScaleChanged(qreal scale)
+{
+    mZoomable->setScale(scale);
 }
 
 void BuildingTileModeWidget::updateActions()

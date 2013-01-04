@@ -74,6 +74,8 @@ private slots:
     void upLevel();
     void downLevel();
 
+    void tileScaleChanged(qreal scale);
+
     void updateActions();
 
 private:
