@@ -302,7 +302,8 @@ void BuildingTileModeScene::setToolTiles(const QVector<QVector<QString> > &tiles
 {
     clearToolTiles();
 
-    CompositeLayerGroup *layerGroup = itemForFloor(currentFloor())->layerGroup();
+    CompositeLayerGroupItem *item = itemForFloor(currentFloor());
+    CompositeLayerGroup *layerGroup = item->layerGroup();
 
     TileLayer *layer = 0;
     foreach (TileLayer *tl, layerGroup->layers()) {
@@ -421,6 +422,7 @@ void BuildingTileModeScene::BuildingToMap()
     }
 
     // The order must match the LayerIndexXXX constants.
+    // FIXME: add user-defined layers as well
     const char *layerNames[] = {
         "Floor",
         "FloorGrime",
@@ -510,7 +512,7 @@ void BuildingTileModeScene::BuildingFloorToTileLayers(BuildingFloor *floor,
 
     int section = 0;
     foreach (TileLayer *tl, layers) {
-        tl->erase(QRegion(0, 0, tl->width(), tl->height()));
+        tl->erase();
         for (int x = 0; x <= floor->width(); x++) {
             for (int y = 0; y <= floor->height(); y++) {
                 const BuildingFloor::Square &square = floor->squares[x][y];
@@ -602,7 +604,11 @@ void BuildingTileModeScene::floorTilesChanged(BuildingFloor *floor,
     floorTilesToLayer(floor, layerName, bounds);
     itemForFloor(floor)->synchWithTileLayers();
     itemForFloor(floor)->updateBounds();
-
+    QRectF sceneRect = mMapComposite->boundingRect(mRenderer);
+    if (sceneRect != this->sceneRect()) {
+        setSceneRect(sceneRect);
+        mDarkRectangle->setRect(sceneRect);
+    }
 }
 
 void BuildingTileModeScene::layerOpacityChanged(BuildingFloor *floor,
@@ -627,6 +633,21 @@ void BuildingTileModeScene::layerVisibilityChanged(BuildingFloor *floor, const Q
 void BuildingTileModeScene::currentFloorChanged()
 {
     highlightFloorChanged(BuildingPreferences::instance()->highlightFloor());
+}
+
+void BuildingTileModeScene::currentLayerChanged()
+{
+    if (CompositeLayerGroupItem *item = itemForFloor(currentFloor())) {
+        if (!mNonEmptyLayer.isEmpty())
+            item->layerGroup()->setLayerNonEmpty(mNonEmptyLayer, false);
+        QString layerName = currentLayerName();
+        if (!layerName.isEmpty())
+            item->layerGroup()->setLayerNonEmpty(layerName, true);
+        mNonEmptyLayer = layerName;
+
+        item->synchWithTileLayers();
+        item->updateBounds();
+    }
 }
 
 void BuildingTileModeScene::roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos)

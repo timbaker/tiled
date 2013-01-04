@@ -117,6 +117,7 @@ void CompositeLayerGroup::addTileLayer(TileLayer *layer, int index)
 
 #ifdef BUILDINGED
     mBlendLayers.insert(index, 0);
+    mForceNonEmpty.insert(index, false);
 #endif
 }
 
@@ -128,6 +129,7 @@ void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
     mEmptyLayers.remove(index);
 #ifdef BUILDINGED
     mBlendLayers.remove(index);
+    mForceNonEmpty.remove(index);
 #endif
 
     // Hack -- only a map being edited can set a TileLayer's group.
@@ -203,17 +205,10 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
 {
     bool cleared = false;
     for (int index = 0; index < mLayers.size(); index++) {
+        if (isLayerEmpty(index))
+            continue;
         TileLayer *tl = mLayers[index];
         TileLayer *tlBlend = mBlendLayers[index];
-#if SPARSE_TILELAYER
-        // Checking isEmpty() and mEmptyLayers to catch hidden NoRender layers in submaps
-        if (!mVisibleLayers[index] || ((mEmptyLayers[index] || tl->isEmpty())
-                                       && (!tlBlend || tlBlend->isEmpty())
-                                       && (mToolTileLayer != tl || mToolTiles.isEmpty())))
-#else
-        if (!mVisibleLayers[index] || mEmptyLayers[index])
-#endif
-            continue;
         QPoint subPos = pos - mOwner->orientAdjustTiles() * mLevel - tl->position();
         if (tl->contains(subPos)) {
             const Cell *cell = &tl->cellAt(subPos);
@@ -244,6 +239,29 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
 }
 #endif // BUILDINGED
 
+bool CompositeLayerGroup::isLayerEmpty(int index) const
+{
+    if (!mVisibleLayers[index])
+        return true;
+#ifdef BUILDINGED
+    if (mForceNonEmpty[index])
+        return false;
+    if (mBlendLayers[index] && !mBlendLayers[index]->isEmpty())
+        return false;
+    if (mToolTileLayer && !mToolTiles.isEmpty())
+        return false;
+#endif
+#if SPARSE_TILELAYER
+    // Checking isEmpty() and mEmptyLayers to catch hidden NoRender layers in submaps.
+    return mEmptyLayers[index] || mLayers[index]->isEmpty();
+#else
+    // TileLayer::isEmpty() is very slow.
+    // Checking mEmptyLayers only catches hidden NoRender layers.
+    // The actual tile layer might be empty.
+    return mEmptyLayers[index]);
+#endif
+}
+
 void CompositeLayerGroup::synch()
 {
     QRect r;
@@ -252,22 +270,8 @@ void CompositeLayerGroup::synch()
 
     mAnyVisibleLayers = false;
 
-    int index = 0;
-    foreach (TileLayer *tl, mLayers) {
-#if SPARSE_TILELAYER
-        // Checking isEmpty() and mEmptyLayers to catch hidden NoRender layers in submaps
-        if (mVisibleLayers[index] && !mEmptyLayers[index] && !tl->isEmpty()) {
-#else
-        if (mVisibleLayers[index] && !mEmptyLayers[index]) {
-#endif
-            unionTileRects(r, tl->bounds().translated(mOwner->orientAdjustTiles() * mLevel), r);
-            maxMargins(m, tl->drawMargins(), m);
-            mAnyVisibleLayers = true;
-        }
-        ++index;
-    }
-
 #ifdef BUILDINGED
+    // Do this before the isLayerEmpty() call below.
     mBlendLayers.fill(0);
     if (MapComposite *blendOverMap = mOwner->blendOverMap()) {
         if (CompositeLayerGroup *layerGroup = blendOverMap->tileLayersForLevel(mLevel)) {
@@ -287,7 +291,23 @@ void CompositeLayerGroup::synch()
             }
         }
     }
+
+    if (mToolTileLayer && !mToolTiles.isEmpty()) {
+        unionTileRects(r, mToolTileLayer->bounds().translated(mOwner->orientAdjustTiles() * mLevel), r);
+        maxMargins(m, QMargins(0, 128, 64, 0), m);
+        mAnyVisibleLayers = true;
+    }
 #endif
+
+    int index = 0;
+    foreach (TileLayer *tl, mLayers) {
+        if (!isLayerEmpty(index)) {
+            unionTileRects(r, tl->bounds().translated(mOwner->orientAdjustTiles() * mLevel), r);
+            maxMargins(m, tl->drawMargins(), m);
+            mAnyVisibleLayers = true;
+        }
+        ++index;
+    }
 
     mTileBounds = r;
 
@@ -345,6 +365,29 @@ void CompositeLayerGroup::restoreOpacity()
 {
     mLayerOpacity = mSavedOpacity;
 }
+
+#ifdef BUILDINGED
+bool CompositeLayerGroup::setLayerNonEmpty(const QString &layerName, bool force)
+{
+    const QString name = MapComposite::layerNameWithoutPrefix(layerName);
+    if (!mLayersByName.contains(name))
+        return false;
+    foreach (Layer *layer, mLayersByName[name])
+        setLayerNonEmpty(layer->asTileLayer(), force);
+    return mNeedsSynch;
+}
+
+bool CompositeLayerGroup::setLayerNonEmpty(TileLayer *tl, bool force)
+{
+    int index = mLayers.indexOf(tl);
+    Q_ASSERT(index != -1);
+    if (force != mForceNonEmpty[index]) {
+        mForceNonEmpty[index] = force;
+        mNeedsSynch = true;
+    }
+    return mNeedsSynch;
+}
+#endif
 
 QRect CompositeLayerGroup::bounds() const
 {

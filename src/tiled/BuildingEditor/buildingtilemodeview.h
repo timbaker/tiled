@@ -93,6 +93,8 @@ signals:
 
 private slots:
     void currentFloorChanged();
+    void currentLayerChanged();
+
     void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
     void roomDefinitionChanged();
 
@@ -139,6 +141,7 @@ private:
     QGraphicsRectItem *mDarkRectangle;
     BaseTileTool *mCurrentTool;
     CompositeLayerGroup *mLayerGroupWithToolTiles;
+    QString mNonEmptyLayer;
 };
 
 class BuildingTileModeView : public QGraphicsView

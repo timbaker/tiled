@@ -71,6 +71,7 @@ public:
 
     void setNeedsSynch(bool synch) { mNeedsSynch = synch; }
     bool needsSynch() const { return mNeedsSynch; }
+    bool isLayerEmpty(int index) const;
     void synch();
 
     // Used when generating map images.
@@ -90,6 +91,9 @@ public:
 
     void clearToolTiles()
     { mToolTiles.clear(); mToolTileLayer = 0; mToolTilesPos = QPoint(-1, -1); }
+
+    bool setLayerNonEmpty(const QString &layerName, bool force);
+    bool setLayerNonEmpty(Tiled::TileLayer *tl, bool force);
 
 #endif
 
@@ -131,6 +135,7 @@ private:
     QVector<QVector<Tiled::Cell> > mToolTiles;
     QPoint mToolTilesPos;
     Tiled::TileLayer *mToolTileLayer;
+    QVector<bool> mForceNonEmpty;
 #endif
 };
 
