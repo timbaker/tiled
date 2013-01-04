@@ -314,6 +314,23 @@ void SwapFloorGrid::swap()
 
 /////
 
+SwapFloorGrime::SwapFloorGrime(BuildingDocument *doc, BuildingFloor *floor,
+                               const QMap<QString, SparseTileGrid *> &grid,
+                               char *undoText) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", undoText)),
+    mDocument(doc),
+    mFloor(floor),
+    mGrid(grid)
+{
+}
+
+void SwapFloorGrime::swap()
+{
+    mGrid = mDocument->swapFloorTiles(mFloor, mGrid);
+}
+
+/////
+
 PaintFloorTiles::PaintFloorTiles(BuildingDocument *doc, BuildingFloor *floor,
                                  const QString &layerName,
                                  const QRect &bounds,
@@ -384,12 +401,17 @@ ResizeFloor::ResizeFloor(BuildingDocument *doc, BuildingFloor *floor,
     mFloor(floor),
     mSize(newSize)
 {
-    mGrid = floor->resized(newSize);
+    mGrid = floor->resizeGrid(newSize);
+    mGrime = floor->resizeGrime(newSize + QSize(1, 1));
+}
+
+ResizeFloor::~ResizeFloor()
+{
 }
 
 void ResizeFloor::swap()
 {
-    mGrid = mDocument->resizeFloor(mFloor, mGrid);
+    mGrid = mDocument->resizeFloor(mFloor, mGrid, mGrime);
 }
 
 /////
@@ -463,28 +485,44 @@ void ReorderFloor::swap()
 
 /////
 
-ResizeBuildingBefore::ResizeBuildingBefore(BuildingDocument *doc) :
+EmitResizeBuilding::EmitResizeBuilding(BuildingDocument *doc, bool before) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Building")),
-    mDocument(doc)
+    mDocument(doc),
+    mBefore(before)
 {
 }
 
-void ResizeBuildingBefore::undo()
+void EmitResizeBuilding::undo()
 {
-    mDocument->emitBuildingResized();
+    if (mBefore)
+        mDocument->emitBuildingResized();
+}
+
+void EmitResizeBuilding::redo()
+{
+    if (!mBefore)
+        mDocument->emitBuildingResized();
 }
 
 /////
 
-ResizeBuildingAfter::ResizeBuildingAfter(BuildingDocument *doc) :
-    QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Building")),
-    mDocument(doc)
+EmitRotateBuilding::EmitRotateBuilding(BuildingDocument *doc, bool before) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Rotate Building")),
+    mDocument(doc),
+    mBefore(before)
 {
 }
 
-void ResizeBuildingAfter::redo()
+void EmitRotateBuilding::undo()
 {
-    mDocument->emitBuildingResized();
+    if (mBefore)
+        mDocument->emitBuildingRotated();
+}
+
+void EmitRotateBuilding::redo()
+{
+    if (!mBefore)
+        mDocument->emitBuildingRotated();
 }
 
 /////

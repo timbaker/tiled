@@ -296,9 +296,17 @@ QVector<QVector<Room*> > BuildingDocument::swapFloorGrid(BuildingFloor *floor,
     return old;
 }
 
+QMap<QString, SparseTileGrid *> BuildingDocument::swapFloorTiles(BuildingFloor *floor,
+                                           const QMap<QString, SparseTileGrid*> &grid)
+{
+    QMap<QString,SparseTileGrid*> old = floor->setGrime(grid);
+    return old;
+}
+
 QVector<QVector<QString> > BuildingDocument::swapFloorTiles(BuildingFloor *floor,
                                                             const QString &layerName,
-                                                            const QRect &bounds, const QVector<QVector<QString> > &grid)
+                                                            const QRect &bounds,
+                                                            const QVector<QVector<QString> > &grid)
 {
     QVector<QVector<QString> > old = grid;
     for (int x = 0; x < bounds.width(); x++) {
@@ -319,10 +327,12 @@ QSize BuildingDocument::resizeBuilding(const QSize &newSize)
 }
 
 QVector<QVector<Room *> > BuildingDocument::resizeFloor(BuildingFloor *floor,
-                                                        const QVector<QVector<Room *> > &grid)
+                                                        const QVector<QVector<Room *> > &grid,
+                                                        QMap<QString,SparseTileGrid*> &grime)
 {
     QVector<QVector<Room *> > old = floor->grid();
     floor->setGrid(grid);
+    grime = floor->setGrime(grime);
     return old;
 }
 
@@ -331,7 +341,6 @@ void BuildingDocument::rotateBuilding(bool right)
     mBuilding->rotate(right);
     foreach (BuildingFloor *floor, mBuilding->floors())
         floor->rotate(right);
-    emit buildingRotated();
 }
 
 void BuildingDocument::flipBuilding(bool horizontal)
@@ -339,7 +348,6 @@ void BuildingDocument::flipBuilding(bool horizontal)
     mBuilding->flip(horizontal);
     foreach (BuildingFloor *floor, mBuilding->floors())
         floor->flip(horizontal);
-    emit buildingRotated();
 }
 
 FurnitureTile *BuildingDocument::changeFurnitureTile(FurnitureObject *object,

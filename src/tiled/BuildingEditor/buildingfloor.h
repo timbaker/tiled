@@ -52,6 +52,9 @@ public:
     int size() const
     { return mWidth * mHeight; }
 
+    int width() const { return mWidth; }
+    int height() const { return mHeight; }
+
     const QString &at(int index) const
     {
         if (mUseVector)
@@ -60,6 +63,12 @@ public:
         if (it != mCells.end())
             return *it;
         return mEmptyCell;
+    }
+
+    const QString &at(int x, int y) const
+    {
+        Q_ASSERT(x >= 0 && x < mWidth && y >= 0 && y < mHeight);
+        return at(x + y * mWidth);
     }
 
     void replace(int index, const QString &tile)
@@ -83,6 +92,7 @@ public:
 
     void replace(int x, int y, const QString &tile)
     {
+        Q_ASSERT(x >= 0 && x < mWidth && y >= 0 && y < mHeight);
         int index = y * mWidth + x;
         replace(index, tile);
     }
@@ -266,7 +276,8 @@ public:
 
     QVector<QRect> roomRegion(Room *room);
 
-    QVector<QVector<Room*> > resized(const QSize &newSize) const;
+    QVector<QVector<Room*> > resizeGrid(const QSize &newSize) const;
+    QMap<QString,SparseTileGrid*> resizeGrime(const QSize &newSize) const;
 
     void rotate(bool right);
     void flip(bool horizontal);
@@ -279,14 +290,21 @@ public:
     QString grimeAt(const QString &layerName, int x, int y) const
     {
         if (mGrimeGrid.contains(layerName))
-            return mGrimeGrid[layerName]->at(x + y * width());
+            return mGrimeGrid[layerName]->at(x, y);
         return QString();
+    }
+
+    QMap<QString,SparseTileGrid*> setGrime(const QMap<QString,SparseTileGrid*> &grime)
+    {
+        QMap<QString,SparseTileGrid*> old = mGrimeGrid;
+        mGrimeGrid = grime;
+        return old;
     }
 
     void setGrime(const QString &layerName, int x, int y, const QString &tileName)
     {
         if (!mGrimeGrid.contains(layerName))
-            mGrimeGrid[layerName] = new SparseTileGrid(width(), height());
+            mGrimeGrid[layerName] = new SparseTileGrid(width() + 1, height() + 1);
         mGrimeGrid[layerName]->replace(x, y, tileName);
     }
 
@@ -309,7 +327,6 @@ public:
             return mLayerVisibility[layerName];
         return 1.0f;
     }
-
 
 private:
     Building *mBuilding;

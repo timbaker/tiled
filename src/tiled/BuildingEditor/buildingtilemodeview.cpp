@@ -731,6 +731,7 @@ void BuildingTileModeScene::buildingResized()
     buildingRotated();
 }
 
+// Called when the building is flipped, rotated or resized.
 void BuildingTileModeScene::buildingRotated()
 {
     int extra = (mMap->orientation() == Map::LevelIsometric) ?
@@ -743,6 +744,12 @@ void BuildingTileModeScene::buildingRotated()
     mMap->setHeight(height);
 
     foreach (BuildingFloor *floor, mDocument->building()->floors()) {
+        // If floor mGrimeGrid is set to empty, we don't know which layers had
+        // tiles in them, so we must erase every layer.
+        foreach (TileLayer *tl, itemForFloor(floor)->layerGroup()->layers())
+            tl->erase();
+        foreach (QString layerName, floor->grimeLayers())
+            floorTilesToLayer(floor, layerName, floor->bounds().adjusted(0, 0, 1, 1));
         floorEdited(floor);
     }
     mGridItem->synchWithBuilding();

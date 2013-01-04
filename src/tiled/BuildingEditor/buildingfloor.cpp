@@ -1240,12 +1240,26 @@ QVector<QRect> BuildingFloor::roomRegion(Room *room)
     return result;
 }
 
-QVector<QVector<Room *> > BuildingFloor::resized(const QSize &newSize) const
+QVector<QVector<Room *> > BuildingFloor::resizeGrid(const QSize &newSize) const
 {
     QVector<QVector<Room *> > grid = mRoomAtPos;
     grid.resize(newSize.width());
     for (int x = 0; x < newSize.width(); x++)
         grid[x].resize(newSize.height());
+    return grid;
+}
+
+QMap<QString,SparseTileGrid*> BuildingFloor::resizeGrime(const QSize &newSize) const
+{
+    QMap<QString,SparseTileGrid*> grid;
+    foreach (QString key, mGrimeGrid.keys()) {
+        grid[key] = new SparseTileGrid(newSize.width(), newSize.height());
+        for (int x = 0; x < qMin(mGrimeGrid[key]->width(), newSize.width()); x++)
+            for (int y = 0; y < qMin(mGrimeGrid[key]->height(), newSize.height()); y++)
+                grid[key]->replace(x, y, mGrimeGrid[key]->at(x, y));
+
+    }
+
     return grid;
 }
 

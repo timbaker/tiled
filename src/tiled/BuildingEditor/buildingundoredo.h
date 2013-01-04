@@ -18,6 +18,7 @@
 #ifndef BUILDINGUNDOREDO_H
 #define BUILDINGUNDOREDO_H
 
+#include <QMap>
 #include <QRectF>
 #include <QUndoCommand>
 #include <QVector>
@@ -35,6 +36,7 @@ class FurnitureTile;
 class FurnitureTiles;
 class RoofObject;
 class Room;
+class SparseTileGrid;
 class WallObject;
 class Window;
 
@@ -291,6 +293,23 @@ private:
     QVector<QVector<Room*> > mGrid;
 };
 
+class SwapFloorGrime : public QUndoCommand
+{
+public:
+    SwapFloorGrime(BuildingDocument *doc, BuildingFloor *floor,
+                   const QMap<QString,SparseTileGrid*> &grid, char *undoText);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    BuildingFloor *mFloor;
+    QMap<QString,SparseTileGrid*> mGrid;
+};
+
 class PaintFloorTiles : public QUndoCommand
 {
 public:
@@ -362,6 +381,8 @@ class ResizeFloor : public QUndoCommand
 public:
     ResizeFloor(BuildingDocument *doc, BuildingFloor *floor, const QSize &newSize);
 
+    ~ResizeFloor();
+
     void undo() { swap(); }
     void redo() { swap(); }
 
@@ -372,6 +393,7 @@ private:
     BuildingFloor *mFloor;
     QSize mSize;
     QVector<QVector<Room*> > mGrid;
+    QMap<QString,SparseTileGrid*> mGrime;
 };
 
 class InsertFloor : public QUndoCommand
@@ -427,26 +449,28 @@ private:
     BuildingFloor *mFloor;
 };
 
-class ResizeBuildingBefore : public QUndoCommand
+class EmitResizeBuilding : public QUndoCommand
 {
 public:
-    ResizeBuildingBefore(BuildingDocument *doc);
+    EmitResizeBuilding(BuildingDocument *doc, bool before);
 
     void undo();
-    void redo() {}
-
-    BuildingDocument *mDocument;
-};
-
-class ResizeBuildingAfter : public QUndoCommand
-{
-public:
-    ResizeBuildingAfter(BuildingDocument *doc);
-
-    void undo() {}
     void redo();
 
     BuildingDocument *mDocument;
+    bool mBefore;
+};
+
+class EmitRotateBuilding : public QUndoCommand
+{
+public:
+    EmitRotateBuilding(BuildingDocument *doc, bool before);
+
+    void undo();
+    void redo();
+
+    BuildingDocument *mDocument;
+    bool mBefore;
 };
 
 class RotateBuilding : public QUndoCommand

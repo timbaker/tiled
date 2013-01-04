@@ -1900,7 +1900,7 @@ void BuildingEditorWindow::resizeBuilding()
 
     QUndoStack *undoStack = mCurrentDocument->undoStack();
     undoStack->beginMacro(tr("Resize Building"));
-    undoStack->push(new ResizeBuildingBefore(mCurrentDocument));
+    undoStack->push(new EmitResizeBuilding(mCurrentDocument, true));
     undoStack->push(new ResizeBuilding(mCurrentDocument, newSize));
     foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
         undoStack->push(new ResizeFloor(mCurrentDocument, floor, newSize));
@@ -1912,7 +1912,7 @@ void BuildingEditorWindow::resizeBuilding()
                                                  floor, i));
         }
     }
-    undoStack->push(new ResizeBuildingAfter(mCurrentDocument));
+    undoStack->push(new EmitResizeBuilding(mCurrentDocument, false));
     undoStack->endMacro();
 }
 
@@ -1921,7 +1921,17 @@ void BuildingEditorWindow::flipHorizontal()
     if (!mCurrentDocument)
         return;
 
-    mCurrentDocument->undoStack()->push(new FlipBuilding(mCurrentDocument, true));
+    QUndoStack *undoStack = mCurrentDocument->undoStack();
+    undoStack->beginMacro(tr("Flip Horizontal"));
+    undoStack->push(new EmitRotateBuilding(mCurrentDocument, true));
+    QMap<QString,SparseTileGrid*> emptyGrime;
+    foreach (BuildingFloor *floor, currentBuilding()->floors()) {
+        undoStack->push( new SwapFloorGrime(mCurrentDocument, floor, emptyGrime,
+                                            "Remove All Tiles"));
+    }
+    undoStack->push(new FlipBuilding(mCurrentDocument, true));
+    undoStack->push(new EmitRotateBuilding(mCurrentDocument, false));
+    undoStack->endMacro();
 }
 
 void BuildingEditorWindow::flipVertical()
@@ -1929,7 +1939,17 @@ void BuildingEditorWindow::flipVertical()
     if (!mCurrentDocument)
         return;
 
-    mCurrentDocument->undoStack()->push(new FlipBuilding(mCurrentDocument, false));
+    QUndoStack *undoStack = mCurrentDocument->undoStack();
+    mCurrentDocument->undoStack()->beginMacro(tr("Flip Vertical"));
+    undoStack->push(new EmitRotateBuilding(mCurrentDocument, true));
+    QMap<QString,SparseTileGrid*> emptyGrime;
+    foreach (BuildingFloor *floor, currentBuilding()->floors()) {
+        undoStack->push(new SwapFloorGrime(mCurrentDocument, floor, emptyGrime,
+                                           "Remove All Tiles"));
+    }
+    undoStack->push(new FlipBuilding(mCurrentDocument, false));
+    undoStack->push(new EmitRotateBuilding(mCurrentDocument, false));
+    undoStack->endMacro();
 }
 
 void BuildingEditorWindow::rotateRight()
@@ -1937,8 +1957,18 @@ void BuildingEditorWindow::rotateRight()
     if (!mCurrentDocument)
         return;
 
-    mCurrentDocument->undoStack()->push(new RotateBuilding(mCurrentDocument,
-                                                           true));
+    QUndoStack *undoStack = mCurrentDocument->undoStack();
+    undoStack->beginMacro(tr("Rotate Right"));
+    undoStack->push(new EmitRotateBuilding(mCurrentDocument, true));
+    QMap<QString,SparseTileGrid*> emptyGrime;
+    foreach (BuildingFloor *floor, currentBuilding()->floors()) {
+        undoStack->push(
+                    new SwapFloorGrime(mCurrentDocument, floor, emptyGrime,
+                                       "Remove All Tiles"));
+    }
+    undoStack->push(new RotateBuilding(mCurrentDocument, true));
+    undoStack->push(new EmitRotateBuilding(mCurrentDocument, false));
+    undoStack->endMacro();
 }
 
 void BuildingEditorWindow::rotateLeft()
@@ -1946,8 +1976,18 @@ void BuildingEditorWindow::rotateLeft()
     if (!mCurrentDocument)
         return;
 
-    mCurrentDocument->undoStack()->push(new RotateBuilding(mCurrentDocument,
-                                                           false));
+    QUndoStack *undoStack = mCurrentDocument->undoStack();
+    undoStack->beginMacro(tr("Rotate Left"));
+    undoStack->push(new EmitRotateBuilding(mCurrentDocument, true));
+    QMap<QString,SparseTileGrid*> emptyGrime;
+    foreach (BuildingFloor *floor, currentBuilding()->floors()) {
+        undoStack->push(
+                    new SwapFloorGrime(mCurrentDocument, floor, emptyGrime,
+                                       "Remove All Tiles"));
+    }
+    undoStack->push(new RotateBuilding(mCurrentDocument, false));
+    undoStack->push(new EmitRotateBuilding(mCurrentDocument, false));
+    undoStack->endMacro();
 }
 
 void BuildingEditorWindow::templatesDialog()
