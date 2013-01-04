@@ -30,10 +30,12 @@
 #include "zoomable.h"
 
 #include <QAction>
+#include <QApplication>
 #include <QDebug>
 #include <QStyleOptionGraphicsItem>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QScrollBar>
 #include <QWheelEvent>
 #include <qmath.h>
 
@@ -1228,7 +1230,8 @@ void FloorEditor::showObjectsChanged(bool show)
 
 FloorView::FloorView(QWidget *parent) :
     QGraphicsView(parent),
-    mZoomable(new Zoomable(this))
+    mZoomable(new Zoomable(this)),
+    mHandScrolling(false)
 {
     // Alignment of the scene within the view
     setAlignment(Qt::AlignLeft | Qt::AlignTop);
@@ -1239,8 +1242,29 @@ FloorView::FloorView(QWidget *parent) :
     connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(adjustScale(qreal)));
 }
 
+void FloorView::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::MidButton) {
+        setHandScrolling(true);
+        return;
+    }
+
+    QGraphicsView::mousePressEvent(event);
+}
+
 void FloorView::mouseMoveEvent(QMouseEvent *event)
 {
+    if (mHandScrolling) {
+        QScrollBar *hBar = horizontalScrollBar();
+        QScrollBar *vBar = verticalScrollBar();
+        const QPoint d = event->globalPos() - mLastMousePos;
+        hBar->setValue(hBar->value() + (isRightToLeft() ? d.x() : -d.x()));
+        vBar->setValue(vBar->value() - d.y());
+
+        mLastMousePos = event->globalPos();
+        return;
+    }
+
     QGraphicsView::mouseMoveEvent(event);
 
     mLastMousePos = event->globalPos();
@@ -1251,6 +1275,16 @@ void FloorView::mouseMoveEvent(QMouseEvent *event)
         mLastMouseTilePos = tilePos;
         emit mouseCoordinateChanged(mLastMouseTilePos);
     }
+}
+
+void FloorView::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::MidButton) {
+        setHandScrolling(false);
+        return;
+    }
+
+    QGraphicsView::mouseReleaseEvent(event);
 }
 
 /**
@@ -1279,6 +1313,24 @@ void FloorView::wheelEvent(QWheelEvent *event)
     }
 
     QGraphicsView::wheelEvent(event);
+}
+
+void FloorView::setHandScrolling(bool handScrolling)
+{
+    if (mHandScrolling == handScrolling)
+        return;
+
+    mHandScrolling = handScrolling;
+    setInteractive(!mHandScrolling);
+
+    if (mHandScrolling) {
+        mLastMousePos = QCursor::pos();
+        QApplication::setOverrideCursor(QCursor(Qt::ClosedHandCursor));
+        viewport()->grabMouse();
+    } else {
+        viewport()->releaseMouse();
+        QApplication::restoreOverrideCursor();
+    }
 }
 
 void FloorView::adjustScale(qreal scale)

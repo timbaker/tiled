@@ -376,8 +376,13 @@ public:
     Tiled::Internal::Zoomable *zoomable() const
     { return mZoomable; }
 
+    void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+
     void wheelEvent(QWheelEvent *event);
+
+    void setHandScrolling(bool handScrolling);
 
 signals:
     void mouseCoordinateChanged(const QPoint &tilePos);
@@ -390,6 +395,7 @@ private:
     QPoint mLastMousePos;
     QPointF mLastMouseScenePos;
     QPoint mLastMouseTilePos;
+    bool mHandScrolling;
 };
 
 } // namespace BuildingEditor
