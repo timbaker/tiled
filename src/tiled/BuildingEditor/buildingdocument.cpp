@@ -400,6 +400,14 @@ QList<FurnitureTiles *> BuildingDocument::changeUsedFurniture(const QList<Furnit
     return old;
 }
 
+QRegion BuildingDocument::setTileSelection(const QRegion &selection)
+{
+    QRegion old = mTileSelection;
+    mTileSelection = selection;
+    emit tileSelectionChanged(old);
+    return old;
+}
+
 void BuildingDocument::furnitureTileChanged(FurnitureTile *ftile)
 {
     foreach (BuildingFloor *floor, mBuilding->floors()) {

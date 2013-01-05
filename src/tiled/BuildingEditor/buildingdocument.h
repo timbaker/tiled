@@ -20,6 +20,7 @@
 
 #include <QObject>
 #include <QRect>
+#include <QRegion>
 #include <QSet>
 
 class QUndoStack;
@@ -85,6 +86,9 @@ public:
     const QSet<BuildingObject*> &selectedObjects() const
     { return mSelectedObjects; }
 
+    const QRegion &tileSelection() const
+    { return mTileSelection; }
+
     void emitBuildingResized()
     { emit buildingResized(); }
 
@@ -141,6 +145,8 @@ public:
 
     QList<BuildingTileEntry*> changeUsedTiles(const QList<BuildingTileEntry*> &tiles);
     QList<FurnitureTiles *> changeUsedFurniture(const QList<FurnitureTiles *> &tiles);
+
+    QRegion setTileSelection(const QRegion &selection);
     // -UNDO/REDO
     
 signals:
@@ -180,6 +186,8 @@ signals:
 
     void selectedObjectsChanged();
 
+    void tileSelectionChanged(const QRegion &old);
+
     void cleanChanged();
 
     void usedTilesChanged();
@@ -202,6 +210,7 @@ private:
     BuildingFloor *mCurrentFloor;
     QString mCurrentLayerName;
     QSet<BuildingObject*> mSelectedObjects;
+    QRegion mTileSelection;
 };
 
 } // namespace BuildingEditor

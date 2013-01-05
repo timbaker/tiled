@@ -29,6 +29,7 @@ class QUndoStack;
 
 namespace BuildingEditor {
 
+class BuildingDocument;
 class BuildingFloor;
 class BuildingTileModeScene;
 
@@ -67,6 +68,7 @@ public:
 
     void setStatusText(const QString &text);
 
+    BuildingDocument *document() const;
     BuildingFloor *floor() const;
     QUndoStack *undoStack() const;
 
@@ -199,6 +201,51 @@ private:
     QVector<QVector<QString> > mCaptureTiles;
 
     QString mTileName;
+};
+
+class SelectTileTool : public BaseTileTool
+{
+    Q_OBJECT
+public:
+    static SelectTileTool *instance();
+
+    SelectTileTool();
+
+    void documentChanged();
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
+    void currentModifiersChanged(Qt::KeyboardModifiers modifiers);
+
+public slots:
+    void activate();
+    void deactivate();
+
+private:
+    void updateCursor(const QPointF &scenePos, bool force = true);
+    void updateStatusText();
+
+private:
+    static SelectTileTool *mInstance;
+
+    enum SelectionMode {
+        Replace,
+        Add,
+        Subtract,
+        Intersect
+    };
+
+    SelectionMode mSelectionMode;
+    bool mMouseDown;
+    QPointF mMouseScenePos;
+    QPoint mStartTilePos;
+    QPoint mCursorTilePos;
+    QRect mCursorTileBounds;
+    DrawTileToolCursor *mCursor;
+    QRectF mCursorViewRect;
+    QRegion mSelectedRegion;
 };
 
 } // namespace BuildingEditor

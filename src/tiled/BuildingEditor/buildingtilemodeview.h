@@ -32,6 +32,8 @@ class BuildingDocument;
 class CompositeLayerGroupItem;
 class Room;
 
+class BuildingTileModeScene;
+
 class TileModeGridItem : public QGraphicsItem
 {
 public:
@@ -46,6 +48,31 @@ private:
     BuildingDocument *mDocument;
     Tiled::MapRenderer *mRenderer;
     QRect mTileBounds;
+    QRectF mBoundingRect;
+};
+
+class TileModeSelectionItem : public QObject, public QGraphicsItem
+{
+    Q_OBJECT
+    Q_INTERFACES(QGraphicsItem)
+public:
+    TileModeSelectionItem(BuildingTileModeScene *scene);
+
+    QRectF boundingRect() const;
+
+    void paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+    BuildingDocument *document() const;
+
+private slots:
+    void tileSelectionChanged(const QRegion &oldSelection);
+    void currentLevelChanged();
+
+private:
+    void updateBoundingRect();
+
+private:
+    BuildingTileModeScene *mScene;
     QRectF mBoundingRect;
 };
 
@@ -74,6 +101,9 @@ public:
 
     Tiled::Map *map() const
     { return mMap; }
+
+    Tiled::MapRenderer *renderer() const
+    { return mRenderer; }
 
     int currentLevel();
     BuildingFloor *currentFloor();
@@ -154,6 +184,7 @@ private:
     Tiled::Map *mMap;
     Tiled::MapRenderer *mRenderer;
     TileModeGridItem *mGridItem;
+    TileModeSelectionItem *mTileSelectionItem;
     QMap<int,CompositeLayerGroupItem*> mLayerGroupItems;
     bool mLoading;
     QGraphicsRectItem *mDarkRectangle;

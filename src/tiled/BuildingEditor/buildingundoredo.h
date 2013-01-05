@@ -20,6 +20,7 @@
 
 #include <QMap>
 #include <QRectF>
+#include <QRegion>
 #include <QUndoCommand>
 #include <QVector>
 
@@ -582,6 +583,22 @@ private:
     WallObject *mObject;
     int mLength;
 };
+
+class ChangeTileSelection : public QUndoCommand
+{
+public:
+    ChangeTileSelection(BuildingDocument *doc, const QRegion &selection);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    QRegion mSelection;
+};
+
 
 } // namespace BuildingEditor
 

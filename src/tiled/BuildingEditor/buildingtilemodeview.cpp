@@ -71,6 +71,68 @@ void TileModeGridItem::paint(QPainter *p, const QStyleOptionGraphicsItem *option
 }
 
 /////
+
+TileModeSelectionItem::TileModeSelectionItem(BuildingTileModeScene *scene) :
+    mScene(scene)
+{
+    setZValue(1000);
+
+    connect(document(), SIGNAL(tileSelectionChanged(QRegion)),
+            SLOT(tileSelectionChanged(QRegion)));
+    connect(document(), SIGNAL(currentFloorChanged()),
+            SLOT(currentLevelChanged()));
+
+    updateBoundingRect();
+}
+
+QRectF TileModeSelectionItem::boundingRect() const
+{
+    return mBoundingRect;
+}
+
+void TileModeSelectionItem::paint(QPainter *p,
+                                  const QStyleOptionGraphicsItem *option,
+                                  QWidget *)
+{
+    const QRegion &selection = document()->tileSelection();
+    QColor highlight = QApplication::palette().highlight().color();
+    highlight.setAlpha(128);
+
+    MapRenderer *renderer = mScene->renderer();
+    renderer->drawTileSelection(p, selection, highlight, option->exposedRect,
+                                mScene->currentLevel());
+}
+
+BuildingDocument *TileModeSelectionItem::document() const
+{
+    return mScene->document();
+}
+
+void TileModeSelectionItem::tileSelectionChanged(const QRegion &oldSelection)
+{
+    prepareGeometryChange();
+    updateBoundingRect();
+
+    // Make sure changes within the bounding rect are updated
+    QRegion newSelection = document()->tileSelection();
+    const QRect changedArea = newSelection.xored(oldSelection).boundingRect();
+    update(mScene->renderer()->boundingRect(changedArea, document()->currentLevel()));
+}
+
+void TileModeSelectionItem::currentLevelChanged()
+{
+    prepareGeometryChange();
+    updateBoundingRect();
+}
+
+void TileModeSelectionItem::updateBoundingRect()
+{
+    const QRect r = document()->tileSelection().boundingRect();
+    mBoundingRect = mScene->renderer()->boundingRect(r, document()->currentLevel());
+}
+
+/////
+
 BuildingTileModeScene::BuildingTileModeScene(QWidget *parent) :
     QGraphicsScene(parent),
     mDocument(0),
@@ -80,6 +142,7 @@ BuildingTileModeScene::BuildingTileModeScene(QWidget *parent) :
     mBlendMap(0),
     mRenderer(0),
     mGridItem(0),
+    mTileSelectionItem(0),
     mDarkRectangle(new QGraphicsRectItem),
     mCurrentTool(0),
     mLayerGroupWithToolTiles(0)
@@ -143,6 +206,10 @@ void BuildingTileModeScene::setDocument(BuildingDocument *doc)
 {
     if (mDocument)
         mDocument->disconnect(this);
+
+    // Delete before clearing mDocument.
+    delete mTileSelectionItem;
+    mTileSelectionItem = 0;
 
     mDocument = doc;
 
@@ -427,6 +494,7 @@ void BuildingTileModeScene::BuildingToMap()
         qDeleteAll(mLayerGroupItems);
         mLayerGroupItems.clear();
         delete mGridItem;
+        delete mTileSelectionItem;
 
         mLayerGroupWithToolTiles = 0;
     }
@@ -536,6 +604,9 @@ void BuildingTileModeScene::BuildingToMap()
     mGridItem->synchWithBuilding();
     mGridItem->setZValue(1000);
     addItem(mGridItem);
+
+    mTileSelectionItem = new TileModeSelectionItem(this);
+    addItem(mTileSelectionItem);
 
     setSceneRect(mMapComposite->boundingRect(mRenderer));
     mDarkRectangle->setRect(sceneRect());
@@ -714,7 +785,6 @@ void BuildingTileModeScene::currentLayerChanged()
         }
     }
 }
-
 void BuildingTileModeScene::roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos)
 {
     Q_UNUSED(pos);

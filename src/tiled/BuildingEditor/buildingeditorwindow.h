@@ -90,6 +90,10 @@ public:
 
     Building *currentBuilding() const;
 
+    BuildingFloor *currentFloor() const;
+
+    QString currentLayer() const;
+
 private:
     void readSettings();
     void writeSettings();
@@ -169,6 +173,7 @@ private slots:
 
     void selectAll();
     void selectNone();
+    void editDelete();
     void deleteObjects();
 
     void preferences();

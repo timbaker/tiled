@@ -76,6 +76,11 @@ void BaseTileTool::setStatusText(const QString &text)
     emit statusTextChanged();
 }
 
+BuildingDocument *BaseTileTool::document() const
+{
+    return mEditor->document();
+}
+
 BuildingFloor *BaseTileTool::floor() const
 {
     return mEditor->document()->currentFloor();
@@ -327,6 +332,7 @@ void DrawTileTool::activate()
 {
     updateCursor(QPointF(-100,-100));
     mEditor->addItem(mCursor);
+    updateStatusText();
 }
 
 void DrawTileTool::deactivate()
@@ -488,4 +494,175 @@ void DrawTileTool::updateStatusText()
                       .arg(mCursorTileBounds.height()));
     else
         setStatusText(tr("Left-click to draw tiles.  CTRL-Left-click to erase."));
+}
+
+/////
+
+SelectTileTool *SelectTileTool::mInstance = 0;
+
+SelectTileTool *SelectTileTool::instance()
+{
+    if (!mInstance)
+        mInstance = new SelectTileTool();
+    return mInstance;
+}
+
+SelectTileTool::SelectTileTool() :
+    BaseTileTool(),
+    mMouseDown(false),
+    mSelectionMode(Replace),
+    mCursor(0)
+{
+    updateStatusText();
+}
+
+void SelectTileTool::documentChanged()
+{
+//    mCursor = 0; // it was deleted from the editor
+}
+
+void SelectTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    const Qt::MouseButton button = event->button();
+    const Qt::KeyboardModifiers modifiers = event->modifiers();
+
+    if (button == Qt::RightButton) {
+        // Right-click to cancel.
+        if (mMouseDown) {
+            mMouseDown = false;
+            updateCursor(event->scenePos());
+            updateStatusText();
+            return;
+        }
+        return;
+    }
+
+    if (button == Qt::LeftButton) {
+        if (modifiers == Qt::ControlModifier) {
+            mSelectionMode = Subtract;
+        } else if (modifiers == Qt::ShiftModifier) {
+            mSelectionMode = Add;
+        } else if (modifiers == (Qt::ControlModifier | Qt::ShiftModifier)) {
+            mSelectionMode = Intersect;
+        } else {
+            mSelectionMode = Replace;
+        }
+
+        mStartTilePos = mEditor->sceneToTile(event->scenePos());
+        mCursorTileBounds = QRect(mStartTilePos, QSize(1, 1)) & floor()->bounds(1, 1);
+        mMouseDown = true;
+        updateStatusText();
+    }
+}
+
+void SelectTileTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    mMouseScenePos = event->scenePos();
+    updateCursor(event->scenePos(), false);
+}
+
+void SelectTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    Q_UNUSED(event)
+    if (mMouseDown) {
+        QRegion selection = document()->tileSelection();
+        const QRect area(mCursorTileBounds);
+
+        switch (mSelectionMode) {
+        case Replace:   selection = area; break;
+        case Add:       selection += area; break;
+        case Subtract:  selection -= area; break;
+        case Intersect: selection &= area; break;
+        }
+
+        if (selection != document()->tileSelection())
+            undoStack()->push(new ChangeTileSelection(document(), selection));
+
+        mMouseDown = false;
+        updateCursor(event->scenePos());
+        updateStatusText();
+    }
+}
+
+void SelectTileTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
+{
+    Q_UNUSED(modifiers)
+    if (!mMouseDown) {
+        updateCursor(mMouseScenePos);
+    }
+}
+
+void SelectTileTool::activate()
+{
+    updateCursor(QPointF(-100,-100));
+    mEditor->addItem(mCursor);
+    updateStatusText();
+}
+
+void SelectTileTool::deactivate()
+{
+    if (mCursor)
+        mEditor->removeItem(mCursor);
+    mMouseDown = false;
+}
+
+void SelectTileTool::updateCursor(const QPointF &scenePos, bool force)
+{
+    QPoint tilePos = mEditor->sceneToTile(scenePos);
+    if (!force && (tilePos == mCursorTilePos))
+        return;
+    mCursorTilePos = tilePos;
+
+    if (!mCursor) {
+        mCursor = new DrawTileToolCursor(mEditor);
+        mCursor->setZValue(mEditor->ZVALUE_CURSOR);
+    }
+
+    if (mMouseDown) {
+        mCursorTileBounds = QRect(QPoint(qMin(mStartTilePos.x(), tilePos.x()),
+                                  qMin(mStartTilePos.y(), tilePos.y())),
+                                  QPoint(qMax(mStartTilePos.x(), tilePos.x()),
+                                  qMax(mStartTilePos.y(), tilePos.y())));
+        updateStatusText();
+    } else {
+        mCursorTileBounds = QRect(tilePos, QSize(1, 1));
+    }
+    mCursorTileBounds &= floor()->bounds(1, 1);
+
+    // This crap is all to work around a bug when the view was scrolled and
+    // then the item moves which led to areas not being repainted.  Each item
+    // remembers where it was last drawn in a view, but those rectangles are
+    // not updated when the view scrolls.
+    QPolygonF polygon = mEditor->tileToScenePolygon(mCursorTileBounds);
+    QRectF sceneRect = polygon.boundingRect().adjusted(-4, -(128-32), 4, 4);
+    QRectF viewRect = mEditor->views()[0]->mapFromScene(sceneRect).boundingRect();
+    if (viewRect != mCursorViewRect) {
+        mCursorViewRect = viewRect;
+        mCursor->update();
+    }
+
+    mCursor->setPolygonFromTileRect(mCursorTileBounds);
+
+    if ((mMouseDown && mSelectionMode == Subtract) || (!mMouseDown && controlModifier())) {
+        QPen pen(QColor(255,0,0,128));
+        mCursor->setPen(pen);
+        mCursor->setBrush(QColor(0,0,0,128));
+    } else {
+        QPen pen(qRgba(0, 0, 255, 200));
+        pen.setWidth(3);
+        mCursor->setPen(pen);
+        mCursor->setBrush(QColor(0,0,255,128));
+    }
+
+    mCursor->setVisible(mMouseDown || mEditor->currentFloorContains(tilePos, 1, 1));
+}
+
+void SelectTileTool::updateStatusText()
+{
+    if (mMouseDown)
+        setStatusText(tr("Width,Height = %1,%2.  Right-click to cancel.")
+                      .arg(mCursorTileBounds.width())
+                      .arg(mCursorTileBounds.height()));
+    else
+        setStatusText(tr("Left-click-drag to select.  CTRL=subtract.  SHIFT=add.  CTRL+SHIFT=intersect."));
 }

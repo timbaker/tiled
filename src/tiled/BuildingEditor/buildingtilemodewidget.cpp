@@ -58,6 +58,7 @@ BuildingTileModeWidget::BuildingTileModeWidget(QWidget *parent) :
     mToolBar = new QToolBar;
     mToolBar->setObjectName(QString::fromUtf8("ToolBar"));
     mToolBar->addAction(ui->actionPecil);
+    mToolBar->addAction(ui->actionSelectTiles);
 
     mToolBar->addSeparator();
     mFloorLabel->setMinimumWidth(90);
@@ -88,6 +89,11 @@ BuildingTileModeWidget::BuildingTileModeWidget(QWidget *parent) :
             DrawTileTool::instance(), SLOT(makeCurrent()));
     DrawTileTool::instance()->setEditor(view()->scene());
     DrawTileTool::instance()->setAction(ui->actionPecil);
+
+    connect(ui->actionSelectTiles, SIGNAL(triggered()),
+            SelectTileTool::instance(), SLOT(makeCurrent()));
+    SelectTileTool::instance()->setEditor(view()->scene());
+    SelectTileTool::instance()->setAction(ui->actionSelectTiles);
 
     connect(ui->actionUpLevel, SIGNAL(triggered()), SLOT(upLevel()));
     connect(ui->actionDownLevel, SIGNAL(triggered()), SLOT(downLevel()));
@@ -414,6 +420,7 @@ void BuildingTileModeWidget::updateActions()
 
     DrawTileTool::instance()->setEnabled(!currentLayerName.isEmpty() &&
             !DrawTileTool::instance()->currentTile().isEmpty());
+    SelectTileTool::instance()->setEnabled(!currentLayerName.isEmpty());
     ui->actionUpLevel->setEnabled(mDocument != 0 &&
             !mDocument->currentFloorIsTop());
     ui->actionDownLevel->setEnabled(mDocument != 0 &&

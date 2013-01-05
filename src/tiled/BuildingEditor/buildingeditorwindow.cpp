@@ -260,7 +260,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->actionDelete->setShortcuts(QKeySequence::Delete);
     connect(ui->actionSelectAll, SIGNAL(triggered()), SLOT(selectAll()));
     connect(ui->actionSelectNone, SIGNAL(triggered()), SLOT(selectNone()));
-    connect(ui->actionDelete, SIGNAL(triggered()), SLOT(deleteObjects()));
+    connect(ui->actionDelete, SIGNAL(triggered()), SLOT(editDelete()));
 
     connect(mUndoGroup, SIGNAL(cleanChanged(bool)), SLOT(updateWindowTitle()));
     connect(mUndoGroup, SIGNAL(cleanChanged(bool)), SLOT(autoSaveCheck()));
@@ -676,6 +676,16 @@ Room *BuildingEditorWindow::currentRoom() const
 Building *BuildingEditorWindow::currentBuilding() const
 {
     return mCurrentDocument ? mCurrentDocument->building() : 0;
+}
+
+BuildingFloor *BuildingEditorWindow::currentFloor() const
+{
+    return mCurrentDocument ? mCurrentDocument->currentFloor() : 0;
+}
+
+QString BuildingEditorWindow::currentLayer() const
+{
+    return mCurrentDocument ? mCurrentDocument->currentLayer() : QString();
 }
 
 void BuildingEditorWindow::readSettings()
@@ -1684,8 +1694,13 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
             SLOT(updateActions()));
     connect(mCurrentDocument, SIGNAL(currentFloorChanged()),
             SLOT(updateActions()));
+    connect(mCurrentDocument, SIGNAL(currentLayerChanged()),
+            SLOT(updateActions()));
 
     connect(mCurrentDocument, SIGNAL(selectedObjectsChanged()),
+            SLOT(updateActions()));
+
+    connect(mCurrentDocument, SIGNAL(tileSelectionChanged(QRegion)),
             SLOT(updateActions()));
 
     connect(mCurrentDocument, SIGNAL(cleanChanged()), SLOT(updateWindowTitle()));
@@ -1759,7 +1774,12 @@ void BuildingEditorWindow::selectAll()
 {
     if (!mCurrentDocument)
         return;
-    QSet<BuildingObject*> objects = mCurrentDocument->currentFloor()->objects().toSet();
+    if (mEditMode == TileMode) {
+        mCurrentDocument->undoStack()->push(
+                    new ChangeTileSelection(mCurrentDocument, currentFloor()->bounds(1, 1)));
+        return;
+    }
+    QSet<BuildingObject*> objects = currentFloor()->objects().toSet();
     mCurrentDocument->setSelectedObjects(objects);
 }
 
@@ -1767,7 +1787,40 @@ void BuildingEditorWindow::selectNone()
 {
     if (!mCurrentDocument)
         return;
+    if (mEditMode == TileMode) {
+        mCurrentDocument->undoStack()->push(
+                    new ChangeTileSelection(mCurrentDocument, QRegion()));
+        return;
+    }
     mCurrentDocument->setSelectedObjects(QSet<BuildingObject*>());
+}
+
+void BuildingEditorWindow::editDelete()
+{
+    if (!mCurrentDocument || currentLayer().isEmpty())
+        return;
+    if (mEditMode == TileMode) {
+        QRect r1 = currentDocument()->tileSelection().boundingRect();
+        QVector<QVector<QString> > tiles = currentFloor()->grimeAt(currentLayer(), r1);
+        bool changed = false;
+        foreach (QRect r, currentDocument()->tileSelection().rects()) {
+            for (int x = r.left(); x <= r.right(); x++)
+                for (int y = r.top(); y <= r.bottom(); y++) {
+                    if (tiles[x-r1.x()][y-r1.y()] != QString()) {
+                        tiles[x-r1.x()][y-r1.y()] = QString();
+                        changed = true;
+                    }
+                }
+        }
+        if (changed)
+            mCurrentDocument->undoStack()->push(
+                        new PaintFloorTiles(mCurrentDocument, currentFloor(),
+                                            currentLayer(), r1, tiles,
+                                            "Erase Tiles"));
+    }
+    if (mEditMode == BuildingMode) {
+        deleteObjects();
+    }
 }
 
 void BuildingEditorWindow::deleteObjects()
@@ -2333,9 +2386,15 @@ void BuildingEditorWindow::updateActions()
 
     mRoomComboBox->setEnabled(hasDoc && currentRoom() != 0);
 
-    ui->actionSelectAll->setEnabled(hasDoc);
-    ui->actionSelectNone->setEnabled(hasDoc && mCurrentDocument->selectedObjects().size());
-    ui->actionDelete->setEnabled(hasDoc && mCurrentDocument->selectedObjects().size());
+    if (mEditMode == TileMode) {
+        ui->actionSelectAll->setEnabled(!currentLayer().isEmpty());
+        ui->actionSelectNone->setEnabled(hasDoc && !mCurrentDocument->tileSelection().isEmpty());
+        ui->actionDelete->setEnabled(hasDoc && !mCurrentDocument->tileSelection().isEmpty());
+    } else {
+        ui->actionSelectAll->setEnabled(hasDoc);
+        ui->actionSelectNone->setEnabled(hasDoc && mCurrentDocument->selectedObjects().size());
+        ui->actionDelete->setEnabled(hasDoc && mCurrentDocument->selectedObjects().size());
+    }
 
     if (mCurrentDocument)
         mFloorLabel->setText(tr("Floor %1/%2")

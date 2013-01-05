@@ -152,6 +152,18 @@
     <string>PgDown</string>
    </property>
   </action>
+  <action name="actionSelectTiles">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/22x22/stock-tool-rect-select.png</normaloff>:/images/22x22/stock-tool-rect-select.png</iconset>
+   </property>
+   <property name="text">
+    <string>Select and Move Tiles</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -166,6 +178,7 @@
   </customwidget>
  </customwidgets>
  <resources>
+  <include location="../tiled.qrc"/>
   <include location="buildingeditor.qrc"/>
  </resources>
  <connections/>
