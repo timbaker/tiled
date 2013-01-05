@@ -90,6 +90,8 @@ public:
 
         writeFurniture(w);
 
+        writeUserTiles(w);
+
         w.writeStartElement(QLatin1String("used_tiles"));
         QStringList usedTiles;
         foreach (BuildingTileEntry *entry, mBuilding->usedTiles())
@@ -245,6 +247,30 @@ public:
         w.writeEndElement(); // </tile>
     }
 
+    void writeUserTiles(QXmlStreamWriter &w)
+    {
+        foreach (BuildingFloor *floor, mBuilding->floors()) {
+            foreach (QString layerName, floor->grimeLayers()) {
+                for (int x = 0; x <= floor->width(); x++) {
+                    for (int y = 0; y <= floor->height(); y++) {
+                        QString tileName = floor->grimeAt(layerName, x, y);
+                        if (!tileName.isEmpty() && !mUserTilesMap.contains(tileName))
+                            mUserTilesMap[tileName] = tileName;
+                    }
+                }
+            }
+        }
+
+        w.writeStartElement(QLatin1String("user_tiles"));
+        foreach (QString tileName, mUserTilesMap.values()) { // sorted
+            w.writeStartElement(QLatin1String("tile"));
+            w.writeAttribute(QLatin1String("tile"), tileName);
+            w.writeEndElement(); // </tile>
+
+        }
+        w.writeEndElement(); // </user_tiles>
+    }
+
     void writeFloor(QXmlStreamWriter &w, BuildingFloor *floor)
     {
         w.writeStartElement(QLatin1String("floor"));
@@ -253,23 +279,50 @@ public:
         foreach (BuildingObject *object, floor->objects())
             writeObject(w, object);
 
+        // Write room indices.
         QString text;
-        text += QLatin1Char('\n');
+        const QLatin1Char zero('0'), comma(','), newline('\n');
+        text += newline;
         int count = 0, max = floor->height() * floor->width();
         for (int y = 0; y < floor->height(); y++) {
             for (int x = 0; x < floor->width(); x++) {
                 if (Room *room = floor->GetRoomAt(x, y))
                     text += QString::number(mBuilding->rooms().indexOf(room) + 1);
                 else
-                    text += QLatin1Char('0');
+                    text += zero;
                 if (++count < max)
-                    text += QLatin1Char(',');
+                    text += comma;
             }
-            text += QLatin1Char('\n');
+            text += newline;
         }
         w.writeStartElement(QLatin1String("rooms"));
         w.writeCharacters(text);
         w.writeEndElement();
+
+        // Write user tile indices.
+        foreach (QString layerName, floor->grimeLayers()) {
+            if (floor->grime()[layerName]->isEmpty())
+                continue;
+            text.clear();
+            text += newline;
+            count = 0, max = (floor->height() + 1) * (floor->width() + 1);
+            for (int y = 0; y <= floor->height(); y++) {
+                for (int x = 0; x <= floor->width(); x++) {
+                    QString tileName = floor->grimeAt(layerName, x, y);
+                    if (tileName.isEmpty())
+                        text += zero;
+                    else
+                        text += QString::number(mUserTilesMap.values().indexOf(tileName) + 1);
+                    if (++count < max)
+                        text += comma;
+                }
+                text += newline;
+            }
+            w.writeStartElement(QLatin1String("tiles"));
+            w.writeAttribute(QLatin1String("layer"), layerName);
+            w.writeCharacters(text);
+            w.writeEndElement();
+        }
 
         w.writeEndElement(); // </floor>
     }
@@ -385,6 +438,7 @@ public:
     QList<FurnitureTiles*> mFurnitureTiles;
     QList<BuildingTileEntry*> mTileEntries;
     QMap<QString,BuildingTileEntry*> mEntriesByCategoryName;
+    QMap<QString,QString> mUserTilesMap;
 };
 
 /////

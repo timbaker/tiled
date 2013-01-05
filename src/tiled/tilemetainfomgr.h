@@ -74,6 +74,13 @@ public:
     int indexOf(Tileset *ts)
     { return tilesets().indexOf(ts); }
 
+    int indexOf(const QString &tilesetName)
+    {
+        if (mTilesetByName.contains(tilesetName))
+            return tilesets().indexOf(mTilesetByName[tilesetName]);
+        return -1;
+    }
+
     QStringList enumNames() const
     { return mEnumNames; }
 

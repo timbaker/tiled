@@ -70,6 +70,8 @@ private:
 
     BuildingTileEntry *readTileEntry();
 
+    void readUserTiles();
+
     QList<BuildingTileEntry*> readUsedTiles();
     QList<FurnitureTiles*> readUsedFurniture();
 
@@ -78,6 +80,9 @@ private:
     BuildingFloor *readFloor();
     void decodeCSVFloorData(BuildingFloor *floor, const QString &text);
     Room *getRoom(BuildingFloor *floor, int x, int y, int index);
+
+    void decodeCSVTileData(BuildingFloor *floor, const QString &layerName, const QString &text);
+    QString getUserTile(BuildingFloor *floor, int x, int y, int index);
 
     BuildingObject *readObject(BuildingFloor *floor);
 
@@ -98,6 +103,7 @@ private:
     QList<FurnitureTiles*> mFurnitureTiles;
     QList<BuildingTileEntry*> mEntries;
     QMap<QString,BuildingTileEntry*> mEntryMap;
+    QStringList mUserTiles;
     int mVersion;
 
     QXmlStreamReader xml;
@@ -172,6 +178,8 @@ Building *BuildingReaderPrivate::readBuilding()
         } else if (xml.name() == "tile_entry") {
             if (BuildingTileEntry *entry = readTileEntry())
                 mEntries += entry;
+        } else if (xml.name() == "user_tiles") {
+            readUserTiles();
         } else if (xml.name() == "used_tiles") {
             mBuilding->setUsedTiles(readUsedTiles());
         } else if (xml.name() == "used_furniture") {
@@ -364,6 +372,29 @@ BuildingTileEntry *BuildingReaderPrivate::readTileEntry()
     return entry;
 }
 
+void BuildingReaderPrivate::readUserTiles()
+{
+    Q_ASSERT(xml.isStartElement() && xml.name() == "user_tiles");
+
+    while (xml.readNextStartElement()) {
+        if (xml.name() == "tile") {
+            const QXmlStreamAttributes atts = xml.attributes();
+            const QString tileName = atts.value(QLatin1String("tile")).toString();
+            QString tilesetName;
+            int tileID;
+            if (tileName.isEmpty() || !BuildingTilesMgr::instance()->
+                    parseTileName(tileName, tilesetName, tileID)) {
+                xml.raiseError(tr("Invalid tile name '%1' in <user_tiles>")
+                               .arg(tileName));
+                return;
+            }
+            mUserTiles += tileName;
+            xml.skipCurrentElement();
+        } else
+            readUnknownElement();
+    }
+}
+
 QList<BuildingTileEntry *> BuildingReaderPrivate::readUsedTiles()
 {
     Q_ASSERT(xml.isStartElement() && xml.name() == "used_tiles");
@@ -460,6 +491,22 @@ BuildingFloor *BuildingReaderPrivate::readFloor()
                     break;
                 if (xml.isCharacters() && !xml.isWhitespace()) {
                     decodeCSVFloorData(floor, xml.text().toString());
+                }
+            }
+        } else if (xml.name() == "tiles") {
+            const QXmlStreamAttributes atts = xml.attributes();
+            const QString layerName = atts.value(QLatin1String("layer")).toString();
+            if (layerName.isEmpty()) {
+                xml.raiseError(tr("Empty/missing layer name for <tiles> on floor %1")
+                               .arg(floor->level()));
+                delete floor;
+                return 0;
+            }
+            while (xml.readNext() != QXmlStreamReader::Invalid) {
+                if (xml.isEndElement())
+                    break;
+                if (xml.isCharacters() && !xml.isWhitespace()) {
+                    decodeCSVTileData(floor, layerName, xml.text().toString());
                 }
             }
         } else
@@ -739,6 +786,71 @@ Room *BuildingReaderPrivate::getRoom(BuildingFloor *floor, int x, int y, int ind
     if (index > 0 && index - 1 < mBuilding->roomCount())
         return mBuilding->room(index - 1);
     xml.raiseError(tr("Invalid room index at (%1,%2) on floor %3")
+                   .arg(x).arg(y).arg(floor->level()));
+    return 0;
+}
+
+void BuildingReaderPrivate::decodeCSVTileData(BuildingFloor *floor,
+                                              const QString &layerName,
+                                              const QString &text)
+{
+    int start = 0;
+    int end = text.length();
+    while (start < end && text.at(start).isSpace())
+        start++;
+    int x = 0, y = 0;
+    const QChar sep(QLatin1Char(','));
+    const QChar nullChar(QLatin1Char('0'));
+    while ((end = text.indexOf(sep, start, Qt::CaseSensitive)) != -1) {
+        if (end - start == 1 && text.at(start) == nullChar) {
+            ; //floor->setGrime(layerName, x, y, QString());
+        } else {
+            bool conversionOk;
+            uint index = text.mid(start, end - start).toUInt(&conversionOk);
+            if (!conversionOk) {
+                xml.raiseError(
+                        tr("Unable to parse user-tile at (%1,%2) on floor %3")
+                               .arg(x + 1).arg(y + 1).arg(floor->level()));
+                return;
+            }
+            floor->setGrime(layerName, x, y, getUserTile(floor, x, y, index));
+        }
+        start = end + 1;
+        if (++x == floor->width() + 1) {
+            ++y;
+            if (y >= floor->height() + 1) {
+                xml.raiseError(tr("Corrupt <tiles> for floor %1")
+                               .arg(floor->level()));
+                return;
+            }
+            x = 0;
+        }
+    }
+    end = text.size();
+    while (start < end && text.at(end-1).isSpace())
+        end--;
+    if (end - start == 1 && text.at(start) == nullChar) {
+        ; //floor->setGrime(layerName, x, y, QString());
+    } else {
+        bool conversionOk;
+        uint index = text.mid(start, end - start).toUInt(&conversionOk);
+        if (!conversionOk) {
+            xml.raiseError(
+                    tr("Unable to parse user-tile at (%1,%2) on floor %3")
+                           .arg(x + 1).arg(y + 1).arg(floor->level()));
+            return;
+        }
+        floor->setGrime(layerName, x, y, getUserTile(floor, x, y, index));
+    }
+}
+
+QString BuildingReaderPrivate::getUserTile(BuildingFloor *floor, int x, int y, int index)
+{
+    if (!index)
+        return QString();
+    if (index > 0 && index - 1 < mUserTiles.size())
+        return mUserTiles.at(index - 1);
+    xml.raiseError(tr("Invalid tile index at (%1,%2) on floor %3")
                    .arg(x).arg(y).arg(floor->level()));
     return 0;
 }
