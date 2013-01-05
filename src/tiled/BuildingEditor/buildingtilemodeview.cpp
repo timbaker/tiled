@@ -333,9 +333,7 @@ QPolygonF BuildingTileModeScene::tileToScenePolygonF(const QRectF &tileRect)
 
 bool BuildingTileModeScene::currentFloorContains(const QPoint &tilePos, int dw, int dh)
 {
-    bool result = currentFloor() && currentFloor()->bounds()
-            .adjusted(0,0,dw,dh).contains(tilePos);
-    return result;
+    return currentFloor() && currentFloor()->contains(tilePos, dw, dh);
 }
 
 void BuildingTileModeScene::setToolTiles(const QVector<QVector<QString> > &tiles,

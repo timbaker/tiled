@@ -1194,9 +1194,19 @@ int BuildingFloor::height() const
     return mBuilding->height();
 }
 
-QRect BuildingFloor::bounds() const
+QRect BuildingFloor::bounds(int dw, int dh) const
 {
-    return mBuilding->bounds();
+    return mBuilding->bounds().adjusted(0, 0, dw, dh);
+}
+
+bool BuildingFloor::contains(int x, int y, int dw, int dh)
+{
+    return bounds().adjusted(0, 0, dw, dh).contains(x, y);
+}
+
+bool BuildingFloor::contains(const QPoint &p, int dw, int dh)
+{
+    return contains(p.x(), p.y(), dw, dh);
 }
 
 QVector<QRect> BuildingFloor::roomRegion(Room *room)
@@ -1325,6 +1335,20 @@ BuildingFloor *BuildingFloor::clone()
     foreach (QString key, klone->mGrimeGrid.keys())
         klone->mGrimeGrid[key] = new SparseTileGrid(*klone->mGrimeGrid[key]);
     return klone;
+}
+
+QVector<QVector<QString> > BuildingFloor::grimeAt(const QString &layerName,
+                                                  const QRect &r)
+{
+    QVector<QVector<QString> > tiles(r.width());
+    for (int x = 0; x < r.width(); x++) {
+        tiles[x].resize(r.height());
+        for (int y = 0; y < r.height(); y++) {
+            if (contains(r.x() + x, r.y() + y, 1, 1))
+                tiles[x][y] = grimeAt(layerName, r.x() + x, r.y() + y);
+        }
+    }
+    return tiles;
 }
 
 QMap<QString,SparseTileGrid*> BuildingFloor::grimeClone() const

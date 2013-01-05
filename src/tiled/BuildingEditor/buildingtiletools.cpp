@@ -225,7 +225,8 @@ DrawTileTool::DrawTileTool() :
     BaseTileTool(),
     mMouseDown(false),
     mErasing(false),
-    mCursor(0)
+    mCursor(0),
+    mCapturing(false)
 {
     updateStatusText();
 }
@@ -250,12 +251,18 @@ void DrawTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         }
         if (!mEditor->currentFloorContains(tilePos, 1, 1))
             return;
+        beginCapture();
+        return;
+    }
+
+    if (!mCaptureTiles.isEmpty()) {
+        mMouseDown = true;
         return;
     }
 
     mErasing = controlModifier();
     mStartTilePos = mEditor->sceneToTile(event->scenePos());
-    mCursorTileBounds = QRect(mStartTilePos, QSize(1, 1)) & floor()->bounds().adjusted(0, 0, 1, 1);
+    mCursorTileBounds = QRect(mStartTilePos, QSize(1, 1)) & floor()->bounds(1, 1);
     mMouseDown = true;
     updateStatusText();
 }
@@ -269,21 +276,30 @@ void DrawTileTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 void DrawTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_UNUSED(event)
+    if (mCapturing) {
+        endCapture();
+        return;
+    }
     if (mMouseDown) {
-        QRect r = mCursorTileBounds;
+        QRect r = mCursorTileBounds & floor()->bounds(1, 1);
         bool changed = false;
-        QString tileName = mErasing ? QString() : mTileName;
         QVector<QVector<QString> > grid;
-        grid.resize(r.width());
-        for (int x = 0; x < r.width(); x++)
-            grid[x].fill(tileName, r.height());
-        for (int x = r.left(); x <= r.right(); x++) {
-            for (int y = r.top(); y <= r.bottom(); y++) {
-                if (floor()->grimeAt(layerName(), x, y) != tileName) {
-                    changed = true;
-                    break;
+        if (mCaptureTiles.isEmpty()) {
+            QString tileName = mErasing ? QString() : mTileName;
+            grid.resize(r.width());
+            for (int x = 0; x < r.width(); x++)
+                grid[x].fill(tileName, r.height());
+            for (int x = r.left(); x <= r.right(); x++) {
+                for (int y = r.top(); y <= r.bottom(); y++) {
+                    if (floor()->grimeAt(layerName(), x, y) != tileName) {
+                        changed = true;
+                        break;
+                    }
                 }
             }
+        } else {
+            grid = floor()->grimeAt(layerName(), r);
+            changed = mergeTiles(clipTiles(mCursorTileBounds.topLeft(), mCaptureTiles, r), grid);
         }
         if (changed)
             undoStack()->push(new PaintFloorTiles(mEditor->document(), floor(),
@@ -302,6 +318,7 @@ void DrawTileTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
     Q_UNUSED(modifiers)
     if (!mMouseDown) {
         mErasing = controlModifier();
+        mCursorTilePos = QPoint(-666,-666);
         updateCursor(mMouseScenePos);
     }
 }
@@ -319,9 +336,81 @@ void DrawTileTool::deactivate()
     mMouseDown = false;
 }
 
+void DrawTileTool::beginCapture()
+{
+    if (mMouseDown)
+        return;
+
+    mEditor->clearToolTiles();
+
+    mCapturing = true;
+    mMouseDown = true;
+
+    mCaptureTiles.clear();
+
+    mStartTilePos = mEditor->sceneToTile(mMouseScenePos);
+    mCursorTileBounds = QRect(mStartTilePos, QSize(1, 1)) & floor()->bounds(1, 1);
+    updateStatusText();
+
+    updateCursor(mMouseScenePos);
+}
+
+void DrawTileTool::endCapture()
+{
+    if (!mCapturing)
+        return;
+
+    mCaptureTiles = floor()->grimeAt(layerName(), mCursorTileBounds);
+
+    mCapturing = false;
+    mMouseDown = false;
+
+    updateCursor(mMouseScenePos);
+    updateStatusText();
+}
+
+// Put non-empty tiles in 'above' into 'below'.
+// Return true if any tiles in below were replaced with a different one.
+bool DrawTileTool::mergeTiles(const QVector<QVector<QString> > &above,
+                              QVector<QVector<QString> > &below)
+{
+    bool changed = false;
+    for (int x = 0; x < above.size(); x++) {
+        for (int y = 0; y < above[x].size(); y++) {
+            if (!above[x][y].isEmpty() && above[x][y] != below[x][y]) {
+                below[x][y] = above[x][y];
+                changed = true;
+            }
+        }
+    }
+    return changed;
+}
+
+QVector<QVector<QString> > DrawTileTool::clipTiles(const QPoint &p,
+                                                   const QVector<QVector<QString> > &tiles,
+                                                   const QRect &bounds)
+{
+    QVector<QVector<QString> > ret;
+    QRect r1 = QRect(p.x(), p.y(), tiles.size(), tiles[0].size());
+    QRect r = bounds & r1;
+    if (r.isValid()) {
+        ret.resize(r.width());
+        for (int x = r.x(); x <= r.right(); x++) {
+            ret[x-r.x()].resize(r.height());
+            for (int y = r.y(); y <= r.bottom(); y++)
+                ret[x-r.x()][y-r.y()] = tiles[x-p.x()][y-p.y()];
+        }
+    }
+    return ret;
+}
+
 void DrawTileTool::updateCursor(const QPointF &scenePos)
 {
     QPoint tilePos = mEditor->sceneToTile(scenePos);
+    if (tilePos == mCursorTilePos)
+        return;
+    mCursorTilePos = tilePos;
+
     if (!mCursor) {
         mCursor = new DrawTileToolCursor(mEditor);
         mCursor->setZValue(mEditor->ZVALUE_CURSOR);
@@ -336,7 +425,7 @@ void DrawTileTool::updateCursor(const QPointF &scenePos)
     } else {
         mCursorTileBounds = QRect(tilePos, QSize(1, 1));
     }
-    mCursorTileBounds &= floor()->bounds().adjusted(0, 0, 1, 1);
+    mCursorTileBounds &= floor()->bounds(1, 1);
 
     // This crap is all to work around a bug when the view was scrolled and
     // then the item moves which led to areas not being repainted.  Each item
@@ -350,6 +439,16 @@ void DrawTileTool::updateCursor(const QPointF &scenePos)
         mCursor->update();
     }
 
+    if (!mCaptureTiles.isEmpty()) {
+        mCursorTileBounds.setLeft(tilePos.x() - mCaptureTiles.size() / 2);
+        mCursorTileBounds.setTop(tilePos.y() - mCaptureTiles[0].size() / 2);
+        mCursorTileBounds.setWidth(mCaptureTiles.size());
+        mCursorTileBounds.setHeight(mCaptureTiles[0].size());
+        QVector<QVector<QString> > merged = floor()->grimeAt(layerName(), mCursorTileBounds);
+        mergeTiles(mCaptureTiles, merged);
+        mEditor->setToolTiles(merged, mCursorTileBounds.topLeft(), layerName());
+    }
+
     mCursor->setPolygonFromTileRect(mCursorTileBounds);
     if (mErasing) {
         QPen pen(QColor(255,0,0,128));
@@ -361,8 +460,10 @@ void DrawTileTool::updateCursor(const QPointF &scenePos)
         mCursor->setPen(pen);
         mCursor->setBrush(QColor(0,0,255,128));
     }
-    mCursor->setVisible(mMouseDown || mEditor->currentFloorContains(tilePos, 1, 1));
+    mCursor->setVisible(mMouseDown || !mCaptureTiles.isEmpty() || mEditor->currentFloorContains(tilePos, 1, 1));
 
+    if (mCapturing || !mCaptureTiles.isEmpty())
+        return;
 
     QRect r = mCursorTileBounds;
     QVector<QVector<QString> > tiles(r.width());

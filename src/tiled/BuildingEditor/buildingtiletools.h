@@ -161,7 +161,7 @@ public:
     void currentModifiersChanged(Qt::KeyboardModifiers modifiers);
 
     void setTile(const QString &tileName)
-    { mTileName = tileName; }
+    { mTileName = tileName; mCaptureTiles.clear(); }
 
     QString currentTile() const
     { return mTileName; }
@@ -171,6 +171,16 @@ public slots:
     void deactivate();
 
 private:
+    void beginCapture();
+    void endCapture();
+
+    bool mergeTiles(const QVector<QVector<QString> > &above,
+                    QVector<QVector<QString> > &below);
+
+    QVector<QVector<QString> > clipTiles(const QPoint &p,
+                                         const QVector<QVector<QString> > &tiles,
+                                         const QRect &bounds);
+
     void updateCursor(const QPointF &scenePos);
     void updateStatusText();
 
@@ -180,9 +190,13 @@ private:
     bool mErasing;
     QPointF mMouseScenePos;
     QPoint mStartTilePos;
+    QPoint mCursorTilePos;
     QRect mCursorTileBounds;
     DrawTileToolCursor *mCursor;
     QRectF mCursorViewRect;
+
+    bool mCapturing;
+    QVector<QVector<QString> > mCaptureTiles;
 
     QString mTileName;
 };

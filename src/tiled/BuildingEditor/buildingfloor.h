@@ -269,10 +269,13 @@ public:
     int width() const;
     int height() const;
 
-    QRect bounds() const;
+    QRect bounds(int dw = 0, int dh = 0) const;
 
     int level() const
     { return mLevel; }
+
+    bool contains(int x, int y, int dw = 0, int dh = 0);
+    bool contains(const QPoint &p, int dw = 0, int dh = 0);
 
     QVector<QRect> roomRegion(Room *room);
 
@@ -296,6 +299,8 @@ public:
             return mGrimeGrid[layerName]->at(x, y);
         return QString();
     }
+
+    QVector<QVector<QString> > grimeAt(const QString &layerName, const QRect &r);
 
     QMap<QString,SparseTileGrid*> setGrime(const QMap<QString,SparseTileGrid*> &grime)
     {
