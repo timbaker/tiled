@@ -37,7 +37,7 @@ class FurnitureTile;
 class FurnitureTiles;
 class RoofObject;
 class Room;
-class SparseTileGrid;
+class FloorTileGrid;
 class WallObject;
 class Window;
 
@@ -122,8 +122,8 @@ public:
     QVector<QVector<Room *> > swapFloorGrid(BuildingFloor *floor,
                                             const QVector<QVector<Room*> > &grid);
 
-    QMap<QString,SparseTileGrid*> swapFloorTiles(BuildingFloor *floor,
-                                                 const QMap<QString, SparseTileGrid *> &grid,
+    QMap<QString,FloorTileGrid*> swapFloorTiles(BuildingFloor *floor,
+                                                 const QMap<QString, FloorTileGrid *> &grid,
                                                  bool emitSignal);
 
     QVector<QVector<QString> > swapFloorTiles(BuildingFloor *floor, const QString &layerName,
@@ -133,7 +133,7 @@ public:
     QSize resizeBuilding(const QSize &newSize);
     QVector<QVector<Room *> > resizeFloor(BuildingFloor *floor,
                                           const QVector<QVector<Room*> > &grid,
-                                          QMap<QString,SparseTileGrid*> &grime);
+                                          QMap<QString,FloorTileGrid*> &grime);
     void rotateBuilding(bool right);
     void flipBuilding(bool horizontal);
 

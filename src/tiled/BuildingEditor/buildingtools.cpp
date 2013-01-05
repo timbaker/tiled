@@ -717,14 +717,14 @@ void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor, bool objectsTo
                                         "Move Rooms"));
 
     // Move the user-placed tiles
-    QMap<QString,SparseTileGrid*> grime = floor->grimeClone();
+    QMap<QString,FloorTileGrid*> grime = floor->grimeClone();
 
     floorBounds = floor->bounds().adjusted(0, 0, 1, 1);
     foreach (QRect src, mSelectedArea.rects()) {
         src &= floorBounds;
         for (int x = src.left(); x <= src.right(); x++) {
             for (int y = src.top(); y <= src.bottom(); y++) {
-                foreach (SparseTileGrid *stg, grime.values())
+                foreach (FloorTileGrid *stg, grime.values())
                     stg->replace(x, y, QString());
             }
         }

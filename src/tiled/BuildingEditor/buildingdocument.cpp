@@ -296,11 +296,11 @@ QVector<QVector<Room*> > BuildingDocument::swapFloorGrid(BuildingFloor *floor,
     return old;
 }
 
-QMap<QString, SparseTileGrid *> BuildingDocument::swapFloorTiles(BuildingFloor *floor,
-                                           const QMap<QString, SparseTileGrid*> &grid,
+QMap<QString, FloorTileGrid *> BuildingDocument::swapFloorTiles(BuildingFloor *floor,
+                                           const QMap<QString, FloorTileGrid*> &grid,
                                            bool emitSignal)
 {
-    QMap<QString,SparseTileGrid*> old = floor->setGrime(grid);
+    QMap<QString,FloorTileGrid*> old = floor->setGrime(grid);
     if (emitSignal) // The signal should not be emitted when flipping/resizing/rotating.
         emit floorTilesChanged(floor);
     return old;
@@ -331,7 +331,7 @@ QSize BuildingDocument::resizeBuilding(const QSize &newSize)
 
 QVector<QVector<Room *> > BuildingDocument::resizeFloor(BuildingFloor *floor,
                                                         const QVector<QVector<Room *> > &grid,
-                                                        QMap<QString,SparseTileGrid*> &grime)
+                                                        QMap<QString,FloorTileGrid*> &grime)
 {
     QVector<QVector<Room *> > old = floor->grid();
     floor->setGrid(grid);

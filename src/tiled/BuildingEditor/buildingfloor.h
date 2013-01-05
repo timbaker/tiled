@@ -39,10 +39,10 @@ class Room;
 class Stairs;
 class Window;
 
-class SparseTileGrid
+class FloorTileGrid
 {
 public:
-    SparseTileGrid(int width, int height)
+    FloorTileGrid(int width, int height)
         : mWidth(width)
         , mHeight(height)
         , mUseVector(false)
@@ -280,14 +280,14 @@ public:
     QVector<QRect> roomRegion(Room *room);
 
     QVector<QVector<Room*> > resizeGrid(const QSize &newSize) const;
-    QMap<QString,SparseTileGrid*> resizeGrime(const QSize &newSize) const;
+    QMap<QString,FloorTileGrid*> resizeGrime(const QSize &newSize) const;
 
     void rotate(bool right);
     void flip(bool horizontal);
 
     BuildingFloor *clone();
 
-    const QMap<QString,SparseTileGrid*> &grime() const
+    const QMap<QString,FloorTileGrid*> &grime() const
     { return mGrimeGrid; }
 
     QStringList grimeLayers() const
@@ -302,19 +302,19 @@ public:
 
     QVector<QVector<QString> > grimeAt(const QString &layerName, const QRect &r);
 
-    QMap<QString,SparseTileGrid*> setGrime(const QMap<QString,SparseTileGrid*> &grime)
+    QMap<QString,FloorTileGrid*> setGrime(const QMap<QString,FloorTileGrid*> &grime)
     {
-        QMap<QString,SparseTileGrid*> old = mGrimeGrid;
+        QMap<QString,FloorTileGrid*> old = mGrimeGrid;
         mGrimeGrid = grime;
         return old;
     }
 
-    QMap<QString,SparseTileGrid*> grimeClone() const;
+    QMap<QString,FloorTileGrid*> grimeClone() const;
 
     void setGrime(const QString &layerName, int x, int y, const QString &tileName)
     {
         if (!mGrimeGrid.contains(layerName))
-            mGrimeGrid[layerName] = new SparseTileGrid(width() + 1, height() + 1);
+            mGrimeGrid[layerName] = new FloorTileGrid(width() + 1, height() + 1);
         mGrimeGrid[layerName]->replace(x, y, tileName);
     }
 
@@ -344,7 +344,7 @@ private:
     QVector<QVector<int> > mIndexAtPos;
     int mLevel;
     QList<BuildingObject*> mObjects;
-    QMap<QString,SparseTileGrid*> mGrimeGrid;
+    QMap<QString,FloorTileGrid*> mGrimeGrid;
     QMap<QString,qreal> mLayerOpacity;
     QMap<QString,bool> mLayerVisibility;
 };

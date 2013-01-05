@@ -315,7 +315,7 @@ void SwapFloorGrid::swap()
 /////
 
 SwapFloorGrime::SwapFloorGrime(BuildingDocument *doc, BuildingFloor *floor,
-                               const QMap<QString, SparseTileGrid *> &grid,
+                               const QMap<QString, FloorTileGrid *> &grid,
                                char *undoText, bool emitSignal) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", undoText)),
     mDocument(doc),

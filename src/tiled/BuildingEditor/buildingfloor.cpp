@@ -1259,11 +1259,11 @@ QVector<QVector<Room *> > BuildingFloor::resizeGrid(const QSize &newSize) const
     return grid;
 }
 
-QMap<QString,SparseTileGrid*> BuildingFloor::resizeGrime(const QSize &newSize) const
+QMap<QString,FloorTileGrid*> BuildingFloor::resizeGrime(const QSize &newSize) const
 {
-    QMap<QString,SparseTileGrid*> grid;
+    QMap<QString,FloorTileGrid*> grid;
     foreach (QString key, mGrimeGrid.keys()) {
-        grid[key] = new SparseTileGrid(newSize.width(), newSize.height());
+        grid[key] = new FloorTileGrid(newSize.width(), newSize.height());
         for (int x = 0; x < qMin(mGrimeGrid[key]->width(), newSize.width()); x++)
             for (int y = 0; y < qMin(mGrimeGrid[key]->height(), newSize.height()); y++)
                 grid[key]->replace(x, y, mGrimeGrid[key]->at(x, y));
@@ -1333,7 +1333,7 @@ BuildingFloor *BuildingFloor::clone()
     }
     klone->mGrimeGrid = mGrimeGrid;
     foreach (QString key, klone->mGrimeGrid.keys())
-        klone->mGrimeGrid[key] = new SparseTileGrid(*klone->mGrimeGrid[key]);
+        klone->mGrimeGrid[key] = new FloorTileGrid(*klone->mGrimeGrid[key]);
     return klone;
 }
 
@@ -1351,11 +1351,11 @@ QVector<QVector<QString> > BuildingFloor::grimeAt(const QString &layerName,
     return tiles;
 }
 
-QMap<QString,SparseTileGrid*> BuildingFloor::grimeClone() const
+QMap<QString,FloorTileGrid*> BuildingFloor::grimeClone() const
 {
-    QMap<QString,SparseTileGrid*> clone;
+    QMap<QString,FloorTileGrid*> clone;
     foreach (QString key, mGrimeGrid.keys()) {
-        clone[key] = new SparseTileGrid(*mGrimeGrid[key]);
+        clone[key] = new FloorTileGrid(*mGrimeGrid[key]);
     }
     return clone;
 }

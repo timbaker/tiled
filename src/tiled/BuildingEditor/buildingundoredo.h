@@ -37,7 +37,7 @@ class FurnitureTile;
 class FurnitureTiles;
 class RoofObject;
 class Room;
-class SparseTileGrid;
+class FloorTileGrid;
 class WallObject;
 class Window;
 
@@ -298,7 +298,7 @@ class SwapFloorGrime : public QUndoCommand
 {
 public:
     SwapFloorGrime(BuildingDocument *doc, BuildingFloor *floor,
-                   const QMap<QString,SparseTileGrid*> &grid, char *undoText,
+                   const QMap<QString,FloorTileGrid*> &grid, char *undoText,
                    bool emitSignal);
 
     ~SwapFloorGrime();
@@ -311,7 +311,7 @@ private:
 
     BuildingDocument *mDocument;
     BuildingFloor *mFloor;
-    QMap<QString,SparseTileGrid*> mGrid;
+    QMap<QString,FloorTileGrid*> mGrid;
     bool mEmitSignal;
 };
 
@@ -398,7 +398,7 @@ private:
     BuildingFloor *mFloor;
     QSize mSize;
     QVector<QVector<Room*> > mGrid;
-    QMap<QString,SparseTileGrid*> mGrime;
+    QMap<QString,FloorTileGrid*> mGrime;
 };
 
 class InsertFloor : public QUndoCommand
