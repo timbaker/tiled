@@ -52,6 +52,8 @@ private:
 
     void switchLayerForTile(Tiled::Tile *tile);
 
+    void writeSettings();
+
     typedef Tiled::Tileset Tileset;
 
 private slots:
@@ -86,6 +88,7 @@ private:
     Tiled::Internal::Zoomable *mZoomable;
     QLabel *mFloorLabel;
     bool mSynching;
+    bool mFirstTimeSeen;
 };
 
 } // BuildingEditor

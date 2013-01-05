@@ -50,7 +50,8 @@ BuildingTileModeWidget::BuildingTileModeWidget(QWidget *parent) :
     mCurrentTileset(0),
     mZoomable(new Zoomable(this)),
     mFloorLabel(new QLabel),
-    mSynching(false)
+    mSynching(false),
+    mFirstTimeSeen(true)
 {
     ui->setupUi(this);
 
@@ -120,6 +121,7 @@ BuildingTileModeWidget::BuildingTileModeWidget(QWidget *parent) :
 
 BuildingTileModeWidget::~BuildingTileModeWidget()
 {
+    writeSettings();
     delete ui;
 }
 
@@ -169,8 +171,24 @@ void BuildingTileModeWidget::switchTo()
     ui->dockLayers->show(); // FIXME: unless the user hid it
     ui->dockTilesets->show(); // FIXME: unless the user hid it
 
-    if (!ui->tilesets->count())
-        setTilesetList();
+    if (mFirstTimeSeen) {
+        if (!ui->tilesets->count())
+            setTilesetList(); // TileMetaInfoMgr signals might have done this already.
+
+        QSettings mSettings;
+        mSettings.beginGroup(QLatin1String("BuildingEditor/TileModeWidget"));
+        QString tilesetName = mSettings.value(QLatin1String("SelectedTileset")).toString();
+        if (!tilesetName.isEmpty()) {
+            int index = TileMetaInfoMgr::instance()->indexOf(tilesetName);
+            if (index >= 0)
+                ui->tilesets->setCurrentRow(index);
+        }
+        qreal scale = mSettings.value(QLatin1String("EditorScale"), 1.0).toReal();
+        view()->zoomable()->setScale(scale);
+        mSettings.endGroup();
+
+        mFirstTimeSeen = false;
+    }
 }
 
 void BuildingTileModeWidget::switchAway()
@@ -238,6 +256,16 @@ void BuildingTileModeWidget::switchLayerForTile(Tiled::Tile *tile)
         if (view()->scene()->layerNames().contains(layerName))
             mDocument->setCurrentLayer(layerName);
     }
+}
+
+void BuildingTileModeWidget::writeSettings()
+{
+    QSettings mSettings;
+    mSettings.beginGroup(QLatin1String("BuildingEditor/TileModeWidget"));
+    mSettings.setValue(QLatin1String("EditorScale"), view()->zoomable()->scale());
+    mSettings.setValue(QLatin1String("SelectedTileset"),
+                       mCurrentTileset ? mCurrentTileset->name() : QString());
+    mSettings.endGroup();
 }
 
 void BuildingTileModeWidget::currentLayerChanged(int row)
