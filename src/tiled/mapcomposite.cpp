@@ -340,6 +340,11 @@ void CompositeLayerGroup::synch()
         }
     }
 
+#ifdef BUILDINGED
+    if (mAnyVisibleLayers)
+        maxMargins(m, QMargins(0, 128, 64, 0), m);
+#endif
+
     mSubMapTileBounds = r;
     mDrawMargins = m;
 
