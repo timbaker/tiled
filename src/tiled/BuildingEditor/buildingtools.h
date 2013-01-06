@@ -127,6 +127,8 @@ public:
     Qt::KeyboardModifiers keyboardModifiers()
     { return mCurrentModifiers; }
 
+    void clearDocument();
+
 signals:
     void currentToolChanged(BaseTool *tool);
     void statusTextChanged(BaseTool *tool);

@@ -168,6 +168,17 @@ void ToolManager::checkKeyboardModifiers(Qt::KeyboardModifiers modifiers)
         mCurrentTool->currentModifiersChanged(modifiers);
 }
 
+void ToolManager::clearDocument()
+{
+    // Avoid a race condition when a document is closed.
+    // When updateActions() calls setEnabled(false) on each tool one-by-one,
+    // another tool is activated (see toolEnabledChanged()).
+    // No tool should become active when a document is closing.
+    activateTool(0);
+    foreach (BaseTool *tool, mTools)
+        tool->action()->setEnabled(false);
+}
+
 void ToolManager::currentToolStatusTextChanged()
 {
     emit statusTextChanged(mCurrentTool);

@@ -1603,6 +1603,9 @@ bool BuildingEditorWindow::confirmSave()
 void BuildingEditorWindow::addDocument(BuildingDocument *doc)
 {
     if (mCurrentDocument) {
+        // Disable all the tools before losing the document/views/etc.
+        ToolManager::instance()->clearDocument();
+        TileToolManager::instance()->clearDocument();
         mRoomComboBox->clear();
         roomEditor->clearDocument();
         mTileModeWidget->clearDocument();
@@ -1720,6 +1723,9 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
 void BuildingEditorWindow::clearDocument()
 {
     if (mCurrentDocument) {
+        // Disable all the tools before losing the document/views/etc.
+        ToolManager::instance()->clearDocument();
+        TileToolManager::instance()->clearDocument();
         roomEditor->clearDocument();
         mTileModeWidget->clearDocument();
         mPreviewWin->clearDocument();
