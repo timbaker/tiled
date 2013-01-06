@@ -179,14 +179,16 @@ private:
     void endCapture();
     void clearCaptureTiles();
 
-    void updateCursor(const QPointF &scenePos);
+    void updateCursor(const QPointF &scenePos, bool force = true);
     void updateStatusText();
 
 private:
     static DrawTileTool *mInstance;
     bool mMouseDown;
+    bool mMouseMoved;
     bool mErasing;
     QPointF mMouseScenePos;
+    QPointF mStartScenePos;
     QPoint mStartTilePos;
     QPoint mCursorTilePos;
     QRect mCursorTileBounds;
