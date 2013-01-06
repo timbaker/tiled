@@ -195,7 +195,7 @@ void TileToolManager::currentToolStatusTextChanged()
 
 DrawTileToolCursor::DrawTileToolCursor(BuildingTileModeScene *scene,
                                        QGraphicsItem *parent) :
-    QGraphicsPolygonItem(parent),
+    QGraphicsItem(parent),
     mScene(scene)
 {
 }
@@ -209,7 +209,21 @@ void DrawTileToolCursor::paint(QPainter *painter,
                                const QStyleOptionGraphicsItem *option,
                                QWidget *widget)
 {
-    QGraphicsPolygonItem::paint(painter, option, widget);
+    Q_UNUSED(option)
+    Q_UNUSED(widget)
+    painter->setPen(mPen);
+    painter->setBrush(mBrush);
+    painter->drawPolygon(mPolygon);
+}
+
+void DrawTileToolCursor::setPen(const QPen &pen)
+{
+    mPen = pen;
+}
+
+void DrawTileToolCursor::setBrush(const QBrush &brush)
+{
+    mBrush = brush;
 }
 
 void DrawTileToolCursor::setPolygonFromTileRect(const QRect &tileRect)
@@ -217,14 +231,24 @@ void DrawTileToolCursor::setPolygonFromTileRect(const QRect &tileRect)
     QPolygonF polygon = mScene->tileToScenePolygon(tileRect);
     QRectF bounds = polygon.boundingRect();
 
-    // Add tile bounds to the shape.
-    bounds.adjust(-4, -(128-32), 4, 4);
-    if (bounds != mBoundingRect) {
+    // Add tile bounds and pen width to the shape.
+    bounds.adjust(-4, -(128-32), 5, 5);
+
+    if (bounds != mBoundingRect || polygon != mPolygon) {
+        // NOTE-SCENE-CORRUPTION
+        // Schedule a redraw of the current area.  Although prepareGeometryChange()
+        // marks the current area as needing to be redrawn by setting the
+        // paintedViewBoundingRectsNeedRepaint flag, any additional call to
+        // QGraphicsScene::update will result in paintedViewBoundingRects getting
+        // set the *new* location of this item before _q_processDirtyItems gets
+        // called, so the current area never gets repainted.
+        if (scene())
+            scene()->update(mBoundingRect);
+
         prepareGeometryChange();
         mBoundingRect = bounds;
+        mPolygon = polygon;
     }
-
-    QGraphicsPolygonItem::setPolygon(polygon);
 }
 
 /////
@@ -421,22 +445,11 @@ void DrawTileTool::updateCursor(const QPointF &scenePos, bool force)
                                   qMin(mStartTilePos.y(), tilePos.y())),
                                   QPoint(qMax(mStartTilePos.x(), tilePos.x()),
                                   qMax(mStartTilePos.y(), tilePos.y())));
+        mCursorTileBounds &= floor()->bounds(1, 1); // before updateStatusText
         updateStatusText();
     } else {
         mCursorTileBounds = QRect(tilePos, QSize(1, 1));
-    }
-    mCursorTileBounds &= floor()->bounds(1, 1);
-
-    // This crap is all to work around a bug when the view was scrolled and
-    // then the item moves which led to areas not being repainted.  Each item
-    // remembers where it was last drawn in a view, but those rectangles are
-    // not updated when the view scrolls.
-    QPolygonF polygon = mEditor->tileToScenePolygon(mCursorTileBounds);
-    QRectF sceneRect = polygon.boundingRect().adjusted(-4, -(128-32), 4, 4);
-    QRectF viewRect = mEditor->views()[0]->mapFromScene(sceneRect).boundingRect();
-    if (viewRect != mCursorViewRect) {
-        mCursorViewRect = viewRect;
-        mCursor->update();
+        mCursorTileBounds &= floor()->bounds(1, 1);
     }
 
     if (mCaptureTiles) {
@@ -624,18 +637,6 @@ void SelectTileTool::updateCursor(const QPointF &scenePos, bool force)
         mCursorTileBounds = QRect(tilePos, QSize(1, 1));
     }
     mCursorTileBounds &= floor()->bounds(1, 1);
-
-    // This crap is all to work around a bug when the view was scrolled and
-    // then the item moves which led to areas not being repainted.  Each item
-    // remembers where it was last drawn in a view, but those rectangles are
-    // not updated when the view scrolls.
-    QPolygonF polygon = mEditor->tileToScenePolygon(mCursorTileBounds);
-    QRectF sceneRect = polygon.boundingRect().adjusted(-4, -(128-32), 4, 4);
-    QRectF viewRect = mEditor->views()[0]->mapFromScene(sceneRect).boundingRect();
-    if (viewRect != mCursorViewRect) {
-        mCursorViewRect = viewRect;
-        mCursor->update();
-    }
 
     mCursor->setPolygonFromTileRect(mCursorTileBounds);
 

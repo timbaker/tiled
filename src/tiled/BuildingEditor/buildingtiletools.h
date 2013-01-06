@@ -20,7 +20,9 @@
 
 #include <QObject>
 
+#include <QBrush>
 #include <QGraphicsPolygonItem>
+#include <QPen>
 #include <QRectF>
 
 class QAction;
@@ -133,20 +135,27 @@ private:
 
 /////
 
-class DrawTileToolCursor : public QGraphicsPolygonItem
+class DrawTileToolCursor : public QGraphicsItem
 {
 public:
     DrawTileToolCursor(BuildingTileModeScene *scene, QGraphicsItem *parent = 0);
 
     QRectF boundingRect() const;
+
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *widget);
+
+    void setPen(const QPen &pen);
+    void setBrush(const QBrush &brush);
 
     void setPolygonFromTileRect(const QRect &tileRect);
 
 private:
     BuildingTileModeScene *mScene;
+    QPolygonF mPolygon;
     QRectF mBoundingRect;
+    QPen mPen;
+    QBrush mBrush;
 };
 
 class DrawTileTool : public BaseTileTool
@@ -193,8 +202,6 @@ private:
     QPoint mCursorTilePos;
     QRect mCursorTileBounds;
     DrawTileToolCursor *mCursor;
-    QRectF mCursorViewRect;
-
     bool mCapturing;
     FloorTileGrid *mCaptureTiles;
 
@@ -242,7 +249,6 @@ private:
     QPoint mCursorTilePos;
     QRect mCursorTileBounds;
     DrawTileToolCursor *mCursor;
-    QRectF mCursorViewRect;
     QRegion mSelectedRegion;
 };
 

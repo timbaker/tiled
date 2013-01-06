@@ -318,17 +318,8 @@ void PencilTool::updateCursor(const QPointF &scenePos)
     } else
         rect = mEditor->tileToSceneRect(tilePos);
 
-    // This crap is all to work around a bug when the view was scrolled and
-    // then the item moves which led to areas not being repainted.  Each item
-    // remembers where it was last drawn in a view, but those rectangles are
-    // not updated when the view scrolls.
-    QRectF viewRect = mEditor->views()[0]->mapFromScene(rect).boundingRect();
-    if (viewRect != mCursorViewRect) {
-        mCursorViewRect = viewRect;
-        mCursor->update();
-    }
-
     mCursor->setRect(rect);
+
     if (mErasing) {
         QPen pen(QColor(255,0,0,128));
         pen.setWidth(3);
@@ -338,7 +329,15 @@ void PencilTool::updateCursor(const QPointF &scenePos)
         mCursor->setPen(QColor(Qt::black));
         mCursor->setBrush(QColor(BuildingEditorWindow::instance()->currentRoom()->Color));
     }
+
     mCursor->setVisible(mMouseDown || mEditor->currentFloorContains(tilePos));
+
+    // See NOTE-SCENE-CORRUPTION
+    if (mCursor->boundingRect() != mCursorSceneRect) {
+        // Don't call mCursor->update(), it isn't the same.
+        mEditor->update(mCursorSceneRect);
+        mCursorSceneRect = mCursor->boundingRect();
+    }
 }
 
 void PencilTool::updateStatusText()
@@ -1334,23 +1333,20 @@ void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
             mEditor->addItem(mCursorItem);
         }
 
-        // This crap is all to work around a bug when the view was scrolled and
-        // then the item moves which led to areas not being repainted.  Each item
-        // remembers where it was last drawn in a view, but those rectangles are
-        // not updated when the view scrolls.
-        QRectF rect = mEditor->tileToSceneRect(mCurrentPos).adjusted(0,0,-1,-1);
-        QRectF viewRect = mEditor->views()[0]->mapFromScene(rect).boundingRect();
-        if (viewRect != mCursorViewRect) {
-            mCursorViewRect = viewRect;
-            mCursorItem->update();
-        }
-
         mCursorItem->setRect(mEditor->tileToSceneRect(mCurrentPos));
 
         updateHandle(event->scenePos());
 
         mCursorItem->setVisible(mEditor->currentFloorContains(mCurrentPos) &&
                                 !mMouseOverHandle);
+
+        // See NOTE-SCENE-CORRUPTION
+        if (mCursorItem->boundingRect() != mCursorSceneRect) {
+            // Don't call mCursor->update(), it isn't the same.
+            mEditor->update(mCursorSceneRect);
+            mCursorSceneRect = mCursorItem->boundingRect();
+        }
+
         return;
     }
 
@@ -2049,24 +2045,21 @@ void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
             mEditor->addItem(mCursorItem);
         }
 
-        // This crap is all to work around a bug when the view was scrolled and
-        // then the item moves which led to areas not being repainted.  Each item
-        // remembers where it was last drawn in a view, but those rectangles are
-        // not updated when the view scrolls.
         p = mEditor->tileToScene(mCurrentPos);
         QRectF rect(p.x() - 6, p.y() - 6, 12, 12);
-        QRectF viewRect = mEditor->views()[0]->mapFromScene(rect).boundingRect();
-        if (viewRect != mCursorViewRect) {
-            mCursorViewRect = viewRect;
-            mCursorItem->update();
-        }
-
         mCursorItem->setRect(rect);
 
         updateHandle(event->scenePos());
 
         mCursorItem->setVisible(floor()->bounds().adjusted(0,0,1,1).contains(mCurrentPos) &&
                                 !mMouseOverHandle);
+
+        // See NOTE-SCENE-CORRUPTION
+        if (mCursorItem->boundingRect() != mCursorSceneRect) {
+            // Don't call mCursor->update(), it isn't the same.
+            mEditor->update(mCursorSceneRect);
+            mCursorSceneRect = mCursorItem->boundingRect();
+        }
         return;
     }
 

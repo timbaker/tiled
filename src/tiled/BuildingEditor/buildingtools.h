@@ -177,7 +177,7 @@ private:
     QPoint mStartTilePos;
     QRect mCursorTileBounds;
     QGraphicsRectItem *mCursor;
-    QRectF mCursorViewRect;
+    QRectF mCursorSceneRect;
 };
 
 /////
@@ -408,7 +408,7 @@ private:
     RoofObject *mObject;
     GraphicsObjectItem *mItem;
     QGraphicsRectItem *mCursorItem;
-    QRectF mCursorViewRect;
+    QRectF mCursorSceneRect;
 
     GraphicsRoofItem *mObjectItem; // item for roof object mouse is over
     RoofObject *mHandleObject; // roof object mouse is over
@@ -540,7 +540,7 @@ private:
     WallObject *mObject;
     GraphicsObjectItem *mItem;
     QGraphicsRectItem *mCursorItem;
-    QRectF mCursorViewRect;
+    QRectF mCursorSceneRect;
 
     GraphicsWallItem *mObjectItem; // item for object mouse is over
     WallObject *mHandleObject; // object mouse is over
