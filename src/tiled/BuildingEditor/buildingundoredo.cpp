@@ -340,20 +340,27 @@ void SwapFloorGrime::swap()
 PaintFloorTiles::PaintFloorTiles(BuildingDocument *doc, BuildingFloor *floor,
                                  const QString &layerName,
                                  const QRect &bounds,
-                                 const QVector<QVector<QString> > &grid,
+                                 FloorTileGrid *tiles,
                                  char *undoText) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", undoText)),
     mDocument(doc),
     mFloor(floor),
     mLayerName(layerName),
     mBounds(bounds),
-    mGrid(grid)
+    mTiles(tiles)
 {
+}
+
+PaintFloorTiles::~PaintFloorTiles()
+{
+    delete mTiles;
 }
 
 void PaintFloorTiles::swap()
 {
-    mGrid = mDocument->swapFloorTiles(mFloor, mLayerName, mBounds, mGrid);
+    FloorTileGrid *old = mTiles;
+    mTiles = mDocument->swapFloorTiles(mFloor, mLayerName, mBounds, mTiles);
+    delete old;
 }
 
 /////

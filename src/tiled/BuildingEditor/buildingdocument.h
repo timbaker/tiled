@@ -123,12 +123,13 @@ public:
                                             const QVector<QVector<Room*> > &grid);
 
     QMap<QString,FloorTileGrid*> swapFloorTiles(BuildingFloor *floor,
-                                                 const QMap<QString, FloorTileGrid *> &grid,
-                                                 bool emitSignal);
+                                                const QMap<QString,FloorTileGrid*> &grid,
+                                                bool emitSignal);
 
-    QVector<QVector<QString> > swapFloorTiles(BuildingFloor *floor, const QString &layerName,
-                                              const QRect &bounds,
-                                              const QVector<QVector<QString> > &grid);
+    FloorTileGrid *swapFloorTiles(BuildingFloor *floor,
+                                  const QString &layerName,
+                                  const QRect &bounds,
+                                  const FloorTileGrid *tiles);
 
     QSize resizeBuilding(const QSize &newSize);
     QVector<QVector<Room *> > resizeFloor(BuildingFloor *floor,

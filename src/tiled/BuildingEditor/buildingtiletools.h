@@ -32,6 +32,7 @@ namespace BuildingEditor {
 class BuildingDocument;
 class BuildingFloor;
 class BuildingTileModeScene;
+class FloorTileGrid;
 
 /////
 
@@ -162,8 +163,7 @@ public:
 
     void currentModifiersChanged(Qt::KeyboardModifiers modifiers);
 
-    void setTile(const QString &tileName)
-    { mTileName = tileName; mCaptureTiles.clear(); }
+    void setTile(const QString &tileName);
 
     QString currentTile() const
     { return mTileName; }
@@ -175,13 +175,7 @@ public slots:
 private:
     void beginCapture();
     void endCapture();
-
-    bool mergeTiles(const QVector<QVector<QString> > &above,
-                    QVector<QVector<QString> > &below);
-
-    QVector<QVector<QString> > clipTiles(const QPoint &p,
-                                         const QVector<QVector<QString> > &tiles,
-                                         const QRect &bounds);
+    void clearCaptureTiles();
 
     void updateCursor(const QPointF &scenePos);
     void updateStatusText();
@@ -198,7 +192,7 @@ private:
     QRectF mCursorViewRect;
 
     bool mCapturing;
-    QVector<QVector<QString> > mCaptureTiles;
+    FloorTileGrid *mCaptureTiles;
 
     QString mTileName;
 };

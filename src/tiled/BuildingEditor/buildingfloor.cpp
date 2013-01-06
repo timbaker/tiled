@@ -25,6 +25,137 @@
 
 using namespace BuildingEditor;
 
+/////
+
+FloorTileGrid::FloorTileGrid(int width, int height) :
+    mWidth(width),
+    mHeight(height),
+    mCount(0),
+    mUseVector(false)
+{
+}
+
+const QString &FloorTileGrid::at(int index) const
+{
+    if (mUseVector)
+        return mCellsVector[index];
+    QHash<int,QString>::const_iterator it = mCells.find(index);
+    if (it != mCells.end())
+        return *it;
+    return mEmptyCell;
+}
+
+void FloorTileGrid::replace(int index, const QString &tile)
+{
+    if (mUseVector) {
+        if (!mCellsVector[index].isEmpty() && tile.isEmpty()) mCount--;
+        if (mCellsVector[index].isEmpty() && !tile.isEmpty()) mCount++;
+        mCellsVector[index] = tile;
+        return;
+    }
+    QHash<int,QString>::iterator it = mCells.find(index);
+    if (it == mCells.end()) {
+        if (tile.isEmpty())
+            return;
+        mCells.insert(index, tile);
+        mCount++;
+    } else if (!tile.isEmpty()) {
+        (*it) = tile;
+        mCount++;
+    } else {
+        mCells.erase(it);
+        mCount--;
+    }
+    if (mCells.size() > 300 * 300 / 3)
+        swapToVector();
+}
+
+void FloorTileGrid::replace(int x, int y, const QString &tile)
+{
+    Q_ASSERT(contains(x, y));
+    replace(y * mWidth + x, tile);
+}
+
+bool FloorTileGrid::replace(const QString &tile)
+{
+    bool changed = false;
+    for (int x = 0; x < mWidth; x++) {
+        for (int y = 0; y < mHeight; y++) {
+            if (at(x, y) != tile) {
+                replace(x, y, tile);
+                changed = true;
+            }
+        }
+    }
+    return changed;
+}
+
+bool FloorTileGrid::replace(const QRect &r, const QString &tile)
+{
+    bool changed = false;
+    for (int x = r.left(); x <= r.right(); x++) {
+        for (int y = r.top(); y <= r.bottom(); y++) {
+            if (at(x, y) != tile) {
+                replace(x, y, tile);
+                changed = true;
+            }
+        }
+    }
+    return changed;
+}
+
+bool FloorTileGrid::replace(const QPoint &p, const FloorTileGrid *other)
+{
+    const QRect r = other->bounds().translated(p) & bounds();
+    bool changed = false;
+    for (int x = r.left(); x <= r.right(); x++) {
+        for (int y = r.top(); y <= r.bottom(); y++) {
+            QString tile = other->at(x - p.x(), y - p.y());
+            if (at(x, y) != tile) {
+                replace(x, y, tile);
+                changed = true;
+            }
+        }
+    }
+    return changed;
+}
+
+void FloorTileGrid::clear()
+{
+    if (mUseVector)
+        mCellsVector.fill(mEmptyCell);
+    else
+        mCells.clear();
+    mCount = 0;
+}
+
+FloorTileGrid *FloorTileGrid::clone(const QRect &r)
+{
+    FloorTileGrid *klone = new FloorTileGrid(r.width(), r.height());
+    const QRect r2 = r & bounds();
+    for (int x = r2.left(); x <= r2.right(); x++) {
+        for (int y = r2.top(); y <= r2.bottom(); y++) {
+            klone->replace(x - r.x(), y - r.y(), at(x, y));
+        }
+    }
+    return klone;
+}
+
+void FloorTileGrid::swapToVector()
+{
+    Q_ASSERT(!mUseVector);
+    mCellsVector.resize(size());
+    QHash<int,QString>::const_iterator it = mCells.begin();
+    while (it != mCells.end()) {
+        mCellsVector[it.key()] = (*it);
+        ++it;
+    }
+    mCells.clear();
+    mUseVector = true;
+}
+
+/////
+
 BuildingFloor::BuildingFloor(Building *building, int level) :
     mBuilding(building),
     mLevel(level)
@@ -1337,18 +1468,18 @@ BuildingFloor *BuildingFloor::clone()
     return klone;
 }
 
-QVector<QVector<QString> > BuildingFloor::grimeAt(const QString &layerName,
-                                                  const QRect &r)
+QString BuildingFloor::grimeAt(const QString &layerName, int x, int y) const
 {
-    QVector<QVector<QString> > tiles(r.width());
-    for (int x = 0; x < r.width(); x++) {
-        tiles[x].resize(r.height());
-        for (int y = 0; y < r.height(); y++) {
-            if (contains(r.x() + x, r.y() + y, 1, 1))
-                tiles[x][y] = grimeAt(layerName, r.x() + x, r.y() + y);
-        }
-    }
-    return tiles;
+    if (mGrimeGrid.contains(layerName))
+        return mGrimeGrid[layerName]->at(x, y);
+    return QString();
+}
+
+FloorTileGrid *BuildingFloor::grimeAt(const QString &layerName, const QRect &r)
+{
+    if (mGrimeGrid.contains(layerName))
+        return mGrimeGrid[layerName]->clone(r);
+    return new FloorTileGrid(r.width(), r.height());
 }
 
 QMap<QString,FloorTileGrid*> BuildingFloor::grimeClone() const
@@ -1358,6 +1489,14 @@ QMap<QString,FloorTileGrid*> BuildingFloor::grimeClone() const
         clone[key] = new FloorTileGrid(*mGrimeGrid[key]);
     }
     return clone;
+}
+
+void BuildingFloor::setGrime(const QString &layerName, const QPoint &p,
+                             const FloorTileGrid *other)
+{
+    if (!mGrimeGrid.contains(layerName))
+        mGrimeGrid[layerName] = new FloorTileGrid(width() + 1, height() + 1);
+    mGrimeGrid[layerName]->replace(p, other);
 }
 
 /////

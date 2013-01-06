@@ -42,12 +42,7 @@ class Window;
 class FloorTileGrid
 {
 public:
-    FloorTileGrid(int width, int height)
-        : mWidth(width)
-        , mHeight(height)
-        , mUseVector(false)
-    {
-    }
+    FloorTileGrid(int width, int height);
 
     int size() const
     { return mWidth * mHeight; }
@@ -55,79 +50,38 @@ public:
     int width() const { return mWidth; }
     int height() const { return mHeight; }
 
-    const QString &at(int index) const
-    {
-        if (mUseVector)
-            return mCellsVector[index];
-        QHash<int,QString>::const_iterator it = mCells.find(index);
-        if (it != mCells.end())
-            return *it;
-        return mEmptyCell;
-    }
+    QRect bounds() const
+    { return QRect(0, 0, mWidth, mHeight); }
+
+    const QString &at(int index) const;
 
     const QString &at(int x, int y) const
     {
-        Q_ASSERT(x >= 0 && x < mWidth && y >= 0 && y < mHeight);
+        Q_ASSERT(contains(x, y));
         return at(x + y * mWidth);
     }
 
-    void replace(int index, const QString &tile)
-    {
-        if (mUseVector) {
-            mCellsVector[index] = tile;
-            return;
-        }
-        QHash<int,QString>::iterator it = mCells.find(index);
-        if (it == mCells.end()) {
-            if (tile.isEmpty())
-                return;
-            mCells.insert(index, tile);
-        } else if (!tile.isEmpty())
-            (*it) = tile;
-        else
-            mCells.erase(it);
-        if (mCells.size() > 300 * 300 / 3)
-            swapToVector();
-    }
-
-    void replace(int x, int y, const QString &tile)
-    {
-        Q_ASSERT(x >= 0 && x < mWidth && y >= 0 && y < mHeight);
-        int index = y * mWidth + x;
-        replace(index, tile);
-    }
-
-    void setTile(int index, const QString &tile)
-    {
-        replace(index, tile);
-    }
+    void replace(int index, const QString &tile);
+    void replace(int x, int y, const QString &tile);
+    bool replace(const QString &tile);
+    bool replace(const QRect &r, const QString &tile);
+    bool replace(const QPoint &p, const FloorTileGrid *other);
 
     bool isEmpty() const
-    { return !mUseVector && mCells.isEmpty(); }
+    { return !mCount; }
 
-    void clear()
-    {
-        if (mUseVector)
-            mCellsVector.fill(mEmptyCell);
-        else
-            mCells.clear();
-    }
+    void clear();
+
+    bool contains(int x, int y) const
+    { return x >= 0 && x < mWidth && y >= 0 && y < mHeight; }
+
+    FloorTileGrid *clone(const QRect &r);
 
 private:
-    void swapToVector()
-    {
-        Q_ASSERT(!mUseVector);
-        mCellsVector.resize(size());
-        QHash<int,QString>::const_iterator it = mCells.begin();
-        while (it != mCells.end()) {
-            mCellsVector[it.key()] = (*it);
-            ++it;
-        }
-        mCells.clear();
-        mUseVector = true;
-    }
+    void swapToVector();
 
     int mWidth, mHeight;
+    int mCount;
     QHash<int,QString> mCells;
     QVector<QString> mCellsVector;
     bool mUseVector;
@@ -293,14 +247,10 @@ public:
     QStringList grimeLayers() const
     { return mGrimeGrid.keys(); }
 
-    QString grimeAt(const QString &layerName, int x, int y) const
-    {
-        if (mGrimeGrid.contains(layerName))
-            return mGrimeGrid[layerName]->at(x, y);
-        return QString();
-    }
+    QString grimeAt(const QString &layerName, int x, int y) const;
+    FloorTileGrid *grimeAt(const QString &layerName, const QRect &r);
 
-    QVector<QVector<QString> > grimeAt(const QString &layerName, const QRect &r);
+    QMap<QString,FloorTileGrid*> grimeClone() const;
 
     QMap<QString,FloorTileGrid*> setGrime(const QMap<QString,FloorTileGrid*> &grime)
     {
@@ -309,14 +259,14 @@ public:
         return old;
     }
 
-    QMap<QString,FloorTileGrid*> grimeClone() const;
-
     void setGrime(const QString &layerName, int x, int y, const QString &tileName)
     {
         if (!mGrimeGrid.contains(layerName))
             mGrimeGrid[layerName] = new FloorTileGrid(width() + 1, height() + 1);
         mGrimeGrid[layerName]->replace(x, y, tileName);
     }
+
+    void setGrime(const QString &layerName, const QPoint &p, const FloorTileGrid *other);
 
     void setLayerOpacity(const QString &layerName, qreal opacity)
     { mLayerOpacity[layerName] = opacity; }

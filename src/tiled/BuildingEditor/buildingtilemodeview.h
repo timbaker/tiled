@@ -30,6 +30,7 @@ class Building;
 class BuildingFloor;
 class BuildingDocument;
 class CompositeLayerGroupItem;
+class FloorTileGrid;
 class Room;
 
 class BuildingTileModeScene;
@@ -120,7 +121,7 @@ public:
     QPolygonF tileToScenePolygonF(const QRectF &tileRect);
     bool currentFloorContains(const QPoint &tilePos, int dw = 0, int dh = 0);
 
-    void setToolTiles(const QVector<QVector<QString> > &tiles,
+    void setToolTiles(const FloorTileGrid *tiles,
                       const QPoint &pos, const QString &layerName);
     void clearToolTiles();
 

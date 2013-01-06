@@ -32,12 +32,12 @@ class BuildingFloor;
 class BuildingTile;
 class BuildingTileEntry;
 class Door;
+class FloorTileGrid;
 class FurnitureObject;
 class FurnitureTile;
 class FurnitureTiles;
 class RoofObject;
 class Room;
-class FloorTileGrid;
 class WallObject;
 class Window;
 
@@ -319,9 +319,11 @@ class PaintFloorTiles : public QUndoCommand
 {
 public:
     PaintFloorTiles(BuildingDocument *doc, BuildingFloor *floor,
-                    const QString &layerName,
-                    const QRect &bounds, const QVector<QVector<QString> > &grid,
+                    const QString &layerName, const QRect &bounds,
+                    FloorTileGrid *tiles,
                     char *undoText);
+
+    ~PaintFloorTiles();
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -333,7 +335,7 @@ private:
     BuildingFloor *mFloor;
     QString mLayerName;
     QRect mBounds;
-    QVector<QVector<QString> > mGrid;
+    FloorTileGrid *mTiles;
 };
 
 class ResizeBuilding : public QUndoCommand

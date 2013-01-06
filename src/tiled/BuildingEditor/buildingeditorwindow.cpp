@@ -1801,16 +1801,11 @@ void BuildingEditorWindow::editDelete()
         return;
     if (mEditMode == TileMode) {
         QRect r1 = currentDocument()->tileSelection().boundingRect();
-        QVector<QVector<QString> > tiles = currentFloor()->grimeAt(currentLayer(), r1);
+        FloorTileGrid *tiles = currentFloor()->grimeAt(currentLayer(), r1);
         bool changed = false;
         foreach (QRect r, currentDocument()->tileSelection().rects()) {
-            for (int x = r.left(); x <= r.right(); x++)
-                for (int y = r.top(); y <= r.bottom(); y++) {
-                    if (tiles[x-r1.x()][y-r1.y()] != QString()) {
-                        tiles[x-r1.x()][y-r1.y()] = QString();
-                        changed = true;
-                    }
-                }
+            if (tiles->replace(r.translated(-r1.topLeft()), QString()))
+                changed = true;
         }
         if (changed)
             mCurrentDocument->undoStack()->push(

@@ -403,8 +403,9 @@ bool BuildingTileModeScene::currentFloorContains(const QPoint &tilePos, int dw, 
     return currentFloor() && currentFloor()->contains(tilePos, dw, dh);
 }
 
-void BuildingTileModeScene::setToolTiles(const QVector<QVector<QString> > &tiles,
-                                         const QPoint &pos, const QString &layerName)
+void BuildingTileModeScene::setToolTiles(const FloorTileGrid *tiles,
+                                         const QPoint &pos,
+                                         const QString &layerName)
 {
     clearToolTiles();
 
@@ -423,13 +424,13 @@ void BuildingTileModeScene::setToolTiles(const QVector<QVector<QString> > &tiles
     foreach (Tileset *ts, mMap->tilesets())
         tilesetByName[ts->name()] = ts;
 
-    QVector<QVector<Tiled::Cell> > cells(tiles.size());
-    for (int x = 0; x < tiles.size(); x++)
-        cells[x].resize(tiles[x].size());
+    QVector<QVector<Tiled::Cell> > cells(tiles->width());
+    for (int x = 0; x < tiles->width(); x++)
+        cells[x].resize(tiles->height());
 
-    for (int x = 0; x < tiles.size(); x++) {
-        for (int y = 0; y < tiles[x].size(); y++) {
-            QString tileName = tiles[x][y];
+    for (int x = 0; x < tiles->width(); x++) {
+        for (int y = 0; y < tiles->height(); y++) {
+            QString tileName = tiles->at(x, y);
             Tile *tile = 0;
             if (!tileName.isEmpty()) {
                 tile = TilesetManager::instance()->missingTile();
