@@ -145,17 +145,15 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *widget);
 
-    void setPen(const QPen &pen);
-    void setBrush(const QBrush &brush);
+    void setColor(const QColor &color);
 
-    void setPolygonFromTileRect(const QRect &tileRect);
+    void setTileRegion(const QRegion &tileRgn);
 
 private:
     BuildingTileModeScene *mScene;
-    QPolygonF mPolygon;
+    QRegion mRegion;
     QRectF mBoundingRect;
-    QPen mPen;
-    QBrush mBrush;
+    QColor mColor;
 };
 
 class DrawTileTool : public BaseTileTool
@@ -178,6 +176,8 @@ public:
 
     QString currentTile() const
     { return mTileName; }
+
+    void setCaptureTiles(FloorTileGrid *tiles, const QRegion &rgn);
 
 public slots:
     void activate();
@@ -204,6 +204,7 @@ private:
     DrawTileToolCursor *mCursor;
     bool mCapturing;
     FloorTileGrid *mCaptureTiles;
+    QRegion mCaptureTilesRgn;
 
     QString mTileName;
 };
@@ -244,7 +245,9 @@ private:
 
     SelectionMode mSelectionMode;
     bool mMouseDown;
+    bool mMouseMoved;
     QPointF mMouseScenePos;
+    QPointF mStartScenePos;
     QPoint mStartTilePos;
     QPoint mCursorTilePos;
     QRect mCursorTileBounds;

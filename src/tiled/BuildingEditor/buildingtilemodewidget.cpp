@@ -418,8 +418,7 @@ void BuildingTileModeWidget::updateActions()
     ui->opacity->setValue(ui->opacity->maximum() * opacity);
     ui->opacity->setEnabled(!currentLayerName.isEmpty());
 
-    DrawTileTool::instance()->setEnabled(!currentLayerName.isEmpty() &&
-            !DrawTileTool::instance()->currentTile().isEmpty());
+    DrawTileTool::instance()->setEnabled(!currentLayerName.isEmpty());
     SelectTileTool::instance()->setEnabled(!currentLayerName.isEmpty());
     ui->actionUpLevel->setEnabled(mDocument != 0 &&
             !mDocument->currentFloorIsTop());

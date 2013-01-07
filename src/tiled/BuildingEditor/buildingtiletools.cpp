@@ -23,11 +23,14 @@
 #include "buildingtilemodeview.h"
 #include "buildingundoredo.h"
 
+#include "maprenderer.h"
+
 #include <QAction>
 #include <QApplication>
 #include <QDebug>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsPolygonItem>
+#include <QStyleOptionGraphicsItem>
 #include <QUndoStack>
 
 using namespace BuildingEditor;
@@ -198,6 +201,7 @@ DrawTileToolCursor::DrawTileToolCursor(BuildingTileModeScene *scene,
     QGraphicsItem(parent),
     mScene(scene)
 {
+    setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
 }
 
 QRectF DrawTileToolCursor::boundingRect() const
@@ -207,47 +211,50 @@ QRectF DrawTileToolCursor::boundingRect() const
 
 void DrawTileToolCursor::paint(QPainter *painter,
                                const QStyleOptionGraphicsItem *option,
-                               QWidget *widget)
+                               QWidget *)
 {
     Q_UNUSED(option)
-    Q_UNUSED(widget)
-    painter->setPen(mPen);
-    painter->setBrush(mBrush);
-    painter->drawPolygon(mPolygon);
+    mScene->renderer()->drawTileSelection(painter, mRegion, mColor,
+                                          option->exposedRect,
+                                          mScene->currentLevel());
 }
 
-void DrawTileToolCursor::setPen(const QPen &pen)
+void DrawTileToolCursor::setColor(const QColor &color)
 {
-    mPen = pen;
+    if (color != mColor) {
+        mColor = color;
+        update();
+    }
 }
 
-void DrawTileToolCursor::setBrush(const QBrush &brush)
+void DrawTileToolCursor::setTileRegion(const QRegion &tileRgn)
 {
-    mBrush = brush;
-}
+    if (tileRgn != mRegion) {
+        QPolygonF polygon = mScene->tileToScenePolygon(tileRgn.boundingRect());
+        QRectF bounds = polygon.boundingRect();
 
-void DrawTileToolCursor::setPolygonFromTileRect(const QRect &tileRect)
-{
-    QPolygonF polygon = mScene->tileToScenePolygon(tileRect);
-    QRectF bounds = polygon.boundingRect();
+        // Add tile bounds and pen width to the shape.
+        bounds.adjust(-4, -(128-32), 5, 5);
 
-    // Add tile bounds and pen width to the shape.
-    bounds.adjust(-4, -(128-32), 5, 5);
+        if (bounds != mBoundingRect) {
+            // NOTE-SCENE-CORRUPTION
+            // Schedule a redraw of the current area.  Although prepareGeometryChange()
+            // marks the current area as needing to be redrawn by setting the
+            // paintedViewBoundingRectsNeedRepaint flag, any additional call to
+            // QGraphicsScene::update will result in paintedViewBoundingRects getting
+            // set the *new* location of this item before _q_processDirtyItems gets
+            // called, so the current area never gets repainted.
+            if (scene())
+                scene()->update(mBoundingRect);
 
-    if (bounds != mBoundingRect || polygon != mPolygon) {
-        // NOTE-SCENE-CORRUPTION
-        // Schedule a redraw of the current area.  Although prepareGeometryChange()
-        // marks the current area as needing to be redrawn by setting the
-        // paintedViewBoundingRectsNeedRepaint flag, any additional call to
-        // QGraphicsScene::update will result in paintedViewBoundingRects getting
-        // set the *new* location of this item before _q_processDirtyItems gets
-        // called, so the current area never gets repainted.
-        if (scene())
-            scene()->update(mBoundingRect);
+            prepareGeometryChange();
+            mBoundingRect = bounds;
+        }
 
-        prepareGeometryChange();
-        mBoundingRect = bounds;
-        mPolygon = polygon;
+        mRegion = tileRgn;
+
+        const QRect changedArea = tileRgn.xored(mRegion).boundingRect();
+        update(mScene->tileToScenePolygon(changedArea).boundingRect());
     }
 }
 
@@ -298,29 +305,27 @@ void DrawTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         return;
     }
 
-    if (mCaptureTiles) {
-        mMouseDown = true;
-        return;
-    }
-
-    mErasing = controlModifier();
     mStartScenePos = event->scenePos();
     mStartTilePos = mEditor->sceneToTile(event->scenePos());
-    mCursorTileBounds = QRect(mStartTilePos, QSize(1, 1)) & floor()->bounds(1, 1);
     mMouseDown = true;
     mMouseMoved = false;
+    mErasing = controlModifier();
+    if (!mCaptureTiles)
+        mCursorTileBounds = QRect(mStartTilePos, QSize(1, 1)) & floor()->bounds(1, 1);
+    updateCursor(mStartScenePos);
     updateStatusText();
 }
 
 void DrawTileTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    bool mouseMoved = mMouseMoved;
     if (mMouseDown && !mMouseMoved) {
         const int dragDistance = (mStartScenePos - event->scenePos()).manhattanLength();
         if (dragDistance >= QApplication::startDragDistance())
             mMouseMoved = true;
     }
     mMouseScenePos = event->scenePos();
-    updateCursor(event->scenePos(), false);
+    updateCursor(event->scenePos(), mouseMoved != mMouseMoved);
 }
 
 void DrawTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
@@ -334,18 +339,27 @@ void DrawTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         QRect r = mCursorTileBounds & floor()->bounds(1, 1);
         bool changed = false;
         FloorTileGrid *tiles = floor()->grimeAt(layerName(), r);
+        QRegion rgn;
         if (!mCaptureTiles) {
             QString tileName = mErasing ? QString() : mTileName;
             changed = tiles->replace(tileName);
+            rgn = QRegion(r);
+        } else if (mErasing) {
+            // Erase in the capture-tiles region
+            changed = tiles->replace(mCaptureTilesRgn, QString());
+            rgn = mCaptureTilesRgn.translated(mCursorTileBounds.topLeft()) & r;
         } else {
             QRect clipRect = r.translated(-mCursorTileBounds.topLeft());
-            FloorTileGrid *clipped = mCaptureTiles->clone(clipRect);
-            changed = tiles->replace(QPoint(0, 0), clipped);
+            rgn = mCaptureTilesRgn.intersected(clipRect);
+            FloorTileGrid *clipped = mCaptureTiles->clone(rgn);
+            rgn.translate(-clipRect.topLeft());
+            changed = tiles->replace(rgn, clipped);
             delete clipped;
+            rgn = mCaptureTilesRgn.translated(mCursorTileBounds.topLeft()) & r;
         }
         if (changed)
             undoStack()->push(new PaintFloorTiles(mEditor->document(), floor(),
-                                                  layerName(), r, tiles,
+                                                  layerName(), rgn, tiles,
                                                   mErasing ? "Erase Tiles"
                                                            : "Draw Tiles"));
         mMouseDown = false;
@@ -361,6 +375,7 @@ void DrawTileTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
     if (!mMouseDown) {
         mErasing = controlModifier();
         updateCursor(mMouseScenePos);
+        updateStatusText();
     }
 }
 
@@ -368,6 +383,14 @@ void DrawTileTool::setTile(const QString &tileName)
 {
     mTileName = tileName;
     clearCaptureTiles();
+}
+
+void DrawTileTool::setCaptureTiles(FloorTileGrid *tiles, const QRegion &rgn)
+{
+    clearCaptureTiles();
+    mCaptureTiles = tiles;
+    mCaptureTilesRgn = rgn.translated(-rgn.boundingRect().topLeft());
+    updateCursor(mMouseScenePos);
 }
 
 void DrawTileTool::activate()
@@ -412,8 +435,10 @@ void DrawTileTool::endCapture()
 
     if (!mMouseMoved)
         clearCaptureTiles();
-    else
+    else {
         mCaptureTiles = floor()->grimeAt(layerName(), mCursorTileBounds);
+        mCaptureTilesRgn = QRegion(mCaptureTiles->bounds());
+    }
 
     mCapturing = false;
     mMouseDown = false;
@@ -457,30 +482,53 @@ void DrawTileTool::updateCursor(const QPointF &scenePos, bool force)
         mCursorTileBounds.setTop(tilePos.y() - mCaptureTiles->height() / 2);
         mCursorTileBounds.setWidth(mCaptureTiles->width());
         mCursorTileBounds.setHeight(mCaptureTiles->height());
-        FloorTileGrid *merged = floor()->grimeAt(layerName(), mCursorTileBounds);
-        merged->replace(QPoint(0,0), mCaptureTiles);
-        mEditor->setToolTiles(merged, mCursorTileBounds.topLeft(), layerName());
-        delete merged;
+
+        // Set the tool-tiles to represent what would be seen if the tiles
+        // were painted at the current location.
+        FloorTileGrid *tiles = floor()->grimeAt(layerName(), mCursorTileBounds);
+        if (mErasing)
+            tiles->replace(mCaptureTilesRgn, QString());
+        else
+            tiles->replace(mCaptureTilesRgn, mCaptureTiles);
+        for (int x = 0; x < mCursorTileBounds.width(); x++) {
+            for (int y = 0; y < mCursorTileBounds.height(); y++) {
+                // Building-generated tiles can't be replaced with nothing.
+                if (tiles->at(x, y).isEmpty())
+                    tiles->replace(x, y, mEditor->buildingTileAt(
+                                        mCursorTileBounds.x() + x,
+                                        mCursorTileBounds.y() + y));
+            }
+        }
+        mEditor->setToolTiles(tiles, mCursorTileBounds.topLeft(), layerName());
+        delete tiles;
     }
 
-    mCursor->setPolygonFromTileRect(mCursorTileBounds);
-    if (mErasing && !mCaptureTiles) {
-        QPen pen(QColor(255,0,0,128));
-        mCursor->setBrush(QColor(0,0,0,128));
-        mCursor->setPen(pen);
+    mCursor->setTileRegion(mCaptureTiles ?
+                               mCaptureTilesRgn.translated(mCursorTileBounds.topLeft())
+                             : mCursorTileBounds);
+    if (mErasing) {
+        mCursor->setColor(QColor(0,0,0,128));
+    } else if (mMouseDown) {
+        mCursor->setColor(QColor(0,0,255,128));
     } else {
-        QPen pen(qRgba(0, 0, 255, 200));
-        pen.setWidth(3);
-        mCursor->setPen(pen);
-        mCursor->setBrush(QColor(0,0,255,128));
+        QColor highlight = QApplication::palette().highlight().color();
+        highlight.setAlpha(128);
+        mCursor->setColor(highlight);
     }
-    mCursor->setVisible(mMouseDown || mCaptureTiles || mEditor->currentFloorContains(tilePos, 1, 1));
+
+    if (mCapturing && !mMouseMoved)
+        mCursor->setVisible(false);
+    else
+        mCursor->setVisible(mMouseDown || mCaptureTiles
+                            || mEditor->currentFloorContains(tilePos, 1, 1));
 
     if (mCapturing || mCaptureTiles)
         return;
 
-    if (mCursorTileBounds.isEmpty())
+    if (mCursorTileBounds.isEmpty()) {
+        mEditor->clearToolTiles();
         return;
+    }
 
     QRect r = mCursorTileBounds;
     FloorTileGrid tiles(r.width(), r.height());
@@ -497,12 +545,24 @@ void DrawTileTool::updateCursor(const QPointF &scenePos, bool force)
 
 void DrawTileTool::updateStatusText()
 {
-    if (mMouseDown)
-        setStatusText(tr("Width,Height = %1,%2.  Right-click to cancel.")
+    if (mCapturing && !mMouseMoved) {
+        setStatusText(tr("Drag to capture tiles.  Release button to cancel."));
+    } else if (mCapturing)
+        setStatusText(tr("Width,Height = %1,%2.  Release button to capture tiles.")
                       .arg(mCursorTileBounds.width())
                       .arg(mCursorTileBounds.height()));
+    else if (mMouseDown && mCaptureTiles)
+        setStatusText(tr("Release to %1 tiles.  Right-click to cancel.")
+                      .arg(QLatin1String(mErasing ? "erase" : "draw")));
+    else if (mMouseDown)
+        setStatusText(tr("Width,Height = %1,%2.  Release button to %3 tiles.  Right-click to cancel.")
+                      .arg(mCursorTileBounds.width())
+                      .arg(mCursorTileBounds.height())
+                      .arg(QLatin1String(mErasing ? "erase" : "draw")));
+    else if (controlModifier())
+        setStatusText(tr("Left-click to erase tiles.  Right-click to capture tiles."));
     else
-        setStatusText(tr("Left-click to draw tiles.  CTRL-Left-click to erase."));
+        setStatusText(tr("Left-click to draw tiles.  CTRL=erase.  Right-click to capture tiles."));
 }
 
 /////
@@ -519,6 +579,7 @@ SelectTileTool *SelectTileTool::instance()
 SelectTileTool::SelectTileTool() :
     BaseTileTool(),
     mMouseDown(false),
+    mMouseMoved(false),
     mSelectionMode(Replace),
     mCursor(0)
 {
@@ -557,17 +618,26 @@ void SelectTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             mSelectionMode = Replace;
         }
 
+        mStartScenePos = event->scenePos();
         mStartTilePos = mEditor->sceneToTile(event->scenePos());
         mCursorTileBounds = QRect(mStartTilePos, QSize(1, 1)) & floor()->bounds(1, 1);
         mMouseDown = true;
+        mMouseMoved = false;
+        updateCursor(mStartScenePos);
         updateStatusText();
     }
 }
 
 void SelectTileTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    bool mouseMoved = mMouseMoved;
+    if (mMouseDown && !mMouseMoved) {
+        const int dragDistance = (mStartScenePos - event->scenePos()).manhattanLength();
+        if (dragDistance >= QApplication::startDragDistance())
+            mMouseMoved = true;
+    }
     mMouseScenePos = event->scenePos();
-    updateCursor(event->scenePos(), false);
+    updateCursor(event->scenePos(), mouseMoved != mMouseMoved);
 }
 
 void SelectTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
@@ -583,6 +653,9 @@ void SelectTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         case Subtract:  selection -= area; break;
         case Intersect: selection &= area; break;
         }
+
+        if (!mMouseMoved)
+            selection = QRegion();
 
         if (selection != document()->tileSelection())
             undoStack()->push(new ChangeTileSelection(document(), selection));
@@ -632,31 +705,29 @@ void SelectTileTool::updateCursor(const QPointF &scenePos, bool force)
                                   qMin(mStartTilePos.y(), tilePos.y())),
                                   QPoint(qMax(mStartTilePos.x(), tilePos.x()),
                                   qMax(mStartTilePos.y(), tilePos.y())));
+        mCursorTileBounds &= floor()->bounds(1, 1);
         updateStatusText();
     } else {
         mCursorTileBounds = QRect(tilePos, QSize(1, 1));
+        mCursorTileBounds &= floor()->bounds(1, 1);
     }
-    mCursorTileBounds &= floor()->bounds(1, 1);
 
-    mCursor->setPolygonFromTileRect(mCursorTileBounds);
+    mCursor->setTileRegion(mCursorTileBounds);
 
     if ((mMouseDown && mSelectionMode == Subtract) || (!mMouseDown && controlModifier())) {
-        QPen pen(QColor(255,0,0,128));
-        mCursor->setPen(pen);
-        mCursor->setBrush(QColor(0,0,0,128));
+        mCursor->setColor(QColor(0,0,0,128));
     } else {
-        QPen pen(qRgba(0, 0, 255, 200));
-        pen.setWidth(3);
-        mCursor->setPen(pen);
-        mCursor->setBrush(QColor(0,0,255,128));
+        mCursor->setColor(QColor(0,0,255,128));
     }
 
-    mCursor->setVisible(mMouseDown || mEditor->currentFloorContains(tilePos, 1, 1));
+    mCursor->setVisible(mMouseDown ? mMouseMoved : mEditor->currentFloorContains(tilePos, 1, 1));
 }
 
 void SelectTileTool::updateStatusText()
 {
-    if (mMouseDown)
+    if (mMouseDown && !mMouseMoved) {
+        setStatusText(tr("Drag to modify selection.  Release button to clear selection.  Right-click to cancel."));
+    } else if (mMouseDown)
         setStatusText(tr("Width,Height = %1,%2.  Right-click to cancel.")
                       .arg(mCursorTileBounds.width())
                       .arg(mCursorTileBounds.height()));

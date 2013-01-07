@@ -447,6 +447,10 @@ void BuildingTileModeScene::setToolTiles(const FloorTileGrid *tiles,
 
     layerGroup->setToolTiles(cells, pos, layer);
     mLayerGroupWithToolTiles = layerGroup;
+
+    QRectF r = mRenderer->boundingRect(tiles->bounds().translated(pos), currentLevel())
+            .adjusted(0, -(128-32), 0, 0); // use mMap->drawMargins()
+    update(r);
 }
 
 void BuildingTileModeScene::clearToolTiles()

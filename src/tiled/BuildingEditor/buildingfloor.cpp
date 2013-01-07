@@ -90,6 +90,42 @@ bool FloorTileGrid::replace(const QString &tile)
     return changed;
 }
 
+bool FloorTileGrid::replace(const QRegion &rgn, const QString &tile)
+{
+    bool changed = false;
+    foreach (QRect r2, rgn.rects()) {
+        r2 &= bounds();
+        for (int x = r2.left(); x <= r2.right(); x++) {
+            for (int y = r2.top(); y <= r2.bottom(); y++) {
+                if (at(x, y) != tile) {
+                    replace(x, y, tile);
+                    changed = true;
+                }
+            }
+        }
+    }
+    return changed;
+}
+
+bool FloorTileGrid::replace(const QRegion &rgn, const FloorTileGrid *other)
+{
+    bool changed = false;
+    QRect r = rgn.boundingRect();
+    foreach (QRect r2, rgn.rects()) {
+        r2 &= bounds();
+        for (int x = r2.left(); x <= r2.right(); x++) {
+            for (int y = r2.top(); y <= r2.bottom(); y++) {
+                QString tile = other->at(x - r.x(), y - r.y());
+                if (at(x, y) != tile) {
+                    replace(x, y, tile);
+                    changed = true;
+                }
+            }
+        }
+    }
+    return changed;
+}
+
 bool FloorTileGrid::replace(const QRect &r, const QString &tile)
 {
     bool changed = false;
@@ -129,6 +165,11 @@ void FloorTileGrid::clear()
     mCount = 0;
 }
 
+FloorTileGrid *FloorTileGrid::clone()
+{
+    return new FloorTileGrid(*this);
+}
+
 FloorTileGrid *FloorTileGrid::clone(const QRect &r)
 {
     FloorTileGrid *klone = new FloorTileGrid(r.width(), r.height());
@@ -136,6 +177,21 @@ FloorTileGrid *FloorTileGrid::clone(const QRect &r)
     for (int x = r2.left(); x <= r2.right(); x++) {
         for (int y = r2.top(); y <= r2.bottom(); y++) {
             klone->replace(x - r.x(), y - r.y(), at(x, y));
+        }
+    }
+    return klone;
+}
+
+FloorTileGrid *FloorTileGrid::clone(const QRegion &rgn)
+{
+    QRect r = rgn.boundingRect();
+    FloorTileGrid *klone = new FloorTileGrid(r.width(), r.height());
+    foreach (QRect r2, rgn.rects()) {
+        r2 &= bounds();
+        for (int x = r2.left(); x <= r2.right(); x++) {
+            for (int y = r2.top(); y <= r2.bottom(); y++) {
+                klone->replace(x - r.x(), y - r.y(), at(x, y));
+            }
         }
     }
     return klone;
@@ -1482,6 +1538,14 @@ FloorTileGrid *BuildingFloor::grimeAt(const QString &layerName, const QRect &r)
     return new FloorTileGrid(r.width(), r.height());
 }
 
+FloorTileGrid *BuildingFloor::grimeAt(const QString &layerName, const QRegion &rgn)
+{
+    if (mGrimeGrid.contains(layerName))
+        return mGrimeGrid[layerName]->clone(rgn);
+    return new FloorTileGrid(rgn.boundingRect().width(),
+                             rgn.boundingRect().height());
+}
+
 QMap<QString,FloorTileGrid*> BuildingFloor::grimeClone() const
 {
     QMap<QString,FloorTileGrid*> clone;
@@ -1491,12 +1555,48 @@ QMap<QString,FloorTileGrid*> BuildingFloor::grimeClone() const
     return clone;
 }
 
+QMap<QString, FloorTileGrid *> BuildingFloor::setGrime(const QMap<QString,
+                                                       FloorTileGrid *> &grime)
+{
+    QMap<QString,FloorTileGrid*> old = mGrimeGrid;
+    mGrimeGrid = grime;
+    return old;
+}
+
+void BuildingFloor::setGrime(const QString &layerName, int x, int y,
+                             const QString &tileName)
+{
+    if (!mGrimeGrid.contains(layerName))
+        mGrimeGrid[layerName] = new FloorTileGrid(width() + 1, height() + 1);
+    mGrimeGrid[layerName]->replace(x, y, tileName);
+}
+
+
 void BuildingFloor::setGrime(const QString &layerName, const QPoint &p,
                              const FloorTileGrid *other)
 {
     if (!mGrimeGrid.contains(layerName))
         mGrimeGrid[layerName] = new FloorTileGrid(width() + 1, height() + 1);
     mGrimeGrid[layerName]->replace(p, other);
+}
+
+void BuildingFloor::setGrime(const QString &layerName, const QRegion &rgn,
+                             const QString &tileName)
+{
+    if (!mGrimeGrid.contains(layerName)) {
+        if (tileName.isEmpty())
+            return;
+        mGrimeGrid[layerName] = new FloorTileGrid(width() + 1, height() + 1);
+    }
+    mGrimeGrid[layerName]->replace(rgn, tileName);
+}
+
+void BuildingFloor::setGrime(const QString &layerName, const QRegion &rgn,
+                             const FloorTileGrid *other)
+{
+    if (!mGrimeGrid.contains(layerName))
+        mGrimeGrid[layerName] = new FloorTileGrid(width() + 1, height() + 1);
+    mGrimeGrid[layerName]->replace(rgn, other);
 }
 
 /////

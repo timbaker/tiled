@@ -308,12 +308,12 @@ QMap<QString, FloorTileGrid *> BuildingDocument::swapFloorTiles(BuildingFloor *f
 
 FloorTileGrid *BuildingDocument::swapFloorTiles(BuildingFloor *floor,
                                                 const QString &layerName,
-                                                const QRect &bounds,
+                                                const QRegion &rgn,
                                                 const FloorTileGrid *tiles)
 {
-    FloorTileGrid *old = floor->grimeAt(layerName, bounds);
-    floor->setGrime(layerName, bounds.topLeft(), tiles);
-    emit floorTilesChanged(floor, layerName, bounds);
+    FloorTileGrid *old = floor->grimeAt(layerName, rgn);
+    floor->setGrime(layerName, rgn, tiles);
+    emit floorTilesChanged(floor, layerName, rgn.boundingRect());
     return old;
 }
 
