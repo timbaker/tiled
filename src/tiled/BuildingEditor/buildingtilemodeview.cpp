@@ -145,7 +145,8 @@ BuildingTileModeScene::BuildingTileModeScene(QWidget *parent) :
     mTileSelectionItem(0),
     mDarkRectangle(new QGraphicsRectItem),
     mCurrentTool(0),
-    mLayerGroupWithToolTiles(0)
+    mLayerGroupWithToolTiles(0),
+    mNonEmptyLayerGroupItem(0)
 {
     setBackgroundBrush(Qt::darkGray);
 
@@ -236,6 +237,8 @@ void BuildingTileModeScene::setDocument(BuildingDocument *doc)
         mRenderer = 0;
 
         mLayerGroupWithToolTiles = 0;
+        mNonEmptyLayerGroupItem = 0;
+        mNonEmptyLayer.clear();
     }
 
     if (!mDocument)
@@ -502,6 +505,8 @@ void BuildingTileModeScene::BuildingToMap()
         delete mTileSelectionItem;
 
         mLayerGroupWithToolTiles = 0;
+        mNonEmptyLayerGroupItem = 0;
+        mNonEmptyLayer.clear();
     }
 
     Map::Orientation orient = Map::LevelIsometric;
@@ -765,6 +770,12 @@ void BuildingTileModeScene::currentFloorChanged()
 {
     highlightFloorChanged(BuildingPreferences::instance()->highlightFloor());
     mGridItem->synchWithBuilding();
+
+    if (!mNonEmptyLayer.isEmpty()) {
+        mNonEmptyLayerGroupItem->layerGroup()->setLayerNonEmpty(mNonEmptyLayer, false);
+        mNonEmptyLayer.clear();
+        mNonEmptyLayerGroupItem = 0;
+    }
 }
 
 void BuildingTileModeScene::currentLayerChanged()
@@ -772,12 +783,14 @@ void BuildingTileModeScene::currentLayerChanged()
     if (CompositeLayerGroupItem *item = itemForFloor(currentFloor())) {
         QRectF bounds = item->boundingRect();
 
-        if (!mNonEmptyLayer.isEmpty())
-            item->layerGroup()->setLayerNonEmpty(mNonEmptyLayer, false);
+        if (!mNonEmptyLayer.isEmpty()) {
+            mNonEmptyLayerGroupItem->layerGroup()->setLayerNonEmpty(mNonEmptyLayer, false);
+        }
         QString layerName = currentLayerName();
         if (!layerName.isEmpty())
             item->layerGroup()->setLayerNonEmpty(layerName, true);
         mNonEmptyLayer = layerName;
+        mNonEmptyLayerGroupItem = item;
 
         if (bounds.isEmpty()) {
             item->synchWithTileLayers();
@@ -790,6 +803,7 @@ void BuildingTileModeScene::currentLayerChanged()
         }
     }
 }
+
 void BuildingTileModeScene::roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos)
 {
     Q_UNUSED(pos);

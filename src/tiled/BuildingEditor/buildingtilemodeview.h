@@ -192,6 +192,7 @@ private:
     BaseTileTool *mCurrentTool;
     CompositeLayerGroup *mLayerGroupWithToolTiles;
     QString mNonEmptyLayer;
+    CompositeLayerGroupItem *mNonEmptyLayerGroupItem;
 };
 
 class BuildingTileModeView : public QGraphicsView
