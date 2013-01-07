@@ -95,6 +95,8 @@ public:
     bool setLayerNonEmpty(const QString &layerName, bool force);
     bool setLayerNonEmpty(Tiled::TileLayer *tl, bool force);
 
+    void setHighlightLayer(const QString &layerName)
+    { mHighlightLayer = layerName; }
 #endif
 
 private:
@@ -135,6 +137,7 @@ private:
     QVector<QVector<Tiled::Cell> > mToolTiles;
     QPoint mToolTilesPos;
     Tiled::TileLayer *mToolTileLayer;
+    QString mHighlightLayer;
     QVector<bool> mForceNonEmpty;
 #endif
 };

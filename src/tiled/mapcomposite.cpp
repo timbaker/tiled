@@ -225,7 +225,14 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                     cleared = true;
                 }
                 cells.append(cell);
+#if 1
                 opacities.append(mLayerOpacity[index]);
+#else
+                if (mHighlightLayer.isEmpty() || tl->name() == mHighlightLayer)
+                    opacities.append(mLayerOpacity[index]);
+                else
+                    opacities.append(0.25);
+#endif
             }
         }
     }

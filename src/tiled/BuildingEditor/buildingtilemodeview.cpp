@@ -773,6 +773,8 @@ void BuildingTileModeScene::currentFloorChanged()
 
     if (!mNonEmptyLayer.isEmpty()) {
         mNonEmptyLayerGroupItem->layerGroup()->setLayerNonEmpty(mNonEmptyLayer, false);
+        mNonEmptyLayerGroupItem->layerGroup()->setHighlightLayer(QString());
+        mNonEmptyLayerGroupItem->update();
         mNonEmptyLayer.clear();
         mNonEmptyLayerGroupItem = 0;
     }
@@ -785,12 +787,16 @@ void BuildingTileModeScene::currentLayerChanged()
 
         if (!mNonEmptyLayer.isEmpty()) {
             mNonEmptyLayerGroupItem->layerGroup()->setLayerNonEmpty(mNonEmptyLayer, false);
+            mNonEmptyLayerGroupItem->layerGroup()->setHighlightLayer(QString());
         }
         QString layerName = currentLayerName();
         if (!layerName.isEmpty())
             item->layerGroup()->setLayerNonEmpty(layerName, true);
         mNonEmptyLayer = layerName;
         mNonEmptyLayerGroupItem = item;
+
+        item->layerGroup()->setHighlightLayer(tr("%1_%2").arg(currentLevel()).arg(mNonEmptyLayer));
+        item->update();
 
         if (bounds.isEmpty()) {
             item->synchWithTileLayers();
