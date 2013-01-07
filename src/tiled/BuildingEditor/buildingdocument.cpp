@@ -38,7 +38,8 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
     mBuilding(building),
     mFileName(fileName),
     mUndoStack(new QUndoStack(this)),
-    mTileChanges(false)
+    mTileChanges(false),
+    mClipboardTiles(0)
 {
     connect(BuildingTilesMgr::instance(), SIGNAL(entryTileChanged(BuildingTileEntry*)),
             SLOT(entryTileChanged(BuildingTileEntry*)));
@@ -48,6 +49,11 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
     connect(FurnitureGroups::instance(),
             SIGNAL(furnitureLayerChanged(FurnitureTiles*)),
             SLOT(furnitureLayerChanged(FurnitureTiles*)));
+}
+
+BuildingDocument::~BuildingDocument()
+{
+    delete mClipboardTiles;
 }
 
 BuildingDocument *BuildingDocument::read(const QString &fileName, QString &error)
@@ -135,6 +141,14 @@ void BuildingDocument::setSelectedObjects(const QSet<BuildingObject *> &selectio
 {
     mSelectedObjects = selection;
     emit selectedObjectsChanged();
+}
+
+void BuildingDocument::setClipboardTiles(FloorTileGrid *tiles, const QRegion &rgn)
+{
+    Q_ASSERT(tiles->bounds().contains(rgn.boundingRect()));
+    delete mClipboardTiles;
+    mClipboardTiles = tiles;
+    mClipboardTilesRgn = rgn;
 }
 
 Room *BuildingDocument::changeRoomAtPosition(BuildingFloor *floor, const QPoint &pos, Room *room)

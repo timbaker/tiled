@@ -46,6 +46,7 @@ class BuildingDocument : public QObject
     Q_OBJECT
 public:
     explicit BuildingDocument(Building *building, const QString &fileName);
+    ~BuildingDocument();
 
     Building *building() const
     { return mBuilding; }
@@ -98,6 +99,14 @@ public:
     void emitObjectChanged(BuildingObject *object)
     { emit objectChanged(object); }
 
+    // Clipboard
+    void setClipboardTiles(FloorTileGrid *tiles, const QRegion &rgn);
+
+    FloorTileGrid *clipboardTiles() const
+    { return mClipboardTiles; }
+
+    QRegion clipboardTilesRgn() const
+    { return mClipboardTilesRgn; }
 
     // +UNDO/REDO
     Room *changeRoomAtPosition(BuildingFloor *floor, const QPoint &pos, Room *room);
@@ -212,6 +221,8 @@ private:
     QString mCurrentLayerName;
     QSet<BuildingObject*> mSelectedObjects;
     QRegion mTileSelection;
+    FloorTileGrid *mClipboardTiles;
+    QRegion mClipboardTilesRgn;
 };
 
 } // namespace BuildingEditor

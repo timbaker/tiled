@@ -130,6 +130,7 @@ private:
     BuildingTileCategory *categoryAt(int row);
     FurnitureGroup *furnitureGroupAt(int row);
 
+    void deleteObjects();
 
     enum EditMode {
         BuildingMode,
@@ -171,10 +172,13 @@ private slots:
     bool saveBuildingAs();
     void exportTMX();
 
+    void editCut();
+    void editCopy();
+    void editPaste();
+    void editDelete();
+
     void selectAll();
     void selectNone();
-    void editDelete();
-    void deleteObjects();
 
     void preferences();
 

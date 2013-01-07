@@ -319,9 +319,12 @@ class PaintFloorTiles : public QUndoCommand
 {
 public:
     PaintFloorTiles(BuildingDocument *doc, BuildingFloor *floor,
-                    const QString &layerName, const QRect &bounds,
-                    FloorTileGrid *tiles,
-                    char *undoText);
+                    const QString &layerName, const QPoint &pos,
+                    FloorTileGrid *tiles, char *undoText);
+
+    PaintFloorTiles(BuildingDocument *doc, BuildingFloor *floor,
+                    const QString &layerName, const QRegion &rgn,
+                    FloorTileGrid *tiles, char *undoText);
 
     ~PaintFloorTiles();
 
@@ -334,7 +337,7 @@ private:
     BuildingDocument *mDocument;
     BuildingFloor *mFloor;
     QString mLayerName;
-    QRect mBounds;
+    QRegion mRegion;
     FloorTileGrid *mTiles;
 };
 

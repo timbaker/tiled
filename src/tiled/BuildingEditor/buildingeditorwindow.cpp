@@ -255,12 +255,18 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->menuEdit->insertAction(ui->menuEdit->actions().at(1), redoAction);
     ui->menuEdit->insertSeparator(ui->menuEdit->actions().at(2));
 
+    ui->actionCut->setShortcuts(QKeySequence::Cut);
+    ui->actionCopy->setShortcuts(QKeySequence::Copy);
+    ui->actionPaste->setShortcuts(QKeySequence::Paste);
+    ui->actionDelete->setShortcuts(QKeySequence::Delete);
     ui->actionSelectAll->setShortcuts(QKeySequence::SelectAll);
     ui->actionSelectNone->setShortcut(tr("Ctrl+Shift+A"));
-    ui->actionDelete->setShortcuts(QKeySequence::Delete);
+    connect(ui->actionCut, SIGNAL(triggered()), SLOT(editCut()));
+    connect(ui->actionCopy, SIGNAL(triggered()), SLOT(editCopy()));
+    connect(ui->actionPaste, SIGNAL(triggered()), SLOT(editPaste()));
+    connect(ui->actionDelete, SIGNAL(triggered()), SLOT(editDelete()));
     connect(ui->actionSelectAll, SIGNAL(triggered()), SLOT(selectAll()));
     connect(ui->actionSelectNone, SIGNAL(triggered()), SLOT(selectNone()));
-    connect(ui->actionDelete, SIGNAL(triggered()), SLOT(editDelete()));
 
     connect(mUndoGroup, SIGNAL(cleanChanged(bool)), SLOT(updateWindowTitle()));
     connect(mUndoGroup, SIGNAL(cleanChanged(bool)), SLOT(autoSaveCheck()));
@@ -1776,6 +1782,81 @@ void BuildingEditorWindow::exportTMX()
                        QFileInfo(fileName).absolutePath());
 }
 
+void BuildingEditorWindow::editCut()
+{
+    if (!mCurrentDocument || currentLayer().isEmpty())
+        return;
+
+    if (mEditMode == TileMode) {
+        QRegion selection = mCurrentDocument->tileSelection();
+        if (!selection.isEmpty()) {
+            QRect r = selection.boundingRect();
+            FloorTileGrid *tiles = currentFloor()->grimeAt(currentLayer(), selection);
+            mCurrentDocument->setClipboardTiles(tiles, selection.translated(-r.topLeft()));
+
+            tiles = new FloorTileGrid(r.width(), r.height());
+            mCurrentDocument->undoStack()->push(new PaintFloorTiles(mCurrentDocument,
+                                                                    currentFloor(),
+                                                                    currentLayer(),
+                                                                    selection,
+                                                                    tiles,
+                                                                    "Cut Tiles"));
+        }
+    }
+}
+
+void BuildingEditorWindow::editCopy()
+{
+    if (!mCurrentDocument || currentLayer().isEmpty())
+        return;
+
+    if (mEditMode == TileMode) {
+        QRegion selection = mCurrentDocument->tileSelection();
+        if (!selection.isEmpty()) {
+            QRect r = selection.boundingRect();
+            FloorTileGrid *tiles = currentFloor()->grimeAt(currentLayer(), selection);
+            mCurrentDocument->setClipboardTiles(tiles, selection.translated(-r.topLeft()));
+        }
+    }
+}
+
+void BuildingEditorWindow::editPaste()
+{
+    if (!mCurrentDocument || currentLayer().isEmpty())
+        return;
+
+    if (mEditMode == TileMode) {
+        if (FloorTileGrid *tiles = mCurrentDocument->clipboardTiles()) {
+            DrawTileTool::instance()->makeCurrent();
+            DrawTileTool::instance()->setCaptureTiles(tiles->clone(),
+                                                      mCurrentDocument->clipboardTilesRgn());
+        }
+    }
+}
+
+void BuildingEditorWindow::editDelete()
+{
+    if (!mCurrentDocument || currentLayer().isEmpty())
+        return;
+    if (mEditMode == TileMode) {
+        QRect r1 = currentDocument()->tileSelection().boundingRect();
+        FloorTileGrid *tiles = currentFloor()->grimeAt(currentLayer(), r1);
+        bool changed = false;
+        foreach (QRect r, currentDocument()->tileSelection().rects()) {
+            if (tiles->replace(r.translated(-r1.topLeft()), QString()))
+                changed = true;
+        }
+        if (changed)
+            mCurrentDocument->undoStack()->push(
+                        new PaintFloorTiles(mCurrentDocument, currentFloor(),
+                                            currentLayer(), r1.topLeft(), tiles,
+                                            "Erase Tiles"));
+    }
+    if (mEditMode == BuildingMode) {
+        deleteObjects();
+    }
+}
+
 void BuildingEditorWindow::selectAll()
 {
     if (!mCurrentDocument)
@@ -1799,29 +1880,6 @@ void BuildingEditorWindow::selectNone()
         return;
     }
     mCurrentDocument->setSelectedObjects(QSet<BuildingObject*>());
-}
-
-void BuildingEditorWindow::editDelete()
-{
-    if (!mCurrentDocument || currentLayer().isEmpty())
-        return;
-    if (mEditMode == TileMode) {
-        QRect r1 = currentDocument()->tileSelection().boundingRect();
-        FloorTileGrid *tiles = currentFloor()->grimeAt(currentLayer(), r1);
-        bool changed = false;
-        foreach (QRect r, currentDocument()->tileSelection().rects()) {
-            if (tiles->replace(r.translated(-r1.topLeft()), QString()))
-                changed = true;
-        }
-        if (changed)
-            mCurrentDocument->undoStack()->push(
-                        new PaintFloorTiles(mCurrentDocument, currentFloor(),
-                                            currentLayer(), r1, tiles,
-                                            "Erase Tiles"));
-    }
-    if (mEditMode == BuildingMode) {
-        deleteObjects();
-    }
 }
 
 void BuildingEditorWindow::deleteObjects()
