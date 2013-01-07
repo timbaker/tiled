@@ -115,6 +115,15 @@ BuildingObject *Door::clone() const
     return clone;
 }
 
+QPolygonF Door::calcShape() const
+{
+    if (isN())
+        return QRectF(mX, mY - 5/30.0, 30/30.0, 10/30.0);
+    if (isW())
+        return QRectF(mX - 5/30.0, mY, 10/30.0, 30/30.0);
+    return QPolygonF();
+}
+
 /////
 
 QRect Stairs::bounds() const
@@ -163,6 +172,15 @@ BuildingObject *Stairs::clone() const
     Stairs *clone = new Stairs(mFloor, mX, mY, mDir);
     clone->mTile = mTile;
     return clone;
+}
+
+QPolygonF Stairs::calcShape() const
+{
+    if (isN())
+        return QRectF(mX, mY, 30/30.0, 30 * 5/30.0);
+    if (isW())
+        return QRectF(mX, mY, 30 * 5/30.0, 30/30.0);
+    return QPolygonF();
 }
 
 int Stairs::getOffset(int x, int y)
@@ -308,6 +326,81 @@ BuildingObject *FurnitureObject::clone() const
     FurnitureObject *clone = new FurnitureObject(mFloor, mX, mY);
     clone->mFurnitureTile = mFurnitureTile;
     return clone;
+}
+
+QPolygonF FurnitureObject::calcShape() const
+{
+    QRectF r = bounds();
+    FurnitureTile *ftile = furnitureTile();
+    FurnitureTiles::FurnitureLayer layer = furnitureTile()->owner()->layer();
+    if (inWallLayer()) {
+        if (ftile->isW())
+            r.setRight(r.left() + 10/30.0);
+        else if (ftile->isN())
+            r.setBottom(r.top() + 10/30.0);
+        else if (ftile->isE())
+            r.setLeft(r.right() - 10/30.0);
+        else if (ftile->isS())
+            r.setTop(r.bottom() - 10/30.0);
+        return r;
+    }
+    if (layer == FurnitureTiles::LayerWalls ||
+            layer == FurnitureTiles::LayerRoofCap) {
+        if (ftile->isW()) {
+            r.setRight(r.left() + 12/30.0);
+            r.translate(-6/30.0, 0);
+        } else if (ftile->isE()) {
+            r.setLeft(r.right() - 12/30.0);
+            r.translate(6/30.0, 0);
+        } else if (ftile->isN()) {
+            r.setBottom(r.top() + 12/30.0);
+            r.translate(0, -6/30.0);
+        } else if (ftile->isS()) {
+            r.setTop(r.bottom() - 12/30.0);
+            r.translate(0, 6/30.0);
+        }
+        return r;
+    }
+    if (layer == FurnitureTiles::LayerFrames) {
+        // Mimic window shape
+        if (ftile->isW()) {
+            r.setRight(r.left() + 6/30.0);
+            r.adjust(0,7/30.0,0,-7/30.0);
+            r.translate(-3/30.0, 0);
+        } else if (ftile->isE()) {
+            r.setLeft(r.right() - 6/30.0);
+            r.adjust(0,7/30.0,0,-7/30.0);
+            r.translate(3/30.0, 0);
+        } else if (ftile->isN()) {
+            r.adjust(7/30.0,0,-7/30.0,0);
+            r.setBottom(r.top() + 6/30.0);
+            r.translate(0, -3/30.0);
+        } else if (ftile->isS()) {
+            r.adjust(7/30.0,0,-7/30.0,0);
+            r.setTop(r.bottom() - 6/30.0);
+            r.translate(0, 3/30.0);
+        }
+        return r;
+    }
+    if (layer == FurnitureTiles::LayerDoors) {
+        // Mimic door shape
+        if (ftile->isW()) {
+            r.setRight(r.left() + 10/30.0);
+            r.translate(-5/30.0, 0);
+        } else if (ftile->isE()) {
+            r.setLeft(r.right() - 10/30.0);
+            r.translate(5/30.0, 0);
+        } else if (ftile->isN()) {
+            r.setBottom(r.top() + 10/30.0);
+            r.translate(0, -5/30.0);
+        } else if (ftile->isS()) {
+            r.setTop(r.bottom() - 10/30.0);
+            r.translate(0, 5/30.0);
+        }
+        return r;
+    }
+    r.adjust(2/30.0, 2/30.0, -2/30.0, -2/30.0);
+    return r;
 }
 
 void FurnitureObject::setFurnitureTile(FurnitureTile *tile)
@@ -518,6 +611,11 @@ BuildingObject *RoofObject::clone() const
     clone->mSlopeTiles = mSlopeTiles;
     clone->mTopTiles = mTopTiles;
     return clone;
+}
+
+QPolygonF RoofObject::calcShape() const
+{
+    return QRectF(bounds());
 }
 
 void RoofObject::setCapTiles(BuildingTileEntry *entry)
@@ -1241,6 +1339,15 @@ BuildingObject *WallObject::clone() const
     return clone;
 }
 
+QPolygonF WallObject::calcShape() const
+{
+    if (isN())
+       return QRectF(mX - 6/30.0, mY, 12/30.0, mLength * 30/30.0);
+    if (isW())
+        return QRectF(mX, mY - 6/30.0, mLength * 30/30.0, 12/30.0);
+    return QPolygonF();
+}
+
 /////
 
 BuildingObject *Window::clone() const
@@ -1249,6 +1356,15 @@ BuildingObject *Window::clone() const
     clone->mTile = mTile;
     clone->mCurtainsTile = mCurtainsTile;
     return clone;
+}
+
+QPolygonF Window::calcShape() const
+{
+    if (isN())
+        return QRectF(mX + 7/30.0, mY - 3/30.0, 16/30.0, 6/30.0);
+    if (isW())
+        return QRectF(mX - 3/30.0, mY + 7/30.0, 6/30.0, 16/30.0);
+    return QPolygonF();
 }
 
 /////

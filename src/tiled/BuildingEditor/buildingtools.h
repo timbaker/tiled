@@ -29,7 +29,7 @@
 class QAction;
 class QGraphicsItem;
 class QGraphicsPathItem;
-class QGraphicsRectItem;
+class QGraphicsPolygonItem;
 class QGraphicsSceneMouseEvent;
 class QImage;
 class QUndoStack;
@@ -39,7 +39,7 @@ namespace BuildingEditor {
 class BuildingFloor;
 class BuildingTile;
 class Door;
-class FloorEditor;
+class BaseFloorEditor;
 class FurnitureTile;
 class GraphicsObjectItem;
 class GraphicsRoofItem;
@@ -57,7 +57,7 @@ class BaseTool : public QObject
 public:
     BaseTool();
 
-    virtual void setEditor(FloorEditor *editor);
+    virtual void setEditor(BaseFloorEditor *editor);
 
     void setAction(QAction *action)
     { mAction = action; }
@@ -99,7 +99,7 @@ public slots:
     virtual void deactivate() = 0;
 
 protected:
-    FloorEditor *mEditor;
+    BaseFloorEditor *mEditor;
     QAction *mAction;
     QString mStatusText;
 };
@@ -176,7 +176,7 @@ private:
     QPointF mMouseScenePos;
     QPoint mStartTilePos;
     QRect mCursorTileBounds;
-    QGraphicsRectItem *mCursor;
+    QGraphicsPolygonItem *mCursor;
     QRectF mCursorSceneRect;
 };
 
@@ -407,7 +407,7 @@ private:
     QPoint mCurrentPos;
     RoofObject *mObject;
     GraphicsObjectItem *mItem;
-    QGraphicsRectItem *mCursorItem;
+    QGraphicsPolygonItem *mCursorItem;
     QRectF mCursorSceneRect;
 
     GraphicsRoofItem *mObjectItem; // item for roof object mouse is over
@@ -481,8 +481,9 @@ private:
     QPointF mStartScenePos;
     QPoint mDragOffset;
     BuildingObject *mClickedObject;
+    BuildingObject *mHoverObject;
     QSet<BuildingObject*> mMovingObjects;
-    QGraphicsRectItem *mSelectionRectItem;
+    QGraphicsPolygonItem *mSelectionRectItem;
     QList<GraphicsObjectItem*> mClones;
 };
 
@@ -539,7 +540,7 @@ private:
     QPoint mCurrentPos;
     WallObject *mObject;
     GraphicsObjectItem *mItem;
-    QGraphicsRectItem *mCursorItem;
+    QGraphicsPolygonItem *mCursorItem;
     QRectF mCursorSceneRect;
 
     GraphicsWallItem *mObjectItem; // item for object mouse is over

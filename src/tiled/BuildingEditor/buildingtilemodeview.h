@@ -1,6 +1,8 @@
 #ifndef BUILDINGTILEMODEVIEW_H
 #define BUILDINGTILEMODEVIEW_H
 
+#include "FloorEditor.h"
+
 #include <QGraphicsItem>
 #include <QGraphicsScene>
 #include <QGraphicsView>
@@ -77,15 +79,33 @@ private:
     QRectF mBoundingRect;
 };
 
-class BuildingTileModeScene : public QGraphicsScene
+class IsoBuildingRenderer : public BuildingRenderer
+{
+public:
+    QPoint sceneToTile(const QPointF &scenePos, int level);
+    QPointF sceneToTileF(const QPointF &scenePos, int level);
+    QRect sceneToTileRect(const QRectF &sceneRect, int level);
+    QRectF sceneToTileRectF(const QRectF &sceneRect, int level);
+    QPointF tileToScene(const QPoint &tilePos, int level);
+    QPointF tileToSceneF(const QPointF &tilePos, int level);
+    QPolygonF tileToScenePolygon(const QPoint &tilePos, int level);
+    QPolygonF tileToScenePolygon(const QRect &tileRect, int level);
+    QPolygonF tileToScenePolygonF(const QRectF &tileRect, int level);
+    QPolygonF tileToScenePolygon(const QPolygonF &tilePolygon, int level);
+
+    void drawLine(QPainter *painter, qreal x1, qreal y1, qreal x2, qreal y2, int level);
+
+    Tiled::MapRenderer *mRenderer;
+};
+
+class BuildingTileModeScene : public BaseFloorEditor
 {
     Q_OBJECT
 public:
-    static const int ZVALUE_CURSOR;
-    static const int ZVALUE_GRID;
-
     BuildingTileModeScene(QWidget *parent = 0);
     ~BuildingTileModeScene();
+
+    Tiled::MapRenderer *mapRenderer() const;
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
@@ -94,31 +114,8 @@ public:
     void setDocument(BuildingDocument *doc);
     void clearDocument();
 
-    BuildingDocument *document() const
-    { return mDocument; }
-
-    MapComposite *mapComposite() const
-    { return mMapComposite; }
-
-    Tiled::Map *map() const
-    { return mMap; }
-
-    Tiled::MapRenderer *renderer() const
-    { return mRenderer; }
-
-    int currentLevel();
-    BuildingFloor *currentFloor();
-
     QStringList layerNames() const;
-    QString currentLayerName() const;
 
-    QPoint sceneToTile(const QPointF &scenePos);
-    QPointF sceneToTileF(const QPointF &scenePos);
-    QRect sceneToTileRect(const QRectF &sceneRect);
-    QPointF tileToScene(const QPoint &tilePos);
-    QPolygonF tileToScenePolygon(const QPoint &tilePos);
-    QPolygonF tileToScenePolygon(const QRect &tileRect);
-    QPolygonF tileToScenePolygonF(const QRectF &tileRect);
     bool currentFloorContains(const QPoint &tilePos, int dw = 0, int dh = 0);
 
     void setToolTiles(const FloorTileGrid *tiles,
@@ -128,16 +125,7 @@ public:
     QString buildingTileAt(int x, int y);
 
 private:
-    void BuildingToMap();
-    void BuildingFloorToTileLayers(BuildingFloor *floor, const QVector<Tiled::TileLayer *> &layers);
-
-    void floorTilesToLayer(BuildingFloor *floor, const QString &layerName,
-                           const QRect &bounds);
-
     CompositeLayerGroupItem *itemForFloor(BuildingFloor *floor);
-
-signals:
-    void documentChanged();
 
 private slots:
     void currentFloorChanged();
@@ -162,6 +150,7 @@ private slots:
     void layerVisibilityChanged(BuildingFloor *floor, const QString &layerName);
 
     void objectAdded(BuildingObject *object);
+    void objectAboutToBeRemoved(BuildingObject *object);
     void objectRemoved(BuildingObject *object);
     void objectMoved(BuildingObject *object);
     void objectTileChanged(BuildingObject *object);
@@ -176,6 +165,7 @@ private slots:
     void tilesetRemoved(Tiled::Tileset *tileset);
 
     void currentToolChanged(BaseTileTool *tool);
+    void currentToolChanged(BaseTool *tool);
 
 private:
     BuildingDocument *mDocument;
@@ -189,7 +179,8 @@ private:
     QMap<int,CompositeLayerGroupItem*> mLayerGroupItems;
     bool mLoading;
     QGraphicsRectItem *mDarkRectangle;
-    BaseTileTool *mCurrentTool;
+    BaseTileTool *mCurrentTileTool;
+    BaseTool *mCurrentTool;
     CompositeLayerGroup *mLayerGroupWithToolTiles;
     QString mNonEmptyLayer;
     CompositeLayerGroupItem *mNonEmptyLayerGroupItem;

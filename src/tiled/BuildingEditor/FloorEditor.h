@@ -42,6 +42,7 @@ class RoofObject;
 class Room;
 class WallObject;
 
+class BaseFloorEditor;
 class GraphicsObjectItem;
 class GraphicsRoofBaseItem;
 class GraphicsRoofCornerItem;
@@ -53,7 +54,7 @@ class GraphicsWallItem;
 class GraphicsFloorItem : public QGraphicsItem
 {
 public:
-    GraphicsFloorItem(BuildingFloor *floor);
+    GraphicsFloorItem(BaseFloorEditor *editor, BuildingFloor *floor);
     ~GraphicsFloorItem();
 
     QRectF boundingRect() const;
@@ -75,6 +76,10 @@ public:
 
     void synchWithFloor();
 
+    void floorEdited();
+    void roomChanged(Room *room);
+    void roomAtPositionChanged(const QPoint &pos);
+
     void setDragBmp(QImage *bmp);
 
     QImage *dragBmp() const
@@ -83,6 +88,7 @@ public:
     void showObjectsChanged(bool show);
 
 private:
+    BaseFloorEditor *mEditor;
     BuildingFloor *mFloor;
     QImage *mBmp;
     QImage *mDragBmp;
@@ -107,13 +113,16 @@ private:
 class GraphicsObjectItem : public QGraphicsItem
 {
 public:
-    GraphicsObjectItem(FloorEditor *editor, BuildingObject *object);
+    GraphicsObjectItem(BaseFloorEditor *editor, BuildingObject *object);
 
     QPainterPath shape() const;
 
     QRectF boundingRect() const;
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+    BaseFloorEditor *editor() const
+    { return mEditor; }
 
     void setObject(BuildingObject *object);
 
@@ -131,6 +140,11 @@ public:
     void setDragging(bool dragging);
     void setDragOffset(const QPoint &offset);
 
+    void setMouseOver(bool mouseOver);
+
+    bool mouseOver() const
+    { return mMouseOver; }
+
     bool isValidPos() const
     { return mValidPos; }
 
@@ -142,7 +156,7 @@ protected:
     void initialize();
 
 protected:
-    FloorEditor *mEditor;
+    BaseFloorEditor *mEditor;
     BuildingObject *mObject;
     QRectF mBoundingRect;
     bool mSelected;
@@ -150,6 +164,7 @@ protected:
     QPoint mDragOffset;
     QPainterPath mShape;
     bool mValidPos;
+    bool mMouseOver;
 };
 
 class GraphicsRoofHandleItem : public QGraphicsItem
@@ -182,17 +197,19 @@ private:
     QRectF calcBoundingRect();
 
 private:
+    BaseFloorEditor *mEditor;
     GraphicsRoofItem *mRoofItem;
     Type mType;
     bool mHighlight;
     QString mStatusText;
+    QRectF mTileBounds;
     QRectF mBoundingRect;
 };
 
 class GraphicsRoofItem : public GraphicsObjectItem
 {
 public:
-    GraphicsRoofItem(FloorEditor *editor, RoofObject *roof);
+    GraphicsRoofItem(BaseFloorEditor *editor, RoofObject *roof);
 
     void synchWithObject();
 
@@ -254,13 +271,14 @@ private:
 private:
     GraphicsWallItem *mWallItem;
     bool mHighlight;
+    QRectF mTileRect;
     QRectF mBoundingRect;
 };
 
 class GraphicsWallItem : public GraphicsObjectItem
 {
 public:
-    GraphicsWallItem(FloorEditor *editor, WallObject *wall);
+    GraphicsWallItem(BaseFloorEditor *editor, WallObject *wall);
 
     void synchWithObject();
     QPainterPath calcShape();
@@ -280,15 +298,131 @@ private:
     GraphicsWallHandleItem *mResizeItem;
 };
 
-class FloorEditor : public QGraphicsScene
+class BuildingRenderer
+{
+public:
+    virtual QPoint sceneToTile(const QPointF &scenePos, int level) = 0;
+    virtual QPointF sceneToTileF(const QPointF &scenePos, int level) = 0;
+    virtual QRect sceneToTileRect(const QRectF &sceneRect, int level) = 0;
+    virtual QRectF sceneToTileRectF(const QRectF &sceneRect, int level) = 0;
+    virtual QPointF tileToScene(const QPoint &tilePos, int level) = 0;
+    virtual QPointF tileToSceneF(const QPointF &tilePos, int level) = 0;
+    virtual QPolygonF tileToScenePolygon(const QPoint &tilePos, int level) = 0;
+    virtual QPolygonF tileToScenePolygon(const QRect &tileRect, int level) = 0;
+    virtual QPolygonF tileToScenePolygonF(const QRectF &tileRect, int level) = 0;
+    virtual QPolygonF tileToScenePolygon(const QPolygonF &tilePolygon, int level) = 0;
+
+    virtual void drawLine(QPainter *painter, qreal x1, qreal y1, qreal x2, qreal y2, int level) = 0;
+
+    void drawLine(QPainter *painter, const QPointF &p1, const QPointF &p2, int level)
+    { drawLine(painter, p1.x(), p1.y(), p2.x(), p2.y(), level); }
+
+    virtual void drawObject(QPainter *painter, BuildingObject *mObject,
+                            const QPoint &mDragOffset, bool mValidPos,
+                            bool mSelected, bool mMouseOver, int level);
+};
+
+class OrthoBuildingRenderer : public BuildingRenderer
+{
+public:
+    QPoint sceneToTile(const QPointF &scenePos, int level);
+    QPointF sceneToTileF(const QPointF &scenePos, int level);
+    QRect sceneToTileRect(const QRectF &sceneRect, int level);
+    QRectF sceneToTileRectF(const QRectF &sceneRect, int level);
+    QPointF tileToScene(const QPoint &tilePos, int level);
+    QPointF tileToSceneF(const QPointF &tilePos, int level);
+    QPolygonF tileToScenePolygon(const QPoint &tilePos, int level);
+    QPolygonF tileToScenePolygon(const QRect &tileRect, int level);
+    QPolygonF tileToScenePolygonF(const QRectF &tileRect, int level);
+    QPolygonF tileToScenePolygon(const QPolygonF &tilePolygon, int level);
+
+    void drawLine(QPainter *painter, qreal x1, qreal y1, qreal x2, qreal y2, int level);
+};
+
+class BaseFloorEditor : public QGraphicsScene
+{
+    Q_OBJECT
+public:
+    int ZVALUE_CURSOR;
+    int ZVALUE_GRID;
+
+    BaseFloorEditor(QObject *parent = 0) :
+        QGraphicsScene(parent),
+        mDocument(0)
+    {}
+
+    BuildingDocument *document() const
+    { return mDocument; }
+
+    Building *building() const;
+
+    int currentLevel();
+    BuildingFloor *currentFloor();
+    QString currentLayerName() const;
+
+    BuildingRenderer *renderer() const
+    { return mRenderer; }
+
+    QPoint sceneToTile(const QPointF &scenePos, int level) { return mRenderer->sceneToTile(scenePos, level); }
+    QPointF sceneToTileF(const QPointF &scenePos, int level) { return mRenderer->sceneToTileF(scenePos, level); }
+    QRect sceneToTileRect(const QRectF &sceneRect, int level) { return mRenderer->sceneToTileRect(sceneRect, level); }
+    QRectF sceneToTileRectF(const QRectF &sceneRect, int level) { return mRenderer->sceneToTileRectF(sceneRect, level); }
+    QPointF tileToScene(const QPoint &tilePos, int level) { return mRenderer->tileToScene(tilePos, level); }
+    QPointF tileToSceneF(const QPointF &tilePos, int level) { return mRenderer->tileToSceneF(tilePos, level); }
+    QPolygonF tileToScenePolygon(const QPoint &tilePos, int level) { return mRenderer->tileToScenePolygon(tilePos, level); }
+    QPolygonF tileToScenePolygon(const QRect &tileRect, int level) { return mRenderer->tileToScenePolygon(tileRect, level); }
+    QPolygonF tileToScenePolygonF(const QRectF &tileRect, int level) { return mRenderer->tileToScenePolygonF(tileRect, level); }
+    QPolygonF tileToScenePolygon(const QPolygonF &tilePolygon, int level) { return mRenderer->tileToScenePolygon(tilePolygon, level); }
+
+    void drawLine(QPainter *painter, qreal x1, qreal y1, qreal x2, qreal y2, int level)
+    { return mRenderer->drawLine(painter, x1, y1, x2, y2, level); }
+
+    void drawLine(QPainter *painter, const QPointF &p1, const QPointF &p2, int level)
+    { return mRenderer->drawLine(painter, p1, p2, level); }
+
+    void drawObject(QPainter *painter, BuildingObject *object);
+
+    bool currentFloorContains(const QPoint &tilePos);
+
+    GraphicsFloorItem *itemForFloor(BuildingFloor *floor);
+    GraphicsObjectItem *itemForObject(BuildingObject *object);
+
+    GraphicsObjectItem *createItemForObject(BuildingObject *object);
+
+    BuildingObject *topmostObjectAt(const QPointF &scenePos);
+
+    QSet<BuildingObject*> objectsInRect(const QRectF &tileRect);
+
+signals:
+    void documentChanged();
+
+protected slots:
+    void floorAdded(BuildingFloor *floor);
+    void floorRemoved(BuildingFloor *floor);
+    void floorEdited(BuildingFloor *floor);
+
+    void objectAdded(BuildingObject *object);
+    void objectAboutToBeRemoved(BuildingObject *object);
+    void objectMoved(BuildingObject *object);
+    void objectTileChanged(BuildingObject *object);
+    void objectChanged(BuildingObject *object);
+
+    void selectedObjectsChanged();
+
+protected:
+    BuildingDocument *mDocument;
+    BuildingRenderer *mRenderer;
+    QList<GraphicsFloorItem*> mFloorItems;
+    QSet<GraphicsObjectItem*> mSelectedObjectItems;
+};
+
+class FloorEditor : public BaseFloorEditor
 {
     Q_OBJECT
 
 public:
-    static const int ZVALUE_CURSOR;
-    static const int ZVALUE_GRID;
 
-    explicit FloorEditor(QWidget *parent = 0);
+    explicit FloorEditor(QObject *parent = 0);
 
     bool eventFilter(QObject *watched, QEvent *event);
 
@@ -302,49 +436,12 @@ public:
     void setDocument(BuildingDocument *doc);
     void clearDocument();
 
-    BuildingDocument *document() const
-    { return mDocument; }
-
-    Building *building() const;
-
-    QPoint sceneToTile(const QPointF &scenePos);
-    QPointF sceneToTileF(const QPointF &scenePos);
-    QRect sceneToTileRect(const QRectF &sceneRect);
-    QPointF tileToScene(const QPoint &tilePos);
-    QRectF tileToSceneRect(const QPoint &tilePos);
-    QRectF tileToSceneRect(const QRect &tileRect);
-    QRectF tileToSceneRectF(const QRectF &tileRect);
-    bool currentFloorContains(const QPoint &tilePos);
-
-    GraphicsFloorItem *itemForFloor(BuildingFloor *floor);
-    GraphicsObjectItem *itemForObject(BuildingObject *object);
-
-    QSet<BuildingObject*> objectsInRect(const QRectF &sceneRect);
-
-    BuildingObject *topmostObjectAt(const QPointF &scenePos);
-
-    GraphicsObjectItem *createItemForObject(BuildingObject *object);
-
-signals:
-    void documentChanged();
 
 private slots:
     void currentToolChanged(BaseTool *tool);
 
     void currentFloorChanged();
     void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
-
-    void floorAdded(BuildingFloor *floor);
-    void floorRemoved(BuildingFloor *floor);
-    void floorEdited(BuildingFloor *floor);
-
-    void objectAdded(BuildingObject *object);
-    void objectAboutToBeRemoved(BuildingObject *object);
-    void objectMoved(BuildingObject *object);
-    void objectTileChanged(BuildingObject *object);
-    void objectChanged(BuildingObject *object);
-
-    void selectedObjectsChanged();
 
     void roomChanged(Room *room);
     void roomAdded(Room *room);
@@ -357,10 +454,7 @@ private slots:
     void showObjectsChanged(bool show);
 
 private:
-    BuildingDocument *mDocument;
     GraphicsGridItem *mGridItem;
-    QList<GraphicsFloorItem*> mFloorItems;
-    QSet<GraphicsObjectItem*> mSelectedObjectItems;
     BaseTool *mCurrentTool;
 };
 

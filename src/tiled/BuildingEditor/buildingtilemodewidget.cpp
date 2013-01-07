@@ -26,6 +26,7 @@
 #include "buildingtilemodeview.h"
 #include "buildingtiles.h"
 #include "buildingtiletools.h"
+#include "buildingtools.h"
 #include "tilemodefurnituredock.h"
 
 #include "mapcomposite.h"
@@ -61,6 +62,7 @@ BuildingTileModeWidget::BuildingTileModeWidget(QWidget *parent) :
     mToolBar->setObjectName(QString::fromUtf8("ToolBar"));
     mToolBar->addAction(ui->actionPecil);
     mToolBar->addAction(ui->actionSelectTiles);
+    mToolBar->addAction(ui->actionSelectObject);
 
     mToolBar->addSeparator();
     mFloorLabel->setMinimumWidth(90);
@@ -98,6 +100,9 @@ BuildingTileModeWidget::BuildingTileModeWidget(QWidget *parent) :
             SelectTileTool::instance(), SLOT(makeCurrent()));
     SelectTileTool::instance()->setEditor(view()->scene());
     SelectTileTool::instance()->setAction(ui->actionSelectTiles);
+
+    connect(ui->actionSelectObject, SIGNAL(triggered()),
+            SelectMoveObjectTool::instance(), SLOT(makeCurrent()));
 
     connect(ui->actionUpLevel, SIGNAL(triggered()), SLOT(upLevel()));
     connect(ui->actionDownLevel, SIGNAL(triggered()), SLOT(downLevel()));
@@ -181,6 +186,9 @@ void BuildingTileModeWidget::switchTo()
     ui->dockLayers->show(); // FIXME: unless the user hid it
     ui->dockTilesets->show(); // FIXME: unless the user hid it
     mFurnitureDock->show(); // FIXME: unless the user hid it
+
+    SelectMoveObjectTool::instance()->setEditor(view()->scene());
+    SelectMoveObjectTool::instance()->setAction(ui->actionSelectObject);
 
     if (mFirstTimeSeen) {
         if (!ui->tilesets->count())

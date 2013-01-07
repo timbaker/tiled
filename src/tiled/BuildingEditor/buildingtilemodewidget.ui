@@ -164,6 +164,21 @@
     <string>Select and Move Tiles</string>
    </property>
   </action>
+  <action name="actionSelectObject">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/22x22/tool-select-objects.png</normaloff>:/images/22x22/tool-select-objects.png</iconset>
+   </property>
+   <property name="text">
+    <string>Select Objects</string>
+   </property>
+   <property name="toolTip">
+    <string>Select and Move Objects</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

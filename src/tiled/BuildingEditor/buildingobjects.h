@@ -18,7 +18,7 @@
 #ifndef BUILDINGOBJECTS_H
 #define BUILDINGOBJECTS_H
 
-#include <QRect>
+#include <QPolygon>
 #include <QRegion>
 #include <QString>
 
@@ -110,6 +110,8 @@ public:
 
     virtual BuildingObject *clone() const = 0;
 
+    virtual QPolygonF calcShape() const = 0;
+
     virtual Door *asDoor() { return 0; }
     virtual Window *asWindow() { return 0; }
     virtual Stairs *asStairs() { return 0; }
@@ -136,6 +138,8 @@ public:
     }
 
     BuildingObject *clone() const;
+
+    QPolygonF calcShape() const;
 
     Door *asDoor() { return this; }
 
@@ -174,6 +178,8 @@ public:
 
     BuildingObject *clone() const;
 
+    QPolygonF calcShape() const;
+
     Stairs *asStairs() { return this; }
 
     int getOffset(int x, int y);
@@ -199,6 +205,8 @@ public:
                     BuildingEditor::BuildingFloor *floor = 0) const;
 
     BuildingObject *clone() const;
+
+    QPolygonF calcShape() const;
 
     WallObject *asWall() { return this; }
 
@@ -231,6 +239,8 @@ public:
 
     BuildingObject *clone() const;
 
+    QPolygonF calcShape() const;
+
     Window *asWindow() { return this; }
 
     int getOffset() const
@@ -257,6 +267,8 @@ public:
                     BuildingEditor::BuildingFloor *floor = 0) const;
 
     BuildingObject *clone() const;
+
+    QPolygonF calcShape() const;
 
     FurnitureObject *asFurniture() { return this; }
 
@@ -330,6 +342,8 @@ public:
     bool affectsFloorAbove() const { return true; }
 
     BuildingObject *clone() const;
+
+    QPolygonF calcShape() const;
 
     RoofObject *asRoof() { return this; }
 

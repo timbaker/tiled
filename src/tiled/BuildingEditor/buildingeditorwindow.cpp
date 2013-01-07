@@ -2504,6 +2504,9 @@ void BuildingEditorWindow::switchMode()
         ui->floorView->setFocus();
         mTileModeWidget->view()->zoomable()->connectToComboBox(0);
         mView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
+
+        SelectMoveObjectTool::instance()->setEditor(roomEditor);
+        SelectMoveObjectTool::instance()->setAction(ui->actionSelectObject);
     }
 
     updateActions();

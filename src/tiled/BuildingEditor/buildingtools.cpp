@@ -47,7 +47,7 @@ BaseTool::BaseTool() :
     ToolManager::instance()->addTool(this);
 }
 
-void BaseTool::setEditor(FloorEditor *editor)
+void BaseTool::setEditor(BaseFloorEditor *editor)
 {
     mEditor = editor;
 
@@ -211,7 +211,7 @@ void PencilTool::documentChanged()
 
 void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    QPoint tilePos = mEditor->sceneToTile(event->scenePos());
+    QPoint tilePos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
 
     if (event->button() == Qt::RightButton) {
         // Right-click to cancel drawing/erasing.
@@ -232,7 +232,7 @@ void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     }
 
     mErasing = controlModifier();
-    mStartTilePos = mEditor->sceneToTile(event->scenePos());
+    mStartTilePos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
     mCursorTileBounds = QRect(mStartTilePos, QSize(1, 1)) & floor()->bounds();
     mMouseDown = true;
     updateStatusText();
@@ -300,25 +300,25 @@ void PencilTool::deactivate()
 
 void PencilTool::updateCursor(const QPointF &scenePos)
 {
-    QPoint tilePos = mEditor->sceneToTile(scenePos);
+    QPoint tilePos = mEditor->sceneToTile(scenePos, mEditor->currentLevel());
     if (!mCursor) {
-        mCursor = new QGraphicsRectItem;
-        mCursor->setZValue(FloorEditor::ZVALUE_CURSOR);
+        mCursor = new QGraphicsPolygonItem;
+        mCursor->setZValue(mEditor->ZVALUE_CURSOR);
     }
 
-    QRectF rect;
+    QPolygonF polygon;
     if (mMouseDown) {
         mCursorTileBounds = QRect(QPoint(qMin(mStartTilePos.x(), tilePos.x()),
                                   qMin(mStartTilePos.y(), tilePos.y())),
                                   QPoint(qMax(mStartTilePos.x(), tilePos.x()),
                                   qMax(mStartTilePos.y(), tilePos.y())));
         mCursorTileBounds &= floor()->bounds();
-        rect = mEditor->tileToSceneRect(mCursorTileBounds);
+        polygon = mEditor->tileToScenePolygon(mCursorTileBounds, mEditor->currentLevel());
         updateStatusText();
     } else
-        rect = mEditor->tileToSceneRect(tilePos);
+        polygon = mEditor->tileToScenePolygon(tilePos, mEditor->currentLevel());
 
-    mCursor->setRect(rect);
+    mCursor->setPolygon(polygon);
 
     if (mErasing) {
         QPen pen(QColor(255,0,0,128));
@@ -397,7 +397,7 @@ void SelectMoveRoomsTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             return;
         mMouseDown = true;
         mStartScenePos = event->scenePos();
-        mStartTilePos = mEditor->sceneToTile(event->scenePos());
+        mStartTilePos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
         updateStatusText();
     }
     if (event->button() == Qt::RightButton) {
@@ -410,7 +410,7 @@ void SelectMoveRoomsTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     QPointF pos = event->scenePos();
 
-    bool mouseOverSelection = mSelectedArea.contains(mEditor->sceneToTile(pos));
+    bool mouseOverSelection = mSelectedArea.contains(mEditor->sceneToTile(pos, mEditor->currentLevel()));
     if (mouseOverSelection != mMouseOverSelection) {
         mMouseOverSelection = mouseOverSelection;
         updateStatusText();
@@ -419,7 +419,7 @@ void SelectMoveRoomsTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     if (mMode == NoMode && mMouseDown) {
         const int dragDistance = (mStartScenePos - pos).manhattanLength();
         if (dragDistance >= QApplication::startDragDistance()) {
-            QPoint tilePos = mEditor->sceneToTile(event->scenePos());
+            QPoint tilePos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
             if (mSelectedArea.contains(tilePos))
                 startMoving();
             else
@@ -430,7 +430,7 @@ void SelectMoveRoomsTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
     switch (mMode) {
     case Selecting: {
-        QPoint tilePos = mEditor->sceneToTile(pos);
+        QPoint tilePos = mEditor->sceneToTile(pos, mEditor->currentLevel());
         QRect tileBounds = QRect(QPoint(qMin(mStartTilePos.x(), tilePos.x()),
                                   qMin(mStartTilePos.y(), tilePos.y())),
                                   QPoint(qMax(mStartTilePos.x(), tilePos.x()),
@@ -444,7 +444,7 @@ void SelectMoveRoomsTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
     case Moving: {
         QPoint startTilePos = mStartTilePos;
-        QPoint currentTilePos = mEditor->sceneToTile(pos);
+        QPoint currentTilePos = mEditor->sceneToTile(pos, mEditor->currentLevel());
         QPoint offset = currentTilePos - startTilePos;
         if (offset != mDragOffset) {
             mDragOffset = offset;
@@ -528,7 +528,7 @@ QRegion SelectMoveRoomsTool::setSelectedArea(const QRegion &selectedArea)
             mSelectionItem = new QGraphicsPathItem();
             mSelectionItem->setPen(QColor(0x33,0x99,0xff));
             mSelectionItem->setBrush(QBrush(QColor(0x33,0x99,0xff,255/8)));
-            mSelectionItem->setZValue(FloorEditor::ZVALUE_CURSOR);
+            mSelectionItem->setZValue(mEditor->ZVALUE_CURSOR);
             mSelectionItem->setScale(30);
             mEditor->addItem(mSelectionItem);
         }
@@ -809,9 +809,9 @@ void BaseObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void BaseObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-    mTilePos = mEditor->sceneToTile(event->scenePos());
+    mTilePos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
 
-    QPointF p = mEditor->sceneToTileF(event->scenePos());
+    QPointF p = mEditor->sceneToTileF(event->scenePos(), mEditor->currentLevel());
     QPointF m(p.x() - int(p.x()), p.y() - int(p.y()));
     TileEdge xEdge = Center, yEdge = Center;
     if (m.x() < 0.25)
@@ -856,7 +856,7 @@ void BaseObjectTool::setCursorObject(BuildingObject *object)
     if (!mCursorItem) {
         mCursorItem = new GraphicsObjectItem(mEditor, mCursorObject);
         mCursorItem->synchWithObject();
-        mCursorItem->setZValue(FloorEditor::ZVALUE_CURSOR);
+        mCursorItem->setZValue(mEditor->ZVALUE_CURSOR);
         mEditor->addItem(mCursorItem);
     }
     mCursorItem->setObject(mCursorObject);
@@ -1246,7 +1246,7 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     if (event->button() == Qt::LeftButton) {
         if (mMode != NoMode)
             return; // ignore clicks when creating/resizing
-        mStartPos = mEditor->sceneToTile(event->scenePos());
+        mStartPos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
         mCurrentPos = mStartPos;
         if (mMouseOverHandle) {
             if (mHandleItem == mObjectItem->depthUpHandle()) {
@@ -1289,7 +1289,7 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                                  /*cappedE=*/true, /*cappedS=*/true);
         mItem = new GraphicsObjectItem(mEditor, mObject);
         mItem->synchWithObject();
-        mItem->setZValue(FloorEditor::ZVALUE_CURSOR);
+        mItem->setZValue(mEditor->ZVALUE_CURSOR);
         mEditor->addItem(mItem);
         mMode = Create;
         updateStatusText();
@@ -1323,17 +1323,17 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-    mCurrentPos = mEditor->sceneToTile(event->scenePos());
+    mCurrentPos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
 
     if (mMode == NoMode) {
         if (!mCursorItem) {
-            mCursorItem = new QGraphicsRectItem;
-            mCursorItem->setZValue(FloorEditor::ZVALUE_CURSOR);
+            mCursorItem = new QGraphicsPolygonItem;
+            mCursorItem->setZValue(mEditor->ZVALUE_CURSOR);
             mCursorItem->setBrush(QColor(0,255,0,128));
             mEditor->addItem(mCursorItem);
         }
 
-        mCursorItem->setRect(mEditor->tileToSceneRect(mCurrentPos));
+        mCursorItem->setPolygon(mEditor->tileToScenePolygon(mCurrentPos, mEditor->currentLevel()));
 
         updateHandle(event->scenePos());
 
@@ -1647,6 +1647,7 @@ SelectMoveObjectTool::SelectMoveObjectTool() :
     mMouseOverObject(false),
     mMouseOverSelection(false),
     mClickedObject(0),
+    mHoverObject(0),
     mSelectionRectItem(0)
 {
     updateStatusText();
@@ -1680,6 +1681,13 @@ void SelectMoveObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         mMouseOverSelection = mouseOverSelection;
         updateStatusText();
     }
+    if (object != mHoverObject) {
+        if (mHoverObject)
+            mEditor->itemForObject(mHoverObject)->setMouseOver(false);
+        mHoverObject = object;
+        if (mHoverObject)
+            mEditor->itemForObject(mHoverObject)->setMouseOver(true);
+    }
 
     if (mMode == NoMode && mMouseDown) {
         const int dragDistance = (mStartScenePos - pos).manhattanLength();
@@ -1692,9 +1700,11 @@ void SelectMoveObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 
     switch (mMode) {
-    case Selecting:
-        mSelectionRectItem->setRect(QRectF(mStartScenePos, pos).normalized());
+    case Selecting: {
+        QRectF tileRect = mEditor->sceneToTileRectF(QRectF(mStartScenePos, pos), mEditor->currentLevel());
+        mSelectionRectItem->setPolygon(mEditor->tileToScenePolygonF(tileRect.normalized(), mEditor->currentLevel()));
         break;
+    }
     case Moving:
         updateMovingItems(pos, event->modifiers());
         break;
@@ -1795,15 +1805,16 @@ void SelectMoveObjectTool::deactivate()
 void SelectMoveObjectTool::updateSelection(const QPointF &pos,
                                            Qt::KeyboardModifiers modifiers)
 {
-    QRectF rect = QRectF(mStartScenePos, pos).normalized();
-
+    QRectF sceneRect = QRectF(mStartScenePos, pos);
+    QRectF tileRect = mEditor->sceneToTileRectF(sceneRect, mEditor->currentLevel()).normalized();
+#if 0
     // Make sure the rect has some contents, otherwise intersects returns false
-    rect.setWidth(qMax(qreal(1), rect.width()));
-    rect.setHeight(qMax(qreal(1), rect.height()));
-
+    tileRect.setWidth(qMax(qreal(1), tileRect.width()));
+    tileRect.setHeight(qMax(qreal(1), tileRect.height()));
+#endif
     QSet<BuildingObject*> selectedObjects;
 
-    foreach (BuildingObject *object, mEditor->objectsInRect(rect))
+    foreach (BuildingObject *object, mEditor->objectsInRect(tileRect))
         selectedObjects.insert(object);
 
     const QSet<BuildingObject*> oldSelection = mEditor->document()->selectedObjects();
@@ -1831,10 +1842,10 @@ void SelectMoveObjectTool::startSelecting()
 {
     mMode = Selecting;
     if (mSelectionRectItem == 0) {
-        mSelectionRectItem = new QGraphicsRectItem();
+        mSelectionRectItem = new QGraphicsPolygonItem();
         mSelectionRectItem->setPen(QColor(0x33,0x99,0xff));
         mSelectionRectItem->setBrush(QBrush(QColor(0x33,0x99,0xff,255/8)));
-        mSelectionRectItem->setZValue(FloorEditor::ZVALUE_CURSOR);
+        mSelectionRectItem->setZValue(mEditor->ZVALUE_CURSOR);
     }
     mEditor->addItem(mSelectionRectItem);
     updateStatusText();
@@ -1861,8 +1872,8 @@ void SelectMoveObjectTool::updateMovingItems(const QPointF &pos,
 {
     Q_UNUSED(modifiers)
 
-    QPoint startTilePos = mEditor->sceneToTile(mStartScenePos);
-    QPoint currentTilePos = mEditor->sceneToTile(pos);
+    QPoint startTilePos = mEditor->sceneToTile(mStartScenePos, mEditor->currentLevel());
+    QPoint currentTilePos = mEditor->sceneToTile(pos, mEditor->currentLevel());
     mDragOffset = currentTilePos - startTilePos;
 
     currentModifiersChanged(modifiers);
@@ -1995,7 +2006,7 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                                  BuildingObject::W,
                                  /*length=*/1);
         mItem = new GraphicsWallItem(mEditor, mObject);
-        mItem->setZValue(FloorEditor::ZVALUE_CURSOR);
+        mItem->setZValue(mEditor->ZVALUE_CURSOR);
         mEditor->addItem(mItem);
         mMode = Create;
         updateStatusText();
@@ -2029,8 +2040,8 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-    mCurrentPos = mEditor->sceneToTile(event->scenePos());
-    QPointF p = mEditor->sceneToTileF(event->scenePos());
+    mCurrentPos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
+    QPointF p = mEditor->sceneToTileF(event->scenePos(), mEditor->currentLevel());
     QPointF m(p.x() - int(p.x()), p.y() - int(p.y()));
     if (m.x() > 0.5)
         mCurrentPos.setX(mCurrentPos.x() + 1);
@@ -2039,15 +2050,14 @@ void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
     if (mMode == NoMode) {
         if (!mCursorItem) {
-            mCursorItem = new QGraphicsRectItem;
-            mCursorItem->setZValue(FloorEditor::ZVALUE_CURSOR);
+            mCursorItem = new QGraphicsPolygonItem;
+            mCursorItem->setZValue(mEditor->ZVALUE_CURSOR);
             mCursorItem->setBrush(QColor(0,255,0,128));
             mEditor->addItem(mCursorItem);
         }
 
-        p = mEditor->tileToScene(mCurrentPos);
-        QRectF rect(p.x() - 6, p.y() - 6, 12, 12);
-        mCursorItem->setRect(rect);
+        QRectF rect(mCurrentPos.x() - 6.0/30.0, mCurrentPos.y() - 6.0/30.0, 12.0/30.0, 12.0/30.0);
+        mCursorItem->setPolygon(mEditor->tileToScenePolygonF(rect, mEditor->currentLevel()));
 
         updateHandle(event->scenePos());
 
