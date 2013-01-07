@@ -324,6 +324,7 @@ public:
 
     PaintFloorTiles(BuildingDocument *doc, BuildingFloor *floor,
                     const QString &layerName, const QRegion &rgn,
+                    const QPoint &pos,
                     FloorTileGrid *tiles, char *undoText);
 
     ~PaintFloorTiles();
@@ -338,6 +339,7 @@ private:
     BuildingFloor *mFloor;
     QString mLayerName;
     QRegion mRegion;
+    QPoint mPos;
     FloorTileGrid *mTiles;
 };
 

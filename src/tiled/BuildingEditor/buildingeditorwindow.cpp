@@ -1791,7 +1791,7 @@ void BuildingEditorWindow::editCut()
         QRegion selection = mCurrentDocument->tileSelection();
         if (!selection.isEmpty()) {
             QRect r = selection.boundingRect();
-            FloorTileGrid *tiles = currentFloor()->grimeAt(currentLayer(), selection);
+            FloorTileGrid *tiles = currentFloor()->grimeAt(currentLayer(), r, selection);
             mCurrentDocument->setClipboardTiles(tiles, selection.translated(-r.topLeft()));
 
             tiles = new FloorTileGrid(r.width(), r.height());
@@ -1799,6 +1799,7 @@ void BuildingEditorWindow::editCut()
                                                                     currentFloor(),
                                                                     currentLayer(),
                                                                     selection,
+                                                                    r.topLeft(),
                                                                     tiles,
                                                                     "Cut Tiles"));
         }
@@ -1814,7 +1815,7 @@ void BuildingEditorWindow::editCopy()
         QRegion selection = mCurrentDocument->tileSelection();
         if (!selection.isEmpty()) {
             QRect r = selection.boundingRect();
-            FloorTileGrid *tiles = currentFloor()->grimeAt(currentLayer(), selection);
+            FloorTileGrid *tiles = currentFloor()->grimeAt(currentLayer(), r, selection);
             mCurrentDocument->setClipboardTiles(tiles, selection.translated(-r.topLeft()));
         }
     }

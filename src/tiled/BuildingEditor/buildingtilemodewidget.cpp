@@ -26,6 +26,7 @@
 #include "buildingtilemodeview.h"
 #include "buildingtiles.h"
 #include "buildingtiletools.h"
+#include "tilemodefurnituredock.h"
 
 #include "mapcomposite.h"
 #include "preferences.h"
@@ -46,6 +47,7 @@ using namespace Tiled::Internal;
 BuildingTileModeWidget::BuildingTileModeWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::BuildingTileModeWidget),
+    mFurnitureDock(new TileModeFurnitureDock(this)),
     mDocument(0),
     mCurrentTileset(0),
     mZoomable(new Zoomable(this)),
@@ -78,12 +80,14 @@ BuildingTileModeWidget::BuildingTileModeWidget(QWidget *parent) :
     connect(BuildingPreferences::instance(), SIGNAL(tileScaleChanged(qreal)),
             SLOT(tileScaleChanged(qreal)));
 
+    QMainWindow *mainWindow = dynamic_cast<QMainWindow*>(parent);
+    mainWindow->addDockWidget(Qt::RightDockWidgetArea, ui->dockLayers);
+    mainWindow->addDockWidget(Qt::RightDockWidgetArea, ui->dockTilesets);
+    mainWindow->tabifyDockWidget(ui->dockTilesets, mFurnitureDock);
+
     ui->dockLayers->hide();
     ui->dockTilesets->hide();
-    dynamic_cast<QMainWindow*>(parent)->addDockWidget(Qt::RightDockWidgetArea,
-                                                      ui->dockLayers);
-    dynamic_cast<QMainWindow*>(parent)->addDockWidget(Qt::RightDockWidgetArea,
-                                                      ui->dockTilesets);
+    mFurnitureDock->hide();
 
     connect(ui->actionPecil, SIGNAL(triggered()),
             DrawTileTool::instance(), SLOT(makeCurrent()));
@@ -176,10 +180,13 @@ void BuildingTileModeWidget::switchTo()
 {
     ui->dockLayers->show(); // FIXME: unless the user hid it
     ui->dockTilesets->show(); // FIXME: unless the user hid it
+    mFurnitureDock->show(); // FIXME: unless the user hid it
 
     if (mFirstTimeSeen) {
         if (!ui->tilesets->count())
             setTilesetList(); // TileMetaInfoMgr signals might have done this already.
+
+        mFurnitureDock->switchTo();
 
         QSettings mSettings;
         mSettings.beginGroup(QLatin1String("BuildingEditor/TileModeWidget"));
@@ -201,6 +208,7 @@ void BuildingTileModeWidget::switchAway()
 {
     ui->dockLayers->hide();
     ui->dockTilesets->hide();
+    mFurnitureDock->hide();
 }
 
 void BuildingTileModeWidget::setLayersList()

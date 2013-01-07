@@ -181,7 +181,8 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/buildingfloorsdialog.cpp \
     BuildingEditor/buildingtilemodeview.cpp \
     BuildingEditor/buildingtilemodewidget.cpp \
-    BuildingEditor/buildingtiletools.cpp
+    BuildingEditor/buildingtiletools.cpp \
+    BuildingEditor/tilemodefurnituredock.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -328,7 +329,8 @@ HEADERS += aboutdialog.h \
     BuildingEditor/buildingfloorsdialog.h \
     BuildingEditor/buildingtilemodeview.h \
     BuildingEditor/buildingtilemodewidget.h \
-    BuildingEditor/buildingtiletools.h
+    BuildingEditor/buildingtiletools.h \
+    BuildingEditor/tilemodefurnituredock.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

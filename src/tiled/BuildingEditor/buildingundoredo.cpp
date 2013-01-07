@@ -353,12 +353,14 @@ PaintFloorTiles::PaintFloorTiles(BuildingDocument *doc, BuildingFloor *floor,
 
 PaintFloorTiles::PaintFloorTiles(BuildingDocument *doc, BuildingFloor *floor,
                                  const QString &layerName, const QRegion &rgn,
+                                 const QPoint &pos,
                                  FloorTileGrid *tiles, char *undoText) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", undoText)),
     mDocument(doc),
     mFloor(floor),
     mLayerName(layerName),
     mRegion(rgn),
+    mPos(pos),
     mTiles(tiles)
 {
 }
@@ -371,7 +373,7 @@ PaintFloorTiles::~PaintFloorTiles()
 void PaintFloorTiles::swap()
 {
     FloorTileGrid *old = mTiles;
-    mTiles = mDocument->swapFloorTiles(mFloor, mLayerName, mRegion, mTiles);
+    mTiles = mDocument->swapFloorTiles(mFloor, mLayerName, mRegion, mPos, mTiles);
     delete old;
 }
 

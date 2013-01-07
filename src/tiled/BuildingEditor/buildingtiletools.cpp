@@ -337,31 +337,34 @@ void DrawTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     }
     if (mMouseDown) {
         QRect r = mCursorTileBounds & floor()->bounds(1, 1);
-        bool changed = false;
-        FloorTileGrid *tiles = floor()->grimeAt(layerName(), r);
-        QRegion rgn;
-        if (!mCaptureTiles) {
-            QString tileName = mErasing ? QString() : mTileName;
-            changed = tiles->replace(tileName);
-            rgn = QRegion(r);
-        } else if (mErasing) {
-            // Erase in the capture-tiles region
-            changed = tiles->replace(mCaptureTilesRgn, QString());
-            rgn = mCaptureTilesRgn.translated(mCursorTileBounds.topLeft()) & r;
-        } else {
-            QRect clipRect = r.translated(-mCursorTileBounds.topLeft());
-            rgn = mCaptureTilesRgn.intersected(clipRect);
-            FloorTileGrid *clipped = mCaptureTiles->clone(rgn);
-            rgn.translate(-clipRect.topLeft());
-            changed = tiles->replace(rgn, clipped);
-            delete clipped;
-            rgn = mCaptureTilesRgn.translated(mCursorTileBounds.topLeft()) & r;
+        if (!r.isEmpty()) {
+            bool changed = false;
+            FloorTileGrid *tiles = floor()->grimeAt(layerName(), r);
+            QRegion rgn;
+            if (!mCaptureTiles) {
+                QString tileName = mErasing ? QString() : mTileName;
+                changed = tiles->replace(tileName);
+                rgn = QRegion(r);
+            } else if (mErasing) {
+                // Erase in the capture-tiles region
+                changed = tiles->replace(mCaptureTilesRgn, QString());
+                rgn = mCaptureTilesRgn.translated(mCursorTileBounds.topLeft()) & r;
+            } else {
+                QRect clipRect = r.translated(-mCursorTileBounds.topLeft());
+                FloorTileGrid *clipped = mCaptureTiles->clone(clipRect, mCaptureTilesRgn);
+                rgn = mCaptureTilesRgn.intersected(clipRect);
+                rgn.translate(-clipRect.topLeft());
+                changed = tiles->replace(rgn, QPoint(0, 0), clipped);
+                delete clipped;
+                rgn = mCaptureTilesRgn.translated(mCursorTileBounds.topLeft()) & r;
+            }
+            if (changed)
+                undoStack()->push(new PaintFloorTiles(mEditor->document(), floor(),
+                                                      layerName(), rgn, r.topLeft(),
+                                                      tiles,
+                                                      mErasing ? "Erase Tiles"
+                                                               : "Draw Tiles"));
         }
-        if (changed)
-            undoStack()->push(new PaintFloorTiles(mEditor->document(), floor(),
-                                                  layerName(), rgn, tiles,
-                                                  mErasing ? "Erase Tiles"
-                                                           : "Draw Tiles"));
         mMouseDown = false;
         mErasing = controlModifier();
         updateCursor(event->scenePos());
@@ -387,9 +390,11 @@ void DrawTileTool::setTile(const QString &tileName)
 
 void DrawTileTool::setCaptureTiles(FloorTileGrid *tiles, const QRegion &rgn)
 {
+    Q_ASSERT(tiles->bounds().contains(rgn.boundingRect()));
+
     clearCaptureTiles();
     mCaptureTiles = tiles;
-    mCaptureTilesRgn = rgn.translated(-rgn.boundingRect().topLeft());
+    mCaptureTilesRgn = rgn/*.translated(-rgn.boundingRect().topLeft())*/;
     updateCursor(mMouseScenePos);
 }
 
@@ -489,7 +494,7 @@ void DrawTileTool::updateCursor(const QPointF &scenePos, bool force)
         if (mErasing)
             tiles->replace(mCaptureTilesRgn, QString());
         else
-            tiles->replace(mCaptureTilesRgn, mCaptureTiles);
+            tiles->replace(mCaptureTilesRgn, QPoint(0, 0), mCaptureTiles);
         for (int x = 0; x < mCursorTileBounds.width(); x++) {
             for (int y = 0; y < mCursorTileBounds.height(); y++) {
                 // Building-generated tiles can't be replaced with nothing.

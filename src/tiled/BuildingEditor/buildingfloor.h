@@ -65,7 +65,7 @@ public:
     void replace(int x, int y, const QString &tile);
     bool replace(const QString &tile);
     bool replace(const QRegion &rgn, const QString &tile);
-    bool replace(const QRegion &rgn, const FloorTileGrid *other);
+    bool replace(const QRegion &rgn, const QPoint &p, const FloorTileGrid *other);
     bool replace(const QRect &r, const QString &tile);
     bool replace(const QPoint &p, const FloorTileGrid *other);
 
@@ -79,7 +79,7 @@ public:
 
     FloorTileGrid *clone();
     FloorTileGrid *clone(const QRect &r);
-    FloorTileGrid *clone(const QRegion &rgn);
+    FloorTileGrid *clone(const QRect &r, const QRegion &rgn);
 
 private:
     void swapToVector();
@@ -253,7 +253,7 @@ public:
 
     QString grimeAt(const QString &layerName, int x, int y) const;
     FloorTileGrid *grimeAt(const QString &layerName, const QRect &r);
-    FloorTileGrid *grimeAt(const QString &layerName, const QRegion &rgn);
+    FloorTileGrid *grimeAt(const QString &layerName, const QRect &r, const QRegion &rgn);
 
     QMap<QString,FloorTileGrid*> grimeClone() const;
 
@@ -261,7 +261,7 @@ public:
     void setGrime(const QString &layerName, int x, int y, const QString &tileName);
     void setGrime(const QString &layerName, const QPoint &p, const FloorTileGrid *other);
     void setGrime(const QString &layerName, const QRegion &rgn, const QString &tileName);
-    void setGrime(const QString &layerName, const QRegion &rgn, const FloorTileGrid *other);
+    void setGrime(const QString &layerName, const QRegion &rgn, const QPoint &pos, const FloorTileGrid *other);
 
     void setLayerOpacity(const QString &layerName, qreal opacity)
     { mLayerOpacity[layerName] = opacity; }

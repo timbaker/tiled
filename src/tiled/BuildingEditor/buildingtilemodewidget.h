@@ -24,6 +24,7 @@ namespace BuildingEditor {
 
 class BuildingDocument;
 class BuildingTileModeView;
+class TileModeFurnitureDock;
 
 class BuildingTileModeWidget : public QWidget
 {
@@ -83,6 +84,7 @@ private slots:
 private:
     Ui::BuildingTileModeWidget *ui;
     QToolBar *mToolBar;
+    TileModeFurnitureDock *mFurnitureDock;
     BuildingDocument *mDocument;
     Tiled::Tileset *mCurrentTileset;
     Tiled::Internal::Zoomable *mZoomable;

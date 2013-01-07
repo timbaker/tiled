@@ -138,6 +138,7 @@ public:
     FloorTileGrid *swapFloorTiles(BuildingFloor *floor,
                                   const QString &layerName,
                                   const QRegion &rgn,
+                                  const QPoint &pos,
                                   const FloorTileGrid *tiles);
 
     QSize resizeBuilding(const QSize &newSize);
