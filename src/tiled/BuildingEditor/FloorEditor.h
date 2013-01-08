@@ -77,6 +77,8 @@ public:
 
     void synchWithFloor();
 
+    void mapResized();
+
     void floorEdited();
     void roomChanged(Room *room);
     void roomAtPositionChanged(const QPoint &pos);
@@ -412,6 +414,11 @@ signals:
     void documentChanged();
 
 protected slots:
+    void buildingResized();
+    void buildingRotated();
+
+    void mapResized();
+
     void floorAdded(BuildingFloor *floor);
     void floorRemoved(BuildingFloor *floor);
     void floorEdited(BuildingFloor *floor);

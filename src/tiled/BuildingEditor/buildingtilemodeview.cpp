@@ -515,6 +515,7 @@ void BuildingTileModeScene::BuildingToMap()
     mBuildingMap = new BuildingMap(building());
     connect(mBuildingMap, SIGNAL(aboutToRecreateLayers()), SLOT(aboutToRecreateLayers()));
     connect(mBuildingMap, SIGNAL(layersRecreated()), SLOT(layersRecreated()));
+    connect(mBuildingMap, SIGNAL(mapResized()), SLOT(mapResized()));
     connect(mBuildingMap, SIGNAL(layersUpdated(int)), SLOT(layersUpdated(int)));
 
     dynamic_cast<IsoBuildingRenderer*>(mRenderer)->mMapRenderer = mBuildingMap->mapRenderer();
@@ -720,6 +721,7 @@ void BuildingTileModeScene::objectTileChanged(BuildingObject *object)
 
 void BuildingTileModeScene::buildingResized()
 {
+    BaseFloorEditor::buildingResized();
     mBuildingMap->buildingResized();
     mGridItem->synchWithBuilding();
 }
@@ -727,7 +729,8 @@ void BuildingTileModeScene::buildingResized()
 // Called when the building is flipped or rotated.
 void BuildingTileModeScene::buildingRotated()
 {
-    mBuildingMap->buildingResized();
+    BaseFloorEditor::buildingRotated();
+    mBuildingMap->buildingRotated();
     mGridItem->synchWithBuilding();
 }
 
@@ -798,6 +801,12 @@ void BuildingTileModeScene::layersRecreated()
         addItem(item);
         mLayerGroupItems[layerGroup->level()] = item;
     }
+}
+
+void BuildingTileModeScene::mapResized()
+{
+    // Building object positions will change when the map size changes.
+    BaseFloorEditor::mapResized();
 }
 
 void BuildingTileModeScene::layersUpdated(int level)

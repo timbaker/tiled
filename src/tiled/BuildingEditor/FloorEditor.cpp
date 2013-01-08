@@ -229,6 +229,29 @@ GraphicsObjectItem *BaseFloorEditor::itemForObject(BuildingObject *object)
     return itemForFloor(object->floor())->itemForObject(object);
 }
 
+void BaseFloorEditor::buildingResized()
+{
+    foreach (GraphicsFloorItem *item, mFloorItems) {
+        item->synchWithFloor();
+        item->floorEdited();
+    }
+}
+
+void BaseFloorEditor::buildingRotated()
+{
+    foreach (GraphicsFloorItem *item, mFloorItems) {
+        item->synchWithFloor();
+        item->floorEdited();
+    }
+}
+
+void BaseFloorEditor::mapResized()
+{
+    foreach (GraphicsFloorItem *item, mFloorItems)
+        item->mapResized();
+
+}
+
 void BaseFloorEditor::floorAdded(BuildingFloor *floor)
 {
     GraphicsFloorItem *item = new GraphicsFloorItem(this, floor);
@@ -501,6 +524,15 @@ void GraphicsFloorItem::synchWithFloor()
     delete mBmp;
     mBmp = new QImage(mFloor->width(), mFloor->height(), QImage::Format_RGB32);
 
+    foreach (GraphicsObjectItem *item, mObjectItems)
+        item->synchWithObject();
+}
+
+void GraphicsFloorItem::mapResized()
+{
+    // When a building is resized, GraphicsObjectItems are updated *before* the
+    // BuildingMap::mMap has been resized to match the building size.  When the
+    // map is finally resized, we must update the GraphicsObjectItems again.
     foreach (GraphicsObjectItem *item, mObjectItems)
         item->synchWithObject();
 }

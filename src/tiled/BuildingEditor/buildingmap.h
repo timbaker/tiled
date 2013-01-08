@@ -87,6 +87,7 @@ public:
 signals:
     void aboutToRecreateLayers();
     void layersRecreated();
+    void mapResized();
     void layersUpdated(int level);
 
 private slots:

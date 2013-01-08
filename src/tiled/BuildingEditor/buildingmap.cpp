@@ -94,6 +94,11 @@ QString BuildingMap::buildingTileAt(int x, int y, int level, const QString &laye
 void BuildingMap::buildingRotated()
 {
     pendingBuildingResized = true;
+
+    // When rotating or flipping, all the user tiles are cleared.
+    // However, no signal is emitted until the buildingRotated signal.
+    pendingEraseUserTiles = mBuilding->floors().toSet();
+
     if (!pending) {
         QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
         pending = true;
@@ -548,6 +553,8 @@ void BuildingMap::handlePending()
 
     if (pendingRecreateAll)
         emit layersRecreated();
+    else if (pendingBuildingResized)
+        emit mapResized();
 
     foreach (int level, updatedLevels)
         emit layersUpdated(level);
