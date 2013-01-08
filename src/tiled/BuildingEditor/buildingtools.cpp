@@ -1524,6 +1524,8 @@ void RoofTool::updateHandle(const QPointF &scenePos)
         mObjectItem->setZValue(mObjectItem->object()->floor()->objectCount());
     }
     mHandleObject = ro;
+
+    mEditor->setMouseOverObject(ro);
 }
 
 void RoofTool::resizeRoof(int width, int height)
@@ -1686,21 +1688,18 @@ void SelectMoveObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     QPointF pos = event->scenePos();
 
-    BuildingObject *object = mEditor->topmostObjectAt(pos);
-    bool mouseOverObject = object != 0;
-    bool mouseOverSelection = object && mEditor->document()->selectedObjects().contains(object);
-    if (mouseOverObject != mMouseOverObject ||
-            mouseOverSelection != mMouseOverSelection) {
-        mMouseOverObject = mouseOverObject;
-        mMouseOverSelection = mouseOverSelection;
-        updateStatusText();
-    }
-    if (object != mHoverObject) {
-        if (mHoverObject)
-            mEditor->itemForObject(mHoverObject)->setMouseOver(false);
-        mHoverObject = object;
-        if (mHoverObject)
-            mEditor->itemForObject(mHoverObject)->setMouseOver(true);
+    if (!mMouseDown) {
+        BuildingObject *object = mEditor->topmostObjectAt(pos);
+        bool mouseOverObject = object != 0;
+        bool mouseOverSelection = object && mEditor->document()->selectedObjects().contains(object);
+        if (mouseOverObject != mMouseOverObject ||
+                mouseOverSelection != mMouseOverSelection) {
+            mMouseOverObject = mouseOverObject;
+            mMouseOverSelection = mouseOverSelection;
+            updateStatusText();
+        }
+
+        mEditor->setMouseOverObject(object);
     }
 
     if (mMode == NoMode && mMouseDown) {
@@ -2253,6 +2252,8 @@ void WallTool::updateHandle(const QPointF &scenePos)
         mObjectItem->setZValue(wall->floor()->objectCount());
     }
     mHandleObject = wall;
+
+    mEditor->setMouseOverObject(wall);
 }
 
 void WallTool::updateStatusText()

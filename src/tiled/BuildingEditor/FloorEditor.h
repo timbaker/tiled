@@ -349,7 +349,8 @@ public:
 
     BaseFloorEditor(QObject *parent = 0) :
         QGraphicsScene(parent),
-        mDocument(0)
+        mDocument(0),
+        mMouseOverObject(0)
     {}
 
     BuildingDocument *document() const
@@ -394,6 +395,7 @@ public:
 
     QSet<BuildingObject*> objectsInRect(const QRectF &tileRect);
 
+    void setMouseOverObject(BuildingObject *object);
 
     /////
     // Tile-editing-only methods
@@ -427,6 +429,7 @@ protected:
     BuildingRenderer *mRenderer;
     QList<GraphicsFloorItem*> mFloorItems;
     QSet<GraphicsObjectItem*> mSelectedObjectItems;
+    BuildingObject *mMouseOverObject;
 };
 
 class FloorEditor : public BaseFloorEditor

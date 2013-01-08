@@ -56,7 +56,7 @@ void BuildingRenderer::drawObject(QPainter *painter, BuildingObject *mObject,
         QPolygonF scenePolygon = tileToScenePolygon(tilePolygon, level);
         path.addPolygon(scenePolygon); // FIXME: cache this, pass as arg?
     }
-    QColor color = mMouseOver ? Qt::lightGray : Qt::white;
+    QColor color = mMouseOver ? Qt::white : QColor(225, 225, 225);
     painter->fillPath(path, color);
     QPen pen(mValidPos ? (mSelected ? Qt::cyan : Qt::blue) : Qt::red);
 
@@ -134,6 +134,16 @@ void BuildingRenderer::drawObject(QPainter *painter, BuildingObject *mObject,
     }
 
     if (RoofObject *roof = mObject->asRoof()) {
+        QColor colorDark(Qt::darkGray);
+        QColor colorLight(Qt::lightGray);
+        QColor colorMid(Qt::gray);
+
+        if (mMouseOver) {
+            colorDark = colorDark.lighter(112);
+            colorLight = colorLight.lighter(112);
+            colorMid = colorMid.lighter(112);
+        }
+
         QRectF ne = roof->northEdge().translated(dragOffset);
         QRectF se = roof->southEdge().translated(dragOffset);
         if ((roof->roofType() == RoofObject::PeakWE) && roof->isHalfDepth()) {
@@ -141,14 +151,12 @@ void BuildingRenderer::drawObject(QPainter *painter, BuildingObject *mObject,
             se.adjust(0,0.5,0,0);
         }
         QPainterPath path2;
-        path2.addPolygon(tileToScenePolygonF(ne,
-                                                      level));
-        painter->fillPath(path2, Qt::darkGray);
+        path2.addPolygon(tileToScenePolygonF(ne, level));
+        painter->fillPath(path2, colorDark);
 
         path2 = QPainterPath();
-        path2.addPolygon(tileToScenePolygonF(se,
-                                                      level));
-        painter->fillPath(path2, Qt::lightGray);
+        path2.addPolygon(tileToScenePolygonF(se, level));
+        painter->fillPath(path2, colorLight);
 
         QRectF we = roof->westEdge().translated(dragOffset);
         QRectF ee = roof->eastEdge().translated(dragOffset);
@@ -158,19 +166,17 @@ void BuildingRenderer::drawObject(QPainter *painter, BuildingObject *mObject,
         }
 
         path2 = QPainterPath();
-        path2.addPolygon(tileToScenePolygonF(we,
-                                                      level));
-        painter->fillPath(path2, Qt::darkGray);
+        path2.addPolygon(tileToScenePolygonF(we, level));
+        painter->fillPath(path2, colorDark);
 
         path2 = QPainterPath();
-        path2.addPolygon(tileToScenePolygonF(ee,
-                                                      level));
-        painter->fillPath(path2, Qt::lightGray);
+        path2.addPolygon(tileToScenePolygonF(ee, level));
+        painter->fillPath(path2, colorLight);
 
         path2 = QPainterPath();
         path2.addPolygon(tileToScenePolygonF(roof->flatTop().translated(dragOffset),
                                                       level));
-        painter->fillPath(path2, Qt::gray);
+        painter->fillPath(path2, colorMid);
     }
 
     painter->setPen(pen);
@@ -269,6 +275,9 @@ void BaseFloorEditor::objectAboutToBeRemoved(BuildingObject *object)
     itemForFloor(object->floor())->objectAboutToBeRemoved(item);
     removeItem(item);
     delete item;
+
+    if (object == mMouseOverObject)
+        mMouseOverObject = 0;
 }
 
 void BaseFloorEditor::objectMoved(BuildingObject *object)
@@ -345,6 +354,17 @@ QSet<BuildingObject*> BaseFloorEditor::objectsInRect(const QRectF &tileRect)
         }
     }
     return objects;
+}
+
+void BaseFloorEditor::setMouseOverObject(BuildingObject *object)
+{
+    if (object != mMouseOverObject) {
+        if (mMouseOverObject)
+            itemForObject(mMouseOverObject)->setMouseOver(false);
+        mMouseOverObject = object;
+        if (mMouseOverObject)
+            itemForObject(mMouseOverObject)->setMouseOver(true);
+    }
 }
 
 void BaseFloorEditor::setToolTiles(const FloorTileGrid *tiles, const QPoint &pos,
