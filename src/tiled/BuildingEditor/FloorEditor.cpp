@@ -1286,7 +1286,7 @@ void GraphicsWallHandleItem::setHighlight(bool highlight)
 
 QRectF GraphicsWallHandleItem::calcBoundingRect()
 {
-    QRectF r = mWallItem->object()->bounds();
+    QRectF r = mWallItem->object()->calcShape().boundingRect();
 
     r.setLeft(r.right() - 12/30.0);
     r.setTop(r.bottom() - 12/30.0);
