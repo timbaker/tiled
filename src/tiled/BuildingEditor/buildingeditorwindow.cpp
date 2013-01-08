@@ -334,8 +334,6 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(mTileModeWidget->view()->zoomable(), SIGNAL(scaleChanged(qreal)),
             SLOT(updateActions()));
     connect(ui->actionSwitchEditMode, SIGNAL(triggered()), SLOT(switchMode()));
-    connect(TileToolManager::instance(), SIGNAL(statusTextChanged(BaseTileTool*)),
-            SLOT(updateTileToolStatusText()));
     connect(mTileModeWidget->view(), SIGNAL(mouseCoordinateChanged(QPoint)),
             SLOT(mouseCoordinateChanged(QPoint)));
     /////
@@ -1611,7 +1609,6 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
     if (mCurrentDocument) {
         // Disable all the tools before losing the document/views/etc.
         ToolManager::instance()->clearDocument();
-        TileToolManager::instance()->clearDocument();
         mRoomComboBox->clear();
         roomEditor->clearDocument();
         mTileModeWidget->clearDocument();
@@ -1731,7 +1728,6 @@ void BuildingEditorWindow::clearDocument()
     if (mCurrentDocument) {
         // Disable all the tools before losing the document/views/etc.
         ToolManager::instance()->clearDocument();
-        TileToolManager::instance()->clearDocument();
         roomEditor->clearDocument();
         mTileModeWidget->clearDocument();
         mPreviewWin->clearDocument();
@@ -2202,14 +2198,6 @@ void BuildingEditorWindow::updateToolStatusText()
         ui->statusLabel->clear();
 }
 
-void BuildingEditorWindow::updateTileToolStatusText()
-{
-    if (BaseTileTool *tool = TileToolManager::instance()->currentTool())
-        ui->statusLabel->setText(tool->statusText());
-    else
-        ui->statusLabel->clear();
-}
-
 void BuildingEditorWindow::roofTypeChanged(QAction *action)
 {
     int index = action->parentWidget()->actions().indexOf(action);
@@ -2474,6 +2462,9 @@ void BuildingEditorWindow::help()
 
 void BuildingEditorWindow::switchMode()
 {
+    BaseTool *tool = ToolManager::instance()->currentTool();
+    ToolManager::instance()->clearDocument();
+
     if (mEditMode == BuildingMode) {
         // Switch to TileMode
         ui->toolBar->hide();
@@ -2490,6 +2481,10 @@ void BuildingEditorWindow::switchMode()
         mTileModeWidget->view()->setFocus();
         mView->zoomable()->connectToComboBox(0);
         mTileModeWidget->view()->zoomable()->connectToComboBox(ui->editorScaleComboBox);
+
+        if (tool)
+            tool->setEditor(mTileModeWidget->view()->scene());
+        ToolManager::instance()->activateTool(tool);
     } else if (mEditMode == TileMode) {
         // Switch to BuildingMode
         removeToolBar(mTileModeWidget->toolBar());
@@ -2505,6 +2500,9 @@ void BuildingEditorWindow::switchMode()
         mTileModeWidget->view()->zoomable()->connectToComboBox(0);
         mView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
 
+        if (tool)
+            tool->setEditor(roomEditor);
+        ToolManager::instance()->activateTool(tool);
         SelectMoveObjectTool::instance()->setEditor(roomEditor);
         SelectMoveObjectTool::instance()->setAction(ui->actionSelectObject);
     }

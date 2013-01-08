@@ -1,3 +1,20 @@
+/*
+ * Copyright 2013, Tim Baker <treectrl@users.sf.net>
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "buildingtilemodeview.h"
 
 #include "building.h"
@@ -140,7 +157,6 @@ BuildingTileModeScene::BuildingTileModeScene(QWidget *parent) :
     mTileSelectionItem(0),
     mDarkRectangle(new QGraphicsRectItem),
     mCurrentTool(0),
-    mCurrentTileTool(0),
     mLayerGroupWithToolTiles(0),
     mNonEmptyLayerGroupItem(0)
 {
@@ -166,8 +182,6 @@ BuildingTileModeScene::BuildingTileModeScene(QWidget *parent) :
     connect(BuildingPreferences::instance(), SIGNAL(highlightFloorChanged(bool)),
             SLOT(highlightFloorChanged(bool)));
 
-    connect(TileToolManager::instance(), SIGNAL(currentToolChanged(BaseTileTool*)),
-            SLOT(currentToolChanged(BaseTileTool*)));
     connect(ToolManager::instance(), SIGNAL(currentToolChanged(BaseTool*)),
             SLOT(currentToolChanged(BaseTool*)));
 }
@@ -184,24 +198,18 @@ MapRenderer *BuildingTileModeScene::mapRenderer() const
 
 void BuildingTileModeScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (mCurrentTileTool)
-        mCurrentTileTool->mousePressEvent(event);
     if (mCurrentTool)
         mCurrentTool->mousePressEvent(event);
 }
 
 void BuildingTileModeScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (mCurrentTileTool)
-        mCurrentTileTool->mouseMoveEvent(event);
     if (mCurrentTool)
         mCurrentTool->mouseMoveEvent(event);
 }
 
 void BuildingTileModeScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (mCurrentTileTool)
-        mCurrentTileTool->mouseReleaseEvent(event);
     if (mCurrentTool)
         mCurrentTool->mouseReleaseEvent(event);
 }
@@ -482,6 +490,13 @@ QString BuildingTileModeScene::buildingTileAt(int x, int y)
     return mBuildingMap->buildingTileAt(x, y, currentLevel(), currentLayerName());
 }
 
+void BuildingTileModeScene::drawTileSelection(QPainter *painter, const QRegion &region,
+                                              const QColor &color, const QRectF &exposed,
+                                              int level) const
+{
+    mapRenderer()->drawTileSelection(painter, region, color, exposed, level);
+}
+
 void BuildingTileModeScene::BuildingToMap()
 {
     if (mBuildingMap) {
@@ -759,18 +774,9 @@ void BuildingTileModeScene::tilesetRemoved(Tileset *tileset)
     mBuildingMap->tilesetRemoved(tileset);
 }
 
-void BuildingTileModeScene::currentToolChanged(BaseTileTool *tool)
-{
-    if (mCurrentTileTool == DrawTileTool::instance())
-        clearToolTiles();
-    mCurrentTileTool = tool;
-    mCurrentTool = 0;
-}
-
 void BuildingTileModeScene::currentToolChanged(BaseTool *tool)
 {
     mCurrentTool = tool;
-    mCurrentTileTool = 0;
 }
 
 void BuildingTileModeScene::aboutToRecreateLayers()
@@ -849,6 +855,7 @@ bool BuildingTileModeView::event(QEvent *e)
 
 bool BuildingTileModeView::eventFilter(QObject *object, QEvent *event)
 {
+#if 0
     Q_UNUSED(object)
     switch (event->type()) {
     case QEvent::KeyPress:
@@ -860,7 +867,7 @@ bool BuildingTileModeView::eventFilter(QObject *object, QEvent *event)
     default:
         break;
     }
-
+#endif
     return false;
 }
 

@@ -38,6 +38,7 @@ class Building;
 class BuildingDocument;
 class BuildingFloor;
 class FloorEditor;
+class FloorTileGrid;
 class RoofObject;
 class Room;
 class WallObject;
@@ -382,7 +383,7 @@ public:
 
     void drawObject(QPainter *painter, BuildingObject *object);
 
-    bool currentFloorContains(const QPoint &tilePos);
+    bool currentFloorContains(const QPoint &tilePos, int dw = 0, int dh = 0);
 
     GraphicsFloorItem *itemForFloor(BuildingFloor *floor);
     GraphicsObjectItem *itemForObject(BuildingObject *object);
@@ -392,6 +393,18 @@ public:
     BuildingObject *topmostObjectAt(const QPointF &scenePos);
 
     QSet<BuildingObject*> objectsInRect(const QRectF &tileRect);
+
+
+    /////
+    // Tile-editing-only methods
+    virtual void setToolTiles(const FloorTileGrid *tiles,
+                      const QPoint &pos, const QString &layerName);
+    virtual void clearToolTiles();
+    virtual QString buildingTileAt(int x, int y);
+    virtual void drawTileSelection(QPainter *painter, const QRegion &region,
+                                   const QColor &color, const QRectF &exposed,
+                                   int level = 0) const;
+    /////
 
 signals:
     void documentChanged();

@@ -49,9 +49,13 @@ BaseTool::BaseTool() :
 
 void BaseTool::setEditor(BaseFloorEditor *editor)
 {
+    if (mEditor)
+        mEditor->disconnect(this);
+
     mEditor = editor;
 
-    connect(mEditor, SIGNAL(documentChanged()), SLOT(documentChanged()));
+    if (mEditor)
+        connect(mEditor, SIGNAL(documentChanged()), SLOT(documentChanged()));
 }
 
 void BaseTool::setEnabled(bool enabled)
@@ -83,9 +87,19 @@ void BaseTool::setStatusText(const QString &text)
     emit statusTextChanged();
 }
 
+BuildingDocument *BaseTool::document() const
+{
+    return mEditor->document();
+}
+
 BuildingFloor *BaseTool::floor() const
 {
     return mEditor->document()->currentFloor();
+}
+
+QString BaseTool::layerName() const
+{
+    return mEditor->currentLayerName();
 }
 
 QUndoStack *BaseTool::undoStack() const

@@ -125,6 +125,10 @@ public:
 
     QString buildingTileAt(int x, int y);
 
+    void drawTileSelection(QPainter *painter, const QRegion &region,
+                           const QColor &color, const QRectF &exposed,
+                           int level = 0) const;
+
 private:
     void BuildingToMap();
     CompositeLayerGroupItem *itemForFloor(BuildingFloor *floor);
@@ -166,7 +170,6 @@ private slots:
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
     void tilesetRemoved(Tiled::Tileset *tileset);
 
-    void currentToolChanged(BaseTileTool *tool);
     void currentToolChanged(BaseTool *tool);
 
     // BuildingMap signals
@@ -181,7 +184,6 @@ private:
     QMap<int,CompositeLayerGroupItem*> mLayerGroupItems;
     bool mLoading;
     QGraphicsRectItem *mDarkRectangle;
-    BaseTileTool *mCurrentTileTool;
     BaseTool *mCurrentTool;
     CompositeLayerGroup *mLayerGroupWithToolTiles;
     QString mNonEmptyLayer;

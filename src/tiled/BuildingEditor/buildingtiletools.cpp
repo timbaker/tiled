@@ -37,169 +37,10 @@ using namespace BuildingEditor;
 
 /////
 
-BaseTileTool::BaseTileTool() :
-    QObject(0),
-    mEditor(0)
-{
-    TileToolManager::instance()->addTool(this);
-}
-
-void BaseTileTool::setEditor(BuildingTileModeScene *editor)
-{
-    mEditor = editor;
-
-    connect(mEditor, SIGNAL(documentChanged()), SLOT(documentChanged()));
-}
-
-void BaseTileTool::setEnabled(bool enabled)
-{
-    if (enabled != mAction->isEnabled()) {
-        mAction->setEnabled(enabled);
-        TileToolManager::instance()->toolEnabledChanged(this, enabled);
-    }
-}
-
-Qt::KeyboardModifiers BaseTileTool::keyboardModifiers() const
-{
-    return TileToolManager::instance()->keyboardModifiers();
-}
-
-bool BaseTileTool::controlModifier() const
-{
-    return (keyboardModifiers() & Qt::ControlModifier) != 0;
-}
-
-bool BaseTileTool::shiftModifier() const
-{
-    return (keyboardModifiers() & Qt::ShiftModifier) != 0;
-}
-
-void BaseTileTool::setStatusText(const QString &text)
-{
-    mStatusText = text;
-    emit statusTextChanged();
-}
-
-BuildingDocument *BaseTileTool::document() const
-{
-    return mEditor->document();
-}
-
-BuildingFloor *BaseTileTool::floor() const
-{
-    return mEditor->document()->currentFloor();
-}
-
-QUndoStack *BaseTileTool::undoStack() const
-{
-    return mEditor->document()->undoStack();
-}
-
-QString BaseTileTool::layerName() const
-{
-    return mEditor->currentLayerName();
-}
-
-bool BaseTileTool::isCurrent()
-{
-    return TileToolManager::instance()->currentTool() == this;
-}
-
-void BaseTileTool::makeCurrent()
-{
-    TileToolManager::instance()->activateTool(this);
-}
-
-/////
-
-TileToolManager *TileToolManager::mInstance = 0;
-
-TileToolManager *TileToolManager::instance()
-{
-    if (!mInstance)
-        mInstance = new TileToolManager;
-    return mInstance;
-}
-
-TileToolManager::TileToolManager() :
-    QObject(),
-    mCurrentTool(0)
-{
-}
-
-void TileToolManager::addTool(BaseTileTool *tool)
-{
-    mTools += tool;
-}
-
-void TileToolManager::activateTool(BaseTileTool *tool)
-{
-    if (mCurrentTool) {
-        mCurrentTool->deactivate();
-        mCurrentTool->action()->setChecked(false);
-        mCurrentTool->disconnect(this);
-    }
-
-    mCurrentTool = tool;
-
-    if (mCurrentTool) {
-        connect(mCurrentTool, SIGNAL(statusTextChanged()),
-                SLOT(currentToolStatusTextChanged()));
-        mCurrentTool->activate();
-        mCurrentTool->action()->setChecked(true);
-    }
-
-    emit currentToolChanged(mCurrentTool);
-}
-
-void TileToolManager::toolEnabledChanged(BaseTileTool *tool, bool enabled)
-{
-    if (enabled && !mCurrentTool)
-        activateTool(tool);
-
-    if (!enabled && tool == mCurrentTool) {
-        foreach (BaseTileTool *tool2, mTools) {
-            if (tool2 != tool && tool2->action()->isEnabled()) {
-                activateTool(tool2);
-                return;
-            }
-        }
-        activateTool(0);
-//        emit currentToolChanged(mCurrentTool);
-    }
-}
-
-void TileToolManager::checkKeyboardModifiers(Qt::KeyboardModifiers modifiers)
-{
-    if (modifiers == mCurrentModifiers)
-        return;
-    mCurrentModifiers = modifiers;
-    if (mCurrentTool)
-        mCurrentTool->currentModifiersChanged(modifiers);
-}
-
-void TileToolManager::clearDocument()
-{
-    // Avoid a race condition when a document is closed.
-    // When updateActions() calls setEnabled(false) on each tool one-by-one,
-    // another tool is activated (see toolEnabledChanged()).
-    // No tool should become active when a document is closing.
-    activateTool(0);
-    foreach (BaseTileTool *tool, mTools)
-        tool->action()->setEnabled(false);
-}
-
-void TileToolManager::currentToolStatusTextChanged()
-{
-    emit statusTextChanged(mCurrentTool);
-}
-
-/////
-
-DrawTileToolCursor::DrawTileToolCursor(BuildingTileModeScene *scene,
+DrawTileToolCursor::DrawTileToolCursor(BaseFloorEditor *editor,
                                        QGraphicsItem *parent) :
     QGraphicsItem(parent),
-    mScene(scene)
+    mEditor(editor)
 {
     setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
 }
@@ -214,9 +55,8 @@ void DrawTileToolCursor::paint(QPainter *painter,
                                QWidget *)
 {
     Q_UNUSED(option)
-    mScene->mapRenderer()->drawTileSelection(painter, mRegion, mColor,
-                                          option->exposedRect,
-                                          mScene->currentLevel());
+    mEditor->drawTileSelection(painter, mRegion, mColor, option->exposedRect,
+                               mEditor->currentLevel());
 }
 
 void DrawTileToolCursor::setColor(const QColor &color)
@@ -230,7 +70,8 @@ void DrawTileToolCursor::setColor(const QColor &color)
 void DrawTileToolCursor::setTileRegion(const QRegion &tileRgn)
 {
     if (tileRgn != mRegion) {
-        QPolygonF polygon = mScene->tileToScenePolygon(tileRgn.boundingRect(), mScene->currentLevel());
+        QPolygonF polygon = mEditor->tileToScenePolygon(tileRgn.boundingRect(),
+                                                        mEditor->currentLevel());
         QRectF bounds = polygon.boundingRect();
 
         // Add tile bounds and pen width to the shape.
@@ -254,7 +95,8 @@ void DrawTileToolCursor::setTileRegion(const QRegion &tileRgn)
         mRegion = tileRgn;
 
         const QRect changedArea = tileRgn.xored(mRegion).boundingRect();
-        update(mScene->tileToScenePolygon(changedArea, mScene->currentLevel()).boundingRect());
+        update(mEditor->tileToScenePolygon(changedArea,
+                                           mEditor->currentLevel()).boundingRect());
     }
 }
 
@@ -270,7 +112,7 @@ DrawTileTool *DrawTileTool::instance()
 }
 
 DrawTileTool::DrawTileTool() :
-    BaseTileTool(),
+    BaseTool(),
     mMouseDown(false),
     mMouseMoved(false),
     mErasing(false),
@@ -582,7 +424,7 @@ SelectTileTool *SelectTileTool::instance()
 }
 
 SelectTileTool::SelectTileTool() :
-    BaseTileTool(),
+    BaseTool(),
     mMouseDown(false),
     mMouseMoved(false),
     mSelectionMode(Replace),

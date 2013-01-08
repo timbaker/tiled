@@ -208,8 +208,6 @@ private slots:
     void currentToolChanged(BaseTool *tool);
     void updateToolStatusText();
 
-    void updateTileToolStatusText();
-
     void roofTypeChanged(QAction *action);
     void roofCornerTypeChanged(QAction *action);
 

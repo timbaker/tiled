@@ -208,9 +208,9 @@ QString BaseFloorEditor::currentLayerName() const
     return mDocument ? mDocument->currentLayer() : QString();
 }
 
-bool BaseFloorEditor::currentFloorContains(const QPoint &tilePos)
+bool BaseFloorEditor::currentFloorContains(const QPoint &tilePos, int dw, int dh)
 {
-    return currentFloor()->bounds().contains(tilePos);
+    return currentFloor()->bounds(dw, dh).contains(tilePos);
 }
 
 GraphicsFloorItem *BaseFloorEditor::itemForFloor(BuildingFloor *floor)
@@ -345,6 +345,30 @@ QSet<BuildingObject*> BaseFloorEditor::objectsInRect(const QRectF &tileRect)
         }
     }
     return objects;
+}
+
+void BaseFloorEditor::setToolTiles(const FloorTileGrid *tiles, const QPoint &pos,
+                                   const QString &layerName)
+{
+    Q_ASSERT(false);
+}
+
+void BaseFloorEditor::clearToolTiles()
+{
+    Q_ASSERT(false);
+}
+
+QString BaseFloorEditor::buildingTileAt(int x, int y)
+{
+    Q_ASSERT(false);
+    return QString();
+}
+
+void BaseFloorEditor::drawTileSelection(QPainter *painter, const QRegion &region,
+                                        const QColor &color, const QRectF &exposed,
+                                        int level) const
+{
+    Q_ASSERT(false);
 }
 
 /////

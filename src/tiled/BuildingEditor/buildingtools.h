@@ -36,6 +36,7 @@ class QUndoStack;
 
 namespace BuildingEditor {
 
+class BuildingDocument;
 class BuildingFloor;
 class BuildingTile;
 class Door;
@@ -84,7 +85,9 @@ public:
 
     void setStatusText(const QString &text);
 
+    BuildingDocument *document() const;
     BuildingFloor *floor() const;
+    QString layerName() const;
     QUndoStack *undoStack() const;
 
     bool isCurrent();

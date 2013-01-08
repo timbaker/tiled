@@ -18,7 +18,7 @@
 #ifndef BUILDINGTILETOOLS_H
 #define BUILDINGTILETOOLS_H
 
-#include <QObject>
+#include "buildingtools.h"
 
 #include <QBrush>
 #include <QGraphicsPolygonItem>
@@ -31,6 +31,7 @@ class QUndoStack;
 
 namespace BuildingEditor {
 
+class BaseFloorEditor;
 class BuildingDocument;
 class BuildingFloor;
 class BuildingTileModeScene;
@@ -38,107 +39,10 @@ class FloorTileGrid;
 
 /////
 
-class BaseTileTool : public QObject
-{
-    Q_OBJECT
-public:
-    BaseTileTool();
-
-    virtual void setEditor(BuildingTileModeScene *editor);
-
-    void setAction(QAction *action)
-    { mAction = action; }
-
-    QAction *action() const
-    { return mAction; }
-
-    void setEnabled(bool enabled);
-
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) = 0;
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) = 0;
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) = 0;
-
-    virtual void currentModifiersChanged(Qt::KeyboardModifiers modifiers)
-    { Q_UNUSED(modifiers) }
-
-    Qt::KeyboardModifiers keyboardModifiers() const;
-
-    bool controlModifier() const;
-    bool shiftModifier() const;
-
-    QString statusText() const
-    { return mStatusText; }
-
-    void setStatusText(const QString &text);
-
-    BuildingDocument *document() const;
-    BuildingFloor *floor() const;
-    QUndoStack *undoStack() const;
-
-    QString layerName() const;
-
-    bool isCurrent();
-
-signals:
-    void statusTextChanged();
-
-public slots:
-    void makeCurrent();
-    virtual void documentChanged() {}
-    virtual void activate() = 0;
-    virtual void deactivate() = 0;
-
-protected:
-    BuildingTileModeScene *mEditor;
-    QAction *mAction;
-    QString mStatusText;
-};
-
-/////
-
-class TileToolManager : public QObject
-{
-    Q_OBJECT
-public:
-    static TileToolManager *instance();
-
-    TileToolManager();
-
-    void addTool(BaseTileTool *tool);
-    void activateTool(BaseTileTool *tool);
-
-    void toolEnabledChanged(BaseTileTool *tool, bool enabled);
-
-    BaseTileTool *currentTool() const
-    { return mCurrentTool; }
-
-    void checkKeyboardModifiers(Qt::KeyboardModifiers modifiers);
-
-    Qt::KeyboardModifiers keyboardModifiers()
-    { return mCurrentModifiers; }
-
-    void clearDocument();
-
-signals:
-    void currentToolChanged(BaseTileTool *tool);
-    void statusTextChanged(BaseTileTool *tool);
-
-private slots:
-    void currentToolStatusTextChanged();
-
-private:
-    static TileToolManager *mInstance;
-    QList<BaseTileTool*> mTools;
-    BaseTileTool *mCurrentTool;
-    Qt::KeyboardModifiers mCurrentModifiers;
-};
-
-/////
-
 class DrawTileToolCursor : public QGraphicsItem
 {
 public:
-    DrawTileToolCursor(BuildingTileModeScene *scene, QGraphicsItem *parent = 0);
+    DrawTileToolCursor(BaseFloorEditor *editor, QGraphicsItem *parent = 0);
 
     QRectF boundingRect() const;
 
@@ -150,13 +54,13 @@ public:
     void setTileRegion(const QRegion &tileRgn);
 
 private:
-    BuildingTileModeScene *mScene;
+    BaseFloorEditor *mEditor;
     QRegion mRegion;
     QRectF mBoundingRect;
     QColor mColor;
 };
 
-class DrawTileTool : public BaseTileTool
+class DrawTileTool : public BaseTool
 {
     Q_OBJECT
 public:
@@ -209,7 +113,7 @@ private:
     QString mTileName;
 };
 
-class SelectTileTool : public BaseTileTool
+class SelectTileTool : public BaseTool
 {
     Q_OBJECT
 public:

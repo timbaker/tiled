@@ -166,7 +166,7 @@ void BuildingTileModeWidget::setDocument(BuildingDocument *doc)
     setLayersList();
     updateActions();
 
-    if (ui->actionPecil->isEnabled() && !TileToolManager::instance()->currentTool())
+    if (ui->actionPecil->isEnabled() && !ToolManager::instance()->currentTool())
         DrawTileTool::instance()->makeCurrent();
 
 }
