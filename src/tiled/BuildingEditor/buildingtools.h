@@ -539,8 +539,8 @@ private:
     };
     Mode mMode;
 
-    QPoint mStartPos;
-    QPoint mCurrentPos;
+    QPoint mStartTilePos;
+    QPoint mCurrentTilePos;
     WallObject *mObject;
     GraphicsObjectItem *mItem;
     QGraphicsPolygonItem *mCursorItem;
