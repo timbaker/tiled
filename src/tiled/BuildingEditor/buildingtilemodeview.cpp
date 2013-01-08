@@ -646,29 +646,37 @@ void BuildingTileModeScene::roomAtPositionChanged(BuildingFloor *floor, const QP
 
 void BuildingTileModeScene::roomDefinitionChanged()
 {
-    foreach (BuildingFloor *floor, mDocument->building()->floors())
+    foreach (BuildingFloor *floor, mDocument->building()->floors()) {
         mBuildingMap->floorEdited(floor);
+        BaseFloorEditor::floorEdited(floor);
+    }
 }
 
 void BuildingTileModeScene::roomAdded(Room *room)
 {
     Q_UNUSED(room)
-    foreach (BuildingFloor *floor, mDocument->building()->floors())
+    foreach (BuildingFloor *floor, mDocument->building()->floors()) {
         mBuildingMap->floorEdited(floor);
+        BaseFloorEditor::floorEdited(floor);
+    }
 }
 
 void BuildingTileModeScene::roomRemoved(Room *room)
 {
     Q_UNUSED(room)
-    foreach (BuildingFloor *floor, mDocument->building()->floors())
+    foreach (BuildingFloor *floor, mDocument->building()->floors()) {
         mBuildingMap->floorEdited(floor);
+        BaseFloorEditor::floorEdited(floor);
+    }
 }
 
 void BuildingTileModeScene::roomChanged(Room *room)
 {
     Q_UNUSED(room)
-    foreach (BuildingFloor *floor, mDocument->building()->floors())
+    foreach (BuildingFloor *floor, mDocument->building()->floors()) {
         mBuildingMap->floorEdited(floor);
+        BaseFloorEditor::floorEdited(floor);
+    }
 }
 
 void BuildingTileModeScene::floorAdded(BuildingFloor *floor)
