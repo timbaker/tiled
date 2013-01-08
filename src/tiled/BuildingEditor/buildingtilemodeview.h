@@ -27,6 +27,7 @@ class Zoomable;
 namespace BuildingEditor {
 
 class BaseTileTool;
+class BuildingMap;
 class BuildingObject;
 class Building;
 class BuildingFloor;
@@ -95,7 +96,7 @@ public:
 
     void drawLine(QPainter *painter, qreal x1, qreal y1, qreal x2, qreal y2, int level);
 
-    Tiled::MapRenderer *mRenderer;
+    Tiled::MapRenderer *mMapRenderer;
 };
 
 class BuildingTileModeScene : public BaseFloorEditor
@@ -125,6 +126,7 @@ public:
     QString buildingTileAt(int x, int y);
 
 private:
+    void BuildingToMap();
     CompositeLayerGroupItem *itemForFloor(BuildingFloor *floor);
 
 private slots:
@@ -167,13 +169,13 @@ private slots:
     void currentToolChanged(BaseTileTool *tool);
     void currentToolChanged(BaseTool *tool);
 
+    // BuildingMap signals
+    void aboutToRecreateLayers();
+    void layersRecreated();
+    void layersUpdated(int level);
+
 private:
-    BuildingDocument *mDocument;
-    MapComposite *mBlendMapComposite;
-    Tiled::Map *mBlendMap;
-    MapComposite *mMapComposite;
-    Tiled::Map *mMap;
-    Tiled::MapRenderer *mRenderer;
+    BuildingMap *mBuildingMap;
     TileModeGridItem *mGridItem;
     TileModeSelectionItem *mTileSelectionItem;
     QMap<int,CompositeLayerGroupItem*> mLayerGroupItems;
