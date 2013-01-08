@@ -22,17 +22,19 @@
 #include "buildingdocument.h"
 #include "buildingfloor.h"
 #include "buildingfloorsdialog.h"
+#include "buildinglayersdock.h"
 #include "buildingobjects.h"
 #include "buildingpreferences.h"
 #include "buildingpreferencesdialog.h"
 #include "buildingpreviewwindow.h"
 #include "buildingundoredo.h"
+#include "buildingfurnituredock.h"
 #include "buildingtemplates.h"
 #include "buildingtemplatesdialog.h"
 #include "buildingtiles.h"
+#include "buildingtilesetdock.h"
 #include "buildingtilesdialog.h"
 #include "buildingtilemodeview.h"
-#include "buildingtilemodewidget.h"
 #include "buildingtiletools.h"
 #include "buildingtmx.h"
 #include "buildingtools.h"
@@ -84,6 +86,43 @@ using namespace Tiled::Internal;
 
 /////
 
+namespace BuildingEditor {
+
+class TileModeToolBar : public QToolBar
+{
+public:
+    TileModeToolBar(QWidget *parent = 0);
+
+public:
+    QLabel *mFloorLabel;
+    QAction *mActionPencil;
+    QAction *mActionSelectTiles;
+};
+
+}
+
+TileModeToolBar::TileModeToolBar(QWidget *parent) :
+    QToolBar(parent),
+    mFloorLabel(new QLabel),
+    mActionPencil(new QAction(this)),
+    mActionSelectTiles(new QAction(this))
+{
+    setObjectName(QString::fromUtf8("TileToolBar"));
+    setWindowTitle(tr("Tile ToolBar"));
+
+    mActionPencil->setCheckable(true);
+    mActionSelectTiles->setCheckable(true);
+
+    addAction(mActionPencil);
+    addAction(mActionSelectTiles);
+    addSeparator();
+    mFloorLabel->setMinimumWidth(90);
+    mFloorLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    addWidget(mFloorLabel);
+}
+
+/////
+
 BuildingEditorWindow* BuildingEditorWindow::mInstance = 0;
 
 BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
@@ -101,7 +140,14 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mInitialCategoryViewSelectionEvent(false),
     mAutoSaveTimer(new QTimer(this)),
     mUsedContextMenu(new QMenu(this)),
-    mActionClearUsed(new QAction(this))
+    mActionClearUsed(new QAction(this)),
+    mOrient(OrientOrtho),
+    mTileModeToolBar(new TileModeToolBar(this)),
+    mTileModeScene(new BuildingTileModeScene(this)),
+    mFurnitureDock(new BuildingFurnitureDock(this)),
+    mLayersDock(new BuildingLayersDock(this)),
+    mTilesetDock(new BuildingTilesetDock(this)),
+    mFirstTimeSeen(true)
 {
     ui->setupUi(this);
 
@@ -109,6 +155,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 
     BuildingPreferences *prefs = BuildingPreferences::instance();
 
+    ui->toolBar->setWindowTitle(tr("Main ToolBar"));
     ui->toolBar->insertSeparator(ui->actionRooms);
     ui->toolBar->insertWidget(ui->actionRooms, mRoomComboBox);
     ui->toolBar->insertSeparator(ui->actionUpLevel);
@@ -122,53 +169,41 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mFloorLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     ui->toolBar->insertWidget(ui->actionUpLevel, mFloorLabel);
 
-    mView = ui->floorView;
-    mView->setScene(roomEditor);
+    mOrthoView = ui->floorView;
+    mOrthoView->setScene(roomEditor);
     ui->coordLabel->clear();
-    connect(mView, SIGNAL(mouseCoordinateChanged(QPoint)),
+    connect(mOrthoView, SIGNAL(mouseCoordinateChanged(QPoint)),
             SLOT(mouseCoordinateChanged(QPoint)));
-    connect(mView->zoomable(), SIGNAL(scaleChanged(qreal)),
+    connect(mOrthoView->zoomable(), SIGNAL(scaleChanged(qreal)),
             SLOT(updateActions()));
-    mView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
+    mOrthoView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
 
-    connect(ui->actionPecil, SIGNAL(triggered()),
-            PencilTool::instance(), SLOT(makeCurrent()));
+    mIsoView = ui->tileView;
+    mIsoView->setScene(mTileModeScene);
+    connect(ui->actionToggleOrthoIso, SIGNAL(triggered()), SLOT(toggleOrthoIso()));
+
     PencilTool::instance()->setEditor(roomEditor);
     PencilTool::instance()->setAction(ui->actionPecil);
 
-    connect(ui->actionSelectRooms, SIGNAL(triggered()),
-            SelectMoveRoomsTool::instance(), SLOT(makeCurrent()));
     SelectMoveRoomsTool::instance()->setEditor(roomEditor);
     SelectMoveRoomsTool::instance()->setAction(ui->actionSelectRooms);
 
-    connect(ui->actionDoor, SIGNAL(triggered()),
-            DoorTool::instance(), SLOT(makeCurrent()));
     DoorTool::instance()->setEditor(roomEditor);
     DoorTool::instance()->setAction(ui->actionDoor);
 
-    connect(ui->actionWall, SIGNAL(triggered()),
-            WallTool::instance(), SLOT(makeCurrent()));
     WallTool::instance()->setEditor(roomEditor);
     WallTool::instance()->setAction(ui->actionWall);
 
-    connect(ui->actionWindow, SIGNAL(triggered()),
-            WindowTool::instance(), SLOT(makeCurrent()));
     WindowTool::instance()->setEditor(roomEditor);
     WindowTool::instance()->setAction(ui->actionWindow);
 
-    connect(ui->actionStairs, SIGNAL(triggered()),
-            StairsTool::instance(), SLOT(makeCurrent()));
     StairsTool::instance()->setEditor(roomEditor);
     StairsTool::instance()->setAction(ui->actionStairs);
 
-    connect(ui->actionFurniture, SIGNAL(triggered()),
-            FurnitureTool::instance(), SLOT(makeCurrent()));
     FurnitureTool::instance()->setEditor(roomEditor);
     FurnitureTool::instance()->setAction(ui->actionFurniture);
 
     /////
-    connect(ui->actionRoof, SIGNAL(triggered()),
-            RoofTool::instance(), SLOT(makeCurrent()));
     RoofTool::instance()->setEditor(roomEditor);
     RoofTool::instance()->setAction(ui->actionRoof);
 
@@ -194,8 +229,6 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     button->setPopupMode(QToolButton::MenuButtonPopup);
     /////
 
-    connect(ui->actionRoofCorner, SIGNAL(triggered()),
-            RoofCornerTool::instance(), SLOT(makeCurrent()));
     RoofCornerTool::instance()->setEditor(roomEditor);
     RoofCornerTool::instance()->setAction(ui->actionRoofCorner);
 
@@ -223,8 +256,6 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     button->setPopupMode(QToolButton::MenuButtonPopup);
     /////
 
-    connect(ui->actionSelectObject, SIGNAL(triggered()),
-            SelectMoveObjectTool::instance(), SLOT(makeCurrent()));
     SelectMoveObjectTool::instance()->setEditor(roomEditor);
     SelectMoveObjectTool::instance()->setAction(ui->actionSelectObject);
 
@@ -307,36 +338,51 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 //    keys += QKeySequence(tr("Ctrl+="));
     keys += QKeySequence(tr("+"));
     ui->actionZoomIn->setShortcuts(keys);
-    mView->addAction(ui->actionZoomIn);
+    mOrthoView->addAction(ui->actionZoomIn);
     ui->actionZoomIn->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     keys = QKeySequence::keyBindings(QKeySequence::ZoomOut);
     keys += QKeySequence(tr("-"));
     ui->actionZoomOut->setShortcuts(keys);
-    mView->addAction(ui->actionZoomOut);
+    mOrthoView->addAction(ui->actionZoomOut);
     ui->actionZoomOut->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     keys.clear();
     keys += QKeySequence(tr("Ctrl+0"));
     keys += QKeySequence(tr("0"));
     ui->actionNormalSize->setShortcuts(keys);
-    mView->addAction(ui->actionNormalSize);
+    mOrthoView->addAction(ui->actionNormalSize);
     ui->actionNormalSize->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     /////
-    mEditMode = BuildingMode;
-    mTileModeWidget = new BuildingTileModeWidget(this);
+    mEditMode = ObjectMode;
+    mTileModeToolBar->mActionPencil->setIcon(ui->actionPecil->icon());
+    mTileModeToolBar->mActionSelectTiles->setIcon(ui->actionSelectRooms->icon());
+    mTileModeToolBar->addAction(ui->actionUpLevel);
+    mTileModeToolBar->addAction(ui->actionDownLevel);
+    addToolBar(mTileModeToolBar);
     // These three actions are only active when the view widget (or a child)
     // has the focus.
-    mTileModeWidget->view()->addAction(ui->actionZoomIn);
-    mTileModeWidget->view()->addAction(ui->actionZoomOut);
-    mTileModeWidget->view()->addAction(ui->actionNormalSize);
-    connect(mTileModeWidget->view()->zoomable(), SIGNAL(scaleChanged(qreal)),
+    mIsoView->addAction(ui->actionZoomIn);
+    mIsoView->addAction(ui->actionZoomOut);
+    mIsoView->addAction(ui->actionNormalSize);
+    connect(mIsoView->zoomable(), SIGNAL(scaleChanged(qreal)),
             SLOT(updateActions()));
-    connect(ui->actionSwitchEditMode, SIGNAL(triggered()), SLOT(switchMode()));
-    connect(mTileModeWidget->view(), SIGNAL(mouseCoordinateChanged(QPoint)),
+    connect(ui->actionSwitchEditMode, SIGNAL(triggered()), SLOT(toggleEditMode()));
+    connect(mIsoView, SIGNAL(mouseCoordinateChanged(QPoint)),
             SLOT(mouseCoordinateChanged(QPoint)));
+    DrawTileTool::instance()->setAction(mTileModeToolBar->mActionPencil);
+    DrawTileTool::instance()->setEditor(mTileModeScene);
+    SelectTileTool::instance()->setAction(mTileModeToolBar->mActionSelectTiles);
+    SelectTileTool::instance()->setEditor(mTileModeScene);
     /////
+
+    addDockWidget(Qt::RightDockWidgetArea, mLayersDock);
+    addDockWidget(Qt::RightDockWidgetArea, mTilesetDock);
+    tabifyDockWidget(mTilesetDock, mFurnitureDock);
+    mLayersDock->hide();
+    mTilesetDock->hide();
+    mFurnitureDock->hide();
 
     connect(ui->actionResize, SIGNAL(triggered()), SLOT(resizeBuilding()));
     connect(ui->actionFlipHorizontal, SIGNAL(triggered()), SLOT(flipHorizontal()));
@@ -400,11 +446,12 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     // readSettings() calls QWidget::restoreGeometry() which might change
     // widget visibility.
     ui->toolBar->show();
-    ui->floorView->show();
+    mOrthoView->show();
     ui->dockWidget->show();
-    mTileModeWidget->hide();
-    mTileModeWidget->toolBar()->hide();
-    mTileModeWidget->switchAway(); // yuck
+    mTileModeToolBar->hide();
+    mFurnitureDock->hide();
+    mLayersDock->hide();
+    mTilesetDock->hide();
 
     updateActions();
 }
@@ -702,7 +749,7 @@ void BuildingEditorWindow::readSettings()
         resize(800, 600);
     restoreState(mSettings.value(QLatin1String("state"),
                                  QByteArray()).toByteArray());
-    mView->zoomable()->setScale(mSettings.value(QLatin1String("EditorScale"),
+    mOrthoView->zoomable()->setScale(mSettings.value(QLatin1String("EditorScale"),
                                                 1.0).toReal());
     mSettings.endGroup();
 
@@ -716,7 +763,7 @@ void BuildingEditorWindow::writeSettings()
     mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
     mSettings.setValue(QLatin1String("geometry"), saveGeometry());
     mSettings.setValue(QLatin1String("state"), saveState());
-    mSettings.setValue(QLatin1String("EditorScale"), mView->zoomable()->scale());
+    mSettings.setValue(QLatin1String("EditorScale"), mOrthoView->zoomable()->scale());
     mSettings.setValue(QLatin1String("SelectedCategory"),
                        mCategory ? mCategory->name() : QString());
     mSettings.setValue(QLatin1String("SelectedFurnitureGroup"),
@@ -1611,7 +1658,8 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         ToolManager::instance()->clearDocument();
         mRoomComboBox->clear();
         roomEditor->clearDocument();
-        mTileModeWidget->clearDocument();
+        mTileModeScene->clearDocument();
+        mLayersDock->clearDocument();
         mPreviewWin->clearDocument();
         mUndoGroup->removeStack(mCurrentDocument->undoStack());
         delete mCurrentDocument->building();
@@ -1677,7 +1725,8 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         categorySelectionChanged();
 
     roomEditor->setDocument(mCurrentDocument);
-    mTileModeWidget->setDocument(mCurrentDocument);
+    mTileModeScene->setDocument(mCurrentDocument);
+    mLayersDock->setDocument(mCurrentDocument);
 
     updateRoomComboBox();
 
@@ -1708,6 +1757,8 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
 
     connect(mCurrentDocument, SIGNAL(tileSelectionChanged(QRegion)),
             SLOT(updateActions()));
+    connect(mCurrentDocument, SIGNAL(clipboardTilesChanged()),
+            SLOT(updateActions()));
 
     connect(mCurrentDocument, SIGNAL(cleanChanged()), SLOT(updateWindowTitle()));
 
@@ -1729,7 +1780,8 @@ void BuildingEditorWindow::clearDocument()
         // Disable all the tools before losing the document/views/etc.
         ToolManager::instance()->clearDocument();
         roomEditor->clearDocument();
-        mTileModeWidget->clearDocument();
+        mTileModeScene->clearDocument();
+        mLayersDock->clearDocument();
         mPreviewWin->clearDocument();
         mUndoGroup->removeStack(mCurrentDocument->undoStack());
         delete mCurrentDocument->building();
@@ -2156,26 +2208,26 @@ void BuildingEditorWindow::templateFromBuilding()
 
 void BuildingEditorWindow::zoomIn()
 {
-    if (mEditMode == BuildingMode)
-        mView->zoomable()->zoomIn();
+    if (mEditMode == ObjectMode)
+        mOrthoView->zoomable()->zoomIn();
     else if (mEditMode == TileMode)
-        mTileModeWidget->view()->zoomable()->zoomIn();
+        mIsoView->zoomable()->zoomIn();
 }
 
 void BuildingEditorWindow::zoomOut()
 {
-    if (mEditMode == BuildingMode)
-        mView->zoomable()->zoomOut();
+    if (mEditMode == ObjectMode)
+        mOrthoView->zoomable()->zoomOut();
     else if (mEditMode == TileMode)
-        mTileModeWidget->view()->zoomable()->zoomOut();
+        mIsoView->zoomable()->zoomOut();
 }
 
 void BuildingEditorWindow::resetZoom()
 {
-    if (mEditMode == BuildingMode)
-        mView->zoomable()->resetZoom();
+    if (mEditMode == ObjectMode)
+        mOrthoView->zoomable()->resetZoom();
     else if (mEditMode == TileMode)
-        mTileModeWidget->view()->zoomable()->resetZoom();
+        mIsoView->zoomable()->resetZoom();
 }
 
 void BuildingEditorWindow::mouseCoordinateChanged(const QPoint &tilePos)
@@ -2382,22 +2434,25 @@ void BuildingEditorWindow::updateActions()
 {
     bool hasDoc = mCurrentDocument != 0;
     bool showObjects = BuildingPreferences::instance()->showObjects();
+    bool objectMode = mEditMode == ObjectMode;
 
-    PencilTool::instance()->setEnabled(hasDoc &&
-            currentRoom() != 0);
-    WallTool::instance()->setEnabled(hasDoc);
-    SelectMoveRoomsTool::instance()->setEnabled(hasDoc);
-    DoorTool::instance()->setEnabled(hasDoc && showObjects);
-    WindowTool::instance()->setEnabled(hasDoc && showObjects);
-    StairsTool::instance()->setEnabled(hasDoc && showObjects);
-    FurnitureTool::instance()->setEnabled(hasDoc && showObjects &&
+    PencilTool::instance()->setEnabled(hasDoc && objectMode && currentRoom() != 0);
+    WallTool::instance()->setEnabled(hasDoc && objectMode && showObjects);
+    SelectMoveRoomsTool::instance()->setEnabled(hasDoc && objectMode);
+    DoorTool::instance()->setEnabled(hasDoc && objectMode && showObjects);
+    WindowTool::instance()->setEnabled(hasDoc && objectMode && showObjects);
+    StairsTool::instance()->setEnabled(hasDoc && objectMode && showObjects);
+    FurnitureTool::instance()->setEnabled(hasDoc && objectMode && showObjects &&
             FurnitureTool::instance()->currentTile() != 0);
     bool roofTilesOK = hasDoc && currentBuilding()->roofCapTile()->asRoofCap() &&
             currentBuilding()->roofSlopeTile()->asRoofSlope() /*&&
             currentBuilding()->roofTopTile()->asRoofTop()*/;
-    RoofTool::instance()->setEnabled(hasDoc && showObjects && roofTilesOK);
-    RoofCornerTool::instance()->setEnabled(hasDoc && showObjects && roofTilesOK);
-    SelectMoveObjectTool::instance()->setEnabled(hasDoc && showObjects);
+    RoofTool::instance()->setEnabled(hasDoc && objectMode && showObjects && roofTilesOK);
+    RoofCornerTool::instance()->setEnabled(hasDoc && objectMode && showObjects && roofTilesOK);
+    SelectMoveObjectTool::instance()->setEnabled(hasDoc && objectMode && showObjects);
+
+    DrawTileTool::instance()->setEnabled(!objectMode && !currentLayer().isEmpty());
+    SelectTileTool::instance()->setEnabled(!objectMode && !currentLayer().isEmpty());
 
     ui->actionUpLevel->setEnabled(hasDoc &&
                                   !mCurrentDocument->currentFloorIsTop());
@@ -2411,8 +2466,8 @@ void BuildingEditorWindow::updateActions()
 
     ui->actionShowObjects->setEnabled(hasDoc);
 
-    Zoomable *zoomable = (mEditMode == BuildingMode) ? mView->zoomable()
-                                                     : mTileModeWidget->view()->zoomable();
+    Zoomable *zoomable = (mEditMode == ObjectMode) ? mOrthoView->zoomable()
+                                                   : mIsoView->zoomable();
     ui->actionZoomIn->setEnabled(hasDoc && zoomable->canZoomIn());
     ui->actionZoomOut->setEnabled(hasDoc && zoomable->canZoomOut());
     ui->actionNormalSize->setEnabled(hasDoc && zoomable->scale() != 1.0);
@@ -2434,10 +2489,14 @@ void BuildingEditorWindow::updateActions()
 
     mRoomComboBox->setEnabled(hasDoc && currentRoom() != 0);
 
-    if (mEditMode == TileMode) {
+    bool hasTileSel = hasDoc && !objectMode && !mCurrentDocument->tileSelection().isEmpty();
+    ui->actionCut->setEnabled(hasTileSel);
+    ui->actionCopy->setEnabled(hasTileSel);
+    ui->actionPaste->setEnabled(hasDoc && !objectMode && mCurrentDocument->clipboardTiles());
+    if (!objectMode) {
         ui->actionSelectAll->setEnabled(!currentLayer().isEmpty());
-        ui->actionSelectNone->setEnabled(hasDoc && !mCurrentDocument->tileSelection().isEmpty());
-        ui->actionDelete->setEnabled(hasDoc && !mCurrentDocument->tileSelection().isEmpty());
+        ui->actionSelectNone->setEnabled(hasTileSel);
+        ui->actionDelete->setEnabled(hasTileSel);
     } else {
         ui->actionSelectAll->setEnabled(hasDoc);
         ui->actionSelectNone->setEnabled(hasDoc && mCurrentDocument->selectedObjects().size());
@@ -2450,6 +2509,8 @@ void BuildingEditorWindow::updateActions()
                              .arg(mCurrentDocument->building()->floorCount()));
     else
         mFloorLabel->clear();
+
+    mTileModeToolBar->mFloorLabel->setText(mFloorLabel->text());
 }
 
 void BuildingEditorWindow::help()
@@ -2460,51 +2521,91 @@ void BuildingEditorWindow::help()
     QDesktopServices::openUrl(QUrl(path, QUrl::TolerantMode));
 }
 
-void BuildingEditorWindow::switchMode()
+void BuildingEditorWindow::toggleOrthoIso()
 {
+    if (mEditMode == TileMode) {
+        toggleEditMode();
+        return;
+    }
+
+    BaseFloorEditor *editor;
+    if (mOrient == OrientOrtho) {
+        mOrthoView->zoomable()->connectToComboBox(0);
+        mIsoView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
+        editor = mTileModeScene;
+        mOrient = OrientIso;
+    } else {
+        mIsoView->zoomable()->connectToComboBox(0);
+        mOrthoView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
+        editor = roomEditor;
+        mOrient = OrientOrtho;
+    }
+
+    ui->stackedWidget->setCurrentIndex(!ui->stackedWidget->currentIndex());
+
     BaseTool *tool = ToolManager::instance()->currentTool();
+
+    // Deactivate the current tool so it removes any cursor item from the
+    // scene.
+    if (tool)
+        ToolManager::instance()->activateTool(0);
+
+    PencilTool::instance()->setEditor(editor);
+    SelectMoveRoomsTool::instance()->setEditor(editor);
+    DoorTool::instance()->setEditor(editor);
+    WallTool::instance()->setEditor(editor);
+    WindowTool::instance()->setEditor(editor);
+    StairsTool::instance()->setEditor(editor);
+    FurnitureTool::instance()->setEditor(editor);
+    RoofTool::instance()->setEditor(editor);
+    RoofCornerTool::instance()->setEditor(editor);
+    SelectMoveObjectTool::instance()->setEditor(editor);
+
+
+    // Restore the current tool so it adds any cursor item back to the scene.
+    if (tool)
+        ToolManager::instance()->activateTool(tool);
+}
+
+void BuildingEditorWindow::toggleEditMode()
+{
     ToolManager::instance()->clearDocument();
 
-    if (mEditMode == BuildingMode) {
+    if (mEditMode == ObjectMode) {
         // Switch to TileMode
-        ui->toolBar->hide();
-        ui->floorView->hide();
-        ui->dockWidget->hide();
-        ui->toolBar->hide();
-        ui->verticalLayout_2->removeWidget(ui->floorView);
-        ui->verticalLayout_2->insertWidget(0, mTileModeWidget, 1);
-        mTileModeWidget->show();
-        mTileModeWidget->toolBar()->show();
-        addToolBar(Qt::TopToolBarArea, mTileModeWidget->toolBar());
+        mTileModeToolBar->show();
         mEditMode = TileMode;
-        mTileModeWidget->switchTo();
-        mTileModeWidget->view()->setFocus();
-        mView->zoomable()->connectToComboBox(0);
-        mTileModeWidget->view()->zoomable()->connectToComboBox(ui->editorScaleComboBox);
-
-        if (tool)
-            tool->setEditor(mTileModeWidget->view()->scene());
-        ToolManager::instance()->activateTool(tool);
+        mLayersDock->show(); // FIXME: unless the user hid it
+        mTilesetDock->show(); // FIXME: unless the user hid it
+        mFurnitureDock->show(); // FIXME: unless the user hid it
+        ui->toolBar->hide();
+        ui->dockWidget->hide();
+        if (mFirstTimeSeen) {
+            mFirstTimeSeen = false;
+            mFurnitureDock->switchTo();
+            mTilesetDock->firstTimeSetup();
+        }
+        if (mOrient == OrientOrtho) {
+            ui->stackedWidget->setCurrentIndex(1);
+            mOrthoView->zoomable()->connectToComboBox(0);
+            mIsoView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
+            mIsoView->setFocus();
+        }
     } else if (mEditMode == TileMode) {
         // Switch to BuildingMode
-        removeToolBar(mTileModeWidget->toolBar());
-        mTileModeWidget->hide();
-        ui->verticalLayout_2->removeWidget(mTileModeWidget);
-        mTileModeWidget->switchAway();
-        ui->verticalLayout_2->insertWidget(0, ui->floorView, 1);
         ui->toolBar->show();
-        ui->floorView->show();
         ui->dockWidget->show();
-        mEditMode = BuildingMode;
-        ui->floorView->setFocus();
-        mTileModeWidget->view()->zoomable()->connectToComboBox(0);
-        mView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
-
-        if (tool)
-            tool->setEditor(roomEditor);
-        ToolManager::instance()->activateTool(tool);
-        SelectMoveObjectTool::instance()->setEditor(roomEditor);
-        SelectMoveObjectTool::instance()->setAction(ui->actionSelectObject);
+        mTileModeToolBar->hide();
+        mLayersDock->hide();
+        mTilesetDock->hide();
+        mFurnitureDock->hide();
+        mEditMode = ObjectMode;
+        if (mOrient == OrientOrtho) {
+            ui->stackedWidget->setCurrentIndex(0);
+            mIsoView->zoomable()->connectToComboBox(0);
+            mOrthoView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
+            mOrthoView->setFocus();
+        }
     }
 
     updateActions();

@@ -198,6 +198,7 @@ signals:
     void selectedObjectsChanged();
 
     void tileSelectionChanged(const QRegion &old);
+    void clipboardTilesChanged();
 
     void cleanChanged();
 

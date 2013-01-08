@@ -60,6 +60,8 @@ public:
 
     QString buildingTileAt(int x, int y, int level, const QString &layerName);
 
+    static QStringList layerNames(int level);
+
 public:
     void buildingRotated();
     void buildingResized();

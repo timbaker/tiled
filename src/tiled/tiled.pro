@@ -146,7 +146,6 @@ SOURCES += aboutdialog.cpp \
     minimap.cpp \
     convertorientationdialog.cpp \
     converttolotdialog.cpp \
-    BuildingEditor/buildingeditorwindow.cpp \
     BuildingEditor/simplefile.cpp \
     BuildingEditor/buildingtools.cpp \
     BuildingEditor/FloorEditor.cpp \
@@ -180,10 +179,12 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/horizontallinedelegate.cpp \
     BuildingEditor/buildingfloorsdialog.cpp \
     BuildingEditor/buildingtilemodeview.cpp \
-    BuildingEditor/buildingtilemodewidget.cpp \
     BuildingEditor/buildingtiletools.cpp \
-    BuildingEditor/tilemodefurnituredock.cpp \
-    BuildingEditor/buildingmap.cpp
+    BuildingEditor/buildingmap.cpp \
+    BuildingEditor/buildingfurnituredock.cpp \
+    BuildingEditor/buildingtilesetdock.cpp \
+    BuildingEditor/buildinglayersdock.cpp \
+    BuildingEditor/buildingeditorwindow.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -329,10 +330,11 @@ HEADERS += aboutdialog.h \
     BuildingEditor/horizontallinedelegate.h \
     BuildingEditor/buildingfloorsdialog.h \
     BuildingEditor/buildingtilemodeview.h \
-    BuildingEditor/buildingtilemodewidget.h \
     BuildingEditor/buildingtiletools.h \
-    BuildingEditor/tilemodefurnituredock.h \
-    BuildingEditor/buildingmap.h
+    BuildingEditor/buildingmap.h \
+    BuildingEditor/buildingfurnituredock.h \
+    BuildingEditor/buildingtilesetdock.h \
+    BuildingEditor/buildinglayersdock.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -365,7 +367,8 @@ FORMS += aboutdialog.ui \
     BuildingEditor/listofstringsdialog.ui \
     tilemetainfodialog.ui \
     BuildingEditor/buildingfloorsdialog.ui \
-    BuildingEditor/buildingtilemodewidget.ui
+    BuildingEditor/buildingtilesetdock.ui \
+    BuildingEditor/buildinglayersdock.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

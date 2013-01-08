@@ -1,4 +1,4 @@
-#include "tilemodefurnituredock.h"
+#include "buildingfurnituredock.h"
 
 #include "buildingfloor.h"
 #include "buildingtiles.h"
@@ -14,7 +14,7 @@
 
 using namespace BuildingEditor;
 
-TileModeFurnitureDock::TileModeFurnitureDock(QWidget *parent) :
+BuildingFurnitureDock::BuildingFurnitureDock(QWidget *parent) :
     QDockWidget(parent),
     mGroupList(new QListWidget(this)),
     mFurnitureView(new FurnitureView(this))
@@ -40,12 +40,12 @@ TileModeFurnitureDock::TileModeFurnitureDock(QWidget *parent) :
     retranslateUi();
 }
 
-void TileModeFurnitureDock::switchTo()
+void BuildingFurnitureDock::switchTo()
 {
     setGroupsList();
 }
 
-void TileModeFurnitureDock::changeEvent(QEvent *e)
+void BuildingFurnitureDock::changeEvent(QEvent *e)
 {
     QDockWidget::changeEvent(e);
     switch (e->type()) {
@@ -57,19 +57,19 @@ void TileModeFurnitureDock::changeEvent(QEvent *e)
     }
 }
 
-void TileModeFurnitureDock::retranslateUi()
+void BuildingFurnitureDock::retranslateUi()
 {
     setWindowTitle(tr("Furniture"));
 }
 
-void TileModeFurnitureDock::setGroupsList()
+void BuildingFurnitureDock::setGroupsList()
 {
     mGroupList->clear();
     foreach (FurnitureGroup *group, FurnitureGroups::instance()->groups())
         mGroupList->addItem(group->mLabel);
 }
 
-void TileModeFurnitureDock::setFurnitureList()
+void BuildingFurnitureDock::setFurnitureList()
 {
     QList<FurnitureTiles*> ftiles;
     if (mCurrentGroup) {
@@ -78,7 +78,7 @@ void TileModeFurnitureDock::setFurnitureList()
     mFurnitureView->model()->setTiles(ftiles);
 }
 
-void TileModeFurnitureDock::currentGroupChanged(int row)
+void BuildingFurnitureDock::currentGroupChanged(int row)
 {
     mCurrentGroup = 0;
     mCurrentTile = 0;
@@ -87,7 +87,7 @@ void TileModeFurnitureDock::currentGroupChanged(int row)
     setFurnitureList();
 }
 
-void TileModeFurnitureDock::currentFurnitureChanged()
+void BuildingFurnitureDock::currentFurnitureChanged()
 {
     QModelIndexList indexes = mFurnitureView->selectionModel()->selectedIndexes();
     if (indexes.count() == 1) {

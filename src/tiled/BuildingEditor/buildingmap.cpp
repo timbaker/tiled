@@ -91,6 +91,43 @@ QString BuildingMap::buildingTileAt(int x, int y, int level, const QString &laye
     return tileName;
 }
 
+// The order must match the LayerIndexXXX constants.
+// FIXME: add user-defined layers as well from TMXConfig.txt.
+static const char *gLayerNames[] = {
+    "Floor",
+    "FloorGrime",
+    "FloorGrime2",
+    "Walls",
+    "Walls2",
+    "RoofCap",
+    "RoofCap2",
+    "WallOverlay",
+    "WallOverlay2",
+    "WallGrime",
+    "WallFurniture",
+    "Frames",
+    "Doors",
+    "Curtains",
+    "Furniture",
+    "Furniture2",
+    "Curtains2",
+    "Roof",
+    "Roof2",
+    "RoofTop",
+    0
+};
+
+QStringList BuildingMap::layerNames(int level)
+{
+//    if (!mDocument)
+//        return QStringList();
+
+    QStringList ret;
+    for (int i = 0; gLayerNames[i]; i++)
+        ret += QLatin1String(gLayerNames[i]);
+    return ret;
+}
+
 void BuildingMap::buildingRotated()
 {
     pendingBuildingResized = true;
@@ -159,36 +196,11 @@ void BuildingMap::BuildingToMap()
         return;
     }
 
-    // The order must match the LayerIndexXXX constants.
-    // FIXME: add user-defined layers as well from TMXConfig.txt.
-    const char *layerNames[] = {
-        "Floor",
-        "FloorGrime",
-        "FloorGrime2",
-        "Walls",
-        "Walls2",
-        "RoofCap",
-        "RoofCap2",
-        "WallOverlay",
-        "WallOverlay2",
-        "WallGrime",
-        "WallFurniture",
-        "Frames",
-        "Doors",
-        "Curtains",
-        "Furniture",
-        "Furniture2",
-        "Curtains2",
-        "Roof",
-        "Roof2",
-        "RoofTop",
-        0
-    };
-    Q_ASSERT(sizeof(layerNames)/sizeof(layerNames[0]) == BuildingFloor::Square::MaxSection + 1);
+    Q_ASSERT(sizeof(gLayerNames)/sizeof(gLayerNames[0]) == BuildingFloor::Square::MaxSection + 1);
 
     foreach (BuildingFloor *floor, mBuilding->floors()) {
-        for (int i = 0; layerNames[i]; i++) {
-            QString name = QLatin1String(layerNames[i]);
+        for (int i = 0; gLayerNames[i]; i++) {
+            QString name = QLatin1String(gLayerNames[i]);
             QString layerName = tr("%1_%2").arg(floor->level()).arg(name);
             TileLayer *tl = new TileLayer(layerName,
                                           0, 0, mapSize.width(), mapSize.height());

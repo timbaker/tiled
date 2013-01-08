@@ -120,7 +120,7 @@ class BuildingTileModeScene : public BaseFloorEditor
 {
     Q_OBJECT
 public:
-    BuildingTileModeScene(QWidget *parent = 0);
+    BuildingTileModeScene(QObject *parent = 0);
     ~BuildingTileModeScene();
 
     Tiled::MapRenderer *mapRenderer() const;

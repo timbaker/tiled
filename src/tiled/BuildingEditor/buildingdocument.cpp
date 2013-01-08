@@ -149,6 +149,7 @@ void BuildingDocument::setClipboardTiles(FloorTileGrid *tiles, const QRegion &rg
     delete mClipboardTiles;
     mClipboardTiles = tiles;
     mClipboardTilesRgn = rgn;
+    emit clipboardTilesChanged();
 }
 
 Room *BuildingDocument::changeRoomAtPosition(BuildingFloor *floor, const QPoint &pos, Room *room)

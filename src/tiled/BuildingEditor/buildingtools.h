@@ -60,8 +60,7 @@ public:
 
     virtual void setEditor(BaseFloorEditor *editor);
 
-    void setAction(QAction *action)
-    { mAction = action; }
+    void setAction(QAction *action);
 
     QAction *action() const
     { return mAction; }

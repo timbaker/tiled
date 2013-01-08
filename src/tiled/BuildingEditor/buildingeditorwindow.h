@@ -51,7 +51,11 @@ class BuildingPreviewWindow;
 class BuildingTile;
 class BuildingTileEntry;
 class BuildingTileCategory;
-class BuildingTileModeWidget;
+class BuildingTileModeScene;
+class BuildingTileModeView;
+class BuildingFurnitureDock;
+class BuildingLayersDock;
+class BuildingTilesetDock;
 class Door;
 class FloorEditor;
 class FloorView;
@@ -59,6 +63,7 @@ class FurnitureGroup;
 class Room;
 class Window;
 class Stairs;
+class TileModeToolBar;
 
 class BuildingEditorWindow : public QMainWindow
 {
@@ -133,7 +138,7 @@ private:
     void deleteObjects();
 
     enum EditMode {
-        BuildingMode,
+        ObjectMode,
         TileMode
     };
 
@@ -226,14 +231,15 @@ private slots:
 
     void help();
 
-    void switchMode();
+    void toggleOrthoIso();
+    void toggleEditMode();
 
 private:
     static BuildingEditorWindow *mInstance;
     Ui::BuildingEditorWindow *ui;
     BuildingDocument *mCurrentDocument;
     FloorEditor *roomEditor;
-    FloorView *mView;
+    FloorView *mOrthoView;
     QComboBox *mRoomComboBox;
     QLabel *mFloorLabel;
     QUndoGroup *mUndoGroup;
@@ -252,8 +258,19 @@ private:
     QMenu *mUsedContextMenu;
     QAction *mActionClearUsed;
 
+    enum Orientation {
+        OrientOrtho,
+        OrientIso
+    };
+    Orientation mOrient;
     EditMode mEditMode;
-    BuildingTileModeWidget *mTileModeWidget;
+    TileModeToolBar *mTileModeToolBar;
+    BuildingTileModeView *mIsoView;
+    BuildingTileModeScene *mTileModeScene;
+    BuildingFurnitureDock *mFurnitureDock;
+    BuildingLayersDock *mLayersDock;
+    BuildingTilesetDock *mTilesetDock;
+    bool mFirstTimeSeen;
 };
 
 } // namespace BuildingEditor

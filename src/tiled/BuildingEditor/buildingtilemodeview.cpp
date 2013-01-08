@@ -150,7 +150,7 @@ void TileModeSelectionItem::updateBoundingRect()
 
 /////
 
-BuildingTileModeScene::BuildingTileModeScene(QWidget *parent) :
+BuildingTileModeScene::BuildingTileModeScene(QObject *parent) :
     BaseFloorEditor(parent),
     mBuildingMap(0),
     mGridItem(0),

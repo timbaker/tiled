@@ -1,5 +1,5 @@
-#ifndef TILEMODEFURNITUREDOCK_H
-#define TILEMODEFURNITUREDOCK_H
+#ifndef BUILDINGFURNITUREDOCK_H
+#define BUILDINGFURNITUREDOCK_H
 
 #include <QDockWidget>
 
@@ -11,12 +11,12 @@ class FurnitureGroup;
 class FurnitureTile;
 class FurnitureView;
 
-class TileModeFurnitureDock : public QDockWidget
+class BuildingFurnitureDock : public QDockWidget
 {
     Q_OBJECT
 
 public:
-    TileModeFurnitureDock(QWidget *parent = 0);
+    BuildingFurnitureDock(QWidget *parent = 0);
 
     void switchTo();
 
@@ -42,4 +42,4 @@ private:
 
 } // namespace BuildingEditor
 
-#endif // TILEMODEFURNITUREDOCK_H
+#endif // BUILDINGFURNITUREDOCK_H

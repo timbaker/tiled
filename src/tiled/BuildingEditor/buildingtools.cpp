@@ -58,6 +58,12 @@ void BaseTool::setEditor(BaseFloorEditor *editor)
         connect(mEditor, SIGNAL(documentChanged()), SLOT(documentChanged()));
 }
 
+void BaseTool::setAction(QAction *action)
+{
+    mAction = action;
+    connect(mAction, SIGNAL(triggered()), SLOT(makeCurrent()));
+}
+
 void BaseTool::setEnabled(bool enabled)
 {
     if (enabled != mAction->isEnabled()) {
@@ -161,7 +167,9 @@ void ToolManager::activateTool(BaseTool *tool)
 
 void ToolManager::toolEnabledChanged(BaseTool *tool, bool enabled)
 {
-    if (!enabled && tool == mCurrentTool) {
+    if (enabled && !mCurrentTool) {
+        activateTool(tool);
+    } else if (!enabled && tool == mCurrentTool) {
         foreach (BaseTool *tool2, mTools) {
             if (tool2 != tool && tool2->action()->isEnabled()) {
                 activateTool(tool2);
@@ -169,7 +177,6 @@ void ToolManager::toolEnabledChanged(BaseTool *tool, bool enabled)
             }
         }
         activateTool(0);
-        emit currentToolChanged(mCurrentTool);
     }
 }
 
