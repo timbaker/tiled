@@ -1039,6 +1039,14 @@ GraphicsRoofHandleItem::GraphicsRoofHandleItem(GraphicsRoofItem *roofItem, Type 
     synchWithObject();
 }
 
+QPainterPath GraphicsRoofHandleItem::shape() const
+{
+    QPainterPath path;
+    path.addPolygon(mEditor->tileToScenePolygonF(mTileBounds,
+                                                 mRoofItem->object()->floor()->level()));
+    return path;
+}
+
 QRectF GraphicsRoofHandleItem::boundingRect() const
 {
     return mBoundingRect;
