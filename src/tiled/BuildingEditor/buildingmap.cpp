@@ -262,8 +262,9 @@ void BuildingMap::userTilesToLayer(BuildingFloor *floor,
                                    const QString &layerName,
                                    const QRect &bounds)
 {
+    CompositeLayerGroup *layerGroup = mMapComposite->layerGroupForLevel(floor->level());
     TileLayer *layer = 0;
-    foreach (TileLayer *tl, mMapComposite->layerGroupForLevel(floor->level())->layers()) {
+    foreach (TileLayer *tl, layerGroup->layers()) {
         if (layerName == MapComposite::layerNameWithoutPrefix(tl)) {
             layer = tl;
             break;
@@ -291,6 +292,8 @@ void BuildingMap::userTilesToLayer(BuildingFloor *floor,
             layer->setCell(x, y, Cell(tile));
         }
     }
+
+    layerGroup->regionAltered(layer); // possibly set mNeedsSynch
 }
 
 void BuildingMap::floorAdded(BuildingFloor *floor)
