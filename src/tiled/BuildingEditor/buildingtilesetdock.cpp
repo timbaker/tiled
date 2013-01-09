@@ -123,7 +123,7 @@ void BuildingTilesetDock::switchLayerForTile(Tiled::Tile *tile)
 #if 0
     QString layerName = TilesetManager::instance()->layerName(tile);
     if (!layerName.isEmpty()) {
-        if (view()->scene()->layerNames().contains(layerName))
+        if (BuildingMap::layerNames().contains(layerName))
             mDocument->setCurrentLayer(layerName);
     }
 #endif

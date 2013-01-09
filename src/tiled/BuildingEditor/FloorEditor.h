@@ -400,16 +400,18 @@ public:
     QSet<BuildingObject*> objectsInRect(const QRectF &tileRect);
 
     void setMouseOverObject(BuildingObject *object);
+    virtual void setCursorObject(BuildingObject *object, const QRect &bounds = QRect())
+    { Q_UNUSED(object) Q_UNUSED(bounds) }
 
     /////
     // Tile-editing-only methods
     virtual void setToolTiles(const FloorTileGrid *tiles,
-                      const QPoint &pos, const QString &layerName);
-    virtual void clearToolTiles();
-    virtual QString buildingTileAt(int x, int y);
+                      const QPoint &pos, const QString &layerName) = 0;
+    virtual void clearToolTiles() = 0;
+    virtual QString buildingTileAt(int x, int y) = 0;
     virtual void drawTileSelection(QPainter *painter, const QRegion &region,
                                    const QColor &color, const QRectF &exposed,
-                                   int level = 0) const;
+                                   int level = 0) const = 0;
     /////
 
 signals:
@@ -461,6 +463,13 @@ public:
     void setDocument(BuildingDocument *doc);
     void clearDocument();
 
+    void setToolTiles(const FloorTileGrid *tiles, const QPoint &pos,
+                      const QString &layerName);
+    void clearToolTiles();
+    QString buildingTileAt(int x, int y);
+    void drawTileSelection(QPainter *painter, const QRegion &region,
+                           const QColor &color, const QRectF &exposed,
+                           int level = 0) const;
 
 private slots:
     void currentToolChanged(BaseTool *tool);

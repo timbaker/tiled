@@ -196,7 +196,9 @@ bool BuildingTMX::readTxt()
     mRevision = simple.value("revision").toInt();
     mSourceRevision = simple.value("source_revision").toInt();
 
+#if 0
     QStringList missingTilesets;
+#endif
 
     foreach (SimpleFileBlock block, simple.blocks) {
 #if 0
@@ -255,6 +257,7 @@ bool BuildingTMX::readTxt()
         }
     }
 
+#if 0
     if (missingTilesets.size()) {
         ListOfStringsDialog dialog(tr("The following tileset files were not found."),
                                    missingTilesets,
@@ -262,6 +265,7 @@ bool BuildingTMX::readTxt()
         dialog.setWindowTitle(tr("Missing Tilesets"));
         dialog.exec();
     }
+#endif
 
     return true;
 }

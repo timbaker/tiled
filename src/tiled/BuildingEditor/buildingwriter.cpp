@@ -37,6 +37,15 @@ using namespace BuildingEditor;
 #define VERSION2 2
 #define VERSION_LATEST VERSION2
 
+#ifdef Q_OS_WIN
+// Hmmmm.  libtiled.dll defines the Properties class as so:
+// class TILEDSHARED_EXPORT Properties : public QMap<QString,QString>
+// Suddenly I'm getting a 'multiply-defined symbol' error.
+// I found the solution here:
+// http://www.archivum.info/qt-interest@trolltech.com/2005-12/00242/RE-Linker-Problem-while-using-QMap.html
+template class __declspec(dllimport) QMap<QString, QString>;
+#endif
+
 class BuildingEditor::BuildingWriterPrivate
 {
     Q_DECLARE_TR_FUNCTIONS(BuildingWriterPrivate)

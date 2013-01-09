@@ -18,7 +18,6 @@
 #include "buildingmap.h"
 
 #include "building.h"
-#include "buildingdocument.h"
 #include "buildingfloor.h"
 #include "buildingobjects.h"
 #include "buildingtiles.h"
@@ -27,7 +26,6 @@
 #include "mapmanager.h"
 #include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
-#include "zoomable.h"
 
 #include "isometricrenderer.h"
 #include "map.h"
@@ -35,6 +33,8 @@
 #include "tilelayer.h"
 #include "tileset.h"
 #include "zlevelrenderer.h"
+
+#include <QDebug>
 
 using namespace BuildingEditor;
 using namespace Tiled;
@@ -49,7 +49,9 @@ BuildingMap::BuildingMap(Building *building) :
     mMapRenderer(0),
     pending(false),
     pendingRecreateAll(false),
-    pendingBuildingResized(false)
+    pendingBuildingResized(false),
+    mCursorObjectFloor(0),
+    mCursorObjectBuilding(0)
 {
     BuildingToMap();
 }
@@ -119,6 +121,7 @@ static const char *gLayerNames[] = {
 
 QStringList BuildingMap::layerNames(int level)
 {
+    Q_UNUSED(level)
 //    if (!mDocument)
 //        return QStringList();
 
@@ -126,6 +129,81 @@ QStringList BuildingMap::layerNames(int level)
     for (int i = 0; gLayerNames[i]; i++)
         ret += QLatin1String(gLayerNames[i]);
     return ret;
+}
+
+/**
+  This method requires a bit of explanation.  The purpose is to show the result of
+  adding or resizing a building object in real time.  BuildingFloor::LayoutToSquares
+  is rather slow and doesn't support updating a sub-area of a floor.  This method
+  creates a new tiny building that is just a bit larger than the object being
+  created or resized.  The tiny building is given a copy of only those objects
+  that overlap its bounds.  LayoutToSquares is then run just on the floor in the
+  tiny building, and those squares are later used by BuildingSquaresToTileLayers.
+  There are still issues with objects that should affect the floors above/below
+  like stairs.
+  */
+void BuildingMap::setCursorObject(BuildingFloor *floor, BuildingObject *object,
+                                  const QRect &bounds)
+{
+    if (mCursorObjectFloor) {
+        BuildingFloor *floor2 = mBuilding->floor(mCursorObjectFloor->level());
+        pendingSquaresToTileLayers[floor2] |= mCursorObjectFloor->bounds().translated(mCursorObjectPos);
+        if (!pending) {
+            QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
+            pending = true;
+        }
+        delete mCursorObjectFloor;
+        mCursorObjectFloor = 0;
+        delete mCursorObjectBuilding;
+        mCursorObjectBuilding = 0;
+    }
+    if (object/* && floor->bounds().intersects(object->bounds())*/) {
+        // When resizing a wall object, we must call SquaresToTileLayers with
+        // the combined area of the wall object's original bounds and the
+        // current bounds during resizing.
+        mCursorObjectBounds = bounds.isNull() ? object->bounds() : bounds;
+        QRect r = mCursorObjectBounds.adjusted(-2, -2, 2, 2) & floor->bounds();
+        mCursorObjectBuilding = new Building(r.width(), r.height());
+        mCursorObjectBuilding->setExteriorWall(floor->building()->exteriorWall());
+        foreach (Room *room, floor->building()->rooms())
+            mCursorObjectBuilding->insertRoom(mCursorObjectBuilding->roomCount(),
+                                              room);
+        foreach (BuildingFloor *floor2, floor->building()->floors()) {
+            BuildingFloor *clone = new BuildingFloor(mCursorObjectBuilding, floor2->level());
+            mCursorObjectBuilding->insertFloor(clone->level(), clone);
+            // TODO: clone stairs/roofs on floor below
+            if (floor2 == floor)
+                mCursorObjectFloor = clone;
+        }
+
+        for (int x = r.x(); x <= r.right(); x++) {
+            for (int y = r.y(); y <= r.bottom(); y++) {
+                mCursorObjectFloor->SetRoomAt(x - r.x(), y - r.y(), floor->GetRoomAt(x, y));
+            }
+        }
+        foreach (BuildingObject *object, floor->objects()) {
+            if (r.adjusted(0,0,1,1) // some objects can be on the edge of the building
+                    .intersects(object->bounds())) {
+                BuildingObject *clone = object->clone();
+                clone->setPos(clone->pos() - r.topLeft());
+                clone->setFloor(mCursorObjectFloor);
+                mCursorObjectFloor->insertObject(mCursorObjectFloor->objectCount(),
+                                                 clone);
+            }
+        }
+        BuildingObject *clone = object->clone();
+        clone->setPos(clone->pos() - r.topLeft());
+        clone->setFloor(mCursorObjectFloor);
+        mCursorObjectFloor->insertObject(mCursorObjectFloor->objectCount(), clone);
+        mCursorObjectFloor->LayoutToSquares();
+        mCursorObjectPos = r.topLeft();
+
+        pendingSquaresToTileLayers[floor] |= r;
+        if (!pending) {
+            QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
+            pending = true;
+        }
+    }
 }
 
 void BuildingMap::buildingRotated()
@@ -199,8 +277,7 @@ void BuildingMap::BuildingToMap()
     Q_ASSERT(sizeof(gLayerNames)/sizeof(gLayerNames[0]) == BuildingFloor::Square::MaxSection + 1);
 
     foreach (BuildingFloor *floor, mBuilding->floors()) {
-        for (int i = 0; gLayerNames[i]; i++) {
-            QString name = QLatin1String(gLayerNames[i]);
+        foreach (QString name, layerNames(floor->level())) {
             QString layerName = tr("%1_%2").arg(floor->level()).arg(name);
             TileLayer *tl = new TileLayer(layerName,
                                           0, 0, mapSize.width(), mapSize.height());
@@ -222,7 +299,7 @@ void BuildingMap::BuildingToMap()
     foreach (CompositeLayerGroup *layerGroup, mBlendMapComposite->layerGroups()) {
         BuildingFloor *floor = mBuilding->floor(layerGroup->level());
         floor->LayoutToSquares();
-        BuildingSquaresToTileLayers(floor, layerGroup);
+        BuildingSquaresToTileLayers(floor, floor->bounds(), layerGroup);
     }
 
     // Set the user-drawn tiles.
@@ -236,18 +313,35 @@ void BuildingMap::BuildingToMap()
 }
 
 void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
+                                              const QRect &area,
                                               CompositeLayerGroup *layerGroup)
 {
     int maxLevel = floor->building()->floorCount() - 1;
     int offset = (mMap->orientation() == Map::LevelIsometric)
             ? 0 : (maxLevel - floor->level()) * 3;
 
+#if 1
+    QRect cursorBounds;
+    if (mCursorObjectFloor && mCursorObjectFloor->level() == floor->level()) {
+        cursorBounds = mCursorObjectBounds.adjusted(-1,-1,1,1) & floor->bounds(1, 1);
+    }
+#endif
+
     int section = 0;
     foreach (TileLayer *tl, layerGroup->layers()) {
-        tl->erase();
-        for (int x = 0; x <= floor->width(); x++) {
-            for (int y = 0; y <= floor->height(); y++) {
+        if (area == floor->bounds())
+            tl->erase();
+        else
+            tl->erase(area.adjusted(0,0,1,1));
+        for (int x = area.x(); x <= area.right() + 1; x++) {
+            for (int y = area.y(); y <= area.bottom() + 1; y++) {
+#if 1
+                const BuildingFloor::Square &square = (cursorBounds.contains(x, y))
+                        ? mCursorObjectFloor->squares[x - mCursorObjectPos.x()][y - mCursorObjectPos.y()]
+                        : floor->squares[x][y];
+#else
                 const BuildingFloor::Square &square = floor->squares[x][y];
+#endif
                 if (BuildingTile *btile = square.mTiles[section]) {
                     if (!btile->isNone()) {
                         if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(btile))
@@ -538,7 +632,8 @@ void BuildingMap::handlePending()
     if (!pendingSquaresToTileLayers.isEmpty()) {
         foreach (BuildingFloor *floor, pendingSquaresToTileLayers.keys()) {
             CompositeLayerGroup *layerGroup = mBlendMapComposite->layerGroupForLevel(floor->level());
-            BuildingSquaresToTileLayers(floor, layerGroup); // TODO: only affected region
+            QRect area = pendingSquaresToTileLayers[floor].boundingRect(); // TODO: only affected region
+            BuildingSquaresToTileLayers(floor, area, layerGroup);
             if (layerGroup->needsSynch())
                 mMapComposite->layerGroupForLevel(floor->level())->setNeedsSynch(true);
             updatedLevels.insert(floor->level());

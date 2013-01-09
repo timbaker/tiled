@@ -830,6 +830,9 @@ void BaseObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void BaseObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    QPoint oldTilePos = mTilePos;
+    TileEdge oldEdge = mTileEdge;
+
     mTilePos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
 
     QPointF p = mEditor->sceneToTileF(event->scenePos(), mEditor->currentLevel());
@@ -849,6 +852,9 @@ void BaseObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         mTileEdge = xEdge;
     else
         mTileEdge = yEdge;
+
+    if (mTilePos == oldTilePos && mTileEdge == oldEdge)
+        return;
 
     updateCursorObject();
 }
@@ -873,14 +879,21 @@ void BaseObjectTool::deactivate()
 
 void BaseObjectTool::setCursorObject(BuildingObject *object)
 {
-    mCursorObject = object;
-    if (!mCursorItem) {
-        mCursorItem = new GraphicsObjectItem(mEditor, mCursorObject);
-        mCursorItem->synchWithObject();
-        mCursorItem->setZValue(mEditor->ZVALUE_CURSOR);
-        mEditor->addItem(mCursorItem);
+    if (object) {
+        mCursorObject = object;
+        if (!mCursorItem) {
+            mCursorItem = new GraphicsObjectItem(mEditor, mCursorObject);
+            mCursorItem->synchWithObject();
+            mCursorItem->setZValue(mEditor->ZVALUE_CURSOR);
+            mEditor->addItem(mCursorItem);
+        }
+        mCursorItem->setObject(mCursorObject);
+    } else {
+        // Note: not setting mCursorObject=0 here!
+        if (mCursorItem)
+            mCursorItem->setVisible(false);
     }
-    mCursorItem->setObject(mCursorObject);
+    mEditor->setCursorObject(object);
 }
 
 /////
@@ -914,8 +927,7 @@ void DoorTool::placeObject()
 void DoorTool::updateCursorObject()
 {
     if (mTileEdge == Center || !mEditor->currentFloorContains(mTilePos)) {
-        if (mCursorItem)
-            mCursorItem->setVisible(false);
+        setCursorObject(0);
         return;
     }
 
@@ -941,6 +953,8 @@ void DoorTool::updateCursorObject()
     // mCursorDoor->setFloor()
     mCursorObject->setPos(x, y);
     mCursorObject->setDir(dir);
+    mCursorObject->setTile(mEditor->building()->doorTile());
+    mCursorObject->setTile(mEditor->building()->doorFrameTile(), 1);
 
     setCursorObject(mCursorObject);
 }
@@ -976,8 +990,7 @@ void WindowTool::placeObject()
 void WindowTool::updateCursorObject()
 {
     if (mTileEdge == Center || !mEditor->currentFloorContains(mTilePos)) {
-        if (mCursorItem)
-            mCursorItem->setVisible(false);
+        setCursorObject(0);
         return;
     }
 
@@ -1003,6 +1016,8 @@ void WindowTool::updateCursorObject()
     // mCursorDoor->setFloor()
     mCursorObject->setPos(x, y);
     mCursorObject->setDir(dir);
+    mCursorObject->setTile(mEditor->building()->windowTile());
+    mCursorObject->setTile(mEditor->building()->curtainsTile(), 1);
 
     setCursorObject(mCursorObject);
 }
@@ -1037,8 +1052,7 @@ void StairsTool::placeObject()
 void StairsTool::updateCursorObject()
 {
     if (mTileEdge == Center || !mEditor->currentFloorContains(mTilePos)) {
-        if (mCursorItem)
-            mCursorItem->setVisible(false);
+        setCursorObject(0);
         return;
     }
 
@@ -1064,6 +1078,7 @@ void StairsTool::updateCursorObject()
     // mCursorDoor->setFloor()
     mCursorObject->setPos(x, y);
     mCursorObject->setDir(dir);
+    mCursorObject->setTile(mEditor->building()->stairsTile());
 
     setCursorObject(mCursorObject);
 }
@@ -1106,8 +1121,7 @@ void FurnitureTool::placeObject()
 void FurnitureTool::updateCursorObject()
 {
     if (!mEditor->currentFloorContains(mTilePos)) {
-        if (mCursorItem)
-            mCursorItem->setVisible(false);
+        setCursorObject(0);
         return;
     }
 
@@ -1173,10 +1187,26 @@ void FurnitureTool::updateCursorObject()
     }
     mCursorObject->asFurniture()->setFurnitureTile(ftiles->tile(orient));
 
-    // mCursorDoor->setFloor()
     mCursorObject->setPos(x, y);
 
     setCursorObject(mCursorObject);
+#if 0
+    QRegion rgn;
+    if (FloorTileGrid *tiles = ftiles->tile(orient)->resolved()->toFloorTileGrid(rgn)) {
+        QString layerName;
+        switch (ftiles->layer()) {
+        case FurnitureTiles::LayerWalls: layerName = QLatin1String("Walls"); break;
+        case FurnitureTiles::LayerRoofCap: layerName = QLatin1String("RoofCap"); break;
+        case FurnitureTiles::LayerWallOverlay: layerName = QLatin1String("WallOverlay"); break;
+        case FurnitureTiles::LayerWallFurniture: layerName = QLatin1String("WallFurniture"); break;
+        case FurnitureTiles::LayerFrames: layerName = QLatin1String("Frames"); break;
+        case FurnitureTiles::LayerDoors: layerName = QLatin1String("Doors"); break;
+        case FurnitureTiles::LayerFurniture: layerName = QLatin1String("Furniture"); break;
+        case FurnitureTiles::LayerRoof: layerName = QLatin1String("Roof"); break;
+        }
+        mEditor->setToolTiles(tiles, mCursorObject->pos(), layerName);
+    }
+#endif
 }
 
 void FurnitureTool::setCurrentTile(FurnitureTile *tile)
@@ -1298,6 +1328,8 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             mOriginalHeight = mHandleObject->height();
             mMode = Resize;
             updateStatusText();
+
+            mEditor->setCursorObject(mHandleObject);
             return;
         }
         if (!mEditor->currentFloorContains(mCurrentPos))
@@ -1314,6 +1346,11 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mEditor->addItem(mItem);
         mMode = Create;
         updateStatusText();
+
+        mObject->setCapTiles(mEditor->building()->roofCapTile());
+        mObject->setSlopeTiles(mEditor->building()->roofSlopeTile());
+        mObject->setTopTiles(mEditor->building()->roofTopTile());
+        mEditor->setCursorObject(mObject);
     }
 
     if (event->button() == Qt::RightButton) {
@@ -1322,6 +1359,7 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             mObjectItem->synchWithObject();
             mMode = NoMode;
             updateStatusText();
+            mEditor->setCursorObject(0);
             return;
         }
         if (mMode == Create) {
@@ -1331,6 +1369,7 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             mItem = 0;
             mMode = NoMode;
             updateStatusText();
+            mEditor->setCursorObject(0);
             return;
         }
         if (mMode != NoMode)
@@ -1386,6 +1425,10 @@ void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         resizeRoof(mHandleObject->width() + diff.x(),
                    mHandleObject->height() + diff.y());
         updateStatusText();
+
+        mEditor->setCursorObject(mHandleObject, mHandleObject->bounds()
+                                 | QRect(mHandleObject->pos(),
+                                         QSize(mOriginalWidth, mOriginalHeight)));
         return;
     }
 
@@ -1408,6 +1451,8 @@ void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         mItem->update();
 
         updateStatusText();
+
+        mEditor->setCursorObject(mObject);
     }
 }
 
@@ -1422,6 +1467,7 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         mHandleObject->resize(mOriginalWidth, mOriginalHeight);
         undoStack()->push(new ResizeRoof(mEditor->document(), mHandleObject,
                                          width, height));
+        mEditor->setCursorObject(0);
     }
 
     if (mMode == Create) {
@@ -1439,6 +1485,8 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         mObject = 0;
         delete mItem;
         mItem = 0;
+
+        mEditor->setCursorObject(0);
     }
 
     updateHandle(event->scenePos());
@@ -1974,7 +2022,7 @@ void SelectMoveObjectTool::updateStatusText()
     } else if (mMouseOverSelection) {
         setStatusText(tr("Left-click-drag to move selected objects.  CTRL to duplicate objects."));
     } else if (mMouseOverObject) {
-        setStatusText(tr("Left-click to select.  Left-click-drag to select and move.  CTRL-left-click toggles selected state.  SHIFT-left-click adds to selection."));
+        setStatusText(tr("Left-click to select.  Left-click-drag to select and move.  CTRL=toggle.  SHIFT=add."));
     } else
         setStatusText(tr("Left-click-drag to select."));
 }
@@ -2017,9 +2065,12 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             mOriginalLength = mHandleObject->length();
             mMode = Resize;
             updateStatusText();
+
+            mOriginalBounds = mHandleObject->bounds();
+            mEditor->setCursorObject(mHandleObject);
             return;
         }
-        if (!floor()->bounds().adjusted(0,0,1,1).contains(mCurrentTilePos))
+        if (!floor()->bounds(1,1).contains(mCurrentTilePos))
             return;
         mObject = new WallObject(floor(),
                                  mStartTilePos.x(), mStartTilePos.y(),
@@ -2030,6 +2081,10 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mEditor->addItem(mItem);
         mMode = Create;
         updateStatusText();
+
+        mObject->setTile(mCurrentExteriorTile, 0);
+        mObject->setTile(mCurrentInteriorTile, 1);
+        mEditor->setCursorObject(mObject);
     }
 
     if (event->button() == Qt::RightButton) {
@@ -2040,6 +2095,7 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             mItem = 0;
             mMode = NoMode;
             updateStatusText();
+            mEditor->setCursorObject(0);
             return;
         }
         if (mMode == Resize) {
@@ -2047,6 +2103,7 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             mObjectItem->synchWithObject();
             mMode = NoMode;
             updateStatusText();
+            mEditor->setCursorObject(0);
             return;
         }
         if (mMode != NoMode)
@@ -2109,6 +2166,7 @@ void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
                 diff.setX(floor()->width() - mStartTilePos.x());
             resizeWall(mHandleObject->length() + diff.x());
         }
+        mEditor->setCursorObject(mHandleObject, mOriginalBounds | mHandleObject->bounds());
         return;
     }
 
@@ -2136,6 +2194,8 @@ void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
         mItem->synchWithObject();
         mItem->update();
+
+        mEditor->setCursorObject(mObject);
     }
 }
 
@@ -2153,6 +2213,7 @@ void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         undoStack()->push(new ResizeWall(mEditor->document(), mHandleObject,
                                          length));
         updateStatusText();
+        mEditor->setCursorObject(0);
         return;
     }
 
@@ -2170,6 +2231,7 @@ void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         delete mItem;
         mItem = 0;
         updateStatusText();
+        mEditor->setCursorObject(0);
     }
 }
 

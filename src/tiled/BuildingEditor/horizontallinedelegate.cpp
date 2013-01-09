@@ -27,6 +27,7 @@ HorizontalLineDelegate *HorizontalLineDelegate::mInstance = 0;
 void HorizontalLineDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
                                    const QModelIndex &index) const
 {
+    Q_UNUSED(index)
     QRect r = option.rect;
     r.setTop(r.top() + (r.height() - 1) / 2);
     r.setBottom(r.top() + 1);
@@ -36,6 +37,8 @@ void HorizontalLineDelegate::paint(QPainter *painter, const QStyleOptionViewItem
 QSize HorizontalLineDelegate::sizeHint(const QStyleOptionViewItem &option,
                                        const QModelIndex &index) const
 {
+    Q_UNUSED(option)
+    Q_UNUSED(index)
     return QSize(16, 5);
 }
 

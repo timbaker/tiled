@@ -497,6 +497,11 @@ void BuildingTileModeScene::drawTileSelection(QPainter *painter, const QRegion &
     mapRenderer()->drawTileSelection(painter, region, color, exposed, level);
 }
 
+void BuildingTileModeScene::setCursorObject(BuildingObject *object, const QRect &bounds)
+{
+    mBuildingMap->setCursorObject(currentFloor(), object, bounds);
+}
+
 void BuildingTileModeScene::BuildingToMap()
 {
     if (mBuildingMap) {
@@ -682,13 +687,21 @@ void BuildingTileModeScene::roomChanged(Room *room)
 void BuildingTileModeScene::floorAdded(BuildingFloor *floor)
 {
     BaseFloorEditor::floorAdded(floor);
+#if 1
+    mBuildingMap->floorAdded(floor);
+#else
     BuildingToMap();
+#endif
 }
 
 void BuildingTileModeScene::floorRemoved(BuildingFloor *floor)
 {
     BaseFloorEditor::floorRemoved(floor);
+#if 1
+    mBuildingMap->floorRemoved(floor);
+#else
     BuildingToMap();
+#endif
 }
 
 void BuildingTileModeScene::objectAdded(BuildingObject *object)
@@ -794,12 +807,23 @@ void BuildingTileModeScene::aboutToRecreateLayers()
 {
     qDeleteAll(mLayerGroupItems);
     mLayerGroupItems.clear();
+
+    mLayerGroupWithToolTiles = 0;
+    mNonEmptyLayerGroupItem = 0;
+    mNonEmptyLayer.clear();
 }
 
 void BuildingTileModeScene::layersRecreated()
 {
+    // Building object positions will change when the number of floors changes.
+    BaseFloorEditor::mapResized();
+
     qDeleteAll(mLayerGroupItems);
     mLayerGroupItems.clear();
+
+    mLayerGroupWithToolTiles = 0;
+    mNonEmptyLayerGroupItem = 0;
+    mNonEmptyLayer.clear();
 
     foreach (CompositeLayerGroup *layerGroup, mBuildingMap->mapComposite()->layerGroups()) {
         CompositeLayerGroupItem *item = new CompositeLayerGroupItem(layerGroup, mBuildingMap->mapRenderer());
@@ -872,6 +896,8 @@ bool BuildingTileModeView::event(QEvent *e)
 
 bool BuildingTileModeView::eventFilter(QObject *object, QEvent *event)
 {
+    Q_UNUSED(object)
+    Q_UNUSED(event)
 #if 0
     Q_UNUSED(object)
     switch (event->type()) {

@@ -165,6 +165,7 @@ void BuildingFloorsDialog::floorAdded(BuildingFloor *floor)
 
 void BuildingFloorsDialog::floorRemoved(BuildingFloor *floor)
 {
+    Q_UNUSED(floor)
     int row = ui->floors->currentRow();
     setFloorsList();
     ui->floors->setCurrentRow(qBound(0, row, ui->floors->count() - 1));

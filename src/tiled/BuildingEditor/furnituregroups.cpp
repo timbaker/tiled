@@ -19,6 +19,7 @@
 
 #include "buildingpreferences.h"
 #include "buildingtiles.h"
+#include "buildingfloor.h"
 #include "simplefile.h"
 
 #include <QCoreApplication>
@@ -616,6 +617,26 @@ bool FurnitureTile::isCornerOrient(FurnitureTile::FurnitureOrientation orient)
 {
     return orient == FurnitureSW || orient == FurnitureSE ||
             orient == FurnitureNW || orient == FurnitureNE;
+}
+
+FloorTileGrid *FurnitureTile::toFloorTileGrid(QRegion &rgn)
+{
+    rgn = QRegion();
+    if (size().isNull())
+        return 0;
+
+    FloorTileGrid *tiles = new FloorTileGrid(width(), height());
+    for (int x = 0; x < width(); x++) {
+        for (int y = 0; y < height(); y++) {
+            if (BuildingTile *btile = tile(x, y)) {
+                if (!btile->isNone()) {
+                    tiles->replace(x, y, btile->name());
+                    rgn += QRect(x, y, 1, 1);
+                }
+            }
+        }
+    }
+    return tiles;
 }
 
 void FurnitureTile::resize(int width, int height)

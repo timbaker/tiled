@@ -371,6 +371,57 @@ static void ReplaceFurniture(int x, int y,
         squares[x][y].ReplaceFurniture(btile, section, section2);
 }
 
+static void ReplaceDoor(Door *door, QVector<QVector<BuildingFloor::Square> > &squares)
+{
+    int x = door->x(), y = door->y();
+    QRect bounds(0, 0, squares.size(), squares[0].size());
+    if (bounds.contains(x, y)) {
+        squares[x][y].ReplaceDoor(door->tile(),
+                                  door->isW() ? BTC_Doors::West
+                                              : BTC_Doors::North);
+        squares[x][y].ReplaceFrame(door->frameTile(),
+                                   door->isW() ? BTC_DoorFrames::West
+                                               : BTC_DoorFrames::North);
+    }
+}
+
+static void ReplaceWindow(Window *window, QVector<QVector<BuildingFloor::Square> > &squares)
+{
+    int x = window->x(), y = window->y();
+    QRect bounds(0, 0, squares.size(), squares[0].size());
+    if (bounds.contains(x, y)) {
+        squares[x][y].ReplaceFrame(window->tile(),
+                                   window->isW() ? BTC_Windows::West
+                                                 : BTC_Windows::North);
+
+        // Window curtains on exterior walls must be *inside* the
+        // room.
+        if (squares[x][y].mExterior) {
+            int dx = window->isW() ? 1 : 0;
+            int dy = window->isN() ? 1 : 0;
+            if ((x - dx >= 0) && (y - dy >= 0))
+                squares[x - dx][y - dy].ReplaceCurtains(window, true);
+        } else
+            squares[x][y].ReplaceCurtains(window, false);
+    }
+}
+
+static void ReplaceWallW(int x, int y, BuildingTileEntry *entry, bool exterior,
+                         QVector<QVector<BuildingFloor::Square> > &squares)
+{
+    QRect bounds(0, 0, squares.size() - 1, squares[0].size() - 1);
+    if (bounds.contains(x, y))
+        squares[x][y].SetWallW(entry, exterior);
+}
+
+static void ReplaceWallN(int x, int y, BuildingTileEntry *entry, bool exterior,
+                         QVector<QVector<BuildingFloor::Square> > &squares)
+{
+    QRect bounds(0, 0, squares.size() - 1, squares[0].size() - 1);
+    if (bounds.contains(x, y))
+        squares[x][y].SetWallN(entry, exterior);
+}
+
 void BuildingFloor::LayoutToSquares()
 {
     int w = width() + 1;
@@ -428,6 +479,21 @@ void BuildingFloor::LayoutToSquares()
     // Handle WallObjects.
     foreach (BuildingObject *object, mObjects) {
         if (WallObject *wall = object->asWall()) {
+#if 1
+            int x = wall->x(), y = wall->y();
+            QRect r = wall->bounds() & bounds();
+            if (wall->isN()) {
+                for (y = r.top(); y <= r.bottom(); y++) {
+                    bool exterior = (x < width()) ? mIndexAtPos[x][y] < 0 : true;
+                    squares[x][y].SetWallW(wall->tile(exterior ? 0 : 1), exterior);
+                }
+            } else {
+                for (x = r.left(); x <= r.right(); x++) {
+                    bool exterior = (y < height()) ? mIndexAtPos[x][y] < 0 : true;
+                    squares[x][y].SetWallN(wall->tile(exterior ? 0 : 1), exterior);
+                }
+            }
+#else
             int x = wall->x(), y = wall->y();
             if (wall->isN()) {
                 for (; y < wall->y() + wall->length(); y++) {
@@ -440,6 +506,7 @@ void BuildingFloor::LayoutToSquares()
                     squares[x][y].SetWallN(wall->tile(exterior ? 0 : 1), exterior);
                 }
             }
+#endif
         }
     }
 
@@ -508,14 +575,21 @@ void BuildingFloor::LayoutToSquares()
         int x = object->x();
         int y = object->y();
         if (Door *door = object->asDoor()) {
+#if 1
+            ReplaceDoor(door, squares);
+#else
             squares[x][y].ReplaceDoor(door->tile(),
                                       door->isW() ? BTC_Doors::West
                                                   : BTC_Doors::North);
             squares[x][y].ReplaceFrame(door->frameTile(),
                                        door->isW() ? BTC_DoorFrames::West
                                                    : BTC_DoorFrames::North);
+#endif
         }
         if (Window *window = object->asWindow()) {
+#if 1
+            ReplaceWindow(window, squares);
+#else
             squares[x][y].ReplaceFrame(window->tile(),
                                        window->isW() ? BTC_Windows::West
                                                      : BTC_Windows::North);
@@ -529,6 +603,7 @@ void BuildingFloor::LayoutToSquares()
                     squares[x - dx][y - dy].ReplaceCurtains(window, true);
             } else
                 squares[x][y].ReplaceCurtains(window, false);
+#endif
         }
         if (Stairs *stairs = object->asStairs()) {
             // Stair objects are 5 tiles long but only have 3 tiles.

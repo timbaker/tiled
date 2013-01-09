@@ -96,6 +96,14 @@ void BuildingFurnitureDock::currentFurnitureChanged()
             ftile = ftile->resolved();
             mCurrentTile = ftile;
 
+            if (!DrawTileTool::instance()->action()->isEnabled())
+                return;
+#if 1
+            QRegion rgn;
+            FloorTileGrid *tiles = ftile->toFloorTileGrid(rgn);
+            if (!tiles) // empty
+                return;
+#else
             if (ftile->size().isNull())
                 return;
 
@@ -111,8 +119,8 @@ void BuildingFurnitureDock::currentFurnitureChanged()
                     }
                 }
             }
-            if (DrawTileTool::instance()->action()->isEnabled())
-                DrawTileTool::instance()->setCaptureTiles(tiles, rgn);
+#endif
+            DrawTileTool::instance()->setCaptureTiles(tiles, rgn);
         }
     }
 }

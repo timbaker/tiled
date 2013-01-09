@@ -146,6 +146,8 @@ public:
                            const QColor &color, const QRectF &exposed,
                            int level = 0) const;
 
+    void setCursorObject(BuildingObject *object, const QRect &bounds = QRect());
+
 private:
     void BuildingToMap();
     CompositeLayerGroupItem *itemForFloor(BuildingFloor *floor);

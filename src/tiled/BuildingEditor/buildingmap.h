@@ -62,6 +62,9 @@ public:
 
     static QStringList layerNames(int level);
 
+    void setCursorObject(BuildingFloor *floor, BuildingObject *object,
+                         const QRect &bounds = QRect());
+
 public:
     void buildingRotated();
     void buildingResized();
@@ -97,7 +100,8 @@ private slots:
 
 private:
     void BuildingToMap();
-    void BuildingSquaresToTileLayers(BuildingFloor *floor, CompositeLayerGroup *layerGroup);
+    void BuildingSquaresToTileLayers(BuildingFloor *floor, const QRect &area,
+                                     CompositeLayerGroup *layerGroup);
 
     void userTilesToLayer(BuildingFloor *floor, const QString &layerName,
                           const QRect &bounds);
@@ -117,6 +121,11 @@ private:
     MapComposite *mMapComposite;
     Tiled::Map *mMap;
     Tiled::MapRenderer *mMapRenderer;
+
+    QPoint mCursorObjectPos;
+    QRect mCursorObjectBounds;
+    BuildingFloor *mCursorObjectFloor;
+    Building *mCursorObjectBuilding;
 };
 
 } // namespace BuildingEditor

@@ -27,6 +27,7 @@
 namespace BuildingEditor {
 
 class BuildingTile;
+class FloorTileGrid;
 class FurnitureGroup;
 class FurnitureTiles;
 
@@ -92,6 +93,8 @@ public:
     FurnitureTile *resolved();
 
     static bool isCornerOrient(FurnitureOrientation orient);
+
+    FloorTileGrid *toFloorTileGrid(QRegion &rgn);
 
 private:
     void resize(int width, int height);

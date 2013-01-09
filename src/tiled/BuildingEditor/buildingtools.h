@@ -550,6 +550,7 @@ private:
     GraphicsWallHandleItem *mHandleItem;
     bool mMouseOverHandle;
     int mOriginalLength;
+    QRect mOriginalBounds;
 
     BuildingTileEntry *mCurrentExteriorTile;
     BuildingTileEntry *mCurrentInteriorTile;

@@ -390,28 +390,34 @@ void BaseFloorEditor::setMouseOverObject(BuildingObject *object)
     }
 }
 
-void BaseFloorEditor::setToolTiles(const FloorTileGrid *tiles, const QPoint &pos,
+void FloorEditor::setToolTiles(const FloorTileGrid *tiles, const QPoint &pos,
                                    const QString &layerName)
 {
-    Q_ASSERT(false);
+    Q_UNUSED(tiles)
+    Q_UNUSED(pos)
+    Q_UNUSED(layerName)
 }
 
-void BaseFloorEditor::clearToolTiles()
+void FloorEditor::clearToolTiles()
 {
-    Q_ASSERT(false);
 }
 
-QString BaseFloorEditor::buildingTileAt(int x, int y)
+QString FloorEditor::buildingTileAt(int x, int y)
 {
-    Q_ASSERT(false);
+    Q_UNUSED(x)
+    Q_UNUSED(y)
     return QString();
 }
 
-void BaseFloorEditor::drawTileSelection(QPainter *painter, const QRegion &region,
-                                        const QColor &color, const QRectF &exposed,
-                                        int level) const
+void FloorEditor::drawTileSelection(QPainter *painter, const QRegion &region,
+                                    const QColor &color, const QRectF &exposed,
+                                    int level) const
 {
-    Q_ASSERT(false);
+    Q_UNUSED(painter)
+    Q_UNUSED(region)
+    Q_UNUSED(color)
+    Q_UNUSED(exposed)
+    Q_UNUSED(level)
 }
 
 /////
@@ -533,6 +539,7 @@ void GraphicsFloorItem::mapResized()
     // When a building is resized, GraphicsObjectItems are updated *before* the
     // BuildingMap::mMap has been resized to match the building size.  When the
     // map is finally resized, we must update the GraphicsObjectItems again.
+    // This also needs doing when the max level changes.
     foreach (GraphicsObjectItem *item, mObjectItems)
         item->synchWithObject();
 }
@@ -651,8 +658,17 @@ GraphicsObjectItem::GraphicsObjectItem(BaseFloorEditor *editor, BuildingObject *
     mValidPos(true),
     mMouseOver(false)
 {
-    if (dynamic_cast<OrthoBuildingRenderer*>(mEditor->renderer()) == 0)
-        setOpacity(0.25);
+    // Cursor objects and Ortho-view objects should be fully visible
+    if (dynamic_cast<OrthoBuildingRenderer*>(mEditor->renderer()) == 0) {
+        if (mObject->floor()) {
+            setOpacity(0.25);
+        } else {
+            if (mObject->asFurniture())
+                setOpacity(0.25);
+            else
+                setOpacity(0.55);
+        }
+    }
 }
 
 QPainterPath GraphicsObjectItem::shape() const
@@ -1001,7 +1017,7 @@ void GraphicsObjectItem::setMouseOver(bool mouseOver)
     if (mouseOver != mMouseOver) {
         mMouseOver = mouseOver;
         if (dynamic_cast<OrthoBuildingRenderer*>(mEditor->renderer()) == 0)
-            setOpacity(mMouseOver ? 0.75 : 0.25);
+            setOpacity(mMouseOver ? 0.55 : 0.25);
         update();
     }
 }
@@ -1480,7 +1496,8 @@ void FloorEditor::currentToolChanged(BaseTool *tool)
 
 QPoint OrthoBuildingRenderer::sceneToTile(const QPointF &scenePos, int level)
 {
-    // FIXME: x/y < 0 rounds up to zero
+    Q_UNUSED(level)
+    // x/y < 0 rounds up to zero
     qreal x = scenePos.x() / 30, y = scenePos.y() / 30;
     if (x < 0)
         x = -qCeil(qAbs(x));
@@ -1491,6 +1508,7 @@ QPoint OrthoBuildingRenderer::sceneToTile(const QPointF &scenePos, int level)
 
 QPointF OrthoBuildingRenderer::sceneToTileF(const QPointF &scenePos, int level)
 {
+    Q_UNUSED(level)
     return scenePos / 30;
 }
 
@@ -1510,11 +1528,13 @@ QRectF OrthoBuildingRenderer::sceneToTileRectF(const QRectF &sceneRect, int leve
 
 QPointF OrthoBuildingRenderer::tileToScene(const QPoint &tilePos, int level)
 {
+    Q_UNUSED(level)
     return tilePos * 30;
 }
 
 QPointF OrthoBuildingRenderer::tileToSceneF(const QPointF &tilePos, int level)
 {
+    Q_UNUSED(level)
     return tilePos * 30;
 }
 
