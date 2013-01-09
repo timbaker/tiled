@@ -287,11 +287,13 @@ void CompositeLayerGroup::synch()
                     continue;
                 for (int j = 0; j < layerGroup->mLayers.size(); j++) {
                     TileLayer *blendLayer = layerGroup->mLayers[j];
-                    if ((blendLayer->name() == mLayers[i]->name()) && !blendLayer->isEmpty()) {
+                    if (blendLayer->name() == mLayers[i]->name()) {
                         mBlendLayers[i] = blendLayer;
-                        unionTileRects(r, blendLayer->bounds().translated(mOwner->orientAdjustTiles() * mLevel), r);
-                        maxMargins(m, blendLayer->drawMargins(), m);
-                        mAnyVisibleLayers = true;
+                        if (!blendLayer->isEmpty()) {
+                            unionTileRects(r, blendLayer->bounds().translated(mOwner->orientAdjustTiles() * mLevel), r);
+                            maxMargins(m, blendLayer->drawMargins(), m);
+                            mAnyVisibleLayers = true;
+                        }
                         break;
                     }
                 }
@@ -502,6 +504,13 @@ bool CompositeLayerGroup::regionAltered(Tiled::TileLayer *tl)
         setNeedsSynch(true);
         return true;
     }
+#ifdef BUILDINGED
+    int index = mLayers.indexOf(tl);
+    if (mTileBounds.isEmpty() && mBlendLayers[index] && !mBlendLayers[index]->isEmpty()) {
+        setNeedsSynch(true);
+        return true;
+    }
+#endif
 #if SPARSE_TILELAYER
     if (mTileBounds.isEmpty() && !tl->isEmpty()) {
         int index = mLayers.indexOf(tl);

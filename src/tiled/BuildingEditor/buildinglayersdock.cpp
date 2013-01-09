@@ -38,6 +38,8 @@ BuildingLayersDock::BuildingLayersDock(QWidget *parent) :
             SLOT(currentLayerChanged(int)));
     connect(ui->layers, SIGNAL(itemChanged(QListWidgetItem*)),
             SLOT(layerItemChanged(QListWidgetItem*)));
+
+    updateActions();
 }
 
 BuildingLayersDock::~BuildingLayersDock()
@@ -85,6 +87,8 @@ void BuildingLayersDock::setLayersList()
             ui->layers->insertItem(0, item);
         }
     }
+
+    updateActions();
 }
 
 void BuildingLayersDock::currentLayerChanged(int row)

@@ -208,6 +208,8 @@ private slots:
     void zoomOut();
     void resetZoom();
 
+    void showObjectsChanged(bool show);
+
     void mouseCoordinateChanged(const QPoint &tilePos);
 
     void currentToolChanged(BaseTool *tool);

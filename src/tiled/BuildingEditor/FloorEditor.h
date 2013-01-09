@@ -49,6 +49,8 @@ class GraphicsRoofBaseItem;
 class GraphicsRoofCornerItem;
 class GraphicsRoofItem;
 class GraphicsWallItem;
+class IsoBuildingRenderer;
+class OrthoBuildingRenderer;
 
 /////
 
@@ -325,6 +327,9 @@ public:
     virtual void drawObject(QPainter *painter, BuildingObject *mObject,
                             const QPoint &mDragOffset, bool mValidPos,
                             bool mSelected, bool mMouseOver, int level);
+
+    virtual OrthoBuildingRenderer *asOrtho() { return 0; }
+    virtual IsoBuildingRenderer *asIso() { return 0; }
 };
 
 class OrthoBuildingRenderer : public BuildingRenderer
@@ -342,6 +347,8 @@ public:
     QPolygonF tileToScenePolygon(const QPolygonF &tilePolygon, int level);
 
     void drawLine(QPainter *painter, qreal x1, qreal y1, qreal x2, qreal y2, int level);
+
+    OrthoBuildingRenderer *asOrtho() { return this; }
 };
 
 class BaseFloorEditor : public QGraphicsScene
@@ -351,18 +358,14 @@ public:
     int ZVALUE_CURSOR;
     int ZVALUE_GRID;
 
-    BaseFloorEditor(QObject *parent = 0) :
-        QGraphicsScene(parent),
-        mDocument(0),
-        mMouseOverObject(0)
-    {}
+    BaseFloorEditor(QObject *parent = 0);
 
     BuildingDocument *document() const
     { return mDocument; }
 
     Building *building() const;
 
-    int currentLevel();
+    int currentLevel() const;
     BuildingFloor *currentFloor();
     QString currentLayerName() const;
 
@@ -400,8 +403,15 @@ public:
     QSet<BuildingObject*> objectsInRect(const QRectF &tileRect);
 
     void setMouseOverObject(BuildingObject *object);
+
     virtual void setCursorObject(BuildingObject *object, const QRect &bounds = QRect())
     { Q_UNUSED(object) Q_UNUSED(bounds) }
+
+    void setShowObjectShapes(bool show, bool editingTiles);
+    bool showObjectShapes() const { return mShowObjectShapes; }
+
+    virtual bool shouldShowFloorItem(BuildingFloor *floor) const;
+    virtual bool shouldShowObjectItem(BuildingObject *object) const;
 
     /////
     // Tile-editing-only methods
@@ -441,6 +451,7 @@ protected:
     QList<GraphicsFloorItem*> mFloorItems;
     QSet<GraphicsObjectItem*> mSelectedObjectItems;
     BuildingObject *mMouseOverObject;
+    bool mShowObjectShapes;
 };
 
 class FloorEditor : public BaseFloorEditor

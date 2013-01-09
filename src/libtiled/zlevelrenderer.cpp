@@ -146,7 +146,9 @@ void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect,
                               QColor gridColor, int level,
                               const QRect &tileBounds) const
 {
-    Q_UNUSED(tileBounds)
+    QRect b = tileBounds;
+    if (b.isEmpty())
+        b = QRect(QPoint(0, 0), map()->size());
 
     const int tileWidth = map()->tileWidth();
     const int tileHeight = map()->tileHeight();
@@ -155,11 +157,11 @@ void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect,
     r.adjust(-tileWidth / 2, -tileHeight / 2,
              tileWidth / 2, tileHeight / 2);
 
-    const int startX = qMax(qreal(0), pixelToTileCoords(r.topLeft(), level).x());
-    const int startY = qMax(qreal(0), pixelToTileCoords(r.topRight(), level).y());
-    const int endX = qMin(qreal(map()->width()),
+    const int startX = qMax(qreal(b.left()), pixelToTileCoords(r.topLeft(), level).x());
+    const int startY = qMax(qreal(b.top()), pixelToTileCoords(r.topRight(), level).y());
+    const int endX = qMin(qreal(b.right() + 1),
                           pixelToTileCoords(r.bottomRight(), level).x());
-    const int endY = qMin(qreal(map()->height()),
+    const int endY = qMin(qreal(b.bottom() + 1),
                           pixelToTileCoords(r.bottomLeft(), level).y());
 
     gridColor.setAlpha(128);

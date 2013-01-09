@@ -4,7 +4,7 @@ source_revision = 0
 meta-enums
 {
     DoorW = 1
-    DoorN = 2
+    DoorN = 3
 }
 tileset
 {

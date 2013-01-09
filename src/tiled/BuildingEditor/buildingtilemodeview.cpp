@@ -44,6 +44,7 @@
 #include <qmath.h>
 #include <QApplication>
 #include <QDebug>
+#include <QGLWidget>
 #include <QKeyEvent>
 #include <QScrollBar>
 #include <QStyleOptionGraphicsItem>
@@ -57,7 +58,8 @@ using namespace Tiled::Internal;
 TileModeGridItem::TileModeGridItem(BuildingDocument *doc, MapRenderer *renderer) :
     QGraphicsItem(),
     mDocument(doc),
-    mRenderer(renderer)
+    mRenderer(renderer),
+    mEditingTiles(false)
 {
     setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
     synchWithBuilding();
@@ -65,9 +67,9 @@ TileModeGridItem::TileModeGridItem(BuildingDocument *doc, MapRenderer *renderer)
 
 void TileModeGridItem::synchWithBuilding()
 {
-    mTileBounds = QRect(0, 0,
-                        mDocument->building()->width() + 1,
-                        mDocument->building()->height() + 1);
+    mTileBounds = mDocument->building()->bounds();
+    if (mEditingTiles)
+        mTileBounds.adjust(0, 0, 1, 1);
 
     QRectF bounds = mRenderer->boundingRect(mTileBounds, mDocument->currentLevel());
     if (bounds != mBoundingRect) {
@@ -85,6 +87,14 @@ void TileModeGridItem::paint(QPainter *p, const QStyleOptionGraphicsItem *option
 {
     mRenderer->drawGrid(p, option->exposedRect, Qt::black,
                         mDocument->currentLevel(), mTileBounds);
+}
+
+void TileModeGridItem::setEditingTiles(bool editing)
+{
+    if (mEditingTiles != editing) {
+        mEditingTiles = editing;
+        synchWithBuilding();
+    }
 }
 
 /////
@@ -158,7 +168,9 @@ BuildingTileModeScene::BuildingTileModeScene(QObject *parent) :
     mDarkRectangle(new QGraphicsRectItem),
     mCurrentTool(0),
     mLayerGroupWithToolTiles(0),
-    mNonEmptyLayerGroupItem(0)
+    mNonEmptyLayerGroupItem(0),
+    mShowBuildingTiles(true),
+    mShowUserTiles(true)
 {
     ZVALUE_CURSOR = 1000;
 
@@ -502,6 +514,34 @@ void BuildingTileModeScene::setCursorObject(BuildingObject *object, const QRect 
     mBuildingMap->setCursorObject(currentFloor(), object, bounds);
 }
 
+bool BuildingTileModeScene::shouldShowFloorItem(BuildingFloor *floor) const
+{
+    return mShowObjectShapes &&
+            (currentLevel() <= floor->level());
+}
+
+bool BuildingTileModeScene::shouldShowObjectItem(BuildingObject *object) const
+{
+    return mShowObjectShapes &&
+            (currentLevel() <= object->floor()->level());
+}
+
+void BuildingTileModeScene::setShowBuildingTiles(bool show)
+{
+    Q_UNUSED(show)
+}
+
+void BuildingTileModeScene::setShowUserTiles(bool show)
+{
+    Q_UNUSED(show)
+}
+
+void BuildingTileModeScene::setEditingTiles(bool editing)
+{
+    if (mGridItem)
+        mGridItem->setEditingTiles(editing);
+}
+
 void BuildingTileModeScene::BuildingToMap()
 {
     if (mBuildingMap) {
@@ -521,7 +561,8 @@ void BuildingTileModeScene::BuildingToMap()
     connect(mBuildingMap, SIGNAL(aboutToRecreateLayers()), SLOT(aboutToRecreateLayers()));
     connect(mBuildingMap, SIGNAL(layersRecreated()), SLOT(layersRecreated()));
     connect(mBuildingMap, SIGNAL(mapResized()), SLOT(mapResized()));
-    connect(mBuildingMap, SIGNAL(layersUpdated(int)), SLOT(layersUpdated(int)));
+    connect(mBuildingMap, SIGNAL(layersUpdated(int,QRegion)),
+            SLOT(layersUpdated(int,QRegion)));
 
     dynamic_cast<IsoBuildingRenderer*>(mRenderer)->mMapRenderer = mBuildingMap->mapRenderer();
 
@@ -833,6 +874,8 @@ void BuildingTileModeScene::layersRecreated()
         addItem(item);
         mLayerGroupItems[layerGroup->level()] = item;
     }
+
+    highlightFloorChanged(BuildingPreferences::instance()->highlightFloor());
 }
 
 void BuildingTileModeScene::mapResized()
@@ -841,7 +884,7 @@ void BuildingTileModeScene::mapResized()
     BaseFloorEditor::mapResized();
 }
 
-void BuildingTileModeScene::layersUpdated(int level)
+void BuildingTileModeScene::layersUpdated(int level, const QRegion &rgn)
 {
     if (mLayerGroupItems.contains(level)) {
         CompositeLayerGroupItem *item = mLayerGroupItems[level];
@@ -855,7 +898,8 @@ void BuildingTileModeScene::layersUpdated(int level)
                 mDarkRectangle->setRect(sceneRect);
             }
         }
-        item->update();
+        foreach (QRect r, rgn.rects())
+            item->update(mapRenderer()->boundingRect(r, level).adjusted(0,-(128-32),0,0));
     }
 }
 
@@ -868,6 +912,21 @@ BuildingTileModeView::BuildingTileModeView(QWidget *parent) :
 {
     // This enables mouseMoveEvent without any buttons being pressed
     setMouseTracking(true);
+
+    setUseOpenGL(true);
+
+    QWidget *v = viewport();
+
+    /* Since Qt 4.5, setting this attribute yields significant repaint
+     * reduction when the view is being resized. */
+    v->setAttribute(Qt::WA_StaticContents);
+
+    /* Since Qt 4.6, mouse tracking is disabled when no graphics item uses
+     * hover events. We need to set it since our scene wants the events. */
+    v->setMouseTracking(true);
+
+    // Adjustment for antialiasing is done by the items that need it
+    setOptimizationFlags(QGraphicsView::DontAdjustForAntialiasing);
 
     connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(adjustScale(qreal)));
 
@@ -995,6 +1054,27 @@ void BuildingTileModeView::wheelEvent(QWheelEvent *event)
     }
 
     QGraphicsView::wheelEvent(event);
+}
+
+void BuildingTileModeView::setUseOpenGL(bool useOpenGL)
+{
+#ifndef QT_NO_OPENGL
+    if (useOpenGL && QGLFormat::hasOpenGL()) {
+        if (!qobject_cast<QGLWidget*>(viewport())) {
+            QGLFormat format = QGLFormat::defaultFormat();
+            format.setDepth(false); // No need for a depth buffer
+            format.setSampleBuffers(true); // Enable anti-aliasing
+            setViewport(new QGLWidget(format));
+        }
+    } else {
+        if (qobject_cast<QGLWidget*>(viewport()))
+            setViewport(0);
+    }
+
+    QWidget *v = viewport();
+    v->setAttribute(Qt::WA_StaticContents);
+    v->setMouseTracking(true);
+#endif
 }
 
 void BuildingTileModeView::setHandScrolling(bool handScrolling)

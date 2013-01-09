@@ -329,7 +329,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->actionShowObjects->setChecked(prefs->showObjects());
     connect(ui->actionShowObjects, SIGNAL(toggled(bool)),
             prefs, SLOT(setShowObjects(bool)));
-    connect(prefs, SIGNAL(showObjectsChanged(bool)), SLOT(updateActions()));
+    connect(prefs, SIGNAL(showObjectsChanged(bool)),
+            SLOT(showObjectsChanged(bool)));
 
     connect(ui->actionZoomIn, SIGNAL(triggered()), SLOT(zoomIn()));
     connect(ui->actionZoomOut, SIGNAL(triggered()), SLOT(zoomOut()));
@@ -1887,9 +1888,11 @@ void BuildingEditorWindow::editPaste()
 
 void BuildingEditorWindow::editDelete()
 {
-    if (!mCurrentDocument || currentLayer().isEmpty())
+    if (!mCurrentDocument)
         return;
     if (mEditMode == TileMode) {
+        if (currentLayer().isEmpty())
+            return;
         QRegion selection = currentDocument()->tileSelection();
         QRect r = selection.boundingRect();
         FloorTileGrid *tiles = currentFloor()->grimeAt(currentLayer(), r);
@@ -2230,6 +2233,14 @@ void BuildingEditorWindow::resetZoom()
         mOrthoView->zoomable()->resetZoom();
     else if (mEditMode == TileMode)
         mIsoView->zoomable()->resetZoom();
+}
+
+void BuildingEditorWindow::showObjectsChanged(bool show)
+{
+    if (mEditMode == ObjectMode) {
+        mIsoView->scene()->setShowObjectShapes(show, false);
+    }
+    updateActions();
 }
 
 void BuildingEditorWindow::mouseCoordinateChanged(const QPoint &tilePos)
@@ -2587,6 +2598,8 @@ void BuildingEditorWindow::toggleEditMode()
             mFurnitureDock->switchTo();
             mTilesetDock->firstTimeSetup();
         }
+        mIsoView->scene()->setShowObjectShapes(false, true);
+        mIsoView->scene()->setEditingTiles(true);
         if (mOrient == OrientOrtho) {
             ui->stackedWidget->setCurrentIndex(1);
             mOrthoView->zoomable()->connectToComboBox(0);
@@ -2602,6 +2615,9 @@ void BuildingEditorWindow::toggleEditMode()
         mTilesetDock->hide();
         mFurnitureDock->hide();
         mEditMode = ObjectMode;
+        mIsoView->scene()->setShowObjectShapes(
+                    BuildingPreferences::instance()->showObjects(), false);
+        mIsoView->scene()->setEditingTiles(false);
         if (mOrient == OrientOrtho) {
             ui->stackedWidget->setCurrentIndex(0);
             mIsoView->zoomable()->connectToComboBox(0);

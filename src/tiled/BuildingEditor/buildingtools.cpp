@@ -550,11 +550,14 @@ QRegion SelectMoveRoomsTool::setSelectedArea(const QRegion &selectedArea)
             mSelectionItem->setPen(QColor(0x33,0x99,0xff));
             mSelectionItem->setBrush(QBrush(QColor(0x33,0x99,0xff,255/8)));
             mSelectionItem->setZValue(mEditor->ZVALUE_CURSOR);
-            mSelectionItem->setScale(30);
+//            mSelectionItem->setScale(30);
             mEditor->addItem(mSelectionItem);
         }
         QPainterPath path;
-        path.addRegion(mSelectedArea);
+        foreach (QRect r, mSelectedArea.rects()) {
+            path.addPolygon(mEditor->tileToScenePolygon(r, mEditor->currentLevel()));
+            path.closeSubpath();
+        }
         mSelectionItem->setPath(path);
     }
     return old;
@@ -660,7 +663,10 @@ void SelectMoveRoomsTool::updateMovingItems()
     }
 
     QPainterPath path;
-    path.addRegion(mSelectedArea.translated(mDragOffset));
+    foreach (QRect r, mSelectedArea.translated(mDragOffset).rects()) {
+        path.addPolygon(mEditor->tileToScenePolygon(r, mEditor->currentLevel()));
+        path.closeSubpath();
+    }
     mSelectionItem->setPath(path);
 }
 
@@ -712,7 +718,10 @@ void SelectMoveRoomsTool::cancelMoving()
     }
 
     QPainterPath path;
-    path.addRegion(mSelectedArea);
+    foreach (QRect r, mSelectedArea.rects()) {
+        path.addPolygon(mEditor->tileToScenePolygon(r, mEditor->currentLevel()));
+        path.closeSubpath();
+    }
     mSelectionItem->setPath(path);
 
     mMode = CancelMoving;
@@ -874,6 +883,7 @@ void BaseObjectTool::deactivate()
         mEditor->removeItem(mCursorItem);
         delete mCursorItem;
         mCursorItem = 0;
+        mEditor->setCursorObject(0);
     }
 }
 

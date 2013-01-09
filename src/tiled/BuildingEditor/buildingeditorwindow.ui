@@ -154,6 +154,9 @@
     <addaction name="actionInsertFloorBelow"/>
     <addaction name="actionRemoveFloor"/>
     <addaction name="actionFloors"/>
+    <addaction name="separator"/>
+    <addaction name="actionUpLevel"/>
+    <addaction name="actionDownLevel"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">

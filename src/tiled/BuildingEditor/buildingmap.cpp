@@ -288,6 +288,15 @@ void BuildingMap::BuildingToMap()
     MapInfo *mapInfo = MapManager::instance()->newFromMap(mMap);
     mMapComposite = new MapComposite(mapInfo);
 
+    // Synch layer opacity with the floor.
+    foreach (CompositeLayerGroup *layerGroup, mMapComposite->layerGroups()) {
+        BuildingFloor *floor = mBuilding->floor(layerGroup->level());
+        foreach (TileLayer *tl, layerGroup->layers()) {
+            QString layerName = MapComposite::layerNameWithoutPrefix(tl);
+            layerGroup->setLayerOpacity(tl, floor->layerOpacity(layerName));
+        }
+    }
+
     // This map displays the automatically-generated tiles from the building.
     mBlendMap = mMap->clone();
     TilesetManager::instance()->addReferences(mBlendMap->tilesets());
@@ -336,7 +345,7 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
         for (int x = area.x(); x <= area.right() + 1; x++) {
             for (int y = area.y(); y <= area.bottom() + 1; y++) {
 #if 1
-                const BuildingFloor::Square &square = (cursorBounds.contains(x, y))
+                const BuildingFloor::Square &square = cursorBounds.contains(x, y)
                         ? mCursorObjectFloor->squares[x - mCursorObjectPos.x()][y - mCursorObjectPos.y()]
                         : floor->squares[x][y];
 #else
@@ -586,7 +595,7 @@ void BuildingMap::tilesetRemoved(Tileset *tileset)
 
 void BuildingMap::handlePending()
 {
-    QSet<int> updatedLevels;
+    QMap<int,QRegion> updatedLevels;
 
     if (pendingRecreateAll) {
         emit aboutToRecreateLayers(); // LayerGroupItems need to get ready
@@ -634,9 +643,13 @@ void BuildingMap::handlePending()
             CompositeLayerGroup *layerGroup = mBlendMapComposite->layerGroupForLevel(floor->level());
             QRect area = pendingSquaresToTileLayers[floor].boundingRect(); // TODO: only affected region
             BuildingSquaresToTileLayers(floor, area, layerGroup);
-            if (layerGroup->needsSynch())
+            if (layerGroup->needsSynch()) {
                 mMapComposite->layerGroupForLevel(floor->level())->setNeedsSynch(true);
-            updatedLevels.insert(floor->level());
+                layerGroup->synch(); // Don't really need to synch the blend-over-map, but do need
+                                     // to update its draw margins so MapComposite::regionAltered
+                                     // doesn't set mNeedsSynch repeatedly.
+            }
+            updatedLevels[floor->level()] |= area;
         }
     }
 
@@ -647,17 +660,18 @@ void BuildingMap::handlePending()
                 tl->erase();
             foreach (QString layerName, floor->grimeLayers())
                 pendingUserTilesToLayer[floor][layerName] = floor->bounds();
-            updatedLevels.insert(floor->level());
+            updatedLevels[floor->level()] |= floor->bounds();
         }
     }
 
     if (!pendingUserTilesToLayer.isEmpty()) {
         foreach (BuildingFloor *floor, pendingUserTilesToLayer.keys()) {
             foreach (QString layerName, pendingUserTilesToLayer[floor].keys()) {
-                foreach (QRect r, pendingUserTilesToLayer[floor][layerName].rects())
+                QRegion rgn = pendingUserTilesToLayer[floor][layerName];
+                foreach (QRect r, rgn.rects())
                     userTilesToLayer(floor, layerName, r);
+                updatedLevels[floor->level()] |= rgn;
             }
-            updatedLevels.insert(floor->level());
         }
     }
 
@@ -666,8 +680,8 @@ void BuildingMap::handlePending()
     else if (pendingBuildingResized)
         emit mapResized();
 
-    foreach (int level, updatedLevels)
-        emit layersUpdated(level);
+    foreach (int level, updatedLevels.keys())
+        emit layersUpdated(level, updatedLevels[level]);
 
     pending = false;
     pendingRecreateAll = false;

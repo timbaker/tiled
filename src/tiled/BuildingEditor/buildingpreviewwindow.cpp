@@ -323,6 +323,8 @@ BuildingPreviewScene::~BuildingPreviewScene()
 
 void BuildingPreviewScene::setDocument(BuildingDocument *doc)
 {
+    doc = 0; /////////////////////////////<<<<<--------------
+
     if (mDocument)
         mDocument->disconnect(this);
 

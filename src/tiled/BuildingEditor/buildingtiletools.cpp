@@ -249,8 +249,10 @@ void DrawTileTool::activate()
 
 void DrawTileTool::deactivate()
 {
-    if (mCursor)
+    if (mCursor) {
         mEditor->removeItem(mCursor);
+        mEditor->clearToolTiles();
+    }
     mMouseDown = false;
 }
 
@@ -469,7 +471,7 @@ void SelectTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mStartTilePos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
         mCursorTileBounds = QRect(mStartTilePos, QSize(1, 1)) & floor()->bounds(1, 1);
         mMouseDown = true;
-        mMouseMoved = false;
+        mMouseMoved = mSelectionMode != Replace;
         updateCursor(mStartScenePos);
         updateStatusText();
     }

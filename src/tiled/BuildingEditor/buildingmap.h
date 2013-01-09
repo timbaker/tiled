@@ -93,7 +93,7 @@ signals:
     void aboutToRecreateLayers();
     void layersRecreated();
     void mapResized();
-    void layersUpdated(int level);
+    void layersUpdated(int level, const QRegion &rgn);
 
 private slots:
     void handlePending();

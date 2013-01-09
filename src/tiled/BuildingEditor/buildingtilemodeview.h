@@ -65,11 +65,14 @@ public:
     QRectF boundingRect() const;
     void paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *);
 
+    void setEditingTiles(bool editing);
+
 private:
     BuildingDocument *mDocument;
     Tiled::MapRenderer *mRenderer;
     QRect mTileBounds;
     QRectF mBoundingRect;
+    bool mEditingTiles;
 };
 
 class TileModeSelectionItem : public QObject, public QGraphicsItem
@@ -113,6 +116,8 @@ public:
 
     void drawLine(QPainter *painter, qreal x1, qreal y1, qreal x2, qreal y2, int level);
 
+    IsoBuildingRenderer *asIso() { return this; }
+
     Tiled::MapRenderer *mMapRenderer;
 };
 
@@ -147,6 +152,13 @@ public:
                            int level = 0) const;
 
     void setCursorObject(BuildingObject *object, const QRect &bounds = QRect());
+
+    bool shouldShowFloorItem(BuildingFloor *floor) const;
+    bool shouldShowObjectItem(BuildingObject *object) const;
+
+    void setShowBuildingTiles(bool show);
+    void setShowUserTiles(bool show);
+    void setEditingTiles(bool editing);
 
 private:
     void BuildingToMap();
@@ -195,7 +207,7 @@ private slots:
     void aboutToRecreateLayers();
     void layersRecreated();
     void mapResized();
-    void layersUpdated(int level);
+    void layersUpdated(int level, const QRegion &rgn);
 
 private:
     BuildingMap *mBuildingMap;
@@ -208,6 +220,8 @@ private:
     CompositeLayerGroup *mLayerGroupWithToolTiles;
     QString mNonEmptyLayer;
     CompositeLayerGroupItem *mNonEmptyLayerGroupItem;
+    bool mShowBuildingTiles;
+    bool mShowUserTiles;
 };
 
 class BuildingTileModeView : public QGraphicsView
@@ -235,6 +249,7 @@ public:
 
     void setHandScrolling(bool handScrolling);
 
+    void setUseOpenGL(bool useOpenGL);
 signals:
     void mouseCoordinateChanged(const QPoint &tilePos);
 
