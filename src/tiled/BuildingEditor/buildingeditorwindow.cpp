@@ -2237,9 +2237,8 @@ void BuildingEditorWindow::resetZoom()
 
 void BuildingEditorWindow::showObjectsChanged(bool show)
 {
-    if (mEditMode == ObjectMode) {
-        mIsoView->scene()->setShowObjectShapes(show, false);
-    }
+    mOrthoView->scene()->synchObjectItemVisibility();
+    mIsoView->scene()->synchObjectItemVisibility();
     updateActions();
 }
 
@@ -2598,7 +2597,6 @@ void BuildingEditorWindow::toggleEditMode()
             mFurnitureDock->switchTo();
             mTilesetDock->firstTimeSetup();
         }
-        mIsoView->scene()->setShowObjectShapes(false, true);
         mIsoView->scene()->setEditingTiles(true);
         if (mOrient == OrientOrtho) {
             ui->stackedWidget->setCurrentIndex(1);
@@ -2615,8 +2613,6 @@ void BuildingEditorWindow::toggleEditMode()
         mTilesetDock->hide();
         mFurnitureDock->hide();
         mEditMode = ObjectMode;
-        mIsoView->scene()->setShowObjectShapes(
-                    BuildingPreferences::instance()->showObjects(), false);
         mIsoView->scene()->setEditingTiles(false);
         if (mOrient == OrientOrtho) {
             ui->stackedWidget->setCurrentIndex(0);

@@ -516,14 +516,19 @@ void BuildingTileModeScene::setCursorObject(BuildingObject *object, const QRect 
 
 bool BuildingTileModeScene::shouldShowFloorItem(BuildingFloor *floor) const
 {
-    return mShowObjectShapes &&
-            (currentLevel() <= floor->level());
+    return !mEditingTiles
+            && (currentLevel() == floor->level());
 }
 
 bool BuildingTileModeScene::shouldShowObjectItem(BuildingObject *object) const
 {
-    return mShowObjectShapes &&
-            (currentLevel() <= object->floor()->level());
+    // Cursor items are always visible.
+    if (!object->floor())
+        return true;
+
+    return !mEditingTiles
+            && BuildingPreferences::instance()->showObjects()
+            && (currentLevel() == object->floor()->level());
 }
 
 void BuildingTileModeScene::setShowBuildingTiles(bool show)
@@ -538,8 +543,12 @@ void BuildingTileModeScene::setShowUserTiles(bool show)
 
 void BuildingTileModeScene::setEditingTiles(bool editing)
 {
-    if (mGridItem)
-        mGridItem->setEditingTiles(editing);
+    if (editing != mEditingTiles) {
+        mEditingTiles = editing;
+        synchObjectItemVisibility();
+        if (mGridItem)
+            mGridItem->setEditingTiles(editing);
+    }
 }
 
 void BuildingTileModeScene::BuildingToMap()
@@ -634,13 +643,7 @@ void BuildingTileModeScene::layerVisibilityChanged(BuildingFloor *floor, const Q
 
 void BuildingTileModeScene::currentFloorChanged()
 {
-    for (int i = 0; i <= currentLevel(); i++) {
-//        mFloorItems[i]->setOpacity((i == currentLevel()) ? 0.25 : 0.05);
-        mFloorItems[i]->setVisible(i == currentLevel());
-    }
-    for (int i = currentLevel() + 1; i < mDocument->building()->floorCount(); i++)
-        mFloorItems[i]->setVisible(false);
-
+    synchObjectItemVisibility();
 
     highlightFloorChanged(BuildingPreferences::instance()->highlightFloor());
     mGridItem->synchWithBuilding();

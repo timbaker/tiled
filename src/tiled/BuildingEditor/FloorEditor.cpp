@@ -197,9 +197,9 @@ void BuildingRenderer::drawObject(QPainter *painter, BuildingObject *mObject,
 BaseFloorEditor::BaseFloorEditor(QObject *parent) :
     QGraphicsScene(parent),
     mDocument(0),
-    mMouseOverObject(0)
+    mMouseOverObject(0),
+    mEditingTiles(false)
 {
-    mShowObjectShapes = BuildingPreferences::instance()->showObjects();
 }
 
 Building *BaseFloorEditor::building() const
@@ -398,26 +398,30 @@ void BaseFloorEditor::setMouseOverObject(BuildingObject *object)
     }
 }
 
-void BaseFloorEditor::setShowObjectShapes(bool show, bool editingTiles)
+void BaseFloorEditor::setEditingTiles(bool editing)
 {
-    if (show != mShowObjectShapes) {
-        mShowObjectShapes = show;
-        foreach (GraphicsFloorItem *item, mFloorItems) {
-            item->setVisible(shouldShowFloorItem(item->floor()));
-            item->showObjectsChanged(show);
-        }
-    }
+    mEditingTiles = editing;
 }
 
 bool BaseFloorEditor::shouldShowFloorItem(BuildingFloor *floor) const
 {
-    return true;
+    return floor->level() <= currentLevel();
 }
 
 bool BaseFloorEditor::shouldShowObjectItem(BuildingObject *object) const
 {
+    // Cursor items are always visible.
+    if (!object->floor())
+        return true;
+
     return BuildingPreferences::instance()->showObjects() &&
-            (mDocument->currentLevel() <= object->floor()->level());
+            (currentLevel() <= object->floor()->level());
+}
+
+void BaseFloorEditor::synchObjectItemVisibility()
+{
+    foreach (GraphicsFloorItem *item, mFloorItems)
+        item->synchVisibility();
 }
 
 void FloorEditor::setToolTiles(const FloorTileGrid *tiles, const QPoint &pos,
@@ -460,7 +464,8 @@ GraphicsFloorItem::GraphicsFloorItem(BaseFloorEditor *editor, BuildingFloor *flo
     mDragBmp(0)
 {
     setFlag(ItemUsesExtendedStyleOption);
-    setFlag(ItemDoesntPropagateOpacityToChildren);
+    if (mEditor->renderer()->asIso())
+        setFlag(ItemDoesntPropagateOpacityToChildren);
     mBmp->fill(Qt::black);
 
     if (mEditor->renderer()->asIso())
@@ -533,7 +538,6 @@ void GraphicsFloorItem::objectAdded(GraphicsObjectItem *item)
     BuildingObject *object = item->object();
     Q_ASSERT(!itemForObject(object));
     item->setParentItem(this);
-    item->setVisible(mEditor->shouldShowObjectItem(object));
     mObjectItems.insert(object->index(), item);
 
     for (int i = object->index(); i < mObjectItems.count(); i++)
@@ -613,8 +617,9 @@ void GraphicsFloorItem::setDragBmp(QImage *bmp)
     update();
 }
 
-void GraphicsFloorItem::showObjectsChanged(bool show)
+void GraphicsFloorItem::synchVisibility()
 {
+    setVisible(mEditor->shouldShowFloorItem(mFloor));
     foreach (GraphicsObjectItem *item, mObjectItems)
         item->setVisible(mEditor->shouldShowObjectItem(item->object()));
 }
@@ -702,6 +707,8 @@ GraphicsObjectItem::GraphicsObjectItem(BaseFloorEditor *editor, BuildingObject *
                 setOpacity(0.55);
         }
     }
+
+    setVisible(mEditor->shouldShowObjectItem(mObject));
 }
 
 QPainterPath GraphicsObjectItem::shape() const
@@ -1509,9 +1516,6 @@ void FloorEditor::setDocument(BuildingDocument *doc)
 
         connect(mDocument, SIGNAL(buildingResized()), SLOT(buildingResized()));
         connect(mDocument, SIGNAL(buildingRotated()), SLOT(buildingRotated()));
-
-        BuildingPreferences *prefs = BuildingPreferences::instance();
-        connect(prefs, SIGNAL(showObjectsChanged(bool)), SLOT(showObjectsChanged(bool)));
     }
 
     emit documentChanged();
@@ -1675,11 +1679,6 @@ void FloorEditor::buildingRotated()
     setSceneRect(-10, -10,
                  building()->width() * 30 + 20,
                  building()->height() * 30 + 20);
-}
-
-void FloorEditor::showObjectsChanged(bool show)
-{
-    setShowObjectShapes(show, false);
 }
 
 /////

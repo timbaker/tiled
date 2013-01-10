@@ -90,7 +90,7 @@ public:
     QImage *dragBmp() const
     { return mDragBmp; }
 
-    void showObjectsChanged(bool show);
+    void synchVisibility();
 
 private:
     BaseFloorEditor *mEditor;
@@ -407,11 +407,13 @@ public:
     virtual void setCursorObject(BuildingObject *object, const QRect &bounds = QRect())
     { Q_UNUSED(object) Q_UNUSED(bounds) }
 
-    void setShowObjectShapes(bool show, bool editingTiles);
-    bool showObjectShapes() const { return mShowObjectShapes; }
+    virtual void setEditingTiles(bool editing);
+    bool editingTiles() const { return mEditingTiles; }
 
     virtual bool shouldShowFloorItem(BuildingFloor *floor) const;
     virtual bool shouldShowObjectItem(BuildingObject *object) const;
+
+    void synchObjectItemVisibility();
 
     /////
     // Tile-editing-only methods
@@ -451,7 +453,7 @@ protected:
     QList<GraphicsFloorItem*> mFloorItems;
     QSet<GraphicsObjectItem*> mSelectedObjectItems;
     BuildingObject *mMouseOverObject;
-    bool mShowObjectShapes;
+    bool mEditingTiles;
 };
 
 class FloorEditor : public BaseFloorEditor
@@ -495,8 +497,6 @@ private slots:
 
     void buildingResized();
     void buildingRotated();
-
-    void showObjectsChanged(bool show);
 
 private:
     GraphicsGridItem *mGridItem;
