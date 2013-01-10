@@ -249,12 +249,12 @@ public:
 
     void setHandScrolling(bool handScrolling);
 
-    void setUseOpenGL(bool useOpenGL);
 signals:
     void mouseCoordinateChanged(const QPoint &tilePos);
 
 private slots:
     void adjustScale(qreal scale);
+    void setUseOpenGL(bool useOpenGL);
 
 private:
     Tiled::Internal::Zoomable *mZoomable;

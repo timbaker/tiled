@@ -32,8 +32,12 @@ BuildingPreferencesDialog::BuildingPreferencesDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QString configPath = BuildingPreferences::instance()->configPath();
+    QString configPath = prefs()->configPath();
     ui->configDirEdit->setText(QDir::toNativeSeparators(configPath));
+
+    mUseOpenGL = prefs()->useOpenGL();
+    ui->useOpenGL->setChecked(mUseOpenGL);
+    connect(ui->useOpenGL, SIGNAL(toggled(bool)), SLOT(setUseOpenGL(bool)));
 }
 
 BuildingPreferencesDialog::~BuildingPreferencesDialog()
@@ -41,7 +45,18 @@ BuildingPreferencesDialog::~BuildingPreferencesDialog()
     delete ui;
 }
 
+BuildingPreferences *BuildingPreferencesDialog::prefs() const
+{
+    return BuildingPreferences::instance();
+}
+
+void BuildingPreferencesDialog::setUseOpenGL(bool useOpenGL)
+{
+    mUseOpenGL = useOpenGL;
+}
+
 void BuildingPreferencesDialog::accept()
 {
+    prefs()->setUseOpenGL(mUseOpenGL);
     QDialog::accept();
 }

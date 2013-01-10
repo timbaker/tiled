@@ -913,10 +913,9 @@ BuildingTileModeView::BuildingTileModeView(QWidget *parent) :
     mZoomable(new Zoomable(this)),
     mHandScrolling(false)
 {
-    // This enables mouseMoveEvent without any buttons being pressed
-    setMouseTracking(true);
-
-    setUseOpenGL(true);
+    BuildingPreferences *prefs = BuildingPreferences::instance();
+    setUseOpenGL(prefs->useOpenGL());
+    connect(prefs, SIGNAL(useOpenGLChanged(bool)), SLOT(setUseOpenGL(bool)));
 
     QWidget *v = viewport();
 

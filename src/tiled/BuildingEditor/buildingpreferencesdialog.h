@@ -19,13 +19,14 @@
 #define BUILDINGPREFERENCESDIALOG_H
 
 #include <QDialog>
-#include <QSettings>
 
 namespace Ui {
 class BuildingPreferencesDialog;
 }
 
 namespace BuildingEditor {
+
+class BuildingPreferences;
 
 class BuildingPreferencesDialog : public QDialog
 {
@@ -35,12 +36,16 @@ public:
     explicit BuildingPreferencesDialog(QWidget *parent = 0);
     ~BuildingPreferencesDialog();
 
+private:
+    BuildingPreferences *prefs() const;
+
 public slots:
+    void setUseOpenGL(bool useOpenGL);
     void accept();
     
 private:
     Ui::BuildingPreferencesDialog *ui;
-    QSettings mSettings;
+    bool mUseOpenGL;
 };
 
 } // BuildingEditor

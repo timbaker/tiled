@@ -26,6 +26,7 @@ static const char *KEY_TILE_SCALE = "BuildingEditor/MainWindow/CategoryScale";
 static const char *KEY_HIGHLIGHT_FLOOR = "BuildingEditor/PreviewWindow/HighlightFloor";
 static const char *KEY_SHOW_WALLS = "BuildingEditor/PreviewWindow/ShowWalls";
 static const char *KEY_SHOW_OBJECTS = "BuildingEditor/PreviewWindow/ShowObjects";
+static const char *KEY_OPENGL = "BuildingEditor/OpenGL";
 
 BuildingPreferences *BuildingPreferences::mInstance = 0;
 
@@ -53,6 +54,7 @@ BuildingPreferences::BuildingPreferences(QObject *parent) :
                                  true).toBool();
     mTileScale = mSettings.value(QLatin1String(KEY_TILE_SCALE),
                                  0.5).toReal();
+    mUseOpenGL = mSettings.value(QLatin1String(KEY_OPENGL), false).toBool();
 }
 
 QString BuildingPreferences::configPath() const
@@ -99,4 +101,13 @@ void BuildingPreferences::setTileScale(qreal scale)
     mTileScale = scale;
     mSettings.setValue(QLatin1String(KEY_TILE_SCALE), mTileScale);
     emit tileScaleChanged(mTileScale);
+}
+
+void BuildingPreferences::setUseOpenGL(bool useOpenGL)
+{
+    if (useOpenGL == mUseOpenGL)
+        return;
+    mUseOpenGL = useOpenGL;
+    mSettings.setValue(QLatin1String(KEY_OPENGL), mUseOpenGL);
+    emit useOpenGLChanged(mUseOpenGL);
 }

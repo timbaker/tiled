@@ -47,17 +47,22 @@ public:
     qreal tileScale() const
     { return mTileScale; }
 
+    bool useOpenGL() const
+    { return mUseOpenGL; }
+
 signals:
     void highlightFloorChanged(bool highlight);
     void showWallsChanged(bool show);
     void showObjectsChanged(bool show);
     void tileScaleChanged(qreal scale);
+    void useOpenGLChanged(bool useOpenGL);
 
 public slots:
     void setHighlightFloor(bool highlight);
     void setShowWalls(bool show);
     void setShowObjects(bool show);
     void setTileScale(qreal scale);
+    void setUseOpenGL(bool useOpenGL);
 
 private:
     static BuildingPreferences *mInstance;
@@ -66,6 +71,7 @@ private:
     bool mShowWalls;
     bool mShowObjects;
     qreal mTileScale;
+    bool mUseOpenGL;
 };
 
 } // namespace BuildingEditor
