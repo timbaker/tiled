@@ -182,17 +182,6 @@ void BuildingPreviewWindow::writeSettings()
     mSettings.endGroup();
 }
 
-bool BuildingPreviewWindow::exportTMX(const QString &fileName)
-{
-    if (!BuildingTMX::instance()->exportTMX(mDocument->building(),
-                                           mScene->mapComposite(),
-                                           fileName)) {
-        QMessageBox::critical(this, tr("Error Saving Map"),
-                              BuildingTMX::instance()->errorString());
-    }
-    return true;
-}
-
 void BuildingPreviewWindow::updateActions()
 {
     ui->actionShowWalls->setEnabled(mDocument != 0);

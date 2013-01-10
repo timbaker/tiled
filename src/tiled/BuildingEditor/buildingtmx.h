@@ -42,8 +42,7 @@ public:
 //    const QList<LayerInfo> &layers() const
 //    { return mLayers; }
 
-    bool exportTMX(Building *building, const MapComposite *mapComposite,
-                   const QString &fileName);
+    bool exportTMX(Building *building, const QString &fileName);
 
     QString txtName();
     QString txtPath();

@@ -206,6 +206,18 @@ void BuildingMap::setCursorObject(BuildingFloor *floor, BuildingObject *object,
     }
 }
 
+Map *BuildingMap::mergedMap() const
+{
+    Map *map = mBlendMap->clone();
+    TilesetManager::instance()->addReferences(map->tilesets());
+    for (int i = 0; i < map->layerCount(); i++) {
+        if (TileLayer *tl = map->layerAt(i)->asTileLayer())
+            tl->merge(tl->position(), mMap->layerAt(i)->asTileLayer());
+
+    }
+    return map;
+}
+
 void BuildingMap::buildingRotated()
 {
     pendingBuildingResized = true;

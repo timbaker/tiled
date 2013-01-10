@@ -65,6 +65,8 @@ public:
     void setCursorObject(BuildingFloor *floor, BuildingObject *object,
                          const QRect &bounds = QRect());
 
+    Tiled::Map *mergedMap() const;
+
 public:
     void buildingRotated();
     void buildingResized();

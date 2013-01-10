@@ -1829,7 +1829,11 @@ void BuildingEditorWindow::exportTMX()
     if (fileName.isEmpty())
         return;
 
-    mPreviewWin->exportTMX(fileName);
+    if (!BuildingTMX::instance()->exportTMX(currentBuilding(), fileName)) {
+        QMessageBox::critical(this, tr("Error Saving Map"),
+                              BuildingTMX::instance()->errorString());
+
+    }
 
     mSettings.setValue(QLatin1String("BuildingEditor/ExportDirectory"),
                        QFileInfo(fileName).absolutePath());

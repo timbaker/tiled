@@ -20,6 +20,7 @@
 #include "building.h"
 #include "buildingeditorwindow.h"
 #include "buildingfloor.h"
+#include "buildingmap.h"
 #include "buildingpreferences.h"
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
@@ -27,6 +28,7 @@
 #include "simplefile.h"
 
 #include "mapcomposite.h"
+#include "mapmanager.h"
 #include "preferences.h"
 #include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
@@ -68,10 +70,17 @@ BuildingTMX::BuildingTMX()
 {
 }
 
-bool BuildingTMX::exportTMX(Building *building, const MapComposite *mapComposite,
-                            const QString &fileName)
+bool BuildingTMX::exportTMX(Building *building, const QString &fileName)
 {
-    Map *clone = mapComposite->map()->clone();
+    BuildingMap bmap(building);
+
+    Map *map = bmap.mergedMap();
+    if (map->orientation() == Map::LevelIsometric) {
+        Map *isoMap = MapManager::instance()->convertOrientation(map, Map::Isometric);
+        TilesetManager::instance()->removeReferences(map->tilesets());
+        delete map;
+        map = isoMap;
+    }
 
     foreach (BuildingFloor *floor, building->floors()) {
 
@@ -92,31 +101,33 @@ bool BuildingTMX::exportTMX(Building *building, const MapComposite *mapComposite
                 layerName = tr("%1_%2").arg(floor->level()).arg(layerName);
             }
             int n;
-            if ((n = clone->indexOfLayer(layerName)) >= 0) {
+            if ((n = map->indexOfLayer(layerName)) >= 0) {
                 previousExistingLayer = n;
                 continue;
             }
             if (layerInfo.mType == LayerInfo::Tile) {
                 TileLayer *tl = new TileLayer(layerName, 0, 0,
-                                              clone->width(), clone->height());
+                                              map->width(), map->height());
                 if (previousExistingLayer < 0)
                     previousExistingLayer = 0;
-                clone->insertLayer(previousExistingLayer + 1, tl);
+                map->insertLayer(previousExistingLayer + 1, tl);
                 previousExistingLayer++;
             } else {
                 ObjectGroup *og = new ObjectGroup(layerName,
-                                                  0, 0, clone->width(), clone->height());
-                clone->addLayer(og);
+                                                  0, 0, map->width(), map->height());
+                map->addLayer(og);
             }
         }
 
         ObjectGroup *objectGroup = new ObjectGroup(tr("%1_RoomDefs").arg(floor->level()),
-                                                   0, 0, clone->width(), clone->height());
+                                                   0, 0, map->width(), map->height());
 
         // Add the RoomDefs layer above all the tile layers
-        clone->addLayer(objectGroup);
+        map->addLayer(objectGroup);
 
-        int delta = (mapComposite->maxLevel() - floor->level()) * 3;
+        int delta = (building->floorCount() - 1 - floor->level()) * 3;
+        if (map->orientation() == Map::LevelIsometric)
+            delta = 0;
         QPoint offset(delta, delta); // FIXME: not for LevelIsometric
         foreach (Room *room, building->rooms()) {
             foreach (QRect rect, floor->roomRegion(room)) {
@@ -129,13 +140,12 @@ bool BuildingTMX::exportTMX(Building *building, const MapComposite *mapComposite
     }
 
     TmxMapWriter writer;
-    if (!writer.write(clone, fileName)) {
+    bool ok = writer.write(map, fileName);
+    if (!ok)
         mError = writer.errorString();
-        delete clone;
-        return false;
-    }
-    delete clone;
-    return true;
+    TilesetManager::instance()->removeReferences(map->tilesets());
+    delete map;
+    return ok;
 }
 
 QString BuildingTMX::txtName()

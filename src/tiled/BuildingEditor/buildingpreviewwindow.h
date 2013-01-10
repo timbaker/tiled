@@ -212,8 +212,6 @@ public:
     void readSettings();
     void writeSettings();
 
-    bool exportTMX(const QString &fileName);
-
 private slots:
     void updateActions();
 
