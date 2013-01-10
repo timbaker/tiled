@@ -341,12 +341,14 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     keys += QKeySequence(tr("+"));
     ui->actionZoomIn->setShortcuts(keys);
     mOrthoView->addAction(ui->actionZoomIn);
+    mIsoView->addAction(ui->actionZoomIn);
     ui->actionZoomIn->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     keys = QKeySequence::keyBindings(QKeySequence::ZoomOut);
     keys += QKeySequence(tr("-"));
     ui->actionZoomOut->setShortcuts(keys);
     mOrthoView->addAction(ui->actionZoomOut);
+    mIsoView->addAction(ui->actionZoomOut);
     ui->actionZoomOut->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     keys.clear();
@@ -354,6 +356,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     keys += QKeySequence(tr("0"));
     ui->actionNormalSize->setShortcuts(keys);
     mOrthoView->addAction(ui->actionNormalSize);
+    mIsoView->addAction(ui->actionNormalSize);
     ui->actionNormalSize->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     /////
@@ -2213,30 +2216,31 @@ void BuildingEditorWindow::templateFromBuilding()
 
 void BuildingEditorWindow::zoomIn()
 {
-    if (mEditMode == ObjectMode)
+    if (mEditMode == ObjectMode && mOrient == OrientOrtho)
         mOrthoView->zoomable()->zoomIn();
-    else if (mEditMode == TileMode)
+    else
         mIsoView->zoomable()->zoomIn();
 }
 
 void BuildingEditorWindow::zoomOut()
 {
-    if (mEditMode == ObjectMode)
+    if (mEditMode == ObjectMode && mOrient == OrientOrtho)
         mOrthoView->zoomable()->zoomOut();
-    else if (mEditMode == TileMode)
+    else
         mIsoView->zoomable()->zoomOut();
 }
 
 void BuildingEditorWindow::resetZoom()
 {
-    if (mEditMode == ObjectMode)
+    if (mEditMode == ObjectMode && mOrient == OrientOrtho)
         mOrthoView->zoomable()->resetZoom();
-    else if (mEditMode == TileMode)
+    else
         mIsoView->zoomable()->resetZoom();
 }
 
 void BuildingEditorWindow::showObjectsChanged(bool show)
 {
+    Q_UNUSED(show)
     mOrthoView->scene()->synchObjectItemVisibility();
     mIsoView->scene()->synchObjectItemVisibility();
     updateActions();
