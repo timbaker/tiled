@@ -481,13 +481,14 @@ void BuildingFloor::LayoutToSquares()
         if (WallObject *wall = object->asWall()) {
 #if 1
             int x = wall->x(), y = wall->y();
-            QRect r = wall->bounds() & bounds();
             if (wall->isN()) {
+                QRect r = wall->bounds() & bounds(1, 0);
                 for (y = r.top(); y <= r.bottom(); y++) {
                     bool exterior = (x < width()) ? mIndexAtPos[x][y] < 0 : true;
                     squares[x][y].SetWallW(wall->tile(exterior ? 0 : 1), exterior);
                 }
             } else {
+                QRect r = wall->bounds() & bounds(0, 1);
                 for (x = r.left(); x <= r.right(); x++) {
                     bool exterior = (y < height()) ? mIndexAtPos[x][y] < 0 : true;
                     squares[x][y].SetWallN(wall->tile(exterior ? 0 : 1), exterior);
