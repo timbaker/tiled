@@ -173,6 +173,7 @@ BuildingTileModeScene::BuildingTileModeScene(QObject *parent) :
     mShowUserTiles(true)
 {
     ZVALUE_CURSOR = 1000;
+    ZVALUE_GRID = 1001;
 
     BaseFloorEditor::mRenderer = new IsoBuildingRenderer;
 
@@ -573,7 +574,7 @@ void BuildingTileModeScene::BuildingToMap()
     connect(mBuildingMap, SIGNAL(layersUpdated(int,QRegion)),
             SLOT(layersUpdated(int,QRegion)));
 
-    dynamic_cast<IsoBuildingRenderer*>(mRenderer)->mMapRenderer = mBuildingMap->mapRenderer();
+    mRenderer->asIso()->mMapRenderer = mBuildingMap->mapRenderer();
 
     foreach (CompositeLayerGroup *layerGroup, mBuildingMap->mapComposite()->layerGroups()) {
         CompositeLayerGroupItem *item = new CompositeLayerGroupItem(layerGroup, mBuildingMap->mapRenderer());
@@ -586,7 +587,7 @@ void BuildingTileModeScene::BuildingToMap()
 
     mGridItem = new TileModeGridItem(mDocument, mBuildingMap->mapRenderer());
     mGridItem->synchWithBuilding();
-    mGridItem->setZValue(1000);
+    mGridItem->setZValue(ZVALUE_GRID);
     addItem(mGridItem);
 
     mTileSelectionItem = new TileModeSelectionItem(this);
@@ -646,6 +647,7 @@ void BuildingTileModeScene::currentFloorChanged()
     synchObjectItemVisibility();
 
     highlightFloorChanged(BuildingPreferences::instance()->highlightFloor());
+
     mGridItem->synchWithBuilding();
 
     if (!mNonEmptyLayer.isEmpty()) {
@@ -695,6 +697,8 @@ void BuildingTileModeScene::roomAtPositionChanged(BuildingFloor *floor, const QP
 
 void BuildingTileModeScene::roomDefinitionChanged()
 {
+    // Also called when the building's exterior wall tile changes.
+
     foreach (BuildingFloor *floor, mDocument->building()->floors()) {
         mBuildingMap->floorEdited(floor);
         BaseFloorEditor::floorEdited(floor);
@@ -735,21 +739,13 @@ void BuildingTileModeScene::roomChanged(Room *room)
 void BuildingTileModeScene::floorAdded(BuildingFloor *floor)
 {
     BaseFloorEditor::floorAdded(floor);
-#if 1
     mBuildingMap->floorAdded(floor);
-#else
-    BuildingToMap();
-#endif
 }
 
 void BuildingTileModeScene::floorRemoved(BuildingFloor *floor)
 {
     BaseFloorEditor::floorRemoved(floor);
-#if 1
     mBuildingMap->floorRemoved(floor);
-#else
-    BuildingToMap();
-#endif
 }
 
 void BuildingTileModeScene::objectAdded(BuildingObject *object)
@@ -859,10 +855,17 @@ void BuildingTileModeScene::aboutToRecreateLayers()
     mLayerGroupWithToolTiles = 0;
     mNonEmptyLayerGroupItem = 0;
     mNonEmptyLayer.clear();
+
+    delete mGridItem; // It uses the MapRenderer, which is being recreated.
+    mGridItem = 0;
+
+    mRenderer->asIso()->mMapRenderer = 0;
 }
 
 void BuildingTileModeScene::layersRecreated()
 {
+    mRenderer->asIso()->mMapRenderer = mBuildingMap->mapRenderer();
+
     // Building object positions will change when the number of floors changes.
     BaseFloorEditor::mapResized();
 
@@ -881,6 +884,12 @@ void BuildingTileModeScene::layersRecreated()
         addItem(item);
         mLayerGroupItems[layerGroup->level()] = item;
     }
+
+    Q_ASSERT(mGridItem == 0);
+    mGridItem = new TileModeGridItem(mDocument, mBuildingMap->mapRenderer());
+    mGridItem->synchWithBuilding();
+    mGridItem->setZValue(ZVALUE_GRID);
+    addItem(mGridItem);
 
     highlightFloorChanged(BuildingPreferences::instance()->highlightFloor());
 }
@@ -1089,7 +1098,7 @@ void BuildingTileModeView::setHandScrolling(bool handScrolling)
         return;
 
     mHandScrolling = handScrolling;
-    qDebug() << "setHandScrolling" << mHandScrolling;
+//    qDebug() << "setHandScrolling" << mHandScrolling;
     setInteractive(!mHandScrolling);
 
     if (mHandScrolling) {
