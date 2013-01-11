@@ -719,14 +719,13 @@ void BuildingEditorWindow::setCurrentRoom(Room *room) const
 
 Room *BuildingEditorWindow::currentRoom() const
 {
-    if (!mCurrentDocument)
-        return 0;
-    if (!currentBuilding()->roomCount())
+    Building *building = currentBuilding();
+    if (!building || !building->roomCount())
         return 0;
     int roomIndex = mRoomComboBox->currentIndex();
-    if (roomIndex < 0)
+    if (roomIndex < 0 || roomIndex >= building->roomCount())
         return 0;
-    return mCurrentDocument->building()->room(roomIndex);
+    return building->room(roomIndex);
 }
 
 Building *BuildingEditorWindow::currentBuilding() const
