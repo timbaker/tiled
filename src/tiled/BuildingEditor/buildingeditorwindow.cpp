@@ -2485,8 +2485,9 @@ void BuildingEditorWindow::updateActions()
 
     ui->actionShowObjects->setEnabled(hasDoc);
 
-    Zoomable *zoomable = (mEditMode == ObjectMode) ? mOrthoView->zoomable()
-                                                   : mIsoView->zoomable();
+    Zoomable *zoomable = (mEditMode == ObjectMode && mOrient == OrientOrtho)
+            ? mOrthoView->zoomable()
+            : mIsoView->zoomable();
     ui->actionZoomIn->setEnabled(hasDoc && zoomable->canZoomIn());
     ui->actionZoomOut->setEnabled(hasDoc && zoomable->canZoomOut());
     ui->actionNormalSize->setEnabled(hasDoc && zoomable->scale() != 1.0);
