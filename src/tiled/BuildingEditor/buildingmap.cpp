@@ -158,6 +158,46 @@ void BuildingMap::setCursorObject(BuildingFloor *floor, BuildingObject *object)
     }
 }
 
+void BuildingMap::dragObject(BuildingObject *object, const QPoint &offset)
+{
+    mShadowBuilding->dragObject(object, offset);
+    pendingLayoutToSquares.insert(object->floor());
+    if (!pending) {
+        QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
+        pending = true;
+    }
+}
+
+void BuildingMap::resetDrag(BuildingObject *object)
+{
+    mShadowBuilding->resetDrag(object);
+    pendingLayoutToSquares.insert(object->floor());
+    if (!pending) {
+        QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
+        pending = true;
+    }
+}
+
+void BuildingMap::changeFloorGrid(BuildingFloor *floor, const QVector<QVector<Room*> > &grid)
+{
+    mShadowBuilding->changeFloorGrid(floor, grid);
+    pendingLayoutToSquares.insert(floor);
+    if (!pending) {
+        QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
+        pending = true;
+    }
+}
+
+void BuildingMap::resetFloorGrid(BuildingFloor *floor)
+{
+    mShadowBuilding->resetFloorGrid(floor);
+    pendingLayoutToSquares.insert(floor);
+    if (!pending) {
+        QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
+        pending = true;
+    }
+}
+
 #else
 /**
   This method requires a bit of explanation.  The purpose is to show the result of
@@ -841,6 +881,57 @@ public:
     BuildingObject *mShadowObject;
 };
 
+class MoveObjectModifier : public BuildingModifier
+{
+public:
+    MoveObjectModifier(ShadowBuilding *sb, BuildingObject *object) :
+        BuildingModifier(sb),
+        mObject(object)
+    {
+        // The shadow object should already exist, we're just moving an existing object.
+
+    }
+
+    ~MoveObjectModifier()
+    {
+        setOffset(QPoint(0, 0));
+    }
+
+    void setOffset(const QPoint &offset)
+    {
+        BuildingObject *shadowObject = mShadowBuilding->shadowObject(mObject);
+        shadowObject->setPos(mObject->pos() + offset);
+    }
+
+    BuildingObject *mObject;
+};
+
+
+class ChangeFloorGridModifier : public BuildingModifier
+{
+public:
+    ChangeFloorGridModifier(ShadowBuilding *sb, BuildingFloor *floor) :
+        BuildingModifier(sb),
+        mFloor(floor)
+    {
+        // The shadow object should already exist, we're just moving an existing object.
+    }
+
+    ~ChangeFloorGridModifier()
+    {
+        BuildingFloor *shadowFloor = mShadowBuilding->floor(mFloor->level());
+        shadowFloor->setGrid(mFloor->grid());
+    }
+
+    void setGrid(const QVector<QVector<Room*> > &grid)
+    {
+        BuildingFloor *shadowFloor = mShadowBuilding->floor(mFloor->level());
+        shadowFloor->setGrid(grid);
+    }
+
+    BuildingFloor *mFloor;
+};
+
 ShadowBuilding::ShadowBuilding(const Building *building) :
     mBuilding(building),
     mCursorObjectModifier(0)
@@ -1051,4 +1142,58 @@ bool ShadowBuilding::setCursorObject(BuildingFloor *floor, BuildingObject *objec
     }
 
     return true;
+}
+
+void ShadowBuilding::dragObject(BuildingObject *object, const QPoint &offset)
+{
+    foreach (BuildingModifier *bmod, mModifiers) {
+        if (MoveObjectModifier *mod = dynamic_cast<MoveObjectModifier*>(bmod)) {
+            if (mod->mObject == object) {
+                mod->setOffset(offset);
+                return;
+            }
+        }
+    }
+
+    MoveObjectModifier *mod = new MoveObjectModifier(this, object);
+    mod->setOffset(offset);
+}
+
+void ShadowBuilding::resetDrag(BuildingObject *object)
+{
+    foreach (BuildingModifier *bmod, mModifiers) {
+        if (MoveObjectModifier *mod = dynamic_cast<MoveObjectModifier*>(bmod)) {
+            if (mod->mObject == object) {
+                delete mod;
+                return;
+            }
+        }
+    }
+}
+
+void ShadowBuilding::changeFloorGrid(BuildingFloor *floor, const QVector<QVector<Room*> > &grid)
+{
+    foreach (BuildingModifier *bmod, mModifiers) {
+        if (ChangeFloorGridModifier *mod = dynamic_cast<ChangeFloorGridModifier*>(bmod)) {
+            if (mod->mFloor == floor) {
+                mod->setGrid(grid);
+                return;
+            }
+        }
+    }
+
+    ChangeFloorGridModifier *mod = new ChangeFloorGridModifier(this, floor);
+    mod->setGrid(grid);
+}
+
+void ShadowBuilding::resetFloorGrid(BuildingFloor *floor)
+{
+    foreach (BuildingModifier *bmod, mModifiers) {
+        if (ChangeFloorGridModifier *mod = dynamic_cast<ChangeFloorGridModifier*>(bmod)) {
+            if (mod->mFloor == floor) {
+                delete mod;
+                return;
+            }
+        }
+    }
 }

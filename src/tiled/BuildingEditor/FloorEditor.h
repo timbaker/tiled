@@ -407,6 +407,16 @@ public:
     virtual void setCursorObject(BuildingObject *object)
     { Q_UNUSED(object) }
 
+    virtual void dragObject(BuildingObject *object, const QPoint &offset)
+    { Q_UNUSED(object) Q_UNUSED(offset) }
+    virtual void resetDrag(BuildingObject *object)
+    { Q_UNUSED(object) }
+    virtual void changeFloorGrid(BuildingFloor *floor,
+                                 const QVector<QVector<Room*> > &grid)
+    { Q_UNUSED(floor) Q_UNUSED(grid) }
+    virtual void resetFloorGrid(BuildingFloor *floor)
+    { Q_UNUSED(floor) }
+
     virtual void setEditingTiles(bool editing);
     bool editingTiles() const { return mEditingTiles; }
 

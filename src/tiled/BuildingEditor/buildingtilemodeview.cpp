@@ -515,6 +515,27 @@ void BuildingTileModeScene::setCursorObject(BuildingObject *object)
     mBuildingMap->setCursorObject(currentFloor(), object);
 }
 
+void BuildingTileModeScene::dragObject(BuildingObject *object, const QPoint &offset)
+{
+    mBuildingMap->dragObject(object, offset);
+}
+
+void BuildingTileModeScene::resetDrag(BuildingObject *object)
+{
+    mBuildingMap->resetDrag(object);
+}
+
+void BuildingTileModeScene::changeFloorGrid(BuildingFloor *floor,
+                                            const QVector<QVector<Room*> > &grid)
+{
+    mBuildingMap->changeFloorGrid(floor, grid);
+}
+
+void BuildingTileModeScene::resetFloorGrid(BuildingFloor *floor)
+{
+    mBuildingMap->resetFloorGrid(floor);
+}
+
 bool BuildingTileModeScene::shouldShowFloorItem(BuildingFloor *floor) const
 {
     return !mEditingTiles

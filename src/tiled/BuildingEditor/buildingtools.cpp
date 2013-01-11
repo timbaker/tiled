@@ -619,14 +619,19 @@ void SelectMoveRoomsTool::startMoving()
 
 void SelectMoveRoomsTool::updateMovingItems()
 {
+    bool allFloors = controlModifier();
+    bool objectsToo = shiftModifier();
+
     foreach (BuildingFloor *floor, mEditor->building()->floors()) {
         GraphicsFloorItem *floorItem = mEditor->itemForFloor(floor);
         QImage *bmp = floorItem->bmp();
         QImage *dragBmp = floorItem->dragBmp();
 
+        QVector<QVector<Room*> > dragGrid = floor->grid();
+
         *dragBmp = *bmp;
 
-        bool moveThisFloor = (floor == this->floor()) || controlModifier();
+        bool moveThisFloor = (floor == this->floor()) || allFloors;
         if (moveThisFloor) {
 
             // Erase the area being moved.
@@ -634,8 +639,10 @@ void SelectMoveRoomsTool::updateMovingItems()
             foreach (QRect r, mSelectedArea.rects()) {
                 r &= floorBounds;
                 for (int x = r.left(); x <= r.right(); x++)
-                    for (int y = r.top(); y <= r.bottom(); y++)
+                    for (int y = r.top(); y <= r.bottom(); y++) {
                         dragBmp->setPixel(x, y, qRgb(0,0,0));
+                        dragGrid[x][y] = 0;
+                    }
             }
 
             // Copy the moved area to its new location.
@@ -644,11 +651,15 @@ void SelectMoveRoomsTool::updateMovingItems()
                 for (int x = src.left(); x <= src.right(); x++) {
                     for (int y = src.top(); y <= src.bottom(); y++) {
                         QPoint p = QPoint(x, y) + mDragOffset;
-                        if (floorBounds.contains(p))
+                        if (floorBounds.contains(p)) {
                             dragBmp->setPixel(p, bmp->pixel(x, y));
+                            dragGrid[p.x()][p.y()] = floor->GetRoomAt(x, y);
+                        }
                     }
                 }
             }
+
+            mEditor->changeFloorGrid(floor, dragGrid);
         }
 
         floorItem->update();
@@ -656,9 +667,11 @@ void SelectMoveRoomsTool::updateMovingItems()
         // Update objects
         foreach (BuildingObject *object, floor->objects()) {
             GraphicsObjectItem *objectItem = floorItem->itemForObject(object);
+            bool moveThisObject = moveThisFloor && objectsToo &&
+                    mSelectedArea.intersects(object->bounds());
             objectItem->setDragOffset(mDragOffset);
-            objectItem->setDragging(moveThisFloor && shiftModifier() &&
-                                    mSelectedArea.intersects(object->bounds()));
+            objectItem->setDragging(moveThisObject);
+            mEditor->dragObject(object, moveThisObject ? mDragOffset : QPoint());
         }
     }
 
@@ -684,8 +697,11 @@ void SelectMoveRoomsTool::finishMoving(const QPointF &pos)
         GraphicsFloorItem *item = mEditor->itemForFloor(floor);
         delete item->dragBmp();
         item->setDragBmp(0);
-        foreach (BuildingObject *object, floor->objects())
+        mEditor->resetFloorGrid(floor);
+        foreach (BuildingObject *object, floor->objects()) {
             item->itemForObject(object)->setDragging(false);
+            mEditor->resetDrag(object);
+        }
     }
 
     if (mDragOffset.isNull()) // Move is a no-op
@@ -713,8 +729,11 @@ void SelectMoveRoomsTool::cancelMoving()
         GraphicsFloorItem *item = mEditor->itemForFloor(floor);
         delete item->dragBmp();
         item->setDragBmp(0);
-        foreach (BuildingObject *object, floor->objects())
+        mEditor->resetFloorGrid(floor);
+        foreach (BuildingObject *object, floor->objects()) {
             item->itemForObject(object)->setDragging(false);
+            mEditor->resetDrag(object);
+        }
     }
 
     QPainterPath path;
@@ -1857,6 +1876,7 @@ void SelectMoveObjectTool::currentModifiersChanged(Qt::KeyboardModifiers modifie
             item->setSelected(!duplicate);
             item->setDragging(!duplicate);
             item->setDragOffset(mDragOffset);
+            mEditor->dragObject(object, mDragOffset);
         }
         foreach (GraphicsObjectItem *item, mClones) {
             item->setVisible(duplicate);
@@ -1966,6 +1986,7 @@ void SelectMoveObjectTool::finishMoving(const QPointF &pos)
         GraphicsObjectItem *item = mEditor->itemForObject(object);
         item->setDragging(false);
         item->setSelected(true);
+        mEditor->resetDrag(object);
     }
     qDeleteAll(mClones);
     mClones.clear();
@@ -2012,6 +2033,7 @@ void SelectMoveObjectTool::cancelMoving()
         GraphicsObjectItem *item = mEditor->itemForObject(object);
         item->setDragging(false);
         item->setSelected(true);
+        mEditor->resetDrag(object);
     }
     qDeleteAll(mClones);
     mClones.clear();

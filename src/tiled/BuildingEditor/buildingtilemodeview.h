@@ -152,6 +152,10 @@ public:
                            int level = 0) const;
 
     void setCursorObject(BuildingObject *object);
+    void dragObject(BuildingObject *object, const QPoint &offset);
+    void resetDrag(BuildingObject *object);
+    void changeFloorGrid(BuildingFloor *floor, const QVector<QVector<Room*> > &grid);
+    void resetFloorGrid(BuildingFloor *floor);
 
     bool shouldShowFloorItem(BuildingFloor *floor) const;
     bool shouldShowObjectItem(BuildingObject *object) const;

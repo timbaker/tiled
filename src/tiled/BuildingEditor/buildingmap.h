@@ -62,6 +62,9 @@ public:
 
     BuildingFloor *floor(int level) const;
 
+    BuildingObject *shadowObject(BuildingObject *object)
+    { return mOriginalToShadowObject[object]; }
+
     void buildingRotated();
     void buildingResized();
 
@@ -82,8 +85,14 @@ public:
     void roomAdded(Room *room);
     void roomRemoved(Room *room);
 
+    /////
     bool setCursorObject(BuildingFloor *floor, BuildingObject *object);
+    void dragObject(BuildingObject *object, const QPoint &offset);
+    void resetDrag(BuildingObject *object);
 
+    void changeFloorGrid(BuildingFloor *floor, const QVector<QVector<Room *> > &grid);
+    void resetFloorGrid(BuildingFloor *floor);
+    /////
 
     BuildingFloor *cloneFloor(BuildingFloor *floor);
     BuildingObject *cloneObject(BuildingFloor *shadowFloor, BuildingObject *object);
@@ -120,7 +129,14 @@ public:
 
     static QStringList layerNames(int level);
 
+    /////
     void setCursorObject(BuildingFloor *floor, BuildingObject *object);
+    void dragObject(BuildingObject *object, const QPoint &offset);
+    void resetDrag(BuildingObject *object);
+
+    void changeFloorGrid(BuildingFloor *floor, const QVector<QVector<Room*> > &grid);
+    void resetFloorGrid(BuildingFloor *floor);
+    /////
 
     Tiled::Map *mergedMap() const;
 
