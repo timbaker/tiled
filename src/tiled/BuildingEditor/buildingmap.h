@@ -87,7 +87,7 @@ public:
 
     /////
     bool setCursorObject(BuildingFloor *floor, BuildingObject *object);
-    void dragObject(BuildingObject *object, const QPoint &offset);
+    void dragObject(BuildingFloor *floor, BuildingObject *object, const QPoint &offset);
     void resetDrag(BuildingObject *object);
 
     void changeFloorGrid(BuildingFloor *floor, const QVector<QVector<Room *> > &grid);
@@ -131,8 +131,8 @@ public:
 
     /////
     void setCursorObject(BuildingFloor *floor, BuildingObject *object);
-    void dragObject(BuildingObject *object, const QPoint &offset);
-    void resetDrag(BuildingObject *object);
+    void dragObject(BuildingFloor *floor, BuildingObject *object, const QPoint &offset);
+    void resetDrag(BuildingFloor *floor, BuildingObject *object);
 
     void changeFloorGrid(BuildingFloor *floor, const QVector<QVector<Room*> > &grid);
     void resetFloorGrid(BuildingFloor *floor);

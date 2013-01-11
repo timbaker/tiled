@@ -158,20 +158,20 @@ void BuildingMap::setCursorObject(BuildingFloor *floor, BuildingObject *object)
     }
 }
 
-void BuildingMap::dragObject(BuildingObject *object, const QPoint &offset)
+void BuildingMap::dragObject(BuildingFloor *floor, BuildingObject *object, const QPoint &offset)
 {
-    mShadowBuilding->dragObject(object, offset);
-    pendingLayoutToSquares.insert(object->floor());
+    mShadowBuilding->dragObject(floor, object, offset);
+    pendingLayoutToSquares.insert(floor);
     if (!pending) {
         QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
         pending = true;
     }
 }
 
-void BuildingMap::resetDrag(BuildingObject *object)
+void BuildingMap::resetDrag(BuildingFloor *floor, BuildingObject *object)
 {
     mShadowBuilding->resetDrag(object);
-    pendingLayoutToSquares.insert(object->floor());
+    pendingLayoutToSquares.insert(floor);
     if (!pending) {
         QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
         pending = true;
@@ -968,11 +968,13 @@ void ShadowBuilding::buildingResized()
 
 void ShadowBuilding::floorAdded(BuildingFloor *floor)
 {
+    Q_UNUSED(floor)
     // The whole ShadowBuilding gets recreated elsewhere.
 }
 
 void ShadowBuilding::floorRemoved(BuildingFloor *floor)
 {
+    Q_UNUSED(floor)
     // The whole ShadowBuilding gets recreated elsewhere.
 }
 
@@ -1042,6 +1044,7 @@ void ShadowBuilding::objectAboutToBeRemoved(BuildingObject *object)
 
 void ShadowBuilding::objectRemoved(BuildingObject *object)
 {
+    Q_UNUSED(object)
 }
 
 void ShadowBuilding::objectMoved(BuildingObject *object)
@@ -1144,8 +1147,22 @@ bool ShadowBuilding::setCursorObject(BuildingFloor *floor, BuildingObject *objec
     return true;
 }
 
-void ShadowBuilding::dragObject(BuildingObject *object, const QPoint &offset)
+void ShadowBuilding::dragObject(BuildingFloor *floor, BuildingObject *object, const QPoint &offset)
 {
+    if (object->floor() == 0) {
+        foreach (BuildingModifier *bmod, mModifiers) {
+            if (AddObjectModifier *mod = dynamic_cast<AddObjectModifier*>(bmod)) {
+                if (mod->mObject == object) {
+                    mod->mShadowObject->setPos(object->pos() + offset);
+                    return;
+                }
+            }
+        }
+        AddObjectModifier *mod = new AddObjectModifier(this, floor, object);
+        mod->mShadowObject->setPos(object->pos() + offset);
+        return;
+    }
+
     foreach (BuildingModifier *bmod, mModifiers) {
         if (MoveObjectModifier *mod = dynamic_cast<MoveObjectModifier*>(bmod)) {
             if (mod->mObject == object) {
@@ -1163,6 +1180,12 @@ void ShadowBuilding::resetDrag(BuildingObject *object)
 {
     foreach (BuildingModifier *bmod, mModifiers) {
         if (MoveObjectModifier *mod = dynamic_cast<MoveObjectModifier*>(bmod)) {
+            if (mod->mObject == object) {
+                delete mod;
+                return;
+            }
+        }
+        if (AddObjectModifier *mod = dynamic_cast<AddObjectModifier*>(bmod)) {
             if (mod->mObject == object) {
                 delete mod;
                 return;

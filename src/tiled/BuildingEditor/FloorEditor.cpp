@@ -1097,9 +1097,12 @@ GraphicsRoofHandleItem::GraphicsRoofHandleItem(GraphicsRoofItem *roofItem, Type 
 
 QPainterPath GraphicsRoofHandleItem::shape() const
 {
+    // Cursor objects have no floor.
+    int level = mRoofItem->object()->floor() ? mRoofItem->object()->floor()->level()
+                                             : mEditor->currentLevel();
+
     QPainterPath path;
-    path.addPolygon(mEditor->tileToScenePolygonF(mTileBounds,
-                                                 mRoofItem->object()->floor()->level()));
+    path.addPolygon(mEditor->tileToScenePolygonF(mTileBounds, level));
     return path;
 }
 
@@ -1112,8 +1115,12 @@ void GraphicsRoofHandleItem::paint(QPainter *painter, const QStyleOptionGraphics
 {
     Q_UNUSED(option)
     Q_UNUSED(widget)
-    QPolygonF polygon = mEditor->tileToScenePolygonF(mTileBounds,
-                                                     mRoofItem->object()->floor()->level());
+
+    // Cursor objects have no floor.
+    int level = mRoofItem->object()->floor() ? mRoofItem->object()->floor()->level()
+                                             : mEditor->currentLevel();
+
+    QPolygonF polygon = mEditor->tileToScenePolygonF(mTileBounds, level);
     painter->setBrush(mHighlight ? Qt::white : Qt::gray);
     painter->drawConvexPolygon(polygon);
 //    painter->drawRect(r);
@@ -1147,17 +1154,20 @@ void GraphicsRoofHandleItem::paint(QPainter *painter, const QStyleOptionGraphics
 
     if (cross) {
         mEditor->drawLine(painter, mTileBounds.topLeft(), mTileBounds.bottomRight(),
-                          mRoofItem->object()->floor()->level());
+                          level);
         mEditor->drawLine(painter, mTileBounds.topRight(), mTileBounds.bottomLeft(),
-                          mRoofItem->object()->floor()->level());
+                          level);
     }
 }
 
 void GraphicsRoofHandleItem::synchWithObject()
 {
+    // Cursor objects have no floor.
+    int level = mRoofItem->object()->floor() ? mRoofItem->object()->floor()->level()
+                                             : mEditor->currentLevel();
+
     mTileBounds = calcBoundingRect();
-    QRectF r = mEditor->tileToScenePolygonF(mTileBounds,
-                                            mRoofItem->object()->floor()->level()).boundingRect();
+    QRectF r = mEditor->tileToScenePolygonF(mTileBounds, level).boundingRect();
     if (r != mBoundingRect) {
         prepareGeometryChange();
         mBoundingRect = r;
@@ -1312,8 +1322,12 @@ void GraphicsWallHandleItem::paint(QPainter *painter,
 {
     Q_UNUSED(option)
     Q_UNUSED(widget)
-    QPolygonF polygon = mWallItem->editor()->tileToScenePolygonF(mTileRect,
-                                                                 mWallItem->object()->floor()->level());
+
+    // Cursor objects have no floor.
+    int level = mWallItem->object()->floor() ? mWallItem->object()->floor()->level()
+                                             : mWallItem->editor()->currentLevel();
+
+    QPolygonF polygon = mWallItem->editor()->tileToScenePolygonF(mTileRect, level);
     painter->setBrush(mHighlight ? Qt::white : Qt::gray);
     painter->drawConvexPolygon(polygon);
 //    painter->drawRect(r);
@@ -1321,9 +1335,12 @@ void GraphicsWallHandleItem::paint(QPainter *painter,
 
 void GraphicsWallHandleItem::synchWithObject()
 {
+    // Cursor objects have no floor.
+    int level = mWallItem->object()->floor() ? mWallItem->object()->floor()->level()
+                                             : mWallItem->editor()->currentLevel();
+
     mTileRect = calcBoundingRect();
-    QRectF r = mWallItem->editor()->tileToScenePolygonF(mTileRect,
-                                                        mWallItem->object()->floor()->level()).boundingRect();
+    QRectF r = mWallItem->editor()->tileToScenePolygonF(mTileRect, level).boundingRect();
     if (r != mBoundingRect) {
         prepareGeometryChange();
         mBoundingRect = r;

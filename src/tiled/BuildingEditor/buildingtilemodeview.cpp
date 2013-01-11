@@ -515,14 +515,14 @@ void BuildingTileModeScene::setCursorObject(BuildingObject *object)
     mBuildingMap->setCursorObject(currentFloor(), object);
 }
 
-void BuildingTileModeScene::dragObject(BuildingObject *object, const QPoint &offset)
+void BuildingTileModeScene::dragObject(BuildingFloor *floor, BuildingObject *object, const QPoint &offset)
 {
-    mBuildingMap->dragObject(object, offset);
+    mBuildingMap->dragObject(floor, object, offset);
 }
 
-void BuildingTileModeScene::resetDrag(BuildingObject *object)
+void BuildingTileModeScene::resetDrag(BuildingFloor *floor, BuildingObject *object)
 {
-    mBuildingMap->resetDrag(object);
+    mBuildingMap->resetDrag(floor, object);
 }
 
 void BuildingTileModeScene::changeFloorGrid(BuildingFloor *floor,

@@ -671,7 +671,7 @@ void SelectMoveRoomsTool::updateMovingItems()
                     mSelectedArea.intersects(object->bounds());
             objectItem->setDragOffset(mDragOffset);
             objectItem->setDragging(moveThisObject);
-            mEditor->dragObject(object, moveThisObject ? mDragOffset : QPoint());
+            mEditor->dragObject(floor, object, moveThisObject ? mDragOffset : QPoint());
         }
     }
 
@@ -700,7 +700,7 @@ void SelectMoveRoomsTool::finishMoving(const QPointF &pos)
         mEditor->resetFloorGrid(floor);
         foreach (BuildingObject *object, floor->objects()) {
             item->itemForObject(object)->setDragging(false);
-            mEditor->resetDrag(object);
+            mEditor->resetDrag(floor, object);
         }
     }
 
@@ -732,7 +732,7 @@ void SelectMoveRoomsTool::cancelMoving()
         mEditor->resetFloorGrid(floor);
         foreach (BuildingObject *object, floor->objects()) {
             item->itemForObject(object)->setDragging(false);
-            mEditor->resetDrag(object);
+            mEditor->resetDrag(floor, object);
         }
     }
 
@@ -1862,25 +1862,35 @@ void SelectMoveObjectTool::currentModifiersChanged(Qt::KeyboardModifiers modifie
     if (mMode == Moving) {
         bool duplicate = controlModifier();
         if (duplicate && mClones.isEmpty()) {
+            int index = floor()->objectCount();
             foreach (BuildingObject *object, mMovingObjects) {
-                GraphicsObjectItem *item = mEditor->createItemForObject(object);
+                BuildingObject *clone = object->clone();
+                clone->setFloor(0);
+                GraphicsObjectItem *item = mEditor->createItemForObject(clone);
                 item->setSelected(true);
                 item->setDragging(true);
-                item->setZValue(mEditor->ZVALUE_CURSOR + object->index());
+                item->setZValue(mEditor->ZVALUE_CURSOR + index++);
+                if (object == mEditor->mouseOverObject())
+                    item->setMouseOver(true);
                 mEditor->addItem(item);
                 mClones += item;
             }
         }
+        // When duplicating, the original objects are left at their original
+        // locations.
         foreach (BuildingObject *object, mMovingObjects) {
             GraphicsObjectItem *item = mEditor->itemForObject(object);
             item->setSelected(!duplicate);
             item->setDragging(!duplicate);
             item->setDragOffset(mDragOffset);
-            mEditor->dragObject(object, mDragOffset);
+            if (object == mEditor->mouseOverObject())
+                item->setMouseOver(!duplicate);
+            mEditor->dragObject(object->floor(), object, duplicate ? QPoint(0,0) : mDragOffset);
         }
         foreach (GraphicsObjectItem *item, mClones) {
             item->setVisible(duplicate);
             item->setDragOffset(mDragOffset);
+            mEditor->dragObject(floor(), item->object(), mDragOffset);
         }
     }
 }
@@ -1986,9 +1996,14 @@ void SelectMoveObjectTool::finishMoving(const QPointF &pos)
         GraphicsObjectItem *item = mEditor->itemForObject(object);
         item->setDragging(false);
         item->setSelected(true);
-        mEditor->resetDrag(object);
+        mEditor->resetDrag(object->floor(), object);
     }
-    qDeleteAll(mClones);
+    foreach (GraphicsObjectItem *item, mClones) {
+        BuildingObject *clone = item->object();
+        mEditor->resetDrag(floor(), clone);
+        delete item;
+        delete clone;
+    }
     mClones.clear();
 
     if (mDragOffset.isNull()) // Move is a no-op
@@ -2033,9 +2048,14 @@ void SelectMoveObjectTool::cancelMoving()
         GraphicsObjectItem *item = mEditor->itemForObject(object);
         item->setDragging(false);
         item->setSelected(true);
-        mEditor->resetDrag(object);
+        mEditor->resetDrag(object->floor(), object);
     }
-    qDeleteAll(mClones);
+    foreach (GraphicsObjectItem *item, mClones) {
+        BuildingObject *clone = item->object();
+        mEditor->resetDrag(floor(), clone);
+        delete item;
+        delete clone;
+    }
     mClones.clear();
 
     mMovingObjects.clear();
