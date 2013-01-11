@@ -151,7 +151,7 @@ public:
                            const QColor &color, const QRectF &exposed,
                            int level = 0) const;
 
-    void setCursorObject(BuildingObject *object, const QRect &bounds = QRect());
+    void setCursorObject(BuildingObject *object);
 
     bool shouldShowFloorItem(BuildingFloor *floor) const;
     bool shouldShowObjectItem(BuildingObject *object) const;

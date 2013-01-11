@@ -509,9 +509,9 @@ void BuildingTileModeScene::drawTileSelection(QPainter *painter, const QRegion &
     mapRenderer()->drawTileSelection(painter, region, color, exposed, level);
 }
 
-void BuildingTileModeScene::setCursorObject(BuildingObject *object, const QRect &bounds)
+void BuildingTileModeScene::setCursorObject(BuildingObject *object)
 {
-    mBuildingMap->setCursorObject(currentFloor(), object, bounds);
+    mBuildingMap->setCursorObject(currentFloor(), object);
 }
 
 bool BuildingTileModeScene::shouldShowFloorItem(BuildingFloor *floor) const
@@ -708,6 +708,8 @@ void BuildingTileModeScene::roomAdded(Room *room)
         mBuildingMap->floorEdited(floor);
         BaseFloorEditor::floorEdited(floor);
     }
+
+    mBuildingMap->roomAdded(room);
 }
 
 void BuildingTileModeScene::roomRemoved(Room *room)
@@ -717,6 +719,8 @@ void BuildingTileModeScene::roomRemoved(Room *room)
         mBuildingMap->floorEdited(floor);
         BaseFloorEditor::floorEdited(floor);
     }
+
+    mBuildingMap->roomRemoved(room);
 }
 
 void BuildingTileModeScene::roomChanged(Room *room)

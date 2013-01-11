@@ -20,6 +20,7 @@
 #include "building.h"
 #include "buildingfloor.h"
 #include "buildingobjects.h"
+#include "buildingtemplates.h"
 #include "buildingtiles.h"
 
 #include "mapcomposite.h"
@@ -51,7 +52,8 @@ BuildingMap::BuildingMap(Building *building) :
     pendingRecreateAll(false),
     pendingBuildingResized(false),
     mCursorObjectFloor(0),
-    mCursorObjectBuilding(0)
+    mCursorObjectBuilding(0),
+    mShadowBuilding(0)
 {
     BuildingToMap();
 }
@@ -71,6 +73,9 @@ BuildingMap::~BuildingMap()
 
         delete mMapRenderer;
     }
+
+    if (mShadowBuilding)
+        delete mShadowBuilding;
 }
 
 QString BuildingMap::buildingTileAt(int x, int y, int level, const QString &layerName)
@@ -131,6 +136,29 @@ QStringList BuildingMap::layerNames(int level)
     return ret;
 }
 
+#if 1
+void BuildingMap::setCursorObject(BuildingFloor *floor, BuildingObject *object)
+{
+    if (mCursorObjectFloor && (mCursorObjectFloor != floor)) {
+        pendingLayoutToSquares.insert(mCursorObjectFloor);
+        if (!pending) {
+            QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
+            pending = true;
+        }
+        mCursorObjectFloor = 0;
+    }
+
+    if (mShadowBuilding->setCursorObject(floor, object)) {
+        pendingLayoutToSquares.insert(floor);
+        if (!pending) {
+            QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
+            pending = true;
+        }
+        mCursorObjectFloor = object ? floor : 0;
+    }
+}
+
+#else
 /**
   This method requires a bit of explanation.  The purpose is to show the result of
   adding or resizing a building object in real time.  BuildingFloor::LayoutToSquares
@@ -181,6 +209,8 @@ void BuildingMap::setCursorObject(BuildingFloor *floor, BuildingObject *object,
                 mCursorObjectFloor->SetRoomAt(x - r.x(), y - r.y(), floor->GetRoomAt(x, y));
             }
         }
+
+        // Copy overlapping objects.
         foreach (BuildingObject *object, floor->objects()) {
             if (r.adjusted(0,0,1,1) // some objects can be on the edge of the building
                     .intersects(object->bounds())) {
@@ -191,10 +221,15 @@ void BuildingMap::setCursorObject(BuildingFloor *floor, BuildingObject *object,
                                                  clone);
             }
         }
-        BuildingObject *clone = object->clone();
-        clone->setPos(clone->pos() - r.topLeft());
-        clone->setFloor(mCursorObjectFloor);
-        mCursorObjectFloor->insertObject(mCursorObjectFloor->objectCount(), clone);
+
+        // Clone the given object if it is a cursor object.
+        if (!floor->objects().contains(object)) {
+            BuildingObject *clone = object->clone();
+            clone->setPos(clone->pos() - r.topLeft());
+            clone->setFloor(mCursorObjectFloor);
+            mCursorObjectFloor->insertObject(mCursorObjectFloor->objectCount(), clone);
+        }
+
         mCursorObjectFloor->LayoutToSquares();
         mCursorObjectPos = r.topLeft();
 
@@ -205,6 +240,7 @@ void BuildingMap::setCursorObject(BuildingFloor *floor, BuildingObject *object,
         }
     }
 }
+#endif
 
 Map *BuildingMap::mergedMap() const
 {
@@ -256,6 +292,11 @@ void BuildingMap::BuildingToMap()
 
         delete mMapRenderer;
     }
+
+    if (mShadowBuilding)
+        delete mShadowBuilding;
+    mShadowBuilding = new ShadowBuilding(mBuilding);
+    mCursorObjectFloor = 0;
 
     Map::Orientation orient = Map::LevelIsometric;
 
@@ -341,7 +382,7 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
     int offset = (mMap->orientation() == Map::LevelIsometric)
             ? 0 : (maxLevel - floor->level()) * 3;
 
-#if 1
+#if 0
     QRect cursorBounds;
     if (mCursorObjectFloor && mCursorObjectFloor->level() == floor->level()) {
         cursorBounds = mCursorObjectBounds.adjusted(-1,-1,1,1) & floor->bounds(1, 1);
@@ -357,6 +398,8 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
         for (int x = area.x(); x <= area.right() + 1; x++) {
             for (int y = area.y(); y <= area.bottom() + 1; y++) {
 #if 1
+                const BuildingFloor::Square &square = mShadowBuilding->floor(floor->level())->squares[x][y];
+#elif 0
                 const BuildingFloor::Square &square = cursorBounds.contains(x, y)
                         ? mCursorObjectFloor->squares[x - mCursorObjectPos.x()][y - mCursorObjectPos.y()]
                         : floor->squares[x][y];
@@ -437,6 +480,8 @@ void BuildingMap::floorRemoved(BuildingFloor *floor)
 
 void BuildingMap::floorEdited(BuildingFloor *floor)
 {
+    mShadowBuilding->floorEdited(floor);
+
     pendingLayoutToSquares.insert(floor);
     if (!pending) {
         QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
@@ -446,6 +491,8 @@ void BuildingMap::floorEdited(BuildingFloor *floor)
 
 void BuildingMap::floorTilesChanged(BuildingFloor *floor)
 {
+    mShadowBuilding->floorTilesChanged(floor);
+
     pendingEraseUserTiles.insert(floor);
     if (!pending) {
         QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
@@ -456,6 +503,8 @@ void BuildingMap::floorTilesChanged(BuildingFloor *floor)
 void BuildingMap::floorTilesChanged(BuildingFloor *floor, const QString &layerName,
                                     const QRect &bounds)
 {
+    mShadowBuilding->floorTilesChanged(floor, layerName, bounds);
+
     pendingUserTilesToLayer[floor][layerName] |= bounds;
     if (!pending) {
         QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
@@ -479,6 +528,8 @@ void BuildingMap::objectAdded(BuildingObject *object)
         QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
         pending = true;
     }
+
+    mShadowBuilding->objectAdded(object);
 }
 
 void BuildingMap::objectAboutToBeRemoved(BuildingObject *object)
@@ -497,6 +548,8 @@ void BuildingMap::objectAboutToBeRemoved(BuildingObject *object)
         QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
         pending = true;
     }
+
+    mShadowBuilding->objectAboutToBeRemoved(object);
 }
 
 void BuildingMap::objectRemoved(BuildingObject *object)
@@ -520,6 +573,8 @@ void BuildingMap::objectMoved(BuildingObject *object)
         QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
         pending = true;
     }
+
+    mShadowBuilding->objectMoved(object);
 }
 
 void BuildingMap::objectTileChanged(BuildingObject *object)
@@ -538,6 +593,18 @@ void BuildingMap::objectTileChanged(BuildingObject *object)
         QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
         pending = true;
     }
+
+    mShadowBuilding->objectTileChanged(object);
+}
+
+void BuildingMap::roomAdded(Room *room)
+{
+    mShadowBuilding->roomAdded(room);
+}
+
+void BuildingMap::roomRemoved(Room *room)
+{
+    mShadowBuilding->roomRemoved(room);
 }
 
 // When tilesets are added/removed, BuildingTile -> Tiled::Tile needs to be
@@ -647,6 +714,8 @@ void BuildingMap::handlePending()
         foreach (BuildingFloor *floor, pendingLayoutToSquares) {
             floor->LayoutToSquares(); // not sure this belongs in this class
             pendingSquaresToTileLayers[floor] = floor->bounds();
+
+            mShadowBuilding->floor(floor->level())->LayoutToSquares();
         }
     }
 
@@ -713,3 +782,273 @@ void BuildingMap::recreateAllLater()
     }
 }
 
+/////
+
+BuildingModifier::BuildingModifier(ShadowBuilding *shadowBuilding) :
+    mShadowBuilding(shadowBuilding)
+{
+    mShadowBuilding->addModifier(this);
+}
+
+BuildingModifier::~BuildingModifier()
+{
+    mShadowBuilding->removeModifier(this);
+}
+
+class AddObjectModifier : public BuildingModifier
+{
+public:
+    AddObjectModifier(ShadowBuilding *sb, BuildingFloor *floor, BuildingObject *object) :
+        BuildingModifier(sb)
+    {
+        BuildingFloor *shadowFloor = mShadowBuilding->floor(floor->level());
+        mObject = object;
+        mShadowObject = mShadowBuilding->cloneObject(shadowFloor, object);
+        shadowFloor->insertObject(shadowFloor->objectCount(), mShadowObject);
+    }
+
+    ~AddObjectModifier()
+    {
+        // It's possible the object was added to the floor after this
+        // modifier was created.  For example, RoofTool adds the actual
+        // cursor object to the floor when creating a new roof object.
+        if (mObject)
+            mShadowBuilding->objectAboutToBeRemoved(mObject);
+    }
+
+    BuildingObject *mObject;
+    BuildingObject *mShadowObject;
+};
+
+class ResizeObjectModifier : public BuildingModifier
+{
+public:
+    ResizeObjectModifier(ShadowBuilding *sb, BuildingObject *object,
+                         BuildingObject *shadowObject) :
+        BuildingModifier(sb),
+        mObject(object),
+        mShadowObject(shadowObject)
+    {
+    }
+
+    ~ResizeObjectModifier()
+    {
+        // When resizing is cancelled/finished, redisplay the object.
+        mShadowBuilding->recreateObject(mObject->floor(), mObject);
+    }
+
+    BuildingObject *mObject;
+    BuildingObject *mShadowObject;
+};
+
+ShadowBuilding::ShadowBuilding(const Building *building) :
+    mBuilding(building),
+    mCursorObjectModifier(0)
+{
+    mShadowBuilding = new Building(mBuilding->width(), mBuilding->height());
+    mShadowBuilding->setTiles(mBuilding->tiles());
+    foreach (Room *room, mBuilding->rooms())
+        mShadowBuilding->insertRoom(mShadowBuilding->roomCount(), room);
+    foreach (BuildingFloor *floor, mBuilding->floors()) {
+        BuildingFloor *f = cloneFloor(floor);
+        f->LayoutToSquares();
+    }
+
+}
+
+ShadowBuilding::~ShadowBuilding()
+{
+    delete mShadowBuilding;
+    qDeleteAll(mModifiers);
+}
+
+BuildingFloor *ShadowBuilding::floor(int level) const
+{
+    return mShadowBuilding->floor(level);
+}
+
+void ShadowBuilding::buildingRotated()
+{
+}
+
+void ShadowBuilding::buildingResized()
+{
+}
+
+void ShadowBuilding::floorAdded(BuildingFloor *floor)
+{
+    // The whole ShadowBuilding gets recreated elsewhere.
+}
+
+void ShadowBuilding::floorRemoved(BuildingFloor *floor)
+{
+    // The whole ShadowBuilding gets recreated elsewhere.
+}
+
+void ShadowBuilding::floorEdited(BuildingFloor *floor)
+{
+    // BuildingDocument emits roomDefinitionChanged when the exterior wall changes.
+    // BuildingTileModeScene::roomDefinitionChanged() calls this method.
+    mShadowBuilding->setExteriorWall(mBuilding->exteriorWall());
+
+    mShadowBuilding->floor(floor->level())->setGrid(floor->grid());
+}
+
+void ShadowBuilding::floorTilesChanged(BuildingFloor *floor)
+{
+    BuildingFloor *shadowFloor = mShadowBuilding->floor(floor->level());
+
+    QMap<QString,FloorTileGrid*> grime = shadowFloor->setGrime(floor->grimeClone());
+    foreach (FloorTileGrid *grid, grime.values())
+        delete grid;
+}
+
+void ShadowBuilding::floorTilesChanged(BuildingFloor *floor,
+                                       const QString &layerName,
+                                       const QRect &bounds)
+{
+    BuildingFloor *shadowFloor = mShadowBuilding->floor(floor->level());
+
+    FloorTileGrid *grid = floor->grimeAt(layerName, bounds);
+    shadowFloor->setGrime(layerName, bounds.topLeft(), grid);
+    delete grid;
+}
+
+void ShadowBuilding::objectAdded(BuildingObject *object)
+{
+    foreach (BuildingModifier *bmod, mModifiers) {
+        if (AddObjectModifier *mod = dynamic_cast<AddObjectModifier*>(bmod)) {
+            if (mod->mObject == object) {
+                mod->mObject = 0;
+            }
+        }
+    }
+
+    BuildingFloor *shadowFloor = mShadowBuilding->floor(object->floor()->level());
+
+    // Check if the object was already added.  For example, RoofTool creates
+    // a cursor-object for a new roof, then adds that object to the floor
+    // when new roof object is added to the building.
+    if (mOriginalToShadowObject.contains(object)) {
+        BuildingObject *shadowObject = mOriginalToShadowObject[object];
+        shadowFloor->removeObject(shadowObject->index());
+        shadowFloor->insertObject(object->index(), shadowObject);
+        return;
+    }
+
+    shadowFloor->insertObject(object->index(), cloneObject(shadowFloor, object));
+}
+
+void ShadowBuilding::objectAboutToBeRemoved(BuildingObject *object)
+{
+    if (mOriginalToShadowObject.contains(object)) {
+        BuildingObject *shadowObject = mOriginalToShadowObject[object];
+        shadowObject->floor()->removeObject(shadowObject->index());
+        delete shadowObject;
+        mOriginalToShadowObject.remove(object);
+    }
+}
+
+void ShadowBuilding::objectRemoved(BuildingObject *object)
+{
+}
+
+void ShadowBuilding::objectMoved(BuildingObject *object)
+{
+    // This also gets called when a roof object is resized.
+    if (mOriginalToShadowObject.contains(object)) {
+        recreateObject(object->floor(), object);
+    }
+}
+
+void ShadowBuilding::objectTileChanged(BuildingObject *object)
+{
+    recreateObject(object->floor(), object);
+}
+
+void ShadowBuilding::roomAdded(Room *room)
+{
+    mShadowBuilding->insertRoom(mBuilding->indexOf(room), room);
+}
+
+void ShadowBuilding::roomRemoved(Room *room)
+{
+    mShadowBuilding->removeRoom(mShadowBuilding->indexOf(room));
+}
+
+BuildingFloor *ShadowBuilding::cloneFloor(BuildingFloor *floor)
+{
+    BuildingFloor *f = new BuildingFloor(mShadowBuilding, floor->level());
+    f->setGrid(floor->grid());
+    f->setGrime(floor->grimeClone());
+    mShadowBuilding->insertFloor(f->level(), f);
+    foreach (BuildingObject *object, floor->objects())
+        f->insertObject(f->objectCount(), cloneObject(f, object));
+    return f;
+}
+
+BuildingObject *ShadowBuilding::cloneObject(BuildingFloor *shadowFloor, BuildingObject *object)
+{
+    Q_ASSERT(!mOriginalToShadowObject.contains(object));
+    BuildingObject *clone = object->clone();
+    clone->setFloor(shadowFloor);
+    mOriginalToShadowObject[object] = clone;
+    return clone;
+}
+
+void ShadowBuilding::recreateObject(BuildingFloor *originalFloor, BuildingObject *object)
+{
+    if (mOriginalToShadowObject.contains(object)) {
+        BuildingObject *shadowObject = mOriginalToShadowObject[object];
+        int index = shadowObject->index();
+        BuildingFloor *shadowFloor = shadowObject->floor();
+        shadowFloor->removeObject(index);
+        delete shadowObject;
+        mOriginalToShadowObject.remove(object);
+
+        shadowFloor = mShadowBuilding->floor(originalFloor->level());
+        shadowObject = cloneObject(shadowFloor, object);
+        shadowFloor->insertObject(index, shadowObject);
+    }
+}
+
+void ShadowBuilding::addModifier(BuildingModifier *modifier)
+{
+    mModifiers += modifier;
+}
+
+void ShadowBuilding::removeModifier(BuildingModifier *modifier)
+{
+    mModifiers.removeAll(modifier);
+}
+
+bool ShadowBuilding::setCursorObject(BuildingFloor *floor, BuildingObject *object)
+{
+    if (!object) {
+        if (mCursorObjectModifier) {
+            delete mCursorObjectModifier;
+            mCursorObjectModifier = 0;
+            return true;
+        }
+        return false;
+    }
+
+    // Recreate the object, its tile or orientation may have changed.
+    // Also, the floor the cursor object is on might have changed.
+    if (mCursorObjectModifier) {
+        // FIXME: any modifier using the recreated shadow object must get updated
+        // or they will still point to the old shadow object.
+        if (mOriginalToShadowObject.contains(object))
+            recreateObject(floor, object);
+    } else {
+        bool cursorObject = floor->indexOf(object) == -1;
+        if (cursorObject) {
+            mCursorObjectModifier = new AddObjectModifier(this, floor, object);
+        } else {
+            mCursorObjectModifier = new ResizeObjectModifier(this, object,
+                                                             mOriginalToShadowObject[object]);
+        }
+    }
+
+    return true;
+}

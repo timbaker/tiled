@@ -40,6 +40,64 @@ namespace BuildingEditor {
 class Building;
 class BuildingFloor;
 class BuildingObject;
+class Room;
+
+class ShadowBuilding;
+
+class BuildingModifier
+{
+public:
+    BuildingModifier(ShadowBuilding *shadowBuilding);
+    virtual ~BuildingModifier();
+
+protected:
+    ShadowBuilding *mShadowBuilding;
+};
+
+class ShadowBuilding
+{
+public:
+    ShadowBuilding(const Building *building);
+    ~ShadowBuilding();
+
+    BuildingFloor *floor(int level) const;
+
+    void buildingRotated();
+    void buildingResized();
+
+    void floorAdded(BuildingFloor *floor);
+    void floorRemoved(BuildingFloor *floor);
+    void floorEdited(BuildingFloor *floor);
+
+    void floorTilesChanged(BuildingFloor *floor);
+    void floorTilesChanged(BuildingFloor *floor, const QString &layerName,
+                           const QRect &bounds);
+
+    void objectAdded(BuildingObject *object);
+    void objectAboutToBeRemoved(BuildingObject *object);
+    void objectRemoved(BuildingObject *object);
+    void objectMoved(BuildingObject *object);
+    void objectTileChanged(BuildingObject *object);
+
+    void roomAdded(Room *room);
+    void roomRemoved(Room *room);
+
+    bool setCursorObject(BuildingFloor *floor, BuildingObject *object);
+
+
+    BuildingFloor *cloneFloor(BuildingFloor *floor);
+    BuildingObject *cloneObject(BuildingFloor *shadowFloor, BuildingObject *object);
+    void recreateObject(BuildingFloor *originalFloor, BuildingObject *object);
+
+    void addModifier(BuildingModifier *modifier);
+    void removeModifier(BuildingModifier *modifier);
+
+private:    const Building *mBuilding;
+    Building *mShadowBuilding;
+    QList<BuildingModifier*> mModifiers;
+    BuildingModifier *mCursorObjectModifier;
+    QMap<BuildingObject*,BuildingObject*> mOriginalToShadowObject;
+};
 
 class BuildingMap : public QObject
 {
@@ -62,8 +120,7 @@ public:
 
     static QStringList layerNames(int level);
 
-    void setCursorObject(BuildingFloor *floor, BuildingObject *object,
-                         const QRect &bounds = QRect());
+    void setCursorObject(BuildingFloor *floor, BuildingObject *object);
 
     Tiled::Map *mergedMap() const;
 
@@ -84,6 +141,9 @@ public:
     void objectRemoved(BuildingObject *object);
     void objectMoved(BuildingObject *object);
     void objectTileChanged(BuildingObject *object);
+
+    void roomAdded(Room *room);
+    void roomRemoved(Room *room);
 
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
@@ -128,6 +188,8 @@ private:
     QRect mCursorObjectBounds;
     BuildingFloor *mCursorObjectFloor;
     Building *mCursorObjectBuilding;
+
+    ShadowBuilding *mShadowBuilding;
 };
 
 } // namespace BuildingEditor

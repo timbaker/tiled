@@ -404,8 +404,8 @@ public:
 
     void setMouseOverObject(BuildingObject *object);
 
-    virtual void setCursorObject(BuildingObject *object, const QRect &bounds = QRect())
-    { Q_UNUSED(object) Q_UNUSED(bounds) }
+    virtual void setCursorObject(BuildingObject *object)
+    { Q_UNUSED(object) }
 
     virtual void setEditingTiles(bool editing);
     bool editingTiles() const { return mEditingTiles; }

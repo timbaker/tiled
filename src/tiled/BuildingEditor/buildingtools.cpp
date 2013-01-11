@@ -1436,9 +1436,7 @@ void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
                    mHandleObject->height() + diff.y());
         updateStatusText();
 
-        mEditor->setCursorObject(mHandleObject, mHandleObject->bounds()
-                                 | QRect(mHandleObject->pos(),
-                                         QSize(mOriginalWidth, mOriginalHeight)));
+        mEditor->setCursorObject(mHandleObject);
         return;
     }
 
@@ -2076,7 +2074,6 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             mMode = Resize;
             updateStatusText();
 
-            mOriginalBounds = mHandleObject->bounds();
             mEditor->setCursorObject(mHandleObject);
             return;
         }
@@ -2176,7 +2173,7 @@ void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
                 diff.setX(floor()->width() - mStartTilePos.x());
             resizeWall(mHandleObject->length() + diff.x());
         }
-        mEditor->setCursorObject(mHandleObject, mOriginalBounds | mHandleObject->bounds());
+        mEditor->setCursorObject(mHandleObject);
         return;
     }
 
