@@ -100,6 +100,21 @@ group
         entry
         {
             orient = W
+            0,0 = appliances_cooking_01_041
+            0,1 = appliances_cooking_01_040
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_cooking_01_042
+            1,0 = appliances_cooking_01_043
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
             0,0 = appliances_cooking_01_016
         }
         entry
@@ -298,6 +313,29 @@ group
         entry
         {
             orient = W
+            0,0 = appliances_refrigeration_01_029
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_refrigeration_01_028
+        }
+        entry
+        {
+            orient = E
+            0,0 = appliances_refrigeration_01_031
+        }
+        entry
+        {
+            orient = S
+            0,0 = appliances_refrigeration_01_030
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
             0,0 = appliances_refrigeration_01_005
         }
         entry
@@ -360,6 +398,29 @@ group
         {
             orient = S
             0,0 = appliances_refrigeration_01_014
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = appliances_refrigeration_01_033
+        }
+        entry
+        {
+            orient = N
+            0,0 = appliances_refrigeration_01_032
+        }
+        entry
+        {
+            orient = E
+            0,0 = appliances_refrigeration_01_035
+        }
+        entry
+        {
+            orient = S
+            0,0 = appliances_refrigeration_01_034
         }
     }
     furniture
@@ -1442,6 +1503,21 @@ group
             0,1 = furniture_bedding_01_034
         }
     }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = furniture_bedding_01_036
+            1,0 = furniture_bedding_01_037
+        }
+        entry
+        {
+            orient = N
+            0,0 = furniture_bedding_01_039
+            0,1 = furniture_bedding_01_038
+        }
+    }
 }
 group
 {
@@ -1493,6 +1569,34 @@ group
         {
             orient = NW
             0,0 = furniture_shelving_01_008
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = furniture_shelving_01_023
+        }
+        entry
+        {
+            orient = N
+            0,0 = furniture_shelving_01_019
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = furniture_shelving_01_025
+            0,1 = furniture_shelving_01_024
+        }
+        entry
+        {
+            orient = N
+            0,0 = furniture_shelving_01_026
+            1,0 = furniture_shelving_01_027
         }
     }
 }
@@ -2574,10 +2678,9 @@ group
     }
     furniture
     {
-        layer = WallFurniture
         entry
         {
-            orient = N
+            orient = W
             0,0 = location_restaurant_bar_01_026
         }
     }
@@ -2613,10 +2716,10 @@ group
         {
             orient = N
             0,0 = location_restaurant_bar_01_014
-            0,1 = location_restaurant_bar_01_027
+            0,1 = furniture_tables_high_01_040
             0,2 = location_restaurant_bar_01_008
             1,0 = location_restaurant_bar_01_015
-            1,1 = location_restaurant_bar_01_028
+            1,1 = furniture_tables_high_01_041
             1,2 = location_restaurant_bar_01_009
         }
     }
@@ -2771,6 +2874,155 @@ group
             1,0 = location_restaurant_diner_01_033
             1,1 = location_restaurant_diner_01_007
             1,2 = location_restaurant_diner_01_037
+        }
+    }
+}
+group
+{
+    label = Location - Restaurant - Generic
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_generic_01_007
+            0,1 = location_restaurant_generic_01_004
+            1,0 = location_restaurant_generic_01_006
+            1,1 = location_restaurant_generic_01_005
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_generic_01_001
+            0,1 = location_restaurant_generic_01_000
+            1,0 = location_restaurant_generic_01_003
+            1,1 = location_restaurant_generic_01_002
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_generic_01_015
+            0,1 = location_restaurant_generic_01_012
+            1,0 = location_restaurant_generic_01_014
+            1,1 = location_restaurant_generic_01_013
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_generic_01_009
+            0,1 = location_restaurant_generic_01_008
+            1,0 = location_restaurant_generic_01_011
+            1,1 = location_restaurant_generic_01_010
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,2 = location_restaurant_generic_01_016
+            1,0 = location_restaurant_generic_01_019
+            1,1 = location_restaurant_generic_01_018
+            1,2 = location_restaurant_generic_01_017
+        }
+        entry
+        {
+            orient = N
+            0,1 = location_restaurant_generic_01_020
+            1,1 = location_restaurant_generic_01_021
+            2,0 = location_restaurant_generic_01_023
+            2,1 = location_restaurant_generic_01_022
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_generic_01_029
+            0,1 = location_restaurant_generic_01_028
+            0,2 = location_restaurant_generic_01_027
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_generic_01_024
+            1,0 = location_restaurant_generic_01_025
+            2,0 = location_restaurant_generic_01_026
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_restaurant_generic_01_037
+            0,1 = location_restaurant_generic_01_036
+            0,2 = location_restaurant_generic_01_035
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_generic_01_032
+            1,0 = location_restaurant_generic_01_033
+            2,0 = location_restaurant_generic_01_034
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_generic_01_045
+            0,1 = location_restaurant_generic_01_044
+            0,2 = location_restaurant_generic_01_043
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_generic_01_040
+            1,0 = location_restaurant_generic_01_041
+            2,0 = location_restaurant_generic_01_042
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_generic_01_047
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_generic_01_046
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_generic_01_049
+            0,1 = location_restaurant_generic_01_048
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_generic_01_052
+            1,0 = location_restaurant_generic_01_053
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_restaurant_generic_01_051
+            0,1 = location_restaurant_generic_01_050
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_generic_01_054
+            1,0 = location_restaurant_generic_01_055
         }
     }
 }
@@ -3107,6 +3359,146 @@ group
         {
             orient = N
             0,0 = location_restaurant_pie_01_059
+        }
+    }
+}
+group
+{
+    label = Location - Restaurant - Pizzawhirled
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_pizzawhirled_01_018
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pizzawhirled_01_017
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_pizzawhirled_01_031
+            0,1 = location_restaurant_pizzawhirled_01_030
+            0,2 = location_restaurant_pizzawhirled_01_029
+            0,3 = location_restaurant_pizzawhirled_01_028
+            0,4 = location_restaurant_pizzawhirled_01_027
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pizzawhirled_01_019
+            1,0 = location_restaurant_pizzawhirled_01_020
+            2,0 = location_restaurant_pizzawhirled_01_021
+            3,0 = location_restaurant_pizzawhirled_01_022
+            4,0 = location_restaurant_pizzawhirled_01_023
+        }
+    }
+    furniture
+    {
+        corners = true
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_pizzawhirled_01_035
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pizzawhirled_01_037
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_restaurant_pizzawhirled_01_039
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_pizzawhirled_01_033
+        }
+        entry
+        {
+            orient = SW
+            0,0 = location_restaurant_pizzawhirled_01_032
+        }
+        entry
+        {
+            orient = NW
+            0,0 = location_restaurant_pizzawhirled_01_036
+        }
+        entry
+        {
+            orient = NE
+            0,0 = location_restaurant_pizzawhirled_01_038
+        }
+        entry
+        {
+            orient = SE
+            0,0 = location_restaurant_pizzawhirled_01_034
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_pizzawhirled_01_041
+            0,1 = location_restaurant_pizzawhirled_01_040
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pizzawhirled_01_044
+            1,0 = location_restaurant_pizzawhirled_01_045
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_restaurant_pizzawhirled_01_043
+            0,1 = location_restaurant_pizzawhirled_01_042
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_restaurant_pizzawhirled_01_046
+            1,0 = location_restaurant_pizzawhirled_01_047
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_pizzawhirled_01_049
+            0,1 = location_restaurant_pizzawhirled_01_048
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pizzawhirled_01_050
+            1,0 = location_restaurant_pizzawhirled_01_051
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_restaurant_pizzawhirled_01_053
+            0,1 = location_restaurant_pizzawhirled_01_052
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_restaurant_pizzawhirled_01_054
+            1,0 = location_restaurant_pizzawhirled_01_055
         }
     }
 }
@@ -3618,6 +4010,117 @@ group
         {
             orient = SE
             0,0 = location_shop_generic_01_016
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_generic_01_027
+            0,1 = location_shop_generic_01_026
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_generic_01_025
+            1,0 = location_shop_generic_01_024
+        }
+    }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = location_shop_generic_01_031
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_generic_01_030
+        }
+        entry
+        {
+            orient = E
+            0,0 = location_shop_generic_01_028
+        }
+        entry
+        {
+            orient = S
+            0,0 = location_shop_generic_01_029
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_generic_01_033
+            0,1 = location_shop_generic_01_032
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_generic_01_034
+            1,0 = location_shop_generic_01_035
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_generic_01_047
+            0,1 = location_shop_generic_01_046
+            0,2 = location_shop_generic_01_044
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_generic_01_040
+            1,0 = location_shop_generic_01_041
+            2,0 = location_shop_generic_01_043
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_generic_01_047
+            0,1 = location_shop_generic_01_046
+            0,2 = location_shop_generic_01_046
+            0,3 = location_shop_generic_01_044
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_generic_01_040
+            1,0 = location_shop_generic_01_041
+            2,0 = location_shop_generic_01_041
+            3,0 = location_shop_generic_01_043
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,0 = location_shop_generic_01_047
+            0,1 = location_shop_generic_01_046
+            0,2 = location_shop_generic_01_046
+            0,3 = location_shop_generic_01_046
+            0,4 = location_shop_generic_01_044
+        }
+        entry
+        {
+            orient = N
+            0,0 = location_shop_generic_01_040
+            1,0 = location_shop_generic_01_041
+            2,0 = location_shop_generic_01_041
+            3,0 = location_shop_generic_01_041
+            4,0 = location_shop_generic_01_043
         }
     }
     furniture
@@ -4337,6 +4840,20 @@ group
             1,0 = recreational_01_011
         }
     }
+    furniture
+    {
+        layer = WallFurniture
+        entry
+        {
+            orient = W
+            0,0 = recreational_01_004
+        }
+        entry
+        {
+            orient = N
+            0,0 = recreational_01_005
+        }
+    }
 }
 group
 {
@@ -4740,6 +5257,17 @@ group
             orient = N
             0,0 = furniture_seating_indoor_02_018
             1,0 = furniture_seating_indoor_02_019
+        }
+    }
+    furniture
+    {
+        entry
+        {
+            orient = W
+            0,1 = furniture_seating_indoor_02_004
+            1,0 = furniture_seating_indoor_02_005
+            1,2 = furniture_seating_indoor_02_007
+            2,1 = furniture_seating_indoor_02_006
         }
     }
 }

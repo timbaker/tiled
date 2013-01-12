@@ -363,6 +363,17 @@ category
     }
     entry
     {
+        West = location_restaurant_pizzawhirled_01_000
+        North = location_restaurant_pizzawhirled_01_001
+        NorthWest = location_restaurant_pizzawhirled_01_002
+        SouthEast = location_restaurant_pizzawhirled_01_003
+        WestWindow = location_restaurant_pizzawhirled_01_008
+        NorthWindow = location_restaurant_pizzawhirled_01_009
+        WestDoor = location_restaurant_pizzawhirled_01_010
+        NorthDoor = location_restaurant_pizzawhirled_01_011
+    }
+    entry
+    {
         West = location_restaurant_seahorse_01_001
         North = location_restaurant_seahorse_01_000
         NorthWest = location_restaurant_seahorse_01_002
@@ -1043,6 +1054,10 @@ category
     }
     entry
     {
+        Floor = location_restaurant_pizzawhirled_01_016
+    }
+    entry
+    {
         Floor = location_restaurant_spiffos_01_038
     }
     entry
@@ -1062,6 +1077,20 @@ category
 {
     label = Doors
     name = doors
+    entry
+    {
+        West = location_restaurant_pizzawhirled_01_056
+        North = location_restaurant_pizzawhirled_01_057
+        WestOpen = location_restaurant_pizzawhirled_01_058
+        NorthOpen = location_restaurant_pizzawhirled_01_059
+    }
+    entry
+    {
+        West = location_restaurant_pizzawhirled_01_060
+        North = location_restaurant_pizzawhirled_01_061
+        WestOpen = location_restaurant_pizzawhirled_01_062
+        NorthOpen = location_restaurant_pizzawhirled_01_063
+    }
     entry
     {
         West = location_restaurant_seahorse_01_044
@@ -1658,28 +1687,28 @@ category
     }
     entry
     {
-        SlopeS1 = roofs_01_024
-        SlopeS2 = roofs_01_025
-        SlopeS3 = roofs_01_026
-        SlopeE1 = roofs_01_029
-        SlopeE2 = roofs_01_028
-        SlopeE3 = roofs_01_027
-        SlopePt5S = roofs_01_039
-        SlopePt5E = roofs_01_031
-        SlopeOnePt5S = roofs_01_039
-        SlopeOnePt5E = roofs_01_031
-        SlopeTwoPt5S = roofs_01_039
-        SlopeTwoPt5E = roofs_01_031
-        Inner1 = roofs_01_035
-        Inner2 = roofs_01_036
-        Inner3 = roofs_01_037
-        Outer1 = roofs_01_032
-        Outer2 = roofs_01_033
-        Outer3 = roofs_01_034
+        SlopeS1 = roofs_01_032
+        SlopeS2 = roofs_01_033
+        SlopeS3 = roofs_01_034
+        SlopeE1 = roofs_01_037
+        SlopeE2 = roofs_01_036
+        SlopeE3 = roofs_01_035
+        SlopePt5S = roofs_01_047
+        SlopePt5E = roofs_01_046
+        SlopeOnePt5S = roofs_01_047
+        SlopeOnePt5E = roofs_01_046
+        SlopeTwoPt5S = roofs_01_047
+        SlopeTwoPt5E = roofs_01_046
+        Inner1 = roofs_01_043
+        Inner2 = roofs_01_044
+        Inner3 = roofs_01_045
+        Outer1 = roofs_01_040
+        Outer2 = roofs_01_041
+        Outer3 = roofs_01_042
         offset = SlopePt5S 1 1
-        offset = SlopePt5E 2 2
-        offset = SlopeOnePt5E 1 1
+        offset = SlopePt5E 1 1
         offset = SlopeTwoPt5S -1 -1
+        offset = SlopeTwoPt5E -1 -1
     }
 }
 category
