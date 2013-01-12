@@ -84,6 +84,12 @@ public:
     QSize maxTileSize(int n) const
     { return mMaxTileSize[n]; }
 
+    void setShowResolved(bool show)
+    { mShowResolved = show; }
+
+    bool showResolved() const
+    { return mShowResolved; }
+
 signals:
     void furnitureTileDropped(FurnitureTile *ftile, int x, int y,
                               const QString &tileName);
@@ -121,6 +127,7 @@ private:
     QModelIndex mDropIndex;
     QVector<QSize> mMaxTileSize;
     bool mShowHeaders;
+    bool mShowResolved;
 };
 
 class FurnitureView : public QTableView

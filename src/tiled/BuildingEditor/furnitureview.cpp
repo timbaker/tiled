@@ -110,7 +110,7 @@ void FurnitureTileDelegate::paint(QPainter *painter,
         return;
 
     FurnitureTile *original = ftile;
-    if (!mView->acceptDrops())
+    if (m->showResolved())
         ftile = ftile->resolved();
 
     if (mView->zoomable()->smoothTransform())
@@ -143,7 +143,7 @@ void FurnitureTileDelegate::paint(QPainter *painter,
         }
     }
 
-    if (mView->acceptDrops()) {
+    if (!m->showResolved()) {
         // Draw the tile grid.
         for (int y = 0; y < mapHeight; y++) {
             for (int x = 0; x < mapWidth; x++) {
@@ -189,7 +189,7 @@ void FurnitureTileDelegate::paint(QPainter *painter,
                       &textRect);
 
     // Draw resolved-tiles indicator
-    if (!mView->acceptDrops() && (ftile != original))
+    if (m->showResolved() && (ftile != original))
         painter->fillRect(textRect.right() + 3, textRect.center().y()-2, 4, 4, Qt::gray);
 
     // Focus rect around 'current' item
@@ -223,7 +223,7 @@ QSize FurnitureTileDelegate::sizeHint(const QStyleOptionViewItem & option,
     FurnitureTile *ftile = m->tileAt(index);
     int d = 0;
     if (ftile) {
-        if (mView->acceptDrops()) {
+        if (!m->showResolved()) {
             d = 1;
         } else {
             ftile = ftile->resolved();
@@ -264,7 +264,7 @@ QPoint FurnitureTileDelegate::dropCoords(const QPoint &dragPos,
 {
     const FurnitureModel *m = static_cast<const FurnitureModel*>(index.model());
     FurnitureTile *ftile = m->tileAt(index);
-    if (!mView->acceptDrops())
+    if (m->showResolved())
         ftile = ftile->resolved();
     QRect r = mView->visualRect(index);
     const int extra = 2;
@@ -442,7 +442,8 @@ void FurnitureView::init()
 
 FurnitureModel::FurnitureModel(QObject *parent) :
     QAbstractListModel(parent),
-    mShowHeaders(true)
+    mShowHeaders(true),
+    mShowResolved(true)
 {
 }
 
@@ -661,6 +662,8 @@ void FurnitureModel::calcMaxTileSize()
     foreach (Item *item, mItems) {
         if (FurnitureTile *ftile = item->mTile) {
             int n = ftile->orient();
+            if (mShowResolved)
+                ftile = ftile->resolved();
             mMaxTileSize[n].setWidth( qMax(mMaxTileSize[n].width(), ftile->width()) );
             mMaxTileSize[n].setHeight( qMax(mMaxTileSize[n].height(), ftile->height()) );
         }

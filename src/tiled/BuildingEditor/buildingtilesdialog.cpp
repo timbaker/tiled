@@ -574,6 +574,7 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
 
     ui->furnitureView->setZoomable(mZoomable);
     ui->furnitureView->setAcceptDrops(true);
+    ui->furnitureView->model()->setShowResolved(false);
     ui->furnitureView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     connect(ui->furnitureView->model(),
             SIGNAL(furnitureTileDropped(FurnitureTile*,int,int,QString)),
