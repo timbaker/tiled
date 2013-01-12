@@ -356,12 +356,12 @@ void DrawTileTool::updateCursor(const QPointF &scenePos, bool force)
                                mCaptureTilesRgn.translated(mCursorTileBounds.topLeft())
                              : mCursorTileBounds);
     if (mErasing) {
-        mCursor->setColor(QColor(0,0,0,128));
+        mCursor->setColor(QColor(0,0,0,64));
     } else if (mMouseDown) {
-        mCursor->setColor(QColor(0,0,255,128));
+        mCursor->setColor(QColor(0,0,255,64));
     } else {
         QColor highlight = QApplication::palette().highlight().color();
-        highlight.setAlpha(128);
+        highlight.setAlpha(64);
         mCursor->setColor(highlight);
     }
 
