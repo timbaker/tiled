@@ -26,7 +26,6 @@
 #include "buildingobjects.h"
 #include "buildingpreferences.h"
 #include "buildingpreferencesdialog.h"
-#include "buildingpreviewwindow.h"
 #include "buildingundoredo.h"
 #include "buildingfurnituredock.h"
 #include "buildingtemplates.h"
@@ -132,7 +131,6 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     roomEditor(new FloorEditor(this)),
     mRoomComboBox(new QComboBox()),
     mUndoGroup(new QUndoGroup(this)),
-    mPreviewWin(0),
     mCategoryZoomable(new Zoomable(this)),
     mCategory(0),
     mFurnitureGroup(0),
@@ -483,22 +481,11 @@ BuildingEditorWindow::~BuildingEditorWindow()
     delete ui;
 }
 
-void BuildingEditorWindow::showEvent(QShowEvent *event)
-{
-    if (mPreviewWin)
-        mPreviewWin->show();
-    event->accept();
-}
-
 void BuildingEditorWindow::closeEvent(QCloseEvent *event)
 {
     if (confirmAllSave()) {
         clearDocument();
         writeSettings();
-        if (mPreviewWin) {
-            mPreviewWin->writeSettings();
-            mPreviewWin->hide();
-        }
         event->accept(); // doesn't destroy us
     } else
         event->ignore();
@@ -516,9 +503,7 @@ bool BuildingEditorWindow::closeYerself()
     if (confirmAllSave()) {
         clearDocument();
         writeSettings();
-        if (mPreviewWin)
-            mPreviewWin->writeSettings();
-        delete this; // Delete ourself and PreviewWindow.
+        delete this;
         return true;
     }
     return false;
@@ -659,9 +644,6 @@ bool BuildingEditorWindow::Startup()
     setCategoryList();
 
     /////
-
-    mPreviewWin = new BuildingPreviewWindow(this);
-    mPreviewWin->show();
 
     mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
     QString categoryName = mSettings.value(QLatin1String("SelectedCategory")).toString();
@@ -1676,7 +1658,6 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         roomEditor->clearDocument();
         mTileModeScene->clearDocument();
         mLayersDock->clearDocument();
-        mPreviewWin->clearDocument();
         mUndoGroup->removeStack(mCurrentDocument->undoStack());
         delete mCurrentDocument->building();
         delete mCurrentDocument;
@@ -1778,8 +1759,6 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
 
     connect(mCurrentDocument, SIGNAL(cleanChanged()), SLOT(updateWindowTitle()));
 
-    mPreviewWin->setDocument(currentDocument());
-
     updateActions();
 
     if (building->roomCount())
@@ -1798,7 +1777,6 @@ void BuildingEditorWindow::clearDocument()
         roomEditor->clearDocument();
         mTileModeScene->clearDocument();
         mLayersDock->clearDocument();
-        mPreviewWin->clearDocument();
         mUndoGroup->removeStack(mCurrentDocument->undoStack());
         delete mCurrentDocument->building();
         delete mCurrentDocument;

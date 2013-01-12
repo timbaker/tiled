@@ -56,6 +56,27 @@ class Room;
 
 class BuildingTileModeScene;
 
+class CompositeLayerGroupItem : public QGraphicsItem
+{
+public:
+    CompositeLayerGroupItem(CompositeLayerGroup *layerGroup,
+                            Tiled::MapRenderer *renderer,
+                            QGraphicsItem *parent = 0);
+
+    QRectF boundingRect() const;
+    void paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *);
+
+    void synchWithTileLayers();
+    void updateBounds();
+
+    CompositeLayerGroup *layerGroup() const { return mLayerGroup; }
+
+private:
+    CompositeLayerGroup *mLayerGroup;
+    Tiled::MapRenderer *mRenderer;
+    QRectF mBoundingRect;
+};
+
 class TileModeGridItem : public QObject, public QGraphicsItem
 {
     Q_OBJECT

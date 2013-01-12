@@ -153,7 +153,6 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/building.cpp \
     BuildingEditor/buildingfloor.cpp \
     BuildingEditor/buildingundoredo.cpp \
-    BuildingEditor/buildingpreviewwindow.cpp \
     BuildingEditor/mixedtilesetview.cpp \
     BuildingEditor/newbuildingdialog.cpp \
     BuildingEditor/buildingpreferencesdialog.cpp \
@@ -304,7 +303,6 @@ HEADERS += aboutdialog.h \
     BuildingEditor/building.h \
     BuildingEditor/buildingfloor.h \
     BuildingEditor/buildingundoredo.h \
-    BuildingEditor/buildingpreviewwindow.h \
     BuildingEditor/mixedtilesetview.h \
     BuildingEditor/newbuildingdialog.h \
     BuildingEditor/buildingpreferencesdialog.h \
@@ -355,7 +353,6 @@ FORMS += aboutdialog.ui \
     convertorientationdialog.ui \
     converttolotdialog.ui \
     BuildingEditor/buildingeditorwindow.ui \
-    BuildingEditor/buildingpreviewwindow.ui \
     BuildingEditor/newbuildingdialog.ui \
     BuildingEditor/buildingpreferencesdialog.ui \
     BuildingEditor/buildingtemplatesdialog.ui \

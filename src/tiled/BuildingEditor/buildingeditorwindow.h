@@ -47,7 +47,6 @@ class BaseTool;
 class Building;
 class BuildingDocument;
 class BuildingFloor;
-class BuildingPreviewWindow;
 class BuildingTile;
 class BuildingTileEntry;
 class BuildingTileCategory;
@@ -76,7 +75,6 @@ public:
     explicit BuildingEditorWindow(QWidget *parent = 0);
     ~BuildingEditorWindow();
 
-    void showEvent(QShowEvent *event);
     void closeEvent(QCloseEvent *event);
 
     bool confirmAllSave();
@@ -247,7 +245,6 @@ private:
     QUndoGroup *mUndoGroup;
     QSettings mSettings;
     QString mError;
-    BuildingPreviewWindow *mPreviewWin;
     Tiled::Internal::Zoomable *mCategoryZoomable;
     BuildingTileCategory *mCategory;
     FurnitureGroup *mFurnitureGroup;

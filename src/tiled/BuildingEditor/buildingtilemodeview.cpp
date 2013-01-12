@@ -23,7 +23,6 @@
 #include "buildingmap.h"
 #include "buildingobjects.h"
 #include "buildingpreferences.h"
-#include "buildingpreviewwindow.h" // for CompositeLayerGroupItem;
 #include "buildingtiles.h"
 #include "buildingtiletools.h"
 #include "buildingtools.h"
@@ -52,6 +51,53 @@
 using namespace BuildingEditor;
 using namespace Tiled;
 using namespace Tiled::Internal;
+
+/////
+
+CompositeLayerGroupItem::CompositeLayerGroupItem(CompositeLayerGroup *layerGroup,
+                                                 MapRenderer *renderer,
+                                                 QGraphicsItem *parent)
+    : QGraphicsItem(parent)
+    , mLayerGroup(layerGroup)
+    , mRenderer(renderer)
+{
+    setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
+
+    mBoundingRect = layerGroup->boundingRect(mRenderer);
+}
+
+QRectF CompositeLayerGroupItem::boundingRect() const
+{
+    return mBoundingRect;
+}
+
+void CompositeLayerGroupItem::paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *)
+{
+    if (mLayerGroup->needsSynch() /*mBoundingRect != mLayerGroup->boundingRect(mRenderer)*/)
+        return;
+
+    mRenderer->drawTileLayerGroup(p, mLayerGroup, option->exposedRect);
+#if 0 && defined(_DEBUG)
+    p->setPen(Qt::white);
+    p->drawRect(mBoundingRect);
+#endif
+}
+
+void CompositeLayerGroupItem::synchWithTileLayers()
+{
+//    if (layerGroup()->needsSynch())
+        layerGroup()->synch();
+    update();
+}
+
+void CompositeLayerGroupItem::updateBounds()
+{
+    QRectF bounds = layerGroup()->boundingRect(mRenderer);
+    if (bounds != mBoundingRect) {
+        prepareGeometryChange();
+        mBoundingRect = bounds;
+    }
+}
 
 /////
 
