@@ -23,7 +23,9 @@ using namespace BuildingEditor;
 
 static const char *KEY_TILES_DIR = "BuildingEditor/TilesDirectory";
 static const char *KEY_TILE_SCALE = "BuildingEditor/MainWindow/CategoryScale";
+static const char *KEY_SHOW_GRID = "BuildingEditor/ShowGrid";
 static const char *KEY_HIGHLIGHT_FLOOR = "BuildingEditor/PreviewWindow/HighlightFloor";
+static const char *KEY_HIGHLIGHT_ROOM = "BuildingEditor/HighlightRoom";
 static const char *KEY_SHOW_WALLS = "BuildingEditor/PreviewWindow/ShowWalls";
 static const char *KEY_SHOW_OBJECTS = "BuildingEditor/PreviewWindow/ShowObjects";
 static const char *KEY_OPENGL = "BuildingEditor/OpenGL";
@@ -46,8 +48,11 @@ void BuildingPreferences::deleteInstance()
 BuildingPreferences::BuildingPreferences(QObject *parent) :
     QObject(parent)
 {
+    mShowGrid = mSettings.value(QLatin1String(KEY_SHOW_GRID), true).toBool();
     mHighlightFloor = mSettings.value(QLatin1String(KEY_HIGHLIGHT_FLOOR),
                                       true).toBool();
+    mHighlightRoom = mSettings.value(QLatin1String(KEY_HIGHLIGHT_ROOM),
+                                     true).toBool();
     mShowWalls = mSettings.value(QLatin1String(KEY_SHOW_WALLS),
                                  true).toBool();
     mShowObjects = mSettings.value(QLatin1String(KEY_SHOW_OBJECTS),
@@ -67,6 +72,15 @@ QString BuildingPreferences::configPath(const QString &fileName) const
     return configPath() + QLatin1Char('/') + fileName;
 }
 
+void BuildingPreferences::setShowGrid(bool show)
+{
+    if (show == mShowGrid)
+        return;
+    mShowGrid = show;
+    mSettings.setValue(QLatin1String(KEY_SHOW_GRID), mShowGrid);
+    emit showGridChanged(mShowGrid);
+}
+
 void BuildingPreferences::setHighlightFloor(bool highlight)
 {
     if (highlight == mHighlightFloor)
@@ -74,6 +88,15 @@ void BuildingPreferences::setHighlightFloor(bool highlight)
     mHighlightFloor = highlight;
     mSettings.setValue(QLatin1String(KEY_HIGHLIGHT_FLOOR), mHighlightFloor);
     emit highlightFloorChanged(mHighlightFloor);
+}
+
+void BuildingPreferences::setHighlightRoom(bool highlight)
+{
+    if (highlight == mHighlightRoom)
+        return;
+    mHighlightRoom = highlight;
+    mSettings.setValue(QLatin1String(KEY_HIGHLIGHT_ROOM), mHighlightRoom);
+    emit highlightRoomChanged(mHighlightRoom);
 }
 
 void BuildingPreferences::setShowWalls(bool show)

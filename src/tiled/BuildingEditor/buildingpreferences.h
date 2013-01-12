@@ -35,8 +35,14 @@ public:
     QString configPath() const;
     QString configPath(const QString &fileName) const;
 
+    bool showGrid() const
+    { return mShowGrid; }
+
     bool highlightFloor() const
     { return mHighlightFloor; }
+
+    bool highlightRoom() const
+    { return mHighlightRoom; }
 
     bool showWalls() const
     { return mShowWalls; }
@@ -51,14 +57,18 @@ public:
     { return mUseOpenGL; }
 
 signals:
+    void showGridChanged(bool show);
     void highlightFloorChanged(bool highlight);
+    void highlightRoomChanged(bool highlight);
     void showWallsChanged(bool show);
     void showObjectsChanged(bool show);
     void tileScaleChanged(qreal scale);
     void useOpenGLChanged(bool useOpenGL);
 
 public slots:
+    void setShowGrid(bool show);
     void setHighlightFloor(bool highlight);
+    void setHighlightRoom(bool highlight);
     void setShowWalls(bool show);
     void setShowObjects(bool show);
     void setTileScale(qreal scale);
@@ -67,7 +77,9 @@ public slots:
 private:
     static BuildingPreferences *mInstance;
     QSettings mSettings;
+    bool mShowGrid;
     bool mHighlightFloor;
+    bool mHighlightRoom;
     bool mShowWalls;
     bool mShowObjects;
     qreal mTileScale;

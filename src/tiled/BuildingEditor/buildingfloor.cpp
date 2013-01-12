@@ -1444,6 +1444,8 @@ void BuildingFloor::SetRoomAt(int x, int y, Room *room)
 
 Room *BuildingFloor::GetRoomAt(const QPoint &pos)
 {
+    if (!contains(pos))
+        return 0;
     return mRoomAtPos[pos.x()][pos.y()];
 }
 

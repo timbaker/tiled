@@ -136,6 +136,8 @@ public:
 
     void changeFloorGrid(BuildingFloor *floor, const QVector<QVector<Room*> > &grid);
     void resetFloorGrid(BuildingFloor *floor);
+
+    void suppressTiles(BuildingFloor *floor, const QRegion &rgn);
     /////
 
     Tiled::Map *mergedMap() const;
@@ -200,12 +202,9 @@ private:
     Tiled::Map *mMap;
     Tiled::MapRenderer *mMapRenderer;
 
-    QPoint mCursorObjectPos;
-    QRect mCursorObjectBounds;
     BuildingFloor *mCursorObjectFloor;
-    Building *mCursorObjectBuilding;
-
     ShadowBuilding *mShadowBuilding;
+    QMap<BuildingFloor*,QRegion> mSuppressTiles;
 };
 
 } // namespace BuildingEditor

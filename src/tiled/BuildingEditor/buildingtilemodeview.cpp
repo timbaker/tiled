@@ -61,6 +61,10 @@ TileModeGridItem::TileModeGridItem(BuildingDocument *doc, MapRenderer *renderer)
     mRenderer(renderer),
     mEditingTiles(false)
 {
+    setVisible(BuildingPreferences::instance()->showGrid());
+    connect(BuildingPreferences::instance(), SIGNAL(showGridChanged(bool)),
+            SLOT(showGridChanged(bool)));
+
     setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
     synchWithBuilding();
 }
@@ -95,6 +99,11 @@ void TileModeGridItem::setEditingTiles(bool editing)
         mEditingTiles = editing;
         synchWithBuilding();
     }
+}
+
+void TileModeGridItem::showGridChanged(bool show)
+{
+    setVisible(show);
 }
 
 /////
@@ -170,7 +179,8 @@ BuildingTileModeScene::BuildingTileModeScene(QObject *parent) :
     mLayerGroupWithToolTiles(0),
     mNonEmptyLayerGroupItem(0),
     mShowBuildingTiles(true),
-    mShowUserTiles(true)
+    mShowUserTiles(true),
+    mCurrentLevel(0)
 {
     ZVALUE_CURSOR = 1000;
     ZVALUE_GRID = 1001;
@@ -192,8 +202,10 @@ BuildingTileModeScene::BuildingTileModeScene(QObject *parent) :
     connect(BuildingTilesMgr::instance(), SIGNAL(tilesetRemoved(Tiled::Tileset*)),
             SLOT(tilesetRemoved(Tiled::Tileset*)));
 
-    connect(BuildingPreferences::instance(), SIGNAL(highlightFloorChanged(bool)),
+    connect(prefs(), SIGNAL(highlightFloorChanged(bool)),
             SLOT(highlightFloorChanged(bool)));
+    connect(prefs(), SIGNAL(highlightRoomChanged(bool)),
+            SLOT(highlightRoomChanged(bool)));
 
     connect(ToolManager::instance(), SIGNAL(currentToolChanged(BaseTool*)),
             SLOT(currentToolChanged(BaseTool*)));
@@ -549,7 +561,7 @@ bool BuildingTileModeScene::shouldShowObjectItem(BuildingObject *object) const
         return true;
 
     return !mEditingTiles
-            && BuildingPreferences::instance()->showObjects()
+            && prefs()->showObjects()
             && (currentLevel() == object->floor()->level());
 }
 
@@ -570,6 +582,68 @@ void BuildingTileModeScene::setEditingTiles(bool editing)
         synchObjectItemVisibility();
         if (mGridItem)
             mGridItem->setEditingTiles(editing);
+    }
+}
+
+bool isRectAdjacent(const QRect &r, const QRect &r2)
+{
+    return r.left() == r2.right() + 1 ||
+            r.right() + 1 == r2.left() ||
+            r.top() == r2.bottom() + 1 ||
+            r.bottom() + 1 == r2.top();
+}
+
+QVector<QRect> adjacentRects(const QVector<QRect> &rects, const QPoint &pos)
+{
+    QRect startRect;
+    foreach (QRect r, rects) {
+        if (r.contains(pos)) {
+            startRect = r;
+            break;
+        }
+    }
+    QVector<QRect> ret;
+    if (startRect.isEmpty())
+        return ret;
+
+    QVector<QRect> remaining = rects;
+    remaining.remove(rects.indexOf(startRect));
+
+    ret += startRect;
+    while (1) {
+        int count = remaining.size();
+        for (int i = 0; i < remaining.size(); i++) {
+            QRect r = remaining[i];
+            foreach (QRect r2, ret) {
+                if (isRectAdjacent(r, r2)) {
+                    ret += r;
+                    remaining.remove(i);
+                    i--;
+                    break;
+                }
+            }
+        }
+        if (count == remaining.size())
+            break;
+    }
+
+    return ret;
+}
+
+void BuildingTileModeScene::setCursorPosition(const QPoint &pos)
+{
+    mHighlightRoomPos = pos;
+    if (!currentFloor())
+        return;
+    Room *room = prefs()->highlightRoom() ? currentFloor()->GetRoomAt(pos) : 0;
+    if (room) {
+        QRegion roomRegion;
+        QVector<QRect> rects = currentFloor()->roomRegion(room);
+        foreach (QRect r, adjacentRects(rects, pos))
+            roomRegion |= r;
+        mBuildingMap->suppressTiles(currentFloor(), QRegion(currentFloor()->bounds(1, 1)) - roomRegion);
+    } else {
+        mBuildingMap->suppressTiles(currentFloor(), QRegion());
     }
 }
 
@@ -625,6 +699,11 @@ CompositeLayerGroupItem *BuildingTileModeScene::itemForFloor(BuildingFloor *floo
     return 0;
 }
 
+BuildingPreferences *BuildingTileModeScene::prefs() const
+{
+    return BuildingPreferences::instance();
+}
+
 void BuildingTileModeScene::floorEdited(BuildingFloor *floor)
 {
     BaseFloorEditor::floorEdited(floor);
@@ -667,7 +746,7 @@ void BuildingTileModeScene::currentFloorChanged()
 {
     synchObjectItemVisibility();
 
-    highlightFloorChanged(BuildingPreferences::instance()->highlightFloor());
+    highlightFloorChanged(prefs()->highlightFloor());
 
     mGridItem->synchWithBuilding();
 
@@ -678,6 +757,10 @@ void BuildingTileModeScene::currentFloorChanged()
         mNonEmptyLayer.clear();
         mNonEmptyLayerGroupItem = 0;
     }
+
+    if (BuildingFloor *floor = building()->floor(mCurrentLevel))
+        mBuildingMap->suppressTiles(floor, QRegion());
+    mCurrentLevel = currentLevel();
 }
 
 void BuildingTileModeScene::currentLayerChanged()
@@ -841,6 +924,12 @@ void BuildingTileModeScene::highlightFloorChanged(bool highlight)
     mDarkRectangle->setZValue(z);
 }
 
+void BuildingTileModeScene::highlightRoomChanged(bool highlight)
+{
+    Q_UNUSED(highlight)
+    setCursorPosition(mHighlightRoomPos);
+}
+
 void BuildingTileModeScene::tilesetAdded(Tileset *tileset)
 {
     if (!mDocument)
@@ -912,7 +1001,7 @@ void BuildingTileModeScene::layersRecreated()
     mGridItem->setZValue(ZVALUE_GRID);
     addItem(mGridItem);
 
-    highlightFloorChanged(BuildingPreferences::instance()->highlightFloor());
+    highlightFloorChanged(prefs()->highlightFloor());
 }
 
 void BuildingTileModeScene::mapResized()
@@ -1051,6 +1140,8 @@ void BuildingTileModeView::mouseMoveEvent(QMouseEvent *event)
     if (tilePos != mLastMouseTilePos) {
         mLastMouseTilePos = tilePos;
         emit mouseCoordinateChanged(mLastMouseTilePos);
+
+        scene()->setCursorPosition(tilePos);
     }
 }
 

@@ -320,11 +320,23 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
     setWindowFlags(windowFlags() & ~Qt::WA_DeleteOnClose);
 
-    ui->actionHighlightFloor->setChecked(BuildingPreferences::instance()->highlightFloor());
+    ui->actionShowGrid->setChecked(prefs->showGrid());
+    connect(ui->actionShowGrid, SIGNAL(toggled(bool)),
+            prefs, SLOT(setShowGrid(bool)));
+    connect(prefs, SIGNAL(showGridChanged(bool)),
+            ui->actionShowGrid, SLOT(setChecked(bool)));
+
+    ui->actionHighlightFloor->setChecked(prefs->highlightFloor());
     connect(ui->actionHighlightFloor, SIGNAL(toggled(bool)),
-            BuildingPreferences::instance(), SLOT(setHighlightFloor(bool)));
-    connect(BuildingPreferences::instance(), SIGNAL(highlightFloorChanged(bool)),
+            prefs, SLOT(setHighlightFloor(bool)));
+    connect(prefs, SIGNAL(highlightFloorChanged(bool)),
             ui->actionHighlightFloor, SLOT(setChecked(bool)));
+
+    ui->actionHighlightRoom->setChecked(prefs->highlightRoom());
+    connect(ui->actionHighlightRoom, SIGNAL(toggled(bool)),
+            prefs, SLOT(setHighlightRoom(bool)));
+    connect(prefs, SIGNAL(highlightRoomChanged(bool)),
+            ui->actionHighlightRoom, SLOT(setChecked(bool)));
 
     ui->actionShowObjects->setChecked(prefs->showObjects());
     connect(ui->actionShowObjects, SIGNAL(toggled(bool)),
@@ -2394,7 +2406,7 @@ void BuildingEditorWindow::reportMissingTilesets()
             if (!ftile || ftile->isEmpty())
                 continue;
             foreach (BuildingTile *btile, ftile->tiles()) {
-                if (btile->mTilesetName.isEmpty())
+                if (!btile || btile->mTilesetName.isEmpty())
                     continue;
                 if (!TileMetaInfoMgr::instance()->tileset(btile->mTilesetName))
                     missingTilesets.insert(btile->mTilesetName);

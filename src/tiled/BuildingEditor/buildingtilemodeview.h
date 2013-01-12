@@ -44,19 +44,22 @@ class Zoomable;
 namespace BuildingEditor {
 
 class BaseTileTool;
+class Building;
+class BuildingDocument;
+class BuildingFloor;
 class BuildingMap;
 class BuildingObject;
-class Building;
-class BuildingFloor;
-class BuildingDocument;
+class BuildingPreferences;
 class CompositeLayerGroupItem;
 class FloorTileGrid;
 class Room;
 
 class BuildingTileModeScene;
 
-class TileModeGridItem : public QGraphicsItem
+class TileModeGridItem : public QObject, public QGraphicsItem
 {
+    Q_OBJECT
+    Q_INTERFACES(QGraphicsItem)
 public:
     TileModeGridItem(BuildingDocument *doc, Tiled::MapRenderer *renderer);
 
@@ -66,6 +69,9 @@ public:
     void paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *);
 
     void setEditingTiles(bool editing);
+
+private slots:
+    void showGridChanged(bool show);
 
 private:
     BuildingDocument *mDocument;
@@ -164,9 +170,13 @@ public:
     void setShowUserTiles(bool show);
     void setEditingTiles(bool editing);
 
+    void setCursorPosition(const QPoint &pos);
+
 private:
     void BuildingToMap();
     CompositeLayerGroupItem *itemForFloor(BuildingFloor *floor);
+
+    BuildingPreferences *prefs() const;
 
 private slots:
     void currentFloorChanged();
@@ -200,6 +210,7 @@ private slots:
     void buildingRotated();
 
     void highlightFloorChanged(bool highlight);
+    void highlightRoomChanged(bool highlight);
 
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
@@ -226,6 +237,8 @@ private:
     CompositeLayerGroupItem *mNonEmptyLayerGroupItem;
     bool mShowBuildingTiles;
     bool mShowUserTiles;
+    int mCurrentLevel;
+    QPoint mHighlightRoomPos;
 };
 
 class BuildingTileModeView : public QGraphicsView

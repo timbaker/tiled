@@ -52,7 +52,6 @@ BuildingMap::BuildingMap(Building *building) :
     pendingRecreateAll(false),
     pendingBuildingResized(false),
     mCursorObjectFloor(0),
-    mCursorObjectBuilding(0),
     mShadowBuilding(0)
 {
     BuildingToMap();
@@ -195,6 +194,32 @@ void BuildingMap::resetFloorGrid(BuildingFloor *floor)
     if (!pending) {
         QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
         pending = true;
+    }
+}
+
+void BuildingMap::suppressTiles(BuildingFloor *floor, const QRegion &rgn)
+{
+    QRegion update;
+    if (mSuppressTiles.contains(floor) && mSuppressTiles[floor] == rgn)
+        return;
+    if (rgn.isEmpty()) {
+        update = mSuppressTiles[floor];
+        mSuppressTiles.remove(floor);
+    } else {
+        update = rgn | mSuppressTiles[floor];
+        mSuppressTiles[floor] = rgn;
+    }
+    if (!update.isEmpty()) {
+        foreach (QRect r, update.rects()) {
+            r &= floor->bounds(1, 1);
+            pendingSquaresToTileLayers[floor] |= r;
+            foreach (QString layerName, floor->grimeLayers())
+                pendingUserTilesToLayer[floor][layerName] |= r;
+        }
+        if (!pending) {
+            QMetaObject::invokeMethod(this, "handlePending", Qt::QueuedConnection);
+            pending = true;
+        }
     }
 }
 
@@ -401,13 +426,13 @@ void BuildingMap::BuildingToMap()
     foreach (CompositeLayerGroup *layerGroup, mBlendMapComposite->layerGroups()) {
         BuildingFloor *floor = mBuilding->floor(layerGroup->level());
         floor->LayoutToSquares();
-        BuildingSquaresToTileLayers(floor, floor->bounds(), layerGroup);
+        BuildingSquaresToTileLayers(floor, floor->bounds(1, 1), layerGroup);
     }
 
     // Set the user-drawn tiles.
     foreach (BuildingFloor *floor, mBuilding->floors()) {
         foreach (QString layerName, floor->grimeLayers())
-            userTilesToLayer(floor, layerName, floor->bounds().adjusted(0, 0, 1, 1));
+            userTilesToLayer(floor, layerName, floor->bounds(1, 1));
     }
 
     // Do this before calculating the bounds of CompositeLayerGroupItem
@@ -422,30 +447,23 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
     int offset = (mMap->orientation() == Map::LevelIsometric)
             ? 0 : (maxLevel - floor->level()) * 3;
 
-#if 0
-    QRect cursorBounds;
-    if (mCursorObjectFloor && mCursorObjectFloor->level() == floor->level()) {
-        cursorBounds = mCursorObjectBounds.adjusted(-1,-1,1,1) & floor->bounds(1, 1);
-    }
-#endif
+    QRegion suppress;
+    if (mSuppressTiles.contains(floor))
+        suppress = mSuppressTiles[floor];
 
     int section = 0;
     foreach (TileLayer *tl, layerGroup->layers()) {
-        if (area == floor->bounds())
+        if (area == floor->bounds(1, 1))
             tl->erase();
         else
-            tl->erase(area.adjusted(0,0,1,1));
-        for (int x = area.x(); x <= area.right() + 1; x++) {
-            for (int y = area.y(); y <= area.bottom() + 1; y++) {
-#if 1
-                const BuildingFloor::Square &square = mShadowBuilding->floor(floor->level())->squares[x][y];
-#elif 0
-                const BuildingFloor::Square &square = cursorBounds.contains(x, y)
-                        ? mCursorObjectFloor->squares[x - mCursorObjectPos.x()][y - mCursorObjectPos.y()]
-                        : floor->squares[x][y];
-#else
-                const BuildingFloor::Square &square = floor->squares[x][y];
-#endif
+            tl->erase(area/*.adjusted(0,0,1,1)*/);
+        for (int x = area.x(); x <= area.right(); x++) {
+            for (int y = area.y(); y <= area.bottom(); y++) {
+                if (section != BuildingFloor::Square::SectionFloor
+                        && suppress.contains(QPoint(x, y)))
+                    continue;
+                const BuildingFloor::Square &square =
+                        mShadowBuilding->floor(floor->level())->squares[x][y];
                 if (BuildingTile *btile = square.mTiles[section]) {
                     if (!btile->isNone()) {
                         if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(btile))
@@ -485,8 +503,16 @@ void BuildingMap::userTilesToLayer(BuildingFloor *floor,
     foreach (Tileset *ts, mMap->tilesets())
         tilesetByName[ts->name()] = ts;
 
+    QRegion suppress;
+    if (mSuppressTiles.contains(floor))
+        suppress = mSuppressTiles[floor];
+
     for (int x = bounds.left(); x <= bounds.right(); x++) {
         for (int y = bounds.top(); y <= bounds.bottom(); y++) {
+            if (suppress.contains(QPoint(x, y))) {
+                layer->setCell(x, y, Cell());
+                continue;
+            }
             QString tileName = floor->grimeAt(layerName, x, y);
             Tile *tile = 0;
             if (!tileName.isEmpty()) {
@@ -662,9 +688,9 @@ void BuildingMap::tilesetAdded(Tileset *tileset)
     TilesetManager::instance()->addReference(tileset);
 
     foreach (BuildingFloor *floor, mBuilding->floors()) {
-        pendingSquaresToTileLayers[floor] = floor->bounds();
+        pendingSquaresToTileLayers[floor] = floor->bounds(1, 1);
         foreach (QString layerName, floor->grimeLayers())
-            pendingUserTilesToLayer[floor][layerName] = floor->bounds();
+            pendingUserTilesToLayer[floor][layerName] = floor->bounds(1, 1);
     }
 
     if (!pending) {
@@ -694,9 +720,9 @@ void BuildingMap::tilesetAboutToBeRemoved(Tileset *tileset)
             tl->erase();
 
     foreach (BuildingFloor *floor, mBuilding->floors()) {
-        pendingSquaresToTileLayers[floor] = floor->bounds();
+        pendingSquaresToTileLayers[floor] = floor->bounds(1, 1);
         foreach (QString layerName, floor->grimeLayers())
-            pendingUserTilesToLayer[floor][layerName] = floor->bounds();
+            pendingUserTilesToLayer[floor][layerName] = floor->bounds(1, 1);
     }
 
     if (!pending) {
@@ -728,7 +754,7 @@ void BuildingMap::handlePending()
         pendingUserTilesToLayer.clear();
         foreach (BuildingFloor *floor, mBuilding->floors()) {
             foreach (QString layerName, floor->grimeLayers()) {
-                pendingUserTilesToLayer[floor][layerName] = floor->bounds();
+                pendingUserTilesToLayer[floor][layerName] = floor->bounds(1, 1);
             }
         }
     }
@@ -748,12 +774,15 @@ void BuildingMap::handlePending()
             layer->resize(QSize(width, height), QPoint());
         mBlendMap->setWidth(width);
         mBlendMap->setHeight(height);
+
+        delete mShadowBuilding;
+        mShadowBuilding = new ShadowBuilding(mBuilding);
     }
 
     if (!pendingLayoutToSquares.isEmpty()) {
         foreach (BuildingFloor *floor, pendingLayoutToSquares) {
             floor->LayoutToSquares(); // not sure this belongs in this class
-            pendingSquaresToTileLayers[floor] = floor->bounds();
+            pendingSquaresToTileLayers[floor] = floor->bounds(1, 1);
 
             mShadowBuilding->floor(floor->level())->LayoutToSquares();
         }
@@ -780,7 +809,7 @@ void BuildingMap::handlePending()
             foreach (TileLayer *tl, layerGroup->layers())
                 tl->erase();
             foreach (QString layerName, floor->grimeLayers())
-                pendingUserTilesToLayer[floor][layerName] = floor->bounds();
+                pendingUserTilesToLayer[floor][layerName] = floor->bounds(1, 1);
             updatedLevels[floor->level()] |= floor->bounds();
         }
     }

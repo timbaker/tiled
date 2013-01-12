@@ -40,6 +40,13 @@ Building::Building(int width, int height, BuildingTemplate *btemplate) :
     }
 }
 
+BuildingFloor *Building::floor(int index)
+{
+    if (index >= 0 && index < mFloors.size())
+        return mFloors.at(index);
+    return 0;
+}
+
 void Building::insertFloor(int index, BuildingFloor *floor)
 {
     mFloors.insert(index, floor);

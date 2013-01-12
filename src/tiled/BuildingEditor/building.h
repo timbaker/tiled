@@ -59,8 +59,7 @@ public:
     const QList<BuildingFloor*> &floors() const
     { return mFloors; }
 
-    BuildingFloor *floor(int index)
-    { return mFloors.at(index); }
+    BuildingFloor *floor(int index);
 
     int floorCount() const
     { return mFloors.count(); }
