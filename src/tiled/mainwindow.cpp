@@ -83,6 +83,7 @@
 #include "mapcomposite.h"
 #include "mapmanager.h"
 #include "mapsdock.h"
+#include "tiledefdialog.h"
 #include "tilemetainfodialog.h"
 #include "tilemetainfomgr.h"
 #include "zlevelsdock.h"
@@ -510,6 +511,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
             SLOT(showBuildingEditor()));
     connect(mUi->actionTilesetMetaInfo, SIGNAL(triggered()),
             SLOT(tilesetMetaInfoDialog()));
+    connect(mUi->actionTileProperties, SIGNAL(triggered()),
+            SLOT(tilePropertiesEditor()));
 #endif
 
     updateActions();
@@ -540,6 +543,7 @@ MainWindow::~MainWindow()
 #ifdef ZOMBOID
     MapManager::deleteInstance();
     TileMetaInfoMgr::deleteInstance();
+    TileDefDialog::deleteInstance();
 #endif
     TilesetManager::deleteInstance();
     DocumentManager::deleteInstance();
@@ -1317,6 +1321,12 @@ void MainWindow::tilesetMetaInfoDialog()
     if (!mgr->writeTxt()) {
         QMessageBox::warning(this, tr("It's no good, Jim!"), mgr->errorString());
     }
+}
+
+void MainWindow::tilePropertiesEditor()
+{
+    TileDefDialog::instance()->show();
+    TileDefDialog::instance()->raise();
 }
 #endif
 

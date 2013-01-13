@@ -126,6 +126,7 @@
     </property>
     <addaction name="actionBuildingEditor"/>
     <addaction name="actionTilesetMetaInfo"/>
+    <addaction name="actionTileProperties"/>
     <addaction name="separator"/>
     <addaction name="actionConvertOrientation"/>
     <addaction name="actionConvertToLot"/>
@@ -466,6 +467,11 @@
    </property>
    <property name="toolTip">
     <string>Tilesets</string>
+   </property>
+  </action>
+  <action name="actionTileProperties">
+   <property name="text">
+    <string>Tile Properties (.tiles)</string>
    </property>
   </action>
  </widget>
