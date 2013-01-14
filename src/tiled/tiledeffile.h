@@ -35,6 +35,8 @@ class EnumTileDefProperty;
 class IntegerTileDefProperty;
 class StringTileDefProperty;
 
+class TileDefTileset;
+
 class TileDefProperty
 {
 public:
@@ -135,6 +137,13 @@ public:
     void addString(const char *name, const char *shortName = 0, const QString &defaultValue = QString());
     void addEnum(const char *name, const char *shortName, const char *enums[]);
 
+    TileDefProperty *property(const QString &name)
+    {
+        if (mProperties.contains(name))
+            return mProperties[name];
+        return 0;
+    }
+
     QMap<QString,TileDefProperty*> mProperties;
 };
 
@@ -183,8 +192,17 @@ public:
         }
 
         virtual bool isDefaultValue() const = 0;
-        virtual QString valueAsString() const = 0;
+        virtual QVariant defaultValue() const = 0;
 
+        virtual QString valueAsString() const = 0;
+        virtual QVariant value() const = 0;
+        virtual void setValue(const QVariant &value) = 0;
+
+        virtual void resetValue()
+        { setValue(defaultValue()); }
+
+        virtual void ChangePropertiesV(const QVariant &value)
+        { Q_UNUSED(value) }
         virtual void ChangeProperties(bool value)
         { Q_UNUSED(value) }
         virtual void ChangeProperties(int value) // enum or int
@@ -221,9 +239,24 @@ public:
             return mValue == mDefaultValue;
         }
 
+        QVariant defaultValue() const
+        {
+            return mDefaultValue;
+        }
+
+        QVariant value() const
+        {
+            return mValue;
+        }
+
         QString valueAsString() const
         {
             return mValue ? QLatin1String("True") : QLatin1String("False");
+        }
+
+        void setValue(const QVariant &value)
+        {
+            mValue = value.toBool();
         }
 
         void FromProperties()
@@ -231,6 +264,11 @@ public:
             mValue = mProperties.contains(mShortName);
             if (mReverseLogic)
                 mValue = !mValue;
+        }
+
+        void ChangePropertiesV(const QVariant &value)
+        {
+            ChangeProperties(value.toBool());
         }
 
         void ChangeProperties(bool value)
@@ -270,9 +308,24 @@ public:
             return mValue == mDefaultValue;
         }
 
+        QVariant defaultValue() const
+        {
+            return mDefaultValue;
+        }
+
+        QVariant value() const
+        {
+            return mValue;
+        }
+
         QString valueAsString() const
         {
             return QString::number(mValue);
+        }
+
+        void setValue(const QVariant &value)
+        {
+            mValue = value.toInt();
         }
 
         void FromProperties()
@@ -280,6 +333,11 @@ public:
             mValue = 0;
             if (contains(mShortName))
                 mValue = mProperties[mShortName].toInt();
+        }
+
+        void ChangePropertiesV(const QVariant &value)
+        {
+            ChangeProperties(value.toInt());
         }
 
         void ChangeProperties(int value)
@@ -318,9 +376,24 @@ public:
             return mValue == mDefaultValue;
         }
 
+        QVariant defaultValue() const
+        {
+            return mDefaultValue;
+        }
+
+        QVariant value() const
+        {
+            return mValue;
+        }
+
         QString valueAsString() const
         {
             return mValue;
+        }
+
+        void setValue(const QVariant &value)
+        {
+            mValue = value.toString();
         }
 
         void FromProperties()
@@ -328,6 +401,11 @@ public:
             mValue.clear();
             if (contains(mShortName))
                 mValue = mProperties[mShortName];
+        }
+
+        void ChangePropertiesV(const QVariant &value)
+        {
+            ChangeProperties(value.toString());
         }
 
         void ChangeProperties(const QString &value)
@@ -348,7 +426,61 @@ public:
         QString mDefaultValue;
     };
 
-    class PropWallStyle : public UIProperty
+    class PropGenericEnum : public UIProperty
+    {
+    public:
+        PropGenericEnum(const QString &name,
+                        QMap<QString,QString> &properties,
+                        const QStringList &enums,
+                        int defaultValue = 0) :
+            UIProperty(name, properties),
+            mEnums(enums),
+            mValue(defaultValue),
+            mDefaultValue(defaultValue)
+        {
+        }
+
+        bool isDefaultValue() const
+        {
+            return mValue == mDefaultValue;
+        }
+
+        QVariant defaultValue() const
+        {
+            return mDefaultValue;
+        }
+
+        QVariant value() const
+        {
+            return mValue;
+        }
+
+        QString valueAsString() const
+        {
+            return mEnums[mValue];
+        }
+
+        void setValue(const QVariant &value)
+        {
+            mValue = qBound(0, value.toInt(), mEnums.size() - 1);
+        }
+
+        void ChangePropertiesV(const QVariant &value)
+        {
+            ChangeProperties(value.toInt());
+        }
+
+        int getEnum()
+        {
+            return mValue;
+        }
+
+        QStringList mEnums;
+        int mValue;
+        int mDefaultValue;
+    };
+
+    class PropWallStyle : public PropGenericEnum
     {
     public:
         enum WallStyle
@@ -367,79 +499,54 @@ public:
             SouthEastCorner
         };
 
-        PropWallStyle(const QString &name, QMap<QString,QString> &properties) :
-            UIProperty(name, properties),
-            mEnum(None)
+        PropWallStyle(const QString &name, QMap<QString,QString> &properties,
+                      const QStringList &enums) :
+            PropGenericEnum(name, properties, enums, None)
         {}
-
-        bool isDefaultValue() const
-        {
-            return mEnum == None;
-        }
-
-        QString valueAsString() const
-        {
-            switch (mEnum) {
-            case None: return QLatin1String("None");
-            case WestWall: return QLatin1String("WestWall");
-            case WestWallTrans: return QLatin1String("WestWallTrans");
-            case WestWindow: return QLatin1String("WestWindow");
-            case WestDoorFrame: return QLatin1String("WestDoorFrame");
-            case NorthWall: return QLatin1String("NorthWall");
-            case NorthWallTrans: return QLatin1String("NorthWallTrans");
-            case NorthWindow: return QLatin1String("NorthWindow");
-            case NorthDoorFrame: return QLatin1String("NorthDoorFrame");
-            case NorthWestCorner: return QLatin1String("NorthWestCorner");
-            case NorthWestCornerTrans: return QLatin1String("NorthWestCornerTrans");
-            case SouthEastCorner: return QLatin1String("SouthEastCorner");
-            default: Q_ASSERT(false); break;
-            }
-            return QString();
-        }
 
         void FromProperties()
         {
-            mEnum = None;
+            mValue = None;
 
             if (contains("windowFW")) {
-                mEnum = WestWindow;
+                mValue = WestWindow;
                 remove("collideW");
             } else if (contains("windowFN")) {
-                mEnum = NorthWindow;
+                mValue = NorthWindow;
                 remove("collideN");
             } else if (contains("collideW") && contains("cutW") && !contains("collideN") && !contains("windowFW"))
-                mEnum = WestWall;
+                mValue = WestWall;
             else if (contains("collideW") && contains("cutW") && contains("collideN"))
-                mEnum = NorthWestCorner;
+                mValue = NorthWestCorner;
             else if (contains("cutN") && contains("cutW") && !contains("collideN") && !contains("collideW"))
-                mEnum = SouthEastCorner;
+                mValue = SouthEastCorner;
             else if (contains("cutN"))
-                mEnum = NorthDoorFrame;
+                mValue = NorthDoorFrame;
             else if (contains("cutW"))
-                mEnum = WestDoorFrame;
+                mValue = WestDoorFrame;
 
             if (contains("WallW"))
-                mEnum = WestWall;
+                mValue = WestWall;
             else if (contains("WallN"))
-                mEnum = NorthWall;
+                mValue = NorthWall;
             else if (contains("WallNW"))
-                mEnum = NorthWestCorner;
+                mValue = NorthWestCorner;
             else if (contains("WallWTrans"))
-                mEnum = WestWallTrans;
+                mValue = WestWallTrans;
             else if (contains("WallNTrans"))
-                mEnum = NorthWallTrans;
+                mValue = NorthWallTrans;
             else if (contains("WallNWTrans"))
-                mEnum = NorthWestCornerTrans;
+                mValue = NorthWestCornerTrans;
             else if (contains("WallSE"))
-                mEnum = SouthEastCorner;
+                mValue = SouthEastCorner;
             else if (contains("WindowW"))
-                mEnum = WestWindow;
+                mValue = WestWindow;
             else if (contains("WindowN"))
-                mEnum = NorthWindow;
+                mValue = NorthWindow;
             else if (contains("DoorWallW"))
-                mEnum = WestDoorFrame;
+                mValue = WestDoorFrame;
             else if (contains("DoorWallN"))
-                mEnum = NorthDoorFrame;
+                mValue = NorthDoorFrame;
         }
 
         void ChangeProperties(int value)
@@ -482,15 +589,11 @@ public:
             case NorthWindow: set("WindowN"); break;
             default: Q_ASSERT(false); return;
             }
-            mEnum = static_cast<WallStyle>(value);
+            mValue = static_cast<WallStyle>(value);
         }
-
-        int getEnum() { return mEnum; }
-
-        WallStyle mEnum;
     };
 
-    class PropRoofStyle : public UIProperty
+    class PropRoofStyle : public PropGenericEnum
     {
     public:
         enum RoofStyle
@@ -501,43 +604,27 @@ public:
             WestRoofT
         };
 
-        PropRoofStyle(const QString &name, QMap<QString,QString> &properties) :
-            UIProperty(name, properties),
-            mEnum(None)
+        PropRoofStyle(const QString &name, QMap<QString,QString> &properties,
+                      const QStringList &enums) :
+            PropGenericEnum(name, properties, enums, None)
         {
 
-        }
-
-        bool isDefaultValue() const
-        {
-            return mEnum == None;
-        }
-
-        QString valueAsString() const
-        {
-            switch (mEnum) {
-            case None: return QLatin1String("None");
-            case WestRoofB: return QLatin1String("WestRoofB");
-            case WestRoofM: return QLatin1String("WestRoofM");
-            case WestRoofT: return QLatin1String("WestRoofT");
-            default: Q_ASSERT(false); break;
-            }
-            return QString();
         }
 
         void FromProperties()
         {
+            mValue = None;
             if (contains("WestRoofB"))
-                mEnum = WestRoofB;
+                mValue = WestRoofB;
             else if (contains("WestRoofM"))
-                mEnum = WestRoofM;
+                mValue = WestRoofM;
             else if (contains("WestRoofT"))
-                mEnum = WestRoofT;
+                mValue = WestRoofT;
         }
 
         void ChangeProperties(int value)
         {
-            mEnum = None;
+            mValue = qBound(0, value, mEnums.size() - 1);
             remove("WestRoofB");
             remove("WestRoofM");
             remove("WestRoofT");
@@ -548,15 +635,10 @@ public:
             case WestRoofT: set("WestRoofT"); break;
             default: Q_ASSERT(false); return;
             }
-            mEnum = static_cast<RoofStyle>(value);
         }
-
-        int getEnum() { return mEnum; }
-
-        RoofStyle mEnum;
     };
 
-    class PropDoorStyle : public UIProperty
+    class PropDoorStyle : public PropGenericEnum
     {
     public:
         enum DoorStyle
@@ -567,37 +649,21 @@ public:
         };
 
         PropDoorStyle(const QString &name, const QString &prefix,
-                      QMap<QString,QString> &properties) :
-            UIProperty(name, properties),
-            mPrefix(prefix),
-            mEnum(None)
+                      QMap<QString,QString> &properties,
+                      const QStringList &enums) :
+            PropGenericEnum(name, properties, enums, None),
+            mPrefix(prefix)
         {
 
-        }
-
-        bool isDefaultValue() const
-        {
-            return mEnum == None;
-        }
-
-        QString valueAsString() const
-        {
-            switch (mEnum) {
-            case None: return QLatin1String("None");
-            case North: return QLatin1String("North");
-            case West: return QLatin1String("West");
-            default: Q_ASSERT(false); break;
-            }
-            return QString();
         }
 
         void FromProperties()
         {
-            mEnum = None;
+            mValue = None;
             if (contains("N"))
-                mEnum = North;
+                mValue = North;
             else if (contains("W"))
-                mEnum = West;
+                mValue = West;
         }
 
         void ChangeProperties(int value)
@@ -611,10 +677,8 @@ public:
             case West: set(mPrefix + QLatin1String("W")); break;
             default: Q_ASSERT(false); return;
             }
-            mEnum = static_cast<DoorStyle>(value);
+            mValue = qBound(0, value, mEnums.size() - 1);
         }
-
-        int getEnum() { return mEnum; }
 
         bool contains(const char *key)
         {
@@ -622,10 +686,9 @@ public:
         }
 
         QString mPrefix;
-        DoorStyle mEnum;
     };
 
-    class PropDirection : public UIProperty
+    class PropDirection : public PropGenericEnum
     {
     public:
         enum Direction
@@ -642,55 +705,33 @@ public:
         };
 
         PropDirection(const QString &name, const QString &prefix,
-                      QMap<QString,QString> &properties) :
-            UIProperty(name, properties),
-            mPrefix(prefix),
-            mEnum(None)
+                      QMap<QString,QString> &properties,
+                      const QStringList &enums) :
+            PropGenericEnum(name, properties, enums, None),
+            mPrefix(prefix)
         {
 
-        }
-
-        bool isDefaultValue() const
-        {
-            return mEnum == None;
-        }
-
-        QString valueAsString() const
-        {
-            switch (mEnum) {
-            case None: return QLatin1String("None");
-            case N: return QLatin1String("N");
-            case NE: return QLatin1String("NE");
-            case E: return QLatin1String("E");
-            case SE: return QLatin1String("SE");
-            case S: return QLatin1String("S");
-            case SW: return QLatin1String("SW");
-            case W: return QLatin1String("W");
-            case NW: return QLatin1String("NW");
-            default: Q_ASSERT(false); break;
-            }
-            return QString();
         }
 
         void FromProperties()
         {
-            mEnum = None;
+            mValue = None;
             if (contains("S") && contains("W"))
-                mEnum = SW;
+                mValue = SW;
             else if (contains("N") && contains("W"))
-                mEnum = NW;
+                mValue = NW;
             else if (contains("S") && contains("E"))
-                mEnum = SE;
+                mValue = SE;
             else if (contains("N") && contains("E"))
-                mEnum = NE;
+                mValue = NE;
             else if (contains("E"))
-                mEnum = E;
+                mValue = E;
             else if (contains("N"))
-                mEnum = N;
+                mValue = N;
             else if (contains("S"))
-                mEnum = S;
+                mValue = S;
             else if (contains("W"))
-                mEnum = W;
+                mValue = W;
         }
 
         void ChangeProperties(int value)
@@ -699,18 +740,15 @@ public:
             Q_ASSERT(false); // unimplemented in original???
         }
 
-        int getEnum() { return mEnum; }
-
         bool contains(const char *key)
         {
             return UIProperty::contains(mPrefix + QLatin1String(key)); // shelfW, tableW
         }
 
         QString mPrefix;
-        Direction mEnum;
     };
 
-    class PropStairStyle : public UIProperty
+    class PropStairStyle : public PropGenericEnum
     {
     public:
         enum StairStyle
@@ -725,49 +763,29 @@ public:
         };
 
         PropStairStyle(const QString &name, const QString &prefix,
-                       QMap<QString,QString> &properties) :
-            UIProperty(name, properties),
-            mPrefix(prefix),
-            mEnum(None)
+                       QMap<QString,QString> &properties,
+                       const QStringList &enums) :
+            PropGenericEnum(name, properties, enums, None),
+            mPrefix(prefix)
         {
 
-        }
-
-        bool isDefaultValue() const
-        {
-            return mEnum == None;
-        }
-
-        QString valueAsString() const
-        {
-            switch (mEnum) {
-            case None: return QLatin1String("None");
-            case BottomW: return QLatin1String("BottomW");
-            case MiddleW: return QLatin1String("MiddleW");
-            case TopW: return QLatin1String("TopW");
-            case BottomN: return QLatin1String("BottomN");
-            case MiddleN: return QLatin1String("MiddleN");
-            case TopN: return QLatin1String("TopN");
-            default: Q_ASSERT(false); break;
-            }
-            return QString();
         }
 
         void FromProperties()
         {
-            mEnum = None;
+            mValue = None;
             if (contains("BW"))
-                mEnum = BottomW;
+                mValue = BottomW;
             else if (contains("MW"))
-                mEnum = MiddleW;
+                mValue = MiddleW;
             else if (contains("TW"))
-                mEnum = TopW;
+                mValue = TopW;
             else if (contains("BN"))
-                mEnum = BottomN;
+                mValue = BottomN;
             else if (contains("MN"))
-                mEnum = MiddleN;
+                mValue = MiddleN;
             else if (contains("TN"))
-                mEnum = TopN;
+                mValue = TopN;
         }
 
         void ChangeProperties(int value)
@@ -788,10 +806,8 @@ public:
             case TopN: set("TN"); break;
             default: Q_ASSERT(false); return;
             }
-            mEnum = static_cast<StairStyle>(value);
+            mValue = qBound(0, value, mEnums.size() - 1);
         }
-
-        int getEnum() { return mEnum; }
 
         bool contains(const char *key)
         {
@@ -809,10 +825,9 @@ public:
         }
 
         QString mPrefix;
-        StairStyle mEnum;
     };
 
-    class PropTileBlockStyle : public UIProperty
+    class PropTileBlockStyle : public PropGenericEnum
     {
     public:
         enum TileBlockStyle
@@ -822,36 +837,20 @@ public:
             SolidTransparent
         };
 
-        PropTileBlockStyle(const QString &name, QMap<QString,QString> &properties) :
-            UIProperty(name, properties),
-            mEnum(None)
+        PropTileBlockStyle(const QString &name, QMap<QString,QString> &properties,
+                           const QStringList &enums) :
+            PropGenericEnum(name, properties, enums, None)
         {
 
-        }
-
-        bool isDefaultValue() const
-        {
-            return mEnum == None;
-        }
-
-        QString valueAsString() const
-        {
-            switch (mEnum) {
-            case None: return QLatin1String("None");
-            case Solid: return QLatin1String("Solid");
-            case SolidTransparent: return QLatin1String("SolidTransparent");
-            default: Q_ASSERT(false); break;
-            }
-            return QString();
         }
 
         void FromProperties()
         {
-            mEnum = None;
+            mValue = None;
             if (contains("solid"))
-                mEnum = Solid;
+                mValue = Solid;
             else if (contains("solidtrans"))
-                mEnum = SolidTransparent;
+                mValue = SolidTransparent;
         }
 
         void ChangeProperties(int value)
@@ -864,15 +863,11 @@ public:
             case SolidTransparent: set("solidtrans"); break;
             default: Q_ASSERT(false); return;
             }
-            mEnum = static_cast<TileBlockStyle>(value);
+            mValue = qBound(0, value, mEnums.size() - 1);
         }
-
-        int getEnum() { return mEnum; }
-
-        TileBlockStyle mEnum;
     };
 
-    class PropLightPolyStyle : public UIProperty
+    class PropLightPolyStyle : public PropGenericEnum
     {
     public:
         enum LightPolyStyle
@@ -882,39 +877,23 @@ public:
             WallN
         };
 
-        PropLightPolyStyle(const QString &name, QMap<QString,QString> &properties) :
-            UIProperty(name, properties),
-            mEnum(None)
+        PropLightPolyStyle(const QString &name, QMap<QString,QString> &properties,
+                           const QStringList &enums) :
+            PropGenericEnum(name, properties, enums, None)
         {
 
-        }
-
-        bool isDefaultValue() const
-        {
-            return mEnum == None;
-        }
-
-        QString valueAsString() const
-        {
-            switch (mEnum) {
-            case None: return QLatin1String("None");
-            case WallW: return QLatin1String("WallW");
-            case WallN: return QLatin1String("WallN");
-            default: Q_ASSERT(false); break;
-            }
-            return QString();
         }
 
         void FromProperties()
         {
-            mEnum = None;
+            mValue = None;
             QString label = QLatin1String("LightPolyStyle");
             if (contains(label)) {
                 QString enumName = mProperties[label];
                 if (enumName == QLatin1String("WallW"))
-                    mEnum = WallW;
+                    mValue = WallW;
                 else if (enumName == QLatin1String("WallN"))
-                    mEnum = WallN;
+                    mValue = WallN;
                 else
                     Q_ASSERT(false);
             }
@@ -929,13 +908,16 @@ public:
             case WallN: set("LightPolyStyle", "WallN"); break;
             default: Q_ASSERT(false); return;
             }
-            mEnum = static_cast<LightPolyStyle>(value);
+            mValue = qBound(0, value, mEnums.size() - 1);
         }
-
-        int getEnum() { return mEnum; }
-
-        LightPolyStyle mEnum;
     };
+
+    UIProperty *property(const QString &name) const
+    {
+        if (mProperties.contains(name))
+            return mProperties[name];
+        return 0;
+    }
 
     UIProperties(QMap<QString,QString> &properties);
 
@@ -956,6 +938,13 @@ public:
         Q_ASSERT(mProperties.contains(label));
         if (mProperties.contains(label))
             mProperties[label]->ChangeProperties(newValue);
+    }
+
+    void ChangePropertiesV(const QString &label, const QVariant &newValue)
+    {
+        Q_ASSERT(mProperties.contains(label));
+        if (mProperties.contains(label))
+            mProperties[label]->ChangePropertiesV(newValue);
     }
 
     void FromProperties()
@@ -1014,58 +1003,31 @@ public:
         return ret;
     }
 
+    void copy(const UIProperties &other)
+    {
+        foreach (UIProperty *prop, mProperties)
+            prop->setValue(other.property(prop->mName)->value());
+    }
+
     QMap<QString,UIProperty*> mProperties;
-
-#if 0
-    PropGenericBoolean mCollideWest;
-    PropGenericBoolean mCollideNorth;
-
-    PropDoorStyle mDoor;
-    PropDoorStyle mDoorFrame;
-
-    PropGenericBoolean mIsBed;
-
-    PropGenericBoolean mFloorOverlay;
-    PropGenericBoolean mIsFloor;
-    PropGenericBoolean mIsIndoor;
-
-    PropRoofStyle mRoofStyle;
-
-    PropGenericBoolean mClimbSheetN;
-    PropGenericBoolean mClimbSheetW;
-
-    PropDirection mFloorItemShelf;
-    PropDirection mHighItemShelf;
-    PropDirection mTableItemShelf;
-
-    //PropStairStyle mStairStyle;
-
-    PropGenericBoolean mPreSeen;
-
-    PropGenericBoolean mHoppableN;
-    PropGenericBoolean mHoppableW;
-    PropGenericBoolean mWallOverlay;
-    PropWallStyle mWallStyle;
-
-    PropGenericInteger mWaterAmount;
-    PropGenericInteger mWaterMaxAmount;
-    PropGenericBoolean mWaterPiped;
-
-    PropGenericInteger mOpenTileOffset;
-    PropGenericInteger mSmashedTileOffset;
-    //PropWindowStyle mWindowStyle;
-    PropGenericBoolean mWindowLocked;
-#endif
 };
 
 class TileDefTile
 {
 public:
-    TileDefTile() :
+    TileDefTile(TileDefTileset *tileset, int id) :
+        mTileset(tileset),
+        mID(id),
         mPropertyUI(mProperties)
     {
 
     }
+
+    TileDefTileset *tileset() const { return mTileset; }
+    int id() const { return mID; }
+
+    UIProperties::UIProperty *property(const QString &name)
+    { return mPropertyUI.property(name); }
 
     bool getBoolean(const QString &name)
     {
@@ -1087,6 +1049,8 @@ public:
         return mPropertyUI.getEnum(name);
     }
 
+    TileDefTileset *mTileset;
+    int mID;
     QMap<QString,QString> mProperties;
     UIProperties mPropertyUI;
 };

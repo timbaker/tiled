@@ -24,6 +24,7 @@
 #include "tilesetmanager.h"
 #include "zoomable.h"
 #include "utils.h"
+#include "zprogress.h"
 
 #include "tile.h"
 #include "tileset.h"
@@ -32,6 +33,7 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QScrollBar>
+#include <QSettings>
 #include <QToolBar>
 #include <QToolButton>
 #include <QUndoGroup>
@@ -39,6 +41,73 @@
 
 using namespace Tiled;
 using namespace Tiled::Internal;
+
+/////
+
+class Tiled::Internal::TilePropertyClipboard
+{
+public:
+    struct Entry
+    {
+        Entry() :
+            mProperties(mYuck)
+        {}
+        UIProperties mProperties;
+        QMap<QString,QString> mYuck;
+    };
+
+    void clear();
+    void resize(int width, int height);
+    void setEntry(int x, int y, UIProperties &properties);
+    UIProperties *entry(int tx, int ty, int x, int y);
+
+    int mWidth, mHeight;
+    QVector<Entry*> mEntries;
+    QRegion mValidRgn;
+};
+
+void TilePropertyClipboard::clear()
+{
+    qDeleteAll(mEntries);
+    mEntries.resize(0);
+    mValidRgn = QRegion();
+    mWidth = mHeight = 0;
+}
+
+void TilePropertyClipboard::resize(int width, int height)
+{
+    clear();
+
+    mWidth = width, mHeight = height;
+    mEntries.resize(mWidth * mHeight);
+    for (int i = 0; i < mEntries.size(); i++) {
+        if (!mEntries[i])
+            mEntries[i] = new Entry;
+    }
+    mValidRgn = QRegion();
+}
+
+void TilePropertyClipboard::setEntry(int x, int y, UIProperties &properties)
+{
+    mEntries[x + y * mWidth]->mProperties.copy(properties);
+    mValidRgn |= QRect(x, y, 1, 1);
+}
+
+UIProperties *TilePropertyClipboard::entry(int tx, int ty, int x, int y)
+{
+    // Support tiling the clipboard contents over the area we are pasting.
+    while (x - tx >= mWidth)
+        tx += mWidth;
+    while (y - ty >= mHeight)
+        ty += mHeight;
+
+    if (QRect(tx, ty, mWidth, mHeight).contains(x, y)) {
+        x -= tx, y -= ty;
+        if (mValidRgn.contains(QPoint(x, y)))
+            return &mEntries[x + y * mWidth]->mProperties;
+    }
+    return 0;
+}
 
 /////
 
@@ -92,6 +161,34 @@ public:
     Tileset *mTileset;
 };
 
+class ChangePropertyValue : public QUndoCommand
+{
+public:
+    ChangePropertyValue(TileDefDialog *d, TileDefTile *defTile,
+                        UIProperties::UIProperty *property,
+                        const QVariant &value) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Property Value")),
+        mDialog(d),
+        mTile(defTile),
+        mProperty(property),
+        mValue(value)
+    {
+    }
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+    void swap()
+    {
+        mValue = mDialog->changePropertyValue(mTile, mProperty->mName, mValue);
+    }
+
+    TileDefDialog *mDialog;
+    TileDefTile *mTile;
+    UIProperties::UIProperty *mProperty;
+    QVariant mValue;
+};
+
 } // namespace
 
 using namespace TileDefUndoRedo;
@@ -117,9 +214,11 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     mCurrentTileset(0),
     mZoomable(new Zoomable(this)),
     mSynching(false),
-    mUpdatePending(false),
+    mTilesetsUpdatePending(false),
+    mPropertyPageUpdatePending(false),
     mTileDefFile(0),
     mTileDefProperties(new TileDefProperties),
+    mClipboard(new TilePropertyClipboard),
     mUndoGroup(new QUndoGroup(this)),
     mUndoStack(new QUndoStack(this))
 {
@@ -140,7 +239,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     button->setText(undoAction->text());
     button->setEnabled(mUndoGroup->canUndo());
-    button->setShortcut(QKeySequence::Undo);
+    undoAction->setShortcut(QKeySequence::Undo);
     mUndoButton = button;
     ui->buttonLayout->insertWidget(0, button);
     connect(mUndoGroup, SIGNAL(canUndoChanged(bool)), button, SLOT(setEnabled(bool)));
@@ -152,7 +251,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     Utils::setThemeIcon(button, "edit-redo");
     button->setText(redoAction->text());
     button->setEnabled(mUndoGroup->canRedo());
-    button->setShortcut(QKeySequence::Redo);
+    redoAction->setShortcut(QKeySequence::Redo);
     mRedoButton = button;
     ui->buttonLayout->insertWidget(1, button);
     connect(mUndoGroup, SIGNAL(canRedoChanged(bool)), button, SLOT(setEnabled(bool)));
@@ -163,12 +262,30 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
 
     /////
 
+    QToolBar *toolBar = new QToolBar;
+    toolBar->setIconSize(QSize(16, 16));
+    toolBar->addAction(ui->actionCopyProperties);
+    toolBar->addAction(ui->actionPasteProperties);
+    toolBar->addAction(ui->actionReset);
+    ui->tileToolsLayout->insertWidget(0, toolBar);
+
+    ui->actionCopyProperties->setShortcut(QKeySequence::Copy);
+    ui->actionPasteProperties->setShortcut(QKeySequence::Paste);
+    ui->actionReset->setShortcut(QKeySequence::Delete);
+
+    connect(ui->actionCopyProperties, SIGNAL(triggered()), SLOT(copyProperties()));
+    connect(ui->actionPasteProperties, SIGNAL(triggered()), SLOT(pasteProperties()));
+    connect(ui->actionReset, SIGNAL(triggered()), SLOT(resetDefaults()));
+
+    QAction *a = ui->menuEdit->actions().first();
+    ui->menuEdit->insertAction(a, undoAction);
+    ui->menuEdit->insertAction(a, redoAction);
+
     ui->splitter->setStretchFactor(0, 1);
 
     mZoomable->setScale(0.5); // FIXME
     mZoomable->connectToComboBox(ui->scaleComboBox);
     ui->tiles->setZoomable(mZoomable);
-    ui->tiles->model()->setShowHeaders(false);
 
     ui->tiles->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ui->tiles->model()->setShowHeaders(false);
@@ -180,6 +297,8 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     connect(ui->tiles->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(tileSelectionChanged()));
+    connect(ui->tiles, SIGNAL(tileEntered(Tile*)), SLOT(tileEntered(Tile*)));
+    connect(ui->tiles, SIGNAL(tileLeft(Tile*)), SLOT(tileLeft(Tile*)));
 
     connect(ui->actionNew, SIGNAL(triggered()), SLOT(fileNew()));
     connect(ui->actionOpen, SIGNAL(triggered()), SLOT(fileOpen()));
@@ -198,6 +317,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
         }
         if (IntegerTileDefProperty *p = prop->asInteger()) {
             if (QSpinBox *w = ui->propertySheet->findChild<QSpinBox*>(p->mName)) {
+                w->installEventFilter(this); // to disable mousewheel
                 connect(w, SIGNAL(valueChanged(int)), SLOT(spinBoxValueChanged(int)));
                 mSpinBoxes[p->mName] = w;
             }
@@ -207,6 +327,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
         }
         if (StringTileDefProperty *p = prop->asString()) {
             if (QComboBox *w = ui->propertySheet->findChild<QComboBox*>(p->mName)) {
+                w->installEventFilter(this); // to disable mousewheel
                 mComboBoxes[p->mName] = w;
             }
             else
@@ -239,6 +360,15 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     mBoldLabelFont = mLabelFont;
     mBoldLabelFont.setBold(true);
 
+    QSettings settings;
+    settings.beginGroup(QLatin1String("TileDefDialog"));
+    QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
+    if (!geom.isEmpty())
+        restoreGeometry(geom);
+    settings.endGroup();
+
+    restoreSplitterSizes(ui->splitter);
+
     fileOpen(QLatin1String("C:\\Users\\Tim\\Desktop\\ProjectZomboid\\maptools\\tiledefinitions.tiles"));
     setTilesetList();
 
@@ -252,6 +382,8 @@ TileDefDialog::~TileDefDialog()
     TilesetManager::instance()->removeReferences(mTilesets.values());
     TilesetManager::instance()->removeReferences(mRemovedTilesets);
     delete mTileDefFile;
+    delete mClipboard;
+    delete mTileDefProperties;
 }
 
 void TileDefDialog::addTileset()
@@ -320,7 +452,17 @@ void TileDefDialog::removeTileset(Tileset *ts)
 
     updateTilesetListLater();
 //    setTilesetList();
-//    ui->tilesets->setCurrentRow(row);
+    //    ui->tilesets->setCurrentRow(row);
+}
+
+QVariant TileDefDialog::changePropertyValue(TileDefTile *defTile, const QString &name,
+                                            const QVariant &value)
+{
+    QVariant old = defTile->mPropertyUI.mProperties[name]->value();
+    defTile->mPropertyUI.ChangePropertiesV(name, value);
+    setToolTipEtc(defTile->id());
+    updatePropertyPageLater();
+    return old;
 }
 
 void TileDefDialog::fileNew()
@@ -329,10 +471,17 @@ void TileDefDialog::fileNew()
 
 void TileDefDialog::fileOpen()
 {
+    QSettings settings;
+    QString key = QLatin1String("TileDefDialog/LastOpenPath");
+    QString lastPath = settings.value(key).toString();
+
     QString fileName = QFileDialog::getOpenFileName(this, tr("Choose .tiles file"),
-                                                    QString(), QLatin1String("Tile properties files (*.tiles)"));
+                                                    lastPath,
+                                                    QLatin1String("Tile properties files (*.tiles)"));
     if (fileName.isEmpty())
         return;
+
+    settings.setValue(key, QFileInfo(fileName).absolutePath());
 
     delete mTileDefFile;
     mTileDefFile = 0;
@@ -365,8 +514,10 @@ void TileDefDialog::tileSelectionChanged()
 
     QModelIndexList selection = ui->tiles->selectionModel()->selectedIndexes();
     foreach (QModelIndex index, selection) {
-        if (Tile *tile = ui->tiles->model()->tileAt(index))
-            mSelectedTiles += tile;
+        if (Tile *tile = ui->tiles->model()->tileAt(index)) {
+            if (TileDefTileset *ts = mTileDefFile->tileset(tile->tileset()->name()))
+                mSelectedTiles += ts->mTiles[tile->id()];
+        }
     }
 
     setPropertiesPage();
@@ -383,26 +534,10 @@ void TileDefDialog::comboBoxActivated(int index)
     QComboBox *w = dynamic_cast<QComboBox*>(sender);
     if (!w) return;
 
-    EnumTileDefProperty *p = 0;
-    TileDefProperties props;
-    foreach (TileDefProperty *prop, props.mProperties) {
-        if (prop->mName == w->objectName()) {
-            p = prop->asEnum();
-            break;
-        }
-    }
-    if (!p)
+    TileDefProperty *prop = mTileDefProperties->property(w->objectName());
+    if (!prop || !prop->asEnum())
         return;
-
-    foreach (Tile *tile, mSelectedTiles) {
-        TileDefTileset *defTileset = mTileDefFile->tileset(tile->tileset()->name()); // TODO: defTile->tileset()
-        TileDefTile *defTile = defTileset->mTiles[tile->id()];
-        defTile->mPropertyUI.ChangeProperties(p->mName, index); // FIXME: undo/redo
-        setToolTipEtc(tile->id());
-    }
-
-    // FIXME: just redisplay what's needed
-    setPropertiesPage();
+    changePropertyValues(mSelectedTiles, prop->mName, index);
 }
 
 void TileDefDialog::checkboxToggled(bool value)
@@ -415,26 +550,10 @@ void TileDefDialog::checkboxToggled(bool value)
     QCheckBox *w = dynamic_cast<QCheckBox*>(sender);
     if (!w) return;
 
-    BooleanTileDefProperty *p = 0;
-    TileDefProperties props;
-    foreach (TileDefProperty *prop, props.mProperties) {
-        if (prop->mName == w->objectName()) {
-            p = prop->asBoolean();
-            break;
-        }
-    }
-    if (!p)
+    TileDefProperty *prop = mTileDefProperties->property(w->objectName());
+    if (!prop || !prop->asBoolean())
         return;
-
-    foreach (Tile *tile, mSelectedTiles) {
-        TileDefTileset *defTileset = mTileDefFile->tileset(tile->tileset()->name()); // TODO: defTile->tileset()
-        TileDefTile *defTile = defTileset->mTiles[tile->id()];
-        defTile->mPropertyUI.ChangeProperties(p->mName, value); // FIXME: undo/redo
-        setToolTipEtc(tile->id());
-    }
-
-    // FIXME: just redisplay what's needed
-    setPropertiesPage();
+    changePropertyValues(mSelectedTiles, prop->mName, value);
 }
 
 void TileDefDialog::spinBoxValueChanged(int value)
@@ -447,26 +566,10 @@ void TileDefDialog::spinBoxValueChanged(int value)
     QSpinBox *w = dynamic_cast<QSpinBox*>(sender);
     if (!w) return;
 
-    IntegerTileDefProperty *p = 0;
-    TileDefProperties props;
-    foreach (TileDefProperty *prop, props.mProperties) {
-        if (prop->mName == w->objectName()) {
-            p = prop->asInteger();
-            break;
-        }
-    }
-    if (!p)
+    TileDefProperty *prop = mTileDefProperties->property(w->objectName());
+    if (!prop || !prop->asInteger())
         return;
-
-    foreach (Tile *tile, mSelectedTiles) {
-        TileDefTileset *defTileset = mTileDefFile->tileset(tile->tileset()->name()); // TODO: defTile->tileset()
-        TileDefTile *defTile = defTileset->mTiles[tile->id()];
-        defTile->mPropertyUI.ChangeProperties(p->mName, value); // FIXME: undo/redo
-        setToolTipEtc(tile->id());
-    }
-
-    // FIXME: just redisplay what's needed
-    setPropertiesPage();
+    changePropertyValues(mSelectedTiles, prop->mName, value);
 }
 
 void TileDefDialog::undoTextChanged(const QString &text)
@@ -481,13 +584,124 @@ void TileDefDialog::redoTextChanged(const QString &text)
 
 void TileDefDialog::updateTilesetList()
 {
-    mUpdatePending = false;
+    mTilesetsUpdatePending = false;
     loadTilesets();
     setTilesetList();
 //    int row = indexOf(ts->name());
 //    ui->tilesets->setCurrentRow(row);
 
     updateUI();
+}
+
+void TileDefDialog::updatePropertyPage()
+{
+    mPropertyPageUpdatePending = false;
+    setPropertiesPage();
+}
+
+void TileDefDialog::copyProperties()
+{
+    QRegion selectedRgn;
+    foreach (TileDefTile *defTile, mSelectedTiles) {
+        int x = defTile->id() % defTile->tileset()->mColumns;
+        int y = defTile->id() / defTile->tileset()->mColumns;
+        selectedRgn |= QRect(x, y, 1, 1);
+    }
+    QRect selectedBounds = selectedRgn.boundingRect();
+
+    mClipboard->resize(selectedBounds.width(), selectedBounds.height());
+    foreach (TileDefTile *defTile, mSelectedTiles) {
+        int x = defTile->id() % defTile->tileset()->mColumns;
+        int y = defTile->id() / defTile->tileset()->mColumns;
+        x -= selectedBounds.left(), y -= selectedBounds.top();
+        mClipboard->setEntry(x, y, defTile->mPropertyUI);
+    }
+
+    qDebug() << "copyProperties w,h =" << mClipboard->mWidth << mClipboard->mHeight;
+
+    updateUI();
+}
+
+void TileDefDialog::pasteProperties()
+{
+    QRegion selectedRgn;
+    foreach (TileDefTile *defTile, mSelectedTiles) {
+        int x = defTile->id() % defTile->tileset()->mColumns;
+        int y = defTile->id() / defTile->tileset()->mColumns;
+        selectedRgn |= QRect(x, y, 1, 1);
+    }
+    QRect selectedBounds = selectedRgn.boundingRect();
+
+    QList<TileDefTile*> changed;
+    TileDefTileset *defTileset = mTileDefFile->tileset(mCurrentTileset->name());
+    int clipX = selectedBounds.left(), clipY = selectedBounds.top();
+    for (int y = selectedBounds.top(); y <= selectedBounds.bottom(); y++) {
+        for (int x = selectedBounds.left(); x <= selectedBounds.right(); x++) {
+            if (!selectedRgn.contains(QPoint(x, y)))
+                continue;
+            if (UIProperties *props = mClipboard->entry(clipX, clipY, x, y)) {
+                int tileID = x + y * defTileset->mColumns;
+                TileDefTile *defTile = defTileset->mTiles[tileID];
+                foreach (UIProperties::UIProperty *src, props->mProperties) {
+                    if (src->value() != defTile->property(src->mName)->value()) {
+                        changed += defTile;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    qDebug() << "pasteProperties" << selectedBounds << changed;
+
+    if (changed.size()) {
+        mUndoStack->beginMacro(tr("Paste Properties"));
+        foreach (TileDefTile *defTile, changed) {
+            int x = defTile->id() % defTile->tileset()->mColumns;
+            int y = defTile->id() / defTile->tileset()->mColumns;
+            UIProperties *props = mClipboard->entry(selectedBounds.left(), selectedBounds.top(), x, y);
+            foreach (UIProperties::UIProperty *src, props->mProperties) {
+                if (src->value() != defTile->property(src->mName)->value()) {
+                    mUndoStack->push(new ChangePropertyValue(this, defTile,
+                                                             defTile->property(src->mName),
+                                                             src->value()));
+                }
+            }
+        }
+        mUndoStack->endMacro();
+    }
+}
+
+void TileDefDialog::resetDefaults()
+{
+    QList<TileDefTile*> defTiles;
+    foreach (TileDefTile *defTile, mSelectedTiles) {
+        if (defTile->mPropertyUI.nonDefaultProperties().size())
+            defTiles += defTile;
+    }
+    if (defTiles.size()) {
+        mUndoStack->beginMacro(tr("Reset Property Values"));
+        foreach (TileDefTile *defTile, defTiles)
+            resetDefaults(defTile);
+        mUndoStack->endMacro();
+    }
+}
+
+void TileDefDialog::tileEntered(Tile *tile)
+{
+    if (mSelectedTiles.size() == 1) {
+        TileDefTile *defTile1 = mSelectedTiles.first();
+        TileDefTile *defTile2 = defTile1->tileset()->mTiles[tile->id()];
+        int offset = defTile2->id() - defTile1->id();
+        ui->tileOffset->setText(tr("Offset: %1").arg(offset));
+        return;
+    }
+    ui->tileOffset->setText(tr("Offset: ?"));
+}
+
+void TileDefDialog::tileLeft(Tile *tile)
+{
+    ui->tileOffset->setText(tr("Offset: ?"));
 }
 
 void TileDefDialog::updateUI()
@@ -498,21 +712,36 @@ void TileDefDialog::updateUI()
     ui->actionSave->setEnabled(hasFile);
     ui->actionAddTileset->setEnabled(hasFile);
 
-    mSynching = false;
-}
+    ui->actionCopyProperties->setEnabled(mSelectedTiles.size());
+    ui->actionPasteProperties->setEnabled(!mClipboard->mValidRgn.isEmpty() &&
+                                          mSelectedTiles.size());
+    ui->actionReset->setEnabled(mSelectedTiles.size());
 
-void TileDefDialog::accept()
-{
+    mSynching = false;
 }
 
 bool TileDefDialog::eventFilter(QObject *object, QEvent *event)
 {
-    if ((event->type() == QEvent::Wheel) && object->parent()
-            && object->parent()->parent() == ui->propertySheet) {
+    if ((event->type() == QEvent::Wheel) &&
+            object->isWidgetType() &&
+            ui->propertySheet->isAncestorOf(qobject_cast<QWidget*>(object))) {
         qDebug() << "Wheel event blocked";
+        QCoreApplication::sendEvent(ui->scrollArea, event);
         return true;
     }
     return false;
+}
+
+void TileDefDialog::closeEvent(QCloseEvent *event)
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("TileDefDialog"));
+    settings.setValue(QLatin1String("geometry"), saveGeometry());
+    settings.endGroup();
+
+    saveSplitterSizes(ui->splitter);
+
+    QMainWindow::closeEvent(event);
 }
 
 void TileDefDialog::fileOpen(const QString &fileName)
@@ -555,17 +784,43 @@ void TileDefDialog::fileOpen(const QString &fileName)
     }
 }
 
+void TileDefDialog::changePropertyValues(const QList<TileDefTile *> &defTiles,
+                                         const QString &name, const QVariant &value)
+{
+    QList<TileDefTile *> change;
+    foreach (TileDefTile *defTile, defTiles) {
+        if (defTile->mPropertyUI.mProperties[name]->value() != value)
+            change += defTile;
+    }
+    if (change.size()) {
+        mUndoStack->beginMacro(tr("Change Property Values"));
+        foreach (TileDefTile *defTile, change)
+            mUndoStack->push(new ChangePropertyValue(this, defTile,
+                                                     defTile->mPropertyUI.mProperties[name],
+                                                     value));
+        mUndoStack->endMacro();
+    }
+}
+
 void TileDefDialog::updateTilesetListLater()
 {
-    if (!mUpdatePending) {
+    if (!mTilesetsUpdatePending) {
         QMetaObject::invokeMethod(this, "updateTilesetList", Qt::QueuedConnection);
-        mUpdatePending = true;
+        mTilesetsUpdatePending = true;
+    }
+}
+
+void TileDefDialog::updatePropertyPageLater()
+{
+    if (!mPropertyPageUpdatePending) {
+        QMetaObject::invokeMethod(this, "updatePropertyPage", Qt::QueuedConnection);
+        mPropertyPageUpdatePending = true;
     }
 }
 
 void TileDefDialog::setTilesetList()
 {
-    if (mUpdatePending)
+    if (mTilesetsUpdatePending)
         return;
 
     mCurrentTileset = 0;
@@ -621,6 +876,19 @@ void TileDefDialog::setToolTipEtc(int tileID)
         r = QRect(0,0,1,1);
     ui->tiles->model()->setCategoryBounds(tileID, r);
     ui->tiles->update(ui->tiles->model()->index(mCurrentTileset->tileAt(tileID)));
+}
+
+void TileDefDialog::resetDefaults(TileDefTile *defTile)
+{
+    QList<UIProperties::UIProperty*> props = defTile->mPropertyUI.nonDefaultProperties();
+    if (props.size() == 0)
+        return;
+
+    mUndoStack->beginMacro(tr("Reset Property Values"));
+    foreach (UIProperties::UIProperty *prop, props) {
+        mUndoStack->push(new ChangePropertyValue(this, defTile, prop, prop->defaultValue()));
+    }
+    mUndoStack->endMacro();
 }
 
 void TileDefDialog::setPropertiesPage()
@@ -725,6 +993,18 @@ int TileDefDialog::indexOf(const QString &name) const
 
 void TileDefDialog::loadTilesets()
 {
+    bool anyMissing;
+    foreach (Tileset *ts, mTilesets.values())
+        if (ts->isMissing()) {
+            anyMissing = true;
+            break;
+        }
+
+    if (!anyMissing)
+        return;
+
+    PROGRESS progress(tr("Loading tilesets..."), this);
+
     foreach (Tileset *ts, mTilesets.values()) {
         if (ts->isMissing()) {
             QString source = ts->imageSource();
@@ -772,3 +1052,32 @@ bool TileDefDialog::loadTilesetImage(Tileset *ts, const QString &source)
 
     return ts;
 }
+
+void TileDefDialog::saveSplitterSizes(QSplitter *splitter)
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("TileDefDialog"));
+    QVariantList v;
+    foreach (int size, splitter->sizes())
+        v += size;
+    settings.setValue(tr("%1/sizes").arg(splitter->objectName()), v);
+    settings.endGroup();
+}
+
+void TileDefDialog::restoreSplitterSizes(QSplitter *splitter)
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("TileDefDialog"));
+    QVariant v = settings.value(tr("%1/sizes").arg(splitter->objectName()));
+    if (v.canConvert(QVariant::List)) {
+        QList<int> sizes;
+        foreach (QVariant v2, v.toList()) {
+            sizes += v2.toInt();
+        }
+        splitter->setSizes(sizes);
+    }
+    settings.endGroup();
+}
+
+/////
+

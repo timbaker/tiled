@@ -48,9 +48,13 @@
            <widget class="Tiled::Internal::MixedTilesetView" name="tiles"/>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <layout class="QHBoxLayout" name="tileToolsLayout">
             <item>
-             <widget class="QComboBox" name="enums"/>
+             <widget class="QLabel" name="tileOffset">
+              <property name="text">
+               <string>Offset: 0</string>
+              </property>
+             </widget>
             </item>
             <item>
              <spacer name="horizontalSpacer_2">
@@ -656,7 +660,17 @@
     <addaction name="actionSave"/>
     <addaction name="actionAddTileset"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="separator"/>
+    <addaction name="actionCopyProperties"/>
+    <addaction name="actionPasteProperties"/>
+    <addaction name="actionReset"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
@@ -679,6 +693,42 @@
     <string>New</string>
    </property>
   </action>
+  <action name="actionReset">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/edit-clear.png</normaloff>:/images/16x16/edit-clear.png</iconset>
+   </property>
+   <property name="text">
+    <string>Reset Property Values</string>
+   </property>
+   <property name="toolTip">
+    <string>Reset properties to the default</string>
+   </property>
+  </action>
+  <action name="actionCopyProperties">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/edit-copy.png</normaloff>:/images/16x16/edit-copy.png</iconset>
+   </property>
+   <property name="text">
+    <string>Copy Properties</string>
+   </property>
+   <property name="toolTip">
+    <string>Copy selected tile properties</string>
+   </property>
+  </action>
+  <action name="actionPasteProperties">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/edit-paste.png</normaloff>:/images/16x16/edit-paste.png</iconset>
+   </property>
+   <property name="text">
+    <string>Paste Properties</string>
+   </property>
+   <property name="toolTip">
+    <string>Paste properties onto selected tiles</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -687,6 +737,8 @@
    <header>BuildingEditor/mixedtilesetview.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="tiled.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -74,7 +74,7 @@ bool TileDefFile::read(const QString &fileName)
 
         QVector<TileDefTile*> tiles(columns * rows);
         for (int j = 0; j < tileCount; j++) {
-            TileDefTile *tile = new TileDefTile;
+            TileDefTile *tile = new TileDefTile(ts, j);
             qint32 numProperties;
             in >> numProperties;
             for (int k = 0; k < numProperties; k++) {
@@ -99,7 +99,7 @@ bool TileDefFile::read(const QString &fileName)
         }
         for (int i = 0; i < ts->mTiles.size(); i++) {
             if (!ts->mTiles[i]) {
-                ts->mTiles[i] = new TileDefTile;
+                ts->mTiles[i] = new TileDefTile(ts, i);
             }
         }
         mTilesets[ts->mName] = ts;
@@ -286,39 +286,46 @@ UIProperties::UIProperties(QMap<QString, QString> &properties)
                 prop->mName == QLatin1String("Window")) {
             mProperties[prop->mName] = new PropDoorStyle(prop->mName,
                                                          prop->mShortName,
-                                                         properties);
+                                                         properties,
+                                                         prop->asEnum()->mEnums);
             continue;
         }
         if (prop->mName == QLatin1String("TileBlockStyle")) {
             mProperties[prop->mName] = new PropTileBlockStyle(prop->mName,
-                                                              properties);
+                                                              properties,
+                                                              prop->asEnum()->mEnums);
             continue;
         }
         if (prop->mName == QLatin1String("LightPolyStyle")) {
             mProperties[prop->mName] = new PropLightPolyStyle(prop->mName,
-                                                              properties);
+                                                              properties,
+                                                              prop->asEnum()->mEnums);
             continue;
         }
         if (prop->mName == QLatin1String("RoofStyle")) {
             mProperties[prop->mName] = new PropRoofStyle(prop->mName,
-                                                         properties);
+                                                         properties,
+                                                         prop->asEnum()->mEnums);
             continue;
         }
         if (prop->mName == QLatin1String("StairStyle")) {
             mProperties[prop->mName] = new PropStairStyle(prop->mName,
                                                           prop->mShortName,
-                                                          properties);
+                                                          properties,
+                                                          prop->asEnum()->mEnums);
             continue;
         }
         if (prop->mName.contains(QLatin1String("ItemShelf"))) {
             mProperties[prop->mName] = new PropDirection(prop->mName,
                                                          prop->mShortName,
-                                                         properties);
+                                                         properties,
+                                                         prop->asEnum()->mEnums);
             continue;
         }
         if (prop->mName == QLatin1String("WallStyle")) {
             mProperties[prop->mName] = new PropWallStyle(prop->mName,
-                                                         properties);
+                                                         properties,
+                                                         prop->asEnum()->mEnums);
             continue;
         }
         if (BooleanTileDefProperty *p = prop->asBoolean()) {

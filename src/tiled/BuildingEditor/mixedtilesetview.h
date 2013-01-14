@@ -179,7 +179,10 @@ public:
 signals:
     void mousePressed();
     void mouseReleased();
-    
+
+    void tileEntered(Tile *tile);
+    void tileLeft(Tile *tile);
+
 public slots:
     void scaleChanged(qreal scale);
 

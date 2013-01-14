@@ -22,12 +22,14 @@
 #include "zoomable.h"
 
 #include <QApplication>
+#include <QDebug>
 #include <QHeaderView>
 #include <QMenu>
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QStyleOption>
+#include <QToolTip>
 
 using namespace Tiled;
 using namespace Internal;
@@ -230,19 +232,26 @@ void MixedTilesetView::mousePressEvent(QMouseEvent *event)
     QTableView::mousePressEvent(event);
 }
 
-#include <QDebug>
-#include <QToolTip>
 void MixedTilesetView::mouseMoveEvent(QMouseEvent *event)
 {
     if (event->buttons() == Qt::NoButton) {
         QModelIndex index = indexAt(event->pos());
         if (index.isValid() && index != mToolTipIndex) {
+            if (Tile *tile = model()->tileAt(mToolTipIndex))
+                emit tileLeft(tile);
+            if (Tile *tile = model()->tileAt(index))
+                emit tileEntered(tile);
             mToolTipIndex = index;
             QVariant tooltip = index.data(Qt::ToolTipRole);
             if (tooltip.canConvert<QString>())
                 QToolTip::showText(event->globalPos(), tooltip.toString(), this,
                                    visualRect(index));
             return;
+        } else if (!index.isValid() && mToolTipIndex.isValid()) {
+            if (Tile *tile = model()->tileAt(mToolTipIndex)) {
+                emit tileLeft(tile);
+                mToolTipIndex = QModelIndex();
+            }
         }
     }
 
@@ -277,7 +286,10 @@ bool MixedTilesetView::viewportEvent(QEvent *event)
     case QEvent::ToolTip:
         return true;
     case QEvent::Leave:
-        mToolTipIndex = QModelIndex();
+        if (Tile *tile = model()->tileAt(mToolTipIndex)) {
+            emit tileLeft(tile);
+            mToolTipIndex = QModelIndex();
+        }
         break;
     }
     return QTableView::viewportEvent(event);
@@ -566,12 +578,14 @@ void MixedTilesetModel::setTileset(Tileset *tileset, const QStringList &labels)
     QString tilesetName;
     int index = 0;
     foreach (Tile *tile, mTiles) {
-        if (tile->tileset()->name() != tilesetName) {
-            while (mItems.count() % columnCount())
-                mItems += new Item(); // filler after previous tile
-            tilesetName = tile->tileset()->name();
-            for (int i = 0; i < columnCount(); i++)
-                mItems += new Item(tilesetName);
+        if (mShowHeaders) {
+            if (tile->tileset()->name() != tilesetName) {
+                while (mItems.count() % columnCount())
+                    mItems += new Item(); // filler after previous tile
+                tilesetName = tile->tileset()->name();
+                for (int i = 0; i < columnCount(); i++)
+                    mItems += new Item(tilesetName);
+            }
         }
         Item *item = new Item(tile);
         if (labels.size() > index)

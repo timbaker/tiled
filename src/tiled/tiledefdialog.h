@@ -27,6 +27,7 @@
 class QCheckBox;
 class QComboBox;
 class QSpinBox;
+class QSplitter;
 class QToolButton;
 class QUndoGroup;
 class QUndoStack;
@@ -45,6 +46,8 @@ namespace Internal {
 
 class TileDefFile;
 class TileDefProperties;
+class TileDefTile;
+class TilePropertyClipboard;
 class Zoomable;
 
 class TileDefDialog : public QMainWindow
@@ -58,6 +61,9 @@ public:
     // UNDO/REDO
     void addTileset(Tileset *ts);
     void removeTileset(Tileset *ts);
+
+    QVariant changePropertyValue(TileDefTile *defTile, const QString &name,
+                                 const QVariant &value);
     //
 
 private slots:
@@ -79,21 +85,37 @@ private slots:
     void redoTextChanged(const QString &text);
 
     void updateTilesetList();
+    void updatePropertyPage();
+
+    void copyProperties();
+    void pasteProperties();
+    void resetDefaults();
+
+    void tileEntered(Tile *tile);
+    void tileLeft(Tile *tile);
 
     void updateUI();
 
-    void accept();
-    void reject() { accept(); }
-
 private:
     bool eventFilter(QObject *object, QEvent *event);
+    void closeEvent(QCloseEvent *event);
     void fileOpen(const QString &fileName);
+
+    void changePropertyValues(const QList<TileDefTile*> &defTiles,
+                              const QString &name, const QVariant &value);
+
     void updateTilesetListLater();
+    void updatePropertyPageLater();
+
     void setTilesetList();
     void setTilesList();
     void setToolTipEtc(int tileID);
+    void resetDefaults(TileDefTile *defTile);
     void setPropertiesPage();
     void setBold(QWidget *w, bool bold);
+
+    void saveSplitterSizes(QSplitter *splitter);
+    void restoreSplitterSizes(QSplitter *splitter);
 
 private:
     static TileDefDialog *mInstance;
@@ -113,10 +135,11 @@ private:
 private:
     Ui::TileDefDialog *ui;
     Tileset *mCurrentTileset;
-    QList<Tile*> mSelectedTiles;
+    QList<TileDefTile*> mSelectedTiles;
     Zoomable *mZoomable;
     bool mSynching;
-    bool mUpdatePending;
+    bool mTilesetsUpdatePending;
+    bool mPropertyPageUpdatePending;
     QString mError;
 
     TileDefFile *mTileDefFile;
@@ -124,6 +147,9 @@ private:
     QList<Tileset*> mRemovedTilesets;
 
     TileDefProperties *mTileDefProperties;
+
+    TilePropertyClipboard *mClipboard;
+
     QMap<QString,QCheckBox*> mCheckBoxes;
     QMap<QString,QComboBox*> mComboBoxes;
     QMap<QString,QSpinBox*> mSpinBoxes;
