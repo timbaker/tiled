@@ -227,14 +227,17 @@ void TilesetManager::fileChangedTimeout()
 }
 
 #ifdef ZOMBOID
-void TilesetManager::tilesetSourceChanged(Tileset *tileset, const QString &oldSource)
+void TilesetManager::tilesetSourceChanged(Tileset *tileset,
+                                          const QString &oldSource,
+                                          bool wasMissing)
 {
-    if (!tileset->isMissing()) {
+    if (!wasMissing && !oldSource.isEmpty())
         mWatcher->removePath(oldSource);
+    if (!tileset->isMissing()) {
         if (!tileset->imageSource().isEmpty())
             mWatcher->addPath(tileset->imageSource());
-        emit tilesetChanged(tileset);
     }
+    emit tilesetChanged(tileset);
 }
 
 void TilesetManager::changeTilesetSource(Tileset *tileset, const QString &source,

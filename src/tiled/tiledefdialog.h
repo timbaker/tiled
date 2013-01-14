@@ -47,6 +47,7 @@ namespace Internal {
 class TileDefFile;
 class TileDefProperties;
 class TileDefTile;
+class TileDefTileset;
 class TilePropertyClipboard;
 class Zoomable;
 
@@ -59,8 +60,9 @@ public:
     static void deleteInstance();
 
     // UNDO/REDO
-    void addTileset(Tileset *ts);
-    void removeTileset(Tileset *ts);
+    void insertTileset(int index, Tileset *ts, TileDefTileset *defTileset);
+    void removeTileset(int index, Tileset **tsPtr = 0,
+                       TileDefTileset **defTilesetPtr = 0);
 
     QVariant changePropertyValue(TileDefTile *defTile, const QString &name,
                                  const QVariant &value);
@@ -103,8 +105,11 @@ private:
     void closeEvent(QCloseEvent *event);
 
     bool confirmSave();
+    QString getSaveLocation();
     void fileOpen(const QString &fileName);
     bool fileSave(const QString &fileName);
+
+    void clearDocument();
 
     void changePropertyValues(const QList<TileDefTile*> &defTiles,
                               const QString &name, const QVariant &value);
@@ -132,9 +137,9 @@ private:
     ~TileDefDialog();
 
     QStringList tilesetNames() const
-    { return mTilesets.keys(); }
+    { return mTilesetByName.keys(); }
     Tileset *tileset(const QString &name) const;
-    Tileset *tileset(int index) const;
+    Tileset *tileset(int row) const;
     int indexOf(const QString &name) const;
 
     void loadTilesets();
@@ -152,8 +157,10 @@ private:
     QString mError;
 
     TileDefFile *mTileDefFile;
-    QMap<QString,Tileset*> mTilesets;
+    QList<Tileset*> mTilesets;
+    QMap<QString,Tileset*> mTilesetByName;
     QList<Tileset*> mRemovedTilesets;
+    QList<TileDefTileset*> mRemovedDefTilesets;
 
     TileDefProperties *mTileDefProperties;
 

@@ -72,7 +72,7 @@ void TileMetaInfoMgr::changeTilesDirectory(const QString &path)
         QFileInfo finfo(source);
         QString oldSource = ts->imageSource();
         if (finfo.exists() && loadTilesetImage(ts, finfo.canonicalFilePath())) {
-            TilesetManager::instance()->tilesetSourceChanged(ts, oldSource);
+            TilesetManager::instance()->tilesetSourceChanged(ts, oldSource, false);
         } else {
             Tile *missingTile = TilesetManager::instance()->missingTile();
             for (int i = 0; i < ts->tileCount(); i++)
@@ -429,7 +429,7 @@ void TileMetaInfoMgr::loadTilesets()
                 source = info.canonicalFilePath();
                 if (loadTilesetImage(ts, source)) {
                     ts->setMissing(false); // Yay!
-                    TilesetManager::instance()->tilesetSourceChanged(ts, oldSource);
+                    TilesetManager::instance()->tilesetSourceChanged(ts, oldSource, true);
                 }
             }
         }

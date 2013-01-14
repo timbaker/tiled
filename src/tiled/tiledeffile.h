@@ -28,6 +28,9 @@
 #include <QVector>
 
 namespace Tiled {
+
+class Tileset;
+
 namespace Internal {
 
 class BooleanTileDefProperty;
@@ -1061,6 +1064,10 @@ public:
 class TileDefTileset
 {
 public:
+    TileDefTileset(Tileset *ts);
+    TileDefTileset()
+    {}
+
     QString mName;
     QString mImageSource;
     int mColumns;
@@ -1085,19 +1092,23 @@ public:
 
     QString directory() const;
 
+    void insertTileset(int index, TileDefTileset *ts);
+    TileDefTileset *removeTileset(int index);
+
     TileDefTileset *tileset(const QString &name);
 
-    QList<TileDefTileset*> tilesets() const
-    { return mTilesets.values(); }
+    const QList<TileDefTileset*> &tilesets() const
+    { return mTilesets; }
 
     QStringList tilesetNames() const
-    { return mTilesets.keys(); }
+    { return mTilesetByName.keys(); }
 
     QString errorString() const
     { return mError; }
 
 private:
-    QMap<QString,TileDefTileset*> mTilesets;
+    QList<TileDefTileset*> mTilesets;
+    QMap<QString,TileDefTileset*> mTilesetByName;
     QString mFileName;
     QString mError;
 };

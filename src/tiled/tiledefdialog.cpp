@@ -20,6 +20,7 @@
 #include "tiledefdialog.h"
 #include "ui_tiledefdialog.h"
 
+#include "addtilesetsdialog.h"
 #include "tiledeffile.h"
 #include "tilesetmanager.h"
 #include "zoomable.h"
@@ -115,52 +116,64 @@ UIProperties *TilePropertyClipboard::entry(int tx, int ty, int x, int y)
 
 namespace TileDefUndoRedo {
 
-class AddGlobalTileset : public QUndoCommand
+class AddTileset : public QUndoCommand
 {
 public:
-    AddGlobalTileset(TileDefDialog *d, Tileset *tileset) :
+    AddTileset(TileDefDialog *d, int index, Tileset *tileset, TileDefTileset *defTileset) :
         QUndoCommand(QCoreApplication::translate("UndoCommands", "Add Tileset")),
         mDialog(d),
-        mTileset(tileset)
+        mIndex(index),
+        mTileset(tileset),
+        mDefTileset(defTileset)
     {
     }
 
     void undo()
     {
-        mDialog->removeTileset(mTileset);
+        mDialog->removeTileset(mIndex, &mTileset, &mDefTileset);
     }
 
     void redo()
     {
-        mDialog->addTileset(mTileset);
+        mDialog->insertTileset(mIndex, mTileset, mDefTileset);
+        mTileset = 0;
+        mDefTileset = 0;
     }
 
     TileDefDialog *mDialog;
+    int mIndex;
     Tileset *mTileset;
+    TileDefTileset *mDefTileset;
 };
 
-class RemoveGlobalTileset : public QUndoCommand
+class RemoveTileset : public QUndoCommand
 {
 public:
-    RemoveGlobalTileset(TileDefDialog *d, Tileset *tileset) :
+    RemoveTileset(TileDefDialog *d, int index) :
         QUndoCommand(QCoreApplication::translate("UndoCommands", "Remove Tileset")),
         mDialog(d),
-        mTileset(tileset)
+        mIndex(index),
+        mTileset(0),
+        mDefTileset(0)
     {
     }
 
     void undo()
     {
-        mDialog->addTileset(mTileset);
+        mDialog->insertTileset(mIndex, mTileset, mDefTileset);
+        mTileset = 0;
+        mDefTileset = 0;
     }
 
     void redo()
     {
-        mDialog->removeTileset(mTileset);
+        mDialog->removeTileset(mIndex, &mTileset, &mDefTileset);
     }
 
     TileDefDialog *mDialog;
+    int mIndex;
     Tileset *mTileset;
+    TileDefTileset *mDefTileset;
 };
 
 class ChangePropertyValue : public QUndoCommand
@@ -315,6 +328,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     connect(ui->actionSave, SIGNAL(triggered()), SLOT(fileSave()));
     connect(ui->actionSaveAs, SIGNAL(triggered()), SLOT(fileSaveAs()));
     connect(ui->actionAddTileset, SIGNAL(triggered()), SLOT(addTileset()));
+    connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
 
     foreach (TileDefProperty *prop, mTileDefProperties->mProperties) {
         if (BooleanTileDefProperty *p = prop->asBoolean()) {
@@ -387,7 +401,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
 
     fileOpen(QLatin1String("C:\\Users\\Tim\\Desktop\\ProjectZomboid\\maptools\\tiledefinitions.tiles"));
     initStringComboBoxValues();
-//    setTilesetList();
+    updateTilesetListLater();
 
     updateUI();
 }
@@ -396,8 +410,9 @@ TileDefDialog::~TileDefDialog()
 {
     delete ui;
 
-    TilesetManager::instance()->removeReferences(mTilesets.values());
+    TilesetManager::instance()->removeReferences(mTilesets);
     TilesetManager::instance()->removeReferences(mRemovedTilesets);
+    qDeleteAll(mRemovedDefTilesets);
     delete mTileDefFile;
     delete mClipboard;
     delete mTileDefProperties;
@@ -405,25 +420,19 @@ TileDefDialog::~TileDefDialog()
 
 void TileDefDialog::addTileset()
 { 
-    const QString tilesDir = mTileDefFile->directory();
-    const QString filter = Utils::readableImageFormatsFilter();
-    QStringList fileNames = QFileDialog::getOpenFileNames(this,
-                                                          tr("Tileset Image"),
-                                                          tilesDir,
-                                                          filter);
+    AddTilesetsDialog dialog(mTileDefFile->directory(),
+                             mTileDefFile->tilesetNames(),
+                             this);
+    if (dialog.exec() != QDialog::Accepted)
+        return;
 
     mUndoStack->beginMacro(tr("Add Tilesets"));
 
-    foreach (QString f, fileNames) {
-        QFileInfo info(f);
+    foreach (QString fileName, dialog.fileNames()) {
+        QFileInfo info(fileName);
         if (Tiled::Tileset *ts = loadTileset(info.canonicalFilePath())) {
-            QString name = info.completeBaseName();
-            // Replace any current tileset with the same name as an existing one.
-            // This will NOT replace the meta-info for the old tileset, it will
-            // be used by the new tileset as well.
-            if (Tileset *old = tileset(name))
-                mUndoStack->push(new RemoveGlobalTileset(this, old));
-            mUndoStack->push(new AddGlobalTileset(this, ts));
+            TileDefTileset *defTileset = new TileDefTileset(ts);
+            mUndoStack->push(new AddTileset(this, mTilesets.size(), ts, defTileset));
         } else {
             QMessageBox::warning(this, tr("It's no good, Jim!"), mError);
         }
@@ -444,32 +453,42 @@ void TileDefDialog::removeTileset()
                                   .arg(tileset->name()),
                                   QMessageBox::Ok, QMessageBox::Cancel) == QMessageBox::Cancel)
             return;
-        mUndoStack->push(new RemoveGlobalTileset(this, tileset));
+        mUndoStack->push(new RemoveTileset(this, row));
     }
 }
 
-void TileDefDialog::addTileset(Tileset *ts)
+void TileDefDialog::insertTileset(int index, Tileset *ts, TileDefTileset *defTileset)
 {
-    mTilesets[ts->name()] = ts;
+    Q_ASSERT(!mTilesets.contains(ts));
+    Q_ASSERT(!mTilesetByName.contains(ts->name()));
+
+    mTileDefFile->insertTileset(index, defTileset);
+    mRemovedDefTilesets.removeOne(defTileset);
+
+    mTilesets.insert(index, ts);
+    mTilesetByName[ts->name()] = ts;
     if (!mRemovedTilesets.contains(ts))
         TilesetManager::instance()->addReference(ts);
-    mRemovedTilesets.removeAll(ts);
+    mRemovedTilesets.removeOne(ts);
 
     updateTilesetListLater();
 }
 
-void TileDefDialog::removeTileset(Tileset *ts)
+void TileDefDialog::removeTileset(int index, Tileset **tsPtr, TileDefTileset **defTilesetPtr)
 {
-//    int row = indexOf(ts->name());
+    TileDefTileset *defTileset = mTileDefFile->removeTileset(index);
+    mRemovedDefTilesets += defTileset;
 
-    mTilesets.remove(ts->name());
+    Tileset *ts = mTilesets.takeAt(index);
+    mTilesetByName.remove(ts->name());
     // Don't remove references now, that will delete the tileset, and the
     // user might undo the removal.
     mRemovedTilesets += ts;
 
     updateTilesetListLater();
-//    setTilesetList();
-    //    ui->tilesets->setCurrentRow(row);
+
+    if (tsPtr) *tsPtr = ts;
+    if (defTilesetPtr) *defTilesetPtr = defTileset;
 }
 
 QVariant TileDefDialog::changePropertyValue(TileDefTile *defTile, const QString &name,
@@ -484,10 +503,28 @@ QVariant TileDefDialog::changePropertyValue(TileDefTile *defTile, const QString 
 
 void TileDefDialog::fileNew()
 {
+    if (!confirmSave())
+        return;
+
+    QString fileName = getSaveLocation();
+    if (fileName.isEmpty())
+        return;
+
+    clearDocument();
+
+    mTileDefFile = new TileDefFile;
+    mTileDefFile->setFileName(fileName);
+
+    initStringComboBoxValues();
+    setTilesetList();
+    updateUI();
 }
 
 void TileDefDialog::fileOpen()
 {
+    if (!confirmSave())
+        return;
+
     QSettings settings;
     QString key = QLatin1String("TileDefDialog/LastOpenPath");
     QString lastPath = settings.value(key).toString();
@@ -500,16 +537,12 @@ void TileDefDialog::fileOpen()
 
     settings.setValue(key, QFileInfo(fileName).absolutePath());
 
-    delete mTileDefFile;
-    mTileDefFile = 0;
-    foreach (Tileset *ts, mTilesets)
-        removeTileset(ts);
+    clearDocument();
 
     fileOpen(fileName);
 
     initStringComboBoxValues();
-
-    setTilesetList();
+    updateTilesetListLater();
     updateUI();
 }
 
@@ -523,24 +556,9 @@ bool TileDefDialog::fileSave()
 
 bool TileDefDialog::fileSaveAs()
 {
-    QSettings settings;
-    QString key = QLatin1String("TileDefDialog/LastSavePath");
-    QString suggestedFileName;
-    if (mTileDefFile->fileName().isEmpty()) {
-        suggestedFileName = settings.value(key).toString();
-        if (!suggestedFileName.isEmpty())
-            suggestedFileName += QLatin1String("/tiledefinitions.tiles");
-    } else {
-        suggestedFileName = mTileDefFile->fileName();
-    }
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save As"),
-                                                    suggestedFileName,
-                                                    QLatin1String("Tile properties files (*.tiles)"));
+    QString fileName = getSaveLocation();
     if (fileName.isEmpty())
         return false;
-
-    settings.setValue(key, QFileInfo(fileName).absolutePath());
-
     return fileSave(fileName);
 }
 
@@ -718,7 +736,8 @@ void TileDefDialog::pasteProperties()
         foreach (TileDefTile *defTile, changed) {
             int x = defTile->id() % defTile->tileset()->mColumns;
             int y = defTile->id() / defTile->tileset()->mColumns;
-            UIProperties *props = mClipboard->entry(selectedBounds.left(), selectedBounds.top(), x, y);
+            UIProperties *props = mClipboard->entry(selectedBounds.left(),
+                                                    selectedBounds.top(), x, y);
             foreach (UIProperties::UIProperty *src, props->mProperties) {
                 if (src->value() != defTile->property(src->mName)->value()) {
                     mUndoStack->push(new ChangePropertyValue(this, defTile,
@@ -797,6 +816,8 @@ bool TileDefDialog::eventFilter(QObject *object, QEvent *event)
 void TileDefDialog::closeEvent(QCloseEvent *event)
 {
     if (confirmSave()) {
+        clearDocument();
+
         QSettings settings;
         settings.beginGroup(QLatin1String("TileDefDialog"));
         settings.setValue(QLatin1String("geometry"), saveGeometry());
@@ -831,6 +852,29 @@ bool TileDefDialog::confirmSave()
     }
 }
 
+QString TileDefDialog::getSaveLocation()
+{
+    QSettings settings;
+    QString key = QLatin1String("TileDefDialog/LastOpenPath");
+    QString suggestedFileName;
+    if (mTileDefFile->fileName().isEmpty()) {
+        suggestedFileName = settings.value(key).toString();
+        if (!suggestedFileName.isEmpty())
+            suggestedFileName += QLatin1String("/tiledefinitions.tiles");
+    } else {
+        suggestedFileName = mTileDefFile->fileName();
+    }
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save As"),
+                                                    suggestedFileName,
+                                                    QLatin1String("Tile properties files (*.tiles)"));
+    if (fileName.isEmpty())
+        return QString();
+
+    settings.setValue(key, QFileInfo(fileName).absolutePath());
+
+    return fileName;
+}
+
 void TileDefDialog::fileOpen(const QString &fileName)
 {
     TileDefFile *defFile = new TileDefFile;
@@ -842,14 +886,22 @@ void TileDefDialog::fileOpen(const QString &fileName)
     }
 
     mTileDefFile = defFile;
+    QDir dir(mTileDefFile->directory());
+
     foreach (QString tilesetName, mTileDefFile->tilesetNames()) {
         TileDefTileset *tsDef = mTileDefFile->tileset(tilesetName);
+        QString imageSource = dir.filePath(tsDef->mImageSource);
+        if (QFileInfo(imageSource).exists())
+            imageSource = QFileInfo(imageSource).canonicalFilePath();
 
         // Try to reuse a tileset from our list of removed tilesets.
         bool reused = false;
         foreach (Tileset *ts, mRemovedTilesets) {
-            if (ts->imageSource() == tsDef->mImageSource) {
-                addTileset(ts);
+            if (ts->imageSource() == imageSource) {
+                mTilesets += ts;
+                mTilesetByName[ts->name()] = ts;
+                // Don't addReferences().
+                mRemovedTilesets.removeOne(ts);
                 reused = true;
                 break;
             }
@@ -861,16 +913,16 @@ void TileDefDialog::fileOpen(const QString &fileName)
         int width = tsDef->mColumns * 64, height = tsDef->mRows * 128;
         QImage image(width, height, QImage::Format_ARGB32);
         image.fill(Qt::red);
-        tileset->loadFromImage(image, tsDef->mImageSource);
+        tileset->loadFromImage(image, imageSource);
         Tile *missingTile = TilesetManager::instance()->missingTile();
         for (int i = 0; i < tileset->tileCount(); i++)
             tileset->tileAt(i)->setImage(missingTile->image());
         tileset->setMissing(true);
 
-        addTileset(tileset);
+        mTilesets += tileset;
+        mTilesetByName[tileset->name()] = tileset;
+        TilesetManager::instance()->addReference(tileset);
     }
-
-    mUndoStack->clear();
 }
 
 bool TileDefDialog::fileSave(const QString &fileName)
@@ -890,6 +942,23 @@ bool TileDefDialog::fileSave(const QString &fileName)
     updateWindowTitle();
 
     return true;
+}
+
+void TileDefDialog::clearDocument()
+{
+    mUndoStack->clear();
+
+    mRemovedTilesets += mTilesets;
+    mTilesets.clear();
+    mTilesetByName.clear();
+
+    qDeleteAll(mRemovedDefTilesets);
+    mRemovedDefTilesets.clear();
+
+    delete mTileDefFile;
+    mTileDefFile = 0;
+
+    ui->tilesets->clear();
 }
 
 void TileDefDialog::changePropertyValues(const QList<TileDefTile *> &defTiles,
@@ -938,7 +1007,7 @@ void TileDefDialog::setTilesetList()
     int maxWidth = 128;
 
     ui->tilesets->clear();
-    foreach (Tileset *ts, mTilesets.values()) {
+    foreach (Tileset *ts, mTilesetByName.values()) {
         QListWidgetItem *item = new QListWidgetItem(ts->name());
         if (ts->isMissing())
             item->setForeground(Qt::red);
@@ -994,7 +1063,8 @@ void TileDefDialog::resetDefaults(TileDefTile *defTile)
 
     mUndoStack->beginMacro(tr("Reset Property Values"));
     foreach (UIProperties::UIProperty *prop, props) {
-        mUndoStack->push(new ChangePropertyValue(this, defTile, prop, prop->defaultValue()));
+        mUndoStack->push(new ChangePropertyValue(this, defTile,
+                                                 prop, prop->defaultValue()));
     }
     mUndoStack->endMacro();
 }
@@ -1108,15 +1178,15 @@ void TileDefDialog::initStringComboBoxValues()
 
 Tileset *TileDefDialog::tileset(const QString &name) const
 {
-    if (mTilesets.contains(name))
-        return mTilesets[name];
+    if (mTilesetByName.contains(name))
+        return mTilesetByName[name];
     return 0;
 }
 
-Tileset *TileDefDialog::tileset(int index) const
+Tileset *TileDefDialog::tileset(int row) const
 {
-    if (index >= 0 && index < mTilesets.size())
-        return mTilesets.values().at(index);
+    if (row >= 0 && row < mTilesetByName.size())
+        return mTilesetByName.values().at(row);
     return 0;
 }
 
@@ -1128,7 +1198,7 @@ int TileDefDialog::indexOf(const QString &name) const
 void TileDefDialog::loadTilesets()
 {
     bool anyMissing;
-    foreach (Tileset *ts, mTilesets.values())
+    foreach (Tileset *ts, mTilesets)
         if (ts->isMissing()) {
             anyMissing = true;
             break;
@@ -1139,20 +1209,18 @@ void TileDefDialog::loadTilesets()
 
     PROGRESS progress(tr("Loading tilesets..."), this);
 
-    foreach (Tileset *ts, mTilesets.values()) {
+    foreach (Tileset *ts, mTilesets) {
         if (ts->isMissing()) {
             QString source = ts->imageSource();
             QString oldSource = source;
-            if (QDir::isRelativePath(ts->imageSource())) {
-                source = mTileDefFile->directory() + QLatin1Char('/')
-                        + ts->imageSource();
-            }
+            if (QDir::isRelativePath(ts->imageSource()))
+                source = QDir(mTileDefFile->directory()).filePath(ts->imageSource());
             QFileInfo info(source);
             if (info.exists()) {
                 source = info.canonicalFilePath();
                 if (loadTilesetImage(ts, source)) {
                     ts->setMissing(false); // Yay!
-                    TilesetManager::instance()->tilesetSourceChanged(ts, oldSource);
+                    TilesetManager::instance()->tilesetSourceChanged(ts, oldSource, true);
                 }
             }
         }

@@ -89,20 +89,22 @@ bool TileDefFile::read(const QString &fileName)
         // Deal with the image being a different size now than it was when the
         // .tiles file was saved.
         QImageReader bmp(dir.filePath(ts->mImageSource));
-        ts->mColumns = bmp.size().width() / 64;
-        ts->mRows = bmp.size().height() / 128;
-        ts->mTiles.resize(ts->mColumns * ts->mRows);
-        for (int y = 0; y < qMin(ts->mRows, rows); y++) {
-            for (int x = 0; x < qMin(ts->mColumns, columns); x++) {
-                ts->mTiles[x + y * ts->mColumns] = tiles[x + y * columns];
+        if (bmp.size().isValid()) {
+            ts->mColumns = bmp.size().width() / 64;
+            ts->mRows = bmp.size().height() / 128;
+            ts->mTiles.resize(ts->mColumns * ts->mRows);
+            for (int y = 0; y < qMin(ts->mRows, rows); y++) {
+                for (int x = 0; x < qMin(ts->mColumns, columns); x++) {
+                    ts->mTiles[x + y * ts->mColumns] = tiles[x + y * columns];
+                }
+            }
+            for (int i = 0; i < ts->mTiles.size(); i++) {
+                if (!ts->mTiles[i]) {
+                    ts->mTiles[i] = new TileDefTile(ts, i);
+                }
             }
         }
-        for (int i = 0; i < ts->mTiles.size(); i++) {
-            if (!ts->mTiles[i]) {
-                ts->mTiles[i] = new TileDefTile(ts, i);
-            }
-        }
-        mTilesets[ts->mName] = ts;
+        insertTileset(mTilesets.size(), ts);
     }
 
     mFileName = fileName;
@@ -131,7 +133,7 @@ bool TileDefFile::write(const QString &fileName)
     out.setByteOrder(QDataStream::LittleEndian);
 
     out << qint32(mTilesets.size());
-    foreach (TileDefTileset *ts, mTilesets.values()) {
+    foreach (TileDefTileset *ts, mTilesets) {
         SaveString(out, ts->mName);
         SaveString(out, ts->mImageSource);
         out << qint32(ts->mColumns);
@@ -154,10 +156,24 @@ QString TileDefFile::directory() const
     return QFileInfo(mFileName).absolutePath();
 }
 
+void TileDefFile::insertTileset(int index, TileDefTileset *ts)
+{
+    Q_ASSERT(!mTilesets.contains(ts));
+    Q_ASSERT(!mTilesetByName.contains(ts->mName));
+    mTilesets.insert(index, ts);
+    mTilesetByName[ts->mName] = ts;
+}
+
+TileDefTileset *TileDefFile::removeTileset(int index)
+{
+    mTilesetByName.remove(mTilesets[index]->mName);
+    return mTilesets.takeAt(index);
+}
+
 TileDefTileset *TileDefFile::tileset(const QString &name)
 {
-    if (mTilesets.contains(name))
-        return mTilesets[name];
+    if (mTilesetByName.contains(name))
+        return mTilesetByName[name];
     return 0;
 }
 
@@ -386,3 +402,17 @@ UIProperties::UIProperties(QMap<QString, QString> &properties)
         }
     }
 }
+
+/////
+
+TileDefTileset::TileDefTileset(Tileset *ts)
+{
+    mName = ts->name();
+    mImageSource = QFileInfo(ts->imageSource()).fileName();
+    mColumns = ts->columnCount();
+    mRows = ts->tileCount() / mColumns;
+    mTiles.resize(ts->tileCount());
+    for (int i = 0; i < mTiles.size(); i++)
+        mTiles[i] = new TileDefTile(this, i);
+}
+
