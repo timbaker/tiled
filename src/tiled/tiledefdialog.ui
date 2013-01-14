@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Tile Properties</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout" rowstretch="1,0">
@@ -19,6 +19,9 @@
      <widget class="QSplitter" name="splitter">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="childrenCollapsible">
+       <bool>false</bool>
       </property>
       <widget class="QWidget" name="layoutWidget">
        <layout class="QHBoxLayout" name="tilesNtilesetLayout">
@@ -86,9 +89,9 @@
            <property name="geometry">
             <rect>
              <x>0</x>
-             <y>-604</y>
-             <width>261</width>
-             <height>1086</height>
+             <y>-156</y>
+             <width>263</width>
+             <height>1282</height>
             </rect>
            </property>
            <layout class="QGridLayout" name="gridLayout_2">
@@ -135,6 +138,9 @@
                     <property name="text">
                      <string>Door</string>
                     </property>
+                    <property name="buddy">
+                     <cstring>Door</cstring>
+                    </property>
                    </widget>
                   </item>
                   <item row="0" column="1">
@@ -144,6 +150,9 @@
                    <widget class="QLabel" name="label_2">
                     <property name="text">
                      <string>DoorFrame</string>
+                    </property>
+                    <property name="buddy">
+                     <cstring>DoorFrame</cstring>
                     </property>
                    </widget>
                   </item>
@@ -199,7 +208,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="4" column="0">
+               <item row="7" column="0">
                 <widget class="QGroupBox" name="groupBox_6">
                  <property name="title">
                   <string>Roof Settings</string>
@@ -210,6 +219,9 @@
                     <property name="text">
                      <string>RoofStyle</string>
                     </property>
+                    <property name="buddy">
+                     <cstring>RoofStyle</cstring>
+                    </property>
                    </widget>
                   </item>
                   <item row="0" column="1">
@@ -218,7 +230,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="5" column="0">
+               <item row="8" column="0">
                 <widget class="QGroupBox" name="groupBox_7">
                  <property name="title">
                   <string>Sheet Settings</string>
@@ -244,7 +256,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="9" column="0">
+               <item row="12" column="0">
                 <widget class="QGroupBox" name="groupBox_4">
                  <property name="title">
                   <string>Wall Settings</string>
@@ -281,6 +293,9 @@
                       <property name="text">
                        <string>WallStyle</string>
                       </property>
+                      <property name="buddy">
+                       <cstring>WallStyle</cstring>
+                      </property>
                      </widget>
                     </item>
                     <item>
@@ -291,58 +306,55 @@
                  </layout>
                 </widget>
                </item>
-               <item row="6" column="0">
+               <item row="9" column="0">
                 <widget class="QGroupBox" name="groupBox_8">
                  <property name="title">
                   <string>Shelf Settings</string>
                  </property>
                  <layout class="QFormLayout" name="formLayout_9">
                   <item row="0" column="0">
-                   <layout class="QHBoxLayout" name="horizontalLayout_9">
-                    <item>
-                     <widget class="QLabel" name="label_12">
-                      <property name="text">
-                       <string>FloorItemShelf</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QComboBox" name="FloorItemShelf"/>
-                    </item>
-                   </layout>
+                   <widget class="QLabel" name="label_12">
+                    <property name="text">
+                     <string>FloorItemShelf</string>
+                    </property>
+                    <property name="buddy">
+                     <cstring>FloorItemShelf</cstring>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QComboBox" name="FloorItemShelf"/>
                   </item>
                   <item row="1" column="0">
-                   <layout class="QHBoxLayout" name="horizontalLayout_10">
-                    <item>
-                     <widget class="QLabel" name="label_13">
-                      <property name="text">
-                       <string>HighItemShelf</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QComboBox" name="HighItemShelf"/>
-                    </item>
-                   </layout>
+                   <widget class="QLabel" name="label_13">
+                    <property name="text">
+                     <string>HighItemShelf</string>
+                    </property>
+                    <property name="buddy">
+                     <cstring>HighItemShelf</cstring>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QComboBox" name="HighItemShelf"/>
                   </item>
                   <item row="2" column="0">
-                   <layout class="QHBoxLayout" name="horizontalLayout_11">
-                    <item>
-                     <widget class="QLabel" name="label_14">
-                      <property name="text">
-                       <string>TableItemShelf</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QComboBox" name="TableItemShelf"/>
-                    </item>
-                   </layout>
+                   <widget class="QLabel" name="label_14">
+                    <property name="text">
+                     <string>TableItemShelf</string>
+                    </property>
+                    <property name="buddy">
+                     <cstring>TableItemShelf</cstring>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QComboBox" name="TableItemShelf"/>
                   </item>
                  </layout>
                 </widget>
                </item>
-               <item row="7" column="0">
+               <item row="10" column="0">
                 <widget class="QGroupBox" name="groupBox_9">
                  <property name="title">
                   <string>Stair Settings</string>
@@ -353,6 +365,9 @@
                     <property name="text">
                      <string>StairStyle</string>
                     </property>
+                    <property name="buddy">
+                     <cstring>StairStyle</cstring>
+                    </property>
                    </widget>
                   </item>
                   <item row="0" column="1">
@@ -361,7 +376,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="8" column="0">
+               <item row="11" column="0">
                 <widget class="QGroupBox" name="groupBox_10">
                  <property name="title">
                   <string>Visibility Functions</string>
@@ -380,7 +395,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="10" column="0">
+               <item row="13" column="0">
                 <widget class="QGroupBox" name="groupBox_11">
                  <property name="title">
                   <string>Water Functions</string>
@@ -403,6 +418,9 @@
                       <property name="text">
                        <string>WaterAmount</string>
                       </property>
+                      <property name="buddy">
+                       <cstring>WaterAmount</cstring>
+                      </property>
                      </widget>
                     </item>
                     <item>
@@ -417,6 +435,9 @@
                       <property name="text">
                        <string>WaterMaxAmount</string>
                       </property>
+                      <property name="buddy">
+                       <cstring>WaterMaxAmount</cstring>
+                      </property>
                      </widget>
                     </item>
                     <item>
@@ -427,7 +448,7 @@
                  </layout>
                 </widget>
                </item>
-               <item row="11" column="0">
+               <item row="14" column="0">
                 <widget class="QGroupBox" name="groupBox_12">
                  <property name="title">
                   <string>Window Functions</string>
@@ -450,6 +471,9 @@
                       <property name="text">
                        <string>OpenTileOffset</string>
                       </property>
+                      <property name="buddy">
+                       <cstring>OpenTileOffset</cstring>
+                      </property>
                      </widget>
                     </item>
                     <item>
@@ -463,6 +487,9 @@
                      <widget class="QLabel" name="label_10">
                       <property name="text">
                        <string>SmashedTileOffset</string>
+                      </property>
+                      <property name="buddy">
+                       <cstring>SmashedTileOffset</cstring>
                       </property>
                      </widget>
                     </item>
@@ -478,12 +505,105 @@
                       <property name="text">
                        <string>Window</string>
                       </property>
+                      <property name="buddy">
+                       <cstring>Window</cstring>
+                      </property>
                      </widget>
                     </item>
                     <item>
                      <widget class="QComboBox" name="Window"/>
                     </item>
                    </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="6" column="0">
+                <widget class="QGroupBox" name="groupBox_13">
+                 <property name="title">
+                  <string>Object Settings</string>
+                 </property>
+                 <layout class="QFormLayout" name="formLayout_14">
+                  <property name="fieldGrowthPolicy">
+                   <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+                  </property>
+                  <item row="1" column="0">
+                   <widget class="QCheckBox" name="WheelieBin">
+                    <property name="text">
+                     <string>WheelieBin</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <layout class="QHBoxLayout" name="horizontalLayout_12">
+                    <item>
+                     <widget class="QLabel" name="label_15">
+                      <property name="text">
+                       <string>ContainerType</string>
+                      </property>
+                      <property name="buddy">
+                       <cstring>ContainerType</cstring>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="ContainerType">
+                      <property name="minimumSize">
+                       <size>
+                        <width>128</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="editable">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QGroupBox" name="groupBox_14">
+                 <property name="title">
+                  <string>Global Settings</string>
+                 </property>
+                 <layout class="QFormLayout" name="formLayout_15">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_7">
+                    <property name="text">
+                     <string>TileBlockStyle</string>
+                    </property>
+                    <property name="buddy">
+                     <cstring>TileBlockStyle</cstring>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QComboBox" name="TileBlockStyle"/>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="5" column="0">
+                <widget class="QGroupBox" name="groupBox_15">
+                 <property name="title">
+                  <string>Light Settings</string>
+                 </property>
+                 <layout class="QFormLayout" name="formLayout_16">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_16">
+                    <property name="text">
+                     <string>LightPolyStyle</string>
+                    </property>
+                    <property name="buddy">
+                     <cstring>LightPolyStyle</cstring>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QComboBox" name="LightPolyStyle"/>
                   </item>
                  </layout>
                 </widget>
@@ -500,7 +620,21 @@
      </widget>
     </item>
     <item row="1" column="0">
-     <layout class="QHBoxLayout" name="buttonLayout"/>
+     <layout class="QHBoxLayout" name="buttonLayout">
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>

@@ -24,6 +24,9 @@
 
 #include <QMap>
 
+class QCheckBox;
+class QComboBox;
+class QSpinBox;
 class QToolButton;
 class QUndoGroup;
 class QUndoStack;
@@ -41,6 +44,7 @@ class Tileset;
 namespace Internal {
 
 class TileDefFile;
+class TileDefProperties;
 class Zoomable;
 
 class TileDefDialog : public QMainWindow
@@ -67,6 +71,10 @@ private slots:
     void currentTilesetChanged(int row);
     void tileSelectionChanged();
 
+    void comboBoxActivated(int index);
+    void checkboxToggled(bool value);
+    void spinBoxValueChanged(int value);
+
     void undoTextChanged(const QString &text);
     void redoTextChanged(const QString &text);
 
@@ -83,7 +91,9 @@ private:
     void updateTilesetListLater();
     void setTilesetList();
     void setTilesList();
+    void setToolTipEtc(int tileID);
     void setPropertiesPage();
+    void setBold(QWidget *w, bool bold);
 
 private:
     static TileDefDialog *mInstance;
@@ -112,6 +122,13 @@ private:
     TileDefFile *mTileDefFile;
     QMap<QString,Tileset*> mTilesets;
     QList<Tileset*> mRemovedTilesets;
+
+    TileDefProperties *mTileDefProperties;
+    QMap<QString,QCheckBox*> mCheckBoxes;
+    QMap<QString,QComboBox*> mComboBoxes;
+    QMap<QString,QSpinBox*> mSpinBoxes;
+    QFont mLabelFont;
+    QFont mBoldLabelFont;
 
     QUndoGroup *mUndoGroup;
     QUndoStack *mUndoStack;

@@ -143,6 +143,25 @@ TileDefProperties::TileDefProperties()
     addBoolean("IsFloor", "solidfloor");
     addBoolean("IsIndoor", "exterior", true, true);
 
+    static const char *TileBlockStyle[] = {
+        "None",
+        "Solid",
+        "SolidTransparent",
+        0
+    };
+    addEnum("TileBlockStyle", 0, TileBlockStyle);
+
+    static const char *LightPolyStyle[] = {
+        "None",
+        "WallW",
+        "WallN",
+        0
+    };
+    addEnum("LightPolyStyle", 0, LightPolyStyle);
+
+    addString("ContainerType", "container");
+    addBoolean("WheelieBin");
+
     static const char *RoofStyle[] = {
         "None",
         "WestRoofB",
@@ -229,11 +248,20 @@ void TileDefProperties::addBoolean(const char *name, const char *shortName,
                                                     defaultValue, reverseLogic);
 }
 
-void TileDefProperties::addInteger(const char *name, const char *shortName, int defaultValue)
+void TileDefProperties::addInteger(const char *name, const char *shortName,
+                                   int defaultValue)
 {
     QLatin1String name2(name);
     QLatin1String shortName2(shortName ? shortName : name);
     mProperties[name2] = new IntegerTileDefProperty(name2, shortName2, defaultValue);
+}
+
+void TileDefProperties::addString(const char *name, const char *shortName,
+                                  const QString &defaultValue)
+{
+    QLatin1String name2(name);
+    QLatin1String shortName2(shortName ? shortName : name);
+    mProperties[name2] = new StringTileDefProperty(name2, shortName2, defaultValue);
 }
 
 void TileDefProperties::addEnum(const char *name, const char *shortName,
@@ -250,95 +278,70 @@ void TileDefProperties::addEnum(const char *name, const char *shortName,
 /////
 
 UIProperties::UIProperties(QMap<QString, QString> &properties)
-    #if 0
-    mCollideWest(QLatin1String("collideW"), properties),
-    mCollideNorth(QLatin1String("collideN"), properties),
-    mDoor(QLatin1String("doorN"), QLatin1String("doorW"), properties),
-    mDoorFrame(QLatin1String("doorFrN"), QLatin1String("doorFrW"), properties),
-    mIsBed(QLatin1String("bed"), properties),
-    mFloorOverlay(QLatin1String("FloorOverlay"), properties),
-    mIsFloor(QLatin1String("solidfloor"), properties),
-    mIsIndoor(QLatin1String("exterior"), properties, true, true),
-    mRoofStyle(properties),
-    mClimbSheetN(QLatin1String("climbSheetN"), properties),
-    mClimbSheetW(QLatin1String("climbSheetW"), properties),
-    mFloorItemShelf(QLatin1String("floor"), properties),
-    mHighItemShelf(QLatin1String("shelf"), properties),
-    mTableItemShelf(QLatin1String("table"), properties),
-    mPreSeen(QLatin1String("PreSeen"), properties),
-    mHoppableN(QLatin1String("HoppableN"), properties),
-    mHoppableW(QLatin1String("HoppableW"), properties),
-    mWallOverlay(QLatin1String("WallOverlay"), properties),
-    mWallStyle(properties),
-    mWaterAmount(QLatin1String("waterAmount"), properties),
-    mWaterMaxAmount(QLatin1String("waterMaxAmount"), properties),
-    mWaterPiped(QLatin1String("waterPiped"), properties),
-    mOpenTileOffset(QLatin1String("OpenTileOffset"), properties),
-    mSmashedTileOffset(QLatin1String("SmashedTileOffset"), properties),
-    mWindowLocked(QLatin1String("WindowLocked"), properties)
-  #endif
 {
-#if 1
     TileDefProperties props;
     foreach (TileDefProperty *prop, props.mProperties) {
         if (prop->mName == QLatin1String("Door") ||
                 prop->mName == QLatin1String("DoorFrame") ||
                 prop->mName == QLatin1String("Window")) {
-            mProperties[prop->mName] = new PropDoorStyle(prop->mShortName,
+            mProperties[prop->mName] = new PropDoorStyle(prop->mName,
+                                                         prop->mShortName,
                                                          properties);
             continue;
         }
+        if (prop->mName == QLatin1String("TileBlockStyle")) {
+            mProperties[prop->mName] = new PropTileBlockStyle(prop->mName,
+                                                              properties);
+            continue;
+        }
+        if (prop->mName == QLatin1String("LightPolyStyle")) {
+            mProperties[prop->mName] = new PropLightPolyStyle(prop->mName,
+                                                              properties);
+            continue;
+        }
         if (prop->mName == QLatin1String("RoofStyle")) {
-            mProperties[prop->mName] = new PropRoofStyle(properties);
+            mProperties[prop->mName] = new PropRoofStyle(prop->mName,
+                                                         properties);
             continue;
         }
         if (prop->mName == QLatin1String("StairStyle")) {
-            mProperties[prop->mName] = new PropStairStyle(prop->mShortName,
+            mProperties[prop->mName] = new PropStairStyle(prop->mName,
+                                                          prop->mShortName,
                                                           properties);
             continue;
         }
         if (prop->mName.contains(QLatin1String("ItemShelf"))) {
-            mProperties[prop->mName] = new PropDirection(prop->mShortName,
+            mProperties[prop->mName] = new PropDirection(prop->mName,
+                                                         prop->mShortName,
                                                          properties);
             continue;
         }
         if (prop->mName == QLatin1String("WallStyle")) {
-            mProperties[prop->mName] = new PropWallStyle(properties);
+            mProperties[prop->mName] = new PropWallStyle(prop->mName,
+                                                         properties);
             continue;
         }
         if (BooleanTileDefProperty *p = prop->asBoolean()) {
-            mProperties[p->mName] = new PropGenericBoolean(p->mShortName,
+            mProperties[p->mName] = new PropGenericBoolean(prop->mName,
+                                                           p->mShortName,
                                                            properties,
                                                            p->mDefault,
                                                            p->mReverseLogic);
             continue;
         }
         if (IntegerTileDefProperty *p = prop->asInteger()) {
-            mProperties[p->mName] = new PropGenericInteger(p->mShortName,
+            mProperties[p->mName] = new PropGenericInteger(prop->mName,
+                                                           p->mShortName,
                                                            properties,
                                                            p->mDefault);
             continue;
         }
+        if (StringTileDefProperty *p = prop->asString()) {
+            mProperties[p->mName] = new PropGenericString(prop->mName,
+                                                          p->mShortName,
+                                                          properties,
+                                                          p->mDefault);
+            continue;
+        }
     }
-
-#else
-    add("CollideWest", mCollideWest);
-    add("CollideNorth", mCollideNorth);
-    add("Door", mDoor);
-    add("DoorFrame", mDoorFrame);
-    add("IsBed", mIsBed);
-    add("FloorOverlay", mFloorOverlay);
-    add("IsFloor", mIsFloor);
-    add("IsIndoor", mIsIndoor);
-    add("WallStyle", mWallStyle);
-    add("RoofStyle", mRoofStyle);
-
-    TileDefProperties props;
-    foreach (TileDefProperty *p, props.mProperties) {
-        Q_ASSERT(mProperties.contains(p->mName));
-    }
-    foreach (QString key, mProperties.keys()) {
-        Q_ASSERT(props.mProperties.contains(key));
-    }
-#endif
 }

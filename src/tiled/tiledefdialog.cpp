@@ -119,6 +119,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     mSynching(false),
     mUpdatePending(false),
     mTileDefFile(0),
+    mTileDefProperties(new TileDefProperties),
     mUndoGroup(new QUndoGroup(this)),
     mUndoStack(new QUndoStack(this))
 {
@@ -162,6 +163,8 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
 
     /////
 
+    ui->splitter->setStretchFactor(0, 1);
+
     mZoomable->setScale(0.5); // FIXME
     mZoomable->connectToComboBox(ui->scaleComboBox);
     ui->tiles->setZoomable(mZoomable);
@@ -183,6 +186,46 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     connect(ui->actionSave, SIGNAL(triggered()), SLOT(fileSave()));
     connect(ui->actionAddTileset, SIGNAL(triggered()), SLOT(addTileset()));
 
+    foreach (TileDefProperty *prop, mTileDefProperties->mProperties) {
+        if (BooleanTileDefProperty *p = prop->asBoolean()) {
+            if (QCheckBox *w = ui->propertySheet->findChild<QCheckBox*>(p->mName)) {
+                connect(w, SIGNAL(toggled(bool)), SLOT(checkboxToggled(bool)));
+                mCheckBoxes[p->mName] = w;
+            }
+            else
+                qDebug() << "missing QCheckBox for property" << prop->mName;
+            continue;
+        }
+        if (IntegerTileDefProperty *p = prop->asInteger()) {
+            if (QSpinBox *w = ui->propertySheet->findChild<QSpinBox*>(p->mName)) {
+                connect(w, SIGNAL(valueChanged(int)), SLOT(spinBoxValueChanged(int)));
+                mSpinBoxes[p->mName] = w;
+            }
+            else
+                qDebug() << "missing QSpinBox for property" << prop->mName;
+            continue;
+        }
+        if (StringTileDefProperty *p = prop->asString()) {
+            if (QComboBox *w = ui->propertySheet->findChild<QComboBox*>(p->mName)) {
+                mComboBoxes[p->mName] = w;
+            }
+            else
+                qDebug() << "missing QComboBox for property" << prop->mName;
+            continue;
+        }
+        if (EnumTileDefProperty *p = prop->asEnum()) {
+            if (QComboBox *w = ui->propertySheet->findChild<QComboBox*>(p->mName)) {
+                w->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+                w->addItems(p->mEnums);
+                w->installEventFilter(this); // to disable mousewheel
+                connect(w, SIGNAL(activated(int)), SLOT(comboBoxActivated(int)));
+                mComboBoxes[p->mName] = w;
+            }
+            else
+                qDebug() << "missing QComboBox for property" << prop->mName;
+            continue;
+        }
+    }
 #if 0
     // Hack - force the tileset-names-list font to be updated now, because
     // setTilesetList() uses its font metrics to determine the maximum item
@@ -190,6 +233,11 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     ui->tilesets->setFont(QFont());
     setTilesetList();
 #endif
+
+    QLabel label;
+    mLabelFont = label.font();
+    mBoldLabelFont = mLabelFont;
+    mBoldLabelFont.setBold(true);
 
     fileOpen(QLatin1String("C:\\Users\\Tim\\Desktop\\ProjectZomboid\\maptools\\tiledefinitions.tiles"));
     setTilesetList();
@@ -263,15 +311,16 @@ void TileDefDialog::addTileset(Tileset *ts)
 
 void TileDefDialog::removeTileset(Tileset *ts)
 {
-    int row = indexOf(ts->name());
+//    int row = indexOf(ts->name());
 
     mTilesets.remove(ts->name());
     // Don't remove references now, that will delete the tileset, and the
     // user might undo the removal.
     mRemovedTilesets += ts;
 
-    setTilesetList();
-    ui->tilesets->setCurrentRow(row);
+    updateTilesetListLater();
+//    setTilesetList();
+//    ui->tilesets->setCurrentRow(row);
 }
 
 void TileDefDialog::fileNew()
@@ -284,6 +333,11 @@ void TileDefDialog::fileOpen()
                                                     QString(), QLatin1String("Tile properties files (*.tiles)"));
     if (fileName.isEmpty())
         return;
+
+    delete mTileDefFile;
+    mTileDefFile = 0;
+    foreach (Tileset *ts, mTilesets)
+        removeTileset(ts);
 
     fileOpen(fileName);
 
@@ -317,6 +371,102 @@ void TileDefDialog::tileSelectionChanged()
 
     setPropertiesPage();
     updateUI();
+}
+
+void TileDefDialog::comboBoxActivated(int index)
+{
+    if (mSynching)
+        return;
+
+    QObject *sender = this->sender();
+    if (!sender) return;
+    QComboBox *w = dynamic_cast<QComboBox*>(sender);
+    if (!w) return;
+
+    EnumTileDefProperty *p = 0;
+    TileDefProperties props;
+    foreach (TileDefProperty *prop, props.mProperties) {
+        if (prop->mName == w->objectName()) {
+            p = prop->asEnum();
+            break;
+        }
+    }
+    if (!p)
+        return;
+
+    foreach (Tile *tile, mSelectedTiles) {
+        TileDefTileset *defTileset = mTileDefFile->tileset(tile->tileset()->name()); // TODO: defTile->tileset()
+        TileDefTile *defTile = defTileset->mTiles[tile->id()];
+        defTile->mPropertyUI.ChangeProperties(p->mName, index); // FIXME: undo/redo
+        setToolTipEtc(tile->id());
+    }
+
+    // FIXME: just redisplay what's needed
+    setPropertiesPage();
+}
+
+void TileDefDialog::checkboxToggled(bool value)
+{
+    if (mSynching)
+        return;
+
+    QObject *sender = this->sender();
+    if (!sender) return;
+    QCheckBox *w = dynamic_cast<QCheckBox*>(sender);
+    if (!w) return;
+
+    BooleanTileDefProperty *p = 0;
+    TileDefProperties props;
+    foreach (TileDefProperty *prop, props.mProperties) {
+        if (prop->mName == w->objectName()) {
+            p = prop->asBoolean();
+            break;
+        }
+    }
+    if (!p)
+        return;
+
+    foreach (Tile *tile, mSelectedTiles) {
+        TileDefTileset *defTileset = mTileDefFile->tileset(tile->tileset()->name()); // TODO: defTile->tileset()
+        TileDefTile *defTile = defTileset->mTiles[tile->id()];
+        defTile->mPropertyUI.ChangeProperties(p->mName, value); // FIXME: undo/redo
+        setToolTipEtc(tile->id());
+    }
+
+    // FIXME: just redisplay what's needed
+    setPropertiesPage();
+}
+
+void TileDefDialog::spinBoxValueChanged(int value)
+{
+    if (mSynching)
+        return;
+
+    QObject *sender = this->sender();
+    if (!sender) return;
+    QSpinBox *w = dynamic_cast<QSpinBox*>(sender);
+    if (!w) return;
+
+    IntegerTileDefProperty *p = 0;
+    TileDefProperties props;
+    foreach (TileDefProperty *prop, props.mProperties) {
+        if (prop->mName == w->objectName()) {
+            p = prop->asInteger();
+            break;
+        }
+    }
+    if (!p)
+        return;
+
+    foreach (Tile *tile, mSelectedTiles) {
+        TileDefTileset *defTileset = mTileDefFile->tileset(tile->tileset()->name()); // TODO: defTile->tileset()
+        TileDefTile *defTile = defTileset->mTiles[tile->id()];
+        defTile->mPropertyUI.ChangeProperties(p->mName, value); // FIXME: undo/redo
+        setToolTipEtc(tile->id());
+    }
+
+    // FIXME: just redisplay what's needed
+    setPropertiesPage();
 }
 
 void TileDefDialog::undoTextChanged(const QString &text)
@@ -379,6 +529,18 @@ void TileDefDialog::fileOpen(const QString &fileName)
     foreach (QString tilesetName, mTileDefFile->tilesetNames()) {
         TileDefTileset *tsDef = mTileDefFile->tileset(tilesetName);
 
+        // Try to reuse a tileset from our list of removed tilesets.
+        bool reused = false;
+        foreach (Tileset *ts, mRemovedTilesets) {
+            if (ts->imageSource() == tsDef->mImageSource) {
+                addTileset(ts);
+                reused = true;
+                break;
+            }
+        }
+        if (reused)
+            continue;
+
         Tileset *tileset = new Tileset(tilesetName, 64, 128);
         int width = tsDef->mColumns * 64, height = tsDef->mRows * 128;
         QImage image(width, height, QImage::Format_ARGB32);
@@ -406,6 +568,9 @@ void TileDefDialog::setTilesetList()
     if (mUpdatePending)
         return;
 
+    mCurrentTileset = 0;
+    mSelectedTiles.clear();
+
     QFontMetrics fm = ui->tilesets->fontMetrics();
     int maxWidth = 128;
 
@@ -423,71 +588,120 @@ void TileDefDialog::setTilesetList()
 
 void TileDefDialog::setTilesList()
 {
+    mSelectedTiles.clear();
+
     if (mCurrentTileset) {
-        QStringList labels;
+        ui->tiles->model()->setTileset(mCurrentTileset);
+
+        // Tooltip shows properties with non-default value.
         for (int i = 0; i < mCurrentTileset->tileCount(); i++) {
-            Tile *tile = mCurrentTileset->tileAt(i);
-            labels += QLatin1String("???");
+            setToolTipEtc(i);
         }
-        ui->tiles->model()->setTileset(mCurrentTileset, labels);
     } else {
         ui->tiles->model()->setTiles(QList<Tile*>());
     }
+
+    tileSelectionChanged(); // model calling reset() doesn't generate selectionChanged signal
+}
+
+void TileDefDialog::setToolTipEtc(int tileID)
+{
+    TileDefTileset *defTileset = mTileDefFile->tileset(mCurrentTileset->name());
+    if (!defTileset)
+        return;
+    TileDefTile *defTile = defTileset->mTiles[tileID];
+    QStringList tooltip;
+    foreach (UIProperties::UIProperty *p, defTile->mPropertyUI.nonDefaultProperties())
+        tooltip += tr("%1 = %2").arg(p->mName).arg(p->valueAsString());
+    if (defTile->mProperties.size() && tooltip.isEmpty())
+        qDebug() << defTile->mProperties;
+    ui->tiles->model()->setToolTip(tileID, tooltip.join(QLatin1String("\n")));
+    QRect r;
+    if (tooltip.size())
+        r = QRect(0,0,1,1);
+    ui->tiles->model()->setCategoryBounds(tileID, r);
+    ui->tiles->update(ui->tiles->model()->index(mCurrentTileset->tileAt(tileID)));
 }
 
 void TileDefDialog::setPropertiesPage()
 {
     mSynching = true;
 
-    TileDefProperties props;
+    TileDefProperties *props = mTileDefProperties;
     TileDefTile *defTile = 0;
     if (mSelectedTiles.size()) {
         if (TileDefTileset *defTileset = mTileDefFile->tileset(mCurrentTileset->name())) {
             defTile = defTileset->mTiles[mSelectedTiles[0]->id()];
         }
     }
-    foreach (TileDefProperty *prop, props.mProperties) {
+    foreach (TileDefProperty *prop, props->mProperties) {
         if (BooleanTileDefProperty *p = prop->asBoolean()) {
-            if (QCheckBox *cb = ui->propertySheet->findChild<QCheckBox*>(p->mName)) {
+            if (QCheckBox *w = mCheckBoxes[p->mName]) {
                 bool checked = p->mDefault;
                 if (defTile) {
                     checked = defTile->getBoolean(p->mName);
                 }
-                cb->setChecked(checked);
+                w->setChecked(checked);
+                setBold(w, checked != p->mDefault);
             }
-            else
-                qDebug() << "missing QCheckBox for property" << prop->mName;
+            continue;
         }
         if (IntegerTileDefProperty *p = prop->asInteger()) {
-            if (QSpinBox *sb = ui->propertySheet->findChild<QSpinBox*>(p->mName)) {
+            if (QSpinBox *w = mSpinBoxes[p->mName]) {
                 int value = p->mDefault;
                 if (defTile) {
                     value = defTile->getInteger(p->mName);
                 }
-                sb->setValue(value);
+                w->setValue(value);
+                setBold(w, value != p->mDefault);
             }
-            else
-                qDebug() << "missing QSpinBox for property" << prop->mName;
+            continue;
+        }
+        if (StringTileDefProperty *p = prop->asString()) {
+            if (QComboBox *w = mComboBoxes[p->mName]) {
+                QString value = p->mDefault;
+                if (defTile) {
+                    value = defTile->getString(p->mName);
+                }
+                w->setEditText(value);
+                setBold(w, value != p->mDefault);
+            }
+            continue;
         }
         if (EnumTileDefProperty *p = prop->asEnum()) {
-            if (QComboBox *cb = ui->propertySheet->findChild<QComboBox*>(p->mName)) {
+            if (QComboBox *w = mComboBoxes[p->mName]) {
                 int index = 0;
                 if (defTile) {
                     index = defTile->getEnum(p->mName);
                 }
-                if (!cb->count()) {
-                    cb->setSizeAdjustPolicy(QComboBox::AdjustToContents);
-                    cb->addItems(p->mEnums);
-                    cb->installEventFilter(this);
-                }
-                cb->setCurrentIndex(index);
+                w->setCurrentIndex(index);
+                setBold(w, index != 0 /*p->mDefault*/);
             }
-            else
-                qDebug() << "missing QComboBox for property" << prop->mName;
+            continue;
         }
     }
 
     mSynching = false;
+}
+
+void TileDefDialog::setBold(QWidget *w, bool bold)
+{
+    if (mLabelFont == w->font()) {
+        if (!bold) return;
+        w->setFont(mBoldLabelFont);
+    } else {
+        if (bold) return;
+        w->setFont(mLabelFont);
+    }
+
+    foreach (QObject *o, w->parent()->children()) {
+        if (QLabel *label = dynamic_cast<QLabel*>(o)) {
+            if (label->buddy() == w) {
+                label->setFont(w->font());
+                break;
+            }
+        }
+    }
 }
 
 Tileset *TileDefDialog::tileset(const QString &name) const
