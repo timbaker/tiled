@@ -29,8 +29,10 @@
 #include "tile.h"
 #include "tileset.h"
 
+#include <QCloseEvent>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QLineEdit>
 #include <QMessageBox>
 #include <QScrollBar>
 #include <QSettings>
@@ -95,7 +97,7 @@ void TilePropertyClipboard::setEntry(int x, int y, UIProperties &properties)
 
 UIProperties *TilePropertyClipboard::entry(int tx, int ty, int x, int y)
 {
-    // Support tiling the clipboard contents over the area we are pasting.
+    // Support tiling the clipboard contents over the area we are pasting to.
     while (x - tx >= mWidth)
         tx += mWidth;
     while (y - ty >= mHeight)
@@ -224,6 +226,8 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    ui->statusbar->hide();
+
     /////
 
     QAction *undoAction = mUndoGroup->createUndoAction(this, tr("Undo"));
@@ -259,6 +263,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
 
     connect(mUndoGroup, SIGNAL(undoTextChanged(QString)), SLOT(undoTextChanged(QString)));
     connect(mUndoGroup, SIGNAL(redoTextChanged(QString)), SLOT(redoTextChanged(QString)));
+    connect(mUndoGroup, SIGNAL(cleanChanged(bool)), SLOT(updateUI()));
 
     /////
 
@@ -300,9 +305,15 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     connect(ui->tiles, SIGNAL(tileEntered(Tile*)), SLOT(tileEntered(Tile*)));
     connect(ui->tiles, SIGNAL(tileLeft(Tile*)), SLOT(tileLeft(Tile*)));
 
+    ui->actionNew->setShortcut(QKeySequence::New);
+    ui->actionOpen->setShortcut(QKeySequence::Open);
+    ui->actionSave->setShortcut(QKeySequence::Save);
+    ui->actionSaveAs->setShortcut(QKeySequence::SaveAs);
+
     connect(ui->actionNew, SIGNAL(triggered()), SLOT(fileNew()));
     connect(ui->actionOpen, SIGNAL(triggered()), SLOT(fileOpen()));
     connect(ui->actionSave, SIGNAL(triggered()), SLOT(fileSave()));
+    connect(ui->actionSaveAs, SIGNAL(triggered()), SLOT(fileSaveAs()));
     connect(ui->actionAddTileset, SIGNAL(triggered()), SLOT(addTileset()));
 
     foreach (TileDefProperty *prop, mTileDefProperties->mProperties) {
@@ -317,6 +328,9 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
         }
         if (IntegerTileDefProperty *p = prop->asInteger()) {
             if (QSpinBox *w = ui->propertySheet->findChild<QSpinBox*>(p->mName)) {
+                w->setMaximum(1000000); // the "farm well" tile has this value!
+                w->setMinimum(-1000000); // tile offsets may be negative
+                w->setMinimumWidth(96);
                 w->installEventFilter(this); // to disable mousewheel
                 connect(w, SIGNAL(valueChanged(int)), SLOT(spinBoxValueChanged(int)));
                 mSpinBoxes[p->mName] = w;
@@ -327,7 +341,9 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
         }
         if (StringTileDefProperty *p = prop->asString()) {
             if (QComboBox *w = ui->propertySheet->findChild<QComboBox*>(p->mName)) {
+                w->setInsertPolicy(QComboBox::InsertAlphabetically);
                 w->installEventFilter(this); // to disable mousewheel
+                connect(w->lineEdit(), SIGNAL(editingFinished()), SLOT(stringEdited()));
                 mComboBoxes[p->mName] = w;
             }
             else
@@ -370,7 +386,8 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     restoreSplitterSizes(ui->splitter);
 
     fileOpen(QLatin1String("C:\\Users\\Tim\\Desktop\\ProjectZomboid\\maptools\\tiledefinitions.tiles"));
-    setTilesetList();
+    initStringComboBoxValues();
+//    setTilesetList();
 
     updateUI();
 }
@@ -490,12 +507,41 @@ void TileDefDialog::fileOpen()
 
     fileOpen(fileName);
 
+    initStringComboBoxValues();
+
     setTilesetList();
     updateUI();
 }
 
-void TileDefDialog::fileSave()
+bool TileDefDialog::fileSave()
+{    
+    if (mTileDefFile->fileName().length())
+        return fileSave(mTileDefFile->fileName());
+    else
+        return fileSaveAs();
+}
+
+bool TileDefDialog::fileSaveAs()
 {
+    QSettings settings;
+    QString key = QLatin1String("TileDefDialog/LastSavePath");
+    QString suggestedFileName;
+    if (mTileDefFile->fileName().isEmpty()) {
+        suggestedFileName = settings.value(key).toString();
+        if (!suggestedFileName.isEmpty())
+            suggestedFileName += QLatin1String("/tiledefinitions.tiles");
+    } else {
+        suggestedFileName = mTileDefFile->fileName();
+    }
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save As"),
+                                                    suggestedFileName,
+                                                    QLatin1String("Tile properties files (*.tiles)"));
+    if (fileName.isEmpty())
+        return false;
+
+    settings.setValue(key, QFileInfo(fileName).absolutePath());
+
+    return fileSave(fileName);
 }
 
 void TileDefDialog::currentTilesetChanged(int row)
@@ -572,6 +618,23 @@ void TileDefDialog::spinBoxValueChanged(int value)
     changePropertyValues(mSelectedTiles, prop->mName, value);
 }
 
+void TileDefDialog::stringEdited()
+{
+    if (mSynching)
+        return;
+
+    QObject *sender = this->sender(); // QLineEdit
+    if (!sender) return;
+    QComboBox *w = dynamic_cast<QComboBox*>(sender->parent());
+    if (!w) return;
+
+    TileDefProperty *prop = mTileDefProperties->property(w->objectName());
+    if (!prop || !prop->asString())
+        return;
+    qDebug() << "stringEdited";
+    changePropertyValues(mSelectedTiles, prop->mName, w->lineEdit()->text());
+}
+
 void TileDefDialog::undoTextChanged(const QString &text)
 {
     mUndoButton->setToolTip(text);
@@ -617,8 +680,6 @@ void TileDefDialog::copyProperties()
         mClipboard->setEntry(x, y, defTile->mPropertyUI);
     }
 
-    qDebug() << "copyProperties w,h =" << mClipboard->mWidth << mClipboard->mHeight;
-
     updateUI();
 }
 
@@ -651,8 +712,6 @@ void TileDefDialog::pasteProperties()
             }
         }
     }
-
-    qDebug() << "pasteProperties" << selectedBounds << changed;
 
     if (changed.size()) {
         mUndoStack->beginMacro(tr("Paste Properties"));
@@ -710,12 +769,15 @@ void TileDefDialog::updateUI()
 
     bool hasFile = mTileDefFile != 0;
     ui->actionSave->setEnabled(hasFile);
+    ui->actionSaveAs->setEnabled(hasFile);
     ui->actionAddTileset->setEnabled(hasFile);
 
     ui->actionCopyProperties->setEnabled(mSelectedTiles.size());
     ui->actionPasteProperties->setEnabled(!mClipboard->mValidRgn.isEmpty() &&
                                           mSelectedTiles.size());
     ui->actionReset->setEnabled(mSelectedTiles.size());
+
+    updateWindowTitle();
 
     mSynching = false;
 }
@@ -734,14 +796,39 @@ bool TileDefDialog::eventFilter(QObject *object, QEvent *event)
 
 void TileDefDialog::closeEvent(QCloseEvent *event)
 {
-    QSettings settings;
-    settings.beginGroup(QLatin1String("TileDefDialog"));
-    settings.setValue(QLatin1String("geometry"), saveGeometry());
-    settings.endGroup();
+    if (confirmSave()) {
+        QSettings settings;
+        settings.beginGroup(QLatin1String("TileDefDialog"));
+        settings.setValue(QLatin1String("geometry"), saveGeometry());
+        settings.endGroup();
 
-    saveSplitterSizes(ui->splitter);
+        saveSplitterSizes(ui->splitter);
 
-    QMainWindow::closeEvent(event);
+        event->accept();
+    } else {
+        event->ignore();
+    }
+
+//    QMainWindow::closeEvent(event);
+}
+
+bool TileDefDialog::confirmSave()
+{
+    if (!mTileDefFile || mUndoStack->isClean())
+        return true;
+
+    int ret = QMessageBox::warning(
+            this, tr("Unsaved Changes"),
+            tr("There are unsaved changes. Do you want to save now?"),
+            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+
+    switch (ret) {
+    case QMessageBox::Save:    return fileSave();
+    case QMessageBox::Discard: return true;
+    case QMessageBox::Cancel:
+    default:
+        return false;
+    }
 }
 
 void TileDefDialog::fileOpen(const QString &fileName)
@@ -782,6 +869,27 @@ void TileDefDialog::fileOpen(const QString &fileName)
 
         addTileset(tileset);
     }
+
+    mUndoStack->clear();
+}
+
+bool TileDefDialog::fileSave(const QString &fileName)
+{
+    if (!mTileDefFile)
+        return false;
+
+    if (!mTileDefFile->write(fileName)) {
+        QMessageBox::warning(this, tr("Eror writing .tiles file"),
+                             mTileDefFile->errorString());
+        return false;
+    }
+
+    mTileDefFile->setFileName(fileName);
+    mUndoStack->setClean();
+
+    updateWindowTitle();
+
+    return true;
 }
 
 void TileDefDialog::changePropertyValues(const QList<TileDefTile *> &defTiles,
@@ -972,6 +1080,32 @@ void TileDefDialog::setBold(QWidget *w, bool bold)
     }
 }
 
+void TileDefDialog::initStringComboBoxValues()
+{
+    QMap<QString,QSet<QString> > values;
+
+    foreach (TileDefTileset *ts, mTileDefFile->tilesets()) {
+        foreach (TileDefTile *t, ts->mTiles) {
+            foreach (UIProperties::UIProperty *p, t->mPropertyUI.mProperties) {
+                if (p->getString().length())
+                    values[p->mName].insert(p->getString());
+            }
+        }
+    }
+
+    foreach (TileDefProperty *prop, mTileDefProperties->mProperties) {
+        if (StringTileDefProperty *p = prop->asString()) {
+            if (values.contains(p->mName)) {
+                QComboBox *w = mComboBoxes[p->mName];
+                w->clear();
+                QStringList names(values[p->mName].toList());
+                names.sort();
+                w->addItems(names);
+            }
+        }
+    }
+}
+
 Tileset *TileDefDialog::tileset(const QString &name) const
 {
     if (mTilesets.contains(name))
@@ -1077,6 +1211,19 @@ void TileDefDialog::restoreSplitterSizes(QSplitter *splitter)
         splitter->setSizes(sizes);
     }
     settings.endGroup();
+}
+
+void TileDefDialog::updateWindowTitle()
+{
+    if (mTileDefFile && mTileDefFile->fileName().length()) {
+        QString fileName = QDir::toNativeSeparators(mTileDefFile->fileName());
+        setWindowTitle(tr("[*]%1").arg(fileName));
+    } else if (mTileDefFile) {
+        setWindowTitle(tr("[*]Untitled"));
+    } else {
+        setWindowTitle(tr("Tile Properties"));
+    }
+    setWindowModified(!mUndoStack->isClean());
 }
 
 /////

@@ -547,6 +547,9 @@ public:
                 mValue = WestDoorFrame;
             else if (contains("DoorWallN"))
                 mValue = NorthDoorFrame;
+
+            if (mValue != None)
+                set("wall");
         }
 
         void ChangeProperties(int value)
@@ -1071,12 +1074,21 @@ class TileDefFile : public QObject
 public:
     TileDefFile();
 
+    QString fileName() const
+    { return mFileName; }
+
+    void setFileName(const QString &fileName)
+    { mFileName = fileName; }
+
     bool read(const QString &fileName);
     bool write(const QString &fileName);
 
     QString directory() const;
 
     TileDefTileset *tileset(const QString &name);
+
+    QList<TileDefTileset*> tilesets() const
+    { return mTilesets.values(); }
 
     QStringList tilesetNames() const
     { return mTilesets.keys(); }

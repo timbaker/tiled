@@ -69,7 +69,8 @@ public:
 private slots:
     void fileNew();
     void fileOpen();
-    void fileSave();
+    bool fileSave();
+    bool fileSaveAs();
 
     void addTileset();
     void removeTileset();
@@ -80,6 +81,7 @@ private slots:
     void comboBoxActivated(int index);
     void checkboxToggled(bool value);
     void spinBoxValueChanged(int value);
+    void stringEdited();
 
     void undoTextChanged(const QString &text);
     void redoTextChanged(const QString &text);
@@ -99,7 +101,10 @@ private slots:
 private:
     bool eventFilter(QObject *object, QEvent *event);
     void closeEvent(QCloseEvent *event);
+
+    bool confirmSave();
     void fileOpen(const QString &fileName);
+    bool fileSave(const QString &fileName);
 
     void changePropertyValues(const QList<TileDefTile*> &defTiles,
                               const QString &name, const QVariant &value);
@@ -114,8 +119,12 @@ private:
     void setPropertiesPage();
     void setBold(QWidget *w, bool bold);
 
+    void initStringComboBoxValues();
+
     void saveSplitterSizes(QSplitter *splitter);
     void restoreSplitterSizes(QSplitter *splitter);
+
+    void updateWindowTitle();
 
 private:
     static TileDefDialog *mInstance;

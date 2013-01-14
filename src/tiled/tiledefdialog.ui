@@ -35,6 +35,12 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="minimumSize">
+             <size>
+              <width>128</width>
+              <height>0</height>
+             </size>
+            </property>
            </widget>
           </item>
           <item>
@@ -658,6 +664,7 @@
     <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
+    <addaction name="actionSaveAs"/>
     <addaction name="actionAddTileset"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -674,6 +681,10 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/document-open.png</normaloff>:/images/16x16/document-open.png</iconset>
+   </property>
    <property name="text">
     <string>Open...</string>
    </property>
@@ -684,11 +695,19 @@
    </property>
   </action>
   <action name="actionSave">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/document-save.png</normaloff>:/images/16x16/document-save.png</iconset>
+   </property>
    <property name="text">
-    <string>Save As...</string>
+    <string>Save</string>
    </property>
   </action>
   <action name="actionNew">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/document-new.png</normaloff>:/images/16x16/document-new.png</iconset>
+   </property>
    <property name="text">
     <string>New</string>
    </property>
@@ -727,6 +746,15 @@
    </property>
    <property name="toolTip">
     <string>Paste properties onto selected tiles</string>
+   </property>
+  </action>
+  <action name="actionSaveAs">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/document-save-as.png</normaloff>:/images/16x16/document-save-as.png</iconset>
+   </property>
+   <property name="text">
+    <string>Save As...</string>
    </property>
   </action>
  </widget>

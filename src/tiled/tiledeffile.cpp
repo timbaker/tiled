@@ -110,8 +110,42 @@ bool TileDefFile::read(const QString &fileName)
     return true;
 }
 
+static void SaveString(QDataStream& out, const QString& str)
+{
+    for (int i = 0; i < str.length(); i++)
+        out << quint8(str[i].toAscii());
+    out << quint8('\n');
+}
+
 bool TileDefFile::write(const QString &fileName)
 {
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly)) {
+        mError = tr("Error opening file for writing.\n%1").arg(fileName);
+        return false;
+    }
+
+    QDir dir = QFileInfo(fileName).absoluteDir();
+
+    QDataStream out(&file);
+    out.setByteOrder(QDataStream::LittleEndian);
+
+    out << qint32(mTilesets.size());
+    foreach (TileDefTileset *ts, mTilesets.values()) {
+        SaveString(out, ts->mName);
+        SaveString(out, ts->mImageSource);
+        out << qint32(ts->mColumns);
+        out << qint32(ts->mRows);
+        out << qint32(ts->mTiles.size());
+        foreach (TileDefTile *tile, ts->mTiles) {
+            out << qint32(tile->mProperties.size());
+            foreach (QString key, tile->mProperties.keys()) {
+                SaveString(out, key);
+                SaveString(out, tile->mProperties[key]);
+            }
+        }
+    }
+
     return true;
 }
 
