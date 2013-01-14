@@ -94,9 +94,9 @@ void TileDelegate::paint(QPainter *painter,
 
     const int extra = 2;
 
-    QString label = index.model()->data(index, Qt::DecorationRole).toString();
+    QString label = index.data(Qt::DecorationRole).toString();
 
-    QRect r = m->categoryBounds(m->tileAt(index));
+    QRect r = m->categoryBounds(index);
     if (m->showLabels() && m->highlightLabelledItems() && label.length())
         r = QRect(index.column(),index.row(),1,1);
     if (r.isValid() && !(option.state & QStyle::State_Selected)) {
@@ -230,6 +230,25 @@ void MixedTilesetView::mousePressEvent(QMouseEvent *event)
     QTableView::mousePressEvent(event);
 }
 
+#include <QDebug>
+#include <QToolTip>
+void MixedTilesetView::mouseMoveEvent(QMouseEvent *event)
+{
+    if (event->buttons() == Qt::NoButton) {
+        QModelIndex index = indexAt(event->pos());
+        if (index.isValid() && index != mToolTipIndex) {
+            mToolTipIndex = index;
+            QVariant tooltip = index.data(Qt::ToolTipRole);
+            if (tooltip.canConvert<QString>())
+                QToolTip::showText(event->globalPos(), tooltip.toString(), this,
+                                   visualRect(index));
+            return;
+        }
+    }
+
+    QTableView::mouseMoveEvent(event);
+}
+
 void MixedTilesetView::mouseReleaseEvent(QMouseEvent *event)
 {
     if ((event->button() == Qt::LeftButton) && mMousePressed) {
@@ -250,6 +269,18 @@ void MixedTilesetView::wheelEvent(QWheelEvent *event)
     }
 
     QTableView::wheelEvent(event);
+}
+
+bool MixedTilesetView::viewportEvent(QEvent *event)
+{
+    switch (event->type()) {
+    case QEvent::ToolTip:
+        return true;
+    case QEvent::Leave:
+        mToolTipIndex = QModelIndex();
+        break;
+    }
+    return QTableView::viewportEvent(event);
 }
 
 void MixedTilesetView::setZoomable(Zoomable *zoomable)
@@ -278,6 +309,8 @@ void MixedTilesetView::init()
     setShowGrid(false);
 
     setSelectionMode(SingleSelection);
+
+    setMouseTracking(true); // for fast tooltips
 
     QHeaderView *header = horizontalHeader();
     header->hide();
@@ -355,12 +388,34 @@ QVariant MixedTilesetModel::data(const QModelIndex &index, int role) const
             return tile->image();
     }
     if (role == Qt::DecorationRole) {
-        if (Item *item = toItem(index)) {
+        if (Item *item = toItem(index))
             return item->mLabel;
-        }
+    }
+    if (role == Qt::ToolTipRole) {
+        if (Item *item = toItem(index))
+            return item->mToolTip;
     }
 
     return QVariant();
+}
+
+bool MixedTilesetModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (Item *item = toItem(index)) {
+        if (role == Qt::DecorationRole) {
+            if (value.canConvert<QString>()) {
+                item->mLabel = value.toString();
+                return true;
+            }
+        }
+        if (role == Qt::ToolTipRole) {
+            if (value.canConvert<QString>()) {
+                item->mToolTip = value.toString();
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 QVariant MixedTilesetModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -388,7 +443,7 @@ QModelIndex MixedTilesetModel::index(int row, int column, const QModelIndex &par
 
 QModelIndex MixedTilesetModel::index(Tile *tile)
 {
-    int tileIndex = mItems.indexOf(toItem(tile));
+    int tileIndex = indexOf(toItem(tile));
     if (tileIndex != -1)
         return index(tileIndex / columnCount(), tileIndex % columnCount());
     return QModelIndex();
@@ -396,7 +451,7 @@ QModelIndex MixedTilesetModel::index(Tile *tile)
 
 QModelIndex MixedTilesetModel::index(void *userData)
 {
-    int tileIndex = mItems.indexOf(toItem(userData));
+    int tileIndex = indexOf(toItem(userData));
     if (tileIndex != -1)
         return index(tileIndex / columnCount(), tileIndex % columnCount());
     return QModelIndex();
@@ -462,7 +517,8 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
     mTiles = tiles;
     mUserData = userData;
     mTileset = 0;
-    mCategoryBounds.clear();
+    mTileToItem.clear();
+    mTileItemsByIndex.clear();
 
     qDeleteAll(mItems);
     mItems.clear();
@@ -482,9 +538,16 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
                     mItems += new Item(header);
             }
         }
-        mItems += new Item(tile, userData.at(index));
+        Item *item = new Item(tile, userData.at(index));
+        mItems += item;
+        mTileItemsByIndex[index] = item;
+        mTileToItem[tile] = item; // may not be unique!
         index++;
     }
+
+    index = 0;
+    foreach (Item *item, mItems)
+        item->mIndex = index++;
 
     reset();
 }
@@ -495,12 +558,13 @@ void MixedTilesetModel::setTileset(Tileset *tileset, const QStringList &labels)
     mTileset = tileset;
     for (int i = 0; i < mTileset->tileCount(); i++)
         mTiles += mTileset->tileAt(i);
-    mCategoryBounds.clear();
+    mTileToItem.clear();
+    mTileItemsByIndex.clear();
 
     qDeleteAll(mItems);
     mItems.clear();
     QString tilesetName;
-    int i = 0;
+    int index = 0;
     foreach (Tile *tile, mTiles) {
         if (tile->tileset()->name() != tilesetName) {
             while (mItems.count() % columnCount())
@@ -510,11 +574,17 @@ void MixedTilesetModel::setTileset(Tileset *tileset, const QStringList &labels)
                 mItems += new Item(tilesetName);
         }
         Item *item = new Item(tile);
-        if (labels.size() > i)
-            item->mLabel = labels[i];
+        if (labels.size() > index)
+            item->mLabel = labels[index];
         mItems += item;
-        i++;
+        mTileItemsByIndex[index] = item;
+        mTileToItem[tile] = item;
+        index++;
     }
+
+    index = 0;
+    foreach (Item *item, mItems)
+        item->mIndex = index++;
 
     reset();
 }
@@ -540,21 +610,54 @@ void *MixedTilesetModel::userDataAt(const QModelIndex &index) const
     return 0;
 }
 
-void MixedTilesetModel::setCategoryBounds(Tile *tile, const QRect &bounds)
+void MixedTilesetModel::setCategoryBounds(const QModelIndex &index, const QRect &bounds)
 {
-    QModelIndex index = this->index(tile);
     QRect viewBounds = bounds.translated(index.column(), index.row());
     for (int x = 0; x < bounds.width(); x++)
         for (int y = 0; y < bounds.height(); y++) {
-            if (Tile *tile2 = tileAt(this->index(index.row() + y, index.column() + x)))
-                mCategoryBounds[tile2] = viewBounds;
+            if (Item *item = toItem(this->index(index.row() + y, index.column() + x))) {
+                if (item->mTile)
+                    item->mCategoryBounds = viewBounds;
+            }
         }
+}
+
+void MixedTilesetModel::setCategoryBounds(Tile *tile, const QRect &bounds)
+{
+    setCategoryBounds(index(tile), bounds);
+}
+
+void MixedTilesetModel::setCategoryBounds(int tileIndex, const QRect &bounds)
+{
+    if (Item *item = toItem(tileIndex)) {
+        if (item->mCategoryBounds == bounds)
+            return;
+        if (bounds.isEmpty()) {
+            item->mCategoryBounds = QRect();
+            // FIXME: clear bounds of all items that used to overlap.
+            return;
+        }
+        int itemIndex = indexOf(item);
+        QModelIndex index = createIndex(itemIndex / columnCount(), itemIndex % columnCount(), item);
+        setCategoryBounds(index, bounds);
+    }
+}
+
+QRect MixedTilesetModel::categoryBounds(const QModelIndex &index) const
+{
+    if (Item *item = toItem(index)) {
+        if (item->mTile)
+            return item->mCategoryBounds;
+    }
+    return QRect();
 }
 
 QRect MixedTilesetModel::categoryBounds(Tile *tile) const
 {
-    if (mCategoryBounds.contains(tile))
-        return mCategoryBounds[tile];
+    if (Item *item = toItem(tile)) {
+        if (item->mTile)
+            return item->mCategoryBounds;
+    }
     return QRect();
 }
 
@@ -584,6 +687,18 @@ void MixedTilesetModel::setLabel(Tile *tile, const QString &label)
     }
 }
 
+void MixedTilesetModel::setToolTip(int tileIndex, const QString &text)
+{
+    if (Item *item = toItem(tileIndex)) {
+        item->mToolTip = text;
+#if 0
+        int itemIndex = indexOf(item);
+        QModelIndex index = createIndex(itemIndex / columnCount(), itemIndex % columnCount(), item);
+        emit toolTipChanged(index);
+#endif
+    }
+}
+
 MixedTilesetModel::Item *MixedTilesetModel::toItem(const QModelIndex &index) const
 {
     if (index.isValid())
@@ -593,9 +708,8 @@ MixedTilesetModel::Item *MixedTilesetModel::toItem(const QModelIndex &index) con
 
 MixedTilesetModel::Item *MixedTilesetModel::toItem(Tile *tile) const
 {
-    foreach (Item *item, mItems)
-        if (item->mTile == tile)
-            return item;
+    if (mTileToItem.contains(tile))
+        return mTileToItem[tile];
     return 0;
 }
 
@@ -604,5 +718,12 @@ MixedTilesetModel::Item *MixedTilesetModel::toItem(void *userData) const
     foreach (Item *item, mItems)
         if (item->mUserData == userData)
             return item;
+    return 0;
+}
+
+MixedTilesetModel::Item *MixedTilesetModel::toItem(int tileIndex) const
+{
+    if (mTileItemsByIndex.contains(tileIndex))
+        return mTileItemsByIndex[tileIndex];
     return 0;
 }

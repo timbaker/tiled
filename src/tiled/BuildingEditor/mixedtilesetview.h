@@ -45,6 +45,7 @@ public:
 
     QVariant data(const QModelIndex &index,
                   int role = Qt::DisplayRole) const;
+    bool setData(const QModelIndex &index, const QVariant &value, int role);
 
     QVariant headerData(int section, Qt::Orientation orientation,
                         int role = Qt::DisplayRole) const;
@@ -70,7 +71,10 @@ public:
     QString headerAt(const QModelIndex &index) const;
     void *userDataAt(const QModelIndex &index) const;
 
+    void setCategoryBounds(const QModelIndex &index, const QRect &bounds);
     void setCategoryBounds(Tile *tile, const QRect &bounds);
+    void setCategoryBounds(int tileIndex, const QRect &bounds);
+    QRect categoryBounds(const QModelIndex &index) const;
     QRect categoryBounds(Tile *tile) const;
 
     void scaleChanged(qreal scale);
@@ -83,6 +87,8 @@ public:
 
     void setHighlightLabelledItems(bool highlight) { mHighlightLabelledItems = highlight; }
     bool highlightLabelledItems() const { return mHighlightLabelledItems; }
+
+    void setToolTip(int tileIndex, const QString &text);
 
 signals:
     void tileDropped(const QString &tilesetName, int tileId);
@@ -111,21 +117,28 @@ private:
 
         }
 
+        int mIndex;
         Tiled::Tile *mTile;
         void *mUserData;
         QString mTilesetName;
         QString mLabel;
+        QString mToolTip;
+        QRect mCategoryBounds;
     };
 
     Item *toItem(const QModelIndex &index) const;
     Item *toItem(Tiled::Tile *tile) const;
     Item *toItem(void *userData) const;
+    Item *toItem(int tileIndex) const;
+
+    int indexOf(Item *item) { return item->mIndex; }
 
     QList<Item*> mItems;
     QList<Tiled::Tile*> mTiles;
     QList<void *> mUserData;
     Tiled::Tileset *mTileset;
-    QMap<Tiled::Tile*,QRect> mCategoryBounds;
+    QMap<int,Item*> mTileItemsByIndex;
+    QMap<Tiled::Tile*,Item*> mTileToItem;
     static QString mMimeType;
     bool mShowHeaders;
     bool mShowLabels;
@@ -142,8 +155,11 @@ public:
     QSize sizeHint() const;
 
     void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
+
+    bool viewportEvent(QEvent *event);
 
     MixedTilesetModel *model() const
     { return mModel; }
@@ -175,6 +191,7 @@ private:
     Zoomable *mZoomable;
     bool mMousePressed;
     QMenu *mContextMenu;
+    QModelIndex mToolTipIndex;
 };
 
 } // namespace Internal
