@@ -1,0 +1,251 @@
+property
+{
+    Type = Boolean
+    Name = CollideNorth
+    ShortName = collideN
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = CollideWest
+    ShortName = collideW
+    Default = false
+    ReverseLogic = false
+}
+special
+{
+    Name = Door
+}
+special
+{
+    Name = DoorFrame
+}
+separator
+{
+}
+property
+{
+    Type = Boolean
+    Name = IsBed
+    ShortName = bed
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = FloorOverlay
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = IsFloor
+    ShortName = solidfloor
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = IsIndoor
+    ShortName = exterior
+    Default = true
+    ReverseLogic = true
+}
+separator
+{
+}
+special
+{
+    Name = TileBlockStyle
+}
+separator
+{
+}
+property
+{
+    Type = Enum
+    Name = LightPolyStyle
+    ShortName =
+    Enums
+    {
+	enum = None
+	enum = WallW
+	enum = WallN
+    }
+    Default = None
+}
+separator
+{
+}
+property
+{
+    Type = String
+    Name = ContainerType
+    ShortName = container
+    Default =
+}
+property
+{
+    Type = Boolean
+    Name = WheelieBin
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+separator
+{
+}
+special
+{
+    Name = RoofStyle
+}
+separator
+{
+}
+property
+{
+    Type = Boolean
+    Name = ClimbSheetN
+    ShortName = climbSheetN
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = ClimbSheetW
+    ShortName = climbSheetW
+    Default = false
+    ReverseLogic = false
+}
+separator
+{
+}
+special
+{
+    Name = FloorItemShelf
+}
+special
+{
+    Name = HighItemShelf
+}
+special
+{
+    Name = TableItemShelf
+}
+separator
+{
+}
+special
+{
+    Name = StairStyle
+}
+property
+{
+    Type = Boolean
+    Name = PreSeen
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+separator
+{
+}
+property
+{
+    Type = Boolean
+    Name = HoppableN
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = HoppableW
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = WallOverlay
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+special
+{
+    Name = WallStyle
+}
+separator
+{
+}
+property
+{
+    Type = Integer
+    Name = WaterAmount
+    ShortName = waterAmount
+    Min = -1000000
+    Max = 1000000
+    Default = 0
+}
+property
+{
+    Type = Integer
+    Name = WaterMaxAmount
+    ShortName = waterMaxAmount
+    Min = -1000000
+    Max = 1000000
+    Default = 0
+}
+property
+{
+    Type = Boolean
+    Name = WaterPiped
+    ShortName = waterPiped
+    Default = false
+    ReverseLogic = false
+}
+separator
+{
+}
+property
+{
+    Type = Integer
+    Name = OpenTileOffset
+    ShortName =
+    Min = -1000
+    Max = 1000
+    Default = 0
+}
+property
+{
+    Type = Integer
+    Name = SmashedTileOffset
+    ShortName =
+    Min = -1000
+    Max = 1000
+    Default = 0
+}
+special
+{
+    Name = Window
+}
+property
+{
+    Type = Boolean
+    Name = WindowLocked
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+
+

@@ -27,6 +27,8 @@
 #include <QStringList>
 #include <QVector>
 
+class SimpleFileBlock;
+
 namespace Tiled {
 
 class Tileset;
@@ -82,8 +84,11 @@ class IntegerTileDefProperty : public TileDefProperty
 public:
     IntegerTileDefProperty(const QString &name,
                            const QString &shortName,
+                           int min, int max,
                            int defaultValue = 0) :
         TileDefProperty(name, shortName),
+        mMin(min),
+        mMax(max),
         mDefault(defaultValue)
     {
 
@@ -91,6 +96,8 @@ public:
 
     IntegerTileDefProperty *asInteger() { return this; }
 
+    int mMin;
+    int mMax;
     int mDefault;
 };
 
@@ -116,9 +123,11 @@ class EnumTileDefProperty : public TileDefProperty
 public:
     EnumTileDefProperty(const QString &name,
                         const QString &shortName,
-                        const QStringList &enums) :
+                        const QStringList &enums,
+                        const QString &defaultValue) :
         TileDefProperty(name, shortName),
-        mEnums(enums)
+        mEnums(enums),
+        mDefault(defaultValue)
     {
 
     }
@@ -126,6 +135,7 @@ public:
     EnumTileDefProperty *asEnum() { return this; }
 
     QStringList mEnums;
+    QString mDefault;
 };
 
 class TileDefProperties
@@ -134,20 +144,31 @@ public:
     TileDefProperties();
     ~TileDefProperties();
 
-    void addBoolean(const char *name, const char *shortName = 0,
-                    bool defaultValue = false, bool reverseLogic = false);
-    void addInteger(const char *name, const char *shortName = 0, int defaultValue = 0);
-    void addString(const char *name, const char *shortName = 0, const QString &defaultValue = QString());
-    void addEnum(const char *name, const char *shortName, const char *enums[]);
+    void addBoolean(const QString &name, const QString &shortName,
+                    bool defaultValue, bool reverseLogic);
+    void addInteger(const QString &name, const QString &shortName,
+                    int min, int max, int defaultValue);
+    void addString(const QString &name, const QString &shortName,
+                   const QString &defaultValue);
+    void addEnum(const QString &name, const QString &shortName,
+                 const QStringList enums, const QString &defaultValue);
 
-    TileDefProperty *property(const QString &name)
+    void addEnum(const char *name, const char *shortName,
+                 const char *enums[], const char *defaultValue);
+
+    void addSeparator()
+    { mSeparators += mSeparators.size() + mProperties.size(); }
+
+    TileDefProperty *property(const QString &name) const
     {
-        if (mProperties.contains(name))
-            return mProperties[name];
+        if (mPropertyByName.contains(name))
+            return mPropertyByName[name];
         return 0;
     }
 
-    QMap<QString,TileDefProperty*> mProperties;
+    QList<TileDefProperty*> mProperties;
+    QMap<QString,TileDefProperty*> mPropertyByName;
+    QList<int> mSeparators;
 };
 
 // TileDefTile.mProperties["bed"] -> TileDefProperties["IsBed"]
@@ -158,8 +179,10 @@ public:
     class UIProperty
     {
     public:
-        UIProperty(const QString &name, QMap<QString,QString> &properties) :
+        UIProperty(const QString &name, QMap<QString,QString> &properties,
+                   QList<QString> &keys) :
             mName(name),
+            mPropertyKeys(keys),
             mProperties(properties)
         {
 
@@ -169,19 +192,22 @@ public:
 
         void set(const char *key, const char *value = "")
         {
-            mProperties[QLatin1String(key)] = QLatin1String(value);
+            set(QLatin1String(key),  QLatin1String(value));
         }
         void set(const QString &key, const QString &value = QString())
         {
+            if (!mPropertyKeys.contains(key))
+                mPropertyKeys += key;
             mProperties[key] = value;
         }
 
         void remove(const char *key)
         {
-            mProperties.remove(QLatin1String(key));
+            remove(QLatin1String(key));
         }
         void remove(const QString &key)
         {
+            mPropertyKeys.removeOne(key);
             mProperties.remove(key);
         }
 
@@ -219,6 +245,7 @@ public:
         virtual QString getString() { return QString(); }
 
         QString mName;
+        QList<QString> &mPropertyKeys; // match C# order-preserving Dictionary
         QMap<QString,QString> &mProperties;
     };
 
@@ -227,9 +254,10 @@ public:
     public:
         PropGenericBoolean(const QString &name, const QString &shortName,
                            QMap<QString,QString> &properties,
+                           QList<QString> &keys,
                            bool defaultValue = false,
                            bool reverseLogic = false) :
-            UIProperty(name, properties),
+            UIProperty(name, properties, keys),
             mShortName(shortName),
             mValue(defaultValue),
             mDefaultValue(defaultValue),
@@ -298,11 +326,14 @@ public:
     public:
         PropGenericInteger(const QString &name, const QString &shortName,
                            QMap<QString,QString> &properties,
-                           int defaultValue = 0) :
-            UIProperty(name, properties),
+                           QList<QString> &keys,
+                           int min, int max, int defaultValue = 0) :
+            UIProperty(name, properties, keys),
             mShortName(shortName),
-            mValue(defaultValue),
-            mDefaultValue(defaultValue)
+            mMin(min),
+            mMax(max),
+            mDefaultValue(defaultValue),
+            mValue(defaultValue)
         {
         }
 
@@ -357,8 +388,10 @@ public:
         }
 
         QString mShortName;
-        int mValue;
+        int mMin;
+        int mMax;
         int mDefaultValue;
+        int mValue;
     };
 
     class PropGenericString : public UIProperty
@@ -366,8 +399,9 @@ public:
     public:
         PropGenericString(const QString &name, const QString &shortName,
                           QMap<QString,QString> &properties,
+                          QList<QString> &keys,
                           const QString &defaultValue = QString()) :
-            UIProperty(name, properties),
+            UIProperty(name, properties, keys),
             mShortName(shortName),
             mValue(defaultValue),
             mDefaultValue(defaultValue)
@@ -433,10 +467,13 @@ public:
     {
     public:
         PropGenericEnum(const QString &name,
+                        const QString &shortName,
                         QMap<QString,QString> &properties,
+                        QList<QString> &keys,
                         const QStringList &enums,
                         int defaultValue = 0) :
-            UIProperty(name, properties),
+            UIProperty(name, properties, keys),
+            mShortName(shortName),
             mEnums(enums),
             mValue(defaultValue),
             mDefaultValue(defaultValue)
@@ -473,11 +510,35 @@ public:
             ChangeProperties(value.toInt());
         }
 
+        void FromProperties()
+        {
+            mValue = mDefaultValue;
+            if (contains(mShortName)) {
+                QString enumName = mProperties[mShortName];
+                if (mEnums.contains(enumName))
+                    mValue = mEnums.indexOf(enumName);
+                else
+                    Q_ASSERT(false);
+            }
+        }
+
+        void ChangeProperties(int value)
+        {
+            remove(mShortName);
+            if (value >= 0 && value < mEnums.size()) {
+                if (value != mDefaultValue)
+                    set(mShortName, mEnums[value]);
+                mValue = value;
+            } else
+                Q_ASSERT(false);
+        }
+
         int getEnum()
         {
             return mValue;
         }
 
+        QString mShortName;
         QStringList mEnums;
         int mValue;
         int mDefaultValue;
@@ -503,8 +564,9 @@ public:
         };
 
         PropWallStyle(const QString &name, QMap<QString,QString> &properties,
+                      QList<QString> &keys,
                       const QStringList &enums) :
-            PropGenericEnum(name, properties, enums, None)
+            PropGenericEnum(name, name, properties, keys, enums, None)
         {}
 
         void FromProperties()
@@ -611,8 +673,9 @@ public:
         };
 
         PropRoofStyle(const QString &name, QMap<QString,QString> &properties,
+                      QList<QString> &keys,
                       const QStringList &enums) :
-            PropGenericEnum(name, properties, enums, None)
+            PropGenericEnum(name, name, properties, keys, enums, None)
         {
 
         }
@@ -656,8 +719,9 @@ public:
 
         PropDoorStyle(const QString &name, const QString &prefix,
                       QMap<QString,QString> &properties,
+                      QList<QString> &keys,
                       const QStringList &enums) :
-            PropGenericEnum(name, properties, enums, None),
+            PropGenericEnum(name, name, properties, keys, enums, None),
             mPrefix(prefix)
         {
 
@@ -712,8 +776,9 @@ public:
 
         PropDirection(const QString &name, const QString &prefix,
                       QMap<QString,QString> &properties,
+                      QList<QString> &keys,
                       const QStringList &enums) :
-            PropGenericEnum(name, properties, enums, None),
+            PropGenericEnum(name, name, properties, keys, enums, None),
             mPrefix(prefix)
         {
 
@@ -770,8 +835,9 @@ public:
 
         PropStairStyle(const QString &name, const QString &prefix,
                        QMap<QString,QString> &properties,
+                       QList<QString> &keys,
                        const QStringList &enums) :
-            PropGenericEnum(name, properties, enums, None),
+            PropGenericEnum(name, name, properties, keys, enums, None),
             mPrefix(prefix)
         {
 
@@ -844,8 +910,9 @@ public:
         };
 
         PropTileBlockStyle(const QString &name, QMap<QString,QString> &properties,
+                           QList<QString> &keys,
                            const QStringList &enums) :
-            PropGenericEnum(name, properties, enums, None)
+            PropGenericEnum(name, name, properties, keys, enums, None)
         {
 
         }
@@ -873,6 +940,7 @@ public:
         }
     };
 
+#if 0
     class PropLightPolyStyle : public PropGenericEnum
     {
     public:
@@ -917,6 +985,7 @@ public:
             mValue = qBound(0, value, mEnums.size() - 1);
         }
     };
+#endif
 
     UIProperty *property(const QString &name) const
     {
@@ -925,7 +994,7 @@ public:
         return 0;
     }
 
-    UIProperties(QMap<QString,QString> &properties);
+    UIProperties(QMap<QString,QString> &properties, QList<QString> &keys);
 
     void add(const char *label, UIProperty &prop)
     {
@@ -1024,7 +1093,7 @@ public:
     TileDefTile(TileDefTileset *tileset, int id) :
         mTileset(tileset),
         mID(id),
-        mPropertyUI(mProperties)
+        mPropertyUI(mProperties, mPropertyKeys)
     {
 
     }
@@ -1057,6 +1126,7 @@ public:
 
     TileDefTileset *mTileset;
     int mID;
+    QList<QString> mPropertyKeys; // match C# order-preserving Dictionary
     QMap<QString,QString> mProperties;
     UIProperties mPropertyUI;
 };
@@ -1075,6 +1145,9 @@ public:
     QVector<TileDefTile*> mTiles;
 };
 
+/**
+  * This class represents a single binary *.tiles file.
+  */
 class TileDefFile : public QObject
 {
     Q_OBJECT
@@ -1110,6 +1183,44 @@ private:
     QList<TileDefTileset*> mTilesets;
     QMap<QString,TileDefTileset*> mTilesetByName;
     QString mFileName;
+    QString mError;
+};
+
+/**
+  * This class manages the TileProperties.txt file.
+  */
+class TilePropertyMgr : public QObject
+{
+    Q_OBJECT
+public:
+    static TilePropertyMgr *instance();
+    static void deleteInstance();
+
+    bool hasReadTxt()
+    { return !mProperties.mProperties.isEmpty(); }
+
+    QString txtName();
+    QString txtPath();
+    bool readTxt();
+
+    const TileDefProperties &properties() const
+    { return mProperties; }
+
+    QString errorString() const
+    { return mError; }
+
+private:
+    bool addProperty(SimpleFileBlock &block);
+    bool toBoolean(const QString &s, bool &ok);
+    int toInt(const QString &s, bool &ok);
+
+private:
+    Q_DISABLE_COPY(TilePropertyMgr)
+    static TilePropertyMgr *mInstance;
+    TilePropertyMgr();
+    ~TilePropertyMgr();
+
+    TileDefProperties mProperties;
     QString mError;
 };
 

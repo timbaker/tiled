@@ -53,9 +53,10 @@ public:
     struct Entry
     {
         Entry() :
-            mProperties(mYuck)
+            mProperties(mYuck, mYuckKeys)
         {}
         UIProperties mProperties;
+        QList<QString> mYuckKeys;
         QMap<QString,QString> mYuck;
     };
 
@@ -232,7 +233,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     mTilesetsUpdatePending(false),
     mPropertyPageUpdatePending(false),
     mTileDefFile(0),
-    mTileDefProperties(new TileDefProperties),
+    mTileDefProperties(&TilePropertyMgr::instance()->properties()),
     mClipboard(new TilePropertyClipboard),
     mUndoGroup(new QUndoGroup(this)),
     mUndoStack(new QUndoStack(this))
@@ -330,53 +331,66 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     connect(ui->actionAddTileset, SIGNAL(triggered()), SLOT(addTileset()));
     connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
 
+    foreach (QObject *o, ui->propertySheet->children())
+        if (o->isWidgetType())
+            delete o;
+    delete ui->propertySheet->layout();
+    QFormLayout *form = new QFormLayout(ui->propertySheet);
+    ui->propertySheet->setLayout(form);
+    form->setRowWrapPolicy(QFormLayout::DontWrapRows);
+    form->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
+
     foreach (TileDefProperty *prop, mTileDefProperties->mProperties) {
+        if (mTileDefProperties->mSeparators.contains(form->rowCount())) {
+            QFrame *w = new QFrame(ui->propertySheet);
+            w->setObjectName(QString::fromUtf8("line"));
+            w->setFrameShape(QFrame::HLine);
+            w->setFrameShadow(QFrame::Sunken);
+            form->setWidget(form->rowCount(), QFormLayout::SpanningRole, w);
+        }
         if (BooleanTileDefProperty *p = prop->asBoolean()) {
-            if (QCheckBox *w = ui->propertySheet->findChild<QCheckBox*>(p->mName)) {
-                connect(w, SIGNAL(toggled(bool)), SLOT(checkboxToggled(bool)));
-                mCheckBoxes[p->mName] = w;
-            }
-            else
-                qDebug() << "missing QCheckBox for property" << prop->mName;
+            QCheckBox *w = new QCheckBox(p->mName, ui->propertySheet);
+            w->setObjectName(p->mName);
+            connect(w, SIGNAL(toggled(bool)), SLOT(checkboxToggled(bool)));
+            mCheckBoxes[p->mName] = w;
+            form->setWidget(form->rowCount(), QFormLayout::SpanningRole, w);
             continue;
         }
         if (IntegerTileDefProperty *p = prop->asInteger()) {
-            if (QSpinBox *w = ui->propertySheet->findChild<QSpinBox*>(p->mName)) {
-                w->setMaximum(1000000); // the "farm well" tile has this value!
-                w->setMinimum(-1000000); // tile offsets may be negative
-                w->setMinimumWidth(96);
-                w->installEventFilter(this); // to disable mousewheel
-                connect(w, SIGNAL(valueChanged(int)), SLOT(spinBoxValueChanged(int)));
-                mSpinBoxes[p->mName] = w;
-            }
-            else
-                qDebug() << "missing QSpinBox for property" << prop->mName;
+            QSpinBox *w = new QSpinBox(ui->propertySheet);
+            w->setObjectName(p->mName);
+            w->setRange(p->mMin, p->mMax);
+            w->setMinimumWidth(96);
+            w->installEventFilter(this); // to disable mousewheel
+            connect(w, SIGNAL(valueChanged(int)), SLOT(spinBoxValueChanged(int)));
+            mSpinBoxes[p->mName] = w;
+            form->addRow(p->mName, w);
             continue;
         }
         if (StringTileDefProperty *p = prop->asString()) {
-            if (QComboBox *w = ui->propertySheet->findChild<QComboBox*>(p->mName)) {
-                w->setInsertPolicy(QComboBox::InsertAlphabetically);
-                w->installEventFilter(this); // to disable mousewheel
-                connect(w->lineEdit(), SIGNAL(editingFinished()), SLOT(stringEdited()));
-                mComboBoxes[p->mName] = w;
-            }
-            else
-                qDebug() << "missing QComboBox for property" << prop->mName;
+            QComboBox *w = new QComboBox(ui->propertySheet);
+            w->setObjectName(p->mName);
+            w->setEditable(true);
+            w->setInsertPolicy(QComboBox::InsertAlphabetically);
+            w->installEventFilter(this); // to disable mousewheel
+            connect(w->lineEdit(), SIGNAL(editingFinished()), SLOT(stringEdited()));
+            mComboBoxes[p->mName] = w;
+            form->addRow(p->mName, w);
             continue;
         }
         if (EnumTileDefProperty *p = prop->asEnum()) {
-            if (QComboBox *w = ui->propertySheet->findChild<QComboBox*>(p->mName)) {
-                w->setSizeAdjustPolicy(QComboBox::AdjustToContents);
-                w->addItems(p->mEnums);
-                w->installEventFilter(this); // to disable mousewheel
-                connect(w, SIGNAL(activated(int)), SLOT(comboBoxActivated(int)));
-                mComboBoxes[p->mName] = w;
-            }
-            else
-                qDebug() << "missing QComboBox for property" << prop->mName;
+            QComboBox *w = new QComboBox(ui->propertySheet);
+            w->setObjectName(p->mName);
+            w->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+            w->addItems(p->mEnums);
+            w->installEventFilter(this); // to disable mousewheel
+            connect(w, SIGNAL(activated(int)), SLOT(comboBoxActivated(int)));
+            mComboBoxes[p->mName] = w;
+            form->addRow(p->mName, w);
             continue;
         }
     }
+
 #if 0
     // Hack - force the tileset-names-list font to be updated now, because
     // setTilesetList() uses its font metrics to determine the maximum item
@@ -415,7 +429,7 @@ TileDefDialog::~TileDefDialog()
     qDeleteAll(mRemovedDefTilesets);
     delete mTileDefFile;
     delete mClipboard;
-    delete mTileDefProperties;
+    //delete mTileDefProperties;
 }
 
 void TileDefDialog::addTileset()
@@ -599,8 +613,10 @@ void TileDefDialog::comboBoxActivated(int index)
     if (!w) return;
 
     TileDefProperty *prop = mTileDefProperties->property(w->objectName());
-    if (!prop || !prop->asEnum())
+    if (!prop || !prop->asEnum()) {
+        Q_ASSERT(false);
         return;
+    }
     changePropertyValues(mSelectedTiles, prop->mName, index);
 }
 
@@ -615,8 +631,10 @@ void TileDefDialog::checkboxToggled(bool value)
     if (!w) return;
 
     TileDefProperty *prop = mTileDefProperties->property(w->objectName());
-    if (!prop || !prop->asBoolean())
+    if (!prop || !prop->asBoolean()) {
+        Q_ASSERT(false);
         return;
+    }
     changePropertyValues(mSelectedTiles, prop->mName, value);
 }
 
@@ -631,8 +649,10 @@ void TileDefDialog::spinBoxValueChanged(int value)
     if (!w) return;
 
     TileDefProperty *prop = mTileDefProperties->property(w->objectName());
-    if (!prop || !prop->asInteger())
+    if (!prop || !prop->asInteger()) {
+        Q_ASSERT(false);
         return;
+    }
     changePropertyValues(mSelectedTiles, prop->mName, value);
 }
 
@@ -647,8 +667,10 @@ void TileDefDialog::stringEdited()
     if (!w) return;
 
     TileDefProperty *prop = mTileDefProperties->property(w->objectName());
-    if (!prop || !prop->asString())
+    if (!prop || !prop->asString()) {
+        Q_ASSERT(false);
         return;
+    }
     qDebug() << "stringEdited";
     changePropertyValues(mSelectedTiles, prop->mName, w->lineEdit()->text());
 }
@@ -1073,7 +1095,7 @@ void TileDefDialog::setPropertiesPage()
 {
     mSynching = true;
 
-    TileDefProperties *props = mTileDefProperties;
+    const TileDefProperties *props = mTileDefProperties;
     TileDefTile *defTile = 0;
     if (mSelectedTiles.size()) {
         if (TileDefTileset *defTileset = mTileDefFile->tileset(mCurrentTileset->name())) {
@@ -1152,6 +1174,8 @@ void TileDefDialog::setBold(QWidget *w, bool bold)
 
 void TileDefDialog::initStringComboBoxValues()
 {
+    mSynching = true;
+
     QMap<QString,QSet<QString> > values;
 
     foreach (TileDefTileset *ts, mTileDefFile->tilesets()) {
@@ -1171,9 +1195,12 @@ void TileDefDialog::initStringComboBoxValues()
                 QStringList names(values[p->mName].toList());
                 names.sort();
                 w->addItems(names);
+                w->clearEditText();
             }
         }
     }
+
+    mSynching = false;
 }
 
 Tileset *TileDefDialog::tileset(const QString &name) const

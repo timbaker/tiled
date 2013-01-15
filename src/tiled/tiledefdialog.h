@@ -162,7 +162,7 @@ private:
     QList<Tileset*> mRemovedTilesets;
     QList<TileDefTileset*> mRemovedDefTilesets;
 
-    TileDefProperties *mTileDefProperties;
+    const TileDefProperties *mTileDefProperties;
 
     TilePropertyClipboard *mClipboard;
 

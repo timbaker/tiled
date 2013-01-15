@@ -84,6 +84,7 @@
 #include "mapmanager.h"
 #include "mapsdock.h"
 #include "tiledefdialog.h"
+#include "tiledeffile.h"
 #include "tilemetainfodialog.h"
 #include "tilemetainfomgr.h"
 #include "zlevelsdock.h"
@@ -1325,6 +1326,15 @@ void MainWindow::tilesetMetaInfoDialog()
 
 void MainWindow::tilePropertiesEditor()
 {
+    TilePropertyMgr *mgr = TilePropertyMgr::instance();
+    if (!mgr->hasReadTxt()) {
+        if (!mgr->readTxt()) {
+            QMessageBox::warning(this, tr("It's no good, Jim!"),
+                                 tr("%1\n(while reading %2)")
+                                 .arg(mgr->errorString()).arg(mgr->txtName()));
+            return;
+        }
+    }
     TileDefDialog::instance()->show();
     TileDefDialog::instance()->raise();
 }
