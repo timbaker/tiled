@@ -65,7 +65,9 @@ public:
     void setTiles(const QList<Tile*> &tiles,
                   const QList<void*> &userData = QList<void*>(),
                   const QStringList &headers = QStringList());
-    void setTileset(Tileset *tileset, const QStringList &labels = QStringList());
+    void setTileset(Tileset *tileset,
+                    const QList<void *> &userData = QList<void*>(),
+                    const QStringList &labels = QStringList());
 
     Tile *tileAt(const QModelIndex &index) const;
     QString headerAt(const QModelIndex &index) const;
@@ -140,6 +142,7 @@ private:
     Tiled::Tileset *mTileset;
     QMap<int,Item*> mTileItemsByIndex;
     QMap<Tiled::Tile*,Item*> mTileToItem;
+    QMap<void*,Item*> mUserDataToItem;
     static QString mMimeType;
     bool mShowHeaders;
     bool mShowLabels;
@@ -181,8 +184,8 @@ signals:
     void mousePressed();
     void mouseReleased();
 
-    void tileEntered(Tile *tile);
-    void tileLeft(Tile *tile);
+    void tileEntered(const QModelIndex &index);
+    void tileLeft(const QModelIndex &index);
 
 public slots:
     void scaleChanged(qreal scale);

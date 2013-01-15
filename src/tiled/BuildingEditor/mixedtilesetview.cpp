@@ -238,9 +238,9 @@ void MixedTilesetView::mouseMoveEvent(QMouseEvent *event)
         QModelIndex index = indexAt(event->pos());
         if (index.isValid() && index != mToolTipIndex) {
             if (Tile *tile = model()->tileAt(mToolTipIndex))
-                emit tileLeft(tile);
+                emit tileLeft(mToolTipIndex);
             if (Tile *tile = model()->tileAt(index))
-                emit tileEntered(tile);
+                emit tileEntered(index);
             mToolTipIndex = index;
             QVariant tooltip = index.data(Qt::ToolTipRole);
             if (tooltip.canConvert<QString>())
@@ -249,7 +249,7 @@ void MixedTilesetView::mouseMoveEvent(QMouseEvent *event)
             return;
         } else if (!index.isValid() && mToolTipIndex.isValid()) {
             if (Tile *tile = model()->tileAt(mToolTipIndex)) {
-                emit tileLeft(tile);
+                emit tileLeft(mToolTipIndex);
                 mToolTipIndex = QModelIndex();
             }
         }
@@ -287,7 +287,7 @@ bool MixedTilesetView::viewportEvent(QEvent *event)
         return true;
     case QEvent::Leave:
         if (Tile *tile = model()->tileAt(mToolTipIndex)) {
-            emit tileLeft(tile);
+            emit tileLeft(mToolTipIndex);
             mToolTipIndex = QModelIndex();
         }
         break;
@@ -542,6 +542,7 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
     mUserData = userData;
     mTileset = 0;
     mTileToItem.clear();
+    mUserDataToItem.clear();
     mTileItemsByIndex.clear();
 
     qDeleteAll(mItems);
@@ -566,6 +567,7 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
         mItems += item;
         mTileItemsByIndex[index] = item;
         mTileToItem[tile] = item; // may not be unique!
+        mUserDataToItem[item->mUserData] = item;
         index++;
     }
 
@@ -576,13 +578,16 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
     reset();
 }
 
-void MixedTilesetModel::setTileset(Tileset *tileset, const QStringList &labels)
+void MixedTilesetModel::setTileset(Tileset *tileset,
+                                   const QList<void*> &userData,
+                                   const QStringList &labels)
 {
     mTiles.clear();
     mTileset = tileset;
     for (int i = 0; i < mTileset->tileCount(); i++)
         mTiles += mTileset->tileAt(i);
     mTileToItem.clear();
+    mUserDataToItem.clear();
     mTileItemsByIndex.clear();
 
     qDeleteAll(mItems);
@@ -602,9 +607,12 @@ void MixedTilesetModel::setTileset(Tileset *tileset, const QStringList &labels)
         Item *item = new Item(tile);
         if (labels.size() > index)
             item->mLabel = labels[index];
+        if (userData.size() > index)
+            item->mUserData = userData[index];
         mItems += item;
         mTileItemsByIndex[index] = item;
         mTileToItem[tile] = item;
+        mUserDataToItem[item->mUserData] = item;
         index++;
     }
 
@@ -741,9 +749,8 @@ MixedTilesetModel::Item *MixedTilesetModel::toItem(Tile *tile) const
 
 MixedTilesetModel::Item *MixedTilesetModel::toItem(void *userData) const
 {
-    foreach (Item *item, mItems)
-        if (item->mUserData == userData)
-            return item;
+    if (mUserDataToItem.contains(userData))
+        return mUserDataToItem[userData];
     return 0;
 }
 

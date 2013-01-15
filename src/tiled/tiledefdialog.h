@@ -23,6 +23,8 @@
 #include <QMainWindow>
 
 #include <QMap>
+#include <QSet>
+#include <QModelIndex>
 
 class QCheckBox;
 class QComboBox;
@@ -95,8 +97,8 @@ private slots:
     void pasteProperties();
     void resetDefaults();
 
-    void tileEntered(Tile *tile);
-    void tileLeft(Tile *tile);
+    void tileEntered(const QModelIndex &index);
+    void tileLeft(const QModelIndex &index);
 
     void updateUI();
 
@@ -120,6 +122,7 @@ private:
     void setTilesetList();
     void setTilesList();
     void setToolTipEtc(int tileID);
+    void highlightTilesWithMatchingProperties(TileDefTile *defTile);
     void resetDefaults(TileDefTile *defTile);
     void setPropertiesPage();
     void setBold(QWidget *w, bool bold);
@@ -163,6 +166,8 @@ private:
     QList<TileDefTileset*> mRemovedDefTilesets;
 
     const TileDefProperties *mTileDefProperties;
+
+    QSet<TileDefTile*> mTilesWithMatchingProperties;
 
     TilePropertyClipboard *mClipboard;
 

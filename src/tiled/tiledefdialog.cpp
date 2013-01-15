@@ -313,8 +313,8 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     connect(ui->tiles->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(tileSelectionChanged()));
-    connect(ui->tiles, SIGNAL(tileEntered(Tile*)), SLOT(tileEntered(Tile*)));
-    connect(ui->tiles, SIGNAL(tileLeft(Tile*)), SLOT(tileLeft(Tile*)));
+    connect(ui->tiles, SIGNAL(tileEntered(QModelIndex)), SLOT(tileEntered(QModelIndex)));
+    connect(ui->tiles, SIGNAL(tileLeft(QModelIndex)), SLOT(tileLeft(QModelIndex)));
 
     ui->actionNew->setShortcut(QKeySequence::New);
     ui->actionOpen->setShortcut(QKeySequence::Open);
@@ -508,6 +508,7 @@ QVariant TileDefDialog::changePropertyValue(TileDefTile *defTile, const QString 
     QVariant old = defTile->mPropertyUI.mProperties[name]->value();
     defTile->mPropertyUI.ChangePropertiesV(name, value);
     setToolTipEtc(defTile->id());
+    ui->tiles->update(ui->tiles->model()->index((void*)defTile));
     updatePropertyPageLater();
     return old;
 }
@@ -784,11 +785,14 @@ void TileDefDialog::resetDefaults()
     }
 }
 
-void TileDefDialog::tileEntered(Tile *tile)
+void TileDefDialog::tileEntered(const QModelIndex &index)
 {
+    TileDefTile *defTile = static_cast<TileDefTile*>(ui->tiles->model()->userDataAt(index)); // danger!
+    highlightTilesWithMatchingProperties(defTile);
+
     if (mSelectedTiles.size() == 1) {
         TileDefTile *defTile1 = mSelectedTiles.first();
-        TileDefTile *defTile2 = defTile1->tileset()->mTiles[tile->id()];
+        TileDefTile *defTile2 = static_cast<TileDefTile*>(ui->tiles->model()->userDataAt(index)); // danger!
         int offset = defTile2->id() - defTile1->id();
         ui->tileOffset->setText(tr("Offset: %1").arg(offset));
         return;
@@ -796,9 +800,10 @@ void TileDefDialog::tileEntered(Tile *tile)
     ui->tileOffset->setText(tr("Offset: ?"));
 }
 
-void TileDefDialog::tileLeft(Tile *tile)
+void TileDefDialog::tileLeft(const QModelIndex &index)
 {
-    Q_UNUSED(tile)
+    Q_UNUSED(index)
+    highlightTilesWithMatchingProperties(0);
     ui->tileOffset->setText(tr("Offset: ?"));
 }
 
@@ -1041,9 +1046,14 @@ void TileDefDialog::setTilesetList()
 void TileDefDialog::setTilesList()
 {
     mSelectedTiles.clear();
+    mTilesWithMatchingProperties.clear();
 
     if (mCurrentTileset) {
-        ui->tiles->model()->setTileset(mCurrentTileset);
+        TileDefTileset *defTileset = mTileDefFile->tileset(mCurrentTileset->name());
+        QList<void*> userData;
+        foreach (TileDefTile *defTile, defTileset->mTiles)
+            userData += defTile;
+        ui->tiles->model()->setTileset(mCurrentTileset, userData);
 
         // Tooltip shows properties with non-default value.
         for (int i = 0; i < mCurrentTileset->tileCount(); i++) {
@@ -1066,8 +1076,9 @@ void TileDefDialog::setToolTipEtc(int tileID)
     foreach (UIProperties::UIProperty *p, defTile->mPropertyUI.nonDefaultProperties())
         tooltip += tr("%1 = %2").arg(p->mName).arg(p->valueAsString());
 
-#if 1
-    // Show .tiles property/value pairs
+    MixedTilesetModel *m = ui->tiles->model();
+
+    // Show .tiles property/value pairs.
     QMap<QString,QString> properties;
     defTile->mPropertyUI.ToProperties(properties);
     if (properties.size()) {
@@ -1076,28 +1087,71 @@ void TileDefDialog::setToolTipEtc(int tileID)
             tooltip += tr("%1 = %2").arg(name).arg(properties[name]);
         }
     }
-#endif
-#if 1
+
     // Use a different background color for tiles that have unknown property names.
-    QStringList known = defTile->mPropertyUI.knownPropertyNames(); // FIXME: same for every tile
+    QColor color; // invalid means use default color
+    QSet<QString> known = defTile->mPropertyUI.knownPropertyNames().toSet(); // FIXME: same for every tile
     QStringList unknown;
     foreach (QString name, defTile->mProperties.keys()) {
         if (!known.contains(name))
             unknown += tr("%1 = %2").arg(name).arg(defTile->mProperties[name]);
     }
     if (unknown.size()) {
-        tooltip += QLatin1String("\nUnknown:");
+        if (tooltip.size())
+            tooltip += QLatin1String("");
+        tooltip += QLatin1String("Unknown:");
         tooltip += unknown;
-        ui->tiles->model()->setData(ui->tiles->model()->index(mCurrentTileset->tileAt(tileID)), QBrush(Qt::red), Qt::BackgroundRole);
+        color = QColor(255, 128, 128);
     }
-#endif
+    m->setData(m->index((void*)defTile), QBrush(color), Qt::BackgroundRole);
 
-    ui->tiles->model()->setToolTip(tileID, tooltip.join(QLatin1String("\n")));
+    m->setToolTip(tileID, tooltip.join(QLatin1String("\n")));
+
     QRect r;
     if (tooltip.size())
         r = QRect(0,0,1,1);
-    ui->tiles->model()->setCategoryBounds(tileID, r);
-    ui->tiles->update(ui->tiles->model()->index(mCurrentTileset->tileAt(tileID)));
+    m->setCategoryBounds(tileID, r);
+}
+
+void TileDefDialog::highlightTilesWithMatchingProperties(TileDefTile *defTile)
+{
+    MixedTilesetModel *m = ui->tiles->model();
+
+    // Reset the appearance of currently-highlighted tiles.
+    foreach (TileDefTile *defTile2, mTilesWithMatchingProperties) {
+        setToolTipEtc(defTile2->id());
+        ui->tiles->update(m->index((void*)defTile2));
+    }
+    mTilesWithMatchingProperties.clear();
+
+    if (!defTile)
+        return;
+
+    // Get the properties on the given tile.  Exit if properties is nil.
+    QMap<QString,QString> props = defTile->mProperties;
+    defTile->mPropertyUI.ToProperties(props);
+    if (props.isEmpty())
+        return;
+    mTilesWithMatchingProperties += defTile;
+
+    // Find other tiles with the same properties.
+    for (int i = 0; i < defTile->tileset()->mTiles.size(); i++) {
+        TileDefTile *defTile2 = defTile->tileset()->mTiles[i];
+        if (defTile == defTile2)
+            continue;
+
+        QMap<QString,QString> props2 = defTile2->mProperties;
+        defTile2->mPropertyUI.ToProperties(props2);
+        if (props == props2)
+            mTilesWithMatchingProperties.insert(defTile2);
+    }
+
+    // Highlight the given tile and others with matching properties.
+    foreach (TileDefTile *defTile2, mTilesWithMatchingProperties) {
+        m->setCategoryBounds(defTile2->id(), QRect(0,0,1,1));
+        m->setData(m->index((void*)defTile2), QBrush(QColor(196, 255, 255)), Qt::BackgroundRole);
+        ui->tiles->update(m->index((void*)defTile2));
+    }
 }
 
 void TileDefDialog::resetDefaults(TileDefTile *defTile)

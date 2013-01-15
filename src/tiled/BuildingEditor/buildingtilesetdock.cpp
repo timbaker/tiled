@@ -114,7 +114,7 @@ void BuildingTilesetDock::setTilesList()
                 label = tr("???");
             labels += label;
         }
-        model->setTileset(mCurrentTileset, labels);
+        model->setTileset(mCurrentTileset, QList<void*>(), labels);
     }
 }
 

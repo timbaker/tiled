@@ -470,7 +470,7 @@ void TileMetaInfoDialog::setTilesList()
             Tile *tile = mCurrentTileset->tileAt(i);
             labels += TileMetaInfoMgr::instance()->tileEnum(tile);
         }
-        ui->tiles->model()->setTileset(mCurrentTileset, labels);
+        ui->tiles->model()->setTileset(mCurrentTileset, QList<void*>(), labels);
     } else {
         ui->tiles->model()->setTiles(QList<Tile*>());
     }
