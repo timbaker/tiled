@@ -1332,6 +1332,7 @@ void MainWindow::tilePropertiesEditor()
             QMessageBox::warning(this, tr("It's no good, Jim!"),
                                  tr("%1\n(while reading %2)")
                                  .arg(mgr->errorString()).arg(mgr->txtName()));
+            TilePropertyMgr::deleteInstance();
             return;
         }
     }

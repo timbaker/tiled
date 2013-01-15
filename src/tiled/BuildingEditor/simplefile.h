@@ -50,6 +50,10 @@ public:
     int findBlock(const QString &key) const;
     int findValue(const QString &key) const;
 
+    SimpleFileKeyValue keyValue(const char *name)
+    { return keyValue(QLatin1String(name)); }
+    SimpleFileKeyValue keyValue(const QString &name);
+
     QString value(const char *key)
     { return value(QLatin1String(key)); }
 

@@ -52,12 +52,9 @@ class Tiled::Internal::TilePropertyClipboard
 public:
     struct Entry
     {
-        Entry() :
-            mProperties(mYuck, mYuckKeys)
+        Entry()
         {}
         UIProperties mProperties;
-        QList<QString> mYuckKeys;
-        QMap<QString,QString> mYuck;
     };
 
     void clear();
@@ -801,6 +798,7 @@ void TileDefDialog::tileEntered(Tile *tile)
 
 void TileDefDialog::tileLeft(Tile *tile)
 {
+    Q_UNUSED(tile)
     ui->tileOffset->setText(tr("Offset: ?"));
 }
 
@@ -1067,8 +1065,33 @@ void TileDefDialog::setToolTipEtc(int tileID)
     QStringList tooltip;
     foreach (UIProperties::UIProperty *p, defTile->mPropertyUI.nonDefaultProperties())
         tooltip += tr("%1 = %2").arg(p->mName).arg(p->valueAsString());
-    if (defTile->mProperties.size() && tooltip.isEmpty())
-        qDebug() << defTile->mProperties;
+
+#if 1
+    // Show .tiles property/value pairs
+    QMap<QString,QString> properties;
+    defTile->mPropertyUI.ToProperties(properties);
+    if (properties.size()) {
+        tooltip += QLatin1String("\nOutput:");
+        foreach (QString name, properties.keys()) {
+            tooltip += tr("%1 = %2").arg(name).arg(properties[name]);
+        }
+    }
+#endif
+#if 1
+    // Use a different background color for tiles that have unknown property names.
+    QStringList known = defTile->mPropertyUI.knownPropertyNames(); // FIXME: same for every tile
+    QStringList unknown;
+    foreach (QString name, defTile->mProperties.keys()) {
+        if (!known.contains(name))
+            unknown += tr("%1 = %2").arg(name).arg(defTile->mProperties[name]);
+    }
+    if (unknown.size()) {
+        tooltip += QLatin1String("\nUnknown:");
+        tooltip += unknown;
+        ui->tiles->model()->setData(ui->tiles->model()->index(mCurrentTileset->tileAt(tileID)), QBrush(Qt::red), Qt::BackgroundRole);
+    }
+#endif
+
     ui->tiles->model()->setToolTip(tileID, tooltip.join(QLatin1String("\n")));
     QRect r;
     if (tooltip.size())
@@ -1095,13 +1118,13 @@ void TileDefDialog::setPropertiesPage()
 {
     mSynching = true;
 
+    ui->propertySheet->setEnabled(mSelectedTiles.size());
+
     const TileDefProperties *props = mTileDefProperties;
     TileDefTile *defTile = 0;
-    if (mSelectedTiles.size()) {
-        if (TileDefTileset *defTileset = mTileDefFile->tileset(mCurrentTileset->name())) {
-            defTile = defTileset->mTiles[mSelectedTiles[0]->id()];
-        }
-    }
+    if (mSelectedTiles.size())
+        defTile = mSelectedTiles.first();
+
     foreach (TileDefProperty *prop, props->mProperties) {
         if (BooleanTileDefProperty *p = prop->asBoolean()) {
             if (QCheckBox *w = mCheckBoxes[p->mName]) {

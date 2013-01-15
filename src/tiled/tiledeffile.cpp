@@ -65,7 +65,7 @@ bool TileDefFile::read(const QString &fileName)
     for (int i = 0; i < numTilesets; i++) {
         TileDefTileset *ts = new TileDefTileset;
         ts->mName = ReadString(in);
-        ts->mImageSource = ReadString(in);
+        ts->mImageSource = ReadString(in); // no path, just file + extension
         qint32 columns, rows;
         in >> columns;
         in >> rows;
@@ -80,13 +80,14 @@ bool TileDefFile::read(const QString &fileName)
             TileDefTile *tile = new TileDefTile(ts, j);
             qint32 numProperties;
             in >> numProperties;
+            QMap<QString,QString> properties;
             for (int k = 0; k < numProperties; k++) {
                 QString propertyName = ReadString(in);
                 QString propertyValue = ReadString(in);
-                tile->mPropertyKeys += propertyName;
-                tile->mProperties[propertyName] = propertyValue;
+                properties[propertyName] = propertyValue;
             }
-            tile->mPropertyUI.FromProperties();
+            tile->mPropertyUI.FromProperties(properties);
+            tile->mProperties = properties;
             tiles[j] = tile;
         }
 
@@ -133,23 +134,23 @@ bool TileDefFile::write(const QString &fileName)
         return false;
     }
 
-    QDir dir = QFileInfo(fileName).absoluteDir();
-
     QDataStream out(&file);
     out.setByteOrder(QDataStream::LittleEndian);
 
     out << qint32(mTilesets.size());
     foreach (TileDefTileset *ts, mTilesets) {
         SaveString(out, ts->mName);
-        SaveString(out, ts->mImageSource);
+        SaveString(out, ts->mImageSource); // no path, just file + extension
         out << qint32(ts->mColumns);
         out << qint32(ts->mRows);
         out << qint32(ts->mTiles.size());
         foreach (TileDefTile *tile, ts->mTiles) {
-            out << qint32(tile->mProperties.size());
-            foreach (QString key, tile->mPropertyKeys/*tile->mProperties.keys()*/) {
+            QMap<QString,QString> &properties = tile->mProperties;
+            tile->mPropertyUI.ToProperties(properties);
+            out << qint32(properties.size());
+            foreach (QString key, properties.keys()) {
                 SaveString(out, key);
-                SaveString(out, tile->mProperties[key]);
+                SaveString(out, properties[key]);
             }
         }
     }
@@ -339,83 +340,82 @@ void TileDefProperties::addString(const QString &name, const QString &shortName,
 }
 
 void TileDefProperties::addEnum(const QString &name, const QString &shortName,
-                                const QStringList enums, const QString &defaultValue)
+                                const QStringList enums,
+                                const QStringList &shortEnums,
+                                const QString &defaultValue,
+                                bool valueAsPropertyName,
+                                const QString &extraPropertyIfSet)
 {
     TileDefProperty *prop = new EnumTileDefProperty(name, shortName, enums,
-                                                    defaultValue);
+                                                    shortEnums, defaultValue,
+                                                    valueAsPropertyName,
+                                                    extraPropertyIfSet);
     mProperties += prop;
     mPropertyByName[name] = prop;
 }
-
+#if 0
 void TileDefProperties::addEnum(const char *name, const char *shortName,
-                                const char *enums[], const char *defaultValue)
+                                const char *enums[], const char *defaultValue,
+                                bool valueAsPropertyName)
 {
     QStringList enums2;
     for (int i = 0; enums[i]; i++)
         enums2 += QLatin1String(enums[i]);
     addEnum(QLatin1String(name), QLatin1String(shortName ? shortName : name),
-            enums2, QLatin1String(defaultValue));
+            enums2, QLatin1String(defaultValue), valueAsPropertyName);
 }
-
+#endif
 /////
 
-UIProperties::UIProperties(QMap<QString, QString> &properties, QList<QString> &keys)
+UIProperties::UIProperties()
 {
     const TileDefProperties &props = TilePropertyMgr::instance()->properties();
     foreach (TileDefProperty *prop, props.mProperties) {
+#if 0
         if (prop->mName == QLatin1String("Door") ||
                 prop->mName == QLatin1String("DoorFrame") ||
                 prop->mName == QLatin1String("Window")) {
             mProperties[prop->mName] = new PropDoorStyle(prop->mName,
                                                          prop->mShortName,
-                                                         properties, keys,
                                                          prop->asEnum()->mEnums);
             continue;
         }
         if (prop->mName == QLatin1String("TileBlockStyle")) {
             mProperties[prop->mName] = new PropTileBlockStyle(prop->mName,
-                                                              properties, keys,
                                                               prop->asEnum()->mEnums);
             continue;
         }
-#if 0
         if (prop->mName == QLatin1String("LightPolyStyle")) {
             mProperties[prop->mName] = new PropLightPolyStyle(prop->mName,
-                                                              properties, keys,
                                                               prop->asEnum()->mEnums);
             continue;
         }
-#endif
         if (prop->mName == QLatin1String("RoofStyle")) {
             mProperties[prop->mName] = new PropRoofStyle(prop->mName,
-                                                         properties, keys,
                                                          prop->asEnum()->mEnums);
             continue;
         }
         if (prop->mName == QLatin1String("StairStyle")) {
             mProperties[prop->mName] = new PropStairStyle(prop->mName,
                                                           prop->mShortName,
-                                                          properties, keys,
                                                           prop->asEnum()->mEnums);
             continue;
         }
         if (prop->mName.contains(QLatin1String("ItemShelf"))) {
             mProperties[prop->mName] = new PropDirection(prop->mName,
                                                          prop->mShortName,
-                                                         properties, keys,
                                                          prop->asEnum()->mEnums);
             continue;
         }
         if (prop->mName == QLatin1String("WallStyle")) {
             mProperties[prop->mName] = new PropWallStyle(prop->mName,
-                                                         properties, keys,
                                                          prop->asEnum()->mEnums);
             continue;
         }
+#endif
         if (BooleanTileDefProperty *p = prop->asBoolean()) {
             mProperties[p->mName] = new PropGenericBoolean(prop->mName,
                                                            p->mShortName,
-                                                           properties, keys,
                                                            p->mDefault,
                                                            p->mReverseLogic);
             continue;
@@ -423,7 +423,6 @@ UIProperties::UIProperties(QMap<QString, QString> &properties, QList<QString> &k
         if (IntegerTileDefProperty *p = prop->asInteger()) {
             mProperties[p->mName] = new PropGenericInteger(prop->mName,
                                                            p->mShortName,
-                                                           properties, keys,
                                                            p->mMin,
                                                            p->mMax,
                                                            p->mDefault);
@@ -432,7 +431,6 @@ UIProperties::UIProperties(QMap<QString, QString> &properties, QList<QString> &k
         if (StringTileDefProperty *p = prop->asString()) {
             mProperties[p->mName] = new PropGenericString(prop->mName,
                                                           p->mShortName,
-                                                          properties, keys,
                                                           p->mDefault);
             continue;
         }
@@ -440,9 +438,11 @@ UIProperties::UIProperties(QMap<QString, QString> &properties, QList<QString> &k
             int defaultValue = p->mEnums.indexOf(p->mDefault);
             mProperties[p->mName] = new PropGenericEnum(prop->mName,
                                                         p->mShortName,
-                                                        properties, keys,
                                                         p->mEnums,
-                                                        defaultValue);
+                                                        p->mShortEnums,
+                                                        defaultValue,
+                                                        p->mValueAsPropertyName,
+                                                        p->mExtraPropertyIfSet);
             continue;
         }
     }
@@ -534,6 +534,7 @@ bool TilePropertyMgr::readTxt()
             mProperties.addSeparator();
             continue;
         }
+#if 0
         if (block.name == QLatin1String("special")) {
             QString Name = block.value(("Name"));
             static const char *DoorStyle[] = { "None", "North", "West", 0 };
@@ -591,11 +592,11 @@ bool TilePropertyMgr::readTxt()
                 mProperties.addEnum("Door", "door", DoorStyle, "None");
             } else if (Name == QLatin1String("DoorFrame")) {
                 mProperties.addEnum("DoorFrame", "doorFr", DoorStyle, "None");
-            } else if (Name == QLatin1String("TileBlockStyle")) {
+            if (Name == QLatin1String("TileBlockStyle")) {
                 mProperties.addEnum("TileBlockStyle", 0, TileBlockStyle, "None");
             } else if (Name == QLatin1String("RoofStyle")) {
                 mProperties.addEnum("RoofStyle", 0, RoofStyle, "None");
-            } else if (Name == QLatin1String("FloorItemShelf")) {
+            if (Name == QLatin1String("FloorItemShelf")) {
                 mProperties.addEnum("FloorItemShelf", "floor", Direction, "None");
             } else if (Name == QLatin1String("HighItemShelf")) {
                 mProperties.addEnum("HighItemShelf", "shelf", Direction, "None");
@@ -613,6 +614,7 @@ bool TilePropertyMgr::readTxt()
             }
             continue;
         }
+#endif
         mError = tr("Unknown block name '%1'\n%2")
                 .arg(block.name)
                 .arg(path);
@@ -629,7 +631,7 @@ bool TilePropertyMgr::addProperty(SimpleFileBlock &block)
     QString ShortName = block.value("ShortName");
 
     if (Name.isEmpty()) {
-        mError = tr("Empty or missing Name value.");
+        mError = tr("Empty or missing Name value.\n\n%2").arg(block.toString());
         return false;
     }
     if (mProperties.property(Name) != 0) {
@@ -642,24 +644,25 @@ bool TilePropertyMgr::addProperty(SimpleFileBlock &block)
 
     bool ok;
     if (Type == QLatin1String("Boolean")) {
-        bool Default = toBoolean(block.value("Default"), ok);
+        bool Default = toBoolean("Default", block, ok);
         if (!ok) return false;
-        bool ReverseLogic = toBoolean(block.value("ReverseLogic"), ok);
+        bool ReverseLogic = toBoolean("ReverseLogic", block, ok);
         if (!ok) return false;
         mProperties.addBoolean(Name, ShortName, Default, ReverseLogic);
         return true;
     }
 
     if (Type == QLatin1String("Integer")) {
-        int Min = toInt(block.value("Min"), ok);
+        int Min = toInt("Min", block, ok);
         if (!ok) return false;
-        int Max = toInt(block.value("Max"), ok);
+        int Max = toInt("Max", block, ok);
         if (!ok) return false;
-        int Default = toInt(block.value("Default"), ok);
+        int Default = toInt("Default", block, ok);
         if (!ok) return false;
         if (Min > Max || Default < Min || Default > Max) {
-            mError = tr("Weird integer values: Min=%1 Max=%2 Default=%3.")
-                    .arg(Min).arg(Max).arg(Default);
+            mError = tr("Weird integer values: Min=%1 Max=%2 Default=%3.\n\n%4")
+                    .arg(Min).arg(Max).arg(Default).arg(block.toString());
+            return false;
         }
         mProperties.addInteger(Name, ShortName, Min, Max, Default);
         return true;
@@ -673,46 +676,72 @@ bool TilePropertyMgr::addProperty(SimpleFileBlock &block)
 
     if (Type == QLatin1String("Enum")) {
         if (block.findBlock(QLatin1String("Enums")) < 0) {
-            mError = tr("Enum property '%1' is missing an Enums block.").arg(Name);
+            mError = tr("Enum property '%1' is missing an Enums block.\n\n%2")
+                    .arg(Name).arg(block.toString());
             return false;
         }
-        QStringList enums;
+        QStringList enums, shortEnums;
         SimpleFileBlock enumsBlock = block.block("Enums");
-        foreach (SimpleFileKeyValue kv, enumsBlock.values)
-            enums += kv.value;
+        foreach (SimpleFileKeyValue kv, enumsBlock.values) {
+            enums += kv.name;
+            shortEnums += kv.value.length() ? kv.value : kv.name;
+        }
         QString Default = block.value("Default");
         if (!enums.contains(Default)) {
-            mError = tr("Enum property '%1' Default=%2 missing from Enums block.")
-                    .arg(Name).arg(Default);
+            mError = tr("Enum property '%1' Default=%2 missing from Enums block.\n\n%3")
+                    .arg(Name).arg(Default).arg(block.toString());
+            return false;
         }
-        mProperties.addEnum(Name, ShortName, enums, Default);
+        bool ValueAsPropertyName = toBoolean("ValueAsPropertyName", block, ok);
+        if (!ok) return false;
+        QString ExtraPropertyIfSet = block.value("ExtraPropertyIfSet");
+        mProperties.addEnum(Name, ShortName, enums, shortEnums, Default,
+                            ValueAsPropertyName, ExtraPropertyIfSet);
         return true;
     }
 
-    mError = tr("Unknown property Type '%1'.").arg(Type);
+    mError = tr("Unknown property Type '%1'.\n\n%2").arg(Type).arg(block.toString());
     return false;
 }
 
-bool TilePropertyMgr::toBoolean(const QString &s, bool &ok)
+bool TilePropertyMgr::toBoolean(const char *key, SimpleFileBlock &block, bool &ok)
 {
-    if (s == QLatin1String("true")) {
+    SimpleFileKeyValue kv = block.keyValue(key);
+    if (kv.name.isEmpty()) {
+        mError = tr("Missing '%1' keyvalue.\n\n%2")
+                .arg(QLatin1String(key))
+                .arg(block.toString());
+        ok = false;
+        return false;
+    }
+    if (kv.value == QLatin1String("true")) {
         ok = true;
         return true;
     }
-    if (s == QLatin1String("false")) {
+    if (kv.value == QLatin1String("false")) {
         ok = true;
         return false;
     }
-    mError = tr("Expected boolean but got '%1'.").arg(s);
+    mError = tr("Expected boolean but got '%1 = %2'.\n\n%3")
+            .arg(kv.name).arg(kv.value).arg(block.toString());
     ok = false;
     return false;
 }
 
-int TilePropertyMgr::toInt(const QString &s, bool &ok)
+int TilePropertyMgr::toInt(const char *key, SimpleFileBlock &block, bool &ok)
 {
-    int i = s.toInt(&ok);
+    SimpleFileKeyValue kv = block.keyValue(key);
+    if (kv.name.isEmpty()) {
+        mError = tr("Missing '%1' keyvalue.\n\n%2")
+                .arg(QLatin1String(key))
+                .arg(block.toString());
+        ok = false;
+        return false;
+    }
+    int i = kv.value.toInt(&ok);
     if (ok) return i;
-    mError = tr("Expected integer but got '%1'.").arg(s);
+    mError = tr("Expected integer but got '%1 = %2'.\n\n%3")
+            .arg(kv.name).arg(kv.value).arg(block.toString());
     ok = false;
     return 0;
 }

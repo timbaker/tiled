@@ -14,13 +14,33 @@ property
     Default = false
     ReverseLogic = false
 }
-special
+property
 {
+    Type = Enum
     Name = Door
+    ShortName =
+    Enums
+    {
+	None =
+	North = doorN
+	West = doorW
+    }
+    Default = None
+    ValueAsPropertyName = true
 }
-special
+property
 {
+    Type = Enum
     Name = DoorFrame
+    ShortName =
+    Enums
+    {
+	None =
+	North = doorFrN
+	West = doorFrW
+    }
+    Default = None
+    ValueAsPropertyName = true
 }
 separator
 {
@@ -60,9 +80,19 @@ property
 separator
 {
 }
-special
+property
 {
+    Type = Enum
     Name = TileBlockStyle
+    ShortName =
+    Enums
+    {
+	None =
+	Solid = solid
+	SolidTransparent = solidtrans
+    }
+    Default = None
+    ValueAsPropertyName = true
 }
 separator
 {
@@ -74,11 +104,23 @@ property
     ShortName =
     Enums
     {
-	enum = None
-	enum = WallW
-	enum = WallN
+	None =
+	WallW =
+	WallN =
     }
     Default = None
+    ValueAsPropertyName = false
+}
+separator
+{
+}
+property
+{
+    Type = Boolean
+    Name = ForceAmbient
+    ShortName =
+    Default = false
+    ReverseLogic = false
 }
 separator
 {
@@ -101,9 +143,20 @@ property
 separator
 {
 }
-special
+property
 {
     Name = RoofStyle
+    Type = Enum
+    ShortName =
+    Enums
+    {
+	None =
+	WestRoofB =
+	WestRoofM =
+	WestRoofT =
+    }
+    Default = None
+    ValueAsPropertyName = true
 }
 separator
 {
@@ -127,24 +180,23 @@ property
 separator
 {
 }
-special
+property
 {
-    Name = FloorItemShelf
-}
-special
-{
-    Name = HighItemShelf
-}
-special
-{
-    Name = TableItemShelf
-}
-separator
-{
-}
-special
-{
+    Type = Enum
     Name = StairStyle
+    ShortName =
+    Enums
+    {
+	None =
+	BottomW = stairsBW
+	MiddleW = stairsMW
+	TopW = stairsTW
+	BottomN = stairsBN
+	MiddleN = stairsMN
+	TopN = stairsTN
+    }
+    Default = None
+    ValueAsPropertyName = true
 }
 property
 {
@@ -181,9 +233,29 @@ property
     Default = false
     ReverseLogic = false
 }
-special
+property
 {
+    Type = Enum
     Name = WallStyle
+    ShortName =
+    Enums
+    {
+	None =
+        WestWall = WallW
+        WestWallTrans = WallWTrans
+        WestWindow = WindowW
+        WestDoorFrame = DoorWallW
+        NorthWall = WallN
+        NorthWallTrans = WallNTrans
+        NorthWindow = WindowN
+        NorthDoorFrame = DoorWallN
+        NorthWestCorner = WallNW
+        NorthWestCornerTrans = WallNWTrans
+        SouthEastCorner = WallSE
+    }
+    Default = None
+    ValueAsPropertyName = true
+    ExtraPropertyIfSet = wall
 }
 separator
 {
@@ -193,7 +265,7 @@ property
     Type = Integer
     Name = WaterAmount
     ShortName = waterAmount
-    Min = -1000000
+    Min = 0
     Max = 1000000
     Default = 0
 }
@@ -202,7 +274,7 @@ property
     Type = Integer
     Name = WaterMaxAmount
     ShortName = waterMaxAmount
-    Min = -1000000
+    Min = 0
     Max = 1000000
     Default = 0
 }
@@ -235,9 +307,19 @@ property
     Max = 1000
     Default = 0
 }
-special
+property
 {
+    Type = Enum
     Name = Window
+    ShortName =
+    Enums
+    {
+	None =
+	North = windowN
+	West = windowW
+    }
+    Default = None
+    ValueAsPropertyName = true
 }
 property
 {

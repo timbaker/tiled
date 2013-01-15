@@ -115,8 +115,8 @@ void TileDelegate::paint(QPainter *painter,
         if (index.row() == r.bottom())
             bottom -= extra;
 
-        painter->fillRect(left, top, right-left+1, bottom-top+1,
-                          qRgb(220, 220, 220));
+        QBrush brush = qvariant_cast<QBrush>(index.data(Qt::BackgroundRole));
+        painter->fillRect(left, top, right-left+1, bottom-top+1, brush);
 
         painter->setPen(Qt::darkGray);
         if (index.column() == r.left())
@@ -395,6 +395,12 @@ Qt::ItemFlags MixedTilesetModel::flags(const QModelIndex &index) const
 
 QVariant MixedTilesetModel::data(const QModelIndex &index, int role) const
 {
+    if (role == Qt::BackgroundRole) {
+        if (Item *item = toItem(index))
+            return QBrush(item->mCategoryColor.isValid()
+                    ? item->mCategoryColor
+                    : QColor(220, 220, 220));
+    }
     if (role == Qt::DisplayRole) {
         if (Tile *tile = tileAt(index))
             return tile->image();
@@ -414,6 +420,12 @@ QVariant MixedTilesetModel::data(const QModelIndex &index, int role) const
 bool MixedTilesetModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (Item *item = toItem(index)) {
+        if (role == Qt::BackgroundRole) {
+            if (value.canConvert<QBrush>()) {
+                item->mCategoryColor = qvariant_cast<QBrush>(value).color();
+                return true;
+            }
+        }
         if (role == Qt::DecorationRole) {
             if (value.canConvert<QString>()) {
                 item->mLabel = value.toString();

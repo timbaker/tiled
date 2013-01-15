@@ -124,6 +124,7 @@ private:
         QString mLabel;
         QString mToolTip;
         QRect mCategoryBounds;
+        QColor mCategoryColor;
     };
 
     Item *toItem(const QModelIndex &index) const;
