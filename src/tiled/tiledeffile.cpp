@@ -86,6 +86,7 @@ bool TileDefFile::read(const QString &fileName)
                 QString propertyValue = ReadString(in);
                 properties[propertyName] = propertyValue;
             }
+            TilePropertyMgr::instance()->modify(properties);
             tile->mPropertyUI.FromProperties(properties);
             tile->mProperties = properties;
             tiles[j] = tile;
@@ -467,6 +468,100 @@ TileDefTileset::TileDefTileset(Tileset *ts)
 
 #include <QCoreApplication>
 
+/////
+
+class Tiled::Internal::TilePropertyModifier
+{
+public:
+    class Command
+    {
+    public:
+        enum Type
+        {
+            Match,
+            Reject,
+            Remove,
+            Rename,
+            Replace,
+            Set
+        };
+
+        Type mType;
+        QString mKey;
+        QString mValue;
+        QStringList mParams;
+        bool mHasValue;
+    };
+
+    void modify(QMap<QString,QString> &properties);
+
+    QList<Command> mCommands;
+};
+
+
+void TilePropertyModifier::modify(QMap<QString, QString> &properties)
+{
+    foreach (Command cmd, mCommands) {
+        switch (cmd.mType) {
+        case Command::Match: {
+            if (!properties.contains(cmd.mKey))
+                return;
+            if (cmd.mHasValue && (properties[cmd.mKey] != cmd.mValue))
+                return;
+            break;
+        }
+        case Command::Reject: {
+            if (properties.contains(cmd.mKey)) {
+                if (cmd.mHasValue) {
+                    if (properties[cmd.mKey] == cmd.mValue)
+                        return; // reject key == specific value
+                } else
+                    return; // reject key == any value
+            }
+            break;
+        }
+        case Command::Remove: {
+            if (properties.contains(cmd.mKey)) {
+                if (cmd.mHasValue) {
+                    if (properties[cmd.mKey] != cmd.mValue)
+                        return; // require key == specific value
+                }
+                qDebug() << "Command::Remove" << cmd.mKey << "=" << properties[cmd.mKey];
+                properties.remove(cmd.mKey);
+            }
+            break;
+        }
+        case Command::Rename: {
+            if (properties.contains(cmd.mKey)) {
+                QString value = properties[cmd.mKey];
+                qDebug() << "Command::Rename" << cmd.mKey << "=" << value << "==>" << cmd.mValue << "=" << value;
+                properties.remove(cmd.mKey);
+                properties[cmd.mValue] = value; // cmd.mValue is the new key name
+            }
+            break;
+        }
+        case Command::Replace: {
+            QString key1 = cmd.mParams[0], value1 = cmd.mParams[1];
+            QString key2 = cmd.mParams[2], value2 = cmd.mParams[3];
+            if (properties.contains(key1) && (properties[key1] == value1)) {
+                qDebug() << "Command::Replace" << key1 << "=" << value1 << "==>" << key2 << "=" << value2;
+                properties.remove(key1);
+                properties[key2] = value2;
+            }
+            break;
+        }
+        case Command::Set: {
+            qDebug() << "Command::Set" << cmd.mKey << "=" << cmd.mValue;
+            properties[cmd.mKey] = cmd.mValue;
+            break;
+        }
+        }
+    }
+}
+
+
+/////
+
 TilePropertyMgr *TilePropertyMgr::mInstance = 0;
 
 TilePropertyMgr *TilePropertyMgr::instance()
@@ -524,6 +619,11 @@ bool TilePropertyMgr::readTxt()
     }
 
     foreach (SimpleFileBlock block, simple.blocks) {
+        if (block.name == QLatin1String("modify")) {
+            if (!addModifier(block))
+                return false;
+            continue;
+        }
         if (block.name == QLatin1String("property")) {
             if (!addProperty(block))
                 return false;
@@ -533,87 +633,6 @@ bool TilePropertyMgr::readTxt()
             mProperties.addSeparator();
             continue;
         }
-#if 0
-        if (block.name == QLatin1String("special")) {
-            QString Name = block.value(("Name"));
-            static const char *DoorStyle[] = { "None", "North", "West", 0 };
-            static const char *TileBlockStyle[] = {
-                "None",
-                "Solid",
-                "SolidTransparent",
-                0
-            };
-            static const char *RoofStyle[] = {
-                "None",
-                "WestRoofB",
-                "WestRoofM",
-                "WestRoofT",
-                0
-            };
-            static const char *Direction[] = {
-                "None",
-                "N",
-                "NE",
-                "E",
-                "SE",
-                "S",
-                "SW",
-                "W",
-                "NW",
-                0
-            };
-            static const char *StairStyle[] = {
-                "None",
-                "BottomW",
-                "MiddleW",
-                "TopW",
-                "BottomN",
-                "MiddleN",
-                "TopN",
-                0
-            };
-            static const char *WallStyle[] = {
-                "None",
-                "WestWall",
-                "WestWallTrans",
-                "WestWindow",
-                "WestDoorFrame",
-                "NorthWall",
-                "NorthWallTrans",
-                "NorthWindow",
-                "NorthDoorFrame",
-                "NorthWestCorner",
-                "NorthWestCornerTrans",
-                "SouthEastCorner",
-                0
-            };
-            if (Name == QLatin1String("Door")) {
-                mProperties.addEnum("Door", "door", DoorStyle, "None");
-            } else if (Name == QLatin1String("DoorFrame")) {
-                mProperties.addEnum("DoorFrame", "doorFr", DoorStyle, "None");
-            if (Name == QLatin1String("TileBlockStyle")) {
-                mProperties.addEnum("TileBlockStyle", 0, TileBlockStyle, "None");
-            } else if (Name == QLatin1String("RoofStyle")) {
-                mProperties.addEnum("RoofStyle", 0, RoofStyle, "None");
-            if (Name == QLatin1String("FloorItemShelf")) {
-                mProperties.addEnum("FloorItemShelf", "floor", Direction, "None");
-            } else if (Name == QLatin1String("HighItemShelf")) {
-                mProperties.addEnum("HighItemShelf", "shelf", Direction, "None");
-            } else if (Name == QLatin1String("TableItemShelf")) {
-                mProperties.addEnum("TableItemShelf", "table", Direction, "None");
-            } else if (Name == QLatin1String("StairStyle")) {
-                mProperties.addEnum("StairStyle", "stairs", StairStyle, "None");
-            } else if (Name == QLatin1String("WallStyle")) {
-                mProperties.addEnum("WallStyle", 0, WallStyle, "None");
-            } else if (Name == QLatin1String("Window")) {
-                mProperties.addEnum("Window", "window", DoorStyle, "None");
-            } else {
-                mError = tr("Unknown special property '%1'").arg(Name);
-                return false;
-            }
-            continue;
-        }
-#endif
         mError = tr("Unknown block name '%1'\n%2")
                 .arg(block.name)
                 .arg(path);
@@ -621,6 +640,12 @@ bool TilePropertyMgr::readTxt()
     }
 
     return true;
+}
+
+void TilePropertyMgr::modify(QMap<QString, QString> &properties)
+{
+    foreach (TilePropertyModifier *mod, mModifiers)
+        mod->modify(properties);
 }
 
 bool TilePropertyMgr::addProperty(SimpleFileBlock &block)
@@ -745,11 +770,102 @@ int TilePropertyMgr::toInt(const char *key, SimpleFileBlock &block, bool &ok)
     return 0;
 }
 
+// Parse a sequence of possibly-quoted words into a list of words.
+static QStringList parseModifierParams(const QString &s)
+{
+    QLatin1Char qt('\"'), sp(' ');
+    QStringList ret;
+    bool inQuote = false;
+    int wordStart = 0;
+    for (int i = 0; i < s.length(); i++) {
+        if (s[i] == qt) {
+            if (inQuote)
+                ret += s.mid(wordStart, i - wordStart); // add word in quotes
+            else if (wordStart < i)
+                ret += s.mid(wordStart, i - wordStart); // add word before quote
+            wordStart = i + 1; // first char after quote
+            inQuote = !inQuote;
+        } else if (inQuote) {
+        } else {
+            if (s[i] == sp) {
+                if (wordStart < i)
+                    ret += s.mid(wordStart, i - wordStart); // add word before space
+                wordStart = i + 1; // first char after space
+            }
+        }
+    }
+    if (wordStart < s.length())
+        ret += s.mid(wordStart);
+    return ret;
+}
+
+bool TilePropertyMgr::addModifier(SimpleFileBlock &block)
+{
+    TilePropertyModifier *mod = new TilePropertyModifier;
+    foreach (SimpleFileKeyValue kv, block.values) {
+        QStringList values = parseModifierParams(kv.value);
+        TilePropertyModifier::Command cmd;
+        cmd.mKey = values[0];
+        cmd.mHasValue = false;
+        if (values.size() >= 2) {
+            cmd.mHasValue = true;
+            cmd.mValue = values[1];
+        }
+        cmd.mParams = values;
+        if (values.size() == 0) {
+bogus:
+            mError = tr("bad modifier block\n\n%1").arg(block.toString());
+            delete mod;
+            return false;
+        }
+        if (kv.name == QLatin1String("match")) {
+            if (values.size() > 2) goto bogus;
+            cmd.mType = TilePropertyModifier::Command::Match;
+            mod->mCommands += cmd;
+            continue;
+        }
+        if (kv.name == QLatin1String("reject")) {
+            if (values.size() > 2) goto bogus;
+            cmd.mType = TilePropertyModifier::Command::Reject;
+            mod->mCommands += cmd;
+            continue;
+        }
+        if (kv.name == QLatin1String("remove")) {
+            if (values.size() > 2) goto bogus;
+            cmd.mType = TilePropertyModifier::Command::Remove;
+            mod->mCommands += cmd;
+            continue;
+        }
+        if (kv.name == QLatin1String("rename")) {
+            if (values.size() != 2) goto bogus;
+            cmd.mType = TilePropertyModifier::Command::Rename;
+            mod->mCommands += cmd;
+            continue;
+        }
+        if (kv.name == QLatin1String("replace")) {
+            if (values.size() != 4) goto bogus;
+            cmd.mType = TilePropertyModifier::Command::Replace;
+            mod->mCommands += cmd;
+            continue;
+        }
+        if (kv.name == QLatin1String("set")) {
+            cmd.mType = TilePropertyModifier::Command::Set;
+            mod->mCommands += cmd;
+            continue;
+        }
+        goto bogus;
+    }
+    mModifiers += mod;
+
+    return true;
+}
+
 TilePropertyMgr::TilePropertyMgr()
 {
 }
 
 TilePropertyMgr::~TilePropertyMgr()
 {
+    qDeleteAll(mModifiers);
+    mInstance = 0;
 }
-

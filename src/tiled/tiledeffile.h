@@ -571,8 +571,6 @@ public:
                 int index = mShortEnums.indexOf(enumName);
                 if (index >= 0)
                     mValue = mEnums[index];
-                else
-                    Q_ASSERT(false);
             }
         }
 
@@ -1357,6 +1355,8 @@ private:
     QString mError;
 };
 
+class TilePropertyModifier;
+
 /**
   * This class manages the TileProperties.txt file.
   */
@@ -1377,6 +1377,8 @@ public:
     const TileDefProperties &properties() const
     { return mProperties; }
 
+    void modify(QMap<QString,QString> &properties);
+
     QString errorString() const
     { return mError; }
 
@@ -1385,6 +1387,8 @@ private:
     bool toBoolean(const char *key, SimpleFileBlock &block, bool &ok);
     int toInt(const char *key, SimpleFileBlock &block, bool &ok);
 
+    bool addModifier(SimpleFileBlock &block);
+
 private:
     Q_DISABLE_COPY(TilePropertyMgr)
     static TilePropertyMgr *mInstance;
@@ -1392,6 +1396,7 @@ private:
     ~TilePropertyMgr();
 
     TileDefProperties mProperties;
+    QList<TilePropertyModifier*> mModifiers;
     QString mError;
 };
 

@@ -452,6 +452,8 @@ TileDefDialog::~TileDefDialog()
     delete mTileDefFile;
     delete mClipboard;
     //delete mTileDefProperties;
+
+    mInstance = 0;
 }
 
 void TileDefDialog::addTileset()
@@ -957,6 +959,11 @@ void TileDefDialog::closeEvent(QCloseEvent *event)
         settings.endGroup();
 
         saveSplitterSizes(ui->splitter);
+
+        // Delete ourself and TilePropertyMgr so TileProperties.txt can be edited without having
+        // to restart TileZed.
+        deleteLater();
+        TilePropertyMgr::instance()->deleteLater();
 
         event->accept();
     } else {
