@@ -435,12 +435,11 @@ UIProperties::UIProperties()
             continue;
         }
         if (EnumTileDefProperty *p = prop->asEnum()) {
-            int defaultValue = p->mEnums.indexOf(p->mDefault);
             mProperties[p->mName] = new PropGenericEnum(prop->mName,
                                                         p->mShortName,
                                                         p->mEnums,
                                                         p->mShortEnums,
-                                                        defaultValue,
+                                                        p->mDefault,
                                                         p->mValueAsPropertyName,
                                                         p->mExtraPropertyIfSet);
             continue;

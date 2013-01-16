@@ -14,6 +14,9 @@ property
     Default = false
     ReverseLogic = false
 }
+separator
+{
+}
 property
 {
     Type = Enum
@@ -21,9 +24,9 @@ property
     ShortName =
     Enums
     {
-	None =
-	North = doorN
-	West = doorW
+        None =
+        North = doorN
+        West = doorW
     }
     Default = None
     ValueAsPropertyName = true
@@ -35,9 +38,9 @@ property
     ShortName =
     Enums
     {
-	None =
-	North = doorFrN
-	West = doorFrW
+        None =
+        North = doorFrN
+        West = doorFrW
     }
     Default = None
     ValueAsPropertyName = true
@@ -87,15 +90,12 @@ property
     ShortName =
     Enums
     {
-	None =
-	Solid = solid
-	SolidTransparent = solidtrans
+        None =
+        Solid = solid
+        SolidTransparent = solidtrans
     }
     Default = None
     ValueAsPropertyName = true
-}
-separator
-{
 }
 property
 {
@@ -104,20 +104,25 @@ property
     ShortName =
     Enums
     {
-	None =
-	WallW =
-	WallN =
+        None =
+        WallW =
+        WallN =
     }
     Default = None
     ValueAsPropertyName = false
-}
-separator
-{
 }
 property
 {
     Type = Boolean
     Name = ForceAmbient
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = PreSeen
     ShortName =
     Default = false
     ReverseLogic = false
@@ -150,10 +155,10 @@ property
     ShortName =
     Enums
     {
-	None =
-	WestRoofB =
-	WestRoofM =
-	WestRoofT =
+        None =
+        WestRoofB =
+        WestRoofM =
+        WestRoofT =
     }
     Default = None
     ValueAsPropertyName = true
@@ -187,51 +192,19 @@ property
     ShortName =
     Enums
     {
-	None =
-	BottomW = stairsBW
-	MiddleW = stairsMW
-	TopW = stairsTW
-	BottomN = stairsBN
-	MiddleN = stairsMN
-	TopN = stairsTN
+        None =
+        BottomW = stairsBW
+        MiddleW = stairsMW
+        TopW = stairsTW
+        BottomN = stairsBN
+        MiddleN = stairsMN
+        TopN = stairsTN
     }
     Default = None
     ValueAsPropertyName = true
 }
-property
-{
-    Type = Boolean
-    Name = PreSeen
-    ShortName =
-    Default = false
-    ReverseLogic = false
-}
 separator
 {
-}
-property
-{
-    Type = Boolean
-    Name = HoppableN
-    ShortName =
-    Default = false
-    ReverseLogic = false
-}
-property
-{
-    Type = Boolean
-    Name = HoppableW
-    ShortName =
-    Default = false
-    ReverseLogic = false
-}
-property
-{
-    Type = Boolean
-    Name = WallOverlay
-    ShortName =
-    Default = false
-    ReverseLogic = false
 }
 property
 {
@@ -256,6 +229,30 @@ property
     Default = None
     ValueAsPropertyName = true
     ExtraPropertyIfSet = wall
+}
+property
+{
+    Type = Boolean
+    Name = HoppableN
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = HoppableW
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = WallOverlay
+    ShortName =
+    Default = false
+    ReverseLogic = false
 }
 separator
 {
@@ -291,6 +288,20 @@ separator
 }
 property
 {
+    Type = Enum
+    Name = Window
+    ShortName =
+    Enums
+    {
+        None =
+        North = windowN
+        West = windowW
+    }
+    Default = None
+    ValueAsPropertyName = true
+}
+property
+{
     Type = Integer
     Name = OpenTileOffset
     ShortName =
@@ -306,20 +317,6 @@ property
     Min = -1000
     Max = 1000
     Default = 0
-}
-property
-{
-    Type = Enum
-    Name = Window
-    ShortName =
-    Enums
-    {
-	None =
-	North = windowN
-	West = windowW
-    }
-    Default = None
-    ValueAsPropertyName = true
 }
 property
 {

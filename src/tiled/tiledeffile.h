@@ -265,13 +265,13 @@ public:
         { Q_UNUSED(value) }
         virtual void ChangeProperties(bool value)
         { Q_UNUSED(value) }
-        virtual void ChangeProperties(int value) // enum or int
+        virtual void ChangeProperties(int value)
         { Q_UNUSED(value) }
-        virtual void ChangeProperties(const QString &value)
+        virtual void ChangeProperties(const QString &value) // enum or string
         { Q_UNUSED(value) }
 
         virtual bool getBoolean() { return false; }
-        virtual int getEnum() { return 0; }
+        virtual QString getEnum() { return QString(); }
         virtual int getInteger() { return 0; }
         virtual QString getString() { return QString(); }
 
@@ -504,9 +504,9 @@ public:
                         const QString &shortName,
                         const QStringList &enums,
                         const QStringList &shortEnums,
-                        int defaultValue = 0,
-                        bool valueAsPropertyName = false,
-                        const QString &extraPropertyIfSet = QString()) :
+                        const QString defaultValue,
+                        bool valueAsPropertyName,
+                        const QString &extraPropertyIfSet) :
             UIProperty(name, shortName),
             mEnums(enums),
             mShortEnums(shortEnums),
@@ -534,12 +534,16 @@ public:
 
         QString valueAsString() const
         {
-            return mEnums[mValue];
+            return mValue;
         }
 
         void setValue(const QVariant &value)
         {
-            mValue = qBound(0, value.toInt(), mEnums.size() - 1);
+            QString enumName = value.toString();
+            if (mEnums.contains(enumName))
+                mValue = enumName;
+            else
+                Q_ASSERT(false);
         }
 
         void FromProperties()
@@ -550,10 +554,10 @@ public:
             // ex WestRoofB=""
             if (mValueAsPropertyName) {
                 for (int i = 0; i < mShortEnums.size(); i++) {
-                    if (i == mDefaultValue)
+                    if (mEnums[i] == mDefaultValue)
                         continue; // skip "None"
                     if (contains(mShortEnums[i])) {
-                        mValue = i;
+                        mValue = mEnums[i];
                         return;
                     }
                 }
@@ -564,8 +568,9 @@ public:
             // ex LightPolyStyle=WallW
             if (contains(mShortName)) {
                 QString enumName = mProperties[mShortName];
-                if (mShortEnums.contains(enumName))
-                    mValue = mShortEnums.indexOf(enumName);
+                int index = mShortEnums.indexOf(enumName);
+                if (index >= 0)
+                    mValue = mEnums[index];
                 else
                     Q_ASSERT(false);
             }
@@ -576,39 +581,44 @@ public:
             if (mExtraPropertyIfSet.length())
                 remove(mExtraPropertyIfSet);
 
+            int index = mEnums.indexOf(mValue);
+
             if (mValueAsPropertyName) {
                 foreach (QString enumName, mShortEnums)
                     remove(enumName);
                 if (mValue != mDefaultValue) {
-                    set(mShortEnums[mValue]);
-                    if (mExtraPropertyIfSet.length())
-                        set(mExtraPropertyIfSet);
+                    if (index >= 0) {
+                        set(mShortEnums[index]);
+                        if (mExtraPropertyIfSet.length())
+                            set(mExtraPropertyIfSet);
+                    } else
+                        Q_ASSERT(false);
                 }
                 return;
             }
 
             remove(mShortName);
-            if (mValue >= 0 && mValue < mShortEnums.size()) {
-                if (mValue != mDefaultValue)
-                    set(mShortName, mShortEnums[mValue]);
+            if (index >= 0) {
+                if (mEnums[index] != mDefaultValue)
+                    set(mShortName, mShortEnums[index]);
             } else
                 Q_ASSERT(false);
         }
 
         void ChangePropertiesV(const QVariant &value)
         {
-            ChangeProperties(value.toInt());
+            ChangeProperties(value.toString());
         }
 
-        void ChangeProperties(int value)
+        void ChangeProperties(const QString &value)
         {
-            if (value >= 0 && value < mEnums.size()) {
+            if (mEnums.contains(value)) {
                 mValue = value;
             } else
                 Q_ASSERT(false);
         }
 
-        int getEnum()
+        QString getEnum()
         {
             return mValue;
         }
@@ -617,7 +627,8 @@ public:
         {
             if (mValueAsPropertyName) {
                 QStringList ret = mShortEnums;
-                ret.removeAt(mDefaultValue);
+                int index = mEnums.indexOf(mDefaultValue);
+                ret.removeAt(index);
                 if (mExtraPropertyIfSet.length())
                     ret += mExtraPropertyIfSet;
                 return ret;
@@ -627,8 +638,8 @@ public:
 
         QStringList mEnums;
         QStringList mShortEnums;
-        int mValue;
-        int mDefaultValue;
+        QString mValue;
+        QString mDefaultValue;
         bool mValueAsPropertyName;
         QString mExtraPropertyIfSet;
     };
@@ -1205,7 +1216,7 @@ public:
         return 0;
     }
 
-    int getEnum(const QString &label)
+    QString getEnum(const QString &label)
     {
         Q_ASSERT(mProperties.contains(label));
         if (mProperties.contains(label))
@@ -1275,7 +1286,7 @@ public:
         return mPropertyUI.getString(name);
     }
 
-    int getEnum(const QString &name)
+    QString getEnum(const QString &name)
     {
         return mPropertyUI.getEnum(name);
     }

@@ -713,7 +713,7 @@ void TileDefDialog::comboBoxActivated(int index)
         Q_ASSERT(false);
         return;
     }
-    changePropertyValues(mSelectedTiles, prop->mName, index);
+    changePropertyValues(mSelectedTiles, prop->mName, prop->asEnum()->mEnums[index]);
 }
 
 void TileDefDialog::checkboxToggled(bool value)
@@ -1325,9 +1325,9 @@ void TileDefDialog::setPropertiesPage()
         }
         if (EnumTileDefProperty *p = prop->asEnum()) {
             if (QComboBox *w = mComboBoxes[p->mName]) {
-                int index = 0;
+                int index = p->mEnums.indexOf(p->mDefault);
                 if (defTile) {
-                    index = defTile->getEnum(p->mName);
+                    index = p->mEnums.indexOf(defTile->getEnum(p->mName));
                 }
                 w->setCurrentIndex(index);
                 setBold(w, index != 0 /*p->mDefault*/);
