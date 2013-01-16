@@ -225,6 +225,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::TileDefDialog),
     mCurrentTileset(0),
+    mCurrentDefTileset(0),
     mZoomable(new Zoomable(this)),
     mSynching(false),
     mTilesetsUpdatePending(false),
@@ -232,6 +233,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     mTileDefFile(0),
     mTileDefProperties(&TilePropertyMgr::instance()->properties()),
     mClipboard(new TilePropertyClipboard),
+    mTilesetHistoryIndex(0),
     mUndoGroup(new QUndoGroup(this)),
     mUndoStack(new QUndoStack(this))
 {
@@ -293,13 +295,30 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     connect(ui->actionPasteProperties, SIGNAL(triggered()), SLOT(pasteProperties()));
     connect(ui->actionReset, SIGNAL(triggered()), SLOT(resetDefaults()));
 
+    /////
+
+    toolBar = new QToolBar;
+    toolBar->setIconSize(QSize(16, 16));
+    toolBar->addAction(ui->actionGoBack);
+    toolBar->addAction(ui->actionGoForward);
+    toolBar->addSeparator();
+    toolBar->addAction(ui->actionAddTileset);
+    toolBar->addAction(ui->actionRemoveTileset);
+    ui->toolBarLayout->insertWidget(0, toolBar);
+
+    connect(ui->actionGoBack, SIGNAL(triggered()), SLOT(goBack()));
+    connect(ui->actionGoForward, SIGNAL(triggered()), SLOT(goForward()));
+    connect(ui->actionRemoveTileset, SIGNAL(triggered()), SLOT(removeTileset()));
+
+    /////
+
     QAction *a = ui->menuEdit->actions().first();
     ui->menuEdit->insertAction(a, undoAction);
     ui->menuEdit->insertAction(a, redoAction);
 
     ui->splitter->setStretchFactor(0, 1);
 
-    mZoomable->setScale(0.5); // FIXME
+    mZoomable->setScale(0.5);
     mZoomable->connectToComboBox(ui->scaleComboBox);
     ui->tiles->setZoomable(mZoomable);
 
@@ -367,6 +386,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
         if (StringTileDefProperty *p = prop->asString()) {
             QComboBox *w = new QComboBox(ui->propertySheet);
             w->setObjectName(p->mName);
+            w->setSizeAdjustPolicy(QComboBox::AdjustToContents);
             w->setEditable(true);
             w->setInsertPolicy(QComboBox::InsertAlphabetically);
             w->installEventFilter(this); // to disable mousewheel
@@ -406,14 +426,19 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
     if (!geom.isEmpty())
         restoreGeometry(geom);
+    qreal scale = settings.value(QLatin1String("TileScale"), 0.5f).toReal();
+    mZoomable->setScale(scale);
+    mCurrentTilesetName = settings.value(QLatin1String("CurrentTileset")).toString();
     settings.endGroup();
 
     restoreSplitterSizes(ui->splitter);
 
+    ui->propertySheet->setEnabled(false);
+#if 0
     fileOpen(QLatin1String("C:\\Users\\Tim\\Desktop\\ProjectZomboid\\maptools\\tiledefinitions.tiles"));
     initStringComboBoxValues();
     updateTilesetListLater();
-
+#endif
     updateUI();
 }
 
@@ -464,7 +489,7 @@ void TileDefDialog::removeTileset()
                                   .arg(tileset->name()),
                                   QMessageBox::Ok, QMessageBox::Cancel) == QMessageBox::Cancel)
             return;
-        mUndoStack->push(new RemoveTileset(this, row));
+        mUndoStack->push(new RemoveTileset(this, mTilesets.indexOf(tileset)));
     }
 }
 
@@ -472,6 +497,7 @@ void TileDefDialog::insertTileset(int index, Tileset *ts, TileDefTileset *defTil
 {
     Q_ASSERT(!mTilesets.contains(ts));
     Q_ASSERT(!mTilesetByName.contains(ts->name()));
+    Q_ASSERT(ts->name() == defTileset->mName);
 
     mTileDefFile->insertTileset(index, defTileset);
     mRemovedDefTilesets.removeOne(defTileset);
@@ -482,6 +508,7 @@ void TileDefDialog::insertTileset(int index, Tileset *ts, TileDefTileset *defTil
         TilesetManager::instance()->addReference(ts);
     mRemovedTilesets.removeOne(ts);
 
+    mCurrentTilesetName = ts->name(); // to be highlighted later
     updateTilesetListLater();
 }
 
@@ -490,16 +517,29 @@ void TileDefDialog::removeTileset(int index, Tileset **tsPtr, TileDefTileset **d
     TileDefTileset *defTileset = mTileDefFile->removeTileset(index);
     mRemovedDefTilesets += defTileset;
 
+    int row = rowOf(defTileset->mName);
+
     Tileset *ts = mTilesets.takeAt(index);
     mTilesetByName.remove(ts->name());
     // Don't remove references now, that will delete the tileset, and the
     // user might undo the removal.
     mRemovedTilesets += ts;
 
-    updateTilesetListLater();
+    Q_ASSERT(ts->name() == defTileset->mName);
 
     if (tsPtr) *tsPtr = ts;
     if (defTilesetPtr) *defTilesetPtr = defTileset;
+
+    mTilesetHistory.removeAll(ts->name());
+    mTilesetHistoryIndex = qBound(0, mTilesetHistoryIndex, mTilesetHistory.size() - 1);
+
+    row = qBound(0, row, mTilesets.size() - 1);
+    if (row < mTilesets.size())
+        mCurrentTilesetName = tilesetNames().at(row); // to be highlighted later
+    else
+        mCurrentTilesetName.clear(); // No more tilesets
+
+    updateTilesetListLater();
 }
 
 QVariant TileDefDialog::changePropertyValue(TileDefTile *defTile, const QString &name,
@@ -507,9 +547,11 @@ QVariant TileDefDialog::changePropertyValue(TileDefTile *defTile, const QString 
 {
     QVariant old = defTile->mPropertyUI.mProperties[name]->value();
     defTile->mPropertyUI.ChangePropertiesV(name, value);
-    setToolTipEtc(defTile->id());
-    ui->tiles->update(ui->tiles->model()->index((void*)defTile));
-    updatePropertyPageLater();
+    if (mCurrentDefTileset == defTile->tileset()) {
+        setToolTipEtc(defTile->id());
+        ui->tiles->update(ui->tiles->model()->index((void*)defTile));
+        updatePropertyPageLater();
+    }
     return old;
 }
 
@@ -574,14 +616,70 @@ bool TileDefDialog::fileSaveAs()
     return fileSave(fileName);
 }
 
+static void debugHistory(QStringList &history, int index)
+{
+    QStringList items;
+    for (int i = 0; i < history.size(); i++) {
+        if (i == index)
+            items += QLatin1String("(") + history[i] + QLatin1String(")");
+        else
+            items += history[i];
+    }
+    qDebug() << items.join(QLatin1String(" "));
+}
+
 void TileDefDialog::currentTilesetChanged(int row)
 {
     mCurrentTileset = 0;
-    if (row >= 0)
+    mCurrentDefTileset = 0;
+    mCurrentTilesetName.clear();
+
+    if (row >= 0) {
         mCurrentTileset = tileset(row);
+        mCurrentTilesetName = mCurrentTileset->name();
+        mCurrentDefTileset = mTileDefFile->tileset(mCurrentTileset->name());
+
+        if (!mSynching) {
+            // Remove entries after the current one.
+            if (mTilesetHistory.size())
+                mTilesetHistory = mTilesetHistory.mid(0, mTilesetHistoryIndex + 1);
+            mTilesetHistory.append(mCurrentTileset->name());
+            // Don't let the history get too big.
+            if (mTilesetHistory.size() > 30)
+                mTilesetHistory = mTilesetHistory.mid(mTilesetHistory.size() - 30);
+            mTilesetHistoryIndex = mTilesetHistory.size() - 1;
+            debugHistory(mTilesetHistory, mTilesetHistoryIndex);
+        }
+    }
 
     setTilesList();
     updateUI();
+}
+
+void TileDefDialog::goBack()
+{
+    if (mTilesetHistoryIndex > 0) {
+        mTilesetHistoryIndex--;
+        int row = rowOf(mTilesetHistory[mTilesetHistoryIndex]);
+        bool synch = mSynching;
+        mSynching = true;
+        ui->tilesets->setCurrentRow(row);
+        mSynching = synch;
+        debugHistory(mTilesetHistory, mTilesetHistoryIndex);
+    }
+}
+
+void TileDefDialog::goForward()
+{
+    if (mTilesetHistoryIndex < mTilesetHistory.size() - 1) {
+        mTilesetHistoryIndex++;
+        int row = rowOf(mTilesetHistory[mTilesetHistoryIndex]);
+        bool synch = mSynching;
+        mSynching = true;
+        ui->tilesets->setCurrentRow(row);
+        mSynching = synch;
+        debugHistory(mTilesetHistory, mTilesetHistoryIndex);
+    }
 }
 
 void TileDefDialog::tileSelectionChanged()
@@ -685,11 +783,15 @@ void TileDefDialog::redoTextChanged(const QString &text)
 
 void TileDefDialog::updateTilesetList()
 {
+    int row = rowOf(mCurrentTilesetName);
+
     mTilesetsUpdatePending = false;
     loadTilesets();
     setTilesetList();
-//    int row = indexOf(ts->name());
-//    ui->tilesets->setCurrentRow(row);
+
+    if (row == -1)
+        row = 0;
+    ui->tilesets->setCurrentRow(row);
 
     updateUI();
 }
@@ -732,7 +834,7 @@ void TileDefDialog::pasteProperties()
     QRect selectedBounds = selectedRgn.boundingRect();
 
     QList<TileDefTile*> changed;
-    TileDefTileset *defTileset = mTileDefFile->tileset(mCurrentTileset->name());
+    TileDefTileset *defTileset = mCurrentDefTileset;
     int clipX = selectedBounds.left(), clipY = selectedBounds.top();
     for (int y = selectedBounds.top(); y <= selectedBounds.bottom(); y++) {
         for (int x = selectedBounds.left(); x <= selectedBounds.right(); x++) {
@@ -814,7 +916,11 @@ void TileDefDialog::updateUI()
     bool hasFile = mTileDefFile != 0;
     ui->actionSave->setEnabled(hasFile);
     ui->actionSaveAs->setEnabled(hasFile);
+
+    ui->actionGoBack->setEnabled(mTilesetHistoryIndex > 0);
+    ui->actionGoForward->setEnabled(mTilesetHistoryIndex < mTilesetHistory.size() - 1);
     ui->actionAddTileset->setEnabled(hasFile);
+    ui->actionRemoveTileset->setEnabled(mCurrentTileset != 0);
 
     ui->actionCopyProperties->setEnabled(mSelectedTiles.size());
     ui->actionPasteProperties->setEnabled(!mClipboard->mValidRgn.isEmpty() &&
@@ -846,6 +952,8 @@ void TileDefDialog::closeEvent(QCloseEvent *event)
         QSettings settings;
         settings.beginGroup(QLatin1String("TileDefDialog"));
         settings.setValue(QLatin1String("geometry"), saveGeometry());
+        settings.setValue(QLatin1String("TileScale"), mZoomable->scale());
+        settings.setValue(QLatin1String("CurrentTileset"), mCurrentTilesetName);
         settings.endGroup();
 
         saveSplitterSizes(ui->splitter);
@@ -913,8 +1021,7 @@ void TileDefDialog::fileOpen(const QString &fileName)
     mTileDefFile = defFile;
     QDir dir(mTileDefFile->directory());
 
-    foreach (QString tilesetName, mTileDefFile->tilesetNames()) {
-        TileDefTileset *tsDef = mTileDefFile->tileset(tilesetName);
+    foreach (TileDefTileset *tsDef, mTileDefFile->tilesets()) {
         QString imageSource = dir.filePath(tsDef->mImageSource);
         if (QFileInfo(imageSource).exists())
             imageSource = QFileInfo(imageSource).canonicalFilePath();
@@ -934,7 +1041,7 @@ void TileDefDialog::fileOpen(const QString &fileName)
         if (reused)
             continue;
 
-        Tileset *tileset = new Tileset(tilesetName, 64, 128);
+        Tileset *tileset = new Tileset(tsDef->mName, 64, 128);
         int width = tsDef->mColumns * 64, height = tsDef->mRows * 128;
         QImage image(width, height, QImage::Format_ARGB32);
         image.fill(Qt::red);
@@ -972,6 +1079,9 @@ bool TileDefDialog::fileSave(const QString &fileName)
 void TileDefDialog::clearDocument()
 {
     mUndoStack->clear();
+
+    mTilesetHistory.clear();
+    mTilesetHistoryIndex = 0;
 
     mRemovedTilesets += mTilesets;
     mTilesets.clear();
@@ -1026,6 +1136,7 @@ void TileDefDialog::setTilesetList()
         return;
 
     mCurrentTileset = 0;
+    mCurrentDefTileset = 0;
     mSelectedTiles.clear();
 
     QFontMetrics fm = ui->tilesets->fontMetrics();
@@ -1049,7 +1160,7 @@ void TileDefDialog::setTilesList()
     mTilesWithMatchingProperties.clear();
 
     if (mCurrentTileset) {
-        TileDefTileset *defTileset = mTileDefFile->tileset(mCurrentTileset->name());
+        TileDefTileset *defTileset = mCurrentDefTileset;
         QList<void*> userData;
         foreach (TileDefTile *defTile, defTileset->mTiles)
             userData += defTile;
@@ -1068,10 +1179,9 @@ void TileDefDialog::setTilesList()
 
 void TileDefDialog::setToolTipEtc(int tileID)
 {
-    TileDefTileset *defTileset = mTileDefFile->tileset(mCurrentTileset->name());
-    if (!defTileset)
+    if (!mCurrentTileset || !mCurrentDefTileset)
         return;
-    TileDefTile *defTile = defTileset->mTiles[tileID];
+    TileDefTile *defTile = mCurrentDefTileset->mTiles[tileID];
     QStringList tooltip;
     foreach (UIProperties::UIProperty *p, defTile->mPropertyUI.nonDefaultProperties())
         tooltip += tr("%1 = %2").arg(p->mName).arg(p->valueAsString());
@@ -1295,6 +1405,13 @@ Tileset *TileDefDialog::tileset(int row) const
 }
 
 int TileDefDialog::indexOf(const QString &name) const
+{
+    if (mTilesetByName.contains(name))
+        return mTilesets.indexOf(mTilesetByName[name]);
+    return -1;
+}
+
+int TileDefDialog::rowOf(const QString &name) const
 {
     return tilesetNames().indexOf(name);
 }

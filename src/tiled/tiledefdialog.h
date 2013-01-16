@@ -80,6 +80,9 @@ private slots:
     void removeTileset();
 
     void currentTilesetChanged(int row);
+    void goBack();
+    void goForward();
+
     void tileSelectionChanged();
 
     void comboBoxActivated(int index);
@@ -144,6 +147,7 @@ private:
     Tileset *tileset(const QString &name) const;
     Tileset *tileset(int row) const;
     int indexOf(const QString &name) const;
+    int rowOf(const QString &name) const;
 
     void loadTilesets();
     Tileset *loadTileset(const QString &source);
@@ -152,6 +156,8 @@ private:
 private:
     Ui::TileDefDialog *ui;
     Tileset *mCurrentTileset;
+    TileDefTileset *mCurrentDefTileset;
+    QString mCurrentTilesetName;
     QList<TileDefTile*> mSelectedTiles;
     Zoomable *mZoomable;
     bool mSynching;
@@ -170,6 +176,9 @@ private:
     QSet<TileDefTile*> mTilesWithMatchingProperties;
 
     TilePropertyClipboard *mClipboard;
+
+    QStringList mTilesetHistory;
+    int mTilesetHistoryIndex;
 
     QMap<QString,QCheckBox*> mCheckBoxes;
     QMap<QString,QComboBox*> mComboBoxes;

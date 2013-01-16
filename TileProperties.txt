@@ -240,7 +240,7 @@ property
     ShortName =
     Enums
     {
-	None =
+        None =
         WestWall = WallW
         WestWallTrans = WallWTrans
         WestWindow = WindowW

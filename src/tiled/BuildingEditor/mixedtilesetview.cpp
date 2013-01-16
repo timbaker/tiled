@@ -467,17 +467,21 @@ QModelIndex MixedTilesetModel::index(int row, int column, const QModelIndex &par
 
 QModelIndex MixedTilesetModel::index(Tile *tile)
 {
-    int tileIndex = indexOf(toItem(tile));
-    if (tileIndex != -1)
-        return index(tileIndex / columnCount(), tileIndex % columnCount());
+    if (Item *item = toItem(tile)) {
+        int tileIndex = indexOf(item);
+        if (tileIndex != -1)
+            return index(tileIndex / columnCount(), tileIndex % columnCount());
+    }
     return QModelIndex();
 }
 
 QModelIndex MixedTilesetModel::index(void *userData)
 {
-    int tileIndex = indexOf(toItem(userData));
-    if (tileIndex != -1)
-        return index(tileIndex / columnCount(), tileIndex % columnCount());
+    if (Item *item = toItem(userData)) {
+        int tileIndex = indexOf(item);
+        if (tileIndex != -1)
+            return index(tileIndex / columnCount(), tileIndex % columnCount());
+    }
     return QModelIndex();
 }
 
