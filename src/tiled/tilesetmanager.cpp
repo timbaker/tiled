@@ -330,6 +330,7 @@ void TilesetManager::setLayerName(Tile *tile, const QString &name)
         if ((tile->id() >= 0) && (tile->id() < tln->mRows * tln->mColumns)) {
             tln->mTiles[tile->id()].mLayerName = name;
             tln->mModified = true;
+            emit tileLayerNameChanged(tile);
         }
     }
 }

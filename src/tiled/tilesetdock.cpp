@@ -1388,6 +1388,7 @@ void TilesetDock::autoSwitchLayerChanged(bool enabled)
     QString text = enabled ? tr("Layer Switch Enabled") : tr("Layer Switch Disabled");
 //    mActionSwitchLayer->setToolTip(text);
     mActionSwitchLayer->setText(text);
+    mActionSwitchLayer->setChecked(enabled == false);
 }
 
 void TilesetDock::switchLayerForTile(Tile *tile)

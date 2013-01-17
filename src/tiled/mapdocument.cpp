@@ -143,6 +143,11 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     // Register tileset references
     TilesetManager *tilesetManager = TilesetManager::instance();
     tilesetManager->addReferences(mMap->tilesets());
+
+#ifdef ZOMBOID
+    connect(tilesetManager, SIGNAL(tileLayerNameChanged(Tile*)),
+            SIGNAL(tileLayerNameChanged(Tile*)));
+#endif
 }
 
 MapDocument::~MapDocument()
@@ -598,7 +603,6 @@ void MapDocument::emitRegionAltered(const QRegion &region, Layer *layer)
 void MapDocument::setTileLayerName(Tile *tile, const QString &name)
 {
     TilesetManager::instance()->setLayerName(tile, name);
-    emit tileLayerNameChanged(tile);
 }
 #endif // ZOMBOID
 

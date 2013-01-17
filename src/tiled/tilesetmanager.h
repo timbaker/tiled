@@ -152,6 +152,10 @@ signals:
      */
     void tilesetChanged(Tileset *tileset);
 
+#ifdef ZOMBOID
+    void tileLayerNameChanged(Tile *tile);
+#endif
+
 private slots:
     void fileChanged(const QString &path);
     void fileChangedTimeout();

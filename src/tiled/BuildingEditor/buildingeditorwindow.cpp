@@ -1658,6 +1658,7 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         roomEditor->clearDocument();
         mTileModeScene->clearDocument();
         mLayersDock->clearDocument();
+        mTilesetDock->clearDocument();
         mUndoGroup->removeStack(mCurrentDocument->undoStack());
         delete mCurrentDocument->building();
         delete mCurrentDocument;
@@ -1724,6 +1725,7 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
     roomEditor->setDocument(mCurrentDocument);
     mTileModeScene->setDocument(mCurrentDocument);
     mLayersDock->setDocument(mCurrentDocument);
+    mTilesetDock->setDocument(mCurrentDocument);
 
     updateRoomComboBox();
 
@@ -1777,6 +1779,7 @@ void BuildingEditorWindow::clearDocument()
         roomEditor->clearDocument();
         mTileModeScene->clearDocument();
         mLayersDock->clearDocument();
+        mTilesetDock->clearDocument();
         mUndoGroup->removeStack(mCurrentDocument->undoStack());
         delete mCurrentDocument->building();
         delete mCurrentDocument;

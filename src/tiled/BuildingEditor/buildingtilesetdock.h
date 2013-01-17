@@ -18,7 +18,10 @@
 #ifndef BUILDINGTILESETDOCK_H
 #define BUILDINGTILESETDOCK_H
 
+#include "mixedtilesetview.h"
+
 #include <QDockWidget>
+#include <QIcon>
 
 namespace Ui {
 class BuildingTilesetDock;
@@ -35,6 +38,15 @@ class Zoomable;
 
 namespace BuildingEditor {
 
+class BuildingDocument;
+
+class BuildingTilesetView : public Tiled::Internal::MixedTilesetView
+{
+public:
+    BuildingTilesetView(QWidget *parent = 0);
+    void contextMenuEvent(QContextMenuEvent *event);
+};
+
 class BuildingTilesetDock : public QDockWidget
 {
     Q_OBJECT
@@ -45,13 +57,20 @@ public:
     
     void firstTimeSetup();
 
+    void setDocument(BuildingDocument *document);
+    void clearDocument();
+
 private:
+    void changeEvent(QEvent *event);
+    void retranslateUi();
+
     void setTilesetList();
     void setTilesList();
 
     void switchLayerForTile(Tiled::Tile *tile);
 
     typedef Tiled::Tileset Tileset;
+    typedef Tiled::Tile Tile;
 
 private slots:
     void currentTilesetChanged(int row);
@@ -60,15 +79,21 @@ private slots:
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
     void tilesetChanged(Tileset *tileset);
+    void tileLayerNameChanged(Tile *tile);
 
-    void autoSwitchLayerChanged(bool autoSwitch);
+    void layerSwitchToggled(bool checked);
+    void autoSwitchLayerChanged(bool enabled);
 
     void tileScaleChanged(qreal scale);
 
 private:
     Ui::BuildingTilesetDock *ui;
+    BuildingDocument *mDocument;
     Tiled::Tileset *mCurrentTileset;
     Tiled::Internal::Zoomable *mZoomable;
+    QIcon mIconTileLayer;
+    QIcon mIconTileLayerStop;
+    QAction *mActionSwitchLayer;
 };
 
 } // namespace BuildingEditor

@@ -24,23 +24,10 @@
     <item row="0" column="1">
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <widget class="Tiled::Internal::MixedTilesetView" name="tiles"/>
+       <widget class="BuildingEditor::BuildingTilesetView" name="tiles"/>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
+       <layout class="QHBoxLayout" name="toolBarLayout">
         <item>
          <widget class="QComboBox" name="scaleComboBox"/>
         </item>
@@ -53,9 +40,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Tiled::Internal::MixedTilesetView</class>
-   <extends>QTableWidget</extends>
-   <header>BuildingEditor/mixedtilesetview.h</header>
+   <class>BuildingEditor::BuildingTilesetView</class>
+   <extends>QTableView</extends>
+   <header>BuildingEditor/buildingtilesetdock.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

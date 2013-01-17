@@ -18,6 +18,8 @@
 #include "buildingtilesetdock.h"
 #include "ui_buildingtilesetdock.h"
 
+#include "buildingdocument.h"
+#include "buildingmap.h"
 #include "buildingpreferences.h"
 #include "buildingtiles.h"
 #include "buildingtiletools.h"
@@ -27,9 +29,11 @@
 #include "tilesetmanager.h"
 #include "zoomable.h"
 
+#include "tile.h"
 #include "tileset.h"
 
 #include <QScrollBar>
+#include <QToolBar>
 
 using namespace BuildingEditor;
 using namespace Tiled;
@@ -38,10 +42,30 @@ using namespace Tiled::Internal;
 BuildingTilesetDock::BuildingTilesetDock(QWidget *parent) :
     QDockWidget(parent),
     ui(new Ui::BuildingTilesetDock),
+    mDocument(0),
     mCurrentTileset(0),
-    mZoomable(new Zoomable(this))
+    mZoomable(new Zoomable(this)),
+    mActionSwitchLayer(new QAction(this))
 {
     ui->setupUi(this);
+
+    mIconTileLayer = QIcon(QLatin1String(":/images/16x16/layer-tile.png"));
+    mIconTileLayerStop = QIcon(QLatin1String(":/images/16x16/layer-tile-stop.png"));
+    mActionSwitchLayer->setCheckable(true);
+    bool enabled = Preferences::instance()->autoSwitchLayer();
+    mActionSwitchLayer->setChecked(enabled == false);
+    mActionSwitchLayer->setIcon(enabled ? mIconTileLayer : mIconTileLayerStop);
+    connect(mActionSwitchLayer, SIGNAL(toggled(bool)),
+            SLOT(layerSwitchToggled(bool)));
+    connect(Preferences::instance(), SIGNAL(autoSwitchLayerChanged(bool)),
+            SLOT(autoSwitchLayerChanged(bool)));
+
+    QToolBar *toolBar = new QToolBar(this);
+    toolBar->setIconSize(QSize(16, 16));
+    toolBar->addAction(mActionSwitchLayer);
+    ui->toolBarLayout->insertWidget(0, toolBar, 1);
+
+    ui->tiles->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
     mZoomable->setScale(BuildingPreferences::instance()->tileScale());
     mZoomable->connectToComboBox(ui->scaleComboBox);
@@ -67,6 +91,10 @@ BuildingTilesetDock::BuildingTilesetDock(QWidget *parent) :
 
     connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
             SLOT(tilesetChanged(Tileset*)));
+    connect(TilesetManager::instance(), SIGNAL(tileLayerNameChanged(Tile*)),
+            SLOT(tileLayerNameChanged(Tile*)));
+
+    retranslateUi();
 }
 
 BuildingTilesetDock::~BuildingTilesetDock()
@@ -78,6 +106,43 @@ void BuildingTilesetDock::firstTimeSetup()
 {
     if (!ui->tilesets->count())
         setTilesetList(); // TileMetaInfoMgr signals might have done this already.
+}
+
+void BuildingTilesetDock::setDocument(BuildingDocument *document)
+{
+    if (mDocument)
+        mDocument->disconnect(this);
+
+    mDocument = document;
+
+    if (mDocument) {
+
+    }
+}
+
+void BuildingTilesetDock::clearDocument()
+{
+    setDocument(0);
+}
+
+void BuildingTilesetDock::changeEvent(QEvent *event)
+{
+    QDockWidget::changeEvent(event);
+    switch (event->type()) {
+    case QEvent::LanguageChange:
+        retranslateUi();
+        break;
+    default:
+        break;
+    }
+}
+
+void BuildingTilesetDock::retranslateUi()
+{
+    bool enabled = Preferences::instance()->autoSwitchLayer();
+    QString text = enabled ? tr("Layer Switch Enabled")
+                           : tr("Layer Switch Disabled");
+    mActionSwitchLayer->setText(text);
 }
 
 void BuildingTilesetDock::setTilesetList()
@@ -120,13 +185,14 @@ void BuildingTilesetDock::setTilesList()
 
 void BuildingTilesetDock::switchLayerForTile(Tiled::Tile *tile)
 {
-#if 0
+    if (!mDocument || !Preferences::instance()->autoSwitchLayer())
+        return;
+    int level = mDocument->currentLevel();
     QString layerName = TilesetManager::instance()->layerName(tile);
     if (!layerName.isEmpty()) {
-        if (BuildingMap::layerNames().contains(layerName))
+        if (BuildingMap::layerNames(level).contains(layerName))
             mDocument->setCurrentLayer(layerName);
     }
-#endif
 }
 
 void BuildingTilesetDock::currentTilesetChanged(int row)
@@ -175,13 +241,93 @@ void BuildingTilesetDock::tilesetChanged(Tileset *tileset)
         item->setForeground(tileset->isMissing() ? Qt::red : Qt::black);
 }
 
-void BuildingTilesetDock::autoSwitchLayerChanged(bool autoSwitch)
+void BuildingTilesetDock::tileLayerNameChanged(BuildingTilesetDock::Tile *tile)
 {
-    ui->tiles->model()->setShowLabels(autoSwitch);
+    if (!mCurrentTileset)
+        return;
+    if (tile->tileset()->imageSource() == mCurrentTileset->imageSource()) {
+        QString layerName = TilesetManager::instance()->layerName(tile);
+        if (layerName.isEmpty())
+            layerName = tr("???");
+        ui->tiles->model()->setLabel(mCurrentTileset->tileAt(tile->id()), layerName);
+    }
+}
+
+void BuildingTilesetDock::layerSwitchToggled(bool checked)
+{
+    Preferences::instance()->setAutoSwitchLayer(checked == false);
+}
+
+void BuildingTilesetDock::autoSwitchLayerChanged(bool enabled)
+{
+    mActionSwitchLayer->setIcon(enabled ? mIconTileLayer : mIconTileLayerStop);
+    QString text = enabled ? tr("Layer Switch Enabled") : tr("Layer Switch Disabled");
+    mActionSwitchLayer->setText(text);
+    mActionSwitchLayer->setChecked(enabled == false);
+
+    ui->tiles->model()->setShowLabels(enabled);
 }
 
 
 void BuildingTilesetDock::tileScaleChanged(qreal scale)
 {
     mZoomable->setScale(scale);
+}
+
+/////
+
+#include <QContextMenuEvent>
+#include <QMenu>
+#include <QUndoCommand>
+
+BuildingTilesetView::BuildingTilesetView(QWidget *parent) :
+    MixedTilesetView(parent)
+{
+}
+
+void BuildingTilesetView::contextMenuEvent(QContextMenuEvent *event)
+{
+    const QModelIndex index = indexAt(event->pos());
+    const MixedTilesetModel *m = model();
+    Tile *tile = m->tileAt(index);
+
+    if (!tile)
+        return;
+
+    QMenu menu;
+    QVector<QAction*> layerActions;
+    QStringList layerNames;
+    if (tile) {
+        // Get a list of layer names from the current map
+        QSet<QString> set = BuildingMap::layerNames(0).toSet();
+
+        // Get a list of layer names for the current tileset
+        for (int i = 0; i < tile->tileset()->tileCount(); i++) {
+            Tile *tile2 = tile->tileset()->tileAt(i);
+            QString layerName = TilesetManager::instance()->layerName(tile2);
+            if (!layerName.isEmpty())
+                set.insert(layerName);
+        }
+        layerNames = QStringList::fromSet(set);
+        layerNames.sort();
+
+        QMenu *layersMenu = menu.addMenu(QLatin1String("Default Layer"));
+        layerActions += layersMenu->addAction(tr("<None>"));
+        foreach (QString layerName, layerNames)
+            layerActions += layersMenu->addAction(layerName);
+    }
+
+    QAction *action = menu.exec(event->globalPos());
+
+    if (action && layerActions.contains(action)) {
+        int index = layerActions.indexOf(action);
+        QString layerName = index ? layerNames[index - 1] : QString();
+        QModelIndexList indexes = selectionModel()->selectedIndexes();
+
+        // TODO: Undo/Redo would be nice here.
+        foreach (QModelIndex index, indexes) {
+            tile = m->tileAt(index);
+            TilesetManager::instance()->setLayerName(tile, layerName);
+        }
+    }
 }
