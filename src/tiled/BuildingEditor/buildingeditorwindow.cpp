@@ -478,6 +478,7 @@ BuildingEditorWindow::~BuildingEditorWindow()
     BuildingTilesMgr::deleteInstance(); // Ensure all the tilesets are released
     BuildingTMX::deleteInstance();
     BuildingPreferences::deleteInstance();
+    ToolManager::deleteInstance();
     delete ui;
 }
 

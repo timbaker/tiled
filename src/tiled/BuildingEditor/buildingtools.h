@@ -113,8 +113,7 @@ class ToolManager : public QObject
     Q_OBJECT
 public:
     static ToolManager *instance();
-
-    ToolManager();
+    static void deleteInstance();
 
     void addTool(BaseTool *tool);
     void activateTool(BaseTool *tool);
@@ -123,6 +122,9 @@ public:
 
     BaseTool *currentTool() const
     { return mCurrentTool; }
+
+    const QList<BaseTool*> &tools() const
+    { return mTools; }
 
     void checkKeyboardModifiers(Qt::KeyboardModifiers modifiers);
 
@@ -139,7 +141,10 @@ private slots:
     void currentToolStatusTextChanged();
 
 private:
+    Q_DISABLE_COPY(ToolManager)
     static ToolManager *mInstance;
+    ToolManager();
+
     QList<BaseTool*> mTools;
     BaseTool *mCurrentTool;
     Qt::KeyboardModifiers mCurrentModifiers;
@@ -172,7 +177,10 @@ private:
     void updateStatusText();
 
 private:
+    Q_DISABLE_COPY(PencilTool)
     static PencilTool *mInstance;
+    ~PencilTool() { mInstance = 0; }
+
     bool mMouseDown;
     bool mErasing;
     QPointF mMouseScenePos;
@@ -227,7 +235,10 @@ private:
 
     void updateStatusText();
 
+private:
+    Q_DISABLE_COPY(SelectMoveRoomsTool)
     static SelectMoveRoomsTool *mInstance;
+    ~SelectMoveRoomsTool() { mInstance = 0; }
 
     Mode mMode;
     bool mMouseDown;
@@ -287,7 +298,9 @@ public:
     void updateCursorObject();
 
 private:
+    Q_DISABLE_COPY(DoorTool)
     static DoorTool *mInstance;
+    ~DoorTool() { mInstance = 0; }
 };
 
 class WindowTool : public BaseObjectTool
@@ -302,7 +315,9 @@ public:
     void updateCursorObject();
 
 private:
+    Q_DISABLE_COPY(WindowTool)
     static WindowTool *mInstance;
+    ~WindowTool() { mInstance = 0; }
 };
 
 class StairsTool : public BaseObjectTool
@@ -317,7 +332,9 @@ public:
     void updateCursorObject();
 
 private:
+    Q_DISABLE_COPY(StairsTool)
     static StairsTool *mInstance;
+    ~StairsTool() { mInstance = 0; }
 };
 
 class FurnitureTool : public BaseObjectTool
@@ -356,7 +373,9 @@ private:
     { return calcOrient(tilePos.x(), tilePos.y()); }
 
 private:
+    Q_DISABLE_COPY(FurnitureTool)
     static FurnitureTool *mInstance;
+    ~FurnitureTool() { mInstance = 0; }
     FurnitureTile *mCurrentTile;
 };
 
@@ -396,6 +415,10 @@ private:
 
 private:
     static RoofTool *mInstance;
+    Q_DISABLE_COPY(RoofTool)
+protected: // for RoofCornerTool
+    ~RoofTool() { mInstance = 0; }
+private:
     RoofObject::RoofType mRoofType;
 
     enum Mode {
@@ -429,7 +452,9 @@ public:
     RoofCornerTool();
 
 private:
+    Q_DISABLE_COPY(RoofCornerTool)
     static RoofCornerTool *mInstance;
+    ~RoofCornerTool() { mInstance = 0; }
 };
 
 /////
@@ -474,7 +499,10 @@ private:
 
     void updateStatusText();
 
+private:
+    Q_DISABLE_COPY(SelectMoveObjectTool)
     static SelectMoveObjectTool *mInstance;
+    ~SelectMoveObjectTool() { mInstance = 0; }
 
     Mode mMode;
     bool mMouseDown;
@@ -529,7 +557,9 @@ private:
     void resizeWall(int length);
 
 private:
+    Q_DISABLE_COPY(WallTool)
     static WallTool *mInstance;
+    ~WallTool() { mInstance = 0; }
 
     enum Mode {
         NoMode,

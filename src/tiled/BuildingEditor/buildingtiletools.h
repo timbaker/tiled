@@ -96,7 +96,10 @@ private:
     void updateStatusText();
 
 private:
+    Q_DISABLE_COPY(DrawTileTool)
     static DrawTileTool *mInstance;
+    ~DrawTileTool() { mInstance = 0; }
+
     bool mMouseDown;
     bool mMouseMoved;
     bool mErasing;
@@ -138,7 +141,9 @@ private:
     void updateStatusText();
 
 private:
+    Q_DISABLE_COPY(SelectTileTool)
     static SelectTileTool *mInstance;
+    ~SelectTileTool() { mInstance = 0; }
 
     enum SelectionMode {
         Replace,

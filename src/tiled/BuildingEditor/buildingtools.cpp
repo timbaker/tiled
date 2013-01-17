@@ -41,7 +41,7 @@ using namespace BuildingEditor;
 /////
 
 BaseTool::BaseTool() :
-    QObject(0),
+    QObject(ToolManager::instance()),
     mEditor(0)
 {
     ToolManager::instance()->addTool(this);
@@ -132,6 +132,12 @@ ToolManager *ToolManager::instance()
     if (!mInstance)
         mInstance = new ToolManager;
     return mInstance;
+}
+
+void ToolManager::deleteInstance()
+{
+    delete mInstance;
+    mInstance = 0;
 }
 
 ToolManager::ToolManager() :
