@@ -22,6 +22,7 @@
 #include "buildingobjects.h"
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
+#include "buildingtmx.h"
 
 #include "mapcomposite.h"
 #include "mapmanager.h"
@@ -97,8 +98,7 @@ QString BuildingMap::buildingTileAt(int x, int y, int level, const QString &laye
     return tileName;
 }
 
-// The order must match the LayerIndexXXX constants.
-// FIXME: add user-defined layers as well from TMXConfig.txt.
+// The order must match the BuildingFloor::Square::SquareSection constants.
 static const char *gLayerNames[] = {
     "Floor",
     "FloorGrime",
@@ -126,10 +126,11 @@ static const char *gLayerNames[] = {
 
 QStringList BuildingMap::layerNames(int level)
 {
-    Q_UNUSED(level)
-//    if (!mDocument)
-//        return QStringList();
+    return BuildingTMX::instance()->tileLayerNamesForLevel(level);
+}
 
+QStringList BuildingMap::requiredLayerNames()
+{
     QStringList ret;
     for (int i = 0; gLayerNames[i]; i++)
         ret += QLatin1String(gLayerNames[i]);
@@ -395,12 +396,19 @@ void BuildingMap::BuildingToMap()
 
     Q_ASSERT(sizeof(gLayerNames)/sizeof(gLayerNames[0]) == BuildingFloor::Square::MaxSection + 1);
 
+    QMap<QString,int> layerToSection;
+    for (int i = 0; gLayerNames[i]; i++)
+        layerToSection.insert(QLatin1String(gLayerNames[i]), i);
+
+    mLayerToSection.clear();
     foreach (BuildingFloor *floor, mBuilding->floors()) {
         foreach (QString name, layerNames(floor->level())) {
             QString layerName = tr("%1_%2").arg(floor->level()).arg(name);
             TileLayer *tl = new TileLayer(layerName,
                                           0, 0, mapSize.width(), mapSize.height());
             mMap->addLayer(tl);
+            mLayerToSection[layerName] = layerToSection.contains(name)
+                    ? layerToSection[name] : -1;
         }
     }
 
@@ -452,8 +460,11 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
     if (mSuppressTiles.contains(floor))
         suppress = mSuppressTiles[floor];
 
-    int section = 0;
+    int layerIndex = 0;
     foreach (TileLayer *tl, layerGroup->layers()) {
+        int section = mLayerToSection[tl->name()];
+        if (section == -1) // Skip user-added layers.
+            continue;
         if (area == floor->bounds(1, 1))
             tl->erase();
         else
@@ -483,7 +494,7 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
             }
         }
         layerGroup->regionAltered(tl); // possibly set mNeedsSynch
-        section++;
+        layerIndex++;
     }
 }
 

@@ -42,6 +42,7 @@ public:
 //    const QList<LayerInfo> &layers() const
 //    { return mLayers; }
 
+    QStringList tileLayerNamesForLevel(int level);
     bool exportTMX(Building *building, const QString &fileName);
 
     QString txtName();

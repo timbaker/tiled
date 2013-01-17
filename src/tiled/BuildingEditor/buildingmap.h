@@ -128,6 +128,7 @@ public:
     QString buildingTileAt(int x, int y, int level, const QString &layerName);
 
     static QStringList layerNames(int level);
+    static QStringList requiredLayerNames();
 
     /////
     void setCursorObject(BuildingFloor *floor, BuildingObject *object);
@@ -201,6 +202,7 @@ private:
     MapComposite *mMapComposite;
     Tiled::Map *mMap;
     Tiled::MapRenderer *mMapRenderer;
+    QMap<QString,int> mLayerToSection;
 
     BuildingFloor *mCursorObjectFloor;
     ShadowBuilding *mShadowBuilding;

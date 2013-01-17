@@ -70,6 +70,24 @@ BuildingTMX::BuildingTMX()
 {
 }
 
+QStringList BuildingTMX::tileLayerNamesForLevel(int level)
+{
+    QStringList ret;
+    foreach (LayerInfo layerInfo, mLayers) {
+        if (layerInfo.mType != LayerInfo::Tile)
+            continue;
+        QString layerName = layerInfo.mName;
+        int level2;
+        if (MapComposite::levelForLayer(layerName, &level2)) {
+            if (level2 != level)
+                continue;
+            layerName = MapComposite::layerNameWithoutPrefix(layerName);
+        }
+        ret += layerName;
+    }
+    return ret;
+}
+
 bool BuildingTMX::exportTMX(Building *building, const QString &fileName)
 {
     BuildingMap bmap(building);
@@ -263,6 +281,22 @@ bool BuildingTMX::readTxt()
             mError = tr("Unknown block name '%1'.\n%2")
                     .arg(block.name)
                     .arg(path);
+            return false;
+        }
+    }
+
+    // Check that TMXConfig.txt contains all the required tile layers.
+    foreach (QString layerName, BuildingMap::requiredLayerNames()) {
+        bool match = false;
+        foreach (LayerInfo layerInfo, mLayers) {
+            if (layerInfo.mType == LayerInfo::Tile && layerInfo.mName == layerName) {
+                match = true;
+                break;
+            }
+        }
+        if (!match) {
+            mError = tr("TMXConfig.txt is missing a required tile layer: %1")
+                    .arg(layerName);
             return false;
         }
     }
