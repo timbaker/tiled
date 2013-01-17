@@ -113,6 +113,7 @@ public:
             SectionWallOverlay2,
             SectionWallGrime,
             SectionWallFurniture,
+            SectionWallFurniture2,
             SectionFrame,
             SectionDoor,
             SectionCurtains, // West, North windows

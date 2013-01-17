@@ -651,7 +651,8 @@ void BuildingFloor::LayoutToSquares()
                         break;
                     case FurnitureTiles::LayerWallFurniture:
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
-                                         Square::SectionWallFurniture);
+                                         Square::SectionWallFurniture,
+                                         Square::SectionWallFurniture2);
                         break;
                     case FurnitureTiles::LayerFrames: {
                         int dx = 0, dy = 0;

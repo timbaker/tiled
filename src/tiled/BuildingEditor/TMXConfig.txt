@@ -1,9 +1,10 @@
 version = 1
-revision = 4
+revision = 5
 layers
 {
     tile = Floor
     tile = FloorGrime
+    tile = FloorGrime2
     tile = 0_Vegetation
     tile = Walls
     tile = Walls2
@@ -13,14 +14,13 @@ layers
     tile = WallOverlay2
     tile = WallGrime
     tile = WallFurniture
+    tile = WallFurniture2
     tile = Frames
     tile = Doors
     tile = Curtains
     tile = Furniture
     tile = Furniture2
     tile = Curtains2
-    tile = RoofCap
-    tile = RoofCap2
     tile = Roof
     tile = Roof2
     tile = RoofTop
