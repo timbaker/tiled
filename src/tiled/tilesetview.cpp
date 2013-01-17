@@ -315,10 +315,9 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
         layerNames.sort();
 
         QMenu *layersMenu = menu.addMenu(QLatin1String("Default Layer"));
-        foreach (QString layerName, layerNames) {
-            QAction *action = layersMenu->addAction(layerName);
-            layerActions.append(action);
-        }
+        layerActions += layersMenu->addAction(tr("<None>"));
+        foreach (QString layerName, layerNames)
+            layerActions += layersMenu->addAction(layerName);
     }
 #endif
 
@@ -345,14 +344,23 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
 
     else if (action && layerActions.contains(action)) {
         int index = layerActions.indexOf(action);
-        QString layerName = layerNames[index];
+        QString layerName = index ? layerNames[index - 1] : QString();
         QModelIndexList indexes = selectionModel()->selectedIndexes();
-        QUndoStack *undoStack = mMapDocument->undoStack();
-        undoStack->beginMacro(tr("Change Tile Layer Name (x%n)", "", indexes.size()));
+        QMap<Tile*,QString> changed;
         foreach (QModelIndex index, indexes) {
             tile = m->tileAt(index);
             QString oldName = TilesetManager::instance()->layerName(tile);
-            ChangeTileLayerName *undo = new ChangeTileLayerName(mMapDocument, tile, oldName, layerName);
+            if (oldName != layerName)
+                changed[tile] = oldName;
+        }
+        if (!changed.size())
+            return;
+        QUndoStack *undoStack = mMapDocument->undoStack();
+        undoStack->beginMacro(tr("Change Tile Layer Name (x%n)", "", changed.size()));
+        foreach (Tile *tile, changed.keys()) {
+            ChangeTileLayerName *undo =
+                    new ChangeTileLayerName(mMapDocument, tile,
+                                            changed[tile], layerName);
             mMapDocument->undoStack()->push(undo);
         }
         undoStack->endMacro();
