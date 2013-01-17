@@ -23,8 +23,6 @@
 #include "buildingmap.h"
 #include "buildingpreferences.h"
 #include "buildingtemplates.h"
-#include "buildingtiles.h"
-#include "listofstringsdialog.h"
 #include "simplefile.h"
 
 #include "mapcomposite.h"
@@ -42,8 +40,6 @@
 #include "tileset.h"
 
 #include <QDebug>
-#include <QDir>
-#include <QImage>
 
 using namespace BuildingEditor;
 using namespace Tiled;
@@ -185,17 +181,6 @@ QString BuildingTMX::txtPath()
 
 bool BuildingTMX::readTxt()
 {
-#if 0
-    // Make sure the user has chosen the Tiles directory.
-    QString tilesDirectory = Preferences::instance()->tilesDirectory();
-    QDir dir(tilesDirectory);
-    if (tilesDirectory.isEmpty() || !dir.exists()) {
-        mError = tr("The Tiles directory specified in the preferences doesn't exist!\n%1")
-                .arg(tilesDirectory);
-        return false;
-    }
-#endif
-
     QFileInfo info(txtPath());
     if (!info.exists()) {
         mError = tr("The %1 file doesn't exist.").arg(txtName());
@@ -224,47 +209,8 @@ bool BuildingTMX::readTxt()
     mRevision = simple.value("revision").toInt();
     mSourceRevision = simple.value("source_revision").toInt();
 
-#if 0
-    QStringList missingTilesets;
-#endif
-
     foreach (SimpleFileBlock block, simple.blocks) {
-#if 0
-        if (block.name == QLatin1String("tilesets")) {
-            foreach (SimpleFileKeyValue kv, block.values) {
-                if (kv.name == QLatin1String("tileset")) {
-                    QString source = tilesDirectory + QLatin1Char('/') + kv.value
-                            + QLatin1String(".png");
-                    QFileInfo info(source);
-                    if (!info.exists()) {
-                        Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
-                        // I could save the tileset image height/width and create
-                        // a complete "missing" image here, instead I only have
-                        // a single tile.
-                        ts->loadFromImage(TilesetManager::instance()->missingTile()->image().toImage(),
-                                          kv.value + QLatin1String(".png"));
-                        ts->setMissing(true);
-                        BuildingTilesMgr::instance()->addTileset(ts);
-                        mTilesets += ts->name();
-                        missingTilesets += QDir::toNativeSeparators(info.absoluteFilePath());
-                        continue;
-                    }
-                    source = info.canonicalFilePath();
-                    Tileset *ts = loadTileset(source);
-                    if (!ts)
-                        return false;
-                    BuildingTilesMgr::instance()->addTileset(ts);
-                    mTilesets += ts->name();
-                } else {
-                    mError = tr("Unknown value name '%1'.\n%2")
-                            .arg(kv.name)
-                            .arg(path);
-                    return false;
-                }
-            }
-        } else
-#endif
-            if (block.name == QLatin1String("layers")) {
+        if (block.name == QLatin1String("layers")) {
             foreach (SimpleFileKeyValue kv, block.values) {
                 if (kv.name == QLatin1String("tile")) {
                     mLayers += LayerInfo(kv.value, LayerInfo::Tile);
@@ -301,16 +247,6 @@ bool BuildingTMX::readTxt()
         }
     }
 
-#if 0
-    if (missingTilesets.size()) {
-        ListOfStringsDialog dialog(tr("The following tileset files were not found."),
-                                   missingTilesets,
-                                   BuildingEditorWindow::instance());
-        dialog.setWindowTitle(tr("Missing Tilesets"));
-        dialog.exec();
-    }
-#endif
-
     return true;
 }
 
@@ -318,17 +254,6 @@ bool BuildingTMX::writeTxt()
 {
     SimpleFile simpleFile;
 
-    QDir tilesDir(Preferences::instance()->tilesDirectory());
-#if 0
-    SimpleFileBlock tilesetBlock;
-    tilesetBlock.name = QLatin1String("tilesets");
-    foreach (Tiled::Tileset *tileset, BuildingTilesMgr::instance()->tilesets()) {
-        QString relativePath = tilesDir.relativeFilePath(tileset->imageSource());
-        relativePath.truncate(relativePath.length() - 4); // remove .png
-        tilesetBlock.values += SimpleFileKeyValue(QLatin1String("tileset"), relativePath);
-    }
-    simpleFile.blocks += tilesetBlock;
-#endif
     SimpleFileBlock layersBlock;
     layersBlock.name = QLatin1String("layers");
     foreach (LayerInfo layerInfo, mLayers) {
@@ -349,27 +274,6 @@ bool BuildingTMX::writeTxt()
         return false;
     }
     return true;
-}
-
-Tiled::Tileset *BuildingTMX::loadTileset(const QString &source)
-{
-    QFileInfo info(source);
-
-    Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
-
-    TilesetImageCache *cache = TilesetManager::instance()->imageCache();
-    Tileset *cached = cache->findMatch(ts, source);
-    if (!cached || !ts->loadFromCache(cached)) {
-        const QImage tilesetImage = QImage(source);
-        if (ts->loadFromImage(tilesetImage, source))
-            cache->addTileset(ts);
-        else {
-            delete ts;
-            mError = tr("Error loading tileset image:\n'%1'").arg(source);
-            return 0;
-        }
-    }
-    return ts;
 }
 
 bool BuildingTMX::upgradeTxt()
@@ -461,18 +365,11 @@ bool BuildingTMX::mergeTxt()
 
     // MERGE HERE
 
-    int tilesetBlock = -1;
     int layersBlock = -1;
-    QMap<QString,SimpleFileKeyValue> userTilesetMap;
     QMap<QString,int> userLayersMap;
     int blockIndex = 0;
     foreach (SimpleFileBlock b, userFile.blocks) {
-        if (b.name == QLatin1String("tilesets")) {
-            foreach (SimpleFileKeyValue kv, b.values) {
-                userTilesetMap[kv.value] = kv;
-            }
-            tilesetBlock = blockIndex;
-        } else if (b.name == QLatin1String("layers"))  {
+        if (b.name == QLatin1String("layers"))  {
             int layerIndex = 0;
             foreach (SimpleFileKeyValue kv, b.values)
                 userLayersMap[kv.value] = layerIndex++;
@@ -482,14 +379,7 @@ bool BuildingTMX::mergeTxt()
     }
 
     foreach (SimpleFileBlock b, sourceFile.blocks) {
-        if (b.name == QLatin1String("tilesets")) {
-            foreach (SimpleFileKeyValue kv, b.values) {
-                if (!userTilesetMap.contains(kv.value)) {
-                    userFile.blocks[tilesetBlock].values += kv;
-                    qDebug() << "TMXConfig.txt merge: added tileset" << kv.value;
-                }
-            }
-        } else if (b.name == QLatin1String("layers"))  {
+        if (b.name == QLatin1String("layers"))  {
             int insertIndex = 0;
             foreach (SimpleFileKeyValue kv, b.values) {
                 if (userLayersMap.contains(kv.value)) {

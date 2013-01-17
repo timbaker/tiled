@@ -51,8 +51,6 @@ public:
     bool readTxt();
     bool writeTxt();
 
-    Tiled::Tileset *loadTileset(const QString &imageSource);
-
     QString errorString() const
     { return mError; }
 
