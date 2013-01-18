@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Tile Properties Editor</title></head><body>
+<h1>Tile Properties Editor</h1>
+The Tile Properties Editor is used to edit <span style="font-weight: bold;">.tiles</span> files. A <span style="font-weight: bold;">.tiles</span> file is a binary file the game uses to determine which tiles are wall tiles, door tiles, etc.&nbsp; A .tiles
+file stores a list of tilesets and the properties assigned to each tile
+in a tileset.&nbsp; Every tile property is just a string name plus
+string value.&nbsp; The editor supports Boolean, Integer, String and
+Enum (enumeration) properties.<br>
+
+<h2>TileProperties.txt</h2>The names and types of all the properties
+that can be edited are
+specified in the TileProperties.txt file.&nbsp; You can easily add new
+property-editing controls to the editor by editing the
+TileProperties.txt file in a
+text editor program.&nbsp; The TileProperties.txt file is read in every
+time the Tile Properites Editor is displayed.&nbsp; So you may close
+the editor (but keep TileZed running), edit TileProperties.txt, then
+open the editor again to see the changes.<br>
+<br>
+There is also a set of simple <a href="modify.html">commands that can modify the properties</a> in a .tiles file when it is read in.<br>
+<h2>Default Values</h2>All properties in the editor have a default
+value.&nbsp; When a property is set to its default value, no property
+is written to the .tiles file.&nbsp; The label for an editor control
+(like a checkbox) is displayed in <span style="font-weight: bold;">bold</span> when a property does not have its default value.<br>
+<h2>Boolean Properties</h2>
+property<br>
+{<br>
+&nbsp;&nbsp;&nbsp; Type = Boolean<br>
+&nbsp;&nbsp;&nbsp; Name = CollideNorth<br>
+&nbsp;&nbsp;&nbsp; ShortName = collideN<br>
+&nbsp;&nbsp;&nbsp; Default = false<br>
+&nbsp;&nbsp;&nbsp; ReverseLogic = false<br>
+}<br>
+<br>
+Boolean properties are displayed as a checkbox in the editor.&nbsp;  In a .tiles file, a Boolean property is stored as <span style="font-weight: bold;">ShortName</span>="".
+<ul>
+  <li><span style="font-weight: bold;">Name</span> is displayed as the label beside the checkbox in the editor.<br>
+</li>
+  <li><span style="font-weight: bold;">ShortName</span> is the name of the property written to the .tiles file.</li>
+  <li><span style="font-weight: bold;">Default</span> is the default value for the property.&nbsp; It may be <span style="font-weight: bold;">true</span> or <span style="font-weight: bold;">false</span>. <br>
+  </li>
+  <li><span style="font-weight: bold;">ReverseLogic</span> causes the property to be written to the .tiles file when the property <span style="font-style: italic;">does</span> have its default value.&nbsp; This is the opposite of the usual behavior.<br>
+  </li>
+</ul>
+<h2>Integer Properties</h2>
+property<br>
+{<br>
+&nbsp;&nbsp;&nbsp; Type = Integer<br>
+&nbsp;&nbsp;&nbsp; Name = WaterAmount<br>
+&nbsp;&nbsp;&nbsp; ShortName = waterAmount<br>
+&nbsp;&nbsp;&nbsp; Min = 0<br>
+&nbsp;&nbsp;&nbsp; Max = 1000000<br>
+&nbsp;&nbsp;&nbsp; Default = 0<br>
+}<br>
+<br>
+Integer properties are displayed as a spinbox in the editor.&nbsp; In a .tiles file, an Integer property is stored as <span style="font-weight: bold;">ShortName</span>=N where N is the integer value of the property.<br>
+<ul>
+  <li><span style="font-weight: bold;">Name</span> is displayed as the label beside the spinbox in the editor.</li>
+  <li><span style="font-weight: bold;">ShortName</span> is the name of the property written to the .tiles file.</li>
+  <li><span style="font-weight: bold;">Min</span> and <span style="font-weight: bold;">Max</span> limit the values the user can enter in the spinbox.&nbsp; <span style="font-weight: bold;">Min</span> must be less than <span style="font-weight: bold;">Max</span>.<br>
+  </li>
+  <li><span style="font-weight: bold;">Default</span> is the default value for the property.&nbsp; It must be between <span style="font-weight: bold;">Min</span> and <span style="font-weight: bold;">Max</span> inclusive.<br>
+  </li>
+</ul>
+<h2>String Properties</h2>
+property<br>
+{<br>
+&nbsp;&nbsp;&nbsp; Type = String<br>
+&nbsp;&nbsp;&nbsp; Name = ContainerType<br>
+&nbsp;&nbsp;&nbsp; ShortName = container<br>
+&nbsp;&nbsp;&nbsp; Default =<br>
+}<br>
+<br>
+String properties are displayed as an edit field with a drop-down list
+in the editor.&nbsp; The drop-down list is populated with all the
+values of the property found in the .tiles file.&nbsp; In a .tiles file, a String property is stored as <span style="font-weight: bold;">ShortName</span>=S where S is the string value of the property.<br>
+
+<ul>
+<li><span style="font-weight: bold;">Name</span> is displayed as the label beside the edit field in the editor.</li><li><span style="font-weight: bold;">ShortName</span> is the name of the property written to the .tiles file.</li>
+  <li><span style="font-weight: bold;">Default</span> is the default value for the property.&nbsp; It can be any one-line string.<br>
+  </li>
+</ul>
+<h2>Enum Properties</h2>
+property<br>
+{<br>
+&nbsp;&nbsp;&nbsp; Type = Enum<br>
+&nbsp;&nbsp;&nbsp; Name = StairStyle<br>
+&nbsp;&nbsp;&nbsp; ShortName =<br>
+&nbsp;&nbsp;&nbsp; Enums<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; None =<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; BottomW = stairsBW<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MiddleW = stairsMW<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TopW = stairsTW<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; BottomN = stairsBN<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MiddleN = stairsMN<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TopN = stairsTN<br>
+&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp; Default = None<br>
+&nbsp;&nbsp;&nbsp; ValueAsPropertyName = true<br>
+}<br>
+<br>
+Enum properties are displayed as a combobox in the editor.&nbsp; In a .tiles file, an Enum property may be stored as either <span style="font-weight: bold;">ShortName</span>=E&nbsp; or as E="", where E is one of the possible values of this property.<br>
+<ul>
+<li><span style="font-weight: bold;">Name</span> is displayed as the label beside the combobox field in the editor.</li><li><span style="font-weight: bold;">ShortName</span> is the name of the property written to the .tiles file, but only when <span style="font-weight: bold;">ValueAsPropertyName</span> is false.</li>
+  <li><span style="font-weight: bold;">Enums</span> lists all the possible values of this property.&nbsp;
+For each A=B listed, A is the name displayed in the editor combobox,
+and B is the name written to the .tiles file.&nbsp; If B is left empty,
+then A is written to the .tiles file.</li>
+  <li><span style="font-weight: bold;">Default</span> is the default value for this property.&nbsp; It must be one of the values listed in the <span style="font-weight: bold;">Enums</span> block.</li>
+  <li><span style="font-weight: bold;">ValueAsPropertyName</span> controls how the property is written to the .tiles file.&nbsp; If you want SomeEnum=SomeValue, set this to <span style="font-weight: bold;">false</span>.&nbsp; If you want SomeValue="", set this to <span style="font-weight: bold;">true</span>.&nbsp; In the example above, if BottomW is chosen in the editor, then stairsBW="" will be written to the .tiles file.<br>
+  </li>
+</ul>
+<br>
+
+
+
+</body></html>

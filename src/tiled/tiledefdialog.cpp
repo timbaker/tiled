@@ -32,6 +32,7 @@
 #include "tileset.h"
 
 #include <QCloseEvent>
+#include <QDesktopServices>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QLineEdit>
@@ -42,6 +43,7 @@
 #include <QToolButton>
 #include <QUndoGroup>
 #include <QUndoStack>
+#include <QUrl>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -347,6 +349,8 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     connect(ui->actionSaveAs, SIGNAL(triggered()), SLOT(fileSaveAs()));
     connect(ui->actionAddTileset, SIGNAL(triggered()), SLOT(addTileset()));
     connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
+
+    connect(ui->actionUserGuide, SIGNAL(triggered()), SLOT(help()));
 
     foreach (QObject *o, ui->propertySheet->children())
         if (o->isWidgetType())
@@ -933,6 +937,14 @@ void TileDefDialog::updateUI()
     updateWindowTitle();
 
     mSynching = false;
+}
+
+void TileDefDialog::help()
+{
+    QString path = QLatin1String("file:///") +
+            QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + QLatin1String("docs/TileProperties/index.html");
+    QDesktopServices::openUrl(QUrl(path, QUrl::TolerantMode));
 }
 
 bool TileDefDialog::eventFilter(QObject *object, QEvent *event)

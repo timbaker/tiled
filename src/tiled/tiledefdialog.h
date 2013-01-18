@@ -105,6 +105,8 @@ private slots:
 
     void updateUI();
 
+    void help();
+
 private:
     bool eventFilter(QObject *object, QEvent *event);
     void closeEvent(QCloseEvent *event);

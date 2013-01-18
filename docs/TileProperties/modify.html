@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+  
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+  <title>Modifying Tile Properties</title>
+
+  
+</head><body>
+You may add commands to the TileProperties.txt file that will modify
+the properties in a .tiles file as it is read in.&nbsp; This can be
+useful if you want to add, rename, or remove properties or change the
+value of properties on many tiles without having to edit each one.<br>
+
+<br>
+
+To add a command, place one or more blocks named "modify" in
+TileProperties.txt.<br>
+
+<pre style="margin-left: 40px;">modify<br>{<br>&nbsp;&nbsp;&nbsp; command = arg<br>&nbsp;&nbsp;&nbsp; command = arg arg<br>&nbsp;&nbsp;&nbsp; command = arg arg arg arg<br>&nbsp;&nbsp;&nbsp; ....<br>}<br>modify<br>{<br>&nbsp;&nbsp;&nbsp; command = arg<br>}<br>....</pre>
+Each "modify" block has a list of one or more commands that will be
+executed in order on the set of properties read in for every tile in a
+.tiles file.&nbsp; All of the modify blocks are processed on every
+tile's properties in the order the modify blocks appear in
+TileProperties.txt.<br>
+<br>
+Any of the arguments to a command may be enclosed in double-quotes
+"...".&nbsp; If you wanted to match an empty value, just write "".<br>
+<h2>Command: match</h2>
+match = property<br>
+match = property value<br>
+<br>
+The <span style="font-weight: bold;">match</span> command looks for
+either a property or a property/value pair.&nbsp; If no matching
+property is found, then none of the other commands after the <span style="font-weight: bold;">match</span> command in the current modify block will be executed.<br>
+<h2>Command: reject</h2>
+reject = property<br>
+reject = property value<br>
+<br>
+The <span style="font-weight: bold;">reject</span> command has the opposite effect of the <span style="font-weight: bold;">match</span> command.&nbsp; If a tile <span style="font-style: italic;">does</span> have a property set, then none of the commands after the <span style="font-weight: bold;">reject</span> command in the current modify block will be executed.<br>
+<h2>Command: remove</h2>
+remove = property<br>
+remove = property value<br>
+<br>
+The <span style="font-weight: bold;">remove</span> command removes the
+named property from the set of properties on a tile.&nbsp; If no value
+is given, then the named property is removed regardless of the value.<br>
+<h2>Command: rename</h2>
+rename = old_name new_name<br>
+<br>
+The <span style="font-weight: bold;">rename</span> command changes the
+name of a property called old_name to new_name.&nbsp; If the property
+called old_name isn't found on a tile, this command has no effect.<br>
+<h2>Command: replace</h2>
+replace = property1 value1 property2 value2<br>
+<br>
+The <span style="font-weight: bold;">replace</span> command removes the
+property1/value1 pair and adds the property2/value2 pair.&nbsp; If the
+property1/value1 pair is not found, then this command has no effect.<br>
+<h2>Command: set</h2>
+set = property value<br>
+<br>
+The <span style="font-weight: bold;">set</span> command sets the value
+of a property.&nbsp; This command sets the property/value even if the
+named property is not already set on a tile.<br>
+<br>
+
+</body></html>
