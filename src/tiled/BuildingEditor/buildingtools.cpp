@@ -1385,6 +1385,7 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mObject->setCapTiles(mEditor->building()->roofCapTile());
         mObject->setSlopeTiles(mEditor->building()->roofSlopeTile());
         mObject->setTopTiles(mEditor->building()->roofTopTile());
+        mObject->setDefaultCaps();
         mEditor->setCursorObject(mObject);
     }
 
