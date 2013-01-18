@@ -1,20 +1,3 @@
-modify
-{
-    match = KEY-WITH-ANY-VALUE
-    match = KEY VALUE
-
-    reject = KEY-WITH-ANY-VALUE
-    reject = KEY VALUE
-
-    remove = KEY-WITH-ANY-VALUE
-    remove = KEY VALUE
-
-    rename = KEY NEWNAME
-
-    replace = KEY VALUE KEY2 VALUE2
-
-    set = KEY VALUE
-}
 property
 {
     Type = Boolean
