@@ -1320,7 +1320,10 @@ void TileDefDialog::setPropertiesPage()
                     checked = defTile->getBoolean(p->mName);
                 }
                 w->setChecked(checked);
-                setBold(w, checked != p->mDefault);
+                if (p->mReverseLogic)
+                    setBold(w, checked == p->mDefault);
+                else
+                    setBold(w, checked != p->mDefault);
             }
             continue;
         }
