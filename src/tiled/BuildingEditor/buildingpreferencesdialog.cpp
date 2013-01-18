@@ -38,6 +38,9 @@ BuildingPreferencesDialog::BuildingPreferencesDialog(QWidget *parent) :
     mUseOpenGL = prefs()->useOpenGL();
     ui->useOpenGL->setChecked(mUseOpenGL);
     connect(ui->useOpenGL, SIGNAL(toggled(bool)), SLOT(setUseOpenGL(bool)));
+
+    ui->isometric->setChecked(!prefs()->levelIsometric());
+    ui->levelIsometric->setChecked(prefs()->levelIsometric());
 }
 
 BuildingPreferencesDialog::~BuildingPreferencesDialog()
@@ -58,5 +61,6 @@ void BuildingPreferencesDialog::setUseOpenGL(bool useOpenGL)
 void BuildingPreferencesDialog::accept()
 {
     prefs()->setUseOpenGL(mUseOpenGL);
+    prefs()->setLevelIsometric(ui->levelIsometric->isChecked());
     QDialog::accept();
 }

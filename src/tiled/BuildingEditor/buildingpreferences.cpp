@@ -29,6 +29,7 @@ static const char *KEY_HIGHLIGHT_ROOM = "BuildingEditor/HighlightRoom";
 static const char *KEY_SHOW_WALLS = "BuildingEditor/PreviewWindow/ShowWalls";
 static const char *KEY_SHOW_OBJECTS = "BuildingEditor/PreviewWindow/ShowObjects";
 static const char *KEY_OPENGL = "BuildingEditor/OpenGL";
+static const char *KEY_LEVEL_ISO = "BuildingEditor/LevelIsomettric";
 
 BuildingPreferences *BuildingPreferences::mInstance = 0;
 
@@ -60,6 +61,7 @@ BuildingPreferences::BuildingPreferences(QObject *parent) :
     mTileScale = mSettings.value(QLatin1String(KEY_TILE_SCALE),
                                  0.5).toReal();
     mUseOpenGL = mSettings.value(QLatin1String(KEY_OPENGL), false).toBool();
+    mLevelIsometric = mSettings.value(QLatin1String(KEY_LEVEL_ISO), false).toBool();
 }
 
 QString BuildingPreferences::configPath() const
@@ -133,4 +135,13 @@ void BuildingPreferences::setUseOpenGL(bool useOpenGL)
     mUseOpenGL = useOpenGL;
     mSettings.setValue(QLatin1String(KEY_OPENGL), mUseOpenGL);
     emit useOpenGLChanged(mUseOpenGL);
+}
+
+void BuildingPreferences::setLevelIsometric(bool levels)
+{
+    if (levels == mLevelIsometric)
+        return;
+    mLevelIsometric = levels;
+    mSettings.setValue(QLatin1String(KEY_LEVEL_ISO), mLevelIsometric);
+    emit levelIsometricChanged(mLevelIsometric);
 }

@@ -89,11 +89,14 @@ bool BuildingTMX::exportTMX(Building *building, const QString &fileName)
     BuildingMap bmap(building);
 
     Map *map = bmap.mergedMap();
+
     if (map->orientation() == Map::LevelIsometric) {
-        Map *isoMap = MapManager::instance()->convertOrientation(map, Map::Isometric);
-        TilesetManager::instance()->removeReferences(map->tilesets());
-        delete map;
-        map = isoMap;
+        if (!BuildingPreferences::instance()->levelIsometric()) {
+            Map *isoMap = MapManager::instance()->convertOrientation(map, Map::Isometric);
+            TilesetManager::instance()->removeReferences(map->tilesets());
+            delete map;
+            map = isoMap;
+        }
     }
 
     foreach (BuildingFloor *floor, building->floors()) {

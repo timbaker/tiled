@@ -56,6 +56,9 @@ public:
     bool useOpenGL() const
     { return mUseOpenGL; }
 
+    bool levelIsometric() const
+    { return mLevelIsometric; }
+
 signals:
     void showGridChanged(bool show);
     void highlightFloorChanged(bool highlight);
@@ -64,6 +67,7 @@ signals:
     void showObjectsChanged(bool show);
     void tileScaleChanged(qreal scale);
     void useOpenGLChanged(bool useOpenGL);
+    void levelIsometricChanged(bool levels);
 
 public slots:
     void setShowGrid(bool show);
@@ -73,6 +77,7 @@ public slots:
     void setShowObjects(bool show);
     void setTileScale(qreal scale);
     void setUseOpenGL(bool useOpenGL);
+    void setLevelIsometric(bool levels);
 
 private:
     static BuildingPreferences *mInstance;
@@ -84,6 +89,7 @@ private:
     bool mShowObjects;
     qreal mTileScale;
     bool mUseOpenGL;
+    bool mLevelIsometric;
 };
 
 } // namespace BuildingEditor
