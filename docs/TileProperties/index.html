@@ -1,5 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
+
 <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Tile Properties Editor</title></head><body>
 <h1>Tile Properties Editor</h1>
 The Tile Properties Editor is used to edit <span style="font-weight: bold;">.tiles</span> files. A <span style="font-weight: bold;">.tiles</span> file is a binary file the game uses to determine which tiles are wall tiles, door tiles, etc.&nbsp; A .tiles
@@ -99,6 +100,7 @@ property<br>
 &nbsp;&nbsp;&nbsp; }<br>
 &nbsp;&nbsp;&nbsp; Default = None<br>
 &nbsp;&nbsp;&nbsp; ValueAsPropertyName = true<br>
+&nbsp;&nbsp;&nbsp; ExtraPropertyIfSet =<br>
 }<br>
 <br>
 Enum properties are displayed as a combobox in the editor.&nbsp; In a .tiles file, an Enum property may be stored as either <span style="font-weight: bold;">ShortName</span>=E&nbsp; or as E="", where E is one of the possible values of this property.<br>
@@ -109,8 +111,10 @@ For each A=B listed, A is the name displayed in the editor combobox,
 and B is the name written to the .tiles file.&nbsp; If B is left empty,
 then A is written to the .tiles file.</li>
   <li><span style="font-weight: bold;">Default</span> is the default value for this property.&nbsp; It must be one of the values listed in the <span style="font-weight: bold;">Enums</span> block.</li>
-  <li><span style="font-weight: bold;">ValueAsPropertyName</span> controls how the property is written to the .tiles file.&nbsp; If you want SomeEnum=SomeValue, set this to <span style="font-weight: bold;">false</span>.&nbsp; If you want SomeValue="", set this to <span style="font-weight: bold;">true</span>.&nbsp; In the example above, if BottomW is chosen in the editor, then stairsBW="" will be written to the .tiles file.<br>
+  <li><span style="font-weight: bold;">ValueAsPropertyName</span> controls how the property is written to the .tiles file.&nbsp; If you want SomeEnum=SomeValue, set this to <span style="font-weight: bold;">false</span>.&nbsp; If you want SomeValue="", set this to <span style="font-weight: bold;">true</span>.&nbsp; In the example above, if BottomW is chosen in the editor, then stairsBW="" will be written to the .tiles file.</li>
+  <li><span style="font-weight: bold;">ExtraPropertyIfSet</span> specifies the name of an additional property that will be set on a tile if <span style="font-weight: bold;">ValueAsPropertyName=true</span> and the value of this property is not the default.&nbsp; This is used to set the wall="" property on a tile if the WallStyle property is also set on that tile.<br>
   </li>
+
 </ul>
 <br>
 
