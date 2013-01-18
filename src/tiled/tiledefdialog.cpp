@@ -625,6 +625,7 @@ bool TileDefDialog::fileSaveAs()
 
 static void debugHistory(QStringList &history, int index)
 {
+#ifndef QT_NO_DEBUG
     QStringList items;
     for (int i = 0; i < history.size(); i++) {
         if (i == index)
@@ -633,6 +634,7 @@ static void debugHistory(QStringList &history, int index)
             items += history[i];
     }
     qDebug() << items.join(QLatin1String(" "));
+#endif
 }
 
 void TileDefDialog::currentTilesetChanged(int row)
