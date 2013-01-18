@@ -683,7 +683,7 @@ bool TilePropertyMgr::addProperty(SimpleFileBlock &block)
         if (!ok) return false;
         int Default = toInt("Default", block, ok);
         if (!ok) return false;
-        if (Min > Max || Default < Min || Default > Max) {
+        if (Min >= Max || Default < Min || Default > Max) {
             mError = tr("Weird integer values: Min=%1 Max=%2 Default=%3.\n\n%4")
                     .arg(Min).arg(Max).arg(Default).arg(block.toString());
             return false;
