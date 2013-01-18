@@ -323,15 +323,19 @@ public:
 
         void FromProperties()
         {
-            mValue = mProperties.contains(mShortName);
-            if (mReverseLogic)
-                mValue = !mValue;
+            mValue = mDefaultValue;
+            if (mProperties.contains(mShortName)) {
+                if (!mReverseLogic)
+                    mValue = !mDefaultValue;
+            }
         }
 
         void ToProperties()
         {
-            remove(mShortName); // "bed"
-            if (mValue == !mReverseLogic)
+            remove(mShortName);
+            if (mReverseLogic && (mValue == mDefaultValue))
+                set(mShortName);
+            else if (!mReverseLogic && (mValue != mDefaultValue))
                 set(mShortName);
         }
 

@@ -95,7 +95,7 @@ property
     Name = IsIndoor
     ShortName = exterior
     Default = true
-    ReverseLogic = true
+    ReverseLogic = false
 }
 separator
 {
