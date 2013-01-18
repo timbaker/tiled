@@ -21,6 +21,7 @@
 #include "ui_tiledefdialog.h"
 
 #include "addtilesetsdialog.h"
+#include "preferences.h"
 #include "tiledeffile.h"
 #include "tilesetmanager.h"
 #include "zoomable.h"
@@ -996,11 +997,14 @@ QString TileDefDialog::getSaveLocation()
 {
     QSettings settings;
     QString key = QLatin1String("TileDefDialog/LastOpenPath");
-    QString suggestedFileName;
-    if (mTileDefFile->fileName().isEmpty()) {
-        suggestedFileName = settings.value(key).toString();
-        if (!suggestedFileName.isEmpty())
-            suggestedFileName += QLatin1String("/tiledefinitions.tiles");
+    QString suggestedFileName = Preferences::instance()->tilesDirectory() +
+            QLatin1String("/tiledefinitions.tiles");
+    if (!mTileDefFile) {
+        //
+    } else if (mTileDefFile->fileName().isEmpty()) {
+        QString lastPath = settings.value(key).toString();
+        if (!lastPath.isEmpty())
+            suggestedFileName = lastPath + QLatin1String("/tiledefinitions.tiles");
     } else {
         suggestedFileName = mTileDefFile->fileName();
     }
