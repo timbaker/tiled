@@ -365,33 +365,66 @@ bool BuildingTMX::mergeTxt()
 
     // MERGE HERE
 
-    int layersBlock = -1;
-    QMap<QString,int> userLayersMap;
-    int blockIndex = 0;
-    foreach (SimpleFileBlock b, userFile.blocks) {
-        if (b.name == QLatin1String("layers"))  {
-            int layerIndex = 0;
-            foreach (SimpleFileKeyValue kv, b.values)
-                userLayersMap[kv.value] = layerIndex++;
-            layersBlock = blockIndex;
+    // Get the list of layers from the source file.
+    int sourceLayersBlock = sourceFile.findBlock(QLatin1String("layers"));
+    if (sourceLayersBlock == -1) {
+        mError = tr("Missing 'layers' block!\n%1").arg(sourcePath);
+        return false;
+    }
+    QList<LayerInfo> sourceLayers;
+    foreach (SimpleFileKeyValue kv, sourceFile.blocks[sourceLayersBlock].values) {
+        if (kv.name == QLatin1String("tile")) {
+            sourceLayers += LayerInfo(kv.value, LayerInfo::Tile);
+        } else if (kv.name == QLatin1String("object")) {
+            sourceLayers += LayerInfo(kv.value, LayerInfo::Object);
+        } else {
+            mError = tr("Unknown layer type '%1'.\n%2")
+                    .arg(kv.name)
+                    .arg(sourcePath);
+            return false;
         }
-        ++blockIndex;
     }
 
-    foreach (SimpleFileBlock b, sourceFile.blocks) {
-        if (b.name == QLatin1String("layers"))  {
-            int insertIndex = 0;
-            foreach (SimpleFileKeyValue kv, b.values) {
-                if (userLayersMap.contains(kv.value)) {
-                    insertIndex = userLayersMap[kv.value] + 1;
-                } else {
-                    userFile.blocks[layersBlock].values.insert(insertIndex, kv);
-                    userLayersMap[kv.value] = insertIndex;
-                    qDebug() << "TMXConfig.txt merge: added layer" << kv.value << "at" << insertIndex;
-                    insertIndex++;
-                }
-            }
+    // Get the list of layers from the user file.
+    int userLayersBlock = userFile.findBlock(QLatin1String("layers"));
+    if (userLayersBlock == -1) {
+        mError = tr("Missing 'layers' block!\n%1").arg(userPath);
+        return false;
+    }
+    QList<LayerInfo> userLayers;
+    foreach (SimpleFileKeyValue kv, userFile.blocks[userLayersBlock].values) {
+        if (kv.name == QLatin1String("tile")) {
+            userLayers += LayerInfo(kv.value, LayerInfo::Tile);
+        } else if (kv.name == QLatin1String("object")) {
+            userLayers += LayerInfo(kv.value, LayerInfo::Object);
+        } else {
+            mError = tr("Unknown layer type '%1'.\n%2")
+                    .arg(kv.name)
+                    .arg(userPath);
+            return false;
         }
+    }
+
+    QList<LayerInfo> mergedLayers = sourceLayers;
+
+    int insertIndex = 0;
+    foreach (LayerInfo info, userLayers) {
+        if (mergedLayers.contains(info)) {
+            insertIndex = mergedLayers.indexOf(info) + 1;
+        } else {
+            mergedLayers.insert(insertIndex, info);
+            qDebug() << "TMXConfig.txt merge: added layer" << info.mName << "at" << insertIndex;
+            insertIndex++;
+        }
+    }
+
+    SimpleFileBlock &userBlock = userFile.blocks[userLayersBlock];
+    userBlock.values.clear();
+    foreach (LayerInfo info, mergedLayers) {
+        if (info.mType == LayerInfo::Tile)
+            userBlock.addValue("tile", info.mName);
+        else
+            userBlock.addValue("object", info.mName);
     }
 
     userFile.replaceValue("revision", QString::number(sourceRevision + 1));

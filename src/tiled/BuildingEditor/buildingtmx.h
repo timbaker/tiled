@@ -71,6 +71,12 @@ private:
             mType(type)
         {}
 
+        bool operator==(const LayerInfo &other) const
+        {
+            return mName == other.mName &&
+                    mType == other.mType;
+        }
+
         QString mName;
         Type mType;
     };
