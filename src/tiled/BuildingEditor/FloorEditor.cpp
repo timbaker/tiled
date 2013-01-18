@@ -279,6 +279,8 @@ void BaseFloorEditor::floorRemoved(BuildingFloor *floor)
 {
     Q_ASSERT(mFloorItems[floor->level()]
              && mFloorItems[floor->level()]->floor() == floor);
+    foreach (GraphicsObjectItem *item, mFloorItems[floor->level()]->objectItems())
+        mSelectedObjectItems.remove(item);
     delete mFloorItems.takeAt(floor->level());
 
     foreach (GraphicsFloorItem *item, mFloorItems)
