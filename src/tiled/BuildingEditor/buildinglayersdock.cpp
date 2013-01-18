@@ -83,7 +83,8 @@ void BuildingLayersDock::setLayersList()
             QListWidgetItem *item = new QListWidgetItem;
             item->setText(layerName);
             item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-            item->setCheckState(Qt::Checked);
+            bool visible = mDocument->currentFloor()->layerVisibility(layerName);
+            item->setCheckState(visible ? Qt::Checked : Qt::Unchecked);
             ui->layers->insertItem(0, item);
         }
     }
