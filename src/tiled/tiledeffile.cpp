@@ -591,6 +591,17 @@ bool TilePropertyMgr::readTxt()
 {
     QFileInfo info(txtPath());
 
+    // Create ~/.TileZed if needed.
+    QString configPath = BuildingEditor::BuildingPreferences::instance()->configPath();
+    QDir dir(configPath);
+    if (!dir.exists()) {
+        if (!dir.mkpath(configPath)) {
+            mError = tr("Failed to create config directory:\n%1")
+                    .arg(QDir::toNativeSeparators(configPath));
+            return false;
+        }
+    }
+
     // Copy TileProperties.txt from the application directory to the ~/.TileZed
     // directory if needed.
     if (!info.exists()) {
