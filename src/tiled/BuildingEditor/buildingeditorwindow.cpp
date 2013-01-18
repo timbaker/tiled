@@ -750,6 +750,12 @@ void BuildingEditorWindow::readSettings()
                                  QByteArray()).toByteArray());
     mOrthoView->zoomable()->setScale(mSettings.value(QLatin1String("EditorScale"),
                                                 1.0).toReal());
+    mIsoView->zoomable()->setScale(mSettings.value(QLatin1String("IsoEditorScale"),
+                                                1.0).toReal());
+    QString orient = mSettings.value(QLatin1String("Orientation"),
+                                     QLatin1String("isometric")).toString();
+    if (orient == QLatin1String("isometric"))
+        toggleOrthoIso();
     mSettings.endGroup();
 
     mCategoryZoomable->setScale(BuildingPreferences::instance()->tileScale());
@@ -763,6 +769,10 @@ void BuildingEditorWindow::writeSettings()
     mSettings.setValue(QLatin1String("geometry"), saveGeometry());
     mSettings.setValue(QLatin1String("state"), saveState());
     mSettings.setValue(QLatin1String("EditorScale"), mOrthoView->zoomable()->scale());
+    mSettings.setValue(QLatin1String("IsoEditorScale"), mIsoView->zoomable()->scale());
+    mSettings.setValue(QLatin1String("Orientation"),
+                       (mOrient == OrientOrtho) ? QLatin1String("orthogonal")
+                                                : QLatin1String("isometric"));
     mSettings.setValue(QLatin1String("SelectedCategory"),
                        mCategory ? mCategory->name() : QString());
     mSettings.setValue(QLatin1String("SelectedFurnitureGroup"),
