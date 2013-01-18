@@ -90,6 +90,7 @@ install(
 )
 
 install(FILES docs/map.dtd docs/map.xsd DESTINATION docs)
+install ( DIRECTORY docs/TileProperties DESTINATION docs/ )
 install(DIRECTORY examples DESTINATION .)
 
 #--------------------------------------------------------------------------------
@@ -102,8 +103,8 @@ Translations = translations\")
     " COMPONENT Runtime)
 
 #--------------------------------------------------------------------------------
-file( COPY Tilesets.txt DESTINATION ${CMAKE_BINARY_DIR}/Debug )
-file( COPY Tilesets.txt DESTINATION ${CMAKE_BINARY_DIR}/Release )
-install(FILES Tilesets.txt DESTINATION .)
+file( COPY TileProperties.txt Tilesets.txt DESTINATION ${CMAKE_BINARY_DIR}/Debug )
+file( COPY TileProperties.txt Tilesets.txt DESTINATION ${CMAKE_BINARY_DIR}/Release )
+install(FILES TileProperties.txt Tilesets.txt DESTINATION .)
 
 

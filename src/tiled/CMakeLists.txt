@@ -68,6 +68,7 @@ set ( Tiled_SRCS
 	addremovelayer.cpp
 	addremovemapobject.cpp
 	addremovetileset.cpp
+	addtilesetsdialog.cpp
 	automapper.cpp
 	automapperwrapper.cpp
 	automappingmanager.cpp
@@ -162,6 +163,8 @@ set ( Tiled_SRCS
 	mapimagemanager.cpp
 	mapmanager.cpp
 	minimap.cpp
+	tiledefdialog.cpp
+	tiledeffile.cpp
 	tilemetainfodialog.cpp
 	tilemetainfomgr.cpp
 	zgriditem.cpp
@@ -175,6 +178,7 @@ set ( Tiled_SRCS
 
 set ( Tiled_UIS
 	aboutdialog.ui
+	addtilesetsdialog.ui
 	commanddialog.ui
 	converttolotdialog.ui
 	convertorientationdialog.ui
@@ -188,6 +192,7 @@ set ( Tiled_UIS
 	propertiesdialog.ui
 	resizedialog.ui
 	saveasimagedialog.ui
+	tiledefdialog.ui
 	tilemetainfodialog.ui
 	)
 QT4_WRAP_UI(UIS ${Tiled_UIS})
@@ -205,6 +210,7 @@ set ( Tiled_MOCS
 	abstractobjecttool.h
 	abstracttiletool.h
 	abstracttool.h
+	addtilesetsdialog.h
 	automapper.h
 	automappingmanager.h
 	bucketfilltool.h
@@ -263,6 +269,8 @@ set ( Tiled_MOCS
 	mapimagemanager.h
 	mapmanager.h
 	minimap.h
+	tiledefdialog.h
+	tiledeffile.h
 	tilemetainfodialog.h
 	tilemetainfomgr.h
 	zlevelsdock.h
@@ -289,4 +297,3 @@ add_executable ( TileZed ${Tiled_SRCS} tiled.rc ${UIS} ${RSCS} ${TRS} ${MOCS} ${
 target_link_libraries ( TileZed BuildingEd libtiled ${QT_QTOPENGL_LIBRARY} ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} )
 
 INSTALL(TARGETS TileZed DESTINATION ".")
-

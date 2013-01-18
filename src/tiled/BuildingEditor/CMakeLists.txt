@@ -1,10 +1,11 @@
 set ( BuildingEd_UIS
     buildingeditorwindow.ui
     buildingfloorsdialog.ui
+    buildinglayersdock.ui
     buildingpreferencesdialog.ui
-    buildingpreviewwindow.ui
     buildingtemplatesdialog.ui
     buildingtilesdialog.ui
+    buildingtilesetdock.ui
     choosebuildingtiledialog.ui
     listofstringsdialog.ui
     newbuildingdialog.ui
@@ -34,15 +35,20 @@ set ( BuildingEd_SRCS
     buildingeditorwindow.cpp
     buildingfloor.cpp
     buildingfloorsdialog.cpp
+    buildingfurnituredock.cpp
+    buildinglayersdock.cpp
+    buildingmap.cpp
     buildingobjects.cpp
     buildingpreferences.cpp
     buildingpreferencesdialog.cpp
-    buildingpreviewwindow.cpp
     buildingreader.cpp
     buildingtemplates.cpp
     buildingtemplatesdialog.cpp
+    buildingtilemodeview.cpp
     buildingtiles.cpp
     buildingtilesdialog.cpp
+    buildingtilesetdock.cpp
+    buildingtiletools.cpp
     buildingtmx.cpp
     buildingtools.cpp
     buildingundoredo.cpp
@@ -66,13 +72,18 @@ set ( BuildingEd_MOCS
     buildingdocument.h
     buildingeditorwindow.h
     buildingfloorsdialog.h
+    buildingfurnituredock.h
+    buildinglayersdock.h
+    buildingmap.h
     buildingpreferences.h
     buildingpreferencesdialog.h
-    buildingpreviewwindow.h
     buildingtemplates.h
     buildingtemplatesdialog.h
+    buildingtilemodeview.h
+    buildingtiletools.h
     buildingtiles.h
     buildingtilesdialog.h
+    buildingtilesetdock.h
     buildingtools.h
     choosebuildingtiledialog.h
     FloorEditor.h
