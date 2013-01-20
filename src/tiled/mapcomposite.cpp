@@ -199,10 +199,15 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
     return !cells.isEmpty();
 }
 #else
+
 bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                                          QVector<const Cell *> &cells,
                                          QVector<qreal> &opacities) const
 {
+    static bool FirstCellIs0Floor = false;
+    if (!mOwner->parent())
+        FirstCellIs0Floor = false;
+
     bool cleared = false;
     for (int index = 0; index < mLayers.size(); index++) {
         if (isLayerEmpty(index))
@@ -220,9 +225,12 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                 cell = &tlBlend->cellAt(subPos);
             if (!cell->isEmpty()) {
                 if (!cleared) {
-                    cells.resize(0);
-                    opacities.resize(0);
+                    bool isFloor = !mLevel && !index && (tl->name() == QLatin1String("0_Floor"));
+                    cells.resize((!isFloor && FirstCellIs0Floor) ? 1 : 0);
+                    opacities.resize((!isFloor && FirstCellIs0Floor) ? 1 : 0);
                     cleared = true;
+                    if (isFloor && !mOwner->parent())
+                        FirstCellIs0Floor = true;
                 }
                 cells.append(cell);
 #if 1
