@@ -350,7 +350,7 @@ static void ReplaceRoofCorner(RoofObject *ro, int x, int y,
                               RoofObject::RoofTile tile)
 {
     int offset = ro->getOffset(tile);
-    QPoint tileOffset = ro->capTiles()->offset(offset);
+    QPoint tileOffset = ro->slopeTiles()->offset(offset);
     QRect bounds(0, 0, squares.size(), squares[0].size());
     QPoint p = QPoint(x, y) + tileOffset;
     if (bounds.contains(p))
