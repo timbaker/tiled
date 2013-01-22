@@ -790,7 +790,7 @@
   <customwidget>
    <class>BuildingEditor::BuildingOrthoView</class>
    <extends>QGraphicsView</extends>
-   <header>BuildingEditor/FloorEditor.h</header>
+   <header>BuildingEditor/buildingorthoview.h</header>
   </customwidget>
  </customwidgets>
  <resources>

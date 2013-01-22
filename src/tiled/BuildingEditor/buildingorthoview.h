@@ -15,8 +15,8 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef FLOOREDITOR_H
-#define FLOOREDITOR_H
+#ifndef BUILDINGORTHOVIEW_H
+#define BUILDINGORTHOVIEW_H
 
 #include <QGraphicsItem>
 //#include <QGraphicsEllipseItem>
@@ -551,4 +551,4 @@ private:
 
 } // namespace BuildingEditor
 
-#endif // FLOOREDITOR_H
+#endif // BUILDINGORTHOVIEW_H

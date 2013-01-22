@@ -39,6 +39,7 @@ set ( BuildingEd_SRCS
     buildinglayersdock.cpp
     buildingmap.cpp
     buildingobjects.cpp
+    buildingorthoview.cpp
     buildingpreferences.cpp
     buildingpreferencesdialog.cpp
     buildingreader.cpp
@@ -54,7 +55,6 @@ set ( BuildingEd_SRCS
     buildingundoredo.cpp
     buildingwriter.cpp
     choosebuildingtiledialog.cpp
-    FloorEditor.cpp
     furnituregroups.cpp
     furnitureview.cpp
     horizontallinedelegate.cpp
@@ -75,6 +75,7 @@ set ( BuildingEd_MOCS
     buildingfurnituredock.h
     buildinglayersdock.h
     buildingmap.h
+    buildingorthoview.h
     buildingpreferences.h
     buildingpreferencesdialog.h
     buildingtemplates.h
@@ -86,7 +87,6 @@ set ( BuildingEd_MOCS
     buildingtilesetdock.h
     buildingtools.h
     choosebuildingtiledialog.h
-    FloorEditor.h
     furnituregroups.h
     furnitureview.h
     mixedtilesetview.h

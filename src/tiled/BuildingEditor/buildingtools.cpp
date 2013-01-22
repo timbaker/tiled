@@ -22,10 +22,10 @@
 #include "buildingeditorwindow.h"
 #include "buildingfloor.h"
 #include "buildingobjects.h"
+#include "buildingorthoview.h"
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
 #include "buildingundoredo.h"
-#include "FloorEditor.h"
 #include "furnituregroups.h"
 
 #include <QAction>

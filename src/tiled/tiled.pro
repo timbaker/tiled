@@ -148,7 +148,6 @@ SOURCES += aboutdialog.cpp \
     converttolotdialog.cpp \
     BuildingEditor/simplefile.cpp \
     BuildingEditor/buildingtools.cpp \
-    BuildingEditor/FloorEditor.cpp \
     BuildingEditor/buildingdocument.cpp \
     BuildingEditor/building.cpp \
     BuildingEditor/buildingfloor.cpp \
@@ -186,7 +185,8 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/buildingeditorwindow.cpp \
     tiledefdialog.cpp \
     tiledeffile.cpp \
-    addtilesetsdialog.cpp
+    addtilesetsdialog.cpp \
+    BuildingEditor/buildingorthoview.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -301,7 +301,6 @@ HEADERS += aboutdialog.h \
     BuildingEditor/buildingeditorwindow.h \
     BuildingEditor/simplefile.h \
     BuildingEditor/buildingtools.h \
-    BuildingEditor/FloorEditor.h \
     BuildingEditor/buildingdocument.h \
     BuildingEditor/building.h \
     BuildingEditor/buildingfloor.h \
@@ -338,7 +337,8 @@ HEADERS += aboutdialog.h \
     BuildingEditor/buildinglayersdock.h \
     tiledefdialog.h \
     tiledeffile.h \
-    addtilesetsdialog.h
+    addtilesetsdialog.h \
+    BuildingEditor/buildingorthoview.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

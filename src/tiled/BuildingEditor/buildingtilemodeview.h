@@ -18,7 +18,7 @@
 #ifndef BUILDINGTILEMODEVIEW_H
 #define BUILDINGTILEMODEVIEW_H
 
-#include "FloorEditor.h"
+#include "buildingorthoview.h"
 
 #include <QGraphicsItem>
 #include <QGraphicsScene>
