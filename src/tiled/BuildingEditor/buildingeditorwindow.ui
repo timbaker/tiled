@@ -780,7 +780,7 @@
   <customwidget>
    <class>BuildingEditor::BuildingIsoView</class>
    <extends>QGraphicsView</extends>
-   <header>BuildingEditor/buildingtilemodeview.h</header>
+   <header>BuildingEditor/buildingisoview.h</header>
   </customwidget>
   <customwidget>
    <class>BuildingEditor::FurnitureView</class>

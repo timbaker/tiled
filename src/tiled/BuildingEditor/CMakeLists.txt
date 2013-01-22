@@ -36,6 +36,7 @@ set ( BuildingEd_SRCS
     buildingfloor.cpp
     buildingfloorsdialog.cpp
     buildingfurnituredock.cpp
+    buildingisoview.cpp
     buildinglayersdock.cpp
     buildingmap.cpp
     buildingobjects.cpp
@@ -45,7 +46,6 @@ set ( BuildingEd_SRCS
     buildingreader.cpp
     buildingtemplates.cpp
     buildingtemplatesdialog.cpp
-    buildingtilemodeview.cpp
     buildingtiles.cpp
     buildingtilesdialog.cpp
     buildingtilesetdock.cpp
@@ -73,6 +73,7 @@ set ( BuildingEd_MOCS
     buildingeditorwindow.h
     buildingfloorsdialog.h
     buildingfurnituredock.h
+    buildingisoview.h
     buildinglayersdock.h
     buildingmap.h
     buildingorthoview.h
@@ -80,7 +81,6 @@ set ( BuildingEd_MOCS
     buildingpreferencesdialog.h
     buildingtemplates.h
     buildingtemplatesdialog.h
-    buildingtilemodeview.h
     buildingtiletools.h
     buildingtiles.h
     buildingtilesdialog.h

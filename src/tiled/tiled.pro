@@ -176,7 +176,6 @@ SOURCES += aboutdialog.cpp \
     tilemetainfomgr.cpp \
     BuildingEditor/horizontallinedelegate.cpp \
     BuildingEditor/buildingfloorsdialog.cpp \
-    BuildingEditor/buildingtilemodeview.cpp \
     BuildingEditor/buildingtiletools.cpp \
     BuildingEditor/buildingmap.cpp \
     BuildingEditor/buildingfurnituredock.cpp \
@@ -186,7 +185,8 @@ SOURCES += aboutdialog.cpp \
     tiledefdialog.cpp \
     tiledeffile.cpp \
     addtilesetsdialog.cpp \
-    BuildingEditor/buildingorthoview.cpp
+    BuildingEditor/buildingorthoview.cpp \
+    BuildingEditor/buildingisoview.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -329,7 +329,6 @@ HEADERS += aboutdialog.h \
     tilemetainfomgr.h \
     BuildingEditor/horizontallinedelegate.h \
     BuildingEditor/buildingfloorsdialog.h \
-    BuildingEditor/buildingtilemodeview.h \
     BuildingEditor/buildingtiletools.h \
     BuildingEditor/buildingmap.h \
     BuildingEditor/buildingfurnituredock.h \
@@ -338,7 +337,8 @@ HEADERS += aboutdialog.h \
     tiledefdialog.h \
     tiledeffile.h \
     addtilesetsdialog.h \
-    BuildingEditor/buildingorthoview.h
+    BuildingEditor/buildingorthoview.h \
+    BuildingEditor/buildingisoview.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

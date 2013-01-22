@@ -15,7 +15,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "buildingtilemodeview.h"
+#include "buildingisoview.h"
 
 #include "building.h"
 #include "buildingdocument.h"

@@ -20,7 +20,7 @@
 #include "building.h"
 #include "buildingfloor.h"
 #include "buildingdocument.h"
-#include "buildingtilemodeview.h"
+#include "buildingisoview.h"
 #include "buildingundoredo.h"
 
 #include "maprenderer.h"

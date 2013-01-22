@@ -15,8 +15,8 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BUILDINGTILEMODEVIEW_H
-#define BUILDINGTILEMODEVIEW_H
+#ifndef BUILDINGISOVIEW_H
+#define BUILDINGISOVIEW_H
 
 #include "buildingorthoview.h"
 
@@ -307,4 +307,4 @@ private:
 
 } // namespace BuildingEditor
 
-#endif // BUILDINGTILEMODEVIEW_H
+#endif // BUILDINGISOVIEW_H
