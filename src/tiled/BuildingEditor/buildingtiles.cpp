@@ -17,7 +17,6 @@
 
 #include "buildingtiles.h"
 
-#include "buildingobjects.h"
 #include "buildingpreferences.h"
 #include "simplefile.h"
 
@@ -715,8 +714,10 @@ void BuildingTileEntry::setOffset(int e, const QPoint &offset)
 
 QPoint BuildingTileEntry::offset(int e) const
 {
-    if (e < 0 || e >= mOffsets.size())
+    if (e < 0 || e >= mOffsets.size()) {
+        Q_ASSERT(false);
         return QPoint();
+    }
     return mOffsets[e];
 }
 
