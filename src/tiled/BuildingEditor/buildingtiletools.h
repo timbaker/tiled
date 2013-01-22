@@ -31,10 +31,10 @@ class QUndoStack;
 
 namespace BuildingEditor {
 
-class BaseFloorEditor;
+class BuildingBaseScene;
 class BuildingDocument;
 class BuildingFloor;
-class BuildingTileModeScene;
+class BuildingIsoScene;
 class FloorTileGrid;
 
 /////
@@ -42,7 +42,7 @@ class FloorTileGrid;
 class DrawTileToolCursor : public QGraphicsItem
 {
 public:
-    DrawTileToolCursor(BaseFloorEditor *editor, QGraphicsItem *parent = 0);
+    DrawTileToolCursor(BuildingBaseScene *editor, QGraphicsItem *parent = 0);
 
     QRectF boundingRect() const;
 
@@ -54,7 +54,7 @@ public:
     void setTileRegion(const QRegion &tileRgn);
 
 private:
-    BaseFloorEditor *mEditor;
+    BuildingBaseScene *mEditor;
     QRegion mRegion;
     QRectF mBoundingRect;
     QColor mColor;

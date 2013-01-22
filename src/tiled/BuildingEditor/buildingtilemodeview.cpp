@@ -154,7 +154,7 @@ void TileModeGridItem::showGridChanged(bool show)
 
 /////
 
-TileModeSelectionItem::TileModeSelectionItem(BuildingTileModeScene *scene) :
+TileModeSelectionItem::TileModeSelectionItem(BuildingIsoScene *scene) :
     mScene(scene)
 {
     setZValue(1000);
@@ -215,8 +215,8 @@ void TileModeSelectionItem::updateBoundingRect()
 
 /////
 
-BuildingTileModeScene::BuildingTileModeScene(QObject *parent) :
-    BaseFloorEditor(parent),
+BuildingIsoScene::BuildingIsoScene(QObject *parent) :
+    BuildingBaseScene(parent),
     mBuildingMap(0),
     mGridItem(0),
     mTileSelectionItem(0),
@@ -231,7 +231,7 @@ BuildingTileModeScene::BuildingTileModeScene(QObject *parent) :
     ZVALUE_CURSOR = 1000;
     ZVALUE_GRID = 1001;
 
-    BaseFloorEditor::mRenderer = new IsoBuildingRenderer;
+    BuildingBaseScene::mRenderer = new IsoBuildingRenderer;
 
     setBackgroundBrush(Qt::darkGray);
 
@@ -257,35 +257,35 @@ BuildingTileModeScene::BuildingTileModeScene(QObject *parent) :
             SLOT(currentToolChanged(BaseTool*)));
 }
 
-BuildingTileModeScene::~BuildingTileModeScene()
+BuildingIsoScene::~BuildingIsoScene()
 {
     delete mBuildingMap;
 }
 
-MapRenderer *BuildingTileModeScene::mapRenderer() const
+MapRenderer *BuildingIsoScene::mapRenderer() const
 {
     return mBuildingMap->mapRenderer();
 }
 
-void BuildingTileModeScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void BuildingIsoScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     if (mCurrentTool)
         mCurrentTool->mousePressEvent(event);
 }
 
-void BuildingTileModeScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void BuildingIsoScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     if (mCurrentTool)
         mCurrentTool->mouseMoveEvent(event);
 }
 
-void BuildingTileModeScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void BuildingIsoScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     if (mCurrentTool)
         mCurrentTool->mouseReleaseEvent(event);
 }
 
-void BuildingTileModeScene::setDocument(BuildingDocument *doc)
+void BuildingIsoScene::setDocument(BuildingDocument *doc)
 {
     if (mDocument)
         mDocument->disconnect(this);
@@ -321,7 +321,7 @@ void BuildingTileModeScene::setDocument(BuildingDocument *doc)
     BuildingToMap();
 
     foreach (BuildingFloor *floor, mDocument->building()->floors())
-        BaseFloorEditor::floorAdded(floor);
+        BuildingBaseScene::floorAdded(floor);
 
     mLoading = true;
     currentFloorChanged();
@@ -385,13 +385,13 @@ void BuildingTileModeScene::setDocument(BuildingDocument *doc)
     emit documentChanged();
 }
 
-void BuildingTileModeScene::clearDocument()
+void BuildingIsoScene::clearDocument()
 {
     setDocument(0);
     emit documentChanged();
 }
 
-QStringList BuildingTileModeScene::layerNames() const
+QStringList BuildingIsoScene::layerNames() const
 {
     if (!mDocument)
         return QStringList();
@@ -493,12 +493,12 @@ void IsoBuildingRenderer::drawLine(QPainter *painter, qreal x1, qreal y1, qreal 
     painter->drawLine(tileToSceneF(QPointF(x1, y1), level), tileToSceneF(QPointF(x2, y2), level));
 }
 
-bool BuildingTileModeScene::currentFloorContains(const QPoint &tilePos, int dw, int dh)
+bool BuildingIsoScene::currentFloorContains(const QPoint &tilePos, int dw, int dh)
 {
     return currentFloor() && currentFloor()->contains(tilePos, dw, dh);
 }
 
-void BuildingTileModeScene::setToolTiles(const FloorTileGrid *tiles,
+void BuildingIsoScene::setToolTiles(const FloorTileGrid *tiles,
                                          const QPoint &pos,
                                          const QString &layerName)
 {
@@ -548,7 +548,7 @@ void BuildingTileModeScene::setToolTiles(const FloorTileGrid *tiles,
     update(r);
 }
 
-void BuildingTileModeScene::clearToolTiles()
+void BuildingIsoScene::clearToolTiles()
 {
     if (mLayerGroupWithToolTiles) {
         mLayerGroupWithToolTiles->clearToolTiles();
@@ -556,51 +556,51 @@ void BuildingTileModeScene::clearToolTiles()
     }
 }
 
-QString BuildingTileModeScene::buildingTileAt(int x, int y)
+QString BuildingIsoScene::buildingTileAt(int x, int y)
 {
     return mBuildingMap->buildingTileAt(x, y, currentLevel(), currentLayerName());
 }
 
-void BuildingTileModeScene::drawTileSelection(QPainter *painter, const QRegion &region,
+void BuildingIsoScene::drawTileSelection(QPainter *painter, const QRegion &region,
                                               const QColor &color, const QRectF &exposed,
                                               int level) const
 {
     mapRenderer()->drawTileSelection(painter, region, color, exposed, level);
 }
 
-void BuildingTileModeScene::setCursorObject(BuildingObject *object)
+void BuildingIsoScene::setCursorObject(BuildingObject *object)
 {
     mBuildingMap->setCursorObject(currentFloor(), object);
 }
 
-void BuildingTileModeScene::dragObject(BuildingFloor *floor, BuildingObject *object, const QPoint &offset)
+void BuildingIsoScene::dragObject(BuildingFloor *floor, BuildingObject *object, const QPoint &offset)
 {
     mBuildingMap->dragObject(floor, object, offset);
 }
 
-void BuildingTileModeScene::resetDrag(BuildingFloor *floor, BuildingObject *object)
+void BuildingIsoScene::resetDrag(BuildingFloor *floor, BuildingObject *object)
 {
     mBuildingMap->resetDrag(floor, object);
 }
 
-void BuildingTileModeScene::changeFloorGrid(BuildingFloor *floor,
+void BuildingIsoScene::changeFloorGrid(BuildingFloor *floor,
                                             const QVector<QVector<Room*> > &grid)
 {
     mBuildingMap->changeFloorGrid(floor, grid);
 }
 
-void BuildingTileModeScene::resetFloorGrid(BuildingFloor *floor)
+void BuildingIsoScene::resetFloorGrid(BuildingFloor *floor)
 {
     mBuildingMap->resetFloorGrid(floor);
 }
 
-bool BuildingTileModeScene::shouldShowFloorItem(BuildingFloor *floor) const
+bool BuildingIsoScene::shouldShowFloorItem(BuildingFloor *floor) const
 {
     return !mEditingTiles
             && (currentLevel() == floor->level());
 }
 
-bool BuildingTileModeScene::shouldShowObjectItem(BuildingObject *object) const
+bool BuildingIsoScene::shouldShowObjectItem(BuildingObject *object) const
 {
     // Cursor items are always visible.
     if (!object->floor())
@@ -611,17 +611,17 @@ bool BuildingTileModeScene::shouldShowObjectItem(BuildingObject *object) const
             && (currentLevel() == object->floor()->level());
 }
 
-void BuildingTileModeScene::setShowBuildingTiles(bool show)
+void BuildingIsoScene::setShowBuildingTiles(bool show)
 {
     Q_UNUSED(show)
 }
 
-void BuildingTileModeScene::setShowUserTiles(bool show)
+void BuildingIsoScene::setShowUserTiles(bool show)
 {
     Q_UNUSED(show)
 }
 
-void BuildingTileModeScene::setEditingTiles(bool editing)
+void BuildingIsoScene::setEditingTiles(bool editing)
 {
     if (editing != mEditingTiles) {
         mEditingTiles = editing;
@@ -676,7 +676,7 @@ QVector<QRect> adjacentRects(const QVector<QRect> &rects, const QPoint &pos)
     return ret;
 }
 
-void BuildingTileModeScene::setCursorPosition(const QPoint &pos)
+void BuildingIsoScene::setCursorPosition(const QPoint &pos)
 {
     mHighlightRoomPos = pos;
     if (!currentFloor())
@@ -693,7 +693,7 @@ void BuildingTileModeScene::setCursorPosition(const QPoint &pos)
     }
 }
 
-void BuildingTileModeScene::BuildingToMap()
+void BuildingIsoScene::BuildingToMap()
 {
     if (mBuildingMap) {
         delete mBuildingMap;
@@ -738,38 +738,38 @@ void BuildingTileModeScene::BuildingToMap()
     mDarkRectangle->setRect(sceneRect());
 }
 
-CompositeLayerGroupItem *BuildingTileModeScene::itemForFloor(BuildingFloor *floor)
+CompositeLayerGroupItem *BuildingIsoScene::itemForFloor(BuildingFloor *floor)
 {
     if (mLayerGroupItems.contains(floor->level()))
         return mLayerGroupItems[floor->level()];
     return 0;
 }
 
-BuildingPreferences *BuildingTileModeScene::prefs() const
+BuildingPreferences *BuildingIsoScene::prefs() const
 {
     return BuildingPreferences::instance();
 }
 
-void BuildingTileModeScene::floorEdited(BuildingFloor *floor)
+void BuildingIsoScene::floorEdited(BuildingFloor *floor)
 {
-    BaseFloorEditor::floorEdited(floor);
+    BuildingBaseScene::floorEdited(floor);
 
     mBuildingMap->floorEdited(floor);
 }
 
-void BuildingTileModeScene::floorTilesChanged(BuildingFloor *floor)
+void BuildingIsoScene::floorTilesChanged(BuildingFloor *floor)
 {
     mBuildingMap->floorTilesChanged(floor);
 }
 
-void BuildingTileModeScene::floorTilesChanged(BuildingFloor *floor,
+void BuildingIsoScene::floorTilesChanged(BuildingFloor *floor,
                                               const QString &layerName,
                                               const QRect &bounds)
 {
     mBuildingMap->floorTilesChanged(floor, layerName, bounds);
 }
 
-void BuildingTileModeScene::layerOpacityChanged(BuildingFloor *floor,
+void BuildingIsoScene::layerOpacityChanged(BuildingFloor *floor,
                                                 const QString &layerName)
 {
     if (CompositeLayerGroupItem *item = itemForFloor(floor)) {
@@ -778,7 +778,7 @@ void BuildingTileModeScene::layerOpacityChanged(BuildingFloor *floor,
     }
 }
 
-void BuildingTileModeScene::layerVisibilityChanged(BuildingFloor *floor, const QString &layerName)
+void BuildingIsoScene::layerVisibilityChanged(BuildingFloor *floor, const QString &layerName)
 {
     if (CompositeLayerGroupItem *item = itemForFloor(floor)) {
         if (item->layerGroup()->setLayerVisibility(layerName, floor->layerVisibility(layerName))) {
@@ -788,7 +788,7 @@ void BuildingTileModeScene::layerVisibilityChanged(BuildingFloor *floor, const Q
     }
 }
 
-void BuildingTileModeScene::currentFloorChanged()
+void BuildingIsoScene::currentFloorChanged()
 {
     synchObjectItemVisibility();
 
@@ -809,7 +809,7 @@ void BuildingTileModeScene::currentFloorChanged()
     mCurrentLevel = currentLevel();
 }
 
-void BuildingTileModeScene::currentLayerChanged()
+void BuildingIsoScene::currentLayerChanged()
 {
     if (CompositeLayerGroupItem *item = itemForFloor(currentFloor())) {
         QRectF bounds = item->boundingRect();
@@ -839,117 +839,117 @@ void BuildingTileModeScene::currentLayerChanged()
     }
 }
 
-void BuildingTileModeScene::roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos)
+void BuildingIsoScene::roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos)
 {
     Q_UNUSED(pos);
     mBuildingMap->floorEdited(floor);
 }
 
-void BuildingTileModeScene::roomDefinitionChanged()
+void BuildingIsoScene::roomDefinitionChanged()
 {
     // Also called when the building's exterior wall tile changes.
 
     foreach (BuildingFloor *floor, mDocument->building()->floors()) {
         mBuildingMap->floorEdited(floor);
-        BaseFloorEditor::floorEdited(floor);
+        BuildingBaseScene::floorEdited(floor);
     }
 }
 
-void BuildingTileModeScene::roomAdded(Room *room)
+void BuildingIsoScene::roomAdded(Room *room)
 {
     Q_UNUSED(room)
     foreach (BuildingFloor *floor, mDocument->building()->floors()) {
         mBuildingMap->floorEdited(floor);
-        BaseFloorEditor::floorEdited(floor);
+        BuildingBaseScene::floorEdited(floor);
     }
 
     mBuildingMap->roomAdded(room);
 }
 
-void BuildingTileModeScene::roomRemoved(Room *room)
+void BuildingIsoScene::roomRemoved(Room *room)
 {
     Q_UNUSED(room)
     foreach (BuildingFloor *floor, mDocument->building()->floors()) {
         mBuildingMap->floorEdited(floor);
-        BaseFloorEditor::floorEdited(floor);
+        BuildingBaseScene::floorEdited(floor);
     }
 
     mBuildingMap->roomRemoved(room);
 }
 
-void BuildingTileModeScene::roomChanged(Room *room)
+void BuildingIsoScene::roomChanged(Room *room)
 {
     Q_UNUSED(room)
     foreach (BuildingFloor *floor, mDocument->building()->floors()) {
         mBuildingMap->floorEdited(floor);
-        BaseFloorEditor::floorEdited(floor);
+        BuildingBaseScene::floorEdited(floor);
     }
 }
 
-void BuildingTileModeScene::floorAdded(BuildingFloor *floor)
+void BuildingIsoScene::floorAdded(BuildingFloor *floor)
 {
-    BaseFloorEditor::floorAdded(floor);
+    BuildingBaseScene::floorAdded(floor);
     mBuildingMap->floorAdded(floor);
 }
 
-void BuildingTileModeScene::floorRemoved(BuildingFloor *floor)
+void BuildingIsoScene::floorRemoved(BuildingFloor *floor)
 {
-    BaseFloorEditor::floorRemoved(floor);
+    BuildingBaseScene::floorRemoved(floor);
     mBuildingMap->floorRemoved(floor);
 }
 
-void BuildingTileModeScene::objectAdded(BuildingObject *object)
+void BuildingIsoScene::objectAdded(BuildingObject *object)
 {
     if (mLoading)
         return;
 
-    BaseFloorEditor::objectAdded(object);
+    BuildingBaseScene::objectAdded(object);
 
     mBuildingMap->objectAdded(object);
 }
 
-void BuildingTileModeScene::objectAboutToBeRemoved(BuildingObject *object)
+void BuildingIsoScene::objectAboutToBeRemoved(BuildingObject *object)
 {
-    BaseFloorEditor::objectAboutToBeRemoved(object);
+    BuildingBaseScene::objectAboutToBeRemoved(object);
 
     mBuildingMap->objectAboutToBeRemoved(object);
 }
 
-void BuildingTileModeScene::objectRemoved(BuildingObject *object)
+void BuildingIsoScene::objectRemoved(BuildingObject *object)
 {
     mBuildingMap->objectRemoved(object);
 }
 
-void BuildingTileModeScene::objectMoved(BuildingObject *object)
+void BuildingIsoScene::objectMoved(BuildingObject *object)
 {
-    BaseFloorEditor::objectMoved(object);
+    BuildingBaseScene::objectMoved(object);
 
     mBuildingMap->objectMoved(object);
 }
 
-void BuildingTileModeScene::objectTileChanged(BuildingObject *object)
+void BuildingIsoScene::objectTileChanged(BuildingObject *object)
 {
-    BaseFloorEditor::objectTileChanged(object);
+    BuildingBaseScene::objectTileChanged(object);
 
     mBuildingMap->objectTileChanged(object);
 }
 
-void BuildingTileModeScene::buildingResized()
+void BuildingIsoScene::buildingResized()
 {
-    BaseFloorEditor::buildingResized();
+    BuildingBaseScene::buildingResized();
     mBuildingMap->buildingResized();
     mGridItem->synchWithBuilding();
 }
 
 // Called when the building is flipped or rotated.
-void BuildingTileModeScene::buildingRotated()
+void BuildingIsoScene::buildingRotated()
 {
-    BaseFloorEditor::buildingRotated();
+    BuildingBaseScene::buildingRotated();
     mBuildingMap->buildingRotated();
     mGridItem->synchWithBuilding();
 }
 
-void BuildingTileModeScene::highlightFloorChanged(bool highlight)
+void BuildingIsoScene::highlightFloorChanged(bool highlight)
 {
     qreal z = 0;
 
@@ -970,20 +970,20 @@ void BuildingTileModeScene::highlightFloorChanged(bool highlight)
     mDarkRectangle->setZValue(z);
 }
 
-void BuildingTileModeScene::highlightRoomChanged(bool highlight)
+void BuildingIsoScene::highlightRoomChanged(bool highlight)
 {
     Q_UNUSED(highlight)
     setCursorPosition(mHighlightRoomPos);
 }
 
-void BuildingTileModeScene::tilesetAdded(Tileset *tileset)
+void BuildingIsoScene::tilesetAdded(Tileset *tileset)
 {
     if (!mDocument)
         return;
     mBuildingMap->tilesetAdded(tileset);
 }
 
-void BuildingTileModeScene::tilesetAboutToBeRemoved(Tileset *tileset)
+void BuildingIsoScene::tilesetAboutToBeRemoved(Tileset *tileset)
 {
     if (!mDocument)
         return;
@@ -991,19 +991,19 @@ void BuildingTileModeScene::tilesetAboutToBeRemoved(Tileset *tileset)
     mBuildingMap->tilesetAboutToBeRemoved(tileset);
 }
 
-void BuildingTileModeScene::tilesetRemoved(Tileset *tileset)
+void BuildingIsoScene::tilesetRemoved(Tileset *tileset)
 {
     if (!mDocument)
         return;
     mBuildingMap->tilesetRemoved(tileset);
 }
 
-void BuildingTileModeScene::currentToolChanged(BaseTool *tool)
+void BuildingIsoScene::currentToolChanged(BaseTool *tool)
 {
     mCurrentTool = tool;
 }
 
-void BuildingTileModeScene::aboutToRecreateLayers()
+void BuildingIsoScene::aboutToRecreateLayers()
 {
     qDeleteAll(mLayerGroupItems);
     mLayerGroupItems.clear();
@@ -1018,12 +1018,12 @@ void BuildingTileModeScene::aboutToRecreateLayers()
     mRenderer->asIso()->mMapRenderer = 0;
 }
 
-void BuildingTileModeScene::layersRecreated()
+void BuildingIsoScene::layersRecreated()
 {
     mRenderer->asIso()->mMapRenderer = mBuildingMap->mapRenderer();
 
     // Building object positions will change when the number of floors changes.
-    BaseFloorEditor::mapResized();
+    BuildingBaseScene::mapResized();
 
     qDeleteAll(mLayerGroupItems);
     mLayerGroupItems.clear();
@@ -1050,13 +1050,13 @@ void BuildingTileModeScene::layersRecreated()
     highlightFloorChanged(prefs()->highlightFloor());
 }
 
-void BuildingTileModeScene::mapResized()
+void BuildingIsoScene::mapResized()
 {
     // Building object positions will change when the map size changes.
-    BaseFloorEditor::mapResized();
+    BuildingBaseScene::mapResized();
 }
 
-void BuildingTileModeScene::layersUpdated(int level, const QRegion &rgn)
+void BuildingIsoScene::layersUpdated(int level, const QRegion &rgn)
 {
     if (mLayerGroupItems.contains(level)) {
         CompositeLayerGroupItem *item = mLayerGroupItems[level];
@@ -1077,7 +1077,7 @@ void BuildingTileModeScene::layersUpdated(int level, const QRegion &rgn)
 
 /////
 
-BuildingTileModeView::BuildingTileModeView(QWidget *parent) :
+BuildingIsoView::BuildingIsoView(QWidget *parent) :
     QGraphicsView(parent),
     mZoomable(new Zoomable(this)),
     mHandScrolling(false)
@@ -1106,12 +1106,12 @@ BuildingTileModeView::BuildingTileModeView(QWidget *parent) :
     qApp->installEventFilter(this);
 }
 
-BuildingTileModeView::~BuildingTileModeView()
+BuildingIsoView::~BuildingIsoView()
 {
     setHandScrolling(false); // Just in case we didn't get a hide event
 }
 
-bool BuildingTileModeView::event(QEvent *e)
+bool BuildingIsoView::event(QEvent *e)
 {
     // Ignore space bar events since they're handled by the MainWindow
     if (e->type() == QEvent::KeyPress || e->type() == QEvent::KeyRelease) {
@@ -1124,7 +1124,7 @@ bool BuildingTileModeView::event(QEvent *e)
     return QGraphicsView::event(e);
 }
 
-bool BuildingTileModeView::eventFilter(QObject *object, QEvent *event)
+bool BuildingIsoView::eventFilter(QObject *object, QEvent *event)
 {
     Q_UNUSED(object)
     Q_UNUSED(event)
@@ -1144,14 +1144,14 @@ bool BuildingTileModeView::eventFilter(QObject *object, QEvent *event)
     return false;
 }
 
-void BuildingTileModeView::hideEvent(QHideEvent *event)
+void BuildingIsoView::hideEvent(QHideEvent *event)
 {
     // Disable hand scrolling when the view gets hidden in any way
     setHandScrolling(false);
     QGraphicsView::hideEvent(event);
 }
 
-void BuildingTileModeView::mousePressEvent(QMouseEvent *event)
+void BuildingIsoView::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::MidButton) {
         setHandScrolling(true);
@@ -1161,7 +1161,7 @@ void BuildingTileModeView::mousePressEvent(QMouseEvent *event)
     QGraphicsView::mousePressEvent(event);
 }
 
-void BuildingTileModeView::mouseMoveEvent(QMouseEvent *event)
+void BuildingIsoView::mouseMoveEvent(QMouseEvent *event)
 {
     if (mHandScrolling) {
         QScrollBar *hBar = horizontalScrollBar();
@@ -1191,7 +1191,7 @@ void BuildingTileModeView::mouseMoveEvent(QMouseEvent *event)
     }
 }
 
-void BuildingTileModeView::mouseReleaseEvent(QMouseEvent *event)
+void BuildingIsoView::mouseReleaseEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::MidButton) {
         setHandScrolling(false);
@@ -1204,7 +1204,7 @@ void BuildingTileModeView::mouseReleaseEvent(QMouseEvent *event)
 /**
  * Override to support zooming in and out using the mouse wheel.
  */
-void BuildingTileModeView::wheelEvent(QWheelEvent *event)
+void BuildingIsoView::wheelEvent(QWheelEvent *event)
 {
     if (event->modifiers() & Qt::ControlModifier
         && event->orientation() == Qt::Vertical)
@@ -1229,7 +1229,7 @@ void BuildingTileModeView::wheelEvent(QWheelEvent *event)
     QGraphicsView::wheelEvent(event);
 }
 
-void BuildingTileModeView::setUseOpenGL(bool useOpenGL)
+void BuildingIsoView::setUseOpenGL(bool useOpenGL)
 {
 #ifndef QT_NO_OPENGL
     if (useOpenGL && QGLFormat::hasOpenGL()) {
@@ -1250,7 +1250,7 @@ void BuildingTileModeView::setUseOpenGL(bool useOpenGL)
 #endif
 }
 
-void BuildingTileModeView::setHandScrolling(bool handScrolling)
+void BuildingIsoView::setHandScrolling(bool handScrolling)
 {
     if (mHandScrolling == handScrolling)
         return;
@@ -1269,7 +1269,7 @@ void BuildingTileModeView::setHandScrolling(bool handScrolling)
     }
 }
 
-void BuildingTileModeView::adjustScale(qreal scale)
+void BuildingIsoView::adjustScale(qreal scale)
 {
     setTransform(QTransform::fromScale(scale, scale));
     setRenderHint(QPainter::SmoothPixmapTransform,

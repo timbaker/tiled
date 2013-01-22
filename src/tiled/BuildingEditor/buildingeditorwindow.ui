@@ -26,7 +26,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="BuildingEditor::FloorView" name="floorView"/>
+         <widget class="BuildingEditor::BuildingOrthoView" name="floorView"/>
         </item>
        </layout>
       </widget>
@@ -36,7 +36,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="BuildingEditor::BuildingTileModeView" name="tileView"/>
+         <widget class="BuildingEditor::BuildingIsoView" name="tileView"/>
         </item>
        </layout>
       </widget>
@@ -778,7 +778,7 @@
    <header>BuildingEditor/mixedtilesetview.h</header>
   </customwidget>
   <customwidget>
-   <class>BuildingEditor::BuildingTileModeView</class>
+   <class>BuildingEditor::BuildingIsoView</class>
    <extends>QGraphicsView</extends>
    <header>BuildingEditor/buildingtilemodeview.h</header>
   </customwidget>
@@ -788,7 +788,7 @@
    <header>BuildingEditor/furnitureview.h</header>
   </customwidget>
   <customwidget>
-   <class>BuildingEditor::FloorView</class>
+   <class>BuildingEditor::BuildingOrthoView</class>
    <extends>QGraphicsView</extends>
    <header>BuildingEditor/FloorEditor.h</header>
   </customwidget>

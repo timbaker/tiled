@@ -194,7 +194,7 @@ void BuildingRenderer::drawObject(QPainter *painter, BuildingObject *mObject,
 
 /////
 
-BaseFloorEditor::BaseFloorEditor(QObject *parent) :
+BuildingBaseScene::BuildingBaseScene(QObject *parent) :
     QGraphicsScene(parent),
     mDocument(0),
     mMouseOverObject(0),
@@ -202,42 +202,42 @@ BaseFloorEditor::BaseFloorEditor(QObject *parent) :
 {
 }
 
-Building *BaseFloorEditor::building() const
+Building *BuildingBaseScene::building() const
 {
     return mDocument ? mDocument->building() : 0;
 }
 
-int BaseFloorEditor::currentLevel() const
+int BuildingBaseScene::currentLevel() const
 {
     return mDocument ? mDocument->currentLevel() : -1;
 }
 
-BuildingFloor *BaseFloorEditor::currentFloor()
+BuildingFloor *BuildingBaseScene::currentFloor()
 {
     return mDocument ? mDocument->currentFloor() : 0;
 }
 
-QString BaseFloorEditor::currentLayerName() const
+QString BuildingBaseScene::currentLayerName() const
 {
     return mDocument ? mDocument->currentLayer() : QString();
 }
 
-bool BaseFloorEditor::currentFloorContains(const QPoint &tilePos, int dw, int dh)
+bool BuildingBaseScene::currentFloorContains(const QPoint &tilePos, int dw, int dh)
 {
     return currentFloor()->bounds(dw, dh).contains(tilePos);
 }
 
-GraphicsFloorItem *BaseFloorEditor::itemForFloor(BuildingFloor *floor)
+GraphicsFloorItem *BuildingBaseScene::itemForFloor(BuildingFloor *floor)
 {
     return mFloorItems[floor->level()];
 }
 
-GraphicsObjectItem *BaseFloorEditor::itemForObject(BuildingObject *object)
+GraphicsObjectItem *BuildingBaseScene::itemForObject(BuildingObject *object)
 {
     return itemForFloor(object->floor())->itemForObject(object);
 }
 
-void BaseFloorEditor::buildingResized()
+void BuildingBaseScene::buildingResized()
 {
     foreach (GraphicsFloorItem *item, mFloorItems) {
         item->synchWithFloor();
@@ -245,7 +245,7 @@ void BaseFloorEditor::buildingResized()
     }
 }
 
-void BaseFloorEditor::buildingRotated()
+void BuildingBaseScene::buildingRotated()
 {
     foreach (GraphicsFloorItem *item, mFloorItems) {
         item->synchWithFloor();
@@ -253,14 +253,14 @@ void BaseFloorEditor::buildingRotated()
     }
 }
 
-void BaseFloorEditor::mapResized()
+void BuildingBaseScene::mapResized()
 {
     foreach (GraphicsFloorItem *item, mFloorItems)
         item->mapResized();
 
 }
 
-void BaseFloorEditor::floorAdded(BuildingFloor *floor)
+void BuildingBaseScene::floorAdded(BuildingFloor *floor)
 {
     GraphicsFloorItem *item = new GraphicsFloorItem(this, floor);
     mFloorItems.insert(floor->level(), item);
@@ -275,7 +275,7 @@ void BaseFloorEditor::floorAdded(BuildingFloor *floor)
         objectAdded(object);
 }
 
-void BaseFloorEditor::floorRemoved(BuildingFloor *floor)
+void BuildingBaseScene::floorRemoved(BuildingFloor *floor)
 {
     Q_ASSERT(mFloorItems[floor->level()]
              && mFloorItems[floor->level()]->floor() == floor);
@@ -287,12 +287,12 @@ void BaseFloorEditor::floorRemoved(BuildingFloor *floor)
         item->setZValue(floor->building()->floorCount() + item->floor()->level());
 }
 
-void BaseFloorEditor::floorEdited(BuildingFloor *floor)
+void BuildingBaseScene::floorEdited(BuildingFloor *floor)
 {
     itemForFloor(floor)->floorEdited();
 }
 
-void BaseFloorEditor::objectAdded(BuildingObject *object)
+void BuildingBaseScene::objectAdded(BuildingObject *object)
 {
     Q_ASSERT(!itemForObject(object));
     GraphicsObjectItem *item = createItemForObject(object);
@@ -300,7 +300,7 @@ void BaseFloorEditor::objectAdded(BuildingObject *object)
     itemForFloor(object->floor())->objectAdded(item);
 }
 
-void BaseFloorEditor::objectAboutToBeRemoved(BuildingObject *object)
+void BuildingBaseScene::objectAboutToBeRemoved(BuildingObject *object)
 {
     GraphicsObjectItem *item = itemForObject(object);
     Q_ASSERT(item);
@@ -313,14 +313,14 @@ void BaseFloorEditor::objectAboutToBeRemoved(BuildingObject *object)
         mMouseOverObject = 0;
 }
 
-void BaseFloorEditor::objectMoved(BuildingObject *object)
+void BuildingBaseScene::objectMoved(BuildingObject *object)
 {
     GraphicsObjectItem *item = itemForObject(object);
     Q_ASSERT(item);
     item->synchWithObject();
 }
 
-void BaseFloorEditor::objectTileChanged(BuildingObject *object)
+void BuildingBaseScene::objectTileChanged(BuildingObject *object)
 {
     // FurnitureObject might change size/orientation so redisplay
     GraphicsObjectItem *item = itemForObject(object);
@@ -330,14 +330,14 @@ void BaseFloorEditor::objectTileChanged(BuildingObject *object)
 }
 
 // This is for roofs being edited via handles
-void BaseFloorEditor::objectChanged(BuildingObject *object)
+void BuildingBaseScene::objectChanged(BuildingObject *object)
 {
     GraphicsObjectItem *item = itemForObject(object);
     Q_ASSERT(item);
     item->update();
 }
 
-void BaseFloorEditor::selectedObjectsChanged()
+void BuildingBaseScene::selectedObjectsChanged()
 {
     QSet<BuildingObject*> selectedObjects = mDocument->selectedObjects();
     QSet<GraphicsObjectItem*> selectedItems;
@@ -353,7 +353,7 @@ void BaseFloorEditor::selectedObjectsChanged()
     mSelectedObjectItems = selectedItems;
 }
 
-GraphicsObjectItem *BaseFloorEditor::createItemForObject(BuildingObject *object)
+GraphicsObjectItem *BuildingBaseScene::createItemForObject(BuildingObject *object)
 {
     GraphicsObjectItem *item;
     if (RoofObject *roof = object->asRoof())
@@ -365,7 +365,7 @@ GraphicsObjectItem *BaseFloorEditor::createItemForObject(BuildingObject *object)
     return item;
 }
 
-BuildingObject *BaseFloorEditor::topmostObjectAt(const QPointF &scenePos)
+BuildingObject *BuildingBaseScene::topmostObjectAt(const QPointF &scenePos)
 {
     foreach (QGraphicsItem *item, items(scenePos)) {
         if (GraphicsObjectItem *objectItem = dynamic_cast<GraphicsObjectItem*>(item)) {
@@ -376,7 +376,7 @@ BuildingObject *BaseFloorEditor::topmostObjectAt(const QPointF &scenePos)
     return 0;
 }
 
-QSet<BuildingObject*> BaseFloorEditor::objectsInRect(const QRectF &tileRect)
+QSet<BuildingObject*> BuildingBaseScene::objectsInRect(const QRectF &tileRect)
 {
     QSet<BuildingObject*> objects;
     QPolygonF polygon = tileToScenePolygonF(tileRect, currentLevel());
@@ -389,7 +389,7 @@ QSet<BuildingObject*> BaseFloorEditor::objectsInRect(const QRectF &tileRect)
     return objects;
 }
 
-void BaseFloorEditor::setMouseOverObject(BuildingObject *object)
+void BuildingBaseScene::setMouseOverObject(BuildingObject *object)
 {
     if (object != mMouseOverObject) {
         if (mMouseOverObject)
@@ -400,17 +400,17 @@ void BaseFloorEditor::setMouseOverObject(BuildingObject *object)
     }
 }
 
-void BaseFloorEditor::setEditingTiles(bool editing)
+void BuildingBaseScene::setEditingTiles(bool editing)
 {
     mEditingTiles = editing;
 }
 
-bool BaseFloorEditor::shouldShowFloorItem(BuildingFloor *floor) const
+bool BuildingBaseScene::shouldShowFloorItem(BuildingFloor *floor) const
 {
     return floor->level() <= currentLevel();
 }
 
-bool BaseFloorEditor::shouldShowObjectItem(BuildingObject *object) const
+bool BuildingBaseScene::shouldShowObjectItem(BuildingObject *object) const
 {
     // Cursor items are always visible.
     if (!object->floor())
@@ -420,13 +420,13 @@ bool BaseFloorEditor::shouldShowObjectItem(BuildingObject *object) const
             (currentLevel() <= object->floor()->level());
 }
 
-void BaseFloorEditor::synchObjectItemVisibility()
+void BuildingBaseScene::synchObjectItemVisibility()
 {
     foreach (GraphicsFloorItem *item, mFloorItems)
         item->synchVisibility();
 }
 
-void FloorEditor::setToolTiles(const FloorTileGrid *tiles, const QPoint &pos,
+void BuildingOrthoScene::setToolTiles(const FloorTileGrid *tiles, const QPoint &pos,
                                    const QString &layerName)
 {
     Q_UNUSED(tiles)
@@ -434,18 +434,18 @@ void FloorEditor::setToolTiles(const FloorTileGrid *tiles, const QPoint &pos,
     Q_UNUSED(layerName)
 }
 
-void FloorEditor::clearToolTiles()
+void BuildingOrthoScene::clearToolTiles()
 {
 }
 
-QString FloorEditor::buildingTileAt(int x, int y)
+QString BuildingOrthoScene::buildingTileAt(int x, int y)
 {
     Q_UNUSED(x)
     Q_UNUSED(y)
     return QString();
 }
 
-void FloorEditor::drawTileSelection(QPainter *painter, const QRegion &region,
+void BuildingOrthoScene::drawTileSelection(QPainter *painter, const QRegion &region,
                                     const QColor &color, const QRectF &exposed,
                                     int level) const
 {
@@ -458,7 +458,7 @@ void FloorEditor::drawTileSelection(QPainter *painter, const QRegion &region,
 
 /////
 
-GraphicsFloorItem::GraphicsFloorItem(BaseFloorEditor *editor, BuildingFloor *floor) :
+GraphicsFloorItem::GraphicsFloorItem(BuildingBaseScene *editor, BuildingFloor *floor) :
     QGraphicsItem(),
     mEditor(editor),
     mFloor(floor),
@@ -689,7 +689,7 @@ void GraphicsGridItem::setSize(int width, int height)
 
 /////
 
-GraphicsObjectItem::GraphicsObjectItem(BaseFloorEditor *editor, BuildingObject *object) :
+GraphicsObjectItem::GraphicsObjectItem(BuildingBaseScene *editor, BuildingObject *object) :
     QGraphicsItem(),
     mEditor(editor),
     mObject(object),
@@ -1268,7 +1268,7 @@ QRectF GraphicsRoofHandleItem::calcBoundingRect()
 
 /////
 
-GraphicsRoofItem::GraphicsRoofItem(BaseFloorEditor *editor, RoofObject *roof) :
+GraphicsRoofItem::GraphicsRoofItem(BuildingBaseScene *editor, RoofObject *roof) :
     GraphicsObjectItem(editor, roof),
     mShowHandles(false),
     mResizeItem(new GraphicsRoofHandleItem(this, GraphicsRoofHandleItem::Resize)),
@@ -1371,7 +1371,7 @@ QRectF GraphicsWallHandleItem::calcBoundingRect()
 
 /////
 
-GraphicsWallItem::GraphicsWallItem(BaseFloorEditor *editor, WallObject *wall) :
+GraphicsWallItem::GraphicsWallItem(BuildingBaseScene *editor, WallObject *wall) :
     GraphicsObjectItem(editor, wall),
     mShowHandles(false),
     mResizeItem(new GraphicsWallHandleItem(this))
@@ -1418,8 +1418,8 @@ void GraphicsWallItem::setShowHandles(bool show)
 
 /////
 
-FloorEditor::FloorEditor(QObject *parent) :
-    BaseFloorEditor(parent),
+BuildingOrthoScene::BuildingOrthoScene(QObject *parent) :
+    BuildingBaseScene(parent),
     mCurrentTool(0)
 {
     ZVALUE_GRID = 20;
@@ -1437,7 +1437,7 @@ FloorEditor::FloorEditor(QObject *parent) :
     qApp->installEventFilter(this);
 }
 
-bool FloorEditor::eventFilter(QObject *watched, QEvent *event)
+bool BuildingOrthoScene::eventFilter(QObject *watched, QEvent *event)
 {
     Q_UNUSED(watched)
     switch (event->type()) {
@@ -1454,25 +1454,25 @@ bool FloorEditor::eventFilter(QObject *watched, QEvent *event)
     return false;
 }
 
-void FloorEditor::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void BuildingOrthoScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     if (mCurrentTool)
         mCurrentTool->mousePressEvent(event);
 }
 
-void FloorEditor::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void BuildingOrthoScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     if (mCurrentTool)
         mCurrentTool->mouseMoveEvent(event);
 }
 
-void FloorEditor::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void BuildingOrthoScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     if (mCurrentTool)
         mCurrentTool->mouseReleaseEvent(event);
 }
 
-void FloorEditor::setDocument(BuildingDocument *doc)
+void BuildingOrthoScene::setDocument(BuildingDocument *doc)
 {
     if (mDocument)
         mDocument->disconnect(this);
@@ -1540,12 +1540,12 @@ void FloorEditor::setDocument(BuildingDocument *doc)
     emit documentChanged();
 }
 
-void FloorEditor::clearDocument()
+void BuildingOrthoScene::clearDocument()
 {
     setDocument(0);
 }
 
-void FloorEditor::currentToolChanged(BaseTool *tool)
+void BuildingOrthoScene::currentToolChanged(BaseTool *tool)
 {
     mCurrentTool = tool;
 }
@@ -1640,7 +1640,7 @@ void OrthoBuildingRenderer::drawLine(QPainter *painter, qreal x1, qreal y1, qrea
     painter->drawLine(tileToSceneF(QPointF(x1, y1), level), tileToSceneF(QPointF(x2, y2), level));
 }
 
-void FloorEditor::currentFloorChanged()
+void BuildingOrthoScene::currentFloorChanged()
 {
     int level = mDocument->currentLevel();
     for (int i = 0; i <= level; i++) {
@@ -1651,18 +1651,18 @@ void FloorEditor::currentFloorChanged()
         mFloorItems[i]->setVisible(false);
 }
 
-void FloorEditor::roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos)
+void BuildingOrthoScene::roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos)
 {
     itemForFloor(floor)->roomAtPositionChanged(pos);
 }
 
-void FloorEditor::roomChanged(Room *room)
+void BuildingOrthoScene::roomChanged(Room *room)
 {
     foreach (GraphicsFloorItem *item, mFloorItems)
         item->roomChanged(room);
 }
 
-void FloorEditor::roomAdded(Room *room)
+void BuildingOrthoScene::roomAdded(Room *room)
 {
     Q_UNUSED(room)
     // This is only to support undoing removing a room.
@@ -1670,23 +1670,23 @@ void FloorEditor::roomAdded(Room *room)
     // back the way it was, so we have to update the bitmap.
 }
 
-void FloorEditor::roomRemoved(Room *room)
+void BuildingOrthoScene::roomRemoved(Room *room)
 {
     Q_UNUSED(room)
     foreach (BuildingFloor *floor, building()->floors())
         floorEdited(floor);
 }
 
-void FloorEditor::roomsReordered()
+void BuildingOrthoScene::roomsReordered()
 {
 }
 
-void FloorEditor::buildingResized()
+void BuildingOrthoScene::buildingResized()
 {
     buildingRotated();
 }
 
-void FloorEditor::buildingRotated()
+void BuildingOrthoScene::buildingRotated()
 {
     foreach (GraphicsFloorItem *item, mFloorItems) {
         item->synchWithFloor();
@@ -1702,7 +1702,7 @@ void FloorEditor::buildingRotated()
 
 /////
 
-FloorView::FloorView(QWidget *parent) :
+BuildingOrthoView::BuildingOrthoView(QWidget *parent) :
     QGraphicsView(parent),
     mZoomable(new Zoomable(this)),
     mHandScrolling(false)
@@ -1716,7 +1716,7 @@ FloorView::FloorView(QWidget *parent) :
     connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(adjustScale(qreal)));
 }
 
-void FloorView::mousePressEvent(QMouseEvent *event)
+void BuildingOrthoView::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::MidButton) {
         setHandScrolling(true);
@@ -1726,7 +1726,7 @@ void FloorView::mousePressEvent(QMouseEvent *event)
     QGraphicsView::mousePressEvent(event);
 }
 
-void FloorView::mouseMoveEvent(QMouseEvent *event)
+void BuildingOrthoView::mouseMoveEvent(QMouseEvent *event)
 {
     if (mHandScrolling) {
         QScrollBar *hBar = horizontalScrollBar();
@@ -1751,7 +1751,7 @@ void FloorView::mouseMoveEvent(QMouseEvent *event)
     }
 }
 
-void FloorView::mouseReleaseEvent(QMouseEvent *event)
+void BuildingOrthoView::mouseReleaseEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::MidButton) {
         setHandScrolling(false);
@@ -1764,7 +1764,7 @@ void FloorView::mouseReleaseEvent(QMouseEvent *event)
 /**
  * Override to support zooming in and out using the mouse wheel.
  */
-void FloorView::wheelEvent(QWheelEvent *event)
+void BuildingOrthoView::wheelEvent(QWheelEvent *event)
 {
     if (event->modifiers() & Qt::ControlModifier
         && event->orientation() == Qt::Vertical)
@@ -1789,7 +1789,7 @@ void FloorView::wheelEvent(QWheelEvent *event)
     QGraphicsView::wheelEvent(event);
 }
 
-void FloorView::setHandScrolling(bool handScrolling)
+void BuildingOrthoView::setHandScrolling(bool handScrolling)
 {
     if (mHandScrolling == handScrolling)
         return;
@@ -1807,7 +1807,7 @@ void FloorView::setHandScrolling(bool handScrolling)
     }
 }
 
-void FloorView::adjustScale(qreal scale)
+void BuildingOrthoView::adjustScale(qreal scale)
 {
     setTransform(QTransform::fromScale(scale, scale));
     setRenderHint(QPainter::SmoothPixmapTransform,

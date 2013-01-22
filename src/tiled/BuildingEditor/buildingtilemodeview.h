@@ -54,7 +54,7 @@ class CompositeLayerGroupItem;
 class FloorTileGrid;
 class Room;
 
-class BuildingTileModeScene;
+class BuildingIsoScene;
 
 class CompositeLayerGroupItem : public QGraphicsItem
 {
@@ -107,7 +107,7 @@ class TileModeSelectionItem : public QObject, public QGraphicsItem
     Q_OBJECT
     Q_INTERFACES(QGraphicsItem)
 public:
-    TileModeSelectionItem(BuildingTileModeScene *scene);
+    TileModeSelectionItem(BuildingIsoScene *scene);
 
     QRectF boundingRect() const;
 
@@ -123,7 +123,7 @@ private:
     void updateBoundingRect();
 
 private:
-    BuildingTileModeScene *mScene;
+    BuildingIsoScene *mScene;
     QRectF mBoundingRect;
 };
 
@@ -148,12 +148,12 @@ public:
     Tiled::MapRenderer *mMapRenderer;
 };
 
-class BuildingTileModeScene : public BaseFloorEditor
+class BuildingIsoScene : public BuildingBaseScene
 {
     Q_OBJECT
 public:
-    BuildingTileModeScene(QObject *parent = 0);
-    ~BuildingTileModeScene();
+    BuildingIsoScene(QObject *parent = 0);
+    ~BuildingIsoScene();
 
     Tiled::MapRenderer *mapRenderer() const;
 
@@ -265,15 +265,15 @@ private:
     QPoint mHighlightRoomPos;
 };
 
-class BuildingTileModeView : public QGraphicsView
+class BuildingIsoView : public QGraphicsView
 {
     Q_OBJECT
 public:
-    BuildingTileModeView(QWidget *parent = 0);
-    ~BuildingTileModeView();
+    BuildingIsoView(QWidget *parent = 0);
+    ~BuildingIsoView();
 
-    BuildingTileModeScene *scene() const
-    { return dynamic_cast<BuildingTileModeScene*>(QGraphicsView::scene()); }
+    BuildingIsoScene *scene() const
+    { return dynamic_cast<BuildingIsoScene*>(QGraphicsView::scene()); }
 
     Tiled::Internal::Zoomable *zoomable() const
     { return mZoomable; }

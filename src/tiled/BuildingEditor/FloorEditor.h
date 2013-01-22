@@ -37,13 +37,13 @@ class BaseTool;
 class Building;
 class BuildingDocument;
 class BuildingFloor;
-class FloorEditor;
+class BuildingOrthoScene;
 class FloorTileGrid;
 class RoofObject;
 class Room;
 class WallObject;
 
-class BaseFloorEditor;
+class BuildingBaseScene;
 class GraphicsObjectItem;
 class GraphicsRoofBaseItem;
 class GraphicsRoofCornerItem;
@@ -57,7 +57,7 @@ class OrthoBuildingRenderer;
 class GraphicsFloorItem : public QGraphicsItem
 {
 public:
-    GraphicsFloorItem(BaseFloorEditor *editor, BuildingFloor *floor);
+    GraphicsFloorItem(BuildingBaseScene *editor, BuildingFloor *floor);
     ~GraphicsFloorItem();
 
     QRectF boundingRect() const;
@@ -93,7 +93,7 @@ public:
     void synchVisibility();
 
 private:
-    BaseFloorEditor *mEditor;
+    BuildingBaseScene *mEditor;
     BuildingFloor *mFloor;
     QImage *mBmp;
     QImage *mDragBmp;
@@ -118,7 +118,7 @@ private:
 class GraphicsObjectItem : public QGraphicsItem
 {
 public:
-    GraphicsObjectItem(BaseFloorEditor *editor, BuildingObject *object);
+    GraphicsObjectItem(BuildingBaseScene *editor, BuildingObject *object);
 
     QPainterPath shape() const;
 
@@ -126,7 +126,7 @@ public:
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-    BaseFloorEditor *editor() const
+    BuildingBaseScene *editor() const
     { return mEditor; }
 
     void setObject(BuildingObject *object);
@@ -161,7 +161,7 @@ protected:
     void initialize();
 
 protected:
-    BaseFloorEditor *mEditor;
+    BuildingBaseScene *mEditor;
     BuildingObject *mObject;
     QRectF mBoundingRect;
     bool mSelected;
@@ -204,7 +204,7 @@ private:
     QRectF calcBoundingRect();
 
 private:
-    BaseFloorEditor *mEditor;
+    BuildingBaseScene *mEditor;
     GraphicsRoofItem *mRoofItem;
     Type mType;
     bool mHighlight;
@@ -216,7 +216,7 @@ private:
 class GraphicsRoofItem : public GraphicsObjectItem
 {
 public:
-    GraphicsRoofItem(BaseFloorEditor *editor, RoofObject *roof);
+    GraphicsRoofItem(BuildingBaseScene *editor, RoofObject *roof);
 
     void synchWithObject();
 
@@ -285,7 +285,7 @@ private:
 class GraphicsWallItem : public GraphicsObjectItem
 {
 public:
-    GraphicsWallItem(BaseFloorEditor *editor, WallObject *wall);
+    GraphicsWallItem(BuildingBaseScene *editor, WallObject *wall);
 
     void synchWithObject();
     QPainterPath calcShape();
@@ -351,14 +351,14 @@ public:
     OrthoBuildingRenderer *asOrtho() { return this; }
 };
 
-class BaseFloorEditor : public QGraphicsScene
+class BuildingBaseScene : public QGraphicsScene
 {
     Q_OBJECT
 public:
     int ZVALUE_CURSOR;
     int ZVALUE_GRID;
 
-    BaseFloorEditor(QObject *parent = 0);
+    BuildingBaseScene(QObject *parent = 0);
 
     BuildingDocument *document() const
     { return mDocument; }
@@ -468,13 +468,13 @@ protected:
     bool mEditingTiles;
 };
 
-class FloorEditor : public BaseFloorEditor
+class BuildingOrthoScene : public BuildingBaseScene
 {
     Q_OBJECT
 
 public:
 
-    explicit FloorEditor(QObject *parent = 0);
+    explicit BuildingOrthoScene(QObject *parent = 0);
 
     bool eventFilter(QObject *watched, QEvent *event);
 
@@ -515,14 +515,14 @@ private:
     BaseTool *mCurrentTool;
 };
 
-class FloorView : public QGraphicsView
+class BuildingOrthoView : public QGraphicsView
 {
     Q_OBJECT
 public:
-    FloorView(QWidget *parent = 0);
+    BuildingOrthoView(QWidget *parent = 0);
 
-    FloorEditor *scene() const
-    { return dynamic_cast<FloorEditor*>(QGraphicsView::scene()); }
+    BuildingOrthoScene *scene() const
+    { return dynamic_cast<BuildingOrthoScene*>(QGraphicsView::scene()); }
 
     Tiled::Internal::Zoomable *zoomable() const
     { return mZoomable; }

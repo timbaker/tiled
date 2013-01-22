@@ -40,7 +40,7 @@ class BuildingDocument;
 class BuildingFloor;
 class BuildingTile;
 class Door;
-class BaseFloorEditor;
+class BuildingBaseScene;
 class FurnitureTile;
 class GraphicsObjectItem;
 class GraphicsRoofItem;
@@ -58,7 +58,7 @@ class BaseTool : public QObject
 public:
     BaseTool();
 
-    virtual void setEditor(BaseFloorEditor *editor);
+    virtual void setEditor(BuildingBaseScene *editor);
 
     void setAction(QAction *action);
 
@@ -101,7 +101,7 @@ public slots:
     virtual void deactivate() = 0;
 
 protected:
-    BaseFloorEditor *mEditor;
+    BuildingBaseScene *mEditor;
     QAction *mAction;
     QString mStatusText;
 };

@@ -128,7 +128,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::BuildingEditorWindow),
     mCurrentDocument(0),
-    roomEditor(new FloorEditor(this)),
+    roomEditor(new BuildingOrthoScene(this)),
     mRoomComboBox(new QComboBox()),
     mUndoGroup(new QUndoGroup(this)),
     mCategoryZoomable(new Zoomable(this)),
@@ -142,7 +142,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mOrient(OrientOrtho),
     mEditMode(ObjectMode),
     mTileModeToolBar(new TileModeToolBar(this)),
-    mTileModeScene(new BuildingTileModeScene(this)),
+    mTileModeScene(new BuildingIsoScene(this)),
     mFurnitureDock(new BuildingFurnitureDock(this)),
     mLayersDock(new BuildingLayersDock(this)),
     mTilesetDock(new BuildingTilesetDock(this)),
@@ -2552,7 +2552,7 @@ void BuildingEditorWindow::toggleOrthoIso()
         return;
     }
 
-    BaseFloorEditor *editor;
+    BuildingBaseScene *editor;
     if (mOrient == OrientOrtho) {
         mOrthoView->zoomable()->connectToComboBox(0);
         mIsoView->zoomable()->connectToComboBox(ui->editorScaleComboBox);

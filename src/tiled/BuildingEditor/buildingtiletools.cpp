@@ -37,7 +37,7 @@ using namespace BuildingEditor;
 
 /////
 
-DrawTileToolCursor::DrawTileToolCursor(BaseFloorEditor *editor,
+DrawTileToolCursor::DrawTileToolCursor(BuildingBaseScene *editor,
                                        QGraphicsItem *parent) :
     QGraphicsItem(parent),
     mEditor(editor)

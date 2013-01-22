@@ -47,7 +47,7 @@ BaseTool::BaseTool() :
     ToolManager::instance()->addTool(this);
 }
 
-void BaseTool::setEditor(BaseFloorEditor *editor)
+void BaseTool::setEditor(BuildingBaseScene *editor)
 {
     if (mEditor)
         mEditor->disconnect(this);
