@@ -490,9 +490,6 @@ void GraphicsFloorItem::paint(QPainter *painter,
                               const QStyleOptionGraphicsItem *option,
                               QWidget *)
 {
-#if 1
-//    return; // painter->setOpacity(painter->opacity() * 0.5);
-
     painter->setPen(Qt::NoPen);
 
     QImage *bmp = mDragBmp ? mDragBmp : mBmp;
@@ -507,32 +504,6 @@ void GraphicsFloorItem::paint(QPainter *painter,
                 painter->drawConvexPolygon(polygon);
         }
     }
-#else
-    // FIXME: BaseFloorEditor subclasses need to figure out which tiles are hit
-    int minX = qFloor(mEditor->sceneToTile(option->exposedRect.topLeft(), mFloor->level()).x()) - 1;
-    int maxX = qCeil(mEditor->sceneToTile(option->exposedRect.topRight(), mFloor->level()).x()) + 1;
-    int minY = qFloor(mEditor->sceneToTile(option->exposedRect.topLeft(), mFloor->level()).y()) - 1;
-    int maxY = qCeil(mEditor->sceneToTile(option->exposedRect.bottomRight(), mFloor->level()).y()) + 1;
-
-    minX = qMax(0, minX);
-    maxX = qMin(maxX, mFloor->width());
-    minY = qMax(0, minY);
-    maxY = qMin(maxY, mFloor->height());
-
-    painter->setPen(Qt::NoPen);
-
-    QImage *bmp = mDragBmp ? mDragBmp : mBmp;
-    for (int x = minX; x < maxX; x++) {
-        for (int y = 0; y < maxY; y++) {
-            QRgb c = bmp->pixel(x, y);
-            if (c == qRgb(0, 0, 0))
-                continue;
-            painter->setBrush(QColor(c));
-            QPolygonF polygon = mEditor->tileToScenePolygon(QPoint(x, y), mFloor->level());
-            painter->drawConvexPolygon(polygon);
-        }
-    }
-#endif
 }
 
 void GraphicsFloorItem::objectAdded(GraphicsObjectItem *item)
@@ -646,16 +617,11 @@ void GraphicsGridItem::paint(QPainter *painter,
                              QWidget *)
 {
     QPen pen(QColor(128, 128, 220, 80));
-#if 1
+    painter->setPen(pen);
     QBrush brush(QColor(128, 128, 220, 80), Qt::Dense4Pattern);
     brush.setTransform(QTransform::fromScale(1/painter->transform().m11(),
                                              1/painter->transform().m22()));
     pen.setBrush(brush);
-#else
-    pen.setWidth(2);
-    pen.setStyle(Qt::DotLine); // FIXME: causes graphics corruption at some scales
-#endif
-    painter->setPen(pen);
 
     int minX = qFloor(option->exposedRect.left() / 30) - 1;
     int maxX = qCeil(option->exposedRect.right() / 30) + 1;
@@ -672,12 +638,6 @@ void GraphicsGridItem::paint(QPainter *painter,
 
     for (int y = minY; y <= maxY; y++)
         painter->drawLine(minX * 30, y * 30, maxX * 30, y * 30);
-
-#if 0
-    static QColor dbg = Qt::blue;
-    painter->fillRect(option->exposedRect, dbg);
-    if (dbg == Qt::blue) dbg = Qt::green; else dbg = Qt::blue;
-#endif
 }
 
 void GraphicsGridItem::setSize(int width, int height)
@@ -727,7 +687,6 @@ void GraphicsObjectItem::paint(QPainter *painter,
                                const QStyleOptionGraphicsItem *,
                                QWidget *)
 {
-#if 1
     QPoint dragOffset = mDragging ? mDragOffset : QPoint();
 
     // Cursor objects have no floor.
@@ -735,142 +694,6 @@ void GraphicsObjectItem::paint(QPainter *painter,
 
     mEditor->renderer()->drawObject(painter, mObject, dragOffset, mValidPos,
                                     mSelected, mMouseOver, level);
-#else
-    QPainterPath path = shape();
-    QColor color = Qt::white;
-    painter->fillPath(path, color);
-    QPen pen(mValidPos ? (mSelected ? Qt::cyan : Qt::blue) : Qt::red);
-
-    QPoint dragOffset = mDragging ? mDragOffset : QPoint();
-
-    // Cursor objects have no floor.
-    int level = mObject->floor() ? mObject->floor()->level() : mEditor->currentLevel();
-
-    if (Stairs *stairs = mObject->asStairs()) {
-        QRectF r = stairs->bounds(); //path.boundingRect();
-        if (stairs->isW()) {
-            for (int x = 30; x <= 120; x += 10)
-                mEditor->drawLine(painter, r.left()+x/30.0, r.top(), r.left()+x/30.0,r.bottom(),
-                                  level);
-        } else {
-            for (int y = 30; y <= 120; y += 10)
-                mEditor->drawLine(painter, r.left(), r.top()+y/30.0, r.right(),r.top()+y/30.0,
-                                  level);
-
-        }
-    }
-
-    // Draw line(s) indicating the orientation of the furniture tile.
-    if (FurnitureObject *object = mObject->asFurniture()) {
-        QRectF r = object->bounds().translated(dragOffset);
-        r.adjust(2/30.0, 2/30.0, -2/30.0, -2/30.0);
-
-        bool lineW = false, lineN = false, lineE = false, lineS = false;
-        switch (object->furnitureTile()->orient()) {
-        case FurnitureTile::FurnitureN:
-            lineN = true;
-            break;
-        case FurnitureTile::FurnitureS:
-            lineS = true;
-            break;
-        case FurnitureTile::FurnitureNW:
-            lineN = true;
-            // fall through
-        case FurnitureTile::FurnitureW:
-            lineW = true;
-            break;
-        case FurnitureTile::FurnitureNE:
-            lineN = true;
-            // fall through
-        case FurnitureTile::FurnitureE:
-            lineE = true;
-            break;
-        case FurnitureTile::FurnitureSE:
-            lineS = true;
-            lineE = true;
-            break;
-        case FurnitureTile::FurnitureSW:
-            lineS = true;
-            lineW = true;
-            break;
-        }
-
-        FurnitureTiles::FurnitureLayer layer = object->furnitureTile()->owner()->layer();
-        if (layer == FurnitureTiles::LayerFrames ||
-                layer == FurnitureTiles::LayerDoors ||
-                layer == FurnitureTiles::LayerWalls ||
-                layer == FurnitureTiles::LayerRoofCap ||
-                layer == FurnitureTiles::LayerRoof)
-            lineW = lineN = lineE = lineS = false;
-
-        QPainterPath path2;
-        if (lineW)
-            path2.addPolygon(mEditor->tileToScenePolygonF(QRectF(r.left() + 2/30.0, r.top() + 2/30.0, 2/30.0, r.height() - 4/30.0),
-                                                          level));
-        if (lineE)
-            path2.addPolygon(mEditor->tileToScenePolygonF(QRectF(r.right() - 4/30.0, r.top() + 2/30.0, 2/30.0, r.height() - 4/30.0),
-                                                          level));
-        if (lineN)
-            path2.addPolygon(mEditor->tileToScenePolygonF(QRectF(r.left() + 2/30.0, r.top() + 2/30.0, r.width() - 4/30.0, 2/30.0),
-                                                          level));
-        if (lineS)
-            path2.addPolygon(mEditor->tileToScenePolygonF(QRectF(r.left() + 2/30.0, r.bottom() - 4/30.0, r.width() - 4/30.0, 2/30.0),
-                                                          level));
-        painter->fillPath(path2, pen.color());
-    }
-
-    if (RoofObject *roof = mObject->asRoof()) {
-        QRectF ne = roof->northEdge().translated(dragOffset);
-        QRectF se = roof->southEdge().translated(dragOffset);
-        if ((roof->roofType() == RoofObject::PeakWE) && roof->isHalfDepth()) {
-            ne.adjust(0,0,0,-0.5);
-            se.adjust(0,0.5,0,0);
-        }
-        QPainterPath path2;
-        path2.addPolygon(mEditor->tileToScenePolygonF(ne,
-                                                      level));
-        painter->fillPath(path2, Qt::darkGray);
-
-        path2 = QPainterPath();
-        path2.addPolygon(mEditor->tileToScenePolygonF(se,
-                                                      level));
-        painter->fillPath(path2, Qt::lightGray);
-
-        QRectF we = roof->westEdge().translated(dragOffset);
-        QRectF ee = roof->eastEdge().translated(dragOffset);
-        if ((roof->roofType() == RoofObject::PeakNS) && roof->isHalfDepth()) {
-            we.adjust(0,0,-0.5,0);
-            ee.adjust(0.5,0,0,0);
-        }
-
-        path2 = QPainterPath();
-        path2.addPolygon(mEditor->tileToScenePolygonF(we,
-                                                      level));
-        painter->fillPath(path2, Qt::darkGray);
-
-        path2 = QPainterPath();
-        path2.addPolygon(mEditor->tileToScenePolygonF(ee,
-                                                      level));
-        painter->fillPath(path2, Qt::lightGray);
-
-        path2 = QPainterPath();
-        path2.addPolygon(mEditor->tileToScenePolygonF(roof->flatTop().translated(dragOffset),
-                                                      level));
-        painter->fillPath(path2, Qt::gray);
-    }
-
-    painter->setPen(pen);
-    painter->drawPath(path);
-
-    if (!mValidPos) {
-        painter->fillPath(path, QColor(255, 0, 0, 128));
-    }
-
-    if (mSelected) {
-        painter->setOpacity(0.5);
-        painter->fillPath(path, option->palette.highlight());
-    }
-#endif
 }
 
 void GraphicsObjectItem::setObject(BuildingObject *object)
@@ -904,136 +727,10 @@ QPainterPath GraphicsObjectItem::calcShape()
     // Cursor objects have no floor.
     int level = mObject->floor() ? mObject->floor()->level() : mEditor->currentLevel();
 
-#if 1
     QPolygonF tilePolygon = mObject->calcShape().translated(dragOffset);
     QPolygonF scenePolygon = mEditor->tileToScenePolygon(tilePolygon, level);
     path.addPolygon(scenePolygon);
     return path;
-#else
-    // Screw you, polymorphism!!!
-    if (Door *door = mObject->asDoor()) {
-        QPointF p = door->pos() + dragOffset;
-        QRectF tileRect;
-        if (door->dir() == BuildingObject::N)
-            tileRect = QRectF(p.x(), p.y() - 5/30.0, 30/30.0, 10/30.0);
-        if (door->dir() == BuildingObject::W)
-            tileRect = QRectF(p.x() - 5/30.0, p.y(), 10/30.0, 30/30.0);
-        path.addPolygon(mEditor->tileToScenePolygonF(tileRect,
-                                                     level));
-    }
-
-    if (Window *window = mObject->asWindow()) {
-        QPointF p = window->pos() + dragOffset;
-        QRectF tileRect;
-        if (window->dir() == BuildingObject::N)
-            tileRect = QRectF(p.x() + 7/30.0, p.y() - 3/30.0, 16/30.0, 6/30.0);
-        if (window->dir() == BuildingObject::W)
-            tileRect = QRectF(p.x() - 3/30.0, p.y() + 7/30.0, 6/30.0, 16/30.0);
-        path.addPolygon(mEditor->tileToScenePolygonF(tileRect,
-                                                     level));
-    }
-
-    if (Stairs *stairs = mObject->asStairs()) {
-        QPointF p = stairs->pos() + dragOffset;
-        QRectF tileRect;
-        if (stairs->dir() == BuildingObject::N)
-            tileRect = QRectF(p.x(), p.y(), 30/30.0, 30 * 5/30.0);
-        if (stairs->dir() == BuildingObject::W)
-            tileRect = QRectF(p.x(), p.y(), 30 * 5/30.0, 30/30.0);
-        path.addPolygon(mEditor->tileToScenePolygonF(tileRect,
-                                                     level));
-    }
-
-    if (FurnitureObject *object = mObject->asFurniture()) {
-        QRectF r = object->bounds().translated(dragOffset);
-        FurnitureTiles::FurnitureLayer layer =
-                object->furnitureTile()->owner()->layer();
-        if (object->inWallLayer()) {
-            if (object->furnitureTile()->isW())
-                r.setRight(r.left() + 10/30.0);
-            else if (object->furnitureTile()->isN())
-                r.setBottom(r.top() + 10/30.0);
-            else if (object->furnitureTile()->isE())
-                r.setLeft(r.right() - 10/30.0);
-            else if (object->furnitureTile()->isS())
-                r.setTop(r.bottom() - 10/30.0);
-            path.addPolygon(mEditor->tileToScenePolygonF(r,
-                                                         level));
-            return path;
-        }
-        if (layer == FurnitureTiles::LayerWalls ||
-                layer == FurnitureTiles::LayerRoofCap) {
-            if (object->furnitureTile()->isW()) {
-                r.setRight(r.left() + 12/30.0);
-                r.translate(-6/30.0, 0);
-            } else if (object->furnitureTile()->isE()) {
-                r.setLeft(r.right() - 12/30.0);
-                r.translate(6/30.0, 0);
-            } else if (object->furnitureTile()->isN()) {
-                r.setBottom(r.top() + 12/30.0);
-                r.translate(0, -6/30.0);
-            } else if (object->furnitureTile()->isS()) {
-                r.setTop(r.bottom() - 12/30.0);
-                r.translate(0, 6/30.0);
-            }
-            path.addPolygon(mEditor->tileToScenePolygonF(r,
-                                                         level));
-            return path;
-        }
-        if (layer == FurnitureTiles::LayerFrames) {
-            // Mimic window shape
-            if (object->furnitureTile()->isW()) {
-                r.setRight(r.left() + 6/30.0);
-                r.adjust(0,7/30.0,0,-7/30.0);
-                r.translate(-3/30.0, 0);
-            } else if (object->furnitureTile()->isE()) {
-                r.setLeft(r.right() - 6/30.0);
-                r.adjust(0,7/30.0,0,-7/30.0);
-                r.translate(3/30.0, 0);
-            } else if (object->furnitureTile()->isN()) {
-                r.adjust(7/30.0,0,-7/30.0,0);
-                r.setBottom(r.top() + 6/30.0);
-                r.translate(0, -3/30.0);
-            } else if (object->furnitureTile()->isS()) {
-                r.adjust(7/30.0,0,-7/30.0,0);
-                r.setTop(r.bottom() - 6/30.0);
-                r.translate(0, 3/30.0);
-            }
-            path.addPolygon(mEditor->tileToScenePolygonF(r,
-                                                         level));
-            return path;
-        }
-        if (layer == FurnitureTiles::LayerDoors) {
-            // Mimic door shape
-            if (object->furnitureTile()->isW()) {
-                r.setRight(r.left() + 10/30.0);
-                r.translate(-5/30.0, 0);
-            } else if (object->furnitureTile()->isE()) {
-                r.setLeft(r.right() - 10/30.0);
-                r.translate(5/30.0, 0);
-            } else if (object->furnitureTile()->isN()) {
-                r.setBottom(r.top() + 10/30.0);
-                r.translate(0, -5/30.0);
-            } else if (object->furnitureTile()->isS()) {
-                r.setTop(r.bottom() - 10/30.0);
-                r.translate(0, 5/30.0);
-            }
-            path.addPolygon(mEditor->tileToScenePolygonF(r,
-                                                         level));
-            return path;
-        }
-        r.adjust(2/30.0, 2/30.0, -2/30.0, -2/30.0);
-        path.addPolygon(mEditor->tileToScenePolygonF(r,
-                                                     level));
-    }
-
-    if (RoofObject *roof = mObject->asRoof()) {
-        path.addPolygon(mEditor->tileToScenePolygon(roof->bounds().translated(dragOffset),
-                                                    level));
-    }
-
-    return path;
-#endif
 }
 
 void GraphicsObjectItem::setSelected(bool selected)
@@ -1382,30 +1079,6 @@ void GraphicsWallItem::synchWithObject()
 {
     GraphicsObjectItem::synchWithObject();
     mResizeItem->synchWithObject();
-}
-
-QPainterPath GraphicsWallItem::calcShape()
-{
-#if 1
-    return GraphicsObjectItem::calcShape();
-#else
-    QPainterPath path;
-    QPoint dragOffset = mDragging ? mDragOffset : QPoint();
-    WallObject *wall = mObject->asWall();
-    QPointF p = wall->pos() + dragOffset;
-    QRectF tileRect;
-
-    // Cursor objects have no floor.
-    int level = mObject->floor() ? mObject->floor()->level() : mEditor->currentLevel();
-
-    if (mObject->isN())
-       tileRect = QRectF(p.x() - 6/30.0, p.y(), 12/30.0, wall->length() * 30/30.0);
-    else
-        tileRect = QRectF(p.x(), p.y() - 6/30.0, wall->length() * 30/30.0, 12/30.0);
-    path.addPolygon(mEditor->tileToScenePolygonF(tileRect,
-                                                 level));
-    return path;
-#endif
 }
 
 void GraphicsWallItem::setShowHandles(bool show)

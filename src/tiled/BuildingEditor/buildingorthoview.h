@@ -288,7 +288,6 @@ public:
     GraphicsWallItem(BuildingBaseScene *editor, WallObject *wall);
 
     void synchWithObject();
-    QPainterPath calcShape();
 
     GraphicsWallItem *asWall() { return this; }
 
