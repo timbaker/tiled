@@ -1499,8 +1499,6 @@ void MainWindow::convertToLot()
 
     if (ObjectGroup *og = dialog.objectGroup()) {
         QString lotName = dialog.filePath();
-        if (QFileInfo(lotName).absoluteDir() == QFileInfo(mMapDocument->fileName()).absoluteDir())
-            lotName = QFileInfo(lotName).completeBaseName();
         MapObject *o = new MapObject(QLatin1String("lot"), lotName,
                                      bounds.topLeft() - mapOffset,
                                      clone->size());

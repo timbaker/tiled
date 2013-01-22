@@ -765,7 +765,7 @@ void ZomboidScene::dropEvent(QGraphicsSceneDragDropEvent *event)
 
     if (mDnDItem) {
 
-        QString mapName = QFileInfo(mDnDItem->mapInfo()->path()).completeBaseName();
+        QString mapName = mDnDItem->mapInfo()->path();
         MapObject *newMapObject = new MapObject(QLatin1String("lot"),
                                                 mapName,
                                                 mDnDItem->dropPosition(),

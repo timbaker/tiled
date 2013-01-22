@@ -56,8 +56,6 @@ signals:
     void lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
 
 private slots:
-    void onMapsDirectoryChanged();
-
     void onLayerAdded(int index);
     void onLayerAboutToBeRemoved(int index);
 

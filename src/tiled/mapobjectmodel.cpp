@@ -28,6 +28,10 @@
 #include "objectgroup.h"
 #include "renamelayer.h"
 
+#ifdef ZOMBOID
+#include <QDir>
+#endif
+
 #define GROUPS_IN_DISPLAY_ORDER 1
 
 using namespace Tiled;
@@ -93,6 +97,18 @@ QVariant MapObjectModel::data(const QModelIndex &index, int role) const
     if (MapObject *mapObject = toMapObject(index)) {
         switch (role) {
         case Qt::DisplayRole:
+#ifdef ZOMBOID
+            // Display the relative filename of lots.
+            if (mapObject->name() == QLatin1String("lot") && index.column()) {
+                QString mapName = mapObject->type();
+                if (!mMapDocument->fileName().isEmpty()) {
+                    QDir mapDir = QFileInfo(mMapDocument->fileName()).absoluteDir();
+                    mapName = mapDir.relativeFilePath(mapName);
+                }
+                return QDir::toNativeSeparators(mapName);
+            }
+#endif
+            return index.column() ? mapObject->type() : mapObject->name();
         case Qt::EditRole:
             return index.column() ? mapObject->type() : mapObject->name();
         case Qt::DecorationRole:

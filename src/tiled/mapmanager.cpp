@@ -82,14 +82,9 @@ MapManager::~MapManager()
 }
 
 // mapName could be "Lot_Foo", "../Lot_Foo", "C:/maptools/Lot_Foo" with/without ".tmx"
-QString MapManager::pathForMap(const QString &mapName, const QString &_relativeTo)
+QString MapManager::pathForMap(const QString &mapName, const QString &relativeTo)
 {
     QString mapFilePath = mapName;
-    QString relativeTo = _relativeTo;
-
-    QDir mapsDirectory(Preferences::instance()->mapsDirectory());
-    if (relativeTo.isEmpty() && mapsDirectory.exists())
-        relativeTo = mapsDirectory.canonicalPath();
 
     if (QDir::isRelativePath(mapName)) {
         Q_ASSERT(!relativeTo.isEmpty());
@@ -97,15 +92,13 @@ QString MapManager::pathForMap(const QString &mapName, const QString &_relativeT
         mapFilePath = relativeTo + QLatin1Char('/') + mapName;
     }
 
-    if (!mapFilePath.endsWith(QLatin1String(".tmx")))
+    if (!mapFilePath.endsWith(QLatin1String(".tmx")) &&
+            !mapFilePath.endsWith(QLatin1String(".tbx")))
         mapFilePath += QLatin1String(".tmx");
 
     QFileInfo fileInfo(mapFilePath);
     if (fileInfo.exists())
         return fileInfo.canonicalFilePath();
-
-    if (mapsDirectory.exists() && (relativeTo != mapsDirectory.canonicalPath()))
-        return pathForMap(mapName, mapsDirectory.canonicalPath());
 
     return QString();
 }

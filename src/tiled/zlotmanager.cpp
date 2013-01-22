@@ -24,7 +24,6 @@
 #include "mapobject.h"
 #include "mapreader.h"
 #include "objectgroup.h"
-#include "preferences.h"
 #include "tilelayer.h"
 #include "tileset.h"
 #include "zprogress.h"
@@ -39,15 +38,10 @@ using namespace Internal;
 ZLotManager::ZLotManager()
     : mMapDocument(0)
 {
-    Preferences *prefs = Preferences::instance();
-    connect(prefs, SIGNAL(mapsDirectoryChanged()), SLOT(onMapsDirectoryChanged()));
 }
 
 ZLotManager::~ZLotManager()
 {
-    Preferences *prefs = Preferences::instance();
-    prefs->disconnect(this);
-
     if (mapDocument())
         mapDocument()->disconnect(this);
 }
@@ -94,10 +88,14 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
     if (name == QLatin1String("lot") && !type.isEmpty()) {
 
         QString mapName = type/* + QLatin1String(".tmx")*/;
-        QString relativeTo;
-        if (!mMapDocument->fileName().isEmpty())
-            relativeTo = QFileInfo(mMapDocument->fileName()).absolutePath();
-        MapInfo *newMapInfo = MapManager::instance()->loadMap(mapName, relativeTo);
+        if (!mMapDocument->fileName().isEmpty()) {
+            QDir mapDir = QFileInfo(mMapDocument->fileName()).absoluteDir();
+            if (QDir::isRelativePath(mapName))
+                mapName = mapDir.filePath(mapName);
+        }
+        MapInfo *newMapInfo = 0;
+        if (QDir::isAbsolutePath(mapName))
+            newMapInfo = MapManager::instance()->loadMap(mapName);
 
         if (newMapInfo) {
             if (!currLot || (currLot->map() != newMapInfo->map())) {
@@ -109,7 +107,7 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
             } else
                 newLot = currLot;
         } else {
-            if (currLot && QFileInfo(currLot->mapInfo()->path()).completeBaseName() == type)
+            if (currLot && QFileInfo(currLot->mapInfo()->path()) == QFileInfo(mapName))
                 newLot = currLot;
         }
     }
@@ -136,15 +134,6 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
         }
         emit lotUpdated(currLot, mapObject); // position change, etc
     }
-}
-
-void ZLotManager::onMapsDirectoryChanged()
-{
-    // This will try to load any lot files that couldn't be loaded from the old directory.
-    // Lot files that were already loaded won't be affected.
-    Map *map = mapDocument()->map();
-    foreach (ObjectGroup *og, map->objectGroups())
-        onObjectsChanged(og->objects());
 }
 
 void ZLotManager::onLayerAdded(int index)

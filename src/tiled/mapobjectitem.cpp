@@ -34,6 +34,7 @@
 #ifdef ZOMBOID
 #include "mapcomposite.h"
 #include "mapimagemanager.h"
+#include <QDir>
 #endif
 
 #include <QApplication>
@@ -227,7 +228,18 @@ void MapObjectItem::syncWithMapObject()
     }
 
     QString toolTip = mName;
+#ifdef ZOMBOID
+    QString type = mObject->type();
+    if (mName == QLatin1String("lot") && !type.isEmpty()) {
+        if (!mMapDocument->fileName().isEmpty()) {
+            QDir mapDir = QFileInfo(mMapDocument->fileName()).absoluteDir();
+            type = mapDir.relativeFilePath(type);
+        }
+        type = QDir::toNativeSeparators(type);
+    }
+#else
     const QString &type = mObject->type();
+#endif
     if (!type.isEmpty())
         toolTip += QLatin1String(" (") + type + QLatin1String(")");
     setToolTip(toolTip);

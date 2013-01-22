@@ -148,6 +148,11 @@ void MapScene::setMapDocument(MapDocument *mapDocument)
                 this, SLOT(objectsChanged(QList<MapObject*>)));
         connect(mMapDocument, SIGNAL(selectedObjectsChanged()),
                 this, SLOT(updateSelectedObjectItems()));
+#ifdef ZOMBOID
+        // The tooltip on lot objects contains the relative path to the lot.
+        connect(mMapDocument, SIGNAL(fileNameChanged()),
+                SLOT(syncAllObjectItems()));
+#endif
     }
 }
 
