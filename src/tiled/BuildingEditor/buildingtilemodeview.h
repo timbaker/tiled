@@ -157,6 +157,9 @@ public:
 
     Tiled::MapRenderer *mapRenderer() const;
 
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+    { mousePressEvent(event); }
+
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
