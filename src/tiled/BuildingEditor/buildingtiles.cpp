@@ -1112,6 +1112,12 @@ BTC_RoofSlopes::BTC_RoofSlopes(const QString &label) :
     mEnumNames += QLatin1String("Outer1");
     mEnumNames += QLatin1String("Outer2");
     mEnumNames += QLatin1String("Outer3");
+    mEnumNames += QLatin1String("CornerSW1");
+    mEnumNames += QLatin1String("CornerSW2");
+    mEnumNames += QLatin1String("CornerSW3");
+    mEnumNames += QLatin1String("CornerNE1");
+    mEnumNames += QLatin1String("CornerNE2");
+    mEnumNames += QLatin1String("CornerNE3");
 
     Q_ASSERT(mEnumNames.size() == EnumCount);
 }
@@ -1137,6 +1143,12 @@ BuildingTileEntry *BTC_RoofSlopes::createEntryFromSingleTile(const QString &tile
     entry->mTiles[Outer1] = BuildingTilesMgr::instance()->get(tileName, 8);
     entry->mTiles[Outer2] = BuildingTilesMgr::instance()->get(tileName, 9);
     entry->mTiles[Outer3] = BuildingTilesMgr::instance()->get(tileName, 10);
+    entry->mTiles[CornerSW1] = BuildingTilesMgr::instance()->get(tileName, 24);
+    entry->mTiles[CornerSW2] = BuildingTilesMgr::instance()->get(tileName, 25);
+    entry->mTiles[CornerSW3] = BuildingTilesMgr::instance()->get(tileName, 26);
+    entry->mTiles[CornerNE1] = BuildingTilesMgr::instance()->get(tileName, 29);
+    entry->mTiles[CornerNE2] = BuildingTilesMgr::instance()->get(tileName, 28);
+    entry->mTiles[CornerNE3] = BuildingTilesMgr::instance()->get(tileName, 27);
 
     entry->mOffsets[SlopePt5S] = QPoint(1, 1);
     entry->mOffsets[SlopePt5E] = QPoint(1, 1);
@@ -1150,7 +1162,8 @@ int BTC_RoofSlopes::shadowToEnum(int shadowIndex)
     const int map[EnumCount] = {
         SlopeS1, SlopeS2, SlopeS3, SlopeE3, SlopeE2, SlopeE1,
         SlopePt5S, SlopeOnePt5S, SlopeTwoPt5S, SlopeTwoPt5E, SlopeOnePt5E, SlopePt5E,
-        Outer1, Outer2, Outer3, Inner1, Inner2, Inner3
+        Outer1, Outer2, Outer3, Inner1, Inner2, Inner3,
+        CornerSW1, CornerSW2, CornerSW3, CornerNE3, CornerNE2, CornerNE1
     };
     return map[shadowIndex];
 }

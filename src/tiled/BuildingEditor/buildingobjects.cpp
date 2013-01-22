@@ -1046,7 +1046,9 @@ int RoofObject::getOffset(RoofObject::RoofTile tile) const
         BTC_RoofSlopes::FlatTopN1, BTC_RoofSlopes::FlatTopN2, BTC_RoofSlopes::FlatTopN3,
     #endif
         BTC_RoofSlopes::Inner1, BTC_RoofSlopes::Inner2, BTC_RoofSlopes::Inner3,
-        BTC_RoofSlopes::Outer1, BTC_RoofSlopes::Outer2, BTC_RoofSlopes::Outer3
+        BTC_RoofSlopes::Outer1, BTC_RoofSlopes::Outer2, BTC_RoofSlopes::Outer3,
+        BTC_RoofSlopes::CornerSW1, BTC_RoofSlopes::CornerSW2, BTC_RoofSlopes::CornerSW3,
+        BTC_RoofSlopes::CornerNE1, BTC_RoofSlopes::CornerNE2, BTC_RoofSlopes::CornerNE3,
     };
 
     static const BTC_RoofCaps::TileEnum mapCap[] = {
@@ -1061,8 +1063,12 @@ int RoofObject::getOffset(RoofObject::RoofTile tile) const
         BTC_RoofCaps::CapGapE1, BTC_RoofCaps::CapGapE2, BTC_RoofCaps::CapGapE3
     };
 
-    if (tile >= CapRiseE1)
+    if (tile >= CapRiseE1) {
+        Q_ASSERT(tile - CapRiseE1 < sizeof(mapCap) / sizeof(mapCap[0]));
         return mapCap[tile - CapRiseE1];
+    }
+
+    Q_ASSERT(tile < sizeof(mapSlope) / sizeof(mapSlope[0]));
 
     return mapSlope[tile];
 }

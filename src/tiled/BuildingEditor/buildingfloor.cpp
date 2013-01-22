@@ -780,6 +780,50 @@ void BuildingFloor::LayoutToSquares()
                     break;
                 }
                 break;
+            case RoofObject::CornerOuterSW:
+                switch (ro->depth()) {
+                case RoofObject::One:
+                    ReplaceRoofCorner(ro, r.left(), r.bottom(), squares, RoofObject::CornerSW1);
+                    break;
+                case RoofObject::Two:
+                    ReplaceRoofCorner(ro, r.left(), r.bottom(), squares, RoofObject::CornerSW1);
+                    ReplaceRoofCorner(ro, r.left()+1, r.bottom()-1, squares, RoofObject::CornerSW2);
+
+                    ReplaceRoofCorner(ro, r.left()+1, r.bottom(), squares, RoofObject::SlopeS1);
+                    break;
+                case RoofObject::Three:
+                    ReplaceRoofCorner(ro, r.left(), r.bottom(), squares, RoofObject::CornerSW1);
+                    ReplaceRoofCorner(ro, r.left()+1, r.bottom()-1, squares, RoofObject::CornerSW2);
+                    ReplaceRoofCorner(ro, r.left()+2, r.bottom()-2, squares, RoofObject::CornerSW3);
+
+                    ReplaceRoofCorner(ro, r.left()+1, r.bottom(), squares, RoofObject::SlopeS1);
+                    ReplaceRoofCorner(ro, r.left()+2, r.bottom(), squares, RoofObject::SlopeS1);
+                    ReplaceRoofCorner(ro, r.left()+2, r.bottom()-1, squares, RoofObject::SlopeS2);
+                    break;
+                }
+                break;
+            case RoofObject::CornerOuterNE:
+                switch (ro->depth()) {
+                case RoofObject::One:
+                    ReplaceRoofCorner(ro, r.left(), r.top(), squares, RoofObject::CornerNE1);
+                    break;
+                case RoofObject::Two:
+                    ReplaceRoofCorner(ro, r.left()+1, r.top(), squares, RoofObject::CornerNE1);
+                    ReplaceRoofCorner(ro, r.left(), r.top()+1, squares, RoofObject::CornerNE2);
+
+                    ReplaceRoofCorner(ro, r.left()+1, r.top()+1, squares, RoofObject::SlopeE1);
+                    break;
+                case RoofObject::Three:
+                    ReplaceRoofCorner(ro, r.left()+2, r.top(), squares, RoofObject::CornerNE1);
+                    ReplaceRoofCorner(ro, r.left()+1, r.top()+1, squares, RoofObject::CornerNE2);
+                    ReplaceRoofCorner(ro, r.left(), r.top()+2, squares, RoofObject::CornerNE3);
+
+                    ReplaceRoofCorner(ro, r.left()+2, r.top()+1, squares, RoofObject::SlopeE1);
+                    ReplaceRoofCorner(ro, r.left()+2, r.top()+2, squares, RoofObject::SlopeE1);
+                    ReplaceRoofCorner(ro, r.left()+1, r.top()+2, squares, RoofObject::SlopeE2);
+                    break;
+                }
+                break;
             case RoofObject::CornerOuterSE:
                 switch (ro->depth()) {
                 case RoofObject::Point5:

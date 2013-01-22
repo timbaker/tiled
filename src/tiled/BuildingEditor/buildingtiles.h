@@ -474,6 +474,8 @@ public:
         // Sloped corners
         Inner1, Inner2, Inner3,
         Outer1, Outer2, Outer3,
+        CornerSW1, CornerSW2, CornerSW3,
+        CornerNE1, CornerNE2, CornerNE3,
 
         EnumCount
     };
