@@ -238,7 +238,7 @@ private:
     static BuildingEditorWindow *mInstance;
     Ui::BuildingEditorWindow *ui;
     BuildingDocument *mCurrentDocument;
-    BuildingOrthoScene *roomEditor;
+    BuildingOrthoScene *mOrthoScene;
     BuildingOrthoView *mOrthoView;
     QComboBox *mRoomComboBox;
     QLabel *mFloorLabel;
@@ -265,7 +265,7 @@ private:
     EditMode mEditMode;
     TileModeToolBar *mTileModeToolBar;
     BuildingIsoView *mIsoView;
-    BuildingIsoScene *mTileModeScene;
+    BuildingIsoScene *mIsoScene;
     BuildingFurnitureDock *mFurnitureDock;
     BuildingLayersDock *mLayersDock;
     BuildingTilesetDock *mTilesetDock;

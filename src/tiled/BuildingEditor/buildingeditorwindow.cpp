@@ -128,7 +128,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::BuildingEditorWindow),
     mCurrentDocument(0),
-    roomEditor(new BuildingOrthoScene(this)),
+    mOrthoScene(new BuildingOrthoScene(this)),
     mRoomComboBox(new QComboBox()),
     mUndoGroup(new QUndoGroup(this)),
     mCategoryZoomable(new Zoomable(this)),
@@ -142,7 +142,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mOrient(OrientOrtho),
     mEditMode(ObjectMode),
     mTileModeToolBar(new TileModeToolBar(this)),
-    mTileModeScene(new BuildingIsoScene(this)),
+    mIsoScene(new BuildingIsoScene(this)),
     mFurnitureDock(new BuildingFurnitureDock(this)),
     mLayersDock(new BuildingLayersDock(this)),
     mTilesetDock(new BuildingTilesetDock(this)),
@@ -169,7 +169,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->toolBar->insertWidget(ui->actionUpLevel, mFloorLabel);
 
     mOrthoView = ui->floorView;
-    mOrthoView->setScene(roomEditor);
+    mOrthoView->setScene(mOrthoScene);
     ui->coordLabel->clear();
     connect(mOrthoView, SIGNAL(mouseCoordinateChanged(QPoint)),
             SLOT(mouseCoordinateChanged(QPoint)));
@@ -178,32 +178,32 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mOrthoView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
 
     mIsoView = ui->tileView;
-    mIsoView->setScene(mTileModeScene);
+    mIsoView->setScene(mIsoScene);
     connect(ui->actionToggleOrthoIso, SIGNAL(triggered()), SLOT(toggleOrthoIso()));
 
-    PencilTool::instance()->setEditor(roomEditor);
+    PencilTool::instance()->setEditor(mOrthoScene);
     PencilTool::instance()->setAction(ui->actionPecil);
 
-    SelectMoveRoomsTool::instance()->setEditor(roomEditor);
+    SelectMoveRoomsTool::instance()->setEditor(mOrthoScene);
     SelectMoveRoomsTool::instance()->setAction(ui->actionSelectRooms);
 
-    DoorTool::instance()->setEditor(roomEditor);
+    DoorTool::instance()->setEditor(mOrthoScene);
     DoorTool::instance()->setAction(ui->actionDoor);
 
-    WallTool::instance()->setEditor(roomEditor);
+    WallTool::instance()->setEditor(mOrthoScene);
     WallTool::instance()->setAction(ui->actionWall);
 
-    WindowTool::instance()->setEditor(roomEditor);
+    WindowTool::instance()->setEditor(mOrthoScene);
     WindowTool::instance()->setAction(ui->actionWindow);
 
-    StairsTool::instance()->setEditor(roomEditor);
+    StairsTool::instance()->setEditor(mOrthoScene);
     StairsTool::instance()->setAction(ui->actionStairs);
 
-    FurnitureTool::instance()->setEditor(roomEditor);
+    FurnitureTool::instance()->setEditor(mOrthoScene);
     FurnitureTool::instance()->setAction(ui->actionFurniture);
 
     /////
-    RoofTool::instance()->setEditor(roomEditor);
+    RoofTool::instance()->setEditor(mOrthoScene);
     RoofTool::instance()->setAction(ui->actionRoof);
 
     QMenu *roofMenu = new QMenu(this);
@@ -228,7 +228,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     button->setPopupMode(QToolButton::MenuButtonPopup);
     /////
 
-    RoofCornerTool::instance()->setEditor(roomEditor);
+    RoofCornerTool::instance()->setEditor(mOrthoScene);
     RoofCornerTool::instance()->setAction(ui->actionRoofCorner);
 
     roofMenu = new QMenu(this);
@@ -255,7 +255,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     button->setPopupMode(QToolButton::MenuButtonPopup);
     /////
 
-    SelectMoveObjectTool::instance()->setEditor(roomEditor);
+    SelectMoveObjectTool::instance()->setEditor(mOrthoScene);
     SelectMoveObjectTool::instance()->setAction(ui->actionSelectObject);
 
     connect(ToolManager::instance(), SIGNAL(currentToolChanged(BaseTool*)),
@@ -387,9 +387,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(mIsoView, SIGNAL(mouseCoordinateChanged(QPoint)),
             SLOT(mouseCoordinateChanged(QPoint)));
     DrawTileTool::instance()->setAction(mTileModeToolBar->mActionPencil);
-    DrawTileTool::instance()->setEditor(mTileModeScene);
+    DrawTileTool::instance()->setEditor(mIsoScene);
     SelectTileTool::instance()->setAction(mTileModeToolBar->mActionSelectTiles);
-    SelectTileTool::instance()->setEditor(mTileModeScene);
+    SelectTileTool::instance()->setEditor(mIsoScene);
     /////
 
     addDockWidget(Qt::RightDockWidgetArea, mLayersDock);
@@ -1666,8 +1666,8 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         // Disable all the tools before losing the document/views/etc.
         ToolManager::instance()->clearDocument();
         mRoomComboBox->clear();
-        roomEditor->clearDocument();
-        mTileModeScene->clearDocument();
+        mOrthoScene->clearDocument();
+        mIsoScene->clearDocument();
         mLayersDock->clearDocument();
         mTilesetDock->clearDocument();
         mUndoGroup->removeStack(mCurrentDocument->undoStack());
@@ -1733,8 +1733,8 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
     if (ui->categoryList->currentRow() < 2)
         categorySelectionChanged();
 
-    roomEditor->setDocument(mCurrentDocument);
-    mTileModeScene->setDocument(mCurrentDocument);
+    mOrthoScene->setDocument(mCurrentDocument);
+    mIsoScene->setDocument(mCurrentDocument);
     mLayersDock->setDocument(mCurrentDocument);
     mTilesetDock->setDocument(mCurrentDocument);
 
@@ -1787,8 +1787,8 @@ void BuildingEditorWindow::clearDocument()
     if (mCurrentDocument) {
         // Disable all the tools before losing the document/views/etc.
         ToolManager::instance()->clearDocument();
-        roomEditor->clearDocument();
-        mTileModeScene->clearDocument();
+        mOrthoScene->clearDocument();
+        mIsoScene->clearDocument();
         mLayersDock->clearDocument();
         mTilesetDock->clearDocument();
         mUndoGroup->removeStack(mCurrentDocument->undoStack());
@@ -2556,12 +2556,12 @@ void BuildingEditorWindow::toggleOrthoIso()
     if (mOrient == OrientOrtho) {
         mOrthoView->zoomable()->connectToComboBox(0);
         mIsoView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
-        editor = mTileModeScene;
+        editor = mIsoScene;
         mOrient = OrientIso;
     } else {
         mIsoView->zoomable()->connectToComboBox(0);
         mOrthoView->zoomable()->connectToComboBox(ui->editorScaleComboBox);
-        editor = roomEditor;
+        editor = mOrthoScene;
         mOrient = OrientOrtho;
     }
 
@@ -2617,7 +2617,7 @@ void BuildingEditorWindow::toggleEditMode()
             mIsoView->setFocus();
         }
     } else if (mEditMode == TileMode) {
-        // Switch to BuildingMode
+        // Switch to ObjectMode
         ui->toolBar->show();
         ui->dockWidget->show();
         mTileModeToolBar->hide();
