@@ -166,6 +166,9 @@ int main(int argc, char *argv[])
     w.show();
 #ifdef ZOMBOID
     w.readSettings();
+
+    if (!w.InitConfigFiles())
+        return 0;
 #endif
     QObject::connect(&a, SIGNAL(fileOpenRequest(QString)),
                      &w, SLOT(openFile(QString)));

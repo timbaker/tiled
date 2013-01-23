@@ -142,6 +142,7 @@ public:
     /////
 
     Tiled::Map *mergedMap() const;
+    static int defaultOrientation();
 
 public:
     void buildingRotated();

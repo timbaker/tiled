@@ -512,6 +512,18 @@ bool BuildingEditorWindow::closeYerself()
 
 bool BuildingEditorWindow::Startup()
 {
+#if 1
+    // Refresh the ui before blocking while loading tilesets etc
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    foreach (Tileset *ts, TileMetaInfoMgr::instance()->tilesets()) {
+        if (ts->isMissing()) {
+            PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
+            TileMetaInfoMgr::instance()->loadTilesets();
+            break;
+        }
+    }
+#else
     // Refresh the ui before blocking while loading tilesets etc
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 
@@ -601,6 +613,7 @@ bool BuildingEditorWindow::Startup()
                               .arg(BuildingTemplates::instance()->errorString()));
         return false;
     }
+#endif
 
     /////
 #if 0

@@ -714,6 +714,8 @@ void BuildingTileEntry::setOffset(int e, const QPoint &offset)
 
 QPoint BuildingTileEntry::offset(int e) const
 {
+    if (isNone())
+        return QPoint();
     if (e < 0 || e >= mOffsets.size()) {
         Q_ASSERT(false);
         return QPoint();

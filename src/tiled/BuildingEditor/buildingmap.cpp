@@ -321,6 +321,11 @@ Map *BuildingMap::mergedMap() const
     return map;
 }
 
+int BuildingMap::defaultOrientation()
+{
+    return Map::LevelIsometric;
+}
+
 void BuildingMap::buildingRotated()
 {
     pendingBuildingResized = true;
@@ -365,7 +370,7 @@ void BuildingMap::BuildingToMap()
     mShadowBuilding = new ShadowBuilding(mBuilding);
     mCursorObjectFloor = 0;
 
-    Map::Orientation orient = Map::LevelIsometric;
+    Map::Orientation orient = static_cast<Map::Orientation>(defaultOrientation());
 
     int maxLevel =  mBuilding->floorCount() - 1;
     int extraForWalls = 1;

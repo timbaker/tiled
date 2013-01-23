@@ -118,7 +118,7 @@ QString TileMetaInfoMgr::txtPath()
 
 bool TileMetaInfoMgr::readTxt()
 {
-#if 1
+#if 0
     {
         // Create ~/.TileZed if needed.
         QString configPath = BuildingEditor::BuildingPreferences::instance()->configPath();
@@ -412,9 +412,13 @@ void TileMetaInfoMgr::removeTileset(Tileset *tileset)
     //    TilesetManager::instance()->removeReference(tileset);
 }
 
-void TileMetaInfoMgr::loadTilesets()
+void TileMetaInfoMgr::loadTilesets(const QList<Tileset *> &tilesets)
 {
-    foreach (Tileset *ts, tilesets()) {
+    QList<Tileset *> _tilesets = tilesets;
+    if (_tilesets.isEmpty())
+        _tilesets = this->tilesets();
+
+    foreach (Tileset *ts, _tilesets) {
         if (ts->isMissing()) {
             QString source = ts->imageSource();
             QString oldSource = source;

@@ -106,6 +106,10 @@ public:
      */
     void openLastFiles();
 
+#ifdef ZOMBOID
+    bool InitConfigFiles();
+#endif
+
 public slots:
     bool openFile(const QString &fileName);
 

@@ -761,6 +761,101 @@ void MainWindow::openLastFiles()
 #endif
 }
 
+#ifdef ZOMBOID
+#include "BuildingEditor/buildingpreferences.h"
+#include "BuildingEditor/buildingtiles.h"
+#include "BuildingEditor/buildingtemplates.h"
+#include "BuildingEditor/buildingtmx.h"
+#include "BuildingEditor/furnituregroups.h"
+using namespace BuildingEditor;
+bool MainWindow::InitConfigFiles()
+{
+    // Refresh the ui before blocking while loading tilesets etc
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    // Create ~/.TileZed if needed.
+    QString configPath = BuildingPreferences::instance()->configPath();
+    QDir dir(configPath);
+    if (!dir.exists()) {
+        if (!dir.mkpath(configPath)) {
+            QMessageBox::critical(this, tr("It's no good, Jim!"),
+                                  tr("Failed to create config directory:\n%1")
+                                  .arg(QDir::toNativeSeparators(configPath)));
+            return false;
+        }
+    }
+
+    // Copy config files from the application directory to ~/.TileZed if they
+    // don't exist there.
+    QStringList configFiles;
+    configFiles += TileMetaInfoMgr::instance()->txtName();
+    configFiles += BuildingTemplates::instance()->txtName();
+    configFiles += BuildingTilesMgr::instance()->txtName();
+    configFiles += BuildingTMX::instance()->txtName();
+    configFiles += FurnitureGroups::instance()->txtName();
+
+    foreach (QString configFile, configFiles) {
+        QString fileName = configPath + QLatin1Char('/') + configFile;
+        if (!QFileInfo(fileName).exists()) {
+            QString source = QCoreApplication::applicationDirPath() + QLatin1Char('/')
+                    + configFile;
+            if (QFileInfo(source).exists()) {
+                if (!QFile::copy(source, fileName)) {
+                    QMessageBox::critical(this, tr("It's no good, Jim!"),
+                                          tr("Failed to copy file:\nFrom: %1\nTo: %2")
+                                          .arg(source).arg(fileName));
+                    return false;
+                }
+            }
+        }
+    }
+
+    // Read Tilesets.txt before LoadTMXConfig() in case we are upgrading
+    // TMXConfig.txt from VERSION0 to VERSION1.
+    if (!TileMetaInfoMgr::instance()->readTxt()) {
+        QMessageBox::critical(this, tr("It's no good, Jim!"),
+                              tr("%1\n(while reading %2)")
+                              .arg(TileMetaInfoMgr::instance()->errorString())
+                              .arg(TileMetaInfoMgr::instance()->txtName()));
+        return false;
+    }
+
+    if (!BuildingTMX::instance()->readTxt()) {
+        QMessageBox::critical(this, tr("It's no good, Jim!"),
+                              tr("Error while reading %1\n%2")
+                              .arg(BuildingTMX::instance()->txtName())
+                              .arg(BuildingTMX::instance()->errorString()));
+        return false;
+    }
+
+    if (!BuildingTilesMgr::instance()->readTxt()) {
+        QMessageBox::critical(this, tr("It's no good, Jim!"),
+                              tr("Error while reading %1\n%2")
+                              .arg(BuildingTilesMgr::instance()->txtName())
+                              .arg(BuildingTilesMgr::instance()->errorString()));
+        return false;
+    }
+
+    if (!FurnitureGroups::instance()->readTxt()) {
+        QMessageBox::critical(this, tr("It's no good, Jim!"),
+                              tr("Error while reading %1\n%2")
+                              .arg(FurnitureGroups::instance()->txtName())
+                              .arg(FurnitureGroups::instance()->errorString()));
+        return false;
+    }
+
+    if (!BuildingTemplates::instance()->readTxt()) {
+        QMessageBox::critical(this, tr("It's no good, Jim!"),
+                              tr("Error while reading %1\n%2")
+                              .arg(BuildingTemplates::instance()->txtName())
+                              .arg(BuildingTemplates::instance()->errorString()));
+        return false;
+    }
+
+    return true;
+}
+#endif // ZOMBOID
+
 void MainWindow::openFile()
 {
     QString filter = tr("All Files (*)");
@@ -1303,6 +1398,15 @@ void MainWindow::showBuildingEditor()
 void MainWindow::tilesetMetaInfoDialog()
 {
     TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
+#if 1
+    foreach (Tileset *ts, mgr->tilesets()) {
+        if (ts->isMissing()) {
+            PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
+            mgr->loadTilesets();
+            break;
+        }
+    }
+#else
     if (!mgr->hasReadTxt()) {
         if (!mgr->readTxt()) {
             QMessageBox::warning(this, tr("It's no good, Jim!"),
@@ -1315,6 +1419,7 @@ void MainWindow::tilesetMetaInfoDialog()
         PROGRESS progress(tr("Loading Tilesets.txt tilesets"));
         mgr->loadTilesets();
     }
+#endif
 
     TileMetaInfoDialog dialog(this);
     dialog.exec();
