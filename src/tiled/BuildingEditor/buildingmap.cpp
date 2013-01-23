@@ -32,6 +32,7 @@
 #include "isometricrenderer.h"
 #include "map.h"
 #include "maprenderer.h"
+#include "tile.h"
 #include "tilelayer.h"
 #include "tileset.h"
 #include "zlevelrenderer.h"
@@ -61,15 +62,17 @@ BuildingMap::BuildingMap(Building *building) :
 BuildingMap::~BuildingMap()
 {
     if (mMapComposite) {
-        delete mMapComposite->mapInfo();
+        MapInfo *mapInfo = mMapComposite->mapInfo();
         delete mMapComposite;
         TilesetManager::instance()->removeReferences(mMap->tilesets());
         delete mMap;
+        delete mapInfo;
 
-        delete mBlendMapComposite->mapInfo();
+        mapInfo = mBlendMapComposite->mapInfo();
         delete mBlendMapComposite;
         TilesetManager::instance()->removeReferences(mBlendMap->tilesets());
         delete mBlendMap;
+        delete mapInfo;
 
         delete mMapRenderer;
     }
@@ -384,6 +387,7 @@ void BuildingMap::BuildingToMap()
                    64, 32);
 
     // Add tilesets from Tilesets.txt
+    mMap->addTileset(TilesetManager::instance()->missingTile()->tileset());
     foreach (Tileset *ts, TileMetaInfoMgr::instance()->tilesets())
         mMap->addTileset(ts);
     TilesetManager::instance()->addReferences(mMap->tilesets());

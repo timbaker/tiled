@@ -41,6 +41,7 @@ TilesetManager::TilesetManager():
 #ifdef ZOMBOID
     mMissingTileset = new Tileset(QLatin1String("missing"), 64, 128);
     mMissingTileset->setTransparentColor(Qt::white);
+    mMissingTileset->setMissing(true);
     QString fileName = QLatin1String(":/BuildingEditor/icons/missing-tile.png");
     if (!mMissingTileset->loadFromImage(QImage(fileName), fileName)) {
         QImage image(64, 128, QImage::Format_ARGB32);
@@ -48,6 +49,7 @@ TilesetManager::TilesetManager():
         mMissingTileset->loadFromImage(image, fileName);
     }
     mMissingTile = mMissingTileset->tileAt(0);
+    addReference(mMissingTileset);
 #endif
 
     connect(mWatcher, SIGNAL(fileChanged(QString)),
@@ -62,6 +64,10 @@ TilesetManager::TilesetManager():
 
 TilesetManager::~TilesetManager()
 {
+#ifdef ZOMBOID
+    removeReference(mMissingTileset);
+#endif
+
     // Since all MapDocuments should be deleted first, we assert that there are
     // no remaining tileset references.
     Q_ASSERT(mTilesets.size() == 0);
@@ -233,11 +239,9 @@ void TilesetManager::tilesetSourceChanged(Tileset *tileset,
 {
     if (!wasMissing && !oldSource.isEmpty())
         mWatcher->removePath(oldSource);
-    if (!tileset->isMissing()) {
-        if (!tileset->imageSource().isEmpty()) {
-            mWatcher->addPath(tileset->imageSource());
-            readTileLayerNames(tileset);
-        }
+    if (!tileset->isMissing() && !tileset->imageSource().isEmpty()) {
+        mWatcher->addPath(tileset->imageSource());
+        readTileLayerNames(tileset);
     }
     emit tilesetChanged(tileset);
 }

@@ -157,7 +157,7 @@ MapImageManager::ImageData MapImageManager::generateMapImage(const QString &mapF
     ImageData data = generateMapImage(&mapComposite);
 
     foreach (MapComposite *mc, mapComposite.maps()) {
-        if (mc->map()->hasMissingTilesets()) {
+        if (mc->map()->hasUsedMissingTilesets()) {
             data.missingTilesets = true;
             break;
         }

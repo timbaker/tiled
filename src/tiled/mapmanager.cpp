@@ -183,6 +183,17 @@ MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo)
         QSet<Tileset*> usedTilesets;
         foreach (TileLayer *tl, map->tileLayers())
             usedTilesets += tl->usedTilesets();
+        usedTilesets.remove(TilesetManager::instance()->missingTile()->tileset());
+#if 0
+        QList<Tileset*> remove;
+        foreach (Tileset *ts, map->tilesets()) {
+            if (!usedTilesets.contains(ts))
+                remove += ts;
+        }
+        foreach (Tileset *ts, remove)
+            map->removeTilesetAt(map->indexOfTileset(ts));
+        TilesetManager::instance()->removeReferences(remove);
+#endif
         TileMetaInfoMgr::instance()->loadTilesets(usedTilesets.toList());
         // The map references TileMetaInfoMgr's tilesets, but we add a reference
         // to them ourself below.
