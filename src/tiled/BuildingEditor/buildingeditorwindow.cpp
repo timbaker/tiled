@@ -493,6 +493,21 @@ void BuildingEditorWindow::closeEvent(QCloseEvent *event)
 
 }
 
+bool BuildingEditorWindow::openFile(const QString &fileName)
+{
+    if (!confirmSave())
+        return false;
+
+    QString error;
+    if (BuildingDocument *doc = BuildingDocument::read(fileName, error)) {
+        addDocument(doc);
+        return true;
+    }
+
+    QMessageBox::warning(this, tr("Error reading building"), error);
+    return false;
+}
+
 bool BuildingEditorWindow::confirmAllSave()
 {
     return confirmSave();

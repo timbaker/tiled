@@ -639,6 +639,15 @@ bool MainWindow::openFile(const QString &fileName,
     if (fileName.isEmpty())
         return false;
 
+#ifdef BUILDINGED
+    if (fileName.endsWith(QLatin1String(".tbx"))) {
+        showBuildingEditor();
+        if (mBuildingEditor)
+            return mBuildingEditor->openFile(fileName);
+        return false;
+    }
+#endif
+
     // Select existing document if this file is already open
     int documentIndex = mDocumentManager->findDocument(fileName);
     if (documentIndex != -1) {
@@ -1393,6 +1402,7 @@ void MainWindow::showBuildingEditor()
 
     mBuildingEditor->show();
     mBuildingEditor->raise();
+    mBuildingEditor->activateWindow();
 }
 
 void MainWindow::tilesetMetaInfoDialog()
