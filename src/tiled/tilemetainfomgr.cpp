@@ -96,6 +96,7 @@ TileMetaInfoMgr::~TileMetaInfoMgr()
 {
     TilesetManager::instance()->removeReferences(tilesets());
     TilesetManager::instance()->removeReferences(mRemovedTilesets);
+    qDeleteAll(mTilesetInfo);
 }
 
 QString TileMetaInfoMgr::tilesDirectory() const
@@ -153,7 +154,7 @@ bool TileMetaInfoMgr::readTxt()
     // Make sure the user has chosen the Tiles directory.
     QString tilesDirectory = this->tilesDirectory();
     QDir dir(tilesDirectory);
-    if (!dir.exists()) {
+    if (tilesDirectory.isEmpty() || !dir.exists()) {
         mError = tr("The Tiles directory specified in the preferences doesn't exist!\n%1")
                 .arg(tilesDirectory);
         return false;
@@ -287,6 +288,21 @@ bool TileMetaInfoMgr::readTxt()
         }
     }
 
+    foreach (QString enumName, mEnumNames) {
+        if (isEnumWest(enumName) || isEnumNorth(enumName)) {
+            if (mEnums.values().contains(mEnums[enumName] + 1)) {
+                QString enumImplicit = enumName;
+                enumImplicit.replace(
+                            QLatin1Char(isEnumWest(enumName) ? 'W' : 'N'),
+                            QLatin1String(isEnumWest(enumName) ? "E" : "S"));
+                mError = tr("Meta-enum %1=%2 requires an implicit %3=%4 but that value is used by %5=%6.")
+                        .arg(enumName).arg(mEnums[enumName])
+                        .arg(enumImplicit).arg(mEnums[enumName]+1)
+                        .arg(mEnums.key(mEnums[enumName] + 1)).arg(mEnums[enumName] + 1);
+                return false;
+            }
+        }
+    }
     if (missingTilesets.size()) {
         BuildingEditor::ListOfStringsDialog dialog(tr("The following tileset files were not found."),
                                                    missingTilesets,
@@ -465,6 +481,36 @@ QString TileMetaInfoMgr::tileEnum(Tile *tile)
     if (!info->mInfo.contains(key))
         return QString();
     return info->mInfo[key].mMetaGameEnum;
+}
+
+int TileMetaInfoMgr::tileEnumValue(Tile *tile)
+{
+    QString enumName = tileEnum(tile);
+    if (!enumName.isEmpty())
+        return mEnums[enumName];
+    return -1;
+}
+
+bool TileMetaInfoMgr::isEnumWest(int enumValue) const
+{
+    Q_ASSERT(mEnums.values().contains(enumValue));
+    return mEnums.key(enumValue).endsWith(QLatin1Char('W'));
+}
+
+bool TileMetaInfoMgr::isEnumNorth(int enumValue) const
+{
+    Q_ASSERT(mEnums.values().contains(enumValue));
+    return mEnums.key(enumValue).endsWith(QLatin1Char('N'));
+}
+
+bool TileMetaInfoMgr::isEnumWest(const QString &enumName) const
+{
+    return enumName.endsWith(QLatin1Char('W'));
+}
+
+bool TileMetaInfoMgr::isEnumNorth(const QString &enumName) const
+{
+    return enumName.endsWith(QLatin1Char('N'));
 }
 
 bool TileMetaInfoMgr::parse2Ints(const QString &s, int *pa, int *pb)
