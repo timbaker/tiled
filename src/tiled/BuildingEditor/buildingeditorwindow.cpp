@@ -968,9 +968,11 @@ void BuildingEditorWindow::categorySelectionChanged()
         } else if (mCategory = categoryAt(row)) {
             QList<Tiled::Tile*> tiles;
             QList<void*> userData;
+            QStringList headers;
             if (mCategory->canAssignNone()) {
                 tiles += BuildingTilesMgr::instance()->noneTiledTile();
                 userData += BuildingTilesMgr::instance()->noneTileEntry();
+                headers += BuildingTilesMgr::instance()->noneTiledTile()->tileset()->name();
             }
             QMap<QString,BuildingTileEntry*> entryMap;
             int i = 0;
@@ -982,9 +984,13 @@ void BuildingEditorWindow::categorySelectionChanged()
                 if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile())) {
                     tiles += tile;
                     userData += entry;
+                    if (tile == TilesetManager::instance()->missingTile())
+                        headers += entry->displayTile()->mTilesetName;
+                    else
+                        headers += tile->tileset()->name();
                 }
             }
-            ui->tilesetView->model()->setTiles(tiles, userData);
+            ui->tilesetView->model()->setTiles(tiles, userData, headers);
             ui->tilesetView->scrollToTop();
             ui->categoryStack->setCurrentIndex(0);
 
