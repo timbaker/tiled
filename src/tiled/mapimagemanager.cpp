@@ -124,7 +124,6 @@ MapImageManager::ImageData MapImageManager::generateMapImage(const QString &mapF
             // resolved.
             if (data.missingTilesets)
                 data.valid = false;
-#if 1
             if (data.valid) {
                 foreach (QString source, data.sources) {
                     QFileInfo sourceInfo(source);
@@ -134,7 +133,6 @@ MapImageManager::ImageData MapImageManager::generateMapImage(const QString &mapF
                     }
                 }
             }
-#endif
             if (data.valid) {
                 data.image = image;
                 return data;
@@ -364,8 +362,15 @@ QFileInfo MapImageManager::imageFileInfo(const QString &mapFilePath)
         if (!mapDir.mkdir(QLatin1String(".pzeditor")))
             return QFileInfo();
     }
+
+    // Need to distinguish BMPToTMX image formats, so include .png or .bmp
+    // in the file name.
+    QString suffix;
+    if (mapFileInfo.suffix() != QLatin1String("tmx"))
+        suffix = QLatin1String("_") + mapFileInfo.suffix();
+
     return QFileInfo(imagesDirInfo.absoluteFilePath() + QLatin1Char('/') +
-                     mapFileInfo.completeBaseName() + QLatin1String(".png"));
+                     mapFileInfo.completeBaseName() + suffix + QLatin1String(".png"));
 }
 
 QFileInfo MapImageManager::imageDataFileInfo(const QFileInfo &imageFileInfo)
