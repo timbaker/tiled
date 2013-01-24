@@ -31,11 +31,50 @@ namespace Tiled {
 class Map;
 }
 
+#include <QMutexLocker>
+#include <QThread>
+#include <QWaitCondition>
+class MapImage;
+class MapImageReaderThread : public QThread
+{
+    Q_OBJECT
+public:
+    MapImageReaderThread();
+
+    ~MapImageReaderThread();
+
+    void run();
+
+    void addJob(const QString &imageFileName, MapImage *mapImage);
+
+signals:
+    void imageLoaded(QImage *image, MapImage *mapImage);
+
+private:
+    class Job {
+    public:
+        Job(const QString &imageFileName, MapImage *mapImage) :
+            imageFileName(imageFileName),
+            mapImage(mapImage)
+        {
+        }
+
+        QString imageFileName;
+        MapImage *mapImage;
+    };
+    QList<Job> mJobs;
+
+    QMutex mMutex;
+    QWaitCondition mWaitCondition;
+    bool mQuit;
+};
+
 class MapImage
 {
 public:
     MapImage(QImage image, qreal scale, const QRectF &levelZeroBounds, MapInfo *mapInfo);
 
+    void setImage(const QImage &image) { mImage = image; }
     QImage image() const {return mImage; }
     MapInfo *mapInfo() const { return mInfo; }
 
@@ -59,6 +98,9 @@ public:
 
     QList<MapInfo*> sources() const
     { return mSources; }
+
+    QRectF levelZeroBounds() const
+    { return mLevelZeroBounds; }
 
 private:
     QImage mImage;
@@ -100,6 +142,7 @@ protected:
         bool valid;
         QStringList sources;
         bool missingTilesets;
+        QSize size;
     };
 
     ImageData generateMapImage(const QString &mapFilePath);
@@ -113,6 +156,7 @@ signals:
     
 private slots:
     void mapFileChanged(MapInfo *mapInfo);
+    void imageLoaded(QImage *image, MapImage *mapImage);
     
 private:
     MapImageManager();
@@ -121,6 +165,8 @@ private:
 
     QMap<QString,MapImage*> mMapImages;
     QString mError;
+
+    MapImageReaderThread mImageReaderThread;
 
     static MapImageManager *mInstance;
 };
