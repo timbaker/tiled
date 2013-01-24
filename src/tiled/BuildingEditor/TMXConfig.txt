@@ -17,6 +17,7 @@ layers
     tile = WallFurniture2
     tile = Frames
     tile = Doors
+    tile = Windows
     tile = Curtains
     tile = Furniture
     tile = Furniture2
