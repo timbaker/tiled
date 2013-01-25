@@ -1024,6 +1024,7 @@ void BuildingTilesDialog::setCategoryTiles()
     bool expertMode = mExpertMode && mCategory && !mCategory->shadowImage().isNull();
     QList<Tiled::Tile*> tiles;
     QList<void*> userData;
+    QStringList headers;
     if (mCategory && !expertMode) {
         QMap<QString,BuildingTileEntry*> entryMap;
         int i = 0;
@@ -1035,11 +1036,15 @@ void BuildingTilesDialog::setCategoryTiles()
             if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile())) {
                 tiles += tile;
                 userData += entry;
+                if (tile == TilesetManager::instance()->missingTile())
+                    headers += entry->displayTile()->mTilesetName;
+                else
+                    headers += tile->tileset()->name();
             }
         }
     }
     mCurrentEntry = 0;
-    ui->categoryTilesView->model()->setTiles(tiles, userData);
+    ui->categoryTilesView->model()->setTiles(tiles, userData, headers);
     ui->categoryView->model()->setCategory(expertMode ? mCategory : 0);
 }
 
