@@ -1,8 +1,6 @@
 /*
  * Copyright 2012, Tim Baker <treectrl@users.sf.net>
  *
- * This file is part of Tiled.
- *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation; either version 2 of the License, or (at your option)
@@ -33,6 +31,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QImage>
+#include <QImageReader>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -71,6 +70,19 @@ void TileMetaInfoMgr::changeTilesDirectory(const QString &path)
         QString source = path + QLatin1Char('/') + relativePath;
         QFileInfo finfo(source);
         QString oldSource = ts->imageSource();
+#if 1
+        QImageReader reader(source);
+        if (reader.size().isValid()) {
+            TilesetManager::instance()->changeTilesetSource(ts, finfo.canonicalFilePath(), false);
+            TilesetManager::instance()->loadTileset(ts, ts->imageSource());
+        } else {
+            // There was a valid image in the old directory, but not in the new one.
+            Tile *missingTile = TilesetManager::instance()->missingTile();
+            for (int i = 0; i < ts->tileCount(); i++)
+                ts->tileAt(i)->setImage(missingTile->image());
+            TilesetManager::instance()->changeTilesetSource(ts, relativePath, true);
+        }
+#else
         if (finfo.exists() && loadTilesetImage(ts, finfo.canonicalFilePath())) {
             TilesetManager::instance()->tilesetSourceChanged(ts, oldSource, false);
         } else {
@@ -79,6 +91,7 @@ void TileMetaInfoMgr::changeTilesDirectory(const QString &path)
                 ts->tileAt(i)->setImage(missingTile->image());
             TilesetManager::instance()->changeTilesetSource(ts, relativePath, true);
         }
+#endif
     }
     Preferences::instance()->setTilesDirectory(path);
     loadTilesets();
@@ -90,6 +103,8 @@ TileMetaInfoMgr::TileMetaInfoMgr(QObject *parent) :
     mSourceRevision(0),
     mHasReadTxt(false)
 {
+    connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
+            SLOT(tilesetChanged(Tileset*)));
 }
 
 TileMetaInfoMgr::~TileMetaInfoMgr()
@@ -241,9 +256,13 @@ bool TileMetaInfoMgr::readTxt()
                 // chosen the Tiles directory. The tilesets will be loaded when
                 // other code asks for them or when the Tiles directory is changed.
                 int width = columns * 64, height = rows * 128;
+#if 1
+                tileset->loadFromNothing(QSize(width, height), tilesetFileName);
+#else
                 QImage image(width, height, QImage::Format_ARGB32);
                 image.fill(Qt::red);
                 tileset->loadFromImage(image, tilesetFileName);
+#endif
                 Tile *missingTile = TilesetManager::instance()->missingTile();
                 for (int i = 0; i < tileset->tileCount(); i++)
                     tileset->tileAt(i)->setImage(missingTile->image());
@@ -444,6 +463,14 @@ void TileMetaInfoMgr::loadTilesets(const QList<Tileset *> &tilesets)
                         // relative to Tiles directory, plus .png.
                         + ts->imageSource();
             }
+#if 1
+            QImageReader reader(source);
+            if (reader.size().isValid()) {
+                ts->loadFromNothing(reader.size(), ts->imageSource()); // update the size now
+                QFileInfo info(source);
+                TilesetManager::instance()->loadTileset(ts, info.canonicalFilePath());
+            }
+#else
             QFileInfo info(source);
             if (info.exists()) {
                 source = info.canonicalFilePath();
@@ -452,7 +479,14 @@ void TileMetaInfoMgr::loadTilesets(const QList<Tileset *> &tilesets)
                     TilesetManager::instance()->tilesetSourceChanged(ts, oldSource, true);
                 }
             }
+#endif
         }
+    }
+}
+
+void TileMetaInfoMgr::tilesetChanged(Tileset *ts)
+{
+    if (tilesets().contains(ts)) {
     }
 }
 

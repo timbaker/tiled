@@ -121,6 +121,9 @@ signals:
     void tilesetAboutToBeRemoved(Tiled::Tileset *ts);
     void tilesetRemoved(Tiled::Tileset *ts);
 
+private slots:
+    void tilesetChanged(Tileset *ts);
+
 private:
     bool parse2Ints(const QString &s, int *pa, int *pb);
 
