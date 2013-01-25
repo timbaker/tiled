@@ -1682,6 +1682,12 @@ category
         Outer1 = roofs_01_008
         Outer2 = roofs_01_009
         Outer3 = roofs_01_010
+        CornerSW1 = roofs_01_024
+        CornerSW2 = roofs_01_025
+        CornerSW3 = roofs_01_026
+        CornerNE1 = roofs_01_029
+        CornerNE2 = roofs_01_028
+        CornerNE3 = roofs_01_027
         offset = SlopePt5S 1 1
         offset = SlopePt5E 1 1
     }
@@ -1705,6 +1711,43 @@ category
         Outer1 = roofs_01_040
         Outer2 = roofs_01_041
         Outer3 = roofs_01_042
+        CornerSW1 = roofs_01_056
+        CornerSW2 = roofs_01_057
+        CornerSW3 = roofs_01_058
+        CornerNE1 = roofs_01_061
+        CornerNE2 = roofs_01_060
+        CornerNE3 = roofs_01_059
+        offset = SlopePt5S 1 1
+        offset = SlopePt5E 1 1
+        offset = SlopeTwoPt5S -1 -1
+        offset = SlopeTwoPt5E -1 -1
+    }
+    entry
+    {
+        SlopeS1 = roofs_02_000
+        SlopeS2 = roofs_02_001
+        SlopeS3 = roofs_02_002
+        SlopeE1 = roofs_02_005
+        SlopeE2 = roofs_02_004
+        SlopeE3 = roofs_02_003
+        SlopePt5S = roofs_02_015
+        SlopePt5E = roofs_02_014
+        SlopeOnePt5S = roofs_02_015
+        SlopeOnePt5E = roofs_02_014
+        SlopeTwoPt5S = roofs_02_015
+        SlopeTwoPt5E = roofs_02_014
+        Inner1 = roofs_02_011
+        Inner2 = roofs_02_012
+        Inner3 = roofs_02_013
+        Outer1 = roofs_02_008
+        Outer2 = roofs_02_009
+        Outer3 = roofs_02_010
+        CornerSW1 = roofs_02_024
+        CornerSW2 = roofs_02_025
+        CornerSW3 = roofs_02_026
+        CornerNE1 = roofs_02_029
+        CornerNE2 = roofs_02_028
+        CornerNE3 = roofs_02_027
         offset = SlopePt5S 1 1
         offset = SlopePt5E 1 1
         offset = SlopeTwoPt5S -1 -1

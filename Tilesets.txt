@@ -433,6 +433,11 @@ tileset
 }
 tileset
 {
+    file = roofs_02
+    size = 8,8
+}
+tileset
+{
     file = street_decoration_01
     size = 8,8
 }
