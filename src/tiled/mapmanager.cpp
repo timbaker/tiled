@@ -19,6 +19,7 @@
 
 #include "mapcomposite.h"
 #include "preferences.h"
+#include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
 #include "zprogress.h"
 
@@ -36,7 +37,7 @@
 #include <QFileInfo>
 
 using namespace Tiled;
-using namespace Internal;
+using namespace Tiled::Internal;
 
 MapManager *MapManager::mInstance = NULL;
 
@@ -159,7 +160,6 @@ public:
 
 #include "BuildingEditor/buildingreader.h"
 #include "BuildingEditor/buildingmap.h"
-#include "tilemetainfomgr.h"
 
 MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo)
 {
@@ -248,7 +248,7 @@ MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo)
     }
 
     mMapInfo[mapFilePath]->mMap = map;
-    mMapInfo[mapFilePath]->mLastModified = QFileInfo(mapFilePath).lastModified();
+    mMapInfo[mapFilePath]->mPlaceholder = false;
 
     return mMapInfo[mapFilePath];
 }
@@ -410,7 +410,6 @@ MapInfo *MapManager::mapInfo(const QString &mapFilePath)
     qDebug() << "read map info for" << mapFilePath;
     mapInfo->setFilePath(mapFilePath);
 
-    mapInfo->mLastModified = QFileInfo(mapFilePath).lastModified();
     mMapInfo[mapFilePath] = mapInfo;
     mFileSystemWatcher->addPath(mapFilePath);
 

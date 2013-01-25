@@ -47,9 +47,7 @@ public:
 
     bool isValid() const { return mWidth > 0 && mHeight > 0; }
 
-    Tiled::Map::Orientation orientation() const
-    { return mOrientation; }
-
+    Tiled::Map::Orientation orientation() const { return mOrientation; }
     int width() const { return mWidth; }
     int height() const { return mHeight; }
     QSize size() const { return QSize(mWidth, mHeight); }
@@ -74,8 +72,6 @@ private:
     Tiled::Map *mMap;
     bool mPlaceholder;
     bool mBeingEdited;
-
-    QDateTime mLastModified;
 
     friend class MapManager;
 };
@@ -126,14 +122,11 @@ public:
       */
     void mapChanged(MapInfo *mapInfo);
 
-    /**
-      * Returns the error from the map reader if loadMap() failed.
-      */
-    QString errorString() const { return mError; }
+    QString errorString() const
+    { return mError; }
 
 signals:
-    void mapMagicallyGotMoreLayers(Tiled::Map *map);
-    void mapAboutToChange(MapInfo *mapInf);
+    void mapAboutToChange(MapInfo *mapInfo);
     void mapFileChanged(MapInfo *mapInfo);
 
 private slots:
