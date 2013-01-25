@@ -1581,6 +1581,10 @@ void BuildingTilesDialog::manageTilesets()
 {
     TileMetaInfoDialog dialog(this);
     dialog.exec();
+
+    TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
+    if (!mgr->writeTxt())
+        QMessageBox::warning(this, tr("It's no good, Jim!"), mgr->errorString());
 }
 
 void BuildingTilesDialog::tilesetAdded(Tileset *tileset)
