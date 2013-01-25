@@ -135,37 +135,6 @@ QString TileMetaInfoMgr::txtPath()
 bool TileMetaInfoMgr::readTxt()
 {
 #if 0
-    {
-        // Create ~/.TileZed if needed.
-        QString configPath = BuildingEditor::BuildingPreferences::instance()->configPath();
-        QDir dir(configPath);
-        if (!dir.exists()) {
-            if (!dir.mkpath(configPath)) {
-                mError = tr("Failed to create config directory:\n%1")
-                        .arg(QDir::toNativeSeparators(configPath));
-                return false;
-            }
-        }
-
-        // Copy TXT_FILE from the application directory to ~/.TileZed if it doesn't
-        // exist there.
-        QString configFile = txtName();
-        QString fileName = txtPath();
-        if (!QFileInfo(fileName).exists()) {
-            QString source = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-                    + configFile;
-            if (QFileInfo(source).exists()) {
-                if (!QFile::copy(source, fileName)) {
-                    mError = tr("Failed to copy file:\nFrom: %1\nTo: %2")
-                            .arg(source).arg(fileName);
-                    return false;
-                }
-            }
-        }
-    }
-#endif
-
-#if 0
     // Make sure the user has chosen the Tiles directory.
     QString tilesDirectory = this->tilesDirectory();
     QDir dir(tilesDirectory);
