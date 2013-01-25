@@ -63,6 +63,11 @@ MapManager::MapManager()
     mChangedFilesTimer.setSingleShot(true);
     connect(&mChangedFilesTimer, SIGNAL(timeout()),
             SLOT(fileChangedTimeout()));
+
+    connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
+            SLOT(metaTilesetAdded(Tiled::Tileset*)));
+    connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetRemoved(Tiled::Tileset*)),
+            SLOT(metaTilesetRemoved(Tiled::Tileset*)));
 }
 
 MapManager::~MapManager()
@@ -548,4 +553,22 @@ void MapManager::fileChangedTimeout()
     }
 
     mChangedFiles.clear();
+}
+
+void MapManager::metaTilesetAdded(Tileset *tileset)
+{
+    Q_UNUSED(tileset)
+    foreach (MapInfo *mapInfo, mMapInfo) {
+        if (mapInfo->map() && mapInfo->path().endsWith(QLatin1String(".tbx")))
+            fileChanged(mapInfo->path());
+    }
+}
+
+void MapManager::metaTilesetRemoved(Tileset *tileset)
+{
+    Q_UNUSED(tileset)
+    foreach (MapInfo *mapInfo, mMapInfo) {
+        if (mapInfo->map() && mapInfo->path().endsWith(QLatin1String(".tbx")))
+            fileChanged(mapInfo->path());
+    }
 }

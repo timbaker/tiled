@@ -140,6 +140,9 @@ private slots:
     void fileChanged(const QString &path);
     void fileChangedTimeout();
 
+    void metaTilesetAdded(Tiled::Tileset *tileset);
+    void metaTilesetRemoved(Tiled::Tileset *tileset);
+
 private:
 
     MapManager();
