@@ -523,6 +523,8 @@ void MapManager::fileChanged(const QString &path)
 
 void MapManager::fileChangedTimeout()
 {
+    PROGRESS progress(tr("Examining changed maps..."));
+
     foreach (const QString &path, mChangedFiles) {
         if (mMapInfo.contains(path)) {
             qDebug() << "MapManager::fileChanged" << path;
