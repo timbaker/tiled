@@ -2652,6 +2652,8 @@ void BuildingEditorWindow::toggleEditMode()
         }
     } else if (mEditMode == TileMode) {
         // Switch to ObjectMode
+        if (mCurrentDocument)
+            mCurrentDocument->setTileSelection(QRegion());
         ui->toolBar->show();
         ui->dockWidget->show();
         mTileModeToolBar->hide();
