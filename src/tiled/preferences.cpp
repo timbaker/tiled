@@ -361,11 +361,11 @@ void Preferences::setMapsDirectory(const QString &path)
         return;
     mMapsDirectory = path;
     mSettings->setValue(QLatin1String("MapsDirectory/Current"), path);
-
+#if 0
     // Put this up, otherwise the progress dialog shows and hides for each lot.
     // Since each open document has its own ZLotManager, this shows and hides for each document as well.
     PROGRESS progress(tr("Checking lots..."));
-
+#endif
     emit mapsDirectoryChanged();
 }
 
