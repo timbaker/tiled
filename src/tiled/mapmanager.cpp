@@ -547,8 +547,8 @@ void MapManager::fileChangedTimeout()
                         // Error loading the new map, keep the old one.
                         mapInfo->mMap = oldMap;
                     }
-                    emit mapFileChanged(mapInfo);
                 }
+                emit mapFileChanged(mapInfo);
             }
         }
     }
