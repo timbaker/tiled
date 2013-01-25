@@ -29,6 +29,7 @@
 
 #ifdef ZOMBOID
 #include <QCoreApplication>
+#include <QDir>
 #endif
 #include <QDesktopServices>
 #include <QFileInfo>
@@ -107,16 +108,23 @@ Preferences::Preferences()
 
 #ifdef ZOMBOID
     QString KEY_TILES_DIR = QLatin1String("BuildingEditor/TilesDirectory");
-    QString oldTilesDirectory = mSettings->value(KEY_TILES_DIR).toString();
-    if (oldTilesDirectory.isEmpty()) {
-        oldTilesDirectory = QCoreApplication::applicationDirPath() +
+    QString tilesDirectory = mSettings->value(KEY_TILES_DIR).toString();
+    if (tilesDirectory.isEmpty() || !QDir(tilesDirectory).exists()) {
+        tilesDirectory = QCoreApplication::applicationDirPath() +
                 QLatin1Char('/') + QLatin1String("../Tiles");
+        if (!QDir(tilesDirectory).exists())
+            tilesDirectory = QCoreApplication::applicationDirPath() +
+                    QLatin1Char('/') + QLatin1String("../../Tiles");
     }
+    if (tilesDirectory.length())
+        tilesDirectory = QDir::cleanPath(tilesDirectory);
+    if (!QDir(tilesDirectory).exists())
+        tilesDirectory.clear();
     mSettings->beginGroup(QLatin1String("Tilesets"));
     mTilesDirectory = mSettings->value(QLatin1String("TilesDirectory"),
-                                       oldTilesDirectory).toString();
+                                       tilesDirectory).toString();
     mSettings->endGroup();
-    if (oldTilesDirectory.length()) {
+    if (tilesDirectory.length()) {
         mSettings->setValue(QLatin1String("Tilesets/TilesDirectory"), mTilesDirectory);
         mSettings->remove(KEY_TILES_DIR);
     }
