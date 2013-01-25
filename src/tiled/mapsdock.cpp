@@ -85,14 +85,14 @@ MapsDock::MapsDock(MainWindow *mainWindow, QWidget *parent)
 
     Preferences *prefs = Preferences::instance();
     connect(prefs, SIGNAL(mapsDirectoryChanged()), this, SLOT(onMapsDirectoryChanged()));
-    edit->setText(prefs->mapsDirectory());
+    edit->setText(QDir::toNativeSeparators(prefs->mapsDirectory()));
     connect(edit, SIGNAL(returnPressed()), this, SLOT(editedMapsDirectory()));
-
-    connect(MapImageManager::instance(), SIGNAL(mapImageChanged(MapImage*)),
-            SLOT(onMapImageChanged(MapImage*)));
 
     connect(mMapsView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(selectionChanged()));
+
+    connect(MapImageManager::instance(), SIGNAL(mapImageChanged(MapImage*)),
+            SLOT(onMapImageChanged(MapImage*)));
 
     // Workaround since a tabbed dockwidget that is not currently visible still
     // returns true for isVisible()
@@ -119,7 +119,7 @@ void MapsDock::editedMapsDirectory()
 void MapsDock::onMapsDirectoryChanged()
 {
     Preferences *prefs = Preferences::instance();
-    mDirectoryEdit->setText(prefs->mapsDirectory());
+    mDirectoryEdit->setText(QDir::toNativeSeparators(prefs->mapsDirectory()));
 }
 
 void MapsDock::selectionChanged()
