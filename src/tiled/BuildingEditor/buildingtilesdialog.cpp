@@ -1597,6 +1597,9 @@ void BuildingTilesDialog::tilesetAdded(Tileset *tileset)
     setTilesetList();
     int row = TileMetaInfoMgr::instance()->indexOf(tileset);
     ui->tilesetList->setCurrentRow(row);
+
+    categoryChanged(ui->categoryList->currentRow());
+
     synchUI();
 }
 
@@ -1604,6 +1607,9 @@ void BuildingTilesDialog::tilesetAboutToBeRemoved(Tileset *tileset)
 {
     int row = TileMetaInfoMgr::instance()->indexOf(tileset);
     delete ui->tilesetList->takeItem(row);
+
+    categoryChanged(ui->categoryList->currentRow());
+
     synchUI();
 }
 
