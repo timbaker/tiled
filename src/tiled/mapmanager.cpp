@@ -312,7 +312,12 @@ public:
         mError.clear();
         mMapInfo = NULL;
 
+#if 1
+        QByteArray data = device->read(1024);
+        xml.addData(data);
+#else
         xml.setDevice(device);
+#endif
 
         if (xml.readNextStartElement() && xml.name() == "map") {
             mMapInfo = readMap();
@@ -358,7 +363,12 @@ public:
         mError.clear();
         mMapInfo = NULL;
 
+#if 1
+        QByteArray data = device->read(1024);
+        xml.addData(data);
+#else
         xml.setDevice(device);
+#endif
 
         if (xml.readNextStartElement() && xml.name() == "building") {
             mMapInfo = readBuilding();
