@@ -254,6 +254,12 @@ void TilesetManager::imageLoaded(QImage *image, Tileset *tileset)
     // This updates a tileset in the cache.
     tileset->loadFromImage(*image, tileset->imageSource());
 
+    // If a .tbx lot is added, only the used tilesets get loaded, but all of
+    // TileMetaInfoMgr's tilesets are passed to addReferences().  Since only
+    // the tilesets used by the .tbx lot are loaded, the unloaded ones are
+    // still marked "missing" and don't get added to mWatcher.
+    mWatcher->addPath(tileset->imageSource());
+
     // Now update every tileset using this image.
     foreach (Tileset *candidate, tilesets()) {
         if (candidate->isLoaded())
@@ -283,12 +289,12 @@ void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource)
 
     if (!tileset->isLoaded() /*&& !tileset->isMissing()*/) {
         if (Tileset *cached = mTilesetImageCache->findMatch(tileset, imageSource)) {
-            // If it !isLoaded(), a thread is reading the image.
             if (cached->isLoaded()) {
                 tileset->loadFromCache(cached);
                 tileset->setMissing(false);
                 emit tilesetChanged(tileset);
             } else {
+                // If !isLoaded(), a thread is reading the image.
                 changeTilesetSource(tileset, imageSource, false);
             }
         } else {
@@ -331,7 +337,7 @@ void TilesetManager::tilesetSourceChanged(Tileset *tileset,
 void TilesetManager::changeTilesetSource(Tileset *tileset, const QString &source,
                                          bool missing)
 {
-    if (!tileset->isMissing())
+    if (!tileset->imageSource().isEmpty() && !tileset->isMissing())
         mWatcher->removePath(tileset->imageSource());
     tileset->setImageSource(source);
     tileset->setMissing(missing);
