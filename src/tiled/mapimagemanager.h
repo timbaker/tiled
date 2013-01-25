@@ -102,12 +102,17 @@ public:
     QRectF levelZeroBounds() const
     { return mLevelZeroBounds; }
 
+    bool isLoaded() const { return mLoaded; }
+
 private:
     QImage mImage;
     MapInfo *mInfo;
     QRectF mLevelZeroBounds;
     qreal mScale;
     QList<MapInfo*> mSources;
+    bool mLoaded;
+
+    friend class MapImageManager;
 };
 
 class MapImageManager : public QObject
@@ -159,7 +164,10 @@ private slots:
     void imageLoaded(QImage *image, MapImage *mapImage);
     
 private:
+    Q_DISABLE_COPY(MapImageManager)
     MapImageManager();
+    ~MapImageManager();
+
     QFileInfo imageFileInfo(const QString &mapFilePath);
     QFileInfo imageDataFileInfo(const QFileInfo &imageFileInfo);
 

@@ -107,6 +107,7 @@ MapImage *MapImageManager::getMapImage(const QString &mapName, const QString &re
     }
 
     MapImage *mapImage = new MapImage(data.image, data.scale, data.levelZeroBounds, mapInfo);
+    mapImage->mLoaded = !threaded;
 
     if (threaded) {
         QString imageFileName = imageFileInfo(mapFilePath).canonicalFilePath();
@@ -412,6 +413,7 @@ void MapImageManager::mapFileChanged(MapInfo *mapInfo)
 void MapImageManager::imageLoaded(QImage *image, MapImage *mapImage)
 {
     mapImage->setImage(*image);
+    mapImage->mLoaded = true;
     delete image;
     emit mapImageChanged(mapImage);
 }
@@ -451,6 +453,7 @@ MapImage::MapImage(QImage image, qreal scale, const QRectF &levelZeroBounds, Map
     , mInfo(mapInfo)
     , mLevelZeroBounds(levelZeroBounds)
     , mScale(scale)
+    , mLoaded(false)
 {
 }
 
