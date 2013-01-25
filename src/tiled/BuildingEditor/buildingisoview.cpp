@@ -633,10 +633,7 @@ void BuildingIsoScene::setEditingTiles(bool editing)
 
 bool isRectAdjacent(const QRect &r, const QRect &r2)
 {
-    return r.left() == r2.right() + 1 ||
-            r.right() + 1 == r2.left() ||
-            r.top() == r2.bottom() + 1 ||
-            r.bottom() + 1 == r2.top();
+    return r.adjusted(-1, -1, 1, 1).intersects(r2);
 }
 
 QVector<QRect> adjacentRects(const QVector<QRect> &rects, const QPoint &pos)
