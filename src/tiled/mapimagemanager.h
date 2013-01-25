@@ -166,7 +166,8 @@ private:
     QMap<QString,MapImage*> mMapImages;
     QString mError;
 
-    MapImageReaderThread mImageReaderThread;
+    QVector<MapImageReaderThread*> mImageReaderThread;
+    int mNextThreadForJob;
 
     static MapImageManager *mInstance;
 };

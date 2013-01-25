@@ -48,8 +48,13 @@ MapImageManager *MapImageManager::mInstance = NULL;
 MapImageManager::MapImageManager()
     : QObject()
 {
-    connect(&mImageReaderThread, SIGNAL(imageLoaded(QImage*,MapImage*)),
-            SLOT(imageLoaded(QImage*,MapImage*)));
+    mImageReaderThread.resize(10);
+    mNextThreadForJob = 0;
+    for (int i = 0; i < mImageReaderThread.size(); i++) {
+        mImageReaderThread[i] = new MapImageReaderThread;
+        connect(mImageReaderThread[i], SIGNAL(imageLoaded(QImage*,MapImage*)),
+                SLOT(imageLoaded(QImage*,MapImage*)));
+    }
 
     connect(MapManager::instance(), SIGNAL(mapFileChanged(MapInfo*)),
             SLOT(mapFileChanged(MapInfo*)));
@@ -104,10 +109,11 @@ MapImage *MapImageManager::getMapImage(const QString &mapName, const QString &re
     MapImage *mapImage = new MapImage(data.image, data.scale, data.levelZeroBounds, mapInfo);
 
     if (threaded) {
-        mImageReaderThread.addJob(imageFileInfo(mapFilePath).canonicalFilePath(), mapImage);
+        QString imageFileName = imageFileInfo(mapFilePath).canonicalFilePath();
+        mImageReaderThread[mNextThreadForJob]->addJob(imageFileName, mapImage);
+        mNextThreadForJob = (mNextThreadForJob + 1) % mImageReaderThread.size();
     }
 
-#if 1
     // Set up file modification tracking on each TMX that makes
     // up this image.
     QList<MapInfo*> sources;
@@ -115,7 +121,7 @@ MapImage *MapImageManager::getMapImage(const QString &mapName, const QString &re
         if (MapInfo *sourceInfo = MapManager::instance()->mapInfo(source))
             sources += sourceInfo;
     mapImage->setSources(sources);
-#endif
+
     mMapImages.insert(mapFilePath, mapImage);
     return mapImage;
 }
