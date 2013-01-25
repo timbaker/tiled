@@ -70,6 +70,8 @@ private slots:
 
     void browse();
 
+    void tilesetChanged(Tileset *tileset);
+
     void updateUI();
 
     void accept();

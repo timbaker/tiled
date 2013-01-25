@@ -32,6 +32,50 @@
 #include <QSet>
 #include <QTimer>
 
+#ifdef ZOMBOID
+#include <QMutexLocker>
+#include <QThread>
+#include <QVector>
+#include <QWaitCondition>
+namespace Tiled {
+class Tileset;
+}
+class QImage;
+class TilesetImageReaderThread : public QThread
+{
+    Q_OBJECT
+public:
+    TilesetImageReaderThread(int id);
+
+    ~TilesetImageReaderThread();
+
+    void run();
+
+    void addJob(Tiled::Tileset *tileset);
+
+signals:
+    void imageLoaded(QImage *image, Tiled::Tileset *tileset);
+
+private:
+    class Job {
+    public:
+        Job(Tiled::Tileset *tileset) :
+            tileset(tileset)
+        {
+        }
+
+        Tiled::Tileset *tileset;
+    };
+    QList<Job> mJobs;
+
+    int mID;
+    QMutex mMutex;
+    QWaitCondition mWaitCondition;
+    bool mWaiting;
+    bool mQuit;
+};
+#endif // ZOMBOID
+
 namespace Tiled {
 
 #ifdef ZOMBOID
@@ -47,6 +91,7 @@ class FileSystemWatcher;
 #ifdef ZOMBOID
 struct ZTileLayerNames;
 #endif
+
 
 /**
  * A tileset specification that uniquely identifies a certain tileset. Does not
@@ -140,10 +185,16 @@ public:
     Tile *missingTile() const
     { return mMissingTile; }
 
+    Tileset *missingTileset() const
+    { return mMissingTileset; }
+
     void setLayerName(Tile *tile, const QString &name);
     QString layerName(Tile *tile);
 
     TilesetImageCache *imageCache() const { return mTilesetImageCache; }
+
+    void loadTileset(Tileset *tileset, const QString &imageSource);
+    void waitForTilesets(QList<Tileset*> &tilesets);
 #endif
 
 signals:
@@ -159,6 +210,10 @@ signals:
 private slots:
     void fileChanged(const QString &path);
     void fileChangedTimeout();
+
+#ifdef ZOMBOID
+    void imageLoaded(QImage *image, Tiled::Tileset *tileset);
+#endif
 
 private:
     Q_DISABLE_COPY(TilesetManager)
@@ -189,6 +244,9 @@ private:
 
     Tileset *mMissingTileset;
     Tile *mMissingTile;
+
+    QVector<TilesetImageReaderThread*> mImageReaderThread;
+    int mNextThreadForJob;
 #endif
 
     /**

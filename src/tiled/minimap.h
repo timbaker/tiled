@@ -26,6 +26,7 @@ namespace Tiled {
 class Layer;
 class MapObject;
 class MapRenderer;
+class Tileset;
 
 namespace Internal {
 class MapScene;
@@ -83,6 +84,8 @@ private:
     void recreateLater();
 
     typedef Tiled::Layer Layer; // hack for signals/slots
+    typedef Tiled::Tileset *Tileset; // hack for signals/slots
+
 private slots:
     void sceneRectChanged(const QRectF &sceneRect);
 
@@ -94,6 +97,8 @@ private slots:
     void onLotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
 
     void regionAltered(const QRegion &region, Layer *layer);
+
+    void tilesetChanged(Tileset *ts);
 
     void updateNow();
 

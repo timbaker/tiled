@@ -141,11 +141,13 @@ public:
     void run()
     {
         EditorMapReader reader;
-        reader.setTilesetImageCache(gTilesetImageCache);
+        reader.setTilesetImageCache(TilesetManager::instance()->imageCache()); // not thread-safe class
         mMap = reader.readMap(mMapFilePath);
+        mError = reader.errorString();
     }
 
     QString mMapFilePath;
+    QString mError;
     Map *mMap;
 };
 #endif
@@ -183,7 +185,7 @@ MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo)
         QSet<Tileset*> usedTilesets;
         foreach (TileLayer *tl, map->tileLayers())
             usedTilesets += tl->usedTilesets();
-        usedTilesets.remove(TilesetManager::instance()->missingTile()->tileset());
+        usedTilesets.remove(TilesetManager::instance()->missingTileset());
 #if 0
         QList<Tileset*> remove;
         foreach (Tileset *ts, map->tilesets()) {
@@ -205,16 +207,20 @@ MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo)
         while (thread.isRunning()) {
             qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
         }
-        Map *map = thread.mMap;
+        map = thread.mMap;
+        if (!map) {
+            mError = thread.mError;
+            return 0; // TODO: Add error handling
+        }
 #else
         EditorMapReader reader;
         reader.setTilesetImageCache(TilesetManager::instance()->imageCache());
         map = reader.readMap(mapFilePath);
-#endif
         if (!map) {
             mError = reader.errorString();
             return 0; // TODO: Add error handling
         }
+#endif
     }
 
     Tile *missingTile = TilesetManager::instance()->missingTile();

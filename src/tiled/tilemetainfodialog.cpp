@@ -204,6 +204,9 @@ TileMetaInfoDialog::TileMetaInfoDialog(QWidget *parent) :
     connect(ui->enums, SIGNAL(activated(int)),
             SLOT(enumChanged(int)));
 
+    connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
+            SLOT(tilesetChanged(Tileset*)));
+
     // Hack - force the tileset-names-list font to be updated now, because
     // setTilesetList() uses its font metrics to determine the maximum item
     // width.
@@ -402,6 +405,14 @@ void TileMetaInfoDialog::browse()
     }
 }
 
+void TileMetaInfoDialog::tilesetChanged(Tileset *tileset)
+{
+    if (tileset == mCurrentTileset) {
+        setTilesList();
+        updateUI();
+    }
+}
+
 void TileMetaInfoDialog::updateUI()
 {
     mSynching = true;
@@ -474,4 +485,6 @@ void TileMetaInfoDialog::setTilesList()
     } else {
         ui->tiles->model()->setTiles(QList<Tile*>());
     }
+
+    tileSelectionChanged(); // model calling reset() doesn't generate selectionChanged signal
 }

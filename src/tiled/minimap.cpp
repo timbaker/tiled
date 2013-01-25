@@ -24,6 +24,7 @@
 #include "mapview.h"
 #include "preferences.h"
 #include "tilelayer.h"
+#include "tilesetmanager.h"
 #include "ZomboidScene.h"
 
 #include <QMouseEvent>
@@ -66,6 +67,9 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
         SLOT(onLotRemoved(MapComposite*,Tiled::MapObject*)));
     connect(&mScene->lotManager(), SIGNAL(lotUpdated(MapComposite*,Tiled::MapObject*)),
         SLOT(onLotUpdated(MapComposite*,Tiled::MapObject*)));
+
+    connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
+            SLOT(tilesetChanged(Tileset*)));
 
     QMap<MapObject*,MapComposite*>::const_iterator it;
     const QMap<MapObject*,MapComposite*> &map = mScene->lotManager().objectToLot();
@@ -272,6 +276,11 @@ void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
                       margins.bottom());
         updateLater(bounds);
     }
+}
+
+void MiniMapItem::tilesetChanged(Tileset *ts)
+{
+    recreateLater();
 }
 
 void MiniMapItem::updateNow()
