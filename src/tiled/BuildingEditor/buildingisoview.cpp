@@ -1226,6 +1226,17 @@ void BuildingIsoView::wheelEvent(QWheelEvent *event)
     QGraphicsView::wheelEvent(event);
 }
 
+void BuildingIsoView::setDocument(BuildingDocument *doc)
+{
+    scene()->setDocument(doc);
+    centerOn(scene()->sceneRect().center());
+}
+
+void BuildingIsoView::clearDocument()
+{
+    scene()->clearDocument();
+}
+
 void BuildingIsoView::setUseOpenGL(bool useOpenGL)
 {
 #ifndef QT_NO_OPENGL

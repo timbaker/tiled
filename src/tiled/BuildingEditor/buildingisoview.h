@@ -288,6 +288,9 @@ public:
     void mouseReleaseEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
 
+    void setDocument(BuildingDocument *doc);
+    void clearDocument();
+
     void setHandScrolling(bool handScrolling);
 
 signals:

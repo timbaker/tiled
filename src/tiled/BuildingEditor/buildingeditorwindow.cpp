@@ -1701,7 +1701,7 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         ToolManager::instance()->clearDocument();
         mRoomComboBox->clear();
         mOrthoScene->clearDocument();
-        mIsoScene->clearDocument();
+        mIsoView->clearDocument();
         mLayersDock->clearDocument();
         mTilesetDock->clearDocument();
         mUndoGroup->removeStack(mCurrentDocument->undoStack());
@@ -1768,7 +1768,7 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
         categorySelectionChanged();
 
     mOrthoScene->setDocument(mCurrentDocument);
-    mIsoScene->setDocument(mCurrentDocument);
+    mIsoView->setDocument(mCurrentDocument);
     mLayersDock->setDocument(mCurrentDocument);
     mTilesetDock->setDocument(mCurrentDocument);
 
@@ -1822,7 +1822,7 @@ void BuildingEditorWindow::clearDocument()
         // Disable all the tools before losing the document/views/etc.
         ToolManager::instance()->clearDocument();
         mOrthoScene->clearDocument();
-        mIsoScene->clearDocument();
+        mIsoView->clearDocument();
         mLayersDock->clearDocument();
         mTilesetDock->clearDocument();
         mUndoGroup->removeStack(mCurrentDocument->undoStack());
