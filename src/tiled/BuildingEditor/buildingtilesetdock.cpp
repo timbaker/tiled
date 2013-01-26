@@ -169,7 +169,7 @@ void BuildingTilesetDock::setTilesList()
     model->setShowLabels(Preferences::instance()->autoSwitchLayer());
 
     if (!mCurrentTileset || mCurrentTileset->isMissing())
-        model->setTiles(QList<Tile*>());
+        ui->tiles->clear();
     else {
         QStringList labels;
         for (int i = 0; i < mCurrentTileset->tileCount(); i++) {
@@ -179,7 +179,7 @@ void BuildingTilesetDock::setTilesList()
                 label = tr("???");
             labels += label;
         }
-        model->setTileset(mCurrentTileset, QList<void*>(), labels);
+        ui->tiles->setTileset(mCurrentTileset, QList<void*>(), labels);
     }
 }
 

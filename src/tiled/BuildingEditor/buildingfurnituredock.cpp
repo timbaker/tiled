@@ -75,7 +75,7 @@ void BuildingFurnitureDock::setFurnitureList()
     if (mCurrentGroup) {
         ftiles = mCurrentGroup->mTiles;
     }
-    mFurnitureView->model()->setTiles(ftiles);
+    mFurnitureView->setTiles(ftiles);
 }
 
 void BuildingFurnitureDock::currentGroupChanged(int row)

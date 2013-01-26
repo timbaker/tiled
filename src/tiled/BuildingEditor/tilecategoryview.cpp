@@ -269,6 +269,18 @@ void TileCategoryView::setZoomable(Zoomable *zoomable)
         connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(scaleChanged(qreal)));
 }
 
+void TileCategoryView::clear()
+{
+    selectionModel()->clear(); // because the model calls reset()
+    model()->clear();
+}
+
+void TileCategoryView::setCategory(BuildingTileCategory *category)
+{
+    selectionModel()->clear(); // because the model calls reset()
+    model()->setCategory(category);
+}
+
 void TileCategoryView::scaleChanged(qreal scale)
 {
     model()->scaleChanged(scale);
@@ -423,6 +435,11 @@ bool TileCategoryModel::dropMimeData(const QMimeData *data, Qt::DropAction actio
      }
 
      return true;
+}
+
+void TileCategoryModel::clear()
+{
+    setCategory(0);
 }
 
 void TileCategoryModel::setCategory(BuildingTileCategory *category)

@@ -280,6 +280,7 @@ void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
 
 void MiniMapItem::tilesetChanged(Tileset *ts)
 {
+    Q_UNUSED(ts)
     recreateLater();
 }
 

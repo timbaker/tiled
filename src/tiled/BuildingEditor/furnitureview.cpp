@@ -403,6 +403,18 @@ void FurnitureView::contextMenuEvent(QContextMenuEvent *event)
         mContextMenu->exec(event->globalPos());
 }
 
+void FurnitureView::clear()
+{
+    selectionModel()->clear(); // because the model calls reset()
+    model()->clear();
+}
+
+void FurnitureView::setTiles(const QList<FurnitureTiles *> &tilesList)
+{
+    selectionModel()->clear(); // because the model calls reset()
+    model()->setTiles(tilesList);
+}
+
 void FurnitureView::scaleChanged(qreal scale)
 {
     model()->scaleChanged(scale);
@@ -556,6 +568,11 @@ bool FurnitureModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
      }
 
      return true;
+}
+
+void FurnitureModel::clear()
+{
+    setTiles(QList<FurnitureTiles*>());
 }
 
 void FurnitureModel::setTiles(const QList<FurnitureTiles *> &tilesList)

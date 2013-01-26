@@ -818,7 +818,6 @@ void BuildingTilesDialog::addTile(BuildingTileCategory *category,
 
     tilesetSelectionChanged();
     setCategoryTiles();
-    synchUI(); // model calling reset() doesn't generate selectionChanged signal
 
     if (mExpertMode) {
         ui->categoryView->scrollTo(
@@ -836,7 +835,6 @@ BuildingTileEntry *BuildingTilesDialog::removeTile(BuildingTileCategory *categor
 
     tilesetSelectionChanged();
     setCategoryTiles();
-    synchUI(); // model calling reset() doesn't generate selectionChanged signal
 
     return entry;
 }
@@ -917,9 +915,8 @@ void BuildingTilesDialog::insertFurnitureTiles(FurnitureGroup *category,
 {
     category->mTiles.insert(index, ftiles);
     ftiles->setGroup(category);
-    ui->furnitureView->model()->setTiles(category->mTiles);
     mCurrentFurniture = 0;
-    synchUI(); // model calling reset() doesn't generate selectionChanged signal
+    ui->furnitureView->setTiles(category->mTiles);
 }
 
 FurnitureTiles *BuildingTilesDialog::removeFurnitureTiles(FurnitureGroup *category,
@@ -1044,8 +1041,8 @@ void BuildingTilesDialog::setCategoryTiles()
         }
     }
     mCurrentEntry = 0;
-    ui->categoryTilesView->model()->setTiles(tiles, userData, headers);
-    ui->categoryView->model()->setCategory(expertMode ? mCategory : 0);
+    ui->categoryTilesView->setTiles(tiles, userData, headers);
+    ui->categoryView->setCategory(expertMode ? mCategory : 0);
 }
 
 void BuildingTilesDialog::setFurnitureTiles()
@@ -1054,7 +1051,7 @@ void BuildingTilesDialog::setFurnitureTiles()
     if (mFurnitureGroup)
         ftiles = mFurnitureGroup->mTiles;
     mCurrentFurniture = 0;
-    ui->furnitureView->model()->setTiles(ftiles);
+    ui->furnitureView->setTiles(ftiles);
 }
 
 void BuildingTilesDialog::setTilesetList()
@@ -1237,12 +1234,11 @@ void BuildingTilesDialog::tilesetSelectionChanged()
             bounds = mCategory->categoryBounds();
 #endif
         int row = ui->tilesetList->row(item);
-        MixedTilesetModel *model = ui->tilesetTilesView->model();
         mCurrentTileset = TileMetaInfoMgr::instance()->tileset(row);
         if (mCurrentTileset->isMissing())
-            model->setTiles(QList<Tile*>());
+            ui->tilesetTilesView->clear();
         else
-            model->setTileset(mCurrentTileset);
+            ui->tilesetTilesView->setTileset(mCurrentTileset);
 #if 0
         for (int i = 0; i < tileset->tileCount(); i++) {
             Tile *tile = tileset->tileAt(i);
@@ -1251,7 +1247,7 @@ void BuildingTilesDialog::tilesetSelectionChanged()
         }
 #endif
     } else {
-        ui->tilesetTilesView->model()->setTiles(QList<Tile*>());
+        ui->tilesetTilesView->clear();
     }
     synchUI();
 }
@@ -1618,9 +1614,9 @@ void BuildingTilesDialog::tilesetChanged(Tileset *tileset)
 {
     if (tileset == mCurrentTileset) {
         if (tileset->isMissing())
-            ui->tilesetTilesView->model()->setTiles(QList<Tile*>());
+            ui->tilesetTilesView->clear();
         else
-            ui->tilesetTilesView->model()->setTileset(tileset);
+            ui->tilesetTilesView->setTileset(tileset);
     }
 
     int row = TileMetaInfoMgr::instance()->indexOf(tileset);

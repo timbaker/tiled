@@ -308,6 +308,28 @@ void MixedTilesetView::contextMenuEvent(QContextMenuEvent *event)
         mContextMenu->exec(event->globalPos());
 }
 
+void MixedTilesetView::clear()
+{
+    selectionModel()->clear(); // because the model calls reset()
+    model()->clear();
+}
+
+void MixedTilesetView::setTiles(const QList<Tile *> &tiles,
+                                const QList<void *> &userData,
+                                const QStringList &headers)
+{
+    selectionModel()->clear(); // because the model calls reset()
+    model()->setTiles(tiles, userData, headers);
+}
+
+void MixedTilesetView::setTileset(Tileset *tileset,
+                                  const QList<void *> &userData,
+                                  const QStringList &labels)
+{
+    selectionModel()->clear(); // because the model calls reset()
+    model()->setTileset(tileset, userData, labels);
+}
+
 void MixedTilesetView::scaleChanged(qreal scale)
 {
     model()->scaleChanged(scale);
@@ -536,6 +558,11 @@ bool MixedTilesetModel::dropMimeData(const QMimeData *data, Qt::DropAction actio
      }
 
      return true;
+}
+
+void MixedTilesetModel::clear()
+{
+    setTiles(QList<Tile*>());
 }
 
 void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,

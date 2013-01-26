@@ -1189,17 +1189,15 @@ void TileDefDialog::setTilesList()
         QList<void*> userData;
         foreach (TileDefTile *defTile, defTileset->mTiles)
             userData += defTile;
-        ui->tiles->model()->setTileset(mCurrentTileset, userData);
+        ui->tiles->setTileset(mCurrentTileset, userData);
 
         // Tooltip shows properties with non-default value.
         for (int i = 0; i < mCurrentTileset->tileCount(); i++) {
             setToolTipEtc(i);
         }
     } else {
-        ui->tiles->model()->setTiles(QList<Tile*>());
+        ui->tiles->clear();
     }
-
-    tileSelectionChanged(); // model calling reset() doesn't generate selectionChanged signal
 }
 
 void TileDefDialog::setToolTipEtc(int tileID)

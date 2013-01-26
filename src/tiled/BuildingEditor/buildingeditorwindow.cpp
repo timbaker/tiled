@@ -897,8 +897,8 @@ void BuildingEditorWindow::categorySelectionChanged()
     mCategory = 0;
     mFurnitureGroup = 0;
 
-    ui->tilesetView->model()->setTiles(QList<Tile*>());
-    ui->furnitureView->model()->setTiles(QList<FurnitureTiles*>());
+    ui->tilesetView->clear();
+    ui->furnitureView->clear();
 
     ui->tilesetView->setContextMenu(0);
     ui->furnitureView->setContextMenu(0);
@@ -940,7 +940,7 @@ void BuildingEditorWindow::categorySelectionChanged()
                     headers += entry->category()->label();
                 }
             }
-            ui->tilesetView->model()->setTiles(tiles, userData, headers);
+            ui->tilesetView->setTiles(tiles, userData, headers);
             ui->tilesetView->scrollToTop();
             ui->categoryStack->setCurrentIndex(0);
 
@@ -959,7 +959,7 @@ void BuildingEditorWindow::categorySelectionChanged()
                 if (!furnitureMap.contains(key))
                     furnitureMap[key] = ftiles;
             }
-            ui->furnitureView->model()->setTiles(furnitureMap.values());
+            ui->furnitureView->setTiles(furnitureMap.values());
             ui->furnitureView->scrollToTop();
             ui->categoryStack->setCurrentIndex(1);
 
@@ -990,13 +990,13 @@ void BuildingEditorWindow::categorySelectionChanged()
                         headers += tile->tileset()->name();
                 }
             }
-            ui->tilesetView->model()->setTiles(tiles, userData, headers);
+            ui->tilesetView->setTiles(tiles, userData, headers);
             ui->tilesetView->scrollToTop();
             ui->categoryStack->setCurrentIndex(0);
 
             selectCurrentCategoryTile();
         } else if (mFurnitureGroup = furnitureGroupAt(row)) {
-            ui->furnitureView->model()->setTiles(mFurnitureGroup->mTiles);
+            ui->furnitureView->setTiles(mFurnitureGroup->mTiles);
             ui->furnitureView->scrollToTop();
             ui->categoryStack->setCurrentIndex(1);
         }
@@ -2364,7 +2364,7 @@ void BuildingEditorWindow::tilesetAdded(Tileset *tileset)
 void BuildingEditorWindow::tilesetAboutToBeRemoved(Tileset *tileset)
 {
     Q_UNUSED(tileset)
-    ui->tilesetView->model()->setTiles(QList<Tile*>());
+    ui->tilesetView->clear();
     // FurnitureView doesn't cache Tiled::Tiles
 }
 

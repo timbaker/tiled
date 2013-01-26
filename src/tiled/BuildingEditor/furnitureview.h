@@ -60,6 +60,7 @@ public:
     bool dropMimeData(const QMimeData *data, Qt::DropAction action,
                       int row, int column, const QModelIndex &parent);
 
+    void clear();
     void setTiles(const QList<FurnitureTiles*> &tilesList);
 
     FurnitureTile *tileAt(const QModelIndex &index) const;
@@ -161,6 +162,9 @@ public:
     void contextMenuEvent(QContextMenuEvent *event);
     void setContextMenu(QMenu *menu)
     { mContextMenu = menu; }
+
+    void clear();
+    void setTiles(const QList<FurnitureTiles*> &tilesList);
 
 signals:
 

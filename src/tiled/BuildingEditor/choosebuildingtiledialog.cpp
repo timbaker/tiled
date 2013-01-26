@@ -110,7 +110,7 @@ void ChooseBuildingTileDialog::setTilesList(BuildingTileCategory *category,
         if (entry == initialTile)
             tile = mTiles.last();
     }
-    v->model()->setTiles(mTiles, userData);
+    v->setTiles(mTiles, userData);
 
     if (tile != 0)
         v->setCurrentIndex(v->model()->index(tile));

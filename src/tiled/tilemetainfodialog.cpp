@@ -444,7 +444,7 @@ void TileMetaInfoDialog::accept()
 {
     mClosing = true; // getting a crash when TileMetaInfoMgr is deleted before this in MainWindow::tilesetMetaInfoDialog
     ui->tilesets->clear();
-    ui->tiles->model()->setTiles(QList<Tile*>());
+    ui->tiles->clear();
     QDialog::accept();
 }
 
@@ -481,10 +481,8 @@ void TileMetaInfoDialog::setTilesList()
             Tile *tile = mCurrentTileset->tileAt(i);
             labels += TileMetaInfoMgr::instance()->tileEnum(tile);
         }
-        ui->tiles->model()->setTileset(mCurrentTileset, QList<void*>(), labels);
+        ui->tiles->setTileset(mCurrentTileset, QList<void*>(), labels);
     } else {
-        ui->tiles->model()->setTiles(QList<Tile*>());
+        ui->tiles->clear();
     }
-
-    tileSelectionChanged(); // model calling reset() doesn't generate selectionChanged signal
 }

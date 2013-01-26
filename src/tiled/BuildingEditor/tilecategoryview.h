@@ -58,6 +58,7 @@ public:
     bool dropMimeData(const QMimeData *data, Qt::DropAction action,
                       int row, int column, const QModelIndex &parent);
 
+    void clear();
     void setCategory(BuildingTileCategory *category);
 
     BuildingTileEntry *entryAt(const QModelIndex &index) const;
@@ -104,6 +105,9 @@ public:
 
     Tiled::Internal::Zoomable *zoomable() const
     { return mZoomable; }
+
+    void clear();
+    void setCategory(BuildingTileCategory *category);
 
 signals:
 

@@ -62,6 +62,7 @@ public:
     bool dropMimeData(const QMimeData *data, Qt::DropAction action,
                       int row, int column, const QModelIndex &parent);
 
+    void clear();
     void setTiles(const QList<Tile*> &tiles,
                   const QList<void*> &userData = QList<void*>(),
                   const QStringList &headers = QStringList());
@@ -179,6 +180,14 @@ public:
     void contextMenuEvent(QContextMenuEvent *event);
     void setContextMenu(QMenu *menu)
     { mContextMenu = menu; }
+
+    void clear();
+    void setTiles(const QList<Tile*> &tiles,
+                  const QList<void*> &userData = QList<void*>(),
+                  const QStringList &headers = QStringList());
+    void setTileset(Tileset *tileset,
+                    const QList<void *> &userData = QList<void*>(),
+                    const QStringList &labels = QStringList());
 
 signals:
     void mousePressed();
