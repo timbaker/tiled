@@ -35,6 +35,7 @@
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QImageReader>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QScrollBar>
@@ -351,6 +352,9 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
 
     connect(ui->actionUserGuide, SIGNAL(triggered()), SLOT(help()));
+
+    connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
+            SLOT(tilesetChanged(Tileset*)));
 
     foreach (QObject *o, ui->propertySheet->children())
         if (o->isWidgetType())
@@ -918,6 +922,12 @@ void TileDefDialog::tileLeft(const QModelIndex &index)
     ui->tileOffset->setText(tr("Offset: ?"));
 }
 
+void TileDefDialog::tilesetChanged(Tileset *tileset)
+{
+    if (tileset == mCurrentTileset)
+        setTilesList();
+}
+
 void TileDefDialog::updateUI()
 {
     mSynching = true;
@@ -1068,9 +1078,7 @@ void TileDefDialog::fileOpen(const QString &fileName)
 
         Tileset *tileset = new Tileset(tsDef->mName, 64, 128);
         int width = tsDef->mColumns * 64, height = tsDef->mRows * 128;
-        QImage image(width, height, QImage::Format_ARGB32);
-        image.fill(Qt::red);
-        tileset->loadFromImage(image, imageSource);
+        tileset->loadFromNothing(QSize(width, height), imageSource);
         Tile *missingTile = TilesetManager::instance()->missingTile();
         for (int i = 0; i < tileset->tileCount(); i++)
             tileset->tileAt(i)->setImage(missingTile->image());
@@ -1459,16 +1467,13 @@ void TileDefDialog::loadTilesets()
     foreach (Tileset *ts, mTilesets) {
         if (ts->isMissing()) {
             QString source = ts->imageSource();
-            QString oldSource = source;
             if (QDir::isRelativePath(ts->imageSource()))
                 source = QDir(mTileDefFile->directory()).filePath(ts->imageSource());
-            QFileInfo info(source);
-            if (info.exists()) {
-                source = info.canonicalFilePath();
-                if (loadTilesetImage(ts, source)) {
-                    ts->setMissing(false); // Yay!
-                    TilesetManager::instance()->tilesetSourceChanged(ts, oldSource, true);
-                }
+            QImageReader reader(source);
+            if (reader.size().isValid()) {
+                ts->loadFromNothing(reader.size(), ts->imageSource());
+                QFileInfo info(source);
+                TilesetManager::instance()->loadTileset(ts, info.canonicalFilePath());
             }
         }
     }
@@ -1476,13 +1481,15 @@ void TileDefDialog::loadTilesets()
 
 Tileset *TileDefDialog::loadTileset(const QString &source)
 {
-    QFileInfo info(source);
-    Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
-    if (!loadTilesetImage(ts, source)) {
-        delete ts;
-        return 0;
+    QImageReader reader(source);
+    if (reader.size().isValid()) {
+        QFileInfo info(source);
+        Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
+        ts->loadFromNothing(reader.size(), info.canonicalFilePath());
+        TilesetManager::instance()->loadTileset(ts, info.canonicalFilePath());
+        return ts;
     }
-    return ts;
+    return 0;
 }
 
 bool TileDefDialog::loadTilesetImage(Tileset *ts, const QString &source)

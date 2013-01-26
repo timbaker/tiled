@@ -103,6 +103,8 @@ private slots:
     void tileEntered(const QModelIndex &index);
     void tileLeft(const QModelIndex &index);
 
+    void tilesetChanged(Tileset *tileset);
+
     void updateUI();
 
     void help();
