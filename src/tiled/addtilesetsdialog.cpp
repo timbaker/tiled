@@ -21,20 +21,25 @@
 #include "ui_addtilesetsdialog.h"
 
 #include <QDir>
+#include <QFileDialog>
 #include <QImageReader>
 
 AddTilesetsDialog::AddTilesetsDialog(const QString &dir,
                                      const QStringList &ignore,
-                                     QWidget *parent) :
+                                     bool ignoreIsPaths, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AddTilesetsDialog),
     mDirectory(dir),
-    mIgnore(ignore)
+    mIgnore(ignore),
+    mIgnoreIsPaths(ignoreIsPaths)
 {
     ui->setupUi(this);
 
     connect(ui->checkAll, SIGNAL(clicked()), SLOT(checkAll()));
     connect(ui->uncheckAll, SIGNAL(clicked()), SLOT(uncheckAll()));
+
+    setPrompt(QString());
+    setAllowBrowse(false);
 
     setFilesList();
 }
@@ -42,6 +47,27 @@ AddTilesetsDialog::AddTilesetsDialog(const QString &dir,
 AddTilesetsDialog::~AddTilesetsDialog()
 {
     delete ui;
+}
+
+void AddTilesetsDialog::setAllowBrowse(bool browse)
+{
+    if (browse) {
+        ui->path->show();
+        ui->browse->show();
+        ui->path->setText(QDir::toNativeSeparators(mDirectory));
+        connect(ui->browse, SIGNAL(clicked()), SLOT(browse()));
+    } else {
+        ui->path->hide();
+        ui->browse->hide();
+    }
+}
+
+void AddTilesetsDialog::setPrompt(const QString &prompt)
+{
+    if (prompt.isEmpty())
+        ui->prompt->hide();
+    else
+        ui->prompt->setText(prompt);
 }
 
 QStringList AddTilesetsDialog::fileNames()
@@ -57,6 +83,8 @@ QStringList AddTilesetsDialog::fileNames()
 
 void AddTilesetsDialog::setFilesList()
 {
+    ui->files->clear();
+
     QDir dir(mDirectory);
     dir.setFilter(QDir::Files);
     dir.setSorting(QDir::Name);
@@ -67,12 +95,36 @@ void AddTilesetsDialog::setFilesList()
     QFileInfoList fileInfoList = dir.entryInfoList(nameFilters);
     foreach (QFileInfo fileInfo, fileInfoList) {
         QString fileName = fileInfo.fileName();
-        if (mIgnore.contains(fileInfo.completeBaseName()))
-            continue;
+        if (mIgnoreIsPaths) {
+            bool ignore = false;
+            foreach (const QString &path, mIgnore) {
+                // 'path' may not exist but that's ok here
+                if (QFileInfo(path) == fileInfo) {
+                    ignore = true;
+                    break;
+                }
+            }
+            if (ignore)
+                continue;
+        } else {
+            if (mIgnore.contains(fileInfo.completeBaseName()))
+                continue;
+        }
         QListWidgetItem *item = new QListWidgetItem;
         item->setText(fileName);
         item->setCheckState(Qt::Unchecked);
         ui->files->addItem(item);
+    }
+}
+
+void AddTilesetsDialog::browse()
+{
+    QString f = QFileDialog::getExistingDirectory(this, QString(),
+                                                  ui->path->text());
+    if (!f.isEmpty()) {
+        mDirectory = f;
+        ui->path->setText(QDir::toNativeSeparators(f));
+        setFilesList();
     }
 }
 

@@ -21,6 +21,7 @@
 #include "ui_tilemetainfodialog.h"
 
 #include "addremovetileset.h"
+#include "addtilesetsdialog.h"
 #include "documentmanager.h"
 #include "mainwindow.h"
 #include "preferences.h"
@@ -238,11 +239,16 @@ QString TileMetaInfoDialog::setTileEnum(Tile *tile, const QString &enumName)
 void TileMetaInfoDialog::addTileset()
 {
     const QString tilesDir = TileMetaInfoMgr::instance()->tilesDirectory();
-    const QString filter = Utils::readableImageFormatsFilter();
-    QStringList fileNames = QFileDialog::getOpenFileNames(this,
-                                                          tr("Tileset Image"),
-                                                          tilesDir,
-                                                          filter);
+
+    AddTilesetsDialog dialog(tilesDir,
+                             TileMetaInfoMgr::instance()->tilesetPaths(),
+                             true,
+                             this);
+    dialog.setAllowBrowse(true);
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    QStringList fileNames = dialog.fileNames();
 
     mUndoStack->beginMacro(tr("Add Tilesets"));
 

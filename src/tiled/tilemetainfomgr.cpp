@@ -119,6 +119,18 @@ QString TileMetaInfoMgr::tilesDirectory() const
     return Preferences::instance()->tilesDirectory();
 }
 
+QStringList TileMetaInfoMgr::tilesetPaths() const
+{
+    QStringList ret;
+    foreach (Tileset *ts, tilesets()) {
+        QString path = ts->imageSource();
+        if (QDir::isRelativePath(path)) // hasn't been loaded yet?
+            path = QDir(tilesDirectory()).filePath(path);
+        ret += path;
+    }
+    return ret;
+}
+
 QString TileMetaInfoMgr::txtName()
 {
     return QLatin1String(TXT_FILE);
