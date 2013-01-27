@@ -66,6 +66,7 @@ class MiniMapItem : public QObject, public QGraphicsItem
     Q_INTERFACES(QGraphicsItem)
 public:
     MiniMapItem(Tiled::Internal::ZomboidScene *scene, QGraphicsItem *parent = 0);
+    ~MiniMapItem();
 
     QRectF boundingRect() const;
 

@@ -81,6 +81,11 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
     recreateImage();
 }
 
+MiniMapItem::~MiniMapItem()
+{
+    delete mMapImage;
+}
+
 QRectF MiniMapItem::boundingRect() const
 {
     return mMapImageBounds;
