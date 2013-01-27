@@ -7,6 +7,7 @@ set ( BuildingEd_UIS
     buildingtilesdialog.ui
     buildingtilesetdock.ui
     choosebuildingtiledialog.ui
+    choosetemplatesdialog.ui
     listofstringsdialog.ui
     newbuildingdialog.ui
     resizebuildingdialog.ui
@@ -55,6 +56,7 @@ set ( BuildingEd_SRCS
     buildingundoredo.cpp
     buildingwriter.cpp
     choosebuildingtiledialog.cpp
+    choosetemplatesdialog.cpp
     furnituregroups.cpp
     furnitureview.cpp
     horizontallinedelegate.cpp
@@ -87,6 +89,7 @@ set ( BuildingEd_MOCS
     buildingtilesetdock.h
     buildingtools.h
     choosebuildingtiledialog.h
+    choosetemplatesdialog.h
     furnituregroups.h
     furnitureview.h
     mixedtilesetview.h
