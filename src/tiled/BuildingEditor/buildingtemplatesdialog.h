@@ -27,6 +27,7 @@ class BuildingTemplatesDialog;
 namespace BuildingEditor {
 
 class BuildingTemplate;
+class BuildingTemplates;
 class BuildingTileEntry;
 
 class BuildingTemplatesDialog : public QDialog
@@ -48,6 +49,8 @@ private slots:
     void duplicateTemplate();
     void moveUp();
     void moveDown();
+    void importTemplates();
+    void exportTemplates();
     void nameEdited(const QString &name);
     void editRooms();
     void chooseTile();
@@ -56,6 +59,8 @@ private slots:
 private:
     void setTilePixmap();
     BuildingTileEntry *selectedTile();
+
+    BuildingTemplates *mgr() const;
 
 private:
     Ui::BuildingTemplatesDialog *ui;

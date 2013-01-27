@@ -21,10 +21,12 @@
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
 #include "choosebuildingtiledialog.h"
+#include "choosetemplatesdialog.h"
 #include "roomsdialog.h"
 
 #include "tile.h"
 
+#include <QFileDialog>
 #include <QMessageBox>
 #include <QToolBar>
 
@@ -52,9 +54,11 @@ BuildingTemplatesDialog::BuildingTemplatesDialog(QWidget *parent) :
 #endif
     toolBar->addAction(ui->actionMoveUp);
     toolBar->addAction(ui->actionMoveDown);
+    toolBar->addAction(ui->actionImport);
+    toolBar->addAction(ui->actionExport);
     ui->toolBarLayout->addWidget(toolBar);
 
-    foreach (BuildingTemplate *btemplate, BuildingTemplates::instance()->templates()) {
+    foreach (BuildingTemplate *btemplate, mgr()->templates()) {
         BuildingTemplate *clone = new BuildingTemplate(btemplate);
         mTemplates += clone;
         ui->templatesList->addItem(btemplate->name());
@@ -67,6 +71,8 @@ BuildingTemplatesDialog::BuildingTemplatesDialog(QWidget *parent) :
     connect(ui->actionDuplicate, SIGNAL(triggered()), SLOT(duplicateTemplate()));
     connect(ui->actionMoveUp, SIGNAL(triggered()), SLOT(moveUp()));
     connect(ui->actionMoveDown, SIGNAL(triggered()), SLOT(moveDown()));
+    connect(ui->actionImport, SIGNAL(triggered()), SLOT(importTemplates()));
+    connect(ui->actionExport, SIGNAL(triggered()), SLOT(exportTemplates()));
     connect(ui->name, SIGNAL(textEdited(QString)), SLOT(nameEdited(QString)));
     connect(ui->tilesList, SIGNAL(itemSelectionChanged()),
             SLOT(tileSelectionChanged()));
@@ -178,6 +184,66 @@ void BuildingTemplatesDialog::moveDown()
     }
 }
 
+void BuildingTemplatesDialog::importTemplates()
+{
+    QString filter = tr("Text files (*.txt)");
+    filter += QLatin1String(";;");
+    filter += tr("All Files (*)");
+
+    QString f = QFileDialog::getOpenFileName(this, tr("Import Templates"),
+                                             QString(), filter);
+    if (f.isEmpty())
+        return;
+
+    QList<BuildingTemplate*> templates;
+    if (!mgr()->importTemplates(f, templates)) {
+        QMessageBox::warning(this, tr("Import Templates"), mgr()->errorString());
+        return;
+    }
+
+    ChooseTemplatesDialog dialog(templates, tr("Choose templates to import:"),
+                                 this);
+    if (dialog.exec() == QDialog::Accepted) {
+        foreach (BuildingTemplate *btemplate, dialog.chosenTemplates()) {
+            mTemplates += new BuildingTemplate(btemplate);
+            ui->templatesList->addItem(btemplate->name());
+            ui->templatesList->setCurrentRow(ui->templatesList->count() - 1);
+        }
+    }
+    qDeleteAll(templates);
+}
+
+void BuildingTemplatesDialog::exportTemplates()
+{
+    ChooseTemplatesDialog dialog(mTemplates, tr("Choose templates to export:"),
+                                 this);
+    dialog.setButtons(QDialogButtonBox::Save | QDialogButtonBox::Cancel);
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    // FIXME: don't hide ChooseTemplatesDialog yet
+
+    QString filter = tr("Text files (*.txt)");
+    filter += QLatin1String(";;");
+    filter += tr("All Files (*)");
+
+    QString f = QFileDialog::getSaveFileName(this, tr("Export Templates"),
+                                             QLatin1String("templates.txt"),
+                                             filter);
+    if (f.isEmpty())
+        return;
+
+    bool ok = mgr()->exportTemplates(f, dialog.chosenTemplates());
+    if (ok) {
+        f = QDir::toNativeSeparators(f);
+        QMessageBox::information(this, tr("Export Templates"),
+                                 tr("The templates were successfully exported to:\n%1")
+                                 .arg(f));
+    } else {
+        QMessageBox::warning(this, tr("Export Templates"), mgr()->errorString());
+    }
+}
+
 void BuildingTemplatesDialog::nameEdited(const QString &name)
 {
     if (!mTemplate)
@@ -225,6 +291,7 @@ void BuildingTemplatesDialog::synchUI()
             mTemplates.indexOf(mTemplate) > 0);
     ui->actionMoveDown->setEnabled(mTemplate != 0 &&
             mTemplates.indexOf(mTemplate) < mTemplates.count() - 1);
+    ui->actionExport->setEnabled(mTemplates.size() > 0);
     ui->tilesList->setEnabled(mTemplate != 0);
     ui->chooseTile->setEnabled(mTemplate != 0 && mTileRow != -1);
     ui->editRooms->setEnabled(mTemplate != 0);
@@ -256,4 +323,9 @@ BuildingTileEntry *BuildingTemplatesDialog::selectedTile()
     return mTemplate->tile(mTileRow);
 
     return 0;
+}
+
+BuildingTemplates *BuildingTemplatesDialog::mgr() const
+{
+    return BuildingTemplates::instance();
 }

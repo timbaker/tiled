@@ -186,7 +186,8 @@ SOURCES += aboutdialog.cpp \
     tiledeffile.cpp \
     addtilesetsdialog.cpp \
     BuildingEditor/buildingorthoview.cpp \
-    BuildingEditor/buildingisoview.cpp
+    BuildingEditor/buildingisoview.cpp \
+    BuildingEditor/choosetemplatesdialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -338,7 +339,8 @@ HEADERS += aboutdialog.h \
     tiledeffile.h \
     addtilesetsdialog.h \
     BuildingEditor/buildingorthoview.h \
-    BuildingEditor/buildingisoview.h
+    BuildingEditor/buildingisoview.h \
+    BuildingEditor/choosetemplatesdialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -373,7 +375,8 @@ FORMS += aboutdialog.ui \
     BuildingEditor/buildingtilesetdock.ui \
     BuildingEditor/buildinglayersdock.ui \
     tiledefdialog.ui \
-    addtilesetsdialog.ui
+    addtilesetsdialog.ui \
+    BuildingEditor/choosetemplatesdialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

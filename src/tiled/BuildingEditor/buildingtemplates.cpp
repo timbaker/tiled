@@ -143,6 +143,7 @@ bool TemplatesFile::read(const QString &fileName)
     mRevision = simple.value("revision").toInt();
     mSourceRevision = simple.value("source_revision").toInt();
 
+    qDeleteAll(mTemplates);
     mTemplates.clear();
 
     mEntries.clear(); // delete?
@@ -573,6 +574,31 @@ void BuildingTemplates::writeTxt(QWidget *parent)
         QMessageBox::warning(parent, tr("It's no good, Jim!"), mError);
         return;
     }
+}
+
+bool BuildingTemplates::importTemplates(const QString &fileName,
+                                        QList<BuildingTemplate *> &templates)
+{
+    TemplatesFile file;
+    if (!file.read(fileName)) {
+        mError = file.errorString();
+        return false;
+    }
+    foreach (BuildingTemplate *btemplate, file.templates())
+        templates += new BuildingTemplate(btemplate);
+    return true;
+}
+
+bool BuildingTemplates::exportTemplates(const QString &fileName,
+                                        const QList<BuildingTemplate *> &templates)
+{
+    TemplatesFile file;
+    file.setRevision(0, 0);
+    if (!file.write(fileName, templates)) {
+        mError = file.errorString();
+        return false;
+    }
+    return true;
 }
 
 bool BuildingTemplates::mergeTxt()

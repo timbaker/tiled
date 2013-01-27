@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, Tim Baker <treectrl@users.sf.net>
+ * Copyright 2013, Tim Baker <treectrl@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -197,6 +197,11 @@ public:
 
     bool readTxt();
     void writeTxt(QWidget *parent = 0);
+
+    bool importTemplates(const QString &fileName,
+                         QList<BuildingTemplate*> &templates);
+    bool exportTemplates(const QString &fileName,
+                         const QList<BuildingTemplate*> &templates);
 
     QString errorString() const
     { return mError; }

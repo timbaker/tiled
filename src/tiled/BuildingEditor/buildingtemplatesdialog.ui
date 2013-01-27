@@ -242,6 +242,30 @@
     <string>Move selected template down</string>
    </property>
   </action>
+  <action name="actionImport">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/document-import.png</normaloff>:/images/16x16/document-import.png</iconset>
+   </property>
+   <property name="text">
+    <string>Import</string>
+   </property>
+   <property name="toolTip">
+    <string>Import templates from a file</string>
+   </property>
+  </action>
+  <action name="actionExport">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/document-export.png</normaloff>:/images/16x16/document-export.png</iconset>
+   </property>
+   <property name="text">
+    <string>Export</string>
+   </property>
+   <property name="toolTip">
+    <string>Export templates to a file</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="../tiled.qrc"/>
