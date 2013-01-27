@@ -1808,9 +1808,6 @@ void BuildingEditorWindow::addDocument(BuildingDocument *doc)
 
     updateActions();
 
-    if (building->roomCount())
-        PencilTool::instance()->makeCurrent();
-
     updateWindowTitle();
 
     reportMissingTilesets();
