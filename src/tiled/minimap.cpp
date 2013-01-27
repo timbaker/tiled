@@ -78,7 +78,7 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
         mLotBounds[lot] = lot->boundingRect(mRenderer);
     }
 
-    recreateImage();
+    recreateLater();
 }
 
 MiniMapItem::~MiniMapItem()
