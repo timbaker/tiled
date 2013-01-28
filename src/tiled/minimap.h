@@ -22,8 +22,11 @@
 #include <QGraphicsView>
 
 class MapComposite;
+class MapInfo;
+
 namespace Tiled {
 class Layer;
+class Map;
 class MapObject;
 class MapRenderer;
 class Tileset;
@@ -57,6 +60,27 @@ class QToolButton;
   * updated when the map is edited and when lots are added/removed/moved.
   */
 
+/**
+  * This class maintains a copy of another map.
+  */
+class ShadowMap
+{
+public:
+    ShadowMap(MapInfo *mapInfo);
+    ~ShadowMap();
+
+    void layerAdded(int index);
+    void layerRemoved(int index);
+    void layerRenamed(int index);
+    void regionAltered(const QRegion &rgn, Tiled::Layer *layer);
+    bool mapAboutToChange(MapInfo *mapInfo);
+    bool mapFileChanged(MapInfo *mapInfo);
+
+    MapComposite *mMapComposite;
+    Tiled::Map *mMaster; // Never accessed from the thread!
+    QMap<quintptr,MapComposite*> mLots;
+};
+
 #include <QMutexLocker>
 #include <QThread>
 #include <QVector>
@@ -72,8 +96,22 @@ public:
     void run();
 
     void update(const QRectF &rect);
-    void regionAltered(const QRegion &rgn, Tiled::Layer *layer);
+    void recreateImage(const QImage *other);
     void restart();
+
+    void layerAdded(int index);
+    void layerRemoved(int index);
+    void layerRenamed(int index);
+    void regionAltered(const QRegion &rgn, Tiled::Layer *layer);
+
+    void onLotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
+    void onLotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
+    void onLotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
+
+    bool mapAboutToChange(MapInfo *mapInfo);
+    bool mapFileChanged(MapInfo *mapInfo);
+
+    void putToSleep();
 
     void getImage(QImage &dest);
 
@@ -86,7 +124,7 @@ private:
     QMutex mGoingToSleepMutex;
     QWaitCondition mGoingToSleep;
     QWaitCondition mWaitCondition;
-    MapComposite *mMapComposite;
+    ShadowMap *mShadowMap;
     Tiled::MapRenderer *mRenderer;
     QImage mImage;
     QRectF mDirtyRect;

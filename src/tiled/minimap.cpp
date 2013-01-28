@@ -20,6 +20,7 @@
 #include "map.h"
 #include "mapcomposite.h"
 #include "mapdocument.h"
+#include "mapmanager.h"
 #include "maprenderer.h"
 #include "mapview.h"
 #include "preferences.h"
@@ -40,6 +41,70 @@ using namespace Tiled::Internal;
 
 /////
 
+ShadowMap::ShadowMap(MapInfo *mapInfo)
+{
+    mMaster = mapInfo->map();
+    Map *map = mMaster->clone();
+    TilesetManager::instance()->addReferences(map->tilesets());
+    mapInfo = MapManager::instance()->newFromMap(map, mapInfo->path()); // FIXME: save as... changes path?
+    mMapComposite = new MapComposite(mapInfo);
+
+    foreach (CompositeLayerGroup *layerGroup, mMapComposite->sortedLayerGroups()) {
+        foreach (TileLayer *tl, layerGroup->layers()) {
+            bool isVisible = true;
+            if (tl->name().contains(QLatin1String("NoRender")))
+                isVisible = false;
+            layerGroup->setLayerVisibility(tl, isVisible);
+            layerGroup->setLayerOpacity(tl, 1.0f);
+        }
+        layerGroup->synch();
+    }
+}
+
+ShadowMap::~ShadowMap()
+{
+    MapInfo *mapInfo = mMapComposite->mapInfo();
+    delete mMapComposite;
+    TilesetManager::instance()->removeReferences(mapInfo->map()->tilesets());
+    delete mapInfo->map();
+    delete mapInfo;
+}
+
+void ShadowMap::layerAdded(int index)
+{
+    Layer *layer = mMaster->layerAt(index)->clone();
+    layer->setVisible(true);
+    mMapComposite->map()->insertLayer(index, layer);
+    mMapComposite->layerAdded(index);
+}
+
+void ShadowMap::layerRemoved(int index)
+{
+    mMapComposite->layerAboutToBeRemoved(index);
+    delete mMapComposite->map()->takeLayerAt(index);
+}
+
+void ShadowMap::layerRenamed(int index)
+{
+    mMapComposite->layerRenamed(index);
+}
+
+void ShadowMap::regionAltered(const QRegion &rgn, Layer *layer)
+{
+    int index = mMaster->layers().indexOf(layer);
+    if (TileLayer *tl = mMapComposite->map()->layerAt(index)->asTileLayer()) {
+        foreach (QRect r, rgn.rects()) {
+            for (int x = r.x(); x <= r.right(); x++) {
+                for (int y = r.y(); y <= r.bottom(); y++) {
+                    tl->setCell(x, y, layer->asTileLayer()->cellAt(x, y));
+                }
+            }
+        }
+    }
+}
+
+/////
+
 #ifdef ZOMBOID
 #include "mapmanager.h"
 #include "isometricrenderer.h"
@@ -56,13 +121,11 @@ MapRenderThread::MapRenderThread(MapComposite *mapComposite, QImage *image, cons
     mAbortDrawing(false),
     mPauseForMapChanges(false)
 {
-    MapInfo *mapInfo = MapManager::instance()->newFromMap(mapComposite->map()->clone(), mapComposite->mapInfo()->path());
-    mapInfo->setBeingEdited(false); // so we get lots
-    mMapComposite = new MapComposite(mapInfo);
-    (mMapComposite->map()->orientation() == Map::Isometric) ?
-                mRenderer = new IsometricRenderer(mMapComposite->map()) :
-            mRenderer = new ZLevelRenderer(mMapComposite->map());
-    mRenderer->setMaxLevel(mMapComposite->maxLevel());
+    mShadowMap = new ShadowMap(mapComposite->mapInfo());
+    (mapComposite->map()->orientation() == Map::Isometric) ?
+                mRenderer = new IsometricRenderer(mShadowMap->mMapComposite->map()) :
+            mRenderer = new ZLevelRenderer(mShadowMap->mMapComposite->map());
+    mRenderer->setMaxLevel(mShadowMap->mMapComposite->maxLevel());
     mRenderer->mAbortDrawing = &mAbortDrawing;
 }
 
@@ -74,11 +137,8 @@ MapRenderThread::~MapRenderThread()
     mWaitCondition.wakeOne();
     mMutexQuit.unlock();
     wait();
-    MapInfo *mapInfo = mMapComposite->mapInfo();
-    delete mMapComposite;
     delete mRenderer;
-    delete mapInfo->map();
-    delete mapInfo;
+    delete mShadowMap;
 }
 
 void MapRenderThread::run()
@@ -89,14 +149,14 @@ void MapRenderThread::run()
         // signal, so we aren't really blocking anything.
         QMutexLocker locker(&mMutex);
 
-        QRectF sceneRect = mMapComposite->boundingRect(mRenderer);
+        QRectF sceneRect = mShadowMap->mMapComposite->boundingRect(mRenderer);
         QSize mapSize = sceneRect.size().toSize();
         if (mapSize.isEmpty())
             return;
 
-        QRectF paintRect = mDirtyRect;
         if (mDirtyRect.isEmpty())
-            paintRect = sceneRect;
+            mDirtyRect = sceneRect;
+        QRectF paintRect = mDirtyRect;
 
         qreal scale = mImage.width() / qreal(mapSize.width());
 
@@ -129,7 +189,7 @@ void MapRenderThread::run()
         QElapsedTimer timer;
         timer.start();
 
-        MapComposite::ZOrderList zorder = mMapComposite->zOrder();
+        MapComposite::ZOrderList zorder = mShadowMap->mMapComposite->zOrder();
         foreach (MapComposite::ZOrderItem zo, zorder) {
             if (zo.group)
                 mRenderer->drawTileLayerGroup(&painter, zo.group, paintRect);
@@ -153,6 +213,8 @@ void MapRenderThread::run()
                 return;
             }
         }
+
+        painter.end(); // since mImage may change after this!
 
         locker.unlock();
 
@@ -208,8 +270,81 @@ void MapRenderThread::update(const QRectF &rect)
     }
 }
 
+void MapRenderThread::recreateImage(const QImage *other)
+{
+    putToSleep();
+    mImage = QImage(other->size(), other->format());
+}
+
+void MapRenderThread::restart()
+{
+    QMutexLocker locker(&mMutexQuit);
+    mAbortDrawing = true;
+    mRestart = true;
+}
+
+void MapRenderThread::layerAdded(int index)
+{
+    putToSleep();
+    mShadowMap->layerAdded(index);
+//    update();
+}
+
+void MapRenderThread::layerRemoved(int index)
+{
+    putToSleep();
+    mShadowMap->layerRemoved(index);
+//    update();
+}
+
+void MapRenderThread::layerRenamed(int index)
+{
+    putToSleep();
+    mShadowMap->layerRenamed(index); // layer added/removed from group
+//    update();
+}
+
 void MapRenderThread::regionAltered(const QRegion &rgn, Layer *layer)
 {
+    putToSleep();
+    mShadowMap->regionAltered(rgn, layer);
+
+     // Keep the render thread waiting, MiniMapItem::regionAltered will now call
+    // update() for us.
+//    mWaiting = false;
+    //    mWaitCondition.wakeOne(); // resume rendering
+}
+
+void MapRenderThread::onLotAdded(MapComposite *lot, MapObject *mapObject)
+{
+    putToSleep();
+    MapComposite *subMap = mShadowMap->mMapComposite->addMap(lot->mapInfo(),
+                                                             lot->origin(),
+                                                             lot->levelOffset());
+    mShadowMap->mLots[quintptr(mapObject)] = subMap;
+//    update();
+}
+
+void MapRenderThread::onLotRemoved(MapComposite *lot, MapObject *mapObject)
+{
+    putToSleep();
+    mShadowMap->mMapComposite->removeMap(mShadowMap->mLots[quintptr(mapObject)]);
+    mShadowMap->mLots.remove(quintptr(mapObject));
+//    update();
+}
+
+void MapRenderThread::onLotUpdated(MapComposite *lot, MapObject *mapObject)
+{
+    putToSleep();
+    mShadowMap->mLots[quintptr(mapObject)]->setOrigin(lot->origin());
+//    update(); // FIXME: only update the old+new lot bounds
+}
+
+void MapRenderThread::putToSleep()
+{
+    if (!isRunning())
+        return;
+
     QMutexLocker locker(&mMutexQuit);
     if (!mWaiting) {
         mAbortDrawing = true;
@@ -219,31 +354,6 @@ void MapRenderThread::regionAltered(const QRegion &rgn, Layer *layer)
         mGoingToSleep.wait(&mGoingToSleepMutex); // wait for run() to pause
         mGoingToSleepMutex.unlock();
     }
-
-    foreach (TileLayer *tl, mMapComposite->map()->tileLayers()) { // slow
-        if (tl->name() == layer->name()) { // dumb
-            foreach (QRect r, rgn.rects()) {
-                for (int x = r.x(); x <= r.right(); x++) {
-                    for (int y = r.y(); y <= r.bottom(); y++) {
-                        tl->setCell(x, y, layer->asTileLayer()->cellAt(x, y)); // bad assumption
-                    }
-                }
-            }
-            break;
-        }
-    }
-
-    // Keep the render thread waiting, MiniMapItem::regionAltered will now call
-    // update() for us.
-//    mWaiting = false;
-//    mWaitCondition.wakeOne(); // resume rendering
-}
-
-void MapRenderThread::restart()
-{
-    QMutexLocker locker(&mMutexQuit);
-    mAbortDrawing = true;
-    mRestart = true;
 }
 
 void MapRenderThread::getImage(QImage &dest)
@@ -293,6 +403,7 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
     for (it = map.constBegin(); it != map.constEnd(); it++) {
         MapComposite *lot = it.value();
         mLotBounds[lot] = lot->boundingRect(mRenderer);
+
     }
 
     recreateLater();
@@ -332,6 +443,13 @@ void MiniMapItem::updateImage(const QRectF &dirtyRect)
     if (!mRenderThread) {
         mRenderThread  = new MapRenderThread(mMapComposite, mMapImage, dirtyRect);
         connect(mRenderThread, SIGNAL(rendered(MapRenderThread*)), SLOT(rendered(MapRenderThread*)));
+
+        QMap<MapObject*,MapComposite*>::const_iterator it;
+        const QMap<MapObject*,MapComposite*> &map = mScene->lotManager().objectToLot();
+        for (it = map.constBegin(); it != map.constEnd(); it++) {
+            MapComposite *lot = it.value();
+            mRenderThread->onLotAdded(lot, it.key());
+        }
     }
     mRenderThread->update(dirtyRect);
 #else
@@ -408,7 +526,6 @@ void MiniMapItem::updateImageBounds()
 
 void MiniMapItem::recreateImage()
 {
-
     delete mMapImage;
 
     QSizeF mapSize = mScene->sceneRect().size();
@@ -417,6 +534,9 @@ void MiniMapItem::recreateImage()
 
     mMapImage = new QImage(imageSize, QImage::Format_ARGB32);
     mMapImage->fill(Qt::transparent);
+
+    if (mRenderThread)
+        mRenderThread->recreateImage(mMapImage);
 
     updateImage();
 
@@ -470,18 +590,21 @@ void MiniMapItem::sceneRectChanged(const QRectF &sceneRect)
 void MiniMapItem::layerAdded(int index)
 {
     Q_UNUSED(index)
+    mRenderThread->layerAdded(index);
     recreateLater();
 }
 
 void MiniMapItem::layerRemoved(int index)
 {
     Q_UNUSED(index)
+    mRenderThread->layerRemoved(index);
     recreateLater();
 }
 
 void MiniMapItem::onLotAdded(MapComposite *lot, Tiled::MapObject *mapObject)
 {
     Q_UNUSED(mapObject)
+    mRenderThread->onLotAdded(lot, mapObject);
     QRectF bounds = lot->boundingRect(mRenderer);
     updateLater(mLotBounds[lot] | bounds);
     mLotBounds[lot] = bounds;
@@ -490,6 +613,7 @@ void MiniMapItem::onLotAdded(MapComposite *lot, Tiled::MapObject *mapObject)
 void MiniMapItem::onLotRemoved(MapComposite *lot, Tiled::MapObject *mapObject)
 {
     Q_UNUSED(mapObject)
+    mRenderThread->onLotRemoved(lot, mapObject);
     updateLater(mLotBounds[lot]);
     mLotBounds.remove(lot);
 }
@@ -497,6 +621,7 @@ void MiniMapItem::onLotRemoved(MapComposite *lot, Tiled::MapObject *mapObject)
 void MiniMapItem::onLotUpdated(MapComposite *lot, Tiled::MapObject *mapObject)
 {
     Q_UNUSED(mapObject)
+    mRenderThread->onLotUpdated(lot, mapObject);
     QRectF bounds = lot->boundingRect(mRenderer);
     updateLater(mLotBounds[lot] | bounds);
     mLotBounds[lot] = bounds;
