@@ -183,9 +183,15 @@ QRegion TilePainter::computeFillRegion(const QPoint &fillOrigin) const
     const Cell matchCell = cellAt(fillOrigin.x(), fillOrigin.y());
 
     // Grab map dimensions for later use.
+#ifdef ZOMBOID
+    const int mapWidth = mTileLayer->width();
+    const int mapHeight = mTileLayer->height();
+    const int mapSize = mapWidth * mapHeight;
+#else
     const int mapWidth = mMapDocument->map()->width();
     const int mapHeight = mMapDocument->map()->height();
     const int mapSize = mapWidth * mapHeight;
+#endif
 
     // Create a queue to hold cells that need filling
     QList<QPoint> fillPositions;
@@ -193,8 +199,12 @@ QRegion TilePainter::computeFillRegion(const QPoint &fillOrigin) const
 
     // Create an array that will store which cells have been processed
     // This is faster than checking if a given cell is in the region/list
+#ifndef QT_NO_DEBUG // ZOMBOID
+    QVector<quint8> processedCells(mapSize);
+#else
     QVector<quint8> processedCellsVec(mapSize);
     quint8 *processedCells = processedCellsVec.data();
+#endif
 
     // Loop through queued positions and fill them, while at the same time
     // checking adjacent positions to see if they should be added
@@ -218,10 +228,16 @@ QRegion TilePainter::computeFillRegion(const QPoint &fillOrigin) const
         fillRegion += QRegion(left, currentPoint.y(), right - left + 1, 1);
 
         // Add cell strip to processed cells
+#ifndef QT_NO_DEBUG // ZOMBOID
+        Q_ASSERT(startOfLine + left + (right - left) <= mapSize);
+        memset(&processedCells.data()[startOfLine + left],
+               1,
+               right - left);
+#else
         memset(&processedCells[startOfLine + left],
                1,
                right - left);
-
+#endif
         // These variables cache whether the last cell was added to the queue
         // or not as an optimization, since adjacent cells on the x axis
         // do not need to be added to the queue.
