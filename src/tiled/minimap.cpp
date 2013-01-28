@@ -53,7 +53,8 @@ MapRenderThread::MapRenderThread(MapComposite *mapComposite, QImage *image, cons
     mRestart(false),
     mWaiting(false),
     mQuit(false),
-    mAbortDrawing(false)
+    mAbortDrawing(false),
+    mPauseForMapChanges(false)
 {
     MapInfo *mapInfo = MapManager::instance()->newFromMap(mapComposite->map()->clone(), mapComposite->mapInfo()->path());
     mapInfo->setBeingEdited(false); // so we get lots
@@ -139,6 +140,10 @@ void MapRenderThread::run()
             }
 
             QMutexLocker locker(&mMutexQuit);
+            if (mPauseForMapChanges) {
+                qDebug() << "MapRenderThread pausing for updates";
+                break;
+            }
             if (mRestart) {
                 qDebug() << "MapRenderThread restarting";
                 break;
@@ -158,18 +163,26 @@ void MapRenderThread::run()
         foreach (CompositeLayerGroup *layerGroup, mMapComposite->sortedLayerGroups())
             layerGroup->synch();
 #endif
-        if (!mRestart)
+        if (!mRestart && !mPauseForMapChanges) {
+            mDirtyRect = QRectF();
             emit rendered(this);
+        }
 
         mMutexQuit.lock();
         if (!mRestart) {
             qDebug() << "MapRenderThread sleeping";
             mWaiting = true;
+            if (mPauseForMapChanges) {
+                mGoingToSleepMutex.lock();
+                mGoingToSleep.wakeOne(); // wake main thread
+                mGoingToSleepMutex.unlock();
+            }
             mWaitCondition.wait(&mMutexQuit); // unlocks the mutex
             qDebug() << "MapRenderThread waking";
         }
         mRestart = false;
         mAbortDrawing = false;
+        mPauseForMapChanges = false;
         mMutexQuit.unlock();
         if (mQuit) {
             qDebug() << "MapRenderThread quitting";
@@ -184,14 +197,46 @@ void MapRenderThread::update(const QRectF &rect)
     if (!isRunning())
         start();
     else {
-        mAbortDrawing = true;
-        mRestart = true;
-        mDirtyRect = rect;
+        mDirtyRect |= rect; // draw new area plus any interrupted area
         if (mWaiting) {
             mWaiting = false;
             mWaitCondition.wakeOne();
+        } else {
+            mAbortDrawing = true;
+            mRestart = true;
         }
     }
+}
+
+void MapRenderThread::regionAltered(const QRegion &rgn, Layer *layer)
+{
+    QMutexLocker locker(&mMutexQuit);
+    if (!mWaiting) {
+        mAbortDrawing = true;
+        mPauseForMapChanges = true;
+        mGoingToSleepMutex.lock();
+        locker.unlock();
+        mGoingToSleep.wait(&mGoingToSleepMutex); // wait for run() to pause
+        mGoingToSleepMutex.unlock();
+    }
+
+    foreach (TileLayer *tl, mMapComposite->map()->tileLayers()) { // slow
+        if (tl->name() == layer->name()) { // dumb
+            foreach (QRect r, rgn.rects()) {
+                for (int x = r.x(); x <= r.right(); x++) {
+                    for (int y = r.y(); y <= r.bottom(); y++) {
+                        tl->setCell(x, y, layer->asTileLayer()->cellAt(x, y)); // bad assumption
+                    }
+                }
+            }
+            break;
+        }
+    }
+
+    // Keep the render thread waiting, MiniMapItem::regionAltered will now call
+    // update() for us.
+//    mWaiting = false;
+//    mWaitCondition.wakeOne(); // resume rendering
 }
 
 void MapRenderThread::restart()
@@ -459,6 +504,8 @@ void MiniMapItem::onLotUpdated(MapComposite *lot, Tiled::MapObject *mapObject)
 
 void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
 {
+    mRenderThread->regionAltered(region, layer);
+
     QMargins margins = mMapComposite->map()->drawMargins();
     foreach (const QRect &r, region.rects()) {
         QRectF bounds = mRenderer->boundingRect(r, layer->level());

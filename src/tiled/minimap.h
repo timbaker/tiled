@@ -72,6 +72,7 @@ public:
     void run();
 
     void update(const QRectF &rect);
+    void regionAltered(const QRegion &rgn, Tiled::Layer *layer);
     void restart();
 
     void getImage(QImage &dest);
@@ -80,17 +81,20 @@ signals:
     void rendered(MapRenderThread *t);
 
 private:
-    QMutex mMutex;
-    QMutex mMutexQuit;
+    QMutex mMutex; // lock on mImage, not really needed
+    QMutex mMutexQuit; // lock on most other vars
+    QMutex mGoingToSleepMutex;
+    QWaitCondition mGoingToSleep;
     QWaitCondition mWaitCondition;
     MapComposite *mMapComposite;
     Tiled::MapRenderer *mRenderer;
     QImage mImage;
     QRectF mDirtyRect;
-    bool mAbortDrawing;
-    bool mRestart;
-    bool mWaiting;
-    bool mQuit;
+    bool mAbortDrawing; // flag for MapRenderer
+    bool mRestart; // restart rendering ASAP
+    bool mWaiting; // inside mWaitCondition.wait()
+    bool mQuit; // exit from run() ASAP
+    bool mPauseForMapChanges; // stop rendering so main thread can update map data
 };
 
 /**
