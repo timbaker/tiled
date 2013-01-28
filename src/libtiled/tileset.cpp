@@ -64,8 +64,14 @@ bool Tileset::loadFromImage(const QImage &image, const QString &fileName)
             QImage tileImage = image2.copy(x, y, mTileWidth, mTileHeight);
 
             if (mTransparentColor.isValid()) {
-                tileImage =
-                        tileImage.createMaskFromColor(mTransparentColor.rgb(), Qt::MaskOutColor);
+                for (int x = 0; x < mTileWidth; x++) {
+                    for (int y = 0; y < mTileHeight; y++) {
+                        if (tileImage.pixel(x, y) == mTransparentColor.rgba())
+                            tileImage.setPixel(x, y, qRgba(0,0,0,0));
+                    }
+                }
+//                tileImage =
+//                        tileImage.createMaskFromColor(mTransparentColor.rgb(), Qt::MaskOutColor);
             }
 
             if (tileNum < oldTilesetSize) {
