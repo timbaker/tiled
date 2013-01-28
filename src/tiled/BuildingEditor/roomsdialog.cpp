@@ -274,7 +274,7 @@ void RoomsDialog::setTilePixmap()
 {
     if (BuildingTileEntry *entry = selectedTile()) {
         Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile());
-        ui->tileLabel->setPixmap(tile->image());
+        ui->tileLabel->setPixmap(QPixmap::fromImage(tile->image()));
     } else {
         ui->tileLabel->clear();
     }

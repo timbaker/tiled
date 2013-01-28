@@ -57,6 +57,42 @@ class QToolButton;
   * updated when the map is edited and when lots are added/removed/moved.
   */
 
+#include <QMutexLocker>
+#include <QThread>
+#include <QVector>
+#include <QWaitCondition>
+
+class MapRenderThread : public QThread
+{
+    Q_OBJECT
+public:
+    MapRenderThread(MapComposite *mapComposite, QImage *image, const QRectF dirtyRect);
+    ~MapRenderThread();
+
+    void run();
+
+    void update(const QRectF &rect);
+    void restart();
+
+    void getImage(QImage &dest);
+
+signals:
+    void rendered(MapRenderThread *t);
+
+private:
+    QMutex mMutex;
+    QMutex mMutexQuit;
+    QWaitCondition mWaitCondition;
+    MapComposite *mMapComposite;
+    Tiled::MapRenderer *mRenderer;
+    QImage mImage;
+    QRectF mDirtyRect;
+    bool mAbortDrawing;
+    bool mRestart;
+    bool mWaiting;
+    bool mQuit;
+};
+
 /**
   * MiniMap item for drawing a map image.
   */
@@ -103,6 +139,8 @@ private slots:
 
     void updateNow();
 
+    void rendered(MapRenderThread *t);
+
 private:
     Tiled::Internal::ZomboidScene *mScene;
     Tiled::MapRenderer *mRenderer;
@@ -115,6 +153,7 @@ private:
     bool mUpdatePending;
     QRectF mNeedsUpdate;
     bool mNeedsRecreate;
+    MapRenderThread *mRenderThread;
 };
 
 class MiniMap : public QGraphicsView

@@ -204,9 +204,9 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                                          QVector<const Cell *> &cells,
                                          QVector<qreal> &opacities) const
 {
-    static bool FirstCellIs0Floor = false;
+    MapComposite *root = mOwner->root();
     if (!mOwner->parent())
-        FirstCellIs0Floor = false;
+        root->mFirstCellIs0Floor = false;
 
     bool cleared = false;
     for (int index = 0; index < mLayers.size(); index++) {
@@ -226,11 +226,11 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
             if (!cell->isEmpty()) {
                 if (!cleared) {
                     bool isFloor = !mLevel && !index && (tl->name() == QLatin1String("0_Floor"));
-                    cells.resize((!isFloor && FirstCellIs0Floor) ? 1 : 0);
-                    opacities.resize((!isFloor && FirstCellIs0Floor) ? 1 : 0);
+                    cells.resize((!isFloor && root->mFirstCellIs0Floor) ? 1 : 0);
+                    opacities.resize((!isFloor && root->mFirstCellIs0Floor) ? 1 : 0);
                     cleared = true;
                     if (isFloor && !mOwner->parent())
-                        FirstCellIs0Floor = true;
+                        mOwner->mFirstCellIs0Floor = true;
                 }
                 cells.append(cell);
 #if 1
@@ -1170,6 +1170,14 @@ void MapComposite::recreate()
 
     if (mParent)
         mParent->moveSubMap(this, origin());
+}
+
+MapComposite *MapComposite::root()
+{
+    MapComposite *root = this;
+    while (root->parent())
+        root = root->parent();
+    return root;
 }
 
 QStringList MapComposite::getMapFileNames() const

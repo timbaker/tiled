@@ -57,21 +57,21 @@ bool Tileset::loadFromImage(const QImage &image, const QString &fileName)
     int oldTilesetSize = mTiles.size();
     int tileNum = 0;
 
+    QImage image2 = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+
     for (int y = mMargin; y <= stopHeight; y += mTileHeight + mTileSpacing) {
         for (int x = mMargin; x <= stopWidth; x += mTileWidth + mTileSpacing) {
-            const QImage tileImage = image.copy(x, y, mTileWidth, mTileHeight);
-            QPixmap tilePixmap = QPixmap::fromImage(tileImage);
+            QImage tileImage = image2.copy(x, y, mTileWidth, mTileHeight);
 
             if (mTransparentColor.isValid()) {
-                const QImage mask =
-                        tileImage.createMaskFromColor(mTransparentColor.rgb());
-                tilePixmap.setMask(QBitmap::fromImage(mask));
+                tileImage =
+                        tileImage.createMaskFromColor(mTransparentColor.rgb(), Qt::MaskOutColor);
             }
 
             if (tileNum < oldTilesetSize) {
-                mTiles.at(tileNum)->setImage(tilePixmap);
+                mTiles.at(tileNum)->setImage(tileImage);
             } else {
-                mTiles.append(new Tile(tilePixmap, tileNum, this));
+                mTiles.append(new Tile(tileImage, tileNum, this));
             }
             ++tileNum;
         }
@@ -79,9 +79,9 @@ bool Tileset::loadFromImage(const QImage &image, const QString &fileName)
 
     // Blank out any remaining tiles to avoid confusion
     while (tileNum < oldTilesetSize) {
-        QPixmap tilePixmap = QPixmap(mTileWidth, mTileHeight);
-        tilePixmap.fill();
-        mTiles.at(tileNum)->setImage(tilePixmap);
+        QImage tileImage = QImage(mTileWidth, mTileHeight, QImage::Format_RGB16);
+        tileImage.fill(Qt::white);
+        mTiles.at(tileNum)->setImage(tileImage);
         ++tileNum;
     }
 
@@ -107,20 +107,20 @@ bool Tileset::loadFromCache(Tileset *cached)
     int tileNum = 0;
 
     for (; tileNum < cached->tileCount(); ++tileNum) {
-        QPixmap tilePixmap = cached->tileAt(tileNum)->image();
+        QImage tileImage = cached->tileAt(tileNum)->image();
 
         if (tileNum < oldTilesetSize) {
-            mTiles.at(tileNum)->setImage(tilePixmap);
+            mTiles.at(tileNum)->setImage(tileImage);
         } else {
-            mTiles.append(new Tile(tilePixmap, tileNum, this));
+            mTiles.append(new Tile(tileImage, tileNum, this));
         }
     }
 
     // Blank out any remaining tiles to avoid confusion
     while (tileNum < oldTilesetSize) {
-        QPixmap tilePixmap = QPixmap(mTileWidth, mTileHeight);
-        tilePixmap.fill();
-        mTiles.at(tileNum)->setImage(tilePixmap);
+        QImage tileImage = QImage(mTileWidth, mTileHeight, QImage::Format_RGB16);
+        tileImage.fill(Qt::white);
+        mTiles.at(tileNum)->setImage(tileImage);
         ++tileNum;
     }
 
@@ -145,15 +145,15 @@ bool Tileset::loadFromNothing(const QSize &imageSize, const QString &fileName)
     int oldTilesetSize = mTiles.size();
     int tileNum = 0;
 
-    QPixmap tilePixmap = QPixmap(mTileWidth, mTileHeight);
-    tilePixmap.fill();
+    QImage tileImage = QImage(mTileWidth, mTileHeight, QImage::Format_RGB16);
+    tileImage.fill(Qt::white);
 
     for (int y = mMargin; y <= stopHeight; y += mTileHeight + mTileSpacing) {
         for (int x = mMargin; x <= stopWidth; x += mTileWidth + mTileSpacing) {
             if (tileNum < oldTilesetSize) {
-                mTiles.at(tileNum)->setImage(tilePixmap);
+                mTiles.at(tileNum)->setImage(tileImage);
             } else {
-                mTiles.append(new Tile(tilePixmap, tileNum, this));
+                mTiles.append(new Tile(tileImage, tileNum, this));
             }
             ++tileNum;
         }
@@ -161,7 +161,7 @@ bool Tileset::loadFromNothing(const QSize &imageSize, const QString &fileName)
 
     // Blank out any remaining tiles to avoid confusion
     while (tileNum < oldTilesetSize) {
-        mTiles.at(tileNum)->setImage(tilePixmap);
+        mTiles.at(tileNum)->setImage(tileImage);
         ++tileNum;
     }
 

@@ -40,6 +40,177 @@ using namespace Tiled::Internal;
 
 /////
 
+#ifdef ZOMBOID
+#include "mapmanager.h"
+#include "isometricrenderer.h"
+#include "zlevelrenderer.h"
+#include <QElapsedTimer>
+#include <QDebug>
+
+MapRenderThread::MapRenderThread(MapComposite *mapComposite, QImage *image, const QRectF dirtyRect) :
+    mImage(image->size(), image->format()),
+    mDirtyRect(dirtyRect),
+    mRestart(false),
+    mWaiting(false),
+    mQuit(false),
+    mAbortDrawing(false)
+{
+    MapInfo *mapInfo = MapManager::instance()->newFromMap(mapComposite->map()->clone(), mapComposite->mapInfo()->path());
+    mapInfo->setBeingEdited(false); // so we get lots
+    mMapComposite = new MapComposite(mapInfo);
+    (mMapComposite->map()->orientation() == Map::Isometric) ?
+                mRenderer = new IsometricRenderer(mMapComposite->map()) :
+            mRenderer = new ZLevelRenderer(mMapComposite->map());
+    mRenderer->setMaxLevel(mMapComposite->maxLevel());
+    mRenderer->mAbortDrawing = &mAbortDrawing;
+}
+
+MapRenderThread::~MapRenderThread()
+{
+    mMutexQuit.lock();
+    mAbortDrawing = true;
+    mQuit = true;
+    mWaitCondition.wakeOne();
+    mMutexQuit.unlock();
+    wait();
+    MapInfo *mapInfo = mMapComposite->mapInfo();
+    delete mMapComposite;
+    delete mRenderer;
+    delete mapInfo->map();
+    delete mapInfo;
+}
+
+void MapRenderThread::run()
+{
+    forever {
+        // Block access to mImage.  This only affects the getImage() call,
+        // which should only be called after this thread emits the rendered()
+        // signal, so we aren't really blocking anything.
+        QMutexLocker locker(&mMutex);
+
+        QRectF sceneRect = mMapComposite->boundingRect(mRenderer);
+        QSize mapSize = sceneRect.size().toSize();
+        if (mapSize.isEmpty())
+            return;
+
+        QRectF paintRect = mDirtyRect;
+        if (mDirtyRect.isEmpty())
+            paintRect = sceneRect;
+
+        qreal scale = mImage.width() / qreal(mapSize.width());
+
+        QPainter painter(&mImage);
+
+        painter.setRenderHints(QPainter::SmoothPixmapTransform |
+                               QPainter::HighQualityAntialiasing);
+        painter.setTransform(QTransform::fromScale(scale, scale)
+                             .translate(-sceneRect.left(), -sceneRect.top()));
+
+        painter.setClipRect(paintRect);
+
+        painter.setCompositionMode(QPainter::CompositionMode_Clear);
+        painter.fillRect(paintRect, Qt::transparent);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+#if 0
+        mMapComposite->saveVisibility();
+        mMapComposite->saveOpacity();
+        foreach (CompositeLayerGroup *layerGroup, mMapComposite->sortedLayerGroups()) {
+            foreach (TileLayer *tl, layerGroup->layers()) {
+                bool isVisible = true;
+                if (tl->name().contains(QLatin1String("NoRender")))
+                    isVisible = false;
+                layerGroup->setLayerVisibility(tl, isVisible);
+                layerGroup->setLayerOpacity(tl, 1.0f);
+            }
+            layerGroup->synch();
+        }
+#endif
+        QElapsedTimer timer;
+        timer.start();
+
+        MapComposite::ZOrderList zorder = mMapComposite->zOrder();
+        foreach (MapComposite::ZOrderItem zo, zorder) {
+            if (zo.group)
+                mRenderer->drawTileLayerGroup(&painter, zo.group, paintRect);
+            else if (TileLayer *tl = zo.layer->asTileLayer()) {
+                if (tl->name().contains(QLatin1String("NoRender")))
+                    continue;
+                mRenderer->drawTileLayer(&painter, tl, paintRect);
+            }
+
+            QMutexLocker locker(&mMutexQuit);
+            if (mRestart) {
+                qDebug() << "MapRenderThread restarting";
+                break;
+            }
+            if (mQuit) {
+                qDebug() << "MapRenderThread quitting";
+                return;
+            }
+        }
+
+        locker.unlock();
+
+        qDebug() << "The slow operation took" << timer.elapsed() << "milliseconds";
+#if 0
+        mMapComposite->restoreVisibility();
+        mMapComposite->restoreOpacity();
+        foreach (CompositeLayerGroup *layerGroup, mMapComposite->sortedLayerGroups())
+            layerGroup->synch();
+#endif
+        if (!mRestart)
+            emit rendered(this);
+
+        mMutexQuit.lock();
+        if (!mRestart) {
+            qDebug() << "MapRenderThread sleeping";
+            mWaiting = true;
+            mWaitCondition.wait(&mMutexQuit); // unlocks the mutex
+            qDebug() << "MapRenderThread waking";
+        }
+        mRestart = false;
+        mAbortDrawing = false;
+        mMutexQuit.unlock();
+        if (mQuit) {
+            qDebug() << "MapRenderThread quitting";
+            return;
+        }
+    }
+}
+
+void MapRenderThread::update(const QRectF &rect)
+{
+    QMutexLocker locker(&mMutexQuit);
+    if (!isRunning())
+        start();
+    else {
+        mAbortDrawing = true;
+        mRestart = true;
+        mDirtyRect = rect;
+        if (mWaiting) {
+            mWaiting = false;
+            mWaitCondition.wakeOne();
+        }
+    }
+}
+
+void MapRenderThread::restart()
+{
+    QMutexLocker locker(&mMutexQuit);
+    mAbortDrawing = true;
+    mRestart = true;
+}
+
+void MapRenderThread::getImage(QImage &dest)
+{
+    QMutexLocker locker(&mMutex);
+    dest = mImage;
+}
+
+#endif // ZOMBOID
+
+/////
+
 MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
     : QGraphicsItem(parent)
     , mScene(zscene)
@@ -48,6 +219,7 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
     , mMiniMapVisible(false)
     , mUpdatePending(false)
     , mNeedsRecreate(false)
+    , mRenderThread(0)
 {
     mMapComposite = mScene->mapDocument()->mapComposite();
 
@@ -84,6 +256,7 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
 MiniMapItem::~MiniMapItem()
 {
     delete mMapImage;
+    delete mRenderThread;
 }
 
 QRectF MiniMapItem::boundingRect() const
@@ -106,10 +279,17 @@ void MiniMapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
 #endif
 }
 
+#include <QCoreApplication>
 void MiniMapItem::updateImage(const QRectF &dirtyRect)
 {
     Q_ASSERT(mMapImage);
-
+#if 1
+    if (!mRenderThread) {
+        mRenderThread  = new MapRenderThread(mMapComposite, mMapImage, dirtyRect);
+        connect(mRenderThread, SIGNAL(rendered(MapRenderThread*)), SLOT(rendered(MapRenderThread*)));
+    }
+    mRenderThread->update(dirtyRect);
+#else
     // Duplicating most of MapImageManager::generateMapImage
 
     QRectF sceneRect = mScene->sceneRect();
@@ -149,6 +329,9 @@ void MiniMapItem::updateImage(const QRectF &dirtyRect)
         layerGroup->synch();
     }
 
+    QElapsedTimer timer;
+    timer.start();
+
     MapComposite::ZOrderList zorder = mMapComposite->zOrder();
     foreach (MapComposite::ZOrderItem zo, zorder) {
         if (zo.group)
@@ -160,10 +343,13 @@ void MiniMapItem::updateImage(const QRectF &dirtyRect)
         }
     }
 
+    qDebug() << "The slow operation took" << timer.elapsed() << "milliseconds";
+
     mMapComposite->restoreVisibility();
     mMapComposite->restoreOpacity();
     foreach (CompositeLayerGroup *layerGroup, mMapComposite->sortedLayerGroups())
         layerGroup->synch();
+#endif
 }
 
 void MiniMapItem::updateImageBounds()
@@ -177,6 +363,7 @@ void MiniMapItem::updateImageBounds()
 
 void MiniMapItem::recreateImage()
 {
+
     delete mMapImage;
 
     QSizeF mapSize = mScene->sceneRect().size();
@@ -301,6 +488,12 @@ void MiniMapItem::updateNow()
     mNeedsRecreate = false;
     mNeedsUpdate = QRectF();
     mUpdatePending = false;
+}
+
+void MiniMapItem::rendered(MapRenderThread *t)
+{
+    t->getImage(*mMapImage);
+    update(); // FIXME: only what changed
 }
 
 /////

@@ -665,13 +665,13 @@ void TilesetImageReaderThread::run()
         QImage *image = new QImage(job.tileset->imageSource());
 #ifndef QT_NO_DEBUG
         msleep(500);
-        qDebug() << "TilesetImageReaderThread #" << mID << "loaded" << job.tileset->imageSource();
+//        qDebug() << "TilesetImageReaderThread #" << mID << "loaded" << job.tileset->imageSource();
 #endif
         emit imageLoaded(image, job.tileset);
 
         if (!mJobs.size()) {
 #ifndef QT_NO_DEBUG
-            qDebug() << "TilesetImageReaderThread #" << mID << "sleeping";
+//            qDebug() << "TilesetImageReaderThread #" << mID << "sleeping";
 #endif
             mMutex.lock();
             mWaiting = true;
@@ -688,12 +688,12 @@ void TilesetImageReaderThread::addJob(Tileset *tileset)
 
     if (!isRunning()) {
 #ifndef QT_NO_DEBUG
-        qDebug() << "TilesetImageReaderThread #" << mID << "starting";
+//        qDebug() << "TilesetImageReaderThread #" << mID << "starting";
 #endif
         start();
     } else if (mWaiting) {
 #ifndef QT_NO_DEBUG
-        qDebug() << "TilesetImageReaderThread #" << mID << "waking";
+//        qDebug() << "TilesetImageReaderThread #" << mID << "waking";
 #endif
         mWaiting = false;
         mWaitCondition.wakeOne();

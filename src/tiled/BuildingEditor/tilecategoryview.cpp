@@ -120,7 +120,7 @@ void BuildingEntryDelegate::paint(QPainter *painter,
                 QRegion clipRgn = painter->clipRegion();
                 bool hasClipping = painter->hasClipping();
                 painter->setClipRect(r);
-                painter->drawPixmap(target, tile->image());
+                painter->drawImage(target, tile->image());
                 painter->setClipRegion(clipRgn, hasClipping ? Qt::ReplaceClip : Qt::NoClip);
             }
         }

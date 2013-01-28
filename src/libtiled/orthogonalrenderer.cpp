@@ -72,7 +72,7 @@ QRectF OrthogonalRenderer::boundingRect(const MapObject *object) const
 
     if (object->tile()) {
         const QPointF bottomLeft = rect.topLeft();
-        const QPixmap &img = object->tile()->image();
+        const QImage &img = object->tile()->image();
         boundingRect = QRectF(bottomLeft.x(),
                               bottomLeft.y() - img.height(),
                               img.width(),
@@ -246,7 +246,7 @@ void OrthogonalRenderer::drawTileLayer(QPainter *painter,
             if (cell.isEmpty())
                 continue;
 
-            const QPixmap &img = cell.tile->image();
+            const QImage &img = cell.tile->image();
             const QPoint offset = cell.tile->tileset()->tileOffset();
 
             qreal m11 = 1;      // Horizontal scaling factor
@@ -280,7 +280,7 @@ void OrthogonalRenderer::drawTileLayer(QPainter *painter,
             const QTransform transform(m11, m12, m21, m22, dx, dy);
             painter->setTransform(transform * baseTransform);
 
-            painter->drawPixmap(0, 0, img);
+            painter->drawImage(0, 0, img);
         }
     }
 
@@ -323,9 +323,9 @@ void OrthogonalRenderer::drawMapObject(QPainter *painter,
     rect.moveTopLeft(QPointF(0, 0));
 
     if (object->tile()) {
-        const QPixmap &img = object->tile()->image();
+        const QImage &img = object->tile()->image();
         const QPoint paintOrigin(0, -img.height());
-        painter->drawPixmap(paintOrigin, img);
+        painter->drawImage(paintOrigin, img);
 
         QPen pen(Qt::SolidLine);
         painter->setPen(pen);

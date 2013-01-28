@@ -281,6 +281,9 @@ private:
     bool mSavedGroupVisible;
     bool mSavedVisible;
     bool mHiddenDuringDrag;
+public:
+    MapComposite *root();
+    bool mFirstCellIs0Floor;
 };
 
 #endif // MAPCOMPOSITE_H

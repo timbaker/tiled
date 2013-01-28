@@ -56,6 +56,7 @@ public:
     MapRenderer(const Map *map)
         : mMap(map)
         , mMaxLevel(0)
+        , mAbortDrawing(0)
     {}
 #else
     MapRenderer(const Map *map) : mMap(map) {}
@@ -188,6 +189,9 @@ public:
 
     void setMaxLevel(int level) { mMaxLevel = level; }
     int maxLevel() const { return mMaxLevel; }
+
+    bool *mAbortDrawing;
+
 #else
     /**
      * Returns the tile coordinates matching the given pixel position.

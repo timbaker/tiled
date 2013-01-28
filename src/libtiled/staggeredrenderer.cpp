@@ -206,7 +206,7 @@ void StaggeredRenderer::drawTileLayer(QPainter *painter,
                 continue;
             }
 
-            const QPixmap &img = cell.tile->image();
+            const QImage &img = cell.tile->image();
             const QPoint offset = cell.tile->tileset()->tileOffset();
 
             qreal m11 = 1;      // Horizontal scaling factor
@@ -242,7 +242,7 @@ void StaggeredRenderer::drawTileLayer(QPainter *painter,
             const QTransform transform(m11, m12, m21, m22, dx, dy);
             painter->setTransform(transform * baseTransform);
 
-            painter->drawPixmap(0, 0, img);
+            painter->drawImage(0, 0, img);
 
             rowPos.rx() += tileWidth;
         }
