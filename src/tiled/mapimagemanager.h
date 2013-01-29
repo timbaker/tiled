@@ -69,6 +69,40 @@ private:
     bool mQuit;
 };
 
+class MapImageRenderThread : public QThread
+{
+    Q_OBJECT
+public:
+    MapImageRenderThread();
+
+    ~MapImageRenderThread();
+
+    void run();
+
+    void addJob(MapImage *mapImage);
+    void cleanupDoneJobs();
+
+signals:
+    void imageRendered(QImage *image, MapImage *mapImage);
+
+private:
+    QImage *generateMapImage(MapComposite *mapComposite);
+
+    class Job {
+    public:
+        Job(MapImage *mapImage);
+
+        MapComposite *mapComposite;
+        MapImage *mapImage;
+    };
+    QList<Job> mJobs;
+    QList<Job> mDoneJobs;
+
+    QMutex mMutex;
+    QWaitCondition mWaitCondition;
+    bool mQuit;
+};
+
 class MapImage
 {
 public:
@@ -102,6 +136,8 @@ public:
     QRectF levelZeroBounds() const
     { return mLevelZeroBounds; }
 
+    bool isMissingTilesets() const { return mMissingTilesets; }
+
     bool isLoaded() const { return mLoaded; }
 
 private:
@@ -110,6 +146,7 @@ private:
     QRectF mLevelZeroBounds;
     qreal mScale;
     QList<MapInfo*> mSources;
+    bool mMissingTilesets;
     bool mLoaded;
 
     friend class MapImageManager;
@@ -139,7 +176,9 @@ protected:
         ImageData() :
             scale(0),
             valid(false),
-            missingTilesets(false)
+            missingTilesets(false),
+            threadLoad(false),
+            threadRender(false)
         {}
         qreal scale;
         QRectF levelZeroBounds;
@@ -148,10 +187,14 @@ protected:
         QStringList sources;
         bool missingTilesets;
         QSize size;
+
+        bool threadLoad;
+        bool threadRender;
     };
 
     ImageData generateMapImage(const QString &mapFilePath, bool force = false);
     ImageData generateMapImage(MapComposite *mapComposite);
+    void paintDummyImage(ImageData &data, MapInfo *mapInfo);
 
     ImageData readImageData(const QFileInfo &imageDataFileInfo);
     void writeImageData(const QFileInfo &imageDataFileInfo, const ImageData &data);
@@ -162,6 +205,7 @@ signals:
 private slots:
     void mapFileChanged(MapInfo *mapInfo);
     void imageLoaded(QImage *image, MapImage *mapImage);
+    void imageRendered(QImage *image, MapImage *mapImage);
     void processDeferrals();
 
 private:
@@ -177,6 +221,8 @@ private:
 
     QVector<MapImageReaderThread*> mImageReaderThread;
     int mNextThreadForJob;
+
+    MapImageRenderThread mImageRenderThread;
 
     friend class MapImageManagerDeferral;
     void deferThreadResults(bool defer);
