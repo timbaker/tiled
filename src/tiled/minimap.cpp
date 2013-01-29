@@ -28,13 +28,11 @@
 #include "tilesetmanager.h"
 #include "ZomboidScene.h"
 
-#include <QMouseEvent>
 #include <QGraphicsPolygonItem>
-#include <QGLWidget>
 #include <QHBoxLayout>
+#include <QMouseEvent>
 #include <QScrollBar>
 #include <QToolButton>
-#include <cmath>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -103,10 +101,40 @@ void ShadowMap::regionAltered(const QRegion &rgn, Layer *layer)
     }
 }
 
+void ShadowMap::lotAdded(MapComposite *lot, MapObject *mapObject)
+{
+    MapComposite *subMap = mMapComposite->addMap(lot->mapInfo(),
+                                                 lot->origin(),
+                                                 lot->levelOffset());
+    mLots[quintptr(mapObject)] = subMap;
+}
+
+void ShadowMap::lotRemoved(MapComposite *lot, MapObject *mapObject)
+{
+    Q_UNUSED(lot)
+    mMapComposite->removeMap(mLots[quintptr(mapObject)]);
+    mLots.remove(quintptr(mapObject));
+}
+
+void ShadowMap::lotUpdated(MapComposite *lot, MapObject *mapObject)
+{
+    mLots[quintptr(mapObject)]->setOrigin(lot->origin());
+}
+
+void ShadowMap::mapAboutToChange(MapInfo *mapInfo)
+{
+    mMapComposite->mapAboutToChange(mapInfo);
+}
+
+void ShadowMap::mapFileChanged(MapInfo *mapInfo)
+{
+    mMapComposite->mapFileChanged(mapInfo);
+    foreach (CompositeLayerGroup *lg, mMapComposite->layerGroups())
+        lg->synch();
+}
+
 /////
 
-#ifdef ZOMBOID
-#include "mapmanager.h"
 #include "isometricrenderer.h"
 #include "zlevelrenderer.h"
 #include <QElapsedTimer>
@@ -118,8 +146,7 @@ MapRenderThread::MapRenderThread(MapComposite *mapComposite, QImage *image, cons
     mRestart(false),
     mWaiting(false),
     mQuit(false),
-    mAbortDrawing(false),
-    mPauseForMapChanges(false)
+    mAbortDrawing(false)
 {
     mShadowMap = new ShadowMap(mapComposite->mapInfo());
     (mapComposite->map()->orientation() == Map::Isometric) ?
@@ -131,11 +158,11 @@ MapRenderThread::MapRenderThread(MapComposite *mapComposite, QImage *image, cons
 
 MapRenderThread::~MapRenderThread()
 {
-    mMutexQuit.lock();
+    mSharedVarsMutex.lock();
     mAbortDrawing = true;
     mQuit = true;
-    mWaitCondition.wakeOne();
-    mMutexQuit.unlock();
+    mRenderSleepCondition.wakeOne();
+    mSharedVarsMutex.unlock();
     wait();
     delete mRenderer;
     delete mShadowMap;
@@ -144,10 +171,9 @@ MapRenderThread::~MapRenderThread()
 void MapRenderThread::run()
 {
     forever {
-        // Block access to mImage.  This only affects the getImage() call,
-        // which should only be called after this thread emits the rendered()
-        // signal, so we aren't really blocking anything.
-        QMutexLocker locker(&mMutex);
+        // Don't let the main thread modify mShadowMap or read/modify mImage until
+        // painting is finished or aborted.
+        QMutexLocker mapAndImageLocker(&mMapAndImageMutex);
 
         QRectF sceneRect = mShadowMap->mMapComposite->boundingRect(mRenderer);
         QSize mapSize = sceneRect.size().toSize();
@@ -172,20 +198,7 @@ void MapRenderThread::run()
         painter.setCompositionMode(QPainter::CompositionMode_Clear);
         painter.fillRect(paintRect, Qt::transparent);
         painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-#if 0
-        mMapComposite->saveVisibility();
-        mMapComposite->saveOpacity();
-        foreach (CompositeLayerGroup *layerGroup, mMapComposite->sortedLayerGroups()) {
-            foreach (TileLayer *tl, layerGroup->layers()) {
-                bool isVisible = true;
-                if (tl->name().contains(QLatin1String("NoRender")))
-                    isVisible = false;
-                layerGroup->setLayerVisibility(tl, isVisible);
-                layerGroup->setLayerOpacity(tl, 1.0f);
-            }
-            layerGroup->synch();
-        }
-#endif
+
         QElapsedTimer timer;
         timer.start();
 
@@ -199,55 +212,52 @@ void MapRenderThread::run()
                 mRenderer->drawTileLayer(&painter, tl, paintRect);
             }
 
-            QMutexLocker locker(&mMutexQuit);
-            if (mPauseForMapChanges) {
-                qDebug() << "MapRenderThread pausing for updates";
+            QMutexLocker locker(&mSharedVarsMutex);
+            if (mAbortDrawing) {
+                qDebug() << "MapRenderThread aborted" << this;
                 break;
             }
             if (mRestart) {
-                qDebug() << "MapRenderThread restarting";
+                qDebug() << "MapRenderThread restarting" << this;
                 break;
             }
             if (mQuit) {
-                qDebug() << "MapRenderThread quitting";
+                qDebug() << "MapRenderThread quitting" << this;
                 return;
             }
         }
 
-        painter.end(); // since mImage may change after this!
+        // mImage is the painter's paint-device.  Since the image may be
+        // recreated before the painter's destructor is called, we must
+        // release it's paint device now.
+        painter.end();
 
-        locker.unlock();
+        mapAndImageLocker.unlock();
 
-        qDebug() << "The slow operation took" << timer.elapsed() << "milliseconds";
-#if 0
-        mMapComposite->restoreVisibility();
-        mMapComposite->restoreOpacity();
-        foreach (CompositeLayerGroup *layerGroup, mMapComposite->sortedLayerGroups())
-            layerGroup->synch();
-#endif
-        if (!mRestart && !mPauseForMapChanges) {
+        qDebug() << "MapRenderThread painting took" << timer.elapsed() << "milliseconds" << this;
+
+        if (!mRestart && !mAbortDrawing) {
             mDirtyRect = QRectF();
             emit rendered(this);
         }
 
-        mMutexQuit.lock();
+        mSharedVarsMutex.lock();
         if (!mRestart) {
-            qDebug() << "MapRenderThread sleeping";
             mWaiting = true;
-            if (mPauseForMapChanges) {
-                mGoingToSleepMutex.lock();
-                mGoingToSleep.wakeOne(); // wake main thread
-                mGoingToSleepMutex.unlock();
-            }
-            mWaitCondition.wait(&mMutexQuit); // unlocks the mutex
-            qDebug() << "MapRenderThread waking";
+            mRenderSleepMutex.lock();
+            mSharedVarsMutex.unlock();
+            qDebug() << "MapRenderThread sleeping" << this;
+            mRenderSleepCondition.wait(&mRenderSleepMutex);
+            qDebug() << "MapRenderThread waking" << this;
+            mSharedVarsMutex.lock();
+            mRenderSleepMutex.unlock();
+            mWaiting = false;
         }
         mRestart = false;
         mAbortDrawing = false;
-        mPauseForMapChanges = false;
-        mMutexQuit.unlock();
+        mSharedVarsMutex.unlock();
         if (mQuit) {
-            qDebug() << "MapRenderThread quitting";
+            qDebug() << "MapRenderThread quitting" << this;
             return;
         }
     }
@@ -255,14 +265,13 @@ void MapRenderThread::run()
 
 void MapRenderThread::update(const QRectF &rect)
 {
-    QMutexLocker locker(&mMutexQuit);
+    QMutexLocker locker(&mSharedVarsMutex);
     if (!isRunning())
         start();
     else {
         mDirtyRect |= rect; // draw new area plus any interrupted area
         if (mWaiting) {
-            mWaiting = false;
-            mWaitCondition.wakeOne();
+            mRenderSleepCondition.wakeOne();
         } else {
             mAbortDrawing = true;
             mRestart = true;
@@ -272,97 +281,89 @@ void MapRenderThread::update(const QRectF &rect)
 
 void MapRenderThread::recreateImage(const QImage *other)
 {
-    putToSleep();
+    abortDrawing();
+    QMutexLocker locker(&mMapAndImageMutex);
     mImage = QImage(other->size(), other->format());
 }
 
-void MapRenderThread::restart()
-{
-    QMutexLocker locker(&mMutexQuit);
-    mAbortDrawing = true;
-    mRestart = true;
-}
-
-void MapRenderThread::layerAdded(int index)
-{
-    putToSleep();
-    mShadowMap->layerAdded(index);
-//    update();
-}
-
-void MapRenderThread::layerRemoved(int index)
-{
-    putToSleep();
-    mShadowMap->layerRemoved(index);
-//    update();
-}
-
-void MapRenderThread::layerRenamed(int index)
-{
-    putToSleep();
-    mShadowMap->layerRenamed(index); // layer added/removed from group
-//    update();
-}
-
-void MapRenderThread::regionAltered(const QRegion &rgn, Layer *layer)
-{
-    putToSleep();
-    mShadowMap->regionAltered(rgn, layer);
-
-     // Keep the render thread waiting, MiniMapItem::regionAltered will now call
-    // update() for us.
-//    mWaiting = false;
-    //    mWaitCondition.wakeOne(); // resume rendering
-}
-
-void MapRenderThread::onLotAdded(MapComposite *lot, MapObject *mapObject)
-{
-    putToSleep();
-    MapComposite *subMap = mShadowMap->mMapComposite->addMap(lot->mapInfo(),
-                                                             lot->origin(),
-                                                             lot->levelOffset());
-    mShadowMap->mLots[quintptr(mapObject)] = subMap;
-//    update();
-}
-
-void MapRenderThread::onLotRemoved(MapComposite *lot, MapObject *mapObject)
-{
-    putToSleep();
-    mShadowMap->mMapComposite->removeMap(mShadowMap->mLots[quintptr(mapObject)]);
-    mShadowMap->mLots.remove(quintptr(mapObject));
-//    update();
-}
-
-void MapRenderThread::onLotUpdated(MapComposite *lot, MapObject *mapObject)
-{
-    putToSleep();
-    mShadowMap->mLots[quintptr(mapObject)]->setOrigin(lot->origin());
-//    update(); // FIXME: only update the old+new lot bounds
-}
-
-void MapRenderThread::putToSleep()
+void MapRenderThread::abortDrawing()
 {
     if (!isRunning())
         return;
 
-    QMutexLocker locker(&mMutexQuit);
-    if (!mWaiting) {
-        mAbortDrawing = true;
-        mPauseForMapChanges = true;
-        mGoingToSleepMutex.lock();
-        locker.unlock();
-        mGoingToSleep.wait(&mGoingToSleepMutex); // wait for run() to pause
-        mGoingToSleepMutex.unlock();
-    }
+    QMutexLocker locker(&mSharedVarsMutex);
+    mAbortDrawing = true;
+    mRestart = false;
+}
+
+void MapRenderThread::layerAdded(int index)
+{
+    abortDrawing();
+    QMutexLocker locker(&mMapAndImageMutex);
+    mShadowMap->layerAdded(index);
+}
+
+void MapRenderThread::layerRemoved(int index)
+{
+    abortDrawing();
+    QMutexLocker locker(&mMapAndImageMutex);
+    mShadowMap->layerRemoved(index);
+}
+
+void MapRenderThread::layerRenamed(int index)
+{
+    abortDrawing();
+    QMutexLocker locker(&mMapAndImageMutex);
+    mShadowMap->layerRenamed(index); // layer added/removed from group
+}
+
+void MapRenderThread::regionAltered(const QRegion &rgn, Layer *layer)
+{
+    abortDrawing();
+    QMutexLocker locker(&mMapAndImageMutex);
+    mShadowMap->regionAltered(rgn, layer);
+}
+
+void MapRenderThread::lotAdded(MapComposite *lot, MapObject *mapObject)
+{
+    abortDrawing();
+    QMutexLocker locker(&mMapAndImageMutex);
+    mShadowMap->lotAdded(lot, mapObject);
+}
+
+void MapRenderThread::lotRemoved(MapComposite *lot, MapObject *mapObject)
+{
+    abortDrawing();
+    QMutexLocker locker(&mMapAndImageMutex);
+    mShadowMap->lotRemoved(lot, mapObject);
+}
+
+void MapRenderThread::lotUpdated(MapComposite *lot, MapObject *mapObject)
+{
+    abortDrawing();
+    QMutexLocker locker(&mMapAndImageMutex);
+    mShadowMap->lotUpdated(lot, mapObject);
+}
+
+void MapRenderThread::mapAboutToChange(MapInfo *mapInfo)
+{
+    abortDrawing();
+    QMutexLocker locker(&mMapAndImageMutex);
+    mShadowMap->mapAboutToChange(mapInfo);
+}
+
+void MapRenderThread::mapFileChanged(MapInfo *mapInfo)
+{
+    abortDrawing();
+    QMutexLocker locker(&mMapAndImageMutex);
+    mShadowMap->mapFileChanged(mapInfo);
 }
 
 void MapRenderThread::getImage(QImage &dest)
 {
-    QMutexLocker locker(&mMutex);
+    QMutexLocker locker(&mMapAndImageMutex);
     dest = mImage;
 }
-
-#endif // ZOMBOID
 
 /////
 
@@ -388,12 +389,17 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
     connect(mScene->mapDocument(), SIGNAL(regionAltered(QRegion,Layer*)),
             SLOT(regionAltered(QRegion,Layer*)));
 
+    connect(MapManager::instance(), SIGNAL(mapAboutToChange(MapInfo*)),
+            SLOT(mapAboutToChange(MapInfo*)));
+    connect(MapManager::instance(), SIGNAL(mapFileChanged(MapInfo*)),
+            SLOT(mapFileChanged(MapInfo*)));
+
     connect(&mScene->lotManager(), SIGNAL(lotAdded(MapComposite*,Tiled::MapObject*)),
-        SLOT(onLotAdded(MapComposite*,Tiled::MapObject*)));
+        SLOT(lotAdded(MapComposite*,Tiled::MapObject*)));
     connect(&mScene->lotManager(), SIGNAL(lotRemoved(MapComposite*,Tiled::MapObject*)),
-        SLOT(onLotRemoved(MapComposite*,Tiled::MapObject*)));
+        SLOT(lotRemoved(MapComposite*,Tiled::MapObject*)));
     connect(&mScene->lotManager(), SIGNAL(lotUpdated(MapComposite*,Tiled::MapObject*)),
-        SLOT(onLotUpdated(MapComposite*,Tiled::MapObject*)));
+        SLOT(lotUpdated(MapComposite*,Tiled::MapObject*)));
 
     connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
             SLOT(tilesetChanged(Tileset*)));
@@ -439,7 +445,7 @@ void MiniMapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
 void MiniMapItem::updateImage(const QRectF &dirtyRect)
 {
     Q_ASSERT(mMapImage);
-#if 1
+
     if (!mRenderThread) {
         mRenderThread  = new MapRenderThread(mMapComposite, mMapImage, dirtyRect);
         connect(mRenderThread, SIGNAL(rendered(MapRenderThread*)), SLOT(rendered(MapRenderThread*)));
@@ -448,71 +454,10 @@ void MiniMapItem::updateImage(const QRectF &dirtyRect)
         const QMap<MapObject*,MapComposite*> &map = mScene->lotManager().objectToLot();
         for (it = map.constBegin(); it != map.constEnd(); it++) {
             MapComposite *lot = it.value();
-            mRenderThread->onLotAdded(lot, it.key());
+            mRenderThread->lotAdded(lot, it.key());
         }
     }
     mRenderThread->update(dirtyRect);
-#else
-    // Duplicating most of MapImageManager::generateMapImage
-
-    QRectF sceneRect = mScene->sceneRect();
-    QSize mapSize = sceneRect.size().toSize();
-    if (mapSize.isEmpty())
-        return;
-
-    QRectF paintRect = dirtyRect;
-    if (dirtyRect.isEmpty())
-        paintRect = sceneRect;
-
-    qreal scale = mMapImage->width() / qreal(mapSize.width());
-
-    QPainter painter(mMapImage);
-
-    painter.setRenderHints(QPainter::SmoothPixmapTransform |
-                           QPainter::HighQualityAntialiasing);
-    painter.setTransform(QTransform::fromScale(scale, scale)
-                         .translate(-sceneRect.left(), -sceneRect.top()));
-
-    painter.setClipRect(paintRect);
-
-    painter.setCompositionMode(QPainter::CompositionMode_Clear);
-    painter.fillRect(paintRect, Qt::transparent);
-    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-
-    mMapComposite->saveVisibility();
-    mMapComposite->saveOpacity();
-    foreach (CompositeLayerGroup *layerGroup, mMapComposite->sortedLayerGroups()) {
-        foreach (TileLayer *tl, layerGroup->layers()) {
-            bool isVisible = true;
-            if (tl->name().contains(QLatin1String("NoRender")))
-                isVisible = false;
-            layerGroup->setLayerVisibility(tl, isVisible);
-            layerGroup->setLayerOpacity(tl, 1.0f);
-        }
-        layerGroup->synch();
-    }
-
-    QElapsedTimer timer;
-    timer.start();
-
-    MapComposite::ZOrderList zorder = mMapComposite->zOrder();
-    foreach (MapComposite::ZOrderItem zo, zorder) {
-        if (zo.group)
-            mRenderer->drawTileLayerGroup(&painter, zo.group, paintRect);
-        else if (TileLayer *tl = zo.layer->asTileLayer()) {
-            if (tl->name().contains(QLatin1String("NoRender")))
-                continue;
-            mRenderer->drawTileLayer(&painter, tl, paintRect);
-        }
-    }
-
-    qDebug() << "The slow operation took" << timer.elapsed() << "milliseconds";
-
-    mMapComposite->restoreVisibility();
-    mMapComposite->restoreOpacity();
-    foreach (CompositeLayerGroup *layerGroup, mMapComposite->sortedLayerGroups())
-        layerGroup->synch();
-#endif
 }
 
 void MiniMapItem::updateImageBounds()
@@ -601,27 +546,24 @@ void MiniMapItem::layerRemoved(int index)
     recreateLater();
 }
 
-void MiniMapItem::onLotAdded(MapComposite *lot, Tiled::MapObject *mapObject)
+void MiniMapItem::lotAdded(MapComposite *lot, Tiled::MapObject *mapObject)
 {
-    Q_UNUSED(mapObject)
-    mRenderThread->onLotAdded(lot, mapObject);
+    mRenderThread->lotAdded(lot, mapObject);
     QRectF bounds = lot->boundingRect(mRenderer);
     updateLater(mLotBounds[lot] | bounds);
     mLotBounds[lot] = bounds;
 }
 
-void MiniMapItem::onLotRemoved(MapComposite *lot, Tiled::MapObject *mapObject)
+void MiniMapItem::lotRemoved(MapComposite *lot, Tiled::MapObject *mapObject)
 {
-    Q_UNUSED(mapObject)
-    mRenderThread->onLotRemoved(lot, mapObject);
+    mRenderThread->lotRemoved(lot, mapObject);
     updateLater(mLotBounds[lot]);
     mLotBounds.remove(lot);
 }
 
-void MiniMapItem::onLotUpdated(MapComposite *lot, Tiled::MapObject *mapObject)
+void MiniMapItem::lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject)
 {
-    Q_UNUSED(mapObject)
-    mRenderThread->onLotUpdated(lot, mapObject);
+    mRenderThread->lotUpdated(lot, mapObject);
     QRectF bounds = lot->boundingRect(mRenderer);
     updateLater(mLotBounds[lot] | bounds);
     mLotBounds[lot] = bounds;
@@ -639,6 +581,22 @@ void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
                       margins.right(),
                       margins.bottom());
         updateLater(bounds);
+    }
+}
+
+void MiniMapItem::mapAboutToChange(MapInfo *mapInfo)
+{
+    mRenderThread->mapAboutToChange(mapInfo);
+}
+
+void MiniMapItem::mapFileChanged(MapInfo *mapInfo)
+{
+    mRenderThread->mapFileChanged(mapInfo);
+    foreach (MapComposite *lot, mMapComposite->subMaps()) {
+        if (lot->mapInfo() == mapInfo) {
+            QRectF bounds = lot->boundingRect(mRenderer);
+            updateLater(mLotBounds[lot] | bounds);
+        }
     }
 }
 

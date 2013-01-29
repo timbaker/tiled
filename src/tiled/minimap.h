@@ -73,8 +73,13 @@ public:
     void layerRemoved(int index);
     void layerRenamed(int index);
     void regionAltered(const QRegion &rgn, Tiled::Layer *layer);
-    bool mapAboutToChange(MapInfo *mapInfo);
-    bool mapFileChanged(MapInfo *mapInfo);
+
+    void lotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
+    void lotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
+    void lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
+
+    void mapAboutToChange(MapInfo *mapInfo);
+    void mapFileChanged(MapInfo *mapInfo);
 
     MapComposite *mMapComposite;
     Tiled::Map *mMaster; // Never accessed from the thread!
@@ -97,21 +102,21 @@ public:
 
     void update(const QRectF &rect);
     void recreateImage(const QImage *other);
-    void restart();
+    void abortDrawing();
 
     void layerAdded(int index);
     void layerRemoved(int index);
     void layerRenamed(int index);
     void regionAltered(const QRegion &rgn, Tiled::Layer *layer);
 
-    void onLotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
-    void onLotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
-    void onLotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
+    void lotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
+    void lotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
+    void lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
 
-    bool mapAboutToChange(MapInfo *mapInfo);
-    bool mapFileChanged(MapInfo *mapInfo);
+    void mapAboutToChange(MapInfo *mapInfo);
+    void mapFileChanged(MapInfo *mapInfo);
 
-    void putToSleep();
+    void lockMapAndImage();
 
     void getImage(QImage &dest);
 
@@ -119,11 +124,10 @@ signals:
     void rendered(MapRenderThread *t);
 
 private:
-    QMutex mMutex; // lock on mImage, not really needed
-    QMutex mMutexQuit; // lock on most other vars
-    QMutex mGoingToSleepMutex;
-    QWaitCondition mGoingToSleep;
-    QWaitCondition mWaitCondition;
+    QMutex mMapAndImageMutex; // lock on mImage and mShadowMap
+    QMutex mSharedVarsMutex; // lock on most other vars
+    QMutex mRenderSleepMutex;
+    QWaitCondition mRenderSleepCondition;
     ShadowMap *mShadowMap;
     Tiled::MapRenderer *mRenderer;
     QImage mImage;
@@ -132,7 +136,6 @@ private:
     bool mRestart; // restart rendering ASAP
     bool mWaiting; // inside mWaitCondition.wait()
     bool mQuit; // exit from run() ASAP
-    bool mPauseForMapChanges; // stop rendering so main thread can update map data
 };
 
 /**
@@ -171,11 +174,14 @@ private slots:
     void layerAdded(int index);
     void layerRemoved(int index);
 
-    void onLotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
-    void onLotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
-    void onLotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
+    void lotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
+    void lotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
+    void lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
 
     void regionAltered(const QRegion &region, Layer *layer);
+
+    void mapAboutToChange(MapInfo *mapInfo);
+    void mapFileChanged(MapInfo *mapInfo);
 
     void tilesetChanged(Tileset *ts);
 
