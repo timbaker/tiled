@@ -281,7 +281,7 @@ class SwapFloorGrid : public QUndoCommand
 {
 public:
     SwapFloorGrid(BuildingDocument *doc, BuildingFloor *floor,
-                  const QVector<QVector<Room*> > &grid, char *undoText);
+                  const QVector<QVector<Room*> > &grid, const char *undoText);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -298,8 +298,8 @@ class SwapFloorGrime : public QUndoCommand
 {
 public:
     SwapFloorGrime(BuildingDocument *doc, BuildingFloor *floor,
-                   const QMap<QString,FloorTileGrid*> &grid, char *undoText,
-                   bool emitSignal);
+                   const QMap<QString,FloorTileGrid*> &grid,
+                   const char *undoText, bool emitSignal);
 
     ~SwapFloorGrime();
 
@@ -320,12 +320,12 @@ class PaintFloorTiles : public QUndoCommand
 public:
     PaintFloorTiles(BuildingDocument *doc, BuildingFloor *floor,
                     const QString &layerName, const QPoint &pos,
-                    FloorTileGrid *tiles, char *undoText);
+                    FloorTileGrid *tiles, const char *undoText);
 
     PaintFloorTiles(BuildingDocument *doc, BuildingFloor *floor,
                     const QString &layerName, const QRegion &rgn,
-                    const QPoint &pos,
-                    FloorTileGrid *tiles, char *undoText);
+                    const QPoint &pos, FloorTileGrid *tiles,
+                    const char *undoText);
 
     ~PaintFloorTiles();
 
