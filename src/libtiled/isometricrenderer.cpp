@@ -253,6 +253,13 @@ void IsometricRenderer::drawTileLayer(QPainter *painter,
         QPoint columnItr = rowItr;
 
         for (int x = startPos.x(); x < rect.right(); x += tileWidth) {
+#ifdef ZOMBOID
+            // Multi-threading
+            if (mAbortDrawing && *mAbortDrawing) {
+                painter->setTransform(baseTransform);
+                return;
+            }
+#endif
             if (layer->contains(columnItr)) {
                 const Cell &cell = layer->cellAt(columnItr);
                 if (!cell.isEmpty()) {
@@ -383,22 +390,19 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *l
 
     qreal opacity = painter->opacity();
 
-    bool quit = false;
-
     for (int y = startPos.y(); y - tileHeight < rect.bottom();
          y += tileHeight / 2)
     {
         QPoint columnItr = rowItr;
 
-        if (quit) break;
         for (int x = startPos.x(); x < rect.right(); x += tileWidth) {
-            if (quit) break;
             cells.resize(0);
             if (layerGroup->orderedCellsAt(columnItr, cells, opacities)) {
                 for (int i = 0; i < cells.size(); i++) {
+                    // Multi-threading
                     if (mAbortDrawing && *mAbortDrawing) {
-                        quit = true;
-                        break;
+                        painter->setTransform(baseTransform);
+                        return;
                     }
                     const Cell *cell = cells[i];
                     if (!cell->isEmpty()) {
