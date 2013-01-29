@@ -880,7 +880,7 @@ void BaseObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         yEdge = N;
     else if (m.y() >= 0.75)
         yEdge = S;
-    if (xEdge == Center && yEdge == Center || (xEdge != Center && yEdge != Center))
+    if ((xEdge == Center && yEdge == Center) || (xEdge != Center && yEdge != Center))
         mTileEdge = Center;
     else if (xEdge != Center)
         mTileEdge = xEdge;

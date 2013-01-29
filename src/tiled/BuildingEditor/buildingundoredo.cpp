@@ -299,7 +299,8 @@ void ChangeRoom::swap()
 /////
 
 SwapFloorGrid::SwapFloorGrid(BuildingDocument *doc, BuildingFloor *floor,
-                             const QVector<QVector<Room *> > &grid, char *undoText) :
+                             const QVector<QVector<Room *> > &grid,
+                             const char *undoText) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", undoText)),
     mDocument(doc),
     mFloor(floor),
@@ -316,7 +317,7 @@ void SwapFloorGrid::swap()
 
 SwapFloorGrime::SwapFloorGrime(BuildingDocument *doc, BuildingFloor *floor,
                                const QMap<QString, FloorTileGrid *> &grid,
-                               char *undoText, bool emitSignal) :
+                               const char *undoText, bool emitSignal) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", undoText)),
     mDocument(doc),
     mFloor(floor),
@@ -339,9 +340,8 @@ void SwapFloorGrime::swap()
 
 PaintFloorTiles::PaintFloorTiles(BuildingDocument *doc, BuildingFloor *floor,
                                  const QString &layerName,
-                                 const QPoint &pos,
-                                 FloorTileGrid *tiles,
-                                 char *undoText) :
+                                 const QPoint &pos, FloorTileGrid *tiles,
+                                 const char *undoText) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", undoText)),
     mDocument(doc),
     mFloor(floor),
@@ -353,8 +353,8 @@ PaintFloorTiles::PaintFloorTiles(BuildingDocument *doc, BuildingFloor *floor,
 
 PaintFloorTiles::PaintFloorTiles(BuildingDocument *doc, BuildingFloor *floor,
                                  const QString &layerName, const QRegion &rgn,
-                                 const QPoint &pos,
-                                 FloorTileGrid *tiles, char *undoText) :
+                                 const QPoint &pos, FloorTileGrid *tiles,
+                                 const char *undoText) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", undoText)),
     mDocument(doc),
     mFloor(floor),

@@ -256,7 +256,9 @@ void ObjectSelectionTool::updateMovingItems(const QPointF &pos,
                                             Qt::KeyboardModifiers modifiers)
 {
     MapRenderer *renderer = mapDocument()->renderer();
+#ifndef ZOMBOID
     QPointF diff = pos - mStart;
+#endif
 
     bool snapToGrid = Preferences::instance()->snapToGrid();
     if (modifiers & Qt::ControlModifier)
