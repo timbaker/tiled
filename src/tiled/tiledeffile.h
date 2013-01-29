@@ -1215,7 +1215,7 @@ public:
             return mProperties[label]->getString();
         else
             qDebug() << "UIProperties::getString" << label;
-        return 0;
+        return QString();
     }
 
     QString getEnum(const QString &label)
@@ -1225,7 +1225,7 @@ public:
             return mProperties[label]->getEnum();
         else
             qDebug() << "UIProperties::getEnum" << label;
-        return 0;
+        return QString();
     }
 
     QList<UIProperty*> nonDefaultProperties() const

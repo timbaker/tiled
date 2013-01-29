@@ -619,7 +619,7 @@ QString FurnitureModel::headerAt(const QModelIndex &index) const
 {
     if (Item *item = toItem(index))
         return item->mHeading;
-    return 0;
+    return QString();
 }
 
 void FurnitureModel::toggleCorners(FurnitureTiles *ftiles)
