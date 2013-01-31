@@ -31,24 +31,22 @@ namespace Tiled {
 class Map;
 }
 
-#include <QMutexLocker>
-#include <QThread>
-#include <QWaitCondition>
+#include "threads.h"
 class MapImage;
-class MapImageReaderThread : public QThread
+class MapImageReaderWorker : public BaseWorker
 {
     Q_OBJECT
 public:
-    MapImageReaderThread();
+    MapImageReaderWorker();
 
-    ~MapImageReaderThread();
-
-    void run();
-
-    void addJob(const QString &imageFileName, MapImage *mapImage);
+    ~MapImageReaderWorker();
 
 signals:
     void imageLoaded(QImage *image, MapImage *mapImage);
+
+public slots:
+    void work();
+    void addJob(const QString &imageFileName, MapImage *mapImage);
 
 private:
     class Job {
@@ -64,29 +62,52 @@ private:
     };
     QList<Job> mJobs;
 
-    QMutex mMutex;
-    QWaitCondition mWaitCondition;
-    bool mQuit;
+    bool mWorkPending;
 };
 
-class MapImageRenderThread : public QThread
+class MapImageData
+{
+public:
+    MapImageData() :
+        scale(0),
+        missingTilesets(false)
+    {
+
+    }
+
+    bool valid() const { return !image.isNull(); }
+
+    QImage image;
+    QRectF levelZeroBounds;
+    qreal scale;
+    QList<MapInfo*> sources;
+    bool missingTilesets;
+};
+
+#include <QMetaType>
+Q_DECLARE_METATYPE(MapImageData) // for QueuedConnection
+
+class MapImageRenderWorker : public BaseWorker
 {
     Q_OBJECT
 public:
-    MapImageRenderThread();
+    MapImageRenderWorker(bool *abortPtr);
 
-    ~MapImageRenderThread();
-
-    void run();
-
-    void addJob(MapImage *mapImage);
-    void cleanupDoneJobs();
+    ~MapImageRenderWorker();
 
 signals:
-    void imageRendered(QImage *image, MapImage *mapImage);
+    void mapNeeded(MapImage *mapImage);
+    void imageRendered(MapImageData data, MapImage *mapImage);
+    void jobDone(MapComposite *mapComposite);
+
+public slots:
+    void work();
+    void addJob(MapImage *mapImage);
+    void mapLoaded(MapComposite *mapComposite);
+    void mapFailedToLoad();
 
 private:
-    QImage *generateMapImage(MapComposite *mapComposite);
+    MapImageData generateMapImage(MapComposite *mapComposite);
 
     class Job {
     public:
@@ -98,9 +119,7 @@ private:
     QList<Job> mJobs;
     QList<Job> mDoneJobs;
 
-    QMutex mMutex;
-    QWaitCondition mWaitCondition;
-    bool mQuit;
+    bool mWorkPending;
 };
 
 class MapImage
@@ -162,11 +181,6 @@ public:
 
     MapImage *getMapImage(const QString &mapName, const QString &relativeTo = QString());
 
-    /**
-      * Used by MiniMap.
-      */
-    MapImage *newFromMap(MapComposite *mapComposite);
-
     QString errorString() const
     { return mError; }
 
@@ -193,7 +207,9 @@ protected:
     };
 
     ImageData generateMapImage(const QString &mapFilePath, bool force = false);
+#if 0
     ImageData generateMapImage(MapComposite *mapComposite);
+#endif
     void paintDummyImage(ImageData &data, MapInfo *mapInfo);
 
     ImageData readImageData(const QFileInfo &imageDataFileInfo);
@@ -201,11 +217,21 @@ protected:
 
 signals:
     void mapImageChanged(MapImage *mapImage);
+    void mapImageFailedToLoad(MapImage *mapImage);
     
 private slots:
     void mapFileChanged(MapInfo *mapInfo);
-    void imageLoaded(QImage *image, MapImage *mapImage);
-    void imageRendered(QImage *image, MapImage *mapImage);
+
+private slots:
+    void imageLoadedByThread(QImage *image, MapImage *mapImage);
+
+    void renderThreadNeedsMap(MapImage *mapImage);
+    void imageRenderedByThread(MapImageData imgData, MapImage *mapImage);
+    void renderJobDone(MapComposite *mapComposite);
+
+    void mapLoaded(MapInfo *mapInfo);
+    void mapFailedToLoad(MapInfo *mapInfo);
+
     void processDeferrals();
 
 private:
@@ -219,10 +245,13 @@ private:
     QMap<QString,MapImage*> mMapImages;
     QString mError;
 
-    QVector<MapImageReaderThread*> mImageReaderThread;
+    QVector<InterruptibleThread*> mImageReaderThreads;
+    QVector<MapImageReaderWorker*> mImageReaderWorkers;
     int mNextThreadForJob;
 
-    MapImageRenderThread mImageRenderThread;
+    InterruptibleThread *mImageRenderThread;
+    MapImageRenderWorker *mImageRenderWorker;
+    MapImage *mExpectMapImage;
 
     friend class MapImageManagerDeferral;
     void deferThreadResults(bool defer);

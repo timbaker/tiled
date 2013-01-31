@@ -54,8 +54,9 @@ void MapManager::deleteInstance()
     mInstance = 0;
 }
 
-MapManager::MapManager()
-    : mFileSystemWatcher(new FileSystemWatcher(this))
+MapManager::MapManager() :
+    mFileSystemWatcher(new FileSystemWatcher(this)),
+    mMapReaderWorker(mMapReaderThread.var())
 {
     connect(mFileSystemWatcher, SIGNAL(fileChanged(QString)),
             SLOT(fileChanged(QString)));
@@ -65,6 +66,15 @@ MapManager::MapManager()
     connect(&mChangedFilesTimer, SIGNAL(timeout()),
             SLOT(fileChangedTimeout()));
 
+    mMapReaderWorker.moveToThread(&mMapReaderThread);
+    connect(&mMapReaderThread, SIGNAL(started()),
+            &mMapReaderWorker, SLOT(work()));
+    connect(&mMapReaderWorker, SIGNAL(mapLoaded(Map*,MapInfo*)),
+            SLOT(mapLoadedByThread(Map*,MapInfo*)));
+    connect(&mMapReaderWorker, SIGNAL(mapFailedToLoad(QString,MapInfo*)),
+            SLOT(mapFailedToLoadByThread(QString,MapInfo*)));
+    mMapReaderThread.start();
+
     connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
             SLOT(metaTilesetAdded(Tiled::Tileset*)));
     connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetRemoved(Tiled::Tileset*)),
@@ -73,6 +83,10 @@ MapManager::MapManager()
 
 MapManager::~MapManager()
 {
+    mMapReaderThread.interrupt(); // stop the long-running task
+    mMapReaderThread.quit(); // exit the event loop
+    mMapReaderThread.wait(); // wait for thread to terminate
+
     TilesetManager *tilesetManager = TilesetManager::instance();
 
     const QMap<QString,MapInfo*>::const_iterator end = mMapInfo.constEnd();
@@ -160,8 +174,12 @@ public:
 
 #include "BuildingEditor/buildingreader.h"
 #include "BuildingEditor/buildingmap.h"
+#include "BuildingEditor/buildingobjects.h"
+#include "BuildingEditor/buildingtiles.h"
+#include "BuildingEditor/furnituregroups.h"
+using namespace BuildingEditor;
 
-MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo)
+MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo, bool asynch)
 {
     QString mapFilePath = pathForMap(mapName, relativeTo);
     if (mapFilePath.isEmpty()) {
@@ -173,9 +191,25 @@ MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo)
         return mMapInfo[mapFilePath];
     }
 
+    if (asynch) {
+        MapInfo *mapInfo = this->mapInfo(mapFilePath);
+        if (mapInfo->mLoading)
+            return mapInfo;
+        mapInfo->mLoading = true;
+        mMapReaderWorker.addJob(mapInfo);
+        return mapInfo;
+    }
+
     QFileInfo fileInfoMap(mapFilePath);
 
     PROGRESS progress(tr("Reading %1").arg(fileInfoMap.completeBaseName()));
+
+    // Caller wants the map now but it is being loaded by a worker thread.
+    if (mMapInfo.contains(mapFilePath) && mMapInfo[mapFilePath]->mLoading) {
+        while (mMapInfo[mapFilePath]->mLoading) {
+            qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+        }
+    }
 
     Map *map = 0;
     if (fileInfoMap.suffix() == QLatin1String("tbx")) {
@@ -595,5 +629,114 @@ void MapManager::metaTilesetRemoved(Tileset *tileset)
     foreach (MapInfo *mapInfo, mMapInfo) {
         if (mapInfo->map() && mapInfo->path().endsWith(QLatin1String(".tbx")))
             fileChanged(mapInfo->path());
+    }
+}
+
+void MapManager::mapLoadedByThread(MapManager::Map *map, MapInfo *mapInfo)
+{
+    Tile *missingTile = TilesetManager::instance()->missingTile();
+    foreach (Tileset *tileset, map->missingTilesets()) {
+        if (tileset->tileHeight() == 128 && tileset->tileWidth() == 64) {
+            // Replace the all-red image with something nicer.
+            for (int i = 0; i < tileset->tileCount(); i++)
+                tileset->tileAt(i)->setImage(missingTile->image());
+        }
+    }
+    TilesetManager::instance()->addReferences(map->tilesets());
+
+    mapInfo->mMap = map;
+    mapInfo->mPlaceholder = false;
+    mapInfo->mLoading = false;
+#if 0
+    // The reference count is zero, but prevent it being immediately purged.
+    // FIXME: add a reference and let the caller deal with it.
+    mapInfo->mReferenceEpoch = ++mReferenceEpoch;
+#endif
+    emit mapLoaded(mapInfo);
+}
+
+void MapManager::mapFailedToLoadByThread(const QString error, MapInfo *mapInfo)
+{
+    mapInfo->mLoading = false;
+    emit mapFailedToLoad(mapInfo);
+}
+
+/////
+
+MapReaderWorker::MapReaderWorker(bool *abortPtr) :
+    BaseWorker(abortPtr),
+    mWorkPending(false)
+{
+}
+
+MapReaderWorker::~MapReaderWorker()
+{
+}
+
+void MapReaderWorker::work()
+{
+    mWorkPending = false;
+
+    while (mJobs.size()) {
+        if (aborted()) {
+            mJobs.clear();
+            return;
+        }
+
+        Job job = mJobs.takeAt(0);
+
+        Map *map = loadMap(job.mapInfo);
+        if (map)
+            emit mapLoaded(map, job.mapInfo);
+        else
+            emit mapFailedToLoad(mError, job.mapInfo);
+    }
+}
+
+void MapReaderWorker::addJob(MapInfo *mapInfo)
+{
+    mJobs += Job(mapInfo);
+    if (!mWorkPending) {
+        mWorkPending = true;
+        QMetaObject::invokeMethod(this, "work", Qt::QueuedConnection);
+    }
+}
+
+class MapReaderWorker_MapReader : public MapReader
+{
+protected:
+    /**
+     * Overridden to make sure the resolved reference is canonical.
+     */
+    QString resolveReference(const QString &reference, const QString &mapPath)
+    {
+        QString resolved = MapReader::resolveReference(reference, mapPath);
+        QString canonical = QFileInfo(resolved).canonicalFilePath();
+
+        // Make sure that we're not returning an empty string when the file is
+        // not found.
+        return canonical.isEmpty() ? resolved : canonical;
+    }
+};
+
+Map *MapReaderWorker::loadMap(MapInfo *mapInfo)
+{
+    if (mapInfo->path().endsWith(QLatin1String(".tbx"))) {
+        return 0; // no way this will be thread safe due to use of FurnitureGroups/BuildingTilesMgr
+        BuildingEditor::BuildingReader reader;
+        BuildingEditor::Building *building = reader.read(mapInfo->path());
+        if (!building) {
+            mError = reader.errorString();
+            return 0;
+        }
+        BuildingEditor::BuildingMap bmap(building);
+        return bmap.mergedMap();
+    } else {
+        MapReaderWorker_MapReader reader;
+//        reader.setTilesetImageCache(TilesetManager::instance()->imageCache()); // not thread-safe class
+        Map *map = reader.readMap(mapInfo->path());
+        if (!map)
+            mError = reader.errorString();
+        return map;
     }
 }

@@ -51,6 +51,7 @@ private slots:
     void onMapsDirectoryChanged();
     void selectionChanged();
     void onMapImageChanged(MapImage *mapImage);
+    void mapImageFailedToLoad(MapImage *mapImage);
 
 protected:
     void changeEvent(QEvent *e);

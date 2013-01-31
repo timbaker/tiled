@@ -33,28 +33,27 @@
 #include <QTimer>
 
 #ifdef ZOMBOID
-#include <QMutexLocker>
-#include <QThread>
+#include "threads.h"
 #include <QVector>
-#include <QWaitCondition>
 namespace Tiled {
 class Tileset;
 }
 class QImage;
-class TilesetImageReaderThread : public QThread
+class TilesetImageReaderWorker : public BaseWorker
 {
     Q_OBJECT
 public:
-    TilesetImageReaderThread(int id);
+    TilesetImageReaderWorker(int id);
 
-    ~TilesetImageReaderThread();
+    ~TilesetImageReaderWorker();
 
-    void run();
-
-    void addJob(Tiled::Tileset *tileset);
-
+    typedef Tiled::Tileset Tileset;
 signals:
     void imageLoaded(QImage *image, Tiled::Tileset *tileset);
+
+public slots:
+    void work();
+    void addJob(Tileset *tileset);
 
 private:
     class Job {
@@ -69,10 +68,7 @@ private:
     QList<Job> mJobs;
 
     int mID;
-    QMutex mMutex;
-    QWaitCondition mWaitCondition;
-    bool mWaiting;
-    bool mQuit;
+    bool mWorkPending;
 };
 #endif // ZOMBOID
 
@@ -91,7 +87,6 @@ class FileSystemWatcher;
 #ifdef ZOMBOID
 struct ZTileLayerNames;
 #endif
-
 
 /**
  * A tileset specification that uniquely identifies a certain tileset. Does not
@@ -231,6 +226,17 @@ private:
     static TilesetManager *mInstance;
 
 #ifdef ZOMBOID
+    TilesetImageCache *mTilesetImageCache;
+
+    Tileset *mMissingTileset;
+    Tile *mMissingTile;
+
+    QVector<InterruptibleThread*> mImageReaderThreads;
+    QVector<TilesetImageReaderWorker*> mImageReaderWorkers;
+    int mNextThreadForJob;
+#endif
+
+#ifdef ZOMBOID
     QMap<QString,ZTileLayerNames*> mTileLayerNames; // imageSource -> tile layer names
 
     QFileInfo tileLayerNamesFile(Tileset *ts);
@@ -239,14 +245,6 @@ private:
     void readTileLayerNames(Tileset *ts);
     void writeTileLayerNames(ZTileLayerNames *tln);
     void syncTileLayerNames(Tileset *ts);
-
-    TilesetImageCache *mTilesetImageCache;
-
-    Tileset *mMissingTileset;
-    Tile *mMissingTile;
-
-    QVector<TilesetImageReaderThread*> mImageReaderThread;
-    int mNextThreadForJob;
 #endif
 
     /**

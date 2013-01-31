@@ -25,6 +25,9 @@
 #include "tileset.h"
 
 #include <QImage>
+#ifdef ZOMBOID
+#include <QMetaType>
+#endif
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -32,9 +35,9 @@ using namespace Tiled::Internal;
 TilesetManager *TilesetManager::mInstance = 0;
 
 TilesetManager::TilesetManager():
-    #ifdef ZOMBOID
+#ifdef ZOMBOID
     mTilesetImageCache(new TilesetImageCache),
-    #endif
+#endif
     mWatcher(new FileSystemWatcher(this)),
     mReloadTilesetsOnChange(false)
 {
@@ -51,13 +54,18 @@ TilesetManager::TilesetManager():
     mMissingTile = mMissingTileset->tileAt(0);
     addReference(mMissingTileset);
 
-    mImageReaderThread.resize(10);
-    mNextThreadForJob = 0;
+    qRegisterMetaType<Tileset*>("Tileset*");
 
-    for (int i = 0; i < mImageReaderThread.size(); i++) {
-        mImageReaderThread[i] = new TilesetImageReaderThread(i);
-        connect(mImageReaderThread[i], SIGNAL(imageLoaded(QImage*,Tiled::Tileset*)),
+    mImageReaderThreads.resize(8);
+    mImageReaderWorkers.resize(mImageReaderThreads.size());
+    mNextThreadForJob = 0;
+    for (int i = 0; i < mImageReaderWorkers.size(); i++) {
+        mImageReaderThreads[i] = new InterruptibleThread;
+        mImageReaderWorkers[i] = new TilesetImageReaderWorker(i);
+        mImageReaderWorkers[i]->moveToThread(mImageReaderThreads[i]);
+        connect(mImageReaderWorkers[i], SIGNAL(imageLoaded(QImage*,Tiled::Tileset*)),
                 SLOT(imageLoaded(QImage*,Tiled::Tileset*)));
+        mImageReaderThreads[i]->start();
     }
 #endif
 
@@ -75,7 +83,13 @@ TilesetManager::~TilesetManager()
 {
 #ifdef ZOMBOID
     removeReference(mMissingTileset);
-    qDeleteAll(mImageReaderThread);
+    for (int i = 0; i < mImageReaderThreads.size(); i++) {
+        mImageReaderThreads[i]->interrupt();
+        mImageReaderThreads[i]->quit();
+        mImageReaderThreads[i]->wait();
+        delete mImageReaderWorkers[i];
+        delete mImageReaderThreads[i];
+    }
 #endif
 
     // Since all MapDocuments should be deleted first, we assert that there are
@@ -289,19 +303,21 @@ void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource)
 
     if (!tileset->isLoaded() /*&& !tileset->isMissing()*/) {
         if (Tileset *cached = mTilesetImageCache->findMatch(tileset, imageSource)) {
+            // If it !isLoaded(), a thread is reading the image.
             if (cached->isLoaded()) {
                 tileset->loadFromCache(cached);
                 tileset->setMissing(false);
                 emit tilesetChanged(tileset);
             } else {
-                // If !isLoaded(), a thread is reading the image.
                 changeTilesetSource(tileset, imageSource, false);
             }
         } else {
             changeTilesetSource(tileset, imageSource, false);
             cached = mTilesetImageCache->addTileset(tileset);
-            mImageReaderThread[mNextThreadForJob]->addJob(cached);
-            mNextThreadForJob = (mNextThreadForJob + 1) % mImageReaderThread.size();
+            QMetaObject::invokeMethod(mImageReaderWorkers[mNextThreadForJob],
+                                      "addJob", Qt::QueuedConnection,
+                                      Q_ARG(Tileset*,cached));
+            mNextThreadForJob = (mNextThreadForJob + 1) % mImageReaderWorkers.size();
         }
     }
 }
@@ -636,67 +652,44 @@ void TilesetManager::syncTileLayerNames(Tileset *ts)
 #ifdef ZOMBOID
 /////
 
-TilesetImageReaderThread::TilesetImageReaderThread(int id) :
+TilesetImageReaderWorker::TilesetImageReaderWorker(int id) :
+    BaseWorker(),
     mID(id),
-    mWaiting(false),
-    mQuit(false)
+    mWorkPending(false)
 {
 }
 
-TilesetImageReaderThread::~TilesetImageReaderThread()
+TilesetImageReaderWorker::~TilesetImageReaderWorker()
 {
-    mMutex.lock();
-    mQuit = true;
-    mWaitCondition.wakeOne();
-    mMutex.unlock();
-    wait();
 }
 
-void TilesetImageReaderThread::run()
+void TilesetImageReaderWorker::work()
 {
-    forever {
-        if (mQuit) // mutex protect it?
-            break;
+    mWorkPending = false;
 
-        mMutex.lock();
+    while (mJobs.size()) {
+        if (aborted()) {
+            mJobs.clear();
+            return;
+        }
+
         Job job = mJobs.takeAt(0);
-        mMutex.unlock();
 
         QImage *image = new QImage(job.tileset->imageSource());
 #ifndef QT_NO_DEBUG
-        msleep(500);
+        Sleep::msleep(500);
 //        qDebug() << "TilesetImageReaderThread #" << mID << "loaded" << job.tileset->imageSource();
 #endif
         emit imageLoaded(image, job.tileset);
-
-        if (!mJobs.size()) {
-#ifndef QT_NO_DEBUG
-//            qDebug() << "TilesetImageReaderThread #" << mID << "sleeping";
-#endif
-            mMutex.lock();
-            mWaiting = true;
-            mWaitCondition.wait(&mMutex);
-            mMutex.unlock();
-        }
     }
 }
 
-void TilesetImageReaderThread::addJob(Tileset *tileset)
+void TilesetImageReaderWorker::addJob(Tileset *tileset)
 {
-    QMutexLocker locker(&mMutex);
     mJobs += Job(tileset);
-
-    if (!isRunning()) {
-#ifndef QT_NO_DEBUG
-//        qDebug() << "TilesetImageReaderThread #" << mID << "starting";
-#endif
-        start();
-    } else if (mWaiting) {
-#ifndef QT_NO_DEBUG
-//        qDebug() << "TilesetImageReaderThread #" << mID << "waking";
-#endif
-        mWaiting = false;
-        mWaitCondition.wakeOne();
+    if (!mWorkPending) {
+        mWorkPending = true;
+        QMetaObject::invokeMethod(this, "work", Qt::QueuedConnection);
     }
 }
 #endif // ZOMBOID

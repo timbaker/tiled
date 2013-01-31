@@ -25,8 +25,44 @@
 #include <QMap>
 #include <QTimer>
 
-// FIXME: The user can save a map, replacing a file whose MapInfo has already
-// been loaded.
+#include "threads.h"
+class MapInfo;
+class MapReaderWorker : public BaseWorker
+{
+    Q_OBJECT
+public:
+    MapReaderWorker(bool *abortPtr);
+    ~MapReaderWorker();
+
+    typedef Tiled::Map Map;
+
+signals:
+    void mapLoaded(Map *map, MapInfo *mapInfo);
+    void mapFailedToLoad(const QString error, MapInfo *mapInfo);
+
+public slots:
+    void work();
+    void addJob(MapInfo *mapInfo);
+
+private:
+    Map *loadMap(MapInfo *mapInfo);
+
+    class Job {
+    public:
+        Job(MapInfo *mapInfo) :
+            mapInfo(mapInfo)
+        {
+        }
+
+        MapInfo *mapInfo;
+    };
+    QList<Job> mJobs;
+
+    bool mWorkPending;
+
+    QString mError;
+};
+
 class MapInfo
 {
 public:
@@ -41,6 +77,7 @@ public:
         , mMap(0)
         , mPlaceholder(false)
         , mBeingEdited(false)
+        , mLoading(false)
     {
 
     }
@@ -62,6 +99,8 @@ public:
     void setBeingEdited(bool edited) { mBeingEdited = edited; }
     bool isBeingEdited() const { return mBeingEdited; }
 
+    bool isLoading() const { return mLoading; }
+
 private:
     Tiled::Map::Orientation mOrientation;
     int mWidth;
@@ -72,6 +111,7 @@ private:
     Tiled::Map *mMap;
     bool mPlaceholder;
     bool mBeingEdited;
+    bool mLoading;
 
     friend class MapManager;
 };
@@ -91,7 +131,8 @@ public:
     QString pathForMap(const QString &mapName, const QString &relativeTo);
 
     MapInfo *loadMap(const QString &mapName,
-                     const QString &relativeTo = QString());
+                     const QString &relativeTo = QString(),
+                     bool asynch = false);
 
     MapInfo *newFromMap(Tiled::Map *map, const QString &mapFilePath = QString());
 
@@ -125,9 +166,12 @@ public:
     QString errorString() const
     { return mError; }
 
+    typedef Tiled::Map Map;
 signals:
     void mapAboutToChange(MapInfo *mapInfo);
     void mapFileChanged(MapInfo *mapInfo);
+    void mapLoaded(MapInfo *mapInfo);
+    void mapFailedToLoad(MapInfo *mapInfo);
 
 private slots:
     void fileChanged(const QString &path);
@@ -136,8 +180,12 @@ private slots:
     void metaTilesetAdded(Tiled::Tileset *tileset);
     void metaTilesetRemoved(Tiled::Tileset *tileset);
 
-private:
+    void mapLoadedByThread(Map *map, MapInfo *mapInfo);
+    void mapFailedToLoadByThread(const QString error, MapInfo *mapInfo);
 
+private:
+    Q_DISABLE_COPY(MapManager)
+    static MapManager *mInstance;
     MapManager();
     ~MapManager();
 
@@ -147,8 +195,10 @@ private:
     QSet<QString> mChangedFiles;
     QTimer mChangedFilesTimer;
 
+    InterruptibleThread mMapReaderThread;
+    MapReaderWorker mMapReaderWorker;
+
     QString mError;
-    static MapManager *mInstance;
 };
 
 #endif // MAPMANAGER_H

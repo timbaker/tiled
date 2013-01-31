@@ -187,7 +187,8 @@ SOURCES += aboutdialog.cpp \
     addtilesetsdialog.cpp \
     BuildingEditor/buildingorthoview.cpp \
     BuildingEditor/buildingisoview.cpp \
-    BuildingEditor/choosetemplatesdialog.cpp
+    BuildingEditor/choosetemplatesdialog.cpp \
+    threads.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -340,7 +341,8 @@ HEADERS += aboutdialog.h \
     addtilesetsdialog.h \
     BuildingEditor/buildingorthoview.h \
     BuildingEditor/buildingisoview.h \
-    BuildingEditor/choosetemplatesdialog.h
+    BuildingEditor/choosetemplatesdialog.h \
+    threads.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
