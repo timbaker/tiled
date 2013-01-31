@@ -77,7 +77,11 @@ QRectF IsometricRenderer::boundingRect(const MapObject *object) const
 {
     if (object->tile()) {
         const QPointF bottomCenter = tileToPixelCoords(object->position());
+#ifdef ZOMBOID
         const QImage &img = object->tile()->image();
+#else
+        const QPixmap &img = object->tile()->image();
+#endif
         return QRectF(bottomCenter.x() - img.width() / 2,
                       bottomCenter.y() - img.height(),
                       img.width(),
@@ -164,7 +168,7 @@ void IsometricRenderer::drawGrid(QPainter *painter, const QRectF &rect,
 
     gridColor.setAlpha(128);
 
-#if 1
+#ifdef ZOMBOID
     QPen pen;
     QBrush brush(gridColor, Qt::Dense4Pattern);
     brush.setTransform(QTransform::fromScale(1/painter->transform().m11(),
@@ -263,7 +267,11 @@ void IsometricRenderer::drawTileLayer(QPainter *painter,
             if (layer->contains(columnItr)) {
                 const Cell &cell = layer->cellAt(columnItr);
                 if (!cell.isEmpty()) {
+#ifdef ZOMBOID
                     const QImage &img = cell.tile->image();
+#else
+                    const QPixmap &img = cell.tile->image();
+#endif
                     const QPoint offset = cell.tile->tileset()->tileOffset();
 
                     qreal m11 = 1;      // Horizontal scaling factor
@@ -299,7 +307,11 @@ void IsometricRenderer::drawTileLayer(QPainter *painter,
                     const QTransform transform(m11, m12, m21, m22, dx, dy);
                     painter->setTransform(transform * baseTransform);
 
+#ifdef ZOMBOID
                     painter->drawImage(0, 0, img);
+#else
+                    painter->drawPixmap(0, 0, img);
+#endif
                 }
             }
 
@@ -500,10 +512,17 @@ void IsometricRenderer::drawMapObject(QPainter *painter,
     QPen pen(Qt::black);
 
     if (object->tile()) {
+#ifdef ZOMBOID
         const QImage &img = object->tile()->image();
         QPointF paintOrigin(-img.width() / 2, -img.height());
         paintOrigin += tileToPixelCoords(object->position()).toPoint();
         painter->drawImage(paintOrigin, img);
+#else
+        const QPixmap &img = object->tile()->image();
+        QPointF paintOrigin(-img.width() / 2, -img.height());
+        paintOrigin += tileToPixelCoords(object->position()).toPoint();
+        painter->drawPixmap(paintOrigin, img);
+#endif
 
         pen.setStyle(Qt::SolidLine);
         painter->setPen(pen);

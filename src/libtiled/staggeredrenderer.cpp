@@ -206,7 +206,11 @@ void StaggeredRenderer::drawTileLayer(QPainter *painter,
                 continue;
             }
 
+#ifdef ZOMBOID
             const QImage &img = cell.tile->image();
+#else
+            const QPixmap &img = cell.tile->image();
+#endif
             const QPoint offset = cell.tile->tileset()->tileOffset();
 
             qreal m11 = 1;      // Horizontal scaling factor
@@ -242,7 +246,11 @@ void StaggeredRenderer::drawTileLayer(QPainter *painter,
             const QTransform transform(m11, m12, m21, m22, dx, dy);
             painter->setTransform(transform * baseTransform);
 
+#ifdef ZOMBOID
             painter->drawImage(0, 0, img);
+#else
+            painter->drawPixmap(0, 0, img);
+#endif
 
             rowPos.rx() += tileWidth;
         }

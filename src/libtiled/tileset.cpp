@@ -56,11 +56,12 @@ bool Tileset::loadFromImage(const QImage &image, const QString &fileName)
 
     int oldTilesetSize = mTiles.size();
     int tileNum = 0;
-
+#ifdef ZOMBOID
     QImage image2 = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-
+#endif
     for (int y = mMargin; y <= stopHeight; y += mTileHeight + mTileSpacing) {
         for (int x = mMargin; x <= stopWidth; x += mTileWidth + mTileSpacing) {
+#ifdef ZOMBOID
             QImage tileImage = image2.copy(x, y, mTileWidth, mTileHeight);
 
             if (mTransparentColor.isValid()) {
@@ -70,8 +71,6 @@ bool Tileset::loadFromImage(const QImage &image, const QString &fileName)
                             tileImage.setPixel(x, y, qRgba(0,0,0,0));
                     }
                 }
-//                tileImage =
-//                        tileImage.createMaskFromColor(mTransparentColor.rgb(), Qt::MaskOutColor);
             }
 
             if (tileNum < oldTilesetSize) {
@@ -79,15 +78,37 @@ bool Tileset::loadFromImage(const QImage &image, const QString &fileName)
             } else {
                 mTiles.append(new Tile(tileImage, tileNum, this));
             }
+#else
+            const QImage tileImage = image.copy(x, y, mTileWidth, mTileHeight);
+            QPixmap tilePixmap = QPixmap::fromImage(tileImage);
+
+            if (mTransparentColor.isValid()) {
+                const QImage mask =
+                        tileImage.createMaskFromColor(mTransparentColor.rgb());
+                tilePixmap.setMask(QBitmap::fromImage(mask));
+            }
+
+            if (tileNum < oldTilesetSize) {
+                mTiles.at(tileNum)->setImage(tilePixmap);
+            } else {
+                mTiles.append(new Tile(tilePixmap, tileNum, this));
+            }
+#endif
             ++tileNum;
         }
     }
 
     // Blank out any remaining tiles to avoid confusion
     while (tileNum < oldTilesetSize) {
+#ifdef ZOMBOID
         QImage tileImage = QImage(mTileWidth, mTileHeight, QImage::Format_RGB16);
         tileImage.fill(Qt::white);
         mTiles.at(tileNum)->setImage(tileImage);
+#else
+        QPixmap tilePixmap = QPixmap(mTileWidth, mTileHeight);
+        tilePixmap.fill();
+        mTiles.at(tileNum)->setImage(tilePixmap);
+#endif
         ++tileNum;
     }
 

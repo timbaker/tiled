@@ -41,7 +41,11 @@ class Tileset;
 class TILEDSHARED_EXPORT Tile : public Object
 {
 public:
+#ifdef ZOMBOID
     Tile(const QImage &image, int id, Tileset *tileset):
+#else
+    Tile(const QPixmap &image, int id, Tileset *tileset):
+#endif
         mId(id),
         mTileset(tileset),
         mImage(image)
@@ -57,6 +61,7 @@ public:
      */
     Tileset *tileset() const { return mTileset; }
 
+#ifdef ZOMBOID
     /**
      * Returns the image of this tile.
      */
@@ -66,6 +71,17 @@ public:
      * Sets the image of this tile.
      */
     void setImage(const QImage &image) { mImage = image; }
+#else
+    /**
+     * Returns the image of this tile.
+     */
+    const QPixmap &image() const { return mImage; }
+
+    /**
+     * Sets the image of this tile.
+     */
+    void setImage(const QPixmap &image) { mImage = image; }
+#endif
 
     /**
      * Returns the width of this tile.
@@ -85,7 +101,11 @@ public:
 private:
     int mId;
     Tileset *mTileset;
+#ifdef ZOMBOID
     QImage mImage;
+#else
+    QPixmap mImage;
+#endif
 };
 
 } // namespace Tiled
