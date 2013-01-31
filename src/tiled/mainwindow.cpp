@@ -81,6 +81,7 @@
 #include "converttolotdialog.h"
 #include "convertorientationdialog.h"
 #include "mapcomposite.h"
+#include "mapimagemanager.h"
 #include "mapmanager.h"
 #include "mapsdock.h"
 #include "tiledefdialog.h"
@@ -542,6 +543,7 @@ MainWindow::~MainWindow()
     QuickStampManager::deleteInstance();
     ToolManager::deleteInstance();
 #ifdef ZOMBOID
+    MapImageManager::deleteInstance();
     MapManager::deleteInstance();
     TileMetaInfoMgr::deleteInstance();
     TileDefDialog::deleteInstance();
