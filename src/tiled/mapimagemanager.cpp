@@ -31,6 +31,7 @@
 #include "zprogress.h"
 #include "zlevelrenderer.h"
 
+#include <QCoreApplication>
 #include <QDataStream>
 #include <QDateTime>
 #include <QDebug>
@@ -52,7 +53,7 @@ MapImageManager::MapImageManager() :
     mDeferralDepth(0),
     mDeferralQueued(false)
 {
-    mImageReaderThreads.resize(8);
+    mImageReaderThreads.resize(4);
     mImageReaderWorkers.resize(mImageReaderThreads.size());
     mNextThreadForJob = 0;
     for (int i = 0; i < mImageReaderWorkers.size(); i++) {
@@ -559,6 +560,7 @@ void MapImageManager::renderThreadNeedsMap(MapImage *mapImage)
         return;
     }
     mExpectMapImage = mapImage;
+    mExpectSubMaps.clear();
     Q_ASSERT(mapInfo == mapImage->mapInfo());
     if (!mapInfo->isLoading())
         mapLoaded(mapInfo);
@@ -566,6 +568,8 @@ void MapImageManager::renderThreadNeedsMap(MapImage *mapImage)
 
 void MapImageManager::imageRenderedByThread(MapImageData imgData, MapImage *mapImage)
 {
+    qDebug() << "imageRenderedByThread" << mapImage->mapInfo()->path();
+
     mapImage->mImage = imgData.image;
     mapImage->mLevelZeroBounds = imgData.levelZeroBounds;
     mapImage->mScale = imgData.scale;
@@ -597,12 +601,58 @@ void MapImageManager::renderJobDone(MapComposite *mapComposite)
     delete mapComposite;
 }
 
+#include "mapobject.h"
+QStringList getSubMapFileNames(const MapInfo *mapInfo)
+{
+    QStringList ret;
+    const QString relativeTo = QFileInfo(mapInfo->path()).absolutePath();
+    foreach (ObjectGroup *objectGroup, mapInfo->map()->objectGroups()) {
+        foreach (MapObject *object, objectGroup->objects()) {
+            if (object->name() == QLatin1String("lot") && !object->type().isEmpty()) {
+                QString path = MapManager::instance()->pathForMap(object->type(), relativeTo);
+                if (!path.isEmpty())
+                    ret += path;
+            }
+        }
+    }
+    return ret;
+}
+
 void MapImageManager::mapLoaded(MapInfo *mapInfo)
 {
-    if (!mExpectMapImage || (mExpectMapImage->mapInfo() != mapInfo))
+    if (!mExpectMapImage)
         return;
+
+    if (mExpectMapImage->mapInfo() == mapInfo) {
+        foreach (const QString &path, getSubMapFileNames(mapInfo)) {
+            bool async = true;
+            if (MapInfo *subMapInfo = MapManager::instance()->loadMap(path, QString(), async)) {
+                if (subMapInfo->isLoading() && !mExpectSubMaps.contains(subMapInfo)) {
+                    mExpectSubMaps += subMapInfo;
+                }
+            }
+        }
+    } else if (mExpectSubMaps.contains(mapInfo)) {
+        mExpectSubMaps.removeAll(mapInfo);
+        foreach (const QString &path, getSubMapFileNames(mapInfo)) {
+            bool async = true;
+            if (MapInfo *subMapInfo = MapManager::instance()->loadMap(path, QString(), async)) {
+                if (subMapInfo->isLoading() && !mExpectSubMaps.contains(subMapInfo)) {
+                    mExpectSubMaps += subMapInfo;
+                }
+            }
+        }
+        mapInfo = mExpectMapImage->mapInfo();
+    } else {
+        return;
+    }
+
+    if (mExpectSubMaps.size())
+        return;
+
     mExpectMapImage = 0;
 
+    // FIXME: load all the submaps needed for this rendering job.
     MapComposite *mapComposite = new MapComposite(mapInfo);
 
     // Wait for TilesetManager's threads to finish loading the tilesets.
@@ -622,6 +672,11 @@ void MapImageManager::mapLoaded(MapInfo *mapInfo)
 
 void MapImageManager::mapFailedToLoad(MapInfo *mapInfo)
 {
+    // Failing to load a submap of the one we want to paint doesn't stop us
+    // creating the map image.
+    if (mExpectSubMaps.contains(mapInfo))
+        mExpectSubMaps.removeAll(mapInfo);
+
     // The render thread was waiting for a map to load, but that failed.
     // Tell the render thread to continue on with the next job.
     if (mExpectMapImage && (mapInfo == mExpectMapImage->mapInfo())) {
@@ -767,6 +822,8 @@ MapImageReaderWorker::~MapImageReaderWorker()
 
 void MapImageReaderWorker::work()
 {
+    IN_WORKER_THREAD
+
     mWorkPending = false;
 
     while (mJobs.size()) {
@@ -789,6 +846,8 @@ void MapImageReaderWorker::work()
 
 void MapImageReaderWorker::addJob(const QString &imageFileName, MapImage *mapImage)
 {
+    IN_WORKER_THREAD
+
     mJobs += Job(imageFileName, mapImage);
     if (!mWorkPending) {
         mWorkPending = true;
@@ -810,6 +869,8 @@ MapImageRenderWorker::~MapImageRenderWorker()
 
 void MapImageRenderWorker::work()
 {
+    IN_WORKER_THREAD
+
     mWorkPending = false;
 
     while (mJobs.size()) {
@@ -837,6 +898,8 @@ void MapImageRenderWorker::work()
 
 void MapImageRenderWorker::addJob(MapImage *mapImage)
 {
+    IN_WORKER_THREAD
+
     mJobs += Job(mapImage);
     if (!mWorkPending) {
         mWorkPending = true;
@@ -846,6 +909,8 @@ void MapImageRenderWorker::addJob(MapImage *mapImage)
 
 void MapImageRenderWorker::mapLoaded(MapComposite *mapComposite)
 {
+    IN_WORKER_THREAD
+
     foreach (CompositeLayerGroup *layerGroup, mapComposite->sortedLayerGroups()) {
         foreach (TileLayer *tl, layerGroup->layers()) {
             bool isVisible = true;
@@ -865,6 +930,8 @@ void MapImageRenderWorker::mapLoaded(MapComposite *mapComposite)
 
 void MapImageRenderWorker::mapFailedToLoad()
 {
+    IN_WORKER_THREAD
+
     mJobs.takeFirst();
     work();
 }

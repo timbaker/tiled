@@ -252,6 +252,7 @@ private:
     InterruptibleThread *mImageRenderThread;
     MapImageRenderWorker *mImageRenderWorker;
     MapImage *mExpectMapImage;
+    QList<MapInfo*> mExpectSubMaps;
 
     friend class MapImageManagerDeferral;
     void deferThreadResults(bool defer);
