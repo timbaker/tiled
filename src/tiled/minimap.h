@@ -95,7 +95,7 @@ class MapRenderThread : public QThread
 {
     Q_OBJECT
 public:
-    MapRenderThread(MapComposite *mapComposite, QImage *image, const QRectF dirtyRect);
+    MapRenderThread(MapComposite *mapComposite);
     ~MapRenderThread();
 
     void run();
@@ -121,7 +121,7 @@ public:
     void getImage(QImage &dest);
 
 signals:
-    void rendered(MapRenderThread *t);
+    void rendered(MapRenderThread *t, const QRectF r);
 
 private:
     QMutex mMapAndImageMutex; // lock on mImage and mShadowMap
@@ -166,7 +166,7 @@ private:
     void recreateLater();
 
     typedef Tiled::Layer Layer; // hack for signals/slots
-    typedef Tiled::Tileset *Tileset; // hack for signals/slots
+    typedef Tiled::Tileset Tileset; // hack for signals/slots
 
 private slots:
     void sceneRectChanged(const QRectF &sceneRect);
@@ -187,7 +187,7 @@ private slots:
 
     void updateNow();
 
-    void rendered(MapRenderThread *t);
+    void rendered(MapRenderThread *t, const QRectF r);
 
 private:
     Tiled::Internal::ZomboidScene *mScene;
@@ -201,6 +201,7 @@ private:
     bool mUpdatePending;
     QRectF mNeedsUpdate;
     bool mNeedsRecreate;
+    bool mRedrawAll;
     MapRenderThread *mRenderThread;
 };
 
