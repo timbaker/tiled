@@ -202,6 +202,7 @@ private:
 
     BuildingPreferences *prefs() const;
 
+    typedef Tiled::Tileset Tileset;
 private slots:
     void currentFloorChanged();
     void currentLayerChanged();
@@ -239,6 +240,8 @@ private slots:
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
     void tilesetRemoved(Tiled::Tileset *tileset);
+
+    void tilesetChanged(Tileset *tileset);
 
     void currentToolChanged(BaseTool *tool);
 

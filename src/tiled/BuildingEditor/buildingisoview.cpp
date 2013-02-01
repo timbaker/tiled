@@ -248,6 +248,9 @@ BuildingIsoScene::BuildingIsoScene(QObject *parent) :
     connect(BuildingTilesMgr::instance(), SIGNAL(tilesetRemoved(Tiled::Tileset*)),
             SLOT(tilesetRemoved(Tiled::Tileset*)));
 
+    connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
+            SLOT(tilesetChanged(Tileset*)));
+
     connect(prefs(), SIGNAL(highlightFloorChanged(bool)),
             SLOT(highlightFloorChanged(bool)));
     connect(prefs(), SIGNAL(highlightRoomChanged(bool)),
@@ -993,6 +996,14 @@ void BuildingIsoScene::tilesetRemoved(Tileset *tileset)
     if (!mDocument)
         return;
     mBuildingMap->tilesetRemoved(tileset);
+}
+
+void BuildingIsoScene::tilesetChanged(Tileset *tileset)
+{
+    if (!mDocument)
+        return;
+    if (mBuildingMap->isTilesetUsed(tileset))
+        update();
 }
 
 void BuildingIsoScene::currentToolChanged(BaseTool *tool)
