@@ -60,6 +60,7 @@ BuildingDocument *BuildingDocument::read(const QString &fileName, QString &error
 {
     BuildingReader reader;
     if (Building *building = reader.read(fileName)) {
+        reader.fix(building);
         BuildingDocument *doc = new BuildingDocument(building, fileName);
         return doc;
     }

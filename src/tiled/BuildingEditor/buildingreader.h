@@ -37,6 +37,8 @@ public:
 
     QString errorString() const;
 
+    void fix(Building *building);
+
 private:
     Building *read(QIODevice *device, const QString &path);
 

@@ -20,13 +20,18 @@
 
 #include "map.h"
 #include "filesystemwatcher.h"
+#include "threads.h"
 
 #include <QDateTime>
 #include <QMap>
 #include <QTimer>
 
-#include "threads.h"
 class MapInfo;
+
+namespace BuildingEditor {
+class Building;
+}
+
 class MapReaderWorker : public BaseWorker
 {
     Q_OBJECT
@@ -35,10 +40,12 @@ public:
     ~MapReaderWorker();
 
     typedef Tiled::Map Map;
+    typedef BuildingEditor::Building Building;
 
 signals:
-    void mapLoaded(Map *map, MapInfo *mapInfo);
-    void mapFailedToLoad(const QString error, MapInfo *mapInfo);
+    void loaded(Map *map, MapInfo *mapInfo);
+    void loaded(Building *building, MapInfo *mapInfo);
+    void failedToLoad(const QString error, MapInfo *mapInfo);
 
 public slots:
     void work();
@@ -46,6 +53,7 @@ public slots:
 
 private:
     Map *loadMap(MapInfo *mapInfo);
+    Building *loadBuilding(MapInfo *mapInfo);
 
     class Job {
     public:
@@ -92,7 +100,7 @@ public:
     int tileHeight() const { return mTileHeight; }
 
     void setFilePath(const QString& path) { mFilePath = path; }
-    const QString &path() { return mFilePath; }
+    const QString &path() const { return mFilePath; }
 
     Tiled::Map *map() const { return mMap; }
 
@@ -167,6 +175,8 @@ public:
     { return mError; }
 
     typedef Tiled::Map Map;
+    typedef BuildingEditor::Building Building;
+
 signals:
     void mapAboutToChange(MapInfo *mapInfo);
     void mapFileChanged(MapInfo *mapInfo);
@@ -181,7 +191,8 @@ private slots:
     void metaTilesetRemoved(Tiled::Tileset *tileset);
 
     void mapLoadedByThread(Map *map, MapInfo *mapInfo);
-    void mapFailedToLoadByThread(const QString error, MapInfo *mapInfo);
+    void buildingLoadedByThread(Building *building, MapInfo *mapInfo);
+    void failedToLoadByThread(const QString error, MapInfo *mapInfo);
 
 private:
     Q_DISABLE_COPY(MapManager)
@@ -195,8 +206,9 @@ private:
     QSet<QString> mChangedFiles;
     QTimer mChangedFilesTimer;
 
-    InterruptibleThread mMapReaderThread;
-    MapReaderWorker mMapReaderWorker;
+    QVector<InterruptibleThread*> mMapReaderThread;
+    QVector<MapReaderWorker*> mMapReaderWorker;
+    int mNextThreadForJob;
 
     QString mError;
 };

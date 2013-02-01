@@ -86,4 +86,8 @@ public:
     }
 };
 
+#include <QCoreApplication>
+#define IN_APP_THREAD Q_ASSERT(QThread::currentThread() == qApp->thread());
+#define IN_WORKER_THREAD Q_ASSERT(QThread::currentThread() != qApp->thread());
+
 #endif // THREADS_H
