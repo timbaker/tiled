@@ -120,13 +120,11 @@ private:
             , mLayerGroup(0)
         {
         }
-        SubMapLayers(MapComposite *subMap, CompositeLayerGroup *layerGroup)
-            : mSubMap(subMap)
-            , mLayerGroup(layerGroup)
-        {
-        }
+        SubMapLayers(MapComposite *subMap, CompositeLayerGroup *layerGroup);
+
         MapComposite *mSubMap;
         CompositeLayerGroup *mLayerGroup;
+        QRect mBounds;
     };
 
     QVector<SubMapLayers> mPreparedSubMapLayers;

@@ -76,6 +76,14 @@ QString MapComposite::layerNameWithoutPrefix(Layer *layer)
 
 ///// ///// ///// ///// /////
 
+CompositeLayerGroup::SubMapLayers::SubMapLayers(MapComposite *subMap,
+                                                CompositeLayerGroup *layerGroup)
+    : mSubMap(subMap)
+    , mLayerGroup(layerGroup)
+    , mBounds(layerGroup->bounds().translated(subMap->origin()))
+{
+}
+
 ///// ///// ///// ///// /////
 
 CompositeLayerGroup::CompositeLayerGroup(MapComposite *owner, int level)
@@ -199,11 +207,12 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
     return !cells.isEmpty();
 }
 #else
-
 bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                                          QVector<const Cell *> &cells,
                                          QVector<qreal> &opacities) const
 {
+    static QLatin1String sFloor("0_Floor");
+
     MapComposite *root = mOwner->root();
     if (!mOwner->parent())
         root->mFirstCellIs0Floor = false;
@@ -225,7 +234,7 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                 cell = &tlBlend->cellAt(subPos);
             if (!cell->isEmpty()) {
                 if (!cleared) {
-                    bool isFloor = !mLevel && !index && (tl->name() == QLatin1String("0_Floor"));
+                    bool isFloor = !mLevel && !index && (tl->name() == sFloor);
                     cells.resize((!isFloor && root->mFirstCellIs0Floor) ? 1 : 0);
                     opacities.resize((!isFloor && root->mFirstCellIs0Floor) ? 1 : 0);
                     cleared = true;
@@ -246,9 +255,12 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
     }
 
     // Overwrite map cells with sub-map cells at this location
-    foreach (const SubMapLayers& subMapLayer, mPreparedSubMapLayers)
+    foreach (const SubMapLayers& subMapLayer, mPreparedSubMapLayers) {
+        if (!subMapLayer.mBounds.contains(pos))
+            continue;
         subMapLayer.mLayerGroup->orderedCellsAt(pos - subMapLayer.mSubMap->origin(),
                                                 cells, opacities);
+    }
 
     return !cells.isEmpty();
 }
@@ -1087,7 +1099,7 @@ void MapComposite::recreate()
 
     mMap = mMapInfo->map();
 
-    /////
+    ///// FIXME: everything below here is copied from our constructor
 
     if (mMap->orientation() != mOrientRender) {
         Map::Orientation orientSelf = mMap->orientation();
@@ -1103,6 +1115,7 @@ void MapComposite::recreate()
         if (levelForLayer(layer, &level)) {
             // FIXME: no changing of mMap should happen after it is loaded!
             layer->setLevel(level); // for ObjectGroup,ImageLayer as well
+
             if (TileLayer *tl = layer->asTileLayer()) {
                 if (!mLayerGroups.contains(level))
                     mLayerGroups[level] = new CompositeLayerGroup(this, level);
@@ -1198,4 +1211,3 @@ QStringList MapComposite::getMapFileNames() const
 
     return result;
 }
-
