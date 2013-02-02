@@ -1,4 +1,5 @@
 include(../../tiled.pri)
+include(../qtlockedfile/qtlockedfile.pri)
 
 TEMPLATE = lib
 TARGET = tiled

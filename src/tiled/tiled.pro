@@ -1,5 +1,6 @@
 include(../../tiled.pri)
 include(../libtiled/libtiled.pri)
+include(../qtlockedfile/qtlockedfile.pri)
 
 TEMPLATE = app
 TARGET = TileZed
