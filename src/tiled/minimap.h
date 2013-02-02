@@ -79,7 +79,7 @@ public:
     void lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
 
     void mapAboutToChange(MapInfo *mapInfo);
-    void mapFileChanged(MapInfo *mapInfo);
+    void mapChanged(MapInfo *mapInfo);
 
     MapComposite *mMapComposite;
     Tiled::Map *mMaster; // Never accessed from the thread!
@@ -114,7 +114,7 @@ public:
     void lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
 
     void mapAboutToChange(MapInfo *mapInfo);
-    void mapFileChanged(MapInfo *mapInfo);
+    void mapChanged(MapInfo *mapInfo);
 
     void lockMapAndImage();
 
@@ -181,7 +181,7 @@ private slots:
     void regionAltered(const QRegion &region, Layer *layer);
 
     void mapAboutToChange(MapInfo *mapInfo);
-    void mapFileChanged(MapInfo *mapInfo);
+    void mapChanged(MapInfo *mapInfo);
 
     void tilesetChanged(Tileset *ts);
 

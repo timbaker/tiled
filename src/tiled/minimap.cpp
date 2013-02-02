@@ -132,9 +132,9 @@ void ShadowMap::mapAboutToChange(MapInfo *mapInfo)
     mMapComposite->mapAboutToChange(mapInfo);
 }
 
-void ShadowMap::mapFileChanged(MapInfo *mapInfo)
+void ShadowMap::mapChanged(MapInfo *mapInfo)
 {
-    mMapComposite->mapFileChanged(mapInfo);
+    mMapComposite->mapChanged(mapInfo);
     foreach (CompositeLayerGroup *lg, mMapComposite->layerGroups())
         lg->synch();
 }
@@ -368,11 +368,11 @@ void MapRenderThread::mapAboutToChange(MapInfo *mapInfo)
     mShadowMap->mapAboutToChange(mapInfo);
 }
 
-void MapRenderThread::mapFileChanged(MapInfo *mapInfo)
+void MapRenderThread::mapChanged(MapInfo *mapInfo)
 {
     abortDrawing();
     QMutexLocker locker(&mMapAndImageMutex);
-    mShadowMap->mapFileChanged(mapInfo);
+    mShadowMap->mapChanged(mapInfo);
 }
 
 void MapRenderThread::getImage(QImage &dest)
@@ -412,8 +412,8 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
 
     connect(MapManager::instance(), SIGNAL(mapAboutToChange(MapInfo*)),
             SLOT(mapAboutToChange(MapInfo*)));
-    connect(MapManager::instance(), SIGNAL(mapFileChanged(MapInfo*)),
-            SLOT(mapFileChanged(MapInfo*)));
+    connect(MapManager::instance(), SIGNAL(mapChanged(MapInfo*)),
+            SLOT(mapChanged(MapInfo*)));
 
     connect(&mScene->lotManager(), SIGNAL(lotAdded(MapComposite*,Tiled::MapObject*)),
         SLOT(lotAdded(MapComposite*,Tiled::MapObject*)));
@@ -589,15 +589,18 @@ void MiniMapItem::mapAboutToChange(MapInfo *mapInfo)
     mRenderThread->mapAboutToChange(mapInfo);
 }
 
-void MiniMapItem::mapFileChanged(MapInfo *mapInfo)
+void MiniMapItem::mapChanged(MapInfo *mapInfo)
 {
-    mRenderThread->mapFileChanged(mapInfo);
+    bool affected = false;
     foreach (MapComposite *lot, mMapComposite->subMaps()) {
         if (lot->mapInfo() == mapInfo) {
             QRectF bounds = lot->boundingRect(mRenderer);
             updateLater(mLotBounds[lot] | bounds);
+            affected = true;
         }
     }
+    if (affected)
+        mRenderThread->mapChanged(mapInfo);
 }
 
 void MiniMapItem::tilesetChanged(Tileset *ts)

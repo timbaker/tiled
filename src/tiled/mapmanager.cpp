@@ -44,7 +44,6 @@ using namespace SharedTools;
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
-#include <QScopedPointer>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -161,7 +160,7 @@ protected:
         // Hack to keep the app responsive.
         // TODO: Move map reading to a worker thread. Only issue is tileset images
         // cannot be accessed outside the GUI thread.
-        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+//        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 
         // Make sure that we're not returning an empty string when the file is
         // not found.
@@ -183,6 +182,28 @@ MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo, 
 
     QFileInfo fileInfoMap(mapFilePath);
 
+#if 1
+    MapInfo *mapInfo = this->mapInfo(mapFilePath);
+    if (!mapInfo)
+        return 0;
+    if (mapInfo->mLoading)
+        return mapInfo;
+    mapInfo->mLoading = true;
+    QMetaObject::invokeMethod(mMapReaderWorker[mNextThreadForJob], "addJob",
+                              Qt::QueuedConnection, Q_ARG(MapInfo*,mapInfo));
+    mNextThreadForJob = (mNextThreadForJob + 1) % mMapReaderThread.size();
+
+    if (asynch)
+        return mapInfo;
+
+    PROGRESS progress(tr("Reading %1").arg(fileInfoMap.completeBaseName()));
+    while (mapInfo->mLoading) {
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    }
+    if (mapInfo->map())
+        return mapInfo;
+    return 0;
+#else
     if (asynch) {
         MapInfo *mapInfo = this->mapInfo(mapFilePath);
         if (!mapInfo)
@@ -271,6 +292,7 @@ MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo, 
     mMapInfo[mapFilePath]->mPlaceholder = false;
 
     return mMapInfo[mapFilePath];
+#endif
 }
 
 MapInfo *MapManager::newFromMap(Map *map, const QString &mapFilePath)
@@ -518,7 +540,7 @@ MapInfo *MapManager::getPlaceholderMap(const QString &mapName, int width, int he
     return mapInfo;
 }
 
-void MapManager::mapChanged(MapInfo *mapInfo)
+void MapManager::mapParametersChanged(MapInfo *mapInfo)
 {
     Map *map = mapInfo->map();
     Q_ASSERT(map);
@@ -572,7 +594,9 @@ void MapManager::fileChanged(const QString &path)
 
 void MapManager::fileChangedTimeout()
 {
+#if 0
     PROGRESS progress(tr("Examining changed maps..."));
+#endif
 
     foreach (const QString &path, mChangedFiles) {
         if (mMapInfo.contains(path)) {
@@ -584,6 +608,14 @@ void MapManager::fileChangedTimeout()
                 MapInfo *mapInfo = mMapInfo[path];
                 if (Map *oldMap = mapInfo->map()) {
                     Q_ASSERT(!mapInfo->isBeingEdited());
+#if 1
+                    if (!mapInfo->isLoading()) {
+                        mapInfo->mLoading = true;
+                        QMetaObject::invokeMethod(mMapReaderWorker[mNextThreadForJob], "addJob",
+                                                  Qt::QueuedConnection, Q_ARG(MapInfo*,mapInfo));
+                        mNextThreadForJob = (mNextThreadForJob + 1) % mMapReaderThread.size();
+                    }
+#else
                     emit mapAboutToChange(mapInfo);
                     mapInfo->mMap = 0;
                     MapInfo *sameInfo = loadMap(path);
@@ -596,6 +628,8 @@ void MapManager::fileChangedTimeout()
                         // Error loading the new map, keep the old one.
                         mapInfo->mMap = oldMap;
                     }
+                    emit mapChanged(mapInfo);
+#endif
                 }
                 emit mapFileChanged(mapInfo);
             }
@@ -635,9 +669,22 @@ void MapManager::mapLoadedByThread(MapManager::Map *map, MapInfo *mapInfo)
     }
     TilesetManager::instance()->addReferences(map->tilesets());
 
+    bool replace = mapInfo->mMap != 0;
+    if (replace) {
+        Q_ASSERT(!mapInfo->isBeingEdited());
+        emit mapAboutToChange(mapInfo);
+        TilesetManager *tilesetMgr = TilesetManager::instance();
+        tilesetMgr->removeReferences(mapInfo->mMap->tilesets());
+        delete mapInfo->mMap;
+    }
+
     mapInfo->mMap = map;
     mapInfo->mPlaceholder = false;
     mapInfo->mLoading = false;
+
+    if (replace)
+        emit mapChanged(mapInfo);
+
 #if 0
     // The reference count is zero, but prevent it being immediately purged.
     // FIXME: add a reference and let the caller deal with it.
@@ -708,7 +755,9 @@ void MapReaderWorker::work()
             else
                 emit failedToLoad(mError, job.mapInfo);
         } else {
+            qDebug() << "READING STARTED" << job.mapInfo->path();
             Map *map = loadMap(job.mapInfo);
+            qDebug() << "READING FINISHED" << job.mapInfo->path();
             if (map)
                 emit loaded(map, job.mapInfo);
             else

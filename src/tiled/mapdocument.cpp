@@ -74,8 +74,8 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     mMapComposite = new MapComposite(MapManager::instance()->newFromMap(map, fileName));
     connect(MapManager::instance(), SIGNAL(mapAboutToChange(MapInfo*)),
             SLOT(onMapAboutToChange(MapInfo*)));
-    connect(MapManager::instance(), SIGNAL(mapFileChanged(MapInfo*)),
-            SLOT(onMapFileChanged(MapInfo*)));
+    connect(MapManager::instance(), SIGNAL(mapChanged(MapInfo*)),
+            SLOT(onMapChanged(MapInfo*)));
 #endif
     switch (map->orientation()) {
     case Map::Isometric:
@@ -572,7 +572,7 @@ void MapDocument::unifyTilesets(Map *map)
 void MapDocument::emitMapChanged()
 {
 #ifdef ZOMBOID
-    MapManager::instance()->mapChanged(mMapComposite->mapInfo());
+    MapManager::instance()->mapParametersChanged(mMapComposite->mapInfo());
 #endif
     emit mapChanged();
 }
@@ -673,9 +673,9 @@ void MapDocument::onMapAboutToChange(MapInfo *mapInfo)
     mMapComposite->mapAboutToChange(mapInfo);
 }
 
-void MapDocument::onMapFileChanged(MapInfo *mapInfo)
+void MapDocument::onMapChanged(MapInfo *mapInfo)
 {
-    if (mMapComposite->mapFileChanged(mapInfo))
+    if (mMapComposite->mapChanged(mapInfo))
         emit mapCompositeChanged();
 }
 #endif

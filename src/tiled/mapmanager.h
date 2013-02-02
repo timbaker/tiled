@@ -169,7 +169,7 @@ public:
     /**
       * Call this when the map's size or tile size changes.
       */
-    void mapChanged(MapInfo *mapInfo);
+    void mapParametersChanged(MapInfo *mapInfo);
 
     QString errorString() const
     { return mError; }
@@ -179,6 +179,7 @@ public:
 
 signals:
     void mapAboutToChange(MapInfo *mapInfo);
+    void mapChanged(MapInfo *mapInfo);
     void mapFileChanged(MapInfo *mapInfo);
     void mapLoaded(MapInfo *mapInfo);
     void mapFailedToLoad(MapInfo *mapInfo);
