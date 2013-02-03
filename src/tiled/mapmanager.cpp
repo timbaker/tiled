@@ -45,6 +45,12 @@ using namespace SharedTools;
 #include <QFile>
 #include <QFileInfo>
 
+#ifdef QT_NO_DEBUG
+inline QNoDebug noise() { return QNoDebug(); }
+#else
+inline QDebug noise() { return QDebug(QtDebugMsg); }
+#endif
+
 using namespace Tiled;
 using namespace Tiled::Internal;
 using namespace BuildingEditor;
@@ -478,7 +484,7 @@ MapInfo *MapManager::mapInfo(const QString &mapFilePath)
     if (!mapInfo)
         return NULL;
 
-    qDebug() << "read map info for" << mapFilePath;
+    noise() << "read map info for" << mapFilePath;
     mapInfo->setFilePath(mapFilePath);
 
     mMapInfo[mapFilePath] = mapInfo;
@@ -600,7 +606,7 @@ void MapManager::fileChangedTimeout()
 
     foreach (const QString &path, mChangedFiles) {
         if (mMapInfo.contains(path)) {
-            qDebug() << "MapManager::fileChanged" << path;
+            noise() << "MapManager::fileChanged" << path;
             mFileSystemWatcher->removePath(path);
             QFileInfo info(path);
             if (info.exists()) {
@@ -624,7 +630,7 @@ void MapManager::fileChangedTimeout()
                         tilesetMgr->removeReferences(oldMap->tilesets());
                         delete oldMap;
                     } else {
-                        qDebug() << "MapManager::fileChangedTimeout: FAILED to load the changed map";
+                        noise() << "MapManager::fileChangedTimeout: FAILED to load the changed map";
                         // Error loading the new map, keep the old one.
                         mapInfo->mMap = oldMap;
                     }
@@ -755,9 +761,9 @@ void MapReaderWorker::work()
             else
                 emit failedToLoad(mError, job.mapInfo);
         } else {
-            qDebug() << "READING STARTED" << job.mapInfo->path();
+//            noise() << "READING STARTED" << job.mapInfo->path();
             Map *map = loadMap(job.mapInfo);
-            qDebug() << "READING FINISHED" << job.mapInfo->path();
+//            noise() << "READING FINISHED" << job.mapInfo->path();
             if (map)
                 emit loaded(map, job.mapInfo);
             else

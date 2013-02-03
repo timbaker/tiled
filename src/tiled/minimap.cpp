@@ -43,6 +43,12 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 
+#ifdef QT_NO_DEBUG
+inline QNoDebug noise() { return QNoDebug(); }
+#else
+inline QDebug noise() { return QDebug(QtDebugMsg); }
+#endif
+
 /////
 
 ShadowMap::ShadowMap(MapInfo *mapInfo)
@@ -225,15 +231,15 @@ void MapRenderThread::run()
 
             QMutexLocker locker(&mSharedVarsMutex);
             if (mQuit) {
-                qDebug() << "MapRenderThread quitting" << this;
+                noise() << "MiniMap render thread: quitting" << this;
                 return;
             }
             if (mAbortDrawing) {
-                qDebug() << "MapRenderThread aborted" << this;
+                noise() << "MiniMap render thread: interrupting -" << timer.elapsed() << "ms wasted" << this;
                 break;
             }
             if (mRestart) {
-                qDebug() << "MapRenderThread restarting" << this;
+                noise() << "MiniMap render thread: restarting" << this;
                 break;
             }
         }
@@ -245,12 +251,13 @@ void MapRenderThread::run()
 
         mapAndImageLocker.unlock();
 
-        qDebug() << "MapRenderThread painting took" << timer.elapsed() << "milliseconds" << this;
+        if (!mAbortDrawing)
+            noise() << "MiniMap render thread: painting took" << timer.elapsed() << "milliseconds" << this;
 
         mSharedVarsMutex.lock();
         if (mQuit) {
             mSharedVarsMutex.unlock();
-            qDebug() << "MapRenderThread quitting" << this;
+            noise() << "MiniMap render thread: quitting" << this;
             return;
         }
         if (!mRestart && !mAbortDrawing) {
@@ -262,9 +269,9 @@ void MapRenderThread::run()
             mWaiting = true;
             mRenderSleepMutex.lock();
             mSharedVarsMutex.unlock();
-            qDebug() << "MapRenderThread sleeping" << this;
+            noise() << "MiniMap render thread: sleeping" << this;
             mRenderSleepCondition.wait(&mRenderSleepMutex);
-            qDebug() << "MapRenderThread waking" << this;
+            noise() << "MiniMap render thread: waking" << this;
             mSharedVarsMutex.lock();
             mRenderSleepMutex.unlock();
             mWaiting = false;
@@ -273,7 +280,7 @@ void MapRenderThread::run()
         mAbortDrawing = false;
         mSharedVarsMutex.unlock();
         if (mQuit) {
-            qDebug() << "MapRenderThread quitting" << this;
+            noise() << "MiniMap render thread: quitting" << this;
             return;
         }
     }
@@ -290,10 +297,12 @@ void MapRenderThread::update(const QRectF &rect)
         else
             mDirtyRect |= rect; // draw new area plus any interrupted area
         if (mWaiting) {
+            noise() << "MapRenderThread::update: waking thread";
             mRenderSleepMutex.lock();
             mRenderSleepMutex.unlock();
             mRenderSleepCondition.wakeOne();
         } else {
+            noise() << "MapRenderThread::update: restarting thread";
             mAbortDrawing = true;
             mRestart = true;
         }
