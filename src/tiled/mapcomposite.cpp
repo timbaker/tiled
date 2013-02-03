@@ -588,6 +588,9 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
     , mBlendOverMap(0)
     #endif
 {
+#if 0
+    MapManager::instance()->addReferenceToMap(mMapInfo);
+#endif
     if (mOrientRender == Map::Unknown)
         mOrientRender = mMap->orientation();
     if (mMap->orientation() != mOrientRender) {
@@ -678,6 +681,10 @@ MapComposite::~MapComposite()
 {
     qDeleteAll(mSubMaps);
     qDeleteAll(mLayerGroups);
+#if 0
+    if (mMapInfo)
+        MapManager::instance()->removeReferenceToMap(mMapInfo);
+#endif
 }
 
 bool MapComposite::levelForLayer(const QString &layerName, int *levelPtr)

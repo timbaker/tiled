@@ -73,6 +73,9 @@ void MapManager::deleteInstance()
 MapManager::MapManager() :
     mFileSystemWatcher(new FileSystemWatcher(this)),
     mNextThreadForJob(0)
+#if 0
+    mReferenceEpoch(0)
+#endif
 {
     connect(mFileSystemWatcher, SIGNAL(fileChanged(QString)),
             SLOT(fileChanged(QString)));
@@ -296,7 +299,10 @@ MapInfo *MapManager::loadMap(const QString &mapName, const QString &relativeTo, 
 
     mMapInfo[mapFilePath]->mMap = map;
     mMapInfo[mapFilePath]->mPlaceholder = false;
-
+#if 0
+    // The reference count is zero, but prevent it being immediately purged.
+    mMapInfo[mapFilePath]->mReferenceEpoch = mReferenceEpoch;
+#endif
     return mMapInfo[mapFilePath];
 #endif
 }
@@ -516,7 +522,9 @@ MapInfo *MapManager::getEmptyMap()
     mapInfo->mMap = map;
     mapInfo->setFilePath(mapFilePath);
     mMapInfo[mapFilePath] = mapInfo;
-
+#if 0
+    addReferenceToMap(mapInfo);
+#endif
     return mapInfo;
 }
 
@@ -555,6 +563,87 @@ void MapManager::mapParametersChanged(MapInfo *mapInfo)
     mapInfo->mTileWidth = map->tileWidth();
     mapInfo->mTileHeight = map->tileHeight();
 }
+
+#if 0
+void MapManager::addReferenceToMap(MapInfo *mapInfo)
+{
+    Q_ASSERT(mapInfo->mMap != 0);
+    if (mapInfo->mMap) {
+        mapInfo->mMapRefCount++;
+        mapInfo->mReferenceEpoch = ++mReferenceEpoch;
+#ifndef QT_NO_DEBUG
+        qDebug() << "MapManager refCount++ =" << mapInfo->mMapRefCount << mapInfo->mFilePath;
+#endif
+    }
+}
+
+void MapManager::removeReferenceToMap(MapInfo *mapInfo)
+{
+    Q_ASSERT(mapInfo->mMap != 0);
+    if (mapInfo->mMap) {
+        Q_ASSERT(mapInfo->mMapRefCount > 0);
+        mapInfo->mMapRefCount--;
+#ifndef QT_NO_DEBUG
+        qDebug() << "MapManager refCount-- =" << mapInfo->mMapRefCount << mapInfo->mFilePath;
+#endif
+        purgeUnreferencedMaps();
+    }
+}
+
+void MapManager::purgeUnreferencedMaps()
+{
+    int unpurged = 0;
+    foreach (MapInfo *mapInfo, mMapInfo) {
+        if (mapInfo->mMap && mapInfo->mMapRefCount <= 0 &&
+                (mapInfo->mReferenceEpoch <= mReferenceEpoch - 50)) {
+            qDebug() << "MapManager purging" << mapInfo->mFilePath;
+            TilesetManager *tilesetMgr = TilesetManager::instance();
+            tilesetMgr->removeReferences(mapInfo->mMap->tilesets());
+            delete mapInfo->mMap;
+            mapInfo->mMap = 0;
+        }
+        else if (mapInfo->mMap && mapInfo->mMapRefCount <= 0)
+            unpurged++;
+    }
+    if (unpurged) qDebug() << "MapManager unpurged =" << unpurged;
+}
+
+void MapManager::newMapFileCreated(const QString &path)
+{
+    // If a cell view is open with a placeholder map and that map now exists,
+    // read the new map and allow the cell-scene to update itself.
+    // This code is 90% the same as fileChangedTimeout().
+    foreach (MapInfo *mapInfo, mMapInfo) {
+        if (!mapInfo->mPlaceholder || !mapInfo->mMap)
+            continue;
+        if (QFileInfo(mapInfo->path()) != QFileInfo(path))
+            continue;
+#if 1
+        mFileSystemWatcher->addPath(mapInfo->path()); // FIXME: make canonical?
+        fileChanged(mapInfo->path());
+#else
+        Map *oldMap = mapInfo->map();
+        Q_ASSERT(!mapInfo->isBeingEdited());
+        emit mapAboutToChange(mapInfo);
+        mapInfo->mMap = 0;
+        MapInfo *sameInfo = loadMap(path);
+        if (sameInfo && sameInfo->map()) {
+            TilesetManager *tilesetMgr = TilesetManager::instance();
+            tilesetMgr->removeReferences(oldMap->tilesets());
+            delete oldMap;
+            mapInfo->mPlaceholder = false;
+        } else {
+            qDebug() << "MapManager::emitMapFileCreated: FAILED to load the new map";
+            // Error loading the new map, keep the old one.
+            mapInfo->mMap = oldMap;
+        }
+        emit mapFileChanged(mapInfo);
+#endif
+    }
+
+    emit mapFileCreated(path);
+}
+#endif
 
 Map *MapManager::convertOrientation(Map *map, Tiled::Map::Orientation orient)
 {
@@ -694,7 +783,7 @@ void MapManager::mapLoadedByThread(MapManager::Map *map, MapInfo *mapInfo)
 #if 0
     // The reference count is zero, but prevent it being immediately purged.
     // FIXME: add a reference and let the caller deal with it.
-    mapInfo->mReferenceEpoch = ++mReferenceEpoch;
+    mapInfo->mReferenceEpoch = mReferenceEpoch;
 #endif
     emit mapLoaded(mapInfo);
 }

@@ -606,6 +606,9 @@ void MapImageManager::renderThreadNeedsMap(MapImage *mapImage)
     }
     mExpectMapImage = mapImage;
     mExpectSubMaps.clear();
+#if 0
+    mReferencedMaps.clear();
+#endif
     Q_ASSERT(mapInfo == mapImage->mapInfo());
     if (!mapInfo->isLoading())
         mapLoaded(mapInfo);
@@ -671,21 +674,37 @@ void MapImageManager::mapLoaded(MapInfo *mapInfo)
         return;
 
     if (mExpectMapImage->mapInfo() == mapInfo) {
+#if 0
+        MapManager::instance()->addReferenceToMap(mapInfo), mReferencedMaps += mapInfo;
+#endif
         foreach (const QString &path, getSubMapFileNames(mapInfo)) {
             bool async = true;
             if (MapInfo *subMapInfo = MapManager::instance()->loadMap(path, QString(), async)) {
-                if (subMapInfo->isLoading() && !mExpectSubMaps.contains(subMapInfo)) {
-                    mExpectSubMaps += subMapInfo;
+                if (!mExpectSubMaps.contains(subMapInfo)) {
+                    if (subMapInfo->isLoading())
+                        mExpectSubMaps += subMapInfo;
+#if 0
+                    else
+                        MapManager::instance()->addReferenceToMap(subMapInfo), mReferencedMaps += subMapInfo;
+#endif
                 }
             }
         }
     } else if (mExpectSubMaps.contains(mapInfo)) {
+#if 0
+        MapManager::instance()->addReferenceToMap(mapInfo), mReferencedMaps += mapInfo;
+#endif
         mExpectSubMaps.removeAll(mapInfo);
         foreach (const QString &path, getSubMapFileNames(mapInfo)) {
             bool async = true;
             if (MapInfo *subMapInfo = MapManager::instance()->loadMap(path, QString(), async)) {
-                if (subMapInfo->isLoading() && !mExpectSubMaps.contains(subMapInfo)) {
-                    mExpectSubMaps += subMapInfo;
+                if (!mExpectSubMaps.contains(subMapInfo)) {
+                    if (subMapInfo->isLoading())
+                        mExpectSubMaps += subMapInfo;
+#if 0
+                    else
+                        MapManager::instance()->addReferenceToMap(subMapInfo), mReferencedMaps += subMapInfo;
+#endif
                 }
             }
         }
@@ -700,6 +719,11 @@ void MapImageManager::mapLoaded(MapInfo *mapInfo)
     mExpectMapImage = 0;
 
     mRenderMapComposite = new MapComposite(mapInfo);
+#if 0
+    // Now that mapComposite is referencing the maps...
+    foreach (MapInfo *mapInfo, mReferencedMaps)
+        MapManager::instance()->removeReferenceToMap(mapInfo);
+#endif
     // Wait for TilesetManager's threads to finish loading the tilesets.
     // FIXME: this shouldn't block the gui.
     QSet<Tileset*> usedTilesets;
@@ -725,6 +749,11 @@ void MapImageManager::mapFailedToLoad(MapInfo *mapInfo)
     // The render thread was waiting for a map to load, but that failed.
     // Tell the render thread to continue on with the next job.
     if (mExpectMapImage && (mapInfo == mExpectMapImage->mapInfo())) {
+#if 0
+        foreach (MapInfo *mapInfo, mReferencedMaps)
+            MapManager::instance()->removeReferenceToMap(mapInfo);
+        mReferencedMaps.clear();
+#endif
         MapImage *mapImage = mExpectMapImage;
         mapImage->mImage.fill(Qt::transparent);
         mapImage->mLoaded = true; // FIXME: delete bogus MapImage???
