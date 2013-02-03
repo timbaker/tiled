@@ -50,6 +50,7 @@ MapImageManager *MapImageManager::mInstance = NULL;
 MapImageManager::MapImageManager() :
     QObject(),
     mExpectMapImage(0),
+    mRenderMapComposite(0),
     mDeferralDepth(0),
     mDeferralQueued(false)
 {
@@ -80,6 +81,8 @@ MapImageManager::MapImageManager() :
             SLOT(renderJobDone(MapComposite*)));
     mImageRenderThread->start();
 
+    connect(MapManager::instance(), SIGNAL(mapAboutToChange(MapInfo*)),
+            SLOT(mapAboutToChange(MapInfo*)));
     connect(MapManager::instance(), SIGNAL(mapFileChanged(MapInfo*)),
             SLOT(mapFileChanged(MapInfo*)));
     connect(MapManager::instance(), SIGNAL(mapLoaded(MapInfo*)),
@@ -481,6 +484,25 @@ void MapImageManager::writeImageData(const QFileInfo &imageDataFileInfo, const M
     out << data.missingTilesets;
 }
 
+void MapImageManager::mapAboutToChange(MapInfo *mapInfo)
+{
+    if (!mRenderMapComposite)
+        return;
+    // Caution: mRenderMapComposite is being used right now by the render thread.
+    foreach (MapComposite *mc, mRenderMapComposite->maps()) {
+        if (mc->mapInfo() == mapInfo) {
+            mImageRenderThread->interrupt(true);
+            MapImage *mapImage = mMapImages[mRenderMapComposite->mapInfo()->path()];
+            Q_ASSERT(mapImage);
+            mapImage->mLoaded = false;
+            QMetaObject::invokeMethod(mImageRenderWorker,
+                                      "resume", Qt::QueuedConnection,
+                                      Q_ARG(MapImage*,mapImage));
+            break;
+        }
+    }
+}
+
 void MapImageManager::mapFileChanged(MapInfo *mapInfo)
 {
     QMap<QString,MapImage*>::iterator it_begin = mMapImages.begin();
@@ -598,6 +620,8 @@ void MapImageManager::imageRenderedByThread(MapImageData imgData, MapImage *mapI
 
 void MapImageManager::renderJobDone(MapComposite *mapComposite)
 {
+    Q_ASSERT(mapComposite == mRenderMapComposite);
+    mRenderMapComposite = 0;
     delete mapComposite;
 }
 
@@ -652,13 +676,11 @@ void MapImageManager::mapLoaded(MapInfo *mapInfo)
 
     mExpectMapImage = 0;
 
-    // FIXME: load all the submaps needed for this rendering job.
-    MapComposite *mapComposite = new MapComposite(mapInfo);
-
+    mRenderMapComposite = new MapComposite(mapInfo);
     // Wait for TilesetManager's threads to finish loading the tilesets.
     // FIXME: this shouldn't block the gui.
     QSet<Tileset*> usedTilesets;
-    foreach (MapComposite *mc, mapComposite->maps()) {
+    foreach (MapComposite *mc, mRenderMapComposite->maps()) {
         foreach (TileLayer *tl, mc->map()->tileLayers())
             usedTilesets += tl->usedTilesets();
     }
@@ -667,7 +689,7 @@ void MapImageManager::mapLoaded(MapInfo *mapInfo)
 
     QMetaObject::invokeMethod(mImageRenderWorker,
                               "mapLoaded", Qt::QueuedConnection,
-                              Q_ARG(MapComposite*,mapComposite));
+                              Q_ARG(MapComposite*,mRenderMapComposite));
 }
 
 void MapImageManager::mapFailedToLoad(MapInfo *mapInfo)
@@ -875,7 +897,9 @@ void MapImageRenderWorker::work()
 
     while (mJobs.size()) {
         if (aborted()) {
-            mJobs.clear();
+            mWorkPending = true;
+//            mJobs.clear();
+            *mAbortPtr = false;
             return;
         }
 
@@ -936,6 +960,14 @@ void MapImageRenderWorker::mapFailedToLoad()
     work();
 }
 
+void MapImageRenderWorker::resume(MapImage *mapImage)
+{
+    IN_WORKER_THREAD
+
+    mJobs.prepend(Job(mapImage));
+    work();
+}
+
 MapImageData MapImageRenderWorker::generateMapImage(MapComposite *mapComposite)
 {
     Map *map = mapComposite->map();
@@ -958,6 +990,8 @@ MapImageData MapImageRenderWorker::generateMapImage(MapComposite *mapComposite)
     default:
         return MapImageData();
     }
+
+    renderer->mAbortDrawing = mAbortPtr;
 
     // Don't draw empty levels
     int maxLevel = 0;

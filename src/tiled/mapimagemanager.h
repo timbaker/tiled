@@ -105,6 +105,7 @@ public slots:
     void addJob(MapImage *mapImage);
     void mapLoaded(MapComposite *mapComposite);
     void mapFailedToLoad();
+    void resume(MapImage *mapImage);
 
 private:
     MapImageData generateMapImage(MapComposite *mapComposite);
@@ -220,6 +221,7 @@ signals:
     void mapImageFailedToLoad(MapImage *mapImage);
     
 private slots:
+    void mapAboutToChange(MapInfo *mapInfo);
     void mapFileChanged(MapInfo *mapInfo);
 
 private slots:
@@ -253,6 +255,10 @@ private:
     MapImageRenderWorker *mImageRenderWorker;
     MapImage *mExpectMapImage;
     QList<MapInfo*> mExpectSubMaps;
+#if 0
+    QList<MapInfo*> mReferencedMaps;
+#endif
+    MapComposite *mRenderMapComposite;
 
     friend class MapImageManagerDeferral;
     void deferThreadResults(bool defer);
