@@ -161,7 +161,8 @@ MapRenderThread::~MapRenderThread()
         mSharedVarsMutex.lock();
         mAbortDrawing = true;
         mQuit = true;
-        if (mWaiting && mRenderSleepMutex.tryLock()) {
+        if (mWaiting) {
+            mRenderSleepMutex.lock();
             mRenderSleepMutex.unlock();
             mRenderSleepCondition.wakeOne();
         }
@@ -247,6 +248,7 @@ void MapRenderThread::run()
 
         mSharedVarsMutex.lock();
         if (mQuit) {
+            mSharedVarsMutex.unlock();
             qDebug() << "MapRenderThread quitting" << this;
             return;
         }
@@ -287,6 +289,8 @@ void MapRenderThread::update(const QRectF &rect)
         else
             mDirtyRect |= rect; // draw new area plus any interrupted area
         if (mWaiting) {
+            mRenderSleepMutex.lock();
+            mRenderSleepMutex.unlock();
             mRenderSleepCondition.wakeOne();
         } else {
             mAbortDrawing = true;
