@@ -665,6 +665,8 @@ TilesetImageReaderWorker::~TilesetImageReaderWorker()
 
 void TilesetImageReaderWorker::work()
 {
+    IN_WORKER_THREAD
+
     mWorkPending = false;
 
     while (mJobs.size()) {
@@ -686,6 +688,8 @@ void TilesetImageReaderWorker::work()
 
 void TilesetImageReaderWorker::addJob(Tileset *tileset)
 {
+    IN_WORKER_THREAD
+
     mJobs += Job(tileset);
     if (!mWorkPending) {
         mWorkPending = true;

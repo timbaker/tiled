@@ -74,7 +74,6 @@ public:
     bool isLayerEmpty(int index) const;
     void synch();
 
-    // Used when generating map images.
     void saveVisibility();
     void restoreVisibility();
     void saveOpacity();
