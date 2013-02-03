@@ -1089,6 +1089,14 @@ bool MapComposite::mapChanged(MapInfo *mapInfo)
     return changed;
 }
 
+void MapComposite::synch()
+{
+    foreach (CompositeLayerGroup *layerGroup, mLayerGroups) {
+        if (layerGroup->needsSynch())
+            layerGroup->synch();
+    }
+}
+
 void MapComposite::recreate()
 {
     qDeleteAll(mSubMaps);

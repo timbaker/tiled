@@ -124,7 +124,8 @@ void ShadowMap::lotRemoved(MapComposite *lot, MapObject *mapObject)
 
 void ShadowMap::lotUpdated(MapComposite *lot, MapObject *mapObject)
 {
-    mLots[quintptr(mapObject)]->setOrigin(lot->origin());
+    Q_ASSERT(mLots[quintptr(mapObject)]);
+    mMapComposite->moveSubMap(mLots[quintptr(mapObject)], lot->origin());
 }
 
 void ShadowMap::mapAboutToChange(MapInfo *mapInfo)
@@ -135,8 +136,6 @@ void ShadowMap::mapAboutToChange(MapInfo *mapInfo)
 void ShadowMap::mapChanged(MapInfo *mapInfo)
 {
     mMapComposite->mapChanged(mapInfo);
-    foreach (CompositeLayerGroup *lg, mMapComposite->layerGroups())
-        lg->synch();
 }
 
 /////
@@ -179,6 +178,8 @@ void MapRenderThread::run()
         // Don't let the main thread modify mShadowMap or read/modify mImage until
         // painting is finished or aborted.
         QMutexLocker mapAndImageLocker(&mMapAndImageMutex);
+
+        mShadowMap->mMapComposite->synch();
 
         mRenderer->setMaxLevel(mShadowMap->mMapComposite->maxLevel());
 

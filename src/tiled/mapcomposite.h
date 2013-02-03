@@ -236,6 +236,8 @@ public:
     bool mapAboutToChange(MapInfo *mapInfo);
     bool mapChanged(MapInfo *mapInfo);
 
+    void synch();
+
 #ifdef BUILDINGED
     void setBlendOverMap(MapComposite *mapComposite)
     { mBlendOverMap = mapComposite; }
