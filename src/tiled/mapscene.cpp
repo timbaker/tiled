@@ -382,8 +382,13 @@ void MapScene::tilesetChanged(Tileset *tileset)
     if (!mMapDocument)
         return;
 
+#ifdef ZOMBOID
+    if (mMapDocument->mapComposite()->isTilesetUsed(tileset))
+        update();
+#else
     if (mMapDocument->map()->tilesets().contains(tileset))
         update();
+#endif
 }
 
 void MapScene::layerAdded(int index)

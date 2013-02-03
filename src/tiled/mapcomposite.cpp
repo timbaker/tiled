@@ -1089,6 +1089,15 @@ bool MapComposite::mapChanged(MapInfo *mapInfo)
     return changed;
 }
 
+bool MapComposite::isTilesetUsed(Tileset *tileset)
+{
+    foreach (MapComposite *mc, maps()) {
+        if (mc->map()->isTilesetUsed(tileset))
+            return true;
+    }
+    return false;
+}
+
 void MapComposite::synch()
 {
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups) {

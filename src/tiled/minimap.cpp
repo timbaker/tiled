@@ -610,12 +610,11 @@ void MiniMapItem::mapChanged(MapInfo *mapInfo)
 
 void MiniMapItem::tilesetChanged(Tileset *ts)
 {
-    foreach (MapComposite *mc, mMapComposite->maps()) {
-        if (mc->map()->isTilesetUsed(ts)) {
-            updateLater();
-            return;
-        }
-    }
+    if (mNeedsRecreate || mRedrawAll)
+        return;
+
+    if (mMapComposite->isTilesetUsed(ts))
+        updateLater();
 }
 
 void MiniMapItem::updateNow()

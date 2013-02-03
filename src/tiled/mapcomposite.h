@@ -236,6 +236,8 @@ public:
     bool mapAboutToChange(MapInfo *mapInfo);
     bool mapChanged(MapInfo *mapInfo);
 
+    bool isTilesetUsed(Tiled::Tileset *tileset);
+
     void synch();
 
 #ifdef BUILDINGED
