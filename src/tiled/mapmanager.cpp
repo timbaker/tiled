@@ -91,7 +91,7 @@ MapManager::MapManager() :
     mMapReaderWorker.resize(mMapReaderThread.size());
     for (int i = 0; i < mMapReaderThread.size(); i++) {
         mMapReaderThread[i] = new InterruptibleThread;
-        mMapReaderWorker[i] = new MapReaderWorker(mMapReaderThread[i]->var());
+        mMapReaderWorker[i] = new MapReaderWorker(mMapReaderThread[i]);
         mMapReaderWorker[i]->moveToThread(mMapReaderThread[i]);
         connect(mMapReaderWorker[i], SIGNAL(loaded(Map*,MapInfo*)),
                 SLOT(mapLoadedByThread(Map*,MapInfo*)));
@@ -681,9 +681,8 @@ void MapManager::failedToLoadByThread(const QString error, MapInfo *mapInfo)
 
 /////
 
-MapReaderWorker::MapReaderWorker(bool *abortPtr) :
-    BaseWorker(abortPtr),
-    mWorkPending(false)
+MapReaderWorker::MapReaderWorker(InterruptibleThread *thread) :
+    BaseWorker(thread)
 {
 }
 
@@ -694,8 +693,6 @@ MapReaderWorker::~MapReaderWorker()
 void MapReaderWorker::work()
 {
     IN_WORKER_THREAD
-
-    mWorkPending = false;
 
     while (mJobs.size()) {
         if (aborted()) {
@@ -728,10 +725,7 @@ void MapReaderWorker::addJob(MapInfo *mapInfo)
     IN_WORKER_THREAD
 
     mJobs += Job(mapInfo);
-    if (!mWorkPending) {
-        mWorkPending = true;
-        QMetaObject::invokeMethod(this, "work", Qt::QueuedConnection);
-    }
+    scheduleWork();
 }
 
 class MapReaderWorker_MapReader : public MapReader

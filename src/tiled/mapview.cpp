@@ -129,7 +129,7 @@ void MapView::setUseOpenGL(bool useOpenGL)
         if (mMiniMap) {
             mMiniMap->setParent(this);
             mMiniMap->setVisible(Preferences::instance()->showMiniMap());
-            mMiniMap->sceneRectChanged(scene()->sceneRect());
+//            mMiniMap->sceneRectChanged(scene()->sceneRect());
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, Tim Baker <treectrl@users.sf.net>
+ * Copyright 2013, Tim Baker <treectrl@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -20,6 +20,8 @@
 
 #include <QGraphicsItem>
 #include <QGraphicsView>
+
+#include "threads.h"
 
 class MapComposite;
 class MapInfo;
@@ -69,73 +71,55 @@ public:
     ShadowMap(MapInfo *mapInfo);
     ~ShadowMap();
 
-    void layerAdded(int index);
+    void layerAdded(int index, Tiled::Layer *layer);
     void layerRemoved(int index);
-    void layerRenamed(int index);
+    void layerRenamed(int index, const QString &name);
     void regionAltered(const QRegion &rgn, Tiled::Layer *layer);
 
-    void lotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
-    void lotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
-    void lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
+    void lotAdded(quintptr id, MapInfo *mapInfo, const QPoint &pos, int level);
+    void lotRemoved(quintptr id);
+    void lotUpdated(quintptr id, const QPoint &pos);
 
     void mapAboutToChange(MapInfo *mapInfo);
     void mapChanged(MapInfo *mapInfo);
 
     MapComposite *mMapComposite;
-    Tiled::Map *mMaster; // Never accessed from the thread!
-    QMap<quintptr,MapComposite*> mLots;
+    QMap<quintptr,MapComposite*> mIDToLot;
+    QMap<MapComposite*,quintptr> mLotToID;
 };
 
-#include <QMutexLocker>
-#include <QThread>
-#include <QVector>
-#include <QWaitCondition>
+class MapChange;
 
-class MapRenderThread : public QThread
+class MiniMapRenderWorker : public BaseWorker
 {
     Q_OBJECT
 public:
-    MapRenderThread(MapComposite *mapComposite);
-    ~MapRenderThread();
+    MiniMapRenderWorker(MapInfo *mapInfo, InterruptibleThread *thread);
+    ~MiniMapRenderWorker();
 
-    void run();
-
-    void update(const QRectF &rect);
-    void recreateImage(const QImage *other);
-    void abortDrawing();
-
-    void layerAdded(int index);
-    void layerRemoved(int index);
-    void layerRenamed(int index);
-    void regionAltered(const QRegion &rgn, Tiled::Layer *layer);
-
-    void lotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
-    void lotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
-    void lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
-
-    void mapAboutToChange(MapInfo *mapInfo);
-    void mapChanged(MapInfo *mapInfo);
-
-    void lockMapAndImage();
-
-    void getImage(QImage &dest);
+public slots:
+    void work();
+    void applyChanges(const QList<MapChange*> &changes);
+    void resume();
+    void setVisible(bool visible);
+    void returnToAppThread();
 
 signals:
-    void rendered(MapRenderThread *t, const QRectF r);
+    void painted(QImage image, QRectF r);
+    void imageResized(QSize sz);
 
 private:
-    QMutex mMapAndImageMutex; // lock on mImage and mShadowMap
-    QMutex mSharedVarsMutex; // lock on most other vars
-    QMutex mRenderSleepMutex;
-    QWaitCondition mRenderSleepCondition;
+    void processChanges(const QList<MapChange *> &changes);
+
     ShadowMap *mShadowMap;
     Tiled::MapRenderer *mRenderer;
     QImage mImage;
     QRectF mDirtyRect;
-    bool mAbortDrawing; // flag for MapRenderer
-    bool mRestart; // restart rendering ASAP
-    bool mWaiting; // inside mWaitCondition.wait()
-    bool mQuit; // exit from run() ASAP
+    QMap<quintptr,QRectF> mLotBounds;
+    bool mWorkPending;
+    bool mRedrawAll;
+    bool mVisible;
+    QList<MapChange*> mPendingChanges;
 };
 
 /**
@@ -155,24 +139,20 @@ public:
                const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0);
 
-    void updateImage(const QRectF &dirtyRect = QRectF());
-    void updateImageBounds();
     void recreateImage();
 
     void minimapVisibilityChanged(bool visible);
 
 private:
-    void updateLater(const QRectF &dirtyRect = QRectF());
-    void recreateLater();
+    void queueChange(MapChange *c);
 
     typedef Tiled::Layer Layer; // hack for signals/slots
     typedef Tiled::Tileset Tileset; // hack for signals/slots
 
 private slots:
-    void sceneRectChanged(const QRectF &sceneRect);
-
     void layerAdded(int index);
     void layerRemoved(int index);
+    void layerRenamed(int index);
 
     void lotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
     void lotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
@@ -183,26 +163,31 @@ private slots:
     void mapAboutToChange(MapInfo *mapInfo);
     void mapChanged(MapInfo *mapInfo);
 
-    void tilesetChanged(Tileset *ts);
+    void mapChanged();
 
-    void updateNow();
+    void tilesetAdded(int index, Tileset *tileset);
+    void tilesetRemoved(Tileset *tileset);
+    void tilesetChanged(Tileset *tileset);
 
-    void rendered(MapRenderThread *t, const QRectF r);
+    void painted(QImage image, QRectF sceneRect);
+    void imageResized(QSize sz);
+
+    void queueChanges();
+
+signals:
+    void resized(const QSize &imageSize, const QRectF &sceneRect);
 
 private:
     Tiled::Internal::ZomboidScene *mScene;
-    Tiled::MapRenderer *mRenderer;
-    QImage *mMapImage;
+    QImage mMapImage;
     QRectF mMapImageBounds;
-    QRectF mLevelZeroBounds;
     MapComposite *mMapComposite;
-    QMap<MapComposite*,QRectF> mLotBounds;
+    QMap<MapComposite*,Tiled::MapObject*> mLots;
     bool mMiniMapVisible;
-    bool mUpdatePending;
-    QRectF mNeedsUpdate;
-    bool mNeedsRecreate;
-    bool mRedrawAll;
-    MapRenderThread *mRenderThread;
+    QList<MapChange*> mPendingChanges;
+    bool mNeedsResume;
+    InterruptibleThread *mRenderThread;
+    MiniMapRenderWorker *mRenderWorker;
 };
 
 class MiniMap : public QGraphicsView
@@ -213,16 +198,16 @@ public:
 
     void setMapScene(Tiled::Internal::MapScene *scene);
     void viewRectChanged();
-    qreal scale();
 
     void setExtraItem(MiniMapItem *item);
 
 public slots:
-    void sceneRectChanged(const QRectF &sceneRect);
+//    void sceneRectChanged(const QRectF &sceneRect);
     void bigger();
     void smaller();
     void updateImage();
     void widthChanged(int width);
+    void miniMapItemResized(const QSize &imageSize, const QRectF &sceneRect);
 
 protected:
     bool event(QEvent *event);
@@ -239,6 +224,8 @@ private:
     Tiled::Internal::MapScene *mMapScene;
     QFrame *mButtons;
     int mWidth;
+    int mHeight;
+    qreal mRatio;
     QGraphicsPolygonItem *mViewportItem;
     MiniMapItem *mExtraItem;
     QToolButton *mBiggerButton;

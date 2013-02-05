@@ -53,8 +53,8 @@ inline QDebug noise() { return QDebug(QtDebugMsg); }
 
 ShadowMap::ShadowMap(MapInfo *mapInfo)
 {
-    mMaster = mapInfo->map();
-    Map *map = mMaster->clone();
+    IN_APP_THREAD
+    Map *map = mapInfo->map()->clone();
     TilesetManager::instance()->addReferences(map->tilesets());
     mapInfo = MapManager::instance()->newFromMap(map, mapInfo->path()); // FIXME: save as... changes path?
     mMapComposite = new MapComposite(mapInfo);
@@ -73,6 +73,7 @@ ShadowMap::ShadowMap(MapInfo *mapInfo)
 
 ShadowMap::~ShadowMap()
 {
+    IN_APP_THREAD
     MapInfo *mapInfo = mMapComposite->mapInfo();
     delete mMapComposite;
     TilesetManager::instance()->removeReferences(mapInfo->map()->tilesets());
@@ -80,12 +81,20 @@ ShadowMap::~ShadowMap()
     delete mapInfo;
 }
 
-void ShadowMap::layerAdded(int index)
+void ShadowMap::layerAdded(int index, Layer *layer)
 {
-    Layer *layer = mMaster->layerAt(index)->clone();
-    layer->setVisible(true);
     mMapComposite->map()->insertLayer(index, layer);
     mMapComposite->layerAdded(index);
+
+    if (TileLayer *tl = layer->asTileLayer()) {
+        if (CompositeLayerGroup *layerGroup = mMapComposite->layerGroupForLayer(tl)) {
+            bool isVisible = true;
+            if (tl->name().contains(QLatin1String("NoRender")))
+                isVisible = false;
+            layerGroup->setLayerVisibility(tl, isVisible);
+            layerGroup->setLayerOpacity(tl, 1.0f);
+        }
+    }
 }
 
 void ShadowMap::layerRemoved(int index)
@@ -94,13 +103,15 @@ void ShadowMap::layerRemoved(int index)
     delete mMapComposite->map()->takeLayerAt(index);
 }
 
-void ShadowMap::layerRenamed(int index)
+void ShadowMap::layerRenamed(int index, const QString &name)
 {
+    mMapComposite->map()->layerAt(index)->setName(name);
     mMapComposite->layerRenamed(index);
 }
 
 void ShadowMap::regionAltered(const QRegion &rgn, Layer *layer)
 {
+#if 0
     int index = mMaster->layers().indexOf(layer);
     if (TileLayer *tl = mMapComposite->map()->layerAt(index)->asTileLayer()) {
         foreach (QRect r, rgn.rects()) {
@@ -111,27 +122,28 @@ void ShadowMap::regionAltered(const QRegion &rgn, Layer *layer)
             }
         }
     }
+#endif
 }
 
-void ShadowMap::lotAdded(MapComposite *lot, MapObject *mapObject)
+void ShadowMap::lotAdded(quintptr id, MapInfo *mapInfo, const QPoint &pos, int level)
 {
-    MapComposite *subMap = mMapComposite->addMap(lot->mapInfo(),
-                                                 lot->origin(),
-                                                 lot->levelOffset());
-    mLots[quintptr(mapObject)] = subMap;
+    MapComposite *subMap = mMapComposite->addMap(mapInfo, pos, level);
+    mIDToLot[id] = subMap;
+    mLotToID[subMap] = id;
 }
 
-void ShadowMap::lotRemoved(MapComposite *lot, MapObject *mapObject)
+void ShadowMap::lotRemoved(quintptr id)
 {
-    Q_UNUSED(lot)
-    mMapComposite->removeMap(mLots[quintptr(mapObject)]);
-    mLots.remove(quintptr(mapObject));
+    Q_ASSERT(mIDToLot[id]);
+    mMapComposite->removeMap(mIDToLot[id]);
+    mLotToID.remove(mIDToLot[id]);
+    mIDToLot.remove(id);
 }
 
-void ShadowMap::lotUpdated(MapComposite *lot, MapObject *mapObject)
+void ShadowMap::lotUpdated(quintptr id, const QPoint &pos)
 {
-    Q_ASSERT(mLots[quintptr(mapObject)]);
-    mMapComposite->moveSubMap(mLots[quintptr(mapObject)], lot->origin());
+    Q_ASSERT(mIDToLot[id]);
+    mMapComposite->moveSubMap(mIDToLot[id], pos);
 }
 
 void ShadowMap::mapAboutToChange(MapInfo *mapInfo)
@@ -146,253 +158,345 @@ void ShadowMap::mapChanged(MapInfo *mapInfo)
 
 /////
 
-MapRenderThread::MapRenderThread(MapComposite *mapComposite) :
-    mRestart(false),
-    mWaiting(false),
-    mQuit(false),
-    mAbortDrawing(false)
+class MapChange
 {
-    mShadowMap = new ShadowMap(mapComposite->mapInfo());
-    (mapComposite->map()->orientation() == Map::Isometric) ?
-                mRenderer = new IsometricRenderer(mShadowMap->mMapComposite->map()) :
-            mRenderer = new ZLevelRenderer(mShadowMap->mMapComposite->map());
+public:
+    enum Change {
+        LayerAdded,
+        LayerRemoved,
+        LayerRenamed,
+        RegionAltered,
+        LotAdded,
+        LotRemoved,
+        LotUpdated,
+        MapChanged,
+        MapResized,
+        TilesetAdded,
+        TilesetRemoved,
+        TilesetChanged
+    };
+
+    MapChange(Change change)
+        : mChange(change)
+    {
+
+    }
+
+    Change mChange;
+    struct LotInfo
+    {
+        MapInfo *mapInfo;
+        quintptr id;
+        QPoint pos;
+        int level;
+    };
+    LotInfo mLotInfo;
+    Tiled::Layer *mLayer;
+    int mLayerIndex;
+    QString mName;
+    struct CellEntry
+    {
+        CellEntry(int x, int y, const Cell &cell) :
+            x(x), y(y), cell(cell)
+        {
+
+        }
+
+        int x, y;
+        Tiled::Cell cell;
+    };
+    QList<CellEntry> mCells;
+    Tileset *mTileset;
+    int mTilesetIndex;
+    QSize mMapSize;
+};
+
+MiniMapRenderWorker::MiniMapRenderWorker(MapInfo *mapInfo, InterruptibleThread *thread) :
+    BaseWorker(thread),
+    mRedrawAll(true),
+    mVisible(false)
+{
+    IN_APP_THREAD
+    mShadowMap = new ShadowMap(mapInfo);
+    (mapInfo->orientation() == Map::Isometric)
+            ? mRenderer = new IsometricRenderer(mapInfo->map())
+            : mRenderer = new ZLevelRenderer(mapInfo->map());
     mRenderer->setMaxLevel(mShadowMap->mMapComposite->maxLevel());
-    mRenderer->mAbortDrawing = &mAbortDrawing;
+    mRenderer->mAbortDrawing = thread->var();
+
+    QRectF r = mShadowMap->mMapComposite->boundingRect(mRenderer);
+    qreal scale = 512.0 / r.width();
+    QSize imageSize = QRectF(QPoint(), r.size() * scale).toAlignedRect().size();
+    mImage = QImage(imageSize, QImage::Format_ARGB32);
 }
 
-MapRenderThread::~MapRenderThread()
+MiniMapRenderWorker::~MiniMapRenderWorker()
 {
-    if (isRunning()) {
-        mSharedVarsMutex.lock();
-        mAbortDrawing = true;
-        mQuit = true;
-        if (mWaiting) {
-            mRenderSleepMutex.lock();
-            mRenderSleepMutex.unlock();
-            mRenderSleepCondition.wakeOne();
-        }
-        mSharedVarsMutex.unlock();
-        wait();
-    }
+    IN_APP_THREAD
     delete mRenderer;
     delete mShadowMap;
+    qDeleteAll(mPendingChanges);
 }
 
-void MapRenderThread::run()
+void MiniMapRenderWorker::work()
 {
-    forever {
-        // Don't let the main thread modify mShadowMap or read/modify mImage until
-        // painting is finished or aborted.
-        QMutexLocker mapAndImageLocker(&mMapAndImageMutex);
+    IN_WORKER_THREAD
 
-        mShadowMap->mMapComposite->synch();
+    processChanges(mPendingChanges);
+    qDeleteAll(mPendingChanges);
+    mPendingChanges.clear();
 
-        mRenderer->setMaxLevel(mShadowMap->mMapComposite->maxLevel());
-
-        QRectF sceneRect = mShadowMap->mMapComposite->boundingRect(mRenderer);
-        QSize mapSize = sceneRect.size().toSize();
-        if (mapSize.isEmpty())
-            return;
-
-        mSharedVarsMutex.lock();
-        QRectF paintRect = mDirtyRect;
-        if (paintRect.isEmpty())
-            paintRect = sceneRect;
-        mSharedVarsMutex.unlock();
-
-        qreal scale = mImage.width() / qreal(mapSize.width());
-
-        QPainter painter(&mImage);
-
-        painter.setRenderHints(QPainter::SmoothPixmapTransform |
-                               QPainter::HighQualityAntialiasing);
-        QTransform xform = QTransform::fromScale(scale, scale)
-                .translate(-sceneRect.left(), -sceneRect.top());
-        painter.setTransform(xform);
-
-        painter.setClipRect(paintRect);
-
-        painter.setCompositionMode(QPainter::CompositionMode_Clear);
-        painter.fillRect(paintRect, Qt::transparent);
-        painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-
-        QElapsedTimer timer;
-        timer.start();
-
-        MapComposite::ZOrderList zorder = mShadowMap->mMapComposite->zOrder();
-        foreach (MapComposite::ZOrderItem zo, zorder) {
-            if (zo.group)
-                mRenderer->drawTileLayerGroup(&painter, zo.group, paintRect);
-            else if (TileLayer *tl = zo.layer->asTileLayer()) {
-                if (tl->name().contains(QLatin1String("NoRender")))
-                    continue;
-                mRenderer->drawTileLayer(&painter, tl, paintRect);
-            }
-
-            QMutexLocker locker(&mSharedVarsMutex);
-            if (mQuit) {
-                noise() << "MiniMap render thread: quitting" << this;
-                return;
-            }
-            if (mAbortDrawing) {
-                noise() << "MiniMap render thread: interrupting -" << timer.elapsed() << "ms wasted" << this;
-                break;
-            }
-            if (mRestart) {
-                noise() << "MiniMap render thread: restarting" << this;
-                break;
-            }
-        }
-
-        // mImage is the painter's paint-device.  Since the image may be
-        // recreated before the painter's destructor is called, we must
-        // release it's paint device now.
-        painter.end();
-
-        mapAndImageLocker.unlock();
-
-        if (!mAbortDrawing)
-            noise() << "MiniMap render thread: painting took" << timer.elapsed() << "milliseconds" << this;
-
-        mSharedVarsMutex.lock();
-        if (mQuit) {
-            mSharedVarsMutex.unlock();
-            noise() << "MiniMap render thread: quitting" << this;
-            return;
-        }
-        if (!mRestart && !mAbortDrawing) {
-            emit rendered(this, paintRect);
-            mDirtyRect = QRectF();
-        }
-
-        if (!mRestart) {
-            mWaiting = true;
-            mRenderSleepMutex.lock();
-            mSharedVarsMutex.unlock();
-            noise() << "MiniMap render thread: sleeping" << this;
-            mRenderSleepCondition.wait(&mRenderSleepMutex);
-            noise() << "MiniMap render thread: waking" << this;
-            mSharedVarsMutex.lock();
-            mRenderSleepMutex.unlock();
-            mWaiting = false;
-        }
-        mRestart = false;
-        mAbortDrawing = false;
-        mSharedVarsMutex.unlock();
-        if (mQuit) {
-            noise() << "MiniMap render thread: quitting" << this;
-            return;
-        }
-    }
-}
-
-void MapRenderThread::update(const QRectF &rect)
-{
-    QMutexLocker locker(&mSharedVarsMutex);
-    if (!isRunning())
-        start();
-    else {
-        if (rect.isEmpty())
-            mDirtyRect = QRectF(); // redraw everything
-        else
-            mDirtyRect |= rect; // draw new area plus any interrupted area
-        if (mWaiting) {
-            noise() << "MapRenderThread::update: waking thread";
-            mRenderSleepMutex.lock();
-            mRenderSleepMutex.unlock();
-            mRenderSleepCondition.wakeOne();
-        } else {
-            noise() << "MapRenderThread::update: restarting thread";
-            mAbortDrawing = true;
-            mRestart = true;
-        }
-    }
-}
-
-void MapRenderThread::recreateImage(const QImage *other)
-{
-    abortDrawing();
-    QMutexLocker locker(&mMapAndImageMutex);
-    mImage = QImage(other->size(), other->format());
-}
-
-void MapRenderThread::abortDrawing()
-{
-    if (!isRunning())
+    if (!mVisible)
         return;
 
-    QMutexLocker locker(&mSharedVarsMutex);
-    mAbortDrawing = true;
-    mRestart = false;
+    if (!mRedrawAll && mDirtyRect.isEmpty())
+        return;
+
+    mRenderer->setMaxLevel(mShadowMap->mMapComposite->maxLevel());
+
+    QRectF sceneRect = mShadowMap->mMapComposite->boundingRect(mRenderer);
+    QSize mapSize = sceneRect.size().toSize();
+    if (mapSize.isEmpty())
+        return;
+
+    QRectF paintRect = mDirtyRect;
+    if (mRedrawAll)
+        paintRect = sceneRect;
+
+    qreal scale = mImage.width() / qreal(mapSize.width());
+
+    QPainter painter(&mImage);
+
+    painter.setRenderHints(QPainter::SmoothPixmapTransform |
+                           QPainter::HighQualityAntialiasing);
+    QTransform xform = QTransform::fromScale(scale, scale)
+            .translate(-sceneRect.left(), -sceneRect.top());
+    painter.setTransform(xform);
+
+    painter.setClipRect(paintRect);
+
+    painter.setCompositionMode(QPainter::CompositionMode_Clear);
+    painter.fillRect(paintRect, Qt::transparent);
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+
+    QElapsedTimer timer;
+    timer.start();
+
+    bool aborted = false;
+
+    MapComposite::ZOrderList zorder = mShadowMap->mMapComposite->zOrder();
+    foreach (MapComposite::ZOrderItem zo, zorder) {
+        if (zo.group)
+            mRenderer->drawTileLayerGroup(&painter, zo.group, paintRect);
+        else if (TileLayer *tl = zo.layer->asTileLayer()) {
+            if (tl->name().contains(QLatin1String("NoRender")))
+                continue;
+            mRenderer->drawTileLayer(&painter, tl, paintRect);
+        }
+
+        aborted = this->aborted();
+        if (aborted) {
+            noise() << "MiniMapRenderWorker: interrupting -" << timer.elapsed() << "ms wasted" << this;
+            break;
+        }
+    }
+
+    if (!aborted) {
+        noise() << "MiniMapRenderWorker: painting took" << timer.elapsed() << "ms" << this;
+        mRedrawAll = false;
+        mDirtyRect = QRectF();
+        emit painted(mImage, sceneRect);
+    }
 }
 
-void MapRenderThread::layerAdded(int index)
+void MiniMapRenderWorker::applyChanges(const QList<MapChange *> &changes)
 {
-    abortDrawing();
-    QMutexLocker locker(&mMapAndImageMutex);
-    mShadowMap->layerAdded(index);
+    IN_WORKER_THREAD
+    mPendingChanges += changes;
+
+    // I have a feeling this gets added to the queue we're processing now rather
+    // than waiting for the next event loop in this thread.
+    scheduleWork();
 }
 
-void MapRenderThread::layerRemoved(int index)
+void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
 {
-    abortDrawing();
-    QMutexLocker locker(&mMapAndImageMutex);
-    mShadowMap->layerRemoved(index);
+    ShadowMap &sm = *mShadowMap;
+    QRectF oldBounds = sm.mMapComposite->boundingRect(mRenderer);
+    bool redrawAll = mRedrawAll;
+
+    foreach (MapChange *cp, changes) {
+        const MapChange &c = *cp;
+        switch (c.mChange) {
+        case MapChange::LayerAdded:
+            sm.layerAdded(c.mLayerIndex, c.mLayer);
+            redrawAll = true;
+            break;
+        case MapChange::LayerRemoved:
+            sm.layerRemoved(c.mLayerIndex);
+            redrawAll = true;
+            break;
+        case MapChange::LayerRenamed:
+            sm.layerRenamed(c.mLayerIndex, c.mName);
+            redrawAll = true;
+            break;
+        case MapChange::RegionAltered: {
+            TileLayer *tl = sm.mMapComposite->map()->layerAt(c.mLayerIndex)->asTileLayer(); // kinda slow
+            foreach (const MapChange::CellEntry &ce, c.mCells) {
+                tl->setCell(ce.x, ce.y, ce.cell);
+            }
+            break;
+        }
+        case MapChange::LotAdded: {
+            sm.lotAdded(c.mLotInfo.id, c.mLotInfo.mapInfo, c.mLotInfo.pos, c.mLotInfo.level);
+            break;
+        }
+        case MapChange::LotRemoved: {
+            sm.lotRemoved(c.mLotInfo.id);
+            break;
+        }
+        case MapChange::LotUpdated: {
+            sm.lotUpdated(c.mLotInfo.id, c.mLotInfo.pos);
+            break;
+        }
+        case MapChange::TilesetAdded: {
+            sm.mMapComposite->map()->insertTileset(c.mTilesetIndex, c.mTileset);
+            break;
+        }
+        case MapChange::TilesetRemoved: {
+            int index = sm.mMapComposite->map()->indexOfTileset(c.mTileset);
+            sm.mMapComposite->map()->removeTilesetAt(index);
+            break;
+        }
+        case MapChange::MapChanged: {
+            // A loaded map changed in memory
+            sm.mMapComposite->mapChanged(c.mLotInfo.mapInfo);
+            break;
+        }
+        case MapChange::MapResized: {
+            sm.mMapComposite->map()->setWidth(c.mMapSize.width());
+            sm.mMapComposite->map()->setHeight(c.mMapSize.height());
+            break;
+        }
+        }
+    }
+
+    // Now all the changes are applied, see if the size of the image should change.
+    sm.mMapComposite->synch();
+    QRectF newBounds = sm.mMapComposite->boundingRect(mRenderer);
+    if (oldBounds != newBounds) {
+        int width = 512;
+        qreal scale = width / newBounds.width();
+        int height = qCeil(newBounds.height() * scale);
+        mImage = QImage(width, height, mImage.format());
+        emit imageResized(mImage.size());
+        redrawAll = true;
+    }
+
+    // Figure out which areas to redraw. Changes to lot bounds must be recorded
+    // even if redrawAll is true.
+    foreach (MapChange *cp, changes) {
+        const MapChange &c = *cp;
+        QRectF dirty;
+        switch (c.mChange) {
+        case MapChange::LayerAdded:
+            break;
+        case MapChange::LayerRemoved:
+            break;
+        case MapChange::LayerRenamed:
+            break;
+        case MapChange::RegionAltered: {
+            if (redrawAll) break;
+            QRect tileBounds;
+            TileLayer *tl = sm.mMapComposite->map()->layerAt(c.mLayerIndex)->asTileLayer(); // kinda slow
+            foreach (const MapChange::CellEntry &ce, c.mCells) {
+                if (tileBounds.isEmpty())
+                    tileBounds = QRect(ce.x, ce.y, 1, 1);
+                else
+                    tileBounds |= QRect(ce.x, ce.y, 1, 1);
+            }
+            QMargins margins = sm.mMapComposite->map()->drawMargins();
+            QRectF r = mRenderer->boundingRect(tileBounds, tl->level());
+            r.adjust(-margins.left(),
+                     -margins.top(),
+                     margins.right(),
+                     margins.bottom());
+            if (dirty.isEmpty())
+                dirty = r;
+            else
+                dirty |= r;
+            break;
+        }
+        case MapChange::LotAdded: {
+            QRectF bounds = sm.mIDToLot[c.mLotInfo.id]->boundingRect(mRenderer);
+            dirty = bounds;
+            mLotBounds[c.mLotInfo.id] = bounds;
+            break;
+        }
+        case MapChange::LotRemoved: {
+            dirty = mLotBounds[c.mLotInfo.id];
+            mLotBounds.remove(c.mLotInfo.id);
+            break;
+        }
+        case MapChange::LotUpdated: {
+            QRectF bounds = sm.mIDToLot[c.mLotInfo.id]->boundingRect(mRenderer);
+            dirty = mLotBounds[c.mLotInfo.id] | bounds;
+            mLotBounds[c.mLotInfo.id] = bounds;
+            break;
+        }
+        case MapChange::MapChanged: {
+            // A loaded map changed in memory
+            QRectF bounds = sm.mIDToLot[c.mLotInfo.id]->boundingRect(mRenderer);
+            dirty = mLotBounds[c.mLotInfo.id] | bounds;
+            mLotBounds[c.mLotInfo.id] = bounds;
+            break;
+        }
+        case MapChange::TilesetChanged: {
+            if (sm.mMapComposite->map()->isTilesetUsed(c.mTileset))
+                redrawAll = true;
+            else {
+                foreach (MapComposite *mc, sm.mMapComposite->subMaps()) {
+                    if (mc->map()->isTilesetUsed(c.mTileset)) {
+                        QRectF bounds = mc->boundingRect(mRenderer);
+                        dirty = mLotBounds[sm.mLotToID[mc]] | bounds;
+                        mLotBounds[sm.mLotToID[mc]] = bounds;
+                    }
+                }
+            }
+            break;
+        }
+        }
+        if (mDirtyRect.isEmpty())
+            mDirtyRect = dirty;
+        else if (!dirty.isEmpty())
+            mDirtyRect |= dirty;
+    }
+
+    if (redrawAll) {
+        mDirtyRect = QRectF();
+        mRedrawAll = true;
+    }
+
+    noise() << "MiniMapRenderWorker: applied" << mPendingChanges.size() << "changes" << this;
 }
 
-void MapRenderThread::layerRenamed(int index)
+void MiniMapRenderWorker::resume()
 {
-    abortDrawing();
-    QMutexLocker locker(&mMapAndImageMutex);
-    mShadowMap->layerRenamed(index); // layer added/removed from group
+//    scheduleWork();
 }
 
-void MapRenderThread::regionAltered(const QRegion &rgn, Layer *layer)
+void MiniMapRenderWorker::setVisible(bool visible)
 {
-    abortDrawing();
-    QMutexLocker locker(&mMapAndImageMutex);
-    mShadowMap->regionAltered(rgn, layer);
+    if (visible == mVisible)
+        return;
+    mVisible = visible;
+    if (mVisible)
+        scheduleWork();
 }
 
-void MapRenderThread::lotAdded(MapComposite *lot, MapObject *mapObject)
+void MiniMapRenderWorker::returnToAppThread()
 {
-    abortDrawing();
-    QMutexLocker locker(&mMapAndImageMutex);
-    mShadowMap->lotAdded(lot, mapObject);
-}
-
-void MapRenderThread::lotRemoved(MapComposite *lot, MapObject *mapObject)
-{
-    abortDrawing();
-    QMutexLocker locker(&mMapAndImageMutex);
-    mShadowMap->lotRemoved(lot, mapObject);
-}
-
-void MapRenderThread::lotUpdated(MapComposite *lot, MapObject *mapObject)
-{
-    abortDrawing();
-    QMutexLocker locker(&mMapAndImageMutex);
-    mShadowMap->lotUpdated(lot, mapObject);
-}
-
-void MapRenderThread::mapAboutToChange(MapInfo *mapInfo)
-{
-    abortDrawing();
-    QMutexLocker locker(&mMapAndImageMutex);
-    mShadowMap->mapAboutToChange(mapInfo);
-}
-
-void MapRenderThread::mapChanged(MapInfo *mapInfo)
-{
-    abortDrawing();
-    QMutexLocker locker(&mMapAndImageMutex);
-    mShadowMap->mapChanged(mapInfo);
-}
-
-void MapRenderThread::getImage(QImage &dest)
-{
-    QMutexLocker locker(&mMapAndImageMutex);
-    dest = mImage;
+    moveToThread(qApp->thread());
 }
 
 /////
@@ -400,29 +504,33 @@ void MapRenderThread::getImage(QImage &dest)
 MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
     : QGraphicsItem(parent)
     , mScene(zscene)
-    , mRenderer(mScene->mapDocument()->renderer())
     , mMapImage(0)
     , mMiniMapVisible(false)
-    , mUpdatePending(false)
-    , mNeedsRecreate(false)
-    , mRedrawAll(false)
-    , mRenderThread(0)
+    , mNeedsResume(false)
 {
     mMapComposite = mScene->mapDocument()->mapComposite();
 
-    mRenderThread = new MapRenderThread(mMapComposite);
-    connect(mRenderThread, SIGNAL(rendered(MapRenderThread*,QRectF)),
-            SLOT(rendered(MapRenderThread*,QRectF)));
-
-    connect(mScene, SIGNAL(sceneRectChanged(QRectF)),
-            SLOT(sceneRectChanged(QRectF)));
+    qRegisterMetaType<QList<MapChange*> >("QList<MapChange*>");
+    mRenderThread = new InterruptibleThread;
+    mRenderWorker = new MiniMapRenderWorker(mMapComposite->mapInfo(),
+                                            mRenderThread);
+    mRenderWorker->moveToThread(mRenderThread);
+    connect(mRenderWorker, SIGNAL(painted(QImage,QRectF)),
+            SLOT(painted(QImage,QRectF)));
+    connect(mRenderWorker, SIGNAL(imageResized(QSize)),
+            SLOT(imageResized(QSize)));
+    mRenderThread->start();
 
     connect(mScene->mapDocument(), SIGNAL(layerAdded(int)),
             SLOT(layerAdded(int)));
     connect(mScene->mapDocument(), SIGNAL(layerRemoved(int)),
             SLOT(layerRemoved(int)));
+    connect(mScene->mapDocument(), SIGNAL(layerRenamed(int)),
+            SLOT(layerRenamed(int)));
     connect(mScene->mapDocument(), SIGNAL(regionAltered(QRegion,Layer*)),
             SLOT(regionAltered(QRegion,Layer*)));
+    connect(mScene->mapDocument(), SIGNAL(mapChanged()),
+            SLOT(mapChanged()));
 
     connect(MapManager::instance(), SIGNAL(mapAboutToChange(MapInfo*)),
             SLOT(mapAboutToChange(MapInfo*)));
@@ -436,23 +544,29 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
     connect(&mScene->lotManager(), SIGNAL(lotUpdated(MapComposite*,Tiled::MapObject*)),
         SLOT(lotUpdated(MapComposite*,Tiled::MapObject*)));
 
+    connect(mScene->mapDocument(), SIGNAL(tilesetAdded(int,Tileset*)),
+            SLOT(tilesetAdded(int,Tileset*)));
+    connect(mScene->mapDocument(), SIGNAL(tilesetRemoved(Tileset*)),
+            SLOT(tilesetRemoved(Tileset*)));
     connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
             SLOT(tilesetChanged(Tileset*)));
 
     QMap<MapObject*,MapComposite*>::const_iterator it;
     const QMap<MapObject*,MapComposite*> &map = mScene->lotManager().objectToLot();
     for (it = map.constBegin(); it != map.constEnd(); it++) {
-        MapComposite *lot = it.value();
-        mLotBounds[lot] = lot->boundingRect(mRenderer);
-        mRenderThread->lotAdded(lot, it.key());
+        lotAdded(it.value(), it.key());
     }
-
-    recreateLater();
 }
 
 MiniMapItem::~MiniMapItem()
 {
-    delete mMapImage;
+    mRenderThread->interrupt();
+    QMetaObject::invokeMethod(mRenderWorker, "returnToAppThread", Qt::QueuedConnection);
+    while (mRenderWorker->thread() != qApp->thread())
+        Sleep::msleep(1);
+    mRenderThread->quit();
+    mRenderThread->wait();
+    delete mRenderWorker;
     delete mRenderThread;
 }
 
@@ -466,193 +580,208 @@ void MiniMapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
     Q_UNUSED(option)
     Q_UNUSED(widget)
 
-    if (mMapImage) {
+    if (!mMapImage.isNull()) {
         QRectF target = mMapImageBounds;
-        QRectF source = QRect(QPoint(0, 0), mMapImage->size());
-        painter->drawImage(target, *mMapImage, source);
+        QRectF source = QRect(QPoint(0, 0), mMapImage.size());
+        painter->drawImage(target, mMapImage, source);
     }
-#if _DEBUG
+#ifndef QT_NO_DEBUG
     painter->drawRect(mMapImageBounds);
 #endif
-}
-
-void MiniMapItem::updateImage(const QRectF &dirtyRect)
-{
-    Q_ASSERT(mMapImage);
-    mRenderThread->update(dirtyRect);
-}
-
-void MiniMapItem::updateImageBounds()
-{
-    QRectF bounds = mScene->sceneRect();
-    if (bounds != mMapImageBounds) {
-        prepareGeometryChange();
-        mMapImageBounds = bounds;
-    }
-}
-
-void MiniMapItem::recreateImage()
-{
-    delete mMapImage;
-
-    QSizeF mapSize = mScene->sceneRect().size();
-    qreal scale = 512.0 / qreal(mapSize.width());
-    QSize imageSize = (mapSize * scale).toSize();
-
-    mMapImage = new QImage(imageSize, QImage::Format_ARGB32);
-    mMapImage->fill(Qt::transparent);
-
-    mRenderThread->recreateImage(mMapImage);
-
-    updateImage();
-
-    updateImageBounds();
 }
 
 void MiniMapItem::minimapVisibilityChanged(bool visible)
 {
     mMiniMapVisible = visible;
-    if (mMiniMapVisible)
-        updateNow();
+    QMetaObject::invokeMethod(mRenderWorker, "setVisible", Qt::QueuedConnection,
+                              Q_ARG(bool,visible));
 }
 
-void MiniMapItem::updateLater(const QRectF &dirtyRect)
+void MiniMapItem::queueChange(MapChange *c)
 {
-    if (mNeedsRecreate || dirtyRect.isEmpty())
-        mRedrawAll = true;
-    else if (mNeedsUpdate.isEmpty())
-        mNeedsUpdate = dirtyRect;
-    else
-        mNeedsUpdate |= dirtyRect;
-
-    if (!mMiniMapVisible)
-        return;
-
-    if (mUpdatePending)
-        return;
-    mUpdatePending = true;
-    QMetaObject::invokeMethod(this, "updateNow", Qt::QueuedConnection);
-}
-
-void MiniMapItem::recreateLater()
-{
-    mNeedsRecreate = true;
-    updateLater();
-}
-
-void MiniMapItem::sceneRectChanged(const QRectF &sceneRect)
-{
-    Q_UNUSED(sceneRect)
-    recreateLater();
+    mPendingChanges += c;
+    if (mPendingChanges.size() == 1) {
+//        mRenderThread->interrupt();
+//        mNeedsResume = true;
+        QMetaObject::invokeMethod(this, "queueChanges", Qt::QueuedConnection);
+    }
 }
 
 void MiniMapItem::layerAdded(int index)
 {
-    Q_UNUSED(index)
-    mRenderThread->layerAdded(index);
-    recreateLater();
+    MapChange *c = new MapChange(MapChange::LayerAdded);
+    c->mLayer = mMapComposite->map()->layerAt(index)->clone();
+    c->mLayerIndex = index;
+    queueChange(c);
 }
 
 void MiniMapItem::layerRemoved(int index)
 {
-    Q_UNUSED(index)
-    mRenderThread->layerRemoved(index);
-    recreateLater();
+    MapChange *c = new MapChange(MapChange::LayerRemoved);
+    c->mLayerIndex = index;
+    queueChange(c);
+}
+
+void MiniMapItem::layerRenamed(int index)
+{
+    MapChange *c = new MapChange(MapChange::LayerRemoved);
+    c->mLayerIndex = index;
+    c->mName = mMapComposite->map()->layerAt(index)->name();
+    queueChange(c);
 }
 
 void MiniMapItem::lotAdded(MapComposite *lot, Tiled::MapObject *mapObject)
 {
-    mRenderThread->lotAdded(lot, mapObject);
-    QRectF bounds = lot->boundingRect(mRenderer);
-    updateLater(mLotBounds[lot] | bounds);
-    mLotBounds[lot] = bounds;
+    mLots[lot] = mapObject;
+    MapChange *c = new MapChange(MapChange::LotAdded);
+    c->mLotInfo.id = quintptr(mapObject);
+    c->mLotInfo.mapInfo = lot->mapInfo();
+    c->mLotInfo.level = lot->levelOffset();
+    c->mLotInfo.pos = lot->origin();
+    queueChange(c);
 }
 
 void MiniMapItem::lotRemoved(MapComposite *lot, Tiled::MapObject *mapObject)
 {
-    mRenderThread->lotRemoved(lot, mapObject);
-    updateLater(mLotBounds[lot]);
-    mLotBounds.remove(lot);
+    mLots.remove(lot);
+    MapChange *c = new MapChange(MapChange::LotRemoved);
+    c->mLotInfo.id = quintptr(mapObject);
+    queueChange(c);
 }
 
 void MiniMapItem::lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject)
 {
-    mRenderThread->lotUpdated(lot, mapObject);
-    QRectF bounds = lot->boundingRect(mRenderer);
-    updateLater(mLotBounds[lot] | bounds);
-    mLotBounds[lot] = bounds;
+    MapChange *c = new MapChange(MapChange::LotUpdated);
+    c->mLotInfo.id = quintptr(mapObject);
+    c->mLotInfo.pos = lot->origin();
+    queueChange(c);
 }
 
 void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
 {
-    mRenderThread->regionAltered(region, layer);
-
-    QMargins margins = mMapComposite->map()->drawMargins();
+    if (!layer->asTileLayer()) return;
+    MapChange *c = new MapChange(MapChange::RegionAltered);
+    c->mLayerIndex = mMapComposite->map()->layers().indexOf(layer);
     foreach (const QRect &r, region.rects()) {
-        QRectF bounds = mRenderer->boundingRect(r, layer->level());
-        bounds.adjust(-margins.left(),
-                      -margins.top(),
-                      margins.right(),
-                      margins.bottom());
-        updateLater(bounds);
+        for (int y = r.y(); y <= r.bottom(); y++) {
+            for (int x = r.x(); x <= r.right(); x++) {
+                c->mCells += MapChange::CellEntry(x, y, layer->asTileLayer()->cellAt(x, y));
+            }
+        }
     }
+    queueChange(c);
 }
 
+// A loaded map (not the one being edited) is about to change.
+// If the map is being used as a lot, stop rendering immediately.
 void MiniMapItem::mapAboutToChange(MapInfo *mapInfo)
 {
-    mRenderThread->mapAboutToChange(mapInfo);
+    foreach (MapComposite *mc, mMapComposite->subMaps()) {
+        if (mapInfo == mc->mapInfo()) {
+            mRenderThread->interrupt(true);
+            // do not resume painting until resume()
+            break;
+        }
+    }
 }
 
 void MiniMapItem::mapChanged(MapInfo *mapInfo)
 {
     bool affected = false;
     foreach (MapComposite *lot, mMapComposite->subMaps()) {
+        // There could be several lots using the same map
         if (lot->mapInfo() == mapInfo) {
-            QRectF bounds = lot->boundingRect(mRenderer);
-            updateLater(mLotBounds[lot] | bounds);
+            MapChange *c = new MapChange(MapChange::MapChanged);
+            c->mLotInfo.id = quintptr(mLots[lot]);
+            c->mLotInfo.mapInfo = mapInfo;
+            queueChange(c);
             affected = true;
         }
     }
-    if (affected)
-        mRenderThread->mapChanged(mapInfo);
-}
-
-void MiniMapItem::tilesetChanged(Tileset *ts)
-{
-    if (mNeedsRecreate || mRedrawAll)
-        return;
-
-    if (mMapComposite->isTilesetUsed(ts))
-        updateLater();
-}
-
-void MiniMapItem::updateNow()
-{
-    if (mNeedsRecreate) {
-        recreateImage();
-        update();
-    } else if (mRedrawAll) {
-        updateImage();
-    } else if (!mNeedsUpdate.isEmpty()) {
-        updateImage(mNeedsUpdate);
-        update(mNeedsUpdate);
+    if (affected) {
+        mNeedsResume = true;
     }
-    mNeedsRecreate = false;
-    mNeedsUpdate = QRectF();
-    mRedrawAll = false;
-    mUpdatePending = false;
 }
 
-void MiniMapItem::rendered(MapRenderThread *t, const QRectF r)
+// called after the map being edited is resized
+void MiniMapItem::mapChanged()
 {
-    t->getImage(*mMapImage);
+    MapChange *c = new MapChange(MapChange::MapResized);
+    c->mMapSize = mMapComposite->map()->size();
+    queueChange(c);
+}
+
+void MiniMapItem::tilesetAdded(int index, Tileset *tileset)
+{
+    TilesetManager::instance()->addReference(tileset); // for ShadowMap
+    MapChange *c = new MapChange(MapChange::TilesetAdded);
+    c->mTileset = tileset;
+    c->mTilesetIndex = index;
+    queueChange(c);
+}
+
+void MiniMapItem::tilesetRemoved(Tileset *tileset)
+{
+    mRenderThread->interrupt(true);
+    mNeedsResume = true;
+    TilesetManager::instance()->removeReference(tileset); // for ShadowMap
+
+    MapChange *c = new MapChange(MapChange::TilesetRemoved);
+    c->mTileset = tileset;
+    queueChange(c);
+}
+
+void MiniMapItem::tilesetChanged(Tileset *tileset)
+{
+    // FIXME: stop rendering *before* it changes, need tilesetAboutToChange()
+    if (mMapComposite->isTilesetUsed(tileset)) {
+        MapChange *c = new MapChange(MapChange::TilesetChanged);
+        c->mTileset = tileset;
+        queueChange(c);
+    }
+}
+
+void MiniMapItem::painted(QImage image, QRectF sceneRect)
+{
+#if 1
+    if (mMapImage.size() != image.size()) {
+        mMapImageBounds = sceneRect;
+        emit resized(image.size(), sceneRect); // update the minimap scene + view
+    }
+    mMapImage = image;
+#else
+    QPainter painter(&mMapImage);
+    painter.drawImage(r, image, r);
+#endif
 
     // There seems to be a conflict with QGraphicsScene's use of QueuedConnection.
     // Since this slot is called as a QueuedConnection (due to the render thread
     // emitting it signal) I'm calling update in the middle of QGraphicsScene
     // handling its own _q_emitUpdated and _q_processDirtyItems.  I'm hitting
     // Q_ASSERT(calledEmitUpdated) in _q_processDirtyItems.
-    update(r);
+    update(sceneRect);
+}
+
+void MiniMapItem::imageResized(QSize sz)
+{
+    Q_UNUSED(sz)
+    // the image was resized, but isn't painted yet
+    // wait until the image is painted before updated the scene + view
+}
+
+void MiniMapItem::queueChanges()
+{
+    if (mNeedsResume) {
+        mNeedsResume = false;
+        mRenderThread->resume();
+        QMetaObject::invokeMethod(mRenderWorker, "resume", Qt::QueuedConnection);
+    }
+
+    // FIXME: merge sequences of RegionAltered changes into a single change.
+    // Maybe use a SparseTileLayerGrid to pass changes.
+    QMetaObject::invokeMethod(mRenderWorker, "applyChanges", Qt::QueuedConnection,
+                              Q_ARG(QList<MapChange*>,mPendingChanges));
+    mPendingChanges.clear();
 }
 
 /////
@@ -661,7 +790,8 @@ MiniMap::MiniMap(MapView *parent)
     : QGraphicsView(parent)
     , mMapView(parent)
     , mButtons(new QFrame(this))
-    , mWidth(256.0)
+    , mWidth(256)
+    , mHeight(128)
     , mViewportItem(0)
     , mExtraItem(0)
     , mBiggerButton(new QToolButton(mButtons))
@@ -672,9 +802,13 @@ MiniMap::MiniMap(MapView *parent)
     // For the smaller/bigger buttons
     setMouseTracking(true);
 
+    setRenderHint(QPainter::SmoothPixmapTransform, true);
+
     Preferences *prefs = Preferences::instance();
     setVisible(prefs->showMiniMap());
+    mRatio = 1.5;
     mWidth = prefs->miniMapWidth();
+    mHeight = mWidth / mRatio;
     connect(prefs, SIGNAL(showMiniMapChanged(bool)), SLOT(setVisible(bool)));
     connect(prefs, SIGNAL(miniMapWidthChanged(int)), SLOT(widthChanged(int)));
 
@@ -725,15 +859,13 @@ MiniMap::MiniMap(MapView *parent)
     connect(button, SIGNAL(clicked()), SLOT(updateImage()));
     layout->addWidget(button);
 
-    setGeometry(20, 20, 220, 220);
+    setGeometry(20, 20, mWidth, mHeight);
 }
 
 void MiniMap::setMapScene(MapScene *scene)
 {
     mMapScene = scene;
     widthChanged(mWidth);
-    connect(mMapScene, SIGNAL(sceneRectChanged(QRectF)),
-            SLOT(sceneRectChanged(QRectF)));
 }
 
 void MiniMap::viewRectChanged()
@@ -746,7 +878,7 @@ void MiniMap::viewRectChanged()
             ? mMapView->verticalScrollBar()->width() : 0;
     rect.adjust(0, 0, -vsbw, -hsbh);
 
-    QPolygonF polygon = mMapView->mapToScene(rect);
+    QPolygonF polygon = mMapView->mapToScene(rect); // FIXME
     mViewportItem->setPolygon(polygon);
 }
 
@@ -754,23 +886,7 @@ void MiniMap::setExtraItem(MiniMapItem *item)
 {
     mExtraItem = item;
     scene()->addItem(mExtraItem);
-}
-
-// FIXME: the size of the minimap should only be affected by the size of the
-// image, not the size of the MapScene's sceneRect.
-void MiniMap::sceneRectChanged(const QRectF &sceneRect)
-{
-    qreal scale = this->scale();
-    QSizeF size = sceneRect.size() * scale;
-    // No idea where the extra 3 pixels is coming from...
-    int width = std::ceil(size.width()) + 3;
-    int height = std::ceil(size.height()) + 3;
-    setGeometry(20, 20, width, height);
-
-    setTransform(QTransform::fromScale(scale, scale));
-    scene()->setSceneRect(sceneRect);
-
-    viewRectChanged();
+    connect(item, SIGNAL(resized(QSize,QRectF)), SLOT(miniMapItemResized(QSize,QRectF)));
 }
 
 void MiniMap::bigger()
@@ -785,19 +901,36 @@ void MiniMap::smaller()
 
 void MiniMap::updateImage()
 {
-    if (mExtraItem) {
-        mExtraItem->updateImage();
-        mExtraItem->update();
-    }
 }
 
 void MiniMap::widthChanged(int width)
 {
     mWidth = width;
-    sceneRectChanged(mMapScene->sceneRect());
+    mHeight = qCeil(mWidth / mRatio);
+
+    // No idea where the extra 3 pixels is coming from...
+    setGeometry(20, 20, mWidth + 3, mHeight + 3);
+
+    qreal scale = mWidth / scene()->sceneRect().width();
+    setTransform(QTransform::fromScale(scale, scale));
 
     mBiggerButton->setEnabled(mWidth < MINIMAP_MAX_WIDTH);
     mSmallerButton->setEnabled(mWidth > MINIMAP_MIN_WIDTH);
+}
+
+void MiniMap::miniMapItemResized(const QSize &imageSize, const QRectF &sceneRect)
+{
+    mRatio = sceneRect.width() / sceneRect.height();
+    mHeight = qCeil(mWidth / mRatio);
+
+    // No idea where the extra 3 pixels is coming from...
+    setGeometry(20, 20, mWidth + 3, mHeight + 3);
+
+    qreal scale = mWidth / sceneRect.width();
+    setTransform(QTransform::fromScale(scale, scale));
+    scene()->setSceneRect(sceneRect);
+
+    viewRectChanged();
 }
 
 bool MiniMap::event(QEvent *event)
@@ -832,12 +965,13 @@ void MiniMap::hideEvent(QHideEvent *event)
 void MiniMap::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton)
-        mMapView->centerOn(mapToScene(event->pos()));}
+        mMapView->centerOn(mapToScene(event->pos())); // FIXME
+}
 
 void MiniMap::mouseMoveEvent(QMouseEvent *event)
 {
     if (event->buttons() & Qt::LeftButton)
-        mMapView->centerOn(mapToScene(event->pos()));
+        mMapView->centerOn(mapToScene(event->pos())); // FIXME
     else {
         QRect hotSpot = mButtons->rect().adjusted(0, 0, 12, 12);
         mButtons->setVisible(hotSpot.contains(event->pos()));
@@ -847,14 +981,4 @@ void MiniMap::mouseMoveEvent(QMouseEvent *event)
 void MiniMap::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_UNUSED(event);
-}
-
-qreal MiniMap::scale()
-{
-    QRectF sceneRect = mMapScene->sceneRect();
-    QSizeF size = sceneRect.size();
-    if (size.isEmpty())
-        return 1.0;
-    return (size.width() > size.height()) ? mWidth / size.width()
-                                          : mWidth / size.height();
 }
