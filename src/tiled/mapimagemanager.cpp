@@ -891,9 +891,9 @@ MapImageData MapImageRenderWorker::generateMapImage(MapComposite *mapComposite)
     qreal scale = IMAGE_WIDTH / qreal(mapSize.width());
     mapSize *= scale;
 
-    QImage *image = new QImage(mapSize, QImage::Format_ARGB32);
-    image->fill(Qt::transparent);
-    QPainter painter(image);
+    QImage image(mapSize, QImage::Format_ARGB32);
+    image.fill(Qt::transparent);
+    QPainter painter(&image);
 
     painter.setRenderHints(QPainter::SmoothPixmapTransform |
                            QPainter::HighQualityAntialiasing);
@@ -909,14 +909,13 @@ MapImageData MapImageRenderWorker::generateMapImage(MapComposite *mapComposite)
         }
         if (aborted()) {
             painter.end();
-            delete image;
             delete renderer;
             return MapImageData();
         }
     }
 
     MapImageData data;
-    data.image = *image;
+    data.image = image;
     data.scale = scale;
     data.levelZeroBounds = renderer->boundingRect(QRect(0, 0, map->width(), map->height()));
     data.levelZeroBounds.translate(-sceneRect.topLeft());
@@ -930,6 +929,7 @@ MapImageData MapImageRenderWorker::generateMapImage(MapComposite *mapComposite)
         }
     }
 
+    painter.end();
     delete renderer;
 
     return data;
