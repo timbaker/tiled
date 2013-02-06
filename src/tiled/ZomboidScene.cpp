@@ -129,6 +129,14 @@ void ZomboidScene::regionAltered(const QRegion &region, Layer *layer)
         if (tl->group() && mTileLayerGroupItems.contains(tl->level())) {
             if (mTileLayerGroupItems[tl->level()]->layerGroup()->regionAltered(tl))
                 updateLayerGroupLater(tl->level(), Synch | Bounds); // recalculate CompositeLayerGroup::mDrawMargins
+        } else {
+            // TileLayer not part of a layer group.
+            int layerIndex = mapDocument()->map()->layers().indexOf(tl);
+            TileLayerItem *item = dynamic_cast<TileLayerItem*>(mLayerItems[layerIndex]);
+            QRectF r = item->boundingRect();
+            item->syncWithTileLayer();
+            if (r != item->boundingRect())
+                doLater(Bounds);
         }
     }
 

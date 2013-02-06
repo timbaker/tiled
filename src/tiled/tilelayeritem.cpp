@@ -45,6 +45,16 @@ void TileLayerItem::syncWithTileLayer()
 {
     prepareGeometryChange();
     mBoundingRect = mRenderer->boundingRect(mLayer->bounds());
+#ifdef ZOMBOID
+    // The TileLayer includes the maximum tile size in its draw margins. So
+    // we need to subtract the tile size of the map, since that part does not
+    // contribute to additional margin.
+    QMargins drawMargins = mLayer->drawMargins();
+    mBoundingRect.adjust(-drawMargins.left(),
+                         -qMax(0, drawMargins.top() - mLayer->map()->tileHeight()),
+                         qMax(0, drawMargins.right() - mLayer->map()->tileWidth()),
+                         drawMargins.bottom());
+#endif
 }
 
 QRectF TileLayerItem::boundingRect() const
