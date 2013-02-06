@@ -599,6 +599,8 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
             SLOT(tilesetAdded(Tiled::Tileset*)));
     connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetAboutToBeRemoved(Tiled::Tileset*)),
             SLOT(tilesetAboutToBeRemoved(Tiled::Tileset*)));
+    connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetRemoved(Tiled::Tileset*)),
+            SLOT(tilesetRemoved(Tiled::Tileset*)));
 
     connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
             SLOT(tilesetChanged(Tileset*)));
@@ -1595,18 +1597,17 @@ void BuildingTilesDialog::tilesetAdded(Tileset *tileset)
     ui->tilesetList->setCurrentRow(row);
 
     categoryChanged(ui->categoryList->currentRow());
-
-    synchUI();
 }
 
 void BuildingTilesDialog::tilesetAboutToBeRemoved(Tileset *tileset)
 {
     int row = TileMetaInfoMgr::instance()->indexOf(tileset);
     delete ui->tilesetList->takeItem(row);
+}
 
+void BuildingTilesDialog::tilesetRemoved(Tileset *tileset)
+{
     categoryChanged(ui->categoryList->currentRow());
-
-    synchUI();
 }
 
 // Called when a tileset image changes or a missing tileset was found.

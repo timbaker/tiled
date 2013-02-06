@@ -142,6 +142,7 @@ private slots:
     void manageTilesets();
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
+    void tilesetRemoved(Tiled::Tileset *tileset);
 
     void tilesetChanged(Tileset *tileset);
 
