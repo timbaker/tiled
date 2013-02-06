@@ -252,8 +252,6 @@ void MiniMapRenderWorker::work()
     if (!mRedrawAll && mDirtyRect.isEmpty())
         return;
 
-    mRenderer->setMaxLevel(mShadowMap->mMapComposite->maxLevel());
-
     QRectF sceneRect = mShadowMap->mMapComposite->boundingRect(mRenderer);
     QSize mapSize = sceneRect.size().toSize();
     if (mapSize.isEmpty())
@@ -386,6 +384,7 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
     }
 
     // Now all the changes are applied, see if the size of the image should change.
+    mRenderer->setMaxLevel(mShadowMap->mMapComposite->maxLevel());
     sm.mMapComposite->synch();
     QRectF newBounds = sm.mMapComposite->boundingRect(mRenderer);
     if (oldBounds != newBounds) {
