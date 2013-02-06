@@ -100,6 +100,8 @@ QVariant ZLevelsModel::data(const QModelIndex &index, int role) const
     if (Layer *layer = item->layer) {
         switch (role) {
         case Qt::DisplayRole:
+            if (layer->isTileLayer() && !layer->asTileLayer()->group())
+                return layer->name() + QLatin1String(" <no level>");
             return MapComposite::layerNameWithoutPrefix(layer);
         case Qt::EditRole:
             return layer->name();
