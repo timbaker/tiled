@@ -624,7 +624,7 @@ void MiniMapItem::layerRemoved(int index)
 
 void MiniMapItem::layerRenamed(int index)
 {
-    MapChange *c = new MapChange(MapChange::LayerRemoved);
+    MapChange *c = new MapChange(MapChange::LayerRenamed);
     c->mLayerIndex = index;
     c->mName = mMapComposite->map()->layerAt(index)->name();
     queueChange(c);
