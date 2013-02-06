@@ -784,7 +784,7 @@ void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor, bool objectsTo
     // Move the user-placed tiles
     QMap<QString,FloorTileGrid*> grime = floor->grimeClone();
 
-    floorBounds = floor->bounds().adjusted(0, 0, 1, 1);
+    floorBounds = floor->bounds(1, 1);
     foreach (QRect src, mSelectedArea.rects()) {
         src &= floorBounds;
         for (int x = src.left(); x <= src.right(); x++) {
@@ -2138,7 +2138,7 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             mEditor->setCursorObject(mHandleObject);
             return;
         }
-        if (!floor()->bounds(1,1).contains(mCurrentTilePos))
+        if (!floor()->bounds(1, 1).contains(mCurrentTilePos))
             return;
         mObject = new WallObject(floor(),
                                  mStartTilePos.x(), mStartTilePos.y(),
@@ -2206,7 +2206,7 @@ void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
         updateHandle(event->scenePos());
 
-        mCursorItem->setVisible(floor()->bounds().adjusted(0,0,1,1).contains(mCurrentTilePos) &&
+        mCursorItem->setVisible(floor()->bounds(1, 1).contains(mCurrentTilePos) &&
                                 !mMouseOverHandle);
 
         // See NOTE-SCENE-CORRUPTION
@@ -2239,7 +2239,7 @@ void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 
     if (mMode == Create) {
-        if (!floor()->bounds().adjusted(0,0,1,1).contains(mCurrentTilePos))
+        if (!floor()->bounds(1, 1).contains(mCurrentTilePos))
             return;
 
         QPoint pos = mStartTilePos;
