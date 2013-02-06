@@ -146,7 +146,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mFurnitureDock(new BuildingFurnitureDock(this)),
     mLayersDock(new BuildingLayersDock(this)),
     mTilesetDock(new BuildingTilesetDock(this)),
-    mFirstTimeSeen(true)
+    mFirstTimeSeen(true),
+    mPrevObjectTool(0),
+    mPrevTileTool(0)
 {
     ui->setupUi(this);
 
@@ -2624,6 +2626,10 @@ void BuildingEditorWindow::toggleOrthoIso()
 
 void BuildingEditorWindow::toggleEditMode()
 {
+    if (mEditMode == ObjectMode)
+        mPrevObjectTool = ToolManager::instance()->currentTool();
+    else
+        mPrevTileTool = ToolManager::instance()->currentTool();
     ToolManager::instance()->clearDocument();
 
     if (mEditMode == ObjectMode) {
@@ -2668,4 +2674,12 @@ void BuildingEditorWindow::toggleEditMode()
     }
 
     updateActions();
+
+    if (mEditMode == ObjectMode) {
+        if (mPrevObjectTool && mPrevObjectTool->action()->isEnabled())
+            mPrevObjectTool->makeCurrent();
+    } else {
+        if (mPrevTileTool && mPrevTileTool->action()->isEnabled())
+            mPrevTileTool->makeCurrent();
+    }
 }

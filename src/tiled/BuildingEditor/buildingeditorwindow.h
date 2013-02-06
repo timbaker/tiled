@@ -272,6 +272,8 @@ private:
     BuildingLayersDock *mLayersDock;
     BuildingTilesetDock *mTilesetDock;
     bool mFirstTimeSeen;
+    BaseTool *mPrevObjectTool;
+    BaseTool *mPrevTileTool;
 };
 
 } // namespace BuildingEditor
