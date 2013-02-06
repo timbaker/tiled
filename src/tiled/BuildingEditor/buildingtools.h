@@ -282,6 +282,7 @@ protected:
 
     QPoint mTilePos;
     TileEdge mTileEdge;
+    bool mTileCenters;
     BuildingObject *mCursorObject;
     GraphicsObjectItem *mCursorItem;
 };

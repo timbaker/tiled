@@ -833,6 +833,7 @@ void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor, bool objectsTo
 BaseObjectTool::BaseObjectTool() :
     BaseTool(),
     mTileEdge(Center),
+    mTileCenters(false),
     mCursorObject(0),
     mCursorItem(0)
 {
@@ -871,21 +872,30 @@ void BaseObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
     QPointF p = mEditor->sceneToTileF(event->scenePos(), mEditor->currentLevel());
     QPointF m(p.x() - int(p.x()), p.y() - int(p.y()));
-    TileEdge xEdge = Center, yEdge = Center;
-    if (m.x() < 0.25)
-        xEdge = W;
-    else if (m.x() >= 0.75)
-        xEdge = E;
-    if (m.y() < 0.25)
-        yEdge = N;
-    else if (m.y() >= 0.75)
-        yEdge = S;
-    if ((xEdge == Center && yEdge == Center) || (xEdge != Center && yEdge != Center))
-        mTileEdge = Center;
-    else if (xEdge != Center)
-        mTileEdge = xEdge;
-    else
-        mTileEdge = yEdge;
+    if (mTileCenters) {
+        TileEdge xEdge = Center, yEdge = Center;
+        if (m.x() < 0.25)
+            xEdge = W;
+        else if (m.x() >= 0.75)
+            xEdge = E;
+        if (m.y() < 0.25)
+            yEdge = N;
+        else if (m.y() >= 0.75)
+            yEdge = S;
+        if ((xEdge == Center && yEdge == Center) || (xEdge != Center && yEdge != Center))
+            mTileEdge = Center;
+        else if (xEdge != Center)
+            mTileEdge = xEdge;
+        else
+            mTileEdge = yEdge;
+    } else {
+        qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
+        if (dW < dE) {
+            mTileEdge = (dW < dN && dW < dS) ? W : ((dN < dS) ? N : S);
+        } else {
+            mTileEdge = (dE < dN && dE < dS) ? E : ((dN < dS) ? N : S);
+        }
+    }
 
     if (mTilePos == oldTilePos && mTileEdge == oldEdge)
         return;
@@ -1097,14 +1107,8 @@ void StairsTool::updateCursorObject()
     int x = mTilePos.x(), y = mTilePos.y();
     BuildingObject::Direction dir = BuildingObject::N;
 
-    if (mTileEdge == W)
+    if (mTileEdge == E || mTileEdge == N)
         dir = BuildingObject::W;
-    else if (mTileEdge == E) {
-        x++;
-        dir = BuildingObject::W;
-    }
-    else if (mTileEdge == S)
-        y++;
 
     if (!mCursorObject) {
         BuildingFloor *floor = 0; //floor();
@@ -1178,16 +1182,24 @@ void FurnitureTool::updateCursorObject()
         case OrientNone: break;
         case OrientNW: orient = ftiles->hasCorners()
                     ? FurnitureTile::FurnitureNW
-                    : (shiftModifier() ? FurnitureTile::FurnitureW : FurnitureTile::FurnitureN); break;
+                    : ((mTileEdge == W || mTileEdge == S)
+                       ? FurnitureTile::FurnitureW : FurnitureTile::FurnitureN);
+            break;
         case OrientNE: orient = ftiles->hasCorners()
                     ? FurnitureTile::FurnitureNE
-                    : (shiftModifier() ? FurnitureTile::FurnitureE : FurnitureTile::FurnitureN); break;
+                    : ((mTileEdge == E || mTileEdge == S)
+                       ? FurnitureTile::FurnitureE : FurnitureTile::FurnitureN);
+            break;
         case OrientSW: orient = ftiles->hasCorners()
                     ? FurnitureTile::FurnitureSW
-                    : (shiftModifier() ? FurnitureTile::FurnitureW : FurnitureTile::FurnitureS); break;
+                    : ((mTileEdge == W || mTileEdge == N)
+                       ? FurnitureTile::FurnitureW : FurnitureTile::FurnitureS);
+            break;
         case OrientSE: orient = ftiles->hasCorners()
                     ? FurnitureTile::FurnitureSE
-                    : (shiftModifier() ? FurnitureTile::FurnitureE : FurnitureTile::FurnitureS); break;
+                    : ((mTileEdge == E || mTileEdge == N)
+                       ? FurnitureTile::FurnitureE : FurnitureTile::FurnitureS);
+            break;
         case OrientW: orient = FurnitureTile::FurnitureW; break;
         case OrientN: orient = FurnitureTile::FurnitureN; break;
         case OrientE: orient = FurnitureTile::FurnitureE; break;
