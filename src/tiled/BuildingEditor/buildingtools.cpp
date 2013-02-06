@@ -938,6 +938,14 @@ void BaseObjectTool::setCursorObject(BuildingObject *object)
         if (mCursorItem)
             mCursorItem->setVisible(false);
     }
+
+    // See NOTE-SCENE-CORRUPTION
+    if (mCursorItem && mCursorItem->boundingRect() != mCursorSceneRect) {
+        // Don't call mCursor->update(), it isn't the same.
+        mEditor->update(mCursorSceneRect);
+        mCursorSceneRect = mCursorItem->boundingRect();
+    }
+
     mEditor->setCursorObject(object);
 }
 
@@ -1285,7 +1293,7 @@ FurnitureTool::Orient FurnitureTool::calcOrient(int x, int y)
 {
     BuildingFloor *floor = this->floor();
     Orient orient[9];
-    orient[OrientNW] = (x &&y) ? wallOrient(floor->squares[x-1][y-1]) : OrientNone;
+    orient[OrientNW] = (x && y) ? wallOrient(floor->squares[x-1][y-1]) : OrientNone;
     orient[OrientN] = y ? wallOrient(floor->squares[x][y-1]) : OrientNone;
     orient[OrientNE] = y ? wallOrient(floor->squares[x+1][y-1]) : OrientNone;
     orient[OrientW] = x ? wallOrient(floor->squares[x-1][y]) : OrientNone;

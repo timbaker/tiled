@@ -285,6 +285,7 @@ protected:
     bool mTileCenters;
     BuildingObject *mCursorObject;
     GraphicsObjectItem *mCursorItem;
+    QRectF mCursorSceneRect;
 };
 
 class DoorTool : public BaseObjectTool
