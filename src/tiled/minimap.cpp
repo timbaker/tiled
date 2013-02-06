@@ -341,9 +341,13 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
             redrawAll = true;
             break;
         case MapChange::RegionAltered: {
-            TileLayer *tl = sm.mMapComposite->map()->layerAt(c.mLayerIndex)->asTileLayer(); // kinda slow
-            foreach (const MapChange::CellEntry &ce, c.mCells) {
-                tl->setCell(ce.x, ce.y, ce.cell);
+            if (Layer *layer = sm.mMapComposite->map()->layerAt(c.mLayerIndex)) { // kinda slow
+                if (TileLayer *tl = layer->asTileLayer()) {
+                    foreach (const MapChange::CellEntry &ce, c.mCells)
+                        tl->setCell(ce.x, ce.y, ce.cell);
+                    if (CompositeLayerGroup *layerGroup = sm.mMapComposite->layerGroupForLayer(tl))
+                        layerGroup->regionAltered(tl); // possibly set mNeedsSynch
+                }
             }
             break;
         }
@@ -660,9 +664,11 @@ void MiniMapItem::lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject)
 void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
 {
     if (!layer->asTileLayer()) return;
+    QRegion clipped = region & layer->bounds();
+    if (clipped.isEmpty()) return;
     MapChange *c = new MapChange(MapChange::RegionAltered);
     c->mLayerIndex = mMapComposite->map()->layers().indexOf(layer);
-    foreach (const QRect &r, region.rects()) {
+    foreach (const QRect &r, clipped.rects()) {
         for (int y = r.y(); y <= r.bottom(); y++) {
             for (int x = r.x(); x <= r.right(); x++) {
                 c->mCells += MapChange::CellEntry(x, y, layer->asTileLayer()->cellAt(x, y));
