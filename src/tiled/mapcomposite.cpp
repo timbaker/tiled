@@ -328,6 +328,34 @@ void CompositeLayerGroup::synch()
     }
 #endif
 
+    // Set the visibility and opacity of this group's layers to match the root
+    // map's layer-group's layers. Layers without a matching name in the root map
+    // are always shown at full opacity.
+    // Note that changing the opacity of a layer is *not* a reason for calling
+    // synch() again.
+    if (mOwner->parent()) {
+        for (int index = 0; index < mLayers.size(); index++) {
+            mVisibleLayers[index] = true;
+            mLayerOpacity[index] = 1.0;
+        }
+        CompositeLayerGroup *rootGroup = mOwner->root()->layerGroupForLevel(mOwner->levelRecursive() + mLevel);
+        if (rootGroup) {
+            // FIXME: this doesn't properly handle multiple layers with the same name.
+            for (int rootIndex = 0; rootIndex < rootGroup->mLayers.size(); rootIndex++) {
+                QString layerName = rootGroup->mLayers[rootIndex]->name();
+                const QString name = MapComposite::layerNameWithoutPrefix(layerName);
+                if (!mLayersByName.contains(name))
+                    continue;
+                foreach (Layer *layer, mLayersByName[name]) {
+                    int index = mLayers.indexOf(layer->asTileLayer());
+                    Q_ASSERT(index != -1);
+                    mVisibleLayers[index] = rootGroup->mVisibleLayers[rootIndex];
+                    mLayerOpacity[index] = rootGroup->mLayerOpacity[rootIndex];
+                }
+            }
+        }
+    }
+
     int index = 0;
     foreach (TileLayer *tl, mLayers) {
         if (!isLayerEmpty(index)) {
@@ -349,17 +377,7 @@ void CompositeLayerGroup::synch()
         int levelOffset = subMap->levelOffset();
         CompositeLayerGroup *layerGroup = subMap->tileLayersForLevel(mLevel - levelOffset);
         if (layerGroup) {
-
-            // Set the visibility of sub-map layers to match this layer-group's layers.
-            // Layers in the sub-map without a matching name in the base map are always shown.
-            foreach (TileLayer *layer, layerGroup->mLayers)
-                layerGroup->setLayerVisibility(layer, true);
-            int index = 0;
-            foreach (TileLayer *layer, mLayers)
-                layerGroup->setLayerVisibility(layer->name(), mVisibleLayers[index++]);
-
             layerGroup->synch();
-
             if (layerGroup->mAnyVisibleLayers) {
                 mVisibleSubMapLayers.append(SubMapLayers(subMap, layerGroup));
                 unionTileRects(r, layerGroup->bounds().translated(subMap->origin()), r);
@@ -716,11 +734,6 @@ MapComposite *MapComposite::addMap(MapInfo *mapInfo, const QPoint &pos, int leve
 
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups) {
         layerGroup->setNeedsSynch(true);
-
-        if (CompositeLayerGroup *subMapLayerGroup = subMap->tileLayersForLevel(layerGroup->level() - levelOffset)) {
-            foreach (TileLayer *tl, layerGroup->layers())
-                subMapLayerGroup->setLayerOpacity(tl->name(), tl->opacity());
-        }
     }
 
     return subMap;
