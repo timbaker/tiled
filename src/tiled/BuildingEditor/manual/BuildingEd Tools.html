@@ -9,6 +9,7 @@
 
 
 
+
 <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>BuildingEd Tools</title>
   <meta content="Tim &quot;EasyPickins&quot; Baker" name="author"></head><body>
 <h2><span style="font-weight: bold;"></span>BuildingEd Tools</h2>
@@ -130,10 +131,12 @@ the staircase are erased automatically.&nbsp; Note that there are only
 remind you to leave a spot for the player to enter and exit the
 staircase.<br>
 <ul>
-<li>Left-click to place a staircase.&nbsp; When the mouse pointer is near the
-left or right edge of a grid cell, the staircase will be horizontal.&nbsp;
-When the mouse pointer is near the top or bottom edge of&nbsp; a grid cell,
-the staircase will be vertical.</li>
+<li>Left-click to place a staircase.&nbsp; When the mouse pointer is
+near the bottom-left corner of a grid cell, the staircase will be
+vertical.&nbsp;
+When the mouse pointer is near the top-right corner of&nbsp; a grid
+cell,
+the staircase will be horizontal.</li>
   <li>Right-click to delete the staircase (or any other kind of object) that is under the mouse pointer.</li>
 </ul>
 
@@ -179,8 +182,7 @@ visually.&nbsp; Roof-corner objects are created by left-click-dragging
 to draw a rectangle defining the area of the object.&nbsp; Roof-corner
 objects may be 1x1, 2x2, or 3x3 tiles in size.<br>
 <img style="width: 140px; height: 219px;" alt="" src="images/roof-corner-tool.png"><br>
-Typically, only the Inner (North-West) and Outer (South-East)
-roof-corner objects are used, but the other types may be used if you
+Typically, only the Inner NW, Outer NE/SE/SW roof-corner objects are used, but the other types may be used if you
 later want to rotate or flip the building and end up with the correct
 appearance for the rotated corners.<br>
 <div style="text-align: left;"><img style="width: 358px; height: 174px;" alt="" src="images/roof-corners.png">
@@ -199,11 +201,8 @@ the edge or corner of a room, the furniture object's orientation will
 automatically be chosen.&nbsp; If you want to disable the chosen
 orientation, hold down the CTRL key.</li>
   <li>In the corners of a room, 2 possible orientations could be
-chosen.&nbsp; The Furniture Tool prefers the north and south
-orientations in these cases.&nbsp; To use the alternate (west or east)
-orientation, hold down the SHIFT key.&nbsp; Some furniture tiles, such
-as for kitchen counters, already have valid corner orientations, in
-which case those are used and the SHIFT key does nothing.<br>
+chosen.&nbsp; Move the mouse pointer next to either wall to choose the desired orientation.&nbsp; Some furniture tiles, such
+as for kitchen counters, only have a single choice for each corner.<br>
   </li>
 <li>Right-click to delete the furniture object (or any other kind of object) that is under the mouse pointer.</li>
 </ul>
@@ -239,10 +238,11 @@ will be affected the same as if clicking on those objects one at a
 time. That is, the CTRL key will toggle the selected state of objects
 in the selection rectangle, while the SHIFT key will always add
 deselected objects to the selection.<br>
-</li><li>Right-click while dragging objects to cancel the operation.<br>
-  </li>
+</li><li>Right-click while dragging objects to cancel the operation.</li>
+  <li>
+If objects are dragged outside the grid (or to any invalid position), those objects will be deleted.</li>
+
 </ul>
 <div style="text-align: left;"><img style="width: 195px; height: 222px;" alt="" src="images/select-objects-tool.png"><br>
-</div>
-If objects are dragged outside the grid (or to any invalid position), those objects will be deleted.<br>
+</div><br>
 </body></html>

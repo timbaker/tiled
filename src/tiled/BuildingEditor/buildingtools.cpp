@@ -1145,7 +1145,7 @@ FurnitureTool::FurnitureTool() :
     BaseObjectTool(),
     mCurrentTile(0)
 {
-    setStatusText(tr("Left-click to place furniture. Right-click to remove any object. CTRL toggles auto-align. SHIFT toggles corner choice."));
+    setStatusText(tr("Left-click to place furniture. Right-click to remove any object. CTRL disables auto-align."));
 }
 
 void FurnitureTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
