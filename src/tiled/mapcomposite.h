@@ -21,7 +21,7 @@
 #include "map.h"
 #define BUILDINGED
 #ifdef BUILDINGED
-#include "tilelayer.h"
+#include "tilelayer.h" // for Cell
 #endif
 #include "ztilelayergroup.h"
 
@@ -136,7 +136,7 @@ private:
     Tiled::TileLayer *mToolTileLayer;
     QString mHighlightLayer;
     QVector<bool> mForceNonEmpty;
-#endif
+#endif // BUILDINGED
 };
 
 class MapComposite : public QObject
@@ -247,7 +247,7 @@ public:
     { return mBlendOverMap; }
 
     MapComposite *mBlendOverMap;
-#endif
+#endif // BUILDINGED
 
 signals:
     void layerGroupAdded(int level);

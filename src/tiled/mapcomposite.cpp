@@ -91,9 +91,9 @@ CompositeLayerGroup::CompositeLayerGroup(MapComposite *owner, int level)
     , mOwner(owner)
     , mAnyVisibleLayers(false)
     , mNeedsSynch(true)
-    #ifdef BUILDINGED
+#ifdef BUILDINGED
     , mToolTileLayer(0)
-    #endif
+#endif // BUILDINGED
 {
 
 }
@@ -126,7 +126,7 @@ void CompositeLayerGroup::addTileLayer(TileLayer *layer, int index)
 #ifdef BUILDINGED
     mBlendLayers.insert(index, 0);
     mForceNonEmpty.insert(index, false);
-#endif
+#endif // BUILDINGED
 }
 
 void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
@@ -138,7 +138,7 @@ void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
 #ifdef BUILDINGED
     mBlendLayers.remove(index);
     mForceNonEmpty.remove(index);
-#endif
+#endif // BUILDINGED
 
     // Hack -- only a map being edited can set a TileLayer's group.
     ZTileLayerGroup *oldGroup = layer->group();
@@ -168,45 +168,6 @@ void CompositeLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRec
     }
 }
 
-#ifndef BUILDINGED
-bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
-                                         QVector<const Cell *> &cells,
-                                         QVector<qreal> &opacities) const
-{
-    bool cleared = false;
-    int index = -1;
-    foreach (TileLayer *tl, mLayers) {
-        ++index;
-#if SPARSE_TILELAYER
-        // Checking isEmpty() and mEmptyLayers to catch hidden NoRender layers in submaps
-        if (!mVisibleLayers[index] || mEmptyLayers[index] || tl->isEmpty())
-#else
-        if (!mVisibleLayers[index] || mEmptyLayers[index])
-#endif
-            continue;
-        QPoint subPos = pos - mOwner->orientAdjustTiles() * mLevel - tl->position();
-        if (tl->contains(subPos)) {
-            const Cell *cell = &tl->cellAt(subPos);
-            if (!cell->isEmpty()) {
-                if (!cleared) {
-                    cells.resize(0);
-                    opacities.resize(0);
-                    cleared = true;
-                }
-                cells.append(cell);
-                opacities.append(mLayerOpacity[index]);
-            }
-        }
-    }
-
-    // Overwrite map cells with sub-map cells at this location
-    foreach (const SubMapLayers& subMapLayer, mPreparedSubMapLayers)
-        subMapLayer.mLayerGroup->orderedCellsAt(pos - subMapLayer.mSubMap->origin(),
-                                                cells, opacities);
-
-    return !cells.isEmpty();
-}
-#else
 bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                                          QVector<const Cell *> &cells,
                                          QVector<qreal> &opacities) const
@@ -222,16 +183,20 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
         if (isLayerEmpty(index))
             continue;
         TileLayer *tl = mLayers[index];
+#ifdef BUILDINGED
         TileLayer *tlBlend = mBlendLayers[index];
+#endif // BUILDINGED
         QPoint subPos = pos - mOwner->orientAdjustTiles() * mLevel - tl->position();
         if (tl->contains(subPos)) {
             const Cell *cell = &tl->cellAt(subPos);
+#ifdef BUILDINGED
             // Use an empty tool tile if given during erasing.
             if ((mToolTileLayer == tl) && !mToolTiles.isEmpty() &&
                     QRect(mToolTilesPos, QSize(mToolTiles.size(), mToolTiles[0].size())).contains(subPos))
                 cell = &mToolTiles[subPos.x()-mToolTilesPos.x()][subPos.y()-mToolTilesPos.y()];
             else if (cell->isEmpty() && tlBlend && tlBlend->contains(subPos))
                 cell = &tlBlend->cellAt(subPos);
+#endif // BUILDINGED
             if (!cell->isEmpty()) {
                 if (!cleared) {
                     bool isFloor = !mLevel && !index && (tl->name() == sFloor);
@@ -264,7 +229,6 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
 
     return !cells.isEmpty();
 }
-#endif // BUILDINGED
 
 bool CompositeLayerGroup::isLayerEmpty(int index) const
 {
@@ -277,7 +241,7 @@ bool CompositeLayerGroup::isLayerEmpty(int index) const
         return false;
     if (mToolTileLayer && !mToolTiles.isEmpty())
         return false;
-#endif
+#endif // BUILDINGED
 #if SPARSE_TILELAYER
     // Checking isEmpty() and mEmptyLayers to catch hidden NoRender layers in submaps.
     return mEmptyLayers[index] || mLayers[index]->isEmpty();
@@ -615,9 +579,9 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
     , mVisible(true)
     , mGroupVisible(true)
     , mHiddenDuringDrag(false)
-    #ifdef BUILDINGED
+#ifdef BUILDINGED
     , mBlendOverMap(0)
-    #endif
+#endif
 {
 #if 0
     MapManager::instance()->addReferenceToMap(mMapInfo);
@@ -638,6 +602,7 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
         if (levelForLayer(layer, &level)) {
             // FIXME: no changing of mMap should happen after it is loaded!
             layer->setLevel(level); // for ObjectGroup,ImageLayer as well
+
             if (TileLayer *tl = layer->asTileLayer()) {
                 if (!mLayerGroups.contains(level))
                     mLayerGroups[level] = new CompositeLayerGroup(this, level);
@@ -669,17 +634,9 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
                     if (subMapInfo) {
                         int levelOffset;
                         (void) levelForLayer(objectGroup, &levelOffset);
-#if 0
-                        MapComposite *_subMap = new MapComposite(subMapInfo, mOrientRender,
-                                                                 this, object->position().toPoint()
-                                                                 + mOrientAdjustPos * levelOffset,
-                                                                 levelOffset);
-                        mSubMaps.append(_subMap);
-#else
                         addMap(subMapInfo, object->position().toPoint()
                                + mOrientAdjustPos * levelOffset,
                                levelOffset);
-#endif
                     }
                 }
             }
@@ -1199,17 +1156,9 @@ void MapComposite::recreate()
                     if (subMapInfo) {
                         int levelOffset;
                         (void) levelForLayer(objectGroup, &levelOffset);
-#if 0
-                        MapComposite *_subMap = new MapComposite(subMapInfo, mOrientRender,
-                                                                 this, object->position().toPoint()
-                                                                 + mOrientAdjustPos * levelOffset,
-                                                                 levelOffset);
-                        mSubMaps.append(_subMap);
-#else
                         addMap(subMapInfo, object->position().toPoint()
                                + mOrientAdjustPos * levelOffset,
                                levelOffset);
-#endif
                     }
                 }
             }
