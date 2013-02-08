@@ -173,7 +173,8 @@ public:
         MapResized,
         TilesetAdded,
         TilesetRemoved,
-        TilesetChanged
+        TilesetChanged,
+        Recreate
     };
 
     MapChange(Change change)
@@ -380,6 +381,9 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
             sm.mMapComposite->map()->setHeight(c.mMapSize.height());
             break;
         }
+        case MapChange::Recreate:
+            redrawAll = true;
+            break;
         }
     }
 
@@ -591,6 +595,12 @@ void MiniMapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
 #ifndef QT_NO_DEBUG
     painter->drawRect(mMapImageBounds);
 #endif
+}
+
+void MiniMapItem::recreateImage()
+{
+    MapChange *c = new MapChange(MapChange::Recreate);
+    queueChange(c);
 }
 
 void MiniMapItem::minimapVisibilityChanged(bool visible)
@@ -906,6 +916,7 @@ void MiniMap::smaller()
 
 void MiniMap::updateImage()
 {
+    mExtraItem->recreateImage();
 }
 
 void MiniMap::widthChanged(int width)
