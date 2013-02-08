@@ -367,8 +367,10 @@ void ZomboidScene::layerGroupAdded(int level)
 
 void ZomboidScene::layerGroupVisibilityChanged(CompositeLayerGroup *g)
 {
-    if (mTileLayerGroupItems.contains(g->level()))
+    if (mTileLayerGroupItems.contains(g->level())) {
         mTileLayerGroupItems[g->level()]->setVisible(g->isVisible());
+        updateLayerGroupLater(g->level(), Synch | Bounds);
+    }
 }
 
 void ZomboidScene::layerAddedToGroup(int index)

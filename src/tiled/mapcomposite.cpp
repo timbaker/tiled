@@ -291,6 +291,19 @@ bool CompositeLayerGroup::isLayerEmpty(int index) const
 
 void CompositeLayerGroup::synch()
 {
+    if (!mVisible) {
+        mAnyVisibleLayers = false;
+        mTileBounds = QRect();
+        mSubMapTileBounds = QRect();
+        mDrawMargins = QMargins(0, mOwner->map()->tileHeight(), mOwner->map()->tileWidth(), 0);
+        mVisibleSubMapLayers.clear();
+#ifdef BUILDINGED
+        mBlendLayers.fill(0);
+#endif
+        mNeedsSynch = false;
+        return;
+    }
+
     QRect r;
     // See TileLayer::drawMargins()
     QMargins m(0, mOwner->map()->tileHeight(), mOwner->map()->tileWidth(), 0);
