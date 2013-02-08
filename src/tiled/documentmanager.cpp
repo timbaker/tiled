@@ -23,6 +23,7 @@
 
 #ifdef ZOMBOID
 #include "ZomboidScene.h"
+#include <QDir>
 #endif
 
 #include "abstracttool.h"
@@ -174,7 +175,12 @@ void DocumentManager::addDocument(MapDocument *mapDocument)
     const int documentIndex = mDocuments.size() - 1;
 
     mTabWidget->addTab(view, mapDocument->displayName());
+#ifdef ZOMBOID
+    mTabWidget->setTabToolTip(documentIndex, QDir::toNativeSeparators(
+                                  mapDocument->fileName()));
+#else
     mTabWidget->setTabToolTip(documentIndex, mapDocument->fileName());
+#endif
     connect(mapDocument, SIGNAL(fileNameChanged()), SLOT(updateDocumentTab()));
     connect(mapDocument, SIGNAL(modifiedChanged()), SLOT(updateDocumentTab()));
 
@@ -253,7 +259,12 @@ void DocumentManager::updateDocumentTab()
         tabText.prepend(QLatin1Char('*'));
 
     mTabWidget->setTabText(index, tabText);
+#ifdef ZOMBOID
+    mTabWidget->setTabToolTip(index, QDir::toNativeSeparators(
+                                  mapDocument->fileName()));
+#else
     mTabWidget->setTabToolTip(index, mapDocument->fileName());
+#endif
 }
 
 void DocumentManager::centerViewOn(int x, int y)
