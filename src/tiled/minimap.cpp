@@ -462,10 +462,15 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
             if (sm.mMapComposite->map()->isTilesetUsed(c.mTileset))
                 redrawAll = true;
             else {
+                QRectF dirty2;
                 foreach (MapComposite *mc, sm.mMapComposite->subMaps()) {
-                    if (mc->map()->isTilesetUsed(c.mTileset)) {
+                    if (mc->isTilesetUsed(c.mTileset)) {
                         QRectF bounds = mc->boundingRect(mRenderer);
-                        dirty = mLotBounds[sm.mLotToID[mc]] | bounds;
+                        dirty2 = mLotBounds[sm.mLotToID[mc]] | bounds;
+                        if (dirty.isEmpty())
+                            dirty = dirty2;
+                        else
+                            dirty |= dirty2;
                         mLotBounds[sm.mLotToID[mc]] = bounds;
                     }
                 }
