@@ -658,6 +658,7 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
     if (mMinLevel == 10000)
         mMinLevel = 0;
 
+    mSortedLayerGroups.clear();
     for (int level = mMinLevel; level <= mMaxLevel; ++level) {
         if (!mLayerGroups.contains(level))
             mLayerGroups[level] = new CompositeLayerGroup(this, level);
