@@ -1071,6 +1071,7 @@ bool MapComposite::mapChanged(MapInfo *mapInfo)
     bool changed = false;
     foreach (MapComposite *subMap, mSubMaps) {
         if (subMap->mapChanged(mapInfo)) {
+            ensureMaxLevels(subMap->levelOffset() + subMap->maxLevel());
             if (!changed) {
                 foreach (CompositeLayerGroup *layerGroup, mLayerGroups)
                     layerGroup->setNeedsSynch(true);
