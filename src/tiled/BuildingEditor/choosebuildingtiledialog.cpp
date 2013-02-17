@@ -44,7 +44,7 @@ ChooseBuildingTileDialog::ChooseBuildingTileDialog(const QString &prompt,
     ui->prompt->setText(prompt);
 
     ui->tableView->setZoomable(mZoomable);
-    mZoomable->setScale(BuildingPreferences::instance()->tileScale());
+    mZoomable->connectToComboBox(ui->scaleCombo);
 
     connect(ui->tilesButton, SIGNAL(clicked()), SLOT(tilesDialog()));
 
@@ -57,6 +57,9 @@ ChooseBuildingTileDialog::ChooseBuildingTileDialog(const QString &prompt,
     QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
     if (!geom.isEmpty())
         restoreGeometry(geom);
+    qreal scale = settings.value(QLatin1String("scale"),
+                                 BuildingPreferences::instance()->tileScale()).toReal();
+    mZoomable->setScale(scale);
     settings.endGroup();
 }
 
@@ -99,8 +102,9 @@ void ChooseBuildingTileDialog::setTilesList(BuildingTileCategory *category,
 
     MixedTilesetView *v = ui->tableView;
     QMap<QString,BuildingTileEntry*> entryMap;
+    int i = 0;
     foreach (BuildingTileEntry *entry, category->entries()) {
-        QString key = entry->displayTile()->name() + QString::number((qulonglong)entry);
+        QString key = entry->displayTile()->name() + QString::number(i++);
         entryMap[key] = entry;
     }
     foreach (BuildingTileEntry *entry, entryMap.values()) {
@@ -116,6 +120,15 @@ void ChooseBuildingTileDialog::setTilesList(BuildingTileCategory *category,
         v->setCurrentIndex(v->model()->index(tile));
     else
         v->setCurrentIndex(v->model()->index(0, 0));
+}
+
+void ChooseBuildingTileDialog::saveSettings()
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("BuildingEditor/ChooseBuildingTileDialog"));
+    settings.setValue(QLatin1String("geometry"), saveGeometry());
+    settings.setValue(QLatin1String("scale"), mZoomable->scale());
+    settings.endGroup();
 }
 
 void ChooseBuildingTileDialog::tilesDialog()
@@ -135,10 +148,12 @@ void ChooseBuildingTileDialog::tilesDialog()
 
 void ChooseBuildingTileDialog::accept()
 {
-    QSettings settings;
-    settings.beginGroup(QLatin1String("BuildingEditor/ChooseBuildingTileDialog"));
-    settings.setValue(QLatin1String("geometry"), saveGeometry());
-    settings.endGroup();
-
+    saveSettings();
     QDialog::accept();
+}
+
+void ChooseBuildingTileDialog::reject()
+{
+    saveSettings();
+    QDialog::reject();
 }

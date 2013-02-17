@@ -46,6 +46,13 @@
        </property>
       </spacer>
      </item>
+     <item>
+      <widget class="QComboBox" name="scaleCombo">
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

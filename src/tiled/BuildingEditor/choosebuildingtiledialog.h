@@ -53,9 +53,12 @@ private:
     void setTilesList(BuildingTileCategory *category,
                       BuildingTileEntry *initialTile = 0);
 
+    void saveSettings();
+
 private slots:
     void tilesDialog();
     void accept();
+    void reject();
     
 private:
     Ui::ChooseBuildingTileDialog *ui;
