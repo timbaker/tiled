@@ -349,8 +349,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionNormalSize, SIGNAL(triggered()), SLOT(resetZoom()));
 
     QList<QKeySequence> keys = QKeySequence::keyBindings(QKeySequence::ZoomIn);
-//    keys += QKeySequence(tr("Ctrl+="));
+    keys += QKeySequence(tr("Ctrl+="));
     keys += QKeySequence(tr("+"));
+    keys += QKeySequence(tr("="));
     ui->actionZoomIn->setShortcuts(keys);
     mOrthoView->addAction(ui->actionZoomIn);
     mIsoView->addAction(ui->actionZoomIn);

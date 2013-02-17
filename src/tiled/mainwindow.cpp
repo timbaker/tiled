@@ -255,6 +255,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     QList<QKeySequence> keys = QKeySequence::keyBindings(QKeySequence::ZoomIn);
     keys += QKeySequence(tr("Ctrl+="));
     keys += QKeySequence(tr("+"));
+#ifdef ZOMBOID
+    keys += QKeySequence(tr("="));
+#endif
     mUi->actionZoomIn->setShortcuts(keys);
     keys = QKeySequence::keyBindings(QKeySequence::ZoomOut);
     keys += QKeySequence(tr("-"));
