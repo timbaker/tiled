@@ -57,6 +57,14 @@ void TilesetModel::setMapDocument(MapDocument *mapDocument)
         connect(mMapDocument, SIGNAL(tileLayerNameChanged(Tile*)),
                 SLOT(tileLayerNameChanged(Tile*)));
 }
+
+void TilesetModel::redisplay()
+{
+    int maxRow = rowCount() - 1;
+    int maxColumn = columnCount() - 1;
+    if (maxRow >= 0 && maxColumn >= 0)
+        emit dataChanged(index(0, 0), index(maxRow, maxColumn));
+}
 #endif
 
 int TilesetModel::rowCount(const QModelIndex &parent) const

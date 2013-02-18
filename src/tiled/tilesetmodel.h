@@ -100,6 +100,8 @@ public:
 
     void setMapDocument(MapDocument *mapDocument);
 
+    void redisplay();
+
 private:
     MapDocument *mMapDocument;
 

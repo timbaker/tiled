@@ -670,7 +670,10 @@ void FurnitureModel::removeTiles(FurnitureTiles *ftiles)
 void FurnitureModel::scaleChanged(qreal scale)
 {
     Q_UNUSED(scale)
-    reset();
+    int maxRow = rowCount() - 1;
+    int maxColumn = columnCount() - 1;
+    if (maxRow >= 0 && maxColumn >= 0)
+        emit dataChanged(index(0, 0), index(maxRow, maxColumn));
 }
 
 void FurnitureModel::calcMaxTileSize()

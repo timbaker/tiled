@@ -387,18 +387,26 @@ void TilesetView::editTileProperties()
 void TilesetView::setDrawGrid(bool drawGrid)
 {
     mDrawGrid = drawGrid;
+#ifdef ZOMBOID
+    tilesetModel()->redisplay();
+#else
     tilesetModel()->tilesetChanged();
+#endif
 }
 
 void TilesetView::adjustScale()
 {
+#ifdef ZOMBOID
+    tilesetModel()->redisplay();
+#else
     tilesetModel()->tilesetChanged();
+#endif
 }
 
 #ifdef ZOMBOID
 void TilesetView::autoSwitchLayerChanged(bool enabled)
 {
     mShowLayerNames = enabled;
-    tilesetModel()->tilesetChanged();
+    tilesetModel()->redisplay();
 }
 #endif
