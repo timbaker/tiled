@@ -32,6 +32,8 @@ private:
 private slots:
     void currentGroupChanged(int row);
     void currentFurnitureChanged();
+    void tileScaleChanged(qreal scale);
+    void tilesDialogEdited();
 
 private:
     QListWidget *mGroupList;

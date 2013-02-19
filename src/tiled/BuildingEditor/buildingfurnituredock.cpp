@@ -1,12 +1,17 @@
 #include "buildingfurnituredock.h"
 
 #include "buildingfloor.h"
+#include "buildingpreferences.h"
 #include "buildingtiles.h"
+#include "buildingtilesdialog.h"
 #include "buildingtiletools.h"
 #include "furnituregroups.h"
 #include "furnitureview.h"
 
+#include "zoomable.h"
+
 #include <QAction>
+#include <QComboBox>
 #include <QHBoxLayout>
 #include <QListWidget>
 #include <QSplitter>
@@ -21,9 +26,22 @@ BuildingFurnitureDock::BuildingFurnitureDock(QWidget *parent) :
 {
     setObjectName(QLatin1String("FurnitureDock"));
 
+    QHBoxLayout *comboLayout = new QHBoxLayout;
+    QComboBox *scaleCombo = new QComboBox;
+    scaleCombo->setEditable(true);
+    comboLayout->addStretch(1);
+    comboLayout->addWidget(scaleCombo);
+
+    QWidget *rightWidget = new QWidget(this);
+    QVBoxLayout *rightLayout = new QVBoxLayout(rightWidget);
+    rightLayout->setContentsMargins(0, 0, 0, 0);
+    rightLayout->addWidget(mFurnitureView, 1);
+    rightLayout->addLayout(comboLayout);
+
     QSplitter *splitter = new QSplitter;
+    splitter->setChildrenCollapsible(false);
     splitter->addWidget(mGroupList);
-    splitter->addWidget(mFurnitureView);
+    splitter->addWidget(rightWidget);
     splitter->setStretchFactor(1, 1);
 
     QWidget *outer = new QWidget(this);
@@ -33,9 +51,20 @@ BuildingFurnitureDock::BuildingFurnitureDock(QWidget *parent) :
     outerLayout->addWidget(splitter);
     setWidget(outer);
 
+    BuildingPreferences *prefs = BuildingPreferences::instance();
+    mFurnitureView->zoomable()->setScale(prefs->tileScale());
+    mFurnitureView->zoomable()->connectToComboBox(scaleCombo);
+    connect(prefs, SIGNAL(tileScaleChanged(qreal)),
+            SLOT(tileScaleChanged(qreal)));
+    connect(mFurnitureView->zoomable(), SIGNAL(scaleChanged(qreal)),
+            prefs, SLOT(setTileScale(qreal)));
+
     connect(mGroupList, SIGNAL(currentRowChanged(int)), SLOT(currentGroupChanged(int)));
     connect(mFurnitureView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(currentFurnitureChanged()));
+
+    connect(BuildingTilesDialog::instance(), SIGNAL(edited()),
+            SLOT(tilesDialogEdited()));
 
     retranslateUi();
 }
@@ -122,5 +151,21 @@ void BuildingFurnitureDock::currentFurnitureChanged()
 #endif
             DrawTileTool::instance()->setCaptureTiles(tiles, rgn);
         }
+    }
+}
+
+void BuildingFurnitureDock::tileScaleChanged(qreal scale)
+{
+    mFurnitureView->zoomable()->setScale(scale);
+}
+
+void BuildingFurnitureDock::tilesDialogEdited()
+{
+    FurnitureGroup *group = mCurrentGroup;
+    setGroupsList();
+    if (group) {
+        int row = FurnitureGroups::instance()->indexOf(group);
+        if (row >= 0)
+            mGroupList->setCurrentRow(row);
     }
 }
