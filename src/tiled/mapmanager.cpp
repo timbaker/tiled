@@ -638,6 +638,11 @@ void MapManager::mapLoadedByThread(MapManager::Map *map, MapInfo *mapInfo)
     }
 
     mapInfo->mMap = map;
+    mapInfo->mOrientation = map->orientation();
+    mapInfo->mHeight = map->height();
+    mapInfo->mWidth = map->width();
+    mapInfo->mTileWidth = map->tileWidth();
+    mapInfo->mTileHeight = map->tileHeight();
     mapInfo->mPlaceholder = false;
     mapInfo->mLoading = false;
 
