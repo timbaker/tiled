@@ -743,7 +743,10 @@ void MixedTilesetModel::setShowHeaders(bool show)
 void MixedTilesetModel::setShowLabels(bool show)
 {
     mShowLabels = show;
-    reset();
+    int maxRow = rowCount() - 1;
+    int maxColumn = columnCount() - 1;
+    if (maxRow >= 0 && maxColumn >= 0)
+        emit dataChanged(index(0, 0), index(maxRow, maxColumn));
 }
 
 void MixedTilesetModel::setLabel(Tile *tile, const QString &label)
