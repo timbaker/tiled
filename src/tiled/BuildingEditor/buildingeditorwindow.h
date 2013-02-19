@@ -84,9 +84,6 @@ public:
 
     bool Startup();
 
-    bool LoadTMXConfig();
-    bool validateTile(BuildingTile *btile, const char *key);
-
     void setCurrentRoom(Room *room) const; // TODO: move to BuildingDocument
     Room *currentRoom() const;
 

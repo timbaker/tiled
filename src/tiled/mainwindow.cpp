@@ -824,7 +824,7 @@ bool MainWindow::InitConfigFiles()
         }
     }
 
-    // Read Tilesets.txt before LoadTMXConfig() in case we are upgrading
+    // Read Tilesets.txt before TMXConfig.txt in case we are upgrading
     // TMXConfig.txt from VERSION0 to VERSION1.
     if (!TileMetaInfoMgr::instance()->readTxt()) {
         QMessageBox::critical(this, tr("It's no good, Jim!"),

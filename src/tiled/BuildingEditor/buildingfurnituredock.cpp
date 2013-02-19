@@ -127,28 +127,12 @@ void BuildingFurnitureDock::currentFurnitureChanged()
 
             if (!DrawTileTool::instance()->action()->isEnabled())
                 return;
-#if 1
+
             QRegion rgn;
             FloorTileGrid *tiles = ftile->toFloorTileGrid(rgn);
             if (!tiles) // empty
                 return;
-#else
-            if (ftile->size().isNull())
-                return;
 
-            QRegion rgn;
-            FloorTileGrid *tiles = new FloorTileGrid(ftile->width(), ftile->height());
-            for (int x = 0; x < ftile->width(); x++) {
-                for (int y = 0; y < ftile->height(); y++) {
-                    if (BuildingTile *btile = ftile->tile(x, y)) {
-                        if (!btile->isNone()) {
-                            tiles->replace(x, y, btile->name());
-                            rgn += QRect(x, y, 1, 1);
-                        }
-                    }
-                }
-            }
-#endif
             DrawTileTool::instance()->setCaptureTiles(tiles, rgn);
         }
     }

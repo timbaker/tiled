@@ -530,7 +530,6 @@ bool BuildingEditorWindow::closeYerself()
 
 bool BuildingEditorWindow::Startup()
 {
-#if 1
     // Refresh the ui before blocking while loading tilesets etc
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 
@@ -541,124 +540,8 @@ bool BuildingEditorWindow::Startup()
             break;
         }
     }
-#else
-    // Refresh the ui before blocking while loading tilesets etc
-    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
-
-    // Create ~/.TileZed if needed.
-    QString configPath = BuildingPreferences::instance()->configPath();
-    QDir dir(configPath);
-    if (!dir.exists()) {
-        if (!dir.mkpath(configPath)) {
-            QMessageBox::critical(this, tr("It's no good, Jim!"),
-                                  tr("Failed to create config directory:\n%1")
-                                  .arg(QDir::toNativeSeparators(configPath)));
-            return false;
-        }
-    }
-
-    // Copy config files from the application directory to ~/.TileZed if they
-    // don't exist there.
-    QStringList configFiles;
-    configFiles += BuildingTemplates::instance()->txtName();
-    configFiles += BuildingTilesMgr::instance()->txtName();
-    configFiles += BuildingTMX::instance()->txtName();
-    configFiles += FurnitureGroups::instance()->txtName();
-
-    foreach (QString configFile, configFiles) {
-        QString fileName = configPath + QLatin1Char('/') + configFile;
-        if (!QFileInfo(fileName).exists()) {
-            QString source = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-                    + configFile;
-            if (QFileInfo(source).exists()) {
-                if (!QFile::copy(source, fileName)) {
-                    QMessageBox::critical(this, tr("It's no good, Jim!"),
-                                          tr("Failed to copy file:\nFrom: %1\nTo: %2")
-                                          .arg(source).arg(fileName));
-                    return false;
-                }
-            }
-        }
-    }
-
-#if 1
-    // Read Tilesets.txt before LoadTMXConfig() in case we are upgrading
-    // TMXConfig.txt from VERSION0 to VERSION1.
-    TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
-    if (!mgr->hasReadTxt()) {
-        if (!mgr->readTxt()) {
-            QMessageBox::critical(this, tr("It's no good, Jim!"),
-                                  tr("%1\n(while reading %2)")
-                                  .arg(mgr->errorString())
-                                  .arg(mgr->txtName()));
-            TileMetaInfoMgr::deleteInstance();
-            return false;
-        }
-        PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
-        mgr->loadTilesets();
-    }
-#endif
-
-    if (!LoadTMXConfig()) {
-        if (!mError.isEmpty()) // Empty when user cancelled choosing Tiles directory.
-            QMessageBox::critical(this, tr("It's no good, Jim!"),
-                                  tr("Error while reading %1\n%2")
-                                  .arg(BuildingTMX::instance()->txtName())
-                                  .arg(mError));
-        return false;
-    }
-
-    if (!BuildingTilesMgr::instance()->readTxt()) {
-        QMessageBox::critical(this, tr("It's no good, Jim!"),
-                              tr("Error while reading %1\n%2")
-                              .arg(BuildingTilesMgr::instance()->txtName())
-                              .arg(BuildingTilesMgr::instance()->errorString()));
-        return false;
-    }
-
-    if (!FurnitureGroups::instance()->readTxt()) {
-        QMessageBox::critical(this, tr("It's no good, Jim!"),
-                              tr("Error while reading %1\n%2")
-                              .arg(FurnitureGroups::instance()->txtName())
-                              .arg(FurnitureGroups::instance()->errorString()));
-        return false;
-    }
-
-    if (!BuildingTemplates::instance()->readTxt()) {
-        QMessageBox::critical(this, tr("It's no good, Jim!"),
-                              tr("Error while reading %1\n%2")
-                              .arg(BuildingTemplates::instance()->txtName())
-                              .arg(BuildingTemplates::instance()->errorString()));
-        return false;
-    }
-#endif
 
     /////
-#if 0
-    foreach (BuildingTemplate *btemplate, BuildingTemplates::instance()->templates()) {
-        if (!validateTile(btemplate->Wall, "Wall") ||
-                !validateTile(btemplate->DoorTile, "Door") ||
-                !validateTile(btemplate->DoorFrameTile, "DoorFrame") ||
-                !validateTile(btemplate->WindowTile, "Window") ||
-                !validateTile(btemplate->CurtainsTile, "Curtains") ||
-                !validateTile(btemplate->StairsTile, "Stairs")) {
-            mError += tr("\nIn template %1").arg(btemplate->Name);
-            QMessageBox::critical(this, tr("It's no good, Jim!"), mError);
-            return false;
-        }
-
-        foreach (Room *room, btemplate->RoomList) {
-            if (!validateTile(room->Floor, "Floor") ||
-                    !validateTile(room->Wall, "Wall")) {
-                mError += tr("\nIn template %1, room %2")
-                        .arg(btemplate->Name)
-                        .arg(room->Name);
-                QMessageBox::critical(this, tr("It's no good, Jim!"), mError);
-                return false;
-            }
-        }
-    }
-#endif
 
     connect(BuildingTilesMgr::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
             SLOT(tilesetAdded(Tiled::Tileset*)));
@@ -693,47 +576,10 @@ bool BuildingEditorWindow::Startup()
     mSettings.endGroup();
 
     // This will create the Tiles dialog.  It must come after reading all the
-    // config files above.
+    // config files.
     connect(BuildingTilesDialog::instance(), SIGNAL(edited()),
             SLOT(tilesDialogEdited()));
 
-    return true;
-}
-
-bool BuildingEditorWindow::LoadTMXConfig()
-{
-    // Make sure the user has chosen the Tiles directory.
-    QString tilesDirectory = Preferences::instance()->tilesDirectory();
-    QDir dir(tilesDirectory);
-    if (tilesDirectory.isEmpty() || !dir.exists()) {
-        QMessageBox::information(this, tr("Choose Tiles Directory"),
-                                 tr("Please choose the Tiles directory in the following dialog."));
-        TileMetaInfoDialog dialog(this);
-        dialog.exec();
-#if 0
-        tilesDirectory = Preferences::instance()->tilesDirectory();
-        if (tilesDirectory.isEmpty() || !QDir(tilesDirectory).exists()) {
-            mError.clear();
-            return false;
-        }
-#endif
-    }
-
-    bool ok = BuildingTMX::instance()->readTxt();
-    mError = BuildingTMX::instance()->errorString();
-    return ok;
-}
-
-bool BuildingEditorWindow::validateTile(BuildingTile *btile, const char *key)
-{
-    if (btile->isNone())
-        return true;
-    if (!BuildingTilesMgr::instance()->tileFor(btile)) {
-        mError = tr("%1 tile '%2' doesn't exist.")
-                .arg(QLatin1String(key))
-                .arg(btile->name());
-        return false;
-    }
     return true;
 }
 
@@ -2374,7 +2220,7 @@ void BuildingEditorWindow::tilesetRemoved(Tileset *tileset)
     categorySelectionChanged();
 }
 
-void BuildingEditorWindow::tilesetChanged(BuildingEditorWindow::Tileset *tileset)
+void BuildingEditorWindow::tilesetChanged(Tileset *tileset)
 {
     Q_UNUSED(tileset)
     categorySelectionChanged();

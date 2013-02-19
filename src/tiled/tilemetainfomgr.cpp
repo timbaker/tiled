@@ -420,7 +420,6 @@ void TileMetaInfoMgr::loadTilesets(const QList<Tileset *> &tilesets)
     foreach (Tileset *ts, _tilesets) {
         if (ts->isMissing()) {
             QString source = ts->imageSource();
-            QString oldSource = source;
             if (QDir::isRelativePath(ts->imageSource())) {
                 source = tilesDirectory() + QLatin1Char('/')
                         // This is the name that was saved in Tilesets.txt,
