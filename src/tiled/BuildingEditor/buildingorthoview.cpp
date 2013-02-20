@@ -1002,10 +1002,11 @@ void GraphicsRoofItem::setShowHandles(bool show)
 
 /////
 
-GraphicsWallHandleItem::GraphicsWallHandleItem(GraphicsWallItem *wallItem) :
+GraphicsWallHandleItem::GraphicsWallHandleItem(GraphicsWallItem *wallItem, bool atEnd) :
     QGraphicsItem(wallItem),
     mWallItem(wallItem),
-    mHighlight(false)
+    mHighlight(false),
+    mAtEnd(atEnd)
 {
     setCursor(Qt::SizeAllCursor);
 }
@@ -1060,8 +1061,13 @@ QRectF GraphicsWallHandleItem::calcBoundingRect()
 {
     QRectF r = mWallItem->object()->calcShape().boundingRect();
 
-    r.setLeft(r.right() - 12/30.0);
-    r.setTop(r.bottom() - 12/30.0);
+    if (mAtEnd) {
+        r.setLeft(r.right() - 12/30.0);
+        r.setTop(r.bottom() - 12/30.0);
+    } else {
+        r.setRight(r.left() + 12/30.0);
+        r.setBottom(r.top() + 12/30.0);
+    }
 
     return r;
 }
@@ -1071,14 +1077,16 @@ QRectF GraphicsWallHandleItem::calcBoundingRect()
 GraphicsWallItem::GraphicsWallItem(BuildingBaseScene *editor, WallObject *wall) :
     GraphicsObjectItem(editor, wall),
     mShowHandles(false),
-    mResizeItem(new GraphicsWallHandleItem(this))
+    mResizeItem1(new GraphicsWallHandleItem(this)),
+    mResizeItem2(new GraphicsWallHandleItem(this, true))
 {
 }
 
 void GraphicsWallItem::synchWithObject()
 {
     GraphicsObjectItem::synchWithObject();
-    mResizeItem->synchWithObject();
+    mResizeItem1->synchWithObject();
+    mResizeItem2->synchWithObject();
 }
 
 void GraphicsWallItem::setShowHandles(bool show)

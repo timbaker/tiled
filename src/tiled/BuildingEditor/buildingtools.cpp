@@ -2139,6 +2139,7 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             return; // ignore clicks when creating/resizing
         mStartTilePos = mCurrentTilePos;
         if (mMouseOverHandle) {
+            mOriginalPos = mHandleObject->pos();
             mOriginalLength = mHandleObject->length();
             mMode = Resize;
             updateStatusText();
@@ -2175,6 +2176,7 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             return;
         }
         if (mMode == Resize) {
+            mHandleObject->setPos(mOriginalPos);
             mHandleObject->setLength(mOriginalLength);
             mObjectItem->synchWithObject();
             mMode = NoMode;
@@ -2229,18 +2231,42 @@ void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     QPoint diff = mCurrentTilePos - mStartTilePos;
 
     if (mMode == Resize) {
-        if (mHandleObject->isN()) {
-            if (mCurrentTilePos.y() < mHandleObject->y())
-                diff.setY(0 - mHandleObject->length() - 1);
-            if (mCurrentTilePos.y() >= floor()->height())
-                diff.setY(floor()->height() - mStartTilePos.y());
-            resizeWall(mHandleObject->length() + diff.y());
+        QPoint start = mHandleObject->pos();
+        QPoint end = mHandleObject->bounds().bottomRight();
+        if (mHandleItem == mObjectItem->resizeHandle1()) {
+            if (mHandleObject->isN()) {
+                start.ry() = mCurrentTilePos.y();
+                if (start.y() < 0)
+                    start.setY(0);
+                if (start.y() > end.y())
+                    start.setY(end.y());
+                mHandleObject->setPos(start);
+                resizeWall(end.y() - start.y() + 1);
+            } else {
+                start.rx() = mCurrentTilePos.x();
+                if (start.x() < 0)
+                    start.setX(0);
+                if (start.x() >= end.x())
+                    start.setX(end.x());
+                mHandleObject->setPos(start);
+                resizeWall(end.x() - start.x() + 1);
+            }
         } else {
-            if (mCurrentTilePos.x() < mHandleObject->x())
-                diff.setX(0 - mHandleObject->length() - 1);
-            if (mCurrentTilePos.x() >= floor()->width())
-                diff.setX(floor()->width() - mStartTilePos.x());
-            resizeWall(mHandleObject->length() + diff.x());
+            if (mHandleObject->isN()) {
+                end.ry() = mCurrentTilePos.y();
+                if (end.y() < start.y())
+                    end.setY(start.y());
+                if (end.y() >= floor()->height())
+                    end.setY(floor()->height() - 1);
+                resizeWall(end.y() - start.y() + 1);
+            } else {
+                end.rx() = mCurrentTilePos.x();
+                if (end.x() < start.x())
+                    end.setX(start.x());
+                if (end.x() >= floor()->width())
+                    end.setX(floor()->width() - 1);
+                resizeWall(end.x() - start.x() + 1);
+            }
         }
         mEditor->setCursorObject(mHandleObject);
         return;
@@ -2282,12 +2308,18 @@ void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
     if (mMode == Resize) {
         mMode = NoMode;
+        QPoint pos = mHandleObject->pos();
         int length = mHandleObject->length();
-        if (length == mOriginalLength)
+        if (pos == mOriginalPos && length == mOriginalLength)
             return;
+        mHandleObject->setPos(mOriginalPos);
         mHandleObject->setLength(mOriginalLength);
+        undoStack()->beginMacro(tr("Resize Wall"));
+        undoStack()->push(new MoveObject(mEditor->document(), mHandleObject,
+                                         pos));
         undoStack()->push(new ResizeWall(mEditor->document(), mHandleObject,
                                          length));
+        undoStack()->endMacro();
         updateStatusText();
         mEditor->setCursorObject(0);
         return;

@@ -262,7 +262,7 @@ private:
 class GraphicsWallHandleItem : public QGraphicsItem
 {
 public:
-    GraphicsWallHandleItem(GraphicsWallItem *wallItem);
+    GraphicsWallHandleItem(GraphicsWallItem *wallItem, bool atEnd = false);
 
     QRectF boundingRect() const;
 
@@ -280,6 +280,7 @@ private:
     bool mHighlight;
     QRectF mTileRect;
     QRectF mBoundingRect;
+    bool mAtEnd;
 };
 
 class GraphicsWallItem : public GraphicsObjectItem
@@ -296,12 +297,16 @@ public:
     bool handlesVisible() const
     { return mShowHandles; }
 
-    GraphicsWallHandleItem *resizeHandle() const
-    { return mResizeItem; }
+    GraphicsWallHandleItem *resizeHandle1() const
+    { return mResizeItem1; }
+
+    GraphicsWallHandleItem *resizeHandle2() const
+    { return mResizeItem2; }
 
 private:
     bool mShowHandles;
-    GraphicsWallHandleItem *mResizeItem;
+    GraphicsWallHandleItem *mResizeItem1;
+    GraphicsWallHandleItem *mResizeItem2;
 };
 
 class BuildingRenderer

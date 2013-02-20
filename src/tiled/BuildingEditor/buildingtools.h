@@ -581,6 +581,7 @@ private:
     WallObject *mHandleObject; // object mouse is over
     GraphicsWallHandleItem *mHandleItem;
     bool mMouseOverHandle;
+    QPoint mOriginalPos;
     int mOriginalLength;
 
     BuildingTileEntry *mCurrentExteriorTile;
