@@ -1156,6 +1156,7 @@ void BuildingOrthoScene::setDocument(BuildingDocument *doc)
 
     mFloorItems.clear();
     mSelectedObjectItems.clear();
+    mMouseOverObject = 0;
 
     if (mDocument) {
         foreach (BuildingFloor *floor, building()->floors())

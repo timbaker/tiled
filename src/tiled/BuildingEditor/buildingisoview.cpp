@@ -302,6 +302,7 @@ void BuildingIsoScene::setDocument(BuildingDocument *doc)
     qDeleteAll(mFloorItems);
     mFloorItems.clear();
     mSelectedObjectItems.clear();
+    mMouseOverObject = 0;
 
     if (mBuildingMap) {
         delete mBuildingMap;
