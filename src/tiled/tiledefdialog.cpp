@@ -46,6 +46,12 @@
 #include <QUndoStack>
 #include <QUrl>
 
+#ifdef QT_NO_DEBUG
+inline QNoDebug noise() { return QNoDebug(); }
+#else
+inline QDebug noise() { return QDebug(QtDebugMsg); }
+#endif
+
 using namespace Tiled;
 using namespace Tiled::Internal;
 
@@ -638,7 +644,7 @@ static void debugHistory(QStringList &history, int index)
         else
             items += history[i];
     }
-    qDebug() << items.join(QLatin1String(" "));
+    noise() << items.join(QLatin1String(" "));
 #endif
 }
 
@@ -781,7 +787,7 @@ void TileDefDialog::stringEdited()
         Q_ASSERT(false);
         return;
     }
-    qDebug() << "stringEdited";
+    noise() << "stringEdited";
     changePropertyValues(mSelectedTiles, prop->mName, w->lineEdit()->text());
 }
 
@@ -965,7 +971,7 @@ bool TileDefDialog::eventFilter(QObject *object, QEvent *event)
     if ((event->type() == QEvent::Wheel) &&
             object->isWidgetType() &&
             ui->propertySheet->isAncestorOf(qobject_cast<QWidget*>(object))) {
-        qDebug() << "Wheel event blocked";
+        noise() << "Wheel event blocked";
         QCoreApplication::sendEvent(ui->scrollArea, event);
         return true;
     }
