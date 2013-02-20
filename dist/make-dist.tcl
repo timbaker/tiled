@@ -6,7 +6,7 @@ set SRC C:/Programming/Tiled/tiled
 set QT_BINARY_DIR C:/Programming/Qt/qt-build/bin
 set QT_PLUGINS_DIR C:/Programming/Qt/qt-build/plugins
 set QT_TRANSLATIONS_DIR C:/Programming/Qt/qt-build/translations
-set DEST {C:\Users\Tim\Desktop\ProjectZomboid\Tools\Tools\TileZed}
+set DEST {C:\Users\Tim\Desktop\ProjectZomboid\Tools\TileZed}
 
 proc copyFile {SOURCE DEST name {name2 ""}} {
     if {$name2 == ""} { set name2 $name }

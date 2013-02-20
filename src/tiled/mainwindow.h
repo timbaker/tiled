@@ -189,6 +189,7 @@ public slots:
     void showBuildingEditor();
     void tilesetMetaInfoDialog();
     void tilePropertiesEditor();
+    void launchWorldEd();
 #endif
 
 private:

@@ -91,6 +91,7 @@
 #include "zlevelsdock.h"
 #include "zprogress.h"
 #include <QDebug>
+#include <QProcess>
 #endif
 
 #ifdef Q_WS_MAC
@@ -518,6 +519,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
             SLOT(tilesetMetaInfoDialog()));
     connect(mUi->actionTileProperties, SIGNAL(triggered()),
             SLOT(tilePropertiesEditor()));
+    connect(mUi->actionWorldEd, SIGNAL(triggered()),
+            SLOT(launchWorldEd()));
 #endif
 
     updateActions();
@@ -1458,6 +1461,27 @@ void MainWindow::tilePropertiesEditor()
     }
     TileDefDialog::instance()->show();
     TileDefDialog::instance()->raise();
+}
+
+void MainWindow::launchWorldEd()
+{
+    QString path = QApplication::applicationDirPath();
+#ifdef Q_OS_WIN
+    path += QLatin1String("/WorldEd/PZWorldEd.exe");
+#elif defined(Q_OS_MAC)
+    path += QLatin1String("/WorldEd/PZWorldEd"); // FIXME: .app ?
+#else
+    path += QLatin1String("/WorldEd/PZWorldEd");
+#endif
+    path = QDir::cleanPath(path);
+    path = QDir::toNativeSeparators(path);
+    if (QFileInfo(path).exists()) {
+        QProcess::startDetached(QFileInfo(path).canonicalFilePath(),
+                                QStringList());
+    } else {
+        QMessageBox::warning(this, tr("Error launching Worlded"),
+                             tr("Couldn't find WorldEd!\n%1").arg(path));
+    }
 }
 #endif
 

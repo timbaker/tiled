@@ -127,6 +127,7 @@
     <addaction name="actionBuildingEditor"/>
     <addaction name="actionTilesetMetaInfo"/>
     <addaction name="actionTileProperties"/>
+    <addaction name="actionWorldEd"/>
     <addaction name="separator"/>
     <addaction name="actionConvertOrientation"/>
     <addaction name="actionConvertToLot"/>
@@ -472,6 +473,15 @@
   <action name="actionTileProperties">
    <property name="text">
     <string>Tile Properties (.tiles)</string>
+   </property>
+  </action>
+  <action name="actionWorldEd">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/worlded-icon-16.png</normaloff>:/images/worlded-icon-16.png</iconset>
+   </property>
+   <property name="text">
+    <string>WorldEd</string>
    </property>
   </action>
  </widget>

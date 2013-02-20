@@ -72,5 +72,6 @@
         <file>images/16x16/sort-by-name.png</file>
         <file>images/16x16/go-back.png</file>
         <file>images/16x16/go-forward.png</file>
+        <file>images/worlded-icon-16.png</file>
     </qresource>
 </RCC>
