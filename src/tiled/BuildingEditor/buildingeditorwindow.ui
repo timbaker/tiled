@@ -240,7 +240,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="Tiled::Internal::MixedTilesetView" name="tilesetView"/>
+           <widget class="BuildingEditor::BuildingTileEntryView" name="tilesetView"/>
           </item>
          </layout>
         </widget>
@@ -773,9 +773,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Tiled::Internal::MixedTilesetView</class>
-   <extends>QTableWidget</extends>
-   <header>BuildingEditor/mixedtilesetview.h</header>
+   <class>BuildingEditor::BuildingTileEntryView</class>
+   <extends>QTableView</extends>
+   <header>buildingtileentryview.h</header>
   </customwidget>
   <customwidget>
    <class>BuildingEditor::BuildingIsoView</class>

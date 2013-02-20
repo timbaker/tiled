@@ -729,6 +729,11 @@ QRect MixedTilesetModel::categoryBounds(Tile *tile) const
 void MixedTilesetModel::scaleChanged(qreal scale)
 {
     Q_UNUSED(scale)
+    redisplay();
+}
+
+void MixedTilesetModel::redisplay()
+{
     int maxRow = rowCount() - 1;
     int maxColumn = columnCount() - 1;
     if (maxRow >= 0 && maxColumn >= 0)
@@ -743,10 +748,7 @@ void MixedTilesetModel::setShowHeaders(bool show)
 void MixedTilesetModel::setShowLabels(bool show)
 {
     mShowLabels = show;
-    int maxRow = rowCount() - 1;
-    int maxColumn = columnCount() - 1;
-    if (maxRow >= 0 && maxColumn >= 0)
-        emit dataChanged(index(0, 0), index(maxRow, maxColumn));
+    redisplay();
 }
 
 void MixedTilesetModel::setLabel(Tile *tile, const QString &label)

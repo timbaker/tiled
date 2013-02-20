@@ -22,6 +22,7 @@
 #include <QTableView>
 
 namespace Tiled {
+class Tileset;
 namespace Internal {
 class Zoomable;
 }
@@ -66,6 +67,8 @@ public:
 
     void scaleChanged(qreal scale);
 
+    void redisplay();
+
 public:
     int itemsPerEntry() const
     { return shadowImageColumns() * shadowImageRows(); }
@@ -109,10 +112,13 @@ public:
     void clear();
     void setCategory(BuildingTileCategory *category);
 
-signals:
-
+    typedef Tiled::Tileset Tileset;
 public slots:
     void scaleChanged(qreal scale);
+
+    void tilesetChanged(Tileset *tileset);
+    void tilesetAdded(Tiled::Tileset *tileset);
+    void tilesetRemoved(Tiled::Tileset *tileset);
 
 private:
     void init();

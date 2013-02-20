@@ -24,6 +24,7 @@
 class QMenu;
 
 namespace Tiled {
+class Tileset;
 namespace Internal {
 class Zoomable;
 }
@@ -90,6 +91,8 @@ public:
 
     bool showResolved() const
     { return mShowResolved; }
+
+    void redisplay();
 
 signals:
     void furnitureTileDropped(FurnitureTile *ftile, int x, int y,
@@ -165,11 +168,15 @@ public:
 
     void clear();
     void setTiles(const QList<FurnitureTiles*> &tilesList);
+    void redisplay();
 
-signals:
-
+    typedef Tiled::Tileset Tileset;
 public slots:
     void scaleChanged(qreal scale);
+
+    void tilesetChanged(Tileset *tileset);
+    void tilesetAdded(Tiled::Tileset *tileset);
+    void tilesetRemoved(Tiled::Tileset *tileset);
 
 private:
     void init();

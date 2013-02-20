@@ -22,7 +22,7 @@
     </widget>
    </item>
    <item>
-    <widget class="Tiled::Internal::MixedTilesetView" name="tableView"/>
+    <widget class="BuildingEditor::BuildingTileEntryView" name="tableView"/>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -76,9 +76,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Tiled::Internal::MixedTilesetView</class>
-   <extends>QTableWidget</extends>
-   <header>BuildingEditor/mixedtilesetview.h</header>
+   <class>BuildingEditor::BuildingTileEntryView</class>
+   <extends>QTableView</extends>
+   <header>buildingtileentryview.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

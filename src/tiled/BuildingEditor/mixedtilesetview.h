@@ -82,6 +82,8 @@ public:
 
     void scaleChanged(qreal scale);
 
+    void redisplay();
+
     void setShowHeaders(bool show);
 
     void setShowLabels(bool show);
@@ -181,7 +183,7 @@ public:
     void setContextMenu(QMenu *menu)
     { mContextMenu = menu; }
 
-    void clear();
+    virtual void clear();
     void setTiles(const QList<Tile*> &tiles,
                   const QList<void*> &userData = QList<void*>(),
                   const QStringList &headers = QStringList());

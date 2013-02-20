@@ -74,6 +74,8 @@ BuildingTileEntry *ChooseBuildingTileDialog::selectedTile() const
     if (selection.count()) {
         QModelIndex index = selection.first();
 #if 1
+        return ui->tableView->entry(index);
+#elif 0
         return static_cast<BuildingTileEntry*>(ui->tableView->model()->userDataAt(index));
 #else
         Tiled::Tile *tile = ui->tableView->model()->tileAt(index);
@@ -86,6 +88,25 @@ BuildingTileEntry *ChooseBuildingTileDialog::selectedTile() const
 void ChooseBuildingTileDialog::setTilesList(BuildingTileCategory *category,
                                             BuildingTileEntry *initialTile)
 {
+#if 1
+    QList<BuildingTileEntry*> entries;
+
+    if (category->canAssignNone())
+        entries += BuildingTilesMgr::instance()->noneTileEntry();
+
+    QMap<QString,BuildingTileEntry*> entryMap;
+    int i = 0;
+    foreach (BuildingTileEntry *entry, category->entries()) {
+        QString key = entry->displayTile()->name() + QString::number(i++);
+        entryMap[key] = entry;
+    }
+    entries += entryMap.values();
+
+    ui->tableView->setEntries(entries);
+
+    if (entries.contains(initialTile))
+        ui->tableView->setCurrentIndex(ui->tableView->index(initialTile));
+#else
     Tiled::Tile *tile = 0;
 
     mTiles.clear();
@@ -120,6 +141,7 @@ void ChooseBuildingTileDialog::setTilesList(BuildingTileCategory *category,
         v->setCurrentIndex(v->model()->index(tile));
     else
         v->setCurrentIndex(v->model()->index(0, 0));
+#endif
 }
 
 void ChooseBuildingTileDialog::saveSettings()

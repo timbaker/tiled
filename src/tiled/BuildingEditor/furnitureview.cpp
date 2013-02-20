@@ -20,9 +20,12 @@
 #include "buildingtiles.h"
 #include "furnituregroups.h"
 
+#include "tilemetainfomgr.h"
+#include "tilesetmanager.h"
+#include "zoomable.h"
+
 #include "tile.h"
 #include "tileset.h"
-#include "zoomable.h"
 
 #include <QApplication>
 #include <QDebug>
@@ -415,9 +418,32 @@ void FurnitureView::setTiles(const QList<FurnitureTiles *> &tilesList)
     model()->setTiles(tilesList);
 }
 
+void FurnitureView::redisplay()
+{
+    model()->redisplay();
+}
+
 void FurnitureView::scaleChanged(qreal scale)
 {
     model()->scaleChanged(scale);
+}
+
+void FurnitureView::tilesetChanged(Tileset *tileset)
+{
+    Q_UNUSED(tileset)
+    redisplay(); // FIXME: only if it is a TileMetaInfoMgr tileset
+}
+
+void FurnitureView::tilesetAdded(Tiled::Tileset *tileset)
+{
+    Q_UNUSED(tileset)
+    redisplay();
+}
+
+void FurnitureView::tilesetRemoved(Tiled::Tileset *tileset)
+{
+    Q_UNUSED(tileset)
+    redisplay();
 }
 
 void FurnitureView::init()
@@ -446,6 +472,14 @@ void FurnitureView::init()
     setModel(mModel);
 
     connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(scaleChanged(qreal)));
+
+    connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
+            SLOT(tilesetChanged(Tileset*)));
+
+    connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
+            SLOT(tilesetAdded(Tiled::Tileset*)));
+    connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetRemoved(Tiled::Tileset*)),
+            SLOT(tilesetRemoved(Tiled::Tileset*)));
 }
 
 /////
@@ -670,10 +704,7 @@ void FurnitureModel::removeTiles(FurnitureTiles *ftiles)
 void FurnitureModel::scaleChanged(qreal scale)
 {
     Q_UNUSED(scale)
-    int maxRow = rowCount() - 1;
-    int maxColumn = columnCount() - 1;
-    if (maxRow >= 0 && maxColumn >= 0)
-        emit dataChanged(index(0, 0), index(maxRow, maxColumn));
+    redisplay();
 }
 
 void FurnitureModel::calcMaxTileSize()
@@ -688,6 +719,14 @@ void FurnitureModel::calcMaxTileSize()
             mMaxTileSize[n].setHeight( qMax(mMaxTileSize[n].height(), ftile->height()) );
         }
     }
+}
+
+void FurnitureModel::redisplay()
+{
+    int maxRow = rowCount() - 1;
+    int maxColumn = columnCount() - 1;
+    if (maxRow >= 0 && maxColumn >= 0)
+        emit dataChanged(index(0, 0), index(maxRow, maxColumn));
 }
 
 FurnitureModel::Item *FurnitureModel::toItem(const QModelIndex &index) const

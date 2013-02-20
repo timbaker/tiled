@@ -778,7 +778,9 @@ void BuildingEditorWindow::categorySelectionChanged()
                 QString key = paddedNumber(categoryIndex) + QLatin1String("_") + paddedNumber(0);
                 entryMap[key] = category->noneTileEntry();
             }
-
+#if 1
+            ui->tilesetView->setEntries(entryMap.values(), true);
+#else
             QList<Tiled::Tile*> tiles;
             QList<void*> userData;
             QStringList headers;
@@ -790,6 +792,7 @@ void BuildingEditorWindow::categorySelectionChanged()
                 }
             }
             ui->tilesetView->setTiles(tiles, userData, headers);
+#endif
             ui->tilesetView->scrollToTop();
             ui->categoryStack->setCurrentIndex(0);
 
@@ -815,6 +818,20 @@ void BuildingEditorWindow::categorySelectionChanged()
             connect(mActionClearUsed, SIGNAL(triggered()), SLOT(resetUsedFurniture()));
             ui->furnitureView->setContextMenu(mUsedContextMenu);
         } else if (mCategory = categoryAt(row)) {
+#if 1
+            QList<BuildingTileEntry*> entries;
+            if (mCategory->canAssignNone()) {
+                entries += BuildingTilesMgr::instance()->noneTileEntry();
+            }
+            QMap<QString,BuildingTileEntry*> entryMap;
+            int i = 0;
+            foreach (BuildingTileEntry *entry, mCategory->entries()) {
+                QString key = entry->displayTile()->name() + QString::number(i++);
+                entryMap[key] = entry;
+            }
+            entries += entryMap.values();
+            ui->tilesetView->setEntries(entries);
+#else
             QList<Tiled::Tile*> tiles;
             QList<void*> userData;
             QStringList headers;
@@ -840,6 +857,7 @@ void BuildingEditorWindow::categorySelectionChanged()
                 }
             }
             ui->tilesetView->setTiles(tiles, userData, headers);
+#endif
             ui->tilesetView->scrollToTop();
             ui->categoryStack->setCurrentIndex(0);
 
@@ -860,9 +878,13 @@ void BuildingEditorWindow::tileSelectionChanged()
     QModelIndexList indexes = ui->tilesetView->selectionModel()->selectedIndexes();
     if (indexes.count() == 1) {
         QModelIndex index = indexes.first();
+#if 1
+        if (BuildingTileEntry *entry = ui->tilesetView->entry(index)) {
+#else
         if (ui->tilesetView->model()->tileAt(index)) {
             BuildingTileEntry *entry = static_cast<BuildingTileEntry*>(
                         ui->tilesetView->model()->userDataAt(index));
+#endif
             bool mergeable = ui->tilesetView->mouseDown() &&
                     mInitialCategoryViewSelectionEvent;
             qDebug() << "mergeable=" << mergeable;
@@ -1313,12 +1335,19 @@ void BuildingEditorWindow::selectCurrentCategoryTile()
     if (mCategory->asRoofTops())
         currentTile = mCurrentDocument->building()->roofTopTile();
     if (currentTile && (currentTile->isNone() || (currentTile->category() == mCategory))) {
+#if 1
+        mSynching = true;
+        QModelIndex index = ui->tilesetView->index(currentTile);
+        ui->tilesetView->setCurrentIndex(index);
+        mSynching = false;
+#else
         if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(currentTile->displayTile())) {
             QModelIndex index = ui->tilesetView->model()->index(tile);
             mSynching = true;
             ui->tilesetView->setCurrentIndex(index);
             mSynching = false;
         }
+#endif
     }
 }
 
@@ -2204,26 +2233,34 @@ void BuildingEditorWindow::roofCornerTypeChanged(QAction *action)
 void BuildingEditorWindow::tilesetAdded(Tileset *tileset)
 {
     Q_UNUSED(tileset)
+#if 0
     categorySelectionChanged();
+#endif
 }
 
 void BuildingEditorWindow::tilesetAboutToBeRemoved(Tileset *tileset)
 {
     Q_UNUSED(tileset)
+#if 0
     ui->tilesetView->clear();
     // FurnitureView doesn't cache Tiled::Tiles
+#endif
 }
 
 void BuildingEditorWindow::tilesetRemoved(Tileset *tileset)
 {
     Q_UNUSED(tileset)
+#if 0
     categorySelectionChanged();
+#endif
 }
 
 void BuildingEditorWindow::tilesetChanged(Tileset *tileset)
 {
     Q_UNUSED(tileset)
+#if 0
     categorySelectionChanged();
+#endif
 }
 
 void BuildingEditorWindow::autoSaveCheck()

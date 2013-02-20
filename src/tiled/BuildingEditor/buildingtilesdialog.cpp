@@ -826,8 +826,12 @@ void BuildingTilesDialog::addTile(BuildingTileCategory *category,
                     ui->categoryView->model()->index(
                         entry, category->shadowToEnum(0)));
     } else {
+#if 1
+        ui->categoryTilesView->scrollTo(ui->categoryTilesView->index(entry));
+#else
         ui->categoryTilesView->scrollTo(
                     ui->categoryTilesView->model()->index((void*)entry));
+#endif
     }
 }
 
@@ -906,9 +910,14 @@ void BuildingTilesDialog::reorderEntry(BuildingTileCategory *category,
     category->insertEntry(newIndex, entry);
 
     setCategoryTiles();
+#if 1
+    ui->categoryTilesView->setCurrentIndex(
+                ui->categoryTilesView->index(category->entry(newIndex)));
+#else
     ui->categoryTilesView->setCurrentIndex(
                 ui->categoryTilesView->model()->index(
                     (void*)category->entry(newIndex)));
+#endif
 }
 
 void BuildingTilesDialog::insertFurnitureTiles(FurnitureGroup *category,
@@ -1021,6 +1030,20 @@ void BuildingTilesDialog::setCategoryList()
 void BuildingTilesDialog::setCategoryTiles()
 { 
     bool expertMode = mExpertMode && mCategory && !mCategory->shadowImage().isNull();
+#if 1
+    QList<BuildingTileEntry*> entries;
+    if (mCategory && !expertMode) {
+        QMap<QString,BuildingTileEntry*> entryMap;
+        int i = 0;
+        foreach (BuildingTileEntry *entry, mCategory->entries()) {
+            QString key = entry->displayTile()->name() + QString::number(i++);
+            entryMap[key] = entry;
+        }
+        entries = entryMap.values();
+    }
+    mCurrentEntry = 0;
+    ui->categoryTilesView->setEntries(entries);
+#else
     QList<Tiled::Tile*> tiles;
     QList<void*> userData;
     QStringList headers;
@@ -1044,6 +1067,7 @@ void BuildingTilesDialog::setCategoryTiles()
     }
     mCurrentEntry = 0;
     ui->categoryTilesView->setTiles(tiles, userData, headers);
+#endif
     ui->categoryView->setCategory(expertMode ? mCategory : 0);
 }
 
@@ -1346,13 +1370,21 @@ void BuildingTilesDialog::removeTiles()
         return;
     }
 
+#if 1
+    BuildingTileEntryView *v = ui->categoryTilesView;
+#else
     MixedTilesetView *v = ui->categoryTilesView;
+#endif
     QModelIndexList selection = v->selectionModel()->selectedIndexes();
     if (selection.count() > 1)
         mUndoStack->beginMacro(tr("Remove Tiles from %1").arg(mCategory->label()));
     foreach (QModelIndex index, selection) {
+#if 1
+        BuildingTileEntry *entry = v->entry(index);
+#else
         BuildingTileEntry *entry = static_cast<BuildingTileEntry*>(
                     v->model()->userDataAt(index));
+#endif
         mUndoStack->push(new RemoveTileFromCategory(this, mCategory,
                                                     mCategory->indexOf(entry)));
     }
@@ -1421,8 +1453,13 @@ void BuildingTilesDialog::setExpertMode(bool expert)
                 v->setCurrentIndex(index);
                 v->scrollTo(index);
             } else {
+#if 1
+                BuildingTileEntryView *v = ui->categoryTilesView;
+                v->setCurrentIndex(v->index(entry));
+#else
                 MixedTilesetView *v = ui->categoryTilesView;
                 v->setCurrentIndex(v->model()->index((void*)entry));
+#endif
                 v->scrollTo(v->currentIndex());
             }
         }
@@ -1595,8 +1632,9 @@ void BuildingTilesDialog::tilesetAdded(Tileset *tileset)
     setTilesetList();
     int row = TileMetaInfoMgr::instance()->indexOf(tileset);
     ui->tilesetList->setCurrentRow(row);
-
+#if 0
     categoryChanged(ui->categoryList->currentRow());
+#endif
 }
 
 void BuildingTilesDialog::tilesetAboutToBeRemoved(Tileset *tileset)
@@ -1607,7 +1645,10 @@ void BuildingTilesDialog::tilesetAboutToBeRemoved(Tileset *tileset)
 
 void BuildingTilesDialog::tilesetRemoved(Tileset *tileset)
 {
+    Q_UNUSED(tileset)
+#if 0
     categoryChanged(ui->categoryList->currentRow());
+#endif
 }
 
 // Called when a tileset image changes or a missing tileset was found.
@@ -1641,10 +1682,16 @@ void BuildingTilesDialog::tileSelectionChanged()
         return;
     mCurrentEntry = 0;
     QModelIndex current = ui->categoryTilesView->currentIndex();
+#if 1
+    if (BuildingTileEntry *entry = ui->categoryTilesView->entry(current)) {
+        mCurrentEntry = entry;
+    }
+#else
     MixedTilesetModel *m = ui->categoryTilesView->model();
     if (BuildingTileEntry *entry = static_cast<BuildingTileEntry*>(m->userDataAt(current))) {
         mCurrentEntry = entry;
     }
+#endif
     synchUI();
 }
 

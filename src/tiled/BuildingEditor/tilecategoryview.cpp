@@ -20,9 +20,12 @@
 #include "buildingtiles.h"
 #include "furnituregroups.h"
 
+#include "tilemetainfomgr.h"
+#include "tilesetmanager.h"
+#include "zoomable.h"
+
 #include "tile.h"
 #include "tileset.h"
-#include "zoomable.h"
 
 #include <QApplication>
 #include <QDebug>
@@ -286,6 +289,24 @@ void TileCategoryView::scaleChanged(qreal scale)
     model()->scaleChanged(scale);
 }
 
+void TileCategoryView::tilesetChanged(Tileset *tileset)
+{
+    Q_UNUSED(tileset)
+    model()->redisplay();
+}
+
+void TileCategoryView::tilesetAdded(Tileset *tileset)
+{
+    Q_UNUSED(tileset)
+    model()->redisplay();
+}
+
+void TileCategoryView::tilesetRemoved(Tileset *tileset)
+{
+    Q_UNUSED(tileset)
+    model()->redisplay();
+}
+
 void TileCategoryView::init()
 {
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -312,6 +333,14 @@ void TileCategoryView::init()
     setModel(mModel);
 
     connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(scaleChanged(qreal)));
+
+    connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
+            SLOT(tilesetChanged(Tileset*)));
+
+    connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
+            SLOT(tilesetAdded(Tiled::Tileset*)));
+    connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetRemoved(Tiled::Tileset*)),
+            SLOT(tilesetRemoved(Tiled::Tileset*)));
 }
 
 /////
@@ -475,6 +504,11 @@ int TileCategoryModel::enumAt(const QModelIndex &index) const
 void TileCategoryModel::scaleChanged(qreal scale)
 {
     Q_UNUSED(scale)
+    redisplay();
+}
+
+void TileCategoryModel::redisplay()
+{
     int maxRow = rowCount() - 1;
     int maxColumn = columnCount() - 1;
     if (maxRow >= 0 && maxColumn >= 0)
