@@ -285,7 +285,8 @@ BuildingTileEntry *RoomsDialog::selectedTile()
     if (mRoom == 0 || mTileRow == -1)
         return 0;
 
-    return mRoom->tile(mTileRow);
+    BuildingTileEntry *entry = mRoom->tile(mTileRow);
+    return entry ? entry : BuildingTilesMgr::instance()->noneTileEntry();
 }
 
 QRgb RoomsDialog::pickColorForNewRoom()
