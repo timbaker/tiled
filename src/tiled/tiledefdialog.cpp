@@ -469,6 +469,7 @@ void TileDefDialog::addTileset()
 { 
     AddTilesetsDialog dialog(mTileDefFile->directory(),
                              mTileDefFile->tilesetNames(),
+                             false,
                              this);
     if (dialog.exec() != QDialog::Accepted)
         return;
