@@ -380,6 +380,11 @@ MixedTilesetModel::MixedTilesetModel(QObject *parent) :
 {
 }
 
+MixedTilesetModel::~MixedTilesetModel()
+{
+    qDeleteAll(mItems);
+}
+
 int MixedTilesetModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())

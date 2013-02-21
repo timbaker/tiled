@@ -493,6 +493,11 @@ FurnitureModel::FurnitureModel(QObject *parent) :
 {
 }
 
+FurnitureModel::~FurnitureModel()
+{
+    qDeleteAll(mItems);
+}
+
 int FurnitureModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())

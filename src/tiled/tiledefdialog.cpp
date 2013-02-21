@@ -60,6 +60,8 @@ using namespace Tiled::Internal;
 class Tiled::Internal::TilePropertyClipboard
 {
 public:
+    ~TilePropertyClipboard();
+
     struct Entry
     {
         Entry()
@@ -76,6 +78,11 @@ public:
     QVector<Entry*> mEntries;
     QRegion mValidRgn;
 };
+
+TilePropertyClipboard::~TilePropertyClipboard()
+{
+    qDeleteAll(mEntries);
+}
 
 void TilePropertyClipboard::clear()
 {
@@ -1459,13 +1466,13 @@ int TileDefDialog::rowOf(const QString &name) const
 
 void TileDefDialog::loadTilesets()
 {
-    bool anyMissing;
-    foreach (Tileset *ts, mTilesets)
+    bool anyMissing = false;
+    foreach (Tileset *ts, mTilesets) {
         if (ts->isMissing()) {
             anyMissing = true;
             break;
         }
-
+    }
     if (!anyMissing)
         return;
 
@@ -1493,6 +1500,7 @@ Tileset *TileDefDialog::loadTileset(const QString &source)
         QFileInfo info(source);
         Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
         ts->loadFromNothing(reader.size(), info.canonicalFilePath());
+        ts->setMissing(true); // prevent FileSystemWatcher warning in TilesetManager::changeTilesetSource
         TilesetManager::instance()->loadTileset(ts, info.canonicalFilePath());
         return ts;
     }

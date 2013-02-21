@@ -231,7 +231,7 @@ BuildingIsoScene::BuildingIsoScene(QObject *parent) :
     ZVALUE_CURSOR = 1000;
     ZVALUE_GRID = 1001;
 
-    BuildingBaseScene::mRenderer = new IsoBuildingRenderer;
+    mRenderer = new IsoBuildingRenderer;
 
     setBackgroundBrush(Qt::darkGray);
 

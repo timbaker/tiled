@@ -76,7 +76,6 @@
 #include "commandbutton.h"
 #include "objectsdock.h"
 #ifdef ZOMBOID
-#include "BuildingEditor/buildingeditorwindow.h"
 #include "changetileselection.h"
 #include "converttolotdialog.h"
 #include "convertorientationdialog.h"
@@ -117,6 +116,16 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 using namespace Tiled::Utils;
+
+#ifdef ZOMBOID
+#include "BuildingEditor/buildingeditorwindow.h"
+#include "BuildingEditor/buildingpreferences.h"
+#include "BuildingEditor/buildingtiles.h"
+#include "BuildingEditor/buildingtemplates.h"
+#include "BuildingEditor/buildingtmx.h"
+#include "BuildingEditor/furnituregroups.h"
+using namespace BuildingEditor;
+#endif
 
 #ifdef ZOMBOID
 MainWindow *MainWindow::mInstance = 0;
@@ -549,10 +558,17 @@ MainWindow::~MainWindow()
     QuickStampManager::deleteInstance();
     ToolManager::deleteInstance();
 #ifdef ZOMBOID
+#if 1
+    BuildingTemplates::deleteInstance();
+    BuildingTilesMgr::deleteInstance(); // Ensure all the tilesets are released
+    BuildingTMX::deleteInstance();
+    BuildingPreferences::deleteInstance();
+#endif
     MapImageManager::deleteInstance();
     MapManager::deleteInstance();
     TileMetaInfoMgr::deleteInstance();
     TileDefDialog::deleteInstance();
+    TilePropertyMgr::deleteInstance();
 #endif
     TilesetManager::deleteInstance();
     DocumentManager::deleteInstance();
@@ -779,12 +795,6 @@ void MainWindow::openLastFiles()
 }
 
 #ifdef ZOMBOID
-#include "BuildingEditor/buildingpreferences.h"
-#include "BuildingEditor/buildingtiles.h"
-#include "BuildingEditor/buildingtemplates.h"
-#include "BuildingEditor/buildingtmx.h"
-#include "BuildingEditor/furnituregroups.h"
-using namespace BuildingEditor;
 bool MainWindow::InitConfigFiles()
 {
     // Refresh the ui before blocking while loading tilesets etc
@@ -1476,10 +1486,9 @@ void MainWindow::launchWorldEd()
     path = QDir::cleanPath(path);
     path = QDir::toNativeSeparators(path);
     if (QFileInfo(path).exists()) {
-        QProcess::startDetached(QFileInfo(path).canonicalFilePath(),
-                                QStringList());
+        QProcess::startDetached(path, QStringList());
     } else {
-        QMessageBox::warning(this, tr("Error launching Worlded"),
+        QMessageBox::warning(this, tr("Error launching WorldEd"),
                              tr("Couldn't find WorldEd!\n%1").arg(path));
     }
 }

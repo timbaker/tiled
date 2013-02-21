@@ -363,6 +363,7 @@ public:
     int ZVALUE_GRID;
 
     BuildingBaseScene(QObject *parent = 0);
+    ~BuildingBaseScene();
 
     BuildingDocument *document() const
     { return mDocument; }
@@ -479,6 +480,7 @@ class BuildingOrthoScene : public BuildingBaseScene
 public:
 
     explicit BuildingOrthoScene(QObject *parent = 0);
+    ~BuildingOrthoScene();
 
     bool eventFilter(QObject *watched, QEvent *event);
 

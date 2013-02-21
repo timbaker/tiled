@@ -35,6 +35,11 @@ TileDefFile::TileDefFile()
 {
 }
 
+TileDefFile::~TileDefFile()
+{
+    qDeleteAll(mTilesets);
+}
+
 static QString ReadString(QDataStream &in)
 {
     QString str;
@@ -448,6 +453,11 @@ UIProperties::UIProperties()
     }
 }
 
+UIProperties::~UIProperties()
+{
+    qDeleteAll(mProperties);
+}
+
 /////
 
 TileDefTileset::TileDefTileset(Tileset *ts)
@@ -459,6 +469,11 @@ TileDefTileset::TileDefTileset(Tileset *ts)
     mTiles.resize(ts->tileCount());
     for (int i = 0; i < mTiles.size(); i++)
         mTiles[i] = new TileDefTile(this, i);
+}
+
+TileDefTileset::~TileDefTileset()
+{
+    qDeleteAll(mTiles);
 }
 
 /////

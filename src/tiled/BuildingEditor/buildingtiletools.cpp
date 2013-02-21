@@ -427,9 +427,9 @@ SelectTileTool *SelectTileTool::instance()
 
 SelectTileTool::SelectTileTool() :
     BaseTool(),
+    mSelectionMode(Replace),
     mMouseDown(false),
     mMouseMoved(false),
-    mSelectionMode(Replace),
     mCursor(0)
 {
     updateStatusText();

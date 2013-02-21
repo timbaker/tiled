@@ -775,7 +775,7 @@
   <customwidget>
    <class>BuildingEditor::BuildingTileEntryView</class>
    <extends>QTableView</extends>
-   <header>buildingtileentryview.h</header>
+   <header>BuildingEditor/buildingtileentryview.h</header>
   </customwidget>
   <customwidget>
    <class>BuildingEditor::BuildingIsoView</class>

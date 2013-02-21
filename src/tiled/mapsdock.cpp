@@ -198,7 +198,7 @@ MapsView::MapsView(MainWindow *mainWindow, QWidget *parent)
     if (!mapsDir.exists())
         mapsDir.setPath(QDir::currentPath());
 
-    QFileSystemModel *model = mFSModel = new QFileSystemModel;
+    QFileSystemModel *model = mFSModel = new QFileSystemModel(this);
     model->setRootPath(mapsDir.absolutePath());
 
     model->setFilter(QDir::AllDirs | QDir::NoDot | QDir::Files);

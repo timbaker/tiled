@@ -37,6 +37,7 @@ class MixedTilesetModel : public QAbstractListModel
     Q_OBJECT
 public:
     MixedTilesetModel(QObject *parent = 0);
+    ~MixedTilesetModel();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     int columnCount(const QModelIndex &parent = QModelIndex()) const;

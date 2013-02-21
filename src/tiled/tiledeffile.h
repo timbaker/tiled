@@ -1147,6 +1147,7 @@ public:
 #endif
 
     UIProperties();
+    ~UIProperties();
 
     UIProperty *property(const QString &name) const
     {
@@ -1310,6 +1311,7 @@ public:
     TileDefTileset(Tileset *ts);
     TileDefTileset()
     {}
+    ~TileDefTileset();
 
     QString mName;
     QString mImageSource;
@@ -1326,6 +1328,7 @@ class TileDefFile : public QObject
     Q_OBJECT
 public:
     TileDefFile();
+    ~TileDefFile();
 
     QString fileName() const
     { return mFileName; }

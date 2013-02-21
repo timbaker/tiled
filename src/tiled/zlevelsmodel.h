@@ -105,6 +105,11 @@ private:
             parent->children.insert(indexInParent, this);
         }
 
+        ~Item()
+        {
+            qDeleteAll(children);
+        }
+
         int indexOf(Layer *layer)
         {
             for (int i = 0; i < children.size(); i++)

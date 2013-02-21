@@ -34,9 +34,9 @@ using namespace Tiled;
 
 BuildingFloorsDialog::BuildingFloorsDialog(BuildingDocument *doc, QWidget *parent) :
     QDialog(parent),
+    ui(new Ui::BuildingFloorsDialog),
     mDocument(doc),
-    mCurrentFloor(0),
-    ui(new Ui::BuildingFloorsDialog)
+    mCurrentFloor(0)
 {
     ui->setupUi(this);
 

@@ -476,12 +476,17 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 
 BuildingEditorWindow::~BuildingEditorWindow()
 {
+#if 1
+    BuildingTilesDialog::deleteInstance();
+    ToolManager::deleteInstance();
+#else
     BuildingTemplates::deleteInstance();
     BuildingTilesDialog::deleteInstance();
     BuildingTilesMgr::deleteInstance(); // Ensure all the tilesets are released
     BuildingTMX::deleteInstance();
     BuildingPreferences::deleteInstance();
     ToolManager::deleteInstance();
+#endif
     delete ui;
 }
 

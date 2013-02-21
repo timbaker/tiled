@@ -197,9 +197,15 @@ void BuildingRenderer::drawObject(QPainter *painter, BuildingObject *mObject,
 BuildingBaseScene::BuildingBaseScene(QObject *parent) :
     QGraphicsScene(parent),
     mDocument(0),
+    mRenderer(0),
     mMouseOverObject(0),
     mEditingTiles(false)
 {
+}
+
+BuildingBaseScene::~BuildingBaseScene()
+{
+    delete mRenderer;
 }
 
 Building *BuildingBaseScene::building() const
@@ -1116,6 +1122,10 @@ BuildingOrthoScene::BuildingOrthoScene(QObject *parent) :
     // Install an event filter so that we can get key events on behalf of the
     // active tool without having to have the current focus.
     qApp->installEventFilter(this);
+}
+
+BuildingOrthoScene::~BuildingOrthoScene()
+{
 }
 
 bool BuildingOrthoScene::eventFilter(QObject *watched, QEvent *event)

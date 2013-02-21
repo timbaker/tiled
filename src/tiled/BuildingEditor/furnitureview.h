@@ -42,6 +42,7 @@ class FurnitureModel : public QAbstractListModel
     Q_OBJECT
 public:
     FurnitureModel(QObject *parent = 0);
+    ~FurnitureModel();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
