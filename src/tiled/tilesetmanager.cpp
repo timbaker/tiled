@@ -334,16 +334,6 @@ void TilesetManager::waitForTilesets(const QList<Tileset *> &tilesets)
     }
 }
 
-void TilesetManager::tilesetSourceChanged(Tileset *tileset,
-                                          const QString &oldSource,
-                                          bool wasMissing)
-{
-    if (!tileset->isMissing() && !tileset->imageSource().isEmpty()) {
-        readTileLayerNames(tileset);
-    }
-    emit tilesetChanged(tileset);
-}
-
 void TilesetManager::changeTilesetSource(Tileset *tileset, const QString &source,
                                          bool missing)
 {
