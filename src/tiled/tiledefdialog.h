@@ -61,6 +61,8 @@ public:
     static TileDefDialog *instance();
     static void deleteInstance();
 
+    static bool closeYerself();
+
     // UNDO/REDO
     void insertTileset(int index, Tileset *ts, TileDefTileset *defTileset);
     void removeTileset(int index, Tileset **tsPtr = 0,

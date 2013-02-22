@@ -238,6 +238,14 @@ void TileDefDialog::deleteInstance()
     mInstance = 0;
 }
 
+bool TileDefDialog::closeYerself()
+{
+    if (mInstance) {
+        return mInstance->close();
+    }
+    return true;
+}
+
 TileDefDialog::TileDefDialog(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::TileDefDialog),

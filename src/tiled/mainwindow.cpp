@@ -592,7 +592,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
 #ifdef ZOMBOID
     writeSettings();
-    if (confirmAllSave() && (!mBuildingEditor || mBuildingEditor->closeYerself())) {
+    if (confirmAllSave() &&
+            TileDefDialog::closeYerself() &&
+            (!mBuildingEditor || mBuildingEditor->closeYerself())) {
         event->accept();
     } else
         event->ignore();
