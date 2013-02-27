@@ -159,12 +159,24 @@ int main(int argc, char *argv[])
     if (commandLine.disableOpenGL)
         Preferences::instance()->setUseOpenGL(false);
 
+#ifdef ZOMBOID
+    if (a.isRunning()) {
+        if (!commandLine.filesToOpen().isEmpty()) {
+            foreach (const QString &fileName, commandLine.filesToOpen())
+                a.sendMessage(fileName);
+            return 0;
+        }
+    }
+#endif
+
     MainWindow w;
 #ifdef ZOMBOID
     ZProgressManager::instance()->setMainWindow(&w);
 #endif
     w.show();
 #ifdef ZOMBOID
+    a.setActivationWindow(&w);
+    w.connect(&a, SIGNAL(messageReceived(QString)), SLOT(openFile(QString)));
     w.readSettings();
 
     if (!w.InitConfigFiles())

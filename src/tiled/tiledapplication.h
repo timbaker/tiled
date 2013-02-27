@@ -21,6 +21,19 @@
 #ifndef TILEDAPPLICATION_H
 #define TILEDAPPLICATION_H
 
+#ifdef ZOMBOID
+#include <QtSingleApplication>
+
+namespace Tiled {
+namespace Internal {
+
+/**
+ * Custom QApplication subclass which handles the QFileOpenEvent, in order
+ * to be able to open files appropriately on MacOS X.
+ */
+class TiledApplication : public QtSingleApplication
+{
+#else
 #include <QApplication>
 
 namespace Tiled {
@@ -32,6 +45,7 @@ namespace Internal {
  */
 class TiledApplication : public QApplication
 {
+#endif
     Q_OBJECT
 
 public:

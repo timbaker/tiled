@@ -26,7 +26,11 @@ using namespace Tiled;
 using namespace Tiled::Internal;
 
 TiledApplication::TiledApplication(int &argc, char **argv) :
+#ifdef ZOMBOID
+    QtSingleApplication(argc, argv)
+#else
     QApplication(argc, argv)
+#endif
 {
 }
 
