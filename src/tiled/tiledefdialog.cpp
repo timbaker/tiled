@@ -975,10 +975,10 @@ void TileDefDialog::updateUI()
 
 void TileDefDialog::help()
 {
-    QString path = QLatin1String("file:///") +
+    QUrl url = QUrl::fromLocalFile(
             QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + QLatin1String("docs/TileProperties/index.html");
-    QDesktopServices::openUrl(QUrl(path, QUrl::TolerantMode));
+            + QLatin1String("docs/TileProperties/index.html"));
+    QDesktopServices::openUrl(url);
 }
 
 bool TileDefDialog::eventFilter(QObject *object, QEvent *event)

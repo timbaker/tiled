@@ -2461,10 +2461,10 @@ void BuildingEditorWindow::updateActions()
 
 void BuildingEditorWindow::help()
 {
-    QString path = QLatin1String("file:///") +
+    QUrl url = QUrl::fromLocalFile(
             QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + QLatin1String("docs/BuildingEd/index.html");
-    QDesktopServices::openUrl(QUrl(path, QUrl::TolerantMode));
+            + QLatin1String("docs/BuildingEd/index.html"));
+    QDesktopServices::openUrl(url);
 }
 
 void BuildingEditorWindow::toggleOrthoIso()
