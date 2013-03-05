@@ -664,6 +664,7 @@ void MapManager::buildingLoadedByThread(Building *building, MapInfo *mapInfo)
 
     BuildingMap bmap(building);
     Map *map = bmap.mergedMap();
+    bmap.addRoomDefObjects(map);
 
     QSet<Tileset*> usedTilesets = map->usedTilesets();
     usedTilesets.remove(TilesetManager::instance()->missingTileset());
