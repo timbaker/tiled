@@ -413,6 +413,7 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
         case MapChange::LayerRenamed:
             break;
         case MapChange::RegionAltered: {
+            // The layer might not exist anymore, redrawAll catches that.
             if (redrawAll) break;
             QRect tileBounds;
             TileLayer *tl = sm.mMapComposite->map()->layerAt(c.mLayerIndex)->asTileLayer(); // kinda slow
@@ -435,6 +436,8 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
             break;
         }
         case MapChange::LotAdded: {
+            // The lot may have been removed in the loop above.
+            if (!sm.mIDToLot.contains(c.mLotInfo.id)) break;
             QRectF bounds = sm.mIDToLot[c.mLotInfo.id]->boundingRect(mRenderer);
             dirty = bounds;
             mLotBounds[c.mLotInfo.id] = bounds;
@@ -446,12 +449,16 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
             break;
         }
         case MapChange::LotUpdated: {
+            // The lot may have been removed in the loop above.
+            if (!sm.mIDToLot.contains(c.mLotInfo.id)) break;
             QRectF bounds = sm.mIDToLot[c.mLotInfo.id]->boundingRect(mRenderer);
             dirty = mLotBounds[c.mLotInfo.id] | bounds;
             mLotBounds[c.mLotInfo.id] = bounds;
             break;
         }
         case MapChange::MapChanged: {
+            // The lot may have been removed in the loop above.
+            if (!sm.mIDToLot.contains(c.mLotInfo.id)) break;
             // A loaded map changed in memory
             QRectF bounds = sm.mIDToLot[c.mLotInfo.id]->boundingRect(mRenderer);
             dirty = mLotBounds[c.mLotInfo.id] | bounds;
