@@ -371,6 +371,17 @@ Tileset *TileMetaInfoMgr::loadTileset(const QString &source)
 
 bool TileMetaInfoMgr::loadTilesetImage(Tileset *ts, const QString &source)
 {
+#if 1
+    QImageReader reader(source);
+    if (reader.size().isValid()) {
+        ts->loadFromNothing(reader.size(), source);
+        QFileInfo info(source);
+        TilesetManager::instance()->loadTileset(ts, info.canonicalFilePath());
+        return true;
+    }
+    mError = tr("Error loading tileset image:\n'%1'").arg(source);
+    return false;
+#else
     TilesetImageCache *cache = TilesetManager::instance()->imageCache();
     Tileset *cached = cache->findMatch(ts, source);
     if (!cached || !ts->loadFromCache(cached)) {
@@ -379,11 +390,11 @@ bool TileMetaInfoMgr::loadTilesetImage(Tileset *ts, const QString &source)
             cache->addTileset(ts);
         else {
             mError = tr("Error loading tileset image:\n'%1'").arg(source);
-            return 0;
+            return false;
         }
     }
-
-    return ts;
+    return true;
+#endif
 }
 
 void TileMetaInfoMgr::addTileset(Tileset *tileset)
