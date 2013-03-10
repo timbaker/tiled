@@ -20,6 +20,7 @@
 #include "building.h"
 #include "buildingeditorwindow.h"
 #include "buildingfloor.h"
+#include "buildingmap.h"
 #include "buildingobjects.h"
 #include "buildingreader.h"
 #include "buildingtemplates.h"
@@ -61,6 +62,7 @@ BuildingDocument *BuildingDocument::read(const QString &fileName, QString &error
     BuildingReader reader;
     if (Building *building = reader.read(fileName)) {
         reader.fix(building);
+        BuildingMap::loadNeededTilesets(building);
         BuildingDocument *doc = new BuildingDocument(building, fileName);
         return doc;
     }
