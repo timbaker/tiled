@@ -296,7 +296,7 @@ void PreferencesDialog::mapsBrowse()
 {
     QString f = QFileDialog::getExistingDirectory(this, tr("Directory"), mUi->lotDirectory->text());
     if (!f.isEmpty()) {
-        mUi->lotDirectory->setText(f);
+        mUi->lotDirectory->setText(QDir::toNativeSeparators(f));
     }
 }
 #endif
@@ -340,7 +340,8 @@ void PreferencesDialog::fromPreferences()
     mObjectTypesModel->setObjectTypes(prefs->objectTypes());
 
 #ifdef ZOMBOID
-    mUi->lotDirectory->setText(prefs->mapsDirectory());
+    mUi->lotDirectory->setText(QDir::toNativeSeparators(prefs->mapsDirectory()));
+    mUi->configDirectory->setText(QDir::toNativeSeparators(prefs->configPath()));
 #endif
 }
 

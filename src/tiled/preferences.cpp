@@ -132,6 +132,10 @@ Preferences::Preferences()
     mSettings->beginGroup(QLatin1String("MapsDirectory"));
     mMapsDirectory = mSettings->value(QLatin1String("Current"), QString()).toString();
     mSettings->endGroup();
+
+    QString configPath = QDir::homePath() + QLatin1Char('/') + QLatin1String(".TileZed");
+    mConfigDirectory = mSettings->value(QLatin1String("ConfigDirectory"),
+                                        configPath).toString();
 #endif
 
     TilesetManager *tilesetManager = TilesetManager::instance();
@@ -350,6 +354,16 @@ void Preferences::setAutomappingDrawing(bool enabled)
 }
 
 #ifdef ZOMBOID
+QString Preferences::configPath() const
+{
+    return mConfigDirectory;
+}
+
+QString Preferences::configPath(const QString &fileName) const
+{
+    return configPath() + QLatin1Char('/') + fileName;
+}
+
 QString Preferences::mapsDirectory() const
 {
     return mMapsDirectory;

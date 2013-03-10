@@ -17,7 +17,6 @@
 
 #include "tilemetainfomgr.h"
 
-#include "BuildingEditor/buildingpreferences.h"
 #include "BuildingEditor/listofstringsdialog.h"
 #include "BuildingEditor/simplefile.h"
 
@@ -127,7 +126,7 @@ QString TileMetaInfoMgr::txtName()
 
 QString TileMetaInfoMgr::txtPath()
 {
-    return BuildingEditor::BuildingPreferences::instance()->configPath(txtName());
+    return Preferences::instance()->configPath(txtName());
 }
 
 #define VERSION0 0

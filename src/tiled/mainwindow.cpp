@@ -803,7 +803,7 @@ bool MainWindow::InitConfigFiles()
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 
     // Create ~/.TileZed if needed.
-    QString configPath = BuildingPreferences::instance()->configPath();
+    QString configPath = Preferences::instance()->configPath();
     QDir dir(configPath);
     if (!dir.exists()) {
         if (!dir.mkpath(configPath)) {

@@ -478,7 +478,7 @@ TileDefTileset::~TileDefTileset()
 
 /////
 
-#include "BuildingEditor/buildingpreferences.h"
+#include "preferences.h"
 #include "BuildingEditor/simplefile.h"
 
 #include <QCoreApplication>
@@ -599,7 +599,7 @@ QString TilePropertyMgr::txtName()
 
 QString TilePropertyMgr::txtPath()
 {
-    return BuildingEditor::BuildingPreferences::instance()->configPath(txtName());
+    return Preferences::instance()->configPath(txtName());
 }
 
 bool TilePropertyMgr::readTxt()
@@ -607,7 +607,7 @@ bool TilePropertyMgr::readTxt()
     QFileInfo info(txtPath());
 
     // Create ~/.TileZed if needed.
-    QString configPath = BuildingEditor::BuildingPreferences::instance()->configPath();
+    QString configPath = Preferences::instance()->configPath();
     QDir dir(configPath);
     if (!dir.exists()) {
         if (!dir.mkpath(configPath)) {

@@ -82,6 +82,9 @@ public:
     void setAutomappingDrawing(bool enabled);
 
 #ifdef ZOMBOID
+    QString configPath() const;
+    QString configPath(const QString &fileName) const;
+
     QString mapsDirectory() const;
     void setMapsDirectory(const QString &path);
 
@@ -164,6 +167,7 @@ private:
 
 #ifdef ZOMBOID
     QString mMapsDirectory;
+    QString mConfigDirectory;
     bool mAutoSwitchLayer;
     QString mTilesDirectory;
     qreal mTilesetScale;

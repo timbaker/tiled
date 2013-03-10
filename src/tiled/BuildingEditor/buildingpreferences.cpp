@@ -16,6 +16,7 @@
  */
 
 #include "buildingpreferences.h"
+#include "preferences.h"
 
 #include <QDir>
 
@@ -66,7 +67,7 @@ BuildingPreferences::BuildingPreferences(QObject *parent) :
 
 QString BuildingPreferences::configPath() const
 {
-    return QDir::homePath() + QLatin1Char('/') + QLatin1String(".TileZed");
+    return Tiled::Internal::Preferences::instance()->configPath();
 }
 
 QString BuildingPreferences::configPath(const QString &fileName) const
