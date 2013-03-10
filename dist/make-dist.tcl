@@ -69,6 +69,7 @@ proc createFile {DEST name contents} {
 
 puts ---Toplevel---
 copyFile {C:\Programming\Tiled} $DEST vcredist_x86.exe
+copyFile $BIN $DEST config.exe
 copyFile $BIN $DEST TileZed.exe
 copyFile $BIN $DEST tiled.dll
 copyFile $BIN $DEST tmxviewer.exe
