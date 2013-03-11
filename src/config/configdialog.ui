@@ -27,7 +27,7 @@
    <item row="1" column="0">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Config files directory</string>
+      <string>Config Directory</string>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
