@@ -129,6 +129,10 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
     Utils::setThemeIcon(mUi->addObjectTypeButton, "add");
     Utils::setThemeIcon(mUi->removeObjectTypeButton, "remove");
 
+#ifdef ZOMBOID
+    mUi->tabWidget->setCurrentIndex(0);
+#endif
+
     fromPreferences();
 
     connect(mUi->languageCombo, SIGNAL(currentIndexChanged(int)),
@@ -158,10 +162,6 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
 
     connect(mUi->autoMapWhileDrawing, SIGNAL(toggled(bool)),
             SLOT(useAutomappingDrawingToggled(bool)));
-
-#ifdef ZOMBOID
-    connect(mUi->lotBrowseButton, SIGNAL(clicked()), SLOT(mapsBrowse()));
-#endif
 }
 
 PreferencesDialog::~PreferencesDialog()
@@ -291,16 +291,6 @@ void PreferencesDialog::exportObjectTypes()
     }
 }
 
-#ifdef ZOMBOID
-void PreferencesDialog::mapsBrowse()
-{
-    QString f = QFileDialog::getExistingDirectory(this, tr("Directory"), mUi->lotDirectory->text());
-    if (!f.isEmpty()) {
-        mUi->lotDirectory->setText(QDir::toNativeSeparators(f));
-    }
-}
-#endif
-
 void PreferencesDialog::fromPreferences()
 {
     const Preferences *prefs = Preferences::instance();
@@ -340,7 +330,6 @@ void PreferencesDialog::fromPreferences()
     mObjectTypesModel->setObjectTypes(prefs->objectTypes());
 
 #ifdef ZOMBOID
-    mUi->lotDirectory->setText(QDir::toNativeSeparators(prefs->mapsDirectory()));
     mUi->configDirectory->setText(QDir::toNativeSeparators(prefs->configPath()));
 #endif
 }
@@ -353,10 +342,6 @@ void PreferencesDialog::toPreferences()
     prefs->setDtdEnabled(mUi->enableDtd->isChecked());
     prefs->setLayerDataFormat(layerDataFormat());
     prefs->setAutomappingDrawing(mUi->autoMapWhileDrawing->isChecked());
-
-#ifdef ZOMBOID
-    prefs->setMapsDirectory(mUi->lotDirectory->text());
-#endif
 }
 
 MapWriter::LayerDataFormat PreferencesDialog::layerDataFormat() const
