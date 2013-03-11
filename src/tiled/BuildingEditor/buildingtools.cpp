@@ -1890,7 +1890,7 @@ void SelectMoveObjectTool::currentModifiersChanged(Qt::KeyboardModifiers modifie
         bool duplicate = controlModifier();
         if (duplicate && mClones.isEmpty()) {
             int index = floor()->objectCount();
-            foreach (BuildingObject *object, mMovingObjects) {
+            foreach (BuildingObject *object, objectsInOrder(mMovingObjects)) {
                 BuildingObject *clone = object->clone();
                 clone->setFloor(0);
                 GraphicsObjectItem *item = mEditor->createItemForObject(clone);
@@ -2040,7 +2040,7 @@ void SelectMoveObjectTool::finishMoving(const QPointF &pos)
     if (controlModifier()) {
         undoStack->beginMacro(tr("Copy %n Object(s)", "", mMovingObjects.size()));
         QSet<BuildingObject*> clones;
-        foreach (BuildingObject *object, mMovingObjects) {
+        foreach (BuildingObject *object, objectsInOrder(mMovingObjects)) {
             if (object->isValidPos(mDragOffset)) {
                 BuildingObject *clone = object->clone();
                 clone->setPos(object->pos() + mDragOffset);
@@ -2102,6 +2102,14 @@ void SelectMoveObjectTool::updateStatusText()
         setStatusText(tr("Left-click to select.  Left-click-drag to select and move.  CTRL=toggle.  SHIFT=add."));
     } else
         setStatusText(tr("Left-click-drag to select."));
+}
+
+QList<BuildingObject*> SelectMoveObjectTool::objectsInOrder(const QSet<BuildingObject*> &objects)
+{
+    QMap<int,BuildingObject*> map;
+    foreach (BuildingObject *object, objects)
+        map[object->index()] = object;
+    return map.values();
 }
 
 /////

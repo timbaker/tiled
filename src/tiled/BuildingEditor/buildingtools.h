@@ -501,6 +501,8 @@ private:
 
     void updateStatusText();
 
+    QList<BuildingObject*> objectsInOrder(const QSet<BuildingObject*> &objects);
+
 private:
     Q_DISABLE_COPY(SelectMoveObjectTool)
     static SelectMoveObjectTool *mInstance;
