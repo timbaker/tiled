@@ -17,7 +17,6 @@
 
 #include "tilemetainfomgr.h"
 
-#include "BuildingEditor/listofstringsdialog.h"
 #include "BuildingEditor/simplefile.h"
 
 #include "mainwindow.h"
@@ -27,7 +26,6 @@
 #include "tile.h"
 #include "tileset.h"
 
-#include <QCoreApplication>
 #include <QDir>
 #include <QImage>
 #include <QImageReader>
@@ -173,8 +171,6 @@ bool TileMetaInfoMgr::readTxt()
     mRevision = simple.value("revision").toInt();
     mSourceRevision = simple.value("source_revision").toInt();
 
-    QStringList missingTilesets;
-
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("meta-enums")) {
             foreach (SimpleFileKeyValue kv, block.values) {
@@ -284,13 +280,6 @@ bool TileMetaInfoMgr::readTxt()
                 return false;
             }
         }
-    }
-    if (missingTilesets.size()) {
-        BuildingEditor::ListOfStringsDialog dialog(tr("The following tileset files were not found."),
-                                                   missingTilesets,
-                                                   0/*MainWindow::instance()*/);
-        dialog.setWindowTitle(tr("Missing Tilesets"));
-        dialog.exec();
     }
 
     mHasReadTxt = true;
