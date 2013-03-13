@@ -1,8 +1,5 @@
 /*
- * undocommands.h
- * Copyright 2009, Thorbjørn Lindeijer <thorbjorn@lindeijer.nl>
- *
- * This file is part of Tiled.
+ * Copyright 2013, Tim Baker <treectrl@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -18,21 +15,39 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UNDOCOMMANDS_H
-#define UNDOCOMMANDS_H
+#ifndef BMPTOOLDIALOG_H
+#define BMPTOOLDIALOG_H
 
-/**
- * These undo command IDs are used by Qt to determine whether two undo commands
- * can be merged.
- */
-enum UndoCommands {
-    Cmd_EraseTiles,
-    Cmd_PaintTileLayer,
-    Cmd_MoveTileset
-#ifdef ZOMBOID
-    ,
-    Cmd_PaintBMP
-#endif
+#include <QDialog>
+#include <QModelIndex>
+
+namespace Ui {
+class BmpToolDialog;
+}
+
+namespace Tiled {
+namespace Internal {
+class MapDocument;
+
+class BmpToolDialog : public QDialog
+{
+    Q_OBJECT
+    
+public:
+    explicit BmpToolDialog(QWidget *parent = 0);
+    ~BmpToolDialog();
+
+    void setDocument(MapDocument *doc);
+
+private slots:
+    void currentRuleChanged(const QModelIndex &current);
+    
+private:
+    Ui::BmpToolDialog *ui;
+    MapDocument *mDocument;
 };
 
-#endif // UNDOCOMMANDS_H
+} // namespace Internal
+} // namespace Tiled
+
+#endif // BMPTOOLDIALOG_H

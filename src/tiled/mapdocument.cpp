@@ -31,6 +31,7 @@
 #include "layermodel.h"
 #include "mapobjectmodel.h"
 #ifdef ZOMBOID
+#include "bmpblender.h"
 #include "mapcomposite.h"
 #include "mapmanager.h"
 #include "zlevelrenderer.h"
@@ -603,6 +604,13 @@ void MapDocument::emitRegionAltered(const QRegion &region, Layer *layer)
 void MapDocument::setTileLayerName(Tile *tile, const QString &name)
 {
     TilesetManager::instance()->setLayerName(tile, name);
+}
+
+void MapDocument::setBmpBlender(BmpBlender *blender)
+{
+    mBmpBlender = blender;
+    mMapComposite->tileLayersForLevel(0)->setBmpBlendLayers(blender->mTileLayers.values());
+    mMapComposite->tileLayersForLevel(0)->setNeedsSynch(true);
 }
 #endif // ZOMBOID
 

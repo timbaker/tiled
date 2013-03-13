@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>BmpToolDialog</class>
+ <widget class="QDialog" name="BmpToolDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>253</width>
+    <height>350</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>BMP Tool</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <property name="margin">
+    <number>2</number>
+   </property>
+   <item row="3" column="0">
+    <widget class="Tiled::Internal::MixedTilesetView" name="tableView"/>
+   </item>
+   <item row="0" column="0">
+    <widget class="QCheckBox" name="showMapTiles">
+     <property name="text">
+      <string>Show map tiles</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QCheckBox" name="showBlendTiles">
+     <property name="text">
+      <string>Show blend tiles</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Tiled::Internal::MixedTilesetView</class>
+   <extends>QTableView</extends>
+   <header>BuildingEditor/mixedtilesetview.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

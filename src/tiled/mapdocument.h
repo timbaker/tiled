@@ -57,6 +57,7 @@ class LayerModel;
 class TileSelectionModel;
 class MapObjectModel;
 #ifdef ZOMBOID
+class BmpBlender;
 class ZLevelsModel;
 #endif
 
@@ -275,6 +276,11 @@ public:
     inline void emitEditLayerNameRequested()
     { emit editLayerNameRequested(); }
 
+#ifdef ZOMBOID
+    void setBmpBlender(BmpBlender *blender);
+    BmpBlender *bmpBlender() const { return mBmpBlender; }
+#endif
+
 signals:
     void fileNameChanged();
     void modifiedChanged();
@@ -397,6 +403,7 @@ private:
     ZLevelsModel *mLevelsModel;
     int mMaxVisibleLayer;
     MapComposite *mMapComposite;
+    BmpBlender *mBmpBlender;
 #endif
     QUndoStack *mUndoStack;
 };

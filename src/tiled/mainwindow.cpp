@@ -76,6 +76,8 @@
 #include "commandbutton.h"
 #include "objectsdock.h"
 #ifdef ZOMBOID
+#include "bmpblender.h"
+#include "bmptool.h"
 #include "changetileselection.h"
 #include "converttolotdialog.h"
 #include "convertorientationdialog.h"
@@ -442,6 +444,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     toolManager->registerTool(mBucketFillTool);
     toolManager->registerTool(new Eraser(this));
     toolManager->registerTool(new TileSelectionTool(this));
+#ifdef ZOMBOID
+    toolManager->registerTool(BmpTool::instance());
+#endif
     toolManager->addSeparator();
     toolManager->registerTool(new ObjectSelectionTool(this));
     toolManager->registerTool(new EditPolygonTool(this));
@@ -712,7 +717,63 @@ bool MainWindow::openFile(const QString &fileName,
         return false;
     }
 
+#ifdef ZOMBOID
+    BmpBlender *blender = new BmpBlender(map);
+    if (!blender->readRules(QLatin1String("C:/Programming/Tiled/PZWorldEd/PZWorldEd/Rules.txt"))) {
+        QMessageBox::critical(this, tr("Error Opening Map"),
+                              blender->mError);
+        return false;
+    }
+    if (!blender->readBlends(QLatin1String("C:/Programming/Tiled/PZWorldEd/PZWorldEd/Blends.txt"))) {
+        QMessageBox::critical(this, tr("Error Opening Map"),
+                              blender->mError);
+        return false;
+    }
+    map->bmpMain() = QImage(map->width(), map->height(), QImage::Format_ARGB32);
+    map->bmpVeg() = QImage(map->width(), map->height(), QImage::Format_ARGB32);
+    map->bmpMain().fill(Qt::black);
+    map->bmpVeg().fill(Qt::black);
+#if 1
+#elif 0
+    int index = map->indexOfLayer(QLatin1String("0_Floor"), Layer::TileLayerType);
+    if (true && index != -1) {
+        TileLayer *tl = map->layerAt(index)->asTileLayer();
+        for (int y = 0; y < map->height(); y++) {
+            for (int x = 0; x < map->width(); x++) {
+                Tile *tile = tl->cellAt(x, y).tile;
+                if (tile) {
+                    QString tileName = BuildingTilesMgr::nameForTile(tile);
+                    foreach (BmpBlender::Rule *rule, blender->mRules) {
+                        if (rule->targetLayer == tl->name() && rule->bitmapIndex == 0 && rule->tileChoices.contains(tileName))
+                            map->bmpMain().setPixel(x, y, rule->color);
+                    }
+                }
+            }
+        }
+    }
+#else
+    {
+        QPainter painter(&map->bmpMain());
+        painter.fillRect(0,0,map->width(),map->height(),Qt::black);
+        painter.fillRect(10,10,30,30,QColor(90,100,35));
+        painter.fillRect(20,20,10,10,QColor(120,145,50));
+    }
+    {
+        QPainter painter(&map->bmpVeg());
+        painter.fillRect(0,0,map->width(),map->height(),Qt::black);
+        painter.fillRect(15,15,20,8,QColor(255,0,0));
+    }
+#endif
+    blender->imagesToTileNames(0,0,map->width(),map->height());
+    blender->blend(0,0,map->width(),map->height());
+    blender->tileNamesToLayers(0,0,map->width(),map->height());
+
+    MapDocument *doc = new MapDocument(map, fileName);
+    doc->setBmpBlender(blender);
+    addMapDocument(doc);
+#else
     addMapDocument(new MapDocument(map, fileName));
+#endif
 
     setRecentFile(fileName);
     return true;

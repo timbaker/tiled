@@ -123,6 +123,7 @@ void CompositeLayerGroup::addTileLayer(TileLayer *layer, int index)
             : layer->isEmpty() || layer->name().contains(QLatin1String("NoRender"));
     mEmptyLayers.insert(index, empty);
 
+    mBmpBlendLayers.insert(index, 0);
 #ifdef BUILDINGED
     mBlendLayers.insert(index, 0);
     mForceNonEmpty.insert(index, false);
@@ -135,6 +136,7 @@ void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
     mVisibleLayers.remove(index);
     mLayerOpacity.remove(index);
     mEmptyLayers.remove(index);
+    mBmpBlendLayers.remove(index);
 #ifdef BUILDINGED
     mBlendLayers.remove(index);
     mForceNonEmpty.remove(index);
@@ -183,12 +185,15 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
         if (isLayerEmpty(index))
             continue;
         TileLayer *tl = mLayers[index];
+        TileLayer *tlBmpBlend = mBmpBlendLayers[index];
 #ifdef BUILDINGED
         TileLayer *tlBlend = mBlendLayers[index];
 #endif // BUILDINGED
         QPoint subPos = pos - mOwner->orientAdjustTiles() * mLevel - tl->position();
         if (tl->contains(subPos)) {
             const Cell *cell = &tl->cellAt(subPos);
+            if (tlBmpBlend && tlBmpBlend->contains(subPos) && !tlBmpBlend->cellAt(subPos).isEmpty())
+                cell = &tlBmpBlend->cellAt(subPos);
 #ifdef BUILDINGED
             // Use an empty tool tile if given during erasing.
             if ((mToolTileLayer == tl) && !mToolTiles.isEmpty() &&
@@ -234,6 +239,8 @@ bool CompositeLayerGroup::isLayerEmpty(int index) const
 {
     if (!mVisibleLayers[index])
         return true;
+    if (mBmpBlendLayers[index] && !mBmpBlendLayers[index]->isEmpty())
+        return false;
 #ifdef BUILDINGED
     if (mForceNonEmpty[index])
         return false;
@@ -393,6 +400,17 @@ void CompositeLayerGroup::saveOpacity()
 void CompositeLayerGroup::restoreOpacity()
 {
     mLayerOpacity = mSavedOpacity;
+}
+
+void CompositeLayerGroup::setBmpBlendLayers(const QList<TileLayer *> &layers)
+{
+    mBmpBlendLayers.fill(0);
+    foreach (TileLayer *tl, layers) {
+        for (int i = 0; i < mLayers.size(); i++) {
+            if (mLayers[i]->name() == tl->name())
+                mBmpBlendLayers[i] = tl;
+        }
+    }
 }
 
 #ifdef BUILDINGED

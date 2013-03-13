@@ -281,6 +281,11 @@ public:
     int tileLayerGroupCount() const { return mTileLayerGroups.size(); }
 #endif
 
+#ifdef ZOMBOID
+    QImage &bmpMain() { return mBmpMain; }
+    QImage &bmpVeg() { return mBmpVeg; }
+#endif
+
     Map *clone() const;
 
     /**
@@ -308,6 +313,8 @@ private:
     QPoint mCellsPerLevel;
     QList<ZTileLayerGroup*> mTileLayerGroups;
     QMap<Tileset*,int> mUsedTilesets;
+    QImage mBmpMain;
+    QImage mBmpVeg;
 #endif
 };
 
