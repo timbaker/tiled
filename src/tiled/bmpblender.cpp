@@ -50,6 +50,19 @@ BmpBlender::~BmpBlender()
     qDeleteAll(mTileNameGrids);
 }
 
+bool BmpBlender::read()
+{
+    QString fileName = QLatin1String("C:/Programming/Tiled/PZWorldEd/PZWorldEd/Rules.txt"); // FIXME
+    if (!readRules(fileName))
+        return false;
+
+    fileName = QLatin1String("C:/Programming/Tiled/PZWorldEd/PZWorldEd/Blends.txt"); // FIXME
+    if (!readBlends(fileName))
+        return false;
+
+    return true;
+}
+
 bool BmpBlender::readRules(const QString &filePath)
 {
     QFile file(filePath);
@@ -175,6 +188,20 @@ bool BmpBlender::readBlends(const QString &filePath)
     return true;
 }
 
+static bool adjacentToNonBlack(const QImage &image1, const QImage &image2, int x1, int y1)
+{
+    const QRgb black = qRgb(0, 0, 0);
+    QRect r(0, 0, image1.width(), image1.height());
+    for (int y = y1 - 1; y <= y1 + 1; y++) {
+        for (int x = x1 - 1; x <= x1 + 1; x++) {
+            if (!r.contains(x, y)) continue;
+            if (image1.pixel(x, y) != black || image2.pixel(x, y) != black)
+                return true;
+        }
+    }
+    return false;
+}
+
 void BmpBlender::imagesToTileNames(int x1, int y1, int x2, int y2)
 {
     if (mTileNameGrids.isEmpty()) {
@@ -194,6 +221,14 @@ void BmpBlender::imagesToTileNames(int x1, int y1, int x2, int y2)
     // Hack - If a pixel is black, and the user-drawn map tile in 0_Floor is
     // one of the Rules.txt tiles, pretend that that pixel exists in the image.
     x1 -= 1, x2 += 1, y1 -= 1, y2 += 1;
+    int index = mMap->indexOfLayer(QLatin1String("0_Floor"), Layer::TileLayerType);
+    TileLayer *tl = (index == -1) ? 0 : mMap->layerAt(index)->asTileLayer();
+    QList<Rule*> floor0Rules;
+    foreach (Rule *rule, mRules) {
+        if (rule->targetLayer == QLatin1String("0_Floor") &&
+                rule->bitmapIndex == 0)
+            floor0Rules += rule;
+    }
 
     x1 = qBound(0, x1, mMap->width() - 1);
     x2 = qBound(0, x2, mMap->width() - 1);
@@ -210,16 +245,12 @@ void BmpBlender::imagesToTileNames(int x1, int y1, int x2, int y2)
 
             // Hack - If a pixel is black, and the user-drawn map tile in 0_Floor is
             // one of the Rules.txt tiles, pretend that that pixel exists in the image.
-            if (col == black) {
-                int index = mMap->indexOfLayer(QLatin1String("0_Floor"), Layer::TileLayerType);
-                if (true && index != -1) {
-                    TileLayer *tl = mMap->layerAt(index)->asTileLayer();
-                    if (Tile *tile = tl->cellAt(x, y).tile) {
-                        QString tileName = BuildingEditor::BuildingTilesMgr::nameForTile(tile);
-                        foreach (Rule *rule, mRules) {
-                            if (rule->targetLayer == tl->name() && rule->bitmapIndex == 0 && rule->tileChoices.contains(tileName))
-                                col = rule->color;
-                        }
+            if (tl && col == black && adjacentToNonBlack(mMap->bmpMain(), mMap->bmpVeg(), x, y)) {
+                if (Tile *tile = tl->cellAt(x, y).tile) {
+                    QString tileName = BuildingEditor::BuildingTilesMgr::nameForTile(tile);
+                    foreach (Rule *rule, floor0Rules) {
+                        if (rule->tileChoices.contains(tileName))
+                            col = rule->color;
                     }
                 }
             }
@@ -297,8 +328,6 @@ void BmpBlender::tileNamesToLayers(int x1, int y1, int x2, int y2)
     foreach (Tileset *ts, mMap->tilesets())
         tilesets[ts->name()] = ts;
 
-    BuildingEditor::BuildingTilesMgr *btiles =
-            BuildingEditor::BuildingTilesMgr::instance();
     foreach (QString layerName, mTileLayers.keys()) {
         BuildingEditor::FloorTileGrid *grid = mTileNameGrids[layerName];
         TileLayer *tl = mTileLayers[layerName];
@@ -311,7 +340,7 @@ void BmpBlender::tileNamesToLayers(int x1, int y1, int x2, int y2)
                 }
                 QString tilesetName;
                 int tileID;
-                if (btiles->parseTileName(tileName, tilesetName, tileID)) {
+                if (BuildingEditor::BuildingTilesMgr::parseTileName(tileName, tilesetName, tileID)) {
                     if (tilesets.contains(tilesetName))
                         tl->setCell(x, y, Cell(tilesets[tilesetName]->tileAt(tileID)));
                 }

@@ -28,6 +28,8 @@
 #include "map.h"
 
 #include <QCoreApplication>
+#include <QDebug>
+#include <QPainter>
 #include <QUndoCommand>
 
 using namespace Tiled;
@@ -38,19 +40,79 @@ using namespace Tiled::Internal;
 namespace Tiled {
 namespace Internal {
 
+// This is a QImage with resize() and merge() methods mirroring those of
+// TileLayer.
+class ResizableImage : public QImage
+{
+public:
+    ResizableImage() :
+        QImage()
+    {
+
+    }
+
+    ResizableImage(const QSize &size) :
+        QImage(size, QImage::Format_ARGB32)
+    {
+
+    }
+
+    ResizableImage(const QImage &image) :
+        QImage(image)
+    {
+    }
+
+    // This is like TileLayer::resize().
+    void resize(const QSize &size, const QPoint &offset)
+    {
+        QImage newImage(size, QImage::Format_ARGB32);
+        newImage.fill(Qt::black);
+
+        // Copy over the preserved part
+        const int startX = qMax(0, -offset.x());
+        const int startY = qMax(0, -offset.y());
+        const int endX = qMin(width(), size.width() - offset.x());
+        const int endY = qMin(height(), size.height() - offset.y());
+
+        for (int y = startY; y < endY; ++y) {
+            for (int x = startX; x < endX; ++x) {
+                newImage.setPixel(x + offset.x(), y + offset.y(), pixel(x, y));
+            }
+        }
+
+        *this = newImage;
+    }
+
+    // This is like TileLayer::merge().
+    void merge(const QPoint &pos, const ResizableImage *other)
+    {
+        // Determine the overlapping area
+        QRect area = QRect(pos, QSize(other->width(), other->height()));
+        area &= QRect(0, 0, width(), height());
+
+        for (int y = area.top(); y <= area.bottom(); ++y) {
+            for (int x = area.left(); x <= area.right(); ++x) {
+                setPixel(x, y, other->pixel(x - area.left(), y - area.top()));
+            }
+        }
+    }
+};
+
+// This is based on PaintTileLayer.
 class PaintBMP : public QUndoCommand
 {
 public:
-    PaintBMP(MapDocument *mapDocument, const QPoint &pos, int bmpIndex, QRgb color);
+    PaintBMP(MapDocument *mapDocument, int bmpIndex, int x, int y,
+             QImage &source, QRegion &region);
 //    ~PaintBMP();
 
     void setMergeable(bool mergeable)
     { mMergeable = mergeable; }
 
-    void undo() { swap(); }
-    void redo() { swap(); }
+    void undo() { paint(mErased); }
+    void redo() { paint(mSource); }
 
-    void swap();
+    void paint(const ResizableImage &source);
 
     int id() const { return Cmd_PaintBMP; }
     bool mergeWith(const QUndoCommand *other);
@@ -58,24 +120,36 @@ public:
 private:
     MapDocument *mMapDocument;
     int mBmpIndex;
-    QImage mImage;
+    ResizableImage mSource;
+    ResizableImage mErased;
+    int mX;
+    int mY;
     QRegion mRegion;
     bool mMergeable;
 };
 
-PaintBMP::PaintBMP(MapDocument *mapDocument, const QPoint &pos, int bmpIndex, QRgb color) :
+PaintBMP::PaintBMP(MapDocument *mapDocument, int bmpIndex,
+                   int x, int y, QImage &source, QRegion &region) :
     QUndoCommand(QCoreApplication::translate("UndoCommands", "Paint BMP")),
     mMapDocument(mapDocument),
     mBmpIndex(bmpIndex),
+    mSource(source),
+    mX(x),
+    mY(y),
+    mRegion(region),
     mMergeable(false)
 {
-    mImage = QImage(mapDocument->map()->size(), QImage::Format_ARGB32);
-    mImage.fill(Qt::black);
-    mImage.setPixel(pos, color);
-    mRegion = QRect(pos, QSize(1, 1));
+    QImage *image = 0;
+    if (mBmpIndex == 0)
+        image = &mMapDocument->map()->bmpMain();
+    if (mBmpIndex == 1)
+        image = &mMapDocument->map()->bmpVeg();
+    if (!image)
+        return;
+    mErased = image->copy(mX, mY, mSource.width(), mSource.height());
 }
 
-void PaintBMP::swap()
+void PaintBMP::paint(const ResizableImage &source)
 {
     QImage *image = 0;
     if (mBmpIndex == 0)
@@ -85,24 +159,21 @@ void PaintBMP::swap()
     if (!image)
         return;
 
-    QImage old = QImage(mImage.size(), QImage::Format_ARGB32);
-    old.fill(Qt::black);
+    QRegion region = mRegion & QRect(0, 0, image->width(), image->height());
 
-    const QRect r = mRegion.boundingRect();
-    for (int y = r.top(); y <= r.bottom(); y++) {
-        for (int x = r.left(); x <= r.right(); x++) {
-            if (mRegion.contains(QPoint(x, y))) {
-                old.setPixel(x, y, image->pixel(x, y));
-                image->setPixel(x, y, mImage.pixel(x, y));
+    foreach (QRect r, region.rects()) {
+        for (int y = r.top(); y <= r.bottom(); y++) {
+            for (int x = r.left(); x <= r.right(); x++) {
+                image->setPixel(x, y, source.pixel(x - mX, y - mY));
             }
         }
     }
 
-    mImage = old;
-
+    const QRect r = region.boundingRect();
     mMapDocument->bmpBlender()->imagesToTileNames(r.left(), r.top(), r.right(), r.bottom());
     mMapDocument->bmpBlender()->blend(r.left() - 1, r.top() - 1, r.right() + 1, r.bottom() + 1);
     mMapDocument->bmpBlender()->tileNamesToLayers(r.left() - 1, r.top() - 1, r.right() + 1, r.bottom() + 1);
+    // FIXME: tileLayersForLevel(0) may be 0
     mMapDocument->mapComposite()->tileLayersForLevel(0)->setBmpBlendLayers(
                 mMapDocument->bmpBlender()->mTileLayers.values());
 
@@ -110,7 +181,7 @@ void PaintBMP::swap()
         int index = mMapDocument->map()->indexOfLayer(layerName, Layer::TileLayerType);
         if (index == -1)
             continue;
-        mMapDocument->emitRegionAltered(mRegion, mMapDocument->map()->layerAt(index)->asTileLayer());
+        mMapDocument->emitRegionAltered(region, mMapDocument->map()->layerAt(index)->asTileLayer());
     }
 }
 
@@ -122,19 +193,32 @@ bool PaintBMP::mergeWith(const QUndoCommand *other)
           o->mMergeable))
         return false;
 
+    const QRegion newRegion = o->mRegion.subtracted(mRegion);
     const QRegion combinedRegion = mRegion.united(o->mRegion);
-    if (mRegion != combinedRegion) {
-        const QRect r = o->mRegion.boundingRect();
-        for (int y = r.top(); y <= r.bottom(); y++) {
-            for (int x = r.left(); x <= r.right(); x++) {
-                if (o->mRegion.contains(QPoint(x, y)) /*&& !mRegion.contains(QPoint(x, y))*/) {
-                    mImage.setPixel(x, y, o->mImage.pixel(x, y));
-                }
-            }
-        }
-        mRegion = combinedRegion;
+    const QRect bounds = QRect(mX, mY, mSource.width(), mSource.height());
+    const QRect combinedBounds = combinedRegion.boundingRect();
+
+    // Resize the erased tiles and source layers when necessary
+    if (bounds != combinedBounds) {
+        const QPoint shift = bounds.topLeft() - combinedBounds.topLeft();
+        mErased.resize(combinedBounds.size(), shift);
+        mSource.resize(combinedBounds.size(), shift);
     }
 
+    mX = combinedBounds.left();
+    mY = combinedBounds.top();
+    mRegion = combinedRegion;
+
+    // Copy the painted tiles from the other command over
+    const QPoint pos = QPoint(o->mX, o->mY) - combinedBounds.topLeft();
+    mSource.merge(pos, &o->mSource);
+
+    // Copy the newly erased tiles from the other command over
+    foreach (const QRect &rect, newRegion.rects())
+        for (int y = rect.top(); y <= rect.bottom(); ++y)
+            for (int x = rect.left(); x <= rect.right(); ++x)
+                mErased.setPixel(x - mX, y - mY,
+                                 o->mErased.pixel(x - o->mX, y - o->mY));
     return true;
 }
 
@@ -160,6 +244,7 @@ BmpTool::BmpTool(QObject *parent) :
                      parent),
     mPainting(false),
     mBmpIndex(0),
+    mBrushSize(1),
     mDialog(0)
 {
 }
@@ -188,6 +273,7 @@ void BmpTool::mousePressed(QGraphicsSceneMouseEvent *event)
 
     if (event->button() == Qt::LeftButton) {
         mPainting = true;
+        mErasing = (event->modifiers() & Qt::ControlModifier) != 0;
         paint(false);
     }
 }
@@ -196,6 +282,12 @@ void BmpTool::mouseReleased(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton)
         mPainting = false;
+}
+
+void BmpTool::setBrushSize(int size)
+{
+    mBrushSize = size;
+    tilePositionChanged(tilePosition());
 }
 
 void BmpTool::mapDocumentChanged(MapDocument *oldDocument,
@@ -216,7 +308,8 @@ void BmpTool::languageChanged()
 
 void BmpTool::tilePositionChanged(const QPoint &tilePos)
 {
-    brushItem()->setTileRegion(QRect(tilePos, QSize(1, 1)));
+    brushItem()->setTileRegion(QRect(tilePos - QPoint(mBrushSize/2, mBrushSize/2),
+                                     QSize(mBrushSize, mBrushSize)));
 
     if (mPainting)
         paint(true);
@@ -225,34 +318,22 @@ void BmpTool::tilePositionChanged(const QPoint &tilePos)
 void BmpTool::paint(bool mergeable)
 {
     TileLayer *tileLayer = currentTileLayer();
-    const QPoint tilePos = tilePosition();
 
-    if (!tileLayer->bounds().contains(tilePos))
+    QRect r = brushItem()->tileRegion().boundingRect();
+
+    if (!tileLayer->bounds().intersects(r))
         return;
 
-#if 1
-    PaintBMP *cmd = new PaintBMP(mapDocument(), tilePos, mBmpIndex, mColor);
+    QPoint topLeft = r.topLeft();
+    QImage image(r.size(), QImage::Format_ARGB32);
+    image.fill(Qt::black);
+    QPainter p(&image);
+    foreach (QRect r, brushItem()->tileRegion().rects())
+        p.fillRect(r.translated(-topLeft), mErasing ? qRgb(0, 0, 0) : mColor);
+    p.end();
+    PaintBMP *cmd = new PaintBMP(mapDocument(), mBmpIndex,
+                                 topLeft.x(), topLeft.y(), image,
+                                 brushItem()->tileRegion());
     cmd->setMergeable(mergeable);
     mapDocument()->undoStack()->push(cmd);
-#else
-    if (mBmpIndex == 0)
-        mapDocument()->map()->bmpMain().setPixel(tilePos, mColor);
-    if (mBmpIndex == 1)
-        mapDocument()->map()->bmpVeg().setPixel(tilePos, mColor);
-
-    int x1 = tilePos.x()-1, x2 = tilePos.x()+1;
-    int y1 = tilePos.y()-1, y2 = tilePos.y()+1;
-    mapDocument()->bmpBlender()->imagesToTileNames(x1+1, y1+1, x2-1, y2-1);
-    mapDocument()->bmpBlender()->blend(x1, y1, x2, y2);
-    mapDocument()->bmpBlender()->tileNamesToLayers(x1, y1, x2, y2);
-    mapDocument()->mapComposite()->tileLayersForLevel(0)->setBmpBlendLayers(
-                mapDocument()->bmpBlender()->mTileLayers.values());
-    foreach (QString layerName, mapDocument()->bmpBlender()->mTileLayers.keys()) {
-        int index = mapDocument()->map()->indexOfLayer(layerName, Layer::TileLayerType);
-        if (index == -1)
-            continue;
-        mapDocument()->emitRegionAltered(QRegion(QRect(tilePos.x()-1,tilePos.y()-1,3,3)),
-                                         mapDocument()->map()->layerAt(index)->asTileLayer());
-    }
-#endif
 }

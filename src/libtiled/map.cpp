@@ -50,6 +50,12 @@ Map::Map(Orientation orientation,
     mCellsPerLevel(0,3)
 #endif
 {
+#ifdef ZOMBOID
+    mBmpMain = QImage(mWidth, mHeight, QImage::Format_ARGB32);
+    mBmpVeg = QImage(mWidth, mHeight, QImage::Format_ARGB32);
+    mBmpMain.fill(Qt::black);
+    mBmpVeg.fill(Qt::black);
+#endif
 }
 
 Map::~Map()

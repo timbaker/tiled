@@ -661,6 +661,17 @@ void MainWindow::newMap()
     if (!mapDocument)
         return;
 
+#ifdef ZOMBOID
+    BmpBlender *blender = new BmpBlender(mapDocument->map());
+    if (!blender->read()) {
+        QMessageBox::critical(this, tr("Error Opening Map"), blender->mError);
+        delete mapDocument;
+        delete blender;
+        return;
+    }
+    mapDocument->setBmpBlender(blender);
+#endif
+
     addMapDocument(mapDocument);
 }
 
@@ -719,20 +730,12 @@ bool MainWindow::openFile(const QString &fileName,
 
 #ifdef ZOMBOID
     BmpBlender *blender = new BmpBlender(map);
-    if (!blender->readRules(QLatin1String("C:/Programming/Tiled/PZWorldEd/PZWorldEd/Rules.txt"))) {
-        QMessageBox::critical(this, tr("Error Opening Map"),
-                              blender->mError);
+    if (!blender->read()) {
+        QMessageBox::critical(this, tr("Error Opening Map"), blender->mError);
+        delete map;
+        delete blender;
         return false;
     }
-    if (!blender->readBlends(QLatin1String("C:/Programming/Tiled/PZWorldEd/PZWorldEd/Blends.txt"))) {
-        QMessageBox::critical(this, tr("Error Opening Map"),
-                              blender->mError);
-        return false;
-    }
-    map->bmpMain() = QImage(map->width(), map->height(), QImage::Format_ARGB32);
-    map->bmpVeg() = QImage(map->width(), map->height(), QImage::Format_ARGB32);
-    map->bmpMain().fill(Qt::black);
-    map->bmpVeg().fill(Qt::black);
 #if 1
 #elif 0
     int index = map->indexOfLayer(QLatin1String("0_Floor"), Layer::TileLayerType);

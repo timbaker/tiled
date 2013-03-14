@@ -37,10 +37,14 @@ public:
     explicit BmpToolDialog(QWidget *parent = 0);
     ~BmpToolDialog();
 
+    void setVisible(bool visible);
+
     void setDocument(MapDocument *doc);
 
 private slots:
     void currentRuleChanged(const QModelIndex &current);
+    void brushSizeChanged(int size);
+    void toggleOverlayLayers();
     
 private:
     Ui::BmpToolDialog *ui;

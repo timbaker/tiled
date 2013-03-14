@@ -39,6 +39,8 @@ public:
     void setColor(int index, QRgb color)
     { mBmpIndex = index; mColor = color; }
 
+    void setBrushSize(int size);
+
 protected:
     void mapDocumentChanged(MapDocument *oldDocument,
                             MapDocument *newDocument);
@@ -57,8 +59,10 @@ private:
     ~BmpTool();
 
     bool mPainting;
+    bool mErasing;
     int mBmpIndex;
     QRgb mColor;
+    int mBrushSize;
     BmpToolDialog *mDialog;
 };
 

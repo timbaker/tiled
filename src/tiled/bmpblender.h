@@ -40,6 +40,7 @@ public:
     BmpBlender(Map *map);
     ~BmpBlender();
 
+    bool read();
     bool readRules(const QString &filePath);
     bool readBlends(const QString &filePath);
 

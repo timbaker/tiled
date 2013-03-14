@@ -21,9 +21,18 @@
 #include "bmpblender.h"
 #include "bmptool.h"
 #include "mapdocument.h"
+#include "tilemetainfomgr.h"
 #include "zoomable.h"
 
 #include "BuildingEditor/buildingtiles.h"
+
+#include "layer.h"
+#include "layermodel.h"
+#include "map.h"
+#include "tile.h"
+#include "tileset.h"
+
+#include <QSettings>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -37,15 +46,49 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
 
     setWindowFlags(windowFlags() | Qt::Tool);
 
-    ui->tableView->zoomable()->setScale(0.5);
+    ui->tabWidget->setCurrentIndex(0);
 
     connect(ui->tableView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
             SLOT(currentRuleChanged(QModelIndex)));
+
+    connect(ui->brushSize, SIGNAL(valueChanged(int)),
+            SLOT(brushSizeChanged(int)));
+    connect(ui->toggleOverlayLayers, SIGNAL(clicked()),
+            SLOT(toggleOverlayLayers()));
+
+    QSettings settings;
+    settings.beginGroup(QLatin1String("BmpToolDialog"));
+    qreal scale = settings.value(QLatin1String("scale"), 0.5).toReal();
+    ui->tableView->zoomable()->setScale(scale);
+    int brushSize = settings.value(QLatin1String("brushSize"), 1).toInt();
+    BmpTool::instance()->setBrushSize(brushSize);
+    ui->brushSize->setValue(brushSize);
+    settings.endGroup();
 }
 
 BmpToolDialog::~BmpToolDialog()
 {
     delete ui;
+}
+
+void BmpToolDialog::setVisible(bool visible)
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("BmpToolDialog"));
+    if (visible) {
+        QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
+        if (!geom.isEmpty())
+            restoreGeometry(geom);
+    }
+
+    QDialog::setVisible(visible);
+
+    if (!visible) {
+        settings.setValue(QLatin1String("geometry"), saveGeometry());
+        settings.setValue(QLatin1String("scale"), ui->tableView->zoomable()->scale());
+        settings.setValue(QLatin1String("brushSize"), ui->brushSize->value());
+    }
+    settings.endGroup();
 }
 
 void BmpToolDialog::setDocument(MapDocument *doc)
@@ -54,6 +97,7 @@ void BmpToolDialog::setDocument(MapDocument *doc)
 
     ui->tableView->clear();
     if (mDocument) {
+        QSet<Tileset*> tilesets;
         QList<Tiled::Tile*> tiles;
         QList<void*> userData;
         QStringList headers;
@@ -63,8 +107,11 @@ void BmpToolDialog::setDocument(MapDocument *doc)
                 Tile *tile;
                 if (tileName.isEmpty())
                     tile = BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile();
-                else
+                else {
                     tile = BuildingEditor::BuildingTilesMgr::instance()->tileFor(tileName);
+                    if (tile && TileMetaInfoMgr::instance()->indexOf(tile->tileset()) != -1)
+                        tilesets += tile->tileset();
+                }
                 tiles += tile;
                 userData += rule;
                 headers += tr("Rule #%8: index=%1 rgb=%2,%3,%4 condition=%5,%6,%7")
@@ -76,6 +123,7 @@ void BmpToolDialog::setDocument(MapDocument *doc)
             ++ruleIndex;
         }
         ui->tableView->setTiles(tiles, userData, headers);
+        TileMetaInfoMgr::instance()->loadTilesets(tilesets.toList());
     }
 }
 
@@ -84,5 +132,30 @@ void BmpToolDialog::currentRuleChanged(const QModelIndex &current)
     BmpBlender::Rule *rule = static_cast<BmpBlender::Rule*>(ui->tableView->model()->userDataAt(current));
     if (rule) {
         BmpTool::instance()->setColor(rule->bitmapIndex, rule->color);
+    }
+}
+
+void BmpToolDialog::brushSizeChanged(int size)
+{
+    BmpTool::instance()->setBrushSize(size);
+}
+
+void BmpToolDialog::toggleOverlayLayers()
+{
+    if (!mDocument)
+        return;
+    LayerModel *m = mDocument->layerModel();
+    Map *map = mDocument->map();
+    int visible = -1;
+    foreach (QString layerName, mDocument->bmpBlender()->mBlendLayers) {
+        int index = map->indexOfLayer(layerName);
+        if (index != -1) {
+            Layer *layer = map->layerAt(index);
+            if (visible == -1)
+                visible = !layer->isVisible();
+            m->setData(m->index(map->layerCount() - index - 1),
+                       visible ? Qt::Checked : Qt::Unchecked,
+                       Qt::CheckStateRole);
+        }
     }
 }
