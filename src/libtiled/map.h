@@ -282,8 +282,11 @@ public:
 #endif
 
 #ifdef ZOMBOID
-    QImage &bmpMain() { return mBmpMain; }
-    QImage &bmpVeg() { return mBmpVeg; }
+    QImage &rbmpMain() { return mBmpMain; }
+    QImage &rbmpVeg() { return mBmpVeg; }
+
+    QImage bmpMain() const { return mBmpMain; }
+    QImage bmpVeg() const { return mBmpVeg; }
 #endif
 
     Map *clone() const;

@@ -88,6 +88,9 @@ private:
     void writeImageLayer(QXmlStreamWriter &w, const ImageLayer *imageLayer);
     void writeProperties(QXmlStreamWriter &w,
                          const Properties &properties);
+#ifdef ZOMBOID
+    void writeBmpImage(QXmlStreamWriter &w, int index, const QImage &image);
+#endif
 
     QDir mMapDir;     // The directory in which the map is being saved
     GidMapper mGidMapper;
@@ -207,6 +210,11 @@ void MapWriterPrivate::writeMap(QXmlStreamWriter &w, const Map *map)
         else if (type == Layer::ImageLayerType)
             writeImageLayer(w, static_cast<const ImageLayer*>(layer));
     }
+
+#ifdef ZOMBOID
+    writeBmpImage(w, 0, map->bmpMain());
+    writeBmpImage(w, 1, map->bmpVeg());
+#endif
 
     w.writeEndElement();
 }
@@ -566,6 +574,75 @@ void MapWriterPrivate::writeProperties(QXmlStreamWriter &w,
     w.writeEndElement();
 }
 
+#ifdef ZOMBOID
+void MapWriterPrivate::writeBmpImage(QXmlStreamWriter &w,
+                                     int index, const QImage &image)
+{
+    const QRgb black = qRgb(0, 0, 0);
+    QSet<QRgb> colorSet;
+    for (int y = 0; y < image.height(); y++)
+        for (int x = 0; x < image.width(); x++) {
+            QRgb rgb = image.pixel(x, y);
+            if (rgb != black)
+                colorSet += rgb;
+        }
+
+    if (colorSet.isEmpty())
+        return;
+    QList<QRgb> colors = colorSet.toList();
+
+    w.writeStartElement(QLatin1String("bmp-image"));
+    w.writeAttribute(QLatin1String("index"), QString::number(index));
+
+    foreach (QRgb rgb, colors) {
+        w.writeStartElement(QLatin1String("color"));
+        w.writeAttribute(QLatin1String("rgb"), tr("%1 %2 %3")
+                         .arg(qRed(rgb))
+                         .arg(qGreen(rgb))
+                         .arg(qBlue(rgb)));
+        w.writeEndElement();
+    }
+
+    w.writeStartElement(QLatin1String("data"));
+    QString data;
+#if 1
+    QByteArray tileData;
+    tileData.reserve(image.height() * image.width() * 4);
+
+    for (int y = 0; y < image.height(); ++y) {
+        for (int x = 0; x < image.width(); ++x) {
+            QRgb rgb = image.pixel(x, y);
+            quint32 n = (rgb == black) ? 0 : (colors.indexOf(rgb) + 1);
+            tileData.append((unsigned char) (n)); // FIXME: big/little endian
+            tileData.append((unsigned char) (n >> 8));
+            tileData.append((unsigned char) (n >> 16));
+            tileData.append((unsigned char) (n >> 24));
+        }
+    }
+
+    tileData = compress(tileData, Gzip);
+    data = QString::fromLatin1(tileData.toBase64());
+#else
+    for (int y = 0; y < image.height(); ++y) {
+        for (int x = 0; x < image.width(); ++x) {
+            QRgb rgb = image.pixel(x, y);
+            int n = (rgb == black) ? 0 : colors.indexOf(rgb) + 1;
+            data.append(QString::number(n));
+            if (x != image.width() - 1 || y != image.height() - 1)
+                data.append(QLatin1String(","));
+        }
+        data.append(QLatin1String("\n"));
+    }
+#endif
+
+    w.writeCharacters(QLatin1String("\n   "));
+    w.writeCharacters(data);
+    w.writeCharacters(QLatin1String("\n"));
+    w.writeEndElement();
+
+    w.writeEndElement();
+}
+#endif // ZOMBOID
 
 MapWriter::MapWriter()
     : d(new MapWriterPrivate)

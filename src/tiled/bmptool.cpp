@@ -141,9 +141,9 @@ PaintBMP::PaintBMP(MapDocument *mapDocument, int bmpIndex,
 {
     QImage *image = 0;
     if (mBmpIndex == 0)
-        image = &mMapDocument->map()->bmpMain();
+        image = &mMapDocument->map()->rbmpMain();
     if (mBmpIndex == 1)
-        image = &mMapDocument->map()->bmpVeg();
+        image = &mMapDocument->map()->rbmpVeg();
     if (!image)
         return;
     mErased = image->copy(mX, mY, mSource.width(), mSource.height());
@@ -153,9 +153,9 @@ void PaintBMP::paint(const ResizableImage &source)
 {
     QImage *image = 0;
     if (mBmpIndex == 0)
-        image = &mMapDocument->map()->bmpMain();
+        image = &mMapDocument->map()->rbmpMain();
     if (mBmpIndex == 1)
-        image = &mMapDocument->map()->bmpVeg();
+        image = &mMapDocument->map()->rbmpVeg();
     if (!image)
         return;
 

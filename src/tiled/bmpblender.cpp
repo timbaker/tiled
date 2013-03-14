@@ -240,12 +240,12 @@ void BmpBlender::imagesToTileNames(int x1, int y1, int x2, int y2)
             foreach (QString layerName, mRuleLayers)
                 mTileNameGrids[layerName]->replace(x, y, QString());
 
-            QRgb col = mMap->bmpMain().pixel(x, y);
-            QRgb col2 = mMap->bmpVeg().pixel(x, y);
+            QRgb col = mMap->rbmpMain().pixel(x, y);
+            QRgb col2 = mMap->rbmpVeg().pixel(x, y);
 
             // Hack - If a pixel is black, and the user-drawn map tile in 0_Floor is
             // one of the Rules.txt tiles, pretend that that pixel exists in the image.
-            if (tl && col == black && adjacentToNonBlack(mMap->bmpMain(), mMap->bmpVeg(), x, y)) {
+            if (tl && col == black && adjacentToNonBlack(mMap->rbmpMain(), mMap->rbmpVeg(), x, y)) {
                 if (Tile *tile = tl->cellAt(x, y).tile) {
                     QString tileName = BuildingEditor::BuildingTilesMgr::nameForTile(tile);
                     foreach (Rule *rule, floor0Rules) {
