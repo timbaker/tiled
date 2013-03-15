@@ -106,9 +106,8 @@ void ObjectSelectionTool::mousePressed(QGraphicsSceneMouseEvent *event)
     case Qt::RightButton:
         if (mMode == Moving)
             cancelMoving();
-        break;
-    default:
-        AbstractObjectTool::mousePressed(event);
+        else
+            AbstractObjectTool::mousePressed(event);
         break;
     }
 #else

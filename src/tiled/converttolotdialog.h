@@ -22,17 +22,23 @@ class ConvertToLotDialog : public QDialog
 public:
     explicit ConvertToLotDialog(const Tiled::Internal::MapDocument *mapDocument, QWidget *parent = 0);
     
-    QString filePath()
+    QString filePath() const
     { return mMapPath; }
 
-    Tiled::ObjectGroup *objectGroup()
+    Tiled::ObjectGroup *objectGroup() const
     { return mObjectGroup; }
 
-    bool eraseSource()
+    bool eraseSource() const
     { return mEraseSource; }
 
-    bool emptyLevels()
+    bool emptyLevels() const
     { return mEmptyLevels; }
+
+    bool levelIsometric() const
+    { return mLevelIsometric; }
+
+    bool openLot() const
+    { return mOpenLot; }
 
 private:
     void accept();
@@ -40,6 +46,7 @@ private:
 signals:
     
 public slots:
+    void mapBrowse();
     
 private:
     Ui::ConvertToLotDialog *ui;
@@ -48,6 +55,8 @@ private:
     QList<Tiled::ObjectGroup*> mObjectGroups;
     bool mEraseSource;
     bool mEmptyLevels;
+    bool mLevelIsometric;
+    bool mOpenLot;
 };
 
 #endif // CONVERTTOLOTDIALOG_H

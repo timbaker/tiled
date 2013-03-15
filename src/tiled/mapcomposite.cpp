@@ -1131,6 +1131,7 @@ void MapComposite::recreate()
     mSortedLayerGroups.clear();
     mMinLevel = mMaxLevel = 0;
     mMap = mMapInfo->map();
+    mOrientAdjustPos = mOrientAdjustTiles = QPoint();
 
     ///// FIXME: everything below here is copied from our constructor
 
