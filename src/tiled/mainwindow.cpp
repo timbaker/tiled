@@ -1511,7 +1511,7 @@ void MainWindow::convertToLot()
     if (!mMapDocument)
         return;
 
-    const QRect bounds = mMapDocument->tileSelection().boundingRect();
+    QRect bounds = mMapDocument->tileSelection().boundingRect();
     if (bounds.isEmpty())
         return;
 
@@ -1521,14 +1521,20 @@ void MainWindow::convertToLot()
     if (dialog.exec() != QDialog::Accepted)
         return;
 
+    // If the tile selection is not in level 0, adjust the bounds.
+    if (map->orientation() == Map::LevelIsometric)
+        bounds.translate(mMapDocument->currentLevel() * QPoint(-3, -3));
+
     MapComposite *mapComposite = mMapDocument->mapComposite();
     QPoint mapOffset;
+    Map::Orientation mapOrient = dialog.levelIsometric()
+            ? Map::LevelIsometric
+            : Map::Isometric;
     int mapWidth = bounds.width(), mapHeight = bounds.height();
     int maxLevel = 0;
     if (dialog.emptyLevels()) {
         maxLevel = mapComposite->maxLevel();
     } else {
-#if 1
         int numLevels = mapComposite->layerGroupCount();
         for (int level = numLevels - 1; level >= 0; --level) {
             CompositeLayerGroup *lg = mapComposite->tileLayersForLevel(level);
@@ -1555,22 +1561,15 @@ void MainWindow::convertToLot()
                 break;
             }
         }
-#else
-        foreach (CompositeLayerGroup *lg, mapComposite->sortedLayerGroups()) {
-            // FIXME: only check emptiness of the converted area
-            if (!lg->bounds().isEmpty())
-                maxLevel = lg->level();
-        }
-#endif
     }
-    if (map->orientation() == Map::Isometric) {
+    if (mapOrient == Map::Isometric) {
         int offset = maxLevel * 3;
         mapOffset.setX(offset);
         mapOffset.setY(offset);
         mapWidth += offset;
         mapHeight += offset;
     }
-    Map *clone = new Map(map->orientation(), mapWidth, mapHeight,
+    Map *clone = new Map(mapOrient, mapWidth, mapHeight,
                      map->tileWidth(), map->tileHeight());
     foreach (Tileset *ts, map->tilesets())
         clone->addTileset(ts);
@@ -1582,46 +1581,28 @@ void MainWindow::convertToLot()
 
     foreach (Layer *layer, map->layers()) {
         if (TileLayer *tl = layer->asTileLayer()) {
-#if 0
-            int level = tl->level();
-            if (level > maxLevel)
-                continue;
-            int offset = 0, offsetSrc = 0;
-            if (map->orientation() == Map::Isometric) {
-                offset = mapOffset.x() - level * 3;
-                offsetSrc = -level * 3;
-            }
-            TileLayer *cloneLayer = tl->copy(mMapDocument->tileSelection().translated(offsetSrc, offsetSrc));
-            cloneLayer->offset(mapOffset);
-            clone->addLayer(cloneLayer);
-#else
             int level = tl->level();
             if (level > maxLevel)
                 continue;
             TileLayer *cloneLayer = new TileLayer(tl->name(), 0, 0,
-                                                 mapWidth, mapHeight);
+                                                  mapWidth, mapHeight);
             clone->addLayer(cloneLayer);
 
             int offset = 0, offsetSrc = 0;
-            if (map->orientation() == Map::Isometric) {
+            if (mapOrient == Map::Isometric)
                 offset = mapOffset.x() - level * 3;
+            if (map->orientation() == Map::Isometric)
                 offsetSrc = -level * 3;
-            }
+
             for (int y = bounds.top(); y <= bounds.bottom(); y++) {
                 for (int x = bounds.left(); x <= bounds.right(); x++) {
                     if (x + offsetSrc < 0 || y + offsetSrc < 0)
                         continue;
-#if 0
-                    if (!cloneLayer->contains(offset + x - bounds.left(),
-                                              offset + y - bounds.top()))
-                        continue;
-#endif
                     cloneLayer->setCell(offset + x - bounds.left(),
                                         offset + y - bounds.top(),
                                         tl->cellAt(x + offsetSrc, y + offsetSrc));
                 }
             }
-#endif
 
             if (dialog.eraseSource()) {
                 QRect eraseRect = bounds.translated(offsetSrc, offsetSrc);
@@ -1635,6 +1616,41 @@ void MainWindow::convertToLot()
                 if (eraseRegion != mMapDocument->tileSelection())
                     undoStack->push(new ChangeTileSelection(mMapDocument, eraseRegion));
                 undoStack->push(new EraseTiles(mMapDocument, tl, eraseRegion));
+            }
+        }
+        if (ObjectGroup *og = layer->asObjectGroup()) {
+            if (og->name().endsWith(QLatin1String("RoomDefs"))) {
+                ObjectGroup *cloneLayer = new ObjectGroup(og->name(), 0, 0,
+                                                          mapWidth, mapHeight);
+                cloneLayer->setColor(og->color());
+                clone->addLayer(cloneLayer);
+
+                QPoint offset = mapOffset;
+                if (map->orientation() == Map::LevelIsometric &&
+                        mapOrient == Map::Isometric)
+                    offset -= QPoint(3, 3) * og->level();
+                if (map->orientation() == Map::Isometric &&
+                        mapOrient == Map::LevelIsometric)
+                    offset = QPoint(3, 3) * og->level();
+
+                QList<MapObject*> remove;
+                foreach (MapObject *object, og->objects()) {
+                    QRectF objectBounds = object->bounds();
+                    if (map->orientation() == Map::Isometric)
+                        objectBounds.translate(og->level() * QPointF(3, 3));
+                    if (objectBounds.intersects(bounds)) {
+                        cloneLayer->addObject(new MapObject(object->name(), object->type(),
+                                                            offset + object->position() - bounds.topLeft(),
+                                                            object->size()));
+                        remove += object;
+                    }
+                }
+
+                if (dialog.eraseSource()) {
+                    foreach (MapObject *object, remove)
+                        undoStack->push(new RemoveMapObject(mMapDocument,
+                                                            object));
+                }
             }
         }
     }
@@ -1663,6 +1679,17 @@ void MainWindow::convertToLot()
     if (oldSelection != mMapDocument->tileSelection())
         undoStack->push(new ChangeTileSelection(mMapDocument, oldSelection));
     undoStack->endMacro();
+
+    if (dialog.openLot()) {
+        QString fileName = dialog.filePath();
+        DocumentManager *docmgr = DocumentManager::instance();
+        int index = docmgr->findDocument(fileName);
+        if (index >= 0) {
+            docmgr->switchToDocument(index);
+            closeFile();
+        }
+        openFile(fileName);
+    }
 }
 
 void MainWindow::convertOrientation()
