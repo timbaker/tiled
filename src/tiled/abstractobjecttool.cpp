@@ -31,9 +31,15 @@
 #include "objectgroup.h"
 #include "objectpropertiesdialog.h"
 #include "utils.h"
+#ifdef ZOMBOID
+#include "mainwindow.h"
+#endif
 
 #include <QMenu>
 #include <QUndoStack>
+#ifdef ZOMBOID
+#include <QFileInfo>
+#endif
 
 #include <cmath>
 
@@ -163,6 +169,17 @@ void AbstractObjectTool::showContextMenu(MapObjectItem *clickedObjectItem,
     Utils::setThemeIcon(removeAction, "edit-delete");
     Utils::setThemeIcon(propertiesAction, "document-properties");
 
+#ifdef ZOMBOID
+    QAction *openAction = 0;
+    if (clickedObjectItem->mapObject()->name() == QLatin1String("lot")) {
+        QIcon tiledIcon(QLatin1String(":images/tiled-icon-16.png"));
+        menu.addSeparator();
+        openAction = menu.addAction(tiledIcon, tr("Open in TileZed"));
+        QString fileName = clickedObjectItem->mapObject()->type();
+        openAction->setEnabled(QFileInfo(fileName).exists());
+    }
+#endif // ZOMBOID
+
     QAction *selectedAction = menu.exec(screenPos);
 
     if (selectedAction == dupAction) {
@@ -185,6 +202,11 @@ void AbstractObjectTool::showContextMenu(MapObjectItem *clickedObjectItem,
         ObjectGroup *objectGroup = i.value();
         moveObjectsToGroup(selectedObjects, objectGroup);
     }
+
+#ifdef ZOMBOID
+    if (openAction != 0 && selectedAction == openAction)
+        MainWindow::instance()->openFile(clickedObjectItem->mapObject()->type());
+#endif
 }
 
 void AbstractObjectTool::duplicateObjects(const QList<MapObject *> &objects)
