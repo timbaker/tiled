@@ -17,6 +17,7 @@
 
 #include "ZomboidScene.h"
 
+#include "bmpblender.h"
 #include "map.h"
 #include "mapcomposite.h"
 #include "mapdocument.h"
@@ -117,6 +118,9 @@ void ZomboidScene::setMapDocument(MapDocument *mapDoc)
         connect(mMapDocument, SIGNAL(layerLevelChanged(int,int)), SLOT(layerLevelChanged(int,int)));
         connect(mMapDocument, SIGNAL(mapCompositeChanged()),
                 SLOT(mapCompositeChanged()));
+
+        connect(mMapDocument->bmpBlender(), SIGNAL(layersRecreated()),
+                SLOT(bmpBlenderLayersRecreated()));
     }
 }
 
@@ -310,6 +314,10 @@ void ZomboidScene::layerChanged(int index)
 
     Layer *layer = mMapDocument->map()->layerAt(index);
     if (TileLayer *tl = layer->asTileLayer()) {
+        // Changing the name of a layer affects MapComposite::mBmpBlendLayers.
+        if (!tl->level() && mapDocument()->mapComposite()->layerGroupForLevel(0)->setBmpBlendLayers(
+                        mapDocument()->bmpBlender()->mTileLayers.values()))
+            updateLayerGroupLater(0, Synch | Bounds);
         if (tl->group() && mTileLayerGroupItems.contains(tl->level())) {
             CompositeLayerGroupItem *layerGroupItem = mTileLayerGroupItems[tl->level()];
             if (layerGroupItem->layerGroup()->setLayerVisibility(tl, tl->isVisible()))
@@ -380,6 +388,11 @@ void ZomboidScene::layerAddedToGroup(int index)
     int level = layer->level();
     if (mTileLayerGroupItems.contains(level))
         updateLayerGroupLater(level, Synch | Bounds);
+
+
+    if (!level)
+        mapDocument()->mapComposite()->layerGroupForLevel(0)->setBmpBlendLayers(
+                    mapDocument()->bmpBlender()->mTileLayers.values());
 
     // If a TileLayerGroup owns a layer, then a DummyGraphicsItem is created which is
     // managed by the base class.
@@ -539,6 +552,14 @@ void ZomboidScene::mapCompositeChanged()
             item->resize(lot->map()->size());
     }
     updateLayerGroupsLater(Synch | Bounds);
+}
+
+void ZomboidScene::bmpBlenderLayersRecreated()
+{
+    mMapDocument->mapComposite()->tileLayersForLevel(0)->setBmpBlendLayers(
+                mMapDocument->bmpBlender()->mTileLayers.values());
+    if (mTileLayerGroupItems.contains(0))
+        updateLayerGroupLater(0, Synch | Bounds);
 }
 
 void ZomboidScene::handlePendingUpdates()

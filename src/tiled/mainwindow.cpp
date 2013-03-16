@@ -444,9 +444,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     toolManager->registerTool(mBucketFillTool);
     toolManager->registerTool(new Eraser(this));
     toolManager->registerTool(new TileSelectionTool(this));
-#ifdef ZOMBOID
-    toolManager->registerTool(BmpTool::instance());
-#endif
     toolManager->addSeparator();
     toolManager->registerTool(new ObjectSelectionTool(this));
     toolManager->registerTool(new EditPolygonTool(this));
@@ -454,6 +451,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     toolManager->registerTool(tileObjectsTool);
     toolManager->registerTool(polygonObjectsTool);
     toolManager->registerTool(polylineObjectsTool);
+#ifdef ZOMBOID
+    toolManager->addSeparator();
+    toolManager->registerTool(BmpPainterTool::instance());
+    toolManager->registerTool(BmpSelectionTool::instance());
+#endif
 
     addToolBar(toolManager->toolBar());
 
@@ -736,40 +738,7 @@ bool MainWindow::openFile(const QString &fileName,
         delete blender;
         return false;
     }
-#if 1
-#elif 0
-    int index = map->indexOfLayer(QLatin1String("0_Floor"), Layer::TileLayerType);
-    if (true && index != -1) {
-        TileLayer *tl = map->layerAt(index)->asTileLayer();
-        for (int y = 0; y < map->height(); y++) {
-            for (int x = 0; x < map->width(); x++) {
-                Tile *tile = tl->cellAt(x, y).tile;
-                if (tile) {
-                    QString tileName = BuildingTilesMgr::nameForTile(tile);
-                    foreach (BmpBlender::Rule *rule, blender->mRules) {
-                        if (rule->targetLayer == tl->name() && rule->bitmapIndex == 0 && rule->tileChoices.contains(tileName))
-                            map->bmpMain().setPixel(x, y, rule->color);
-                    }
-                }
-            }
-        }
-    }
-#else
-    {
-        QPainter painter(&map->bmpMain());
-        painter.fillRect(0,0,map->width(),map->height(),Qt::black);
-        painter.fillRect(10,10,30,30,QColor(90,100,35));
-        painter.fillRect(20,20,10,10,QColor(120,145,50));
-    }
-    {
-        QPainter painter(&map->bmpVeg());
-        painter.fillRect(0,0,map->width(),map->height(),Qt::black);
-        painter.fillRect(15,15,20,8,QColor(255,0,0));
-    }
-#endif
-    blender->imagesToTileNames(0,0,map->width(),map->height());
-    blender->blend(0,0,map->width(),map->height());
-    blender->tileNamesToLayers(0,0,map->width(),map->height());
+    blender->update(0, 0, map->width(), map->height());
 
     MapDocument *doc = new MapDocument(map, fileName);
     doc->setBmpBlender(blender);

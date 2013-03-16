@@ -29,6 +29,9 @@
 #include <QString>
 
 #include "layer.h"
+#ifdef ZOMBOID
+#include "map.h" // for MapRands
+#endif
 
 class QPoint;
 class QRect;
@@ -165,7 +168,6 @@ public:
                    const QRect &bounds,
                    bool wrapX, bool wrapY);
 
-
     void addLayer(Layer::Type layerType);
     void duplicateLayer();
     void mergeLayerDown();
@@ -213,6 +215,16 @@ public:
      * Sets the selected area of tiles.
      */
     void setTileSelection(const QRegion &selection);
+
+#ifdef ZOMBOID
+    const QRegion &bmpSelection() const { return mBmpSelection; }
+    void setBmpSelection(const QRegion &selection);
+
+    void paintBmp(int bmpIndex, int px, int py, const QImage &source,
+                  const QRegion &paintRgn);
+    QImage swapBmpImage(int bmpIndex, const QImage &image);
+    MapRands swapBmpRands(int bmpIndex, const MapRands &rands);
+#endif // ZOMBOID
 
     /**
      * Returns the list of selected objects.
@@ -291,6 +303,11 @@ signals:
      */
     void tileSelectionChanged(const QRegion &newSelection,
                               const QRegion &oldSelection);
+
+#ifdef ZOMBOID
+    void bmpSelectionChanged(const QRegion &newSelection,
+                             const QRegion &oldSelection);
+#endif // ZOMBOID
 
     /**
      * Emitted when the list of selected objects changes.
@@ -404,6 +421,7 @@ private:
     int mMaxVisibleLayer;
     MapComposite *mMapComposite;
     BmpBlender *mBmpBlender;
+    QRegion mBmpSelection;
 #endif
     QUndoStack *mUndoStack;
 };

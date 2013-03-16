@@ -42,6 +42,7 @@ class MapObjectItem;
 class MapScene;
 class ObjectGroupItem;
 #ifdef ZOMBOID
+class BmpSelectionItem;
 class ZGridItem;
 #endif
 
@@ -111,6 +112,11 @@ public:
      * Sets the currently selected tool.
      */
     void setSelectedTool(AbstractTool *tool);
+
+#ifdef ZOMBOID
+    BmpSelectionItem *bmpSelectionItem() const
+    { return mBmpSelectionItem; }
+#endif // ZOMBOID
 
 signals:
     void selectedObjectItemsChanged();
@@ -220,6 +226,7 @@ private:
     QGraphicsRectItem *mDarkRectangle;
 #ifdef ZOMBOID
     ZGridItem *mGridItem;
+    BmpSelectionItem *mBmpSelectionItem;
 #endif
 
     typedef QMap<MapObject*, MapObjectItem*> ObjectItems;

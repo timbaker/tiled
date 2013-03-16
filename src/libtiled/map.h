@@ -47,6 +47,53 @@ class ObjectGroup;
 class ZTileLayerGroup;
 #endif
 
+#ifdef ZOMBOID
+/**
+  * This class represents a grid of random numbers for each cell in a Map.
+  * The random numbers are used by the BmpBlender class.
+  */
+class TILEDSHARED_EXPORT MapRands : public QVector<QVector<int> >
+{
+public:
+    MapRands(int width, int height, uint seed);
+    void setSize(int width, int height);
+    void setSeed(uint seed);
+    uint seed() const { return mSeed; }
+private:
+    uint mSeed;
+};
+
+class TILEDSHARED_EXPORT MapBmp
+{
+public:
+    MapBmp(int width, int height);
+
+    QImage &rimage() { return mImage; }
+    MapRands &rrands() { return mRands; }
+
+    const QImage image() const { return mImage; }
+    const MapRands &rands() const { return mRands; }
+
+    int width() const { return mImage.width(); }
+    int height() const { return mImage.height(); }
+
+    QRgb pixel(const QPoint &pt) const { return mImage.pixel(pt); }
+    QRgb pixel(int x, int y) const { return mImage.pixel(x, y); }
+    void setPixel(int x, int y, QRgb rgb) { mImage.setPixel(x, y, rgb); }
+
+    int rand(int x, int y) { return mRands[x][y]; }
+
+    void resize(const QSize &size, const QPoint &offset);
+    void merge(const QPoint &pos, const MapBmp *other);
+
+    QList<QRgb> colors() const;
+
+    QImage mImage;
+    MapRands mRands;
+};
+
+#endif // ZOMBOID
+
 /**
  * A tile map. Consists of a stack of layers, each can be either a TileLayer
  * or an ObjectGroup.
@@ -282,11 +329,14 @@ public:
 #endif
 
 #ifdef ZOMBOID
-    QImage &rbmpMain() { return mBmpMain; }
-    QImage &rbmpVeg() { return mBmpVeg; }
+    MapBmp &rbmp(int index) { return index ? mBmpVeg : mBmpMain; }
+    MapBmp bmp(int index) { return index ? mBmpVeg : mBmpMain; }
 
-    QImage bmpMain() const { return mBmpMain; }
-    QImage bmpVeg() const { return mBmpVeg; }
+    MapBmp &rbmpMain() { return mBmpMain; }
+    MapBmp &rbmpVeg() { return mBmpVeg; }
+
+    MapBmp bmpMain() const { return mBmpMain; }
+    MapBmp bmpVeg() const { return mBmpVeg; }
 #endif
 
     Map *clone() const;
@@ -316,8 +366,8 @@ private:
     QPoint mCellsPerLevel;
     QList<ZTileLayerGroup*> mTileLayerGroups;
     QMap<Tileset*,int> mUsedTilesets;
-    QImage mBmpMain;
-    QImage mBmpVeg;
+    MapBmp mBmpMain;
+    MapBmp mBmpVeg;
 #endif
 };
 

@@ -21,6 +21,7 @@
 #include "bmpblender.h"
 #include "bmptool.h"
 #include "mapdocument.h"
+#include "mainwindow.h"
 #include "tilemetainfomgr.h"
 #include "zoomable.h"
 
@@ -32,10 +33,20 @@
 #include "tile.h"
 #include "tileset.h"
 
+#include <QDebug>
 #include <QSettings>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
+
+BmpToolDialog *BmpToolDialog::mInstance = 0;
+
+BmpToolDialog *BmpToolDialog::instance()
+{
+    if (!mInstance)
+        mInstance = new BmpToolDialog(MainWindow::instance());
+    return mInstance;
+}
 
 BmpToolDialog::BmpToolDialog(QWidget *parent) :
     QDialog(parent),
@@ -61,9 +72,13 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
     qreal scale = settings.value(QLatin1String("scale"), 0.5).toReal();
     ui->tableView->zoomable()->setScale(scale);
     int brushSize = settings.value(QLatin1String("brushSize"), 1).toInt();
-    BmpTool::instance()->setBrushSize(brushSize);
+    BmpPainterTool::instance()->setBrushSize(brushSize);
     ui->brushSize->setValue(brushSize);
     settings.endGroup();
+
+    mVisibleLaterTimer.setSingleShot(true);
+    mVisibleLaterTimer.setInterval(200);
+    connect(&mVisibleLaterTimer, SIGNAL(timeout()), SLOT(setVisibleNow()));
 }
 
 BmpToolDialog::~BmpToolDialog()
@@ -89,6 +104,19 @@ void BmpToolDialog::setVisible(bool visible)
         settings.setValue(QLatin1String("brushSize"), ui->brushSize->value());
     }
     settings.endGroup();
+}
+
+void BmpToolDialog::setVisibleLater(bool visible)
+{
+    mVisibleLater = visible;
+    mVisibleLaterTimer.start();
+}
+
+void BmpToolDialog::setVisibleNow()
+{
+    qDebug() << "BmpToolDialog::setVisibleNow";
+    if (mVisibleLater != isVisible())
+        setVisible(mVisibleLater);
 }
 
 void BmpToolDialog::setDocument(MapDocument *doc)
@@ -131,13 +159,13 @@ void BmpToolDialog::currentRuleChanged(const QModelIndex &current)
 {
     BmpBlender::Rule *rule = static_cast<BmpBlender::Rule*>(ui->tableView->model()->userDataAt(current));
     if (rule) {
-        BmpTool::instance()->setColor(rule->bitmapIndex, rule->color);
+        BmpPainterTool::instance()->setColor(rule->bitmapIndex, rule->color);
     }
 }
 
 void BmpToolDialog::brushSizeChanged(int size)
 {
-    BmpTool::instance()->setBrushSize(size);
+    BmpPainterTool::instance()->setBrushSize(size);
 }
 
 void BmpToolDialog::toggleOverlayLayers()

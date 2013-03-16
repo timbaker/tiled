@@ -101,6 +101,8 @@ private slots:
 
     void mapCompositeChanged();
 
+    void bmpBlenderLayersRecreated();
+
     void handlePendingUpdates();
 
 public:

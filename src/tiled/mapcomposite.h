@@ -79,7 +79,9 @@ public:
     void saveOpacity();
     void restoreOpacity();
 
-    void setBmpBlendLayers(const QList<Tiled::TileLayer*> &layers);
+    bool setBmpBlendLayers(const QList<Tiled::TileLayer*> &layers);
+    const QVector<Tiled::TileLayer*> &bmpBlendLayers() const
+    { return mBmpBlendLayers; }
 
 #ifdef BUILDINGED
     void setToolTiles(const QVector<QVector<Tiled::Cell> > &tiles,

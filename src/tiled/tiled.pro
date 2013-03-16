@@ -194,7 +194,8 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/buildingtileentryview.cpp \
     bmptool.cpp \
     bmpblender.cpp \
-    bmptooldialog.cpp
+    bmptooldialog.cpp \
+    bmpselectionitem.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -352,7 +353,8 @@ HEADERS += aboutdialog.h \
     BuildingEditor/buildingtileentryview.h \
     bmptool.h \
     bmpblender.h \
-    bmptooldialog.h
+    bmptooldialog.h \
+    bmpselectionitem.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

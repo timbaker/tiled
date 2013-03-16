@@ -117,8 +117,8 @@ private:
 
 #ifdef ZOMBOID
     void readBmpImage();
-    void readBmpData(int index, const QList<QRgb> &colors);
-    void decodeBmpData(int index, const QList<QRgb> &colors, const QStringRef &text);
+    void readBmpPixels(int index, const QList<QRgb> &colors);
+    void decodeBmpPixels(int bmpIndex, const QList<QRgb> &colors, const QStringRef &text);
 #endif
 
     MapReader *p;
@@ -966,6 +966,9 @@ void MapReaderPrivate::readBmpImage()
 
     const QXmlStreamAttributes atts = xml.attributes();
     int index = atts.value(QLatin1String("index")).toString().toUInt();
+    uint seed = atts.value(QLatin1String("seed")).toString().toUInt();
+
+    mMap->rbmp(index).rrands().setSeed(seed);
 
     QList<QRgb> colors;
 
@@ -986,29 +989,29 @@ bogusColor:
             colors += qRgb(r, g, b);
 
             xml.skipCurrentElement();
-        } else if (xml.name() == "data") {
-            readBmpData(index, colors);
+        } else if (xml.name() == "pixels") {
+            readBmpPixels(index, colors);
         } else {
             readUnknownElement();
         }
     }
 }
 
-void MapReaderPrivate::readBmpData(int index, const QList<QRgb> &colors)
+void MapReaderPrivate::readBmpPixels(int index, const QList<QRgb> &colors)
 {
-    Q_ASSERT(xml.isStartElement() && xml.name() == "data");
+    Q_ASSERT(xml.isStartElement() && xml.name() == "pixels");
 
     while (xml.readNext() != QXmlStreamReader::Invalid) {
         if (xml.isEndElement()) {
             break;
         } else if (xml.isCharacters() && !xml.isWhitespace()) {
-            decodeBmpData(index, colors, xml.text());
+            decodeBmpPixels(index, colors, xml.text());
         }
     }
 }
 
-void MapReaderPrivate::decodeBmpData(int index, const QList<QRgb> &colors,
-                                     const QStringRef &text)
+void MapReaderPrivate::decodeBmpPixels(int bmpIndex, const QList<QRgb> &colors,
+                                       const QStringRef &text)
 {
 #if QT_VERSION < 0x040800
     const QString textData = QString::fromRawData(text.unicode(), text.size());
@@ -1038,8 +1041,7 @@ void MapReaderPrivate::decodeBmpData(int index, const QList<QRgb> &colors,
                           data[i + 3] << 24;
         if (n > 0 && n <= colors.size()) {
             QRgb rgb = colors[n - 1];
-            index ? mMap->rbmpVeg().setPixel(x, y, rgb)
-                  : mMap->rbmpMain().setPixel(x, y, rgb);
+            mMap->rbmp(bmpIndex).setPixel(x, y, rgb);
         }
 
         x++;

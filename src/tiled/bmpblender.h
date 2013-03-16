@@ -44,11 +44,17 @@ public:
     bool readRules(const QString &filePath);
     bool readBlends(const QString &filePath);
 
+    void recreate();
+    void update(int x1, int y1, int x2, int y2);
+
+signals:
+    void layersRecreated();
+
+public: // TODO: make private
     void imagesToTileNames(int x1, int y1, int x2, int y2);
     void blend(int x1, int y1, int x2, int y2);
     void tileNamesToLayers(int x1, int y1, int x2, int y2);
 
-public: // TODO: make private
     Map *mMap;
     QMap<QString,BuildingEditor::FloorTileGrid*> mTileNameGrids;
     QMap<QString,TileLayer*> mTileLayers;
@@ -128,8 +134,6 @@ public: // TODO: make private
     QList<Blend> mBlendList;
     QStringList mBlendLayers;
     QMap<QString,QList<int> > mBlendsByLayer;
-
-    QVector<QVector<int> > mRandomNumbers;
 
     QString mError;
 };

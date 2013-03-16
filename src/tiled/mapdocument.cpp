@@ -32,6 +32,7 @@
 #include "mapobjectmodel.h"
 #ifdef ZOMBOID
 #include "bmpblender.h"
+#include "bmptool.h"
 #include "mapcomposite.h"
 #include "mapmanager.h"
 #include "zlevelrenderer.h"
@@ -252,6 +253,9 @@ void MapDocument::resizeMap(const QSize &size, const QPoint &offset)
 
     // Resize the map and each layer
     mUndoStack->beginMacro(tr("Resize Map"));
+#ifdef ZOMBOID
+    mUndoStack->push(new ResizeMap(this, size, true));
+#endif
     for (int i = 0; i < mMap->layerCount(); ++i) {
         if (ObjectGroup *objectGroup = mMap->layerAt(i)->asObjectGroup()) {
             // Remove objects that will fall outside of the map
@@ -265,8 +269,20 @@ void MapDocument::resizeMap(const QSize &size, const QPoint &offset)
 
         mUndoStack->push(new ResizeLayer(this, i, size, offset));
     }
+#ifdef ZOMBOID
+    mUndoStack->push(new ResizeBmpImage(this, 0, size, offset));
+    mUndoStack->push(new ResizeBmpImage(this, 1, size, offset));
+    mUndoStack->push(new ResizeBmpRands(this, 0, size));
+    mUndoStack->push(new ResizeBmpRands(this, 1, size));
+    mUndoStack->push(new ResizeMap(this, size, false));
+#else
     mUndoStack->push(new ResizeMap(this, size));
+#endif
     mUndoStack->push(new ChangeTileSelection(this, movedSelection));
+#ifdef ZOMBOID
+    QRegion bmpSelection = mBmpSelection.translated(offset);
+    mUndoStack->push(new ChangeBmpSelection(this, bmpSelection));
+#endif
     mUndoStack->endMacro();
 
     // TODO: Handle layers that don't match the map size correctly
@@ -511,6 +527,61 @@ void MapDocument::setTileSelection(const QRegion &selection)
     }
 }
 
+#ifdef ZOMBOID
+void MapDocument::setBmpSelection(const QRegion &selection)
+{
+    if (mBmpSelection != selection) {
+        const QRegion oldSelection = mBmpSelection;
+        mBmpSelection = selection;
+        emit bmpSelectionChanged(mBmpSelection, oldSelection);
+    }
+}
+
+void MapDocument::paintBmp(int bmpIndex, int px, int py, const QImage &source,
+                           const QRegion &paintRgn)
+{
+    MapBmp &bmp = mMap->rbmp(bmpIndex);
+    QRegion region = paintRgn & QRect(0, 0, bmp.width(), bmp.height());
+
+    foreach (QRect r, region.rects()) {
+        for (int y = r.top(); y <= r.bottom(); y++) {
+            for (int x = r.left(); x <= r.right(); x++) {
+                bmp.setPixel(x, y, source.pixel(x - px, y - py));
+            }
+        }
+    }
+
+    const QRect r = region.boundingRect();
+    bmpBlender()->update(r.left(), r.top(), r.right(), r.bottom());
+    Q_ASSERT(mapComposite()->tileLayersForLevel(0));
+    mapComposite()->tileLayersForLevel(0)->setBmpBlendLayers(
+                bmpBlender()->mTileLayers.values());
+
+    foreach (QString layerName, bmpBlender()->mTileLayers.keys()) {
+        int index = map()->indexOfLayer(layerName, Layer::TileLayerType);
+        if (index == -1)
+            continue;
+        TileLayer *tl = map()->layerAt(index)->asTileLayer();
+        mapComposite()->tileLayersForLevel(0)->regionAltered(tl);
+        emitRegionAltered(region, tl);
+    }
+}
+
+QImage MapDocument::swapBmpImage(int bmpIndex, const QImage &image)
+{
+    QImage old = mMap->bmp(bmpIndex).image();
+    mMap->rbmp(bmpIndex).rimage() = image;
+    return old;
+}
+
+MapRands MapDocument::swapBmpRands(int bmpIndex, const MapRands &rands)
+{
+    MapRands old = mMap->bmp(bmpIndex).rands();
+    mMap->rbmp(bmpIndex).rrands() = rands;
+    return old;
+}
+#endif // ZOMBOID
+
 void MapDocument::setSelectedObjects(const QList<MapObject *> &selectedObjects)
 {
     mSelectedObjects = selectedObjects;
@@ -609,8 +680,9 @@ void MapDocument::setTileLayerName(Tile *tile, const QString &name)
 void MapDocument::setBmpBlender(BmpBlender *blender)
 {
     mBmpBlender = blender;
+    Q_ASSERT(mMapComposite->tileLayersForLevel(0));
     mMapComposite->tileLayersForLevel(0)->setBmpBlendLayers(blender->mTileLayers.values());
-    mMapComposite->tileLayersForLevel(0)->setNeedsSynch(true);
+//    mMapComposite->tileLayersForLevel(0)->setNeedsSynch(true);
 }
 #endif // ZOMBOID
 

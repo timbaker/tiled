@@ -40,6 +40,7 @@
 #include "toolmanager.h"
 #include "tilesetmanager.h"
 #ifdef ZOMBOID
+#include "bmpselectionitem.h"
 #include "mapcomposite.h"
 #include "zgriditem.h"
 #endif
@@ -68,7 +69,8 @@ MapScene::MapScene(QObject *parent):
     mDarkRectangle(new QGraphicsRectItem)
 #ifdef ZOMBOID
     ,
-    mGridItem(new ZGridItem)
+    mGridItem(new ZGridItem),
+    mBmpSelectionItem(0)
 #endif
 {
     setBackgroundBrush(Qt::darkGray);
@@ -222,6 +224,12 @@ void MapScene::refreshScene()
     TileSelectionItem *selectionItem = new TileSelectionItem(mMapDocument);
     selectionItem->setZValue(10000 - 1);
     addItem(selectionItem);
+
+#ifdef ZOMBOID
+    mBmpSelectionItem = new BmpSelectionItem(mMapDocument);
+    mBmpSelectionItem->setZValue(10000 - 1);
+    addItem(mBmpSelectionItem);
+#endif
 
     updateCurrentLayerHighlight();
 }

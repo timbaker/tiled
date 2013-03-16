@@ -15,53 +15,46 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BMPTOOLDIALOG_H
-#define BMPTOOLDIALOG_H
+#ifndef BMPSELECTIONITEM_H
+#define BMPSELECTIONITEM_H
 
-#include <QDialog>
-#include <QModelIndex>
-#include <QTimer>
-
-namespace Ui {
-class BmpToolDialog;
-}
+#include <QObject>
+#include <QGraphicsItem>
 
 namespace Tiled {
 namespace Internal {
+
 class MapDocument;
 
-class BmpToolDialog : public QDialog
+class BmpSelectionItem : public QObject, public QGraphicsItem
 {
     Q_OBJECT
-    
+    Q_INTERFACES(QGraphicsItem)
+
 public:
-    static BmpToolDialog *instance();
+    BmpSelectionItem(MapDocument *mapDocument);
 
-    void setVisible(bool visible);
+    QRectF boundingRect() const;
 
-    void setVisibleLater(bool visible);
+    void paint(QPainter *painter,
+               const QStyleOptionGraphicsItem *option,
+               QWidget *widget = 0);
 
-    void setDocument(MapDocument *doc);
+    void setDragOffset(const QPoint &offset);
 
 private slots:
-    void currentRuleChanged(const QModelIndex &current);
-    void brushSizeChanged(int size);
-    void toggleOverlayLayers();
-    void setVisibleNow();
-    
-private:
-    Q_DISABLE_COPY(BmpToolDialog)
-    static BmpToolDialog *mInstance;
-    explicit BmpToolDialog(QWidget *parent = 0);
-    ~BmpToolDialog();
+    void selectionChanged(const QRegion &newSelection,
+                          const QRegion &oldSelection);
 
-    Ui::BmpToolDialog *ui;
-    MapDocument *mDocument;
-    bool mVisibleLater;
-    QTimer mVisibleLaterTimer;
+private:
+    void updateBoundingRect();
+
+    MapDocument *mMapDocument;
+    QRectF mBoundingRect;
+    QPoint mDragOffset;
 };
 
 } // namespace Internal
 } // namespace Tiled
 
-#endif // BMPTOOLDIALOG_H
+#endif // BMPSELECTIONITEM_H

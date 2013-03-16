@@ -20,6 +20,11 @@
 
 #include "resizemap.h"
 
+#ifdef ZOMBOID
+#include "bmpblender.h"
+#include "mapcomposite.h"
+#endif
+
 #include "map.h"
 #include "mapdocument.h"
 
@@ -28,6 +33,7 @@
 namespace Tiled {
 namespace Internal {
 
+#ifndef ZOMBOID
 ResizeMap::ResizeMap(MapDocument *mapDocument, const QSize &size)
     : QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Map"))
     , mMapDocument(mapDocument)
@@ -55,6 +61,41 @@ void ResizeMap::swapSize()
 
     mMapDocument->emitMapChanged();
 }
+#else // !ZOMBOID
+ResizeMap::ResizeMap(MapDocument *mapDocument, const QSize &size, bool before)
+    : QUndoCommand(QCoreApplication::translate("Undo Commands", "Resize Map"))
+    , mMapDocument(mapDocument)
+    , mSize(before ? mapDocument->map()->size() : size)
+    , mBefore(before)
+{
+}
+
+void ResizeMap::undo()
+{
+    if (mBefore)
+        swapSize();
+}
+
+void ResizeMap::redo()
+{
+    if (!mBefore)
+        swapSize();
+}
+
+void ResizeMap::swapSize()
+{
+    Map *map = mMapDocument->map();
+    map->setWidth(mSize.width());
+    map->setHeight(mSize.height());
+
+    mMapDocument->bmpBlender()->recreate();
+    Q_ASSERT(mMapDocument->mapComposite()->tileLayersForLevel(0));
+    mMapDocument->mapComposite()->layerGroupForLevel(0)->setBmpBlendLayers(
+                mMapDocument->bmpBlender()->mTileLayers.values());
+
+    mMapDocument->emitMapChanged();
+}
+#endif // ZOMBOID
 
 } // namespace Internal
 } // namespace Tiled

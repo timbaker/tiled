@@ -36,7 +36,11 @@ class MapDocument;
 class ResizeMap : public QUndoCommand
 {
 public:
+#ifdef ZOMBOID
+    ResizeMap(MapDocument *mapDocument, const QSize &size, bool before);
+#else
     ResizeMap(MapDocument *mapDocument, const QSize &size);
+#endif
 
     void undo();
     void redo();
@@ -46,6 +50,9 @@ private:
 
     MapDocument *mMapDocument;
     QSize mSize;
+#ifdef ZOMBOID
+    bool mBefore;
+#endif
 };
 
 } // namespace Internal

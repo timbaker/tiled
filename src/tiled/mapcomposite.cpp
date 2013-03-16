@@ -281,6 +281,16 @@ void CompositeLayerGroup::synch()
 
     mAnyVisibleLayers = false;
 
+    for (int i = 0; i < mLayers.size(); i++) {
+        if (!mVisibleLayers[i])
+            continue;
+        if (mBmpBlendLayers[i] && !mBmpBlendLayers[i]->isEmpty()) {
+            unionTileRects(r, mBmpBlendLayers[i]->bounds().translated(mOwner->orientAdjustTiles() * mLevel), r);
+            maxMargins(m, mBmpBlendLayers[i]->drawMargins(), m);
+            mAnyVisibleLayers = true;
+        }
+    }
+
 #ifdef BUILDINGED
     // Do this before the isLayerEmpty() call below.
     mBlendLayers.fill(0);
@@ -402,8 +412,10 @@ void CompositeLayerGroup::restoreOpacity()
     mLayerOpacity = mSavedOpacity;
 }
 
-void CompositeLayerGroup::setBmpBlendLayers(const QList<TileLayer *> &layers)
+bool CompositeLayerGroup::setBmpBlendLayers(const QList<TileLayer *> &layers)
 {
+    QVector<TileLayer*> old = mBmpBlendLayers;
+
     mBmpBlendLayers.fill(0);
     foreach (TileLayer *tl, layers) {
         for (int i = 0; i < mLayers.size(); i++) {
@@ -411,6 +423,8 @@ void CompositeLayerGroup::setBmpBlendLayers(const QList<TileLayer *> &layers)
                 mBmpBlendLayers[i] = tl;
         }
     }
+
+    return old != mBmpBlendLayers;
 }
 
 #ifdef BUILDINGED
@@ -537,8 +551,12 @@ bool CompositeLayerGroup::regionAltered(Tiled::TileLayer *tl)
         setNeedsSynch(true);
         return true;
     }
-#ifdef BUILDINGED
     int index = mLayers.indexOf(tl);
+    if (mTileBounds.isEmpty() && mBmpBlendLayers[index] && !mBmpBlendLayers[index]->isEmpty()) {
+        setNeedsSynch(true);
+        return true;
+    }
+#ifdef BUILDINGED
     if (mTileBounds.isEmpty() && mBlendLayers[index] && !mBlendLayers[index]->isEmpty()) {
         setNeedsSynch(true);
         return true;
@@ -1110,6 +1128,10 @@ bool MapComposite::isTilesetUsed(Tileset *tileset)
     foreach (MapComposite *mc, maps()) {
         if (mc->map()->isTilesetUsed(tileset))
             return true;
+        foreach (TileLayer *tl, mc->tileLayersForLevel(0)->bmpBlendLayers()) {
+            if (tl && tl->usedTilesets().contains(tileset))
+                return true;
+        }
     }
     return false;
 }

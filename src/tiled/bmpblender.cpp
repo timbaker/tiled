@@ -25,6 +25,7 @@
 #include "tilelayer.h"
 #include "tileset.h"
 
+#include <QApplication>
 #include <QFile>
 #include <QImage>
 #include <QSet>
@@ -36,12 +37,6 @@ using namespace Tiled::Internal;
 BmpBlender::BmpBlender(Map *map) :
     mMap(map)
 {
-    mRandomNumbers.resize(map->height());
-    for (int y = 0; y < map->height(); y++) {
-        mRandomNumbers[y].resize(map->width());
-        for (int x = 0; x < map->width(); x++)
-            mRandomNumbers[y][x] = qrand();
-    }
 }
 
 BmpBlender::~BmpBlender()
@@ -52,11 +47,19 @@ BmpBlender::~BmpBlender()
 
 bool BmpBlender::read()
 {
+#ifdef QT_NO_DEBUG
+    QString fileName = QApplication::applicationDirPath() + QLatin1String("/WorldEd/Rules.txt");
+#else
     QString fileName = QLatin1String("C:/Programming/Tiled/PZWorldEd/PZWorldEd/Rules.txt"); // FIXME
+#endif
     if (!readRules(fileName))
         return false;
 
+#ifdef QT_NO_DEBUG
+    QString fileName = QApplication::applicationDirPath() + QLatin1String("/WorldEd/Blends.txt");
+#else
     fileName = QLatin1String("C:/Programming/Tiled/PZWorldEd/PZWorldEd/Blends.txt"); // FIXME
+#endif
     if (!readBlends(fileName))
         return false;
 
@@ -188,6 +191,24 @@ bool BmpBlender::readBlends(const QString &filePath)
     return true;
 }
 
+void BmpBlender::recreate()
+{
+    qDeleteAll(mTileNameGrids);
+    mTileNameGrids.clear();
+
+    qDeleteAll(mTileLayers);
+    mTileLayers.clear();
+
+    update(0, 0, mMap->width(), mMap->height());
+}
+
+void BmpBlender::update(int x1, int y1, int x2, int y2)
+{
+    imagesToTileNames(x1, y1, x2, y2);
+    blend(x1 - 1, y1 - 1, x2 + 1, y2 + 1);
+    tileNamesToLayers(x1 - 1, y1 - 1, x2 + 1, y2 + 1);
+}
+
 static bool adjacentToNonBlack(const QImage &image1, const QImage &image2, int x1, int y1)
 {
     const QRgb black = qRgb(0, 0, 0);
@@ -205,8 +226,6 @@ static bool adjacentToNonBlack(const QImage &image1, const QImage &image2, int x
 void BmpBlender::imagesToTileNames(int x1, int y1, int x2, int y2)
 {
     if (mTileNameGrids.isEmpty()) {
-        qDeleteAll(mTileNameGrids);
-        mTileNameGrids.clear();
         foreach (QString layerName, mRuleLayers + mBlendLayers) {
             if (!mTileNameGrids.contains(layerName)) {
                 mTileNameGrids[layerName]
@@ -245,7 +264,9 @@ void BmpBlender::imagesToTileNames(int x1, int y1, int x2, int y2)
 
             // Hack - If a pixel is black, and the user-drawn map tile in 0_Floor is
             // one of the Rules.txt tiles, pretend that that pixel exists in the image.
-            if (tl && col == black && adjacentToNonBlack(mMap->rbmpMain(), mMap->rbmpVeg(), x, y)) {
+            if (tl && col == black && adjacentToNonBlack(mMap->rbmpMain().rimage(),
+                                                         mMap->rbmpVeg().rimage(),
+                                                         x, y)) {
                 if (Tile *tile = tl->cellAt(x, y).tile) {
                     QString tileName = BuildingEditor::BuildingTilesMgr::nameForTile(tile);
                     foreach (Rule *rule, floor0Rules) {
@@ -263,7 +284,7 @@ void BmpBlender::imagesToTileNames(int x1, int y1, int x2, int y2)
                         continue;
                     if (!mTileNameGrids.contains(rule->targetLayer))
                         continue;
-                    QString tileName = rule->tileChoices[mRandomNumbers[y][x] % rule->tileChoices.count()];
+                    QString tileName = rule->tileChoices[mMap->bmp(0).rand(x, y) % rule->tileChoices.count()];
                     mTileNameGrids[rule->targetLayer]->replace(x, y, tileName);
                 }
             }
@@ -278,7 +299,7 @@ void BmpBlender::imagesToTileNames(int x1, int y1, int x2, int y2)
                         continue;
                     if (!mTileNameGrids.contains(rule->targetLayer))
                         continue;
-                    QString tileName = rule->tileChoices[mRandomNumbers[y][x] % rule->tileChoices.count()];
+                    QString tileName = rule->tileChoices[mMap->bmp(1).rand(x, y) % rule->tileChoices.count()];
                     mTileNameGrids[rule->targetLayer]->replace(x, y, tileName);
                 }
             }
@@ -308,15 +329,15 @@ void BmpBlender::blend(int x1, int y1, int x2, int y2)
 
 void BmpBlender::tileNamesToLayers(int x1, int y1, int x2, int y2)
 {
+    bool recreated = false;
     if (mTileLayers.isEmpty()) {
-        qDeleteAll(mTileLayers);
-        mTileLayers.clear();
         foreach (QString layerName, mRuleLayers + mBlendLayers) {
             if (!mTileLayers.contains(layerName)) {
                 mTileLayers[layerName] = new TileLayer(layerName, 0, 0,
                                                        mMap->width(), mMap->height());
             }
         }
+        recreated = true;
     }
 
     x1 = qBound(0, x1, mMap->width() - 1);
@@ -347,6 +368,9 @@ void BmpBlender::tileNamesToLayers(int x1, int y1, int x2, int y2)
             }
         }
     }
+
+    if (recreated)
+        emit layersRecreated();
 }
 
 QString BmpBlender::getNeighbouringTile(int x, int y)
