@@ -79,7 +79,8 @@ bool BmpBlender::readRules(const QString &filePath)
 {
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly)) {
-        mError = file.errorString();
+        mError = tr("%1\n(while reading %2)").arg(file.errorString())
+                .arg(QDir::toNativeSeparators(filePath));
         return false;
     }
 
@@ -138,9 +139,9 @@ bool BmpBlender::readBlends(const QString &filePath)
 
     SimpleFile simpleFile;
     if (!simpleFile.read(filePath)) {
-        mError = tr("%1\nwhile reading %2")
+        mError = tr("%1\n(while reading %2)")
                 .arg(simpleFile.errorString())
-                .arg(filePath);
+                .arg(QDir::toNativeSeparators(filePath));
         return false;
     }
 
