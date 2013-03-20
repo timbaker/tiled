@@ -671,6 +671,10 @@ void MainWindow::newMap()
         delete blender;
         return;
     }
+    qsrand(QDateTime().toTime_t());
+    int seed1 = qrand(), seed2 = qrand();
+    mapDocument->map()->rbmp(0).rrands().setSeed(seed1);
+    mapDocument->map()->rbmp(1).rrands().setSeed(seed2);
     mapDocument->setBmpBlender(blender);
 #endif
 
