@@ -73,8 +73,8 @@ void MapManager::deleteInstance()
 MapManager::MapManager() :
     mFileSystemWatcher(new FileSystemWatcher(this)),
     mNextThreadForJob(0)
-#if 0
-    mReferenceEpoch(0)
+#ifdef WORLDED
+    , mReferenceEpoch(0)
 #endif
 {
     connect(mFileSystemWatcher, SIGNAL(fileChanged(QString)),
@@ -423,7 +423,7 @@ MapInfo *MapManager::getEmptyMap()
     mapInfo->mMap = map;
     mapInfo->setFilePath(mapFilePath);
     mMapInfo[mapFilePath] = mapInfo;
-#if 0
+#ifdef WORLDED
     addReferenceToMap(mapInfo);
 #endif
     return mapInfo;
@@ -465,7 +465,7 @@ void MapManager::mapParametersChanged(MapInfo *mapInfo)
     mapInfo->mTileHeight = map->tileHeight();
 }
 
-#if 0
+#ifdef WORLDED
 void MapManager::addReferenceToMap(MapInfo *mapInfo)
 {
     Q_ASSERT(mapInfo->mMap != 0);
@@ -523,7 +523,7 @@ void MapManager::newMapFileCreated(const QString &path)
 
     emit mapFileCreated(path);
 }
-#endif
+#endif // WORLDED
 
 Map *MapManager::convertOrientation(Map *map, Tiled::Map::Orientation orient)
 {
@@ -649,7 +649,7 @@ void MapManager::mapLoadedByThread(MapManager::Map *map, MapInfo *mapInfo)
     if (replace)
         emit mapChanged(mapInfo);
 
-#if 0
+#ifdef WORLDED
     // The reference count is zero, but prevent it being immediately purged.
     // FIXME: add a reference and let the caller deal with it.
     mapInfo->mReferenceEpoch = mReferenceEpoch;

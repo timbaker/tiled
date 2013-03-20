@@ -26,6 +26,7 @@
 #include "tileset.h"
 
 #include <QApplication>
+#include <QDir>
 #include <QFile>
 #include <QImage>
 #include <QSet>
@@ -48,7 +49,11 @@ BmpBlender::~BmpBlender()
 bool BmpBlender::read()
 {
 #ifdef QT_NO_DEBUG
+#ifdef WORLDED
+    QString fileName = QApplication::applicationDirPath() + QLatin1String("/Rules.txt");
+#else
     QString fileName = QApplication::applicationDirPath() + QLatin1String("/WorldEd/Rules.txt");
+#endif
 #else
     QString fileName = QLatin1String("C:/Programming/Tiled/PZWorldEd/PZWorldEd/Rules.txt"); // FIXME
 #endif
@@ -56,7 +61,11 @@ bool BmpBlender::read()
         return false;
 
 #ifdef QT_NO_DEBUG
-    QString fileName = QApplication::applicationDirPath() + QLatin1String("/WorldEd/Blends.txt");
+#ifdef WORLDED
+    fileName = QApplication::applicationDirPath() + QLatin1String("/Blends.txt");
+#else
+    fileName = QApplication::applicationDirPath() + QLatin1String("/WorldEd/Blends.txt");
+#endif
 #else
     fileName = QLatin1String("C:/Programming/Tiled/PZWorldEd/PZWorldEd/Blends.txt"); // FIXME
 #endif

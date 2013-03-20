@@ -100,11 +100,15 @@ CompositeLayerGroup::CompositeLayerGroup(MapComposite *owner, int level)
 
 void CompositeLayerGroup::addTileLayer(TileLayer *layer, int index)
 {
+#ifndef WORLDED
     // Hack -- only a map being edited can set a TileLayer's group.
     ZTileLayerGroup *oldGroup = layer->group();
+#endif
     ZTileLayerGroup::addTileLayer(layer, index);
+#ifndef WORLDED
     if (!mOwner->mapInfo()->isBeingEdited())
         layer->setGroup(oldGroup);
+#endif
 
     // Remember the names of layers (without the N_ prefix)
     const QString name = MapComposite::layerNameWithoutPrefix(layer);
@@ -141,12 +145,15 @@ void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
     mBlendLayers.remove(index);
     mForceNonEmpty.remove(index);
 #endif // BUILDINGED
-
+#ifndef WORLDED
     // Hack -- only a map being edited can set a TileLayer's group.
     ZTileLayerGroup *oldGroup = layer->group();
+#endif
     ZTileLayerGroup::removeTileLayer(layer);
+#ifndef WORLDED
     if (!mOwner->mapInfo()->isBeingEdited())
         layer->setGroup(oldGroup);
+#endif
 
     const QString name = MapComposite::layerNameWithoutPrefix(layer);
     index = mLayersByName[name].indexOf(layer);
@@ -234,6 +241,82 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
 
     return !cells.isEmpty();
 }
+
+#ifdef WORLDED
+void CompositeLayerGroup::prepareDrawing2()
+{
+    mPreparedSubMapLayers.resize(0);
+    foreach (MapComposite *subMap, mOwner->subMaps()) {
+        int levelOffset = subMap->levelOffset();
+        CompositeLayerGroup *layerGroup = subMap->tileLayersForLevel(mLevel - levelOffset);
+        if (layerGroup) {
+            mPreparedSubMapLayers.append(SubMapLayers(subMap, layerGroup));
+            layerGroup->prepareDrawing2();
+        }
+    }
+}
+
+// This is for the benefit of LotFilesManager.  It ignores the visibility of
+// layers (so NoRender layers are included) and visibility of sub-maps.
+bool CompositeLayerGroup::orderedCellsAt2(const QPoint &pos, QVector<const Cell *> &cells) const
+{
+    static QLatin1String sFloor("0_Floor");
+
+    MapComposite *root = mOwner->root();
+    if (!mOwner->parent())
+        root->mFirstCellIs0Floor = false;
+
+    bool cleared = false;
+    int index = -1;
+    foreach (TileLayer *tl, mLayers) {
+        ++index;
+        TileLayer *tlBmpBlend = mBmpBlendLayers[index];
+        QPoint subPos = pos - mOwner->orientAdjustTiles() * mLevel;
+        if (tl->contains(subPos)) {
+#if 1 // ROAD_CRUD
+            if (tl == mRoadLayer0 || tl == mRoadLayer1) {
+                const Cell *cell = (tl == mRoadLayer0)
+                        ? &mOwner->roadLayer0()->cellAt(subPos)
+                        : &mOwner->roadLayer1()->cellAt(subPos);
+                if (!cell->isEmpty()) {
+                    if (!cleared) {
+                        bool isFloor = !mLevel && !index && (tl->name() == sFloor);
+                        cells.resize((!isFloor && root->mFirstCellIs0Floor) ? 1 : 0);
+                        cleared = true;
+                        if (isFloor && !mOwner->parent())
+                            mOwner->mFirstCellIs0Floor = true;
+                    }
+                    cells.append(cell);
+                    continue;
+                }
+            }
+#endif // ROAD_CRUD
+            const Cell *cell = &tl->cellAt(subPos);
+            if (tlBmpBlend && tlBmpBlend->contains(subPos) && !tlBmpBlend->cellAt(subPos).isEmpty())
+                cell = &tlBmpBlend->cellAt(subPos);
+            if (!cell->isEmpty()) {
+                if (!cleared) {
+                    bool isFloor = !mLevel && !index && (tl->name() == sFloor);
+                    cells.resize((!isFloor && root->mFirstCellIs0Floor) ? 1 : 0);
+                    cleared = true;
+                    if (isFloor && !mOwner->parent())
+                        mOwner->mFirstCellIs0Floor = true;
+                }
+                cells.append(cell);
+            }
+        }
+    }
+
+    // Overwrite map cells with sub-map cells at this location
+    foreach (const SubMapLayers& subMapLayer, mPreparedSubMapLayers) {
+        if (!subMapLayer.mBounds.contains(pos))
+            continue;
+        subMapLayer.mLayerGroup->orderedCellsAt2(pos - subMapLayer.mSubMap->origin(), cells);
+    }
+
+    return !cells.isEmpty();
+}
+#endif // WORLDED
 
 bool CompositeLayerGroup::isLayerEmpty(int index) const
 {
@@ -381,7 +464,7 @@ void CompositeLayerGroup::synch()
         }
     }
 
-#ifdef BUILDINGED
+#if defined(BUILDINGED) && !defined(WORLDED)
     if (mAnyVisibleLayers)
         maxMargins(m, QMargins(0, 128, 64, 0), m);
 #endif
@@ -619,7 +702,7 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
     , mBlendOverMap(0)
 #endif
 {
-#if 0
+#ifdef WORLDED
     MapManager::instance()->addReferenceToMap(mMapInfo);
 #endif
     if (mOrientRender == Map::Unknown)
@@ -693,6 +776,10 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
 
     if (mMinLevel == 10000)
         mMinLevel = 0;
+#ifdef WORLDED
+    if (!mParent && !mMapInfo->isBeingEdited())
+        mMaxLevel = qMax(mMaxLevel, 10);
+#endif // WORLDED
 
     mSortedLayerGroups.clear();
     for (int level = mMinLevel; level <= mMaxLevel; ++level) {
@@ -706,7 +793,7 @@ MapComposite::~MapComposite()
 {
     qDeleteAll(mSubMaps);
     qDeleteAll(mLayerGroups);
-#if 0
+#ifdef WORLDED
     if (mMapInfo)
         MapManager::instance()->removeReferenceToMap(mMapInfo);
 #endif
@@ -1226,6 +1313,10 @@ void MapComposite::recreate()
 
     if (mMinLevel == 10000)
         mMinLevel = 0;
+#ifdef WORLDED
+    if (!mParent && !mMapInfo->isBeingEdited())
+        mMaxLevel = qMax(mMaxLevel, 10);
+#endif
 
     for (int level = mMinLevel; level <= mMaxLevel; ++level) {
         if (!mLayerGroups.contains(level))

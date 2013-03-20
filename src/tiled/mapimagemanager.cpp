@@ -136,6 +136,28 @@ MapImage *MapImageManager::getMapImage(const QString &mapName, const QString &re
     // by MapManager's EditorMapReader class and the PROGRESS class) a
     // worker-thread's signal to us may be processed.
     MapImageManagerDeferral deferral; // FIXME: optimized out?
+
+#ifdef WORLDED
+    QString suffix = QFileInfo(mapName).suffix();
+    if (BMPToTMX::supportedImageFormats().contains(suffix)) {
+        QString keyName = QFileInfo(mapName).canonicalFilePath();
+        if (mMapImages.contains(keyName))
+            return mMapImages[keyName];
+        ImageData data = generateBMPImage(mapName);
+        if (!data.valid)
+            return 0;
+        // Abusing the MapInfo struct
+        MapInfo *mapInfo = new MapInfo(Map::Isometric,
+                                       data.levelZeroBounds.width(),
+                                       data.levelZeroBounds.height(), 1, 1);
+        MapImage *mapImage = new MapImage(data.image, data.scale,
+                                          data.levelZeroBounds, mapInfo);
+        mapImage->mLoaded = true;
+        mMapImages[keyName] = mapImage;
+        return mapImage;
+    }
+#endif
+
     QString mapFilePath = MapManager::instance()->pathForMap(mapName, relativeTo);
     if (mapFilePath.isEmpty())
         return 0;
@@ -293,6 +315,70 @@ void MapImageManager::paintDummyImage(ImageData &data, MapInfo *mapInfo)
     p.fillPath(path, QColor(100,100,100));
 }
 
+#ifdef WORLDED
+// BMP To TMX image thumbnail
+MapImageManager::ImageData MapImageManager::generateBMPImage(const QString &bmpFilePath)
+{
+    QSize imageSize = BMPToTMX::instance()->validateImages(bmpFilePath);
+    if (imageSize.isEmpty()) {
+        mError = BMPToTMX::instance()->errorString();
+        return ImageData();
+    }
+
+    // Transform the image to the isometric view
+    QTransform xform;
+    xform.scale(1.0 / 2, 0.5 / 2);
+    xform.shear(-1, 1);
+    QRect skewedImageBounds = xform.mapRect(QRect(QPoint(0, 0), imageSize));
+
+    QFileInfo fileInfo(bmpFilePath);
+    QFileInfo imageInfo = imageFileInfo(bmpFilePath);
+    QFileInfo imageDataInfo = imageDataFileInfo(imageInfo);
+    if (imageInfo.exists() && imageDataInfo.exists() &&
+            (fileInfo.lastModified() < imageInfo.lastModified())) {
+        QImage image(imageInfo.absoluteFilePath());
+        if (image.isNull())
+            QMessageBox::warning(MainWindow::instance(), tr("Error Loading Image"),
+                                 tr("An error occurred trying to read a BMP thumbnail image.\n")
+                                 + imageInfo.absoluteFilePath());
+        if (image.size() == skewedImageBounds.size()) {
+            ImageData data = readImageData(imageDataInfo);
+            if (data.valid) {
+                data.image = image;
+                return data;
+            }
+        }
+    }
+
+    PROGRESS progress(tr("Generating thumbnail for %1").arg(fileInfo.completeBaseName()));
+
+    BMPToTMXImages *images = BMPToTMX::instance()->getImages(bmpFilePath, QPoint());
+    if (!images)
+        return ImageData();
+
+    QImage bmpRecolored(images->mBmp);
+    for (int x = 0; x < images->mBmp.width(); x++) {
+        for (int y = 0; y < images->mBmp.height(); y++) {
+            if (images->mBmpVeg.pixel(x, y) == qRgb(255, 0, 0))
+                bmpRecolored.setPixel(x, y, qRgb(47, 76, 64));
+        }
+    }
+
+    delete images; // ***** ***** *****
+
+    ImageData data;
+    data.image = bmpRecolored.transformed(xform);;
+    data.scale = 1.0f;
+    data.levelZeroBounds = QRectF(0, 0, imageSize.width() / 300, imageSize.height() / 300);
+    data.valid = true;
+
+    data.image.save(imageInfo.absoluteFilePath());
+    writeImageData(imageDataInfo, data);
+
+    return data;
+}
+#endif // WORLDED
+
 #define IMAGE_DATA_MAGIC 0xB15B00B5
 #define IMAGE_DATA_VERSION 3
 
@@ -446,7 +532,7 @@ void MapImageManager::renderThreadNeedsMap(MapImage *mapImage)
     }
     mExpectMapImage = mapImage;
     mExpectSubMaps.clear();
-#if 0
+#ifdef WORLDED
     mReferencedMaps.clear();
 #endif
     Q_ASSERT(mapInfo == mapImage->mapInfo());
@@ -514,7 +600,7 @@ void MapImageManager::mapLoaded(MapInfo *mapInfo)
         return;
 
     if (mExpectMapImage->mapInfo() == mapInfo) {
-#if 0
+#ifdef WORLDED
         MapManager::instance()->addReferenceToMap(mapInfo), mReferencedMaps += mapInfo;
 #endif
         foreach (const QString &path, getSubMapFileNames(mapInfo)) {
@@ -523,7 +609,7 @@ void MapImageManager::mapLoaded(MapInfo *mapInfo)
                 if (!mExpectSubMaps.contains(subMapInfo)) {
                     if (subMapInfo->isLoading())
                         mExpectSubMaps += subMapInfo;
-#if 0
+#ifdef WORLDED
                     else
                         MapManager::instance()->addReferenceToMap(subMapInfo), mReferencedMaps += subMapInfo;
 #endif
@@ -531,7 +617,7 @@ void MapImageManager::mapLoaded(MapInfo *mapInfo)
             }
         }
     } else if (mExpectSubMaps.contains(mapInfo)) {
-#if 0
+#ifdef WORLDED
         MapManager::instance()->addReferenceToMap(mapInfo), mReferencedMaps += mapInfo;
 #endif
         mExpectSubMaps.removeAll(mapInfo);
@@ -541,7 +627,7 @@ void MapImageManager::mapLoaded(MapInfo *mapInfo)
                 if (!mExpectSubMaps.contains(subMapInfo)) {
                     if (subMapInfo->isLoading())
                         mExpectSubMaps += subMapInfo;
-#if 0
+#ifdef WORLDED
                     else
                         MapManager::instance()->addReferenceToMap(subMapInfo), mReferencedMaps += subMapInfo;
 #endif
@@ -559,7 +645,7 @@ void MapImageManager::mapLoaded(MapInfo *mapInfo)
     mExpectMapImage = 0;
 
     mRenderMapComposite = new MapComposite(mapInfo);
-#if 0
+#ifdef WORLDED
     // Now that mapComposite is referencing the maps...
     foreach (MapInfo *mapInfo, mReferencedMaps)
         MapManager::instance()->removeReferenceToMap(mapInfo);
@@ -587,7 +673,7 @@ void MapImageManager::mapFailedToLoad(MapInfo *mapInfo)
     // The render thread was waiting for a map to load, but that failed.
     // Tell the render thread to continue on with the next job.
     if (mExpectMapImage && (mapInfo == mExpectMapImage->mapInfo())) {
-#if 0
+#ifdef WORLDED
         foreach (MapInfo *mapInfo, mReferencedMaps)
             MapManager::instance()->removeReferenceToMap(mapInfo);
         mReferencedMaps.clear();
@@ -745,6 +831,10 @@ void MapImageReaderWorker::work()
         Job job = mJobs.takeAt(0);
 
         QImage *image = new QImage(job.imageFileName);
+#ifdef WORLDED
+        if (!image->isNull())
+            *image = image->convertToFormat(QImage::Format_ARGB4444_Premultiplied);
+#endif // WORLDED
 
 #ifndef QT_NO_DEBUG
         Sleep::msleep(250);
@@ -915,7 +1005,11 @@ MapImageData MapImageRenderWorker::generateMapImage(MapComposite *mapComposite)
     }
 
     MapImageData data;
+#ifdef WORLDED
+    data.image = image.convertToFormat(QImage::Format_ARGB4444_Premultiplied);
+#else
     data.image = image;
+#endif
     data.scale = scale;
     data.levelZeroBounds = renderer->boundingRect(QRect(0, 0, map->width(), map->height()));
     data.levelZeroBounds.translate(-sceneRect.topLeft());
