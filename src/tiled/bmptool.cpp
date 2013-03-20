@@ -380,6 +380,7 @@ void BmpPainterTool::mousePressed(QGraphicsSceneMouseEvent *event)
 
     if (event->button() == Qt::LeftButton) {
         mPainting = true;
+        mStampPos = tilePosition();
         mErasing = (event->modifiers() & Qt::ControlModifier) != 0;
         paint(false);
     }
@@ -409,13 +410,67 @@ void BmpPainterTool::languageChanged()
     setShortcut(QKeySequence(tr("P")));
 }
 
+/**
+ * Returns the lists of points on a line from (x0,y0) to (x1,y1).
+ *
+ * This is an implementation of bresenhams line algorithm, initially copied
+ * from http://en.wikipedia.org/wiki/Bresenham's_line_algorithm#Optimization
+ * changed to C++ syntax.
+ */
+// Copied from stampbrush.cpp
+static QVector<QPoint> calculateLine(int x0, int y0, int x1, int y1)
+{
+    QVector<QPoint> ret;
+
+    bool steep = qAbs(y1 - y0) > qAbs(x1 - x0);
+    if (steep) {
+        qSwap(x0, y0);
+        qSwap(x1, y1);
+    }
+    if (x0 > x1) {
+        qSwap(x0, x1);
+        qSwap(y0, y1);
+    }
+    const int deltax = x1 - x0;
+    const int deltay = qAbs(y1 - y0);
+    int error = deltax / 2;
+    int ystep;
+    int y = y0;
+
+    if (y0 < y1)
+        ystep = 1;
+    else
+        ystep = -1;
+
+    for (int x = x0; x < x1 + 1 ; x++) {
+        if (steep)
+            ret += QPoint(y, x);
+        else
+            ret += QPoint(x, y);
+        error = error - deltay;
+        if (error < 0) {
+             y = y + ystep;
+             error = error + deltax;
+        }
+    }
+
+    return ret;
+}
+
 void BmpPainterTool::tilePositionChanged(const QPoint &tilePos)
 {
     brushItem()->setTileRegion(QRect(tilePos - QPoint(mBrushSize/2, mBrushSize/2),
                                      QSize(mBrushSize, mBrushSize)));
 
-    if (mPainting)
-        paint(true);
+    if (mPainting) {
+        foreach (const QPoint &p, calculateLine(mStampPos.x(), mStampPos.y(),
+                                                tilePos.x(), tilePos.y())) {
+            brushItem()->setTileRegion(QRect(p - QPoint(mBrushSize/2, mBrushSize/2),
+                                             QSize(mBrushSize, mBrushSize)));
+            paint(true);
+        }
+        mStampPos = tilePos;
+    }
 }
 
 void BmpPainterTool::paint(bool mergeable)

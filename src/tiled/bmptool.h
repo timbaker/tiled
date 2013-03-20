@@ -124,6 +124,7 @@ private:
     ~BmpPainterTool();
 
     bool mPainting;
+    QPoint mStampPos;
     bool mErasing;
     int mBmpIndex;
     QRgb mColor;
