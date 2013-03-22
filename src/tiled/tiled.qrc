@@ -74,5 +74,6 @@
         <file>images/16x16/go-forward.png</file>
         <file>images/worlded-icon-16.png</file>
         <file>images/22x22/bmp-tool.png</file>
+        <file>images/22x22/bmp-select.png</file>
     </qresource>
 </RCC>

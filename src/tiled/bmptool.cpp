@@ -575,7 +575,7 @@ BmpSelectionTool *BmpSelectionTool::instance()
 BmpSelectionTool::BmpSelectionTool(QObject *parent) :
     AbstractBmpTool(tr("BMP Select"),
                     QIcon(QLatin1String(
-                              ":images/22x22/stock-tool-rect-select.png")),
+                              ":images/22x22/bmp-select.png")),
                     QKeySequence(/*tr("R")*/),
                     parent),
     mMode(NoMode),
