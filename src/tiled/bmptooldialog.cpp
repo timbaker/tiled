@@ -130,7 +130,7 @@ void BmpToolDialog::setDocument(MapDocument *doc)
         QList<void*> userData;
         QStringList headers;
         int ruleIndex = 1;
-        foreach (BmpBlender::Rule *rule, mDocument->bmpBlender()->mRules) {
+        foreach (BmpRule *rule, mDocument->bmpBlender()->mRules) {
             foreach (QString tileName, rule->tileChoices) {
                 Tile *tile;
                 if (tileName.isEmpty())
@@ -157,7 +157,7 @@ void BmpToolDialog::setDocument(MapDocument *doc)
 
 void BmpToolDialog::currentRuleChanged(const QModelIndex &current)
 {
-    BmpBlender::Rule *rule = static_cast<BmpBlender::Rule*>(ui->tableView->model()->userDataAt(current));
+    BmpRule *rule = static_cast<BmpRule*>(ui->tableView->model()->userDataAt(current));
     if (rule) {
         BmpPainterTool::instance()->setColor(rule->bitmapIndex, rule->color);
     }

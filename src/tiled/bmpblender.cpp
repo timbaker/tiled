@@ -43,6 +43,7 @@ BmpBlender::BmpBlender(Map *map) :
 BmpBlender::~BmpBlender()
 {
     qDeleteAll(mRules);
+    qDeleteAll(mBlendList);
     qDeleteAll(mTileNameGrids);
 }
 
@@ -77,10 +78,9 @@ bool BmpBlender::read()
 
 bool BmpBlender::readRules(const QString &filePath)
 {
-    QFile file(filePath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        mError = tr("%1\n(while reading %2)").arg(file.errorString())
-                .arg(QDir::toNativeSeparators(filePath));
+    BmpRulesFile rulesFile;
+    if (!rulesFile.read(filePath)) {
+        mError = rulesFile.errorString();
         return false;
     }
 
@@ -89,44 +89,11 @@ bool BmpBlender::readRules(const QString &filePath)
     mRuleByColor.clear();
     mRuleLayers.clear();
 
-    QTextStream sr(&file);
-    while (!sr.atEnd()) {
-        QString line = sr.readLine();
-
-        if (line.contains(QLatin1Char('#')))
-            continue;
-        if (line.trimmed().isEmpty())
-            continue;
-
-        QStringList lineSplit = line.split(QLatin1Char(','));
-        int bmp = lineSplit[0].trimmed().toInt();
-        QRgb col = qRgb(lineSplit[1].trimmed().toInt(),
-                        lineSplit[2].trimmed().toInt(),
-                        lineSplit[3].trimmed().toInt());
-        QStringList choices = lineSplit[4].split(QLatin1Char(' '));
-        int n = 0;
-        foreach (QString choice, choices) {
-            choices[n] = choice.trimmed();
-            if (choices[n] == QLatin1String("null"))
-                choices[n].clear();
-            n++;
-        }
-        QRgb con = qRgb(0, 0, 0);
-
-        QString layer = lineSplit[5].trimmed();
-        bool hasCon = false;
-        if (lineSplit.length() > 6) {
-            con = qRgb(lineSplit[6].trimmed().toInt(),
-                       lineSplit[7].trimmed().toInt(),
-                       lineSplit[8].trimmed().toInt());
-            hasCon = true;
-        }
-
-        if (hasCon) {
-            AddRule(bmp, col, choices, layer, con);
-        } else {
-            AddRule(bmp, col, choices, layer);
-        }
+    foreach (BmpRule *rule, rulesFile.rules()) {
+        mRules += new BmpRule(rule);
+        mRuleByColor[rule->color] += mRules.last();
+        if (!mRuleLayers.contains(rule->targetLayer))
+            mRuleLayers += rule->targetLayer;
     }
 
     return true;
@@ -134,68 +101,22 @@ bool BmpBlender::readRules(const QString &filePath)
 
 bool BmpBlender::readBlends(const QString &filePath)
 {
-    mBlendList.clear();
-    mBlendsByLayer.clear();
-
-    SimpleFile simpleFile;
-    if (!simpleFile.read(filePath)) {
-        mError = tr("%1\n(while reading %2)")
-                .arg(simpleFile.errorString())
-                .arg(QDir::toNativeSeparators(filePath));
+    BmpBlendsFile blendFile;
+    if (!blendFile.read(filePath)) {
+        mError = blendFile.errorString();
         return false;
     }
 
-    QMap<QString,Blend::Direction> dirMap;
-    dirMap[QLatin1String("n")] = Blend::N;
-    dirMap[QLatin1String("s")] = Blend::S;
-    dirMap[QLatin1String("e")] = Blend::E;
-    dirMap[QLatin1String("w")] = Blend::W;
-    dirMap[QLatin1String("nw")] = Blend::NW;
-    dirMap[QLatin1String("sw")] = Blend::SW;
-    dirMap[QLatin1String("ne")] = Blend::NE;
-    dirMap[QLatin1String("se")] = Blend::SE;
-
-    foreach (SimpleFileBlock block, simpleFile.blocks) {
-        if (block.name == QLatin1String("blend")) {
-            foreach (SimpleFileKeyValue kv, block.values) {
-                if (kv.name != QLatin1String("layer") &&
-                        kv.name != QLatin1String("mainTile") &&
-                        kv.name != QLatin1String("blendTile") &&
-                        kv.name != QLatin1String("dir") &&
-                        kv.name != QLatin1String("exclude")) {
-                    mError = tr("Unknown blend attribute '%1'").arg(kv.name);
-                    return false;
-                }
-            }
-
-            Blend::Direction dir = Blend::Unknown;
-            QString dirName = block.value("dir");
-            if (dirMap.contains(dirName))
-                dir = dirMap[dirName];
-            else {
-                mError = tr("Unknown blend direction '%1'").arg(dirName);
-                return false;
-            }
-
-            QStringList excludes;
-            foreach (QString exclude, block.value("exclude").split(QLatin1String(" "), QString::SkipEmptyParts))
-                excludes += BuildingEditor::BuildingTilesMgr::normalizeTileName(exclude);
-
-            Blend blend(block.value("layer"),
-                        BuildingEditor::BuildingTilesMgr::normalizeTileName(block.value("mainTile")),
-                        BuildingEditor::BuildingTilesMgr::normalizeTileName(block.value("blendTile")),
-                        dir, excludes);
-            mBlendList += blend;
-            mBlendsByLayer[blend.targetLayer] += mBlendList.count() - 1;
-        } else {
-            mError = tr("Unknown block name '%1'.\nProbable syntax error in Blends.txt.").arg(block.name);
-            return false;
-        }
-    }
+    qDeleteAll(mBlendList);
+    mBlendList.clear();
+    mBlendsByLayer.clear();
 
     QSet<QString> layers;
-    foreach (Blend blend, mBlendList)
-        layers.insert(blend.targetLayer);
+    foreach (BmpBlend *blend, blendFile.blends()) {
+        mBlendList += new BmpBlend(blend);
+        mBlendsByLayer[blend->targetLayer] += mBlendList.last();
+        layers.insert(blend->targetLayer);
+    }
     mBlendLayers = layers.values();
 
     return true;
@@ -252,8 +173,8 @@ void BmpBlender::imagesToTileNames(int x1, int y1, int x2, int y2)
     x1 -= 1, x2 += 1, y1 -= 1, y2 += 1;
     int index = mMap->indexOfLayer(QLatin1String("0_Floor"), Layer::TileLayerType);
     TileLayer *tl = (index == -1) ? 0 : mMap->layerAt(index)->asTileLayer();
-    QList<Rule*> floor0Rules;
-    foreach (Rule *rule, mRules) {
+    QList<BmpRule*> floor0Rules;
+    foreach (BmpRule *rule, mRules) {
         if (rule->targetLayer == QLatin1String("0_Floor") &&
                 rule->bitmapIndex == 0)
             floor0Rules += rule;
@@ -279,7 +200,7 @@ void BmpBlender::imagesToTileNames(int x1, int y1, int x2, int y2)
                                                          x, y)) {
                 if (Tile *tile = tl->cellAt(x, y).tile) {
                     QString tileName = BuildingEditor::BuildingTilesMgr::nameForTile(tile);
-                    foreach (Rule *rule, floor0Rules) {
+                    foreach (BmpRule *rule, floor0Rules) {
                         if (rule->tileChoices.contains(tileName))
                             col = rule->color;
                     }
@@ -287,9 +208,9 @@ void BmpBlender::imagesToTileNames(int x1, int y1, int x2, int y2)
             }
 
             if (mRuleByColor.contains(col)) {
-                QList<Rule*> rules = mRuleByColor[col];
+                QList<BmpRule*> rules = mRuleByColor[col];
 
-                foreach (Rule *rule, rules) {
+                foreach (BmpRule *rule, rules) {
                     if (rule->bitmapIndex != 0)
                         continue;
                     if (!mTileNameGrids.contains(rule->targetLayer))
@@ -300,9 +221,9 @@ void BmpBlender::imagesToTileNames(int x1, int y1, int x2, int y2)
             }
 
             if (col2 != black && mRuleByColor.contains(col2)) {
-                QList<Rule*> rules = mRuleByColor[col2];
+                QList<BmpRule*> rules = mRuleByColor[col2];
 
-                foreach (Rule *rule, rules) {
+                foreach (BmpRule *rule, rules) {
                     if (rule->bitmapIndex != 1)
                         continue;
                     if (rule->condition != col && rule->condition != black)
@@ -330,8 +251,8 @@ void BmpBlender::blend(int x1, int y1, int x2, int y2)
         for (int x = x1; x <= x2; x++) {
             QString tileName = grid->at(x, y);
             foreach (QString layerName, mBlendLayers) {
-                Blend blend = getBlendRule(x, y, tileName, layerName);
-                mTileNameGrids[layerName]->replace(x, y, blend.isNull() ? QString() : blend.blendTile);
+                BmpBlend *blend = getBlendRule(x, y, tileName, layerName);
+                mTileNameGrids[layerName]->replace(x, y, blend ? blend->blendTile : QString());
             }
         }
     }
@@ -392,50 +313,49 @@ QString BmpBlender::getNeighbouringTile(int x, int y)
     return grid->at(x, y);
 }
 
-BmpBlender::Blend BmpBlender::getBlendRule(int x, int y, const QString &tileName,
+BmpBlend *BmpBlender::getBlendRule(int x, int y, const QString &tileName,
                                            const QString &layer)
 {
-    Blend lastBlend;
+    BmpBlend *lastBlend = 0;
     if (tileName.isEmpty())
         return lastBlend;
-    foreach (int index, mBlendsByLayer[layer]) {
-        Blend &blend = mBlendList[index];
-        Q_ASSERT(blend.targetLayer == layer);
-        if (blend.targetLayer != layer)
+    foreach (BmpBlend *blend, mBlendsByLayer[layer]) {
+        Q_ASSERT(blend->targetLayer == layer);
+        if (blend->targetLayer != layer)
             continue;
 
-        if (tileName != blend.mainTile) {
-            if (blend.ExclusionList.contains(tileName))
+        if (tileName != blend->mainTile) {
+            if (blend->ExclusionList.contains(tileName))
                 continue;
             bool bPass = false;
-            switch (blend.dir) {
-            case Blend::N:
-                bPass = getNeighbouringTile(x, y - 1) == blend.mainTile;
+            switch (blend->dir) {
+            case BmpBlend::N:
+                bPass = getNeighbouringTile(x, y - 1) == blend->mainTile;
                 break;
-            case Blend::S:
-                bPass = getNeighbouringTile(x, y + 1) == blend.mainTile;
+            case BmpBlend::S:
+                bPass = getNeighbouringTile(x, y + 1) == blend->mainTile;
                 break;
-            case Blend::E:
-                bPass = getNeighbouringTile(x + 1, y) == blend.mainTile;
+            case BmpBlend::E:
+                bPass = getNeighbouringTile(x + 1, y) == blend->mainTile;
                 break;
-            case Blend::W:
-                bPass = getNeighbouringTile(x - 1, y) == blend.mainTile;
+            case BmpBlend::W:
+                bPass = getNeighbouringTile(x - 1, y) == blend->mainTile;
                 break;
-            case Blend::NE:
-                bPass = getNeighbouringTile(x, y - 1) == blend.mainTile &&
-                        getNeighbouringTile(x + 1, y) == blend.mainTile;
+            case BmpBlend::NE:
+                bPass = getNeighbouringTile(x, y - 1) == blend->mainTile &&
+                        getNeighbouringTile(x + 1, y) == blend->mainTile;
                 break;
-            case Blend::SE:
-                bPass = getNeighbouringTile(x, y + 1) == blend.mainTile &&
-                        getNeighbouringTile(x + 1, y) == blend.mainTile;
+            case BmpBlend::SE:
+                bPass = getNeighbouringTile(x, y + 1) == blend->mainTile &&
+                        getNeighbouringTile(x + 1, y) == blend->mainTile;
                 break;
-            case Blend::NW:
-                bPass = getNeighbouringTile(x, y - 1) == blend.mainTile &&
-                        getNeighbouringTile(x - 1, y) == blend.mainTile;
+            case BmpBlend::NW:
+                bPass = getNeighbouringTile(x, y - 1) == blend->mainTile &&
+                        getNeighbouringTile(x - 1, y) == blend->mainTile;
                 break;
-            case Blend::SW:
-                bPass = getNeighbouringTile(x, y + 1) == blend.mainTile &&
-                        getNeighbouringTile(x - 1, y) == blend.mainTile;
+            case BmpBlend::SW:
+                bPass = getNeighbouringTile(x, y + 1) == blend->mainTile &&
+                        getNeighbouringTile(x - 1, y) == blend->mainTile;
                 break;
             }
 
@@ -447,28 +367,165 @@ BmpBlender::Blend BmpBlender::getBlendRule(int x, int y, const QString &tileName
     return lastBlend;
 }
 
-void BmpBlender::AddRule(int bitmapIndex, QRgb col, QStringList tiles,
+/////
+
+BmpRulesFile::BmpRulesFile()
+{
+}
+
+BmpRulesFile::~BmpRulesFile()
+{
+    qDeleteAll(mRules);
+}
+
+bool BmpRulesFile::read(const QString &fileName)
+{
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly)) {
+        mError = tr("%1\n(while reading %2)").arg(file.errorString())
+                .arg(QDir::toNativeSeparators(fileName));
+        return false;
+    }
+
+    qDeleteAll(mRules);
+    mRules.clear();
+
+    QTextStream sr(&file);
+    while (!sr.atEnd()) {
+        QString line = sr.readLine();
+
+        if (line.contains(QLatin1Char('#')))
+            continue;
+        if (line.trimmed().isEmpty())
+            continue;
+
+        QStringList lineSplit = line.split(QLatin1Char(','));
+        int bmp = lineSplit[0].trimmed().toInt();
+        QRgb col = qRgb(lineSplit[1].trimmed().toInt(),
+                        lineSplit[2].trimmed().toInt(),
+                        lineSplit[3].trimmed().toInt());
+        QStringList choices = lineSplit[4].split(QLatin1Char(' '));
+        int n = 0;
+        foreach (QString choice, choices) {
+            choices[n] = choice.trimmed();
+            if (choices[n] == QLatin1String("null"))
+                choices[n].clear();
+            n++;
+        }
+        QRgb con = qRgb(0, 0, 0);
+
+        QString layer = lineSplit[5].trimmed();
+        bool hasCon = false;
+        if (lineSplit.length() > 6) {
+            con = qRgb(lineSplit[6].trimmed().toInt(),
+                       lineSplit[7].trimmed().toInt(),
+                       lineSplit[8].trimmed().toInt());
+            hasCon = true;
+        }
+
+        if (hasCon) {
+            AddRule(bmp, col, choices, layer, con);
+        } else {
+            AddRule(bmp, col, choices, layer);
+        }
+    }
+
+    return true;
+}
+
+void BmpRulesFile::AddRule(int bitmapIndex, QRgb col, QStringList tiles,
                          QString layer, QRgb condition)
 {
     QStringList normalizedTileNames;
     foreach (QString tileName, tiles)
         normalizedTileNames += BuildingEditor::BuildingTilesMgr::normalizeTileName(tileName);
 
-    mRules += new Rule(bitmapIndex, col, normalizedTileNames, layer, condition);
-    mRuleByColor[col] += mRules.last();
-    if (!mRuleLayers.contains(layer))
-        mRuleLayers += layer;
+    mRules += new BmpRule(bitmapIndex, col, normalizedTileNames, layer, condition);
 }
 
-void BmpBlender::AddRule(int bitmapIndex, QRgb col, QStringList tiles,
+void BmpRulesFile::AddRule(int bitmapIndex, QRgb col, QStringList tiles,
                          QString layer)
 {
     QStringList normalizedTileNames;
     foreach (QString tileName, tiles)
         normalizedTileNames += BuildingEditor::BuildingTilesMgr::normalizeTileName(tileName);
 
-    mRules += new Rule(bitmapIndex, col, normalizedTileNames, layer);
-    mRuleByColor[col] += mRules.last();
-    if (!mRuleLayers.contains(layer))
-        mRuleLayers += layer;
+    mRules += new BmpRule(bitmapIndex, col, normalizedTileNames, layer);
 }
+
+/////
+
+BmpBlendsFile::BmpBlendsFile()
+{
+}
+
+BmpBlendsFile::~BmpBlendsFile()
+{
+    qDeleteAll(mBlends);
+}
+
+bool BmpBlendsFile::read(const QString &fileName)
+{
+    qDeleteAll(mBlends);
+    mBlends.clear();
+
+    SimpleFile simpleFile;
+    if (!simpleFile.read(fileName)) {
+        mError = tr("%1\n(while reading %2)")
+                .arg(simpleFile.errorString())
+                .arg(QDir::toNativeSeparators(fileName));
+        return false;
+    }
+
+    QMap<QString,BmpBlend::Direction> dirMap;
+    dirMap[QLatin1String("n")] = BmpBlend::N;
+    dirMap[QLatin1String("s")] = BmpBlend::S;
+    dirMap[QLatin1String("e")] = BmpBlend::E;
+    dirMap[QLatin1String("w")] = BmpBlend::W;
+    dirMap[QLatin1String("nw")] = BmpBlend::NW;
+    dirMap[QLatin1String("sw")] = BmpBlend::SW;
+    dirMap[QLatin1String("ne")] = BmpBlend::NE;
+    dirMap[QLatin1String("se")] = BmpBlend::SE;
+
+    foreach (SimpleFileBlock block, simpleFile.blocks) {
+        if (block.name == QLatin1String("blend")) {
+            foreach (SimpleFileKeyValue kv, block.values) {
+                if (kv.name != QLatin1String("layer") &&
+                        kv.name != QLatin1String("mainTile") &&
+                        kv.name != QLatin1String("blendTile") &&
+                        kv.name != QLatin1String("dir") &&
+                        kv.name != QLatin1String("exclude")) {
+                    mError = tr("Unknown blend attribute '%1'").arg(kv.name);
+                    return false;
+                }
+            }
+
+            BmpBlend::Direction dir = BmpBlend::Unknown;
+            QString dirName = block.value("dir");
+            if (dirMap.contains(dirName))
+                dir = dirMap[dirName];
+            else {
+                mError = tr("Unknown blend direction '%1'").arg(dirName);
+                return false;
+            }
+
+            QStringList excludes;
+            foreach (QString exclude, block.value("exclude").split(QLatin1String(" "), QString::SkipEmptyParts))
+                excludes += BuildingEditor::BuildingTilesMgr::normalizeTileName(exclude);
+
+            BmpBlend *blend = new BmpBlend(block.value("layer"),
+                        BuildingEditor::BuildingTilesMgr::normalizeTileName(block.value("mainTile")),
+                        BuildingEditor::BuildingTilesMgr::normalizeTileName(block.value("blendTile")),
+                        dir, excludes);
+            mBlends += blend;
+        } else {
+            mError = tr("Unknown block name '%1'.\nProbable syntax error in Blends.txt.").arg(block.name);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/////
+

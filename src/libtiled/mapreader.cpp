@@ -1039,7 +1039,7 @@ void MapReaderPrivate::decodeBmpPixels(int bmpIndex, const QList<QRgb> &colors,
                           data[i + 1] << 8 |
                           data[i + 2] << 16 |
                           data[i + 3] << 24;
-        if (n > 0 && n <= colors.size()) {
+        if (n > 0 && int(n) <= colors.size()) {
             QRgb rgb = colors[n - 1];
             mMap->rbmp(bmpIndex).setPixel(x, y, rgb);
         }
