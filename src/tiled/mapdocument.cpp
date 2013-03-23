@@ -73,16 +73,13 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     mUndoStack(new QUndoStack(this))
 {
 #ifdef ZOMBOID
-    BmpBlender *blender = new BmpBlender(map);
-    blender->update(0, 0, map->width(), map->height());
-
     mMapComposite = new MapComposite(MapManager::instance()->newFromMap(map, fileName));
+    connect(mMapComposite->bmpBlender(), SIGNAL(regionAltered(QRegion)),
+            SLOT(bmpBlenderRegionAltered(QRegion)));
     connect(MapManager::instance(), SIGNAL(mapAboutToChange(MapInfo*)),
             SLOT(onMapAboutToChange(MapInfo*)));
     connect(MapManager::instance(), SIGNAL(mapChanged(MapInfo*)),
             SLOT(onMapChanged(MapInfo*)));
-
-    setBmpBlender(blender);
 #endif
     switch (map->orientation()) {
     case Map::Isometric:
@@ -493,6 +490,9 @@ void MapDocument::insertTileset(int index, Tileset *tileset)
     mMap->insertTileset(index, tileset);
     TilesetManager *tilesetManager = TilesetManager::instance();
     tilesetManager->addReference(tileset);
+#ifdef ZOMBOID
+    mMapComposite->bmpBlender()->tilesetAdded(tileset);
+#endif
     emit tilesetAdded(index, tileset);
 }
 
@@ -507,6 +507,9 @@ void MapDocument::removeTilesetAt(int index)
 {
     Tileset *tileset = mMap->tilesets().at(index);
     mMap->removeTilesetAt(index);
+#ifdef ZOMBOID
+    mMapComposite->bmpBlender()->tilesetRemoved(tileset);
+#endif
     emit tilesetRemoved(tileset);
     TilesetManager *tilesetManager = TilesetManager::instance();
     tilesetManager->removeReference(tileset);
@@ -557,12 +560,13 @@ void MapDocument::paintBmp(int bmpIndex, int px, int py, const QImage &source,
     }
 
     const QRect r = region.boundingRect();
-    bmpBlender()->update(r.left(), r.top(), r.right(), r.bottom());
+    mapComposite()->bmpBlender()->update(r.left(), r.top(), r.right(), r.bottom());
+#if 0
     Q_ASSERT(mapComposite()->tileLayersForLevel(0));
     mapComposite()->tileLayersForLevel(0)->setBmpBlendLayers(
-                bmpBlender()->mTileLayers.values());
+                mapComposite()->bmpBlender()->tileLayers());
 
-    foreach (QString layerName, bmpBlender()->mTileLayers.keys()) {
+    foreach (QString layerName, mapComposite()->bmpBlender()->tileLayerNames()) {
         int index = map()->indexOfLayer(layerName, Layer::TileLayerType);
         if (index == -1)
             continue;
@@ -570,6 +574,7 @@ void MapDocument::paintBmp(int bmpIndex, int px, int py, const QImage &source,
         mapComposite()->tileLayersForLevel(0)->regionAltered(tl);
         emitRegionAltered(region, tl);
     }
+#endif
 }
 
 QImage MapDocument::swapBmpImage(int bmpIndex, const QImage &image)
@@ -592,14 +597,13 @@ void MapDocument::setBmpRules(const QString &fileName,
     mMap->rbmpSettings()->setRulesFile(fileName);
     mMap->rbmpSettings()->setRules(rules);
 
-    mBmpBlender->fromMap();
-    mBmpBlender->recreate();
-//    setBmpBlender(mBmpBlender);
+    mapComposite()->bmpBlender()->fromMap();
+    mapComposite()->bmpBlender()->recreate();
 
     emit bmpRulesChanged();
-
+#if 0
     QRegion region(0, 0, mMap->width(), mMap->height());
-    foreach (QString layerName, bmpBlender()->mTileLayers.keys()) {
+    foreach (QString layerName, mapComposite()->bmpBlender()->tileLayerNames()) {
         int index = map()->indexOfLayer(layerName, Layer::TileLayerType);
         if (index == -1)
             continue;
@@ -607,6 +611,7 @@ void MapDocument::setBmpRules(const QString &fileName,
         mapComposite()->tileLayersForLevel(0)->regionAltered(tl);
         emitRegionAltered(region, tl);
     }
+#endif
 }
 
 void MapDocument::setBmpBlends(const QString &fileName,
@@ -615,14 +620,13 @@ void MapDocument::setBmpBlends(const QString &fileName,
     mMap->rbmpSettings()->setBlendsFile(fileName);
     mMap->rbmpSettings()->setBlends(blends);
 
-    mBmpBlender->fromMap();
-    mBmpBlender->recreate();
-//    setBmpBlender(mBmpBlender);
+    mapComposite()->bmpBlender()->fromMap();
+    mapComposite()->bmpBlender()->recreate();
 
     emit bmpBlendsChanged();
-
+#if 0
     QRegion region(0, 0, mMap->width(), mMap->height());
-    foreach (QString layerName, bmpBlender()->mTileLayers.keys()) {
+    foreach (QString layerName, mapComposite()->bmpBlender()->tileLayerNames()) {
         int index = map()->indexOfLayer(layerName, Layer::TileLayerType);
         if (index == -1)
             continue;
@@ -630,6 +634,7 @@ void MapDocument::setBmpBlends(const QString &fileName,
         mapComposite()->tileLayersForLevel(0)->regionAltered(tl);
         emitRegionAltered(region, tl);
     }
+#endif
 }
 #endif // ZOMBOID
 
@@ -727,14 +732,6 @@ void MapDocument::setTileLayerName(Tile *tile, const QString &name)
 {
     TilesetManager::instance()->setLayerName(tile, name);
 }
-
-void MapDocument::setBmpBlender(BmpBlender *blender)
-{
-    mBmpBlender = blender;
-    Q_ASSERT(mMapComposite->tileLayersForLevel(0));
-    mMapComposite->tileLayersForLevel(0)->setBmpBlendLayers(blender->mTileLayers.values());
-//    mMapComposite->tileLayersForLevel(0)->setNeedsSynch(true);
-}
 #endif // ZOMBOID
 
 /**
@@ -809,7 +806,19 @@ void MapDocument::onMapChanged(MapInfo *mapInfo)
     if (mMapComposite->mapChanged(mapInfo))
         emit mapCompositeChanged();
 }
-#endif
+
+void MapDocument::bmpBlenderRegionAltered(const QRegion &region)
+{
+    foreach (QString layerName, mapComposite()->bmpBlender()->tileLayerNames()) {
+        int index = map()->indexOfLayer(layerName, Layer::TileLayerType);
+        if (index == -1)
+            continue;
+        TileLayer *tl = map()->layerAt(index)->asTileLayer();
+        mapComposite()->tileLayersForLevel(0)->regionAltered(tl);
+        emitRegionAltered(region, tl);
+    }
+}
+#endif // ZOMBOID
 
 void MapDocument::deselectObjects(const QList<MapObject *> &objects)
 {

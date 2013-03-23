@@ -20,6 +20,7 @@
 
 #include <QCoreApplication>
 #include <QMap>
+#include <QRegion>
 #include <QRgb>
 #include <QStringList>
 
@@ -31,7 +32,9 @@ namespace Tiled {
 class BmpBlend;
 class BmpRule;
 class Map;
+class Tile;
 class TileLayer;
+class Tileset;
 
 namespace Internal {
 
@@ -65,7 +68,7 @@ private:
 
 class BmpBlendsFile
 {
-    Q_DECLARE_TR_FUNCTIONS(BmpRulesFile)
+    Q_DECLARE_TR_FUNCTIONS(BmpBlendsFile)
 
 public:
     BmpBlendsFile();
@@ -90,22 +93,31 @@ class BmpBlender : public QObject
 {
     Q_OBJECT
 public:
-    BmpBlender(Map *map);
+    BmpBlender(Map *map, QObject *parent = 0);
     ~BmpBlender();
 
-    bool read();
-    bool readRules(const QString &filePath);
-    bool readBlends(const QString &filePath);
-
+    void fromMap();
     void recreate();
     void update(int x1, int y1, int x2, int y2);
 
+    QList<TileLayer*> tileLayers()
+    { return mTileLayers.values(); }
+
+    QStringList tileLayerNames()
+    { return mTileLayers.keys(); }
+
+    QStringList blendLayers()
+    { return mBlendLayers; }
+
+    void tilesetAdded(Tileset *ts);
+    void tilesetRemoved(Tileset *ts);
+
 signals:
     void layersRecreated();
+    void regionAltered(const QRegion &region);
 
-public: // TODO: make private
-    void fromMap();
-
+private:
+    void initTiles();
     void imagesToTileNames(int x1, int y1, int x2, int y2);
     void blend(int x1, int y1, int x2, int y2);
     void tileNamesToLayers(int x1, int y1, int x2, int y2);
@@ -113,6 +125,10 @@ public: // TODO: make private
     Map *mMap;
     QMap<QString,BuildingEditor::FloorTileGrid*> mTileNameGrids;
     QMap<QString,TileLayer*> mTileLayers;
+
+    QStringList mTilesetNames;
+    QStringList mTileNames;
+    QMap<QString,Tile*> mTileByName;
 
     QString getNeighbouringTile(int x, int y);
     BmpBlend *getBlendRule(int x, int y, const QString &tileName, const QString &layer);

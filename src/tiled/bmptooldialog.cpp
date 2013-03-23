@@ -20,6 +20,7 @@
 
 #include "bmpblender.h"
 #include "bmptool.h"
+#include "mapcomposite.h"
 #include "mapdocument.h"
 #include "mainwindow.h"
 #include "tilemetainfomgr.h"
@@ -300,7 +301,7 @@ void BmpToolDialog::setDocument(MapDocument *doc)
         QList<void*> userData;
         QStringList headers;
         int ruleIndex = 1;
-        foreach (BmpRule *rule, mDocument->bmpBlender()->mRules) {
+        foreach (BmpRule *rule, mDocument->map()->bmpSettings()->rules()) {
             foreach (QString tileName, rule->tileChoices) {
                 Tile *tile;
                 if (tileName.isEmpty())
@@ -357,7 +358,7 @@ void BmpToolDialog::toggleOverlayLayers()
     LayerModel *m = mDocument->layerModel();
     Map *map = mDocument->map();
     int visible = -1;
-    foreach (QString layerName, mDocument->bmpBlender()->mBlendLayers) {
+    foreach (QString layerName, mDocument->mapComposite()->bmpBlender()->blendLayers()) {
         int index = map->indexOfLayer(layerName);
         if (index != -1) {
             Layer *layer = map->layerAt(index);

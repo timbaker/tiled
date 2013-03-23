@@ -35,6 +35,9 @@ class MapInfo;
 
 namespace Tiled {
 class Layer;
+namespace Internal {
+class BmpBlender;
+}
 }
 
 class MapComposite;
@@ -250,6 +253,9 @@ public:
 
     void synch();
 
+    Tiled::Internal::BmpBlender *bmpBlender() const
+    { return mBmpBlender; }
+
 #ifdef BUILDINGED
     void setBlendOverMap(MapComposite *mapComposite)
     { mBlendOverMap = mapComposite; }
@@ -266,6 +272,9 @@ signals:
     void layerAboutToBeRemovedFromGroup(int index);
     void layerRemovedFromGroup(int index, CompositeLayerGroup *oldGroup);
     void layerLevelChanged(int index, int oldLevel);
+
+private slots:
+    void bmpBlenderLayersRecreated();
 
 private:
     void addLayerToGroup(int index);
@@ -293,6 +302,9 @@ private:
     bool mSavedGroupVisible;
     bool mSavedVisible;
     bool mHiddenDuringDrag;
+
+    Tiled::Internal::BmpBlender *mBmpBlender;
+
 public:
     MapComposite *root();
     bool mFirstCellIs0Floor;

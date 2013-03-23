@@ -17,6 +17,7 @@
 
 #include "mapcomposite.h"
 
+#include "bmpblender.h"
 #include "mapmanager.h"
 #include "mapobject.h"
 #include "maprenderer.h"
@@ -687,7 +688,8 @@ QRectF CompositeLayerGroup::boundingRect(const MapRenderer *renderer)
 MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
                            MapComposite *parent, const QPoint &positionInParent,
                            int levelOffset)
-    : mMapInfo(mapInfo)
+    : QObject()
+    , mMapInfo(mapInfo)
     , mMap(mapInfo->map())
     , mParent(parent)
     , mPos(positionInParent)
@@ -701,6 +703,7 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
 #ifdef BUILDINGED
     , mBlendOverMap(0)
 #endif
+    , mBmpBlender(new Tiled::Internal::BmpBlender(mMap, this))
 {
 #ifdef WORLDED
     MapManager::instance()->addReferenceToMap(mMapInfo);
@@ -787,6 +790,10 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
             mLayerGroups[level] = new CompositeLayerGroup(this, level);
         mSortedLayerGroups.append(mLayerGroups[level]);
     }
+
+    connect(mBmpBlender, SIGNAL(layersRecreated()), SLOT(bmpBlenderLayersRecreated()));
+    mBmpBlender->update(0, 0, mMap->width(), mMap->height());
+    mLayerGroups[0]->setBmpBlendLayers(mBmpBlender->tileLayers());
 }
 
 MapComposite::~MapComposite()
@@ -1349,4 +1356,9 @@ QStringList MapComposite::getMapFileNames() const
                 result += path;
 
     return result;
+}
+
+void MapComposite::bmpBlenderLayersRecreated()
+{
+    mLayerGroups[0]->setBmpBlendLayers(mBmpBlender->tileLayers());
 }

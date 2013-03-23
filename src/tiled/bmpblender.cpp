@@ -35,7 +35,8 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 
-BmpBlender::BmpBlender(Map *map) :
+BmpBlender::BmpBlender(Map *map, QObject *parent) :
+    QObject(parent),
     mMap(map),
     mRules(map->bmpSettings()->rules()),
     mBlendList(map->bmpSettings()->blends())
@@ -48,81 +49,7 @@ BmpBlender::~BmpBlender()
 //    qDeleteAll(mRules);
 //    qDeleteAll(mBlendList);
     qDeleteAll(mTileNameGrids);
-}
-
-bool BmpBlender::read()
-{
-#ifdef QT_NO_DEBUG
-#ifdef WORLDED
-    QString fileName = QApplication::applicationDirPath() + QLatin1String("/Rules.txt");
-#else
-    QString fileName = QApplication::applicationDirPath() + QLatin1String("/WorldEd/Rules.txt");
-#endif
-#else
-    QString fileName = QLatin1String("C:/Programming/Tiled/PZWorldEd/PZWorldEd/Rules.txt"); // FIXME
-#endif
-    if (!readRules(fileName))
-        return false;
-
-#ifdef QT_NO_DEBUG
-#ifdef WORLDED
-    fileName = QApplication::applicationDirPath() + QLatin1String("/Blends.txt");
-#else
-    fileName = QApplication::applicationDirPath() + QLatin1String("/WorldEd/Blends.txt");
-#endif
-#else
-    fileName = QLatin1String("C:/Programming/Tiled/PZWorldEd/PZWorldEd/Blends.txt"); // FIXME
-#endif
-    if (!readBlends(fileName))
-        return false;
-
-    return true;
-}
-
-bool BmpBlender::readRules(const QString &filePath)
-{
-    BmpRulesFile rulesFile;
-    if (!rulesFile.read(filePath)) {
-        mError = rulesFile.errorString();
-        return false;
-    }
-
-    qDeleteAll(mRules);
-    mRules.clear();
-    mRuleByColor.clear();
-    mRuleLayers.clear();
-
-    foreach (BmpRule *rule, rulesFile.rules()) {
-        mRules += new BmpRule(rule);
-        mRuleByColor[rule->color] += mRules.last();
-        if (!mRuleLayers.contains(rule->targetLayer))
-            mRuleLayers += rule->targetLayer;
-    }
-
-    return true;
-}
-
-bool BmpBlender::readBlends(const QString &filePath)
-{
-    BmpBlendsFile blendFile;
-    if (!blendFile.read(filePath)) {
-        mError = blendFile.errorString();
-        return false;
-    }
-
-    qDeleteAll(mBlendList);
-    mBlendList.clear();
-    mBlendsByLayer.clear();
-
-    QSet<QString> layers;
-    foreach (BmpBlend *blend, blendFile.blends()) {
-        mBlendList += new BmpBlend(blend);
-        mBlendsByLayer[blend->targetLayer] += mBlendList.last();
-        layers.insert(blend->targetLayer);
-    }
-    mBlendLayers = layers.values();
-
-    return true;
+    qDeleteAll(mTileLayers);
 }
 
 void BmpBlender::recreate()
@@ -143,8 +70,26 @@ void BmpBlender::update(int x1, int y1, int x2, int y2)
     tileNamesToLayers(x1 - 1, y1 - 1, x2 + 1, y2 + 1);
 }
 
+void BmpBlender::tilesetAdded(Tileset *ts)
+{
+    if (mTilesetNames.contains(ts->name())) {
+        initTiles();
+        tileNamesToLayers(0, 0, mMap->width(), mMap->height());
+    }
+}
+
+void BmpBlender::tilesetRemoved(Tileset *ts)
+{
+    if (mTilesetNames.contains(ts->name())) {
+        initTiles();
+        tileNamesToLayers(0, 0, mMap->width(), mMap->height());
+    }
+}
+
 void BmpBlender::fromMap()
 {
+    QSet<QString> tileNames;
+
     mRules = mMap->bmpSettings()->rules();
     mRuleByColor.clear();
     mRuleLayers.clear();
@@ -152,6 +97,9 @@ void BmpBlender::fromMap()
         mRuleByColor[rule->color] += rule;
         if (!mRuleLayers.contains(rule->targetLayer))
             mRuleLayers += rule->targetLayer;
+        foreach (QString tileName, rule->tileChoices)
+            tileNames += tileName;
+
     }
 
     mBlendList = mMap->bmpSettings()->blends();
@@ -161,8 +109,36 @@ void BmpBlender::fromMap()
     foreach (BmpBlend *blend, mBlendList) {
         mBlendsByLayer[blend->targetLayer] += blend;
         layers.insert(blend->targetLayer);
+        foreach (QString tileName, blend->ExclusionList)
+            tileNames += tileName;
+        tileNames += blend->mainTile;
+        tileNames += blend->blendTile;
     }
     mBlendLayers = layers.values();
+
+    mTileNames = tileNames.values();
+
+    initTiles();
+}
+
+void BmpBlender::initTiles()
+{
+    QMap<QString,Tileset*> tilesets;
+    foreach (Tileset *ts, mMap->tilesets())
+        tilesets[ts->name()] = ts;
+
+    mTilesetNames.clear();
+    mTileByName.clear();
+    foreach (QString tileName, mTileNames) {
+        QString tilesetName;
+        int tileID;
+        if (BuildingEditor::BuildingTilesMgr::parseTileName(tileName, tilesetName, tileID)) {
+            if (!mTilesetNames.contains(tilesetName))
+                mTilesetNames += tilesetName;
+            if (tilesets.contains(tilesetName))
+                mTileByName[tileName] = tilesets[tilesetName]->tileAt(tileID);
+        }
+    }
 }
 
 static bool adjacentToNonBlack(const QImage &image1, const QImage &image2, int x1, int y1)
@@ -303,10 +279,6 @@ void BmpBlender::tileNamesToLayers(int x1, int y1, int x2, int y2)
     y1 = qBound(0, y1, mMap->height() - 1);
     y2 = qBound(0, y2, mMap->height() - 1);
 
-    QMap<QString,Tileset*> tilesets;
-    foreach (Tileset *ts, mMap->tilesets())
-        tilesets[ts->name()] = ts;
-
     foreach (QString layerName, mTileLayers.keys()) {
         BuildingEditor::FloorTileGrid *grid = mTileNameGrids[layerName];
         TileLayer *tl = mTileLayers[layerName];
@@ -317,18 +289,16 @@ void BmpBlender::tileNamesToLayers(int x1, int y1, int x2, int y2)
                     tl->setCell(x, y, Cell(0));
                     continue;
                 }
-                QString tilesetName;
-                int tileID;
-                if (BuildingEditor::BuildingTilesMgr::parseTileName(tileName, tilesetName, tileID)) {
-                    if (tilesets.contains(tilesetName))
-                        tl->setCell(x, y, Cell(tilesets[tilesetName]->tileAt(tileID)));
-                }
+                tl->setCell(x, y, Cell(mTileByName[tileName]));
             }
         }
     }
 
     if (recreated)
         emit layersRecreated();
+
+    QRect r(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
+    emit regionAltered(r);
 }
 
 QString BmpBlender::getNeighbouringTile(int x, int y)
