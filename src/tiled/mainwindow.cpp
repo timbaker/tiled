@@ -663,21 +663,6 @@ void MainWindow::newMap()
     if (!mapDocument)
         return;
 
-#ifdef ZOMBOID
-    BmpBlender *blender = new BmpBlender(mapDocument->map());
-    if (!blender->read()) {
-        QMessageBox::critical(this, tr("Error Opening Map"), blender->mError);
-        delete mapDocument;
-        delete blender;
-        return;
-    }
-    qsrand(QDateTime().toTime_t());
-    int seed1 = qrand(), seed2 = qrand();
-    mapDocument->map()->rbmp(0).rrands().setSeed(seed1);
-    mapDocument->map()->rbmp(1).rrands().setSeed(seed2);
-    mapDocument->setBmpBlender(blender);
-#endif
-
     addMapDocument(mapDocument);
 }
 
@@ -734,22 +719,7 @@ bool MainWindow::openFile(const QString &fileName,
         return false;
     }
 
-#ifdef ZOMBOID
-    BmpBlender *blender = new BmpBlender(map);
-    if (!blender->read()) {
-        QMessageBox::critical(this, tr("Error Opening Map"), blender->mError);
-        delete map;
-        delete blender;
-        return false;
-    }
-    blender->update(0, 0, map->width(), map->height());
-
-    MapDocument *doc = new MapDocument(map, fileName);
-    doc->setBmpBlender(blender);
-    addMapDocument(doc);
-#else
     addMapDocument(new MapDocument(map, fileName));
-#endif
 
     setRecentFile(fileName);
     return true;

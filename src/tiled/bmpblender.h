@@ -51,6 +51,7 @@ public:
 
     const QList<BmpRule*> &rules() const
     { return mRules; }
+    QList<BmpRule*> rulesCopy() const;
 
 private:
     void AddRule(int bitmapIndex, QRgb col, QStringList tiles,
@@ -78,6 +79,7 @@ public:
 
     const QList<BmpBlend*> &blends() const
     { return mBlends; }
+    QList<BmpBlend*> blendsCopy() const;
 
 private:
     QList<BmpBlend*> mBlends;
@@ -102,6 +104,8 @@ signals:
     void layersRecreated();
 
 public: // TODO: make private
+    void fromMap();
+
     void imagesToTileNames(int x1, int y1, int x2, int y2);
     void blend(int x1, int y1, int x2, int y2);
     void tileNamesToLayers(int x1, int y1, int x2, int y2);

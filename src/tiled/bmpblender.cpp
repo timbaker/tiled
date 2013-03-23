@@ -36,14 +36,17 @@ using namespace Tiled;
 using namespace Tiled::Internal;
 
 BmpBlender::BmpBlender(Map *map) :
-    mMap(map)
+    mMap(map),
+    mRules(map->bmpSettings()->rules()),
+    mBlendList(map->bmpSettings()->blends())
 {
+    fromMap();
 }
 
 BmpBlender::~BmpBlender()
 {
-    qDeleteAll(mRules);
-    qDeleteAll(mBlendList);
+//    qDeleteAll(mRules);
+//    qDeleteAll(mBlendList);
     qDeleteAll(mTileNameGrids);
 }
 
@@ -138,6 +141,28 @@ void BmpBlender::update(int x1, int y1, int x2, int y2)
     imagesToTileNames(x1, y1, x2, y2);
     blend(x1 - 1, y1 - 1, x2 + 1, y2 + 1);
     tileNamesToLayers(x1 - 1, y1 - 1, x2 + 1, y2 + 1);
+}
+
+void BmpBlender::fromMap()
+{
+    mRules = mMap->bmpSettings()->rules();
+    mRuleByColor.clear();
+    mRuleLayers.clear();
+    foreach (BmpRule *rule, mRules) {
+        mRuleByColor[rule->color] += rule;
+        if (!mRuleLayers.contains(rule->targetLayer))
+            mRuleLayers += rule->targetLayer;
+    }
+
+    mBlendList = mMap->bmpSettings()->blends();
+    mBlendsByLayer.clear();
+    mBlendLayers.clear();
+    QSet<QString> layers;
+    foreach (BmpBlend *blend, mBlendList) {
+        mBlendsByLayer[blend->targetLayer] += blend;
+        layers.insert(blend->targetLayer);
+    }
+    mBlendLayers = layers.values();
 }
 
 static bool adjacentToNonBlack(const QImage &image1, const QImage &image2, int x1, int y1)
@@ -247,6 +272,8 @@ void BmpBlender::blend(int x1, int y1, int x2, int y2)
 
     BuildingEditor::FloorTileGrid *grid
             = mTileNameGrids[QLatin1String("0_Floor")];
+    if (!grid)
+        return;
     for (int y = y1; y <= y2; y++) {
         for (int x = x1; x <= x2; x++) {
             QString tileName = grid->at(x, y);
@@ -433,6 +460,15 @@ bool BmpRulesFile::read(const QString &fileName)
     return true;
 }
 
+QList<BmpRule *> BmpRulesFile::rulesCopy() const
+{
+    QList<BmpRule *> ret;
+    foreach (BmpRule *rule, mRules)
+        ret += new BmpRule(rule);
+    return ret;
+}
+
+
 void BmpRulesFile::AddRule(int bitmapIndex, QRgb col, QStringList tiles,
                          QString layer, QRgb condition)
 {
@@ -525,6 +561,14 @@ bool BmpBlendsFile::read(const QString &fileName)
     }
 
     return true;
+}
+
+QList<BmpBlend *> BmpBlendsFile::blendsCopy() const
+{
+    QList<BmpBlend *> ret;
+    foreach (BmpBlend *blend, mBlends)
+        ret += new BmpBlend(blend);
+    return ret;
 }
 
 /////

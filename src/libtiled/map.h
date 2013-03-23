@@ -159,6 +159,41 @@ public:
         targetLayer(layer), mainTile(main), blendTile(blend), dir(dir),
         ExclusionList(exclusions)
     {}
+
+    QString dirAsString() const;
+};
+
+class TILEDSHARED_EXPORT BmpSettings
+{
+public:
+    BmpSettings();
+    ~BmpSettings();
+
+    void setRulesFile(const QString &fileName)
+    { mRulesFileName = fileName; }
+    QString rulesFile() const
+    { return mRulesFileName; }
+
+    void setBlendsFile(const QString &fileName)
+    { mBlendsFileName = fileName; }
+    QString blendsFile() const
+    { return mBlendsFileName; }
+
+    void setRules(const QList<BmpRule*> &rules);
+    const QList<BmpRule*> &rules() const
+    { return mRules; }
+    QList<BmpRule*> rulesCopy() const;
+
+    void setBlends(const QList<BmpBlend*> &blends);
+    const QList<BmpBlend*> &blends() const
+    { return mBlends; }
+    QList<BmpBlend*> blendsCopy() const;
+
+private:
+    QString mRulesFileName;
+    QString mBlendsFileName;
+    QList<BmpRule*> mRules;
+    QList<BmpBlend*> mBlends;
 };
 
 #endif // ZOMBOID
@@ -399,13 +434,16 @@ public:
 
 #ifdef ZOMBOID
     MapBmp &rbmp(int index) { return index ? mBmpVeg : mBmpMain; }
-    MapBmp bmp(int index) { return index ? mBmpVeg : mBmpMain; }
+    MapBmp bmp(int index) const { return index ? mBmpVeg : mBmpMain; }
 
     MapBmp &rbmpMain() { return mBmpMain; }
     MapBmp &rbmpVeg() { return mBmpVeg; }
 
     MapBmp bmpMain() const { return mBmpMain; }
     MapBmp bmpVeg() const { return mBmpVeg; }
+
+    BmpSettings *rbmpSettings() { return &mSettings; }
+    const BmpSettings *bmpSettings() const { return &mSettings; }
 #endif
 
     Map *clone() const;
@@ -437,6 +475,7 @@ private:
     QMap<Tileset*,int> mUsedTilesets;
     MapBmp mBmpMain;
     MapBmp mBmpVeg;
+    BmpSettings mSettings;
 #endif
 };
 

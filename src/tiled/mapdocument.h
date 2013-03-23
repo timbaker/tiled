@@ -224,6 +224,9 @@ public:
                   const QRegion &paintRgn);
     QImage swapBmpImage(int bmpIndex, const QImage &image);
     MapRands swapBmpRands(int bmpIndex, const MapRands &rands);
+
+    void setBmpRules(const QString &fileName, const QList<BmpRule*> &rules);
+    void setBmpBlends(const QString &fileName, const QList<BmpBlend*> &blends);
 #endif // ZOMBOID
 
     /**
@@ -390,6 +393,9 @@ signals:
 
 #ifdef ZOMBOID
     void mapCompositeChanged();
+
+    void bmpRulesChanged();
+    void bmpBlendsChanged();
 #endif
 
 private slots:

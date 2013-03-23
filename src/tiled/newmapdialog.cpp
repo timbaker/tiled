@@ -29,6 +29,9 @@
 #include "tilelayer.h"
 
 #include <QSettings>
+#ifdef ZOMBOID
+#include <QDateTime>
+#endif
 
 static const char * const ORIENTATION_KEY = "Map/Orientation";
 static const char * const MAP_WIDTH_KEY = "Map/Width";
@@ -111,6 +114,13 @@ MapDocument *NewMapDialog::createMap()
     map->addLayer(new TileLayer(tr("0_Tile Layer 1"), 0, 0, mapWidth, mapHeight));
 #else
     map->addLayer(new TileLayer(tr("Tile Layer 1"), 0, 0, mapWidth, mapHeight));
+#endif
+
+#ifdef ZOMBOID
+    qsrand(QDateTime().toTime_t());
+    int seed1 = qrand(), seed2 = qrand();
+    map->rbmp(0).rrands().setSeed(seed1);
+    map->rbmp(1).rrands().setSeed(seed2);
 #endif
 
     // Store settings for next time

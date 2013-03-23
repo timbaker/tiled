@@ -48,7 +48,16 @@ private slots:
     void brushSizeChanged(int size);
     void toggleOverlayLayers();
     void setVisibleNow();
-    
+
+    void reloadRules();
+    void importRules();
+
+    void reloadBlends();
+    void importBlends();
+
+    void bmpRulesChanged();
+    void bmpBlendsChanged();
+
 private:
     Q_DISABLE_COPY(BmpToolDialog)
     static BmpToolDialog *mInstance;

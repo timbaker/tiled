@@ -34,10 +34,78 @@
 #include "tileset.h"
 
 #include <QDebug>
+#include <QFileDialog>
+#include <QMessageBox>
 #include <QSettings>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
+
+namespace Tiled {
+namespace Internal {
+
+class ChangeBmpRules : public QUndoCommand
+{
+public:
+    ChangeBmpRules(MapDocument *mapDocument, const QString &fileName,
+                   const QList<BmpRule*> &rules)
+        : QUndoCommand(QCoreApplication::translate("Undo Commands",
+                                                   "Change BMP Settings (Rules.txt)"))
+        , mMapDocument(mapDocument)
+        , mFileName(fileName)
+        , mRules(rules)
+    {
+    }
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+    void swap()
+    {
+        QString oldFile = mMapDocument->map()->bmpSettings()->rulesFile();
+        QList<BmpRule*> oldRules = mMapDocument->map()->bmpSettings()->rulesCopy();
+        mMapDocument->setBmpRules(mFileName, mRules);
+        mFileName = oldFile;
+        mRules = oldRules;
+    }
+
+    MapDocument *mMapDocument;
+    QString mFileName;
+    QList<BmpRule*> mRules;
+};
+
+class ChangeBmpBlends : public QUndoCommand
+{
+public:
+    ChangeBmpBlends(MapDocument *mapDocument, const QString &fileName,
+                    const QList<BmpBlend*> &blends)
+        : QUndoCommand(QCoreApplication::translate("Undo Commands",
+                                                   "Change BMP Settings (Blends.txt)"))
+        , mMapDocument(mapDocument)
+        , mFileName(fileName)
+        , mBlends(blends)
+    {
+    }
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+    void swap()
+    {
+        QString oldFile = mMapDocument->map()->bmpSettings()->blendsFile();
+        QList<BmpBlend*> oldBlends = mMapDocument->map()->bmpSettings()->blendsCopy();
+        mMapDocument->setBmpBlends(mFileName, mBlends);
+        mFileName = oldFile;
+        mBlends = oldBlends;
+    }
+
+    MapDocument *mMapDocument;
+    QString mFileName;
+    QList<BmpBlend*> mBlends;
+};
+
+} // namespace Internal
+} // namespace Tiled
 
 BmpToolDialog *BmpToolDialog::mInstance = 0;
 
@@ -66,6 +134,11 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
             SLOT(brushSizeChanged(int)));
     connect(ui->toggleOverlayLayers, SIGNAL(clicked()),
             SLOT(toggleOverlayLayers()));
+
+    connect(ui->reloadRules, SIGNAL(clicked()), SLOT(reloadRules()));
+    connect(ui->importRules, SIGNAL(clicked()), SLOT(importRules()));
+    connect(ui->reloadBlends, SIGNAL(clicked()), SLOT(reloadBlends()));
+    connect(ui->importBlends, SIGNAL(clicked()), SLOT(importBlends()));
 
     QSettings settings;
     settings.beginGroup(QLatin1String("BmpToolDialog"));
@@ -114,16 +187,113 @@ void BmpToolDialog::setVisibleLater(bool visible)
 
 void BmpToolDialog::setVisibleNow()
 {
-    qDebug() << "BmpToolDialog::setVisibleNow";
     if (mVisibleLater != isVisible())
         setVisible(mVisibleLater);
 }
 
+void BmpToolDialog::reloadRules()
+{
+    QString f = mDocument->map()->bmpSettings()->rulesFile();
+    if (!f.isEmpty()/* && QFileInfo(f).exists()*/) {
+        BmpRulesFile file;
+        if (!file.read(f)) {
+            QMessageBox::warning(this, tr("Reload Rules Failed"), file.errorString());
+            return;
+        }
+        mDocument->undoStack()->push(new ChangeBmpRules(mDocument, f, file.rulesCopy()));
+    }
+}
+
+void BmpToolDialog::importRules()
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("BmpToolDialog"));
+    QString initialDir = settings.value(QLatin1String("RulesFile")).toString();
+    if (initialDir.isEmpty() || !QFileInfo(initialDir).exists())
+        initialDir = QApplication::applicationDirPath() + QLatin1String("/WorldEd/Rules.txt");
+    settings.endGroup();
+
+    QString f = QFileDialog::getOpenFileName(this, tr("Import Rules"),
+                                             initialDir,
+                                             tr("Rules.txt files (*.txt)"));
+    if (!f.isEmpty()) {
+        BmpRulesFile file;
+        if (!file.read(f)) {
+            QMessageBox::warning(this, tr("Import Rules Failed"), file.errorString());
+            return;
+        }
+        settings.setValue(QLatin1String("BmpToolDialog/RulesFile"), f);
+        mDocument->undoStack()->push(new ChangeBmpRules(mDocument, f, file.rulesCopy()));
+    }
+}
+
+void BmpToolDialog::reloadBlends()
+{
+    QString f = mDocument->map()->bmpSettings()->blendsFile();
+    if (!f.isEmpty()/* && QFileInfo(f).exists()*/) {
+        BmpBlendsFile file;
+        if (!file.read(f)) {
+            QMessageBox::warning(this, tr("Reload Blends Failed"), file.errorString());
+            return;
+        }
+        mDocument->undoStack()->push(new ChangeBmpBlends(mDocument, f, file.blendsCopy()));
+    }
+}
+
+void BmpToolDialog::importBlends()
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("BmpToolDialog"));
+    QString initialDir = settings.value(QLatin1String("BlendsFile")).toString();
+    if (initialDir.isEmpty() || !QFileInfo(initialDir).exists())
+        initialDir = QApplication::applicationDirPath() + QLatin1String("/WorldEd/Blends.txt");
+    settings.endGroup();
+
+    QString f = QFileDialog::getOpenFileName(this, tr("Import Blends"),
+                                             initialDir,
+                                             tr("Blends.txt files (*.txt)"));
+    if (!f.isEmpty()) {
+        BmpBlendsFile file;
+        if (!file.read(f)) {
+            QMessageBox::warning(this, tr("Import Blends Failed"), file.errorString());
+            return;
+        }
+        settings.setValue(QLatin1String("BmpToolDialog/BlendsFile"), f);
+        mDocument->undoStack()->push(new ChangeBmpBlends(mDocument, f, file.blendsCopy()));
+    }
+}
+
+void BmpToolDialog::bmpRulesChanged()
+{
+    setDocument(mDocument);
+}
+
+void BmpToolDialog::bmpBlendsChanged()
+{
+    setDocument(mDocument);
+}
+
 void BmpToolDialog::setDocument(MapDocument *doc)
 {
+    if (mDocument)
+        mDocument->disconnect(this);
+
     mDocument = doc;
 
     ui->tableView->clear();
+    ui->rulesFile->setText(tr("<none>"));
+    ui->blendsFile->setText(tr("<none>"));
+
+    ui->reloadRules->setEnabled(mDocument != 0 &&
+            !mDocument->map()->bmpSettings()->rulesFile().isEmpty());
+    ui->importRules->setEnabled(mDocument != 0);
+    ui->exportRules->setEnabled(mDocument != 0);
+
+    ui->reloadBlends->setEnabled(mDocument != 0 &&
+            !mDocument->map()->bmpSettings()->blendsFile().isEmpty());
+    ui->importBlends->setEnabled(mDocument != 0);
+    ui->exportBlends->setEnabled(mDocument != 0);
+
     if (mDocument) {
         QSet<Tileset*> tilesets;
         QList<Tiled::Tile*> tiles;
@@ -152,6 +322,18 @@ void BmpToolDialog::setDocument(MapDocument *doc)
         }
         ui->tableView->setTiles(tiles, userData, headers);
         TileMetaInfoMgr::instance()->loadTilesets(tilesets.toList());
+
+        const BmpSettings *settings = mDocument->map()->bmpSettings();
+        QString fileName = settings->rulesFile();
+        if (!fileName.isEmpty())
+            ui->rulesFile->setText(QDir::toNativeSeparators(fileName));
+
+        fileName = settings->blendsFile();
+        if (!fileName.isEmpty())
+            ui->blendsFile->setText(QDir::toNativeSeparators(fileName));
+
+        connect(mDocument, SIGNAL(bmpRulesChanged()), SLOT(bmpRulesChanged()));
+        connect(mDocument, SIGNAL(bmpBlendsChanged()), SLOT(bmpBlendsChanged()));
     }
 }
 

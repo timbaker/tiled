@@ -73,11 +73,16 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     mUndoStack(new QUndoStack(this))
 {
 #ifdef ZOMBOID
+    BmpBlender *blender = new BmpBlender(map);
+    blender->update(0, 0, map->width(), map->height());
+
     mMapComposite = new MapComposite(MapManager::instance()->newFromMap(map, fileName));
     connect(MapManager::instance(), SIGNAL(mapAboutToChange(MapInfo*)),
             SLOT(onMapAboutToChange(MapInfo*)));
     connect(MapManager::instance(), SIGNAL(mapChanged(MapInfo*)),
             SLOT(onMapChanged(MapInfo*)));
+
+    setBmpBlender(blender);
 #endif
     switch (map->orientation()) {
     case Map::Isometric:
@@ -579,6 +584,52 @@ MapRands MapDocument::swapBmpRands(int bmpIndex, const MapRands &rands)
     MapRands old = mMap->bmp(bmpIndex).rands();
     mMap->rbmp(bmpIndex).rrands() = rands;
     return old;
+}
+
+void MapDocument::setBmpRules(const QString &fileName,
+                                      const QList<BmpRule *> &rules)
+{
+    mMap->rbmpSettings()->setRulesFile(fileName);
+    mMap->rbmpSettings()->setRules(rules);
+
+    mBmpBlender->fromMap();
+    mBmpBlender->recreate();
+//    setBmpBlender(mBmpBlender);
+
+    emit bmpRulesChanged();
+
+    QRegion region(0, 0, mMap->width(), mMap->height());
+    foreach (QString layerName, bmpBlender()->mTileLayers.keys()) {
+        int index = map()->indexOfLayer(layerName, Layer::TileLayerType);
+        if (index == -1)
+            continue;
+        TileLayer *tl = map()->layerAt(index)->asTileLayer();
+        mapComposite()->tileLayersForLevel(0)->regionAltered(tl);
+        emitRegionAltered(region, tl);
+    }
+}
+
+void MapDocument::setBmpBlends(const QString &fileName,
+                               const QList<BmpBlend *> &blends)
+{
+    mMap->rbmpSettings()->setBlendsFile(fileName);
+    mMap->rbmpSettings()->setBlends(blends);
+
+    mBmpBlender->fromMap();
+    mBmpBlender->recreate();
+//    setBmpBlender(mBmpBlender);
+
+    emit bmpBlendsChanged();
+
+    QRegion region(0, 0, mMap->width(), mMap->height());
+    foreach (QString layerName, bmpBlender()->mTileLayers.keys()) {
+        int index = map()->indexOfLayer(layerName, Layer::TileLayerType);
+        if (index == -1)
+            continue;
+        TileLayer *tl = map()->layerAt(index)->asTileLayer();
+        mapComposite()->tileLayersForLevel(0)->regionAltered(tl);
+        emitRegionAltered(region, tl);
+    }
 }
 #endif // ZOMBOID
 
