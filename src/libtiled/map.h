@@ -189,6 +189,8 @@ public:
     { return mBlends; }
     QList<BmpBlend*> blendsCopy() const;
 
+    void clone(const BmpSettings &other);
+
 private:
     QString mRulesFileName;
     QString mBlendsFileName;
@@ -442,8 +444,8 @@ public:
     MapBmp bmpMain() const { return mBmpMain; }
     MapBmp bmpVeg() const { return mBmpVeg; }
 
-    BmpSettings *rbmpSettings() { return &mSettings; }
-    const BmpSettings *bmpSettings() const { return &mSettings; }
+    BmpSettings *rbmpSettings() { return &mBmpSettings; }
+    const BmpSettings *bmpSettings() const { return &mBmpSettings; }
 #endif
 
     Map *clone() const;
@@ -475,7 +477,7 @@ private:
     QMap<Tileset*,int> mUsedTilesets;
     MapBmp mBmpMain;
     MapBmp mBmpVeg;
-    BmpSettings mSettings;
+    BmpSettings mBmpSettings;
 #endif
 };
 

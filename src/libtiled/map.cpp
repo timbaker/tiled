@@ -293,6 +293,9 @@ Map *Map::clone() const
 #ifdef ZOMBOID
     Q_ASSERT(o->mUsedTilesets == mUsedTilesets);
     o->mUsedTilesets = mUsedTilesets; // not needed because of addLayer() above
+    o->mBmpMain = mBmpMain;
+    o->mBmpVeg = mBmpVeg;
+    o->mBmpSettings.clone(mBmpSettings);
 #endif
     o->setProperties(properties());
     return o;
@@ -425,6 +428,14 @@ QList<BmpBlend *> BmpSettings::blendsCopy() const
     foreach (BmpBlend *blend, mBlends)
         ret += new BmpBlend(blend);
     return ret;
+}
+
+void BmpSettings::clone(const BmpSettings &other)
+{
+    mRulesFileName = other.mRulesFileName;
+    mBlendsFileName = other.mBlendsFileName;
+    mRules = other.rulesCopy();
+    mBlends = other.blendsCopy();
 }
 
 /////
