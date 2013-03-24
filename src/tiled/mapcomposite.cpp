@@ -1065,6 +1065,9 @@ void MapComposite::saveVisibility()
     mSavedVisible = mVisible;
     mVisible = true; // hack
 
+    mSavedShowMapTiles = mShowMapTiles;
+    mShowMapTiles = true;
+
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups)
         layerGroup->saveVisibility();
 
@@ -1078,6 +1081,7 @@ void MapComposite::restoreVisibility()
 {
     mGroupVisible = mSavedGroupVisible;
     mVisible = mSavedVisible;
+    mShowMapTiles = mSavedShowMapTiles;
 
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups)
         layerGroup->restoreVisibility();

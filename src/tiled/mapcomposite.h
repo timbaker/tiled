@@ -309,6 +309,7 @@ private:
     bool mSavedVisible;
     bool mHiddenDuringDrag;
     bool mShowMapTiles;
+    bool mSavedShowMapTiles;
 
     Tiled::Internal::BmpBlender *mBmpBlender;
 
