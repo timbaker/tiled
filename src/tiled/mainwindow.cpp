@@ -454,6 +454,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 #ifdef ZOMBOID
     toolManager->addSeparator();
     toolManager->registerTool(BmpPainterTool::instance());
+    toolManager->registerTool(BmpRectTool::instance());
     toolManager->registerTool(BmpSelectionTool::instance());
 #endif
 

@@ -104,7 +104,16 @@ public:
     int bmpIndex() const
     { return mBmpIndex; }
 
+    QRgb color() const
+    { return mColor; }
+
     void setBrushSize(int size);
+
+    enum BrushShape {
+        Square,
+        Circle
+    };
+    void setBrushShape(BrushShape shape);
 
 protected:
     void mapDocumentChanged(MapDocument *oldDocument,
@@ -114,7 +123,7 @@ protected:
 
 protected:
     void tilePositionChanged(const QPoint &tilePos);
-
+    void setBrushRegion(const QPoint &tilePos);
     void paint(bool mergeable);
 
 private:
@@ -129,6 +138,7 @@ private:
     int mBmpIndex;
     QRgb mColor;
     int mBrushSize;
+    BrushShape mBrushShape;
     BmpToolDialog *mDialog;
 };
 
@@ -182,6 +192,47 @@ private:
     QPoint mSelectionStart;
     SelectionMode mSelectionMode;
     bool mSelecting;
+};
+
+// This tool is for drawing rectangles in a map's BMP images.
+class BmpRectTool : public AbstractBmpTool
+{
+    Q_OBJECT
+
+public:
+    static BmpRectTool *instance();
+
+    void mousePressed(QGraphicsSceneMouseEvent *event);
+    void mouseReleased(QGraphicsSceneMouseEvent *event);
+
+    void mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers);
+
+    void languageChanged();
+
+protected:
+    void tilePositionChanged(const QPoint &tilePos);
+
+    void updateStatusInfo();
+
+private:
+    Q_DISABLE_COPY(BmpRectTool)
+    static BmpRectTool *mInstance;
+    BmpRectTool(QObject *parent = 0);
+
+    enum Mode {
+        NoMode,
+        Painting
+    };
+
+    QRect selectedArea() const;
+
+    Mode mMode;
+
+    QPointF mStartScenePos;
+    bool mMouseDown;
+    bool mMouseMoved;
+
+    QPoint mSelectionStart;
 };
 
 /////
