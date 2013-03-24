@@ -126,7 +126,7 @@ protected:
 protected:
     void tilePositionChanged(const QPoint &tilePos);
     void setBrushRegion(const QPoint &tilePos);
-    void paint(bool mergeable);
+    void paint();
 
 private:
     Q_DISABLE_COPY(BmpBrushTool)
@@ -135,6 +135,7 @@ private:
     ~BmpBrushTool();
 
     bool mPainting;
+    bool mDidFirstPaint;
     QPoint mStampPos;
     bool mErasing;
     int mBmpIndex;

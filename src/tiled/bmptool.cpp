@@ -207,15 +207,14 @@ public:
     }
 
     // This is like TileLayer::merge().
-    void merge(const QPoint &pos, const ResizableImage *other)
+    void merge(const QPoint &pos, const ResizableImage *other, const QRegion &otherRegion)
     {
-        // Determine the overlapping area
-        QRect area = QRect(pos, QSize(other->width(), other->height()));
-        area &= QRect(0, 0, width(), height());
-
-        for (int y = area.top(); y <= area.bottom(); ++y) {
-            for (int x = area.left(); x <= area.right(); ++x) {
-                setPixel(x, y, other->pixel(x - area.left(), y - area.top()));
+        QRegion region = otherRegion.translated(pos - otherRegion.boundingRect().topLeft()) & QRect(0, 0, width(), height());
+        foreach (QRect area, region.rects()) {
+            for (int y = area.top(); y <= area.bottom(); ++y) {
+                for (int x = area.left(); x <= area.right(); ++x) {
+                    setPixel(x, y, other->pixel(x - pos.x(), y - pos.y()));
+                }
             }
         }
     }
@@ -310,7 +309,7 @@ bool PaintBMP::mergeWith(const QUndoCommand *other)
     const QRect bounds = QRect(mX, mY, mSource.width(), mSource.height());
     const QRect combinedBounds = combinedRegion.boundingRect();
 
-    // Resize the erased tiles and source layers when necessary
+    // Resize the erased tiles and source image when necessary
     if (bounds != combinedBounds) {
         const QPoint shift = bounds.topLeft() - combinedBounds.topLeft();
         mErased.resize(combinedBounds.size(), shift);
@@ -321,16 +320,20 @@ bool PaintBMP::mergeWith(const QUndoCommand *other)
     mY = combinedBounds.top();
     mRegion = combinedRegion;
 
-    // Copy the painted tiles from the other command over
+    // Copy the painted pixels from the other command over
     const QPoint pos = QPoint(o->mX, o->mY) - combinedBounds.topLeft();
-    mSource.merge(pos, &o->mSource);
+    mSource.merge(pos, &o->mSource, o->mRegion);
 
-    // Copy the newly erased tiles from the other command over
+    // Copy the newly-erased pixels from the other command over
+#if 1
+    mErased.merge(pos, &o->mErased, newRegion);
+#else
     foreach (const QRect &rect, newRegion.rects())
         for (int y = rect.top(); y <= rect.bottom(); ++y)
             for (int x = rect.left(); x <= rect.right(); ++x)
                 mErased.setPixel(x - mX, y - mY,
                                  o->mErased.pixel(x - o->mX, y - o->mY));
+#endif
     return true;
 }
 
@@ -382,9 +385,10 @@ void BmpBrushTool::mousePressed(QGraphicsSceneMouseEvent *event)
 
     if (event->button() == Qt::LeftButton) {
         mPainting = true;
+        mDidFirstPaint = false;
         mStampPos = tilePosition();
         mErasing = (event->modifiers() & Qt::ControlModifier) != 0;
-        paint(false);
+        paint();
     }
 }
 
@@ -473,7 +477,7 @@ void BmpBrushTool::tilePositionChanged(const QPoint &tilePos)
         foreach (const QPoint &p, calculateLine(mStampPos.x(), mStampPos.y(),
                                                 tilePos.x(), tilePos.y())) {
             setBrushRegion(p);
-            paint(true);
+            paint();
         }
         mStampPos = tilePos;
     }
@@ -500,17 +504,21 @@ void BmpBrushTool::setBrushRegion(const QPoint &tilePos)
                                      QSize(mBrushSize, mBrushSize)));
 }
 
-void BmpBrushTool::paint(bool mergeable)
+void BmpBrushTool::paint()
 {
+    if (!mErasing && mColor == qRgb(0, 0, 0))
+        return;
+
     QRect mapBounds(QPoint(), mapDocument()->map()->size());
 
     QRegion paintRgn;
     QImage &bmpImage = mapDocument()->map()->rbmp(mBmpIndex).rimage();
+    QRgb color = mErasing ? qRgb(0, 0, 0) : mColor;
     foreach (QRect r, brushItem()->tileRegion().rects()) {
         r &= mapBounds;
         for (int y = r.top(); y <= r.bottom(); y++) {
             for (int x = r.left(); x <= r.right(); x++) {
-                if (bmpImage.pixel(x, y) != mColor) {
+                if (bmpImage.pixel(x, y) != color) {
                     paintRgn += QRect(x, y, 1, 1);
                 }
             }
@@ -526,13 +534,14 @@ void BmpBrushTool::paint(bool mergeable)
     image.fill(Qt::black);
     QPainter p(&image);
     foreach (QRect r, paintRgn.rects())
-        p.fillRect(r.translated(-topLeft), mErasing ? qRgb(0, 0, 0) : mColor);
+        p.fillRect(r.translated(-topLeft), color);
     p.end();
     PaintBMP *cmd = new PaintBMP(mapDocument(), mBmpIndex,
                                  topLeft.x(), topLeft.y(), image,
                                  paintRgn);
-    cmd->setMergeable(mergeable);
+    cmd->setMergeable(mDidFirstPaint);
     mapDocument()->undoStack()->push(cmd);
+    mDidFirstPaint = true;
 }
 
 /////
