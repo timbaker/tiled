@@ -985,7 +985,7 @@ CompositeLayerGroup *MapComposite::layerGroupForLayer(TileLayer *tl) const
     return 0;
 }
 
-const QList<MapComposite *> MapComposite::maps()
+QList<MapComposite *> MapComposite::maps()
 {
     QList<MapComposite*> ret;
     ret += this;
@@ -1230,6 +1230,17 @@ bool MapComposite::isTilesetUsed(Tileset *tileset, bool recurse)
         }
     }
     return false;
+}
+
+QList<Tileset *> MapComposite::usedTilesets()
+{
+    QSet<Tileset*> usedTilesets;
+    foreach (MapComposite *mc, maps()) {
+        usedTilesets += mc->map()->usedTilesets();
+        foreach (TileLayer *tl, mc->mBmpBlender->tileLayers())
+            usedTilesets += tl->usedTilesets();
+    }
+    return usedTilesets.values();
 }
 
 void MapComposite::synch()

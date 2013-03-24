@@ -186,7 +186,7 @@ public:
     CompositeLayerGroup *layerGroupForLayer(Tiled::TileLayer *tl) const;
 
     const QVector<MapComposite*>& subMaps() const { return mSubMaps; }
-    const QList<MapComposite*> maps();
+    QList<MapComposite*> maps();
 
     MapComposite *parent() const { return mParent; }
 
@@ -250,6 +250,7 @@ public:
     bool mapChanged(MapInfo *mapInfo);
 
     bool isTilesetUsed(Tiled::Tileset *tileset, bool recurse = true);
+    QList<Tiled::Tileset*> usedTilesets();
 
     void synch();
 
