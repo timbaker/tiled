@@ -135,6 +135,8 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
             SLOT(brushSizeChanged(int)));
     connect(ui->toggleOverlayLayers, SIGNAL(clicked()),
             SLOT(toggleOverlayLayers()));
+    connect(ui->showMapTiles, SIGNAL(toggled(bool)),
+            SLOT(showMapTiles(bool)));
 
     connect(ui->reloadRules, SIGNAL(clicked()), SLOT(reloadRules()));
     connect(ui->importRules, SIGNAL(clicked()), SLOT(importRules()));
@@ -295,6 +297,8 @@ void BmpToolDialog::setDocument(MapDocument *doc)
     ui->importBlends->setEnabled(mDocument != 0);
     ui->exportBlends->setEnabled(mDocument != 0);
 
+    ui->showMapTiles->setEnabled(mDocument != 0);
+
     if (mDocument) {
         QSet<Tileset*> tilesets;
         QList<Tiled::Tile*> tiles;
@@ -333,6 +337,8 @@ void BmpToolDialog::setDocument(MapDocument *doc)
         if (!fileName.isEmpty())
             ui->blendsFile->setText(QDir::toNativeSeparators(fileName));
 
+        ui->showMapTiles->setChecked(mDocument->mapComposite()->showMapTiles());
+
         connect(mDocument, SIGNAL(bmpRulesChanged()), SLOT(bmpRulesChanged()));
         connect(mDocument, SIGNAL(bmpBlendsChanged()), SLOT(bmpBlendsChanged()));
     }
@@ -369,4 +375,14 @@ void BmpToolDialog::toggleOverlayLayers()
                        Qt::CheckStateRole);
         }
     }
+}
+
+void BmpToolDialog::showMapTiles(bool show)
+{
+    if (!mDocument)
+        return;
+    mDocument->mapComposite()->setShowMapTiles(show);
+    if (mDocument->map()->layerCount())
+        mDocument->emitRegionChanged(QRect(QPoint(0, 0), mDocument->map()->size()),
+                                     mDocument->map()->layerAt(0));
 }

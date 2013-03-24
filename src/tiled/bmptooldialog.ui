@@ -98,6 +98,20 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="showMapTiles">
+         <property name="text">
+          <string>Show map tiles</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="rulesBox">
          <property name="title">
           <string>Rules.txt</string>
