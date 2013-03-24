@@ -210,6 +210,8 @@ public:
 
     void mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers);
 
+    void modifiersChanged(Qt::KeyboardModifiers);
+
     void languageChanged();
 
 protected:
@@ -232,10 +234,10 @@ private:
     Mode mMode;
 
     QPointF mStartScenePos;
+    QPoint mStartTilePos;
     bool mMouseDown;
     bool mMouseMoved;
-
-    QPoint mSelectionStart;
+    bool mErasing;
 };
 
 /////

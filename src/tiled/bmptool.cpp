@@ -886,7 +886,8 @@ void BmpRectTool::mousePressed(QGraphicsSceneMouseEvent *event)
         mMouseDown = true;
         mMouseMoved = false;
         mStartScenePos = event->scenePos();
-        mSelectionStart = tilePosition();
+        mStartTilePos = tilePosition();
+        mErasing = (modifiers & Qt::ControlModifier) != 0;
         brushItem()->setTileRegion(QRegion());
     }
 
@@ -908,14 +909,30 @@ void BmpRectTool::mouseReleased(QGraphicsSceneMouseEvent *event)
             mMode = NoMode;
 
             const QRect r = selectedArea();
+            int bmpIndex = BmpBrushTool::instance()->bmpIndex();
+            QRgb color = mErasing ? qRgb(0, 0, 0)
+                                  : BmpBrushTool::instance()->color();
             if (!r.isEmpty()) {
-                QPoint topLeft = r.topLeft();
-                QImage image(r.size(), QImage::Format_ARGB32);
-                image.fill(BmpBrushTool::instance()->color());
-                PaintBMP *cmd = new PaintBMP(doc, BmpBrushTool::instance()->bmpIndex(),
-                                             topLeft.x(), topLeft.y(), image, QRegion(r));
-                cmd->setMergeable(false);
-                doc->undoStack()->push(cmd);
+                const QImage &bmpImage = doc->map()->bmp(bmpIndex).rimage();
+                QRegion paintRgn;
+                for (int y = r.top(); y <= r.bottom(); y++) {
+                    for (int x = r.left(); x <= r.right(); x++) {
+                        if (bmpImage.pixel(x, y) != color) {
+                            paintRgn += QRect(x, y, 1, 1);
+                        }
+                    }
+                }
+                if (!paintRgn.isEmpty()) {
+                    QRect paintRect = paintRgn.boundingRect();
+                    QPoint topLeft = paintRect.topLeft();
+                    QImage image(paintRect.size(), QImage::Format_ARGB32);
+                    image.fill(color);
+                    PaintBMP *cmd = new PaintBMP(doc, bmpIndex,
+                                                 topLeft.x(), topLeft.y(),
+                                                 image, paintRgn);
+                    cmd->setMergeable(false);
+                    doc->undoStack()->push(cmd);
+                }
             }
             brushItem()->setTileRegion(QRegion());
             updateStatusInfo();
@@ -936,6 +953,11 @@ void BmpRectTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers
     AbstractBmpTool::mouseMoved(pos, modifiers);
 }
 
+void BmpRectTool::modifiersChanged(Qt::KeyboardModifiers)
+{
+    tilePositionChanged(tilePosition());
+}
+
 void BmpRectTool::languageChanged()
 {
     setName(tr("BMP Rectangle"));
@@ -947,9 +969,24 @@ QRect BmpRectTool::selectedArea() const
     if (!mMouseMoved)
         return QRect();
     const QPoint tilePos = tilePosition();
-    QRect r(QPoint(qMin(mSelectionStart.x(), tilePos.x()),
-                   qMin(mSelectionStart.y(), tilePos.y())),
-            QPoint(qMax(mSelectionStart.x(), tilePos.x()),
-                   qMax(mSelectionStart.y(), tilePos.y())));
+    QRect r(QPoint(qMin(mStartTilePos.x(), tilePos.x()),
+                   qMin(mStartTilePos.y(), tilePos.y())),
+            QPoint(qMax(mStartTilePos.x(), tilePos.x()),
+                   qMax(mStartTilePos.y(), tilePos.y())));
+    if (qApp->keyboardModifiers() & Qt::ShiftModifier) {
+        int side = qMax(r.width(), r.height());
+        if (tilePos.x() < mStartTilePos.x()) {
+            r.setLeft(mStartTilePos.x() - side + 1);
+            r.setRight(mStartTilePos.x());
+        } else {
+            r.setWidth(side);
+        }
+        if (tilePos.y() < mStartTilePos.y()) {
+            r.setTop(mStartTilePos.y() - side + 1);
+            r.setBottom(mStartTilePos.y());
+        } else {
+            r.setHeight(side);
+        }
+    }
     return r & QRect(QPoint(0, 0), mapDocument()->map()->size());
 }
