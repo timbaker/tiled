@@ -46,6 +46,8 @@ public:
 private slots:
     void currentRuleChanged(const QModelIndex &current);
     void brushSizeChanged(int size);
+    void brushSquare();
+    void brushCircle();
     void toggleOverlayLayers();
     void showMapTiles(bool show);
     void setVisibleNow();

@@ -114,6 +114,8 @@ public:
         Circle
     };
     void setBrushShape(BrushShape shape);
+    BrushShape brushShape() const
+    { return mBrushShape; }
 
 protected:
     void mapDocumentChanged(MapDocument *oldDocument,

@@ -133,6 +133,10 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
 
     connect(ui->brushSize, SIGNAL(valueChanged(int)),
             SLOT(brushSizeChanged(int)));
+    connect(ui->brushSquare, SIGNAL(clicked()),
+            SLOT(brushSquare()));
+    connect(ui->brushCircle, SIGNAL(clicked()),
+            SLOT(brushCircle()));
     connect(ui->toggleOverlayLayers, SIGNAL(clicked()),
             SLOT(toggleOverlayLayers()));
     connect(ui->showMapTiles, SIGNAL(toggled(bool)),
@@ -150,6 +154,10 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
     int brushSize = settings.value(QLatin1String("brushSize"), 1).toInt();
     BmpBrushTool::instance()->setBrushSize(brushSize);
     ui->brushSize->setValue(brushSize);
+    QString shape = settings.value(QLatin1String("brushShape"),
+                                   QLatin1String("square")).toString();
+    if (shape == QLatin1String("square")) brushSquare();
+    else if (shape == QLatin1String("circle")) brushCircle();
     settings.endGroup();
 
     mVisibleLaterTimer.setSingleShot(true);
@@ -178,6 +186,10 @@ void BmpToolDialog::setVisible(bool visible)
         settings.setValue(QLatin1String("geometry"), saveGeometry());
         settings.setValue(QLatin1String("scale"), ui->tableView->zoomable()->scale());
         settings.setValue(QLatin1String("brushSize"), ui->brushSize->value());
+        if (ui->brushSquare->isChecked())
+            settings.setValue(QLatin1String("brushShape"), QLatin1String("square"));
+        if (ui->brushCircle->isChecked())
+            settings.setValue(QLatin1String("brushShape"), QLatin1String("circle"));
     }
     settings.endGroup();
 }
@@ -297,6 +309,10 @@ void BmpToolDialog::setDocument(MapDocument *doc)
     ui->importBlends->setEnabled(mDocument != 0);
     ui->exportBlends->setEnabled(mDocument != 0);
 
+    switch (BmpBrushTool::instance()->brushShape()) {
+    case BmpBrushTool::Square: ui->brushSquare->setChecked(true); break;
+    case BmpBrushTool::Circle: ui->brushCircle->setChecked(true); break;
+    }
     ui->showMapTiles->setEnabled(mDocument != 0);
 
     if (mDocument) {
@@ -355,6 +371,16 @@ void BmpToolDialog::currentRuleChanged(const QModelIndex &current)
 void BmpToolDialog::brushSizeChanged(int size)
 {
     BmpBrushTool::instance()->setBrushSize(size);
+}
+
+void BmpToolDialog::brushSquare()
+{
+    BmpBrushTool::instance()->setBrushShape(BmpBrushTool::Square);
+}
+
+void BmpToolDialog::brushCircle()
+{
+    BmpBrushTool::instance()->setBrushShape(BmpBrushTool::Circle);
 }
 
 void BmpToolDialog::toggleOverlayLayers()

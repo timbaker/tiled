@@ -71,7 +71,29 @@
             <number>1</number>
            </property>
            <property name="maximum">
-            <number>30</number>
+            <number>300</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="brushSquare">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="tiled.qrc">
+             <normaloff>:/images/22x22/brush-square.png</normaloff>:/images/22x22/brush-square.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="brushCircle">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="tiled.qrc">
+             <normaloff>:/images/22x22/brush-circle.png</normaloff>:/images/22x22/brush-circle.png</iconset>
            </property>
           </widget>
          </item>
@@ -225,6 +247,8 @@
    <header>BuildingEditor/mixedtilesetview.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="tiled.qrc"/>
+ </resources>
  <connections/>
 </ui>

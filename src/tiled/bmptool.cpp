@@ -400,6 +400,12 @@ void BmpBrushTool::setBrushSize(int size)
     tilePositionChanged(tilePosition());
 }
 
+void BmpBrushTool::setBrushShape(BmpBrushTool::BrushShape shape)
+{
+    mBrushShape = shape;
+    tilePositionChanged(tilePosition());
+}
+
 void BmpBrushTool::mapDocumentChanged(MapDocument *oldDocument,
                                  MapDocument *newDocument)
 {
