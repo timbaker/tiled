@@ -89,9 +89,6 @@ void ResizeMap::swapSize()
     map->setHeight(mSize.height());
 
     mMapDocument->mapComposite()->bmpBlender()->recreate();
-    Q_ASSERT(mMapDocument->mapComposite()->tileLayersForLevel(0));
-    mMapDocument->mapComposite()->layerGroupForLevel(0)->setBmpBlendLayers(
-                mMapDocument->mapComposite()->bmpBlender()->tileLayers());
 
     mMapDocument->emitMapChanged();
 }

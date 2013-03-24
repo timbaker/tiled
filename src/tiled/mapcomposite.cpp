@@ -1217,9 +1217,11 @@ bool MapComposite::mapChanged(MapInfo *mapInfo)
     return changed;
 }
 
-bool MapComposite::isTilesetUsed(Tileset *tileset)
+bool MapComposite::isTilesetUsed(Tileset *tileset, bool recurse)
 {
-    foreach (MapComposite *mc, maps()) {
+    QList<MapComposite*> maps = recurse ? this->maps() : (QList<MapComposite*>() << this);
+
+    foreach (MapComposite *mc, maps) {
         if (mc->map()->isTilesetUsed(tileset))
             return true;
         foreach (TileLayer *tl, mc->tileLayersForLevel(0)->bmpBlendLayers()) {

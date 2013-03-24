@@ -249,7 +249,7 @@ public:
     bool mapAboutToChange(MapInfo *mapInfo);
     bool mapChanged(MapInfo *mapInfo);
 
-    bool isTilesetUsed(Tiled::Tileset *tileset);
+    bool isTilesetUsed(Tiled::Tileset *tileset, bool recurse = true);
 
     void synch();
 

@@ -508,7 +508,7 @@ void MapDocument::removeTilesetAt(int index)
     Tileset *tileset = mMap->tilesets().at(index);
     mMap->removeTilesetAt(index);
 #ifdef ZOMBOID
-    mMapComposite->bmpBlender()->tilesetRemoved(tileset);
+    mMapComposite->bmpBlender()->tilesetRemoved(tileset->name());
 #endif
     emit tilesetRemoved(tileset);
     TilesetManager *tilesetManager = TilesetManager::instance();
@@ -561,20 +561,8 @@ void MapDocument::paintBmp(int bmpIndex, int px, int py, const QImage &source,
 
     const QRect r = region.boundingRect();
     mapComposite()->bmpBlender()->update(r.left(), r.top(), r.right(), r.bottom());
-#if 0
-    Q_ASSERT(mapComposite()->tileLayersForLevel(0));
-    mapComposite()->tileLayersForLevel(0)->setBmpBlendLayers(
-                mapComposite()->bmpBlender()->tileLayers());
 
-    foreach (QString layerName, mapComposite()->bmpBlender()->tileLayerNames()) {
-        int index = map()->indexOfLayer(layerName, Layer::TileLayerType);
-        if (index == -1)
-            continue;
-        TileLayer *tl = map()->layerAt(index)->asTileLayer();
-        mapComposite()->tileLayersForLevel(0)->regionAltered(tl);
-        emitRegionAltered(region, tl);
-    }
-#endif
+    emit bmpPainted(bmpIndex, region);
 }
 
 QImage MapDocument::swapBmpImage(int bmpIndex, const QImage &image)
@@ -816,6 +804,7 @@ void MapDocument::bmpBlenderRegionAltered(const QRegion &region)
         TileLayer *tl = map()->layerAt(index)->asTileLayer();
         mapComposite()->tileLayersForLevel(0)->regionAltered(tl);
         emitRegionAltered(region, tl);
+        break; // this should redraw the whole layergroup anyway
     }
 }
 #endif // ZOMBOID

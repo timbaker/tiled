@@ -78,9 +78,9 @@ void BmpBlender::tilesetAdded(Tileset *ts)
     }
 }
 
-void BmpBlender::tilesetRemoved(Tileset *ts)
+void BmpBlender::tilesetRemoved(const QString &tilesetName)
 {
-    if (mTilesetNames.contains(ts->name())) {
+    if (mTilesetNames.contains(tilesetName)) {
         initTiles();
         tileNamesToLayers(0, 0, mMap->width(), mMap->height());
     }

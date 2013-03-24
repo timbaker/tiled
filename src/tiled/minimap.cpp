@@ -17,6 +17,7 @@
 
 #include "minimap.h"
 
+#include "bmpblender.h"
 #include "mapcomposite.h"
 #include "mapdocument.h"
 #include "mapmanager.h"
@@ -29,6 +30,7 @@
 #include "isometricrenderer.h"
 #include "map.h"
 #include "tilelayer.h"
+#include "tileset.h"
 #include "zlevelrenderer.h"
 
 #include <qmath.h>
@@ -54,7 +56,7 @@ inline QDebug noise() { return QDebug(QtDebugMsg); }
 ShadowMap::ShadowMap(MapInfo *mapInfo)
 {
     IN_APP_THREAD
-    Map *map = mapInfo->map()->clone();
+    Map *map = mapInfo->map()->clone(); // FIXME: make copy of BMP images, not thread-safe
     TilesetManager::instance()->addReferences(map->tilesets());
     mapInfo = MapManager::instance()->newFromMap(map, mapInfo->path()); // FIXME: save as... changes path?
     mMapComposite = new MapComposite(mapInfo);
@@ -174,6 +176,9 @@ public:
         TilesetAdded,
         TilesetRemoved,
         TilesetChanged,
+        BmpPainted,
+        BmpRulesChanged,
+        BmpBlendsChanged,
         Recreate
     };
 
@@ -209,7 +214,14 @@ public:
     QList<CellEntry> mCells;
     Tileset *mTileset;
     int mTilesetIndex;
+    QString mTilesetName;
     QSize mMapSize;
+
+    QImage mBmps[2];
+    int mBmpIndex;
+    QList<BmpRule*> mBmpRules;
+    QList<BmpBlend*> mBmpBlends;
+    QRegion mRegion;
 };
 
 MiniMapRenderWorker::MiniMapRenderWorker(MapInfo *mapInfo, InterruptibleThread *thread) :
@@ -219,6 +231,7 @@ MiniMapRenderWorker::MiniMapRenderWorker(MapInfo *mapInfo, InterruptibleThread *
 {
     IN_APP_THREAD
     mShadowMap = new ShadowMap(mapInfo);
+    mShadowMap->mMapComposite->setParent(this); // so moveToThread() moves it
     (mapInfo->orientation() == Map::Isometric)
             ? mRenderer = new IsometricRenderer(mapInfo->map())
             : mRenderer = new ZLevelRenderer(mapInfo->map());
@@ -235,6 +248,8 @@ MiniMapRenderWorker::~MiniMapRenderWorker()
 {
     IN_APP_THREAD
     delete mRenderer;
+    Q_ASSERT(mShadowMap->mMapComposite->QObject::parent() == this);
+    mShadowMap->mMapComposite->setParent(0);
     delete mShadowMap;
     qDeleteAll(mPendingChanges);
 }
@@ -320,6 +335,8 @@ void MiniMapRenderWorker::applyChanges(const QList<MapChange *> &changes)
 
 void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
 {
+    IN_WORKER_THREAD
+
     ShadowMap &sm = *mShadowMap;
     QRectF oldBounds = sm.mMapComposite->boundingRect(mRenderer);
     bool redrawAll = mRedrawAll;
@@ -364,11 +381,13 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
         }
         case MapChange::TilesetAdded: {
             sm.mMapComposite->map()->insertTileset(c.mTilesetIndex, c.mTileset);
+            sm.mMapComposite->bmpBlender()->tilesetAdded(c.mTileset);
             break;
         }
         case MapChange::TilesetRemoved: {
             int index = sm.mMapComposite->map()->indexOfTileset(c.mTileset);
             sm.mMapComposite->map()->removeTilesetAt(index);
+            sm.mMapComposite->bmpBlender()->tilesetRemoved(c.mTilesetName);
             break;
         }
         case MapChange::MapChanged: {
@@ -379,6 +398,34 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
         case MapChange::MapResized: {
             sm.mMapComposite->map()->setWidth(c.mMapSize.width());
             sm.mMapComposite->map()->setHeight(c.mMapSize.height());
+            sm.mMapComposite->map()->rbmp(0).rimage() = c.mBmps[0];
+            sm.mMapComposite->map()->rbmp(1).rimage() = c.mBmps[1];
+            sm.mMapComposite->map()->rbmp(0).rrands().setSize(c.mMapSize.width(),
+                                                              c.mMapSize.height());
+            sm.mMapComposite->map()->rbmp(1).rrands().setSize(c.mMapSize.width(),
+                                                              c.mMapSize.height());
+            sm.mMapComposite->bmpBlender()->recreate();
+            sm.mMapComposite->layerGroupForLevel(0)->setNeedsSynch(true);
+            break;
+        }
+        case MapChange::BmpPainted: {
+            sm.mMapComposite->map()->rbmp(c.mBmpIndex).rimage() = c.mBmps[c.mBmpIndex];
+            QRect r = c.mRegion.boundingRect();
+            sm.mMapComposite->bmpBlender()->update(r.x(), r.y(), r.right(), r.bottom());
+            break;
+        }
+        case MapChange::BmpRulesChanged: {
+            sm.mMapComposite->map()->rbmpSettings()->setRules(c.mBmpRules);
+            sm.mMapComposite->bmpBlender()->fromMap();
+            sm.mMapComposite->bmpBlender()->recreate();
+            redrawAll = true;
+            break;
+        }
+        case MapChange::BmpBlendsChanged: {
+            sm.mMapComposite->map()->rbmpSettings()->setBlends(c.mBmpBlends);
+            sm.mMapComposite->bmpBlender()->fromMap();
+            sm.mMapComposite->bmpBlender()->recreate();
+            redrawAll = true;
             break;
         }
         case MapChange::Recreate:
@@ -466,7 +513,7 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
             break;
         }
         case MapChange::TilesetChanged: {
-            if (sm.mMapComposite->map()->isTilesetUsed(c.mTileset))
+            if (sm.mMapComposite->isTilesetUsed(c.mTileset, false))
                 redrawAll = true;
             else {
                 QRectF dirty2;
@@ -482,6 +529,14 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
                     }
                 }
             }
+            break;
+        }
+        case MapChange::BmpPainted: {
+            if (redrawAll) break;
+            dirty = mRenderer->boundingRect(c.mRegion.boundingRect());
+            QMargins margins = sm.mMapComposite->map()->drawMargins();
+            dirty.adjust(-margins.left(), -margins.top(),
+                         margins.right(), margins.bottom());
             break;
         }
         }
@@ -515,6 +570,7 @@ void MiniMapRenderWorker::setVisible(bool visible)
 
 void MiniMapRenderWorker::returnToAppThread()
 {
+    IN_WORKER_THREAD
     moveToThread(qApp->thread());
 }
 
@@ -569,6 +625,13 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
             SLOT(tilesetRemoved(Tileset*)));
     connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
             SLOT(tilesetChanged(Tileset*)));
+
+    connect(mScene->mapDocument(), SIGNAL(bmpPainted(int,QRegion)),
+            SLOT(bmpPainted(int,QRegion)));
+    connect(mScene->mapDocument(), SIGNAL(bmpRulesChanged()),
+            SLOT(bmpRulesChanged()));
+    connect(mScene->mapDocument(), SIGNAL(bmpBlendsChanged()),
+            SLOT(bmpBlendsChanged()));
 
     QMap<MapObject*,MapComposite*>::const_iterator it;
     const QMap<MapObject*,MapComposite*> &map = mScene->lotManager().objectToLot();
@@ -735,6 +798,8 @@ void MiniMapItem::mapChanged()
 {
     MapChange *c = new MapChange(MapChange::MapResized);
     c->mMapSize = mMapComposite->map()->size();
+    c->mBmps[0] = mMapComposite->map()->bmp(0).image();
+    c->mBmps[1] = mMapComposite->map()->bmp(1).image();
     queueChange(c);
 }
 
@@ -751,11 +816,13 @@ void MiniMapItem::tilesetRemoved(Tileset *tileset)
 {
     mRenderThread->interrupt(true);
     mNeedsResume = true;
-    TilesetManager::instance()->removeReference(tileset); // for ShadowMap
 
     MapChange *c = new MapChange(MapChange::TilesetRemoved);
-    c->mTileset = tileset;
+    c->mTileset = tileset; // THIS MAY BE DELETED BY removeReference() below!
+    c->mTilesetName = tileset->name();
     queueChange(c);
+
+    TilesetManager::instance()->removeReference(tileset); // for ShadowMap
 }
 
 void MiniMapItem::tilesetChanged(Tileset *tileset)
@@ -766,6 +833,29 @@ void MiniMapItem::tilesetChanged(Tileset *tileset)
         c->mTileset = tileset;
         queueChange(c);
     }
+}
+
+void MiniMapItem::bmpPainted(int bmpIndex, const QRegion &region)
+{
+    MapChange *c = new MapChange(MapChange::BmpPainted);
+    c->mBmpIndex = bmpIndex;
+    c->mBmps[bmpIndex] = mMapComposite->map()->rbmp(bmpIndex).rimage().copy(); // FIXME: send changed part only
+    c->mRegion = region;
+    queueChange(c);
+}
+
+void MiniMapItem::bmpRulesChanged()
+{
+    MapChange *c = new MapChange(MapChange::BmpRulesChanged);
+    c->mBmpRules = mMapComposite->map()->bmpSettings()->rulesCopy();
+    queueChange(c);
+}
+
+void MiniMapItem::bmpBlendsChanged()
+{
+    MapChange *c = new MapChange(MapChange::BmpBlendsChanged);
+    c->mBmpBlends = mMapComposite->map()->bmpSettings()->blendsCopy();
+    queueChange(c);
 }
 
 void MiniMapItem::painted(QImage image, QRectF sceneRect)

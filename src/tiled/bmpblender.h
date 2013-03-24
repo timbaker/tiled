@@ -110,7 +110,7 @@ public:
     { return mBlendLayers; }
 
     void tilesetAdded(Tileset *ts);
-    void tilesetRemoved(Tileset *ts);
+    void tilesetRemoved(const QString &tilesetName);
 
 signals:
     void layersRecreated();

@@ -169,6 +169,10 @@ private slots:
     void tilesetRemoved(Tileset *tileset);
     void tilesetChanged(Tileset *tileset);
 
+    void bmpPainted(int bmpIndex, const QRegion &region);
+    void bmpRulesChanged();
+    void bmpBlendsChanged();
+
     void painted(QImage image, QRectF sceneRect);
     void imageResized(QSize sz);
 

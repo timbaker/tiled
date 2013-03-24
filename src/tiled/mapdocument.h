@@ -388,6 +388,7 @@ signals:
 #ifdef ZOMBOID
     void mapCompositeChanged();
 
+    void bmpPainted(int bmpIndex, const QRegion &region);
     void bmpRulesChanged();
     void bmpBlendsChanged();
 #endif
