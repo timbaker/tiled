@@ -1344,6 +1344,8 @@ void MapComposite::recreate()
         mSortedLayerGroups.append(mLayerGroups[level]);
     }
 
+    mBmpBlender->setMap(mMap);
+
     /////
 
     if (mParent)
