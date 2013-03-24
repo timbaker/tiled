@@ -20,6 +20,7 @@
 
 #include "bmpblender.h"
 #include "bmptool.h"
+#include "documentmanager.h"
 #include "mapcomposite.h"
 #include "mapdocument.h"
 #include "mainwindow.h"
@@ -163,6 +164,9 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
     mVisibleLaterTimer.setSingleShot(true);
     mVisibleLaterTimer.setInterval(200);
     connect(&mVisibleLaterTimer, SIGNAL(timeout()), SLOT(setVisibleNow()));
+
+    connect(DocumentManager::instance(), SIGNAL(documentAboutToClose(int,MapDocument*)),
+            SLOT(documentAboutToClose(int,MapDocument*)));
 }
 
 BmpToolDialog::~BmpToolDialog()
@@ -288,6 +292,11 @@ void BmpToolDialog::bmpBlendsChanged()
     setDocument(mDocument);
 }
 
+void BmpToolDialog::documentAboutToClose(int index, MapDocument *doc)
+{
+    mCurrentRuleForDocument.remove(doc);
+}
+
 void BmpToolDialog::setDocument(MapDocument *doc)
 {
     if (mDocument)
@@ -321,7 +330,8 @@ void BmpToolDialog::setDocument(MapDocument *doc)
         QList<void*> userData;
         QStringList headers;
         int ruleIndex = 1;
-        foreach (BmpRule *rule, mDocument->map()->bmpSettings()->rules()) {
+        QList<BmpRule*> rules = mDocument->map()->bmpSettings()->rules();
+        foreach (BmpRule *rule, rules) {
             foreach (QString tileName, rule->tileChoices) {
                 Tile *tile;
                 if (tileName.isEmpty())
@@ -344,6 +354,13 @@ void BmpToolDialog::setDocument(MapDocument *doc)
         ui->tableView->setTiles(tiles, userData, headers);
         TileMetaInfoMgr::instance()->loadTilesets(tilesets.toList());
 
+        ruleIndex = 0;
+        if (mCurrentRuleForDocument.contains(mDocument))
+            ruleIndex = mCurrentRuleForDocument[mDocument];
+        if (ruleIndex >= 0 && ruleIndex < rules.size())
+            ui->tableView->setCurrentIndex(
+                        ui->tableView->model()->index((void*)rules.at(ruleIndex)));
+
         const BmpSettings *settings = mDocument->map()->bmpSettings();
         QString fileName = settings->rulesFile();
         if (!fileName.isEmpty())
@@ -365,6 +382,8 @@ void BmpToolDialog::currentRuleChanged(const QModelIndex &current)
     BmpRule *rule = static_cast<BmpRule*>(ui->tableView->model()->userDataAt(current));
     if (rule) {
         BmpBrushTool::instance()->setColor(rule->bitmapIndex, rule->color);
+        mCurrentRuleForDocument[mDocument]
+                = mDocument->map()->bmpSettings()->rules().indexOf(rule);
     }
 }
 

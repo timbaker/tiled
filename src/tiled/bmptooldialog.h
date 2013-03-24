@@ -61,6 +61,8 @@ private slots:
     void bmpRulesChanged();
     void bmpBlendsChanged();
 
+    void documentAboutToClose(int index, MapDocument *doc);
+
 private:
     Q_DISABLE_COPY(BmpToolDialog)
     static BmpToolDialog *mInstance;
@@ -71,6 +73,7 @@ private:
     MapDocument *mDocument;
     bool mVisibleLater;
     QTimer mVisibleLaterTimer;
+    QMap<MapDocument*,int> mCurrentRuleForDocument;
 };
 
 } // namespace Internal
