@@ -171,8 +171,11 @@ QString BuildingTilesMgr::nameForTile(Tile *tile)
 
 bool BuildingTilesMgr::parseTileName(const QString &tileName, QString &tilesetName, int &index)
 {
-    tilesetName = tileName.mid(0, tileName.lastIndexOf(QLatin1Char('_')));
-    QString indexString = tileName.mid(tileName.lastIndexOf(QLatin1Char('_')) + 1);
+    int n = tileName.lastIndexOf(QLatin1Char('_'));
+    if (n == -1)
+        return false;
+    tilesetName = tileName.mid(0, n);
+    QString indexString = tileName.mid(n + 1);
     // Strip leading zeroes from the tile index
 #if 1
     int i = 0;
@@ -182,8 +185,16 @@ bool BuildingTilesMgr::parseTileName(const QString &tileName, QString &tilesetNa
 #else
     indexString.remove( QRegExp(QLatin1String("^[0]*")) );
 #endif
-    index = indexString.toInt();
-    return true;
+    bool ok;
+    index = indexString.toUInt(&ok);
+    return !tilesetName.isEmpty() && ok;
+}
+
+bool BuildingTilesMgr::legalTileName(const QString &tileName)
+{
+    QString tilesetName;
+    int index;
+    return parseTileName(tileName, tilesetName, index);
 }
 
 QString BuildingTilesMgr::adjustTileNameIndex(const QString &tileName, int offset)

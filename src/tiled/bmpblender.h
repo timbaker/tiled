@@ -62,6 +62,8 @@ private:
     void AddRule(int bitmapIndex, QRgb col, QStringList tiles,
                  QString layer);
 
+    QRgb rgbFromStringList(const QStringList &rgb, bool &ok);
+
     QList<BmpRule*> mRules;
     QString mError;
 };
@@ -93,8 +95,11 @@ class BmpBlender : public QObject
 {
     Q_OBJECT
 public:
+    BmpBlender(QObject *parent = 0);
     BmpBlender(Map *map, QObject *parent = 0);
     ~BmpBlender();
+
+    void setMap(Map *map);
 
     void fromMap();
     void recreate();
