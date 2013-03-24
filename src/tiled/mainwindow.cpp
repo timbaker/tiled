@@ -453,7 +453,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     toolManager->registerTool(polylineObjectsTool);
 #ifdef ZOMBOID
     toolManager->addSeparator();
-    toolManager->registerTool(BmpPainterTool::instance());
+    toolManager->registerTool(BmpBrushTool::instance());
     toolManager->registerTool(BmpRectTool::instance());
     toolManager->registerTool(BmpSelectionTool::instance());
 #endif

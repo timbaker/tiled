@@ -86,11 +86,11 @@ private:
 };
 
 // This tool is for painting (and erasing) pixels in a map's BMP images.
-class BmpPainterTool : public AbstractBmpTool
+class BmpBrushTool : public AbstractBmpTool
 {
     Q_OBJECT
 public:
-    static BmpPainterTool *instance();
+    static BmpBrushTool *instance();
 
     void activate(MapScene *scene);
     void deactivate(MapScene *scene);
@@ -127,10 +127,10 @@ protected:
     void paint(bool mergeable);
 
 private:
-    Q_DISABLE_COPY(BmpPainterTool)
-    static BmpPainterTool *mInstance;
-    BmpPainterTool(QObject *parent = 0);
-    ~BmpPainterTool();
+    Q_DISABLE_COPY(BmpBrushTool)
+    static BmpBrushTool *mInstance;
+    BmpBrushTool(QObject *parent = 0);
+    ~BmpBrushTool();
 
     bool mPainting;
     QPoint mStampPos;

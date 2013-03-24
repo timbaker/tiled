@@ -148,7 +148,7 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
     qreal scale = settings.value(QLatin1String("scale"), 0.5).toReal();
     ui->tableView->zoomable()->setScale(scale);
     int brushSize = settings.value(QLatin1String("brushSize"), 1).toInt();
-    BmpPainterTool::instance()->setBrushSize(brushSize);
+    BmpBrushTool::instance()->setBrushSize(brushSize);
     ui->brushSize->setValue(brushSize);
     settings.endGroup();
 
@@ -348,13 +348,13 @@ void BmpToolDialog::currentRuleChanged(const QModelIndex &current)
 {
     BmpRule *rule = static_cast<BmpRule*>(ui->tableView->model()->userDataAt(current));
     if (rule) {
-        BmpPainterTool::instance()->setColor(rule->bitmapIndex, rule->color);
+        BmpBrushTool::instance()->setColor(rule->bitmapIndex, rule->color);
     }
 }
 
 void BmpToolDialog::brushSizeChanged(int size)
 {
-    BmpPainterTool::instance()->setBrushSize(size);
+    BmpBrushTool::instance()->setBrushSize(size);
 }
 
 void BmpToolDialog::toggleOverlayLayers()

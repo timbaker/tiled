@@ -339,16 +339,16 @@ bool PaintBMP::mergeWith(const QUndoCommand *other)
 
 /////
 
-BmpPainterTool *BmpPainterTool::mInstance = 0;
+BmpBrushTool *BmpBrushTool::mInstance = 0;
 
-BmpPainterTool *BmpPainterTool::instance()
+BmpBrushTool *BmpBrushTool::instance()
 {
     if (!mInstance)
-        mInstance = new BmpPainterTool;
+        mInstance = new BmpBrushTool;
     return mInstance;
 }
 
-BmpPainterTool::BmpPainterTool(QObject *parent) :
+BmpBrushTool::BmpBrushTool(QObject *parent) :
     AbstractBmpTool(tr("BMP Brush"),
                      QIcon(QLatin1String(
                              ":images/22x22/bmp-tool.png")),
@@ -361,21 +361,21 @@ BmpPainterTool::BmpPainterTool(QObject *parent) :
 {
 }
 
-BmpPainterTool::~BmpPainterTool()
+BmpBrushTool::~BmpBrushTool()
 {
 }
 
-void BmpPainterTool::activate(MapScene *scene)
+void BmpBrushTool::activate(MapScene *scene)
 {
     AbstractBmpTool::activate(scene);
 }
 
-void BmpPainterTool::deactivate(MapScene *scene)
+void BmpBrushTool::deactivate(MapScene *scene)
 {
     AbstractBmpTool::deactivate(scene);
 }
 
-void BmpPainterTool::mousePressed(QGraphicsSceneMouseEvent *event)
+void BmpBrushTool::mousePressed(QGraphicsSceneMouseEvent *event)
 {
     if (!brushItem()->isVisible())
         return;
@@ -388,25 +388,25 @@ void BmpPainterTool::mousePressed(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void BmpPainterTool::mouseReleased(QGraphicsSceneMouseEvent *event)
+void BmpBrushTool::mouseReleased(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton)
         mPainting = false;
 }
 
-void BmpPainterTool::setBrushSize(int size)
+void BmpBrushTool::setBrushSize(int size)
 {
     mBrushSize = size;
     tilePositionChanged(tilePosition());
 }
 
-void BmpPainterTool::mapDocumentChanged(MapDocument *oldDocument,
+void BmpBrushTool::mapDocumentChanged(MapDocument *oldDocument,
                                  MapDocument *newDocument)
 {
     AbstractBmpTool::mapDocumentChanged(oldDocument, newDocument);
 }
 
-void BmpPainterTool::languageChanged()
+void BmpBrushTool::languageChanged()
 {
     setName(tr("BMP Brush"));
     setShortcut(QKeySequence(tr("")));
@@ -459,7 +459,7 @@ static QVector<QPoint> calculateLine(int x0, int y0, int x1, int y1)
     return ret;
 }
 
-void BmpPainterTool::tilePositionChanged(const QPoint &tilePos)
+void BmpBrushTool::tilePositionChanged(const QPoint &tilePos)
 {
     setBrushRegion(tilePos);
 
@@ -474,7 +474,7 @@ void BmpPainterTool::tilePositionChanged(const QPoint &tilePos)
 }
 
 #include <qmath.h>
-void BmpPainterTool::setBrushRegion(const QPoint &tilePos)
+void BmpBrushTool::setBrushRegion(const QPoint &tilePos)
 {
     if (mBrushShape == Circle) {
         QRegion rgn;
@@ -494,7 +494,7 @@ void BmpPainterTool::setBrushRegion(const QPoint &tilePos)
                                      QSize(mBrushSize, mBrushSize)));
 }
 
-void BmpPainterTool::paint(bool mergeable)
+void BmpBrushTool::paint(bool mergeable)
 {
     QRect mapBounds(QPoint(), mapDocument()->map()->size());
 
@@ -719,7 +719,7 @@ void BmpSelectionTool::mouseReleased(QGraphicsSceneMouseEvent *event)
                 QRegion newSelection = oldSelection.translated(offset);
                 QRegion paintedRgn = oldSelection | newSelection;
                 paintedRgn &= QRect(0, 0, doc->map()->width(), doc->map()->height());
-                int bmpIndex = BmpPainterTool::instance()->bmpIndex();
+                int bmpIndex = BmpBrushTool::instance()->bmpIndex();
                 doc->undoStack()->beginMacro(tr("Drag BMP Selection"));
                 {
                     QImage &bmp = doc->map()->rbmp(bmpIndex).rimage();
@@ -840,8 +840,9 @@ BmpRectTool::BmpRectTool(QObject *parent) :
 {
 }
 
-void BmpRectTool::tilePositionChanged(const QPoint &pos)
+void BmpRectTool::tilePositionChanged(const QPoint &tilePos)
 {
+    Q_UNUSED(tilePos)
     if (mMode == Painting)
         brushItem()->setTileRegion(selectedArea());
 }
@@ -895,8 +896,8 @@ void BmpRectTool::mouseReleased(QGraphicsSceneMouseEvent *event)
             if (!r.isEmpty()) {
                 QPoint topLeft = r.topLeft();
                 QImage image(r.size(), QImage::Format_ARGB32);
-                image.fill(BmpPainterTool::instance()->color());
-                PaintBMP *cmd = new PaintBMP(doc, BmpPainterTool::instance()->bmpIndex(),
+                image.fill(BmpBrushTool::instance()->color());
+                PaintBMP *cmd = new PaintBMP(doc, BmpBrushTool::instance()->bmpIndex(),
                                              topLeft.x(), topLeft.y(), image, QRegion(r));
                 cmd->setMergeable(false);
                 doc->undoStack()->push(cmd);
