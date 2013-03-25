@@ -384,6 +384,8 @@ void BmpToolDialog::currentRuleChanged(const QModelIndex &current)
         BmpBrushTool::instance()->setColor(rule->bitmapIndex, rule->color);
         mCurrentRuleForDocument[mDocument]
                 = mDocument->map()->bmpSettings()->rules().indexOf(rule);
+    } else {
+        BmpBrushTool::instance()->setColor(0, qRgb(0, 0, 0));
     }
 }
 
