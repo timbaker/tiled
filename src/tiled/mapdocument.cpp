@@ -713,6 +713,12 @@ void MapDocument::emitRegionEdited(const QRegion &region, Layer *layer)
 #ifdef ZOMBOID
 void MapDocument::emitRegionAltered(const QRegion &region, Layer *layer)
 {
+#if 1
+    if (layer->name() == QLatin1String("0_Floor")) {
+        QRect r = region.boundingRect();
+        mMapComposite->bmpBlender()->update(r.x(), r.y(), r.right(), r.bottom());
+    }
+#endif
     emit regionAltered(region, layer);
 }
 
@@ -803,7 +809,7 @@ void MapDocument::bmpBlenderRegionAltered(const QRegion &region)
             continue;
         TileLayer *tl = map()->layerAt(index)->asTileLayer();
         mapComposite()->tileLayersForLevel(0)->regionAltered(tl);
-        emitRegionAltered(region, tl);
+        emit regionAltered(region, tl); // infinite loop with emitRegionAltered()
         break; // this should redraw the whole layergroup anyway
     }
 }
