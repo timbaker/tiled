@@ -51,6 +51,7 @@ AbstractBmpTool::AbstractBmpTool(const QString &name,
                                  const QKeySequence &shortcut,
                                  QObject *parent)
     : AbstractTool(name, icon, shortcut, parent)
+    , mScene(0)
     , mBrushItem(new BrushItem)
     , mTileX(0), mTileY(0)
     , mBrushVisible(false)
@@ -989,4 +990,214 @@ QRect BmpRectTool::selectedArea() const
         }
     }
     return r & QRect(QPoint(0, 0), mapDocument()->map()->size());
+}
+
+
+/////
+
+BmpBucketTool *BmpBucketTool::mInstance = 0;
+
+BmpBucketTool *BmpBucketTool::instance()
+{
+    if (!mInstance)
+        mInstance = new BmpBucketTool;
+    return mInstance;
+}
+
+BmpBucketTool::BmpBucketTool(QObject *parent) :
+    AbstractBmpTool(tr("BMP Bucket Fill"),
+                    QIcon(QLatin1String(
+                              ":images/22x22/bmp-bucket.png")),
+                    QKeySequence(/*tr("R")*/),
+                    parent)
+{
+    connect(BmpBrushTool::instance(), SIGNAL(ruleChanged()),
+            SLOT(bmpImageChanged()));
+}
+
+void BmpBucketTool::tilePositionChanged(const QPoint &tilePos)
+{
+    if (!QRect(QPoint(), mapDocument()->map()->size()).contains(tilePos)) {
+        brushItem()->setTileRegion(QRegion());
+        mRegion = QRegion();
+        return;
+    }
+    if (mRegion.contains(tilePos))
+        return;
+    int bmpIndex = BmpBrushTool::instance()->bmpIndex();
+    mImage = mapDocument()->map()->bmp(bmpIndex).image().copy();
+    mRegion = QRegion();
+    floodFillScanlineStack(tilePos.x(), tilePos.y(),
+                           BmpBrushTool::instance()->color(),
+                           mImage.pixel(tilePos.x(), tilePos.y()));
+    brushItem()->setTileRegion(mRegion);
+}
+
+void BmpBucketTool::updateStatusInfo()
+{
+    if (!isBrushVisible()) {
+        AbstractBmpTool::updateStatusInfo();
+        return;
+    }
+
+    AbstractBmpTool::updateStatusInfo();
+}
+
+void BmpBucketTool::mousePressed(QGraphicsSceneMouseEvent *event)
+{
+    const Qt::MouseButton button = event->button();
+    const Qt::KeyboardModifiers modifiers = event->modifiers();
+
+    if (button == Qt::LeftButton) {
+        if (mRegion.isEmpty())
+            return;
+        int bmpIndex = BmpBrushTool::instance()->bmpIndex();
+        mapDocument()->undoStack()->push(new PaintBMP(mapDocument(),
+                                                      bmpIndex,
+                                                      mRegion.boundingRect().x(),
+                                                      mRegion.boundingRect().y(),
+                                                      mImage.copy(mRegion.boundingRect()),
+                                                      mRegion));
+    }
+}
+
+void BmpBucketTool::mouseReleased(QGraphicsSceneMouseEvent *event)
+{
+}
+
+void BmpBucketTool::languageChanged()
+{
+    setName(tr("BMP Bucket Fill"));
+    setShortcut(QKeySequence(/*tr("R")*/));
+}
+
+void BmpBucketTool::mapDocumentChanged(MapDocument *oldDocument,
+                                       MapDocument *newDocument)
+{
+    AbstractBmpTool::mapDocumentChanged(oldDocument, newDocument);
+
+    if (oldDocument)
+        oldDocument->disconnect(this);
+
+    if (newDocument) {
+        connect(newDocument, SIGNAL(bmpPainted(int,QRegion)),
+                SLOT(bmpImageChanged()));
+        connect(newDocument, SIGNAL(mapChanged()),
+                SLOT(bmpImageChanged()));
+    }
+
+    mRegion = QRegion();
+}
+
+// Taken from http://lodev.org/cgtutor/floodfill.html#Recursive_Scanline_Floodfill_Algorithm
+// Copyright (c) 2004-2007 by Lode Vandevenne. All rights reserved.
+void BmpBucketTool::floodFillScanlineStack(int x, int y, QRgb newColor, QRgb oldColor)
+{
+    if (oldColor == newColor) return;
+    emptyStack();
+
+    int y1;
+    bool spanLeft, spanRight;
+
+    if (!push(x, y)) return;
+
+    while (pop(x, y))
+    {
+        y1 = y;
+        while (y1 >= 0 && pixel(x, y1) == oldColor) y1--;
+        y1++;
+        spanLeft = spanRight = 0;
+        QRect r;
+        while (y1 < mImage.height() && pixel(x, y1) == oldColor )
+        {
+            setPixel(x, y1, newColor);
+#if 1 // This seems a lot faster (in Debug mode at least) than mRegion += QRect(x, y, 1, 1) each setPixel()
+            if (r.isEmpty()) {
+                r = QRect(x, y1, 1, 1);
+            } else if (r.bottom() + 1 != y1) {
+                mRegion += r;
+                r = QRect();
+            } else {
+                r.setBottom(y1);
+            }
+#else
+            mRegion += QRect(x, y1, 1, 1);
+#endif
+            if (!spanLeft && x > 0 && pixel(x - 1, y1) == oldColor)
+            {
+                if (!push(x - 1, y1)) return;
+                spanLeft = true;
+            }
+            else if (spanLeft && x > 0 && pixel(x - 1, y1) != oldColor)
+            {
+                spanLeft = false;
+            }
+            if (!spanRight && x < mImage.width() - 1 && pixel(x + 1, y1) == oldColor)
+            {
+                if (!push(x + 1, y1)) return;
+                spanRight = true;
+            }
+            else if (spanRight && x < mImage.width() - 1 && pixel(x + 1, y1) != oldColor)
+            {
+                spanRight = false;
+            }
+            y1++;
+        }
+        if (!r.isEmpty())
+            mRegion += r;
+    }
+}
+
+QRgb BmpBucketTool::pixel(int x, int y)
+{
+    return mImage.pixel(x, y);
+}
+
+void BmpBucketTool::setPixel(int x, int y, QRgb pixel)
+{
+    mImage.setPixel(x, y, pixel);
+}
+
+bool BmpBucketTool::push(int x, int y)
+{
+    if (stackPointer < STACK_SIZE - 1)
+    {
+        stackPointer++;
+        stack[stackPointer] = mImage.height() * x + y;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool BmpBucketTool::pop(int &x, int &y)
+{
+    if (stackPointer > 0)
+    {
+        int p = stack[stackPointer];
+        x = p / mImage.height();
+        y = p % mImage.height();
+        stackPointer--;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void BmpBucketTool::emptyStack()
+{
+    stackPointer = 0;
+}
+
+void BmpBucketTool::bmpImageChanged()
+{
+    // Recompute the fill region if the BMP changes.
+    mRegion = QRegion();
+    if (scene()) {
+        tilePositionChanged(tilePosition());
+    }
 }

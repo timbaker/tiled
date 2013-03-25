@@ -99,7 +99,7 @@ public:
     void mouseReleased(QGraphicsSceneMouseEvent *event);
 
     void setColor(int index, QRgb color)
-    { mBmpIndex = index; mColor = color; }
+    { mBmpIndex = index; mColor = color; emit ruleChanged(); }
 
     int bmpIndex() const
     { return mBmpIndex; }
@@ -127,6 +127,9 @@ protected:
     void tilePositionChanged(const QPoint &tilePos);
     void setBrushRegion(const QPoint &tilePos);
     void paint();
+
+signals:
+    void ruleChanged();
 
 private:
     Q_DISABLE_COPY(BmpBrushTool)
@@ -238,6 +241,52 @@ private:
     bool mMouseDown;
     bool mMouseMoved;
     bool mErasing;
+};
+
+// This tool is for flood-filling in a map's BMP images.
+class BmpBucketTool : public AbstractBmpTool
+{
+    Q_OBJECT
+
+public:
+    static BmpBucketTool *instance();
+
+    void mousePressed(QGraphicsSceneMouseEvent *event);
+    void mouseReleased(QGraphicsSceneMouseEvent *event);
+
+    void languageChanged();
+
+protected:
+    void mapDocumentChanged(MapDocument *oldDocument, MapDocument *newDocument);
+
+    void tilePositionChanged(const QPoint &tilePos);
+
+    void updateStatusInfo();
+
+private:
+    void floodFillScanlineStack(int x, int y, QRgb newColor, QRgb oldColor);
+    QRgb pixel(int x, int y);
+    void setPixel(int x, int y, QRgb pixel);
+    bool push(int x, int y);
+    bool pop(int &x, int &y);
+    void emptyStack();
+
+private slots:
+    void bmpImageChanged();
+
+private:
+    Q_DISABLE_COPY(BmpBucketTool)
+    static BmpBucketTool *mInstance;
+    BmpBucketTool(QObject *parent = 0);
+
+    QPointF mStartScenePos;
+    QPoint mStartTilePos;
+    bool mErasing;
+    QImage mImage;
+    QRegion mRegion;
+    enum { STACK_SIZE = 16 * 1024 * 1024 };
+    int stack[STACK_SIZE];
+    int stackPointer;
 };
 
 /////

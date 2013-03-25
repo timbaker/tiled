@@ -78,5 +78,6 @@
         <file>images/22x22/bmp-rect.png</file>
         <file>images/22x22/brush-circle.png</file>
         <file>images/22x22/brush-square.png</file>
+        <file>images/22x22/bmp-bucket.png</file>
     </qresource>
 </RCC>

@@ -455,6 +455,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     toolManager->addSeparator();
     toolManager->registerTool(BmpBrushTool::instance());
     toolManager->registerTool(BmpRectTool::instance());
+    toolManager->registerTool(BmpBucketTool::instance());
     toolManager->registerTool(BmpSelectionTool::instance());
 #endif
 
