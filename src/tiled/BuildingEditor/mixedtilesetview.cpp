@@ -602,8 +602,10 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
         Item *item = new Item(tile, userData.at(index));
         mItems += item;
         mTileItemsByIndex[index] = item;
-        mTileToItem[tile] = item; // may not be unique!
-        mUserDataToItem[item->mUserData] = item;
+        if (!mTileToItem.contains(tile))
+            mTileToItem[tile] = item; // may not be unique!
+        if (!mUserDataToItem.contains(item->mUserData))
+            mUserDataToItem[item->mUserData] = item; // may not be unique!
         index++;
     }
 
