@@ -56,7 +56,11 @@ void TileSelectionItem::paint(QPainter *painter,
                               const QStyleOptionGraphicsItem *option,
                               QWidget *)
 {
+#ifdef ZOMBOID
+    const QRegion &selection = mMapDocument->tileSelection().translated(mDragOffset);
+#else
     const QRegion &selection = mMapDocument->tileSelection();
+#endif
     QColor highlight = QApplication::palette().highlight().color();
     highlight.setAlpha(128);
 
@@ -95,10 +99,20 @@ void TileSelectionItem::currentLayerIndexChanged(int index)
 
 void TileSelectionItem::updateBoundingRect()
 {
-    const QRect b = mMapDocument->tileSelection().boundingRect();
 #ifdef ZOMBOID
+    const QRect b = mMapDocument->tileSelection().boundingRect().translated(mDragOffset);
     mBoundingRect = mMapDocument->renderer()->boundingRect(b, mMapDocument->currentLevel());
 #else
+    const QRect b = mMapDocument->tileSelection().boundingRect();
     mBoundingRect = mMapDocument->renderer()->boundingRect(b);
 #endif
 }
+
+#ifdef ZOMBOID
+void TileSelectionItem::setDragOffset(const QPoint &offset)
+{
+    mDragOffset = offset;
+    prepareGeometryChange();
+    updateBoundingRect();
+}
+#endif

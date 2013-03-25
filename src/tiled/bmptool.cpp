@@ -24,9 +24,9 @@
 #include "mapcomposite.h"
 #include "mainwindow.h"
 #include "mapscene.h"
+#include "tileselectionitem.h"
 #include "undocommands.h"
 
-#include "brushitem.h"
 #include "map.h"
 #include "maprenderer.h"
 

@@ -216,7 +216,7 @@ public:
     void setTileSelection(const QRegion &selection);
 
 #ifdef ZOMBOID
-    const QRegion &bmpSelection() const { return mBmpSelection; }
+    const QRegion &bmpSelection() const;
     void setBmpSelection(const QRegion &selection);
 
     void paintBmp(int bmpIndex, int px, int py, const QImage &source,
@@ -423,7 +423,9 @@ private:
     ZLevelsModel *mLevelsModel;
     int mMaxVisibleLayer;
     MapComposite *mMapComposite;
+#ifdef SEPARATE_BMP_SELECTION
     QRegion mBmpSelection;
+#endif
 #endif
     QUndoStack *mUndoStack;
 };

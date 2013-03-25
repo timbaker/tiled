@@ -282,8 +282,10 @@ void MapDocument::resizeMap(const QSize &size, const QPoint &offset)
 #endif
     mUndoStack->push(new ChangeTileSelection(this, movedSelection));
 #ifdef ZOMBOID
+#ifdef SEPARATE_BMP_SELECTION
     QRegion bmpSelection = mBmpSelection.translated(offset);
     mUndoStack->push(new ChangeBmpSelection(this, bmpSelection));
+#endif
 #endif
     mUndoStack->endMacro();
 
@@ -536,13 +538,26 @@ void MapDocument::setTileSelection(const QRegion &selection)
 }
 
 #ifdef ZOMBOID
+const QRegion &MapDocument::bmpSelection() const
+{
+#ifdef SEPARATE_BMP_SELECTION
+    return mBmpSelection;
+#else
+    return tileSelection();
+#endif
+}
+
 void MapDocument::setBmpSelection(const QRegion &selection)
 {
+#ifdef SEPARATE_BMP_SELECTION
     if (mBmpSelection != selection) {
         const QRegion oldSelection = mBmpSelection;
         mBmpSelection = selection;
         emit bmpSelectionChanged(mBmpSelection, oldSelection);
     }
+#else
+    setTileSelection(selection);
+#endif
 }
 
 void MapDocument::paintBmp(int bmpIndex, int px, int py, const QImage &source,

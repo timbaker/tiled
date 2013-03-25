@@ -51,6 +51,10 @@ public:
                const QStyleOptionGraphicsItem *option,
                QWidget *widget = 0);
 
+#ifdef ZOMBOID
+    void TileSelectionItem::setDragOffset(const QPoint &offset);
+#endif
+
 private slots:
     void selectionChanged(const QRegion &newSelection,
                           const QRegion &oldSelection);
@@ -63,6 +67,9 @@ private:
 
     MapDocument *mMapDocument;
     QRectF mBoundingRect;
+#ifdef ZOMBOID
+    QPoint mDragOffset;
+#endif
 };
 
 } // namespace Internal

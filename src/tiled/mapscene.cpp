@@ -69,8 +69,10 @@ MapScene::MapScene(QObject *parent):
     mDarkRectangle(new QGraphicsRectItem)
 #ifdef ZOMBOID
     ,
-    mGridItem(new ZGridItem),
-    mBmpSelectionItem(0)
+    mGridItem(new ZGridItem)
+#ifdef SEPARATE_BMP_SELECTION
+    , mBmpSelectionItem(0)
+#endif
 #endif
 {
     setBackgroundBrush(Qt::darkGray);
@@ -226,9 +228,13 @@ void MapScene::refreshScene()
     addItem(selectionItem);
 
 #ifdef ZOMBOID
+#ifdef SEPARATE_BMP_SELECTION
     mBmpSelectionItem = new BmpSelectionItem(mMapDocument);
     mBmpSelectionItem->setZValue(10000 - 1);
     addItem(mBmpSelectionItem);
+#else
+    mTileSelectionItem = selectionItem;
+#endif
 #endif
 
     updateCurrentLayerHighlight();

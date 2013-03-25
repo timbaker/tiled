@@ -42,7 +42,10 @@ class MapObjectItem;
 class MapScene;
 class ObjectGroupItem;
 #ifdef ZOMBOID
+#ifdef SEPARATE_BMP_SELECTION
 class BmpSelectionItem;
+#endif
+class TileSelectionItem;
 class ZGridItem;
 #endif
 
@@ -114,8 +117,13 @@ public:
     void setSelectedTool(AbstractTool *tool);
 
 #ifdef ZOMBOID
+#ifdef SEPARATE_BMP_SELECTION
     BmpSelectionItem *bmpSelectionItem() const
     { return mBmpSelectionItem; }
+#else
+    TileSelectionItem *bmpSelectionItem() const
+    { return mTileSelectionItem; }
+#endif
 #endif // ZOMBOID
 
 signals:
@@ -226,7 +234,10 @@ private:
     QGraphicsRectItem *mDarkRectangle;
 #ifdef ZOMBOID
     ZGridItem *mGridItem;
+    TileSelectionItem *mTileSelectionItem;
+#ifdef SEPARATE_BMP_SELECTION
     BmpSelectionItem *mBmpSelectionItem;
+#endif
 #endif
 
     typedef QMap<MapObject*, MapObjectItem*> ObjectItems;
