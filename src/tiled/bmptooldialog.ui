@@ -113,6 +113,13 @@
         </layout>
        </item>
        <item>
+        <widget class="QCheckBox" name="restrictToSelection">
+         <property name="text">
+          <string>Restrict drawing to the selected area</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QToolButton" name="toggleOverlayLayers">
          <property name="text">
           <string>Show/Hide FloorOverlay Layers</string>

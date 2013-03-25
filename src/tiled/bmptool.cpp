@@ -35,6 +35,7 @@
 #include <QPainter>
 #include <QUndoCommand>
 #include <QVector2D>
+#include <qmath.h>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -272,14 +273,14 @@ BmpBrushTool *BmpBrushTool::instance()
 
 BmpBrushTool::BmpBrushTool(QObject *parent) :
     AbstractBmpTool(tr("BMP Brush"),
-                     QIcon(QLatin1String(
-                             ":images/22x22/bmp-tool.png")),
+                     QIcon(QLatin1String(":images/22x22/bmp-tool.png")),
                      QKeySequence(tr("")),
                      parent),
     mPainting(false),
     mBmpIndex(0),
     mBrushSize(1),
-    mBrushShape(Square)
+    mBrushShape(Square),
+    mRestrictToSelection(false)
 {
 }
 
@@ -402,7 +403,6 @@ void BmpBrushTool::tilePositionChanged(const QPoint &tilePos)
     }
 }
 
-#include <qmath.h>
 void BmpBrushTool::setBrushRegion(const QPoint &tilePos)
 {
     if (mBrushShape == Circle) {
@@ -430,10 +430,17 @@ void BmpBrushTool::paint()
 
     QRect mapBounds(QPoint(), mapDocument()->map()->size());
 
+    QRegion tileRgn = brushItem()->tileRegion();
+    if (restrictToSelection()) {
+        QRegion selection = mapDocument()->bmpSelection();
+        if (!selection.isEmpty())
+            tileRgn &= selection;
+    }
+
     QRegion paintRgn;
     QImage &bmpImage = mapDocument()->map()->rbmp(mBmpIndex).rimage();
     QRgb color = mErasing ? qRgb(0, 0, 0) : mColor;
-    foreach (QRect r, brushItem()->tileRegion().rects()) {
+    foreach (QRect r, tileRgn.rects()) {
         r &= mapBounds;
         for (int y = r.top(); y <= r.bottom(); y++) {
             for (int x = r.left(); x <= r.right(); x++) {
@@ -772,6 +779,10 @@ BmpWandTool::BmpWandTool(QObject *parent) :
     mMode(NoMode),
     mMouseDown(false)
 {
+    connect(BmpBrushTool::instance(), SIGNAL(ruleChanged()),
+            SLOT(bmpImageChanged()));
+    connect(BmpBrushTool::instance(), SIGNAL(restrictToSelectionChanged()),
+            SLOT(bmpImageChanged()));
 }
 
 void BmpWandTool::tilePositionChanged(const QPoint &tilePos)
@@ -925,6 +936,33 @@ void BmpWandTool::languageChanged()
     setShortcut(QKeySequence(/*tr("R")*/));
 }
 
+void BmpWandTool::mapDocumentChanged(MapDocument *oldDocument,
+                                       MapDocument *newDocument)
+{
+    AbstractBmpTool::mapDocumentChanged(oldDocument, newDocument);
+
+    if (oldDocument)
+        oldDocument->disconnect(this);
+
+    if (newDocument) {
+        connect(newDocument, SIGNAL(bmpPainted(int,QRegion)),
+                SLOT(bmpImageChanged()));
+        connect(newDocument, SIGNAL(mapChanged()),
+                SLOT(bmpImageChanged()));
+    }
+
+    mFloodFill.mRegion = QRegion();
+}
+
+void BmpWandTool::bmpImageChanged()
+{
+    // Recompute the fill region if the BMP or tool settings change.
+    mFloodFill.mRegion = QRegion();
+    if (scene()) {
+        tilePositionChanged(tilePosition());
+    }
+}
+
 /////
 
 BmpRectTool *BmpRectTool::mInstance = 0;
@@ -1006,11 +1044,21 @@ void BmpRectTool::mouseReleased(QGraphicsSceneMouseEvent *event)
                                   : BmpBrushTool::instance()->color();
             if (!r.isEmpty()) {
                 const QImage &bmpImage = doc->map()->bmp(bmpIndex).rimage();
+
+                QRegion tileRgn(r);
+                if (BmpBrushTool::instance()->restrictToSelection()) {
+                    QRegion selection = mapDocument()->bmpSelection();
+                    if (!selection.isEmpty())
+                        tileRgn &= selection;
+                }
+
                 QRegion paintRgn;
-                for (int y = r.top(); y <= r.bottom(); y++) {
-                    for (int x = r.left(); x <= r.right(); x++) {
-                        if (bmpImage.pixel(x, y) != color) {
-                            paintRgn += QRect(x, y, 1, 1);
+                foreach (QRect r, tileRgn.rects()) {
+                    for (int y = r.top(); y <= r.bottom(); y++) {
+                        for (int x = r.left(); x <= r.right(); x++) {
+                            if (bmpImage.pixel(x, y) != color) {
+                                paintRgn += QRect(x, y, 1, 1);
+                            }
                         }
                     }
                 }
@@ -1104,6 +1152,8 @@ BmpBucketTool::BmpBucketTool(QObject *parent) :
 {
     connect(BmpBrushTool::instance(), SIGNAL(ruleChanged()),
             SLOT(bmpImageChanged()));
+    connect(BmpBrushTool::instance(), SIGNAL(restrictToSelectionChanged()),
+            SLOT(bmpImageChanged()));
 }
 
 void BmpBucketTool::tilePositionChanged(const QPoint &tilePos)
@@ -1121,7 +1171,14 @@ void BmpBucketTool::tilePositionChanged(const QPoint &tilePos)
     mFloodFill.floodFillScanlineStack(tilePos.x(), tilePos.y(),
                                       BmpBrushTool::instance()->color(),
                                       mFloodFill.mImage.pixel(tilePos.x(), tilePos.y()));
-    brushItem()->setTileRegion(mFloodFill.mRegion);
+
+    QRegion tileRgn = mFloodFill.mRegion;
+    if (BmpBrushTool::instance()->restrictToSelection()) {
+        QRegion selection = mapDocument()->bmpSelection();
+        if (!selection.isEmpty())
+            tileRgn &= selection;
+    }
+    brushItem()->setTileRegion(tileRgn);
 }
 
 void BmpBucketTool::updateStatusInfo()
@@ -1143,13 +1200,14 @@ void BmpBucketTool::mousePressed(QGraphicsSceneMouseEvent *event)
         if (mFloodFill.mRegion.isEmpty())
             return;
         int bmpIndex = BmpBrushTool::instance()->bmpIndex();
+        QRegion region = brushItem()->tileRegion();
         mapDocument()->undoStack()->push(
                     new PaintBMP(mapDocument(),
                                  bmpIndex,
-                                 mFloodFill.mRegion.boundingRect().x(),
-                                 mFloodFill.mRegion.boundingRect().y(),
-                                 mFloodFill.mImage.copy(mFloodFill.mRegion.boundingRect()),
-                                 mFloodFill.mRegion));
+                                 region.boundingRect().x(),
+                                 region.boundingRect().y(),
+                                 mFloodFill.mImage.copy(region.boundingRect()),
+                                 region));
     }
 }
 

@@ -117,6 +117,15 @@ public:
     BrushShape brushShape() const
     { return mBrushShape; }
 
+    void setRestrictToSelection(bool isRestricted)
+    {
+        if (mRestrictToSelection == isRestricted) return;
+        mRestrictToSelection = isRestricted;
+        emit restrictToSelectionChanged();
+    }
+    bool restrictToSelection() const
+    { return mRestrictToSelection;}
+
 protected:
     void mapDocumentChanged(MapDocument *oldDocument,
                             MapDocument *newDocument);
@@ -130,6 +139,7 @@ protected:
 
 signals:
     void ruleChanged();
+    void restrictToSelectionChanged();
 
 private:
     Q_DISABLE_COPY(BmpBrushTool)
@@ -145,6 +155,7 @@ private:
     QRgb mColor;
     int mBrushSize;
     BrushShape mBrushShape;
+    bool mRestrictToSelection;
     BmpToolDialog *mDialog;
 };
 
@@ -233,9 +244,14 @@ public:
     void languageChanged();
 
 protected:
+    void mapDocumentChanged(MapDocument *oldDocument, MapDocument *newDocument);
+
     void tilePositionChanged(const QPoint &tilePos);
 
     void updateStatusInfo();
+
+private slots:
+    void bmpImageChanged();
 
 private:
     Q_DISABLE_COPY(BmpWandTool)

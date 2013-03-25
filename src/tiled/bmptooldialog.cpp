@@ -138,6 +138,8 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
             SLOT(brushSquare()));
     connect(ui->brushCircle, SIGNAL(clicked()),
             SLOT(brushCircle()));
+    connect(ui->restrictToSelection, SIGNAL(toggled(bool)),
+            SLOT(restrictToSelection(bool)));
     connect(ui->toggleOverlayLayers, SIGNAL(clicked()),
             SLOT(toggleOverlayLayers()));
     connect(ui->showMapTiles, SIGNAL(toggled(bool)),
@@ -152,13 +154,19 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
     settings.beginGroup(QLatin1String("BmpToolDialog"));
     qreal scale = settings.value(QLatin1String("scale"), 0.5).toReal();
     ui->tableView->zoomable()->setScale(scale);
+
     int brushSize = settings.value(QLatin1String("brushSize"), 1).toInt();
     BmpBrushTool::instance()->setBrushSize(brushSize);
     ui->brushSize->setValue(brushSize);
+
     QString shape = settings.value(QLatin1String("brushShape"),
                                    QLatin1String("square")).toString();
     if (shape == QLatin1String("square")) brushSquare();
     else if (shape == QLatin1String("circle")) brushCircle();
+
+    bool isRestricted = settings.value(QLatin1String("restrictToSelection"),
+                                       true).toBool();
+    BmpBrushTool::instance()->setRestrictToSelection(isRestricted);
     settings.endGroup();
 
     mVisibleLaterTimer.setSingleShot(true);
@@ -194,6 +202,8 @@ void BmpToolDialog::setVisible(bool visible)
             settings.setValue(QLatin1String("brushShape"), QLatin1String("square"));
         if (ui->brushCircle->isChecked())
             settings.setValue(QLatin1String("brushShape"), QLatin1String("circle"));
+        settings.setValue(QLatin1String("restrictToSelection"),
+                          BmpBrushTool::instance()->restrictToSelection());
     }
     settings.endGroup();
 }
@@ -322,6 +332,7 @@ void BmpToolDialog::setDocument(MapDocument *doc)
     case BmpBrushTool::Square: ui->brushSquare->setChecked(true); break;
     case BmpBrushTool::Circle: ui->brushCircle->setChecked(true); break;
     }
+    ui->restrictToSelection->setChecked(BmpBrushTool::instance()->restrictToSelection());
     ui->showMapTiles->setEnabled(mDocument != 0);
 
     if (mDocument) {
@@ -402,6 +413,11 @@ void BmpToolDialog::brushSquare()
 void BmpToolDialog::brushCircle()
 {
     BmpBrushTool::instance()->setBrushShape(BmpBrushTool::Circle);
+}
+
+void BmpToolDialog::restrictToSelection(bool isRestricted)
+{
+    BmpBrushTool::instance()->setRestrictToSelection(isRestricted);
 }
 
 void BmpToolDialog::toggleOverlayLayers()

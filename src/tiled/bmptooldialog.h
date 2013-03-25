@@ -48,6 +48,7 @@ private slots:
     void brushSizeChanged(int size);
     void brushSquare();
     void brushCircle();
+    void restrictToSelection(bool isRestricted);
     void toggleOverlayLayers();
     void showMapTiles(bool show);
     void setVisibleNow();
