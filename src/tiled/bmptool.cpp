@@ -672,16 +672,21 @@ void BmpSelectionTool::mouseReleased(QGraphicsSceneMouseEvent *event)
                                          rect.x() + offset.x() - r.x(),
                                          rect.y() + offset.y() - r.y(), image);
                     }
-                    QPainter p(&image);
-                    foreach (QRect rect, (paintedRgn - newSelection).rects()) {
-                        p.fillRect(rect.translated(-r.topLeft()), Qt::black);
+                    // Hold down Ctrl to copy the moved pixels, otherwise erase.
+                    if (!(event->modifiers() & Qt::ControlModifier)) {
+                        QPainter p(&image);
+                        foreach (QRect rect, (paintedRgn - newSelection).rects()) {
+                            p.fillRect(rect.translated(-r.topLeft()), Qt::black);
+                        }
+                        p.end();
                     }
-                    p.end();
                     doc->undoStack()->push(new PaintBMP(doc, bmpIndex, r.x(), r.y(),
                                                         image, paintedRgn));
                 }
-                if (event->modifiers() & Qt::ControlModifier) {
-                    QImage &bmp = doc->map()->rbmp(!bmpIndex).rimage(); // opposite of above
+
+                // Hold down Shift to affect every BMP.
+                if (event->modifiers() & Qt::ShiftModifier) {
+                    QImage &bmp = doc->map()->rbmp(!bmpIndex).rimage();
                     QRect r = paintedRgn.boundingRect();
                     QImage image = bmp.copy(r.x(), r.y(), r.width(), r.height());
                     foreach (QRect rect, oldSelection.rects()) {
@@ -690,11 +695,14 @@ void BmpSelectionTool::mouseReleased(QGraphicsSceneMouseEvent *event)
                                          rect.x() + offset.x() - r.x(),
                                          rect.y() + offset.y() - r.y(), image);
                     }
-                    QPainter p(&image);
-                    foreach (QRect rect, (paintedRgn - newSelection).rects()) {
-                        p.fillRect(rect.translated(-r.topLeft()), Qt::black);
+                    // Hold down Ctrl to copy the moved pixels, otherwise erase.
+                    if (!(event->modifiers() & Qt::ControlModifier)) {
+                        QPainter p(&image);
+                        foreach (QRect rect, (paintedRgn - newSelection).rects()) {
+                            p.fillRect(rect.translated(-r.topLeft()), Qt::black);
+                        }
+                        p.end();
                     }
-                    p.end();
                     doc->undoStack()->push(new PaintBMP(doc, !bmpIndex, r.x(), r.y(),
                                                         image, paintedRgn));
                 }
@@ -883,16 +891,21 @@ void BmpWandTool::mouseReleased(QGraphicsSceneMouseEvent *event)
                                          rect.x() + offset.x() - r.x(),
                                          rect.y() + offset.y() - r.y(), image);
                     }
-                    QPainter p(&image);
-                    foreach (QRect rect, (paintedRgn - newSelection).rects()) {
-                        p.fillRect(rect.translated(-r.topLeft()), Qt::black);
+                    // Hold down Ctrl to copy the moved pixels, otherwise erase.
+                    if (!(event->modifiers() & Qt::ControlModifier)) {
+                        QPainter p(&image);
+                        foreach (QRect rect, (paintedRgn - newSelection).rects()) {
+                            p.fillRect(rect.translated(-r.topLeft()), Qt::black);
+                        }
+                        p.end();
                     }
-                    p.end();
                     doc->undoStack()->push(new PaintBMP(doc, bmpIndex, r.x(), r.y(),
                                                         image, paintedRgn));
                 }
-                if (event->modifiers() & Qt::ControlModifier) {
-                    QImage &bmp = doc->map()->rbmp(!bmpIndex).rimage(); // opposite of above
+
+                // Hold down Shift to affect every BMP.
+                if (event->modifiers() & Qt::ShiftModifier) {
+                    QImage &bmp = doc->map()->rbmp(!bmpIndex).rimage();
                     QRect r = paintedRgn.boundingRect();
                     QImage image = bmp.copy(r.x(), r.y(), r.width(), r.height());
                     foreach (QRect rect, oldSelection.rects()) {
@@ -901,11 +914,14 @@ void BmpWandTool::mouseReleased(QGraphicsSceneMouseEvent *event)
                                          rect.x() + offset.x() - r.x(),
                                          rect.y() + offset.y() - r.y(), image);
                     }
-                    QPainter p(&image);
-                    foreach (QRect rect, (paintedRgn - newSelection).rects()) {
-                        p.fillRect(rect.translated(-r.topLeft()), Qt::black);
+                    // Hold down Ctrl to copy the moved pixels, otherwise erase.
+                    if (!(event->modifiers() & Qt::ControlModifier)) {
+                        QPainter p(&image);
+                        foreach (QRect rect, (paintedRgn - newSelection).rects()) {
+                            p.fillRect(rect.translated(-r.topLeft()), Qt::black);
+                        }
+                        p.end();
                     }
-                    p.end();
                     doc->undoStack()->push(new PaintBMP(doc, !bmpIndex, r.x(), r.y(),
                                                         image, paintedRgn));
                 }
