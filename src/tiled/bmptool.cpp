@@ -623,7 +623,7 @@ BmpSelectionTool *BmpSelectionTool::instance()
 }
 
 BmpSelectionTool::BmpSelectionTool(QObject *parent) :
-    AbstractBmpTool(tr("BMP Select"),
+    AbstractBmpTool(tr("BMP Rectangle Select"),
                     QIcon(QLatin1String(
                               ":images/22x22/bmp-select.png")),
                     QKeySequence(/*tr("R")*/),
@@ -821,7 +821,7 @@ void BmpSelectionTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modi
 
 void BmpSelectionTool::languageChanged()
 {
-    setName(tr("BMP Select"));
+    setName(tr("BMP Rectangle Select"));
     setShortcut(QKeySequence(/*tr("R")*/));
 }
 
@@ -832,6 +832,179 @@ QRect BmpSelectionTool::selectedArea() const
                         qMin(mSelectionStart.y(), tilePos.y())),
                  QPoint(qMax(mSelectionStart.x(), tilePos.x()),
                         qMax(mSelectionStart.y(), tilePos.y())));
+}
+
+/////
+
+BmpWandTool *BmpWandTool::mInstance = 0;
+
+BmpWandTool *BmpWandTool::instance()
+{
+    if (!mInstance)
+        mInstance = new BmpWandTool;
+    return mInstance;
+}
+
+BmpWandTool::BmpWandTool(QObject *parent) :
+    AbstractBmpTool(tr("BMP Fuzzy Select"),
+                    QIcon(QLatin1String(
+                              ":images/22x22/bmp-wand.png")),
+                    QKeySequence(/*tr("R")*/),
+                    parent),
+    mMode(NoMode),
+    mMouseDown(false)
+{
+}
+
+void BmpWandTool::tilePositionChanged(const QPoint &tilePos)
+{
+    if (mMode == Dragging) {
+        QPoint offset = tilePos - mDragStart;
+        if (scene() && scene()->bmpSelectionItem())
+            scene()->bmpSelectionItem()->setDragOffset(offset);
+        return;
+    }
+
+    if (!QRect(QPoint(), mapDocument()->map()->size()).contains(tilePos)) {
+        brushItem()->setTileRegion(QRegion());
+        mFloodFill.mRegion = QRegion();
+        return;
+    }
+    if (mFloodFill.mRegion.contains(tilePos))
+        return;
+    int bmpIndex = BmpBrushTool::instance()->bmpIndex();
+    mFloodFill.mImage = mapDocument()->map()->bmp(bmpIndex).image().copy();
+    mFloodFill.mRegion = QRegion();
+    mFloodFill.floodFillScanlineStack(tilePos.x(), tilePos.y(),
+                                      qRgba(0, 0, 0, 0),
+                                      mFloodFill.mImage.pixel(tilePos.x(), tilePos.y()));
+    brushItem()->setTileRegion(mFloodFill.mRegion);
+}
+
+void BmpWandTool::updateStatusInfo()
+{
+    AbstractBmpTool::updateStatusInfo();
+}
+
+void BmpWandTool::mousePressed(QGraphicsSceneMouseEvent *event)
+{
+    const Qt::MouseButton button = event->button();
+    const Qt::KeyboardModifiers modifiers = event->modifiers();
+
+    if (button == Qt::LeftButton) {
+        mMouseDown = true;
+        mMouseMoved = false;
+        mStartScenePos = event->scenePos();
+
+        QRegion selection = mapDocument()->bmpSelection();
+        if (modifiers == Qt::ControlModifier) {
+            selection -= brushItem()->tileRegion();
+        } else if (modifiers == Qt::ShiftModifier) {
+            selection += brushItem()->tileRegion();
+        } else if (modifiers == (Qt::ControlModifier | Qt::ShiftModifier)) {
+            selection &= brushItem()->tileRegion();
+        } else {
+            if (mapDocument()->bmpSelection().contains(tilePosition())) {
+                mMode = Dragging;
+                mDragStart = tilePosition();
+                return;
+            }
+            selection = brushItem()->tileRegion();
+        }
+        if (selection != mapDocument()->bmpSelection()) {
+            ChangeBmpSelection *cmd = new ChangeBmpSelection(mapDocument(), selection);
+            mapDocument()->undoStack()->push(cmd);
+            tilePositionChanged(tilePosition());
+        }
+    }
+
+    if (button == Qt::RightButton) {
+        if (mMode == Dragging) {
+            if (scene() && scene()->bmpSelectionItem())
+                scene()->bmpSelectionItem()->setDragOffset(QPoint());
+            mMode = NoMode;
+        }
+    }
+}
+
+void BmpWandTool::mouseReleased(QGraphicsSceneMouseEvent *event)
+{
+    MapDocument *doc = mapDocument();
+    if (event->button() == Qt::LeftButton) {
+        mMouseDown = false;
+        if (mMode == Dragging) {
+            if (scene() && scene()->bmpSelectionItem())
+                scene()->bmpSelectionItem()->setDragOffset(QPoint());
+            mMode = NoMode;
+            QPoint offset = tilePosition() - mDragStart;
+            if (!offset.isNull()) {
+                QRegion oldSelection = doc->bmpSelection();
+                QRegion newSelection = oldSelection.translated(offset);
+                QRegion paintedRgn = oldSelection | newSelection;
+                paintedRgn &= QRect(0, 0, doc->map()->width(), doc->map()->height());
+                int bmpIndex = BmpBrushTool::instance()->bmpIndex();
+                doc->undoStack()->beginMacro(tr("Drag BMP Selection"));
+                {
+                    QImage &bmp = doc->map()->rbmp(bmpIndex).rimage();
+                    QRect r = paintedRgn.boundingRect();
+                    QImage image = bmp.copy(r.x(), r.y(), r.width(), r.height());
+                    foreach (QRect rect, oldSelection.rects()) {
+                        copyImageToImage(rect.x(), rect.y(),
+                                         rect.width(), rect.height(), bmp,
+                                         rect.x() + offset.x() - r.x(),
+                                         rect.y() + offset.y() - r.y(), image);
+                    }
+                    QPainter p(&image);
+                    foreach (QRect rect, (paintedRgn - newSelection).rects()) {
+                        p.fillRect(rect.translated(-r.topLeft()), Qt::black);
+                    }
+                    p.end();
+                    doc->undoStack()->push(new PaintBMP(doc, bmpIndex, r.x(), r.y(),
+                                                        image, paintedRgn));
+                }
+                if (event->modifiers() & Qt::ControlModifier) {
+                    QImage &bmp = doc->map()->rbmp(!bmpIndex).rimage(); // opposite of above
+                    QRect r = paintedRgn.boundingRect();
+                    QImage image = bmp.copy(r.x(), r.y(), r.width(), r.height());
+                    foreach (QRect rect, oldSelection.rects()) {
+                        copyImageToImage(rect.x(), rect.y(),
+                                         rect.width(), rect.height(), bmp,
+                                         rect.x() + offset.x() - r.x(),
+                                         rect.y() + offset.y() - r.y(), image);
+                    }
+                    QPainter p(&image);
+                    foreach (QRect rect, (paintedRgn - newSelection).rects()) {
+                        p.fillRect(rect.translated(-r.topLeft()), Qt::black);
+                    }
+                    p.end();
+                    doc->undoStack()->push(new PaintBMP(doc, !bmpIndex, r.x(), r.y(),
+                                                        image, paintedRgn));
+                }
+                doc->undoStack()->push(new ChangeBmpSelection(doc, newSelection));
+                doc->undoStack()->endMacro();
+            }
+            return;
+        }
+    }
+}
+
+void BmpWandTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
+{
+    if (mMouseDown && !mMouseMoved) {
+        const int dragDistance = (mStartScenePos - pos).manhattanLength();
+        if (dragDistance >= QApplication::startDragDistance()) {
+            mMouseMoved = true;
+            tilePositionChanged(tilePosition());
+        }
+    }
+
+    AbstractBmpTool::mouseMoved(pos, modifiers);
+}
+
+void BmpWandTool::languageChanged()
+{
+    setName(tr("BMP Fuzzy Select"));
+    setShortcut(QKeySequence(/*tr("R")*/));
 }
 
 /////
@@ -1019,18 +1192,18 @@ void BmpBucketTool::tilePositionChanged(const QPoint &tilePos)
 {
     if (!QRect(QPoint(), mapDocument()->map()->size()).contains(tilePos)) {
         brushItem()->setTileRegion(QRegion());
-        mRegion = QRegion();
+        mFloodFill.mRegion = QRegion();
         return;
     }
-    if (mRegion.contains(tilePos))
+    if (mFloodFill.mRegion.contains(tilePos))
         return;
     int bmpIndex = BmpBrushTool::instance()->bmpIndex();
-    mImage = mapDocument()->map()->bmp(bmpIndex).image().copy();
-    mRegion = QRegion();
-    floodFillScanlineStack(tilePos.x(), tilePos.y(),
-                           BmpBrushTool::instance()->color(),
-                           mImage.pixel(tilePos.x(), tilePos.y()));
-    brushItem()->setTileRegion(mRegion);
+    mFloodFill.mImage = mapDocument()->map()->bmp(bmpIndex).image().copy();
+    mFloodFill.mRegion = QRegion();
+    mFloodFill.floodFillScanlineStack(tilePos.x(), tilePos.y(),
+                                      BmpBrushTool::instance()->color(),
+                                      mFloodFill.mImage.pixel(tilePos.x(), tilePos.y()));
+    brushItem()->setTileRegion(mFloodFill.mRegion);
 }
 
 void BmpBucketTool::updateStatusInfo()
@@ -1049,15 +1222,16 @@ void BmpBucketTool::mousePressed(QGraphicsSceneMouseEvent *event)
     const Qt::KeyboardModifiers modifiers = event->modifiers();
 
     if (button == Qt::LeftButton) {
-        if (mRegion.isEmpty())
+        if (mFloodFill.mRegion.isEmpty())
             return;
         int bmpIndex = BmpBrushTool::instance()->bmpIndex();
-        mapDocument()->undoStack()->push(new PaintBMP(mapDocument(),
-                                                      bmpIndex,
-                                                      mRegion.boundingRect().x(),
-                                                      mRegion.boundingRect().y(),
-                                                      mImage.copy(mRegion.boundingRect()),
-                                                      mRegion));
+        mapDocument()->undoStack()->push(
+                    new PaintBMP(mapDocument(),
+                                 bmpIndex,
+                                 mFloodFill.mRegion.boundingRect().x(),
+                                 mFloodFill.mRegion.boundingRect().y(),
+                                 mFloodFill.mImage.copy(mFloodFill.mRegion.boundingRect()),
+                                 mFloodFill.mRegion));
     }
 }
 
@@ -1086,12 +1260,23 @@ void BmpBucketTool::mapDocumentChanged(MapDocument *oldDocument,
                 SLOT(bmpImageChanged()));
     }
 
-    mRegion = QRegion();
+    mFloodFill.mRegion = QRegion();
 }
+
+void BmpBucketTool::bmpImageChanged()
+{
+    // Recompute the fill region if the BMP changes.
+    mFloodFill.mRegion = QRegion();
+    if (scene()) {
+        tilePositionChanged(tilePosition());
+    }
+}
+
+/////
 
 // Taken from http://lodev.org/cgtutor/floodfill.html#Recursive_Scanline_Floodfill_Algorithm
 // Copyright (c) 2004-2007 by Lode Vandevenne. All rights reserved.
-void BmpBucketTool::floodFillScanlineStack(int x, int y, QRgb newColor, QRgb oldColor)
+void BmpFloodFill::floodFillScanlineStack(int x, int y, QRgb newColor, QRgb oldColor)
 {
     if (oldColor == newColor) return;
     emptyStack();
@@ -1101,15 +1286,13 @@ void BmpBucketTool::floodFillScanlineStack(int x, int y, QRgb newColor, QRgb old
 
     if (!push(x, y)) return;
 
-    while (pop(x, y))
-    {
+    while (pop(x, y)) {
         y1 = y;
         while (y1 >= 0 && pixel(x, y1) == oldColor) y1--;
         y1++;
-        spanLeft = spanRight = 0;
+        spanLeft = spanRight = false;
         QRect r;
-        while (y1 < mImage.height() && pixel(x, y1) == oldColor )
-        {
+        while (y1 < mImage.height() && pixel(x, y1) == oldColor ) {
             setPixel(x, y1, newColor);
 #if 1 // This seems a lot faster (in Debug mode at least) than mRegion += QRect(x, y, 1, 1) each setPixel()
             if (r.isEmpty()) {
@@ -1123,22 +1306,18 @@ void BmpBucketTool::floodFillScanlineStack(int x, int y, QRgb newColor, QRgb old
 #else
             mRegion += QRect(x, y1, 1, 1);
 #endif
-            if (!spanLeft && x > 0 && pixel(x - 1, y1) == oldColor)
-            {
+            if (!spanLeft && x > 0 && pixel(x - 1, y1) == oldColor) {
                 if (!push(x - 1, y1)) return;
                 spanLeft = true;
             }
-            else if (spanLeft && x > 0 && pixel(x - 1, y1) != oldColor)
-            {
+            else if (spanLeft && x > 0 && pixel(x - 1, y1) != oldColor) {
                 spanLeft = false;
             }
-            if (!spanRight && x < mImage.width() - 1 && pixel(x + 1, y1) == oldColor)
-            {
+            if (!spanRight && x < mImage.width() - 1 && pixel(x + 1, y1) == oldColor) {
                 if (!push(x + 1, y1)) return;
                 spanRight = true;
             }
-            else if (spanRight && x < mImage.width() - 1 && pixel(x + 1, y1) != oldColor)
-            {
+            else if (spanRight && x < mImage.width() - 1 && pixel(x + 1, y1) != oldColor) {
                 spanRight = false;
             }
             y1++;
@@ -1148,56 +1327,41 @@ void BmpBucketTool::floodFillScanlineStack(int x, int y, QRgb newColor, QRgb old
     }
 }
 
-QRgb BmpBucketTool::pixel(int x, int y)
+QRgb BmpFloodFill::pixel(int x, int y)
 {
     return mImage.pixel(x, y);
 }
 
-void BmpBucketTool::setPixel(int x, int y, QRgb pixel)
+void BmpFloodFill::setPixel(int x, int y, QRgb pixel)
 {
     mImage.setPixel(x, y, pixel);
 }
 
-bool BmpBucketTool::push(int x, int y)
+bool BmpFloodFill::push(int x, int y)
 {
-    if (stackPointer < STACK_SIZE - 1)
-    {
+    if (stackPointer < STACK_SIZE - 1) {
         stackPointer++;
         stack[stackPointer] = mImage.height() * x + y;
         return true;
-    }
-    else
-    {
+    } else {
         return false;
     }
 }
 
-bool BmpBucketTool::pop(int &x, int &y)
+bool BmpFloodFill::pop(int &x, int &y)
 {
-    if (stackPointer > 0)
-    {
+    if (stackPointer > 0) {
         int p = stack[stackPointer];
         x = p / mImage.height();
         y = p % mImage.height();
         stackPointer--;
         return true;
-    }
-    else
-    {
+    } else {
         return false;
     }
 }
 
-void BmpBucketTool::emptyStack()
+void BmpFloodFill::emptyStack()
 {
     stackPointer = 0;
-}
-
-void BmpBucketTool::bmpImageChanged()
-{
-    // Recompute the fill region if the BMP changes.
-    mRegion = QRegion();
-    if (scene()) {
-        tilePositionChanged(tilePosition());
-    }
 }

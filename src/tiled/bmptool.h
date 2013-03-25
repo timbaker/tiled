@@ -200,6 +200,71 @@ private:
     bool mSelecting;
 };
 
+class BmpFloodFill
+{
+public:
+    void floodFillScanlineStack(int x, int y, QRgb newColor, QRgb oldColor);
+    QRgb pixel(int x, int y);
+    void setPixel(int x, int y, QRgb pixel);
+    bool push(int x, int y);
+    bool pop(int &x, int &y);
+    void emptyStack();
+
+    QImage mImage;
+    QRegion mRegion;
+    enum { STACK_SIZE = 16 * 1024 * 1024 };
+    int stack[STACK_SIZE];
+    int stackPointer;
+};
+
+// This tool is for selecting and moving pixels in a map's BMP images.
+class BmpWandTool : public AbstractBmpTool
+{
+    Q_OBJECT
+
+public:
+    static BmpWandTool *instance();
+
+    void mousePressed(QGraphicsSceneMouseEvent *event);
+    void mouseReleased(QGraphicsSceneMouseEvent *event);
+
+    void mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers);
+
+    void languageChanged();
+
+protected:
+    void tilePositionChanged(const QPoint &tilePos);
+
+    void updateStatusInfo();
+
+private:
+    Q_DISABLE_COPY(BmpWandTool)
+    static BmpWandTool *mInstance;
+    BmpWandTool(QObject *parent = 0);
+
+    enum Mode {
+        NoMode,
+        Selecting,
+        Dragging
+    };
+
+    enum SelectionMode {
+        Replace,
+        Add,
+        Subtract,
+        Intersect
+    };
+
+    Mode mMode;
+    QPoint mDragStart;
+
+    QPointF mStartScenePos;
+    bool mMouseDown;
+    bool mMouseMoved;
+
+    BmpFloodFill mFloodFill;
+};
+
 // This tool is for drawing rectangles in a map's BMP images.
 class BmpRectTool : public AbstractBmpTool
 {
@@ -264,12 +329,6 @@ protected:
     void updateStatusInfo();
 
 private:
-    void floodFillScanlineStack(int x, int y, QRgb newColor, QRgb oldColor);
-    QRgb pixel(int x, int y);
-    void setPixel(int x, int y, QRgb pixel);
-    bool push(int x, int y);
-    bool pop(int &x, int &y);
-    void emptyStack();
 
 private slots:
     void bmpImageChanged();
@@ -282,11 +341,7 @@ private:
     QPointF mStartScenePos;
     QPoint mStartTilePos;
     bool mErasing;
-    QImage mImage;
-    QRegion mRegion;
-    enum { STACK_SIZE = 16 * 1024 * 1024 };
-    int stack[STACK_SIZE];
-    int stackPointer;
+    BmpFloodFill mFloodFill;
 };
 
 /////
