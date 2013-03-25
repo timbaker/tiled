@@ -1288,8 +1288,9 @@ void MainWindow::delete_()
         foreach (MapObject *mapObject, selectedObjects)
             undoStack->push(new RemoveMapObject(mMapDocument, mapObject));
     }
-
+#ifndef ZOMBOID
     mActionHandler->selectNone();
+#endif
     undoStack->endMacro();
 }
 
