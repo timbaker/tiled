@@ -346,6 +346,93 @@ private:
 
 /////
 
+// This is a QImage with resize() and merge() methods mirroring those of
+// TileLayer.
+class ResizableImage : public QImage
+{
+public:
+    ResizableImage() :
+        QImage()
+    {
+
+    }
+
+    ResizableImage(const QSize &size) :
+        QImage(size, QImage::Format_ARGB32)
+    {
+
+    }
+
+    ResizableImage(const QImage &image) :
+        QImage(image)
+    {
+    }
+
+    // This is like TileLayer::resize().
+    void resize(const QSize &size, const QPoint &offset)
+    {
+        QImage newImage(size, QImage::Format_ARGB32);
+        newImage.fill(Qt::black);
+
+        // Copy over the preserved part
+        const int startX = qMax(0, -offset.x());
+        const int startY = qMax(0, -offset.y());
+        const int endX = qMin(width(), size.width() - offset.x());
+        const int endY = qMin(height(), size.height() - offset.y());
+
+        for (int y = startY; y < endY; ++y) {
+            for (int x = startX; x < endX; ++x) {
+                newImage.setPixel(x + offset.x(), y + offset.y(), pixel(x, y));
+            }
+        }
+
+        *this = newImage;
+    }
+
+    // This is like TileLayer::merge().
+    void merge(const QPoint &pos, const ResizableImage *other, const QRegion &otherRegion)
+    {
+        QRegion region = otherRegion.translated(pos - otherRegion.boundingRect().topLeft()) & QRect(0, 0, width(), height());
+        foreach (QRect area, region.rects()) {
+            for (int y = area.top(); y <= area.bottom(); ++y) {
+                for (int x = area.left(); x <= area.right(); ++x) {
+                    setPixel(x, y, other->pixel(x - pos.x(), y - pos.y()));
+                }
+            }
+        }
+    }
+};
+
+// This is based on PaintTileLayer.
+class PaintBMP : public QUndoCommand
+{
+public:
+    PaintBMP(MapDocument *mapDocument, int bmpIndex, int x, int y,
+             QImage &source, QRegion &region);
+//    ~PaintBMP();
+
+    void setMergeable(bool mergeable)
+    { mMergeable = mergeable; }
+
+    void undo() { paint(mErased); }
+    void redo() { paint(mSource); }
+
+    void paint(const ResizableImage &source);
+
+    int id() const;
+    bool mergeWith(const QUndoCommand *other);
+
+private:
+    MapDocument *mMapDocument;
+    int mBmpIndex;
+    ResizableImage mSource;
+    ResizableImage mErased;
+    int mX;
+    int mY;
+    QRegion mRegion;
+    bool mMergeable;
+};
+
 class ChangeBmpSelection : public QUndoCommand
 {
 public:

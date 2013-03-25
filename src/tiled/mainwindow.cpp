@@ -1267,6 +1267,21 @@ void MainWindow::delete_()
     QUndoStack *undoStack = mMapDocument->undoStack();
     undoStack->beginMacro(tr("Delete"));
 
+#ifdef ZOMBOID
+    AbstractTool *tool = ToolManager::instance()->selectedTool();
+    if (tool && dynamic_cast<AbstractBmpTool*>(tool)) {
+        QRegion selection = mMapDocument->bmpSelection();
+        if (!selection.isEmpty()) {
+            QRect r = selection.boundingRect();
+            int x = r.x(), y = r.y();
+            QImage image(r.size(), QImage::Format_ARGB32);
+            image.fill(qRgb(0, 0, 0));
+            undoStack->push(new PaintBMP(mMapDocument,
+                                         BmpBrushTool::instance()->bmpIndex(),
+                                         x, y, image, selection));
+        }
+    } else
+#endif // ZOMBOID
     if (tileLayer && !tileSelection.isEmpty()) {
         undoStack->push(new EraseTiles(mMapDocument, tileLayer, tileSelection));
     } else if (!selectedObjects.isEmpty()) {
@@ -1792,7 +1807,6 @@ void MainWindow::updateActions()
 
     const bool canCopy = (tileLayerSelected && !selection.isEmpty())
             || objectsSelected;
-
     mUi->actionSave->setEnabled(map);
     mUi->actionSaveAs->setEnabled(map);
     mUi->actionSaveAsImage->setEnabled(map);
@@ -1802,7 +1816,11 @@ void MainWindow::updateActions()
     mUi->actionCut->setEnabled(canCopy);
     mUi->actionCopy->setEnabled(canCopy);
     mUi->actionPaste->setEnabled(mClipboardManager->hasMap());
+#ifdef ZOMBOID
+    mUi->actionDelete->setEnabled(canCopy || (mMapDocument && !mMapDocument->bmpSelection().isEmpty()));
+#else
     mUi->actionDelete->setEnabled(canCopy);
+#endif
     mUi->actionNewTileset->setEnabled(map);
     mUi->actionAddExternalTileset->setEnabled(map);
     mUi->actionResizeMap->setEnabled(map);
