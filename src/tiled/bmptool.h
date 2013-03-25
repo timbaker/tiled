@@ -108,6 +108,8 @@ public:
     { return mColor; }
 
     void setBrushSize(int size);
+    int brushSize() const
+    { return mBrushSize; }
 
     enum BrushShape {
         Square,
@@ -156,7 +158,39 @@ private:
     int mBrushSize;
     BrushShape mBrushShape;
     bool mRestrictToSelection;
-    BmpToolDialog *mDialog;
+};
+
+// This tool is for erasing pixels in a map's BMP images.
+class BmpEraserTool : public AbstractBmpTool
+{
+    Q_OBJECT
+public:
+    static BmpEraserTool *instance();
+
+    void activate(MapScene *scene);
+    void deactivate(MapScene *scene);
+
+    void mousePressed(QGraphicsSceneMouseEvent *event);
+    void mouseReleased(QGraphicsSceneMouseEvent *event);
+
+protected:
+    void languageChanged();
+
+protected:
+    void tilePositionChanged(const QPoint &tilePos);
+    void setBrushRegion(const QPoint &tilePos);
+    void paint();
+    void eraseBmp(int bmpIndex, const QRegion &tileRgn);
+
+private:
+    Q_DISABLE_COPY(BmpEraserTool)
+    static BmpEraserTool *mInstance;
+    BmpEraserTool(QObject *parent = 0);
+    ~BmpEraserTool();
+
+    bool mPainting;
+    bool mDidFirstPaint;
+    QPoint mStampPos;
 };
 
 // This tool is for selecting and moving pixels in a map's BMP images.

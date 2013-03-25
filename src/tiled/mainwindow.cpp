@@ -458,6 +458,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     toolManager->registerTool(BmpBucketTool::instance());
     toolManager->registerTool(BmpSelectionTool::instance());
     toolManager->registerTool(BmpWandTool::instance());
+    toolManager->registerTool(BmpEraserTool::instance());
 #endif
 
     addToolBar(toolManager->toolBar());

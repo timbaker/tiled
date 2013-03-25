@@ -182,33 +182,7 @@ PaintBMP::PaintBMP(MapDocument *mapDocument, int bmpIndex,
 
 void PaintBMP::paint(const ResizableImage &source)
 {
-#if 1
     mMapDocument->paintBmp(mBmpIndex, mX, mY, source, mRegion);
-#else
-    QImage &image = mMapDocument->map()->rbmp(mBmpIndex);
-    QRegion region = mRegion & QRect(0, 0, image.width(), image.height());
-
-    foreach (QRect r, region.rects()) {
-        for (int y = r.top(); y <= r.bottom(); y++) {
-            for (int x = r.left(); x <= r.right(); x++) {
-                image.setPixel(x, y, source.pixel(x - mX, y - mY));
-            }
-        }
-    }
-
-    const QRect r = region.boundingRect();
-    mMapDocument->bmpBlender()->update(r.left(), r.top(), r.right(), r.bottom());
-    Q_ASSERT(mMapDocument->mapComposite()->tileLayersForLevel(0));
-    mMapDocument->mapComposite()->tileLayersForLevel(0)->setBmpBlendLayers(
-                mMapDocument->bmpBlender()->mTileLayers.values());
-
-    foreach (QString layerName, mMapDocument->bmpBlender()->mTileLayers.keys()) {
-        int index = mMapDocument->map()->indexOfLayer(layerName, Layer::TileLayerType);
-        if (index == -1)
-            continue;
-        mMapDocument->emitRegionAltered(region, mMapDocument->map()->layerAt(index)->asTileLayer());
-    }
-#endif
 }
 
 int PaintBMP::id() const
@@ -245,15 +219,8 @@ bool PaintBMP::mergeWith(const QUndoCommand *other)
     mSource.merge(pos, &o->mSource, o->mRegion);
 
     // Copy the newly-erased pixels from the other command over
-#if 1
     mErased.merge(pos, &o->mErased, newRegion);
-#else
-    foreach (const QRect &rect, newRegion.rects())
-        for (int y = rect.top(); y <= rect.bottom(); ++y)
-            for (int x = rect.left(); x <= rect.right(); ++x)
-                mErased.setPixel(x - mX, y - mY,
-                                 o->mErased.pixel(x - o->mX, y - o->mY));
-#endif
+
     return true;
 }
 
@@ -423,6 +390,26 @@ void BmpBrushTool::setBrushRegion(const QPoint &tilePos)
                                      QSize(mBrushSize, mBrushSize)));
 }
 
+// Calculate the region of pixels that do *not* have a given pixel value.
+static QRegion bmpPixelRegion(Map *map, int bmpIndex, const QRegion &tileRgn, QRgb pixel)
+{
+    const QImage &bmpImage = map->rbmp(bmpIndex).rimage();
+    QRect mapBounds(QPoint(), map->size());
+
+    QRegion paintRgn;
+    foreach (QRect r, tileRgn.rects()) {
+        r &= mapBounds;
+        for (int y = r.top(); y <= r.bottom(); y++) {
+            for (int x = r.left(); x <= r.right(); x++) {
+                if (bmpImage.pixel(x, y) != pixel) {
+                    paintRgn += QRect(x, y, 1, 1);
+                }
+            }
+        }
+    }
+    return paintRgn;
+}
+
 void BmpBrushTool::paint()
 {
     if (!mErasing && mColor == qRgb(0, 0, 0))
@@ -437,19 +424,8 @@ void BmpBrushTool::paint()
             tileRgn &= selection;
     }
 
-    QRegion paintRgn;
-    QImage &bmpImage = mapDocument()->map()->rbmp(mBmpIndex).rimage();
     QRgb color = mErasing ? qRgb(0, 0, 0) : mColor;
-    foreach (QRect r, tileRgn.rects()) {
-        r &= mapBounds;
-        for (int y = r.top(); y <= r.bottom(); y++) {
-            for (int x = r.left(); x <= r.right(); x++) {
-                if (bmpImage.pixel(x, y) != color) {
-                    paintRgn += QRect(x, y, 1, 1);
-                }
-            }
-        }
-    }
+    QRegion paintRgn = bmpPixelRegion(mapDocument()->map(), mBmpIndex, tileRgn, color);
 
     if (paintRgn.isEmpty())
         return;
@@ -468,6 +444,132 @@ void BmpBrushTool::paint()
     cmd->setMergeable(mDidFirstPaint);
     mapDocument()->undoStack()->push(cmd);
     mDidFirstPaint = true;
+}
+
+/////
+
+BmpEraserTool *BmpEraserTool::mInstance = 0;
+
+BmpEraserTool *BmpEraserTool::instance()
+{
+    if (!mInstance)
+        mInstance = new BmpEraserTool;
+    return mInstance;
+}
+
+BmpEraserTool::BmpEraserTool(QObject *parent) :
+    AbstractBmpTool(tr("BMP Eraser"),
+                     QIcon(QLatin1String(":images/22x22/bmp-eraser.png")),
+                     QKeySequence(tr("")),
+                     parent),
+    mPainting(false)
+{
+}
+
+BmpEraserTool::~BmpEraserTool()
+{
+}
+
+void BmpEraserTool::activate(MapScene *scene)
+{
+    AbstractBmpTool::activate(scene);
+}
+
+void BmpEraserTool::deactivate(MapScene *scene)
+{
+    AbstractBmpTool::deactivate(scene);
+}
+
+void BmpEraserTool::mousePressed(QGraphicsSceneMouseEvent *event)
+{
+    if (!brushItem()->isVisible())
+        return;
+
+    if (event->button() == Qt::LeftButton) {
+        mPainting = true;
+        mDidFirstPaint = false;
+        mStampPos = tilePosition();
+        paint();
+    }
+}
+
+void BmpEraserTool::mouseReleased(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)
+        mPainting = false;
+}
+
+void BmpEraserTool::languageChanged()
+{
+    setName(tr("BMP Eraser"));
+    setShortcut(QKeySequence(tr("")));
+}
+
+void BmpEraserTool::tilePositionChanged(const QPoint &tilePos)
+{
+    setBrushRegion(tilePos);
+
+    if (mPainting) {
+        foreach (const QPoint &p, calculateLine(mStampPos.x(), mStampPos.y(),
+                                                tilePos.x(), tilePos.y())) {
+            setBrushRegion(p);
+            paint();
+        }
+        mStampPos = tilePos;
+    }
+}
+
+void BmpEraserTool::setBrushRegion(const QPoint &tilePos)
+{
+    int brushSize = BmpBrushTool::instance()->brushSize();
+    if (BmpBrushTool::instance()->brushShape() == BmpBrushTool::Circle) {
+        QRegion rgn;
+        qreal radius = brushSize / 2.0;
+        QVector2D center = QVector2D(tilePos) + QVector2D(0.5, 0.5);
+        for (int y = -qFloor(radius); y <= qCeil(radius); y++) {
+            for (int x = -qFloor(radius); x <= qCeil(radius); x++) {
+                QVector2D p(tilePos.x() + x + 0.5, tilePos.y() + y + 0.5);
+                if ((p - center).length() <= radius + 0.05)
+                    rgn += QRect(tilePos + QPoint(x, y), QSize(1, 1));
+            }
+        }
+        brushItem()->setTileRegion(rgn);
+        return;
+    }
+    brushItem()->setTileRegion(QRect(tilePos - QPoint(brushSize/2, brushSize/2),
+                                     QSize(brushSize, brushSize)));
+}
+
+void BmpEraserTool::paint()
+{
+    QRegion tileRgn = brushItem()->tileRegion();
+    if (BmpBrushTool::instance()->restrictToSelection()) {
+        QRegion selection = mapDocument()->bmpSelection();
+        if (!selection.isEmpty())
+            tileRgn &= selection;
+    }
+
+    int bmpIndex = BmpBrushTool::instance()->bmpIndex();
+
+    QRgb black = qRgb(0, 0, 0);
+    QRegion paintRgn = bmpPixelRegion(mapDocument()->map(), bmpIndex, tileRgn, black);
+    if (paintRgn.isEmpty())
+        return;
+
+    QRect r = paintRgn.boundingRect();
+    QPoint topLeft = r.topLeft();
+    QImage image(r.size(), QImage::Format_ARGB32);
+    image.fill(black);
+    PaintBMP *cmd = new PaintBMP(mapDocument(), bmpIndex,
+                                 topLeft.x(), topLeft.y(), image,
+                                 paintRgn);
+    cmd->setMergeable(mDidFirstPaint);
+    mapDocument()->undoStack()->push(cmd);
+    mDidFirstPaint = true;
+}
+
+void BmpEraserTool::eraseBmp(int bmpIndex, const QRegion &tileRgn)
+{
 }
 
 /////
@@ -1059,8 +1161,6 @@ void BmpRectTool::mouseReleased(QGraphicsSceneMouseEvent *event)
             QRgb color = mErasing ? qRgb(0, 0, 0)
                                   : BmpBrushTool::instance()->color();
             if (!r.isEmpty()) {
-                const QImage &bmpImage = doc->map()->bmp(bmpIndex).rimage();
-
                 QRegion tileRgn(r);
                 if (BmpBrushTool::instance()->restrictToSelection()) {
                     QRegion selection = mapDocument()->bmpSelection();
@@ -1068,16 +1168,8 @@ void BmpRectTool::mouseReleased(QGraphicsSceneMouseEvent *event)
                         tileRgn &= selection;
                 }
 
-                QRegion paintRgn;
-                foreach (QRect r, tileRgn.rects()) {
-                    for (int y = r.top(); y <= r.bottom(); y++) {
-                        for (int x = r.left(); x <= r.right(); x++) {
-                            if (bmpImage.pixel(x, y) != color) {
-                                paintRgn += QRect(x, y, 1, 1);
-                            }
-                        }
-                    }
-                }
+                QRegion paintRgn = bmpPixelRegion(mapDocument()->map(), bmpIndex,
+                                                  tileRgn, color);
                 if (!paintRgn.isEmpty()) {
                     QRect paintRect = paintRgn.boundingRect();
                     QPoint topLeft = paintRect.topLeft();
