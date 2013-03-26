@@ -370,20 +370,98 @@ void BmpBrushTool::tilePositionChanged(const QPoint &tilePos)
     }
 }
 
+class BresenhamCircle
+{
+public:
+    BresenhamCircle(int cx, int cy, int diameter) :
+        xCenter(cx),
+        yCenter(cy),
+        diameter(diameter),
+        cheat(!(diameter % 2))
+    {
+        if (diameter == 2) {
+            region = QRect(cx - 1, cy - 1, 2, 2);
+            return;
+        }
+        if (diameter == 4) {
+            region += QRect(cx - 1, cy - 2, 2, 4);
+            region += QRect(cx - 2, cy - 1, 4, 2);
+            return;
+        }
+        circleMidpoint();
+    }
+
+    void point(int x, int y)
+    {
+        // For non-integer radius (i.e., even-diameter circles), just
+        // chop out the pixels along the axes.
+        if (cheat) {
+            if (x == xCenter || y == yCenter) return;
+            if (x > xCenter) --x;
+            if (y > yCenter) --y;
+        }
+        region += QRect(x, y, 1, 1);
+    }
+
+    void line(int x1, int y1, int x2)
+    {
+        while (x1 <= x2)
+            point(x1++, y1);
+    }
+
+    void points(int x, int y)
+    {
+        int cx = xCenter, cy = yCenter;
+
+        if (x == 0) {
+            point(cx, cy + y);
+            point(cx, cy - y);
+            line(cx - y, cy, cx + y );
+        } else if (x == y) {
+            line(cx - x, cy + y, cx + x);
+            line(cx - x, cy - y, cx + x);
+        } else if (x < y) {
+            line(cx - x, cy + y, cx + x);
+            line(cx - x, cy - y, cx + x);
+            line(cx - y, cy + x, cx + y);
+            line(cx - y, cy - x, cx + y);
+        }
+    }
+
+    void circleMidpoint()
+    {
+        int radius = diameter / 2;
+        if (cheat) radius = (diameter + 1) / 2;
+
+        int x = 0;
+        int y = radius;
+        int p = (5 - radius*4)/4;
+
+        points(x, y);
+        while (x < y) {
+            x++;
+            if (p < 0) {
+                p += 2*x+1;
+            } else {
+                y--;
+                p += 2*(x-y)+1;
+            }
+            points(x, y);
+        }
+    }
+
+    int xCenter;
+    int yCenter;
+    int diameter;
+    bool cheat;
+    QRegion region;
+};
+
 void BmpBrushTool::setBrushRegion(const QPoint &tilePos)
 {
     if (mBrushShape == Circle) {
-        QRegion rgn;
-        qreal radius = mBrushSize / 2.0;
-        QVector2D center = QVector2D(tilePos) + QVector2D(0.5, 0.5);
-        for (int y = -qFloor(radius); y <= qCeil(radius); y++) {
-            for (int x = -qFloor(radius); x <= qCeil(radius); x++) {
-                QVector2D p(tilePos.x() + x + 0.5, tilePos.y() + y + 0.5);
-                if ((p - center).length() <= radius + 0.05)
-                    rgn += QRect(tilePos + QPoint(x, y), QSize(1, 1));
-            }
-        }
-        brushItem()->setTileRegion(rgn);
+        BresenhamCircle bc(tilePos.x(), tilePos.y(), mBrushSize);
+        brushItem()->setTileRegion(bc.region);
         return;
     }
     brushItem()->setTileRegion(QRect(tilePos - QPoint(mBrushSize/2, mBrushSize/2),
@@ -523,6 +601,10 @@ void BmpEraserTool::setBrushRegion(const QPoint &tilePos)
 {
     int brushSize = BmpBrushTool::instance()->brushSize();
     if (BmpBrushTool::instance()->brushShape() == BmpBrushTool::Circle) {
+#if 1
+        BresenhamCircle bc(tilePos.x(), tilePos.y(), brushSize);
+        QRegion rgn = bc.region;
+#else
         QRegion rgn;
         qreal radius = brushSize / 2.0;
         QVector2D center = QVector2D(tilePos) + QVector2D(0.5, 0.5);
@@ -533,6 +615,7 @@ void BmpEraserTool::setBrushRegion(const QPoint &tilePos)
                     rgn += QRect(tilePos + QPoint(x, y), QSize(1, 1));
             }
         }
+#endif
         brushItem()->setTileRegion(rgn);
         return;
     }
