@@ -86,6 +86,11 @@ QStringList BuildingTMX::tileLayerNamesForLevel(int level)
 
 bool BuildingTMX::exportTMX(Building *building, const QString &fileName)
 {
+#ifdef WORLDED
+    Q_UNUSED(building)
+    Q_UNUSED(fileName)
+    return false;
+#else
     BuildingMap bmap(building);
 
     Map *map = bmap.mergedMap();
@@ -170,6 +175,7 @@ bool BuildingTMX::exportTMX(Building *building, const QString &fileName)
     TilesetManager::instance()->removeReferences(map->tilesets());
     delete map;
     return ok;
+#endif // WORLDED
 }
 
 QString BuildingTMX::txtName()
@@ -179,7 +185,7 @@ QString BuildingTMX::txtName()
 
 QString BuildingTMX::txtPath()
 {
-    return BuildingPreferences::instance()->configPath(txtName());
+    return Preferences::instance()->configPath(txtName());
 }
 
 #define VERSION0 0
@@ -197,11 +203,13 @@ bool BuildingTMX::readTxt()
         return false;
     }
 
+#ifndef WORLDED
     if (!upgradeTxt())
         return false;
 
     if (!mergeTxt())
         return false;
+#endif
 
     QString path = info.canonicalFilePath();
     SimpleFile simple;
@@ -262,6 +270,9 @@ bool BuildingTMX::readTxt()
 
 bool BuildingTMX::writeTxt()
 {
+#ifdef WORLDED
+    return false;
+#endif
     SimpleFile simpleFile;
 
     SimpleFileBlock layersBlock;

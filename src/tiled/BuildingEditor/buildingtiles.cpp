@@ -242,7 +242,11 @@ QString BuildingTilesMgr::txtName()
 
 QString BuildingTilesMgr::txtPath()
 {
+#ifdef WORLDED
+    return Preferences::instance()->configPath(txtName());
+#else
     return BuildingPreferences::instance()->configPath(txtName());
+#endif
 }
 
 static void writeTileEntry(SimpleFileBlock &parentBlock, BuildingTileEntry *entry)
@@ -321,13 +325,13 @@ bool BuildingTilesMgr::readTxt()
         mError = tr("The %1 file doesn't exist.").arg(txtName());
         return false;
     }
-
+#if !defined(WORLDED)
     if (!upgradeTxt())
         return false;
 
     if (!mergeTxt())
         return false;
-
+#endif
     QString path = info.canonicalFilePath();
     SimpleFile simple;
     if (!simple.read(path)) {
@@ -397,6 +401,10 @@ bool BuildingTilesMgr::readTxt()
 
 void BuildingTilesMgr::writeTxt(QWidget *parent)
 {
+#ifdef WORLDED
+    return;
+#endif
+
     SimpleFile simpleFile;
     foreach (BuildingTileCategory *category, categories()) {
         SimpleFileBlock categoryBlock;
