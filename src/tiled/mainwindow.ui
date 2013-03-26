@@ -90,6 +90,8 @@
     <property name="title">
      <string>&amp;Help</string>
     </property>
+    <addaction name="actionHelpContents"/>
+    <addaction name="separator"/>
     <addaction name="actionAbout"/>
     <addaction name="actionAboutQt"/>
    </widget>
@@ -482,6 +484,11 @@
    </property>
    <property name="text">
     <string>WorldEd</string>
+   </property>
+  </action>
+  <action name="actionHelpContents">
+   <property name="text">
+    <string>Contents</string>
    </property>
   </action>
  </widget>

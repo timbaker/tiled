@@ -1,0 +1,127 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>TileZed - BMP Tools</title></head><body>
+<h1>TileZed's BMP Tools</h1>
+Every map has 2 images the same size as the map with one pixel per tile position.<br>
+The pixel colors of the images are used to automatically generate tiles according to a set of rules.<br>
+A map starts without any rules; the rules must be imported from 2 text files and are saved in the map's .tmx file.<br>
+The text files are the same as those used by WorldEd's BMPToTMX command, Rules.txt and Blends.txt.<br>
+<h2>Setting up your map for the BMP tools</h2>
+<ol>
+  <li>Click on one of the BMP tools.&nbsp; This will display the floating Bmp Tool Window.</li>
+  <li>Notice the Rules page is empty.&nbsp; You need to add some rules!</li>
+  <li>In the Options page, click each of the Import buttons to load Rules.txt and Blends.txt.&nbsp; Those files are in WorldEd's directory but you may load them from some other location.</li>
+  <li>You should now see a list of rules in the Rules page.</li>
+  <li>Make sure your map has all the layers needed by Rules.txt and
+Blends.txt.&nbsp; By default, this means your map must have 0_Floor,
+0_FloorOverlay/2/3/4 and 0_Vegetation.</li>
+  <li>Your map also needs all the tilesets used by Rules.txt and Blends.txt.<br>
+  </li>
+</ol>
+<h2>Interaction with existing map tiles</h2>
+
+The pixels in a map's BMP images are used to generate tiles
+on-the-fly.&nbsp; These tiles are displayed in the layers determined by the
+map's rules and blends.&nbsp; These automatically-generated tiles will
+<span style="font-style: italic;">override</span> the map's own tiles.&nbsp; So if a rule specifies that a tile
+should be placed in the 0_Floor layer, that tile will replace any tile
+in the 0_Floor layer that was drawn by the user.<br>
+
+<br>
+The whole point of the BMP tools is to allow you to "touch up" an
+existing map by drawing paths, roads, patches of grass, etc
+without having to place all the blended tiles around the edges yourself
+(which is time-consuming).&nbsp; In order for this blending to work
+correctly in areas adjacent to the areas painted by the tools (i.e.,
+where only black pixels exist next to painted pixels), the blending
+code will look at the existing map tile in the 0_Floor layer and see if
+it matches one of a rules' tiles.&nbsp; If the map tile does match one
+of a rules' tiles, the black pixel is replaced by the rule's
+color.&nbsp; This allows blending of painted areas with adjacent
+non-painted areas, and allows trees/grass to be painted (when a rule
+has a "condition" color specified) onto parts of the map where you
+didn't paint any ground pixels.<br>
+<h2>How random tile choices work</h2>
+Some rules have multiple choices for which tile is placed.&nbsp; The
+tile that is used at each map location is randomly chosen from the
+rule's list of tiles.&nbsp; In order to keep the same tile choices
+between editing sessions, a random number is assigned to each tile
+location when the map is loaded.&nbsp; This is done by setting a fixed
+"seed" for the random number generator.&nbsp; As long as the map's size
+doesn't change, the same random number will be used at each tile
+location every time the map is loaded.&nbsp; If a map is resized, a
+whole new set of random numbers will be generated for the map,
+resulting in different tiles being displayed!<br>
+
+<h2>The BMP Tool Window</h2>
+The Rules page shows a list of all the rules you may paint with.<br>
+<ul>
+  <li>"index" determines which of the two BMPs the rule will affect.&nbsp;
+The index is either 0 or 1.&nbsp; Rules with index=0 typically put
+tiles into 0_Floor.&nbsp; Rules with index=1 typically put tiles into
+0_Vegetation.<br>
+  </li>
+  <li>"color" is the red-green-blue color of the pixel that is painted in a BMP.</li>
+  <li>"condition" is another red-green-blue color that is only used by rules with index=1.&nbsp; When "condition" is not "0,0,0", the rule will only generate tiles if the pixel in the index=0 BMP image has the same color as the "condition" color.</li>
+  <li>Each rule has one or more tiles displayed.&nbsp; When a BMP image has a
+pixel with the same color as the rule, one of the rule's tiles will be
+    <span style="font-style: italic;">randomly chosen</span> and placed in the map.</li>
+  <li>Some rules might have a "none" tile.&nbsp; This just means that no tile will be placed sometimes when randomly choosing a tile.<br>
+  </li>
+</ul>
+Selecting one of a rule's tiles determines which pixel color and which
+BMP image is affected by the BMP tools.&nbsp; This means that painting,
+erasing and selecting only affects one BMP image at a time.&nbsp; It
+doesn't matter which tile is selected if a rule has more than one tile;
+the tiles of a rule all use the same pixel color and which tile is
+actually placed in the map is always randomly determined.<br>
+<h2>The BMP Tools</h2>
+Use the BMP tools to draw and erase pixels in a map's BMP images.&nbsp;
+The selected rule determines which BMP image is the current one
+affected by the tools.&nbsp; Usually the tools only affect the pixels in one BMP image at a time.<br>
+
+
+<h3>Brush Tool<br>
+</h3>
+The Brush Tool paints pixels using a brush.&nbsp; The size and shape of
+the brush may be changed in the Options page of the BMP Tool
+Window.&nbsp; Left-click-drag to paint.&nbsp; Hold down the CTRL key to
+erase pixels instead of painting.<br>
+<h3>Rectangle Tool</h3>
+The Rectangle Tool draws a filled rectangle.&nbsp; Left-click-drag to
+trace out a rectangle, then release the left mouse button to paint the
+pixels. Hold down the Shift key to draw a square.&nbsp; Right-click
+while drawing to cancel.<br>
+<h3>Bucket Fill Tool</h3>
+The Bucket Fill Tool performs a flood-fill.&nbsp; It looks at the pixel
+under the cursor, then replaces that pixel and any pixels of the same
+color that touch it with the current rule's color.&nbsp; Moving the
+mouse pointer around highlights the area that will be affected.&nbsp;
+Left-click to paint.<br>
+<h3>Rectangle Select Tool</h3>
+The Rectangle Select Tool selects a rectangular area of tiles.&nbsp;
+Left-click-drag to trace out a rectangle, then release the left mouse
+button to change the selection.&nbsp; Right-click while tracing out a
+rectangle to cancel.&nbsp; Hold down Ctrl to subtract from the current
+selection.&nbsp; Hold down Shift to add to the current selection.&nbsp;
+Hold down both Ctrl and Shift to intersect the current selection.<br>
+<br>
+Left-click outside the current selection to clear the selection.<br>
+<br>
+You can move and duplicate selected pixels using this tool.&nbsp;
+Left-click-drag in the selected area to move the selection, then
+release the left mouse button to move the pixels, erasing the original
+pixels.&nbsp; Hold down the Ctrl key when <span style="font-style: italic;">releasing</span> the left mouse button to duplicate the selected pixels.&nbsp; Hold down the Shift key when <span style="font-style: italic;">releasing</span> the left mouse button to move/duplicate the pixels in both BMP images, not just the current one.<br>
+<h3>Fuzzy Select Tool</h3>
+The Fuzzy Select Tool changes the selection using a flood-fill (similar
+to the Bucket Fill Tool).&nbsp; Otherwise this tool behaves the same as
+the Rectangle Select Tool.<br>
+<h3>Eraser Tool</h3>
+The Eraser Tool erases pixels using a brush.&nbsp; The size and shape
+of the brush may be changed in the Options page of the BMP Tool
+Window.&nbsp; Left-click-drag to erase pixels in the current BMP
+image.&nbsp; Note that erasing actually means painting black pixels.<br>
+<br>
+You can also erase all the pixels in the selected area using Edit &gt;
+Delete (the Delete key).&nbsp; This only works when one of the BMP
+tools is active.<br>
+</body></html>

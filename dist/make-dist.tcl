@@ -125,6 +125,7 @@ puts ---Docs---
 copyFile $SRC/docs $DEST/docs map.dtd
 copyFile $SRC/docs $DEST/docs map.xsd
 copyDir $SRC/docs $DEST/docs TileProperties
+copyDir $SRC/docs $DEST/docs TileZed
 
 puts ---Examples---
 copyDir $SRC $DEST examples

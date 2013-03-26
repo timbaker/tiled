@@ -92,6 +92,7 @@
 #include "zlevelsdock.h"
 #include "zprogress.h"
 #include <QDebug>
+#include <QDesktopServices>
 #include <QProcess>
 #endif
 
@@ -378,6 +379,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 
     connect(mUi->actionAbout, SIGNAL(triggered()), SLOT(aboutTiled()));
     connect(mUi->actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+#ifdef ZOMBOID
+    connect(mUi->actionHelpContents, SIGNAL(triggered()), SLOT(helpContents()));
+#endif
 
     connect(mTilesetDock, SIGNAL(tilesetsDropped(QStringList)),
             SLOT(newTilesets(QStringList)));
@@ -2266,3 +2270,13 @@ void MainWindow::closeMapDocument(int index)
     if (confirmSave())
         mDocumentManager->closeCurrentDocument();
 }
+
+#ifdef ZOMBOID
+void MainWindow::helpContents()
+{
+    QUrl url = QUrl::fromLocalFile(
+            QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + QLatin1String("docs/TileZed/index.html"));
+    QDesktopServices::openUrl(url);
+}
+#endif
