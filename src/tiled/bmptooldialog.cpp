@@ -354,11 +354,18 @@ void BmpToolDialog::setDocument(MapDocument *doc)
                 }
                 tiles += tile;
                 userData += rule;
-                headers += tr("Rule #%8: index=%1 rgb=%2,%3,%4 condition=%5,%6,%7")
-                        .arg(rule->bitmapIndex)
-                        .arg(qRed(rule->color)).arg(qGreen(rule->color)).arg(qBlue(rule->color))
-                        .arg(qRed(rule->condition)).arg(qGreen(rule->condition)).arg(qBlue(rule->condition))
-                        .arg(ruleIndex);
+                if (rule->bitmapIndex == 0) {
+                    headers += tr("Rule #%1: index=%2 color=%3,%4,%5")
+                            .arg(ruleIndex)
+                            .arg(rule->bitmapIndex)
+                            .arg(qRed(rule->color)).arg(qGreen(rule->color)).arg(qBlue(rule->color));
+                } else {
+                    headers += tr("Rule #%1: index=%2 color=%3,%4,%5 condition=%6,%7,%8")
+                            .arg(ruleIndex)
+                            .arg(rule->bitmapIndex)
+                            .arg(qRed(rule->color)).arg(qGreen(rule->color)).arg(qBlue(rule->color))
+                            .arg(qRed(rule->condition)).arg(qGreen(rule->condition)).arg(qBlue(rule->condition));
+                }
             }
             ++ruleIndex;
         }
