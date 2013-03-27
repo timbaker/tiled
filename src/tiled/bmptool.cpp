@@ -42,11 +42,6 @@ using namespace Tiled::Internal;
 
 /////
 
-namespace Tiled {
-namespace Internal {
-
-/////
-
 AbstractBmpTool::AbstractBmpTool(const QString &name,
                                  const QIcon &icon,
                                  const QKeySequence &shortcut,
@@ -222,9 +217,6 @@ bool PaintBMP::mergeWith(const QUndoCommand *other)
     mErased.merge(pos, &o->mErased, newRegion);
 
     return true;
-}
-
-}
 }
 
 /////
