@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>253</width>
-    <height>350</height>
+    <height>398</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -240,6 +240,23 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <widget class="QToolButton" name="help">
+           <property name="minimumSize">
+            <size>
+             <width>200</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>HELP!</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>

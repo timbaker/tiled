@@ -59,6 +59,8 @@ private slots:
     void reloadBlends();
     void importBlends();
 
+    void help();
+
     void bmpRulesChanged();
     void bmpBlendsChanged();
 

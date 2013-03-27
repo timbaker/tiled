@@ -36,9 +36,11 @@
 #include "tileset.h"
 
 #include <QDebug>
+#include <QDesktopServices>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QSettings>
+#include <QUrl>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -149,6 +151,8 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
     connect(ui->importRules, SIGNAL(clicked()), SLOT(importRules()));
     connect(ui->reloadBlends, SIGNAL(clicked()), SLOT(reloadBlends()));
     connect(ui->importBlends, SIGNAL(clicked()), SLOT(importBlends()));
+
+    connect(ui->help, SIGNAL(clicked()), SLOT(help()));
 
     QSettings settings;
     settings.beginGroup(QLatin1String("BmpToolDialog"));
@@ -290,6 +294,14 @@ void BmpToolDialog::importBlends()
         settings.setValue(QLatin1String("BmpToolDialog/BlendsFile"), f);
         mDocument->undoStack()->push(new ChangeBmpBlends(mDocument, f, file.blendsCopy()));
     }
+}
+
+void BmpToolDialog::help()
+{
+    QUrl url = QUrl::fromLocalFile(
+            QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + QLatin1String("docs/TileZed/BMPTools.html"));
+    QDesktopServices::openUrl(url);
 }
 
 void BmpToolDialog::bmpRulesChanged()
