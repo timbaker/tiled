@@ -191,6 +191,9 @@ public slots:
     void tilePropertiesEditor();
     void launchWorldEd();
 
+    void brushSizeMinus();
+    void brushSizePlus();
+
     void helpContents();
 #endif
 

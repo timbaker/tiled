@@ -64,6 +64,8 @@ private slots:
     void bmpRulesChanged();
     void bmpBlendsChanged();
 
+    void brushChanged();
+
     void documentAboutToClose(int index, MapDocument *doc);
 
 private:

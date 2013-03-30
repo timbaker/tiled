@@ -142,6 +142,7 @@ protected:
 signals:
     void ruleChanged();
     void restrictToSelectionChanged();
+    void brushChanged();
 
 private:
     Q_DISABLE_COPY(BmpBrushTool)
@@ -181,6 +182,9 @@ protected:
     void setBrushRegion(const QPoint &tilePos);
     void paint();
     void eraseBmp(int bmpIndex, const QRegion &tileRgn);
+
+private slots:
+    void brushChanged();
 
 private:
     Q_DISABLE_COPY(BmpEraserTool)

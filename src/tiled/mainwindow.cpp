@@ -463,6 +463,16 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     toolManager->registerTool(BmpSelectionTool::instance());
     toolManager->registerTool(BmpWandTool::instance());
     toolManager->registerTool(BmpEraserTool::instance());
+
+    QAction *brushSizeMinus = new QAction(this);
+    brushSizeMinus->setShortcut(QKeySequence(QLatin1String("[")));
+    connect(brushSizeMinus, SIGNAL(triggered()), SLOT(brushSizeMinus()));
+    addAction(brushSizeMinus);
+
+    QAction *brushSizePlus = new QAction(this);
+    brushSizePlus->setShortcut(QKeySequence(QLatin1String("]")));
+    connect(brushSizePlus, SIGNAL(triggered()), SLOT(brushSizePlus()));
+    addAction(brushSizePlus);
 #endif
 
     addToolBar(toolManager->toolBar());
@@ -1524,6 +1534,20 @@ void MainWindow::launchWorldEd()
         QMessageBox::warning(this, tr("Error launching WorldEd"),
                              tr("Couldn't find WorldEd!\n%1").arg(path));
     }
+}
+
+void MainWindow::brushSizeMinus()
+{
+    int brushSize = BmpBrushTool::instance()->brushSize();
+    if (brushSize > 1)
+        BmpBrushTool::instance()->setBrushSize(brushSize - 1);
+}
+
+void MainWindow::brushSizePlus()
+{
+    int brushSize = BmpBrushTool::instance()->brushSize();
+    if (brushSize < 300)
+        BmpBrushTool::instance()->setBrushSize(brushSize + 1);
 }
 #endif
 

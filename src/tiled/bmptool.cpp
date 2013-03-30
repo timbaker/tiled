@@ -279,8 +279,12 @@ void BmpBrushTool::mouseReleased(QGraphicsSceneMouseEvent *event)
 
 void BmpBrushTool::setBrushSize(int size)
 {
+    if (size == mBrushSize)
+        return;
+
     mBrushSize = size;
     tilePositionChanged(tilePosition());
+    emit brushChanged();
 }
 
 void BmpBrushTool::setBrushShape(BmpBrushTool::BrushShape shape)
@@ -534,6 +538,8 @@ BmpEraserTool::BmpEraserTool(QObject *parent) :
                      parent),
     mPainting(false)
 {
+    connect(BmpBrushTool::instance(), SIGNAL(brushChanged()),
+            SLOT(brushChanged()));
 }
 
 BmpEraserTool::~BmpEraserTool()
@@ -645,6 +651,11 @@ void BmpEraserTool::paint()
 
 void BmpEraserTool::eraseBmp(int bmpIndex, const QRegion &tileRgn)
 {
+}
+
+void BmpEraserTool::brushChanged()
+{
+    setBrushRegion(tilePosition());
 }
 
 /////

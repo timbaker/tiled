@@ -177,6 +177,9 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
     mVisibleLaterTimer.setInterval(200);
     connect(&mVisibleLaterTimer, SIGNAL(timeout()), SLOT(setVisibleNow()));
 
+    connect(BmpBrushTool::instance(), SIGNAL(brushChanged()),
+            SLOT(brushChanged()));
+
     connect(DocumentManager::instance(), SIGNAL(documentAboutToClose(int,MapDocument*)),
             SLOT(documentAboutToClose(int,MapDocument*)));
 }
@@ -312,6 +315,12 @@ void BmpToolDialog::bmpRulesChanged()
 void BmpToolDialog::bmpBlendsChanged()
 {
     setDocument(mDocument);
+}
+
+void BmpToolDialog::brushChanged()
+{
+    int brushSize = BmpBrushTool::instance()->brushSize();
+    ui->brushSize->setValue(brushSize);
 }
 
 void BmpToolDialog::documentAboutToClose(int index, MapDocument *doc)
