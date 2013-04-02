@@ -184,6 +184,8 @@ private slots:
 
     void preferences();
 
+    void buildingPropertiesDialog();
+
     void roomsDialog();
     void roomAdded(Room *room);
     void roomRemoved(Room *room);

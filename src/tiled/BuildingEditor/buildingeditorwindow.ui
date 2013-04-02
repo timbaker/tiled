@@ -142,6 +142,7 @@
     <addaction name="actionRotateRight"/>
     <addaction name="actionRotateLeft"/>
     <addaction name="separator"/>
+    <addaction name="actionBuildingProperties"/>
     <addaction name="actionRooms"/>
     <addaction name="actionTemplates"/>
     <addaction name="actionTiles"/>
@@ -768,6 +769,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+R</string>
+   </property>
+  </action>
+  <action name="actionBuildingProperties">
+   <property name="text">
+    <string>Building Properties...</string>
    </property>
   </action>
  </widget>

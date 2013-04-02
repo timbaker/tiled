@@ -26,6 +26,7 @@
 #include "buildingobjects.h"
 #include "buildingpreferences.h"
 #include "buildingpreferencesdialog.h"
+#include "buildingpropertiesdialog.h"
 #include "buildingundoredo.h"
 #include "buildingfurnituredock.h"
 #include "buildingisoview.h"
@@ -413,6 +414,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionRemoveFloor, SIGNAL(triggered()), SLOT(removeFloor()));
     connect(ui->actionFloors, SIGNAL(triggered()), SLOT(floorsDialog()));
 
+    connect(ui->actionBuildingProperties, SIGNAL(triggered()),
+            SLOT(buildingPropertiesDialog()));
     connect(ui->actionRooms, SIGNAL(triggered()), SLOT(roomsDialog()));
     connect(ui->actionTemplates, SIGNAL(triggered()), SLOT(templatesDialog()));
     connect(ui->actionTiles, SIGNAL(triggered()), SLOT(tilesDialog()));
@@ -1056,8 +1059,10 @@ void BuildingEditorWindow::currentEWallChanged(BuildingTileEntry *entry, bool me
         return;
     }
 
-    mCurrentDocument->undoStack()->push(new ChangeEWall(mCurrentDocument, entry,
-                                                        mergeable));
+    mCurrentDocument->undoStack()->push(
+                new ChangeBuildingTile(mCurrentDocument,
+                                       Building::ExteriorWall, entry,
+                                       mergeable));
 }
 
 void BuildingEditorWindow::currentIWallChanged(BuildingTileEntry *entry, bool mergeable)
@@ -1886,6 +1891,52 @@ void BuildingEditorWindow::preferences()
     dialog.exec();
 }
 
+void BuildingEditorWindow::buildingPropertiesDialog()
+{
+    if (!mCurrentDocument)
+        return;
+
+    BuildingPropertiesDialog dialog(mCurrentDocument, this);
+    dialog.exec();
+#if 0
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    const QVector<BuildingTileEntry*> &tiles = dialog.tiles();
+    QVector<int> changed;
+    for (int e = 0; e < tiles.size(); e++) {
+        if (tiles[e] != mCurrentDocument->building()->tile(e))
+            changed += e;
+    }
+    if (changed.size()) {
+        QUndoStack *undoStack = mCurrentDocument->undoStack();
+        undoStack->beginMacro(tr("Change Building Tiles"));
+        foreach (int e, changed) {
+            undoStack->push(new ChangeBuildingTile(mCurrentDocument, e, tiles[e],
+                                                   false));
+            if (e == Building::RoofCap || e == Building::RoofSlope) {
+                int which = (e == Building::RoofCap) ? RoofObject::TileCap
+                                                     : RoofObject::TileSlope;
+                // Change the tiles for each roof object.
+                foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
+                    foreach (BuildingObject *object, floor->objects()) {
+                        if (RoofObject *roof = object->asRoof()) {
+                            if (roof->tile(which) != tiles[e]) {
+                                undoStack->push(
+                                            new ChangeObjectTile(mCurrentDocument,
+                                                                 roof, tiles[e],
+                                                                 false, which));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        undoStack->endMacro();
+    }
+#endif
+}
+
 void BuildingEditorWindow::roomsDialog()
 {
     if (!mCurrentDocument)
@@ -2418,6 +2469,7 @@ void BuildingEditorWindow::updateActions()
     ui->actionZoomOut->setEnabled(hasDoc && zoomable->canZoomOut());
     ui->actionNormalSize->setEnabled(hasDoc && zoomable->scale() != 1.0);
 
+    ui->actionBuildingProperties->setEnabled(hasDoc);
     ui->actionRooms->setEnabled(hasDoc);
     ui->actionTemplateFromBuilding->setEnabled(hasDoc);
 

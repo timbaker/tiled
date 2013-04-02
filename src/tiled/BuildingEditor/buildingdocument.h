@@ -110,7 +110,7 @@ public:
 
     // +UNDO/REDO
     Room *changeRoomAtPosition(BuildingFloor *floor, const QPoint &pos, Room *room);
-    BuildingEditor::BuildingTileEntry *changeEWall(BuildingEditor::BuildingTileEntry *tile);
+    BuildingEditor::BuildingTileEntry *changeBuildingTile(int tileEnum, BuildingTileEntry *tile);
     BuildingTileEntry *changeRoomTile(Room *room, int tileEnum, BuildingTileEntry *tile);
 
     void insertFloor(int index, BuildingFloor *floor);

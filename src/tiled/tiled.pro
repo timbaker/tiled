@@ -195,7 +195,8 @@ SOURCES += aboutdialog.cpp \
     bmptool.cpp \
     bmpblender.cpp \
     bmptooldialog.cpp \
-    bmpselectionitem.cpp
+    bmpselectionitem.cpp \
+    BuildingEditor/buildingpropertiesdialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -354,7 +355,8 @@ HEADERS += aboutdialog.h \
     bmptool.h \
     bmpblender.h \
     bmptooldialog.h \
-    bmpselectionitem.h
+    bmpselectionitem.h \
+    BuildingEditor/buildingpropertiesdialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -391,7 +393,8 @@ FORMS += aboutdialog.ui \
     tiledefdialog.ui \
     addtilesetsdialog.ui \
     BuildingEditor/choosetemplatesdialog.ui \
-    bmptooldialog.ui
+    bmptooldialog.ui \
+    BuildingEditor/buildingpropertiesdialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

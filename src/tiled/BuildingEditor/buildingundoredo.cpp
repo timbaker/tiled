@@ -91,25 +91,27 @@ EraseRoom::EraseRoom(BuildingDocument *doc, BuildingFloor *floor, const QPoint &
 
 /////
 
-ChangeEWall::ChangeEWall(BuildingDocument *doc, BuildingTileEntry *tile, bool mergeable) :
-    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Exterior Wall")),
+ChangeBuildingTile::ChangeBuildingTile(BuildingDocument *doc, int tileEnum,
+                                       BuildingTileEntry *tile, bool mergeable) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Building Tile")),
     mDocument(doc),
+    mEnum(tileEnum),
     mTile(tile),
     mMergeable(mergeable)
 {
 }
 
-bool ChangeEWall::mergeWith(const QUndoCommand *other)
+bool ChangeBuildingTile::mergeWith(const QUndoCommand *other)
 {
-    const ChangeEWall *o = static_cast<const ChangeEWall*>(other);
-    if (!o->mMergeable)
+    const ChangeBuildingTile *o = static_cast<const ChangeBuildingTile*>(other);
+    if (!(o->mMergeable && (o->mEnum == mEnum)))
         return false;
     return true;
 }
 
-void ChangeEWall::swap()
+void ChangeBuildingTile::swap()
 {
-    mTile = mDocument->changeEWall(mTile);
+    mTile = mDocument->changeBuildingTile(mEnum, mTile);
 }
 
 /////

@@ -96,11 +96,11 @@ public:
     int id() const { return UndoCmd_EraseRoom; }
 };
 
-class ChangeEWall : public QUndoCommand
+class ChangeBuildingTile : public QUndoCommand
 {
 public:
-    ChangeEWall(BuildingDocument *doc, BuildingEditor::BuildingTileEntry *tile,
-                bool mergeable);
+    ChangeBuildingTile(BuildingDocument *doc, int tileEnum,
+                       BuildingTileEntry *tile, bool mergeable);
 
     int id() const { return UndoCmd_ChangeEWall; }
     bool mergeWith(const QUndoCommand *other);
@@ -112,6 +112,7 @@ private:
     void swap();
 
     BuildingDocument *mDocument;
+    int mEnum;
     BuildingTileEntry *mTile;
     bool mMergeable;
 };

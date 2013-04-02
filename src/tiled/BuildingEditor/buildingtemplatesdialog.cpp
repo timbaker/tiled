@@ -40,6 +40,9 @@ BuildingTemplatesDialog::BuildingTemplatesDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    ui->tilesList->clear();
+    ui->tilesList->addItems(BuildingTemplate::enumTileNames());
+
     QToolBar *toolBar = new QToolBar(this);
     toolBar->setIconSize(QSize(16, 16));
     toolBar->addAction(ui->actionAdd);

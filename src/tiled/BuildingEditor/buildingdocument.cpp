@@ -163,10 +163,11 @@ Room *BuildingDocument::changeRoomAtPosition(BuildingFloor *floor, const QPoint 
     return old;
 }
 
-BuildingTileEntry *BuildingDocument::changeEWall(BuildingTileEntry *tile)
+BuildingTileEntry *BuildingDocument::changeBuildingTile(int tileEnum,
+                                                        BuildingTileEntry *tile)
 {
-    BuildingTileEntry *old = mBuilding->exteriorWall();
-    mBuilding->setExteriorWall(tile);
+    BuildingTileEntry *old = mBuilding->tile(tileEnum);
+    mBuilding->setTile(tileEnum, tile);
     emit roomDefinitionChanged();
 
     checkUsedTile(tile);
