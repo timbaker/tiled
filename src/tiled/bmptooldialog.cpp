@@ -325,6 +325,7 @@ void BmpToolDialog::brushChanged()
 
 void BmpToolDialog::documentAboutToClose(int index, MapDocument *doc)
 {
+    Q_UNUSED(index)
     mCurrentRuleForDocument.remove(doc);
 }
 

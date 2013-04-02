@@ -161,11 +161,13 @@ bool FurnitureGroups::readTxt()
         return false;
     }
 
+#if !defined(WORLDED)
     if (!upgradeTxt())
         return false;
 
     if (!mergeTxt())
         return false;
+#endif
 
     QString path = info.canonicalFilePath();
     SimpleFile simple;
@@ -325,6 +327,9 @@ SimpleFileBlock FurnitureGroups::furnitureTilesToSFB(FurnitureTiles *ftiles)
 
 bool FurnitureGroups::writeTxt()
 {
+#ifdef WORLDED
+    return false;
+#endif
     SimpleFile simpleFile;
     foreach (FurnitureGroup *group, groups()) {
         SimpleFileBlock groupBlock;
