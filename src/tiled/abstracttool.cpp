@@ -32,7 +32,11 @@ AbstractTool::AbstractTool(const QString &name, const QIcon &icon,
     , mName(name)
     , mIcon(icon)
     , mShortcut(shortcut)
+#ifdef ZOMBOID
+    , mEnabled(false)
+#else
     , mEnabled(true)
+#endif
     , mMapDocument(0)
 {
     MapDocumentActionHandler *handler = MapDocumentActionHandler::instance();
