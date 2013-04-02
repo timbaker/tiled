@@ -143,6 +143,7 @@
     <addaction name="actionRotateLeft"/>
     <addaction name="separator"/>
     <addaction name="actionBuildingProperties"/>
+    <addaction name="actionGrime"/>
     <addaction name="actionRooms"/>
     <addaction name="actionTemplates"/>
     <addaction name="actionTiles"/>
@@ -772,8 +773,20 @@
    </property>
   </action>
   <action name="actionBuildingProperties">
+   <property name="icon">
+    <iconset resource="../tiled.qrc">
+     <normaloff>:/images/16x16/document-properties.png</normaloff>:/images/16x16/document-properties.png</iconset>
+   </property>
    <property name="text">
-    <string>Building Properties...</string>
+    <string>Properties...</string>
+   </property>
+  </action>
+  <action name="actionGrime">
+   <property name="text">
+    <string>Grime...</string>
+   </property>
+   <property name="shortcut">
+    <string>G</string>
    </property>
   </action>
  </widget>

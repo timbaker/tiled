@@ -185,6 +185,7 @@ private slots:
     void preferences();
 
     void buildingPropertiesDialog();
+    void buildingGrime();
 
     void roomsDialog();
     void roomAdded(Room *room);

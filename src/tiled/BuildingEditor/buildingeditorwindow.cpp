@@ -39,6 +39,7 @@
 #include "buildingtiletools.h"
 #include "buildingtmx.h"
 #include "buildingtools.h"
+#include "choosebuildingtiledialog.h"
 #include "furnituregroups.h"
 #include "furnitureview.h"
 #include "horizontallinedelegate.h"
@@ -416,6 +417,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 
     connect(ui->actionBuildingProperties, SIGNAL(triggered()),
             SLOT(buildingPropertiesDialog()));
+    connect(ui->actionGrime, SIGNAL(triggered()),
+            SLOT(buildingGrime()));
     connect(ui->actionRooms, SIGNAL(triggered()), SLOT(roomsDialog()));
     connect(ui->actionTemplates, SIGNAL(triggered()), SLOT(templatesDialog()));
     connect(ui->actionTiles, SIGNAL(triggered()), SLOT(tilesDialog()));
@@ -1935,6 +1938,25 @@ void BuildingEditorWindow::buildingPropertiesDialog()
         undoStack->endMacro();
     }
 #endif
+}
+
+void BuildingEditorWindow::buildingGrime()
+{
+    if (!mCurrentDocument)
+        return;
+
+    ChooseBuildingTileDialog dialog(tr("Choose Building Grime Tile"),
+                                    BuildingTilesMgr::instance()->catGrimeWall(),
+                                    mCurrentDocument->building()->tile(Building::GrimeWall),
+                                    this);
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    mCurrentDocument->undoStack()->push(
+                new ChangeBuildingTile(mCurrentDocument,
+                                       Building::GrimeWall,
+                                       dialog.selectedTile(),
+                                       false));
 }
 
 void BuildingEditorWindow::roomsDialog()
