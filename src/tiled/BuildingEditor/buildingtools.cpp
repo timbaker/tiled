@@ -2261,14 +2261,14 @@ void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
             }
         } else {
             if (mHandleObject->isN()) {
-                end.ry() = mCurrentTilePos.y();
+                end.ry() = mCurrentTilePos.y() - 1;
                 if (end.y() < start.y())
                     end.setY(start.y());
                 if (end.y() >= floor()->height())
                     end.setY(floor()->height() - 1);
                 resizeWall(end.y() - start.y() + 1);
             } else {
-                end.rx() = mCurrentTilePos.x();
+                end.rx() = mCurrentTilePos.x() - 1;
                 if (end.x() < start.x())
                     end.setX(start.x());
                 if (end.x() >= floor()->width())
