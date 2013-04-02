@@ -1,5 +1,5 @@
 version = 2
-revision = 4
+revision = 5
 TileEntry
 {
     category = curtains
@@ -443,6 +443,12 @@ TileEntry
     Outer1 = roofs_01_008
     Outer2 = roofs_01_009
     Outer3 = roofs_01_010
+    CornerSW1 = 
+    CornerSW2 = 
+    CornerSW3 = 
+    CornerNE1 = 
+    CornerNE2 = 
+    CornerNE3 = 
     offset = SlopePt5S 1 1
     offset = SlopePt5E 1 1
     offset = SlopeTwoPt5S -1 -1
@@ -900,7 +906,7 @@ Template
     RoofCap = 0
     RoofSlope = 0
     RoofTop = 0
-    UsedTiles = 0
+    UsedTiles = 
     UsedFurniture = 
     Room
     {
@@ -1005,7 +1011,7 @@ Template
     RoofCap = 0
     RoofSlope = 0
     RoofTop = 0
-    UsedTiles = 0
+    UsedTiles = 
     UsedFurniture = 
     Room
     {
@@ -1090,7 +1096,7 @@ Template
     RoofCap = 0
     RoofSlope = 0
     RoofTop = 0
-    UsedTiles = 0
+    UsedTiles = 
     UsedFurniture = 
     Room
     {
@@ -1195,7 +1201,7 @@ Template
     RoofCap = 0
     RoofSlope = 0
     RoofTop = 0
-    UsedTiles = 0
+    UsedTiles = 
     UsedFurniture = 
     Room
     {
@@ -1300,7 +1306,7 @@ Template
     RoofCap = 43
     RoofSlope = 44
     RoofTop = 45
-    UsedTiles = 0
+    UsedTiles = 
     UsedFurniture = 
     Room
     {
@@ -1365,7 +1371,7 @@ Template
     RoofCap = 43
     RoofSlope = 44
     RoofTop = 45
-    UsedTiles = 0
+    UsedTiles = 
     UsedFurniture = 
     Room
     {

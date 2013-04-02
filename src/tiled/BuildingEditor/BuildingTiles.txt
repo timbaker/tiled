@@ -1,9 +1,20 @@
 version = 2
-revision = 5
+revision = 6
 category
 {
     label = Exterior Walls
     name = exterior_walls
+    entry
+    {
+        West = fixtures_bathroom_02_000
+        North = fixtures_bathroom_02_001
+        NorthWest = fixtures_bathroom_02_002
+        SouthEast = fixtures_bathroom_02_003
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = fixtures_bathroom_02_010
+        NorthDoor = fixtures_bathroom_02_011
+    }
     entry
     {
         West = location_barn_01_000
@@ -36,6 +47,17 @@ category
         NorthWindow = location_community_church_small_01_013
         WestDoor = location_community_church_small_01_014
         NorthDoor = location_community_church_small_01_015
+    }
+    entry
+    {
+        West = location_community_school_01_000
+        North = location_community_school_01_001
+        NorthWest = location_community_school_01_002
+        SouthEast = location_community_school_01_003
+        WestWindow = location_community_school_01_008
+        NorthWindow = location_community_school_01_009
+        WestDoor = location_community_school_01_010
+        NorthDoor = location_community_school_01_011
     }
     entry
     {
@@ -193,6 +215,17 @@ category
     }
     entry
     {
+        West = walls_commercial_01_052
+        North = walls_commercial_01_053
+        NorthWest = walls_commercial_01_054
+        SouthEast = walls_commercial_01_055
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = 
+        NorthDoor = 
+    }
+    entry
+    {
         West = walls_commercial_02_000
         North = walls_commercial_02_001
         NorthWest = walls_commercial_02_002
@@ -281,6 +314,17 @@ category
     }
     entry
     {
+        West = walls_exterior_house_01_052
+        North = walls_exterior_house_01_053
+        NorthWest = walls_exterior_house_01_054
+        SouthEast = walls_exterior_house_01_055
+        WestWindow = walls_exterior_house_01_060
+        NorthWindow = walls_exterior_house_01_061
+        WestDoor = walls_exterior_house_01_062
+        NorthDoor = walls_exterior_house_01_063
+    }
+    entry
+    {
         West = walls_exterior_wooden_01_000
         North = walls_exterior_wooden_01_001
         NorthWest = walls_exterior_wooden_01_002
@@ -323,11 +367,33 @@ category
         WestDoor = location_shop_fossoil_01_008
         NorthDoor = location_shop_fossoil_01_009
     }
+    entry
+    {
+        West = walls_exterior_wooden_01_028
+        North = walls_exterior_wooden_01_029
+        NorthWest = walls_exterior_wooden_01_030
+        SouthEast = walls_exterior_wooden_01_031
+        WestWindow = walls_exterior_wooden_01_036
+        NorthWindow = walls_exterior_wooden_01_037
+        WestDoor = walls_exterior_wooden_01_038
+        NorthDoor = walls_exterior_wooden_01_039
+    }
 }
 category
 {
     label = Interior Walls
     name = interior_walls
+    entry
+    {
+        West = fixtures_bathroom_02_000
+        North = fixtures_bathroom_02_001
+        NorthWest = fixtures_bathroom_02_002
+        SouthEast = fixtures_bathroom_02_003
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = fixtures_bathroom_02_010
+        NorthDoor = fixtures_bathroom_02_011
+    }
     entry
     {
         West = location_community_church_small_01_004
@@ -338,6 +404,17 @@ category
         NorthWindow = location_community_church_small_01_013
         WestDoor = location_community_church_small_01_014
         NorthDoor = location_community_church_small_01_015
+    }
+    entry
+    {
+        West = location_community_school_01_000
+        North = location_community_school_01_001
+        NorthWest = location_community_school_01_002
+        SouthEast = location_community_school_01_003
+        WestWindow = location_community_school_01_008
+        NorthWindow = location_community_school_01_009
+        WestDoor = location_community_school_01_010
+        NorthDoor = location_community_school_01_011
     }
     entry
     {
@@ -495,6 +572,17 @@ category
     }
     entry
     {
+        West = walls_commercial_01_000
+        North = walls_commercial_01_001
+        NorthWest = 
+        SouthEast = walls_commercial_01_002
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = walls_commercial_01_008
+        NorthDoor = walls_commercial_01_009
+    }
+    entry
+    {
         West = walls_commercial_01_016
         North = walls_commercial_01_017
         NorthWest = walls_commercial_01_018
@@ -539,6 +627,17 @@ category
     }
     entry
     {
+        West = walls_commercial_01_052
+        North = walls_commercial_01_053
+        NorthWest = walls_commercial_01_054
+        SouthEast = walls_commercial_01_055
+        WestWindow = 
+        NorthWindow = 
+        WestDoor = 
+        NorthDoor = 
+    }
+    entry
+    {
         West = walls_exterior_house_01_004
         North = walls_exterior_house_01_005
         NorthWest = walls_exterior_house_01_006
@@ -569,6 +668,39 @@ category
         NorthWindow = walls_exterior_wooden_01_033
         WestDoor = walls_exterior_wooden_01_034
         NorthDoor = walls_exterior_wooden_01_035
+    }
+    entry
+    {
+        West = walls_exterior_wooden_01_028
+        North = walls_exterior_wooden_01_029
+        NorthWest = walls_exterior_wooden_01_030
+        SouthEast = walls_exterior_wooden_01_031
+        WestWindow = walls_exterior_wooden_01_036
+        NorthWindow = walls_exterior_wooden_01_037
+        WestDoor = walls_exterior_wooden_01_038
+        NorthDoor = walls_exterior_wooden_01_039
+    }
+    entry
+    {
+        West = walls_garage_01_032
+        North = walls_garage_01_033
+        NorthWest = walls_garage_01_034
+        SouthEast = walls_garage_01_035
+        WestWindow = walls_garage_01_040
+        NorthWindow = walls_garage_01_041
+        WestDoor = walls_garage_01_042
+        NorthDoor = walls_garage_01_043
+    }
+    entry
+    {
+        West = walls_garage_01_036
+        North = walls_garage_01_037
+        NorthWest = walls_garage_01_038
+        SouthEast = walls_garage_01_039
+        WestWindow = walls_garage_01_044
+        NorthWindow = walls_garage_01_045
+        WestDoor = walls_garage_01_046
+        NorthDoor = walls_garage_01_047
     }
     entry
     {
@@ -867,6 +999,61 @@ category
         WestDoor = 
         NorthDoor = 
     }
+    entry
+    {
+        West = walls_interior_house_03_020
+        North = walls_interior_house_03_021
+        NorthWest = walls_interior_house_03_022
+        SouthEast = walls_interior_house_03_023
+        WestWindow = walls_interior_house_03_028
+        NorthWindow = walls_interior_house_03_029
+        WestDoor = walls_interior_house_03_030
+        NorthDoor = walls_interior_house_03_031
+    }
+    entry
+    {
+        West = walls_interior_house_03_032
+        North = walls_interior_house_03_033
+        NorthWest = walls_interior_house_03_034
+        SouthEast = walls_interior_house_03_035
+        WestWindow = walls_interior_house_03_040
+        NorthWindow = walls_interior_house_03_041
+        WestDoor = walls_interior_house_03_042
+        NorthDoor = walls_interior_house_03_043
+    }
+    entry
+    {
+        West = walls_interior_house_03_036
+        North = walls_interior_house_03_037
+        NorthWest = walls_interior_house_03_038
+        SouthEast = walls_interior_house_03_039
+        WestWindow = walls_interior_house_03_044
+        NorthWindow = walls_interior_house_03_045
+        WestDoor = walls_interior_house_03_046
+        NorthDoor = walls_interior_house_03_047
+    }
+    entry
+    {
+        West = walls_interior_house_03_048
+        North = walls_interior_house_03_049
+        NorthWest = walls_interior_house_03_050
+        SouthEast = walls_interior_house_03_051
+        WestWindow = walls_interior_house_03_056
+        NorthWindow = walls_interior_house_03_057
+        WestDoor = walls_interior_house_03_058
+        NorthDoor = walls_interior_house_03_059
+    }
+    entry
+    {
+        West = walls_interior_house_03_052
+        North = walls_interior_house_03_053
+        NorthWest = walls_interior_house_03_054
+        SouthEast = walls_interior_house_03_055
+        WestWindow = walls_interior_house_03_060
+        NorthWindow = walls_interior_house_03_061
+        WestDoor = walls_interior_house_03_062
+        NorthDoor = walls_interior_house_03_063
+    }
 }
 category
 {
@@ -942,6 +1129,10 @@ category
     }
     entry
     {
+        Floor = floors_interior_carpet_01_011
+    }
+    entry
+    {
         Floor = floors_interior_tilesandwood_01_000
     }
     entry
@@ -995,6 +1186,14 @@ category
     entry
     {
         Floor = floors_interior_tilesandwood_01_017
+    }
+    entry
+    {
+        Floor = floors_interior_tilesandwood_01_018
+    }
+    entry
+    {
+        Floor = floors_interior_tilesandwood_01_019
     }
     entry
     {
@@ -1077,6 +1276,34 @@ category
 {
     label = Doors
     name = doors
+    entry
+    {
+        West = fixtures_bathroom_01_048
+        North = fixtures_bathroom_01_049
+        WestOpen = fixtures_bathroom_01_050
+        NorthOpen = fixtures_bathroom_01_051
+    }
+    entry
+    {
+        West = fixtures_bathroom_02_016
+        North = fixtures_bathroom_02_017
+        WestOpen = fixtures_bathroom_02_018
+        NorthOpen = fixtures_bathroom_02_019
+    }
+    entry
+    {
+        West = fixtures_doors_01_056
+        North = fixtures_doors_01_057
+        WestOpen = fixtures_doors_01_058
+        NorthOpen = fixtures_doors_01_059
+    }
+    entry
+    {
+        West = fixtures_doors_01_060
+        North = fixtures_doors_01_061
+        WestOpen = fixtures_doors_01_062
+        NorthOpen = fixtures_doors_01_063
+    }
     entry
     {
         West = location_restaurant_pizzawhirled_01_056
@@ -1267,6 +1494,11 @@ category
         West = fixtures_windows_01_032
         North = fixtures_windows_01_033
     }
+    entry
+    {
+        West = fixtures_windows_01_056
+        North = fixtures_windows_01_057
+    }
 }
 category
 {
@@ -1370,6 +1602,62 @@ category
         North = fixtures_windows_curtains_01_054
         South = fixtures_windows_curtains_01_055
     }
+    entry
+    {
+        West = fixtures_windows_curtains_02_000
+        East = fixtures_windows_curtains_02_001
+        North = fixtures_windows_curtains_02_002
+        South = fixtures_windows_curtains_02_003
+    }
+    entry
+    {
+        West = fixtures_windows_curtains_02_004
+        East = fixtures_windows_curtains_02_005
+        North = fixtures_windows_curtains_02_006
+        South = fixtures_windows_curtains_02_007
+    }
+    entry
+    {
+        West = fixtures_windows_curtains_02_008
+        East = fixtures_windows_curtains_02_009
+        North = fixtures_windows_curtains_02_010
+        South = fixtures_windows_curtains_02_011
+    }
+    entry
+    {
+        West = fixtures_windows_curtains_02_012
+        East = fixtures_windows_curtains_02_013
+        North = fixtures_windows_curtains_02_014
+        South = fixtures_windows_curtains_02_015
+    }
+    entry
+    {
+        West = fixtures_windows_curtains_02_016
+        East = fixtures_windows_curtains_02_017
+        North = fixtures_windows_curtains_02_018
+        South = fixtures_windows_curtains_02_019
+    }
+    entry
+    {
+        West = fixtures_windows_curtains_02_020
+        East = fixtures_windows_curtains_02_021
+        North = fixtures_windows_curtains_02_022
+        South = fixtures_windows_curtains_02_023
+    }
+    entry
+    {
+        West = fixtures_windows_curtains_02_024
+        East = fixtures_windows_curtains_02_025
+        North = fixtures_windows_curtains_02_026
+        South = fixtures_windows_curtains_02_027
+    }
+    entry
+    {
+        West = fixtures_windows_curtains_02_028
+        East = fixtures_windows_curtains_02_029
+        North = fixtures_windows_curtains_02_030
+        South = fixtures_windows_curtains_02_031
+    }
 }
 category
 {
@@ -1383,6 +1671,15 @@ category
         North1 = fixtures_stairs_01_008
         North2 = fixtures_stairs_01_009
         North3 = fixtures_stairs_01_010
+    }
+    entry
+    {
+        West1 = fixtures_stairs_01_003
+        West2 = fixtures_stairs_01_004
+        West3 = fixtures_stairs_01_005
+        North1 = fixtures_stairs_01_011
+        North2 = fixtures_stairs_01_012
+        North3 = fixtures_stairs_01_013
     }
     entry
     {
@@ -1410,6 +1707,15 @@ category
         North1 = fixtures_stairs_01_040
         North2 = fixtures_stairs_01_041
         North3 = fixtures_stairs_01_042
+    }
+    entry
+    {
+        West1 = fixtures_stairs_01_048
+        West2 = fixtures_stairs_01_049
+        West3 = fixtures_stairs_01_050
+        North1 = fixtures_stairs_01_056
+        North2 = fixtures_stairs_01_057
+        North3 = fixtures_stairs_01_058
     }
     entry
     {
