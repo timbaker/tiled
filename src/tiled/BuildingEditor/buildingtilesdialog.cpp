@@ -34,6 +34,7 @@
 #include "tile.h"
 #include "tileset.h"
 
+#include <QCheckBox>
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QDebug>
@@ -479,6 +480,30 @@ public:
     int /*FurnitureTiles::FurnitureLayer*/ mLayer;
 };
 
+class ChangeFurnitureGrime : public QUndoCommand
+{
+public:
+    ChangeFurnitureGrime(BuildingTilesDialog *d, FurnitureTile *ftile, bool allow) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Furniture Grime")),
+        mDialog(d),
+        mTile(ftile),
+        mGrime(allow)
+    {
+    }
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+    void swap()
+    {
+        mGrime = mDialog->changeFurnitureGrime(mTile, mGrime);
+    }
+
+    BuildingTilesDialog *mDialog;
+    FurnitureTile *mTile;
+    bool mGrime;
+};
+
 class RenameFurnitureCategory : public QUndoCommand
 {
 public:
@@ -669,6 +694,9 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     cb->addItems(FurnitureTiles::layerNames());
     hbox->addWidget(cb);
 
+    mFurnitureGrimeCheckBox = new QCheckBox(tr("Grime"));
+    hbox->addWidget(mFurnitureGrimeCheckBox);
+
     hbox->addStretch(1);
 
     QWidget *layoutWidget = new QWidget();
@@ -679,6 +707,8 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     connect(mFurnitureLayerComboBox, SIGNAL(currentIndexChanged(int)),
             SLOT(furnitureLayerChanged(int)));
     }
+    connect(mFurnitureGrimeCheckBox, SIGNAL(toggled(bool)),
+            SLOT(furnitureGrimeChanged(bool)));
 
     /////
     toolBar = new QToolBar();
@@ -985,6 +1015,15 @@ int BuildingTilesDialog::changeFurnitureLayer(FurnitureTiles *ftiles, int layer)
     return old;
 }
 
+bool BuildingTilesDialog::changeFurnitureGrime(FurnitureTile *ftile, bool allow)
+{
+    bool old = ftile->allowGrime();
+    ftile->setAllowGrime(allow);
+    FurnitureGroups::instance()->grimeChanged(ftile);
+    synchUI(); // update the grime checkbox
+    return old;
+}
+
 QString BuildingTilesDialog::renameFurnitureCategory(FurnitureGroup *category,
                                             const QString &name)
 {
@@ -1212,8 +1251,10 @@ void BuildingTilesDialog::synchUI()
     mFurnitureLayerUI->setEnabled(mCurrentFurniture);
 
     mSynching = true;
-    if (mCurrentFurniture)
+    if (mCurrentFurniture) {
         mFurnitureLayerComboBox->setCurrentIndex(mCurrentFurniture->owner()->layer());
+        mFurnitureGrimeCheckBox->setChecked(mCurrentFurniture->allowGrime());
+    }
     mSynching = false;
 
     ui->actionMoveTileUp->setEnabled(moveUp);
@@ -1782,6 +1823,29 @@ void BuildingTilesDialog::furnitureLayerChanged(int index)
     foreach (FurnitureTiles *ftiles, ftilesList)
         mUndoStack->push(new ChangeFurnitureLayer(this, ftiles, index));
     if (ftilesList.count() > 1)
+        mUndoStack->endMacro();
+}
+
+void BuildingTilesDialog::furnitureGrimeChanged(bool allow)
+{
+    if (!mCurrentFurniture || mSynching)
+        return;
+
+    QList<FurnitureTile*> ftiles;
+    FurnitureView *v = ui->furnitureView;
+    QModelIndexList selection = v->selectionModel()->selectedIndexes();
+    foreach (QModelIndex index, selection) {
+        FurnitureTile *ftile = v->model()->tileAt(index);
+        if (ftile->allowGrime() != allow)
+            ftiles += ftile;
+    }
+    if (ftiles.count() == 0)
+        return;
+    if (ftiles.count() > 1)
+        mUndoStack->beginMacro(tr("Change Furniture Layer"));
+    foreach (FurnitureTile *ftile, ftiles)
+        mUndoStack->push(new ChangeFurnitureGrime(this, ftile, allow));
+    if (ftiles.count() > 1)
         mUndoStack->endMacro();
 }
 

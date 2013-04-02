@@ -21,6 +21,7 @@
 #include <QDialog>
 #include <QModelIndex>
 
+class QCheckBox;
 class QComboBox;
 class QListWidgetItem;
 class QSpinBox;
@@ -86,6 +87,7 @@ public:
     void reorderFurniture(FurnitureGroup *category, int oldIndex, int newIndex);
     void toggleCorners(FurnitureTiles *ftiles);
     int changeFurnitureLayer(FurnitureTiles *ftiles, int layer);
+    bool changeFurnitureGrime(FurnitureTile *ftile, bool allow);
 
     QString renameFurnitureCategory(FurnitureGroup *category, const QString &name);
     void reorderCategory(int oldIndex, int newIndex);
@@ -160,6 +162,7 @@ private slots:
     void entryOffsetChanged();
 
     void furnitureLayerChanged(int index);
+    void furnitureGrimeChanged(bool allow);
 
     void accept();
     void reject();
@@ -189,6 +192,7 @@ private:
 
     QWidget *mFurnitureLayerUI;
     QComboBox *mFurnitureLayerComboBox;
+    QCheckBox *mFurnitureGrimeCheckBox;
 
     bool mExpertMode;
     bool mChanges;

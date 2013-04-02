@@ -1296,6 +1296,7 @@ void BuildingFloor::LayoutToSquares()
                     s.mTiles[Square::SectionWall] = ftile->tile(j, i);
                     s.mEntries[Square::SectionWall] = 0;
                     s.mEntryEnum[Square::SectionWall] = 0;
+                    s.mAllowGrime = ftile->allowGrime();
                     switch (fo->furnitureTile()->orient()) {
                     case FurnitureTile::FurnitureW:
                     case FurnitureTile::FurnitureE:
@@ -1355,6 +1356,8 @@ void BuildingFloor::LayoutToSquares()
     for (int x = 0; x < w; x++) {
         for (int y = 0; y < h; y++) {
             Square &sq = squares[x][y];
+            if (!sq.mAllowGrime)
+                continue;
             Room *room = GetRoomAt(x, y);
 
             // Floor Grime inside a room.
@@ -1804,7 +1807,8 @@ BuildingFloor::Square::Square() :
     mEntries(MaxSection, 0),
     mEntryEnum(MaxSection, 0),
     mExterior(false),
-    mTiles(MaxSection, 0)
+    mTiles(MaxSection, 0),
+    mAllowGrime(true)
 {
     mWallN.entry = mWallW.entry = 0;
 }
