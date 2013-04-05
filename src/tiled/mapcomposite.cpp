@@ -186,7 +186,7 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
 
     MapComposite *root = mOwner->root();
     if (!mOwner->parent())
-        root->mFirstCellIs0Floor = false;
+        root->mKeepFloorLayerCount = 0;
 
     bool cleared = false;
     for (int index = 0; index < mLayers.size(); index++) {
@@ -216,11 +216,9 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
             if (!cell->isEmpty()) {
                 if (!cleared) {
                     bool isFloor = !mLevel && !index && (tl->name() == sFloor);
-                    cells.resize((!isFloor && root->mFirstCellIs0Floor) ? 1 : 0);
-                    opacities.resize((!isFloor && root->mFirstCellIs0Floor) ? 1 : 0);
+                    cells.resize(!isFloor ? root->mKeepFloorLayerCount : 0);
+                    opacities.resize(!isFloor ? root->mKeepFloorLayerCount : 0);
                     cleared = true;
-                    if (isFloor && !mOwner->parent())
-                        mOwner->mFirstCellIs0Floor = true;
                 }
                 cells.append(cell);
 #if 1
@@ -231,6 +229,8 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                 else
                     opacities.append(0.25);
 #endif
+                if (mMaxFloorLayer >= index)
+                    mOwner->mKeepFloorLayerCount = cells.size();
             }
         }
     }
@@ -268,7 +268,7 @@ bool CompositeLayerGroup::orderedCellsAt2(const QPoint &pos, QVector<const Cell 
 
     MapComposite *root = mOwner->root();
     if (!mOwner->parent())
-        root->mFirstCellIs0Floor = false;
+        root->mKeepFloorLayerCount = 0;
 
     bool cleared = false;
     int index = -1;
@@ -285,12 +285,12 @@ bool CompositeLayerGroup::orderedCellsAt2(const QPoint &pos, QVector<const Cell 
                 if (!cell->isEmpty()) {
                     if (!cleared) {
                         bool isFloor = !mLevel && !index && (tl->name() == sFloor);
-                        cells.resize((!isFloor && root->mFirstCellIs0Floor) ? 1 : 0);
+                        cells.resize(!isFloor ? root->mKeepFloorLayerCount : 0);
                         cleared = true;
-                        if (isFloor && !mOwner->parent())
-                            mOwner->mFirstCellIs0Floor = true;
                     }
                     cells.append(cell);
+                    if (mMaxFloorLayer >= index)
+                        mOwner->mKeepFloorLayerCount = cells.size();
                     continue;
                 }
             }
@@ -301,12 +301,12 @@ bool CompositeLayerGroup::orderedCellsAt2(const QPoint &pos, QVector<const Cell 
             if (!cell->isEmpty()) {
                 if (!cleared) {
                     bool isFloor = !mLevel && !index && (tl->name() == sFloor);
-                    cells.resize((!isFloor && root->mFirstCellIs0Floor) ? 1 : 0);
+                    cells.resize(!isFloor ? root->mKeepFloorLayerCount : 0);
                     cleared = true;
-                    if (isFloor && !mOwner->parent())
-                        mOwner->mFirstCellIs0Floor = true;
                 }
                 cells.append(cell);
+                if (mMaxFloorLayer >= index)
+                    mOwner->mKeepFloorLayerCount = cells.size();
             }
         }
     }
@@ -349,6 +349,7 @@ bool CompositeLayerGroup::isLayerEmpty(int index) const
 
 void CompositeLayerGroup::synch()
 {
+    mMaxFloorLayer = -1;
     if (!mVisible) {
         mAnyVisibleLayers = false;
         mTileBounds = QRect();
@@ -444,6 +445,10 @@ void CompositeLayerGroup::synch()
             maxMargins(m, tl->drawMargins(), m);
             mAnyVisibleLayers = true;
         }
+        if (!mLevel && !mOwner->parent() &&
+                (index == mMaxFloorLayer + 1) &&
+                tl->name().startsWith(QLatin1String("0_Floor")))
+            mMaxFloorLayer = index;
         ++index;
     }
 
