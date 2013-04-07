@@ -126,6 +126,14 @@
     <property name="title">
      <string>Tools</string>
     </property>
+    <widget class="QMenu" name="menuRoomDefecator">
+     <property name="title">
+      <string>RoomDefecator</string>
+     </property>
+     <addaction name="actionRoomDefGo"/>
+     <addaction name="actionRoomDefMerge"/>
+     <addaction name="actionRoomDefRemove"/>
+    </widget>
     <addaction name="actionBuildingEditor"/>
     <addaction name="actionTilesetMetaInfo"/>
     <addaction name="actionTileProperties"/>
@@ -133,6 +141,7 @@
     <addaction name="separator"/>
     <addaction name="actionConvertOrientation"/>
     <addaction name="actionConvertToLot"/>
+    <addaction name="menuRoomDefecator"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -489,6 +498,21 @@
   <action name="actionHelpContents">
    <property name="text">
     <string>Contents</string>
+   </property>
+  </action>
+  <action name="actionRoomDefGo">
+   <property name="text">
+    <string>Go!</string>
+   </property>
+  </action>
+  <action name="actionRoomDefRemove">
+   <property name="text">
+    <string>Remove RoomDefs</string>
+   </property>
+  </action>
+  <action name="actionRoomDefMerge">
+   <property name="text">
+    <string>Merge Selected RoomDefs</string>
    </property>
   </action>
  </widget>

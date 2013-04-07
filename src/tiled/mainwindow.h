@@ -153,6 +153,10 @@ public slots:
 #ifdef ZOMBOID
     void convertToLot();
     void convertOrientation();
+
+    void RoomDefGo();
+    void RoomDefMerge();
+    void RoomDefRemove();
 #endif
 
     void updateWindowTitle();

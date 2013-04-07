@@ -372,6 +372,12 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
             SLOT(convertToLot()));
     connect(mUi->actionConvertOrientation, SIGNAL(triggered()),
             SLOT(convertOrientation()));
+    connect(mUi->actionRoomDefGo, SIGNAL(triggered()),
+            SLOT(RoomDefGo()));
+    connect(mUi->actionRoomDefMerge, SIGNAL(triggered()),
+            SLOT(RoomDefMerge()));
+    connect(mUi->actionRoomDefRemove, SIGNAL(triggered()),
+            SLOT(RoomDefRemove()));
 #endif
 
     connect(mActionHandler->actionLayerProperties(), SIGNAL(triggered()),
@@ -1752,7 +1758,211 @@ void MainWindow::convertOrientation()
     ConvertOrientationDialog dialog(this);
     dialog.exec();
 }
-#endif
+
+#include "roomdefecator.h"
+#include <addremovelayer.h>
+
+// Copied from BuildingFloor::roomRegion()
+static QList<QRect> cleanupRegion(QRegion region)
+{
+    // Clean up the region by merging vertically-adjacent rectangles of the
+    // same width.
+    QVector<QRect> rects = region.rects();
+    for (int i = 0; i < rects.size(); i++) {
+        QRect r = rects[i];
+        if (!r.isValid()) continue;
+        for (int j = 0; j < rects.size(); j++) {
+            if (i == j) continue;
+            QRect r2 = rects.at(j);
+            if (!r2.isValid()) continue;
+            if (r2.left() == r.left() && r2.right() == r.right()) {
+                if (r.bottom() + 1 == r2.top()) {
+                    r.setBottom(r2.bottom());
+                    rects[j] = QRect();
+                } else if (r.top() == r2.bottom() + 1) {
+                    r.setTop(r2.top());
+                    rects[j] = QRect();
+                }
+            }
+        }
+        rects[i] = r;
+    }
+
+    QList<QRect> ret;
+    foreach (QRect r, rects) {
+        if (r.isValid())
+            ret += r;
+    }
+    return ret;
+}
+
+void MainWindow::RoomDefGo()
+{
+    if (!mMapDocument)
+        return;
+
+    QRect bounds = mMapDocument->tileSelection().boundingRect();
+    if (bounds.isEmpty())
+        bounds = QRect(0, 0, mMapDocument->map()->width(), mMapDocument->map()->height());
+
+    Map *map = mMapDocument->map();
+
+    bool beginMacro = false;
+
+    for (int level = 0; level <= mMapDocument->mapComposite()->maxLevel(); level++) {
+        RoomDefecator rd(map, level, bounds);
+        if (rd.mRegions.isEmpty())
+            continue;
+
+        if (!beginMacro) {
+            mMapDocument->undoStack()->beginMacro(tr("Auto RoomDefs"));
+            beginMacro = true;
+        }
+
+        QString layerName = QString::fromAscii("%1_RoomDefs").arg(level);
+        int index = map->indexOfLayer(layerName, Layer::ObjectGroupType);
+        ObjectGroup *og = 0;
+        if (index < 0) {
+            // Create the new layer in the same level as the current layer.
+            // Stack it with other layers of the same type in level-order.
+            index = map->layerCount();
+            Layer *topLayerOfSameTypeInSameLevel = 0;
+            Layer *bottomLayerOfSameTypeInGreaterLevel = 0;
+            Layer *topLayerOfSameTypeInLesserLevel = 0;
+            foreach (Layer *layer, map->layers(Layer::ObjectGroupType)) {
+                if ((layer->level() > level) && !bottomLayerOfSameTypeInGreaterLevel)
+                    bottomLayerOfSameTypeInGreaterLevel = layer;
+                if (layer->level() < level)
+                    topLayerOfSameTypeInLesserLevel = layer;
+                if (layer->level() == level)
+                    topLayerOfSameTypeInSameLevel = layer;
+            }
+            if (topLayerOfSameTypeInSameLevel)
+                index = map->layers().indexOf(topLayerOfSameTypeInSameLevel) + 1;
+            else if (bottomLayerOfSameTypeInGreaterLevel)
+                index = map->layers().indexOf(bottomLayerOfSameTypeInGreaterLevel);
+            else if (topLayerOfSameTypeInLesserLevel)
+                index = map->layers().indexOf(topLayerOfSameTypeInLesserLevel) + 1;
+            og = new ObjectGroup(layerName, 0, 0, map->width(), map->height());
+            og->setColor(Qt::blue);
+            mMapDocument->undoStack()->push(new AddLayer(mMapDocument, index, og));
+        } else {
+            og = map->layerAt(index)->asObjectGroup();
+            int row = mMapDocument->map()->layerCount() - index - 1;
+            mMapDocument->layerModel()->setData(
+                        mMapDocument->layerModel()->index(row), Qt::Checked,
+                        Qt::CheckStateRole);
+        }
+
+        int i = 1;
+        foreach (QRegion rgn, rd.mRegions) {
+            QList<QRect> rects = cleanupRegion(rgn);
+            QString suffix;
+            if (rects.size() > 1)
+                suffix = QLatin1String("#");
+            foreach (QRect r, rects) {
+                MapObject *object = new MapObject(QString::fromAscii("room%1%2").arg(i).arg(suffix),
+                                                  QLatin1String("room"),
+                                                  r.topLeft(), r.size());
+                mMapDocument->undoStack()->push(new AddMapObject(mMapDocument,
+                                                                 og, object));
+            }
+            ++i;
+        }
+    }
+
+    if (beginMacro)
+        mMapDocument->undoStack()->endMacro();
+}
+
+void MainWindow::RoomDefMerge()
+{
+    if (!mMapDocument ||
+            !mMapDocument->currentLayer() ||
+            mMapDocument->selectedObjects().isEmpty())
+        return;
+
+    int level = mMapDocument->currentLevel();
+    QString layerName = QString::fromAscii("%1_RoomDefs").arg(level);
+    int index = mMapDocument->map()->indexOfLayer(layerName, Layer::ObjectGroupType);
+    if (index < 0)
+        return;
+    ObjectGroup *og = mMapDocument->map()->layerAt(index)->asObjectGroup();
+
+    QRegion merged;
+    foreach (MapObject *object, mMapDocument->selectedObjects())
+        merged += object->bounds().toRect();
+    QList<QRect> rects = cleanupRegion(merged);
+
+    mMapDocument->undoStack()->beginMacro(tr("Merge RoomDefs"));
+    foreach (MapObject *object, mMapDocument->selectedObjects()) {
+        mMapDocument->undoStack()->push(new RemoveMapObject(mMapDocument,
+                                                            object));
+    }
+
+    QStringList taken;
+    foreach (MapObject *o, og->objects())
+        taken += o->name();
+    QString suffix;
+    if (rects.size() > 1)
+        suffix = QLatin1String("#");
+    QString name;
+    int roomID = 1;
+    while (true) {
+        name = QString::fromAscii("room%1%2").arg(roomID).arg(suffix);
+        QString name2 = QString::fromAscii("room%1%2").arg(roomID)
+                .arg((rects.size() <= 1) ? QLatin1String("#") : QString());
+        if (!taken.contains(name) && !taken.contains(name2))
+            break;
+        ++roomID;
+    }
+
+    QList<MapObject*> selected;
+    foreach (QRect r, rects) {
+        MapObject *object = new MapObject(name, QLatin1String("room"),
+                                          r.topLeft(), r.size());
+        mMapDocument->undoStack()->push(new AddMapObject(mMapDocument,
+                                                         og, object));
+        selected += object;
+    }
+    mMapDocument->setSelectedObjects(selected);
+
+    mMapDocument->undoStack()->endMacro();
+}
+
+void MainWindow::RoomDefRemove()
+{
+    if (!mMapDocument)
+        return;
+
+    QRect bounds = mMapDocument->tileSelection().boundingRect();
+    if (bounds.isEmpty())
+        bounds = QRect(0, 0, mMapDocument->map()->width(), mMapDocument->map()->height());
+
+    QList<MapObject*> remove;
+
+    for (int level = 0; level <= mMapDocument->mapComposite()->maxLevel(); level++) {
+        QString layerName = QString::fromAscii("%1_RoomDefs").arg(level);
+        int index = mMapDocument->map()->indexOfLayer(layerName, Layer::ObjectGroupType);
+        if (index >= 0) {
+            ObjectGroup *og = mMapDocument->map()->layerAt(index)->asObjectGroup();
+            foreach (MapObject *o, og->objects()) {
+                if (o->bounds().intersects(bounds))
+                    remove += o;
+            }
+        }
+    }
+
+    if (!remove.size())
+        return;
+
+    mMapDocument->undoStack()->beginMacro(tr("Remove RoomDefs"));
+    foreach (MapObject *o, remove)
+        mMapDocument->undoStack()->push(
+                    new RemoveMapObject(mMapDocument, o));
+    mMapDocument->undoStack()->endMacro();
+}
+#endif // ZOMBOID
 
 void MainWindow::openRecentFile()
 {
@@ -1894,6 +2104,10 @@ void MainWindow::updateActions()
         if (!bounds.isEmpty())
             mUi->actionConvertToLot->setEnabled(true);
     }
+    mUi->actionRoomDefGo->setEnabled(mMapDocument);
+    mUi->actionRoomDefMerge->setEnabled(mMapDocument &&
+                                        !mMapDocument->selectedObjects().isEmpty());
+    mUi->actionRoomDefRemove->setEnabled(mMapDocument);
 #endif
 }
 
