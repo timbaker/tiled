@@ -353,7 +353,14 @@ void MapObjectItem::paint(QPainter *painter,
                           QWidget *)
 {
     painter->translate(-pos());
+#ifdef ZOMBOID
+    QColor color = mColor;
+    if (mIsEditable)
+        color.setAlpha(100);
+    mMapDocument->renderer()->drawMapObject(painter, mObject, color);
+#else
     mMapDocument->renderer()->drawMapObject(painter, mObject, mColor);
+#endif
 
 #ifdef ZOMBOID
     if (mDragging && mMapImage) {

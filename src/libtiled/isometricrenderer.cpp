@@ -533,6 +533,11 @@ void IsometricRenderer::drawMapObject(QPainter *painter,
         painter->drawRect(QRectF(paintOrigin, img.size()));
     } else {
         QColor brushColor = color;
+#ifdef ZOMBOID
+        if (color.alpha() != 255)
+            brushColor.setAlpha(color.alpha());
+        else
+#endif
         brushColor.setAlpha(50);
         QBrush brush(brushColor);
 
