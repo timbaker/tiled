@@ -175,14 +175,18 @@ void TileDelegate::paint(QPainter *painter,
     }
 }
 
-QSize TileDelegate::sizeHint(const QStyleOptionViewItem & option,
+QSize TileDelegate::sizeHint(const QStyleOptionViewItem &option,
                              const QModelIndex &index) const
 {
     const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
     const qreal zoom = mView->zoomable()->scale();
     const int extra = 2 * 2;
-    if (m->headerAt(index).length())
+    if (m->headerAt(index).length()) {
+        if (m->columnCount() == 1)
+            return QSize(mView->maxHeaderWidth() + extra,
+                         option.fontMetrics.lineSpacing() + 2);
         return QSize(64 * zoom + extra, option.fontMetrics.lineSpacing() + 2);
+    }
     if (!m->tileAt(index))
         return QSize(64 * zoom + extra, 128 * zoom + extra);
     const Tileset *tileset = m->tileAt(index)->tileset();
@@ -212,7 +216,8 @@ MixedTilesetView::MixedTilesetView(Zoomable *zoomable, QWidget *parent) :
     QTableView(parent),
     mModel(new MixedTilesetModel(this)),
     mZoomable(zoomable),
-    mContextMenu(0)
+    mContextMenu(0),
+    mMaxHeaderWidth(0)
 {
     init();
 }
@@ -318,6 +323,14 @@ void MixedTilesetView::setTiles(const QList<Tile *> &tiles,
                                 const QList<void *> &userData,
                                 const QStringList &headers)
 {
+    mMaxHeaderWidth = 0;
+    if (model()->columnCount() == 1) {
+        foreach (QString header, headers) {
+            int width = fontMetrics().width(header);
+            mMaxHeaderWidth = qMax(mMaxHeaderWidth, width);
+        }
+    }
+
     selectionModel()->clear(); // because the model calls reset()
     model()->setTiles(tiles, userData, headers);
 }
@@ -326,6 +339,8 @@ void MixedTilesetView::setTileset(Tileset *tileset,
                                   const QList<void *> &userData,
                                   const QStringList &labels)
 {
+    mMaxHeaderWidth = 0;
+
     selectionModel()->clear(); // because the model calls reset()
     model()->setTileset(tileset, userData, labels);
 }
@@ -376,7 +391,8 @@ MixedTilesetModel::MixedTilesetModel(QObject *parent) :
     mTileset(0),
     mShowHeaders(true),
     mShowLabels(false),
-    mHighlightLabelledItems(false)
+    mHighlightLabelledItems(false),
+    mColumnCount(COLUMN_COUNT)
 {
 }
 
@@ -405,7 +421,7 @@ int MixedTilesetModel::rowCount(const QModelIndex &parent) const
 
 int MixedTilesetModel::columnCount(const QModelIndex &parent) const
 {
-    return parent.isValid() ? 0 : (mTileset ? mTileset->columnCount() : COLUMN_COUNT);
+    return parent.isValid() ? 0 : (mTileset ? mTileset->columnCount() : mColumnCount);
 }
 
 Qt::ItemFlags MixedTilesetModel::flags(const QModelIndex &index) const
@@ -777,6 +793,12 @@ void MixedTilesetModel::setToolTip(int tileIndex, const QString &text)
         emit toolTipChanged(index);
 #endif
     }
+}
+
+void MixedTilesetModel::setColumnCount(int count)
+{
+    mColumnCount = count;
+    reset();
 }
 
 MixedTilesetModel::Item *MixedTilesetModel::toItem(const QModelIndex &index) const

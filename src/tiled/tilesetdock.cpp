@@ -716,6 +716,7 @@ void TilesetDock::refreshTilesetMenu()
 #include <QApplication>
 #include <QClipboard>
 #include <QComboBox>
+#include <QDebug>
 #include <QDropEvent>
 #include <QFileDialog>
 #include <QHBoxLayout>
@@ -1003,6 +1004,22 @@ void TilesetDock::setMapDocument(MapDocument *mapDocument)
     }
 
     updateActions();
+}
+
+void TilesetDock::tilePicked(Tile *tile)
+{
+    if (!tile)
+        return;
+
+    qDebug() << "TilesetDock::tilePicked" << tile->tileset()->name();
+
+    if (mTilesetByName.contains(tile->tileset()->name())) {
+        int row = mTilesets.indexOf(mTilesetByName[tile->tileset()->name()]);
+        mTilesetNamesView->setCurrentRow(row);
+        row = tile->id() / tile->tileset()->columnCount();
+        int col = tile->id() % tile->tileset()->columnCount();
+        mTilesetView->setCurrentIndex(mTilesetView->model()->index(row, col));
+    }
 }
 
 void TilesetDock::changeEvent(QEvent *e)

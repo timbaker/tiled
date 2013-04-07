@@ -197,7 +197,8 @@ SOURCES += aboutdialog.cpp \
     bmptooldialog.cpp \
     bmpselectionitem.cpp \
     BuildingEditor/buildingpropertiesdialog.cpp \
-    roomdefecator.cpp
+    roomdefecator.cpp \
+    tilelayerspanel.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -358,7 +359,8 @@ HEADERS += aboutdialog.h \
     bmptooldialog.h \
     bmpselectionitem.h \
     BuildingEditor/buildingpropertiesdialog.h \
-    roomdefecator.h
+    roomdefecator.h \
+    tilelayerspanel.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

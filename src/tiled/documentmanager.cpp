@@ -22,7 +22,9 @@
 #include "documentmanager.h"
 
 #ifdef ZOMBOID
+#include "tilelayerspanel.h"
 #include "ZomboidScene.h"
+#include <QHBoxLayout>
 #include <QDir>
 #endif
 
@@ -99,7 +101,11 @@ MapDocument *DocumentManager::currentDocument() const
 
 MapView *DocumentManager::currentMapView() const
 {
+#ifdef ZOMBOID
+    return mDocuments.size() ? mMapViews[currentDocument()] : 0;
+#else
     return static_cast<MapView*>(mTabWidget->currentWidget());
+#endif
 }
 
 MapScene *DocumentManager::currentMapScene() const
@@ -150,6 +156,7 @@ void DocumentManager::switchToRightDocument()
     switchToDocument((currentIndex + 1) % tabCount);
 }
 
+#ifndef ZOMBOID
 void DocumentManager::addDocument(MapDocument *mapDocument)
 {
     Q_ASSERT(mapDocument);
@@ -187,6 +194,49 @@ void DocumentManager::addDocument(MapDocument *mapDocument)
     switchToDocument(documentIndex);
     centerViewOn(0, 0);
 }
+#else
+void DocumentManager::addDocument(MapDocument *mapDocument)
+{
+    Q_ASSERT(mapDocument);
+    Q_ASSERT(!mDocuments.contains(mapDocument));
+
+    mDocuments.append(mapDocument);
+    mUndoGroup->addStack(mapDocument->undoStack());
+
+    QWidget *widget = new QWidget(mTabWidget);
+    TileLayersPanel *tlPanel = new TileLayersPanel(widget);
+    MapView *view = new MapView(widget);
+    MapScene *scene = new ZomboidScene(view); // scene is owned by the view
+
+    QHBoxLayout *layout = new QHBoxLayout();
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(2);
+    layout->addWidget(tlPanel);
+    layout->addWidget(view);
+    widget->setLayout(layout);
+
+    scene->setMapDocument(mapDocument);
+    view->setMapScene(scene);
+    tlPanel->setDocument(mapDocument);
+
+    connect(tlPanel, SIGNAL(tilePicked(Tile*)), SIGNAL(tilePicked(Tile*)));
+
+    const int documentIndex = mDocuments.size() - 1;
+
+    mTabWidget->addTab(widget, mapDocument->displayName());
+    mTabWidget->setTabToolTip(documentIndex, QDir::toNativeSeparators(
+                                  mapDocument->fileName()));
+
+    mMapViews[mapDocument] = view;
+    mTileLayerPanels[mapDocument] = tlPanel;
+
+    connect(mapDocument, SIGNAL(fileNameChanged()), SLOT(updateDocumentTab()));
+    connect(mapDocument, SIGNAL(modifiedChanged()), SLOT(updateDocumentTab()));
+
+    switchToDocument(documentIndex);
+    centerViewOn(0, 0);
+}
+#endif // ZOMBOID
 
 void DocumentManager::closeCurrentDocument()
 {
@@ -195,11 +245,17 @@ void DocumentManager::closeCurrentDocument()
         return;
 
     MapDocument *mapDocument = mDocuments.takeAt(index);
+#ifdef ZOMBOID
+    MapView *mapView = mMapViews[mapDocument];
+#else
     MapView *mapView = currentMapView();
+#endif
 
     mTabWidget->removeTab(index);
 #ifdef ZOMBOID
     emit documentAboutToClose(index, mapDocument);
+    mMapViews.remove(mapDocument);
+    mTileLayerPanels.remove(mapDocument);
 #endif
     delete mapView;
     delete mapDocument;
@@ -275,6 +331,19 @@ void DocumentManager::centerViewOn(int x, int y)
 
     view->centerOn(currentDocument()->renderer()->tileToPixelCoords(x, (qreal)y));
 }
+
+#ifdef ZOMBOID
+TileLayersPanel *DocumentManager::currentTileLayerPanel() const
+{
+    return mDocuments.size() ? mTileLayerPanels[currentDocument()] : 0;
+}
+
+void DocumentManager::stampAltHovered(const QPoint &tilePos)
+{
+    if (TileLayersPanel *panel = currentTileLayerPanel())
+        panel->setTilePosition(tilePos);
+}
+#endif // ZOMBOID
 
 // Wrapper around QGraphicsView::ensureVisible.  In ensureVisible, when the rectangle to
 // view is larger than the viewport, the final position is often undesirable with multiple

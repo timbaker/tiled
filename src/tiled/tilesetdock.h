@@ -206,6 +206,9 @@ public:
      */
     Tile *currentTile() const { return mCurrentTile; }
 
+public slots:
+    void tilePicked(Tile *tile);
+
 signals:
     /**
      * Emitted when the current tile changed.

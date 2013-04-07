@@ -96,6 +96,8 @@ public:
 
     void setToolTip(int tileIndex, const QString &text);
 
+    void setColumnCount(int count);
+
 signals:
     void tileDropped(const QString &tilesetName, int tileId);
 
@@ -151,6 +153,7 @@ private:
     bool mShowHeaders;
     bool mShowLabels;
     bool mHighlightLabelledItems;
+    int mColumnCount;
 };
 
 class MixedTilesetView : public QTableView
@@ -192,6 +195,9 @@ public:
                     const QList<void *> &userData = QList<void*>(),
                     const QStringList &labels = QStringList());
 
+    int maxHeaderWidth() const
+    { return mMaxHeaderWidth; }
+
 signals:
     void mousePressed();
     void mouseReleased();
@@ -211,6 +217,7 @@ private:
     bool mMousePressed;
     QMenu *mContextMenu;
     QModelIndex mToolTipIndex;
+    int mMaxHeaderWidth;
 };
 
 } // namespace Internal

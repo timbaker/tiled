@@ -30,6 +30,9 @@
 
 #include <math.h>
 #include <QVector>
+#ifdef ZOMBOID
+#include <QApplication>
+#endif
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -213,6 +216,11 @@ void StampBrush::tilePositionChanged(const QPoint &)
         updatePosition();
         break;
     }
+
+#ifdef ZOMBOID
+    if (qApp->keyboardModifiers() & Qt::AltModifier)
+        emit altHover(tilePosition());
+#endif
 }
 
 void StampBrush::mousePressed(QGraphicsSceneMouseEvent *event)
@@ -251,6 +259,19 @@ void StampBrush::mousePressed(QGraphicsSceneMouseEvent *event)
             break;
         }
     } else {
+#ifdef ZOMBOID
+        if ((event->button() == Qt::RightButton)
+                && (event->modifiers() & Qt::AltModifier)) {
+            if (TileLayer *tl = currentTileLayer()) {
+                if (!tl->contains(tilePosition()))
+                    return;
+                if (Tile *tile = tl->cellAt(tilePosition()).tile) {
+                    emit tilePicked(tile);
+                }
+            }
+            return;
+        }
+#endif
         if (event->button() == Qt::RightButton)
             beginCapture();
     }
@@ -315,6 +336,11 @@ void StampBrush::configureBrush(const QVector<QPoint> &list)
 
 void StampBrush::modifiersChanged(Qt::KeyboardModifiers modifiers)
 {
+#ifdef ZOMBOID
+    if (modifiers & Qt::AltModifier)
+        emit altHover(tilePosition());
+#endif
+
     if (!mStamp)
         return;
 

@@ -443,6 +443,14 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
             this, SLOT(setStampBrush(const TileLayer*)));
     connect(mTilesetDock, SIGNAL(currentTileChanged(Tile*)),
             tileObjectsTool, SLOT(setTile(Tile*)));
+#ifdef ZOMBOID
+    connect(mStampBrush, SIGNAL(tilePicked(Tile*)),
+            mTilesetDock, SLOT(tilePicked(Tile*)));
+    connect(mStampBrush, SIGNAL(altHover(QPoint)),
+            SLOT(stampAltHovered(QPoint)));
+    connect(DocumentManager::instance(), SIGNAL(tilePicked(Tile*)),
+            mTilesetDock, SLOT(tilePicked(Tile*)));
+#endif
 
     connect(mRandomButton, SIGNAL(toggled(bool)),
             mStampBrush, SLOT(setRandom(bool)));
@@ -1455,6 +1463,11 @@ void MainWindow::autoMappingWarning()
 }
 
 #ifdef ZOMBOID
+void MainWindow::stampAltHovered(const QPoint &tilePos)
+{
+    DocumentManager::instance()->stampAltHovered(tilePos);
+}
+
 void MainWindow::showBuildingEditor()
 {
     if (!mBuildingEditor) {
