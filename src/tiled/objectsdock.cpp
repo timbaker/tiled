@@ -22,15 +22,17 @@
 
 #include "addremovemapobject.h"
 #include "documentmanager.h"
-#include "map.h"
-#include "mapobject.h"
 #include "mapdocument.h"
 #include "mapdocumentactionhandler.h"
+#include "mapobjectmodel.h"
 #include "movemapobjecttogroup.h"
-#include "objectgroup.h"
 #include "objectpropertiesdialog.h"
 #include "utils.h"
-#include "mapobjectmodel.h"
+
+#include "map.h"
+#include "mapobject.h"
+#include "maprenderer.h"
+#include "objectgroup.h"
 
 #include <QBoxLayout>
 #include <QApplication>
@@ -382,10 +384,8 @@ void ObjectsView::selectionChanged(const QItemSelection &selected,
         mSynching = true;
         if (selectedObjects.count() == 1) {
             MapObject *o = selectedObjects.first();
-            QPoint pos = o->position().toPoint();
-            QSize size = o->size().toSize();
-            DocumentManager::instance()->centerViewOn(pos.x() + size.width() / 2,
-                                                      pos.y() + size.height() / 2);
+            DocumentManager::instance()->ensureRectVisible(
+                        mMapDocument->renderer()->boundingRect(o));
         }
         mMapDocument->setSelectedObjects(selectedObjects);
         mSynching = false;

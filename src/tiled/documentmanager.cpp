@@ -275,3 +275,33 @@ void DocumentManager::centerViewOn(int x, int y)
 
     view->centerOn(currentDocument()->renderer()->tileToPixelCoords(x, (qreal)y));
 }
+
+// Wrapper around QGraphicsView::ensureVisible.  In ensureVisible, when the rectangle to
+// view is larger than the viewport, the final position is often undesirable with multiple
+// scrolls taking place.  In this implementation, when the rectangle to view (plus margins)
+// does not fit in the current view or is not partially visible already, the view is centered
+// on the rectangle's center.
+void ensureRectVisible(QGraphicsView *view, const QRectF &rect, int xmargin, int ymargin)
+{
+    QRect rectToView = view->mapFromScene(rect).boundingRect();
+    rectToView.adjust(-xmargin, -ymargin, xmargin, ymargin);
+    QRect viewportRect = view->viewport()->rect(); // includes scrollbars?
+    if (viewportRect.contains(rectToView, true))
+        return;
+    if (rectToView.width() > viewportRect.width() ||
+            rectToView.height() > viewportRect.height() ||
+            !viewportRect.intersects(rectToView)) {
+        view->centerOn(rect.center());
+    } else {
+        view->ensureVisible(rect, xmargin, ymargin);
+    }
+}
+
+void DocumentManager::ensureRectVisible(QRectF &rect, int xmargin, int ymargin)
+{
+    MapView *view = currentMapView();
+    if (!view)
+        return;
+
+    ::ensureRectVisible(view, rect, xmargin, ymargin);
+}
