@@ -294,6 +294,15 @@ void ZomboidScene::layerAdded(int index)
 {
     MapScene::layerAdded(index);
 
+    if (mHighlightCurrentLayer) {
+        if (ObjectGroup *og = mMapDocument->map()->layerAt(index)->asObjectGroup()) {
+            int level;
+            MapComposite::levelForLayer(og, &level);
+            mLayerItems[index]->setVisible(og->isVisible() &&
+                                           (level == mMapDocument->currentLevel()));
+        }
+    }
+
     doLater(ZOrder);
 }
 
@@ -337,6 +346,11 @@ void ZomboidScene::layerChanged(int index)
                     synch = true;
                 }
             }
+        }
+        if (mHighlightCurrentLayer && (index < mLayerItems.size())) {
+            QGraphicsItem *layerItem = mLayerItems.at(index);
+            layerItem->setVisible(og->isVisible()
+                                  && (og->level() == mMapDocument->currentLevel()));
         }
         if (synch)
             updateLayerGroupsLater(Synch | Bounds);
@@ -598,6 +612,8 @@ void ZomboidScene::handlePendingUpdates()
         foreach (CompositeLayerGroupItem *item, mPendingGroupItems)
             item->update();
     }
+    if (mPendingFlags & Highlight)
+        updateCurrentLayerHighlight();
 
     mPendingFlags = None;
     mPendingGroupItems.clear();
