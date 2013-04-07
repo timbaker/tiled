@@ -835,7 +835,9 @@ BaseObjectTool::BaseObjectTool() :
     mTileEdge(Center),
     mTileCenters(false),
     mCursorObject(0),
-    mCursorItem(0)
+    mCursorItem(0),
+    mEyedrop(false),
+    mMouseOverObject(false)
 {
 }
 
@@ -857,6 +859,13 @@ void BaseObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     if (event->button() != Qt::LeftButton)
         return;
 
+    if (mEyedrop) {
+        if (BuildingObject *object = mEditor->topmostObjectAt(event->scenePos())) {
+            eyedrop(object);
+        }
+        return;
+    }
+
     if (!mCursorItem || !mCursorItem->isVisible() || !mCursorItem->isValidPos())
         return;
 
@@ -865,6 +874,16 @@ void BaseObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void BaseObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    if (mEyedrop) {
+        BuildingObject *object = mEditor->topmostObjectAt(event->scenePos());
+        if (object && (object->asRoof() || object->asWall()))
+            object = 0;
+        bool mouseOverObject = object != 0;
+        if (mouseOverObject != mMouseOverObject)
+            mMouseOverObject = mouseOverObject;
+        mEditor->setMouseOverObject(object);
+    }
+
     QPoint oldTilePos = mTilePos;
     TileEdge oldEdge = mTileEdge;
 
@@ -908,12 +927,34 @@ void BaseObjectTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     Q_UNUSED(event)
 }
 
+
+void BaseObjectTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
+{
+    bool eyedrop = (modifiers & Qt::AltModifier) != 0;
+    if (eyedrop != mEyedrop) {
+        mEyedrop = eyedrop;
+        if (mEyedrop) {
+            mEditor->views().at(0)->setCursor(Qt::PointingHandCursor);
+        } else {
+            mEditor->views().at(0)->unsetCursor();
+            mEditor->setMouseOverObject(0);
+        }
+    }
+    updateCursorObject();
+}
+
 void BaseObjectTool::activate()
 {
+    currentModifiersChanged(qApp->keyboardModifiers());
 }
 
 void BaseObjectTool::deactivate()
 {
+    if (mEyedrop) {
+        mEditor->views().at(0)->unsetCursor();
+        mEditor->setMouseOverObject(0);
+        mEyedrop = false;
+    }
     if (mCursorItem) {
         mEditor->removeItem(mCursorItem);
         delete mCursorItem;
@@ -949,6 +990,27 @@ void BaseObjectTool::setCursorObject(BuildingObject *object)
     mEditor->setCursorObject(object);
 }
 
+void BaseObjectTool::eyedrop(BuildingObject *object)
+{
+    if (FurnitureObject *fobject = object->asFurniture()) {
+        BuildingEditorWindow::instance()->selectAndDisplay(fobject->furnitureTile());
+        updateCursorObject();
+    } else if (BuildingTileEntry *entry = object->tile()) {
+        BuildingEditorWindow::instance()->selectAndDisplay(entry);
+        updateCursorObject();
+    }
+
+    BaseTool *tool = 0;
+    if (object->asDoor()) tool = DoorTool::instance();
+    if (object->asFurniture()) tool = FurnitureTool::instance();
+//    if (object->asRoof()) tool = RoofTool::instance();
+    if (object->asStairs()) tool = StairsTool::instance();
+//    if (object->asWall()) tool = WallTool::instance();
+    if (object->asWindow()) tool = WindowTool::instance();
+    if (tool && !tool->isCurrent() && tool->action()->isEnabled())
+        QMetaObject::invokeMethod(tool, "makeCurrent", Qt::QueuedConnection);
+}
+
 /////
 
 DoorTool *DoorTool::mInstance = 0;
@@ -979,7 +1041,7 @@ void DoorTool::placeObject()
 
 void DoorTool::updateCursorObject()
 {
-    if (mTileEdge == Center || !mEditor->currentFloorContains(mTilePos)) {
+    if (mEyedrop || mTileEdge == Center || !mEditor->currentFloorContains(mTilePos)) {
         setCursorObject(0);
         return;
     }
@@ -1042,7 +1104,7 @@ void WindowTool::placeObject()
 
 void WindowTool::updateCursorObject()
 {
-    if (mTileEdge == Center || !mEditor->currentFloorContains(mTilePos)) {
+    if (mEyedrop || mTileEdge == Center || !mEditor->currentFloorContains(mTilePos)) {
         setCursorObject(0);
         return;
     }
@@ -1104,7 +1166,7 @@ void StairsTool::placeObject()
 
 void StairsTool::updateCursorObject()
 {
-    if (mTileEdge == Center || !mEditor->currentFloorContains(mTilePos)) {
+    if (mEyedrop || mTileEdge == Center || !mEditor->currentFloorContains(mTilePos)) {
         setCursorObject(0);
         return;
     }
@@ -1145,13 +1207,7 @@ FurnitureTool::FurnitureTool() :
     BaseObjectTool(),
     mCurrentTile(0)
 {
-    setStatusText(tr("Left-click to place furniture. Right-click to remove any object. CTRL disables auto-align."));
-}
-
-void FurnitureTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
-{
-    Q_UNUSED(modifiers)
-    updateCursorObject();
+    setStatusText(tr("Left-click to place furniture. Right-click to remove any object. CTRL disables auto-align.  ALT = eyedrop."));
 }
 
 void FurnitureTool::placeObject()
@@ -1167,7 +1223,7 @@ void FurnitureTool::placeObject()
 
 void FurnitureTool::updateCursorObject()
 {
-    if (!mEditor->currentFloorContains(mTilePos)) {
+    if (mEyedrop || !mEditor->currentFloorContains(mTilePos)) {
         setCursorObject(0);
         return;
     }
@@ -1262,6 +1318,14 @@ void FurnitureTool::updateCursorObject()
         mEditor->setToolTiles(tiles, mCursorObject->pos(), layerName);
     }
 #endif
+}
+
+void FurnitureTool::eyedrop(BuildingObject *object)
+{
+    BaseObjectTool::eyedrop(object);
+    if (FurnitureObject *fobj = object->asFurniture()) {
+        mCurrentTile = fobj->furnitureTile();
+    }
 }
 
 void FurnitureTool::setCurrentTile(FurnitureTile *tile)

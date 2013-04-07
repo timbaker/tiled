@@ -626,6 +626,30 @@ QString BuildingEditorWindow::currentLayer() const
     return mCurrentDocument ? mCurrentDocument->currentLayer() : QString();
 }
 
+void BuildingEditorWindow::selectAndDisplay(BuildingTileEntry *entry)
+{
+    if (!entry)
+        return;
+    ui->categoryList->setCurrentRow(0); // Used Tiles
+    QModelIndex index = ui->tilesetView->model()->index((void*)entry);
+    ui->tilesetView->setCurrentIndex(index);
+    QMetaObject::invokeMethod(this, "scrollToNow", Qt::QueuedConnection,
+                              Q_ARG(int, 0), Q_ARG(QModelIndex, index));
+//    ui->tilesetView->scrollTo(index);
+}
+
+void BuildingEditorWindow::selectAndDisplay(FurnitureTile *ftile)
+{
+    if (!ftile)
+        return;
+    ui->categoryList->setCurrentRow(1); // Used Furniture
+    QModelIndex index = ui->furnitureView->model()->index(ftile);
+    ui->furnitureView->setCurrentIndex(index);
+    QMetaObject::invokeMethod(this, "scrollToNow", Qt::QueuedConnection,
+                              Q_ARG(int, 1), Q_ARG(QModelIndex, index));
+//    ui->furnitureView->scrollTo(index);
+}
+
 void BuildingEditorWindow::readSettings()
 {
     mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
@@ -967,6 +991,14 @@ void BuildingEditorWindow::furnitureSelectionChanged()
         }
     }
     updateActions();
+}
+
+void BuildingEditorWindow::scrollToNow(int which, const QModelIndex &index)
+{
+    if (which == 0)
+        ui->tilesetView->scrollTo(index);
+    else
+        ui->furnitureView->scrollTo(index);
 }
 
 void BuildingEditorWindow::usedTilesChanged()

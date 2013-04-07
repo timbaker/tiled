@@ -262,6 +262,8 @@ public:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
+    void currentModifiersChanged(Qt::KeyboardModifiers modifiers);
+
 public slots:
     void documentChanged();
     void activate();
@@ -271,6 +273,7 @@ protected:
     virtual void updateCursorObject() = 0;
     void setCursorObject(BuildingObject *object);
     virtual void placeObject() = 0;
+    virtual void eyedrop(BuildingObject *object);
 
     enum TileEdge {
         Center,
@@ -286,6 +289,8 @@ protected:
     BuildingObject *mCursorObject;
     GraphicsObjectItem *mCursorItem;
     QRectF mCursorSceneRect;
+    bool mEyedrop;
+    bool mMouseOverObject;
 };
 
 class DoorTool : public BaseObjectTool
@@ -347,10 +352,9 @@ public:
 
     FurnitureTool();
 
-    void currentModifiersChanged(Qt::KeyboardModifiers modifiers);
-
     void placeObject();
     void updateCursorObject();
+    void eyedrop(BuildingObject *object);
 
     void setCurrentTile(FurnitureTile *tile);
 

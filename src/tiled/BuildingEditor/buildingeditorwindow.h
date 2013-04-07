@@ -59,6 +59,7 @@ class Door;
 class BuildingOrthoScene;
 class BuildingOrthoView;
 class FurnitureGroup;
+class FurnitureTile;
 class Room;
 class Window;
 class Stairs;
@@ -95,6 +96,9 @@ public:
     BuildingFloor *currentFloor() const;
 
     QString currentLayer() const;
+
+    void selectAndDisplay(BuildingTileEntry *entry);
+    void selectAndDisplay(FurnitureTile *ftile);
 
 private:
     void readSettings();
@@ -154,6 +158,8 @@ private slots:
     void categorySelectionChanged();
     void tileSelectionChanged();
     void furnitureSelectionChanged();
+
+    void scrollToNow(int which, const QModelIndex &index);
 
     void usedTilesChanged();
     void usedFurnitureChanged();
