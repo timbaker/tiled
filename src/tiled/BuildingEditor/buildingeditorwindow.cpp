@@ -2524,6 +2524,7 @@ void BuildingEditorWindow::updateActions()
     ui->actionNormalSize->setEnabled(hasDoc && zoomable->scale() != 1.0);
 
     ui->actionBuildingProperties->setEnabled(hasDoc);
+    ui->actionGrime->setEnabled(hasDoc);
     ui->actionRooms->setEnabled(hasDoc);
     ui->actionTemplateFromBuilding->setEnabled(hasDoc);
 
