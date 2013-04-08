@@ -83,8 +83,12 @@ void RoomDefecator::initTiles()
                         if (!ftile || ftile->isCornerOrient(ftile->orient()))
                             continue;
                         foreach (BuildingTile *btile, ftile->tiles()) {
-                            if (btile && !btile->isNone())
-                                mWestWallTiles += btiles->tileFor(btile);
+                            if (btile && !btile->isNone()) {
+                                if (ftile->isW() || ftile->isE())
+                                    mWestWallTiles += btiles->tileFor(btile);
+                                else if (ftile->isN() || ftile->isS())
+                                    mNorthWallTiles += btiles->tileFor(btile);
+                            }
                         }
                     }
                 }
