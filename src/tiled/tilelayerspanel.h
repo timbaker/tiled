@@ -53,6 +53,7 @@ private slots:
     void activated(const QModelIndex &index);
     void currentChanged();
     void layerIndexChanged(int index);
+    void layerChanged(int index);
     void regionAltered(const QRegion &region, Layer *layer);
     void showTileLayersPanelChanged(bool show);
 

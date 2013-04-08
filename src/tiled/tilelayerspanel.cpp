@@ -72,6 +72,7 @@ void TileLayersPanel::setDocument(MapDocument *doc)
                 SLOT(layerIndexChanged(int)));
         connect(mDocument, SIGNAL(layerAdded(int)), SLOT(setList()));
         connect(mDocument, SIGNAL(layerRemoved(int)), SLOT(setList()));
+        connect(mDocument, SIGNAL(layerChanged(int)), SLOT(layerChanged(int)));
         connect(mDocument, SIGNAL(regionAltered(QRegion,Layer*)),
                 SLOT(regionAltered(QRegion,Layer*)));
         setList();
@@ -157,6 +158,14 @@ void TileLayersPanel::layerIndexChanged(int index)
         return;
     mCurrentLayerIndex = index;
     setList();
+}
+
+void TileLayersPanel::layerChanged(int index)
+{
+    Layer *layer = mDocument->map()->layerAt(index);
+    if (layer->asTileLayer() && (layer->level() == mDocument->currentLevel())) {
+        setList(); // handle renaming
+    }
 }
 
 void TileLayersPanel::regionAltered(const QRegion &region, Layer *layer)
