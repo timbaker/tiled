@@ -134,6 +134,7 @@
      <addaction name="actionRoomDefGo"/>
      <addaction name="actionRoomDefMerge"/>
      <addaction name="actionRoomDefRemove"/>
+     <addaction name="actionRoomDefUnknownWalls"/>
     </widget>
     <addaction name="actionBuildingEditor"/>
     <addaction name="actionTilesetMetaInfo"/>
@@ -502,11 +503,19 @@
    </property>
   </action>
   <action name="actionRoomDefGo">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/22x22/add.png</normaloff>:/images/22x22/add.png</iconset>
+   </property>
    <property name="text">
     <string>Go!</string>
    </property>
   </action>
   <action name="actionRoomDefRemove">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
+   </property>
    <property name="text">
     <string>Remove RoomDefs</string>
    </property>
@@ -522,6 +531,15 @@
    </property>
    <property name="text">
     <string>Show Tile Layers Panel</string>
+   </property>
+  </action>
+  <action name="actionRoomDefUnknownWalls">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/22x22/stock-tool-rect-select.png</normaloff>:/images/22x22/stock-tool-rect-select.png</iconset>
+   </property>
+   <property name="text">
+    <string>Select Unknown Walls</string>
    </property>
   </action>
  </widget>

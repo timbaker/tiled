@@ -161,6 +161,7 @@ public slots:
     void RoomDefGo();
     void RoomDefMerge();
     void RoomDefRemove();
+    void RoomDefUnknownWalls();
 #endif
 
     void updateWindowTitle();

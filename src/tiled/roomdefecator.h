@@ -56,6 +56,7 @@ class RoomDefecator
 {
 public:
     RoomDefecator(Map *map, int level, const QRect &bounds);
+    void defecate();
     void initTiles();
     bool didTile(int x, int y);
     bool isInRoom(int x, int y);
@@ -68,12 +69,14 @@ public:
     Map *mMap;
     TileLayer *mLayerFloor;
     TileLayer *mLayerWalls;
+    TileLayer *mLayerWalls2;
     QRect mBounds;
     QList<QRegion> mRegions;
     QList<QRegion> mIgnoreRegions;
     QMap<QString,Tileset*> mTilesets;
     QSet<Tile*> mWestWallTiles;
     QSet<Tile*> mNorthWallTiles;
+    QSet<Tile*> mSouthEastWallTiles;
 };
 
 } // namespace Internal

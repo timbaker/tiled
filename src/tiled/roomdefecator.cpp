@@ -31,7 +31,10 @@ using namespace BuildingEditor;
 
 RoomDefecator::RoomDefecator(Map *map, int level, const QRect &bounds) :
     mMap(map),
-    mBounds(bounds)
+    mBounds(bounds),
+    mLayerFloor(0),
+    mLayerWalls(0),
+    mLayerWalls2(0)
 {
     int i = map->indexOfLayer(QString::fromAscii("%1_Floor").arg(level), Layer::TileLayerType);
     if (i < 0)
@@ -43,10 +46,25 @@ RoomDefecator::RoomDefecator(Map *map, int level, const QRect &bounds) :
         return;
     mLayerWalls = map->layerAt(i)->asTileLayer();
 
-    initTiles();
+    i = map->indexOfLayer(QString::fromAscii("%1_Walls2").arg(level), Layer::TileLayerType);
+    if (i >= 0)
+        mLayerWalls2 = map->layerAt(i)->asTileLayer();
 
-    for (int y = bounds.top(); y <= bounds.bottom(); y++) {
-        for (int x = bounds.left(); x <= bounds.right(); x++) {
+    i = map->indexOfLayer(QString::fromAscii("%1_Walls_2").arg(level), Layer::TileLayerType);
+    if (i >= 0)
+        mLayerWalls2 = map->layerAt(i)->asTileLayer();
+
+
+    initTiles();
+}
+
+void RoomDefecator::defecate()
+{
+    if (!mLayerFloor || !mLayerWalls)
+        return;
+
+    for (int y = mBounds.top(); y <= mBounds.bottom(); y++) {
+        for (int x = mBounds.left(); x <= mBounds.right(); x++) {
             if (!isValidPos(x, y))
                 continue;
             if (!didTile(x, y) /*&& isInRoom(x, y)*/) {
@@ -74,6 +92,9 @@ void RoomDefecator::initTiles()
             mNorthWallTiles += btiles->tileFor(entry->tile(BTC_Walls::NorthDoor));
             mNorthWallTiles += btiles->tileFor(entry->tile(BTC_Walls::NorthWindow));
             mNorthWallTiles += btiles->tileFor(entry->tile(BTC_Walls::NorthWest));
+
+            // These are for the benefit of MainWindow::RoomDefUnknownWalls
+            mSouthEastWallTiles += btiles->tileFor(entry->tile(BTC_Walls::SouthEast));
         }
 
         foreach (FurnitureGroup *fg, FurnitureGroups::instance()->groups()) {
@@ -96,9 +117,33 @@ void RoomDefecator::initTiles()
         }
     }
 
-    foreach (Tile *tile, mWestWallTiles | mNorthWallTiles) {
-        mTilesets[tile->tileset()->name()] = tile->tileset();
+    QSet<Tileset*> mapTilesets = mMap->usedTilesets();
+    foreach (Tileset *ts, mapTilesets) {
+        mTilesets[ts->name()] = ts;
     }
+
+    QSet<Tile*> westTiles, northTiles, southEastTiles;
+    foreach (Tile *tile, mWestWallTiles) {
+        if (mTilesets.contains(tile->tileset()->name())) {
+            if (Tile *tile2 = mTilesets[tile->tileset()->name()]->tileAt(tile->id()))
+                westTiles += tile2;
+        }
+    }
+    foreach (Tile *tile, mNorthWallTiles) {
+        if (mTilesets.contains(tile->tileset()->name())) {
+            if (Tile *tile2 = mTilesets[tile->tileset()->name()]->tileAt(tile->id()))
+                northTiles += tile2;
+        }
+    }
+    foreach (Tile *tile, mSouthEastWallTiles) {
+        if (mTilesets.contains(tile->tileset()->name())) {
+            if (Tile *tile2 = mTilesets[tile->tileset()->name()]->tileAt(tile->id()))
+                southEastTiles += tile2;
+        }
+    }
+    mWestWallTiles = westTiles;
+    mNorthWallTiles = northTiles;
+    mSouthEastWallTiles = southEastTiles;
 }
 
 bool RoomDefecator::didTile(int x, int y)
@@ -232,20 +277,24 @@ bool RoomDefecator::isWestWall(int x, int y)
 {
     if (!isValidPos(x, y)) return false;
     Tile *tile = mLayerWalls->cellAt(x, y).tile;
-    if (!tile) return false;
-    if (Tileset *ts = mTilesets[tile->tileset()->name()])
-        tile = ts->tileAt(tile->id());
-    return mWestWallTiles.contains(tile);
+    if (tile && mWestWallTiles.contains(tile)) return true;
+    if (mLayerWalls2) {
+        Tile *tile = mLayerWalls2->cellAt(x, y).tile;
+        if (tile && mWestWallTiles.contains(tile)) return true;
+    }
+    return false;
 }
 
 bool RoomDefecator::isNorthWall(int x, int y)
 {
     if (!isValidPos(x, y)) return false;
     Tile *tile = mLayerWalls->cellAt(x, y).tile;
-    if (!tile) return false;
-    if (Tileset *ts = mTilesets[tile->tileset()->name()])
-        tile = ts->tileAt(tile->id());
-    return mNorthWallTiles.contains(tile);
+    if (tile && mNorthWallTiles.contains(tile)) return true;
+    if (mLayerWalls2) {
+        Tile *tile = mLayerWalls2->cellAt(x, y).tile;
+        if (tile && mNorthWallTiles.contains(tile)) return true;
+    }
+    return false;
 }
 
 /////

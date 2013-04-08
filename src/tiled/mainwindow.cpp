@@ -395,6 +395,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
             SLOT(RoomDefMerge()));
     connect(mUi->actionRoomDefRemove, SIGNAL(triggered()),
             SLOT(RoomDefRemove()));
+    connect(mUi->actionRoomDefUnknownWalls, SIGNAL(triggered()),
+            SLOT(RoomDefUnknownWalls()));
 #endif
 
     connect(mActionHandler->actionLayerProperties(), SIGNAL(triggered()),
@@ -1841,6 +1843,7 @@ void MainWindow::RoomDefGo()
 
     for (int level = 0; level <= mMapDocument->mapComposite()->maxLevel(); level++) {
         RoomDefecator rd(map, level, bounds);
+        rd.defecate();
         if (rd.mRegions.isEmpty())
             continue;
 
@@ -1992,6 +1995,47 @@ void MainWindow::RoomDefRemove()
                     new RemoveMapObject(mMapDocument, o));
     mMapDocument->undoStack()->endMacro();
 }
+
+#include "tile.h"
+void MainWindow::RoomDefUnknownWalls()
+{
+    if (!mMapDocument)
+        return;
+
+    QRect bounds = mMapDocument->tileSelection().boundingRect();
+    QRect mapRect = QRect(0, 0, mMapDocument->map()->width(), mMapDocument->map()->height());
+    if (bounds.isEmpty())
+        bounds = mapRect;
+
+    RoomDefecator rd(mMapDocument->map(), mMapDocument->currentLevel(), bounds);
+    if (!rd.mLayerWalls)
+        return;
+
+    QSet<Tile*> tiles = rd.mWestWallTiles + rd.mNorthWallTiles;
+    tiles += rd.mSouthEastWallTiles;
+
+    QRegion unknown;
+    bounds &= rd.mLayerWalls->bounds();
+    for (int y = bounds.top(); y <= bounds.bottom(); y++) {
+        for (int x = bounds.left(); x <= bounds.right(); x++) {
+            Tile *tile = rd.mLayerWalls->cellAt(x, y).tile;
+            if (tile && !tiles.contains(tile))
+                unknown += QRect(x, y, 1, 1);
+            else if (tile)
+                ; // valid in Walls, don't check Walls2
+            else if (rd.mLayerWalls2) {
+                tile = rd.mLayerWalls2->cellAt(x, y).tile;
+                if (tile && !tiles.contains(tile))
+                    unknown += QRect(x, y, 1, 1);
+            }
+        }
+    }
+
+    if (!unknown.isEmpty()) {
+        mMapDocument->undoStack()->push(
+                    new ChangeTileSelection(mMapDocument, unknown));
+    }
+}
 #endif // ZOMBOID
 
 void MainWindow::openRecentFile()
@@ -2138,6 +2182,7 @@ void MainWindow::updateActions()
     mUi->actionRoomDefMerge->setEnabled(mMapDocument &&
                                         !mMapDocument->selectedObjects().isEmpty());
     mUi->actionRoomDefRemove->setEnabled(mMapDocument);
+    mUi->actionRoomDefUnknownWalls->setEnabled(mMapDocument);
 #endif
 }
 
