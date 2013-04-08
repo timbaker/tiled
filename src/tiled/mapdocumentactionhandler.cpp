@@ -146,8 +146,13 @@ void MapDocumentActionHandler::retranslateUi()
     mActionMergeLayerDown->setText(tr("&Merge Layer Down"));
     mActionRemoveLayer->setText(tr("&Remove Layer"));
     mActionRenameLayer->setText(tr("Re&name Layer"));
+#ifdef ZOMBOID
+    mActionSelectPreviousLayer->setText(tr("Select Level Above"));
+    mActionSelectNextLayer->setText(tr("Select Level Below"));
+#else
     mActionSelectPreviousLayer->setText(tr("Select Pre&vious Layer"));
     mActionSelectNextLayer->setText(tr("Select &Next Layer"));
+#endif
     mActionMoveLayerUp->setText(tr("R&aise Layer"));
     mActionMoveLayerDown->setText(tr("&Lower Layer"));
     mActionToggleOtherLayers->setText(tr("Show/&Hide all Other Layers"));
@@ -263,6 +268,7 @@ void MapDocumentActionHandler::mergeLayerDown()
         mMapDocument->mergeLayerDown();
 }
 
+#ifndef ZOMBOID
 void MapDocumentActionHandler::selectPreviousLayer()
 {
     if (mMapDocument) {
@@ -280,6 +286,60 @@ void MapDocumentActionHandler::selectNextLayer()
             mMapDocument->setCurrentLayerIndex(currentLayer - 1);
     }
 }
+#else
+#include "mapcomposite.h"
+#include "objectgroup.h"
+static void switchToLevel(MapDocument *mMapDocument, int level) {
+
+    if (Layer *layer = mMapDocument->currentLayer()) {
+        if (CompositeLayerGroup *layerGroup = mMapDocument->mapComposite()->tileLayersForLevel(level)) {
+            // Try to switch to a layer with the same name in the new level
+            QString name = MapComposite::layerNameWithoutPrefix(layer);
+            if (layer->isTileLayer()) {
+                foreach (TileLayer *tl, layerGroup->layers()) {
+                    QString name2 = MapComposite::layerNameWithoutPrefix(tl);
+                    if (name == name2) {
+                        int index = mMapDocument->map()->layers().indexOf(tl);
+                        mMapDocument->setCurrentLayerIndex(index);
+                        return;
+                    }
+                }
+            } else if (layer->isObjectGroup()) {
+                foreach (ObjectGroup *og, mMapDocument->map()->objectGroups()) {
+                    if (og->level() == level) {
+                        QString name2 = MapComposite::layerNameWithoutPrefix(og);
+                        if (name == name2) {
+                            int index = mMapDocument->map()->layers().indexOf(og);
+                            mMapDocument->setCurrentLayerIndex(index);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    int index = 0;
+    foreach (Layer *layer, mMapDocument->map()->layers()) {
+        if (layer->level() == level) {
+            mMapDocument->setCurrentLayerIndex(index);
+            return;
+        }
+        ++index;
+    }
+}
+
+void MapDocumentActionHandler::selectPreviousLayer()
+{
+    if (mMapDocument)
+        switchToLevel(mMapDocument, mMapDocument->currentLevel() + 1);
+}
+
+void MapDocumentActionHandler::selectNextLayer()
+{
+    if (mMapDocument)
+        switchToLevel(mMapDocument, mMapDocument->currentLevel() - 1);
+}
+#endif // ZOMBOID
 
 void MapDocumentActionHandler::moveLayerUp()
 {
