@@ -86,6 +86,7 @@ Preferences::Preferences()
     mSortTilesets = mSettings->value(QLatin1String("SortTilesets"), false).toBool();
     mShowMiniMap = mSettings->value(QLatin1String("ShowMiniMap"), true).toBool();
     mMiniMapWidth = mSettings->value(QLatin1String("MiniMapWidth"), 256).toInt();
+    mShowTileLayersPanel = mSettings->value(QLatin1String("ShowTileLayersPanel"), true).toBool();
 #endif
     mSettings->endGroup();
 
@@ -466,5 +467,14 @@ void Preferences::setShowMiniMap(bool show)
     mShowMiniMap = show;
     mSettings->setValue(QLatin1String("Interface/ShowMiniMap"), show);
     emit showMiniMapChanged(mShowMiniMap);
+}
+
+void Preferences::setShowTileLayersPanel(bool show)
+{
+    if (mShowTileLayersPanel == show)
+        return;
+    mShowTileLayersPanel = show;
+    mSettings->setValue(QLatin1String("Interface/ShowTileLayersPanel"), show);
+    emit showTileLayersPanelChanged(mShowTileLayersPanel);
 }
 #endif // ZOMBOID

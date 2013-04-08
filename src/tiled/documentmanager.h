@@ -128,8 +128,6 @@ public:
     void centerViewOn(int x, int y);
 
 #ifdef ZOMBOID
-    TileLayersPanel *currentTileLayerPanel() const;
-    void stampAltHovered(const QPoint &tilePos);
     void ensureRectVisible(QRectF &rect, int xmargin = 50, int ymargin = 50);
 #endif
 
@@ -146,7 +144,6 @@ signals:
 
 #ifdef ZOMBOID
     void documentAboutToClose(int index, MapDocument *mapDocument);
-    void tilePicked(Tile *tile);
 #endif
 
 public slots:
@@ -168,10 +165,6 @@ private:
     QUndoGroup *mUndoGroup;
     AbstractTool *mSelectedTool;
     MapScene *mSceneWithTool;
-#ifdef ZOMBOID
-    QMap<MapDocument*,MapView*> mMapViews;
-    QMap<MapDocument*,TileLayersPanel*> mTileLayerPanels;
-#endif
 
     static DocumentManager *mInstance;
 };

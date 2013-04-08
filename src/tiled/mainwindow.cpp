@@ -87,6 +87,7 @@
 #include "mapsdock.h"
 #include "tiledefdialog.h"
 #include "tiledeffile.h"
+#include "tilelayerspanel.h"
 #include "tilemetainfodialog.h"
 #include "tilemetainfomgr.h"
 #include "zlevelsdock.h"
@@ -94,6 +95,7 @@
 #include <QDebug>
 #include <QDesktopServices>
 #include <QProcess>
+#include <QSplitter>
 #endif
 
 #ifdef Q_WS_MAC
@@ -147,6 +149,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 #endif
     , mTilesetDock(new TilesetDock(this))
 #ifdef ZOMBOID
+    , mTileLayersPanel(new TileLayersPanel())
+    , mMainSplitter(new QSplitter(this))
     , mCurrentLevelMenu(new QMenu(this))
     , mCurrentLevelButton(new QToolButton(this))
     , mCurrentLayerMenu(new QMenu(this))
@@ -168,8 +172,18 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 #endif
     mUi->setupUi(this);
 #ifdef ZOMBOID
+    mMainSplitter->setObjectName(QLatin1String("mainSplitter"));
+    mMainSplitter->setOrientation(Qt::Horizontal);
+    mMainSplitter->addWidget(mTileLayersPanel);
+    mMainSplitter->addWidget(mDocumentManager->widget());
+    mMainSplitter->setStretchFactor(0, 0);
+    mMainSplitter->setStretchFactor(1, 1);
+    mMainSplitter->setSizes(QList<int>() << 80 << 200);
+
     QVBoxLayout *centralLayout = static_cast<QVBoxLayout*>(centralWidget()->layout());
-    centralLayout->insertWidget(0, mDocumentManager->widget());
+    centralLayout->insertWidget(0, mMainSplitter);
+    centralLayout->setStretch(0, 1);
+    centralLayout->setStretch(1, 0);
 #else
     setCentralWidget(mDocumentManager->widget());
 #endif
@@ -262,6 +276,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     mUi->actionHighlightCurrentLayer->setChecked(preferences->highlightCurrentLayer());
 #ifdef ZOMBOID
     mUi->actionShowMiniMap->setChecked(preferences->showMiniMap());
+    mUi->actionShowTileLayersPanel->setChecked(preferences->showTileLayersPanel());
 #endif
 
     // Make sure Ctrl+= also works for zooming in
@@ -354,6 +369,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 #ifdef ZOMBOID
     connect(mUi->actionShowMiniMap, SIGNAL(toggled(bool)),
             preferences, SLOT(setShowMiniMap(bool)));
+    connect(mUi->actionShowTileLayersPanel, SIGNAL(toggled(bool)),
+            preferences, SLOT(setShowTileLayersPanel(bool)));
 #endif
     connect(mUi->actionZoomIn, SIGNAL(triggered()), SLOT(zoomIn()));
     connect(mUi->actionZoomOut, SIGNAL(triggered()), SLOT(zoomOut()));
@@ -448,7 +465,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
             mTilesetDock, SLOT(tilePicked(Tile*)));
     connect(mStampBrush, SIGNAL(altHover(QPoint)),
             SLOT(stampAltHovered(QPoint)));
-    connect(DocumentManager::instance(), SIGNAL(tilePicked(Tile*)),
+    connect(mTileLayersPanel, SIGNAL(tilePicked(Tile*)),
             mTilesetDock, SLOT(tilePicked(Tile*)));
 #endif
 
@@ -1465,7 +1482,7 @@ void MainWindow::autoMappingWarning()
 #ifdef ZOMBOID
 void MainWindow::stampAltHovered(const QPoint &tilePos)
 {
-    DocumentManager::instance()->stampAltHovered(tilePos);
+    mTileLayersPanel->setTilePosition(tilePos);
 }
 
 void MainWindow::showBuildingEditor()
@@ -2345,6 +2362,14 @@ void MainWindow::writeSettings()
     mSettings.beginGroup(QLatin1String("mainwindow"));
     mSettings.setValue(QLatin1String("geometry"), saveGeometry());
     mSettings.setValue(QLatin1String("state"), saveState());
+
+    QVariantList v;
+    foreach (int size, mMainSplitter->sizes())
+        v += size;
+    mSettings.setValue(tr("%1/sizes").arg(mMainSplitter->objectName()), v);
+    mSettings.setValue(QLatin1String("TileLayersPanel/scale"),
+                       mTileLayersPanel->scale());
+
     mSettings.endGroup();
 
     mSettings.beginGroup(QLatin1String("recentFiles"));
@@ -2387,6 +2412,18 @@ void MainWindow::readSettings()
         resize(800, 600);
     restoreState(mSettings.value(QLatin1String("state"),
                                  QByteArray()).toByteArray());
+
+    QVariant v = mSettings.value(tr("%1/sizes").arg(mMainSplitter->objectName()));
+    if (v.canConvert(QVariant::List)) {
+        QList<int> sizes;
+        foreach (QVariant v2, v.toList()) {
+            sizes += v2.toInt();
+        }
+        mMainSplitter->setSizes(sizes);
+    }
+
+    qreal scale = mSettings.value(QLatin1String("TileLayersPanel/scale"), 0.25).toReal();
+    mTileLayersPanel->setScale(scale);
     mSettings.endGroup();
     updateRecentFiles();
 }
@@ -2451,6 +2488,7 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
     mObjectsDock->setMapDocument(mMapDocument);
 #ifdef ZOMBOID
     mLevelsDock->setMapDocument(mMapDocument);
+    mTileLayersPanel->setDocument(mMapDocument);
 #endif
     mTilesetDock->setMapDocument(mMapDocument);
     AutomappingManager::instance()->setMapDocument(mMapDocument);

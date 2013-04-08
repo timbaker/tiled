@@ -19,11 +19,13 @@
 
 #include "mapcomposite.h"
 #include "mapdocument.h"
+#include "preferences.h"
 #include "zoomable.h"
 
 #include "BuildingEditor/mixedtilesetview.h"
 #include "BuildingEditor/buildingtiles.h"
 
+#include <QApplication>
 #include <QDebug>
 #include <QEvent>
 #include <QScrollBar>
@@ -32,29 +34,28 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 
-Zoomable *TileLayersPanel::mZoomable = new Zoomable();
-
 TileLayersPanel::TileLayersPanel(QWidget *parent) :
     QWidget(parent),
     mDocument(0),
-    mView(new MixedTilesetView(mZoomable)),
-    mCurrentLayerIndex(-1),
-    mResizeLater(false)
+    mView(new MixedTilesetView(this)),
+    mCurrentLayerIndex(-1)
 {
-    setFixedWidth(80); // FIXME: resize to contents
-
-//    mView->zoomable()->setScale(0.5); // TODO: save/restore
+    mView->zoomable()->setScale(0.25);
     mView->model()->setColumnCount(1);
     mView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     connect(mView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
             SLOT(currentChanged()));
-    connect(mView->zoomable(), SIGNAL(scaleChanged(qreal)), SLOT(resizeToContents()));
+    connect(mView, SIGNAL(activated(QModelIndex)), SLOT(activated(QModelIndex)));
+    connect(Preferences::instance(), SIGNAL(showTileLayersPanelChanged(bool)),
+            SLOT(showTileLayersPanelChanged(bool)));
 
     QVBoxLayout *layout = new QVBoxLayout;
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(mView);
     setLayout(layout);
+
+    setVisible(Preferences::instance()->showTileLayersPanel());
 }
 
 void TileLayersPanel::setDocument(MapDocument *doc)
@@ -77,16 +78,14 @@ void TileLayersPanel::setDocument(MapDocument *doc)
     }
 }
 
-void TileLayersPanel::showEvent(QShowEvent *e)
+void TileLayersPanel::setScale(qreal scale)
 {
-    QWidget::showEvent(e);
-    resizeToContentsLater();
+    mView->zoomable()->setScale(scale);
 }
 
-void TileLayersPanel::resizeEvent(QResizeEvent *e)
+qreal TileLayersPanel::scale() const
 {
-    QWidget::resizeEvent(e);
-    resizeToContentsLater();
+    return mView->zoomable()->scale();
 }
 
 void TileLayersPanel::setTilePosition(const QPoint &tilePos)
@@ -116,10 +115,18 @@ void TileLayersPanel::setList()
 
     mView->setTiles(tiles, userData, headers);
     mView->setCurrentIndex(mView->model()->index((void*)(mCurrentLayerIndex+1)));
+}
 
-    if (isVisible() && !mResizeLater) {
-        QMetaObject::invokeMethod(this, "resizeToContents", Qt::QueuedConnection);
-        mResizeLater = true;
+void TileLayersPanel::activated(const QModelIndex &index)
+{
+    if (void *userData = mView->model()->userDataAt(index)) {
+        int layerIndex = ((int)userData) - 1;
+        Layer *layer = mDocument->map()->layerAt(layerIndex);
+        if (!layer || !layer->asTileLayer())
+            return;
+        TileLayer *tl = layer->asTileLayer();
+        if (tl->contains(mTilePos) && tl->cellAt(mTilePos).tile)
+            emit tilePicked(tl->cellAt(mTilePos).tile);
     }
 }
 
@@ -128,18 +135,19 @@ void TileLayersPanel::currentChanged()
     QModelIndex index = mView->currentIndex();
     if (void *userData = mView->model()->userDataAt(index)) {
         int layerIndex = ((int)userData) - 1;
-//        qDebug() << "TileLayersPanel::currentChanged() layerIndex=" << layerIndex;
         if (layerIndex == mCurrentLayerIndex)
             return;
         mCurrentLayerIndex = layerIndex;
         mDocument->setCurrentLayerIndex(layerIndex);
-
+#if 0
         Layer *layer = mDocument->map()->layerAt(layerIndex);
-        if (!layer) return;
+        if (!layer)
+            return;
         if (TileLayer *tl = layer->asTileLayer()) {
             if (tl->contains(mTilePos) && tl->cellAt(mTilePos).tile)
                 emit tilePicked(tl->cellAt(mTilePos).tile);
         }
+#endif
     }
 }
 
@@ -158,24 +166,7 @@ void TileLayersPanel::regionAltered(const QRegion &region, Layer *layer)
         setList();
 }
 
-void TileLayersPanel::resizeToContents()
+void TileLayersPanel::showTileLayersPanelChanged(bool show)
 {
-    mResizeLater = false;
-    int height = 0;
-    for (int row = 0; row < mView->model()->rowCount(); row++)
-        height += mView->rowHeight(row);
-
-    int width = mView->columnWidth(0);
-    width = qMax(width, 40);
-    if (height > mView->viewport()->rect().height())
-        width += mView->verticalScrollBar()->sizeHint().width();
-    setFixedWidth(width);
-}
-
-void TileLayersPanel::resizeToContentsLater()
-{
-    if (!mResizeLater) {
-        QMetaObject::invokeMethod(this, "resizeToContents", Qt::QueuedConnection);
-        mResizeLater = true;
-    }
+    setVisible(show);
 }

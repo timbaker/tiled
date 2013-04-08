@@ -102,7 +102,10 @@ public:
 #define MINIMAP_MAX_WIDTH 512
     void setMiniMapWidth(int width);
     int miniMapWidth() const;
-#endif
+
+    bool showTileLayersPanel() const
+    { return mShowTileLayersPanel; }
+#endif // ZOMBOID
 
     /**
      * Provides access to the QSettings instance to allow storing/retrieving
@@ -121,6 +124,7 @@ public slots:
     void setTilesetScale(qreal scale);
     void setSortTilesets(bool sort);
     void setShowMiniMap(bool show);
+    void setShowTileLayersPanel(bool show);
 #endif
 
 signals:
@@ -142,6 +146,7 @@ signals:
     void sortTilesetsChanged(bool sort);
     void showMiniMapChanged(bool show);
     void miniMapWidthChanged(int width);
+    void showTileLayersPanelChanged(bool show);
 #endif
 
 private:
@@ -174,6 +179,7 @@ private:
     bool mSortTilesets;
     bool mShowMiniMap;
     int mMiniMapWidth;
+    bool mShowTileLayersPanel;
 #endif
 
     static Preferences *mInstance;

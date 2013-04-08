@@ -117,6 +117,7 @@
     <addaction name="actionSnapToGrid"/>
     <addaction name="actionHighlightCurrentLayer"/>
     <addaction name="actionShowMiniMap"/>
+    <addaction name="actionShowTileLayersPanel"/>
     <addaction name="separator"/>
     <addaction name="actionZoomIn"/>
     <addaction name="actionZoomOut"/>
@@ -513,6 +514,14 @@
   <action name="actionRoomDefMerge">
    <property name="text">
     <string>Merge Selected RoomDefs</string>
+   </property>
+  </action>
+  <action name="actionShowTileLayersPanel">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Tile Layers Panel</string>
    </property>
   </action>
  </widget>

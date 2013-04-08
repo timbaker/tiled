@@ -18,6 +18,7 @@
 #ifndef TILELAYERSPANEL_H
 #define TILELAYERSPANEL_H
 
+#include <QModelIndex>
 #include <QWidget>
 
 namespace Tiled {
@@ -38,8 +39,8 @@ public:
 
     void setDocument(MapDocument *doc);
 
-    void showEvent(QShowEvent *e);
-    void resizeEvent(QResizeEvent *e);
+    void setScale(qreal scale);
+    qreal scale() const;
 
 signals:
     void tilePicked(Tile *tile);
@@ -49,21 +50,17 @@ public slots:
 
 private slots:
     void setList();
+    void activated(const QModelIndex &index);
     void currentChanged();
     void layerIndexChanged(int index);
     void regionAltered(const QRegion &region, Layer *layer);
-    void resizeToContents();
-
-private:
-    void resizeToContentsLater();
+    void showTileLayersPanelChanged(bool show);
 
 private:
     MapDocument *mDocument;
     MixedTilesetView *mView;
     int mCurrentLayerIndex;
     QPoint mTilePos;
-    bool mResizeLater;
-    static Zoomable *mZoomable;
 };
 
 }

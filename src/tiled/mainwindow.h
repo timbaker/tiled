@@ -33,6 +33,9 @@
 class QComboBox;
 class QLabel;
 class QToolButton;
+#ifdef ZOMBOID
+class QSplitter;
+#endif
 
 namespace Ui {
 class MainWindow;
@@ -66,6 +69,7 @@ class Zoomable;
 #ifdef ZOMBOID
 class ZLevelsDock;
 class MapsDock;
+class TileLayersPanel;
 #endif
 
 /**
@@ -265,6 +269,8 @@ private:
 #endif
     TilesetDock *mTilesetDock;
 #ifdef ZOMBOID
+    TileLayersPanel *mTileLayersPanel;
+    QSplitter *mMainSplitter;
     QMenu *mCurrentLevelMenu;
     QToolButton *mCurrentLevelButton;
     QMenu *mCurrentLayerMenu;
