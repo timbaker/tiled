@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>RoomDefecator</title></head><body>
+<h1>RoomDefecator</h1>
+The RoomDefecator commands are used to make it easier to deal with RoomDef objects.<br>
+RoomDef objects are used to identify individual rooms in a building.<br>
+A single room may be composed of one or more adjacent RoomDef objects.<br>
+Every floor tile in a room should be covered by exactly one RoomDef object.<br>
+<br>
+With BuildingEd buildings, RoomDef objects are automatically created.<br>
+
+For regular TileZed .tmx maps, RoomDef objects must be created manually, or using the RoomDefecator tools.<br>
+<h2>The "Go!" command</h2>
+This command creates RoomDef objects in <span style="font-style: italic;">every level</span> of the map.<br>
+This command will create N_RoomDef object layers if needed.<br>
+This command operates in either the bounds of the current tile
+selection (if any) or in the entire map (if no tile selection exists).<br>
+<h3>How rooms are detected</h3>
+
+The "Go!" command uses a flood-fill technique to figure out which map locations are part of a room.<br>
+
+Rooms are split wherever floor tiles differ or when walls separate adjacent floor tiles.<br>
+Only the N_Floor layer in a level is checked for the existence of floor tiles.<br>
+Map locations without a floor tile are never part of a room.&nbsp;
+Also, every tile in a room must have walls to the north, south, east
+and west.<br>
+<br>
+To determine whether a wall is a west or north wall, BuildingEd's tiles and furniture objects are examined.<br>
+BuildingEd's "Exterior Walls" and "Interior Walls" are used to identify west and north wall tiles.<br>
+BuildingEd's furniture objects assigned to the "Walls" furniture layer are also used to identify west and north wall tiles.<br>
+<br>
+When examining the map, only the N_Walls, N_Walls2, and N_Walls_2 layers in a level are checked for wall tiles.<br>
+If a wall tile isn't recognized, it is ignored and does not stop the
+flood-fill.&nbsp; Use the "Select Unknown Walls" command to see where
+this happens.&nbsp; If you get unknown wall tiles, just add them in
+BuildingEd's Tiles dialog.<br>
+<h2>The "Merge Selected RoomDefs" command</h2>
+This command will merge selected RoomDef objects into a single room.<br>
+You should select all the RoomDef objects you want to be in the final, merged room.<br>
+The original RoomDef objects will all be deleted, and a unique name will be assigned to the new merge-objects.<br>
+<h2>The "Remove RoomDefs" command</h2>
+This command simply deletes RoomDef objects in every level of the map.<br>
+This command operates in either the bounds of the current tile
+selection (if any) or in the entire map (if no tile selection exists).<br>
+<h2>The "Select Unknown Walls" command</h2>
+This command sets the tile selection in the current level to contain all the map locations that have unrecognized wall tiles.<br>
+This command operates in either the bounds of the current tile
+selection (if any) or in the entire map (if no tile selection exists).<br>
+This command is just for figuring out why some walls aren't being detected.<br>
+<hr style="width: 100%; height: 2px;">
+<h2>RoomDef object naming convention</h2>
+When WorldEd is generating binary .lotheader files, it uses a simple
+naming convention to determine which RoomDef objects are part of the
+same room.&nbsp; Each RoomDef object specifies a rectangular area of
+tiles that are part of a room.&nbsp; Adjacent RoomDef objects with
+identical names that also contain a # character are considered part of
+a the same room. A RoomDef object without a # character in its name <span style="font-style: italic;">always</span> indicates a room composed of a single rectangle.<br>
+<br>
+Examples of object names:<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; background-color: rgb(204, 204, 204);">Object 1<br>
+      </td>
+      <td style="vertical-align: top; background-color: rgb(204, 204, 204);">Object 2<br>
+      </td>
+      <td style="vertical-align: top; background-color: rgb(204, 204, 204);">Result<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">name=<span style="font-weight: bold;">kitchen</span></td>
+      <td style="vertical-align: top;">name=<span style="font-weight: bold;">kitchen</span></td>
+      <td style="vertical-align: top;">2 separate rooms, even if they touch</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">name=<span style="font-weight: bold;">kitchen1#</span></td>
+      <td style="vertical-align: top;">name=<span style="font-weight: bold;">kitchen2#</span></td>
+      <td style="vertical-align: top;">2 separate rooms, even if they touch</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">name=<span style="font-weight: bold;">kitchen1#</span></td>
+      <td style="vertical-align: top;">name=<span style="font-weight: bold;">kitchen1#</span></td>
+      <td style="vertical-align: top;">1 room if they touch, 2 rooms if they don't touch<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-weight: bold;"></span><span style="font-weight: bold;"></span><span style="font-weight: bold;"></span><br>
+</body></html>
