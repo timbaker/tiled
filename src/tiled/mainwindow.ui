@@ -439,7 +439,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>&amp;Highlight Current Layer</string>
+    <string>&amp;Highlight Current Level</string>
    </property>
    <property name="shortcut">
     <string>H</string>
