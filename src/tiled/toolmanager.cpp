@@ -105,6 +105,11 @@ void ToolManager::registerTool(AbstractTool *tool)
     toolAction->setShortcut(tool->shortcut());
     toolAction->setData(QVariant::fromValue<AbstractTool*>(tool));
     toolAction->setCheckable(true);
+#ifdef ZOMBOID
+    if (tool->shortcut().toString().isEmpty())
+        toolAction->setToolTip(tool->name());
+    else
+#endif
     toolAction->setToolTip(
             QString(QLatin1String("%1 (%2)")).arg(tool->name(),
                                                   tool->shortcut().toString()));
@@ -160,6 +165,11 @@ void ToolManager::languageChanged()
         // Update the text, shortcut and tooltip of the action
         action->setText(tool->name());
         action->setShortcut(tool->shortcut());
+#ifdef ZOMBOID
+        if (tool->shortcut().toString().isEmpty())
+            action->setToolTip(tool->name());
+        else
+#endif
         action->setToolTip(QString(QLatin1String("%1 (%2)")).arg(
                 tool->name(), tool->shortcut().toString()));
     }
