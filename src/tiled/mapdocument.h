@@ -174,6 +174,9 @@ public:
     void moveLayerDown(int index);
     void removeLayer(int index);
     void toggleOtherLayers(int index);
+#ifdef ZOMBOID
+    void setLayerVisible(int layerIndex, bool visible);
+#endif
 
     void insertTileset(int index, Tileset *tileset);
     void removeTilesetAt(int index);

@@ -174,6 +174,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 #ifdef ZOMBOID
     mMainSplitter->setObjectName(QLatin1String("mainSplitter"));
     mMainSplitter->setOrientation(Qt::Horizontal);
+    mMainSplitter->setChildrenCollapsible(false);
     mMainSplitter->addWidget(mTileLayersPanel);
     mMainSplitter->addWidget(mDocumentManager->widget());
     mMainSplitter->setStretchFactor(0, 0);

@@ -483,6 +483,16 @@ void MapDocument::toggleOtherLayers(int index)
     mLayerModel->toggleOtherLayers(index);
 }
 
+#ifdef ZOMBOID
+void MapDocument::setLayerVisible(int layerIndex, bool visible)
+{
+    int row = mMap->layerCount() - layerIndex - 1;
+    mLayerModel->setData(mLayerModel->index(row),
+                         visible ? Qt::Checked : Qt::Unchecked,
+                         Qt::CheckStateRole);
+}
+#endif // ZOMBOID
+
 /**
  * Adds a tileset to this map at the given \a index. Emits the appropriate
  * signal.
