@@ -1882,10 +1882,7 @@ void MainWindow::RoomDefGo()
             mMapDocument->undoStack()->push(new AddLayer(mMapDocument, index, og));
         } else {
             og = map->layerAt(index)->asObjectGroup();
-            int row = mMapDocument->map()->layerCount() - index - 1;
-            mMapDocument->layerModel()->setData(
-                        mMapDocument->layerModel()->index(row), Qt::Checked,
-                        Qt::CheckStateRole);
+            mMapDocument->setLayerVisible(index, true);
         }
 
         int i = 1;

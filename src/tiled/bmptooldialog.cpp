@@ -453,7 +453,6 @@ void BmpToolDialog::toggleOverlayLayers()
 {
     if (!mDocument)
         return;
-    LayerModel *m = mDocument->layerModel();
     Map *map = mDocument->map();
     int visible = -1;
     foreach (QString layerName, mDocument->mapComposite()->bmpBlender()->blendLayers()) {
@@ -462,9 +461,7 @@ void BmpToolDialog::toggleOverlayLayers()
             Layer *layer = map->layerAt(index);
             if (visible == -1)
                 visible = !layer->isVisible();
-            m->setData(m->index(map->layerCount() - index - 1),
-                       visible ? Qt::Checked : Qt::Unchecked,
-                       Qt::CheckStateRole);
+            mDocument->setLayerVisible(index, visible);
         }
     }
 }

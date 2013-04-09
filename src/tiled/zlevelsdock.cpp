@@ -232,17 +232,12 @@ void ZLevelsDock::setTopmostVisibleLayer(int layerIndex)
     if (!mMapDocument)
         return;
 
-    LayerModel *layerModel = mMapDocument->layerModel();
-
     int index = 0;
     foreach (Layer *layer, mMapDocument->map()->layers()) {
         if (layer->asTileLayer() ) {
             bool visible = (index + 1 <= layerIndex);
-            if (visible != layer->isVisible()) {
-                 layerModel->setData(layerModel->index(mMapDocument->map()->layerCount() - index - 1),
-                                     visible ? Qt::Checked : Qt::Unchecked,
-                                     Qt::CheckStateRole);
-            }
+            if (visible != layer->isVisible())
+                mMapDocument->setLayerVisible(index, visible);
         }
         index++;
     }
