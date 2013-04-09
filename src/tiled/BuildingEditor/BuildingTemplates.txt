@@ -906,6 +906,7 @@ Template
     RoofCap = 0
     RoofSlope = 0
     RoofTop = 0
+    GrimeWall = 0
     UsedTiles = 
     UsedFurniture = 
     Room
@@ -1011,6 +1012,7 @@ Template
     RoofCap = 0
     RoofSlope = 0
     RoofTop = 0
+    GrimeWall = 0
     UsedTiles = 
     UsedFurniture = 
     Room
@@ -1096,6 +1098,7 @@ Template
     RoofCap = 0
     RoofSlope = 0
     RoofTop = 0
+    GrimeWall = 0
     UsedTiles = 
     UsedFurniture = 
     Room
@@ -1201,6 +1204,7 @@ Template
     RoofCap = 0
     RoofSlope = 0
     RoofTop = 0
+    GrimeWall = 0
     UsedTiles = 
     UsedFurniture = 
     Room
@@ -1306,6 +1310,7 @@ Template
     RoofCap = 43
     RoofSlope = 44
     RoofTop = 45
+    GrimeWall = 0
     UsedTiles = 
     UsedFurniture = 
     Room
@@ -1371,6 +1376,7 @@ Template
     RoofCap = 43
     RoofSlope = 44
     RoofTop = 45
+    GrimeWall = 0
     UsedTiles = 
     UsedFurniture = 
     Room
@@ -1436,6 +1442,7 @@ Template
     RoofCap = 43
     RoofSlope = 44
     RoofTop = 46
+    GrimeWall = 0
     UsedTiles = 49 4 1 33 20 25 26
     UsedFurniture = 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
     Room

@@ -2185,6 +2185,24 @@ group
             1,0 = location_barn_01_007
         }
     }
+    furniture
+    {
+        layer = Walls
+        entry
+        {
+            orient = E
+            grime = false
+            0,0 = location_barn_01_005
+            0,1 = location_barn_01_004
+        }
+        entry
+        {
+            orient = S
+            grime = false
+            0,0 = location_barn_01_006
+            1,0 = location_barn_01_007
+        }
+    }
 }
 group
 {
