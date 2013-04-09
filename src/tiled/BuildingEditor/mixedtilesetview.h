@@ -44,6 +44,10 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const;
 
+    enum {
+        HeaderRole = Qt::UserRole,
+        CategoryBgRole
+    };
     QVariant data(const QModelIndex &index,
                   int role = Qt::DisplayRole) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
@@ -131,6 +135,7 @@ private:
         QString mTilesetName;
         QString mLabel;
         QString mToolTip;
+        QBrush mBackground;
         QRect mCategoryBounds;
         QColor mCategoryColor;
     };

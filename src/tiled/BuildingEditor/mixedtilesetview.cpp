@@ -63,6 +63,9 @@ void TileDelegate::paint(QPainter *painter,
 {
     const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
 
+    QBrush brush = qvariant_cast<QBrush>(m->data(index, Qt::BackgroundRole));
+    painter->fillRect(option.rect, brush);
+
     QString tilesetName = m->headerAt(index);
     if (!tilesetName.isEmpty()) {
         if (index.row() > 0) {
@@ -115,7 +118,7 @@ void TileDelegate::paint(QPainter *painter,
         if (index.row() == r.bottom())
             bottom -= extra;
 
-        QBrush brush = qvariant_cast<QBrush>(index.data(Qt::BackgroundRole));
+        QBrush brush = qvariant_cast<QBrush>(index.data(MixedTilesetModel::CategoryBgRole));
         painter->fillRect(left, top, right-left+1, bottom-top+1, brush);
 
         painter->setPen(Qt::darkGray);
@@ -438,11 +441,15 @@ Qt::ItemFlags MixedTilesetModel::flags(const QModelIndex &index) const
 
 QVariant MixedTilesetModel::data(const QModelIndex &index, int role) const
 {
-    if (role == Qt::BackgroundRole) {
+    if (role == CategoryBgRole) {
         if (Item *item = toItem(index))
             return QBrush(item->mCategoryColor.isValid()
                     ? item->mCategoryColor
                     : QColor(220, 220, 220));
+    }
+    if (role == Qt::BackgroundRole) {
+        if (Item *item = toItem(index))
+            return item->mBackground;
     }
     if (role == Qt::DisplayRole) {
         if (Tile *tile = tileAt(index))
@@ -463,9 +470,18 @@ QVariant MixedTilesetModel::data(const QModelIndex &index, int role) const
 bool MixedTilesetModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (Item *item = toItem(index)) {
-        if (role == Qt::BackgroundRole) {
+        if (role == CategoryBgRole) {
             if (value.canConvert<QBrush>()) {
                 item->mCategoryColor = qvariant_cast<QBrush>(value).color();
+                // SLOW in TileProperties editor...
+//                emit dataChanged(index, index);
+                return true;
+            }
+        }
+        if (role == Qt::BackgroundRole) {
+            if (value.canConvert<QBrush>()) {
+                item->mBackground = qvariant_cast<QBrush>(value);
+                emit dataChanged(index, index);
                 return true;
             }
         }
@@ -475,9 +491,22 @@ bool MixedTilesetModel::setData(const QModelIndex &index, const QVariant &value,
                 return true;
             }
         }
+        if (role == Qt::DisplayRole) {
+            if (item->mTile && value.canConvert<Tile*>()) {
+                item->mTile = qvariant_cast<Tile*>(value);
+                return true;
+            }
+        }
         if (role == Qt::ToolTipRole) {
             if (value.canConvert<QString>()) {
                 item->mToolTip = value.toString();
+                return true;
+            }
+        }
+        if (role == HeaderRole) {
+            if (item->mTilesetName.length() && value.canConvert<QString>()) {
+                item->mTilesetName = value.toString();
+                emit dataChanged(index, index);
                 return true;
             }
         }

@@ -17,6 +17,7 @@
 
 #include "tilelayerspanel.h"
 
+#include "layermodel.h"
 #include "mapcomposite.h"
 #include "mapdocument.h"
 #include "preferences.h"
@@ -47,6 +48,7 @@ TileLayersPanel::TileLayersPanel(QWidget *parent) :
     connect(mView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
             SLOT(currentChanged()));
     connect(mView, SIGNAL(activated(QModelIndex)), SLOT(activated(QModelIndex)));
+    connect(mView, SIGNAL(clicked(QModelIndex)), SLOT(clicked(QModelIndex)));
     connect(Preferences::instance(), SIGNAL(showTileLayersPanelChanged(bool)),
             SLOT(showTileLayersPanelChanged(bool)));
 
@@ -70,8 +72,9 @@ void TileLayersPanel::setDocument(MapDocument *doc)
     if (mDocument) {
         connect(mDocument, SIGNAL(currentLayerIndexChanged(int)),
                 SLOT(layerIndexChanged(int)));
-        connect(mDocument, SIGNAL(layerAdded(int)), SLOT(setList()));
-        connect(mDocument, SIGNAL(layerRemoved(int)), SLOT(setList()));
+        connect(mDocument, SIGNAL(layerAddedToGroup(int)), SLOT(setList()));
+        connect(mDocument, SIGNAL(layerRemovedFromGroup(int,CompositeLayerGroup*)),
+                SLOT(setList()));
         connect(mDocument, SIGNAL(layerChanged(int)), SLOT(layerChanged(int)));
         connect(mDocument, SIGNAL(regionAltered(QRegion,Layer*)),
                 SLOT(regionAltered(QRegion,Layer*)));
@@ -115,6 +118,16 @@ void TileLayersPanel::setList()
     }
 
     mView->setTiles(tiles, userData, headers);
+
+    int row = 0;
+    foreach (TileLayer *tl, lg->layers()) {
+        QBrush brush(tl->isVisible() ? Qt::white : Qt::lightGray);
+        QModelIndex index = mView->model()->index((lg->layerCount() - row - 1) * 2, 0);
+        mView->model()->setData(index, brush, Qt::BackgroundRole);
+        index = mView->model()->index((lg->layerCount() - row - 1) * 2 + 1, 0);
+        mView->model()->setData(index, brush, Qt::BackgroundRole);
+        ++row;
+    }
     mView->setCurrentIndex(mView->model()->index((void*)(mCurrentLayerIndex+1)));
 }
 
@@ -128,6 +141,24 @@ void TileLayersPanel::activated(const QModelIndex &index)
         TileLayer *tl = layer->asTileLayer();
         if (tl->contains(mTilePos) && tl->cellAt(mTilePos).tile)
             emit tilePicked(tl->cellAt(mTilePos).tile);
+    }
+}
+
+void TileLayersPanel::clicked(const QModelIndex &index)
+{
+    if (mView->model()->headerAt(index).length()) {
+        QModelIndex index2 = mView->model()->index(index.row() + 1, index.column());
+        if (void *userData = mView->model()->userDataAt(index2)) {
+            int layerIndex = ((int)userData) - 1;
+            Layer *layer = mDocument->map()->layerAt(layerIndex);
+            if (!layer || !layer->asTileLayer())
+                return;
+            int row = mDocument->map()->layerCount() - layerIndex - 1;
+            mDocument->layerModel()->setData(
+                        mDocument->layerModel()->index(row),
+                            layer->isVisible() ? Qt::Unchecked : Qt::Checked,
+                        Qt::CheckStateRole);
+        }
     }
 }
 
@@ -164,7 +195,15 @@ void TileLayersPanel::layerChanged(int index)
 {
     Layer *layer = mDocument->map()->layerAt(index);
     if (layer->asTileLayer() && (layer->level() == mDocument->currentLevel())) {
-        setList(); // handle renaming
+        QModelIndex mi = mView->model()->index((void*)(index + 1));
+        if (mi.isValid()) {
+            QBrush brush(layer->isVisible() ? Qt::white : Qt::lightGray);
+            mView->model()->setData(mi, brush, Qt::BackgroundRole);
+            mi = mView->model()->index(mi.row() - 1, mi.column());
+            QString name = MapComposite::layerNameWithoutPrefix(layer);
+            mView->model()->setData(mi, name, MixedTilesetModel::HeaderRole);
+            mView->model()->setData(mi, brush, Qt::BackgroundRole);
+        }
     }
 }
 

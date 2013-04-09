@@ -1266,7 +1266,7 @@ void TileDefDialog::setToolTipEtc(int tileID)
         tooltip += unknown;
         color = QColor(255, 128, 128);
     }
-    m->setData(m->index((void*)defTile), QBrush(color), Qt::BackgroundRole);
+    m->setData(m->index((void*)defTile), QBrush(color), MixedTilesetModel::CategoryBgRole);
 
     m->setToolTip(tileID, tooltip.join(QLatin1String("\n")));
 
@@ -1312,7 +1312,8 @@ void TileDefDialog::highlightTilesWithMatchingProperties(TileDefTile *defTile)
     // Highlight the given tile and others with matching properties.
     foreach (TileDefTile *defTile2, mTilesWithMatchingProperties) {
         m->setCategoryBounds(defTile2->id(), QRect(0,0,1,1));
-        m->setData(m->index((void*)defTile2), QBrush(QColor(196, 255, 255)), Qt::BackgroundRole);
+        m->setData(m->index((void*)defTile2), QBrush(QColor(196, 255, 255)),
+                   MixedTilesetModel::CategoryBgRole);
         ui->tiles->update(m->index((void*)defTile2));
     }
 }

@@ -51,6 +51,7 @@ public slots:
 private slots:
     void setList();
     void activated(const QModelIndex &index);
+    void clicked(const QModelIndex &index);
     void currentChanged();
     void layerIndexChanged(int index);
     void layerChanged(int index);
