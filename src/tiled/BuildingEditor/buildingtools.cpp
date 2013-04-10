@@ -1025,7 +1025,7 @@ DoorTool *DoorTool::instance()
 DoorTool::DoorTool() :
     BaseObjectTool()
 {
-    setStatusText(tr("Left-click to place a door.  Right-click to remove any object."));
+    setStatusText(tr("Left-click to place a door.  Right-click to remove any object.  ALT = eyedrop."));
 }
 
 void DoorTool::placeObject()
@@ -1088,7 +1088,7 @@ WindowTool *WindowTool::instance()
 WindowTool::WindowTool() :
     BaseObjectTool()
 {
-    setStatusText(tr("Left-click to place a window.  Right-click to remove any object."));
+    setStatusText(tr("Left-click to place a window.  Right-click to remove any object.  ALT = eyedrop."));
 }
 
 void WindowTool::placeObject()
@@ -1151,7 +1151,7 @@ StairsTool *StairsTool::instance()
 StairsTool::StairsTool() :
     BaseObjectTool()
 {
-    setStatusText(tr("Left-click to place stairs.  Right-click to remove any object."));
+    setStatusText(tr("Left-click to place stairs.  Right-click to remove any object.  ALT = eyedrop."));
 }
 
 void StairsTool::placeObject()
