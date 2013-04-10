@@ -182,12 +182,12 @@ QSize LayersPanelDelegate::sizeHint(const QStyleOptionViewItem &option,
     const LayersPanelModel *m = static_cast<const LayersPanelModel*>(index.model());
     const qreal zoom = mView->zoomable()->scale();
     const int extra = 2 * 2;
-    if (!m->tileAt(index))
-        return QSize(64 * zoom + extra, 128 * zoom + extra);
-    const Tileset *tileset = m->tileAt(index)->tileset();
-    const int tileWidth = qCeil(tileset->tileWidth() * zoom);
     const QFontMetrics &fm = option.fontMetrics;
     const int labelHeight = fm.lineSpacing();
+    if (!m->tileAt(index))
+        return QSize(64 * zoom + extra, 2 + labelHeight + 128 * zoom + extra);
+    const Tileset *tileset = m->tileAt(index)->tileset();
+    const int tileWidth = qCeil(tileset->tileWidth() * zoom);
     const int viewWidth = mView->viewport()->width();
     return QSize(qMax(qMax(tileWidth, mView->maxHeaderWidth()) + extra, viewWidth),
                  2 + labelHeight + qCeil(tileset->tileHeight() * zoom) + extra);
