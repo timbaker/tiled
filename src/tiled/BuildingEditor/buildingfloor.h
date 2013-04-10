@@ -35,6 +35,7 @@ class BuildingTileEntry;
 class Door;
 class FloorType;
 class FurnitureObject;
+class FurnitureTile;
 class Room;
 class Stairs;
 class Window;
@@ -112,6 +113,7 @@ public:
             SectionWallOverlay,
             SectionWallOverlay2,
             SectionWallGrime,
+            SectionWallGrime2,
             SectionWallFurniture,
             SectionWallFurniture2,
             SectionFrame,
@@ -131,6 +133,7 @@ public:
 
         enum WallOrientation
         {
+            WallOrientInvalid = -1,
             WallOrientN,
             WallOrientW,
             WallOrientNW,
@@ -145,10 +148,13 @@ public:
         WallOrientation mWallOrientation;
         bool mExterior;
         QVector<BuildingTile*> mTiles;
-        bool mAllowGrime;
 
-        struct {
+        struct WallInfo {
+            WallInfo() :
+                entry(0), furniture(0), exterior(false)
+            {}
             BuildingTileEntry *entry;
+            FurnitureTile *furniture;
             bool exterior;
         } mWallN, mWallW;
         void SetWallN(BuildingTileEntry *tile, bool exterior = true);
@@ -168,6 +174,8 @@ public:
         void ReplaceRoof(BuildingTileEntry *tile, int offset = 0);
         void ReplaceRoofCap(BuildingTileEntry *tile, int offset = 0);
         void ReplaceRoofTop(BuildingTileEntry *tile, int offset);
+        void ReplaceFloorGrime(BuildingTileEntry *grimeTile);
+        void ReplaceWallGrime(BuildingTileEntry *grimeTile);
 
         int getWallOffset();
     };

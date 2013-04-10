@@ -1,5 +1,5 @@
 version = 1
-revision = 7
+revision = 8
 layers
 {
     tile = Floor
@@ -13,6 +13,7 @@ layers
     tile = WallOverlay
     tile = WallOverlay2
     tile = WallGrime
+    tile = WallGrime2
     tile = WallFurniture
     tile = WallFurniture2
     tile = Frames

@@ -523,6 +523,50 @@ void BuildingFloor::LayoutToSquares()
         }
     }
 
+    // Furniture in the Walls layer replaces wall entries with tiles.
+    QList<FurnitureObject*> wallReplacement;
+    foreach (BuildingObject *object, mObjects) {
+        if (FurnitureObject *fo = object->asFurniture()) {
+            FurnitureTile *ftile = fo->furnitureTile()->resolved();
+            if (ftile->owner()->layer() == FurnitureTiles::LayerWalls) {
+                wallReplacement += fo;
+
+                int x = fo->x(), y = fo->y();
+                int dx = 0, dy = 0;
+                bool killW = false, killN = false;
+                switch (fo->furnitureTile()->orient()) {
+                case FurnitureTile::FurnitureW:
+                    killW = true;
+                    break;
+                case FurnitureTile::FurnitureE:
+                    killW = true;
+                    dx = 1;
+                    break;
+                case FurnitureTile::FurnitureN:
+                    killN = true;
+                    break;
+                case FurnitureTile::FurnitureS:
+                    killN = true;
+                    dy = 1;
+                    break;
+                }
+                for (int i = 0; i < ftile->size().height(); i++) {
+                    for (int j = 0; j < ftile->size().width(); j++) {
+                        int sx = x + j + dx, sy = y + i + dy;
+                        if (bounds(1, 1).contains(sx, sy)) {
+                            Square &sq = squares[sx][sy];
+                            bool exterior = (sx < width() && sy < height())
+                                    ? mIndexAtPos[sx][sy] < 0 : true;
+                            if (killW) sq.SetWallW(0, exterior);
+                            if (killN) sq.SetWallN(0, exterior);
+                            sq.mExterior = exterior;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     for (int x = 0; x < width() + 1; x++) {
         for (int y = 0; y < height() + 1; y++) {
             Square &s = squares[x][y];
@@ -582,8 +626,6 @@ void BuildingFloor::LayoutToSquares()
         }
     }
 
-    QList<FurnitureObject*> wallReplacement;
-
     foreach (BuildingObject *object, mObjects) {
         int x = object->x();
         int y = object->y();
@@ -637,7 +679,9 @@ void BuildingFloor::LayoutToSquares()
         if (FurnitureObject *fo = object->asFurniture()) {
             FurnitureTile *ftile = fo->furnitureTile()->resolved();
             if (ftile->owner()->layer() == FurnitureTiles::LayerWalls) {
+#if 0
                 wallReplacement += fo;
+#endif
                 continue;
             }
             for (int i = 0; i < ftile->size().height(); i++) {
@@ -1293,10 +1337,38 @@ void BuildingFloor::LayoutToSquares()
             for (int j = 0; j < ftile->size().width(); j++) {
                 if (bounds(1, 1).contains(x + j + dx, y + i + dy)) {
                     Square &s = squares[x + j + dx][y + i + dy];
-                    s.mTiles[Square::SectionWall] = ftile->tile(j, i);
-                    s.mEntries[Square::SectionWall] = 0;
-                    s.mEntryEnum[Square::SectionWall] = 0;
-                    s.mAllowGrime = ftile->allowGrime();
+                    Square::SquareSection section = Square::SectionWall;
+                    if (s.mEntries[section] && !s.mEntries[section]->isNone()) {
+                        // FIXME: if SectionWall2 is occupied, push it down to SectionWall
+                        section = Square::SectionWall2;
+                    }
+                    if (s.mTiles[section] && !s.mTiles[section]->isNone()) {
+                        // FIXME: if SectionWall2 is occupied, push it down to SectionWall
+                        section = Square::SectionWall2;
+                    }
+                    s.mTiles[section] = ftile->tile(j, i);
+                    s.mEntries[section] = 0;
+                    s.mEntryEnum[section] = 0;
+#if 1
+                    switch (fo->furnitureTile()->orient()) {
+                    case FurnitureTile::FurnitureW:
+                    case FurnitureTile::FurnitureE:
+                        if (s.mWallOrientation == Square::WallOrientN)
+                            s.mWallOrientation = Square::WallOrientNW;
+                        else
+                            s.mWallOrientation = Square::WallOrientW;
+                        s.mWallW.furniture = fo->furnitureTile();
+                        break;
+                    case FurnitureTile::FurnitureN:
+                    case FurnitureTile::FurnitureS:
+                        if (s.mWallOrientation == Square::WallOrientW)
+                            s.mWallOrientation = Square::WallOrientNW;
+                        else
+                            s.mWallOrientation = Square::WallOrientN;
+                        s.mWallN.furniture = fo->furnitureTile();
+                        break;
+                    }
+#else
                     switch (fo->furnitureTile()->orient()) {
                     case FurnitureTile::FurnitureW:
                     case FurnitureTile::FurnitureE:
@@ -1307,6 +1379,7 @@ void BuildingFloor::LayoutToSquares()
                         s.mWallOrientation = Square::WallOrientN;
                         break;
                     }
+#endif
                 }
             }
         }
@@ -1356,10 +1429,17 @@ void BuildingFloor::LayoutToSquares()
     for (int x = 0; x < w; x++) {
         for (int y = 0; y < h; y++) {
             Square &sq = squares[x][y];
-            if (!sq.mAllowGrime)
-                continue;
             Room *room = GetRoomAt(x, y);
 
+#if 1
+            BuildingTileEntry *grimeTile = room ? room->tile(Room::GrimeFloor) : 0;
+            if (!sq.mExterior)
+                sq.ReplaceFloorGrime(grimeTile);
+
+            grimeTile = room ? room->tile(Room::GrimeWall) : 0;
+            if (!sq.mExterior)
+                sq.ReplaceWallGrime(grimeTile);
+#else
             // Floor Grime inside a room.
             BuildingTileEntry *grimeTile = room ? room->tile(Room::GrimeFloor) : 0;
             if (grimeTile && grimeTile->isNone())
@@ -1463,6 +1543,7 @@ void BuildingFloor::LayoutToSquares()
                     sq.mEntryEnum[Square::SectionWallGrime] = e;
                 }
             }
+#endif
 
             // Place exterior wall grime on level 0 only.
             if (level() > 0)
@@ -1470,6 +1551,10 @@ void BuildingFloor::LayoutToSquares()
 
             // Wall Grime on building exterior.
             grimeTile = building()->tile(Building::GrimeWall);
+#if 1
+            if (sq.mExterior)
+                sq.ReplaceWallGrime(grimeTile);
+#else
             if (grimeTile && grimeTile->isNone())
                 grimeTile = 0;
             if (grimeTile
@@ -1513,6 +1598,7 @@ void BuildingFloor::LayoutToSquares()
                     sq.mEntryEnum[Square::SectionWallGrime] = e;
                 }
             }
+#endif
         }
     }
 }
@@ -1806,11 +1892,10 @@ void BuildingFloor::setGrime(const QString &layerName, const QRegion &rgn,
 BuildingFloor::Square::Square() :
     mEntries(MaxSection, 0),
     mEntryEnum(MaxSection, 0),
+    mWallOrientation(WallOrientInvalid),
     mExterior(false),
-    mTiles(MaxSection, 0),
-    mAllowGrime(true)
+    mTiles(MaxSection, 0)
 {
-    mWallN.entry = mWallW.entry = 0;
 }
 
 
@@ -2014,6 +2099,129 @@ void BuildingFloor::Square::ReplaceRoofTop(BuildingTileEntry *tile, int offset)
 {
     mEntries[SectionRoofTop] = tile;
     mEntryEnum[SectionRoofTop] = offset;
+}
+
+void BuildingFloor::Square::ReplaceFloorGrime(BuildingTileEntry *grimeTile)
+{
+    if (!grimeTile || grimeTile->isNone())
+        return;
+
+    BuildingTileEntry *wallTile1 = mEntries[SectionWall];
+    if (wallTile1 && wallTile1->isNone()) wallTile1 = 0;
+
+    BuildingTileEntry *wallTile2 = mEntries[SectionWall2];
+    if (wallTile2 && wallTile2->isNone()) wallTile2 = 0;
+
+    Q_ASSERT(!(wallTile1 == 0 && wallTile2 != 0));
+
+    int grimeEnumW = -1, grimeEnumN = -1;
+
+    if (wallTile1) {
+        switch (mEntryEnum[SectionWall]) {
+        case BTC_Walls::West:
+        case BTC_Walls::WestWindow: grimeEnumW = BTC_GrimeFloor::West; break;
+        case BTC_Walls::WestDoor: break; // no grime by doors
+        case BTC_Walls::North:
+        case BTC_Walls::NorthWindow: grimeEnumN = BTC_GrimeFloor::North; break;
+        case BTC_Walls::NorthDoor: break; // no grime by doors
+        case BTC_Walls::NorthWest:
+            grimeEnumW = BTC_GrimeFloor::West;
+            grimeEnumN = BTC_GrimeFloor::North;
+            break;
+        case BTC_Walls::SouthEast: grimeEnumW = BTC_GrimeFloor::NorthWest; break;
+        }
+    }
+    if (wallTile2) {
+        switch (mEntryEnum[SectionWall2]) {
+        case BTC_Walls::West:
+        case BTC_Walls::WestWindow: grimeEnumW = BTC_GrimeFloor::West; break;
+        case BTC_Walls::WestDoor: break;
+        case BTC_Walls::North:
+        case BTC_Walls::NorthWindow: grimeEnumN = BTC_GrimeFloor::North; break;
+        case BTC_Walls::NorthDoor: break;
+        case BTC_Walls::NorthWest: Q_ASSERT(false); break;
+        case BTC_Walls::SouthEast: Q_ASSERT(false); break;
+        }
+    }
+
+    // Handle furniture in Walls layer
+    if (mWallW.furniture && mWallW.furniture->resolved()->allowGrime())
+        grimeEnumW = BTC_GrimeFloor::West;
+    if (mWallN.furniture && mWallN.furniture->resolved()->allowGrime())
+        grimeEnumN = BTC_GrimeFloor::North;
+
+    if (grimeEnumW >= 0) {
+        mEntries[SectionFloorGrime] = grimeTile;
+        mEntryEnum[SectionFloorGrime] = grimeEnumW;
+    }
+    if (grimeEnumN >= 0) {
+        mEntries[SectionFloorGrime2] = grimeTile;
+        mEntryEnum[SectionFloorGrime2] = grimeEnumN;
+    }
+}
+
+void BuildingFloor::Square::ReplaceWallGrime(BuildingTileEntry *grimeTile)
+{
+    if (!grimeTile || grimeTile->isNone())
+        return;
+
+    BuildingTileEntry *wallTile1 = mEntries[SectionWall];
+    if (wallTile1 && wallTile1->isNone()) wallTile1 = 0;
+
+    BuildingTileEntry *wallTile2 = mEntries[SectionWall2];
+    if (wallTile2 && wallTile2->isNone()) wallTile2 = 0;
+
+    Q_ASSERT(!(wallTile1 == 0 && wallTile2 != 0));
+
+    int grimeEnumW = -1, grimeEnumN = -1;
+
+    if (wallTile1) {
+        switch (mEntryEnum[SectionWall]) {
+        case BTC_Walls::West: grimeEnumW = BTC_GrimeWall::West; break;
+        case BTC_Walls::WestDoor: grimeEnumW = BTC_GrimeWall::WestDoor; break;
+        case BTC_Walls::WestWindow: grimeEnumW = BTC_GrimeWall::WestWindow; break;
+        case BTC_Walls::North: grimeEnumN = BTC_GrimeWall::North; break;
+        case BTC_Walls::NorthDoor: grimeEnumN = BTC_GrimeWall::NorthDoor; break;
+        case BTC_Walls::NorthWindow: grimeEnumN = BTC_GrimeWall::NorthWindow; break;
+        case BTC_Walls::NorthWest: grimeEnumW = BTC_GrimeWall::NorthWest; break;
+        case BTC_Walls::SouthEast: grimeEnumW = BTC_GrimeWall::SouthEast; break;
+        }
+    }
+
+    if (wallTile2) {
+        switch (mEntryEnum[SectionWall2]) {
+        case BTC_Walls::West: grimeEnumW = BTC_GrimeWall::West; break;
+        case BTC_Walls::WestDoor: grimeEnumW = BTC_GrimeWall::WestDoor; break;
+        case BTC_Walls::WestWindow: grimeEnumW = BTC_GrimeWall::WestWindow; break;
+        case BTC_Walls::North: grimeEnumN = BTC_GrimeWall::North; break;
+        case BTC_Walls::NorthDoor: grimeEnumN = BTC_GrimeWall::NorthDoor; break;
+        case BTC_Walls::NorthWindow: grimeEnumN = BTC_GrimeWall::NorthWindow; break;
+        case BTC_Walls::NorthWest: Q_ASSERT(false); break;
+        case BTC_Walls::SouthEast: Q_ASSERT(false); break;
+        }
+    }
+
+    // Handle furniture in Walls layer
+    if (mWallW.furniture && mWallW.furniture->resolved()->allowGrime())
+        grimeEnumW = BTC_GrimeWall::West;
+    if (mWallN.furniture && mWallN.furniture->resolved()->allowGrime())
+        grimeEnumN = BTC_GrimeWall::North;
+
+    // Handle 2 different wall tiles due to a possible mix of regular walls,
+    // WallObjects, and FurnitureObjects.
+    if (grimeEnumW == BTC_GrimeWall::West && grimeEnumN == BTC_GrimeWall::North) {
+        grimeEnumW = BTC_GrimeWall::NorthWest;
+        grimeEnumN = -1;
+    }
+
+    if (grimeEnumW >= 0) {
+        mEntries[SectionWallGrime] = grimeTile;
+        mEntryEnum[SectionWallGrime] = grimeEnumW;
+    }
+    if (grimeEnumN >= 0) {
+        mEntries[SectionWallGrime2] = grimeTile;
+        mEntryEnum[SectionWallGrime2] = grimeEnumN;
+    }
 }
 
 int BuildingFloor::Square::getWallOffset()
