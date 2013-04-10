@@ -270,6 +270,7 @@ bool LayersPanelModel::setData(const QModelIndex &index, const QVariant &value, 
         if (role == Qt::DisplayRole) {
             if (item->mTile && value.canConvert<Tile*>()) {
                 item->mTile = qvariant_cast<Tile*>(value);
+                emit dataChanged(index, index);
                 return true;
             }
         }
@@ -605,7 +606,22 @@ qreal TileLayersPanel::scale() const
 void TileLayersPanel::setTilePosition(const QPoint &tilePos)
 {
     mTilePos = tilePos;
-    setList();
+
+    // Not calling setList() only because it scrolls the view when setting
+    // the current index.
+
+    int level = mDocument->currentLevel();
+    CompositeLayerGroup *lg = mDocument->mapComposite()->layerGroupForLevel(level);
+    if (!lg) return;
+
+    foreach (TileLayer *tl, lg->layers()) {
+        Tile *tile = tl->contains(mTilePos) ? tl->cellAt(mTilePos).tile : 0;
+        if (!tile)
+            tile = BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile();
+        int layerIndex = mDocument->map()->layers().indexOf(tl);
+        mView->model()->setData(mView->model()->index(layerIndex),
+                                QVariant::fromValue(tile), Qt::DisplayRole);
+    }
 }
 
 void TileLayersPanel::setList()
@@ -663,11 +679,18 @@ void TileLayersPanel::currentChanged()
     }
 }
 
-void TileLayersPanel::layerIndexChanged(int index)
+void TileLayersPanel::layerIndexChanged(int layerIndex)
 {
-    if (mCurrentLayerIndex == index)
+    if (mCurrentLayerIndex == layerIndex)
         return;
-    mCurrentLayerIndex = index;
+    mCurrentLayerIndex = layerIndex;
+    if (layerIndex >= 0 && layerIndex < mDocument->map()->layerCount()) {
+        Layer *layer = mDocument->map()->layerAt(layerIndex);
+        if ((layer->level() == mDocument->currentLevel()) && !layer->isTileLayer()) {
+            mView->setCurrentIndex(QModelIndex());
+            return;
+        }
+    }
     setList();
 }
 
