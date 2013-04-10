@@ -144,7 +144,7 @@ void TileDelegate::paint(QPainter *painter,
     const QFontMetrics fm = painter->fontMetrics();
     const int labelHeight = m->showLabels() ? fm.lineSpacing() : 0;
     const int dw = option.rect.width() - tileWidth;
-    painter->drawPixmap(option.rect.adjusted(dw/2, extra, -dw/2, -extra - labelHeight), tileImage);
+    painter->drawPixmap(option.rect.adjusted(dw/2, extra, -(dw - dw/2), -extra - labelHeight), tileImage);
 
     if (m->showLabels()) {
         QString name = fm.elidedText(label, Qt::ElideRight, option.rect.width());

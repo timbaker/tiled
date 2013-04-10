@@ -110,7 +110,8 @@ void LayersPanelDelegate::paint(QPainter *painter,
     const int labelHeight = fm.lineSpacing();
     const int dw = option.rect.width() - tileWidth;
     if (tile != BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile())
-        painter->drawPixmap(option.rect.adjusted(dw/2, extra + labelHeight + extra, -dw/2, -extra), tileImage);
+        painter->drawPixmap(option.rect.adjusted(dw/2, extra + labelHeight + extra,
+                                                 -(dw - dw/2), -extra), tileImage);
 #if 0
     // Overlay with highlight color when selected
     if (option.state & QStyle::State_Selected) {
