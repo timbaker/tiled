@@ -442,6 +442,7 @@ void BuildingFloor::LayoutToSquares()
         for (int y = 0; y < height(); y++) {
             Room *room = mRoomAtPos[x][y];
             mIndexAtPos[x][y] = room ? mBuilding->indexOf(room) : -1;
+            squares[x][y].mExterior = room == 0;
         }
     }
 
@@ -524,9 +525,15 @@ void BuildingFloor::LayoutToSquares()
                             Square &sq = squares[sx][sy];
                             bool exterior = (sx < width() && sy < height())
                                     ? mIndexAtPos[sx][sy] < 0 : true;
-                            if (killW) sq.SetWallW(0, exterior);
-                            if (killN) sq.SetWallN(0, exterior);
-                            sq.mExterior = exterior;
+                            if (killW) {
+                                sq.SetWallW(0, exterior);
+                                sq.mWallW.furniture = fo->furnitureTile();
+                            }
+                            if (killN) {
+                                sq.SetWallN(0, exterior);
+                                sq.mWallN.furniture = fo->furnitureTile();
+                            }
+//                            sq.mExterior = exterior;
                         }
                     }
                 }
@@ -553,7 +560,7 @@ void BuildingFloor::LayoutToSquares()
                     s.mEntries[Square::SectionWall] = wallN;
                     s.mWallOrientation = Square::WallOrientN; // must be set before getWallOffset
                     s.mEntryEnum[Square::SectionWall] = s.getWallOffset();
-                    s.mExterior = s.mWallN.exterior;
+//                    s.mExterior = s.mWallN.exterior;
 
                     s.mEntries[Square::SectionWall2] = wallW;
                     s.mWallOrientation = Square::WallOrientW; // must be set before getWallOffset
@@ -567,8 +574,10 @@ void BuildingFloor::LayoutToSquares()
 
     for (int x = 1; x < width() + 1; x++) {
         for (int y = 1; y < height() + 1; y++) {
-            if (squares[x][y].mEntries[Square::SectionWall] &&
-                    !squares[x][y].mEntries[Square::SectionWall]->isNone())
+            Square &sq = squares[x][y];
+            if ((sq.mEntries[Square::SectionWall] &&
+                    !sq.mEntries[Square::SectionWall]->isNone()) ||
+                    (sq.mWallW.furniture) || (sq.mWallN.furniture))
                 continue;
             // Put in the SE piece...
             if ((squares[x][y - 1].IsWallOrient(Square::WallOrientW) ||
@@ -580,8 +589,22 @@ void BuildingFloor::LayoutToSquares()
                 // at this SE corner.
                 wtype = squares[x][y - 1].mWallW.entry;
 
-                squares[x][y].ReplaceWall(wtype, Square::WallOrientSE,
+                sq.ReplaceWall(wtype, Square::WallOrientSE,
                                           squares[x][y - 1].mExterior);
+            }
+            // South end of a north-south wall.
+            else if (squares[x][y - 1].IsWallOrient(Square::WallOrientW) ||
+                      squares[x][y - 1].IsWallOrient(Square::WallOrientNW)) {
+                wtype = squares[x][y - 1].mWallW.entry;
+                sq.mEntries[Square::SectionWall] = wtype;
+                sq.mEntryEnum[Square::SectionWall] = BTC_Walls::SouthEast;
+            }
+            // East end of a west-east wall.
+            else if (squares[x - 1][y].IsWallOrient(Square::WallOrientN) ||
+                      squares[x - 1][y].IsWallOrient(Square::WallOrientNW)) {
+                wtype = squares[x - 1][y].mWallN.entry;
+                sq.mEntries[Square::SectionWall] = wtype;
+                sq.mEntryEnum[Square::SectionWall] = BTC_Walls::SouthEast;
             }
         }
     }
@@ -1354,8 +1377,7 @@ void BuildingFloor::LayoutToSquares()
                 if (level() > 0)
                     continue;
                 BuildingTileEntry *grimeTile = building()->tile(Building::GrimeWall);
-                if (sq.mExterior)
-                    sq.ReplaceWallGrime(grimeTile);
+                sq.ReplaceWallGrime(grimeTile);
 
             } else {
                 Room *room = GetRoomAt(x, y);
@@ -1659,7 +1681,7 @@ BuildingFloor::Square::Square() :
     mEntries(MaxSection, 0),
     mEntryEnum(MaxSection, 0),
     mWallOrientation(WallOrientInvalid),
-    mExterior(false),
+    mExterior(true),
     mTiles(MaxSection, 0)
 {
 }
@@ -1704,7 +1726,7 @@ void BuildingFloor::Square::ReplaceWall(BuildingTileEntry *tile,
     mEntries[SectionWall] = tile;
     mWallOrientation = orient; // Must set this before getWallOffset() is called
     mEntryEnum[SectionWall] = getWallOffset();
-    mExterior = exterior;
+//    mExterior = exterior;
 }
 
 void BuildingFloor::Square::ReplaceDoor(BuildingTileEntry *tile, int offset)
@@ -1894,7 +1916,13 @@ void BuildingFloor::Square::ReplaceFloorGrime(BuildingTileEntry *grimeTile)
             grimeEnumW = BTC_GrimeFloor::West;
             grimeEnumN = BTC_GrimeFloor::North;
             break;
-        case BTC_Walls::SouthEast: grimeEnumW = BTC_GrimeFloor::NorthWest; break;
+        case BTC_Walls::SouthEast:
+            // Hack - ignore "end cap" of a wall object.
+            if ((mEntryEnum[Square::SectionWall] == BTC_Walls::SouthEast)
+                    && (mWallOrientation != Square::WallOrientSE))
+                break;
+            grimeEnumW = BTC_GrimeFloor::NorthWest;
+            break;
         }
     }
     if (wallTile2) {
