@@ -151,19 +151,21 @@ public:
 
         struct WallInfo {
             WallInfo() :
-                entry(0), furniture(0), exterior(false)
+                entry(0), furniture(0)
             {}
             BuildingTileEntry *entry;
             FurnitureTile *furniture;
-            bool exterior;
         } mWallN, mWallW;
-        void SetWallN(BuildingTileEntry *tile, bool exterior = true);
-        void SetWallW(BuildingTileEntry *tile, bool exterior = true);
+
+        void SetWallN(BuildingTileEntry *tile);
+        void SetWallW(BuildingTileEntry *tile);
+        void SetWallN(FurnitureTile *ftile);
+        void SetWallW(FurnitureTile *ftile);
 
         bool IsWallOrient(WallOrientation orient);
 
         void ReplaceFloor(BuildingTileEntry *tile, int offset);
-        void ReplaceWall(BuildingTileEntry *tile, WallOrientation orient, bool exterior = true);
+        void ReplaceWall(BuildingTileEntry *tile, WallOrientation orient);
         void ReplaceDoor(BuildingTileEntry *tile, int offset);
         void ReplaceFrame(BuildingTileEntry *tile, int offset);
         void ReplaceWindow(BuildingTileEntry *tile, int offset);
