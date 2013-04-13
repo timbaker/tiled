@@ -52,7 +52,7 @@ public:
                QWidget *widget = 0);
 
 #ifdef ZOMBOID
-    void TileSelectionItem::setDragOffset(const QPoint &offset);
+    void setDragOffset(const QPoint &offset);
 #endif
 
 private slots:

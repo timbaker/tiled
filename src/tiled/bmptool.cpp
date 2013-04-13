@@ -92,8 +92,8 @@ void AbstractBmpTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers)
     const QPointF tilePosF = renderer->pixelToTileCoords(pos, layer ? layer->level() : 0);
     QPoint tilePos;
 
-    tilePos = QPoint((int) std::floor(tilePosF.x()),
-                     (int) std::floor(tilePosF.y()));
+    tilePos = QPoint(qFloor(tilePosF.x()),
+                     qFloor(tilePosF.y()));
 
     if (mTileX != tilePos.x() || mTileY != tilePos.y()) {
         mTileX = tilePos.x();
@@ -161,7 +161,7 @@ Layer *AbstractBmpTool::currentLayer() const
 /////
 
 PaintBMP::PaintBMP(MapDocument *mapDocument, int bmpIndex,
-                   int x, int y, QImage &source, QRegion &region) :
+                   int x, int y, const QImage &source, const QRegion &region) :
     QUndoCommand(QCoreApplication::translate("UndoCommands", "Paint BMP")),
     mMapDocument(mapDocument),
     mBmpIndex(bmpIndex),
