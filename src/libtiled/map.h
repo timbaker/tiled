@@ -104,23 +104,23 @@ public:
     BmpRule(const BmpRule *other) :
         bitmapIndex(other->bitmapIndex),
         color(other->color),
+        condition(other->condition),
         tileChoices(other->tileChoices),
-        targetLayer(other->targetLayer),
-        condition(other->condition)
+        targetLayer(other->targetLayer)
     {}
     BmpRule(int bitmapIndex, QRgb col, QStringList tiles, QString layer, QRgb condition) :
         bitmapIndex(bitmapIndex),
         color(col),
+        condition(condition),
         tileChoices(tiles),
-        targetLayer(layer),
-        condition(condition)
+        targetLayer(layer)
     {}
     BmpRule(int bitmapIndex, QRgb col, QStringList tiles, QString layer) :
         bitmapIndex(bitmapIndex),
         color(col),
+        condition(qRgb(0,0,0)),
         tileChoices(tiles),
-        targetLayer(layer),
-        condition(qRgb(0,0,0))
+        targetLayer(layer)
     {}
     BmpRule(int bitmapIndex, QRgb col, QString tile, QString layer);
     BmpRule(int bitmapIndex, QRgb col, QString tile, QString layer, QRgb condition);

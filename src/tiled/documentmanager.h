@@ -128,7 +128,7 @@ public:
     void centerViewOn(int x, int y);
 
 #ifdef ZOMBOID
-    void ensureRectVisible(QRectF &rect, int xmargin = 50, int ymargin = 50);
+    void ensureRectVisible(const QRectF &rect, int xmargin = 50, int ymargin = 50);
 #endif
 
 signals:
