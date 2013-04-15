@@ -245,9 +245,9 @@ void MixedTilesetView::mouseMoveEvent(QMouseEvent *event)
     if (event->buttons() == Qt::NoButton) {
         QModelIndex index = indexAt(event->pos());
         if (index.isValid() && index != mToolTipIndex) {
-            if (Tile *tile = model()->tileAt(mToolTipIndex))
+            if (model()->tileAt(mToolTipIndex))
                 emit tileLeft(mToolTipIndex);
-            if (Tile *tile = model()->tileAt(index))
+            if (model()->tileAt(index))
                 emit tileEntered(index);
             mToolTipIndex = index;
             QVariant tooltip = index.data(Qt::ToolTipRole);
@@ -256,7 +256,7 @@ void MixedTilesetView::mouseMoveEvent(QMouseEvent *event)
                                    visualRect(index));
             return;
         } else if (!index.isValid() && mToolTipIndex.isValid()) {
-            if (Tile *tile = model()->tileAt(mToolTipIndex)) {
+            if (model()->tileAt(mToolTipIndex)) {
                 emit tileLeft(mToolTipIndex);
                 mToolTipIndex = QModelIndex();
             }
@@ -294,10 +294,12 @@ bool MixedTilesetView::viewportEvent(QEvent *event)
     case QEvent::ToolTip:
         return true;
     case QEvent::Leave:
-        if (Tile *tile = model()->tileAt(mToolTipIndex)) {
+        if (model()->tileAt(mToolTipIndex)) {
             emit tileLeft(mToolTipIndex);
             mToolTipIndex = QModelIndex();
         }
+        break;
+    default:
         break;
     }
     return QTableView::viewportEvent(event);

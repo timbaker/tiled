@@ -113,9 +113,9 @@ class TILEDSHARED_EXPORT BmpRule
 public:
     int bitmapIndex;
     QRgb color;
-    QRgb condition;
     QStringList tileChoices;
     QString targetLayer;
+    QRgb condition;
 
     BmpRule(const BmpRule *other) :
         bitmapIndex(other->bitmapIndex),

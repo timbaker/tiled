@@ -817,8 +817,6 @@ TilesetDock::TilesetDock(QWidget *parent):
     mCurrentTileset(0),
     mCurrentTile(0),
     mCurrentTiles(0),
-    mZoomable(new Zoomable(this)),
-    mZoomComboBox(new QComboBox(this)),
     mActionTilesetUp(new QAction(this)),
     mActionTilesetDown(new QAction(this)),
     mActionSortByName(new QAction(this)),
@@ -829,6 +827,8 @@ TilesetDock::TilesetDock(QWidget *parent):
     mActionDeleteTileset(new QAction(this)),
     mActionRenameTileset(new QAction(this)),
     mActionSwitchLayer(new QAction(this)),
+    mZoomable(new Zoomable(this)),
+    mZoomComboBox(new QComboBox(this)),
     mTilesetView(new TilesetView(mZoomable, this)),
     mTilesetNamesView(new QListWidget(this))
 {

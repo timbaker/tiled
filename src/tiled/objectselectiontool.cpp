@@ -109,6 +109,8 @@ void ObjectSelectionTool::mousePressed(QGraphicsSceneMouseEvent *event)
         else
             AbstractObjectTool::mousePressed(event);
         break;
+    default:
+        break;
     }
 #else
     if (mMode != NoMode) // Ignore additional presses during select/move

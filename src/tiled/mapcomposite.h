@@ -269,8 +269,6 @@ public:
 
     MapComposite *blendOverMap() const
     { return mBlendOverMap; }
-
-    MapComposite *mBlendOverMap;
 #endif // BUILDINGED
 
 signals:
@@ -292,6 +290,9 @@ private:
 private:
     MapInfo *mMapInfo;
     Tiled::Map *mMap;
+#ifdef BUILDINGED
+    MapComposite *mBlendOverMap;
+#endif
     QVector<MapComposite*> mSubMaps;
     QMap<int,CompositeLayerGroup*> mLayerGroups;
     QList<CompositeLayerGroup*> mSortedLayerGroups;

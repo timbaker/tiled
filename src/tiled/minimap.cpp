@@ -440,6 +440,8 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
         case MapChange::Recreate:
             redrawAll = true;
             break;
+        default:
+            break;
         }
     }
 
@@ -548,6 +550,8 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
                          margins.right(), margins.bottom());
             break;
         }
+        default:
+            break;
         }
         if (mDirtyRect.isEmpty())
             mDirtyRect = dirty;

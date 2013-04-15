@@ -312,6 +312,8 @@ private:
 class BuildingRenderer
 {
 public:
+    virtual ~BuildingRenderer() {}
+
     virtual QPoint sceneToTile(const QPointF &scenePos, int level) = 0;
     virtual QPointF sceneToTileF(const QPointF &scenePos, int level) = 0;
     virtual QRect sceneToTileRect(const QRectF &sceneRect, int level) = 0;

@@ -1341,6 +1341,8 @@ static FurnitureTool::Orient wallOrient(const BuildingFloor::Square &square)
          !square.mEntries[BuildingFloor::Square::SectionWall]->isNone()) ||
             square.mTiles[BuildingFloor::Square::SectionWall])
         switch (square.mWallOrientation) {
+        case BuildingFloor::Square::WallOrientInvalid:
+            break;
         case BuildingFloor::Square::WallOrientW:
             return FurnitureTool::OrientW;
         case BuildingFloor::Square::WallOrientN:

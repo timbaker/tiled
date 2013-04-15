@@ -67,10 +67,10 @@ public:
     bool isNorthWall(int x, int y);
 
     Map *mMap;
+    QRect mBounds;
     TileLayer *mLayerFloor;
     TileLayer *mLayerWalls;
     TileLayer *mLayerWalls2;
-    QRect mBounds;
     QList<QRegion> mRegions;
     QList<QRegion> mIgnoreRegions;
     QMap<QString,Tileset*> mTilesets;

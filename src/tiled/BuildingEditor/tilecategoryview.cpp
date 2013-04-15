@@ -102,13 +102,11 @@ void BuildingEntryDelegate::paint(QPainter *painter,
 
     // Draw the shadow image.
     {
-        QPointF offset = entry->offset(e);
         QPointF p1 = tileToPixelCoords(0, 0) + tileMargins + r.topLeft();
         QRect target((p1 - QPointF(tileWidth/2, imageHeight - tileHeight)).toPoint(),
                 QSize(tileWidth, imageHeight));
         int row = index.row() % m->shadowImageRows();
-        QRect source(index.column() * 64, row * 128,
-                     64, 128);
+        QRect source(index.column() * 64, row * 128, 64, 128);
         painter->drawImage(target, entry->category()->shadowImage(), source);
     }
 

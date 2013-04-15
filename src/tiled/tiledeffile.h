@@ -50,6 +50,7 @@ public:
         mName(name),
         mShortName(shortName)
     {}
+    virtual ~TileDefProperty() {}
 
     virtual BooleanTileDefProperty *asBoolean() { return 0; }
     virtual EnumTileDefProperty *asEnum() { return 0; }
@@ -203,6 +204,7 @@ public:
             if (mShortName.isEmpty())
                 mShortName = mName;
         }
+        virtual ~UIProperty() {}
 
         void FromProperties(const QMap<QString,QString> &props)
         {

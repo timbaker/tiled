@@ -972,8 +972,9 @@ void MapReaderPrivate::readBmpSettings()
     Q_ASSERT(xml.isStartElement() && xml.name() == "bmp-settings");
 
     const QXmlStreamAttributes atts = xml.attributes();
+#if 0
     int version = atts.value(QLatin1String("version")).toString().toInt();
-
+#endif
     while (xml.readNextStartElement()) {
         if (xml.name() == QLatin1String("rules-file")) {
             const QXmlStreamAttributes atts = xml.attributes();

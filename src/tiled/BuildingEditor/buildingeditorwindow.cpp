@@ -852,7 +852,7 @@ void BuildingEditorWindow::categorySelectionChanged()
 
             connect(mActionClearUsed, SIGNAL(triggered()), SLOT(resetUsedFurniture()));
             ui->furnitureView->setContextMenu(mUsedContextMenu);
-        } else if (mCategory = categoryAt(row)) {
+        } else if ((mCategory = categoryAt(row))) {
 #if 1
             QList<BuildingTileEntry*> entries;
             if (mCategory->canAssignNone()) {
@@ -897,7 +897,7 @@ void BuildingEditorWindow::categorySelectionChanged()
             ui->categoryStack->setCurrentIndex(0);
 
             selectCurrentCategoryTile();
-        } else if (mFurnitureGroup = furnitureGroupAt(row)) {
+        } else if ((mFurnitureGroup = furnitureGroupAt(row))) {
             ui->furnitureView->setTiles(mFurnitureGroup->mTiles);
             ui->furnitureView->scrollToTop();
             ui->categoryStack->setCurrentIndex(1);

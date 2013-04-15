@@ -299,7 +299,7 @@ void ensureRectVisible(QGraphicsView *view, const QRectF &rect, int xmargin, int
     }
 }
 
-void DocumentManager::ensureRectVisible(QRectF &rect, int xmargin, int ymargin)
+void DocumentManager::ensureRectVisible(const QRectF &rect, int xmargin, int ymargin)
 {
     MapView *view = currentMapView();
     if (!view)

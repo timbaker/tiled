@@ -511,7 +511,7 @@ void EditPolygonTool::updateMovingItems(const QPointF &pos,
     int i = 0;
     foreach (PointHandle *handle, mSelectedHandles) {
         Layer *layer = handle->mapObject()->objectGroup();
-        QPointF diff = pos - mStart;
+        diff = pos - mStart;
         if (snapToGrid) {
             const QPointF alignPixelPos =
                 renderer->tileToPixelCoords(mAlignPosition, layer->level());

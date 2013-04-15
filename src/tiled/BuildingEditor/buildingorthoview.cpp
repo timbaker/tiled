@@ -107,6 +107,8 @@ void BuildingRenderer::drawObject(QPainter *painter, BuildingObject *mObject,
             lineS = true;
             lineW = true;
             break;
+        default:
+            break;
         }
 
         FurnitureTiles::FurnitureLayer layer = object->furnitureTile()->owner()->layer();

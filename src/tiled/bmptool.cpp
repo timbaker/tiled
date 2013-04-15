@@ -92,8 +92,7 @@ void AbstractBmpTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers)
     const QPointF tilePosF = renderer->pixelToTileCoords(pos, layer ? layer->level() : 0);
     QPoint tilePos;
 
-    tilePos = QPoint((int) std::floor(tilePosF.x()),
-                     (int) std::floor(tilePosF.y()));
+    tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
 
     if (mTileX != tilePos.x() || mTileY != tilePos.y()) {
         mTileX = tilePos.x();
@@ -141,12 +140,7 @@ void AbstractBmpTool::setBrushVisible(bool visible)
 
 void AbstractBmpTool::updateBrushVisibility()
 {
-    bool showBrush = false;
-    if (mBrushVisible) {
-        if (Layer *layer = currentLayer()) {
-            showBrush = true;
-        }
-    }
+    bool showBrush = mBrushVisible && currentLayer();
     mBrushItem->setVisible(showBrush);
 }
 
@@ -161,7 +155,7 @@ Layer *AbstractBmpTool::currentLayer() const
 /////
 
 PaintBMP::PaintBMP(MapDocument *mapDocument, int bmpIndex,
-                   int x, int y, QImage &source, QRegion &region) :
+                   int x, int y, const QImage &source, QRegion &region) :
     QUndoCommand(QCoreApplication::translate("UndoCommands", "Paint BMP")),
     mMapDocument(mapDocument),
     mBmpIndex(bmpIndex),
@@ -1388,7 +1382,6 @@ void BmpBucketTool::updateStatusInfo()
 void BmpBucketTool::mousePressed(QGraphicsSceneMouseEvent *event)
 {
     const Qt::MouseButton button = event->button();
-    const Qt::KeyboardModifiers modifiers = event->modifiers();
 
     if (button == Qt::LeftButton) {
         if (mFloodFill.mRegion.isEmpty())
@@ -1407,6 +1400,7 @@ void BmpBucketTool::mousePressed(QGraphicsSceneMouseEvent *event)
 
 void BmpBucketTool::mouseReleased(QGraphicsSceneMouseEvent *event)
 {
+    Q_UNUSED(event)
 }
 
 void BmpBucketTool::languageChanged()

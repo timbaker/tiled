@@ -451,6 +451,8 @@ bool LayersPanelView::viewportEvent(QEvent *event)
             update(index);
         }
     }
+    default:
+            break;
     }
 
     return QTableView::viewportEvent(event);

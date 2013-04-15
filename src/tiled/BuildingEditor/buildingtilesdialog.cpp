@@ -1274,7 +1274,7 @@ void BuildingTilesDialog::categoryChanged(int index)
         setCategoryTiles();
         setFurnitureTiles();
         tilesetSelectionChanged();
-    } else if (mCategory = categoryAt(index)) {
+    } else if ((mCategory = categoryAt(index))) {
         if (mExpertMode && !mCategory->shadowImage().isNull()) {
             ui->categoryStack->setCurrentIndex(2);
         } else {
@@ -1282,7 +1282,7 @@ void BuildingTilesDialog::categoryChanged(int index)
         }
         setCategoryTiles();
         tilesetSelectionChanged();
-    } else if (mFurnitureGroup = furnitureGroupAt(index)) {
+    } else if ((mFurnitureGroup = furnitureGroupAt(index))) {
         setFurnitureTiles();
         ui->categoryStack->setCurrentIndex(1);
     }
@@ -1851,7 +1851,7 @@ void BuildingTilesDialog::furnitureGrimeChanged(bool allow)
 
 void BuildingTilesDialog::accept()
 {
-    if (mChanges = !mUndoStack->isClean()) {
+    if ((mChanges = !mUndoStack->isClean())) {
         BuildingTilesMgr::instance()->writeTxt(this);
         if (!FurnitureGroups::instance()->writeTxt()) {
             QMessageBox::warning(this, tr("It's no good, Jim!"),

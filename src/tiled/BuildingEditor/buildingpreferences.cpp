@@ -22,7 +22,6 @@
 
 using namespace BuildingEditor;
 
-static const char *KEY_TILES_DIR = "BuildingEditor/TilesDirectory";
 static const char *KEY_TILE_SCALE = "BuildingEditor/MainWindow/CategoryScale";
 static const char *KEY_SHOW_GRID = "BuildingEditor/ShowGrid";
 static const char *KEY_HIGHLIGHT_FLOOR = "BuildingEditor/PreviewWindow/HighlightFloor";
