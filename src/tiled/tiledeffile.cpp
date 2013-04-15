@@ -756,8 +756,8 @@ bool TilePropertyMgr::addProperty(SimpleFileBlock &block)
 
 bool TilePropertyMgr::toBoolean(const char *key, SimpleFileBlock &block, bool &ok)
 {
-    SimpleFileKeyValue kv = block.keyValue(key);
-    if (kv.name.isEmpty()) {
+    SimpleFileKeyValue kv;
+    if (!block.keyValue(key, kv)) {
         mError = tr("Missing '%1' keyvalue.\n\n%2")
                 .arg(QLatin1String(key))
                 .arg(block.toString());
@@ -780,8 +780,8 @@ bool TilePropertyMgr::toBoolean(const char *key, SimpleFileBlock &block, bool &o
 
 int TilePropertyMgr::toInt(const char *key, SimpleFileBlock &block, bool &ok)
 {
-    SimpleFileKeyValue kv = block.keyValue(key);
-    if (kv.name.isEmpty()) {
+    SimpleFileKeyValue kv;
+    if (!block.keyValue(key, kv)) {
         mError = tr("Missing '%1' keyvalue.\n\n%2")
                 .arg(QLatin1String(key))
                 .arg(block.toString());

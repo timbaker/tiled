@@ -604,6 +604,16 @@ MapRands MapDocument::swapBmpRands(int bmpIndex, const MapRands &rands)
     return old;
 }
 
+void MapDocument::setBmpAliases(const QList<BmpAlias *> &aliases)
+{
+    mMap->rbmpSettings()->setAliases(aliases);
+
+    mapComposite()->bmpBlender()->fromMap();
+    mapComposite()->bmpBlender()->recreate();
+
+    emit bmpAliasesChanged();
+}
+
 void MapDocument::setBmpRules(const QString &fileName,
                                       const QList<BmpRule *> &rules)
 {

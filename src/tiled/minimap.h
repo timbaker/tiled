@@ -170,6 +170,7 @@ private slots:
     void tilesetChanged(Tileset *tileset);
 
     void bmpPainted(int bmpIndex, const QRegion &region);
+    void bmpAliasesChanged();
     void bmpRulesChanged();
     void bmpBlendsChanged();
 

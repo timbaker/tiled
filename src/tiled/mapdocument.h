@@ -227,6 +227,7 @@ public:
     QImage swapBmpImage(int bmpIndex, const QImage &image);
     MapRands swapBmpRands(int bmpIndex, const MapRands &rands);
 
+    void setBmpAliases(const QList<BmpAlias*> &aliases);
     void setBmpRules(const QString &fileName, const QList<BmpRule*> &rules);
     void setBmpBlends(const QString &fileName, const QList<BmpBlend*> &blends);
 #endif // ZOMBOID
@@ -392,6 +393,7 @@ signals:
     void mapCompositeChanged();
 
     void bmpPainted(int bmpIndex, const QRegion &region);
+    void bmpAliasesChanged();
     void bmpRulesChanged();
     void bmpBlendsChanged();
 #endif

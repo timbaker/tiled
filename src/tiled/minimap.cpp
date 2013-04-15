@@ -177,6 +177,7 @@ public:
         TilesetRemoved,
         TilesetChanged,
         BmpPainted,
+        BmpAliasesChanged,
         BmpRulesChanged,
         BmpBlendsChanged,
         Recreate
@@ -219,6 +220,7 @@ public:
 
     QImage mBmps[2];
     int mBmpIndex;
+    QList<BmpAlias*> mBmpAliases;
     QList<BmpRule*> mBmpRules;
     QList<BmpBlend*> mBmpBlends;
     QRegion mRegion;
@@ -412,6 +414,13 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
             sm.mMapComposite->map()->rbmp(c.mBmpIndex).rimage() = c.mBmps[c.mBmpIndex];
             QRect r = c.mRegion.boundingRect();
             sm.mMapComposite->bmpBlender()->update(r.x(), r.y(), r.right(), r.bottom());
+            break;
+        }
+        case MapChange::BmpAliasesChanged: {
+            sm.mMapComposite->map()->rbmpSettings()->setAliases(c.mBmpAliases);
+            sm.mMapComposite->bmpBlender()->fromMap();
+            sm.mMapComposite->bmpBlender()->recreate();
+            redrawAll = true;
             break;
         }
         case MapChange::BmpRulesChanged: {
@@ -628,6 +637,8 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
 
     connect(mScene->mapDocument(), SIGNAL(bmpPainted(int,QRegion)),
             SLOT(bmpPainted(int,QRegion)));
+    connect(mScene->mapDocument(), SIGNAL(bmpAliasesChanged()),
+            SLOT(bmpAliasesChanged()));
     connect(mScene->mapDocument(), SIGNAL(bmpRulesChanged()),
             SLOT(bmpRulesChanged()));
     connect(mScene->mapDocument(), SIGNAL(bmpBlendsChanged()),
@@ -841,6 +852,13 @@ void MiniMapItem::bmpPainted(int bmpIndex, const QRegion &region)
     c->mBmpIndex = bmpIndex;
     c->mBmps[bmpIndex] = mMapComposite->map()->rbmp(bmpIndex).rimage().copy(); // FIXME: send changed part only
     c->mRegion = region;
+    queueChange(c);
+}
+
+void MiniMapItem::bmpAliasesChanged()
+{
+    MapChange *c = new MapChange(MapChange::BmpAliasesChanged);
+    c->mBmpAliases = mMapComposite->map()->bmpSettings()->aliasesCopy();
     queueChange(c);
 }
 

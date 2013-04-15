@@ -52,11 +52,13 @@ class ChangeBmpRules : public QUndoCommand
 {
 public:
     ChangeBmpRules(MapDocument *mapDocument, const QString &fileName,
+                   const QList<BmpAlias*> &aliases,
                    const QList<BmpRule*> &rules)
         : QUndoCommand(QCoreApplication::translate("Undo Commands",
                                                    "Change BMP Settings (Rules.txt)"))
         , mMapDocument(mapDocument)
         , mFileName(fileName)
+        , mAliases(aliases)
         , mRules(rules)
     {
     }
@@ -67,14 +69,18 @@ public:
     void swap()
     {
         QString oldFile = mMapDocument->map()->bmpSettings()->rulesFile();
+        QList<BmpAlias*> oldAliases = mMapDocument->map()->bmpSettings()->aliasesCopy();
         QList<BmpRule*> oldRules = mMapDocument->map()->bmpSettings()->rulesCopy();
+        mMapDocument->setBmpAliases(mAliases);
         mMapDocument->setBmpRules(mFileName, mRules);
+        mAliases = oldAliases;
         mFileName = oldFile;
         mRules = oldRules;
     }
 
     MapDocument *mMapDocument;
     QString mFileName;
+    QList<BmpAlias*> mAliases;
     QList<BmpRule*> mRules;
 };
 
@@ -236,7 +242,9 @@ void BmpToolDialog::reloadRules()
             QMessageBox::warning(this, tr("Reload Rules Failed"), file.errorString());
             return;
         }
-        mDocument->undoStack()->push(new ChangeBmpRules(mDocument, f, file.rulesCopy()));
+        mDocument->undoStack()->push(
+                    new ChangeBmpRules(mDocument, f, file.aliasesCopy(),
+                                       file.rulesCopy()));
     }
 }
 
@@ -259,7 +267,9 @@ void BmpToolDialog::importRules()
             return;
         }
         settings.setValue(QLatin1String("BmpToolDialog/RulesFile"), f);
-        mDocument->undoStack()->push(new ChangeBmpRules(mDocument, f, file.rulesCopy()));
+        mDocument->undoStack()->push(new ChangeBmpRules(mDocument, f,
+                                                        file.aliasesCopy(),
+                                                        file.rulesCopy()));
     }
 }
 
@@ -268,7 +278,7 @@ void BmpToolDialog::reloadBlends()
     QString f = mDocument->map()->bmpSettings()->blendsFile();
     if (!f.isEmpty()/* && QFileInfo(f).exists()*/) {
         BmpBlendsFile file;
-        if (!file.read(f)) {
+        if (!file.read(f, mDocument->map()->bmpSettings()->aliases())) {
             QMessageBox::warning(this, tr("Reload Blends Failed"), file.errorString());
             return;
         }
@@ -290,7 +300,7 @@ void BmpToolDialog::importBlends()
                                              tr("Blends.txt files (*.txt)"));
     if (!f.isEmpty()) {
         BmpBlendsFile file;
-        if (!file.read(f)) {
+        if (!file.read(f, mDocument->map()->bmpSettings()->aliases())) {
             QMessageBox::warning(this, tr("Import Blends Failed"), file.errorString());
             return;
         }
@@ -363,9 +373,19 @@ void BmpToolDialog::setDocument(MapDocument *doc)
         QList<void*> userData;
         QStringList headers;
         int ruleIndex = 1;
+        QMap<QString,BmpAlias*> aliasByName;
+        foreach (BmpAlias *alias, mDocument->map()->bmpSettings()->aliases())
+            aliasByName[alias->name] = alias;
         QList<BmpRule*> rules = mDocument->map()->bmpSettings()->rules();
         foreach (BmpRule *rule, rules) {
+            QStringList tileChoices;
             foreach (QString tileName, rule->tileChoices) {
+                if (aliasByName.contains(tileName))
+                    tileChoices += aliasByName[tileName]->tiles;
+                else
+                    tileChoices += tileName;
+            }
+            foreach (QString tileName, tileChoices) {
                 Tile *tile;
                 if (tileName.isEmpty())
                     tile = BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile();
@@ -412,6 +432,7 @@ void BmpToolDialog::setDocument(MapDocument *doc)
 
         ui->showMapTiles->setChecked(mDocument->mapComposite()->showMapTiles());
 
+        connect(mDocument, SIGNAL(bmpAliasesChanged()), SLOT(bmpRulesChanged())); // XXXXX
         connect(mDocument, SIGNAL(bmpRulesChanged()), SLOT(bmpRulesChanged()));
         connect(mDocument, SIGNAL(bmpBlendsChanged()), SLOT(bmpBlendsChanged()));
     }
