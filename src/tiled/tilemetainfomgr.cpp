@@ -132,7 +132,7 @@ QString TileMetaInfoMgr::txtPath()
 
 bool TileMetaInfoMgr::readTxt()
 {
-#if 0
+#ifdef WORLDED
     // Make sure the user has chosen the Tiles directory.
     QString tilesDirectory = this->tilesDirectory();
     QDir dir(tilesDirectory);
