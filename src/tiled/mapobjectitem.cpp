@@ -122,6 +122,11 @@ void ResizeHandle::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mOldSize = mMapObjectItem->mapObject()->size();
 
     Handle::mousePressEvent(event);
+
+#ifdef ZOMBOID
+    // Stop the object context menu messing us up.
+    event->accept();
+#endif
 }
 
 void ResizeHandle::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
@@ -135,6 +140,11 @@ void ResizeHandle::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         QUndoCommand *cmd = new ResizeMapObject(document, obj, mOldSize);
         document->undoStack()->push(cmd);
     }
+
+#ifdef ZOMBOID
+    // Stop the object context menu messing us up.
+    event->accept();
+#endif
 }
 
 QVariant ResizeHandle::itemChange(GraphicsItemChange change,
