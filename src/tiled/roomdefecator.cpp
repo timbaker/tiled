@@ -331,6 +331,9 @@ void RoomDefecatorFill::floodFillScanlineStack(int x, int y)
             }
             else if (spanLeft && x > 0 && !shouldVisit(x, y1, x - 1, y1)) {
                 spanLeft = false;
+            } else if (spanLeft && x > 0 && !shouldVisit(x - 1, y1 - 1, x - 1, y1)) {
+                // North wall splits the span.
+                if (!push(x - 1, y1)) return;
             }
             if (!spanRight && (x < mRoomDefecator->mMap->width() - 1) && shouldVisit(x, y1, x + 1, y1)) {
                 if (!push(x + 1, y1)) return;
@@ -338,6 +341,9 @@ void RoomDefecatorFill::floodFillScanlineStack(int x, int y)
             }
             else if (spanRight && (x < mRoomDefecator->mMap->width() - 1) && !shouldVisit(x, y1, x + 1, y1)) {
                 spanRight = false;
+            } else if (spanRight && (x < mRoomDefecator->mMap->width() - 1) && !shouldVisit(x + 1, y1 - 1, x + 1, y1)) {
+                // North wall splits the span.
+                if (!push(x + 1, y1)) return;
             }
             py = y1;
             y1++;
