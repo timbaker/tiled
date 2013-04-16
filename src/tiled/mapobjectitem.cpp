@@ -205,8 +205,13 @@ MapObjectItem::MapObjectItem(MapObject *object, MapDocument *mapDocument,
   , mLot(0)
   , mMapImage(0)
   , mDragging(false)
+  , mHoverRefCount(0)
 #endif
 {
+#ifdef ZOMBOID
+    setAcceptsHoverEvents(true);
+    mLabelItem = new ObjectLabelItem(this, this);
+#endif
     syncWithMapObject();
     mResizeHandle->setVisible(false);
 }
@@ -284,9 +289,35 @@ void MapObjectItem::syncWithMapObject()
     mSyncing = false;
 
     setVisible(mObject->isVisible());
+
+#ifdef ZOMBOID
+    mLabelItem->synch();
+#endif
 }
 
 #ifdef ZOMBOID
+void MapObjectItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+{
+    Q_UNUSED(event)
+    if ((++mHoverRefCount == 1) && mMapDocument->currentLayer() &&
+            mMapDocument->currentLayer()->isObjectGroup()) {
+        update();
+
+        mLabelItem->update();
+    }
+}
+
+void MapObjectItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+{
+    Q_UNUSED(event)
+    Q_ASSERT(mHoverRefCount > 0);
+    if (--mHoverRefCount == 0) {
+        update();
+
+        mLabelItem->update();
+    }
+}
+
 void MapObjectItem::setLot(MapComposite *lot)
 {
     mLot = lot;
@@ -334,6 +365,10 @@ void MapObjectItem::setEditable(bool editable)
         unsetCursor();
 
     update();
+
+#ifdef ZOMBOID
+    mLabelItem->update();
+#endif
 }
 
 QRectF MapObjectItem::boundingRect() const
@@ -357,6 +392,9 @@ void MapObjectItem::paint(QPainter *painter,
     QColor color = mColor;
     if (mIsEditable)
         color.setAlpha(100);
+    else if (mHoverRefCount && mMapDocument->currentLayer()
+             && mMapDocument->currentLayer()->isObjectGroup())
+        color.setAlpha(75);
     mMapDocument->renderer()->drawMapObject(painter, mObject, color);
 #else
     mMapDocument->renderer()->drawMapObject(painter, mObject, mColor);
@@ -433,3 +471,73 @@ QColor MapObjectItem::objectColor(const MapObject *object)
     // Fallback color
     return Qt::gray;
 }
+
+#ifdef ZOMBOID
+ObjectLabelItem::ObjectLabelItem(MapObjectItem *item, QGraphicsItem *parent)
+    : QGraphicsSimpleTextItem(parent)
+    , mItem(item)
+{
+    setAcceptsHoverEvents(true);
+    setFlag(ItemIgnoresTransformations);
+
+    synch();
+}
+
+QRectF ObjectLabelItem::boundingRect() const
+{
+    QRectF r = QGraphicsSimpleTextItem::boundingRect().adjusted(-3, -3, 2, 2);
+    return r.translated(-r.center());
+}
+
+QPainterPath ObjectLabelItem::shape() const
+{
+    QPainterPath path;
+    path.addRect(boundingRect());
+    return path;
+}
+
+bool ObjectLabelItem::contains(const QPointF &point) const
+{
+    return boundingRect().contains(point);
+}
+
+void ObjectLabelItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+                            QWidget *widget)
+{
+    Q_UNUSED(option)
+    Q_UNUSED(widget)
+
+    mBgColor = /*mItem->isMouseOverHighlighted()*/mItem->isEditable() ? Qt::white : Qt::lightGray;
+    mBgColor.setAlphaF(0.75);
+
+    QRectF r = boundingRect();
+    painter->fillRect(r, mBgColor);
+    painter->drawText(r, Qt::AlignCenter, text());
+}
+
+void ObjectLabelItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+{
+    mItem->hoverEnterEvent(event);
+}
+
+void ObjectLabelItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+{
+    mItem->hoverLeaveEvent(event);
+}
+
+void ObjectLabelItem::synch()
+{
+    QString name = mItem->mapObject()->name();
+    if (name == QLatin1String("lot"))
+        name.clear();
+
+    if (/*!Preferences::instance()->showObjectNames()
+            || */name.isEmpty())
+        setVisible(false);
+    else {
+        setVisible(true);
+        setText(name);
+        setPos(mItem->boundingRect().center());
+    }
+}
+#endif // ZOMBOID

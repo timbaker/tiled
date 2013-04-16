@@ -40,6 +40,7 @@
 #include "toolmanager.h"
 #include "tilesetmanager.h"
 #ifdef ZOMBOID
+#include "abstractobjecttool.h"
 #include "bmpselectionitem.h"
 #include "mapcomposite.h"
 #include "zgriditem.h"
@@ -339,6 +340,19 @@ void MapScene::enableSelectedTool()
         mActiveTool->mouseEntered();
         mActiveTool->mouseMoved(mLastMousePos, Qt::KeyboardModifiers());
     }
+
+#ifdef ZOMBOID
+    // When an item accepts hover events, it stops the active tool getting
+    // mouse move events.  For example, the Stamp brush won't update its
+    // position when the mouse is hovering over a MapObjectItem.
+    bool hover = dynamic_cast<AbstractObjectTool*>(mActiveTool) != 0;
+    foreach (QGraphicsItem *item, items()) {
+        if (MapObjectItem *mo = dynamic_cast<MapObjectItem*>(item)) {
+            mo->setAcceptHoverEvents(hover);
+            mo->labelItem()->setAcceptHoverEvents(hover);
+        }
+    }
+#endif
 }
 
 void MapScene::disableSelectedTool()

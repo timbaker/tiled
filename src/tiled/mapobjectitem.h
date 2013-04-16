@@ -42,6 +42,32 @@ class ObjectGroupItem;
 class PointHandle;
 class ResizeHandle;
 
+#ifdef ZOMBOID
+class MapObjectItem;
+class ObjectLabelItem : public QGraphicsSimpleTextItem
+{
+public:
+    ObjectLabelItem(MapObjectItem *item, QGraphicsItem *parent = 0);
+
+    QRectF boundingRect() const;
+    QPainterPath shape() const;
+    bool contains(const QPointF &point) const;
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+               QWidget *widget);
+
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
+
+    void synch();
+
+    MapObjectItem *objectItem() const { return mItem; }
+
+private:
+    MapObjectItem *mItem;
+    QColor mBgColor;
+};
+#endif // ZOMBOID
+
 /**
  * A graphics item displaying a map object.
  */
@@ -96,6 +122,10 @@ public:
     void setPolygon(const QPolygonF &polygon);
 
 #ifdef ZOMBOID
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
+    ObjectLabelItem *labelItem() const { return mLabelItem; }
+
     void setLot(MapComposite *lot);
     MapComposite *lot() const { return mLot; }
 
@@ -130,6 +160,8 @@ private:
     MapComposite *mLot;
     MapImage *mMapImage;
     bool mDragging;
+    ObjectLabelItem *mLabelItem;
+    int mHoverRefCount;
 #endif
 
     friend class Handle;
