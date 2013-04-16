@@ -552,6 +552,7 @@ TileLayersPanel::TileLayersPanel(QWidget *parent) :
     QWidget(parent),
     mDocument(0),
     mView(new LayersPanelView(this)),
+    mCurrentLevel(-1),
     mCurrentLayerIndex(-1)
 {
     mView->zoomable()->setScale(0.25);
@@ -628,11 +629,11 @@ void TileLayersPanel::setTilePosition(const QPoint &tilePos)
 
 void TileLayersPanel::setList()
 {
-    int level = mDocument->currentLevel();
+    mCurrentLevel = mDocument->currentLevel();
 
     mView->clear();
 
-    CompositeLayerGroup *lg = mDocument->mapComposite()->layerGroupForLevel(level);
+    CompositeLayerGroup *lg = mDocument->mapComposite()->layerGroupForLevel(mCurrentLevel);
     if (!lg) return;
 
     foreach (TileLayer *tl, lg->layers()) {
@@ -688,7 +689,7 @@ void TileLayersPanel::layerIndexChanged(int layerIndex)
     mCurrentLayerIndex = layerIndex;
     if (layerIndex >= 0 && layerIndex < mDocument->map()->layerCount()) {
         Layer *layer = mDocument->map()->layerAt(layerIndex);
-        if ((layer->level() == mDocument->currentLevel()) && !layer->isTileLayer()) {
+        if ((layer->level() == mCurrentLevel) && !layer->isTileLayer()) {
             mView->setCurrentIndex(QModelIndex());
             return;
         }

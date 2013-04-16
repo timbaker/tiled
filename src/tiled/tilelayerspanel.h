@@ -177,6 +177,7 @@ private slots:
 private:
     MapDocument *mDocument;
     LayersPanelView *mView;
+    int mCurrentLevel;
     int mCurrentLayerIndex;
     QPoint mTilePos;
 };
