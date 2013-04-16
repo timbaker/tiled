@@ -85,6 +85,7 @@
 #include "mapimagemanager.h"
 #include "mapmanager.h"
 #include "mapsdock.h"
+#include "roomdeftool.h"
 #include "tiledefdialog.h"
 #include "tiledeffile.h"
 #include "tilelayerspanel.h"
@@ -490,6 +491,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     toolManager->registerTool(polygonObjectsTool);
     toolManager->registerTool(polylineObjectsTool);
 #ifdef ZOMBOID
+    toolManager->registerTool(new RoomDefTool(this));
     toolManager->addSeparator();
     toolManager->registerTool(BmpBrushTool::instance());
     toolManager->registerTool(BmpRectTool::instance());

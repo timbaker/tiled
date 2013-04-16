@@ -81,5 +81,6 @@
         <file>images/22x22/bmp-bucket.png</file>
         <file>images/22x22/bmp-wand.png</file>
         <file>images/22x22/bmp-eraser.png</file>
+        <file>images/22x22/roomdef-tool.png</file>
     </qresource>
 </RCC>

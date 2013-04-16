@@ -198,7 +198,9 @@ SOURCES += aboutdialog.cpp \
     bmpselectionitem.cpp \
     BuildingEditor/buildingpropertiesdialog.cpp \
     roomdefecator.cpp \
-    tilelayerspanel.cpp
+    tilelayerspanel.cpp \
+    roomdeftool.cpp \
+    roomdefnamedialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -360,7 +362,9 @@ HEADERS += aboutdialog.h \
     bmpselectionitem.h \
     BuildingEditor/buildingpropertiesdialog.h \
     roomdefecator.h \
-    tilelayerspanel.h
+    tilelayerspanel.h \
+    roomdeftool.h \
+    roomdefnamedialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -398,7 +402,8 @@ FORMS += aboutdialog.ui \
     addtilesetsdialog.ui \
     BuildingEditor/choosetemplatesdialog.ui \
     bmptooldialog.ui \
-    BuildingEditor/buildingpropertiesdialog.ui
+    BuildingEditor/buildingpropertiesdialog.ui \
+    roomdefnamedialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc
