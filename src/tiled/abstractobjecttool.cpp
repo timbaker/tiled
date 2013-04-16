@@ -171,7 +171,8 @@ void AbstractObjectTool::showContextMenu(MapObjectItem *clickedObjectItem,
 
 #ifdef ZOMBOID
     QAction *openAction = 0;
-    if (clickedObjectItem->mapObject()->name() == QLatin1String("lot")) {
+    if (clickedObjectItem &&
+            (clickedObjectItem->mapObject()->name() == QLatin1String("lot"))) {
         QIcon tiledIcon(QLatin1String(":images/tiled-icon-16.png"));
         menu.addSeparator();
         openAction = menu.addAction(tiledIcon, tr("Open in TileZed"));
