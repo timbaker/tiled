@@ -1,5 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>TileZed - BMP Tools</title></head><body>
+<html><head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>TileZed - BMP Tools</title></head><body>
 <h1>TileZed's BMP Tools</h1>
 Every map has 2 images the same size as the map with one pixel per tile position.<br>
 The pixel colors of the images are used to automatically generate tiles according to a set of rules.<br>
@@ -9,7 +10,10 @@ The text files are the same as those used by WorldEd's BMPToTMX command, Rules.t
 <ol>
   <li>Click on one of the BMP tools.&nbsp; This will display the floating Bmp Tool Window.</li>
   <li>Notice the Rules page is empty.&nbsp; You need to add some rules!</li>
-  <li>In the Options page, click each of the Import buttons to load Rules.txt and Blends.txt.&nbsp; Those files are in WorldEd's directory but you may load them from some other location.</li>
+  <li>In
+the Options page, click each of the Import buttons to load Rules.txt
+and Blends.txt.&nbsp; Those files are in WorldEd's directory but you
+may load them from some other location.</li>
   <li>You should now see a list of rules in the Rules page.</li>
   <li>Make sure your map has all the layers needed by Rules.txt and
 Blends.txt.&nbsp; By default, this means your map must have 0_Floor,
@@ -61,7 +65,11 @@ tiles into 0_Floor.&nbsp; Rules with index=1 typically put tiles into
 0_Vegetation.<br>
   </li>
   <li>"color" is the red-green-blue color of the pixel that is painted in a BMP.</li>
-  <li>"condition" is another red-green-blue color that is only used by rules with index=1.&nbsp; When "condition" is not "0,0,0", the rule will only generate tiles if the pixel in the index=0 BMP image has the same color as the "condition" color.</li>
+  <li>"condition"
+is another red-green-blue color that is only used by rules with
+index=1.&nbsp; When "condition" is not "0,0,0", the rule will only
+generate tiles if the pixel in the index=0 BMP image has the same color
+as the "condition" color.</li>
   <li>Each rule has one or more tiles displayed.&nbsp; When a BMP image has a
 pixel with the same color as the rule, one of the rule's tiles will be
     <span style="font-style: italic;">randomly chosen</span> and placed in the map.</li>
@@ -124,4 +132,10 @@ image.&nbsp; Note that erasing actually means painting black pixels.<br>
 You can also erase all the pixels in the selected area using Edit &gt;
 Delete (the Delete key).&nbsp; This only works when one of the BMP
 tools is active.<br>
+<h3>BMP To Layers Tool</h3>
+The BMP To Layers Tool puts the automatically-generated tiles into the
+map's tile layers and erases the BMP images.&nbsp; Use this tool if you
+aren't happy with some of the automatically-generated tiles in an area
+of the map and want to edit them with the regular tile-editing tools.<br>
+Normally you won't see any visible changes to the map's appearance after using this tool (but sometimes you will).<br>
 </body></html>

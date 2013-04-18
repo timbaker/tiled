@@ -24,6 +24,7 @@
 #include "mapcomposite.h"
 #include "mainwindow.h"
 #include "mapscene.h"
+#include "painttilelayer.h"
 #include "tileselectionitem.h"
 #include "undocommands.h"
 
@@ -155,7 +156,7 @@ Layer *AbstractBmpTool::currentLayer() const
 /////
 
 PaintBMP::PaintBMP(MapDocument *mapDocument, int bmpIndex,
-                   int x, int y, const QImage &source, QRegion &region) :
+                   int x, int y, const QImage &source, const QRegion &region) :
     QUndoCommand(QCoreApplication::translate("UndoCommands", "Paint BMP")),
     mMapDocument(mapDocument),
     mBmpIndex(bmpIndex),
@@ -1528,4 +1529,212 @@ bool BmpFloodFill::pop(int &x, int &y)
 void BmpFloodFill::emptyStack()
 {
     stackPointer = 0;
+}
+
+/////
+
+BmpToLayers::BmpToLayers(MapDocument *mapDocument, const QRegion &region, bool mergeable) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "BMP To Layers")),
+    mMapDocument(mapDocument),
+    mMergeable(mergeable)
+{
+    // Put the blender's tiles into the map's tile layers.
+    // Gotta grab the tiles adjacent to the pixels we're erasing.
+    QRect mapBounds(QPoint(), mMapDocument->map()->size());
+    QRegion tileRgn;
+    foreach (QRect rgnRect, region.rects())
+        tileRgn += rgnRect.adjusted(-1, -1, 1, 1) & mapBounds;
+    QPoint topLeft = tileRgn.boundingRect().topLeft();
+    BmpBlender *blender = mMapDocument->mapComposite()->bmpBlender();
+    foreach (TileLayer *tl, blender->tileLayers()) {
+        int n = mMapDocument->map()->indexOfLayer(tl->name(), Layer::TileLayerType);
+        if (n >= 0) {
+            TileLayer *target = mMapDocument->map()->layerAt(n)->asTileLayer();
+            TileLayer *source = tl->copy(tileRgn);
+            // Preserve user-drawn tiles where the blender didn't place a tile.
+            foreach (QRect r, tileRgn.rects()) {
+                for (int y = r.top(); y <= r.bottom(); y++) {
+                    for (int x = r.left(); x <= r.right(); x++) {
+                        if (tl->cellAt(x, y).isEmpty() && !target->cellAt(x, y).isEmpty())
+                            source->setCell(x - topLeft.x(), y - topLeft.y(),
+                                            target->cellAt(x, y));
+                    }
+                }
+            }
+            PaintTileLayer *cmd = new PaintTileLayer(mMapDocument, target,
+                                                     topLeft.x(), topLeft.y(),
+                                                     source, tileRgn);
+            cmd->setMergeable(mergeable);
+            mLayerCmds += cmd;
+        }
+    }
+
+    // Paint the BMPs black.
+    QRect r = region.boundingRect();
+    topLeft = r.topLeft();
+    QImage image(r.size(), QImage::Format_ARGB32);
+    image.fill(qRgb(0, 0, 0));
+    mPaintCmd0 = new PaintBMP(mMapDocument, 0, topLeft.x(), topLeft.y(),
+                             image, region);
+    mPaintCmd0->setMergeable(mergeable);
+
+    mPaintCmd1 = new PaintBMP(mMapDocument, 1, topLeft.x(), topLeft.y(),
+                             image, region);
+    mPaintCmd1->setMergeable(mergeable);
+}
+
+BmpToLayers::~BmpToLayers()
+{
+    qDeleteAll(mLayerCmds);
+    delete mPaintCmd0;
+    delete mPaintCmd1;
+}
+
+int BmpToLayers::id() const
+{
+    return Cmd_BmpToLayers;
+}
+
+bool BmpToLayers::mergeWith(const QUndoCommand *other)
+{
+    const BmpToLayers *o = static_cast<const BmpToLayers*>(other);
+    if (!(mMapDocument == o->mMapDocument &&
+          o->mMergeable))
+        return false;
+
+    for (int i = 0; i < mLayerCmds.size(); i++) {
+        Q_ASSERT(mLayerCmds[i]->mergeWith(o->mLayerCmds[i]));
+    }
+    Q_ASSERT(mPaintCmd0->mergeWith(o->mPaintCmd0));
+    Q_ASSERT(mPaintCmd1->mergeWith(o->mPaintCmd1));
+    return true;
+}
+
+void BmpToLayers::undo()
+{
+    foreach (PaintTileLayer *cmd, mLayerCmds)
+        cmd->undo();
+    mPaintCmd0->undo();
+    mPaintCmd1->undo();
+}
+
+void BmpToLayers::redo()
+{
+    foreach (PaintTileLayer *cmd, mLayerCmds)
+        cmd->redo();
+    mPaintCmd0->redo();
+    mPaintCmd1->redo();
+}
+
+/////
+
+BmpToLayersTool *BmpToLayersTool::mInstance = 0;
+
+BmpToLayersTool *BmpToLayersTool::instance()
+{
+    if (!mInstance)
+        mInstance = new BmpToLayersTool;
+    return mInstance;
+}
+
+BmpToLayersTool::BmpToLayersTool(QObject *parent) :
+    AbstractBmpTool(tr("BMP To Layers"),
+                     QIcon(QLatin1String(":images/22x22/bmp-to-layers.png")),
+                     QKeySequence(tr("")),
+                     parent),
+    mPainting(false)
+{
+    connect(BmpBrushTool::instance(), SIGNAL(brushChanged()),
+            SLOT(brushChanged()));
+}
+
+BmpToLayersTool::~BmpToLayersTool()
+{
+}
+
+void BmpToLayersTool::activate(MapScene *scene)
+{
+    AbstractBmpTool::activate(scene);
+}
+
+void BmpToLayersTool::deactivate(MapScene *scene)
+{
+    AbstractBmpTool::deactivate(scene);
+}
+
+void BmpToLayersTool::mousePressed(QGraphicsSceneMouseEvent *event)
+{
+    if (!brushItem()->isVisible())
+        return;
+
+    if (event->button() == Qt::LeftButton) {
+        mPainting = true;
+        mDidFirstPaint = false;
+        mStampPos = tilePosition();
+        paint();
+    }
+}
+
+void BmpToLayersTool::mouseReleased(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)
+        mPainting = false;
+}
+
+void BmpToLayersTool::languageChanged()
+{
+    setName(tr("BMP To Layers"));
+    setShortcut(QKeySequence(tr("")));
+}
+
+void BmpToLayersTool::tilePositionChanged(const QPoint &tilePos)
+{
+    setBrushRegion(tilePos);
+
+    if (mPainting) {
+        foreach (const QPoint &p, calculateLine(mStampPos.x(), mStampPos.y(),
+                                                tilePos.x(), tilePos.y())) {
+            setBrushRegion(p);
+            paint();
+        }
+        setBrushRegion(tilePos);
+        mStampPos = tilePos;
+    }
+}
+
+void BmpToLayersTool::setBrushRegion(const QPoint &tilePos)
+{
+    int brushSize = BmpBrushTool::instance()->brushSize();
+    if (BmpBrushTool::instance()->brushShape() == BmpBrushTool::Circle) {
+        BresenhamCircle bc(tilePos.x(), tilePos.y(), brushSize);
+        brushItem()->setTileRegion(bc.region);
+        return;
+    }
+    brushItem()->setTileRegion(QRect(tilePos - QPoint(brushSize/2, brushSize/2),
+                                     QSize(brushSize, brushSize)));
+}
+
+void BmpToLayersTool::paint()
+{
+    QRegion tileRgn = brushItem()->tileRegion();
+    if (BmpBrushTool::instance()->restrictToSelection()) {
+        QRegion selection = mapDocument()->bmpSelection();
+        if (!selection.isEmpty())
+            tileRgn &= selection;
+    }
+
+    QRgb black = qRgb(0, 0, 0);
+    QRegion paintRgn = bmpPixelRegion(mapDocument()->map(), 0, tileRgn, black);
+    paintRgn |= bmpPixelRegion(mapDocument()->map(), 1, tileRgn, black);
+    if (paintRgn.isEmpty())
+        return;
+
+    BmpToLayers *cmd = new BmpToLayers(mapDocument(), paintRgn, mDidFirstPaint);
+    mDidFirstPaint = true;
+    mapDocument()->undoStack()->push(cmd);
+}
+
+void BmpToLayersTool::brushChanged()
+{
+    setBrushRegion(tilePosition());
 }

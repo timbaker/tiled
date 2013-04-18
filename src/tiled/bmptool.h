@@ -30,6 +30,7 @@ class Layer;
 namespace Internal {
 class BmpToolDialog;
 class BrushItem;
+class PaintTileLayer;
 
 // Base class for all BMP-editing tools, shamelessly ripped from AbstractTileTool.
 class AbstractBmpTool : public AbstractTool
@@ -261,7 +262,7 @@ public:
 
     QImage mImage;
     QRegion mRegion;
-    enum { STACK_SIZE = 16 * 1024 * 1024 };
+    enum { STACK_SIZE = 300 * 300 };
     int stack[STACK_SIZE];
     int stackPointer;
 };
@@ -398,6 +399,41 @@ private:
     BmpFloodFill mFloodFill;
 };
 
+// This tool is for baking auto-generated tiles to tile layers.
+class BmpToLayersTool : public AbstractBmpTool
+{
+    Q_OBJECT
+public:
+    static BmpToLayersTool *instance();
+
+    void activate(MapScene *scene);
+    void deactivate(MapScene *scene);
+
+    void mousePressed(QGraphicsSceneMouseEvent *event);
+    void mouseReleased(QGraphicsSceneMouseEvent *event);
+
+protected:
+    void languageChanged();
+
+protected:
+    void tilePositionChanged(const QPoint &tilePos);
+    void setBrushRegion(const QPoint &tilePos);
+    void paint();
+
+private slots:
+    void brushChanged();
+
+private:
+    Q_DISABLE_COPY(BmpToLayersTool)
+    static BmpToLayersTool *mInstance;
+    BmpToLayersTool(QObject *parent = 0);
+    ~BmpToLayersTool();
+
+    bool mPainting;
+    bool mDidFirstPaint;
+    QPoint mStampPos;
+};
+
 /////
 
 // This is a QImage with resize() and merge() methods mirroring those of
@@ -462,7 +498,7 @@ class PaintBMP : public QUndoCommand
 {
 public:
     PaintBMP(MapDocument *mapDocument, int bmpIndex, int x, int y,
-             const QImage &source, QRegion &region);
+             const QImage &source, const QRegion &region);
 //    ~PaintBMP();
 
     void setMergeable(bool mergeable)
@@ -531,6 +567,26 @@ private:
     int mBmpIndex;
     MapRands mOriginal;
     MapRands mResized;
+};
+
+class BmpToLayers : public QUndoCommand
+{
+public:
+    BmpToLayers(MapDocument *mapDocument, const QRegion &region, bool mergeable);
+    ~BmpToLayers();
+
+    int id() const;
+    bool mergeWith(const QUndoCommand *other);
+
+    void undo();
+    void redo();
+
+private:
+    MapDocument *mMapDocument;
+    bool mMergeable;
+    QList<PaintTileLayer*> mLayerCmds;
+    PaintBMP *mPaintCmd0;
+    PaintBMP *mPaintCmd1;
 };
 
 /////

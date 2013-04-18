@@ -499,6 +499,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     toolManager->registerTool(BmpSelectionTool::instance());
     toolManager->registerTool(BmpWandTool::instance());
     toolManager->registerTool(BmpEraserTool::instance());
+    toolManager->registerTool(BmpToLayersTool::instance());
 
     QAction *brushSizeMinus = new QAction(this);
     brushSizeMinus->setShortcut(QKeySequence(QLatin1String("[")));

@@ -31,7 +31,8 @@ enum UndoCommands {
     Cmd_MoveTileset
 #ifdef ZOMBOID
     ,
-    Cmd_PaintBMP
+    Cmd_PaintBMP,
+    Cmd_BmpToLayers
 #endif
 };
 
