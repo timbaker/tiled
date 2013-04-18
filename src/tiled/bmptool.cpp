@@ -1600,11 +1600,18 @@ bool BmpToLayers::mergeWith(const QUndoCommand *other)
           o->mMergeable))
         return false;
 
-    for (int i = 0; i < mLayerCmds.size(); i++) {
+#ifdef QT_NO_DEBUG
+    for (int i = 0; i < mLayerCmds.size(); i++)
+        mLayerCmds[i]->mergeWith(o->mLayerCmds[i]);
+    mPaintCmd0->mergeWith(o->mPaintCmd0);
+    mPaintCmd1->mergeWith(o->mPaintCmd1);
+#else
+    // Holy **** it took hours to figure out what was wrong with this in release mode.
+    for (int i = 0; i < mLayerCmds.size(); i++)
         Q_ASSERT(mLayerCmds[i]->mergeWith(o->mLayerCmds[i]));
-    }
     Q_ASSERT(mPaintCmd0->mergeWith(o->mPaintCmd0));
     Q_ASSERT(mPaintCmd1->mergeWith(o->mPaintCmd1));
+#endif
     return true;
 }
 
