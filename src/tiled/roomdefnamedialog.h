@@ -19,7 +19,7 @@ class RoomDefNameDialog : public QDialog
     Q_OBJECT
     
 public:
-    explicit RoomDefNameDialog(QList<ObjectGroup*> &ogList, const QString &name, QWidget *parent = 0);
+    explicit RoomDefNameDialog(const QList<ObjectGroup*> &ogList, const QString &name, QWidget *parent = 0);
     ~RoomDefNameDialog();
 
     QString name() const;

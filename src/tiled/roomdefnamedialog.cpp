@@ -7,7 +7,8 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 
-RoomDefNameDialog::RoomDefNameDialog(QList<ObjectGroup *> &ogList, const QString &name, QWidget *parent) :
+RoomDefNameDialog::RoomDefNameDialog(const QList<ObjectGroup *> &ogList,
+                                     const QString &name, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RoomDefNameDialog)
 {
