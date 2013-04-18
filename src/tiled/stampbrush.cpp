@@ -192,6 +192,7 @@ void StampBrush::tilePositionChanged(const QPoint &)
             brushItem()->setTileLayerPosition(p);
             doPaint(true, p.x(), p.y());
         }
+        brushItem()->setTileLayerPosition(QPoint(mStampX, mStampY));
 #else
         foreach (const QPoint &p, calculateLine(x, y, mStampX, mStampY))
             doPaint(true, p.x(), p.y());

@@ -357,6 +357,7 @@ void BmpBrushTool::tilePositionChanged(const QPoint &tilePos)
             setBrushRegion(p);
             paint();
         }
+        setBrushRegion(tilePos);
         mStampPos = tilePos;
     }
 }
@@ -586,6 +587,7 @@ void BmpEraserTool::tilePositionChanged(const QPoint &tilePos)
             setBrushRegion(p);
             paint();
         }
+        setBrushRegion(tilePos);
         mStampPos = tilePos;
     }
 }
