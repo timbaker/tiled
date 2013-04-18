@@ -1540,21 +1540,18 @@ BmpToLayers::BmpToLayers(MapDocument *mapDocument, const QRegion &region, bool m
     mMapDocument(mapDocument),
     mMergeable(mergeable)
 {
+    QRect r = region.boundingRect();
+    QPoint topLeft = r.topLeft();
+
     // Put the blender's tiles into the map's tile layers.
-    // Gotta grab the tiles adjacent to the pixels we're erasing.
-    QRect mapBounds(QPoint(), mMapDocument->map()->size());
-    QRegion tileRgn;
-    foreach (QRect rgnRect, region.rects())
-        tileRgn += rgnRect.adjusted(-1, -1, 1, 1) & mapBounds;
-    QPoint topLeft = tileRgn.boundingRect().topLeft();
     BmpBlender *blender = mMapDocument->mapComposite()->bmpBlender();
     foreach (TileLayer *tl, blender->tileLayers()) {
         int n = mMapDocument->map()->indexOfLayer(tl->name(), Layer::TileLayerType);
         if (n >= 0) {
             TileLayer *target = mMapDocument->map()->layerAt(n)->asTileLayer();
-            TileLayer *source = tl->copy(tileRgn);
+            TileLayer *source = tl->copy(region);
             // Preserve user-drawn tiles where the blender didn't place a tile.
-            foreach (QRect r, tileRgn.rects()) {
+            foreach (QRect r, region.rects()) {
                 for (int y = r.top(); y <= r.bottom(); y++) {
                     for (int x = r.left(); x <= r.right(); x++) {
                         if (tl->cellAt(x, y).isEmpty() && !target->cellAt(x, y).isEmpty())
@@ -1565,15 +1562,14 @@ BmpToLayers::BmpToLayers(MapDocument *mapDocument, const QRegion &region, bool m
             }
             PaintTileLayer *cmd = new PaintTileLayer(mMapDocument, target,
                                                      topLeft.x(), topLeft.y(),
-                                                     source, tileRgn);
+                                                     source, region);
+            delete source;
             cmd->setMergeable(mergeable);
             mLayerCmds += cmd;
         }
     }
 
     // Paint the BMPs black.
-    QRect r = region.boundingRect();
-    topLeft = r.topLeft();
     QImage image(r.size(), QImage::Format_ARGB32);
     image.fill(qRgb(0, 0, 0));
     mPaintCmd0 = new PaintBMP(mMapDocument, 0, topLeft.x(), topLeft.y(),
