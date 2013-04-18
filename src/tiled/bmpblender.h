@@ -153,6 +153,7 @@ private:
 
     QList<BmpAlias*> mAliases;
     QMap<QString,BmpAlias*> mAliasByName;
+    QMap<QString,QStringList> mAliasTiles;
 
     QList<BmpRule*> mRules;
     QMap<QRgb,QList<BmpRule*> > mRuleByColor;

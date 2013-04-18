@@ -1096,7 +1096,8 @@ void MapReaderPrivate::readBmpBlends()
                 return;
             }
             BmpBlend::Direction dir = dirMap[dirString];
-            QStringList ExclusionList = atts.value(QLatin1String("ExclusionList")).toString().split(QLatin1Char(' '));
+            QStringList ExclusionList = atts.value(QLatin1String("ExclusionList"))
+                    .toString().split(QLatin1Char(' '), QString::SkipEmptyParts);
             blends += new BmpBlend(targetLayer, mainTile, blendTile, dir, ExclusionList);
             xml.skipCurrentElement();
         } else {
