@@ -155,8 +155,11 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
 
     connect(ui->reloadRules, SIGNAL(clicked()), SLOT(reloadRules()));
     connect(ui->importRules, SIGNAL(clicked()), SLOT(importRules()));
+    connect(ui->trashRules, SIGNAL(clicked()), SLOT(trashRules()));
+
     connect(ui->reloadBlends, SIGNAL(clicked()), SLOT(reloadBlends()));
     connect(ui->importBlends, SIGNAL(clicked()), SLOT(importBlends()));
+    connect(ui->trashBlends, SIGNAL(clicked()), SLOT(trashBlends()));
 
     connect(ui->help, SIGNAL(clicked()), SLOT(help()));
 
@@ -273,6 +276,13 @@ void BmpToolDialog::importRules()
     }
 }
 
+void BmpToolDialog::trashRules()
+{
+    mDocument->undoStack()->push(new ChangeBmpRules(mDocument, QString(),
+                                                    QList<BmpAlias*>(),
+                                                    QList<BmpRule*>()));
+}
+
 void BmpToolDialog::reloadBlends()
 {
     QString f = mDocument->map()->bmpSettings()->blendsFile();
@@ -309,6 +319,12 @@ void BmpToolDialog::importBlends()
     }
 }
 
+void BmpToolDialog::trashBlends()
+{
+    mDocument->undoStack()->push(new ChangeBmpBlends(mDocument, QString(),
+                                                     QList<BmpBlend*>()));
+}
+
 void BmpToolDialog::help()
 {
     QUrl url = QUrl::fromLocalFile(
@@ -339,10 +355,20 @@ void BmpToolDialog::documentAboutToClose(int index, MapDocument *doc)
     mCurrentRuleForDocument.remove(doc);
 }
 
+void BmpToolDialog::warningsChanged()
+{
+    ui->warnings->clear();
+    if (!mDocument)
+        return;
+    ui->warnings->addItems(mDocument->mapComposite()->bmpBlender()->warnings());
+}
+
 void BmpToolDialog::setDocument(MapDocument *doc)
 {
-    if (mDocument)
+    if (mDocument) {
         mDocument->disconnect(this);
+        mDocument->mapComposite()->bmpBlender()->disconnect(this);
+    }
 
     mDocument = doc;
 
@@ -353,12 +379,14 @@ void BmpToolDialog::setDocument(MapDocument *doc)
     ui->reloadRules->setEnabled(mDocument != 0 &&
             !mDocument->map()->bmpSettings()->rulesFile().isEmpty());
     ui->importRules->setEnabled(mDocument != 0);
-    ui->exportRules->setEnabled(mDocument != 0);
+    ui->exportRules->setEnabled(false/*mDocument != 0*/);
+    ui->trashRules->setEnabled(ui->reloadRules->isEnabled());
 
     ui->reloadBlends->setEnabled(mDocument != 0 &&
             !mDocument->map()->bmpSettings()->blendsFile().isEmpty());
     ui->importBlends->setEnabled(mDocument != 0);
-    ui->exportBlends->setEnabled(mDocument != 0);
+    ui->exportBlends->setEnabled(false /*mDocument != 0*/);
+    ui->trashBlends->setEnabled(ui->reloadBlends->isEnabled());
 
     switch (BmpBrushTool::instance()->brushShape()) {
     case BmpBrushTool::Square: ui->brushSquare->setChecked(true); break;
@@ -435,7 +463,11 @@ void BmpToolDialog::setDocument(MapDocument *doc)
         connect(mDocument, SIGNAL(bmpAliasesChanged()), SLOT(bmpRulesChanged())); // XXXXX
         connect(mDocument, SIGNAL(bmpRulesChanged()), SLOT(bmpRulesChanged()));
         connect(mDocument, SIGNAL(bmpBlendsChanged()), SLOT(bmpBlendsChanged()));
+        connect(mDocument->mapComposite()->bmpBlender(), SIGNAL(warningsChanged()),
+                SLOT(warningsChanged()));
     }
+
+    warningsChanged();
 }
 
 void BmpToolDialog::currentRuleChanged(const QModelIndex &current)

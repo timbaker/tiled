@@ -179,6 +179,20 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QToolButton" name="trashRules">
+              <property name="toolTip">
+               <string>Remove all rules</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="icon">
+               <iconset resource="tiled.qrc">
+                <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>
@@ -223,6 +237,20 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QToolButton" name="trashBlends">
+              <property name="toolTip">
+               <string>Remove all blends</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="icon">
+               <iconset resource="tiled.qrc">
+                <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>
@@ -241,7 +269,21 @@
          </property>
         </spacer>
        </item>
-       <item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_3">
+      <attribute name="title">
+       <string>Warnings</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <widget class="QListWidget" name="warnings">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
           <widget class="QToolButton" name="help">

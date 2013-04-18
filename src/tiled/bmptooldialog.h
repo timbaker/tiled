@@ -55,9 +55,11 @@ private slots:
 
     void reloadRules();
     void importRules();
+    void trashRules();
 
     void reloadBlends();
     void importBlends();
+    void trashBlends();
 
     void help();
 
@@ -67,6 +69,8 @@ private slots:
     void brushChanged();
 
     void documentAboutToClose(int index, MapDocument *doc);
+
+    void warningsChanged();
 
 private:
     Q_DISABLE_COPY(BmpToolDialog)

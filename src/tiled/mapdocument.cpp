@@ -76,6 +76,12 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     mMapComposite = new MapComposite(MapManager::instance()->newFromMap(map, fileName));
     connect(mMapComposite->bmpBlender(), SIGNAL(regionAltered(QRegion)),
             SLOT(bmpBlenderRegionAltered(QRegion)));
+    connect(this, SIGNAL(layerAdded(int)),
+             mMapComposite->bmpBlender(), SLOT(updateWarnings()));
+    connect(this, SIGNAL(layerRenamed(int)),
+             mMapComposite->bmpBlender(), SLOT(updateWarnings()));
+    connect(this, SIGNAL(layerRemoved(int)),
+             mMapComposite->bmpBlender(), SLOT(updateWarnings()));
     connect(MapManager::instance(), SIGNAL(mapAboutToChange(MapInfo*)),
             SLOT(onMapAboutToChange(MapInfo*)));
     connect(MapManager::instance(), SIGNAL(mapChanged(MapInfo*)),

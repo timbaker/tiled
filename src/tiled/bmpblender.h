@@ -22,6 +22,7 @@
 #include <QMap>
 #include <QRegion>
 #include <QRgb>
+#include <QSet>
 #include <QStringList>
 
 namespace BuildingEditor {
@@ -128,9 +129,20 @@ public:
     void tilesetAdded(Tileset *ts);
     void tilesetRemoved(const QString &tilesetName);
 
+    QStringList warnings() const
+    {
+        QStringList ret(mWarnings.toList());
+        ret.sort();
+        return ret;
+    }
+
 signals:
     void layersRecreated();
     void regionAltered(const QRegion &region);
+    void warningsChanged();
+
+public slots:
+    void updateWarnings();
 
 private:
     void initTiles();
@@ -165,6 +177,8 @@ private:
     QStringList mBlendLayers;
     QMap<QString,QList<BmpBlend*> > mBlendsByLayer;
     QMap<BmpBlend*,QStringList> mBlendExcludes;
+
+    QSet<QString> mWarnings;
 
     QString mError;
 };
