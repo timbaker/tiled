@@ -275,6 +275,8 @@ public:
     bool isAdjacentMap()/* const*/
     { return mParent ? mParent->mAdjacentMaps.contains(this) : false; }
 
+    bool waitingForMapsToLoad() const;
+
 signals:
     void layerGroupAdded(int level);
     void layerAddedToGroup(int index);
@@ -284,6 +286,8 @@ signals:
 
 private slots:
     void bmpBlenderLayersRecreated();
+    void mapLoaded(MapInfo *mapInfo);
+    void mapFailedToLoad(MapInfo *mapInfo);
 
 private:
     void addLayerToGroup(int index);
@@ -321,6 +325,20 @@ private:
 
     QVector<MapComposite*> mAdjacentMaps;
 
+    struct SubMapLoading {
+        SubMapLoading(MapInfo *info, const QPoint &pos, int level) :
+            mapInfo(info), pos(pos), level(level)
+        {}
+        MapInfo *mapInfo;
+        QPoint pos;
+        int level;
+    };
+    QList<SubMapLoading> mSubMapsLoading;
+
+#if 1 // ROAD_CRUD
+    Tiled::TileLayer *mRoadLayer1;
+    Tiled::TileLayer *mRoadLayer0;
+#endif // ROAD_CRUD
 
 public:
     MapComposite *root();
