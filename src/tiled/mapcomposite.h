@@ -271,6 +271,10 @@ public:
     { return mBlendOverMap; }
 #endif // BUILDINGED
 
+    void setAdjacentMap(int x, int y, MapInfo *mapInfo);
+    bool isAdjacentMap()/* const*/
+    { return mParent ? mParent->mAdjacentMaps.contains(this) : false; }
+
 signals:
     void layerGroupAdded(int level);
     void layerAddedToGroup(int index);
@@ -314,6 +318,9 @@ private:
     bool mSavedShowMapTiles;
 
     Tiled::Internal::BmpBlender *mBmpBlender;
+
+    QVector<MapComposite*> mAdjacentMaps;
+
 
 public:
     MapComposite *root();

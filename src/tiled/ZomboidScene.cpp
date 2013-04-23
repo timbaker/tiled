@@ -89,6 +89,8 @@ ZomboidScene::ZomboidScene(QObject *parent)
     , mPendingActive(false)
     , mDnDItem(0)
     , mWasHighlightCurrentLayer(false)
+    , mMapBordersItem(new QGraphicsPolygonItem)
+    , mMapBordersItem2(new QGraphicsPolygonItem)
 {
     connect(&mLotManager, SIGNAL(lotAdded(MapComposite*,Tiled::MapObject*)),
         this, SLOT(onLotAdded(MapComposite*,Tiled::MapObject*)));
@@ -96,6 +98,22 @@ ZomboidScene::ZomboidScene(QObject *parent)
         this, SLOT(onLotRemoved(MapComposite*,Tiled::MapObject*)));
     connect(&mLotManager, SIGNAL(lotUpdated(MapComposite*,Tiled::MapObject*)),
         this, SLOT(onLotUpdated(MapComposite*,Tiled::MapObject*)));
+
+    QPen pen(QColor(128, 128, 128, 128));
+    pen.setWidth(28); // only good for isometric 64x32 tiles!
+    pen.setJoinStyle(Qt::MiterJoin);
+    mMapBordersItem->setPen(pen);
+    mMapBordersItem->setZValue(20000 - 1); // ZVALUE_GRID - 1
+    addItem(mMapBordersItem);
+#if 1
+    mMapBordersItem2->setVisible(false);
+#else
+    pen = QPen();
+    pen.setWidth(2);
+    pen.setCosmetic(true);
+    mMapBordersItem2->setPen(pen);
+    addItem(mMapBordersItem2);
+#endif
 }
 
 ZomboidScene::~ZomboidScene()
@@ -173,7 +191,13 @@ void ZomboidScene::refreshScene()
     qDeleteAll(mTileLayerGroupItems); // QGraphicsScene.clear() will delete these actually
     mTileLayerGroupItems.clear();
 
+    removeItem(mMapBordersItem);
+    removeItem(mMapBordersItem2);
+
     MapScene::refreshScene();
+
+    addItem(mMapBordersItem);
+    addItem(mMapBordersItem2);
 
     updateLayerGroupsLater(Synch | Bounds | ZOrder);
 }
@@ -605,6 +629,26 @@ void ZomboidScene::handlePendingUpdates()
 //            setSceneRect(sceneRect);
 //            mDarkRectangle->setRect(sceneRect);
         }
+        QPolygonF polygon;
+        QRectF rect(0 - 0.5, 0 - 0.5,
+                    mapDocument()->map()->width() + 1.0,
+                    mapDocument()->map()->height() + 1.0);
+        polygon << QPointF(mapDocument()->renderer()->tileToPixelCoords(rect.topLeft()));
+        polygon << QPointF(mapDocument()->renderer()->tileToPixelCoords(rect.topRight()));
+        polygon << QPointF(mapDocument()->renderer()->tileToPixelCoords(rect.bottomRight()));
+        polygon << QPointF(mapDocument()->renderer()->tileToPixelCoords(rect.bottomLeft()));
+        mMapBordersItem->setPolygon(polygon);
+#if 0
+        rect = QRect(0, 0,
+                     mapDocument()->map()->width(),
+                     mapDocument()->map()->height());
+        polygon.clear();
+        polygon << QPointF(mapDocument()->renderer()->tileToPixelCoords(rect.topLeft()));
+        polygon << QPointF(mapDocument()->renderer()->tileToPixelCoords(rect.topRight()));
+        polygon << QPointF(mapDocument()->renderer()->tileToPixelCoords(rect.bottomRight()));
+        polygon << QPointF(mapDocument()->renderer()->tileToPixelCoords(rect.bottomLeft()));
+        mMapBordersItem2->setPolygon(polygon);
+#endif
     }
     if (mPendingFlags & ZOrder)
         setGraphicsSceneZOrder();

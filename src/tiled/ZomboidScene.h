@@ -146,6 +146,8 @@ private:
     ZLotManager mLotManager;
     DnDItem *mDnDItem;
     bool mWasHighlightCurrentLayer;
+    QGraphicsPolygonItem *mMapBordersItem;
+    QGraphicsPolygonItem *mMapBordersItem2;
 };
 
 } // namespace Internal

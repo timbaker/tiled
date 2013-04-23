@@ -57,6 +57,9 @@
 #include <QFileInfo>
 #include <QRect>
 #include <QUndoStack>
+#ifdef ZOMBOID
+#include <QDir>
+#endif
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -86,6 +89,7 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
             SLOT(onMapAboutToChange(MapInfo*)));
     connect(MapManager::instance(), SIGNAL(mapChanged(MapInfo*)),
             SLOT(onMapChanged(MapInfo*)));
+    initAdjacentMaps();
 #endif
     switch (map->orientation()) {
     case Map::Isometric:
@@ -854,6 +858,19 @@ void MapDocument::bmpBlenderRegionAltered(const QRegion &region)
         break; // this should redraw the whole layergroup anyway
     }
 }
+
+void MapDocument::mapLoaded(MapInfo *info)
+{
+    for (int i = 0; i < mAdjacentMapsLoading.size(); i++) {
+        AdjacentMap &am = mAdjacentMapsLoading[i];
+        if (am.info == info) {
+            mMapComposite->setAdjacentMap(am.pos.x(), am.pos.y(), am.info);
+            mAdjacentMapsLoading.removeAt(i);
+            emit mapCompositeChanged(); ///////
+            return;
+        }
+    }
+}
 #endif // ZOMBOID
 
 void MapDocument::deselectObjects(const QList<MapObject *> &objects)
@@ -865,6 +882,45 @@ void MapDocument::deselectObjects(const QList<MapObject *> &objects)
     if (removedCount > 0)
         emit selectedObjectsChanged();
 }
+
+#ifdef ZOMBOID
+void MapDocument::initAdjacentMaps()
+{
+    if (mFileName.isEmpty())
+        return;
+    QRegExp re(QLatin1String("(.+)_([0-9]+)_([0-9]+)"));
+    QFileInfo info(mFileName);
+    if (!re.exactMatch(info.baseName()))
+        return;
+
+    connect(MapManager::instance(), SIGNAL(mapLoaded(MapInfo*)),
+            SLOT(mapLoaded(MapInfo*)));
+
+    QString base = re.cap(1);
+    int X = re.cap(2).toInt();
+    int Y = re.cap(3).toInt();
+
+    for (int y = -1; y <= 1; y++) {
+        if (Y + y < 0) continue;
+        for (int x = -1; x <= 1; x++) {
+            if (X + x < 0) continue;
+            if (!x && !y) continue;
+            QFileInfo info2(info.dir(), QString::fromLatin1("%1_%2_%3.tmx")
+                            .arg(base).arg(X + x).arg(Y + y));
+            if (info2.exists()) {
+                MapInfo *mapInfo = MapManager::instance()->loadMap(
+                            info2.absoluteFilePath(), QString(), true);
+                if (mapInfo) {
+                    if (mapInfo->isLoading())
+                        mAdjacentMapsLoading += AdjacentMap(x, y, mapInfo);
+                    else
+                        mMapComposite->setAdjacentMap(x, y, mapInfo);
+                }
+            }
+        }
+    }
+}
+#endif // ZOMBOID
 
 void MapDocument::setTilesetFileName(Tileset *tileset,
                                      const QString &fileName)

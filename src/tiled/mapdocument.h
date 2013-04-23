@@ -411,10 +411,15 @@ private slots:
     void onMapChanged(MapInfo *mapInfo);
 
     void bmpBlenderRegionAltered(const QRegion &region);
+
+    void mapLoaded(MapInfo *info);
 #endif
 
 private:
     void deselectObjects(const QList<MapObject*> &objects);
+#ifdef ZOMBOID
+    void initAdjacentMaps();
+#endif
 
     QString mFileName;
     Map *mMap;
@@ -431,7 +436,16 @@ private:
 #ifdef SEPARATE_BMP_SELECTION
     QRegion mBmpSelection;
 #endif
-#endif
+    struct AdjacentMap {
+        AdjacentMap(int x, int y, MapInfo *info) :
+            pos(x, y),
+            info(info)
+        {}
+        QPoint pos;
+        MapInfo *info;
+    };
+    QList<AdjacentMap> mAdjacentMapsLoading;
+#endif // ZOMBOID
     QUndoStack *mUndoStack;
 };
 
