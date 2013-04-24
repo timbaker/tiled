@@ -273,7 +273,7 @@ public:
 
     void setAdjacentMap(int x, int y, MapInfo *mapInfo);
     bool isAdjacentMap()/* const*/
-    { return mParent ? mParent->mAdjacentMaps.contains(this) : false; }
+    { return mIsAdjacentMap;/*mParent ? mParent->mAdjacentMaps.contains(this) : false;*/ }
 
     bool waitingForMapsToLoad() const;
 
@@ -320,6 +320,7 @@ private:
     bool mHiddenDuringDrag;
     bool mShowMapTiles;
     bool mSavedShowMapTiles;
+    bool mIsAdjacentMap;
 
     Tiled::Internal::BmpBlender *mBmpBlender;
 

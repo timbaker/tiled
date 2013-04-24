@@ -909,7 +909,8 @@ void MapDocument::initAdjacentMaps()
                             .arg(base).arg(X + x).arg(Y + y));
             if (info2.exists()) {
                 MapInfo *mapInfo = MapManager::instance()->loadMap(
-                            info2.absoluteFilePath(), QString(), true);
+                            info2.absoluteFilePath(), QString(), true,
+                            MapManager::PriorityMedium);
                 if (mapInfo) {
                     if (mapInfo->isLoading())
                         mAdjacentMapsLoading += AdjacentMap(x, y, mapInfo);

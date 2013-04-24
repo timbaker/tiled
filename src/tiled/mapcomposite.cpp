@@ -712,6 +712,7 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
     , mGroupVisible(true)
     , mHiddenDuringDrag(false)
     , mShowMapTiles(true)
+    , mIsAdjacentMap(false)
     , mBmpBlender(new Tiled::Internal::BmpBlender(mMap, this))
 {
 #ifdef WORLDED
@@ -756,7 +757,7 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
 #if 1
                     MapInfo *subMapInfo = MapManager::instance()->loadMap(
                                 object->type(), QFileInfo(mMapInfo->path()).absolutePath(),
-                                true);
+                                true, MapManager::PriorityLow);
 
                     if (!subMapInfo) {
                         qDebug() << "failed to find sub-map" << object->type() << "inside map" << mMapInfo->path();
@@ -1316,6 +1317,7 @@ void MapComposite::setAdjacentMap(int x, int y, MapInfo *mapInfo)
     case 1: pos.setY(mMapInfo->height()); break;
     }
     mAdjacentMaps[index] = addMap(mapInfo, pos, 0, false);
+    mAdjacentMaps[index]->mIsAdjacentMap = true;
 }
 
 bool MapComposite::waitingForMapsToLoad() const
@@ -1339,6 +1341,7 @@ void MapComposite::recreate()
     mMinLevel = mMaxLevel = 0;
     mMap = mMapInfo->map();
     mOrientAdjustPos = mOrientAdjustTiles = QPoint();
+    mAdjacentMaps.clear();
 
     ///// FIXME: everything below here is copied from our constructor
 
@@ -1464,6 +1467,7 @@ void MapComposite::mapLoaded(MapInfo *mapInfo)
         if (mSubMapsLoading[i].mapInfo == mapInfo) {
             addMap(mapInfo, mSubMapsLoading[i].pos, mSubMapsLoading[i].level);
             mSubMapsLoading.removeAt(i);
+            --i;
             // Keep going, could be duplicate submaps to load
         }
     }
@@ -1474,6 +1478,7 @@ void MapComposite::mapFailedToLoad(MapInfo *mapInfo)
     for (int i = 0; i < mSubMapsLoading.size(); i++) {
         if (mSubMapsLoading[i].mapInfo == mapInfo) {
             mSubMapsLoading.removeAt(i);
+            --i;
             // Keep going, could be duplicate submaps to load
         }
     }
