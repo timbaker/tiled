@@ -81,6 +81,8 @@ private slots:
     void addTileset();
     void removeTileset();
 
+    void chooseTilesDirectory();
+
     void currentTilesetChanged(int row);
     void goBack();
     void goForward();
@@ -158,6 +160,11 @@ private:
     void loadTilesets();
     Tileset *loadTileset(const QString &source);
     bool loadTilesetImage(Tileset *ts, const QString &source);
+    void tilesDirChanged();
+
+    QString tilesDir();
+    void setTilesDir(const QString &path);
+    void getTilesDirKeyValues(QMap<QString,QString> &map);
 
 private:
     Ui::TileDefDialog *ui;
@@ -172,6 +179,7 @@ private:
     QString mError;
 
     TileDefFile *mTileDefFile;
+    QString mTilesDirectory;
     QList<Tileset*> mTilesets;
     QMap<QString,Tileset*> mTilesetByName;
     QList<Tileset*> mRemovedTilesets;

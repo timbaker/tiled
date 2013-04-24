@@ -370,6 +370,7 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     connect(ui->actionSave, SIGNAL(triggered()), SLOT(fileSave()));
     connect(ui->actionSaveAs, SIGNAL(triggered()), SLOT(fileSaveAs()));
     connect(ui->actionAddTileset, SIGNAL(triggered()), SLOT(addTileset()));
+    connect(ui->actionTilesDirectory, SIGNAL(triggered()), SLOT(chooseTilesDirectory()));
     connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
 
     connect(ui->actionUserGuide, SIGNAL(triggered()), SLOT(help()));
@@ -488,7 +489,7 @@ TileDefDialog::~TileDefDialog()
 
 void TileDefDialog::addTileset()
 { 
-    AddTilesetsDialog dialog(mTileDefFile->directory(),
+    AddTilesetsDialog dialog(tilesDir(),
                              mTileDefFile->tilesetNames(),
                              false,
                              this);
@@ -524,6 +525,22 @@ void TileDefDialog::removeTileset()
             return;
         mUndoStack->push(new RemoveTileset(this, mTilesets.indexOf(tileset)));
     }
+}
+
+void TileDefDialog::chooseTilesDirectory()
+{
+    if (!mTileDefFile)
+        return;
+
+    QString f = QFileDialog::getExistingDirectory(this,
+                                                  tr("Choose Tiles Directory"),
+                                                  tilesDir());
+    if (f.isEmpty())
+        return;
+
+    setTilesDir(f);
+    tilesDirChanged();
+    updateTilesetListLater();
 }
 
 void TileDefDialog::insertTileset(int index, Tileset *ts, TileDefTileset *defTileset)
@@ -958,6 +975,8 @@ void TileDefDialog::updateUI()
     ui->actionSave->setEnabled(hasFile);
     ui->actionSaveAs->setEnabled(hasFile);
 
+    ui->actionTilesDirectory->setEnabled(hasFile);
+
     ui->actionGoBack->setEnabled(mTilesetHistoryIndex > 0);
     ui->actionGoForward->setEnabled(mTilesetHistoryIndex < mTilesetHistory.size() - 1);
     ui->actionAddTileset->setEnabled(hasFile);
@@ -1076,40 +1095,8 @@ void TileDefDialog::fileOpen(const QString &fileName)
     }
 
     mTileDefFile = defFile;
-    QDir dir(mTileDefFile->directory());
-
-    foreach (TileDefTileset *tsDef, mTileDefFile->tilesets()) {
-        QString imageSource = dir.filePath(tsDef->mImageSource);
-        if (QFileInfo(imageSource).exists())
-            imageSource = QFileInfo(imageSource).canonicalFilePath();
-
-        // Try to reuse a tileset from our list of removed tilesets.
-        bool reused = false;
-        foreach (Tileset *ts, mRemovedTilesets) {
-            if (ts->imageSource() == imageSource) {
-                mTilesets += ts;
-                mTilesetByName[ts->name()] = ts;
-                // Don't addReferences().
-                mRemovedTilesets.removeOne(ts);
-                reused = true;
-                break;
-            }
-        }
-        if (reused)
-            continue;
-
-        Tileset *tileset = new Tileset(tsDef->mName, 64, 128);
-        int width = tsDef->mColumns * 64, height = tsDef->mRows * 128;
-        tileset->loadFromNothing(QSize(width, height), imageSource);
-        Tile *missingTile = TilesetManager::instance()->missingTile();
-        for (int i = 0; i < tileset->tileCount(); i++)
-            tileset->tileAt(i)->setImage(missingTile->image());
-        tileset->setMissing(true);
-
-        mTilesets += tileset;
-        mTilesetByName[tileset->name()] = tileset;
-        TilesetManager::instance()->addReference(tileset);
-    }
+    mTilesDirectory.clear();
+    tilesDirChanged();
 }
 
 bool TileDefDialog::fileSave(const QString &fileName)
@@ -1124,6 +1111,7 @@ bool TileDefDialog::fileSave(const QString &fileName)
     }
 
     mTileDefFile->setFileName(fileName);
+    setTilesDir(tilesDir());
     mUndoStack->setClean();
 
     updateWindowTitle();
@@ -1491,7 +1479,7 @@ void TileDefDialog::loadTilesets()
         if (ts->isMissing()) {
             QString source = ts->imageSource();
             if (QDir::isRelativePath(ts->imageSource()))
-                source = QDir(mTileDefFile->directory()).filePath(ts->imageSource());
+                source = QDir(tilesDir()).filePath(ts->imageSource());
             QImageReader reader(source);
             if (reader.size().isValid()) {
                 ts->loadFromNothing(reader.size(), ts->imageSource());
@@ -1531,6 +1519,112 @@ bool TileDefDialog::loadTilesetImage(Tileset *ts, const QString &source)
     }
 
     return ts;
+}
+
+void TileDefDialog::tilesDirChanged()
+{
+    mRemovedTilesets += mTilesets;
+    mTilesets.clear();
+    mTilesetByName.clear();
+
+    QDir dir(tilesDir());
+
+    foreach (TileDefTileset *tsDef, mTileDefFile->tilesets()) {
+        QString imageSource = dir.filePath(tsDef->mImageSource);
+        if (QFileInfo(imageSource).exists())
+            imageSource = QFileInfo(imageSource).canonicalFilePath();
+
+        // Try to reuse a tileset from our list of removed tilesets.
+        bool reused = false;
+        foreach (Tileset *ts, mRemovedTilesets) {
+            if (ts->imageSource() == imageSource) {
+                mTilesets += ts;
+                mTilesetByName[ts->name()] = ts;
+                // Don't addReferences().
+                mRemovedTilesets.removeOne(ts);
+                reused = true;
+                break;
+            }
+        }
+        if (reused)
+            continue;
+
+        Tileset *tileset = new Tileset(tsDef->mName, 64, 128);
+        int width = tsDef->mColumns * 64, height = tsDef->mRows * 128;
+        tileset->loadFromNothing(QSize(width, height), imageSource);
+        Tile *missingTile = TilesetManager::instance()->missingTile();
+        for (int i = 0; i < tileset->tileCount(); i++)
+            tileset->tileAt(i)->setImage(missingTile->image());
+        tileset->setMissing(true);
+
+        mTilesets += tileset;
+        mTilesetByName[tileset->name()] = tileset;
+        TilesetManager::instance()->addReference(tileset);
+    }
+}
+
+QString TileDefDialog::tilesDir()
+{
+    // If the user never set the directory, it will be the same as the TileDefFile
+    // directory.  If it was set, it is saved by QSettings, not in the file itself.
+    if (mTilesDirectory.isEmpty()) {
+        QFileInfo info(mTileDefFile->fileName());
+        if (info.exists()) {
+            QMap<QString,QString> kv;
+            getTilesDirKeyValues(kv);
+            foreach (QString file, kv.keys()) {
+                if (file == info.canonicalFilePath()) {
+                    if (!kv[file].isEmpty() && QFileInfo(kv[file]).exists())
+                        return kv[file];
+                    break;
+                }
+            }
+        }
+        return mTileDefFile->directory();
+    }
+    return mTilesDirectory;
+}
+
+void TileDefDialog::setTilesDir(const QString &path)
+{
+    QFileInfo info(mTileDefFile->fileName());
+    if (info.exists()) {
+        QSettings settings;
+        QMap<QString,QString> kv;
+        getTilesDirKeyValues(kv);
+        settings.beginWriteArray(QLatin1String("TileDefDialog/TilesDir"));
+        QString canonical = info.canonicalFilePath();
+        int i = 0;
+        foreach (QString file, kv.keys()) {
+            if (file == canonical) continue;
+            settings.setArrayIndex(i++);
+            settings.setValue(QLatin1String("file"), file);
+            settings.setValue(QLatin1String("dir"), kv[file]);
+        }
+        settings.setArrayIndex(i++);
+        settings.setValue(QLatin1String("file"), canonical);
+        settings.setValue(QLatin1String("dir"), path);
+        settings.endArray();
+        return;
+    }
+
+    // If the file hasn't been saved, we can't store the canonical file path
+    // in QSettings. So just remember the path until we save the file.
+    mTilesDirectory = path;
+}
+
+void TileDefDialog::getTilesDirKeyValues(QMap<QString, QString> &map)
+{
+    QSettings settings;
+    int size = settings.beginReadArray(QLatin1String("TileDefDialog/TilesDir"));
+    for (int i = 0; i < size; i++) {
+        settings.setArrayIndex(i);
+        QString file = settings.value(QLatin1String("file")).toString();
+        QString dir = settings.value(QLatin1String("dir")).toString();
+        if (QFile(file).exists())
+            map[file] = dir;
+    }
+    settings.endArray();
 }
 
 void TileDefDialog::saveSplitterSizes(QSplitter *splitter)

@@ -674,6 +674,7 @@
     <addaction name="actionSaveAs"/>
     <addaction name="separator"/>
     <addaction name="actionAddTileset"/>
+    <addaction name="actionTilesDirectory"/>
     <addaction name="separator"/>
     <addaction name="actionClose"/>
    </widget>
@@ -853,6 +854,11 @@
   <action name="actionUserGuide">
    <property name="text">
     <string>Contents</string>
+   </property>
+  </action>
+  <action name="actionTilesDirectory">
+   <property name="text">
+    <string>Tiles Directory...</string>
    </property>
   </action>
  </widget>
