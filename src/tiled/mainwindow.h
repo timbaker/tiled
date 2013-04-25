@@ -69,6 +69,7 @@ class Zoomable;
 #ifdef ZOMBOID
 class ZLevelsDock;
 class MapsDock;
+class TileDefDialog;
 class TileLayersPanel;
 #endif
 
@@ -198,6 +199,7 @@ public slots:
     void stampAltHovered(const QPoint &tilePos);
 
     void showBuildingEditor();
+    void buildingTilePicked(const QString &tileName);
     void tilesetMetaInfoDialog();
     void tilePropertiesEditor();
     void launchWorldEd();
@@ -302,6 +304,7 @@ private:
 
 #ifdef ZOMBOID
     BuildingEditor::BuildingEditorWindow *mBuildingEditor;
+    TileDefDialog *mTileDefDialog;
 #endif
 };
 

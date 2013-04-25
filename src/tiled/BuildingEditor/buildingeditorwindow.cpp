@@ -98,6 +98,7 @@ public:
     QLabel *mFloorLabel;
     QAction *mActionPencil;
     QAction *mActionSelectTiles;
+    QAction *mActionPickTile;
 };
 
 }
@@ -106,16 +107,19 @@ TileModeToolBar::TileModeToolBar(QWidget *parent) :
     QToolBar(parent),
     mFloorLabel(new QLabel),
     mActionPencil(new QAction(this)),
-    mActionSelectTiles(new QAction(this))
+    mActionSelectTiles(new QAction(this)),
+    mActionPickTile(new QAction(this))
 {
     setObjectName(QString::fromUtf8("TileToolBar"));
     setWindowTitle(tr("Tile ToolBar"));
 
     mActionPencil->setCheckable(true);
     mActionSelectTiles->setCheckable(true);
+    mActionPickTile->setCheckable(true);
 
     addAction(mActionPencil);
     addAction(mActionSelectTiles);
+    addAction(mActionPickTile);
     addSeparator();
     mFloorLabel->setMinimumWidth(90);
     mFloorLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
@@ -378,6 +382,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mTileModeToolBar->mActionPencil->setIcon(
                 QIcon(QLatin1String(":images/22x22/stock-tool-clone.png")));
     mTileModeToolBar->mActionSelectTiles->setIcon(ui->actionSelectRooms->icon());
+    mTileModeToolBar->mActionPickTile->setIcon(
+                QIcon(QLatin1String(":images/22x22/stock-tool-clone.png")));
     mTileModeToolBar->addAction(ui->actionUpLevel);
     mTileModeToolBar->addAction(ui->actionDownLevel);
     addToolBar(mTileModeToolBar);
@@ -395,6 +401,10 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     DrawTileTool::instance()->setEditor(mIsoScene);
     SelectTileTool::instance()->setAction(mTileModeToolBar->mActionSelectTiles);
     SelectTileTool::instance()->setEditor(mIsoScene);
+    PickTileTool::instance()->setAction(mTileModeToolBar->mActionPickTile);
+    PickTileTool::instance()->setEditor(mIsoScene);
+    connect(PickTileTool::instance(), SIGNAL(tilePicked(QString)),
+            SIGNAL(tilePicked(QString)));
     /////
 
     addDockWidget(Qt::RightDockWidgetArea, mLayersDock);
@@ -2503,6 +2513,7 @@ void BuildingEditorWindow::updateActions()
 
     DrawTileTool::instance()->setEnabled(!objectMode && !currentLayer().isEmpty());
     SelectTileTool::instance()->setEnabled(!objectMode && !currentLayer().isEmpty());
+    PickTileTool::instance()->setEnabled(!objectMode && mCurrentDocument);
 
     ui->actionUpLevel->setEnabled(hasDoc &&
                                   !mCurrentDocument->currentFloorIsTop());

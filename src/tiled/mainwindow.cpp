@@ -166,6 +166,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     , mDocumentManager(DocumentManager::instance())
 #ifdef ZOMBOID
     , mBuildingEditor(0)
+    , mTileDefDialog(0)
 #endif
 {
 #ifdef ZOMBOID
@@ -1501,11 +1502,20 @@ void MainWindow::showBuildingEditor()
             mBuildingEditor = 0;
             return;
         }
+
+        connect(mBuildingEditor, SIGNAL(tilePicked(QString)),
+                SLOT(buildingTilePicked(QString)));
     }
 
     mBuildingEditor->show();
     mBuildingEditor->raise();
     mBuildingEditor->activateWindow();
+}
+
+void MainWindow::buildingTilePicked(const QString &tileName)
+{
+    if (mTileDefDialog && TileDefDialog::instance()->isVisible())
+        TileDefDialog::instance()->displayTile(tileName);
 }
 
 void MainWindow::tilesetMetaInfoDialog()
@@ -1554,6 +1564,7 @@ void MainWindow::tilePropertiesEditor()
             return;
         }
     }
+    mTileDefDialog = TileDefDialog::instance();
     TileDefDialog::instance()->show();
     TileDefDialog::instance()->raise();
 }

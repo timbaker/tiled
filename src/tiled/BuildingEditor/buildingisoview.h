@@ -176,6 +176,7 @@ public:
     void clearToolTiles();
 
     QString buildingTileAt(int x, int y);
+    QString tileUnderPoint(int x, int y);
 
     void drawTileSelection(QPainter *painter, const QRegion &region,
                            const QColor &color, const QRectF &exposed,

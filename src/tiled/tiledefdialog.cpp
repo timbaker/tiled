@@ -28,6 +28,8 @@
 #include "utils.h"
 #include "zprogress.h"
 
+#include "BuildingEditor/buildingtiles.h"
+
 #include "tile.h"
 #include "tileset.h"
 
@@ -1664,6 +1666,19 @@ void TileDefDialog::updateWindowTitle()
         setWindowTitle(tr("Tile Properties"));
     }
     setWindowModified(!mUndoStack->isClean());
+}
+
+void TileDefDialog::displayTile(const QString &tileName)
+{
+    QString tilesetName;
+    int tileID;
+    if (BuildingEditor::BuildingTilesMgr::parseTileName(tileName, tilesetName, tileID)) {
+        if (mTilesetByName.contains(tilesetName)) {
+            int row = rowOf(tilesetName);
+            ui->tilesets->setCurrentRow(row);
+            ui->tiles->setCurrentIndex(ui->tiles->model()->index(mTilesetByName[tilesetName]->tileAt(tileID)));
+        }
+    }
 }
 
 /////

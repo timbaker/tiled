@@ -164,6 +164,35 @@ private:
     QRegion mSelectedRegion;
 };
 
+class PickTileTool : public BaseTool
+{
+    Q_OBJECT
+public:
+    static PickTileTool *instance();
+
+    PickTileTool();
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
+signals:
+    void tilePicked(const QString &tileName);
+
+public slots:
+    void activate() {}
+    void deactivate() {}
+
+private:
+    BuildingTile *pickTile(const QPoint &scenePos);
+
+private:
+    Q_DISABLE_COPY(PickTileTool)
+    static PickTileTool *mInstance;
+    ~PickTileTool() { mInstance = 0; }
+
+};
+
 } // namespace BuildingEditor
 
 #endif // BUILDINGTILETOOLS_H

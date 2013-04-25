@@ -583,3 +583,47 @@ void SelectTileTool::updateStatusText()
     else
         setStatusText(tr("Left-click-drag to select.  CTRL=subtract.  SHIFT=add.  CTRL+SHIFT=intersect."));
 }
+
+/////
+
+/////
+
+PickTileTool *PickTileTool::mInstance = 0;
+
+PickTileTool *PickTileTool::instance()
+{
+    if (!mInstance)
+        mInstance = new PickTileTool();
+    return mInstance;
+}
+
+PickTileTool::PickTileTool() :
+    BaseTool()
+{
+
+}
+
+void PickTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    QString tileName = mEditor->tileUnderPoint(event->scenePos().x(),
+                                               event->scenePos().y());
+    if (!tileName.isEmpty())
+        emit tilePicked(tileName);
+}
+
+void PickTileTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+#if 0
+    qDebug() << mEditor->tileUnderPoint(event->scenePos().x(),
+                                        event->scenePos().y());
+#endif
+}
+
+void PickTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+}
+
+BuildingTile *PickTileTool::pickTile(const QPoint &scenePos)
+{
+    return 0;
+}

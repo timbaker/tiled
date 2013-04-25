@@ -104,7 +104,6 @@ ZomboidScene::ZomboidScene(QObject *parent)
     pen.setJoinStyle(Qt::MiterJoin);
     mMapBordersItem->setPen(pen);
     mMapBordersItem->setZValue(20000 - 1); // ZVALUE_GRID - 1
-    addItem(mMapBordersItem);
 #if 1
     mMapBordersItem2->setVisible(false);
 #else
@@ -638,6 +637,7 @@ void ZomboidScene::handlePendingUpdates()
         polygon << QPointF(mapDocument()->renderer()->tileToPixelCoords(rect.bottomRight()));
         polygon << QPointF(mapDocument()->renderer()->tileToPixelCoords(rect.bottomLeft()));
         mMapBordersItem->setPolygon(polygon);
+        mMapBordersItem->setVisible(mapDocument()->map()->size() == QSize(300, 300));
 #if 0
         rect = QRect(0, 0,
                      mapDocument()->map()->width(),

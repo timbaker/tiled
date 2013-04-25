@@ -143,7 +143,10 @@ private:
         TileMode
     };
 
-    typedef Tiled::Tileset Tileset;
+    typedef Tiled::Tileset Tileset; // Hack for signals/slots
+
+signals:
+    void tilePicked(const QString &tileName);
 
 private slots:
     void updateWindowTitle();

@@ -565,6 +565,14 @@ QString BuildingIsoScene::buildingTileAt(int x, int y)
     return mBuildingMap->buildingTileAt(x, y, currentLevel(), currentLayerName());
 }
 
+QString BuildingIsoScene::tileUnderPoint(int x, int y)
+{
+    QList<bool> visible;
+    foreach (CompositeLayerGroupItem *item, mLayerGroupItems)
+        visible += item->isVisible();
+    return mBuildingMap->buildingTileAt(x, y, visible);
+}
+
 void BuildingIsoScene::drawTileSelection(QPainter *painter, const QRegion &region,
                                               const QColor &color, const QRectF &exposed,
                                               int level) const
