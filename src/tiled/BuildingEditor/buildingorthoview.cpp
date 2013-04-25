@@ -453,6 +453,13 @@ QString BuildingOrthoScene::buildingTileAt(int x, int y)
     return QString();
 }
 
+QString BuildingEditor::BuildingOrthoScene::tileUnderPoint(int x, int y)
+{
+    Q_UNUSED(x)
+    Q_UNUSED(y)
+    return QString();
+}
+
 void BuildingOrthoScene::drawTileSelection(QPainter *painter, const QRegion &region,
                                     const QColor &color, const QRectF &exposed,
                                     int level) const

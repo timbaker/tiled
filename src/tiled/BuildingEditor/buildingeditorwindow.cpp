@@ -383,7 +383,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
                 QIcon(QLatin1String(":images/22x22/stock-tool-clone.png")));
     mTileModeToolBar->mActionSelectTiles->setIcon(ui->actionSelectRooms->icon());
     mTileModeToolBar->mActionPickTile->setIcon(
-                QIcon(QLatin1String(":images/22x22/stock-tool-clone.png")));
+                QIcon(QLatin1String(":BuildingEditor/icons/icon_eyedrop.png")));
     mTileModeToolBar->addAction(ui->actionUpLevel);
     mTileModeToolBar->addAction(ui->actionDownLevel);
     addToolBar(mTileModeToolBar);

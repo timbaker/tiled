@@ -613,6 +613,7 @@ void PickTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void PickTileTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    Q_UNUSED(event)
 #if 0
     qDebug() << mEditor->tileUnderPoint(event->scenePos().x(),
                                         event->scenePos().y());
@@ -621,9 +622,5 @@ void PickTileTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 void PickTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-}
-
-BuildingTile *PickTileTool::pickTile(const QPoint &scenePos)
-{
-    return 0;
+    Q_UNUSED(event)
 }

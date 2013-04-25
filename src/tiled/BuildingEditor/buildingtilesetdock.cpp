@@ -94,6 +94,9 @@ BuildingTilesetDock::BuildingTilesetDock(QWidget *parent) :
     connect(TilesetManager::instance(), SIGNAL(tileLayerNameChanged(Tile*)),
             SLOT(tileLayerNameChanged(Tile*)));
 
+    connect(PickTileTool::instance(), SIGNAL(tilePicked(QString)),
+            SLOT(buildingTilePicked(QString)));
+
     retranslateUi();
 }
 
@@ -272,6 +275,21 @@ void BuildingTilesetDock::autoSwitchLayerChanged(bool enabled)
 void BuildingTilesetDock::tileScaleChanged(qreal scale)
 {
     mZoomable->setScale(scale);
+}
+
+void BuildingTilesetDock::buildingTilePicked(const QString &tileName)
+{
+    QString tilesetName;
+    int tileID;
+
+    if (BuildingTilesMgr::parseTileName(tileName, tilesetName, tileID)) {
+        if (Tileset *ts = TileMetaInfoMgr::instance()->tileset(tilesetName)) {
+            if (Tile *tile = ts->tileAt(tileID)) {
+                ui->tilesets->setCurrentRow(TileMetaInfoMgr::instance()->indexOf(ts));
+                ui->tiles->setCurrentIndex(ui->tiles->model()->index(tile));
+            }
+        }
+    }
 }
 
 /////

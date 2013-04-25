@@ -86,6 +86,8 @@ private slots:
 
     void tileScaleChanged(qreal scale);
 
+    void buildingTilePicked(const QString &tileName);
+
 private:
     Ui::BuildingTilesetDock *ui;
     BuildingDocument *mDocument;

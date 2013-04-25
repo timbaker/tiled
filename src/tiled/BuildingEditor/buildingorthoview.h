@@ -440,7 +440,7 @@ public:
                       const QPoint &pos, const QString &layerName) = 0;
     virtual void clearToolTiles() = 0;
     virtual QString buildingTileAt(int x, int y) = 0;
-    virtual QString tileUnderPoint(int x, int y) { return QString(); }
+    virtual QString tileUnderPoint(int x, int y) = 0;
     virtual void drawTileSelection(QPainter *painter, const QRegion &region,
                                    const QColor &color, const QRectF &exposed,
                                    int level = 0) const = 0;
@@ -500,7 +500,10 @@ public:
     void setToolTiles(const FloorTileGrid *tiles, const QPoint &pos,
                       const QString &layerName);
     void clearToolTiles();
+
     QString buildingTileAt(int x, int y);
+    virtual QString tileUnderPoint(int x, int y);
+
     void drawTileSelection(QPainter *painter, const QRegion &region,
                            const QColor &color, const QRectF &exposed,
                            int level = 0) const;

@@ -48,5 +48,6 @@
         <file>icons/icon_wall.png</file>
         <file>icons/shadow_grime_wall.png</file>
         <file>icons/shadow_grime_floor.png</file>
+        <file>icons/icon_eyedrop.png</file>
     </qresource>
 </RCC>

@@ -184,9 +184,6 @@ public slots:
     void deactivate() {}
 
 private:
-    BuildingTile *pickTile(const QPoint &scenePos);
-
-private:
     Q_DISABLE_COPY(PickTileTool)
     static PickTileTool *mInstance;
     ~PickTileTool() { mInstance = 0; }
