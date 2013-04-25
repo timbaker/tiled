@@ -197,6 +197,7 @@ public slots:
 
 #ifdef ZOMBOID
     void stampAltHovered(const QPoint &tilePos);
+    void tilePicked(Tile *tile);
 
     void showBuildingEditor();
     void buildingTilePicked(const QString &tileName);

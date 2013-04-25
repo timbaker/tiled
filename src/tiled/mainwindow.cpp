@@ -472,6 +472,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
             SLOT(stampAltHovered(QPoint)));
     connect(mTileLayersPanel, SIGNAL(tilePicked(Tile*)),
             mTilesetDock, SLOT(tilePicked(Tile*)));
+    connect(mTileLayersPanel, SIGNAL(tilePicked(Tile*)),
+            SLOT(tilePicked(Tile*)));
 #endif
 
     connect(mRandomButton, SIGNAL(toggled(bool)),
@@ -1490,6 +1492,13 @@ void MainWindow::autoMappingWarning()
 void MainWindow::stampAltHovered(const QPoint &tilePos)
 {
     mTileLayersPanel->setTilePosition(tilePos);
+}
+
+void MainWindow::tilePicked(Tile *tile)
+{
+    QString tileName = BuildingTilesMgr::nameForTile(tile);
+    if (mTileDefDialog && TileDefDialog::instance()->isVisible())
+        TileDefDialog::instance()->displayTile(tileName);
 }
 
 void MainWindow::showBuildingEditor()
