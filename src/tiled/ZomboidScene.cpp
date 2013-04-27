@@ -190,8 +190,10 @@ void ZomboidScene::refreshScene()
     qDeleteAll(mTileLayerGroupItems); // QGraphicsScene.clear() will delete these actually
     mTileLayerGroupItems.clear();
 
-    removeItem(mMapBordersItem);
-    removeItem(mMapBordersItem2);
+    if (mMapBordersItem->scene()) {
+        removeItem(mMapBordersItem);
+        removeItem(mMapBordersItem2);
+    }
 
     MapScene::refreshScene();
 
