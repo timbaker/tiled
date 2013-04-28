@@ -1050,6 +1050,7 @@ void MapReaderPrivate::readBmpRules()
     while (xml.readNextStartElement()) {
         if (xml.name() == QLatin1String("rule")) {
             const QXmlStreamAttributes atts = xml.attributes();
+            QString label = atts.value(QLatin1String("label")).toString();
             uint bitmapIndex = atts.value(QLatin1String("bitmapIndex")).toString().toUInt();
             bool ok;
             QRgb color = rgbFromString(atts.value(QLatin1String("color")).toString(), ok);
@@ -1059,7 +1060,7 @@ void MapReaderPrivate::readBmpRules()
                     tileChoices[i].clear();
             QString targetLayer = atts.value(QLatin1String("targetLayer")).toString();
             QRgb condition = rgbFromString(atts.value(QLatin1String("condition")).toString(), ok);
-            rules += new BmpRule(bitmapIndex, color, tileChoices, targetLayer, condition);
+            rules += new BmpRule(label, bitmapIndex, color, tileChoices, targetLayer, condition);
             xml.skipCurrentElement();
         } else {
             readUnknownElement();

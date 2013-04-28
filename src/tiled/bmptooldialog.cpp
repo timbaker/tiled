@@ -396,6 +396,10 @@ void BmpToolDialog::setDocument(MapDocument *doc)
     ui->showMapTiles->setEnabled(mDocument != 0);
 
     if (mDocument) {
+#if 1
+        ui->tableView->setRules(mDocument->map());
+        QList<BmpRule*> rules = mDocument->map()->bmpSettings()->rules();
+#else
         QSet<Tileset*> tilesets;
         QList<Tiled::Tile*> tiles;
         QList<void*> userData;
@@ -441,13 +445,14 @@ void BmpToolDialog::setDocument(MapDocument *doc)
         }
         ui->tableView->setTiles(tiles, userData, headers);
         TileMetaInfoMgr::instance()->loadTilesets(tilesets.toList());
+#endif
 
-        ruleIndex = 0;
+        int ruleIndex = 0;
         if (mCurrentRuleForDocument.contains(mDocument))
             ruleIndex = mCurrentRuleForDocument[mDocument];
         if (ruleIndex >= 0 && ruleIndex < rules.size())
             ui->tableView->setCurrentIndex(
-                        ui->tableView->model()->index((void*)rules.at(ruleIndex)));
+                        ui->tableView->model()->index(rules.at(ruleIndex)));
 
         const BmpSettings *settings = mDocument->map()->bmpSettings();
         QString fileName = settings->rulesFile();
@@ -472,8 +477,7 @@ void BmpToolDialog::setDocument(MapDocument *doc)
 
 void BmpToolDialog::currentRuleChanged(const QModelIndex &current)
 {
-    BmpRule *rule = static_cast<BmpRule*>(ui->tableView->model()->userDataAt(current));
-    if (rule) {
+    if (BmpRule *rule = ui->tableView->model()->ruleAt(current)) {
         BmpBrushTool::instance()->setColor(rule->bitmapIndex, rule->color);
         mCurrentRuleForDocument[mDocument]
                 = mDocument->map()->bmpSettings()->rules().indexOf(rule);

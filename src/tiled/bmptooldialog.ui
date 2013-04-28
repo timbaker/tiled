@@ -20,7 +20,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -31,7 +31,7 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="Tiled::Internal::MixedTilesetView" name="tableView">
+        <widget class="Tiled::Internal::BmpRuleView" name="tableView">
          <property name="frameShape">
           <enum>QFrame::NoFrame</enum>
          </property>
@@ -308,9 +308,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Tiled::Internal::MixedTilesetView</class>
+   <class>Tiled::Internal::BmpRuleView</class>
    <extends>QTableView</extends>
-   <header>BuildingEditor/mixedtilesetview.h</header>
+   <header>bmpruleview.h</header>
   </customwidget>
  </customwidgets>
  <resources>

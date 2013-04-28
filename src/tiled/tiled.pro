@@ -200,7 +200,8 @@ SOURCES += aboutdialog.cpp \
     roomdefecator.cpp \
     tilelayerspanel.cpp \
     roomdeftool.cpp \
-    roomdefnamedialog.cpp
+    roomdefnamedialog.cpp \
+    bmpruleview.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -364,7 +365,8 @@ HEADERS += aboutdialog.h \
     roomdefecator.h \
     tilelayerspanel.h \
     roomdeftool.h \
-    roomdefnamedialog.h
+    roomdefnamedialog.h \
+    bmpruleview.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
