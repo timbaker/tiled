@@ -29,6 +29,8 @@ void RoomDefTool::mouseEntered()
 
 void RoomDefTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
 {
+    Q_UNUSED(modifiers)
+
     MapObjectItem *item = topMostObjectItemAt(pos);
     if (item != mObjectItem) {
         if (mObjectItem) {

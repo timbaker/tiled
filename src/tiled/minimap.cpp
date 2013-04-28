@@ -113,6 +113,8 @@ void ShadowMap::layerRenamed(int index, const QString &name)
 
 void ShadowMap::regionAltered(const QRegion &rgn, Layer *layer)
 {
+    Q_UNUSED(rgn)
+    Q_UNUSED(layer)
 #if 0
     int index = mMaster->layers().indexOf(layer);
     if (TileLayer *tl = mMapComposite->map()->layerAt(index)->asTileLayer()) {
@@ -1060,6 +1062,8 @@ void MiniMap::widthChanged(int width)
 
 void MiniMap::miniMapItemResized(const QSize &imageSize, const QRectF &sceneRect)
 {
+    Q_UNUSED(imageSize)
+
     mRatio = sceneRect.width() / sceneRect.height();
     mHeight = qCeil(mWidth / mRatio);
 

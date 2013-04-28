@@ -648,6 +648,8 @@ void BmpEraserTool::paint()
 
 void BmpEraserTool::eraseBmp(int bmpIndex, const QRegion &tileRgn)
 {
+    Q_UNUSED(bmpIndex)
+    Q_UNUSED(tileRgn)
 }
 
 void BmpEraserTool::brushChanged()
