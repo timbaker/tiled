@@ -129,7 +129,7 @@ void BmpRuleDelegate::paint(QPainter *painter,
         if (!aliasTiles.isEmpty())
             tileNames += aliasTiles;
         else
-            tileName += tileName;
+            tileNames += tileName;
     }
 
     const QFontMetrics fm = painter->fontMetrics();
@@ -139,7 +139,7 @@ void BmpRuleDelegate::paint(QPainter *painter,
     const int columns = qMax(8, option.rect.width() / tileWidth);
 
     int n = 0;
-    foreach (QString tileName, rule->tileChoices) {
+    foreach (QString tileName, tileNames) {
         if (Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName)) {
             const int tileWidth = qCeil(tile->tileset()->tileWidth() * scale);
             const int tileHeight = qCeil(tile->tileset()->tileHeight() * scale);
@@ -370,6 +370,8 @@ void BmpRuleModel::setRules(const Map *map)
         item->mIndex = index++;
         mItems += item;
     }
+
+    mAliasTiles.clear();
     foreach (BmpAlias *alias, map->bmpSettings()->aliases()) {
         mAliasTiles[alias->name] = alias->tiles;
     }

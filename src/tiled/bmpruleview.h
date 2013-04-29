@@ -43,7 +43,7 @@ public:
 
     QStringList aliasTiles(const QString &alias) const
     {
-        if (mAliasTiles[alias].contains(alias))
+        if (mAliasTiles.contains(alias))
             return mAliasTiles[alias];
         return QStringList();
     }
