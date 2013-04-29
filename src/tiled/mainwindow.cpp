@@ -400,6 +400,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
             SLOT(RoomDefRemove()));
     connect(mUi->actionRoomDefUnknownWalls, SIGNAL(triggered()),
             SLOT(RoomDefUnknownWalls()));
+    connect(mUi->actionLuaScript, SIGNAL(triggered()), SLOT(LuaScript()));
 #endif
 
     connect(mActionHandler->actionLayerProperties(), SIGNAL(triggered()),
@@ -2056,6 +2057,14 @@ void MainWindow::RoomDefUnknownWalls()
         mMapDocument->undoStack()->push(
                     new ChangeTileSelection(mMapDocument, unknown));
     }
+}
+
+#include "luatiled.h"
+void MainWindow::LuaScript()
+{
+    QString f = QFileDialog::getOpenFileName(this, tr("Open Lua Script"));
+    if (f.isEmpty()) return;
+    qDebug() << Lua::LuaScript(mMapDocument->map()).dofile(f);
 }
 #endif // ZOMBOID
 

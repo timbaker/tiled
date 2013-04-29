@@ -1,0 +1,45 @@
+$#include "luatiled.h"
+$#include "tile.h"
+$#include "tilelayer.h"
+$#include "tileset.h"
+
+$using namespace Tiled;
+$using namespace Tiled::Lua;
+
+class Tile
+{
+    Tileset *tileset();
+};
+
+class Cell
+{
+    Tile *tile;
+};
+
+class LuaLayer @ Layer
+{
+    LuaTileLayer *asTileLayer();
+    const char *name();
+    const char *type();
+};
+
+class LuaTileLayer @ TileLayer : public LuaLayer
+{
+    void setTile(int x, int y, Tile *tile);
+    Tile *tileAt(int x, int y);
+};
+
+class LuaMap @ Map
+{
+    int width();
+    int height();
+    
+    int layerCount();
+    LuaLayer *layerAt(int index);
+    LuaLayer *layer(const char *name);
+    LuaTileLayer *tileLayer(const char *name);
+
+    Tileset *tileset(const char *name);
+    Tile *tile(const char *name);
+    Tile *tile(const char *tilesetName, int id);
+};

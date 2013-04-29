@@ -163,6 +163,8 @@ public slots:
     void RoomDefMerge();
     void RoomDefRemove();
     void RoomDefUnknownWalls();
+
+    void LuaScript();
 #endif
 
     void updateWindowTitle();

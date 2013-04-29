@@ -144,6 +144,7 @@
     <addaction name="actionConvertOrientation"/>
     <addaction name="actionConvertToLot"/>
     <addaction name="menuRoomDefecator"/>
+    <addaction name="actionLuaScript"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -540,6 +541,11 @@
    </property>
    <property name="text">
     <string>Select Unknown Walls</string>
+   </property>
+  </action>
+  <action name="actionLuaScript">
+   <property name="text">
+    <string>Lua Script...</string>
    </property>
   </action>
  </widget>

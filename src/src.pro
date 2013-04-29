@@ -3,4 +3,5 @@ CONFIG   += ordered
 
 SUBDIRS = config libtiled tiled plugins \
     tmxviewer \
-    automappingconverter
+    automappingconverter \
+    lua tolua
