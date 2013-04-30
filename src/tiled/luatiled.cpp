@@ -18,7 +18,7 @@ extern "C" {
 using namespace Tiled;
 using namespace Tiled::Lua;
 
-TOLUA_API int tolua_libtiled_open(lua_State *L);
+TOLUA_API int tolua_tiled_open(lua_State *L);
 
 /////
 
@@ -84,7 +84,7 @@ lua_State *LuaScript::init()
 {
     L = luaL_newstate();
     luaL_openlibs(L);
-    tolua_libtiled_open(L);
+    tolua_tiled_open(L);
 
     tolua_beginmodule(L,NULL);
     tolua_beginmodule(L,"Region");

@@ -427,12 +427,13 @@ contains(CONFIG, static) {
         qtiff
 }
 
-OTHER_FILES += libtiled.pkg
+OTHER_FILES += \
+    luatiled.pkg
 
 
 include(../tolua/src/lib/tolua.pri)
 include(../lua/lua.pri)
-TOLUA_PKGNAME = libtiled
-TOLUA_PKG = libtiled.pkg
+TOLUA_PKGNAME = tiled
+TOLUA_PKG = luatiled.pkg
 TOLUA_DEPS = $$PWD/luatiled.h
 include(../tolua/src/bin/tolua.pri)
