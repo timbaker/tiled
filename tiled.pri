@@ -8,4 +8,3 @@ macx {
 }
 
 DEFINES += ZOMBOID
-

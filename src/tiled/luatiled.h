@@ -1,8 +1,6 @@
 #ifndef LUATILED_H
 #define LUATILED_H
 
-#include "tiled_global.h"
-
 #include <QList>
 #include <QMap>
 #include <QRegion>
@@ -23,7 +21,7 @@ namespace Lua {
 class LuaMap;
 class LuaTileLayer;
 
-class TILEDSHARED_EXPORT LuaLayer
+class LuaLayer
 {
 public:
     LuaLayer();
@@ -44,7 +42,7 @@ public:
     QString mName;
 };
 
-class TILEDSHARED_EXPORT LuaTileLayer : public LuaLayer
+class LuaTileLayer : public LuaLayer
 {
 public:
     LuaTileLayer(TileLayer *orig);
@@ -66,7 +64,7 @@ public:
     LuaMap *mMap;
 };
 
-class TILEDSHARED_EXPORT LuaMap
+class LuaMap
 {
 public:
     LuaMap(Map *orig);
@@ -109,7 +107,7 @@ public:
     QRegion mSelection;
 };
 
-class TILEDSHARED_EXPORT LuaScript
+class LuaScript
 {
 public:
     LuaScript(Map *map);

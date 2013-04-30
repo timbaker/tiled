@@ -44,8 +44,7 @@ SOURCES += compression.cpp \
     tileset.cpp \
     gidmapper.cpp \
     zlevelrenderer.cpp \
-    ztilelayergroup.cpp \
-    luatiled.cpp
+    ztilelayergroup.cpp
 HEADERS += compression.h \
     imagelayer.h \
     isometricrenderer.h \
@@ -66,18 +65,8 @@ HEADERS += compression.h \
     tileset.h \
     gidmapper.h \
     zlevelrenderer.h \
-    ztilelayergroup.h \
-    luatiled.h \
-    libtiled.pkg
+    ztilelayergroup.h
 macx {
     contains(QT_CONFIG, ppc):CONFIG += x86 \
         ppc
 }
-
-#LIBS += -L../../lib
-include(../tolua/src/lib/tolua.pri)
-include(../lua/lua.pri)
-TOLUA_PKGNAME = libtiled
-TOLUA_PKG = libtiled.pkg
-include(../tolua/src/bin/tolua.pri)
-

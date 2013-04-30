@@ -1,3 +1,5 @@
+include($$top_srcdir/tiled.pri)
+
 TEMPLATE = lib
 CONFIG += console
 CONFIG -= app_bundle

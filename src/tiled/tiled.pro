@@ -201,7 +201,8 @@ SOURCES += aboutdialog.cpp \
     tilelayerspanel.cpp \
     roomdeftool.cpp \
     roomdefnamedialog.cpp \
-    bmpruleview.cpp
+    bmpruleview.cpp \
+    luatiled.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -366,7 +367,8 @@ HEADERS += aboutdialog.h \
     tilelayerspanel.h \
     roomdeftool.h \
     roomdefnamedialog.h \
-    bmpruleview.h
+    bmpruleview.h \
+    luatiled.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -425,4 +427,12 @@ contains(CONFIG, static) {
         qtiff
 }
 
-OTHER_FILES +=
+OTHER_FILES += libtiled.pkg
+
+
+include(../tolua/src/lib/tolua.pri)
+include(../lua/lua.pri)
+TOLUA_PKGNAME = libtiled
+TOLUA_PKG = libtiled.pkg
+TOLUA_DEPS = $$PWD/luatiled.h
+include(../tolua/src/bin/tolua.pri)
