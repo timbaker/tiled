@@ -43,11 +43,6 @@ class Tile
     Tileset *tileset();
 };
 
-class Cell
-{
-    Tile *tile;
-};
-
 class LuaLayer @ Layer
 {
     LuaTileLayer *asTileLayer();
@@ -63,6 +58,45 @@ class LuaTileLayer @ TileLayer : public LuaLayer
     Tile *tileAt(int x, int y);
 
     void replaceTile(Tile *oldTile, Tile *newTile);
+};
+
+class LuaColor @ Color
+{
+    LuaColor();
+    LuaColor(int r, int g, int b);
+    int r;
+    int g;
+    int b;
+};
+
+LuaColor Lua_rgb @ rgb(int r, int g, int b);
+
+class LuaMapBmp & MapBmp
+{
+    void setPixel(int x, int y, LuaColor &c);
+    LuaColor pixel(int x, int y);
+
+    void erase(int x, int y, int width, int height);
+    void erase(QRect &r);
+    void erase(QRegion &rgn);
+    void erase();
+
+    void fill(int x, int y, int width, int height, LuaColor &c);
+    void fill(QRect &r, LuaColor &c);
+    void fill(QRegion &rgn, LuaColor &c);
+    void fill(LuaColor &c);
+
+    void replace(LuaColor &oldColor, LuaColor &newColor);
+};
+
+class LuaBmpRule @ BmpRule
+{
+    const char *label();
+    int bmpIndex();
+    LuaColor color();
+    // 'table[char*] tiles()' defined in C++
+    const char *layer();
+    LuaColor condition();
 };
 
 class LuaMap @ Map
@@ -85,4 +119,7 @@ class LuaMap @ Map
 
     void setTileSelection(QRegion &rgn);
     QRegion tileSelection();
+
+    LuaMapBmp &bmp(int index);
+    LuaBmpRule *rule(const char *name);
 };

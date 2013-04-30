@@ -1,3 +1,20 @@
+/*
+ * Copyright 2013, Tim Baker <treectrl@users.sf.net>
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "luatiled.h"
 
 #include "map.h"
@@ -7,6 +24,7 @@
 
 #include "tolua.h"
 
+#include <QHash>
 #include <QString>
 #include <QTextStream>
 
@@ -20,6 +38,18 @@ using namespace Tiled::Lua;
 
 TOLUA_API int tolua_tiled_open(lua_State *L);
 
+static const char *cstring(const QString &qstring)
+{
+    static QHash<QString,const char*> StringHash;
+    if (!StringHash.contains(qstring)) {
+        QByteArray b = qstring.toLatin1();
+        char *s = new char[b.size() + 1];
+        memcpy(s, (void*)b.data(), b.size() + 1);
+        StringHash[qstring] = s;
+    }
+    return StringHash[qstring];
+}
+
 /////
 
 /* function to release collected object via destructor */
@@ -32,7 +62,7 @@ static int tolua_collect_QRect(lua_State* tolua_S)
 }
 
 /* method: rects of class QRegion */
-static int tolua_libtiled_Region_rects00(lua_State* tolua_S)
+static int tolua_tiled_Region_rects00(lua_State* tolua_S)
 {
 #ifndef TOLUA_RELEASE
     tolua_Error tolua_err;
@@ -66,6 +96,39 @@ tolua_lerror:
 #endif
 }
 
+/* method: tiles of class LuaBmpRule */
+static int tolua_tiled_BmpRule_tiles00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+    tolua_Error tolua_err;
+    if (
+            !tolua_isusertype(tolua_S,1,"LuaBmpRule",0,&tolua_err) ||
+            !tolua_isnoobj(tolua_S,2,&tolua_err)
+            )
+        goto tolua_lerror;
+    else
+#endif
+    {
+        LuaBmpRule* self = (LuaBmpRule*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+        if (!self) tolua_error(tolua_S,"invalid 'self' in function 'tiles'",NULL);
+#endif
+        {
+            lua_newtable(tolua_S);
+            for (int i = 0; i < self->mRule->tileChoices.size(); i++) {
+                tolua_pushfieldstring(tolua_S,2,i+1,cstring(self->mRule->tileChoices[i]));
+            }
+        }
+        return 1;
+    }
+    return 0;
+#ifndef TOLUA_RELEASE
+tolua_lerror:
+    tolua_error(tolua_S,"#ferror in function 'tiles'.",&tolua_err);
+    return 0;
+#endif
+}
+
 /////
 
 LuaScript::LuaScript(Map *map) :
@@ -88,7 +151,10 @@ lua_State *LuaScript::init()
 
     tolua_beginmodule(L,NULL);
     tolua_beginmodule(L,"Region");
-    tolua_function(L,"rects",tolua_libtiled_Region_rects00);
+    tolua_function(L,"rects",tolua_tiled_Region_rects00);
+    tolua_endmodule(L);
+    tolua_beginmodule(L,"BmpRule");
+    tolua_function(L,"tiles",tolua_tiled_BmpRule_tiles00);
     tolua_endmodule(L);
     tolua_endmodule(L);
 
@@ -129,9 +195,7 @@ LuaLayer::~LuaLayer()
 
 const char *LuaLayer::name()
 {
-    static QByteArray ba;
-    ba = mName.toLatin1();
-    return ba.data(); // think this is ok
+    return cstring(mName);
 }
 
 void LuaLayer::initClone()
@@ -223,9 +287,11 @@ void LuaTileLayer::replaceTile(Tile *oldTile, Tile *newTile)
 /////
 
 LuaMap::LuaMap(Map *orig) :
+    mClone(new Map(orig->orientation(), orig->width(), orig->height(),
+                   orig->tileWidth(), orig->tileHeight())),
     mOrig(orig),
-    mWidth(orig->width()),
-    mHeight(orig->height())
+    mBmpMain(mClone->rbmpMain()),
+    mBmpVeg(mClone->rbmpVeg())
 {
     foreach (Layer *layer, orig->layers()) {
         if (layer->asTileLayer())
@@ -234,21 +300,28 @@ LuaMap::LuaMap(Map *orig) :
             mLayers += new LuaLayer(layer);
         mLayerByName[layer->name()] = mLayers.last(); // could be duplicates & empty names
     }
+
+    mClone->rbmpSettings()->clone(*mOrig->bmpSettings());
+    foreach (BmpRule *rule, mClone->bmpSettings()->rules()) {
+        if (!rule->label.isEmpty())
+            mRules[rule->label] = LuaBmpRule(rule);
+    }
 }
 
 LuaMap::~LuaMap()
 {
     qDeleteAll(mLayers);
+    delete mClone;
 }
 
 int LuaMap::width() const
 {
-    return mWidth;
+    return mClone->width();
 }
 
 int LuaMap::height() const
 {
-    return mHeight;
+    return mClone->height();
 }
 
 int LuaMap::layerCount() const
@@ -280,7 +353,7 @@ LuaTileLayer *LuaMap::tileLayer(const char *name)
 
 LuaTileLayer *LuaMap::newTileLayer(const char *name)
 {
-    LuaTileLayer *tl = new LuaTileLayer(name, 0, 0, mWidth, mHeight);
+    LuaTileLayer *tl = new LuaTileLayer(name, 0, 0, width(), height());
     return tl;
 }
 
@@ -349,6 +422,20 @@ Tileset *LuaMap::tileset(const char *name)
     return _tileset(QString::fromLatin1(name));
 }
 
+LuaMapBmp &LuaMap::bmp(int index)
+{
+    return index ? mBmpVeg : mBmpMain;
+}
+
+LuaBmpRule *LuaMap::rule(const char *name)
+{
+    QString qname(QString::fromLatin1(name));
+
+    if (mRules.contains(qname))
+        return &mRules[qname];
+    return 0;
+}
+
 Tileset *LuaMap::_tileset(const QString &name)
 {
     if (mTilesetByName.isEmpty()) {
@@ -360,4 +447,120 @@ Tileset *LuaMap::_tileset(const QString &name)
     return 0;
 }
 
+/////
 
+LuaMapBmp::LuaMapBmp(MapBmp &bmp) :
+    mBmp(bmp)
+{
+}
+
+bool LuaMapBmp::contains(int x, int y)
+{
+    return QRect(0, 0, mBmp.width(), mBmp.height()).contains(x, y);
+}
+
+void LuaMapBmp::setPixel(int x, int y, LuaColor &c)
+{
+    if (!contains(x, y)) return; // error!
+    mBmp.setPixel(x, y, c.pixel);
+    mAltered += QRect(x, y, 1, 1);
+}
+
+LuaColor LuaMapBmp::pixel(int x, int y)
+{
+    if (!contains(x, y)) return LuaColor(); // error!
+    return mBmp.pixel(x, y);
+}
+
+void LuaMapBmp::erase(int x, int y, int width, int height)
+{
+    fill(x, y, width, height, LuaColor());
+}
+
+void LuaMapBmp::erase(QRect &r)
+{
+    fill(r, LuaColor());
+}
+
+void LuaMapBmp::erase(QRegion &rgn)
+{
+    fill(rgn, LuaColor());
+}
+
+void LuaMapBmp::erase()
+{
+    fill(LuaColor());
+}
+
+void LuaMapBmp::fill(int x, int y, int width, int height, LuaColor &c)
+{
+    fill(QRect(x, y, width, height), c);
+}
+
+void LuaMapBmp::fill(QRect &r, LuaColor &c)
+{
+    r &= QRect(0, 0, mBmp.width(), mBmp.height());
+
+    for (int y = r.y(); y <= r.bottom(); y++) {
+        for (int x = r.x(); x <= r.right(); x++) {
+            mBmp.setPixel(x, y, c.pixel);
+        }
+    }
+
+    mAltered += r;
+}
+
+void LuaMapBmp::fill(QRegion &rgn, LuaColor &c)
+{
+    foreach (QRect r, rgn.rects())
+        fill(r, c);
+}
+
+void LuaMapBmp::fill(LuaColor &c)
+{
+    fill(QRect(0, 0, mBmp.width(), mBmp.height()), c);
+}
+
+void LuaMapBmp::replace(LuaColor &oldColor, LuaColor &newColor)
+{
+    for (int y = 0; y < mBmp.height(); y++) {
+        for (int x = 0; x < mBmp.width(); x++) {
+            if (mBmp.pixel(x, y) == oldColor.pixel)
+                mBmp.setPixel(x, y, newColor.pixel);
+        }
+    }
+}
+
+/////
+
+LuaColor Lua::Lua_rgb(int r, int g, int b)
+{
+    return LuaColor(r, g, b);
+}
+
+/////
+
+const char *LuaBmpRule::label()
+{
+    return cstring(mRule->label);
+}
+
+int LuaBmpRule::bmpIndex()
+{
+    return mRule->bitmapIndex;
+}
+
+LuaColor LuaBmpRule::color()
+{
+    return mRule->color;
+}
+
+const char *LuaBmpRule::layer()
+{
+    return cstring(mRule->targetLayer);
+}
+
+LuaColor LuaBmpRule::condition()
+{
+    return mRule->condition;
+}

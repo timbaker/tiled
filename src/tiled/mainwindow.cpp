@@ -2172,6 +2172,22 @@ void MainWindow::LuaScript()
         }
     }
 
+    // Apply changes to BMP images
+    Lua::LuaMapBmp &bmpMain = scripter.mMap.mBmpMain;
+    if (!bmpMain.mAltered.isEmpty()) {
+        QRect r = bmpMain.mAltered.boundingRect();
+        us->push(new PaintBMP(mMapDocument, 0, r.x(), r.y(),
+                              bmpMain.mBmp.image(),
+                              bmpMain.mAltered));
+    }
+    Lua::LuaMapBmp &bmpVeg = scripter.mMap.mBmpVeg;
+    if (!bmpVeg.mAltered.isEmpty()) {
+        QRect r = bmpVeg.mAltered.boundingRect();
+        us->push(new PaintBMP(mMapDocument, 0, r.x(), r.y(),
+                              bmpVeg.mBmp.image(),
+                              bmpVeg.mAltered));
+    }
+
     // Handle the script changing the tile selection.
     if (tileSelection != scripter.mMap.mSelection)
         us->push(new ChangeTileSelection(mMapDocument, scripter.mMap.mSelection));
