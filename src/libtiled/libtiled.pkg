@@ -6,6 +6,38 @@ $#include "tileset.h"
 $using namespace Tiled;
 $using namespace Tiled::Lua;
 
+class QRect @ Rect
+{
+    QRect(int x, int y, int w, int h);
+    
+    int x();
+    int y();
+    int width();
+    int height();
+
+    void translate(int dx, int dy);
+    QRect translated(int dx, int dy);
+};
+
+class QRegion @ Region
+{
+    // 'table[QRect] rects()' defined in C++
+
+    bool isEmpty();
+
+    int rectCount();
+    
+    QRegion operator+(QRect &rect);
+    QRegion intersected(QRect &rect);
+
+    QRegion operator+(QRegion &r);
+    QRegion operator-(QRegion &r);
+    QRegion intersected(QRegion &r);
+    QRegion intersected(QRegion &r);
+
+    QRegion translated(int dx, int dy);
+};
+
 class Tile
 {
     Tileset *tileset();
@@ -25,21 +57,32 @@ class LuaLayer @ Layer
 
 class LuaTileLayer @ TileLayer : public LuaLayer
 {
+    LuaTileLayer(const char *name, int x, int y, int width, int height);
+    
     void setTile(int x, int y, Tile *tile);
     Tile *tileAt(int x, int y);
+
+    void replaceTile(Tile *oldTile, Tile *newTile);
 };
 
 class LuaMap @ Map
 {
     int width();
     int height();
-    
+
+    void insertLayer(int index, LuaLayer *layer);
+    void removeLayer(int index);
     int layerCount();
     LuaLayer *layerAt(int index);
     LuaLayer *layer(const char *name);
     LuaTileLayer *tileLayer(const char *name);
+    
+    LuaTileLayer *newTileLayer(const char *name);
 
     Tileset *tileset(const char *name);
     Tile *tile(const char *name);
     Tile *tile(const char *tilesetName, int id);
+
+    void setTileSelection(QRegion &rgn);
+    QRegion tileSelection();
 };

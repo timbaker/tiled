@@ -2059,12 +2059,124 @@ void MainWindow::RoomDefUnknownWalls()
     }
 }
 
+namespace Tiled {
+namespace Internal {
+
+class ReorderLayer : public QUndoCommand
+{
+public:
+    ReorderLayer(MapDocument *doc, int index, Layer *layer) :
+        QUndoCommand(QCoreApplication::translate("Undo Commands", "Reorder Layer")),
+        mDocument(doc),
+        mIndex(index),
+        mLayer(layer)
+    {}
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap()
+    {
+        Layer *current = mDocument->currentLayer();
+
+        mIndex = reorderLayer(mIndex);
+
+        mDocument->setCurrentLayerIndex(current
+                                        ? mDocument->map()->layers().indexOf(current)
+                                        : 0);
+    }
+
+    int reorderLayer(int index)
+    {
+        int old = mDocument->map()->layers().indexOf(mLayer);
+        LayerModel *layerModel = mDocument->layerModel();
+        Layer *layer = layerModel->takeLayerAt(old);
+        layerModel->insertLayer(mIndex, layer);
+        return old;
+    }
+
+    MapDocument *mDocument;
+    int mIndex;
+    Layer *mLayer;
+};
+
+} // namespace Internal
+} // namespace Tiled
+
 #include "luatiled.h"
+#include "painttilelayer.h"
 void MainWindow::LuaScript()
 {
     QString f = QFileDialog::getOpenFileName(this, tr("Open Lua Script"));
     if (f.isEmpty()) return;
-    qDebug() << Lua::LuaScript(mMapDocument->map()).dofile(f);
+
+    Lua::LuaScript scripter(mMapDocument->map());
+    scripter.mMap.mSelection = mMapDocument->tileSelection();
+    QString output;
+    bool ok = scripter.dofile(f, output);
+    qDebug() << output;
+    if (!ok) return;
+
+    QUndoStack *us = mMapDocument->undoStack();
+    us->beginMacro(tr("Lua Script"));
+
+    // Map resizing.
+
+    // Handle deleted layers
+    foreach (Lua::LuaLayer *ll, scripter.mMap.mRemovedLayers) {
+        if (ll->mOrig) {
+            int index = mMapDocument->map()->layers().indexOf(ll->mOrig);
+            Q_ASSERT(index != -1);
+            qDebug() << "remove layer" << ll->mOrig->name() << " at " << index;
+            us->push(new RemoveLayer(mMapDocument, index));
+        }
+    }
+
+    // Layers may have been added, moved, deleted, and/or edited.
+    foreach (Lua::LuaLayer *ll, scripter.mMap.mLayers) {
+        if (Layer *layer = ll->mOrig) {
+            // This layer exists (somewhere) in the original map.
+            int oldIndex = mMapDocument->map()->layers().indexOf(layer);
+            int newIndex = scripter.mMap.mLayers.indexOf(ll);
+            if (oldIndex != newIndex) {
+                qDebug() << "move layer" << layer->name() << "from " << oldIndex << " to " << newIndex;
+                us->push(new ReorderLayer(mMapDocument, newIndex, layer));
+            }
+        } else {
+            // This is a new layer.
+            Q_ASSERT(ll->mClone);
+            Layer *newLayer = ll->mClone->clone();
+            int index = scripter.mMap.mLayers.indexOf(ll);
+            qDebug() << "add layer" << newLayer->name() << "at" << index;
+            us->push(new AddLayer(mMapDocument, index, newLayer));
+        }
+    }
+
+    // Clear the tile selection so it doesn't inhibit what the script changed.
+    QRegion tileSelection = mMapDocument->tileSelection();
+    mMapDocument->setTileSelection(QRegion());
+
+    // Apply changes to tile layers.
+    foreach (Lua::LuaLayer *ll, scripter.mMap.mLayers) {
+        if (Lua::LuaTileLayer *tl = ll->asTileLayer()) {
+            if (tl->mOrig == 0)
+                continue; // Ignore new layers.
+            if (!tl->mCloneTileLayer || tl->mAltered.isEmpty())
+                continue; // No changes.
+            TileLayer *source = tl->mCloneTileLayer->copy(tl->mAltered);
+            QRect r = tl->mAltered.boundingRect();
+            us->push(new PaintTileLayer(mMapDocument, tl->mOrig->asTileLayer(),
+                                        r.x(), r.y(), source, tl->mAltered));
+            delete source;
+        }
+    }
+
+    // Handle the script changing the tile selection.
+    if (tileSelection != scripter.mMap.mSelection)
+        us->push(new ChangeTileSelection(mMapDocument, scripter.mMap.mSelection));
+
+    us->endMacro();
 }
 #endif // ZOMBOID
 
