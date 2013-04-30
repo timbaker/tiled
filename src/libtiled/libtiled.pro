@@ -74,7 +74,7 @@ macx {
         ppc
 }
 
-LIBS += -L../../lib
+#LIBS += -L../../lib
 include(../tolua/src/lib/tolua.pri)
 include(../lua/lua.pri)
 TOLUA_PKGNAME = libtiled

@@ -10,4 +10,4 @@ contains(QT_VERSION, ^4\\.[0-5]\\..*) {
 TEMPLATE  = subdirs
 CONFIG   += ordered
 
-SUBDIRS = src translations
+SUBDIRS = initvars.pro src translations

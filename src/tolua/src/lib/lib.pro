@@ -1,5 +1,5 @@
-include(../../../../tiled.pri)
-include(../../../lua/lua.pri)
+include($$top_srcdir/tiled.pri)
+include($$top_srcdir/src/lua/lua.pri)
 
 TEMPLATE = lib
 CONFIG += static
@@ -8,7 +8,7 @@ CONFIG -= qt
 
 TARGET = tolua
 
-DESTDIR = ../../../../lib
+DESTDIR = $$top_builddir/lib
 
 INCLUDEPATH += \
     ../../include
