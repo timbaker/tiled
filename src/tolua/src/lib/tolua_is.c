@@ -259,7 +259,13 @@ TOLUA_API int tolua_isusertype (lua_State* L, int lo, const char* type, int def,
 {
   if (def && lua_gettop(L)<abs(lo))
     return 1;
+#if 1
+  // ZOMBOID
+  // Why does tolua permit passing null when a C++ argument is not a pointer?
+  if (lua_isusertype(L,lo,type))
+#else
   if (lua_isnil(L,lo) || lua_isusertype(L,lo,type))
+#endif
     return 1;
   err->index = lo;
   err->array = 0;
