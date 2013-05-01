@@ -362,6 +362,12 @@ QModelIndex BmpRuleModel::index(BmpRule *rule) const
 
 void BmpRuleModel::setRules(const Map *map)
 {
+    if (map->bmpSettings()->rules().isEmpty()) {
+        mAliasTiles.clear();
+        clear();
+        return;
+    }
+
     beginInsertRows(QModelIndex(), 0, map->bmpSettings()->rules().size() - 1);
 
     int index = 0;
