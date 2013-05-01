@@ -23,6 +23,8 @@ class QRegion @ Region
 {
     // 'table[QRect] rects()' defined in C++
 
+    vector<QRect> rects();
+
     bool isEmpty();
 
     int rectCount();

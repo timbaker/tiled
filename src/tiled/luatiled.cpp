@@ -52,6 +52,7 @@ static const char *cstring(const QString &qstring)
 
 /////
 
+#if 0
 /* function to release collected object via destructor */
 static int tolua_collect_QRect(lua_State* tolua_S)
 {
@@ -95,6 +96,7 @@ tolua_lerror:
     return 0;
 #endif
 }
+#endif
 
 /* method: tiles of class LuaBmpRule */
 static int tolua_tiled_BmpRule_tiles00(lua_State* tolua_S)
@@ -150,9 +152,11 @@ lua_State *LuaScript::init()
     tolua_tiled_open(L);
 
     tolua_beginmodule(L,NULL);
+#if 0
     tolua_beginmodule(L,"Region");
     tolua_function(L,"rects",tolua_tiled_Region_rects00);
     tolua_endmodule(L);
+#endif
     tolua_beginmodule(L,"BmpRule");
     tolua_function(L,"tiles",tolua_tiled_BmpRule_tiles00);
     tolua_endmodule(L);
