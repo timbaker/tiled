@@ -212,9 +212,14 @@
 ** avoids including 'stdio.h' everywhere.)
 */
 #if defined(LUA_LIB) || defined(lua_c)
+#ifdef ZOMBOID
+extern void luai_writestring(const char *s, int len);
+extern void luai_writeline();
+#else
 #include <stdio.h>
 #define luai_writestring(s,l)	fwrite((s), sizeof(char), (l), stdout)
 #define luai_writeline()	(luai_writestring("\n", 1), fflush(stdout))
+#endif
 #endif
 
 /*

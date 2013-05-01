@@ -113,6 +113,8 @@ public:
 
 #ifdef ZOMBOID
     bool InitConfigFiles();
+
+    void LuaScript(const QString &filePath);
 #endif
 
 public slots:
@@ -164,7 +166,7 @@ public slots:
     void RoomDefRemove();
     void RoomDefUnknownWalls();
 
-    void LuaScript();
+    void LuaConsole();
 #endif
 
     void updateWindowTitle();

@@ -400,7 +400,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
             SLOT(RoomDefRemove()));
     connect(mUi->actionRoomDefUnknownWalls, SIGNAL(triggered()),
             SLOT(RoomDefUnknownWalls()));
-    connect(mUi->actionLuaScript, SIGNAL(triggered()), SLOT(LuaScript()));
+    connect(mUi->actionLuaScript, SIGNAL(triggered()), SLOT(LuaConsole()));
 #endif
 
     connect(mActionHandler->actionLayerProperties(), SIGNAL(triggered()),
@@ -2059,6 +2059,14 @@ void MainWindow::RoomDefUnknownWalls()
     }
 }
 
+#include "luaconsole.h"
+void MainWindow::LuaConsole()
+{
+    LuaConsole::instance()->show();
+    LuaConsole::instance()->raise();
+    LuaConsole::instance()->activateWindow();
+}
+
 namespace Tiled {
 namespace Internal {
 
@@ -2106,17 +2114,24 @@ private:
 
 #include "luatiled.h"
 #include "painttilelayer.h"
-void MainWindow::LuaScript()
+void MainWindow::LuaScript(const QString &filePath)
 {
-    QString f = QFileDialog::getOpenFileName(this, tr("Open Lua Script"));
+    QString f = filePath.isEmpty()
+            ? QFileDialog::getOpenFileName(LuaConsole::instance(), tr("Open Lua Script"),
+                                           QString(), tr("Lua files (*.lua)"))
+            : filePath;
     if (f.isEmpty()) return;
+
+    LuaConsole::instance()->setFile(f);
 
     Lua::LuaScript scripter(mMapDocument->map());
     scripter.mMap.mSelection = mMapDocument->tileSelection();
     QString output;
     bool ok = scripter.dofile(f, output);
     qDebug() << output;
-    if (!ok) return;
+    if (!ok) {
+        return;
+    }
 
     QUndoStack *us = mMapDocument->undoStack();
     us->beginMacro(tr("Lua Script"));

@@ -124,6 +124,18 @@ public:
     void setTile(int x, int y, Tile *tile);
     Tile *tileAt(int x, int y);
 
+    void clearTile(int x, int y);
+
+    void erase(int x, int y, int width, int height);
+    void erase(QRect &r);
+    void erase(LuaRegion &rgn);
+    void erase();
+
+    void fill(int x, int y, int width, int height, Tile *tile);
+    void fill(QRect &r, Tile *tile);
+    void fill(LuaRegion &rgn, Tile *tile);
+    void fill(Tile *tile);
+
     void replaceTile(Tile *oldTile, Tile *newTile);
 
     TileLayer *mCloneTileLayer;

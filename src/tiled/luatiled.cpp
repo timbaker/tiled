@@ -169,6 +169,33 @@ lua_State *LuaScript::init()
     return L;
 }
 
+#include "luaconsole.h"
+extern "C" {
+
+// see luaconf.h
+// these are where print() calls go
+void luai_writestring(const char *s, int len)
+{
+    LuaConsole::instance()->writestring(s, len);
+}
+
+void luai_writeline()
+{
+    LuaConsole::instance()->writeline();
+}
+
+static int traceback (lua_State *L) {
+  const char *msg = lua_tostring(L, 1);
+  if (msg)
+    luaL_traceback(L, L, msg, 1);
+  else if (!lua_isnoneornil(L, 1)) {  /* is there an error object? */
+    if (!luaL_callmeta(L, 1, "__tostring"))  /* try its 'tostring' metamethod */
+      lua_pushliteral(L, "(no error message)");
+  }
+  return 1;
+}
+}
+
 bool LuaScript::dofile(const QString &f, QString &output)
 {
     lua_State *L = init();
@@ -176,9 +203,18 @@ bool LuaScript::dofile(const QString &f, QString &output)
     tolua_pushusertype(L, &mMap, "LuaMap");
     lua_setglobal(L, "map");
 
-    bool fail = luaL_dofile(L, f.toLatin1().data());
+    int status = luaL_loadfile(L, cstring(f));
+    if (status == LUA_OK) {
+        int base = lua_gettop(L);
+        lua_pushcfunction(L, traceback);
+        lua_insert(L, base);
+        status = lua_pcall(L, 0, 0, base);
+        lua_remove(L, base);
+    }
     output = QString::fromLatin1(lua_tostring(L, -1));
-    return !fail;
+    LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+    LuaConsole::instance()->write(QLatin1String("----------------------------------------"));
+    return status == LUA_OK;
 }
 
 /////
@@ -286,6 +322,60 @@ Tile *LuaTileLayer::tileAt(int x, int y)
     return mOrig->asTileLayer()->cellAt(x, y).tile;
 }
 
+void LuaTileLayer::clearTile(int x, int y)
+{
+    setTile(x, y, 0);
+}
+
+void LuaTileLayer::erase(int x, int y, int width, int height)
+{
+    fill(QRect(x, y, width, height), 0);
+}
+
+void LuaTileLayer::erase(QRect &r)
+{
+    fill(r, 0);
+}
+
+void LuaTileLayer::erase(LuaRegion &rgn)
+{
+    fill(rgn, 0);
+}
+
+void LuaTileLayer::erase()
+{
+    fill(0);
+}
+
+void LuaTileLayer::fill(int x, int y, int width, int height, Tile *tile)
+{
+    fill(QRect(x, y, width, height), tile);
+}
+
+void LuaTileLayer::fill(QRect &r, Tile *tile)
+{
+    initClone();
+    r &= mClone->bounds();
+    for (int y = r.y(); y <= r.bottom(); y++) {
+        for (int x = r.x(); x <= r.right(); x++) {
+            mCloneTileLayer->setCell(x, y, Cell(tile));
+        }
+    }
+    mAltered += r;
+}
+
+void LuaTileLayer::fill(LuaRegion &rgn, Tile *tile)
+{
+    foreach (QRect r, rgn.rects()) {
+        fill(r, tile);
+    }
+}
+
+void LuaTileLayer::fill(Tile *tile)
+{
+    fill(mClone ? mClone->bounds() : mOrig->bounds(), tile);
+}
+
 void LuaTileLayer::replaceTile(Tile *oldTile, Tile *newTile)
 {
     initClone();
@@ -316,6 +406,7 @@ LuaMap::LuaMap(Map *orig) :
         else
             mLayers += new LuaLayer(layer);
         mLayerByName[layer->name()] = mLayers.last(); // could be duplicates & empty names
+//        mClone->addLayer(layer);
     }
 
     mClone->rbmpSettings()->clone(*mOrig->bmpSettings());
@@ -338,7 +429,15 @@ LuaMap::LuaMap(LuaMap::Orientation orient, int width, int height, int tileWidth,
 
 LuaMap::~LuaMap()
 {
+    // Remove all layers from the clone map.
+    // Either they are the original unmodified layers or they are clones.
+    // Original layers aren't to be deleted, clones delete themselves.
+    for (int i = mClone->layerCount() - 1; i >= 0; i--) {
+        mClone->takeLayerAt(i);
+    }
+
     qDeleteAll(mLayers);
+    qDeleteAll(mRemovedLayers);
     delete mClone;
 }
 
@@ -397,8 +496,10 @@ LuaTileLayer *LuaMap::newTileLayer(const char *name)
 
 void LuaMap::addLayer(LuaLayer *layer)
 {
+    if (mRemovedLayers.contains(layer))
+        mRemovedLayers.removeAll(layer);
     mLayers += layer;
-    mClone->addLayer(layer->mClone ? layer->mClone : layer->mOrig);
+//    mClone->addLayer(layer->mClone ? layer->mClone : layer->mOrig);
 
     mLayerByName.clear(); // FIXME: make more efficient
     foreach (LuaLayer *ll, mLayers)
@@ -407,9 +508,12 @@ void LuaMap::addLayer(LuaLayer *layer)
 
 void LuaMap::insertLayer(int index, LuaLayer *layer)
 {
+    if (mRemovedLayers.contains(layer))
+        mRemovedLayers.removeAll(layer);
+
     index = qBound(0, index, mLayers.size());
     mLayers.insert(index, layer);
-    mClone->insertLayer(index, layer->mClone ? layer->mClone : layer->mOrig);
+//    mClone->insertLayer(index, layer->mClone ? layer->mClone : layer->mOrig);
 
     mLayerByName.clear(); // FIXME: make more efficient
     foreach (LuaLayer *ll, mLayers)
@@ -422,7 +526,7 @@ void LuaMap::removeLayer(int index)
         return; // error!
     LuaLayer *layer = mLayers.takeAt(index);
     mRemovedLayers += layer;
-    mClone->takeLayerAt(index);
+//    mClone->takeLayerAt(index);
 
     mLayerByName.clear(); // FIXME: make more efficient
     foreach (LuaLayer *ll, mLayers)
@@ -514,18 +618,19 @@ LuaBmpRule *LuaMap::rule(const char *name)
 #include "tmxmapwriter.h"
 bool LuaMap::write(const char *path)
 {
-    // FIX this crap later - assumes a script-create map is being written
-    // and that objects have not been added to the object layer.
+    QScopedPointer<Map> map(mClone->clone());
+    Q_ASSERT(map->layerCount() == 0);
     foreach (LuaLayer *ll, mLayers) {
+        Layer *newLayer = ll->mClone ? ll->mClone->clone() : ll->mOrig->clone();
         if (LuaObjectGroup *og = ll->asObjectGroup()) {
             foreach (LuaMapObject *o, og->objects())
-                if (og->mCloneObjectGroup)
-                    og->mCloneObjectGroup->addObject(o->mClone);
+                newLayer->asObjectGroup()->addObject(o->mClone->clone());
         }
+        map->addLayer(newLayer);
     }
 
     Internal::TmxMapWriter writer;
-    if (!writer.write(mClone, QString::fromLatin1(path))) {
+    if (!writer.write(map.data(), QString::fromLatin1(path))) {
         // mError = write.errorString();
         return false;
     }

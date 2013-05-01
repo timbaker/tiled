@@ -1,7 +1,7 @@
 include($$top_srcdir/tiled.pri)
 
 TEMPLATE = lib
-CONFIG += console
+CONFIG += static
 CONFIG -= app_bundle
 CONFIG -= qt
 
@@ -17,7 +17,7 @@ macx {
 
 DLLDESTDIR = ../..
 
-DEFINES += LUA_BUILD_AS_DLL
+#DEFINES += LUA_BUILD_AS_DLL
 
 SOURCES += \
     src/lzio.c \

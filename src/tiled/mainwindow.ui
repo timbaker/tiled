@@ -545,7 +545,10 @@
   </action>
   <action name="actionLuaScript">
    <property name="text">
-    <string>Lua Script...</string>
+    <string>Lua Console</string>
+   </property>
+   <property name="shortcut">
+    <string>L</string>
    </property>
   </action>
  </widget>
