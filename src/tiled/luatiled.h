@@ -145,7 +145,7 @@ public:
     const char *label();
     int bmpIndex();
     LuaColor color();
-    // 'table[char*] tiles()' defined in C++
+    QStringList tiles();
     const char *layer();
     LuaColor condition();
 
@@ -213,6 +213,7 @@ public:
 };
 
 extern LuaColor Lua_rgb(int r, int g, int b);
+extern const char *cstring(const QString &qstring);
 
 } // namespace Lua
 } // namespace Tiled

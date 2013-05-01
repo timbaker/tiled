@@ -38,7 +38,7 @@ using namespace Tiled::Lua;
 
 TOLUA_API int tolua_tiled_open(lua_State *L);
 
-static const char *cstring(const QString &qstring)
+const char *Lua::cstring(const QString &qstring)
 {
     static QHash<QString,const char*> StringHash;
     if (!StringHash.contains(qstring)) {
@@ -96,7 +96,6 @@ tolua_lerror:
     return 0;
 #endif
 }
-#endif
 
 /* method: tiles of class LuaBmpRule */
 static int tolua_tiled_BmpRule_tiles00(lua_State* tolua_S)
@@ -130,6 +129,7 @@ tolua_lerror:
     return 0;
 #endif
 }
+#endif
 
 /////
 
@@ -156,10 +156,10 @@ lua_State *LuaScript::init()
     tolua_beginmodule(L,"Region");
     tolua_function(L,"rects",tolua_tiled_Region_rects00);
     tolua_endmodule(L);
-#endif
     tolua_beginmodule(L,"BmpRule");
     tolua_function(L,"tiles",tolua_tiled_BmpRule_tiles00);
     tolua_endmodule(L);
+#endif
     tolua_endmodule(L);
 
     return L;
@@ -557,6 +557,11 @@ int LuaBmpRule::bmpIndex()
 LuaColor LuaBmpRule::color()
 {
     return mRule->color;
+}
+
+QStringList LuaBmpRule::tiles()
+{
+    return mRule->tileChoices;
 }
 
 const char *LuaBmpRule::layer()

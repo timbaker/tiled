@@ -219,9 +219,14 @@ function classFunction:supcode ()
      elseif self.list_type then
       output('   lua_newtable(tolua_S);')
       output('   for (int i = 0; i < tolua_ret.size(); i++) {')
-      output('    void* tolua_obj = new',self.list_type,'(tolua_ret[i]);')
-      output('    void* v = tolua_clone(tolua_S,tolua_obj,'.. (_collect[self.list_type] or 'NULL') ..');')
-      output('    tolua_pushfieldusertype(tolua_S,2,i+1,v,"',self.list_type,'");')
+      if self.list_type == 'QString' then
+        output('    const char *v = cstring(tolua_ret[i]);')
+        output('    tolua_pushfieldstring(tolua_S,2,i+1,v);')
+      else
+        output('    void* tolua_obj = new',self.list_type,'(tolua_ret[i]);')
+        output('    void* v = tolua_clone(tolua_S,tolua_obj,'.. (_collect[self.list_type] or 'NULL') ..');')
+        output('    tolua_pushfieldusertype(tolua_S,2,i+1,v,"',self.list_type,'");')
+      end
       output('   }')
      else
       output('   tolua_push'..t..'(tolua_S,(',ct,')tolua_ret);')
