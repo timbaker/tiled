@@ -222,6 +222,8 @@ function classFunction:supcode ()
       if self.list_type == 'QString' then
         output('    const char *v = cstring(tolua_ret[i]);')
         output('    tolua_pushfieldstring(tolua_S,2,i+1,v);')
+      elseif strfind(self.list_type,'.+%*') then
+        output('    tolua_pushfieldusertype(tolua_S,2,i+1,tolua_ret[i],"',string.gsub(self.list_type,'%*',""),'");')
       else
         output('    void* tolua_obj = new',self.list_type,'(tolua_ret[i]);')
         output('    void* v = tolua_clone(tolua_S,tolua_obj,'.. (_collect[self.list_type] or 'NULL') ..');')

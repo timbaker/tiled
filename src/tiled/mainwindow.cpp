@@ -2154,11 +2154,10 @@ void MainWindow::LuaScript()
     }
 
     // Clear the tile selection so it doesn't inhibit what the script changed.
-    QRegion tileSelection = mMapDocument->tileSelection();
-    mMapDocument->setTileSelection(QRegion());
+    us->push(new ChangeTileSelection(mMapDocument, QRegion()));
 
-    // Apply changes to tile layers.
     foreach (Lua::LuaLayer *ll, scripter.mMap.mLayers) {
+        // Apply changes to tile layers.
         if (Lua::LuaTileLayer *tl = ll->asTileLayer()) {
             if (tl->mOrig == 0)
                 continue; // Ignore new layers.
@@ -2169,6 +2168,18 @@ void MainWindow::LuaScript()
             us->push(new PaintTileLayer(mMapDocument, tl->mOrig->asTileLayer(),
                                         r.x(), r.y(), source, tl->mAltered));
             delete source;
+        }
+        // Add/Remove/Delete objects
+        if (Lua::LuaObjectGroup *og = ll->asObjectGroup()) {
+            foreach (Lua::LuaMapObject *o, og->objects()) {
+                if (og->mOrig) {
+
+                } else {
+                    us->push(new AddMapObject(mMapDocument,
+                                              mMapDocument->map()->layerAt(scripter.mMap.mLayers.indexOf(ll))->asObjectGroup(),
+                                              o->mClone->clone()));
+                }
+            }
         }
     }
 
@@ -2189,7 +2200,7 @@ void MainWindow::LuaScript()
     }
 
     // Handle the script changing the tile selection.
-    if (tileSelection != scripter.mMap.mSelection)
+    if (mMapDocument->tileSelection() != scripter.mMap.mSelection)
         us->push(new ChangeTileSelection(mMapDocument, scripter.mMap.mSelection));
 
     us->endMacro();

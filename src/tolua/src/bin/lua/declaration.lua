@@ -450,6 +450,8 @@ function Declaration (s,kind)
   }
  end
   
+ -- this breaks on list<T*>
+ if not strfind(s,'list%b<>') and not strfind(s,'vector%b<>') then
  -- check the form: mod type* name
  local s1 = gsub(s,"(%b%[%])",function (n) return gsub(n,'%*','\1') end)
  t = split(s1,'%*')
@@ -463,6 +465,7 @@ function Declaration (s,kind)
    mod = concat(m,1,m.n-1)   ,
    kind = kind
   }
+ end
  end
 
  if kind == 'var' then

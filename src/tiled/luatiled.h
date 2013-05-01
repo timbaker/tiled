@@ -18,6 +18,7 @@
 #ifndef LUATILED_H
 #define LUATILED_H
 
+#include <QColor>
 #include <QList>
 #include <QMap>
 #include <QRegion>
@@ -32,6 +33,8 @@ class BmpRule;
 class Layer;
 class Map;
 class MapBmp;
+class MapObject;
+class ObjectGroup;
 class Tile;
 class TileLayer;
 class Tileset;
@@ -39,50 +42,8 @@ class Tileset;
 namespace Lua {
 
 class LuaMap;
+class LuaObjectGroup;
 class LuaTileLayer;
-
-class LuaLayer
-{
-public:
-    LuaLayer();
-    LuaLayer(Layer *orig);
-    virtual ~LuaLayer();
-
-    const char *name();
-
-    virtual LuaTileLayer *asTileLayer() { return 0; }
-
-    virtual const char *type() const { return "unknown"; }
-
-    void initClone();
-    virtual void cloned();
-
-    Layer *mClone;
-    Layer *mOrig;
-    QString mName;
-};
-
-class LuaTileLayer : public LuaLayer
-{
-public:
-    LuaTileLayer(TileLayer *orig);
-    LuaTileLayer(const char *name, int x, int y, int width, int height);
-    ~LuaTileLayer();
-
-    LuaTileLayer *asTileLayer() { return this; }
-    const char *type() const { return "tile"; }
-
-    void cloned();
-
-    void setTile(int x, int y, Tile *tile);
-    Tile *tileAt(int x, int y);
-
-    void replaceTile(Tile *oldTile, Tile *newTile);
-
-    TileLayer *mCloneTileLayer;
-    QRegion mAltered;
-    LuaMap *mMap;
-};
 
 class LuaColor
 {
@@ -106,6 +67,109 @@ public:
     QRgb pixel;
 };
 
+// Only reason for this class is because tolua doesn't handle operator+= etc.
+// unite() and intersect() aren't QRegion methods.
+class LuaRegion : public QRegion
+{
+public:
+
+    LuaRegion() : QRegion() {}
+    LuaRegion(const QRegion &rgn) : QRegion(rgn) {}
+
+    void unite(int x, int y, int w, int h) { *this += QRect(x, y, w, h); }
+    void unite(QRect &rect) { *this += rect; }
+    void unite(LuaRegion &rgn) { *this += rgn; }
+
+    void intersect(int x, int y, int w, int h) { *this &= QRect(x, y, w, h); }
+    void intersect(QRect &rect) { *this &= rect; }
+    void intersect(LuaRegion &rgn) { *this &= rgn; }
+};
+
+class LuaLayer
+{
+public:
+    LuaLayer();
+    LuaLayer(Layer *orig);
+    virtual ~LuaLayer();
+
+    const char *name();
+
+    virtual LuaTileLayer *asTileLayer() { return 0; }
+    virtual LuaObjectGroup *asObjectGroup() { return 0; }
+
+    virtual const char *type() const { return "unknown"; }
+
+    void initClone();
+    virtual void cloned();
+
+    Layer *mClone;
+    Layer *mOrig;
+    QString mName;
+};
+
+class LuaTileLayer : public LuaLayer
+{
+public:
+    LuaTileLayer(TileLayer *orig);
+    LuaTileLayer(const char *name, int x, int y, int width, int height);
+    ~LuaTileLayer();
+
+    LuaTileLayer *asTileLayer() { return this; }
+    const char *type() const { return "tile"; }
+
+    void cloned();
+
+    int level();
+
+    void setTile(int x, int y, Tile *tile);
+    Tile *tileAt(int x, int y);
+
+    void replaceTile(Tile *oldTile, Tile *newTile);
+
+    TileLayer *mCloneTileLayer;
+    QRegion mAltered;
+    LuaMap *mMap;
+};
+
+
+class LuaMapObject
+{
+public:
+    LuaMapObject(MapObject *orig);
+    LuaMapObject(const char *name, const char *type, int x, int y, int width, int height);
+
+    const char *name();
+    const char *type();
+
+    QRect bounds();
+
+    MapObject *mClone;
+    MapObject *mOrig;
+};
+
+class LuaObjectGroup : public LuaLayer
+{
+public:
+    LuaObjectGroup(ObjectGroup *orig);
+    LuaObjectGroup(const char *name, int x, int y, int width, int height);
+    ~LuaObjectGroup();
+
+    virtual LuaObjectGroup *asObjectGroup() { return this; }
+
+    void cloned();
+
+    void setColor(LuaColor &color);
+    LuaColor color();
+
+    void addObject(LuaMapObject *object);
+    QList<LuaMapObject*> objects();
+
+    ObjectGroup *mCloneObjectGroup;
+    ObjectGroup *mOrig;
+    QList<LuaMapObject*> mObjects;
+    QColor mColor;
+};
+
 class LuaMapBmp
 {
 public:
@@ -118,12 +182,12 @@ public:
 
     void erase(int x, int y, int width, int height);
     void erase(QRect &r);
-    void erase(QRegion &rgn);
+    void erase(LuaRegion &rgn);
     void erase();
 
     void fill(int x, int y, int width, int height, LuaColor &c);
     void fill(QRect &r, LuaColor &c);
-    void fill(QRegion &rgn, LuaColor &c);
+    void fill(LuaRegion &rgn, LuaColor &c);
     void fill(LuaColor &c);
 
     void replace(LuaColor &oldColor, LuaColor &newColor);
@@ -155,17 +219,30 @@ public:
 class LuaMap
 {
 public:
+    enum Orientation {
+        Unknown,
+        Orthogonal,
+        Isometric,
+        LevelIsometric,
+        Staggered
+    };
+
     LuaMap(Map *orig);
+    LuaMap(Orientation orient, int width, int height, int tileWidth, int tileHeight);
     ~LuaMap();
 
-    void setTileSelection(const QRegion &selection)
+    Orientation orientation();
+
+    void setTileSelection(const LuaRegion &selection)
     { mSelection = selection; }
 
-    QRegion tileSelection()
+    LuaRegion tileSelection()
     { return mSelection; }
 
     int width() const;
     int height() const;
+
+    int maxLevel();
 
     int layerCount() const;
     LuaLayer *layerAt(int index) const;
@@ -174,17 +251,23 @@ public:
 
     LuaTileLayer *newTileLayer(const char *name);
 
+    void addLayer(LuaLayer *layer);
     void insertLayer(int index, LuaLayer *layer);
     void removeLayer(int index);
 
     Tile *tile(const char *name);
     Tile *tile(const char *tilesetName, int tileID);
 
+    void addTileset(Tileset *tileset);
+    int tilesetCount();
     Tileset *_tileset(const QString &name);
     Tileset *tileset(const char *name);
+    Tileset *tilesetAt(int index);
 
     LuaMapBmp &bmp(int index);
     LuaBmpRule *rule(const char *name);
+
+    bool write(const char *path);
 
     Map *mClone;
     Map *mOrig;
@@ -192,8 +275,7 @@ public:
     QList<LuaLayer*> mLayers;
     QList<LuaLayer*> mRemovedLayers;
     QMap<QString,LuaLayer*> mLayerByName;
-    QList<Tileset*> mTilesets;
-    QRegion mSelection;
+    LuaRegion mSelection;
     LuaMapBmp mBmpMain;
     LuaMapBmp mBmpVeg;
     QMap<QString,LuaBmpRule> mRules;

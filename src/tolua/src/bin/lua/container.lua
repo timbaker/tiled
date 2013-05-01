@@ -415,7 +415,15 @@ function classContainer:doparse (s)
 
  -- try function
  do
-  local b,e,decl,arg,const = strfind(s,"^%s*([~_%w][<>_@%w%s%*&:]*[_%w])%s*(%b())%s*(c?o?n?s?t?)%s*=?%s*0?%s*;%s*")
+  local b,e,decl,arg,const = strfind(s,"^%s*([~_%w][_@%w%s%*&:]*[_%w])%s*(%b())%s*(c?o?n?s?t?)%s*=?%s*0?%s*;%s*")
+  if not b then
+   b,e,decl,arg,const = strfind(s,"^%s*(list%b<>%s*[~_%w][_@%w%s%*&:]*[_%w])%s*(%b())%s*(c?o?n?s?t?)%s*=?%s*0?%s*;%s*")
+   if decl then print('matched list<> function ' .. decl) end
+  end
+  if not b then
+   b,e,decl,arg,const = strfind(s,"^%s*(vector%b<>%s*[~_%w][_@%w%s%*&:]*[_%w])%s*(%b())%s*(c?o?n?s?t?)%s*=?%s*0?%s*;%s*")
+   if decl then print('matched vector<> function ' .. decl) end
+  end
   if not b then
    -- try a single letter function name
    b,e,decl,arg,const = strfind(s,"^%s*([_%w])%s*(%b())%s*(c?o?n?s?t?)%s*;%s*")

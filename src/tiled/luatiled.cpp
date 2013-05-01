@@ -17,7 +17,11 @@
 
 #include "luatiled.h"
 
+#include "mapcomposite.h"
+
 #include "map.h"
+#include "mapobject.h"
+#include "objectgroup.h"
 #include "tile.h"
 #include "tileset.h"
 #include "tilelayer.h"
@@ -170,7 +174,7 @@ bool LuaScript::dofile(const QString &f, QString &output)
     lua_State *L = init();
 
     tolua_pushusertype(L, &mMap, "LuaMap");
-    lua_setglobal(L, "TheMap");
+    lua_setglobal(L, "map");
 
     bool fail = luaL_dofile(L, f.toLatin1().data());
     output = QString::fromLatin1(lua_tostring(L, -1));
@@ -246,6 +250,13 @@ void LuaTileLayer::cloned()
     mCloneTileLayer = mClone->asTileLayer();
 }
 
+int LuaTileLayer::level()
+{
+    int level;
+    MapComposite::levelForLayer(mName, &level);
+    return level;
+}
+
 void LuaTileLayer::setTile(int x, int y, Tile *tile)
 {
     // Forbid changing tiles outside the current tile selection.
@@ -298,8 +309,10 @@ LuaMap::LuaMap(Map *orig) :
     mBmpVeg(mClone->rbmpVeg())
 {
     foreach (Layer *layer, orig->layers()) {
-        if (layer->asTileLayer())
-            mLayers += new LuaTileLayer(layer->asTileLayer());
+        if (TileLayer *tl = layer->asTileLayer())
+            mLayers += new LuaTileLayer(tl);
+        else if (ObjectGroup *og = layer->asObjectGroup())
+            mLayers+= new LuaObjectGroup(og);
         else
             mLayers += new LuaLayer(layer);
         mLayerByName[layer->name()] = mLayers.last(); // could be duplicates & empty names
@@ -310,12 +323,28 @@ LuaMap::LuaMap(Map *orig) :
         if (!rule->label.isEmpty())
             mRules[rule->label] = LuaBmpRule(rule);
     }
+
+    foreach (Tileset *ts, mOrig->tilesets())
+        addTileset(ts);
+}
+
+LuaMap::LuaMap(LuaMap::Orientation orient, int width, int height, int tileWidth, int tileHeight) :
+    mClone(new Map((Map::Orientation)orient, width, height, tileWidth, tileHeight)),
+    mOrig(0),
+    mBmpMain(mClone->rbmpMain()),
+    mBmpVeg(mClone->rbmpVeg())
+{
 }
 
 LuaMap::~LuaMap()
 {
     qDeleteAll(mLayers);
     delete mClone;
+}
+
+LuaMap::Orientation LuaMap::orientation()
+{
+    return (Orientation) mClone->orientation();
 }
 
 int LuaMap::width() const
@@ -326,6 +355,11 @@ int LuaMap::width() const
 int LuaMap::height() const
 {
     return mClone->height();
+}
+
+int LuaMap::maxLevel()
+{
+    return 10; // FIXME
 }
 
 int LuaMap::layerCount() const
@@ -361,10 +395,21 @@ LuaTileLayer *LuaMap::newTileLayer(const char *name)
     return tl;
 }
 
+void LuaMap::addLayer(LuaLayer *layer)
+{
+    mLayers += layer;
+    mClone->addLayer(layer->mClone ? layer->mClone : layer->mOrig);
+
+    mLayerByName.clear(); // FIXME: make more efficient
+    foreach (LuaLayer *ll, mLayers)
+        mLayerByName[ll->mName] = ll;
+}
+
 void LuaMap::insertLayer(int index, LuaLayer *layer)
 {
     index = qBound(0, index, mLayers.size());
     mLayers.insert(index, layer);
+    mClone->insertLayer(index, layer->mClone ? layer->mClone : layer->mOrig);
 
     mLayerByName.clear(); // FIXME: make more efficient
     foreach (LuaLayer *ll, mLayers)
@@ -377,6 +422,7 @@ void LuaMap::removeLayer(int index)
         return; // error!
     LuaLayer *layer = mLayers.takeAt(index);
     mRemovedLayers += layer;
+    mClone->takeLayerAt(index);
 
     mLayerByName.clear(); // FIXME: make more efficient
     foreach (LuaLayer *ll, mLayers)
@@ -421,9 +467,34 @@ Tile *LuaMap::tile(const char *tilesetName, int tileID)
     return 0;
 }
 
+void LuaMap::addTileset(Tileset *tileset)
+{
+    mClone->addTileset(tileset);
+    mTilesetByName[tileset->name()] = tileset;
+}
+
+int LuaMap::tilesetCount()
+{
+    return mClone->tilesets().size();
+}
+
+Tileset *LuaMap::_tileset(const QString &name)
+{
+    if (mTilesetByName.contains(name))
+        return mTilesetByName[name];
+    return 0;
+}
+
 Tileset *LuaMap::tileset(const char *name)
 {
     return _tileset(QString::fromLatin1(name));
+}
+
+Tileset *LuaMap::tilesetAt(int index)
+{
+    if (index >= 0 && index < mClone->tilesets().size())
+        return mClone->tilesets()[index];
+    return 0;
 }
 
 LuaMapBmp &LuaMap::bmp(int index)
@@ -440,15 +511,25 @@ LuaBmpRule *LuaMap::rule(const char *name)
     return 0;
 }
 
-Tileset *LuaMap::_tileset(const QString &name)
+#include "tmxmapwriter.h"
+bool LuaMap::write(const char *path)
 {
-    if (mTilesetByName.isEmpty()) {
-        foreach (Tileset *ts, mOrig->tilesets())
-            mTilesetByName[ts->name()] = ts;
+    // FIX this crap later - assumes a script-create map is being written
+    // and that objects have not been added to the object layer.
+    foreach (LuaLayer *ll, mLayers) {
+        if (LuaObjectGroup *og = ll->asObjectGroup()) {
+            foreach (LuaMapObject *o, og->objects())
+                if (og->mCloneObjectGroup)
+                    og->mCloneObjectGroup->addObject(o->mClone);
+        }
     }
-    if (mTilesetByName.contains(name))
-        return mTilesetByName[name];
-    return 0;
+
+    Internal::TmxMapWriter writer;
+    if (!writer.write(mClone, QString::fromLatin1(path))) {
+        // mError = write.errorString();
+        return false;
+    }
+    return true;
 }
 
 /////
@@ -486,7 +567,7 @@ void LuaMapBmp::erase(QRect &r)
     fill(r, LuaColor());
 }
 
-void LuaMapBmp::erase(QRegion &rgn)
+void LuaMapBmp::erase(LuaRegion &rgn)
 {
     fill(rgn, LuaColor());
 }
@@ -514,7 +595,7 @@ void LuaMapBmp::fill(QRect &r, LuaColor &c)
     mAltered += r;
 }
 
-void LuaMapBmp::fill(QRegion &rgn, LuaColor &c)
+void LuaMapBmp::fill(LuaRegion &rgn, LuaColor &c)
 {
     foreach (QRect r, rgn.rects())
         fill(r, c);
@@ -569,7 +650,95 @@ const char *LuaBmpRule::layer()
     return cstring(mRule->targetLayer);
 }
 
+/////
+
 LuaColor LuaBmpRule::condition()
 {
     return mRule->condition;
+}
+
+////
+
+LuaMapObject::LuaMapObject(MapObject *orig) :
+    mClone(0),
+    mOrig(orig)
+{
+}
+
+LuaMapObject::LuaMapObject(const char *name, const char *type,
+                           int x, int y, int width, int height) :
+    mClone(new MapObject(QString::fromLatin1(name), QString::fromLatin1(type),
+           QPointF(x, y), QSizeF(width, height))),
+    mOrig(0)
+{
+
+}
+
+const char *LuaMapObject::name()
+{
+    return mClone ? cstring(mClone->name()) : cstring(mOrig->name());
+}
+
+const char *LuaMapObject::type()
+{
+    return mClone ? cstring(mClone->type()) : cstring(mOrig->type());
+}
+
+QRect LuaMapObject::bounds()
+{
+    return mClone ? mClone->bounds().toAlignedRect() : mOrig->bounds().toAlignedRect();
+}
+
+/////
+
+LuaObjectGroup::LuaObjectGroup(ObjectGroup *orig) :
+    LuaLayer(orig),
+    mCloneObjectGroup(0),
+    mOrig(orig),
+    mColor(orig->color())
+{
+    foreach (MapObject *mo, orig->objects())
+        addObject(new LuaMapObject(mo));
+}
+
+LuaObjectGroup::LuaObjectGroup(const char *name, int x, int y, int width, int height) :
+    LuaLayer(),
+    mCloneObjectGroup(new ObjectGroup(QString::fromLatin1(name), x, y, width, height))
+{
+    mName = mCloneObjectGroup->name();
+    mClone = mCloneObjectGroup;
+}
+
+LuaObjectGroup::~LuaObjectGroup()
+{
+    qDeleteAll(mObjects);
+}
+
+void LuaObjectGroup::cloned()
+{
+    LuaLayer::cloned();
+    mCloneObjectGroup = mClone->asObjectGroup();
+}
+
+void LuaObjectGroup::setColor(LuaColor &color)
+{
+    mColor = QColor(color.r, color.g, color.b);
+}
+
+LuaColor LuaObjectGroup::color()
+{
+    return LuaColor(mColor.red(), mColor.green(), mColor.blue());
+}
+
+void LuaObjectGroup::addObject(LuaMapObject *object)
+{
+    initClone();
+    // FIXME: MainWindow::LuaScript must use these
+//    mCloneObjectGroup->addObject(object->mClone ? object->mClone : object->mOrig);
+    mObjects += object;
+}
+
+QList<LuaMapObject *> LuaObjectGroup::objects()
+{
+    return mObjects;
 }
