@@ -134,6 +134,12 @@ public:
         return ret;
     }
 
+    void setHack(bool hack) { mHack = hack; }
+    QSet<Tile*> knownBlendTiles()
+    { return mKnownBlendTiles; }
+    void tilesToPixels(int x1, int y1, int x2, int y2);
+    bool expectTile(const QString &layerName, int x, int y, Tile *tile);
+
 signals:
     void layersRecreated();
     void regionAltered(const QRegion &region);
@@ -175,6 +181,12 @@ private:
     QStringList mBlendLayers;
     QMap<QString,QList<BmpBlend*> > mBlendsByLayer;
     QMap<BmpBlend*,QStringList> mBlendExcludes;
+
+    QSet<Tile*> mKnownBlendTiles;
+    QMap<BmpBlend*,QList<Tile*> > mBlendTiles;
+    bool mHack;
+    typedef QHash<int,BmpBlend*> BlendGrid;
+    QMap<QString,BlendGrid> mBlendGrids; // blend at each x,y
 
     QSet<QString> mWarnings;
 

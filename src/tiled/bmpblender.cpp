@@ -41,7 +41,8 @@ using namespace Tiled::Internal;
 BmpBlender::BmpBlender(QObject *parent) :
     QObject(parent),
     mMap(0),
-    mFakeTileGrid(0)
+    mFakeTileGrid(0),
+    mHack(false)
 {
 }
 
@@ -51,7 +52,8 @@ BmpBlender::BmpBlender(Map *map, QObject *parent) :
     mFakeTileGrid(0),
     mAliases(map->bmpSettings()->aliases()),
     mRules(map->bmpSettings()->rules()),
-    mBlendList(map->bmpSettings()->blends())
+    mBlendList(map->bmpSettings()->blends()),
+    mHack(false)
 {
     fromMap();
 }
@@ -105,6 +107,49 @@ void BmpBlender::tilesetRemoved(const QString &tilesetName)
         initTiles();
         tileNamesToLayers(0, 0, mMap->width(), mMap->height());
     }
+}
+
+void BmpBlender::tilesToPixels(int x1, int y1, int x2, int y2)
+{
+    int index = mMap->indexOfLayer(QLatin1String("0_Floor"), Layer::TileLayerType);
+    if (index == -1) return;
+    TileLayer *floorLayer = mMap->layerAt(index)->asTileLayer();
+
+    x1 = qBound(0, x1, mMap->width() - 1);
+    x2 = qBound(0, x2, mMap->width() - 1);
+    y1 = qBound(0, y1, mMap->height() - 1);
+    y2 = qBound(0, y2, mMap->height() - 1);
+
+    for (int y = y1; y <= y2; y++) {
+        for (int x = x1; x <= x2; x++) {
+            QRgb col = mMap->rbmpMain().pixel(x, y);
+            if (col != qRgb(0, 0, 0))
+                continue;
+
+            if (Tile *tile = floorLayer->cellAt(x, y).tile) {
+                QString tileName = BuildingEditor::BuildingTilesMgr::nameForTile(tile);
+                for (int i = 0; i < mFloor0Rules.size(); i++) {
+                    if (mFloor0RuleTiles[i].contains(tileName)) {
+                        mMap->rbmp(0).setPixel(x, y, mFloor0Rules[i]->color);
+                    }
+                }
+            }
+        }
+    }
+}
+
+// See if the given tile in the given layer should be there based on the rules
+// and blends.
+bool BmpBlender::expectTile(const QString &layerName, int x, int y, Tile *tile)
+{
+    if (mBlendGrids.contains(layerName)) {
+        int index = x + y * mMap->width();
+        if (mBlendGrids[layerName].contains(index)) {
+            BmpBlend *blend = mBlendGrids[layerName][index];
+            return mBlendTiles[blend].contains(tile);
+        }
+    }
+    return false;
 }
 
 static QStringList normalizeTileNames(const QStringList &tileNames)
@@ -221,6 +266,27 @@ void BmpBlender::initTiles()
     }
 
     updateWarnings();
+
+    // This list is for the benefit of PaintBMP().
+    // It is a list of all known blend tiles.
+    if (mHack) {
+        mKnownBlendTiles.clear();
+        mBlendTiles.clear();
+        foreach (BmpBlend *blend, mBlendList) {
+            QStringList tileNames;
+            if (!BuildingEditor::BuildingTilesMgr::legalTileName(blend->blendTile)) {
+                if (mAliasByName.contains(blend->blendTile))
+                    tileNames += mAliasByName[blend->blendTile]->tiles;
+            } else
+                tileNames += blend->blendTile;
+            foreach (QString tileName, tileNames) {
+                if (mTileByName.contains(tileName)) {
+                    mKnownBlendTiles += mTileByName[tileName];
+                    mBlendTiles[blend] += mTileByName[tileName];
+                }
+            }
+        }
+    }
 }
 
 static bool adjacentToNonBlack(const QImage &image1, const QImage &image2, int x1, int y1)
@@ -349,8 +415,17 @@ void BmpBlender::blend(int x1, int y1, int x2, int y2)
                 if (BmpBlend *blend = getBlendRule(x, y, tileName, layerName)) {
                     QString tileName = resolveAlias(blend->blendTile, mMap->bmp(0).rand(x, y));
                     mTileNameGrids[layerName]->replace(x, y, tileName);
-                } else
+                    if (mHack) {
+                        int index = x + y * mMap->width();
+                        mBlendGrids[layerName][index] = blend;
+                    }
+                } else {
                     mTileNameGrids[layerName]->replace(x, y, QString());
+                    if (mHack) {
+                        int index = x + y * mMap->width();
+                        mBlendGrids[layerName].remove(index);
+                    }
+                }
             }
         }
     }

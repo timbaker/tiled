@@ -30,6 +30,7 @@ class Layer;
 namespace Internal {
 class BmpToolDialog;
 class BrushItem;
+class EraseTiles;
 class PaintTileLayer;
 
 // Base class for all BMP-editing tools, shamelessly ripped from AbstractTileTool.
@@ -501,11 +502,10 @@ public:
              const QImage &source, const QRegion &region);
 //    ~PaintBMP();
 
-    void setMergeable(bool mergeable)
-    { mMergeable = mergeable; }
+    void setMergeable(bool mergeable);
 
-    void undo() { paint(mErased); }
-    void redo() { paint(mSource); }
+    void undo();
+    void redo();
 
     void paint(const ResizableImage &source);
 
@@ -521,6 +521,8 @@ private:
     int mY;
     QRegion mRegion;
     bool mMergeable;
+    QList<EraseTiles*> mEraseTilesCmds;
+    QList<QRegion> mEraseRgns;
 };
 
 class ChangeBmpSelection : public QUndoCommand

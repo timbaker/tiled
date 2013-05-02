@@ -21,6 +21,7 @@
 #include "bmpselectionitem.h"
 #include "bmptooldialog.h"
 #include "brushitem.h"
+#include "erasetiles.h"
 #include "mapcomposite.h"
 #include "mainwindow.h"
 #include "mapscene.h"
@@ -168,6 +169,87 @@ PaintBMP::PaintBMP(MapDocument *mapDocument, int bmpIndex,
 {
     QImage &image = mMapDocument->map()->rbmp(mBmpIndex).rimage();
     mErased = image.copy(mX, mY, mSource.width(), mSource.height());
+
+    Map *origMap = mMapDocument->map();
+    Map map(origMap->orientation(), origMap->width(), origMap->height(),
+            origMap->tileWidth(), origMap->tileHeight());
+    map.rbmpSettings()->clone(*origMap->bmpSettings());
+    foreach (Tileset *ts, origMap->tilesets())
+        map.addTileset(ts);
+    int index = origMap->indexOfLayer(QLatin1String("0_Floor"));
+    if (index != -1)
+        map.addLayer(origMap->layerAt(index)->clone());
+    foreach (QRect r, mRegion.rects()) {
+        for (int y = r.top(); y <= r.bottom(); y++) {
+            for (int x = r.left(); x <= r.right(); x++) {
+                if (QRect(0, 0, source.width(), source.height()).contains(x - mX, y - mY))
+                    map.rbmpMain().setPixel(x, y, source.pixel(x - mX, y - mY));
+            }
+        }
+    }
+    BmpBlender blender(&map);
+    blender.setHack(true);
+    blender.fromMap();
+    QRect r = mRegion.boundingRect();
+    blender.tilesToPixels(r.left() - 2, r.top() - 2, r.right() + 2, r.bottom() + 2);
+    blender.update(r.left() - 1, r.top() - 1, r.right() + 1, r.bottom() + 1);
+
+    // Remove known blend tiles from every layer on level 0.
+    // Do this adjacent to the painted area as well.
+    // Don't remove tiles that the blender would put there.
+    if (CompositeLayerGroup *lg = mMapDocument->mapComposite()->layerGroupForLevel(0)) {
+        QSet<Tile*> blendTiles = blender.knownBlendTiles();
+        foreach (TileLayer *tl, lg->layers()) {
+            QRegion eraseRgn;
+            foreach (QRect r, mRegion.rects()) {
+                for (int y = r.top() - 1; y <= r.bottom() + 1; y++) {
+                    for (int x = r.left() - 1; x <= r.right() + 1; x++) {
+                        if (!tl->contains(x, y)) continue;
+                        if (Tile *tile = tl->cellAt(x, y).tile) {
+                            if (blendTiles.contains(tile)) {
+                                if (!blender.expectTile(tl->name(),x,y,tile))
+                                    eraseRgn += QRect(x, y, 1, 1);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Note: eraseRgn may be empty, but we need the same list of
+            // EraseTiles for merge() to work.
+            EraseTiles *cmd = new EraseTiles(mMapDocument, tl, eraseRgn);
+            cmd->setMergeable(mMergeable);
+            mEraseTilesCmds += cmd;
+            mEraseRgns += eraseRgn;
+        }
+    }
+}
+
+void PaintBMP::setMergeable(bool mergeable)
+{
+    mMergeable = mergeable;
+    foreach (EraseTiles *cmd, mEraseTilesCmds)
+        cmd->setMergeable(mergeable);
+}
+
+void PaintBMP::undo()
+{
+    paint(mErased);
+    // FIXME: TilePainter won't paint outside the selected area
+    for (int i = 0; i < mEraseTilesCmds.size(); i++) {
+        if (!mEraseRgns[i].isEmpty())
+            mEraseTilesCmds[i]->undo();
+    }
+}
+
+void PaintBMP::redo()
+{
+    paint(mSource);
+    // FIXME: TilePainter won't paint outside the selected area
+    for (int i = 0; i < mEraseTilesCmds.size(); i++) {
+        if (!mEraseRgns[i].isEmpty())
+            mEraseTilesCmds[i]->redo();
+    }
 }
 
 void PaintBMP::paint(const ResizableImage &source)
@@ -210,6 +292,11 @@ bool PaintBMP::mergeWith(const QUndoCommand *other)
 
     // Copy the newly-erased pixels from the other command over
     mErased.merge(pos, &o->mErased, newRegion);
+
+    for (int i = 0; i < mEraseTilesCmds.size(); i++) {
+        mEraseTilesCmds[i]->mergeWith(o->mEraseTilesCmds[i]);
+        mEraseRgns[i] |= o->mEraseRgns[i];
+    }
 
     return true;
 }
