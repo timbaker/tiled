@@ -1,3 +1,3 @@
-INCLUDEPATH += $$top_srcdir/src/lua/src
-#DEPENDPATH += $$PWD
+INCLUDEPATH += $$PWD/src
+DEPENDPATH += $$PWD/src
 LIBS += -L$$top_builddir/lib -llua
