@@ -173,9 +173,11 @@ private:
 
     QList<BmpRule*> mRules;
     QMap<QRgb,QList<BmpRule*> > mRuleByColor;
+    QMap<BmpRule*,QStringList> mRuleTileNames;
     QStringList mRuleLayers;
     QList<BmpRule*> mFloor0Rules;
     QList<QStringList> mFloor0RuleTiles;
+    QMap<Tile*,BmpRule*> mFloorTileToRule;
 
     QList<BmpBlend*> mBlendList;
     QStringList mBlendLayers;
