@@ -194,6 +194,10 @@ class LuaMap @ Map
     LuaRegion tileSelection();
 
     LuaMapBmp &bmp(int index);
+
+    int ruleCount();
+    LuaBmpRule *ruleAt(int index);
+    list<LuaBmpRule*> rules();
     LuaBmpRule *rule(const char *name);
 
     bool write(const char *path);

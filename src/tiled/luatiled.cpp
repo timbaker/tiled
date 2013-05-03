@@ -25,6 +25,7 @@
 #include "tile.h"
 #include "tileset.h"
 #include "tilelayer.h"
+#include "tmxmapwriter.h"
 
 #include "tolua.h"
 
@@ -411,8 +412,9 @@ LuaMap::LuaMap(Map *orig) :
 
     mClone->rbmpSettings()->clone(*mOrig->bmpSettings());
     foreach (BmpRule *rule, mClone->bmpSettings()->rules()) {
+        mRules += new LuaBmpRule(rule);
         if (!rule->label.isEmpty())
-            mRules[rule->label] = LuaBmpRule(rule);
+            mRuleByName[rule->label] = mRules.last();
     }
 
     foreach (Tileset *ts, mOrig->tilesets())
@@ -496,6 +498,9 @@ LuaTileLayer *LuaMap::newTileLayer(const char *name)
 
 void LuaMap::addLayer(LuaLayer *layer)
 {
+    if (mLayers.contains(layer))
+        return; // error!
+
     if (mRemovedLayers.contains(layer))
         mRemovedLayers.removeAll(layer);
     mLayers += layer;
@@ -508,6 +513,9 @@ void LuaMap::addLayer(LuaLayer *layer)
 
 void LuaMap::insertLayer(int index, LuaLayer *layer)
 {
+    if (mLayers.contains(layer))
+        return; // error!
+
     if (mRemovedLayers.contains(layer))
         mRemovedLayers.removeAll(layer);
 
@@ -573,6 +581,9 @@ Tile *LuaMap::tile(const char *tilesetName, int tileID)
 
 void LuaMap::addTileset(Tileset *tileset)
 {
+    if (mClone->tilesets().contains(tileset))
+        return; // error!
+
     mClone->addTileset(tileset);
     mTilesetByName[tileset->name()] = tileset;
 }
@@ -606,16 +617,32 @@ LuaMapBmp &LuaMap::bmp(int index)
     return index ? mBmpVeg : mBmpMain;
 }
 
+int LuaMap::ruleCount()
+{
+    return mRules.size();
+}
+
+QList<LuaBmpRule *> LuaMap::rules()
+{
+    return mRules;
+}
+
+LuaBmpRule *LuaMap::ruleAt(int index)
+{
+    if (index >= 0 && index < mRules.size())
+        return mRules[index];
+    return 0;
+}
+
 LuaBmpRule *LuaMap::rule(const char *name)
 {
     QString qname(QString::fromLatin1(name));
 
-    if (mRules.contains(qname))
-        return &mRules[qname];
+    if (mRuleByName.contains(qname))
+        return mRuleByName[qname];
     return 0;
 }
 
-#include "tmxmapwriter.h"
 bool LuaMap::write(const char *path)
 {
     QScopedPointer<Map> map(mClone->clone());

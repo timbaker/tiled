@@ -277,6 +277,10 @@ public:
     Tileset *tilesetAt(int index);
 
     LuaMapBmp &bmp(int index);
+
+    int ruleCount();
+    QList<LuaBmpRule*> rules();
+    LuaBmpRule *ruleAt(int index);
     LuaBmpRule *rule(const char *name);
 
     bool write(const char *path);
@@ -290,7 +294,8 @@ public:
     LuaRegion mSelection;
     LuaMapBmp mBmpMain;
     LuaMapBmp mBmpVeg;
-    QMap<QString,LuaBmpRule> mRules;
+    QList<LuaBmpRule*> mRules;
+    QMap<QString,LuaBmpRule*> mRuleByName;
 };
 
 class LuaScript
