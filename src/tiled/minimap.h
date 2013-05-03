@@ -213,6 +213,7 @@ public slots:
     void updateImage();
     void widthChanged(int width);
     void miniMapItemResized(const QSize &imageSize, const QRectF &sceneRect);
+    void bgColorChanged(const QColor &color);
 
 protected:
     bool event(QEvent *event);

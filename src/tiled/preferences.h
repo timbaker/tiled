@@ -105,6 +105,9 @@ public:
 
     bool showTileLayersPanel() const
     { return mShowTileLayersPanel; }
+
+    QColor backgroundColor() const
+    { return mBackgroundColor; }
 #endif // ZOMBOID
 
     /**
@@ -125,6 +128,7 @@ public slots:
     void setSortTilesets(bool sort);
     void setShowMiniMap(bool show);
     void setShowTileLayersPanel(bool show);
+    void setBackgroundColor(const QColor &bgColor);
 #endif
 
 signals:
@@ -147,6 +151,7 @@ signals:
     void showMiniMapChanged(bool show);
     void miniMapWidthChanged(int width);
     void showTileLayersPanelChanged(bool show);
+    void backgroundColorChanged(const QColor &color);
 #endif
 
 private:
@@ -180,6 +185,7 @@ private:
     bool mShowMiniMap;
     int mMiniMapWidth;
     bool mShowTileLayersPanel;
+    QColor mBackgroundColor;
 #endif
 
     static Preferences *mInstance;

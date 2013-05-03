@@ -209,6 +209,8 @@ private slots:
     void syncAllObjectItems();
 
 #ifdef ZOMBOID
+    void bgColorChanged(const QColor &color);
+
 protected:
     virtual QGraphicsItem *createLayerItem(Layer *layer);
 

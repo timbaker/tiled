@@ -140,6 +140,12 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
     connect(mUi->openGL, SIGNAL(toggled(bool)), SLOT(useOpenGLToggled(bool)));
     connect(mUi->gridColor, SIGNAL(colorChanged(QColor)),
             Preferences::instance(), SLOT(setGridColor(QColor)));
+#ifdef ZOMBOID
+    connect(mUi->bgColor, SIGNAL(colorChanged(QColor)),
+            Preferences::instance(), SLOT(setBackgroundColor(QColor)));
+    connect(mUi->bgColorReset, SIGNAL(clicked()),
+            SLOT(defaultBackgroundColor()));
+#endif
 
     connect(mUi->objectTypesTable->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
@@ -291,6 +297,14 @@ void PreferencesDialog::exportObjectTypes()
     }
 }
 
+#ifdef ZOMBOID
+void PreferencesDialog::defaultBackgroundColor()
+{
+    Preferences::instance()->setBackgroundColor(Qt::darkGray);
+    mUi->bgColor->setColor(Preferences::instance()->backgroundColor());
+}
+#endif
+
 void PreferencesDialog::fromPreferences()
 {
     const Preferences *prefs = Preferences::instance();
@@ -330,6 +344,7 @@ void PreferencesDialog::fromPreferences()
     mObjectTypesModel->setObjectTypes(prefs->objectTypes());
 
 #ifdef ZOMBOID
+    mUi->bgColor->setColor(prefs->backgroundColor());
     mUi->configDirectory->setText(QDir::toNativeSeparators(prefs->configPath()));
 #endif
 }

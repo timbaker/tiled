@@ -64,6 +64,10 @@ private slots:
     void importObjectTypes();
     void exportObjectTypes();
 
+#ifdef ZOMBOID
+    void defaultBackgroundColor();
+#endif
+
 private:
     void fromPreferences();
     void toPreferences();

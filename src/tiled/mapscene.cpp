@@ -76,7 +76,9 @@ MapScene::MapScene(QObject *parent):
 #endif
 #endif
 {
+#ifndef ZOMBOID
     setBackgroundBrush(Qt::darkGray);
+#endif
 
     TilesetManager *tilesetManager = TilesetManager::instance();
     connect(tilesetManager, SIGNAL(tilesetChanged(Tileset*)),
@@ -94,6 +96,9 @@ MapScene::MapScene(QObject *parent):
     addItem(mDarkRectangle);
 
 #ifdef ZOMBOID
+    setBackgroundBrush(prefs->backgroundColor());
+    connect(prefs, SIGNAL(backgroundColorChanged(QColor)),
+            SLOT(bgColorChanged(QColor)));
     addItem(mGridItem);
 #endif
 
@@ -558,6 +563,13 @@ void MapScene::syncAllObjectItems()
     foreach (MapObjectItem *item, mObjectItems)
         item->syncWithMapObject();
 }
+
+#ifdef ZOMBOID
+void MapScene::bgColorChanged(const QColor &color)
+{
+    setBackgroundBrush(color);
+}
+#endif
 
 void MapScene::setGridVisible(bool visible)
 {

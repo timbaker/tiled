@@ -954,7 +954,8 @@ MiniMap::MiniMap(MapView *parent)
     connect(prefs, SIGNAL(miniMapWidthChanged(int)), SLOT(widthChanged(int)));
 
     QGraphicsScene *scene = new QGraphicsScene(this);
-    scene->setBackgroundBrush(Qt::gray);
+    scene->setBackgroundBrush(prefs->backgroundColor().lighter(125));
+    connect(prefs, SIGNAL(backgroundColorChanged(QColor)), SLOT(bgColorChanged(QColor)));
     // Set the sceneRect explicitly so it doesn't grow itself
     scene->setSceneRect(0, 0, 1, 1);
     setScene(scene);
@@ -1075,6 +1076,11 @@ void MiniMap::miniMapItemResized(const QSize &imageSize, const QRectF &sceneRect
     scene()->setSceneRect(sceneRect);
 
     viewRectChanged();
+}
+
+void MiniMap::bgColorChanged(const QColor &color)
+{
+    setBackgroundBrush(color.lighter(125));
 }
 
 bool MiniMap::event(QEvent *event)
