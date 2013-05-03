@@ -129,7 +129,8 @@ BmpToolDialog *BmpToolDialog::instance()
 BmpToolDialog::BmpToolDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::BmpToolDialog),
-    mDocument(0)
+    mDocument(0),
+    mExpanded(true)
 {
     ui->setupUi(this);
 
@@ -139,6 +140,10 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
 
     connect(ui->tableView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
             SLOT(currentRuleChanged(QModelIndex)));
+
+    connect(ui->expandCollapse, SIGNAL(clicked()),
+            SLOT(expandCollapse()));
+    ui->tableView->zoomable()->connectToComboBox(ui->scaleCombo);
 
     connect(ui->brushSize, SIGNAL(valueChanged(int)),
             SLOT(brushSizeChanged(int)));
@@ -180,6 +185,9 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
     bool isRestricted = settings.value(QLatin1String("restrictToSelection"),
                                        true).toBool();
     BmpBrushTool::instance()->setRestrictToSelection(isRestricted);
+
+    bool expanded = settings.value(QLatin1String("expanded"), true).toBool();
+    if (!expanded) expandCollapse();
     settings.endGroup();
 
     mVisibleLaterTimer.setSingleShot(true);
@@ -220,6 +228,7 @@ void BmpToolDialog::setVisible(bool visible)
             settings.setValue(QLatin1String("brushShape"), QLatin1String("circle"));
         settings.setValue(QLatin1String("restrictToSelection"),
                           BmpBrushTool::instance()->restrictToSelection());
+        settings.setValue(QLatin1String("expanded"), mExpanded);
     }
     settings.endGroup();
 }
@@ -234,6 +243,18 @@ void BmpToolDialog::setVisibleNow()
 {
     if (mVisibleLater != isVisible())
         setVisible(mVisibleLater);
+}
+
+void BmpToolDialog::expandCollapse()
+{
+    if (mExpanded) {
+        ui->expandCollapse->setText(tr("Expand"));
+    } else {
+        ui->expandCollapse->setText(tr("Collapse"));
+    }
+    mExpanded = !mExpanded;
+
+    ui->tableView->setExpanded(mExpanded);
 }
 
 void BmpToolDialog::reloadRules()

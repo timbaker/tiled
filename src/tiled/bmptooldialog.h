@@ -53,6 +53,8 @@ private slots:
     void showMapTiles(bool show);
     void setVisibleNow();
 
+    void expandCollapse();
+
     void reloadRules();
     void importRules();
     void trashRules();
@@ -83,6 +85,7 @@ private:
     bool mVisibleLater;
     QTimer mVisibleLaterTimer;
     QMap<MapDocument*,int> mCurrentRuleForDocument;
+    bool mExpanded;
 };
 
 } // namespace Internal

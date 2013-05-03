@@ -132,6 +132,9 @@ void BmpRuleDelegate::paint(QPainter *painter,
             tileNames += tileName;
     }
 
+    if (!mView->isExpanded())
+        tileNames.clear();
+
     const QFontMetrics fm = painter->fontMetrics();
     const int labelHeight = fm.lineSpacing();
     qreal scale = mView->zoomable()->scale();
@@ -231,7 +234,7 @@ QSize BmpRuleDelegate::sizeHint(const QStyleOptionViewItem &option,
     }
 
     const int tileWidth = qCeil(64 * zoom);
-    const int tileHeight = qCeil(128 * zoom);
+    const int tileHeight = mView->isExpanded() ? qCeil(128 * zoom) : 0;
     const int viewWidth = mView->viewport()->width();
     const int columns = qMax(8, viewWidth / tileWidth);
     return QSize(qMax(qMax(tileWidth, mView->maxHeaderWidth()) + extra, viewWidth),
@@ -443,7 +446,8 @@ BmpRuleView::BmpRuleView(QWidget *parent) :
     mZoomable(new Zoomable(this)),
     mContextMenu(0),
     mMaxHeaderWidth(0),
-    mIgnoreMouse(false)
+    mIgnoreMouse(false),
+    mExpanded(true)
 {
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -624,7 +628,22 @@ void BmpRuleView::setRules(const Map *map)
     model()->setRules(map);
 }
 
+void BmpRuleView::setExpanded(bool expanded)
+{
+    if (mExpanded != expanded) {
+        mExpanded = expanded;
+        model()->scaleChanged(mZoomable->scale());
+        visualRect(currentIndex());
+        QMetaObject::invokeMethod(this, "scrollToCurrentItem", Qt::QueuedConnection);
+    }
+}
+
 void BmpRuleView::scaleChanged(qreal scale)
 {
     model()->scaleChanged(scale);
+}
+
+void BmpRuleView::scrollToCurrentItem()
+{
+    scrollTo(currentIndex(), QTableView::EnsureVisible);
 }

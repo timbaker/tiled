@@ -108,11 +108,16 @@ public:
     int maxHeaderWidth() const
     { return mMaxHeaderWidth; }
 
+    void setExpanded(bool expanded);
+    bool isExpanded() const
+    { return mExpanded; }
+
 signals:
     void layerNameClicked(int layerIndex);
 
 public slots:
     void scaleChanged(qreal scale);
+    void scrollToCurrentItem();
 
 private:
     BmpRuleModel *mModel;
@@ -121,6 +126,7 @@ private:
     QMenu *mContextMenu;
     int mMaxHeaderWidth;
     bool mIgnoreMouse;
+    bool mExpanded;
 };
 
 } // namespace Internal
