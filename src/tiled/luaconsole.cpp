@@ -30,6 +30,8 @@ LuaConsole::LuaConsole(QWidget *parent) :
     connect(ui->actionRunAgain, SIGNAL(triggered()), SLOT(runAgain()));
     connect(ui->btnRunAgain, SIGNAL(clicked()), SLOT(runAgain()));
 
+    connect(ui->clear, SIGNAL(clicked()), SLOT(clear()));
+
     connect(ui->actionHelpContents, SIGNAL(triggered()), SLOT(helpContents()));
 }
 
@@ -49,6 +51,10 @@ void LuaConsole::runAgain()
     MainWindow::instance()->LuaScript(mFileName);
 }
 
+void LuaConsole::clear()
+{
+    ui->textEdit->clear();
+}
 
 void LuaConsole::writestring(const char *s, int len)
 {

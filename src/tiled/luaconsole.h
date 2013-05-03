@@ -27,6 +27,7 @@ public:
 private slots:
     void runScript();
     void runAgain();
+    void clear();
     void helpContents();
 
 private:

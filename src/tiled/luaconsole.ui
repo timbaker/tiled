@@ -25,12 +25,46 @@
       </property>
      </widget>
     </item>
-    <item row="1" column="0">
-     <widget class="QToolButton" name="btnRunAgain">
-      <property name="text">
-       <string>Run Again</string>
+    <item row="2" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="topMargin">
+       <number>0</number>
       </property>
-     </widget>
+      <item>
+       <widget class="QToolButton" name="btnRunAgain">
+        <property name="text">
+         <string>Run Again</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="clear">
+        <property name="text">
+         <string>Clear</string>
+        </property>
+        <property name="icon">
+         <iconset resource="tiled.qrc">
+          <normaloff>:/images/16x16/edit-clear.png</normaloff>:/images/16x16/edit-clear.png</iconset>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextBesideIcon</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -75,6 +109,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="tiled.qrc"/>
+ </resources>
  <connections/>
 </ui>
