@@ -3,6 +3,9 @@
 
 #include "mainwindow.h"
 
+#include <QDesktopServices>
+#include <QUrl>
+
 using namespace Tiled;
 using namespace Internal;
 
@@ -26,6 +29,8 @@ LuaConsole::LuaConsole(QWidget *parent) :
     connect(ui->actionRun_Script, SIGNAL(triggered()), SLOT(runScript()));
     connect(ui->actionRunAgain, SIGNAL(triggered()), SLOT(runAgain()));
     connect(ui->btnRunAgain, SIGNAL(clicked()), SLOT(runAgain()));
+
+    connect(ui->actionHelpContents, SIGNAL(triggered()), SLOT(helpContents()));
 }
 
 LuaConsole::~LuaConsole()
@@ -68,4 +73,12 @@ void LuaConsole::write(const QString &s, QColor color)
 //    ui->textEdit->moveCursor(QTextCursor::End);
     ui->textEdit->setTextColor(Qt::black);
     ui->textEdit->insertPlainText(QLatin1String("\n"));
+}
+
+void LuaConsole::helpContents()
+{
+    QUrl url = QUrl::fromLocalFile(
+            QCoreApplication::applicationDirPath() + QLatin1Char('/')
+            + QLatin1String("docs/TileZed/LuaScripting.html"));
+    QDesktopServices::openUrl(url);
 }

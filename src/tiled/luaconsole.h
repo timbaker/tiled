@@ -27,6 +27,7 @@ public:
 private slots:
     void runScript();
     void runAgain();
+    void helpContents();
 
 private:
     Q_DISABLE_COPY(LuaConsole)

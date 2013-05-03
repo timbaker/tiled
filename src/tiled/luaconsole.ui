@@ -50,7 +50,14 @@
     <addaction name="actionRun_Script"/>
     <addaction name="actionRunAgain"/>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionHelpContents"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuHelp"/>
   </widget>
   <action name="actionRun_Script">
    <property name="text">
@@ -60,6 +67,11 @@
   <action name="actionRunAgain">
    <property name="text">
     <string>Run Again</string>
+   </property>
+  </action>
+  <action name="actionHelpContents">
+   <property name="text">
+    <string>Contents</string>
    </property>
   </action>
  </widget>

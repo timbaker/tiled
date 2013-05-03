@@ -1,0 +1,193 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Lua Scripting in TileZed</title><style type="text/css">
+.func {
+  font-weight: bold;
+  font-style: italic;
+  font-size: larger;
+}
+
+</style></head><body>
+<h1>Lua Scripting in TileZed</h1>
+Classes<br>
+<ul>
+  <li><a href="#class_Map">Map</a></li>
+  <li><a href="#class_Layer">Layer</a></li>
+  <li><a href="#class_TileLayer">TileLayer</a></li>
+  <li><a href="#class_ObjectGroup">ObjectGroup</a></li>
+  <li><a href="#class_MapObject">MapObject</a></li>
+  <li><a href="#class_MapBmp">MapBmp</a></li>
+  <li><a href="#class_BmpRule">BmpRule</a></li>
+  <li><a href="#class_Color">Color</a></li>
+  <li><a href="#class_Region">Region</a></li>
+  <li><a href="#class_Rect">Rect</a><br>
+  </li>
+</ul>
+<hr style="width: 100%; height: 2px;">
+<h2><a name="class_Map"></a>class Map</h2>
+enum Orientation {<br>
+&nbsp;&nbsp;&nbsp; Map.Isometric<br>
+&nbsp;&nbsp;&nbsp; Map.LevelIsometric<br>
+}<br>
+<br>
+<span class="func">Map:new</span>(orient, width, height [, tileWidth = 64 [, tileHeight = 32]])<br>
+<br>
+enum Orientation&nbsp;<span class="func">orientation</span>()<br>
+<br>
+int&nbsp;<span class="func">width</span>()<br>
+int&nbsp;<span class="func">height</span>()<br>
+<br>
+int&nbsp;<span class="func">maxLevel</span>()<br>
+<br>
+<span class="func">addLayer</span>(Layer layer)<br>
+<span class="func">insertLayer</span>(int index, Layer layer)<br>
+<span class="func">removeLayer</span>(int index)<br>
+<br>
+int&nbsp;<span class="func">layerCount</span>()<br>
+Layer&nbsp;<span class="func">layerAt</span>(index)<br>
+Layer&nbsp;<span class="func">layer</span>(string name)<br>
+<br>
+TileLayer&nbsp;<span class="func">tileLayer</span>(string name)<br>
+TileLayer&nbsp;<span class="func">newTileLayer</span>(string name)<br>
+<br>
+<span class="func">addTileset</span>(Tileset tileset)<br>
+int&nbsp;<span class="func">tilesetCount</span>()<br>
+Tileset&nbsp;<span class="func">tileset</span>(string name)<br>
+Tileset&nbsp;<span class="func">tilesetAt</span>(int index)<br>
+<br>
+Tile&nbsp;<span class="func">tile</span>(string name)<br>
+Tile&nbsp;<span class="func">tile</span>(string tilesetName, int index)<br>
+<br>
+<span class="func">setTileSelection</span>(Region region)<br>
+Region&nbsp;<span class="func">tileSelection</span>()<br>
+<br>
+<span class="MapBmp">MapBmp</span>&nbsp;<span class="func">bmp</span>(int index)<br>
+BmpRule&nbsp;<span class="func">rule</span>(string name)<br>
+<br>
+bool write(string path)<br>
+<hr style="width: 100%; height: 2px;">
+<h2><a name="class_Layer"></a>class Layer</h2>
+TileLayer&nbsp;<span class="func">asTileLayer</span>()<br>
+ObjectGroup&nbsp;<span class="func">asObjectGroup</span>()<br>
+<br>
+string&nbsp;<span class="func">name</span>()<br>
+string&nbsp;<span class="func">type</span>()<br>
+<hr style="width: 100%; height: 2px;">
+<h2><a name="class_TileLayer"></a>class TileLayer</h2>
+<span class="func">TileLayer:new</span>(string name, int x, int y, int width, int height)<br>
+<br>
+int&nbsp;<span class="func">level</span>()<br>
+<br>
+<span class="func">setTile</span>(int x, int y, Tile tile)<br>
+Tile&nbsp;<span class="func">tileAt</span>(int x, int y)<br>
+<span class="func">clearTile</span>(int x, int y)<br>
+<br>
+<span class="func">erase</span>(int x, int y, int width, int height)<br>
+
+<span class="func">erase</span>(Rect rect)<br>
+
+<span class="func">erase</span>(Region region)<br>
+
+<span class="func">erase</span>()<br>
+
+<br>
+
+<span class="func">fill</span>(int x, int y, int width, int height, Tile tile)<br>
+
+
+<span class="func">fill</span>(Rect rect, Tile tile)<br>
+
+
+<span class="func">fill</span>(Region region, Tile tile)<br>
+
+
+<span class="func">fill</span>(Tile tile)<br>
+<br>
+<span class="func">replaceTile</span>(Tile old, Tile new)<br>
+<hr style="width: 100%; height: 2px;">
+<h2><a name="class_ObjectGroup"></a>class ObjectGroup</h2>
+<span class="func">ObjectGroup:new</span>(string name, int x, int y, int width, int height)<br>
+<br>
+<span class="func">setColor</span>(Color c)<br>
+Color&nbsp;<span class="func">color</span>()<br>
+<br>
+<span class="func">addObject</span>(MapObject object)<br>
+list&lt;MapObject&gt;&nbsp;<span class="func">objects</span>()<br>
+<hr style="width: 100%; height: 2px;">
+<h2><a name="class_MapObject"></a>class MapObject</h2>
+<span class="func">MapObject:new</span>(string name, string type, int x, int y, int width, int height)<br>
+<hr style="width: 100%; height: 2px;">
+<h2><a name="class_MapBmp"></a>class MapBmp</h2>
+<span class="func">setPixel</span>(int x, int y, Color c)<br>
+Color&nbsp;<span class="func">pixel</span>(int x, int y)<br>
+<br>
+<span class="func">erase</span>(int x, int y, int width, int height)<br>
+<span class="func">erase</span>(Rect rect)<br>
+<span class="func">erase</span>(Region region)<br>
+<span class="func">erase</span>()<br>
+<br>
+<span class="func">fill</span>(int x, int y, int width, int height, Color c)<br>
+<span class="func">fill</span>(Rect rect, Color c)<br>
+
+<span class="func">fill(</span>Region region, Color c)<br>
+<span class="func">fill</span>(Color c)<br>
+
+<br>
+<span class="func">replace</span>(Color old, Color new)<br>
+<hr style="width: 100%; height: 2px;">
+<h2><a name="class_BmpRule"></a>class BmpRule</h2>
+string&nbsp;<span class="func">label</span>()<br>
+int&nbsp;<span class="func">bmpIndex</span>()<br>
+Color&nbsp;<span class="func">color</span>()<br>
+list&lt;string&gt;&nbsp;<span class="func">tiles</span>()<br>
+string&nbsp;<span class="func">layer</span>()<br>
+Color&nbsp;<span class="func">condition</span>()<br>
+<hr style="width: 100%; height: 2px;">
+<h2><a name="class_Color"></a>class Color</h2>
+<span class="func">Color:new</span>()<br>
+<span class="func">Color:new</span>(int r, int g, int b)<br>
+int r<br>
+int g<br>
+int b<br>
+<hr style="width: 100%; height: 2px;">
+<h2><a name="class_Region"></a>class Region</h2>
+<span class="func">Region:new</span>()<br>
+<br>
+list&lt;Rect&gt;&nbsp;<span class="func">rects</span>()<br>
+<br>
+bool&nbsp;<span class="func">isEmpty</span>()<br>
+<br>
+int&nbsp;<span class="func">rectCount</span>()<br>
+<br>
+<span class="func">unite</span>(int x, int y, int w, int h)<br>
+<span class="func">unite</span>(Rect rect)<br>
+<span class="func">unite(</span>Region r)<br>
+<br>
+<span class="func">intersect</span>(int x, int y, int w, int h)<br>
+<span class="func">intersect(</span>Rect rect)<br>
+<span class="func">intersect</span>(Region region)<br>
+<br>
+Region&nbsp;<span class="func">intersected</span>(Rect)<br>
+Region&nbsp;<span class="func">intersected</span>(Region)<br>
+<br>
+Region&nbsp;<span class="func">operator+</span>(Rect)<br>
+Region&nbsp;<span class="func">operator+</span>(Region)<br>
+Region&nbsp;<span class="func">operator-</span>(Region)<br>
+<hr style="width: 100%; height: 2px;">
+<h2><a name="class_Rect"></a>class Rect</h2>
+<span class="func">Rect:new</span>(int x, int y, int w, int h)<br>
+<br>
+int&nbsp;<span class="func">x</span>()<br>
+int&nbsp;<span class="func">y</span>()<br>
+int&nbsp;<span class="func">width</span>()<br>
+int&nbsp;<span class="func">height</span>()<br>
+<br>
+int&nbsp;<span class="func">left</span>()<br>
+int&nbsp;<span class="func">top</span>()<br>
+int&nbsp;<span class="func">right</span>()<br>
+int&nbsp;<span class="func">bottom</span>()<br>
+<br>
+<span class="func">translate(</span>int dx, int dy)<br>
+Rect&nbsp;<span class="func">translated</span>(int dx, int dy)<br>
+<br>
+bool&nbsp;<span class="func">intersects</span>(Rect other)<br>
+</body></html>
