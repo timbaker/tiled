@@ -37,7 +37,6 @@
 extern "C" {
 #include "lualib.h"
 #include "lauxlib.h"
-#include "luasocket.h"
 }
 
 using namespace Tiled;
@@ -157,7 +156,6 @@ lua_State *LuaScript::init()
     L = luaL_newstate();
     luaL_openlibs(L);
     tolua_tiled_open(L);
-    luaopen_socket_core(L);
 
     tolua_beginmodule(L,NULL);
 #if 0
