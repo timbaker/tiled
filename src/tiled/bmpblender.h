@@ -149,6 +149,7 @@ public slots:
     void updateWarnings();
 
 private:
+    QList<Tile *> tileNamesToTiles(const QStringList &names);
     void initTiles();
     void imagesToTileNames(int x1, int y1, int x2, int y2);
     void blend(int x1, int y1, int x2, int y2);
@@ -183,6 +184,8 @@ private:
     QStringList mBlendLayers;
     QMap<QString,QList<BmpBlend*> > mBlendsByLayer;
     QMap<BmpBlend*,QStringList> mBlendExcludes;
+    QMap<BmpBlend*,QList<QList<Tile*> > > mBlendExclude2;
+    QSet<QString> mBlendExclude2Layers;
 
     QSet<Tile*> mKnownBlendTiles;
     QMap<BmpBlend*,QList<Tile*> > mBlendTiles;

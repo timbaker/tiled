@@ -236,6 +236,12 @@ void BmpBlender::fromMap()
                 tileNames += tileName;
             }
         }
+        foreach (QString tileName, blend->exclude2) {
+            if (BuildingEditor::BuildingTilesMgr::legalTileName(tileName)) {
+                tileNames += tileName;
+            }
+        }
+
         mBlendExcludes[blend] = normalizeTileNames(excludes);
         if (BuildingEditor::BuildingTilesMgr::legalTileName(blend->mainTile)) {
             if (!mAliasByName.contains(blend->mainTile))
@@ -251,6 +257,18 @@ void BmpBlender::fromMap()
     mTileNames = normalizeTileNames(tileNames.values());
 
     initTiles();
+}
+
+QList<Tile*> BmpBlender::tileNamesToTiles(const QStringList &names)
+{
+    QList<Tile*> ret;
+    foreach (QString name, names) {
+        if (mAliasByName.contains(name)) {
+            ret += tileNamesToTiles(mAliasByName[name]->tiles);
+        } else if (mTileByName.contains(name))
+            ret += mTileByName[name];
+    }
+    return ret;
 }
 
 void BmpBlender::initTiles()
@@ -282,6 +300,15 @@ void BmpBlender::initTiles()
         }
     }
 
+    mBlendExclude2.clear();
+    mBlendExclude2Layers.clear();
+    foreach (BmpBlend *blend, mBlendList) {
+        for (int i = 0; i < blend->exclude2.size(); i += 2) {
+            mBlendExclude2[blend] += tileNamesToTiles(QStringList(blend->exclude2[i]));
+            mBlendExclude2Layers += blend->exclude2[i + 1];
+        }
+    }
+
     updateWarnings();
 
     // This list is for the benefit of PaintBMP().
@@ -290,6 +317,11 @@ void BmpBlender::initTiles()
         mKnownBlendTiles.clear();
         mBlendTiles.clear();
         foreach (BmpBlend *blend, mBlendList) {
+#if 1
+            QList<Tile*> tiles = tileNamesToTiles(QStringList(blend->blendTile));
+            mKnownBlendTiles += tiles.toSet();
+            mBlendTiles[blend] += tiles;
+#else
             QStringList tileNames;
             if (!BuildingEditor::BuildingTilesMgr::legalTileName(blend->blendTile)) {
                 if (mAliasByName.contains(blend->blendTile))
@@ -302,6 +334,7 @@ void BmpBlender::initTiles()
                     mBlendTiles[blend] += mTileByName[tileName];
                 }
             }
+#endif
         }
     }
 }
@@ -435,6 +468,14 @@ void BmpBlender::blend(int x1, int y1, int x2, int y2)
             = mTileNameGrids[QLatin1String("0_Floor")];
     if (!grid)
         return;
+
+    QMap<QString,TileLayer*> mapLayers;
+    foreach (QString layerName, mBlendExclude2Layers) {
+        int n = mMap->indexOfLayer(layerName, Layer::TileLayerType);
+        if (n != -1)
+            mapLayers[layerName] = mMap->layerAt(n)->asTileLayer();
+    }
+
     for (int y = y1; y <= y2; y++) {
         for (int x = x1; x <= x2; x++) {
             QString tileName = grid->at(x, y);
@@ -444,6 +485,25 @@ void BmpBlender::blend(int x1, int y1, int x2, int y2)
                 tileName = mFakeTileGrid->at(x, y);
             foreach (QString layerName, mBlendLayers) {
                 if (BmpBlend *blend = getBlendRule(x, y, tileName, layerName)) {
+
+                    for (int i = 0; i < blend->exclude2.size(); i += 2) {
+                        if (mapLayers.contains(blend->exclude2[i + 1])) {
+                            TileLayer *mapLayer = mapLayers[blend->exclude2[i + 1]];
+                            if (Tile *tile = mapLayer->cellAt(x, y).tile) {
+                                if (mBlendExclude2[blend][i/2].contains(tile)) {
+                                    blend = 0;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (!blend) {
+                        mTileNameGrids[layerName]->replace(x, y, QString());
+                        int index = x + y * mMap->width();
+                        mBlendGrids[layerName].remove(index);
+                        continue;
+                    }
+
                     QString tileName = resolveAlias(blend->blendTile, mMap->bmp(0).rand(x, y));
                     mTileNameGrids[layerName]->replace(x, y, tileName);
                     if (true/*mHack*/) {
@@ -483,6 +543,8 @@ void BmpBlender::tileNamesToLayers(int x1, int y1, int x2, int y2)
     foreach (QString layerName, mTileLayers.keys()) {
         BuildingEditor::FloorTileGrid *grid = mTileNameGrids[layerName];
         TileLayer *tl = mTileLayers[layerName];
+        int n = mMap->indexOfLayer(layerName, Layer::TileLayerType);
+        TileLayer *mapLayer = (n == -1) ? 0 : mMap->layerAt(n)->asTileLayer();
         for (int y = y1; y <= y2; y++) {
             for (int x = x1; x <= x2; x++) {
                 QString tileName = grid->at(x, y);
@@ -491,14 +553,13 @@ void BmpBlender::tileNamesToLayers(int x1, int y1, int x2, int y2)
                     continue;
                 }
                 // If the blend tile that is in the map is the expected one,
-                // don't override it.
-                int n = mMap->indexOfLayer(layerName, Layer::TileLayerType);
-                if (n != -1) {
-                    TileLayer *mapLayer = mMap->layerAt(n)->asTileLayer();
-                    Tile *tile = mapLayer->cellAt(x, y).tile;
+                // don't override it.  This prevents a map tile which should
+                // be there from being overriden by this automatic one.
+                if (mapLayer) {
                     int index = x + y * mMap->width();
                     if (mBlendGrids[layerName].contains(index)) {
                         BmpBlend *blend = mBlendGrids[layerName][index];
+                        Tile *tile = mapLayer->cellAt(x, y).tile;
                         if (mBlendTiles[blend].contains(tile)) {
                             tl->setCell(x, y, Cell(0));
                             continue;
@@ -1092,7 +1153,8 @@ bool BmpBlendsFile::read(const QString &fileName, const QList<BmpAlias*> &aliase
                         kv.name != QLatin1String("mainTile") &&
                         kv.name != QLatin1String("blendTile") &&
                         kv.name != QLatin1String("dir") &&
-                        kv.name != QLatin1String("exclude")) {
+                        kv.name != QLatin1String("exclude") &&
+                        kv.name != QLatin1String("exclude2")) {
                     mError = tr("Unknown blend attribute '%1'").arg(kv.name);
                     return false;
                 }
@@ -1159,8 +1221,38 @@ missingKV:
                 }
             }
 
+            QStringList exclude2;
+            if (block.keyValue("exclude2", kv)) {
+                QStringList values = kv.values();
+                if (values.size() % 2) {
+                    mError = tr("Line %1: Expected tile,layer pairs in exclude2")
+                            .arg(kv.lineNumber);
+                    return false;
+                }
+                for (int i = 0; i < values.size(); i += 2) {
+                    QString tileName = values[i];
+                    QString layerName = values[i + 1];
+                    if (!MapComposite::levelForLayer(layerName)) {
+                        mError = tr("Line %1: Invalid layer name '%2'")
+                                .arg(kv.lineNumber).arg(layerName);
+                        return false;
+                    }
+                    if (aliasToName.contains(tileName)) {
+                        exclude2 += tileName;
+                    } else {
+                        if (!BuildingEditor::BuildingTilesMgr::legalTileName(tileName)) {
+                            mError = tr("Line %1: Invalid tile name '%2'")
+                                    .arg(kv.lineNumber).arg(tileName);
+                            return false;
+                        }
+                        exclude2 += BuildingEditor::BuildingTilesMgr::normalizeTileName(tileName);
+                    }
+                    exclude2 += layerName;
+                }
+            }
+
             BmpBlend *blend = new BmpBlend(block.value("layer"), mainTile,
-                                           blendTile, dir, excludes);
+                                           blendTile, dir, excludes, exclude2);
             mBlends += blend;
         } else {
             mError = tr("Unknown block name '%1'.\nProbable syntax error in Blends.txt.").arg(block.name);
