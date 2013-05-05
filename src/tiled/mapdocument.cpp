@@ -35,6 +35,7 @@
 #include "bmptool.h"
 #include "mapcomposite.h"
 #include "mapmanager.h"
+#include "preferences.h"
 #include "zlevelrenderer.h"
 #include "zlevelsmodel.h"
 #endif
@@ -886,7 +887,7 @@ void MapDocument::deselectObjects(const QList<MapObject *> &objects)
 #ifdef ZOMBOID
 void MapDocument::initAdjacentMaps()
 {
-    if (mFileName.isEmpty())
+    if (mFileName.isEmpty() || !Preferences::instance()->showAdjacentMaps())
         return;
     QRegExp re(QLatin1String("(.+)_([0-9]+)_([0-9]+)"));
     QFileInfo info(mFileName);

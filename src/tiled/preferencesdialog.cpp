@@ -145,6 +145,8 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
             Preferences::instance(), SLOT(setBackgroundColor(QColor)));
     connect(mUi->bgColorReset, SIGNAL(clicked()),
             SLOT(defaultBackgroundColor()));
+    connect(mUi->showAdjacent, SIGNAL(toggled(bool)),
+            Preferences::instance(), SLOT(setShowAdjacentMaps(bool)));
 #endif
 
     connect(mUi->objectTypesTable->selectionModel(),
@@ -346,6 +348,7 @@ void PreferencesDialog::fromPreferences()
 #ifdef ZOMBOID
     mUi->bgColor->setColor(prefs->backgroundColor());
     mUi->configDirectory->setText(QDir::toNativeSeparators(prefs->configPath()));
+    mUi->showAdjacent->setChecked(prefs->showAdjacentMaps());
 #endif
 }
 

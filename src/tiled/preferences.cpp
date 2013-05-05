@@ -89,6 +89,7 @@ Preferences::Preferences()
     mShowTileLayersPanel = mSettings->value(QLatin1String("ShowTileLayersPanel"), true).toBool();
     mBackgroundColor = QColor(mSettings->value(QLatin1String("BackgroundColor"),
                                                QColor(Qt::darkGray).name()).toString());
+    mShowAdjacentMaps = mSettings->value(QLatin1String("ShowAdjacentMaps"), true).toBool();
 #endif
     mSettings->endGroup();
 
@@ -488,5 +489,14 @@ void Preferences::setBackgroundColor(const QColor &bgColor)
     mBackgroundColor = bgColor;
     mSettings->setValue(QLatin1String("Interface/BackgroundColor"), mBackgroundColor.name());
     emit backgroundColorChanged(mBackgroundColor);
+}
+
+void Preferences::setShowAdjacentMaps(bool show)
+{
+    if (mShowAdjacentMaps == show)
+        return;
+    mShowAdjacentMaps = show;
+    mSettings->setValue(QLatin1String("Interface/ShowAdjacentMaps"), show);
+    emit showAdjacentMapsChanged(mShowAdjacentMaps);
 }
 #endif // ZOMBOID
