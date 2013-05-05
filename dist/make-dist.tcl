@@ -135,6 +135,9 @@ foreach plugin {droidcraft flare json lot lua replicaisland tengine tmw} {
     copyFile $BIN/plugins/tiled $DEST/plugins/tiled $plugin.dll
 }
 
+puts ---Lua---
+copyDir $SRC $DEST lua
+
 puts "---Qt DLLS---"
 copyFile $QT_BINARY_DIR $DEST QtCore4.dll
 copyFile $QT_BINARY_DIR $DEST QtGui4.dll
