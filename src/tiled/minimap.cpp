@@ -185,8 +185,9 @@ public:
         Recreate
     };
 
-    MapChange(Change change)
-        : mChange(change)
+    MapChange(Change change) :
+        mChange(change),
+        mTileLayer(QString(), 0, 0, 0, 0)
     {
 
     }
@@ -215,6 +216,7 @@ public:
         Tiled::Cell cell;
     };
     QList<CellEntry> mCells;
+    TileLayer mTileLayer;
     Tileset *mTileset;
     int mTilesetIndex;
     QString mTilesetName;
@@ -363,10 +365,18 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
         case MapChange::RegionAltered: {
             if (Layer *layer = sm.mMapComposite->map()->layerAt(c.mLayerIndex)) { // kinda slow
                 if (TileLayer *tl = layer->asTileLayer()) {
-                    foreach (const MapChange::CellEntry &ce, c.mCells)
-                        tl->setCell(ce.x, ce.y, ce.cell);
+                    if (c.mCells.isEmpty())
+                        tl->setCells(c.mTileLayer.x(), c.mTileLayer.y(), (TileLayer*)&c.mTileLayer, c.mRegion);
+                    else {
+                        foreach (const MapChange::CellEntry &ce, c.mCells)
+                            tl->setCell(ce.x, ce.y, ce.cell);
+                    }
                     if (CompositeLayerGroup *layerGroup = sm.mMapComposite->layerGroupForLayer(tl))
                         layerGroup->regionAltered(tl); // possibly set mNeedsSynch
+                }
+                if (sm.mMapComposite->bmpBlender()->tileLayerNames().contains(layer->name())) {
+                    QRect r = c.mRegion.boundingRect();
+                    sm.mMapComposite->bmpBlender()->update(r.x(), r.y(), r.right(), r.bottom());
                 }
             }
             break;
@@ -475,14 +485,20 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
         case MapChange::RegionAltered: {
             // The layer might not exist anymore, redrawAll catches that.
             if (redrawAll) break;
+#if 1
+            QRect tileBounds = c.mRegion.boundingRect();
+#else
             QRect tileBounds;
+#endif
             TileLayer *tl = sm.mMapComposite->map()->layerAt(c.mLayerIndex)->asTileLayer(); // kinda slow
+#if 0
             foreach (const MapChange::CellEntry &ce, c.mCells) {
                 if (tileBounds.isEmpty())
                     tileBounds = QRect(ce.x, ce.y, 1, 1);
                 else
                     tileBounds |= QRect(ce.x, ce.y, 1, 1);
             }
+#endif
             QMargins margins = sm.mMapComposite->map()->drawMargins();
             QRectF r = mRenderer->boundingRect(tileBounds, tl->level());
             r.adjust(-margins.left(),
@@ -769,13 +785,30 @@ void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
     if (clipped.isEmpty()) return;
     MapChange *c = new MapChange(MapChange::RegionAltered);
     c->mLayerIndex = mMapComposite->map()->layers().indexOf(layer);
-    foreach (const QRect &r, clipped.rects()) {
-        for (int y = r.y(); y <= r.bottom(); y++) {
-            for (int x = r.x(); x <= r.right(); x++) {
-                c->mCells += MapChange::CellEntry(x, y, layer->asTileLayer()->cellAt(x, y));
+    c->mRegion = clipped;
+
+    QRect br = clipped.boundingRect();
+    if (layer->asTileLayer() && (br.width() * br.height() > 50)) {
+        c->mTileLayer.resize(br.size(), QPoint());
+        foreach (const QRect &r, clipped.rects()) {
+            for (int y = r.y(); y <= r.bottom(); y++) {
+                for (int x = r.x(); x <= r.right(); x++) {
+                    c->mTileLayer.setCell(x-br.x(), y-br.y(),
+                                          layer->asTileLayer()->cellAt(x, y));
+                }
+            }
+        }
+        c->mTileLayer.setPosition(br.topLeft());
+    } else {
+        foreach (const QRect &r, clipped.rects()) {
+            for (int y = r.y(); y <= r.bottom(); y++) {
+                for (int x = r.x(); x <= r.right(); x++) {
+                    c->mCells += MapChange::CellEntry(x, y, layer->asTileLayer()->cellAt(x, y));
+                }
             }
         }
     }
+
     queueChange(c);
 }
 
