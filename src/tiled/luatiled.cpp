@@ -29,6 +29,7 @@
 
 #include "tolua.h"
 
+#include <QElapsedTimer>
 #include <QHash>
 #include <QString>
 #include <QTextStream>
@@ -36,6 +37,7 @@
 extern "C" {
 #include "lualib.h"
 #include "lauxlib.h"
+#include "luasocket.h"
 }
 
 using namespace Tiled;
@@ -155,6 +157,7 @@ lua_State *LuaScript::init()
     L = luaL_newstate();
     luaL_openlibs(L);
     tolua_tiled_open(L);
+    luaopen_socket_core(L);
 
     tolua_beginmodule(L,NULL);
 #if 0
@@ -201,6 +204,9 @@ bool LuaScript::dofile(const QString &f, QString &output)
 {
     lua_State *L = init();
 
+    QElapsedTimer elapsed;
+    elapsed.start();
+
     tolua_pushusertype(L, &mMap, "LuaMap");
     lua_setglobal(L, "map");
 
@@ -214,7 +220,9 @@ bool LuaScript::dofile(const QString &f, QString &output)
     }
     output = QString::fromLatin1(lua_tostring(L, -1));
     LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
-    LuaConsole::instance()->write(QLatin1String("----------------------------------------"));
+    LuaConsole::instance()->write(qApp->tr("---------- script completed in %1s ----------")
+                                  .arg(elapsed.elapsed()/1000.0));
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
     return status == LUA_OK;
 }
 
@@ -411,10 +419,20 @@ LuaMap::LuaMap(Map *orig) :
     }
 
     mClone->rbmpSettings()->clone(*mOrig->bmpSettings());
+    mBmpMain.mBmp = orig->bmpMain();
+    mBmpVeg.mBmp = orig->bmpVeg();
+
+    foreach (BmpAlias *alias, mClone->bmpSettings()->aliases()) {
+        mAliases += new LuaBmpAlias(alias);
+        mAliasByName[alias->name] = mAliases.last();
+    }
     foreach (BmpRule *rule, mClone->bmpSettings()->rules()) {
         mRules += new LuaBmpRule(rule);
         if (!rule->label.isEmpty())
             mRuleByName[rule->label] = mRules.last();
+    }
+    foreach (BmpBlend *blend, mClone->bmpSettings()->blends()) {
+        mBlends += new LuaBmpBlend(blend);
     }
 
     foreach (Tileset *ts, mOrig->tilesets())
@@ -431,6 +449,10 @@ LuaMap::LuaMap(LuaMap::Orientation orient, int width, int height, int tileWidth,
 
 LuaMap::~LuaMap()
 {
+    qDeleteAll(mAliases);
+    qDeleteAll(mRules);
+    qDeleteAll(mBlends);
+
     // Remove all layers from the clone map.
     // Either they are the original unmodified layers or they are clones.
     // Original layers aren't to be deleted, clones delete themselves.
@@ -617,6 +639,19 @@ LuaMapBmp &LuaMap::bmp(int index)
     return index ? mBmpVeg : mBmpMain;
 }
 
+QList<LuaBmpAlias *> LuaMap::aliases()
+{
+    return mAliases;
+}
+
+LuaBmpAlias *LuaMap::alias(const char *name)
+{
+    QString qname(QString::fromLatin1(name));
+    if (mAliasByName.contains(qname))
+        return mAliasByName[qname];
+    return 0;
+}
+
 int LuaMap::ruleCount()
 {
     return mRules.size();
@@ -641,6 +676,11 @@ LuaBmpRule *LuaMap::rule(const char *name)
     if (mRuleByName.contains(qname))
         return mRuleByName[qname];
     return 0;
+}
+
+QList<LuaBmpBlend *> LuaMap::blends()
+{
+    return mBlends;
 }
 
 bool LuaMap::write(const char *path)
@@ -683,9 +723,9 @@ void LuaMapBmp::setPixel(int x, int y, LuaColor &c)
     mAltered += QRect(x, y, 1, 1);
 }
 
-LuaColor LuaMapBmp::pixel(int x, int y)
+unsigned int LuaMapBmp::pixel(int x, int y)
 {
-    if (!contains(x, y)) return LuaColor(); // error!
+    if (!contains(x, y)) return qRgb(0,0,0); // error!
     return mBmp.pixel(x, y);
 }
 
@@ -873,4 +913,38 @@ void LuaObjectGroup::addObject(LuaMapObject *object)
 QList<LuaMapObject *> LuaObjectGroup::objects()
 {
     return mObjects;
+}
+
+/////
+
+QStringList LuaBmpAlias::tiles()
+{
+    return mAlias->tiles;
+}
+
+/////
+
+const char *LuaBmpBlend::layer()
+{
+    return cstring(mBlend->targetLayer);
+}
+
+const char *LuaBmpBlend::mainTile()
+{
+    return cstring(mBlend->mainTile);
+}
+
+const char *LuaBmpBlend::blendTile()
+{
+    return cstring(mBlend->blendTile);
+}
+
+LuaBmpBlend::Direction LuaBmpBlend::direction()
+{
+    return (Direction) mBlend->dir;
+}
+
+QStringList LuaBmpBlend::exclude()
+{
+    return mBlend->ExclusionList;
 }

@@ -122,6 +122,7 @@ class LuaColor @ Color
     int r;
     int g;
     int b;
+    unsigned int pixel;
 };
 
 LuaColor Lua_rgb @ rgb(int r, int g, int b);
@@ -129,7 +130,7 @@ LuaColor Lua_rgb @ rgb(int r, int g, int b);
 class LuaMapBmp & MapBmp
 {
     void setPixel(int x, int y, LuaColor &c);
-    LuaColor pixel(int x, int y);
+    unsigned int pixel(int x, int y);
 
     void erase(int x, int y, int width, int height);
     void erase(QRect &r);
@@ -144,6 +145,11 @@ class LuaMapBmp & MapBmp
     void replace(LuaColor &oldColor, LuaColor &newColor);
 };
 
+class LuaBmpAlias @ BmpAlias
+{
+    list<QString> tiles();
+};
+
 class LuaBmpRule @ BmpRule
 {
     const char *label();
@@ -152,6 +158,27 @@ class LuaBmpRule @ BmpRule
     list<QString> tiles();
     const char *layer();
     LuaColor condition();
+};
+
+class LuaBmpBlend @ BmpBlend
+{
+    enum Direction {
+        Unknown,
+        N,
+        S,
+        E,
+        W,
+        NW,
+        NE,
+        SW,
+        SE
+    };
+
+    const char *layer();
+    const char *mainTile();
+    const char *blendTile();
+    Direction direction();
+    list<QString> exclude();
 };
 
 class LuaMap @ Map
@@ -195,10 +222,14 @@ class LuaMap @ Map
 
     LuaMapBmp &bmp(int index);
 
+    LuaBmpAlias *alias(const char *name);
+
     int ruleCount();
     LuaBmpRule *ruleAt(int index);
     list<LuaBmpRule*> rules();
     LuaBmpRule *rule(const char *name);
+
+    list<LuaBmpBlend*> blends();
 
     bool write(const char *path);
 };

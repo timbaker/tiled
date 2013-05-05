@@ -29,6 +29,8 @@ struct lua_State;
 }
 
 namespace Tiled {
+class BmpAlias;
+class BmpBlend;
 class BmpRule;
 class Layer;
 class Map;
@@ -190,7 +192,7 @@ public:
     bool contains(int x, int y);
 
     void setPixel(int x, int y, LuaColor &c);
-    LuaColor pixel(int x, int y);
+    unsigned int pixel(int x, int y);
 
     void erase(int x, int y, int width, int height);
     void erase(QRect &r);
@@ -206,6 +208,18 @@ public:
 
     MapBmp &mBmp;
     QRegion mAltered;
+};
+
+class LuaBmpAlias
+{
+public:
+    LuaBmpAlias(BmpAlias *alias) :
+        mAlias(alias)
+    {}
+
+    QStringList tiles();
+
+    BmpAlias *mAlias;
 };
 
 class LuaBmpRule
@@ -226,6 +240,34 @@ public:
     LuaColor condition();
 
     BmpRule *mRule;
+};
+
+class LuaBmpBlend
+{
+public:
+    LuaBmpBlend(BmpBlend *blend) :
+        mBlend(blend)
+    {}
+
+    enum Direction {
+        Unknown,
+        N,
+        S,
+        E,
+        W,
+        NW,
+        NE,
+        SW,
+        SE
+    };
+
+    const char *layer();
+    const char *mainTile();
+    const char *blendTile();
+    Direction direction();
+    QStringList exclude();
+
+    BmpBlend *mBlend;
 };
 
 class LuaMap
@@ -278,10 +320,15 @@ public:
 
     LuaMapBmp &bmp(int index);
 
+    QList<LuaBmpAlias*> aliases();
+    LuaBmpAlias *alias(const char *name);
+
     int ruleCount();
     QList<LuaBmpRule*> rules();
     LuaBmpRule *ruleAt(int index);
     LuaBmpRule *rule(const char *name);
+
+    QList<LuaBmpBlend*> blends();
 
     bool write(const char *path);
 
@@ -294,8 +341,14 @@ public:
     LuaRegion mSelection;
     LuaMapBmp mBmpMain;
     LuaMapBmp mBmpVeg;
+
+    QList<LuaBmpAlias*> mAliases;
+    QMap<QString,LuaBmpAlias*> mAliasByName;
+
     QList<LuaBmpRule*> mRules;
     QMap<QString,LuaBmpRule*> mRuleByName;
+
+    QList<LuaBmpBlend*> mBlends;
 };
 
 class LuaScript
