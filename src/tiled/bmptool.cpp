@@ -157,7 +157,8 @@ Layer *AbstractBmpTool::currentLayer() const
 /////
 
 PaintBMP::PaintBMP(MapDocument *mapDocument, int bmpIndex,
-                   int x, int y, const QImage &source, const QRegion &region) :
+                   int x, int y, const QImage &source, const QRegion &region,
+                   bool erase) :
     QUndoCommand(QCoreApplication::translate("UndoCommands", "Paint BMP")),
     mMapDocument(mapDocument),
     mBmpIndex(bmpIndex),
@@ -169,6 +170,9 @@ PaintBMP::PaintBMP(MapDocument *mapDocument, int bmpIndex,
 {
     QImage &image = mMapDocument->map()->rbmp(mBmpIndex).rimage();
     mErased = image.copy(mX, mY, mSource.width(), mSource.height());
+
+    if (!erase || mBmpIndex != 0)
+        return;
 
     Map *origMap = mMapDocument->map();
     Map map(origMap->orientation(), origMap->width(), origMap->height(),
@@ -192,7 +196,7 @@ PaintBMP::PaintBMP(MapDocument *mapDocument, int bmpIndex,
     blender.fromMap();
     QRect r = mRegion.boundingRect();
     blender.tilesToPixels(r.left() - 2, r.top() - 2, r.right() + 2, r.bottom() + 2);
-    blender.update(r.left() - 1, r.top() - 1, r.right() + 1, r.bottom() + 1);
+    blender.update(r.left(), r.top(), r.right(), r.bottom());
 
     // Remove known blend tiles from every layer on level 0.
     // Do this adjacent to the painted area as well.
@@ -234,12 +238,12 @@ void PaintBMP::setMergeable(bool mergeable)
 
 void PaintBMP::undo()
 {
-    paint(mErased);
     // FIXME: TilePainter won't paint outside the selected area
     for (int i = 0; i < mEraseTilesCmds.size(); i++) {
         if (!mEraseRgns[i].isEmpty())
             mEraseTilesCmds[i]->undo();
     }
+    paint(mErased);
 }
 
 void PaintBMP::redo()
@@ -294,7 +298,12 @@ bool PaintBMP::mergeWith(const QUndoCommand *other)
     mErased.merge(pos, &o->mErased, newRegion);
 
     for (int i = 0; i < mEraseTilesCmds.size(); i++) {
+#ifdef QT_NO_DEBUG
         mEraseTilesCmds[i]->mergeWith(o->mEraseTilesCmds[i]);
+#else
+        bool ret = mEraseTilesCmds[i]->mergeWith(o->mEraseTilesCmds[i]);
+        Q_ASSERT(ret);
+#endif
         mEraseRgns[i] |= o->mEraseRgns[i];
     }
 
@@ -1632,15 +1641,22 @@ BmpToLayers::BmpToLayers(MapDocument *mapDocument, const QRegion &region, bool m
     QRect r = region.boundingRect();
     QPoint topLeft = r.topLeft();
 
+    // The blender affects 2 tiles around areas where there are pixels, so
+    // copy those tiles too.
+    QRegion adjusted;
+    foreach (QRect rect, region.rects())
+        adjusted += rect.adjusted(-2, -2, 2, 2) & QRect(QPoint(), mMapDocument->map()->size());
+
     // Put the blender's tiles into the map's tile layers.
     BmpBlender *blender = mMapDocument->mapComposite()->bmpBlender();
     foreach (TileLayer *tl, blender->tileLayers()) {
         int n = mMapDocument->map()->indexOfLayer(tl->name(), Layer::TileLayerType);
         if (n >= 0) {
             TileLayer *target = mMapDocument->map()->layerAt(n)->asTileLayer();
-            TileLayer *source = tl->copy(region);
+            TileLayer *source = tl->copy(adjusted);
+            QPoint topLeft = adjusted.boundingRect().topLeft();
             // Preserve user-drawn tiles where the blender didn't place a tile.
-            foreach (QRect r, region.rects()) {
+            foreach (QRect r, adjusted.rects()) {
                 for (int y = r.top(); y <= r.bottom(); y++) {
                     for (int x = r.left(); x <= r.right(); x++) {
                         if (tl->cellAt(x, y).isEmpty() && !target->cellAt(x, y).isEmpty())
@@ -1651,7 +1667,7 @@ BmpToLayers::BmpToLayers(MapDocument *mapDocument, const QRegion &region, bool m
             }
             PaintTileLayer *cmd = new PaintTileLayer(mMapDocument, target,
                                                      topLeft.x(), topLeft.y(),
-                                                     source, region);
+                                                     source, adjusted);
             delete source;
             cmd->setMergeable(mergeable);
             mLayerCmds += cmd;
@@ -1662,11 +1678,11 @@ BmpToLayers::BmpToLayers(MapDocument *mapDocument, const QRegion &region, bool m
     QImage image(r.size(), QImage::Format_ARGB32);
     image.fill(qRgb(0, 0, 0));
     mPaintCmd0 = new PaintBMP(mMapDocument, 0, topLeft.x(), topLeft.y(),
-                             image, region);
+                             image, region, false);
     mPaintCmd0->setMergeable(mergeable);
 
     mPaintCmd1 = new PaintBMP(mMapDocument, 1, topLeft.x(), topLeft.y(),
-                             image, region);
+                             image, region, false);
     mPaintCmd1->setMergeable(mergeable);
 }
 
@@ -1708,16 +1724,16 @@ void BmpToLayers::undo()
 {
     foreach (PaintTileLayer *cmd, mLayerCmds)
         cmd->undo();
-    mPaintCmd0->undo();
     mPaintCmd1->undo();
+    mPaintCmd0->undo();
 }
 
 void BmpToLayers::redo()
 {
-    foreach (PaintTileLayer *cmd, mLayerCmds)
-        cmd->redo();
     mPaintCmd0->redo();
     mPaintCmd1->redo();
+    foreach (PaintTileLayer *cmd, mLayerCmds)
+        cmd->redo();
 }
 
 /////

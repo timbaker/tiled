@@ -499,7 +499,7 @@ class PaintBMP : public QUndoCommand
 {
 public:
     PaintBMP(MapDocument *mapDocument, int bmpIndex, int x, int y,
-             const QImage &source, const QRegion &region);
+             const QImage &source, const QRegion &region, bool erase = true);
 //    ~PaintBMP();
 
     void setMergeable(bool mergeable);

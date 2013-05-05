@@ -759,7 +759,7 @@ void MapDocument::emitRegionEdited(const QRegion &region, Layer *layer)
 void MapDocument::emitRegionAltered(const QRegion &region, Layer *layer)
 {
 #if 1
-    if (layer->name() == QLatin1String("0_Floor")) {
+    if (mMapComposite->bmpBlender()->tileLayerNames().contains(layer->name())) {
         QRect r = region.boundingRect();
         mMapComposite->bmpBlender()->update(r.x(), r.y(), r.right(), r.bottom());
     }
