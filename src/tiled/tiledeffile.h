@@ -1311,15 +1311,17 @@ class TileDefTileset
 {
 public:
     TileDefTileset(Tileset *ts);
-    TileDefTileset()
-    {}
+    TileDefTileset();
     ~TileDefTileset();
+
+    void resize(int columns, int rows);
 
     QString mName;
     QString mImageSource;
     int mColumns;
     int mRows;
     QVector<TileDefTile*> mTiles;
+    int mID;
 };
 
 /**

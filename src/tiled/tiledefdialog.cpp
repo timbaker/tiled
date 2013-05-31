@@ -28,6 +28,7 @@
 #include "utils.h"
 #include "zprogress.h"
 
+#include "BuildingEditor/listofstringsdialog.h"
 #include "BuildingEditor/buildingtiles.h"
 
 #include "tile.h"
@@ -504,6 +505,7 @@ void TileDefDialog::addTileset()
         QFileInfo info(fileName);
         if (Tiled::Tileset *ts = loadTileset(info.canonicalFilePath())) {
             TileDefTileset *defTileset = new TileDefTileset(ts);
+            defTileset->mID = uniqueTilesetID();
             mUndoStack->push(new AddTileset(this, mTilesets.size(), ts, defTileset));
         } else {
             QMessageBox::warning(this, tr("It's no good, Jim!"), mError);
@@ -1189,11 +1191,11 @@ void TileDefDialog::setTilesetList()
 
     ui->tilesets->clear();
     foreach (Tileset *ts, mTilesetByName.values()) {
-        QListWidgetItem *item = new QListWidgetItem(ts->name());
+        QListWidgetItem *item = new QListWidgetItem(ts->name() + QString::fromLatin1(" (%1)").arg(mTileDefFile->tileset(ts->name())->mID));
         if (ts->isMissing())
             item->setForeground(Qt::red);
         ui->tilesets->addItem(item);
-        maxWidth = qMax(maxWidth, fm.width(ts->name()));
+        maxWidth = qMax(maxWidth, fm.width(item->text()));
     }
     ui->tilesets->setFixedWidth(maxWidth + 16 +
         ui->tilesets->verticalScrollBar()->sizeHint().width());
@@ -1212,7 +1214,7 @@ void TileDefDialog::setTilesList()
         ui->tiles->setTileset(mCurrentTileset, userData);
 
         // Tooltip shows properties with non-default value.
-        for (int i = 0; i < mCurrentTileset->tileCount(); i++) {
+        for (int i = 0; i < defTileset->mTiles.size(); i++) {
             setToolTipEtc(i);
         }
     } else {
@@ -1249,6 +1251,7 @@ void TileDefDialog::setToolTipEtc(int tileID)
         if (!known.contains(name))
             unknown += tr("%1 = %2").arg(name).arg(defTile->mProperties[name]);
     }
+    if (properties.isEmpty()) color = Qt::white;
     if (unknown.size()) {
         if (tooltip.size())
             tooltip += QLatin1String("");
@@ -1257,6 +1260,10 @@ void TileDefDialog::setToolTipEtc(int tileID)
         color = QColor(255, 128, 128);
     }
     m->setData(m->index((void*)defTile), QBrush(color), MixedTilesetModel::CategoryBgRole);
+
+    if (tooltip.size())
+        tooltip += QLatin1String("");
+    tooltip += QString::fromLatin1("gid %1").arg(defTile->tileset()->mID * 1000 + defTile->id());
 
     m->setToolTip(tileID, tooltip.join(QLatin1String("\n")));
 
@@ -1506,6 +1513,7 @@ Tileset *TileDefDialog::loadTileset(const QString &source)
     return 0;
 }
 
+#if 0
 bool TileDefDialog::loadTilesetImage(Tileset *ts, const QString &source)
 {
     TilesetImageCache *cache = TilesetManager::instance()->imageCache();
@@ -1522,6 +1530,7 @@ bool TileDefDialog::loadTilesetImage(Tileset *ts, const QString &source)
 
     return ts;
 }
+#endif
 
 void TileDefDialog::tilesDirChanged()
 {
@@ -1531,10 +1540,33 @@ void TileDefDialog::tilesDirChanged()
 
     QDir dir(tilesDir());
 
+    struct ResizedTileset {
+        ResizedTileset(const QString &name, const QSize &oldSize, const QSize &newSize) :
+            name(name), oldSize(oldSize), newSize(newSize)
+        {}
+        QString name;
+        QSize oldSize;
+        QSize newSize;
+    };
+
+    QList<ResizedTileset> resized;
+
     foreach (TileDefTileset *tsDef, mTileDefFile->tilesets()) {
         QString imageSource = dir.filePath(tsDef->mImageSource);
-        if (QFileInfo(imageSource).exists())
+        if (QFileInfo(imageSource).exists()) {
             imageSource = QFileInfo(imageSource).canonicalFilePath();
+            QImageReader ir(imageSource);
+            if (ir.size().isValid()) {
+                int columns = ir.size().width() / 64;
+                int rows = ir.size().height() / 128 ;
+                if (QSize(columns, rows) != QSize(tsDef->mColumns, tsDef->mRows)) {
+                    resized += ResizedTileset(tsDef->mName,
+                                              QSize(tsDef->mColumns, tsDef->mRows),
+                                              QSize(columns, rows));
+                    tsDef->resize(columns, rows);
+                }
+            }
+        }
 
         // Try to reuse a tileset from our list of removed tilesets.
         bool reused = false;
@@ -1562,6 +1594,23 @@ void TileDefDialog::tilesDirChanged()
         mTilesets += tileset;
         mTilesetByName[tileset->name()] = tileset;
         TilesetManager::instance()->addReference(tileset);
+    }
+
+    if (resized.size()) {
+        QStringList sl;
+        foreach (ResizedTileset rt, resized) {
+            bool smaller = rt.oldSize.width() > rt.newSize.width() ||
+                    rt.oldSize.height() > rt.newSize.height();
+            sl += QString::fromLatin1("%1 - was %2x%3, now %4x%5 - %6")
+                    .arg(rt.name).arg(rt.oldSize.width()).arg(rt.oldSize.height())
+                    .arg(rt.newSize.width()).arg(rt.newSize.height())
+                    .arg(QLatin1String(smaller ? "SMALLER" : "LARGER"));
+        }
+        BuildingEditor::ListOfStringsDialog dialog(
+                    tr("Some tileset images are not the same size they were before.\nIf a tileset is now smaller, you have lost properites for some tiles.\nIf you didn't want that to happen, close without saving now."),
+                    sl, this);
+        dialog.setWindowTitle(tr("Tileset Images Changed Size"));
+        dialog.exec();
     }
 }
 
@@ -1627,6 +1676,16 @@ void TileDefDialog::getTilesDirKeyValues(QMap<QString, QString> &map)
             map[file] = dir;
     }
     settings.endArray();
+}
+
+int TileDefDialog::uniqueTilesetID()
+{
+    int id = 1;
+    foreach (TileDefTileset *tsDef, mTileDefFile->tilesets()) {
+        if (tsDef->mID >= id)
+            id = tsDef->mID + 1;
+    }
+    return id;
 }
 
 void TileDefDialog::saveSplitterSizes(QSplitter *splitter)

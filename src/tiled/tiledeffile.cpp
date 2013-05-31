@@ -52,6 +52,10 @@ static QString ReadString(QDataStream &in)
     return str;
 }
 
+#define VERSION0 0
+#define VERSION1 1
+#define VERSION_LATEST VERSION1
+
 bool TileDefFile::read(const QString &fileName)
 {
     QFile file(fileName);
@@ -65,6 +69,22 @@ bool TileDefFile::read(const QString &fileName)
     QDataStream in(&file);
     in.setByteOrder(QDataStream::LittleEndian);
 
+    quint8 tdef[4] = {0};
+    in >> tdef[0];
+    in >> tdef[1];
+    in >> tdef[2];
+    in >> tdef[3];
+    int version = VERSION0;
+    if (memcmp(tdef, "tdef", 4) == 0) {
+        in >> version;
+        if (version < 0 || version > VERSION_LATEST) {
+            mError = tr("Unknown version number %1 in .tiles file\n.%2")
+                    .arg(version).arg(fileName);
+            return false;
+        }
+    } else
+        file.seek(0);
+
     int numTilesets;
     in >> numTilesets;
     for (int i = 0; i < numTilesets; i++) {
@@ -74,11 +94,17 @@ bool TileDefFile::read(const QString &fileName)
         qint32 columns, rows;
         in >> columns;
         in >> rows;
+
+        qint32 id = i + 1;
+        if (version > VERSION0)
+            in >> id;
+
         qint32 tileCount;
         in >> tileCount;
 
         ts->mColumns = columns;
         ts->mRows = rows;
+        ts->mID = id;
 
         QVector<TileDefTile*> tiles(columns * rows);
         for (int j = 0; j < tileCount; j++) {
@@ -96,27 +122,17 @@ bool TileDefFile::read(const QString &fileName)
             tile->mProperties = properties;
             tiles[j] = tile;
         }
+        ts->mTiles = tiles;
 
         // Deal with the image being a different size now than it was when the
         // .tiles file was saved.
         QImageReader bmp(dir.filePath(ts->mImageSource));
         if (bmp.size().isValid()) {
-            ts->mColumns = bmp.size().width() / 64;
-            ts->mRows = bmp.size().height() / 128;
-            ts->mTiles.resize(ts->mColumns * ts->mRows);
-            for (int y = 0; y < qMin(ts->mRows, rows); y++) {
-                for (int x = 0; x < qMin(ts->mColumns, columns); x++) {
-                    ts->mTiles[x + y * ts->mColumns] = tiles[x + y * columns];
-                }
-            }
-            for (int i = 0; i < ts->mTiles.size(); i++) {
-                if (!ts->mTiles[i]) {
-                    ts->mTiles[i] = new TileDefTile(ts, i);
-                }
-            }
-        } else {
-            ts->mTiles = tiles;
+            int columns = bmp.size().width() / 64;
+            int rows = bmp.size().height() / 128;
+            ts->resize(columns, rows);
         }
+
         insertTileset(mTilesets.size(), ts);
     }
 
@@ -143,12 +159,16 @@ bool TileDefFile::write(const QString &fileName)
     QDataStream out(&file);
     out.setByteOrder(QDataStream::LittleEndian);
 
+    out << quint8('t') << quint8('d') << quint8('e') << quint8('f');
+    out << qint32(VERSION_LATEST);
+
     out << qint32(mTilesets.size());
     foreach (TileDefTileset *ts, mTilesets) {
         SaveString(out, ts->mName);
         SaveString(out, ts->mImageSource); // no path, just file + extension
         out << qint32(ts->mColumns);
         out << qint32(ts->mRows);
+        out << qint32(ts->mID);
         out << qint32(ts->mTiles.size());
         foreach (TileDefTile *tile, ts->mTiles) {
             QMap<QString,QString> &properties = tile->mProperties;
@@ -460,7 +480,8 @@ UIProperties::~UIProperties()
 
 /////
 
-TileDefTileset::TileDefTileset(Tileset *ts)
+TileDefTileset::TileDefTileset(Tileset *ts) :
+    mID(0)
 {
     mName = ts->name();
     mImageSource = QFileInfo(ts->imageSource()).fileName();
@@ -471,9 +492,40 @@ TileDefTileset::TileDefTileset(Tileset *ts)
         mTiles[i] = new TileDefTile(this, i);
 }
 
+TileDefTileset::TileDefTileset() :
+    mID(0)
+{
+}
+
 TileDefTileset::~TileDefTileset()
 {
     qDeleteAll(mTiles);
+}
+
+void TileDefTileset::resize(int columns, int rows)
+{
+    if (columns == mColumns && rows == mRows)
+        return;
+
+    int oldColumns = mColumns;
+    int oldRows = mRows;
+    QVector<TileDefTile*> oldTiles = mTiles;
+
+    mColumns = columns;
+    mRows = rows;
+    mTiles.resize(mColumns * mRows);
+    for (int y = 0; y < qMin(mRows, oldRows); y++) {
+        for (int x = 0; x < qMin(mColumns, oldColumns); x++) {
+            mTiles[x + y * mColumns] = oldTiles[x + y * oldColumns];
+            oldTiles[x + y * oldColumns] = 0;
+        }
+    }
+    for (int i = 0; i < mTiles.size(); i++) {
+        if (!mTiles[i]) {
+            mTiles[i] = new TileDefTile(this, i);
+        }
+    }
+    qDeleteAll(oldTiles);
 }
 
 /////

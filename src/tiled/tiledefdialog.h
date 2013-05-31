@@ -161,12 +161,16 @@ private:
 
     void loadTilesets();
     Tileset *loadTileset(const QString &source);
+#if 0
     bool loadTilesetImage(Tileset *ts, const QString &source);
+#endif
     void tilesDirChanged();
 
     QString tilesDir();
     void setTilesDir(const QString &path);
     void getTilesDirKeyValues(QMap<QString,QString> &map);
+
+    int uniqueTilesetID();
 
 private:
     Ui::TileDefDialog *ui;
