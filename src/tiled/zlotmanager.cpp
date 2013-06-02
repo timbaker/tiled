@@ -28,6 +28,9 @@
 #include "tileset.h"
 #include "zprogress.h"
 
+#include "worlded/worldcell.h"
+#include "worlded/worldedmgr.h"
+
 #include <QDir>
 #include <QFileInfo>
 
@@ -74,6 +77,21 @@ void ZLotManager::setMapDocument(MapDocument *mapDoc)
             Map *map = mapDocument()->map();
             foreach (ObjectGroup *og, map->objectGroups())
                 onObjectsAdded(og->objects());
+
+#if 1
+            if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mMapDocument->fileName())) {
+                foreach (WorldCellLot *lot, cell->lots()) {
+                    MapInfo *mapInfo = MapManager::instance()->loadMap(lot->mapName(), QString(),
+                                                                       true, MapManager::PriorityLow);
+                    if (mapInfo) {
+                        if (mapInfo->isLoading())
+                            mMapsLoading2 += MapLoading2(mapInfo, lot);
+                        else
+                            setMapInfo(lot, mapInfo);
+                    }
+                }
+            }
+#endif
         }
     }
 }
@@ -233,6 +251,66 @@ int ZLotManager::findLoading(MapObject *mapObject)
     return -1;
 }
 
+void ZLotManager::setMapInfo(WorldCellLot *lot, MapInfo *mapInfo)
+{
+    MapInfo *currInfo = 0, *newInfo = mapInfo;
+
+    if (mWorldCellLotToMI.contains(lot))
+        currInfo = mWorldCellLotToMI[lot];
+
+    MapComposite *newLot = 0;
+
+    if (currInfo != newInfo) {
+        if (currInfo) {
+            mWorldCellLotToMI.remove(lot);
+        }
+        if (newInfo) {
+            mWorldCellLotToMI[lot] = newInfo;
+            newLot = mMapDocument->mapComposite()->addMap(newInfo,
+                                                          lot->pos(),
+                                                          lot->level());
+        }
+    } else {
+        if (mWorldCellLotToMC.contains(lot))
+            newLot = mWorldCellLotToMC[lot];
+    }
+
+    setMapComposite(lot, newLot);
+}
+
+void ZLotManager::setMapComposite(WorldCellLot *lot, MapComposite *mapComposite)
+{
+    MapComposite *currLot = 0, *newLot = mapComposite;
+
+    if (mWorldCellLotToMC.contains(lot))
+        currLot = mWorldCellLotToMC[lot];
+
+    if (currLot != newLot) {
+        if (currLot) {
+            QMap<WorldCellLot*,MapComposite*>::iterator it = mWorldCellLotToMC.find(lot);
+            mMapDocument->mapComposite()->removeMap((*it)); // deletes currLot!
+            mWorldCellLotToMC.erase(it);
+//            emit lotRemoved(currLot, lot); // remove from scene
+            emit lotUpdated(currLot, lot); // position change, etc
+        }
+        if (newLot) {
+            mWorldCellLotToMC[lot] = newLot;
+//            newLot->setGroupVisible(lot->objectGroup()->isVisible());
+//            emit lotAdded(newLot, lot); // add to scene
+            emit lotUpdated(currLot, lot); // position change, etc
+        }
+    } else if (currLot) {
+        if (currLot->origin() != lot->pos())
+            mMapDocument->mapComposite()->moveSubMap(currLot, lot->pos());
+#if 0
+        else if (currLot->isVisible() != lot->isVisible()) {
+            currLot->setVisible(lot->isVisible());
+        }
+#endif
+        emit lotUpdated(currLot, lot); // position change, etc
+    }
+}
+
 void ZLotManager::onLayerAdded(int index)
 {
     Layer *layer = mapDocument()->map()->layerAt(index);
@@ -291,6 +369,15 @@ void ZLotManager::mapLoaded(MapInfo *mapInfo)
             --i;
         }
     }
+
+    for (int i = 0; i < mMapsLoading2.size(); i++) {
+        MapLoading2 &ml = mMapsLoading2[i];
+        if (ml.info == mapInfo) {
+            setMapInfo(ml.lot, ml.info);
+            mMapsLoading2.removeAt(i);
+            --i;
+        }
+    }
 }
 
 void ZLotManager::mapFailedToLoad(MapInfo *mapInfo)
@@ -299,6 +386,14 @@ void ZLotManager::mapFailedToLoad(MapInfo *mapInfo)
         MapLoading &ml = mMapsLoading[i];
         if (ml.info == mapInfo) {
             mMapsLoading.removeAt(i);
+            --i;
+        }
+    }
+
+    for (int i = 0; i < mMapsLoading2.size(); i++) {
+        MapLoading2 &ml = mMapsLoading2[i];
+        if (ml.info == mapInfo) {
+            mMapsLoading2.removeAt(i);
             --i;
         }
     }

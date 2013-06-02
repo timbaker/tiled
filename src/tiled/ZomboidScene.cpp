@@ -98,6 +98,8 @@ ZomboidScene::ZomboidScene(QObject *parent)
         this, SLOT(onLotRemoved(MapComposite*,Tiled::MapObject*)));
     connect(&mLotManager, SIGNAL(lotUpdated(MapComposite*,Tiled::MapObject*)),
         this, SLOT(onLotUpdated(MapComposite*,Tiled::MapObject*)));
+    connect(&mLotManager, SIGNAL(lotUpdated(MapComposite*,WorldCellLot*)),
+            SLOT(onLotUpdated(MapComposite*,WorldCellLot*)));
 
     QPen pen(QColor(128, 128, 128, 128));
     pen.setWidth(28); // only good for isometric 64x32 tiles!
@@ -575,6 +577,13 @@ void ZomboidScene::onLotUpdated(MapComposite *lot, MapObject *mapObject)
         item->resize(lot->map()->size());
     }
 
+    updateLayerGroupsLater(Synch | Bounds);
+}
+
+void ZomboidScene::onLotUpdated(MapComposite *mc, WorldCellLot *lot)
+{
+    Q_UNUSED(mc)
+    Q_UNUSED(lot)
     updateLayerGroupsLater(Synch | Bounds);
 }
 

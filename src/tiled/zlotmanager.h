@@ -57,6 +57,8 @@ signals:
     void lotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
     void lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
 
+    void lotUpdated(MapComposite *mc, WorldCellLot *lot);
+
 private slots:
     void onLayerAdded(int index);
     void onLayerAboutToBeRemoved(int index);
@@ -87,6 +89,24 @@ private:
     };
 
     QList<MapLoading> mMapsLoading;
+
+    /////
+
+    void setMapInfo(WorldCellLot *lot, MapInfo *mapInfo);
+    void setMapComposite(WorldCellLot *lot, MapComposite *mapComposite);
+
+    QMap<WorldCellLot*,MapComposite*> mWorldCellLotToMC;
+    QMap<WorldCellLot*,MapInfo*> mWorldCellLotToMI;
+
+    struct MapLoading2
+    {
+        MapLoading2(MapInfo *info, WorldCellLot *lot) :
+            info(info), lot(lot) {}
+        MapInfo *info;
+        WorldCellLot *lot;
+    };
+
+    QList<MapLoading2> mMapsLoading2;
 };
 
 } // namespace Tiled

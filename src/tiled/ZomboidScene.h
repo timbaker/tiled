@@ -99,6 +99,8 @@ private slots:
     void onLotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
     void onLotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
 
+    void onLotUpdated(MapComposite *mc, WorldCellLot *lot);
+
     void mapCompositeChanged();
 
     void bmpBlenderLayersRecreated();
