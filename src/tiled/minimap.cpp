@@ -650,6 +650,13 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
     connect(&mScene->lotManager(), SIGNAL(lotUpdated(MapComposite*,Tiled::MapObject*)),
         SLOT(lotUpdated(MapComposite*,Tiled::MapObject*)));
 
+    connect(&mScene->lotManager(), SIGNAL(lotAdded(MapComposite*,WorldCellLot*)),
+        SLOT(lotAdded(MapComposite*,WorldCellLot*)));
+    connect(&mScene->lotManager(), SIGNAL(lotRemoved(MapComposite*,WorldCellLot*)),
+        SLOT(lotRemoved(MapComposite*,WorldCellLot*)));
+    connect(&mScene->lotManager(), SIGNAL(lotUpdated(MapComposite*,WorldCellLot*)),
+        SLOT(lotUpdated(MapComposite*,WorldCellLot*)));
+
     connect(mScene->mapDocument(), SIGNAL(tilesetAdded(int,Tileset*)),
             SLOT(tilesetAdded(int,Tileset*)));
     connect(mScene->mapDocument(), SIGNAL(tilesetRemoved(Tileset*)),
@@ -751,29 +758,59 @@ void MiniMapItem::layerRenamed(int index)
     queueChange(c);
 }
 
-void MiniMapItem::lotAdded(MapComposite *lot, Tiled::MapObject *mapObject)
+void MiniMapItem::lotAdded(MapComposite *lot, MapObject *mapObject)
 {
-    mLots[lot] = mapObject;
+    lotAdded(lot, quintptr(mapObject));
+}
+
+void MiniMapItem::lotRemoved(MapComposite *lot, MapObject *mapObject)
+{
+    lotRemoved(lot, quintptr(mapObject));
+}
+
+void MiniMapItem::lotUpdated(MapComposite *lot, MapObject *mapObject)
+{
+    lotUpdated(lot, quintptr(mapObject));
+}
+
+void MiniMapItem::lotAdded(MapComposite *mc, WorldCellLot *lot)
+{
+    lotAdded(mc, quintptr(lot));
+}
+
+void MiniMapItem::lotRemoved(MapComposite *mc, WorldCellLot *lot)
+{
+    lotRemoved(mc, quintptr(lot));
+}
+
+void MiniMapItem::lotUpdated(MapComposite *mc, WorldCellLot *lot)
+{
+    lotUpdated(mc, quintptr(lot));
+}
+
+void MiniMapItem::lotAdded(MapComposite *lot, quintptr id)
+{
+    mLots[lot] = id;
     MapChange *c = new MapChange(MapChange::LotAdded);
-    c->mLotInfo.id = quintptr(mapObject);
+    c->mLotInfo.id = id;
     c->mLotInfo.mapInfo = lot->mapInfo();
     c->mLotInfo.level = lot->levelOffset();
     c->mLotInfo.pos = lot->origin();
     queueChange(c);
 }
 
-void MiniMapItem::lotRemoved(MapComposite *lot, Tiled::MapObject *mapObject)
+void MiniMapItem::lotRemoved(MapComposite *lot, quintptr id)
 {
     mLots.remove(lot);
     MapChange *c = new MapChange(MapChange::LotRemoved);
-    c->mLotInfo.id = quintptr(mapObject);
+    c->mLotInfo.id = id;
     queueChange(c);
 }
 
-void MiniMapItem::lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject)
+void MiniMapItem::lotUpdated(MapComposite *lot, quintptr id)
 {
     MapChange *c = new MapChange(MapChange::LotUpdated);
-    c->mLotInfo.id = quintptr(mapObject);
+    c->mLotInfo.id = id;
     c->mLotInfo.pos = lot->origin();
     queueChange(c);
 }
@@ -832,7 +869,7 @@ void MiniMapItem::mapChanged(MapInfo *mapInfo)
         // There could be several lots using the same map
         if (lot->mapInfo() == mapInfo) {
             MapChange *c = new MapChange(MapChange::MapChanged);
-            c->mLotInfo.id = quintptr(mLots[lot]);
+            c->mLotInfo.id = mLots[lot];
             c->mLotInfo.mapInfo = mapInfo;
             queueChange(c);
             affected = true;

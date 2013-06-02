@@ -25,6 +25,7 @@
 
 class MapComposite;
 class MapInfo;
+class WorldCellLot;
 
 namespace Tiled {
 class Layer;
@@ -146,6 +147,10 @@ public:
 private:
     void queueChange(MapChange *c);
 
+    void lotAdded(MapComposite *lot, quintptr id);
+    void lotRemoved(MapComposite *lot, quintptr id);
+    void lotUpdated(MapComposite *lot, quintptr id);
+
     typedef Tiled::Layer Layer; // hack for signals/slots
     typedef Tiled::Tileset Tileset; // hack for signals/slots
 
@@ -157,6 +162,10 @@ private slots:
     void lotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
     void lotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
     void lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
+
+    void lotAdded(MapComposite *mc, WorldCellLot *lot);
+    void lotRemoved(MapComposite *mc, WorldCellLot *lot);
+    void lotUpdated(MapComposite *mc, WorldCellLot *lot);
 
     void regionAltered(const QRegion &region, Layer *layer);
 
@@ -187,7 +196,7 @@ private:
     QImage mMapImage;
     QRectF mMapImageBounds;
     MapComposite *mMapComposite;
-    QMap<MapComposite*,Tiled::MapObject*> mLots;
+    QMap<MapComposite*,quintptr> mLots;
     bool mMiniMapVisible;
     QList<MapChange*> mPendingChanges;
     bool mNeedsResume;

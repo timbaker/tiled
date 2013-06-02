@@ -311,14 +311,12 @@ void ZLotManager::setMapComposite(WorldCellLot *lot, MapComposite *mapComposite)
             QMap<WorldCellLot*,MapComposite*>::iterator it = mWorldCellLotToMC.find(lot);
             mMapDocument->mapComposite()->removeMap((*it)); // deletes currLot!
             mWorldCellLotToMC.erase(it);
-//            emit lotRemoved(currLot, lot); // remove from scene
-            emit lotUpdated(currLot, lot);
+            emit lotRemoved(currLot, lot); // remove from scene
         }
         if (newLot) {
             mWorldCellLotToMC[lot] = newLot;
 //            newLot->setGroupVisible(lot->objectGroup()->isVisible());
-//            emit lotAdded(newLot, lot); // add to scene
-            emit lotUpdated(currLot, lot);
+            emit lotAdded(newLot, lot); // add to scene
         }
     } else if (currLot) {
         if (currLot->origin() != lot->pos())
@@ -326,7 +324,7 @@ void ZLotManager::setMapComposite(WorldCellLot *lot, MapComposite *mapComposite)
         else if (currLot->isVisible() != lot->isVisible()) {
             currLot->setVisible(lot->isVisible());
         }
-        emit lotUpdated(currLot, lot);
+        emit lotUpdated(currLot, lot); // position change, etc
     }
 }
 

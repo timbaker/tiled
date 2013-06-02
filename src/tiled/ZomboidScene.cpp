@@ -98,6 +98,11 @@ ZomboidScene::ZomboidScene(QObject *parent)
         this, SLOT(onLotRemoved(MapComposite*,Tiled::MapObject*)));
     connect(&mLotManager, SIGNAL(lotUpdated(MapComposite*,Tiled::MapObject*)),
         this, SLOT(onLotUpdated(MapComposite*,Tiled::MapObject*)));
+
+    connect(&mLotManager, SIGNAL(lotAdded(MapComposite*,WorldCellLot*)),
+            SLOT(onLotUpdated(MapComposite*,WorldCellLot*)));
+    connect(&mLotManager, SIGNAL(lotRemoved(MapComposite*,WorldCellLot*)),
+            SLOT(onLotUpdated(MapComposite*,WorldCellLot*)));
     connect(&mLotManager, SIGNAL(lotUpdated(MapComposite*,WorldCellLot*)),
             SLOT(onLotUpdated(MapComposite*,WorldCellLot*)));
 

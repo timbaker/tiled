@@ -60,6 +60,8 @@ signals:
     void lotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
     void lotUpdated(MapComposite *lot, Tiled::MapObject *mapObject);
 
+    void lotAdded(MapComposite *mc, WorldCellLot *lot);
+    void lotRemoved(MapComposite *mc, WorldCellLot *lot);
     void lotUpdated(MapComposite *mc, WorldCellLot *lot);
 
 private slots:
