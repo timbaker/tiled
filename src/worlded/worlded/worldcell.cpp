@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, Tim Baker <treectrl@users.sf.net>
+ * Copyright 2013, Tim Baker <treectrl@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -28,6 +28,7 @@ WorldCellLot::WorldCellLot(WorldCell *cell, const QString &name, int x, int y,
     , mWidth(width)
     , mHeight(height)
     , mCell(cell)
+    , mVisible(true)
 {
 }
 
@@ -39,6 +40,7 @@ WorldCellLot::WorldCellLot(WorldCell *cell, WorldCellLot *other)
     , mWidth(other->width())
     , mHeight(other->height())
     , mCell(cell)
+    , mVisible(true)
 {
 }
 
