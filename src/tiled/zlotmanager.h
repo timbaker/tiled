@@ -52,6 +52,9 @@ public:
     const QMap<MapObject*,MapComposite*> &objectToLot()
     { return mMapObjectToLot; }
 
+    void worldCellLevelChanged(int level, bool visible);
+    void worldCellLotChanged(WorldCellLot*lot);
+
 signals:
     void lotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
     void lotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);

@@ -96,6 +96,22 @@ void ZLotManager::setMapDocument(MapDocument *mapDoc)
     }
 }
 
+void ZLotManager::worldCellLevelChanged(int level, bool visible)
+{
+    foreach (WorldCellLot *lot, mWorldCellLotToMC.keys()) {
+        if (lot->level() == level) {
+            mWorldCellLotToMC[lot]->setGroupVisible(visible);
+            emit lotUpdated(mWorldCellLotToMC[lot], lot);
+        }
+    }
+}
+
+void ZLotManager::worldCellLotChanged(WorldCellLot *lot)
+{
+    if (mWorldCellLotToMC.contains(lot))
+        setMapComposite(lot, mWorldCellLotToMC[lot]);
+}
+
 void ZLotManager::handleMapObject(MapObject *mapObject)
 {
 #if 1
@@ -302,11 +318,9 @@ void ZLotManager::setMapComposite(WorldCellLot *lot, MapComposite *mapComposite)
     } else if (currLot) {
         if (currLot->origin() != lot->pos())
             mMapDocument->mapComposite()->moveSubMap(currLot, lot->pos());
-#if 0
         else if (currLot->isVisible() != lot->isVisible()) {
             currLot->setVisible(lot->isVisible());
         }
-#endif
         emit lotUpdated(currLot, lot); // position change, etc
     }
 }

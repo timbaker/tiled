@@ -71,6 +71,7 @@ class ZLevelsDock;
 class MapsDock;
 class TileDefDialog;
 class TileLayersPanel;
+class WorldEdDock;
 #endif
 
 /**
@@ -274,6 +275,7 @@ private:
 #ifdef ZOMBOID
     ZLevelsDock *mLevelsDock;
     MapsDock *mMapsDock;
+    WorldEdDock *mWorldEdDock;
 #endif
     TilesetDock *mTilesetDock;
 #ifdef ZOMBOID

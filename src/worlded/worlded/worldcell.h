@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, Tim Baker <treectrl@users.sf.net>
+ * Copyright 2013, Tim Baker <treectrl@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -72,11 +72,17 @@ public:
     QRect bounds() const
     { return QRect(mX, mY, mWidth, mHeight); }
 
+    void setVisible(bool visible)
+    { mVisible = visible; }
+    bool isVisible() const
+    { return mVisible; }
+
 private:
     QString mName;
     int mX, mY, mZ;
     int mWidth, mHeight;
     WorldCell *mCell;
+    bool mVisible;
 };
 
 class WorldCellLotList : public QList<WorldCellLot*>

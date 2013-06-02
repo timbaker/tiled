@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WorldEdDock</class>
+ <widget class="QDockWidget" name="WorldEdDock">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>367</width>
+    <height>485</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>WorldEd</string>
+  </property>
+  <widget class="QWidget" name="dockWidgetContents">
+   <layout class="QGridLayout" name="gridLayout">
+    <property name="margin">
+     <number>4</number>
+    </property>
+    <item row="0" column="0">
+     <widget class="Tiled::Internal::WorldEdView" name="view"/>
+    </item>
+    <item row="1" column="0">
+     <layout class="QHBoxLayout" name="toolbarLayout"/>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Tiled::Internal::WorldEdView</class>
+   <extends>QTreeView</extends>
+   <header>worldeddock.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

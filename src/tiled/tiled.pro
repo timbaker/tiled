@@ -204,7 +204,8 @@ SOURCES += aboutdialog.cpp \
     roomdefnamedialog.cpp \
     bmpruleview.cpp \
     luatiled.cpp \
-    luaconsole.cpp
+    luaconsole.cpp \
+    worldeddock.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -371,7 +372,8 @@ HEADERS += aboutdialog.h \
     roomdefnamedialog.h \
     bmpruleview.h \
     luatiled.h \
-    luaconsole.h
+    luaconsole.h \
+    worldeddock.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -411,7 +413,8 @@ FORMS += aboutdialog.ui \
     bmptooldialog.ui \
     BuildingEditor/buildingpropertiesdialog.ui \
     roomdefnamedialog.ui \
-    luaconsole.ui
+    luaconsole.ui \
+    worldeddock.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

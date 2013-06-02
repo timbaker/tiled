@@ -93,6 +93,7 @@
 #include "tilemetainfomgr.h"
 #include "zlevelsdock.h"
 #include "zprogress.h"
+#include "worldeddock.h"
 
 #include "worlded/worldedmgr.h"
 
@@ -150,6 +151,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 #ifdef ZOMBOID
     , mLevelsDock(new ZLevelsDock(this))
     , mMapsDock(new MapsDock(this))
+    , mWorldEdDock(new WorldEdDock(this))
 #endif
     , mTilesetDock(new TilesetDock(this))
 #ifdef ZOMBOID
@@ -240,12 +242,14 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     addDockWidget(Qt::RightDockWidgetArea, mLayerDock);
     addDockWidget(Qt::RightDockWidgetArea, mLevelsDock);
     addDockWidget(Qt::RightDockWidgetArea, mObjectsDock);
+    addDockWidget(Qt::RightDockWidgetArea, mWorldEdDock);
     addDockWidget(Qt::RightDockWidgetArea, mMapsDock);
     addDockWidget(Qt::RightDockWidgetArea, undoDock);
     addDockWidget(Qt::RightDockWidgetArea, mTilesetDock);
     tabifyDockWidget(mLayerDock, mLevelsDock);
     tabifyDockWidget(mLevelsDock, mObjectsDock);
-    tabifyDockWidget(mObjectsDock, mMapsDock);
+    tabifyDockWidget(mObjectsDock, mWorldEdDock);
+    tabifyDockWidget(mWorldEdDock, mMapsDock);
     tabifyDockWidget(undoDock, mTilesetDock);
 
     setStatusBar(0);
@@ -557,6 +561,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     mUi->menuView->addAction(mObjectsDock->toggleViewAction());
 #ifdef ZOMBOID
     mUi->menuView->addAction(mLevelsDock->toggleViewAction());
+    mUi->menuView->addAction(mWorldEdDock->toggleViewAction());
     mUi->menuView->addAction(mMapsDock->toggleViewAction());
 #endif
 
@@ -2726,6 +2731,7 @@ void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
     mObjectsDock->setMapDocument(mMapDocument);
 #ifdef ZOMBOID
     mLevelsDock->setMapDocument(mMapDocument);
+    mWorldEdDock->setMapDocument(mMapDocument);
     mTileLayersPanel->setDocument(mMapDocument);
 #endif
     mTilesetDock->setMapDocument(mMapDocument);
