@@ -73,6 +73,9 @@ private slots:
     void mapLoaded(MapInfo *mapInfo);
     void mapFailedToLoad(MapInfo *mapInfo);
 
+    void beforeWorldChanged();
+    void afterWorldChanged();
+
 private:
     void handleMapObject(MapObject *mapObject);
     void setMapInfo(MapObject *mapObject, MapInfo *mapInfo);

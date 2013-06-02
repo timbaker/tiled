@@ -19,6 +19,11 @@
 #define WORLDEDMGR_H
 
 #include <QObject>
+#include <QSet>
+#include <QStringList>
+#include <QTimer>
+
+#include "filesystemwatcher.h"
 
 class World;
 class WorldCell;
@@ -37,8 +42,12 @@ public:
     WorldCell *cellForMap(const QString &fileName);
     
 signals:
-    
+    void beforeWorldChanged(const QString &fileName);
+    void afterWorldChanged(const QString &fileName);
+
 public slots:
+    void fileChanged(const QString &fileName);
+    void fileChangedTimeout();
     
 private:
     Q_DISABLE_COPY(WorldEdMgr)
@@ -47,6 +56,10 @@ private:
     ~WorldEdMgr();
 
     QList<World*> mWorlds;
+    QStringList mWorldFileNames;
+    Tiled::Internal::FileSystemWatcher mWatcher;
+    QSet<QString> mChangedFiles;
+    QTimer mChangedFilesTimer;
 };
 
 } // namespace WorldEd

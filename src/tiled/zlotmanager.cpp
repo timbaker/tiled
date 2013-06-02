@@ -91,6 +91,11 @@ void ZLotManager::setMapDocument(MapDocument *mapDoc)
                     }
                 }
             }
+
+            connect(WorldEd::WorldEdMgr::instance(), SIGNAL(beforeWorldChanged(QString)),
+                    SLOT(beforeWorldChanged()));
+            connect(WorldEd::WorldEdMgr::instance(), SIGNAL(afterWorldChanged(QString)),
+                    SLOT(afterWorldChanged()));
 #endif
         }
     }
@@ -307,13 +312,13 @@ void ZLotManager::setMapComposite(WorldCellLot *lot, MapComposite *mapComposite)
             mMapDocument->mapComposite()->removeMap((*it)); // deletes currLot!
             mWorldCellLotToMC.erase(it);
 //            emit lotRemoved(currLot, lot); // remove from scene
-            emit lotUpdated(currLot, lot); // position change, etc
+            emit lotUpdated(currLot, lot);
         }
         if (newLot) {
             mWorldCellLotToMC[lot] = newLot;
 //            newLot->setGroupVisible(lot->objectGroup()->isVisible());
 //            emit lotAdded(newLot, lot); // add to scene
-            emit lotUpdated(currLot, lot); // position change, etc
+            emit lotUpdated(currLot, lot);
         }
     } else if (currLot) {
         if (currLot->origin() != lot->pos())
@@ -321,7 +326,7 @@ void ZLotManager::setMapComposite(WorldCellLot *lot, MapComposite *mapComposite)
         else if (currLot->isVisible() != lot->isVisible()) {
             currLot->setVisible(lot->isVisible());
         }
-        emit lotUpdated(currLot, lot); // position change, etc
+        emit lotUpdated(currLot, lot);
     }
 }
 
@@ -409,6 +414,31 @@ void ZLotManager::mapFailedToLoad(MapInfo *mapInfo)
         if (ml.info == mapInfo) {
             mMapsLoading2.removeAt(i);
             --i;
+        }
+    }
+}
+
+void ZLotManager::beforeWorldChanged()
+{
+    foreach (WorldCellLot *lot, mWorldCellLotToMI.keys())
+        setMapInfo(lot, 0);
+    mMapsLoading2.clear();
+    Q_ASSERT(mWorldCellLotToMI.isEmpty());
+    Q_ASSERT(mWorldCellLotToMC.isEmpty());
+}
+
+void ZLotManager::afterWorldChanged()
+{
+    if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mMapDocument->fileName())) {
+        foreach (WorldCellLot *lot, cell->lots()) {
+            MapInfo *mapInfo = MapManager::instance()->loadMap(lot->mapName(), QString(),
+                                                               true, MapManager::PriorityLow);
+            if (mapInfo) {
+                if (mapInfo->isLoading())
+                    mMapsLoading2 += MapLoading2(mapInfo, lot);
+                else
+                    setMapInfo(lot, mapInfo);
+            }
         }
     }
 }

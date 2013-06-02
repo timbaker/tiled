@@ -21,6 +21,7 @@
 #include "worldcell.h"
 #include "worldreader.h"
 
+#include <QDebug>
 #include <QFileInfo>
 
 using namespace WorldEd;
@@ -37,6 +38,12 @@ WorldEdMgr *WorldEdMgr::instance()
 WorldEdMgr::WorldEdMgr(QObject *parent) :
     QObject(parent)
 {
+    connect(&mWatcher, SIGNAL(fileChanged(QString)), SLOT(fileChanged(QString)));
+
+    mChangedFilesTimer.setInterval(500);
+    mChangedFilesTimer.setSingleShot(true);
+    connect(&mChangedFilesTimer, SIGNAL(timeout()),
+            SLOT(fileChangedTimeout()));
 }
 
 WorldEdMgr::~WorldEdMgr()
@@ -52,6 +59,9 @@ void WorldEdMgr::addProject(const QString &fileName)
         return;
 
     mWorlds += world;
+    mWorldFileNames += fileName;
+
+    mWatcher.addPath(fileName);
 }
 
 WorldCell *WorldEdMgr::cellForMap(const QString &fileName)
@@ -72,3 +82,32 @@ WorldCell *WorldEdMgr::cellForMap(const QString &fileName)
     return 0;
 }
 
+void WorldEdMgr::fileChanged(const QString &fileName)
+{
+    qDebug() << "WorldEdMgr::fileChanged" << fileName;
+    mChangedFiles.insert(fileName);
+    mChangedFilesTimer.start();
+}
+
+void WorldEdMgr::fileChangedTimeout()
+{
+    qDebug() << "WorldEdMgr::fileChangedTimeout";
+    QStringList files = mChangedFiles.toList();
+    mChangedFiles.clear();
+
+    foreach (QString fileName, files) {
+        QFileInfo info(fileName);
+        for (int i = 0; i < mWorlds.size(); i++) {
+            if (info == QFileInfo(mWorldFileNames[i])) {
+                emit beforeWorldChanged(mWorldFileNames[i]);
+                delete mWorlds[i];
+                mWorlds.removeAt(i);
+                mWorldFileNames.removeAt(i);
+                mWatcher.removePath(fileName);
+                if (info.exists())
+                    addProject(fileName);
+                emit afterWorldChanged(fileName);
+            }
+        }
+    }
+}

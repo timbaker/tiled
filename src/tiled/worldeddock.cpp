@@ -299,6 +299,11 @@ WorldEdDock::WorldEdDock(QWidget *parent) :
             SLOT(visibilityChanged(WorldCellLot*)));
     connect(ui->view->model(), SIGNAL(visibilityChanged(WorldCellLevel*)),
             SLOT(visibilityChanged(WorldCellLevel*)));
+
+    connect(WorldEd::WorldEdMgr::instance(), SIGNAL(beforeWorldChanged(QString)),
+           SLOT(beforeWorldChanged()));
+    connect(WorldEd::WorldEdMgr::instance(), SIGNAL(afterWorldChanged(QString)),
+            SLOT(afterWorldChanged()));
 }
 
 WorldEdDock::~WorldEdDock()
@@ -351,4 +356,18 @@ void WorldEdDock::visibilityChanged(WorldCellLot *lot)
 {
     ((ZomboidScene*)DocumentManager::instance()->currentMapScene())->lotManager()
             .worldCellLotChanged(lot);
+}
+
+void WorldEdDock::beforeWorldChanged()
+{
+    if (mDocument)
+        ui->view->model()->setWorldCell(0);
+}
+
+void WorldEdDock::afterWorldChanged()
+{
+    if (mDocument) {
+        if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mDocument->fileName()))
+            ui->view->model()->setWorldCell(cell);
+    }
 }

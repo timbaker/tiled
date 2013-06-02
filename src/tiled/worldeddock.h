@@ -156,6 +156,9 @@ private slots:
     void visibilityChanged(WorldCellLevel *level);
     void visibilityChanged(WorldCellLot *lot);
 
+    void beforeWorldChanged();
+    void afterWorldChanged();
+
 private:
     MapDocument *mDocument;
     Ui::WorldEdDock *ui;
