@@ -635,17 +635,6 @@ void MapDocument::setBmpRules(const QString &fileName,
     mapComposite()->bmpBlender()->recreate();
 
     emit bmpRulesChanged();
-#if 0
-    QRegion region(0, 0, mMap->width(), mMap->height());
-    foreach (QString layerName, mapComposite()->bmpBlender()->tileLayerNames()) {
-        int index = map()->indexOfLayer(layerName, Layer::TileLayerType);
-        if (index == -1)
-            continue;
-        TileLayer *tl = map()->layerAt(index)->asTileLayer();
-        mapComposite()->tileLayersForLevel(0)->regionAltered(tl);
-        emitRegionAltered(region, tl);
-    }
-#endif
 }
 
 void MapDocument::setBmpBlends(const QString &fileName,
@@ -658,17 +647,6 @@ void MapDocument::setBmpBlends(const QString &fileName,
     mapComposite()->bmpBlender()->recreate();
 
     emit bmpBlendsChanged();
-#if 0
-    QRegion region(0, 0, mMap->width(), mMap->height());
-    foreach (QString layerName, mapComposite()->bmpBlender()->tileLayerNames()) {
-        int index = map()->indexOfLayer(layerName, Layer::TileLayerType);
-        if (index == -1)
-            continue;
-        TileLayer *tl = map()->layerAt(index)->asTileLayer();
-        mapComposite()->tileLayersForLevel(0)->regionAltered(tl);
-        emitRegionAltered(region, tl);
-    }
-#endif
 }
 #endif // ZOMBOID
 
