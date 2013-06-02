@@ -20,7 +20,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -389,7 +389,8 @@
           <item>
            <widget class="QLabel" name="label_6">
             <property name="text">
-             <string>Choose a WorldEd project file for adjacent maps and lots.</string>
+             <string>Choose a WorldEd project file for adjacent maps and lots.
+Restart TileZed to see changes.</string>
             </property>
             <property name="wordWrap">
              <bool>true</bool>
