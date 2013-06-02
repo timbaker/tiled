@@ -140,6 +140,8 @@ Preferences::Preferences()
     QString configPath = QDir::homePath() + QLatin1Char('/') + QLatin1String(".TileZed");
     mConfigDirectory = mSettings->value(QLatin1String("ConfigDirectory"),
                                         configPath).toString();
+
+    mWorldEdFile = mSettings->value(QLatin1String("WorldEd/ProjectFile")).toString();
 #endif
 
     TilesetManager *tilesetManager = TilesetManager::instance();
@@ -498,5 +500,14 @@ void Preferences::setShowAdjacentMaps(bool show)
     mShowAdjacentMaps = show;
     mSettings->setValue(QLatin1String("Interface/ShowAdjacentMaps"), show);
     emit showAdjacentMapsChanged(mShowAdjacentMaps);
+}
+
+void Preferences::setWorldEdFile(const QString &fileName)
+{
+    if (mWorldEdFile == fileName)
+        return;
+    mWorldEdFile = fileName;
+    mSettings->setValue(QLatin1String("WorldEd/ProjectFile"), mWorldEdFile);
+    emit worldEdFileChanged(mWorldEdFile);
 }
 #endif // ZOMBOID

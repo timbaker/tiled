@@ -147,6 +147,7 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
             SLOT(defaultBackgroundColor()));
     connect(mUi->showAdjacent, SIGNAL(toggled(bool)),
             Preferences::instance(), SLOT(setShowAdjacentMaps(bool)));
+    connect(mUi->worldedBrowse, SIGNAL(clicked()), SLOT(browseWorlded()));
 #endif
 
     connect(mUi->objectTypesTable->selectionModel(),
@@ -305,7 +306,18 @@ void PreferencesDialog::defaultBackgroundColor()
     Preferences::instance()->setBackgroundColor(Qt::darkGray);
     mUi->bgColor->setColor(Preferences::instance()->backgroundColor());
 }
-#endif
+
+void PreferencesDialog::browseWorlded()
+{
+    QString f = QFileDialog::getOpenFileName(this, tr("Choose WorldEd Project"),
+                                             QString(),
+                                             tr("WorldEd world (*.pzw)"));
+    if (f.isEmpty())
+        return;
+
+    mUi->worldedFile->setText(QDir::toNativeSeparators(f));
+}
+#endif // ZOMBOID
 
 void PreferencesDialog::fromPreferences()
 {
@@ -348,6 +360,7 @@ void PreferencesDialog::fromPreferences()
 #ifdef ZOMBOID
     mUi->bgColor->setColor(prefs->backgroundColor());
     mUi->configDirectory->setText(QDir::toNativeSeparators(prefs->configPath()));
+    mUi->worldedFile->setText(QDir::toNativeSeparators(prefs->worldedFile()));
     mUi->showAdjacent->setChecked(prefs->showAdjacentMaps());
 #endif
 }
@@ -360,6 +373,9 @@ void PreferencesDialog::toPreferences()
     prefs->setDtdEnabled(mUi->enableDtd->isChecked());
     prefs->setLayerDataFormat(layerDataFormat());
     prefs->setAutomappingDrawing(mUi->autoMapWhileDrawing->isChecked());
+#ifdef ZOMBOID
+    prefs->setWorldEdFile(mUi->worldedFile->text());
+#endif
 }
 
 MapWriter::LayerDataFormat PreferencesDialog::layerDataFormat() const

@@ -66,6 +66,7 @@ private slots:
 
 #ifdef ZOMBOID
     void defaultBackgroundColor();
+    void browseWorlded();
 #endif
 
 private:

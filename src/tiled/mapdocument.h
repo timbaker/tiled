@@ -413,6 +413,7 @@ private slots:
     void bmpBlenderRegionAltered(const QRegion &region);
 
     void mapLoaded(MapInfo *info);
+    void mapFailedToLoad(MapInfo *info);
 #endif
 
 private:

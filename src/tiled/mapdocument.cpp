@@ -38,6 +38,9 @@
 #include "preferences.h"
 #include "zlevelrenderer.h"
 #include "zlevelsmodel.h"
+#include "worlded/world.h"
+#include "worlded/worldcell.h"
+#include "worlded/worldedmgr.h"
 #endif
 #include "map.h"
 #include "mapobject.h"
@@ -862,16 +865,31 @@ void MapDocument::bmpBlenderRegionAltered(const QRegion &region)
 
 void MapDocument::mapLoaded(MapInfo *info)
 {
+    bool changed = false;
     for (int i = 0; i < mAdjacentMapsLoading.size(); i++) {
         AdjacentMap &am = mAdjacentMapsLoading[i];
         if (am.info == info) {
             mMapComposite->setAdjacentMap(am.pos.x(), am.pos.y(), am.info);
             mAdjacentMapsLoading.removeAt(i);
-            emit mapCompositeChanged(); ///////
-            return;
+            changed = true;
+            --i;
+        }
+    }
+    if (changed)
+        emit mapCompositeChanged(); ///////
+}
+
+void MapDocument::mapFailedToLoad(MapInfo *info)
+{
+    for (int i = 0; i < mAdjacentMapsLoading.size(); i++) {
+        AdjacentMap &am = mAdjacentMapsLoading[i];
+        if (am.info == info) {
+            mAdjacentMapsLoading.removeAt(i);
+            --i;
         }
     }
 }
+
 #endif // ZOMBOID
 
 void MapDocument::deselectObjects(const QList<MapObject *> &objects)
@@ -889,6 +907,39 @@ void MapDocument::initAdjacentMaps()
 {
     if (mFileName.isEmpty() || !Preferences::instance()->showAdjacentMaps())
         return;
+#if 1
+    connect(MapManager::instance(), SIGNAL(mapLoaded(MapInfo*)),
+            SLOT(mapLoaded(MapInfo*)));
+    connect(MapManager::instance(), SIGNAL(mapFailedToLoad(MapInfo*)),
+            SLOT(mapFailedToLoad(MapInfo*)));
+
+    if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mFileName)) {
+        int cx = cell->x(), cy = cell->y();
+        for (int y = -1; y <= 1; y++) {
+            if (cy + y < 0 || cy + y >= cell->world()->height()) continue;
+            for (int x = -1; x <= 1; x++) {
+                if (cx + x < 0 || cx + x >= cell->world()->width()) continue;
+                if (x == 0 && y == 0) continue;
+                if (WorldCell *cell2 = cell->world()->cellAt(cx + x, cy + y)) {
+                    if (cell2->mapFilePath().isEmpty()) continue;
+                    QFileInfo info(cell2->mapFilePath());
+                    if (info.exists()) {
+                        MapInfo *mapInfo = MapManager::instance()->loadMap(
+                                    info.absoluteFilePath(), QString(), true,
+                                    MapManager::PriorityMedium);
+                        if (mapInfo) {
+                            if (mapInfo->isLoading())
+                                mAdjacentMapsLoading += AdjacentMap(x, y, mapInfo);
+                            else
+                                mMapComposite->setAdjacentMap(x, y, mapInfo);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+#else
     QRegExp re(QLatin1String("(.+)_([0-9]+)_([0-9]+)"));
     QFileInfo info(mFileName);
     if (!re.exactMatch(info.baseName()))
@@ -921,6 +972,7 @@ void MapDocument::initAdjacentMaps()
             }
         }
     }
+#endif
 }
 #endif // ZOMBOID
 

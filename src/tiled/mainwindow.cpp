@@ -93,6 +93,9 @@
 #include "tilemetainfomgr.h"
 #include "zlevelsdock.h"
 #include "zprogress.h"
+
+#include "worlded/worldedmgr.h"
+
 #include <QDebug>
 #include <QDesktopServices>
 #include <QProcess>
@@ -791,6 +794,12 @@ bool MainWindow::openFile(const QString &fileName)
 
 void MainWindow::openLastFiles()
 {
+#ifdef ZOMBOID
+    QString f = Preferences::instance()->worldedFile();
+    if (!f.isEmpty() && QFileInfo(f).exists())
+        WorldEd::WorldEdMgr::instance()->addProject(f);
+#endif
+
     mSettings.beginGroup(QLatin1String("recentFiles"));
 
     QStringList lastOpenFiles = mSettings.value(

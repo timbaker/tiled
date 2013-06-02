@@ -111,6 +111,9 @@ public:
 
     bool showAdjacentMaps() const
     { return mShowAdjacentMaps; }
+
+    QString worldedFile() const
+    { return mWorldEdFile; }
 #endif // ZOMBOID
 
     /**
@@ -133,6 +136,7 @@ public slots:
     void setShowTileLayersPanel(bool show);
     void setBackgroundColor(const QColor &bgColor);
     void setShowAdjacentMaps(bool show);
+    void setWorldEdFile(const QString &fileName);
 #endif
 
 signals:
@@ -157,6 +161,7 @@ signals:
     void showTileLayersPanelChanged(bool show);
     void backgroundColorChanged(const QColor &color);
     void showAdjacentMapsChanged(bool show);
+    void worldEdFileChanged(const QString &fileName);
 #endif
 
 private:
@@ -192,6 +197,7 @@ private:
     bool mShowTileLayersPanel;
     QColor mBackgroundColor;
     bool mShowAdjacentMaps;
+    QString mWorldEdFile;
 #endif
 
     static Preferences *mInstance;
