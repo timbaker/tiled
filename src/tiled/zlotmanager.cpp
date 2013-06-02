@@ -1,5 +1,5 @@
 /*
- * zlotmanager.cpp
+ * Copyright 2013, Tim Baker <treectrl@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -31,13 +31,16 @@
 #include <QDir>
 #include <QFileInfo>
 
-namespace Tiled {
-
-using namespace Internal;
+using namespace Tiled;
+using namespace Tiled::Internal;
 
 ZLotManager::ZLotManager()
     : mMapDocument(0)
 {
+    connect(MapManager::instance(), SIGNAL(mapLoaded(MapInfo*)),
+            SLOT(mapLoaded(MapInfo*)));
+    connect(MapManager::instance(), SIGNAL(mapFailedToLoad(MapInfo*)),
+            SLOT(mapFailedToLoad(MapInfo*)));
 }
 
 ZLotManager::~ZLotManager()
@@ -77,6 +80,33 @@ void ZLotManager::setMapDocument(MapDocument *mapDoc)
 
 void ZLotManager::handleMapObject(MapObject *mapObject)
 {
+#if 1
+    const QString& name = mapObject->name();
+    const QString& type = mapObject->type();
+
+    MapInfo *newInfo = 0;
+
+    if (name == QLatin1String("lot") && !type.isEmpty()) {
+        QString mapName = type;
+        if (!mMapDocument->fileName().isEmpty()) {
+            QDir mapDir = QFileInfo(mMapDocument->fileName()).absoluteDir();
+            if (QDir::isRelativePath(mapName))
+                mapName = mapDir.filePath(mapName);
+        }
+        if (QDir::isAbsolutePath(mapName))
+            newInfo = MapManager::instance()->loadMap(mapName, QString(),
+                                                      true, MapManager::PriorityMedium);
+    }
+
+    if (newInfo && newInfo->isLoading()) {
+        int n = findLoading(mapObject);
+        if (n != -1)
+            mMapsLoading[n].info = newInfo;
+        else
+            mMapsLoading += MapLoading(newInfo, mapObject);
+    } else if (!newInfo || !newInfo->isLoading())
+        setMapInfo(mapObject, newInfo);
+#else
     const QString& name = mapObject->name();
     const QString& type = mapObject->type();
 
@@ -95,7 +125,7 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
         }
         MapInfo *newMapInfo = 0;
         if (QDir::isAbsolutePath(mapName))
-            newMapInfo = MapManager::instance()->loadMap(mapName);
+            newMapInfo = MapManager::instance()->mapInfo(mapName);
 
         if (newMapInfo) {
             if (!currLot || (currLot->map() != newMapInfo->map())) {
@@ -129,11 +159,78 @@ void ZLotManager::handleMapObject(MapObject *mapObject)
             mMapDocument->mapComposite()->moveSubMap(currLot, mapObject->position().toPoint());
         else if (currLot->isVisible() != mapObject->isVisible()) {
             currLot->setVisible(mapObject->isVisible());
-//            foreach (CompositeLayerGroup *g, mMapDocument->mapComposite()->layerGroups())
-//                g->synch();
         }
         emit lotUpdated(currLot, mapObject); // position change, etc
     }
+#endif
+}
+
+void ZLotManager::setMapInfo(MapObject *mapObject, MapInfo *mapInfo)
+{
+    MapInfo *currInfo = 0, *newInfo = mapInfo;
+
+    if (mMapObjectToInfo.contains(mapObject))
+        currInfo = mMapObjectToInfo[mapObject];
+
+    MapComposite *newLot = 0;
+
+    if (currInfo != newInfo) {
+        if (currInfo) {
+            mMapObjectToInfo.remove(mapObject);
+        }
+        if (newInfo) {
+            mMapObjectToInfo[mapObject] = newInfo;
+            int level;
+            (void) MapComposite::levelForLayer(mapObject->objectGroup(), &level);
+            newLot = mMapDocument->mapComposite()->addMap(newInfo,
+                                                          mapObject->position().toPoint(),
+                                                          level);
+        }
+    } else {
+        if (mMapObjectToLot.contains(mapObject))
+            newLot = mMapObjectToLot[mapObject];
+    }
+
+    setMapComposite(mapObject, newLot);
+}
+
+void ZLotManager::setMapComposite(MapObject *mapObject, MapComposite *mapComposite)
+{
+    MapComposite *currLot = 0, *newLot = mapComposite;
+
+    if (mMapObjectToLot.contains(mapObject))
+        currLot = mMapObjectToLot[mapObject];
+
+    if (currLot != newLot) {
+        if (currLot) {
+            QMap<MapObject*,MapComposite*>::iterator it = mMapObjectToLot.find(mapObject);
+            mMapDocument->mapComposite()->removeMap((*it)); // deletes currLot!
+            mMapObjectToLot.erase(it);
+            emit lotRemoved(currLot, mapObject); // remove from scene
+        }
+        if (newLot) {
+            mMapObjectToLot[mapObject] = newLot;
+            newLot->setGroupVisible(mapObject->objectGroup()->isVisible());
+            emit lotAdded(newLot, mapObject); // add to scene
+        }
+    } else if (currLot) {
+        if (currLot->origin() != mapObject->position().toPoint())
+            mMapDocument->mapComposite()->moveSubMap(currLot, mapObject->position().toPoint());
+        else if (currLot->isVisible() != mapObject->isVisible()) {
+            currLot->setVisible(mapObject->isVisible());
+        }
+        emit lotUpdated(currLot, mapObject); // position change, etc
+    }
+}
+
+int ZLotManager::findLoading(MapObject *mapObject)
+{
+    for (int i = 0; i < mMapsLoading.size(); i++) {
+        MapLoading &ml = mMapsLoading[i];
+        if (ml.object == mapObject)
+            return i;
+    }
+    return -1;
 }
 
 void ZLotManager::onLayerAdded(int index)
@@ -166,9 +263,14 @@ void ZLotManager::onObjectsChanged(const QList<MapObject*> &objects)
         handleMapObject(mapObj);
 }
 
+// FIXME: should forget stuff when a map document is closed
 void ZLotManager::onObjectsRemoved(const QList<MapObject*> &objects)
 {
     foreach (MapObject *mapObject, objects) {
+        mMapObjectToInfo.remove(mapObject);
+        int n = findLoading(mapObject);
+        if (n != -1)
+            mMapsLoading.removeAt(n);
         QMap<MapObject*,MapComposite*>::iterator it = mMapObjectToLot.find(mapObject);
         if (it != mMapObjectToLot.end()) {
             MapComposite *lot = it.value();
@@ -179,4 +281,26 @@ void ZLotManager::onObjectsRemoved(const QList<MapObject*> &objects)
     }
 }
 
-} // namespace Tiled
+void ZLotManager::mapLoaded(MapInfo *mapInfo)
+{
+    for (int i = 0; i < mMapsLoading.size(); i++) {
+        MapLoading &ml = mMapsLoading[i];
+        if (ml.info == mapInfo) {
+            setMapInfo(ml.object, ml.info);
+            mMapsLoading.removeAt(i);
+            --i;
+        }
+    }
+}
+
+void ZLotManager::mapFailedToLoad(MapInfo *mapInfo)
+{
+    for (int i = 0; i < mMapsLoading.size(); i++) {
+        MapLoading &ml = mMapsLoading[i];
+        if (ml.info == mapInfo) {
+            mMapsLoading.removeAt(i);
+            --i;
+        }
+    }
+}
+

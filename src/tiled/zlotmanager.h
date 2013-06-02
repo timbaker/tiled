@@ -25,6 +25,8 @@
 #include <QMap>
 
 class MapComposite;
+class MapInfo;
+class WorldCellLot;
 
 namespace Tiled {
 
@@ -63,11 +65,28 @@ private slots:
     void onObjectsChanged(const QList<MapObject*> &objects);
     void onObjectsRemoved(const QList<MapObject*> &objects);
 
+    void mapLoaded(MapInfo *mapInfo);
+    void mapFailedToLoad(MapInfo *mapInfo);
+
 private:
     void handleMapObject(MapObject *mapObject);
+    void setMapInfo(MapObject *mapObject, MapInfo *mapInfo);
+    void setMapComposite(MapObject *mapObject, MapComposite *mapComposite);
+    int findLoading(MapObject *mapObject);
 
     Internal::MapDocument *mMapDocument;
     QMap<MapObject*,MapComposite*> mMapObjectToLot;
+    QMap<MapObject*,MapInfo*> mMapObjectToInfo;
+
+    struct MapLoading
+    {
+        MapLoading(MapInfo *info, MapObject *object) :
+            info(info), object(object) {}
+        MapInfo *info;
+        MapObject *object;
+    };
+
+    QList<MapLoading> mMapsLoading;
 };
 
 } // namespace Tiled
