@@ -376,7 +376,7 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
                 }
                 if (sm.mMapComposite->bmpBlender()->tileLayerNames().contains(layer->name())) {
                     QRect r = c.mRegion.boundingRect();
-                    sm.mMapComposite->bmpBlender()->update(r.x(), r.y(), r.right(), r.bottom());
+                    sm.mMapComposite->bmpBlender()->flush(r);
                 }
             }
             break;
@@ -425,7 +425,7 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
         case MapChange::BmpPainted: {
             sm.mMapComposite->map()->rbmp(c.mBmpIndex).rimage() = c.mBmps[c.mBmpIndex];
             QRect r = c.mRegion.boundingRect();
-            sm.mMapComposite->bmpBlender()->update(r.x(), r.y(), r.right(), r.bottom());
+            sm.mMapComposite->bmpBlender()->flush(r);
             break;
         }
         case MapChange::BmpAliasesChanged: {

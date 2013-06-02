@@ -196,7 +196,7 @@ PaintBMP::PaintBMP(MapDocument *mapDocument, int bmpIndex,
     blender.fromMap();
     QRect r = mRegion.boundingRect();
     blender.tilesToPixels(r.left() - 2, r.top() - 2, r.right() + 2, r.bottom() + 2);
-    blender.update(r.left(), r.top(), r.right(), r.bottom());
+    blender.flush(r);
 
     // Remove known blend tiles from every layer on level 0.
     // Do this adjacent to the painted area as well.

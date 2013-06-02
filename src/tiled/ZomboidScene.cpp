@@ -138,6 +138,7 @@ void ZomboidScene::setMapDocument(MapDocument *mapDoc)
 
         connect(mMapDocument->mapComposite()->bmpBlender(), SIGNAL(layersRecreated()),
                 SLOT(bmpBlenderLayersRecreated()));
+        connect(mMapDocument, SIGNAL(bmpPainted(int,QRegion)), SLOT(bmpPainted(int,QRegion)));
     }
 }
 
@@ -596,6 +597,19 @@ void ZomboidScene::bmpBlenderLayersRecreated()
 {
     if (mTileLayerGroupItems.contains(0))
         updateLayerGroupLater(0, Synch | Bounds);
+}
+
+void ZomboidScene::bmpPainted(int bmpIndex, const QRegion &region)
+{
+    const MapRenderer *renderer = mMapDocument->renderer();
+    const QMargins margins = mMapDocument->map()->drawMargins();
+
+    foreach (const QRect &r, region.rects()) {
+        update(renderer->boundingRect(r, 0).adjusted(-margins.left(),
+                                                     -margins.top(),
+                                                     margins.right(),
+                                                     margins.bottom()));
+    }
 }
 
 void ZomboidScene::handlePendingUpdates()

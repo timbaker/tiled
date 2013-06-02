@@ -102,6 +102,7 @@ private slots:
     void mapCompositeChanged();
 
     void bmpBlenderLayersRecreated();
+    void bmpPainted(int bmpIndex, const QRegion &region);
 
     void handlePendingUpdates();
 
