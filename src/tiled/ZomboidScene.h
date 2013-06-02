@@ -105,6 +105,7 @@ private slots:
 
     void bmpBlenderLayersRecreated();
     void bmpPainted(int bmpIndex, const QRegion &region);
+    void bmpXXXChanged();
 
     void handlePendingUpdates();
 
