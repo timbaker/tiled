@@ -32,27 +32,20 @@ using namespace Tiled::Internal;
 
 /////
 
-WorldCellLevel::WorldCellLevel(WorldCell *cell, int level) :
-    mCell(cell),
-    mLevel(level),
-    mLots(cell->lots()),
-    mVisible(true)
-{
-}
-
-/////
-
 WorldCellLotModel::WorldCellLotModel(QObject *parent) :
     QAbstractItemModel(parent),
     mRoot(0),
     mCell(0)
 {
+    connect(WorldEd::WorldEdMgr::instance(), SIGNAL(levelVisibilityChanged(WorldCellLevel*)),
+            SLOT(levelVisibilityChanged(WorldCellLevel*)));
+    connect(WorldEd::WorldEdMgr::instance(), SIGNAL(lotVisibilityChanged(WorldCellLot*)),
+            SLOT(lotVisibilityChanged(WorldCellLot*)));
 }
 
 WorldCellLotModel::~WorldCellLotModel()
 {
     delete mRoot;
-    qDeleteAll(mLevels);
 }
 
 QModelIndex WorldCellLotModel::index(int row, int column, const QModelIndex &parent) const
@@ -112,7 +105,7 @@ QVariant WorldCellLotModel::data(const QModelIndex &index, int role) const
     if (WorldCellLevel *level = item->level) {
         switch (role) {
         case Qt::DisplayRole:
-            return QString::fromLatin1("Level %1").arg(level->level());
+            return QString::fromLatin1("Level %1").arg(level->z());
         case Qt::EditRole:
         case Qt::DecorationRole:
             return QVariant();
@@ -149,8 +142,7 @@ bool WorldCellLotModel::setData(const QModelIndex &index, const QVariant &value,
         switch (role) {
         case Qt::CheckStateRole: {
             Qt::CheckState c = static_cast<Qt::CheckState>(value.toInt());
-            level->setVisible(c == Qt::Checked);
-            emit visibilityChanged(level);
+            WorldEd::WorldEdMgr::instance()->setLevelVisible(level, c == Qt::Checked);
             return true;
         }
         }
@@ -160,8 +152,7 @@ bool WorldCellLotModel::setData(const QModelIndex &index, const QVariant &value,
         switch (role) {
         case Qt::CheckStateRole: {
             Qt::CheckState c = static_cast<Qt::CheckState>(value.toInt());
-            lot->setVisible(c == Qt::Checked);
-            emit visibilityChanged(lot);
+            WorldEd::WorldEdMgr::instance()->setLotVisible(lot, c == Qt::Checked);
             return true;
         }
         }
@@ -190,15 +181,13 @@ QVariant WorldCellLotModel::headerData(int section, Qt::Orientation orientation,
 QModelIndex WorldCellLotModel::index(WorldCellLevel *level) const
 {
     Item *item = toItem(level);
-    int row = item->parent->children.indexOf(item);
-    return createIndex(row, 0, item);
+    return index(item);
 }
 
 QModelIndex WorldCellLotModel::index(WorldCellLot *lot) const
 {
     Item *item = toItem(lot);
-    int row = item->parent->children.indexOf(item);
-    return createIndex(row, 0, item);
+    return index(item);
 }
 
 WorldCellLevel *WorldCellLotModel::toLevel(const QModelIndex &index) const
@@ -219,17 +208,14 @@ void WorldCellLotModel::setWorldCell(WorldCell *cell)
 {
     delete mRoot;
     mRoot = 0;
-    qDeleteAll(mLevels);
-    mLevels.clear();
 
     mCell = cell;
 
     if (mCell) {
         mRoot = new Item;
 
-        for (int z = 0; z < 16; z++) {
-            mLevels += new WorldCellLevel(cell, z);
-            Item *levelItem = new Item(mRoot, 0, mLevels.last());
+        for (int z = 0; z < mCell->levelCount(); z++) {
+            Item *levelItem = new Item(mRoot, 0, cell->levelAt(z));
             foreach (WorldCellLot *lot, mCell->lots()) {
                 if (lot->level() == z)
                     new Item(levelItem, 0, lot);
@@ -238,6 +224,18 @@ void WorldCellLotModel::setWorldCell(WorldCell *cell)
     }
 
     reset();
+}
+
+void WorldCellLotModel::levelVisibilityChanged(WorldCellLevel *level)
+{
+    if (Item *item = toItem(level))
+        emit dataChanged(index(item), index(item));
+}
+
+void WorldCellLotModel::lotVisibilityChanged(WorldCellLot *lot)
+{
+    if (Item *item = toItem(lot))
+        emit dataChanged(index(item), index(item));
 }
 
 WorldCellLotModel::Item *WorldCellLotModel::toItem(const QModelIndex &index) const
@@ -261,11 +259,17 @@ WorldCellLotModel::Item *WorldCellLotModel::toItem(WorldCellLot *lot) const
 {
     if (!mRoot)
         return 0;
-    Item *parent = toItem(mLevels[lot->level()]);
+    Item *parent = toItem(lot->cell()->levelAt(lot->level()));
     foreach (Item *item, parent->children)
         if (item->lot == lot)
             return item;
     return 0;
+}
+
+QModelIndex WorldCellLotModel::index(WorldCellLotModel::Item *item) const
+{
+    int row = item->parent->children.indexOf(item);
+    return createIndex(row, 0, item);
 }
 
 /////
@@ -289,21 +293,24 @@ WorldEdView::WorldEdView(QWidget *parent) :
 WorldEdDock::WorldEdDock(QWidget *parent) :
     QDockWidget(parent),
     mDocument(0),
+    mSynching(false),
     ui(new Ui::WorldEdDock)
 {
     ui->setupUi(this);
 
     connect(ui->view->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(selectionChanged()));
-    connect(ui->view->model(), SIGNAL(visibilityChanged(WorldCellLot*)),
+    connect(WorldEd::WorldEdMgr::instance(), SIGNAL(lotVisibilityChanged(WorldCellLot*)),
             SLOT(visibilityChanged(WorldCellLot*)));
-    connect(ui->view->model(), SIGNAL(visibilityChanged(WorldCellLevel*)),
+    connect(WorldEd::WorldEdMgr::instance(), SIGNAL(levelVisibilityChanged(WorldCellLevel*)),
             SLOT(visibilityChanged(WorldCellLevel*)));
 
     connect(WorldEd::WorldEdMgr::instance(), SIGNAL(beforeWorldChanged(QString)),
            SLOT(beforeWorldChanged()));
     connect(WorldEd::WorldEdMgr::instance(), SIGNAL(afterWorldChanged(QString)),
             SLOT(afterWorldChanged()));
+    connect(WorldEd::WorldEdMgr::instance(), SIGNAL(selectedLotsChanged()),
+            SLOT(selectedLotsChanged()));
 }
 
 WorldEdDock::~WorldEdDock()
@@ -327,10 +334,9 @@ void WorldEdDock::setMapDocument(MapDocument *mapDoc)
         ui->view->model()->setWorldCell(0);
 }
 
-
 void WorldEdDock::selectionChanged()
 {
-    if (!mDocument /*|| mSynching*/)
+    if (!mDocument || mSynching)
         return;
 
     QModelIndexList selectedRows = ui->view->selectionModel()->selectedRows();
@@ -349,7 +355,7 @@ void WorldEdDock::selectionChanged()
 void WorldEdDock::visibilityChanged(WorldCellLevel *level)
 {
     ((ZomboidScene*)DocumentManager::instance()->currentMapScene())->lotManager()
-            .worldCellLevelChanged(level->level(), level->isVisible());
+            .worldCellLevelChanged(level->z(), level->isVisible());
 }
 
 void WorldEdDock::visibilityChanged(WorldCellLot *lot)
@@ -371,3 +377,19 @@ void WorldEdDock::afterWorldChanged()
             ui->view->model()->setWorldCell(cell);
     }
 }
+
+void WorldEdDock::selectedLotsChanged()
+{
+    const QSet<WorldCellLot*> &selected = WorldEd::WorldEdMgr::instance()->selectedLots();
+    if (selected.size() == 1) {
+        QModelIndex index = ui->view->model()->index(selected.values().first());
+        if (index.isValid()) {
+            mSynching = true;
+            ui->view->setCurrentIndex(index);
+            mSynching = false;
+        }
+    } else {
+        ui->view->clearSelection();
+    }
+}
+

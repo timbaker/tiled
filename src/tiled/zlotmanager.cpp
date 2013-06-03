@@ -315,7 +315,7 @@ void ZLotManager::setMapComposite(WorldCellLot *lot, MapComposite *mapComposite)
         }
         if (newLot) {
             mWorldCellLotToMC[lot] = newLot;
-//            newLot->setGroupVisible(lot->objectGroup()->isVisible());
+            newLot->setGroupVisible(lot->cell()->levelAt(lot->level())->isVisible());
             emit lotAdded(newLot, lot); // add to scene
         }
     } else if (currLot) {

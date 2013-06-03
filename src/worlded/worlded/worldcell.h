@@ -267,6 +267,35 @@ public:
     }
 };
 
+class WorldCellLevel
+{
+public:
+    WorldCellLevel(WorldCell *cell, int level);
+
+    int z() const
+    { return mLevel; }
+
+    void setVisible(bool visible)
+    { mVisible = visible; }
+
+    bool isVisible() const
+    { return mVisible; }
+
+    void insertLot(int index, WorldCellLot *lot);
+    WorldCellLot *removeLot(int index);
+    const WorldCellLotList &lots() const
+    { return mLots; }
+
+private:
+    WorldCell *mCell;
+    int mLevel;
+    WorldCellLotList mLots;
+    WorldCellObjectList mObjects;
+    bool mVisible;
+};
+
+typedef QList<WorldCellLevel*> WorldCellLevelList;
+
 /**
   * This class represents a single cell in a World.
   */
@@ -288,8 +317,15 @@ public:
 
     void addLot(const QString &name, int x, int y, int z, int width, int height)
     {
-        mLots.append(new WorldCellLot(this, name, x, y, z, width, height));
+        insertLot(mLots.size(), new WorldCellLot(this, name, x, y, z, width, height));
     }
+
+    const WorldCellLevelList &levels() const
+    { return mLevels; }
+    int levelCount() const
+    { return mLevels.size(); }
+    WorldCellLevel *levelAt(int index) const
+    { return mLevels[index]; }
 
     void insertLot(int index, WorldCellLot *lot);
     WorldCellLot *removeLot(int index);
@@ -306,6 +342,7 @@ private:
     int mX, mY;
     World *mWorld;
     QString mMapFilePath;
+    WorldCellLevelList mLevels;
     WorldCellLotList mLots;
     WorldCellObjectList mObjects;
 

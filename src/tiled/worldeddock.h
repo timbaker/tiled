@@ -23,32 +23,12 @@
 #include <QTreeView>
 
 class WorldCell;
+class WorldCellLevel;
 class WorldCellLot;
 
 namespace Ui {
 class WorldEdDock;
 }
-
-class WorldCellLevel
-{
-public:
-    WorldCellLevel(WorldCell *cell, int level);
-
-    int level() const
-    { return mLevel; }
-
-    void setVisible(bool visible)
-    { mVisible = visible; }
-
-    bool isVisible() const
-    { return mVisible; }
-
-private:
-    WorldCell *mCell;
-    int mLevel;
-    QList<WorldCellLot*> mLots;
-    bool mVisible;
-};
 
 namespace Tiled {
 namespace Internal {
@@ -82,9 +62,9 @@ public:
 
     void setWorldCell(WorldCell *cell);
 
-signals:
-    void visibilityChanged(WorldCellLevel *level);
-    void visibilityChanged(WorldCellLot *lot);
+private slots:
+    void levelVisibilityChanged(WorldCellLevel *level);
+    void lotVisibilityChanged(WorldCellLot *lot);
 
 private:
     class Item
@@ -124,8 +104,9 @@ private:
     Item *toItem(WorldCellLevel *level) const;
     Item *toItem(WorldCellLot *lot) const;
 
+    QModelIndex index(Item *item) const;
+
     Item *mRoot;
-    QVector<WorldCellLevel*> mLevels;
     WorldCell *mCell;
 };
 
@@ -159,8 +140,11 @@ private slots:
     void beforeWorldChanged();
     void afterWorldChanged();
 
+    void selectedLotsChanged();
+
 private:
     MapDocument *mDocument;
+    bool mSynching;
     Ui::WorldEdDock *ui;
 };
 

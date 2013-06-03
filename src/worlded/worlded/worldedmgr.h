@@ -27,6 +27,8 @@
 
 class World;
 class WorldCell;
+class WorldCellLevel;
+class WorldCellLot;
 
 namespace WorldEd {
 
@@ -40,10 +42,22 @@ public:
     void addProject(const QString &fileName);
 
     WorldCell *cellForMap(const QString &fileName);
-    
+
+    void setLevelVisible(WorldCellLevel *level, bool visible);
+    void setLotVisible(WorldCellLot *lot, bool visible);
+
+    void setSelectedLots(const QSet<WorldCellLot*> &selected);
+    const QSet<WorldCellLot*> &selectedLots() const
+    { return mSelectedLots; }
+
 signals:
     void beforeWorldChanged(const QString &fileName);
     void afterWorldChanged(const QString &fileName);
+
+    void levelVisibilityChanged(WorldCellLevel *level);
+    void lotVisibilityChanged(WorldCellLot *lot);
+
+    void selectedLotsChanged();
 
 public slots:
     void fileChanged(const QString &fileName);
@@ -60,6 +74,7 @@ private:
     Tiled::Internal::FileSystemWatcher mWatcher;
     QSet<QString> mChangedFiles;
     QTimer mChangedFilesTimer;
+    QSet<WorldCellLot*> mSelectedLots;
 };
 
 } // namespace WorldEd

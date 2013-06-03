@@ -205,7 +205,8 @@ SOURCES += aboutdialog.cpp \
     bmpruleview.cpp \
     luatiled.cpp \
     luaconsole.cpp \
-    worldeddock.cpp
+    worldeddock.cpp \
+    worldlottool.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -373,7 +374,8 @@ HEADERS += aboutdialog.h \
     bmpruleview.h \
     luatiled.h \
     luaconsole.h \
-    worldeddock.h
+    worldeddock.h \
+    worldlottool.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

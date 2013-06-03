@@ -51,6 +51,8 @@ public:
     // Yuck: used by MiniMap
     const QMap<MapObject*,MapComposite*> &objectToLot()
     { return mMapObjectToLot; }
+    const QMap<WorldCellLot*,MapComposite*> &worldLotToSubMap() const
+    { return mWorldCellLotToMC; }
 
     void worldCellLevelChanged(int level, bool visible);
     void worldCellLotChanged(WorldCellLot*lot);

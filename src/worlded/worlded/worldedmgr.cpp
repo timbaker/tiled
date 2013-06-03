@@ -82,6 +82,28 @@ WorldCell *WorldEdMgr::cellForMap(const QString &fileName)
     return 0;
 }
 
+void WorldEdMgr::setLevelVisible(WorldCellLevel *level, bool visible)
+{
+    if (level->isVisible() != visible) {
+        level->setVisible(visible);
+        emit levelVisibilityChanged(level);
+    }
+}
+
+void WorldEdMgr::setLotVisible(WorldCellLot *lot, bool visible)
+{
+    if (lot->isVisible() != visible) {
+        lot->setVisible(visible);
+        emit lotVisibilityChanged(lot);
+    }
+}
+
+void WorldEdMgr::setSelectedLots(const QSet<WorldCellLot *> &selected)
+{
+    mSelectedLots = selected;
+    emit selectedLotsChanged();
+}
+
 void WorldEdMgr::fileChanged(const QString &fileName)
 {
     qDebug() << "WorldEdMgr::fileChanged" << fileName;
@@ -99,6 +121,7 @@ void WorldEdMgr::fileChangedTimeout()
         QFileInfo info(fileName);
         for (int i = 0; i < mWorlds.size(); i++) {
             if (info == QFileInfo(mWorldFileNames[i])) {
+                setSelectedLots(QSet<WorldCellLot*>());
                 emit beforeWorldChanged(mWorldFileNames[i]);
                 delete mWorlds[i];
                 mWorlds.removeAt(i);

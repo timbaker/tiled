@@ -46,15 +46,39 @@ WorldCellLot::WorldCellLot(WorldCell *cell, WorldCellLot *other)
 
 /////
 
+WorldCellLevel::WorldCellLevel(WorldCell *cell, int level) :
+    mCell(cell),
+    mLevel(level),
+    mVisible(true),
+    mLots(cell->lots()),
+    mObjects(cell->objects())
+{
+}
+
+void WorldCellLevel::insertLot(int index, WorldCellLot *lot)
+{
+    mLots.insert(index, lot);
+}
+
+WorldCellLot *WorldCellLevel::removeLot(int index)
+{
+    return mLots.takeAt(index);
+}
+
+/////
+
 WorldCell::WorldCell(World *world, int x, int y)
     : mX(x)
     , mY(y)
     , mWorld(world)
 {
+    for (int z = 0; z < 16; z++)
+        mLevels += new WorldCellLevel(this, z);
 }
 
 WorldCell::~WorldCell()
 {
+    qDeleteAll(mLevels);
     qDeleteAll(mLots);
     qDeleteAll(mObjects);
 }
@@ -67,11 +91,14 @@ void WorldCell::setMapFilePath(const QString &path)
 void WorldCell::insertLot(int index, WorldCellLot *lot)
 {
     mLots.insert(index, lot);
+    mLevels[lot->level()]->insertLot(index, lot);
 }
 
 WorldCellLot *WorldCell::removeLot(int index)
 {
-    return mLots.takeAt(index);
+    WorldCellLot *lot = mLots.takeAt(index);
+    mLevels[lot->level()]->removeLot(index);
+    return lot;
 }
 
 void WorldCell::insertObject(int index, WorldCellObject *obj)

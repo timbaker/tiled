@@ -94,6 +94,7 @@
 #include "zlevelsdock.h"
 #include "zprogress.h"
 #include "worldeddock.h"
+#include "worldlottool.h"
 
 #include "worlded/worldedmgr.h"
 
@@ -511,6 +512,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     toolManager->registerTool(BmpWandTool::instance());
     toolManager->registerTool(BmpEraserTool::instance());
     toolManager->registerTool(BmpToLayersTool::instance());
+    toolManager->addSeparator();
+    toolManager->registerTool(WorldLotTool::instance());
 
     QAction *brushSizeMinus = new QAction(this);
     brushSizeMinus->setShortcut(QKeySequence(QLatin1String("[")));
