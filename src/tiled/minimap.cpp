@@ -678,6 +678,11 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
     for (it = map.constBegin(); it != map.constEnd(); it++) {
         lotAdded(it.value(), it.key());
     }
+
+    QMap<WorldCellLot*,MapComposite*>::const_iterator it2;
+    const QMap<WorldCellLot*,MapComposite*> &map2 = mScene->lotManager().worldLotToSubMap();
+    for (it2 = map2.constBegin(); it2 != map2.constEnd(); it2++)
+        lotAdded(it2.value(), it2.key());
 }
 
 MiniMapItem::~MiniMapItem()
