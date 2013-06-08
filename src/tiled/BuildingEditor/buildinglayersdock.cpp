@@ -62,6 +62,7 @@ void BuildingLayersDock::setDocument(BuildingDocument *doc)
     }
 
     setLayersList();
+    currentLayerChanged();
 }
 
 void BuildingLayersDock::clearDocument()
@@ -76,6 +77,8 @@ void BuildingLayersDock::clearDocument()
 
 void BuildingLayersDock::setLayersList()
 {
+    mSynching = true;
+
     ui->layers->clear();
 
     if (mDocument) {
@@ -89,12 +92,14 @@ void BuildingLayersDock::setLayersList()
         }
     }
 
+    mSynching = false;
+
     updateActions();
 }
 
 void BuildingLayersDock::currentLayerChanged(int row)
 {
-    if (!mDocument)
+    if (!mDocument || mSynching)
         return;
     QString layerName;
     if (row >= 0)

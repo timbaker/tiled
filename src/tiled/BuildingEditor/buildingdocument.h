@@ -54,6 +54,8 @@ public:
     QString fileName() const
     { return mFileName; }
 
+    QString displayName() const;
+
     static BuildingDocument *read(const QString &fileName, QString &error);
     bool write(const QString &fileName, QString &error);
 
@@ -66,6 +68,10 @@ public:
 
     bool currentFloorIsTop();
     bool currentFloorIsBottom();
+
+    void setCurrentRoom(Room *room);
+    Room *currentRoom() const
+    { return mCurrentRoom; }
 
     void setCurrentLayer(const QString &layerName);
 
@@ -159,10 +165,10 @@ public:
 
     QRegion setTileSelection(const QRegion &selection);
     // -UNDO/REDO
-    
+
 signals:
     void currentFloorChanged();
-
+    void currentRoomChanged();
     void currentLayerChanged();
 
     void roomAtPositionChanged(BuildingFloor *floor, const QPoint &pos);
@@ -200,6 +206,7 @@ signals:
     void tileSelectionChanged(const QRegion &old);
     void clipboardTilesChanged();
 
+    void fileNameChanged();
     void cleanChanged();
 
     void usedTilesChanged();
@@ -220,6 +227,7 @@ private:
     QUndoStack *mUndoStack;
     bool mTileChanges;
     BuildingFloor *mCurrentFloor;
+    Room *mCurrentRoom;
     QString mCurrentLayerName;
     QSet<BuildingObject*> mSelectedObjects;
     QRegion mTileSelection;

@@ -206,7 +206,8 @@ SOURCES += aboutdialog.cpp \
     luatiled.cpp \
     luaconsole.cpp \
     worldeddock.cpp \
-    worldlottool.cpp
+    worldlottool.cpp \
+    BuildingEditor/buildingdocumentmgr.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -375,7 +376,8 @@ HEADERS += aboutdialog.h \
     luatiled.h \
     luaconsole.h \
     worldeddock.h \
-    worldlottool.h
+    worldlottool.h \
+    BuildingEditor/buildingdocumentmgr.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

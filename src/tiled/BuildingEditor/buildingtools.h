@@ -132,6 +132,7 @@ public:
     { return mCurrentModifiers; }
 
     void clearDocument();
+    void setEditor(BuildingBaseScene *editor);
 
 signals:
     void currentToolChanged(BaseTool *tool);
@@ -147,6 +148,7 @@ private:
 
     QList<BaseTool*> mTools;
     BaseTool *mCurrentTool;
+    BuildingBaseScene *mCurrentEditor;
     Qt::KeyboardModifiers mCurrentModifiers;
 };
 

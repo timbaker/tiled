@@ -545,6 +545,9 @@ public:
 
     void wheelEvent(QWheelEvent *event);
 
+    void setDocument(BuildingDocument *doc) { scene()->setDocument(doc); }
+    void clearDocument() { scene()->clearDocument(); }
+
     void setHandScrolling(bool handScrolling);
 
 signals:

@@ -142,7 +142,8 @@ void ToolManager::deleteInstance()
 
 ToolManager::ToolManager() :
     QObject(),
-    mCurrentTool(0)
+    mCurrentTool(0),
+    mCurrentEditor(0)
 {
 }
 
@@ -155,6 +156,7 @@ void ToolManager::activateTool(BaseTool *tool)
 {
     if (mCurrentTool) {
         mCurrentTool->deactivate();
+        mCurrentTool->setEditor(0);
         mCurrentTool->action()->setChecked(false);
         mCurrentTool->disconnect(this);
     }
@@ -164,6 +166,8 @@ void ToolManager::activateTool(BaseTool *tool)
     if (mCurrentTool) {
         connect(mCurrentTool, SIGNAL(statusTextChanged()),
                 SLOT(currentToolStatusTextChanged()));
+        Q_ASSERT(mCurrentEditor != 0);
+        mCurrentTool->setEditor(mCurrentEditor);
         mCurrentTool->activate();
         mCurrentTool->action()->setChecked(true);
     }
@@ -204,6 +208,12 @@ void ToolManager::clearDocument()
     activateTool(0);
     foreach (BaseTool *tool, mTools)
         tool->action()->setEnabled(false);
+    mCurrentEditor = 0;
+}
+
+void ToolManager::setEditor(BuildingBaseScene *editor)
+{
+    mCurrentEditor = editor;
 }
 
 void ToolManager::currentToolStatusTextChanged()

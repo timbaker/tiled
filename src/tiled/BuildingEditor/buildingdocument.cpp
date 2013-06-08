@@ -29,6 +29,7 @@
 #include "buildingwriter.h"
 #include "furnituregroups.h"
 
+#include <QFileInfo>
 #include <QMessageBox>
 #include <QUndoStack>
 
@@ -40,6 +41,8 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
     mFileName(fileName),
     mUndoStack(new QUndoStack(this)),
     mTileChanges(false),
+    mCurrentFloor(0),
+    mCurrentRoom(0),
     mClipboardTiles(0)
 {
     connect(BuildingTilesMgr::instance(), SIGNAL(entryTileChanged(BuildingTileEntry*)),
@@ -55,6 +58,14 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
 BuildingDocument::~BuildingDocument()
 {
     delete mClipboardTiles;
+}
+
+QString BuildingDocument::displayName() const
+{
+    QString displayName = QFileInfo(mFileName).fileName();
+    if (displayName.isEmpty())
+        displayName = tr("untitled.tbx");
+    return displayName;
 }
 
 BuildingDocument *BuildingDocument::read(const QString &fileName, QString &error)
@@ -80,6 +91,7 @@ bool BuildingDocument::write(const QString &fileName, QString &error)
     if (fileName.endsWith(QLatin1String(".autosave")))
         return true;
     mFileName = fileName;
+    emit fileNameChanged();
     mUndoStack->setClean();
     if (mTileChanges) {
         mTileChanges = false;
@@ -108,6 +120,12 @@ bool BuildingDocument::currentFloorIsTop()
 bool BuildingDocument::currentFloorIsBottom()
 {
     return mCurrentFloor == mBuilding->floors().first();
+}
+
+void BuildingDocument::setCurrentRoom(Room *room)
+{
+    mCurrentRoom = room;
+    emit currentRoomChanged();
 }
 
 void BuildingDocument::setCurrentLayer(const QString &layerName)
@@ -278,6 +296,14 @@ void BuildingDocument::insertRoom(int index, Room *room)
 Room *BuildingDocument::removeRoom(int index)
 {
     Room *room = building()->room(index);
+    if (room == currentRoom()) {
+        if (index < building()->roomCount() - 1)
+            setCurrentRoom(building()->room(index + 1));
+        else if (index > 0)
+            setCurrentRoom(building()->room(index - 1));
+        else
+            setCurrentRoom(0);
+    }
     emit roomAboutToBeRemoved(room);
     building()->removeRoom(index);
     emit roomRemoved(room);

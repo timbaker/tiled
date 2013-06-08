@@ -22,12 +22,15 @@
 #include <QMainWindow>
 #include <QMap>
 #include <QSettings>
+#include <QTimer>
 #include <QVector>
 
 class QComboBox;
 class QLabel;
 class QSplitter;
+class QStackedWidget;
 class QUndoGroup;
+class QGraphicsView;
 
 namespace Ui {
 class BuildingEditorWindow;
@@ -45,7 +48,9 @@ namespace BuildingEditor {
 
 class BaseTool;
 class Building;
+class BuildingBaseScene;
 class BuildingDocument;
+class BuildingDocumentMgr;
 class BuildingFloor;
 class BuildingTile;
 class BuildingTileEntry;
@@ -64,6 +69,73 @@ class Room;
 class Window;
 class Stairs;
 class TileModeToolBar;
+
+class BuildingEditorWindow;
+class BuildingDocumentGUI : public QObject
+{
+    Q_OBJECT
+public:
+    BuildingDocumentGUI(BuildingDocument *doc);
+    ~BuildingDocumentGUI();
+
+    BuildingDocument *document() const { return mDocument; }
+    BuildingOrthoView *orthoView() const { return mOrthoView; }
+    BuildingIsoView *isoView() const { return mIsoView; }
+
+    QGraphicsView *currentView() const;
+    BuildingBaseScene *currentScene() const;
+    Tiled::Internal::Zoomable *currentZoomable() const;
+
+    QStackedWidget *stackedWidget() const { return mStackedWidget; }
+
+    void activate();
+    void deactivate();
+
+    enum EditMode {
+        OrthoObjectMode,
+        IsoObjectMode,
+        TileMode
+    };
+    void setEditMode(EditMode mode);
+    EditMode editMode() const { return mEditMode; }
+    bool isOrthoObject() { return mEditMode == OrthoObjectMode; }
+    bool isIsoObject() { return mEditMode == IsoObjectMode; }
+    bool isObject() { return mEditMode != TileMode; }
+    bool isTile() { return mEditMode == TileMode; }
+    bool isOrtho() { return mEditMode == OrthoObjectMode; }
+    bool isIso() { return mEditMode != OrthoObjectMode; }
+
+    void toOrthoObject();
+    void toIsoObject();
+    void toObject();
+    void toTile();
+
+    void restoreTool();
+
+public slots:
+    void updateDocumentTab();
+    void autoSaveCheck();
+    void autoSaveTimeout();
+
+private:
+    void removeAutoSaveFile();
+
+private:
+    BuildingEditorWindow *mMainWindow;
+    BuildingDocument *mDocument;
+    QStackedWidget *mStackedWidget;
+    BuildingOrthoView *mOrthoView;
+    BuildingOrthoScene *mOrthoScene;
+    BuildingIsoView *mIsoView;
+    BuildingIsoScene *mIsoScene;
+    EditMode mEditMode;
+    EditMode mPrevObjectMode;
+    BaseTool *mPrevObjectTool;
+    BaseTool *mPrevTileTool;
+
+    QTimer mAutoSaveTimer;
+    QString mAutoSaveFileName;
+};
 
 class BuildingEditorWindow : public QMainWindow
 {
@@ -85,7 +157,7 @@ public:
 
     bool Startup();
 
-    void setCurrentRoom(Room *room) const; // TODO: move to BuildingDocument
+    void setCurrentRoom(Room *room) const;
     Room *currentRoom() const;
 
     BuildingDocument *currentDocument() const
@@ -101,6 +173,8 @@ public:
     void selectAndDisplay(FurnitureTile *ftile);
 
 private:
+    BuildingDocumentMgr *docman() const;
+
     void readSettings();
     void writeSettings();
     void saveSplitterSizes(QSplitter *splitter);
@@ -115,7 +189,6 @@ private:
 
     bool confirmSave();
 
-    void addDocument(BuildingDocument *doc);
     void clearDocument();
 
     void currentEWallChanged(BuildingTileEntry *entry, bool mergeable);
@@ -131,17 +204,10 @@ private:
 
     void selectCurrentCategoryTile();
 
-    void removeAutoSaveFile();
-
     BuildingTileCategory *categoryAt(int row);
     FurnitureGroup *furnitureGroupAt(int row);
 
     void deleteObjects();
-
-    enum EditMode {
-        ObjectMode,
-        TileMode
-    };
 
     typedef Tiled::Tileset Tileset; // Hack for signals/slots
 
@@ -149,6 +215,13 @@ signals:
     void tilePicked(const QString &tileName);
 
 private slots:
+    void documentAdded(BuildingDocument *doc);
+    void documentAboutToClose(int index, BuildingDocument *doc);
+    void currentDocumentChanged(BuildingDocument *doc);
+
+    void currentDocumentTabChanged(int index);
+    void documentTabCloseRequested(int index);
+
     void updateWindowTitle();
 
     void roomIndexChanged(int index);
@@ -201,6 +274,7 @@ private slots:
     void roomRemoved(Room *room);
     void roomsReordered();
     void roomChanged(Room *room);
+    void currentRoomChanged();
 
     void resizeBuilding();
     void flipHorizontal();
@@ -233,15 +307,13 @@ private slots:
 
     void tilesetChanged(Tileset *tileset);
 
-    void autoSaveCheck();
-    void autoSaveTimeout();
-
     void reportMissingTilesets();
 
     void updateActions();
 
     void help();
 
+    void setEditMode();
     void toggleOrthoIso();
     void toggleEditMode();
 
@@ -249,8 +321,7 @@ private:
     static BuildingEditorWindow *mInstance;
     Ui::BuildingEditorWindow *ui;
     BuildingDocument *mCurrentDocument;
-    BuildingOrthoScene *mOrthoScene;
-    BuildingOrthoView *mOrthoView;
+    BuildingDocumentGUI *mCurrentDocumentGUI;
     QComboBox *mRoomComboBox;
     QLabel *mFloorLabel;
     QUndoGroup *mUndoGroup;
@@ -263,26 +334,18 @@ private:
     int mRowOfFirstFurnitureGroup;
     bool mSynching;
     bool mInitialCategoryViewSelectionEvent;
-    QTimer *mAutoSaveTimer;
-    QString mAutoSaveFileName;
     QMenu *mUsedContextMenu;
     QAction *mActionClearUsed;
 
-    enum Orientation {
-        OrientOrtho,
-        OrientIso
-    };
-    Orientation mOrient;
-    EditMode mEditMode;
     TileModeToolBar *mTileModeToolBar;
-    BuildingIsoView *mIsoView;
-    BuildingIsoScene *mIsoScene;
     BuildingFurnitureDock *mFurnitureDock;
     BuildingLayersDock *mLayersDock;
     BuildingTilesetDock *mTilesetDock;
     bool mFirstTimeSeen;
-    BaseTool *mPrevObjectTool;
-    BaseTool *mPrevTileTool;
+
+    friend class BuildingDocumentGUI;
+    QMap<BuildingDocument*,BuildingDocumentGUI*> mDocumentGUI;
+    BuildingDocumentGUI::EditMode mEditMode;
 };
 
 } // namespace BuildingEditor
