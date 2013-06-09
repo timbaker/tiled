@@ -96,9 +96,12 @@ signals:
 
 public slots:
     void makeCurrent();
-    virtual void documentChanged() {}
-    virtual void activate() = 0;
-    virtual void deactivate() = 0;
+    virtual void documentChanged();
+    virtual void activate();
+    virtual void deactivate();
+
+    virtual void objectAboutToBeRemoved(BuildingObject *object)
+    { Q_UNUSED(object) }
 
 protected:
     BuildingBaseScene *mEditor;

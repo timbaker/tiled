@@ -123,6 +123,21 @@ void BaseTool::makeCurrent()
     ToolManager::instance()->activateTool(this);
 }
 
+void BaseTool::documentChanged()
+{
+}
+
+void BaseTool::activate()
+{
+    connect(document(), SIGNAL(objectAboutToBeRemoved(BuildingObject*)),
+            SLOT(objectAboutToBeRemoved(BuildingObject*)));
+}
+
+void BaseTool::deactivate()
+{
+    document()->disconnect(this);
+}
+
 /////
 
 ToolManager *ToolManager::mInstance = 0;
@@ -243,7 +258,6 @@ PencilTool::PencilTool() :
 
 void PencilTool::documentChanged()
 {
-    mCursor = 0; // it was deleted from the editor
 }
 
 void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -325,12 +339,14 @@ void PencilTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
 
 void PencilTool::activate()
 {
+    BaseTool::activate();
     updateCursor(QPointF(-100,-100));
     mEditor->addItem(mCursor);
 }
 
 void PencilTool::deactivate()
 {
+    BaseTool::deactivate();
     if (mCursor)
         mEditor->removeItem(mCursor);
 }
@@ -596,15 +612,16 @@ void SelectMoveRoomsTool::updateStatusText()
 
 void SelectMoveRoomsTool::documentChanged()
 {
-    mSelectionItem = 0;
 }
 
 void SelectMoveRoomsTool::activate()
 {
+    BaseTool::activate();
 }
 
 void SelectMoveRoomsTool::deactivate()
 {
+    BaseTool::deactivate();
     setSelectedArea(QRegion());
 }
 
@@ -853,7 +870,6 @@ BaseObjectTool::BaseObjectTool() :
 
 void BaseObjectTool::documentChanged()
 {
-    mCursorItem = 0; // it was deleted from the editor
 }
 
 void BaseObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -955,11 +971,13 @@ void BaseObjectTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
 
 void BaseObjectTool::activate()
 {
+    BaseTool::activate();
     currentModifiersChanged(qApp->keyboardModifiers());
 }
 
 void BaseObjectTool::deactivate()
 {
+    BaseTool::deactivate();
     if (mEyedrop) {
         mEditor->views().at(0)->unsetCursor();
         mEditor->setMouseOverObject(0);
@@ -1625,20 +1643,11 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void RoofTool::documentChanged()
 {
-    // When the document changes, the scene is cleared, deleting our items.
-    mItem = 0;
-    mCursorItem = 0;
-    mHandleItem = 0;
-    mObjectItem = 0;
-
-    if (mEditor->document())
-        connect(mEditor->document(),
-                SIGNAL(objectAboutToBeRemoved(BuildingObject*)),
-                SLOT(objectAboutToBeRemoved(BuildingObject*)));
 }
 
 void RoofTool::activate()
 {
+    BaseTool::activate();
     updateStatusText();
     if (mCursorItem)
         mEditor->addItem(mCursorItem);
@@ -1646,6 +1655,7 @@ void RoofTool::activate()
 
 void RoofTool::deactivate()
 {
+    BaseTool::deactivate();
     if (mCursorItem)
         mEditor->removeItem(mCursorItem);
 }
@@ -2000,15 +2010,16 @@ void SelectMoveObjectTool::currentModifiersChanged(Qt::KeyboardModifiers modifie
 
 void SelectMoveObjectTool::documentChanged()
 {
-    mSelectionRectItem = 0;
 }
 
 void SelectMoveObjectTool::activate()
 {
+    BaseTool::activate();
 }
 
 void SelectMoveObjectTool::deactivate()
 {
+    BaseTool::deactivate();
 }
 
 void SelectMoveObjectTool::updateSelection(const QPointF &pos,
@@ -2429,20 +2440,11 @@ void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void WallTool::documentChanged()
 {
-    // When the document changes, the scene is cleared, deleting our items.
-    mItem = 0;
-    mCursorItem = 0;
-    mHandleItem = 0;
-    mObjectItem = 0;
-
-    if (mEditor->document())
-        connect(mEditor->document(),
-                SIGNAL(objectAboutToBeRemoved(BuildingObject*)),
-                SLOT(objectAboutToBeRemoved(BuildingObject*)));
 }
 
 void WallTool::activate()
 {
+    BaseTool::activate();
     updateStatusText();
     if (mCursorItem)
         mEditor->addItem(mCursorItem);
@@ -2450,6 +2452,7 @@ void WallTool::activate()
 
 void WallTool::deactivate()
 {
+    BaseTool::deactivate();
     if (mCursorItem)
         mEditor->removeItem(mCursorItem);
 }

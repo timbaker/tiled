@@ -125,7 +125,6 @@ DrawTileTool::DrawTileTool() :
 
 void DrawTileTool::documentChanged()
 {
-//    mCursor = 0; // it was deleted from the editor
 }
 
 void DrawTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -242,6 +241,7 @@ void DrawTileTool::setCaptureTiles(FloorTileGrid *tiles, const QRegion &rgn)
 
 void DrawTileTool::activate()
 {
+    BaseTool::activate();
     updateCursor(QPointF(-100,-100));
     mEditor->addItem(mCursor);
     updateStatusText();
@@ -249,6 +249,7 @@ void DrawTileTool::activate()
 
 void DrawTileTool::deactivate()
 {
+    BaseTool::deactivate();
     if (mCursor) {
         mEditor->removeItem(mCursor);
         mEditor->clearToolTiles();
@@ -437,7 +438,6 @@ SelectTileTool::SelectTileTool() :
 
 void SelectTileTool::documentChanged()
 {
-//    mCursor = 0; // it was deleted from the editor
 }
 
 void SelectTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -525,6 +525,7 @@ void SelectTileTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
 
 void SelectTileTool::activate()
 {
+    BaseTool::activate();
     updateCursor(QPointF(-100,-100));
     mEditor->addItem(mCursor);
     updateStatusText();
@@ -532,6 +533,7 @@ void SelectTileTool::activate()
 
 void SelectTileTool::deactivate()
 {
+    BaseTool::deactivate();
     if (mCursor)
         mEditor->removeItem(mCursor);
     mMouseDown = false;
