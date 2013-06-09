@@ -114,6 +114,10 @@ TileModeToolBar::TileModeToolBar(QWidget *parent) :
     setObjectName(QString::fromUtf8("TileToolBar"));
     setWindowTitle(tr("Tile ToolBar"));
 
+    mActionPencil->setToolTip(tr("Draw Tiles"));
+    mActionSelectTiles->setToolTip(tr("Select Tiles"));
+    mActionPickTile->setToolTip(tr("Pick Tile"));
+
     mActionPencil->setCheckable(true);
     mActionSelectTiles->setCheckable(true);
     mActionPickTile->setCheckable(true);
