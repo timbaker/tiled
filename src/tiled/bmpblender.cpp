@@ -126,7 +126,10 @@ void BmpBlender::flush(const MapRenderer *renderer, const QRect &rect, const QPo
 
 void BmpBlender::flush(const QRect &rect)
 {
-    mDirtyRegion -= QRegion(rect);
+    QRegion dirty = mDirtyRegion & rect;
+    if (dirty.isEmpty())
+        return;
+    mDirtyRegion -= dirty;
 
     int x1 = rect.left(), x2 = rect.right(), y1 = rect.top(), y2 = rect.bottom();
     x1 -= 2, x2 += 2, y1 -= 2, y2 += 2;
@@ -1128,7 +1131,6 @@ bool BmpRulesFile::readOldFormat(const QString &fileName)
         QString layer = lineSplit[5].trimmed();
 
         QRgb con = qRgb(0, 0, 0);
-        bool hasCon = false;
         if (lineSplit.length() > 6) {
             con = rgbFromStringList(lineSplit.mid(6, 3), ok);
             if (!ok) {
@@ -1139,7 +1141,6 @@ bool BmpRulesFile::readOldFormat(const QString &fileName)
                         .arg(lineSplit[8].trimmed());
                 return false;
             }
-            hasCon = true;
         }
 
         AddRule(QString(), bmpIndex, col, choices, layer, con);
