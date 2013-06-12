@@ -1808,6 +1808,9 @@ bool BuildingEditorWindow::confirmSave()
     if (!mCurrentDocument || !mCurrentDocument->isModified())
         return true;
 
+    if (isMinimized())
+        setWindowState(windowState() & ~Qt::WindowMinimized | Qt::WindowActive);
+
     int ret = QMessageBox::warning(
             this, tr("Unsaved Changes"),
             tr("There are unsaved changes. Do you want to save now?"),
