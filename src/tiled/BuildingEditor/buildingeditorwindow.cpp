@@ -236,12 +236,6 @@ void BuildingDocumentGUI::activate()
 
 void BuildingDocumentGUI::deactivate()
 {
-    BaseTool *tool = ToolManager::instance()->currentTool();
-    if (isTile())
-        mPrevTileTool = tool;
-    else
-        mPrevObjectTool = tool;
-
     document()->disconnect(mMainWindow);
     orthoView()->disconnect(mMainWindow);
     isoView()->disconnect(mMainWindow);
@@ -285,6 +279,14 @@ void BuildingDocumentGUI::toTile()
     stackedWidget()->setCurrentIndex(1);
     mIsoView->setFocus();
     mEditMode = TileMode;
+}
+
+void BuildingDocumentGUI::rememberTool()
+{
+    if (isTile())
+        mPrevTileTool = ToolManager::instance()->currentTool();
+    else
+        mPrevObjectTool = ToolManager::instance()->currentTool();
 }
 
 void BuildingDocumentGUI::restoreTool()
@@ -2014,6 +2016,7 @@ void BuildingEditorWindow::documentAboutToClose(int index, BuildingDocument *doc
 void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
 {
     if (mCurrentDocument) {
+        mCurrentDocumentGUI->rememberTool();
         mCurrentDocumentGUI->deactivate();
     }
 
@@ -2907,6 +2910,7 @@ void BuildingEditorWindow::toggleOrthoIso()
     }
 
 #if 1
+    mCurrentDocumentGUI->rememberTool();
     if (mCurrentDocumentGUI->isOrthoObject())
         mCurrentDocumentGUI->toIsoObject();
     else
@@ -2940,6 +2944,7 @@ void BuildingEditorWindow::toggleEditMode()
     if (!mCurrentDocument)
         return;
 #if 1
+    mCurrentDocumentGUI->rememberTool();
     if (mCurrentDocumentGUI->isTile())
         mCurrentDocumentGUI->toObject();
     else

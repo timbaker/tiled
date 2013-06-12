@@ -110,6 +110,7 @@ public:
     void toObject();
     void toTile();
 
+    void rememberTool();
     void restoreTool();
 
 public slots:
