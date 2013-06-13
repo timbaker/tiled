@@ -60,6 +60,7 @@ class BuildingIsoView;
 class BuildingFurnitureDock;
 class BuildingLayersDock;
 class BuildingTilesetDock;
+class CategoryDock;
 class Door;
 class BuildingOrthoScene;
 class BuildingOrthoView;
@@ -178,35 +179,22 @@ private:
 
     void readSettings();
     void writeSettings();
+
+public:
     void saveSplitterSizes(QSplitter *splitter);
     void restoreSplitterSizes(QSplitter *splitter);
 
+    void hackUpdateActions() { updateActions(); } // FIXME
+
+private:
     void updateRoomComboBox();
     void resizeCoordsLabel();
-
-    void setCategoryList();
 
     bool writeBuilding(BuildingDocument *doc, const QString &fileName);
 
     bool confirmSave();
 
     void clearDocument();
-
-    void currentEWallChanged(BuildingTileEntry *entry, bool mergeable);
-    void currentIWallChanged(BuildingTileEntry *entry, bool mergeable);
-    void currentFloorChanged(BuildingTileEntry *entry, bool mergeable);
-    void currentDoorChanged(BuildingTileEntry *entry, bool mergeable);
-    void currentDoorFrameChanged(BuildingTileEntry *entry, bool mergeable);
-    void currentWindowChanged(BuildingTileEntry *entry, bool mergeable);
-    void currentCurtainsChanged(BuildingTileEntry *entry, bool mergeable);
-    void currentStairsChanged(BuildingTileEntry *entry, bool mergeable);
-    void currentRoomTileChanged(int entryEnum, BuildingTileEntry *entry, bool mergeable);
-    void currentRoofTileChanged(BuildingTileEntry *entry, int which, bool mergeable);
-
-    void selectCurrentCategoryTile();
-
-    BuildingTileCategory *categoryAt(int row);
-    FurnitureGroup *furnitureGroupAt(int row);
 
     void deleteObjects();
 
@@ -226,22 +214,6 @@ private slots:
     void updateWindowTitle();
 
     void roomIndexChanged(int index);
-    void categoryScaleChanged(qreal scale);
-
-    void categoryViewMousePressed();
-
-    void categoryActivated(const QModelIndex &index);
-
-    void categorySelectionChanged();
-    void tileSelectionChanged();
-    void furnitureSelectionChanged();
-
-    void scrollToNow(int which, const QModelIndex &index);
-
-    void usedTilesChanged();
-    void usedFurnitureChanged();
-    void resetUsedTiles();
-    void resetUsedFurniture();
 
     void upLevel();
     void downLevel();
@@ -284,8 +256,9 @@ private slots:
     void rotateLeft();
 
     void templatesDialog();
+public slots:
     void tilesDialog();
-    void tilesDialogEdited();
+private slots:
     void templateFromBuilding();
 
     void zoomIn();
@@ -328,17 +301,10 @@ private:
     QUndoGroup *mUndoGroup;
     QSettings mSettings;
     QString mError;
-    Tiled::Internal::Zoomable *mCategoryZoomable;
-    BuildingTileCategory *mCategory;
-    FurnitureGroup *mFurnitureGroup;
-    int mRowOfFirstCategory;
-    int mRowOfFirstFurnitureGroup;
     bool mSynching;
-    bool mInitialCategoryViewSelectionEvent;
-    QMenu *mUsedContextMenu;
-    QAction *mActionClearUsed;
 
     TileModeToolBar *mTileModeToolBar;
+    CategoryDock *mCategoryDock;
     BuildingFurnitureDock *mFurnitureDock;
     BuildingLayersDock *mLayersDock;
     BuildingTilesetDock *mTilesetDock;
