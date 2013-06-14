@@ -427,7 +427,8 @@ public:
 private:
     void swap()
     {
-        mSelectedArea = SelectMoveRoomsTool::instance()->setSelectedArea(mSelectedArea);
+        if (SelectMoveRoomsTool::instance()->isCurrent())
+            mSelectedArea = SelectMoveRoomsTool::instance()->setSelectedArea(mSelectedArea);
     }
 
     QRegion mSelectedArea;
