@@ -19,6 +19,7 @@
 #include "ui_buildinglayersdock.h"
 
 #include "buildingdocument.h"
+#include "buildingdocumentmgr.h"
 #include "buildingfloor.h"
 #include "buildingmap.h"
 
@@ -39,6 +40,8 @@ BuildingLayersDock::BuildingLayersDock(QWidget *parent) :
     connect(ui->layers, SIGNAL(itemChanged(QListWidgetItem*)),
             SLOT(layerItemChanged(QListWidgetItem*)));
 
+    connect(BuildingDocumentMgr::instance(), SIGNAL(currentDocumentChanged(BuildingDocument*)),
+            SLOT(currentDocumentChanged(BuildingDocument*)));
     updateActions();
 }
 
@@ -47,7 +50,7 @@ BuildingLayersDock::~BuildingLayersDock()
     delete ui;
 }
 
-void BuildingLayersDock::setDocument(BuildingDocument *doc)
+void BuildingLayersDock::currentDocumentChanged(BuildingDocument *doc)
 {
     if (mDocument)
         mDocument->disconnect(this);
@@ -63,16 +66,6 @@ void BuildingLayersDock::setDocument(BuildingDocument *doc)
 
     setLayersList();
     currentLayerChanged();
-}
-
-void BuildingLayersDock::clearDocument()
-{
-    if (mDocument)
-        mDocument->disconnect(this);
-
-    mDocument = 0;
-
-    setLayersList();
 }
 
 void BuildingLayersDock::setLayersList()

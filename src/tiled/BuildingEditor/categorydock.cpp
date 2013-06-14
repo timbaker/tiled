@@ -19,6 +19,7 @@
 
 #include "building.h"
 #include "buildingdocument.h"
+#include "buildingdocumentmgr.h"
 #include "buildingeditorwindow.h"
 #include "buildingfloor.h"
 #include "buildingobjects.h"
@@ -156,9 +157,12 @@ CategoryDock::CategoryDock(QWidget *parent) :
     // config files.
     connect(BuildingTilesDialog::instance(), SIGNAL(edited()),
             SLOT(tilesDialogEdited()));
+
+    connect(BuildingDocumentMgr::instance(), SIGNAL(currentDocumentChanged(BuildingDocument*)),
+            SLOT(currentDocumentChanged(BuildingDocument*)));
 }
 
-void CategoryDock::setDocument(BuildingDocument *doc)
+void CategoryDock::currentDocumentChanged(BuildingDocument *doc)
 {
     if (mCurrentDocument)
         mCurrentDocument->disconnect(this);
@@ -176,11 +180,6 @@ void CategoryDock::setDocument(BuildingDocument *doc)
 
     if (ui->categoryList->currentRow() < 2)
         categorySelectionChanged();
-}
-
-void CategoryDock::clearDocument()
-{
-    setDocument(0);
 }
 
 Building *CategoryDock::currentBuilding() const
@@ -813,6 +812,14 @@ void CategoryDock::furnitureSelectionChanged()
     BuildingEditorWindow::instance()->hackUpdateActions();
 }
 
+void CategoryDock::objectPicked(BuildingObject *object)
+{
+    if (FurnitureObject *fobj = object->asFurniture())
+        selectAndDisplay(fobj->furnitureTile());
+    else
+        selectAndDisplay(object->tile());
+}
+
 void CategoryDock::selectAndDisplay(BuildingTileEntry *entry)
 {
     if (!entry)
@@ -837,23 +844,21 @@ void CategoryDock::selectAndDisplay(FurnitureTile *ftile)
     //    ui->furnitureView->scrollTo(index);
 }
 
-void CategoryDock::readSettings()
+void CategoryDock::readSettings(QSettings &settings)
 {
-    QSettings mSettings;
-    mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
+    settings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
     BuildingEditorWindow::instance()->restoreSplitterSizes(ui->categorySplitter);
-    mSettings.endGroup();
+    settings.endGroup();
 }
 
-void CategoryDock::writeSettings()
+void CategoryDock::writeSettings(QSettings &settings)
 {
-    QSettings mSettings;
-    mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
-    mSettings.setValue(QLatin1String("SelectedCategory"),
-                       mCategory ? mCategory->name() : QString());
-    mSettings.setValue(QLatin1String("SelectedFurnitureGroup"),
-                       mFurnitureGroup ? mFurnitureGroup->mLabel : QString());
-    mSettings.endGroup();
+    settings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
+    settings.setValue(QLatin1String("SelectedCategory"),
+                      mCategory ? mCategory->name() : QString());
+    settings.setValue(QLatin1String("SelectedFurnitureGroup"),
+                      mFurnitureGroup ? mFurnitureGroup->mLabel : QString());
+    settings.endGroup();
 
     BuildingEditorWindow::instance()->saveSplitterSizes(ui->categorySplitter);
 }

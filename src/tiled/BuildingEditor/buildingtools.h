@@ -136,8 +136,10 @@ public:
 
     void clearDocument();
     void setEditor(BuildingBaseScene *editor);
+    BuildingBaseScene *currentEditor() const { return mCurrentEditor; }
 
 signals:
+    void currentEditorChanged();
     void currentToolChanged(BaseTool *tool);
     void statusTextChanged(BaseTool *tool);
 
@@ -268,6 +270,9 @@ public:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
     void currentModifiersChanged(Qt::KeyboardModifiers modifiers);
+
+signals:
+    void objectPicked(BuildingObject *object);
 
 public slots:
     void documentChanged();

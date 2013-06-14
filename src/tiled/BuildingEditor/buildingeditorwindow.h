@@ -57,37 +57,27 @@ class BuildingTileEntry;
 class BuildingTileCategory;
 class BuildingIsoScene;
 class BuildingIsoView;
-class BuildingFurnitureDock;
-class BuildingLayersDock;
-class BuildingTilesetDock;
-class CategoryDock;
-class Door;
 class BuildingOrthoScene;
 class BuildingOrthoView;
+class CategoryDock;
+class Door;
 class FurnitureGroup;
 class FurnitureTile;
+class ObjectEditMode;
 class Room;
+class TileEditMode;
 class Window;
 class Stairs;
-class TileModeToolBar;
 
 class BuildingEditorWindow;
-class BuildingDocumentGUI : public QObject
+class EditorWindowPerDocumentStuff : public QObject
 {
     Q_OBJECT
 public:
-    BuildingDocumentGUI(BuildingDocument *doc);
-    ~BuildingDocumentGUI();
+    EditorWindowPerDocumentStuff(BuildingDocument *doc);
+    ~EditorWindowPerDocumentStuff();
 
     BuildingDocument *document() const { return mDocument; }
-    BuildingOrthoView *orthoView() const { return mOrthoView; }
-    BuildingIsoView *isoView() const { return mIsoView; }
-
-    QGraphicsView *currentView() const;
-    BuildingBaseScene *currentScene() const;
-    Tiled::Internal::Zoomable *currentZoomable() const;
-
-    QStackedWidget *stackedWidget() const { return mStackedWidget; }
 
     void activate();
     void deactivate();
@@ -115,7 +105,6 @@ public:
     void restoreTool();
 
 public slots:
-    void updateDocumentTab();
     void autoSaveCheck();
     void autoSaveTimeout();
 
@@ -125,11 +114,6 @@ private:
 private:
     BuildingEditorWindow *mMainWindow;
     BuildingDocument *mDocument;
-    QStackedWidget *mStackedWidget;
-    BuildingOrthoView *mOrthoView;
-    BuildingOrthoScene *mOrthoScene;
-    BuildingIsoView *mIsoView;
-    BuildingIsoScene *mIsoScene;
     EditMode mEditMode;
     EditMode mPrevObjectMode;
     BaseTool *mPrevObjectTool;
@@ -171,9 +155,6 @@ public:
 
     QString currentLayer() const;
 
-    void selectAndDisplay(BuildingTileEntry *entry);
-    void selectAndDisplay(FurnitureTile *ftile);
-
 private:
     BuildingDocumentMgr *docman() const;
 
@@ -186,15 +167,14 @@ public:
 
     void hackUpdateActions() { updateActions(); } // FIXME
 
-private:
-    void updateRoomComboBox();
-    void resizeCoordsLabel();
+    Ui::BuildingEditorWindow *actionIface() { return ui; }
 
+    void documentTabCloseRequested(int index);
+
+private:
     bool writeBuilding(BuildingDocument *doc, const QString &fileName);
 
     bool confirmSave();
-
-    void clearDocument();
 
     void deleteObjects();
 
@@ -208,12 +188,9 @@ private slots:
     void documentAboutToClose(int index, BuildingDocument *doc);
     void currentDocumentChanged(BuildingDocument *doc);
 
-    void currentDocumentTabChanged(int index);
-    void documentTabCloseRequested(int index);
+    void currentEditorChanged();
 
     void updateWindowTitle();
-
-    void roomIndexChanged(int index);
 
     void upLevel();
     void downLevel();
@@ -247,7 +224,6 @@ private slots:
     void roomRemoved(Room *room);
     void roomsReordered();
     void roomChanged(Room *room);
-    void currentRoomChanged();
 
     void resizeBuilding();
     void flipHorizontal();
@@ -261,19 +237,7 @@ public slots:
 private slots:
     void templateFromBuilding();
 
-    void zoomIn();
-    void zoomOut();
-    void resetZoom();
-
     void showObjectsChanged(bool show);
-
-    void mouseCoordinateChanged(const QPoint &tilePos);
-
-    void currentToolChanged(BaseTool *tool);
-    void updateToolStatusText();
-
-    void roofTypeChanged(QAction *action);
-    void roofCornerTypeChanged(QAction *action);
 
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
@@ -295,24 +259,19 @@ private:
     static BuildingEditorWindow *mInstance;
     Ui::BuildingEditorWindow *ui;
     BuildingDocument *mCurrentDocument;
-    BuildingDocumentGUI *mCurrentDocumentGUI;
-    QComboBox *mRoomComboBox;
-    QLabel *mFloorLabel;
+    EditorWindowPerDocumentStuff *mCurrentDocumentStuff;
     QUndoGroup *mUndoGroup;
     QSettings mSettings;
     QString mError;
     bool mSynching;
 
-    TileModeToolBar *mTileModeToolBar;
-    CategoryDock *mCategoryDock;
-    BuildingFurnitureDock *mFurnitureDock;
-    BuildingLayersDock *mLayersDock;
-    BuildingTilesetDock *mTilesetDock;
-    bool mFirstTimeSeen;
+    QStackedWidget *mModeStack;
+    ObjectEditMode *mObjectEditMode;
+    TileEditMode *mTileEditMode;
 
-    friend class BuildingDocumentGUI;
-    QMap<BuildingDocument*,BuildingDocumentGUI*> mDocumentGUI;
-    BuildingDocumentGUI::EditMode mEditMode;
+    EditorWindowPerDocumentStuff::EditMode mEditMode;
+    QMap<BuildingDocument*,EditorWindowPerDocumentStuff*> mDocumentStuff;
+    friend class EditorWindowPerDocumentStuff;
 };
 
 } // namespace BuildingEditor

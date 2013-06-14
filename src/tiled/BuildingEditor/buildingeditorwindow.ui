@@ -18,57 +18,6 @@
     <property name="margin">
      <number>0</number>
     </property>
-    <item>
-     <widget class="QTabWidget" name="documentTabWidget">
-      <widget class="QWidget" name="tab">
-       <attribute name="title">
-        <string>Tab 1</string>
-       </attribute>
-      </widget>
-      <widget class="QWidget" name="tab_2">
-       <attribute name="title">
-        <string>Tab 2</string>
-       </attribute>
-      </widget>
-     </widget>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="statusBarLayout">
-      <item>
-       <widget class="QLabel" name="coordLabel">
-        <property name="text">
-         <string>999,999</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="statusLabel">
-        <property name="text">
-         <string>Status</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QComboBox" name="editorScaleComboBox"/>
-      </item>
-     </layout>
-    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -165,31 +114,6 @@
    <addaction name="menuBuilding"/>
    <addaction name="menuFloor"/>
    <addaction name="menuHelp"/>
-  </widget>
-  <widget class="QToolBar" name="toolBar">
-   <property name="windowTitle">
-    <string>toolBar</string>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="actionPecil"/>
-   <addaction name="actionWall"/>
-   <addaction name="actionSelectRooms"/>
-   <addaction name="separator"/>
-   <addaction name="actionDoor"/>
-   <addaction name="actionWindow"/>
-   <addaction name="actionStairs"/>
-   <addaction name="actionRoof"/>
-   <addaction name="actionRoofCorner"/>
-   <addaction name="actionFurniture"/>
-   <addaction name="actionSelectObject"/>
-   <addaction name="actionRooms"/>
-   <addaction name="actionUpLevel"/>
-   <addaction name="actionDownLevel"/>
   </widget>
   <action name="actionClose">
    <property name="text">
@@ -692,6 +616,51 @@
    </property>
    <property name="shortcut">
     <string>G</string>
+   </property>
+  </action>
+  <action name="actionDrawTiles">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_pencil.png</normaloff>:/BuildingEditor/icons/icon_pencil.png</iconset>
+   </property>
+   <property name="text">
+    <string>Draw Tiles</string>
+   </property>
+   <property name="toolTip">
+    <string>Draw Tiles</string>
+   </property>
+  </action>
+  <action name="actionSelectTiles">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_select.png</normaloff>:/BuildingEditor/icons/icon_select.png</iconset>
+   </property>
+   <property name="text">
+    <string>Select Tiles</string>
+   </property>
+   <property name="toolTip">
+    <string>Select Tiles</string>
+   </property>
+  </action>
+  <action name="actionPickTiles">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_eyedrop.png</normaloff>:/BuildingEditor/icons/icon_eyedrop.png</iconset>
+   </property>
+   <property name="text">
+    <string>Pick Tiles</string>
+   </property>
+   <property name="toolTip">
+    <string>Pick Tiles</string>
    </property>
   </action>
  </widget>

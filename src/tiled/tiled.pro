@@ -208,7 +208,12 @@ SOURCES += aboutdialog.cpp \
     worldeddock.cpp \
     worldlottool.cpp \
     BuildingEditor/buildingdocumentmgr.cpp \
-    BuildingEditor/categorydock.cpp
+    BuildingEditor/categorydock.cpp \
+    BuildingEditor/imode.cpp \
+    BuildingEditor/objecteditmode.cpp \
+    BuildingEditor/tileeditmode.cpp \
+    BuildingEditor/editmodestatusbar.cpp \
+    BuildingEditor/embeddedmainwindow.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -379,7 +384,14 @@ HEADERS += aboutdialog.h \
     worldeddock.h \
     worldlottool.h \
     BuildingEditor/buildingdocumentmgr.h \
-    BuildingEditor/categorydock.h
+    BuildingEditor/categorydock.h \
+    BuildingEditor/imode.h \
+    BuildingEditor/objecteditmode.h \
+    BuildingEditor/tileeditmode.h \
+    BuildingEditor/editmodestatusbar.h \
+    BuildingEditor/objecteditmode_p.h \
+    BuildingEditor/tileeditmode_p.h \
+    BuildingEditor/embeddedmainwindow.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

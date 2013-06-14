@@ -228,7 +228,16 @@ void ToolManager::clearDocument()
 
 void ToolManager::setEditor(BuildingBaseScene *editor)
 {
+    if (mCurrentEditor)
+        clearDocument();
+
     mCurrentEditor = editor;
+
+    if (mCurrentEditor) {
+
+    }
+
+    emit currentEditorChanged();
 }
 
 void ToolManager::currentToolStatusTextChanged()
@@ -1020,13 +1029,8 @@ void BaseObjectTool::setCursorObject(BuildingObject *object)
 
 void BaseObjectTool::eyedrop(BuildingObject *object)
 {
-    if (FurnitureObject *fobject = object->asFurniture()) {
-        BuildingEditorWindow::instance()->selectAndDisplay(fobject->furnitureTile());
-        updateCursorObject();
-    } else if (BuildingTileEntry *entry = object->tile()) {
-        BuildingEditorWindow::instance()->selectAndDisplay(entry);
-        updateCursorObject();
-    }
+    emit objectPicked(object);
+    updateCursorObject();
 
     BaseTool *tool = 0;
     if (object->asDoor()) tool = DoorTool::instance();

@@ -15,50 +15,38 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BUILDINGLAYERSDOCK_H
-#define BUILDINGLAYERSDOCK_H
+#ifndef EMBEDDEDMAINWINDOW_H
+#define EMBEDDEDMAINWINDOW_H
 
-#include <QDockWidget>
-
-class QListWidgetItem;
-
-namespace Ui {
-class BuildingLayersDock;
-}
+#include <QMainWindow>
 
 namespace BuildingEditor {
 
-class BuildingDocument;
-
-class BuildingLayersDock : public QDockWidget
+class EmbeddedMainWindow : public QMainWindow
 {
     Q_OBJECT
-    
 public:
-    explicit BuildingLayersDock(QWidget *parent = 0);
-    ~BuildingLayersDock();
+    explicit EmbeddedMainWindow(QWidget *parent = 0);
 
-private:
-    void setLayersList();
+    void registerDockWidget(QDockWidget *dockWidget);
+    
+protected:
+    void showEvent(QShowEvent *e);
+    void hideEvent(QHideEvent *e);
+    
+    void handleVisibilityChange(bool visible);
+
+    QList<QDockWidget*> dockWidgets() const;
 
 private slots:
-    void currentDocumentChanged(BuildingDocument *doc);
-    void currentLayerChanged(int row);
-
-    void opacityChanged(int value);
-    void layerItemChanged(QListWidgetItem *item);
-
-    void currentFloorChanged();
-    void currentLayerChanged();
-
-    void updateActions();
+    void onDockActionTriggered();
+    void onDockVisibilityChanged(bool visible);
+    void onDockTopLevelChanged();
 
 private:
-    Ui::BuildingLayersDock *ui;
-    BuildingDocument *mDocument;
-    bool mSynching;
+    bool mHandleDockVisibilityChanges;
 };
 
 } // namespace BuildingEditor
 
-#endif // BUILDINGLAYERSDOCK_H
+#endif // EMBEDDEDMAINWINDOW_H

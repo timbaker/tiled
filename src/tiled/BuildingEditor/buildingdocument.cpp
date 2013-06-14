@@ -45,6 +45,57 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
     mCurrentRoom(0),
     mClipboardTiles(0)
 {
+    // Roof tiles need to be non-none to enable the roof tools.
+    // Old templates will have 'none' for these tiles.
+    BuildingTilesMgr *btiles = BuildingTilesMgr::instance();
+    if (building->roofCapTile()->isNone())
+        building->setRoofCapTile(btiles->defaultRoofCapTiles());
+    if (building->roofSlopeTile()->isNone())
+        building->setRoofSlopeTile(btiles->defaultRoofSlopeTiles());
+#if 0
+    if (building->roofTopTile()->isNone())
+        building->setRoofTopTile(btiles->defaultRoofTopTiles());
+#endif
+
+    // Handle reading old buildings
+    if (building->usedTiles().isEmpty()) {
+        QList<BuildingTileEntry*> entries;
+        QList<FurnitureTiles*> furniture;
+        foreach (BuildingFloor *floor, building->floors()) {
+            foreach (BuildingObject *object, floor->objects()) {
+                if (FurnitureObject *fo = object->asFurniture()) {
+                    if (FurnitureTile *ftile = fo->furnitureTile()) {
+                        if (!furniture.contains(ftile->owner()))
+                            furniture += ftile->owner();
+                    }
+                    continue;
+                }
+                for (int i = 0; i < 3; i++) {
+                    if (object->tile(i) && !object->tile(i)->isNone()
+                            && !entries.contains(object->tile(i)))
+                        entries += object->tile(i);
+                }
+            }
+        }
+        BuildingTileEntry *entry = building->exteriorWall();
+        if (entry && !entry->isNone() && !entries.contains(entry))
+            entries += entry;
+        foreach (Room *room, building->rooms()) {
+            foreach (BuildingTileEntry *entry, room->tiles()) {
+                if (entry && !entry->isNone() && !entries.contains(entry))
+                    entries += entry;
+            }
+        }
+        building->setUsedTiles(entries);
+        building->setUsedFurniture(furniture);
+    }
+
+    setCurrentFloor(building->floor(0));
+    setCurrentRoom(building->roomCount() ? building->room(0) : 0);
+    QStringList layerNames = BuildingMap::layerNames(currentLevel());
+    if (layerNames.size())
+        setCurrentLayer(layerNames.first());
+
     connect(BuildingTilesMgr::instance(), SIGNAL(entryTileChanged(BuildingTileEntry*)),
             SLOT(entryTileChanged(BuildingTileEntry*)));
     connect(FurnitureGroups::instance(),

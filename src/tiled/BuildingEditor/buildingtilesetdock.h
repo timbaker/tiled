@@ -57,9 +57,6 @@ public:
     
     void firstTimeSetup();
 
-    void setDocument(BuildingDocument *document);
-    void clearDocument();
-
 private:
     void changeEvent(QEvent *event);
     void retranslateUi();
@@ -73,6 +70,8 @@ private:
     typedef Tiled::Tile Tile;
 
 private slots:
+    void currentDocumentChanged(BuildingDocument *document);
+
     void currentTilesetChanged(int row);
     void tileSelectionChanged();
 

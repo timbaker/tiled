@@ -111,7 +111,7 @@ void BuildingTilesetDock::firstTimeSetup()
         setTilesetList(); // TileMetaInfoMgr signals might have done this already.
 }
 
-void BuildingTilesetDock::setDocument(BuildingDocument *document)
+void BuildingTilesetDock::currentDocumentChanged(BuildingDocument *document)
 {
     if (mDocument)
         mDocument->disconnect(this);
@@ -121,11 +121,6 @@ void BuildingTilesetDock::setDocument(BuildingDocument *document)
     if (mDocument) {
 
     }
-}
-
-void BuildingTilesetDock::clearDocument()
-{
-    setDocument(0);
 }
 
 void BuildingTilesetDock::changeEvent(QEvent *event)

@@ -43,7 +43,6 @@ class Zoomable;
 
 namespace BuildingEditor {
 
-class BaseTileTool;
 class Building;
 class BuildingDocument;
 class BuildingFloor;

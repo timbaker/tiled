@@ -25,6 +25,7 @@
 class QComboBox;
 class QListWidget;
 class QMenu;
+class QSettings;
 class QSplitter;
 class QStackedWidget;
 
@@ -72,6 +73,7 @@ namespace BuildingEditor {
 class Building;
 class BuildingDocument;
 class BuildingFloor;
+class BuildingObject;
 class BuildingTileCategory;
 class BuildingTileEntry;
 class BuildingTileEntryView;
@@ -84,23 +86,19 @@ class CategoryDock : public QDockWidget
 {
     Q_OBJECT
 public:
-    CategoryDock(QWidget *parent);
-
-    void setDocument(BuildingDocument *doc);
-    void clearDocument();
+    CategoryDock(QWidget *parent = 0);
     
     Building *currentBuilding() const;
     Room *currentRoom() const;
 
-    void selectAndDisplay(BuildingTileEntry *entry);
-    void selectAndDisplay(FurnitureTile *ftile);
-
-    void readSettings();
-    void writeSettings();
+    void readSettings(QSettings &settings);
+    void writeSettings(QSettings &settings);
 
 signals:
     
 private slots:
+    void currentDocumentChanged(BuildingDocument *doc);
+
     void categoryScaleChanged(qreal scale);
     void categoryViewMousePressed();
     void categoryActivated(const QModelIndex &index);
@@ -122,6 +120,8 @@ private slots:
 
     void currentToolChanged();
 
+    void objectPicked(BuildingObject *object);
+
 private:
     void setCategoryList();
 
@@ -141,8 +141,10 @@ private:
     BuildingTileCategory *categoryAt(int row);
     FurnitureGroup *furnitureGroupAt(int row);
 
-private:
+    void selectAndDisplay(BuildingTileEntry *entry);
+    void selectAndDisplay(FurnitureTile *ftile);
 
+private:
     BuildingDocument *mCurrentDocument;
     BuildingTileCategory *mCategory;
     FurnitureGroup *mFurnitureGroup;
