@@ -26,9 +26,14 @@ class Singleton
 public:
     static T &instance()
     {
-        if (!mInstance)
-            mInstance = new T;
+        Q_ASSERT(mInstance);
         return *mInstance;
+    }
+
+    static T *instancePtr()
+    {
+        Q_ASSERT(mInstance);
+        return mInstance;
     }
 
     static void deleteInstance()

@@ -19,10 +19,11 @@
 
 #include <QAction>
 #include <QDockWidget>
+#include <QSettings>
 
 using namespace BuildingEditor;
 
-static const char dockWidgetActiveState[] = "DockWidgetActiveState";
+static const char KEY_DOCKWIDGET_ACTIVE_STATE[] = "DockWidgetActiveState";
 
 // Much of this class is based on QtCreator's FancyMainWindow
 
@@ -34,13 +35,36 @@ EmbeddedMainWindow::EmbeddedMainWindow(QWidget *parent) :
 
 void EmbeddedMainWindow::registerDockWidget(QDockWidget *dockWidget)
 {
+    Q_ASSERT(!dockWidget->objectName().isEmpty());
     connect(dockWidget->toggleViewAction(), SIGNAL(triggered()),
         this, SLOT(onDockActionTriggered()), Qt::QueuedConnection);
     connect(dockWidget, SIGNAL(visibilityChanged(bool)),
             this, SLOT(onDockVisibilityChange(bool)));
     connect(dockWidget, SIGNAL(topLevelChanged(bool)),
             this, SLOT(onDockTopLevelChanged()));
-    dockWidget->setProperty(dockWidgetActiveState, true);
+    dockWidget->setProperty(KEY_DOCKWIDGET_ACTIVE_STATE, true);
+}
+
+#define STATE_VERSION 0
+void EmbeddedMainWindow::readSettings(QSettings &settings)
+{
+    QByteArray state = settings.value(QLatin1String("state")).toByteArray();
+    if (!state.isEmpty())
+        restoreState(state, STATE_VERSION);
+
+    foreach (QDockWidget *dockWidget, dockWidgets()) {
+        dockWidget->setProperty(KEY_DOCKWIDGET_ACTIVE_STATE,
+                                settings.value(dockWidget->objectName(), true));
+    }
+}
+
+void EmbeddedMainWindow::writeSettings(QSettings &settings)
+{
+    settings.setValue(QLatin1String("state"), saveState(STATE_VERSION));
+
+    foreach (QDockWidget *dockWidget, dockWidgets()) {
+        settings.setValue(dockWidget->objectName(), dockWidget->property(KEY_DOCKWIDGET_ACTIVE_STATE));
+    }
 }
 
 void EmbeddedMainWindow::showEvent(QShowEvent *e)
@@ -61,7 +85,7 @@ void EmbeddedMainWindow::handleVisibilityChange(bool visible)
     foreach (QDockWidget *dockWidget, dockWidgets()) {
         if (dockWidget->isFloating()) {
             dockWidget->setVisible(visible
-                && dockWidget->property(dockWidgetActiveState).toBool());
+                && dockWidget->property(KEY_DOCKWIDGET_ACTIVE_STATE).toBool());
         }
     }
     if (visible)
@@ -80,7 +104,7 @@ void EmbeddedMainWindow::onDockActionTriggered()
 void EmbeddedMainWindow::onDockVisibilityChange(bool visible)
 {
     if (mHandleDockVisibilityChanges)
-        sender()->setProperty(dockWidgetActiveState, visible);
+        sender()->setProperty(KEY_DOCKWIDGET_ACTIVE_STATE, visible);
 }
 
 void EmbeddedMainWindow::onDockTopLevelChanged()

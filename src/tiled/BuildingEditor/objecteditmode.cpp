@@ -522,8 +522,7 @@ Room *ObjectEditMode::currentRoom() const
 void ObjectEditMode::readSettings(QSettings &settings)
 {
     settings.beginGroup(QString::fromLatin1("BuildingEditor/%1ObjectEditMode").arg(mSettingsPrefix));
-    QByteArray state = settings.value(QLatin1String("state")).toByteArray();
-    mMainWindow->restoreState(state, WIDGET_STATE_VERSION);
+    mMainWindow->readSettings(settings);
     settings.endGroup();
 
     mCategoryDock->readSettings(settings);
@@ -532,7 +531,7 @@ void ObjectEditMode::readSettings(QSettings &settings)
 void ObjectEditMode::writeSettings(QSettings &settings)
 {
     settings.beginGroup(QString::fromLatin1("BuildingEditor/%1ObjectEditMode").arg(mSettingsPrefix));
-    settings.setValue(QLatin1String("state"), mMainWindow->saveState(WIDGET_STATE_VERSION));
+    mMainWindow->writeSettings(settings);
     settings.endGroup();
 
     mCategoryDock->writeSettings(settings);
@@ -605,6 +604,7 @@ void ObjectEditMode::updateActions()
 OrthoObjectEditMode::OrthoObjectEditMode(QObject *parent) :
     ObjectEditMode(parent)
 {
+    setDisplayName(tr("Ortho"));
     mSettingsPrefix = QLatin1String("Ortho");
 }
 
@@ -618,6 +618,7 @@ ObjectEditModePerDocumentStuff *OrthoObjectEditMode::createPerDocumentStuff(Buil
 IsoObjectEditMode::IsoObjectEditMode(QObject *parent) :
     ObjectEditMode(parent)
 {
+    setDisplayName(tr("Iso"));
     mSettingsPrefix = QLatin1String("Iso");
 }
 

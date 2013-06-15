@@ -52,6 +52,9 @@
 #include "templatefrombuildingdialog.h"
 #include "tileeditmode.h"
 
+#include "fancytabwidget.h"
+#include "utils/stylehelper.h"
+
 #include "preferences.h"
 #include "tilemetainfodialog.h"
 #include "tilemetainfomgr.h"
@@ -277,8 +280,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     QIcon redoIcon(QLatin1String(":images/16x16/edit-redo.png"));
     undoAction->setIcon(undoIcon);
     redoAction->setIcon(redoIcon);
-    Utils::setThemeIcon(undoAction, "edit-undo");
-    Utils::setThemeIcon(redoAction, "edit-redo");
+    Tiled::Utils::setThemeIcon(undoAction, "edit-undo");
+    Tiled::Utils::setThemeIcon(redoAction, "edit-redo");
     ui->menuEdit->insertAction(ui->menuEdit->actions().at(0), undoAction);
     ui->menuEdit->insertAction(ui->menuEdit->actions().at(1), redoAction);
     ui->menuEdit->insertSeparator(ui->menuEdit->actions().at(2));
@@ -379,14 +382,52 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mOrthoObjectEditMode = new OrthoObjectEditMode(this);
     mIsoObjectEditMode = new IsoObjectEditMode(this);
     mTileEditMode = new TileEditMode(this);
-
+#if 0
     mModeStack = new QStackedWidget;
     mModeStack->addWidget(mOrthoObjectEditMode->widget());
     mModeStack->addWidget(mIsoObjectEditMode->widget());
     mModeStack->addWidget(mTileEditMode->widget());
-    setCentralWidget(mModeStack);
+//    setCentralWidget(mModeStack);
     mEditMode = EditorWindowPerDocumentStuff::IsoObjectMode;
     ModeManager::instance().setCurrentMode(mIsoObjectEditMode);
+
+    ::Utils::StyleHelper::setBaseColor(::Utils::StyleHelper::DEFAULT_BASE_COLOR);
+    mTabBar = new Core::Internal::FancyTabBar(this);
+    mTabBar->insertTab(0, QIcon(), tr("Welcome"));
+    mTabBar->insertTab(1, QIcon(), tr("Orth"));
+    mTabBar->insertTab(2, QIcon(), tr("Iso"));
+    mTabBar->insertTab(3, QIcon(), tr("Tile"));
+    mTabBar->setTabEnabled(0, true);
+    mTabBar->setTabEnabled(1, true);
+    mTabBar->setTabEnabled(2, true);
+    mTabBar->setTabEnabled(3, true);
+#endif
+
+#if 1
+    ::Utils::StyleHelper::setBaseColor(::Utils::StyleHelper::DEFAULT_BASE_COLOR);
+    mTabWidget = new Core::Internal::FancyTabWidget;
+    new ModeManager(mTabWidget, this);
+    ModeManager::instance().addMode(mOrthoObjectEditMode);
+    ModeManager::instance().addMode(mIsoObjectEditMode);
+    ModeManager::instance().addMode(mTileEditMode);
+    setCentralWidget(mTabWidget);
+
+//    mEditMode = EditorWindowPerDocumentStuff::IsoObjectMode;
+    ModeManager::instance().setCurrentMode(mIsoObjectEditMode);
+
+    connect(ModeManager::instancePtr(), SIGNAL(currentModeAboutToChange(IMode*)), SLOT(currentModeAboutToChange(IMode*)));
+    connect(ModeManager::instancePtr(), SIGNAL(currentModeChanged()), SLOT(currentModeChanged()));
+#else
+    QWidget *w = new QWidget;
+    QHBoxLayout *hbox = new QHBoxLayout;
+    hbox->setMargin(0);
+    hbox->setSpacing(0);
+    hbox->addWidget(mTabBar);
+    hbox->addWidget(mModeStack);
+    hbox->setStretchFactor(mModeStack, 1);
+    w->setLayout(hbox);
+    setCentralWidget(w);
+#endif
 
     readSettings();
 
@@ -928,8 +969,22 @@ void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
     mCurrentDocumentStuff = doc ? mDocumentStuff[doc] : 0; // FIXME: unset when deleted
 
     if (mCurrentDocument) {
+        switch (mCurrentDocumentStuff->editMode())
+        {
+        case EditorWindowPerDocumentStuff::OrthoObjectMode: {
+            ModeManager::instance().setCurrentMode(mOrthoObjectEditMode);
+            break;
+        }
+        case EditorWindowPerDocumentStuff::IsoObjectMode: {
+            ModeManager::instance().setCurrentMode(mIsoObjectEditMode);
+            break;
+        }
+        case EditorWindowPerDocumentStuff::TileMode: {
+            ModeManager::instance().setCurrentMode(mTileEditMode);
+        }
+        }
+
         mUndoGroup->setActiveStack(mCurrentDocument->undoStack());
-        setEditMode();
 
         connect(mCurrentDocument, SIGNAL(floorAdded(BuildingFloor*)),
                 SLOT(updateActions()));
@@ -1591,6 +1646,30 @@ void BuildingEditorWindow::help()
     QDesktopServices::openUrl(url);
 }
 
+void BuildingEditorWindow::currentModeAboutToChange(IMode *mode)
+{
+    if (!mCurrentDocument)
+        return;
+
+    mCurrentDocumentStuff->rememberTool();
+}
+
+void BuildingEditorWindow::currentModeChanged()
+{
+    if (!mCurrentDocument)
+        return;
+
+    if (ModeManager::instance().currentMode() == mOrthoObjectEditMode)
+        mCurrentDocumentStuff->toOrthoObject();
+    else if (ModeManager::instance().currentMode() == mIsoObjectEditMode)
+        mCurrentDocumentStuff->toOrthoObject();
+    else if (ModeManager::instance().currentMode() == mTileEditMode)
+        mCurrentDocumentStuff->toTile();
+
+    updateActions();
+}
+
+#if 0
 void BuildingEditorWindow::setEditMode()
 {
     if (!mCurrentDocument)
@@ -1630,7 +1709,8 @@ void BuildingEditorWindow::setEditMode()
 #endif
     }
     }
-    mModeStack->setCurrentWidget(ModeManager::instance().currentMode()->widget());
+//    mTabWidget->setCurrentIndex(mCurrentDocumentStuff->editMode());
+//    mModeStack->setCurrentWidget(ModeManager::instance().currentMode()->widget());
 
     mEditMode = mCurrentDocumentStuff->editMode();
 
@@ -1671,3 +1751,4 @@ void BuildingEditorWindow::toggleEditMode()
 
     setEditMode();
 }
+#endif

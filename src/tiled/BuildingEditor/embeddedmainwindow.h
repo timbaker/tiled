@@ -20,6 +20,8 @@
 
 #include <QMainWindow>
 
+class QSettings;
+
 namespace BuildingEditor {
 
 class EmbeddedMainWindow : public QMainWindow
@@ -30,6 +32,9 @@ public:
 
     void registerDockWidget(QDockWidget *dockWidget);
     
+    void readSettings(QSettings &settings);
+    void writeSettings(QSettings &settings);
+
 protected:
     void showEvent(QShowEvent *e);
     void hideEvent(QHideEvent *e);

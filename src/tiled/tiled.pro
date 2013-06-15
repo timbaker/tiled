@@ -213,7 +213,10 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/objecteditmode.cpp \
     BuildingEditor/tileeditmode.cpp \
     BuildingEditor/editmodestatusbar.cpp \
-    BuildingEditor/embeddedmainwindow.cpp
+    BuildingEditor/embeddedmainwindow.cpp \
+    BuildingEditor/fancytabwidget.cpp \
+    BuildingEditor/utils/stylehelper.cpp \
+    BuildingEditor/utils/styledbar.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -392,7 +395,11 @@ HEADERS += aboutdialog.h \
     BuildingEditor/objecteditmode_p.h \
     BuildingEditor/tileeditmode_p.h \
     BuildingEditor/embeddedmainwindow.h \
-    BuildingEditor/singleton.h
+    BuildingEditor/singleton.h \
+    BuildingEditor/fancytabwidget.h \
+    BuildingEditor/utils/stylehelper.h \
+    BuildingEditor/utils/styledbar.h \
+    BuildingEditor/utils/hostosinfo.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

@@ -44,6 +44,12 @@ class Zoomable;
 }
 }
 
+namespace Core {
+namespace Internal {
+class FancyTabWidget;
+}
+}
+
 namespace BuildingEditor {
 
 class BaseTool;
@@ -63,6 +69,7 @@ class CategoryDock;
 class Door;
 class FurnitureGroup;
 class FurnitureTile;
+class IMode;
 class IsoObjectEditMode;
 class OrthoObjectEditMode;
 class Room;
@@ -252,10 +259,13 @@ private slots:
 
     void help();
 
+    void currentModeAboutToChange(IMode *mode);
+    void currentModeChanged();
+#if 0
     void setEditMode();
     void toggleOrthoIso();
     void toggleEditMode();
-
+#endif
 private:
     static BuildingEditorWindow *mInstance;
     Ui::BuildingEditorWindow *ui;
@@ -266,14 +276,16 @@ private:
     QString mError;
     bool mSynching;
 
-    QStackedWidget *mModeStack;
+//    QStackedWidget *mModeStack;
     OrthoObjectEditMode *mOrthoObjectEditMode;
     IsoObjectEditMode *mIsoObjectEditMode;
     TileEditMode *mTileEditMode;
 
-    EditorWindowPerDocumentStuff::EditMode mEditMode;
+//    EditorWindowPerDocumentStuff::EditMode mEditMode;
     QMap<BuildingDocument*,EditorWindowPerDocumentStuff*> mDocumentStuff;
     friend class EditorWindowPerDocumentStuff;
+
+    Core::Internal::FancyTabWidget *mTabWidget;
 };
 
 } // namespace BuildingEditor

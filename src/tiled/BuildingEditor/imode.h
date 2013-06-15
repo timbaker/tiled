@@ -25,6 +25,12 @@
 
 class QSettings;
 
+namespace Core {
+namespace Internal {
+class FancyTabWidget;
+}
+}
+
 namespace BuildingEditor {
 
 class IMode : public QObject
@@ -67,15 +73,25 @@ class ModeManager : public QObject, public Singleton<ModeManager>
 {
     Q_OBJECT
 public:
-    ModeManager(QObject *parent = 0);
+    ModeManager(Core::Internal::FancyTabWidget *tabWidget, QObject *parent = 0);
+
+    void addMode(IMode *mode);
 
     void setCurrentMode(IMode *mode);
     IMode *currentMode() const { return mCurrentMode; }
 
 signals:
+    void currentModeAboutToChange(IMode *mode);
     void currentModeChanged();
 
+private slots:
+    void currentTabAboutToChange(int index);
+    void currentTabChanged(int index);
+    void enabledStateChanged(bool enabled);
+
 private:
+    Core::Internal::FancyTabWidget *mTabWidget;
+    QList<IMode*> mModes;
     IMode *mCurrentMode;
 };
 

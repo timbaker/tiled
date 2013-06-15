@@ -233,6 +233,8 @@ TileEditMode::TileEditMode(QObject *parent) :
     mTilesetDock(new BuildingTilesetDock),
     mFirstTimeSeen(true)
 {
+    setDisplayName(tr("Tile"));
+
     mMainWindow = new EmbeddedMainWindow;
     mMainWindow->setObjectName(QString::fromUtf8("TileEditModeWidget"));
 
@@ -285,25 +287,18 @@ TileEditMode::TileEditMode(QObject *parent) :
     connect(this, SIGNAL(activeStateChanged(bool)), SLOT(onActiveStateChanged(bool)));
 }
 
-void TileEditMode::toTile()
-{
-    if (mCurrentDocumentStuff)
-        mCurrentDocumentStuff->activate();
-}
-
 #define WIDGET_STATE_VERSION 0
 void TileEditMode::readSettings(QSettings &settings)
 {
     settings.beginGroup(QLatin1String("BuildingEditor/TileEditMode"));
-    QByteArray state = settings.value(QLatin1String("state")).toByteArray();
-    mMainWindow->restoreState(state, WIDGET_STATE_VERSION);
+    mMainWindow->readSettings(settings);
     settings.endGroup();
 }
 
 void TileEditMode::writeSettings(QSettings &settings)
 {
     settings.beginGroup(QLatin1String("BuildingEditor/TileEditMode"));
-    settings.setValue(QLatin1String("state"), mMainWindow->saveState(WIDGET_STATE_VERSION));
+    mMainWindow->writeSettings(settings);
     settings.endGroup();
 }
 
