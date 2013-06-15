@@ -55,6 +55,7 @@ void DrawTileToolCursor::paint(QPainter *painter,
                                QWidget *)
 {
     Q_UNUSED(option)
+    if (!mEditor) return;
     mEditor->drawTileSelection(painter, mRegion, mColor, option->exposedRect,
                                mEditor->currentLevel());
 }
@@ -69,6 +70,7 @@ void DrawTileToolCursor::setColor(const QColor &color)
 
 void DrawTileToolCursor::setTileRegion(const QRegion &tileRgn)
 {
+    if (!mEditor) return;
     if (tileRgn != mRegion) {
         QPolygonF polygon = mEditor->tileToScenePolygon(tileRgn.boundingRect(),
                                                         mEditor->currentLevel());
@@ -100,6 +102,11 @@ void DrawTileToolCursor::setTileRegion(const QRegion &tileRgn)
     }
 }
 
+void DrawTileToolCursor::setEditor(BuildingBaseScene *editor)
+{
+    mEditor = editor;
+}
+
 /////
 
 DrawTileTool *DrawTileTool::mInstance = 0;
@@ -121,10 +128,6 @@ DrawTileTool::DrawTileTool() :
     mCaptureTiles(0)
 {
     updateStatusText();
-}
-
-void DrawTileTool::documentChanged()
-{
 }
 
 void DrawTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -252,6 +255,7 @@ void DrawTileTool::deactivate()
     BaseTool::deactivate();
     if (mCursor) {
         mEditor->removeItem(mCursor);
+        mCursor->setEditor(0);
         mEditor->clearToolTiles();
     }
     mMouseDown = false;
@@ -314,6 +318,7 @@ void DrawTileTool::updateCursor(const QPointF &scenePos, bool force)
         mCursor = new DrawTileToolCursor(mEditor);
         mCursor->setZValue(mEditor->ZVALUE_CURSOR);
     }
+    mCursor->setEditor(mEditor);
 
     if (mMouseDown) {
         mCursorTileBounds = QRect(QPoint(qMin(mStartTilePos.x(), tilePos.x()),
@@ -434,10 +439,6 @@ SelectTileTool::SelectTileTool() :
     mCursor(0)
 {
     updateStatusText();
-}
-
-void SelectTileTool::documentChanged()
-{
 }
 
 void SelectTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)

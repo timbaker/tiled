@@ -311,24 +311,8 @@ ObjectEditModePerDocumentStuff::ObjectEditModePerDocumentStuff(
         ObjectEditMode *mode, BuildingDocument *doc) :
     QObject(doc),
     mMode(mode),
-    mDocument(doc),
-    mStackedWidget(new QStackedWidget),
-    mOrthoView(new BuildingOrthoView),
-    mOrthoScene(new BuildingOrthoScene(mOrthoView)),
-    mIsoView(new BuildingIsoView),
-    mIsoScene(new BuildingIsoScene(mIsoView)),
-    mOrthoMode(false)
+    mDocument(doc)
 {
-    mOrthoView->setScene(mOrthoScene);
-    mIsoView->setScene(mIsoScene);
-
-    orthoView()->setDocument(document());
-    isoView()->setDocument(document());
-
-    mStackedWidget->addWidget(mOrthoView);
-    mStackedWidget->addWidget(mIsoView);
-    mStackedWidget->setCurrentIndex(1);
-
     connect(document(), SIGNAL(fileNameChanged()), SLOT(updateDocumentTab()));
     connect(document(), SIGNAL(cleanChanged()), SLOT(updateDocumentTab()));
     connect(document()->undoStack(), SIGNAL(cleanChanged(bool)), SLOT(updateDocumentTab()));
@@ -342,62 +326,19 @@ ObjectEditModePerDocumentStuff::ObjectEditModePerDocumentStuff(
 
 ObjectEditModePerDocumentStuff::~ObjectEditModePerDocumentStuff()
 {
-    // This is added to a QTabWidget.
-    // Removing a tab does not delete the page widget.
-    delete mStackedWidget;
-}
-
-QGraphicsView *ObjectEditModePerDocumentStuff::currentView() const
-{
-    if (isOrtho()) return orthoView();
-    return isoView();
-}
-
-BuildingBaseScene *ObjectEditModePerDocumentStuff::currentScene() const
-{
-    if (isOrtho()) return orthoView()->scene();
-    return isoView()->scene();
-}
-
-Tiled::Internal::Zoomable *ObjectEditModePerDocumentStuff::currentZoomable() const
-{
-    if (isOrtho()) return orthoView()->zoomable();
-    return isoView()->zoomable();
 }
 
 void ObjectEditModePerDocumentStuff::activate()
 {
-    ToolManager::instance()->setEditor(currentScene());
+    ToolManager::instance()->setEditor(scene());
 
-    connect(currentView(), SIGNAL(mouseCoordinateChanged(QPoint)),
+    connect(view(), SIGNAL(mouseCoordinateChanged(QPoint)),
             mMode->mStatusBar, SLOT(mouseCoordinateChanged(QPoint)));
-    connect(currentZoomable(), SIGNAL(scaleChanged(qreal)),
+    connect(zoomable(), SIGNAL(scaleChanged(qreal)),
             SLOT(updateActions()));
 
-    currentZoomable()->connectToComboBox(mMode->mStatusBar->editorScaleComboBox);
+    zoomable()->connectToComboBox(mMode->mStatusBar->editorScaleComboBox);
 
-    connect(document(), SIGNAL(roomAdded(Room*)), mMode, SLOT(roomAdded(Room*)));
-    connect(document(), SIGNAL(roomRemoved(Room*)), mMode, SLOT(roomRemoved(Room*)));
-    connect(document(), SIGNAL(roomsReordered()), mMode, SLOT(roomsReordered()));
-    connect(document(), SIGNAL(roomChanged(Room*)), mMode, SLOT(roomChanged(Room*)));
-
-    connect(document(), SIGNAL(floorAdded(BuildingFloor*)),
-            mMode, SLOT(updateActions()));
-    connect(document(), SIGNAL(floorRemoved(BuildingFloor*)),
-            mMode, SLOT(updateActions()));
-    connect(document(), SIGNAL(currentFloorChanged()),
-            mMode, SLOT(updateActions()));
-    connect(document(), SIGNAL(currentLayerChanged()),
-            mMode, SLOT(updateActions()));
-
-    connect(document(), SIGNAL(selectedObjectsChanged()),
-            mMode, SLOT(updateActions()));
-#if 0
-    connect(document(), SIGNAL(tileSelectionChanged(QRegion)),
-            mMode, SLOT(updateActions()));
-    connect(document(), SIGNAL(clipboardTilesChanged()),
-            mMode, SLOT(updateActions()));
-#endif
 //    connect(document(), SIGNAL(cleanChanged()), SLOT(updateWindowTitle()));
 
     connect(BuildingEditorWindow::instance()->actionIface()->actionZoomIn, SIGNAL(triggered()),
@@ -410,37 +351,15 @@ void ObjectEditModePerDocumentStuff::activate()
 
 void ObjectEditModePerDocumentStuff::deactivate()
 {
-    document()->disconnect(this);
-    document()->disconnect(mMode);
-    orthoView()->disconnect(this);
-    orthoView()->disconnect(mMode->mStatusBar);
-    isoView()->disconnect(this);
-    isoView()->disconnect(mMode->mStatusBar);
-    currentZoomable()->disconnect(this);
-    currentZoomable()->disconnect(mMode); /////
+//    document()->disconnect(this);
+//    document()->disconnect(mMode);
+//    view()->disconnect(this);
+    view()->disconnect(mMode->mStatusBar);
+    zoomable()->disconnect(this);
+//    zoomable()->disconnect(mMode); /////
     BuildingEditorWindow::instance()->actionIface()->actionZoomIn->disconnect(this);
     BuildingEditorWindow::instance()->actionIface()->actionZoomOut->disconnect(this);
     BuildingEditorWindow::instance()->actionIface()->actionNormalSize->disconnect(this);
-}
-
-void ObjectEditModePerDocumentStuff::toOrtho()
-{
-    mIsoView->zoomable()->connectToComboBox(0);
-    mOrthoView->zoomable()->connectToComboBox(mMode->mStatusBar->editorScaleComboBox);
-    stackedWidget()->setCurrentIndex(0);
-    mOrthoView->setFocus();
-    mOrthoMode = true;
-    ToolManager::instance()->setEditor(currentScene());
-}
-
-void ObjectEditModePerDocumentStuff::toIso()
-{
-    mOrthoView->zoomable()->connectToComboBox(0);
-    mIsoView->zoomable()->connectToComboBox(mMode->mStatusBar->editorScaleComboBox);
-    stackedWidget()->setCurrentIndex(1);
-    mIsoView->setFocus();
-    mOrthoMode = false;
-    ToolManager::instance()->setEditor(currentScene());
 }
 
 void ObjectEditModePerDocumentStuff::updateDocumentTab()
@@ -460,33 +379,81 @@ void ObjectEditModePerDocumentStuff::updateDocumentTab()
 
 void ObjectEditModePerDocumentStuff::showObjectsChanged()
 {
-    orthoView()->scene()->synchObjectItemVisibility();
-    isoView()->scene()->synchObjectItemVisibility();
+    scene()->synchObjectItemVisibility();
 }
 
 void ObjectEditModePerDocumentStuff::zoomIn()
 {
-    currentZoomable()->zoomIn();
+    zoomable()->zoomIn();
 }
 
 void ObjectEditModePerDocumentStuff::zoomOut()
 {
-    currentZoomable()->zoomOut();
+    zoomable()->zoomOut();
 }
 
 void ObjectEditModePerDocumentStuff::zoomNormal()
 {
-    currentZoomable()->resetZoom();
+    zoomable()->resetZoom();
 }
 
 void ObjectEditModePerDocumentStuff::updateActions()
 {
-    if (ToolManager::instance()->currentEditor() == currentScene()) {
-        Tiled::Internal::Zoomable *zoomable = currentZoomable();
-        BuildingEditorWindow::instance()->actionIface()->actionZoomIn->setEnabled(zoomable->canZoomIn());
-        BuildingEditorWindow::instance()->actionIface()->actionZoomOut->setEnabled(zoomable->canZoomOut());
-        BuildingEditorWindow::instance()->actionIface()->actionNormalSize->setEnabled(zoomable->scale() != 1.0);
+    if (ToolManager::instance()->currentEditor() == scene()) {
+        BuildingEditorWindow::instance()->actionIface()->actionZoomIn->setEnabled(zoomable()->canZoomIn());
+        BuildingEditorWindow::instance()->actionIface()->actionZoomOut->setEnabled(zoomable()->canZoomOut());
+        BuildingEditorWindow::instance()->actionIface()->actionNormalSize->setEnabled(zoomable()->scale() != 1.0);
     }
+}
+
+/////
+
+OrthoObjectEditModePerDocumentStuff::OrthoObjectEditModePerDocumentStuff(
+        OrthoObjectEditMode *mode, BuildingDocument *doc) :
+    ObjectEditModePerDocumentStuff(mode, doc),
+    mView(new BuildingOrthoView),
+    mScene(new BuildingOrthoScene(mView))
+{
+    mView->setScene(mScene);
+    mView->setDocument(doc);
+}
+
+OrthoObjectEditModePerDocumentStuff::~OrthoObjectEditModePerDocumentStuff()
+{
+    // This is added to a QTabWidget.
+    // Removing a tab does not delete the page widget.
+    // mScene is owned by the view.
+    delete mView;
+}
+
+Tiled::Internal::Zoomable *OrthoObjectEditModePerDocumentStuff::zoomable() const
+{
+    return mView->zoomable();
+}
+
+/////
+
+IsoObjectEditModePerDocumentStuff::IsoObjectEditModePerDocumentStuff(
+        IsoObjectEditMode *mode, BuildingDocument *doc) :
+    ObjectEditModePerDocumentStuff(mode, doc),
+    mView(new BuildingIsoView),
+    mScene(new BuildingIsoScene(mView))
+{
+    mView->setScene(mScene);
+    mView->setDocument(doc);
+}
+
+IsoObjectEditModePerDocumentStuff::~IsoObjectEditModePerDocumentStuff()
+{
+    // This is added to a QTabWidget.
+    // Removing a tab does not delete the page widget.
+    // mScene is owned by the view.
+    delete mView;
+}
+
+Tiled::Internal::Zoomable *IsoObjectEditModePerDocumentStuff::zoomable() const
+{
+    return mView->zoomable();
 }
 
 /////
@@ -537,6 +504,8 @@ ObjectEditMode::ObjectEditMode(QObject *parent) :
             SLOT(currentDocumentChanged(BuildingDocument*)));
     connect(BuildingDocumentMgr::instance(), SIGNAL(documentAboutToClose(int,BuildingDocument*)),
             SLOT(documentAboutToClose(int,BuildingDocument*)));
+
+    connect(this, SIGNAL(activeStateChanged(bool)), SLOT(onActiveStateChanged(bool)));
 }
 
 Building *ObjectEditMode::currentBuilding() const
@@ -549,22 +518,10 @@ Room *ObjectEditMode::currentRoom() const
     return mCurrentDocument ? mCurrentDocument->currentRoom() : 0;
 }
 
-void ObjectEditMode::toOrtho()
-{
-    if (mCurrentDocumentStuff)
-        mCurrentDocumentStuff->toOrtho();
-}
-
-void ObjectEditMode::toIso()
-{
-    if (mCurrentDocumentStuff)
-        mCurrentDocumentStuff->toIso();
-}
-
 #define WIDGET_STATE_VERSION 0
 void ObjectEditMode::readSettings(QSettings &settings)
 {
-    settings.beginGroup(QLatin1String("BuildingEditor/ObjectEditMode"));
+    settings.beginGroup(QString::fromLatin1("BuildingEditor/%1ObjectEditMode").arg(mSettingsPrefix));
     QByteArray state = settings.value(QLatin1String("state")).toByteArray();
     mMainWindow->restoreState(state, WIDGET_STATE_VERSION);
     settings.endGroup();
@@ -574,20 +531,31 @@ void ObjectEditMode::readSettings(QSettings &settings)
 
 void ObjectEditMode::writeSettings(QSettings &settings)
 {
-    settings.beginGroup(QLatin1String("BuildingEditor/ObjectEditMode"));
+    settings.beginGroup(QString::fromLatin1("BuildingEditor/%1ObjectEditMode").arg(mSettingsPrefix));
     settings.setValue(QLatin1String("state"), mMainWindow->saveState(WIDGET_STATE_VERSION));
     settings.endGroup();
 
     mCategoryDock->writeSettings(settings);
 }
 
+void ObjectEditMode::onActiveStateChanged(bool active)
+{
+    if (active) {
+        if (mCurrentDocumentStuff)
+            mCurrentDocumentStuff->activate();
+    } else {
+        if (mCurrentDocumentStuff)
+            mCurrentDocumentStuff->deactivate();
+    }
+}
+
 void ObjectEditMode::documentAdded(BuildingDocument *doc)
 {
-    mDocumentStuff[doc] = new ObjectEditModePerDocumentStuff(this, doc);
+    mDocumentStuff[doc] = createPerDocumentStuff(doc);
 
     int docIndex = BuildingDocumentMgr::instance()->indexOf(doc);
     mTabWidget->blockSignals(true);
-    mTabWidget->insertTab(docIndex, mDocumentStuff[doc]->stackedWidget(), doc->displayName());
+    mTabWidget->insertTab(docIndex, mDocumentStuff[doc]->view(), doc->displayName());
     mTabWidget->blockSignals(false);
     mDocumentStuff[doc]->updateDocumentTab();
 }
@@ -595,7 +563,8 @@ void ObjectEditMode::documentAdded(BuildingDocument *doc)
 void ObjectEditMode::currentDocumentChanged(BuildingDocument *doc)
 {
     if (mCurrentDocument) {
-        mCurrentDocumentStuff->deactivate();
+        if (isActive())
+            mCurrentDocumentStuff->deactivate();
     }
 
     mCurrentDocument = doc;
@@ -603,7 +572,8 @@ void ObjectEditMode::currentDocumentChanged(BuildingDocument *doc)
 
     if (mCurrentDocument) {
         mTabWidget->setCurrentIndex(docman()->indexOf(doc));
-        mCurrentDocumentStuff->activate();
+        if (isActive())
+            mCurrentDocumentStuff->activate();
     }
 }
 
@@ -626,29 +596,33 @@ void ObjectEditMode::documentTabCloseRequested(int index)
     BuildingEditorWindow::instance()->documentTabCloseRequested(index);
 }
 
-
-void ObjectEditMode::roomAdded(Room *room)
-{
-    Q_UNUSED(room)
-    updateActions();
-}
-
-void ObjectEditMode::roomRemoved(Room *room)
-{
-    Q_UNUSED(room)
-    updateActions();
-}
-
-void ObjectEditMode::roomsReordered()
-{
-}
-
-void ObjectEditMode::roomChanged(Room *room)
-{
-    Q_UNUSED(room)
-}
-
 void ObjectEditMode::updateActions()
 {
+}
+
+/////
+
+OrthoObjectEditMode::OrthoObjectEditMode(QObject *parent) :
+    ObjectEditMode(parent)
+{
+    mSettingsPrefix = QLatin1String("Ortho");
+}
+
+ObjectEditModePerDocumentStuff *OrthoObjectEditMode::createPerDocumentStuff(BuildingDocument *doc)
+{
+    return new OrthoObjectEditModePerDocumentStuff(this, doc);
+}
+
+/////
+
+IsoObjectEditMode::IsoObjectEditMode(QObject *parent) :
+    ObjectEditMode(parent)
+{
+    mSettingsPrefix = QLatin1String("Iso");
+}
+
+ObjectEditModePerDocumentStuff *IsoObjectEditMode::createPerDocumentStuff(BuildingDocument *doc)
+{
+    return new IsoObjectEditModePerDocumentStuff(this, doc);
 }
 

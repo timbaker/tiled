@@ -96,7 +96,6 @@ signals:
 
 public slots:
     void makeCurrent();
-    virtual void documentChanged();
     virtual void activate();
     virtual void deactivate();
 
@@ -167,8 +166,6 @@ public:
 
     PencilTool();
 
-    void documentChanged();
-
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
@@ -216,7 +213,6 @@ public:
     QRegion setSelectedArea(const QRegion &selectedArea);
 
 public slots:
-    void documentChanged();
     void activate();
     void deactivate();
 
@@ -275,7 +271,6 @@ signals:
     void objectPicked(BuildingObject *object);
 
 public slots:
-    void documentChanged();
     void activate();
     void deactivate();
 
@@ -407,14 +402,13 @@ public:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
-    void documentChanged();
-    void activate();
-    void deactivate();
-
     void setRoofType(RoofObject::RoofType type)
     { mRoofType = type; }
 
-private slots:
+public slots:
+    void activate();
+    void deactivate();
+
     void objectAboutToBeRemoved(BuildingObject *object);
 
 private:
@@ -490,7 +484,6 @@ public:
     void currentModifiersChanged(Qt::KeyboardModifiers modifiers);
 
 public slots:
-    void documentChanged();
     void activate();
     void deactivate();
 
@@ -549,10 +542,11 @@ public:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
-    void documentChanged();
+public slots:
     void activate();
     void deactivate();
 
+public:
     void setCurrentExteriorTile(BuildingTileEntry *entry)
     { mCurrentExteriorTile = entry; }
 

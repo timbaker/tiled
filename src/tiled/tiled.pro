@@ -391,7 +391,8 @@ HEADERS += aboutdialog.h \
     BuildingEditor/editmodestatusbar.h \
     BuildingEditor/objecteditmode_p.h \
     BuildingEditor/tileeditmode_p.h \
-    BuildingEditor/embeddedmainwindow.h
+    BuildingEditor/embeddedmainwindow.h \
+    BuildingEditor/singleton.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

@@ -5,6 +5,7 @@
 #include <QToolBar>
 
 class QComboBox;
+class QGraphicsScene;
 class QGraphicsView;
 class QLabel;
 class QStackedWidget;
@@ -27,6 +28,8 @@ class BuildingIsoView;
 class Room;
 
 class ObjectEditMode;
+class OrthoObjectEditMode;
+class IsoObjectEditMode;
 
 class ObjectEditModeToolBar : public QToolBar
 {
@@ -68,23 +71,13 @@ public:
     ~ObjectEditModePerDocumentStuff();
 
     BuildingDocument *document() const { return mDocument; }
-    BuildingOrthoView *orthoView() const { return mOrthoView; }
-    BuildingIsoView *isoView() const { return mIsoView; }
 
-    QGraphicsView *currentView() const;
-    BuildingBaseScene *currentScene() const;
-    Tiled::Internal::Zoomable *currentZoomable() const;
-
-    QStackedWidget *stackedWidget() const { return mStackedWidget; }
+    virtual QGraphicsView *view() const = 0;
+    virtual BuildingBaseScene *scene() const = 0;
+    virtual Tiled::Internal::Zoomable *zoomable() const = 0;
 
     void activate();
     void deactivate();
-
-    bool isOrtho() const { return mOrthoMode; }
-    bool isIso() const { return !mOrthoMode; }
-
-    void toOrtho();
-    void toIso();
 
 public slots:
     void updateDocumentTab();
@@ -99,12 +92,36 @@ public slots:
 private:
     ObjectEditMode *mMode;
     BuildingDocument *mDocument;
-    QStackedWidget *mStackedWidget;
-    BuildingOrthoView *mOrthoView;
-    BuildingOrthoScene *mOrthoScene;
-    BuildingIsoView *mIsoView;
-    BuildingIsoScene *mIsoScene;
-    bool mOrthoMode;
+};
+
+class OrthoObjectEditModePerDocumentStuff : public ObjectEditModePerDocumentStuff
+{
+public:
+    OrthoObjectEditModePerDocumentStuff(OrthoObjectEditMode *mode, BuildingDocument *doc);
+    ~OrthoObjectEditModePerDocumentStuff();
+
+    QGraphicsView *view() const { return (QGraphicsView*)mView; }
+    BuildingBaseScene *scene() const { return (BuildingBaseScene*)mScene; }
+    Tiled::Internal::Zoomable *zoomable() const;
+
+private:
+    BuildingOrthoView *mView;
+    BuildingOrthoScene *mScene;
+};
+
+class IsoObjectEditModePerDocumentStuff : public ObjectEditModePerDocumentStuff
+{
+public:
+    IsoObjectEditModePerDocumentStuff(IsoObjectEditMode *mode, BuildingDocument *doc);
+    ~IsoObjectEditModePerDocumentStuff();
+
+    QGraphicsView *view() const { return (QGraphicsView*)mView; }
+    BuildingBaseScene *scene() const { return (BuildingBaseScene*)mScene; }
+    Tiled::Internal::Zoomable *zoomable() const;
+
+private:
+    BuildingIsoView *mView;
+    BuildingIsoScene *mScene;
 };
 
 } // namespace BuildingEditor

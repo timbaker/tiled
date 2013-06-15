@@ -21,7 +21,8 @@ using namespace BuildingEditor;
 
 IMode::IMode(QObject *parent) :
     QObject(parent),
-    mEnabled(true)
+    mEnabled(true),
+    mActive(false)
 {
 }
 
@@ -31,4 +32,38 @@ void IMode::setEnabled(bool enabled)
         return;
     mEnabled = enabled;
     emit enabledStateChanged(mEnabled);
+}
+
+void IMode::setActive(bool active)
+{
+    if (mActive == active)
+        return;
+    mActive = active;
+    emit activeStateChanged(mActive);
+}
+
+/////
+
+SINGLETON_IMPL(ModeManager)
+
+ModeManager::ModeManager(QObject *parent) :
+    QObject(parent),
+    mCurrentMode(0)
+{
+}
+
+void ModeManager::setCurrentMode(IMode *mode)
+{
+    if (mode == mCurrentMode)
+        return;
+
+    if (mCurrentMode)
+        mCurrentMode->setActive(false);
+
+    mCurrentMode = mode;
+
+    if (mCurrentMode)
+        mCurrentMode->setActive(true);
+
+    emit currentModeChanged();
 }

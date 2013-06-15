@@ -63,7 +63,8 @@ class CategoryDock;
 class Door;
 class FurnitureGroup;
 class FurnitureTile;
-class ObjectEditMode;
+class IsoObjectEditMode;
+class OrthoObjectEditMode;
 class Room;
 class TileEditMode;
 class Window;
@@ -266,7 +267,8 @@ private:
     bool mSynching;
 
     QStackedWidget *mModeStack;
-    ObjectEditMode *mObjectEditMode;
+    OrthoObjectEditMode *mOrthoObjectEditMode;
+    IsoObjectEditMode *mIsoObjectEditMode;
     TileEditMode *mTileEditMode;
 
     EditorWindowPerDocumentStuff::EditMode mEditMode;

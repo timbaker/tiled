@@ -56,6 +56,8 @@ public:
     void writeSettings(QSettings &settings);
 
 private slots:
+    void onActiveStateChanged(bool active);
+
     void documentAdded(BuildingDocument *doc);
     void currentDocumentChanged(BuildingDocument *doc);
     void documentAboutToClose(int index, BuildingDocument *doc);
@@ -63,14 +65,9 @@ private slots:
     void currentDocumentTabChanged(int index);
     void documentTabCloseRequested(int index);
 
-    void roomAdded(Room *room);
-    void roomRemoved(Room *room);
-    void roomsReordered();
-    void roomChanged(Room *room);
-
     void updateActions();
 
-private:
+protected:
     EmbeddedMainWindow *mMainWindow;
     QTabWidget *mTabWidget;
     ObjectEditModeToolBar *mToolBar;
@@ -82,9 +79,29 @@ private:
 
     friend class ObjectEditModePerDocumentStuff;
     QMap<BuildingDocument*,ObjectEditModePerDocumentStuff*> mDocumentStuff;
+    virtual ObjectEditModePerDocumentStuff *createPerDocumentStuff(BuildingDocument *doc) = 0;
 
+    QString mSettingsPrefix;
 };
 
-}
+class OrthoObjectEditMode : public ObjectEditMode
+{
+public:
+    OrthoObjectEditMode(QObject *parent = 0);
+
+private:
+    ObjectEditModePerDocumentStuff *createPerDocumentStuff(BuildingDocument *doc);
+};
+
+class IsoObjectEditMode : public ObjectEditMode
+{
+public:
+    IsoObjectEditMode(QObject *parent = 0);
+
+private:
+    ObjectEditModePerDocumentStuff *createPerDocumentStuff(BuildingDocument *doc);
+};
+
+} // namespace BuildingEditor
 
 #endif // OBJECTEDITMODE_H

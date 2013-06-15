@@ -18,6 +18,8 @@
 #ifndef IMODE_H
 #define IMODE_H
 
+#include "singleton.h"
+
 #include <QObject>
 #include <QIcon>
 
@@ -43,17 +45,38 @@ public:
     void setEnabled(bool enabled);
     bool isEnabled() const { return mEnabled; }
 
+    void setActive(bool active);
+    bool isActive() const { return mActive; }
+
     virtual void readSettings(QSettings &settings) = 0;
     virtual void writeSettings(QSettings &settings) = 0;
 
 signals:
     void enabledStateChanged(bool enabled);
+    void activeStateChanged(bool active);
 
 protected:
     QWidget *mWidget;
     QIcon mIcon;
     QString mDisplayName;
     bool mEnabled;
+    bool mActive;
+};
+
+class ModeManager : public QObject, public Singleton<ModeManager>
+{
+    Q_OBJECT
+public:
+    ModeManager(QObject *parent = 0);
+
+    void setCurrentMode(IMode *mode);
+    IMode *currentMode() const { return mCurrentMode; }
+
+signals:
+    void currentModeChanged();
+
+private:
+    IMode *mCurrentMode;
 };
 
 } // namespace BuildingEditor

@@ -49,13 +49,15 @@ BaseTool::BaseTool() :
 
 void BaseTool::setEditor(BuildingBaseScene *editor)
 {
-    if (mEditor)
-        mEditor->disconnect(this);
+    if (mEditor) {
+        deactivate();
+    }
 
     mEditor = editor;
 
-    if (mEditor)
-        connect(mEditor, SIGNAL(documentChanged()), SLOT(documentChanged()));
+    if (mEditor) {
+        activate();
+    }
 }
 
 void BaseTool::setAction(QAction *action)
@@ -123,10 +125,6 @@ void BaseTool::makeCurrent()
     ToolManager::instance()->activateTool(this);
 }
 
-void BaseTool::documentChanged()
-{
-}
-
 void BaseTool::activate()
 {
     connect(document(), SIGNAL(objectAboutToBeRemoved(BuildingObject*)),
@@ -170,7 +168,6 @@ void ToolManager::addTool(BaseTool *tool)
 void ToolManager::activateTool(BaseTool *tool)
 {
     if (mCurrentTool) {
-        mCurrentTool->deactivate();
         mCurrentTool->setEditor(0);
         mCurrentTool->action()->setChecked(false);
         mCurrentTool->disconnect(this);
@@ -183,9 +180,10 @@ void ToolManager::activateTool(BaseTool *tool)
                 SLOT(currentToolStatusTextChanged()));
         Q_ASSERT(mCurrentEditor != 0);
         mCurrentTool->setEditor(mCurrentEditor);
-        mCurrentTool->activate();
         mCurrentTool->action()->setChecked(true);
     }
+
+    qDebug() << "ToolManager::mCurrentTool" << mCurrentTool << "mCurrentEditor" << mCurrentEditor;
 
     emit currentToolChanged(mCurrentTool);
 }
@@ -263,10 +261,6 @@ PencilTool::PencilTool() :
     mCursor(0)
 {
     updateStatusText();
-}
-
-void PencilTool::documentChanged()
-{
 }
 
 void PencilTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -620,10 +614,6 @@ void SelectMoveRoomsTool::updateStatusText()
     }
 }
 
-void SelectMoveRoomsTool::documentChanged()
-{
-}
-
 void SelectMoveRoomsTool::activate()
 {
     BaseTool::activate();
@@ -875,10 +865,6 @@ BaseObjectTool::BaseObjectTool() :
     mCursorItem(0),
     mEyedrop(false),
     mMouseOverObject(false)
-{
-}
-
-void BaseObjectTool::documentChanged()
 {
 }
 
@@ -1646,10 +1632,6 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     updateStatusText();
 }
 
-void RoofTool::documentChanged()
-{
-}
-
 void RoofTool::activate()
 {
     BaseTool::activate();
@@ -2011,10 +1993,6 @@ void SelectMoveObjectTool::currentModifiersChanged(Qt::KeyboardModifiers modifie
             mEditor->dragObject(floor(), item->object(), mDragOffset);
         }
     }
-}
-
-void SelectMoveObjectTool::documentChanged()
-{
 }
 
 void SelectMoveObjectTool::activate()
@@ -2441,10 +2419,6 @@ void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         updateStatusText();
         mEditor->setCursorObject(0);
     }
-}
-
-void WallTool::documentChanged()
-{
 }
 
 void WallTool::activate()

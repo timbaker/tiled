@@ -143,21 +143,14 @@ Tiled::Internal::Zoomable *TileEditModePerDocumentStuff::zoomable() const
 
 void TileEditModePerDocumentStuff::activate()
 {
+    ToolManager::instance()->setEditor(scene());
+
     connect(view(), SIGNAL(mouseCoordinateChanged(QPoint)),
             mMode->mStatusBar, SLOT(mouseCoordinateChanged(QPoint)));
     connect(zoomable(), SIGNAL(scaleChanged(qreal)),
             SLOT(updateActions()));
 
     zoomable()->connectToComboBox(mMode->mStatusBar->editorScaleComboBox);
-
-    connect(document(), SIGNAL(floorAdded(BuildingFloor*)),
-            mMode, SLOT(updateActions()));
-    connect(document(), SIGNAL(floorRemoved(BuildingFloor*)),
-            mMode, SLOT(updateActions()));
-    connect(document(), SIGNAL(currentFloorChanged()),
-            mMode, SLOT(updateActions()));
-    connect(document(), SIGNAL(currentLayerChanged()),
-            mMode, SLOT(updateActions()));
 
     connect(document(), SIGNAL(tileSelectionChanged(QRegion)),
             SLOT(updateActions()));
@@ -176,9 +169,9 @@ void TileEditModePerDocumentStuff::activate()
 
 void TileEditModePerDocumentStuff::deactivate()
 {
-    document()->disconnect(this);
-    document()->disconnect(mMode); /////
-    document()->disconnect(mMode->mStatusBar);
+//    document()->disconnect(this);
+//    document()->disconnect(mMode); /////
+    view()->disconnect(mMode->mStatusBar);
     view()->disconnect(this);
     zoomable()->disconnect(this);
     BuildingEditorWindow::instance()->actionIface()->actionZoomIn->disconnect(this);
@@ -288,6 +281,14 @@ TileEditMode::TileEditMode(QObject *parent) :
             SLOT(currentDocumentChanged(BuildingDocument*)));
     connect(BuildingDocumentMgr::instance(), SIGNAL(documentAboutToClose(int,BuildingDocument*)),
             SLOT(documentAboutToClose(int,BuildingDocument*)));
+
+    connect(this, SIGNAL(activeStateChanged(bool)), SLOT(onActiveStateChanged(bool)));
+}
+
+void TileEditMode::toTile()
+{
+    if (mCurrentDocumentStuff)
+        mCurrentDocumentStuff->activate();
 }
 
 #define WIDGET_STATE_VERSION 0
@@ -306,6 +307,17 @@ void TileEditMode::writeSettings(QSettings &settings)
     settings.endGroup();
 }
 
+void TileEditMode::onActiveStateChanged(bool active)
+{
+    if (active) {
+        if (mCurrentDocumentStuff)
+            mCurrentDocumentStuff->activate();
+    } else {
+        if (mCurrentDocumentStuff)
+            mCurrentDocumentStuff->deactivate();
+    }
+}
+
 void TileEditMode::documentAdded(BuildingDocument *doc)
 {
     mDocumentStuff[doc] = new TileEditModePerDocumentStuff(this, doc);
@@ -320,7 +332,8 @@ void TileEditMode::documentAdded(BuildingDocument *doc)
 void TileEditMode::currentDocumentChanged(BuildingDocument *doc)
 {
     if (mCurrentDocument) {
-        mCurrentDocumentStuff->deactivate();
+        if (isActive())
+            mCurrentDocumentStuff->deactivate();
     }
 
     mCurrentDocument = doc;
@@ -328,7 +341,8 @@ void TileEditMode::currentDocumentChanged(BuildingDocument *doc)
 
     if (mCurrentDocument) {
         mTabWidget->setCurrentIndex(docman()->indexOf(doc));
-        mCurrentDocumentStuff->activate();
+        if (isActive())
+            mCurrentDocumentStuff->activate();
     }
 }
 

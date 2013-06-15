@@ -77,7 +77,7 @@ void EmbeddedMainWindow::onDockActionTriggered()
 {
 }
 
-void EmbeddedMainWindow::onDockVisibilityChanged(bool visible)
+void EmbeddedMainWindow::onDockVisibilityChange(bool visible)
 {
     if (mHandleDockVisibilityChanges)
         sender()->setProperty(dockWidgetActiveState, visible);

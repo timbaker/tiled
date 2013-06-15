@@ -125,14 +125,12 @@ void EditorWindowPerDocumentStuff::deactivate()
 
 void EditorWindowPerDocumentStuff::toOrthoObject()
 {
-    mMainWindow->mObjectEditMode->toOrtho();
     mEditMode = OrthoObjectMode;
     mPrevObjectMode = OrthoObjectMode;
 }
 
 void EditorWindowPerDocumentStuff::toIsoObject()
 {
-    mMainWindow->mObjectEditMode->toIso();
     mEditMode = IsoObjectMode;
     mPrevObjectMode = IsoObjectMode;
 }
@@ -224,7 +222,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mCurrentDocumentStuff(0),
     mUndoGroup(new QUndoGroup(this)),
     mSynching(false),
-    mObjectEditMode(0),
+    mOrthoObjectEditMode(0),
+    mIsoObjectEditMode(0),
     mTileEditMode(0)
 {
     ui->setupUi(this);
@@ -377,13 +376,17 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
     // Do this after connect() calls above -> esp. documentAdded()
-    mObjectEditMode = new ObjectEditMode(this);
+    mOrthoObjectEditMode = new OrthoObjectEditMode(this);
+    mIsoObjectEditMode = new IsoObjectEditMode(this);
     mTileEditMode = new TileEditMode(this);
 
     mModeStack = new QStackedWidget;
-    mModeStack->addWidget(mObjectEditMode->widget());
+    mModeStack->addWidget(mOrthoObjectEditMode->widget());
+    mModeStack->addWidget(mIsoObjectEditMode->widget());
     mModeStack->addWidget(mTileEditMode->widget());
     setCentralWidget(mModeStack);
+    mEditMode = EditorWindowPerDocumentStuff::IsoObjectMode;
+    ModeManager::instance().setCurrentMode(mIsoObjectEditMode);
 
     readSettings();
 
@@ -540,7 +543,8 @@ void BuildingEditorWindow::readSettings()
 #endif
     mSettings.endGroup();
 
-    mObjectEditMode->readSettings(mSettings);
+    mOrthoObjectEditMode->readSettings(mSettings);
+    mIsoObjectEditMode->readSettings(mSettings);
     mTileEditMode->readSettings(mSettings);
 }
 
@@ -558,7 +562,8 @@ void BuildingEditorWindow::writeSettings()
 #endif
     mSettings.endGroup();
 
-    mObjectEditMode->writeSettings(mSettings);
+    mOrthoObjectEditMode->writeSettings(mSettings);
+    mIsoObjectEditMode->writeSettings(mSettings);
     mTileEditMode->writeSettings(mSettings);
 }
 
@@ -935,6 +940,19 @@ void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
 
         connect(mCurrentDocument, SIGNAL(currentLayerChanged()),
                 SLOT(updateActions()));
+
+        connect(mCurrentDocument, SIGNAL(currentRoomChanged()),
+                SLOT(updateActions()));
+
+        connect(mCurrentDocument, SIGNAL(selectedObjectsChanged()),
+                SLOT(updateActions()));
+
+        connect(mCurrentDocument, SIGNAL(tileSelectionChanged(QRegion)),
+                SLOT(updateActions()));
+        connect(mCurrentDocument, SIGNAL(clipboardTilesChanged()),
+                SLOT(updateActions()));
+
+        connect(mCurrentDocument, SIGNAL(cleanChanged()), SLOT(updateWindowTitle()));
     } else {
         ToolManager::instance()->clearDocument();
     }
@@ -1581,27 +1599,38 @@ void BuildingEditorWindow::setEditMode()
     switch (mCurrentDocumentStuff->editMode())
     {
     case EditorWindowPerDocumentStuff::OrthoObjectMode: {
+        ModeManager::instance().setCurrentMode(mOrthoObjectEditMode);
+#if 0
         if (mEditMode == EditorWindowPerDocumentStuff::TileMode) {
             // Switch from Tile to OrthoObject
             mCurrentDocument->setTileSelection(QRegion());
             mModeStack->setCurrentWidget(mObjectEditMode->widget());
         }
+#endif
         break;
     }
     case EditorWindowPerDocumentStuff::IsoObjectMode: {
+        ModeManager::instance().setCurrentMode(mIsoObjectEditMode);
+#if 0
         if (mEditMode == EditorWindowPerDocumentStuff::TileMode) {
             // Switch from Tile to IsoObject
             mCurrentDocument->setTileSelection(QRegion());
             mModeStack->setCurrentWidget(mObjectEditMode->widget());
         }
+#endif
         break;
     }
     case EditorWindowPerDocumentStuff::TileMode: {
+        ModeManager::instance().setCurrentMode(mTileEditMode);
+#if 0
         // Switch from OrthoObject/IsoObject to Tile
         mModeStack->setCurrentWidget(mTileEditMode->widget());
+        ModeManager::instance().setCurrentMode(mTileEditMode);
         break;
+#endif
     }
     }
+    mModeStack->setCurrentWidget(ModeManager::instance().currentMode()->widget());
 
     mEditMode = mCurrentDocumentStuff->editMode();
 

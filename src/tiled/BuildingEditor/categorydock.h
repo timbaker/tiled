@@ -37,37 +37,6 @@ class Zoomable;
 }
 }
 
-template<class T>
-class Singleton
-{
-public:
-    static T &instance()
-    {
-        Q_ASSERT(mInstance);
-        return *mInstance;
-    }
-
-    static void deleteInstance()
-    {
-        delete T;
-    }
-
-    Singleton()
-    {
-        Q_ASSERT(!mInstance);
-        mInstance = static_cast< T* >( this );
-    }
-
-private:
-    Singleton(const Singleton<T> &other);
-    Singleton<T> &operator =(const Singleton<T> &other);
-
-protected:
-    static T *mInstance;
-};
-
-#define SINGLETON_IMPL(T) T *Singleton<T>::mInstance = 0;
-
 namespace BuildingEditor {
 
 class Building;

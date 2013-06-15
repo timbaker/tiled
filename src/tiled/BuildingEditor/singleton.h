@@ -15,38 +15,41 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef EMBEDDEDMAINWINDOW_H
-#define EMBEDDEDMAINWINDOW_H
+#ifndef SINGLETON_H
+#define SINGLETON_H
 
-#include <QMainWindow>
+#include <qglobal.h>
 
-namespace BuildingEditor {
-
-class EmbeddedMainWindow : public QMainWindow
+template<class T>
+class Singleton
 {
-    Q_OBJECT
 public:
-    explicit EmbeddedMainWindow(QWidget *parent = 0);
+    static T &instance()
+    {
+        if (!mInstance)
+            mInstance = new T;
+        return *mInstance;
+    }
 
-    void registerDockWidget(QDockWidget *dockWidget);
-    
-protected:
-    void showEvent(QShowEvent *e);
-    void hideEvent(QHideEvent *e);
-    
-    void handleVisibilityChange(bool visible);
+    static void deleteInstance()
+    {
+        delete T;
+    }
 
-    QList<QDockWidget*> dockWidgets() const;
-
-private slots:
-    void onDockActionTriggered();
-    void onDockVisibilityChange(bool visible);
-    void onDockTopLevelChanged();
+    Singleton()
+    {
+        Q_ASSERT(!mInstance);
+        mInstance = static_cast< T* >( this );
+    }
 
 private:
-    bool mHandleDockVisibilityChanges;
+    Singleton(const Singleton<T> &other);
+    Singleton<T> &operator =(const Singleton<T> &other);
+
+protected:
+    static T *mInstance;
 };
 
-} // namespace BuildingEditor
+#define SINGLETON_IMPL(T) T *Singleton<T>::mInstance = 0;
 
-#endif // EMBEDDEDMAINWINDOW_H
+#endif // SINGLETON_H

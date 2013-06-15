@@ -53,6 +53,8 @@ public:
 
     void setTileRegion(const QRegion &tileRgn);
 
+    void setEditor(BuildingBaseScene *editor);
+
 private:
     BuildingBaseScene *mEditor;
     QRegion mRegion;
@@ -67,8 +69,6 @@ public:
     static DrawTileTool *instance();
 
     DrawTileTool();
-
-    void documentChanged();
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
@@ -123,8 +123,6 @@ public:
     static SelectTileTool *instance();
 
     SelectTileTool();
-
-    void documentChanged();
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);

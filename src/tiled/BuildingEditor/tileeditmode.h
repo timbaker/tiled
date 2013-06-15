@@ -63,12 +63,16 @@ class TileEditMode : public IMode
 public:
     explicit TileEditMode(QObject *parent = 0);
 
+    void toTile();
+
     void readSettings(QSettings &settings);
     void writeSettings(QSettings &settings);
 
 signals:
     
 public slots:
+    void onActiveStateChanged(bool active);
+
     void documentAdded(BuildingDocument *doc);
     void currentDocumentChanged(BuildingDocument *doc);
     void documentAboutToClose(int index, BuildingDocument *doc);
