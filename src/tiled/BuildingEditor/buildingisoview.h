@@ -193,6 +193,7 @@ public:
     void setShowBuildingTiles(bool show);
     void setShowUserTiles(bool show);
     void setEditingTiles(bool editing);
+    bool editingTiles() const { return mEditingTiles; }
 
     void setCursorPosition(const QPoint &pos);
 

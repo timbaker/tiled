@@ -605,6 +605,7 @@ OrthoObjectEditMode::OrthoObjectEditMode(QObject *parent) :
     ObjectEditMode(parent)
 {
     setDisplayName(tr("Ortho"));
+    setIcon(QIcon(QLatin1String(":/BuildingEditor/icons/mode_ortho.png")));
     mSettingsPrefix = QLatin1String("Ortho");
 }
 
@@ -619,7 +620,16 @@ IsoObjectEditMode::IsoObjectEditMode(QObject *parent) :
     ObjectEditMode(parent)
 {
     setDisplayName(tr("Iso"));
+    setIcon(QIcon(QLatin1String(":/BuildingEditor/icons/mode_iso.png")));
     mSettingsPrefix = QLatin1String("Iso");
+}
+
+void IsoObjectEditMode::documentAdded(BuildingDocument *doc)
+{
+    ObjectEditMode::documentAdded(doc);
+
+    // Hack to keep iso/tile view position + scale synched.
+    emit viewAddedForDocument(doc, (BuildingIsoView*)mDocumentStuff[doc]->view());
 }
 
 ObjectEditModePerDocumentStuff *IsoObjectEditMode::createPerDocumentStuff(BuildingDocument *doc)

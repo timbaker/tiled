@@ -49,5 +49,8 @@
         <file>icons/shadow_grime_wall.png</file>
         <file>icons/shadow_grime_floor.png</file>
         <file>icons/icon_eyedrop.png</file>
+        <file>icons/mode_iso.png</file>
+        <file>icons/mode_ortho.png</file>
+        <file>icons/mode_tile.png</file>
     </qresource>
 </RCC>

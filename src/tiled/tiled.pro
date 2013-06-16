@@ -216,7 +216,8 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/embeddedmainwindow.cpp \
     BuildingEditor/fancytabwidget.cpp \
     BuildingEditor/utils/stylehelper.cpp \
-    BuildingEditor/utils/styledbar.cpp
+    BuildingEditor/utils/styledbar.cpp \
+    BuildingEditor/welcomemode.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -399,7 +400,8 @@ HEADERS += aboutdialog.h \
     BuildingEditor/fancytabwidget.h \
     BuildingEditor/utils/stylehelper.h \
     BuildingEditor/utils/styledbar.h \
-    BuildingEditor/utils/hostosinfo.h
+    BuildingEditor/utils/hostosinfo.h \
+    BuildingEditor/welcomemode.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -440,7 +442,8 @@ FORMS += aboutdialog.ui \
     BuildingEditor/buildingpropertiesdialog.ui \
     roomdefnamedialog.ui \
     luaconsole.ui \
-    worldeddock.ui
+    worldeddock.ui \
+    BuildingEditor/welcomemode.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

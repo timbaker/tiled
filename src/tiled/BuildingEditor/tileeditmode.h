@@ -32,6 +32,7 @@ namespace BuildingEditor {
 
 class BuildingDocument;
 class BuildingFurnitureDock;
+class BuildingIsoView;
 class BuildingLayersDock;
 class BuildingTilesetDock;
 class CategoryDock;
@@ -67,6 +68,7 @@ public:
     void writeSettings(QSettings &settings);
 
 signals:
+    void viewAddedForDocument(BuildingDocument *doc, BuildingIsoView *view);
     
 public slots:
     void onActiveStateChanged(bool active);

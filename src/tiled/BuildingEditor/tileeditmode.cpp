@@ -234,6 +234,7 @@ TileEditMode::TileEditMode(QObject *parent) :
     mFirstTimeSeen(true)
 {
     setDisplayName(tr("Tile"));
+    setIcon(QIcon(QLatin1String(":/BuildingEditor/icons/mode_tile.png")));
 
     mMainWindow = new EmbeddedMainWindow;
     mMainWindow->setObjectName(QString::fromUtf8("TileEditModeWidget"));
@@ -322,6 +323,9 @@ void TileEditMode::documentAdded(BuildingDocument *doc)
     mTabWidget->insertTab(docIndex, mDocumentStuff[doc]->view(), doc->displayName());
     mTabWidget->blockSignals(false);
     mDocumentStuff[doc]->updateDocumentTab();
+
+    // Hack to keep iso/tile view position + scale synched.
+    emit viewAddedForDocument(doc, mDocumentStuff[doc]->view());
 }
 
 void TileEditMode::currentDocumentChanged(BuildingDocument *doc)

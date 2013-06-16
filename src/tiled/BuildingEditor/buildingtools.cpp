@@ -183,7 +183,7 @@ void ToolManager::activateTool(BaseTool *tool)
         mCurrentTool->action()->setChecked(true);
     }
 
-    qDebug() << "ToolManager::mCurrentTool" << mCurrentTool << "mCurrentEditor" << mCurrentEditor;
+//    qDebug() << "ToolManager::mCurrentTool" << mCurrentTool << "mCurrentEditor" << mCurrentEditor;
 
     emit currentToolChanged(mCurrentTool);
 }

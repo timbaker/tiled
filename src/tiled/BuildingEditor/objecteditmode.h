@@ -24,6 +24,7 @@
 
 class QAction;
 class QComboBox;
+class QGraphicsView;
 class QLabel;
 class QMainWindow;
 class QTabWidget;
@@ -32,6 +33,7 @@ namespace BuildingEditor {
 
 class Building;
 class BuildingDocument;
+class BuildingIsoView;
 class CategoryDock;
 class EditModeStatusBar;
 class EmbeddedMainWindow;
@@ -49,16 +51,13 @@ public:
     Building *currentBuilding() const;
     Room *currentRoom() const;
 
-    void toOrtho();
-    void toIso();
-
     void readSettings(QSettings &settings);
     void writeSettings(QSettings &settings);
 
-private slots:
+protected slots:
     void onActiveStateChanged(bool active);
 
-    void documentAdded(BuildingDocument *doc);
+    virtual void documentAdded(BuildingDocument *doc);
     void currentDocumentChanged(BuildingDocument *doc);
     void documentAboutToClose(int index, BuildingDocument *doc);
 
@@ -95,8 +94,15 @@ private:
 
 class IsoObjectEditMode : public ObjectEditMode
 {
+    Q_OBJECT
 public:
     IsoObjectEditMode(QObject *parent = 0);
+
+signals:
+    void viewAddedForDocument(BuildingDocument *doc, BuildingIsoView *view);
+
+private slots:
+    void documentAdded(BuildingDocument *doc);
 
 private:
     ObjectEditModePerDocumentStuff *createPerDocumentStuff(BuildingDocument *doc);

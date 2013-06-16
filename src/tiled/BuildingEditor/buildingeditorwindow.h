@@ -76,6 +76,7 @@ class Room;
 class TileEditMode;
 class Window;
 class Stairs;
+class WelcomeMode;
 
 class BuildingEditorWindow;
 class EditorWindowPerDocumentStuff : public QObject
@@ -112,6 +113,8 @@ public:
     void rememberTool();
     void restoreTool();
 
+    void viewAddedForDocument(BuildingIsoView *view);
+
 public slots:
     void autoSaveCheck();
     void autoSaveTimeout();
@@ -126,6 +129,10 @@ private:
     EditMode mPrevObjectMode;
     BaseTool *mPrevObjectTool;
     BaseTool *mPrevTileTool;
+
+    // Hack to keep iso/tile view position and scale synched.
+    BuildingIsoView *mIsoView;
+    BuildingIsoView *mTileView;
 
     QTimer mAutoSaveTimer;
     QString mAutoSaveFileName;
@@ -179,10 +186,14 @@ public:
 
     void documentTabCloseRequested(int index);
 
+    QStringList recentFiles() const;
+
 private:
     bool writeBuilding(BuildingDocument *doc, const QString &fileName);
 
     bool confirmSave();
+
+    void addRecentFile(const QString &fileName);
 
     void deleteObjects();
 
@@ -190,6 +201,7 @@ private:
 
 signals:
     void tilePicked(const QString &tileName);
+    void recentFilesChanged();
 
 private slots:
     void documentAdded(BuildingDocument *doc);
@@ -261,11 +273,9 @@ private slots:
 
     void currentModeAboutToChange(IMode *mode);
     void currentModeChanged();
-#if 0
-    void setEditMode();
-    void toggleOrthoIso();
-    void toggleEditMode();
-#endif
+
+    void viewAddedForDocument(BuildingDocument *doc, BuildingIsoView *view);
+
 private:
     static BuildingEditorWindow *mInstance;
     Ui::BuildingEditorWindow *ui;
@@ -277,6 +287,7 @@ private:
     bool mSynching;
 
 //    QStackedWidget *mModeStack;
+    WelcomeMode *mWelcomeMode;
     OrthoObjectEditMode *mOrthoObjectEditMode;
     IsoObjectEditMode *mIsoObjectEditMode;
     TileEditMode *mTileEditMode;

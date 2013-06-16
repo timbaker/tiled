@@ -51,6 +51,7 @@
 #include "simplefile.h"
 #include "templatefrombuildingdialog.h"
 #include "tileeditmode.h"
+#include "welcomemode.h"
 
 #include "fancytabwidget.h"
 #include "utils/stylehelper.h"
@@ -81,7 +82,8 @@
 #include <QPixmap>
 #include <QShowEvent>
 #include <QSplitter>
-#include <QStackedWidget>
+//#include <QStackedWidget>
+#include <QStatusBar>
 #include <QToolButton>
 #include <QUndoGroup>
 #include <QUrl>
@@ -99,7 +101,9 @@ EditorWindowPerDocumentStuff::EditorWindowPerDocumentStuff(BuildingDocument *doc
     mDocument(doc),
     mEditMode(IsoObjectMode),
     mPrevObjectTool(PencilTool::instance()),
-    mPrevTileTool(DrawTileTool::instance())
+    mPrevTileTool(DrawTileTool::instance()),
+    mIsoView(0),
+    mTileView(0)
 {
     connect(document()->undoStack(), SIGNAL(cleanChanged(bool)), SLOT(autoSaveCheck()));
     connect(document()->undoStack(), SIGNAL(indexChanged(int)), SLOT(autoSaveCheck()));
@@ -128,12 +132,20 @@ void EditorWindowPerDocumentStuff::deactivate()
 
 void EditorWindowPerDocumentStuff::toOrthoObject()
 {
+    if (mEditMode == TileMode) {
+        mIsoView->centerOn(mTileView->mapToScene(mTileView->viewport()->rect().center()));
+        mIsoView->zoomable()->setScale(mTileView->zoomable()->scale());
+    }
     mEditMode = OrthoObjectMode;
     mPrevObjectMode = OrthoObjectMode;
 }
 
 void EditorWindowPerDocumentStuff::toIsoObject()
 {
+    if (mEditMode == TileMode) {
+        mIsoView->centerOn(mTileView->mapToScene(mTileView->viewport()->rect().center()));
+        mIsoView->zoomable()->setScale(mTileView->zoomable()->scale());
+    }
     mEditMode = IsoObjectMode;
     mPrevObjectMode = IsoObjectMode;
 }
@@ -148,6 +160,8 @@ void EditorWindowPerDocumentStuff::toObject()
 
 void EditorWindowPerDocumentStuff::toTile()
 {
+    mTileView->centerOn(mIsoView->mapToScene(mIsoView->viewport()->rect().center()));
+    mTileView->zoomable()->setScale(mIsoView->zoomable()->scale());
     mEditMode = TileMode;
 }
 
@@ -165,6 +179,14 @@ void EditorWindowPerDocumentStuff::restoreTool()
         mPrevTileTool->makeCurrent();
     else if (isObject() && mPrevObjectTool && mPrevObjectTool->action()->isEnabled())
         mPrevObjectTool->makeCurrent();
+}
+
+void EditorWindowPerDocumentStuff::viewAddedForDocument(BuildingIsoView *view)
+{
+    if (view->scene()->editingTiles())
+        mTileView = view;
+    else
+        mIsoView = view;
 }
 
 void EditorWindowPerDocumentStuff::autoSaveCheck()
@@ -235,16 +257,12 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 
     BuildingPreferences *prefs = BuildingPreferences::instance();
 
-    connect(ui->actionSwitchEditMode, SIGNAL(triggered()), SLOT(toggleEditMode()));
-
     connect(docman(), SIGNAL(documentAdded(BuildingDocument*)),
             SLOT(documentAdded(BuildingDocument*)));
     connect(docman(), SIGNAL(documentAboutToClose(int,BuildingDocument*)),
             SLOT(documentAboutToClose(int,BuildingDocument*)));
     connect(docman(), SIGNAL(currentDocumentChanged(BuildingDocument*)),
             SLOT(currentDocumentChanged(BuildingDocument*)));
-
-    connect(ui->actionToggleOrthoIso, SIGNAL(triggered()), SLOT(toggleOrthoIso()));
 
     PencilTool::instance()->setAction(ui->actionPecil);
     SelectMoveRoomsTool::instance()->setAction(ui->actionSelectRooms);
@@ -379,55 +397,31 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
     // Do this after connect() calls above -> esp. documentAdded()
+    mWelcomeMode = new WelcomeMode(this);
     mOrthoObjectEditMode = new OrthoObjectEditMode(this);
     mIsoObjectEditMode = new IsoObjectEditMode(this);
     mTileEditMode = new TileEditMode(this);
-#if 0
-    mModeStack = new QStackedWidget;
-    mModeStack->addWidget(mOrthoObjectEditMode->widget());
-    mModeStack->addWidget(mIsoObjectEditMode->widget());
-    mModeStack->addWidget(mTileEditMode->widget());
-//    setCentralWidget(mModeStack);
-    mEditMode = EditorWindowPerDocumentStuff::IsoObjectMode;
-    ModeManager::instance().setCurrentMode(mIsoObjectEditMode);
 
-    ::Utils::StyleHelper::setBaseColor(::Utils::StyleHelper::DEFAULT_BASE_COLOR);
-    mTabBar = new Core::Internal::FancyTabBar(this);
-    mTabBar->insertTab(0, QIcon(), tr("Welcome"));
-    mTabBar->insertTab(1, QIcon(), tr("Orth"));
-    mTabBar->insertTab(2, QIcon(), tr("Iso"));
-    mTabBar->insertTab(3, QIcon(), tr("Tile"));
-    mTabBar->setTabEnabled(0, true);
-    mTabBar->setTabEnabled(1, true);
-    mTabBar->setTabEnabled(2, true);
-    mTabBar->setTabEnabled(3, true);
-#endif
+    connect(mIsoObjectEditMode, SIGNAL(viewAddedForDocument(BuildingDocument*,BuildingIsoView*)),
+            SLOT(viewAddedForDocument(BuildingDocument*,BuildingIsoView*)));
+    connect(mTileEditMode, SIGNAL(viewAddedForDocument(BuildingDocument*,BuildingIsoView*)),
+            SLOT(viewAddedForDocument(BuildingDocument*,BuildingIsoView*)));
 
-#if 1
     ::Utils::StyleHelper::setBaseColor(::Utils::StyleHelper::DEFAULT_BASE_COLOR);
     mTabWidget = new Core::Internal::FancyTabWidget;
+    mTabWidget->setObjectName(QLatin1String("FancyTabWidget"));
+    mTabWidget->statusBar()->setVisible(false);
     new ModeManager(mTabWidget, this);
+    ModeManager::instance().addMode(mWelcomeMode);
     ModeManager::instance().addMode(mOrthoObjectEditMode);
     ModeManager::instance().addMode(mIsoObjectEditMode);
     ModeManager::instance().addMode(mTileEditMode);
     setCentralWidget(mTabWidget);
 
-//    mEditMode = EditorWindowPerDocumentStuff::IsoObjectMode;
     ModeManager::instance().setCurrentMode(mIsoObjectEditMode);
 
     connect(ModeManager::instancePtr(), SIGNAL(currentModeAboutToChange(IMode*)), SLOT(currentModeAboutToChange(IMode*)));
     connect(ModeManager::instancePtr(), SIGNAL(currentModeChanged()), SLOT(currentModeChanged()));
-#else
-    QWidget *w = new QWidget;
-    QHBoxLayout *hbox = new QHBoxLayout;
-    hbox->setMargin(0);
-    hbox->setSpacing(0);
-    hbox->addWidget(mTabBar);
-    hbox->addWidget(mModeStack);
-    hbox->setStretchFactor(mModeStack, 1);
-    w->setLayout(hbox);
-    setCentralWidget(w);
-#endif
 
     readSettings();
 
@@ -472,7 +466,8 @@ bool BuildingEditorWindow::openFile(const QString &fileName)
 
     QString error;
     if (BuildingDocument *doc = BuildingDocument::read(fileName, error)) {
-        BuildingDocumentMgr::instance()->addDocument(doc);
+        docman()->addDocument(doc);
+        addRecentFile(fileName);
         return true;
     }
 
@@ -733,6 +728,7 @@ void BuildingEditorWindow::openBuilding()
     QString error;
     if (BuildingDocument *doc = BuildingDocument::read(fileName, error)) {
         docman()->addDocument(doc);
+        addRecentFile(fileName);
         return;
     }
 
@@ -796,7 +792,8 @@ bool BuildingEditorWindow::writeBuilding(BuildingDocument *doc, const QString &f
         return false;
     }
 
-//    setRecentFile(fileName);
+    if (!fileName.endsWith(QLatin1String(".autosave")))
+        addRecentFile(fileName);
     return true;
 }
 
@@ -820,6 +817,32 @@ bool BuildingEditorWindow::confirmSave()
     default:
         return false;
     }
+}
+
+QStringList BuildingEditorWindow::recentFiles() const
+{
+    return mSettings.value(QLatin1String("BuildingEditor/RecentFiles"))
+            .toStringList();
+}
+
+void BuildingEditorWindow::addRecentFile(const QString &fileName)
+{
+    // Remember the file by its canonical file path
+    const QString canonicalFilePath = QFileInfo(fileName).canonicalFilePath();
+
+    if (canonicalFilePath.isEmpty())
+        return;
+
+    const int MaxRecentFiles = 10;
+
+    QStringList files = recentFiles();
+    files.removeAll(canonicalFilePath);
+    files.prepend(canonicalFilePath);
+    while (files.size() > MaxRecentFiles)
+        files.removeLast();
+
+    mSettings.setValue(QLatin1String("BuildingEditor/RecentFiles"), files);
+    emit recentFilesChanged();
 }
 
 void BuildingEditorWindow::documentAdded(BuildingDocument *doc)
@@ -1662,11 +1685,16 @@ void BuildingEditorWindow::currentModeChanged()
     if (ModeManager::instance().currentMode() == mOrthoObjectEditMode)
         mCurrentDocumentStuff->toOrthoObject();
     else if (ModeManager::instance().currentMode() == mIsoObjectEditMode)
-        mCurrentDocumentStuff->toOrthoObject();
+        mCurrentDocumentStuff->toIsoObject();
     else if (ModeManager::instance().currentMode() == mTileEditMode)
         mCurrentDocumentStuff->toTile();
 
     updateActions();
+}
+
+void BuildingEditorWindow::viewAddedForDocument(BuildingDocument *doc, BuildingIsoView *view)
+{
+    mDocumentStuff[doc]->viewAddedForDocument(view);
 }
 
 #if 0

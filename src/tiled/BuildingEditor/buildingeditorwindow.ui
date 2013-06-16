@@ -64,8 +64,6 @@
     <addaction name="actionHighlightFloor"/>
     <addaction name="actionHighlightRoom"/>
     <addaction name="actionShowObjects"/>
-    <addaction name="actionToggleOrthoIso"/>
-    <addaction name="actionSwitchEditMode"/>
     <addaction name="separator"/>
     <addaction name="actionZoomIn"/>
     <addaction name="actionZoomOut"/>
@@ -525,14 +523,6 @@
     <string>Select None</string>
    </property>
   </action>
-  <action name="actionSwitchEditMode">
-   <property name="text">
-    <string>Toggle Object/Tile Mode</string>
-   </property>
-   <property name="shortcut">
-    <string>Esc</string>
-   </property>
-  </action>
   <action name="actionHighlightFloor">
    <property name="checkable">
     <bool>true</bool>
@@ -569,14 +559,6 @@
    </property>
    <property name="text">
     <string>Paste</string>
-   </property>
-  </action>
-  <action name="actionToggleOrthoIso">
-   <property name="text">
-    <string>Toggle Ortho/Iso</string>
-   </property>
-   <property name="shortcut">
-    <string>V</string>
    </property>
   </action>
   <action name="actionShowGrid">
