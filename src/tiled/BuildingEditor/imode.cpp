@@ -23,7 +23,7 @@ using namespace BuildingEditor;
 
 IMode::IMode(QObject *parent) :
     QObject(parent),
-    mEnabled(true),
+    mEnabled(false),
     mActive(false)
 {
 }

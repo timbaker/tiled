@@ -418,7 +418,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ModeManager::instance().addMode(mTileEditMode);
     setCentralWidget(mTabWidget);
 
-    ModeManager::instance().setCurrentMode(mIsoObjectEditMode);
+    mWelcomeMode->setEnabled(true);
+    ModeManager::instance().setCurrentMode(mWelcomeMode);
 
     connect(ModeManager::instancePtr(), SIGNAL(currentModeAboutToChange(IMode*)), SLOT(currentModeAboutToChange(IMode*)));
     connect(ModeManager::instancePtr(), SIGNAL(currentModeChanged()), SLOT(currentModeChanged()));
@@ -851,6 +852,10 @@ void BuildingEditorWindow::documentAdded(BuildingDocument *doc)
 
     mDocumentStuff[doc] = new EditorWindowPerDocumentStuff(doc);
 
+    mOrthoObjectEditMode->setEnabled(true);
+    mIsoObjectEditMode->setEnabled(true);
+    mTileEditMode->setEnabled(true);
+
 //    reportMissingTilesets();
 #if 1
 #else
@@ -1033,6 +1038,10 @@ void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
         connect(mCurrentDocument, SIGNAL(cleanChanged()), SLOT(updateWindowTitle()));
     } else {
         ToolManager::instance()->clearDocument();
+
+        mOrthoObjectEditMode->setEnabled(false);
+        mIsoObjectEditMode->setEnabled(false);
+        mTileEditMode->setEnabled(false);
     }
 
     updateActions();
@@ -1593,7 +1602,8 @@ void BuildingEditorWindow::reportMissingTilesets()
 
 void BuildingEditorWindow::updateActions()
 {
-    bool hasDoc = mCurrentDocument != 0;
+    bool hasDoc = (ModeManager::instance().currentMode() != mWelcomeMode) &&
+            mCurrentDocument != 0;
     bool showObjects = BuildingPreferences::instance()->showObjects();
     bool objectMode = hasDoc && mCurrentDocumentStuff->isObject();
 
