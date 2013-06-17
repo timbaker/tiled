@@ -237,23 +237,23 @@ TileEditMode::TileEditMode(QObject *parent) :
     setIcon(QIcon(QLatin1String(":/BuildingEditor/icons/mode_tile.png")));
 
     mMainWindow = new EmbeddedMainWindow;
-    mMainWindow->setObjectName(QString::fromUtf8("TileEditModeWidget"));
+    mMainWindow->setObjectName(QString::fromUtf8("TileEditMode.Widget"));
 
-    mTabWidget->setObjectName(QString::fromUtf8("TileEditModeTabWidget"));
+    mTabWidget->setObjectName(QString::fromUtf8("TileEditMode.TabWidget"));
     mTabWidget->setDocumentMode(true);
     mTabWidget->setTabsClosable(true);
 
-    mStatusBar->setObjectName(QLatin1String("TileEditModeStatusBar"));
+    mStatusBar->setObjectName(QLatin1String("TileEditMode.StatusBar"));
 
     QVBoxLayout *vbox = new QVBoxLayout;
-    vbox->setObjectName(QLatin1String("TileEditModeVBox"));
+    vbox->setObjectName(QLatin1String("TileEditMode.VBox"));
     vbox->setMargin(0);
 //    vbox->addWidget(mToolBar);
     vbox->addWidget(mTabWidget);
     vbox->setStretchFactor(mTabWidget, 1);
     vbox->addLayout(mStatusBar->statusBarLayout);
     QWidget *w = new QWidget;
-    w->setObjectName(QString::fromUtf8("TileEditModeVBoxWidget"));
+    w->setObjectName(QString::fromUtf8("TileEditMode.VBoxWidget"));
     w->setLayout(vbox);
 
     mMainWindow->setCentralWidget(w);
@@ -294,6 +294,8 @@ void TileEditMode::readSettings(QSettings &settings)
     settings.beginGroup(QLatin1String("BuildingEditor/TileEditMode"));
     mMainWindow->readSettings(settings);
     settings.endGroup();
+
+    mFurnitureDock->readSettings(settings);
 }
 
 void TileEditMode::writeSettings(QSettings &settings)
@@ -301,6 +303,8 @@ void TileEditMode::writeSettings(QSettings &settings)
     settings.beginGroup(QLatin1String("BuildingEditor/TileEditMode"));
     mMainWindow->writeSettings(settings);
     settings.endGroup();
+
+    mFurnitureDock->writeSettings(settings);
 }
 
 void TileEditMode::onActiveStateChanged(bool active)

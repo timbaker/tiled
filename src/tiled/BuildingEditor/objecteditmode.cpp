@@ -465,25 +465,25 @@ ObjectEditMode::ObjectEditMode(QObject *parent) :
     mCategoryDock(new CategoryDock)
 {
     mMainWindow = new EmbeddedMainWindow;
-    mMainWindow->setObjectName(QLatin1String("ObjectEditModeWidget"));
+    mMainWindow->setObjectName(QLatin1String("ObjectEditMode.Widget"));
 
     mToolBar = new ObjectEditModeToolBar(this);
-    mStatusBar = new EditModeStatusBar(QLatin1String("ObjectEditModeStatusBar."));
+    mStatusBar = new EditModeStatusBar(QLatin1String("ObjectEditMode.StatusBar."));
 
     mTabWidget = new QTabWidget;
-    mTabWidget->setObjectName(QLatin1String("ObjectEditModeTabWidget"));
+    mTabWidget->setObjectName(QLatin1String("ObjectEditMode.TabWidget"));
     mTabWidget->setDocumentMode(true);
     mTabWidget->setTabsClosable(true);
 
     QVBoxLayout *vbox = new QVBoxLayout;
-    vbox->setObjectName(QLatin1String("ObjectEditModeVBox"));
+    vbox->setObjectName(QLatin1String("ObjectEditMode.VBox"));
     vbox->setMargin(0);
 //    vbox->addWidget(mToolBar);
     vbox->addWidget(mTabWidget);
     vbox->addLayout(mStatusBar->statusBarLayout);
     vbox->setStretchFactor(mTabWidget, 1);
     QWidget *w = new QWidget;
-    w->setObjectName(QLatin1String("ObjectEditModeVBoxWidget"));
+    w->setObjectName(QLatin1String("ObjectEditMode.VBoxWidget"));
     w->setLayout(vbox);
 
     mMainWindow->setCentralWidget(w);

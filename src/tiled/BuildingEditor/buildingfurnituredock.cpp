@@ -1,5 +1,23 @@
+/*
+ * Copyright 2013, Tim Baker <treectrl@users.sf.net>
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "buildingfurnituredock.h"
 
+#include "buildingeditorwindow.h"
 #include "buildingfloor.h"
 #include "buildingpreferences.h"
 #include "buildingtiles.h"
@@ -14,6 +32,7 @@
 #include <QComboBox>
 #include <QHBoxLayout>
 #include <QListWidget>
+#include <QSettings>
 #include <QSplitter>
 #include <QVBoxLayout>
 
@@ -27,25 +46,32 @@ BuildingFurnitureDock::BuildingFurnitureDock(QWidget *parent) :
     setObjectName(QLatin1String("FurnitureDock"));
 
     QHBoxLayout *comboLayout = new QHBoxLayout;
+    comboLayout->setObjectName(QLatin1String("FurnitureDock.comboLayout"));
     QComboBox *scaleCombo = new QComboBox;
+    scaleCombo->setObjectName(QLatin1String("FurnitureDock.scaleComboBox"));
     scaleCombo->setEditable(true);
     comboLayout->addStretch(1);
     comboLayout->addWidget(scaleCombo);
 
     QWidget *rightWidget = new QWidget(this);
+    rightWidget->setObjectName(QLatin1String("FurnitureDock.rightWidget"));
     QVBoxLayout *rightLayout = new QVBoxLayout(rightWidget);
+    rightLayout->setObjectName(QLatin1String("FurnitureDock.rightLayout"));
     rightLayout->setContentsMargins(0, 0, 0, 0);
     rightLayout->addWidget(mFurnitureView, 1);
     rightLayout->addLayout(comboLayout);
 
-    QSplitter *splitter = new QSplitter;
+    QSplitter *splitter = mSplitter = new QSplitter;
+    splitter->setObjectName(QLatin1String("FurnitureDock.splitter"));
     splitter->setChildrenCollapsible(false);
     splitter->addWidget(mGroupList);
     splitter->addWidget(rightWidget);
     splitter->setStretchFactor(1, 1);
 
     QWidget *outer = new QWidget(this);
+    outer->setObjectName(QLatin1String("FurnitureDock.contents"));
     QHBoxLayout *outerLayout = new QHBoxLayout(outer);
+    outerLayout->setObjectName(QLatin1String("FurnitureDock.contentsLayout"));
     outerLayout->setSpacing(5);
     outerLayout->setMargin(5);
     outerLayout->addWidget(splitter);
@@ -67,6 +93,27 @@ BuildingFurnitureDock::BuildingFurnitureDock(QWidget *parent) :
             SLOT(tilesDialogEdited()));
 
     retranslateUi();
+}
+
+void BuildingFurnitureDock::readSettings(QSettings &settings)
+{
+#if 0
+    settings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
+    settings.endGroup();
+#endif
+
+    BuildingEditorWindow::instance()->restoreSplitterSizes(mSplitter);
+}
+
+void BuildingFurnitureDock::writeSettings(QSettings &settings)
+{
+#if 0
+    settings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
+    settings.setValue(QLatin1String("SelectedFurnitureGroup"),
+                      mFurnitureGroup ? mFurnitureGroup->mLabel : QString());
+    settings.endGroup();
+#endif
+    BuildingEditorWindow::instance()->saveSplitterSizes(mSplitter);
 }
 
 void BuildingFurnitureDock::switchTo()

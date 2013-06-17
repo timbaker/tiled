@@ -68,30 +68,42 @@ CategoryDock::CategoryDock(QWidget *parent) :
     setWindowTitle(tr("Tiles and Furniture"));
 
     ui->categoryList = new QListWidget;
+    ui->categoryList->setObjectName(QLatin1String("CategoryDock.categoryList"));
+
     ui->tilesetView = new BuildingTileEntryView;
+    ui->tilesetView->setObjectName(QLatin1String("CategoryDock.tilesetView"));
+
     ui->furnitureView = new FurnitureView;
+    ui->furnitureView->setObjectName(QLatin1String("CategoryDock.furnitureView"));
+
     ui->scaleComboBox = new QComboBox;
+    ui->scaleComboBox->setObjectName(QLatin1String("CategoryDock.scaleComboBox"));
 
     ui->categoryStack = new QStackedWidget;
+    ui->categoryStack->setObjectName(QLatin1String("CategoryDock.stack"));
     ui->categoryStack->addWidget(ui->tilesetView);
     ui->categoryStack->addWidget(ui->furnitureView);
 
     ui->categorySplitter = new QSplitter;
+    ui->categorySplitter->setObjectName(QLatin1String("CategoryDock.splitter"));
     ui->categorySplitter->setOrientation(Qt::Vertical);
     ui->categorySplitter->addWidget(ui->categoryList);
     ui->categorySplitter->addWidget(ui->categoryStack);
     ui->categorySplitter->setSizes(QList<int>() << 128 << 256);
 
     QHBoxLayout *hbox = new QHBoxLayout;
+    hbox->setObjectName(QLatin1String("CategoryDock.comboLayout"));
     hbox->setMargin(0);
     hbox->addStretch(1);
     hbox->addWidget(ui->scaleComboBox);
 
     QVBoxLayout *vbox = new QVBoxLayout;
+    vbox->setObjectName(QLatin1String("CategoryDock.contentsLayout"));
     vbox->setMargin(2);
     vbox->addWidget(ui->categorySplitter);
     vbox->addLayout(hbox);
     QWidget *w = new QWidget;
+    w->setObjectName(QLatin1String("CategoryDock.contents"));
     w->setLayout(vbox);
     setWidget(w);
 
@@ -847,8 +859,9 @@ void CategoryDock::selectAndDisplay(FurnitureTile *ftile)
 void CategoryDock::readSettings(QSettings &settings)
 {
     settings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
-    BuildingEditorWindow::instance()->restoreSplitterSizes(ui->categorySplitter);
     settings.endGroup();
+
+    BuildingEditorWindow::instance()->restoreSplitterSizes(ui->categorySplitter);
 }
 
 void CategoryDock::writeSettings(QSettings &settings)
