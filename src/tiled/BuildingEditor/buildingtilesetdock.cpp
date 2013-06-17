@@ -19,6 +19,7 @@
 #include "ui_buildingtilesetdock.h"
 
 #include "buildingdocument.h"
+#include "buildingdocumentmgr.h"
 #include "buildingmap.h"
 #include "buildingpreferences.h"
 #include "buildingtiles.h"
@@ -83,6 +84,9 @@ BuildingTilesetDock::BuildingTilesetDock(QWidget *parent) :
             SLOT(tileSelectionChanged()));
     connect(Preferences::instance(), SIGNAL(autoSwitchLayerChanged(bool)),
             SLOT(autoSwitchLayerChanged(bool)));
+
+    connect(BuildingDocumentMgr::instance(), SIGNAL(currentDocumentChanged(BuildingDocument*)),
+            SLOT(currentDocumentChanged(BuildingDocument*)));
 
     connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
             SLOT(tilesetAdded(Tiled::Tileset*)));
