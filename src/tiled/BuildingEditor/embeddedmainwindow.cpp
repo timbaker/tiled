@@ -48,11 +48,13 @@ void EmbeddedMainWindow::registerDockWidget(QDockWidget *dockWidget)
 #define STATE_VERSION 0
 void EmbeddedMainWindow::readSettings(QSettings &settings)
 {
-    QByteArray state = settings.value(QLatin1String("state")).toByteArray();
+    QByteArray state = settings.value(objectName() + QLatin1String(".state")).toByteArray();
     if (!state.isEmpty())
         restoreState(state, STATE_VERSION);
 
     foreach (QDockWidget *dockWidget, dockWidgets()) {
+        if (dockWidget->isFloating())
+            dockWidget->setVisible(false);
         dockWidget->setProperty(KEY_DOCKWIDGET_ACTIVE_STATE,
                                 settings.value(dockWidget->objectName(), true));
     }
@@ -60,7 +62,7 @@ void EmbeddedMainWindow::readSettings(QSettings &settings)
 
 void EmbeddedMainWindow::writeSettings(QSettings &settings)
 {
-    settings.setValue(QLatin1String("state"), saveState(STATE_VERSION));
+    settings.setValue(objectName() + QLatin1String(".state"), saveState(STATE_VERSION));
 
     foreach (QDockWidget *dockWidget, dockWidgets()) {
         settings.setValue(dockWidget->objectName(), dockWidget->property(KEY_DOCKWIDGET_ACTIVE_STATE));

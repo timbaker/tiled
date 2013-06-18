@@ -150,7 +150,7 @@ CategoryDock::CategoryDock(QWidget *parent) :
     /////
 
     QSettings mSettings;
-    mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
+    mSettings.beginGroup(QLatin1String("BuildingEditor/CategoryDock"));
     QString categoryName = mSettings.value(QLatin1String("SelectedCategory")).toString();
     if (!categoryName.isEmpty()) {
         int index = BuildingTilesMgr::instance()->indexOf(categoryName);
@@ -858,22 +858,21 @@ void CategoryDock::selectAndDisplay(FurnitureTile *ftile)
 
 void CategoryDock::readSettings(QSettings &settings)
 {
-    settings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
-    settings.endGroup();
-
+    settings.beginGroup(QLatin1String("CategoryDock"));
     BuildingEditorWindow::instance()->restoreSplitterSizes(ui->categorySplitter);
+    settings.endGroup();
 }
 
 void CategoryDock::writeSettings(QSettings &settings)
 {
-    settings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
+    settings.beginGroup(QLatin1String("CategoryDock"));
     settings.setValue(QLatin1String("SelectedCategory"),
                       mCategory ? mCategory->name() : QString());
     settings.setValue(QLatin1String("SelectedFurnitureGroup"),
                       mFurnitureGroup ? mFurnitureGroup->mLabel : QString());
+    BuildingEditorWindow::instance()->saveSplitterSizes(ui->categorySplitter);
     settings.endGroup();
 
-    BuildingEditorWindow::instance()->saveSplitterSizes(ui->categorySplitter);
 }
 
 void CategoryDock::scrollToNow(int which, const QModelIndex &index)

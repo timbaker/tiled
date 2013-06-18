@@ -606,18 +606,18 @@ void BuildingEditorWindow::writeSettings()
 
 void BuildingEditorWindow::saveSplitterSizes(QSplitter *splitter)
 {
-    mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
+//    mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
     QVariantList v;
     foreach (int size, splitter->sizes())
         v += size;
-    mSettings.setValue(tr("%1/sizes").arg(splitter->objectName()), v);
-    mSettings.endGroup();
+    mSettings.setValue(tr("%1.sizes").arg(splitter->objectName()), v);
+//    mSettings.endGroup();
 }
 
 void BuildingEditorWindow::restoreSplitterSizes(QSplitter *splitter)
 {
-    mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
-    QVariant v = mSettings.value(tr("%1/sizes").arg(splitter->objectName()));
+//    mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
+    QVariant v = mSettings.value(tr("%1.sizes").arg(splitter->objectName()));
     if (v.canConvert(QVariant::List)) {
         QList<int> sizes;
         foreach (QVariant v2, v.toList()) {
@@ -625,7 +625,7 @@ void BuildingEditorWindow::restoreSplitterSizes(QSplitter *splitter)
         }
         splitter->setSizes(sizes);
     }
-    mSettings.endGroup();
+//    mSettings.endGroup();
 }
 
 void BuildingEditorWindow::upLevel()

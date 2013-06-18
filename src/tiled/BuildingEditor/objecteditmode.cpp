@@ -523,18 +523,16 @@ void ObjectEditMode::readSettings(QSettings &settings)
 {
     settings.beginGroup(QString::fromLatin1("BuildingEditor/%1ObjectEditMode").arg(mSettingsPrefix));
     mMainWindow->readSettings(settings);
-    settings.endGroup();
-
     mCategoryDock->readSettings(settings);
+    settings.endGroup();
 }
 
 void ObjectEditMode::writeSettings(QSettings &settings)
 {
     settings.beginGroup(QString::fromLatin1("BuildingEditor/%1ObjectEditMode").arg(mSettingsPrefix));
     mMainWindow->writeSettings(settings);
-    settings.endGroup();
-
     mCategoryDock->writeSettings(settings);
+    settings.endGroup();
 }
 
 void ObjectEditMode::onActiveStateChanged(bool active)

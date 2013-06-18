@@ -293,18 +293,16 @@ void TileEditMode::readSettings(QSettings &settings)
 {
     settings.beginGroup(QLatin1String("BuildingEditor/TileEditMode"));
     mMainWindow->readSettings(settings);
-    settings.endGroup();
-
     mFurnitureDock->readSettings(settings);
+    settings.endGroup();
 }
 
 void TileEditMode::writeSettings(QSettings &settings)
 {
     settings.beginGroup(QLatin1String("BuildingEditor/TileEditMode"));
     mMainWindow->writeSettings(settings);
-    settings.endGroup();
-
     mFurnitureDock->writeSettings(settings);
+    settings.endGroup();
 }
 
 void TileEditMode::onActiveStateChanged(bool active)

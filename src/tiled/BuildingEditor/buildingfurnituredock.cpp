@@ -97,12 +97,10 @@ BuildingFurnitureDock::BuildingFurnitureDock(QWidget *parent) :
 
 void BuildingFurnitureDock::readSettings(QSettings &settings)
 {
-#if 0
-    settings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
-    settings.endGroup();
-#endif
-
+    settings.beginGroup(QLatin1String("FurnitureDock"));
     BuildingEditorWindow::instance()->restoreSplitterSizes(mSplitter);
+    settings.endGroup();
+
 }
 
 void BuildingFurnitureDock::writeSettings(QSettings &settings)
@@ -113,7 +111,9 @@ void BuildingFurnitureDock::writeSettings(QSettings &settings)
                       mFurnitureGroup ? mFurnitureGroup->mLabel : QString());
     settings.endGroup();
 #endif
+    settings.beginGroup(QLatin1String("FurnitureDock"));
     BuildingEditorWindow::instance()->saveSplitterSizes(mSplitter);
+    settings.endGroup();
 }
 
 void BuildingFurnitureDock::switchTo()
