@@ -319,6 +319,10 @@ void FancyTabBar::paintTab(QPainter *painter, int tabIndex) const
 }
 
 void FancyTabBar::setCurrentIndex(int index) {
+#ifdef ZOMBOID
+    if (index == m_currentIndex)
+        return;
+#endif
     if (isTabEnabled(index)) {
         m_currentIndex = index;
         update();

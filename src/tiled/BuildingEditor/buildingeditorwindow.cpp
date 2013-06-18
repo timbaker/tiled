@@ -1051,8 +1051,6 @@ void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
 void BuildingEditorWindow::currentEditorChanged()
 {
     updateActions();
-    if (mCurrentDocumentStuff)
-        mCurrentDocumentStuff->restoreTool();
 }
 
 void BuildingEditorWindow::documentTabCloseRequested(int index)
@@ -1692,6 +1690,9 @@ void BuildingEditorWindow::currentModeChanged()
     if (!mCurrentDocument)
         return;
 
+    if (mCurrentDocumentStuff->isTile())
+        mCurrentDocument->setTileSelection(QRegion());
+
     if (ModeManager::instance().currentMode() == mOrthoObjectEditMode)
         mCurrentDocumentStuff->toOrthoObject();
     else if (ModeManager::instance().currentMode() == mIsoObjectEditMode)
@@ -1700,6 +1701,9 @@ void BuildingEditorWindow::currentModeChanged()
         mCurrentDocumentStuff->toTile();
 
     updateActions();
+
+    if (mCurrentDocumentStuff)
+        mCurrentDocumentStuff->restoreTool();
 }
 
 void BuildingEditorWindow::viewAddedForDocument(BuildingDocument *doc, BuildingIsoView *view)
