@@ -35,13 +35,14 @@ public:
     void readSettings(QSettings &settings);
     void writeSettings(QSettings &settings);
 
+    QList<QDockWidget*> dockWidgets() const;
+    QList<QToolBar*> toolBars() const;
+
 protected:
     void showEvent(QShowEvent *e);
     void hideEvent(QHideEvent *e);
     
     void handleVisibilityChange(bool visible);
-
-    QList<QDockWidget*> dockWidgets() const;
 
 private slots:
     void onDockActionTriggered();

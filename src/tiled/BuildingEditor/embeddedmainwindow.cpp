@@ -20,6 +20,7 @@
 #include <QAction>
 #include <QDockWidget>
 #include <QSettings>
+#include <QToolBar>
 
 using namespace BuildingEditor;
 
@@ -97,6 +98,17 @@ void EmbeddedMainWindow::handleVisibilityChange(bool visible)
 QList<QDockWidget *> EmbeddedMainWindow::dockWidgets() const
 {
     return findChildren<QDockWidget*>();
+}
+
+QList<QToolBar *> EmbeddedMainWindow::toolBars() const
+{
+    // Because findChildren is recursive, it will find toolbars inside dock
+    // widgets: we don't want those.
+    QList<QToolBar *> ret;
+    foreach (QToolBar *toolBar, findChildren<QToolBar*>())
+        if (toolBarArea(toolBar) != Qt::NoToolBarArea)
+            ret += toolBar;
+    return ret;
 }
 
 void EmbeddedMainWindow::onDockActionTriggered()

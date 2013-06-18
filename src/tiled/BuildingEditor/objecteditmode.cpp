@@ -537,9 +537,24 @@ void ObjectEditMode::writeSettings(QSettings &settings)
 
 void ObjectEditMode::onActiveStateChanged(bool active)
 {
+    QMenu *menu = BuildingEditorWindow::instance()->actionIface()->menuViews;
+    menu->clear();
+
     if (active) {
         if (mCurrentDocumentStuff)
             mCurrentDocumentStuff->activate();
+
+        QMap<QString,QAction*> map;
+        foreach (QDockWidget *dockWidget, mMainWindow->dockWidgets()) {
+            QAction *action = dockWidget->toggleViewAction();
+            map[action->text()] = action;
+        }
+        foreach (QAction *action, map.values())
+            menu->addAction(action);
+        menu->addSeparator();
+        foreach (QToolBar *toolBar, mMainWindow->toolBars()) {
+            menu->addAction(toolBar->toggleViewAction());
+        }
     } else {
         if (mCurrentDocumentStuff)
             mCurrentDocumentStuff->deactivate();

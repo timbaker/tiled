@@ -1667,6 +1667,8 @@ void BuildingEditorWindow::updateActions()
         ui->actionSelectNone->setEnabled(hasDoc && mCurrentDocument->selectedObjects().size());
         ui->actionDelete->setEnabled(hasDoc && mCurrentDocument->selectedObjects().size());
     }
+
+    ui->menuViews->setEnabled(ModeManager::instance().currentMode() != mWelcomeMode);
 }
 
 void BuildingEditorWindow::help()
