@@ -24,9 +24,9 @@
 #include <QToolBar>
 
 class QAction;
-class QLabel;
 class QMainWindow;
 class QTabWidget;
+class QToolButton;
 
 namespace BuildingEditor {
 
@@ -55,7 +55,7 @@ private slots:
 
 public:
     BuildingDocument *mCurrentDocument;
-    QLabel *mFloorLabel;
+    QToolButton *mFloorLabel;
 };
 
 class TileEditMode : public IMode

@@ -37,7 +37,6 @@
 #include <QAction>
 #include <QComboBox>
 #include <QDir>
-#include <QLabel>
 #include <QMainWindow>
 #include <QStackedWidget>
 #include <QTabWidget>
@@ -80,15 +79,20 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
     mRoomComboBox = new QComboBox;
     mRoomComboBox->setIconSize(QSize(20, 20));
     mRoomComboBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+
     addWidget(mRoomComboBox);
     addAction(actions->actionRooms);
     connect(mRoomComboBox, SIGNAL(currentIndexChanged(int)),
             SLOT(roomIndexChanged(int)));
 
-    mFloorLabel = new QLabel;
-    mFloorLabel->setText(tr("Ground Floor"));
+    mFloorLabel = new QToolButton;
     mFloorLabel->setMinimumWidth(90);
-    mFloorLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    mFloorLabel->setAutoRaise(true);
+    mFloorLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
+    mFloorLabel->setToolTip(tr("Click to edit floors"));
+    connect(mFloorLabel, SIGNAL(clicked()),
+            BuildingEditorWindow::instance(), SLOT(floorsDialog()));
+
     addSeparator();
     addWidget(mFloorLabel);
     addAction(actions->actionUpLevel);
@@ -302,7 +306,8 @@ void ObjectEditModeToolBar::updateActions()
                              .arg(mCurrentDocument->currentLevel() + 1)
                              .arg(mCurrentDocument->building()->floorCount()));
     else
-        mFloorLabel->clear();
+        mFloorLabel->setText(QString());
+    mFloorLabel->setEnabled(mCurrentDocument != 0);
 }
 
 /////

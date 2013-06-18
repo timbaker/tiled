@@ -37,11 +37,11 @@
 #include <QAction>
 #include <QComboBox>
 #include <QDir>
-#include <QLabel>
 #include <QMainWindow>
 #include <QStackedWidget>
 #include <QTabWidget>
 #include <QToolBar>
+#include <QToolButton>
 #include <QUndoStack>
 #include <QVBoxLayout>
 
@@ -53,15 +53,18 @@ using namespace BuildingEditor;
 
 TileEditModeToolBar::TileEditModeToolBar(QWidget *parent) :
     QToolBar(parent),
-    mCurrentDocument(0),
-    mFloorLabel(new QLabel)
+    mCurrentDocument(0)
 {
     setObjectName(QString::fromUtf8("TileEditModeToolBar"));
     setWindowTitle(tr("Tile ToolBar"));
 
-    mFloorLabel->setText(tr("Ground Floor"));
+    mFloorLabel = new QToolButton;
     mFloorLabel->setMinimumWidth(90);
-    mFloorLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    mFloorLabel->setAutoRaise(true);
+    mFloorLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
+    mFloorLabel->setToolTip(tr("Click to edit floors"));
+    connect(mFloorLabel, SIGNAL(clicked()),
+            BuildingEditorWindow::instance(), SLOT(floorsDialog()));
 
     addAction(BuildingEditorWindow::instance()->actionIface()->actionDrawTiles);
     addAction(BuildingEditorWindow::instance()->actionIface()->actionSelectTiles);
@@ -96,14 +99,13 @@ void TileEditModeToolBar::currentDocumentChanged(BuildingDocument *doc)
 
 void TileEditModeToolBar::updateActions()
 {
-//    bool hasDoc = mCurrentDocument != 0;
-
     if (mCurrentDocument)
         mFloorLabel->setText(tr("Floor %1/%2")
                              .arg(mCurrentDocument->currentLevel() + 1)
                              .arg(mCurrentDocument->building()->floorCount()));
     else
-        mFloorLabel->clear();
+        mFloorLabel->setText(QString());
+    mFloorLabel->setEnabled(mCurrentDocument != 0);
 }
 
 /////

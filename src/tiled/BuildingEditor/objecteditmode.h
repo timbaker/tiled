@@ -25,7 +25,6 @@
 class QAction;
 class QComboBox;
 class QGraphicsView;
-class QLabel;
 class QMainWindow;
 class QTabWidget;
 

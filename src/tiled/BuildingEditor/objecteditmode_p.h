@@ -7,7 +7,7 @@
 class QComboBox;
 class QGraphicsScene;
 class QGraphicsView;
-class QLabel;
+class QToolButton;
 class QStackedWidget;
 
 namespace Tiled {
@@ -60,7 +60,7 @@ private slots:
 private:
     BuildingDocument *mCurrentDocument;
     QComboBox *mRoomComboBox;
-    QLabel *mFloorLabel;
+    QToolButton *mFloorLabel;
 };
 
 class ObjectEditModePerDocumentStuff : public QObject
