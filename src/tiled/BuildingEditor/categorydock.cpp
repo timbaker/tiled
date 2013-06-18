@@ -135,7 +135,7 @@ CategoryDock::CategoryDock(QWidget *parent) :
 
     QIcon clearIcon(QLatin1String(":/images/16x16/edit-clear.png"));
     mActionClearUsed->setIcon(clearIcon);
-    mActionClearUsed->setText(tr("Clean-up"));
+    mActionClearUsed->setText(tr("Remove unused entries"));
     connect(mActionClearUsed, SIGNAL(triggered()), SLOT(resetUsedTiles()));
     mUsedContextMenu->addAction(mActionClearUsed);
 
