@@ -914,9 +914,17 @@ void CategoryDock::resetUsedTiles()
             }
         }
     }
-    BuildingTileEntry *entry = building->exteriorWall();
-    if (entry && !entry->isNone() && !entries.contains(entry))
-        entries += entry;
+
+    if (BuildingTileEntry *entry = building->exteriorWall()) {
+        if (!entry->isNone() && !entries.contains(entry))
+            entries += entry;
+    }
+
+    if (BuildingTileEntry *entry = building->tile(Building::GrimeWall)) {
+        if (!entry->isNone() && !entries.contains(entry))
+            entries += entry;
+    }
+
     foreach (Room *room, building->rooms()) {
         foreach (BuildingTileEntry *entry, room->tiles()) {
             if (entry && !entry->isNone() && !entries.contains(entry))
