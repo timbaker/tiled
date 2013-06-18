@@ -17,7 +17,10 @@
 
 #include "imode.h"
 
+#include "buildingeditorwindow.h"
 #include "fancytabwidget.h"
+
+#include <QAction>
 
 using namespace BuildingEditor;
 
@@ -55,7 +58,6 @@ ModeManager::ModeManager(Core::Internal::FancyTabWidget *tabWidget, QObject *par
 {
     connect(mTabWidget, SIGNAL(currentAboutToShow(int)), SLOT(currentTabAboutToChange(int)));
     connect(mTabWidget, SIGNAL(currentChanged(int)), SLOT(currentTabChanged(int)));
-
 }
 
 void ModeManager::addMode(IMode *mode)
@@ -65,7 +67,19 @@ void ModeManager::addMode(IMode *mode)
     mTabWidget->insertTab(mModes.size() - 1, mode->widget(), mode->icon(), mode->displayName());
     mTabWidget->setTabEnabled(mModes.size() - 1, mode->isEnabled());
 
+    QKeySequence key(QString::fromLatin1("F%1").arg(mModes.size()));
+    QAction *action = new QAction(this);
+    action->setShortcut(key);
+    mActions += action;
+    connect(action, SIGNAL(triggered()), SLOT(modeActionTriggered()));
+    action->setWhatsThis(tr("<p style='white-space:pre'>Switch to <b>%1</b> mode").arg(mode->displayName()));
+    mTabWidget->setTabToolTip(mModes.size() - 1,
+                              QString::fromLatin1("%1\n<span style=\"color: gray; font-size: small\">%2</span>")
+                              .arg(action->whatsThis()).arg(key.toString(QKeySequence::NativeText)));
+
     connect(mode, SIGNAL(enabledStateChanged(bool)), SLOT(enabledStateChanged(bool)));
+
+    BuildingEditorWindow::instance()->addAction(action);
 }
 
 void ModeManager::setCurrentMode(IMode *mode)
@@ -102,6 +116,7 @@ void ModeManager::enabledStateChanged(bool enabled)
     IMode *mode = qobject_cast<IMode*>(sender());
     int index = mModes.indexOf(mode);
     mTabWidget->setTabEnabled(index, enabled);
+    mActions[index]->setEnabled(enabled);
 
     if (mode == currentMode() && !enabled) {
         for (int i = 0; i < mModes.size(); i++) {
@@ -111,4 +126,11 @@ void ModeManager::enabledStateChanged(bool enabled)
             }
         }
     }
+}
+
+void ModeManager::modeActionTriggered()
+{
+    QAction *action = qobject_cast<QAction*>(sender());
+    int index = mActions.indexOf(action);
+    setCurrentMode(mModes[index]);
 }

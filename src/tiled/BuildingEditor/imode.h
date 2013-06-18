@@ -23,6 +23,7 @@
 #include <QObject>
 #include <QIcon>
 
+class QAction;
 class QSettings;
 
 namespace Core {
@@ -88,11 +89,13 @@ private slots:
     void currentTabAboutToChange(int index);
     void currentTabChanged(int index);
     void enabledStateChanged(bool enabled);
+    void modeActionTriggered();
 
 private:
     Core::Internal::FancyTabWidget *mTabWidget;
     QList<IMode*> mModes;
     IMode *mCurrentMode;
+    QList<QAction*> mActions;
 };
 
 } // namespace BuildingEditor
