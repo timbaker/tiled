@@ -16,7 +16,7 @@
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QGridLayout" name="gridLayout">
     <property name="margin">
-     <number>4</number>
+     <number>5</number>
     </property>
     <item row="0" column="0">
      <widget class="Tiled::Internal::WorldEdView" name="view"/>
