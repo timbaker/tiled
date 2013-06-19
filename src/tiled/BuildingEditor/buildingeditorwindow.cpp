@@ -429,6 +429,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     readSettings();
 
     updateActions();
+    updateWindowTitle();
 }
 
 BuildingEditorWindow::~BuildingEditorWindow()
@@ -1091,6 +1092,11 @@ void BuildingEditorWindow::clearDocument()
 
 void BuildingEditorWindow::updateWindowTitle()
 {
+    if (ModeManager::instance().currentMode() == mWelcomeMode) {
+        setWindowTitle(tr("BuildingEd"));
+        return;
+    }
+
     QString fileName = mCurrentDocument ? mCurrentDocument->fileName() : QString();
     if (fileName.isEmpty())
         fileName = tr("Untitled");
@@ -1705,6 +1711,7 @@ void BuildingEditorWindow::currentModeChanged()
         mCurrentDocumentStuff->toTile();
 
     updateActions();
+    updateWindowTitle();
 
     if (mCurrentDocumentStuff)
         mCurrentDocumentStuff->restoreTool();
