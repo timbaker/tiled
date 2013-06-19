@@ -346,11 +346,12 @@ void ObjectEditModePerDocumentStuff::activate()
 
 //    connect(document(), SIGNAL(cleanChanged()), SLOT(updateWindowTitle()));
 
-    connect(BuildingEditorWindow::instance()->actionIface()->actionZoomIn, SIGNAL(triggered()),
+    Ui::BuildingEditorWindow *actions = BuildingEditorWindow::instance()->actionIface();
+    connect(actions->actionZoomIn, SIGNAL(triggered()),
             SLOT(zoomIn()));
-    connect(BuildingEditorWindow::instance()->actionIface()->actionZoomOut, SIGNAL(triggered()),
+    connect(actions->actionZoomOut, SIGNAL(triggered()),
             SLOT(zoomOut()));
-    connect(BuildingEditorWindow::instance()->actionIface()->actionNormalSize, SIGNAL(triggered()),
+    connect(actions->actionNormalSize, SIGNAL(triggered()),
             SLOT(zoomNormal()));
 }
 
@@ -362,9 +363,15 @@ void ObjectEditModePerDocumentStuff::deactivate()
     view()->disconnect(mMode->mStatusBar);
     zoomable()->disconnect(this);
 //    zoomable()->disconnect(mMode); /////
-    BuildingEditorWindow::instance()->actionIface()->actionZoomIn->disconnect(this);
-    BuildingEditorWindow::instance()->actionIface()->actionZoomOut->disconnect(this);
-    BuildingEditorWindow::instance()->actionIface()->actionNormalSize->disconnect(this);
+
+    Ui::BuildingEditorWindow *actions = BuildingEditorWindow::instance()->actionIface();
+    actions->actionZoomIn->disconnect(this);
+    actions->actionZoomOut->disconnect(this);
+    actions->actionNormalSize->disconnect(this);
+
+    actions->actionZoomIn->setEnabled(false);
+    actions->actionZoomOut->setEnabled(false);
+    actions->actionNormalSize->setEnabled(false);
 }
 
 void ObjectEditModePerDocumentStuff::updateDocumentTab()
