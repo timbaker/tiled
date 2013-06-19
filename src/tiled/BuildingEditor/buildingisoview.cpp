@@ -1071,6 +1071,10 @@ void BuildingIsoScene::mapResized()
 {
     // Building object positions will change when the map size changes.
     BuildingBaseScene::mapResized();
+
+    // TileModeGridItem::mBoundingRect needs updating.
+    if (mGridItem)
+        mGridItem->synchWithBuilding();
 }
 
 void BuildingIsoScene::layersUpdated(int level, const QRegion &rgn)
