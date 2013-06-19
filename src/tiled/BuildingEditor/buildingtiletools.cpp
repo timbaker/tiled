@@ -603,7 +603,7 @@ PickTileTool *PickTileTool::instance()
 PickTileTool::PickTileTool() :
     BaseTool()
 {
-
+    setStatusText(tr("Left-click to pick a tile and display it in the Tileset Dock."));
 }
 
 void PickTileTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
