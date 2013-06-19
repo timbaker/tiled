@@ -356,6 +356,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->actionShowObjects->setChecked(prefs->showObjects());
     connect(ui->actionShowObjects, SIGNAL(toggled(bool)),
             prefs, SLOT(setShowObjects(bool)));
+    connect(prefs, SIGNAL(showObjectsChanged(bool)),
+            SLOT(showObjectsChanged(bool)));
 
     QList<QKeySequence> keys = QKeySequence::keyBindings(QKeySequence::ZoomIn);
     keys += QKeySequence(tr("Ctrl+="));
