@@ -87,6 +87,7 @@ CategoryDock::CategoryDock(QWidget *parent) :
     ui->categorySplitter = new QSplitter;
     ui->categorySplitter->setObjectName(QLatin1String("CategoryDock.splitter"));
     ui->categorySplitter->setOrientation(Qt::Vertical);
+    ui->categorySplitter->setChildrenCollapsible(false);
     ui->categorySplitter->addWidget(ui->categoryList);
     ui->categorySplitter->addWidget(ui->categoryStack);
     ui->categorySplitter->setSizes(QList<int>() << 128 << 256);
