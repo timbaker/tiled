@@ -140,8 +140,8 @@ tolua_lerror:
 /////
 
 LuaScript::LuaScript(Map *map) :
-    mMap(map),
-    L(0)
+    L(0),
+    mMap(map)
 {
 }
 
@@ -339,12 +339,12 @@ void LuaTileLayer::erase(int x, int y, int width, int height)
     fill(QRect(x, y, width, height), 0);
 }
 
-void LuaTileLayer::erase(QRect &r)
+void LuaTileLayer::erase(const QRect &r)
 {
     fill(r, 0);
 }
 
-void LuaTileLayer::erase(LuaRegion &rgn)
+void LuaTileLayer::erase(const LuaRegion &rgn)
 {
     fill(rgn, 0);
 }
@@ -359,19 +359,19 @@ void LuaTileLayer::fill(int x, int y, int width, int height, Tile *tile)
     fill(QRect(x, y, width, height), tile);
 }
 
-void LuaTileLayer::fill(QRect &r, Tile *tile)
+void LuaTileLayer::fill(const QRect &r, Tile *tile)
 {
     initClone();
-    r &= mClone->bounds();
-    for (int y = r.y(); y <= r.bottom(); y++) {
-        for (int x = r.x(); x <= r.right(); x++) {
+    QRect r2 = r & mClone->bounds();
+    for (int y = r2.y(); y <= r2.bottom(); y++) {
+        for (int x = r2.x(); x <= r2.right(); x++) {
             mCloneTileLayer->setCell(x, y, Cell(tile));
         }
     }
-    mAltered += r;
+    mAltered += r2;
 }
 
-void LuaTileLayer::fill(LuaRegion &rgn, Tile *tile)
+void LuaTileLayer::fill(const LuaRegion &rgn, Tile *tile)
 {
     foreach (QRect r, rgn.rects()) {
         fill(r, tile);
@@ -714,7 +714,7 @@ bool LuaMapBmp::contains(int x, int y)
     return QRect(0, 0, mBmp.width(), mBmp.height()).contains(x, y);
 }
 
-void LuaMapBmp::setPixel(int x, int y, LuaColor &c)
+void LuaMapBmp::setPixel(int x, int y, const LuaColor &c)
 {
     if (!contains(x, y)) return; // error!
     mBmp.setPixel(x, y, c.pixel);
@@ -732,12 +732,12 @@ void LuaMapBmp::erase(int x, int y, int width, int height)
     fill(x, y, width, height, LuaColor());
 }
 
-void LuaMapBmp::erase(QRect &r)
+void LuaMapBmp::erase(const QRect &r)
 {
     fill(r, LuaColor());
 }
 
-void LuaMapBmp::erase(LuaRegion &rgn)
+void LuaMapBmp::erase(const LuaRegion &rgn)
 {
     fill(rgn, LuaColor());
 }
@@ -747,36 +747,36 @@ void LuaMapBmp::erase()
     fill(LuaColor());
 }
 
-void LuaMapBmp::fill(int x, int y, int width, int height, LuaColor &c)
+void LuaMapBmp::fill(int x, int y, int width, int height, const LuaColor &c)
 {
     fill(QRect(x, y, width, height), c);
 }
 
-void LuaMapBmp::fill(QRect &r, LuaColor &c)
+void LuaMapBmp::fill(const QRect &r, const LuaColor &c)
 {
-    r &= QRect(0, 0, mBmp.width(), mBmp.height());
+    QRect r2 = r & QRect(0, 0, mBmp.width(), mBmp.height());
 
-    for (int y = r.y(); y <= r.bottom(); y++) {
-        for (int x = r.x(); x <= r.right(); x++) {
+    for (int y = r2.y(); y <= r2.bottom(); y++) {
+        for (int x = r2.x(); x <= r2.right(); x++) {
             mBmp.setPixel(x, y, c.pixel);
         }
     }
 
-    mAltered += r;
+    mAltered += r2;
 }
 
-void LuaMapBmp::fill(LuaRegion &rgn, LuaColor &c)
+void LuaMapBmp::fill(const LuaRegion &rgn, const LuaColor &c)
 {
     foreach (QRect r, rgn.rects())
         fill(r, c);
 }
 
-void LuaMapBmp::fill(LuaColor &c)
+void LuaMapBmp::fill(const LuaColor &c)
 {
     fill(QRect(0, 0, mBmp.width(), mBmp.height()), c);
 }
 
-void LuaMapBmp::replace(LuaColor &oldColor, LuaColor &newColor)
+void LuaMapBmp::replace(const LuaColor &oldColor, const LuaColor &newColor)
 {
     for (int y = 0; y < mBmp.height(); y++) {
         for (int x = 0; x < mBmp.width(); x++) {

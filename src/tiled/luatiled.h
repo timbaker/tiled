@@ -129,13 +129,13 @@ public:
     void clearTile(int x, int y);
 
     void erase(int x, int y, int width, int height);
-    void erase(QRect &r);
-    void erase(LuaRegion &rgn);
+    void erase(const QRect &r);
+    void erase(const LuaRegion &rgn);
     void erase();
 
     void fill(int x, int y, int width, int height, Tile *tile);
-    void fill(QRect &r, Tile *tile);
-    void fill(LuaRegion &rgn, Tile *tile);
+    void fill(const QRect &r, Tile *tile);
+    void fill(const LuaRegion &rgn, Tile *tile);
     void fill(Tile *tile);
 
     void replaceTile(Tile *oldTile, Tile *newTile);
@@ -191,20 +191,20 @@ public:
 
     bool contains(int x, int y);
 
-    void setPixel(int x, int y, LuaColor &c);
+    void setPixel(int x, int y, const LuaColor &c);
     unsigned int pixel(int x, int y);
 
     void erase(int x, int y, int width, int height);
-    void erase(QRect &r);
-    void erase(LuaRegion &rgn);
+    void erase(const QRect &r);
+    void erase(const LuaRegion &rgn);
     void erase();
 
-    void fill(int x, int y, int width, int height, LuaColor &c);
-    void fill(QRect &r, LuaColor &c);
-    void fill(LuaRegion &rgn, LuaColor &c);
-    void fill(LuaColor &c);
+    void fill(int x, int y, int width, int height, const LuaColor &c);
+    void fill(const QRect &r, const LuaColor &c);
+    void fill(const LuaRegion &rgn, const LuaColor &c);
+    void fill(const LuaColor &c);
 
-    void replace(LuaColor &oldColor, LuaColor &newColor);
+    void replace(const LuaColor &oldColor, const LuaColor &newColor);
 
     MapBmp &mBmp;
     QRegion mAltered;

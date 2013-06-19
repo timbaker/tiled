@@ -55,13 +55,13 @@ using namespace BuildingEditor;
 CategoryDock::CategoryDock(QWidget *parent) :
     QDockWidget(parent),
     mCurrentDocument(0),
-    mCategoryZoomable(new Tiled::Internal::Zoomable(this)),
     mCategory(0),
     mFurnitureGroup(0),
-    mSynching(false),
     mInitialCategoryViewSelectionEvent(false),
+    mCategoryZoomable(new Tiled::Internal::Zoomable(this)),
     mUsedContextMenu(new QMenu(this)),
     mActionClearUsed(new QAction(this)),
+    mSynching(false),
     ui(&_ui)
 {
     setObjectName(QLatin1String("CategoryDock"));

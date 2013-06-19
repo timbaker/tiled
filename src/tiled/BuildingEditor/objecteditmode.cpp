@@ -465,9 +465,9 @@ Tiled::Internal::Zoomable *IsoObjectEditModePerDocumentStuff::zoomable() const
 
 ObjectEditMode::ObjectEditMode(QObject *parent) :
     IMode(parent),
+    mCategoryDock(new CategoryDock),
     mCurrentDocument(0),
-    mCurrentDocumentStuff(0),
-    mCategoryDock(new CategoryDock)
+    mCurrentDocumentStuff(0)
 {
     mMainWindow = new EmbeddedMainWindow;
     mMainWindow->setObjectName(QLatin1String("ObjectEditMode.Widget"));

@@ -38,7 +38,7 @@ public:
 
     static void deleteInstance()
     {
-        delete T;
+        delete mInstance;
     }
 
     Singleton()
@@ -55,6 +55,6 @@ protected:
     static T *mInstance;
 };
 
-#define SINGLETON_IMPL(T) T *Singleton<T>::mInstance = 0;
+#define SINGLETON_IMPL(T) template<> T *Singleton<T>::mInstance = 0;
 
 #endif // SINGLETON_H

@@ -1532,6 +1532,15 @@ bool TileDefDialog::loadTilesetImage(Tileset *ts, const QString &source)
 }
 #endif
 
+struct ResizedTileset {
+    ResizedTileset(const QString &name, const QSize &oldSize, const QSize &newSize) :
+        name(name), oldSize(oldSize), newSize(newSize)
+    {}
+    QString name;
+    QSize oldSize;
+    QSize newSize;
+};
+
 void TileDefDialog::tilesDirChanged()
 {
     mRemovedTilesets += mTilesets;
@@ -1539,15 +1548,6 @@ void TileDefDialog::tilesDirChanged()
     mTilesetByName.clear();
 
     QDir dir(tilesDir());
-
-    struct ResizedTileset {
-        ResizedTileset(const QString &name, const QSize &oldSize, const QSize &newSize) :
-            name(name), oldSize(oldSize), newSize(newSize)
-        {}
-        QString name;
-        QSize oldSize;
-        QSize newSize;
-    };
 
     QList<ResizedTileset> resized;
 

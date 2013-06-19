@@ -804,7 +804,7 @@ bool BuildingEditorWindow::confirmSave()
         return true;
 
     if (isMinimized())
-        setWindowState(windowState() & ~Qt::WindowMinimized | Qt::WindowActive);
+        setWindowState(windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
 
     int ret = QMessageBox::warning(
             this, tr("Unsaved Changes"),

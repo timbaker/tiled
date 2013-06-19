@@ -73,6 +73,7 @@ void WorldLotTool::activate(MapScene *scene)
 
 void WorldLotTool::deactivate(MapScene *scene)
 {
+    Q_UNUSED(scene)
     if (mHoverItem) {
         delete mHoverItem;
         mHoverItem = 0;
@@ -131,6 +132,7 @@ void WorldLotTool::mousePressed(QGraphicsSceneMouseEvent *event)
 
 void WorldLotTool::mouseReleased(QGraphicsSceneMouseEvent *event)
 {
+    Q_UNUSED(event)
 }
 
 void WorldLotTool::languageChanged()
