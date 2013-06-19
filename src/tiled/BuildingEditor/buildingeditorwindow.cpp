@@ -295,7 +295,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     undoAction->setShortcuts(QKeySequence::Undo);
     redoAction->setShortcuts(QKeySequence::Redo);
     QIcon undoIcon(QLatin1String(":images/16x16/edit-undo.png"));
+    undoIcon.addFile(QLatin1String(":images/24x24/edit-undo.png"));
     QIcon redoIcon(QLatin1String(":images/16x16/edit-redo.png"));
+    redoIcon.addFile(QLatin1String(":images/24x24/edit-redo.png"));
     undoAction->setIcon(undoIcon);
     redoAction->setIcon(redoIcon);
     Tiled::Utils::setThemeIcon(undoAction, "edit-undo");
@@ -303,6 +305,16 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     ui->menuEdit->insertAction(ui->menuEdit->actions().at(0), undoAction);
     ui->menuEdit->insertAction(ui->menuEdit->actions().at(1), redoAction);
     ui->menuEdit->insertSeparator(ui->menuEdit->actions().at(2));
+
+    QIcon newIcon = ui->actionNewBuilding->icon();
+    QIcon openIcon = ui->actionOpen->icon();
+    QIcon saveIcon = ui->actionSave->icon();
+    newIcon.addFile(QLatin1String(":images/24x24/document-new.png"));
+    openIcon.addFile(QLatin1String(":images/24x24/document-open.png"));
+    saveIcon.addFile(QLatin1String(":images/24x24/document-save.png"));
+    ui->actionNewBuilding->setIcon(newIcon);
+    ui->actionOpen->setIcon(openIcon);
+    ui->actionSave->setIcon(saveIcon);
 
     ui->actionCut->setShortcuts(QKeySequence::Cut);
     ui->actionCopy->setShortcuts(QKeySequence::Copy);
@@ -629,6 +641,20 @@ void BuildingEditorWindow::restoreSplitterSizes(QSplitter *splitter)
         splitter->setSizes(sizes);
     }
 //    mSettings.endGroup();
+}
+
+QToolBar *BuildingEditorWindow::createCommonToolBar()
+{
+    QToolBar *toolBar = new QToolBar;
+    toolBar->setWindowTitle(tr("Main ToolBar"));
+    toolBar->addAction(ui->actionNewBuilding);
+    toolBar->addAction(ui->actionOpen);
+    toolBar->addAction(ui->actionSave);
+    toolBar->addAction(ui->actionSaveAs);
+    toolBar->addSeparator();
+    toolBar->addAction(ui->menuEdit->actions().at(0)); // undo
+    toolBar->addAction(ui->menuEdit->actions().at(1)); // redo
+    return toolBar;
 }
 
 void BuildingEditorWindow::upLevel()

@@ -498,7 +498,11 @@ ObjectEditMode::ObjectEditMode(QObject *parent) :
     w->setObjectName(QLatin1String("ObjectEditMode.VBoxWidget"));
     w->setLayout(vbox);
 
+    QToolBar *commonToolBar = BuildingEditorWindow::instance()->createCommonToolBar();
+    commonToolBar->setObjectName(QLatin1String("ObjectEditMode.CommonToolBar"));
+
     mMainWindow->setCentralWidget(w);
+    mMainWindow->addToolBar(commonToolBar);
     mMainWindow->addToolBar(mToolBar);
     mMainWindow->registerDockWidget(mCategoryDock);
     mMainWindow->addDockWidget(Qt::RightDockWidgetArea, mCategoryDock);

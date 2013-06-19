@@ -265,7 +265,11 @@ TileEditMode::TileEditMode(QObject *parent) :
     w->setObjectName(QString::fromUtf8("TileEditMode.VBoxWidget"));
     w->setLayout(vbox);
 
+    QToolBar *commonToolBar = BuildingEditorWindow::instance()->createCommonToolBar();
+    commonToolBar->setObjectName(QLatin1String("TileEditMode.CommonToolBar"));
+
     mMainWindow->setCentralWidget(w);
+    mMainWindow->addToolBar(commonToolBar);
     mMainWindow->addToolBar(mToolBar);
     mMainWindow->registerDockWidget(mLayersDock);
     mMainWindow->registerDockWidget(mTilesetDock);

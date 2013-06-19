@@ -183,6 +183,7 @@ public:
     void hackUpdateActions() { updateActions(); } // FIXME
 
     Ui::BuildingEditorWindow *actionIface() { return ui; }
+    QToolBar *createCommonToolBar();
 
     void documentTabCloseRequested(int index);
 
