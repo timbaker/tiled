@@ -478,6 +478,9 @@
    <property name="text">
     <string>Show Objects</string>
    </property>
+   <property name="shortcut">
+    <string>O</string>
+   </property>
   </action>
   <action name="actionWall">
    <property name="checkable">
