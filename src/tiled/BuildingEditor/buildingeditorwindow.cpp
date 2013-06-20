@@ -832,6 +832,9 @@ bool BuildingEditorWindow::confirmSave()
     if (!mCurrentDocument || !mCurrentDocument->isModified())
         return true;
 
+    if (ModeManager::instance().currentMode() == mWelcomeMode)
+        ModeManager::instance().setCurrentMode(mIsoObjectEditMode);
+
     if (isMinimized())
         setWindowState(windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
 
