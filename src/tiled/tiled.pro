@@ -217,7 +217,8 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/fancytabwidget.cpp \
     BuildingEditor/utils/stylehelper.cpp \
     BuildingEditor/utils/styledbar.cpp \
-    BuildingEditor/welcomemode.cpp
+    BuildingEditor/welcomemode.cpp \
+    BuildingEditor/buildingroomdef.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -401,7 +402,8 @@ HEADERS += aboutdialog.h \
     BuildingEditor/utils/stylehelper.h \
     BuildingEditor/utils/styledbar.h \
     BuildingEditor/utils/hostosinfo.h \
-    BuildingEditor/welcomemode.h
+    BuildingEditor/welcomemode.h \
+    BuildingEditor/buildingroomdef.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
