@@ -502,7 +502,7 @@ ObjectEditMode::ObjectEditMode(QObject *parent) :
     commonToolBar->setObjectName(QLatin1String("ObjectEditMode.CommonToolBar"));
 
     mMainWindow->setCentralWidget(w);
-    mMainWindow->addToolBar(commonToolBar);
+    mMainWindow->addToolBar(Qt::LeftToolBarArea, commonToolBar);
     mMainWindow->addToolBar(mToolBar);
     mMainWindow->registerDockWidget(mCategoryDock);
     mMainWindow->addDockWidget(Qt::RightDockWidgetArea, mCategoryDock);
