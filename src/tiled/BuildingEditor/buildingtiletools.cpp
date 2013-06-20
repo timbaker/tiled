@@ -551,6 +551,7 @@ void SelectTileTool::updateCursor(const QPointF &scenePos, bool force)
         mCursor = new DrawTileToolCursor(mEditor);
         mCursor->setZValue(mEditor->ZVALUE_CURSOR);
     }
+    mCursor->setEditor(mEditor);
 
     if (mMouseDown) {
         mCursorTileBounds = QRect(QPoint(qMin(mStartTilePos.x(), tilePos.x()),
