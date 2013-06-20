@@ -172,6 +172,8 @@ void ObjectEditModeToolBar::currentDocumentChanged(BuildingDocument *doc)
         connect(mCurrentDocument, SIGNAL(roomsReordered()), SLOT(roomsReordered()));
         connect(mCurrentDocument, SIGNAL(roomChanged(Room*)), SLOT(roomChanged(Room*)));
 
+        connect(mCurrentDocument, SIGNAL(currentRoomChanged()), SLOT(currentRoomChanged()));
+
         connect(mCurrentDocument, SIGNAL(floorAdded(BuildingFloor*)),
                 SLOT(updateActions()));
         connect(mCurrentDocument, SIGNAL(floorRemoved(BuildingFloor*)),
