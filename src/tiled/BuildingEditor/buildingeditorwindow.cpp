@@ -1083,6 +1083,10 @@ void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
 void BuildingEditorWindow::currentEditorChanged()
 {
     updateActions();
+
+    // This is needed only when the mode didn't change.
+    if (mCurrentDocumentStuff)
+        mCurrentDocumentStuff->restoreTool();
 }
 
 void BuildingEditorWindow::documentTabCloseRequested(int index)
