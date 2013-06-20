@@ -605,8 +605,8 @@ void SelectMoveRoomsTool::updateStatusText()
         setStatusText(tr("CTRL moves rooms on all floors.  SHIFT moves objects as well.  Right-click to cancel."));
     } else if (mMode == Selecting) {
         setStatusText(tr("Width,Height=%1,%2")
-                      .arg(mSelectionItem->boundingRect().width())
-                      .arg(mSelectionItem->boundingRect().height()));
+                      .arg(mSelectedArea.boundingRect().width())
+                      .arg(mSelectedArea.boundingRect().height()));
     } else if (mMouseOverSelection) {
         setStatusText(tr("Left-click-drag selection to move rooms."));
     } else {
