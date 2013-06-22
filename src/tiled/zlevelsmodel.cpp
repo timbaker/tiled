@@ -249,6 +249,8 @@ void ZLevelsModel::setMapDocument(MapDocument *mapDocument)
     if (mMapDocument)
         mMapDocument->disconnect(this);
 
+    beginResetModel();
+
     mMapDocument = mapDocument;
     mMap = 0;
 
@@ -275,7 +277,7 @@ void ZLevelsModel::setMapDocument(MapDocument *mapDocument)
             new Item(createLevelItemIfNeeded(layer->level()), 0, layer);
     }
 
-    reset();
+    endResetModel();
 }
 
 QList<int> ZLevelsModel::levels() const

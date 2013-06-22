@@ -713,7 +713,12 @@ void MiniMapItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
         painter->drawImage(target, mMapImage, source);
     }
 #ifndef QT_NO_DEBUG
-    painter->drawRect(mMapImageBounds);
+#if QT_VERSION >= 0x050000
+    QPen pen(painter->pen());
+    pen.setCosmetic(true);
+    painter->setPen(pen);
+#endif
+        painter->drawRect(mMapImageBounds);
 #endif
 }
 
@@ -1039,7 +1044,13 @@ MiniMap::MiniMap(MapView *parent)
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     mViewportItem = new QGraphicsPolygonItem();
+#if QT_VERSION >= 0x050000
+    QPen pen(Qt::white);
+    pen.setCosmetic(true);
+    mViewportItem->setPen(pen);
+#else
     mViewportItem->setPen(QPen(Qt::white));
+#endif
     mViewportItem->setZValue(100);
     scene->addItem(mViewportItem);
 

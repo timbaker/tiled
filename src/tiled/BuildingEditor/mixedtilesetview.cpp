@@ -368,12 +368,20 @@ void MixedTilesetView::init()
 
     QHeaderView *header = horizontalHeader();
     header->hide();
+#if QT_VERSION >= 0x050000
+    header->setSectionResizeMode(QHeaderView::ResizeToContents);
+#else
     header->setResizeMode(QHeaderView::ResizeToContents);
+#endif
     header->setMinimumSectionSize(1);
 
     header = verticalHeader();
     header->hide();
+#if QT_VERSION >= 0x050000
+    header->setSectionResizeMode(QHeaderView::ResizeToContents);
+#else
     header->setResizeMode(QHeaderView::ResizeToContents);
+#endif
     header->setMinimumSectionSize(1);
 
     // Hardcode this view on 'left to right' since it doesn't work properly
@@ -621,6 +629,8 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
                                  const QList<void *> &userData,
                                  const QStringList &headers)
 {
+    beginResetModel();
+
     mTiles = tiles;
     mUserData = userData;
     mTileset = 0;
@@ -660,13 +670,15 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
     foreach (Item *item, mItems)
         item->mIndex = index++;
 
-    reset();
+    endResetModel();
 }
 
 void MixedTilesetModel::setTileset(Tileset *tileset,
                                    const QList<void*> &userData,
                                    const QStringList &labels)
 {
+    beginResetModel();
+
     mTiles.clear();
     mTileset = tileset;
     for (int i = 0; i < mTileset->tileCount(); i++)
@@ -705,7 +717,7 @@ void MixedTilesetModel::setTileset(Tileset *tileset,
     foreach (Item *item, mItems)
         item->mIndex = index++;
 
-    reset();
+    endResetModel();
 }
 
 Tile *MixedTilesetModel::tileAt(const QModelIndex &index) const
@@ -828,8 +840,9 @@ void MixedTilesetModel::setToolTip(int tileIndex, const QString &text)
 
 void MixedTilesetModel::setColumnCount(int count)
 {
+    beginResetModel();
     mColumnCount = count;
-    reset();
+    endResetModel();
 }
 
 MixedTilesetModel::Item *MixedTilesetModel::toItem(const QModelIndex &index) const

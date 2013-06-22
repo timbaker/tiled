@@ -315,7 +315,12 @@ void ZLevelsView::setMapDocument(MapDocument *mapDoc)
     if (mMapDocument) {
         setModel(mModel = mMapDocument->levelsModel());
         model()->setMapDocument(mapDoc);
-        header()->setResizeMode(0, QHeaderView::Stretch); // 2 equal-sized columns, user can't adjust
+        // 2 equal-sized columns, user can't adjust
+#if QT_VERSION >= 0x050000
+        header()->setSectionResizeMode(0, QHeaderView::Stretch);
+#else
+        header()->setResizeMode(0, QHeaderView::Stretch);
+#endif
 
         connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
                 this, SLOT(currentLayerIndexChanged(int)));

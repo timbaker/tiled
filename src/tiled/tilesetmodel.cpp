@@ -141,8 +141,9 @@ void TilesetModel::setTileset(Tileset *tileset)
 {
     if (mTileset == tileset)
         return;
+    beginResetModel();
     mTileset = tileset;
-    reset();
+    endResetModel();
 }
 
 #ifdef ZOMBOID
@@ -151,7 +152,7 @@ void TilesetModel::tileLayerNameChanged(Tile *tile)
     if (tile->tileset() == mTileset) {
         int column = tile->id() % mTileset->columnCount();
         int row = tile->id() / mTileset->columnCount();
-        QModelIndex index = createIndex(row, column, 0);
+        QModelIndex index = createIndex(row, column, (void*)0);
         emit dataChanged(index, index);
     }
 }

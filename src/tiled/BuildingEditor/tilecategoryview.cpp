@@ -316,12 +316,20 @@ void TileCategoryView::init()
 
     QHeaderView *header = horizontalHeader();
     header->hide();
+#if QT_VERSION >= 0x050000
+    header->setSectionResizeMode(QHeaderView::ResizeToContents);
+#else
     header->setResizeMode(QHeaderView::ResizeToContents);
+#endif
     header->setMinimumSectionSize(1);
 
     header = verticalHeader();
     header->hide();
+#if QT_VERSION >= 0x050000
+    header->setSectionResizeMode(QHeaderView::ResizeToContents);
+#else
     header->setResizeMode(QHeaderView::ResizeToContents);
+#endif
     header->setMinimumSectionSize(1);
 
     // Hardcode this view on 'left to right' since it doesn't work properly
@@ -471,8 +479,9 @@ void TileCategoryModel::clear()
 
 void TileCategoryModel::setCategory(BuildingTileCategory *category)
 {
+    beginResetModel();
     mCategory = category;
-    reset();
+    endResetModel();
 }
 
 BuildingTileEntry *TileCategoryModel::entryAt(const QModelIndex &index) const

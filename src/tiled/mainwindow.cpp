@@ -112,6 +112,7 @@
 #include <QComboBox>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QScrollBar>
 #include <QSessionManager>
 #include <QTextStream>
@@ -142,7 +143,7 @@ using namespace BuildingEditor;
 MainWindow *MainWindow::mInstance = 0;
 #endif
 
-MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
+MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     : QMainWindow(parent, flags)
     , mUi(new Ui::MainWindow)
     , mMapDocument(0)
@@ -1894,7 +1895,7 @@ void MainWindow::RoomDefGo()
             beginMacro = true;
         }
 
-        QString layerName = QString::fromAscii("%1_RoomDefs").arg(level);
+        QString layerName = QString::fromLatin1("%1_RoomDefs").arg(level);
         int index = map->indexOfLayer(layerName, Layer::ObjectGroupType);
         ObjectGroup *og = 0;
         if (index < 0) {
@@ -1933,7 +1934,7 @@ void MainWindow::RoomDefGo()
             if (rects.size() > 1)
                 suffix = QLatin1String("#");
             foreach (QRect r, rects) {
-                MapObject *object = new MapObject(QString::fromAscii("room%1%2").arg(i).arg(suffix),
+                MapObject *object = new MapObject(QString::fromLatin1("room%1%2").arg(i).arg(suffix),
                                                   QLatin1String("room"),
                                                   r.topLeft(), r.size());
                 mMapDocument->undoStack()->push(new AddMapObject(mMapDocument,
@@ -1955,7 +1956,7 @@ void MainWindow::RoomDefMerge()
         return;
 
     int level = mMapDocument->currentLevel();
-    QString layerName = QString::fromAscii("%1_RoomDefs").arg(level);
+    QString layerName = QString::fromLatin1("%1_RoomDefs").arg(level);
     int index = mMapDocument->map()->indexOfLayer(layerName, Layer::ObjectGroupType);
     if (index < 0)
         return;
@@ -1981,8 +1982,8 @@ void MainWindow::RoomDefMerge()
     QString name;
     int roomID = 1;
     while (true) {
-        name = QString::fromAscii("room%1%2").arg(roomID).arg(suffix);
-        QString name2 = QString::fromAscii("room%1%2").arg(roomID)
+        name = QString::fromLatin1("room%1%2").arg(roomID).arg(suffix);
+        QString name2 = QString::fromLatin1("room%1%2").arg(roomID)
                 .arg((rects.size() <= 1) ? QLatin1String("#") : QString());
         if (!taken.contains(name) && !taken.contains(name2))
             break;
@@ -2014,7 +2015,7 @@ void MainWindow::RoomDefRemove()
     QList<MapObject*> remove;
 
     for (int level = 0; level <= mMapDocument->mapComposite()->maxLevel(); level++) {
-        QString layerName = QString::fromAscii("%1_RoomDefs").arg(level);
+        QString layerName = QString::fromLatin1("%1_RoomDefs").arg(level);
         int index = mMapDocument->map()->indexOfLayer(layerName, Layer::ObjectGroupType);
         if (index >= 0) {
             ObjectGroup *og = mMapDocument->map()->layerAt(index)->asObjectGroup();

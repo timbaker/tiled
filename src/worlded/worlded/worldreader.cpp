@@ -71,7 +71,7 @@ public:
 
         xml.setDevice(device);
 
-        if (xml.readNextStartElement() && xml.name() == "world") {
+        if (xml.readNextStartElement() && xml.name() == QLatin1String("world")) {
             world = readWorld();
         } else {
             xml.raiseError(tr("Not a world file."));
@@ -83,7 +83,7 @@ public:
 private:
     World *readWorld()
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "world");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("world"));
 
         const QXmlStreamAttributes atts = xml.attributes();
         const int width =
@@ -94,23 +94,23 @@ private:
         mWorld = new World(width, height);
 
         while (xml.readNextStartElement()) {
-            if (xml.name() == "propertydef")
+            if (xml.name() == QLatin1String("propertydef"))
                 readPropertyDef();
-            else if (xml.name() == "template")
+            else if (xml.name() == QLatin1String("template"))
                 readTemplate();
-            else if (xml.name() == "objectgroup")
+            else if (xml.name() == QLatin1String("objectgroup"))
                 readObjectGroup();
-            else if (xml.name() == "objecttype")
+            else if (xml.name() == QLatin1String("objecttype"))
                 readObjectType();
-            else if (xml.name() == "road")
+            else if (xml.name() == QLatin1String("road"))
                 readRoad();
-            else if (xml.name() == "cell")
+            else if (xml.name() == QLatin1String("cell"))
                 readCell();
-            else if (xml.name() == "BMPToTMX")
+            else if (xml.name() == QLatin1String("BMPToTMX"))
                 readBMPToTMX();
-            else if (xml.name() == "GenerateLots")
+            else if (xml.name() == QLatin1String("GenerateLots"))
                 readGenerateLots();
-            else if (xml.name() == "bmp")
+            else if (xml.name() == QLatin1String("bmp"))
                 readBMP();
             else
                 readUnknownElement();
@@ -127,7 +127,7 @@ private:
 
     void readPropertyDef()
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "propertydef");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("propertydef"));
 
         const QXmlStreamAttributes atts = xml.attributes();
         const QString name = atts.value(QLatin1String("name")).toString();
@@ -135,7 +135,7 @@ private:
         QString desc;
 
         while (xml.readNextStartElement()) {
-            if (xml.name() == "description") {
+            if (xml.name() == QLatin1String("description")) {
                 desc = readDescription();
             } else
                 readUnknownElement();
@@ -147,7 +147,7 @@ private:
 
     QString readDescription()
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "description");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("description"));
 
         QString result;
         while (xml.readNext() != QXmlStreamReader::Invalid) {
@@ -161,7 +161,7 @@ private:
 
     void readTemplate()
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "template");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("template"));
 
         const QXmlStreamAttributes atts = xml.attributes();
         const QString name = atts.value(QLatin1String("name")).toString();
@@ -172,11 +172,11 @@ private:
         mWorld->addPropertyTemplate(mWorld->propertyTemplates().size(), pt);
 
         while (xml.readNextStartElement()) {
-            if (xml.name() == "description") {
+            if (xml.name() == QLatin1String("description")) {
                 pt->mDescription = readDescription();
-            } else if (xml.name() == "template") {
+            } else if (xml.name() == QLatin1String("template")) {
                 readTemplateInstance(pt);
-            } else if (xml.name() == "property") {
+            } else if (xml.name() == QLatin1String("property")) {
                 readProperty(pt);
             } else
                 readUnknownElement();
@@ -185,7 +185,7 @@ private:
 
     void readObjectGroup()
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "objectgroup");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("objectgroup"));
 
         const QXmlStreamAttributes atts = xml.attributes();
         const QString name = atts.value(QLatin1String("name")).toString();
@@ -221,7 +221,7 @@ private:
 
     void readObjectType()
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "objecttype");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("objecttype"));
 
         const QXmlStreamAttributes atts = xml.attributes();
         const QString name = atts.value(QLatin1String("name")).toString();
@@ -244,7 +244,7 @@ private:
 
     void readProperty(PropertyHolder *ph)
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "property");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("property"));
 
         const QXmlStreamAttributes atts = xml.attributes();
         const QString name = atts.value(QLatin1String("name")).toString();
@@ -264,7 +264,7 @@ private:
 
     void readTemplateInstance(PropertyHolder *ph)
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "template");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("template"));
 
         const QXmlStreamAttributes atts = xml.attributes();
         const QString name = atts.value(QLatin1String("name")).toString();
@@ -282,7 +282,7 @@ private:
 
     void readRoad()
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "road");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("road"));
 
         const QXmlStreamAttributes atts = xml.attributes();
 
@@ -308,7 +308,7 @@ private:
 
     void readCell()
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "cell");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("cell"));
 
         const QXmlStreamAttributes atts = xml.attributes();
         const int x =
@@ -324,13 +324,13 @@ private:
             cell->setMapFilePath(resolveReference(mapName, mPath));
 
             while (xml.readNextStartElement()) {
-                if (xml.name() == "template")
+                if (xml.name() == QLatin1String("template"))
                     readTemplateInstance(cell);
-                else if (xml.name() == "property")
+                else if (xml.name() == QLatin1String("property"))
                     readProperty(cell);
-                else if (xml.name() == "lot")
+                else if (xml.name() == QLatin1String("lot"))
                     readLot(cell);
-                else if (xml.name() == "object")
+                else if (xml.name() == QLatin1String("object"))
                     readObject(cell);
                 else
                     readUnknownElement();
@@ -341,7 +341,7 @@ private:
 
     void readLot(WorldCell *cell)
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "lot");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("lot"));
 
         const QXmlStreamAttributes atts = xml.attributes();
         const int x =
@@ -364,7 +364,7 @@ private:
 
     void readObject(WorldCell *cell)
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "object");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("object"));
 
         const QXmlStreamAttributes atts = xml.attributes();
         const QString name = atts.value(QLatin1String("name")).toString();
@@ -402,9 +402,9 @@ private:
         cell->insertObject(cell->objects().size(), obj);
 
         while (xml.readNextStartElement()) {
-            if (xml.name() == "template")
+            if (xml.name() == QLatin1String("template"))
                 readTemplateInstance(obj);
-            else if (xml.name() == "property")
+            else if (xml.name() == QLatin1String("property"))
                 readProperty(obj);
             else
                 readUnknownElement();
@@ -413,36 +413,36 @@ private:
 
     void readBMPToTMX()
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "BMPToTMX");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("BMPToTMX"));
 
         BMPToTMXSettings settings;
 
         while (xml.readNextStartElement()) {
-            if (xml.name() == "tmxexportdir") {
+            if (xml.name() == QLatin1String("tmxexportdir")) {
                 QString path = xml.attributes().value(QLatin1String("path")).toString();
                 settings.exportDir = resolveReference(path, mPath);
                 xml.skipCurrentElement();
-            } else if (xml.name() == "rulesfile") {
+            } else if (xml.name() == QLatin1String("rulesfile")) {
                 QString path = xml.attributes().value(QLatin1String("path")).toString();
                 settings.rulesFile = resolveReference(path, mPath);
                 xml.skipCurrentElement();
-            } else if (xml.name() == "blendsfile") {
+            } else if (xml.name() == QLatin1String("blendsfile")) {
                 QString path = xml.attributes().value(QLatin1String("path")).toString();
                 settings.blendsFile = resolveReference(path, mPath);
                 xml.skipCurrentElement();
-            } else if (xml.name() == "mapbasefile") {
+            } else if (xml.name() == QLatin1String("mapbasefile")) {
                 QString path = xml.attributes().value(QLatin1String("path")).toString();
                 settings.mapbaseFile = resolveReference(path, mPath);
                 xml.skipCurrentElement();
-            } else if (xml.name() == "assign-maps-to-world") {
+            } else if (xml.name() == QLatin1String("assign-maps-to-world")) {
                 QString value = xml.attributes().value(QLatin1String("checked")).toString();
                 settings.assignMapsToWorld = value == QLatin1String("true");
                 xml.skipCurrentElement();
-            } else if (xml.name() == "warn-unknown-colors") {
+            } else if (xml.name() == QLatin1String("warn-unknown-colors")) {
                 QString value = xml.attributes().value(QLatin1String("checked")).toString();
                 settings.warnUnknownColors = value == QLatin1String("true");
                 xml.skipCurrentElement();
-            } else if (xml.name() == "compress") {
+            } else if (xml.name() == QLatin1String("compress")) {
                 QString value = xml.attributes().value(QLatin1String("checked")).toString();
                 settings.compress = value == QLatin1String("true");
                 xml.skipCurrentElement();
@@ -455,16 +455,16 @@ private:
 
     void readGenerateLots()
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "GenerateLots");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("GenerateLots"));
 
         GenerateLotsSettings settings;
 
         while (xml.readNextStartElement()) {
-            if (xml.name() == "exportdir") {
+            if (xml.name() == QLatin1String("exportdir")) {
                 QString path = xml.attributes().value(QLatin1String("path")).toString();
                 settings.exportDir = resolveReference(path, mPath);
                 xml.skipCurrentElement();
-            } else if (xml.name() == "ZombieSpawnMap") {
+            } else if (xml.name() == QLatin1String("ZombieSpawnMap")) {
                 QString path = xml.attributes().value(QLatin1String("path")).toString();
                 settings.zombieSpawnMap = resolveReference(path, mPath);
                 xml.skipCurrentElement();
@@ -477,7 +477,7 @@ private:
 
     void readBMP()
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "bmp");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("bmp"));
 
         const QXmlStreamAttributes atts = xml.attributes();
         QString path = atts.value(QLatin1String("path")).toString();

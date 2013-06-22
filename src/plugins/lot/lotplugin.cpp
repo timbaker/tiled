@@ -37,7 +37,7 @@ LotPlugin::LotPlugin()
 static void SaveString(QDataStream& out, const QString& str)
 {
     for (int i = 0; i < str.length(); i++)
-        out << quint8(str[i].toAscii());
+        out << quint8(str[i].toLatin1());
     out << quint8('\n');
 }
 
@@ -292,4 +292,6 @@ bool LotPlugin::parseNameToLevel(const QString& name, int *level)
     return false;
 }
 
+#if QT_VERSION < 0x050000
 Q_EXPORT_PLUGIN2(Lot, LotPlugin)
+#endif

@@ -36,21 +36,21 @@ RoomDefecator::RoomDefecator(Map *map, int level, const QRect &bounds) :
     mLayerWalls(0),
     mLayerWalls2(0)
 {
-    int i = map->indexOfLayer(QString::fromAscii("%1_Floor").arg(level), Layer::TileLayerType);
+    int i = map->indexOfLayer(QString::fromLatin1("%1_Floor").arg(level), Layer::TileLayerType);
     if (i < 0)
         return;
     mLayerFloor = map->layerAt(i)->asTileLayer();
 
-    i = map->indexOfLayer(QString::fromAscii("%1_Walls").arg(level), Layer::TileLayerType);
+    i = map->indexOfLayer(QString::fromLatin1("%1_Walls").arg(level), Layer::TileLayerType);
     if (i < 0)
         return;
     mLayerWalls = map->layerAt(i)->asTileLayer();
 
-    i = map->indexOfLayer(QString::fromAscii("%1_Walls2").arg(level), Layer::TileLayerType);
+    i = map->indexOfLayer(QString::fromLatin1("%1_Walls2").arg(level), Layer::TileLayerType);
     if (i >= 0)
         mLayerWalls2 = map->layerAt(i)->asTileLayer();
 
-    i = map->indexOfLayer(QString::fromAscii("%1_Walls_2").arg(level), Layer::TileLayerType);
+    i = map->indexOfLayer(QString::fromLatin1("%1_Walls_2").arg(level), Layer::TileLayerType);
     if (i >= 0)
         mLayerWalls2 = map->layerAt(i)->asTileLayer();
 

@@ -200,9 +200,13 @@ WelcomeMode::WelcomeMode(QObject *parent) :
         ui->treeView->setRootIndex(model->index(mapsDir.absolutePath()));
 
         hHeader->setStretchLastSection(false);
+#if QT_VERSION >= 0x050000
+        hHeader->setSectionResizeMode(0, QHeaderView::Stretch);
+        hHeader->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+#else
         hHeader->setResizeMode(0, QHeaderView::Stretch);
         hHeader->setResizeMode(1, QHeaderView::ResizeToContents);
-
+#endif
         connect(ui->treeView, SIGNAL(activated(QModelIndex)),
                 SLOT(onActivated(QModelIndex)));
         connect(ui->treeView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),

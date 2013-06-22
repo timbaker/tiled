@@ -144,7 +144,7 @@ bool TileDefFile::read(const QString &fileName)
 static void SaveString(QDataStream& out, const QString& str)
 {
     for (int i = 0; i < str.length(); i++)
-        out << quint8(str[i].toAscii());
+        out << quint8(str[i].toLatin1());
     out << quint8('\n');
 }
 

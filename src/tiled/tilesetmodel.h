@@ -93,7 +93,7 @@ public:
     /**
      * Performs a reset() on the model
      */
-    void tilesetChanged() { reset(); }
+    void tilesetChanged() { beginResetModel(); endResetModel(); }
 
 #ifdef ZOMBOID
     ~TilesetModel();

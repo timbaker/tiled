@@ -49,6 +49,9 @@ class LUASHARED_EXPORT LuaPlugin : public QObject,
 {
     Q_OBJECT
     Q_INTERFACES(Tiled::MapWriterInterface)
+#if QT_VERSION >= 0x050000
+    Q_PLUGIN_METADATA(IID "org.mapeditor.MapWriterInterface" FILE "plugin.json")
+#endif
 
 public:
     LuaPlugin();

@@ -219,7 +219,7 @@ MapObjectItem::MapObjectItem(MapObject *object, MapDocument *mapDocument,
 #endif
 {
 #ifdef ZOMBOID
-    setAcceptsHoverEvents(true);
+    setAcceptHoverEvents(true);
     mLabelItem = new ObjectLabelItem(this, this);
 #endif
     syncWithMapObject();
@@ -487,7 +487,7 @@ ObjectLabelItem::ObjectLabelItem(MapObjectItem *item, QGraphicsItem *parent)
     : QGraphicsSimpleTextItem(parent)
     , mItem(item)
 {
-    setAcceptsHoverEvents(true);
+    setAcceptHoverEvents(true);
     setFlag(ItemIgnoresTransformations);
 
     synch();

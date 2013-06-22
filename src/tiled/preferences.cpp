@@ -339,8 +339,13 @@ QString Preferences::lastPath(FileType fileType) const
     }
 
     if (path.isEmpty())
+#if QT_VERSION >= 0x050000
+        path = QStandardPaths::writableLocation(
+                    QStandardPaths::DocumentsLocation);
+#else
         path = QDesktopServices::storageLocation(
                     QDesktopServices::DocumentsLocation);
+#endif
 
     return path;
 }

@@ -458,7 +458,7 @@ public:
 
         xml.setDevice(&file);
 
-        if (xml.readNextStartElement() && xml.name() == "tileset") {
+        if (xml.readNextStartElement() && xml.name() == QLatin1String("tileset")) {
             mTLN.mFilePath = filePath;
             return readTileset();
         } else {
@@ -469,7 +469,7 @@ public:
 
     bool readTileset()
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "tileset");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("tileset"));
 
         const QXmlStreamAttributes atts = xml.attributes();
         const QString tilesetName = atts.value(QLatin1String("name")).toString();
@@ -482,7 +482,7 @@ public:
         mTLN.mRows = rows;
 
         while (xml.readNextStartElement()) {
-            if (xml.name() == "tile") {
+            if (xml.name() == QLatin1String("tile")) {
                 const QXmlStreamAttributes atts = xml.attributes();
                 uint id = atts.value(QLatin1String("id")).toString().toUInt();
                 if (id >= columns * rows) {

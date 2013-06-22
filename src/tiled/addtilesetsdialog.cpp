@@ -90,7 +90,7 @@ void AddTilesetsDialog::setFilesList()
     dir.setSorting(QDir::Name);
     QStringList nameFilters;
     foreach (QByteArray format, QImageReader::supportedImageFormats())
-        nameFilters += QLatin1String("*.") + QString::fromAscii(format);
+        nameFilters += QLatin1String("*.") + QString::fromLatin1(format);
 
     QFileInfoList fileInfoList = dir.entryInfoList(nameFilters);
     foreach (QFileInfo fileInfo, fileInfoList) {

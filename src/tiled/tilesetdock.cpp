@@ -724,6 +724,7 @@ void TilesetDock::refreshTilesetMenu()
 #include <QListWidget>
 #include <QMenu>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QScrollBar>
 #include <QToolBar>
 #include <QToolButton>

@@ -206,6 +206,8 @@ WorldCellLot *WorldCellLotModel::toLot(const QModelIndex &index) const
 
 void WorldCellLotModel::setWorldCell(WorldCell *cell)
 {
+    beginResetModel();
+
     delete mRoot;
     mRoot = 0;
 
@@ -223,7 +225,7 @@ void WorldCellLotModel::setWorldCell(WorldCell *cell)
         }
     }
 
-    reset();
+    endResetModel();
 }
 
 void WorldCellLotModel::levelVisibilityChanged(WorldCellLevel *level)

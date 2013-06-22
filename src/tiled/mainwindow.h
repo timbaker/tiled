@@ -90,7 +90,7 @@ public:
     static MainWindow *instance() { return mInstance; }
 #endif
 
-    MainWindow(QWidget *parent = 0, Qt::WFlags flags = 0);
+    MainWindow(QWidget *parent = 0, Qt::WindowFlags flags = 0);
     ~MainWindow();
 
     void commitData(QSessionManager &manager);

@@ -24,6 +24,10 @@ macx {
     QMAKE_RPATHDIR =
 }
 
+greaterThan(QT_MAJOR_VERSION, 4) {
+    QT += widgets
+}
+
 QT       += core gui
 
 TARGET = automappingconverter

@@ -1,7 +1,6 @@
 TEMPLATE  = subdirs
 CONFIG   += ordered
 
-SUBDIRS = config libtiled worlded tiled plugins \
+SUBDIRS = lua tolua config libtiled worlded tiled plugins \
     tmxviewer \
-    automappingconverter \
-    lua tolua
+    automappingconverter

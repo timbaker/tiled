@@ -13,6 +13,10 @@ win32 {
 } else {
     DESTDIR = ../../bin
 }
+
+greaterThan(QT_MAJOR_VERSION, 4) {
+    QT += widgets
+}
 contains(QT_CONFIG, opengl): QT += opengl
 
 DEFINES += QT_NO_CAST_FROM_ASCII \
