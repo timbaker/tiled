@@ -103,7 +103,7 @@ void RoomDefTool::renameRoomDef(MapObject *object, const QString &newName)
         int n = 1;
         while (anyAdjacent(roomName, objects, others)) {
             ++n;
-            roomName = newName + QString::number(n) + hash;
+            roomName = newName + hash + QString::number(n);
         }
     }
 
