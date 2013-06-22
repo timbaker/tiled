@@ -1029,20 +1029,19 @@ void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
     mCurrentDocumentStuff = doc ? mDocumentStuff[doc] : 0; // FIXME: unset when deleted
 
     if (mCurrentDocument) {
-        switch (mCurrentDocumentStuff->editMode())
-        {
-        case EditorWindowPerDocumentStuff::OrthoObjectMode: {
-            ModeManager::instance().setCurrentMode(mOrthoObjectEditMode);
+        IMode *mode = 0;
+        switch (mCurrentDocumentStuff->editMode()) {
+        case EditorWindowPerDocumentStuff::OrthoObjectMode:
+            mode = mOrthoObjectEditMode;
+            break;
+        case EditorWindowPerDocumentStuff::IsoObjectMode:
+            mode = mIsoObjectEditMode;
+            break;
+        case EditorWindowPerDocumentStuff::TileMode:
+            mode = mTileEditMode;
             break;
         }
-        case EditorWindowPerDocumentStuff::IsoObjectMode: {
-            ModeManager::instance().setCurrentMode(mIsoObjectEditMode);
-            break;
-        }
-        case EditorWindowPerDocumentStuff::TileMode: {
-            ModeManager::instance().setCurrentMode(mTileEditMode);
-        }
-        }
+        ModeManager::instance().setCurrentMode(mode);
 
         mUndoGroup->setActiveStack(mCurrentDocument->undoStack());
 
