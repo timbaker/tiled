@@ -23,7 +23,7 @@
 #include <string.h>
 
 #ifdef ZOMBOID
-void luai_writestring(s,l) { fwrite((s), sizeof(char), (l), stdout); }
+void luai_writestring(const char *s, int l) { fwrite((s), sizeof(char), (l), stdout); }
 void luai_writeline() { (luai_writestring("\n", 1), fflush(stdout)); }
 #endif
 
