@@ -45,6 +45,9 @@ BuildingFurnitureDock::BuildingFurnitureDock(QWidget *parent) :
 {
     setObjectName(QLatin1String("FurnitureDock"));
 
+    mGroupList->setObjectName(QLatin1String("FurnitureDock.groupList"));
+    mFurnitureView->setObjectName(QLatin1String("FurnitureDock.furnitureView"));
+
     QHBoxLayout *comboLayout = new QHBoxLayout;
     comboLayout->setObjectName(QLatin1String("FurnitureDock.comboLayout"));
     QComboBox *scaleCombo = new QComboBox;
