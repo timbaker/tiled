@@ -77,6 +77,7 @@ void WorldLotTool::deactivate(MapScene *scene)
     if (mHoverItem) {
         delete mHoverItem;
         mHoverItem = 0;
+        mHoverLot = 0;
     }
     mScene = 0;
 }
