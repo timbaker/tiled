@@ -86,11 +86,13 @@ class GenerateLotsSettings
 public:
     QString exportDir;
     QString zombieSpawnMap;
+    QPoint worldOrigin;
 
     bool operator == (const GenerateLotsSettings &other)
     {
         return exportDir == other.exportDir &&
-                zombieSpawnMap == other.zombieSpawnMap;
+                zombieSpawnMap == other.zombieSpawnMap &&
+                worldOrigin == other.worldOrigin;
     }
 
     bool operator != (const GenerateLotsSettings &other)
@@ -225,6 +227,11 @@ public:
     WorldObjectGroup *nullObjectGroup() const { return mNullObjectGroup; }
     ObjectType *nullObjectType() const { return mNullObjectType; }
 
+    void setHeightMapFileName(const QString &fileName)
+    { mHeightMapFileName = fileName; }
+    const QString &hmFileName() const
+    { return mHeightMapFileName; }
+
 private:
     int mWidth;
     int mHeight;
@@ -239,6 +246,7 @@ private:
     QList<WorldBMP*> mBMPs;
     BMPToTMXSettings mBMPToTMXSettings;
     GenerateLotsSettings mGenerateLotsSettings;
+    QString mHeightMapFileName;
 };
 
 #endif // WORLD_H

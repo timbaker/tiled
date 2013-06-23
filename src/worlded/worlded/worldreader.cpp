@@ -112,6 +112,8 @@ private:
                 readGenerateLots();
             else if (xml.name() == QLatin1String("bmp"))
                 readBMP();
+            else if (xml.name() == QLatin1String("heightmap"))
+                readHeightMap();
             else
                 readUnknownElement();
         }
@@ -468,6 +470,11 @@ private:
                 QString path = xml.attributes().value(QLatin1String("path")).toString();
                 settings.zombieSpawnMap = resolveReference(path, mPath);
                 xml.skipCurrentElement();
+            } else if (xml.name() == QLatin1String("worldOrigin")) {
+                QPoint pos;
+                if (readPoint(QLatin1String("origin"), pos))
+                    settings.worldOrigin = pos;
+                xml.skipCurrentElement();
             } else
                 readUnknownElement();
         }
@@ -495,10 +502,40 @@ private:
         xml.skipCurrentElement();
     }
 
+    void readHeightMap()
+    {
+        Q_ASSERT(xml.isStartElement() && xml.name() == "heightmap");
+
+        const QXmlStreamAttributes atts = xml.attributes();
+        QString path = atts.value(QLatin1String("file")).toString();
+        path = resolveReference(path, mPath);
+        mWorld->setHeightMapFileName(path);
+
+        xml.skipCurrentElement();
+    }
+
     void readUnknownElement()
     {
         qDebug() << "Unknown element (fixme):" << xml.name();
         xml.skipCurrentElement();
+    }
+
+    bool readPoint(const QString &name, QPoint &result)
+    {
+        const QXmlStreamAttributes atts = xml.attributes();
+        QString s = atts.value(name).toString();
+        if (s.isEmpty()) {
+            result = QPoint();
+            return true;
+        }
+        QStringList split = s.split(QLatin1Char(','), QString::SkipEmptyParts);
+        if (split.size() != 2) {
+            xml.raiseError(tr("expected point, got '%1'").arg(s));
+            return false;
+        }
+        result.setX(split[0].toInt());
+        result.setY(split[1].toInt());
+        return true;
     }
 
     QString resolveReference(const QString &fileName, const QString &relativeTo)
