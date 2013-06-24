@@ -84,6 +84,11 @@ void ModeManager::addMode(IMode *mode)
 
 void ModeManager::setCurrentMode(IMode *mode)
 {
+    mTabWidget->setCurrentIndex(mode ? mModes.indexOf(mode) : -1);
+}
+
+void ModeManager::switchMode(IMode *mode)
+{
     if (mode == mCurrentMode)
         return;
 
@@ -96,8 +101,6 @@ void ModeManager::setCurrentMode(IMode *mode)
         mCurrentMode->setActive(true);
 
     emit currentModeChanged();
-
-    mTabWidget->setCurrentIndex(mode ? mModes.indexOf(mode) : -1);
 }
 
 void ModeManager::currentTabAboutToChange(int index)
@@ -108,7 +111,7 @@ void ModeManager::currentTabAboutToChange(int index)
 
 void ModeManager::currentTabChanged(int index)
 {
-    setCurrentMode((index >= 0) ? mModes[index] : 0);
+    switchMode((index >= 0) ? mModes[index] : 0);
 }
 
 void ModeManager::enabledStateChanged(bool enabled)

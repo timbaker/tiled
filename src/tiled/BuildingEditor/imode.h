@@ -81,6 +81,9 @@ public:
     void setCurrentMode(IMode *mode);
     IMode *currentMode() const { return mCurrentMode; }
 
+private:
+    void switchMode(IMode *mode);
+
 signals:
     void currentModeAboutToChange(IMode *mode);
     void currentModeChanged();

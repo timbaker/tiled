@@ -249,7 +249,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mSynching(false),
     mOrthoObjectEditMode(0),
     mIsoObjectEditMode(0),
-    mTileEditMode(0)
+    mTileEditMode(0),
+    mDocumentChanging(false)
 {
     ui->setupUi(this);
 
@@ -1022,8 +1023,11 @@ void BuildingEditorWindow::documentAboutToClose(int index, BuildingDocument *doc
 
 void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
 {
+    mDocumentChanging = true;
+
     if (mCurrentDocument) {
-        mCurrentDocumentStuff->rememberTool();
+        if (!mWelcomeMode->isActive())
+            mCurrentDocumentStuff->rememberTool();
         mCurrentDocument->disconnect(this);
     }
 
@@ -1082,6 +1086,11 @@ void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
 
     updateActions();
     updateWindowTitle();
+
+    if (mCurrentDocumentStuff && !mWelcomeMode->isActive())
+        mCurrentDocumentStuff->restoreTool();
+
+    mDocumentChanging = false;
 }
 
 void BuildingEditorWindow::currentEditorChanged()
@@ -1089,7 +1098,7 @@ void BuildingEditorWindow::currentEditorChanged()
     updateActions();
 
     // This is needed only when the mode didn't change.
-    if (mCurrentDocumentStuff)
+    if (mCurrentDocumentStuff && !mDocumentChanging && !mWelcomeMode->isActive())
         mCurrentDocumentStuff->restoreTool();
 }
 
@@ -1810,7 +1819,7 @@ void BuildingEditorWindow::currentModeAboutToChange(IMode *mode)
     if (!mCurrentDocument)
         return;
 
-    if (ModeManager::instance().currentMode() != mWelcomeMode)
+    if (!mDocumentChanging && !mWelcomeMode->isActive())
         mCurrentDocumentStuff->rememberTool();
 }
 
@@ -1836,7 +1845,7 @@ void BuildingEditorWindow::currentModeChanged()
     updateActions();
     updateWindowTitle();
 
-    if (mCurrentDocumentStuff && (mode != mWelcomeMode))
+    if (mCurrentDocumentStuff && !mDocumentChanging && (mode != mWelcomeMode))
         mCurrentDocumentStuff->restoreTool();
 }
 

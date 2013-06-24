@@ -288,17 +288,17 @@ private:
     QString mError;
     bool mSynching;
 
-//    QStackedWidget *mModeStack;
     WelcomeMode *mWelcomeMode;
     OrthoObjectEditMode *mOrthoObjectEditMode;
     IsoObjectEditMode *mIsoObjectEditMode;
     TileEditMode *mTileEditMode;
 
-//    EditorWindowPerDocumentStuff::EditMode mEditMode;
     QMap<BuildingDocument*,EditorWindowPerDocumentStuff*> mDocumentStuff;
     friend class EditorWindowPerDocumentStuff;
 
     Core::Internal::FancyTabWidget *mTabWidget;
+
+    bool mDocumentChanging;
 };
 
 } // namespace BuildingEditor
