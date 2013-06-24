@@ -81,6 +81,7 @@
     <property name="title">
      <string>Building</string>
     </property>
+    <addaction name="actionCropToSelection"/>
     <addaction name="actionResize"/>
     <addaction name="actionFlipHorizontal"/>
     <addaction name="actionFlipVertical"/>
@@ -476,7 +477,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show Objects</string>
+    <string>Show Object Shapes</string>
    </property>
    <property name="shortcut">
     <string>O</string>
@@ -659,6 +660,15 @@
   <action name="actionViewsPlaceholder">
    <property name="text">
     <string>Placeholder</string>
+   </property>
+  </action>
+  <action name="actionCropToSelection">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_crop.png</normaloff>:/BuildingEditor/icons/icon_crop.png</iconset>
+   </property>
+   <property name="text">
+    <string>Crop To Selection</string>
    </property>
   </action>
  </widget>

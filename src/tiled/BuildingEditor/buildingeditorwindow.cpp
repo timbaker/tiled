@@ -386,6 +386,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     keys += QKeySequence(tr("0"));
     ui->actionNormalSize->setShortcuts(keys);
 
+    connect(ui->actionCropToSelection, SIGNAL(triggered()), SLOT(crop()));
     connect(ui->actionResize, SIGNAL(triggered()), SLOT(resizeBuilding()));
     connect(ui->actionFlipHorizontal, SIGNAL(triggered()), SLOT(flipHorizontal()));
     connect(ui->actionFlipVertical, SIGNAL(triggered()), SLOT(flipVertical()));
@@ -1419,6 +1420,83 @@ void BuildingEditorWindow::roomChanged(Room *room)
     Q_UNUSED(room)
 }
 
+void BuildingEditorWindow::crop()
+{
+    if (!mCurrentDocument)
+        return;
+
+    QRegion selection = mCurrentDocument->roomSelection();
+    if (selection.isEmpty())
+        return;
+
+    QRect bounds = selection.boundingRect() & mCurrentDocument->building()->bounds();
+    QPoint offset = -bounds.topLeft();
+    QSize newSize = bounds.size();
+
+    QUndoStack *undoStack = mCurrentDocument->undoStack();
+    undoStack->beginMacro(tr("Crop To Selection"));
+
+    // Offset
+    foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
+
+        // Move the rooms
+        QVector<QVector<Room*> > grid;
+        grid.resize(floor->width());
+        for (int x = 0; x < floor->width(); x++)
+            grid[x].resize(floor->height());
+        for (int y = bounds.top(); y <= bounds.bottom(); y++) {
+            for (int x = bounds.left(); x <= bounds.right(); x++) {
+                grid[x-bounds.left()][y-bounds.top()] = floor->GetRoomAt(x, y);
+            }
+        }
+        undoStack->push(new SwapFloorGrid(mCurrentDocument, floor, grid,
+                                          "Offset Rooms"));
+
+        // Move the user-placed tiles
+        QMap<QString,FloorTileGrid*> grime;
+        foreach (QString layerName, floor->grimeLayers()) {
+            FloorTileGrid *src = floor->grime()[layerName];
+            FloorTileGrid *dest = new FloorTileGrid(floor->width() + 1, floor->height() + 1);
+            for (int y = bounds.top(); y <= bounds.bottom() + 1; y++) {
+                for (int x = bounds.left(); x <= bounds.right() + 1; x++) {
+                    dest->replace(x-bounds.left(), y-bounds.top(), src->at(x, y));
+                }
+            }
+            grime[layerName] = dest;
+        }
+        undoStack->push(new SwapFloorGrime(mCurrentDocument, floor, grime,
+                                           "Offset Tiles", true));
+    }
+
+    // Resize
+    undoStack->push(new EmitResizeBuilding(mCurrentDocument, true));
+    undoStack->push(new ResizeBuilding(mCurrentDocument, newSize));
+    bool objectsDeleted = false;
+    foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
+        undoStack->push(new ResizeFloor(mCurrentDocument, floor, newSize));
+        // Offset objects. Remove objects that aren't in bounds.
+        for (int i = floor->objectCount() - 1; i >= 0; --i) {
+            BuildingObject *object = floor->object(i);
+            if (object->isValidPos(offset))
+                undoStack->push(new MoveObject(mCurrentDocument, object, object->pos() + offset));
+            else {
+                undoStack->push(new RemoveObject(mCurrentDocument, floor, i));
+                objectsDeleted = true;
+            }
+        }
+    }
+    undoStack->push(new EmitResizeBuilding(mCurrentDocument, false));
+
+    undoStack->push(new ChangeRoomSelection(mCurrentDocument,
+                                            mCurrentDocument->roomSelection().translated(offset)));
+    undoStack->endMacro();
+
+    if (objectsDeleted) {
+        QMessageBox::information(this, tr("Crop Building"),
+                                 tr("Some objects were deleted during cropping."));
+    }
+}
+
 void BuildingEditorWindow::resizeBuilding()
 {
     if (!mCurrentDocument)
@@ -1686,6 +1764,8 @@ void BuildingEditorWindow::updateActions()
     ui->actionRooms->setEnabled(hasDoc);
     ui->actionTemplateFromBuilding->setEnabled(hasDoc);
 
+    ui->actionCropToSelection->setEnabled(hasDoc &&
+                                          !mCurrentDocument->roomSelection().isEmpty());
     ui->actionResize->setEnabled(hasDoc);
     ui->actionFlipHorizontal->setEnabled(hasDoc);
     ui->actionFlipVertical->setEnabled(hasDoc);

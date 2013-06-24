@@ -246,6 +246,7 @@ private slots:
     void roomsReordered();
     void roomChanged(Room *room);
 
+    void crop();
     void resizeBuilding();
     void flipHorizontal();
     void flipVertical();
