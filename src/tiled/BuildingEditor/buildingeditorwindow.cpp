@@ -479,6 +479,21 @@ bool BuildingEditorWindow::openFile(const QString &fileName)
     int documentIndex = docman()->findDocument(fileName);
     if (documentIndex != -1) {
         docman()->setCurrentDocument(documentIndex);
+        if (mWelcomeMode->isActive()) {
+            IMode *mode = 0;
+            switch (mCurrentDocumentStuff->editMode()) {
+            case EditorWindowPerDocumentStuff::OrthoObjectMode:
+                mode = mOrthoObjectEditMode;
+                break;
+            case EditorWindowPerDocumentStuff::IsoObjectMode:
+                mode = mIsoObjectEditMode;
+                break;
+            case EditorWindowPerDocumentStuff::TileMode:
+                mode = mTileEditMode;
+                break;
+            }
+            ModeManager::instance().setCurrentMode(mode);
+        }
         return true;
     }
 
