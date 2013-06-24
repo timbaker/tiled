@@ -685,6 +685,7 @@ QVector<QRect> adjacentRects(const QVector<QRect> &rects, const QPoint &pos)
     return ret;
 }
 
+#include "buildingroomdef.h"
 void BuildingIsoScene::setCursorPosition(const QPoint &pos)
 {
     mHighlightRoomPos = pos;
@@ -693,7 +694,19 @@ void BuildingIsoScene::setCursorPosition(const QPoint &pos)
     Room *room = prefs()->highlightRoom() ? currentFloor()->GetRoomAt(pos) : 0;
     if (room) {
         QRegion roomRegion;
+#if 1
+        BuildingRoomDefecator rd(currentFloor(), room);
+        rd.defecate();
+        QVector<QRect> rects;
+        foreach (QRegion rgn, rd.mRegions) {
+            if (rgn.contains(pos)) {
+                rects += rgn.rects();
+                break;
+            }
+        }
+#else
         QVector<QRect> rects = currentFloor()->roomRegion(room);
+#endif
         foreach (QRect r, adjacentRects(rects, pos))
             roomRegion |= r;
         mBuildingMap->suppressTiles(currentFloor(), QRegion(currentFloor()->bounds(1, 1)) - roomRegion);
