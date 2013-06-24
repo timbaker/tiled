@@ -24,6 +24,7 @@
 #include "buildingtiles.h"
 #include "buildingtmx.h"
 
+#include "bmpblender.h"
 #include "mapcomposite.h"
 #include "mapmanager.h"
 #include "tilemetainfomgr.h"
@@ -875,14 +876,16 @@ void BuildingMap::handlePending()
             layer->resize(QSize(width, height), QPoint());
         mMap->setWidth(width);
         mMap->setHeight(height);
+        MapManager::instance()->mapParametersChanged(mMapComposite->mapInfo());
+        mMapComposite->bmpBlender()->recreate();
 
         foreach (Layer *layer, mBlendMap->layers())
             layer->resize(QSize(width, height), QPoint());
         mBlendMap->setWidth(width);
         mBlendMap->setHeight(height);
+        MapManager::instance()->mapParametersChanged(mBlendMapComposite->mapInfo());
+        mBlendMapComposite->bmpBlender()->recreate();
 
-        MapInfo *mapInfo = mMapComposite->mapInfo();
-        MapManager::instance()->mapParametersChanged(mapInfo);
         foreach (CompositeLayerGroup *lg, mMapComposite->layerGroups())
             lg->setNeedsSynch(true);
 
