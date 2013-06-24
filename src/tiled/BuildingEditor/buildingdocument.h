@@ -93,6 +93,9 @@ public:
     const QSet<BuildingObject*> &selectedObjects() const
     { return mSelectedObjects; }
 
+    const QRegion &roomSelection() const
+    { return mRoomSelection; }
+
     const QRegion &tileSelection() const
     { return mTileSelection; }
 
@@ -163,6 +166,7 @@ public:
     QList<BuildingTileEntry*> changeUsedTiles(const QList<BuildingTileEntry*> &tiles);
     QList<FurnitureTiles *> changeUsedFurniture(const QList<FurnitureTiles *> &tiles);
 
+    QRegion setRoomSelection(const QRegion &selection);
     QRegion setTileSelection(const QRegion &selection);
     // -UNDO/REDO
 
@@ -203,6 +207,8 @@ signals:
 
     void selectedObjectsChanged();
 
+    void roomSelectionChanged(const QRegion &old);
+
     void tileSelectionChanged(const QRegion &old);
     void clipboardTilesChanged();
 
@@ -230,6 +236,7 @@ private:
     Room *mCurrentRoom;
     QString mCurrentLayerName;
     QSet<BuildingObject*> mSelectedObjects;
+    QRegion mRoomSelection;
     QRegion mTileSelection;
     FloorTileGrid *mClipboardTiles;
     QRegion mClipboardTilesRgn;

@@ -20,6 +20,7 @@
 
 #include "buildingobjects.h" // need RoofType enum
 
+#include <QGraphicsItem>
 #include <QObject>
 #include <QPointF>
 #include <QRegion>
@@ -38,6 +39,7 @@ namespace BuildingEditor {
 
 class BuildingDocument;
 class BuildingFloor;
+class BuildingRegionItem;
 class BuildingTile;
 class Door;
 class BuildingBaseScene;
@@ -210,13 +212,15 @@ public:
 
     void currentModifiersChanged(Qt::KeyboardModifiers modifiers);
 
-    QRegion setSelectedArea(const QRegion &selectedArea);
+    QRegion selectedArea() const;
 
 public slots:
     void activate();
     void deactivate();
 
 private:
+    void updateCursor(const QPointF &scenePos);
+
     enum Mode {
         NoMode,
         Selecting,
@@ -249,8 +253,9 @@ private:
     QPointF mStartScenePos;
     QPoint mStartTilePos;
     QPoint mDragOffset;
-    QGraphicsPathItem *mSelectionItem;
-    QRegion mSelectedArea;
+    BuildingRegionItem *mCursorItem;
+    QPoint mCursorTilePos;
+    QRect mCursorTileBounds;
 };
 
 /////

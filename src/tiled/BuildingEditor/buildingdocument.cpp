@@ -492,6 +492,14 @@ QList<FurnitureTiles *> BuildingDocument::changeUsedFurniture(const QList<Furnit
     return old;
 }
 
+QRegion BuildingDocument::setRoomSelection(const QRegion &selection)
+{
+    QRegion old = mRoomSelection;
+    mRoomSelection = selection;
+    emit roomSelectionChanged(old);
+    return old;
+}
+
 QRegion BuildingDocument::setTileSelection(const QRegion &selection)
 {
     QRegion old = mTileSelection;

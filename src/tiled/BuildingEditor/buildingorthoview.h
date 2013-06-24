@@ -357,6 +357,51 @@ public:
     OrthoBuildingRenderer *asOrtho() { return this; }
 };
 
+/////
+
+class BuildingRegionItem : public QGraphicsItem
+{
+public:
+    BuildingRegionItem(BuildingBaseScene *scene, QGraphicsItem *parent = 0);
+
+    QRectF boundingRect() const;
+
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+               QWidget *widget);
+
+    void setColor(const QColor &color);
+
+    void setRegion(const QRegion &region);
+
+    void buildingResized();
+
+protected:
+    BuildingBaseScene *mScene;
+    QRegion mRegion;
+    QRectF mBoundingRect;
+    QColor mColor;
+};
+
+/////
+
+class RoomSelectionItem : public QObject, public BuildingRegionItem
+{
+    Q_OBJECT
+    Q_INTERFACES(QGraphicsItem)
+public:
+    RoomSelectionItem(BuildingBaseScene *scene, QGraphicsItem *parent = 0);
+
+    BuildingDocument *document() const;
+
+    void setDragOffset(const QPoint &offset);
+
+private slots:
+    void roomSelectionChanged();
+    void currentLevelChanged();
+};
+
+/////
+
 class BuildingBaseScene : public QGraphicsScene
 {
     Q_OBJECT
@@ -434,6 +479,9 @@ public:
 
     void synchObjectItemVisibility();
 
+    RoomSelectionItem *roomSelectionItem() const
+    { return mRoomSelectionItem; }
+
     /////
     // Tile-editing-only methods
     virtual void setToolTiles(const FloorTileGrid *tiles,
@@ -474,6 +522,7 @@ protected:
     QSet<GraphicsObjectItem*> mSelectedObjectItems;
     BuildingObject *mMouseOverObject;
     bool mEditingTiles;
+    RoomSelectionItem *mRoomSelectionItem;
 };
 
 class BuildingOrthoScene : public BuildingBaseScene

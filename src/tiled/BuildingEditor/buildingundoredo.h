@@ -592,6 +592,21 @@ private:
     int mLength;
 };
 
+class ChangeRoomSelection : public QUndoCommand
+{
+public:
+    ChangeRoomSelection(BuildingDocument *doc, const QRegion &selection);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    BuildingDocument *mDocument;
+    QRegion mSelection;
+};
+
 class ChangeTileSelection : public QUndoCommand
 {
 public:

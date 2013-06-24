@@ -670,6 +670,20 @@ void ResizeWall::swap()
 
 /////
 
+ChangeRoomSelection::ChangeRoomSelection(BuildingDocument *doc, const QRegion &selection) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Room Selection")),
+    mDocument(doc),
+    mSelection(selection)
+{
+}
+
+void ChangeRoomSelection::swap()
+{
+    mSelection = mDocument->setRoomSelection(mSelection);
+}
+
+/////
+
 ChangeTileSelection::ChangeTileSelection(BuildingDocument *doc, const QRegion &selection) :
     QUndoCommand(QCoreApplication::translate("Undo Commands", "Change Tile Selection")),
     mDocument(doc),

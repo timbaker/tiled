@@ -744,6 +744,9 @@ void BuildingIsoScene::BuildingToMap()
     mTileSelectionItem = new TileModeSelectionItem(this);
     addItem(mTileSelectionItem);
 
+    mRoomSelectionItem = new RoomSelectionItem(this);
+    addItem(mRoomSelectionItem);
+
     setSceneRect(mBuildingMap->mapComposite()->boundingRect(mBuildingMap->mapRenderer()));
     mDarkRectangle->setRect(sceneRect());
 }

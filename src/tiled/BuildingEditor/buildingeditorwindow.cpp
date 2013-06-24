@@ -169,7 +169,7 @@ void EditorWindowPerDocumentStuff::rememberTool()
 {
     if (isTile())
         mPrevTileTool = ToolManager::instance()->currentTool();
-    else
+    else if (isObject())
         mPrevObjectTool = ToolManager::instance()->currentTool();
 }
 
@@ -1011,6 +1011,7 @@ void BuildingEditorWindow::documentAdded(BuildingDocument *doc)
 
 void BuildingEditorWindow::documentAboutToClose(int index, BuildingDocument *doc)
 {
+    Q_UNUSED(index)
     Q_UNUSED(doc)
 
     // At this point, the document is not in the DocumentManager's list of documents.
@@ -1059,6 +1060,9 @@ void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
                 SLOT(updateActions()));
 
         connect(mCurrentDocument, SIGNAL(selectedObjectsChanged()),
+                SLOT(updateActions()));
+
+        connect(mCurrentDocument, SIGNAL(roomSelectionChanged(QRegion)),
                 SLOT(updateActions()));
 
         connect(mCurrentDocument, SIGNAL(tileSelectionChanged(QRegion)),
@@ -1721,10 +1725,13 @@ void BuildingEditorWindow::help()
 
 void BuildingEditorWindow::currentModeAboutToChange(IMode *mode)
 {
+    Q_UNUSED(mode)
+
     if (!mCurrentDocument)
         return;
 
-    mCurrentDocumentStuff->rememberTool();
+    if (ModeManager::instance().currentMode() != mWelcomeMode)
+        mCurrentDocumentStuff->rememberTool();
 }
 
 void BuildingEditorWindow::currentModeChanged()
@@ -1732,20 +1739,24 @@ void BuildingEditorWindow::currentModeChanged()
     if (!mCurrentDocument)
         return;
 
+    IMode *mode = ModeManager::instance().currentMode();
+
     if (mCurrentDocumentStuff->isTile())
         mCurrentDocument->setTileSelection(QRegion());
+    else if (mode == mTileEditMode)
+        mCurrentDocument->setRoomSelection(QRegion());
 
-    if (ModeManager::instance().currentMode() == mOrthoObjectEditMode)
+    if (mode == mOrthoObjectEditMode)
         mCurrentDocumentStuff->toOrthoObject();
-    else if (ModeManager::instance().currentMode() == mIsoObjectEditMode)
+    else if (mode == mIsoObjectEditMode)
         mCurrentDocumentStuff->toIsoObject();
-    else if (ModeManager::instance().currentMode() == mTileEditMode)
+    else if (mode == mTileEditMode)
         mCurrentDocumentStuff->toTile();
 
     updateActions();
     updateWindowTitle();
 
-    if (mCurrentDocumentStuff)
+    if (mCurrentDocumentStuff && (mode != mWelcomeMode))
         mCurrentDocumentStuff->restoreTool();
 }
 

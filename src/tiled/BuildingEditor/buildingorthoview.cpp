@@ -46,6 +46,126 @@ using namespace Internal;
 
 /////
 
+BuildingRegionItem::BuildingRegionItem(BuildingBaseScene *scene, QGraphicsItem *parent) :
+    QGraphicsItem(parent),
+    mScene(scene)
+{
+    setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
+}
+
+QRectF BuildingRegionItem::boundingRect() const
+{
+    return mBoundingRect;
+}
+
+void BuildingRegionItem::paint(QPainter *painter,
+                               const QStyleOptionGraphicsItem *option,
+                               QWidget *)
+{
+    Q_UNUSED(option)
+
+    painter->setBrush(mColor);
+    painter->setPen(Qt::NoPen);
+
+    BuildingRenderer *renderer = mScene->renderer();
+    foreach (const QRect &r, mRegion.rects()) {
+        QPolygonF polygon = renderer->tileToScenePolygonF(r, mScene->currentLevel());
+        if (QRectF(polygon.boundingRect()).intersects(option->exposedRect))
+            painter->drawConvexPolygon(polygon);
+    }
+}
+
+void BuildingRegionItem::setColor(const QColor &color)
+{
+    if (color != mColor) {
+        mColor = color;
+        update();
+    }
+}
+
+void BuildingRegionItem::setRegion(const QRegion &region)
+{
+    if (region != mRegion) {
+        BuildingRenderer *renderer = mScene->renderer();
+        QPolygonF polygon = renderer->tileToScenePolygonF(region.boundingRect(),
+                                                          mScene->currentLevel());
+        QRectF bounds = polygon.boundingRect();
+
+        // Add tile bounds and pen width to the shape.
+//        bounds.adjust(-4, -(128-32), 5, 5);
+
+        if (bounds != mBoundingRect) {
+            // NOTE-SCENE-CORRUPTION
+            // Schedule a redraw of the current area.  Although prepareGeometryChange()
+            // marks the current area as needing to be redrawn by setting the
+            // paintedViewBoundingRectsNeedRepaint flag, any additional call to
+            // QGraphicsScene::update will result in paintedViewBoundingRects getting
+            // set the *new* location of this item before _q_processDirtyItems gets
+            // called, so the current area never gets repainted.
+            if (scene())
+                scene()->update(mBoundingRect);
+
+            prepareGeometryChange();
+            mBoundingRect = bounds;
+        }
+
+        mRegion = region;
+
+        const QRect changedArea = region.xored(mRegion).boundingRect();
+        polygon = renderer->tileToScenePolygonF(changedArea,
+                                                mScene->currentLevel());
+        update(polygon.boundingRect());
+    }
+}
+
+void BuildingRegionItem::buildingResized()
+{
+    // Just recalculating the bounding rect.
+    QRegion region = mRegion;
+    mRegion = QRegion();
+    setRegion(region);
+}
+
+/////
+
+RoomSelectionItem::RoomSelectionItem(BuildingBaseScene *scene, QGraphicsItem *parent) :
+    QObject(),
+    BuildingRegionItem(scene, parent)
+{
+    setZValue(scene->ZVALUE_CURSOR);
+
+    QColor highlight = QApplication::palette().highlight().color();
+    highlight.setAlpha(128);
+    setColor(highlight);
+
+    connect(document(), SIGNAL(roomSelectionChanged(QRegion)),
+            SLOT(roomSelectionChanged()));
+    connect(document(), SIGNAL(currentFloorChanged()),
+            SLOT(currentLevelChanged()));
+}
+
+BuildingDocument *RoomSelectionItem::document() const
+{
+    return mScene->document();
+}
+
+void RoomSelectionItem::setDragOffset(const QPoint &offset)
+{
+    setRegion(document()->roomSelection().translated(offset));
+}
+
+void RoomSelectionItem::roomSelectionChanged()
+{
+    setRegion(document()->roomSelection());
+}
+
+void RoomSelectionItem::currentLevelChanged()
+{
+    setRegion(document()->roomSelection());
+}
+
+/////
+
 void BuildingRenderer::drawObject(QPainter *painter, BuildingObject *mObject,
                                   const QPoint &dragOffset, bool mValidPos,
                                   bool mSelected, bool mMouseOver, int level)
@@ -201,7 +321,8 @@ BuildingBaseScene::BuildingBaseScene(QObject *parent) :
     mDocument(0),
     mRenderer(0),
     mMouseOverObject(0),
-    mEditingTiles(false)
+    mEditingTiles(false),
+    mRoomSelectionItem(0)
 {
 }
 
@@ -266,6 +387,8 @@ void BuildingBaseScene::mapResized()
     foreach (GraphicsFloorItem *item, mFloorItems)
         item->mapResized();
 
+    if (mRoomSelectionItem)
+        mRoomSelectionItem->buildingResized();
 }
 
 void BuildingBaseScene::floorAdded(BuildingFloor *floor)
@@ -453,7 +576,7 @@ QString BuildingOrthoScene::buildingTileAt(int x, int y)
     return QString();
 }
 
-QString BuildingEditor::BuildingOrthoScene::tileUnderPoint(int x, int y)
+QString BuildingOrthoScene::tileUnderPoint(int x, int y)
 {
     Q_UNUSED(x)
     Q_UNUSED(y)
@@ -1194,6 +1317,9 @@ void BuildingOrthoScene::setDocument(BuildingDocument *doc)
                                          building()->height());
         mGridItem->setZValue(ZVALUE_GRID);
         addItem(mGridItem);
+
+        mRoomSelectionItem = new RoomSelectionItem(this);
+        addItem(mRoomSelectionItem);
 
         setSceneRect(-10, -10,
                      building()->width() * 30 + 20,
