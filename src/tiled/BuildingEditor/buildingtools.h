@@ -93,6 +93,13 @@ public:
 
     bool isCurrent();
 
+    enum HandCursor {
+        HandNone,
+        HandOpen,
+        HandClosed
+    };
+    void setHandCursor(HandCursor cursor);
+
 signals:
     void statusTextChanged();
 
@@ -108,6 +115,7 @@ protected:
     BuildingBaseScene *mEditor;
     QAction *mAction;
     QString mStatusText;
+    HandCursor mHandCursor;
 };
 
 /////

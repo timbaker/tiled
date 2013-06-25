@@ -121,6 +121,19 @@ bool BaseTool::isCurrent()
     return ToolManager::instance()->currentTool() == this;
 }
 
+void BaseTool::setHandCursor(HandCursor cursor)
+{
+    if (!mEditor || !mEditor->views().size() || cursor == mHandCursor)
+        return;
+    mHandCursor = cursor;
+    if (mHandCursor == HandOpen)
+        mEditor->views().at(0)->setCursor(Qt::OpenHandCursor);
+    else if (mHandCursor == HandClosed)
+        mEditor->views().at(0)->setCursor(Qt::ClosedHandCursor);
+    else
+        mEditor->views().at(0)->unsetCursor();
+}
+
 void BaseTool::makeCurrent()
 {
     ToolManager::instance()->activateTool(this);
@@ -134,6 +147,10 @@ void BaseTool::activate()
 
 void BaseTool::deactivate()
 {
+    if (mHandCursor != HandNone) {
+        mEditor->views().at(0)->unsetCursor();
+        mHandCursor = HandNone;
+    }
     document()->disconnect(this);
 }
 
@@ -436,6 +453,10 @@ void SelectMoveRoomsTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mMouseDown = true;
         mStartScenePos = event->scenePos();
         mStartTilePos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
+        if (mMouseOverSelection) {
+            setHandCursor(HandClosed);
+            startMoving();
+        }
         updateStatusText();
     }
     if (event->button() == Qt::RightButton) {
@@ -454,6 +475,8 @@ void SelectMoveRoomsTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     if (mouseOverSelection != mMouseOverSelection) {
         mMouseOverSelection = mouseOverSelection;
         updateStatusText();
+        if (mMode == NoMode)
+            setHandCursor(mMouseOverSelection ? HandOpen : HandNone);
     }
 
     if (mMode == NoMode && mMouseDown) {
@@ -525,6 +548,8 @@ void SelectMoveRoomsTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     }
 
     mMouseDown = false;
+    updateCursor(event->scenePos());
+    setHandCursor(mMouseOverSelection ? HandOpen : HandNone);
     updateStatusText();
 }
 
@@ -567,6 +592,7 @@ void SelectMoveRoomsTool::deactivate()
         delete mCursorItem;
         mCursorItem = 0;
     }
+    mMouseOverSelection = false;
     BaseTool::deactivate();
 }
 
@@ -588,6 +614,10 @@ void SelectMoveRoomsTool::updateCursor(const QPointF &scenePos)
     mCursorTileBounds &= floor()->bounds(1, 1);
 
     mCursorItem->setRegion(QRegion(mCursorTileBounds));
+
+    QPoint offset = (mMode == Moving) ? mDragOffset : QPoint();
+    mCursorItem->setVisible((mMode != Moving) && !selectedArea().translated(offset)
+                            .contains(mCursorTilePos));
 }
 
 void SelectMoveRoomsTool::updateSelection(const QPointF &pos,
@@ -1816,6 +1846,8 @@ void SelectMoveObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mMouseDown = true;
         mStartScenePos = event->scenePos();
         mClickedObject = mEditor->topmostObjectAt(mStartScenePos);
+        if (mMouseOverObject)
+            startMoving();
     }
     if (event->button() == Qt::RightButton) {
         if (mMode == Moving)
@@ -1837,6 +1869,7 @@ void SelectMoveObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
             mMouseOverSelection = mouseOverSelection;
             updateStatusText();
         }
+        setHandCursor(mMouseOverSelection ? HandOpen : HandNone);
 
         mEditor->setMouseOverObject(object);
     }
@@ -1909,6 +1942,7 @@ void SelectMoveObjectTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
     mMouseDown = false;
     mClickedObject = 0;
+    mouseMoveEvent(event); // update mMouseOverXXX
     updateStatusText();
 }
 
@@ -2024,6 +2058,7 @@ void SelectMoveObjectTool::startMoving()
 
     mMode = Moving;
     mDragOffset = QPoint();
+    setHandCursor(HandClosed);
     updateStatusText();
 }
 
