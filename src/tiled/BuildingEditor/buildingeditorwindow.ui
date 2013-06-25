@@ -323,6 +323,9 @@
    <property name="text">
     <string>Rooms...</string>
    </property>
+   <property name="toolTip">
+    <string>Edit Rooms</string>
+   </property>
   </action>
   <action name="actionTemplates">
    <property name="text">
