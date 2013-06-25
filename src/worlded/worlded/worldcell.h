@@ -325,7 +325,7 @@ public:
     int levelCount() const
     { return mLevels.size(); }
     WorldCellLevel *levelAt(int index) const
-    { return mLevels[index]; }
+    { return (index >= 0 && index < mLevels.size()) ? mLevels[index] : 0; }
 
     void insertLot(int index, WorldCellLot *lot);
     WorldCellLot *removeLot(int index);

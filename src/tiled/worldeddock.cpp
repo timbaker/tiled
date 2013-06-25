@@ -20,6 +20,7 @@
 
 #include "documentmanager.h"
 #include "mapdocument.h"
+#include "ZomboidScene.h"
 
 #include "worlded/worldcell.h"
 #include "worlded/worldedmgr.h"
@@ -313,6 +314,9 @@ WorldEdDock::WorldEdDock(QWidget *parent) :
             SLOT(afterWorldChanged()));
     connect(WorldEd::WorldEdMgr::instance(), SIGNAL(selectedLotsChanged()),
             SLOT(selectedLotsChanged()));
+
+    connect(DocumentManager::instance(), SIGNAL(documentAboutToClose(int,MapDocument*)),
+            SLOT(documentAboutToClose(int,MapDocument*)));
 }
 
 WorldEdDock::~WorldEdDock()
@@ -322,8 +326,10 @@ WorldEdDock::~WorldEdDock()
 
 void WorldEdDock::setMapDocument(MapDocument *mapDoc)
 {
-    if (mDocument)
+    if (mDocument) {
+        saveExpandedLevels(mDocument);
         mDocument->disconnect(this);
+    }
 
     mDocument = mapDoc;
 
@@ -332,6 +338,7 @@ void WorldEdDock::setMapDocument(MapDocument *mapDoc)
             ui->view->model()->setWorldCell(cell);
         else
             ui->view->model()->setWorldCell(0);
+        restoreExpandedLevels(mDocument);
     } else
         ui->view->model()->setWorldCell(0);
 }
@@ -353,7 +360,6 @@ void WorldEdDock::selectionChanged()
     }
 }
 
-#include "ZomboidScene.h"
 void WorldEdDock::visibilityChanged(WorldCellLevel *level)
 {
     ((ZomboidScene*)DocumentManager::instance()->currentMapScene())->lotManager()
@@ -395,3 +401,37 @@ void WorldEdDock::selectedLotsChanged()
     }
 }
 
+void WorldEdDock::saveExpandedLevels(MapDocument *mapDoc)
+{
+    mExpandedLevels[mapDoc].clear();
+    if (WorldCell *cell = ui->view->model()->cell()) {
+        foreach (WorldCellLevel *level, cell->levels()) {
+            if (ui->view->isExpanded(ui->view->model()->index(level)))
+                mExpandedLevels[mapDoc].append(level->z());
+        }
+    }
+}
+
+void WorldEdDock::restoreExpandedLevels(MapDocument *mapDoc)
+{
+    if (mExpandedLevels.contains(mapDoc)) {
+        if (WorldCell *cell = ui->view->model()->cell()) {
+            foreach (int z, mExpandedLevels[mapDoc]) {
+                if (WorldCellLevel *level = cell->levelAt(z))
+                    ui->view->setExpanded(ui->view->model()->index(level), true);
+            }
+        }
+        mExpandedLevels[mapDoc].clear();
+    } else
+        ui->view->expandAll();
+
+    // Also restore the selection
+//    if (Layer *layer = mapDoc->currentLayer())
+//        mView->setCurrentIndex(mView->model()->index(layer));
+}
+
+void WorldEdDock::documentAboutToClose(int index, MapDocument *mapDocument)
+{
+    Q_UNUSED(index)
+    mExpandedLevels.remove(mapDocument);
+}

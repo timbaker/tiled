@@ -61,6 +61,8 @@ public:
     WorldCellLot *toLot(const QModelIndex &index) const;
 
     void setWorldCell(WorldCell *cell);
+    WorldCell *cell() const
+    { return mCell; }
 
 private slots:
     void levelVisibilityChanged(WorldCellLevel *level);
@@ -132,6 +134,10 @@ public:
 
     void setMapDocument(MapDocument *mapDoc);
     
+private:
+    void saveExpandedLevels(MapDocument *mapDoc);
+    void restoreExpandedLevels(MapDocument *mapDoc);
+
 private slots:
     void selectionChanged();
     void visibilityChanged(WorldCellLevel *level);
@@ -142,9 +148,12 @@ private slots:
 
     void selectedLotsChanged();
 
+    void documentAboutToClose(int index, MapDocument *mapDocument);
+
 private:
     MapDocument *mDocument;
     bool mSynching;
+    QMap<MapDocument*,QList<int> > mExpandedLevels;
     Ui::WorldEdDock *ui;
 };
 
