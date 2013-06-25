@@ -1846,7 +1846,7 @@ void SelectMoveObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mMouseDown = true;
         mStartScenePos = event->scenePos();
         mClickedObject = mEditor->topmostObjectAt(mStartScenePos);
-        if (mMouseOverObject)
+        if (mMouseOverObject && !(event->modifiers() & (Qt::ControlModifier | Qt::ShiftModifier)))
             startMoving();
     }
     if (event->button() == Qt::RightButton) {
