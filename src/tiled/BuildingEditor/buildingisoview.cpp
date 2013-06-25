@@ -606,6 +606,17 @@ void BuildingIsoScene::resetFloorGrid(BuildingFloor *floor)
     mBuildingMap->resetFloorGrid(floor);
 }
 
+void BuildingIsoScene::changeUserTiles(BuildingFloor *floor,
+                                       const QMap<QString,FloorTileGrid*> &tiles)
+{
+    mBuildingMap->changeUserTiles(floor, tiles);
+}
+
+void BuildingIsoScene::resetUserTiles(BuildingFloor *floor)
+{
+    mBuildingMap->resetUserTiles(floor);
+}
+
 bool BuildingIsoScene::shouldShowFloorItem(BuildingFloor *floor) const
 {
     return !mEditingTiles

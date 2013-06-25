@@ -472,6 +472,11 @@ public:
     { Q_UNUSED(floor) Q_UNUSED(grid) }
     virtual void resetFloorGrid(BuildingFloor *floor)
     { Q_UNUSED(floor) }
+    virtual void changeUserTiles(BuildingFloor *floor,
+                                 const QMap<QString,FloorTileGrid*> &tiles)
+    { Q_UNUSED(floor) Q_UNUSED(tiles) }
+    virtual void resetUserTiles(BuildingFloor *floor)
+    { Q_UNUSED(floor) }
 
     virtual void setEditingTiles(bool editing);
     bool editingTiles() const { return mEditingTiles; }

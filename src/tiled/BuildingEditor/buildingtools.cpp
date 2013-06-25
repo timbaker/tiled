@@ -656,6 +656,7 @@ void SelectMoveRoomsTool::updateMovingItems()
         QImage *dragBmp = floorItem->dragBmp();
 
         QVector<QVector<Room*> > dragGrid = floor->grid();
+        QMap<QString,FloorTileGrid*> dragTiles = floor->grimeClone();
 
         *dragBmp = *bmp;
 
@@ -670,6 +671,8 @@ void SelectMoveRoomsTool::updateMovingItems()
                     for (int y = r.top(); y <= r.bottom(); y++) {
                         dragBmp->setPixel(x, y, qRgb(0,0,0));
                         dragGrid[x][y] = 0;
+                        foreach (QString layerName, dragTiles.keys())
+                            dragTiles[layerName]->replace(x, y, QString());
                     }
             }
 
@@ -682,12 +685,15 @@ void SelectMoveRoomsTool::updateMovingItems()
                         if (floorBounds.contains(p)) {
                             dragBmp->setPixel(p, bmp->pixel(x, y));
                             dragGrid[p.x()][p.y()] = floor->GetRoomAt(x, y);
+                            foreach (QString layerName, dragTiles.keys())
+                                dragTiles[layerName]->replace(p.x(), p.y(), floor->grimeAt(layerName, x, y));
                         }
                     }
                 }
             }
 
             mEditor->changeFloorGrid(floor, dragGrid);
+            mEditor->changeUserTiles(floor, dragTiles);
         }
 
         floorItem->update();
@@ -721,6 +727,7 @@ void SelectMoveRoomsTool::finishMoving(const QPointF &pos)
         delete item->dragBmp();
         item->setDragBmp(0);
         mEditor->resetFloorGrid(floor);
+        mEditor->resetUserTiles(floor);
         foreach (BuildingObject *object, floor->objects()) {
             item->itemForObject(object)->setDragging(false);
             mEditor->resetDrag(floor, object);
@@ -755,6 +762,7 @@ void SelectMoveRoomsTool::cancelMoving()
         delete item->dragBmp();
         item->setDragBmp(0);
         mEditor->resetFloorGrid(floor);
+        mEditor->resetUserTiles(floor);
         foreach (BuildingObject *object, floor->objects()) {
             item->itemForObject(object)->setDragging(false);
             mEditor->resetDrag(floor, object);

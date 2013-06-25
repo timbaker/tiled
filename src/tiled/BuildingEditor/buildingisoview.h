@@ -186,6 +186,8 @@ public:
     void resetDrag(BuildingFloor *floor, BuildingObject *object);
     void changeFloorGrid(BuildingFloor *floor, const QVector<QVector<Room*> > &grid);
     void resetFloorGrid(BuildingFloor *floor);
+    void changeUserTiles(BuildingFloor *floor, const QMap<QString,FloorTileGrid*> &tiles);
+    void resetUserTiles(BuildingFloor *floor);
 
     bool shouldShowFloorItem(BuildingFloor *floor) const;
     bool shouldShowObjectItem(BuildingObject *object) const;
