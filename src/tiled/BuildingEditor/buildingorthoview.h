@@ -373,13 +373,14 @@ public:
 
     void setColor(const QColor &color);
 
-    void setRegion(const QRegion &region);
+    void setRegion(const QRegion &region, int level, bool force = false);
 
     void buildingResized();
 
 protected:
     BuildingBaseScene *mScene;
     QRegion mRegion;
+    int mLevel;
     QRectF mBoundingRect;
     QColor mColor;
 };

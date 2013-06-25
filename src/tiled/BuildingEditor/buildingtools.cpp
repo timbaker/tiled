@@ -613,7 +613,7 @@ void SelectMoveRoomsTool::updateCursor(const QPointF &scenePos)
     mCursorTileBounds = QRect(mCursorTilePos, QSize(1, 1));
     mCursorTileBounds &= floor()->bounds(1, 1);
 
-    mCursorItem->setRegion(QRegion(mCursorTileBounds));
+    mCursorItem->setRegion(QRegion(mCursorTileBounds), mEditor->currentLevel());
 
     QPoint offset = (mMode == Moving) ? mDragOffset : QPoint();
     mCursorItem->setVisible((mMode != Moving) && !selectedArea().translated(offset)

@@ -63,7 +63,7 @@ QPainterPath BuildingRegionItem::shape() const
     BuildingRenderer *renderer = mScene->renderer();
     QPainterPath path;
     foreach (const QRect &r, mRegion.rects()) {
-        QPolygonF polygon = renderer->tileToScenePolygonF(r, mScene->currentLevel());
+        QPolygonF polygon = renderer->tileToScenePolygonF(r, mLevel);
         path.addPolygon(polygon);
     }
     return path;
@@ -80,7 +80,7 @@ void BuildingRegionItem::paint(QPainter *painter,
 
     BuildingRenderer *renderer = mScene->renderer();
     foreach (const QRect &r, mRegion.rects()) {
-        QPolygonF polygon = renderer->tileToScenePolygonF(r, mScene->currentLevel());
+        QPolygonF polygon = renderer->tileToScenePolygonF(r, mLevel);
         if (QRectF(polygon.boundingRect()).intersects(option->exposedRect))
             painter->drawConvexPolygon(polygon);
     }
@@ -94,12 +94,12 @@ void BuildingRegionItem::setColor(const QColor &color)
     }
 }
 
-void BuildingRegionItem::setRegion(const QRegion &region)
+void BuildingRegionItem::setRegion(const QRegion &region, int level, bool force)
 {
-    if (region != mRegion) {
+    if (force || (region != mRegion) || (level != mLevel)) {
         BuildingRenderer *renderer = mScene->renderer();
         QPolygonF polygon = renderer->tileToScenePolygonF(region.boundingRect(),
-                                                          mScene->currentLevel());
+                                                          level);
         QRectF bounds = polygon.boundingRect();
 
         // Add tile bounds and pen width to the shape.
@@ -121,10 +121,10 @@ void BuildingRegionItem::setRegion(const QRegion &region)
         }
 
         mRegion = region;
+        mLevel = level;
 
         const QRect changedArea = region.xored(mRegion).boundingRect();
-        polygon = renderer->tileToScenePolygonF(changedArea,
-                                                mScene->currentLevel());
+        polygon = renderer->tileToScenePolygonF(changedArea, mLevel);
         update(polygon.boundingRect());
     }
 }
@@ -132,9 +132,7 @@ void BuildingRegionItem::setRegion(const QRegion &region)
 void BuildingRegionItem::buildingResized()
 {
     // Just recalculating the bounding rect.
-    QRegion region = mRegion;
-    mRegion = QRegion();
-    setRegion(region);
+    setRegion(mRegion, true);
 }
 
 /////
@@ -162,17 +160,17 @@ BuildingDocument *RoomSelectionItem::document() const
 
 void RoomSelectionItem::setDragOffset(const QPoint &offset)
 {
-    setRegion(document()->roomSelection().translated(offset));
+    setRegion(document()->roomSelection().translated(offset), document()->currentLevel());
 }
 
 void RoomSelectionItem::roomSelectionChanged()
 {
-    setRegion(document()->roomSelection());
+    setRegion(document()->roomSelection(), document()->currentLevel());
 }
 
 void RoomSelectionItem::currentLevelChanged()
 {
-    setRegion(document()->roomSelection());
+    setRegion(document()->roomSelection(), document()->currentLevel());
 }
 
 /////
