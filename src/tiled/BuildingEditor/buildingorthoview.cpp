@@ -58,6 +58,17 @@ QRectF BuildingRegionItem::boundingRect() const
     return mBoundingRect;
 }
 
+QPainterPath BuildingRegionItem::shape() const
+{
+    BuildingRenderer *renderer = mScene->renderer();
+    QPainterPath path;
+    foreach (const QRect &r, mRegion.rects()) {
+        QPolygonF polygon = renderer->tileToScenePolygonF(r, mScene->currentLevel());
+        path.addPolygon(polygon);
+    }
+    return path;
+}
+
 void BuildingRegionItem::paint(QPainter *painter,
                                const QStyleOptionGraphicsItem *option,
                                QWidget *)
