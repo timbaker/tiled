@@ -337,7 +337,7 @@ void BmpBlender::initTiles()
         }
     }
 
-
+    mFloorTileToRule.clear();
     foreach (BmpRule *rule, mRules) {
         if (rule->targetLayer != QLatin1String("0_Floor"))
             continue;
