@@ -22,6 +22,7 @@
 #include "mapscene.h"
 #include "worldeddock.h"
 
+#include "worlded/world.h"
 #include "worlded/worldcell.h"
 #include "worlded/worldedmgr.h"
 
@@ -54,6 +55,7 @@ WorldLotTool::WorldLotTool(QObject *parent) :
                  QIcon(QLatin1String(":images/worlded-icon-16.png")),
                  QKeySequence(), parent),
     mScene(0),
+    mCell(0),
     mHoverItem(0),
     mHoverLot(0),
     mShowingContextMenu(false)
@@ -69,6 +71,7 @@ WorldLotTool::~WorldLotTool()
 void WorldLotTool::activate(MapScene *scene)
 {
     mScene = scene;
+    mCell = WorldEd::WorldEdMgr::instance()->cellForMap(mScene->mapDocument()->fileName());
 }
 
 void WorldLotTool::deactivate(MapScene *scene)
@@ -80,6 +83,7 @@ void WorldLotTool::deactivate(MapScene *scene)
         mHoverLot = 0;
     }
     mScene = 0;
+    mCell = 0;
 }
 
 void WorldLotTool::mouseEntered()
@@ -143,14 +147,29 @@ void WorldLotTool::languageChanged()
 WorldCellLot *WorldLotTool::topmostLotAt(const QPointF &scenePos)
 {
     WorldCellLot *hover = 0;
-    if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mScene->mapDocument()->fileName())) {
-        foreach (WorldCellLevel *level, cell->levels()) {
-            if (!level->isVisible()) continue;
-            foreach (WorldCellLot *lot, level->lots()) {
-                if (!lot->isVisible()) continue;
-                QPoint tilePos = mScene->mapDocument()->renderer()->pixelToTileCoordsInt(scenePos, level->z());
-                if (lot->bounds().contains(tilePos))
-                    hover = lot; // keep going to find the top-most one
+    if (mCell) {
+        for (int y = -1; y <= 1; y++) {
+            for (int x = -1; x <= 1; x++) {
+                WorldCell *cell = mCell->world()->cellAt(mCell->pos() + QPoint(x, y));
+                if (!cell) continue;
+                foreach (WorldCellLevel *level, cell->levels()) {
+                    if (!level->isVisible()) continue;
+                    QPoint tilePos = mScene->mapDocument()->renderer()->pixelToTileCoordsInt(scenePos, level->z());
+                    foreach (WorldCellLot *lot, level->lots()) {
+                        if (!lot->isVisible()) continue;
+                        QPoint origin;
+                        switch (x) {
+                        case -1: origin.setX(-300); break;
+                        case 1: origin.setX(300); break;
+                        }
+                        switch (y) {
+                        case -1: origin.setY(-300); break;
+                        case 1: origin.setY(300); break;
+                        }
+                        if (lot->bounds().contains(tilePos - origin))
+                            hover = lot; // keep going to find the top-most one
+                    }
+                }
             }
         }
     }
@@ -177,7 +196,19 @@ void WorldLotTool::updateHoverItem(WorldCellLot *lot)
                 mHoverItem->setZValue(1000);
                 mScene->addItem(mHoverItem);
             }
-            QPolygonF polygon = mScene->mapDocument()->renderer()->tileToPixelCoords(lot->bounds());
+
+            QPoint origin;
+            switch (lot->cell()->x() - mCell->x()) {
+            case -1: origin.setX(-300); break;
+            case 1: origin.setX(300); break;
+            }
+            switch (lot->cell()->y() - mCell->y()) {
+            case -1: origin.setY(-300); break;
+            case 1: origin.setY(300); break;
+            }
+            QRect lotBounds = lot->bounds().translated(origin);
+
+            QPolygonF polygon = mScene->mapDocument()->renderer()->tileToPixelCoords(lotBounds);
             mHoverItem->setPolygon(polygon);
             mHoverItem->setVisible(true);
             mHoverItem->setToolTip(QDir::toNativeSeparators(lot->mapName()));

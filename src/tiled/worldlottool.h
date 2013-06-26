@@ -20,6 +20,7 @@
 
 #include "abstracttool.h"
 
+class WorldCell;
 class WorldCellLot;
 
 class QGraphicsPolygonItem;
@@ -58,6 +59,7 @@ private:
     ~WorldLotTool();
 
     MapScene *mScene;
+    WorldCell *mCell;
     QGraphicsPolygonItem *mHoverItem;
     WorldCellLot *mHoverLot;
     QPointF mLastScenePos;

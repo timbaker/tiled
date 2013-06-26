@@ -844,15 +844,42 @@ void MapDocument::bmpBlenderRegionAltered(const QRegion &region)
 void MapDocument::mapLoaded(MapInfo *info)
 {
     bool changed = false;
+    WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mFileName);
+
     for (int i = 0; i < mAdjacentMapsLoading.size(); i++) {
         AdjacentMap &am = mAdjacentMapsLoading[i];
         if (am.info == info) {
             mMapComposite->setAdjacentMap(am.pos.x(), am.pos.y(), am.info);
+
+            MapComposite *adjacentMap = mMapComposite->adjacentMap(am.pos.x(),
+                                                                   am.pos.y());
+            WorldCell *cell2 = cell->world()->cellAt(am.pos + cell->pos());
+            foreach (WorldCellLot *lot, cell2->lots()) {
+                MapInfo *subMapInfo = MapManager::instance()->loadMap(
+                            lot->mapName(), QString(), true, MapManager::PriorityLow);
+                if (subMapInfo && !subMapInfo->isLoading())
+                    adjacentMap->addMap(subMapInfo, lot->pos(), lot->level());
+            }
+
             mAdjacentMapsLoading.removeAt(i);
             changed = true;
             --i;
         }
     }
+
+    for (int i = 0; i < mAdjacentSubMapsLoading.size(); i++) {
+        LoadingSubMap &sm = mAdjacentSubMapsLoading[i];
+        if (sm.mapInfo == info) {
+            int x = sm.lot->cell()->x(), y = sm.lot->cell()->y();
+            if (MapComposite *adjacentMap = mMapComposite->adjacentMap(x - cell->x(),
+                                                                       y - cell->y()))
+                adjacentMap->addMap(info, sm.lot->pos(), sm.lot->level());
+            mAdjacentSubMapsLoading.removeAt(i);
+            changed = true;
+            --i;
+        }
+    }
+
     if (changed)
         emit mapCompositeChanged(); ///////
 }
@@ -863,6 +890,14 @@ void MapDocument::mapFailedToLoad(MapInfo *info)
         AdjacentMap &am = mAdjacentMapsLoading[i];
         if (am.info == info) {
             mAdjacentMapsLoading.removeAt(i);
+            --i;
+        }
+    }
+
+    for (int i = 0; i < mAdjacentSubMapsLoading.size(); i++) {
+        LoadingSubMap &sm = mAdjacentSubMapsLoading[i];
+        if (sm.mapInfo == info) {
+            mAdjacentSubMapsLoading.removeAt(i);
             --i;
         }
     }
@@ -885,7 +920,7 @@ void MapDocument::initAdjacentMaps()
 {
     if (mFileName.isEmpty() || !Preferences::instance()->showAdjacentMaps())
         return;
-#if 1
+
     connect(MapManager::instance(), SIGNAL(mapLoaded(MapInfo*)),
             SLOT(mapLoaded(MapInfo*)));
     connect(MapManager::instance(), SIGNAL(mapFailedToLoad(MapInfo*)),
@@ -910,47 +945,24 @@ void MapDocument::initAdjacentMaps()
                                 mAdjacentMapsLoading += AdjacentMap(x, y, mapInfo);
                             else
                                 mMapComposite->setAdjacentMap(x, y, mapInfo);
+
+                            MapComposite *adjacentMap = mMapComposite->adjacentMap(x, y);
+                            foreach (WorldCellLot *lot, cell2->lots()) {
+                                MapInfo *subMapInfo = MapManager::instance()->loadMap(
+                                            lot->mapName(), QString(), true, MapManager::PriorityLow);
+                                if (subMapInfo) {
+                                    if (subMapInfo->isLoading())
+                                        mAdjacentSubMapsLoading += LoadingSubMap(lot, subMapInfo);
+                                    else if (adjacentMap)
+                                        adjacentMap->addMap(subMapInfo, lot->pos(), lot->level());
+                                }
+                            }
                         }
                     }
                 }
             }
         }
     }
-
-#else
-    QRegExp re(QLatin1String("(.+)_([0-9]+)_([0-9]+)"));
-    QFileInfo info(mFileName);
-    if (!re.exactMatch(info.baseName()))
-        return;
-
-    connect(MapManager::instance(), SIGNAL(mapLoaded(MapInfo*)),
-            SLOT(mapLoaded(MapInfo*)));
-
-    QString base = re.cap(1);
-    int X = re.cap(2).toInt();
-    int Y = re.cap(3).toInt();
-
-    for (int y = -1; y <= 1; y++) {
-        if (Y + y < 0) continue;
-        for (int x = -1; x <= 1; x++) {
-            if (X + x < 0) continue;
-            if (!x && !y) continue;
-            QFileInfo info2(info.dir(), QString::fromLatin1("%1_%2_%3.tmx")
-                            .arg(base).arg(X + x).arg(Y + y));
-            if (info2.exists()) {
-                MapInfo *mapInfo = MapManager::instance()->loadMap(
-                            info2.absoluteFilePath(), QString(), true,
-                            MapManager::PriorityMedium);
-                if (mapInfo) {
-                    if (mapInfo->isLoading())
-                        mAdjacentMapsLoading += AdjacentMap(x, y, mapInfo);
-                    else
-                        mMapComposite->setAdjacentMap(x, y, mapInfo);
-                }
-            }
-        }
-    }
-#endif
 }
 #endif // ZOMBOID
 

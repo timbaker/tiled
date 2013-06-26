@@ -42,6 +42,7 @@ class QUndoStack;
 class CompositeLayerGroup;
 class MapComposite;
 class MapInfo;
+class WorldCellLot;
 #endif
 
 namespace Tiled {
@@ -446,6 +447,16 @@ private:
         MapInfo *info;
     };
     QList<AdjacentMap> mAdjacentMapsLoading;
+
+    struct LoadingSubMap {
+        LoadingSubMap(WorldCellLot *lot, MapInfo *mapInfo) :
+            lot(lot),
+            mapInfo(mapInfo)
+        {}
+        WorldCellLot *lot;
+        MapInfo *mapInfo;
+    };
+    QList<LoadingSubMap> mAdjacentSubMapsLoading;
 #endif // ZOMBOID
     QUndoStack *mUndoStack;
 };

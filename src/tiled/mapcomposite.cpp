@@ -186,8 +186,8 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
 {
     static QLatin1String sFloor("0_Floor");
 
-    MapComposite *root = mOwner->root();
-    if (!mOwner->parent())
+    MapComposite *root = mOwner->rootOrAdjacent();
+    if (root == mOwner)
         root->mKeepFloorLayerCount = 0;
 
     bool cleared = false;
@@ -272,7 +272,7 @@ bool CompositeLayerGroup::orderedCellsAt2(const QPoint &pos, QVector<const Cell 
     static QLatin1String sFloor("0_Floor");
 
     MapComposite *root = mOwner->root();
-    if (!mOwner->parent())
+    if (root == mOwner)
         root->mKeepFloorLayerCount = 0;
 
     bool cleared = false;
@@ -452,7 +452,7 @@ void CompositeLayerGroup::synch()
             maxMargins(m, tl->drawMargins(), m);
             mAnyVisibleLayers = true;
         }
-        if (!mLevel && !mOwner->parent() &&
+        if (!mLevel && (!mOwner->parent() || mOwner->isAdjacentMap()) &&
                 (index == mMaxFloorLayer + 1) &&
                 tl->name().startsWith(QLatin1String("0_Floor")))
             mMaxFloorLayer = index;
@@ -1333,6 +1333,16 @@ void MapComposite::setAdjacentMap(int x, int y, MapInfo *mapInfo)
     mAdjacentMaps[index]->mIsAdjacentMap = true;
 }
 
+MapComposite *MapComposite::adjacentMap(int x, int y)
+{
+    int index = (x + 1) + (y + 1) * 3;
+    if (index < 0 || index == 4 || index > 8) {
+        Q_ASSERT(false);
+        return 0;
+    }
+    return mAdjacentMaps.size() ? mAdjacentMaps[index] : 0;
+}
+
 bool MapComposite::waitingForMapsToLoad() const
 {
     if (mSubMapsLoading.size())
@@ -1467,6 +1477,14 @@ MapComposite *MapComposite::root()
 {
     MapComposite *root = this;
     while (root->parent())
+        root = root->parent();
+    return root;
+}
+
+MapComposite *MapComposite::rootOrAdjacent()
+{
+    MapComposite *root = this;
+    while (!root->isAdjacentMap() && root->parent())
         root = root->parent();
     return root;
 }
