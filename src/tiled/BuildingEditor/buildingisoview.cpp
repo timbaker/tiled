@@ -1100,6 +1100,20 @@ void BuildingIsoScene::mapResized()
     // Building object positions will change when the map size changes.
     BuildingBaseScene::mapResized();
 
+    foreach (CompositeLayerGroup *layerGroup, mBuildingMap->mapComposite()->layerGroups()) {
+        if (mLayerGroupItems.contains(layerGroup->level())) {
+            CompositeLayerGroupItem *item = mLayerGroupItems[layerGroup->level()];
+            item->synchWithTileLayers();
+            item->updateBounds();
+        }
+    }
+
+    QRectF sceneRect = mBuildingMap->mapComposite()->boundingRect(mBuildingMap->mapRenderer());
+    if (sceneRect != this->sceneRect()) {
+        setSceneRect(sceneRect);
+        mDarkRectangle->setRect(sceneRect);
+    }
+
     // TileModeGridItem::mBoundingRect needs updating.
     if (mGridItem)
         mGridItem->synchWithBuilding();
@@ -1109,6 +1123,9 @@ void BuildingIsoScene::layersUpdated(int level, const QRegion &rgn)
 {
     if (mLayerGroupItems.contains(level)) {
         CompositeLayerGroupItem *item = mLayerGroupItems[level];
+        // FIXME: BuildingMap will sometimes call layerGroup->synch() but we
+        // won't know it, and won't update the bounds here.  That's why the
+        // same code is in mapResized() above.
         if (item->layerGroup()->needsSynch()) {
             item->synchWithTileLayers();
             item->updateBounds();
