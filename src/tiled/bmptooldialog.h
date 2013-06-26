@@ -57,10 +57,12 @@ private slots:
 
     void reloadRules();
     void importRules();
+    void exportRules();
     void trashRules();
 
     void reloadBlends();
     void importBlends();
+    void exportBlends();
     void trashBlends();
 
     void help();

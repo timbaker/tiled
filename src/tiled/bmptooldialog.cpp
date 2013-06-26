@@ -160,10 +160,12 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
 
     connect(ui->reloadRules, SIGNAL(clicked()), SLOT(reloadRules()));
     connect(ui->importRules, SIGNAL(clicked()), SLOT(importRules()));
+    connect(ui->exportRules, SIGNAL(clicked()), SLOT(exportRules()));
     connect(ui->trashRules, SIGNAL(clicked()), SLOT(trashRules()));
 
     connect(ui->reloadBlends, SIGNAL(clicked()), SLOT(reloadBlends()));
     connect(ui->importBlends, SIGNAL(clicked()), SLOT(importBlends()));
+    connect(ui->exportBlends, SIGNAL(clicked()), SLOT(exportBlends()));
     connect(ui->trashBlends, SIGNAL(clicked()), SLOT(trashBlends()));
 
     connect(ui->help, SIGNAL(clicked()), SLOT(help()));
@@ -297,6 +299,21 @@ void BmpToolDialog::importRules()
     }
 }
 
+void BmpToolDialog::exportRules()
+{
+    QString f = QFileDialog::getSaveFileName(this, tr("Export Rules"),
+                                             mDocument->map()->bmpSettings()->rulesFile(),
+                                             tr("Rules.txt files (*.txt)"));
+    if (!f.isEmpty()) {
+        BmpRulesFile file;
+        file.fromMap(mDocument->map());
+        if (!file.write(f)) {
+            QMessageBox::warning(this, tr("Export Rules Failed"), file.errorString());
+            return;
+        }
+    }
+}
+
 void BmpToolDialog::trashRules()
 {
     mDocument->undoStack()->push(new ChangeBmpRules(mDocument, QString(),
@@ -337,6 +354,21 @@ void BmpToolDialog::importBlends()
         }
         settings.setValue(QLatin1String("BmpToolDialog/BlendsFile"), f);
         mDocument->undoStack()->push(new ChangeBmpBlends(mDocument, f, file.blendsCopy()));
+    }
+}
+
+void BmpToolDialog::exportBlends()
+{
+    QString f = QFileDialog::getSaveFileName(this, tr("Export Blends"),
+                                             mDocument->map()->bmpSettings()->blendsFile(),
+                                             tr("Blends.txt files (*.txt)"));
+    if (!f.isEmpty()) {
+        BmpBlendsFile file;
+        file.fromMap(mDocument->map());
+        if (!file.write(f)) {
+            QMessageBox::warning(this, tr("Export Blends Failed"), file.errorString());
+            return;
+        }
     }
 }
 
@@ -400,13 +432,13 @@ void BmpToolDialog::setDocument(MapDocument *doc)
     ui->reloadRules->setEnabled(mDocument != 0 &&
             !mDocument->map()->bmpSettings()->rulesFile().isEmpty());
     ui->importRules->setEnabled(mDocument != 0);
-    ui->exportRules->setEnabled(false/*mDocument != 0*/);
+    ui->exportRules->setEnabled(mDocument != 0);
     ui->trashRules->setEnabled(ui->reloadRules->isEnabled());
 
     ui->reloadBlends->setEnabled(mDocument != 0 &&
             !mDocument->map()->bmpSettings()->blendsFile().isEmpty());
     ui->importBlends->setEnabled(mDocument != 0);
-    ui->exportBlends->setEnabled(false /*mDocument != 0*/);
+    ui->exportBlends->setEnabled(mDocument != 0);
     ui->trashBlends->setEnabled(ui->reloadBlends->isEnabled());
 
     switch (BmpBrushTool::instance()->brushShape()) {
