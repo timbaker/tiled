@@ -208,20 +208,22 @@ void EditorWindowPerDocumentStuff::autoSaveCheck()
 void EditorWindowPerDocumentStuff::autoSaveTimeout()
 {
     qDebug() << "BuildingEd auto-save timeout";
-    QString fileName = document()->fileName();
-    QString suffix = QLatin1String(".autosave"); // BuildingDocument::write() looks for this
-    if (fileName.isEmpty()) {
-        int n = 1;
-        QString dir = BuildingPreferences::instance()->configPath();
-        do {
-            fileName = QString::fromLatin1("%1/untitled%2.tbx").arg(dir).arg(n);
-            ++n;
-        } while (QFileInfo(fileName + suffix).exists());
+    if (mAutoSaveFileName.isEmpty()) {
+        QString fileName = document()->fileName();
+        QString suffix = QLatin1String(".autosave"); // BuildingDocument::write() looks for this
+        if (fileName.isEmpty()) {
+            int n = 1;
+            QString dir = BuildingPreferences::instance()->configPath();
+            do {
+                fileName = QString::fromLatin1("%1/untitled%2.tbx").arg(dir).arg(n);
+                ++n;
+            } while (QFileInfo(fileName + suffix).exists());
+        }
+        fileName += suffix;
+        mAutoSaveFileName = fileName;
     }
-    fileName += suffix;
-    mMainWindow->writeBuilding(document(), fileName);
-    mAutoSaveFileName = fileName;
-    qDebug() << "BuildingEd auto-saved:" << fileName;
+    mMainWindow->writeBuilding(document(), mAutoSaveFileName);
+    qDebug() << "BuildingEd auto-saved:" << mAutoSaveFileName;
 }
 
 void EditorWindowPerDocumentStuff::removeAutoSaveFile()
