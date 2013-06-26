@@ -414,6 +414,9 @@ void BmpToolDialog::warningsChanged()
     if (!mDocument)
         return;
     ui->warnings->addItems(mDocument->mapComposite()->bmpBlender()->warnings());
+    ui->tabWidget->setTabIcon(2, ui->warnings->count()
+                              ? QIcon(QLatin1String(":/images/24x24/warning.png"))
+                              : QIcon());
 }
 
 void BmpToolDialog::setDocument(MapDocument *doc)

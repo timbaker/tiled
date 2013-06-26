@@ -83,5 +83,6 @@
         <file>images/22x22/bmp-eraser.png</file>
         <file>images/22x22/roomdef-tool.png</file>
         <file>images/22x22/bmp-to-layers.png</file>
+        <file>images/24x24/warning.png</file>
     </qresource>
 </RCC>
