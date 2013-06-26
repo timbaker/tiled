@@ -2001,6 +2001,8 @@ void SelectMoveObjectTool::activate()
 
 void SelectMoveObjectTool::deactivate()
 {
+    if (mMode == Moving)
+        cancelMoving();
     BaseTool::deactivate();
 }
 
