@@ -43,7 +43,8 @@ using namespace BuildingEditor;
 
 BaseTool::BaseTool() :
     QObject(ToolManager::instance()),
-    mEditor(0)
+    mEditor(0),
+    mHandCursor(HandNone)
 {
     ToolManager::instance()->addTool(this);
 }
@@ -148,7 +149,8 @@ void BaseTool::activate()
 void BaseTool::deactivate()
 {
     if (mHandCursor != HandNone) {
-        mEditor->views().at(0)->unsetCursor();
+        if (mEditor->views().size())
+            mEditor->views().at(0)->unsetCursor();
         mHandCursor = HandNone;
     }
     document()->disconnect(this);
