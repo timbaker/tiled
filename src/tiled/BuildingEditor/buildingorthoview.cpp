@@ -132,7 +132,7 @@ void BuildingRegionItem::setRegion(const QRegion &region, int level, bool force)
 void BuildingRegionItem::buildingResized()
 {
     // Just recalculating the bounding rect.
-    setRegion(mRegion, true);
+    setRegion(mRegion, mLevel, true);
 }
 
 /////
