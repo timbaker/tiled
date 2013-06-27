@@ -374,15 +374,19 @@ void WorldEdDock::visibilityChanged(WorldCellLot *lot)
 
 void WorldEdDock::beforeWorldChanged()
 {
-    if (mDocument)
+    if (mDocument) {
+        saveExpandedLevels(mDocument);
         ui->view->model()->setWorldCell(0);
+    }
 }
 
 void WorldEdDock::afterWorldChanged()
 {
     if (mDocument) {
-        if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mDocument->fileName()))
+        if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mDocument->fileName())) {
             ui->view->model()->setWorldCell(cell);
+            restoreExpandedLevels(mDocument);
+        }
     }
 }
 
