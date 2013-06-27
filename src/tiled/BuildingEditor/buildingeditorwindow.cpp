@@ -1561,13 +1561,20 @@ void BuildingEditorWindow::flipHorizontal()
     undoStack->beginMacro(tr("Flip Horizontal"));
     undoStack->push(new EmitRotateBuilding(mCurrentDocument, true));
     QMap<QString,FloorTileGrid*> emptyGrime;
+    bool lostTiles = false;
     foreach (BuildingFloor *floor, currentBuilding()->floors()) {
+        if (!floor->hasUserTiles()) continue;
+        lostTiles = true;
         undoStack->push(new SwapFloorGrime(mCurrentDocument, floor, emptyGrime,
                                            "Remove All Tiles", false));
     }
     undoStack->push(new FlipBuilding(mCurrentDocument, true));
     undoStack->push(new EmitRotateBuilding(mCurrentDocument, false));
     undoStack->endMacro();
+
+    if (lostTiles)
+        QMessageBox::information(this, tr("Flip Building"),
+                                 tr("User-drawn tiles were removed during flipping."));
 }
 
 void BuildingEditorWindow::flipVertical()
@@ -1579,13 +1586,20 @@ void BuildingEditorWindow::flipVertical()
     mCurrentDocument->undoStack()->beginMacro(tr("Flip Vertical"));
     undoStack->push(new EmitRotateBuilding(mCurrentDocument, true));
     QMap<QString,FloorTileGrid*> emptyGrime;
+    bool lostTiles = false;
     foreach (BuildingFloor *floor, currentBuilding()->floors()) {
+        if (!floor->hasUserTiles()) continue;
+        lostTiles = true;
         undoStack->push(new SwapFloorGrime(mCurrentDocument, floor, emptyGrime,
                                            "Remove All Tiles", false));
     }
     undoStack->push(new FlipBuilding(mCurrentDocument, false));
     undoStack->push(new EmitRotateBuilding(mCurrentDocument, false));
     undoStack->endMacro();
+
+    if (lostTiles)
+        QMessageBox::information(this, tr("Flip Building"),
+                                 tr("User-drawn tiles were removed during flipping."));
 }
 
 void BuildingEditorWindow::rotateRight()
@@ -1597,13 +1611,20 @@ void BuildingEditorWindow::rotateRight()
     undoStack->beginMacro(tr("Rotate Right"));
     undoStack->push(new EmitRotateBuilding(mCurrentDocument, true));
     QMap<QString,FloorTileGrid*> emptyGrime;
+    bool lostTiles = false;
     foreach (BuildingFloor *floor, currentBuilding()->floors()) {
+        if (!floor->hasUserTiles()) continue;
+        lostTiles = true;
         undoStack->push(new SwapFloorGrime(mCurrentDocument, floor, emptyGrime,
                                            "Remove All Tiles", false));
     }
     undoStack->push(new RotateBuilding(mCurrentDocument, true));
     undoStack->push(new EmitRotateBuilding(mCurrentDocument, false));
     undoStack->endMacro();
+
+    if (lostTiles)
+        QMessageBox::information(this, tr("Rotate Building"),
+                                 tr("User-drawn tiles were removed during rotating."));
 }
 
 void BuildingEditorWindow::rotateLeft()
@@ -1615,13 +1636,20 @@ void BuildingEditorWindow::rotateLeft()
     undoStack->beginMacro(tr("Rotate Left"));
     undoStack->push(new EmitRotateBuilding(mCurrentDocument, true));
     QMap<QString,FloorTileGrid*> emptyGrime;
+    bool lostTiles = false;
     foreach (BuildingFloor *floor, currentBuilding()->floors()) {
+        if (!floor->hasUserTiles()) continue;
+        lostTiles = true;
         undoStack->push(new SwapFloorGrime(mCurrentDocument, floor, emptyGrime,
                                            "Remove All Tiles", false));
     }
     undoStack->push(new RotateBuilding(mCurrentDocument, false));
     undoStack->push(new EmitRotateBuilding(mCurrentDocument, false));
     undoStack->endMacro();
+
+    if (lostTiles)
+        QMessageBox::information(this, tr("Rotate Building"),
+                                 tr("User-drawn tiles were removed during rotating."));
 }
 
 void BuildingEditorWindow::templatesDialog()
