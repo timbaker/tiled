@@ -545,6 +545,10 @@ void BuildingIsoScene::setToolTiles(const FloorTileGrid *tiles,
     }
 
     layerGroup->setToolTiles(cells, pos, layer);
+    if (layerGroup->bounds().isEmpty() && !cells.isEmpty()) {
+        item->synchWithTileLayers();
+        item->updateBounds();
+    }
     mLayerGroupWithToolTiles = layerGroup;
 
     QRectF r = mBuildingMap->mapRenderer()->boundingRect(tiles->bounds().translated(pos), currentLevel())
