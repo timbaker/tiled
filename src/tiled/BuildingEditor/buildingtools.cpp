@@ -1600,9 +1600,11 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     if (mMode == Resize) {
         mMode = NoMode;
         int width = mHandleObject->width(), height = mHandleObject->height();
-        mHandleObject->resize(mOriginalWidth, mOriginalHeight);
-        undoStack()->push(new ResizeRoof(mEditor->document(), mHandleObject,
-                                         width, height));
+        if (width != mOriginalWidth || height != mOriginalHeight) {
+            mHandleObject->resize(mOriginalWidth, mOriginalHeight);
+            undoStack()->push(new ResizeRoof(mEditor->document(), mHandleObject,
+                                             width, height));
+        }
         mEditor->setCursorObject(0);
     }
 
@@ -2392,17 +2394,17 @@ void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         mMode = NoMode;
         QPoint pos = mHandleObject->pos();
         int length = mHandleObject->length();
-        if (pos == mOriginalPos && length == mOriginalLength)
-            return;
-        mHandleObject->setPos(mOriginalPos);
-        mHandleObject->setLength(mOriginalLength);
-        undoStack()->beginMacro(tr("Resize Wall"));
-        undoStack()->push(new MoveObject(mEditor->document(), mHandleObject,
-                                         pos));
-        undoStack()->push(new ResizeWall(mEditor->document(), mHandleObject,
-                                         length));
-        undoStack()->endMacro();
-        updateStatusText();
+        if (pos != mOriginalPos || length != mOriginalLength) {
+            mHandleObject->setPos(mOriginalPos);
+            mHandleObject->setLength(mOriginalLength);
+            undoStack()->beginMacro(tr("Resize Wall"));
+            undoStack()->push(new MoveObject(mEditor->document(), mHandleObject,
+                                             pos));
+            undoStack()->push(new ResizeWall(mEditor->document(), mHandleObject,
+                                             length));
+            undoStack()->endMacro();
+            updateStatusText();
+        }
         mEditor->setCursorObject(0);
         return;
     }

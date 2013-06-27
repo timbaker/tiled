@@ -1141,8 +1141,8 @@ ShadowBuilding::ShadowBuilding(const Building *building) :
 
 ShadowBuilding::~ShadowBuilding()
 {
-    delete mShadowBuilding;
     qDeleteAll(mModifiers);
+    delete mShadowBuilding;
 }
 
 BuildingFloor *ShadowBuilding::floor(int level) const
