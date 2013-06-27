@@ -81,6 +81,7 @@
     <property name="title">
      <string>Building</string>
     </property>
+    <addaction name="actionCropToMinimum"/>
     <addaction name="actionCropToSelection"/>
     <addaction name="actionResize"/>
     <addaction name="actionFlipHorizontal"/>
@@ -672,6 +673,15 @@
    </property>
    <property name="text">
     <string>Crop To Selection</string>
+   </property>
+  </action>
+  <action name="actionCropToMinimum">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_crop.png</normaloff>:/BuildingEditor/icons/icon_crop.png</iconset>
+   </property>
+   <property name="text">
+    <string>Crop To Minimum</string>
    </property>
   </action>
  </widget>

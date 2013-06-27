@@ -389,7 +389,8 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     keys += QKeySequence(tr("0"));
     ui->actionNormalSize->setShortcuts(keys);
 
-    connect(ui->actionCropToSelection, SIGNAL(triggered()), SLOT(crop()));
+    connect(ui->actionCropToMinimum, SIGNAL(triggered()), SLOT(cropToMinimum()));
+    connect(ui->actionCropToSelection, SIGNAL(triggered()), SLOT(cropToSelection()));
     connect(ui->actionResize, SIGNAL(triggered()), SLOT(resizeBuilding()));
     connect(ui->actionFlipHorizontal, SIGNAL(triggered()), SLOT(flipHorizontal()));
     connect(ui->actionFlipVertical, SIGNAL(triggered()), SLOT(flipVertical()));
@@ -1446,7 +1447,65 @@ void BuildingEditorWindow::roomChanged(Room *room)
     Q_UNUSED(room)
 }
 
-void BuildingEditorWindow::crop()
+void BuildingEditorWindow::cropToMinimum()
+{
+    if (!mCurrentDocument)
+        return;
+
+    QRect bounds;
+    QRect tileBounds;
+    QRect vertObjects, horzObjects;
+    Building *building = currentBuilding();
+    foreach (BuildingFloor *floor, building->floors()) {
+        for (int y = 0; y < floor->height(); y++) {
+            for (int x = 0; x < floor->width(); x++) {
+                if (floor->GetRoomAt(x, y))
+                    bounds |= QRect(x, y, 1, 1);
+            }
+        }
+
+        // Door, Window, and Wall objects are allowed to lie on the
+        // outer edge of a building without adding an extra row/column
+        // to the building.
+        foreach (BuildingObject *object, floor->objects()) {
+            if (object->asDoor() || object->asWindow()) {
+                if (object->isN())
+                    horzObjects |= object->bounds();
+                else
+                    vertObjects |= object->bounds();
+            } else if (object->asWall()) {
+                if (object->isN()) // bass-ackwards
+                    vertObjects |= object->bounds();
+                else
+                    horzObjects |= object->bounds();
+            } else
+                bounds |= object->bounds() & floor->bounds();
+        }
+
+        for (int y = 0; y < floor->height() + 1; y++) {
+            for (int x = 0; x < floor->width() + 1; x++) {
+                foreach (QString layerName, floor->grimeLayers())
+                    if (!floor->grimeAt(layerName, x, y).isEmpty())
+                        tileBounds |= QRect(x, y, 1, 1);
+            }
+        }
+    }
+    if (tileBounds.width() > 1) tileBounds.adjust(0, 0, -1, 0);
+    if (tileBounds.height() > 1) tileBounds.adjust(0, 0, 0, -1);
+    bounds |= tileBounds;
+
+    if (horzObjects.bottom() > (bounds | vertObjects).bottom())
+        horzObjects.adjust(0, 0, 0, -1);
+    if (vertObjects.right() > (bounds | horzObjects).right())
+        vertObjects.adjust(0, 0, -1, 0);
+    bounds |= horzObjects | vertObjects;
+
+    bounds &= building->bounds();
+    if (!bounds.isEmpty())
+        cropBuilding(bounds);
+}
+
+void BuildingEditorWindow::cropToSelection()
 {
     if (!mCurrentDocument)
         return;
@@ -1456,11 +1515,16 @@ void BuildingEditorWindow::crop()
         return;
 
     QRect bounds = selection.boundingRect() & mCurrentDocument->building()->bounds();
+    cropBuilding(bounds);
+}
+
+void BuildingEditorWindow::cropBuilding(const QRect &bounds)
+{
     QPoint offset = -bounds.topLeft();
     QSize newSize = bounds.size();
 
     QUndoStack *undoStack = mCurrentDocument->undoStack();
-    undoStack->beginMacro(tr("Crop To Selection"));
+    undoStack->beginMacro(tr("Crop Building"));
 
     // Offset
     foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
@@ -1818,6 +1882,7 @@ void BuildingEditorWindow::updateActions()
     ui->actionRooms->setEnabled(hasDoc);
     ui->actionTemplateFromBuilding->setEnabled(hasDoc);
 
+    ui->actionCropToMinimum->setEnabled(hasDoc);
     ui->actionCropToSelection->setEnabled(hasDoc &&
                                           !mCurrentDocument->roomSelection().isEmpty());
     ui->actionResize->setEnabled(hasDoc);

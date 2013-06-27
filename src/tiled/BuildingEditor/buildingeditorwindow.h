@@ -198,6 +198,8 @@ private:
 
     void deleteObjects();
 
+    void cropBuilding(const QRect &bounds);
+
     typedef Tiled::Tileset Tileset; // Hack for signals/slots
 
 signals:
@@ -246,7 +248,8 @@ private slots:
     void roomsReordered();
     void roomChanged(Room *room);
 
-    void crop();
+    void cropToMinimum();
+    void cropToSelection();
     void resizeBuilding();
     void flipHorizontal();
     void flipVertical();
