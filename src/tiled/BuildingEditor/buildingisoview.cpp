@@ -1088,6 +1088,7 @@ void BuildingIsoScene::layersRecreated()
 
     Q_ASSERT(mGridItem == 0);
     mGridItem = new TileModeGridItem(mDocument, mBuildingMap->mapRenderer());
+    mGridItem->setEditingTiles(editingTiles());
     mGridItem->synchWithBuilding();
     mGridItem->setZValue(ZVALUE_GRID);
     addItem(mGridItem);
