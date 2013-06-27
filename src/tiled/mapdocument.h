@@ -415,13 +415,12 @@ private slots:
 
     void mapLoaded(MapInfo *info);
     void mapFailedToLoad(MapInfo *info);
+
+    void initAdjacentMaps();
 #endif
 
 private:
     void deselectObjects(const QList<MapObject*> &objects);
-#ifdef ZOMBOID
-    void initAdjacentMaps();
-#endif
 
     QString mFileName;
     Map *mMap;

@@ -93,7 +93,16 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
             SLOT(onMapAboutToChange(MapInfo*)));
     connect(MapManager::instance(), SIGNAL(mapChanged(MapInfo*)),
             SLOT(onMapChanged(MapInfo*)));
-    initAdjacentMaps();
+
+    if (!mFileName.isEmpty() && Preferences::instance()->showAdjacentMaps()) {
+        connect(MapManager::instance(), SIGNAL(mapLoaded(MapInfo*)),
+                SLOT(mapLoaded(MapInfo*)));
+        connect(MapManager::instance(), SIGNAL(mapFailedToLoad(MapInfo*)),
+                SLOT(mapFailedToLoad(MapInfo*)));
+        connect(WorldEd::WorldEdMgr::instance(), SIGNAL(afterWorldChanged(QString)),
+                SLOT(initAdjacentMaps()));
+        initAdjacentMaps();
+    }
 #endif
     switch (map->orientation()) {
     case Map::Isometric:
@@ -918,13 +927,7 @@ void MapDocument::deselectObjects(const QList<MapObject *> &objects)
 #ifdef ZOMBOID
 void MapDocument::initAdjacentMaps()
 {
-    if (mFileName.isEmpty() || !Preferences::instance()->showAdjacentMaps())
-        return;
-
-    connect(MapManager::instance(), SIGNAL(mapLoaded(MapInfo*)),
-            SLOT(mapLoaded(MapInfo*)));
-    connect(MapManager::instance(), SIGNAL(mapFailedToLoad(MapInfo*)),
-            SLOT(mapFailedToLoad(MapInfo*)));
+    QVector<MapInfo*> adjacentMaps(9);
 
     if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mFileName)) {
         int cx = cell->x(), cy = cell->y();
@@ -957,9 +960,21 @@ void MapDocument::initAdjacentMaps()
                                         adjacentMap->addMap(subMapInfo, lot->pos(), lot->level());
                                 }
                             }
+                            adjacentMaps[(x + 1) + (y + 1) * 3] = mapInfo;
                         }
                     }
                 }
+            }
+        }
+    }
+
+    for (int y = -1; y <= 1; y++) {
+        for (int x = -1; x <= 1; x++) {
+            if (x == 0 && y == 0) continue;
+            if (MapComposite *mc = mMapComposite->adjacentMap(x, y)) {
+                int index = (x + 1) + (y + 1) * 3;
+                if (mc->mapInfo() != adjacentMaps[index])
+                    mMapComposite->setAdjacentMap(x, y, 0);
             }
         }
     }
