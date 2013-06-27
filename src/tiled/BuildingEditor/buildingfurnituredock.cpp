@@ -180,8 +180,10 @@ void BuildingFurnitureDock::currentFurnitureChanged()
 
             QRegion rgn;
             FloorTileGrid *tiles = ftile->toFloorTileGrid(rgn);
-            if (!tiles) // empty
+            if (!tiles) { // empty
+                DrawTileTool::instance()->setTile(QString());
                 return;
+            }
 
             DrawTileTool::instance()->setCaptureTiles(tiles, rgn);
         }
