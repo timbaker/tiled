@@ -49,9 +49,9 @@ WorldCellLot::WorldCellLot(WorldCell *cell, WorldCellLot *other)
 WorldCellLevel::WorldCellLevel(WorldCell *cell, int level) :
     mCell(cell),
     mLevel(level),
-    mVisible(true),
     mLots(cell->lots()),
-    mObjects(cell->objects())
+    mObjects(cell->objects()),
+    mVisible(true)
 {
 }
 
