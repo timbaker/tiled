@@ -861,6 +861,9 @@ BaseObjectTool::BaseObjectTool() :
     mCursorObject(0),
     mCursorItem(0),
     mEyedrop(false),
+    mMouseDown(false),
+    mRightClicked(false),
+    mPlaceOnRelease(false),
     mMouseOverObject(false)
 {
 }
@@ -868,6 +871,10 @@ BaseObjectTool::BaseObjectTool() :
 void BaseObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::RightButton) {
+        if (mMouseDown) {
+            mRightClicked = true;
+            return;
+        }
         if (BuildingObject *object = mEditor->topmostObjectAt(event->scenePos())) {
             undoStack()->push(new RemoveObject(mEditor->document(), floor(),
                                                object->index()));
@@ -885,14 +892,22 @@ void BaseObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         return;
     }
 
+    mMouseDown = true;
+
     if (!mCursorItem || !mCursorItem->isVisible() || !mCursorItem->isValidPos())
         return;
 
-    placeObject();
+    if (mPlaceOnRelease)
+        updateStatusText();
+    else
+        placeObject();
 }
 
 void BaseObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    if (mMouseDown)
+        return;
+
     if (mEyedrop) {
         BuildingObject *object = mEditor->topmostObjectAt(event->scenePos());
         if (object && (object->asRoof() || object->asWall()))
@@ -944,6 +959,14 @@ void BaseObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 void BaseObjectTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_UNUSED(event)
+
+    if (event->button() == Qt::LeftButton) {
+        if (!mRightClicked && mMouseDown && mPlaceOnRelease)
+            placeObject();
+        mMouseDown = false;
+        mRightClicked = false;
+        updateStatusText();
+    }
 }
 
 
@@ -1223,7 +1246,48 @@ FurnitureTool::FurnitureTool() :
     BaseObjectTool(),
     mCurrentTile(0)
 {
-    setStatusText(tr("Left-click to place furniture. Right-click to remove any object. CTRL disables auto-align.  ALT = eyedrop."));
+    mPlaceOnRelease = true;
+    updateStatusText();
+}
+
+void FurnitureTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (mMouseDown && mCursorObject) {
+        QPoint tilePos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
+        if (tilePos != mTilePos) {
+            QPointF tilePosF = mEditor->sceneToTileF(event->scenePos(), mEditor->currentLevel());
+            QLineF line(QPointF(mTilePos) + QPointF(0.5, 0.5), tilePosF);
+            FurnitureTile::FurnitureOrientation orient = FurnitureTile::FurnitureE;
+            if (mCurrentTile->owner()->hasCorners()) {
+                qreal angle = line.angle() + 45.0 / 2;
+                if (angle > 360) angle -= 360.0;
+                int sector = angle / 45.0;
+                if (sector == 0) orient = FurnitureTile::FurnitureE;
+                else if (sector == 1) orient = FurnitureTile::FurnitureNE;
+                else if (sector == 2) orient = FurnitureTile::FurnitureN;
+                else if (sector == 3) orient = FurnitureTile::FurnitureNW;
+                else if (sector == 4) orient = FurnitureTile::FurnitureW;
+                else if (sector == 5) orient = FurnitureTile::FurnitureSW;
+                else if (sector == 6) orient = FurnitureTile::FurnitureS;
+                else if (sector == 7) orient = FurnitureTile::FurnitureSE;
+            } else {
+                qreal angle = line.angle() + 90.0 / 2;
+                if (angle > 360) angle -= 360.0;
+                int sector = angle / 90.0;
+                if (sector == 0) orient = FurnitureTile::FurnitureE;
+                else if (sector == 1) orient = FurnitureTile::FurnitureN;
+                else if (sector == 2) orient = FurnitureTile::FurnitureW;
+                else if (sector == 3) orient = FurnitureTile::FurnitureS;
+            }
+
+            FurnitureTiles *ftiles = mCurrentTile->owner();
+            mCursorObject->asFurniture()->setFurnitureTile(ftiles->tile(orient));
+            setCursorObject(mCursorObject);
+        }
+        return;
+    }
+
+    BaseObjectTool::mouseMoveEvent(event);
 }
 
 void FurnitureTool::placeObject()
@@ -1402,6 +1466,14 @@ FurnitureTool::Orient FurnitureTool::calcOrient(int x, int y)
     if (orient[OrientS] == OrientN || orient[OrientS] == OrientNW) return OrientS;
 
     return OrientNone;
+}
+
+void FurnitureTool::updateStatusText()
+{
+    if (mMouseDown)
+        setStatusText(tr("Drag to change orientation. Right-click to cancel."));
+    else
+        setStatusText(tr("Left-click to place furniture. Right-click to remove any object. CTRL disables auto-align. ALT = eyedrop."));
 }
 
 /////

@@ -292,6 +292,7 @@ protected:
     void setCursorObject(BuildingObject *object);
     virtual void placeObject() = 0;
     virtual void eyedrop(BuildingObject *object);
+    virtual void updateStatusText() {}
 
     enum TileEdge {
         Center,
@@ -308,6 +309,9 @@ protected:
     GraphicsObjectItem *mCursorItem;
     QRectF mCursorSceneRect;
     bool mEyedrop;
+    bool mMouseDown;
+    bool mRightClicked;
+    bool mPlaceOnRelease;
     bool mMouseOverObject;
 };
 
@@ -370,6 +374,8 @@ public:
 
     FurnitureTool();
 
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+
     void placeObject();
     void updateCursorObject();
     void eyedrop(BuildingObject *object);
@@ -395,6 +401,8 @@ private:
 
     Orient calcOrient(const QPoint &tilePos)
     { return calcOrient(tilePos.x(), tilePos.y()); }
+
+    void updateStatusText();
 
 private:
     Q_DISABLE_COPY(FurnitureTool)
