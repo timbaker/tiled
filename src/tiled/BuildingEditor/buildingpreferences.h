@@ -35,6 +35,9 @@ public:
     QString configPath() const;
     QString configPath(const QString &fileName) const;
 
+    QString mapsDirectory() const
+    { return mMapsDirectory; }
+
     bool showGrid() const
     { return mShowGrid; }
 
@@ -60,6 +63,7 @@ public:
     { return mLevelIsometric; }
 
 signals:
+    void mapsDirectoryChanged();
     void showGridChanged(bool show);
     void highlightFloorChanged(bool highlight);
     void highlightRoomChanged(bool highlight);
@@ -70,6 +74,7 @@ signals:
     void levelIsometricChanged(bool levels);
 
 public slots:
+    void setMapsDirectory(const QString &path);
     void setShowGrid(bool show);
     void setHighlightFloor(bool highlight);
     void setHighlightRoom(bool highlight);
@@ -82,6 +87,7 @@ public slots:
 private:
     static BuildingPreferences *mInstance;
     QSettings mSettings;
+    QString mMapsDirectory;
     bool mShowGrid;
     bool mHighlightFloor;
     bool mHighlightRoom;

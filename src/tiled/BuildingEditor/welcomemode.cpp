@@ -20,10 +20,10 @@
 
 #include "buildingeditorwindow.h"
 #include "ui_buildingeditorwindow.h"
+#include "buildingpreferences.h"
 
 #include "mainwindow.h"
 #include "mapimagemanager.h"
-#include "preferences.h"
 
 #include <QCompleter>
 #include <QDebug>
@@ -168,7 +168,7 @@ WelcomeMode::WelcomeMode(QObject *parent) :
         ui->dirEdit->setCompleter(completer);
     }
 
-    Tiled::Internal::Preferences *prefs = Tiled::Internal::Preferences::instance();
+    BuildingPreferences *prefs = BuildingPreferences::instance();
     connect(prefs, SIGNAL(mapsDirectoryChanged()), this, SLOT(onMapsDirectoryChanged()));
 
     QDir mapsDir(prefs->mapsDirectory());
@@ -242,7 +242,7 @@ void WelcomeMode::onActivated(const QModelIndex &index)
     QString path = mFSModel->filePath(index);
     QFileInfo fileInfo(path);
     if (fileInfo.isDir()) {
-        Tiled::Internal::Preferences *prefs = Tiled::Internal::Preferences::instance();
+        BuildingPreferences *prefs = BuildingPreferences::instance();
         prefs->setMapsDirectory(fileInfo.canonicalFilePath());
         return;
     }
@@ -254,20 +254,20 @@ void WelcomeMode::browse()
     QString f = QFileDialog::getExistingDirectory(widget()->window(), tr("Choose the Maps Folder"),
         ui->dirEdit->text());
     if (!f.isEmpty()) {
-        Tiled::Internal::Preferences *prefs = Tiled::Internal::Preferences::instance();
+        BuildingPreferences *prefs = BuildingPreferences::instance();
         prefs->setMapsDirectory(f);
     }
 }
 
 void WelcomeMode::editedMapsDirectory()
 {
-    Tiled::Internal::Preferences *prefs = Tiled::Internal::Preferences::instance();
+    BuildingPreferences *prefs = BuildingPreferences::instance();
     prefs->setMapsDirectory(ui->dirEdit->text());
 }
 
 void WelcomeMode::onMapsDirectoryChanged()
 {
-    Tiled::Internal::Preferences *prefs = Tiled::Internal::Preferences::instance();
+    BuildingPreferences *prefs = BuildingPreferences::instance();
     QDir mapsDir(prefs->mapsDirectory());
     if (!mapsDir.exists())
         mapsDir.setPath(QDir::currentPath());

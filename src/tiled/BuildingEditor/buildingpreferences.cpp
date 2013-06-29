@@ -22,6 +22,7 @@
 
 using namespace BuildingEditor;
 
+static const char *KEY_MAPS_DIRECTORY = "BuildingEditor/MapsDirectory";
 static const char *KEY_TILE_SCALE = "BuildingEditor/MainWindow/CategoryScale";
 static const char *KEY_SHOW_GRID = "BuildingEditor/ShowGrid";
 static const char *KEY_HIGHLIGHT_FLOOR = "BuildingEditor/PreviewWindow/HighlightFloor";
@@ -49,6 +50,8 @@ void BuildingPreferences::deleteInstance()
 BuildingPreferences::BuildingPreferences(QObject *parent) :
     QObject(parent)
 {
+    mMapsDirectory = mSettings.value(QLatin1String(KEY_MAPS_DIRECTORY),
+                                     Tiled::Internal::Preferences::instance()->mapsDirectory()).toString();
     mShowGrid = mSettings.value(QLatin1String(KEY_SHOW_GRID), true).toBool();
     mHighlightFloor = mSettings.value(QLatin1String(KEY_HIGHLIGHT_FLOOR),
                                       true).toBool();
@@ -72,6 +75,15 @@ QString BuildingPreferences::configPath() const
 QString BuildingPreferences::configPath(const QString &fileName) const
 {
     return configPath() + QLatin1Char('/') + fileName;
+}
+
+void BuildingPreferences::setMapsDirectory(const QString &path)
+{
+    if (mMapsDirectory == path)
+        return;
+    mMapsDirectory = path;
+    mSettings.setValue(QLatin1String(KEY_MAPS_DIRECTORY), path);
+    emit mapsDirectoryChanged();
 }
 
 void BuildingPreferences::setShowGrid(bool show)
