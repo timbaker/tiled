@@ -428,7 +428,7 @@ void BuildingFloor::LayoutToSquares()
     BuildingTileEntry *wtype = 0;
 
     BuildingTileEntry *exteriorWall = mBuilding->exteriorWall();
-    BuildingTileEntry *exteriorWallTrim = mBuilding->exteriorWallTrim();
+    BuildingTileEntry *exteriorWallTrim = level() ? 0 : mBuilding->exteriorWallTrim();
     QVector<BuildingTileEntry*> interiorWalls;
     QVector<BuildingTileEntry*> interiorWallTrim;
     QVector<BuildingTileEntry*> floors;
