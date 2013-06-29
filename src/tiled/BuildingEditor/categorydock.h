@@ -96,6 +96,8 @@ private:
 
     void currentEWallChanged(BuildingTileEntry *entry, bool mergeable);
     void currentIWallChanged(BuildingTileEntry *entry, bool mergeable);
+    void currentEWallTrimChanged(BuildingTileEntry *entry, bool mergeable);
+    void currentIWallTrimChanged(BuildingTileEntry *entry, bool mergeable);
     void currentFloorChanged(BuildingTileEntry *entry, bool mergeable);
     void currentDoorChanged(BuildingTileEntry *entry, bool mergeable);
     void currentDoorFrameChanged(BuildingTileEntry *entry, bool mergeable);

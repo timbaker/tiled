@@ -221,7 +221,7 @@ public:
                     addEntry(roof->slopeTiles());
                     addEntry(roof->topTiles());
                 } else if (WallObject *wall = object->asWall()) {
-                    addEntry(wall->tile(1));
+                    addEntry(wall->tile(WallObject::TileInterior));
                 } else if (Window *window = object->asWindow()) {
                     addEntry(window->curtainsTile());
                 }
@@ -377,7 +377,9 @@ public:
         } else if (WallObject *wall = object->asWall()) {
             w.writeAttribute(QLatin1String("type"), QLatin1String("wall"));
             w.writeAttribute(QLatin1String("length"), QString::number(wall->length()));
-            w.writeAttribute(QLatin1String("InteriorTile"), entryIndex(wall->tile(1)));
+            w.writeAttribute(QLatin1String("InteriorTile"), entryIndex(wall->tile(WallObject::TileInterior)));
+            w.writeAttribute(QLatin1String("ExteriorTrim"), entryIndex(wall->tile(WallObject::TileExteriorTrim)));
+            w.writeAttribute(QLatin1String("InteriorTrim"), entryIndex(wall->tile(WallObject::TileInteriorTrim)));
         } else {
             qFatal("Unhandled object type in BuildingWriter::writeObject");
         }

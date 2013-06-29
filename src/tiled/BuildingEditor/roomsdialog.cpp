@@ -38,6 +38,9 @@ RoomsDialog::RoomsDialog(const QList<Room*> &rooms, QWidget *parent) :
 {
     ui->setupUi(this);
 
+    ui->tilesList->clear();
+    ui->tilesList->addItems(Room::enumLabels());
+
     QToolBar *toolBar = new QToolBar(this);
     toolBar->setIconSize(QSize(16, 16));
     toolBar->addAction(ui->actionAdd);
@@ -163,6 +166,7 @@ void RoomsDialog::addRoom()
     room->internalName = tr("room%1").arg(n);
     room->Color = pickColorForNewRoom();
     room->setTile(Room::InteriorWall, BuildingTilesMgr::instance()->defaultInteriorWall());
+    room->setTile(Room::InteriorWallTrim, BuildingTilesMgr::instance()->defaultInteriorWallTrim());
     room->setTile(Room::Floor, BuildingTilesMgr::instance()->defaultFloorTile());
 
     mRooms += room;

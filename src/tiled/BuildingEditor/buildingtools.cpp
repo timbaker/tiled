@@ -2284,7 +2284,9 @@ WallTool::WallTool() :
     mHandleItem(0),
     mMouseOverHandle(false),
     mCurrentExteriorTile(BuildingTilesMgr::instance()->noneTileEntry()),
-    mCurrentInteriorTile(BuildingTilesMgr::instance()->noneTileEntry())
+    mCurrentInteriorTile(BuildingTilesMgr::instance()->noneTileEntry()),
+    mCurrentExteriorTrim(BuildingTilesMgr::instance()->noneTileEntry()),
+    mCurrentInteriorTrim(BuildingTilesMgr::instance()->noneTileEntry())
 {
 }
 
@@ -2315,8 +2317,10 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mMode = Create;
         updateStatusText();
 
-        mObject->setTile(mCurrentExteriorTile, 0);
-        mObject->setTile(mCurrentInteriorTile, 1);
+        mObject->setTile(mCurrentExteriorTile, WallObject::TileExterior);
+        mObject->setTile(mCurrentInteriorTile, WallObject::TileInterior);
+        mObject->setTile(mCurrentExteriorTrim, WallObject::TileExteriorTrim);
+        mObject->setTile(mCurrentInteriorTrim, WallObject::TileInteriorTrim);
         mEditor->setCursorObject(mObject);
     }
 
@@ -2484,8 +2488,10 @@ void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     if (mMode == Create) {
         mMode = NoMode;
         if (mObject->isValidPos()) {
-            mObject->setTile(mCurrentExteriorTile, 0);
-            mObject->setTile(mCurrentInteriorTile, 1);
+            mObject->setTile(mCurrentExteriorTile, WallObject::TileExterior);
+            mObject->setTile(mCurrentInteriorTile, WallObject::TileInterior);
+            mObject->setTile(mCurrentExteriorTrim, WallObject::TileExteriorTrim);
+            mObject->setTile(mCurrentInteriorTrim, WallObject::TileInteriorTrim);
             BuildingFloor *floor = this->floor();
             undoStack()->push(new AddObject(mEditor->document(), floor,
                                             floor->objectCount(), mObject));

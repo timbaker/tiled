@@ -394,9 +394,11 @@ void CategoryDock::currentEWallChanged(BuildingTileEntry *entry, bool mergeable)
 {
     // Assign the new tile to selected wall objects.
     QList<WallObject*> objects;
+    bool anySelected = false;
     foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
         if (WallObject *wall = object->asWall()) {
-            if (wall->tile() != entry)
+            anySelected = true;
+            if (wall->tile(WallObject::TileExterior) != entry)
                 objects += wall;
         }
     }
@@ -408,11 +410,11 @@ void CategoryDock::currentEWallChanged(BuildingTileEntry *entry, bool mergeable)
                                                                      wall,
                                                                      entry,
                                                                      mergeable,
-                                                                     0));
+                                                                     WallObject::TileExterior));
         if (objects.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
-    if (objects.size() || WallTool::instance()->isCurrent()) {
+    if (anySelected || WallTool::instance()->isCurrent()) {
         WallTool::instance()->setCurrentExteriorTile(entry);
         return;
     }
@@ -427,9 +429,11 @@ void CategoryDock::currentIWallChanged(BuildingTileEntry *entry, bool mergeable)
 {
     // Assign the new tile to selected wall objects.
     QList<WallObject*> objects;
+    bool anySelected = false;
     foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
         if (WallObject *wall = object->asWall()) {
-            if (wall->tile() != entry)
+            anySelected = true;
+            if (wall->tile(WallObject::TileInterior) != entry)
                 objects += wall;
         }
     }
@@ -441,11 +445,11 @@ void CategoryDock::currentIWallChanged(BuildingTileEntry *entry, bool mergeable)
                                                                      wall,
                                                                      entry,
                                                                      mergeable,
-                                                                     1));
+                                                                     WallObject::TileInterior));
         if (objects.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
-    if (objects.size() || WallTool::instance()->isCurrent()) {
+    if (anySelected || WallTool::instance()->isCurrent()) {
         WallTool::instance()->setCurrentInteriorTile(entry);
         return;
     }
@@ -456,6 +460,79 @@ void CategoryDock::currentIWallChanged(BuildingTileEntry *entry, bool mergeable)
     mCurrentDocument->undoStack()->push(new ChangeRoomTile(mCurrentDocument,
                                                            currentRoom(),
                                                            Room::InteriorWall,
+                                                           entry, mergeable));
+}
+
+void CategoryDock::currentEWallTrimChanged(BuildingTileEntry *entry, bool mergeable)
+{
+    // Assign the new tile to selected wall objects.
+    QList<WallObject*> objects;
+    bool anySelected = false;
+    foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
+        if (WallObject *wall = object->asWall()) {
+            anySelected = true;
+            if (wall->tile(WallObject::TileExteriorTrim) != entry)
+                objects += wall;
+        }
+    }
+    if (objects.size()) {
+        if (objects.count() > 1)
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Wall Object Exterior Trim"));
+        foreach (WallObject *wall, objects)
+            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
+                                                                     wall,
+                                                                     entry,
+                                                                     mergeable,
+                                                                     WallObject::TileExteriorTrim));
+        if (objects.count() > 1)
+            mCurrentDocument->undoStack()->endMacro();
+    }
+    if (anySelected || WallTool::instance()->isCurrent()) {
+        WallTool::instance()->setCurrentExteriorTrim(entry);
+        return;
+    }
+
+    mCurrentDocument->undoStack()->push(
+                new ChangeBuildingTile(mCurrentDocument,
+                                       Building::ExteriorWallTrim, entry,
+                                       mergeable));
+}
+
+void CategoryDock::currentIWallTrimChanged(BuildingTileEntry *entry, bool mergeable)
+{
+    // Assign the new tile to selected wall objects.
+    QList<WallObject*> objects;
+    bool anySelected = false;
+    foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
+        if (WallObject *wall = object->asWall()) {
+            anySelected = true;
+            if (wall->tile(WallObject::TileInteriorTrim) != entry)
+                objects += wall;
+        }
+    }
+    if (objects.size()) {
+        if (objects.count() > 1)
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Wall Object Interior Trim"));
+        foreach (WallObject *wall, objects)
+            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
+                                                                     wall,
+                                                                     entry,
+                                                                     mergeable,
+                                                                     WallObject::TileInteriorTrim));
+        if (objects.count() > 1)
+            mCurrentDocument->undoStack()->endMacro();
+    }
+    if (anySelected || WallTool::instance()->isCurrent()) {
+        WallTool::instance()->setCurrentInteriorTrim(entry);
+        return;
+    }
+
+    if (!currentRoom())
+        return;
+
+    mCurrentDocument->undoStack()->push(new ChangeRoomTile(mCurrentDocument,
+                                                           currentRoom(),
+                                                           Room::InteriorWallTrim,
                                                            entry, mergeable));
 }
 
@@ -680,6 +757,18 @@ void CategoryDock::selectCurrentCategoryTile()
         else if (currentRoom())
             currentTile = currentRoom()->tile(Room::InteriorWall);
     }
+    if (mCategory->asExteriorWallTrim()) {
+        if (WallTool::instance()->isCurrent())
+            currentTile = WallTool::instance()->currentExteriorTrim();
+        else
+            currentTile = mCurrentDocument->building()->exteriorWallTrim();
+    }
+    if (mCategory->asInteriorWallTrim()) {
+        if (WallTool::instance()->isCurrent())
+            currentTile = WallTool::instance()->currentInteriorTrim();
+        else if (currentRoom())
+            currentTile = currentRoom()->tile(Room::InteriorWallTrim);
+    }
     if (currentRoom() && mCategory->asFloors())
         currentTile = currentRoom()->tile(Room::Floor);
     if (mCategory->asDoors())
@@ -761,6 +850,10 @@ void CategoryDock::tileSelectionChanged()
                 currentEWallChanged(entry, mergeable);
             else if (category->asInteriorWalls())
                 currentIWallChanged(entry, mergeable);
+            else if (category->asExteriorWallTrim())
+                currentEWallTrimChanged(entry, mergeable);
+            else if (category->asInteriorWallTrim())
+                currentIWallTrimChanged(entry, mergeable);
             else if (category->asFloors())
                 currentFloorChanged(entry, mergeable);
             else if (category->asDoors())
@@ -908,21 +1001,15 @@ void CategoryDock::resetUsedTiles()
         foreach (BuildingObject *object, floor->objects()) {
             if (object->asFurniture())
                 continue;
-            for (int i = 0; i < 3; i++) {
-                if (object->tile(i) && !object->tile(i)->isNone()
-                        && !entries.contains(object->tile(i)))
-                    entries += object->tile(i);
+            foreach (BuildingTileEntry *entry, object->tiles()) {
+                if (entry && !entry->isNone() && !entries.contains(entry))
+                    entries += entry;
             }
         }
     }
 
-    if (BuildingTileEntry *entry = building->exteriorWall()) {
-        if (!entry->isNone() && !entries.contains(entry))
-            entries += entry;
-    }
-
-    if (BuildingTileEntry *entry = building->tile(Building::GrimeWall)) {
-        if (!entry->isNone() && !entries.contains(entry))
+    foreach (BuildingTileEntry *entry, building->tiles()) {
+        if (entry && !entry->isNone() && !entries.contains(entry))
             entries += entry;
     }
 

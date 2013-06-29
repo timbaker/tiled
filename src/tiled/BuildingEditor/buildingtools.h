@@ -574,11 +574,23 @@ public:
     void setCurrentInteriorTile(BuildingTileEntry *entry)
     { mCurrentInteriorTile = entry; }
 
+    void setCurrentExteriorTrim(BuildingTileEntry *entry)
+    { mCurrentExteriorTrim = entry; }
+
+    void setCurrentInteriorTrim(BuildingTileEntry *entry)
+    { mCurrentInteriorTrim = entry; }
+
     BuildingTileEntry *currentExteriorTile() const
     { return mCurrentExteriorTile; }
 
     BuildingTileEntry *currentInteriorTile() const
     { return mCurrentInteriorTile; }
+
+    BuildingTileEntry *currentExteriorTrim() const
+    { return mCurrentExteriorTrim; }
+
+    BuildingTileEntry *currentInteriorTrim() const
+    { return mCurrentInteriorTrim; }
 
 private slots:
     void objectAboutToBeRemoved(BuildingObject *object);
@@ -617,6 +629,8 @@ private:
 
     BuildingTileEntry *mCurrentExteriorTile;
     BuildingTileEntry *mCurrentInteriorTile;
+    BuildingTileEntry *mCurrentExteriorTrim;
+    BuildingTileEntry *mCurrentInteriorTrim;
 };
 
 } // namespace BuildingEditor

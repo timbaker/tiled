@@ -70,10 +70,9 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
                     }
                     continue;
                 }
-                for (int i = 0; i < 3; i++) {
-                    if (object->tile(i) && !object->tile(i)->isNone()
-                            && !entries.contains(object->tile(i)))
-                        entries += object->tile(i);
+                foreach (BuildingTileEntry *entry, object->tiles()) {
+                    if (entry && !entry->isNone() && !entries.contains(entry))
+                        entries += entry;
                 }
             }
         }
@@ -290,8 +289,8 @@ void BuildingDocument::insertObject(BuildingFloor *floor, int index, BuildingObj
         FurnitureTiles *ftiles = fo->furnitureTile() ? fo->furnitureTile()->owner() : 0;
         checkUsedFurniture(ftiles);
     } else {
-        for (int i = 0; i < 3; i++) {
-            if (BuildingTileEntry *entry = object->tile(i))
+        foreach (BuildingTileEntry *entry, object->tiles()) {
+            if (entry)
                 checkUsedTile(entry);
         }
     }
@@ -543,9 +542,7 @@ void BuildingDocument::entryTileChanged(BuildingTileEntry *entry)
 {
     foreach (BuildingFloor *floor, mBuilding->floors()) {
         foreach (BuildingObject *object, floor->objects()) {
-            if (object->tile() == entry ||
-                    object->tile(1) == entry ||
-                    object->tile(2) == entry) {
+            if (object->tiles().contains(entry)) {
                 emit objectTileChanged(object);
                 if (!mTileChanges) {
                     mTileChanges = true;

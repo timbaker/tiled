@@ -707,6 +707,7 @@ int BuildingTemplate::categoryEnum(int n)
 {
     switch (n) {
     case ExteriorWall: return BuildingTilesMgr::ExteriorWalls;
+    case ExteriorWallTrim: return BuildingTilesMgr::ExteriorWallTrim;
     case Door: return BuildingTilesMgr::Doors;
     case DoorFrame: return BuildingTilesMgr::DoorFrames;
     case Window: return BuildingTilesMgr::Windows;
@@ -741,6 +742,7 @@ void BuildingTemplate::initNames()
         return;
     mEnumNames.reserve(TileCount);
     mEnumNames += QLatin1String("ExteriorWall");
+    mEnumNames += QLatin1String("ExteriorWallTrim");
     mEnumNames += QLatin1String("Door");
     mEnumNames += QLatin1String("DoorFrame");
     mEnumNames += QLatin1String("Window");
@@ -755,6 +757,7 @@ void BuildingTemplate::initNames()
     // These are displayed in the UI (templates dialog for example).
     mTileNames.reserve(TileCount);
     mTileNames += QCoreApplication::tr("Exterior wall");
+    mTileNames += QCoreApplication::tr("Trim - Exterior wall");
     mTileNames += QCoreApplication::tr("Door");
     mTileNames += QCoreApplication::tr("Door frame");
     mTileNames += QCoreApplication::tr("Window");
@@ -782,6 +785,16 @@ void Room::setTile(int n, BuildingTileEntry *entry)
     mTiles[n] = entry;
 }
 
+QStringList Room::enumLabels()
+{
+    return QStringList()
+            << BuildingTilesMgr::instance()->catIWalls()->label()
+            << BuildingTilesMgr::instance()->catIWallTrim()->label()
+            << BuildingTilesMgr::instance()->catFloors()->label()
+            << BuildingTilesMgr::instance()->catGrimeFloor()->label()
+            << BuildingTilesMgr::instance()->catGrimeWall()->label();
+}
+
 QString Room::enumToString(int n)
 {
     initNames();
@@ -792,6 +805,7 @@ int Room::categoryEnum(int n)
 {
     switch (n) {
     case InteriorWall: return BuildingTilesMgr::InteriorWalls;
+    case InteriorWallTrim: return BuildingTilesMgr::InteriorWallTrim;
     case Floor: return BuildingTilesMgr::Floors;
     case GrimeFloor: return BuildingTilesMgr::GrimeFloor;
     case GrimeWall: return BuildingTilesMgr::GrimeWall;
@@ -808,6 +822,7 @@ void Room::initNames()
         return;
     mEnumNames.reserve(TileCount);
     mEnumNames += QLatin1String("InteriorWall");
+    mEnumNames += QLatin1String("InteriorWallTrim");
     mEnumNames += QLatin1String("Floor");
     mEnumNames += QLatin1String("GrimeFloor");
     mEnumNames += QLatin1String("GrimeWall");

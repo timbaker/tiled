@@ -1,5 +1,5 @@
 version = 1
-revision = 8
+revision = 9
 layers
 {
     tile = Floor
@@ -7,7 +7,9 @@ layers
     tile = FloorGrime2
     tile = 0_Vegetation
     tile = Walls
+    tile = WallTrim
     tile = Walls2
+    tile = WallTrim2
     tile = RoofCap
     tile = RoofCap2
     tile = WallOverlay
