@@ -91,6 +91,8 @@ private slots:
 
     void objectPicked(BuildingObject *object);
 
+    void selectCurrentCategoryTile();
+
 private:
     void setCategoryList();
 
@@ -106,8 +108,6 @@ private:
     void currentStairsChanged(BuildingTileEntry *entry, bool mergeable);
     void currentRoomTileChanged(int entryEnum, BuildingTileEntry *entry, bool mergeable);
     void currentRoofTileChanged(BuildingTileEntry *entry, int which, bool mergeable);
-
-    void selectCurrentCategoryTile();
 
     BuildingTileCategory *categoryAt(int row);
     FurnitureGroup *furnitureGroupAt(int row);

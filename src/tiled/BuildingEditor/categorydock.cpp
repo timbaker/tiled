@@ -189,6 +189,8 @@ void CategoryDock::currentDocumentChanged(BuildingDocument *doc)
                 SLOT(usedFurnitureChanged()));
         connect(mCurrentDocument, SIGNAL(usedTilesChanged()),
                 SLOT(usedTilesChanged()));
+        connect(mCurrentDocument, SIGNAL(selectedObjectsChanged()),
+                SLOT(selectCurrentCategoryTile()));
     }
 
     if (ui->categoryList->currentRow() < 2)
@@ -745,42 +747,83 @@ void CategoryDock::selectCurrentCategoryTile()
     if (!mCurrentDocument || !mCategory)
         return;
     BuildingTileEntry *currentTile = 0;
+    BuildingObject *selectedObject = 0;
+    if (mCurrentDocument->selectedObjects().size() == 1)
+        selectedObject = mCurrentDocument->selectedObjects().values().first();
     if (mCategory->asExteriorWalls()) {
-        if (WallTool::instance()->isCurrent())
+        if (selectedObject && selectedObject->asWall())
+            currentTile = selectedObject->tile(WallObject::TileExterior);
+        else if (WallTool::instance()->isCurrent())
             currentTile = WallTool::instance()->currentExteriorTile();
         else
             currentTile = mCurrentDocument->building()->exteriorWall();
     }
     if (mCategory->asInteriorWalls()) {
-        if (WallTool::instance()->isCurrent())
+        if (selectedObject && selectedObject->asWall())
+            currentTile = selectedObject->tile(WallObject::TileInterior);
+        else if (WallTool::instance()->isCurrent())
             currentTile = WallTool::instance()->currentInteriorTile();
         else if (currentRoom())
             currentTile = currentRoom()->tile(Room::InteriorWall);
     }
     if (mCategory->asExteriorWallTrim()) {
-        if (WallTool::instance()->isCurrent())
+        if (selectedObject && selectedObject->asWall())
+            currentTile = selectedObject->tile(WallObject::TileExteriorTrim);
+        else if (WallTool::instance()->isCurrent())
             currentTile = WallTool::instance()->currentExteriorTrim();
         else
             currentTile = mCurrentDocument->building()->exteriorWallTrim();
     }
     if (mCategory->asInteriorWallTrim()) {
-        if (WallTool::instance()->isCurrent())
+        if (selectedObject && selectedObject->asWall())
+            currentTile = selectedObject->tile(WallObject::TileInteriorTrim);
+        else if (WallTool::instance()->isCurrent())
             currentTile = WallTool::instance()->currentInteriorTrim();
         else if (currentRoom())
             currentTile = currentRoom()->tile(Room::InteriorWallTrim);
     }
     if (currentRoom() && mCategory->asFloors())
         currentTile = currentRoom()->tile(Room::Floor);
-    if (mCategory->asDoors())
-        currentTile = mCurrentDocument->building()->doorTile();
-    if (mCategory->asDoorFrames())
-        currentTile = mCurrentDocument->building()->doorFrameTile();
-    if (mCategory->asWindows())
-        currentTile = mCurrentDocument->building()->windowTile();
-    if (mCategory->asCurtains())
-        currentTile = mCurrentDocument->building()->curtainsTile();
-    if (mCategory->asStairs())
-        currentTile = mCurrentDocument->building()->stairsTile();
+    if (mCategory->asDoors()) {
+        if (selectedObject && selectedObject->asDoor())
+            currentTile = selectedObject->tile()
+                    ? selectedObject->tile()
+                    : BuildingTilesMgr::instance()->noneTileEntry();
+        else
+            currentTile = mCurrentDocument->building()->doorTile();
+    }
+    if (mCategory->asDoorFrames()) {
+        if (selectedObject && selectedObject->asDoor())
+            currentTile = selectedObject->tile(1)
+                    ? selectedObject->tile(1)
+                    : BuildingTilesMgr::instance()->noneTileEntry();
+        else
+            currentTile = mCurrentDocument->building()->doorFrameTile();
+    }
+    if (mCategory->asWindows()) {
+        if (selectedObject && selectedObject->asWindow())
+            currentTile = selectedObject->tile()
+                    ? selectedObject->tile()
+                    : BuildingTilesMgr::instance()->noneTileEntry();
+        else
+            currentTile = mCurrentDocument->building()->windowTile();
+    }
+    if (mCategory->asCurtains()) {
+        if (selectedObject && selectedObject->asWindow())
+            currentTile = selectedObject->tile(1)
+                    ? selectedObject->tile(1)
+                    : BuildingTilesMgr::instance()->noneTileEntry();
+        else
+            currentTile = mCurrentDocument->building()->curtainsTile();
+    }
+    if (mCategory->asStairs()) {
+        if (selectedObject && selectedObject->asStairs())
+            currentTile = selectedObject->tile()
+                    ? selectedObject->tile()
+                    : BuildingTilesMgr::instance()->noneTileEntry();
+        else
+            currentTile = mCurrentDocument->building()->stairsTile();
+    }
     if (mCategory->asGrimeFloor() && currentRoom())
         currentTile = currentRoom()->tile(Room::GrimeFloor);
     if (mCategory->asGrimeWall() && currentRoom())
@@ -789,22 +832,17 @@ void CategoryDock::selectCurrentCategoryTile()
         currentTile = mCurrentDocument->building()->roofCapTile();
     if (mCategory->asRoofSlopes())
         currentTile = mCurrentDocument->building()->roofSlopeTile();
-    if (mCategory->asRoofTops())
-        currentTile = mCurrentDocument->building()->roofTopTile();
+    if (mCategory->asRoofTops()) {
+        if (selectedObject && selectedObject->asRoof())
+            currentTile = selectedObject->asRoof()->topTiles();
+        else
+            currentTile = mCurrentDocument->building()->roofTopTile();
+    }
     if (currentTile && (currentTile->isNone() || (currentTile->category() == mCategory))) {
-#if 1
         mSynching = true;
         QModelIndex index = ui->tilesetView->index(currentTile);
         ui->tilesetView->setCurrentIndex(index);
         mSynching = false;
-#else
-        if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(currentTile->displayTile())) {
-            QModelIndex index = ui->tilesetView->model()->index(tile);
-            mSynching = true;
-            ui->tilesetView->setCurrentIndex(index);
-            mSynching = false;
-        }
-#endif
     }
 }
 
