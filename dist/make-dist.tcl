@@ -1,8 +1,8 @@
 console show
 update
 
-set BIN C:/Programming/TileZed/build-msvc-release
-set SRC C:/Programming/TileZed/tiled
+set BIN C:/Programming/Tiled/build-msvc-release
+set SRC C:/Programming/Tiled/tiled
 set QT_BINARY_DIR C:/Programming/Qt/qt-build/bin
 set QT_PLUGINS_DIR C:/Programming/Qt/qt-build/plugins
 set QT_TRANSLATIONS_DIR C:/Programming/Qt/qt-build/translations
@@ -68,7 +68,7 @@ proc createFile {DEST name contents} {
 }
 
 puts ---Toplevel---
-copyFile {C:\Programming\TileZed} $DEST vcredist_x86.exe
+copyFile {C:\Programming\Tiled} $DEST vcredist_x86.exe
 copyFile $BIN $DEST config.exe
 copyFile $BIN $DEST TileZed.exe
 copyFile $BIN $DEST tiled.dll
