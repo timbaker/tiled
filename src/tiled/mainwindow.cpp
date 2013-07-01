@@ -85,6 +85,7 @@
 #include "mapimagemanager.h"
 #include "mapmanager.h"
 #include "mapsdock.h"
+#include "picktiletool.h"
 #include "roomdeftool.h"
 #include "tiledefdialog.h"
 #include "tiledeffile.h"
@@ -477,11 +478,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             tileObjectsTool, SLOT(setTile(Tile*)));
 #ifdef ZOMBOID
     connect(mStampBrush, SIGNAL(tilePicked(Tile*)),
-            mTilesetDock, SLOT(tilePicked(Tile*)));
+            SLOT(tilePicked(Tile*)));
     connect(mStampBrush, SIGNAL(altHover(QPoint)),
             SLOT(stampAltHovered(QPoint)));
-    connect(mTileLayersPanel, SIGNAL(tilePicked(Tile*)),
-            mTilesetDock, SLOT(tilePicked(Tile*)));
     connect(mTileLayersPanel, SIGNAL(tilePicked(Tile*)),
             SLOT(tilePicked(Tile*)));
 #endif
@@ -496,6 +495,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     toolManager->registerTool(mBucketFillTool);
     toolManager->registerTool(new Eraser(this));
     toolManager->registerTool(new TileSelectionTool(this));
+#ifdef ZOMBOID
+    toolManager->registerTool(new PickTileTool(this));
+#endif
     toolManager->addSeparator();
     toolManager->registerTool(new ObjectSelectionTool(this));
     toolManager->registerTool(new EditPolygonTool(this));
@@ -525,6 +527,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     brushSizePlus->setShortcut(QKeySequence(QLatin1String("]")));
     connect(brushSizePlus, SIGNAL(triggered()), SLOT(brushSizePlus()));
     addAction(brushSizePlus);
+
+    connect(PickTileTool::instancePtr(), SIGNAL(tilePicked(Tile*)),
+            SLOT(tilePicked(Tile*)));
 #endif
 
     addToolBar(toolManager->toolBar());
@@ -1515,6 +1520,8 @@ void MainWindow::stampAltHovered(const QPoint &tilePos)
 
 void MainWindow::tilePicked(Tile *tile)
 {
+    mTilesetDock->tilePicked(tile);
+
     QString tileName = BuildingTilesMgr::nameForTile(tile);
     if (mTileDefDialog && TileDefDialog::instance()->isVisible())
         TileDefDialog::instance()->displayTile(tileName);

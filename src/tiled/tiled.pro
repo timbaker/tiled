@@ -222,7 +222,8 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/utils/stylehelper.cpp \
     BuildingEditor/utils/styledbar.cpp \
     BuildingEditor/welcomemode.cpp \
-    BuildingEditor/buildingroomdef.cpp
+    BuildingEditor/buildingroomdef.cpp \
+    picktiletool.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -407,7 +408,8 @@ HEADERS += aboutdialog.h \
     BuildingEditor/utils/styledbar.h \
     BuildingEditor/utils/hostosinfo.h \
     BuildingEditor/welcomemode.h \
-    BuildingEditor/buildingroomdef.h
+    BuildingEditor/buildingroomdef.h \
+    picktiletool.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
