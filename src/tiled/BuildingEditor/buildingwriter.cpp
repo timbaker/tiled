@@ -213,6 +213,10 @@ public:
 
         foreach (BuildingFloor *floor, mBuilding->floors()) {
             foreach (BuildingObject *object, floor->objects()) {
+#if 1
+                foreach (BuildingTileEntry *entry, object->tiles())
+                    addEntry(entry);
+#else
                 addEntry(object->tile());
                 if (Door *door = object->asDoor()) {
                     addEntry(door->frameTile());
@@ -225,6 +229,7 @@ public:
                 } else if (Window *window = object->asWindow()) {
                     addEntry(window->curtainsTile());
                 }
+#endif
             }
         }
 
