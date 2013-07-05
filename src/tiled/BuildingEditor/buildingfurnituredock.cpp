@@ -103,17 +103,10 @@ void BuildingFurnitureDock::readSettings(QSettings &settings)
     settings.beginGroup(QLatin1String("FurnitureDock"));
     BuildingEditorWindow::instance()->restoreSplitterSizes(mSplitter);
     settings.endGroup();
-
 }
 
 void BuildingFurnitureDock::writeSettings(QSettings &settings)
 {
-#if 0
-    settings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
-    settings.setValue(QLatin1String("SelectedFurnitureGroup"),
-                      mFurnitureGroup ? mFurnitureGroup->mLabel : QString());
-    settings.endGroup();
-#endif
     settings.beginGroup(QLatin1String("FurnitureDock"));
     BuildingEditorWindow::instance()->saveSplitterSizes(mSplitter);
     settings.endGroup();

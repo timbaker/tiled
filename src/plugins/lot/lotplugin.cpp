@@ -28,7 +28,7 @@
 #include <QFile>
 
 using namespace Tiled;
-using namespace Lot;
+using namespace LotNS;
 
 LotPlugin::LotPlugin()
 {

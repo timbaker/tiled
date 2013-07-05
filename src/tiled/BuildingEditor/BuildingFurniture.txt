@@ -3063,37 +3063,42 @@ group
         entry
         {
             orient = W
-            0,0 = location_restaurant_diner_01_028
-        }
-        entry
-        {
-            orient = N
-            0,0 = location_restaurant_diner_01_030
-        }
-        entry
-        {
-            orient = S
-            0,0 = location_restaurant_diner_01_026
-        }
-        entry
-        {
-            orient = SW
             0,0 = location_restaurant_diner_01_027
         }
         entry
         {
-            orient = NW
+            orient = N
             0,0 = location_restaurant_diner_01_029
         }
         entry
         {
-            orient = NE
+            orient = E
             0,0 = location_restaurant_diner_01_031
         }
         entry
         {
-            orient = SE
+            orient = S
             0,0 = location_restaurant_diner_01_025
+        }
+        entry
+        {
+            orient = SW
+            0,0 = location_restaurant_diner_01_026
+        }
+        entry
+        {
+            orient = NW
+            0,0 = location_restaurant_diner_01_028
+        }
+        entry
+        {
+            orient = NE
+            0,0 = location_restaurant_diner_01_030
+        }
+        entry
+        {
+            orient = SE
+            0,0 = location_restaurant_diner_01_024
         }
     }
     furniture

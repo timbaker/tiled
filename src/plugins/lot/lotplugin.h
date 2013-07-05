@@ -34,7 +34,7 @@ class TileLayer;
 class Tileset;
 }
 
-namespace Lot {
+namespace LotNS {
 
 class Tile
 {

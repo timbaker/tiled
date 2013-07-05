@@ -504,7 +504,7 @@ private:
 
     void readHeightMap()
     {
-        Q_ASSERT(xml.isStartElement() && xml.name() == "heightmap");
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("heightmap"));
 
         const QXmlStreamAttributes atts = xml.attributes();
         QString path = atts.value(QLatin1String("file")).toString();

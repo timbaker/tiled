@@ -440,8 +440,10 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mWelcomeMode->setEnabled(true);
     ModeManager::instance().setCurrentMode(mWelcomeMode);
 
-    connect(ModeManager::instancePtr(), SIGNAL(currentModeAboutToChange(IMode*)), SLOT(currentModeAboutToChange(IMode*)));
-    connect(ModeManager::instancePtr(), SIGNAL(currentModeChanged()), SLOT(currentModeChanged()));
+    connect(ModeManager::instancePtr(), SIGNAL(currentModeAboutToChange(IMode*)),
+            SLOT(currentModeAboutToChange(IMode*)));
+    connect(ModeManager::instancePtr(), SIGNAL(currentModeChanged()),
+            SLOT(currentModeChanged()));
 
     readSettings();
 
