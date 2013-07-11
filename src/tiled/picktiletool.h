@@ -33,6 +33,9 @@ class PickTileTool : public AbstractTileTool, public Singleton<PickTileTool>
 public:
     PickTileTool(QObject *parent = 0);
 
+    void activate(MapScene *scene);
+    void deactivate(MapScene *scene);
+
     void mousePressed(QGraphicsSceneMouseEvent *event);
     void mouseReleased(QGraphicsSceneMouseEvent *) {}
 

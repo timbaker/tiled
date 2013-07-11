@@ -17,13 +17,16 @@
 
 #include "picktiletool.h"
 
-#include "mapdocument.h"
 #include "mapcomposite.h"
+#include "mapdocument.h"
+#include "mapscene.h"
 #include "preferences.h"
 
 #include "maprenderer.h"
 #include "tile.h"
 #include "tilelayer.h"
+
+#include <QGraphicsView>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -35,6 +38,18 @@ PickTileTool::PickTileTool(QObject *parent) :
                      QIcon(QLatin1String(":/BuildingEditor/icons/icon_eyedrop.png")),
                      QKeySequence(), parent)
 {
+}
+
+void PickTileTool::activate(MapScene *scene)
+{
+    AbstractTileTool::activate(scene);
+    scene->views().first()->setCursor(Qt::PointingHandCursor);
+}
+
+void PickTileTool::deactivate(MapScene *scene)
+{
+    scene->views().first()->unsetCursor();
+    AbstractTileTool::deactivate(scene);
 }
 
 void PickTileTool::mousePressed(QGraphicsSceneMouseEvent *event)
