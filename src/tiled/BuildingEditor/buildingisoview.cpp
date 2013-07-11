@@ -1122,6 +1122,13 @@ void BuildingIsoScene::mapResized()
     // TileModeGridItem::mBoundingRect needs updating.
     if (mGridItem)
         mGridItem->synchWithBuilding();
+
+    // Strangely needed to fix graphics corruption when cropping a building.
+    // Something to do with setSceneRect() causing the view to scroll (which
+    // blits existing pixels?) and those pixels don't get redrawn, leaving
+    // crud in the wrong location.  Simply calling update() here doesn't fix
+    // the problem.
+    QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
 }
 
 void BuildingIsoScene::layersUpdated(int level, const QRegion &rgn)
