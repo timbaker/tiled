@@ -29,9 +29,9 @@ SOURCES += \
     worldedmgr.cpp
     
 HEADERS +=  \
-    properties.h \
     road.h \
     world.h \
     worldcell.h \
     worldreader.h \
-    worldedmgr.h
+    worldedmgr.h \
+    worldproperties.h

@@ -15,32 +15,91 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "properties.h"
+#include "worldproperties.h"
 
 #include "world.h"
+
+PropertyEnum::PropertyEnum(const QString &name, const QStringList &values, bool multi) :
+    mName(name),
+    mValues(values),
+    mMulti(multi)
+{
+}
+
+PropertyEnum::PropertyEnum(const PropertyEnum *other) :
+    mName(other->mName),
+    mValues(other->mValues),
+    mMulti(other->mMulti)
+{
+}
+
+bool PropertyEnum::operator ==(const PropertyEnum &other) const
+{
+    return mName == other.mName &&
+            mValues == other.mValues &&
+            mMulti == other.mMulti;
+}
+
+/////
+
+PropertyEnum *PropertyEnumList::find(const QString &name) const
+{
+    const_iterator it = constBegin();
+    while (it != constEnd()) {
+        if ((*it)->name() == name)
+            return *it;
+        it++;
+    }
+    return 0;
+}
+
+PropertyEnumList PropertyEnumList::sorted() const
+{
+    PropertyEnumList sorted;
+    const_iterator it = constBegin();
+    while (it != constEnd()) {
+        PropertyEnum *pe = *it;
+        int index = 0;
+        foreach (PropertyEnum *pe2, sorted) {
+            if (pe2->name() > pe->name())
+                break;
+            ++index;
+        }
+        sorted.insert(index, pe);
+        ++it;
+    }
+    return sorted;
+}
 
 /////
 
 PropertyDef::PropertyDef(const QString &name, const QString &defaultValue,
-                         const QString &description)
+                         const QString &description, PropertyEnum *pe)
     : mName(name)
     , mDefaultValue(defaultValue)
     , mDescription(description)
+    , mEnum(pe)
 {
 }
 
-PropertyDef::PropertyDef(PropertyDef *other)
+PropertyDef::PropertyDef(World *world, PropertyDef *other)
     : mName(other->mName)
     , mDefaultValue(other->mDefaultValue)
     , mDescription(other->mDescription)
+    , mEnum(0)
 {
+    if (other->mEnum) {
+        mEnum = world->propertyEnums().find(other->mEnum->name());
+        Q_ASSERT(mEnum);
+    }
 }
 
 bool PropertyDef::operator ==(const PropertyDef &other) const
 {
     return mName == other.mName &&
             mDefaultValue == other.mDefaultValue &&
-            mDescription == other.mDescription;
+            mDescription == other.mDescription &&
+            mEnum == other.mEnum;
 }
 
 /////
@@ -80,7 +139,7 @@ Property::Property(World *world, Property *other)
     : mValue(other->mValue)
     , mNote(other->mNote)
 {
-    mDefinition = world->propertyDefinitions().findPropertyDef(other->mDefinition->mName);
+    mDefinition = world->propertyDefinition(other->mDefinition->mName);
     Q_ASSERT(mDefinition);
 }
 

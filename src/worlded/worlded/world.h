@@ -18,11 +18,12 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include "properties.h"
+#include "worldproperties.h"
 #include "road.h"
 
 #include <QRect>
 #include <QSize>
+#include <QStringList>
 #include <QVector>
 
 class BMPToTMXImages;
@@ -96,6 +97,20 @@ public:
     }
 
     bool operator != (const GenerateLotsSettings &other)
+    { return !operator==(other); }
+};
+
+class LuaSettings
+{
+public:
+    QString spawnPointsFile;
+
+    bool operator == (const LuaSettings &other)
+    {
+        return spawnPointsFile == other.spawnPointsFile;
+    }
+
+    bool operator != (const LuaSettings &other)
     { return !operator==(other); }
 };
 
@@ -181,16 +196,29 @@ public:
     { mPropertyTemplates.insert(index, pt); }
     PropertyTemplate *removeTemplate(int index)
     { return mPropertyTemplates.takeAt(index); }
+    PropertyTemplate *propertyTemplate(const QString &name)
+    { return mPropertyTemplates.find(name); }
 
     void addPropertyDefinition(int index, PropertyDef *pd)
     { mPropertyDefs.insert(index, pd); }
     PropertyDef *removePropertyDefinition(int index);
+    PropertyDef *propertyDefinition(const QString &name)
+    { return mPropertyDefs.findPropertyDef(name); }
+
+    void insertPropertyEnum(int index, PropertyEnum *pe)
+    { mPropertyEnums.insert(index, pe); }
+    PropertyEnum *removePropertyEnum(int index)
+    { return mPropertyEnums.takeAt(index); }
+    const PropertyEnumList &propertyEnums() const
+    { return mPropertyEnums; }
 
     void insertObjectGroup(int index, WorldObjectGroup *og);
     WorldObjectGroup *removeObjectGroup(int index);
 
     void insertObjectType(int index, ObjectType *ot);
     ObjectType *removeObjectType(int index);
+    ObjectType *objectType(const QString &name)
+    { return mObjectTypes.find(name); }
 
     void insertRoad(int index, Road *road);
     Road *removeRoad(int index);
@@ -224,6 +252,12 @@ public:
     const GenerateLotsSettings &getGenerateLotsSettings() const
     { return mGenerateLotsSettings; }
 
+    void setLuaSettings(const LuaSettings &settings)
+    { mLuaSettings = settings; }
+
+    const LuaSettings &getLuaSettings() const
+    { return mLuaSettings; }
+
     WorldObjectGroup *nullObjectGroup() const { return mNullObjectGroup; }
     ObjectType *nullObjectType() const { return mNullObjectType; }
 
@@ -240,12 +274,14 @@ private:
     ObjectType *mNullObjectType;
     ObjectGroupList mObjectGroups;
     WorldObjectGroup *mNullObjectGroup;
+    PropertyEnumList mPropertyEnums;
     PropertyDefList mPropertyDefs;
     PropertyTemplateList mPropertyTemplates;
     RoadList mRoads;
     QList<WorldBMP*> mBMPs;
     BMPToTMXSettings mBMPToTMXSettings;
     GenerateLotsSettings mGenerateLotsSettings;
+    LuaSettings mLuaSettings;
     QString mHeightMapFileName;
 };
 

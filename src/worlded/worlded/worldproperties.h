@@ -20,16 +20,55 @@
 
 #include <QList>
 #include <QSet>
-#include <QString>
+#include <QStringList>
 
 class World;
+
+class PropertyEnum
+{
+public:
+    PropertyEnum(const QString &name, const QStringList &values, bool multi);
+    PropertyEnum(const PropertyEnum *other);
+
+    void setName(const QString &name)
+    { mName = name; }
+    const QString &name() const
+    { return mName; }
+
+    void setValues(const QStringList &values)
+    { mValues = values; }
+    const QStringList &values() const
+    { return mValues; }
+
+    void setMulti(bool multi)
+    { mMulti = multi; }
+    bool isMulti() const
+    { return mMulti; }
+
+    bool operator ==(const PropertyEnum &other) const;
+    bool operator !=(const PropertyEnum &other) const
+    { return !(*this == other); }
+
+private:
+    QString mName;
+    QStringList mValues;
+    bool mMulti;
+};
+
+
+class PropertyEnumList : public QList<PropertyEnum*>
+{
+public:
+    PropertyEnum *find(const QString &name) const;
+    PropertyEnumList sorted() const;
+};
 
 class PropertyDef
 {
 public:
     PropertyDef(const QString &name, const QString &defaultValue,
-                const QString &description);
-    PropertyDef(PropertyDef *other);
+                const QString &description, PropertyEnum *pe);
+    PropertyDef(World *world, PropertyDef *other);
 
     bool operator ==(const PropertyDef &other) const;
     bool operator !=(const PropertyDef &other) const
@@ -38,6 +77,7 @@ public:
     QString mName;
     QString mDefaultValue;
     QString mDescription;
+    PropertyEnum *mEnum;
 };
 
 class PropertyDefList : public QList<PropertyDef*>

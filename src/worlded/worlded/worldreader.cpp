@@ -94,7 +94,9 @@ private:
         mWorld = new World(width, height);
 
         while (xml.readNextStartElement()) {
-            if (xml.name() == QLatin1String("propertydef"))
+            if (xml.name() == QLatin1String("propertyenum"))
+                readPropertyEnum();
+            else if (xml.name() == QLatin1String("propertydef"))
                 readPropertyDef();
             else if (xml.name() == QLatin1String("template"))
                 readTemplate();
@@ -110,6 +112,8 @@ private:
                 readBMPToTMX();
             else if (xml.name() == QLatin1String("GenerateLots"))
                 readGenerateLots();
+            else if (xml.name() == QLatin1String("LuaSettings"))
+                readLuaSettings();
             else if (xml.name() == QLatin1String("bmp"))
                 readBMP();
             else if (xml.name() == QLatin1String("heightmap"))
@@ -127,6 +131,24 @@ private:
         return mWorld;
     }
 
+    void readPropertyEnum()
+    {
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("propertyenum"));
+
+        const QXmlStreamAttributes atts = xml.attributes();
+        const QString name = atts.value(QLatin1String("name")).toString();
+        const QString choicesString = atts.value(QLatin1String("choices")).toString();
+        const QString multiString = atts.value(QLatin1String("multi")).toString();
+
+        QStringList choices = choicesString.split(QLatin1String(","), QString::SkipEmptyParts);
+        bool multi = multiString == QLatin1String("true");
+
+        PropertyEnum *pe = new PropertyEnum(name, choices, multi);
+        mWorld->insertPropertyEnum(mWorld->propertyEnums().size(), pe);
+
+        xml.skipCurrentElement();
+    }
+
     void readPropertyDef()
     {
         Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("propertydef"));
@@ -134,6 +156,7 @@ private:
         const QXmlStreamAttributes atts = xml.attributes();
         const QString name = atts.value(QLatin1String("name")).toString();
         const QString defaultValue = atts.value(QLatin1String("default")).toString();
+        const QString enumName = atts.value(QLatin1String("enum")).toString();
         QString desc;
 
         while (xml.readNextStartElement()) {
@@ -143,7 +166,16 @@ private:
                 readUnknownElement();
         }
 
-        PropertyDef *pd = new PropertyDef(name, defaultValue, desc);
+        PropertyEnum *pe = 0;
+        if (!enumName.isEmpty()) {
+            pe = mWorld->propertyEnums().find(enumName);
+            if (!pe) {
+                xml.raiseError(tr("Unknown property enum \"%1\"").arg(enumName));
+                return;
+            }
+        }
+
+        PropertyDef *pd = new PropertyDef(name, defaultValue, desc, pe);
         mWorld->addPropertyDefinition(mWorld->propertyDefinitions().size(), pd);
     }
 
@@ -482,6 +514,24 @@ private:
         mWorld->setGenerateLotsSettings(settings);
     }
 
+    void readLuaSettings()
+    {
+        Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("LuaSettings"));
+
+        LuaSettings settings;
+
+        while (xml.readNextStartElement()) {
+            if (xml.name() == QLatin1String("spawnPointsFile")) {
+                QString path = xml.attributes().value(QLatin1String("path")).toString();
+                settings.spawnPointsFile = resolveReference(path, mPath);
+                xml.skipCurrentElement();
+            } else
+                readUnknownElement();
+        }
+
+        mWorld->setLuaSettings(settings);
+    }
+
     void readBMP()
     {
         Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("bmp"));
@@ -550,7 +600,7 @@ private:
             QFileInfo info(path);
             if (info.exists())
                 return info.canonicalFilePath();
-            return path;
+            return QDir::cleanPath(path);
         }
         return fileName;
     }
