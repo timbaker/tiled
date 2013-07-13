@@ -226,7 +226,8 @@ BuildingIsoScene::BuildingIsoScene(QObject *parent) :
     mNonEmptyLayerGroupItem(0),
     mShowBuildingTiles(true),
     mShowUserTiles(true),
-    mCurrentLevel(0)
+    mCurrentLevel(0),
+    mHighlightRoomLock(false)
 {
     ZVALUE_CURSOR = 1000;
     ZVALUE_GRID = 1001;
@@ -703,6 +704,8 @@ QVector<QRect> adjacentRects(const QVector<QRect> &rects, const QPoint &pos)
 #include "buildingroomdef.h"
 void BuildingIsoScene::setCursorPosition(const QPoint &pos)
 {
+    if (mHighlightRoomLock)
+        return;
     mHighlightRoomPos = pos;
     if (!currentFloor())
         return;

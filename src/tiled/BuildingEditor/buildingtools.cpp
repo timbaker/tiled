@@ -897,9 +897,10 @@ void BaseObjectTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     if (!mCursorItem || !mCursorItem->isVisible() || !mCursorItem->isValidPos())
         return;
 
-    if (mPlaceOnRelease)
+    if (mPlaceOnRelease) {
+        mEditor->setHighlightRoomLock(true);
         updateStatusText();
-    else
+    } else
         placeObject();
 }
 
@@ -961,6 +962,8 @@ void BaseObjectTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     Q_UNUSED(event)
 
     if (event->button() == Qt::LeftButton) {
+        if (mPlaceOnRelease)
+            mEditor->setHighlightRoomLock(false);
         if (!mRightClicked && mMouseDown && mPlaceOnRelease)
             placeObject();
         mMouseDown = false;

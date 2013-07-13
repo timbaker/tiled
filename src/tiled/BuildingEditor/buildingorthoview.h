@@ -500,6 +500,7 @@ public:
     virtual void drawTileSelection(QPainter *painter, const QRegion &region,
                                    const QColor &color, const QRectF &exposed,
                                    int level = 0) const = 0;
+    virtual void setHighlightRoomLock(bool lock) { Q_UNUSED(lock) }
     /////
 
 signals:

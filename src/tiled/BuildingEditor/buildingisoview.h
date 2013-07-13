@@ -181,6 +181,9 @@ public:
                            const QColor &color, const QRectF &exposed,
                            int level = 0) const;
 
+    void setHighlightRoomLock(bool lock)
+    { mHighlightRoomLock = lock; }
+
     void setCursorObject(BuildingObject *object);
     void dragObject(BuildingFloor *floor, BuildingObject *object, const QPoint &offset);
     void resetDrag(BuildingFloor *floor, BuildingObject *object);
@@ -269,6 +272,7 @@ private:
     bool mShowUserTiles;
     int mCurrentLevel;
     QPoint mHighlightRoomPos;
+    bool mHighlightRoomLock;
 };
 
 class BuildingIsoView : public QGraphicsView
