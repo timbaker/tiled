@@ -19,6 +19,7 @@
 
 #include "bmpblender.h"
 #include "map.h"
+#include "mapbuildings.h"
 #include "mapcomposite.h"
 #include "mapdocument.h"
 #include "mapimagemanager.h"
@@ -28,10 +29,13 @@
 #include "maprenderer.h"
 #include "zgriditem.h"
 #include "objectgroup.h"
+#include "preferences.h"
 #include "tilelayer.h"
 #include "tilelayeritem.h"
 #include "zlevelsmodel.h"
 #include "zlotmanager.h"
+
+#include <QGraphicsSceneMouseEvent>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -91,6 +95,8 @@ ZomboidScene::ZomboidScene(QObject *parent)
     , mWasHighlightCurrentLayer(false)
     , mMapBordersItem(new QGraphicsPolygonItem)
     , mMapBordersItem2(new QGraphicsPolygonItem)
+    , mMapBuildings(new MapBuildings)
+    , mMapBuildingsInvalid(true)
 {
     connect(&mLotManager, SIGNAL(lotAdded(MapComposite*,Tiled::MapObject*)),
         this, SLOT(onLotAdded(MapComposite*,Tiled::MapObject*)));
@@ -125,6 +131,7 @@ ZomboidScene::ZomboidScene(QObject *parent)
 ZomboidScene::~ZomboidScene()
 {
     mLotManager.disconnect(this);
+    delete mMapBuildings;
 }
 
 void ZomboidScene::setMapDocument(MapDocument *mapDoc)
@@ -143,12 +150,22 @@ void ZomboidScene::setMapDocument(MapDocument *mapDoc)
         connect(mMapDocument, SIGNAL(mapCompositeChanged()),
                 SLOT(mapCompositeChanged()));
 
+        connect(mMapDocument, SIGNAL(objectsAdded(QList<MapObject*>)),
+                SLOT(invalidateMapBuildings()));
+        connect(mMapDocument, SIGNAL(objectsRemoved(QList<MapObject*>)),
+                SLOT(invalidateMapBuildings()));
+        connect(mMapDocument, SIGNAL(objectsChanged(QList<MapObject*>)),
+                SLOT(invalidateMapBuildings()));
+
         connect(mMapDocument->mapComposite()->bmpBlender(), SIGNAL(layersRecreated()),
                 SLOT(bmpBlenderLayersRecreated()));
         connect(mMapDocument, SIGNAL(bmpPainted(int,QRegion)), SLOT(bmpPainted(int,QRegion)));
         connect(mMapDocument, SIGNAL(bmpAliasesChanged()), SLOT(bmpXXXChanged()));
         connect(mMapDocument, SIGNAL(bmpRulesChanged()), SLOT(bmpXXXChanged()));
         connect(mMapDocument, SIGNAL(bmpBlendsChanged()), SLOT(bmpXXXChanged()));
+
+        connect(Preferences::instance(), SIGNAL(highlightRoomUnderPointerChanged(bool)),
+                SLOT(highlightRoomUnderPointerChanged(bool)));
     }
 }
 
@@ -339,12 +356,16 @@ void ZomboidScene::layerAdded(int index)
         }
     }
 
+    mMapBuildingsInvalid = true;
+
     doLater(ZOrder);
 }
 
 void ZomboidScene::layerRemoved(int index)
 {
     MapScene::layerRemoved(index);
+
+    mMapBuildingsInvalid = true;
 
     doLater(ZOrder);
 }
@@ -388,6 +409,7 @@ void ZomboidScene::layerChanged(int index)
             layerItem->setVisible(og->isVisible()
                                   && (og->level() == mMapDocument->currentLevel()));
         }
+        mMapBuildingsInvalid = true;
         if (synch)
             updateLayerGroupsLater(Synch | Bounds);
     }
@@ -543,6 +565,35 @@ void ZomboidScene::setGraphicsSceneZOrder()
     }
 }
 
+QRegion ZomboidScene::getBuildingRegion(const QPoint &tilePos, QRegion &roomRgn)
+{
+    if (mMapBuildingsInvalid) {
+        mMapBuildings->calculate(mMapDocument->mapComposite());
+        mMapBuildingsInvalid = false;
+    }
+    if (MapBuildingsNS::Room *room = mMapBuildings->roomAt(tilePos,
+                                                           mMapDocument->currentLevel())) {
+        roomRgn = room->region();
+        return room->building->region();
+    }
+    return QRegion();
+}
+
+void ZomboidScene::setHighlightRoomPosition(const QPoint &tilePos)
+{
+    MapComposite *mc = mMapDocument->mapComposite();
+    int level = mMapDocument->currentLevel();
+    QRegion buildingRgn, roomRgn;
+    if (Preferences::instance()->highlightRoomUnderPointer())
+        buildingRgn = getBuildingRegion(tilePos, roomRgn);
+    if (buildingRgn - roomRgn != mc->suppressRegion() ||
+            level != mc->suppressLevel()) {
+        mc->setSuppressRegion(buildingRgn - roomRgn, level);
+        update();
+    }
+    mHighlightRoomPosition = tilePos;
+}
+
 void ZomboidScene::onLotAdded(MapComposite *lot, MapObject *mapObject)
 {
     mMapObjectToLot[mapObject] = lot;
@@ -559,6 +610,8 @@ void ZomboidScene::onLotAdded(MapComposite *lot, MapObject *mapObject)
         item->setMapImage(mapImage);
     }
 
+    mMapBuildingsInvalid = true;
+
     updateLayerGroupsLater(Synch | Bounds);
 }
 
@@ -573,6 +626,8 @@ void ZomboidScene::onLotRemoved(MapComposite *lot, MapObject *mapObject)
     }
     mMapObjectToLot.remove(mapObject);
 
+    mMapBuildingsInvalid = true;
+
     updateLayerGroupsLater(Synch | Bounds);
 }
 
@@ -585,6 +640,8 @@ void ZomboidScene::onLotUpdated(MapComposite *lot, MapObject *mapObject)
         item->resize(lot->map()->size());
     }
 
+    mMapBuildingsInvalid = true;
+
     updateLayerGroupsLater(Synch | Bounds);
 }
 
@@ -592,7 +649,13 @@ void ZomboidScene::onLotUpdated(MapComposite *mc, WorldCellLot *lot)
 {
     Q_UNUSED(mc)
     Q_UNUSED(lot)
+    mMapBuildingsInvalid = true;
     updateLayerGroupsLater(Synch | Bounds);
+}
+
+void ZomboidScene::invalidateMapBuildings()
+{
+    mMapBuildingsInvalid = true;
 }
 
 // Called when a map file displayed as a Lot is changed on disk.
@@ -607,6 +670,7 @@ void ZomboidScene::mapCompositeChanged()
         if (MapObjectItem *item = itemForObject(mapObject))
             item->resize(lot->map()->size());
     }
+    mMapBuildingsInvalid = true;
     updateLayerGroupsLater(Synch | Bounds);
 }
 
@@ -618,6 +682,7 @@ void ZomboidScene::bmpBlenderLayersRecreated()
 
 void ZomboidScene::bmpPainted(int bmpIndex, const QRegion &region)
 {
+    Q_UNUSED(bmpIndex)
     const MapRenderer *renderer = mMapDocument->renderer();
     const QMargins margins = mMapDocument->map()->drawMargins();
 
@@ -633,6 +698,12 @@ void ZomboidScene::bmpXXXChanged()
 {
     if (mTileLayerGroupItems.contains(0))
         updateLayerGroupLater(0, Synch | Bounds);
+}
+
+void ZomboidScene::highlightRoomUnderPointerChanged(bool highlight)
+{
+    Q_UNUSED(highlight)
+    setHighlightRoomPosition(mHighlightRoomPosition);
 }
 
 void ZomboidScene::handlePendingUpdates()
@@ -701,6 +772,16 @@ void ZomboidScene::handlePendingUpdates()
     mPendingFlags = None;
     mPendingGroupItems.clear();
     mPendingActive = false;
+}
+
+void ZomboidScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
+{
+   MapScene::mouseMoveEvent(mouseEvent);
+
+   QPoint tilePos = mapDocument()->renderer()->pixelToTileCoordsInt(mouseEvent->scenePos(),
+                                                                    mapDocument()->currentLevel());
+   if (tilePos != mHighlightRoomPosition)
+       setHighlightRoomPosition(tilePos);
 }
 
 #include "preferences.h"

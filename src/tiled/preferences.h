@@ -114,6 +114,9 @@ public:
 
     QString worldedFile() const
     { return mWorldEdFile; }
+
+    bool highlightRoomUnderPointer() const
+    { return mHighlightRoomUnderPointer; }
 #endif // ZOMBOID
 
     /**
@@ -137,6 +140,7 @@ public slots:
     void setBackgroundColor(const QColor &bgColor);
     void setShowAdjacentMaps(bool show);
     void setWorldEdFile(const QString &fileName);
+    void setHighlightRoomUnderPointer(bool highlight);
 #endif
 
 signals:
@@ -162,6 +166,7 @@ signals:
     void backgroundColorChanged(const QColor &color);
     void showAdjacentMapsChanged(bool show);
     void worldEdFileChanged(const QString &fileName);
+    void highlightRoomUnderPointerChanged(bool highlight);
 #endif
 
 private:
@@ -198,6 +203,7 @@ private:
     QColor mBackgroundColor;
     bool mShowAdjacentMaps;
     QString mWorldEdFile;
+    bool mHighlightRoomUnderPointer;
 #endif
 
     static Preferences *mInstance;

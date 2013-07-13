@@ -288,6 +288,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     mUi->actionSnapToGrid->setChecked(preferences->snapToGrid());
     mUi->actionHighlightCurrentLayer->setChecked(preferences->highlightCurrentLayer());
 #ifdef ZOMBOID
+    mUi->actionHighlightRoomUnderPointer->setChecked(preferences->highlightRoomUnderPointer());
     mUi->actionShowMiniMap->setChecked(preferences->showMiniMap());
     mUi->actionShowTileLayersPanel->setChecked(preferences->showTileLayersPanel());
 #endif
@@ -380,6 +381,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     connect(mUi->actionHighlightCurrentLayer, SIGNAL(toggled(bool)),
             preferences, SLOT(setHighlightCurrentLayer(bool)));
 #ifdef ZOMBOID
+    connect(mUi->actionHighlightRoomUnderPointer, SIGNAL(toggled(bool)),
+            preferences, SLOT(setHighlightRoomUnderPointer(bool)));
     connect(mUi->actionShowMiniMap, SIGNAL(toggled(bool)),
             preferences, SLOT(setShowMiniMap(bool)));
     connect(mUi->actionShowTileLayersPanel, SIGNAL(toggled(bool)),

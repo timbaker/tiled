@@ -90,6 +90,7 @@ Preferences::Preferences()
     mBackgroundColor = QColor(mSettings->value(QLatin1String("BackgroundColor"),
                                                QColor(Qt::darkGray).name()).toString());
     mShowAdjacentMaps = mSettings->value(QLatin1String("ShowAdjacentMaps"), true).toBool();
+    mHighlightRoomUnderPointer = mSettings->value(QLatin1String("HighlightRoomUnderPointer"), false).toBool();
 #endif
     mSettings->endGroup();
 
@@ -514,5 +515,14 @@ void Preferences::setWorldEdFile(const QString &fileName)
     mWorldEdFile = fileName;
     mSettings->setValue(QLatin1String("WorldEd/ProjectFile"), mWorldEdFile);
     emit worldEdFileChanged(mWorldEdFile);
+}
+
+void Preferences::setHighlightRoomUnderPointer(bool highlight)
+{
+    if (mHighlightRoomUnderPointer == highlight)
+        return;
+    mHighlightRoomUnderPointer = highlight;
+    mSettings->setValue(QLatin1String("Interface/HighlightRoomUnderPointer"), highlight);
+    emit highlightRoomUnderPointerChanged(mHighlightRoomUnderPointer);
 }
 #endif // ZOMBOID

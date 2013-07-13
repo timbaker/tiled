@@ -190,6 +190,11 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
     if (root == mOwner)
         root->mKeepFloorLayerCount = 0;
 
+    QRegion suppressRgn;
+    if (mOwner->levelRecursive() + level() == mOwner->root()->suppressLevel())
+        suppressRgn = mOwner->root()->suppressRegion();
+    const QPoint rootPos = pos + mOwner->originRecursive();
+
     bool cleared = false;
     for (int index = 0; index < mLayers.size(); index++) {
         if (isLayerEmpty(index))
@@ -215,6 +220,10 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
             else if (cell->isEmpty() && tlBlend && tlBlend->contains(subPos))
                 cell = &tlBlend->cellAt(subPos);
 #endif // BUILDINGED
+#if 1
+            if (index && suppressRgn.contains(rootPos))
+                cell = &emptyCell;
+#endif
             if (!cell->isEmpty()) {
                 if (!cleared) {
                     bool isFloor = !mLevel && !index && (tl->name() == sFloor);
@@ -547,7 +556,7 @@ bool CompositeLayerGroup::setLayerNonEmpty(TileLayer *tl, bool force)
     }
     return mNeedsSynch;
 }
-#endif
+#endif // BUILDINGED
 
 QRect CompositeLayerGroup::bounds() const
 {
@@ -721,6 +730,7 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
     , mShowMapTiles(true)
     , mIsAdjacentMap(false)
     , mBmpBlender(new Tiled::Internal::BmpBlender(mMap, this))
+    , mSuppressLevel(0)
 {
 #ifdef WORLDED
     MapManager::instance()->addReferenceToMap(mMapInfo);
@@ -1546,3 +1556,10 @@ void MapComposite::mapFailedToLoad(MapInfo *mapInfo)
         }
     }
 }
+
+void MapComposite::setSuppressRegion(const QRegion &rgn, int level)
+{
+    mSuppressRgn = rgn;
+    mSuppressLevel = level;
+}
+

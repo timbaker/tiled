@@ -26,6 +26,7 @@
 
 class CompositeLayerGroup;
 class DnDItem;
+class MapBuildings;
 
 namespace Tiled {
 class MapRenderer;
@@ -101,11 +102,15 @@ private slots:
 
     void onLotUpdated(MapComposite *mc, WorldCellLot *lot);
 
+    void invalidateMapBuildings();
+
     void mapCompositeChanged();
 
     void bmpBlenderLayersRecreated();
     void bmpPainted(int bmpIndex, const QRegion &region);
     void bmpXXXChanged();
+
+    void highlightRoomUnderPointerChanged(bool highlight);
 
     void handlePendingUpdates();
 
@@ -124,6 +129,7 @@ public:
 protected:
 
     // QGraphicsScene
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent);
     virtual void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
     virtual void dragMoveEvent(QGraphicsSceneDragDropEvent *event);
     virtual void dragLeaveEvent(QGraphicsSceneDragDropEvent *event);
@@ -137,6 +143,9 @@ protected:
     void updateLayerGroupLater(int level, PendingFlags flags);
 
     void setGraphicsSceneZOrder();
+
+    QRegion getBuildingRegion(const QPoint &tilePos, QRegion &roomRgn);
+    void setHighlightRoomPosition(const QPoint &tilePos);
 
 private:
     QMap<MapObject*,MapComposite*> mMapObjectToLot;
@@ -152,6 +161,10 @@ private:
     bool mWasHighlightCurrentLayer;
     QGraphicsPolygonItem *mMapBordersItem;
     QGraphicsPolygonItem *mMapBordersItem2;
+
+    QPoint mHighlightRoomPosition;
+    MapBuildings *mMapBuildings;
+    bool mMapBuildingsInvalid;
 };
 
 } // namespace Internal

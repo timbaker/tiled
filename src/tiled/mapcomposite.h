@@ -278,6 +278,11 @@ public:
 
     bool waitingForMapsToLoad() const;
 
+    void setSuppressRegion(const QRegion &rgn, int level);
+    QRegion suppressRegion() const
+    { return mSuppressRgn; }
+    int suppressLevel() const
+    { return mSuppressLevel; }
 signals:
     void layerGroupAdded(int level);
     void layerAddedToGroup(int index);
@@ -338,6 +343,9 @@ private:
         int level;
     };
     QList<SubMapLoading> mSubMapsLoading;
+
+    QRegion mSuppressRgn;
+    int mSuppressLevel;
 
 #if 1 // ROAD_CRUD
     Tiled::TileLayer *mRoadLayer1;
