@@ -17,6 +17,7 @@
 
 #include "mapimagemanager.h"
 
+#include "bmpblender.h"
 #include "imagelayer.h"
 #include "isometricrenderer.h"
 #include "mainwindow.h"
@@ -668,6 +669,11 @@ void MapImageManager::mapLoaded(MapInfo *mapInfo)
     TilesetManager::instance()->waitForTilesets(usedTilesets.toList());
 #endif
 
+    // BmpBlender sends a signal to the MapComposite when it has finished
+    // blending.  That needs to happen in the render thread.
+    Q_ASSERT(mRenderMapComposite->bmpBlender()->parent() == mRenderMapComposite);
+    mRenderMapComposite->moveToThread(mImageRenderThread);
+
     QMetaObject::invokeMethod(mImageRenderWorker,
                               "mapLoaded", Qt::QueuedConnection,
                               Q_ARG(MapComposite*,mRenderMapComposite));
@@ -982,6 +988,10 @@ MapImageData MapImageRenderWorker::generateMapImage(MapComposite *mapComposite)
             maxLevel = layerGroup->level();
     }
     renderer->setMaxLevel(maxLevel);
+
+    foreach (MapComposite *mc, mapComposite->maps())
+        if (mc->bmpBlender())
+            mc->bmpBlender()->flush(QRect(0, 0, mc->map()->width() - 1, mc->map()->height() - 1));
 
     QRectF sceneRect = mapComposite->boundingRect(renderer);
     QSize mapSize = sceneRect.size().toSize();
