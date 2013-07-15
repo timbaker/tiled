@@ -50,6 +50,7 @@ BmpBlender::BmpBlender(Map *map, QObject *parent) :
     QObject(parent),
     mMap(map),
     mFakeTileGrid(0),
+    mInitTilesLater(true),
     mAliases(map->bmpSettings()->aliases()),
     mRules(map->bmpSettings()->rules()),
     mBlendList(map->bmpSettings()->blends()),
@@ -114,6 +115,11 @@ void BmpBlender::flush(const MapRenderer *renderer, const QRect &rect, const QPo
         return;
     mDirtyRegion -= dirty;
 
+    if (mInitTilesLater) {
+        initTiles();
+        mInitTilesLater = false;
+    }
+
     foreach (QRect r, dirty.rects()) {
         int x1 = r.left(), x2 = r.right(), y1 = r.top(), y2 = r.bottom();
         x1 -= 2, x2 += 2, y1 -= 2, y2 += 2;
@@ -131,6 +137,11 @@ void BmpBlender::flush(const QRect &rect)
         return;
     mDirtyRegion -= dirty;
 
+    if (mInitTilesLater) {
+        initTiles();
+        mInitTilesLater = false;
+    }
+
     int x1 = rect.left(), x2 = rect.right(), y1 = rect.top(), y2 = rect.bottom();
     x1 -= 2, x2 += 2, y1 -= 2, y2 += 2;
 
@@ -142,16 +153,16 @@ void BmpBlender::flush(const QRect &rect)
 void BmpBlender::tilesetAdded(Tileset *ts)
 {
     if (mTilesetNames.contains(ts->name())) {
-        initTiles();
-        tileNamesToLayers(0, 0, mMap->width(), mMap->height());
+        mInitTilesLater = true;
+        mDirtyRegion = QRegion(0, 0, mMap->width(), mMap->height());
     }
 }
 
 void BmpBlender::tilesetRemoved(const QString &tilesetName)
 {
     if (mTilesetNames.contains(tilesetName)) {
-        initTiles();
-        tileNamesToLayers(0, 0, mMap->width(), mMap->height());
+        mInitTilesLater = true;
+        mDirtyRegion = QRegion(0, 0, mMap->width(), mMap->height());
     }
 }
 
@@ -165,6 +176,11 @@ void BmpBlender::tilesToPixels(int x1, int y1, int x2, int y2)
     x2 = qBound(0, x2, mMap->width() - 1);
     y1 = qBound(0, y1, mMap->height() - 1);
     y2 = qBound(0, y2, mMap->height() - 1);
+
+    if (mInitTilesLater) {
+        initTiles();
+        mInitTilesLater = false;
+    }
 
     for (int y = y1; y <= y2; y++) {
         for (int x = x1; x <= x2; x++) {
@@ -301,7 +317,7 @@ void BmpBlender::fromMap()
 
     mTileNames = normalizeTileNames(tileNames.values());
 
-    initTiles();
+    mInitTilesLater = true;
 
     mDirtyRegion = QRegion(QRect(QPoint(), mMap->size()));
 }

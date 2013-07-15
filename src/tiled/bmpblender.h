@@ -175,6 +175,7 @@ private:
     QStringList mTilesetNames;
     QStringList mTileNames;
     QMap<QString,Tile*> mTileByName;
+    bool mInitTilesLater;
 
     QString getNeighbouringTile(int x, int y);
     BmpBlend *getBlendRule(int x, int y, const QString &tileName, const QString &layer,
