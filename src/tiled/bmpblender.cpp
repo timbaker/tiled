@@ -523,6 +523,8 @@ void BmpBlender::blend(int x1, int y1, int x2, int y2)
             mapLayers[layerName] = mMap->layerAt(n)->asTileLayer();
     }
 
+    QVector<QString> neighbors(9);
+
     for (int y = y1; y <= y2; y++) {
         for (int x = x1; x <= x2; x++) {
             QString tileName = grid->at(x, y);
@@ -530,8 +532,13 @@ void BmpBlender::blend(int x1, int y1, int x2, int y2)
                                                          mMap->rbmpVeg().rimage(),
                                                          x, y))
                 tileName = mFakeTileGrid->at(x, y);
+
+            for (int dy = -1; dy <= +1; dy++)
+                for (int dx = -1; dx <= +1; dx++)
+                    neighbors[(dx + 1) + (dy + 1) * 3] = getNeighbouringTile(x + dx, y + dy);
+
             foreach (QString layerName, mBlendLayers) {
-                if (BmpBlend *blend = getBlendRule(x, y, tileName, layerName)) {
+                if (BmpBlend *blend = getBlendRule(x, y, tileName, layerName, neighbors)) {
 
                     for (int i = 0; i < blend->exclude2.size(); i += 2) {
                         if (mapLayers.contains(blend->exclude2[i + 1])) {
@@ -716,11 +723,15 @@ QString BmpBlender::getNeighbouringTile(int x, int y)
 }
 
 BmpBlend *BmpBlender::getBlendRule(int x, int y, const QString &tileName,
-                                   const QString &layer)
+                                   const QString &layer,
+                                   const QVector<QString> &neighbors)
 {
     BmpBlend *lastBlend = 0;
     if (tileName.isEmpty())
         return lastBlend;
+
+#define NEIGHBOR(X,Y) neighbors[((X) - x + 1) + ((Y) - y + 1) * 3]
+
     foreach (BmpBlend *blend, mBlendsByLayer[layer]) {
         Q_ASSERT(blend->targetLayer == layer);
         if (blend->targetLayer != layer)
@@ -736,37 +747,36 @@ BmpBlend *BmpBlender::getBlendRule(int x, int y, const QString &tileName,
             bool bPass = false;
             switch (blend->dir) {
             case BmpBlend::N:
-                bPass = mainTiles.contains(getNeighbouringTile(x, y - 1));
+                bPass = mainTiles.contains(NEIGHBOR(x, y - 1));
                 break;
             case BmpBlend::S:
-                bPass = mainTiles.contains(getNeighbouringTile(x, y + 1));
+                bPass = mainTiles.contains(NEIGHBOR(x, y + 1));
                 break;
             case BmpBlend::E:
-                bPass = mainTiles.contains(getNeighbouringTile(x + 1, y));
+                bPass = mainTiles.contains(NEIGHBOR(x + 1, y));
                 break;
             case BmpBlend::W:
-                bPass = mainTiles.contains(getNeighbouringTile(x - 1, y));
+                bPass = mainTiles.contains(NEIGHBOR(x - 1, y));
                 break;
             case BmpBlend::NE:
-                bPass = mainTiles.contains(getNeighbouringTile(x, y - 1)) &&
-                        mainTiles.contains(getNeighbouringTile(x + 1, y));
+                bPass = mainTiles.contains(NEIGHBOR(x, y - 1)) &&
+                        mainTiles.contains(NEIGHBOR(x + 1, y));
                 break;
             case BmpBlend::SE:
-                bPass = mainTiles.contains(getNeighbouringTile(x, y + 1)) &&
-                        mainTiles.contains(getNeighbouringTile(x + 1, y));
+                bPass = mainTiles.contains(NEIGHBOR(x, y + 1)) &&
+                        mainTiles.contains(NEIGHBOR(x + 1, y));
                 break;
             case BmpBlend::NW:
-                bPass = mainTiles.contains(getNeighbouringTile(x, y - 1)) &&
-                        mainTiles.contains(getNeighbouringTile(x - 1, y));
+                bPass = mainTiles.contains(NEIGHBOR(x, y - 1)) &&
+                        mainTiles.contains(NEIGHBOR(x - 1, y));
                 break;
             case BmpBlend::SW:
-                bPass = mainTiles.contains(getNeighbouringTile(x, y + 1)) &&
-                        mainTiles.contains(getNeighbouringTile(x - 1, y));
+                bPass = mainTiles.contains(NEIGHBOR(x, y + 1)) &&
+                        mainTiles.contains(NEIGHBOR(x - 1, y));
                 break;
             default:
                 break;
             }
-
             if (bPass)
                 lastBlend = blend;
         }

@@ -177,7 +177,8 @@ private:
     QMap<QString,Tile*> mTileByName;
 
     QString getNeighbouringTile(int x, int y);
-    BmpBlend *getBlendRule(int x, int y, const QString &tileName, const QString &layer);
+    BmpBlend *getBlendRule(int x, int y, const QString &tileName, const QString &layer,
+                           const QVector<QString> &neighbors);
 
     QList<BmpAlias*> mAliases;
     QMap<QString,BmpAlias*> mAliasByName;
