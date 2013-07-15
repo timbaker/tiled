@@ -14,20 +14,38 @@
    <string>BMP Tool</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <property name="margin">
+   <property name="leftMargin">
+    <number>2</number>
+   </property>
+   <property name="topMargin">
+    <number>2</number>
+   </property>
+   <property name="rightMargin">
+    <number>2</number>
+   </property>
+   <property name="bottomMargin">
     <number>2</number>
    </property>
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
        <string>Rules</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout">
-       <property name="margin">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
         <number>0</number>
        </property>
        <item>
@@ -154,6 +172,13 @@
         <widget class="QToolButton" name="toggleOverlayLayers">
          <property name="text">
           <string>Show/Hide FloorOverlay Layers</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="showBMPTiles">
+         <property name="text">
+          <string>Show BMP-generated tiles</string>
          </property>
         </widget>
        </item>

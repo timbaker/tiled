@@ -50,6 +50,7 @@ private slots:
     void brushCircle();
     void restrictToSelection(bool isRestricted);
     void toggleOverlayLayers();
+    void showBMPTiles(bool show);
     void showMapTiles(bool show);
     void setVisibleNow();
 

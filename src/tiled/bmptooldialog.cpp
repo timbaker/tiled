@@ -155,6 +155,8 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
             SLOT(restrictToSelection(bool)));
     connect(ui->toggleOverlayLayers, SIGNAL(clicked()),
             SLOT(toggleOverlayLayers()));
+    connect(ui->showBMPTiles, SIGNAL(toggled(bool)),
+            SLOT(showBMPTiles(bool)));
     connect(ui->showMapTiles, SIGNAL(toggled(bool)),
             SLOT(showMapTiles(bool)));
 
@@ -449,6 +451,7 @@ void BmpToolDialog::setDocument(MapDocument *doc)
     case BmpBrushTool::Circle: ui->brushCircle->setChecked(true); break;
     }
     ui->restrictToSelection->setChecked(BmpBrushTool::instance()->restrictToSelection());
+    ui->showBMPTiles->setEnabled(mDocument != 0);
     ui->showMapTiles->setEnabled(mDocument != 0);
 
     if (mDocument) {
@@ -519,6 +522,7 @@ void BmpToolDialog::setDocument(MapDocument *doc)
         if (!fileName.isEmpty())
             ui->blendsFile->setText(QDir::toNativeSeparators(fileName));
 
+        ui->showBMPTiles->setChecked(mDocument->mapComposite()->showBMPTiles());
         ui->showMapTiles->setChecked(mDocument->mapComposite()->showMapTiles());
 
         connect(mDocument, SIGNAL(bmpAliasesChanged()), SLOT(bmpRulesChanged())); // XXXXX
@@ -577,6 +581,16 @@ void BmpToolDialog::toggleOverlayLayers()
             mDocument->setLayerVisible(index, visible);
         }
     }
+}
+
+void BmpToolDialog::showBMPTiles(bool show)
+{
+    if (!mDocument)
+        return;
+    mDocument->mapComposite()->setShowBMPTiles(show);
+    if (mDocument->map()->layerCount())
+        mDocument->emitRegionChanged(QRect(QPoint(0, 0), mDocument->map()->size()),
+                                     mDocument->map()->layerAt(0));
 }
 
 void BmpToolDialog::showMapTiles(bool show)

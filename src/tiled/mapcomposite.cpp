@@ -211,7 +211,8 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
             if (!mOwner->parent() && !mOwner->showMapTiles())
                 cell = &emptyCell;
             if (tlBmpBlend && tlBmpBlend->contains(subPos) && !tlBmpBlend->cellAt(subPos).isEmpty())
-                cell = &tlBmpBlend->cellAt(subPos);
+                if (mOwner->parent() || mOwner->showBMPTiles())
+                    cell = &tlBmpBlend->cellAt(subPos);
 #ifdef BUILDINGED
             // Use an empty tool tile if given during erasing.
             if ((mToolTileLayer == tl) && !mToolTiles.isEmpty() &&
@@ -727,6 +728,7 @@ MapComposite::MapComposite(MapInfo *mapInfo, Map::Orientation orientRender,
     , mVisible(true)
     , mGroupVisible(true)
     , mHiddenDuringDrag(false)
+    , mShowBMPTiles(true)
     , mShowMapTiles(true)
     , mIsAdjacentMap(false)
     , mBmpBlender(new Tiled::Internal::BmpBlender(mMap, this))
@@ -1122,7 +1124,9 @@ void MapComposite::saveVisibility()
     mSavedVisible = mVisible;
     mVisible = true; // hack
 
+    mSavedShowBMPTiles = mShowBMPTiles;
     mSavedShowMapTiles = mShowMapTiles;
+    mShowBMPTiles = true;
     mShowMapTiles = true;
 
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups)
@@ -1138,6 +1142,7 @@ void MapComposite::restoreVisibility()
 {
     mGroupVisible = mSavedGroupVisible;
     mVisible = mSavedVisible;
+    mShowBMPTiles = mSavedShowBMPTiles;
     mShowMapTiles = mSavedShowMapTiles;
 
     foreach (CompositeLayerGroup *layerGroup, mLayerGroups)
