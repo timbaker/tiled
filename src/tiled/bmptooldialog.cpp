@@ -426,6 +426,7 @@ void BmpToolDialog::setDocument(MapDocument *doc)
     if (mDocument) {
         mDocument->disconnect(this);
         mDocument->mapComposite()->bmpBlender()->disconnect(this);
+        ui->tabWidget->disconnect(mDocument->mapComposite()->bmpBlender());
     }
 
     mDocument = doc;
@@ -530,6 +531,10 @@ void BmpToolDialog::setDocument(MapDocument *doc)
         connect(mDocument, SIGNAL(bmpBlendsChanged()), SLOT(bmpBlendsChanged()));
         connect(mDocument->mapComposite()->bmpBlender(), SIGNAL(warningsChanged()),
                 SLOT(warningsChanged()));
+
+        // This is to handle unknown pixels in the BMP images being erased.
+        connect(ui->tabWidget, SIGNAL(currentChanged(int)),
+                mDocument->mapComposite()->bmpBlender(), SLOT(updateWarnings()));
     }
 
     warningsChanged();
