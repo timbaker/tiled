@@ -2231,14 +2231,14 @@ void MainWindow::LuaScript(const QString &filePath)
     if (!bmpMain.mAltered.isEmpty()) {
         QRect r = bmpMain.mAltered.boundingRect();
         us->push(new PaintBMP(mMapDocument, 0, r.x(), r.y(),
-                              bmpMain.mBmp.image(),
+                              bmpMain.mBmp.image().copy(r),
                               bmpMain.mAltered));
     }
     Lua::LuaMapBmp &bmpVeg = scripter.mMap.mBmpVeg;
     if (!bmpVeg.mAltered.isEmpty()) {
         QRect r = bmpVeg.mAltered.boundingRect();
-        us->push(new PaintBMP(mMapDocument, 0, r.x(), r.y(),
-                              bmpVeg.mBmp.image(),
+        us->push(new PaintBMP(mMapDocument, 1, r.x(), r.y(),
+                              bmpVeg.mBmp.image().copy(r),
                               bmpVeg.mAltered));
     }
 
