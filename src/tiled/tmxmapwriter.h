@@ -26,6 +26,10 @@
 #include <QCoreApplication>
 #include <QString>
 
+#ifdef ZOMBOID
+class QFile;
+#endif
+
 namespace Tiled {
 
 class Tileset;
@@ -41,6 +45,10 @@ class TmxMapWriter : public MapWriterInterface
 
 public:
     bool write(const Map *map, const QString &fileName);
+
+#ifdef ZOMBOID
+    bool write(const Map *map, QFile &file, const QString &path);
+#endif
 
     bool writeTileset(const Tileset *tileset, const QString &fileName);
 

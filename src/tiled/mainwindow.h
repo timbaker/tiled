@@ -116,6 +116,7 @@ public:
     bool InitConfigFiles();
 
     void LuaScript(const QString &filePath);
+    bool LuaScript(MapDocument *doc, const QString &filePath);
 #endif
 
 public slots:

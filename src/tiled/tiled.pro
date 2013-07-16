@@ -225,7 +225,8 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/buildingroomdef.cpp \
     picktiletool.cpp \
     mapbuildings.cpp \
-    bmpblendview.cpp
+    bmpblendview.cpp \
+    luamapsdialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -413,7 +414,8 @@ HEADERS += aboutdialog.h \
     BuildingEditor/buildingroomdef.h \
     picktiletool.h \
     mapbuildings.h \
-    bmpblendview.h
+    bmpblendview.h \
+    luamapsdialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -455,7 +457,8 @@ FORMS += aboutdialog.ui \
     roomdefnamedialog.ui \
     luaconsole.ui \
     worldeddock.ui \
-    BuildingEditor/welcomemode.ui
+    BuildingEditor/welcomemode.ui \
+    luamapsdialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

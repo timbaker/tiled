@@ -45,6 +45,26 @@ bool TmxMapWriter::write(const Map *map, const QString &fileName)
     return result;
 }
 
+#ifdef ZOMBOID
+#include <QFile>
+bool TmxMapWriter::write(const Map *map, QFile &file, const QString &path)
+{
+    Preferences *prefs = Preferences::instance();
+
+    MapWriter writer;
+    writer.setLayerDataFormat(prefs->layerDataFormat());
+    writer.setDtdEnabled(prefs->dtdEnabled());
+
+    writer.writeMap(map, &file, path);
+    if (file.error() != QFile::NoError) {
+        mError = file.errorString();
+        return false;
+    }
+    mError.clear();
+    return true;
+}
+#endif // ZOMBOID
+
 bool TmxMapWriter::writeTileset(const Tileset *tileset,
                                 const QString &fileName)
 {

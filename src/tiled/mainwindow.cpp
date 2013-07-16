@@ -2142,26 +2142,26 @@ private:
 
 #include "luatiled.h"
 #include "painttilelayer.h"
-void MainWindow::LuaScript(const QString &filePath)
+bool MainWindow::LuaScript(MapDocument *doc, const QString &filePath)
 {
     QString f = filePath.isEmpty()
             ? QFileDialog::getOpenFileName(LuaConsole::instance(), tr("Open Lua Script"),
                                            QString(), tr("Lua files (*.lua)"))
             : filePath;
-    if (f.isEmpty()) return;
+    if (f.isEmpty()) return true;
 
     LuaConsole::instance()->setFile(f);
 
-    Lua::LuaScript scripter(mMapDocument->map());
-    scripter.mMap.mSelection = mMapDocument->tileSelection();
+    Lua::LuaScript scripter(doc->map());
+    scripter.mMap.mSelection = doc->tileSelection();
     QString output;
     bool ok = scripter.dofile(f, output);
     qDebug() << output;
     if (!ok) {
-        return;
+        return false;
     }
 
-    QUndoStack *us = mMapDocument->undoStack();
+    QUndoStack *us = doc->undoStack();
     us->beginMacro(tr("Lua Script"));
 
     // Map resizing.
@@ -2169,10 +2169,10 @@ void MainWindow::LuaScript(const QString &filePath)
     // Handle deleted layers
     foreach (Lua::LuaLayer *ll, scripter.mMap.mRemovedLayers) {
         if (ll->mOrig) {
-            int index = mMapDocument->map()->layers().indexOf(ll->mOrig);
+            int index = doc->map()->layers().indexOf(ll->mOrig);
             Q_ASSERT(index != -1);
             qDebug() << "remove layer" << ll->mOrig->name() << " at " << index;
-            us->push(new RemoveLayer(mMapDocument, index));
+            us->push(new RemoveLayer(doc, index));
         }
     }
 
@@ -2180,11 +2180,11 @@ void MainWindow::LuaScript(const QString &filePath)
     foreach (Lua::LuaLayer *ll, scripter.mMap.mLayers) {
         if (Layer *layer = ll->mOrig) {
             // This layer exists (somewhere) in the original map.
-            int oldIndex = mMapDocument->map()->layers().indexOf(layer);
+            int oldIndex = doc->map()->layers().indexOf(layer);
             int newIndex = scripter.mMap.mLayers.indexOf(ll);
             if (oldIndex != newIndex) {
                 qDebug() << "move layer" << layer->name() << "from " << oldIndex << " to " << newIndex;
-                us->push(new ReorderLayer(mMapDocument, newIndex, layer));
+                us->push(new ReorderLayer(doc, newIndex, layer));
             }
         } else {
             // This is a new layer.
@@ -2192,12 +2192,13 @@ void MainWindow::LuaScript(const QString &filePath)
             Layer *newLayer = ll->mClone->clone();
             int index = scripter.mMap.mLayers.indexOf(ll);
             qDebug() << "add layer" << newLayer->name() << "at" << index;
-            us->push(new AddLayer(mMapDocument, index, newLayer));
+            us->push(new AddLayer(doc, index, newLayer));
         }
     }
 
     // Clear the tile selection so it doesn't inhibit what the script changed.
-    us->push(new ChangeTileSelection(mMapDocument, QRegion()));
+    if (!doc->tileSelection().isEmpty())
+        us->push(new ChangeTileSelection(doc, QRegion()));
 
     foreach (Lua::LuaLayer *ll, scripter.mMap.mLayers) {
         // Apply changes to tile layers.
@@ -2208,7 +2209,7 @@ void MainWindow::LuaScript(const QString &filePath)
                 continue; // No changes.
             TileLayer *source = tl->mCloneTileLayer->copy(tl->mAltered);
             QRect r = tl->mAltered.boundingRect();
-            us->push(new PaintTileLayer(mMapDocument, tl->mOrig->asTileLayer(),
+            us->push(new PaintTileLayer(doc, tl->mOrig->asTileLayer(),
                                         r.x(), r.y(), source, tl->mAltered));
             delete source;
         }
@@ -2218,8 +2219,8 @@ void MainWindow::LuaScript(const QString &filePath)
                 if (og->mOrig) {
 
                 } else {
-                    us->push(new AddMapObject(mMapDocument,
-                                              mMapDocument->map()->layerAt(scripter.mMap.mLayers.indexOf(ll))->asObjectGroup(),
+                    us->push(new AddMapObject(doc,
+                                              doc->map()->layerAt(scripter.mMap.mLayers.indexOf(ll))->asObjectGroup(),
                                               o->mClone->clone()));
                 }
             }
@@ -2230,23 +2231,30 @@ void MainWindow::LuaScript(const QString &filePath)
     Lua::LuaMapBmp &bmpMain = scripter.mMap.mBmpMain;
     if (!bmpMain.mAltered.isEmpty()) {
         QRect r = bmpMain.mAltered.boundingRect();
-        us->push(new PaintBMP(mMapDocument, 0, r.x(), r.y(),
+        us->push(new PaintBMP(doc, 0, r.x(), r.y(),
                               bmpMain.mBmp.image().copy(r),
                               bmpMain.mAltered));
     }
     Lua::LuaMapBmp &bmpVeg = scripter.mMap.mBmpVeg;
     if (!bmpVeg.mAltered.isEmpty()) {
         QRect r = bmpVeg.mAltered.boundingRect();
-        us->push(new PaintBMP(mMapDocument, 1, r.x(), r.y(),
+        us->push(new PaintBMP(doc, 1, r.x(), r.y(),
                               bmpVeg.mBmp.image().copy(r),
                               bmpVeg.mAltered));
     }
 
     // Handle the script changing the tile selection.
-    if (mMapDocument->tileSelection() != scripter.mMap.mSelection)
-        us->push(new ChangeTileSelection(mMapDocument, scripter.mMap.mSelection));
+    if (doc->tileSelection() != scripter.mMap.mSelection)
+        us->push(new ChangeTileSelection(doc, scripter.mMap.mSelection));
 
     us->endMacro();
+
+    return true;
+}
+
+void MainWindow::LuaScript(const QString &filePath)
+{
+    LuaScript(mMapDocument, filePath);
 }
 #endif // ZOMBOID
 

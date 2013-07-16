@@ -717,8 +717,10 @@ bool LuaMapBmp::contains(int x, int y)
 void LuaMapBmp::setPixel(int x, int y, const LuaColor &c)
 {
     if (!contains(x, y)) return; // error!
-    mBmp.setPixel(x, y, c.pixel);
-    mAltered += QRect(x, y, 1, 1);
+    if (mBmp.pixel(x, y) != c.pixel) {
+        mBmp.setPixel(x, y, c.pixel);
+        mAltered += QRect(x, y, 1, 1);
+    }
 }
 
 unsigned int LuaMapBmp::pixel(int x, int y)
@@ -758,11 +760,13 @@ void LuaMapBmp::fill(const QRect &r, const LuaColor &c)
 
     for (int y = r2.y(); y <= r2.bottom(); y++) {
         for (int x = r2.x(); x <= r2.right(); x++) {
-            mBmp.setPixel(x, y, c.pixel);
+            if (mBmp.pixel(x, y) != c.pixel) {
+                mBmp.setPixel(x, y, c.pixel);
+                mAltered += QRect(x, y, 1, 1);
+            }
         }
     }
 
-    mAltered += r2;
 }
 
 void LuaMapBmp::fill(const LuaRegion &rgn, const LuaColor &c)
