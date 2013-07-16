@@ -15,7 +15,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "bmpruleview.h"
+#include "bmpblendview.h"
 
 #include "tilemetainfomgr.h"
 #include "zoomable.h"
@@ -40,12 +40,13 @@ using namespace BuildingEditor;
 namespace Tiled {
 namespace Internal {
 
-class BmpRuleDelegate : public QAbstractItemDelegate
+class BmpBlendDelegate : public QAbstractItemDelegate
 {
 public:
-    BmpRuleDelegate(BmpRuleView *view, QObject *parent = 0)
+    BmpBlendDelegate(BmpBlendView *view, QObject *parent = 0)
         : QAbstractItemDelegate(parent)
         , mView(view)
+        , mMouseOverDir(-1)
         , mLabelFontMetrics(mLabelFont)
     {
         if (true/*mFont != mView->font()*/) {
@@ -66,14 +67,17 @@ public:
     QSize sizeHint(const QStyleOptionViewItem &option,
                    const QModelIndex &index) const;
 
-    void setMouseOver(const QModelIndex &index);
+    int blendAt(const QPoint &p, const QRect &viewRect);
+    void setMouseOver(const QModelIndex &index, int dir);
 
     QModelIndex mouseOverIndex() const
     { return mMouseOverIndex; }
+    int mouseOverDir() const { return mMouseOverDir; }
 
 private:
-    BmpRuleView *mView;
+    BmpBlendView *mView;
     QModelIndex mMouseOverIndex;
+    int mMouseOverDir;
     QFont mFont;
     QFont mLabelFont;
     QFontMetrics mLabelFontMetrics;
@@ -82,11 +86,11 @@ private:
 } // namepace Internal
 } // namespace Tiled
 
-void BmpRuleDelegate::paint(QPainter *painter,
+void BmpBlendDelegate::paint(QPainter *painter,
                                 const QStyleOptionViewItem &option,
                                 const QModelIndex &index) const
 {
-    const BmpRuleModel *m = static_cast<const BmpRuleModel*>(index.model());
+    const BmpBlendModel *m = static_cast<const BmpBlendModel*>(index.model());
 
     QBrush brush(QColor(255, 255, 255));
     painter->fillRect(option.rect, brush);
@@ -97,8 +101,8 @@ void BmpRuleDelegate::paint(QPainter *painter,
         painter->setPen(Qt::black);
     }
 
-    BmpRule *rule = m->ruleAt(index);
-    if (!rule) return;
+    QVector<BmpBlend*> blends = m->blendsAt(index);
+    if (blends.isEmpty()) return;
 
     const int extra = 2;
 #if 0
@@ -128,7 +132,22 @@ void BmpRuleDelegate::paint(QPainter *painter,
         painter->setOpacity(opacity);
     }
 
-    // Rect around current rule
+    const QFontMetrics fm = painter->fontMetrics();
+    const int labelHeight = fm.lineSpacing();
+    qreal scale = mView->zoomable()->scale();
+    const int tileWidth = qCeil(64 * scale);
+    const int tileHeight = qCeil(128 * scale);
+//    const int columns = qMax(8, option.rect.width() / tileWidth);
+
+    // Mouse-over tile highlight
+    if (index == mMouseOverIndex && mMouseOverDir != -1) {
+        QRect r(option.rect.left() + extra + mMouseOverDir * tileWidth,
+                option.rect.top() + extra + labelHeight + extra,
+                tileWidth, tileHeight);
+        painter->fillRect(r, Qt::lightGray);
+    }
+
+    // Rect around current blend
     if (option.state & QStyle::State_Selected) {
         QPen oldPen = painter->pen();
         QPen pen;
@@ -139,64 +158,51 @@ void BmpRuleDelegate::paint(QPainter *painter,
     }
 
     // Draw the tiles
-    QStringList tileNames;
-    foreach (QString tileName, rule->tileChoices) {
-        if (tileName.isEmpty()) continue; // "null"
-        QStringList aliasTiles = m->aliasTiles(tileName);
-        if (!aliasTiles.isEmpty())
-            tileNames += aliasTiles;
-        else
-            tileNames += tileName;
-    }
+    for (int i = BmpBlend::Unknown; i <= BmpBlend::SE; i++) {
+        if (BmpBlend *blend = blends[i]) {
+            QString tileName = i ? blend->blendTile : blend->mainTile;
+            QStringList aliasTiles = m->aliasTiles(tileName);
+            if (!aliasTiles.isEmpty())
+                tileName = aliasTiles.first();
+            if (Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName)) {
+                const int tileWidth = qCeil(tile->tileset()->tileWidth() * scale);
+                const int tileHeight = qCeil(tile->tileset()->tileHeight() * scale);
 
-    if (!mView->isExpanded())
-        tileNames.clear();
+                if (mView->zoomable()->smoothTransform())
+                    painter->setRenderHint(QPainter::SmoothPixmapTransform);
 
-    const QFontMetrics fm = painter->fontMetrics();
-    const int labelHeight = fm.lineSpacing();
-    qreal scale = mView->zoomable()->scale();
-    const int tileWidth = qCeil(64 * scale);
-    const int columns = qMax(8, option.rect.width() / tileWidth);
-
-    int n = 0;
-    foreach (QString tileName, tileNames) {
-        if (Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName)) {
-            const int tileWidth = qCeil(tile->tileset()->tileWidth() * scale);
-            const int tileHeight = qCeil(tile->tileset()->tileHeight() * scale);
-
-            if (mView->zoomable()->smoothTransform())
-                painter->setRenderHint(QPainter::SmoothPixmapTransform);
-
-            if (tile != BuildingTilesMgr::instance()->noneTiledTile())
-                painter->drawPixmap(QRect(option.rect.left() + extra + (n % columns) * tileWidth,
-                                          option.rect.top() + extra + labelHeight + (n / columns) * tileHeight + extra,
-                                          tileWidth, tileHeight),
-                                    QPixmap::fromImage(tile->image()));
-            n++;
+                if (tile != BuildingTilesMgr::instance()->noneTiledTile())
+                    painter->drawPixmap(QRect(option.rect.left() + extra + i * tileWidth,
+                                              option.rect.top() + extra + labelHeight /*+ (n / columns) * tileHeight*/ + extra,
+                                              tileWidth, tileHeight),
+                                        QPixmap::fromImage(tile->image()));
+            }
         }
     }
 
     int labelWidth = 0;
     QFont font = painter->font();
-    if (rule->label.size()) {
+    QString label = blends[0] ? blends[0]->mainTile : QString();
+    if (label.length()) {
         QPen oldPen = painter->pen();
         painter->setPen(Qt::blue);
         painter->setFont(mLabelFont);
-        labelWidth = mLabelFontMetrics.width(rule->label) + 6;
+        labelWidth = mLabelFontMetrics.width(label) + 6;
         painter->drawText(option.rect.left() + extra, option.rect.top() + extra,
-                          option.rect.width() - extra * 2, labelHeight, Qt::AlignLeft, rule->label);
+                          option.rect.width() - extra * 2, labelHeight, Qt::AlignLeft, label);
         painter->setFont(font);
         painter->setPen(oldPen);
     }
 
+#if 0
     // Rule header.
     QString label = tr("Rule #%1: index=%2 color=%3,%4,%5")
-            .arg(m->ruleIndex(rule))
-            .arg(rule->bitmapIndex)
-            .arg(qRed(rule->color)).arg(qGreen(rule->color)).arg(qBlue(rule->color));
-    if (rule->condition != qRgb(0, 0, 0))
+            .arg(m->blendIndex(blend))
+            .arg(blend->bitmapIndex)
+            .arg(qRed(blend->color)).arg(qGreen(blend->color)).arg(qBlue(blend->color));
+    if (blend->condition != qRgb(0, 0, 0))
         label += QString::fromLatin1(" condition=%1,%2,%3")
-                .arg(qRed(rule->condition)).arg(qGreen(rule->condition)).arg(qBlue(rule->condition));
+                .arg(qRed(blend->condition)).arg(qGreen(blend->condition)).arg(qBlue(blend->condition));
     QString name = fm.elidedText(label, Qt::ElideRight, option.rect.width());
     if (mMouseOverIndex == index) {
         QFont newFont = font;
@@ -207,7 +213,7 @@ void BmpRuleDelegate::paint(QPainter *painter,
                       option.rect.width() - labelWidth - extra * 2, labelHeight, Qt::AlignLeft | Qt::AlignVCenter, name);
     if (mMouseOverIndex == index)
         painter->setFont(font);
-
+#endif
 #if 0
     // Focus rect around 'current' item
     if (option.state & QStyle::State_HasFocus) {
@@ -227,69 +233,70 @@ void BmpRuleDelegate::paint(QPainter *painter,
 #endif
 }
 
-QSize BmpRuleDelegate::sizeHint(const QStyleOptionViewItem &option,
+QSize BmpBlendDelegate::sizeHint(const QStyleOptionViewItem &option,
                                 const QModelIndex &index) const
 {
-    const BmpRuleModel *m = static_cast<const BmpRuleModel*>(index.model());
-    BmpRule *rule = m->ruleAt(index);
-    if (!rule) return QSize();
+    const BmpBlendModel *m = static_cast<const BmpBlendModel*>(index.model());
+    QVector<BmpBlend*> blends = m->blendsAt(index);
+    if (blends.isEmpty()) return QSize();
 
     const qreal zoom = mView->zoomable()->scale();
     const int extra = 2 * 2;
 
-    const QFontMetrics &fm = rule->label.isEmpty() ? option.fontMetrics : mLabelFontMetrics;
+    const QFontMetrics &fm = mLabelFontMetrics;
     const int labelHeight = fm.lineSpacing();
-
-    QStringList tileNames;
-    foreach (QString tileName, rule->tileChoices) {
-        if (tileName.isEmpty()) continue; // "null"
-        QStringList aliasTiles = m->aliasTiles(tileName);
-        if (!aliasTiles.isEmpty())
-            tileNames += aliasTiles;
-        else
-            tileNames += tileName;
-    }
 
     const int tileWidth = qCeil(64 * zoom);
     const int tileHeight = mView->isExpanded() ? qCeil(128 * zoom) : 0;
     const int viewWidth = mView->viewport()->width();
-    const int columns = qMax(8, viewWidth / tileWidth);
-    return QSize(qMax(qMax(tileWidth, mView->maxHeaderWidth()) + extra, viewWidth),
-                 2 + labelHeight + (tileHeight * ((tileNames.size() + columns - 1) / columns)) + extra);
+    const int columns = 9;
+    return QSize(qMax(qMax(tileWidth * columns, mView->maxHeaderWidth()) + extra, viewWidth),
+                 2 + labelHeight + (tileHeight * 1) + extra);
 }
 
-void BmpRuleDelegate::setMouseOver(const QModelIndex &index)
+int BmpBlendDelegate::blendAt(const QPoint &p, const QRect &viewRect)
+{
+    int extra = 2;
+    const qreal zoom = mView->zoomable()->scale();
+    const int tileWidth = qCeil(64 * zoom);
+    int n = (p.x() - viewRect.x() - extra) / tileWidth;
+    if (n < 0 || n > 8) return -1;
+    return n;
+}
+
+void BmpBlendDelegate::setMouseOver(const QModelIndex &index, int dir)
 {
     mMouseOverIndex = index;
+    mMouseOverDir = dir;
 }
 
 /////
 
-BmpRuleModel::Item::Item(BmpRule *rule) :
-    mRule(new BmpRule(rule)),
-    mOriginalRule(rule)
+void BmpBlendModel::Item::addBlend(BmpBlend *blend)
 {
-
+    mBlend[blend->dir] = new BmpBlend(blend);
+    mBlend[Unknown] = new BmpBlend(blend); // for mainTile
+    mOriginalBlend[blend->dir] = blend;
 }
 
-BmpRuleModel::Item::~Item()
+BmpBlendModel::Item::~Item()
 {
-    delete mRule;
+    qDeleteAll(mBlend);
 }
 
 /////
 
-BmpRuleModel::BmpRuleModel(QObject *parent) :
+BmpBlendModel::BmpBlendModel(QObject *parent) :
     QAbstractListModel(parent)
 {
 }
 
-BmpRuleModel::~BmpRuleModel()
+BmpBlendModel::~BmpBlendModel()
 {
     qDeleteAll(mItems);
 }
 
-int BmpRuleModel::rowCount(const QModelIndex &parent) const
+int BmpBlendModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
         return 0;
@@ -297,18 +304,18 @@ int BmpRuleModel::rowCount(const QModelIndex &parent) const
     return mItems.size();
 }
 
-int BmpRuleModel::columnCount(const QModelIndex &parent) const
+int BmpBlendModel::columnCount(const QModelIndex &parent) const
 {
     return parent.isValid() ? 0 : 1;
 }
 
-Qt::ItemFlags BmpRuleModel::flags(const QModelIndex &index) const
+Qt::ItemFlags BmpBlendModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags flags = QAbstractListModel::flags(index);
     return flags;
 }
 
-QVariant BmpRuleModel::data(const QModelIndex &index, int role) const
+QVariant BmpBlendModel::data(const QModelIndex &index, int role) const
 {
     Q_UNUSED(index)
     Q_UNUSED(role)
@@ -333,7 +340,7 @@ QVariant BmpRuleModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-bool BmpRuleModel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool BmpBlendModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     Q_UNUSED(index)
     Q_UNUSED(value)
@@ -352,7 +359,7 @@ bool BmpRuleModel::setData(const QModelIndex &index, const QVariant &value, int 
     return false;
 }
 
-QVariant BmpRuleModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant BmpBlendModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     Q_UNUSED(section)
     Q_UNUSED(orientation)
@@ -361,7 +368,7 @@ QVariant BmpRuleModel::headerData(int section, Qt::Orientation orientation, int 
     return QVariant();
 }
 
-QModelIndex BmpRuleModel::index(int row, int column, const QModelIndex &parent) const
+QModelIndex BmpBlendModel::index(int row, int column, const QModelIndex &parent) const
 {
     if (parent.isValid())
         return QModelIndex();
@@ -373,29 +380,37 @@ QModelIndex BmpRuleModel::index(int row, int column, const QModelIndex &parent) 
     return createIndex(row, column, item);
 }
 
-QModelIndex BmpRuleModel::index(BmpRule *rule) const
+QModelIndex BmpBlendModel::index(BmpBlend *blend) const
 {
-    if (Item *item = toItem(rule))
+    if (Item *item = toItem(blend))
         return index(mItems.indexOf(item), 0);
     return QModelIndex();
 }
 
-void BmpRuleModel::setRules(const Map *map)
+void BmpBlendModel::setBlends(const Map *map)
 {
-    if (map->bmpSettings()->rules().isEmpty()) {
+    if (map->bmpSettings()->blends().isEmpty()) {
         mAliasTiles.clear();
         clear();
         return;
     }
 
-    beginInsertRows(QModelIndex(), 0, map->bmpSettings()->rules().size() - 1);
-
-    int index = 0;
-    foreach (BmpRule *rule, map->bmpSettings()->rules()) {
-        Item *item = new Item(rule);
-        item->mIndex = index++;
-        mItems += item;
+    // Groups blends by mainTile
+    QMap<QString,Item*> itemMap;
+    QList<Item*> items;
+    foreach (BmpBlend *blend, map->bmpSettings()->blends()) {
+        Item *item = itemMap[blend->mainTile];
+        if (!item) {
+            item = new Item();
+            items += item;
+            itemMap[blend->mainTile] = item;
+        }
+        item->addBlend(blend);
     }
+
+    beginInsertRows(QModelIndex(), 0, items.size() - 1);
+
+    mItems = items;
 
     mAliasTiles.clear();
     foreach (BmpAlias *alias, map->bmpSettings()->aliases()) {
@@ -405,7 +420,7 @@ void BmpRuleModel::setRules(const Map *map)
     endInsertRows();
 }
 
-void BmpRuleModel::clear()
+void BmpBlendModel::clear()
 {
     if (!mItems.size())
         return;
@@ -415,21 +430,22 @@ void BmpRuleModel::clear()
     endRemoveRows();
 }
 
-BmpRule *BmpRuleModel::ruleAt(const QModelIndex &index) const
+QVector<BmpBlend*> BmpBlendModel::blendsAt(const QModelIndex &index) const
 {
-    if (Item *item = toItem(index))
-        return item->mOriginalRule;
-    return 0;
+    if (Item *item = toItem(index)) {
+        return item->mBlend;
+    }
+    return QVector<BmpBlend*>();
 }
 
-int BmpRuleModel::ruleIndex(BmpRule *rule) const
+int BmpBlendModel::blendIndex(BmpBlend *blend) const
 {
-    if (Item *item = toItem(rule))
+    if (Item *item = toItem(blend))
         return item->mIndex;
     return -1;
 }
 
-void BmpRuleModel::scaleChanged(qreal scale)
+void BmpBlendModel::scaleChanged(qreal scale)
 {
     Q_UNUSED(scale)
     int maxRow = rowCount() - 1;
@@ -438,17 +454,17 @@ void BmpRuleModel::scaleChanged(qreal scale)
         emit dataChanged(index(0, 0), index(maxRow, maxColumn));
 }
 
-BmpRuleModel::Item *BmpRuleModel::toItem(const QModelIndex &index) const
+BmpBlendModel::Item *BmpBlendModel::toItem(const QModelIndex &index) const
 {
     if (index.isValid())
         return static_cast<Item*>(index.internalPointer());
     return 0;
 }
 
-BmpRuleModel::Item *BmpRuleModel::toItem(BmpRule *rule) const
+BmpBlendModel::Item *BmpBlendModel::toItem(BmpBlend *blend) const
 {
     foreach (Item *item, mItems) {
-        if (item->mOriginalRule == rule)
+        if (item->mOriginalBlend.contains(blend))
             return item;
     }
     return 0;
@@ -456,10 +472,10 @@ BmpRuleModel::Item *BmpRuleModel::toItem(BmpRule *rule) const
 
 /////
 
-BmpRuleView::BmpRuleView(QWidget *parent) :
+BmpBlendView::BmpBlendView(QWidget *parent) :
     QTableView(parent),
-    mModel(new BmpRuleModel(this)),
-    mDelegate(new BmpRuleDelegate(this, this)),
+    mModel(new BmpBlendModel(this)),
+    mDelegate(new BmpBlendDelegate(this, this)),
     mZoomable(new Zoomable(this)),
     mContextMenu(0),
     mMaxHeaderWidth(0),
@@ -504,49 +520,55 @@ BmpRuleView::BmpRuleView(QWidget *parent) :
     connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(scaleChanged(qreal)));
 }
 
-QSize BmpRuleView::sizeHint() const
+QSize BmpBlendView::sizeHint() const
 {
     return QSize(64, 128);
 }
 
-bool BmpRuleView::viewportEvent(QEvent *event)
+bool BmpBlendView::viewportEvent(QEvent *event)
 {
-#if 0
     switch (event->type()) {
     case QEvent::HoverEnter:
     case QEvent::HoverMove: {
         QModelIndex mouseOver;
         QPoint pos = static_cast<QHoverEvent*>(event)->pos();
         QModelIndex index = indexAt(pos);
-        BmpRule *rule = model()->ruleAt(index);
-        if (rule) {
+        QVector<BmpBlend*> blends = model()->blendsAt(index);
+        int blendDir = -1;
+        if (blends.size()) {
             QRect r = visualRect(index);
-            if (pos.y() < r.top() + 2 + fontMetrics().lineSpacing())
+            blendDir = mDelegate->blendAt(pos, r);
+            if (blendDir != -1)
                 mouseOver = index;
         }
-        if (mouseOver != mDelegate->mouseOverIndex()) {
+        if (mouseOver != mDelegate->mouseOverIndex() || blendDir != mDelegate->mouseOverDir()) {
             if (mDelegate->mouseOverIndex().isValid())
                 update(mDelegate->mouseOverIndex());
-            mDelegate->setMouseOver(mouseOver);
+            mDelegate->setMouseOver(mouseOver, blendDir);
             update(mouseOver);
+            if (blendDir != -1)
+                emit blendHighlighted(blends[blendDir], blendDir);
+            else
+                emit blendHighlighted(0, -1);
         }
         break;
     }
     case QEvent::HoverLeave: {
         QModelIndex index = mDelegate->mouseOverIndex();
         if (index.isValid()) {
-            mDelegate->setMouseOver(QModelIndex());
+            mDelegate->setMouseOver(QModelIndex(), -1);
             update(index);
+            emit blendHighlighted(0, -1);
         }
     }
     default:
             break;
     }
-#endif
+
     return QTableView::viewportEvent(event);
 }
 
-void BmpRuleView::mouseMoveEvent(QMouseEvent *event)
+void BmpBlendView::mouseMoveEvent(QMouseEvent *event)
 {
     if (mIgnoreMouse)
         return;
@@ -554,7 +576,7 @@ void BmpRuleView::mouseMoveEvent(QMouseEvent *event)
     QTableView::mouseMoveEvent(event);
 }
 
-void BmpRuleView::mousePressEvent(QMouseEvent *event)
+void BmpBlendView::mousePressEvent(QMouseEvent *event)
 {
 #if 0
     QModelIndex index = indexAt(event->pos());
@@ -571,7 +593,7 @@ void BmpRuleView::mousePressEvent(QMouseEvent *event)
     QTableView::mousePressEvent(event);
 }
 
-void BmpRuleView::mouseReleaseEvent(QMouseEvent *event)
+void BmpBlendView::mouseReleaseEvent(QMouseEvent *event)
 {
     if (mIgnoreMouse) {
         mIgnoreMouse = false;
@@ -580,24 +602,12 @@ void BmpRuleView::mouseReleaseEvent(QMouseEvent *event)
     QTableView::mouseReleaseEvent(event);
 }
 
-void BmpRuleView::mouseDoubleClickEvent(QMouseEvent *event)
+void BmpBlendView::mouseDoubleClickEvent(QMouseEvent *event)
 {
-#if 0
-    QModelIndex index = indexAt(event->pos());
-    int layerIndex = model()->layerAt(index);
-    if (layerIndex >= 0) {
-        QRect r = visualRect(index);
-        if (event->pos().y() < r.top() + 2 + fontMetrics().lineSpacing()) {
-            emit layerNameClicked(layerIndex);
-            mIgnoreMouse = true;
-            return; // don't activated() the item
-        }
-    }
-#endif
     QTableView::mouseDoubleClickEvent(event);
 }
 
-void BmpRuleView::wheelEvent(QWheelEvent *event)
+void BmpBlendView::wheelEvent(QWheelEvent *event)
 {
     if (event->modifiers() & Qt::ControlModifier
         && event->orientation() == Qt::Vertical)
@@ -609,29 +619,30 @@ void BmpRuleView::wheelEvent(QWheelEvent *event)
     QTableView::wheelEvent(event);
 }
 
-void BmpRuleView::contextMenuEvent(QContextMenuEvent *event)
+void BmpBlendView::contextMenuEvent(QContextMenuEvent *event)
 {
     if (mContextMenu)
         mContextMenu->exec(event->globalPos());
 }
 
-void BmpRuleView::clear()
+void BmpBlendView::clear()
 {
-    mDelegate->setMouseOver(QModelIndex());
+    mDelegate->setMouseOver(QModelIndex(), -1);
     selectionModel()->clear(); // because the model calls reset()
     model()->clear();
 }
 
-void BmpRuleView::setRules(const Map *map)
+void BmpBlendView::setBlends(const Map *map)
 {
+#if 0
     QSet<Tileset*> tilesets;
     QMap<QString,BmpAlias*> aliasByName;
     foreach (BmpAlias *alias, map->bmpSettings()->aliases())
         aliasByName[alias->name] = alias;
-    QList<BmpRule*> rules = map->bmpSettings()->rules();
-    foreach (BmpRule *rule, rules) {
+    QList<BmpBlend*> blends = map->bmpSettings()->blends();
+    foreach (BmpBlend *blend, blends) {
         QStringList tileChoices;
-        foreach (QString tileName, rule->tileChoices) {
+        foreach (QString tileName, blend->tileChoices) {
             if (aliasByName.contains(tileName))
                 tileChoices += aliasByName[tileName]->tiles;
             else
@@ -649,11 +660,11 @@ void BmpRuleView::setRules(const Map *map)
         }
     }
     TileMetaInfoMgr::instance()->loadTilesets(tilesets.toList());
-
-    model()->setRules(map);
+#endif
+    model()->setBlends(map);
 }
 
-void BmpRuleView::setExpanded(bool expanded)
+void BmpBlendView::setExpanded(bool expanded)
 {
     if (mExpanded != expanded) {
         mExpanded = expanded;
@@ -663,12 +674,12 @@ void BmpRuleView::setExpanded(bool expanded)
     }
 }
 
-void BmpRuleView::scaleChanged(qreal scale)
+void BmpBlendView::scaleChanged(qreal scale)
 {
     model()->scaleChanged(scale);
 }
 
-void BmpRuleView::scrollToCurrentItem()
+void BmpBlendView::scrollToCurrentItem()
 {
     scrollTo(currentIndex(), QTableView::EnsureVisible);
 }

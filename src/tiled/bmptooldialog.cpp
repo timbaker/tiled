@@ -25,6 +25,7 @@
 #include "mapdocument.h"
 #include "mainwindow.h"
 #include "tilemetainfomgr.h"
+#include "tilesetmanager.h"
 #include "zoomable.h"
 
 #include "BuildingEditor/buildingtiles.h"
@@ -145,6 +146,13 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
             SLOT(expandCollapse()));
     ui->tableView->zoomable()->connectToComboBox(ui->scaleCombo);
 
+    connect(ui->blendView, SIGNAL(blendHighlighted(BmpBlend*,int)),
+            SLOT(blendHighlighted(BmpBlend*,int)));
+    ui->blendView->zoomable()->connectToComboBox(ui->blendScaleCombo);
+    ui->tilesInBlend->setZoomable(ui->blendView->zoomable());
+    connect(ui->tilesInBlend->zoomable(), SIGNAL(scaleChanged(qreal)),
+            SLOT(synchBlendTilesView()));
+
     connect(ui->brushSize, SIGNAL(valueChanged(int)),
             SLOT(brushSizeChanged(int)));
     connect(ui->brushSquare, SIGNAL(clicked()),
@@ -176,6 +184,9 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
     settings.beginGroup(QLatin1String("BmpToolDialog"));
     qreal scale = settings.value(QLatin1String("scale"), 0.5).toReal();
     ui->tableView->zoomable()->setScale(scale);
+
+    scale = settings.value(QLatin1String("Blends/Scale"), 0.5).toReal();
+    ui->blendView->zoomable()->setScale(scale);
 
     int brushSize = settings.value(QLatin1String("brushSize"), 1).toInt();
     BmpBrushTool::instance()->setBrushSize(brushSize);
@@ -220,11 +231,14 @@ void BmpToolDialog::setVisible(bool visible)
             restoreGeometry(geom);
     }
 
+    synchBlendTilesView();
+
     QDialog::setVisible(visible);
 
     if (!visible) {
         settings.setValue(QLatin1String("geometry"), saveGeometry());
         settings.setValue(QLatin1String("scale"), ui->tableView->zoomable()->scale());
+        settings.setValue(QLatin1String("Blends/Scale"), ui->blendView->zoomable()->scale());
         settings.setValue(QLatin1String("brushSize"), ui->brushSize->value());
         if (ui->brushSquare->isChecked())
             settings.setValue(QLatin1String("brushShape"), QLatin1String("square"));
@@ -247,6 +261,39 @@ void BmpToolDialog::setVisibleNow()
 {
     if (mVisibleLater != isVisible())
         setVisible(mVisibleLater);
+}
+
+void BmpToolDialog::blendHighlighted(BmpBlend *blend, int dir)
+{
+    QList<Tile*> tiles;
+    QString header;
+    if (blend && dir != -1) {
+        QStringList tileNames;
+        QStringList aliasTiles = ui->blendView->model()->aliasTiles(dir ? blend->blendTile : blend->mainTile);
+        if (aliasTiles.isEmpty())
+            tileNames << (dir ? blend->blendTile : blend->mainTile);
+        else
+            tileNames = aliasTiles;
+        foreach (QString tileName, tileNames) {
+            if (Tile *tile = BuildingEditor::BuildingTilesMgr::instance()->tileFor(tileName))
+                tiles += tile;
+            else
+                tiles += TilesetManager::instance()->missingTile();
+        }
+        if (dir == 0)
+            header = tr("mainTile: %1").arg(blend->mainTile);
+        else
+            header = tr("blendTile (%1): %2").arg(blend->dirAsString()).arg(blend->blendTile);
+    }
+    ui->tilesInBlend->model()->setColumnCount(qMax(8, tiles.size()));
+    ui->tilesInBlend->setTiles(tiles, QList<void*>(), QStringList() << header);
+}
+
+void BmpToolDialog::synchBlendTilesView()
+{
+    int height = 2 + ui->tilesInBlend->fontMetrics().lineSpacing() + 2 + 128 * ui->tilesInBlend->zoomable()->scale() + 2;
+    height += ui->tilesInBlend->frameWidth() * 2;
+    ui->tilesInBlend->setFixedHeight(height);
 }
 
 void BmpToolDialog::expandCollapse()
@@ -416,7 +463,7 @@ void BmpToolDialog::warningsChanged()
     if (!mDocument)
         return;
     ui->warnings->addItems(mDocument->mapComposite()->bmpBlender()->warnings());
-    ui->tabWidget->setTabIcon(2, ui->warnings->count()
+    ui->tabWidget->setTabIcon(3, ui->warnings->count()
                               ? QIcon(QLatin1String(":/images/24x24/warning.png"))
                               : QIcon());
 }
@@ -432,6 +479,7 @@ void BmpToolDialog::setDocument(MapDocument *doc)
     mDocument = doc;
 
     ui->tableView->clear();
+    ui->blendView->clear();
     ui->rulesFile->setText(tr("<none>"));
     ui->blendsFile->setText(tr("<none>"));
 
@@ -456,56 +504,10 @@ void BmpToolDialog::setDocument(MapDocument *doc)
     ui->showMapTiles->setEnabled(mDocument != 0);
 
     if (mDocument) {
-#if 1
         ui->tableView->setRules(mDocument->map());
         QList<BmpRule*> rules = mDocument->map()->bmpSettings()->rules();
-#else
-        QSet<Tileset*> tilesets;
-        QList<Tiled::Tile*> tiles;
-        QList<void*> userData;
-        QStringList headers;
-        int ruleIndex = 1;
-        QMap<QString,BmpAlias*> aliasByName;
-        foreach (BmpAlias *alias, mDocument->map()->bmpSettings()->aliases())
-            aliasByName[alias->name] = alias;
-        QList<BmpRule*> rules = mDocument->map()->bmpSettings()->rules();
-        foreach (BmpRule *rule, rules) {
-            QStringList tileChoices;
-            foreach (QString tileName, rule->tileChoices) {
-                if (aliasByName.contains(tileName))
-                    tileChoices += aliasByName[tileName]->tiles;
-                else
-                    tileChoices += tileName;
-            }
-            foreach (QString tileName, tileChoices) {
-                Tile *tile;
-                if (tileName.isEmpty())
-                    tile = BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile();
-                else {
-                    tile = BuildingEditor::BuildingTilesMgr::instance()->tileFor(tileName);
-                    if (tile && TileMetaInfoMgr::instance()->indexOf(tile->tileset()) != -1)
-                        tilesets += tile->tileset();
-                }
-                tiles += tile;
-                userData += rule;
-                if (rule->bitmapIndex == 0) {
-                    headers += tr("Rule #%1: index=%2 color=%3,%4,%5")
-                            .arg(ruleIndex)
-                            .arg(rule->bitmapIndex)
-                            .arg(qRed(rule->color)).arg(qGreen(rule->color)).arg(qBlue(rule->color));
-                } else {
-                    headers += tr("Rule #%1: index=%2 color=%3,%4,%5 condition=%6,%7,%8")
-                            .arg(ruleIndex)
-                            .arg(rule->bitmapIndex)
-                            .arg(qRed(rule->color)).arg(qGreen(rule->color)).arg(qBlue(rule->color))
-                            .arg(qRed(rule->condition)).arg(qGreen(rule->condition)).arg(qBlue(rule->condition));
-                }
-            }
-            ++ruleIndex;
-        }
-        ui->tableView->setTiles(tiles, userData, headers);
-        TileMetaInfoMgr::instance()->loadTilesets(tilesets.toList());
-#endif
+
+        ui->blendView->setBlends(mDocument->map());
 
         int ruleIndex = 0;
         if (mCurrentRuleForDocument.contains(mDocument))

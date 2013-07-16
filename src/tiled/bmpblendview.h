@@ -15,27 +15,27 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BMPRULEVIEW_H
-#define BMPRULEVIEW_H
+#ifndef BMPBLENDVIEW_H
+#define BMPBLENDVIEW_H
 
 #include <QAbstractListModel>
 #include <QGraphicsView>
 #include <QTableView>
 
 namespace Tiled {
-class BmpRule;
+class BmpBlend;
 class Map;
 
 namespace Internal {
-class BmpRuleDelegate;
+class BmpBlendDelegate;
 class Zoomable;
 
-class BmpRuleModel : public QAbstractListModel
+class BmpBlendModel : public QAbstractListModel
 {
     Q_OBJECT
 public:
-    BmpRuleModel(QObject *parent = 0);
-    ~BmpRuleModel();
+    BmpBlendModel(QObject *parent = 0);
+    ~BmpBlendModel();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
@@ -50,13 +50,13 @@ public:
                         int role = Qt::DisplayRole) const;
 
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
-    QModelIndex index(BmpRule *rule) const;
+    QModelIndex index(BmpBlend *blend) const;
 
-    void setRules(const Map *map);
+    void setBlends(const Map *map);
     void clear();
 
-    BmpRule *ruleAt(const QModelIndex &index) const;
-    int ruleIndex(BmpRule *rule) const;
+    QVector<BmpBlend*> blendsAt(const QModelIndex &index) const;
+    int blendIndex(BmpBlend *blend) const;
 
     QStringList aliasTiles(const QString &alias) const
     {
@@ -71,32 +71,46 @@ private:
     class Item
     {
     public:
+        enum Direction {
+            Unknown,
+            N,
+            S,
+            E,
+            W,
+            NW,
+            NE,
+            SW,
+            SE,
+            DirectionCount
+        };
+
         Item() :
-            mRule(0),
-            mOriginalRule(0)
+            mBlend(DirectionCount),
+            mOriginalBlend(DirectionCount)
         {
         }
 
-        Item(BmpRule *rule);
+        void addBlend(BmpBlend *blend);
+
         ~Item();
 
-        BmpRule *mRule;
-        BmpRule *mOriginalRule;
+        QVector<BmpBlend*> mBlend;
+        QVector<BmpBlend*> mOriginalBlend;
         int mIndex;
     };
 
     Item *toItem(const QModelIndex &index) const;
-    Item *toItem(BmpRule *rule) const;
+    Item *toItem(BmpBlend *blend) const;
 
     QList<Item*> mItems;
     QMap<QString,QStringList> mAliasTiles;
 };
 
-class BmpRuleView : public QTableView
+class BmpBlendView : public QTableView
 {
     Q_OBJECT
 public:
-    explicit BmpRuleView(QWidget *parent = 0);
+    explicit BmpBlendView(QWidget *parent = 0);
 
     QSize sizeHint() const;
 
@@ -107,7 +121,7 @@ public:
     void mouseDoubleClickEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
 
-    BmpRuleModel *model() const
+    BmpBlendModel *model() const
     { return mModel; }
 
     void setZoomable(Zoomable *zoomable);
@@ -120,7 +134,7 @@ public:
     { mContextMenu = menu; }
 
     void clear();
-    void setRules(const Map *map);
+    void setBlends(const Map *map);
 
     int maxHeaderWidth() const
     { return mMaxHeaderWidth; }
@@ -130,15 +144,15 @@ public:
     { return mExpanded; }
 
 signals:
-    void layerNameClicked(int layerIndex);
+    void blendHighlighted(BmpBlend *blend, int dir);
 
 public slots:
     void scaleChanged(qreal scale);
     void scrollToCurrentItem();
 
 private:
-    BmpRuleModel *mModel;
-    BmpRuleDelegate *mDelegate;
+    BmpBlendModel *mModel;
+    BmpBlendDelegate *mDelegate;
     Zoomable *mZoomable;
     QMenu *mContextMenu;
     int mMaxHeaderWidth;
@@ -149,4 +163,4 @@ private:
 } // namespace Internal
 } // namespace Tiled
 
-#endif // BMPRULEVIEW_H
+#endif // BMPBLENDVIEW_H

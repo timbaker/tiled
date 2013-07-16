@@ -647,7 +647,7 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
         if (mShowHeaders) {
             QString name = tile->tileset()->name();
             if (!headers.isEmpty())
-                name = headers[index];
+                name = (index < headers.size()) ? headers[index] : headers.last();
             if (name != header) {
                 while (mItems.count() % columnCount())
                     mItems += new Item(); // filler after previous tile
@@ -656,7 +656,8 @@ void MixedTilesetModel::setTiles(const QList<Tile *> &tiles,
                     mItems += new Item(header);
             }
         }
-        Item *item = new Item(tile, userData.at(index));
+        void *data = (index < userData.size()) ? userData[index] : 0;
+        Item *item = new Item(tile, data);
         mItems += item;
         mTileItemsByIndex[index] = item;
         if (!mTileToItem.contains(tile))

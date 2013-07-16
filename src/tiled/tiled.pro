@@ -224,7 +224,8 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/welcomemode.cpp \
     BuildingEditor/buildingroomdef.cpp \
     picktiletool.cpp \
-    mapbuildings.cpp
+    mapbuildings.cpp \
+    bmpblendview.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -411,7 +412,8 @@ HEADERS += aboutdialog.h \
     BuildingEditor/welcomemode.h \
     BuildingEditor/buildingroomdef.h \
     picktiletool.h \
-    mapbuildings.h
+    mapbuildings.h \
+    bmpblendview.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

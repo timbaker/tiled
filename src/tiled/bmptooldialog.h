@@ -27,6 +27,8 @@ class BmpToolDialog;
 }
 
 namespace Tiled {
+class BmpBlend;
+
 namespace Internal {
 class MapDocument;
 
@@ -53,6 +55,9 @@ private slots:
     void showBMPTiles(bool show);
     void showMapTiles(bool show);
     void setVisibleNow();
+
+    void blendHighlighted(BmpBlend *blend, int dir);
+    void synchBlendTilesView();
 
     void expandCollapse();
 
