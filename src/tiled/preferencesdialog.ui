@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>462</width>
-    <height>392</height>
+    <height>394</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -380,7 +380,7 @@
           </sizepolicy>
          </property>
          <property name="title">
-          <string>WorldEd Project File</string>
+          <string>WorldEd Project Files</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -389,8 +389,7 @@
           <item>
            <widget class="QLabel" name="label_6">
             <property name="text">
-             <string>Choose a WorldEd project file for adjacent maps and lots.
-Restart TileZed to see changes.</string>
+             <string>Used for adjacent maps and lots.  Restart TileZed to see changes.</string>
             </property>
             <property name="wordWrap">
              <bool>true</bool>
@@ -398,26 +397,103 @@ Restart TileZed to see changes.</string>
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="configLayout_2">
+           <widget class="QListWidget" name="listPZW">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>96</height>
+             </size>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
             <item>
-             <widget class="QLineEdit" name="worldedFile">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
+             <widget class="QToolButton" name="addPZW">
+              <property name="toolTip">
+               <string>Add Object Type</string>
               </property>
-              <property name="readOnly">
+              <property name="text">
+               <string>Add</string>
+              </property>
+              <property name="icon">
+               <iconset resource="tiled.qrc">
+                <normaloff>:/images/22x22/add.png</normaloff>:/images/22x22/add.png</iconset>
+              </property>
+              <property name="autoRaise">
                <bool>true</bool>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QToolButton" name="worldedBrowse">
+             <widget class="QToolButton" name="removePZW">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="toolTip">
+               <string>Remove Selected Object Types</string>
+              </property>
+              <property name="text">
+               <string>Remove</string>
+              </property>
+              <property name="icon">
+               <iconset resource="tiled.qrc">
+                <normaloff>:/images/22x22/remove.png</normaloff>:/images/22x22/remove.png</iconset>
+              </property>
+              <property name="autoRaise">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="raisePZW">
               <property name="text">
                <string>...</string>
               </property>
+              <property name="icon">
+               <iconset resource="tiled.qrc">
+                <normaloff>:/images/16x16/go-up.png</normaloff>:/images/16x16/go-up.png</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonIconOnly</enum>
+              </property>
+              <property name="autoRaise">
+               <bool>true</bool>
+              </property>
              </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="lowerPZW">
+              <property name="text">
+               <string>...</string>
+              </property>
+              <property name="icon">
+               <iconset resource="tiled.qrc">
+                <normaloff>:/images/16x16/go-down.png</normaloff>:/images/16x16/go-down.png</iconset>
+              </property>
+              <property name="toolButtonStyle">
+               <enum>Qt::ToolButtonIconOnly</enum>
+              </property>
+              <property name="autoRaise">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
             </item>
            </layout>
           </item>
@@ -493,8 +569,8 @@ Restart TileZed to see changes.</string>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>304</x>
-     <y>303</y>
+     <x>313</x>
+     <y>384</y>
     </hint>
     <hint type="destinationlabel">
      <x>315</x>

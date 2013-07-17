@@ -112,8 +112,8 @@ public:
     bool showAdjacentMaps() const
     { return mShowAdjacentMaps; }
 
-    QString worldedFile() const
-    { return mWorldEdFile; }
+    QStringList worldedFiles() const
+    { return mWorldEdFiles; }
 
     bool highlightRoomUnderPointer() const
     { return mHighlightRoomUnderPointer; }
@@ -139,7 +139,7 @@ public slots:
     void setShowTileLayersPanel(bool show);
     void setBackgroundColor(const QColor &bgColor);
     void setShowAdjacentMaps(bool show);
-    void setWorldEdFile(const QString &fileName);
+    void setWorldEdFiles(const QStringList &fileNames);
     void setHighlightRoomUnderPointer(bool highlight);
 #endif
 
@@ -165,7 +165,7 @@ signals:
     void showTileLayersPanelChanged(bool show);
     void backgroundColorChanged(const QColor &color);
     void showAdjacentMapsChanged(bool show);
-    void worldEdFileChanged(const QString &fileName);
+    void worldEdFilesChanged(const QStringList &fileNames);
     void highlightRoomUnderPointerChanged(bool highlight);
 #endif
 
@@ -202,7 +202,7 @@ private:
     bool mShowTileLayersPanel;
     QColor mBackgroundColor;
     bool mShowAdjacentMaps;
-    QString mWorldEdFile;
+    QStringList mWorldEdFiles;
     bool mHighlightRoomUnderPointer;
 #endif
 

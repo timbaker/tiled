@@ -67,7 +67,11 @@ private slots:
 #ifdef ZOMBOID
     void defaultBackgroundColor();
     void browseWorlded();
-#endif
+    void removePZW();
+    void raisePZW();
+    void lowerPZW();
+    void updateActions();
+#endif // ZOMBOID
 
 private:
     void fromPreferences();

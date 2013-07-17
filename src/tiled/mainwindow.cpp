@@ -812,9 +812,9 @@ bool MainWindow::openFile(const QString &fileName)
 void MainWindow::openLastFiles()
 {
 #ifdef ZOMBOID
-    QString f = Preferences::instance()->worldedFile();
-    if (!f.isEmpty() && QFileInfo(f).exists())
-        WorldEd::WorldEdMgr::instance()->addProject(f);
+    foreach (QString f, Preferences::instance()->worldedFiles())
+        if (!f.isEmpty() && QFileInfo(f).exists())
+            WorldEd::WorldEdMgr::instance()->addProject(f);
 #endif
 
     mSettings.beginGroup(QLatin1String("recentFiles"));

@@ -142,7 +142,7 @@ Preferences::Preferences()
     mConfigDirectory = mSettings->value(QLatin1String("ConfigDirectory"),
                                         configPath).toString();
 
-    mWorldEdFile = mSettings->value(QLatin1String("WorldEd/ProjectFile")).toString();
+    mWorldEdFiles = mSettings->value(QLatin1String("WorldEd/ProjectFile")).toStringList();
 #endif
 
     TilesetManager *tilesetManager = TilesetManager::instance();
@@ -508,13 +508,13 @@ void Preferences::setShowAdjacentMaps(bool show)
     emit showAdjacentMapsChanged(mShowAdjacentMaps);
 }
 
-void Preferences::setWorldEdFile(const QString &fileName)
+void Preferences::setWorldEdFiles(const QStringList &fileNames)
 {
-    if (mWorldEdFile == fileName)
+    if (mWorldEdFiles == fileNames)
         return;
-    mWorldEdFile = fileName;
-    mSettings->setValue(QLatin1String("WorldEd/ProjectFile"), mWorldEdFile);
-    emit worldEdFileChanged(mWorldEdFile);
+    mWorldEdFiles = fileNames;
+    mSettings->setValue(QLatin1String("WorldEd/ProjectFile"), mWorldEdFiles);
+    emit worldEdFilesChanged(mWorldEdFiles);
 }
 
 void Preferences::setHighlightRoomUnderPointer(bool highlight)

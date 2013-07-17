@@ -151,8 +151,12 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
             SLOT(defaultBackgroundColor()));
     connect(mUi->showAdjacent, SIGNAL(toggled(bool)),
             Preferences::instance(), SLOT(setShowAdjacentMaps(bool)));
-    connect(mUi->worldedBrowse, SIGNAL(clicked()), SLOT(browseWorlded()));
-#endif
+    connect(mUi->listPZW, SIGNAL(currentRowChanged(int)), SLOT(updateActions()));
+    connect(mUi->addPZW, SIGNAL(clicked()), SLOT(browseWorlded()));
+    connect(mUi->removePZW, SIGNAL(clicked()), SLOT(removePZW()));
+    connect(mUi->raisePZW, SIGNAL(clicked()), SLOT(raisePZW()));
+    connect(mUi->lowerPZW, SIGNAL(clicked()), SLOT(lowerPZW()));
+#endif // ZOMBOID
 
     connect(mUi->objectTypesTable->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
@@ -319,7 +323,36 @@ void PreferencesDialog::browseWorlded()
     if (f.isEmpty())
         return;
 
-    mUi->worldedFile->setText(QDir::toNativeSeparators(f));
+    mUi->listPZW->addItem(QDir::toNativeSeparators(f));
+}
+
+void PreferencesDialog::removePZW()
+{
+    mUi->listPZW->takeItem(mUi->listPZW->currentRow());
+}
+
+void PreferencesDialog::raisePZW()
+{
+    int row = mUi->listPZW->currentRow();
+    mUi->listPZW->insertItem(row - 1,
+                             mUi->listPZW->takeItem(row));
+    mUi->listPZW->setCurrentRow(row - 1);
+}
+
+void PreferencesDialog::lowerPZW()
+{
+    int row = mUi->listPZW->currentRow();
+    mUi->listPZW->insertItem(row + 1,
+                             mUi->listPZW->takeItem(row));
+    mUi->listPZW->setCurrentRow(row + 1);
+}
+
+void PreferencesDialog::updateActions()
+{
+    int row = mUi->listPZW->currentRow();
+    mUi->removePZW->setEnabled(row != -1);
+    mUi->raisePZW->setEnabled(row > 0);
+    mUi->lowerPZW->setEnabled(row >= 0 && row < mUi->listPZW->count());
 }
 #endif // ZOMBOID
 
@@ -364,7 +397,10 @@ void PreferencesDialog::fromPreferences()
 #ifdef ZOMBOID
     mUi->bgColor->setColor(prefs->backgroundColor());
     mUi->configDirectory->setText(QDir::toNativeSeparators(prefs->configPath()));
-    mUi->worldedFile->setText(QDir::toNativeSeparators(prefs->worldedFile()));
+    foreach (QString fileName, prefs->worldedFiles())
+        mUi->listPZW->addItem(QDir::toNativeSeparators(fileName));
+    if (mUi->listPZW->count())
+        mUi->listPZW->setCurrentRow(0);
     mUi->showAdjacent->setChecked(prefs->showAdjacentMaps());
 #endif
 }
@@ -378,7 +414,10 @@ void PreferencesDialog::toPreferences()
     prefs->setLayerDataFormat(layerDataFormat());
     prefs->setAutomappingDrawing(mUi->autoMapWhileDrawing->isChecked());
 #ifdef ZOMBOID
-    prefs->setWorldEdFile(mUi->worldedFile->text());
+    QStringList fileNames;
+    for (int i = 0; i < mUi->listPZW->count(); i++)
+        fileNames += mUi->listPZW->item(i)->text();
+    prefs->setWorldEdFiles(fileNames);
 #endif
 }
 
