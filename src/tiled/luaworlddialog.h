@@ -15,48 +15,34 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUACONSOLE_H
-#define LUACONSOLE_H
+#ifndef LUAWORLDDIALOG_H
+#define LUAWORLDDIALOG_H
 
-#include <QMainWindow>
+#include <QDialog>
 
 namespace Ui {
-class LuaConsole;
+class LuaWorldDialog;
 }
 
-class LuaConsole : public QMainWindow
+class LuaWorldDialog : public QDialog
 {
     Q_OBJECT
     
 public:
-    static LuaConsole *instance();
-    static void deleteInstance();
-
-    void setFile(const QString &fileName)
-    { mFileName = fileName; }
-
-    void write(const QString &s, QColor color = Qt::black);
-
-    // These are the luai_write* implementations!
-    void writestring(const char *s, int len);
-    void writeline();
+    explicit LuaWorldDialog(QWidget *parent = 0);
+    ~LuaWorldDialog();
+    
+private:
+    void accept();
+    bool processMap(const QString &mapFilePath);
 
 private slots:
-    void runScript();
-    void runAgain();
-    void runInDirectory();
-    void runOnWorld();
-    void clear();
-    void helpContents();
+    void setList();
+    void backupsBrowse();
+    void scriptBrowse();
 
 private:
-    Q_DISABLE_COPY(LuaConsole)
-    static LuaConsole *mInstance;
-    explicit LuaConsole(QWidget *parent = 0);
-    ~LuaConsole();
-
-    Ui::LuaConsole *ui;
-    QString mFileName;
+    Ui::LuaWorldDialog *ui;
 };
 
-#endif // LUACONSOLE_H
+#endif // LUAWORLDDIALOG_H

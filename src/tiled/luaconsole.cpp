@@ -19,6 +19,7 @@
 #include "ui_luaconsole.h"
 
 #include "luamapsdialog.h"
+#include "luaworlddialog.h"
 #include "mainwindow.h"
 
 #include <QDesktopServices>
@@ -48,6 +49,7 @@ LuaConsole::LuaConsole(QWidget *parent) :
     connect(ui->actionRunAgain, SIGNAL(triggered()), SLOT(runAgain()));
     connect(ui->btnRunAgain, SIGNAL(clicked()), SLOT(runAgain()));
     connect(ui->actionRunInDirectory, SIGNAL(triggered()), SLOT(runInDirectory()));
+    connect(ui->actionRunOnWorld, SIGNAL(triggered()), SLOT(runOnWorld()));
 
     connect(ui->clear, SIGNAL(clicked()), SLOT(clear()));
 
@@ -73,6 +75,17 @@ void LuaConsole::runAgain()
 void LuaConsole::runInDirectory()
 {
     LuaMapsDialog d(this);
+    d.exec();
+
+    // Not sure why MainWindow comes to the front, maybe due to this
+    // window having the Qt::Tool flag?
+    raise();
+    activateWindow();
+}
+
+void LuaConsole::runOnWorld()
+{
+    LuaWorldDialog d(this);
     d.exec();
 
     // Not sure why MainWindow comes to the front, maybe due to this

@@ -104,6 +104,20 @@ void WorldEdMgr::setSelectedLots(const QSet<WorldCellLot *> &selected)
     emit selectedLotsChanged();
 }
 
+World *WorldEdMgr::worldAt(int n)
+{
+    if (n >= 0 && n < mWorlds.size())
+        return mWorlds[n];
+    return 0;
+}
+
+const QString &WorldEdMgr::worldFileName(int n)
+{
+    if (n >= 0 && n < mWorlds.size())
+        return mWorldFileNames[n];
+    return QString();
+}
+
 void WorldEdMgr::fileChanged(const QString &fileName)
 {
     qDebug() << "WorldEdMgr::fileChanged" << fileName;

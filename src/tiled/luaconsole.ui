@@ -93,6 +93,7 @@
     <addaction name="actionRun_Script"/>
     <addaction name="actionRunAgain"/>
     <addaction name="actionRunInDirectory"/>
+    <addaction name="actionRunOnWorld"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -121,6 +122,11 @@
   <action name="actionRunInDirectory">
    <property name="text">
     <string>Run In Directory...</string>
+   </property>
+  </action>
+  <action name="actionRunOnWorld">
+   <property name="text">
+    <string>Run on World...</string>
    </property>
   </action>
  </widget>

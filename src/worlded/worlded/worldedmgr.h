@@ -50,6 +50,11 @@ public:
     const QSet<WorldCellLot*> &selectedLots() const
     { return mSelectedLots; }
 
+    int worldCount() const
+    { return mWorlds.size(); }
+    World *worldAt(int n);
+    const QString &worldFileName(int n);
+
 signals:
     void beforeWorldChanged(const QString &fileName);
     void afterWorldChanged(const QString &fileName);
