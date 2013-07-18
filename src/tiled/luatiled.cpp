@@ -19,6 +19,7 @@
 
 #include "mapcomposite.h"
 
+#include "bmpblender.h"
 #include "map.h"
 #include "mapobject.h"
 #include "objectgroup.h"
