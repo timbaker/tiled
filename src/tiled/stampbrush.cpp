@@ -505,7 +505,8 @@ void StampBrush::doPaint(bool mergeable, int whereX, int whereY)
     PaintTileLayer *paint = new PaintTileLayer(mapDocument(), tileLayer,
 #ifdef ZOMBOID
                                                whereX, whereY, stamp,
-                                               brushItem()->tileRegion());
+                                               brushItem()->tileRegion(),
+                                               false);
 #else
                             whereX, whereY, stamp);
 #endif

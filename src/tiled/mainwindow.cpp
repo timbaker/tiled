@@ -2210,7 +2210,7 @@ bool MainWindow::LuaScript(MapDocument *doc, const QString &filePath)
             TileLayer *source = tl->mCloneTileLayer->copy(tl->mAltered);
             QRect r = tl->mAltered.boundingRect();
             us->push(new PaintTileLayer(doc, tl->mOrig->asTileLayer(),
-                                        r.x(), r.y(), source, tl->mAltered));
+                                        r.x(), r.y(), source, tl->mAltered, true));
             delete source;
         }
         // Add/Remove/Delete objects

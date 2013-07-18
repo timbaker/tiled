@@ -1667,7 +1667,7 @@ BmpToLayers::BmpToLayers(MapDocument *mapDocument, const QRegion &region, bool m
             }
             PaintTileLayer *cmd = new PaintTileLayer(mMapDocument, target,
                                                      topLeft.x(), topLeft.y(),
-                                                     source, adjusted);
+                                                     source, adjusted, false);
             delete source;
             cmd->setMergeable(mergeable);
             mLayerCmds += cmd;

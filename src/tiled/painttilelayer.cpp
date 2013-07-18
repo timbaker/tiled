@@ -36,7 +36,8 @@ PaintTileLayer::PaintTileLayer(MapDocument *mapDocument,
                                int y,
 #ifdef ZOMBOID
                                const TileLayer *source,
-                               const QRegion &mask):
+                               const QRegion &mask,
+                               bool paintEmptyCells):
 #else
                                const TileLayer *source):
 #endif
@@ -47,6 +48,7 @@ PaintTileLayer::PaintTileLayer(MapDocument *mapDocument,
     mY(y),
 #ifdef ZOMBOID
     mPaintedRegion(mask),
+    mPaintEmptyCells(paintEmptyCells),
 #else
     mPaintedRegion(x, y, source->width(), source->height()),
 #endif
@@ -76,9 +78,14 @@ void PaintTileLayer::undo()
 void PaintTileLayer::redo()
 {
     TilePainter painter(mMapDocument, mTarget);
-    painter.drawCells(mX, mY, mSource);
 #ifdef ZOMBOID
+    if (mPaintEmptyCells)
+        painter.setCells(mX, mY, mSource, mPaintedRegion);
+    else
+        painter.drawCells(mX, mY, mSource);
     mMapDocument->emitRegionAltered(mPaintedRegion & mTarget->bounds(), mTarget);
+#else
+    painter.drawCells(mX, mY, mSource);
 #endif
 }
 

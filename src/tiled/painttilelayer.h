@@ -54,7 +54,8 @@ public:
                    int x, int y,
 #ifdef ZOMBOID
                    const TileLayer *source,
-                   const QRegion &mask);
+                   const QRegion &mask,
+                   bool paintEmptyCells);
 #else
                    const TileLayer *source);
 #endif
@@ -81,6 +82,9 @@ private:
     int mX, mY;
     QRegion mPaintedRegion;
     bool mMergeable;
+#ifdef ZOMBOID
+    bool mPaintEmptyCells;
+#endif
 };
 
 } // namespace Internal
