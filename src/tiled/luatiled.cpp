@@ -30,6 +30,7 @@
 #include "tolua.h"
 
 #include <QElapsedTimer>
+#include <QFileInfo>
 #include <QHash>
 #include <QString>
 #include <QTextStream>
@@ -207,6 +208,9 @@ bool LuaScript::dofile(const QString &f, QString &output)
 
     tolua_pushusertype(L, &mMap, "LuaMap");
     lua_setglobal(L, "map");
+
+    tolua_pushstring(L, Lua::cstring(QFileInfo(f).absolutePath()));
+    lua_setglobal(L, "scriptDirectory");
 
     int status = luaL_loadfile(L, cstring(f));
     if (status == LUA_OK) {
