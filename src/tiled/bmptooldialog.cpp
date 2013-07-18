@@ -149,6 +149,8 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
     connect(ui->blendView, SIGNAL(blendHighlighted(BmpBlend*,int)),
             SLOT(blendHighlighted(BmpBlend*,int)));
     ui->blendView->zoomable()->connectToComboBox(ui->blendScaleCombo);
+
+    ui->tilesInBlend->model()->setShowHeaders(false);
     ui->tilesInBlend->setZoomable(ui->blendView->zoomable());
     connect(ui->tilesInBlend->zoomable(), SIGNAL(scaleChanged(qreal)),
             SLOT(synchBlendTilesView()));
@@ -281,12 +283,16 @@ void BmpToolDialog::blendHighlighted(BmpBlend *blend, int dir)
                 tiles += TilesetManager::instance()->missingTile();
         }
         if (dir == 0)
-            header = tr("mainTile: %1").arg(blend->mainTile);
+            header = tr("<b>mainTile</b>=%1").arg(blend->mainTile);
         else
-            header = tr("blendTile (%1): %2").arg(blend->dirAsString()).arg(blend->blendTile);
+            header = tr("<b>blendTile</b>=%1, <b>dir</b>=%2, <b>layer</b>=%3")
+                    .arg(blend->blendTile)
+                    .arg(blend->dirAsString())
+                    .arg(blend->targetLayer);
     }
+    ui->blendLabel->setText(header);
     ui->tilesInBlend->model()->setColumnCount(qMax(8, tiles.size()));
-    ui->tilesInBlend->setTiles(tiles, QList<void*>(), QStringList() << header);
+    ui->tilesInBlend->setTiles(tiles);
 }
 
 void BmpToolDialog::synchBlendTilesView()

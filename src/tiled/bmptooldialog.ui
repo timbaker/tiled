@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>253</width>
-    <height>355</height>
+    <height>358</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,7 +29,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -109,6 +109,13 @@
         <widget class="Tiled::Internal::BmpBlendView" name="blendView">
          <property name="frameShape">
           <enum>QFrame::NoFrame</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="blendLabel">
+         <property name="text">
+          <string>Blend Info</string>
          </property>
         </widget>
        </item>
