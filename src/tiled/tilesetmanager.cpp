@@ -659,7 +659,7 @@ void TilesetImageReaderWorker::work()
         Job job = mJobs.takeAt(0);
 
         QImage *image = new QImage(job.tileset->imageSource());
-#ifndef QT_NO_DEBUG
+#if 0
         Sleep::msleep(500);
 //        qDebug() << "TilesetImageReaderThread #" << mID << "loaded" << job.tileset->imageSource();
 #endif
