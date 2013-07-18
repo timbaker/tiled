@@ -27,7 +27,9 @@ class BmpToolDialog;
 }
 
 namespace Tiled {
+class BmpAlias;
 class BmpBlend;
+class BmpRule;
 
 namespace Internal {
 class MapDocument;
@@ -44,6 +46,13 @@ public:
     void setVisibleLater(bool visible);
 
     void setDocument(MapDocument *doc);
+
+    // Hack for MainWindow so I don't have to move declaration of some undo cmds.
+    static void changeBmpRules(MapDocument *doc, const QString &fileName,
+                               const QList<BmpAlias*> &aliases,
+                               const QList<BmpRule*> &rules);
+    static void changeBmpBlends(MapDocument *doc, const QString &fileName,
+                                const QList<BmpBlend*> &blends);
 
 private slots:
     void currentRuleChanged(const QModelIndex &current);

@@ -403,7 +403,9 @@ LuaMap::LuaMap(Map *orig) :
                    orig->tileWidth(), orig->tileHeight())),
     mOrig(orig),
     mBmpMain(mClone->rbmpMain()),
-    mBmpVeg(mClone->rbmpVeg())
+    mBmpVeg(mClone->rbmpVeg()),
+    mRulesChanged(false),
+    mBlendsChanged(false)
 {
     foreach (Layer *layer, orig->layers()) {
         if (TileLayer *tl = layer->asTileLayer())
@@ -635,6 +637,62 @@ Tileset *LuaMap::tilesetAt(int index)
 LuaMapBmp &LuaMap::bmp(int index)
 {
     return index ? mBmpVeg : mBmpMain;
+}
+
+void LuaMap::reloadRules()
+{
+    QString f = mClone->bmpSettings()->rulesFile();
+    if (f.isEmpty() || !QFileInfo(f).exists())
+        return; // error
+
+    Tiled::Internal::BmpRulesFile rulesFile;
+    if (!rulesFile.read(f))
+        return; // error
+
+    // FIXME: Not safe if any Lua variables are using these.
+    qDeleteAll(mAliases);
+    mAliases.clear();
+    qDeleteAll(mRules);
+    mRules.clear();
+    mRuleByName.clear();
+
+    QList<BmpAlias*> aliases = rulesFile.aliasesCopy();
+    mClone->rbmpSettings()->setAliases(aliases);
+    foreach (BmpAlias *alias, aliases) {
+        mAliases += new LuaBmpAlias(alias);
+        mAliasByName[alias->name] = mAliases.last();
+    }
+    QList<BmpRule*> rules = rulesFile.rulesCopy();
+    mClone->rbmpSettings()->setRules(rules);
+    foreach (BmpRule *rule, rules) {
+        mRules += new LuaBmpRule(rule);
+        if (!rule->label.isEmpty())
+            mRuleByName[rule->label] = mRules.last();
+    }
+
+    mRulesChanged = true;
+}
+
+void LuaMap::reloadBlends()
+{
+    QString f = mClone->bmpSettings()->blendsFile();
+    if (f.isEmpty() || !QFileInfo(f).exists())
+        return; // error
+
+    Tiled::Internal::BmpBlendsFile blendsFile;
+    if (!blendsFile.read(f, mClone->rbmpSettings()->aliases()))
+        return; // error
+
+    // FIXME: Not safe if any Lua variables are using these.
+    qDeleteAll(mBlends);
+    mBlends.clear();
+
+    QList<BmpBlend*> blends = blendsFile.blendsCopy();
+    mClone->rbmpSettings()->setBlends(blends);
+    foreach (BmpBlend *blend, blends)
+        mBlends += new LuaBmpBlend(blend);
+
+    mBlendsChanged = true;
 }
 
 QList<LuaBmpAlias *> LuaMap::aliases()

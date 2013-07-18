@@ -320,6 +320,9 @@ public:
 
     LuaMapBmp &bmp(int index);
 
+    void reloadRules();
+    void reloadBlends();
+
     QList<LuaBmpAlias*> aliases();
     LuaBmpAlias *alias(const char *name);
 
@@ -349,6 +352,9 @@ public:
     QMap<QString,LuaBmpRule*> mRuleByName;
 
     QList<LuaBmpBlend*> mBlends;
+
+    bool mRulesChanged;
+    bool mBlendsChanged;
 };
 
 class LuaScript

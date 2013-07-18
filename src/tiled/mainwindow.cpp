@@ -2227,6 +2227,21 @@ bool MainWindow::LuaScript(MapDocument *doc, const QString &filePath)
         }
     }
 
+    // Apply changes to rules
+    if (scripter.mMap.mRulesChanged) {
+        BmpToolDialog::changeBmpRules(doc,
+                                      scripter.mMap.mClone->rbmpSettings()->rulesFile(),
+                                      scripter.mMap.mClone->rbmpSettings()->aliasesCopy(),
+                                      scripter.mMap.mClone->rbmpSettings()->rulesCopy());
+    }
+
+    // Apply changes to blends
+    if (scripter.mMap.mBlendsChanged) {
+        BmpToolDialog::changeBmpBlends(doc,
+                                      scripter.mMap.mClone->rbmpSettings()->blendsFile(),
+                                      scripter.mMap.mClone->rbmpSettings()->blendsCopy());
+    }
+
     // Apply changes to BMP images
     Lua::LuaMapBmp &bmpMain = scripter.mMap.mBmpMain;
     if (!bmpMain.mAltered.isEmpty()) {

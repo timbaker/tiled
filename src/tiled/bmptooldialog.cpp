@@ -542,6 +542,19 @@ void BmpToolDialog::setDocument(MapDocument *doc)
     warningsChanged();
 }
 
+void BmpToolDialog::changeBmpRules(MapDocument *doc, const QString &fileName,
+                                   const QList<BmpAlias *> &aliases,
+                                   const QList<BmpRule *> &rules)
+{
+    doc->undoStack()->push(new ChangeBmpRules(doc, fileName, aliases, rules));
+}
+
+void BmpToolDialog::changeBmpBlends(MapDocument *doc, const QString &fileName,
+                                    const QList<BmpBlend *> &blends)
+{
+    doc->undoStack()->push(new ChangeBmpBlends(doc, fileName, blends));
+}
+
 void BmpToolDialog::currentRuleChanged(const QModelIndex &current)
 {
     if (BmpRule *rule = ui->tableView->model()->ruleAt(current)) {
