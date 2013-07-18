@@ -32,6 +32,8 @@ public:
     static LuaConsole *instance();
     static void deleteInstance();
 
+    const QString fileName() const
+    { return mFileName; }
     void setFile(const QString &fileName)
     { mFileName = fileName; }
 

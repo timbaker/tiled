@@ -2125,6 +2125,7 @@ private:
 
     int reorderLayer(int index)
     {
+        Q_UNUSED(index)
         int old = mDocument->map()->layers().indexOf(mLayer);
         LayerModel *layerModel = mDocument->layerModel();
         Layer *layer = layerModel->takeLayerAt(old);
@@ -2140,15 +2141,21 @@ private:
 } // namespace Internal
 } // namespace Tiled
 
+#include "bmptooldialog.h"
 #include "luatiled.h"
 #include "painttilelayer.h"
 bool MainWindow::LuaScript(MapDocument *doc, const QString &filePath)
 {
-    QString f = filePath.isEmpty()
-            ? QFileDialog::getOpenFileName(LuaConsole::instance(), tr("Open Lua Script"),
-                                           QString(), tr("Lua files (*.lua)"))
-            : filePath;
-    if (f.isEmpty()) return true;
+    QString f = filePath;
+    if (filePath.isEmpty()) {
+        f = QDir(QApplication::applicationDirPath()).filePath(QLatin1String("lua"));
+        if (!LuaConsole::instance()->fileName().isEmpty())
+            f = LuaConsole::instance()->fileName();
+        f = QFileDialog::getOpenFileName(LuaConsole::instance(), tr("Open Lua Script"),
+                                         f, tr("Lua files (*.lua)"));
+    }
+    if (f.isEmpty())
+        return true;
 
     LuaConsole::instance()->setFile(f);
 
