@@ -414,7 +414,7 @@
             <item>
              <widget class="QToolButton" name="addPZW">
               <property name="toolTip">
-               <string>Add Object Type</string>
+               <string>Add Project</string>
               </property>
               <property name="text">
                <string>Add</string>
@@ -434,7 +434,7 @@
                <bool>true</bool>
               </property>
               <property name="toolTip">
-               <string>Remove Selected Object Types</string>
+               <string>Remove Selected Project</string>
               </property>
               <property name="text">
                <string>Remove</string>
@@ -450,6 +450,9 @@
             </item>
             <item>
              <widget class="QToolButton" name="raisePZW">
+              <property name="toolTip">
+               <string>Raise Project</string>
+              </property>
               <property name="text">
                <string>...</string>
               </property>
@@ -467,6 +470,9 @@
             </item>
             <item>
              <widget class="QToolButton" name="lowerPZW">
+              <property name="toolTip">
+               <string>Lower Project</string>
+              </property>
               <property name="text">
                <string>...</string>
               </property>
