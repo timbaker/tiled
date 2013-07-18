@@ -64,6 +64,12 @@ public:
     {
     }
 
+    ~ChangeBmpRules()
+    {
+        qDeleteAll(mAliases);
+        qDeleteAll(mRules);
+    }
+
     void undo() { swap(); }
     void redo() { swap(); }
 
@@ -96,6 +102,11 @@ public:
         , mFileName(fileName)
         , mBlends(blends)
     {
+    }
+
+    ~ChangeBmpBlends()
+    {
+        qDeleteAll(mBlends);
     }
 
     void undo() { swap(); }
