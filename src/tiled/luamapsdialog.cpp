@@ -15,7 +15,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "LuaMapsDialog.h"
+#include "luamapsdialog.h"
 #include "ui_luamapsdialog.h"
 
 #include "luaconsole.h"
@@ -84,8 +84,6 @@ LuaMapsDialog::~LuaMapsDialog()
 
 void LuaMapsDialog::setList()
 {
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-
     ui->mapsList->clear();
 
     QDir dir(ui->directoryEdit->text());
@@ -106,8 +104,6 @@ void LuaMapsDialog::setList()
         item->setCheckState(0, Qt::Checked);
         ui->mapsList->addTopLevelItem(item);
     }
-
-    QApplication::restoreOverrideCursor();
 }
 
 bool LuaMapsDialog::processMap(const QString &mapFilePath)
@@ -266,7 +262,8 @@ void LuaMapsDialog::backupsBrowse()
 void LuaMapsDialog::scriptBrowse()
 {
     QString f = QFileDialog::getOpenFileName(this, tr("Choose Lua Script"),
-                                             QString(), tr("Lua files (*.lua)"));
+                                             ui->scriptEdit->text(),
+                                             tr("Lua files (*.lua)"));
     if (!f.isEmpty()) {
         ui->scriptEdit->setText(QDir::toNativeSeparators(f));
     }
