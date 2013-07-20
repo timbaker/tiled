@@ -785,16 +785,24 @@ BmpBlend *BmpBlender::getBlendRule(int x, int y, const QString &tileName,
             bool bPass = false;
             switch (blend->dir) {
             case BmpBlend::N:
-                bPass = mainTiles.contains(NEIGHBOR(x, y - 1));
+                bPass = mainTiles.contains(NEIGHBOR(x, y - 1))/* &&
+                        !mainTiles.contains(NEIGHBOR(x - 1, y)) &&
+                        !mainTiles.contains(NEIGHBOR(x + 1, y))*/;
                 break;
             case BmpBlend::S:
-                bPass = mainTiles.contains(NEIGHBOR(x, y + 1));
+                bPass = mainTiles.contains(NEIGHBOR(x, y + 1))/* &&
+                        !mainTiles.contains(NEIGHBOR(x - 1, y)) &&
+                        !mainTiles.contains(NEIGHBOR(x + 1, y))*/;
                 break;
             case BmpBlend::E:
-                bPass = mainTiles.contains(NEIGHBOR(x + 1, y));
+                bPass = mainTiles.contains(NEIGHBOR(x + 1, y))/* &&
+                        !mainTiles.contains(NEIGHBOR(x, y - 1)) &&
+                        !mainTiles.contains(NEIGHBOR(x, y + 1))*/;
                 break;
             case BmpBlend::W:
-                bPass = mainTiles.contains(NEIGHBOR(x - 1, y));
+                bPass = mainTiles.contains(NEIGHBOR(x - 1, y))/* &&
+                        !mainTiles.contains(NEIGHBOR(x, y - 1)) &&
+                        !mainTiles.contains(NEIGHBOR(x, y + 1))*/;
                 break;
             case BmpBlend::NE:
                 bPass = mainTiles.contains(NEIGHBOR(x, y - 1)) &&
