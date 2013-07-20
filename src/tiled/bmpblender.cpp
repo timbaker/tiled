@@ -704,6 +704,14 @@ void BmpBlender::updateWarnings()
                             .arg(blendIndex).arg(tileName);
             }
         }
+        for (int i = 0; i < blend->exclude2.size() - 1; i += 2) {
+            QString tileName = blend->exclude2[i];
+            if (!BuildingEditor::BuildingTilesMgr::legalTileName(tileName)) {
+                if (!mAliasByName.contains(tileName))
+                    warnings += tr("Blend %1 uses unknown alias '%2' for exclude2.")
+                            .arg(blendIndex).arg(tileName);
+            }
+        }
         if (!BuildingEditor::BuildingTilesMgr::legalTileName(blend->mainTile)) {
             if (!mAliasByName.contains(blend->mainTile))
                 warnings += tr("Blend %1 uses unknown alias '%2' for mainTile.")
