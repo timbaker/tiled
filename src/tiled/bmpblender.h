@@ -122,6 +122,7 @@ public:
 
     void fromMap();
     void recreate();
+    void markDirty(const QRect &r);
     void markDirty(int x1, int y1, int x2, int y2);
     void flush(const MapRenderer *renderer, const QRect &rect, const QPoint &mapPos);
     void flush(const QRect &rect);

@@ -92,6 +92,11 @@ void BmpBlender::recreate()
     }
 }
 
+void BmpBlender::markDirty(const QRect &r)
+{
+    mDirtyRegion += r;
+}
+
 void BmpBlender::markDirty(int x1, int y1, int x2, int y2)
 {
     mDirtyRegion += QRect(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
@@ -189,17 +194,8 @@ void BmpBlender::tilesToPixels(int x1, int y1, int x2, int y2)
                 continue;
 
             if (Tile *tile = floorLayer->cellAt(x, y).tile) {
-#if 1
                 if (mFloorTileToRule.contains(tile))
                     mMap->rbmp(0).setPixel(x, y, mFloorTileToRule[tile]->color);
-#else
-                QString tileName = BuildingEditor::BuildingTilesMgr::nameForTile(tile);
-                for (int i = 0; i < mFloor0Rules.size(); i++) {
-                    if (mFloor0RuleTiles[i].contains(tileName)) {
-                        mMap->rbmp(0).setPixel(x, y, mFloor0Rules[i]->color);
-                    }
-                }
-#endif
             }
         }
     }
@@ -398,24 +394,9 @@ void BmpBlender::initTiles()
         mKnownBlendTiles.clear();
         mBlendTiles.clear();
         foreach (BmpBlend *blend, mBlendList) {
-#if 1
             QList<Tile*> tiles = tileNamesToTiles(QStringList(blend->blendTile));
             mKnownBlendTiles += tiles.toSet();
             mBlendTiles[blend] += tiles;
-#else
-            QStringList tileNames;
-            if (!BuildingEditor::BuildingTilesMgr::legalTileName(blend->blendTile)) {
-                if (mAliasByName.contains(blend->blendTile))
-                    tileNames += mAliasByName[blend->blendTile]->tiles;
-            } else
-                tileNames += blend->blendTile;
-            foreach (QString tileName, tileNames) {
-                if (mTileByName.contains(tileName)) {
-                    mKnownBlendTiles += mTileByName[tileName];
-                    mBlendTiles[blend] += mTileByName[tileName];
-                }
-            }
-#endif
         }
     }
 }

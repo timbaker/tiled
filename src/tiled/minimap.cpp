@@ -95,6 +95,9 @@ void ShadowMap::layerAdded(int index, Layer *layer)
                 isVisible = false;
             layerGroup->setLayerVisibility(tl, isVisible);
             layerGroup->setLayerOpacity(tl, 1.0f);
+
+            if (layerGroup->level() == 0)
+                layerGroup->setBmpBlendLayers(mMapComposite->bmpBlender()->tileLayers());
         }
     }
 }
@@ -109,6 +112,10 @@ void ShadowMap::layerRenamed(int index, const QString &name)
 {
     mMapComposite->map()->layerAt(index)->setName(name);
     mMapComposite->layerRenamed(index);
+
+    if (name.startsWith(QLatin1String("0_")))
+        mMapComposite->layerGroupForLevel(0)->setBmpBlendLayers(
+                    mMapComposite->bmpBlender()->tileLayers());
 }
 
 void ShadowMap::regionAltered(const QRegion &rgn, Layer *layer)
@@ -304,6 +311,8 @@ void MiniMapRenderWorker::work()
 
     bool aborted = false;
 
+    mShadowMap->mMapComposite->bmpBlender()->flush(mRenderer, paintRect.toAlignedRect(), QPoint());
+
     MapComposite::ZOrderList zorder = mShadowMap->mMapComposite->zOrder();
     foreach (MapComposite::ZOrderItem zo, zorder) {
         if (zo.group)
@@ -376,7 +385,7 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
                 }
                 if (sm.mMapComposite->bmpBlender()->tileLayerNames().contains(layer->name())) {
                     QRect r = c.mRegion.boundingRect();
-                    sm.mMapComposite->bmpBlender()->flush(r);
+                    sm.mMapComposite->bmpBlender()->markDirty(r);
                 }
             }
             break;
@@ -425,7 +434,7 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
         case MapChange::BmpPainted: {
             sm.mMapComposite->map()->rbmp(c.mBmpIndex).rimage() = c.mBmps[c.mBmpIndex];
             QRect r = c.mRegion.boundingRect();
-            sm.mMapComposite->bmpBlender()->flush(r);
+            sm.mMapComposite->bmpBlender()->markDirty(r);
             break;
         }
         case MapChange::BmpAliasesChanged: {
