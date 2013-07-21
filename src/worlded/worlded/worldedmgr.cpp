@@ -111,7 +111,7 @@ World *WorldEdMgr::worldAt(int n)
     return 0;
 }
 
-const QString &WorldEdMgr::worldFileName(int n)
+QString WorldEdMgr::worldFileName(int n)
 {
     if (n >= 0 && n < mWorlds.size())
         return mWorldFileNames[n];
