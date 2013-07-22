@@ -23,6 +23,7 @@
 #include "mainwindow.h"
 
 #include <QDesktopServices>
+#include <QFileInfo>
 #include <QUrl>
 
 using namespace Tiled;
@@ -61,6 +62,11 @@ LuaConsole::~LuaConsole()
     delete ui;
 }
 
+void LuaConsole::setFile(const QString &fileName)
+{
+    mFileName = fileName;
+    setWindowTitle(tr("%1 - Lua Console").arg(QFileInfo(mFileName).fileName()));
+}
 
 void LuaConsole::runScript()
 {

@@ -34,8 +34,7 @@ public:
 
     const QString fileName() const
     { return mFileName; }
-    void setFile(const QString &fileName)
-    { mFileName = fileName; }
+    void setFile(const QString &fileName);
 
     void write(const QString &s, QColor color = Qt::black);
 
