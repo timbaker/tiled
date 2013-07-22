@@ -2148,7 +2148,7 @@ bool MainWindow::LuaScript(MapDocument *doc, const QString &filePath)
 {
     QString f = filePath;
     if (filePath.isEmpty()) {
-        f = QDir(QApplication::applicationDirPath()).filePath(QLatin1String("lua"));
+        f = QDir(QApplication::applicationDirPath()).filePath(QLatin1String("lua/"));
         if (!LuaConsole::instance()->fileName().isEmpty())
             f = LuaConsole::instance()->fileName();
         f = QFileDialog::getOpenFileName(LuaConsole::instance(), tr("Open Lua Script"),
