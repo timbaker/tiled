@@ -1,12 +1,36 @@
-console show
-update
+if {[llength [info commands console]]} {
+    console show
+    update
+}
 
-set BIN C:/Programming/Tiled/build-msvc-release
+set BIN C:/Programming/Tiled/build-tiled-Qt4_MSVC_64-Release
 set SRC C:/Programming/Tiled/tiled
-set QT_BINARY_DIR C:/Programming/Qt/qt-build/bin
-set QT_PLUGINS_DIR C:/Programming/Qt/qt-build/plugins
-set QT_TRANSLATIONS_DIR C:/Programming/Qt/qt-build/translations
+set QT_BINARY_DIR C:/Programming/Qt/qt-4.8.x-MSVC-2012-64bit-build/bin
+set QT_PLUGINS_DIR C:/Programming/Qt/qt-4.8.x-MSVC-2012-64bit-build/plugins
+set QT_TRANSLATIONS_DIR C:/Programming/Qt/qt-4.8.x-MSVC-2012-64bit-build/translations
 set DEST {C:\Users\Tim\Desktop\ProjectZomboid\Tools\TileZed}
+set SUFFIX "-64bit"
+set REDIST vcredist_x64.exe
+
+if {$argc > 0} {
+    switch -- [lindex $argv 0] {
+        32bit {
+            puts "dist.tcl: 32-bit"
+            set BIN C:/Programming/Tiled/build-msvc-release
+            set QT_BINARY_DIR C:/Programming/Qt/qt-build/bin
+            set QT_PLUGINS_DIR C:/Programming/Qt/qt-build/plugins
+            set QT_TRANSLATIONS_DIR C:/Programming/Qt/qt-build/translations
+            set SUFFIX "-32bit"
+            set REDIST vcredist_x86.exe
+        }
+        64bit {
+            puts "dist.tcl: 64-bit"
+        }
+        default {
+            error "unknown arguments to dist.tcl: $argv"
+        }
+    }
+}
 
 proc copyFile {SOURCE DEST name {name2 ""}} {
     if {$name2 == ""} { set name2 $name }
@@ -21,7 +45,7 @@ proc copyFile {SOURCE DEST name {name2 ""}} {
             set relative [string range $src [string length [set ::$var]] end]
         }
     }
-    if {![file exists $dst] || ([file mtime $src] > [file mtime $dst])} {
+    if {![file exists $dst] || ([file mtime $src] > [file mtime $dst]) || ([file size $src] != [file size $dst])} {
         file mkdir [file dirname $dst]
         if {[file extension $name2] == ".txt"} {
             set chan [open $src r]
@@ -68,7 +92,7 @@ proc createFile {DEST name contents} {
 }
 
 puts ---Toplevel---
-copyFile {C:\Programming\Tiled} $DEST vcredist_x86.exe
+copyFile {C:\Programming\Tiled} $DEST $REDIST
 copyFile $BIN $DEST config.exe
 copyFile $BIN $DEST TileZed.exe
 copyFile $BIN $DEST tiled.dll
@@ -154,3 +178,13 @@ copyFile $QT_PLUGINS_DIR $DEST/plugins codecs/qjpcodecs4.dll
 copyFile $QT_PLUGINS_DIR $DEST/plugins codecs/qkrcodecs4.dll
 copyFile $QT_PLUGINS_DIR $DEST/plugins codecs/qtwcodecs4.dll
 
+### Archive creation
+puts "---Archive Creation---"
+set date [clock format [clock seconds] -format "%b-%d-%Y"]
+set name TileZed-$date$SUFFIX.zip
+set ARCHIVE C:/Users/Tim/Desktop/ProjectZomboid/$name
+file delete $ARCHIVE
+cd C:/Users/Tim/Desktop/ProjectZomboid/Tools
+exec {C:\Program Files\7-Zip\7z.exe} a $ARCHIVE TileZed
+cd C:/Programming/Tiled
+puts $name
