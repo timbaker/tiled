@@ -384,8 +384,7 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
                         layerGroup->regionAltered(tl); // possibly set mNeedsSynch
                 }
                 if (sm.mMapComposite->bmpBlender()->tileLayerNames().contains(layer->name())) {
-                    QRect r = c.mRegion.boundingRect();
-                    sm.mMapComposite->bmpBlender()->markDirty(r);
+                    sm.mMapComposite->bmpBlender()->markDirty(c.mRegion);
                 }
             }
             break;
@@ -433,8 +432,7 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
         }
         case MapChange::BmpPainted: {
             sm.mMapComposite->map()->rbmp(c.mBmpIndex).rimage() = c.mBmps[c.mBmpIndex];
-            QRect r = c.mRegion.boundingRect();
-            sm.mMapComposite->bmpBlender()->markDirty(r);
+            sm.mMapComposite->bmpBlender()->markDirty(c.mRegion);
             break;
         }
         case MapChange::BmpAliasesChanged: {

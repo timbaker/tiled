@@ -607,8 +607,7 @@ void MapDocument::paintBmp(int bmpIndex, int px, int py, const QImage &source,
         }
     }
 
-    const QRect r = region.boundingRect();
-    mapComposite()->bmpBlender()->markDirty(r);
+    mapComposite()->bmpBlender()->markDirty(region);
 
     emit bmpPainted(bmpIndex, region);
 }
@@ -751,8 +750,7 @@ void MapDocument::emitRegionAltered(const QRegion &region, Layer *layer)
 {
 #if 1
     if (mMapComposite->bmpBlender()->tileLayerNames().contains(layer->name())) {
-        QRect r = region.boundingRect();
-        mMapComposite->bmpBlender()->markDirty(r);
+        mMapComposite->bmpBlender()->markDirty(region);
     }
 #endif
     emit regionAltered(region, layer);

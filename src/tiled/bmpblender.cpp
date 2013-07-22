@@ -43,6 +43,7 @@ BmpBlender::BmpBlender(QObject *parent) :
     QObject(parent),
     mMap(0),
     mFakeTileGrid(0),
+    mInitTilesLater(true),
     mHack(false)
 {
 }
@@ -89,6 +90,11 @@ void BmpBlender::recreate()
 
         emit layersRecreated();
     }
+}
+
+void BmpBlender::markDirty(const QRegion &rgn)
+{
+    mDirtyRegion += rgn;
 }
 
 void BmpBlender::markDirty(const QRect &r)
