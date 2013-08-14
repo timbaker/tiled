@@ -210,6 +210,7 @@ bool BuildingDocument::isModified() const
 
 void BuildingDocument::setSelectedObjects(const QSet<BuildingObject *> &selection)
 {
+    if (selection == mSelectedObjects) return;
     mSelectedObjects = selection;
     emit selectedObjectsChanged();
 }

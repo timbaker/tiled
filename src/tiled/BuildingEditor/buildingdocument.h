@@ -108,6 +108,9 @@ public:
     void emitObjectChanged(BuildingObject *object)
     { emit objectChanged(object); }
 
+    void emitObjectPicked(BuildingObject *object)
+    { emit objectPicked(object); }
+
     // Clipboard
     void setClipboardTiles(FloorTileGrid *tiles, const QRegion &rgn);
 
@@ -195,6 +198,7 @@ signals:
     void objectMoved(BuildingObject *object);
     void objectTileChanged(BuildingObject *object);
     void objectChanged(BuildingObject *object);
+    void objectPicked(BuildingObject *object);
 
     void roomAdded(Room *room);
     void roomAboutToBeRemoved(Room *room);

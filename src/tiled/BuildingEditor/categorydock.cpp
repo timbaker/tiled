@@ -191,6 +191,8 @@ void CategoryDock::currentDocumentChanged(BuildingDocument *doc)
                 SLOT(usedTilesChanged()));
         connect(mCurrentDocument, SIGNAL(selectedObjectsChanged()),
                 SLOT(selectCurrentCategoryTile()));
+        connect(mCurrentDocument, SIGNAL(objectPicked(BuildingObject*)),
+                SLOT(objectPicked(BuildingObject*)));
     }
 
     if (ui->categoryList->currentRow() < 2)
@@ -968,6 +970,20 @@ void CategoryDock::selectAndDisplay(BuildingTileEntry *entry)
 {
     if (!entry)
         return;
+
+    int row = mRowOfFirstCategory;
+    foreach (BuildingTileCategory *category, BuildingTilesMgr::instance()->categories()) {
+        if (category->entries().contains(entry)) {
+            ui->categoryList->setCurrentRow(row);
+            QModelIndex index = ui->tilesetView->model()->index((void*)entry);
+            ui->tilesetView->setCurrentIndex(index);
+            QMetaObject::invokeMethod(this, "scrollToNow", Qt::QueuedConnection,
+                                      Q_ARG(int, 0), Q_ARG(QModelIndex, index));
+            return;
+        }
+        ++row;
+    }
+
     ui->categoryList->setCurrentRow(0); // Used Tiles
     QModelIndex index = ui->tilesetView->model()->index((void*)entry);
     ui->tilesetView->setCurrentIndex(index);
@@ -980,6 +996,20 @@ void CategoryDock::selectAndDisplay(FurnitureTile *ftile)
 {
     if (!ftile)
         return;
+
+    int row = mRowOfFirstFurnitureGroup;
+    foreach (FurnitureGroup *group, FurnitureGroups::instance()->groups()) {
+        if (group == ftile->owner()->group()) {
+            ui->categoryList->setCurrentRow(row);
+            QModelIndex index = ui->furnitureView->model()->index(ftile);
+            ui->furnitureView->setCurrentIndex(index);
+            QMetaObject::invokeMethod(this, "scrollToNow", Qt::QueuedConnection,
+                                      Q_ARG(int, 1), Q_ARG(QModelIndex, index));
+            return;
+        }
+        ++row;
+    }
+
     ui->categoryList->setCurrentRow(1); // Used Furniture
     QModelIndex index = ui->furnitureView->model()->index(ftile);
     ui->furnitureView->setCurrentIndex(index);

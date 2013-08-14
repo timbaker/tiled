@@ -1042,6 +1042,11 @@ void BaseObjectTool::eyedrop(BuildingObject *object)
     emit objectPicked(object);
     updateCursorObject();
 
+    mEditor->document()->setSelectedObjects(QSet<BuildingObject*>());
+
+    if (FurnitureObject *fobj = object->asFurniture())
+        FurnitureTool::instance()->setCurrentTile(fobj->furnitureTile());
+
     BaseTool *tool = 0;
     if (object->asDoor()) tool = DoorTool::instance();
     if (object->asFurniture()) tool = FurnitureTool::instance();
@@ -1051,6 +1056,8 @@ void BaseObjectTool::eyedrop(BuildingObject *object)
     if (object->asWindow()) tool = WindowTool::instance();
     if (tool && !tool->isCurrent() && tool->action()->isEnabled())
         QMetaObject::invokeMethod(tool, "makeCurrent", Qt::QueuedConnection);
+
+    mEditor->document()->emitObjectPicked(object);
 }
 
 /////
