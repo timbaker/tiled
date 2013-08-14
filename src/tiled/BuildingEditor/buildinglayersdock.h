@@ -29,6 +29,7 @@ class BuildingLayersDock;
 namespace BuildingEditor {
 
 class BuildingDocument;
+class BuildingFloor;
 
 class BuildingLayersDock : public QDockWidget
 {
@@ -45,11 +46,13 @@ private slots:
     void currentDocumentChanged(BuildingDocument *doc);
     void currentLayerChanged(int row);
 
+    void visibilityChanged(int value);
     void opacityChanged(int value);
     void layerItemChanged(QListWidgetItem *item);
 
     void currentFloorChanged();
     void currentLayerChanged();
+    void layerVisibilityChanged(BuildingFloor *floor, const QString &layerName);
 
     void updateActions();
 

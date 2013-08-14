@@ -33,6 +33,7 @@ BuildingLayersDock::BuildingLayersDock(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    connect(ui->visibility, SIGNAL(valueChanged(int)), SLOT(visibilityChanged(int)));
     connect(ui->opacity, SIGNAL(valueChanged(int)), SLOT(opacityChanged(int)));
 
     connect(ui->layers, SIGNAL(currentRowChanged(int)),
@@ -62,6 +63,8 @@ void BuildingLayersDock::currentDocumentChanged(BuildingDocument *doc)
                 SLOT(currentFloorChanged()));
         connect(mDocument, SIGNAL(currentLayerChanged()),
                 SLOT(currentLayerChanged()));
+        connect(mDocument, SIGNAL(layerVisibilityChanged(BuildingFloor*,QString)),
+                SLOT(layerVisibilityChanged(BuildingFloor*,QString)));
     }
 
     setLayersList();
@@ -74,6 +77,8 @@ void BuildingLayersDock::setLayersList()
 
     ui->layers->clear();
 
+    QString topVisibleLayer;
+
     if (mDocument) {
         foreach (QString layerName, BuildingMap::layerNames(mDocument->currentLevel())) {
             QListWidgetItem *item = new QListWidgetItem;
@@ -82,7 +87,17 @@ void BuildingLayersDock::setLayersList()
             bool visible = mDocument->currentFloor()->layerVisibility(layerName);
             item->setCheckState(visible ? Qt::Checked : Qt::Unchecked);
             ui->layers->insertItem(0, item);
+            if (visible)
+                topVisibleLayer = layerName;
         }
+    }
+
+    ui->visibility->setRange(0, ui->layers->count() - 1);
+    ui->visibility->setValue(ui->visibility->maximum());
+    if (!topVisibleLayer.isEmpty()) {
+        QStringList layerNames = BuildingMap::layerNames(mDocument->currentLevel());
+        int n = layerNames.indexOf(topVisibleLayer);
+        ui->visibility->setValue(n);
     }
 
     mSynching = false;
@@ -98,6 +113,17 @@ void BuildingLayersDock::currentLayerChanged(int row)
     if (row >= 0)
         layerName = ui->layers->item(row)->text();
     mDocument->setCurrentLayer(layerName);
+}
+
+void BuildingLayersDock::visibilityChanged(int value)
+{
+    if (mSynching || !mDocument)
+        return;
+
+    for (int i = ui->layers->count() - 1; i >= 0; i--)
+        mDocument->setLayerVisibility(mDocument->currentFloor(),
+                                      ui->layers->item(i)->text(),
+                                      ui->layers->count() - i - 1 <= value);
 }
 
 void BuildingLayersDock::opacityChanged(int value)
@@ -149,6 +175,18 @@ void BuildingLayersDock::currentLayerChanged()
     updateActions();
 }
 
+void BuildingLayersDock::layerVisibilityChanged(BuildingFloor *floor, const QString &layerName)
+{
+    if (mDocument) {
+        int index = BuildingMap::layerNames(floor->level()).indexOf(layerName);
+        if (index >= 0) {
+            int row = ui->layers->count() - index - 1;
+            ui->layers->item(row)->setCheckState(floor->layerVisibility(layerName) ?
+                                                     Qt::Checked : Qt::Unchecked);
+        }
+    }
+}
+
 void BuildingLayersDock::updateActions()
 {
     mSynching = true;
@@ -159,6 +197,8 @@ void BuildingLayersDock::updateActions()
         opacity = mDocument->currentFloor()->layerOpacity(currentLayerName);
     ui->opacity->setValue(ui->opacity->maximum() * opacity);
     ui->opacity->setEnabled(!currentLayerName.isEmpty());
+
+    ui->visibility->setEnabled(mDocument != 0);
 
     mSynching = false;
 }
