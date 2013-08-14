@@ -694,7 +694,8 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
     cb->addItems(FurnitureTiles::layerNames());
     hbox->addWidget(cb);
 
-    mFurnitureGrimeCheckBox = new QCheckBox(tr("Grime"));
+    mFurnitureGrimeCheckBox = new QCheckBox(tr("Allow Grime"));
+    mFurnitureGrimeCheckBox->setToolTip(tr("Allow automatic wall grime on this tile."));
     hbox->addWidget(mFurnitureGrimeCheckBox);
 
     hbox->addStretch(1);
@@ -1260,7 +1261,9 @@ void BuildingTilesDialog::synchUI()
     if (mCurrentFurniture) {
         mFurnitureLayerComboBox->setCurrentIndex(mCurrentFurniture->owner()->layer());
         mFurnitureGrimeCheckBox->setChecked(mCurrentFurniture->allowGrime());
-    }
+        mFurnitureGrimeCheckBox->setEnabled(mCurrentFurniture->owner()->layer() == FurnitureTiles::LayerWalls);
+    } else
+        mFurnitureGrimeCheckBox->setEnabled(false);
     mSynching = false;
 
     ui->actionMoveTileUp->setEnabled(moveUp);
