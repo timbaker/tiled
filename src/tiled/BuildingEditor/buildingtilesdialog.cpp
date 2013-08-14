@@ -773,6 +773,11 @@ BuildingTilesDialog::BuildingTilesDialog(QWidget *parent) :
 
     ui->overallSplitter->setStretchFactor(1, 1);
 
+    // Without this, in Qt 4.8.5+ calling setParent() in our reparent() method
+    // breaks drag-and-drop, even though the toplevel itself does not accept
+    // drop events.
+    setAcceptDrops(true);
+
     setCategoryList();
     setTilesetList();
 
@@ -836,6 +841,7 @@ void BuildingTilesDialog::selectCategory(FurnitureGroup *furnitureGroup)
 
 void BuildingTilesDialog::reparent(QWidget *parent)
 {
+    if (parent == parentWidget()) return;
     QPoint savePosition = pos();
     setParent(parent, windowFlags());
     move(savePosition);
