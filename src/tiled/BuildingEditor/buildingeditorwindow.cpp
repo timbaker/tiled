@@ -46,7 +46,7 @@
 #include "mixedtilesetview.h"
 #include "newbuildingdialog.h"
 #include "objecteditmode.h"
-#include "resizebuildingdialog.h"
+#include "resizedialog.h"
 #include "roomsdialog.h"
 #include "simplefile.h"
 #include "templatefrombuildingdialog.h"
@@ -1594,6 +1594,76 @@ void BuildingEditorWindow::resizeBuilding()
     if (!mCurrentDocument)
         return;
 
+#if 1
+    ResizeDialog dialog(this);
+    dialog.setOldSize(currentBuilding()->size());
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    QPoint offset = dialog.offset();
+    QSize newSize = dialog.newSize();
+    QRect newBounds(QPoint(), newSize);
+    QRect overlap = newBounds & currentBuilding()->bounds().translated(offset);
+
+    QUndoStack *undoStack = mCurrentDocument->undoStack();
+    undoStack->beginMacro(tr("Resize Building"));
+
+    // Calculate offset+resized room+tile grids.
+    QMap<BuildingFloor*, QVector<QVector<Room*> > > grids;
+    QMap<BuildingFloor*, QMap<QString,FloorTileGrid*> > grimes;
+    foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
+
+        // Rooms
+        QVector<QVector<Room*> > grid;
+        grid.resize(newSize.width());
+        for (int x = 0; x < newSize.width(); x++)
+            grid[x].resize(newSize.height());
+        for (int y = 0; y < floor->height(); y++) {
+            for (int x = 0; x < floor->width(); x++) {
+                if (newBounds.contains(x + offset.x(), y + offset.y()))
+                    grid[x + offset.x()][y + offset.y()] = floor->GetRoomAt(x, y);
+            }
+        }
+        grids[floor] = grid;
+
+        // User-placed tiles
+        QMap<QString,FloorTileGrid*> grime;
+        foreach (QString layerName, floor->grimeLayers()) {
+            FloorTileGrid *src = floor->grime()[layerName];
+            FloorTileGrid *dest = new FloorTileGrid(newSize.width() + 1, newSize.height() + 1);
+            for (int y = 0; y < floor->height() + 1; y++) {
+                for (int x = 0; x < floor->width() + 1; x++) {
+                    if (newBounds.adjusted(0, 0, 1, 1).contains(x + offset.x(), y + offset.y()))
+                        dest->replace(x + offset.x(), y + offset.y(), src->at(x, y));
+                }
+            }
+            grime[layerName] = dest;
+        }
+        grimes[floor] = grime;
+    }
+
+    // Resize
+    undoStack->push(new EmitResizeBuilding(mCurrentDocument, true));
+    undoStack->push(new ResizeBuilding(mCurrentDocument, newSize));
+    foreach (BuildingFloor *floor, mCurrentDocument->building()->floors()) {
+        undoStack->push(new ResizeFloor(mCurrentDocument, floor, newSize));
+        undoStack->push(new SwapFloorGrid(mCurrentDocument, floor, grids[floor],
+                                          "Offset Rooms"));
+        undoStack->push(new SwapFloorGrime(mCurrentDocument, floor, grimes[floor],
+                                           "Offset Tiles", true));
+        // Offset objects. Remove objects that aren't in bounds.
+        for (int i = floor->objectCount() - 1; i >= 0; --i) {
+            BuildingObject *object = floor->object(i);
+            if (object->isValidPos(offset))
+                undoStack->push(new MoveObject(mCurrentDocument, object, object->pos() + offset));
+            else {
+                undoStack->push(new RemoveObject(mCurrentDocument, floor, i));
+            }
+        }
+    }
+    undoStack->push(new EmitResizeBuilding(mCurrentDocument, false));
+    undoStack->endMacro();
+#else
     ResizeBuildingDialog dialog(mCurrentDocument->building(), this);
     if (dialog.exec() != QDialog::Accepted)
         return;
@@ -1616,6 +1686,7 @@ void BuildingEditorWindow::resizeBuilding()
     }
     undoStack->push(new EmitResizeBuilding(mCurrentDocument, false));
     undoStack->endMacro();
+#endif
 }
 
 void BuildingEditorWindow::flipHorizontal()
