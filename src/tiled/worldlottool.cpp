@@ -106,8 +106,10 @@ void WorldLotTool::mousePressed(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
         updateHoverItem(topmostLotAt(event->scenePos()));
-        if (mHoverLot)
-            WorldEd::WorldEdMgr::instance()->setSelectedLots(QSet<WorldCellLot*>() << mHoverLot);
+        QSet<WorldCellLot*> selection;
+        if (mHoverLot && (mHoverLot->cell() == mCell))
+            selection << mHoverLot;
+        WorldEd::WorldEdMgr::instance()->setSelectedLots(selection);
     }
 
     if (event->button() == Qt::RightButton) {
@@ -121,6 +123,9 @@ void WorldLotTool::mousePressed(QGraphicsSceneMouseEvent *event)
             QAction *openAction = menu.addAction(tiledIcon, tr("Open in TileZed"));
             QString fileName = mHoverLot->mapName();
             openAction->setEnabled(QFileInfo(fileName).exists());
+
+            if (mHoverLot->cell() != mCell)
+                hideAction->setVisible(false);
 
             mShowingContextMenu = true;
             QAction *selected = menu.exec(event->screenPos());

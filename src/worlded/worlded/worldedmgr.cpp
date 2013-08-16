@@ -100,6 +100,7 @@ void WorldEdMgr::setLotVisible(WorldCellLot *lot, bool visible)
 
 void WorldEdMgr::setSelectedLots(const QSet<WorldCellLot *> &selected)
 {
+    if (mSelectedLots == selected) return;
     mSelectedLots = selected;
     emit selectedLotsChanged();
 }

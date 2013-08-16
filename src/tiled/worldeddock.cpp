@@ -354,6 +354,9 @@ void WorldEdDock::selectionChanged()
     if (count == 1) {
         QModelIndex index = selectedRows.first();
         if (WorldCellLot *lot = ui->view->model()->toLot(index)) {
+            mSynching = true;
+            WorldEd::WorldEdMgr::instance()->setSelectedLots(QSet<WorldCellLot*>() << lot);
+            mSynching = false;
             DocumentManager::instance()->ensureRectVisible(
                         mDocument->renderer()->boundingRect(lot->bounds()));
         }
