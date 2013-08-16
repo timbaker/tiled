@@ -67,6 +67,7 @@ class CommandButton;
 class ObjectsDock;
 class Zoomable;
 #ifdef ZOMBOID
+class Eraser;
 class ZLevelsDock;
 class MapsDock;
 class TileDefDialog;
@@ -298,6 +299,9 @@ private:
 
     StampBrush *mStampBrush;
     BucketFillTool *mBucketFillTool;
+#ifdef ZOMBOID
+    Eraser *mEraserTool;
+#endif
 
     ClipboardManager *mClipboardManager;
 

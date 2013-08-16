@@ -44,10 +44,20 @@ public:
 protected:
     void tilePositionChanged(const QPoint &tilePos);
 
+#ifdef ZOMBOID
+    QRegion brushRegion();
+
+private slots:
+    void brushSizeChanged(int newSize);
+#endif
+
 private:
     void doErase(bool mergeable);
 
     bool mErasing;
+#ifdef ZOMBOID
+    bool mMergeable;
+#endif
 };
 
 } // namespace Internal

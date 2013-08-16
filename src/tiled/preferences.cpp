@@ -93,6 +93,9 @@ Preferences::Preferences()
     mHighlightRoomUnderPointer = mSettings->value(QLatin1String("HighlightRoomUnderPointer"), false).toBool();
 #endif
     mSettings->endGroup();
+#ifdef ZOMBOID
+    mEraserBrushSize = mSettings->value(QLatin1String("Tools/Eraser/BrushSize"), 1).toInt();
+#endif
 
     // Retrieve defined object types
     mSettings->beginGroup(QLatin1String("ObjectTypes"));
@@ -524,5 +527,14 @@ void Preferences::setHighlightRoomUnderPointer(bool highlight)
     mHighlightRoomUnderPointer = highlight;
     mSettings->setValue(QLatin1String("Interface/HighlightRoomUnderPointer"), highlight);
     emit highlightRoomUnderPointerChanged(mHighlightRoomUnderPointer);
+}
+
+void Preferences::setEraserBrushSize(int newSize)
+{
+    if (mEraserBrushSize == newSize)
+        return;
+    mEraserBrushSize = newSize;
+    mSettings->setValue(QLatin1String("Tools/Eraser/BrushSize"), mEraserBrushSize);
+    emit eraserBrushSizeChanged(mEraserBrushSize);
 }
 #endif // ZOMBOID

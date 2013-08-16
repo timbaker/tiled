@@ -117,6 +117,9 @@ public:
 
     bool highlightRoomUnderPointer() const
     { return mHighlightRoomUnderPointer; }
+
+    int eraserBrushSize() const
+    { return mEraserBrushSize; }
 #endif // ZOMBOID
 
     /**
@@ -141,6 +144,7 @@ public slots:
     void setShowAdjacentMaps(bool show);
     void setWorldEdFiles(const QStringList &fileNames);
     void setHighlightRoomUnderPointer(bool highlight);
+    void setEraserBrushSize(int newSize);
 #endif
 
 signals:
@@ -167,6 +171,7 @@ signals:
     void showAdjacentMapsChanged(bool show);
     void worldEdFilesChanged(const QStringList &fileNames);
     void highlightRoomUnderPointerChanged(bool highlight);
+    void eraserBrushSizeChanged(int newSize);
 #endif
 
 private:
@@ -204,6 +209,7 @@ private:
     bool mShowAdjacentMaps;
     QStringList mWorldEdFiles;
     bool mHighlightRoomUnderPointer;
+    int mEraserBrushSize;
 #endif
 
     static Preferences *mInstance;

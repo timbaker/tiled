@@ -496,7 +496,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     ToolManager *toolManager = ToolManager::instance();
     toolManager->registerTool(mStampBrush);
     toolManager->registerTool(mBucketFillTool);
+#ifdef ZOMBOID
+    toolManager->registerTool(mEraserTool = new Eraser(this));
+#else
     toolManager->registerTool(new Eraser(this));
+#endif
     toolManager->registerTool(new TileSelectionTool(this));
 #ifdef ZOMBOID
     toolManager->registerTool(new PickTileTool(this));
@@ -1629,6 +1633,12 @@ void MainWindow::launchWorldEd()
 
 void MainWindow::brushSizeMinus()
 {
+    if (ToolManager::instance()->selectedTool() == mEraserTool) {
+        int brushSize = Preferences::instance()->eraserBrushSize();
+        if (brushSize > 1)
+            Preferences::instance()->setEraserBrushSize(brushSize - 1);
+        return;
+    }
     int brushSize = BmpBrushTool::instance()->brushSize();
     if (brushSize > 1)
         BmpBrushTool::instance()->setBrushSize(brushSize - 1);
@@ -1636,11 +1646,17 @@ void MainWindow::brushSizeMinus()
 
 void MainWindow::brushSizePlus()
 {
+    if (ToolManager::instance()->selectedTool() == mEraserTool) {
+        int brushSize = Preferences::instance()->eraserBrushSize();
+        if (brushSize < 300)
+            Preferences::instance()->setEraserBrushSize(brushSize + 1);
+        return;
+    }
     int brushSize = BmpBrushTool::instance()->brushSize();
     if (brushSize < 300)
         BmpBrushTool::instance()->setBrushSize(brushSize + 1);
 }
-#endif
+#endif // ZOMBOID
 
 void MainWindow::autoMappingError()
 {

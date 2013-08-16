@@ -25,6 +25,9 @@
 #include "map.h"
 #include "mapdocument.h"
 #include "mapscene.h"
+#ifdef ZOMBOID
+#include "preferences.h"
+#endif
 #include "tilelayer.h"
 
 using namespace Tiled;
@@ -38,15 +41,39 @@ Eraser::Eraser(QObject *parent)
                        parent)
     , mErasing(false)
 {
+#ifdef ZOMBOID
+    connect(Preferences::instance(), SIGNAL(eraserBrushSizeChanged(int)),
+            SLOT(brushSizeChanged(int)));
+#endif
 }
 
 void Eraser::tilePositionChanged(const QPoint &tilePos)
 {
+#ifdef ZOMBOID
+    Q_UNUSED(tilePos)
+    brushItem()->setTileRegion(brushRegion());
+#else
     brushItem()->setTileRegion(QRect(tilePos, QSize(1, 1)));
+#endif
 
     if (mErasing)
         doErase(true);
 }
+
+#ifdef ZOMBOID
+QRegion Eraser::brushRegion()
+{
+    int brushSize = Preferences::instance()->eraserBrushSize();
+    return QRect(tilePosition() - QPoint(brushSize/2, brushSize/2),
+                 QSize(brushSize, brushSize));
+}
+
+void Eraser::brushSizeChanged(int newSize)
+{
+    Q_UNUSED(newSize);
+    brushItem()->setTileRegion(brushRegion());
+}
+#endif
 
 void Eraser::mousePressed(QGraphicsSceneMouseEvent *event)
 {
@@ -55,6 +82,9 @@ void Eraser::mousePressed(QGraphicsSceneMouseEvent *event)
 
     if (event->button() == Qt::LeftButton) {
         mErasing = true;
+#ifdef ZOMBOID
+        mMergeable = false;
+#endif
         doErase(false);
     }
 }
@@ -74,6 +104,17 @@ void Eraser::languageChanged()
 void Eraser::doErase(bool mergeable)
 {
     TileLayer *tileLayer = currentTileLayer();
+
+#ifdef ZOMBOID
+    Q_UNUSED(mergeable)
+    QRegion eraseRegion = brushRegion() & tileLayer->bounds();
+    if (eraseRegion.isEmpty())
+        return;
+
+    EraseTiles *erase = new EraseTiles(mapDocument(), tileLayer, eraseRegion);
+    erase->setMergeable(mMergeable);
+    mMergeable = true;
+#else
     const QPoint tilePos = tilePosition();
 
     if (!tileLayer->bounds().contains(tilePos))
@@ -82,6 +123,7 @@ void Eraser::doErase(bool mergeable)
     QRegion eraseRegion(tilePos.x(), tilePos.y(), 1, 1);
     EraseTiles *erase = new EraseTiles(mapDocument(), tileLayer, eraseRegion);
     erase->setMergeable(mergeable);
+#endif
 
     mapDocument()->undoStack()->push(erase);
     mapDocument()->emitRegionEdited(eraseRegion, tileLayer);
