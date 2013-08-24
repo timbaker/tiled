@@ -24,6 +24,7 @@ RoomDefNameDialog::RoomDefNameDialog(const QList<ObjectGroup *> &ogList,
     QSet<QString> names;
     names << QLatin1String("bedroom")
           << QLatin1String("bathroom")
+          << QLatin1String("closet")
           << QLatin1String("diningroom")
           << QLatin1String("livingroom")
           << QLatin1String("foyer")
