@@ -218,26 +218,36 @@ void EdgeTool::drawEdge(const QPointF &start, const QPointF &end, Edge edge)
     if (mDashLen > 0 && mDashGap > 0) {
         if (edge == EdgeN || edge == EdgeS) {
             if (sx > ex) {
-                for (int x = sx; x >= ex; x -= mDashGap) {
+                for (int x = sx; x >= ex; ) {
                     for (int n = 0; n < mDashLen && x >= ex; n++, x--)
                         drawEdgeTile(x, sy, edge);
+                    for (int n = 0; n < mDashGap && x >= ex; n++, x--)
+                        drawGapTile(x, sy);
                 }
                 return;
             }
-            for (int x = sx; x <= ex; x += mDashGap) {
+            for (int x = sx; x <= ex; ) {
                 for (int n = 0; n < mDashLen && x <= ex; n++, x++)
                     drawEdgeTile(x, sy, edge);
+                for (int n = 0; n < mDashGap && x <= ex; n++, x++)
+                    drawGapTile(x, sy);
             }
         } else {
             if (sy > ey) {
-                for (int y = sy; y >= ey; y -= mDashGap)
+                for (int y = sy; y >= ey; ) {
                     for (int n = 0; n < mDashLen && y >= ey; n++, y--)
                         drawEdgeTile(sx, y, edge);
+                    for (int n = 0; n < mDashGap && y >= ey; n++, y--)
+                        drawGapTile(sx, y);
+                }
                 return;
             }
-            for (int y = sy; y <= ey; y += mDashGap)
+            for (int y = sy; y <= ey; ) {
                 for (int n = 0; n < mDashLen && y <= ey; n++, y++)
                     drawEdgeTile(sx, y, edge);
+                for (int n = 0; n < mDashGap && y <= ey; n++, y++)
+                    drawGapTile(sx, y);
+            }
         }
         return;
     }
@@ -254,6 +264,7 @@ void EdgeTool::drawEdge(const QPointF &start, const QPointF &end, Edge edge)
 }
 
 #include "BuildingEditor/buildingtiles.h"
+#include "erasetiles.h"
 #include "painttilelayer.h"
 void EdgeTool::drawEdgeTile(int x, int y, Edge edge)
 {
@@ -347,6 +358,19 @@ void EdgeTool::drawEdgeTile(int x, int y, Edge edge)
                                              x, y, &stamp,
                                              QRect(x, y, 1, 1),
                                              false);
+//    cmd->setMergeable(mergeable);
+    mapDocument()->undoStack()->push(cmd);
+    mapDocument()->emitRegionEdited(QRect(x, y, 1, 1), tileLayer);
+}
+
+void EdgeTool::drawGapTile(int x, int y)
+{
+    TileLayer *tileLayer = currentTileLayer();
+    if (!tileLayer->contains(x, y))
+        return;
+
+    // FIXME: one undo command for the whole edge
+    EraseTiles *cmd = new EraseTiles(mapDocument(), tileLayer, QRect(x, y, 1, 1));
 //    cmd->setMergeable(mergeable);
     mapDocument()->undoStack()->push(cmd);
     mapDocument()->emitRegionEdited(QRect(x, y, 1, 1), tileLayer);

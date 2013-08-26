@@ -111,6 +111,7 @@ private:
 
     void drawEdge(const QPointF &start, const QPointF &end, Edge edge);
     void drawEdgeTile(int x, int y, Edge edge);
+    void drawGapTile(int x, int y);
 
     bool mInitialClick;
     QPointF mStartTilePosF;
