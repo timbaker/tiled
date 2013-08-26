@@ -227,7 +227,9 @@ SOURCES += aboutdialog.cpp \
     mapbuildings.cpp \
     bmpblendview.cpp \
     luamapsdialog.cpp \
-    luaworlddialog.cpp
+    luaworlddialog.cpp \
+    edgetool.cpp \
+    edgetooldialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -417,7 +419,9 @@ HEADERS += aboutdialog.h \
     mapbuildings.h \
     bmpblendview.h \
     luamapsdialog.h \
-    luaworlddialog.h
+    luaworlddialog.h \
+    edgetool.h \
+    edgetooldialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -461,7 +465,8 @@ FORMS += aboutdialog.ui \
     worldeddock.ui \
     BuildingEditor/welcomemode.ui \
     luamapsdialog.ui \
-    luaworlddialog.ui
+    luaworlddialog.ui \
+    edgetooldialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

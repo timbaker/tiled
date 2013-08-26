@@ -67,6 +67,7 @@ class CommandButton;
 class ObjectsDock;
 class Zoomable;
 #ifdef ZOMBOID
+class EdgeTool;
 class Eraser;
 class ZLevelsDock;
 class MapsDock;
@@ -300,6 +301,7 @@ private:
     StampBrush *mStampBrush;
     BucketFillTool *mBucketFillTool;
 #ifdef ZOMBOID
+    EdgeTool *mEdgeTool;
     Eraser *mEraserTool;
 #endif
 
