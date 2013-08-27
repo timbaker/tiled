@@ -229,7 +229,8 @@ SOURCES += aboutdialog.cpp \
     luamapsdialog.cpp \
     luaworlddialog.cpp \
     edgetool.cpp \
-    edgetooldialog.cpp
+    edgetooldialog.cpp \
+    curbtool.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -421,7 +422,8 @@ HEADERS += aboutdialog.h \
     luamapsdialog.h \
     luaworlddialog.h \
     edgetool.h \
-    edgetooldialog.h
+    edgetooldialog.h \
+    curbtool.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
