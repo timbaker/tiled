@@ -81,6 +81,7 @@
 #include "changetileselection.h"
 #include "converttolotdialog.h"
 #include "convertorientationdialog.h"
+#include "curbtool.h"
 #include "edgetool.h"
 #include "mapcomposite.h"
 #include "mapimagemanager.h"
@@ -506,6 +507,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 #ifdef ZOMBOID
     toolManager->registerTool(new PickTileTool(this));
     toolManager->registerTool(mEdgeTool = new EdgeTool(this));
+    toolManager->registerTool(new CurbTool(this));
 #endif
     toolManager->addSeparator();
     toolManager->registerTool(new ObjectSelectionTool(this));

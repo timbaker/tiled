@@ -1,0 +1,22 @@
+curb
+{
+    far
+    {
+	e = street_curbs_01_11
+	s = street_curbs_01_10
+	se = street_curbs_01_2
+	join-se = street_curbs_01_3
+	e-join-s = street_curbs_01_4
+	s-join-e = street_curbs_01_5
+    }
+    near
+    {
+	e = street_curbs_01_9
+	s = street_curbs_01_8
+	se = street_curbs_01_0
+	join-se = street_curbs_01_1
+	e-join-s = street_curbs_01_6
+	s-join-e = street_curbs_01_7
+    }
+}
+
