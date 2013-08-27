@@ -1,0 +1,87 @@
+edges
+{
+    label = Sidewalk
+    w = edges_0
+    n = edges_1
+    e = edges_2
+    s = edges_3
+    inner
+    {
+	nw = edges_10
+	ne = edges_11
+	se = edges_8
+	sw = edges_9
+    }
+    outer
+    {
+	nw = edges_4
+	ne = edges_5
+	se = edges_6
+	sw = edges_7
+    }
+}
+
+edges
+{
+    label = Traffic Lines (Faded White)
+    w = street_trafficlines_01_0
+    n = street_trafficlines_01_2
+    e = street_trafficlines_01_4
+    s = street_trafficlines_01_6
+    outer
+    {
+	nw = street_trafficlines_01_1
+	ne = street_trafficlines_01_3
+	se = street_trafficlines_01_5
+	sw = street_trafficlines_01_7
+    }
+}
+
+edges
+{
+    label = Traffic Lines (Dark White)
+    w = street_trafficlines_01_8
+    n = street_trafficlines_01_10
+    e = street_trafficlines_01_12
+    s = street_trafficlines_01_14
+    outer
+    {
+	nw = street_trafficlines_01_9
+	ne = street_trafficlines_01_11
+	se = street_trafficlines_01_13
+	sw = street_trafficlines_01_15
+    }
+}
+
+edges
+{
+    label = Traffic Lines (Faded Yellow)
+    w = street_trafficlines_01_16
+    n = street_trafficlines_01_18
+    e = street_trafficlines_01_20
+    s = street_trafficlines_01_22
+    outer
+    {
+	nw = street_trafficlines_01_17
+	ne = street_trafficlines_01_19
+	se = street_trafficlines_01_21
+	sw = street_trafficlines_01_23
+    }
+}
+
+edges
+{
+    label = Traffic Lines (Dark Yellow)
+    w = street_trafficlines_01_24
+    n = street_trafficlines_01_26
+    e = street_trafficlines_01_28
+    s = street_trafficlines_01_30
+    outer
+    {
+	nw = street_trafficlines_01_25
+	ne = street_trafficlines_01_27
+	se = street_trafficlines_01_29
+	sw = street_trafficlines_01_31
+    }
+}
+
