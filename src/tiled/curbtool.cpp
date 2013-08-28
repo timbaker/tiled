@@ -44,7 +44,7 @@ CurbTool::CurbTool(QObject *parent) :
                      parent),
     mInitialClick(false),
     mCurb(0),
-    mSuppressBlendTiles(true),
+    mSuppressBlendTiles(false),
     mCursorItem(new QGraphicsPolygonItem)
 {
     mCursorItem->setPen(QPen(QColor(0,255,0,96), 1));
@@ -557,27 +557,34 @@ void CurbTool::drawEdgeTile(int x, int y, Edge edge, bool half, bool far)
     if (!suppressBlendTiles())
         return;
 
-    // Erase user-drawn tiles in all blend layers.
+    // Erase user-drawn blend tiles in all blend layers.
     // Set NoBlend flag in all blend layers.
     // Erase below/right of near tiles.  Erase same spot as far tiles
     bool isFar = tiles.indexOf(tile) < Curb::NearE; // first near tile
     if (!isFar) {
+        if (tile == nearJoinSE) return;
         if (edge == EdgeE) x += 1;
         else y += 1;
     }
+
+    QSet<Tile*> blendTiles = mapDocument()->mapComposite()->bmpBlender()->knownBlendTiles();
 
     foreach (QString layerName, mapDocument()->mapComposite()->bmpBlender()->blendLayers()) {
         int index = mapDocument()->map()->indexOfLayer(layerName, Layer::TileLayerType);
         if (index >= 0) {
             TileLayer *tl = mapDocument()->map()->layerAt(index)->asTileLayer();
-            EraseTiles *cmd = new EraseTiles(mapDocument(), tl, QRect(x, y, 1, 1));
-            mapDocument()->undoStack()->push(cmd);
+            if (blendTiles.contains(tl->cellAt(x, y).tile)) {
+                EraseTiles *cmd = new EraseTiles(mapDocument(), tl, QRect(x, y, 1, 1));
+                mapDocument()->undoStack()->push(cmd);
+            }
         }
 
         MapNoBlend *noBlend = mapDocument()->map()->noBlend(layerName);
-        QBitArray bits(1, true);
-        PaintNoBlend *cmd = new PaintNoBlend(mapDocument(), noBlend, bits, QRect(x, y, 1, 1));
-        mapDocument()->undoStack()->push(cmd);
+        if (noBlend->get(x, y) == false) {
+            QBitArray bits(1, true);
+            PaintNoBlend *cmd = new PaintNoBlend(mapDocument(), noBlend, bits, QRect(x, y, 1, 1));
+            mapDocument()->undoStack()->push(cmd);
+        }
     }
 
 }
