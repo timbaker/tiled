@@ -15,9 +15,9 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "CurbTool.h"
+#include "curbtool.h"
 
-//#include "curbtooldialog.h"
+#include "curbtooldialog.h"
 #include "mapdocument.h"
 #include "mapscene.h"
 
@@ -44,14 +44,10 @@ CurbTool::CurbTool(QObject *parent) :
                      parent),
     mInitialClick(false),
     mCurb(0),
+    mSuppressBlendTiles(true),
     mLineItem(new QGraphicsPolygonItem)
 {
     mLineItem->setPen(QPen(Qt::green, 2));
-
-    CurbFile curbFile;
-    if (curbFile.read(qApp->applicationDirPath() + QLatin1String("/Curbs.txt"))) {
-        mCurb = curbFile.takeCurbs().first();
-    }
 
     mValidAdjacent.resize(Curb::ShapeCount);
 
@@ -107,12 +103,19 @@ void CurbTool::activate(MapScene *scene)
     mInitialClick = false;
     scene->addItem(mLineItem);
     AbstractTileTool::activate(scene);
-//    CurbToolDialog::instance()->setVisibleLater(true);
+    CurbToolDialog::instance()->setVisibleLater(true);
+
+    int index = scene->mapDocument()->map()->indexOfLayer(mDefaultLayer);
+    if (index >= 0) {
+        Layer *layer = scene->mapDocument()->map()->layerAt(index);
+        if (layer->asTileLayer())
+            scene->mapDocument()->setCurrentLayerIndex(index);
+    }
 }
 
 void CurbTool::deactivate(MapScene *scene)
 {
-//    CurbToolDialog::instance()->setVisibleLater(false);
+    CurbToolDialog::instance()->setVisibleLater(false);
     scene->removeItem(mLineItem);
     AbstractTileTool::deactivate(scene);
 }
@@ -427,6 +430,9 @@ void CurbTool::drawEdge(const QPointF &start, Corner cornerStart,
 #endif
 }
 
+#include "bmpblender.h"
+#include "bmptool.h"
+#include "mapcomposite.h"
 #include "BuildingEditor/buildingtiles.h"
 #include "erasetiles.h"
 #include "painttilelayer.h"
@@ -546,6 +552,33 @@ void CurbTool::drawEdgeTile(int x, int y, Edge edge, bool half, bool far)
 //    cmd->setMergeable(mergeable);
     mapDocument()->undoStack()->push(cmd);
     mapDocument()->emitRegionEdited(QRect(x, y, 1, 1), tileLayer);
+
+    if (!suppressBlendTiles())
+        return;
+
+    // Erase user-drawn tiles in all blend layers.
+    // Set NoBlend flag in all blend layers.
+    // Erase below/right of near tiles.  Erase same spot as far tiles
+    bool isFar = tiles.indexOf(tile) < Curb::NearE; // first near tile
+    if (!isFar) {
+        if (edge == EdgeE) x += 1;
+        else y += 1;
+    }
+
+    foreach (QString layerName, mapDocument()->mapComposite()->bmpBlender()->blendLayers()) {
+        int index = mapDocument()->map()->indexOfLayer(layerName, Layer::TileLayerType);
+        if (index >= 0) {
+            TileLayer *tl = mapDocument()->map()->layerAt(index)->asTileLayer();
+            EraseTiles *cmd = new EraseTiles(mapDocument(), tl, QRect(x, y, 1, 1));
+            mapDocument()->undoStack()->push(cmd);
+        }
+
+        MapNoBlend *noBlend = mapDocument()->map()->noBlend(layerName);
+        QBitArray bits(1, true);
+        PaintNoBlend *cmd = new PaintNoBlend(mapDocument(), noBlend, bits, QRect(x, y, 1, 1));
+        mapDocument()->undoStack()->push(cmd);
+    }
+
 }
 
 /////

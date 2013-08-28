@@ -94,6 +94,16 @@ public:
 
     void setCurb(Curb *Curb);
 
+    void setDefaultLayer(const QString &layer)
+    { mDefaultLayer = layer; }
+    QString defaultLayer() const
+    { return mDefaultLayer; }
+
+    void setSuppressBlendTiles(bool suppress)
+    { mSuppressBlendTiles = suppress; }
+    bool suppressBlendTiles() const
+    { return mSuppressBlendTiles; }
+
 protected:
     void tilePositionChanged(const QPoint &tilePos);
 
@@ -153,6 +163,8 @@ private:
     QPoint mStartTilePos;
     Corner mStartCorner;
     Curb *mCurb;
+    QString mDefaultLayer;
+    bool mSuppressBlendTiles;
     QGraphicsPolygonItem *mLineItem;
 };
 
