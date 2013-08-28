@@ -78,7 +78,6 @@ signals:
 
 #ifdef ZOMBOID
     void tilePicked(Tile *tile);
-    void altHover(const QPoint &tilePos);
 #endif // ZOMBOID
 
 protected:

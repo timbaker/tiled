@@ -204,7 +204,6 @@ public slots:
     void autoMappingWarning();
 
 #ifdef ZOMBOID
-    void stampAltHovered(const QPoint &tilePos);
     void tilePicked(Tile *tile);
 
     void showBuildingEditor();

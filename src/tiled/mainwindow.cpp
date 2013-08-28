@@ -484,8 +484,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 #ifdef ZOMBOID
     connect(mStampBrush, SIGNAL(tilePicked(Tile*)),
             SLOT(tilePicked(Tile*)));
-    connect(mStampBrush, SIGNAL(altHover(QPoint)),
-            SLOT(stampAltHovered(QPoint)));
     connect(mTileLayersPanel, SIGNAL(tilePicked(Tile*)),
             SLOT(tilePicked(Tile*)));
 #endif
@@ -1525,11 +1523,6 @@ void MainWindow::autoMappingWarning()
 }
 
 #ifdef ZOMBOID
-void MainWindow::stampAltHovered(const QPoint &tilePos)
-{
-    mTileLayersPanel->setTilePosition(tilePos);
-}
-
 void MainWindow::tilePicked(Tile *tile)
 {
     mTilesetDock->tilePicked(tile);
@@ -2663,6 +2656,17 @@ void MainWindow::setStampBrush(const TileLayer *tiles)
 void MainWindow::updateStatusInfoLabel(const QString &statusInfo)
 {
     mStatusInfoLabel->setText(statusInfo);
+
+    // Hack -- Update TileLayersPanel
+    if (mMapDocument && !(qApp->keyboardModifiers() & Qt::AltModifier)) {
+        MapView *view = DocumentManager::instance()->currentMapView();
+        QPoint viewPos = view->mapFromGlobal(QCursor::pos());
+        if (view->viewport()->rect().contains(viewPos)) {
+            QPointF scenePos = view->mapToScene(viewPos);
+            QPoint tilePos = mMapDocument->renderer()->pixelToTileCoordsInt(scenePos);
+            mTileLayersPanel->setTilePosition(tilePos);
+        }
+    }
 }
 
 void MainWindow::writeSettings()

@@ -217,11 +217,6 @@ void StampBrush::tilePositionChanged(const QPoint &)
         updatePosition();
         break;
     }
-
-#ifdef ZOMBOID
-    if (brushItem()->isVisible() && (qApp->keyboardModifiers() & Qt::AltModifier))
-        emit altHover(tilePosition());
-#endif
 }
 
 void StampBrush::mousePressed(QGraphicsSceneMouseEvent *event)
@@ -337,11 +332,6 @@ void StampBrush::configureBrush(const QVector<QPoint> &list)
 
 void StampBrush::modifiersChanged(Qt::KeyboardModifiers modifiers)
 {
-#ifdef ZOMBOID
-    if (brushItem()->isVisible() && (modifiers & Qt::AltModifier))
-        emit altHover(tilePosition());
-#endif
-
     if (!mStamp)
         return;
 
