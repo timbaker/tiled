@@ -26,6 +26,7 @@ class QMenu;
 
 namespace Tiled {
 class Layer;
+class MapNoBlend;
 class Tile;
 
 namespace Internal {
@@ -172,6 +173,7 @@ private slots:
     void layerIndexChanged(int layerIndex);
     void layerChanged(int index);
     void regionAltered(const QRegion &region, Layer *layer);
+    void noBlendPainted(MapNoBlend *noBlend, const QRegion &rgn);
     void showTileLayersPanelChanged(bool show);
 
 private:

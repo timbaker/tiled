@@ -17,7 +17,8 @@
 
 #include "tilelayerspanel.h"
 
-#include "layermodel.h"
+#include "bmpblender.h"
+//#include "layermodel.h"
 #include "mapcomposite.h"
 #include "mapdocument.h"
 #include "preferences.h"
@@ -598,6 +599,8 @@ void TileLayersPanel::setDocument(MapDocument *doc)
         connect(mDocument, SIGNAL(layerChanged(int)), SLOT(layerChanged(int)));
         connect(mDocument, SIGNAL(regionAltered(QRegion,Layer*)),
                 SLOT(regionAltered(QRegion,Layer*)));
+        connect(mDocument, SIGNAL(noBlendPainted(MapNoBlend*,QRegion)),
+                SLOT(noBlendPainted(MapNoBlend*,QRegion)));
 
         mCurrentLayerIndex = mDocument->currentLayerIndex();
         setList();
@@ -618,6 +621,9 @@ void TileLayersPanel::setTilePosition(const QPoint &tilePos)
 {
     mTilePos = tilePos;
 
+#if 1
+    setList();
+#else
     // Not calling setList() only because it scrolls the view when setting
     // the current index.
 
@@ -625,14 +631,25 @@ void TileLayersPanel::setTilePosition(const QPoint &tilePos)
     CompositeLayerGroup *lg = mDocument->mapComposite()->layerGroupForLevel(level);
     if (!lg) return;
 
+    QStringList blendLayerNames = mDocument->mapComposite()->bmpBlender()->blendLayers();
+
+    int index = 0;
     foreach (TileLayer *tl, lg->layers()) {
         Tile *tile = tl->contains(mTilePos) ? tl->cellAt(mTilePos).tile : 0;
+        TileLayer *blendLayer = lg->bmpBlendLayers().at(index);
+        if (blendLayer && blendLayer->contains(tilePos))
+            if (!blendLayerNames.contains(tl->name()) ||
+                    !mDocument->map()->noBlend(tl->name())->get(tilePos.x(), tilePos.y()))
+                if (Tile *blendTile = blendLayer->cellAt(tilePos).tile)
+                    tile = blendTile;
         if (!tile)
             tile = BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile();
         int layerIndex = mDocument->map()->layers().indexOf(tl);
         mView->model()->setData(mView->model()->index(layerIndex),
                                 QVariant::fromValue(tile), Qt::DisplayRole);
+        ++index;
     }
+#endif
 }
 
 void TileLayersPanel::setList()
@@ -644,9 +661,18 @@ void TileLayersPanel::setList()
     CompositeLayerGroup *lg = mDocument->mapComposite()->layerGroupForLevel(mCurrentLevel);
     if (!lg) return;
 
+    QStringList blendLayerNames = mDocument->mapComposite()->bmpBlender()->blendLayers();
+
+    int index = 0;
     foreach (TileLayer *tl, lg->layers()) {
         QString layerName = MapComposite::layerNameWithoutPrefix(tl);
         Tile *tile = tl->contains(mTilePos) ? tl->cellAt(mTilePos).tile : 0;
+        TileLayer *blendLayer = lg->bmpBlendLayers().at(index);
+        if (blendLayer && blendLayer->contains(mTilePos))
+            if (!blendLayerNames.contains(tl->name()) ||
+                    !mDocument->map()->noBlend(tl->name())->get(mTilePos.x(), mTilePos.y()))
+                if (Tile *blendTile = blendLayer->cellAt(mTilePos).tile)
+                    tile = blendTile;
         if (!tile)
             tile = BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile();
         int layerIndex = mDocument->map()->layers().indexOf(tl);
@@ -654,22 +680,44 @@ void TileLayersPanel::setList()
 
         QBrush brush(tl->isVisible() ? Qt::white : Qt::lightGray);
         mView->model()->setData(mView->model()->index(layerIndex), brush, Qt::BackgroundRole);
+        ++index;
     }
 
+    mView->setAutoScroll(false);
     mView->setCurrentIndex(mView->model()->index(mCurrentLayerIndex));
+    mView->setAutoScroll(true);
 }
 
 void TileLayersPanel::activated(const QModelIndex &index)
 {
+#if 1
+    Tile *tile = mView->model()->tileAt(index);
+    if (tile && tile != BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile())
+        emit tilePicked(tile);
+#else
     int layerIndex = mView->model()->layerAt(index);
     if (layerIndex >= 0 && layerIndex < mDocument->map()->layerCount()) {
         Layer *layer = mDocument->map()->layerAt(layerIndex);
         if (!layer || !layer->asTileLayer())
             return;
         TileLayer *tl = layer->asTileLayer();
-        if (tl->contains(mTilePos) && tl->cellAt(mTilePos).tile)
+        Tile *tile = tl->contains(mTilePos) ? tl->cellAt(mTilePos).tile : 0;
+        if (tl->contains(mTilePos) && )
+        if (CompositeLayerGroup *lg = mDocument->mapComposite()->layerGroupForLevel(mCurrentLevel)) {
+            int index = lg->layers().indexOf(layer->asTileLayer());
+            TileLayer *blendLayer = lg->bmpBlendLayers().at(index);
+            if (blendLayer && blendLayer->contains(mTilePos)) {
+                if (!mDocument->map()->noBlend(layer->name())->get(mTilePos.x(), mTilePos.y())) {
+                    Tile *tile = blendLayer->cellAt(mTilePos).tile;
+                    emit tilePicked(tile);
+                    return;
+                }
+            }
+        }
+        if (tile)
             emit tilePicked(tl->cellAt(mTilePos).tile);
     }
+#endif
 }
 
 void TileLayersPanel::layerNameClicked(int layerIndex)
@@ -723,6 +771,12 @@ void TileLayersPanel::regionAltered(const QRegion &region, Layer *layer)
 {
     if (layer->asTileLayer() && (layer->level() == mDocument->currentLevel())
             && region.contains(mTilePos))
+        setList();
+}
+
+void TileLayersPanel::noBlendPainted(MapNoBlend *noBlend, const QRegion &rgn)
+{
+    if (mDocument->currentLevel() == 0)
         setList();
 }
 
