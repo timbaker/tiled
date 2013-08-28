@@ -435,6 +435,49 @@ private:
     QPoint mStampPos;
 };
 
+// This tool is for drawing no-blend areas.
+class NoBlendTool : public AbstractBmpTool
+{
+    Q_OBJECT
+
+public:
+    static NoBlendTool *instance();
+
+    void mousePressed(QGraphicsSceneMouseEvent *event);
+    void mouseReleased(QGraphicsSceneMouseEvent *event);
+
+    void mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers);
+
+    void modifiersChanged(Qt::KeyboardModifiers);
+
+    void languageChanged();
+
+protected:
+    void tilePositionChanged(const QPoint &tilePos);
+
+    void updateStatusInfo();
+
+private:
+    Q_DISABLE_COPY(NoBlendTool)
+    static NoBlendTool *mInstance;
+    NoBlendTool(QObject *parent = 0);
+
+    enum Mode {
+        NoMode,
+        Painting
+    };
+
+    QRect selectedArea() const;
+
+    Mode mMode;
+
+    QPointF mStartScenePos;
+    QPoint mStartTilePos;
+    bool mMouseDown;
+    bool mMouseMoved;
+    bool mErasing;
+};
+
 /////
 
 // This is a QImage with resize() and merge() methods mirroring those of
@@ -544,7 +587,7 @@ class ResizeBmpImage : public QUndoCommand
 {
 public:
     ResizeBmpImage(MapDocument *mapDocument, int bmpIndex, const QSize &size,
-              const QPoint &offset);
+                   const QPoint &offset);
 
     void undo();
     void redo();
@@ -569,6 +612,41 @@ private:
     int mBmpIndex;
     MapRands mOriginal;
     MapRands mResized;
+};
+
+class PaintNoBlend : public QUndoCommand
+{
+public:
+    PaintNoBlend(MapDocument *mapDocument, MapNoBlend *noBlend,
+                 const QBitArray &bits, const QRegion &rgn);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    MapDocument *mMapDocument;
+    MapNoBlend *mNoBlend;
+    QBitArray mBits;
+    QRegion mRegion;
+};
+
+class ResizeNoBlend : public QUndoCommand
+{
+public:
+    ResizeNoBlend(MapDocument *mapDocument, MapNoBlend *noBlend,
+                  const QSize &size, const QPoint &offset);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    MapDocument *mMapDocument;
+    MapNoBlend *mOriginal;
+    MapNoBlend mResized;
 };
 
 class BmpToLayers : public QUndoCommand

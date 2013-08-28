@@ -18,6 +18,7 @@
 #include "ZomboidScene.h"
 
 #include "bmpblender.h"
+#include "bmptool.h"
 #include "map.h"
 #include "mapbuildings.h"
 #include "mapcomposite.h"
@@ -32,6 +33,7 @@
 #include "preferences.h"
 #include "tilelayer.h"
 #include "tilelayeritem.h"
+#include "toolmanager.h"
 #include "zlevelsmodel.h"
 #include "zlotmanager.h"
 
@@ -163,6 +165,10 @@ void ZomboidScene::setMapDocument(MapDocument *mapDoc)
         connect(mMapDocument, SIGNAL(bmpAliasesChanged()), SLOT(bmpXXXChanged()));
         connect(mMapDocument, SIGNAL(bmpRulesChanged()), SLOT(bmpXXXChanged()));
         connect(mMapDocument, SIGNAL(bmpBlendsChanged()), SLOT(bmpXXXChanged()));
+
+        connect(mMapDocument, SIGNAL(noBlendPainted(MapNoBlend*,QRegion)), SLOT(noBlendPainted(MapNoBlend*,QRegion)));
+        connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)), SLOT(synchNoBlendVisible()));
+        connect(ToolManager::instance(), SIGNAL(selectedToolChanged(AbstractTool*)), SLOT(synchNoBlendVisible()));
 
         connect(Preferences::instance(), SIGNAL(highlightRoomUnderPointerChanged(bool)),
                 SLOT(highlightRoomUnderPointerChanged(bool)));
@@ -698,6 +704,27 @@ void ZomboidScene::bmpXXXChanged()
 {
     if (mTileLayerGroupItems.contains(0))
         updateLayerGroupLater(0, Synch | Bounds);
+}
+
+void ZomboidScene::noBlendPainted(MapNoBlend *noBlend, const QRegion &rgn)
+{
+    bmpPainted(0, rgn);
+}
+
+void ZomboidScene::synchNoBlendVisible()
+{
+    QString layerName;
+    if (mapDocument()->currentLayer() && mapDocument()->currentLayer()->asTileLayer()) {
+        layerName = mapDocument()->currentLayer()->name();
+        if (!mapDocument()->mapComposite()->bmpBlender()->blendLayers().contains(layerName))
+            layerName.clear();
+    }
+    if (NoBlendTool::instance() != ToolManager::instance()->selectedTool())
+        layerName.clear();
+    if (layerName != mapDocument()->mapComposite()->noBlendLayer()) {
+        mapDocument()->mapComposite()->setNoBlendLayer(layerName);
+        update();
+    }
 }
 
 void ZomboidScene::highlightRoomUnderPointerChanged(bool highlight)

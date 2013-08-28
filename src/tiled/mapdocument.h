@@ -231,6 +231,9 @@ public:
     void setBmpAliases(const QList<BmpAlias*> &aliases);
     void setBmpRules(const QString &fileName, const QList<BmpRule*> &rules);
     void setBmpBlends(const QString &fileName, const QList<BmpBlend*> &blends);
+
+    QBitArray paintNoBlend(MapNoBlend *noBlend, const QBitArray &bits, const QRegion &rgn);
+    void swapNoBlend(MapNoBlend *noBlend, MapNoBlend *other);
 #endif // ZOMBOID
 
     /**
@@ -397,6 +400,8 @@ signals:
     void bmpAliasesChanged();
     void bmpRulesChanged();
     void bmpBlendsChanged();
+
+    void noBlendPainted(MapNoBlend *noBlend, const QRegion &rgn);
 #endif
 
 private slots:

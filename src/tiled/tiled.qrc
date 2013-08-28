@@ -84,5 +84,7 @@
         <file>images/22x22/roomdef-tool.png</file>
         <file>images/22x22/bmp-to-layers.png</file>
         <file>images/24x24/warning.png</file>
+        <file>images/noblend.png</file>
+        <file>images/22x22/bmp-no-blend.png</file>
     </qresource>
 </RCC>

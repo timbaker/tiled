@@ -19,6 +19,8 @@
 
 #include "bmpblender.h"
 #include "mapmanager.h"
+#include "tilesetmanager.h"
+
 #include "mapobject.h"
 #include "maprenderer.h"
 #include "objectgroup.h"
@@ -92,6 +94,7 @@ CompositeLayerGroup::CompositeLayerGroup(MapComposite *owner, int level)
     , mOwner(owner)
     , mAnyVisibleLayers(false)
     , mNeedsSynch(true)
+    , mNoBlendCell(Tiled::Internal::TilesetManager::instance()->noBlendTile())
 #ifdef BUILDINGED
     , mToolTileLayer(0)
 #endif // BUILDINGED
@@ -129,6 +132,7 @@ void CompositeLayerGroup::addTileLayer(TileLayer *layer, int index)
     mEmptyLayers.insert(index, empty);
 
     mBmpBlendLayers.insert(index, 0);
+    mNoBlends.insert(index, 0);
 #ifdef BUILDINGED
     mBlendLayers.insert(index, 0);
     mForceNonEmpty.insert(index, false);
@@ -142,6 +146,7 @@ void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
     mLayerOpacity.remove(index);
     mEmptyLayers.remove(index);
     mBmpBlendLayers.remove(index);
+    mNoBlends.remove(index);
 #ifdef BUILDINGED
     mBlendLayers.remove(index);
     mForceNonEmpty.remove(index);
@@ -201,6 +206,7 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
             continue;
         TileLayer *tl = mLayers[index];
         TileLayer *tlBmpBlend = mBmpBlendLayers[index];
+        MapNoBlend *noBlend = mNoBlends[index];
 #ifdef BUILDINGED
         TileLayer *tlBlend = mBlendLayers[index];
 #endif // BUILDINGED
@@ -211,8 +217,10 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
             if (!mOwner->parent() && !mOwner->showMapTiles())
                 cell = &emptyCell;
             if (tlBmpBlend && tlBmpBlend->contains(subPos) && !tlBmpBlend->cellAt(subPos).isEmpty())
-                if (mOwner->parent() || mOwner->showBMPTiles())
-                    cell = &tlBmpBlend->cellAt(subPos);
+                if (mOwner->parent() || mOwner->showBMPTiles()) {
+                    if (!noBlend || !noBlend->get(subPos.x(), subPos.y()))
+                        cell = &tlBmpBlend->cellAt(subPos);
+                }
 #ifdef BUILDINGED
             // Use an empty tool tile if given during erasing.
             if ((mToolTileLayer == tl) && !mToolTiles.isEmpty() &&
@@ -242,6 +250,19 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                 else
                     opacities.append(0.25);
 #endif
+                if (mMaxFloorLayer >= index)
+                    mOwner->mKeepFloorLayerCount = cells.size();
+            }
+            if (noBlend && mOwner && tl->name() == mOwner->mNoBlendLayer && noBlend->get(subPos.x(), subPos.y())) {
+                if (!cleared) {
+                    bool isFloor = !mLevel && !index && (tl->name() == sFloor);
+                    if (isFloor) root->mKeepFloorLayerCount = 0;
+                    cells.resize(root->mKeepFloorLayerCount);
+                    opacities.resize(root->mKeepFloorLayerCount);
+                    cleared = true;
+                }
+                cells.append(&mNoBlendCell);
+                opacities.append(0.25);
                 if (mMaxFloorLayer >= index)
                     mOwner->mKeepFloorLayerCount = cells.size();
             }
@@ -312,8 +333,9 @@ bool CompositeLayerGroup::orderedCellsAt2(const QPoint &pos, QVector<const Cell 
             }
 #endif // ROAD_CRUD
             const Cell *cell = &tl->cellAt(subPos);
-            if (tlBmpBlend && tlBmpBlend->contains(subPos) && !tlBmpBlend->cellAt(subPos).isEmpty())
-                cell = &tlBmpBlend->cellAt(subPos);
+            if (!noBlend || !noBlend->get(subPos.x(), subPos.y()))
+                if (tlBmpBlend && tlBmpBlend->contains(subPos) && !tlBmpBlend->cellAt(subPos).isEmpty())
+                    cell = &tlBmpBlend->cellAt(subPos);
             if (!cell->isEmpty()) {
                 if (!cleared) {
                     bool isFloor = !mLevel && !index && (tl->name() == sFloor);
@@ -532,8 +554,11 @@ bool CompositeLayerGroup::setBmpBlendLayers(const QList<TileLayer *> &layers)
     mBmpBlendLayers.fill(0);
     foreach (TileLayer *tl, layers) {
         for (int i = 0; i < mLayers.size(); i++) {
-            if (mLayers[i]->name() == tl->name())
+            if (mLayers[i]->name() == tl->name()) {
                 mBmpBlendLayers[i] = tl;
+                if (mOwner->bmpBlender()->blendLayers().contains(tl->name()))
+                    mNoBlends[i] = mMap->noBlend(tl->name());
+            }
         }
     }
 

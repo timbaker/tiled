@@ -143,6 +143,8 @@ private:
     QVector<SubMapLayers> mVisibleSubMapLayers;
 
     QVector<Tiled::TileLayer*> mBmpBlendLayers;
+    QVector<Tiled::MapNoBlend*> mNoBlends;
+    Tiled::Cell mNoBlendCell;
 #ifdef BUILDINGED
     QVector<Tiled::TileLayer*> mBlendLayers;
     QVector<QVector<Tiled::Cell> > mToolTiles;
@@ -268,6 +270,11 @@ public:
     bool showMapTiles() const
     { return mShowMapTiles; }
 
+    void setNoBlendLayer(const QString &layerName)
+    { mNoBlendLayer = layerName; }
+    QString noBlendLayer() const
+    { return mNoBlendLayer; }
+
 #ifdef BUILDINGED
     void setBlendOverMap(MapComposite *mapComposite)
     { mBlendOverMap = mapComposite; }
@@ -363,6 +370,8 @@ public:
     MapComposite *root();
     MapComposite *rootOrAdjacent();
     int mKeepFloorLayerCount;
+
+    QString mNoBlendLayer;
 };
 
 #endif // MAPCOMPOSITE_H

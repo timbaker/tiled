@@ -525,6 +525,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     toolManager->registerTool(BmpSelectionTool::instance());
     toolManager->registerTool(BmpWandTool::instance());
     toolManager->registerTool(BmpEraserTool::instance());
+    toolManager->registerTool(NoBlendTool::instance());
     toolManager->registerTool(BmpToLayersTool::instance());
     toolManager->addSeparator();
     toolManager->registerTool(WorldLotTool::instance());

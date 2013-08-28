@@ -299,6 +299,8 @@ void MapDocument::resizeMap(const QSize &size, const QPoint &offset)
     mUndoStack->push(new ResizeBmpImage(this, 1, size, offset));
     mUndoStack->push(new ResizeBmpRands(this, 0, size));
     mUndoStack->push(new ResizeBmpRands(this, 1, size));
+    foreach (MapNoBlend *noBlend, mMap->noBlends())
+        mUndoStack->push(new ResizeNoBlend(this, noBlend, size, offset));
     mUndoStack->push(new ResizeMap(this, size, false));
 #else
     mUndoStack->push(new ResizeMap(this, size));
@@ -658,6 +660,31 @@ void MapDocument::setBmpBlends(const QString &fileName,
     mapComposite()->bmpBlender()->recreate();
 
     emit bmpBlendsChanged();
+}
+
+QBitArray MapDocument::paintNoBlend(MapNoBlend *noBlend, const QBitArray &bits, const QRegion &rgn)
+{
+    QBitArray old(bits.size());
+    QRect r = rgn.boundingRect();
+    for (int y = r.top(); y <= r.bottom(); y++) {
+        for (int x = r.x(); x <= r.right(); x++) {
+            int i = (x - r.x()) + (y - r.y()) * r.width();
+            old.setBit(i, noBlend->get(x, y));
+            noBlend->set(x, y, bits.testBit(i));
+        }
+    }
+    emit noBlendPainted(noBlend, rgn);
+    return old;
+}
+
+void MapDocument::swapNoBlend(MapNoBlend *noBlend, MapNoBlend *other)
+{
+    MapNoBlend old(noBlend->layerName(), noBlend->width(), noBlend->height());
+    old.replace(noBlend);
+    noBlend->replace(other);
+    other->replace(&old);
+    // swapNoBlend() gets called when resizing a map
+//    emit noBlendPainted(noBlend, QRect(0, 0, noBlend->width(), noBlend->height()));
 }
 #endif // ZOMBOID
 

@@ -181,6 +181,9 @@ public:
     Tileset *missingTileset() const
     { return mMissingTileset; }
 
+    Tile *noBlendTile() const
+    { return mNoBlendTile; }
+
     void setLayerName(Tile *tile, const QString &name);
     QString layerName(Tile *tile);
 
@@ -228,6 +231,9 @@ private:
 
     Tileset *mMissingTileset;
     Tile *mMissingTile;
+
+    Tileset *mNoBlendTileset;
+    Tile *mNoBlendTile;
 
     QVector<InterruptibleThread*> mImageReaderThreads;
     QVector<TilesetImageReaderWorker*> mImageReaderWorkers;

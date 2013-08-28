@@ -29,6 +29,7 @@ class DnDItem;
 class MapBuildings;
 
 namespace Tiled {
+class MapNoBlend;
 class MapRenderer;
 }
 
@@ -109,6 +110,9 @@ private slots:
     void bmpBlenderLayersRecreated();
     void bmpPainted(int bmpIndex, const QRegion &region);
     void bmpXXXChanged();
+
+    void noBlendPainted(MapNoBlend *noBlend, const QRegion &rgn);
+    void synchNoBlendVisible();
 
     void highlightRoomUnderPointerChanged(bool highlight);
 

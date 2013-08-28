@@ -821,6 +821,47 @@ void ResizeBmpRands::redo()
 
 /////
 
+PaintNoBlend::PaintNoBlend(MapDocument *mapDocument, MapNoBlend *noBlend, const QBitArray &bits, const QRegion &rgn) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands",
+                                             "Paint BMP NoBlend")),
+    mMapDocument(mapDocument),
+    mNoBlend(noBlend),
+    mBits(bits),
+    mRegion(rgn)
+{
+}
+
+void PaintNoBlend::swap()
+{
+    mBits = mMapDocument->paintNoBlend(mNoBlend, mBits, mRegion);
+}
+
+/////
+
+ResizeNoBlend::ResizeNoBlend(MapDocument *mapDocument, MapNoBlend *noBlend,
+                             const QSize &size, const QPoint &offset) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands",
+                                             "Resize BMP NoBlend")),
+    mMapDocument(mapDocument),
+    mOriginal(noBlend),
+    mResized(noBlend->layerName(), size.width(), size.height())
+{
+    for (int y = 0; y < qMin(mOriginal->height(), size.height()); y++) {
+        if (y + offset.y() < 0 || y + offset.y() >= mResized.height()) continue;
+        for (int x = 0; x < qMin(mOriginal->width(), size.width()); x++) {
+            if (x + offset.x() < 0 || x + offset.x() >= mResized.width()) continue;
+            mResized.set(x + offset.x(), y + offset.y(), mOriginal->get(x, y));
+        }
+    }
+}
+
+void ResizeNoBlend::swap()
+{
+    mMapDocument->swapNoBlend(mOriginal, &mResized);
+}
+
+/////
+
 BmpSelectionTool *BmpSelectionTool::mInstance = 0;
 
 BmpSelectionTool *BmpSelectionTool::instance()
@@ -1420,7 +1461,6 @@ QRect BmpRectTool::selectedArea() const
     return r & QRect(QPoint(0, 0), mapDocument()->map()->size());
 }
 
-
 /////
 
 BmpBucketTool *BmpBucketTool::mInstance = 0;
@@ -1535,6 +1575,197 @@ void BmpBucketTool::bmpImageChanged()
     if (scene()) {
         tilePositionChanged(tilePosition());
     }
+}
+
+/////
+
+// Calculate the region of no-blend values that do *not* have a given value.
+static QRegion noBlendRegion(Map *map, MapNoBlend *noBlend,
+                                const QRegion &tileRgn, bool value)
+{
+    QRect mapBounds(QPoint(), map->size());
+
+    QRegion ret;
+    foreach (QRect r, tileRgn.rects()) {
+        r &= mapBounds;
+        for (int y = r.top(); y <= r.bottom(); y++) {
+            for (int x = r.left(); x <= r.right(); x++) {
+                if (noBlend->get(x, y) != value) {
+                    ret += QRect(x, y, 1, 1);
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+NoBlendTool *NoBlendTool::mInstance = 0;
+
+NoBlendTool *NoBlendTool::instance()
+{
+    if (!mInstance)
+        mInstance = new NoBlendTool;
+    return mInstance;
+}
+
+NoBlendTool::NoBlendTool(QObject *parent) :
+    AbstractBmpTool(tr("BMP Stop Blend"),
+                    QIcon(QLatin1String(
+                              ":images/22x22/bmp-no-blend.png")),
+                    QKeySequence(/*tr("R")*/),
+                    parent),
+    mMode(NoMode),
+    mMouseDown(false)
+{
+}
+
+void NoBlendTool::tilePositionChanged(const QPoint &tilePos)
+{
+    Q_UNUSED(tilePos)
+    if (mMode == Painting)
+        brushItem()->setTileRegion(selectedArea());
+    else
+        brushItem()->setTileRegion(QRect(tilePos, QSize(1, 1)));
+}
+
+void NoBlendTool::updateStatusInfo()
+{
+    if (!isBrushVisible() || (mMode == NoMode)) {
+        AbstractBmpTool::updateStatusInfo();
+        return;
+    }
+
+    const QPoint pos = tilePosition();
+    const QRect area = selectedArea();
+    setStatusInfo(tr("%1, %2 - Rectangle: (%3 x %4)")
+                  .arg(pos.x()).arg(pos.y())
+                  .arg(area.width()).arg(area.height()));
+}
+
+void NoBlendTool::mousePressed(QGraphicsSceneMouseEvent *event)
+{
+    const Qt::MouseButton button = event->button();
+    const Qt::KeyboardModifiers modifiers = event->modifiers();
+
+    if (button == Qt::LeftButton) {
+        mMode = Painting;
+        mMouseDown = true;
+        mMouseMoved = false;
+        mStartScenePos = event->scenePos();
+        mStartTilePos = tilePosition();
+        mErasing = (modifiers & Qt::ControlModifier) != 0;
+        brushItem()->setTileRegion(QRegion());
+    }
+
+    if (button == Qt::RightButton) {
+        if (mMode == Painting) {
+            brushItem()->setTileRegion(QRegion());
+            updateStatusInfo();
+            mMode = NoMode;
+        }
+    }
+}
+
+void NoBlendTool::mouseReleased(QGraphicsSceneMouseEvent *event)
+{
+    MapDocument *doc = mapDocument();
+    if (event->button() == Qt::LeftButton) {
+        mMouseDown = false;
+        if (mMode == Painting) {
+            mMode = NoMode;
+
+            const QRect r = selectedArea();
+            if (!r.isEmpty()) {
+                if (doc->mapComposite()->bmpBlender()->blendLayers().contains(currentLayer()->name())) {
+                    MapNoBlend *noBlend = doc->map()->noBlend(currentLayer()->name());
+
+                    QRegion tileRgn(r);
+                    if (BmpBrushTool::instance()->restrictToSelection()) {
+                        QRegion selection = doc->bmpSelection();
+                        if (!selection.isEmpty())
+                            tileRgn &= selection;
+                    }
+
+                    QRegion paintRgn = tileRgn; //noBlendRegion(doc->map(), noBlend, tileRgn, true);
+                    if (!paintRgn.isEmpty()) {
+                        QRect paintRect = paintRgn.boundingRect();
+                        QBitArray bits(paintRect.width() * paintRect.height());
+                        for (int y = r.top(); y <= r.bottom(); y++) {
+                            for (int x = r.left(); x <= r.right(); x++) {
+                                int i = (x - r.left()) + (y - r.top()) * paintRect.width();
+                                bits.setBit(i, !noBlend->get(x, y));
+                            }
+                        }
+                        doc->undoStack()->beginMacro(tr("Paint BMP NoBlend"));
+
+                        PaintNoBlend *cmd = new PaintNoBlend(doc, noBlend,
+                                                             bits, paintRgn);
+//                        cmd->setMergeable(false);
+                        doc->undoStack()->push(cmd);
+
+                        // Erase map tiles in the blend layer
+                        EraseTiles *cmd2 = new EraseTiles(doc, currentLayer()->asTileLayer(), paintRgn);
+                        doc->undoStack()->push(cmd2);
+
+                        doc->undoStack()->endMacro();
+                    }
+                }
+            }
+            brushItem()->setTileRegion(QRegion());
+            updateStatusInfo();
+        }
+    }
+}
+
+void NoBlendTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
+{
+    if (mMouseDown && !mMouseMoved) {
+        const int dragDistance = (mStartScenePos - pos).manhattanLength();
+        if (dragDistance >= QApplication::startDragDistance()) {
+            mMouseMoved = true;
+            tilePositionChanged(tilePosition());
+        }
+    }
+
+    AbstractBmpTool::mouseMoved(pos, modifiers);
+}
+
+void NoBlendTool::modifiersChanged(Qt::KeyboardModifiers)
+{
+    tilePositionChanged(tilePosition());
+}
+
+void NoBlendTool::languageChanged()
+{
+    setName(tr("BMP Rectangle"));
+    setShortcut(QKeySequence(/*tr("R")*/));
+}
+
+QRect NoBlendTool::selectedArea() const
+{
+    if (!mMouseMoved)
+        return QRect();
+    const QPoint tilePos = tilePosition();
+    QRect r(QPoint(qMin(mStartTilePos.x(), tilePos.x()),
+                   qMin(mStartTilePos.y(), tilePos.y())),
+            QPoint(qMax(mStartTilePos.x(), tilePos.x()),
+                   qMax(mStartTilePos.y(), tilePos.y())));
+    if (qApp->keyboardModifiers() & Qt::ShiftModifier) {
+        int side = qMax(r.width(), r.height());
+        if (tilePos.x() < mStartTilePos.x()) {
+            r.setLeft(mStartTilePos.x() - side + 1);
+            r.setRight(mStartTilePos.x());
+        } else {
+            r.setWidth(side);
+        }
+        if (tilePos.y() < mStartTilePos.y()) {
+            r.setTop(mStartTilePos.y() - side + 1);
+            r.setBottom(mStartTilePos.y());
+        } else {
+            r.setHeight(side);
+        }
+    }
+    return r & QRect(QPoint(0, 0), mapDocument()->map()->size());
 }
 
 /////
