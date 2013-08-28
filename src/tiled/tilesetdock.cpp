@@ -842,6 +842,8 @@ TilesetDock::TilesetDock(QWidget *parent):
     connect(mTilesetNamesView, SIGNAL(itemChanged(QListWidgetItem*)),
             SLOT(tilesetItemChanged(QListWidgetItem*)));
 
+    mZoomable->setZoomFactors(QVector<qreal>() << 0.25 << 0.5 << 0.75 << 1.0
+                              << 1.25 << 1.5 << 1.75 << 2.0);
     mZoomable->connectToComboBox(mZoomComboBox);
 
     QHBoxLayout *tilesetToolBarLayout = new QHBoxLayout();
@@ -900,8 +902,6 @@ TilesetDock::TilesetDock(QWidget *parent):
             SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(updateCurrentTiles()));
 
-    mZoomable->setZoomFactors(QVector<qreal>() << 0.25 << 0.5 << 0.75 << 1.0
-                              << 1.25 << 1.5 << 1.75 << 2.0);
     mZoomable->blockSignals(true);
     mZoomable->setScale(Preferences::instance()->tilesetScale());
     mZoomable->blockSignals(false);
