@@ -457,6 +457,8 @@ protected:
 
     void updateStatusInfo();
 
+    bool isBlendLayer();
+
 private:
     Q_DISABLE_COPY(NoBlendTool)
     static NoBlendTool *mInstance;

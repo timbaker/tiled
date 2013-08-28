@@ -1609,7 +1609,7 @@ NoBlendTool *NoBlendTool::instance()
 }
 
 NoBlendTool::NoBlendTool(QObject *parent) :
-    AbstractBmpTool(tr("BMP Stop Blend"),
+    AbstractBmpTool(tr("BMP Prevent Blending"),
                     QIcon(QLatin1String(
                               ":images/22x22/bmp-no-blend.png")),
                     QKeySequence(/*tr("R")*/),
@@ -1624,8 +1624,10 @@ void NoBlendTool::tilePositionChanged(const QPoint &tilePos)
     Q_UNUSED(tilePos)
     if (mMode == Painting)
         brushItem()->setTileRegion(selectedArea());
-    else
+    else if (isBlendLayer())
         brushItem()->setTileRegion(QRect(tilePos, QSize(1, 1)));
+    else
+        brushItem()->setTileRegion(QRegion());
 }
 
 void NoBlendTool::updateStatusInfo()
@@ -1642,12 +1644,23 @@ void NoBlendTool::updateStatusInfo()
                   .arg(area.width()).arg(area.height()));
 }
 
+bool NoBlendTool::isBlendLayer()
+{
+    MapDocument *doc = mapDocument();
+    Layer *layer = currentLayer();
+    if (doc && layer && layer->asTileLayer())
+        return doc->mapComposite()->bmpBlender()->blendLayers().contains(layer->name());
+    return false;
+}
+
 void NoBlendTool::mousePressed(QGraphicsSceneMouseEvent *event)
 {
     const Qt::MouseButton button = event->button();
     const Qt::KeyboardModifiers modifiers = event->modifiers();
 
     if (button == Qt::LeftButton) {
+        if (!isBlendLayer())
+            return;
         mMode = Painting;
         mMouseDown = true;
         mMouseMoved = false;
@@ -1674,9 +1687,9 @@ void NoBlendTool::mouseReleased(QGraphicsSceneMouseEvent *event)
         if (mMode == Painting) {
             mMode = NoMode;
 
-            const QRect r = selectedArea();
-            if (!r.isEmpty()) {
-                if (doc->mapComposite()->bmpBlender()->blendLayers().contains(currentLayer()->name())) {
+            if (isBlendLayer()) {
+                const QRect r = selectedArea();
+                if (!r.isEmpty()) {
                     MapNoBlend *noBlend = doc->map()->noBlend(currentLayer()->name());
 
                     QRegion tileRgn(r);
@@ -1690,9 +1703,9 @@ void NoBlendTool::mouseReleased(QGraphicsSceneMouseEvent *event)
                     if (!paintRgn.isEmpty()) {
                         QRect paintRect = paintRgn.boundingRect();
                         QBitArray bits(paintRect.width() * paintRect.height());
-                        for (int y = r.top(); y <= r.bottom(); y++) {
-                            for (int x = r.left(); x <= r.right(); x++) {
-                                int i = (x - r.left()) + (y - r.top()) * paintRect.width();
+                        for (int y = paintRect.top(); y <= paintRect.bottom(); y++) {
+                            for (int x = paintRect.left(); x <= paintRect.right(); x++) {
+                                int i = (x - paintRect.left()) + (y - paintRect.top()) * paintRect.width();
                                 bits.setBit(i, !noBlend->get(x, y));
                             }
                         }
@@ -1703,9 +1716,22 @@ void NoBlendTool::mouseReleased(QGraphicsSceneMouseEvent *event)
 //                        cmd->setMergeable(false);
                         doc->undoStack()->push(cmd);
 
-                        // Erase map tiles in the blend layer
-                        EraseTiles *cmd2 = new EraseTiles(doc, currentLayer()->asTileLayer(), paintRgn);
-                        doc->undoStack()->push(cmd2);
+                        // Erase known user-drawn blend tiles in the layer.
+                        QRegion eraseRgn;
+                        TileLayer *tl = currentLayer()->asTileLayer();
+                        QSet<Tile*> blendTiles = doc->mapComposite()->bmpBlender()->knownBlendTiles();
+                        foreach (QRect rgnRect, paintRgn.rects()) {
+                            for (int y = rgnRect.top(); y <= rgnRect.bottom(); y++) {
+                                for (int x = rgnRect.left(); x <= rgnRect.right(); x++) {
+                                    if (blendTiles.contains(tl->cellAt(x, y).tile))
+                                        eraseRgn += QRect(x, y, 1, 1);
+                                }
+                            }
+                        }
+                        if (!eraseRgn.isEmpty()) {
+                            EraseTiles *cmd = new EraseTiles(doc, tl, eraseRgn);
+                            doc->undoStack()->push(cmd);
+                        }
 
                         doc->undoStack()->endMacro();
                     }
@@ -1737,7 +1763,7 @@ void NoBlendTool::modifiersChanged(Qt::KeyboardModifiers)
 
 void NoBlendTool::languageChanged()
 {
-    setName(tr("BMP Rectangle"));
+    setName(tr("BMP Prevent Blending"));
     setShortcut(QKeySequence(/*tr("R")*/));
 }
 
