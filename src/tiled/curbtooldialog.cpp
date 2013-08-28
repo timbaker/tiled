@@ -43,6 +43,7 @@ CurbToolDialog::CurbToolDialog(QWidget *parent) :
 
     setWindowFlags(windowFlags() | Qt::Tool);
 
+    readSettings();
     ui->layer->setText(CurbTool::instance().defaultLayer());
     ui->suppressBlend->setChecked(CurbTool::instance().suppressBlendTiles());
 
@@ -71,29 +72,43 @@ CurbToolDialog::~CurbToolDialog()
 
 void CurbToolDialog::setVisible(bool visible)
 {
-    QSettings settings;
-    settings.beginGroup(QLatin1String("CurbToolDialog"));
-    if (visible) {
-        QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
-        if (!geom.isEmpty())
-            restoreGeometry(geom);
-        QString layer = settings.value(QLatin1String("layer")).toString();
-        layerChanged(layer);
-    }
+//    if (visible)
+//        readSettings();
 
     QDialog::setVisible(visible);
 
-    if (!visible) {
-        settings.setValue(QLatin1String("geometry"), saveGeometry());
-        settings.setValue(QLatin1String("layer"), CurbTool::instance().defaultLayer());
-    }
-    settings.endGroup();
+    if (!visible)
+        writeSettings();
 }
 
 void CurbToolDialog::setVisibleLater(bool visible)
 {
     mVisibleLater = visible;
     mVisibleLaterTimer.start();
+}
+
+void CurbToolDialog::readSettings()
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("CurbToolDialog"));
+    QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
+    if (!geom.isEmpty())
+        restoreGeometry(geom);
+    QString layer = settings.value(QLatin1String("layer"), CurbTool::instance().defaultLayer()).toString();
+    bool suppress = settings.value(QLatin1String("suppress"), CurbTool::instance().suppressBlendTiles()).toBool();
+    layerChanged(layer);
+    suppressChanged(suppress);
+    settings.endGroup();
+}
+
+void CurbToolDialog::writeSettings()
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("CurbToolDialog"));
+    settings.setValue(QLatin1String("geometry"), saveGeometry());
+    settings.setValue(QLatin1String("layer"), CurbTool::instance().defaultLayer());
+    settings.value(QLatin1String("suppress"), CurbTool::instance().suppressBlendTiles());
+    settings.endGroup();
 }
 
 void CurbToolDialog::currentRowChanged(int row)

@@ -41,6 +41,9 @@ public:
 
     void setVisibleLater(bool visible);
 
+    void readSettings();
+    void writeSettings();
+
 private slots:
     void currentRowChanged(int row);
     void layerChanged(const QString &layer);
