@@ -31,6 +31,7 @@
 
 #include <qmath.h>
 #include <QApplication>
+#include <QComboBox>
 #include <QDebug>
 #include <QEvent>
 #include <QHeaderView>
@@ -566,6 +567,9 @@ TileLayersPanel::TileLayersPanel(QWidget *parent) :
 {
     mView->zoomable()->setScale(0.25);
 
+    QComboBox *scaleCombo = new QComboBox;
+    mView->zoomable()->connectToComboBox(scaleCombo);
+
     connect(mView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
             SLOT(currentChanged()));
     connect(mView, SIGNAL(activated(QModelIndex)), SLOT(activated(QModelIndex)));
@@ -575,7 +579,9 @@ TileLayersPanel::TileLayersPanel(QWidget *parent) :
 
     QVBoxLayout *layout = new QVBoxLayout;
     layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(1);
     layout->addWidget(mView);
+    layout->addWidget(scaleCombo);
     setLayout(layout);
 
     setVisible(Preferences::instance()->showTileLayersPanel());
