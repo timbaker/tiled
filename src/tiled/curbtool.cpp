@@ -45,9 +45,10 @@ CurbTool::CurbTool(QObject *parent) :
     mInitialClick(false),
     mCurb(0),
     mSuppressBlendTiles(true),
-    mLineItem(new QGraphicsPolygonItem)
+    mCursorItem(new QGraphicsPolygonItem)
 {
-    mLineItem->setPen(QPen(Qt::green, 2));
+    mCursorItem->setPen(QPen(QColor(0,255,0,96), 1));
+    mCursorItem->setBrush(QColor(0,255,0,64));
 
     mValidAdjacent.resize(Curb::ShapeCount);
 
@@ -101,7 +102,7 @@ CurbTool::CurbTool(QObject *parent) :
 void CurbTool::activate(MapScene *scene)
 {
     mInitialClick = false;
-    scene->addItem(mLineItem);
+    scene->addItem(mCursorItem);
     AbstractTileTool::activate(scene);
     CurbToolDialog::instance()->setVisibleLater(true);
 
@@ -116,7 +117,7 @@ void CurbTool::activate(MapScene *scene)
 void CurbTool::deactivate(MapScene *scene)
 {
     CurbToolDialog::instance()->setVisibleLater(false);
-    scene->removeItem(mLineItem);
+    scene->removeItem(mCursorItem);
     AbstractTileTool::deactivate(scene);
 }
 
@@ -133,7 +134,7 @@ void CurbTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
         if (corner == CornerNE || corner == CornerSE) dx = 0.5;
         if (corner == CornerSW || corner == CornerSE) dy = 0.5;
         QPolygonF poly = renderer->tileToPixelCoords(QRectF(tilePos.x() + dx, tilePos.y() + dy, 0.5, 0.5), layer->level());
-        mLineItem->setPolygon(poly);
+        mCursorItem->setPolygon(poly);
     } else {
         qreal dx = 0, dy = 0;
         if (corner == CornerNE || corner == CornerSE) dx = 0.5;
@@ -144,7 +145,7 @@ void CurbTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
         if (mStartCorner == CornerSW || mStartCorner == CornerSE) dy = 0.5;
         QRectF tileRectStart(mStartTilePos.x() + dx, mStartTilePos.y() + dy, 0.5, 0.5);
         QPolygonF poly = renderer->tileToPixelCoords(tileRectEnd | tileRectStart, layer->level());
-        mLineItem->setPolygon(poly);
+        mCursorItem->setPolygon(poly);
     }
 
     AbstractTileTool::mouseMoved(pos, modifiers);
@@ -177,7 +178,7 @@ void CurbTool::mousePressed(QGraphicsSceneMouseEvent *event)
             mStartCorner = corner;
             mInitialClick = true;
         }
-        mLineItem->setPen(QPen(Qt::blue, 2));
+//        mCursorItem->setPen(QPen(Qt::blue, 2));
     }
 
     if (event->button() == Qt::RightButton) {
@@ -191,7 +192,7 @@ void CurbTool::mousePressed(QGraphicsSceneMouseEvent *event)
 void CurbTool::mouseReleased(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
-        mLineItem->setPen(QPen(Qt::green, 2));
+//        mCursorItem->setPen(QPen(Qt::green, 2));
     }
 
 //    AbstractTileTool::mouseReleased(event);

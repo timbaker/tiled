@@ -46,15 +46,16 @@ EdgeTool::EdgeTool(QObject *parent) :
     mEdges(0),
     mDashLen(0),
     mDashGap(0),
-    mLineItem(new QGraphicsPolygonItem)
+    mCursorItem(new QGraphicsPathItem)
 {
-    mLineItem->setPen(QPen(Qt::green, 2));
+    mCursorItem->setPen(QPen(QColor(0,255,0,96), 1));
+    mCursorItem->setBrush(QColor(0,255,0,64));
 }
 
 void EdgeTool::activate(MapScene *scene)
 {
     mInitialClick = false;
-    scene->addItem(mLineItem);
+    scene->addItem(mCursorItem);
     AbstractTileTool::activate(scene);
     EdgeToolDialog::instance()->setVisibleLater(true);
 }
@@ -62,7 +63,7 @@ void EdgeTool::activate(MapScene *scene)
 void EdgeTool::deactivate(MapScene *scene)
 {
     EdgeToolDialog::instance()->setVisibleLater(false);
-    scene->removeItem(mLineItem);
+    scene->removeItem(mCursorItem);
     AbstractTileTool::deactivate(scene);
 }
 
@@ -74,6 +75,7 @@ void EdgeTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
     QPoint tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
     QPointF m(tilePosF.x() - tilePos.x(), tilePosF.y() - tilePos.y());
     qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
+    QPainterPath path;
     if (!mInitialClick) {
         if (dW < dE) {
             mEdge = (dW < dN && dW < dS) ? EdgeW : ((dN < dS) ? EdgeN : EdgeS);
@@ -81,35 +83,42 @@ void EdgeTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
             mEdge = (dE < dN && dE < dS) ? EdgeE : ((dN < dS) ? EdgeN : EdgeS);
         }
 
-        QPolygonF poly = renderer->tileToPixelCoords(QRect(tilePos.x(), tilePos.y(), 1, 1), layer->level());
+        QPolygonF polyN = renderer->tileToPixelCoords(QRectF(tilePos.x(), tilePos.y(), 1, 0.25), layer->level());
+        QPolygonF polyS = renderer->tileToPixelCoords(QRectF(tilePos.x(), tilePos.y() + 0.75, 1, 0.25), layer->level());
+        QPolygonF polyW = renderer->tileToPixelCoords(QRectF(tilePos.x(), tilePos.y(), 0.25, 1), layer->level());
+        QPolygonF polyE = renderer->tileToPixelCoords(QRectF(tilePos.x() + 0.75, tilePos.y(), 0.25, 1), layer->level());
+        polyN += polyN.first(), polyS += polyS.first(), polyW += polyW.first(), polyE += polyE.first();
         if ((mEdge == EdgeN && dW < 0.5) || (mEdge == EdgeW && dN < 0.5))
-            mLineItem->setPolygon(QPolygonF() << poly[3] << poly[0] << poly[1]);
+            path.addPolygon(polyN), path.addPolygon(polyW);
         if ((mEdge == EdgeS && dW < 0.5) || (mEdge == EdgeW && dS < 0.5))
-            mLineItem->setPolygon(QPolygonF() << poly[0] << poly[3] << poly[2]);
+            path.addPolygon(polyS), path.addPolygon(polyW);
         if ((mEdge == EdgeN && dE < 0.5) || (mEdge == EdgeE && dN < 0.5))
-            mLineItem->setPolygon(QPolygonF() << poly[0] << poly[1] << poly[2]);
+            path.addPolygon(polyN), path.addPolygon(polyE);
         if ((mEdge == EdgeS && dE < 0.5) || (mEdge == EdgeE && dS < 0.5))
-            mLineItem->setPolygon(QPolygonF() << poly[1] << poly[2] << poly[3]);
+            path.addPolygon(polyS), path.addPolygon(polyE);
     } else {
         qreal dx = tilePosF.x() - mStartTilePosF.x();
         qreal dy = tilePosF.y() - mStartTilePosF.y();
         m = mStartTilePosF - mStartTilePos;
         if (qAbs(dx) > qAbs(dy)) {
-            QPolygonF poly = renderer->tileToPixelCoords(QRect(mStartTilePos, QSize(1,1))
-                                                     | QRect(tilePos.x(), mStartTilePos.y(), 1, 1), layer->level());
-            if (m.y() < 0.5)
-                mLineItem->setPolygon(QPolygonF() << poly[0] << poly[1]); // north
-            else
-                mLineItem->setPolygon(QPolygonF() << poly[3] << poly[2]); // south
+            qreal dy = 0;
+            if (m.y() >= 0.5) dy = 0.75;
+            QRectF r = QRectF(mStartTilePos.x(), mStartTilePos.y() + dy, 1, 0.25)
+                    | QRectF(tilePos.x(), mStartTilePos.y() + dy, 1, 0.25);
+            QPolygonF poly = renderer->tileToPixelCoords(r, layer->level());
+            path.addPolygon(poly);
         } else {
-            QPolygonF poly = renderer->tileToPixelCoords(QRect(mStartTilePos, QSize(1,1))
-                                                     | QRect(mStartTilePos.x(), tilePos.y(), 1, 1), layer->level());
-            if (m.x() < 0.5)
-                mLineItem->setPolygon(QPolygonF() << poly[0] << poly[3]); // west
-            else
-                mLineItem->setPolygon(QPolygonF() << poly[1] << poly[2]); // east
+            qreal dx = 0;
+            if (m.x() >= 0.5) dx = 0.75;
+            QRectF r = QRectF(mStartTilePos.x() + dx, mStartTilePos.y(), 0.25, 1)
+                    | QRectF(mStartTilePos.x() + dx, tilePos.y(), 0.25, 1);
+            QPolygonF poly = renderer->tileToPixelCoords(r, layer->level());
+            path.addPolygon(poly);
         }
     }
+    path.setFillRule(Qt::WindingFill);
+    path = path.simplified();
+    mCursorItem->setPath(path);
 
     AbstractTileTool::mouseMoved(pos, modifiers);
 }
@@ -349,7 +358,10 @@ void EdgeTool::drawEdgeTile(int x, int y, Edge edge)
             tile = seOuter;
     }
 
-    if (tile == (Tile*) -1) tile = 0;
+    if (tile == (Tile*) -1) {
+        drawGapTile(x, y);
+        return;
+    }
 
     // FIXME: one undo command for the whole edge
     TileLayer stamp(QString(), 0, 0, 1, 1);

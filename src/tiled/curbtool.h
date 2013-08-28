@@ -165,7 +165,7 @@ private:
     Curb *mCurb;
     QString mDefaultLayer;
     bool mSuppressBlendTiles;
-    QGraphicsPolygonItem *mLineItem;
+    QGraphicsPolygonItem *mCursorItem;
 };
 
 } // namespace Internal

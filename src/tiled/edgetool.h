@@ -23,7 +23,7 @@
 #include "BuildingEditor/singleton.h"
 
 #include <QCoreApplication>
-#include <QGraphicsPolygonItem>
+#include <QGraphicsPathItem>
 
 namespace Tiled {
 class Tile;
@@ -120,7 +120,7 @@ private:
     Edges *mEdges;
     int mDashLen;
     int mDashGap;
-    QGraphicsPolygonItem *mLineItem;
+    QGraphicsPathItem *mCursorItem;
 };
 
 } // namespace Internal
