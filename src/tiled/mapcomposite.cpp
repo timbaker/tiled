@@ -333,8 +333,8 @@ bool CompositeLayerGroup::orderedCellsAt2(const QPoint &pos, QVector<const Cell 
             }
 #endif // ROAD_CRUD
             const Cell *cell = &tl->cellAt(subPos);
-            if (!noBlend || !noBlend->get(subPos.x(), subPos.y()))
-                if (tlBmpBlend && tlBmpBlend->contains(subPos) && !tlBmpBlend->cellAt(subPos).isEmpty())
+            if (tlBmpBlend && tlBmpBlend->contains(subPos) && !tlBmpBlend->cellAt(subPos).isEmpty())
+                if (!noBlend || !noBlend->get(subPos.x(), subPos.y()))
                     cell = &tlBmpBlend->cellAt(subPos);
             if (!cell->isEmpty()) {
                 if (!cleared) {

@@ -34,7 +34,9 @@
 #include "layer.h"
 #include "object.h"
 
+#ifdef ZOMBOID
 #include <QBitArray>
+#endif
 #include <QList>
 #include <QMargins>
 #include <QSize>

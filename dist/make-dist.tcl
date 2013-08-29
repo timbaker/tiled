@@ -110,6 +110,8 @@ Plugins = plugins
 Translations = translations
 }
 
+copyFile $SRC $DEST Curbs.txt
+copyFile $SRC $DEST Edges.txt
 copyFile $SRC $DEST TileProperties.txt
 copyFile $SRC $DEST Tilesets.txt
 
