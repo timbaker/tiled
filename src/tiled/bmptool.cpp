@@ -1711,28 +1711,53 @@ void NoBlendTool::mouseReleased(QGraphicsSceneMouseEvent *event)
                         }
                         doc->undoStack()->beginMacro(tr("Paint BMP NoBlend"));
 
-                        PaintNoBlend *cmd = new PaintNoBlend(doc, noBlend,
-                                                             bits, paintRgn);
-//                        cmd->setMergeable(false);
-                        doc->undoStack()->push(cmd);
-
-                        // Erase known user-drawn blend tiles in the layer.
-                        QRegion eraseRgn;
-                        TileLayer *tl = currentLayer()->asTileLayer();
                         QSet<Tile*> blendTiles = doc->mapComposite()->bmpBlender()->knownBlendTiles();
-                        foreach (QRect rgnRect, paintRgn.rects()) {
-                            for (int y = rgnRect.top(); y <= rgnRect.bottom(); y++) {
-                                for (int x = rgnRect.left(); x <= rgnRect.right(); x++) {
-                                    if (blendTiles.contains(tl->cellAt(x, y).tile))
-                                        eraseRgn += QRect(x, y, 1, 1);
+                        // Shift key affects all blend layers.
+                        if (event->modifiers() & Qt::ShiftModifier) {
+                            foreach (QString layerName, doc->mapComposite()->bmpBlender()->blendLayers()) {
+                                PaintNoBlend *cmd = new PaintNoBlend(doc, doc->map()->noBlend(layerName),
+                                                                     bits, paintRgn);
+                                doc->undoStack()->push(cmd);
+
+                                int layerIndex = doc->map()->indexOfLayer(layerName, Layer::TileLayerType);
+                                if (layerIndex >= 0) {
+                                    QRegion eraseRgn;
+                                    TileLayer *tl = doc->map()->layerAt(layerIndex)->asTileLayer();
+                                    foreach (QRect rgnRect, paintRgn.rects()) {
+                                        for (int y = rgnRect.top(); y <= rgnRect.bottom(); y++) {
+                                            for (int x = rgnRect.left(); x <= rgnRect.right(); x++) {
+                                                if (blendTiles.contains(tl->cellAt(x, y).tile))
+                                                    eraseRgn += QRect(x, y, 1, 1);
+                                            }
+                                        }
+                                    }
+                                    if (!eraseRgn.isEmpty()) {
+                                        EraseTiles *cmd = new EraseTiles(doc, tl, eraseRgn);
+                                        doc->undoStack()->push(cmd);
+                                    }
                                 }
                             }
-                        }
-                        if (!eraseRgn.isEmpty()) {
-                            EraseTiles *cmd = new EraseTiles(doc, tl, eraseRgn);
+                        } else {
+                            PaintNoBlend *cmd = new PaintNoBlend(doc, noBlend,
+                                                                 bits, paintRgn);
                             doc->undoStack()->push(cmd);
-                        }
 
+                            // Erase known user-drawn blend tiles in the layer.
+                            QRegion eraseRgn;
+                            TileLayer *tl = currentLayer()->asTileLayer();
+                            foreach (QRect rgnRect, paintRgn.rects()) {
+                                for (int y = rgnRect.top(); y <= rgnRect.bottom(); y++) {
+                                    for (int x = rgnRect.left(); x <= rgnRect.right(); x++) {
+                                        if (blendTiles.contains(tl->cellAt(x, y).tile))
+                                            eraseRgn += QRect(x, y, 1, 1);
+                                    }
+                                }
+                            }
+                            if (!eraseRgn.isEmpty()) {
+                                EraseTiles *cmd = new EraseTiles(doc, tl, eraseRgn);
+                                doc->undoStack()->push(cmd);
+                            }
+                        }
                         doc->undoStack()->endMacro();
                     }
                 }
@@ -1776,6 +1801,7 @@ QRect NoBlendTool::selectedArea() const
                    qMin(mStartTilePos.y(), tilePos.y())),
             QPoint(qMax(mStartTilePos.x(), tilePos.x()),
                    qMax(mStartTilePos.y(), tilePos.y())));
+#if 0
     if (qApp->keyboardModifiers() & Qt::ShiftModifier) {
         int side = qMax(r.width(), r.height());
         if (tilePos.x() < mStartTilePos.x()) {
@@ -1791,6 +1817,7 @@ QRect NoBlendTool::selectedArea() const
             r.setHeight(side);
         }
     }
+#endif
     return r & QRect(QPoint(0, 0), mapDocument()->map()->size());
 }
 
