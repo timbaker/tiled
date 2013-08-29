@@ -189,6 +189,7 @@ public:
         BmpAliasesChanged,
         BmpRulesChanged,
         BmpBlendsChanged,
+        NoBlendPainted,
         Recreate
     };
 
@@ -234,6 +235,7 @@ public:
     QList<BmpAlias*> mBmpAliases;
     QList<BmpRule*> mBmpRules;
     QList<BmpBlend*> mBmpBlends;
+    QList<MapNoBlend> mNoBlends;
     QRegion mRegion;
 };
 
@@ -426,6 +428,8 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
                                                               c.mMapSize.height());
             sm.mMapComposite->map()->rbmp(1).rrands().setSize(c.mMapSize.width(),
                                                               c.mMapSize.height());
+            foreach (MapNoBlend noBlend, c.mNoBlends)
+                sm.mMapComposite->map()->noBlend(noBlend.layerName())->replace(&noBlend);
             sm.mMapComposite->bmpBlender()->recreate();
             sm.mMapComposite->layerGroupForLevel(0)->setNeedsSynch(true);
             break;
@@ -454,6 +458,10 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
             sm.mMapComposite->bmpBlender()->fromMap();
             sm.mMapComposite->bmpBlender()->recreate();
             redrawAll = true;
+            break;
+        }
+        case MapChange::NoBlendPainted: {
+            sm.mMapComposite->map()->noBlend(c.mNoBlends[0].layerName())->replace(&c.mNoBlends[0], c.mRegion);
             break;
         }
         case MapChange::Recreate:
@@ -567,7 +575,8 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
             }
             break;
         }
-        case MapChange::BmpPainted: {
+        case MapChange::BmpPainted:
+        case MapChange::NoBlendPainted: {
             if (redrawAll) break;
             dirty = mRenderer->boundingRect(c.mRegion.boundingRect());
             QMargins margins = sm.mMapComposite->map()->drawMargins();
@@ -679,6 +688,9 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
             SLOT(bmpRulesChanged()));
     connect(mScene->mapDocument(), SIGNAL(bmpBlendsChanged()),
             SLOT(bmpBlendsChanged()));
+
+    connect(mScene->mapDocument(), SIGNAL(noBlendPainted(MapNoBlend*,QRegion)),
+            SLOT(noBlendPainted(MapNoBlend*,QRegion)));
 
     QMap<MapObject*,MapComposite*>::const_iterator it;
     const QMap<MapObject*,MapComposite*> &map = mScene->lotManager().objectToLot();
@@ -904,6 +916,8 @@ void MiniMapItem::mapChanged()
     c->mMapSize = mMapComposite->map()->size();
     c->mBmps[0] = mMapComposite->map()->bmp(0).image();
     c->mBmps[1] = mMapComposite->map()->bmp(1).image();
+    foreach (MapNoBlend *noBlend, mMapComposite->map()->noBlends())
+        c->mNoBlends += *noBlend;
     queueChange(c);
 }
 
@@ -966,6 +980,15 @@ void MiniMapItem::bmpBlendsChanged()
 {
     MapChange *c = new MapChange(MapChange::BmpBlendsChanged);
     c->mBmpBlends = mMapComposite->map()->bmpSettings()->blendsCopy();
+    queueChange(c);
+}
+
+void MiniMapItem::noBlendPainted(MiniMapItem::MapNoBlend *noBlend, const QRegion &region)
+{
+    MapChange *c = new MapChange(MapChange::NoBlendPainted);
+    MapNoBlend nb = noBlend->copy(region);
+    c->mNoBlends += nb;
+    c->mRegion = region;
     queueChange(c);
 }
 

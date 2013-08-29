@@ -30,6 +30,7 @@ class WorldCellLot;
 namespace Tiled {
 class Layer;
 class Map;
+class MapNoBlend;
 class MapObject;
 class MapRenderer;
 class Tileset;
@@ -152,6 +153,7 @@ private:
     void lotUpdated(MapComposite *lot, quintptr id);
 
     typedef Tiled::Layer Layer; // hack for signals/slots
+    typedef Tiled::MapNoBlend MapNoBlend; // hack for signals/slots
     typedef Tiled::Tileset Tileset; // hack for signals/slots
 
 private slots:
@@ -182,6 +184,8 @@ private slots:
     void bmpAliasesChanged();
     void bmpRulesChanged();
     void bmpBlendsChanged();
+
+    void noBlendPainted(MapNoBlend *noBlend, const QRegion &region);
 
     void painted(QImage image, QRectF sceneRect);
     void imageResized(QSize sz);
