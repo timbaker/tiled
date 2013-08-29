@@ -574,7 +574,8 @@ void CurbTool::drawEdgeTile(int x, int y, Edge edge, bool half, bool far)
 
         MapNoBlend *noBlend = mapDocument()->map()->noBlend(layerName);
         if (noBlend->get(x, y) == false) {
-            QBitArray bits(1, true);
+            MapNoBlend bits(QString(), 1, 1);
+            bits.set(0, 0, true);
             PaintNoBlend *cmd = new PaintNoBlend(mapDocument(), noBlend, bits, QRect(x, y, 1, 1));
             mapDocument()->undoStack()->push(cmd);
         }

@@ -226,13 +226,15 @@ public:
     void paintBmp(int bmpIndex, int px, int py, const QImage &source,
                   const QRegion &paintRgn);
     QImage swapBmpImage(int bmpIndex, const QImage &image);
+    void emitBmpPainted(int bmpIndex, const QRegion &rgn)
+    { emit bmpPainted(bmpIndex, rgn); }
     MapRands swapBmpRands(int bmpIndex, const MapRands &rands);
 
     void setBmpAliases(const QList<BmpAlias*> &aliases);
     void setBmpRules(const QString &fileName, const QList<BmpRule*> &rules);
     void setBmpBlends(const QString &fileName, const QList<BmpBlend*> &blends);
 
-    QBitArray paintNoBlend(MapNoBlend *noBlend, const QBitArray &bits, const QRegion &rgn);
+    MapNoBlend paintNoBlend(MapNoBlend *noBlend, const MapNoBlend &other, const QRegion &rgn);
     void swapNoBlend(MapNoBlend *noBlend, MapNoBlend *other);
 #endif // ZOMBOID
 

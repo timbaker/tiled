@@ -773,6 +773,36 @@ void ChangeBmpSelection::swap()
 
 /////
 
+OffsetBmpImage::OffsetBmpImage(MapDocument *mapDocument, int bmpIndex,
+                               const QPoint &offset, const QRect &bounds,
+                               int wrapX, int wrapY) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands",
+                                             "Offset BMP Image")),
+    mMapDocument(mapDocument),
+    mBmpIndex(bmpIndex),
+    mBounds(bounds)
+{
+    ResizableImage offsetImg = ResizableImage(mMapDocument->map()->bmp(mBmpIndex).image());
+    offsetImg.offset(offset, bounds, wrapX, wrapY);
+    mNew = offsetImg;
+}
+
+void OffsetBmpImage::undo()
+{
+    mNew = mMapDocument->swapBmpImage(mBmpIndex, mOriginal);
+    mMapDocument->mapComposite()->bmpBlender()->markDirty(mBounds);
+    mMapDocument->emitBmpPainted(mBmpIndex, mBounds);
+}
+
+void OffsetBmpImage::redo()
+{
+    mOriginal = mMapDocument->swapBmpImage(mBmpIndex, mNew);
+    mMapDocument->mapComposite()->bmpBlender()->markDirty(mBounds);
+    mMapDocument->emitBmpPainted(mBmpIndex, mBounds);
+}
+
+/////
+
 ResizeBmpImage::ResizeBmpImage(MapDocument *mapDocument, int bmpIndex, const QSize &size,
                      const QPoint &offset) :
     QUndoCommand(QCoreApplication::translate("Undo Commands",
@@ -821,19 +851,76 @@ void ResizeBmpRands::redo()
 
 /////
 
-PaintNoBlend::PaintNoBlend(MapDocument *mapDocument, MapNoBlend *noBlend, const QBitArray &bits, const QRegion &rgn) :
+PaintNoBlend::PaintNoBlend(MapDocument *mapDocument, MapNoBlend *noBlend,
+                           const MapNoBlend &other, const QRegion &rgn) :
     QUndoCommand(QCoreApplication::translate("Undo Commands",
                                              "Paint BMP NoBlend")),
     mMapDocument(mapDocument),
     mNoBlend(noBlend),
-    mBits(bits),
+    mNew(other),
     mRegion(rgn)
 {
 }
 
 void PaintNoBlend::swap()
 {
-    mBits = mMapDocument->paintNoBlend(mNoBlend, mBits, mRegion);
+    mNew = mMapDocument->paintNoBlend(mNoBlend, mNew, mRegion);
+}
+
+/////
+
+OffsetNoBlend::OffsetNoBlend(MapDocument *mapDocument, MapNoBlend *noBlend,
+                             const QPoint &offset, const QRect &bounds,
+                             int wrapX, int wrapY) :
+    QUndoCommand(QCoreApplication::translate("Undo Commands",
+                                             "Offset BMP NoBlend")),
+    mMapDocument(mapDocument),
+    mOriginal(noBlend),
+    mOffset(noBlend->layerName(), noBlend->width(), noBlend->height())
+{
+    QRect layerBounds(0, 0, mOriginal->width(), mOriginal->height());
+
+    // Based on TileLayer::offset()
+    for (int y = 0; y < mOriginal->height(); ++y) {
+        for (int x = 0; x < mOriginal->width(); ++x) {
+            // Skip out of bounds tiles
+            if (!bounds.contains(x, y)) {
+                mOffset.set(x, y, mOriginal->get(x, y));
+                continue;
+            }
+
+            // Get position to pull tile value from
+            int oldX = x - offset.x();
+            int oldY = y - offset.y();
+
+            // Wrap x value that will be pulled from
+            if (wrapX && bounds.width() > 0) {
+                while (oldX < bounds.left())
+                    oldX += bounds.width();
+                while (oldX > bounds.right())
+                    oldX -= bounds.width();
+            }
+
+            // Wrap y value that will be pulled from
+            if (wrapY && bounds.height() > 0) {
+                while (oldY < bounds.top())
+                    oldY += bounds.height();
+                while (oldY > bounds.bottom())
+                    oldY -= bounds.height();
+            }
+
+            // Set the new tile
+            if (layerBounds.contains(oldX, oldY) && bounds.contains(oldX, oldY))
+                mOffset.set(x, y, mOriginal->get(oldX, oldY));
+//            else
+//                mOffset.set(x, y, false);
+        }
+    }
+}
+
+void OffsetNoBlend::swap()
+{
+    mMapDocument->swapNoBlend(mOriginal, &mOffset);
 }
 
 /////
@@ -1702,11 +1789,12 @@ void NoBlendTool::mouseReleased(QGraphicsSceneMouseEvent *event)
                     QRegion paintRgn = tileRgn; //noBlendRegion(doc->map(), noBlend, tileRgn, true);
                     if (!paintRgn.isEmpty()) {
                         QRect paintRect = paintRgn.boundingRect();
-                        QBitArray bits(paintRect.width() * paintRect.height());
-                        for (int y = paintRect.top(); y <= paintRect.bottom(); y++) {
-                            for (int x = paintRect.left(); x <= paintRect.right(); x++) {
-                                int i = (x - paintRect.left()) + (y - paintRect.top()) * paintRect.width();
-                                bits.setBit(i, !noBlend->get(x, y));
+                        MapNoBlend bits = noBlend->copy(paintRgn);
+                        foreach (QRect r, paintRgn.rects()) {
+                            for (int y = r.top(); y <= r.bottom(); y++) {
+                                for (int x = r.left(); x <= r.right(); x++) {
+                                    bits.set(x - paintRect.x(), y - paintRect.y(), !noBlend->get(x, y));
+                                }
                             }
                         }
                         doc->undoStack()->beginMacro(tr("Paint BMP NoBlend"));

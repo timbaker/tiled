@@ -334,6 +334,27 @@ void MapDocument::offsetMap(const QList<int> &layerIndexes,
             mUndoStack->push(new OffsetLayer(this, layerIndex, offset,
                                              bounds, wrapX, wrapY));
         }
+
+#ifdef ZOMBOID
+        // Offset the BMP images and MapNoBlends only if every rule+blend layer
+        // is being offset.
+        // Don't offset the MapRands.
+        bool allBMPLayers = true;
+        foreach (QString layerName, mapComposite()->bmpBlender()->tileLayerNames()) {
+            int layerIndex = map()->indexOfLayer(layerName, Layer::TileLayerType);
+            if (layerIndex >= 0 && !layerIndexes.contains(layerIndex)) {
+                allBMPLayers = false;
+                break;
+            }
+        }
+        if (allBMPLayers) {
+            mUndoStack->push(new OffsetBmpImage(this, 0, offset, bounds, wrapX, wrapY));
+            mUndoStack->push(new OffsetBmpImage(this, 1, offset, bounds, wrapX, wrapY));
+            foreach (MapNoBlend *noBlend, map()->noBlends())
+                mUndoStack->push(new OffsetNoBlend(this, noBlend, offset, bounds, wrapX, wrapY));
+        }
+#endif
+
         mUndoStack->endMacro();
     }
 }
@@ -662,17 +683,10 @@ void MapDocument::setBmpBlends(const QString &fileName,
     emit bmpBlendsChanged();
 }
 
-QBitArray MapDocument::paintNoBlend(MapNoBlend *noBlend, const QBitArray &bits, const QRegion &rgn)
+MapNoBlend MapDocument::paintNoBlend(MapNoBlend *noBlend, const MapNoBlend &other, const QRegion &rgn)
 {
-    QBitArray old(bits.size());
-    QRect r = rgn.boundingRect();
-    for (int y = r.top(); y <= r.bottom(); y++) {
-        for (int x = r.x(); x <= r.right(); x++) {
-            int i = (x - r.x()) + (y - r.y()) * r.width();
-            old.setBit(i, noBlend->get(x, y));
-            noBlend->set(x, y, bits.testBit(i));
-        }
-    }
+    MapNoBlend old = noBlend->copy(rgn);
+    noBlend->replace(&other, rgn);
     emit noBlendPainted(noBlend, rgn);
     return old;
 }

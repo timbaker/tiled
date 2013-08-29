@@ -537,6 +537,52 @@ public:
             }
         }
     }
+
+    // This is like TileLayer::offset()
+    void offset(const QPoint &offset, const QRect &bounds, int wrapX, int wrapY)
+    {
+        QImage newImage(size(), format());
+        const QRgb black = qRgb(0, 0, 0);
+        QRect imgBounds(QPoint(), size());
+
+        for (int y = 0; y < height(); ++y) {
+            for (int x = 0; x < width(); ++x) {
+                // Skip out of bounds tiles
+                if (!bounds.contains(x, y)) {
+                    newImage.setPixel(x, y, pixel(x, y));
+                    continue;
+                }
+
+                // Get position to pull tile value from
+                int oldX = x - offset.x();
+                int oldY = y - offset.y();
+
+                // Wrap x value that will be pulled from
+                if (wrapX && bounds.width() > 0) {
+                    while (oldX < bounds.left())
+                        oldX += bounds.width();
+                    while (oldX > bounds.right())
+                        oldX -= bounds.width();
+                }
+
+                // Wrap y value that will be pulled from
+                if (wrapY && bounds.height() > 0) {
+                    while (oldY < bounds.top())
+                        oldY += bounds.height();
+                    while (oldY > bounds.bottom())
+                        oldY -= bounds.height();
+                }
+
+                // Set the new tile
+                if (imgBounds.contains(oldX, oldY) && bounds.contains(oldX, oldY))
+                    newImage.setPixel(x, y, pixel(oldX, oldY));
+                else
+                    newImage.setPixel(x, y, black);
+            }
+        }
+
+        *this = newImage;
+    }
 };
 
 // This is based on PaintTileLayer.
@@ -585,6 +631,23 @@ private:
     QRegion mSelection;
 };
 
+class OffsetBmpImage : public QUndoCommand
+{
+public:
+    OffsetBmpImage(MapDocument *mapDocument, int bmpIndex, const QPoint &offset,
+                   const QRect &bounds, int wrapX, int wrapY);
+
+    void undo();
+    void redo();
+
+private:
+    MapDocument *mMapDocument;
+    int mBmpIndex;
+    QRect mBounds;
+    QImage mOriginal;
+    QImage mNew;
+};
+
 class ResizeBmpImage : public QUndoCommand
 {
 public:
@@ -620,7 +683,7 @@ class PaintNoBlend : public QUndoCommand
 {
 public:
     PaintNoBlend(MapDocument *mapDocument, MapNoBlend *noBlend,
-                 const QBitArray &bits, const QRegion &rgn);
+                 const MapNoBlend &other, const QRegion &rgn);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -630,8 +693,26 @@ private:
 
     MapDocument *mMapDocument;
     MapNoBlend *mNoBlend;
-    QBitArray mBits;
+    MapNoBlend mNew;
     QRegion mRegion;
+};
+
+class OffsetNoBlend : public QUndoCommand
+{
+public:
+    OffsetNoBlend(MapDocument *mapDocument, MapNoBlend *noBlend,
+                  const QPoint &offset, const QRect &bounds,
+                  int wrapX, int wrapY);
+
+    void undo() { swap(); }
+    void redo() { swap(); }
+
+private:
+    void swap();
+
+    MapDocument *mMapDocument;
+    MapNoBlend *mOriginal;
+    MapNoBlend mOffset;
 };
 
 class ResizeNoBlend : public QUndoCommand
