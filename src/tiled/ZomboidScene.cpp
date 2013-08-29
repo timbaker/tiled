@@ -708,6 +708,7 @@ void ZomboidScene::bmpXXXChanged()
 
 void ZomboidScene::noBlendPainted(MapNoBlend *noBlend, const QRegion &rgn)
 {
+    Q_UNUSED(noBlend)
     bmpPainted(0, rgn);
 }
 

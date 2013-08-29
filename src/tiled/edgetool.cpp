@@ -200,6 +200,7 @@ void EdgeTool::setDash(int len, int gap)
 
 void EdgeTool::tilePositionChanged(const QPoint &tilePos)
 {
+    Q_UNUSED(tilePos)
 }
 
 QVector<Tile *> EdgeTool::resolveEdgeTiles(Edges *edges)
@@ -449,7 +450,7 @@ bool EdgeFile::read(const QString &fileName)
 
     mFileName = path;
 
-    int version = simple.version();
+//    int version = simple.version();
 
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("edges")) {

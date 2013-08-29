@@ -88,6 +88,7 @@ void LinkItem::paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *)
 
 void LinkItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
+    Q_UNUSED(event)
     emit clicked();
 }
 
@@ -231,10 +232,12 @@ WelcomeMode::WelcomeMode(QObject *parent) :
 
 void WelcomeMode::readSettings(QSettings &settings)
 {
+    Q_UNUSED(settings)
 }
 
 void WelcomeMode::writeSettings(QSettings &settings)
 {
+    Q_UNUSED(settings)
 }
 
 void WelcomeMode::onActivated(const QModelIndex &index)

@@ -90,6 +90,7 @@ CurbTool::CurbTool(QObject *parent) :
     mValidAdjacent[Curb::NearSJoinE].w << Curb::NearS << Curb::NearJoinSE << Curb::FarEJoinS;
     mValidAdjacent[Curb::NearSJoinE].s << Curb::FarE << Curb::FarEJoinS << Curb::FarSE;
 
+#ifndef QT_NO_DEBUG
     for (int i = 0; i < mValidAdjacent.size(); i++) {
         Curb::Shapes sh = static_cast<Curb::Shapes>(i);
         foreach (Curb::Shapes w, mValidAdjacent[i].w) Q_ASSERT(mValidAdjacent[w].e.contains(sh));
@@ -97,6 +98,7 @@ CurbTool::CurbTool(QObject *parent) :
         foreach (Curb::Shapes e, mValidAdjacent[i].e) Q_ASSERT(mValidAdjacent[e].w.contains(sh));
         foreach (Curb::Shapes s, mValidAdjacent[i].s) Q_ASSERT(mValidAdjacent[s].n.contains(sh));
     }
+#endif
 }
 
 void CurbTool::activate(MapScene *scene)
@@ -204,6 +206,7 @@ void CurbTool::setCurb(Curb *curb)
 
 void CurbTool::tilePositionChanged(const QPoint &tilePos)
 {
+    Q_UNUSED(tilePos)
 }
 
 QVector<Tile *> CurbTool::resolveTiles(Curb *curb)
@@ -236,7 +239,7 @@ void CurbTool::toCorner(const QPointF &scenePos, QPointF &tilePosF, Corner &corn
     tilePosF = renderer->pixelToTileCoords(scenePos, layer->level());
     QPoint tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
     QPointF m(tilePosF.x() - tilePos.x(), tilePosF.y() - tilePos.y());
-    qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
+    qreal dW = m.x(), dN = m.y()/*, dE = 1.0 - dW, dS = 1.0 - dN*/;
     if (dW < 0.5 && dN < 0.5) {
         corner = CornerNW;
         return;
@@ -252,6 +255,7 @@ void CurbTool::toCorner(const QPointF &scenePos, QPointF &tilePosF, Corner &corn
     corner = CornerNE;
 }
 
+#if 0
 // Get a CurbSpot for each recognized tile in an area
 QVector<CurbTool::CurbSpot> CurbTool::mapToSpots(int x, int y, int w, int h)
 {
@@ -342,9 +346,10 @@ CurbTool::CurbSpot CurbTool::toCurbSpot(Tile *tile, QVector<Tile *> tiles)
     return ret;
 }
 
-void Tiled::Internal::CurbTool::spotToTile(int x, int y, Tiled::Internal::CurbTool::CurbSpot &spot)
+void CurbTool::spotToTile(int x, int y, Tiled::Internal::CurbTool::CurbSpot &spot)
 {
 }
+#endif
 
 void CurbTool::drawEdge(const QPointF &start, Corner cornerStart,
                         const QPointF &end, Corner cornerEnd,
@@ -615,7 +620,7 @@ bool CurbFile::read(const QString &fileName)
 
     mFileName = path;
 
-    int version = simple.version();
+//    int version = simple.version();
 
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("curb")) {

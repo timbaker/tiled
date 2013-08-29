@@ -782,6 +782,8 @@ void TileLayersPanel::regionAltered(const QRegion &region, Layer *layer)
 
 void TileLayersPanel::noBlendPainted(MapNoBlend *noBlend, const QRegion &rgn)
 {
+    Q_UNUSED(noBlend)
+    Q_UNUSED(rgn)
     if (mDocument->currentLevel() == 0)
         setList();
 }
