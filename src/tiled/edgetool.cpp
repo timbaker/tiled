@@ -17,9 +17,14 @@
 
 #include "edgetool.h"
 
+#include "bmpblender.h"
+#include "bmptool.h"
 #include "edgetooldialog.h"
+#include "erasetiles.h"
+#include "mapcomposite.h"
 #include "mapdocument.h"
 #include "mapscene.h"
+#include "painttilelayer.h"
 
 #include "BuildingEditor/buildingtiles.h"
 
@@ -46,6 +51,7 @@ EdgeTool::EdgeTool(QObject *parent) :
     mEdges(0),
     mDashLen(0),
     mDashGap(0),
+    mSuppressBlendTiles(false),
     mCursorItem(new QGraphicsPathItem)
 {
     mCursorItem->setPen(QPen(QColor(0,255,0,96), 1));
@@ -123,7 +129,7 @@ void EdgeTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
     AbstractTileTool::mouseMoved(pos, modifiers);
 }
 
-void Tiled::Internal::EdgeTool::mousePressed(QGraphicsSceneMouseEvent *event)
+void EdgeTool::mousePressed(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
         const MapRenderer *renderer = mapDocument()->renderer();
@@ -198,13 +204,13 @@ void EdgeTool::tilePositionChanged(const QPoint &tilePos)
 
 QVector<Tile *> EdgeTool::resolveEdgeTiles(Edges *edges)
 {
-    QVector<Tile *> ret(Edges::EdgeCount);
+    QVector<Tile *> ret(Edges::ShapeCount);
     Map *map = mapDocument()->map();
     QMap<QString,Tileset*> tilesets;
     foreach (Tileset *ts, map->tilesets())
         tilesets[ts->name()] = ts;
 
-    for (int i = 0; i < Edges::EdgeCount; i++) {
+    for (int i = 0; i < Edges::ShapeCount; i++) {
         ret[i] = (Tile*) -1;
         if (edges->mTileNames[i].isEmpty())
             continue;
@@ -272,9 +278,6 @@ void EdgeTool::drawEdge(const QPointF &start, const QPointF &end, Edge edge)
     }
 }
 
-#include "BuildingEditor/buildingtiles.h"
-#include "erasetiles.h"
-#include "painttilelayer.h"
 void EdgeTool::drawEdgeTile(int x, int y, Edge edge)
 {
 //    qDebug() << "EdgeTool::drawEdgeTile" << x << y << edge;
@@ -373,6 +376,31 @@ void EdgeTool::drawEdgeTile(int x, int y, Edge edge)
 //    cmd->setMergeable(mergeable);
     mapDocument()->undoStack()->push(cmd);
     mapDocument()->emitRegionEdited(QRect(x, y, 1, 1), tileLayer);
+
+    if (!suppressBlendTiles())
+        return;
+
+    // Erase user-drawn blend tiles in all blend layers.
+    // Set NoBlend flag in all blend layers.
+    QSet<Tile*> blendTiles = mapDocument()->mapComposite()->bmpBlender()->knownBlendTiles();
+
+    foreach (QString layerName, mapDocument()->mapComposite()->bmpBlender()->blendLayers()) {
+        int index = mapDocument()->map()->indexOfLayer(layerName, Layer::TileLayerType);
+        if (index >= 0) {
+            TileLayer *tl = mapDocument()->map()->layerAt(index)->asTileLayer();
+            if (blendTiles.contains(tl->cellAt(x, y).tile)) {
+                EraseTiles *cmd = new EraseTiles(mapDocument(), tl, QRect(x, y, 1, 1));
+                mapDocument()->undoStack()->push(cmd);
+            }
+        }
+
+        MapNoBlend *noBlend = mapDocument()->map()->noBlend(layerName);
+        if (noBlend->get(x, y) == false) {
+            QBitArray bits(1, true);
+            PaintNoBlend *cmd = new PaintNoBlend(mapDocument(), noBlend, bits, QRect(x, y, 1, 1));
+            mapDocument()->undoStack()->push(cmd);
+        }
+    }
 }
 
 void EdgeTool::drawGapTile(int x, int y)
@@ -418,12 +446,25 @@ bool EdgeFile::read(const QString &fileName)
         return false;
     }
 
+    mFileName = path;
+
     int version = simple.version();
 
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("edges")) {
+            QStringList keys;
+            keys << QLatin1String("label")
+                 << QLatin1String("layer")
+                 << QLatin1String("w")
+                 << QLatin1String("n")
+                 << QLatin1String("e")
+                 << QLatin1String("s");
+            if (!validKeys(block, keys))
+                return false;
+
             Edges *edges = new Edges;
             edges->mLabel = block.value("label");
+            edges->mLayer = block.value("layer");
             if (block.hasValue("first")) {
 
             } else {
@@ -432,21 +473,44 @@ bool EdgeFile::read(const QString &fileName)
                 edges->mTileNames[Edges::EdgeN] = block.value("n");
                 edges->mTileNames[Edges::EdgeE] = block.value("e");
                 edges->mTileNames[Edges::EdgeS] = block.value("s");
+                foreach (SimpleFileBlock block2, block.blocks) {
+                    QStringList keys;
+                    keys << QLatin1String("nw")
+                         << QLatin1String("ne")
+                         << QLatin1String("se")
+                         << QLatin1String("sw");
+                    if (block2.name == QLatin1String("inner")) {
+                        if (!validKeys(block2, keys))
+                            return false;
+                        edges->mTileNames[Edges::InnerNW] = block2.value("nw");
+                        edges->mTileNames[Edges::InnerNE] = block2.value("ne");
+                        edges->mTileNames[Edges::InnerSE] = block2.value("se");
+                        edges->mTileNames[Edges::InnerSW] = block2.value("sw");
+                    } else if (block2.name == QLatin1String("outer")) {
+                        if (!validKeys(block2, keys))
+                            return false;
+                        edges->mTileNames[Edges::OuterNW] = block2.value("nw");
+                        edges->mTileNames[Edges::OuterNE] = block2.value("ne");
+                        edges->mTileNames[Edges::OuterSE] = block2.value("se");
+                        edges->mTileNames[Edges::OuterSW] = block2.value("sw");
+
+                    } else {
+                        mError = tr("Line %1: Unknown block name '%2'.\n%3")
+                                .arg(block2.lineNumber)
+                                .arg(block2.name)
+                                .arg(path);
+                        return false;
+                    }
+                }
+
                 SimpleFileBlock inner = block.block("inner");
-                edges->mTileNames[Edges::InnerNW] = inner.value("nw");
-                edges->mTileNames[Edges::InnerNE] = inner.value("ne");
-                edges->mTileNames[Edges::InnerSE] = inner.value("se");
-                edges->mTileNames[Edges::InnerSW] = inner.value("sw");
                 SimpleFileBlock outer = block.block("outer");
-                edges->mTileNames[Edges::OuterNW] = outer.value("nw");
-                edges->mTileNames[Edges::OuterNE] = outer.value("ne");
-                edges->mTileNames[Edges::OuterSE] = outer.value("se");
-                edges->mTileNames[Edges::OuterSW] = outer.value("sw");
             }
 
             mEdges += edges;
         } else {
-            mError = tr("Unknown block name '%1'.\n%2")
+            mError = tr("Line %1: Unknown block name '%2'.\n%3")
+                    .arg(block.lineNumber)
                     .arg(block.name)
                     .arg(path);
             return false;
@@ -461,4 +525,18 @@ QList<Edges *> EdgeFile::takeEdges()
     QList<Edges *> ret = mEdges;
     mEdges.clear();
     return ret;
+}
+
+bool EdgeFile::validKeys(SimpleFileBlock &block, const QStringList &keys)
+{
+    foreach (SimpleFileKeyValue kv, block.values) {
+        if (!keys.contains(kv.name)) {
+            mError = tr("Line %1: Unknown attribute '%2'.\n%3")
+                    .arg(kv.lineNumber)
+                    .arg(kv.name)
+                    .arg(mFileName);
+            return false;
+        }
+    }
+    return true;
 }

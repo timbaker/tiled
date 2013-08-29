@@ -25,6 +25,8 @@
 #include <QCoreApplication>
 #include <QGraphicsPolygonItem>
 
+class SimpleFileBlock;
+
 namespace Tiled {
 class Tile;
 
@@ -55,6 +57,7 @@ public:
     {}
 
     QString mLabel;
+    QString mLayer;
     QVector<QString> mTileNames;
 };
 
@@ -74,7 +77,11 @@ public:
     QList<Curb*> takeCurbs();
 
 private:
+    bool validKeys(SimpleFileBlock &block, const QStringList &keys);
+
+private:
     QList<Curb*> mCurbs;
+    QString mFileName;
     QString mError;
 };
 
@@ -93,11 +100,6 @@ public:
     void languageChanged();
 
     void setCurb(Curb *Curb);
-
-    void setDefaultLayer(const QString &layer)
-    { mDefaultLayer = layer; }
-    QString defaultLayer() const
-    { return mDefaultLayer; }
 
     void setSuppressBlendTiles(bool suppress)
     { mSuppressBlendTiles = suppress; }
@@ -163,7 +165,6 @@ private:
     QPoint mStartTilePos;
     Corner mStartCorner;
     Curb *mCurb;
-    QString mDefaultLayer;
     bool mSuppressBlendTiles;
     QGraphicsPolygonItem *mCursorItem;
 };

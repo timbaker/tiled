@@ -14,29 +14,27 @@
    <string>Curb Tool</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
+    <number>4</number>
+   </property>
+   <property name="topMargin">
+    <number>4</number>
+   </property>
+   <property name="rightMargin">
+    <number>4</number>
+   </property>
+   <property name="bottomMargin">
+    <number>4</number>
+   </property>
    <item row="3" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0">
-     <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Layer:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="layer"/>
-     </item>
-    </layout>
-   </item>
-   <item row="0" column="0">
-    <widget class="QListWidget" name="curbList"/>
-   </item>
-   <item row="4" column="0">
     <widget class="QCheckBox" name="suppressBlend">
      <property name="text">
       <string>Suppress blend tiles</string>
      </property>
     </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QListWidget" name="curbList"/>
    </item>
   </layout>
  </widget>

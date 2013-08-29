@@ -18,6 +18,7 @@
 #ifndef EDGETOOLDIALOG_H
 #define EDGETOOLDIALOG_H
 
+#include <QDateTime>
 #include <QDialog>
 #include <QTimer>
 
@@ -41,10 +42,17 @@ public:
 
     void setVisibleLater(bool visible);
 
+    void readSettings();
+    void writeSettings();
+
 private slots:
     void currentRowChanged(int row);
     void dashChanged();
+    void suppressChanged(bool suppress);
     void setVisibleNow();
+
+private:
+    void readTxt();
 
 private:
     Q_DISABLE_COPY(EdgeToolDialog)
@@ -56,6 +64,7 @@ private:
     bool mVisibleLater;
     QTimer mVisibleLaterTimer;
     QList<Edges*> mEdges;
+    QDateTime mTxtModifiedTime;
 };
 
 } // namespace Internal

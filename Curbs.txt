@@ -1,5 +1,9 @@
+version = 1
+
 curb
 {
+    label = Street Curb
+    layer =
     far
     {
 	e = street_curbs_01_11

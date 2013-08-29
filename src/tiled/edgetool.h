@@ -25,6 +25,8 @@
 #include <QCoreApplication>
 #include <QGraphicsPathItem>
 
+class SimpleFileBlock;
+
 namespace Tiled {
 class Tile;
 
@@ -33,7 +35,7 @@ namespace Internal {
 class Edges
 {
 public:
-    enum Edge
+    enum Shapes
     {
         EdgeW,
         EdgeN,
@@ -47,14 +49,15 @@ public:
         OuterNE,
         OuterSE,
         OuterSW,
-        EdgeCount
+        ShapeCount
     };
 
     Edges() :
-        mTileNames(EdgeCount)
+        mTileNames(ShapeCount)
     {}
 
     QString mLabel;
+    QString mLayer;
     QVector<QString> mTileNames;
 };
 
@@ -74,7 +77,11 @@ public:
     QList<Edges*> takeEdges();
 
 private:
+    bool validKeys(SimpleFileBlock &block, const QStringList &keys);
+
+private:
     QList<Edges*> mEdges;
+    QString mFileName;
     QString mError;
 };
 
@@ -94,6 +101,11 @@ public:
 
     void setEdges(Edges *edges);
     void setDash(int len, int gap);
+
+    void setSuppressBlendTiles(bool suppress)
+    { mSuppressBlendTiles = suppress; }
+    bool suppressBlendTiles() const
+    { return mSuppressBlendTiles; }
 
 protected:
     void tilePositionChanged(const QPoint &tilePos);
@@ -120,6 +132,7 @@ private:
     Edges *mEdges;
     int mDashLen;
     int mDashGap;
+    bool mSuppressBlendTiles;
     QGraphicsPathItem *mCursorItem;
 };
 

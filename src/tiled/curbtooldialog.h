@@ -18,6 +18,7 @@
 #ifndef CURBTOOLDIALOG_H
 #define CURBTOOLDIALOG_H
 
+#include <QDateTime>
 #include <QDialog>
 #include <QTimer>
 
@@ -46,9 +47,11 @@ public:
 
 private slots:
     void currentRowChanged(int row);
-    void layerChanged(const QString &layer);
     void suppressChanged(bool suppress);
     void setVisibleNow();
+
+private:
+    void readTxt();
 
 private:
     Q_DISABLE_COPY(CurbToolDialog)
@@ -60,6 +63,7 @@ private:
     bool mVisibleLater;
     QTimer mVisibleLaterTimer;
     QList<Curb*> mCurbs;
+    QDateTime mTxtModifiedTime;
 };
 
 } // namespace Internal

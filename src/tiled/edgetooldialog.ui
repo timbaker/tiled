@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>190</width>
-    <height>199</height>
+    <height>270</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,6 +26,13 @@
    <property name="bottomMargin">
     <number>4</number>
    </property>
+   <item row="5" column="0">
+    <widget class="QCheckBox" name="suppressBlend">
+     <property name="text">
+      <string>Suppress blend tiles</string>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0">
     <widget class="QListWidget" name="edgeList"/>
    </item>

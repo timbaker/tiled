@@ -1,29 +1,43 @@
+version = 1
+
 edges
 {
-    label = Sidewalk
-    w = edges_0
-    n = edges_1
-    e = edges_2
-    s = edges_3
+    label = Floor Grime (Lighter)
+    layer =
+    w = overlay_grime_floor_01_28
+    n = overlay_grime_floor_01_29
+    e = overlay_grime_floor_01_37
+    s = overlay_grime_floor_01_36
     inner
     {
-	nw = edges_10
-	ne = edges_11
-	se = edges_8
-	sw = edges_9
+	nw = overlay_grime_floor_01_38
+	ne = overlay_grime_floor_01_39
+	se = overlay_grime_floor_01_30
+	sw = overlay_grime_floor_01_31
     }
-    outer
+}
+
+edges
+{
+    label = Floor Grime (Darker)
+    layer =
+    w = overlay_grime_floor_01_0
+    n = overlay_grime_floor_01_1
+    e = overlay_grime_floor_01_9
+    s = overlay_grime_floor_01_8
+    inner
     {
-	nw = edges_4
-	ne = edges_5
-	se = edges_6
-	sw = edges_7
+	nw = overlay_grime_floor_01_10
+	ne = overlay_grime_floor_01_11
+	se = overlay_grime_floor_01_2
+	sw = overlay_grime_floor_01_3
     }
 }
 
 edges
 {
     label = Traffic Lines (Faded White)
+    layer =
     w = street_trafficlines_01_0
     n = street_trafficlines_01_2
     e = street_trafficlines_01_4
@@ -40,6 +54,7 @@ edges
 edges
 {
     label = Traffic Lines (Dark White)
+    layer =
     w = street_trafficlines_01_8
     n = street_trafficlines_01_10
     e = street_trafficlines_01_12
@@ -56,6 +71,7 @@ edges
 edges
 {
     label = Traffic Lines (Faded Yellow)
+    layer =
     w = street_trafficlines_01_16
     n = street_trafficlines_01_18
     e = street_trafficlines_01_20
@@ -72,6 +88,7 @@ edges
 edges
 {
     label = Traffic Lines (Dark Yellow)
+    layer =
     w = street_trafficlines_01_24
     n = street_trafficlines_01_26
     e = street_trafficlines_01_28

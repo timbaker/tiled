@@ -105,13 +105,6 @@ void CurbTool::activate(MapScene *scene)
     scene->addItem(mCursorItem);
     AbstractTileTool::activate(scene);
     CurbToolDialog::instance()->setVisibleLater(true);
-
-    int index = scene->mapDocument()->map()->indexOfLayer(mDefaultLayer);
-    if (index >= 0) {
-        Layer *layer = scene->mapDocument()->map()->layerAt(index);
-        if (layer->asTileLayer())
-            scene->mapDocument()->setCurrentLayerIndex(index);
-    }
 }
 
 void CurbTool::deactivate(MapScene *scene)
@@ -619,32 +612,61 @@ bool CurbFile::read(const QString &fileName)
         return false;
     }
 
+    mFileName = path;
+
     int version = simple.version();
 
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("curb")) {
+            QStringList keys;
+            keys << QLatin1String("label") << QLatin1String("layer");
+            if (!validKeys(block, keys))
+                return false;
+
             Curb *curb = new Curb;
             curb->mLabel = block.value("label");
+            curb->mLayer = block.value("layer");
 
-            // TODO: validate tile names
-            SimpleFileBlock inner = block.block("far");
-            curb->mTileNames[Curb::FarE] = inner.value("e");
-            curb->mTileNames[Curb::FarS] = inner.value("s");
-            curb->mTileNames[Curb::FarSE] = inner.value("se");
-            curb->mTileNames[Curb::FarJoinSE] = inner.value("join-se");
-            curb->mTileNames[Curb::FarEJoinS] = inner.value("e-join-s");
-            curb->mTileNames[Curb::FarSJoinE] = inner.value("s-join-e");
-            SimpleFileBlock outer = block.block("near");
-            curb->mTileNames[Curb::NearE] = outer.value("e");
-            curb->mTileNames[Curb::NearS] = outer.value("s");
-            curb->mTileNames[Curb::NearSE] = outer.value("se");
-            curb->mTileNames[Curb::NearJoinSE] = outer.value("join-se");
-            curb->mTileNames[Curb::NearEJoinS] = outer.value("e-join-s");
-            curb->mTileNames[Curb::NearSJoinE] = outer.value("s-join-e");
+            foreach (SimpleFileBlock block2, block.blocks) {
+                QStringList keys;
+                keys << QLatin1String("e")
+                     << QLatin1String("s")
+                     << QLatin1String("se")
+                     << QLatin1String("join-se")
+                     << QLatin1String("e-join-s")
+                     << QLatin1String("s-join-e");
+                // TODO: validate tile names
+                if (block2.name == QLatin1String("far")) {
+                    if (!validKeys(block2, keys))
+                        return false;
+                    curb->mTileNames[Curb::FarE] = block2.value("e");
+                    curb->mTileNames[Curb::FarS] = block2.value("s");
+                    curb->mTileNames[Curb::FarSE] = block2.value("se");
+                    curb->mTileNames[Curb::FarJoinSE] = block2.value("join-se");
+                    curb->mTileNames[Curb::FarEJoinS] = block2.value("e-join-s");
+                    curb->mTileNames[Curb::FarSJoinE] = block2.value("s-join-e");
+                } else if (block2.name == QLatin1String("near")) {
+                    if (!validKeys(block2, keys))
+                        return false;
+                    curb->mTileNames[Curb::NearE] = block2.value("e");
+                    curb->mTileNames[Curb::NearS] = block2.value("s");
+                    curb->mTileNames[Curb::NearSE] = block2.value("se");
+                    curb->mTileNames[Curb::NearJoinSE] = block2.value("join-se");
+                    curb->mTileNames[Curb::NearEJoinS] = block2.value("e-join-s");
+                    curb->mTileNames[Curb::NearSJoinE] = block2.value("s-join-e");
+                } else {
+                    mError = tr("Line %1: Unknown block name '%2'.\n%3")
+                            .arg(block2.lineNumber)
+                            .arg(block2.name)
+                            .arg(path);
+                    return false;
+                }
+            }
 
             mCurbs += curb;
         } else {
-            mError = tr("Unknown block name '%1'.\n%2")
+            mError = tr("Line %1: Unknown block name '%2'.\n%3")
+                    .arg(block.lineNumber)
                     .arg(block.name)
                     .arg(path);
             return false;
@@ -659,4 +681,18 @@ QList<Curb *> CurbFile::takeCurbs()
     QList<Curb *> ret = mCurbs;
     mCurbs.clear();
     return ret;
+}
+
+bool CurbFile::validKeys(SimpleFileBlock &block, const QStringList &keys)
+{
+    foreach (SimpleFileKeyValue kv, block.values) {
+        if (!keys.contains(kv.name)) {
+            mError = tr("Line %1: Unknown attribute '%2'.\n%3")
+                    .arg(kv.lineNumber)
+                    .arg(kv.name)
+                    .arg(mFileName);
+            return false;
+        }
+    }
+    return true;
 }

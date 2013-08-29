@@ -19,8 +19,11 @@
 #include "ui_curbtooldialog.h"
 
 #include "curbtool.h"
+#include "documentmanager.h"
 #include "mainwindow.h"
 
+#include <QFileInfo>
+#include <QMessageBox>
 #include <QSettings>
 
 using namespace Tiled::Internal;
@@ -44,25 +47,16 @@ CurbToolDialog::CurbToolDialog(QWidget *parent) :
     setWindowFlags(windowFlags() | Qt::Tool);
 
     readSettings();
-    ui->layer->setText(CurbTool::instance().defaultLayer());
     ui->suppressBlend->setChecked(CurbTool::instance().suppressBlendTiles());
 
     connect(ui->curbList, SIGNAL(currentRowChanged(int)), SLOT(currentRowChanged(int)));
-    connect(ui->layer, SIGNAL(textChanged(QString)), SLOT(layerChanged(QString)));
     connect(ui->suppressBlend, SIGNAL(toggled(bool)), SLOT(suppressChanged(bool)));
 
     mVisibleLaterTimer.setSingleShot(true);
     mVisibleLaterTimer.setInterval(200);
     connect(&mVisibleLaterTimer, SIGNAL(timeout()), SLOT(setVisibleNow()));
 
-    CurbFile curbFile;
-    if (curbFile.read(qApp->applicationDirPath() + QLatin1String("/Curbs.txt"))) {
-        mCurbs = curbFile.takeCurbs();
-    }
-    foreach (Curb *curb, mCurbs)
-        ui->curbList->addItem(curb->mLabel);
-
-    ui->curbList->setCurrentRow(mCurbs.size() ? 0 : -1);
+//    readTxt();
 }
 
 CurbToolDialog::~CurbToolDialog()
@@ -72,8 +66,17 @@ CurbToolDialog::~CurbToolDialog()
 
 void CurbToolDialog::setVisible(bool visible)
 {
-//    if (visible)
+    if (visible) {
 //        readSettings();
+
+        QString fileName(qApp->applicationDirPath() + QLatin1String("/Curbs.txt"));
+        if (QFileInfo(fileName).exists()) {
+            if (mTxtModifiedTime != QFileInfo(fileName).lastModified())
+                readTxt();
+        }
+
+        currentRowChanged(ui->curbList->currentRow());
+    }
 
     QDialog::setVisible(visible);
 
@@ -94,9 +97,7 @@ void CurbToolDialog::readSettings()
     QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
     if (!geom.isEmpty())
         restoreGeometry(geom);
-    QString layer = settings.value(QLatin1String("layer"), CurbTool::instance().defaultLayer()).toString();
     bool suppress = settings.value(QLatin1String("suppress"), CurbTool::instance().suppressBlendTiles()).toBool();
-    layerChanged(layer);
     suppressChanged(suppress);
     settings.endGroup();
 }
@@ -106,19 +107,24 @@ void CurbToolDialog::writeSettings()
     QSettings settings;
     settings.beginGroup(QLatin1String("CurbToolDialog"));
     settings.setValue(QLatin1String("geometry"), saveGeometry());
-    settings.setValue(QLatin1String("layer"), CurbTool::instance().defaultLayer());
-    settings.value(QLatin1String("suppress"), CurbTool::instance().suppressBlendTiles());
+    settings.setValue(QLatin1String("suppress"), CurbTool::instance().suppressBlendTiles());
     settings.endGroup();
 }
 
 void CurbToolDialog::currentRowChanged(int row)
 {
-    CurbTool::instance().setCurb((row >= 0) ? mCurbs.at(row) : 0);
-}
+    Curb *curb = (row >= 0) ? mCurbs.at(row) : 0;
+    CurbTool::instance().setCurb(curb);
 
-void CurbToolDialog::layerChanged(const QString &layer)
-{
-    CurbTool::instance().setDefaultLayer(layer);
+    if (!curb || curb->mLayer.isEmpty()) return;
+    MapDocument *doc = DocumentManager::instance()->currentDocument();
+    if (!doc) return;
+    int index = doc->map()->indexOfLayer(curb->mLayer);
+    if (index >= 0) {
+        Layer *layer = doc->map()->layerAt(index);
+        if (layer->asTileLayer())
+            doc->setCurrentLayerIndex(index);
+    }
 }
 
 void CurbToolDialog::suppressChanged(bool suppress)
@@ -130,4 +136,25 @@ void CurbToolDialog::setVisibleNow()
 {
     if (mVisibleLater != isVisible())
         setVisible(mVisibleLater);
+}
+
+void CurbToolDialog::readTxt()
+{
+    CurbFile curbFile;
+    QString fileName(qApp->applicationDirPath() + QLatin1String("/Curbs.txt"));
+    if (QFileInfo(fileName).exists()) {
+        if (curbFile.read(fileName)) {
+            mCurbs = curbFile.takeCurbs();
+            mTxtModifiedTime = QFileInfo(fileName).lastModified();
+        } else {
+            QMessageBox::warning(MainWindow::instance(), tr("Error Reading Curbs.txt"),
+                                 curbFile.errorString());
+        }
+    }
+
+    ui->curbList->clear();
+    foreach (Curb *curb, mCurbs)
+        ui->curbList->addItem(curb->mLabel);
+
+    ui->curbList->setCurrentRow(mCurbs.size() ? 0 : -1);
 }
