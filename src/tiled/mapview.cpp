@@ -23,6 +23,11 @@
 #include "mapscene.h"
 #include "preferences.h"
 #include "zoomable.h"
+#ifdef ZOMBOID
+#include "mainwindow.h"
+#include "maprenderer.h"
+#include "tilelayerspanel.h"
+#endif
 
 #include <QApplication>
 #include <QCursor>
@@ -272,6 +277,13 @@ void MapView::mouseMoveEvent(QMouseEvent *event)
     QGraphicsView::mouseMoveEvent(event);
     mLastMousePos = event->globalPos();
     mLastMouseScenePos = mapToScene(viewport()->mapFromGlobal(mLastMousePos));
+
+#ifdef ZOMBOID
+    if (!(event->modifiers() & Qt::AltModifier)) {
+        QPoint tilePos = mapScene()->mapDocument()->renderer()->pixelToTileCoordsInt(mLastMouseScenePos);
+        MainWindow::instance()->tileLayersPanel()->setTilePosition(tilePos);
+    }
+#endif
 }
 
 #ifdef ZOMBOID

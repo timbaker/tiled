@@ -119,6 +119,9 @@ public:
 
     void LuaScript(const QString &filePath);
     bool LuaScript(MapDocument *doc, const QString &filePath);
+
+    TileLayersPanel *tileLayersPanel() const
+    { return mTileLayersPanel; }
 #endif
 
 public slots:

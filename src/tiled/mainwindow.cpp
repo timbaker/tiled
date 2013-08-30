@@ -2656,17 +2656,6 @@ void MainWindow::setStampBrush(const TileLayer *tiles)
 void MainWindow::updateStatusInfoLabel(const QString &statusInfo)
 {
     mStatusInfoLabel->setText(statusInfo);
-
-    // Hack -- Update TileLayersPanel
-    if (mMapDocument && !(qApp->keyboardModifiers() & Qt::AltModifier)) {
-        MapView *view = DocumentManager::instance()->currentMapView();
-        QPoint viewPos = view->mapFromGlobal(QCursor::pos());
-        if (view->viewport()->rect().contains(viewPos)) {
-            QPointF scenePos = view->mapToScene(viewPos);
-            QPoint tilePos = mMapDocument->renderer()->pixelToTileCoordsInt(scenePos);
-            mTileLayersPanel->setTilePosition(tilePos);
-        }
-    }
 }
 
 void MainWindow::writeSettings()

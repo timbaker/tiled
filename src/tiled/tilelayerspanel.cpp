@@ -625,6 +625,9 @@ qreal TileLayersPanel::scale() const
 
 void TileLayersPanel::setTilePosition(const QPoint &tilePos)
 {
+    if (mTilePos == tilePos)
+        return;
+
     mTilePos = tilePos;
 
 #if 1
