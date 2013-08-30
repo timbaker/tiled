@@ -12,6 +12,16 @@ curb
 	join-se = street_curbs_01_3
 	e-join-s = street_curbs_01_4
 	s-join-e = street_curbs_01_5
+
+	sunken
+	{
+	    w = street_curbs_01_40
+	    n = street_curbs_01_41
+	    join-w = street_curbs_01_38
+	    join-e = street_curbs_01_39
+	    join-n = street_curbs_01_36
+	    join-s = street_curbs_01_37
+	}
     }
     near
     {
@@ -21,6 +31,16 @@ curb
 	join-se = street_curbs_01_1
 	e-join-s = street_curbs_01_6
 	s-join-e = street_curbs_01_7
+
+	sunken
+	{
+	    e = street_curbs_01_43
+	    s = street_curbs_01_42
+	    join-w = street_curbs_01_32
+	    join-e = street_curbs_01_33
+	    join-n = street_curbs_01_35
+	    join-s = street_curbs_01_34
+	}
     }
 }
 

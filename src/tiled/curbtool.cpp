@@ -50,6 +50,7 @@ CurbTool::CurbTool(QObject *parent) :
     mCursorItem->setPen(QPen(QColor(0,255,0,96), 1));
     mCursorItem->setBrush(QColor(0,255,0,64));
 
+#if 0
     mValidAdjacent.resize(Curb::ShapeCount);
 
     mValidAdjacent[Curb::FarE].n << Curb::FarE << Curb::FarJoinSE << Curb::NearSJoinE;
@@ -98,6 +99,7 @@ CurbTool::CurbTool(QObject *parent) :
         foreach (Curb::Shapes e, mValidAdjacent[i].e) Q_ASSERT(mValidAdjacent[e].w.contains(sh));
         foreach (Curb::Shapes s, mValidAdjacent[i].s) Q_ASSERT(mValidAdjacent[s].n.contains(sh));
     }
+#endif
 #endif
 }
 
@@ -157,9 +159,8 @@ void CurbTool::mousePressed(QGraphicsSceneMouseEvent *event)
             qreal dx = tilePosF.x() - mStartTilePosF.x();
             qreal dy = tilePosF.y() - mStartTilePosF.y();
             mapDocument()->undoStack()->beginMacro(tr("Draw Curb"));
-            if (qAbs(dx) > qAbs(dy)) {
-                drawEdge(mStartTilePosF, mStartCorner, tilePosF, corner,
-                         (event->modifiers() & Qt::AltModifier) != 0);
+            if (event->modifiers() & Qt::ControlModifier) {
+                raiseLower(mStartTilePosF, tilePosF);
             } else {
                 drawEdge(mStartTilePosF, mStartCorner, tilePosF, corner,
                          (event->modifiers() & Qt::AltModifier) != 0);
@@ -464,12 +465,6 @@ void CurbTool::drawEdgeTile(int x, int y, Edge edge, bool half, bool far)
     Tile *nearEJoinS = tiles[Curb::NearEJoinS];
     Tile *nearSJoinE = tiles[Curb::NearSJoinE];
 
-#if 0
-    if (edge == EdgeE) {
-    } else if (edge == EdgeS) {
-
-    }
-#else
     if (edge == EdgeE) {
         // far
         if (!half && (currentE == nearS || currentE == nearSJoinE || currentE == nearSE))
@@ -535,7 +530,6 @@ void CurbTool::drawEdgeTile(int x, int y, Edge edge, bool half, bool far)
         else if (!half)
             tile = far ? farS : nearS;
     }
-#endif
 
     if (tile == (Tile*) -1) {
         return;
@@ -558,7 +552,7 @@ void CurbTool::drawEdgeTile(int x, int y, Edge edge, bool half, bool far)
     // Erase user-drawn blend tiles in all blend layers.
     // Set NoBlend flag in all blend layers.
     // Erase below/right of near tiles.  Erase same spot as far tiles
-    bool isFar = tiles.indexOf(tile) < Curb::NearE; // first near tile
+    bool isFar = tiles.indexOf(tile) < Curb::FirstNear;
     if (!isFar) {
         if (tile == nearJoinSE) return;
         if (edge == EdgeE) x += 1;
@@ -586,6 +580,152 @@ void CurbTool::drawEdgeTile(int x, int y, Edge edge, bool half, bool far)
         }
     }
 
+}
+
+void CurbTool::raiseLower(const QPointF &start, const QPointF &end)
+{
+    int sx = qFloor(start.x()), sy = qFloor(start.y());
+    int ex = qFloor(end.x()), ey = qFloor(end.y());
+    if (sx > ex) qSwap(sx, ex);
+    if (sy > ey) qSwap(sy, ey);
+
+    if (qAbs(start.x() - end.x()) > qAbs(start.y() - end.y())) {
+        for (int x = sx; x <= ex; x++)
+            raiseLowerTile(sx, sy, ex, ey, x, sy);
+    } else {
+        for (int y = sy; y <= ey; y++)
+            raiseLowerTile(sx, sy, ex, ey, sx, y);
+    }
+}
+
+void CurbTool::raiseLowerTile(int sx, int sy, int ex, int ey, int x, int y)
+{
+    TileLayer *tileLayer = currentTileLayer();
+    if (!tileLayer->contains(x, y))
+        return;
+
+    Tile *tile = 0;
+    Tile *CURRENT = tileLayer->cellAt(x, y).tile;
+    Tile *currentE = tileLayer->contains(x + 1, y) ? tileLayer->cellAt(x + 1, y).tile : 0;
+    Tile *currentS = tileLayer->contains(x, y + 1) ? tileLayer->cellAt(x, y + 1).tile : 0;
+
+    QVector<Tile*> tiles = resolveTiles(mCurb);
+    Tile *farE = tiles[Curb::FarE];
+    Tile *farS = tiles[Curb::FarS];
+    Tile *nearE = tiles[Curb::NearE];
+    Tile *nearS = tiles[Curb::NearS];
+
+    bool lower = true;
+    int dx = 0, dy = 0;
+    // Far horizontal
+    if (x == sx && CURRENT == farS) {
+        tile = tiles[Curb::FarSunkenJoinW];
+        dy = 1;
+    } else if (x == ex && CURRENT == farS) {
+        tile = tiles[Curb::FarSunkenJoinE];
+        dy = 1;
+    } else if (x > sx && x < ex && CURRENT == farS) {
+        tile = tiles[Curb::FarSunkenN];
+        dy = 1;
+    } else if (x == sx && currentS == tiles[Curb::FarSunkenJoinW]) {
+        tile = farS;
+        dy = 1;
+        lower = false;
+    } else if (x == ex && currentS == tiles[Curb::FarSunkenJoinE]) {
+        tile = farS;
+        dy = 1;
+        lower = false;
+    } else if (x > sx && x < ex && currentS == tiles[Curb::FarSunkenN]) {
+        tile = farS;
+        dy = 1;
+        lower = false;
+
+    // Near horizontal
+    } else if (x == sx && CURRENT == nearS) {
+        tile = tiles[Curb::NearSunkenJoinW];
+    } else if (x == ex && CURRENT == nearS) {
+        tile = tiles[Curb::NearSunkenJoinE];
+    } else if (x > sx && x < ex && CURRENT == nearS) {
+        tile = tiles[Curb::NearSunkenS];
+    } else if (x == sx && CURRENT == tiles[Curb::NearSunkenJoinW]) {
+        tile = nearS;
+        lower = false;
+    } else if (x == ex && CURRENT == tiles[Curb::NearSunkenJoinE]) {
+        tile = nearS;
+        lower = false;
+    } else if (x > sx && x < ex && CURRENT == tiles[Curb::NearSunkenS]) {
+        tile = nearS;
+        lower = false;
+    }
+
+    // Far vertical
+    if (y == sy && CURRENT == farE) {
+        tile = tiles[Curb::FarSunkenJoinN];
+        dx = 1;
+    } else if (y == ey && CURRENT == farE) {
+        tile = tiles[Curb::FarSunkenJoinS];
+        dx = 1;
+    } else if (y > sy && y < ey && CURRENT == farE) {
+        tile = tiles[Curb::FarSunkenW];
+        dx = 1;
+    } else if (y == sy && currentE == tiles[Curb::FarSunkenJoinN]) {
+        tile = farE;
+        dx = 1;
+        lower = false;
+    } else if (y == ey && currentE == tiles[Curb::FarSunkenJoinS]) {
+        tile = farE;
+        dx = 1;
+        lower = false;
+    } else if (y > sy && y < ey && currentE == tiles[Curb::FarSunkenW]) {
+        tile = farE;
+        dx = 1;
+        lower = false;
+
+    // Near vertical
+    } else if (y == sy && CURRENT == nearE) {
+        tile = tiles[Curb::NearSunkenJoinN];
+    } else if (y == ey && CURRENT == nearE) {
+        tile = tiles[Curb::NearSunkenJoinS];
+    } else if (y > sy && y < ey && CURRENT == nearE) {
+        tile = tiles[Curb::NearSunkenE];
+    } else if (y == sy && CURRENT == tiles[Curb::NearSunkenJoinN]) {
+        tile = nearE;
+        lower = false;
+    } else if (y == ey && CURRENT == tiles[Curb::NearSunkenJoinS]) {
+        tile = nearE;
+        lower = false;
+    } else if (y > sy && y < ey && CURRENT == tiles[Curb::NearSunkenE]) {
+        tile = nearE;
+        lower = false;
+    }
+
+    if (tile == 0 || tile == (Tile*) -1) {
+        return;
+    }
+
+    if (dx == 1) {
+        x += lower ? 0 : 1; // FIXME: what if not valid x-coord?
+        EraseTiles *cmd = new EraseTiles(mapDocument(), tileLayer, QRect(x, y, 1, 1));
+        mapDocument()->undoStack()->push(cmd);
+        x += lower ? 1 : -1; // FIXME: what if not valid x-coord?
+    }
+    if (dy == 1) {
+        y += lower ? 0 : 1; // FIXME: what if not valid y-coord?
+        EraseTiles *cmd = new EraseTiles(mapDocument(), tileLayer, QRect(x, y, 1, 1));
+        mapDocument()->undoStack()->push(cmd);
+        y += lower ? 1 : -1; // FIXME: what if not valid y-coord?
+    }
+
+    // FIXME: one undo command for the whole edge
+    TileLayer stamp(QString(), 0, 0, 1, 1);
+    stamp.setCell(0, 0, Cell(tile));
+    PaintTileLayer *cmd = new PaintTileLayer(mapDocument(), tileLayer,
+                                             x, y, &stamp,
+                                             QRect(x, y, 1, 1),
+                                             false);
+//    cmd->setMergeable(mergeable);
+    mapDocument()->undoStack()->push(cmd);
+    mapDocument()->emitRegionEdited(QRect(x, y, 1, 1), tileLayer);
 }
 
 /////
@@ -641,6 +781,15 @@ bool CurbFile::read(const QString &fileName)
                      << QLatin1String("join-se")
                      << QLatin1String("e-join-s")
                      << QLatin1String("s-join-e");
+                QStringList keys2;
+                keys2 << QLatin1String("w")
+                      << QLatin1String("e")
+                      << QLatin1String("n")
+                      << QLatin1String("s")
+                      << QLatin1String("join-w")
+                      << QLatin1String("join-e")
+                      << QLatin1String("join-n")
+                      << QLatin1String("join-s");
                 // TODO: validate tile names
                 if (block2.name == QLatin1String("far")) {
                     if (!validKeys(block2, keys))
@@ -651,6 +800,24 @@ bool CurbFile::read(const QString &fileName)
                     curb->mTileNames[Curb::FarJoinSE] = block2.value("join-se");
                     curb->mTileNames[Curb::FarEJoinS] = block2.value("e-join-s");
                     curb->mTileNames[Curb::FarSJoinE] = block2.value("s-join-e");
+                    foreach (SimpleFileBlock block3, block2.blocks) {
+                        if (block3.name == QLatin1String("sunken")) {
+                            if (!validKeys(block3, keys2))
+                                return false;
+                            curb->mTileNames[Curb::FarSunkenW] = block3.value("w");
+                            curb->mTileNames[Curb::FarSunkenN] = block3.value("n");
+                            curb->mTileNames[Curb::FarSunkenJoinW] = block3.value("join-w");
+                            curb->mTileNames[Curb::FarSunkenJoinE] = block3.value("join-e");
+                            curb->mTileNames[Curb::FarSunkenJoinN] = block3.value("join-n");
+                            curb->mTileNames[Curb::FarSunkenJoinS] = block3.value("join-s");
+                        } else {
+                            mError = tr("Line %1: Unknown block name '%2'.\n%3")
+                                    .arg(block3.lineNumber)
+                                    .arg(block3.name)
+                                    .arg(path);
+                            return false;
+                        }
+                    }
                 } else if (block2.name == QLatin1String("near")) {
                     if (!validKeys(block2, keys))
                         return false;
@@ -660,6 +827,24 @@ bool CurbFile::read(const QString &fileName)
                     curb->mTileNames[Curb::NearJoinSE] = block2.value("join-se");
                     curb->mTileNames[Curb::NearEJoinS] = block2.value("e-join-s");
                     curb->mTileNames[Curb::NearSJoinE] = block2.value("s-join-e");
+                    foreach (SimpleFileBlock block3, block2.blocks) {
+                        if (block3.name == QLatin1String("sunken")) {
+                            if (!validKeys(block3, keys2))
+                                return false;
+                            curb->mTileNames[Curb::NearSunkenE] = block3.value("e");
+                            curb->mTileNames[Curb::NearSunkenS] = block3.value("s");
+                            curb->mTileNames[Curb::NearSunkenJoinW] = block3.value("join-w");
+                            curb->mTileNames[Curb::NearSunkenJoinE] = block3.value("join-e");
+                            curb->mTileNames[Curb::NearSunkenJoinN] = block3.value("join-n");
+                            curb->mTileNames[Curb::NearSunkenJoinS] = block3.value("join-s");
+                        } else {
+                            mError = tr("Line %1: Unknown block name '%2'.\n%3")
+                                    .arg(block3.lineNumber)
+                                    .arg(block3.name)
+                                    .arg(path);
+                            return false;
+                        }
+                    }
                 } else {
                     mError = tr("Line %1: Unknown block name '%2'.\n%3")
                             .arg(block2.lineNumber)

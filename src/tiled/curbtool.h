@@ -43,12 +43,25 @@ public:
         FarJoinSE,
         FarEJoinS,
         FarSJoinE,
-        NearE,
+        FirstNear,
+        NearE = FirstNear,
         NearS,
         NearSE,
         NearJoinSE,
         NearEJoinS,
         NearSJoinE,
+        FarSunkenW,
+        FarSunkenN,
+        FarSunkenJoinW,
+        FarSunkenJoinE,
+        FarSunkenJoinN,
+        FarSunkenJoinS,
+        NearSunkenE,
+        NearSunkenS,
+        NearSunkenJoinW,
+        NearSunkenJoinE,
+        NearSunkenJoinN,
+        NearSunkenJoinS,
         ShapeCount
     };
 
@@ -121,7 +134,7 @@ private:
     };
 
     void toCorner(const QPointF &scenePos, QPointF &tilePosF, Corner &corner);
-
+#if 0
     // One map location made of 4 corners
     struct CurbSpot
     {
@@ -150,7 +163,7 @@ private:
         QList<Curb::Shapes> s;
     };
     QVector<ValidAdjacent> mValidAdjacent;
-
+#endif
     enum Edge
     {
         EdgeE,
@@ -159,6 +172,9 @@ private:
 
     void drawEdge(const QPointF &start, Corner cornerStart, const QPointF &end, Corner cornerEnd, bool far);
     void drawEdgeTile(int x, int y, Edge edge, bool half, bool far);
+
+    void raiseLower(const QPointF &start, const QPointF &end);
+    void raiseLowerTile(int sx, int sy, int ex, int ey, int x, int y);
 
     bool mInitialClick;
     QPointF mStartTilePosF;
