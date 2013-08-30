@@ -44,7 +44,7 @@ SINGLETON_IMPL(EdgeTool)
 EdgeTool::EdgeTool(QObject *parent) :
     AbstractTileTool(tr("Draw Edge"),
                      QIcon(QLatin1String(
-                               ":/BuildingEditor/icons/icon_corner_outerNW.png")),
+                               ":/images/22x22/edge-tool.png")),
                      QKeySequence(/*tr("E")*/),
                      parent),
     mInitialClick(false),

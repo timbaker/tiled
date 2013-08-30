@@ -86,5 +86,7 @@
         <file>images/24x24/warning.png</file>
         <file>images/noblend.png</file>
         <file>images/22x22/bmp-no-blend.png</file>
+        <file>images/22x22/curb-tool.png</file>
+        <file>images/22x22/edge-tool.png</file>
     </qresource>
 </RCC>

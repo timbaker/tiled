@@ -39,7 +39,7 @@ SINGLETON_IMPL(CurbTool)
 CurbTool::CurbTool(QObject *parent) :
     AbstractTileTool(tr("Draw Curb"),
                      QIcon(QLatin1String(
-                               ":/BuildingEditor/icons/icon_corner_innerNW.png")),
+                               ":/images/22x22/curb-tool.png")),
                      QKeySequence(/*tr("E")*/),
                      parent),
     mInitialClick(false),
