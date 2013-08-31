@@ -47,6 +47,8 @@ EdgeTool::EdgeTool(QObject *parent) :
                                ":/images/22x22/edge-tool.png")),
                      QKeySequence(/*tr("E")*/),
                      parent),
+    mScene(0),
+    mToolTileLayerGroup(0),
     mInitialClick(false),
     mEdges(0),
     mDashLen(0),
@@ -60,6 +62,8 @@ EdgeTool::EdgeTool(QObject *parent) :
 
 void EdgeTool::activate(MapScene *scene)
 {
+    Q_ASSERT(mScene == 0);
+    mScene = scene;
     mInitialClick = false;
     scene->addItem(mCursorItem);
     AbstractTileTool::activate(scene);
@@ -68,20 +72,51 @@ void EdgeTool::activate(MapScene *scene)
 
 void EdgeTool::deactivate(MapScene *scene)
 {
+    Q_ASSERT(mScene == scene);
+    if (mToolTileLayerGroup != 0) {
+        mToolTileLayerGroup->clearToolTiles();
+        mScene->update(mToolTilesRect);
+        mToolTileLayerGroup = 0;
+    }
+
     EdgeToolDialog::instance()->setVisibleLater(false);
     scene->removeItem(mCursorItem);
+    mScene = 0;
     AbstractTileTool::deactivate(scene);
+}
+
+static QVector<QVector<Cell> > tileLayerToVector(TileLayer &tl)
+{
+    QVector<QVector<Cell> > ret(tl.width());
+    for (int x = 0; x < tl.width(); x++)
+        ret[x].resize(tl.height());
+    for (int y = 0; y < tl.height(); y++) {
+        for (int x = 0; x < tl.width(); x++) {
+            ret[x][y] = tl.cellAt(x, y);
+        }
+    }
+    return ret;
 }
 
 void EdgeTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
 {
     const MapRenderer *renderer = mapDocument()->renderer();
     Layer *layer = currentTileLayer();
-    const QPointF tilePosF = renderer->pixelToTileCoords(pos, layer ? layer->level() : 0);
+    QPointF tilePosF = renderer->pixelToTileCoords(pos, layer ? layer->level() : 0);
     QPoint tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
     QPointF m(tilePosF.x() - tilePos.x(), tilePosF.y() - tilePos.y());
     qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
     QPainterPath path;
+
+    CompositeLayerGroup *lg = mapDocument()->mapComposite()->layerGroupForLevel(mapDocument()->currentLevel());
+    if (mToolTileLayerGroup != 0) {
+        mToolTileLayerGroup->clearToolTiles();
+        mScene->update(mToolTilesRect);
+        mToolTileLayerGroup = 0;
+    }
+    QPoint topLeft;
+    QVector<QVector<Cell> > toolTiles;
+
     if (!mInitialClick) {
         if (dW < dE) {
             mEdge = (dW < dN && dW < dS) ? EdgeW : ((dN < dS) ? EdgeN : EdgeS);
@@ -89,19 +124,36 @@ void EdgeTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
             mEdge = (dE < dN && dE < dS) ? EdgeE : ((dN < dS) ? EdgeN : EdgeS);
         }
 
+        QVector<Tile*> tiles = resolveEdgeTiles(mEdges);
+
         QPolygonF polyN = renderer->tileToPixelCoords(QRectF(tilePos.x(), tilePos.y(), 1, 0.25), layer->level());
         QPolygonF polyS = renderer->tileToPixelCoords(QRectF(tilePos.x(), tilePos.y() + 0.75, 1, 0.25), layer->level());
         QPolygonF polyW = renderer->tileToPixelCoords(QRectF(tilePos.x(), tilePos.y(), 0.25, 1), layer->level());
         QPolygonF polyE = renderer->tileToPixelCoords(QRectF(tilePos.x() + 0.75, tilePos.y(), 0.25, 1), layer->level());
         polyN += polyN.first(), polyS += polyS.first(), polyW += polyW.first(), polyE += polyE.first();
-        if ((mEdge == EdgeN && dW < 0.5) || (mEdge == EdgeW && dN < 0.5))
+        int shape = -1;
+        if ((mEdge == EdgeN && dW < 0.5) || (mEdge == EdgeW && dN < 0.5)) {
             path.addPolygon(polyN), path.addPolygon(polyW);
-        if ((mEdge == EdgeS && dW < 0.5) || (mEdge == EdgeW && dS < 0.5))
+            shape = Edges::OuterNW;
+        }
+        if ((mEdge == EdgeS && dW < 0.5) || (mEdge == EdgeW && dS < 0.5)) {
             path.addPolygon(polyS), path.addPolygon(polyW);
-        if ((mEdge == EdgeN && dE < 0.5) || (mEdge == EdgeE && dN < 0.5))
+            shape = Edges::OuterSW;
+        }
+        if ((mEdge == EdgeN && dE < 0.5) || (mEdge == EdgeE && dN < 0.5)) {
             path.addPolygon(polyN), path.addPolygon(polyE);
-        if ((mEdge == EdgeS && dE < 0.5) || (mEdge == EdgeE && dS < 0.5))
+            shape = Edges::OuterNE;
+        }
+        if ((mEdge == EdgeS && dE < 0.5) || (mEdge == EdgeE && dS < 0.5)) {
             path.addPolygon(polyS), path.addPolygon(polyE);
+            shape = Edges::OuterSE;
+        }
+        if (shape != -1 && tiles[shape] != (Tile*)-1) {
+            topLeft = tilePos;
+            toolTiles.resize(1);
+            toolTiles[0].resize(1);
+            toolTiles[0][0] = Cell(tiles[shape]);
+        }
     } else {
         qreal dx = tilePosF.x() - mStartTilePosF.x();
         qreal dy = tilePosF.y() - mStartTilePosF.y();
@@ -113,6 +165,13 @@ void EdgeTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
                     | QRectF(tilePos.x(), mStartTilePos.y() + dy, 1, 0.25);
             QPolygonF poly = renderer->tileToPixelCoords(r, layer->level());
             path.addPolygon(poly);
+
+            topLeft = QPoint(qMin(mStartTilePos.x(), tilePos.x()), mStartTilePos.y());
+            TileLayer stamp(QString(), 0, 0, qAbs(tilePos.x() - mStartTilePos.x()) + 1, 1);
+            QMap<QString,QRegion> eraseRgn, noBlendRgn;
+            tilePosF.setY(mStartTilePosF.y());
+            getMapChanges(mStartTilePosF, tilePosF, dy ? EdgeS : EdgeN, stamp, eraseRgn, noBlendRgn);
+            toolTiles = tileLayerToVector(stamp);
         } else {
             qreal dx = 0;
             if (m.x() >= 0.5) dx = 0.75;
@@ -120,8 +179,24 @@ void EdgeTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
                     | QRectF(mStartTilePos.x() + dx, tilePos.y(), 0.25, 1);
             QPolygonF poly = renderer->tileToPixelCoords(r, layer->level());
             path.addPolygon(poly);
+
+            topLeft = QPoint(mStartTilePos.x(), qMin(mStartTilePos.y(), tilePos.y()));
+            TileLayer stamp(QString(), 0, 0, 1, qAbs(tilePos.y() - mStartTilePos.y()) + 1);
+            QMap<QString,QRegion> eraseRgn, noBlendRgn;
+            tilePosF.setX(mStartTilePosF.x());
+            getMapChanges(mStartTilePosF, tilePosF, dx ? EdgeE : EdgeW, stamp, eraseRgn, noBlendRgn);
+            toolTiles = tileLayerToVector(stamp);
         }
     }
+
+    if (toolTiles.size()) {
+        lg->setToolTiles(toolTiles, topLeft, currentTileLayer());
+        mToolTilesRect = renderer->boundingRect(QRect(topLeft.x(), topLeft.y(), toolTiles.size(), toolTiles[0].size()),
+                mapDocument()->currentLevel()).adjusted(-3, -(128-32) - 3, 3, 3); // use mMap->drawMargins()
+        mToolTileLayerGroup = lg;
+        mScene->update(mToolTilesRect);
+    }
+
     path.setFillRule(Qt::WindingFill);
     path = path.simplified();
     mCursorItem->setPath(path);
@@ -137,27 +212,7 @@ void EdgeTool::mousePressed(QGraphicsSceneMouseEvent *event)
         QPointF tilePosF = renderer->pixelToTileCoords(event->scenePos(),
                                                        layer ? layer->level() : 0);
         QPoint tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
-//        QPointF m(tilePosF.x() - tilePos.x(), tilePosF.y() - tilePos.y());
-        QPointF m = mStartTilePosF - mStartTilePos;
         if (mInitialClick) {
-            // Click a second time to draw
-            qreal dx = tilePosF.x() - mStartTilePosF.x();
-            qreal dy = tilePosF.y() - mStartTilePosF.y();
-            mapDocument()->undoStack()->beginMacro(tr("Draw Edge"));
-            if (qAbs(dx) > qAbs(dy)) {
-                if (m.y() < 0.5)
-                    drawEdge(mStartTilePosF, tilePosF, EdgeN);
-                else
-                    drawEdge(mStartTilePosF, tilePosF, EdgeS);
-            } else {
-                if (m.x() < 0.5)
-                    drawEdge(mStartTilePosF, tilePosF, EdgeW);
-                else
-                    drawEdge(mStartTilePosF, tilePosF, EdgeE);
-            }
-            mapDocument()->undoStack()->endMacro();
-            mInitialClick = false;
-            mouseMoved(event->scenePos(), event->modifiers());
         } else {
             mStartTilePosF = tilePosF;
             mStartTilePos = tilePos;
@@ -175,7 +230,34 @@ void EdgeTool::mousePressed(QGraphicsSceneMouseEvent *event)
 
 void EdgeTool::mouseReleased(QGraphicsSceneMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton) {
+    if (event->button() == Qt::LeftButton && mInitialClick) {
+        const MapRenderer *renderer = mapDocument()->renderer();
+        Layer *layer = currentTileLayer();
+        QPointF tilePosF = renderer->pixelToTileCoords(event->scenePos(),
+                                                       layer ? layer->level() : 0);
+        QPoint tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
+//        QPointF m(tilePosF.x() - tilePos.x(), tilePosF.y() - tilePos.y());
+        QPointF m = mStartTilePosF - mStartTilePos;
+        // Click a second time to draw
+        qreal dx = tilePosF.x() - mStartTilePosF.x();
+        qreal dy = tilePosF.y() - mStartTilePosF.y();
+        mapDocument()->undoStack()->beginMacro(tr("Draw Edge"));
+        if (qAbs(dx) > qAbs(dy)) {
+            tilePosF.setY(mStartTilePosF.y());
+            if (m.y() < 0.5)
+                drawEdge(mStartTilePosF, tilePosF, EdgeN);
+            else
+                drawEdge(mStartTilePosF, tilePosF, EdgeS);
+        } else {
+            tilePosF.setX(mStartTilePosF.x());
+            if (m.x() < 0.5)
+                drawEdge(mStartTilePosF, tilePosF, EdgeW);
+            else
+                drawEdge(mStartTilePosF, tilePosF, EdgeE);
+        }
+        mapDocument()->undoStack()->endMacro();
+        mInitialClick = false;
+        mouseMoved(event->scenePos(), event->modifiers());
     }
 
 //    AbstractTileTool::mouseReleased(event);
@@ -205,14 +287,15 @@ void EdgeTool::tilePositionChanged(const QPoint &tilePos)
 
 QVector<Tile *> EdgeTool::resolveEdgeTiles(Edges *edges)
 {
-    QVector<Tile *> ret(Edges::ShapeCount);
+    QVector<Tile *> ret(Edges::ShapeCount, (Tile*)-1);
+    if (!edges)
+        return ret;
     Map *map = mapDocument()->map();
     QMap<QString,Tileset*> tilesets;
     foreach (Tileset *ts, map->tilesets())
         tilesets[ts->name()] = ts;
 
     for (int i = 0; i < Edges::ShapeCount; i++) {
-        ret[i] = (Tile*) -1;
         if (edges->mTileNames[i].isEmpty())
             continue;
         QString tilesetName;
@@ -228,6 +311,52 @@ QVector<Tile *> EdgeTool::resolveEdgeTiles(Edges *edges)
 
 void EdgeTool::drawEdge(const QPointF &start, const QPointF &end, Edge edge)
 {
+#if 1
+    int sx = qFloor(start.x()), sy = qFloor(start.y());
+    int ex = qFloor(end.x()), ey = qFloor(end.y());
+    QPoint origin(qMin(sx, ex), qMin(sy, ey));
+    int width, height;
+    if (edge == EdgeN || edge == EdgeS)
+        width = qAbs(ex - sx) + 1, height = 1;
+    else
+        width = 1, height = qAbs(ey - sy) + 1;
+    TileLayer stamp(QString(), 0, 0, width, height);
+    QMap<QString,QRegion> eraseRgn, noBlendRgn;
+    getMapChanges(start, end, edge, stamp, eraseRgn, noBlendRgn);
+
+    if (!stamp.isEmpty()) {
+        PaintTileLayer *cmd = new PaintTileLayer(mapDocument(), currentTileLayer(),
+                                                 origin.x(), origin.y(), &stamp,
+                                                 stamp.region().translated(origin),
+                                                 false);
+//      cmd->setMergeable(mergeable);
+        mapDocument()->undoStack()->push(cmd);
+        mapDocument()->emitRegionEdited(stamp.region(), currentTileLayer());
+    }
+
+    foreach (QString layerName, eraseRgn.keys()) {
+        int index = mapDocument()->map()->indexOfLayer(layerName, Layer::TileLayerType);
+        if (index >= 0) {
+            TileLayer *tl = mapDocument()->map()->layerAt(index)->asTileLayer();
+            EraseTiles *cmd = new EraseTiles(mapDocument(), tl, eraseRgn[layerName]);
+            mapDocument()->undoStack()->push(cmd);
+        }
+    }
+
+    foreach (QString layerName, noBlendRgn.keys()) {
+        QRegion rgn = noBlendRgn[layerName];
+        QRect r = rgn.boundingRect();
+        MapNoBlend *noBlend = mapDocument()->map()->noBlend(layerName);
+        MapNoBlend bits(QString(), r.width(), r.height());
+        for (int y = r.top(); y <= r.bottom(); y++) {
+            for (int x = r.left(); x <= r.right(); x++)
+                if (rgn.contains(QPoint(x, y)))
+                    bits.set(x - r.x(), y - r.y(), true);
+        }
+        PaintNoBlend *cmd = new PaintNoBlend(mapDocument(), noBlend, bits, rgn);
+        mapDocument()->undoStack()->push(cmd);
+    }
+#else
     int sx = qFloor(start.x()), sy = qFloor(start.y());
     int ex = qFloor(end.x()), ey = qFloor(end.y());
 
@@ -277,8 +406,10 @@ void EdgeTool::drawEdge(const QPointF &start, const QPointF &end, Edge edge)
         for (int y = sy; y <= ey; y++)
             drawEdgeTile(sx, y, edge);
     }
+#endif
 }
 
+#if 0
 void EdgeTool::drawEdgeTile(int x, int y, Edge edge)
 {
 //    qDebug() << "EdgeTool::drawEdgeTile" << x << y << edge;
@@ -416,6 +547,170 @@ void EdgeTool::drawGapTile(int x, int y)
 //    cmd->setMergeable(mergeable);
     mapDocument()->undoStack()->push(cmd);
     mapDocument()->emitRegionEdited(QRect(x, y, 1, 1), tileLayer);
+}
+#endif
+
+void EdgeTool::getMapChanges(const QPointF &start, const QPointF &end,
+                             EdgeTool::Edge edge, TileLayer &stamp,
+                             QMap<QString, QRegion> &eraseRgn,
+                             QMap<QString, QRegion> &noBlendRgn)
+{
+    int sx = qFloor(start.x()), sy = qFloor(start.y());
+    int ex = qFloor(end.x()), ey = qFloor(end.y());
+    QPoint origin(qMin(sx, ex), qMin(sy, ey));
+
+    if (mDashLen > 0 && mDashGap > 0) {
+        if (edge == EdgeN || edge == EdgeS) {
+            if (sx > ex) {
+                for (int x = sx; x >= ex; ) {
+                    for (int n = 0; n < mDashLen && x >= ex; n++, x--)
+                        drawEdgeTile(origin, x, sy, edge, stamp, eraseRgn, noBlendRgn);
+                    for (int n = 0; n < mDashGap && x >= ex; n++, x--)
+                        drawGapTile(x, sy, stamp, eraseRgn, noBlendRgn);
+                }
+                return;
+            }
+            for (int x = sx; x <= ex; ) {
+                for (int n = 0; n < mDashLen && x <= ex; n++, x++)
+                    drawEdgeTile(origin, x, sy, edge, stamp, eraseRgn, noBlendRgn);
+                for (int n = 0; n < mDashGap && x <= ex; n++, x++)
+                    drawGapTile(x, sy, stamp, eraseRgn, noBlendRgn);
+            }
+        } else {
+            if (sy > ey) {
+                for (int y = sy; y >= ey; ) {
+                    for (int n = 0; n < mDashLen && y >= ey; n++, y--)
+                        drawEdgeTile(origin, sx, y, edge, stamp, eraseRgn, noBlendRgn);
+                    for (int n = 0; n < mDashGap && y >= ey; n++, y--)
+                        drawGapTile(sx, y, stamp, eraseRgn, noBlendRgn);
+                }
+                return;
+            }
+            for (int y = sy; y <= ey; ) {
+                for (int n = 0; n < mDashLen && y <= ey; n++, y++)
+                    drawEdgeTile(origin, sx, y, edge, stamp, eraseRgn, noBlendRgn);
+                for (int n = 0; n < mDashGap && y <= ey; n++, y++)
+                    drawGapTile(sx, y, stamp, eraseRgn, noBlendRgn);
+            }
+        }
+        return;
+    }
+
+    if (edge == EdgeN || edge == EdgeS) {
+        if (sx > ex) qSwap(sx, ex);
+        for (int x = sx; x <= ex; x++)
+            drawEdgeTile(origin, x, sy, edge, stamp, eraseRgn, noBlendRgn);
+    } else {
+        if (sy > ey) qSwap(sy, ey);
+        for (int y = sy; y <= ey; y++)
+            drawEdgeTile(origin, sx, y, edge, stamp, eraseRgn, noBlendRgn);
+    }
+}
+
+void EdgeTool::drawEdgeTile(const QPoint &origin, int x, int y, EdgeTool::Edge edge,
+                            TileLayer &stamp,
+                            QMap<QString, QRegion> &eraseRgn,
+                            QMap<QString, QRegion> &noBlendRgn)
+{
+    TileLayer *tileLayer = currentTileLayer();
+    if (!tileLayer->contains(x, y))
+        return;
+
+    Tile *tile = 0;
+    Tile *currentW = tileLayer->contains(x - 1, y) ? tileLayer->cellAt(x - 1, y).tile : 0;
+    Tile *currentE = tileLayer->contains(x + 1, y) ? tileLayer->cellAt(x + 1, y).tile : 0;
+    Tile *currentN = tileLayer->contains(x, y - 1) ? tileLayer->cellAt(x, y - 1).tile : 0;
+    Tile *currentS = tileLayer->contains(x, y + 1) ? tileLayer->cellAt(x, y + 1).tile : 0;
+
+    QVector<Tile*> tiles = resolveEdgeTiles(mEdges);
+    Tile *w = tiles[Edges::EdgeW];
+    Tile *n = tiles[Edges::EdgeN];
+    Tile *e = tiles[Edges::EdgeE];
+    Tile *s = tiles[Edges::EdgeS];
+    Tile *nwOuter = tiles[Edges::OuterNW];
+    Tile *neOuter = tiles[Edges::OuterNE];
+    Tile *seOuter = tiles[Edges::OuterSE];
+    Tile *swOuter = tiles[Edges::OuterSW];
+    Tile *nwInner = tiles[Edges::InnerNW];
+    Tile *neInner = tiles[Edges::InnerNE];
+    Tile *seInner = tiles[Edges::InnerSE];
+    Tile *swInner = tiles[Edges::InnerSW];
+
+    if (edge == EdgeW) {
+        tile = w;
+        if (currentW == n || currentW == nwOuter || currentW == swInner)
+            tile = seInner;
+        else if (currentW == s || currentW == swOuter || currentW == nwInner)
+            tile = neInner;
+        else if (currentE == n || currentE == neOuter || currentE == seInner)
+            tile = nwOuter;
+        else if (currentE == s || currentE == seOuter || currentE == neInner)
+            tile = swOuter;
+    } else if (edge == EdgeN) {
+        tile = n;
+        if (currentN == e || currentN == neOuter || currentN == nwInner)
+            tile = swInner;
+        else if (currentN == w || currentN == nwOuter || currentN == neInner)
+            tile = seInner;
+        else if (currentS == w || currentS == swOuter || currentS == seInner)
+            tile = nwOuter;
+        else if (currentS == e || currentS == seOuter || currentS == swInner)
+            tile = neOuter;
+    } else if (edge == EdgeE) {
+        tile = e;
+        if (currentE == n || currentE == neOuter || currentE == seInner)
+            tile = swInner;
+        else if (currentE == s || currentE == seOuter || currentE == neInner)
+            tile = nwInner;
+        else if (currentW == n || currentW == nwOuter || currentW == swInner)
+            tile = neOuter;
+        else if (currentW == s || currentW == swOuter || currentW == nwInner)
+            tile = seOuter;
+    } else if (edge == EdgeS) {
+        tile = s;
+        if (currentS == e || currentS == seOuter || currentS == swInner)
+            tile = nwInner;
+        else if (currentS == w || currentS == swOuter || currentS == seInner)
+            tile = neInner;
+        else if (currentN == w || currentN == nwOuter || currentN == neInner)
+            tile = swOuter;
+        else if (currentN == e || currentN == neOuter || currentN == nwInner)
+            tile = seOuter;
+    }
+
+    if (tile == (Tile*) -1) {
+        drawGapTile(x, y, stamp, eraseRgn, noBlendRgn);
+        return;
+    }
+
+    stamp.setCell(x - origin.x(), y - origin.y(), Cell(tile));
+
+    if (!suppressBlendTiles())
+        return;
+
+    // Erase user-drawn blend tiles in all blend layers.
+    // Set NoBlend flag in all blend layers.
+    QSet<Tile*> blendTiles = mapDocument()->mapComposite()->bmpBlender()->knownBlendTiles();
+
+    foreach (QString layerName, mapDocument()->mapComposite()->bmpBlender()->blendLayers()) {
+        int index = mapDocument()->map()->indexOfLayer(layerName, Layer::TileLayerType);
+        if (index >= 0) {
+            TileLayer *tl = mapDocument()->map()->layerAt(index)->asTileLayer();
+            if (blendTiles.contains(tl->cellAt(x, y).tile))
+                eraseRgn[layerName] += QRect(x, y, 1, 1);
+        }
+
+        MapNoBlend *noBlend = mapDocument()->map()->noBlend(layerName);
+        if (noBlend->get(x, y) == false)
+            noBlendRgn[layerName] += QRect(x, y, 1, 1);
+    }
+}
+
+void EdgeTool::drawGapTile(int x, int y, TileLayer &stamp,
+                           QMap<QString, QRegion> &eraseRgn,
+                           QMap<QString, QRegion> &noBlendRgn)
+{
+    eraseRgn[currentTileLayer()->name()] += QRect(x, y, 1, 1);
 }
 
 /////

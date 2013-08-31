@@ -25,6 +25,7 @@
 #include <QCoreApplication>
 #include <QGraphicsPathItem>
 
+class CompositeLayerGroup;
 class SimpleFileBlock;
 
 namespace Tiled {
@@ -122,9 +123,23 @@ private:
     };
 
     void drawEdge(const QPointF &start, const QPointF &end, Edge edge);
+#if 0
     void drawEdgeTile(int x, int y, Edge edge);
     void drawGapTile(int x, int y);
+#endif
 
+    void getMapChanges(const QPointF &start, const QPointF &end, Edge edge,
+                       TileLayer &stamp, QMap<QString,QRegion> &eraseRgn,
+                       QMap<QString, QRegion> &noBlendRgn);
+    void drawEdgeTile(const QPoint &origin, int x, int y, Edge edge,
+                      TileLayer &stamp, QMap<QString,QRegion> &eraseRgn,
+                      QMap<QString,QRegion> &noBlendRgn);
+    void drawGapTile(int x, int y, TileLayer &stamp, QMap<QString,QRegion> &eraseRgn,
+                     QMap<QString,QRegion> &noBlendRgn);
+
+    MapScene *mScene;
+    CompositeLayerGroup *mToolTileLayerGroup;
+    QRectF mToolTilesRect;
     bool mInitialClick;
     QPointF mStartTilePosF;
     QPoint mStartTilePos;
