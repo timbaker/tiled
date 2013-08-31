@@ -83,6 +83,7 @@
 #include "convertorientationdialog.h"
 #include "curbtool.h"
 #include "edgetool.h"
+#include "fencetool.h"
 #include "mapcomposite.h"
 #include "mapimagemanager.h"
 #include "mapmanager.h"
@@ -506,6 +507,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     toolManager->registerTool(new PickTileTool(this));
     toolManager->registerTool(mEdgeTool = new EdgeTool(this));
     toolManager->registerTool(new CurbTool(this));
+    toolManager->registerTool(new FenceTool(this));
 #endif
     toolManager->addSeparator();
     toolManager->registerTool(new ObjectSelectionTool(this));

@@ -88,5 +88,6 @@
         <file>images/22x22/bmp-no-blend.png</file>
         <file>images/22x22/curb-tool.png</file>
         <file>images/22x22/edge-tool.png</file>
+        <file>images/22x22/fence-tool.png</file>
     </qresource>
 </RCC>

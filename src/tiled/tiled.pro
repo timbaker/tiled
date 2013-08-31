@@ -231,7 +231,9 @@ SOURCES += aboutdialog.cpp \
     edgetool.cpp \
     edgetooldialog.cpp \
     curbtool.cpp \
-    curbtooldialog.cpp
+    curbtooldialog.cpp \
+    fencetool.cpp \
+    fencetooldialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -425,7 +427,9 @@ HEADERS += aboutdialog.h \
     edgetool.h \
     edgetooldialog.h \
     curbtool.h \
-    curbtooldialog.h
+    curbtooldialog.h \
+    fencetool.h \
+    fencetooldialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -471,7 +475,8 @@ FORMS += aboutdialog.ui \
     luamapsdialog.ui \
     luaworlddialog.ui \
     edgetooldialog.ui \
-    curbtooldialog.ui
+    curbtooldialog.ui \
+    fencetooldialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc
