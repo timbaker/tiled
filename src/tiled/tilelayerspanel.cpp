@@ -91,29 +91,32 @@ void LayersPanelDelegate::paint(QPainter *painter,
         painter->setPen(Qt::black);
     }
 
-    Tile *tile;
-    if (!(tile = m->tileAt(index))) {
+    // Note: BuildingTilesMgr::instance()->noneTiledTile() is used for valid
+    // model indices with no tile in the layer.
+    Tile *tile = m->tileAt(index);
+    if (!tile)
         return;
-    }
+    if (tile == BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile())
+        tile = 0;
 
     const int extra = 2;
 
-    QString label = index.data(Qt::DecorationRole).toString();
-
-    // Draw the tile image
-    const QVariant display = index.model()->data(index, Qt::DisplayRole);
-    const QPixmap tileImage = display.value<QPixmap>();
-    const int tileWidth = qCeil(tile->tileset()->tileWidth() * mView->zoomable()->scale());
-
-    if (mView->zoomable()->smoothTransform())
-        painter->setRenderHint(QPainter::SmoothPixmapTransform);
-
     const QFontMetrics fm = painter->fontMetrics();
     const int labelHeight = fm.lineSpacing();
-    const int dw = option.rect.width() - tileWidth;
-    if (tile != BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile())
+
+    // Draw the tile image
+    if (tile != 0) {
+        const QVariant display = index.model()->data(index, Qt::DisplayRole);
+        const QPixmap tileImage = display.value<QPixmap>();
+        const int tileWidth = qCeil(tile->tileset()->tileWidth() * mView->zoomable()->scale());
+
+        if (mView->zoomable()->smoothTransform())
+            painter->setRenderHint(QPainter::SmoothPixmapTransform);
+
+        const int dw = option.rect.width() - tileWidth;
         painter->drawPixmap(option.rect.adjusted(dw/2, extra + labelHeight + extra,
                                                  -(dw - dw/2), -extra), tileImage);
+    }
 #if 0
     // Overlay with highlight color when selected
     if (option.state & QStyle::State_Selected) {
@@ -136,9 +139,10 @@ void LayersPanelDelegate::paint(QPainter *painter,
         painter->setOpacity(opacity);
     }
 
+    const QPen oldPen = painter->pen();
+
     // Rect around current layer
     if (option.state & QStyle::State_Selected) {
-        QPen oldPen = painter->pen();
         QPen pen;
         pen.setWidth(2);
         painter->setPen(pen);
@@ -147,17 +151,22 @@ void LayersPanelDelegate::paint(QPainter *painter,
     }
 
     // Draw the layer name.  Underline it if the mouse is over it.
+    QString label = index.data(Qt::DecorationRole).toString();
     QString name = fm.elidedText(label, Qt::ElideRight, option.rect.width());
-    QFont font = painter->font();
+    const QFont oldFont = painter->font();
     if (mMouseOverIndex == index) {
-        QFont newFont = font;
+        QFont newFont = oldFont;
         newFont.setUnderline(true);
         painter->setFont(newFont);
     }
+    if (!tile)
+        painter->setPen(Qt::gray);
     painter->drawText(option.rect.left(), option.rect.top() + 2,
                       option.rect.width(), labelHeight, Qt::AlignHCenter, name);
+    if (!tile)
+        painter->setPen(oldPen);
     if (mMouseOverIndex == index)
-        painter->setFont(font);
+        painter->setFont(oldFont);
 
 #if 0
     // Focus rect around 'current' item
