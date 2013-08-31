@@ -101,7 +101,7 @@ void FenceTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
     const QPointF tilePosF = renderer->pixelToTileCoords(pos, layer ? layer->level() : 0);
     QPoint tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
     QPointF m(tilePosF.x() - tilePos.x(), tilePosF.y() - tilePos.y());
-    qreal dW = m.x(), dN = m.y()/*, dE = 1.0 - dW*/, dS = 1.0 - dN;
+    qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
     QPainterPath path;
 
     CompositeLayerGroup *lg = mapDocument()->mapComposite()->layerGroupForLevel(mapDocument()->currentLevel());
@@ -119,10 +119,12 @@ void FenceTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
         QPolygonF polyW = renderer->tileToPixelCoords(QRectF(tilePos.x(), tilePos.y(), 0.25, 1), layer->level());
         QPolygonF polyE = renderer->tileToPixelCoords(QRectF(tilePos.x() + 0.75, tilePos.y(), 0.25, 1), layer->level());
         polyN += polyN.first(), polyS += polyS.first(), polyW += polyW.first(), polyE += polyE.first();
-        bool west = dW < dN && dS < dN;
+        bool west = dW < dE && dW < dN && dW < dS;
+        bool east = dE <= dW && dE < dN && dE < dS;
+        bool south = (dW < dE && !west && dS <= dN) || (dW >= dE && !east && dS <= dN);
         if (modifiers & Qt::AltModifier) {
             path.addPolygon(west ? polyW : polyN);
-            if (Tile *tile = gateTile(tilePos.x(), tilePos.y(), west)) {
+            if (Tile *tile = gateTile(tilePos.x(), tilePos.y(), west || south)) {
                 topLeft = tilePos;
                 toolTiles.resize(1);
                 toolTiles[0].resize(1);
@@ -138,7 +140,7 @@ void FenceTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
             }
         } else {
             path.addPolygon(polyN), path.addPolygon(polyW);
-            if (Tile *tile = fenceTile(tilePos.x(), tilePos.y(), west)) {
+            if (Tile *tile = fenceTile(tilePos.x(), tilePos.y(), west || south)) {
                 topLeft = tilePos;
                 toolTiles.resize(1);
                 toolTiles[0].resize(1);
@@ -224,8 +226,11 @@ void FenceTool::mousePressed(QGraphicsSceneMouseEvent *event)
             }
             if (event->modifiers() & Qt::AltModifier) {
                 m = tilePosF - tilePos;
-                qreal dW = m.x(), dN = m.y()/*, dE = 1.0 - dW*/, dS = 1.0 - dN;
-                drawGate(tilePos.x(), tilePos.y(), (dW < dN && dS < dN));
+                qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
+                bool west = dW < dE && dW < dN && dW < dS;
+                bool east = dE <= dW && dE < dN && dE < dS;
+                bool south = (dW < dE && !west && dS <= dN) || (dW >= dE && !east && dS <= dN);
+                drawGate(tilePos.x(), tilePos.y(), west || south);
                 return;
             }
             mStartTilePosF = tilePosF;
