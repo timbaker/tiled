@@ -255,14 +255,15 @@ void CurbTool::tilePositionChanged(const QPoint &tilePos)
 
 QVector<Tile *> CurbTool::resolveTiles(Curb *curb)
 {
-    QVector<Tile *> ret(Curb::ShapeCount);
+    QVector<Tile *> ret(Curb::ShapeCount, (Tile*)-1);
+    if (!mCurb)
+        return ret;
     Map *map = mapDocument()->map();
     QMap<QString,Tileset*> tilesets;
     foreach (Tileset *ts, map->tilesets())
         tilesets[ts->name()] = ts;
 
     for (int i = 0; i < Curb::ShapeCount; i++) {
-        ret[i] = (Tile*) -1;
         if (curb->mTileNames[i].isEmpty())
             continue;
         QString tilesetName;
