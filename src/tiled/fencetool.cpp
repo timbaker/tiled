@@ -488,6 +488,8 @@ void FenceTool::getWestEdgeTiles(int sx, int sy, int ey, TileLayer &stamp)
     if (sy > ey) {
         int n = 1;
         for (int y = sy; y >= ey; y--) {
+            if (!tileLayer->contains(sx, y))
+                continue;
             Tile *CURRENT = tileLayer->cellAt(sx, y).tile;
             if (CURRENT == tiles[Fence::North1])
                 stamp.setCell(0, y - ey, Cell(tiles[Fence::NorthWest]));
@@ -498,6 +500,8 @@ void FenceTool::getWestEdgeTiles(int sx, int sy, int ey, TileLayer &stamp)
     } else {
         int n = 0;
         for (int y = sy; y <= ey; y++) {
+            if (!tileLayer->contains(sx, y))
+                continue;
             Tile *CURRENT = tileLayer->cellAt(sx, y).tile;
             if (CURRENT == tiles[Fence::North1])
                 stamp.setCell(0, y - sy, Cell(tiles[Fence::NorthWest]));
@@ -518,6 +522,8 @@ void FenceTool::getNorthEdgeTiles(int sx, int sy, int ex, TileLayer &stamp)
     if (sx > ex) {
         int n = 1;
         for (int x = sx; x >= ex; x--) {
+            if (!tileLayer->contains(x, sy))
+                continue;
             Tile *CURRENT = tileLayer->cellAt(x, sy).tile;
             if (CURRENT == tiles[Fence::West1])
                 stamp.setCell(x - ex, 0, Cell(tiles[Fence::NorthWest]));
@@ -528,6 +534,8 @@ void FenceTool::getNorthEdgeTiles(int sx, int sy, int ex, TileLayer &stamp)
     } else {
         int n = 0;
         for (int x = sx; x <= ex; x++) {
+            if (!tileLayer->contains(x, sy))
+                continue;
             Tile *CURRENT = tileLayer->cellAt(x, sy).tile;
             if (CURRENT == tiles[Fence::West1])
                 stamp.setCell(x - sx, 0, Cell(tiles[Fence::NorthWest]));
