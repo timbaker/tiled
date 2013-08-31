@@ -1,0 +1,106 @@
+fence
+{
+    label = Short Wooden
+    west1 = fencing_01_35
+    west2 = fencing_01_34
+    gate-space-w = fencing_01_38
+    gate-door-w = fixtures_doors_fences_01_4
+    north1 = fencing_01_32
+    north2 = fencing_01_33
+    gate-space-n = fencing_01_39
+    gate-door-n = fixtures_doors_fences_01_5
+    nw = fencing_01_36
+    post = fencing_01_37
+}
+
+fence
+{
+    label = Tall Wooden
+    west1 = fencing_01_11
+    west2 = fencing_01_10
+    gate-space-w = fencing_01_46
+    gate-door-w = fixtures_doors_fences_01_12
+    north1 = fencing_01_8
+    north2 = fencing_01_9
+    gate-space-n = fencing_01_47
+    gate-door-n = fixtures_doors_fences_01_13
+    nw = fencing_01_12
+    post = fencing_01_13
+}
+
+fence
+{
+    label = Short Chainlink
+    west1 = fencing_01_27
+    west2 = fencing_01_26
+    gate-space-w = fencing_01_30
+    gate-door-w = fixtures_doors_fences_01_16
+    north1 = fencing_01_24
+    north2 = fencing_01_25
+    gate-space-n = fencing_01_31
+    gate-door-n = fixtures_doors_fences_01_17
+    nw = fencing_01_28
+    post = fencing_01_29
+}
+
+fence
+{
+    label = White Picket
+    west1 = fencing_01_4
+    west2 = fencing_01_4
+    gate-space-w = fencing_01_22
+    gate-door-w = fixtures_doors_fences_01_8
+    north1 = fencing_01_5
+    north2 = fencing_01_5
+    gate-space-n = fencing_01_23
+    gate-door-n = fixtures_doors_fences_01_9
+    nw = fencing_01_6
+    post = fencing_01_7
+}
+
+fence
+{
+    label = Short Black Metal
+    west1 = fencing_01_2
+    west2 = fencing_01_2
+    gate-space-w = fencing_01_14
+    gate-door-w = fixtures_doors_fences_01_0
+    north1 = fencing_01_1
+    north2 = fencing_01_1
+    gate-space-n = fencing_01_15
+    gate-door-n = fixtures_doors_fences_01_1
+    nw = fencing_01_3
+    post = fencing_01_0
+}
+
+fence
+{
+    label = Tall Concrete
+    west1 = fencing_01_40
+    west2 = fencing_01_40
+    gate-space-w = 
+    gate-door-w = 
+    north1 = fencing_01_41
+    north2 = fencing_01_41
+    gate-space-n = 
+    gate-door-n = 
+    nw = fencing_01_42
+    post = fencing_01_43
+}
+
+fence
+{
+    label = Military Grade
+    west1 = fencing_01_51
+    west2 = fencing_01_50
+    gate-space-w = 
+    gate-door-w = 
+    north1 = fencing_01_48
+    north2 = fencing_01_49
+    gate-space-n = 
+    gate-door-n = 
+    nw = fencing_01_52
+    post = fencing_01_53
+}
+
+
