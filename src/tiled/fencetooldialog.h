@@ -45,6 +45,8 @@ public:
     void readSettings();
     void writeSettings();
 
+    QString txtName() const { return QLatin1String("Fences.txt"); }
+
 private slots:
     void currentRowChanged(int row);
     void setVisibleNow();

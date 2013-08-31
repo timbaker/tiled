@@ -21,6 +21,7 @@
 #include "documentmanager.h"
 #include "fencetool.h"
 #include "mainwindow.h"
+#include "preferences.h"
 
 #include <QFileInfo>
 #include <QMessageBox>
@@ -67,7 +68,7 @@ void FenceToolDialog::setVisible(bool visible)
     if (visible) {
 //        readSettings();
 
-        QString fileName(qApp->applicationDirPath() + QLatin1String("/Fences.txt"));
+        QString fileName = Preferences::instance()->configPath(txtName());
         if (QFileInfo(fileName).exists()) {
             if (mTxtModifiedTime != QFileInfo(fileName).lastModified())
                 readTxt();
@@ -132,7 +133,7 @@ void FenceToolDialog::setVisibleNow()
 void FenceToolDialog::readTxt()
 {
     FenceFile fenceFile;
-    QString fileName(qApp->applicationDirPath() + QLatin1String("/Fences.txt"));
+    QString fileName = Preferences::instance()->configPath(txtName());
     if (QFileInfo(fileName).exists()) {
         if (fenceFile.read(fileName)) {
             mFences = fenceFile.takeFences();

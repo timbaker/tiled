@@ -923,6 +923,9 @@ bool MainWindow::InitConfigFiles()
     configFiles += BuildingTilesMgr::instance()->txtName();
     configFiles += BuildingTMX::instance()->txtName();
     configFiles += FurnitureGroups::instance()->txtName();
+    configFiles += QLatin1String("Curbs.txt");
+    configFiles += QLatin1String("Edges.txt");
+    configFiles += QLatin1String("Fences.txt");
 
     foreach (QString configFile, configFiles) {
         QString fileName = configPath + QLatin1Char('/') + configFile;

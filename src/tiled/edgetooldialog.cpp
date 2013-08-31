@@ -21,6 +21,7 @@
 #include "documentmanager.h"
 #include "edgetool.h"
 #include "mainwindow.h"
+#include "preferences.h"
 
 #include <QFileInfo>
 #include <QMessageBox>
@@ -71,7 +72,7 @@ void EdgeToolDialog::setVisible(bool visible)
     if (visible) {
 //        readSettings();
 
-        QString fileName(qApp->applicationDirPath() + QLatin1String("/Edges.txt"));
+        QString fileName = Preferences::instance()->configPath(txtName());
         if (QFileInfo(fileName).exists()) {
             if (mTxtModifiedTime != QFileInfo(fileName).lastModified())
                 readTxt();
@@ -148,7 +149,7 @@ void EdgeToolDialog::setVisibleNow()
 void EdgeToolDialog::readTxt()
 {
     EdgeFile edgeFile;
-    QString fileName(qApp->applicationDirPath() + QLatin1String("/Edges.txt"));
+    QString fileName = Preferences::instance()->configPath(txtName());
     if (QFileInfo(fileName).exists()) {
         if (edgeFile.read(fileName)) {
             mEdges = edgeFile.takeEdges();

@@ -21,6 +21,7 @@
 #include "curbtool.h"
 #include "documentmanager.h"
 #include "mainwindow.h"
+#include "preferences.h"
 
 #include <QFileInfo>
 #include <QMessageBox>
@@ -69,7 +70,7 @@ void CurbToolDialog::setVisible(bool visible)
     if (visible) {
 //        readSettings();
 
-        QString fileName(qApp->applicationDirPath() + QLatin1String("/Curbs.txt"));
+        QString fileName = Preferences::instance()->configPath(txtName());
         if (QFileInfo(fileName).exists()) {
             if (mTxtModifiedTime != QFileInfo(fileName).lastModified())
                 readTxt();
@@ -141,7 +142,7 @@ void CurbToolDialog::setVisibleNow()
 void CurbToolDialog::readTxt()
 {
     CurbFile curbFile;
-    QString fileName(qApp->applicationDirPath() + QLatin1String("/Curbs.txt"));
+    QString fileName = Preferences::instance()->configPath(txtName());
     if (QFileInfo(fileName).exists()) {
         if (curbFile.read(fileName)) {
             mCurbs = curbFile.takeCurbs();

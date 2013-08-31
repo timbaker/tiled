@@ -1,3 +1,5 @@
+version = 1
+
 fence
 {
     label = Short Wooden
@@ -56,6 +58,21 @@ fence
     gate-door-n = fixtures_doors_fences_01_9
     nw = fencing_01_6
     post = fencing_01_7
+}
+
+fence
+{
+    label = Short Cattle Fence
+    west1 = fencing_01_20
+    west2 = fencing_01_20
+    gate-space-w = 
+    gate-door-w = 
+    north1 = fencing_01_21
+    north2 = fencing_01_21
+    gate-space-n = 
+    gate-door-n = 
+    nw = fencing_01_18
+    post = fencing_01_19
 }
 
 fence
