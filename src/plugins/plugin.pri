@@ -16,8 +16,10 @@ win32 {
 }
 
 include(../../tiled.pri)
-target.path = $${LIBDIR}/tiled/plugins
-INSTALLS += target
+isEmpty(INSTALL_ONLY_BUILD) {
+    target.path = $${LIBDIR}/tiled/plugins
+    INSTALLS += target
+}
 
 include(../libtiled/libtiled.pri)
 macx {

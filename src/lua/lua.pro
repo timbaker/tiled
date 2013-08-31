@@ -5,8 +5,8 @@ CONFIG += static
 CONFIG -= app_bundle
 CONFIG -= qt
 
-target.path = $${LIBDIR}
-INSTALLS += target
+#target.path = $${LIBDIR}
+#INSTALLS += target
 
 macx {
     DESTDIR = ../../bin/TileZed.app/Contents/Frameworks

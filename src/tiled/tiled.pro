@@ -6,8 +6,10 @@ include(../worlded/worlded.pri)
 
 TEMPLATE = app
 TARGET = TileZed
-target.path = $${PREFIX}/bin
-INSTALLS += target
+isEmpty(INSTALL_ONLY_BUILD) {
+    target.path = $${PREFIX}/bin
+    INSTALLS += target
+}
 win32 {
     DESTDIR = ../..
 } else {
@@ -506,3 +508,35 @@ TOLUA_PKGNAME = tiled
 TOLUA_PKG = luatiled.pkg
 TOLUA_DEPS = $$PWD/luatiled.h
 include(../tolua/src/bin/tolua.pri)
+
+isEmpty(INSTALL_ONLY_BUILD):configTxtFiles.path = $${target.path}
+!isEmpty(INSTALL_ONLY_BUILD):configTxtFiles.path = $${top_builddir}
+configTxtFiles.files = \
+    $${top_srcdir}/Curbs.txt \
+    $${top_srcdir}/Edges.txt \
+    $${top_srcdir}/Fences.txt \
+    $${top_srcdir}/TileProperties.txt \
+    $${top_srcdir}/Tilesets.txt
+INSTALLS += configTxtFiles
+
+isEmpty(INSTALL_ONLY_BUILD):buildingEdTxt.path = $${target.path}
+!isEmpty(INSTALL_ONLY_BUILD):buildingEdTxt.path = $${top_builddir}
+buildingEdTxt.files = \
+    BuildingEditor/BuildingFurniture.txt \
+    BuildingEditor/BuildingTemplates.txt \
+    BuildingEditor/BuildingTiles.txt \
+    BuildingEditor/TMXConfig.txt
+INSTALLS += buildingEdTxt
+
+isEmpty(INSTALL_ONLY_BUILD):tiledDocs.path = $${target.path}/docs
+!isEmpty(INSTALL_ONLY_BUILD):tiledDocs.path = $${top_builddir}/docs
+tiledDocs.files = \
+    $${top_srcdir}/docs/TileProperties \
+    $${top_srcdir}/docs/TileZed
+INSTALLS += tiledDocs
+
+isEmpty(INSTALL_ONLY_BUILD):buildingEdDocs.path = $${target.path}/docs/BuildingEd
+!isEmpty(INSTALL_ONLY_BUILD):buildingEdDocs.path = $${top_builddir}/docs/BuildingEd
+buildingEdDocs.files = \
+    BuildingEditor/manual/
+INSTALLS += buildingEdDocs

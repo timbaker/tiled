@@ -3,8 +3,10 @@ include(../libtiled/libtiled.pri)
 
 TEMPLATE = app
 TARGET = tmxviewer
-target.path = $${PREFIX}/bin
-INSTALLS += target
+isEmpty(INSTALL_ONLY_BUILD) {
+    target.path = $${PREFIX}/bin
+    INSTALLS += target
+}
 TEMPLATE = app
 
 greaterThan(QT_MAJOR_VERSION, 4) {

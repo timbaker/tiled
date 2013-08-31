@@ -7,4 +7,10 @@ macx {
     contains(QT_CONFIG, ppc):CONFIG += x86 ppc
 }
 
+# Only "make install" newer files
+!isEmpty(INSTALL_ONLY_BUILD):win32-msvc* {
+    QMAKE_INSTALL_FILE=xcopy /d /y
+    QMAKE_INSTALL_DIR=xcopy /d /s /q /y /i
+}
+
 DEFINES += ZOMBOID

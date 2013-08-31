@@ -2,8 +2,10 @@ include(../../tiled.pri)
 
 TEMPLATE = app
 TARGET = config
-target.path = $${PREFIX}/bin
-INSTALLS += target
+isEmpty(INSTALL_ONLY_BUILD) {
+    target.path = $${PREFIX}/bin
+    INSTALLS += target
+}
 TEMPLATE = app
 win32 {
     DESTDIR = ../..

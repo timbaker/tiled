@@ -57,8 +57,10 @@ updateqm.CONFIG += no_link
 QMAKE_EXTRA_COMPILERS += updateqm
 
 # Install rule for translations
-include(../tiled.pri)
-qmfiles.files = $$prependAppend(LANGUAGES, $$OUT_PWD/$$TARGET_DIR/tiled_, .qm)
-qmfiles.path = $${PREFIX}/share/tiled/translations
-qmfiles.CONFIG += no_check_exist
-INSTALLS += qmfiles
+isEmpty(INSTALL_ONLY_BUILD) {
+    include(../tiled.pri)
+    qmfiles.files = $$prependAppend(LANGUAGES, $$OUT_PWD/$$TARGET_DIR/tiled_, .qm)
+    qmfiles.path = $${PREFIX}/share/tiled/translations
+    qmfiles.CONFIG += no_check_exist
+    INSTALLS += qmfiles
+}

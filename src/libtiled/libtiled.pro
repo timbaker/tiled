@@ -3,8 +3,10 @@ include(../qtlockedfile/qtlockedfile.pri)
 
 TEMPLATE = lib
 TARGET = tiled
-target.path = $${LIBDIR}
-INSTALLS += target
+isEmpty(INSTALL_ONLY_BUILD) {
+    target.path = $${LIBDIR}
+    INSTALLS += target
+}
 macx {
     DESTDIR = ../../bin/TileZed.app/Contents/Frameworks
     QMAKE_LFLAGS_SONAME = -Wl,-install_name,@executable_path/../Frameworks/
