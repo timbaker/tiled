@@ -280,7 +280,9 @@ void MapView::mouseMoveEvent(QMouseEvent *event)
 
 #ifdef ZOMBOID
     if (!(event->modifiers() & Qt::AltModifier)) {
-        QPoint tilePos = mapScene()->mapDocument()->renderer()->pixelToTileCoordsInt(mLastMouseScenePos);
+        MapDocument *doc = mapScene()->mapDocument();
+        QPoint tilePos = doc->renderer()->pixelToTileCoordsInt(mLastMouseScenePos,
+                                                               doc->currentLevel());
         MainWindow::instance()->tileLayersPanel()->setTilePosition(tilePos);
     }
 #endif
