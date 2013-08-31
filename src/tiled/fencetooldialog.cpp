@@ -49,7 +49,6 @@ FenceToolDialog::FenceToolDialog(QWidget *parent) :
     readSettings();
 
     connect(ui->fenceList, SIGNAL(currentRowChanged(int)), SLOT(currentRowChanged(int)));
-    connect(ui->postGap, SIGNAL(valueChanged(int)), SLOT(postGapChanged(int)));
 
     mVisibleLaterTimer.setSingleShot(true);
     mVisibleLaterTimer.setInterval(200);
@@ -122,11 +121,6 @@ void FenceToolDialog::currentRowChanged(int row)
             doc->setCurrentLayerIndex(index);
     }
 #endif
-}
-
-void FenceToolDialog::postGapChanged(int value)
-{
-    FenceTool::instance().setPostGap(value);
 }
 
 void FenceToolDialog::setVisibleNow()

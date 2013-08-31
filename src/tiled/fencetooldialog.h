@@ -47,7 +47,6 @@ public:
 
 private slots:
     void currentRowChanged(int row);
-    void postGapChanged(int value);
     void setVisibleNow();
 
 private:

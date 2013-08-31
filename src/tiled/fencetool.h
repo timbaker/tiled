@@ -100,7 +100,6 @@ public:
     void languageChanged();
 
     void setFence(Fence *fence);
-    void setPostGap(int gap);
 
 protected:
     void tilePositionChanged(const QPoint &tilePos);
@@ -123,7 +122,6 @@ private:
     QPointF mStartTilePosF;
     QPoint mStartTilePos;
     Fence *mFence;
-    int mPostGap;
     QGraphicsPathItem *mCursorItem;
     QRectF mToolTilesRect;
 };

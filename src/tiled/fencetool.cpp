@@ -43,15 +43,13 @@ SINGLETON_IMPL(FenceTool)
 
 FenceTool::FenceTool(QObject *parent) :
     AbstractTileTool(tr("Draw Fence"),
-                     QIcon(QLatin1String(
-                               ":/images/22x22/fence-tool.png")),
+                     QIcon(QLatin1String(":/images/22x22/fence-tool.png")),
                      QKeySequence(/*tr("E")*/),
                      parent),
     mScene(0),
     mToolTileLayerGroup(0),
     mInitialClick(false),
     mFence(0),
-    mPostGap(0),
     mCursorItem(new QGraphicsPathItem)
 {
     mCursorItem->setPen(QPen(QColor(0,255,0,96), 1));
@@ -280,11 +278,6 @@ void FenceTool::languageChanged()
 void FenceTool::setFence(Fence *fence)
 {
     mFence = fence;
-}
-
-void FenceTool::setPostGap(int gap)
-{
-    mPostGap = gap;
 }
 
 void FenceTool::tilePositionChanged(const QPoint &tilePos)
