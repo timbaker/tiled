@@ -220,12 +220,14 @@ void CurbTool::mouseReleased(QGraphicsSceneMouseEvent *event)
         // Click a second time to draw
         qreal dx = tilePosF.x() - mStartTilePosF.x();
         qreal dy = tilePosF.y() - mStartTilePosF.y();
+        if (qAbs(dx) > qAbs(dy))
+            tilePosF.setY(mStartTilePosF.y());
+        else
+            tilePosF.setX(mStartTilePosF.x());
         mapDocument()->undoStack()->beginMacro(tr("Draw Curb"));
         if (event->modifiers() & Qt::ControlModifier) {
             raiseLower(mStartTilePosF, tilePosF);
         } else {
-            if (qAbs(dx) > qAbs(dy)) tilePosF.setY(mStartTilePosF.y());
-            else tilePosF.setX(mStartTilePosF.x());
             drawEdge(mStartTilePosF, mStartCorner, tilePosF, corner,
                      (event->modifiers() & Qt::AltModifier) != 0);
         }
