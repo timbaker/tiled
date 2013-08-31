@@ -25,6 +25,7 @@
 #include <QCoreApplication>
 #include <QGraphicsPolygonItem>
 
+class CompositeLayerGroup;
 class SimpleFileBlock;
 
 namespace Tiled {
@@ -134,36 +135,7 @@ private:
     };
 
     void toCorner(const QPointF &scenePos, QPointF &tilePosF, Corner &corner);
-#if 0
-    // One map location made of 4 corners
-    struct CurbSpot
-    {
-        bool far;
-        bool nw[2];
-        bool ne[2];
-        bool se[2];
-        bool sw[2];
-    };
 
-    QVector<CurbSpot> mapToSpots(int x, int y, int w, int h);
-    CurbSpot toCurbSpot(Tile *tile, QVector<Tile*> tiles);
-    void spotToTile(int x, int y, CurbSpot &spot);
-
-    struct ValidAdjacent
-    {
-        ValidAdjacent() :
-            w(QList<Curb::Shapes>()),
-            n(QList<Curb::Shapes>()),
-            e(QList<Curb::Shapes>()),
-            s(QList<Curb::Shapes>())
-        {}
-        QList<Curb::Shapes> w;
-        QList<Curb::Shapes> n;
-        QList<Curb::Shapes> e;
-        QList<Curb::Shapes> s;
-    };
-    QVector<ValidAdjacent> mValidAdjacent;
-#endif
     enum Edge
     {
         EdgeE,
@@ -171,11 +143,24 @@ private:
     };
 
     void drawEdge(const QPointF &start, Corner cornerStart, const QPointF &end, Corner cornerEnd, bool far);
-    void drawEdgeTile(int x, int y, Edge edge, bool half, bool far);
+    void drawEdgeTile(const QPoint &origin, int x, int y, Edge edge, bool half, bool far,
+                      TileLayer &stamp, QMap<QString,QRegion> &eraseRgn,
+                      QMap<QString,QRegion> &noBlendRgn);
 
     void raiseLower(const QPointF &start, const QPointF &end);
-    void raiseLowerTile(int sx, int sy, int ex, int ey, int x, int y);
+    void raiseLowerChanges(const QPointF &start, const QPointF &end,
+                           TileLayer &stamp, QMap<QString,QRegion> &eraseRgn);
+    void raiseLowerTile(int sx, int sy, int ex, int ey, int x, int y,
+                        TileLayer &stamp, QMap<QString, QRegion> &eraseRgn);
 
+    void getMapChanges(const QPointF &start, Corner cornerStart,
+                       const QPointF &end, Corner cornerEnd, bool far,
+                       TileLayer &stamp, QMap<QString,QRegion> &eraseRgn,
+                       QMap<QString,QRegion> &noBlendRgn);
+
+    MapScene *mScene;
+    CompositeLayerGroup *mToolTileLayerGroup;
+    QRectF mToolTilesRect;
     bool mInitialClick;
     QPointF mStartTilePosF;
     QPoint mStartTilePos;
