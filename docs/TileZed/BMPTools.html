@@ -1,6 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
 
+
 <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>TileZed - BMP Tools</title></head><body>
 <h1>TileZed's BMP Tools</h1>
 Every map has 2 images the same size as the map with one pixel per tile position.<br>
@@ -133,6 +134,20 @@ image.&nbsp; Note that erasing actually means painting black pixels.<br>
 You can also erase all the pixels in the selected area using Edit &gt;
 Delete (the Delete key).&nbsp; This only works when one of the BMP
 tools is active.<br>
+<h3>Prevent Blending Tool</h3>
+The Prevent Blending Tool stops automatically-generated blend tiles
+being placed.&nbsp; Left-click-drag to trace out a rectangle, then
+release the mouse button to toggle the prevent/don't-prevent setting at
+each location within the rectangle.&nbsp; This tool can only be used in
+the blend layers defined in Blends.txt (0_FloorOverlay,
+0_FloorOverlay2, etc).<br>
+<br>
+Holding down the Shift key when drawing with this tool causes the changes to be made to <span style="font-style: italic;">every known blend layer</span> in the map, not just the current layer.<br>
+<br>
+When this tool is active and a known blend layer is current, a special
+tile is drawn to indicate the locations in that layer where blending is
+prevented.<br>
+
 <h3>BMP To Layers Tool</h3>
 The BMP To Layers Tool puts the automatically-generated tiles into the
 map's tile layers and erases the BMP images.&nbsp; Use this tool if you
