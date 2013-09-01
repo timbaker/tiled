@@ -136,6 +136,8 @@ void FenceTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
                 topLeft = tilePos;
                 toolTiles.resize(1);
                 toolTiles[0].resize(1);
+                if (!currentTileLayer()->contains(tilePos) ||
+                        currentTileLayer()->cellAt(tilePos).tile != tile)
                 toolTiles[0][0] = Cell(tile);
             }
         } else {
@@ -414,7 +416,18 @@ void FenceTool::drawPost(int x, int y)
     if (!tileLayer->contains(x, y))
         return;
 
+    Tile *CURRENT = tileLayer->cellAt(x, y).tile;
+
     QVector<Tile*> tiles = resolveTiles(mFence);
+
+    // Drawing a post on an exising one erases it.
+    if (CURRENT == tiles[Fence::Post]) {
+        EraseTiles *cmd = new EraseTiles(mapDocument(), tileLayer, QRect(x, y, 1, 1));
+        cmd->setText(tr("Remove Fence Post"));
+        mapDocument()->undoStack()->push(cmd);
+        mapDocument()->emitRegionEdited(QRect(x, y, 1, 1), tileLayer);
+        return;
+    }
 
     TileLayer stamp(QString(), 0, 0, 1, 1);
     stamp.setCell(0, 0, Cell(tiles[Fence::Post]));
@@ -422,6 +435,7 @@ void FenceTool::drawPost(int x, int y)
                                              x, y, &stamp,
                                              QRect(x, y, stamp.width(), stamp.height()),
                                              false);
+    cmd->setText(tr("Draw Fence Post"));
 //    cmd->setMergeable(mergeable);
     mapDocument()->undoStack()->push(cmd);
     mapDocument()->emitRegionEdited(QRect(x, y, stamp.width(), stamp.height()), tileLayer);
