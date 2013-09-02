@@ -155,7 +155,6 @@ void FenceTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
         m = mStartTilePosF - mStartTilePos;
         if (qAbs(dx) > qAbs(dy)) {
             qreal dy = 0;
-//            if (m.y() >= 0.5) dy = 0.75;
             QRectF r = QRectF(mStartTilePos.x(), mStartTilePos.y() + dy, 1, 0.25)
                     | QRectF(tilePos.x(), mStartTilePos.y() + dy, 1, 0.25);
             QPolygonF poly = renderer->tileToPixelCoords(r, layer->level());
@@ -167,7 +166,6 @@ void FenceTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
             toolTiles = tileLayerToVector(stamp);
         } else {
             qreal dx = 0;
-//            if (m.x() >= 0.5) dx = 0.75;
             QRectF r = QRectF(mStartTilePos.x() + dx, mStartTilePos.y(), 0.25, 1)
                     | QRectF(mStartTilePos.x() + dx, tilePos.y(), 0.25, 1);
             QPolygonF poly = renderer->tileToPixelCoords(r, layer->level());
@@ -205,40 +203,23 @@ void FenceTool::mousePressed(QGraphicsSceneMouseEvent *event)
         QPoint tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
 //        QPointF m(tilePosF.x() - tilePos.x(), tilePosF.y() - tilePos.y());
         QPointF m = mStartTilePosF - mStartTilePos;
-#if 0
-        if (mInitialClick) {
-            // Click a second time to draw
-            qreal dx = tilePosF.x() - mStartTilePosF.x();
-            qreal dy = tilePosF.y() - mStartTilePosF.y();
-            mapDocument()->undoStack()->beginMacro(tr("Draw Edge"));
-            if (qAbs(dx) > qAbs(dy)) {
-                drawNorthEdge(mStartTilePos.x(), mStartTilePos.y(), tilePos.x());
-            } else {
-                drawWestEdge(mStartTilePos.x(), mStartTilePos.y(), tilePos.y());
-            }
-            mapDocument()->undoStack()->endMacro();
-            mInitialClick = false;
-            mouseMoved(event->scenePos(), event->modifiers());
-        } else
-#endif
-        {
-            if (event->modifiers() & Qt::ControlModifier) {
-                drawPost(tilePos.x(), tilePos.y());
-                return;
-            }
-            if (event->modifiers() & Qt::AltModifier) {
-                m = tilePosF - tilePos;
-                qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
-                bool west = dW < dE && dW < dN && dW < dS;
-                bool east = dE <= dW && dE < dN && dE < dS;
-                bool south = (dW < dE && !west && dS <= dN) || (dW >= dE && !east && dS <= dN);
-                drawGate(tilePos.x(), tilePos.y(), west || south);
-                return;
-            }
-            mStartTilePosF = tilePosF;
-            mStartTilePos = tilePos;
-            mInitialClick = true;
+
+        if (event->modifiers() & Qt::ControlModifier) {
+            drawPost(tilePos.x(), tilePos.y());
+            return;
         }
+        if (event->modifiers() & Qt::AltModifier) {
+            m = tilePosF - tilePos;
+            qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
+            bool west = dW < dE && dW < dN && dW < dS;
+            bool east = dE <= dW && dE < dN && dE < dS;
+            bool south = (dW < dE && !west && dS <= dN) || (dW >= dE && !east && dS <= dN);
+            drawGate(tilePos.x(), tilePos.y(), west || south);
+            return;
+        }
+        mStartTilePosF = tilePosF;
+        mStartTilePos = tilePos;
+        mInitialClick = true;
     }
 
     if (event->button() == Qt::RightButton) {
@@ -257,12 +238,10 @@ void FenceTool::mouseReleased(QGraphicsSceneMouseEvent *event)
         QPointF tilePosF = renderer->pixelToTileCoords(event->scenePos(),
                                                        layer ? layer->level() : 0);
         QPoint tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
-//        QPointF m(tilePosF.x() - tilePos.x(), tilePosF.y() - tilePos.y());
-        QPointF m = mStartTilePosF - mStartTilePos;
 
         qreal dx = tilePosF.x() - mStartTilePosF.x();
         qreal dy = tilePosF.y() - mStartTilePosF.y();
-        mapDocument()->undoStack()->beginMacro(tr("Draw Edge"));
+        mapDocument()->undoStack()->beginMacro(tr("Draw Fence"));
         if (qAbs(dx) > qAbs(dy)) {
             drawNorthEdge(mStartTilePos.x(), mStartTilePos.y(), tilePos.x());
         } else {
@@ -469,6 +448,7 @@ void FenceTool::drawGate(int x, int y, bool west)
                                              x, y, &stamp,
                                              QRect(x, y, stamp.width(), stamp.height()),
                                              false);
+    cmd->setText(tr("Draw Fence Gate"));
 //    cmd->setMergeable(mergeable);
     mapDocument()->undoStack()->push(cmd);
     mapDocument()->emitRegionEdited(QRect(x, y, stamp.width(), stamp.height()), tileLayer);
