@@ -12,12 +12,12 @@ win32 {
 } else:macx {
     DESTDIR = $$OUT_PWD/../../../bin/TileZed.app/Contents/PlugIns
 } else {
-    DESTDIR = $$OUT_PWD/../../../lib/tiled/plugins
+    DESTDIR = $$OUT_PWD/../../../lib/tilezed/plugins
 }
 
 include(../../tiled.pri)
 isEmpty(INSTALL_ONLY_BUILD) {
-    target.path = $${LIBDIR}/tiled/plugins
+    target.path = $${LIBDIR}/tilezed/plugins
     INSTALLS += target
 }
 

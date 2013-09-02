@@ -45,7 +45,7 @@ win32 {
 } else:macx {
     TARGET_DIR = ../bin/TileZed.app/Contents/Translations
 } else {
-    TARGET_DIR = ../share/tiled/translations
+    TARGET_DIR = ../share/tilezed/translations
 }
 
 updateqm.input = TRANSLATIONS
@@ -60,7 +60,7 @@ QMAKE_EXTRA_COMPILERS += updateqm
 isEmpty(INSTALL_ONLY_BUILD) {
     include(../tiled.pri)
     qmfiles.files = $$prependAppend(LANGUAGES, $$OUT_PWD/$$TARGET_DIR/tiled_, .qm)
-    qmfiles.path = $${PREFIX}/share/tiled/translations
+    qmfiles.path = $${PREFIX}/share/tilezed/translations
     qmfiles.CONFIG += no_check_exist
     INSTALLS += qmfiles
 }

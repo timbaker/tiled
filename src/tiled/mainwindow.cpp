@@ -930,8 +930,7 @@ bool MainWindow::InitConfigFiles()
     foreach (QString configFile, configFiles) {
         QString fileName = configPath + QLatin1Char('/') + configFile;
         if (!QFileInfo(fileName).exists()) {
-            QString source = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-                    + configFile;
+            QString source = Preferences::instance()->appConfigPath(configFile);
             if (QFileInfo(source).exists()) {
                 if (!QFile::copy(source, fileName)) {
                     QMessageBox::critical(this, tr("It's no good, Jim!"),
@@ -2167,7 +2166,7 @@ bool MainWindow::LuaScript(MapDocument *doc, const QString &filePath)
 {
     QString f = filePath;
     if (filePath.isEmpty()) {
-        f = QDir(QApplication::applicationDirPath()).filePath(QLatin1String("lua/"));
+        f = Preferences::instance()->luaPath() + QLatin1String("/");
         if (!LuaConsole::instance()->fileName().isEmpty())
             f = LuaConsole::instance()->fileName();
         f = QFileDialog::getOpenFileName(LuaConsole::instance(), tr("Open Lua Script"),
@@ -2871,8 +2870,7 @@ void MainWindow::closeMapDocument(int index)
 void MainWindow::helpContents()
 {
     QUrl url = QUrl::fromLocalFile(
-            QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + QLatin1String("docs/TileZed/index.html"));
+            Preferences::instance()->docsPath(QLatin1String("TileZed/index.html")));
     QDesktopServices::openUrl(url);
 }
 #endif

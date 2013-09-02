@@ -24,6 +24,7 @@
 #include "mapcomposite.h"
 #include "mapdocument.h"
 #include "mainwindow.h"
+#include "preferences.h"
 #include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
 #include "zoomable.h"
@@ -447,8 +448,7 @@ void BmpToolDialog::trashBlends()
 void BmpToolDialog::help()
 {
     QUrl url = QUrl::fromLocalFile(
-            QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + QLatin1String("docs/TileZed/BMPTools.html"));
+                Preferences::instance()->docsPath(QLatin1String("TileZed/BMPTools.html")));
     QDesktopServices::openUrl(url);
 }
 

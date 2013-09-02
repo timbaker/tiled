@@ -999,8 +999,7 @@ void TileDefDialog::updateUI()
 void TileDefDialog::help()
 {
     QUrl url = QUrl::fromLocalFile(
-            QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + QLatin1String("docs/TileProperties/index.html"));
+            Preferences::instance()->docsPath(QLatin1String("TileProperties/index.html")));
     QDesktopServices::openUrl(url);
 }
 

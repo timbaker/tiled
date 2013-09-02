@@ -22,6 +22,8 @@
 #include "furnituregroups.h"
 #include "simplefile.h"
 
+#include "preferences.h"
+
 #include <QCoreApplication>
 #include <QDebug>
 #include <QFileInfo>
@@ -618,8 +620,7 @@ bool BuildingTemplates::mergeTxt()
     }
     Q_ASSERT(userFile.version() == VERSION_LATEST);
 
-    QString sourcePath = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + txtName();
+    QString sourcePath = Tiled::Internal::Preferences::instance()->appConfigPath(txtName());
 
     SimpleFile sourceFile;
     if (!sourceFile.read(sourcePath)) {

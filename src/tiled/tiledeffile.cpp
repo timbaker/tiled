@@ -672,8 +672,7 @@ bool TilePropertyMgr::readTxt()
     // Copy TileProperties.txt from the application directory to the ~/.TileZed
     // directory if needed.
     if (!info.exists()) {
-        QString source = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-                + txtName();
+        QString source = Preferences::instance()->appConfigPath(txtName());
         if (QFileInfo(source).exists()) {
             if (!QFile::copy(source, txtPath())) {
                 mError = tr("Failed to copy file:\nFrom: %1\nTo: %2")

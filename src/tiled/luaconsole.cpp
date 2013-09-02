@@ -21,6 +21,7 @@
 #include "luamapsdialog.h"
 #include "luaworlddialog.h"
 #include "mainwindow.h"
+#include "preferences.h"
 
 #include <QDesktopServices>
 #include <QFileInfo>
@@ -133,7 +134,6 @@ void LuaConsole::write(const QString &s, QColor color)
 void LuaConsole::helpContents()
 {
     QUrl url = QUrl::fromLocalFile(
-            QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + QLatin1String("docs/TileZed/LuaScripting.html"));
+            Preferences::instance()->docsPath(QLatin1String("TileZed/LuaScripting.html")));
     QDesktopServices::openUrl(url);
 }

@@ -85,6 +85,15 @@ public:
     QString configPath() const;
     QString configPath(const QString &fileName) const;
 
+    QString appConfigPath() const;
+    QString appConfigPath(const QString &fileName) const;
+
+    QString docsPath() const;
+    QString docsPath(const QString &fileName) const;
+
+    QString luaPath() const;
+    QString luaPath(const QString &fileName) const;
+
     QString mapsDirectory() const;
     void setMapsDirectory(const QString &path);
 

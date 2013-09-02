@@ -509,8 +509,33 @@ TOLUA_PKG = luatiled.pkg
 TOLUA_DEPS = $$PWD/luatiled.h
 include(../tolua/src/bin/tolua.pri)
 
-isEmpty(INSTALL_ONLY_BUILD):configTxtFiles.path = $${target.path}
-!isEmpty(INSTALL_ONLY_BUILD):configTxtFiles.path = $${top_builddir}
+isEmpty(INSTALL_ONLY_BUILD) {
+    win32:CONFIG_PREFIX = $${target.path}
+    unix:CONFIG_PREFIX = $${target.path}/../share/tilezed/config
+    macx:CONFIG_PREFIX = $${target.path}/TileZed.app/Contents/Config
+
+    win32:DOCS_PREFIX = $${target.path}/docs
+    unix:DOCS_PREFIX = $${target.path}/../share/tilezed/docs
+    macx:DOCS_PREFIX = $${target.path}/TileZed.app/Contents/Docs
+
+    win32:LUA_PREFIX = $${target.path}/lua
+    unix:LUA_PREFIX = $${target.path}/../share/tilezed/lua
+    macx:LUA_PREFIX = $${target.path}/TileZed.app/Contents/Lua
+} else {
+    win32:CONFIG_PREFIX = $${top_builddir}
+    unix:CONFIG_PREFIX = $${top_builddir}/share/tilezed/config
+    macx:CONFIG_PREFIX = $${top_builddir}/bin/TileZed.app/Contents/Config
+
+    win32:DOCS_PREFIX = $${top_builddir}/docs
+    unix:DOCS_PREFIX = $${top_builddir}/share/tilezed/docs
+    macx:DOCS_PREFIX = $${top_builddir}/TileZed.app/Contents/Docs
+
+    win32:LUA_PREFIX = $${top_builddir}/lua
+    unix:LUA_PREFIX = $${top_builddir}/share/tilezed/lua
+    macx:LUA_PREFIX = $${top_builddir}/TileZed.app/Contents/Lua
+}
+
+configTxtFiles.path = $${CONFIG_PREFIX}
 configTxtFiles.files = \
     $${top_srcdir}/Curbs.txt \
     $${top_srcdir}/Edges.txt \
@@ -519,8 +544,7 @@ configTxtFiles.files = \
     $${top_srcdir}/Tilesets.txt
 INSTALLS += configTxtFiles
 
-isEmpty(INSTALL_ONLY_BUILD):buildingEdTxt.path = $${target.path}
-!isEmpty(INSTALL_ONLY_BUILD):buildingEdTxt.path = $${top_builddir}
+buildingEdTxt.path = $${CONFIG_PREFIX}
 buildingEdTxt.files = \
     BuildingEditor/BuildingFurniture.txt \
     BuildingEditor/BuildingTemplates.txt \
@@ -528,15 +552,17 @@ buildingEdTxt.files = \
     BuildingEditor/TMXConfig.txt
 INSTALLS += buildingEdTxt
 
-isEmpty(INSTALL_ONLY_BUILD):tiledDocs.path = $${target.path}/docs
-!isEmpty(INSTALL_ONLY_BUILD):tiledDocs.path = $${top_builddir}/docs
+tiledDocs.path = $${DOCS_PREFIX}
 tiledDocs.files = \
     $${top_srcdir}/docs/TileProperties \
     $${top_srcdir}/docs/TileZed
 INSTALLS += tiledDocs
 
-isEmpty(INSTALL_ONLY_BUILD):buildingEdDocs.path = $${target.path}/docs/BuildingEd
-!isEmpty(INSTALL_ONLY_BUILD):buildingEdDocs.path = $${top_builddir}/docs/BuildingEd
+buildingEdDocs.path = $${DOCS_PREFIX}/BuildingEd
 buildingEdDocs.files = \
-    BuildingEditor/manual/
+    BuildingEditor/manual/*
 INSTALLS += buildingEdDocs
+
+luaScripts.path = $${LUA_PREFIX}
+luaScripts.files = $${top_srcdir}/lua/*.lua
+INSTALLS += luaScripts

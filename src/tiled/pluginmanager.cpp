@@ -66,7 +66,11 @@ void PluginManager::loadPlugins()
 #elif defined(Q_OS_MAC)
     pluginPath += QLatin1String("/../PlugIns");
 #else
+#ifdef ZOMBOID
+    pluginPath += QLatin1String("/../lib/tilezed/plugins");
+#else
     pluginPath += QLatin1String("/../lib/tiled/plugins");
+#endif // ZOMBOID
 #endif
 
     // Load dynamic plugins

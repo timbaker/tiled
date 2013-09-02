@@ -1989,9 +1989,8 @@ void BuildingEditorWindow::updateActions()
 
 void BuildingEditorWindow::help()
 {
-    QUrl url = QUrl::fromLocalFile(
-            QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + QLatin1String("docs/BuildingEd/index.html"));
+    QString fileName = Preferences::instance()->docsPath(QLatin1String("BuildingEd/index.html"));
+    QUrl url = QUrl::fromLocalFile(fileName);
     QDesktopServices::openUrl(url);
 }
 

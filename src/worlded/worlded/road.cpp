@@ -18,6 +18,7 @@
 #include "road.h"
 
 #include "mainwindow.h"
+#include "preferences.h"
 
 #include "BuildingEditor/simplefile.h"
 
@@ -178,8 +179,7 @@ TrafficLines *RoadTemplates::findLines(const QString &name)
 
 void RoadTemplates::parseRoadsDotTxt()
 {
-    QString appDirectory = QCoreApplication::applicationDirPath();
-    QString filePath = appDirectory + QLatin1Char('/') + QLatin1String("Roads.txt");
+    QString filePath = Preferences::instance()->appConfigPath(QLatin1String("Roads.txt"));
     SimpleFile simpleFile;
     if (!simpleFile.read(filePath)) {
         QMessageBox::warning(MainWindow::instance(),

@@ -56,7 +56,11 @@ LanguageManager::LanguageManager()
 #elif defined(Q_OS_MAC)
     mTranslationsDir += QLatin1String("/../Translations");
 #else
+#ifdef ZOMBOID
+    mTranslationsDir += QLatin1String("/../share/tilezed/translations");
+#else
     mTranslationsDir += QLatin1String("/../share/tiled/translations");
+#endif // ZOMBOID
 #endif
 }
 

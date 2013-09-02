@@ -318,8 +318,7 @@ bool BuildingTMX::upgradeTxt()
 
     // Not the latest version -> upgrade it.
 
-    QString sourcePath = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + txtName();
+    QString sourcePath = Tiled::Internal::Preferences::instance()->appConfigPath(txtName());
 
     SimpleFile sourceFile;
     if (!sourceFile.read(sourcePath)) {
@@ -369,8 +368,7 @@ bool BuildingTMX::mergeTxt()
     }
     Q_ASSERT(userFile.version() == VERSION_LATEST);
 
-    QString sourcePath = QCoreApplication::applicationDirPath() + QLatin1Char('/')
-            + txtName();
+    QString sourcePath = Tiled::Internal::Preferences::instance()->appConfigPath(txtName());
 
     SimpleFile sourceFile;
     if (!sourceFile.read(sourcePath)) {
