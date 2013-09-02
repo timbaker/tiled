@@ -123,7 +123,7 @@ void FenceTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
         bool east = dE <= dW && dE < dN && dE < dS;
         bool south = (dW < dE && !west && dS <= dN) || (dW >= dE && !east && dS <= dN);
         if (modifiers & Qt::AltModifier) {
-            path.addPolygon(west ? polyW : polyN);
+            path.addPolygon((west || south) ? polyW : polyN);
             if (Tile *tile = gateTile(tilePos.x(), tilePos.y(), west || south)) {
                 topLeft = tilePos;
                 toolTiles.resize(1);
