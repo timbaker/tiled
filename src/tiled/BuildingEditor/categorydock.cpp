@@ -618,13 +618,13 @@ void CategoryDock::currentWindowChanged(BuildingTileEntry *entry, bool mergeable
     }
     if (windows.count()) {
         if (windows.count() > 1)
-            mCurrentDocument->undoStack()->beginMacro(tr("Change Door Frame Tile"));
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Window Tile"));
         foreach (Window *window, windows)
             mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
                                                                      window,
                                                                      entry,
                                                                      mergeable,
-                                                                     0));
+                                                                     Window::TileWindow));
         if (windows.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
@@ -651,7 +651,34 @@ void CategoryDock::currentCurtainsChanged(BuildingTileEntry *entry, bool mergeab
                                                                      window,
                                                                      entry,
                                                                      mergeable,
-                                                                     1));
+                                                                     Window::TileCurtains));
+        if (windows.count() > 1)
+            mCurrentDocument->undoStack()->endMacro();
+    }
+}
+
+void CategoryDock::currentShuttersChanged(BuildingTileEntry *entry, bool mergeable)
+{
+    // New windows will be created with this tile
+    currentBuilding()->setTile(Building::Shutters, entry);
+
+    // Assign the new tile to selected windows
+    QList<Window*> windows;
+    foreach (BuildingObject *object, mCurrentDocument->selectedObjects()) {
+        if (Window *window = object->asWindow()) {
+            if (window->shuttersTile() != entry)
+                windows += window;
+        }
+    }
+    if (windows.count()) {
+        if (windows.count() > 1)
+            mCurrentDocument->undoStack()->beginMacro(tr("Change Window Shutters"));
+        foreach (Window *window, windows)
+            mCurrentDocument->undoStack()->push(new ChangeObjectTile(mCurrentDocument,
+                                                                     window,
+                                                                     entry,
+                                                                     mergeable,
+                                                                     Window::TileShutters));
         if (windows.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
@@ -812,11 +839,19 @@ void CategoryDock::selectCurrentCategoryTile()
     }
     if (mCategory->asCurtains()) {
         if (selectedObject && selectedObject->asWindow())
-            currentTile = selectedObject->tile(1)
-                    ? selectedObject->tile(1)
+            currentTile = selectedObject->tile(Window::TileCurtains)
+                    ? selectedObject->tile(Window::TileCurtains)
                     : BuildingTilesMgr::instance()->noneTileEntry();
         else
             currentTile = mCurrentDocument->building()->curtainsTile();
+    }
+    if (mCategory->asShutters()) {
+        if (selectedObject && selectedObject->asWindow())
+            currentTile = selectedObject->tile(Window::TileShutters)
+                    ? selectedObject->tile(Window::TileShutters)
+                    : BuildingTilesMgr::instance()->noneTileEntry();
+        else
+            currentTile = mCurrentDocument->building()->tile(Building::Shutters);
     }
     if (mCategory->asStairs()) {
         if (selectedObject && selectedObject->asStairs())
@@ -904,6 +939,8 @@ void CategoryDock::tileSelectionChanged()
                 currentWindowChanged(entry, mergeable);
             else if (category->asCurtains())
                 currentCurtainsChanged(entry, mergeable);
+            else if (category->asShutters())
+                currentShuttersChanged(entry, mergeable);
             else if (category->asStairs())
                 currentStairsChanged(entry, mergeable);
             else if (category->asGrimeFloor())

@@ -1146,7 +1146,8 @@ void WindowTool::placeObject()
     Window *window = new Window(floor, mCursorObject->x(), mCursorObject->y(),
                                 mCursorObject->dir());
     window->setTile(mEditor->building()->windowTile());
-    window->setTile(mEditor->building()->curtainsTile(), 1);
+    window->setTile(mEditor->building()->curtainsTile(), Window::TileCurtains);
+    window->setTile(mEditor->building()->tile(Building::Shutters), Window::TileShutters);
     undoStack()->push(new AddObject(mEditor->document(), floor,
                                     floor->objectCount(), window));
 }
@@ -1181,7 +1182,8 @@ void WindowTool::updateCursorObject()
     mCursorObject->setPos(x, y);
     mCursorObject->setDir(dir);
     mCursorObject->setTile(mEditor->building()->windowTile());
-    mCursorObject->setTile(mEditor->building()->curtainsTile(), 1);
+    mCursorObject->setTile(mEditor->building()->curtainsTile(), Window::TileCurtains);
+    mCursorObject->setTile(mEditor->building()->tile(Building::Shutters), Window::TileShutters);
 
     setCursorObject(mCursorObject);
 }

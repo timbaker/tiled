@@ -53,5 +53,6 @@
         <file>icons/mode_ortho.png</file>
         <file>icons/mode_tile.png</file>
         <file>icons/icon_crop.png</file>
+        <file>icons/shadow_shutters.png</file>
     </qresource>
 </RCC>
