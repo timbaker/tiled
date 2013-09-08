@@ -505,6 +505,15 @@ void MapScene::objectsAdded(const QList<MapObject*> &objects)
         Q_ASSERT(ogItem);
         MapObjectItem *item = new MapObjectItem(object, mMapDocument, ogItem);
         mObjectItems.insert(object, item);
+
+#ifdef ZOMBOID
+        // When an item accepts hover events, it stops the active tool getting
+        // mouse move events.  For example, the Stamp brush won't update its
+        // position when the mouse is hovering over a MapObjectItem.
+        bool hover = dynamic_cast<AbstractObjectTool*>(mActiveTool) != 0;
+        item->setAcceptHoverEvents(hover);
+        item->labelItem()->setAcceptHoverEvents(hover);
+#endif
     }
 }
 
