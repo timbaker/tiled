@@ -1518,6 +1518,8 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     if (event->button() == Qt::LeftButton) {
         if (mMode != NoMode)
             return; // ignore clicks when creating/resizing
+        mStartTilePosF = mEditor->sceneToTileF(event->scenePos(), mEditor->currentLevel());
+        mCurrentTilePosF = mStartTilePosF;
         mStartPos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
         mCurrentPos = mStartPos;
         if (mMouseOverHandle) {
@@ -1547,6 +1549,7 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             }
             mOriginalWidth = mHandleObject->width();
             mOriginalHeight = mHandleObject->height();
+            mOriginalHalfDepth = mHandleObject->isHalfDepth();
             mMode = Resize;
             updateStatusText();
 
@@ -1577,7 +1580,7 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     if (event->button() == Qt::RightButton) {
         if (mMode == Resize) {
-            mHandleObject->resize(mOriginalWidth, mOriginalHeight);
+            mHandleObject->resize(mOriginalWidth, mOriginalHeight, mOriginalHalfDepth);
             mObjectItem->synchWithObject();
             mMode = NoMode;
             updateStatusText();
@@ -1605,6 +1608,7 @@ void RoofTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    mCurrentTilePosF = mEditor->sceneToTileF(event->scenePos(), mEditor->currentLevel());
     mCurrentPos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
 
     if (mMode == NoMode) {
@@ -1644,8 +1648,43 @@ void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         if (mCurrentPos.y() >= floor()->height())
             diff.setY(floor()->height() - mStartPos.y() - 1);
 
+#if 1
+        // Fugly code to determine if a corner should be half-depth.
+        bool halfDepth = false;
+        if (mHandleObject->roofType() == RoofObject::CornerOuterSE
+                || mHandleObject->roofType() == RoofObject::CornerInnerNW) {
+            QRect bounds = mHandleObject->bounds().adjusted(0, 0, diff.x(), diff.y());
+            if (bounds.width() > 3) bounds.setWidth(3);
+            if (bounds.height() > 3) bounds.setHeight(3);
+            QPointF d = mCurrentTilePosF - mCurrentPos;
+            halfDepth = d.x() < 0.5 && d.y() < 0.5;
+            qreal angle = QLineF(mHandleObject->bounds().topLeft(), mCurrentTilePosF).angle();
+            if (angle >= 315)
+                halfDepth = bounds.contains(mCurrentPos) && d.x() < 0.5;
+            else if (angle >= 270)
+                halfDepth = bounds.contains(mCurrentPos) && d.y() < 0.5;
+            else
+                halfDepth = true;
+        }
+        if (mHandleObject->roofType() == RoofObject::SlopeW ||
+                mHandleObject->roofType() == RoofObject::SlopeE) {
+            QRect bounds = mHandleObject->bounds().adjusted(0, 0, diff.x(), diff.y());
+            if (bounds.width() > 3) bounds.setWidth(3);
+            QPointF d = mCurrentTilePosF - mCurrentPos;
+            halfDepth = bounds.contains(mCurrentPos) ? d.x() < 0.5 : mCurrentPos.x() < mHandleObject->x();
+        }
+        if (mHandleObject->roofType() == RoofObject::SlopeN ||
+                mHandleObject->roofType() == RoofObject::SlopeS) {
+            QRect bounds = mHandleObject->bounds().adjusted(0, 0, diff.x(), diff.y());
+            if (bounds.height() > 3) bounds.setHeight(3);
+            QPointF d = mCurrentTilePosF - mCurrentPos;
+            halfDepth = bounds.contains(mCurrentPos) ? d.y() < 0.5 : mCurrentPos.y() < mHandleObject->y();
+        }
+#endif
+
         resizeRoof(mHandleObject->width() + diff.x(),
-                   mHandleObject->height() + diff.y());
+                   mHandleObject->height() + diff.y(),
+                   halfDepth);
         updateStatusText();
 
         mEditor->setCursorObject(mHandleObject);
@@ -1658,8 +1697,42 @@ void RoofTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
         QPoint pos = mStartPos;
 
+#if 1
+        // Fugly code to determine if a roof should be half-depth.
+        bool halfDepth = false;
+        if (mObject->roofType() == RoofObject::CornerOuterSE
+                || mObject->roofType() == RoofObject::CornerInnerNW) {
+            QRect bounds = QRect(mObject->x(), mObject->y(), qAbs(diff.x()) + 1, qAbs(diff.y()) + 1);
+            if (bounds.width() > 3) bounds.setWidth(3);
+            if (bounds.height() > 3) bounds.setHeight(3);
+            QPointF d = mCurrentTilePosF - mCurrentPos;
+            halfDepth = d.x() < 0.5 && d.y() < 0.5;
+            qreal angle = QLineF(mObject->bounds().topLeft(), mCurrentTilePosF).angle();
+            if (angle >= 315)
+                halfDepth = bounds.contains(mCurrentPos) && d.x() < 0.5;
+            else if (angle >= 270)
+                halfDepth = bounds.contains(mCurrentPos) && d.y() < 0.5;
+            else
+                halfDepth = true;
+        }
+        if (mObject->roofType() == RoofObject::SlopeW ||
+                mObject->roofType() == RoofObject::SlopeE) {
+            QRect bounds = QRect(mObject->x(), mObject->y(), qAbs(diff.x()) + 1, qAbs(diff.y()) + 1);
+            if (bounds.width() > 3) bounds.setWidth(3);
+            QPointF d = mCurrentTilePosF - mCurrentPos;
+            halfDepth = bounds.contains(mCurrentPos) ? d.x() < 0.5 : mCurrentPos.x() < mObject->x();
+        }
+        if (mObject->roofType() == RoofObject::SlopeN ||
+                mObject->roofType() == RoofObject::SlopeS) {
+            QRect bounds = QRect(mObject->x(), mObject->y(), qAbs(diff.x()) + 1, qAbs(diff.y()) + 1);
+            if (bounds.height() > 3) bounds.setHeight(3);
+            QPointF d = mCurrentTilePosF - mCurrentPos;
+            halfDepth = bounds.contains(mCurrentPos) ? d.y() < 0.5 : mCurrentPos.y() < mObject->y();
+        }
+#endif
+
         // This call might restrict the width and/or height.
-        mObject->resize(qAbs(diff.x()) + 1, qAbs(diff.y()) + 1);
+        mObject->resize(qAbs(diff.x()) + 1, qAbs(diff.y()) + 1, halfDepth);
 
         if (diff.x() < 0)
             pos.setX(mStartPos.x() - mObject->width() + 1);
@@ -1684,10 +1757,12 @@ void RoofTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     if (mMode == Resize) {
         mMode = NoMode;
         int width = mHandleObject->width(), height = mHandleObject->height();
-        if (width != mOriginalWidth || height != mOriginalHeight) {
-            mHandleObject->resize(mOriginalWidth, mOriginalHeight);
+        bool halfDepth = mHandleObject->isHalfDepth();
+        if (width != mOriginalWidth || height != mOriginalHeight
+                || halfDepth != mOriginalHalfDepth) {
+            mHandleObject->resize(mOriginalWidth, mOriginalHeight, mOriginalHalfDepth);
             undoStack()->push(new ResizeRoof(mEditor->document(), mHandleObject,
-                                             width, height));
+                                             width, height, halfDepth));
         }
         mEditor->setCursorObject(0);
     }
@@ -1793,7 +1868,7 @@ void RoofTool::updateHandle(const QPointF &scenePos)
     mEditor->setMouseOverObject(ro);
 }
 
-void RoofTool::resizeRoof(int width, int height)
+void RoofTool::resizeRoof(int width, int height, bool halfDepth)
 {
     if (width < 1 || height < 1)
         return;
@@ -1801,11 +1876,13 @@ void RoofTool::resizeRoof(int width, int height)
     RoofObject *roof = mHandleObject;
 
     int oldWidth = roof->width(), oldHeight = roof->height();
-    roof->resize(width, height);
+    bool oldHalfDepth = roof->isHalfDepth();
+    roof->resize(width, height, halfDepth);
     if (!roof->isValidPos()) {
-        roof->resize(oldWidth, oldHeight);
+        roof->resize(oldWidth, oldHeight, oldHalfDepth);
         return;
     }
+
 
     mEditor->itemForObject(roof)->synchWithObject();
     mStartPos = roof->bounds().bottomRight();

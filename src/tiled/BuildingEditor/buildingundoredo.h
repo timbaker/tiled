@@ -537,7 +537,7 @@ class ResizeRoof : public QUndoCommand
 {
 public:
     ResizeRoof(BuildingDocument *doc, RoofObject *roof, int width,
-               int height);
+               int height, bool halfDepth);
 
     void undo() { swap(); }
     void redo() { swap(); }
@@ -549,6 +549,7 @@ private:
     RoofObject *mObject;
     int mWidth;
     int mHeight;
+    bool mHalfDepth;
 };
 
 class HandleRoof : public QUndoCommand

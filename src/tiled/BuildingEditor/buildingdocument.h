@@ -162,7 +162,7 @@ public:
 
     FurnitureTile *changeFurnitureTile(FurnitureObject *object, FurnitureTile *ftile);
 
-    void resizeRoof(RoofObject *roof, int &width, int &height);
+    void resizeRoof(RoofObject *roof, int &width, int &height, bool &halfDepth);
 
     int resizeWall(WallObject *wall, int length);
 

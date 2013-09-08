@@ -435,7 +435,7 @@ public slots:
 private:
     RoofObject *topmostRoofAt(const QPointF &scenePos);
     void updateHandle(const QPointF &scenePos);
-    void resizeRoof(int width, int height);
+    void resizeRoof(int width, int height, bool halfDepth);
     void toggleCappedW();
     void toggleCappedN();
     void toggleCappedE();
@@ -459,6 +459,8 @@ private:
     };
     Mode mMode;
 
+    QPointF mStartTilePosF;
+    QPointF mCurrentTilePosF;
     QPoint mStartPos;
     QPoint mCurrentPos;
     RoofObject *mObject;
@@ -471,6 +473,7 @@ private:
     GraphicsRoofHandleItem *mHandleItem;
     bool mMouseOverHandle;
     int mOriginalWidth, mOriginalHeight;
+    bool mOriginalHalfDepth;
 };
 
 /////

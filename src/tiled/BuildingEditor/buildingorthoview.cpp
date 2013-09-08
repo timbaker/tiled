@@ -1025,8 +1025,6 @@ void GraphicsRoofHandleItem::synchWithObject()
     case Resize:
         break;
     case DepthUp:
-        visible = roof->roofType() == RoofObject::FlatTop;
-        break;
     case DepthDown:
         visible = roof->roofType() == RoofObject::FlatTop;
         break;

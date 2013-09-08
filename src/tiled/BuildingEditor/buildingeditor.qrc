@@ -54,5 +54,9 @@
         <file>icons/mode_tile.png</file>
         <file>icons/icon_crop.png</file>
         <file>icons/shadow_shutters.png</file>
+        <file>icons/icon_roof_dormerE.png</file>
+        <file>icons/icon_roof_dormerN.png</file>
+        <file>icons/icon_roof_dormerS.png</file>
+        <file>icons/icon_roof_dormerW.png</file>
     </qresource>
 </RCC>

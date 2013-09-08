@@ -55,6 +55,8 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
     QToolBar(parent),
     mCurrentDocument(0)
 {
+    Q_UNUSED(mode)
+
     setObjectName(QString::fromUtf8("ObjectEditModeToolBar"));
     setWindowTitle(tr("Object ToolBar"));
 
@@ -112,6 +114,14 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
                          mode->tr("Peak (Horizontal)"));
     roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_peakNS.png")),
                          mode->tr("Peak (Vertical)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_dormerW.png")),
+                         mode->tr("Dormer (W)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_dormerE.png")),
+                         mode->tr("Dormer (E)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_dormerN.png")),
+                         mode->tr("Dormer (N)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_dormerS.png")),
+                         mode->tr("Dormer (S)"));
     roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_flat.png")),
                          mode->tr("Flat Top"));
     connect(roofMenu, SIGNAL(triggered(QAction*)), SLOT(roofTypeChanged(QAction*)));
@@ -260,6 +270,10 @@ void ObjectEditModeToolBar::roofTypeChanged(QAction *action)
         RoofObject::SlopeS,
         RoofObject::PeakWE,
         RoofObject::PeakNS,
+        RoofObject::DormerW,
+        RoofObject::DormerE,
+        RoofObject::DormerN,
+        RoofObject::DormerS,
         RoofObject::FlatTop,
     };
 

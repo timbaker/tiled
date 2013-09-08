@@ -455,17 +455,20 @@ FurnitureTile *BuildingDocument::changeFurnitureTile(FurnitureObject *object,
     return old;
 }
 
-void BuildingDocument::resizeRoof(RoofObject *roof, int &width, int &height)
+void BuildingDocument::resizeRoof(RoofObject *roof, int &width, int &height,
+                                  bool &halfDepth)
 {
     int oldWidth = roof->bounds().width();
     int oldHeight = roof->bounds().height();
+    bool oldHalfDepth = roof->isHalfDepth();
 
-    roof->resize(width, height);
+    roof->resize(width, height, halfDepth);
 
     emit objectMoved(roof);
 
     width = oldWidth;
     height = oldHeight;
+    halfDepth = oldHalfDepth;
 }
 
 int BuildingDocument::resizeWall(WallObject *wall, int length)
