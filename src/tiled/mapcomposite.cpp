@@ -939,6 +939,13 @@ MapComposite *MapComposite::addMap(MapInfo *mapInfo, const QPoint &pos,
         layerGroup->setNeedsSynch(true);
     }
 
+    MapComposite *mc = this;
+    while (mc->mParent) {
+        mc->mParent->ensureMaxLevels(mc->levelOffset() + mc->maxLevel());
+        // FIXME: setNeedsSynch() on mc->mParent's layergroups
+        mc = mc->mParent;
+    }
+
     return subMap;
 }
 
@@ -1577,11 +1584,13 @@ void MapComposite::mapLoaded(MapInfo *mapInfo)
 
     // Let the scene know it needs to synch.
     if (synch) {
+#if 0
         MapComposite *mc = mParent;
         while (mc) {
             mc->ensureMaxLevels(mLevelOffset + mMaxLevel);
             mc = mc->mParent;
         }
+#endif
         emit needsSynch();
     }
 }
