@@ -76,6 +76,7 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
 #ifdef ZOMBOID
     mLevelsModel(new ZLevelsModel(this)),
     mMapComposite(0),
+    mWorldCell(0),
 #endif
     mUndoStack(new QUndoStack(this))
 {
@@ -891,12 +892,37 @@ void MapDocument::bmpBlenderRegionAltered(const QRegion &region)
 
 void MapDocument::mapLoaded(MapInfo *info)
 {
-    bool changed = false;
-    WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mFileName);
+    if (!mAdjacentMapsLoading.contains(info) &&
+            !mAdjacentSubMapsLoading.contains(info)) return;
 
-    for (int i = 0; i < mAdjacentMapsLoading.size(); i++) {
-        AdjacentMap &am = mAdjacentMapsLoading[i];
-        if (am.info == info) {
+    if (mMapsLoaded.isEmpty())
+        QMetaObject::invokeMethod(this, "handleMapsLoadedNow", Qt::QueuedConnection);
+    mMapsLoaded += info;
+}
+
+void MapDocument::mapFailedToLoad(MapInfo *info)
+{
+    mAdjacentMapsLoading.remove(info);
+    mAdjacentSubMapsLoading.remove(info);
+}
+
+void MapDocument::handleMapsLoadedNow()
+{
+    bool changed = false;
+    // It could happen that the WorldEd project file was changed while
+    // adjacent maps were being loaded, causes mWorldCell to be set to null.
+    WorldCell *cell = mWorldCell;
+    if (!cell) {
+        mMapsLoaded.clear();
+        mAdjacentMapsLoading.clear();
+        mAdjacentSubMapsLoading.clear();
+        return;
+    }
+
+    while (!mMapsLoaded.isEmpty()) {
+        MapInfo *info = mMapsLoaded.takeFirst();
+
+        foreach (const AdjacentMap &am, mAdjacentMapsLoading.values(info)) {
             mMapComposite->setAdjacentMap(am.pos.x(), am.pos.y(), am.info);
 
             MapComposite *adjacentMap = mMapComposite->adjacentMap(am.pos.x(),
@@ -905,50 +931,42 @@ void MapDocument::mapLoaded(MapInfo *info)
             foreach (WorldCellLot *lot, cell2->lots()) {
                 MapInfo *subMapInfo = MapManager::instance()->loadMap(
                             lot->mapName(), QString(), true, MapManager::PriorityLow);
-                if (subMapInfo && !subMapInfo->isLoading())
+                if (subMapInfo && !subMapInfo->isLoading() && !mAdjacentSubMapsLoading.contains(subMapInfo))
                     adjacentMap->addMap(subMapInfo, lot->pos(), lot->level());
             }
 
-            mAdjacentMapsLoading.removeAt(i);
             changed = true;
-            --i;
         }
-    }
+        mAdjacentMapsLoading.remove(info);
 
-    for (int i = 0; i < mAdjacentSubMapsLoading.size(); i++) {
-        LoadingSubMap &sm = mAdjacentSubMapsLoading[i];
-        if (sm.mapInfo == info) {
+        foreach (const LoadingSubMap &sm, mAdjacentSubMapsLoading.values(info)) {
             int x = sm.lot->cell()->x(), y = sm.lot->cell()->y();
             if (MapComposite *adjacentMap = mMapComposite->adjacentMap(x - cell->x(),
                                                                        y - cell->y()))
                 adjacentMap->addMap(info, sm.lot->pos(), sm.lot->level());
-            mAdjacentSubMapsLoading.removeAt(i);
             changed = true;
-            --i;
         }
+        mAdjacentSubMapsLoading.remove(info);
     }
 
+    // This lets ZomboidScene update itself (syncing and repainting).
     if (changed)
         emit mapCompositeChanged(); ///////
+
+    if (!mMapsLoaded.isEmpty())
+        QMetaObject::invokeMethod(this, "handleMapsLoadedNow", Qt::QueuedConnection);
 }
 
-void MapDocument::mapFailedToLoad(MapInfo *info)
+void MapDocument::beforeWorldChanged(const QString &fileName)
 {
-    for (int i = 0; i < mAdjacentMapsLoading.size(); i++) {
-        AdjacentMap &am = mAdjacentMapsLoading[i];
-        if (am.info == info) {
-            mAdjacentMapsLoading.removeAt(i);
-            --i;
-        }
-    }
+    Q_UNUSED(fileName);
+    mWorldCell = 0;
+}
 
-    for (int i = 0; i < mAdjacentSubMapsLoading.size(); i++) {
-        LoadingSubMap &sm = mAdjacentSubMapsLoading[i];
-        if (sm.mapInfo == info) {
-            mAdjacentSubMapsLoading.removeAt(i);
-            --i;
-        }
-    }
+void MapDocument::afterWorldChanged(const QString &fileName)
+{
+    Q_UNUSED(fileName);
+    mWorldCell = WorldEd::WorldEdMgr::instance()->cellForMap(mFileName);
 }
 
 #endif // ZOMBOID
@@ -969,6 +987,7 @@ void MapDocument::initAdjacentMaps()
     QVector<MapInfo*> adjacentMaps(9);
 
     if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mFileName)) {
+        mWorldCell = cell;
         int cx = cell->x(), cy = cell->y();
         for (int y = -1; y <= 1; y++) {
             if (cy + y < 0 || cy + y >= cell->world()->height()) continue;
@@ -984,7 +1003,7 @@ void MapDocument::initAdjacentMaps()
                                     MapManager::PriorityMedium);
                         if (mapInfo) {
                             if (mapInfo->isLoading())
-                                mAdjacentMapsLoading += AdjacentMap(x, y, mapInfo);
+                                mAdjacentMapsLoading.insert(mapInfo, AdjacentMap(x, y, mapInfo));
                             else
                                 mMapComposite->setAdjacentMap(x, y, mapInfo);
 
@@ -994,7 +1013,7 @@ void MapDocument::initAdjacentMaps()
                                             lot->mapName(), QString(), true, MapManager::PriorityLow);
                                 if (subMapInfo) {
                                     if (subMapInfo->isLoading())
-                                        mAdjacentSubMapsLoading += LoadingSubMap(lot, subMapInfo);
+                                        mAdjacentSubMapsLoading.insert(subMapInfo, LoadingSubMap(lot, subMapInfo));
                                     else if (adjacentMap)
                                         adjacentMap->addMap(subMapInfo, lot->pos(), lot->level());
                                 }

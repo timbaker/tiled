@@ -42,6 +42,7 @@ class QUndoStack;
 class CompositeLayerGroup;
 class MapComposite;
 class MapInfo;
+class WorldCell;
 class WorldCellLot;
 #endif
 
@@ -423,6 +424,11 @@ private slots:
     void mapLoaded(MapInfo *info);
     void mapFailedToLoad(MapInfo *info);
 
+    void handleMapsLoadedNow();
+
+    void beforeWorldChanged(const QString &fileName);
+    void afterWorldChanged(const QString &fileName);
+
     void initAdjacentMaps();
 #endif
 
@@ -444,6 +450,8 @@ private:
 #ifdef SEPARATE_BMP_SELECTION
     QRegion mBmpSelection;
 #endif
+    WorldCell *mWorldCell;
+
     struct AdjacentMap {
         AdjacentMap(int x, int y, MapInfo *info) :
             pos(x, y),
@@ -452,7 +460,7 @@ private:
         QPoint pos;
         MapInfo *info;
     };
-    QList<AdjacentMap> mAdjacentMapsLoading;
+    QMultiMap<MapInfo*,AdjacentMap> mAdjacentMapsLoading;
 
     struct LoadingSubMap {
         LoadingSubMap(WorldCellLot *lot, MapInfo *mapInfo) :
@@ -462,7 +470,9 @@ private:
         WorldCellLot *lot;
         MapInfo *mapInfo;
     };
-    QList<LoadingSubMap> mAdjacentSubMapsLoading;
+    QMultiMap<MapInfo*,LoadingSubMap> mAdjacentSubMapsLoading;
+
+    QList<MapInfo*> mMapsLoaded;
 #endif // ZOMBOID
     QUndoStack *mUndoStack;
 };
