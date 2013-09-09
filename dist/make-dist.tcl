@@ -97,6 +97,7 @@ copyFile $BIN $DEST config.exe
 copyFile $BIN $DEST TileZed.exe
 copyFile $BIN $DEST tiled.dll
 copyFile $BIN $DEST tmxviewer.exe
+copyFile $BIN $DEST zlib1.dll
 
 copyFile $SRC $DEST AUTHORS AUTHORS.txt
 copyFile $SRC $DEST COPYING COPYING.txt
