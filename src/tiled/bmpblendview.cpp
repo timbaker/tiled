@@ -236,6 +236,7 @@ void BmpBlendDelegate::paint(QPainter *painter,
 QSize BmpBlendDelegate::sizeHint(const QStyleOptionViewItem &option,
                                 const QModelIndex &index) const
 {
+    Q_UNUSED(option)
     const BmpBlendModel *m = static_cast<const BmpBlendModel*>(index.model());
     QVector<BmpBlend*> blends = m->blendsAt(index);
     if (blends.isEmpty()) return QSize();

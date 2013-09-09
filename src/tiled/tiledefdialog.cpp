@@ -672,7 +672,10 @@ bool TileDefDialog::fileSaveAs()
 
 static void debugHistory(QStringList &history, int index)
 {
-#ifndef QT_NO_DEBUG
+#ifdef QT_NO_DEBUG
+    Q_UNUSED(history)
+    Q_UNUSED(index)
+#else
     QStringList items;
     for (int i = 0; i < history.size(); i++) {
         if (i == index)

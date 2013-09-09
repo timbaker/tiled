@@ -1603,7 +1603,7 @@ void BuildingEditorWindow::resizeBuilding()
     QPoint offset = dialog.offset();
     QSize newSize = dialog.newSize();
     QRect newBounds(QPoint(), newSize);
-    QRect overlap = newBounds & currentBuilding()->bounds().translated(offset);
+//    QRect overlap = newBounds & currentBuilding()->bounds().translated(offset);
 
     QUndoStack *undoStack = mCurrentDocument->undoStack();
     undoStack->beginMacro(tr("Resize Building"));

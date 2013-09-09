@@ -81,10 +81,10 @@ private:
     TileLayer *mErased;
     int mX, mY;
     QRegion mPaintedRegion;
-    bool mMergeable;
 #ifdef ZOMBOID
     bool mPaintEmptyCells;
 #endif
+    bool mMergeable;
 };
 
 } // namespace Internal

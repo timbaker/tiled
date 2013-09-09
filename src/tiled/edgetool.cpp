@@ -234,7 +234,7 @@ void EdgeTool::mouseReleased(QGraphicsSceneMouseEvent *event)
         Layer *layer = currentTileLayer();
         QPointF tilePosF = renderer->pixelToTileCoords(event->scenePos(),
                                                        layer ? layer->level() : 0);
-        QPoint tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
+//        QPoint tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
 //        QPointF m(tilePosF.x() - tilePos.x(), tilePosF.y() - tilePos.y());
         QPointF m = mStartTilePosF - mStartTilePos;
         // Click a second time to draw
@@ -709,6 +709,8 @@ void EdgeTool::drawGapTile(int x, int y, TileLayer &stamp,
                            QMap<QString, QRegion> &eraseRgn,
                            QMap<QString, QRegion> &noBlendRgn)
 {
+    Q_UNUSED(stamp)
+    Q_UNUSED(noBlendRgn)
     eraseRgn[currentTileLayer()->name()] += QRect(x, y, 1, 1);
 }
 
