@@ -144,6 +144,7 @@ using namespace BuildingEditor;
 #endif
 
 #ifdef ZOMBOID
+extern bool gStartupBlockRendering;
 MainWindow *MainWindow::mInstance = 0;
 #endif
 
@@ -820,12 +821,6 @@ bool MainWindow::openFile(const QString &fileName)
 
 void MainWindow::openLastFiles()
 {
-#ifdef ZOMBOID
-    foreach (QString f, Preferences::instance()->worldedFiles())
-        if (!f.isEmpty() && QFileInfo(f).exists())
-            WorldEd::WorldEdMgr::instance()->addProject(f);
-#endif
-
     mSettings.beginGroup(QLatin1String("recentFiles"));
 
     QStringList lastOpenFiles = mSettings.value(
@@ -867,17 +862,28 @@ void MainWindow::openLastFiles()
             continue;
 
         if (openFile(lastOpenFiles.at(i))) {
+#ifdef ZOMBOID
+            MapDocument *mapDocument = mDocumentManager->documents().last();
+            MapView *mapView = mDocumentManager->documentView(mapDocument);
+#else
             MapView *mapView = mDocumentManager->currentMapView();
+#endif
 
             // Restore camera to the previous position
             qreal scale = mapScales.at(i).toDouble();
             if (scale > 0)
                 mapView->zoomable()->setScale(scale);
 
+#ifdef ZOMBOID
+            const qreal hor = scrollX.at(i).toDouble();
+            const qreal ver = scrollY.at(i).toDouble();
+            mapView->centerOn(hor, ver);
+#else
             const int hor = scrollX.at(i).toInt();
             const int ver = scrollY.at(i).toInt();
             mapView->horizontalScrollBar()->setSliderPosition(hor);
             mapView->verticalScrollBar()->setSliderPosition(ver);
+#endif
 
             int layer = selectedLayer.at(i).toInt();
             if (layer > 0 && layer < mMapDocument->map()->layerCount())
@@ -891,6 +897,12 @@ void MainWindow::openLastFiles()
         mDocumentManager->switchToDocument(documentIndex);
 
     mSettings.endGroup();
+
+#ifdef ZOMBOID
+    gStartupBlockRendering = false;
+    if (mMapDocument)
+        mDocumentManager->currentMapScene()->update();
+#endif
 
 #ifdef ZOMBOID
     delete progress;
@@ -2693,10 +2705,17 @@ void MainWindow::writeSettings()
         const int currentLayerIndex = mMapDocument->currentLayerIndex();
 
         mapScales.append(QString::number(mapView->zoomable()->scale()));
+#ifdef ZOMBOID
+        QPointF centerScenePos = mapView->mapToScene(mapView->viewport()->width() / 2,
+                                                     mapView->viewport()->height() / 2);
+        scrollX.append(QString::number(centerScenePos.x()));
+        scrollY.append(QString::number(centerScenePos.y()));
+#else
         scrollX.append(QString::number(
                        mapView->horizontalScrollBar()->sliderPosition()));
         scrollY.append(QString::number(
                        mapView->verticalScrollBar()->sliderPosition()));
+#endif
         selectedLayer.append(QString::number(currentLayerIndex));
     }
     mSettings.setValue(QLatin1String("lastOpenFiles"), fileList);
@@ -2750,7 +2769,11 @@ void MainWindow::addMapDocument(MapDocument *mapDocument)
 {
     mDocumentManager->addDocument(mapDocument);
 
+#ifdef ZOMBOID
+    MapView *mapView = mDocumentManager->documentView(mapDocument);
+#else
     MapView *mapView = mDocumentManager->currentMapView();
+#endif
     connect(mapView->zoomable(), SIGNAL(scaleChanged(qreal)),
             this, SLOT(updateZoomLabel()));
 
@@ -2760,6 +2783,14 @@ void MainWindow::addMapDocument(MapDocument *mapDocument)
     mapScene->setGridVisible(prefs->showGrid());
     connect(prefs, SIGNAL(showGridChanged(bool)),
             mapScene, SLOT(setGridVisible(bool)));
+
+#ifdef ZOMBOID
+    if (!gStartupBlockRendering) {
+        int index = mDocumentManager->documents().indexOf(mapDocument);
+        mDocumentManager->switchToDocument(index);
+        mDocumentManager->centerViewOn(0, 0);
+    }
+#endif
 }
 
 void MainWindow::aboutTiled()

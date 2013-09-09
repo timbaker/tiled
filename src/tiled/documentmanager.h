@@ -80,6 +80,10 @@ public:
      */
     MapView *currentMapView() const;
 
+#ifdef ZOMBOID
+    MapView *documentView(MapDocument *doc) const;
+#endif
+
     /**
      * Returns the map scene of the current document, or 0 when there is none.
      */

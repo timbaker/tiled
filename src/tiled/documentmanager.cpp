@@ -104,6 +104,13 @@ MapView *DocumentManager::currentMapView() const
     return static_cast<MapView*>(mTabWidget->currentWidget());
 }
 
+#ifdef ZOMBOID
+MapView *DocumentManager::documentView(MapDocument *doc) const
+{
+    return static_cast<MapView*>(mTabWidget->widget(mDocuments.indexOf(doc)));
+}
+#endif
+
 MapScene *DocumentManager::currentMapScene() const
 {
     if (MapView *mapView = currentMapView())
@@ -185,9 +192,10 @@ void DocumentManager::addDocument(MapDocument *mapDocument)
 #endif
     connect(mapDocument, SIGNAL(fileNameChanged()), SLOT(updateDocumentTab()));
     connect(mapDocument, SIGNAL(modifiedChanged()), SLOT(updateDocumentTab()));
-
+#ifndef ZOMBOID
     switchToDocument(documentIndex);
     centerViewOn(0, 0);
+#endif
 }
 
 void DocumentManager::closeCurrentDocument()

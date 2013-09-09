@@ -42,6 +42,8 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 
+extern bool gStartupBlockRendering;
+
 ///// ///// ///// ///// /////
 
 #include <QStyleOptionGraphicsItem>
@@ -63,6 +65,10 @@ QRectF CompositeLayerGroupItem::boundingRect() const
 
 void CompositeLayerGroupItem::paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *)
 {
+    // This is a dumb hack used when restoring a session.
+    if (gStartupBlockRendering)
+        return;
+
     if (mLayerGroup->needsSynch() /*mBoundingRect != mLayerGroup->boundingRect(mRenderer)*/)
         return;
 

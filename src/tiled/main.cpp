@@ -26,7 +26,9 @@
 #include "preferences.h"
 #include "tiledapplication.h"
 #ifdef ZOMBOID
+#include "worlded/worldedmgr.h"
 #include "zprogress.h"
+#include <QFileInfo>
 #endif
 
 #include <QDebug>
@@ -42,6 +44,10 @@ Q_IMPORT_PLUGIN(qtiff)
 #define AS_STRING(x) STRINGIFY(x)
 
 using namespace Tiled::Internal;
+
+#ifdef ZOMBOID
+bool gStartupBlockRendering = true;
+#endif
 
 namespace {
 
@@ -181,11 +187,19 @@ int main(int argc, char *argv[])
 
     if (!w.InitConfigFiles())
         return 0;
-#endif
+
+    foreach (QString f, Preferences::instance()->worldedFiles())
+        if (!f.isEmpty() && QFileInfo(f).exists())
+            WorldEd::WorldEdMgr::instance()->addProject(f);
+#endif // ZOMBOID
+
     QObject::connect(&a, SIGNAL(fileOpenRequest(QString)),
                      &w, SLOT(openFile(QString)));
 
     if (!commandLine.filesToOpen().isEmpty()) {
+#ifdef ZOMBOID
+        gStartupBlockRendering = false;
+#endif
         foreach (const QString &fileName, commandLine.filesToOpen())
             w.openFile(fileName);
     } else {
