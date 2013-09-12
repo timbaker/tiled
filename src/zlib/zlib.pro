@@ -8,8 +8,10 @@ CONFIG -= qt
 
 win32:DEFINES += ZLIB_DLL
 
-target.path = $${LIBDIR}
-INSTALLS += target
+isEmpty(INSTALL_ONLY_BUILD) {
+    target.path = $${LIBDIR}
+    INSTALLS += target
+}
 
 macx {
     DESTDIR = ../../bin/TileZed.app/Contents/Frameworks
