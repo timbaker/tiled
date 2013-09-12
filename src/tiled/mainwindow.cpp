@@ -84,6 +84,7 @@
 #include "curbtool.h"
 #include "edgetool.h"
 #include "fencetool.h"
+#include "luatiletool.h"
 #include "mapcomposite.h"
 #include "mapimagemanager.h"
 #include "mapmanager.h"
@@ -509,6 +510,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     toolManager->registerTool(mEdgeTool = new EdgeTool(this));
     toolManager->registerTool(new CurbTool(this));
     toolManager->registerTool(new FenceTool(this));
+    toolManager->registerTool(new Lua::LuaTileTool(tr("Lua Tool"),
+                                                   QIcon(), QKeySequence(),
+                                                   this));
 #endif
     toolManager->addSeparator();
     toolManager->registerTool(new ObjectSelectionTool(this));
@@ -938,6 +942,7 @@ bool MainWindow::InitConfigFiles()
     configFiles += QLatin1String("Curbs.txt");
     configFiles += QLatin1String("Edges.txt");
     configFiles += QLatin1String("Fences.txt");
+    configFiles += QLatin1String("LuaTools.txt");
 
     foreach (QString configFile, configFiles) {
         QString fileName = configPath + QLatin1Char('/') + configFile;

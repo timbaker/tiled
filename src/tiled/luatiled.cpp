@@ -20,6 +20,7 @@
 #include "mapcomposite.h"
 
 #include "bmpblender.h"
+#include "luaconsole.h"
 #include "map.h"
 #include "mapobject.h"
 #include "objectgroup.h"
@@ -173,7 +174,6 @@ lua_State *LuaScript::init()
     return L;
 }
 
-#include "luaconsole.h"
 extern "C" {
 
 // see luaconf.h
@@ -188,7 +188,7 @@ void luai_writeline()
     LuaConsole::instance()->writeline();
 }
 
-static int traceback (lua_State *L) {
+int traceback(lua_State *L) {
   const char *msg = lua_tostring(L, 1);
   if (msg)
     luaL_traceback(L, L, msg, 1);
@@ -1013,3 +1013,5 @@ QStringList LuaBmpBlend::exclude()
 {
     return mBlend->ExclusionList;
 }
+
+/////

@@ -235,7 +235,9 @@ SOURCES += aboutdialog.cpp \
     curbtool.cpp \
     curbtooldialog.cpp \
     fencetool.cpp \
-    fencetooldialog.cpp
+    fencetooldialog.cpp \
+    luatiletool.cpp \
+    luatooldialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -431,7 +433,9 @@ HEADERS += aboutdialog.h \
     curbtool.h \
     curbtooldialog.h \
     fencetool.h \
-    fencetooldialog.h
+    fencetooldialog.h \
+    luatiletool.h \
+    luatooldialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -478,7 +482,8 @@ FORMS += aboutdialog.ui \
     luaworlddialog.ui \
     edgetooldialog.ui \
     curbtooldialog.ui \
-    fencetooldialog.ui
+    fencetooldialog.ui \
+    luatooldialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc
@@ -540,6 +545,7 @@ configTxtFiles.files = \
     $${top_srcdir}/Curbs.txt \
     $${top_srcdir}/Edges.txt \
     $${top_srcdir}/Fences.txt \
+    $${top_srcdir}/LuaTools.txt \
     $${top_srcdir}/TileProperties.txt \
     $${top_srcdir}/Tilesets.txt
 INSTALLS += configTxtFiles

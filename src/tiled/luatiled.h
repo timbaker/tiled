@@ -376,4 +376,8 @@ extern const char *cstring(const QString &qstring);
 } // namespace Lua
 } // namespace Tiled
 
+extern "C" {
+extern int traceback(lua_State *L);
+}
+
 #endif // LUATILED_H

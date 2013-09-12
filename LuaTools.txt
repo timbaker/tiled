@@ -1,0 +1,20 @@
+version = 1
+
+tool
+{
+    label = Mailbox (Rural)
+    script = tool-mailbox-rural.lua
+}
+
+tool
+{
+    label = Stop Sign
+    script = tool-stop-sign.lua
+}
+
+tool
+{
+    label = Street Light
+    script = tool-street-light.lua
+}
+

@@ -114,6 +114,7 @@ Translations = translations
 copyFile $SRC $DEST Curbs.txt
 copyFile $SRC $DEST Edges.txt
 copyFile $SRC $DEST Fences.txt
+copyFile $SRC $DEST LuaTools.txt
 copyFile $SRC $DEST TileProperties.txt
 copyFile $SRC $DEST Tilesets.txt
 
