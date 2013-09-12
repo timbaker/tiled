@@ -22,6 +22,8 @@
 
 #include "BuildingEditor/singleton.h"
 
+#include "tilelayer.h"
+
 #include <QCoreApplication>
 #include <QGraphicsPolygonItem>
 
@@ -160,6 +162,7 @@ private:
 
     MapScene *mScene;
     CompositeLayerGroup *mToolTileLayerGroup;
+    TileLayer mToolTiles;
     QRectF mToolTilesRect;
     bool mInitialClick;
     QPointF mStartTilePosF;

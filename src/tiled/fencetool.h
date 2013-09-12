@@ -22,6 +22,8 @@
 
 #include "BuildingEditor/singleton.h"
 
+#include "tilelayer.h"
+
 #include <QCoreApplication>
 #include <QGraphicsPathItem>
 
@@ -118,6 +120,7 @@ private:
 
     MapScene *mScene;
     CompositeLayerGroup *mToolTileLayerGroup;
+    TileLayer mToolTiles;
     bool mInitialClick;
     QPointF mStartTilePosF;
     QPoint mStartTilePos;

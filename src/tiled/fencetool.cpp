@@ -48,6 +48,7 @@ FenceTool::FenceTool(QObject *parent) :
                      parent),
     mScene(0),
     mToolTileLayerGroup(0),
+    mToolTiles(QString(), 0, 0, 1, 1),
     mInitialClick(false),
     mFence(0),
     mCursorItem(new QGraphicsPathItem)
@@ -73,6 +74,7 @@ void FenceTool::deactivate(MapScene *scene)
         mToolTileLayerGroup->clearToolTiles();
         mScene->update(mToolTilesRect);
         mToolTileLayerGroup = 0;
+        mToolTiles.erase();
     }
 
     FenceToolDialog::instance()->setVisibleLater(false);
@@ -109,6 +111,7 @@ void FenceTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
         mToolTileLayerGroup->clearToolTiles();
         mScene->update(mToolTilesRect);
         mToolTileLayerGroup = 0;
+        mToolTiles.erase();
     }
     QPoint topLeft;
     QVector<QVector<Cell> > toolTiles;
@@ -126,27 +129,24 @@ void FenceTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
             path.addPolygon((west || south) ? polyW : polyN);
             if (Tile *tile = gateTile(tilePos.x(), tilePos.y(), west || south)) {
                 topLeft = tilePos;
-                toolTiles.resize(1);
-                toolTiles[0].resize(1);
-                toolTiles[0][0] = Cell(tile);
+                mToolTiles.resize(QSize(1, 1), QPoint());
+                mToolTiles.setCell(0, 0, Cell(tile));
             }
         } else if (modifiers & Qt::ControlModifier) {
             QVector<Tile*> tiles = resolveTiles(mFence);
             if (Tile *tile = tiles[Fence::Post]) {
                 topLeft = tilePos;
-                toolTiles.resize(1);
-                toolTiles[0].resize(1);
+                mToolTiles.resize(QSize(1, 1), QPoint());
                 if (!currentTileLayer()->contains(tilePos) ||
                         currentTileLayer()->cellAt(tilePos).tile != tile)
-                toolTiles[0][0] = Cell(tile);
+                    mToolTiles.setCell(0, 0, Cell(tile));
             }
         } else {
             path.addPolygon(polyN), path.addPolygon(polyW);
             if (Tile *tile = fenceTile(tilePos.x(), tilePos.y(), west || south)) {
                 topLeft = tilePos;
-                toolTiles.resize(1);
-                toolTiles[0].resize(1);
-                toolTiles[0][0] = Cell(tile);
+                mToolTiles.resize(QSize(1, 1), QPoint());
+                mToolTiles.setCell(0, 0, Cell(tile));
             }
         }
     } else {
@@ -161,9 +161,8 @@ void FenceTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
             path.addPolygon(poly);
 
             topLeft = QPoint(qMin(mStartTilePos.x(), tilePos.x()), mStartTilePos.y());
-            TileLayer stamp(QString(), 0, 0, qAbs(tilePos.x() - mStartTilePos.x()) + 1, 1);
-            getNorthEdgeTiles(mStartTilePos.x(), mStartTilePos.y(), tilePos.x(), stamp);
-            toolTiles = tileLayerToVector(stamp);
+            mToolTiles.resize(QSize(qAbs(tilePos.x() - mStartTilePos.x()) + 1, 1), QPoint());
+            getNorthEdgeTiles(mStartTilePos.x(), mStartTilePos.y(), tilePos.x(), mToolTiles);
         } else {
             qreal dx = 0;
             QRectF r = QRectF(mStartTilePos.x() + dx, mStartTilePos.y(), 0.25, 1)
@@ -172,15 +171,15 @@ void FenceTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
             path.addPolygon(poly);
 
             topLeft = QPoint(mStartTilePos.x(), qMin(mStartTilePos.y(), tilePos.y()));
-            TileLayer stamp(QString(), 0, 0, 1, qAbs(tilePos.y() - mStartTilePos.y()) + 1);
-            getWestEdgeTiles(mStartTilePos.x(), mStartTilePos.y(), tilePos.y(), stamp);
-            toolTiles = tileLayerToVector(stamp);
+            mToolTiles.resize(QSize(1, qAbs(tilePos.y() - mStartTilePos.y()) + 1), QPoint());
+            getWestEdgeTiles(mStartTilePos.x(), mStartTilePos.y(), tilePos.y(), mToolTiles);
         }
     }
 
-    if (toolTiles.size()) {
-        lg->setToolTiles(toolTiles, topLeft, currentTileLayer());
-        mToolTilesRect = renderer->boundingRect(QRect(topLeft.x(), topLeft.y(), toolTiles.size(), toolTiles[0].size()),
+    if (!mToolTiles.isEmpty()) {
+        QSize tilesSize(mToolTiles.width(), mToolTiles.height());
+        lg->setToolTiles(&mToolTiles, topLeft, QRect(topLeft, tilesSize), currentTileLayer());
+        mToolTilesRect = renderer->boundingRect(QRect(topLeft.x(), topLeft.y(), mToolTiles.width(), mToolTiles.height()),
                 mapDocument()->currentLevel()).adjusted(-3, -(128-32) - 3, 3, 3); // use mMap->drawMargins()
         mToolTileLayerGroup = lg;
         mScene->update(mToolTilesRect);

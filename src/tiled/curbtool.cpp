@@ -48,6 +48,7 @@ CurbTool::CurbTool(QObject *parent) :
                      parent),
     mScene(0),
     mToolTileLayerGroup(0),
+    mToolTiles(QString(), 0, 0, 1, 1),
     mInitialClick(false),
     mCurb(0),
     mSuppressBlendTiles(false),
@@ -74,6 +75,7 @@ void CurbTool::deactivate(MapScene *scene)
         mToolTileLayerGroup->clearToolTiles();
         mScene->update(mToolTilesRect);
         mToolTileLayerGroup = 0;
+        mToolTiles.erase();
     }
 
     CurbToolDialog::instance()->setVisibleLater(false);
@@ -109,9 +111,9 @@ void CurbTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
         mToolTileLayerGroup->clearToolTiles();
         mScene->update(mToolTilesRect);
         mToolTileLayerGroup = 0;
+        mToolTiles.erase();
     }
     QPoint topLeft;
-    QVector<QVector<Cell> > toolTiles;
 
     if (!mInitialClick) {
         qreal dx = 0, dy = 0;
@@ -149,19 +151,20 @@ void CurbTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
             }
             topLeft = QPoint(qMin(mStartTilePos.x(), tilePos.x()), qMin(mStartTilePos.y(), tilePos.y()));
             bool far = (modifiers & Qt::AltModifier) != 0;
-            TileLayer stamp(QString(), 0, 0, qAbs(tilePos.x() - mStartTilePos.x()) + 2, qAbs(tilePos.y() - mStartTilePos.y()) + 2);
+            mToolTiles.resize(QSize(qAbs(tilePos.x() - mStartTilePos.x()) + 2, qAbs(tilePos.y() - mStartTilePos.y()) + 2),
+                              QPoint());
             QMap<QString,QRegion> eraseRgn, noBlendRgn;
             if (modifiers & Qt::ControlModifier) {
-                stamp.setCells(-topLeft.x(), -topLeft.y(), currentTileLayer(), QRegion(0, 0, stamp.width(), stamp.height()));
-                raiseLowerChanges(mStartTilePosF, tilePosF, stamp, eraseRgn);
+                mToolTiles.setCells(-topLeft.x(), -topLeft.y(), currentTileLayer(),
+                                    QRegion(0, 0, mToolTiles.width(), mToolTiles.height()));
+                raiseLowerChanges(mStartTilePosF, tilePosF, mToolTiles, eraseRgn);
                 QRegion region = eraseRgn.size() ? eraseRgn.values().first() : QRegion();
-                stamp.erase(region.translated(-topLeft));
+                mToolTiles.erase(region.translated(-topLeft));
             } else {
-                getMapChanges(mStartTilePosF, mStartCorner, tilePosF, corner, far, stamp, eraseRgn, noBlendRgn);
+                getMapChanges(mStartTilePosF, mStartCorner, tilePosF, corner, far, mToolTiles, eraseRgn, noBlendRgn);
                 // FIXME: should handle eraseRgn and noBlendRgn (noBlend in multiple layers)
-                stamp.resize(QSize(stamp.width() - 1, stamp.height() - 1), QPoint());
+                mToolTiles.resize(QSize(mToolTiles.width() - 1, mToolTiles.height() - 1), QPoint());
             }
-            toolTiles = tileLayerToVector(stamp);
         }
 
         qreal dx = 0, dy = 0;
@@ -176,9 +179,10 @@ void CurbTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
         mCursorItem->setPolygon(poly);
     }
 
-    if (toolTiles.size()) {
-        lg->setToolTiles(toolTiles, topLeft, currentTileLayer());
-        mToolTilesRect = renderer->boundingRect(QRect(topLeft.x(), topLeft.y(), toolTiles.size(), toolTiles[0].size()),
+    if (!mToolTiles.isEmpty()) {
+        QSize tilesSize(mToolTiles.width(), mToolTiles.height());
+        lg->setToolTiles(&mToolTiles, topLeft, QRect(topLeft, tilesSize), currentTileLayer());
+        mToolTilesRect = renderer->boundingRect(QRect(topLeft.x(), topLeft.y(), mToolTiles.width(), mToolTiles.height()),
                 mapDocument()->currentLevel()).adjusted(-3, -(128-32) - 3, 3, 3); // use mMap->drawMargins()
         mToolTileLayerGroup = lg;
         mScene->update(mToolTilesRect);

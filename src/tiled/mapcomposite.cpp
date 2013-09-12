@@ -95,9 +95,6 @@ CompositeLayerGroup::CompositeLayerGroup(MapComposite *owner, int level)
     , mAnyVisibleLayers(false)
     , mNeedsSynch(true)
     , mNoBlendCell(Tiled::Internal::TilesetManager::instance()->noBlendTile())
-#ifdef BUILDINGED
-    , mToolTileLayer(0)
-#endif // BUILDINGED
 {
 
 }
@@ -135,6 +132,7 @@ void CompositeLayerGroup::addTileLayer(TileLayer *layer, int index)
     mNoBlends.insert(index, 0);
 #ifdef BUILDINGED
     mBlendLayers.insert(index, 0);
+    mToolLayers.insert(index, ToolLayer());
     mForceNonEmpty.insert(index, false);
 #endif // BUILDINGED
 }
@@ -149,6 +147,7 @@ void CompositeLayerGroup::removeTileLayer(TileLayer *layer)
     mNoBlends.remove(index);
 #ifdef BUILDINGED
     mBlendLayers.remove(index);
+    mToolLayers.remove(index);
     mForceNonEmpty.remove(index);
 #endif // BUILDINGED
 #ifndef WORLDED
@@ -209,6 +208,7 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
         MapNoBlend *noBlend = mNoBlends[index];
 #ifdef BUILDINGED
         TileLayer *tlBlend = mBlendLayers[index];
+        const TileLayer *tlTool = mToolLayers[index].mLayer;
 #endif // BUILDINGED
         QPoint subPos = pos - mOwner->orientAdjustTiles() * mLevel - tl->position();
         if (tl->contains(subPos)) {
@@ -223,9 +223,9 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                 }
 #ifdef BUILDINGED
             // Use an empty tool tile if given during erasing.
-            if ((mToolTileLayer == tl) && !mToolTiles.isEmpty() &&
-                    QRect(mToolTilesPos, QSize(mToolTiles.size(), mToolTiles[0].size())).contains(subPos))
-                cell = &mToolTiles[subPos.x()-mToolTilesPos.x()][subPos.y()-mToolTilesPos.y()];
+            if (tlTool && mToolLayers[index].mRegion.contains(subPos) &&
+                    tlTool->contains(subPos - mToolLayers[index].mPos))
+                cell = &tlTool->cellAt(subPos - mToolLayers[index].mPos);
             else if (cell->isEmpty() && tlBlend && tlBlend->contains(subPos))
                 cell = &tlBlend->cellAt(subPos);
 #endif // BUILDINGED
@@ -382,7 +382,7 @@ bool CompositeLayerGroup::isLayerEmpty(int index) const
         return false;
     if (mBlendLayers[index] && !mBlendLayers[index]->isEmpty())
         return false;
-    if (mToolTileLayer && !mToolTiles.isEmpty())
+    if (mToolLayers[index].mLayer && !mToolLayers[index].mRegion.isEmpty())
         return false;
 #endif // BUILDINGED
 #if SPARSE_TILELAYER
@@ -426,6 +426,13 @@ void CompositeLayerGroup::synch()
             maxMargins(m, mBmpBlendLayers[i]->drawMargins(), m);
             mAnyVisibleLayers = true;
         }
+#ifdef BUILDINGED
+        if (mToolLayers[i].mLayer && !mToolLayers[i].mRegion.isEmpty()) {
+            unionTileRects(r, mLayers[i]->bounds().translated(mOwner->orientAdjustTiles() * mLevel), r);
+            maxMargins(m, mLayers[i]->drawMargins(), m);
+            mAnyVisibleLayers = true;
+        }
+#endif
     }
 
 #ifdef BUILDINGED
@@ -450,12 +457,6 @@ void CompositeLayerGroup::synch()
                 }
             }
         }
-    }
-
-    if (mToolTileLayer && !mToolTiles.isEmpty()) {
-        unionTileRects(r, mToolTileLayer->bounds().translated(mOwner->orientAdjustTiles() * mLevel), r);
-        maxMargins(m, QMargins(0, 128, 64, 0), m);
-        mAnyVisibleLayers = true;
     }
 #endif
 

@@ -20,6 +20,8 @@
 
 #include "buildingorthoview.h"
 
+#include "tilelayer.h"
+
 #include <QGraphicsItem>
 #include <QGraphicsScene>
 #include <QGraphicsView>
@@ -266,6 +268,7 @@ private:
     QGraphicsRectItem *mDarkRectangle;
     BaseTool *mCurrentTool;
     CompositeLayerGroup *mLayerGroupWithToolTiles;
+    Tiled::TileLayer mToolTiles;
     QString mNonEmptyLayer;
     CompositeLayerGroupItem *mNonEmptyLayerGroupItem;
     bool mShowBuildingTiles;

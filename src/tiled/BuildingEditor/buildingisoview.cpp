@@ -223,6 +223,7 @@ BuildingIsoScene::BuildingIsoScene(QObject *parent) :
     mDarkRectangle(new QGraphicsRectItem),
     mCurrentTool(0),
     mLayerGroupWithToolTiles(0),
+    mToolTiles(QString(), 0, 0, 1, 1),
     mNonEmptyLayerGroupItem(0),
     mShowBuildingTiles(true),
     mShowUserTiles(true),
@@ -504,8 +505,8 @@ bool BuildingIsoScene::currentFloorContains(const QPoint &tilePos, int dw, int d
 }
 
 void BuildingIsoScene::setToolTiles(const FloorTileGrid *tiles,
-                                         const QPoint &pos,
-                                         const QString &layerName)
+                                    const QPoint &pos,
+                                    const QString &layerName)
 {
     clearToolTiles();
 
@@ -524,9 +525,8 @@ void BuildingIsoScene::setToolTiles(const FloorTileGrid *tiles,
     foreach (Tileset *ts, mBuildingMap->map()->tilesets())
         tilesetByName[ts->name()] = ts;
 
-    QVector<QVector<Tiled::Cell> > cells(tiles->width());
-    for (int x = 0; x < tiles->width(); x++)
-        cells[x].resize(tiles->height());
+    QSize tilesSize(tiles->width(), tiles->height());
+    mToolTiles.resize(tilesSize, QPoint());
 
     for (int x = 0; x < tiles->width(); x++) {
         for (int y = 0; y < tiles->height(); y++) {
@@ -541,12 +541,12 @@ void BuildingIsoScene::setToolTiles(const FloorTileGrid *tiles,
                         tile = tilesetByName[tilesetName]->tileAt(index);
                 }
             }
-            cells[x][y] = Cell(tile);
+            mToolTiles.setCell(x, y, Cell(tile));
         }
     }
 
-    layerGroup->setToolTiles(cells, pos, layer);
-    if (layerGroup->bounds().isEmpty() && !cells.isEmpty()) {
+    layerGroup->setToolTiles(&mToolTiles, pos, QRect(pos, tilesSize), layer);
+    if (layerGroup->bounds().isEmpty() && !mToolTiles.isEmpty()) {
         item->synchWithTileLayers();
         item->updateBounds();
     }
