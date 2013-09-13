@@ -71,8 +71,9 @@ private:
     Ui::LuaToolDialog *ui;
     bool mVisibleLater;
     QTimer mVisibleLaterTimer;
-    QDateTime mTxtModifiedTime;
     QList<LuaToolInfo> mTools;
+    QDateTime mTxtModifiedTime1;
+    QDateTime mTxtModifiedTime2;
 };
 
 class LuaToolFile

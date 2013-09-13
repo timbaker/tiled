@@ -70,11 +70,19 @@ void CurbToolDialog::setVisible(bool visible)
     if (visible) {
 //        readSettings();
 
+        bool modified = false;
         QString fileName = Preferences::instance()->configPath(txtName());
         if (QFileInfo(fileName).exists()) {
-            if (mTxtModifiedTime != QFileInfo(fileName).lastModified())
-                readTxt();
+            if (mTxtModifiedTime1 != QFileInfo(fileName).lastModified())
+                modified = true;
         }
+        fileName = Preferences::instance()->appConfigPath(txtName());
+        if (QFileInfo(fileName).exists()) {
+            if (mTxtModifiedTime2 != QFileInfo(fileName).lastModified())
+                modified = true;
+        }
+        if (modified)
+            readTxt();
 
         currentRowChanged(ui->curbList->currentRow());
     }
@@ -141,15 +149,31 @@ void CurbToolDialog::setVisibleNow()
 
 void CurbToolDialog::readTxt()
 {
-    CurbFile curbFile;
+    mCurbs.clear();
+
+    // Read the user's Curbs.txt
+    CurbFile curbFile1;
     QString fileName = Preferences::instance()->configPath(txtName());
     if (QFileInfo(fileName).exists()) {
-        if (curbFile.read(fileName)) {
-            mCurbs = curbFile.takeCurbs();
-            mTxtModifiedTime = QFileInfo(fileName).lastModified();
+        if (curbFile1.read(fileName)) {
+            mCurbs += curbFile1.takeCurbs();
+            mTxtModifiedTime1 = QFileInfo(fileName).lastModified();
         } else {
             QMessageBox::warning(MainWindow::instance(), tr("Error Reading Curbs.txt"),
-                                 curbFile.errorString());
+                                 curbFile1.errorString());
+        }
+    }
+
+    // Read the application's Curbs.txt
+    CurbFile curbFile2;
+    fileName = Preferences::instance()->appConfigPath(txtName());
+    if (QFileInfo(fileName).exists()) {
+        if (curbFile2.read(fileName)) {
+            mCurbs += curbFile2.takeCurbs();
+            mTxtModifiedTime2 = QFileInfo(fileName).lastModified();
+        } else {
+            QMessageBox::warning(MainWindow::instance(), tr("Error Reading Curbs.txt"),
+                                 curbFile2.errorString());
         }
     }
 

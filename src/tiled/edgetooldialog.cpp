@@ -72,11 +72,19 @@ void EdgeToolDialog::setVisible(bool visible)
     if (visible) {
 //        readSettings();
 
+        bool modified = false;
         QString fileName = Preferences::instance()->configPath(txtName());
         if (QFileInfo(fileName).exists()) {
-            if (mTxtModifiedTime != QFileInfo(fileName).lastModified())
-                readTxt();
+            if (mTxtModifiedTime1 != QFileInfo(fileName).lastModified())
+                modified = true;
         }
+        fileName = Preferences::instance()->appConfigPath(txtName());
+        if (QFileInfo(fileName).exists()) {
+            if (mTxtModifiedTime2 != QFileInfo(fileName).lastModified())
+                modified = true;
+        }
+        if (modified)
+            readTxt();
 
         currentRowChanged(ui->edgeList->currentRow());
     }
@@ -148,15 +156,31 @@ void EdgeToolDialog::setVisibleNow()
 
 void EdgeToolDialog::readTxt()
 {
-    EdgeFile edgeFile;
+    mEdges.clear();
+
+    // Read the user's Edges.txt
+    EdgeFile edgeFile1;
     QString fileName = Preferences::instance()->configPath(txtName());
     if (QFileInfo(fileName).exists()) {
-        if (edgeFile.read(fileName)) {
-            mEdges = edgeFile.takeEdges();
-            mTxtModifiedTime = QFileInfo(fileName).lastModified();
+        if (edgeFile1.read(fileName)) {
+            mEdges += edgeFile1.takeEdges();
+            mTxtModifiedTime1 = QFileInfo(fileName).lastModified();
         } else {
             QMessageBox::warning(MainWindow::instance(), tr("Error Reading Edges.txt"),
-                                 edgeFile.errorString());
+                                 edgeFile1.errorString());
+        }
+    }
+
+    // Read the application's Edges.txt
+    EdgeFile edgeFile2;
+    fileName = Preferences::instance()->appConfigPath(txtName());
+    if (QFileInfo(fileName).exists()) {
+        if (edgeFile2.read(fileName)) {
+            mEdges += edgeFile2.takeEdges();
+            mTxtModifiedTime2 = QFileInfo(fileName).lastModified();
+        } else {
+            QMessageBox::warning(MainWindow::instance(), tr("Error Reading Edges.txt"),
+                                 edgeFile2.errorString());
         }
     }
 

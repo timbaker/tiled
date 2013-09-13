@@ -68,11 +68,19 @@ void FenceToolDialog::setVisible(bool visible)
     if (visible) {
 //        readSettings();
 
+        bool modified = false;
         QString fileName = Preferences::instance()->configPath(txtName());
         if (QFileInfo(fileName).exists()) {
-            if (mTxtModifiedTime != QFileInfo(fileName).lastModified())
-                readTxt();
+            if (mTxtModifiedTime1 != QFileInfo(fileName).lastModified())
+                modified = true;
         }
+        fileName = Preferences::instance()->appConfigPath(txtName());
+        if (QFileInfo(fileName).exists()) {
+            if (mTxtModifiedTime2 != QFileInfo(fileName).lastModified())
+                modified = true;
+        }
+        if (modified)
+            readTxt();
 
         currentRowChanged(ui->fenceList->currentRow());
     }
@@ -132,15 +140,31 @@ void FenceToolDialog::setVisibleNow()
 
 void FenceToolDialog::readTxt()
 {
-    FenceFile fenceFile;
+    mFences.clear();
+
+    // Read the user's Fences.txt
+    FenceFile fenceFile1;
     QString fileName = Preferences::instance()->configPath(txtName());
     if (QFileInfo(fileName).exists()) {
-        if (fenceFile.read(fileName)) {
-            mFences = fenceFile.takeFences();
-            mTxtModifiedTime = QFileInfo(fileName).lastModified();
+        if (fenceFile1.read(fileName)) {
+            mFences += fenceFile1.takeFences();
+            mTxtModifiedTime1 = QFileInfo(fileName).lastModified();
         } else {
             QMessageBox::warning(MainWindow::instance(), tr("Error Reading Fences.txt"),
-                                 fenceFile.errorString());
+                                 fenceFile1.errorString());
+        }
+    }
+
+    // Read the application's Fences.txt
+    FenceFile fenceFile2;
+    fileName = Preferences::instance()->appConfigPath(txtName());
+    if (QFileInfo(fileName).exists()) {
+        if (fenceFile2.read(fileName)) {
+            mFences += fenceFile2.takeFences();
+            mTxtModifiedTime2 = QFileInfo(fileName).lastModified();
+        } else {
+            QMessageBox::warning(MainWindow::instance(), tr("Error Reading Fences.txt"),
+                                 fenceFile2.errorString());
         }
     }
 

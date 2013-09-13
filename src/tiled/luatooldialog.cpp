@@ -64,11 +64,20 @@ LuaToolDialog::~LuaToolDialog()
 void LuaToolDialog::setVisible(bool visible)
 {
     if (visible) {
+        bool modified = false;
         QString fileName = Preferences::instance()->configPath(txtName());
         if (QFileInfo(fileName).exists()) {
-            if (mTxtModifiedTime != QFileInfo(fileName).lastModified())
-                readTxt();
+            if (mTxtModifiedTime1 != QFileInfo(fileName).lastModified())
+                modified = true;
         }
+        fileName = Preferences::instance()->appConfigPath(txtName());
+        if (QFileInfo(fileName).exists()) {
+            if (mTxtModifiedTime2 != QFileInfo(fileName).lastModified())
+                modified = true;
+        }
+        if (modified)
+            readTxt();
+
         currentRowChanged(ui->scriptList->currentRow());
     }
 
@@ -105,10 +114,8 @@ void LuaToolDialog::writeSettings()
 void LuaToolDialog::currentRowChanged(int row)
 {
     QString script = (row >= 0) ? mTools.at(row).mScript : QString();
-    if (!script.isEmpty()) {
-        script = Preferences::instance()->luaPath(script);
+    if (!script.isEmpty())
         Lua::LuaTileTool::instance().setScript(script);
-    }
 }
 
 void LuaToolDialog::setVisibleNow()
@@ -119,15 +126,31 @@ void LuaToolDialog::setVisibleNow()
 
 void LuaToolDialog::readTxt()
 {
-    LuaToolFile file;
+    mTools.clear();
+
+    // Load the user's LuaTools.txt.
+    LuaToolFile file1;
     QString fileName = Preferences::instance()->configPath(txtName());
     if (QFileInfo(fileName).exists()) {
-        if (file.read(fileName)) {
-            mTools = file.takeTools();
-            mTxtModifiedTime = QFileInfo(fileName).lastModified();
+        if (file1.read(fileName)) {
+            mTools += file1.takeTools();
+            mTxtModifiedTime1 = QFileInfo(fileName).lastModified();
         } else {
             QMessageBox::warning(MainWindow::instance(), tr("Error Reading LuaTools.txt"),
-                                 file.errorString());
+                                 file1.errorString());
+        }
+    }
+
+    // Load the application's LuaTools.txt.
+    LuaToolFile file2;
+    fileName = Preferences::instance()->appConfigPath(txtName());
+    if (QFileInfo(fileName).exists()) {
+        if (file2.read(fileName)) {
+            mTools += file2.takeTools();
+            mTxtModifiedTime2 = QFileInfo(fileName).lastModified();
+        } else {
+            QMessageBox::warning(MainWindow::instance(), tr("Error Reading LuaTools.txt"),
+                                 file2.errorString());
         }
     }
 
@@ -141,6 +164,7 @@ void LuaToolDialog::readTxt()
 
 #include "BuildingEditor/simplefile.h"
 
+#include <QDir>
 #include <QFileInfo>
 
 LuaToolFile::LuaToolFile()
@@ -168,6 +192,7 @@ bool LuaToolFile::read(const QString &fileName)
     }
 
     mFileName = path;
+    QDir dir(info.absoluteDir());
 
 //    int version = simple.version();
 
@@ -181,6 +206,10 @@ bool LuaToolFile::read(const QString &fileName)
             LuaToolInfo info;
             info.mLabel = block.value("label");
             info.mScript = block.value("script");
+            if (QFileInfo(info.mScript).isRelative()) {
+                info.mScript = QLatin1String("lua/") + info.mScript;
+                info.mScript = dir.filePath(info.mScript);
+            }
 
             mTools += info;
         } else {

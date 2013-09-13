@@ -64,7 +64,8 @@ private:
     bool mVisibleLater;
     QTimer mVisibleLaterTimer;
     QList<Fence*> mFences;
-    QDateTime mTxtModifiedTime;
+    QDateTime mTxtModifiedTime1;
+    QDateTime mTxtModifiedTime2;
 };
 
 } // namespace Internal
