@@ -115,6 +115,8 @@ public:
 
     void viewAddedForDocument(BuildingIsoView *view);
 
+    bool mMissingTilesetsReported;
+
 public slots:
     void autoSaveCheck();
     void autoSaveTimeout();

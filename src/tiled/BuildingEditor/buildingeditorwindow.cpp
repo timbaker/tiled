@@ -102,6 +102,7 @@ EditorWindowPerDocumentStuff::EditorWindowPerDocumentStuff(BuildingDocument *doc
     mEditMode(IsoObjectMode),
     mPrevObjectTool(PencilTool::instance()),
     mPrevTileTool(DrawTileTool::instance()),
+    mMissingTilesetsReported(false),
     mIsoView(0),
     mTileView(0)
 {
@@ -444,6 +445,10 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
             SLOT(currentModeAboutToChange(IMode*)));
     connect(ModeManager::instancePtr(), SIGNAL(currentModeChanged()),
             SLOT(currentModeChanged()));
+
+    // Do this *after* all the different modes handle the document changing.
+    connect(docman(), SIGNAL(currentDocumentChanged(BuildingDocument*)),
+            SLOT(reportMissingTilesets()));
 
     readSettings();
 
@@ -1876,6 +1881,8 @@ void BuildingEditorWindow::tilesetChanged(Tileset *tileset)
 void BuildingEditorWindow::reportMissingTilesets()
 {
     Building *building = currentBuilding();
+    if (!building || mCurrentDocumentStuff->mMissingTilesetsReported)
+        return;
 
     QSet<QString> missingTilesets;
     foreach (BuildingTileEntry *entry, building->usedTiles()) {
@@ -1909,6 +1916,8 @@ void BuildingEditorWindow::reportMissingTilesets()
         dialog.setWindowTitle(tr("Missing Tilesets"));
         dialog.exec();
     }
+
+    mCurrentDocumentStuff->mMissingTilesetsReported = true;
 }
 
 void BuildingEditorWindow::updateActions()
