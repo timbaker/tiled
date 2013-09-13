@@ -31,6 +31,7 @@
 #include "maprenderer.h"
 #include "tilelayer.h"
 
+#include <qmath.h>
 #include <QDebug>
 #include <QFileInfo>
 #include <QUndoStack>
@@ -52,9 +53,14 @@ LuaTileTool::LuaTileTool(const QString &name, const QIcon &icon,
     AbstractTileTool(name, icon, shortcut, parent),
     L(0),
     mMap(0),
-    mMapChanged(false)
+    mMapChanged(false),
+    mCursorItem(new QGraphicsPathItem),
+    mCursorType(None)
 {
     mDistanceIndicators[0] = mDistanceIndicators[1] = mDistanceIndicators[2] = mDistanceIndicators[3] = 0;
+
+    mCursorItem->setPen(QPen(QColor(0,255,0,96), 1));
+    mCursorItem->setBrush(QColor(0,255,0,64));
 }
 
 void LuaTileTool::setScript(const QString &fileName)
@@ -98,6 +104,8 @@ void LuaTileTool::activate(Internal::MapScene *scene)
     AbstractTileTool::activate(scene);
     mScene = scene;
 
+    mScene->addItem(mCursorItem);
+
     Internal::LuaToolDialog::instance()->setVisibleLater(true);
 
     connect(mapDocument(), SIGNAL(mapChanged()), SLOT(mapChanged()));
@@ -140,6 +148,8 @@ void LuaTileTool::deactivate(Internal::MapScene *scene)
     clearToolTiles();
     clearDistanceIndicators();
     mapDocument()->disconnect(this);
+    scene->removeItem(mCursorItem);
+    mCursorType = CursorType::None;
 
     AbstractTileTool::deactivate(scene);
 
@@ -174,6 +184,13 @@ void LuaTileTool::mouseLeft()
 
 void LuaTileTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
 {
+    if (mButtons & Qt::LeftButton) {
+        mCursorItem->setVisible(false);
+    } else {
+        QPainterPath path = cursorShape(pos, modifiers);
+        mCursorItem->setPath(path);
+        mCursorItem->setVisible(true);
+    }
     mouseEvent("mouseMoved", mButtons, pos, modifiers);
 }
 
@@ -235,6 +252,11 @@ void LuaTileTool::languageChanged()
 void LuaTileTool::tilePositionChanged(const QPoint &tilePos)
 {
     Q_UNUSED(tilePos)
+}
+
+void LuaTileTool::setCursorType(LuaTileTool::CursorType type)
+{
+    mCursorType = type;
 }
 
 void LuaTileTool::mouseEvent(const char *func, Qt::MouseButtons buttons,
@@ -425,6 +447,43 @@ void LuaTileTool::indicateDistance(int x1, int y1, int x2, int y2)
             mDistanceIndicators[d]->show();
         }
     }
+}
+
+QPainterPath LuaTileTool::cursorShape(const QPointF &pos, Qt::KeyboardModifiers modifiers)
+{
+    QPainterPath path;
+    if (mCursorType == CursorType::EdgeTool) {
+        const MapRenderer *renderer = mapDocument()->renderer();
+        int level = 0;
+        QPointF tilePosF = renderer->pixelToTileCoords(pos, level);
+        QPoint tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
+        QPointF m(tilePosF.x() - tilePos.x(), tilePosF.y() - tilePos.y());
+        qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
+
+        Edge edge;
+        if (dW < dE) {
+            edge = (dW < dN && dW < dS) ? EdgeW : ((dN < dS) ? EdgeN : EdgeS);
+        } else {
+            edge = (dE < dN && dE < dS) ? EdgeE : ((dN < dS) ? EdgeN : EdgeS);
+        }
+
+        QPolygonF polyN = renderer->tileToPixelCoords(QRectF(tilePos.x(), tilePos.y(), 1, 0.25), level);
+        QPolygonF polyS = renderer->tileToPixelCoords(QRectF(tilePos.x(), tilePos.y() + 0.75, 1, 0.25), level);
+        QPolygonF polyW = renderer->tileToPixelCoords(QRectF(tilePos.x(), tilePos.y(), 0.25, 1), level);
+        QPolygonF polyE = renderer->tileToPixelCoords(QRectF(tilePos.x() + 0.75, tilePos.y(), 0.25, 1), level);
+        polyN += polyN.first(), polyS += polyS.first(), polyW += polyW.first(), polyE += polyE.first();
+        if ((edge == EdgeN && dW < 0.5) || (edge == EdgeW && dN < 0.5))
+            path.addPolygon(polyN), path.addPolygon(polyW);
+        if ((edge == EdgeS && dW < 0.5) || (edge == EdgeW && dS < 0.5))
+            path.addPolygon(polyS), path.addPolygon(polyW);
+        if ((edge == EdgeN && dE < 0.5) || (edge == EdgeE && dN < 0.5))
+            path.addPolygon(polyN), path.addPolygon(polyE);
+        if ((edge == EdgeS && dE < 0.5) || (edge == EdgeE && dS < 0.5))
+            path.addPolygon(polyS), path.addPolygon(polyE);
+        path.setFillRule(Qt::WindingFill);
+        path = path.simplified();
+    }
+    return path;
 }
 
 /////

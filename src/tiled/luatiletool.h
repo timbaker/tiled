@@ -25,6 +25,7 @@
 #include <QMap>
 
 class DistanceIndicator;
+class QGraphicsPathItem;
 
 extern "C" {
 struct lua_State;
@@ -62,6 +63,11 @@ public:
     void tilePositionChanged(const QPoint &tilePos);
 
     // Callable from Lua scripts
+    enum CursorType {
+        None,
+        EdgeTool
+    };
+    void setCursorType(CursorType type);
     void applyChanges(const char *undoText);
     int angle(float x1, float y1, float x2, float y2);
     void clearToolTiles();
@@ -74,6 +80,7 @@ protected slots:
     void mapChanged() { mMapChanged = true; }
 
 protected:
+    QPainterPath cursorShape(const QPointF &pos, Qt::KeyboardModifiers modifiers);
     void mouseEvent(const char *func, Qt::MouseButtons buttons,
                     const QPointF &scenePos, Qt::KeyboardModifiers modifiers);
     void checkMap();
@@ -87,6 +94,16 @@ private:
     Qt::MouseButtons mButtons;
     QMap<QString,Tiled::TileLayer*> mToolTileLayers;
     QMap<QString,QRegion> mToolTileRegions;
+
+    enum Edge {
+        EdgeW,
+        EdgeN,
+        EdgeE,
+        EdgeS
+    };
+
+    QGraphicsPathItem *mCursorItem;
+    CursorType mCursorType;
 
     DistanceIndicator *mDistanceIndicators[4];
 };
