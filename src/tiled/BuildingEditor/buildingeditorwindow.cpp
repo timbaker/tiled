@@ -1292,6 +1292,11 @@ void BuildingEditorWindow::selectAll()
                     new ChangeTileSelection(mCurrentDocument, currentFloor()->bounds(1, 1)));
         return;
     }
+    if (PencilTool::instance()->isCurrent() || SelectMoveRoomsTool::instance()->isCurrent()) {
+        mCurrentDocument->undoStack()->push(
+                    new ChangeRoomSelection(mCurrentDocument, currentFloor()->bounds()));
+        return;
+    }
     QSet<BuildingObject*> objects = currentFloor()->objects().toSet();
     mCurrentDocument->setSelectedObjects(objects);
 }
@@ -1303,6 +1308,11 @@ void BuildingEditorWindow::selectNone()
     if (mCurrentDocumentStuff->isTile()) {
         mCurrentDocument->undoStack()->push(
                     new ChangeTileSelection(mCurrentDocument, QRegion()));
+        return;
+    }
+    if (PencilTool::instance()->isCurrent() || SelectMoveRoomsTool::instance()->isCurrent()) {
+        mCurrentDocument->undoStack()->push(
+                    new ChangeRoomSelection(mCurrentDocument, QRegion()));
         return;
     }
     mCurrentDocument->setSelectedObjects(QSet<BuildingObject*>());
@@ -1989,7 +1999,12 @@ void BuildingEditorWindow::updateActions()
         ui->actionDelete->setEnabled(hasTileSel);
     } else {
         ui->actionSelectAll->setEnabled(hasDoc);
-        ui->actionSelectNone->setEnabled(hasDoc && mCurrentDocument->selectedObjects().size());
+        bool selectNone = false;
+        if (PencilTool::instance()->isCurrent() || SelectMoveRoomsTool::instance()->isCurrent())
+            selectNone = hasDoc && !mCurrentDocument->roomSelection().isEmpty();
+        else
+            selectNone = hasDoc && mCurrentDocument->selectedObjects().size();
+        ui->actionSelectNone->setEnabled(selectNone);
         ui->actionDelete->setEnabled(hasDoc && mCurrentDocument->selectedObjects().size());
     }
 
