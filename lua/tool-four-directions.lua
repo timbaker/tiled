@@ -1,11 +1,11 @@
 if not params.tile1 then params.tile1 = {} end
 
 function activate()
-    print('activate!')
+    print('activate')
 end
 
 function deactivate()
-    print('deactivate!')
+    print('deactivate')
 end
 
 function mouseMoved(buttons, x, y, modifiers)
@@ -13,6 +13,12 @@ function mouseMoved(buttons, x, y, modifiers)
     self:clearToolTiles()
     local tile0 = params.tile0.e
     local tile1 = params.tile1.e
+    local dx = 0
+    local dy = 0
+    if map:orientation() == Map.Isometric then
+	dx = -3
+	dy = -3
+    end
     if buttons.left then
 	local angle = self:angle(self.xy.x, self.xy.y, x, y)
 	if angle >= 45 and angle < 135 then
@@ -27,13 +33,13 @@ function mouseMoved(buttons, x, y, modifiers)
 	end
 	self:setToolTile(params.layer0, self.xy.x, self.xy.y, map:tile(tile0))
 	if params.layer1 and params.tile1 then
-	    self:setToolTile(params.layer1, self.xy.x, self.xy.y, map:tile(tile1))
+	    self:setToolTile(params.layer1, self.xy.x + dx, self.xy.y + dy, map:tile(tile1))
 	end
 	indicateDistance(self.xy.x, self.xy.y)
     else
 	self:setToolTile(params.layer0, x, y, map:tile(tile0))
 	if tile1 then
-	    self:setToolTile(params.layer1, x, y, map:tile(tile1))
+	    self:setToolTile(params.layer1, x + dx, y + dy, map:tile(tile1))
 	end
 	indicateDistance(x, y)
     end
@@ -53,6 +59,12 @@ end
 function mouseReleased(buttons, x, y, modifiers)
     debugMouse('mouseReleased', buttons, x, y, modifiers)
     if buttons.left and not self.cancel then
+	local dx = 0
+	local dy = 0
+	if map:orientation() == Map.Isometric then
+	    dx = -3
+	    dy = -3
+	end
 	local current = map:tileLayer(params.layer0):tileAt(x, y)
 	if current == map:tile(params.tile0.w) or
 		current == map:tile(params.tile0.n) or
@@ -60,7 +72,7 @@ function mouseReleased(buttons, x, y, modifiers)
 		current == map:tile(params.tile0.s) then
 	    map:tileLayer(params.layer0):clearTile(x, y)
 	    if params.layer1 and params.tile1 then
-		map:tileLayer(params.layer1):clearTile(x, y)
+		map:tileLayer(params.layer1):clearTile(x + dx, y + dy)
 	    end
 	    self:applyChanges('Erase '..params.undoText)
 	    return
@@ -80,12 +92,6 @@ function mouseReleased(buttons, x, y, modifiers)
 	end
 	map:tileLayer(params.layer0):setTile(self.xy.x, self.xy.y, map:tile(tile0))
 	if params.layer1 and params.tile1 then
-	    local dx = 0
-	    local dy = 0
-	    if map:orientation() == Map::Isometric then
-		dx = -3
-		dy = -3
-	    end
 	    map:tileLayer(params.layer1):setTile(self.xy.x + dx, self.xy.y + dy, map:tile(tile1))
 	end
 	self:applyChanges('Draw '..params.undoText)
