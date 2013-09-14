@@ -303,7 +303,6 @@ private:
     StampBrush *mStampBrush;
     BucketFillTool *mBucketFillTool;
 #ifdef ZOMBOID
-    EdgeTool *mEdgeTool;
     Eraser *mEraserTool;
 #endif
 

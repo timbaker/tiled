@@ -84,19 +84,6 @@ void CurbTool::deactivate(MapScene *scene)
     AbstractTileTool::deactivate(scene);
 }
 
-static QVector<QVector<Cell> > tileLayerToVector(TileLayer &tl)
-{
-    QVector<QVector<Cell> > ret(tl.width());
-    for (int x = 0; x < tl.width(); x++)
-        ret[x].resize(tl.height());
-    for (int y = 0; y < tl.height(); y++) {
-        for (int x = 0; x < tl.width(); x++) {
-            ret[x][y] = tl.cellAt(x, y);
-        }
-    }
-    return ret;
-}
-
 void CurbTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
 {
     const MapRenderer *renderer = mapDocument()->renderer();
@@ -310,7 +297,6 @@ void CurbTool::drawEdge(const QPointF &start, Corner cornerStart,
                         const QPointF &end, Corner cornerEnd,
                         bool far)
 {
-#if 1
     int sx = qFloor(start.x()), sy = qFloor(start.y());
     int ex = qFloor(end.x()), ey = qFloor(end.y());
     QPoint origin(qMin(sx, ex), qMin(sy, ey));
@@ -356,58 +342,12 @@ void CurbTool::drawEdge(const QPointF &start, Corner cornerStart,
         PaintNoBlend *cmd = new PaintNoBlend(mapDocument(), noBlend, bits, rgn);
         mapDocument()->undoStack()->push(cmd);
     }
-#else
-    int sx = qFloor(start.x()), sy = qFloor(start.y());
-    int ex = qFloor(end.x()), ey = qFloor(end.y());
-
-    if (qAbs(start.x() - end.x()) > qAbs(start.y() - end.y())) {
-        // South edge
-        // East-to-West
-        if (start.x() > end.x()) {
-            for (int x = sx; x >= ex; x--) {
-                bool half = ((sx == ex) && (cornerStart == cornerEnd))
-                        || ((sx != ex && x == sx) && (cornerStart == CornerSW || cornerStart == CornerNW))
-                        || ((sx != ex && x == ex) && (cornerEnd == CornerNE || cornerEnd == CornerSE));
-                drawEdgeTile(x, sy, EdgeS, half, far);
-            }
-            return;
-        }
-        // West-to-East
-        for (int x = sx; x <= ex; x++) {
-            bool half = ((sx == ex) && (cornerStart == cornerEnd))
-                    || ((sx != ex && x == sx) && (cornerStart == CornerNE || cornerStart == CornerSE))
-                    || ((sx != ex && x == ex) && (cornerEnd == CornerSW || cornerEnd == CornerNW));
-            drawEdgeTile(x, sy, EdgeS, half, far);
-        }
-    } else {
-        // East edge
-        // South-to-North
-        if (start.y() > end.y()) {
-            for (int y = sy; y >= ey; y--) {
-                bool half = ((sy == ey) && (cornerStart == cornerEnd))
-                        || ((sy != ey && y == sy) && (cornerStart == CornerNW || cornerStart == CornerNE))
-                        || ((sy != ey && y == ey) && (cornerEnd == CornerSW || cornerEnd == CornerSE));
-                drawEdgeTile(sx, y, EdgeE, half, far);
-            }
-            return;
-        }
-        // North-to-South
-        for (int y = sy; y <= ey; y++) {
-            bool half = ((sy == ey) && (cornerStart == cornerEnd))
-                    || ((sy != ey && y == sy) && (cornerStart == CornerSW || cornerStart == CornerSE))
-                    || ((sy != ey && y == ey) && (cornerEnd == CornerNW || cornerEnd == CornerNE));
-            drawEdgeTile(sx, y, EdgeE, half, far);
-        }
-    }
-#endif
 }
 
 void CurbTool::drawEdgeTile(const QPoint &origin, int x, int y, Edge edge, bool half, bool far,
                             TileLayer &stamp, QMap<QString,QRegion> &eraseRgn,
                             QMap<QString,QRegion> &noBlendRgn)
 {
-//    qDebug() << "CurbTool::drawEdgeTile" << x << y << edge;
-
     TileLayer *tileLayer = currentTileLayer();
     if (!tileLayer->contains(x, y))
         return;

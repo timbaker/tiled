@@ -507,7 +507,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     toolManager->registerTool(new TileSelectionTool(this));
 #ifdef ZOMBOID
     toolManager->registerTool(new PickTileTool(this));
-    toolManager->registerTool(mEdgeTool = new EdgeTool(this));
+    toolManager->registerTool(new EdgeTool(this));
     toolManager->registerTool(new CurbTool(this));
     toolManager->registerTool(new FenceTool(this));
     toolManager->registerTool(new Lua::LuaTileTool(tr("Lua Tile Tool"),

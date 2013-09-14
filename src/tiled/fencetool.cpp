@@ -83,19 +83,6 @@ void FenceTool::deactivate(MapScene *scene)
     AbstractTileTool::deactivate(scene);
 }
 
-static QVector<QVector<Cell> > tileLayerToVector(TileLayer &tl)
-{
-    QVector<QVector<Cell> > ret(tl.width());
-    for (int x = 0; x < tl.width(); x++)
-        ret[x].resize(tl.height());
-    for (int y = 0; y < tl.height(); y++) {
-        for (int x = 0; x < tl.width(); x++) {
-            ret[x][y] = tl.cellAt(x, y);
-        }
-    }
-    return ret;
-}
-
 void FenceTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
 {
     const MapRenderer *renderer = mapDocument()->renderer();
@@ -296,41 +283,10 @@ QVector<Tile *> FenceTool::resolveTiles(Fence *fence)
 
 void FenceTool::drawWestEdge(int sx, int sy, int ey)
 {
-#if 1
     TileLayer stamp(QString(), 0, 0, 1, qAbs(ey - sy) + 1);
     getWestEdgeTiles(sx, sy, ey, stamp);
 
     TileLayer *tileLayer = currentTileLayer();
-#else
-    QVector<Tile*> tiles = resolveTiles(mFence);
-    Tile *t[2] = { tiles[Fence::West1], tiles[Fence::West2] };
-
-    TileLayer stamp(QString(), 0, 0, 1, qAbs(ey - sy) + 1);
-
-    TileLayer *tileLayer = currentTileLayer();
-
-    if (sy > ey) {
-        int n = 1;
-        for (int y = sy; y >= ey; y--) {
-            Tile *CURRENT = tileLayer->cellAt(sx, y).tile;
-            if (CURRENT == tiles[Fence::North1])
-                stamp.setCell(0, y - ey, Cell(tiles[Fence::NorthWest]));
-            else if (CURRENT != tiles[Fence::NorthWest])
-                stamp.setCell(0, y - ey, Cell(t[n]));
-            n = !n;
-        }
-    } else {
-        int n = 0;
-        for (int y = sy; y <= ey; y++) {
-            Tile *CURRENT = tileLayer->cellAt(sx, y).tile;
-            if (CURRENT == tiles[Fence::North1])
-                stamp.setCell(0, y - sy, Cell(tiles[Fence::NorthWest]));
-            else if (CURRENT != tiles[Fence::NorthWest])
-                stamp.setCell(0, y - sy, Cell(t[n]));
-            n = !n;
-        }
-    }
-#endif
 
     PaintTileLayer *cmd = new PaintTileLayer(mapDocument(), tileLayer,
                                              sx, qMin(sy, ey), &stamp,
@@ -343,41 +299,10 @@ void FenceTool::drawWestEdge(int sx, int sy, int ey)
 
 void FenceTool::drawNorthEdge(int sx, int sy, int ex)
 {
-#if 1
     TileLayer stamp(QString(), 0, 0, qAbs(ex - sx) + 1, 1);
     getNorthEdgeTiles(sx, sy, ex, stamp);
 
     TileLayer *tileLayer = currentTileLayer();
-#else
-    QVector<Tile*> tiles = resolveTiles(mFence);
-    Tile *t[2] = { tiles[Fence::North1], tiles[Fence::North2] };
-
-    TileLayer stamp(QString(), 0, 0, qAbs(ex - sx) + 1, 1);
-
-    TileLayer *tileLayer = currentTileLayer();
-
-    if (sx > ex) {
-        int n = 1;
-        for (int x = sx; x >= ex; x--) {
-            Tile *CURRENT = tileLayer->cellAt(x, sy).tile;
-            if (CURRENT == tiles[Fence::West1])
-                stamp.setCell(x - ex, 0, Cell(tiles[Fence::NorthWest]));
-            else if (CURRENT != tiles[Fence::NorthWest])
-                stamp.setCell(x - ex, 0, Cell(t[n]));
-            n = !n;
-        }
-    } else {
-        int n = 0;
-        for (int x = sx; x <= ex; x++) {
-            Tile *CURRENT = tileLayer->cellAt(x, sy).tile;
-            if (CURRENT == tiles[Fence::West1])
-                stamp.setCell(x - sx, 0, Cell(tiles[Fence::NorthWest]));
-            else if (CURRENT != tiles[Fence::NorthWest])
-                stamp.setCell(x - sx, 0, Cell(t[n]));
-            n = !n;
-        }
-    }
-#endif
 
     PaintTileLayer *cmd = new PaintTileLayer(mapDocument(), tileLayer,
                                              qMin(sx, ex), sy, &stamp,
@@ -422,24 +347,11 @@ void FenceTool::drawPost(int x, int y)
 void FenceTool::drawGate(int x, int y, bool west)
 {
     TileLayer *tileLayer = currentTileLayer();
-#if 1
-    Tile *tile = gateTile(x, y, west);
-    if (!tile) return;
-#else
     if (!tileLayer->contains(x, y))
         return;
 
-    QVector<Tile*> tiles = resolveTiles(mFence);
-
-    Tile *CURRENT = tileLayer->cellAt(x, y).tile;
-    Tile *tile = 0;
-    if (CURRENT == tiles[Fence::West1] || CURRENT == tiles[Fence::West2])
-        tile = tiles[Fence::GateSpaceW];
-    else if (CURRENT == tiles[Fence::North1] || CURRENT == tiles[Fence::North2])
-        tile = tiles[Fence::GateSpaceN];
-    else
-        tile = tiles[west ? Fence::GateDoorW : Fence::GateDoorN];
-#endif
+    Tile *tile = gateTile(x, y, west);
+    if (!tile) return;
 
     TileLayer stamp(QString(), 0, 0, 1, 1);
     stamp.setCell(0, 0, Cell(tile));
