@@ -191,18 +191,34 @@ void LuaTileTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers
         mCursorItem->setPath(path);
         mCursorItem->setVisible(true);
     }
+
+    if (mButtons & Qt::LeftButton)
+        mCurrentScenePos = pos;
     mouseEvent("mouseMoved", mButtons, pos, modifiers);
+
+    int level = mapDocument()->currentLevel();
+    QPoint tilePos = mapDocument()->renderer()->pixelToTileCoordsInt(pos, level);
+    if (true) {
+        setStatusInfo(QString(QLatin1String("%1, %2"))
+                      .arg(tilePos.x()).arg(tilePos.y()));
+    } else {
+        setStatusInfo(QString());
+    }
 }
 
 void LuaTileTool::mousePressed(QGraphicsSceneMouseEvent *event)
 {
     mButtons = event->buttons();
+    if (event->button() == Qt::LeftButton)
+        mStartScenePos = event->screenPos();
     mouseEvent("mousePressed", event->button(), event->scenePos(), event->modifiers());
 }
 
 void LuaTileTool::mouseReleased(QGraphicsSceneMouseEvent *event)
 {
     mButtons = event->buttons();
+    if (event->button() == Qt::LeftButton)
+        mCurrentScenePos = event->screenPos();
     mouseEvent("mouseReleased", event->button(), event->scenePos(), event->modifiers());
 }
 
@@ -259,6 +275,12 @@ void LuaTileTool::setCursorType(LuaTileTool::CursorType type)
     mCursorType = type;
 }
 
+LuaTileLayer *LuaTileTool::currentLayer() const
+{
+    int index = mapDocument()->currentLayerIndex();
+    return (mMap && mMap->layerAt(index)) ? mMap->layerAt(index)->asTileLayer() : 0;
+}
+
 void LuaTileTool::mouseEvent(const char *func, Qt::MouseButtons buttons,
                              const QPointF &scenePos, Qt::KeyboardModifiers modifiers)
 {
@@ -284,8 +306,8 @@ void LuaTileTool::mouseEvent(const char *func, Qt::MouseButtons buttons,
         lua_settable(L, -3);
     }
 
-    Layer *layer = currentTileLayer();
-    const QPointF tilePosF = mapDocument()->renderer()->pixelToTileCoords(scenePos, layer->level());
+    int level = mapDocument()->currentLevel();
+    const QPointF tilePosF = mapDocument()->renderer()->pixelToTileCoords(scenePos, level);
     lua_pushnumber(L, tilePosF.x()); // arg x
     lua_pushnumber(L, tilePosF.y()); // arg y
 
@@ -449,12 +471,18 @@ void LuaTileTool::indicateDistance(int x1, int y1, int x2, int y2)
     }
 }
 
+bool LuaTileTool::dragged()
+{
+    int d = (mCurrentScenePos - mStartScenePos).manhattanLength();
+    return d >= 4; //QApplication::startDragDistance();
+}
+
 QPainterPath LuaTileTool::cursorShape(const QPointF &pos, Qt::KeyboardModifiers modifiers)
 {
     QPainterPath path;
     if (mCursorType == CursorType::EdgeTool) {
         const MapRenderer *renderer = mapDocument()->renderer();
-        int level = 0;
+        int level = mapDocument()->currentLevel();
         QPointF tilePosF = renderer->pixelToTileCoords(pos, level);
         QPoint tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
         QPointF m(tilePosF.x() - tilePos.x(), tilePosF.y() - tilePos.y());

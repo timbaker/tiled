@@ -2,6 +2,12 @@ version = 1
 
 tool
 {
+    label = Fence (WIP)
+    script = tool-fence.lua
+}
+
+tool
+{
     label = Mailbox (Rural)
     script = tool-mailbox-rural.lua
 }

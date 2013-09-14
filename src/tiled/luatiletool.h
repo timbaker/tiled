@@ -37,6 +37,7 @@ class Tile;
 
 namespace Lua {
 class LuaMap;
+class LuaTileLayer;
 
 class LuaTileTool : public Tiled::Internal::AbstractTileTool, public Singleton<LuaTileTool>
 {
@@ -68,12 +69,14 @@ public:
         EdgeTool
     };
     void setCursorType(CursorType type);
+    LuaTileLayer *currentLayer() const;
     void applyChanges(const char *undoText);
     int angle(float x1, float y1, float x2, float y2);
     void clearToolTiles();
     void setToolTile(const char *layer, int x, int y, Tile *tile);
     void clearDistanceIndicators();
     void indicateDistance(int x1, int y1, int x2, int y2);
+    bool dragged();
     //
 
 protected slots:
@@ -94,6 +97,8 @@ private:
     Qt::MouseButtons mButtons;
     QMap<QString,Tiled::TileLayer*> mToolTileLayers;
     QMap<QString,QRegion> mToolTileRegions;
+    QPointF mStartScenePos;
+    QPointF mCurrentScenePos;
 
     enum Edge {
         EdgeW,
