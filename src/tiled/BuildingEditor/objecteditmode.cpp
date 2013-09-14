@@ -208,24 +208,29 @@ void ObjectEditModeToolBar::currentRoomChanged()
 void ObjectEditModeToolBar::updateRoomComboBox()
 {
     Room *currentRoom = this->currentRoom();
+    // blockSignals() to avoid setting currentRoom()==0 which might change the
+    // currently-selected tool.
+    mRoomComboBox->blockSignals(true);
     mRoomComboBox->clear();
-    if (!mCurrentDocument)
-        return;
+    if (mCurrentDocument) {
+        int index = 0;
+        foreach (Room *room, currentBuilding()->rooms()) {
+            QImage image(20, 20, QImage::Format_ARGB32);
+            image.fill(qRgba(0,0,0,0));
+            QPainter painter(&image);
+            painter.fillRect(1, 1, 18, 18, room->Color);
+            mRoomComboBox->addItem(room->Name);
+            mRoomComboBox->setItemIcon(index, QPixmap::fromImage(image));
+            index++;
+        }
 
-    int index = 0;
-    foreach (Room *room, currentBuilding()->rooms()) {
-        QImage image(20, 20, QImage::Format_ARGB32);
-        image.fill(qRgba(0,0,0,0));
-        QPainter painter(&image);
-        painter.fillRect(1, 1, 18, 18, room->Color);
-        mRoomComboBox->addItem(room->Name);
-        mRoomComboBox->setItemIcon(index, QPixmap::fromImage(image));
-        index++;
+        index = currentBuilding()->indexOf(currentRoom);
+        if (index != -1)
+            mRoomComboBox->setCurrentIndex(index);
+        else
+            roomIndexChanged(mRoomComboBox->currentIndex());
     }
-
-    index = currentBuilding()->indexOf(currentRoom);
-    if (index != -1)
-        mRoomComboBox->setCurrentIndex(index);
+    mRoomComboBox->blockSignals(false);
 }
 
 void ObjectEditModeToolBar::roomIndexChanged(int index)
