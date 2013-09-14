@@ -147,7 +147,7 @@ void LuaTileTool::deactivate(Internal::MapScene *scene)
     Internal::LuaToolDialog::instance()->setVisibleLater(false);
     clearToolTiles();
     clearDistanceIndicators();
-    mapDocument()->disconnect(this);
+    mapDocument()->disconnect(this, SLOT(mapChanged()));
     scene->removeItem(mCursorItem);
     mCursorType = CursorType::None;
 
