@@ -510,8 +510,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     toolManager->registerTool(mEdgeTool = new EdgeTool(this));
     toolManager->registerTool(new CurbTool(this));
     toolManager->registerTool(new FenceTool(this));
-    toolManager->registerTool(new Lua::LuaTileTool(tr("Lua Tool"),
-                                                   QIcon(), QKeySequence(),
+    toolManager->registerTool(new Lua::LuaTileTool(tr("Lua Tile Tool"),
+                                                   QIcon(QLatin1String(":/images/22x22/lua-tile-tool.png")), QKeySequence(),
                                                    this));
 #endif
     toolManager->addSeparator();
