@@ -206,6 +206,11 @@
 #define LUA_IDSIZE	60
 
 
+#if defined(ZOMBOID) && defined(LUA_DEBUG)
+#include <assert.h>
+#define lua_assert assert
+#endif
+
 /*
 @@ luai_writestring/luai_writeline define how 'print' prints its results.
 ** They are only used in libraries and the stand-alone program. (The #if

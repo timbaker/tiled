@@ -17,6 +17,7 @@ macx {
 
 DLLDESTDIR = ../..
 
+contains(CONFIG,Debug):DEFINES += LUA_DEBUG
 #DEFINES += LUA_BUILD_AS_DLL
 
 SOURCES += \
