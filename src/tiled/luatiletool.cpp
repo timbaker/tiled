@@ -137,6 +137,11 @@ void LuaTileTool::activate(MapScene *scene)
     checkMap();
 
     lua_getglobal(L, "activate");
+    if (!lua_isfunction(L, -1)) {
+        lua_pop(L, 1);
+        return;
+    }
+
     int base = lua_gettop(L);
     lua_pushcfunction(L, traceback);
     lua_insert(L, base);
@@ -164,17 +169,20 @@ void LuaTileTool::deactivate(MapScene *scene)
     if (!L) return;
 
     lua_getglobal(L, "deactivate");
-    int base = lua_gettop(L);
-    lua_pushcfunction(L, traceback);
-    lua_insert(L, base);
-    int status = lua_pcall(L, 0, 0, base);
-    lua_remove(L, base);
+    if (lua_isfunction(L, -1)) {
+        int base = lua_gettop(L);
+        lua_pushcfunction(L, traceback);
+        lua_insert(L, base);
+        int status = lua_pcall(L, 0, 0, base);
+        lua_remove(L, base);
 
-    if (status != LUA_OK) {
-        QString output = QString::fromLatin1(lua_tostring(L, -1));
-        lua_pop(L, -1); // pop error
-        LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
-    }
+        if (status != LUA_OK) {
+            QString output = QString::fromLatin1(lua_tostring(L, -1));
+            lua_pop(L, -1); // pop error
+            LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+        }
+    } else
+        lua_pop(L, 1); // function deactivate()
 
     lua_close(L);
     L = 0;
@@ -237,8 +245,11 @@ void LuaTileTool::modifiersChanged(Qt::KeyboardModifiers modifiers)
 
     checkMap();
 
-
     lua_getglobal(L, "modifiersChanged");
+    if (!lua_isfunction(L, -1)) {
+        lua_pop(L, 1);
+        return;
+    }
 
     lua_newtable(L); // arg modifiers
     if (modifiers & Qt::AltModifier) {
@@ -295,7 +306,10 @@ void LuaTileTool::setOption(LuaToolOption *option, const QVariant &value)
     }
 
     lua_getglobal(L, "setOption");
-    if (!lua_isfunction(L, -1)) return;
+    if (!lua_isfunction(L, -1)) {
+        lua_pop(L, 1);
+        return;
+    }
 
     lua_pushstring(L, cstring(option->mName));
     if (option->asBoolean())
@@ -341,7 +355,10 @@ void LuaTileTool::mouseEvent(const char *func, Qt::MouseButtons buttons,
     checkMap();
 
     lua_getglobal(L, func); // mouseMoved/mousePressed/mouseReleased
-    if (!lua_isfunction(L, -1)) return;
+    if (!lua_isfunction(L, -1)) {
+        lua_pop(L, 1);
+        return;
+    }
 
     lua_newtable(L); // arg buttons
     if (buttons & Qt::LeftButton) {
@@ -494,7 +511,10 @@ void LuaTileTool::setToolOptions()
     // subtable = { name, type, args } where 'args' depends on type.
 
     lua_getglobal(L, "options");
-    if (!lua_isfunction(L, -1)) return;
+    if (!lua_isfunction(L, -1)) {
+        lua_pop(L, 1);
+        return;
+    }
 
     int nargs = 0, nret = 1;
     int base = lua_gettop(L) - nargs;
