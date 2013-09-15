@@ -34,6 +34,7 @@
 #include <qmath.h>
 #include <QDebug>
 #include <QFileInfo>
+#include <QSettings>
 #include <QUndoStack>
 
 extern "C" {
@@ -55,7 +56,8 @@ LuaTileTool::LuaTileTool(const QString &name, const QIcon &icon,
     mMap(0),
     mMapChanged(false),
     mCursorItem(new QGraphicsPathItem),
-    mCursorType(None)
+    mCursorType(None),
+    mSaveOptionValue(true)
 {
     mDistanceIndicators[0] = mDistanceIndicators[1] = mDistanceIndicators[2] = mDistanceIndicators[3] = 0;
 
@@ -91,10 +93,14 @@ void LuaTileTool::setScript(const QString &fileName)
         lua_remove(L, base);
     }
 
-    QString output;
-    if (status != LUA_OK)
-        output = QString::fromLatin1(lua_tostring(L, -1));
-    LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+    if (status != LUA_OK) {
+        QString output = QString::fromLatin1(lua_tostring(L, -1));
+        lua_pop(L, -1); // pop error
+        LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+    }
+
+    if (status == LUA_OK)
+        setToolOptions();
 
     if (scene) activate(scene);
 }
@@ -129,17 +135,18 @@ void LuaTileTool::activate(Internal::MapScene *scene)
 
     checkMap();
 
+    lua_getglobal(L, "activate");
     int base = lua_gettop(L);
     lua_pushcfunction(L, traceback);
     lua_insert(L, base);
-    lua_getglobal(L, "activate");
-    int status = lua_pcall(L, 0, LUA_MULTRET, base);
+    int status = lua_pcall(L, 0, 0, base);
     lua_remove(L, base);
 
-    QString output;
-    if (status != LUA_OK)
-        output = QString::fromLatin1(lua_tostring(L, -1));
-    LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+    if (status != LUA_OK) {
+        QString output = QString::fromLatin1(lua_tostring(L, -1));
+        lua_pop(L, -1); // pop error
+        LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+    }
 }
 
 void LuaTileTool::deactivate(Internal::MapScene *scene)
@@ -155,17 +162,18 @@ void LuaTileTool::deactivate(Internal::MapScene *scene)
 
     if (!L) return;
 
+    lua_getglobal(L, "deactivate");
     int base = lua_gettop(L);
     lua_pushcfunction(L, traceback);
     lua_insert(L, base);
-    lua_getglobal(L, "deactivate");
-    int status = lua_pcall(L, 0, LUA_MULTRET, base);
+    int status = lua_pcall(L, 0, 0, base);
     lua_remove(L, base);
 
-    QString output;
-    if (status != LUA_OK)
-        output = QString::fromLatin1(lua_tostring(L, -1));
-    LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+    if (status != LUA_OK) {
+        QString output = QString::fromLatin1(lua_tostring(L, -1));
+        lua_pop(L, -1); // pop error
+        LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+    }
 
     lua_close(L);
     L = 0;
@@ -228,11 +236,9 @@ void LuaTileTool::modifiersChanged(Qt::KeyboardModifiers modifiers)
 
     checkMap();
 
-    int base = lua_gettop(L);
-    lua_pushcfunction(L, traceback);
-    lua_insert(L, base);
 
     lua_getglobal(L, "modifiersChanged");
+
     lua_newtable(L); // arg modifiers
     if (modifiers & Qt::AltModifier) {
         lua_pushstring(L, "alt");
@@ -250,14 +256,20 @@ void LuaTileTool::modifiersChanged(Qt::KeyboardModifiers modifiers)
         lua_settable(L, -3);
     }
 
-    int status = lua_pcall(L, 1, LUA_MULTRET, base);
+    int nargs = 1;
+    int base = lua_gettop(L) - nargs;
+    lua_pushcfunction(L, traceback);
+    lua_insert(L, base);
+
+    int status = lua_pcall(L, nargs, 0, base);
 
     lua_remove(L, base);
 
-    QString output;
-    if (status != LUA_OK)
-        output = QString::fromLatin1(lua_tostring(L, -1));
-    LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+    if (status != LUA_OK) {
+        QString output = QString::fromLatin1(lua_tostring(L, -1));
+        lua_pop(L, -1); // pop error
+        LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+    }
 }
 
 void LuaTileTool::languageChanged()
@@ -268,6 +280,45 @@ void LuaTileTool::languageChanged()
 void LuaTileTool::tilePositionChanged(const QPoint &tilePos)
 {
     Q_UNUSED(tilePos)
+}
+
+void LuaTileTool::setOption(LuaToolOption *option, const QVariant &value)
+{
+    if (!L) return;
+
+    if (mSaveOptionValue) {
+        QSettings settings;
+        settings.beginGroup(QLatin1String("LuaTileTool/Tool/")+QFileInfo(mFileName).completeBaseName());
+        settings.setValue(option->mName, value);
+        settings.endGroup();
+    }
+
+    lua_getglobal(L, "setOption");
+    if (!lua_isfunction(L, -1)) return;
+
+    lua_pushstring(L, cstring(option->mName));
+    if (option->asBoolean())
+        lua_pushboolean(L, value.toBool());
+    else if (option->asEnum())
+        lua_pushstring(L, cstring(value.toString()));
+    else if (option->asInteger())
+        lua_pushinteger(L, value.toInt());
+    else if (option->asString())
+        lua_pushstring(L, cstring(value.toString()));
+
+    int nargs = 2;
+    int base = lua_gettop(L) - nargs;
+    lua_pushcfunction(L, traceback);
+    lua_insert(L, base);
+
+    int status = lua_pcall(L, nargs, 0, base);
+    lua_remove(L, base);
+
+    if (status != LUA_OK) {
+        QString output = QString::fromLatin1(lua_tostring(L, -1));
+        lua_pop(L, -1); // pop error
+        LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+    }
 }
 
 void LuaTileTool::setCursorType(LuaTileTool::CursorType type)
@@ -288,11 +339,8 @@ void LuaTileTool::mouseEvent(const char *func, Qt::MouseButtons buttons,
 
     checkMap();
 
-    int base = lua_gettop(L);
-    lua_pushcfunction(L, traceback);
-    lua_insert(L, base);
-
     lua_getglobal(L, func); // mouseMoved/mousePressed/mouseReleased
+    if (!lua_isfunction(L, -1)) return;
 
     lua_newtable(L); // arg buttons
     if (buttons & Qt::LeftButton) {
@@ -328,14 +376,19 @@ void LuaTileTool::mouseEvent(const char *func, Qt::MouseButtons buttons,
         lua_settable(L, -3);
     }
 
-    int status = lua_pcall(L, 4, LUA_MULTRET, base);
+    int nargs = 4;
+    int base = lua_gettop(L) - nargs;
+    lua_pushcfunction(L, traceback);
+    lua_insert(L, base);
+    int status = lua_pcall(L, nargs, 0, base);
 
     lua_remove(L, base);
 
-    QString output;
-    if (status != LUA_OK)
-        output = QString::fromLatin1(lua_tostring(L, -1));
-    LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+    if (status != LUA_OK) {
+        QString output = QString::fromLatin1(lua_tostring(L, -1));
+        lua_pop(L, -1); // pop error
+        LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+    }
 }
 
 void LuaTileTool::checkMap()
@@ -352,6 +405,221 @@ void LuaTileTool::checkMap()
     mMapChanged = false;
 
     qDebug() << "LuaTileTool::checkMap(): recreated map";
+}
+
+static bool getBooleanFromTable(lua_State *L, const char *key, bool &b)
+{
+    tolua_Error err;
+    if (lua_gettop(L) >= 1 && tolua_istable(L, -1, 0, &err) == 1) {
+        int tblidx = lua_gettop(L);
+        lua_pushstring(L, key);
+        lua_gettable(L, tblidx);
+        if (lua_isnil(L, -1) || !lua_isboolean(L, -1)) {
+            lua_pop(L, 1); // i
+            return false;
+        }
+        b = lua_toboolean(L, -1);
+        lua_pop(L, 1);
+        return true;
+    }
+    return false;
+}
+
+static bool getIntegerFromTable(lua_State *L, const char *key, int &i)
+{
+    tolua_Error err;
+    if (lua_gettop(L) >= 1 && tolua_istable(L, -1, 0, &err) == 1) {
+        int tblidx = lua_gettop(L);
+        lua_pushstring(L, key);
+        lua_gettable(L, tblidx);
+        if (lua_isnil(L, -1) || !lua_isnumber(L, -1)) {
+            lua_pop(L, 1); // i
+            return false;
+        }
+        int isnum;
+        i = lua_tointegerx(L, -1, &isnum);
+        lua_pop(L, 1);
+        return isnum;
+    }
+    return false;
+}
+
+static bool getStringFromTable(lua_State *L, const char *key, QString &string)
+{
+    tolua_Error err;
+    if (lua_gettop(L) >= 1 && tolua_istable(L, -1, 0, &err) == 1) {
+        int tblidx = lua_gettop(L);
+        lua_pushstring(L, key);
+        lua_gettable(L, tblidx);
+        if (lua_isnil(L, -1) || !lua_isstring(L, -1)) {
+            lua_pop(L, 1); // i
+            return false;
+        }
+        string = QLatin1String(lua_tostring(L, -1));
+        lua_pop(L, 1);
+        return true;
+    }
+    return false;
+}
+
+static bool getStringsFromTable(lua_State *L, QStringList &strings)
+{
+    tolua_Error err;
+    if (lua_gettop(L) >= 1 && tolua_istable(L, -1, 0, &err) == 1) {
+        int tblidx = lua_gettop(L);
+        int len = luaL_len(L, tblidx);
+        for (int i = 1; i <= len; ++i) {
+            lua_pushnumber(L, i);
+            lua_gettable(L, tblidx);
+            if (lua_isnil(L, -1) || !lua_isstring(L, -1))
+                return false;
+            strings += QLatin1String(lua_tostring(L, -1));
+            lua_pop(L, 1);
+        }
+        return true;
+    }
+    return false;
+}
+
+void LuaTileTool::setToolOptions()
+{
+    Internal::LuaToolDialog::instance()->setToolOptions(0);
+    mOptions.clear();
+
+    if (!L) return;
+
+    // Call the options() function.
+    // It should return a table of subtables.
+    // subtable = { name, type, args } where 'args' depends on type.
+
+    lua_getglobal(L, "options");
+    if (!lua_isfunction(L, -1)) return;
+
+    int nargs = 0, nret = 1;
+    int base = lua_gettop(L) - nargs;
+    lua_pushcfunction(L, traceback);
+    lua_insert(L, base);
+    int status = lua_pcall(L, nargs, nret, base);
+    lua_remove(L, base);
+
+    if (status != LUA_OK) {
+        QString output = QString::fromLatin1(lua_tostring(L, -1));
+        lua_pop(L, -1); // pop error
+        LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+    }
+
+    if (status == LUA_OK) {
+        tolua_Error err;
+        if (lua_gettop(L) >= 1 && tolua_istable(L, -1, 0, &err) == 1) {
+            int tblidx = lua_gettop(L);
+            int len = luaL_len(L, tblidx);
+            for (int i = 1; i <= len; ++i) {
+                lua_pushnumber(L, i);
+                lua_gettable(L, tblidx);
+                QString err;
+                if (!parseToolOption(err)) {
+                    lua_pop(L, 1 + nret);
+                    LuaConsole::instance()->write(tr("error parsing result of options(): ") + err, Qt::red);
+                    return;
+                }
+                lua_pop(L, 1);
+            }
+        }
+
+        lua_pop(L, nret); // result of options()
+
+        // We got a valid set of options, set the current values to those saved
+        // in the settings (or the defaults).
+        mSaveOptionValue = false;
+        QSettings settings;
+        settings.beginGroup(QLatin1String("LuaTileTool/Tool/")+QFileInfo(mFileName).completeBaseName());
+        foreach (LuaToolOption *option, mOptions.mOptions) {
+            if (BooleanLuaToolOption *o = option->asBoolean())
+                setOption(o, settings.value(o->mName, o->mDefault));
+            else if (EnumLuaToolOption *o = option->asEnum())
+                setOption(o, settings.value(o->mName, o->mDefault));
+            else if (IntegerLuaToolOption *o = option->asInteger())
+                setOption(o, settings.value(o->mName, o->mDefault));
+            else if (StringLuaToolOption *o = option->asString())
+                setOption(o, settings.value(o->mName, o->mDefault));
+        }
+        Internal::LuaToolDialog::instance()->setToolOptions(&mOptions);
+        foreach (LuaToolOption *option, mOptions.mOptions)
+            Internal::LuaToolDialog::instance()->setToolOptionValue(option, settings.value(option->mName));
+        settings.endGroup();
+        mSaveOptionValue = true;
+    }
+}
+
+bool LuaTileTool::parseToolOption(QString &err)
+{
+    tolua_Error err2;
+    if (lua_gettop(L) >= 1 && tolua_istable(L, -1, 0, &err2) == 1) {
+        int tblidx = lua_gettop(L);
+        QString name, label, type;
+        if (!getStringFromTable(L, "name", name) || name.isEmpty()) {
+            err = tr("missing 'name'");
+            return false;
+        }
+        if (mOptions.option(name) != 0) {
+            err = tr("duplicate option '%1'").arg(name);
+            return false;
+        }
+        if (!getStringFromTable(L, "label", label) || label.isEmpty()) {
+            err = tr("missing 'label'");
+            return false;
+        }
+        if (!getStringFromTable(L, "type", type)) {
+            err = tr("missing 'type' in option '%2'").arg(name);
+            return false;
+        }
+        if (type == QLatin1String("bool")) {
+            bool defaultValue;
+            if (!getBooleanFromTable(L, "default", defaultValue)) {
+                err = tr("bad 'default' in option '%1'").arg(name);
+                return false;
+            }
+            mOptions.addBoolean(name, label, defaultValue);
+        } else if (type == QLatin1String("enum")) {
+            QStringList enumNames;
+            lua_pushstring(L, "choices");
+            lua_gettable(L, tblidx);
+            if (!getStringsFromTable(L, enumNames)) {
+                lua_pop(L, 1);
+                err = tr("bad 'choices' in option '%1'").arg(name);
+                return false;
+            }
+            lua_pop(L, 1);
+            mOptions.addEnum(name, label, enumNames, enumNames.first());
+        } else if (type == QLatin1String("int")) {
+            int min, max, defaultValue;
+            if (!getIntegerFromTable(L, "min", min)) {
+                err = tr("bad 'min' in option '%1'").arg(name);
+                return false;
+            }
+            if (!getIntegerFromTable(L, "max", max)) {
+                err = tr("bad 'max' in option '%1'").arg(name);
+                return false;
+            }
+            if (!getIntegerFromTable(L, "default", defaultValue)) {
+                err = tr("bad 'default' in option '%1'").arg(name);
+                return false;
+            }
+            mOptions.addInteger(name, label, min, max, defaultValue);
+        } else if (type == QLatin1String("string")) {
+            QString defaultValue;
+            if (!getStringFromTable(L, "default", defaultValue)) {
+                err = tr("bad 'default' in option '%1'").arg(name);
+                return false;
+            }
+            mOptions.addString(name, label, defaultValue);
+        } else {
+            err = tr("unknown type '%1' in option '%2'").arg(type).arg(name);
+            return false;
+        }
+        return true;
+    }
+    return false;
 }
 
 void LuaTileTool::applyChanges(const char *undoText)

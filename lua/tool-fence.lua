@@ -12,18 +12,55 @@ local ShortWooden = {
     post = 'fencing_01_37'
 }
 
+local TallWooden = {
+    label = 'Tall Wooden',
+    west1 = 'fencing_01_11',
+    west2 = 'fencing_01_10',
+    gate_space_w = 'fencing_01_46',
+    gate_door_w = 'fixtures_doors_fences_01_12',
+    north1 = 'fencing_01_8',
+    north2 = 'fencing_01_9',
+    gate_space_n = 'fencing_01_47',
+    gate_door_n = 'fixtures_doors_fences_01_13',
+    nw = 'fencing_01_12',
+    post = 'fencing_01_13'
+}
+
+local FENCES = {}
+FENCES[ShortWooden.label] = ShortWooden
+FENCES[TallWooden.label] = TallWooden
+
 local FENCE = ShortWooden
+
+function options()
+    self.options = {}
+    return {
+	{ name = 'type', label = 'Type:', type = 'enum', choices = { ShortWooden.label, TallWooden.label } },
+	{ name = 'gap', label = 'Dash Gap:', type = 'int', min = 0, max = 99, default = 0 },
+	{ name = 'suppress', label = 'Suppress blend tiles', type = 'bool', default = false },
+	{ name = 'layer', label = 'Layer:', type = 'string', default = '0_Floor' },
+    }
+end
+
+function setOption(name, value)
+    print('setOption '..name..'='..tostring(value))
+    self.options[name] = value
+    if name == 'type' then FENCE = FENCES[value] end
+end
 
 function activate()
     -- self:setCursorType(LuaTileTool.EdgeTool)
+    print 'activate'
 end
 
 function deactivate()
+    print 'deactivate'
 end
 
 function mouseMoved(buttons, x, y, modifiers)
     self:clearToolTiles()
     if buttons.left then
+	if self.cancel then return end
 	local dx = math.abs(x - self.x)
 	local dy = math.abs(y - self.y)
 	local tiles = {}

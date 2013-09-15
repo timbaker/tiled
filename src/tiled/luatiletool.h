@@ -19,6 +19,7 @@
 #define LUATILETOOL_H
 
 #include "abstracttiletool.h"
+#include "luatooloptions.h"
 
 #include "BuildingEditor/singleton.h"
 
@@ -63,6 +64,8 @@ public:
     void languageChanged();
     void tilePositionChanged(const QPoint &tilePos);
 
+    void setOption(Lua::LuaToolOption *option, const QVariant &value);
+
     // Callable from Lua scripts
     enum CursorType {
         None,
@@ -87,6 +90,8 @@ protected:
     void mouseEvent(const char *func, Qt::MouseButtons buttons,
                     const QPointF &scenePos, Qt::KeyboardModifiers modifiers);
     void checkMap();
+    void setToolOptions();
+    bool parseToolOption(QString &err);
 
 private:
     QString mFileName;
@@ -111,6 +116,9 @@ private:
     CursorType mCursorType;
 
     DistanceIndicator *mDistanceIndicators[4];
+
+    Lua::LuaToolOptions mOptions;
+    bool mSaveOptionValue;
 };
 
 } // namespace Lua

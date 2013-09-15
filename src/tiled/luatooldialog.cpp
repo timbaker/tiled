@@ -27,6 +27,7 @@
 #include <QMessageBox>
 #include <QSettings>
 
+using namespace Tiled;
 using namespace Tiled::Internal;
 
 LuaToolDialog *LuaToolDialog::mInstance = 0;
@@ -50,6 +51,8 @@ LuaToolDialog::LuaToolDialog(QWidget *parent) :
     readSettings();
 
     connect(ui->scriptList, SIGNAL(currentRowChanged(int)), SLOT(currentRowChanged(int)));
+    connect(ui->options, SIGNAL(valueChanged(LuaToolOption*,QVariant)),
+            SLOT(valueChanged(LuaToolOption*,QVariant)));
 
     mVisibleLaterTimer.setSingleShot(true);
     mVisibleLaterTimer.setInterval(200);
@@ -111,6 +114,16 @@ void LuaToolDialog::writeSettings()
     settings.endGroup();
 }
 
+void LuaToolDialog::setToolOptions(Tiled::Lua::LuaToolOptions *options)
+{
+    ui->options->setOptions(options);
+}
+
+void LuaToolDialog::setToolOptionValue(Lua::LuaToolOption *option, const QVariant &value)
+{
+    ui->options->setValue(option, value);
+}
+
 void LuaToolDialog::currentRowChanged(int row)
 {
     QString script = (row >= 0) ? mTools.at(row).mScript : QString();
@@ -122,6 +135,11 @@ void LuaToolDialog::setVisibleNow()
 {
     if (mVisibleLater != isVisible())
         setVisible(mVisibleLater);
+}
+
+void LuaToolDialog::valueChanged(Lua::LuaToolOption *option, const QVariant &value)
+{
+    Lua::LuaTileTool::instance().setOption(option, value);
 }
 
 void LuaToolDialog::readTxt()

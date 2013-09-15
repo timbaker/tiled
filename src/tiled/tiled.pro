@@ -237,7 +237,8 @@ SOURCES += aboutdialog.cpp \
     fencetool.cpp \
     fencetooldialog.cpp \
     luatiletool.cpp \
-    luatooldialog.cpp
+    luatooldialog.cpp \
+    luatooloptions.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -435,7 +436,8 @@ HEADERS += aboutdialog.h \
     fencetool.h \
     fencetooldialog.h \
     luatiletool.h \
-    luatooldialog.h
+    luatooldialog.h \
+    luatooloptions.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

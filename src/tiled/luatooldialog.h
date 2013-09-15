@@ -30,6 +30,12 @@ class LuaToolDialog;
 class SimpleFileBlock;
 
 namespace Tiled {
+
+namespace Lua {
+class LuaToolOption;
+class LuaToolOptions;
+}
+
 namespace Internal {
 
 class LuaToolInfo
@@ -55,9 +61,15 @@ public:
 
     QString txtName() const { return QLatin1String("LuaTools.txt"); }
 
+    void setToolOptions(Lua::LuaToolOptions *options);
+    void setToolOptionValue(Lua::LuaToolOption *option, const QVariant &value);
+
+    typedef Lua::LuaToolOption LuaToolOption; // hack for signals/slots
+
 private slots:
     void currentRowChanged(int row);
     void setVisibleNow();
+    void valueChanged(LuaToolOption *option, const QVariant &value);
 
 private:
     void readTxt();
