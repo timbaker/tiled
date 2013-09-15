@@ -45,6 +45,7 @@ extern "C" {
 TOLUA_API int tolua_tiled_open(lua_State *L);
 
 using namespace Tiled;
+using namespace Tiled::Internal;
 using namespace Tiled::Lua;
 
 SINGLETON_IMPL(LuaTileTool)
@@ -67,7 +68,7 @@ LuaTileTool::LuaTileTool(const QString &name, const QIcon &icon,
 
 void LuaTileTool::setScript(const QString &fileName)
 {
-    Internal::MapScene *scene = mScene;
+    MapScene *scene = mScene;
     if (mScene) deactivate(scene);
 
     mFileName = fileName;
@@ -105,14 +106,14 @@ void LuaTileTool::setScript(const QString &fileName)
     if (scene) activate(scene);
 }
 
-void LuaTileTool::activate(Internal::MapScene *scene)
+void LuaTileTool::activate(MapScene *scene)
 {
     AbstractTileTool::activate(scene);
     mScene = scene;
 
     mScene->addItem(mCursorItem);
 
-    Internal::LuaToolDialog::instance()->setVisibleLater(true);
+    LuaToolDialog::instance()->setVisibleLater(true);
 
     connect(mapDocument(), SIGNAL(mapChanged()), SLOT(mapChanged()));
     connect(mapDocument(), SIGNAL(tilesetAdded(int,Tileset*)), SLOT(mapChanged()));
@@ -149,9 +150,9 @@ void LuaTileTool::activate(Internal::MapScene *scene)
     }
 }
 
-void LuaTileTool::deactivate(Internal::MapScene *scene)
+void LuaTileTool::deactivate(MapScene *scene)
 {
-    Internal::LuaToolDialog::instance()->setVisibleLater(false);
+    LuaToolDialog::instance()->setVisibleLater(false);
     clearToolTiles();
     clearDistanceIndicators();
     mapDocument()->disconnect(this, SLOT(mapChanged()));
@@ -483,7 +484,7 @@ static bool getStringsFromTable(lua_State *L, QStringList &strings)
 
 void LuaTileTool::setToolOptions()
 {
-    Internal::LuaToolDialog::instance()->setToolOptions(0);
+    LuaToolDialog::instance()->setToolOptions(0);
     mOptions.clear();
 
     if (!L) return;
@@ -530,24 +531,28 @@ void LuaTileTool::setToolOptions()
 
         // We got a valid set of options, set the current values to those saved
         // in the settings (or the defaults).
+        // FIXME: check for legal values pulled from QSettings
         mSaveOptionValue = false;
         QSettings settings;
         settings.beginGroup(QLatin1String("LuaTileTool/Tool/")+QFileInfo(mFileName).completeBaseName());
+        QMap<LuaToolOption*,QVariant> current;
         foreach (LuaToolOption *option, mOptions.mOptions) {
             if (BooleanLuaToolOption *o = option->asBoolean())
-                setOption(o, settings.value(o->mName, o->mDefault));
+                current[option] = settings.value(o->mName, o->mDefault);
             else if (EnumLuaToolOption *o = option->asEnum())
-                setOption(o, settings.value(o->mName, o->mDefault));
+                current[option] = settings.value(o->mName, o->mDefault);
             else if (IntegerLuaToolOption *o = option->asInteger())
-                setOption(o, settings.value(o->mName, o->mDefault));
+                current[option] = settings.value(o->mName, o->mDefault);
             else if (StringLuaToolOption *o = option->asString())
-                setOption(o, settings.value(o->mName, o->mDefault));
+                current[option] = settings.value(o->mName, o->mDefault);
+            setOption(option, current[option]);
         }
-        Internal::LuaToolDialog::instance()->setToolOptions(&mOptions);
-        foreach (LuaToolOption *option, mOptions.mOptions)
-            Internal::LuaToolDialog::instance()->setToolOptionValue(option, settings.value(option->mName));
         settings.endGroup();
         mSaveOptionValue = true;
+
+        LuaToolDialog::instance()->setToolOptions(&mOptions);
+        foreach (LuaToolOption *option, mOptions.mOptions)
+            LuaToolDialog::instance()->setToolOptionValue(option, current[option]);
     }
 }
 
@@ -636,7 +641,7 @@ void LuaTileTool::applyChanges(const char *undoText)
                 continue; // No changes.
             TileLayer *source = tl->mCloneTileLayer->copy(tl->mAltered);
             QRect r = tl->mAltered.boundingRect();
-            cmds += new ::Internal::PaintTileLayer(mapDocument(), tl->mOrig->asTileLayer(),
+            cmds += new PaintTileLayer(mapDocument(), tl->mOrig->asTileLayer(),
                                                    r.x(), r.y(), source, tl->mAltered, true);
             delete source;
         }
