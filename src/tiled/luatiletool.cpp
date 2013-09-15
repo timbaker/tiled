@@ -48,6 +48,36 @@ using namespace Tiled;
 using namespace Tiled::Internal;
 using namespace Tiled::Lua;
 
+extern "C" {
+
+static int loadToolData(lua_State *L)
+{
+    const char *f = lua_tostring(L, -1);
+    {
+        QString fileName = QString::fromLatin1("tool-%1-data.lua").arg(QLatin1String(f));
+        QFileInfo info(Preferences::instance()->configPath(QLatin1String("lua/") + fileName));
+        if (info.exists()) {
+            if (luaL_loadfile(L, cstring(info.absoluteFilePath())) != LUA_OK)
+                goto error;
+            if (lua_pcall(L, 0, 0, 0) != LUA_OK)
+                goto error;
+        }
+
+        QFileInfo info2(Preferences::instance()->luaPath(fileName));
+        if (info2.exists()) {
+            if (luaL_loadfile(L, cstring(info2.absoluteFilePath())) != LUA_OK)
+                goto error;
+            if (lua_pcall(L, 0, 0, 0) != LUA_OK)
+                goto error;
+        }
+    }
+    return 0;
+error:
+    return lua_error(L); // !!! longjmp() !!! (unless Lua compiled as C++)
+}
+
+} // extern "C"
+
 SINGLETON_IMPL(LuaTileTool)
 
 LuaTileTool::LuaTileTool(const QString &name, const QIcon &icon,
@@ -84,6 +114,9 @@ void LuaTileTool::setScript(const QString &fileName)
 
     tolua_pushstring(L, Lua::cstring(QFileInfo(fileName).absolutePath()));
     lua_setglobal(L, "scriptDirectory");
+
+    lua_pushcfunction(L, loadToolData);
+    lua_setglobal(L, "loadToolData");
 
     int status = luaL_loadfile(L, cstring(mFileName));
     if (status == LUA_OK) {

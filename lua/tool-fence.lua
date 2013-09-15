@@ -1,41 +1,15 @@
-local ShortWooden = {
-    label = 'Short Wooden',
-    west1 = 'fencing_01_35',
-    west2 = 'fencing_01_34',
-    gate_space_w = 'fencing_01_38',
-    gate_door_w = 'fixtures_doors_fences_01_4',
-    north1 = 'fencing_01_32',
-    north2 = 'fencing_01_33',
-    gate_space_n = 'fencing_01_39',
-    gate_door_n = 'fixtures_doors_fences_01_5',
-    nw = 'fencing_01_36',
-    post = 'fencing_01_37'
-}
-
-local TallWooden = {
-    label = 'Tall Wooden',
-    west1 = 'fencing_01_11',
-    west2 = 'fencing_01_10',
-    gate_space_w = 'fencing_01_46',
-    gate_door_w = 'fixtures_doors_fences_01_12',
-    north1 = 'fencing_01_8',
-    north2 = 'fencing_01_9',
-    gate_space_n = 'fencing_01_47',
-    gate_door_n = 'fixtures_doors_fences_01_13',
-    nw = 'fencing_01_12',
-    post = 'fencing_01_13'
-}
-
 local FENCES = {}
-FENCES[ShortWooden.label] = ShortWooden
-FENCES[TallWooden.label] = TallWooden
+function fence(f) FENCES[#FENCES+1] = f end
+loadToolData 'fence'
 
-local FENCE = ShortWooden
+local FENCE = FENCES[1]
 
 function options()
     self.options = {}
+    choices = {}
+    for i=1,#FENCES do choices[i] = FENCES[i].label end
     return {
-	{ name = 'type', label = 'Type:', type = 'enum', choices = { ShortWooden.label, TallWooden.label } },
+	{ name = 'type', label = 'Type:', type = 'enum', choices = choices },
 	{ name = 'gap', label = 'Dash Gap:', type = 'int', min = 0, max = 99, default = 0 },
 	{ name = 'suppress', label = 'Suppress blend tiles', type = 'bool', default = false },
 	{ name = 'layer', label = 'Layer:', type = 'string', default = '0_Floor' },
@@ -45,7 +19,14 @@ end
 function setOption(name, value)
     print('setOption '..name..'='..tostring(value))
     self.options[name] = value
-    if name == 'type' then FENCE = FENCES[value] end
+    if name == 'type' then
+	for i=1,#FENCES do
+	    if value == FENCES[i].label then
+		FENCE = FENCES[i]
+		break
+	    end
+	end
+    end
 end
 
 function activate()
@@ -152,6 +133,11 @@ function mouseReleased(buttons, x, y, modifiers)
 end
 
 function modifiersChanged(modifiers)
+    local s = 'modifiersChanged '
+    for k,v in pairs(modifiers) do
+	s = s..k..' '
+    end
+    print(s)
 end
 
 function keyPressed(key)
