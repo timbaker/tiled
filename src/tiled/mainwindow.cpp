@@ -695,6 +695,19 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if (confirmAllSave() &&
             TileDefDialog::closeYerself() &&
             (!mBuildingEditor || mBuildingEditor->closeYerself())) {
+
+        /*
+         * Calling QWidget::setVisible(true) removes QEvent::Quit from the event loop.
+         * So if you show a widget (doesn't have to be a toplevel) after QEvent::Quit was
+         * already posted, the application will not exit.
+         *
+         * This is a problem with LuaToolDialog when it adds tool-specific option widgets
+         * after closing the main window.
+         */
+        foreach (QWidget *toplevel, qApp->topLevelWidgets())
+            if (toplevel != this && toplevel->isVisible() && (toplevel->windowFlags() & Qt::Tool))
+                toplevel->hide();
+
         event->accept();
     } else
         event->ignore();
