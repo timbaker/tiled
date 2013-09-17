@@ -195,6 +195,7 @@ void LuaTileTool::activate(MapScene *scene)
 void LuaTileTool::deactivate(MapScene *scene)
 {
     LuaToolDialog::instancePtr()->disconnect(this);
+    LuaToolDialog::instancePtr()->setToolOptions(0);
     LuaToolDialog::instancePtr()->setVisibleLater(false);
 
     clearToolTiles();
@@ -832,15 +833,22 @@ bool LuaTileTool::dragged()
 
 QPainterPath LuaTileTool::cursorShape(const QPointF &pos, Qt::KeyboardModifiers modifiers)
 {
-    QPainterPath path;
-    if (mCursorType == CursorType::EdgeTool) {
-        const MapRenderer *renderer = mapDocument()->renderer();
-        int level = mapDocument()->currentLevel();
-        QPointF tilePosF = renderer->pixelToTileCoords(pos, level);
-        QPoint tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
-        QPointF m(tilePosF.x() - tilePos.x(), tilePosF.y() - tilePos.y());
-        qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
+    const MapRenderer *renderer = mapDocument()->renderer();
+    int level = mapDocument()->currentLevel();
+    QPointF tilePosF = renderer->pixelToTileCoords(pos, level);
+    QPoint tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
+    QPointF m(tilePosF.x() - tilePos.x(), tilePosF.y() - tilePos.y());
+    qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
 
+    QPainterPath path;
+    if (mCursorType == CursorType::CurbTool) {
+        qreal dx = 0, dy = 0;
+        if (dE <= dW) dx = 0.5;
+        if (dS <= dN) dy = 0.5;
+        QPolygonF poly = renderer->tileToPixelCoords(QRectF(tilePos.x() + dx, tilePos.y() + dy, 0.5, 0.5), level);
+        path.addPolygon(poly);
+    }
+    if (mCursorType == CursorType::EdgeTool) {
         Edge edge;
         if (dW < dE) {
             edge = (dW < dN && dW < dS) ? EdgeW : ((dN < dS) ? EdgeN : EdgeS);

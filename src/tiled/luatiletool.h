@@ -67,6 +67,7 @@ public:
     // Callable from Lua scripts
     enum CursorType {
         None,
+        CurbTool,
         EdgeTool
     };
     void setCursorType(CursorType type);
