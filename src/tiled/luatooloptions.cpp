@@ -56,6 +56,13 @@ void LuaToolOptions::addEnum(const QString &name, const QString &label, const QS
     mOptionByName[name] = prop;
 }
 
+void LuaToolOptions::addList(const QString &name, const QString &label, const QStringList enums, const QString &defaultValue)
+{
+    LuaToolOption *prop = new ListLuaToolOption(name, label, enums, defaultValue);
+    mOptions += prop;
+    mOptionByName[name] = prop;
+}
+
 /////
 
 #include <QCheckBox>
@@ -63,6 +70,7 @@ void LuaToolOptions::addEnum(const QString &name, const QString &label, const QS
 #include <QFormLayout>
 #include <QFrame>
 #include <QLineEdit>
+#include <QListWidget>
 #include <QSpinBox>
 
 LuaToolOptionsWidget::LuaToolOptionsWidget(QWidget *parent) :
@@ -85,6 +93,7 @@ void LuaToolOptionsWidget::setOptions(LuaToolOptions *options)
     mCheckBoxes.clear();
     mSpinBoxes.clear();
     mComboBoxes.clear();
+    mListWidgets.clear();
 
     mOptions = options;
     if (!mOptions)
@@ -140,6 +149,19 @@ void LuaToolOptionsWidget::setOptions(LuaToolOptions *options)
             mLayout->addRow(p->mLabel, w);
             continue;
         }
+        if (ListLuaToolOption *p = prop->asList()) {
+            QListWidget *w = new QListWidget(this);
+            w->setObjectName(p->mName);
+            QSizePolicy policy(w->sizePolicy());
+            policy.setVerticalStretch(1);
+            w->setSizePolicy(policy);
+            w->addItems(p->mEnums);
+            w->installEventFilter(this); // to disable mousewheel
+            connect(w, SIGNAL(currentRowChanged(int)), SLOT(listRowChanged(int)));
+            mListWidgets[p->mName] = w;
+            mLayout->addRow(w);
+            continue;
+        }
     }
 }
 
@@ -162,6 +184,11 @@ void LuaToolOptionsWidget::setValue(LuaToolOption *option, const QVariant &value
         if (QComboBox *w = mComboBoxes[p->mName]) {
             int index = p->mEnums.indexOf(value.toString());
             w->setCurrentIndex(index);
+        }
+    } else if (ListLuaToolOption *p = option->asList()) {
+        if (QListWidget *w = mListWidgets[p->mName]) {
+            int index = p->mEnums.indexOf(value.toString());
+            w->setCurrentRow(index);
         }
     }
     mSynching = false;
@@ -201,6 +228,24 @@ void LuaToolOptionsWidget::checkboxToggled(bool value)
         return;
     }
     emit valueChanged(prop, value);
+}
+
+void LuaToolOptionsWidget::listRowChanged(int row)
+{
+    if (mSynching)
+        return;
+
+    QObject *sender = this->sender();
+    if (!sender) return;
+    QListWidget *w = dynamic_cast<QListWidget*>(sender);
+    if (!w) return;
+
+    LuaToolOption *prop = mOptions->option(w->objectName());
+    if (!prop || !prop->asList()) {
+        Q_ASSERT(false);
+        return;
+    }
+    emit valueChanged(prop, prop->asList()->mEnums[row]);
 }
 
 void LuaToolOptionsWidget::spinBoxValueChanged(int value)

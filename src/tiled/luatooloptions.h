@@ -26,6 +26,7 @@
 class QCheckBox;
 class QComboBox;
 class QFormLayout;
+class QListWidget;
 class QSpinBox;
 
 namespace Tiled {
@@ -34,6 +35,7 @@ namespace Lua {
 class BooleanLuaToolOption;
 class EnumLuaToolOption;
 class IntegerLuaToolOption;
+class ListLuaToolOption;
 class StringLuaToolOption;
 
 class LuaToolOption
@@ -48,6 +50,7 @@ public:
     virtual BooleanLuaToolOption *asBoolean() { return 0; }
     virtual EnumLuaToolOption *asEnum() { return 0; }
     virtual IntegerLuaToolOption *asInteger() { return 0; }
+    virtual ListLuaToolOption *asList() { return 0; }
     virtual StringLuaToolOption *asString() { return 0; }
 
     QString mName;
@@ -120,6 +123,23 @@ public:
     QString mDefault;
 };
 
+class ListLuaToolOption : public LuaToolOption
+{
+public:
+    ListLuaToolOption(const QString &name, const QString &label, const QStringList &enums, const QString &defaultValue) :
+        LuaToolOption(name, label),
+        mEnums(enums),
+        mDefault(defaultValue)
+    {
+
+    }
+
+    ListLuaToolOption *asList() { return this; }
+
+    QStringList mEnums;
+    QString mDefault;
+};
+
 class LuaToolOptions
 {
 public:
@@ -130,6 +150,7 @@ public:
     void addInteger(const QString &name, const QString &label, int min, int max, int defaultValue);
     void addString(const QString &name, const QString &label, const QString &defaultValue);
     void addEnum(const QString &name, const QString &label, const QStringList enums, const QString &defaultValue);
+    void addList(const QString &name, const QString &label, const QStringList enums, const QString &defaultValue);
 
     void addSeparator()
     { mSeparators += mSeparators.size() + mOptions.size(); }
@@ -169,6 +190,7 @@ signals:
 private slots:
     void comboBoxActivated(int index);
     void checkboxToggled(bool value);
+    void listRowChanged(int row);
     void spinBoxValueChanged(int value);
     void stringEdited();
 
@@ -180,6 +202,7 @@ private:
     QMap<QString,QCheckBox*> mCheckBoxes;
     QMap<QString,QComboBox*> mComboBoxes;
     QMap<QString,QSpinBox*> mSpinBoxes;
+    QMap<QString,QListWidget*> mListWidgets;
 };
 
 } // namespace Lua

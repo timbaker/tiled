@@ -9,7 +9,7 @@ function options()
     choices = {}
     for i=1,#DATA do choices[i] = DATA[i].label end
     return {
-	{ name = 'type', label = 'Type:', type = 'enum', choices = choices },
+	{ name = 'type', label = 'Type:', type = 'list', choices = choices },
 	{ name = 'dash_length', label = 'Dash Length:', type = 'int', min = 0, max = 99, default = 0 },
 	{ name = 'dash_gap', label = 'Dash Gap:', type = 'int', min = 0, max = 99, default = 0 },
 	{ name = 'suppress', label = 'Suppress blend tiles', type = 'bool', default = false },

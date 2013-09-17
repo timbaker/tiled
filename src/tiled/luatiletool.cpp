@@ -359,8 +359,12 @@ void LuaTileTool::setOption(LuaToolOption *option, const QVariant &value)
         lua_pushstring(L, cstring(value.toString()));
     else if (option->asInteger())
         lua_pushinteger(L, value.toInt());
+    else if (option->asList())
+        lua_pushstring(L, cstring(value.toString()));
     else if (option->asString())
         lua_pushstring(L, cstring(value.toString()));
+    else
+        Q_ASSERT(false);
 
     int nargs = 2;
     int base = lua_gettop(L) - nargs;
@@ -606,8 +610,12 @@ void LuaTileTool::setToolOptions()
                 current[option] = settings.value(o->mName, o->mDefault);
             else if (IntegerLuaToolOption *o = option->asInteger())
                 current[option] = settings.value(o->mName, o->mDefault);
+            else if (ListLuaToolOption *o = option->asList())
+                current[option] = settings.value(o->mName, o->mDefault);
             else if (StringLuaToolOption *o = option->asString())
                 current[option] = settings.value(o->mName, o->mDefault);
+            else
+                Q_ASSERT(false);
             setOption(option, current[option]);
         }
         settings.endGroup();
@@ -675,6 +683,18 @@ bool LuaTileTool::parseToolOption(QString &err)
                 return false;
             }
             mOptions.addInteger(name, label, min, max, defaultValue);
+        } else if (type == QLatin1String("list")) {
+            QStringList enumNames;
+            lua_pushstring(L, "choices");
+            lua_gettable(L, tblidx);
+            if (!getStringsFromTable(L, enumNames) || enumNames.isEmpty() || enumNames.contains(QString())) {
+                lua_pop(L, 1);
+                err = tr("bad 'choices' in option '%1'").arg(name);
+                return false;
+            }
+            lua_pop(L, 1);
+            mOptions.addList(name, label, enumNames,
+                             enumNames.size() ? enumNames.first() : QString());
         } else if (type == QLatin1String("string")) {
             QString defaultValue;
             if (!getStringFromTable(L, "default", defaultValue)) {

@@ -83,7 +83,7 @@ function options()
     local choices = {}
     for i=1,#DATA do choices[i] = DATA[i].label end
     return {
-	{ name = 'type', label = 'Type:', type = 'enum', choices = choices },
+	{ name = 'type', label = 'Type:', type = 'list', choices = choices },
 	{ name = 'suppress', label = 'Suppress blend tiles', type = 'bool', default = false },
     }
 end

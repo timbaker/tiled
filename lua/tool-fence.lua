@@ -9,7 +9,7 @@ function options()
     choices = {}
     for i=1,#FENCES do choices[i] = FENCES[i].label end
     return {
-	{ name = 'type', label = 'Type:', type = 'enum', choices = choices },
+	{ name = 'type', label = 'Type:', type = 'list', choices = choices },
     }
 end
 
