@@ -9,6 +9,13 @@ tool
 
 tool
 {
+    label = Draw Curb
+    icon = tool-curb.png
+    script = tool-curb.lua
+}
+
+tool
+{
     label = Draw Fence
     icon = tool-fence.png
     script = tool-fence.lua
