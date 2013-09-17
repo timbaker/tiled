@@ -21,12 +21,12 @@
 #include "abstracttiletool.h"
 #include "luatooloptions.h"
 
-#include "BuildingEditor/singleton.h"
-
+#include <QCoreApplication>
 #include <QMap>
 
 class DistanceIndicator;
 class QGraphicsPathItem;
+class SimpleFileBlock;
 
 extern "C" {
 struct lua_State;
@@ -40,16 +40,16 @@ namespace Lua {
 class LuaMap;
 class LuaTileLayer;
 
-class LuaTileTool : public Tiled::Internal::AbstractTileTool, public Singleton<LuaTileTool>
+class LuaTileTool : public Tiled::Internal::AbstractTileTool
 {
     Q_OBJECT
 public:
-    LuaTileTool(const QString &name,
+    LuaTileTool(const QString &scriptFileName, const QString &name,
                 const QIcon &icon,
                 const QKeySequence &shortcut,
                 QObject *parent);
 
-    void setScript(const QString &fileName);
+    void loadScript();
 
     void activate(Tiled::Internal::MapScene *scene);
     void deactivate(Tiled::Internal::MapScene *scene);
@@ -63,8 +63,6 @@ public:
 
     void languageChanged();
     void tilePositionChanged(const QPoint &tilePos);
-
-    void setOption(Lua::LuaToolOption *option, const QVariant &value);
 
     // Callable from Lua scripts
     enum CursorType {
@@ -83,6 +81,7 @@ public:
     //
 
 protected slots:
+    void setOption(LuaToolOption *option, const QVariant &value);
     void mapChanged() { mMapChanged = true; }
 
 protected:
@@ -119,6 +118,38 @@ private:
 
     Lua::LuaToolOptions mOptions;
     bool mSaveOptionValue;
+};
+
+class LuaToolInfo
+{
+public:
+    QString mLabel;
+    QIcon mIcon;
+    QString mScript;
+};
+
+class LuaToolFile
+{
+    Q_DECLARE_TR_FUNCTIONS(LuaToolFile)
+
+public:
+    LuaToolFile();
+    ~LuaToolFile();
+
+    bool read(const QString &fileName);
+
+    QString errorString() const
+    { return mError; }
+
+    QList<LuaToolInfo> takeTools();
+
+private:
+    bool validKeys(SimpleFileBlock &block, const QStringList &keys);
+
+private:
+    QList<LuaToolInfo> mTools;
+    QString mFileName;
+    QString mError;
 };
 
 } // namespace Lua

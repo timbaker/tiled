@@ -1,4 +1,24 @@
-if not params.tile1 then params.tile1 = {} end
+local params = DATA[1]
+
+function options()
+    choices = {}
+    for i=1,#DATA do choices[i] = DATA[i].label end
+    return {
+	{ name = 'type', label = 'Type:', type = 'enum', choices = choices },
+    }
+end
+
+function setOption(name, value)
+    if name == 'type' then
+	for i=1,#DATA do
+	    if value == DATA[i].label then
+		params = DATA[i]
+		if not params.tile1 then params.tile1 = {} end
+		break
+	    end
+	end
+    end
+end
 
 function activate()
     print('activate')
@@ -47,6 +67,8 @@ end
 
 function mousePressed(buttons, x, y, modifiers)
     debugMouse('mousePressed', buttons, x, y, modifiers)
+    checkLayer(params.layer0)
+    checkLayer(params.layer1)
     if buttons.left then
 	self.cancel = false
 	self.xy = {x = x, y = y}
@@ -74,7 +96,7 @@ function mouseReleased(buttons, x, y, modifiers)
 	    if params.layer1 and params.tile1 then
 		map:tileLayer(params.layer1):clearTile(x + dx, y + dy)
 	    end
-	    self:applyChanges('Erase '..params.undoText)
+	    self:applyChanges('Erase '..params.label)
 	    return
 	end
 	local angle = self:angle(self.xy.x, self.xy.y, x, y)
@@ -94,7 +116,7 @@ function mouseReleased(buttons, x, y, modifiers)
 	if params.layer1 and params.tile1 then
 	    map:tileLayer(params.layer1):setTile(self.xy.x + dx, self.xy.y + dy, map:tile(tile1))
 	end
-	self:applyChanges('Draw '..params.undoText)
+	self:applyChanges('Draw '..params.label)
     end
 end
 
@@ -144,6 +166,13 @@ function indicateDistance(x, y)
 	    self:indicateDistance(x, y, x, y1)
 	    break
 	end
+    end
+end
+
+function checkLayer(name)
+    if not name or #name == 0 then return end
+    if not map:tileLayer(name) then
+	print('map is missing tile layer '..name)
     end
 end
 

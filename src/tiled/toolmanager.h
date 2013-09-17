@@ -60,6 +60,10 @@ public:
      */
     void registerTool(AbstractTool *tool);
 
+#ifdef ZOMBOID
+    void removeTool(AbstractTool *tool);
+#endif
+
     /**
      * Adds a separator to the tool bar between the last registered tool and
      * the next tool that is registered.

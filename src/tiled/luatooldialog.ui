@@ -27,9 +27,6 @@
     <number>4</number>
    </property>
    <item row="0" column="0">
-    <widget class="QListWidget" name="scriptList"/>
-   </item>
-   <item row="1" column="0">
     <widget class="Tiled::Lua::LuaToolOptionsWidget" name="options" native="true"/>
    </item>
   </layout>

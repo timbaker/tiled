@@ -85,6 +85,7 @@
 #include "edgetool.h"
 #include "fencetool.h"
 #include "luatiletool.h"
+#include "luatooldialog.h"
 #include "mapcomposite.h"
 #include "mapimagemanager.h"
 #include "mapmanager.h"
@@ -510,9 +511,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     toolManager->registerTool(new EdgeTool(this));
     toolManager->registerTool(new CurbTool(this));
     toolManager->registerTool(new FenceTool(this));
-    toolManager->registerTool(new Lua::LuaTileTool(tr("Lua Tile Tool"),
-                                                   QIcon(QLatin1String(":/images/22x22/lua-tile-tool.png")), QKeySequence(),
-                                                   this));
+
+    toolManager->addSeparator();
+    initLuaTileTools();
 #endif
     toolManager->addSeparator();
     toolManager->registerTool(new ObjectSelectionTool(this));
@@ -2821,6 +2822,53 @@ void MainWindow::retranslateUi()
     mLayerMenu->setTitle(tr("&Layer"));
     mActionHandler->retranslateUi();
 }
+
+#ifdef ZOMBOID
+void MainWindow::initLuaTileTools()
+{
+    new LuaToolDialog(this);
+
+    foreach (Lua::LuaTileTool *tool, mLuaTileTools) {
+        ToolManager::instance()->removeTool(tool);
+        delete tool;
+    }
+    mLuaTileTools.clear();
+
+    QList<Lua::LuaToolInfo> toolsInfo;
+
+    // Load the user's LuaTools.txt.
+    Lua::LuaToolFile file1;
+    QString fileName = Preferences::instance()->configPath(QLatin1String("LuaTools.txt"));
+    if (QFileInfo(fileName).exists()) {
+        if (file1.read(fileName)) {
+            toolsInfo += file1.takeTools();
+//            mTxtModifiedTime1 = QFileInfo(fileName).lastModified();
+        } else {
+            QMessageBox::warning(this, tr("Error Reading LuaTools.txt"),
+                                 file1.errorString());
+        }
+    }
+
+    // Load the application's LuaTools.txt.
+    Lua::LuaToolFile file2;
+    fileName = Preferences::instance()->appConfigPath(QLatin1String("LuaTools.txt"));
+    if (QFileInfo(fileName).exists()) {
+        if (file2.read(fileName)) {
+            toolsInfo += file2.takeTools();
+//            mTxtModifiedTime2 = QFileInfo(fileName).lastModified();
+        } else {
+            QMessageBox::warning(MainWindow::instance(), tr("Error Reading LuaTools.txt"),
+                                 file2.errorString());
+        }
+    }
+
+    foreach (Lua::LuaToolInfo toolInfo, toolsInfo) {
+        mLuaTileTools += new Lua::LuaTileTool(toolInfo.mScript, toolInfo.mLabel,
+                                              toolInfo.mIcon, QKeySequence(), this);
+        ToolManager::instance()->registerTool(mLuaTileTools.last());
+    }
+}
+#endif // ZOMBOID
 
 void MainWindow::mapDocumentChanged(MapDocument *mapDocument)
 {

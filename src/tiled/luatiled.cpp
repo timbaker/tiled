@@ -17,17 +17,20 @@
 
 #include "luatiled.h"
 
-#include "mapcomposite.h"
-
 #include "bmpblender.h"
 #include "luaconsole.h"
+#include "mapcomposite.h"
+#include "tilesetmanager.h"
+#include "tmxmapwriter.h"
+
+#include "BuildingEditor/buildingtiles.h"
+
 #include "map.h"
 #include "mapobject.h"
 #include "objectgroup.h"
 #include "tile.h"
 #include "tileset.h"
 #include "tilelayer.h"
-#include "tmxmapwriter.h"
 
 #include "tolua.h"
 
@@ -315,6 +318,7 @@ void LuaTileLayer::setTile(int x, int y, Tile *tile)
     initClone();
     if (!mCloneTileLayer->contains(x, y))
         return; // TODO: lua error!
+    if (tile == LuaMap::noneTile()) tile = 0;
     mCloneTileLayer->setCell(x, y, Cell(tile));
     mAltered += QRect(x, y, 1, 1); // too slow?
 }
@@ -366,6 +370,7 @@ void LuaTileLayer::fill(int x, int y, int width, int height, Tile *tile)
 
 void LuaTileLayer::fill(const QRect &r, Tile *tile)
 {
+    if (tile == LuaMap::noneTile()) tile = 0;
     initClone();
     QRect r2 = r & mClone->bounds();
     for (int y = r2.y(); y <= r2.bottom(); y++) {
@@ -390,6 +395,7 @@ void LuaTileLayer::fill(Tile *tile)
 
 void LuaTileLayer::replaceTile(Tile *oldTile, Tile *newTile)
 {
+    if (newTile == LuaMap::noneTile()) newTile = 0;
     initClone();
     for (int y = 0; y < mClone->width(); y++) {
         for (int x = 0; x < mClone->width(); x++) {
@@ -604,6 +610,11 @@ Tile *LuaMap::tile(const char *tilesetName, int tileID)
     if (Tileset *ts = tileset(tilesetName))
         return ts->tileAt(tileID);
     return 0;
+}
+
+Tile *LuaMap::noneTile()
+{
+    return BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile();
 }
 
 void LuaMap::addTileset(Tileset *tileset)

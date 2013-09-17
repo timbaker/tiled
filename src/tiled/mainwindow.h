@@ -52,6 +52,12 @@ namespace Tiled {
 class TileLayer;
 class MapReaderInterface;
 
+#ifdef ZOMBOID
+namespace Lua {
+class LuaTileTool;
+}
+#endif
+
 namespace Internal {
 
 class ClipboardManager;
@@ -304,6 +310,9 @@ private:
     BucketFillTool *mBucketFillTool;
 #ifdef ZOMBOID
     Eraser *mEraserTool;
+
+    void initLuaTileTools();
+    QList<Lua::LuaTileTool*> mLuaTileTools;
 #endif
 
     ClipboardManager *mClipboardManager;

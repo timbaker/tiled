@@ -2,14 +2,16 @@ version = 1
 
 tool
 {
-    label = Fence (WIP)
-    script = tool-fence.lua
+    label = Draw Edge
+    icon = tool-edge.png
+    script = tool-edge.lua
 }
 
 tool
 {
-    label = Mailbox (Rural)
-    script = tool-mailbox-rural.lua
+    label = Draw Fence
+    icon = tool-fence.png
+    script = tool-fence.lua
 }
 
 tool
@@ -20,13 +22,7 @@ tool
 
 tool
 {
-    label = Stop Sign
-    script = tool-stop-sign.lua
-}
-
-tool
-{
-    label = Street Light
-    script = tool-street-light.lua
+    label = Street Decoration
+    script = tool-street-decoration.lua
 }
 

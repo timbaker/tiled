@@ -572,5 +572,5 @@ buildingEdDocs.files = \
 INSTALLS += buildingEdDocs
 
 luaScripts.path = $${LUA_PREFIX}
-luaScripts.files = $${top_srcdir}/lua/*.lua
+luaScripts.files = $${top_srcdir}/lua/*
 INSTALLS += luaScripts

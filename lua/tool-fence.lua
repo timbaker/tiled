@@ -10,9 +10,6 @@ function options()
     for i=1,#FENCES do choices[i] = FENCES[i].label end
     return {
 	{ name = 'type', label = 'Type:', type = 'enum', choices = choices },
-	{ name = 'gap', label = 'Dash Gap:', type = 'int', min = 0, max = 99, default = 0 },
-	{ name = 'suppress', label = 'Suppress blend tiles', type = 'bool', default = false },
-	{ name = 'layer', label = 'Layer:', type = 'string', default = '0_Floor' },
     }
 end
 
@@ -79,8 +76,13 @@ function mousePressed(buttons, x, y, modifiers)
 	if modifiers.alt then
 	    local tile = gateTile(x, y, isWest(x, y))
 	    if tile then
-		self:currentLayer():setTile(x, y, tile)
-		self:applyChanges('Draw Fence Gate')
+		if self:currentLayer():tileAt(x, y) == tile then
+		    self:currentLayer():clearTile(x, y)
+		    self:applyChanges('Erase Fence Gate')
+		else
+		    self:currentLayer():setTile(x, y, tile)
+		    self:applyChanges('Draw Fence Gate')
+		end
 	    end
 	    self.cancel = true
 	    return

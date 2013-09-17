@@ -18,7 +18,8 @@
 #ifndef LUATOOLDIALOG_H
 #define LUATOOLDIALOG_H
 
-#include <QCoreApplication>
+#include "BuildingEditor/singleton.h"
+
 #include <QDateTime>
 #include <QDialog>
 #include <QTimer>
@@ -26,8 +27,6 @@
 namespace Ui {
 class LuaToolDialog;
 }
-
-class SimpleFileBlock;
 
 namespace Tiled {
 
@@ -38,19 +37,13 @@ class LuaToolOptions;
 
 namespace Internal {
 
-class LuaToolInfo
-{
-public:
-    QString mLabel;
-    QString mScript;
-};
-
-class LuaToolDialog : public QDialog
+class LuaToolDialog : public QDialog, public Singleton<LuaToolDialog>
 {
     Q_OBJECT
 
 public:
-    static LuaToolDialog *instance();
+    explicit LuaToolDialog(QWidget *parent = 0);
+    ~LuaToolDialog();
 
     void setVisible(bool visible);
 
@@ -59,57 +52,21 @@ public:
     void readSettings();
     void writeSettings();
 
-    QString txtName() const { return QLatin1String("LuaTools.txt"); }
-
     void setToolOptions(Lua::LuaToolOptions *options);
     void setToolOptionValue(Lua::LuaToolOption *option, const QVariant &value);
 
     typedef Lua::LuaToolOption LuaToolOption; // hack for signals/slots
 
-private slots:
-    void currentRowChanged(int row);
-    void setVisibleNow();
+signals:
     void valueChanged(LuaToolOption *option, const QVariant &value);
 
-private:
-    void readTxt();
+private slots:
+    void setVisibleNow();
 
 private:
-    Q_DISABLE_COPY(LuaToolDialog)
-    static LuaToolDialog *mInstance;
-    explicit LuaToolDialog(QWidget *parent = 0);
-    ~LuaToolDialog();
-
     Ui::LuaToolDialog *ui;
     bool mVisibleLater;
     QTimer mVisibleLaterTimer;
-    QList<LuaToolInfo> mTools;
-    QDateTime mTxtModifiedTime1;
-    QDateTime mTxtModifiedTime2;
-};
-
-class LuaToolFile
-{
-    Q_DECLARE_TR_FUNCTIONS(LuaToolFile)
-
-public:
-    LuaToolFile();
-    ~LuaToolFile();
-
-    bool read(const QString &fileName);
-
-    QString errorString() const
-    { return mError; }
-
-    QList<LuaToolInfo> takeTools();
-
-private:
-    bool validKeys(SimpleFileBlock &block, const QStringList &keys);
-
-private:
-    QList<LuaToolInfo> mTools;
-    QString mFileName;
-    QString mError;
 };
 
 } // namespace Internal

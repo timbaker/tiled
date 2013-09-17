@@ -80,9 +80,11 @@ error:
 
 SINGLETON_IMPL(LuaTileTool)
 
-LuaTileTool::LuaTileTool(const QString &name, const QIcon &icon,
+LuaTileTool::LuaTileTool(const QString &scriptFileName,
+                         const QString &name, const QIcon &icon,
                          const QKeySequence &shortcut, QObject *parent) :
     AbstractTileTool(name, icon, shortcut, parent),
+    mFileName(scriptFileName),
     L(0),
     mMap(0),
     mMapChanged(false),
@@ -96,12 +98,10 @@ LuaTileTool::LuaTileTool(const QString &name, const QIcon &icon,
     mCursorItem->setBrush(QColor(0,255,0,64));
 }
 
-void LuaTileTool::setScript(const QString &fileName)
+void LuaTileTool::loadScript()
 {
     MapScene *scene = mScene;
     if (mScene) deactivate(scene);
-
-    mFileName = fileName;
 
     if (L)
         lua_close(L);
@@ -112,7 +112,7 @@ void LuaTileTool::setScript(const QString &fileName)
     tolua_pushusertype(L, this, "LuaTileTool");
     lua_setglobal(L, "self");
 
-    tolua_pushstring(L, Lua::cstring(QFileInfo(fileName).absolutePath()));
+    tolua_pushstring(L, Lua::cstring(QFileInfo(mFileName).absolutePath()));
     lua_setglobal(L, "scriptDirectory");
 
     lua_pushcfunction(L, loadToolData);
@@ -146,8 +146,6 @@ void LuaTileTool::activate(MapScene *scene)
 
     mScene->addItem(mCursorItem);
 
-    LuaToolDialog::instance()->setVisibleLater(true);
-
     connect(mapDocument(), SIGNAL(mapChanged()), SLOT(mapChanged()));
     connect(mapDocument(), SIGNAL(tilesetAdded(int,Tileset*)), SLOT(mapChanged()));
     connect(mapDocument(), SIGNAL(tilesetRemoved(Tileset*)), SLOT(mapChanged()));
@@ -157,12 +155,16 @@ void LuaTileTool::activate(MapScene *scene)
     connect(mapDocument(), SIGNAL(layerChanged(int)), SLOT(mapChanged())); // layer renamed
     connect(mapDocument(), SIGNAL(regionAltered(QRegion,Layer*)), SLOT(mapChanged()));
 
-//    if (!L) setScript(Internal::Preferences::instance()->luaPath(QLatin1String("tool-street-light.lua")));
-
     if (!L && !mFileName.isEmpty()) {
         mScene = 0;
-        setScript(mFileName);
+        loadScript();
         mScene = scene;
+    }
+
+    if (mOptions.mOptions.size()) {
+        connect(LuaToolDialog::instancePtr(), SIGNAL(valueChanged(LuaToolOption*,QVariant)),
+                SLOT(setOption(LuaToolOption*,QVariant)));
+        LuaToolDialog::instancePtr()->setVisibleLater(true);
     }
 
     if (!L) return;
@@ -182,6 +184,7 @@ void LuaTileTool::activate(MapScene *scene)
     lua_remove(L, base);
 
     if (status != LUA_OK) {
+        mMapChanged = true; // discard any changes before the error occurred
         QString output = QString::fromLatin1(lua_tostring(L, -1));
         lua_pop(L, -1); // pop error
         LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
@@ -190,7 +193,9 @@ void LuaTileTool::activate(MapScene *scene)
 
 void LuaTileTool::deactivate(MapScene *scene)
 {
-    LuaToolDialog::instance()->setVisibleLater(false);
+    LuaToolDialog::instancePtr()->disconnect(this);
+    LuaToolDialog::instancePtr()->setVisibleLater(false);
+
     clearToolTiles();
     clearDistanceIndicators();
     mapDocument()->disconnect(this, SLOT(mapChanged()));
@@ -311,6 +316,7 @@ void LuaTileTool::modifiersChanged(Qt::KeyboardModifiers modifiers)
     lua_remove(L, base);
 
     if (status != LUA_OK) {
+        mMapChanged = true; // discard any changes before the error occurred
         QString output = QString::fromLatin1(lua_tostring(L, -1));
         lua_pop(L, -1); // pop error
         LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
@@ -363,6 +369,7 @@ void LuaTileTool::setOption(LuaToolOption *option, const QVariant &value)
     lua_remove(L, base);
 
     if (status != LUA_OK) {
+        mMapChanged = true; // discard any changes before the error occurred
         QString output = QString::fromLatin1(lua_tostring(L, -1));
         lua_pop(L, -1); // pop error
         LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
@@ -436,6 +443,7 @@ void LuaTileTool::mouseEvent(const char *func, Qt::MouseButtons buttons,
     lua_remove(L, base);
 
     if (status != LUA_OK) {
+        mMapChanged = true; // discard any changes before the error occurred
         QString output = QString::fromLatin1(lua_tostring(L, -1));
         lua_pop(L, -1); // pop error
         LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
@@ -534,7 +542,7 @@ static bool getStringsFromTable(lua_State *L, QStringList &strings)
 
 void LuaTileTool::setToolOptions()
 {
-    LuaToolDialog::instance()->setToolOptions(0);
+    LuaToolDialog::instancePtr()->setToolOptions(0);
     mOptions.clear();
 
     if (!L) return;
@@ -603,9 +611,9 @@ void LuaTileTool::setToolOptions()
         settings.endGroup();
         mSaveOptionValue = true;
 
-        LuaToolDialog::instance()->setToolOptions(&mOptions);
+        LuaToolDialog::instancePtr()->setToolOptions(&mOptions);
         foreach (LuaToolOption *option, mOptions.mOptions)
-            LuaToolDialog::instance()->setToolOptionValue(option, current[option]);
+            LuaToolDialog::instancePtr()->setToolOptionValue(option, current[option]);
     }
 }
 
@@ -642,13 +650,14 @@ bool LuaTileTool::parseToolOption(QString &err)
             QStringList enumNames;
             lua_pushstring(L, "choices");
             lua_gettable(L, tblidx);
-            if (!getStringsFromTable(L, enumNames)) {
+            if (!getStringsFromTable(L, enumNames) || enumNames.isEmpty() || enumNames.contains(QString())) {
                 lua_pop(L, 1);
                 err = tr("bad 'choices' in option '%1'").arg(name);
                 return false;
             }
             lua_pop(L, 1);
-            mOptions.addEnum(name, label, enumNames, enumNames.first());
+            mOptions.addEnum(name, label, enumNames,
+                             enumNames.size() ? enumNames.first() : QString());
         } else if (type == QLatin1String("int")) {
             int min, max, defaultValue;
             if (!getIntegerFromTable(L, "min", min)) {
@@ -736,6 +745,8 @@ void LuaTileTool::clearToolTiles()
 
 void LuaTileTool::setToolTile(const char *layer, int x, int y, Tile *tile)
 {
+    if (tile == LuaMap::noneTile()) tile = 0;
+
     QString layerName = QLatin1String(layer);
     Map *map = mapDocument()->map();
     if (!mToolTileLayers.keys().contains(layerName))
@@ -838,6 +849,97 @@ QPainterPath LuaTileTool::cursorShape(const QPointF &pos, Qt::KeyboardModifiers 
         path = path.simplified();
     }
     return path;
+}
+
+/////
+
+#include "BuildingEditor/simplefile.h"
+
+#include <QDir>
+#include <QFileInfo>
+
+LuaToolFile::LuaToolFile()
+{
+}
+
+LuaToolFile::~LuaToolFile()
+{
+//    qDeleteAll(mScripts);
+}
+
+bool LuaToolFile::read(const QString &fileName)
+{
+    QFileInfo info(fileName);
+    if (!info.exists()) {
+        mError = tr("The %1 file doesn't exist.").arg(fileName);
+        return false;
+    }
+
+    QString path = info.absoluteFilePath();
+    SimpleFile simple;
+    if (!simple.read(path)) {
+        mError = tr("Error reading %1.\n%2").arg(path).arg(simple.errorString());
+        return false;
+    }
+
+    mFileName = path;
+    QDir dir(info.absoluteDir());
+
+//    int version = simple.version();
+
+    foreach (SimpleFileBlock block, simple.blocks) {
+        if (block.name == QLatin1String("tool")) {
+            QStringList keys;
+            keys << QLatin1String("label")
+                 << QLatin1String("icon")
+                 << QLatin1String("script");
+            if (!validKeys(block, keys))
+                return false;
+
+            LuaToolInfo info;
+            info.mLabel = block.value("label");
+
+            QString icon = block.value("icon");
+            info.mIcon = QIcon(dir.filePath(QLatin1String("lua/") + icon));
+
+            info.mScript = block.value("script");
+            if (QFileInfo(info.mScript).isRelative()) {
+                info.mScript = QLatin1String("lua/") + info.mScript;
+                info.mScript = dir.filePath(info.mScript);
+            }
+
+            mTools += info;
+        } else {
+            mError = tr("Line %1: Unknown block name '%2'.\n%3")
+                    .arg(block.lineNumber)
+                    .arg(block.name)
+                    .arg(path);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+QList<LuaToolInfo> LuaToolFile::takeTools()
+{
+    QList<LuaToolInfo> ret = mTools;
+    mTools.clear();
+    return ret;
+}
+
+bool LuaToolFile::validKeys(SimpleFileBlock &block, const QStringList &keys)
+{
+    foreach (SimpleFileKeyValue kv, block.values) {
+        if (!keys.contains(kv.name)) {
+            mError = tr("Line %1: Unknown attribute '%2'.\n%3")
+                    .arg(kv.lineNumber)
+                    .arg(kv.name)
+                    .arg(mFileName);
+            return false;
+        }
+    }
+    return true;
 }
 
 /////

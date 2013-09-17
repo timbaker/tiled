@@ -311,6 +311,7 @@ public:
 
     Tile *tile(const char *name);
     Tile *tile(const char *tilesetName, int tileID);
+    static Tile *noneTile();
 
     void addTileset(Tileset *tileset);
     int tilesetCount();

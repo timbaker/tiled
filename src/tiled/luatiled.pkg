@@ -217,6 +217,7 @@ class LuaMap @ Map
     Tileset *tilesetAt(int index);
     Tile *tile(const char *name);
     Tile *tile(const char *tilesetName, int id);
+    Tile *noneTile();
 
     void setTileSelection(LuaRegion &rgn);
     LuaRegion tileSelection();
