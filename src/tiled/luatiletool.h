@@ -75,6 +75,7 @@ public:
     int angle(float x1, float y1, float x2, float y2);
     void clearToolTiles();
     void setToolTile(const char *layer, int x, int y, Tile *tile);
+    void setToolTile(const char *layer, const QRegion &rgn, Tile *tile);
     void clearDistanceIndicators();
     void indicateDistance(int x1, int y1, int x2, int y2);
     bool dragged();

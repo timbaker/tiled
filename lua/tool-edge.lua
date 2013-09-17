@@ -12,6 +12,7 @@ function options()
 	{ name = 'type', label = 'Type:', type = 'enum', choices = choices },
 	{ name = 'dash_length', label = 'Dash Length:', type = 'int', min = 0, max = 99, default = 0 },
 	{ name = 'dash_gap', label = 'Dash Gap:', type = 'int', min = 0, max = 99, default = 0 },
+	{ name = 'suppress', label = 'Suppress blend tiles', type = 'bool', default = false },
     }
 end
 
@@ -42,7 +43,10 @@ function mouseMoved(buttons, x, y, modifiers)
     self:clearToolTiles()
     if buttons.left then
 	if self.cancel then return end
-	local tiles = doEdge(self.x, self.y, x, y)
+	local tiles, erase, noBlend = doEdge(self.x, self.y, x, y)
+	for k,v in pairs(erase) do
+	    self:setToolTile(k, v, map:noneTile())
+	end
 	local layer = EDGE.layer or self:currentLayer():name()
 	for i=1,#tiles do
 	    local t = tiles[i]
@@ -66,11 +70,18 @@ end
 
 function mouseReleased(buttons, x, y, modifiers)
     if buttons.left and not self.cancel then
-	local tiles = doEdge(self.x, self.y, x, y)
+	self:clearToolTiles()
+	local tiles, erase, noBlend = doEdge(self.x, self.y, x, y)
+	for k,v in pairs(erase) do
+	    map:tileLayer(k):erase(v)
+	end
 	local layer = map:tileLayer(EDGE.layer) or self:currentLayer()
 	for i=1,#tiles do
 	    local t = tiles[i]
 	    layer:setTile(t[1], t[2], t[3])
+	end
+	for k,v in pairs(noBlend) do
+	    map:noBlend(k):set(v, true)
 	end
 	self:applyChanges('Draw Edge')
     end
@@ -186,7 +197,7 @@ function westEdge(sx, sy, ey)
 	    end
 	end
     end
-    return ret
+    return ret, erase, noBlend
 end
 
 function eastEdge(sx, sy, ey)
@@ -315,17 +326,40 @@ end
 function doEdge(sx, sy, ex, ey)
     local dx = math.abs(ex - sx)
     local dy = math.abs(ey - sy)
+    local tiles = {}
     if dx > dy then
 	if ns(sx, sy) == 'n' then
-	    return northEdge(math.floor(sx), math.floor(sy), math.floor(ex))
+	    tiles = northEdge(math.floor(sx), math.floor(sy), math.floor(ex))
 	else
-	    return southEdge(math.floor(sx), math.floor(sy), math.floor(ex))
+	    tiles = southEdge(math.floor(sx), math.floor(sy), math.floor(ex))
 	end
     else
 	if we(sx, sy) == 'w' then
-	    return westEdge(math.floor(sx), math.floor(sy), math.floor(ey))
+	    tiles = westEdge(math.floor(sx), math.floor(sy), math.floor(ey))
 	else
-	    return eastEdge(math.floor(sx), math.floor(sy), math.floor(ey))
+	    tiles = eastEdge(math.floor(sx), math.floor(sy), math.floor(ey))
 	end
     end
+
+    local erase = {}
+    local noBlend = {}
+    if self.options.suppress then
+	for _,layer in pairs(map:blendLayers()) do
+	    local tl = map:tileLayer(layer)
+	    for i=1,#tiles do
+		local x = tiles[i][1]
+		local y = tiles[i][2]
+		if tl and tiles[i][3] ~= map:noneTile() and tl:tileAt(x, y) and map:isBlendTile(tl:tileAt(x, y)) then
+		    if not erase[layer] then erase[layer] = Region:new() end
+		    erase[layer]:unite(x, y, 1, 1)
+		end
+		if tiles[i][3] ~= map:noneTile() then
+		    if not noBlend[layer] then noBlend[layer] = Region:new() end
+		    noBlend[layer]:unite(x, y, 1, 1)
+		end
+	    end
+	end
+    end
+
+    return tiles, erase, noBlend
 end

@@ -755,6 +755,36 @@ QList<LuaBmpBlend *> LuaMap::blends()
     return mBlends;
 }
 
+bool LuaMap::isBlendTile(Tile *tile)
+{
+    QSet<Tile*> ret;
+    foreach (LuaBmpBlend *blend, mBlends) {
+        if (blend->mBlend->blendTile.isEmpty()) continue;
+        if (mAliasByName.contains(blend->mBlend->blendTile))
+            foreach (QString tileName, mAliasByName[blend->mBlend->blendTile]->tiles())
+                ret += this->tile(tileName.toLatin1().constData());
+        else
+            ret += this->tile(blend->blendTile());
+    }
+    return ret.contains(tile);
+}
+
+QList<QString> LuaMap::blendLayers()
+{
+    QSet<QString> ret;
+    foreach (LuaBmpBlend *blend, mBlends)
+        ret += blend->mBlend->targetLayer;
+    return ret.toList();
+}
+
+LuaMapNoBlend *LuaMap::noBlend(const char *layerName)
+{
+    QLatin1String qLayerName(layerName);
+    if (!mNoBlends.contains(qLayerName))
+        mNoBlends[qLayerName] = new LuaMapNoBlend(mClone->noBlend(qLayerName));
+    return mNoBlends[qLayerName];
+}
+
 bool LuaMap::write(const char *path)
 {
     QScopedPointer<Map> map(mClone->clone());
@@ -1026,3 +1056,38 @@ QStringList LuaBmpBlend::exclude()
 }
 
 /////
+
+LuaMapNoBlend::LuaMapNoBlend(MapNoBlend *clone) :
+    mClone(clone)
+{
+
+}
+
+LuaMapNoBlend::~LuaMapNoBlend()
+{
+}
+
+void LuaMapNoBlend::set(int x, int y, bool noblend)
+{
+    if (x < 0 || x >= mClone->width()) return; // error
+    if (y < 0 || y >= mClone->height()) return; // error
+    if (mClone->get(x, y) != noblend) {
+        mClone->set(x, y, noblend);
+        mAltered += QRect(x, y, 1, 1);
+    }
+}
+
+void LuaMapNoBlend::set(const LuaRegion &rgn, bool noblend)
+{
+    foreach (QRect r, rgn.rects())
+        for (int y = r.top(); y <= r.bottom(); y++)
+            for (int x = r.left(); x <= r.right(); x++)
+                set(x, y, noblend);
+}
+
+bool LuaMapNoBlend::get(int x, int y)
+{
+    if (x < 0 || x >= mClone->width()) return false; // error
+    if (y < 0 || y >= mClone->height()) return false; // error
+    return mClone->get(x, y);
+}

@@ -17,6 +17,7 @@
 
 #include "luatiletool.h"
 
+#include "bmptool.h"
 #include "luaconsole.h"
 #include "luatiled.h"
 #include "luatooldialog.h"
@@ -709,6 +710,13 @@ void LuaTileTool::applyChanges(const char *undoText)
         }
     }
 
+    foreach (LuaMapNoBlend *nb, mMap->mNoBlends) {
+        if (!nb->mAltered.isEmpty()) {
+            cmds += new PaintNoBlend(mapDocument(), mapDocument()->map()->noBlend(nb->mClone->layerName()),
+                                     nb->mClone->copy(nb->mAltered), nb->mAltered);
+        }
+    }
+
     if (cmds.size()) {
         us->beginMacro(QLatin1String(undoText));
         foreach (QUndoCommand *cmd, cmds)
@@ -728,7 +736,7 @@ int LuaTileTool::angle(float x1, float y1, float x2, float y2)
 void LuaTileTool::clearToolTiles()
 {
     foreach (QString layerName, mToolTileLayers.keys()) {
-        if (!mToolTileLayers[layerName]->isEmpty()) {
+        if (!mToolTileRegions[layerName].isEmpty()) {
             mToolTileLayers[layerName]->erase();
             int n = mapDocument()->map()->indexOfLayer(layerName, Layer::TileLayerType);
             if (n >= 0) {
@@ -774,6 +782,14 @@ void LuaTileTool::setToolTile(const char *layer, int x, int y, Tile *tile)
             mScene->update(r);
         }
     }
+}
+
+void LuaTileTool::setToolTile(const char *layer, const QRegion &rgn, Tile *tile)
+{
+    foreach (QRect r, rgn.rects())
+        for (int y = r.top(); y <= r.bottom(); y++)
+            for (int x = r.left(); x <= r.right(); x++)
+                setToolTile(layer, x, y, tile);
 }
 
 void LuaTileTool::clearDistanceIndicators()

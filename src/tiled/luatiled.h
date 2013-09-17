@@ -35,6 +35,7 @@ class BmpRule;
 class Layer;
 class Map;
 class MapBmp;
+class MapNoBlend;
 class MapObject;
 class ObjectGroup;
 class Tile;
@@ -270,6 +271,20 @@ public:
     BmpBlend *mBlend;
 };
 
+class LuaMapNoBlend
+{
+public:
+    LuaMapNoBlend(MapNoBlend *clone);
+    ~LuaMapNoBlend();
+
+    void set(int x, int y, bool noblend);
+    void set(const LuaRegion &rgn, bool noblend);
+    bool get(int x, int y);
+
+    MapNoBlend *mClone;
+    QRegion mAltered;
+};
+
 class LuaMap
 {
 public:
@@ -333,6 +348,10 @@ public:
     LuaBmpRule *rule(const char *name);
 
     QList<LuaBmpBlend*> blends();
+    bool isBlendTile(Tile *tile);
+    QList<QString> blendLayers();
+
+    LuaMapNoBlend *noBlend(const char *layerName);
 
     bool write(const char *path);
 
@@ -353,6 +372,8 @@ public:
     QMap<QString,LuaBmpRule*> mRuleByName;
 
     QList<LuaBmpBlend*> mBlends;
+
+    QMap<QString,LuaMapNoBlend*> mNoBlends;
 
     bool mRulesChanged;
     bool mBlendsChanged;
