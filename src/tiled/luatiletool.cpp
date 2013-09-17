@@ -82,10 +82,12 @@ error:
 SINGLETON_IMPL(LuaTileTool)
 
 LuaTileTool::LuaTileTool(const QString &scriptFileName,
+                         const QString &dialogTitle,
                          const QString &name, const QIcon &icon,
                          const QKeySequence &shortcut, QObject *parent) :
     AbstractTileTool(name, icon, shortcut, parent),
     mFileName(scriptFileName),
+    mDialogTitle(dialogTitle),
     L(0),
     mMap(0),
     mMapChanged(false),
@@ -165,6 +167,7 @@ void LuaTileTool::activate(MapScene *scene)
     if (mOptions.mOptions.size()) {
         connect(LuaToolDialog::instancePtr(), SIGNAL(valueChanged(LuaToolOption*,QVariant)),
                 SLOT(setOption(LuaToolOption*,QVariant)));
+        LuaToolDialog::instancePtr()->setWindowTitle(mDialogTitle);
         LuaToolDialog::instancePtr()->setVisibleLater(true);
     }
 
@@ -196,6 +199,7 @@ void LuaTileTool::deactivate(MapScene *scene)
 {
     LuaToolDialog::instancePtr()->disconnect(this);
     LuaToolDialog::instancePtr()->setToolOptions(0);
+//    LuaToolDialog::instancePtr()->setWindowTitle(tr("Lua Tool"));
     LuaToolDialog::instancePtr()->setVisibleLater(false);
 
     clearToolTiles();
@@ -936,7 +940,8 @@ bool LuaToolFile::read(const QString &fileName)
             QStringList keys;
             keys << QLatin1String("label")
                  << QLatin1String("icon")
-                 << QLatin1String("script");
+                 << QLatin1String("script")
+                 << QLatin1String("dialog-title");
             if (!validKeys(block, keys))
                 return false;
 
@@ -951,6 +956,8 @@ bool LuaToolFile::read(const QString &fileName)
                 info.mScript = QLatin1String("lua/") + info.mScript;
                 info.mScript = dir.filePath(info.mScript);
             }
+
+            info.mDialogTitle = block.value("dialog-title");
 
             mTools += info;
         } else {

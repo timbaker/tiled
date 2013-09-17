@@ -44,7 +44,9 @@ class LuaTileTool : public Tiled::Internal::AbstractTileTool
 {
     Q_OBJECT
 public:
-    LuaTileTool(const QString &scriptFileName, const QString &name,
+    LuaTileTool(const QString &scriptFileName,
+                const QString &dialogTitle,
+                const QString &name,
                 const QIcon &icon,
                 const QKeySequence &shortcut,
                 QObject *parent);
@@ -96,6 +98,7 @@ protected:
 
 private:
     QString mFileName;
+    QString mDialogTitle;
     lua_State *L;
     LuaMap *mMap;
     bool mMapChanged;
@@ -128,6 +131,7 @@ public:
     QString mLabel;
     QIcon mIcon;
     QString mScript;
+    QString mDialogTitle;
 };
 
 class LuaToolFile

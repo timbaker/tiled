@@ -5,6 +5,7 @@ tool
     label = Draw Edge
     icon = tool-edge.png
     script = tool-edge.lua
+    dialog-title = Edge Tool
 }
 
 tool
@@ -12,6 +13,7 @@ tool
     label = Draw Curb
     icon = tool-curb.png
     script = tool-curb.lua
+    dialog-title = Curb Tool
 }
 
 tool
@@ -19,6 +21,7 @@ tool
     label = Draw Fence
     icon = tool-fence.png
     script = tool-fence.lua
+    dialog-title = Fence Tool
 }
 
 tool
@@ -31,5 +34,6 @@ tool
 {
     label = Street Decoration
     script = tool-street-decoration.lua
+    dialog-title = Street Stuff
 }
 

@@ -2863,8 +2863,9 @@ void MainWindow::initLuaTileTools()
     }
 
     foreach (Lua::LuaToolInfo toolInfo, toolsInfo) {
-        mLuaTileTools += new Lua::LuaTileTool(toolInfo.mScript, toolInfo.mLabel,
-                                              toolInfo.mIcon, QKeySequence(), this);
+        mLuaTileTools += new Lua::LuaTileTool(toolInfo.mScript, toolInfo.mDialogTitle,
+                                              toolInfo.mLabel, toolInfo.mIcon,
+                                              QKeySequence(), this);
         ToolManager::instance()->registerTool(mLuaTileTools.last());
     }
 }
