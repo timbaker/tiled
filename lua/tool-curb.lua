@@ -1,12 +1,86 @@
+--===================================================
+--=  Niklas Frykholm 
+-- basically if user tries to create global variable
+-- the system will not let them!!
+-- call GLOBAL_lock(_G)
+--
+--===================================================
+function GLOBAL_lock(t)
+  local mt = getmetatable(t) or {}
+  mt.__newindex = lock_new_index
+  setmetatable(t, mt)
+end
+
+--===================================================
+-- call GLOBAL_unlock(_G)
+-- to change things back to normal.
+--===================================================
+function GLOBAL_unlock(t)
+  local mt = getmetatable(t) or {}
+  mt.__newindex = unlock_new_index
+  setmetatable(t, mt)
+end
+
+function lock_new_index(t, k, v)
+  if (k~="_" and string.sub(k,1,2) ~= "__") then
+    GLOBAL_unlock(_G)
+    error("GLOBALS are locked -- " .. k ..
+          " must be declared local or prefix with '__' for globals.", 2)
+  else
+    rawset(t, k, v)
+  end
+end
+
+function lock_new_index(t, k, v)
+  if (k~="_" and string.sub(k,1,2) ~= "__") then
+    GLOBAL_unlock(_G)
+    print("GLOBALS are locked -- " .. k ..
+          " must be declared local or prefix with '__' for globals.")
+  end
+  rawset(t, k, v)
+end
+
+function unlock_new_index(t, k, v)
+  rawset(t, k, v)
+end
+
+-----------------------------------------------------------
+
+local valid_keys = {
+    label = 1,
+    layer = 1,
+    far = {
+	e = 1, s = 1, se = 1, join_se = 1, e_join_s = 1, s_join_e = 1,
+	sunken = {
+	    w = 1, n = 1, join_w = 1, join_e = 1, join_n = 1, join_s = 1,
+	}
+    },
+    near = {
+	e = 1, s = 1, se = 1, join_se = 1, e_join_s = 1, s_join_e = 1,
+	sunken = {
+	    e = 1, s = 1, join_w = 1, join_e = 1, join_n = 1, join_s = 1,
+	}
+    }
+}
+function validate(t, keys, path)
+    if path then path = path..'.' else path = '' end
+    for k,v in pairs(t) do
+	if not keys[k] then error("unknown key '"..path..k.."'") end
+	if type(keys[k]) == 'table' then
+	    validate(v, keys[k], path..k)
+	end
+    end
+end
+
 local DATA = {}
-function curb(d) DATA[#DATA+1] = d end
+function curb(d) validate(d, valid_keys); DATA[#DATA+1] = d end
 loadToolData 'curb'
 
 local CURB = DATA[1]
 
 function options()
     self.options = {}
-    choices = {}
+    local choices = {}
     for i=1,#DATA do choices[i] = DATA[i].label end
     return {
 	{ name = 'type', label = 'Type:', type = 'enum', choices = choices },
@@ -39,8 +113,12 @@ function mouseMoved(buttons, x, y, modifiers)
     self:clearToolTiles()
     if buttons.left then
 	if self.cancel then return end
-	local far = modifiers.alt
-	doEdge(self.x, self.y, x, y, far)
+	if modifiers.control then
+	    raiseLower(self.x, self.y, x, y)
+	else
+	    local far = modifiers.alt
+	    doEdge(self.x, self.y, x, y, far)
+	end
 	for k,v in pairs(self.erase) do
 	    self:setToolTile(k, v, map:noneTile())
 	end
@@ -68,8 +146,12 @@ end
 function mouseReleased(buttons, x, y, modifiers)
     if buttons.left and not self.cancel then
 	self:clearToolTiles()
-	local far = modifiers.alt
-	doEdge(self.x, self.y, x, y, far)
+	if modifiers.control then
+	    raiseLower(self.x, self.y, x, y)
+	else
+	    local far = modifiers.alt
+	    doEdge(self.x, self.y, x, y, far)
+	end
 	for k,v in pairs(self.erase) do
 	    map:tileLayer(k):erase(v)
 	end
@@ -110,7 +192,7 @@ function corner(x, y)
 end
 
 function curbTiles()
-    return {
+    local t = {
 	far = {
 	    e = map:tile(CURB.far.e) or map:noneTile(),
 	    s = map:tile(CURB.far.s) or map:noneTile(),
@@ -137,8 +219,8 @@ function curbTiles()
 	    s_join_e = map:tile(CURB.near.s_join_e) or map:noneTile(),
 
 	    sunken = {
-		w = map:tile(CURB.near.sunken.w) or map:noneTile(),
-		n = map:tile(CURB.near.sunken.n) or map:noneTile(),
+		e = map:tile(CURB.near.sunken.e) or map:noneTile(),
+		s = map:tile(CURB.near.sunken.s) or map:noneTile(),
 		join_w = map:tile(CURB.near.sunken.join_w) or map:noneTile(),
 		join_e = map:tile(CURB.near.sunken.join_e) or map:noneTile(),
 		join_n = map:tile(CURB.near.sunken.join_n) or map:noneTile(),
@@ -146,6 +228,8 @@ function curbTiles()
 	    }
 	}
     }
+    validate(t, valid_keys) -- debug
+    return t
 end
 
 function placedTile(x, y)
@@ -161,6 +245,20 @@ function currentTiles(x, y)
     local tl = map:tileLayer(CURB.layer) or self:currentLayer()
     if tl then
 	return {
+	    at = tl:tileAt(x, y),
+	    w = tl:tileAt(x-1, y),
+	    n = tl:tileAt(x, y-1),
+	    e = tl:tileAt(x+1, y),
+	    s = tl:tileAt(x, y+1)
+	}
+    end
+    return {}
+end
+
+function placedOrCurrentTiles(x, y)
+    local tl = map:tileLayer(CURB.layer) or self:currentLayer()
+    if tl then
+	return {
 	    at = placedTile(x, y) or tl:tileAt(x, y),
 	    w = placedTile(x-1, y) or tl:tileAt(x-1, y),
 	    n = placedTile(x, y-1) or tl:tileAt(x, y-1),
@@ -173,7 +271,7 @@ end
 
 function eastTile(x, y, half, far)
     if not contains(x, y) then return end
-    local current = currentTiles(x, y)
+    local current = placedOrCurrentTiles(x, y)
     local tiles = curbTiles()
     local tile
 
@@ -239,7 +337,7 @@ end
 
 function southTile(x, y, half, far)
     if not contains(x, y) then return end
-    local current = currentTiles(x, y)
+    local current = placedOrCurrentTiles(x, y)
     local tiles = curbTiles()
     local tile
 
@@ -356,3 +454,111 @@ function doEdge(sx, sy, ex, ey, far)
     end
 end
 
+function raiseLowerTile(sx, sy, ex, ey, x, y)
+    if not contains(x, y) then return end
+    local current = currentTiles(x, y)
+    local tiles = curbTiles()
+    local tile
+
+    local lower = true
+    local dx, dy = 0, 0
+
+    -- Far horizontal
+    if x == sx and current.at == tiles.far.s then
+	tile = tiles.far.sunken.join_w
+	dy = 1
+    elseif x == ex and current.at == tiles.far.s then
+	tile = tiles.far.sunken.join_e
+	dy = 1
+    elseif x > sx and x < ex and current.at == tiles.far.s then
+	tile = tiles.far.sunken.n
+	dy = 1
+    elseif current.s == tiles.far.sunken.join_w or
+	    current.s == tiles.far.sunken.join_e or
+	    current.s == tiles.far.sunken.n then
+	tile = tiles.far.s
+	dy = 1
+	lower = false
+
+    -- Near horizontal
+    elseif x == sx and current.at == tiles.near.s then
+	tile = tiles.near.sunken.join_w
+    elseif x == ex and current.at == tiles.near.s then
+	tile = tiles.near.sunken.join_e
+    elseif x > sx and x < ex and current.at == tiles.near.s then
+	tile = tiles.near.sunken.s
+    elseif current.at == tiles.near.sunken.join_w or
+	    current.at == tiles.near.sunken.join_e or
+	    current.at == tiles.near.sunken.s then
+	tile = tiles.near.s
+	lower = false
+    end
+
+    -- Far vertical
+    if y == sy and current.at == tiles.far.e then
+        tile = tiles.far.sunken.join_n
+        dx = 1
+    elseif y == ey and current.at == tiles.far.e then
+        tile = tiles.far.sunken.join_s
+        dx = 1
+    elseif y > sy and y < ey and current.at == tiles.far.e then
+        tile = tiles.far.sunken.w
+        dx = 1
+    elseif current.e == tiles.far.sunken.join_n
+               or current.e == tiles.far.sunken.join_s
+               or current.e == tiles.far.sunken.w then
+        tile = tiles.far.e
+        dx = 1
+        lower = false
+
+    -- Near vertical
+    elseif y == sy and current.at == tiles.near.e then
+        tile = tiles.near.sunken.join_n
+    elseif y == ey and current.at == tiles.near.e then
+        tile = tiles.near.sunken.join_s
+    elseif y > sy and y < ey and current.at == tiles.near.e then
+        tile = tiles.near.sunken.e
+    elseif (current.at == tiles.near.sunken.join_n
+               or current.at == tiles.near.sunken.join_s
+               or current.at == tiles.near.sunken.e) then
+        tile = tiles.near.e
+        lower = false
+    end
+
+    if not tile or tile == map:noneTile() then return end
+
+    local layer = CURB.layer or self:currentLayer():name()
+    if dx ~= 0 then
+	if not lower then x = x + 1 end
+	if not self.erase[layer] then self.erase[layer] = Region:new() end
+	self.erase[layer]:unite(x, y, 1, 1)
+	if lower then x = x + 1 else x = x - 1 end
+    end
+    if dy ~= 0 then
+	if not lower then y = y + 1 end
+	if not self.erase[layer] then self.erase[layer] = Region:new() end
+	self.erase[layer]:unite(x, y, 1, 1)
+	if lower then y = y + 1 else y = y - 1 end
+    end
+    self.tiles[#self.tiles+1] = { x, y, tile }
+end
+
+function raiseLower(sx, sy, ex, ey)
+    local dx = math.abs(ex - sx)
+    local dy = math.abs(ey - sy)
+    sx, sy, ex, ey = math.floor(sx), math.floor(sy), math.floor(ex), math.floor(ey)
+    self.tiles, self.erase, self.noBlend = {}, {}, {}
+    if dx > dy then
+	if sx > ex then sx,ex = ex,sx end
+	for x=sx,ex do
+	    raiseLowerTile(sx, sy, ex, sy, x, sy)
+	end
+    else
+	if sy > ey then sy,ey = ey,sy end
+	for y=sy,ey do
+	    raiseLowerTile(sx, sy, sx, ey, sx, y)
+	end
+    end
+end
+
+GLOBAL_lock(_G)
