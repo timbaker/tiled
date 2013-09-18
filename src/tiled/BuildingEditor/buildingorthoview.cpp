@@ -613,13 +613,13 @@ GraphicsFloorItem::GraphicsFloorItem(BuildingBaseScene *editor, BuildingFloor *f
     mDragBmp(0)
 {
     setFlag(ItemUsesExtendedStyleOption);
-    if (mEditor->renderer()->asIso())
+    if (mEditor->renderer()->asIso()) {
         setFlag(ItemDoesntPropagateOpacityToChildren);
+        setFlag(ItemHasNoContents);
+    }
     mBmp->fill(Qt::black);
 
-    if (mEditor->renderer()->asIso())
-        setOpacity(0.05);
-    else
+    if (mEditor->renderer()->asOrtho())
         setOpacity(0.25);
 }
 
