@@ -56,9 +56,9 @@ void LuaToolOptions::addEnum(const QString &name, const QString &label, const QS
     mOptionByName[name] = prop;
 }
 
-void LuaToolOptions::addList(const QString &name, const QString &label, const QStringList enums, const QString &defaultValue)
+void LuaToolOptions::addList(const QString &name, const QString &label, const QStringList items, int defaultIndex)
 {
-    LuaToolOption *prop = new ListLuaToolOption(name, label, enums, defaultValue);
+    LuaToolOption *prop = new ListLuaToolOption(name, label, items, defaultIndex);
     mOptions += prop;
     mOptionByName[name] = prop;
 }
@@ -155,7 +155,7 @@ void LuaToolOptionsWidget::setOptions(LuaToolOptions *options)
             QSizePolicy policy(w->sizePolicy());
             policy.setVerticalStretch(1);
             w->setSizePolicy(policy);
-            w->addItems(p->mEnums);
+            w->addItems(p->mItems);
             w->installEventFilter(this); // to disable mousewheel
             connect(w, SIGNAL(currentRowChanged(int)), SLOT(listRowChanged(int)));
             mListWidgets[p->mName] = w;
@@ -187,8 +187,8 @@ void LuaToolOptionsWidget::setValue(LuaToolOption *option, const QVariant &value
         }
     } else if (ListLuaToolOption *p = option->asList()) {
         if (QListWidget *w = mListWidgets[p->mName]) {
-            int index = p->mEnums.indexOf(value.toString());
-            w->setCurrentRow(index);
+            int index = value.toInt();
+            w->setCurrentRow(index - 1);
         }
     }
     mSynching = false;
@@ -245,7 +245,7 @@ void LuaToolOptionsWidget::listRowChanged(int row)
         Q_ASSERT(false);
         return;
     }
-    emit valueChanged(prop, prop->asList()->mEnums[row]);
+    emit valueChanged(prop, row + 1);
 }
 
 void LuaToolOptionsWidget::spinBoxValueChanged(int value)

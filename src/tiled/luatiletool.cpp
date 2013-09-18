@@ -364,7 +364,7 @@ void LuaTileTool::setOption(LuaToolOption *option, const QVariant &value)
     else if (option->asInteger())
         lua_pushinteger(L, value.toInt());
     else if (option->asList())
-        lua_pushstring(L, cstring(value.toString()));
+        lua_pushinteger(L, value.toInt());
     else if (option->asString())
         lua_pushstring(L, cstring(value.toString()));
     else
@@ -602,7 +602,6 @@ void LuaTileTool::setToolOptions()
 
         // We got a valid set of options, set the current values to those saved
         // in the settings (or the defaults).
-        // FIXME: check for legal values pulled from QSettings
         mSaveOptionValue = false;
         QSettings settings;
         settings.beginGroup(QLatin1String("LuaTileTool/Tool/")+QFileInfo(mFileName).completeBaseName());
@@ -610,13 +609,18 @@ void LuaTileTool::setToolOptions()
         foreach (LuaToolOption *option, mOptions.mOptions) {
             if (BooleanLuaToolOption *o = option->asBoolean())
                 current[option] = settings.value(o->mName, o->mDefault);
-            else if (EnumLuaToolOption *o = option->asEnum())
-                current[option] = settings.value(o->mName, o->mDefault);
-            else if (IntegerLuaToolOption *o = option->asInteger())
-                current[option] = settings.value(o->mName, o->mDefault);
-            else if (ListLuaToolOption *o = option->asList())
-                current[option] = settings.value(o->mName, o->mDefault);
-            else if (StringLuaToolOption *o = option->asString())
+            else if (EnumLuaToolOption *o = option->asEnum()) {
+                QString value = settings.value(o->mName, o->mDefault).toString();
+                if (!o->mEnums.contains(value))
+                    value = o->mDefault;
+                current[option] = value;
+            } else if (IntegerLuaToolOption *o = option->asInteger()) {
+                int value = settings.value(o->mName, o->mDefault).toInt();
+                current[option] = qBound(o->mMin, value, o->mMax);
+            } else if (ListLuaToolOption *o = option->asList()) {
+                int value = settings.value(o->mName, o->mDefault).toInt();
+                current[option] = qBound(1, value, o->mItems.size());
+            } else if (StringLuaToolOption *o = option->asString())
                 current[option] = settings.value(o->mName, o->mDefault);
             else
                 Q_ASSERT(false);
@@ -688,17 +692,16 @@ bool LuaTileTool::parseToolOption(QString &err)
             }
             mOptions.addInteger(name, label, min, max, defaultValue);
         } else if (type == QLatin1String("list")) {
-            QStringList enumNames;
-            lua_pushstring(L, "choices");
+            QStringList items;
+            lua_pushstring(L, "items");
             lua_gettable(L, tblidx);
-            if (!getStringsFromTable(L, enumNames) || enumNames.isEmpty() || enumNames.contains(QString())) {
+            if (!getStringsFromTable(L, items)) {
                 lua_pop(L, 1);
-                err = tr("bad 'choices' in option '%1'").arg(name);
+                err = tr("bad 'items' in option '%1'").arg(name);
                 return false;
             }
             lua_pop(L, 1);
-            mOptions.addList(name, label, enumNames,
-                             enumNames.size() ? enumNames.first() : QString());
+            mOptions.addList(name, label, items, 1);
         } else if (type == QLatin1String("string")) {
             QString defaultValue;
             if (!getStringFromTable(L, "default", defaultValue)) {

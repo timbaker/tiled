@@ -6,10 +6,10 @@ local EDGE = DATA[1]
 
 function options()
     self.options = {}
-    choices = {}
-    for i=1,#DATA do choices[i] = DATA[i].label end
+    local items = {}
+    for i=1,#DATA do items[i] = DATA[i].label end
     return {
-	{ name = 'type', label = 'Type:', type = 'list', choices = choices },
+	{ name = 'type', label = 'Type:', type = 'list', items = items },
 	{ name = 'dash_length', label = 'Dash Length:', type = 'int', min = 0, max = 99, default = 0 },
 	{ name = 'dash_gap', label = 'Dash Gap:', type = 'int', min = 0, max = 99, default = 0 },
 	{ name = 'suppress', label = 'Suppress blend tiles', type = 'bool', default = false },
@@ -18,15 +18,11 @@ end
 
 function setOption(name, value)
     self.options[name] = value
-    if name == 'type' then
-	for i=1,#DATA do
-	    if value == DATA[i].label then
-		EDGE = DATA[i]
-		if not EDGE.inner then EDGE.inner = {} end
-		if not EDGE.outer then EDGE.outer = {} end
-		break
-	    end
-	end
+    if name == 'type' and #DATA > 0 then
+	print(name,value)
+	EDGE = DATA[value]
+	if not EDGE.inner then EDGE.inner = {} end
+	if not EDGE.outer then EDGE.outer = {} end
     end
 end
 

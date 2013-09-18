@@ -126,18 +126,18 @@ public:
 class ListLuaToolOption : public LuaToolOption
 {
 public:
-    ListLuaToolOption(const QString &name, const QString &label, const QStringList &enums, const QString &defaultValue) :
+    ListLuaToolOption(const QString &name, const QString &label, const QStringList &items, int defaultIndex) :
         LuaToolOption(name, label),
-        mEnums(enums),
-        mDefault(defaultValue)
+        mItems(items),
+        mDefault(defaultIndex)
     {
 
     }
 
     ListLuaToolOption *asList() { return this; }
 
-    QStringList mEnums;
-    QString mDefault;
+    QStringList mItems;
+    int mDefault;
 };
 
 class LuaToolOptions
@@ -150,7 +150,7 @@ public:
     void addInteger(const QString &name, const QString &label, int min, int max, int defaultValue);
     void addString(const QString &name, const QString &label, const QString &defaultValue);
     void addEnum(const QString &name, const QString &label, const QStringList enums, const QString &defaultValue);
-    void addList(const QString &name, const QString &label, const QStringList enums, const QString &defaultValue);
+    void addList(const QString &name, const QString &label, const QStringList items, int defaultIndex);
 
     void addSeparator()
     { mSeparators += mSeparators.size() + mOptions.size(); }

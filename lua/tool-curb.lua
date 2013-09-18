@@ -80,23 +80,18 @@ local CURB = DATA[1]
 
 function options()
     self.options = {}
-    local choices = {}
-    for i=1,#DATA do choices[i] = DATA[i].label end
+    local items = {}
+    for i=1,#DATA do items[i] = DATA[i].label end
     return {
-	{ name = 'type', label = 'Type:', type = 'list', choices = choices },
+	{ name = 'type', label = 'Type:', type = 'list', items = items },
 	{ name = 'suppress', label = 'Suppress blend tiles', type = 'bool', default = false },
     }
 end
 
 function setOption(name, value)
     self.options[name] = value
-    if name == 'type' then
-	for i=1,#DATA do
-	    if value == DATA[i].label then
-		CURB = DATA[i]
-		break
-	    end
-	end
+    if name == 'type' and #DATA > 0 then
+	CURB = DATA[value]
     end
 end
 

@@ -1,22 +1,17 @@
 local CURDATA = DATA[1]
 
 function options()
-    choices = {}
-    for i=1,#DATA do choices[i] = DATA[i].label end
+    local items = {}
+    for i=1,#DATA do items[i] = DATA[i].label end
     return {
-	{ name = 'type', label = 'Type:', type = 'list', choices = choices },
+	{ name = 'type', label = 'Type:', type = 'list', items = items },
     }
 end
 
 function setOption(name, value)
-    if name == 'type' then
-	for i=1,#DATA do
-	    if value == DATA[i].label then
-		CURDATA = DATA[i]
-		if not CURDATA.tile1 then CURDATA.tile1 = {} end
-		break
-	    end
-	end
+    if name == 'type' and #DATA > 0 then
+	CURDATA = DATA[value]
+	if not CURDATA.tile1 then CURDATA.tile1 = {} end
     end
 end
 
