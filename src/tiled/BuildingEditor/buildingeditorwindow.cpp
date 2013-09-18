@@ -1891,7 +1891,7 @@ void BuildingEditorWindow::tilesetChanged(Tileset *tileset)
 void BuildingEditorWindow::reportMissingTilesets()
 {
     Building *building = currentBuilding();
-    if (!building || mCurrentDocumentStuff->mMissingTilesetsReported)
+    if (!building || mCurrentDocumentStuff->missingTilesetsReported())
         return;
 
     QSet<QString> missingTilesets;
@@ -1927,7 +1927,7 @@ void BuildingEditorWindow::reportMissingTilesets()
         dialog.exec();
     }
 
-    mCurrentDocumentStuff->mMissingTilesetsReported = true;
+    mCurrentDocumentStuff->setMissingTilesetsReported(true);
 }
 
 void BuildingEditorWindow::updateActions()

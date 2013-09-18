@@ -115,7 +115,10 @@ public:
 
     void viewAddedForDocument(BuildingIsoView *view);
 
-    bool mMissingTilesetsReported;
+    bool missingTilesetsReported() const
+    { return mMissingTilesetsReported; }
+    void setMissingTilesetsReported(bool reported)
+    { mMissingTilesetsReported = reported; }
 
 public slots:
     void autoSaveCheck();
@@ -131,6 +134,7 @@ private:
     EditMode mPrevObjectMode;
     BaseTool *mPrevObjectTool;
     BaseTool *mPrevTileTool;
+    bool mMissingTilesetsReported;
 
     // Hack to keep iso/tile view position and scale synched.
     BuildingIsoView *mIsoView;
