@@ -101,6 +101,13 @@ LuaTileTool::LuaTileTool(const QString &scriptFileName,
     mCursorItem->setBrush(QColor(0,255,0,64));
 }
 
+LuaTileTool::~LuaTileTool()
+{
+    qDeleteAll(mToolTileLayers);
+    qDeleteAll(mToolNoBlends);
+    // qDeleteAll(mDistanceIndicators)
+}
+
 void LuaTileTool::loadScript()
 {
     MapScene *scene = mScene;
@@ -203,10 +210,11 @@ void LuaTileTool::deactivate(MapScene *scene)
     LuaToolDialog::instancePtr()->setVisibleLater(false);
 
     clearToolTiles();
+    clearToolNoBlends();
     clearDistanceIndicators();
     mapDocument()->disconnect(this, SLOT(mapChanged()));
     scene->removeItem(mCursorItem);
-    mCursorType = CursorType::None;
+    mCursorType = LuaTileTool::None;
 
     AbstractTileTool::deactivate(scene);
 
@@ -240,6 +248,7 @@ void LuaTileTool::deactivate(MapScene *scene)
 void LuaTileTool::mouseLeft()
 {
     clearToolTiles();
+    clearToolNoBlends();
     AbstractTileTool::mouseLeft();
 }
 
@@ -820,6 +829,63 @@ void LuaTileTool::setToolTile(const char *layer, const QRegion &rgn, Tile *tile)
                 setToolTile(layer, x, y, tile);
 }
 
+void LuaTileTool::clearToolNoBlends()
+{
+    foreach (QString layerName, mToolNoBlends.keys()) {
+        if (!mToolNoBlendRegions[layerName].isEmpty()) {
+            //mToolNoBlends[layerName]->clear();
+            int n = mapDocument()->map()->indexOfLayer(layerName, Layer::TileLayerType);
+            if (n >= 0) {
+                TileLayer *tl = mapDocument()->map()->layerAt(n)->asTileLayer();
+                mapDocument()->mapComposite()->layerGroupForLayer(tl)->clearToolNoBlends();
+                QRect r = mapDocument()->renderer()->boundingRect(mToolNoBlendRegions[layerName].boundingRect(),
+                                                                  tl->level()).adjusted(-3, -(128-32) - 3, 3, 3);
+                mScene->update(r);
+            }
+            mToolNoBlendRegions[layerName] = QRegion();
+        }
+     }
+}
+
+void LuaTileTool::setToolNoBlend(const char *layer, int x, int y, bool noBlend)
+{
+    QString layerName = QLatin1String(layer);
+    Map *map = mapDocument()->map();
+    if (!mToolNoBlends.keys().contains(layerName))
+        mToolNoBlends[layerName] = new MapNoBlend(layerName, map->width(), map->height());
+
+    MapNoBlend *nb = mToolNoBlends[layerName];
+    QRegion &rgn = mToolNoBlendRegions[layerName];
+    if (nb->width() != map->width() || nb->height() != map->height()) {
+        delete mToolNoBlends[layerName];
+        nb = mToolNoBlends[layerName] = new MapNoBlend(layerName, map->width(), map->height());
+        rgn &= QRect(QPoint(), map->size());
+    }
+
+    if (QRect(QPoint(), map->size()).contains(x, y)) {
+        nb->set(x, y, noBlend);
+        rgn += QRect(x, y, 1, 1);
+        int n = map->indexOfLayer(layerName, Layer::TileLayerType);
+        if (n >= 0) {
+            TileLayer *tl = map->layerAt(n)->asTileLayer();
+            mapDocument()->mapComposite()->layerGroupForLayer(tl)->setToolNoBlend(
+                        nb->copy(rgn), rgn.boundingRect().topLeft(), rgn, tl);
+            QRect r = mapDocument()->renderer()->boundingRect(
+                        rgn.boundingRect(),
+                        tl->level()).adjusted(-3, -(128-32) - 3, 3, 3);
+            mScene->update(r);
+        }
+    }
+}
+
+void LuaTileTool::setToolNoBlend(const char *layer, const QRegion &rgn, bool noBlend)
+{
+    foreach (QRect r, rgn.rects())
+        for (int y = r.top(); y <= r.bottom(); y++)
+            for (int x = r.left(); x <= r.right(); x++)
+                setToolNoBlend(layer, x, y, noBlend);
+}
+
 void LuaTileTool::clearDistanceIndicators()
 {
     for (int i = 0; i < 4; i++) {
@@ -868,14 +934,14 @@ QPainterPath LuaTileTool::cursorShape(const QPointF &pos, Qt::KeyboardModifiers 
     qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
 
     QPainterPath path;
-    if (mCursorType == CursorType::CurbTool) {
+    if (mCursorType == LuaTileTool::CurbTool) {
         qreal dx = 0, dy = 0;
         if (dE <= dW) dx = 0.5;
         if (dS <= dN) dy = 0.5;
         QPolygonF poly = renderer->tileToPixelCoords(QRectF(tilePos.x() + dx, tilePos.y() + dy, 0.5, 0.5), level);
         path.addPolygon(poly);
     }
-    if (mCursorType == CursorType::EdgeTool) {
+    if (mCursorType == LuaTileTool::EdgeTool) {
         Edge edge;
         if (dW < dE) {
             edge = (dW < dN && dW < dS) ? EdgeW : ((dN < dS) ? EdgeN : EdgeS);

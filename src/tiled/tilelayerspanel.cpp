@@ -688,7 +688,7 @@ void TileLayersPanel::setList()
         TileLayer *blendLayer = lg->bmpBlendLayers().at(index);
         if (blendLayer && blendLayer->contains(mTilePos))
             if (!blendLayerNames.contains(tl->name()) ||
-                    !mDocument->map()->noBlend(tl->name())->get(mTilePos.x(), mTilePos.y()))
+                    !mDocument->map()->noBlend(tl->name())->get(mTilePos))
                 if (Tile *blendTile = blendLayer->cellAt(mTilePos).tile)
                     tile = blendTile;
         if (!tile)

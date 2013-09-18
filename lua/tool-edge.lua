@@ -37,6 +37,7 @@ end
 
 function mouseMoved(buttons, x, y, modifiers)
     self:clearToolTiles()
+    self:clearToolNoBlends();
     if buttons.left then
 	if self.cancel then return end
 	doEdge(self.x, self.y, x, y)
@@ -47,6 +48,9 @@ function mouseMoved(buttons, x, y, modifiers)
 	for i=1,#self.tiles do
 	    local t = self.tiles[i]
 	    self:setToolTile(layer, t[1], t[2], t[3])
+	end
+	for k,v in pairs(self.noBlend) do
+	    self:setToolNoBlend(k, v, true)
 	end
     else
     end
@@ -61,12 +65,14 @@ function mousePressed(buttons, x, y, modifiers)
     if buttons.right then
 	self.cancel = true
 	self:clearToolTiles()
+	self:clearToolNoBlends();
     end
 end
 
 function mouseReleased(buttons, x, y, modifiers)
     if buttons.left and not self.cancel then
 	self:clearToolTiles()
+	self:clearToolNoBlends();
 	doEdge(self.x, self.y, x, y)
 	for k,v in pairs(self.erase) do
 	    map:tileLayer(k):erase(v)

@@ -265,6 +265,8 @@ class LuaTileTool
     void clearToolTiles();
     void setToolTile(const char *layer, int x, int y, Tile *tile);
     void setToolTile(const char *layer, LuaRegion &rgn, Tile *tile);
+    void clearToolNoBlends();
+    void setToolNoBlend(const char *layer, LuaRegion &rgn, bool noBlend);
     void clearDistanceIndicators();
     void indicateDistance(int x1, int y1, int x2, int y2);
     bool dragged();

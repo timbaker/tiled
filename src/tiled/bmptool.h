@@ -443,6 +443,8 @@ class NoBlendTool : public AbstractBmpTool
 public:
     static NoBlendTool *instance();
 
+    void deactivate(MapScene *scene);
+
     void mousePressed(QGraphicsSceneMouseEvent *event);
     void mouseReleased(QGraphicsSceneMouseEvent *event);
 
@@ -470,6 +472,7 @@ private:
     };
 
     QRect selectedArea() const;
+    void clearNoBlend();
 
     Mode mMode;
 
@@ -478,6 +481,7 @@ private:
     bool mMouseDown;
     bool mMouseMoved;
     bool mErasing;
+    QSet<int> mToolNoBlendLevel;
 };
 
 /////

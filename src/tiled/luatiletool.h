@@ -33,6 +33,7 @@ struct lua_State;
 }
 
 namespace Tiled {
+class MapNoBlend;
 class MapRenderer;
 class Tile;
 
@@ -50,6 +51,7 @@ public:
                 const QIcon &icon,
                 const QKeySequence &shortcut,
                 QObject *parent);
+    ~LuaTileTool();
 
     void loadScript();
 
@@ -79,6 +81,9 @@ public:
     void clearToolTiles();
     void setToolTile(const char *layer, int x, int y, Tile *tile);
     void setToolTile(const char *layer, const QRegion &rgn, Tile *tile);
+    void clearToolNoBlends();
+    void setToolNoBlend(const char *layer, int x, int y, bool noBlend);
+    void setToolNoBlend(const char *layer, const QRegion &rgn, bool noBlend);
     void clearDistanceIndicators();
     void indicateDistance(int x1, int y1, int x2, int y2);
     bool dragged();
@@ -106,6 +111,8 @@ private:
     Qt::MouseButtons mButtons;
     QMap<QString,Tiled::TileLayer*> mToolTileLayers;
     QMap<QString,QRegion> mToolTileRegions;
+    QMap<QString,Tiled::MapNoBlend*> mToolNoBlends;
+    QMap<QString,QRegion> mToolNoBlendRegions;
     QPointF mStartScenePos;
     QPointF mCurrentScenePos;
 

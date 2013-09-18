@@ -106,6 +106,7 @@ end
 
 function mouseMoved(buttons, x, y, modifiers)
     self:clearToolTiles()
+    self:clearToolNoBlends();
     if buttons.left then
 	if self.cancel then return end
 	if modifiers.control then
@@ -122,6 +123,9 @@ function mouseMoved(buttons, x, y, modifiers)
 	    local t = self.tiles[i]
 	    self:setToolTile(layer, t[1], t[2], t[3])
 	end
+	for k,v in pairs(self.noBlend) do
+	    self:setToolNoBlend(k, v, true)
+	end
     else
     end
 end
@@ -135,12 +139,14 @@ function mousePressed(buttons, x, y, modifiers)
     if buttons.right then
 	self.cancel = true
 	self:clearToolTiles()
+	self:clearToolNoBlends();
     end
 end
 
 function mouseReleased(buttons, x, y, modifiers)
     if buttons.left and not self.cancel then
 	self:clearToolTiles()
+	self:clearToolNoBlends();
 	if modifiers.control then
 	    raiseLower(self.x, self.y, x, y)
 	else

@@ -1666,6 +1666,7 @@ void BmpBucketTool::bmpImageChanged()
 
 /////
 
+#if 0
 // Calculate the region of no-blend values that do *not* have a given value.
 static QRegion noBlendRegion(Map *map, MapNoBlend *noBlend,
                                 const QRegion &tileRgn, bool value)
@@ -1685,6 +1686,7 @@ static QRegion noBlendRegion(Map *map, MapNoBlend *noBlend,
     }
     return ret;
 }
+#endif
 
 NoBlendTool *NoBlendTool::mInstance = 0;
 
@@ -1693,6 +1695,12 @@ NoBlendTool *NoBlendTool::instance()
     if (!mInstance)
         mInstance = new NoBlendTool;
     return mInstance;
+}
+
+void NoBlendTool::deactivate(MapScene *scene)
+{
+    clearNoBlend();
+    AbstractBmpTool::deactivate(scene);
 }
 
 NoBlendTool::NoBlendTool(QObject *parent) :
@@ -1709,9 +1717,38 @@ NoBlendTool::NoBlendTool(QObject *parent) :
 void NoBlendTool::tilePositionChanged(const QPoint &tilePos)
 {
     Q_UNUSED(tilePos)
-    if (mMode == Painting)
+    if (mMode == Painting) {
         brushItem()->setTileRegion(selectedArea());
-    else if (isBlendLayer())
+        clearNoBlend();
+        if (isBlendLayer() && !brushItem()->tileRegion().isEmpty()) {
+            MapDocument *doc = mapDocument();
+            MapNoBlend *nb = doc->map()->noBlend(currentLayer()->name());
+            MapNoBlend noBlend = nb->copy(brushItem()->tileRegion());
+            foreach (QRect r, brushItem()->tileRegion().rects()) {
+                for (int y = r.top(); y <= r.bottom(); y++) {
+                    for (int x = r.left(); x <= r.right(); x++) {
+                        noBlend.set(x - r.left(), y - r.top(), !noBlend.get(x - r.left(), y - r.top()));
+                    }
+                }
+            }
+            // Shift key affects all blend layers.
+            if (qApp->keyboardModifiers() & Qt::ShiftModifier) {
+                foreach (QString layerName, doc->mapComposite()->bmpBlender()->blendLayers()) {
+                    int n = doc->map()->indexOfLayer(layerName, Layer::TileLayerType);
+                    if (n >= 0) {
+                        TileLayer *tl = doc->map()->layerAt(n)->asTileLayer();
+                        doc->mapComposite()->layerGroupForLayer(tl)->setToolNoBlend(
+                                    noBlend, selectedArea().topLeft(), selectedArea(), tl);
+                        mToolNoBlendLevel += tl->level();
+                    }
+                }
+            } else {
+                doc->mapComposite()->layerGroupForLevel(doc->currentLevel())->setToolNoBlend(
+                            noBlend, selectedArea().topLeft(), selectedArea(), currentLayer()->asTileLayer());
+                mToolNoBlendLevel += mapDocument()->currentLevel();
+            }
+        }
+    } else if (isBlendLayer())
         brushItem()->setTileRegion(QRect(tilePos, QSize(1, 1)));
     else
         brushItem()->setTileRegion(QRegion());
@@ -1760,6 +1797,7 @@ void NoBlendTool::mousePressed(QGraphicsSceneMouseEvent *event)
     if (button == Qt::RightButton) {
         if (mMode == Painting) {
             brushItem()->setTileRegion(QRegion());
+            clearNoBlend();
             updateStatusInfo();
             mMode = NoMode;
         }
@@ -1851,6 +1889,7 @@ void NoBlendTool::mouseReleased(QGraphicsSceneMouseEvent *event)
                 }
             }
             brushItem()->setTileRegion(QRegion());
+            clearNoBlend();
             updateStatusInfo();
         }
     }
@@ -1872,6 +1911,7 @@ void NoBlendTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers
 void NoBlendTool::modifiersChanged(Qt::KeyboardModifiers)
 {
     tilePositionChanged(tilePosition());
+    brushItem()->update(); // force redraw in case Shift was toggled
 }
 
 void NoBlendTool::languageChanged()
@@ -1907,6 +1947,13 @@ QRect NoBlendTool::selectedArea() const
     }
 #endif
     return r & QRect(QPoint(0, 0), mapDocument()->map()->size());
+}
+
+void NoBlendTool::clearNoBlend()
+{
+    foreach (int level, mToolNoBlendLevel)
+        mapDocument()->mapComposite()->layerGroupForLevel(level)->clearToolNoBlends();
+    mToolNoBlendLevel.clear();
 }
 
 /////
