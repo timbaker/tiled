@@ -508,10 +508,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     toolManager->registerTool(new TileSelectionTool(this));
 #ifdef ZOMBOID
     toolManager->registerTool(new PickTileTool(this));
+#if 0
     toolManager->registerTool(new EdgeTool(this));
     toolManager->registerTool(new CurbTool(this));
     toolManager->registerTool(new FenceTool(this));
-
+#endif
     toolManager->addSeparator();
     initLuaTileTools();
 #endif
@@ -2308,6 +2309,14 @@ bool MainWindow::LuaScript(MapDocument *doc, const QString &filePath)
         us->push(new PaintBMP(doc, 1, r.x(), r.y(),
                               bmpVeg.mBmp.image().copy(r),
                               bmpVeg.mAltered));
+    }
+
+    // Apply changes to MapNoBlends
+    foreach (Lua::LuaMapNoBlend *nb, scripter.mMap.mNoBlends) {
+        if (!nb->mAltered.isEmpty()) {
+            us->push(new PaintNoBlend(doc, doc->map()->noBlend(nb->mClone->layerName()),
+                                      nb->mClone->copy(nb->mAltered), nb->mAltered));
+        }
     }
 
     // Handle the script changing the tile selection.
