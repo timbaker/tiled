@@ -43,13 +43,13 @@ function mouseMoved(buttons, x, y, modifiers)
     self:clearToolTiles()
     if buttons.left then
 	if self.cancel then return end
-	local tiles, erase, noBlend = doEdge(self.x, self.y, x, y)
-	for k,v in pairs(erase) do
+	doEdge(self.x, self.y, x, y)
+	for k,v in pairs(self.erase) do
 	    self:setToolTile(k, v, map:noneTile())
 	end
 	local layer = EDGE.layer or self:currentLayer():name()
-	for i=1,#tiles do
-	    local t = tiles[i]
+	for i=1,#self.tiles do
+	    local t = self.tiles[i]
 	    self:setToolTile(layer, t[1], t[2], t[3])
 	end
     else
@@ -71,16 +71,16 @@ end
 function mouseReleased(buttons, x, y, modifiers)
     if buttons.left and not self.cancel then
 	self:clearToolTiles()
-	local tiles, erase, noBlend = doEdge(self.x, self.y, x, y)
-	for k,v in pairs(erase) do
+	doEdge(self.x, self.y, x, y)
+	for k,v in pairs(self.erase) do
 	    map:tileLayer(k):erase(v)
 	end
 	local layer = map:tileLayer(EDGE.layer) or self:currentLayer()
-	for i=1,#tiles do
-	    local t = tiles[i]
+	for i=1,#self.tiles do
+	    local t = self.tiles[i]
 	    layer:setTile(t[1], t[2], t[3])
 	end
-	for k,v in pairs(noBlend) do
+	for k,v in pairs(self.noBlend) do
 	    map:noBlend(k):set(v, true)
 	end
 	self:applyChanges('Draw Edge')
@@ -160,206 +160,202 @@ function currentTiles(x, y)
 end
 
 function westEdge(sx, sy, ey)
-    local ret = {}
     local tiles = edgeTiles()
     local dy = 1
     if sy > ey then dy = -1 end
-    for y = sy,ey,dy do
-	if contains(sx, y) then
-	    local current = currentTiles(sx, y)
-	    tile = tiles.w
-	    if (current.w == tiles.n or current.w == tiles.outer.nw or current.w == tiles.inner.sw) then
-		tile = tiles.inner.se
-	    elseif (current.w == tiles.s or current.w == tiles.outer.sw or current.w == tiles.inner.nw) then
-		tile = tiles.inner.ne
-	    elseif (current.e == tiles.n or current.e == tiles.outer.ne or current.e == tiles.inner.se) then
-		tile = tiles.outer.nw
-	    elseif (current.e == tiles.s or current.e == tiles.outer.se or current.e == tiles.inner.ne) then
-		tile = tiles.outer.sw
-	    elseif current.at == tiles.n then
-		tile = tiles.outer.nw
-	    elseif current.at == tiles.s then
-		tile = tiles.outer.sw
-	    end
-	    ret[#ret+1] = { sx, y, tile }
-	end
-    end
     local len = self.options.dash_length
     local gap = self.options.dash_gap
-    if len > 0 and gap > 0 then
-	for y = sy+len*dy,ey,(len+gap)*dy do
-	    for i=0,gap-1 do
-		if sy > ey and y-i < ey then break end
-		if sy <= ey and y+i > ey then break end
-		if contains(sx, y+i*dy) then
-		    ret[math.abs(y+i*dy - sy)+1][3] = map:noneTile()
+    if len < 1 or gap < 1 then
+	len = math.abs(ey - sy) + 1
+    end
+    for y = sy,ey,dy do
+	if len > 0 then
+	    if contains(sx, y) then
+		local current = currentTiles(sx, y)
+		tile = tiles.w
+		if (current.w == tiles.n or current.w == tiles.outer.nw or current.w == tiles.inner.sw) then
+		    tile = tiles.inner.se
+		elseif (current.w == tiles.s or current.w == tiles.outer.sw or current.w == tiles.inner.nw) then
+		    tile = tiles.inner.ne
+		elseif (current.e == tiles.n or current.e == tiles.outer.ne or current.e == tiles.inner.se) then
+		    tile = tiles.outer.nw
+		elseif (current.e == tiles.s or current.e == tiles.outer.se or current.e == tiles.inner.ne) then
+		    tile = tiles.outer.sw
+		elseif current.at == tiles.n then
+		    tile = tiles.outer.nw
+		elseif current.at == tiles.s then
+		    tile = tiles.outer.sw
 		end
+		self.tiles[#self.tiles+1] = { sx, y, tile }
 	    end
+	    len = len - 1
+	    if len == 0 then gap = self.options.dash_gap end
+	else
+	    if contains(sx, y) then
+		self.tiles[#self.tiles+1] = { sx, y, map:noneTile() }
+	    end
+	    gap = gap - 1
+	    if gap == 0 then len = self.options.dash_length end
 	end
     end
-    return ret, erase, noBlend
 end
 
 function eastEdge(sx, sy, ey)
-    local ret = {}
     local tiles = edgeTiles()
     local dy = 1
     if sy > ey then dy = -1 end
-    for y = sy,ey,dy do
-	if contains(sx, y) then
-	    local current = currentTiles(sx, y)
-	    tile = tiles.e
-	    if (current.e == tiles.n or current.e == tiles.outer.ne or current.e == tiles.inner.se) then
-		tile = tiles.inner.sw
-	    elseif (current.e == tiles.s or current.e == tiles.outer.se or current.e == tiles.inner.ne) then
-		tile = tiles.inner.nw
-	    elseif (current.w == tiles.n or current.w == tiles.outer.nw or current.w == tiles.inner.sw) then
-		tile = tiles.outer.ne
-	    elseif (current.w == tiles.s or current.w == tiles.outer.sw or current.w == tiles.inner.nw) then
-		tile = tiles.outer.se
-	    elseif current.at == tiles.n then
-		tile = tiles.outer.ne
-	    elseif current.at == tiles.s then
-		tile = tiles.outer.se
-	    end
-	    ret[#ret+1] = { sx, y, tile }
-	end
-    end
     local len = self.options.dash_length
     local gap = self.options.dash_gap
-    if len > 0 and gap > 0 then
-	for y = sy+len*dy,ey,(len+gap)*dy do
-	    for i=0,gap-1 do
-		if sy > ey and y-i < ey then break end
-		if sy <= ey and y+i > ey then break end
-		if contains(sx, y+i*dy) then
-		    ret[math.abs(y+i*dy - sy)+1][3] = map:noneTile()
+    if len < 1 or gap < 1 then
+	len = math.abs(ey - sy) + 1
+    end
+    for y = sy,ey,dy do
+	if len > 0 then
+	    if contains(sx, y) then
+		local current = currentTiles(sx, y)
+		tile = tiles.e
+		if (current.e == tiles.n or current.e == tiles.outer.ne or current.e == tiles.inner.se) then
+		    tile = tiles.inner.sw
+		elseif (current.e == tiles.s or current.e == tiles.outer.se or current.e == tiles.inner.ne) then
+		    tile = tiles.inner.nw
+		elseif (current.w == tiles.n or current.w == tiles.outer.nw or current.w == tiles.inner.sw) then
+		    tile = tiles.outer.ne
+		elseif (current.w == tiles.s or current.w == tiles.outer.sw or current.w == tiles.inner.nw) then
+		    tile = tiles.outer.se
+		elseif current.at == tiles.n then
+		    tile = tiles.outer.ne
+		elseif current.at == tiles.s then
+		    tile = tiles.outer.se
 		end
+		self.tiles[#self.tiles+1] = { sx, y, tile }
 	    end
+	    len = len - 1
+	    if len == 0 then gap = self.options.dash_gap end
+	else
+	    if contains(sx, y) then
+		self.tiles[#self.tiles+1] = { sx, y, map:noneTile() }
+	    end
+	    gap = gap - 1
+	    if gap == 0 then len = self.options.dash_length end
 	end
     end
-    return ret
 end
 
 function northEdge(sx, sy, ex)
-    local ret = {}
     local tiles = edgeTiles()
     local dx = 1
     if sx > ex then dx = -1 end
-    for x = sx,ex,dx do
-	if contains(x, sy) then
-	    local current = currentTiles(x, sy)
-	    tile = tiles.n
-	    if (current.n == tiles.e or current.n == tiles.outer.ne or current.n == tiles.inner.nw) then
-		tile = tiles.inner.sw
-	    elseif (current.n == tiles.w or current.n == tiles.outer.nw or current.n == tiles.inner.ne) then
-		tile = tiles.inner.se
-	    elseif (current.s == tiles.w or current.s == tiles.outer.sw or current.s == tiles.inner.se) then
-		tile = tiles.outer.nw
-	    elseif (current.s == tiles.e or current.s == tiles.outer.se or current.s == tiles.inner.sw) then
-		tile = tiles.outer.ne
-	    elseif current.at == tiles.w then
-		tile = tiles.outer.nw
-	    elseif current.at == tiles.e then
-		tile = tiles.outer.ne
-	    end
-	    ret[#ret+1] = { x, sy, tile }
-	end
-    end
     local len = self.options.dash_length
     local gap = self.options.dash_gap
-    if len > 0 and gap > 0 then
-	for x = sx+len*dx,ex,(len+gap)*dx do
-	    for i=0,gap-1 do
-		if sx > ex and x-i < ex then break end
-		if sx <= ex and x+i > ex then break end
-		if contains(x+i*dx, sy) then
-		    ret[math.abs(x+i*dx - sx)+1][3] = map:noneTile()
+    if len < 1 or gap < 1 then
+	len = math.abs(ex - sx) + 1
+    end
+    for x = sx,ex,dx do
+	if len > 0 then
+	    if contains(x, sy) then
+		local current = currentTiles(x, sy)
+		tile = tiles.n
+		if (current.n == tiles.e or current.n == tiles.outer.ne or current.n == tiles.inner.nw) then
+		    tile = tiles.inner.sw
+		elseif (current.n == tiles.w or current.n == tiles.outer.nw or current.n == tiles.inner.ne) then
+		    tile = tiles.inner.se
+		elseif (current.s == tiles.w or current.s == tiles.outer.sw or current.s == tiles.inner.se) then
+		    tile = tiles.outer.nw
+		elseif (current.s == tiles.e or current.s == tiles.outer.se or current.s == tiles.inner.sw) then
+		    tile = tiles.outer.ne
+		elseif current.at == tiles.w then
+		    tile = tiles.outer.nw
+		elseif current.at == tiles.e then
+		    tile = tiles.outer.ne
 		end
+		self.tiles[#self.tiles+1] = { x, sy, tile }
 	    end
+	    len = len - 1
+	    if len == 0 then gap = self.options.dash_gap end
+	else
+	    if contains(x, sy) then
+		self.tiles[#self.tiles+1] = { x, sy, map:noneTile() }
+	    end
+	    gap = gap - 1
+	    if gap == 0 then len = self.options.dash_length end
 	end
     end
-    return ret
 end
 
 function southEdge(sx, sy, ex)
-    local ret = {}
     local tiles = edgeTiles()
     local dx = 1
     if sx > ex then dx = -1 end
-    for x = sx,ex,dx do
-	if contains(x, sy) then
-	    local current = currentTiles(x, sy)
-	    tile = tiles.s
-	    if (current.s == tiles.e or current.s == tiles.outer.se or current.s == tiles.inner.sw) then
-		tile = tiles.inner.nw
-	    elseif (current.s == tiles.w or current.s == tiles.outer.sw or current.s == tiles.inner.se) then
-		tile = tiles.inner.ne
-	    elseif (current.n == tiles.w or current.n == tiles.outer.nw or current.n == tiles.inner.ne) then
-		tile = tiles.outer.sw
-	    elseif (current.n == tiles.e or current.n == tiles.outer.ne or current.n == tiles.inner.nw) then
-		tile = tiles.outer.se
-	    elseif current.at == tiles.w then
-		tile = tiles.outer.sw
-	    elseif current.at == tiles.e then
-		tile = tiles.outer.se
-	    end
-	    ret[#ret+1] = { x, sy, tile }
-	end
-    end
     local len = self.options.dash_length
     local gap = self.options.dash_gap
-    if len > 0 and gap > 0 then
-	for x = sx+len*dx,ex,(len+gap)*dx do
-	    for i=0,gap-1 do
-		if sx > ex and x-i < ex then break end
-		if sx <= ex and x+i > ex then break end
-		if contains(x+i*dx, sy) then
-		    ret[math.abs(x+i*dx - sx)+1][3] = map:noneTile()
+    if len < 1 or gap < 1 then
+	len = math.abs(ex - sx) + 1
+    end
+    for x = sx,ex,dx do
+	if len > 0 then
+	    if contains(x, sy) then
+		local current = currentTiles(x, sy)
+		tile = tiles.s
+		if (current.s == tiles.e or current.s == tiles.outer.se or current.s == tiles.inner.sw) then
+		    tile = tiles.inner.nw
+		elseif (current.s == tiles.w or current.s == tiles.outer.sw or current.s == tiles.inner.se) then
+		    tile = tiles.inner.ne
+		elseif (current.n == tiles.w or current.n == tiles.outer.nw or current.n == tiles.inner.ne) then
+		    tile = tiles.outer.sw
+		elseif (current.n == tiles.e or current.n == tiles.outer.ne or current.n == tiles.inner.nw) then
+		    tile = tiles.outer.se
+		elseif current.at == tiles.w then
+		    tile = tiles.outer.sw
+		elseif current.at == tiles.e then
+		    tile = tiles.outer.se
 		end
+		self.tiles[#self.tiles+1] = { x, sy, tile }
 	    end
+	    len = len - 1
+	    if len == 0 then gap = self.options.dash_gap end
+	else
+	    if contains(x, sy) then
+		self.tiles[#self.tiles+1] = { x, sy, map:noneTile() }
+	    end
+	    gap = gap - 1
+	    if gap == 0 then len = self.options.dash_length end
 	end
     end
-    return ret
 end
 
 function doEdge(sx, sy, ex, ey)
     local dx = math.abs(ex - sx)
     local dy = math.abs(ey - sy)
-    local tiles = {}
+    self.tiles, self.erase, self.noBlend = {}, {}, {}
     if dx > dy then
 	if ns(sx, sy) == 'n' then
-	    tiles = northEdge(math.floor(sx), math.floor(sy), math.floor(ex))
+	    northEdge(math.floor(sx), math.floor(sy), math.floor(ex))
 	else
-	    tiles = southEdge(math.floor(sx), math.floor(sy), math.floor(ex))
+	    southEdge(math.floor(sx), math.floor(sy), math.floor(ex))
 	end
     else
 	if we(sx, sy) == 'w' then
-	    tiles = westEdge(math.floor(sx), math.floor(sy), math.floor(ey))
+	    westEdge(math.floor(sx), math.floor(sy), math.floor(ey))
 	else
-	    tiles = eastEdge(math.floor(sx), math.floor(sy), math.floor(ey))
+	    eastEdge(math.floor(sx), math.floor(sy), math.floor(ey))
 	end
     end
-
-    local erase = {}
-    local noBlend = {}
     if self.options.suppress then
 	for _,layer in pairs(map:blendLayers()) do
 	    local tl = map:tileLayer(layer)
-	    for i=1,#tiles do
-		local x = tiles[i][1]
-		local y = tiles[i][2]
-		if tl and tiles[i][3] ~= map:noneTile() and tl:tileAt(x, y) and map:isBlendTile(tl:tileAt(x, y)) then
-		    if not erase[layer] then erase[layer] = Region:new() end
-		    erase[layer]:unite(x, y, 1, 1)
+	    for i=1,#self.tiles do
+		local t = self.tiles[i]
+		local x = t[1]
+		local y = t[2]
+		if tl and t[3] ~= map:noneTile() and tl:tileAt(x, y) and map:isBlendTile(tl:tileAt(x, y)) then
+		    if not self.erase[layer] then self.erase[layer] = Region:new() end
+		    self.erase[layer]:unite(x, y, 1, 1)
 		end
-		if tiles[i][3] ~= map:noneTile() then
-		    if not noBlend[layer] then noBlend[layer] = Region:new() end
-		    noBlend[layer]:unite(x, y, 1, 1)
+		if t[3] ~= map:noneTile() then
+		    if not self.noBlend[layer] then self.noBlend[layer] = Region:new() end
+		    self.noBlend[layer]:unite(x, y, 1, 1)
 		end
 	    end
 	end
     end
-
-    return tiles, erase, noBlend
 end

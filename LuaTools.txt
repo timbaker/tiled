@@ -27,12 +27,14 @@ tool
 tool
 {
     label = Parking Stall
+    icon = tool-parking-stall.png
     script = tool-parking-stall.lua
 }
 
 tool
 {
     label = Street Decoration
+    icon = tool-street-decoration.png
     script = tool-street-decoration.lua
     dialog-title = Street Stuff
 }

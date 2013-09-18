@@ -1,13 +1,13 @@
-local FENCES = {}
-function fence(f) FENCES[#FENCES+1] = f end
+local DATA = {}
+function fence(f) DATA[#DATA+1] = f end
 loadToolData 'fence'
 
-local FENCE = FENCES[1]
+local FENCE = DATA[1]
 
 function options()
     self.options = {}
-    choices = {}
-    for i=1,#FENCES do choices[i] = FENCES[i].label end
+    local choices = {}
+    for i=1,#DATA do choices[i] = DATA[i].label end
     return {
 	{ name = 'type', label = 'Type:', type = 'list', choices = choices },
     }
@@ -17,9 +17,9 @@ function setOption(name, value)
     print('setOption '..name..'='..tostring(value))
     self.options[name] = value
     if name == 'type' then
-	for i=1,#FENCES do
-	    if value == FENCES[i].label then
-		FENCE = FENCES[i]
+	for i=1,#DATA do
+	    if value == DATA[i].label then
+		FENCE = DATA[i]
 		break
 	    end
 	end
@@ -41,15 +41,16 @@ function mouseMoved(buttons, x, y, modifiers)
 	if self.cancel then return end
 	local dx = math.abs(x - self.x)
 	local dy = math.abs(y - self.y)
-	local tiles = {}
+	self.tiles = {}
 	if dx > dy then
-	    tiles = northEdgeTiles(self.x, self.y, x)
+	    northEdge(self.x, self.y, x)
 	else
-	    tiles = westEdgeTiles(self.x, self.y, y)
+	    westEdge(self.x, self.y, y)
 	end
-	for i=1,#tiles do
-	    local t = tiles[i]
-	    self:setToolTile(self:currentLayer():name(), t[1], t[2], t[3])
+	local layer = self:currentLayer():name()
+	for i=1,#self.tiles do
+	    local t = self.tiles[i]
+	    self:setToolTile(layer, t[1], t[2], t[3])
 	end
     else
 	if modifiers.alt then
@@ -115,19 +116,19 @@ function mouseReleased(buttons, x, y, modifiers)
     if buttons.left and not self.cancel then
 	local dx = math.abs(x - self.x)
 	local dy = math.abs(y - self.y)
-	local tiles = {}
+	self.tiles = {}
 	if not self:dragged() then
 	    local tile = fenceTile(x, y, isWest(x, y))
 	    if tile and self:currentLayer():tileAt(x, y) ~= tile then
-		tiles = { { x, y, tile } }
+		self.tiles = { { x, y, tile } }
 	    end
 	elseif dx > dy then
-	    tiles = northEdgeTiles(self.x, self.y, x)
+	    northEdge(self.x, self.y, x)
 	else
-	    tiles = westEdgeTiles(self.x, self.y, y)
+	    westEdge(self.x, self.y, y)
 	end
-	for i=1,#tiles do
-	    local t = tiles[i]
+	for i=1,#self.tiles do
+	    local t = self.tiles[i]
 	    self:currentLayer():setTile(t[1], t[2], t[3])
 	end
 	self:applyChanges('Draw Fence')
@@ -199,12 +200,11 @@ function fenceTile(x, y, west)
     end
 end
 
-function westEdgeTiles(sx, sy, ey)
+function westEdge(sx, sy, ey)
     local f = resolveTiles(FENCE)
     local t = { f.west1, f.west2 }
     local tl = self:currentLayer()
-    sx = math.floor(sx)
-    sy = math.floor(sy)
+    sx, sy = math.floor(sx), math.floor(sy)
     ey = math.floor(ey)
     local ret = {}
     local n = 1
@@ -217,9 +217,9 @@ function westEdgeTiles(sx, sy, ey)
 	if contains(sx, y) then
 	    local cur = tl:tileAt(sx, y)
 	    if cur == f.north1 then
-		ret = join_tables(ret, {{ sx, y, f.nw }})
+		self.tiles[#self.tiles+1] = { sx, y, f.nw }
 	    elseif cur ~= f.nw then
-		ret = join_tables(ret, {{ sx, y, t[n] }})
+		self.tiles[#self.tiles+1] = { sx, y, t[n] }
 	    end
 	end
 	n = 3 - n
@@ -227,12 +227,11 @@ function westEdgeTiles(sx, sy, ey)
     return ret
 end
 
-function northEdgeTiles(sx, sy, ex)
+function northEdge(sx, sy, ex)
     local f = resolveTiles(FENCE)
     local t = { f.north1, f.north2 }
     local tl = self:currentLayer()
-    sx = math.floor(sx)
-    sy = math.floor(sy)
+    sx, sy = math.floor(sx), math.floor(sy)
     ex = math.floor(ex)
     local ret = {}
     local n = 1
@@ -245,9 +244,9 @@ function northEdgeTiles(sx, sy, ex)
 	if contains(x, sy) then
 	    local cur = tl:tileAt(x, sy)
 	    if cur == f.west1 then
-		ret = join_tables(ret, {{ x, sy, f.nw }})
+		self.tiles[#self.tiles+1] = { x, sy, f.nw }
 	    elseif cur ~= f.nw then
-		ret = join_tables(ret, {{ x, sy, t[n] }})
+		self.tiles[#self.tiles+1] = { x, sy, t[n] }
 	    end
 	end
 	n = 3 - n

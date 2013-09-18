@@ -544,9 +544,6 @@ isEmpty(INSTALL_ONLY_BUILD) {
 
 configTxtFiles.path = $${CONFIG_PREFIX}
 configTxtFiles.files = \
-    $${top_srcdir}/Curbs.txt \
-    $${top_srcdir}/Edges.txt \
-    $${top_srcdir}/Fences.txt \
     $${top_srcdir}/LuaTools.txt \
     $${top_srcdir}/TileProperties.txt \
     $${top_srcdir}/Tilesets.txt

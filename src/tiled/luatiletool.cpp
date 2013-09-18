@@ -887,11 +887,11 @@ QPainterPath LuaTileTool::cursorShape(const QPointF &pos, Qt::KeyboardModifiers 
         polyN += polyN.first(), polyS += polyS.first(), polyW += polyW.first(), polyE += polyE.first();
         if ((edge == EdgeN && dW < 0.5) || (edge == EdgeW && dN < 0.5))
             path.addPolygon(polyN), path.addPolygon(polyW);
-        if ((edge == EdgeS && dW < 0.5) || (edge == EdgeW && dS < 0.5))
+        if ((edge == EdgeS && dW < 0.5) || (edge == EdgeW && dS <= 0.5))
             path.addPolygon(polyS), path.addPolygon(polyW);
-        if ((edge == EdgeN && dE < 0.5) || (edge == EdgeE && dN < 0.5))
+        if ((edge == EdgeN && dE <= 0.5) || (edge == EdgeE && dN < 0.5))
             path.addPolygon(polyN), path.addPolygon(polyE);
-        if ((edge == EdgeS && dE < 0.5) || (edge == EdgeE && dS < 0.5))
+        if ((edge == EdgeS && dE <= 0.5) || (edge == EdgeE && dS <= 0.5))
             path.addPolygon(polyS), path.addPolygon(polyE);
         path.setFillRule(Qt::WindingFill);
         path = path.simplified();
