@@ -13,7 +13,10 @@ function mouseMoved(buttons, x, y, modifiers)
 	local tiles = getTiles(x, y)
 	for i=1,#tiles do
 	    local t = tiles[i]
-	    self:setToolTile(t[1], t[2], t[3], map:tile(t[4]))
+	    local tile = map:tile(t[4])
+	    if tile then
+		self:setToolTile(t[1], t[2], t[3], tile)
+	    end
 	end
     end
 end
@@ -31,10 +34,18 @@ end
 
 function mouseReleased(buttons, x, y, modifiers)
     if not buttons.left or self.cancel then return end
+    self:clearToolTiles()
     local tiles = getTiles(x, y)
     for i=1,#tiles do
 	local t = tiles[i]
-	map:tileLayer(t[1]):setTile(t[2], t[3], map:tile(t[4]))
+	local layer = map:tileLayer(t[1])
+	local tile = map:tile(t[4])
+	if layer and tile then
+	   layer:setTile(t[2], t[3], tile)
+	else
+	    if not layer then print('map is missing layer '..t[1]) end
+	    if not tile then print('map is missing tile '..t[4]) end
+	end
     end
     self:applyChanges('Draw Parking Stall')
 end
