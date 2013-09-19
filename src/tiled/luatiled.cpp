@@ -224,8 +224,10 @@ bool LuaScript::dofile(const QString &f, QString &output)
         status = lua_pcall(L, 0, 0, base);
         lua_remove(L, base);
     }
-    output = QString::fromLatin1(lua_tostring(L, -1));
-    LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+    if (status != LUA_OK) {
+        output = QString::fromLatin1(lua_tostring(L, -1));
+        LuaConsole::instance()->write(output, (status == LUA_OK) ? Qt::black : Qt::red);
+    }
     LuaConsole::instance()->write(qApp->tr("---------- script completed in %1s ----------")
                                   .arg(elapsed.elapsed()/1000.0));
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
