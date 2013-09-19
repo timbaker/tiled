@@ -164,7 +164,7 @@ function mouseReleased(buttons, x, y, modifiers)
 	for k,v in pairs(self.noBlend) do
 	    map:noBlend(k):set(v, true)
 	end
-	self:applyChanges('Draw Edge')
+	self:applyChanges('Draw Curb')
     end
 end
 
