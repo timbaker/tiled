@@ -2190,6 +2190,126 @@ private:
 #include "bmptooldialog.h"
 #include "luatiled.h"
 #include "painttilelayer.h"
+
+void MainWindow::ApplyScriptChanges(MapDocument *doc, const QString &undoText, Lua::LuaMap *mMap)
+{
+    QUndoStack *us = doc->undoStack();
+    us->beginMacro(undoText);
+
+    // Map resizing.
+
+    // Handle deleted layers
+    foreach (Lua::LuaLayer *ll, mMap->mRemovedLayers) {
+        if (ll->mOrig) {
+            int index = doc->map()->layers().indexOf(ll->mOrig);
+            Q_ASSERT(index != -1);
+            qDebug() << "remove layer" << ll->mOrig->name() << " at " << index;
+            us->push(new RemoveLayer(doc, index));
+        }
+    }
+
+    // Layers may have been added, moved, deleted, and/or edited.
+    foreach (Lua::LuaLayer *ll, mMap->mLayers) {
+        if (Layer *layer = ll->mOrig) {
+            // This layer exists (somewhere) in the original map.
+            int oldIndex = doc->map()->layers().indexOf(layer);
+            int newIndex = mMap->mLayers.indexOf(ll);
+            if (oldIndex != newIndex) {
+                qDebug() << "move layer" << layer->name() << "from " << oldIndex << " to " << newIndex;
+                us->push(new ReorderLayer(doc, newIndex, layer));
+            }
+        } else {
+            // This is a new layer.
+            Q_ASSERT(ll->mClone);
+            Layer *newLayer = ll->mClone->clone();
+            int index = mMap->mLayers.indexOf(ll);
+            qDebug() << "add layer" << newLayer->name() << "at" << index;
+            us->push(new AddLayer(doc, index, newLayer));
+        }
+    }
+
+    // Clear the tile selection so it doesn't inhibit what the script changed.
+    if (!doc->tileSelection().isEmpty())
+        us->push(new ChangeTileSelection(doc, QRegion()));
+
+    foreach (Lua::LuaLayer *ll, mMap->mLayers) {
+        // Apply changes to tile layers.
+        if (Lua::LuaTileLayer *tl = ll->asTileLayer()) {
+            if (tl->mOrig == 0)
+                continue; // Ignore new layers.
+            if (!tl->mCloneTileLayer || tl->mAltered.isEmpty())
+                continue; // No changes.
+            TileLayer *source = tl->mCloneTileLayer->copy(tl->mAltered);
+            QRect r = tl->mAltered.boundingRect();
+            us->push(new PaintTileLayer(doc, tl->mOrig->asTileLayer(),
+                                        r.x(), r.y(), source, tl->mAltered, true));
+            delete source;
+        }
+        // Add/Remove/Delete objects
+        if (Lua::LuaObjectGroup *og = ll->asObjectGroup()) {
+            foreach (Lua::LuaMapObject *o, og->objects()) {
+                if (og->mOrig) {
+
+                } else {
+                    us->push(new AddMapObject(doc,
+                                              doc->map()->layerAt(mMap->mLayers.indexOf(ll))->asObjectGroup(),
+                                              o->mClone->clone()));
+                }
+            }
+        }
+    }
+
+    // Apply changes to rules
+    if (mMap->mRulesChanged) {
+        BmpToolDialog::changeBmpRules(doc,
+                                      mMap->mClone->rbmpSettings()->rulesFile(),
+                                      mMap->mClone->rbmpSettings()->aliasesCopy(),
+                                      mMap->mClone->rbmpSettings()->rulesCopy());
+    }
+
+    // Apply changes to blends
+    if (mMap->mBlendsChanged) {
+        BmpToolDialog::changeBmpBlends(doc,
+                                       mMap->mClone->rbmpSettings()->blendsFile(),
+                                       mMap->mClone->rbmpSettings()->blendsCopy());
+    }
+
+    // Apply changes to BMP images
+    Lua::LuaMapBmp &bmpMain = mMap->mBmpMain;
+    if (!bmpMain.mAltered.isEmpty()) {
+        QRect r = bmpMain.mAltered.boundingRect();
+        us->push(new PaintBMP(doc, 0, r.x(), r.y(),
+                              bmpMain.mBmp.image().copy(r),
+                              bmpMain.mAltered));
+    }
+    Lua::LuaMapBmp &bmpVeg = mMap->mBmpVeg;
+    if (!bmpVeg.mAltered.isEmpty()) {
+        QRect r = bmpVeg.mAltered.boundingRect();
+        us->push(new PaintBMP(doc, 1, r.x(), r.y(),
+                              bmpVeg.mBmp.image().copy(r),
+                              bmpVeg.mAltered));
+    }
+
+    // Apply changes to MapNoBlends
+    foreach (Lua::LuaMapNoBlend *nb, mMap->mNoBlends) {
+        if (!nb->mAltered.isEmpty()) {
+            us->push(new PaintNoBlend(doc, doc->map()->noBlend(nb->mClone->layerName()),
+                                      nb->mClone->copy(nb->mAltered), nb->mAltered));
+        }
+    }
+
+    // Handle the script changing the tile selection.
+    if (doc->tileSelection() != mMap->mSelection)
+        us->push(new ChangeTileSelection(doc, mMap->mSelection));
+
+    us->endMacro();
+
+    const QUndoCommand *cmd = us->command(us->count() - 1);
+    if (cmd->childCount() == 0) {
+        us->undo();
+    }
+}
+
 bool MainWindow::LuaScript(MapDocument *doc, const QString &filePath)
 {
     QString f = filePath;
@@ -2214,6 +2334,9 @@ bool MainWindow::LuaScript(MapDocument *doc, const QString &filePath)
         return false;
     }
 
+#if 1
+    ApplyScriptChanges(doc, tr("Lua Script"), &scripter.mMap);
+#else
     QUndoStack *us = doc->undoStack();
     us->beginMacro(tr("Lua Script"));
 
@@ -2291,8 +2414,8 @@ bool MainWindow::LuaScript(MapDocument *doc, const QString &filePath)
     // Apply changes to blends
     if (scripter.mMap.mBlendsChanged) {
         BmpToolDialog::changeBmpBlends(doc,
-                                      scripter.mMap.mClone->rbmpSettings()->blendsFile(),
-                                      scripter.mMap.mClone->rbmpSettings()->blendsCopy());
+                                       scripter.mMap.mClone->rbmpSettings()->blendsFile(),
+                                       scripter.mMap.mClone->rbmpSettings()->blendsCopy());
     }
 
     // Apply changes to BMP images
@@ -2324,6 +2447,7 @@ bool MainWindow::LuaScript(MapDocument *doc, const QString &filePath)
         us->push(new ChangeTileSelection(doc, scripter.mMap.mSelection));
 
     us->endMacro();
+#endif
 
     return true;
 }

@@ -54,6 +54,7 @@ class MapReaderInterface;
 
 #ifdef ZOMBOID
 namespace Lua {
+class LuaMap;
 class LuaTileTool;
 }
 #endif
@@ -123,6 +124,7 @@ public:
 #ifdef ZOMBOID
     bool InitConfigFiles();
 
+    void ApplyScriptChanges(MapDocument *doc, const QString &undoText, Lua::LuaMap *map);
     void LuaScript(const QString &filePath);
     bool LuaScript(MapDocument *doc, const QString &filePath);
 

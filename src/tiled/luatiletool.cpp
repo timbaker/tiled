@@ -727,8 +727,12 @@ bool LuaTileTool::parseToolOption(QString &err)
     return false;
 }
 
+#include "mainwindow.h"
 void LuaTileTool::applyChanges(const char *undoText)
 {
+#if 1
+    MainWindow::instance()->ApplyScriptChanges(mapDocument(), QLatin1String(undoText), mMap);
+#else
     QUndoStack *us = mapDocument()->undoStack();
     QList<QUndoCommand*> cmds;
 
@@ -760,6 +764,7 @@ void LuaTileTool::applyChanges(const char *undoText)
             us->push(cmd);
         us->endMacro();
     }
+#endif
 
     mMapChanged = true;
 }
