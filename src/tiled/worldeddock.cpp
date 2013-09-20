@@ -19,6 +19,7 @@
 #include "ui_worldeddock.h"
 
 #include "documentmanager.h"
+#include "mainwindow.h"
 #include "mapdocument.h"
 #include "ZomboidScene.h"
 
@@ -303,6 +304,8 @@ WorldEdDock::WorldEdDock(QWidget *parent) :
 
     connect(ui->view->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(selectionChanged()));
+    connect(ui->view, SIGNAL(activated(QModelIndex)), SLOT(activated(QModelIndex)));
+
     connect(WorldEd::WorldEdMgr::instance(), SIGNAL(lotVisibilityChanged(WorldCellLot*)),
             SLOT(visibilityChanged(WorldCellLot*)));
     connect(WorldEd::WorldEdMgr::instance(), SIGNAL(levelVisibilityChanged(WorldCellLevel*)),
@@ -360,6 +363,14 @@ void WorldEdDock::selectionChanged()
             DocumentManager::instance()->ensureRectVisible(
                         mDocument->renderer()->boundingRect(lot->bounds()));
         }
+    }
+}
+
+void WorldEdDock::activated(const QModelIndex &index)
+{
+    if (WorldCellLot *lot = ui->view->model()->toLot(index)) {
+        if (QFileInfo(lot->mapName()).exists())
+            MainWindow::instance()->openFile(lot->mapName());
     }
 }
 

@@ -140,6 +140,8 @@ private:
 
 private slots:
     void selectionChanged();
+    void activated(const QModelIndex &index);
+
     void visibilityChanged(WorldCellLevel *level);
     void visibilityChanged(WorldCellLot *lot);
 
