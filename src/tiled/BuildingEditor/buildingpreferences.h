@@ -18,6 +18,7 @@
 #ifndef BUILDINGPREFERENCES_H
 #define BUILDINGPREFERENCES_H
 
+#include <QColor>
 #include <QObject>
 #include <QSettings>
 
@@ -40,6 +41,9 @@ public:
 
     bool showGrid() const
     { return mShowGrid; }
+
+    QColor gridColor() const
+    { return mGridColor; }
 
     bool highlightFloor() const
     { return mHighlightFloor; }
@@ -65,6 +69,7 @@ public:
 signals:
     void mapsDirectoryChanged();
     void showGridChanged(bool show);
+    void gridColorChanged(const QColor &gridColor);
     void highlightFloorChanged(bool highlight);
     void highlightRoomChanged(bool highlight);
     void showWallsChanged(bool show);
@@ -76,6 +81,7 @@ signals:
 public slots:
     void setMapsDirectory(const QString &path);
     void setShowGrid(bool show);
+    void setGridColor(const QColor &gridColor);
     void setHighlightFloor(bool highlight);
     void setHighlightRoom(bool highlight);
     void setShowWalls(bool show);
@@ -89,6 +95,7 @@ private:
     QSettings mSettings;
     QString mMapsDirectory;
     bool mShowGrid;
+    QColor mGridColor;
     bool mHighlightFloor;
     bool mHighlightRoom;
     bool mShowWalls;

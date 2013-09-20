@@ -108,6 +108,8 @@ TileModeGridItem::TileModeGridItem(BuildingDocument *doc, MapRenderer *renderer)
     mEditingTiles(false)
 {
     setVisible(BuildingPreferences::instance()->showGrid());
+    connect(BuildingPreferences::instance(), SIGNAL(gridColorChanged(QColor)),
+            SLOT(gridColorChanged()));
     connect(BuildingPreferences::instance(), SIGNAL(showGridChanged(bool)),
             SLOT(showGridChanged(bool)));
 
@@ -135,7 +137,7 @@ QRectF TileModeGridItem::boundingRect() const
 
 void TileModeGridItem::paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *)
 {
-    mRenderer->drawGrid(p, option->exposedRect, Qt::black,
+    mRenderer->drawGrid(p, option->exposedRect, BuildingPreferences::instance()->gridColor(),
                         mDocument->currentLevel(), mTileBounds);
 }
 

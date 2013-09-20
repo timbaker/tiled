@@ -25,6 +25,7 @@ using namespace BuildingEditor;
 static const char *KEY_MAPS_DIRECTORY = "BuildingEditor/MapsDirectory";
 static const char *KEY_TILE_SCALE = "BuildingEditor/MainWindow/CategoryScale";
 static const char *KEY_SHOW_GRID = "BuildingEditor/ShowGrid";
+static const char *KEY_GRID_COLOR = "BuildingEditor/GridColor";
 static const char *KEY_HIGHLIGHT_FLOOR = "BuildingEditor/PreviewWindow/HighlightFloor";
 static const char *KEY_HIGHLIGHT_ROOM = "BuildingEditor/HighlightRoom";
 static const char *KEY_SHOW_WALLS = "BuildingEditor/PreviewWindow/ShowWalls";
@@ -53,6 +54,7 @@ BuildingPreferences::BuildingPreferences(QObject *parent) :
     mMapsDirectory = mSettings.value(QLatin1String(KEY_MAPS_DIRECTORY),
                                      Tiled::Internal::Preferences::instance()->mapsDirectory()).toString();
     mShowGrid = mSettings.value(QLatin1String(KEY_SHOW_GRID), true).toBool();
+    mGridColor = mSettings.value(QLatin1String(KEY_GRID_COLOR), QColor(Qt::black).name()).toString();
     mHighlightFloor = mSettings.value(QLatin1String(KEY_HIGHLIGHT_FLOOR),
                                       true).toBool();
     mHighlightRoom = mSettings.value(QLatin1String(KEY_HIGHLIGHT_ROOM),
@@ -93,6 +95,15 @@ void BuildingPreferences::setShowGrid(bool show)
     mShowGrid = show;
     mSettings.setValue(QLatin1String(KEY_SHOW_GRID), mShowGrid);
     emit showGridChanged(mShowGrid);
+}
+
+void BuildingPreferences::setGridColor(const QColor &gridColor)
+{
+    if (gridColor == mGridColor)
+        return;
+    mGridColor = gridColor;
+    mSettings.setValue(QLatin1String(KEY_GRID_COLOR), mGridColor.name());
+    emit gridColorChanged(mGridColor);
 }
 
 void BuildingPreferences::setHighlightFloor(bool highlight)

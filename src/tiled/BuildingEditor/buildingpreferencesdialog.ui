@@ -91,17 +91,40 @@
          <property name="title">
           <string>Interface</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
-          <item>
+         <layout class="QGridLayout" name="gridLayout" columnstretch="0,0">
+          <item row="0" column="0">
            <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
-             <widget class="QCheckBox" name="useOpenGL">
+             <widget class="QLabel" name="label_4">
               <property name="text">
-               <string>Use hardware-accelerated rendering (OpenGL)</string>
+               <string>Grid color:</string>
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="Tiled::Internal::ColorButton" name="gridColor"/>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
            </layout>
+          </item>
+          <item row="4" column="0">
+           <widget class="QCheckBox" name="useOpenGL">
+            <property name="text">
+             <string>Use hardware-accelerated rendering (OpenGL)</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -135,6 +158,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Tiled::Internal::ColorButton</class>
+   <extends>QToolButton</extends>
+   <header location="global">colorbutton.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

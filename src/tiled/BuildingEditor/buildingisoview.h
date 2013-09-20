@@ -93,6 +93,7 @@ public:
     void setEditingTiles(bool editing);
 
 private slots:
+    void gridColorChanged() { update(); }
     void showGridChanged(bool show);
 
 private:

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, Tim Baker <treectrl@users.sf.net>
+ * Copyright 2013, Tim Baker <treectrl@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -35,6 +35,8 @@ BuildingPreferencesDialog::BuildingPreferencesDialog(QWidget *parent) :
     QString configPath = prefs()->configPath();
     ui->configDirEdit->setText(QDir::toNativeSeparators(configPath));
 
+    ui->gridColor->setColor(BuildingPreferences::instance()->gridColor());
+
     mUseOpenGL = prefs()->useOpenGL();
     ui->useOpenGL->setChecked(mUseOpenGL);
     connect(ui->useOpenGL, SIGNAL(toggled(bool)), SLOT(setUseOpenGL(bool)));
@@ -60,6 +62,7 @@ void BuildingPreferencesDialog::setUseOpenGL(bool useOpenGL)
 
 void BuildingPreferencesDialog::accept()
 {
+    prefs()->setGridColor(ui->gridColor->color());
     prefs()->setUseOpenGL(mUseOpenGL);
     prefs()->setLevelIsometric(ui->levelIsometric->isChecked());
     QDialog::accept();
