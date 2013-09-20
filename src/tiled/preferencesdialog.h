@@ -65,6 +65,7 @@ private slots:
     void exportObjectTypes();
 
 #ifdef ZOMBOID
+    void defaultGridColor();
     void defaultBackgroundColor();
     void browseWorlded();
     void removePZW();

@@ -145,6 +145,8 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
     connect(mUi->gridColor, SIGNAL(colorChanged(QColor)),
             Preferences::instance(), SLOT(setGridColor(QColor)));
 #ifdef ZOMBOID
+    connect(mUi->gridColorReset, SIGNAL(clicked()),
+            SLOT(defaultGridColor()));
     connect(mUi->bgColor, SIGNAL(colorChanged(QColor)),
             Preferences::instance(), SLOT(setBackgroundColor(QColor)));
     connect(mUi->bgColorReset, SIGNAL(clicked()),
@@ -309,6 +311,12 @@ void PreferencesDialog::exportObjectTypes()
 }
 
 #ifdef ZOMBOID
+void PreferencesDialog::defaultGridColor()
+{
+    Preferences::instance()->setGridColor(Qt::black);
+    mUi->gridColor->setColor(Preferences::instance()->gridColor());
+}
+
 void PreferencesDialog::defaultBackgroundColor()
 {
     Preferences::instance()->setBackgroundColor(Qt::darkGray);
