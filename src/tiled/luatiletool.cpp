@@ -157,13 +157,22 @@ void LuaTileTool::activate(MapScene *scene)
     mScene->addItem(mCursorItem);
 
     connect(mapDocument(), SIGNAL(mapChanged()), SLOT(mapChanged()));
+
     connect(mapDocument(), SIGNAL(tilesetAdded(int,Tileset*)), SLOT(mapChanged()));
     connect(mapDocument(), SIGNAL(tilesetRemoved(Tileset*)), SLOT(mapChanged()));
     connect(mapDocument(), SIGNAL(tilesetNameChanged(Tileset*)), SLOT(mapChanged()));
+
     connect(mapDocument(), SIGNAL(layerAdded(int)), SLOT(mapChanged()));
     connect(mapDocument(), SIGNAL(layerRemoved(int)), SLOT(mapChanged()));
     connect(mapDocument(), SIGNAL(layerChanged(int)), SLOT(mapChanged())); // layer renamed
     connect(mapDocument(), SIGNAL(regionAltered(QRegion,Layer*)), SLOT(mapChanged()));
+
+    connect(mapDocument(), SIGNAL(bmpAliasesChanged()), SLOT(mapChanged()));
+    connect(mapDocument(), SIGNAL(bmpBlendsChanged()), SLOT(mapChanged()));
+    connect(mapDocument(), SIGNAL(bmpRulesChanged()), SLOT(mapChanged()));
+    connect(mapDocument(), SIGNAL(bmpPainted(int,QRegion)), SLOT(mapChanged()));
+
+    connect(mapDocument(), SIGNAL(noBlendPainted(MapNoBlend*,QRegion)), SLOT(mapChanged()));
 
     if (!L && !mFileName.isEmpty()) {
         mScene = 0;
