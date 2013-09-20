@@ -135,8 +135,20 @@ void WorldLotTool::mousePressed(QGraphicsSceneMouseEvent *event)
                 WorldEd::WorldEdMgr::instance()->setLotVisible(hover, false);
             else if (selected == openAction)
                 MainWindow::instance()->openFile(hover->mapName());
-        }
+        } else if (WorldCell *cell = adjacentCellAt(event->scenePos())) {
+            QMenu menu;
+            QIcon tiledIcon(QLatin1String(":images/tiled-icon-16.png"));
+            QAction *openAction = menu.addAction(tiledIcon, tr("Open in TileZed"));
+            QString fileName = cell->mapFilePath();
+            openAction->setEnabled(QFileInfo(fileName).exists());
 
+            mShowingContextMenu = true;
+            QAction *selected = menu.exec(event->screenPos());
+            mShowingContextMenu = false;
+
+            if (selected == openAction)
+                MainWindow::instance()->openFile(fileName);
+        }
     }
 }
 
@@ -179,6 +191,33 @@ WorldCellLot *WorldLotTool::topmostLotAt(const QPointF &scenePos)
         }
     }
     return hover;
+}
+
+WorldCell *WorldLotTool::adjacentCellAt(const QPointF &scenePos)
+{
+    if (mCell) {
+        QPoint tilePos = mScene->mapDocument()->renderer()->pixelToTileCoordsInt(
+                    scenePos, mScene->mapDocument()->currentLevel());
+        for (int y = -1; y <= 1; y++) {
+            for (int x = -1; x <= 1; x++) {
+                if (!x && !y) continue;
+                WorldCell *cell = mCell->world()->cellAt(mCell->pos() + QPoint(x, y));
+                if (!cell) continue;
+                QPoint origin;
+                switch (x) {
+                case -1: origin.setX(-300); break;
+                case 1: origin.setX(300); break;
+                }
+                switch (y) {
+                case -1: origin.setY(-300); break;
+                case 1: origin.setY(300); break;
+                }
+                if (QRect(origin, QSize(300,300)).contains(tilePos))
+                    return cell;
+            }
+        }
+    }
+    return 0;
 }
 
 void WorldLotTool::updateHoverItem(WorldCellLot *lot)

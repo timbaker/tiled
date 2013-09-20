@@ -47,6 +47,7 @@ public:
 
 private:
     WorldCellLot *topmostLotAt(const QPointF &scenePos);
+    WorldCell *adjacentCellAt(const QPointF &scenePos);
     void updateHoverItem(WorldCellLot *lot);
 
 private slots:
