@@ -96,7 +96,7 @@ function setOption(name, value)
 end
 
 function activate()
-    self:setCursorType(LuaTileTool.CurbTool)
+    self:setCursorType(TileTool.CurbTool)
     print 'activate'
 end
 

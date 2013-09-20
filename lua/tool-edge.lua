@@ -27,7 +27,7 @@ function setOption(name, value)
 end
 
 function activate()
-    self:setCursorType(LuaTileTool.EdgeTool)
+    self:setCursorType(TileTool.EdgeTool)
     print 'activate'
 end
 

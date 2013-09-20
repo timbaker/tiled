@@ -1,7 +1,7 @@
 dofile(scriptDirectory..'/parking-stall.lua')
 
 function activate()
-    self:setCursorType(LuaTileTool.EdgeTool)
+    self:setCursorType(TileTool.EdgeTool)
 end
 
 function deactivate()

@@ -251,7 +251,7 @@ class LuaMap @ Map
     bool write(const char *path);
 };
 
-class LuaTileTool
+class LuaTileTool @ TileTool
 {
     enum CursorType {
         None,
