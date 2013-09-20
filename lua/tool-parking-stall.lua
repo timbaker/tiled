@@ -24,7 +24,7 @@ end
 function mousePressed(buttons, x, y, modifiers)
     if buttons.left then
 	self.cancel = false
-	self.xy = {x = x, y = y}
+	self.x, self.y = x, y
     end
     if buttons.right then
 	self.cancel = true
@@ -64,49 +64,49 @@ end
 
 function getTiles(x, y)
     local ret = {}
-    local dx = math.abs(x - self.xy.x)
-    local dy = math.abs(y - self.xy.y)
+    local dx = math.abs(x - self.x)
+    local dy = math.abs(y - self.y)
     if dx > dy then
-	if self.xy.y - math.floor(self.xy.y) < 0.5 then
-	    if x > self.xy.x then
-		for x1=self.xy.x,x,3 do
-		    ret = join_tables( ret, north_parking_stall(x1,self.xy.y) )
+	if self.y - math.floor(self.y) < 0.5 then
+	    if x > self.x then
+		for x1=self.x,x,3 do
+		    ret = join_tables( ret, north_parking_stall(x1,self.y) )
 		end
 	    else
-		for x1=self.xy.x-2,x,-3 do
-		    ret = join_tables( ret, north_parking_stall(x1,self.xy.y) )
+		for x1=self.x-2,x,-3 do
+		    ret = join_tables( ret, north_parking_stall(x1,self.y) )
 		end
 	    end
 	else
-	    if x > self.xy.x then
-		for x1=self.xy.x,x,3 do
-		    ret = join_tables( ret, south_parking_stall(x1,self.xy.y) )
+	    if x > self.x then
+		for x1=self.x,x,3 do
+		    ret = join_tables( ret, south_parking_stall(x1,self.y) )
 		end
 	    else
-		for x1=self.xy.x-2,x,-3 do
-		    ret = join_tables( ret, south_parking_stall(x1,self.xy.y) )
+		for x1=self.x-2,x,-3 do
+		    ret = join_tables( ret, south_parking_stall(x1,self.y) )
 		end
 	    end
 	end
     else
-	if self.xy.x - math.floor(self.xy.x) < 0.5 then
-	    if y > self.xy.y then
-		for y1=self.xy.y,y,3 do
-		    ret = join_tables( ret, west_parking_stall(self.xy.x,y1) )
+	if self.x - math.floor(self.x) < 0.5 then
+	    if y > self.y then
+		for y1=self.y,y,3 do
+		    ret = join_tables( ret, west_parking_stall(self.x,y1) )
 		end
 	    else
-		for y1=self.xy.y-2,y,-3 do
-		    ret = join_tables( ret, west_parking_stall(self.xy.x,y1) )
+		for y1=self.y-2,y,-3 do
+		    ret = join_tables( ret, west_parking_stall(self.x,y1) )
 		end
 	    end
 	else
-	    if y > self.xy.y then
-		for y1=self.xy.y,y,3 do
-		    ret = join_tables( ret, east_parking_stall(self.xy.x,y1) )
+	    if y > self.y then
+		for y1=self.y,y,3 do
+		    ret = join_tables( ret, east_parking_stall(self.x,y1) )
 		end
 	    else
-		for y1=self.xy.y-2,y,-3 do
-		    ret = join_tables( ret, east_parking_stall(self.xy.x,y1) )
+		for y1=self.y-2,y,-3 do
+		    ret = join_tables( ret, east_parking_stall(self.x,y1) )
 		end
 	    end
 	end
