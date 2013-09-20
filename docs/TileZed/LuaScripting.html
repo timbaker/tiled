@@ -1,5 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Lua Scripting in TileZed</title><style type="text/css">
+<html><head>
+
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Lua Scripting in TileZed</title><style type="text/css">
 .func {
   font-weight: bold;
   font-style: italic;
@@ -17,10 +19,15 @@ Classes<br>
   <li><a href="#class_MapObject">MapObject</a></li>
   <li><a href="#class_MapBmp">MapBmp</a></li>
   <li><a href="#class_BmpRule">BmpRule</a></li>
+  <li><a href="#class_MapNoBlend">MapNoBlend</a><br>
+  </li>
+
   <li><a href="#class_Color">Color</a></li>
   <li><a href="#class_Region">Region</a></li>
-  <li><a href="#class_Rect">Rect</a><br>
+  <li><a href="#class_Rect">Rect</a></li>
+  <li><a href="#class_TileTool">TileTool</a><br>
   </li>
+
 </ul>
 <hr style="width: 100%; height: 2px;">
 <h2><a name="class_Map"></a>class Map</h2>
@@ -56,18 +63,30 @@ Tileset&nbsp;<span class="func">tilesetAt</span>(int index)<br>
 <br>
 Tile&nbsp;<span class="func">tile</span>(string name)<br>
 Tile&nbsp;<span class="func">tile</span>(string tilesetName, int index)<br>
+Tile&nbsp;<span class="func">noneTile</span>()<br>
 <br>
 <span class="func">setTileSelection</span>(Region region)<br>
 Region&nbsp;<span class="func">tileSelection</span>()<br>
 <br>
 <span class="MapBmp">MapBmp</span>&nbsp;<span class="func">bmp</span>(int index)<br>
 <br>
+BmpAlias alias(string name)<br>
+<br>
 list&lt;BmpRule&gt;&nbsp;<span class="func">rules</span>()<br>
 int&nbsp;<span class="func">ruleCount</span>()<br>
 BmpRule&nbsp;<span class="func">ruleAt</span>(int index)<br>
 BmpRule&nbsp;<span class="func">rule</span>(string name)<br>
 <br>
-bool write(string path)<br>
+list&lt;BmpBlend&gt;&nbsp;<span class="func">blends</span>()<br>
+bool&nbsp;<span class="func">isBlendTile</span>(Tile tile)<br>
+list&lt;string&gt;&nbsp;<span class="func">blendLayers</span>()<br>
+<br>
+MapNoBlend <span class="func">noBlend(</span>string layerName)<br>
+<br>
+<span class="func">reloadRules</span>()<br>
+<span class="func">reloadBlends</span>()<br>
+<br>
+bool&nbsp;<span class="func">write</span>(string path)<br>
 <hr style="width: 100%; height: 2px;">
 <h2><a name="class_Layer"></a>class Layer</h2>
 TileLayer&nbsp;<span class="func">asTileLayer</span>()<br>
@@ -146,6 +165,12 @@ list&lt;string&gt;&nbsp;<span class="func">tiles</span>()<br>
 string&nbsp;<span class="func">layer</span>()<br>
 Color&nbsp;<span class="func">condition</span>()<br>
 <hr style="width: 100%; height: 2px;">
+<h2><a name="class_MapNoBlend"></a>class MapNoBlend</h2>
+<span style="color: rgb(192, 192, 192);">    </span><span class="func">set</span>(int x, int y, bool noblend)<br>
+<span class="func">set</span>(Region rgn, bool noblend)<br>
+    bool&nbsp;<span class="func">get</span>(int x, int y)
+
+<hr style="width: 100%; height: 2px;">
 <h2><a name="class_Color"></a>class Color</h2>
 <span class="func">Color:new</span>()<br>
 <span class="func">Color:new</span>(int r, int g, int b)<br>
@@ -194,4 +219,33 @@ int&nbsp;<span class="func">bottom</span>()<br>
 Rect&nbsp;<span class="func">translated</span>(int dx, int dy)<br>
 <br>
 bool&nbsp;<span class="func">intersects</span>(Rect other)<br>
+<hr style="width: 100%; height: 2px;">
+<h2><a name="class_TileTool"></a>class TileTool</h2>
+<span style="color: rgb(192, 192, 192);">    </span>enum CursorType {
+<br>
+&nbsp;&nbsp;        TileTool.None,
+<br>
+&nbsp;&nbsp;        TileTool.CurbTool,
+<br>
+&nbsp;&nbsp;        TileTool.EdgeTool
+<br>
+    }<br>
+    <span class="func">setCursorType</span>(CursorType type)<br>
+    TileLayer&nbsp;<span class="func">currentLayer</span>()<br>
+    <span class="func">applyChanges</span>(string undoText)<br>
+    int&nbsp;<span class="func">angle</span>(float x1, float y1, float x2, float y2)<br>
+<br>
+    <span class="func">clearToolTiles</span>()<br>
+    <span class="func">setToolTile</span>(string layer, int x, int y, Tile tile)<br>
+    <span class="func">setToolTile</span>(string layer, Region rgn, Tile tile)<br>
+    <span class="func"><br>
+clearToolNoBlends</span>()<br>
+    <span class="func">setToolNoBlend</span>(string layer, Region rgn, bool noBlend)<br>
+    <span class="func"><br>
+clearDistanceIndicators</span>()<br>
+    <span class="func">indicateDistance</span>(int x1, int y1, int x2, int y2)<br>
+    <br>
+bool&nbsp;<span class="func">dragged</span>()
+<pre style="margin: 0px; text-indent: 0px;"><br></pre>
+<br>
 </body></html>
