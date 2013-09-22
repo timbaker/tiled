@@ -873,7 +873,37 @@ void MapDocument::onMapAboutToChange(MapInfo *mapInfo)
 
 void MapDocument::onMapChanged(MapInfo *mapInfo)
 {
+    bool changed = false;
+
     if (mMapComposite->mapChanged(mapInfo))
+        changed = true;
+
+    // If an adjacent map was just reloaded, all the WorldEd lots in it will
+    // have been deleted.
+    for (int y = -1; y <= 1; y++) {
+        for (int x = -1; x <= 1; x++) {
+            if (x == 0 && y == 0) continue;
+            if (MapComposite *adjacentMap = mMapComposite->adjacentMap(x, y)) {
+                if (adjacentMap->mapInfo() == mapInfo) {
+                    int cx = mWorldCell->x(), cy = mWorldCell->y();
+                    if (WorldCell *cell = mWorldCell->world()->cellAt(cx + x, cy + y)) {
+                        foreach (WorldCellLot *lot, cell->lots()) {
+                            MapInfo *subMapInfo = MapManager::instance()->loadMap(
+                                        lot->mapName(), QString(), true, MapManager::PriorityLow);
+                            if (subMapInfo) {
+                                if (subMapInfo->isLoading())
+                                    mAdjacentSubMapsLoading.insert(subMapInfo, LoadingSubMap(lot, subMapInfo));
+                                else
+                                    adjacentMap->addMap(subMapInfo, lot->pos(), lot->level());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (changed)
         emit mapCompositeChanged();
 }
 
