@@ -60,6 +60,10 @@ WorldLotTool::WorldLotTool(QObject *parent) :
     mHoverLot(0),
     mShowingContextMenu(false)
 {
+    connect(WorldEd::WorldEdMgr::instance(), SIGNAL(beforeWorldChanged(QString)),
+            SLOT(beforeWorldChanged()));
+    connect(WorldEd::WorldEdMgr::instance(), SIGNAL(afterWorldChanged(QString)),
+            SLOT(afterWorldChanged()));
     connect(WorldEd::WorldEdMgr::instance(), SIGNAL(lotVisibilityChanged(WorldCellLot*)),
             SLOT(lotVisibilityChanged(WorldCellLot*)));
 }
@@ -258,6 +262,17 @@ void WorldLotTool::updateHoverItem(WorldCellLot *lot)
             mHoverItem->setToolTip(QDir::toNativeSeparators(lot->mapName()));
         }
     }
+}
+
+void WorldLotTool::beforeWorldChanged()
+{
+    mCell = 0;
+    mHoverLot = 0;
+}
+
+void WorldLotTool::afterWorldChanged()
+{
+    mCell = WorldEd::WorldEdMgr::instance()->cellForMap(mScene->mapDocument()->fileName());
 }
 
 void WorldLotTool::lotVisibilityChanged(WorldCellLot *lot)

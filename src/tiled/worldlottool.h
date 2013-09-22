@@ -51,6 +51,8 @@ private:
     void updateHoverItem(WorldCellLot *lot);
 
 private slots:
+    void beforeWorldChanged();
+    void afterWorldChanged();
     void lotVisibilityChanged(WorldCellLot *lot);
 
 private:
