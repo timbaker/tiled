@@ -238,7 +238,12 @@ SOURCES += aboutdialog.cpp \
     fencetooldialog.cpp \
     luatiletool.cpp \
     luatooldialog.cpp \
-    luatooloptions.cpp
+    luatooloptions.cpp \
+    virtualtilesetdialog.cpp \
+    virtualtilesetview.cpp \
+    virtualtileset.cpp \
+    undoredobuttons.cpp \
+    addvirtualtilesetdialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -437,7 +442,12 @@ HEADERS += aboutdialog.h \
     fencetooldialog.h \
     luatiletool.h \
     luatooldialog.h \
-    luatooloptions.h
+    luatooloptions.h \
+    virtualtilesetdialog.h \
+    virtualtilesetview.h \
+    virtualtileset.h \
+    undoredobuttons.h \
+    addvirtualtilesetdialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -485,7 +495,9 @@ FORMS += aboutdialog.ui \
     edgetooldialog.ui \
     curbtooldialog.ui \
     fencetooldialog.ui \
-    luatooldialog.ui
+    luatooldialog.ui \
+    virtualtilesetdialog.ui \
+    addvirtualtilesetdialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

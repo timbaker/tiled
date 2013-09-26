@@ -97,6 +97,8 @@
 #include "tilelayerspanel.h"
 #include "tilemetainfodialog.h"
 #include "tilemetainfomgr.h"
+#include "virtualtileset.h"
+#include "virtualtilesetdialog.h"
 #include "zlevelsdock.h"
 #include "zprogress.h"
 #include "worldeddock.h"
@@ -630,6 +632,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             SLOT(tilesetMetaInfoDialog()));
     connect(mUi->actionTileProperties, SIGNAL(triggered()),
             SLOT(tilePropertiesEditor()));
+    connect(mUi->actionVirtualTilesetDialog, SIGNAL(triggered()),
+            SLOT(virtualTilesetDialog()));
     connect(mUi->actionWorldEd, SIGNAL(triggered()),
             SLOT(launchWorldEd()));
 #endif
@@ -1639,6 +1643,16 @@ void MainWindow::tilePropertiesEditor()
     mTileDefDialog = TileDefDialog::instance();
     TileDefDialog::instance()->show();
     TileDefDialog::instance()->raise();
+}
+
+void MainWindow::virtualTilesetDialog()
+{
+    static VirtualTilesetDialog *dialog = 0;
+    if (!dialog) {
+        new VirtualTilesetMgr();
+        dialog = new VirtualTilesetDialog(this);
+    }
+    dialog->exec();
 }
 
 void MainWindow::launchWorldEd()

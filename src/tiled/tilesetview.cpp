@@ -134,6 +134,53 @@ QSize TileDelegate::sizeHint(const QStyleOptionViewItem & option,
 } // anonymous namespace
 
 #ifdef ZOMBOID
+// I added this constructor for QtDesigner, all the code is the same as the
+// other constructor (only the new Zoomable is different).
+TilesetView::TilesetView(QWidget *parent)
+    : QTableView(parent)
+    , mZoomable(new Zoomable(this))
+    , mMapDocument(0)
+{
+    setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+    setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    setItemDelegate(new TileDelegate(this, this));
+    setShowGrid(false);
+
+    QHeaderView *header = horizontalHeader();
+    header->hide();
+#if QT_VERSION >= 0x050000
+    header->setSectionResizeMode(QHeaderView::ResizeToContents);
+#else
+    header->setResizeMode(QHeaderView::ResizeToContents);
+#endif
+    header->setMinimumSectionSize(1);
+
+    header = verticalHeader();
+    header->hide();
+#if QT_VERSION >= 0x050000
+    header->setSectionResizeMode(QHeaderView::ResizeToContents);
+#else
+    header->setResizeMode(QHeaderView::ResizeToContents);
+#endif
+    header->setMinimumSectionSize(1);
+
+    // Hardcode this view on 'left to right' since it doesn't work properly
+    // for 'right to left' languages.
+    setLayoutDirection(Qt::LeftToRight);
+
+    Preferences *prefs = Preferences::instance();
+    mDrawGrid = prefs->showTilesetGrid();
+
+    connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(adjustScale()));
+    connect(prefs, SIGNAL(showTilesetGridChanged(bool)),
+            SLOT(setDrawGrid(bool)));
+#ifdef ZOMBOID
+    mShowLayerNames = prefs->autoSwitchLayer();
+    connect(prefs, SIGNAL(autoSwitchLayerChanged(bool)),
+            SLOT(autoSwitchLayerChanged(bool)));
+#endif
+}
+
 TilesetView::TilesetView(Zoomable *zoomable, QWidget *parent)
     : QTableView(parent)
     , mZoomable(zoomable)

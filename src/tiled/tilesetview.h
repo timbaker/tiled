@@ -40,6 +40,7 @@ class TilesetView : public QTableView
 
 public:
 #ifdef ZOMBOID
+    TilesetView(QWidget *parent = 0);
     TilesetView(Zoomable *zoomable, QWidget *parent = 0);
 
     void setMapDocument(MapDocument *mapDocument);
