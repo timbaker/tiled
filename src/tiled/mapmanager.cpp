@@ -660,7 +660,8 @@ void MapManager::metaTilesetAdded(Tileset *tileset)
 {
     Q_UNUSED(tileset)
     foreach (MapInfo *mapInfo, mMapInfo) {
-        if (mapInfo->map() && mapInfo->path().endsWith(QLatin1String(".tbx")))
+        if (mapInfo->map() && mapInfo->path().endsWith(QLatin1String(".tbx"))
+                && mapInfo->map()->hasUsedMissingTilesets())
             fileChanged(mapInfo->path());
     }
 }
@@ -669,7 +670,8 @@ void MapManager::metaTilesetRemoved(Tileset *tileset)
 {
     Q_UNUSED(tileset)
     foreach (MapInfo *mapInfo, mMapInfo) {
-        if (mapInfo->map() && mapInfo->path().endsWith(QLatin1String(".tbx")))
+        if (mapInfo->map() && mapInfo->path().endsWith(QLatin1String(".tbx"))
+                && mapInfo->map()->usedTilesets().contains(tileset))
             fileChanged(mapInfo->path());
     }
 }

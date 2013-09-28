@@ -28,6 +28,7 @@
 #include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
 #include "utils.h"
+#include "virtualtileset.h"
 #include "zoomable.h"
 
 #include "map.h"
@@ -248,13 +249,11 @@ void TileMetaInfoDialog::addTileset()
     if (dialog.exec() != QDialog::Accepted)
         return;
 
-    QStringList fileNames = dialog.fileNames();
-
     mUndoStack->beginMacro(tr("Add Tilesets"));
 
-    foreach (QString f, fileNames) {
+    foreach (QString f, dialog.fileNames()) {
         QFileInfo info(f);
-        if (Tiled::Tileset *ts = TileMetaInfoMgr::instance()->loadTileset(info.canonicalFilePath())) {
+        if (Tiled::Tileset *ts = TileMetaInfoMgr::instance()->loadTileset(f/*info.canonicalFilePath()*/)) {
             QString name = info.completeBaseName();
             // Replace any current tileset with the same name as an existing one.
             // This will NOT replace the meta-info for the old tileset, it will

@@ -29,6 +29,8 @@ class QGLPixelBuffer;
 namespace Tiled {
 namespace Internal {
 
+class VirtualTileset;
+
 class VirtualTile
 {
 public:
@@ -44,8 +46,11 @@ public:
         WallDoorN
     };
 
-    VirtualTile(int x, int y);
-    VirtualTile(int x, int y, const QString &imageSource, int srcX, int srcY, IsoType type);
+    VirtualTile(VirtualTileset *vts, int x, int y);
+    VirtualTile(VirtualTileset *vts, int x, int y, const QString &imageSource,
+                int srcX, int srcY, IsoType type);
+
+    VirtualTileset *tileset() const { return mTileset; }
 
     int x() const { return mX; }
     int y() const { return mY; }
@@ -68,6 +73,7 @@ public:
     void clear();
 
 private:
+    VirtualTileset *mTileset;
     int mX;
     int mY;
     QString mImageSource;
@@ -96,11 +102,16 @@ public:
 
     void resize(int columnCount, int rowCount);
 
+    void tileChanged() { mImage = QImage(); }
+
+    QImage image();
+
 private:
     QString mName;
     int mColumnCount;
     int mRowCount;
     QVector<VirtualTile*> mTiles;
+    QImage mImage;
 };
 
 class VirtualTilesetMgr : public QObject, public Singleton<VirtualTilesetMgr>
@@ -125,7 +136,14 @@ public:
     void addTileset(VirtualTileset *vts);
     void removeTileset(VirtualTileset *vts);
 
+    QString imageSource(VirtualTileset *vts);
+    bool resolveImageSource(QString &imageSource);
+    VirtualTileset *tilesetFromPath(const QString &path);
+
     QImage renderIsoTile(VirtualTile *vtile);
+
+    void emitTilesetChanged(VirtualTileset *vts)
+    { emit tilesetChanged(vts); }
 
 private:
     void initPixelBuffer();
@@ -135,6 +153,8 @@ signals:
     void tilesetAdded(VirtualTileset *vts);
     void tilesetAboutToBeRemoved(VirtualTileset *vts);
     void tilesetRemoved(VirtualTileset *vts);
+
+    void tilesetChanged(VirtualTileset *vts);
 
 private:
     QMap<QString,VirtualTileset*> mTilesetByName;

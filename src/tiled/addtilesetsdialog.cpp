@@ -20,9 +20,14 @@
 #include "addtilesetsdialog.h"
 #include "ui_addtilesetsdialog.h"
 
+#include "preferences.h"
+#include "virtualtileset.h"
+
 #include <QDir>
 #include <QFileDialog>
 #include <QImageReader>
+
+using namespace Tiled::Internal;
 
 AddTilesetsDialog::AddTilesetsDialog(const QString &dir,
                                      const QStringList &ignore,
@@ -38,10 +43,14 @@ AddTilesetsDialog::AddTilesetsDialog(const QString &dir,
     connect(ui->checkAll, SIGNAL(clicked()), SLOT(checkAll()));
     connect(ui->uncheckAll, SIGNAL(clicked()), SLOT(uncheckAll()));
 
+    connect(ui->vCheckAll, SIGNAL(clicked()), SLOT(vCheckAll()));
+    connect(ui->vUncheckAll, SIGNAL(clicked()), SLOT(vUncheckAll()));
+
     setPrompt(QString());
     setAllowBrowse(false);
 
     setFilesList();
+    setVirtualsList();
 }
 
 AddTilesetsDialog::~AddTilesetsDialog()
@@ -75,8 +84,17 @@ QStringList AddTilesetsDialog::fileNames()
     QStringList ret;
     for (int i = 0; i < ui->files->count(); i++) {
         QListWidgetItem *item = ui->files->item(i);
-        if (item->checkState() == Qt::Checked)
-            ret += QDir(mDirectory).filePath(item->text());
+        if (item->checkState() == Qt::Checked) {
+            QString fileName = QDir(mDirectory).filePath(item->text());
+            ret += QFileInfo(fileName).canonicalFilePath();
+        }
+    }
+    for (int i = 0; i < ui->virtualList->count(); i++) {
+        QListWidgetItem *item = ui->virtualList->item(i);
+        if (item->checkState() == Qt::Checked) {
+            if (VirtualTileset *vts = VirtualTilesetMgr::instance().tileset(item->text()))
+                ret += VirtualTilesetMgr::instance().imageSource(vts);
+        }
     }
     return ret;
 }
@@ -117,6 +135,33 @@ void AddTilesetsDialog::setFilesList()
     }
 }
 
+void AddTilesetsDialog::setVirtualsList()
+{
+    ui->virtualList->clear();
+
+    foreach (VirtualTileset *vts, VirtualTilesetMgr::instance().tilesets()) {
+        if (mIgnoreIsPaths) {
+            bool ignore = false;
+            foreach (const QString &path, mIgnore) {
+                // 'path' may not exist but that's ok here
+                if (path == VirtualTilesetMgr::instance().imageSource(vts)) {
+                    ignore = true;
+                    break;
+                }
+            }
+            if (ignore)
+                continue;
+        } else {
+            if (mIgnore.contains(vts->name()))
+                continue;
+        }
+        QListWidgetItem *item = new QListWidgetItem;
+        item->setText(vts->name());
+        item->setCheckState(Qt::Unchecked);
+        ui->virtualList->addItem(item);
+    }
+}
+
 void AddTilesetsDialog::browse()
 {
     QString f = QFileDialog::getExistingDirectory(this, QString(),
@@ -138,6 +183,18 @@ void AddTilesetsDialog::uncheckAll()
 {
     for (int i = 0; i < ui->files->count(); i++)
         ui->files->item(i)->setCheckState(Qt::Unchecked);
+}
+
+void AddTilesetsDialog::vCheckAll()
+{
+    for (int i = 0; i < ui->virtualList->count(); i++)
+        ui->virtualList->item(i)->setCheckState(Qt::Checked);
+}
+
+void AddTilesetsDialog::vUncheckAll()
+{
+    for (int i = 0; i < ui->virtualList->count(); i++)
+        ui->virtualList->item(i)->setCheckState(Qt::Unchecked);
 }
 
 void AddTilesetsDialog::accept()

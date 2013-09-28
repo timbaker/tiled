@@ -26,6 +26,7 @@
 #include "tilesetmanager.h"
 #include "zoomable.h"
 #include "utils.h"
+#include "virtualtileset.h"
 #include "zprogress.h"
 
 #include "BuildingEditor/listofstringsdialog.h"
@@ -502,8 +503,7 @@ void TileDefDialog::addTileset()
     mUndoStack->beginMacro(tr("Add Tilesets"));
 
     foreach (QString fileName, dialog.fileNames()) {
-        QFileInfo info(fileName);
-        if (Tiled::Tileset *ts = loadTileset(info.canonicalFilePath())) {
+        if (Tiled::Tileset *ts = loadTileset(fileName)) {
             TileDefTileset *defTileset = new TileDefTileset(ts);
             defTileset->mID = uniqueTilesetID();
             mUndoStack->push(new AddTileset(this, mTilesets.size(), ts, defTileset));
@@ -1491,6 +1491,10 @@ void TileDefDialog::loadTilesets()
             QString source = ts->imageSource();
             if (QDir::isRelativePath(ts->imageSource()))
                 source = QDir(tilesDir()).filePath(ts->imageSource());
+            if (VirtualTilesetMgr::instance().resolveImageSource(source)) {
+                TilesetManager::instance()->loadTileset(ts, source);
+                continue;
+            }
             QImageReader reader(source);
             if (reader.size().isValid()) {
                 ts->loadFromNothing(reader.size(), ts->imageSource());
@@ -1503,13 +1507,20 @@ void TileDefDialog::loadTilesets()
 
 Tileset *TileDefDialog::loadTileset(const QString &source)
 {
+    QString canonical = source;
+    if (VirtualTilesetMgr::instance().resolveImageSource(canonical)) {
+        QFileInfo info(source);
+        Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
+        TilesetManager::instance()->loadTileset(ts, canonical);
+        return ts;
+    }
     QImageReader reader(source);
     if (reader.size().isValid()) {
         QFileInfo info(source);
         Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
-        ts->loadFromNothing(reader.size(), info.canonicalFilePath());
+        ts->loadFromNothing(reader.size(), source/*info.canonicalFilePath()*/);
         ts->setMissing(true); // prevent FileSystemWatcher warning in TilesetManager::changeTilesetSource
-        TilesetManager::instance()->loadTileset(ts, info.canonicalFilePath());
+        TilesetManager::instance()->loadTileset(ts, source/*info.canonicalFilePath()*/);
         return ts;
     }
     return 0;

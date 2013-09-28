@@ -88,8 +88,10 @@ public:
         mImageHeight(0),
         mColumnCount(0)
   #ifdef ZOMBOID
-        , mMissing(false),
-        mLoaded(false)
+        ,
+        mMissing(false),
+        mLoaded(false),
+        mVirtual(false)
   #endif
     {
         Q_ASSERT(tileSpacing >= 0);
@@ -264,6 +266,9 @@ public:
 
     bool isLoaded() const
     { return mLoaded; }
+
+    void setVirtual(bool isVirtual) { mVirtual = isVirtual; }
+    bool isVirtual() const { return mVirtual; }
 #endif
 
 private:
@@ -283,6 +288,7 @@ private:
 #ifdef ZOMBOID
     bool mMissing;
     bool mLoaded;
+    bool mVirtual;
 #endif
 };
 

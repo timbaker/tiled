@@ -86,7 +86,7 @@ Map *TmxMapReader::read(const QString &fileName)
     if (!map)
         mError = reader.errorString();
 
-#ifdef ZOMBOID
+#ifdef ZOMBOIDxxx
     if (map) {
         Tile *missingTile = TilesetManager::instance()->missingTile();
         foreach (Tileset *tileset, map->missingTilesets()) {

@@ -632,6 +632,13 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             SLOT(tilesetMetaInfoDialog()));
     connect(mUi->actionTileProperties, SIGNAL(triggered()),
             SLOT(tilePropertiesEditor()));
+    new VirtualTilesetMgr();
+    connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetAdded(VirtualTileset*)),
+            TilesetManager::instance(), SLOT(virtualTilesetChanged(VirtualTileset*)));
+    connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetRemoved(VirtualTileset*)),
+            TilesetManager::instance(), SLOT(virtualTilesetChanged(VirtualTileset*)));
+    connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetChanged(VirtualTileset*)),
+            TilesetManager::instance(), SLOT(virtualTilesetChanged(VirtualTileset*)));
     connect(mUi->actionVirtualTilesetDialog, SIGNAL(triggered()),
             SLOT(virtualTilesetDialog()));
     connect(mUi->actionWorldEd, SIGNAL(triggered()),
@@ -1649,7 +1656,6 @@ void MainWindow::virtualTilesetDialog()
 {
     static VirtualTilesetDialog *dialog = 0;
     if (!dialog) {
-        new VirtualTilesetMgr();
         dialog = new VirtualTilesetDialog(this);
     }
     dialog->exec();

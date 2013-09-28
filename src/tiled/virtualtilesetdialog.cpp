@@ -220,9 +220,13 @@ void VirtualTilesetDialog::changeVTile(VirtualTile *vtile, QString &imageSource,
     vtile->setType(static_cast<VirtualTile::IsoType>(isoType));
     vtile->setImage(VirtualTilesetMgr::instance().renderIsoTile(vtile));
 
+    vtile->tileset()->tileChanged();
+
     imageSource = mOldImgSrc;
     srcX = oldSrcX, srcY = oldSrcY;
     isoType = oldType;
+
+    VirtualTilesetMgr::instance().emitTilesetChanged(vtile->tileset());
 
     ui->vTilesetTiles->model()->redisplay(vtile);
 }

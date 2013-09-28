@@ -85,6 +85,7 @@ namespace Internal {
 class FileSystemWatcher;
 
 #ifdef ZOMBOID
+class VirtualTileset;
 struct ZTileLayerNames;
 #endif
 
@@ -209,6 +210,8 @@ private slots:
 
 #ifdef ZOMBOID
     void imageLoaded(QImage *image, Tiled::Tileset *tileset);
+
+    void virtualTilesetChanged(VirtualTileset *vts);
 #endif
 
 private:

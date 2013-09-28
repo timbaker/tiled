@@ -18,7 +18,9 @@
 #include "virtualtileset.h"
 
 #include "preferences.h"
+#include "tilesetmanager.h"
 
+#include <QDir>
 #include <QGLPixelBuffer>
 #include <QVector2D>
 #include <QVector3D>
@@ -26,7 +28,8 @@
 using namespace Tiled;
 using namespace Internal;
 
-VirtualTile::VirtualTile(int x, int y) :
+VirtualTile::VirtualTile(VirtualTileset *vts, int x, int y) :
+    mTileset(vts),
     mX(x),
     mY(y),
     mSrcX(-1),
@@ -36,7 +39,9 @@ VirtualTile::VirtualTile(int x, int y) :
 
 }
 
-VirtualTile::VirtualTile(int x, int y, const QString &imageSource, int srcX, int srcY, VirtualTile::IsoType type) :
+VirtualTile::VirtualTile(VirtualTileset *vts, int x, int y, const QString &imageSource,
+                         int srcX, int srcY, VirtualTile::IsoType type) :
+    mTileset(vts),
     mImageSource(imageSource),
     mX(x),
     mY(y),
@@ -65,7 +70,7 @@ VirtualTileset::VirtualTileset(const QString &name, int columnCount, int rowCoun
 {
     for (int y = 0; y < rowCount; y++)
         for (int x = 0; x < columnCount; x++)
-            mTiles[y * columnCount + x] = new VirtualTile(x, y);
+            mTiles[y * columnCount + x] = new VirtualTile(this, x, y);
 }
 
 VirtualTileset::~VirtualTileset()
@@ -87,6 +92,21 @@ VirtualTile *VirtualTileset::tileAt(int x, int y)
     return tileAt(y * mColumnCount + x);
 }
 
+QImage VirtualTileset::image()
+{
+    if (mImage.isNull()) {
+        mImage = QImage(columnCount() * 64, rowCount() * 128, QImage::Format_ARGB32);
+        mImage.fill(Qt::transparent);
+        QPainter painter(&mImage);
+        for (int i = 0; i < tileCount(); i++) {
+            VirtualTile *vtile = tileAt(i);
+            painter.drawImage(vtile->x() * 64, vtile->y() * 128, vtile->image());
+        }
+        painter.end();
+    }
+    return mImage;
+}
+
 /////
 
 SINGLETON_IMPL(VirtualTilesetMgr)
@@ -95,7 +115,7 @@ VirtualTilesetMgr::VirtualTilesetMgr()
 {
     initPixelBuffer();
 
-    VirtualTileset *vts = new VirtualTileset(QLatin1String("walls_exterior_house_01"), 8, 8);
+    VirtualTileset *vts = new VirtualTileset(QLatin1String("walls_exterior_house_01"), 512/64, 1024/128);
     VirtualTile *vtile = vts->tileAt(0, 0);
     vtile->setImageSource(QLatin1String("C:\\Users\\Tim\\Desktop\\ProjectZomboid\\Tiles\\Textures\\tex_walls_exterior_house_01.png"), 0, 0);
     vtile->setType(VirtualTile::WallW);
@@ -143,7 +163,44 @@ void VirtualTilesetMgr::removeTileset(VirtualTileset *vts)
     // Don't remove references now, that will delete the tileset, and the
     // user might undo the removal.
     mRemovedTilesets += vts;
+}
 
+QString VirtualTilesetMgr::imageSource(VirtualTileset *vts)
+{
+    QString tilesDir = Preferences::instance()->tilesDirectory();
+    if (QFileInfo(tilesDir).exists())
+        tilesDir = QFileInfo(tilesDir).canonicalFilePath();
+    return QDir(tilesDir).filePath(vts->name() + QLatin1String(".png"));
+}
+
+bool VirtualTilesetMgr::resolveImageSource(QString &imageSource)
+{
+    if (imageSource.isEmpty())
+        return false;
+    QFileInfo info(imageSource);
+    if (info.isRelative())
+        return false;
+    if (!mTilesetByName.contains(info.completeBaseName()))
+        return false;
+    QString tilesDir = Preferences::instance()->tilesDirectory();
+    if (tilesDir.isEmpty() || QFileInfo(tilesDir).isRelative())
+        return false;
+    // FIXME: use QFileInfo::operator==() if both exist
+    if (QDir::cleanPath(tilesDir) == QDir::cleanPath(info.absolutePath())) {
+        if (QFileInfo(tilesDir).exists())
+            tilesDir = QFileInfo(tilesDir).canonicalFilePath();
+        imageSource = QDir(tilesDir).filePath(info.fileName());
+        return true;
+    }
+    return false;
+}
+
+VirtualTileset *VirtualTilesetMgr::tilesetFromPath(const QString &path)
+{
+    QString canonical = path;
+    if (resolveImageSource(canonical))
+        return tileset(QFileInfo(canonical).completeBaseName());
+    return 0;
 }
 
 struct TextureTile
@@ -188,9 +245,10 @@ struct PBufferFace
         return QVector3D(p.x(), p.y() - z, 0);
     }
 
-    QVector3D west(int x, int y, int dx)
+    QVector3D west(int x, int y, int dx, int dy = 1)
     {
-        QPointF p = toScene(dx / qreal(mTileWidth), (1 - x / qreal(mTileWidth)));
+        // HACK - dy is the offset from top (the original tilesets were offset by 1)
+        QPointF p = toScene(dx / qreal(mTileWidth), (1 - (x - dy) / qreal(mTileWidth)));
         return QVector3D(p.x(), p.y() - mTileHeight + y, 0);
     }
 
@@ -387,7 +445,9 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
     int tx = vtile->srcX(), ty = vtile->srcY(); // tile col/row
     int tw = 32, th = 96; // tile width/height
     int texWid = 32, texHgt = 96;
-    int wallWidth = 3;
+    // West walls are 3 from left edge of a tile, AND offset 1 pixel from top
+    // North walls are 4 from top edge of a tile
+    int wallDX = 3, wallDY = 4;
     TextureTile tt(texWid, texHgt, tw, th, tx, ty);
     PBufferFace f(mPixelBuffer, 0, 0, tw, th);
     DrawElements de;
@@ -396,8 +456,8 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, th), tt.uv(0, th),
-               f.west(0, 0, wallWidth), f.west(tw, 0, wallWidth),
-               f.west(tw, th, wallWidth), f.west(0, th, wallWidth));
+               f.west(0, 0, wallDX), f.west(tw, 0, wallDX),
+               f.west(tw, th, wallDX), f.west(0, th, wallDX));
         de.color(0.8f,0.8f,0.8f);
     }
     if (vtile->type() == VirtualTile::WallN) {
@@ -405,38 +465,38 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
         de.add(textureID,
                 tt.uv(0, 0), tt.uv(tw, 0),
                 tt.uv(tw, th), tt.uv(0, th),
-                f.north(0, 0, wallWidth), f.north(tw, 0, wallWidth),
-                f.north(tw, th, wallWidth), f.north(0, th, wallWidth));
+                f.north(0, 0, wallDY), f.north(tw, 0, wallDY),
+                f.north(tw, th, wallDY), f.north(0, th, wallDY));
     }
     if (vtile->type() == VirtualTile::WallNW) {
         // nw corner
         de.add(textureID,
-               tt.uv(0, 0), tt.uv(tw - wallWidth, 0),
-               tt.uv(tw - wallWidth, th), tt.uv(0, th),
-               f.west(0, 0, wallWidth), f.west(tw - wallWidth, 0, wallWidth),
-               f.west(tw - wallWidth, th, wallWidth), f.west(0, th, wallWidth));
+               tt.uv(0, 0), tt.uv(tw - wallDY, 0),
+               tt.uv(tw - wallDY, th), tt.uv(0, th),
+               f.west(0, 0, wallDX), f.west(tw - wallDY, 0, wallDX, 0),
+               f.west(tw - wallDY, th, wallDX, 0), f.west(0, th, wallDX));
         de.color(0.8f,0.8f,0.8f);
         de.add(textureID,
-                tt.uv(wallWidth, 0), tt.uv(tw, 0),
-                tt.uv(tw, th), tt.uv(wallWidth, th),
-                f.north(wallWidth, 0, wallWidth), f.north(tw, 0, wallWidth),
-                f.north(tw, th, wallWidth), f.north(wallWidth, th, wallWidth));
+                tt.uv(wallDX, 0), tt.uv(tw, 0),
+                tt.uv(tw, th), tt.uv(wallDX, th),
+                f.north(wallDX, 0, wallDY), f.north(tw, 0, wallDY),
+                f.north(tw, th, wallDY), f.north(wallDX, th, wallDY));
     }
     if (vtile->type() == VirtualTile::WallSE) {
         // se pillar
         de.add(textureID,
-               tt.uv(tw - wallWidth, 0), tt.uv(wallWidth, 0),
-               tt.uv(tw, th), tt.uv(tw - wallWidth, th),
-               f.west(tw - wallWidth, 0, wallWidth), f.west(tw, 0, wallWidth),
-               f.west(tw, th, wallWidth), f.west(tw - wallWidth, th, wallWidth));
+               tt.uv(tw - wallDY, 0), tt.uv(tw, 0),
+               tt.uv(tw, th), tt.uv(tw - wallDY, th),
+               f.west(tw - wallDY, 0, wallDX), f.west(tw, 0, wallDX),
+               f.west(tw, th, wallDX), f.west(tw - wallDY, th, wallDX));
         de.color(0.8f,0.8f,0.8f);
         de.add(textureID,
-                tt.uv(0, 0), tt.uv(wallWidth, 0),
-                tt.uv(wallWidth, th), tt.uv(0, th),
-                f.north(0, 0, wallWidth), f.north(wallWidth, 0, wallWidth),
-                f.north(wallWidth, th, wallWidth), f.north(0, th, wallWidth));
+                tt.uv(0, 0), tt.uv(wallDX, 0),
+                tt.uv(wallDX, th), tt.uv(0, th),
+                f.north(0, 0, wallDY), f.north(wallDX, 0, wallDY),
+                f.north(wallDX, th, wallDY), f.north(0, th, wallDY));
     }
-    int topHgt = th*0.2, botHgt = th*0.4;
+    int topHgt = 21, botHgt = 37;
     if (vtile->type() == VirtualTile::WallWindowW) {
         // west window
         int side = 6;
@@ -444,29 +504,29 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, topHgt), tt.uv(0, topHgt),
-               f.west(0, 0, wallWidth), f.west(tw, 0, wallWidth),
-               f.west(tw, topHgt, wallWidth), f.west(0, topHgt, wallWidth));
+               f.west(0, 0, wallDX), f.west(tw, 0, wallDX),
+               f.west(tw, topHgt, wallDX), f.west(0, topHgt, wallDX));
         de.color(0.8f,0.8f,0.8f);
         // bottom
         de.add(textureID,
                tt.uv(0, th - botHgt), tt.uv(tw, th - botHgt),
                tt.uv(tw, th), tt.uv(0, th),
-               f.west(0, th - botHgt, wallWidth), f.west(tw, th - botHgt, wallWidth),
-               f.west(tw, th, wallWidth), f.west(0, th, wallWidth));
+               f.west(0, th - botHgt, wallDX), f.west(tw, th - botHgt, wallDX),
+               f.west(tw, th, wallDX), f.west(0, th, wallDX));
         de.color(0.8f,0.8f,0.8f);
         // left
         de.add(textureID,
                tt.uv(0, topHgt), tt.uv(side, topHgt),
                tt.uv(side, th - botHgt), tt.uv(0, th - botHgt),
-               f.west(0, topHgt, wallWidth), f.west(side, topHgt, wallWidth),
-               f.west(side, th - botHgt, wallWidth), f.west(0, th - botHgt, wallWidth));
+               f.west(0, topHgt, wallDX), f.west(side, topHgt, wallDX),
+               f.west(side, th - botHgt, wallDX), f.west(0, th - botHgt, wallDX));
         de.color(0.8f,0.8f,0.8f);
         // right
         de.add(textureID,
                tt.uv(tw - side, topHgt), tt.uv(tw, topHgt),
                tt.uv(tw, th - botHgt), tt.uv(tw - side, th - botHgt),
-               f.west(tw - side, topHgt, wallWidth), f.west(tw, topHgt, wallWidth),
-               f.west(tw, th - botHgt, wallWidth), f.west(tw - side, th - botHgt, wallWidth));
+               f.west(tw - side, topHgt, wallDX), f.west(tw, topHgt, wallDX),
+               f.west(tw, th - botHgt, wallDX), f.west(tw - side, th - botHgt, wallDX));
         de.color(0.8f,0.8f,0.8f);
     }
     if (vtile->type() == VirtualTile::WallWindowN) {
@@ -476,73 +536,73 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, topHgt), tt.uv(0, topHgt),
-               f.north(0, 0, wallWidth), f.north(tw, 0, wallWidth),
-               f.north(tw, topHgt, wallWidth), f.north(0, topHgt, wallWidth));
+               f.north(0, 0, wallDY), f.north(tw, 0, wallDY),
+               f.north(tw, topHgt, wallDY), f.north(0, topHgt, wallDY));
         // bottom
         de.add(textureID,
                tt.uv(0, th - botHgt), tt.uv(tw, th - botHgt),
                tt.uv(tw, th), tt.uv(0, th),
-               f.north(0, th - botHgt, wallWidth), f.north(tw, th - botHgt, wallWidth),
-               f.north(tw, th, wallWidth), f.north(0, th, wallWidth));
+               f.north(0, th - botHgt, wallDY), f.north(tw, th - botHgt, wallDY),
+               f.north(tw, th, wallDY), f.north(0, th, wallDY));
         // left
         de.add(textureID,
                tt.uv(0, topHgt), tt.uv(side, topHgt),
                tt.uv(side, th - botHgt), tt.uv(0, th - botHgt),
-               f.north(0, topHgt, wallWidth), f.north(side, topHgt, wallWidth),
-               f.north(side, th - botHgt, wallWidth), f.north(0, th - botHgt, wallWidth));
+               f.north(0, topHgt, wallDY), f.north(side, topHgt, wallDY),
+               f.north(side, th - botHgt, wallDY), f.north(0, th - botHgt, wallDY));
         // right
         de.add(textureID,
                tt.uv(tw - side, topHgt), tt.uv(tw, topHgt),
                tt.uv(tw, th - botHgt), tt.uv(tw - side, th - botHgt),
-               f.north(tw - side, topHgt, wallWidth), f.north(tw, topHgt, wallWidth),
-               f.north(tw, th - botHgt, wallWidth), f.north(tw - side, th - botHgt, wallWidth));
+               f.north(tw - side, topHgt, wallDY), f.north(tw, topHgt, wallDY),
+               f.north(tw, th - botHgt, wallDY), f.north(tw - side, th - botHgt, wallDY));
     }
     if (vtile->type() == VirtualTile::WallDoorW) {
         // west door
-        int side = 3;
+        int side = 4;
         // top
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, topHgt), tt.uv(0, topHgt),
-               f.west(0, 0, wallWidth), f.west(tw, 0, wallWidth),
-               f.west(tw, topHgt, wallWidth), f.west(0, topHgt, wallWidth));
+               f.west(0, 0, wallDX), f.west(tw, 0, wallDX),
+               f.west(tw, topHgt, wallDX), f.west(0, topHgt, wallDX));
         de.color(0.8f,0.8f,0.8f);
         // left
         de.add(textureID,
                tt.uv(0, topHgt), tt.uv(side, topHgt),
                tt.uv(side, th), tt.uv(0, th),
-               f.west(0, topHgt, wallWidth), f.west(side, topHgt, wallWidth),
-               f.west(side, th, wallWidth), f.west(0, th, wallWidth));
+               f.west(0, topHgt, wallDX), f.west(side, topHgt, wallDX),
+               f.west(side, th, wallDX), f.west(0, th, wallDX));
         de.color(0.8f,0.8f,0.8f);
         // right
         de.add(textureID,
                tt.uv(tw - side, topHgt), tt.uv(tw, topHgt),
                tt.uv(tw, th), tt.uv(tw - side, th),
-               f.west(tw - side, topHgt, wallWidth), f.west(tw, topHgt, wallWidth),
-               f.west(tw, th, wallWidth), f.west(tw - side, th, wallWidth));
+               f.west(tw - side, topHgt, wallDX), f.west(tw, topHgt, wallDX),
+               f.west(tw, th, wallDX), f.west(tw - side, th, wallDX));
         de.color(0.8f,0.8f,0.8f);
     }
     if (vtile->type() == VirtualTile::WallDoorN) {
         // north door
-        int side = 3;
+        int side = 4;
         // top
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, topHgt), tt.uv(0, topHgt),
-               f.north(0, 0, wallWidth), f.north(tw, 0, wallWidth),
-               f.north(tw, topHgt, wallWidth), f.north(0, topHgt, wallWidth));
+               f.north(0, 0, wallDY), f.north(tw, 0, wallDY),
+               f.north(tw, topHgt, wallDY), f.north(0, topHgt, wallDY));
         // left
         de.add(textureID,
                tt.uv(0, topHgt), tt.uv(side, topHgt),
                tt.uv(side, th), tt.uv(0, th),
-               f.north(0, topHgt, wallWidth), f.north(side, topHgt, wallWidth),
-               f.north(side, th, wallWidth), f.north(0, th, wallWidth));
+               f.north(0, topHgt, wallDY), f.north(side, topHgt, wallDY),
+               f.north(side, th, wallDY), f.north(0, th, wallDY));
         // right
         de.add(textureID,
                tt.uv(tw - side, topHgt), tt.uv(tw, topHgt),
                tt.uv(tw, th), tt.uv(tw - side, th),
-               f.north(tw - side, topHgt, wallWidth), f.north(tw, topHgt, wallWidth),
-               f.north(tw, th, wallWidth), f.north(tw - side, th, wallWidth));
+               f.north(tw - side, topHgt, wallDY), f.north(tw, topHgt, wallDY),
+               f.north(tw, th, wallDY), f.north(tw - side, th, wallDY));
     }
 #if 0
     de.add(textureID, QVector2D(0,0), QVector2D(1,0), QVector2D(1,1), QVector2D(0,1),

@@ -43,12 +43,16 @@ public:
 
 private:
     void setFilesList();
+    void setVirtualsList();
 
 private slots:
     void browse();
 
     void checkAll();
     void uncheckAll();
+
+    void vCheckAll();
+    void vUncheckAll();
 
     void accept();
 
