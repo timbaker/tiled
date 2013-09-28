@@ -965,6 +965,7 @@ bool MainWindow::InitConfigFiles()
     configFiles += BuildingTilesMgr::instance()->txtName();
     configFiles += BuildingTMX::instance()->txtName();
     configFiles += FurnitureGroups::instance()->txtName();
+    configFiles += VirtualTilesetMgr::instance().txtName();
 
     foreach (QString configFile, configFiles) {
         QString fileName = configPath + QLatin1Char('/') + configFile;
@@ -1020,6 +1021,14 @@ bool MainWindow::InitConfigFiles()
                               tr("Error while reading %1\n%2")
                               .arg(BuildingTemplates::instance()->txtName())
                               .arg(BuildingTemplates::instance()->errorString()));
+        return false;
+    }
+
+    if (!VirtualTilesetMgr::instance().readTxt()) {
+        QMessageBox::critical(this, tr("It's no good, Jim!"),
+                              tr("Error while reading %1\n%2")
+                              .arg(VirtualTilesetMgr::instance().txtName())
+                              .arg(VirtualTilesetMgr::instance().errorString()));
         return false;
     }
 
@@ -1659,6 +1668,7 @@ void MainWindow::virtualTilesetDialog()
         dialog = new VirtualTilesetDialog(this);
     }
     dialog->exec();
+    VirtualTilesetMgr::instance().writeTxt();
 }
 
 void MainWindow::launchWorldEd()

@@ -20,6 +20,7 @@
 
 #include "BuildingEditor/singleton.h"
 
+#include <QCoreApplication>
 #include <QImage>
 #include <QMap>
 #include <QObject>
@@ -145,6 +146,9 @@ public:
     void emitTilesetChanged(VirtualTileset *vts)
     { emit tilesetChanged(vts); }
 
+    QString errorString() const
+    { return mError; }
+
 private:
     void initPixelBuffer();
     uint loadGLTexture(const QString &imageSource);
@@ -160,6 +164,61 @@ private:
     QMap<QString,VirtualTileset*> mTilesetByName;
     QList<VirtualTileset*> mRemovedTilesets;
     QGLPixelBuffer *mPixelBuffer;
+
+    int mSourceRevision;
+    int mRevision;
+    QString mError;
+};
+
+class VirtualTilesetsFile
+{
+    Q_DECLARE_TR_FUNCTIONS(VirtualTilesetsFile)
+
+public:
+    VirtualTilesetsFile();
+    ~VirtualTilesetsFile();
+
+    bool read(const QString &fileName);
+    bool write(const QString &fileName);
+    bool write(const QString &fileName, const QList<VirtualTileset*> &tilesets);
+
+    void setRevision(int revision, int sourceRevision)
+    { mRevision = revision, mSourceRevision = sourceRevision; }
+
+    int revision() const { return mRevision; }
+    int sourceRevision() const { return mSourceRevision; }
+
+    const QList<VirtualTileset*> &tilesets() const
+    { return mTilesets; }
+
+    QList<VirtualTileset*> takeTilesets()
+    {
+        QList<VirtualTileset*> ret = mTilesets;
+        mTilesets.clear();
+        mTilesetByName.clear();
+        return ret;
+    }
+
+    void addTileset(VirtualTileset *vts)
+    { mTilesets += vts; mTilesetByName[vts->name()] = vts; }
+
+    QString errorString() const
+    { return mError; }
+
+private:
+    bool parse2Ints(const QString &s, int *pa, int *pb);
+    bool parseIsoType(const QString &s, VirtualTile::IsoType &isoType);
+
+private:
+    QList<VirtualTileset*> mTilesets;
+    QMap<QString,VirtualTileset*> mTilesetByName;
+    QMap<QString,VirtualTile::IsoType> mNameToType;
+    QMap<VirtualTile::IsoType,QString> mTypeToName;
+
+    int mVersion;
+    int mRevision;
+    int mSourceRevision;
+    QString mError;
 };
 
 } // namespace Internal

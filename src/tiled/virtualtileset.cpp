@@ -100,6 +100,8 @@ QImage VirtualTileset::image()
         QPainter painter(&mImage);
         for (int i = 0; i < tileCount(); i++) {
             VirtualTile *vtile = tileAt(i);
+            if (vtile->image().isNull())
+                vtile->setImage(VirtualTilesetMgr::instance().renderIsoTile(vtile));
             painter.drawImage(vtile->x() * 64, vtile->y() * 128, vtile->image());
         }
         painter.end();
@@ -114,7 +116,7 @@ SINGLETON_IMPL(VirtualTilesetMgr)
 VirtualTilesetMgr::VirtualTilesetMgr()
 {
     initPixelBuffer();
-
+#if 0
     VirtualTileset *vts = new VirtualTileset(QLatin1String("walls_exterior_house_01"), 512/64, 1024/128);
     VirtualTile *vtile = vts->tileAt(0, 0);
     vtile->setImageSource(QLatin1String("C:\\Users\\Tim\\Desktop\\ProjectZomboid\\Tiles\\Textures\\tex_walls_exterior_house_01.png"), 0, 0);
@@ -122,6 +124,7 @@ VirtualTilesetMgr::VirtualTilesetMgr()
     vtile->setImage(renderIsoTile(vtile));
 
     mTilesetByName[vts->name()] = vts;
+#endif
 }
 
 VirtualTilesetMgr::~VirtualTilesetMgr()
@@ -136,11 +139,36 @@ QString VirtualTilesetMgr::txtPath() const
 
 bool VirtualTilesetMgr::readTxt()
 {
+    QFileInfo info(txtPath());
+    if (!info.exists()) {
+        mError = tr("The %1 file doesn't exist.").arg(txtName());
+        return false;
+    }
+
+    VirtualTilesetsFile file;
+    if (!file.read(txtPath())) {
+        mError = file.errorString();
+        return false;
+    }
+
+    mRevision = file.revision();
+    mSourceRevision = file.sourceRevision();
+
+    foreach (VirtualTileset *vts, file.takeTilesets())
+        addTileset(vts);
+
     return true;
 }
 
 bool VirtualTilesetMgr::writeTxt()
 {
+    VirtualTilesetsFile file;
+    file.setRevision(++mRevision, mSourceRevision);
+    if (!file.write(txtPath(), tilesets())) {
+        mError = file.errorString();
+        return false;
+    }
+
     return true;
 }
 
@@ -627,4 +655,203 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
         const_cast<QGLContext*>(context)->makeCurrent();
 
     return img;
+}
+
+/////
+
+#include "BuildingEditor/simplefile.h"
+
+#define VERSION0 0
+
+#define VERSION_LATEST VERSION0
+
+VirtualTilesetsFile::VirtualTilesetsFile() :
+    mVersion(0),
+    mRevision(0),
+    mSourceRevision(0)
+{
+    mNameToType[QLatin1String("wall_w")] = VirtualTile::WallW;
+    mNameToType[QLatin1String("wall_n")] = VirtualTile::WallN;
+    mNameToType[QLatin1String("wall_nw")] = VirtualTile::WallNW;
+    mNameToType[QLatin1String("wall_se")] = VirtualTile::WallSE;
+    mNameToType[QLatin1String("wall_window_w")] = VirtualTile::WallWindowW;
+    mNameToType[QLatin1String("wall_window_n")] = VirtualTile::WallWindowN;
+    mNameToType[QLatin1String("wall_door_w")] = VirtualTile::WallDoorW;
+    mNameToType[QLatin1String("wall_door_n")] = VirtualTile::WallDoorN;
+
+    foreach (QString name, mNameToType.keys())
+        mTypeToName[mNameToType[name]] = name;
+}
+
+VirtualTilesetsFile::~VirtualTilesetsFile()
+{
+    qDeleteAll(mTilesets);
+}
+
+bool VirtualTilesetsFile::read(const QString &fileName)
+{
+    QFileInfo info(fileName);
+    if (!info.exists()) {
+        mError = tr("The %1 file doesn't exist.").arg(fileName);
+        return false;
+    }
+
+    QString path = info.absoluteFilePath();
+    SimpleFile simple;
+    if (!simple.read(path)) {
+        mError = tr("Error reading %1.\n%2").arg(path).arg(simple.errorString());
+        return false;
+    }
+
+    mVersion = simple.version();
+    mRevision = simple.value("revision").toInt();
+    mSourceRevision = simple.value("source_revision").toInt();
+
+    if (mVersion > VERSION_LATEST) {
+        mError = tr("%1 is from a newer version of TileZed").arg(info.fileName());
+        return false;
+    }
+
+    qDeleteAll(mTilesets);
+    mTilesets.clear();
+
+    foreach (SimpleFileBlock block, simple.blocks) {
+        if (block.name == QLatin1String("tileset")) {
+            QString name = block.value("name");
+            if (name.isEmpty()) {
+                mError = tr("Line %1: Missing tileset name")
+                        .arg(block.lineNumber);
+                return false;
+            }
+            if (mTilesetByName.contains(name)) {
+                mError = tr("Line %1: Duplicate tileset name '%2'")
+                        .arg(block.lineNumber)
+                        .arg(name);
+                return false;
+            }
+            int columnCount, rowCount;
+            if (!parse2Ints(block.value("size"), &columnCount, &rowCount)) {
+                mError = tr("Line %1: Invalid 'size' attribute").arg(block.lineNumber);
+                return false;
+            }
+            VirtualTileset *vts = new VirtualTileset(name, columnCount, rowCount);
+
+            foreach (SimpleFileBlock block2, block.blocks) {
+                if (block2.name == QLatin1String("tile")) {
+                    // FIXME: The Tiles Directory could be unset/invalid here
+                    QString file = block2.value("file");
+                    if (QDir::isRelativePath(file))
+                        file = Preferences::instance()->tilesDirectory() + QLatin1String("/") + file;
+                    int x, y;
+                    if (!parse2Ints(block2.value("xy"), &x, &y) ||
+                            !QRect(0, 0, columnCount, rowCount).contains(x, y)) {
+                        mError = tr("Line %1: Invalid 'xy' attribute").arg(block2.lineNumber);
+                        return false;
+                    }
+                    int srcX, srcY;
+                    if (!parse2Ints(block2.value("file-xy"), &srcX, &srcY)) {
+                        mError = tr("Line %1: Invalid 'file-xy' attribute").arg(block2.lineNumber);
+                        return false;
+                    }
+                    QString shape = block2.value("shape");
+                    VirtualTile::IsoType isoType = VirtualTile::Invalid;
+                    if (!parseIsoType(shape, isoType)) {
+                        mError = tr("Line %1: Invalid 'shape' attribute").arg(block2.lineNumber);
+                        return false;
+                    }
+                    vts->tileAt(x, y)->setImageSource(file, srcX, srcY);
+                    vts->tileAt(x, y)->setType(isoType);
+                } else {
+                    mError = tr("Line %1: Unknown block name '%1'\n%2")
+                            .arg(block2.lineNumber)
+                            .arg(block2.name)
+                            .arg(path);
+                    return false;
+                }
+            }
+            addTileset(vts);
+        } else {
+            mError = tr("Line %1: Unknown block name '%1'.\n%2")
+                    .arg(block.lineNumber)
+                    .arg(block.name)
+                    .arg(path);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool VirtualTilesetsFile::write(const QString &fileName)
+{
+    return write(fileName, mTilesets);
+}
+
+bool VirtualTilesetsFile::write(const QString &fileName,
+                                const QList<VirtualTileset *> &tilesets)
+{
+    SimpleFile simpleFile;
+
+    QDir tilesDir(Preferences::instance()->tilesDirectory());
+
+    foreach (VirtualTileset *vts, tilesets) {
+        SimpleFileBlock block;
+        block.name = QLatin1String("tileset");
+        block.addValue("name", vts->name());
+        block.addValue("size", QString::fromLatin1("%1,%2")
+                       .arg(vts->columnCount())
+                       .arg(vts->rowCount()));
+        for (int i = 0; i < vts->tileCount(); i++) {
+            VirtualTile *vtile = vts->tileAt(i);
+            if (vtile->type() == VirtualTile::Invalid)
+                continue;
+            SimpleFileBlock block2;
+            block2.name = QLatin1String("tile");
+            block2.addValue("xy", QString::fromLatin1("%1,%2")
+                           .arg(vtile->x())
+                           .arg(vtile->y()));
+            QString relativePath = tilesDir.relativeFilePath(vtile->imageSource());
+            block2.addValue("file", relativePath);
+            block2.addValue("file-xy", QString::fromLatin1("%1,%2")
+                            .arg(vtile->srcX())
+                            .arg(vtile->srcY()));
+            block2.addValue("shape", mTypeToName[vtile->type()]);
+            block.blocks += block2;
+        }
+
+        simpleFile.blocks += block;
+    }
+
+    simpleFile.setVersion(VERSION_LATEST);
+    simpleFile.replaceValue("revision", QString::number(mRevision));
+    simpleFile.replaceValue("source_revision", QString::number(mSourceRevision));
+    if (!simpleFile.write(fileName)) {
+        mError = simpleFile.errorString();
+        return false;
+    }
+
+    return true;
+}
+
+bool VirtualTilesetsFile::parse2Ints(const QString &s, int *pa, int *pb)
+{
+    QStringList coords = s.split(QLatin1Char(','), QString::SkipEmptyParts);
+    if (coords.size() != 2)
+        return false;
+    bool ok;
+    int a = coords[0].toInt(&ok);
+    if (!ok) return false;
+    int b = coords[1].toInt(&ok);
+    if (!ok) return false;
+    *pa = a, *pb = b;
+    return true;
+}
+
+bool VirtualTilesetsFile::parseIsoType(const QString &s, VirtualTile::IsoType &isoType)
+{
+    if (mNameToType.contains(s)) {
+        isoType = mNameToType[s];
+        return true;
+    }
+    return false;
 }
