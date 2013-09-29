@@ -66,6 +66,10 @@ public:
     void setClickedIndex(const QModelIndex &index) { mClickedIndex = index; }
     void setMovedTiles(QList<VirtualTile*> &tiles) { mMovedTiles = tiles; }
 
+    void setDiskImage(const QImage &image);
+    void setShowDiskImage(bool show);
+    bool diskImageValid() const { return !mDiskImage.isNull(); }
+
 signals:
     void beginDropTiles();
     void tileDropped(VirtualTile *vtile, const QString &imageSource, int x, int y, int isoType);
@@ -86,6 +90,7 @@ private:
         }
 
         VirtualTile *mTile;
+        QImage mDiskImage;
     };
 
     Item *toItem(const QModelIndex &index) const;
@@ -95,6 +100,8 @@ private:
     QList<Item*> mItems;
     QModelIndex mClickedIndex;
     QList<VirtualTile*> mMovedTiles;
+    QImage mDiskImage;
+    bool mShowDiskImage;
     static QString mMimeType;
 };
 

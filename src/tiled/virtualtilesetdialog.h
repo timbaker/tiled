@@ -69,6 +69,7 @@ private slots:
     void removeTileset();
 
     void clearVTiles();
+    void showDiskImage(bool show);
 
     void tilesetAdded(VirtualTileset *vts);
     void tilesetRemoved(VirtualTileset *vts);
@@ -101,6 +102,7 @@ private:
     Tileset *mOrthoTileset;
     VirtualTileset *mIsoTileset;
     IsoCategory mIsoCategory;
+    bool mShowDiskImage;
 
     QUndoGroup *mUndoGroup;
     QUndoStack *mUndoStack;

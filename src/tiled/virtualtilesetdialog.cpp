@@ -27,6 +27,7 @@
 #include "tileset.h"
 
 #include <QFileInfo>
+#include <QImageReader>
 #include <QMessageBox>
 #include <QSettings>
 #include <QToolBar>
@@ -205,6 +206,7 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     mOrthoTileset(0),
     mIsoTileset(0),
     mIsoCategory(CategoryWall),
+    mShowDiskImage(false),
     mUndoGroup(new QUndoGroup(this)),
     mUndoStack(new QUndoStack(this))
 {
@@ -219,6 +221,7 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     toolBar = new QToolBar;
     toolBar->setIconSize(QSize(16, 16));
     toolBar->addAction(ui->actionClearVTiles);
+    toolBar->addAction(ui->actionShowDiskImage);
     ui->vTileToolbarLayout->insertWidget(0, toolBar, 1);
 
     UndoRedoButtons *urb = new UndoRedoButtons(mUndoStack, this);
@@ -270,6 +273,7 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     connect(ui->actionAddTileset, SIGNAL(triggered()), SLOT(addTileset()));
     connect(ui->actionRemoveTileset, SIGNAL(triggered()), SLOT(removeTileset()));
     connect(ui->actionClearVTiles, SIGNAL(triggered()), SLOT(clearVTiles()));
+    connect(ui->actionShowDiskImage, SIGNAL(toggled(bool)), SLOT(showDiskImage(bool)));
 
     connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetAdded(VirtualTileset*)),
             SLOT(tilesetAdded(VirtualTileset*)));
@@ -279,14 +283,15 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     setVirtualTilesetNamesList();
     setOrthoFilesList();
 
-    updateActions();
-
     settings.beginGroup(QLatin1String("VirtualTilesetDialog"));
     QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
     if (!geom.isEmpty())
         restoreGeometry(geom);
+    mShowDiskImage = settings.value(QLatin1String("ShowDiskImage"), mShowDiskImage).toBool();
     settings.endGroup();
     restoreSplitterSizes(ui->splitter);
+
+    updateActions();
 }
 
 VirtualTilesetDialog::~VirtualTilesetDialog()
@@ -307,6 +312,14 @@ void VirtualTilesetDialog::setVirtualTilesetNamesList()
 void VirtualTilesetDialog::setVirtualTilesetTilesList()
 {
     ui->vTilesetTiles->setTileset(mCurrentVirtualTileset);
+
+    QImage diskImage;
+    if (mCurrentVirtualTileset) {
+        QString fileName = VirtualTilesetMgr::instance().imageSource(mCurrentVirtualTileset);
+        if (QImageReader(fileName).size().isValid())
+            diskImage = QImage(fileName);
+    }
+    ui->vTilesetTiles->model()->setDiskImage(diskImage);
 }
 
 void VirtualTilesetDialog::setOrthoFilesList()
@@ -416,6 +429,11 @@ void VirtualTilesetDialog::clearVTiles()
         mUndoStack->endMacro();
 }
 
+void VirtualTilesetDialog::showDiskImage(bool show)
+{
+    ui->vTilesetTiles->model()->setShowDiskImage(show);
+}
+
 void VirtualTilesetDialog::tilesetAdded(VirtualTileset *vts)
 {
     setVirtualTilesetNamesList();
@@ -501,8 +519,8 @@ void VirtualTilesetDialog::orthoTileSelectionChanged()
         mIsoTileset = new VirtualTileset(QLatin1String("Dynamic"), 1, 1);
         for (int i = 0; i < mIsoTileset->tileCount(); i++)
             mIsoTileset->tileAt(i)->setImageSource(tile->tileset()->imageSource(),
-                                                      tile->id() % tile->tileset()->columnCount(),
-                                                      tile->id() / tile->tileset()->columnCount());
+                                                   tile->id() % tile->tileset()->columnCount(),
+                                                   tile->id() / tile->tileset()->columnCount());
         mIsoTileset->tileAt(0, 0)->setType(VirtualTile::Floor);
     }
     if (!selected.isEmpty() && mIsoCategory == CategoryRoof) {
@@ -510,8 +528,8 @@ void VirtualTilesetDialog::orthoTileSelectionChanged()
         mIsoTileset = new VirtualTileset(QLatin1String("Dynamic"), 8, 8);
         for (int i = 0; i < mIsoTileset->tileCount(); i++)
             mIsoTileset->tileAt(i)->setImageSource(tile->tileset()->imageSource(),
-                                                      tile->id() % tile->tileset()->columnCount(),
-                                                      tile->id() / tile->tileset()->columnCount());
+                                                   tile->id() % tile->tileset()->columnCount(),
+                                                   tile->id() / tile->tileset()->columnCount());
         mIsoTileset->tileAt(0, 0)->setType(VirtualTile::SlopeS1);
         mIsoTileset->tileAt(1, 0)->setType(VirtualTile::SlopeS2);
         mIsoTileset->tileAt(2, 0)->setType(VirtualTile::SlopeS3);
@@ -615,6 +633,7 @@ void VirtualTilesetDialog::updateActions()
 {
     ui->actionRemoveTileset->setEnabled(ui->vTilesetNames->selectedItems().size() != 0);
     ui->actionClearVTiles->setEnabled(ui->vTilesetTiles->selectionModel()->selectedIndexes().size() != 0);
+    ui->actionShowDiskImage->setEnabled(ui->vTilesetTiles->model()->diskImageValid());
 }
 
 void VirtualTilesetDialog::saveSplitterSizes(QSplitter *splitter)

@@ -81,6 +81,10 @@ void VirtualTilesetDelegate::paint(QPainter *painter,
     else
         painter->drawImage(option.rect.adjusted(0, 0, -extra, -extra), tileImage);
 
+    // Grid
+    painter->fillRect(option.rect.right(), option.rect.top(), 1, option.rect.height(), Qt::lightGray);
+    painter->fillRect(option.rect.left(), option.rect.bottom(), option.rect.width(), 1, Qt::lightGray);
+
     // Overlay with highlight color when selected
     if (option.state & QStyle::State_Selected) {
         const qreal opacity = painter->opacity();
@@ -94,7 +98,10 @@ void VirtualTilesetDelegate::paint(QPainter *painter,
 QSize VirtualTilesetDelegate::sizeHint(const QStyleOptionViewItem &option,
                                        const QModelIndex &index) const
 {
+    Q_UNUSED(option)
     const VirtualTilesetModel *m = static_cast<const VirtualTilesetModel*>(index.model());
+    if (!m->tileAt(index))
+        return QSize();
     const qreal scale = this->scale();
     const int extra = 1;
     return QSize(64 * scale + extra, 128 * scale + extra);
@@ -105,7 +112,8 @@ QSize VirtualTilesetDelegate::sizeHint(const QStyleOptionViewItem &option,
 
 VirtualTilesetModel::VirtualTilesetModel(QObject *parent) :
     QAbstractTableModel(parent),
-    mTileset(0)
+    mTileset(0),
+    mShowDiskImage(false)
 {
 }
 
@@ -152,8 +160,16 @@ Qt::ItemFlags VirtualTilesetModel::flags(const QModelIndex &index) const
 QVariant VirtualTilesetModel::data(const QModelIndex &index, int role) const
 {
     if (role == Qt::DisplayRole) {
-        if (VirtualTile *vtile = tileAt(index))
-            return vtile->image();
+        if (Item *item = toItem(index)) {
+            if (mShowDiskImage) {
+                if (!mDiskImage.isNull() && item->mDiskImage.isNull())
+                    item->mDiskImage = mDiskImage.copy(item->mTile->x() * 64,
+                                                       item->mTile->y() * 128,
+                                                       64, 128);
+                return item->mDiskImage;
+            }
+            return item->mTile->image();
+        }
     }
     return QVariant();
 }
@@ -310,6 +326,21 @@ void VirtualTilesetModel::redisplay(VirtualTile *vtile)
     QModelIndex index = this->index(vtile);
     if (index.isValid())
         emit dataChanged(index, index);
+}
+
+void VirtualTilesetModel::setDiskImage(const QImage &image)
+{
+    mDiskImage = image;
+    if (mShowDiskImage)
+        redisplay();
+}
+
+void VirtualTilesetModel::setShowDiskImage(bool show)
+{
+    if (show != mShowDiskImage) {
+        mShowDiskImage = show;
+        redisplay();
+    }
 }
 
 VirtualTilesetModel::Item *VirtualTilesetModel::toItem(const QModelIndex &index) const

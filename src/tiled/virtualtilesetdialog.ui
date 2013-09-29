@@ -168,6 +168,18 @@
     <string>Clear Selected Tiles</string>
    </property>
   </action>
+  <action name="actionShowDiskImage">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/drive-harddisk.png</normaloff>:/images/16x16/drive-harddisk.png</iconset>
+   </property>
+   <property name="text">
+    <string>Show Disk Image</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
