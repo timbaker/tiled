@@ -7,35 +7,15 @@
     <x>0</x>
     <y>0</y>
     <width>342</width>
-    <height>131</height>
+    <height>139</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Virtual Tileset</string>
   </property>
-  <layout class="QFormLayout" name="formLayout">
-   <property name="fieldGrowthPolicy">
-    <enum>QFormLayout::ExpandingFieldsGrow</enum>
-   </property>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Name:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1">
-    <widget class="QLineEdit" name="nameEdit"/>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>Columns:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QSpinBox" name="columnCount">
+  <layout class="QGridLayout" name="gridLayout" columnstretch="0,0,1">
+   <item row="2" column="1">
+    <widget class="QSpinBox" name="rowCount">
      <property name="minimum">
       <number>1</number>
      </property>
@@ -48,20 +28,17 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="1">
-    <widget class="QSpinBox" name="rowCount">
-     <property name="minimum">
-      <number>1</number>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Name:</string>
      </property>
     </widget>
    </item>
-   <item row="4" column="0" colspan="2">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Columns:</string>
      </property>
     </widget>
    </item>
@@ -77,6 +54,46 @@
       </size>
      </property>
     </spacer>
+   </item>
+   <item row="1" column="1">
+    <widget class="QSpinBox" name="columnCount">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimum">
+      <number>1</number>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QLabel" name="diskColumnCount">
+     <property name="text">
+      <string>Disk Image: ?</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="2">
+    <widget class="QLabel" name="diskRowCount">
+     <property name="text">
+      <string>Disk Image: ?</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1" colspan="2">
+    <widget class="QLineEdit" name="nameEdit"/>
+   </item>
+   <item row="4" column="0" colspan="3">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

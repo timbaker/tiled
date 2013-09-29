@@ -18,6 +18,10 @@
 #include "addvirtualtilesetdialog.h"
 #include "ui_addvirtualtilesetdialog.h"
 
+#include "preferences.h"
+
+#include <QDir>
+#include <QImageReader>
 #include <QPushButton>
 
 AddVirtualTilesetDialog::AddVirtualTilesetDialog(QWidget *parent) :
@@ -29,8 +33,11 @@ AddVirtualTilesetDialog::AddVirtualTilesetDialog(QWidget *parent) :
 
     ui->columnCount->setValue(8);
     ui->rowCount->setValue(8);
+    ui->nameEdit->setFocus();
 
     connect(ui->nameEdit, SIGNAL(textEdited(QString)), SLOT(updateActions()));
+
+    updateActions();
 }
 
 AddVirtualTilesetDialog::AddVirtualTilesetDialog(const QString &name, int columnCount,
@@ -44,6 +51,11 @@ AddVirtualTilesetDialog::AddVirtualTilesetDialog(const QString &name, int column
     ui->columnCount->setValue(columnCount);
     ui->rowCount->setValue(rowCount);
     ui->nameEdit->setText(name);
+    ui->nameEdit->setFocus();
+
+    connect(ui->nameEdit, SIGNAL(textEdited(QString)), SLOT(updateActions()));
+
+    updateActions();
 }
 
 AddVirtualTilesetDialog::~AddVirtualTilesetDialog()
@@ -68,5 +80,22 @@ int AddVirtualTilesetDialog::rowCount() const
 
 void AddVirtualTilesetDialog::updateActions()
 {
+    int diskColCount = -1, diskRowCount = -1;
+    QString tilesDir = Tiled::Internal::Preferences::instance()->tilesDirectory();
+    if (!tilesDir.isEmpty() && !name().isEmpty()) {
+        QString fileName = QDir(tilesDir).filePath(name() + QLatin1String(".png"));
+        QSize size = QImageReader(fileName).size();
+        if (size.isValid()) {
+            diskColCount = size.width() / 64;
+            diskRowCount = size.height() / 128;
+        }
+    }
+    if (diskColCount != -1) {
+        ui->diskColumnCount->setText(tr("Disk image: <b>%1</b>").arg(diskColCount));
+        ui->diskRowCount->setText(tr("Disk image: <b>%1</b>").arg(diskRowCount));
+    } else {
+        ui->diskColumnCount->clear();
+        ui->diskRowCount->clear();
+    }
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(name().length());
 }
