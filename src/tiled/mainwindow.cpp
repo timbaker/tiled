@@ -1668,7 +1668,6 @@ void MainWindow::virtualTilesetDialog()
         dialog = new VirtualTilesetDialog(this);
     }
     dialog->exec();
-    VirtualTilesetMgr::instance().writeTxt();
 }
 
 void MainWindow::launchWorldEd()

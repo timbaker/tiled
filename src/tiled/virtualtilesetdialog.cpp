@@ -590,7 +590,7 @@ void VirtualTilesetDialog::orthoTileSelectionChanged()
     }
     if (!selected.isEmpty() && mIsoCategory == CategoryWall) {
         Tile *tile = ui->orthoTiles->tilesetModel()->tileAt(selected.first());
-        mIsoTileset = new VirtualTileset(QLatin1String("Dynamic"), 4, 2);
+        mIsoTileset = new VirtualTileset(QLatin1String("Dynamic"), 4, 3);
         for (int i = 0; i < mIsoTileset->tileCount(); i++)
             mIsoTileset->tileAt(i)->setImageSource(tile->tileset()->imageSource(),
                                                       tile->id() % tile->tileset()->columnCount(),
@@ -603,6 +603,10 @@ void VirtualTilesetDialog::orthoTileSelectionChanged()
         mIsoTileset->tileAt(1, 1)->setType(VirtualTile::WallWindowN);
         mIsoTileset->tileAt(2, 1)->setType(VirtualTile::WallDoorW);
         mIsoTileset->tileAt(3, 1)->setType(VirtualTile::WallDoorN);
+        mIsoTileset->tileAt(0, 2)->setType(VirtualTile::WallShortW);
+        mIsoTileset->tileAt(1, 2)->setType(VirtualTile::WallShortN);
+        mIsoTileset->tileAt(2, 2)->setType(VirtualTile::WallShortNW);
+        mIsoTileset->tileAt(3, 2)->setType(VirtualTile::WallShortSE);
     }
     ui->isoTiles->setTileset(mIsoTileset);
 }
@@ -669,8 +673,12 @@ void VirtualTilesetDialog::done(int r)
     settings.setValue(QLatin1String("geometry"), saveGeometry());
     settings.setValue(QLatin1String("TileScale"), ui->vTilesetTiles->zoomable()->scale());
     settings.endGroup();
-
     saveSplitterSizes(ui->splitter);
+
+    if (!mUndoStack->isClean()) {
+        VirtualTilesetMgr::instance().writeTxt();
+        mUndoStack->setClean();
+    }
 
     QDialog::done(r);
 }

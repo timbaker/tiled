@@ -48,6 +48,10 @@ public:
         WallWindowN,
         WallDoorW,
         WallDoorN,
+        WallShortW,
+        WallShortN,
+        WallShortNW,
+        WallShortSE,
 
         // Roof steep slopes
         SlopeS1, SlopeS2, SlopeS3,

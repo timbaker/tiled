@@ -697,6 +697,48 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
                f.north(tw - side, topHgt, wallDY), f.north(tw, topHgt, wallDY),
                f.north(tw, th, wallDY), f.north(tw - side, th, wallDY));
     }
+    const int shortWallHgt = 57;
+    if (vtile->type() == VirtualTile::WallShortW) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, shortWallHgt), tt.uv(0, shortWallHgt),
+               f.west(0, th - shortWallHgt, wallDX), f.west(tw, th - shortWallHgt, wallDX),
+               f.west(tw, th, wallDX), f.west(0, th, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (vtile->type() == VirtualTile::WallShortN) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, shortWallHgt), tt.uv(0, shortWallHgt),
+               f.north(0, th - shortWallHgt, wallDY), f.north(tw, th - shortWallHgt, wallDY),
+               f.north(tw, th, wallDY), f.north(0, th, wallDY));
+    }
+    if (vtile->type() == VirtualTile::WallShortNW) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, shortWallHgt), tt.uv(0, shortWallHgt),
+               f.west(0, th - shortWallHgt, wallDX), f.west(tw - wallDY, th - shortWallHgt, wallDX, 0),
+               f.west(tw - wallDY, th, wallDX, 0), f.west(0, th, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, shortWallHgt), tt.uv(0, shortWallHgt),
+               f.north(wallDX, th - shortWallHgt, wallDY), f.north(tw, th - shortWallHgt, wallDY),
+               f.north(tw, th, wallDY), f.north(wallDX, th, wallDY));
+    }
+    if (vtile->type() == VirtualTile::WallShortSE) {
+        de.add(textureID,
+               tt.uv(tw - wallDY, th - shortWallHgt), tt.uv(tw, th - shortWallHgt),
+               tt.uv(tw, th), tt.uv(tw - wallDY, th),
+               f.west(tw - wallDY, th - shortWallHgt, wallDX), f.west(tw, th - shortWallHgt, wallDX),
+               f.west(tw, th, wallDX), f.west(tw - wallDY, th, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+        de.add(textureID,
+                tt.uv(0, th - shortWallHgt), tt.uv(wallDX, th - shortWallHgt),
+                tt.uv(wallDX, th), tt.uv(0, th),
+                f.north(0, th - shortWallHgt, wallDY), f.north(wallDX, th - shortWallHgt, wallDY),
+                f.north(wallDX, th, wallDY), f.north(0, th, wallDY));
+    }
 
     //
     // ROOFS
@@ -930,6 +972,11 @@ VirtualTilesetsFile::VirtualTilesetsFile() :
     mNameToType[QLatin1String("wall_door_w")] = VirtualTile::WallDoorW;
     mNameToType[QLatin1String("wall_door_n")] = VirtualTile::WallDoorN;
 
+    mNameToType[QLatin1String("wall_short_w")] = VirtualTile::WallShortW;
+    mNameToType[QLatin1String("wall_short_n")] = VirtualTile::WallShortN;
+    mNameToType[QLatin1String("wall_short_nw")] = VirtualTile::WallShortNW;
+    mNameToType[QLatin1String("wall_short_se")] = VirtualTile::WallShortSE;
+
     mNameToType[QLatin1String("roof_slope_s1")] = VirtualTile::SlopeS1;
     mNameToType[QLatin1String("roof_slope_s2")] = VirtualTile::SlopeS2;
     mNameToType[QLatin1String("roof_slope_s3")] = VirtualTile::SlopeS3;
@@ -1065,7 +1112,9 @@ bool VirtualTilesetsFile::read(const QString &fileName)
                     QString shape = block2.value("shape");
                     VirtualTile::IsoType isoType = VirtualTile::Invalid;
                     if (!parseIsoType(shape, isoType)) {
-                        mError = tr("Line %1: Invalid 'shape' attribute").arg(block2.lineNumber);
+                        mError = tr("Line %1: Invalid 'shape' attribute '%2'.")
+                                .arg(block2.lineNumber)
+                                .arg(shape);
                         return false;
                     }
                     vts->tileAt(x, y)->setImageSource(file, srcX, srcY);
