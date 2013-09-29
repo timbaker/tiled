@@ -63,8 +63,8 @@ Zoomable::Zoomable(QObject *parent)
     , mComboRegExp(QLatin1String("^\\s*(\\d+)\\s*%?\\s*$"))
     , mComboValidator(0)
 {
-    for (int i = 0; i < zoomFactorCount; i++)
-        mZoomFactors << zoomFactors[i];
+    for (int i = 0; i < ::zoomFactorCount; i++)
+        mZoomFactors << ::zoomFactors[i];
 }
 
 void Zoomable::setScale(qreal scale)

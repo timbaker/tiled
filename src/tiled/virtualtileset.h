@@ -37,6 +37,9 @@ class VirtualTile
 public:
     enum IsoType {
         Invalid,
+        Floor,
+
+        // Walls
         WallW,
         WallN,
         WallNW,
@@ -44,7 +47,25 @@ public:
         WallWindowW,
         WallWindowN,
         WallDoorW,
-        WallDoorN
+        WallDoorN,
+
+        // Roof sides
+        SlopeS1, SlopeS2, SlopeS3,
+        SlopeE1, SlopeE2, SlopeE3,
+        SlopePt5S, SlopeOnePt5S, SlopeTwoPt5S,
+        SlopePt5E, SlopeOnePt5E, SlopeTwoPt5E,
+
+        // Roof corners
+        Inner1, Inner2, Inner3,
+        Outer1, Outer2, Outer3,
+        InnerPt5, InnerOnePt5, InnerTwoPt5,
+        OuterPt5, OuterOnePt5, OuterTwoPt5,
+        CornerSW1, CornerSW2, CornerSW3,
+        CornerNE1, CornerNE2, CornerNE3,
+
+        // Roof tops
+        RoofTopN1, RoofTopN2, RoofTopN3,
+        RoofTopW1, RoofTopW2, RoofTopW3
     };
 
     VirtualTile(VirtualTileset *vts, int x, int y);
@@ -69,7 +90,7 @@ public:
     IsoType type() const { return mType; }
 
     void setImage(const QImage &image) { mImage = image; }
-    QImage image() const { return mImage; }
+    QImage image();
 
     void clear();
 
@@ -101,7 +122,7 @@ public:
     VirtualTile *tileAt(int n);
     VirtualTile *tileAt(int x, int y);
 
-    void resize(int columnCount, int rowCount);
+    void resize(int columnCount, int rowCount, QVector<VirtualTile *> &tiles);
 
     void tileChanged() { mImage = QImage(); }
 
@@ -136,6 +157,9 @@ public:
 
     void addTileset(VirtualTileset *vts);
     void removeTileset(VirtualTileset *vts);
+    void renameTileset(VirtualTileset *vts, const QString &name);
+    void resizeTileset(VirtualTileset *vts, QSize &size,
+                       QVector<VirtualTile*> &tiles);
 
     QString imageSource(VirtualTileset *vts);
     bool resolveImageSource(QString &imageSource);

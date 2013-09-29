@@ -243,10 +243,19 @@ void TilesetManager::fileChangedTimeout()
     foreach (Tileset *tileset, mTilesetImageCache->mTilesets) {
         QString fileName = tileset->imageSource();
         if (mChangedFiles.contains(fileName)) {
-            if (VirtualTileset *vts = VirtualTilesetMgr::instance().tilesetFromPath(fileName))
+            if (VirtualTileset *vts = VirtualTilesetMgr::instance().tilesetFromPath(fileName)) {
                 tileset->loadFromImage(vts->image(), fileName);
-            else
-                tileset->loadFromImage(QImage(fileName), fileName); // FIXME: could fail
+                tileset->setMissing(false);
+            } else if (QImageReader(fileName).size().isValid()) {
+                tileset->loadFromImage(QImage(fileName), fileName);
+                tileset->setMissing(false);
+            } else {
+                if (tileset->tileHeight() == 128 && tileset->tileWidth() == 64) {
+                    for (int i = 0; i < tileset->tileCount(); i++)
+                        tileset->tileAt(i)->setImage(mMissingTile->image());
+                }
+                tileset->setMissing(true);
+            }
         }
     }
     foreach (Tileset *tileset, tilesets()) {
@@ -254,6 +263,7 @@ void TilesetManager::fileChangedTimeout()
         if (mChangedFiles.contains(fileName)) {
             if (Tileset *cached = mTilesetImageCache->findMatch(tileset, fileName)) {
                 if (tileset->loadFromCache(cached)) {
+                    tileset->setMissing(cached->isMissing());
                     syncTileLayerNames(tileset);
                     emit tilesetChanged(tileset);
                 }
@@ -342,9 +352,6 @@ void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource_)
     // since they're saved relative to the TMX's directory.
     QString imageSource = imageSource_;
     VirtualTilesetMgr::instance().resolveImageSource(imageSource);
-    if (imageSource_.contains(QLatin1String("virtual"))) {
-        int i = 0;
-    }
 #endif
 
     if (!tileset->isLoaded() /*&& !tileset->isMissing()*/) {
@@ -371,7 +378,6 @@ void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource_)
             mNextThreadForJob = (mNextThreadForJob + 1) % mImageReaderWorkers.size();
         } else {
             if (tileset->tileHeight() == 128 && tileset->tileWidth() == 64) {
-                // Replace the all-red image with something nicer.
                 for (int i = 0; i < tileset->tileCount(); i++)
                     tileset->tileAt(i)->setImage(mMissingTile->image());
             }
