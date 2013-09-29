@@ -349,6 +349,9 @@ void VirtualTilesetView::mousePressEvent(QMouseEvent *event)
     mClickedIndex = indexAt(event->pos());
     model()->setClickedIndex(mClickedIndex);
 
+    // Only drag already-selected tiles.
+    setDragEnabled(selectionModel()->isSelected(mClickedIndex));
+
     QTableView::mousePressEvent(event);
 }
 
