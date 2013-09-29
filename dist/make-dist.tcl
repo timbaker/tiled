@@ -114,6 +114,7 @@ Translations = translations
 copyFile $SRC $DEST LuaTools.txt
 copyFile $SRC $DEST TileProperties.txt
 copyFile $SRC $DEST Tilesets.txt
+copyFile $SRC $DEST VirtualTilesets.txt
 
 puts ---Translations---
 set qt_trs {qt_cs.qm qt_de.qm qt_es.qm qt_fr.qm qt_he.qm qt_ja.qm qt_pt.qm qt_ru.qm qt_zh_CN.qm qt_zh_TW.qm}

@@ -558,7 +558,8 @@ configTxtFiles.path = $${CONFIG_PREFIX}
 configTxtFiles.files = \
     $${top_srcdir}/LuaTools.txt \
     $${top_srcdir}/TileProperties.txt \
-    $${top_srcdir}/Tilesets.txt
+    $${top_srcdir}/Tilesets.txt \
+    $${top_srcdir}/VirtualTilesets.txt
 INSTALLS += configTxtFiles
 
 buildingEdTxt.path = $${CONFIG_PREFIX}
