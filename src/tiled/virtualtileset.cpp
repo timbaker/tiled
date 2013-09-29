@@ -704,55 +704,50 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
     if (vtile->type() >= VirtualTile::SlopeS1 && vtile->type() <= VirtualTile::SlopeS3) {
         int dy = (vtile->type() - vtile->SlopeS1) * 32;
         de.add(textureID,
-               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, th), tt.uv(0, th),
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64), tt.uv(0, 64),
                f.flatNS(0, 0, 32 + dy), f.flatNS(tw, 0, 32 + dy), f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
     }
     if (vtile->type() >= VirtualTile::SlopeE1 && vtile->type() <= VirtualTile::SlopeE3) {
         int dy = (vtile->type() - vtile->SlopeE1) * 32;
         de.add(textureID,
-               tt.uv(0, 0), tt.uv(tw, 0),
-               tt.uv(tw, th), tt.uv(0, th),
-               f.flatWE(0, 0, 32 + dy), f.flatWE(tw, 0, 32 + dy),
-               f.flatWE(tw, th, dy), f.flatWE(0, th, dy));
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64), tt.uv(0, 64),
+               f.flatWE(0, 0, 32 + dy), f.flatWE(tw, 0, 32 + dy), f.flatWE(tw, th, dy), f.flatWE(0, th, dy));
         de.color(0.8f,0.8f,0.8f);
     }
     if (vtile->type() >= VirtualTile::SlopePt5S && vtile->type() <= VirtualTile::SlopeTwoPt5S) {
         int dy = (vtile->type() - vtile->SlopePt5S) * 32;
         de.add(textureID,
-               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, th), tt.uv(0, th),
+               tt.uv(0, 32), tt.uv(tw, 32), tt.uv(tw, 64), tt.uv(0, 64),
                f.flatNS(0, th / 2, 16 + dy), f.flatNS(tw, th / 2, 16 + dy), f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
     }
     if (vtile->type() >= VirtualTile::SlopePt5E && vtile->type() <= VirtualTile::SlopeTwoPt5E) {
         int dy = (vtile->type() - vtile->SlopePt5E) * 32;
         de.add(textureID,
-               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, th), tt.uv(0, th),
+               tt.uv(0, 32), tt.uv(tw, 32), tt.uv(tw, 64), tt.uv(0, 64),
                f.flatWE(0, th / 2, 16 + dy), f.flatWE(tw, th / 2, 16 + dy), f.flatWE(tw, th, dy), f.flatWE(0, th, dy));
+        de.color(0.8f,0.8f,0.8f);
     }
     if (vtile->type() >= VirtualTile::Outer1 && vtile->type() <= VirtualTile::Outer3) {
         int dy = (vtile->type() - vtile->Outer1) * 32;
         // south
         de.add(textureID,
-               tt.uv(0, 0), /*tt.uv(tw, 0),*/
-               tt.uv(tw, th), tt.uv(0, th),
-               f.flatNS(0, 0, 32 + dy), /*f.flat(tw, 0, 32 + dy),*/
-               f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
+               tt.uv(0, 0), tt.uv(tw, 64), tt.uv(0, 64),
+               f.flatNS(0, 0, 32 + dy), f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
         // east
         de.add(textureID,
-               /*tt.uv(0, 0),*/ tt.uv(tw, 0),
-               tt.uv(tw, th), tt.uv(0, th),
-               /*f.flat(0, th, 32 + dy),*/ f.flatNS(0, 0, 32 + dy),
-               f.flatNS(tw, 0, dy), f.flatNS(tw, th, dy));
+               tt.uv(tw, 0), tt.uv(tw, 64), tt.uv(0, 64),
+               f.flatNS(0, 0, 32 + dy), f.flatNS(tw, 0, dy), f.flatNS(tw, th, dy));
         de.color(0.8f,0.8f,0.8f);
     }
     if (vtile->type() >= VirtualTile::Inner1 && vtile->type() <= VirtualTile::Inner3) {
         int dy = (vtile->type() - vtile->Inner1) * 32;
         // south
         de.add(textureID,
-               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, th),
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64),
                f.flatNS(0, 0, 32 + dy), f.flatNS(tw, 0, 32 + dy), f.flatNS(tw, th, dy));
         // east
         de.add(textureID,
-               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(0, th),
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(0, 64),
                f.flatNS(0, th, 32 + dy), f.flatNS(0, 0, 32 + dy), f.flatNS(tw, th, dy));
         de.color(0.8f,0.8f,0.8f);
     }
@@ -760,11 +755,11 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
         int dy = (vtile->type() - vtile->OuterPt5) * 32;
         // south
         de.add(textureID,
-               tt.uv(0, 0), tt.uv(tw / 2, 0), tt.uv(tw, 28), tt.uv(0, 28),
+               tt.uv(0, 32), tt.uv(tw / 2, 32), tt.uv(tw, 64), tt.uv(0, 64),
                f.flatNS(tw / 2, th, 32 + dy), f.flatNS(0, 0, dy), f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
         // east
         de.add(textureID,
-               tt.uv(tw / 2, 0), tt.uv(tw, 0), tt.uv(tw, 28), tt.uv(tw, 28),
+               tt.uv(tw / 2, 32), tt.uv(tw, 32), tt.uv(tw, 64), tt.uv(0, 64),
                f.flatNS(0, 0, dy), f.flatNS(tw, th / 2, 32 + dy), f.flatNS(tw, 0, dy), f.flatNS(tw, th, dy));
         de.color(0.8f,0.8f,0.8f);
     }
@@ -772,24 +767,24 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
         int dy = (vtile->type() - vtile->InnerPt5) * 32;
         // south
         de.add(textureID,
-               tt.uv(0, 0), tt.uv(tw / 2, 0), tt.uv(tw, th),
+               tt.uv(0, 32), tt.uv(tw / 2, 32), tt.uv(tw, 64),
                f.flatNS(0, 0, dy), f.flatNS(tw / 2, 0, dy), f.flatNS(tw, th, dy));
         // east
         de.add(textureID,
-               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, th),
+               tt.uv(0, 32), tt.uv(tw, 32), tt.uv(tw, 64),
                f.flatNS(0, th / 2, dy), f.flatNS(0, 0, dy), f.flatNS(tw, th, dy));
         de.color(0.8f,0.8f,0.8f);
     }
     if (vtile->type() >= VirtualTile::CornerSW1 && vtile->type() <= VirtualTile::CornerSW3) {
         int dy = (vtile->type() - vtile->CornerSW1) * 32;
         de.add(textureID,
-               tt.uv(tw, 0), tt.uv(tw, th), tt.uv(0, th),
+               tt.uv(tw, 0), tt.uv(tw, 64), tt.uv(0, 64),
                f.flatNS(tw, 0, 32 + dy), f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
     }
     if (vtile->type() >= VirtualTile::CornerNE1 && vtile->type() <= VirtualTile::CornerNE3) {
         int dy = (vtile->type() - vtile->CornerNE1) * 32;
         de.add(textureID,
-               tt.uv(0, 0), tt.uv(tw, th), tt.uv(0, th),
+               tt.uv(0, 0), tt.uv(tw, 64), tt.uv(0, 64),
                f.flatNS(0, th, 32 + dy), f.flatNS(tw, 0, dy), f.flatNS(tw, th, dy));
         de.color(0.8f,0.8f,0.8f);
     }
@@ -808,6 +803,83 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
                tt.uv(tw, 32), tt.uv(0, 32),
                f.flatWE(0, 0, dy), f.flatWE(tw, 0, dy),
                f.flatWE(tw, th, dy), f.flatWE(0, th, dy));
+    }
+
+    int shallowRise = 8;
+    if (vtile->type() >= VirtualTile::ShallowSlopeN1 && vtile->type() <= VirtualTile::ShallowSlopeN2) {
+        int dy = 10 + (vtile->type() - vtile->ShallowSlopeN1) * shallowRise;
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, 32), tt.uv(0, 32),
+               f.flatNS(0, 0, dy), f.flatNS(tw, 0, dy),
+               f.flatNS(tw, th, shallowRise + dy), f.flatNS(0, th, shallowRise + dy));
+    }
+    if (vtile->type() >= VirtualTile::ShallowSlopeS1 && vtile->type() <= VirtualTile::ShallowSlopeS2) {
+        int dy = 10 + (vtile->type() - vtile->ShallowSlopeS1) * shallowRise;
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, 32), tt.uv(0, 32),
+               f.flatNS(0, 0, shallowRise + dy), f.flatNS(tw, 0, shallowRise + dy),
+               f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
+    }
+    if (vtile->type() >= VirtualTile::ShallowSlopeW1 && vtile->type() <= VirtualTile::ShallowSlopeW2) {
+        int dy = 10 + (vtile->type() - vtile->ShallowSlopeW1) * shallowRise;
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, 32), tt.uv(0, 32),
+               f.flatWE(0, 0, dy), f.flatWE(tw, 0, dy),
+               f.flatWE(tw, th, shallowRise + dy), f.flatWE(0, th, shallowRise + dy));
+    }
+    if (vtile->type() >= VirtualTile::ShallowSlopeE1 && vtile->type() <= VirtualTile::ShallowSlopeE2) {
+        int dy = 10 + (vtile->type() - vtile->ShallowSlopeE1) * shallowRise;
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, 32), tt.uv(0, 32),
+               f.flatWE(0, 0, shallowRise + dy), f.flatWE(tw, 0, shallowRise + dy),
+               f.flatWE(tw, th, dy), f.flatWE(0, th, dy));
+    }
+
+    if (vtile->type() == VirtualTile::TrimS) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64/3), tt.uv(0, 64/3),
+               f.flatNS(0, 0, 96), f.flatNS(tw, 0, 96), f.flatNS(tw, th / 3, 96-(32/3+1)), f.flatNS(0, th / 3, 96-(32/3+1)));
+    }
+    if (vtile->type() == VirtualTile::TrimE) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64/3), tt.uv(0, 64/3),
+               f.flatWE(0, 0, 96), f.flatWE(tw, 0, 96), f.flatWE(tw, th / 3, 96-(32/3+1)), f.flatWE(0, th / 3, 96-(32/3+1)));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (vtile->type() == VirtualTile::TrimOuter) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 64/3), tt.uv(0, 64/3),
+               f.flatNS(0, 0, 96), f.flatNS(tw * 0.66, th * 0.66, 96), f.flatNS(0, th / 3, 96-(32/3+1)));
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 64/3), tt.uv(0, 64/3),
+               f.flatNS(0, 0, 96), f.flatNS(tw / 3, 0, 96-(32/3+1)), f.flatNS(tw * 0.66, th * 0.66, 96));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (vtile->type() == VirtualTile::TrimInner) {
+        // south
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64/3), tt.uv(64 / 3, 64/3),
+               f.flatNS(0, 0, 96), f.flatNS(tw, 0, 96), f.flatNS(tw, th / 3, 96-(32/3+1)), f.flatNS((tw * 2) / 3, (th * 2) / 3, 96));
+        // east
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw/3, 64/3), tt.uv(0, 64/3),
+               f.flatWE(0, 0, 96), f.flatWE(tw, 0, 96), f.flatWE(tw / 3, (th * 2) / 3, 96), f.flatWE(0, th / 3, 96-(32/3+1)));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (vtile->type() == VirtualTile::TrimCornerSW) {
+        de.add(textureID,
+               tt.uv(tw, 0), tt.uv(tw - 64/3, 64/3), tt.uv(0, 64/3),
+               f.flatNS(tw, 0, 96), f.flatNS(tw, th / 3, 96-(32/3+1)), f.flatNS(tw, th * 2 / 3, 96));
+    }
+    if (vtile->type() == VirtualTile::TrimCornerNE) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw / 3, 64/3), tt.uv(0, 64/3),
+               f.flatNS(0, th, 96), f.flatNS(tw * 2 / 3, th, 96), f.flatNS(tw / 3, th, 96-(32/3+1)));
+        de.color(0.8f,0.8f,0.8f);
     }
 #if 0
     de.add(textureID, QVector2D(0,0), QVector2D(1,0), QVector2D(1,1), QVector2D(0,1),
@@ -865,12 +937,28 @@ VirtualTilesetsFile::VirtualTilesetsFile() :
     mNameToType[QLatin1String("roof_slope_e2")] = VirtualTile::SlopeE2;
     mNameToType[QLatin1String("roof_slope_e3")] = VirtualTile::SlopeE3;
 
+    mNameToType[QLatin1String("roof_shallow_n1")] = VirtualTile::ShallowSlopeN1;
+    mNameToType[QLatin1String("roof_shallow_n2")] = VirtualTile::ShallowSlopeN2;
+    mNameToType[QLatin1String("roof_shallow_s1")] = VirtualTile::ShallowSlopeS1;
+    mNameToType[QLatin1String("roof_shallow_s2")] = VirtualTile::ShallowSlopeS2;
+    mNameToType[QLatin1String("roof_shallow_w1")] = VirtualTile::ShallowSlopeW1;
+    mNameToType[QLatin1String("roof_shallow_w2")] = VirtualTile::ShallowSlopeW2;
+    mNameToType[QLatin1String("roof_shallow_e1")] = VirtualTile::ShallowSlopeE1;
+    mNameToType[QLatin1String("roof_shallow_e2")] = VirtualTile::ShallowSlopeE2;
+
     mNameToType[QLatin1String("roof_slope_pt5s")] = VirtualTile::SlopePt5S;
     mNameToType[QLatin1String("roof_slope_1pt5s")] = VirtualTile::SlopeOnePt5S;
     mNameToType[QLatin1String("roof_slope_2pt5s")] = VirtualTile::SlopeTwoPt5S;
     mNameToType[QLatin1String("roof_slope_pt5e")] = VirtualTile::SlopePt5E;
     mNameToType[QLatin1String("roof_slope_1pt5e")] = VirtualTile::SlopeOnePt5E;
     mNameToType[QLatin1String("roof_slope_2pt5e")] = VirtualTile::SlopeTwoPt5E;
+
+    mNameToType[QLatin1String("roof_trim_inner")] = VirtualTile::TrimInner;
+    mNameToType[QLatin1String("roof_trim_outer")] = VirtualTile::TrimOuter;
+    mNameToType[QLatin1String("roof_trim_s")] = VirtualTile::TrimS;
+    mNameToType[QLatin1String("roof_trim_w")] = VirtualTile::TrimE;
+    mNameToType[QLatin1String("roof_trim_corner_sw")] = VirtualTile::TrimCornerSW;
+    mNameToType[QLatin1String("roof_trim_corner_ne")] = VirtualTile::TrimCornerNE;
 
     mNameToType[QLatin1String("roof_inner1")] = VirtualTile::Inner1;
     mNameToType[QLatin1String("roof_inner2")] = VirtualTile::Inner2;

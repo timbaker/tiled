@@ -172,7 +172,7 @@ public:
         }
         for (int i = 0; i < mTiles.size(); i++)
             if (!mTiles[i])
-                mTiles[i] = new VirtualTile(mTileset, i % size.width(), i / size.height());
+                mTiles[i] = new VirtualTile(mTileset, i % size.width(), i / size.width());
     }
 
     ~ResizeVTileset()
@@ -507,7 +507,7 @@ void VirtualTilesetDialog::orthoTileSelectionChanged()
     }
     if (!selected.isEmpty() && mIsoCategory == CategoryRoof) {
         Tile *tile = ui->orthoTiles->tilesetModel()->tileAt(selected.first());
-        mIsoTileset = new VirtualTileset(QLatin1String("Dynamic"), 8, 6);
+        mIsoTileset = new VirtualTileset(QLatin1String("Dynamic"), 8, 8);
         for (int i = 0; i < mIsoTileset->tileCount(); i++)
             mIsoTileset->tileAt(i)->setImageSource(tile->tileset()->imageSource(),
                                                       tile->id() % tile->tileset()->columnCount(),
@@ -554,6 +554,21 @@ void VirtualTilesetDialog::orthoTileSelectionChanged()
         mIsoTileset->tileAt(4, 5)->setType(VirtualTile::RoofTopN3);
         mIsoTileset->tileAt(5, 5)->setType(VirtualTile::RoofTopW3);
 
+        mIsoTileset->tileAt(0, 6)->setType(VirtualTile::ShallowSlopeE1);
+        mIsoTileset->tileAt(1, 6)->setType(VirtualTile::ShallowSlopeE2);
+        mIsoTileset->tileAt(2, 6)->setType(VirtualTile::ShallowSlopeW2);
+        mIsoTileset->tileAt(3, 6)->setType(VirtualTile::ShallowSlopeW1);
+        mIsoTileset->tileAt(4, 6)->setType(VirtualTile::ShallowSlopeN1);
+        mIsoTileset->tileAt(5, 6)->setType(VirtualTile::ShallowSlopeN2);
+        mIsoTileset->tileAt(6, 6)->setType(VirtualTile::ShallowSlopeS2);
+        mIsoTileset->tileAt(7, 6)->setType(VirtualTile::ShallowSlopeS1);
+
+        mIsoTileset->tileAt(0, 7)->setType(VirtualTile::TrimS);
+        mIsoTileset->tileAt(1, 7)->setType(VirtualTile::TrimE);
+        mIsoTileset->tileAt(2, 7)->setType(VirtualTile::TrimInner);
+        mIsoTileset->tileAt(3, 7)->setType(VirtualTile::TrimOuter);
+        mIsoTileset->tileAt(4, 7)->setType(VirtualTile::TrimCornerSW);
+        mIsoTileset->tileAt(5, 7)->setType(VirtualTile::TrimCornerNE);
     }
     if (!selected.isEmpty() && mIsoCategory == CategoryWall) {
         Tile *tile = ui->orthoTiles->tilesetModel()->tileAt(selected.first());

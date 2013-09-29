@@ -49,11 +49,21 @@ public:
         WallDoorW,
         WallDoorN,
 
-        // Roof sides
+        // Roof steep slopes
         SlopeS1, SlopeS2, SlopeS3,
         SlopeE1, SlopeE2, SlopeE3,
         SlopePt5S, SlopeOnePt5S, SlopeTwoPt5S,
         SlopePt5E, SlopeOnePt5E, SlopeTwoPt5E,
+
+        // Roof trim
+        TrimS, TrimE, TrimInner, TrimOuter,
+        TrimCornerSW, TrimCornerNE,
+
+        // Roof shallow slopes
+        ShallowSlopeN1, ShallowSlopeN2,
+        ShallowSlopeS1, ShallowSlopeS2,
+        ShallowSlopeW1, ShallowSlopeW2,
+        ShallowSlopeE1, ShallowSlopeE2,
 
         // Roof corners
         Inner1, Inner2, Inner3,
