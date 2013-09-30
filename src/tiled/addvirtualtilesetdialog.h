@@ -42,6 +42,9 @@ private slots:
     void updateActions();
 
 private:
+    void init(const QString &name, int columnCount, int rowCount);
+
+private:
     Ui::AddVirtualTilesetDialog *ui;
 };
 

@@ -28,16 +28,8 @@ AddVirtualTilesetDialog::AddVirtualTilesetDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AddVirtualTilesetDialog)
 {
-    ui->setupUi(this);
     setWindowTitle(tr("Add Virtual Tileset"));
-
-    ui->columnCount->setValue(8);
-    ui->rowCount->setValue(8);
-    ui->nameEdit->setFocus();
-
-    connect(ui->nameEdit, SIGNAL(textEdited(QString)), SLOT(updateActions()));
-
-    updateActions();
+    init(QString(), 8, 8);
 }
 
 AddVirtualTilesetDialog::AddVirtualTilesetDialog(const QString &name, int columnCount,
@@ -45,8 +37,13 @@ AddVirtualTilesetDialog::AddVirtualTilesetDialog(const QString &name, int column
     QDialog(parent),
     ui(new Ui::AddVirtualTilesetDialog)
 {
-    ui->setupUi(this);
     setWindowTitle(tr("Edit Virtual Tileset"));
+    init(name, columnCount, rowCount);
+}
+
+void AddVirtualTilesetDialog::init(const QString &name, int columnCount, int rowCount)
+{
+    ui->setupUi(this);
 
     ui->columnCount->setValue(columnCount);
     ui->rowCount->setValue(rowCount);
@@ -54,6 +51,8 @@ AddVirtualTilesetDialog::AddVirtualTilesetDialog(const QString &name, int column
     ui->nameEdit->setFocus();
 
     connect(ui->nameEdit, SIGNAL(textEdited(QString)), SLOT(updateActions()));
+    connect(ui->columnCount, SIGNAL(valueChanged(int)), SLOT(updateActions()));
+    connect(ui->rowCount, SIGNAL(valueChanged(int)), SLOT(updateActions()));
 
     updateActions();
 }
@@ -91,8 +90,14 @@ void AddVirtualTilesetDialog::updateActions()
         }
     }
     if (diskColCount != -1) {
-        ui->diskColumnCount->setText(tr("Disk image: <b>%1</b>").arg(diskColCount));
-        ui->diskRowCount->setText(tr("Disk image: <b>%1</b>").arg(diskRowCount));
+        if (diskColCount != columnCount())
+            ui->diskColumnCount->setText(tr("Disk image: <b>%1</b>").arg(diskColCount));
+        else
+            ui->diskColumnCount->setText(tr("Disk image: %1").arg(diskColCount));
+        if (diskRowCount != rowCount())
+            ui->diskRowCount->setText(tr("Disk image: <b>%1</b>").arg(diskRowCount));
+        else
+            ui->diskRowCount->setText(tr("Disk image: %1").arg(diskRowCount));
     } else {
         ui->diskColumnCount->clear();
         ui->diskRowCount->clear();
