@@ -86,6 +86,8 @@ private slots:
     void endDropTiles();
     void tileDropped(VirtualTile *vtile, const QString &imageSource, int srcX, int srcY, int isoType);
 
+    void editShape(const QModelIndex &index);
+
     void updateActions();
 
     void done(int r);

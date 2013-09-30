@@ -243,7 +243,8 @@ SOURCES += aboutdialog.cpp \
     virtualtilesetview.cpp \
     virtualtileset.cpp \
     undoredobuttons.cpp \
-    addvirtualtilesetdialog.cpp
+    addvirtualtilesetdialog.cpp \
+    tileshapeeditor.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -447,7 +448,8 @@ HEADERS += aboutdialog.h \
     virtualtilesetview.h \
     virtualtileset.h \
     undoredobuttons.h \
-    addvirtualtilesetdialog.h
+    addvirtualtilesetdialog.h \
+    tileshapeeditor.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -497,7 +499,8 @@ FORMS += aboutdialog.ui \
     fencetooldialog.ui \
     luatooldialog.ui \
     virtualtilesetdialog.ui \
-    addvirtualtilesetdialog.ui
+    addvirtualtilesetdialog.ui \
+    tileshapeeditor.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

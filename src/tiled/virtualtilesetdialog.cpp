@@ -270,6 +270,8 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     connect(ui->vTilesetTiles->model(), SIGNAL(tileDropped(VirtualTile*,QString,int,int,int)),
             SLOT(tileDropped(VirtualTile*,QString,int,int,int)));
 
+    connect(ui->isoTiles, SIGNAL(activated(QModelIndex)), SLOT(editShape(QModelIndex)));
+
     connect(ui->actionAddTileset, SIGNAL(triggered()), SLOT(addTileset()));
     connect(ui->actionRemoveTileset, SIGNAL(triggered()), SLOT(removeTileset()));
     connect(ui->actionClearVTiles, SIGNAL(triggered()), SLOT(clearVTiles()));
@@ -392,7 +394,7 @@ void VirtualTilesetDialog::addTileset()
 
     if (VirtualTilesetMgr::instance().tileset(d.name()) != 0) {
         QMessageBox::information(this, tr("Add Tileset"),
-                                 tr("There is already a tileset with that name"));
+                                 tr("There is already a tileset called '%1'.").arg(d.name()));
         return;
     }
 
@@ -633,11 +635,41 @@ void VirtualTilesetDialog::tileDropped(VirtualTile *vtile, const QString &imageS
     mUndoStack->push(new ChangeVTile(this, vtile, imageSource, srcX, srcY, isoType));
 }
 
+#include "tileshapeeditor.h"
+void VirtualTilesetDialog::editShape(const QModelIndex &index)
+{
+    if (VirtualTile *vtile = ui->isoTiles->model()->tileAt(index)) {
+        if (TileShape *shape = VirtualTilesetMgr::instance().tileShape(vtile->type())) {
+            TileShapeEditor dialog(shape, this);
+            if (dialog.exec() == QDialog::Accepted) {
+                TileShape *shape2 = dialog.tileShape();
+                shape->mElements = shape2->mElements;
+                vtile->setImage(QImage());
+                vtile->tileset()->tileChanged();
+
+                foreach (VirtualTileset *vts, VirtualTilesetMgr::instance().tilesets()) {
+                    bool changed = false;
+                    foreach (VirtualTile *vtile2, vts->tiles()) {
+                        if (vtile2->type() == vtile->type()) {
+                            vtile2->setImage(QImage());
+                            changed = true;
+                        }
+                    }
+                    if (changed) {
+                        vts->tileChanged();
+                        VirtualTilesetMgr::instance().emitTilesetChanged(vts);
+                    }
+                }
+            }
+        }
+    }
+}
+
 void VirtualTilesetDialog::updateActions()
 {
     ui->actionRemoveTileset->setEnabled(ui->vTilesetNames->selectedItems().size() != 0);
     ui->actionClearVTiles->setEnabled(ui->vTilesetTiles->selectionModel()->selectedIndexes().size() != 0);
-    ui->actionShowDiskImage->setEnabled(ui->vTilesetTiles->model()->diskImageValid());
+//    ui->actionShowDiskImage->setEnabled(ui->vTilesetTiles->model()->diskImageValid());
 }
 
 void VirtualTilesetDialog::saveSplitterSizes(QSplitter *splitter)

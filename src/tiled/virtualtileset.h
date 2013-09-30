@@ -30,6 +30,7 @@ class QGLPixelBuffer;
 namespace Tiled {
 namespace Internal {
 
+class TileShape;
 class VirtualTileset;
 
 class VirtualTile
@@ -181,6 +182,9 @@ public:
 
     QImage renderIsoTile(VirtualTile *vtile);
 
+    TileShape *tileShape(int isoType);
+    TileShape *VirtualTilesetMgr::createTileShape(int isoType);
+
     void emitTilesetChanged(VirtualTileset *vts)
     { emit tilesetChanged(vts); }
 
@@ -202,6 +206,8 @@ private:
     QMap<QString,VirtualTileset*> mTilesetByName;
     QList<VirtualTileset*> mRemovedTilesets;
     QGLPixelBuffer *mPixelBuffer;
+
+    QMap<int,TileShape*> mShapeByType;
 
     int mSourceRevision;
     int mRevision;

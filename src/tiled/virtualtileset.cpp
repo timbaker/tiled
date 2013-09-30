@@ -19,6 +19,7 @@
 
 #include "preferences.h"
 #include "tilesetmanager.h"
+#include "tileshapeeditor.h"
 
 #include <QDir>
 #include <QGLPixelBuffer>
@@ -140,6 +141,11 @@ VirtualTilesetMgr::VirtualTilesetMgr()
 
     mTilesetByName[vts->name()] = vts;
 #endif
+
+    for (int i = VirtualTile::Floor; i <= VirtualTile::RoofTopW3; i++) {
+        TileShape *shape = createTileShape(i);
+        mShapeByType[i] = shape;
+    }
 }
 
 VirtualTilesetMgr::~VirtualTilesetMgr()
@@ -529,6 +535,26 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
     glClearDepth(1.0f);
 #endif
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+#if 1
+    if (TileShape *shape = tileShape(vtile->type())) {
+        DrawElements de;
+        foreach (TileShape::Element e, shape->mElements) {
+            if (e.mGeom.size() == 4)
+                de.add(textureID,
+                       QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]), QVector2D(e.mUV[3]),
+                        QVector3D(TileShapeScene::toScene(e.mGeom[0])), QVector3D(TileShapeScene::toScene(e.mGeom[1])),
+                        QVector3D(TileShapeScene::toScene(e.mGeom[2])), QVector3D(TileShapeScene::toScene(e.mGeom[3])));
+            if (e.mGeom.size() == 3)
+                de.add(textureID,
+                       QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]),
+                        QVector3D(TileShapeScene::toScene(e.mGeom[0])), QVector3D(TileShapeScene::toScene(e.mGeom[1])),
+                        QVector3D(TileShapeScene::toScene(e.mGeom[2])));
+            de.flush();
+        }
+    }
+#else
 
     /////
 
@@ -928,7 +954,7 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
            QVector3D(0,0,0), QVector3D(32,0,0), QVector3D(32,96,0), QVector3D(0,96,0));
 #endif
     de.flush();
-
+#endif
     /////
 
 #if 1
@@ -946,6 +972,429 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
         const_cast<QGLContext*>(context)->makeCurrent();
 
     return img;
+}
+
+TileShape *VirtualTilesetMgr::tileShape(int isoType)
+{
+    if (mShapeByType.contains(isoType))
+        return mShapeByType[isoType];
+    return 0;
+}
+
+TileShape *VirtualTilesetMgr::createTileShape(int isoType)
+{
+    QList<QPolygonF> ret;
+
+    int tx = 0/*vtile->srcX()*/, ty = 0/*vtile->srcY()*/; // tile col/row
+    int tw = 32, th = 96; // tile width/height
+    int texWid = 32, texHgt = 96;
+    // West walls are 3 from left edge of a tile, AND offset 1 pixel from top
+    // North walls are 4 from top edge of a tile
+    int wallDX = 3, wallDY = 4;
+    TextureTile tt(texWid, texHgt, tw, th, tx, ty);
+    PBufferFace f(mPixelBuffer, 0, 0, tw, th);
+    DrawElements de;
+
+    GLuint textureID = 0;
+
+    //
+    // WALLS
+    //
+    if (isoType == VirtualTile::WallW) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, th), tt.uv(0, th),
+               f.west(0, 0, wallDX), f.west(tw, 0, wallDX),
+               f.west(tw, th, wallDX), f.west(0, th, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (isoType == VirtualTile::WallN) {
+        de.add(textureID,
+                tt.uv(0, 0), tt.uv(tw, 0),
+                tt.uv(tw, th), tt.uv(0, th),
+                f.north(0, 0, wallDY), f.north(tw, 0, wallDY),
+                f.north(tw, th, wallDY), f.north(0, th, wallDY));
+    }
+    if (isoType == VirtualTile::WallNW) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw - wallDY, 0),
+               tt.uv(tw - wallDY, th), tt.uv(0, th),
+               f.west(0, 0, wallDX), f.west(tw - wallDY, 0, wallDX, 0),
+               f.west(tw - wallDY, th, wallDX, 0), f.west(0, th, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+        de.add(textureID,
+                tt.uv(wallDX, 0), tt.uv(tw, 0),
+                tt.uv(tw, th), tt.uv(wallDX, th),
+                f.north(wallDX, 0, wallDY), f.north(tw, 0, wallDY),
+                f.north(tw, th, wallDY), f.north(wallDX, th, wallDY));
+    }
+    if (isoType == VirtualTile::WallSE) {
+        de.add(textureID,
+               tt.uv(tw - wallDY, 0), tt.uv(tw, 0),
+               tt.uv(tw, th), tt.uv(tw - wallDY, th),
+               f.west(tw - wallDY, 0, wallDX), f.west(tw, 0, wallDX),
+               f.west(tw, th, wallDX), f.west(tw - wallDY, th, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+        de.add(textureID,
+                tt.uv(0, 0), tt.uv(wallDX, 0),
+                tt.uv(wallDX, th), tt.uv(0, th),
+                f.north(0, 0, wallDY), f.north(wallDX, 0, wallDY),
+                f.north(wallDX, th, wallDY), f.north(0, th, wallDY));
+    }
+    int topHgt = 21, botHgt = 37;
+    if (isoType == VirtualTile::WallWindowW) {
+        int side = 6;
+        // top
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, topHgt), tt.uv(0, topHgt),
+               f.west(0, 0, wallDX), f.west(tw, 0, wallDX),
+               f.west(tw, topHgt, wallDX), f.west(0, topHgt, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+        // bottom
+        de.add(textureID,
+               tt.uv(0, th - botHgt), tt.uv(tw, th - botHgt),
+               tt.uv(tw, th), tt.uv(0, th),
+               f.west(0, th - botHgt, wallDX), f.west(tw, th - botHgt, wallDX),
+               f.west(tw, th, wallDX), f.west(0, th, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+        // left
+        de.add(textureID,
+               tt.uv(0, topHgt), tt.uv(side, topHgt),
+               tt.uv(side, th - botHgt), tt.uv(0, th - botHgt),
+               f.west(0, topHgt, wallDX), f.west(side, topHgt, wallDX),
+               f.west(side, th - botHgt, wallDX), f.west(0, th - botHgt, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+        // right
+        de.add(textureID,
+               tt.uv(tw - side, topHgt), tt.uv(tw, topHgt),
+               tt.uv(tw, th - botHgt), tt.uv(tw - side, th - botHgt),
+               f.west(tw - side, topHgt, wallDX), f.west(tw, topHgt, wallDX),
+               f.west(tw, th - botHgt, wallDX), f.west(tw - side, th - botHgt, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (isoType == VirtualTile::WallWindowN) {
+        int side = 6;
+        // top
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, topHgt), tt.uv(0, topHgt),
+               f.north(0, 0, wallDY), f.north(tw, 0, wallDY),
+               f.north(tw, topHgt, wallDY), f.north(0, topHgt, wallDY));
+        // bottom
+        de.add(textureID,
+               tt.uv(0, th - botHgt), tt.uv(tw, th - botHgt),
+               tt.uv(tw, th), tt.uv(0, th),
+               f.north(0, th - botHgt, wallDY), f.north(tw, th - botHgt, wallDY),
+               f.north(tw, th, wallDY), f.north(0, th, wallDY));
+        // left
+        de.add(textureID,
+               tt.uv(0, topHgt), tt.uv(side, topHgt),
+               tt.uv(side, th - botHgt), tt.uv(0, th - botHgt),
+               f.north(0, topHgt, wallDY), f.north(side, topHgt, wallDY),
+               f.north(side, th - botHgt, wallDY), f.north(0, th - botHgt, wallDY));
+        // right
+        de.add(textureID,
+               tt.uv(tw - side, topHgt), tt.uv(tw, topHgt),
+               tt.uv(tw, th - botHgt), tt.uv(tw - side, th - botHgt),
+               f.north(tw - side, topHgt, wallDY), f.north(tw, topHgt, wallDY),
+               f.north(tw, th - botHgt, wallDY), f.north(tw - side, th - botHgt, wallDY));
+    }
+    if (isoType == VirtualTile::WallDoorW) {
+        int side = 4;
+        // top
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, topHgt), tt.uv(0, topHgt),
+               f.west(0, 0, wallDX), f.west(tw, 0, wallDX),
+               f.west(tw, topHgt, wallDX), f.west(0, topHgt, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+        // left
+        de.add(textureID,
+               tt.uv(0, topHgt), tt.uv(side, topHgt),
+               tt.uv(side, th), tt.uv(0, th),
+               f.west(0, topHgt, wallDX), f.west(side, topHgt, wallDX),
+               f.west(side, th, wallDX), f.west(0, th, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+        // right
+        de.add(textureID,
+               tt.uv(tw - side, topHgt), tt.uv(tw, topHgt),
+               tt.uv(tw, th), tt.uv(tw - side, th),
+               f.west(tw - side, topHgt, wallDX), f.west(tw, topHgt, wallDX),
+               f.west(tw, th, wallDX), f.west(tw - side, th, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (isoType == VirtualTile::WallDoorN) {
+        int side = 4;
+        // top
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, topHgt), tt.uv(0, topHgt),
+               f.north(0, 0, wallDY), f.north(tw, 0, wallDY),
+               f.north(tw, topHgt, wallDY), f.north(0, topHgt, wallDY));
+        // left
+        de.add(textureID,
+               tt.uv(0, topHgt), tt.uv(side, topHgt),
+               tt.uv(side, th), tt.uv(0, th),
+               f.north(0, topHgt, wallDY), f.north(side, topHgt, wallDY),
+               f.north(side, th, wallDY), f.north(0, th, wallDY));
+        // right
+        de.add(textureID,
+               tt.uv(tw - side, topHgt), tt.uv(tw, topHgt),
+               tt.uv(tw, th), tt.uv(tw - side, th),
+               f.north(tw - side, topHgt, wallDY), f.north(tw, topHgt, wallDY),
+               f.north(tw, th, wallDY), f.north(tw - side, th, wallDY));
+    }
+    const int shortWallHgt = 57;
+    if (isoType == VirtualTile::WallShortW) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, shortWallHgt), tt.uv(0, shortWallHgt),
+               f.west(0, th - shortWallHgt, wallDX), f.west(tw, th - shortWallHgt, wallDX),
+               f.west(tw, th, wallDX), f.west(0, th, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (isoType == VirtualTile::WallShortN) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, shortWallHgt), tt.uv(0, shortWallHgt),
+               f.north(0, th - shortWallHgt, wallDY), f.north(tw, th - shortWallHgt, wallDY),
+               f.north(tw, th, wallDY), f.north(0, th, wallDY));
+    }
+    if (isoType == VirtualTile::WallShortNW) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, shortWallHgt), tt.uv(0, shortWallHgt),
+               f.west(0, th - shortWallHgt, wallDX), f.west(tw - wallDY, th - shortWallHgt, wallDX, 0),
+               f.west(tw - wallDY, th, wallDX, 0), f.west(0, th, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, shortWallHgt), tt.uv(0, shortWallHgt),
+               f.north(wallDX, th - shortWallHgt, wallDY), f.north(tw, th - shortWallHgt, wallDY),
+               f.north(tw, th, wallDY), f.north(wallDX, th, wallDY));
+    }
+    if (isoType == VirtualTile::WallShortSE) {
+        de.add(textureID,
+               tt.uv(tw - wallDY, th - shortWallHgt), tt.uv(tw, th - shortWallHgt),
+               tt.uv(tw, th), tt.uv(tw - wallDY, th),
+               f.west(tw - wallDY, th - shortWallHgt, wallDX), f.west(tw, th - shortWallHgt, wallDX),
+               f.west(tw, th, wallDX), f.west(tw - wallDY, th, wallDX));
+        de.color(0.8f,0.8f,0.8f);
+        de.add(textureID,
+                tt.uv(0, th - shortWallHgt), tt.uv(wallDX, th - shortWallHgt),
+                tt.uv(wallDX, th), tt.uv(0, th),
+                f.north(0, th - shortWallHgt, wallDY), f.north(wallDX, th - shortWallHgt, wallDY),
+                f.north(wallDX, th, wallDY), f.north(0, th, wallDY));
+    }
+
+    //
+    // ROOFS
+    //
+    if (isoType >= VirtualTile::SlopeS1 && isoType <= VirtualTile::SlopeS3) {
+        int dy = (isoType - VirtualTile::SlopeS1) * 32;
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64), tt.uv(0, 64),
+               f.flatNS(0, 0, 32 + dy), f.flatNS(tw, 0, 32 + dy), f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
+    }
+    if (isoType >= VirtualTile::SlopeE1 && isoType <= VirtualTile::SlopeE3) {
+        int dy = (isoType - VirtualTile::SlopeE1) * 32;
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64), tt.uv(0, 64),
+               f.flatWE(0, 0, 32 + dy), f.flatWE(tw, 0, 32 + dy), f.flatWE(tw, th, dy), f.flatWE(0, th, dy));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (isoType >= VirtualTile::SlopePt5S && isoType <= VirtualTile::SlopeTwoPt5S) {
+        int dy = (isoType - VirtualTile::SlopePt5S) * 32;
+        de.add(textureID,
+               tt.uv(0, 32), tt.uv(tw, 32), tt.uv(tw, 64), tt.uv(0, 64),
+               f.flatNS(0, th / 2, 16 + dy), f.flatNS(tw, th / 2, 16 + dy), f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
+    }
+    if (isoType >= VirtualTile::SlopePt5E && isoType <= VirtualTile::SlopeTwoPt5E) {
+        int dy = (isoType - VirtualTile::SlopePt5E) * 32;
+        de.add(textureID,
+               tt.uv(0, 32), tt.uv(tw, 32), tt.uv(tw, 64), tt.uv(0, 64),
+               f.flatWE(0, th / 2, 16 + dy), f.flatWE(tw, th / 2, 16 + dy), f.flatWE(tw, th, dy), f.flatWE(0, th, dy));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (isoType >= VirtualTile::Outer1 && isoType <= VirtualTile::Outer3) {
+        int dy = (isoType - VirtualTile::Outer1) * 32;
+        // south
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 64), tt.uv(0, 64),
+               f.flatNS(0, 0, 32 + dy), f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
+        // east
+        de.add(textureID,
+               tt.uv(tw, 0), tt.uv(tw, 64), tt.uv(0, 64),
+               f.flatNS(0, 0, 32 + dy), f.flatNS(tw, 0, dy), f.flatNS(tw, th, dy));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (isoType >= VirtualTile::Inner1 && isoType <= VirtualTile::Inner3) {
+        int dy = (isoType - VirtualTile::Inner1) * 32;
+        // south
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64),
+               f.flatNS(0, 0, 32 + dy), f.flatNS(tw, 0, 32 + dy), f.flatNS(tw, th, dy));
+        // east
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(0, 64),
+               f.flatNS(0, th, 32 + dy), f.flatNS(0, 0, 32 + dy), f.flatNS(tw, th, dy));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (isoType >= VirtualTile::OuterPt5 && isoType <= VirtualTile::OuterTwoPt5) {
+        int dy = (isoType - VirtualTile::OuterPt5) * 32;
+        // south
+        de.add(textureID,
+               tt.uv(0, 32), tt.uv(tw / 2, 32), tt.uv(tw, 64), tt.uv(0, 64),
+               f.flatNS(tw / 2, th, 32 + dy), f.flatNS(0, 0, dy), f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
+        // east
+        de.add(textureID,
+               tt.uv(tw / 2, 32), tt.uv(tw, 32), tt.uv(tw, 64), tt.uv(0, 64),
+               f.flatNS(0, 0, dy), f.flatNS(tw, th / 2, 32 + dy), f.flatNS(tw, 0, dy), f.flatNS(tw, th, dy));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (isoType >= VirtualTile::InnerPt5 && isoType <= VirtualTile::InnerTwoPt5) {
+        int dy = (isoType - VirtualTile::InnerPt5) * 32;
+        // south
+        de.add(textureID,
+               tt.uv(0, 32), tt.uv(tw / 2, 32), tt.uv(tw, 64),
+               f.flatNS(0, 0, dy), f.flatNS(tw / 2, 0, dy), f.flatNS(tw, th, dy));
+        // east
+        de.add(textureID,
+               tt.uv(0, 32), tt.uv(tw, 32), tt.uv(tw, 64),
+               f.flatNS(0, th / 2, dy), f.flatNS(0, 0, dy), f.flatNS(tw, th, dy));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (isoType >= VirtualTile::CornerSW1 && isoType <= VirtualTile::CornerSW3) {
+        int dy = (isoType - VirtualTile::CornerSW1) * 32;
+        de.add(textureID,
+               tt.uv(tw, 0), tt.uv(tw, 64), tt.uv(0, 64),
+               f.flatNS(tw, 0, 32 + dy), f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
+    }
+    if (isoType >= VirtualTile::CornerNE1 && isoType <= VirtualTile::CornerNE3) {
+        int dy = (isoType - VirtualTile::CornerNE1) * 32;
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 64), tt.uv(0, 64),
+               f.flatNS(0, th, 32 + dy), f.flatNS(tw, 0, dy), f.flatNS(tw, th, dy));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (isoType >= VirtualTile::RoofTopN1 && isoType <= VirtualTile::RoofTopN3) {
+        int dy = (isoType - VirtualTile::RoofTopN1) * 32;
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, 32), tt.uv(0, 32),
+               f.flatNS(0, 0, dy), f.flatNS(tw, 0, dy),
+               f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
+    }
+    if (isoType >= VirtualTile::RoofTopW1 && isoType <= VirtualTile::RoofTopW3) {
+        int dy = (isoType - VirtualTile::RoofTopW1) * 32;
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, 32), tt.uv(0, 32),
+               f.flatWE(0, 0, dy), f.flatWE(tw, 0, dy),
+               f.flatWE(tw, th, dy), f.flatWE(0, th, dy));
+    }
+
+    int shallowRise = 8;
+    if (isoType >= VirtualTile::ShallowSlopeN1 && isoType <= VirtualTile::ShallowSlopeN2) {
+        int dy = 10 + (isoType - VirtualTile::ShallowSlopeN1) * shallowRise;
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, 32), tt.uv(0, 32),
+               f.flatNS(0, 0, dy), f.flatNS(tw, 0, dy),
+               f.flatNS(tw, th, shallowRise + dy), f.flatNS(0, th, shallowRise + dy));
+    }
+    if (isoType >= VirtualTile::ShallowSlopeS1 && isoType <= VirtualTile::ShallowSlopeS2) {
+        int dy = 10 + (isoType - VirtualTile::ShallowSlopeS1) * shallowRise;
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, 32), tt.uv(0, 32),
+               f.flatNS(0, 0, shallowRise + dy), f.flatNS(tw, 0, shallowRise + dy),
+               f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
+    }
+    if (isoType >= VirtualTile::ShallowSlopeW1 && isoType <= VirtualTile::ShallowSlopeW2) {
+        int dy = 10 + (isoType - VirtualTile::ShallowSlopeW1) * shallowRise;
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, 32), tt.uv(0, 32),
+               f.flatWE(0, 0, dy), f.flatWE(tw, 0, dy),
+               f.flatWE(tw, th, shallowRise + dy), f.flatWE(0, th, shallowRise + dy));
+    }
+    if (isoType >= VirtualTile::ShallowSlopeE1 && isoType <= VirtualTile::ShallowSlopeE2) {
+        int dy = 10 + (isoType - VirtualTile::ShallowSlopeE1) * shallowRise;
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0),
+               tt.uv(tw, 32), tt.uv(0, 32),
+               f.flatWE(0, 0, shallowRise + dy), f.flatWE(tw, 0, shallowRise + dy),
+               f.flatWE(tw, th, dy), f.flatWE(0, th, dy));
+    }
+
+    if (isoType == VirtualTile::TrimS) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64/3), tt.uv(0, 64/3),
+               f.flatNS(0, 0, 96), f.flatNS(tw, 0, 96), f.flatNS(tw, th / 3, 96-(32/3+1)), f.flatNS(0, th / 3, 96-(32/3+1)));
+    }
+    if (isoType == VirtualTile::TrimE) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64/3), tt.uv(0, 64/3),
+               f.flatWE(0, 0, 96), f.flatWE(tw, 0, 96), f.flatWE(tw, th / 3, 96-(32/3+1)), f.flatWE(0, th / 3, 96-(32/3+1)));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (isoType == VirtualTile::TrimOuter) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 64/3), tt.uv(0, 64/3),
+               f.flatNS(0, 0, 96), f.flatNS(tw * 0.66, th * 0.66, 96), f.flatNS(0, th / 3, 96-(32/3+1)));
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 64/3), tt.uv(0, 64/3),
+               f.flatNS(0, 0, 96), f.flatNS(tw / 3, 0, 96-(32/3+1)), f.flatNS(tw * 0.66, th * 0.66, 96));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (isoType == VirtualTile::TrimInner) {
+        // south
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64/3), tt.uv(64 / 3, 64/3),
+               f.flatNS(0, 0, 96), f.flatNS(tw, 0, 96), f.flatNS(tw, th / 3, 96-(32/3+1)), f.flatNS((tw * 2) / 3, (th * 2) / 3, 96));
+        // east
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw/3, 64/3), tt.uv(0, 64/3),
+               f.flatWE(0, 0, 96), f.flatWE(tw, 0, 96), f.flatWE(tw / 3, (th * 2) / 3, 96), f.flatWE(0, th / 3, 96-(32/3+1)));
+        de.color(0.8f,0.8f,0.8f);
+    }
+    if (isoType == VirtualTile::TrimCornerSW) {
+        de.add(textureID,
+               tt.uv(tw, 0), tt.uv(tw - 64/3, 64/3), tt.uv(0, 64/3),
+               f.flatNS(tw, 0, 96), f.flatNS(tw, th / 3, 96-(32/3+1)), f.flatNS(tw, th * 2 / 3, 96));
+    }
+    if (isoType == VirtualTile::TrimCornerNE) {
+        de.add(textureID,
+               tt.uv(0, 0), tt.uv(tw / 3, 64/3), tt.uv(0, 64/3),
+               f.flatNS(0, th, 96), f.flatNS(tw * 2 / 3, th, 96), f.flatNS(tw / 3, th, 96-(32/3+1)));
+        de.color(0.8f,0.8f,0.8f);
+    }
+
+    TileShape *shape = new TileShape;
+
+    int ind = 0;
+    for (int i = 0; i < de.textureids.size(); i++) {
+        QPolygonF scenePoly;
+        QPolygonF uvPoly;
+        if (de.counts[i] == 4) {
+            scenePoly << de.vertices[ind].toPointF() << de.vertices[ind+1].toPointF() << de.vertices[ind+2].toPointF() << de.vertices[ind+3].toPointF();
+            uvPoly << de.texcoords[ind].toPointF() << de.texcoords[ind+1].toPointF() << de.texcoords[ind+2].toPointF() << de.texcoords[ind+3].toPointF();
+        } else if (de.counts[i] == 3) {
+            scenePoly << de.vertices[ind].toPointF() << de.vertices[ind+1].toPointF() << de.vertices[ind+2].toPointF();
+            uvPoly << de.texcoords[ind].toPointF() << de.texcoords[ind+1].toPointF() << de.texcoords[ind+2].toPointF();
+        }
+        ret += scenePoly;
+        ind += de.counts[i];
+
+        TileShape::Element e;
+        e.mGeom = TileShapeScene::toTile(scenePoly);
+        e.mUV = uvPoly;
+        shape->mElements += e;
+
+    }
+    return shape;
 }
 
 /////
