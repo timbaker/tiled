@@ -92,9 +92,10 @@ void TileShapeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, Q
     }
 
     if (mSelectedElement >= 0 && mSelectedElement < mShape->mElements.size()) {
+        TileShape::Element e = mShape->mElements[mSelectedElement];
         QPen pen(QColor(Qt::green).darker(), 0.5);
         painter->setPen(pen);
-        painter->drawPolygon(mScene->toScene(mShape->mElements[mSelectedElement].mGeom));
+        painter->drawPolygon(mScene->toScene(e.mGeom));
     }
 }
 

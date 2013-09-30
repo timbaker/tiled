@@ -80,7 +80,9 @@ public:
 
         // Roof tops
         RoofTopN1, RoofTopN2, RoofTopN3,
-        RoofTopW1, RoofTopW2, RoofTopW3
+        RoofTopW1, RoofTopW2, RoofTopW3,
+
+        IsoTypeCount
     };
 
     VirtualTile(VirtualTileset *vts, int x, int y);
@@ -245,6 +247,9 @@ public:
 
     void addTileset(VirtualTileset *vts)
     { mTilesets += vts; mTilesetByName[vts->name()] = vts; }
+
+    QString typeToName(VirtualTile::IsoType isoType)
+    { return mTypeToName[isoType]; }
 
     QString errorString() const
     { return mError; }
