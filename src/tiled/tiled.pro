@@ -244,7 +244,8 @@ SOURCES += aboutdialog.cpp \
     virtualtileset.cpp \
     undoredobuttons.cpp \
     addvirtualtilesetdialog.cpp \
-    tileshapeeditor.cpp
+    tileshapeeditor.cpp \
+    textureunpacker.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -449,7 +450,8 @@ HEADERS += aboutdialog.h \
     virtualtileset.h \
     undoredobuttons.h \
     addvirtualtilesetdialog.h \
-    tileshapeeditor.h
+    tileshapeeditor.h \
+    textureunpacker.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm

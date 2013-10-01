@@ -28,6 +28,8 @@
 class QGLPixelBuffer;
 
 namespace Tiled {
+class Tileset;
+
 namespace Internal {
 
 class TileShape;
@@ -195,7 +197,7 @@ public:
 
 private:
     void initPixelBuffer();
-    uint loadGLTexture(const QString &imageSource);
+    uint loadGLTexture(const QString &imageSource, int srcX, int srcY);
 
 signals:
     void tilesetAdded(VirtualTileset *vts);
@@ -210,6 +212,8 @@ private:
     QGLPixelBuffer *mPixelBuffer;
 
     QMap<int,TileShape*> mShapeByType;
+
+    QMap<QString,Tileset*> mUnpackedTilesets;
 
     int mSourceRevision;
     int mRevision;

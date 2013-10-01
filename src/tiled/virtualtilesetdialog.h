@@ -100,7 +100,7 @@ private:
     Ui::VirtualTilesetDialog *ui;
     QList<VirtualTileset*> mTilesets;
     VirtualTileset *mCurrentVirtualTileset;
-    QStringList mOrthoFiles;
+    QList<Tileset*> mOrthoTilesets;
     Tileset *mOrthoTileset;
     VirtualTileset *mIsoTileset;
     IsoCategory mIsoCategory;

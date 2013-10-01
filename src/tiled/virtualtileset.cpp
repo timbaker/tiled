@@ -21,6 +21,11 @@
 #include "tilesetmanager.h"
 #include "tileshapeeditor.h"
 
+#include "BuildingEditor/buildingtiles.h"
+
+#include "tile.h"
+#include "tileset.h"
+
 #include <QDebug>
 #include <QDir>
 #include <QGLPixelBuffer>
@@ -130,10 +135,19 @@ QImage VirtualTileset::image()
 
 SINGLETON_IMPL(VirtualTilesetMgr)
 
-#include <QTextStream>
+#include "textureunpacker.h"
 VirtualTilesetMgr::VirtualTilesetMgr()
 {
     initPixelBuffer();
+
+    TextureUnpacker unpacker;
+    unpacker.unpack(QLatin1String("ntiles_0"));
+    unpacker.unpack(QLatin1String("ntiles_1"));
+    unpacker.unpack(QLatin1String("ntiles_2"));
+    unpacker.unpack(QLatin1String("ntiles_3"));
+    foreach (Tileset *ts, unpacker.createTilesets())
+        mUnpackedTilesets[ts->name()] = ts;
+
 #if 0
     VirtualTileset *vts = new VirtualTileset(QLatin1String("walls_exterior_house_01"), 512/64, 1024/128);
     VirtualTile *vtile = vts->tileAt(0, 0);
@@ -144,6 +158,12 @@ VirtualTilesetMgr::VirtualTilesetMgr()
     mTilesetByName[vts->name()] = vts;
 #endif
 
+#if 1
+    for (int i = VirtualTile::Invalid + 1; i < VirtualTile::IsoTypeCount; i++) {
+        TileShape *shape = createTileShape(i);
+        mShapeByType[i] = shape;
+    }
+#else
     VirtualTilesetsFile file;
     for (int i = VirtualTile::Invalid + 1; i < VirtualTile::IsoTypeCount; i++) {
         TileShape *shape = createTileShape(i);
@@ -163,6 +183,7 @@ VirtualTilesetMgr::VirtualTilesetMgr()
         }
         qDebug() << s;
     }
+#endif
 }
 
 VirtualTilesetMgr::~VirtualTilesetMgr()
@@ -474,9 +495,12 @@ void VirtualTilesetMgr::initPixelBuffer()
     glDepthFunc(GL_LEQUAL);
 }
 
-uint VirtualTilesetMgr::loadGLTexture(const QString &imageSource)
+uint VirtualTilesetMgr::loadGLTexture(const QString &imageSource, int srcX, int srcY)
 {
-    QImage b(imageSource);
+    if (!mUnpackedTilesets.contains(imageSource))
+        return 0;
+    Tile *unpackedTile = mUnpackedTilesets[imageSource]->tileAt(srcY * mUnpackedTilesets[imageSource]->columnCount() + srcX);
+    QImage b = unpackedTile->image();
     if (b.isNull()) return 0;
 
     QImage fixedImage(b.width(), b.height(), QImage::Format_ARGB32);
@@ -507,7 +531,7 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
     const QGLContext *context = QGLContext::currentContext();
     mPixelBuffer->makeCurrent();
 
-    GLuint textureID = loadGLTexture(vtile->imageSource());
+    GLuint textureID = loadGLTexture(vtile->imageSource(), vtile->srcX(), vtile->srcY());
     if (!textureID) {
         if (context)
             const_cast<QGLContext*>(context)->makeCurrent();
@@ -1576,8 +1600,10 @@ bool VirtualTilesetsFile::read(const QString &fileName)
                 if (block2.name == QLatin1String("tile")) {
                     // FIXME: The Tiles Directory could be unset/invalid here
                     QString file = block2.value("file");
+#if 0
                     if (QDir::isRelativePath(file))
                         file = Preferences::instance()->tilesDirectory() + QLatin1String("/") + file;
+#endif
                     int x, y;
                     if (!parse2Ints(block2.value("xy"), &x, &y) ||
                             !QRect(0, 0, columnCount, rowCount).contains(x, y)) {

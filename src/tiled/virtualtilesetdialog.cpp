@@ -324,13 +324,20 @@ void VirtualTilesetDialog::setVirtualTilesetTilesList()
     ui->vTilesetTiles->model()->setDiskImage(diskImage);
 }
 
+#include "textureunpacker.h"
 void VirtualTilesetDialog::setOrthoFilesList()
 {
+    qDeleteAll(mOrthoTilesets);
+    mOrthoTilesets.clear();
+    TextureUnpacker unpacker;
+    unpacker.unpack(QLatin1String("ntiles_0"));
+    unpacker.unpack(QLatin1String("ntiles_1"));
+    unpacker.unpack(QLatin1String("ntiles_2"));
+    unpacker.unpack(QLatin1String("ntiles_3"));
+    mOrthoTilesets = unpacker.createTilesets();
     ui->orthoFiles->clear();
-    mOrthoFiles.clear();
-    mOrthoFiles << QLatin1String("C:\\Users\\Tim\\Desktop\\ProjectZomboid\\Tiles\\Textures\\tex_walls_exterior_house_01.png");
-    foreach (QString file, mOrthoFiles)
-        ui->orthoFiles->addItem(QFileInfo(file).fileName());
+    foreach (Tileset *ts, mOrthoTilesets)
+        ui->orthoFiles->addItem(ts->name());
 }
 
 void VirtualTilesetDialog::setOrthoTilesList()
@@ -497,14 +504,9 @@ void VirtualTilesetDialog::editVTileset(const QModelIndex &index)
 void VirtualTilesetDialog::orthoFileSelectionChanged()
 {
     QModelIndexList selected = ui->orthoFiles->selectionModel()->selectedIndexes();
-    if (mOrthoTileset) {
-        delete mOrthoTileset;
-        mOrthoTileset = 0;
-    }
     if (!selected.isEmpty()) {
         int row = selected.first().row();
-        mOrthoTileset = new Tileset(mOrthoFiles.at(row), 32, 96);
-        mOrthoTileset->loadFromImage(QImage(mOrthoFiles.at(row)), mOrthoFiles.at(row));
+        mOrthoTileset = mOrthoTilesets.at(row);
     }
     setOrthoTilesList();
 }
@@ -517,19 +519,26 @@ void VirtualTilesetDialog::orthoTileSelectionChanged()
         mIsoTileset = 0;
     }
     if (!selected.isEmpty() && mIsoCategory == CategoryFloor) {
-        Tile *tile = ui->orthoTiles->tilesetModel()->tileAt(selected.first());
-        mIsoTileset = new VirtualTileset(QLatin1String("Dynamic"), 1, 1);
-        for (int i = 0; i < mIsoTileset->tileCount(); i++)
-            mIsoTileset->tileAt(i)->setImageSource(tile->tileset()->imageSource(),
-                                                   tile->id() % tile->tileset()->columnCount(),
-                                                   tile->id() / tile->tileset()->columnCount());
-        mIsoTileset->tileAt(0, 0)->setType(VirtualTile::Floor);
+        QRect r(selected.first().column(), selected.first().row(), 1, 1);
+        foreach (QModelIndex index, selected)
+            r |= QRect(index.column(), index.row(), 1, 1);
+
+
+        mIsoTileset = new VirtualTileset(QLatin1String("Dynamic"), r.width(), r.height());
+        foreach (QModelIndex index, selected) {
+            Tile *tile = ui->orthoTiles->tilesetModel()->tileAt(index);
+            int x = index.column() - r.x(), y = index.row() - r.y();
+            mIsoTileset->tileAt(x, y)->setImageSource(tile->tileset()->name(),
+                                                      tile->id() % tile->tileset()->columnCount(),
+                                                      tile->id() / tile->tileset()->columnCount());
+            mIsoTileset->tileAt(x, y)->setType(VirtualTile::Floor);
+        }
     }
     if (!selected.isEmpty() && mIsoCategory == CategoryRoof) {
         Tile *tile = ui->orthoTiles->tilesetModel()->tileAt(selected.first());
         mIsoTileset = new VirtualTileset(QLatin1String("Dynamic"), 8, 8);
         for (int i = 0; i < mIsoTileset->tileCount(); i++)
-            mIsoTileset->tileAt(i)->setImageSource(tile->tileset()->imageSource(),
+            mIsoTileset->tileAt(i)->setImageSource(tile->tileset()->name(),
                                                    tile->id() % tile->tileset()->columnCount(),
                                                    tile->id() / tile->tileset()->columnCount());
         mIsoTileset->tileAt(0, 0)->setType(VirtualTile::SlopeS1);
@@ -594,9 +603,9 @@ void VirtualTilesetDialog::orthoTileSelectionChanged()
         Tile *tile = ui->orthoTiles->tilesetModel()->tileAt(selected.first());
         mIsoTileset = new VirtualTileset(QLatin1String("Dynamic"), 4, 3);
         for (int i = 0; i < mIsoTileset->tileCount(); i++)
-            mIsoTileset->tileAt(i)->setImageSource(tile->tileset()->imageSource(),
-                                                      tile->id() % tile->tileset()->columnCount(),
-                                                      tile->id() / tile->tileset()->columnCount());
+            mIsoTileset->tileAt(i)->setImageSource(tile->tileset()->name(),
+                                                   tile->id() % tile->tileset()->columnCount(),
+                                                   tile->id() / tile->tileset()->columnCount());
         mIsoTileset->tileAt(0, 0)->setType(VirtualTile::WallW);
         mIsoTileset->tileAt(1, 0)->setType(VirtualTile::WallN);
         mIsoTileset->tileAt(2, 0)->setType(VirtualTile::WallNW);
