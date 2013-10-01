@@ -6,6 +6,7 @@
 #include <QGraphicsView>
 #include <QDialog>
 #include <QSet>
+#include <QVector3D>
 
 namespace Ui {
 class TileShapeEditor;
@@ -24,8 +25,8 @@ public:
     class Element
     {
     public:
+        QVector<QVector3D> mGeom;
         QPolygonF mUV;
-        QPolygonF mGeom;
     };
 
     QList<Element> mElements;
@@ -39,8 +40,11 @@ public:
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
+    void setGridZ(qreal z);
+
 private:
     TileShapeScene *mScene;
+    qreal mZ;
 };
 
 class TileShapeItem : public QGraphicsItem
@@ -56,6 +60,10 @@ public:
     void setSelectedElement(int elementIndex);
     int selectedElement() const { return mSelectedElement; }
 
+    void setCursorPoint(const QVector3D &pt);
+    void clearCursorPoint();
+    QVector3D cursorPoint() const { return mCursorPoint; }
+
     void shapeChanged();
 
 private:
@@ -63,10 +71,14 @@ private:
     TileShape *mShape;
     QRectF mBoundingRect;
     int mSelectedElement;
+    QVector3D mCursorPoint;
+    bool mHasCursorPoint;
 };
 
-class BaseTileShapeTool
+class BaseTileShapeTool : public QObject
 {
+    Q_OBJECT
+
 public:
     BaseTileShapeTool(TileShapeScene *scene);
 
@@ -78,6 +90,9 @@ public:
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) = 0;
 
     QAction *action() { return mAction; }
+
+signals:
+    void statusTextChanged(const QString &text);
 
 protected:
     TileShapeScene *mScene;
@@ -98,6 +113,13 @@ public:
 
     TileShapeItem *mElementItem;
     QGraphicsLineItem *mCursorItemX, *mCursorItemY;
+
+    enum Mode {
+        NoMode,
+        SetXY,
+        SetZ
+    };
+    Mode mMode;
 };
 
 class TileShapeHandle : public QGraphicsItem
@@ -111,15 +133,18 @@ public:
     void setSelected(bool selected);
     bool isSelected() const { return mSelected; }
 
-    void setDragOrigin(const QPointF &pos) { mDragOrigin = pos; }
-    void setDragOffset(const QPointF &delta);
+    QVector3D tilePos() const;
+
+    void setDragOrigin(const QVector3D &pos) { mDragOrigin = pos; }
+    QVector3D dragOrigin() const { return mDragOrigin; }
+    void setDragOffset(const QVector3D &delta);
 
 private:
     TileShapeScene *mScene;
     int mElementIndex;
     int mPointIndex;
     bool mSelected;
-    QPointF mDragOrigin;
+    QVector3D mDragOrigin;
 };
 
 class EditTileShapeElementTool : public BaseTileShapeTool
@@ -139,12 +164,14 @@ public:
     enum Mode {
         NoMode,
         Selecting,
-        Moving
+        MoveXY,
+        MoveZ
     };
 
     void startMoving();
     void updateMovingItems(const QPointF &scenePos);
     void finishMoving(const QPointF &scenePos);
+    void cancelMoving();
     void startSelecting();
     void setSelectedHandles(const QSet<TileShapeHandle *> &handles);
 
@@ -154,6 +181,7 @@ public:
     QPointF mStartScenePos;
     TileShapeHandle *mClickedHandle;
     QGraphicsLineItem *mCursorItemX, *mCursorItemY;
+    QPointF mDragOffsetXY;
 };
 
 class TileShapeScene : public QGraphicsScene
@@ -167,16 +195,18 @@ public:
     TileShapeItem *tileShapeItem() const { return mShapeItem; }
     TileShape *tileShape() const { return mShapeItem->tileShape(); }
 
-    static QPointF toScene(qreal x, qreal y);
-    static QPointF toScene(const QPointF &p);
-    QPolygonF toScene(const QRectF &tileRect) const;
-    QPolygonF toScene(const QPolygonF &tilePoly) const;
+    TileShapeGrid *gridItem() const { return mGridItem; }
 
-    static QPointF toTile(qreal x, qreal y);
-    static QPointF toTile(const QPointF &scenePos);
-    static QPolygonF toTile(const QPolygonF &scenePoly);
+    static QPointF toScene(qreal x, qreal y, qreal z);
+    static QPointF toScene(const QVector3D &v);
+    QPolygonF toScene(const QRectF &tileRect, qreal z) const;
+    QPolygonF toScene(const QVector<QVector3D> &tilePoly) const;
 
-    QRectF boundingRect(const QRectF &rect) const;
+    static QVector3D toTile(qreal x, qreal y, qreal z);
+    static QVector3D toTile(const QPointF &scenePos, qreal z);
+    static QVector<QVector3D> toTile(const QPolygonF &scenePoly, qreal z);
+
+    QRectF boundingRect(const QRectF &rect, qreal z) const;
     QRectF boundingRect(TileShape *shape) const;
 
     int topmostElementAt(const QPointF &scenePos, int *indexPtr);
