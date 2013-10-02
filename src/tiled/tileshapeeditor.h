@@ -144,6 +144,8 @@ public:
     QVector3D dragOrigin() const { return mDragOrigin; }
     void setDragOffset(const QVector3D &delta);
 
+    void setUV(const QPointF &uv);
+
 private:
     TileShapeScene *mScene;
     int mElementIndex;
@@ -187,6 +189,49 @@ public:
     TileShapeHandle *mClickedHandle;
     QGraphicsLineItem *mCursorItemX, *mCursorItemY;
     QPointF mDragOffsetXY;
+};
+
+class TileShapeUVGuide : public QGraphicsItem
+{
+public:
+    TileShapeUVGuide();
+
+    QRectF boundingRect() const;
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+    QPointF toUV(const QPointF &scenePos);
+    void setCurrentUV(const QPointF &uv);
+    void setCursorUV(const QPointF &uv);
+
+    QPointF mCurrentUV;
+    QPointF mCursorUV;
+};
+
+class TileShapeUVTool : public BaseTileShapeTool
+{
+public:
+    TileShapeUVTool(TileShapeScene *scene);
+
+    void activate();
+    void deactivate();
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
+    void updateHandles();
+    void setSelectedHandles(const QSet<TileShapeHandle *> &handles);
+
+    TileShapeUVGuide *mGuide;
+    TileShapeHandle *mClickedHandle;
+    QSet<TileShapeHandle*> mSelectedHandles;
+    QList<TileShapeHandle*> mHandles;
+
+    enum Mode {
+        NoMode,
+        SetUV
+    };
+    Mode mMode;
 };
 
 class TileShapeScene : public QGraphicsScene
@@ -268,6 +313,7 @@ private:
     Ui::TileShapeEditor *ui;
     CreateTileShapeElementTool *mCreateElementTool;
     EditTileShapeElementTool *mEditElementTool;
+    TileShapeUVTool *mUVTool;
 };
 
 } // namespace Internal

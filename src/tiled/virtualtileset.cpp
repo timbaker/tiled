@@ -320,6 +320,9 @@ bool VirtualTilesetMgr::writeTxt()
     }
 #endif
 
+    TileShapesFile shapesFile;
+    (void) shapesFile.write(Preferences::instance()->configPath(QLatin1String("TileShapes.txt")), tileShapes());
+
     QString fileName = Preferences::instance()->tilesDirectory() + QLatin1String("/virtualtilesets.vts");
     VirtualTilesetsFile binFile;
     return binFile.write(fileName, tilesets());

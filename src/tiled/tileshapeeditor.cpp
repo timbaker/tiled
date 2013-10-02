@@ -452,17 +452,25 @@ TileShapeEditor::TileShapeEditor(TileShape *shape, QWidget *parent) :
 
     if (shape)
         ui->graphicsView->scene()->setTileShape(shape);
+
     mCreateElementTool = new CreateTileShapeElementTool(ui->graphicsView->scene());
     mEditElementTool = new EditTileShapeElementTool(ui->graphicsView->scene());
+    mUVTool = new TileShapeUVTool(ui->graphicsView->scene());
+
     ui->graphicsView->scene()->activateTool(mCreateElementTool);
 
     ui->toolBar->addAction(mCreateElementTool->action());
     ui->toolBar->addAction(mEditElementTool->action());
+    ui->toolBar->addAction(mUVTool->action());
 
     connect(mCreateElementTool->action(), SIGNAL(toggled(bool)), SLOT(toolActivated(bool)));
-    connect(mEditElementTool->action(), SIGNAL(toggled(bool)), SLOT(toolActivated(bool)));
     connect(mCreateElementTool, SIGNAL(statusTextChanged(QString)), ui->status, SLOT(setText(QString)));
+
+    connect(mEditElementTool->action(), SIGNAL(toggled(bool)), SLOT(toolActivated(bool)));
     connect(mEditElementTool, SIGNAL(statusTextChanged(QString)), ui->status, SLOT(setText(QString)));
+
+    connect(mUVTool->action(), SIGNAL(toggled(bool)), SLOT(toolActivated(bool)));
+    connect(mUVTool, SIGNAL(statusTextChanged(QString)), ui->status, SLOT(setText(QString)));
 }
 
 TileShapeEditor::~TileShapeEditor()
@@ -482,6 +490,8 @@ void TileShapeEditor::toolActivated(bool active)
         ui->graphicsView->scene()->activateTool(mCreateElementTool);
     if (sender() == mEditElementTool->action())
         ui->graphicsView->scene()->activateTool(mEditElementTool);
+    if (sender() == mUVTool->action())
+        ui->graphicsView->scene()->activateTool(mUVTool);
 }
 
 /////
@@ -732,6 +742,11 @@ void TileShapeHandle::setDragOffset(const QVector3D &delta)
     setPos(mScene->toScene(mDragOrigin + delta));
 }
 
+void TileShapeHandle::setUV(const QPointF &uv)
+{
+    mScene->tileShape()->mElements[mElementIndex].mUV[mPointIndex] = uv;
+}
+
 /////
 
 template <class T>
@@ -935,6 +950,152 @@ void EditTileShapeElementTool::startSelecting()
 }
 
 void EditTileShapeElementTool::setSelectedHandles(const QSet<TileShapeHandle *> &handles)
+{
+    foreach (TileShapeHandle *handle, mSelectedHandles)
+        if (!handles.contains(handle))
+            handle->setSelected(false);
+
+    foreach (TileShapeHandle *handle, handles)
+        if (!mSelectedHandles.contains(handle))
+            handle->setSelected(true);
+
+    mSelectedHandles = handles;
+}
+
+/////
+
+TileShapeUVGuide::TileShapeUVGuide() :
+    QGraphicsItem()
+{
+}
+
+QRectF TileShapeUVGuide::boundingRect() const
+{
+    return QRectF(0, 0, 32, 96);
+}
+
+void TileShapeUVGuide::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+    painter->setPen(Qt::gray);
+
+    painter->fillRect(boundingRect(), Qt::lightGray);
+
+    for (int x = 0; x < 32; x++)
+        painter->drawLine(x, 0, x, 96);
+    for (int y = 0; y < 96; y++)
+        painter->drawLine(0, y, 32, y);
+
+    painter->fillRect(mCurrentUV.x() * 32 - 0.25, mCurrentUV.y() * 96 - 0.25, 0.5, 0.5, Qt::gray);
+    painter->fillRect(mCursorUV.x() * 32 - 0.25, mCursorUV.y() * 96 - 0.25, 0.5, 0.5, Qt::blue);
+}
+
+QPointF TileShapeUVGuide::toUV(const QPointF &scenePos)
+{
+    QPointF itemPos = mapFromScene(scenePos);
+    return QPointF(itemPos.x() / boundingRect().width(),
+                   itemPos.y() / boundingRect().height());
+}
+
+void TileShapeUVGuide::setCurrentUV(const QPointF &uv)
+{
+    if (mCurrentUV != uv) {
+        mCurrentUV = uv;
+        update();
+    }
+}
+
+void TileShapeUVGuide::setCursorUV(const QPointF &uv)
+{
+    if (mCursorUV != uv) {
+        mCursorUV = uv;
+        update();
+    }
+}
+
+/////
+
+TileShapeUVTool::TileShapeUVTool(TileShapeScene *scene) :
+    BaseTileShapeTool(scene),
+    mGuide(new TileShapeUVGuide),
+    mMode(NoMode),
+    mClickedHandle(0)
+{
+    mAction->setText(QLatin1String("EditUV"));
+
+    mGuide->setPos(16, 16);
+    mGuide->setZValue(100);
+}
+
+void TileShapeUVTool::activate()
+{
+    mMode = NoMode;
+    mGuide->hide();
+    mScene->addItem(mGuide);
+}
+
+void TileShapeUVTool::deactivate()
+{
+    mScene->removeItem(mGuide);
+}
+
+void TileShapeUVTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        if (mMode == NoMode) {
+            const QList<QGraphicsItem *> items = mScene->items(event->scenePos());
+            mClickedHandle = first<TileShapeHandle>(items);
+            if (mClickedHandle) {
+                setSelectedHandles(QSet<TileShapeHandle*>() << mClickedHandle);
+                mGuide->show();
+                mMode = SetUV;
+            } else {
+                int elementIndex = mScene->topmostElementAt(event->scenePos(), 0);
+                if (mScene->tileShapeItem()->selectedElement() != elementIndex) {
+                    mScene->tileShapeItem()->setSelectedElement(elementIndex);
+                    updateHandles();
+                } else
+                    setSelectedHandles(QSet<TileShapeHandle*>());
+            }
+        } else if (mMode == SetUV) {
+            QPointF uv = mGuide->toUV(event->scenePos());
+            mClickedHandle->setUV(uv);
+            mGuide->hide();
+            mMode = NoMode;
+        }
+    }
+}
+
+void TileShapeUVTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (mMode == SetUV) {
+        QPointF uv = mGuide->toUV(event->scenePos());
+        mGuide->setCursorUV(uv);
+    }
+}
+
+void TileShapeUVTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+
+}
+
+void TileShapeUVTool::updateHandles()
+{
+    qDeleteAll(mHandles);
+    mHandles.clear();
+    mSelectedHandles.clear();
+    mClickedHandle = 0;
+
+    int elementIndex = mScene->tileShapeItem()->selectedElement();
+    if (elementIndex != -1) {
+        for (int j = 0; j < mScene->tileShape()->mElements[elementIndex].mGeom.size(); j++) {
+            TileShapeHandle *handle = new TileShapeHandle(mScene, elementIndex, j);
+            mHandles += handle;
+            mScene->addItem(handle);
+        }
+    }
+}
+
+void TileShapeUVTool::setSelectedHandles(const QSet<TileShapeHandle *> &handles)
 {
     foreach (TileShapeHandle *handle, mSelectedHandles)
         if (!handles.contains(handle))
