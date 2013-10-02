@@ -37,6 +37,7 @@ class Tileset;
 namespace Internal {
 
 class TextureInfo;
+class TileShape;
 class VirtualTile;
 class VirtualTileset;
 class VirtualTilesetsFile;
@@ -49,6 +50,7 @@ public:
     enum IsoCategory {
         CategoryFloor,
         CategoryRoof,
+        CategoryRoofCap,
         CategoryWall
     };
 
@@ -70,7 +72,7 @@ public:
     void removeTileset(VirtualTileset *vts);
     QString renameTileset(VirtualTileset *vts, const QString &name);
     void resizeTileset(VirtualTileset *vts, QSize &size, QVector<VirtualTile *> &tiles);
-    void changeVTile(VirtualTile *vtile, QString &imageSource, int &srcX, int &srcY, int &isoType);
+    void changeVTile(VirtualTile *vtile, QString &imageSource, int &srcX, int &srcY, TileShape *&isoType);
     void addTexture(TextureInfo *tex);
     void removeTexture(TextureInfo *tex);
     //
@@ -104,7 +106,7 @@ private slots:
 
     void beginDropTiles();
     void endDropTiles();
-    void tileDropped(VirtualTile *vtile, const QString &imageSource, int srcX, int srcY, int isoType);
+    void tileDropped(VirtualTile *vtile, const QString &imageSource, int srcX, int srcY, TileShape *shape);
 
     void editShape(const QModelIndex &index);
 
@@ -115,6 +117,8 @@ private slots:
     bool fileSaveAs();
 
 private:
+    TileShape *shape(const char *name);
+    void writeShapes();
     void fileOpen(const QString &fileName);
     bool fileSave(const QString &fileName);
     void clearDocument();

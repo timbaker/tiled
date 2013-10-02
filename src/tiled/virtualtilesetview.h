@@ -24,6 +24,7 @@
 namespace Tiled {
 namespace Internal {
 
+class TileShape;
 class VirtualTile;
 class VirtualTileset;
 class VirtualTilesetDelegate;
@@ -72,7 +73,7 @@ public:
 
 signals:
     void beginDropTiles();
-    void tileDropped(VirtualTile *vtile, const QString &imageSource, int x, int y, int isoType);
+    void tileDropped(VirtualTile *vtile, const QString &imageSource, int x, int y, TileShape *shape);
     void endDropTiles();
 
 private:

@@ -971,6 +971,7 @@ bool MainWindow::InitConfigFiles()
     configFiles += FurnitureGroups::instance()->txtName();
     configFiles += TextureMgr::instance().txtName();
     configFiles += VirtualTilesetMgr::instance().txtName();
+    configFiles += QLatin1String("TileShapes.txt");
 
     foreach (QString configFile, configFiles) {
         QString fileName = configPath + QLatin1Char('/') + configFile;

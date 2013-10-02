@@ -39,6 +39,7 @@ class VirtualTileset;
 class VirtualTile
 {
 public:
+#if 0
     enum IsoType {
         Invalid = -1,
         Floor,
@@ -56,6 +57,18 @@ public:
         WallShortN,
         WallShortNW,
         WallShortSE,
+
+        // Sloped cap tiles go left-to-right or bottom-to-top
+        CapRiseS1, CapRiseS2, CapRiseS3, CapFallS1, CapFallS2, CapFallS3,
+        CapRiseE1, CapRiseE2, CapRiseE3, CapFallE1, CapFallE2, CapFallE3,
+
+        // Cap tiles with peaked tops
+        CapPeakPt5S, CapPeakOnePt5S, CapPeakTwoPt5S,
+        CapPeakPt5E, CapPeakOnePt5E, CapPeakTwoPt5E,
+
+        // Cap tiles with flat tops
+        CapFlatS1, CapFlatS2, CapFlatS3,
+        CapFlatE1, CapFlatE2, CapFlatE3,
 
         // Roof steep slopes
         SlopeS1, SlopeS2, SlopeS3,
@@ -87,10 +100,11 @@ public:
 
         IsoTypeCount
     };
+#endif
 
     VirtualTile(VirtualTileset *vts, int x, int y);
     VirtualTile(VirtualTileset *vts, int x, int y, const QString &imageSource,
-                int srcX, int srcY, IsoType type);
+                int srcX, int srcY, TileShape *shape);
 
     VirtualTileset *tileset() const { return mTileset; }
 
@@ -107,8 +121,8 @@ public:
     int srcX() const { return mSrcX; }
     int srcY() const { return mSrcY; }
 
-    void setType(IsoType type) { mType = type; }
-    IsoType type() const { return mType; }
+    void setShape(TileShape *shape) { mShape = shape; }
+    TileShape *shape() const { return mShape; }
 
     void setImage(const QImage &image) { mImage = image; }
     QImage image();
@@ -122,7 +136,7 @@ private:
     QString mImageSource;
     int mSrcX;
     int mSrcY;
-    IsoType mType;
+    TileShape *mShape;
     QImage mImage;
 };
 
@@ -188,8 +202,9 @@ public:
 
     QImage renderIsoTile(VirtualTile *vtile);
 
-    TileShape *tileShape(int isoType);
-    TileShape *VirtualTilesetMgr::createTileShape(int isoType);
+    QList<TileShape*> tileShapes() const { return mShapeByName.values(); }
+    TileShape *tileShape(const QString &name);
+    TileShape *createTileShape(const QString &name);
 
     void emitTilesetChanged(VirtualTileset *vts)
     { emit tilesetChanged(vts); }
@@ -213,7 +228,7 @@ private:
     QList<VirtualTileset*> mRemovedTilesets;
     QGLPixelBuffer *mPixelBuffer;
 
-    QMap<int,TileShape*> mShapeByType;
+    QMap<QString,TileShape*> mShapeByName;
 
     int mSourceRevision;
     int mRevision;
@@ -271,11 +286,9 @@ private:
     QMap<QString,VirtualTileset*> mTilesetByName;
     QString mFileName;
     QString mError;
-
-    QMap<QString,VirtualTile::IsoType> mNameToType;
-    QMap<VirtualTile::IsoType,QString> mTypeToName;
 };
 
+#if 0
 class OldVirtualTilesetsTxtFile
 {
     Q_DECLARE_TR_FUNCTIONS(OldVirtualTilesetsTxtFile)
@@ -327,6 +340,56 @@ private:
     int mVersion;
     int mRevision;
     int mSourceRevision;
+    QString mError;
+};
+#endif
+
+/**
+  * This class represents the TileShapes.txt file.
+  */
+class TileShapesFile
+{
+    Q_DECLARE_TR_FUNCTIONS(TileShapesFile)
+public:
+    TileShapesFile();
+    ~TileShapesFile();
+
+    QString fileName() const
+    { return mFileName; }
+
+    void setFileName(const QString &fileName)
+    { mFileName = fileName; }
+
+    bool read(const QString &fileName);
+    bool write(const QString &fileName);
+    bool write(const QString &fileName, const QList<TileShape*> &shapes);
+
+    const QList<TileShape*> &shapes() const
+    { return mShapes; }
+
+    QList<TileShape*> takeShapes()
+    {
+        QList<TileShape*> ret = mShapes;
+        mShapes.clear();
+        mShapeByName.clear();
+        return ret;
+    }
+
+    TileShape *shape(const QString &name)
+    { return mShapeByName.contains(name) ? mShapeByName[name] : 0; }
+
+    QStringList shapeNames() const
+    { return mShapeByName.keys(); }
+
+    bool parseDoubles(const QString &s, int stride, QList<qreal> &out);
+
+    QString errorString() const
+    { return mError; }
+
+private:
+    QList<TileShape*> mShapes;
+    QMap<QString,TileShape*> mShapeByName;
+    QString mFileName;
     QString mError;
 };
 

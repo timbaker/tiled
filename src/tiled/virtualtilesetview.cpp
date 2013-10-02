@@ -18,6 +18,7 @@
 #include "virtualtilesetview.h"
 
 #include "tilesetmanager.h"
+#include "tileshapeeditor.h"
 #include "virtualtileset.h"
 #include "zoomable.h"
 
@@ -226,7 +227,7 @@ QMimeData *VirtualTilesetModel::mimeData(const QModelIndexList &indexes) const
             stream << (vtile->x() - mClickedIndex.column()) << (vtile->y() - mClickedIndex.row());
             stream << vtile->imageSource();
             stream << vtile->srcX() << vtile->srcY();
-            stream << int(vtile->type());
+            stream << (vtile->shape() ? vtile->shape()->name() : QString());
         }
     }
 
@@ -257,7 +258,7 @@ bool VirtualTilesetModel::dropMimeData(const QMimeData *data, Qt::DropAction act
      emit beginDropTiles();
 
      foreach (VirtualTile *vtile, mMovedTiles)
-         emit tileDropped(vtile, QString(), -1, -1, VirtualTile::Invalid);
+         emit tileDropped(vtile, QString(), -1, -1, 0);
 
      while (!stream.atEnd()) {
          int col, row;
@@ -266,11 +267,12 @@ bool VirtualTilesetModel::dropMimeData(const QMimeData *data, Qt::DropAction act
          stream >> imageSource;
          int srcX, srcY;
          stream >> srcX >> srcY;
-         int isoType;
-         stream >> isoType;
+         QString shapeName;
+         stream >> shapeName;
+         TileShape *shape = VirtualTilesetMgr::instance().tileShape(shapeName);
          if (VirtualTile *vtile = tileAt(this->index(index.row() + row,
                                                      index.column() + col)))
-            emit tileDropped(vtile, imageSource, srcX, srcY, isoType);
+            emit tileDropped(vtile, imageSource, srcX, srcY, shape);
      }
 
      emit endDropTiles();

@@ -23,6 +23,7 @@
 #include "tileshapeeditor.h"
 
 #include "BuildingEditor/buildingtiles.h"
+#include "BuildingEditor/simplefile.h"
 
 #include "tile.h"
 #include "tileset.h"
@@ -42,20 +43,20 @@ VirtualTile::VirtualTile(VirtualTileset *vts, int x, int y) :
     mY(y),
     mSrcX(-1),
     mSrcY(-1),
-    mType(Invalid)
+    mShape(0)
 {
 
 }
 
 VirtualTile::VirtualTile(VirtualTileset *vts, int x, int y, const QString &imageSource,
-                         int srcX, int srcY, VirtualTile::IsoType type) :
+                         int srcX, int srcY, TileShape *shape) :
     mTileset(vts),
     mImageSource(imageSource),
     mX(x),
     mY(y),
     mSrcX(srcX),
     mSrcY(srcY),
-    mType(type)
+    mShape(shape)
 {
 
 }
@@ -76,7 +77,7 @@ void VirtualTile::clear()
 {
     mImageSource.clear();
     mSrcX = mSrcY = -1;
-    mType = Invalid;
+    mShape = 0;
     mImage = QImage();
 }
 
@@ -165,10 +166,6 @@ VirtualTilesetMgr::VirtualTilesetMgr()
     mTilesetByName[vts->name()] = vts;
 #endif
 
-    for (int i = VirtualTile::Invalid + 1; i < VirtualTile::IsoTypeCount; i++) {
-        TileShape *shape = createTileShape(i);
-        mShapeByType[i] = shape;
-    }
 #if 0
     VirtualTilesetsFile file;
     QList<VirtualTile::IsoType> isoType;
@@ -264,6 +261,7 @@ QString VirtualTilesetMgr::txtPath() const
 bool VirtualTilesetMgr::readTxt()
 {
     QString fileName = Preferences::instance()->tilesDirectory() + QLatin1String("/virtualtilesets.vts");
+#if 0
     if (!QFileInfo(fileName).exists()) {
 
         QFileInfo info(txtPath());
@@ -290,6 +288,14 @@ bool VirtualTilesetMgr::readTxt()
             return false;
         }
     }
+#endif
+    TileShapesFile shapesFile;
+    if (!shapesFile.read(Preferences::instance()->configPath(QLatin1String("TileShapes.txt")))) {
+        mError = shapesFile.errorString();
+        return false;
+    }
+    foreach (TileShape *shape, shapesFile.takeShapes())
+        mShapeByName[shape->name()] = shape;
 
     VirtualTilesetsFile binFile;
     if (!binFile.read(fileName)) {
@@ -656,7 +662,7 @@ uint VirtualTilesetMgr::loadGLTexture(const QString &imageSource, int srcX, int 
 
 QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
 {
-    if (vtile->type() == VirtualTile::Invalid)
+    if (vtile->shape() == 0 || vtile->shape()->mElements.isEmpty())
         return QImage();
 
     const QGLContext *context = QGLContext::currentContext();
@@ -675,21 +681,19 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
 #endif
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (TileShape *shape = tileShape(vtile->type())) {
-        DrawElements de;
-        foreach (TileShape::Element e, shape->mElements) {
-            if (e.mGeom.size() == 4)
-                de.add(textureID,
-                       QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]), QVector2D(e.mUV[3]),
-                        QVector3D(TileShapeScene::toScene(e.mGeom[0])), QVector3D(TileShapeScene::toScene(e.mGeom[1])),
-                        QVector3D(TileShapeScene::toScene(e.mGeom[2])), QVector3D(TileShapeScene::toScene(e.mGeom[3])));
-            if (e.mGeom.size() == 3)
-                de.add(textureID,
-                       QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]),
-                        QVector3D(TileShapeScene::toScene(e.mGeom[0])), QVector3D(TileShapeScene::toScene(e.mGeom[1])),
-                        QVector3D(TileShapeScene::toScene(e.mGeom[2])));
-            de.flush();
-        }
+    DrawElements de;
+    foreach (TileShape::Element e, vtile->shape()->mElements) {
+        if (e.mGeom.size() == 4)
+            de.add(textureID,
+                   QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]), QVector2D(e.mUV[3]),
+                    QVector3D(TileShapeScene::toScene(e.mGeom[0])), QVector3D(TileShapeScene::toScene(e.mGeom[1])),
+                    QVector3D(TileShapeScene::toScene(e.mGeom[2])), QVector3D(TileShapeScene::toScene(e.mGeom[3])));
+        if (e.mGeom.size() == 3)
+            de.add(textureID,
+                   QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]),
+                    QVector3D(TileShapeScene::toScene(e.mGeom[0])), QVector3D(TileShapeScene::toScene(e.mGeom[1])),
+                    QVector3D(TileShapeScene::toScene(e.mGeom[2])));
+        de.flush();
     }
 
     /////
@@ -705,14 +709,15 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
     return img;
 }
 
-TileShape *VirtualTilesetMgr::tileShape(int isoType)
+TileShape *VirtualTilesetMgr::tileShape(const QString &name)
 {
-    if (mShapeByType.contains(isoType))
-        return mShapeByType[isoType];
+    if (mShapeByName.contains(name))
+        return mShapeByName[name];
     return 0;
 }
 
-TileShape *VirtualTilesetMgr::createTileShape(int isoType)
+#if 0
+TileShape *VirtualTilesetMgr::createTileShape(const QString &name)
 {
     int tx = 0/*vtile->srcX()*/, ty = 0/*vtile->srcY()*/; // tile col/row
     int tw = 32, th = 96; // tile width/height
@@ -726,7 +731,7 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
 
     GLuint textureID = 0;
 
-    if (isoType == VirtualTile::Floor) {
+    if (name == VirtualTile::Floor) {
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, 32), tt.uv(0, 32),
@@ -737,7 +742,7 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
     //
     // WALLS
     //
-    if (isoType == VirtualTile::WallW) {
+    if (name == VirtualTile::WallW) {
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, th), tt.uv(0, th),
@@ -745,14 +750,14 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                f.west(tw, th, wallDX), f.west(0, th, wallDX));
         de.color(0.8f,0.8f,0.8f);
     }
-    if (isoType == VirtualTile::WallN) {
+    if (name == VirtualTile::WallN) {
         de.add(textureID,
                 tt.uv(0, 0), tt.uv(tw, 0),
                 tt.uv(tw, th), tt.uv(0, th),
                 f.north(0, 0, wallDY), f.north(tw, 0, wallDY),
                 f.north(tw, th, wallDY), f.north(0, th, wallDY));
     }
-    if (isoType == VirtualTile::WallNW) {
+    if (name == VirtualTile::WallNW) {
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw - wallDY, 0),
                tt.uv(tw - wallDY, th), tt.uv(0, th),
@@ -765,7 +770,7 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                 f.north(wallDX, 0, wallDY), f.north(tw, 0, wallDY),
                 f.north(tw, th, wallDY), f.north(wallDX, th, wallDY));
     }
-    if (isoType == VirtualTile::WallSE) {
+    if (name == VirtualTile::WallSE) {
         int dy = 1; // hack for west walls (see PBufferFace::west())
         de.add(textureID,
                tt.uv(tw - wallDY, 0), tt.uv(tw, 0),
@@ -780,7 +785,7 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                 f.north(wallDX, th, wallDY), f.north(0, th, wallDY));
     }
     int topHgt = 21, botHgt = 37;
-    if (isoType == VirtualTile::WallWindowW) {
+    if (name == VirtualTile::WallWindowW) {
         int side = 6;
         // top
         de.add(textureID,
@@ -811,7 +816,7 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                f.west(tw, th - botHgt, wallDX), f.west(tw - side, th - botHgt, wallDX));
         de.color(0.8f,0.8f,0.8f);
     }
-    if (isoType == VirtualTile::WallWindowN) {
+    if (name == VirtualTile::WallWindowN) {
         int side = 6;
         // top
         de.add(textureID,
@@ -838,7 +843,7 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                f.north(tw - side, topHgt, wallDY), f.north(tw, topHgt, wallDY),
                f.north(tw, th - botHgt, wallDY), f.north(tw - side, th - botHgt, wallDY));
     }
-    if (isoType == VirtualTile::WallDoorW) {
+    if (name == VirtualTile::WallDoorW) {
         int side = 4;
         // top
         de.add(textureID,
@@ -862,7 +867,7 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                f.west(tw, th, wallDX), f.west(tw - side, th, wallDX));
         de.color(0.8f,0.8f,0.8f);
     }
-    if (isoType == VirtualTile::WallDoorN) {
+    if (name == VirtualTile::WallDoorN) {
         int side = 4;
         // top
         de.add(textureID,
@@ -884,7 +889,7 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                f.north(tw, th, wallDY), f.north(tw - side, th, wallDY));
     }
     const int shortWallHgt = 57;
-    if (isoType == VirtualTile::WallShortW) {
+    if (name == VirtualTile::WallShortW) {
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, shortWallHgt), tt.uv(0, shortWallHgt),
@@ -892,14 +897,14 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                f.west(tw, th, wallDX), f.west(0, th, wallDX));
         de.color(0.8f,0.8f,0.8f);
     }
-    if (isoType == VirtualTile::WallShortN) {
+    if (name == VirtualTile::WallShortN) {
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, shortWallHgt), tt.uv(0, shortWallHgt),
                f.north(0, th - shortWallHgt, wallDY), f.north(tw, th - shortWallHgt, wallDY),
                f.north(tw, th, wallDY), f.north(0, th, wallDY));
     }
-    if (isoType == VirtualTile::WallShortNW) {
+    if (name == VirtualTile::WallShortNW) {
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, shortWallHgt), tt.uv(0, shortWallHgt),
@@ -912,7 +917,7 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                f.north(wallDX, th - shortWallHgt, wallDY), f.north(tw, th - shortWallHgt, wallDY),
                f.north(tw, th, wallDY), f.north(wallDX, th, wallDY));
     }
-    if (isoType == VirtualTile::WallShortSE) {
+    if (name == VirtualTile::WallShortSE) {
         int dy = 1; // hack for west walls (see PBufferFace::west())
         de.add(textureID,
                tt.uv(tw - wallDY, th - shortWallHgt), tt.uv(tw, th - shortWallHgt),
@@ -930,34 +935,34 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
     //
     // ROOFS
     //
-    if (isoType >= VirtualTile::SlopeS1 && isoType <= VirtualTile::SlopeS3) {
-        int dy = (isoType - VirtualTile::SlopeS1) * 32;
+    if (name >= VirtualTile::SlopeS1 && name <= VirtualTile::SlopeS3) {
+        int dy = (name - VirtualTile::SlopeS1) * 32;
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64), tt.uv(0, 64),
                f.flatNS(0, 0, 32 + dy), f.flatNS(tw, 0, 32 + dy), f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
     }
-    if (isoType >= VirtualTile::SlopeE1 && isoType <= VirtualTile::SlopeE3) {
-        int dy = (isoType - VirtualTile::SlopeE1) * 32;
+    if (name >= VirtualTile::SlopeE1 && name <= VirtualTile::SlopeE3) {
+        int dy = (name - VirtualTile::SlopeE1) * 32;
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64), tt.uv(0, 64),
                f.flatWE(0, 0, 32 + dy), f.flatWE(tw, 0, 32 + dy), f.flatWE(tw, th, dy), f.flatWE(0, th, dy));
         de.color(0.8f,0.8f,0.8f);
     }
-    if (isoType >= VirtualTile::SlopePt5S && isoType <= VirtualTile::SlopeTwoPt5S) {
-        int dy = (isoType - VirtualTile::SlopePt5S) * 32;
+    if (name >= VirtualTile::SlopePt5S && name <= VirtualTile::SlopeTwoPt5S) {
+        int dy = (name - VirtualTile::SlopePt5S) * 32;
         de.add(textureID,
                tt.uv(0, 32), tt.uv(tw, 32), tt.uv(tw, 64), tt.uv(0, 64),
                f.flatNS(0, th / 2, 16 + dy), f.flatNS(tw, th / 2, 16 + dy), f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
     }
-    if (isoType >= VirtualTile::SlopePt5E && isoType <= VirtualTile::SlopeTwoPt5E) {
-        int dy = (isoType - VirtualTile::SlopePt5E) * 32;
+    if (name >= VirtualTile::SlopePt5E && name <= VirtualTile::SlopeTwoPt5E) {
+        int dy = (name - VirtualTile::SlopePt5E) * 32;
         de.add(textureID,
                tt.uv(0, 32), tt.uv(tw, 32), tt.uv(tw, 64), tt.uv(0, 64),
                f.flatWE(0, th / 2, 16 + dy), f.flatWE(tw, th / 2, 16 + dy), f.flatWE(tw, th, dy), f.flatWE(0, th, dy));
         de.color(0.8f,0.8f,0.8f);
     }
-    if (isoType >= VirtualTile::Outer1 && isoType <= VirtualTile::Outer3) {
-        int dy = (isoType - VirtualTile::Outer1) * 32;
+    if (name >= VirtualTile::Outer1 && name <= VirtualTile::Outer3) {
+        int dy = (name - VirtualTile::Outer1) * 32;
         // south
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 64), tt.uv(0, 64),
@@ -968,8 +973,8 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                f.flatNS(0, 0, 32 + dy), f.flatNS(tw, 0, dy), f.flatNS(tw, th, dy));
         de.color(0.8f,0.8f,0.8f);
     }
-    if (isoType >= VirtualTile::Inner1 && isoType <= VirtualTile::Inner3) {
-        int dy = (isoType - VirtualTile::Inner1) * 32;
+    if (name >= VirtualTile::Inner1 && name <= VirtualTile::Inner3) {
+        int dy = (name - VirtualTile::Inner1) * 32;
         // south
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64),
@@ -980,8 +985,8 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                f.flatNS(0, th, 32 + dy), f.flatNS(0, 0, 32 + dy), f.flatNS(tw, th, dy));
         de.color(0.8f,0.8f,0.8f);
     }
-    if (isoType >= VirtualTile::OuterPt5 && isoType <= VirtualTile::OuterTwoPt5) {
-        int dy = (isoType - VirtualTile::OuterPt5) * 32;
+    if (name >= VirtualTile::OuterPt5 && name <= VirtualTile::OuterTwoPt5) {
+        int dy = (name - VirtualTile::OuterPt5) * 32;
         // south
         de.add(textureID,
                tt.uv(0, 32), tt.uv(tw / 2, 32), tt.uv(tw, 64), tt.uv(0, 64),
@@ -992,8 +997,8 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                f.flatNS(0, 0, dy), f.flatNS(tw, th / 2, 32 + dy), f.flatNS(tw, 0, dy), f.flatNS(tw, th, dy));
         de.color(0.8f,0.8f,0.8f);
     }
-    if (isoType >= VirtualTile::InnerPt5 && isoType <= VirtualTile::InnerTwoPt5) {
-        int dy = (isoType - VirtualTile::InnerPt5) * 32;
+    if (name >= VirtualTile::InnerPt5 && name <= VirtualTile::InnerTwoPt5) {
+        int dy = (name - VirtualTile::InnerPt5) * 32;
         // south
         de.add(textureID,
                tt.uv(0, 32), tt.uv(tw / 2, 32), tt.uv(tw, 64),
@@ -1004,29 +1009,29 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                f.flatNS(0, th / 2, dy), f.flatNS(0, 0, dy), f.flatNS(tw, th, dy));
         de.color(0.8f,0.8f,0.8f);
     }
-    if (isoType >= VirtualTile::CornerSW1 && isoType <= VirtualTile::CornerSW3) {
-        int dy = (isoType - VirtualTile::CornerSW1) * 32;
+    if (name >= VirtualTile::CornerSW1 && name <= VirtualTile::CornerSW3) {
+        int dy = (name - VirtualTile::CornerSW1) * 32;
         de.add(textureID,
                tt.uv(tw, 0), tt.uv(tw, 64), tt.uv(0, 64),
                f.flatNS(tw, 0, 32 + dy), f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
     }
-    if (isoType >= VirtualTile::CornerNE1 && isoType <= VirtualTile::CornerNE3) {
-        int dy = (isoType - VirtualTile::CornerNE1) * 32;
+    if (name >= VirtualTile::CornerNE1 && name <= VirtualTile::CornerNE3) {
+        int dy = (name - VirtualTile::CornerNE1) * 32;
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 64), tt.uv(0, 64),
                f.flatNS(0, th, 32 + dy), f.flatNS(tw, 0, dy), f.flatNS(tw, th, dy));
         de.color(0.8f,0.8f,0.8f);
     }
-    if (isoType >= VirtualTile::RoofTopN1 && isoType <= VirtualTile::RoofTopN3) {
-        int dy = (isoType - VirtualTile::RoofTopN1) * 32;
+    if (name >= VirtualTile::RoofTopN1 && name <= VirtualTile::RoofTopN3) {
+        int dy = (name - VirtualTile::RoofTopN1) * 32;
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, 32), tt.uv(0, 32),
                f.flatNS(0, 0, dy), f.flatNS(tw, 0, dy),
                f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
     }
-    if (isoType >= VirtualTile::RoofTopW1 && isoType <= VirtualTile::RoofTopW3) {
-        int dy = (isoType - VirtualTile::RoofTopW1) * 32;
+    if (name >= VirtualTile::RoofTopW1 && name <= VirtualTile::RoofTopW3) {
+        int dy = (name - VirtualTile::RoofTopW1) * 32;
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, 32), tt.uv(0, 32),
@@ -1035,32 +1040,32 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
     }
 
     int shallowRise = 8;
-    if (isoType >= VirtualTile::ShallowSlopeN1 && isoType <= VirtualTile::ShallowSlopeN2) {
-        int dy = 10 + (isoType - VirtualTile::ShallowSlopeN1) * shallowRise;
+    if (name >= VirtualTile::ShallowSlopeN1 && name <= VirtualTile::ShallowSlopeN2) {
+        int dy = 10 + (name - VirtualTile::ShallowSlopeN1) * shallowRise;
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, 32), tt.uv(0, 32),
                f.flatNS(0, 0, dy), f.flatNS(tw, 0, dy),
                f.flatNS(tw, th, shallowRise + dy), f.flatNS(0, th, shallowRise + dy));
     }
-    if (isoType >= VirtualTile::ShallowSlopeS1 && isoType <= VirtualTile::ShallowSlopeS2) {
-        int dy = 10 + (isoType - VirtualTile::ShallowSlopeS1) * shallowRise;
+    if (name >= VirtualTile::ShallowSlopeS1 && name <= VirtualTile::ShallowSlopeS2) {
+        int dy = 10 + (name - VirtualTile::ShallowSlopeS1) * shallowRise;
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, 32), tt.uv(0, 32),
                f.flatNS(0, 0, shallowRise + dy), f.flatNS(tw, 0, shallowRise + dy),
                f.flatNS(tw, th, dy), f.flatNS(0, th, dy));
     }
-    if (isoType >= VirtualTile::ShallowSlopeW1 && isoType <= VirtualTile::ShallowSlopeW2) {
-        int dy = 10 + (isoType - VirtualTile::ShallowSlopeW1) * shallowRise;
+    if (name >= VirtualTile::ShallowSlopeW1 && name <= VirtualTile::ShallowSlopeW2) {
+        int dy = 10 + (name - VirtualTile::ShallowSlopeW1) * shallowRise;
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, 32), tt.uv(0, 32),
                f.flatWE(0, 0, dy), f.flatWE(tw, 0, dy),
                f.flatWE(tw, th, shallowRise + dy), f.flatWE(0, th, shallowRise + dy));
     }
-    if (isoType >= VirtualTile::ShallowSlopeE1 && isoType <= VirtualTile::ShallowSlopeE2) {
-        int dy = 10 + (isoType - VirtualTile::ShallowSlopeE1) * shallowRise;
+    if (name >= VirtualTile::ShallowSlopeE1 && name <= VirtualTile::ShallowSlopeE2) {
+        int dy = 10 + (name - VirtualTile::ShallowSlopeE1) * shallowRise;
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0),
                tt.uv(tw, 32), tt.uv(0, 32),
@@ -1068,18 +1073,18 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                f.flatWE(tw, th, dy), f.flatWE(0, th, dy));
     }
 
-    if (isoType == VirtualTile::TrimS) {
+    if (name == VirtualTile::TrimS) {
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64/3.0), tt.uv(0, 64/3.0),
                f.flatNS(0, 0, 96), f.flatNS(tw, 0, 96), f.flatNS(tw, th / 3.0, 96-(32/3.0)), f.flatNS(0, th / 3.0, 96-(32/3.0)));
     }
-    if (isoType == VirtualTile::TrimE) {
+    if (name == VirtualTile::TrimE) {
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64/3.0), tt.uv(0, 64/3.0),
                f.flatWE(0, 0, 96), f.flatWE(tw, 0, 96), f.flatWE(tw, th / 3.0, 96-(32/3.0)), f.flatWE(0, th / 3, 96-(32/3.0)));
         de.color(0.8f,0.8f,0.8f);
     }
-    if (isoType == VirtualTile::TrimOuter) {
+    if (name == VirtualTile::TrimOuter) {
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 64/3.0), tt.uv(0, 64/3.0),
                f.flatNS(0, 0, 96), f.flatNS((tw * 2) / 3.0, (th * 2) / 3.0, 96), f.flatNS(0, th / 3.0, 96-(32/3.0)));
@@ -1088,7 +1093,7 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                f.flatNS(0, 0, 96), f.flatNS(tw / 3.0, 0, 96-(32/3.0)), f.flatNS((tw * 2) / 3.0, (th * 2) / 3.0, 96));
         de.color(0.8f,0.8f,0.8f);
     }
-    if (isoType == VirtualTile::TrimInner) {
+    if (name == VirtualTile::TrimInner) {
         // south
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw, 0), tt.uv(tw, 64/3.0), tt.uv(64 / 3, 64/3.0),
@@ -1099,12 +1104,12 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
                f.flatWE(0, 0, 96), f.flatWE(tw, 0, 96), f.flatWE(tw / 3.0, (th * 2) / 3.0, 96), f.flatWE(0, th / 3, 96-(32/3.0)));
         de.color(0.8f,0.8f,0.8f);
     }
-    if (isoType == VirtualTile::TrimCornerSW) {
+    if (name == VirtualTile::TrimCornerSW) {
         de.add(textureID,
                tt.uv(tw, 0), tt.uv(tw - 64/3.0, 64/3.0), tt.uv(0, 64/3.0),
                f.flatNS(tw, 0, 96), f.flatNS(tw, th / 3.0, 96-(32/3.0)), f.flatNS(tw, th * 2 / 3.0, 96));
     }
-    if (isoType == VirtualTile::TrimCornerNE) {
+    if (name == VirtualTile::TrimCornerNE) {
         de.add(textureID,
                tt.uv(0, 0), tt.uv(tw / 3, 64/3.0), tt.uv(0, 64/3.0),
                f.flatNS(0, th, 96), f.flatNS(tw * 2 / 3.0, th, 96), f.flatNS(tw / 3.0, th, 96-(32/3.0)));
@@ -1134,11 +1139,13 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
     }
     return shape;
 }
+#endif
 
 /////
 
 VirtualTilesetsFile::VirtualTilesetsFile()
 {
+#if 0
     mNameToType[QLatin1String("floor")] = VirtualTile::Floor;
 
     mNameToType[QLatin1String("wall_w")] = VirtualTile::WallW;
@@ -1154,6 +1161,34 @@ VirtualTilesetsFile::VirtualTilesetsFile()
     mNameToType[QLatin1String("wall_short_n")] = VirtualTile::WallShortN;
     mNameToType[QLatin1String("wall_short_nw")] = VirtualTile::WallShortNW;
     mNameToType[QLatin1String("wall_short_se")] = VirtualTile::WallShortSE;
+
+    mNameToType[QLatin1String("roof_cap_rise_s1")] = VirtualTile::CapRiseS1;
+    mNameToType[QLatin1String("roof_cap_rise_s2")] = VirtualTile::CapRiseS2;
+    mNameToType[QLatin1String("roof_cap_rise_s3")] = VirtualTile::CapRiseS3;
+    mNameToType[QLatin1String("roof_cap_fall_s1")] = VirtualTile::CapFallS1;
+    mNameToType[QLatin1String("roof_cap_fall_s2")] = VirtualTile::CapFallS2;
+    mNameToType[QLatin1String("roof_cap_fall_s3")] = VirtualTile::CapFallS3;
+
+    mNameToType[QLatin1String("roof_cap_rise_e1")] = VirtualTile::CapRiseE1;
+    mNameToType[QLatin1String("roof_cap_rise_e2")] = VirtualTile::CapRiseE2;
+    mNameToType[QLatin1String("roof_cap_rise_e3")] = VirtualTile::CapRiseE3;
+    mNameToType[QLatin1String("roof_cap_fall_e1")] = VirtualTile::CapFallE1;
+    mNameToType[QLatin1String("roof_cap_fall_e2")] = VirtualTile::CapFallE2;
+    mNameToType[QLatin1String("roof_cap_fall_e3")] = VirtualTile::CapFallE3;
+
+    mNameToType[QLatin1String("roof_cap_peak_pt5s")] = VirtualTile::CapPeakPt5S;
+    mNameToType[QLatin1String("roof_cap_peak_1pt5s")] = VirtualTile::CapPeakOnePt5S;
+    mNameToType[QLatin1String("roof_cap_peak_2pt5s")] = VirtualTile::CapPeakTwoPt5S;
+    mNameToType[QLatin1String("roof_cap_peak_pt5e")] = VirtualTile::CapPeakPt5E;
+    mNameToType[QLatin1String("roof_cap_peak_1pt5e")] = VirtualTile::CapPeakOnePt5E;
+    mNameToType[QLatin1String("roof_cap_peak_2pt5e")] = VirtualTile::CapPeakTwoPt5E;
+
+    mNameToType[QLatin1String("roof_cap_flat_s1")] = VirtualTile::CapFlatS1;
+    mNameToType[QLatin1String("roof_cap_flat_s2")] = VirtualTile::CapFlatS2;
+    mNameToType[QLatin1String("roof_cap_flat_s3")] = VirtualTile::CapFlatS3;
+    mNameToType[QLatin1String("roof_cap_flat_e1")] = VirtualTile::CapFlatE1;
+    mNameToType[QLatin1String("roof_cap_flat_e2")] = VirtualTile::CapFlatE2;
+    mNameToType[QLatin1String("roof_cap_flat_e3")] = VirtualTile::CapFlatE3;
 
     mNameToType[QLatin1String("roof_slope_s1")] = VirtualTile::SlopeS1;
     mNameToType[QLatin1String("roof_slope_s2")] = VirtualTile::SlopeS2;
@@ -1215,6 +1250,7 @@ VirtualTilesetsFile::VirtualTilesetsFile()
 
     foreach (QString name, mNameToType.keys())
         mTypeToName[mNameToType[name]] = name;
+#endif
 }
 
 VirtualTilesetsFile::~VirtualTilesetsFile()
@@ -1311,9 +1347,15 @@ bool VirtualTilesetsFile::read(const QString &fileName)
             in >> srcX;
             in >> srcY;
             vtile->setImageSource(imageSrc, srcX, srcY);
-            qint32 shape;
-            in >> shape;
-            vtile->setType(mNameToType[shapes.at(shape)]);
+            qint32 shapeIndex;
+            in >> shapeIndex;
+            QString shapeName = shapes.at(shapeIndex);
+            TileShape *shape = VirtualTilesetMgr::instance().tileShape(shapeName);
+            if (shape == 0) {
+                mError = tr("Unknown tile shape '%1'.").arg(shapeName);
+                return false;
+            }
+            vtile->setShape(shape);
         }
 
         addTileset(vts);
@@ -1350,9 +1392,13 @@ bool VirtualTilesetsFile::write(const QString &fileName, const QList<VirtualTile
     out << quint8('v') << quint8('t') << quint8('s') << quint8('f');
     out << qint32(VERSION_LATEST);
 
-    out << qint32(VirtualTile::IsoTypeCount);
-    for (int i = VirtualTile::Invalid + 1; i < VirtualTile::IsoTypeCount; i++)
-        SaveString(out, mTypeToName[static_cast<VirtualTile::IsoType>(i)]);
+    QMap<TileShape*,int> shapeMap;
+    int i = 0;
+    foreach (TileShape *shape, VirtualTilesetMgr::instance().tileShapes())
+        shapeMap[shape] = i++;
+    out << qint32(shapeMap.size());
+    foreach (TileShape *shape, VirtualTilesetMgr::instance().tileShapes())
+        SaveString(out, shape->name());
 
     QMap<QString,int> srcNameMap;
     foreach (VirtualTileset *ts, tilesets) {
@@ -1376,7 +1422,7 @@ bool VirtualTilesetsFile::write(const QString &fileName, const QList<VirtualTile
         out << qint32(ts->rowCount());
         QList<VirtualTile*> nonEmptyTiles;
         foreach (VirtualTile *vtile, ts->tiles()) {
-            if (vtile->type() != VirtualTile::Invalid && srcNameMap.contains(vtile->imageSource()))
+            if (vtile->shape() != 0 && srcNameMap.contains(vtile->imageSource()))
                 nonEmptyTiles += vtile;
         }
         out << qint32(nonEmptyTiles.size());
@@ -1385,7 +1431,7 @@ bool VirtualTilesetsFile::write(const QString &fileName, const QList<VirtualTile
             out << qint32(srcNameMap[vtile->imageSource()]);
             out << qint32(vtile->srcX());
             out << qint32(vtile->srcY());
-            out << qint32(vtile->type());
+            out << qint32(shapeMap[vtile->shape()]);
         }
     }
 
@@ -1394,6 +1440,7 @@ bool VirtualTilesetsFile::write(const QString &fileName, const QList<VirtualTile
 
 /////
 
+#if 0
 #include "BuildingEditor/simplefile.h"
 
 #define VERSION0 0
@@ -1564,7 +1611,7 @@ bool OldVirtualTilesetsTxtFile::read(const QString &fileName)
                         return false;
                     }
                     vts->tileAt(x, y)->setImageSource(file, srcX, srcY);
-                    vts->tileAt(x, y)->setType(isoType);
+                    vts->tileAt(x, y)->setShape(isoType);
                 } else {
                     mError = tr("Line %1: Unknown block name '%1'\n%2")
                             .arg(block2.lineNumber)
@@ -1658,4 +1705,167 @@ bool OldVirtualTilesetsTxtFile::parseIsoType(const QString &s, VirtualTile::IsoT
         return true;
     }
     return false;
+}
+#endif
+
+/////
+
+TileShapesFile::TileShapesFile()
+{
+
+}
+
+TileShapesFile::~TileShapesFile()
+{
+    qDeleteAll(mShapes);
+}
+
+#define VERSION_LATEST 1
+
+bool TileShapesFile::read(const QString &fileName)
+{
+    QFileInfo info(fileName);
+    if (!info.exists()) {
+        mError = tr("The %1 file doesn't exist.").arg(info.fileName());
+        return false;
+    }
+
+    QString path = info.absoluteFilePath();
+    SimpleFile simple;
+    if (!simple.read(path)) {
+        mError = tr("Error reading %1.\n%2").arg(path).arg(simple.errorString());
+        return false;
+    }
+
+    int version = simple.version();
+
+    if (version < 1 || version > VERSION_LATEST) {
+        mError = tr("Unknown version number %1 in %2.").arg(version).arg(info.fileName());
+        return false;
+    }
+
+    qDeleteAll(mShapes);
+    mShapes.clear();
+
+    foreach (SimpleFileBlock block, simple.blocks) {
+        if (block.name == QLatin1String("shape")) {
+            QString name = block.value("name");
+            if (name.isEmpty()) {
+                mError = tr("Line %1: Missing shape name")
+                        .arg(block.lineNumber);
+                return false;
+            }
+            if (mShapeByName.contains(name)) {
+                mError = tr("Line %1: Duplicate shape name '%2'.")
+                        .arg(block.lineNumber)
+                        .arg(name);
+                return false;
+            }
+            TileShape *shape = new TileShape(name);
+            foreach (SimpleFileBlock block2, block.blocks) {
+                if (block2.name == QLatin1String("face")) {
+                    TileShape::Element e;
+
+                    QString geom = block2.value("geom");
+                    QList<qreal> xyz;
+                    if (!parseDoubles(geom, 3, xyz)) {
+                        mError = tr("Line %1: Expected X Y Z triplets.").arg(block2.lineNumber);
+                        return false;
+                    }
+                    for (int i = 0; i < xyz.size(); i += 3)
+                        e.mGeom += QVector3D(xyz[i], xyz[i+1], xyz[i+2]);
+
+#if 1
+                    for (int i = 0; i < e.mGeom.size(); i++)
+                        e.mUV += QPointF();
+
+#else
+                    QString uv = block2.value("uv");
+                    QList<qreal> uvs;
+                    if (!parseDoubles(uv, 2, uvs)) {
+                        mError = tr("Line %1: Expected U V pairs.").arg(block2.lineNumber);
+                        return false;
+                    }
+                    if (uvs.size() / 2 != xyz.size() / 3) {
+                        mError = tr("Line %1: %2 uv values but %3 geom values.")
+                                .arg(block2.lineNumber)
+                                .arg(uvs.size() / 2)
+                                .arg(xyz.size() / 3);
+                        return false;
+                    }
+                    for (int i = 0; i < uvs.size(); i += 2)
+                        e.mUV += QPointF(uvs[i], uvs[i+1]);
+#endif
+
+                    shape->mElements += e;
+                } else {
+                    mError = tr("Line %1: Unknown block name '%1'.")
+                            .arg(block2.lineNumber)
+                            .arg(block2.name);
+                    return false;
+                }
+            }
+            mShapes += shape;
+        } else {
+            mError = tr("Line %1: Unknown block name '%1'.")
+                    .arg(block.lineNumber)
+                    .arg(block.name);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool TileShapesFile::write(const QString &fileName)
+{
+    return write(fileName, mShapes);
+}
+
+bool TileShapesFile::write(const QString &fileName, const QList<TileShape *> &shapes)
+{
+    SimpleFile simpleFile;
+    foreach (TileShape *shape, shapes) {
+        SimpleFileBlock shapeBlock;
+        shapeBlock.name = QLatin1String("shape");
+        shapeBlock.addValue("name", shape->name());
+        foreach (TileShape::Element e, shape->mElements) {
+            SimpleFileBlock faceBlock;
+            faceBlock.name = QLatin1String("face");
+            QString geom;
+            foreach (QVector3D v, e.mGeom)
+                geom += QString::fromLatin1("%1 %2 %3 ").arg(v.x()).arg(v.y()).arg(v.z());
+            QString uv;
+            foreach (QPointF v, e.mUV)
+                uv += QString::fromLatin1("%1 %2 ").arg(v.x(), v.y());
+            faceBlock.addValue("geom", geom);
+            faceBlock.addValue("uv", uv);
+            shapeBlock.blocks += faceBlock;
+        }
+        simpleFile.blocks += shapeBlock;
+    }
+
+    simpleFile.setVersion(VERSION_LATEST);
+    if (!simpleFile.write(fileName)) {
+        mError = simpleFile.errorString();
+        return false;
+    }
+
+    return true;
+}
+
+bool TileShapesFile::parseDoubles(const QString &s, int stride, QList<qreal> &out)
+{
+    QStringList values = s.split(QLatin1Char(' '), QString::SkipEmptyParts);
+    if (values.size() % stride)
+        return false;
+    out.clear();
+    for (int i = 0; i < values.size(); i++) {
+        bool ok;
+        double d = values[i].toDouble(&ok);
+        if (!ok)
+            return false;
+        out += d;
+    }
+    return true;
 }

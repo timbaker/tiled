@@ -20,7 +20,11 @@ class TileShapeScene;
 class TileShape
 {
 public:
-    TileShape() {}
+    TileShape(const QString &name) :
+        mName(name)
+    {}
+
+    QString name() const { return mName; }
 
     class Element
     {
@@ -29,6 +33,7 @@ public:
         QPolygonF mUV;
     };
 
+    QString mName;
     QList<Element> mElements;
 };
 

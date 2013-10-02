@@ -155,7 +155,7 @@ TileShapeScene::TileShapeScene(QObject *parent) :
 //    mGridItem->setPos(-mGridItem->boundingRect().topLeft());
     addItem(mGridItem);
 
-    TileShape *shape = new TileShape;
+    TileShape *shape = new TileShape(QLatin1String("SceneShape"));
     TileShape::Element e;
     e.mGeom << QVector3D(0, 0, 0) << QVector3D(0, 0, 3) << QVector3D(1, 0, 3) << QVector3D(1, 0, 0);
     shape->mElements += e;
@@ -536,9 +536,10 @@ void CreateTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event
             QVector3D tilePos = mScene->toTile(event->scenePos(), z);
             tilePos.setX( qFloor(tilePos.x()) + qFloor((tilePos.x() - qFloor(tilePos.x())) * 32) / 32.0 );
             tilePos.setY( qFloor(tilePos.y()) + qFloor((tilePos.y() - qFloor(tilePos.y())) * 32) / 32.0 );
-            TileShape *shape = new TileShape;
+            TileShape *shape = new TileShape(QLatin1String("CreateTileShapeElementTool-Shape"));
             TileShape::Element e;
-            e.mGeom << tilePos;
+            e.mGeom += tilePos;
+            e.mUV += QPointF();
             shape->mElements += e;
             mElementItem = new TileShapeItem(mScene, shape);
             mElementItem->setSelectedElement(0);
@@ -551,6 +552,7 @@ void CreateTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event
             TileShape::Element &e = mElementItem->tileShape()->mElements.first();
 #if 1
             e.mGeom += mElementItem->cursorPoint();
+            e.mUV += QPointF();
 #else
             qreal z = e.mGeom.last().z();
             QVector3D tilePos = mScene->toTile(event->scenePos(), z);
