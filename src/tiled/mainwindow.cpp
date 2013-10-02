@@ -62,6 +62,7 @@
 #include "quickstampmanager.h"
 #include "saveasimagedialog.h"
 #include "stampbrush.h"
+#include "texturemanager.h"
 #include "tilelayer.h"
 #include "tileselectiontool.h"
 #include "tileset.h"
@@ -632,7 +633,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             SLOT(tilesetMetaInfoDialog()));
     connect(mUi->actionTileProperties, SIGNAL(triggered()),
             SLOT(tilePropertiesEditor()));
-    new VirtualTilesetMgr();
+    new TextureMgr;
+    new VirtualTilesetMgr;
     connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetAdded(VirtualTileset*)),
             TilesetManager::instance(), SLOT(virtualTilesetChanged(VirtualTileset*)));
     connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetRemoved(VirtualTileset*)),
@@ -677,6 +679,7 @@ MainWindow::~MainWindow()
     BuildingTMX::deleteInstance();
     BuildingPreferences::deleteInstance();
 #endif
+    TextureMgr::deleteInstance();
     MapImageManager::deleteInstance();
     MapManager::deleteInstance();
     TileMetaInfoMgr::deleteInstance();
@@ -707,6 +710,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     writeSettings();
     if (confirmAllSave() &&
             TileDefDialog::closeYerself() &&
+            VirtualTilesetDialog::closeYerself() &&
             (!mBuildingEditor || mBuildingEditor->closeYerself())) {
 
         /*
@@ -965,6 +969,7 @@ bool MainWindow::InitConfigFiles()
     configFiles += BuildingTilesMgr::instance()->txtName();
     configFiles += BuildingTMX::instance()->txtName();
     configFiles += FurnitureGroups::instance()->txtName();
+    configFiles += TextureMgr::instance().txtName();
     configFiles += VirtualTilesetMgr::instance().txtName();
 
     foreach (QString configFile, configFiles) {
@@ -1021,6 +1026,14 @@ bool MainWindow::InitConfigFiles()
                               tr("Error while reading %1\n%2")
                               .arg(BuildingTemplates::instance()->txtName())
                               .arg(BuildingTemplates::instance()->errorString()));
+        return false;
+    }
+
+    if (!TextureMgr::instance().readTxt()) {
+        QMessageBox::critical(this, tr("It's no good, Jim!"),
+                              tr("Error while reading %1\n%2")
+                              .arg(TextureMgr::instance().txtName())
+                              .arg(TextureMgr::instance().errorString()));
         return false;
     }
 
@@ -1667,7 +1680,8 @@ void MainWindow::virtualTilesetDialog()
     if (!dialog) {
         dialog = new VirtualTilesetDialog(this);
     }
-    dialog->exec();
+    dialog->show();
+    dialog->raise();
 }
 
 void MainWindow::launchWorldEd()

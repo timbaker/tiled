@@ -53,7 +53,8 @@ public:
 
     bool drawGrid() const { return mDrawGrid; }
 #ifdef ZOMBOID
-    bool showLayerNames() const { return mShowLayerNames; }
+    void setShowLayerNames(bool show) { mShowLayerNames = show; }
+    bool showLayerNames() const;
 #endif
 
     /**

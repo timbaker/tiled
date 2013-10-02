@@ -101,6 +101,7 @@ public:
     void setAutoSwitchLayer(bool enable);
 
     QString tilesDirectory() const;
+    QString texturesDirectory() const;
 
     qreal tilesetScale() const;
 

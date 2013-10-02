@@ -78,6 +78,13 @@ QList<Tileset *> TextureUnpacker::createTilesets()
     return ret;
 }
 
+void TextureUnpacker::writeImages(const QString &dirName)
+{
+    foreach (QString tilesetName, mTilesetImages.keys()) {
+        mTilesetImages[tilesetName].save(dirName + QLatin1String("/") + tilesetName + QLatin1String(".png"));
+    }
+}
+
 bool TextureUnpacker::readTxt(const QString &fileName)
 {
     mEntries.clear();
@@ -109,4 +116,6 @@ bool TextureUnpacker::readTxt(const QString &fileName)
             mEntries += e;
         }
     }
+
+    return true;
 }

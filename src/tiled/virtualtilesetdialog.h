@@ -18,7 +18,9 @@
 #ifndef VIRTUALTILESETDIALOG_H
 #define VIRTUALTILESETDIALOG_H
 
-#include <QDialog>
+#include <QMainWindow>
+
+#include "BuildingEditor/singleton.h"
 
 class QModelIndex;
 class QSplitter;
@@ -34,10 +36,12 @@ class Tileset;
 
 namespace Internal {
 
+class TextureInfo;
 class VirtualTile;
 class VirtualTileset;
+class VirtualTilesetsFile;
 
-class VirtualTilesetDialog : public QDialog
+class VirtualTilesetDialog : public QMainWindow, public Singleton<VirtualTilesetDialog>
 {
     Q_OBJECT
 
@@ -51,10 +55,15 @@ public:
     explicit VirtualTilesetDialog(QWidget *parent = 0);
     ~VirtualTilesetDialog();
 
+    static bool closeYerself()
+    {
+        return mInstance ? mInstance->close() : true;
+    }
+
     void setVirtualTilesetNamesList();
     void setVirtualTilesetTilesList();
-    void setOrthoFilesList();
-    void setOrthoTilesList();
+    void setTextureNamesList();
+    void setTextureTilesList();
 
     // Undo/Redo callbacks
     void addTileset(VirtualTileset *vts);
@@ -62,12 +71,17 @@ public:
     QString renameTileset(VirtualTileset *vts, const QString &name);
     void resizeTileset(VirtualTileset *vts, QSize &size, QVector<VirtualTile *> &tiles);
     void changeVTile(VirtualTile *vtile, QString &imageSource, int &srcX, int &srcY, int &isoType);
+    void addTexture(TextureInfo *tex);
+    void removeTexture(TextureInfo *tex);
     //
+
+    void closeEvent(QCloseEvent *event);
 
 private slots:
     void addTileset();
     void removeTileset();
 
+    void vTileActivated(const QModelIndex &index);
     void clearVTiles();
     void showDiskImage(bool show);
 
@@ -77,8 +91,14 @@ private slots:
     void virtualTilesetNameSelected();
     void editVTileset(const QModelIndex &index);
 
-    void orthoFileSelectionChanged();
-    void orthoTileSelectionChanged();
+    void textureNameSelectionChanged();
+    void textureTileSelectionChanged();
+
+    void addTexture();
+    void removeTexture();
+
+    void textureAdded(TextureInfo *tex);
+    void textureRemoved(TextureInfo *tex);
 
     void isoCategoryChanged(int row);
 
@@ -90,21 +110,32 @@ private slots:
 
     void updateActions();
 
-    void done(int r);
+    void fileOpen();
+    bool fileSave();
+    bool fileSaveAs();
+
+private:
+    void fileOpen(const QString &fileName);
+    bool fileSave(const QString &fileName);
+    void clearDocument();
 
 private:
     void saveSplitterSizes(QSplitter *splitter);
     void restoreSplitterSizes(QSplitter *splitter);
+    bool confirmSave();
+    QString getSaveLocation();
 
 private:
     Ui::VirtualTilesetDialog *ui;
     QList<VirtualTileset*> mTilesets;
     VirtualTileset *mCurrentVirtualTileset;
-    QList<Tileset*> mOrthoTilesets;
-    Tileset *mOrthoTileset;
+    TextureInfo *mCurrentTexture;
+    QList<Tileset*> mTextureTilesets;
+    Tileset *mTextureTileset;
     VirtualTileset *mIsoTileset;
     IsoCategory mIsoCategory;
     bool mShowDiskImage;
+    VirtualTilesetsFile *mFile;
 
     QUndoGroup *mUndoGroup;
     QUndoStack *mUndoStack;

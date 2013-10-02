@@ -18,6 +18,7 @@
 #include "virtualtileset.h"
 
 #include "preferences.h"
+#include "texturemanager.h"
 #include "tilesetmanager.h"
 #include "tileshapeeditor.h"
 
@@ -57,6 +58,11 @@ VirtualTile::VirtualTile(VirtualTileset *vts, int x, int y, const QString &image
     mType(type)
 {
 
+}
+
+int VirtualTile::index() const
+{
+    return mX + mTileset->columnCount() * mY;
 }
 
 QImage VirtualTile::image()
@@ -140,13 +146,14 @@ VirtualTilesetMgr::VirtualTilesetMgr()
 {
     initPixelBuffer();
 
+#if 0
     TextureUnpacker unpacker;
     unpacker.unpack(QLatin1String("ntiles_0"));
     unpacker.unpack(QLatin1String("ntiles_1"));
     unpacker.unpack(QLatin1String("ntiles_2"));
     unpacker.unpack(QLatin1String("ntiles_3"));
-    foreach (Tileset *ts, unpacker.createTilesets())
-        mUnpackedTilesets[ts->name()] = ts;
+    unpacker.writeImages(Preferences::instance()->tilesDirectory() + QLatin1String("/Textures"));
+#endif
 
 #if 0
     VirtualTileset *vts = new VirtualTileset(QLatin1String("walls_exterior_house_01"), 512/64, 1024/128);
@@ -256,22 +263,41 @@ QString VirtualTilesetMgr::txtPath() const
 
 bool VirtualTilesetMgr::readTxt()
 {
-    QFileInfo info(txtPath());
-    if (!info.exists()) {
-        mError = tr("The %1 file doesn't exist.").arg(txtName());
+    QString fileName = Preferences::instance()->tilesDirectory() + QLatin1String("/virtualtilesets.vts");
+    if (!QFileInfo(fileName).exists()) {
+
+        QFileInfo info(txtPath());
+        if (!info.exists()) {
+            mError = tr("The %1 file doesn't exist.").arg(txtName());
+            return false;
+        }
+
+        OldVirtualTilesetsTxtFile file;
+        if (!file.read(txtPath())) {
+            mError = file.errorString();
+            return false;
+        }
+
+        mRevision = file.revision();
+        mSourceRevision = file.sourceRevision();
+
+        VirtualTilesetsFile binFile;
+        foreach (VirtualTileset *vts, file.takeTilesets())
+            binFile.addTileset(vts);
+
+        if (!binFile.write(fileName)) {
+            mError = binFile.errorString();
+            return false;
+        }
+    }
+
+    VirtualTilesetsFile binFile;
+    if (!binFile.read(fileName)) {
+        mError = binFile.errorString();
         return false;
     }
 
-    VirtualTilesetsFile file;
-    if (!file.read(txtPath())) {
-        mError = file.errorString();
-        return false;
-    }
-
-    mRevision = file.revision();
-    mSourceRevision = file.sourceRevision();
-
-    foreach (VirtualTileset *vts, file.takeTilesets())
+    foreach (VirtualTileset *vts, binFile.takeTilesets())
         addTileset(vts);
 
     return true;
@@ -279,12 +305,18 @@ bool VirtualTilesetMgr::readTxt()
 
 bool VirtualTilesetMgr::writeTxt()
 {
-    VirtualTilesetsFile file;
+#if 0
+    OldVirtualTilesetsTxtFile file;
     file.setRevision(++mRevision, mSourceRevision);
     if (!file.write(txtPath(), tilesets())) {
         mError = file.errorString();
         return false;
     }
+#endif
+
+    QString fileName = Preferences::instance()->tilesDirectory() + QLatin1String("/virtualtilesets.vts");
+    VirtualTilesetsFile binFile;
+    return binFile.write(fileName, tilesets());
 
     return true;
 }
@@ -592,11 +624,16 @@ void VirtualTilesetMgr::initPixelBuffer()
 
 uint VirtualTilesetMgr::loadGLTexture(const QString &imageSource, int srcX, int srcY)
 {
-    if (!mUnpackedTilesets.contains(imageSource))
+    QImage b;
+    if (TextureInfo *tex = TextureMgr::instance().texture(imageSource)) {
+        Tileset *ts = TextureMgr::instance().tileset(tex);
+        if (ts->isMissing())
+             return 0;
+        if (Tile *tile = ts->tileAt(srcY * ts->columnCount() + srcX))
+            b = tile->image();
+    }
+    if (b.isNull())
         return 0;
-    Tile *unpackedTile = mUnpackedTilesets[imageSource]->tileAt(srcY * mUnpackedTilesets[imageSource]->columnCount() + srcX);
-    QImage b = unpackedTile->image();
-    if (b.isNull()) return 0;
 
     QImage fixedImage(b.width(), b.height(), QImage::Format_ARGB32);
     QPainter painter(&fixedImage);
@@ -1100,16 +1137,7 @@ TileShape *VirtualTilesetMgr::createTileShape(int isoType)
 
 /////
 
-#include "BuildingEditor/simplefile.h"
-
-#define VERSION0 0
-
-#define VERSION_LATEST VERSION0
-
-VirtualTilesetsFile::VirtualTilesetsFile() :
-    mVersion(0),
-    mRevision(0),
-    mSourceRevision(0)
+VirtualTilesetsFile::VirtualTilesetsFile()
 {
     mNameToType[QLatin1String("floor")] = VirtualTile::Floor;
 
@@ -1194,7 +1222,273 @@ VirtualTilesetsFile::~VirtualTilesetsFile()
     qDeleteAll(mTilesets);
 }
 
+static QString ReadString(QDataStream &in)
+{
+    QString str;
+    quint8 c = ' ';
+    while (c != '\n') {
+        in >> c;
+        if (c != '\n')
+            str += QLatin1Char(c);
+    }
+    return str;
+}
+
+#define VERSION1 1
+#define VERSION2 2 //
+#define VERSION_LATEST VERSION2
+
 bool VirtualTilesetsFile::read(const QString &fileName)
+{
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly)) {
+        mError = tr("Error opening file for reading.\n%1").arg(fileName);
+        return false;
+    }
+
+    QDir dir = QFileInfo(fileName).absoluteDir();
+
+    QDataStream in(&file);
+    in.setByteOrder(QDataStream::LittleEndian);
+
+    quint8 tdef[4] = {0};
+    in >> tdef[0];
+    in >> tdef[1];
+    in >> tdef[2];
+    in >> tdef[3];
+    qint32 version = VERSION1;
+    if (memcmp(tdef, "vtsf", 4) == 0) {
+        in >> version;
+        if (version < 1 || version > VERSION_LATEST) {
+            mError = tr("Unknown version number %1 in .vts file.\n%2")
+                    .arg(version).arg(fileName);
+            return false;
+        }
+    } else {
+        mError = tr("This isn't a .vts file.\n%1").arg(fileName);
+        return false;
+    }
+
+    qint32 numShapes;
+    in >> numShapes;
+    QStringList shapes;
+    for (int i = 0; i < numShapes; i++)
+        shapes += ReadString(in);
+
+    QStringList srcNames;
+    if (version > VERSION1) {
+        qint32 numSrcNames;
+        in >> numSrcNames;
+        for (int i = 0; i < numSrcNames; i++)
+            srcNames += ReadString(in);
+    }
+
+    qint32 numTilesets;
+    in >> numTilesets;
+    for (int i = 0; i < numTilesets; i++) {
+        QString name = ReadString(in);
+        qint32 columns, rows;
+        in >> columns;
+        in >> rows;
+
+        VirtualTileset *vts = new VirtualTileset(name, columns, rows);
+
+        qint32 tileCount;
+        in >> tileCount;
+        for (int j = 0; j < tileCount; j++) {
+            qint32 tileIndex;
+            in >> tileIndex;
+            VirtualTile *vtile = vts->tileAt(tileIndex);
+            QString imageSrc;
+            if (version == VERSION1)
+                imageSrc = ReadString(in);
+            else {
+                qint32 srcIndex;
+                in >> srcIndex;
+                imageSrc = srcNames.at(srcIndex);
+            }
+            qint32 srcX, srcY;
+            in >> srcX;
+            in >> srcY;
+            vtile->setImageSource(imageSrc, srcX, srcY);
+            qint32 shape;
+            in >> shape;
+            vtile->setType(mNameToType[shapes.at(shape)]);
+        }
+
+        addTileset(vts);
+    }
+
+    mFileName = fileName;
+
+    return true;
+}
+
+static void SaveString(QDataStream& out, const QString& str)
+{
+    for (int i = 0; i < str.length(); i++)
+        out << quint8(str[i].toLatin1());
+    out << quint8('\n');
+}
+
+bool VirtualTilesetsFile::write(const QString &fileName)
+{
+    return write(fileName, mTilesets);
+}
+
+bool VirtualTilesetsFile::write(const QString &fileName, const QList<VirtualTileset *> &tilesets)
+{
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly)) {
+        mError = tr("Error opening file for writing.\n%1").arg(fileName);
+        return false;
+    }
+
+    QDataStream out(&file);
+    out.setByteOrder(QDataStream::LittleEndian);
+
+    out << quint8('v') << quint8('t') << quint8('s') << quint8('f');
+    out << qint32(VERSION_LATEST);
+
+    out << qint32(VirtualTile::IsoTypeCount);
+    for (int i = VirtualTile::Invalid + 1; i < VirtualTile::IsoTypeCount; i++)
+        SaveString(out, mTypeToName[static_cast<VirtualTile::IsoType>(i)]);
+
+    QMap<QString,int> srcNameMap;
+    foreach (VirtualTileset *ts, tilesets) {
+        foreach (VirtualTile *vtile, ts->tiles()) {
+            if (!vtile->imageSource().isEmpty())
+                srcNameMap[vtile->imageSource()] = 1;
+        }
+    }
+    int srcNameCount = srcNameMap.values().size();
+    out << qint32(srcNameCount);
+    int n = 0;
+    foreach (QString name, srcNameMap.keys()) {
+        srcNameMap[name] = n++;
+        SaveString(out, name);
+    }
+
+    out << qint32(tilesets.size());
+    foreach (VirtualTileset *ts, tilesets) {
+        SaveString(out, ts->name());
+        out << qint32(ts->columnCount());
+        out << qint32(ts->rowCount());
+        QList<VirtualTile*> nonEmptyTiles;
+        foreach (VirtualTile *vtile, ts->tiles()) {
+            if (vtile->type() != VirtualTile::Invalid && srcNameMap.contains(vtile->imageSource()))
+                nonEmptyTiles += vtile;
+        }
+        out << qint32(nonEmptyTiles.size());
+        foreach (VirtualTile *vtile, nonEmptyTiles) {
+            out << qint32(vtile->index());
+            out << qint32(srcNameMap[vtile->imageSource()]);
+            out << qint32(vtile->srcX());
+            out << qint32(vtile->srcY());
+            out << qint32(vtile->type());
+        }
+    }
+
+    return true;
+}
+
+/////
+
+#include "BuildingEditor/simplefile.h"
+
+#define VERSION0 0
+
+#define VERSION_LATEST VERSION0
+
+OldVirtualTilesetsTxtFile::OldVirtualTilesetsTxtFile() :
+    mVersion(0),
+    mRevision(0),
+    mSourceRevision(0)
+{
+    mNameToType[QLatin1String("floor")] = VirtualTile::Floor;
+
+    mNameToType[QLatin1String("wall_w")] = VirtualTile::WallW;
+    mNameToType[QLatin1String("wall_n")] = VirtualTile::WallN;
+    mNameToType[QLatin1String("wall_nw")] = VirtualTile::WallNW;
+    mNameToType[QLatin1String("wall_se")] = VirtualTile::WallSE;
+    mNameToType[QLatin1String("wall_window_w")] = VirtualTile::WallWindowW;
+    mNameToType[QLatin1String("wall_window_n")] = VirtualTile::WallWindowN;
+    mNameToType[QLatin1String("wall_door_w")] = VirtualTile::WallDoorW;
+    mNameToType[QLatin1String("wall_door_n")] = VirtualTile::WallDoorN;
+
+    mNameToType[QLatin1String("wall_short_w")] = VirtualTile::WallShortW;
+    mNameToType[QLatin1String("wall_short_n")] = VirtualTile::WallShortN;
+    mNameToType[QLatin1String("wall_short_nw")] = VirtualTile::WallShortNW;
+    mNameToType[QLatin1String("wall_short_se")] = VirtualTile::WallShortSE;
+
+    mNameToType[QLatin1String("roof_slope_s1")] = VirtualTile::SlopeS1;
+    mNameToType[QLatin1String("roof_slope_s2")] = VirtualTile::SlopeS2;
+    mNameToType[QLatin1String("roof_slope_s3")] = VirtualTile::SlopeS3;
+    mNameToType[QLatin1String("roof_slope_e1")] = VirtualTile::SlopeE1;
+    mNameToType[QLatin1String("roof_slope_e2")] = VirtualTile::SlopeE2;
+    mNameToType[QLatin1String("roof_slope_e3")] = VirtualTile::SlopeE3;
+
+    mNameToType[QLatin1String("roof_shallow_n1")] = VirtualTile::ShallowSlopeN1;
+    mNameToType[QLatin1String("roof_shallow_n2")] = VirtualTile::ShallowSlopeN2;
+    mNameToType[QLatin1String("roof_shallow_s1")] = VirtualTile::ShallowSlopeS1;
+    mNameToType[QLatin1String("roof_shallow_s2")] = VirtualTile::ShallowSlopeS2;
+    mNameToType[QLatin1String("roof_shallow_w1")] = VirtualTile::ShallowSlopeW1;
+    mNameToType[QLatin1String("roof_shallow_w2")] = VirtualTile::ShallowSlopeW2;
+    mNameToType[QLatin1String("roof_shallow_e1")] = VirtualTile::ShallowSlopeE1;
+    mNameToType[QLatin1String("roof_shallow_e2")] = VirtualTile::ShallowSlopeE2;
+
+    mNameToType[QLatin1String("roof_slope_pt5s")] = VirtualTile::SlopePt5S;
+    mNameToType[QLatin1String("roof_slope_1pt5s")] = VirtualTile::SlopeOnePt5S;
+    mNameToType[QLatin1String("roof_slope_2pt5s")] = VirtualTile::SlopeTwoPt5S;
+    mNameToType[QLatin1String("roof_slope_pt5e")] = VirtualTile::SlopePt5E;
+    mNameToType[QLatin1String("roof_slope_1pt5e")] = VirtualTile::SlopeOnePt5E;
+    mNameToType[QLatin1String("roof_slope_2pt5e")] = VirtualTile::SlopeTwoPt5E;
+
+    mNameToType[QLatin1String("roof_trim_inner")] = VirtualTile::TrimInner;
+    mNameToType[QLatin1String("roof_trim_outer")] = VirtualTile::TrimOuter;
+    mNameToType[QLatin1String("roof_trim_s")] = VirtualTile::TrimS;
+    mNameToType[QLatin1String("roof_trim_e")] = VirtualTile::TrimE;
+    mNameToType[QLatin1String("roof_trim_corner_sw")] = VirtualTile::TrimCornerSW;
+    mNameToType[QLatin1String("roof_trim_corner_ne")] = VirtualTile::TrimCornerNE;
+
+    mNameToType[QLatin1String("roof_inner1")] = VirtualTile::Inner1;
+    mNameToType[QLatin1String("roof_inner2")] = VirtualTile::Inner2;
+    mNameToType[QLatin1String("roof_inner3")] = VirtualTile::Inner3;
+    mNameToType[QLatin1String("roof_outer1")] = VirtualTile::Outer1;
+    mNameToType[QLatin1String("roof_outer2")] = VirtualTile::Outer2;
+    mNameToType[QLatin1String("roof_outer3")] = VirtualTile::Outer3;
+
+    mNameToType[QLatin1String("roof_inner_pt5")] = VirtualTile::InnerPt5;
+    mNameToType[QLatin1String("roof_inner_1pt5")] = VirtualTile::InnerOnePt5;
+    mNameToType[QLatin1String("roof_inner_2pt5")] = VirtualTile::InnerTwoPt5;
+    mNameToType[QLatin1String("roof_outer_p5")] = VirtualTile::OuterPt5;
+    mNameToType[QLatin1String("roof_outer_1pt5")] = VirtualTile::OuterOnePt5;
+    mNameToType[QLatin1String("roof_outer_2pt5")] = VirtualTile::OuterTwoPt5;
+
+    mNameToType[QLatin1String("roof_corner_sw1")] = VirtualTile::CornerSW1;
+    mNameToType[QLatin1String("roof_corner_sw2")] = VirtualTile::CornerSW2;
+    mNameToType[QLatin1String("roof_corner_sw3")] = VirtualTile::CornerSW3;
+    mNameToType[QLatin1String("roof_corner_ne1")] = VirtualTile::CornerNE1;
+    mNameToType[QLatin1String("roof_corner_ne2")] = VirtualTile::CornerNE2;
+    mNameToType[QLatin1String("roof_corner_ne3")] = VirtualTile::CornerNE3;
+
+    mNameToType[QLatin1String("roof_top_n1")] = VirtualTile::RoofTopN1;
+    mNameToType[QLatin1String("roof_top_n2")] = VirtualTile::RoofTopN2;
+    mNameToType[QLatin1String("roof_top_n3")] = VirtualTile::RoofTopN3;
+    mNameToType[QLatin1String("roof_top_w1")] = VirtualTile::RoofTopW1;
+    mNameToType[QLatin1String("roof_top_w2")] = VirtualTile::RoofTopW2;
+    mNameToType[QLatin1String("roof_top_w3")] = VirtualTile::RoofTopW3;
+
+    foreach (QString name, mNameToType.keys())
+        mTypeToName[mNameToType[name]] = name;
+}
+
+OldVirtualTilesetsTxtFile::~OldVirtualTilesetsTxtFile()
+{
+    qDeleteAll(mTilesets);
+}
+
+bool OldVirtualTilesetsTxtFile::read(const QString &fileName)
 {
     QFileInfo info(fileName);
     if (!info.exists()) {
@@ -1292,12 +1586,12 @@ bool VirtualTilesetsFile::read(const QString &fileName)
     return true;
 }
 
-bool VirtualTilesetsFile::write(const QString &fileName)
+bool OldVirtualTilesetsTxtFile::write(const QString &fileName)
 {
     return write(fileName, mTilesets);
 }
 
-bool VirtualTilesetsFile::write(const QString &fileName,
+bool OldVirtualTilesetsTxtFile::write(const QString &fileName,
                                 const QList<VirtualTileset *> &tilesets)
 {
     SimpleFile simpleFile;
@@ -1343,7 +1637,7 @@ bool VirtualTilesetsFile::write(const QString &fileName,
     return true;
 }
 
-bool VirtualTilesetsFile::parse2Ints(const QString &s, int *pa, int *pb)
+bool OldVirtualTilesetsTxtFile::parse2Ints(const QString &s, int *pa, int *pb)
 {
     QStringList coords = s.split(QLatin1Char(','), QString::SkipEmptyParts);
     if (coords.size() != 2)
@@ -1357,7 +1651,7 @@ bool VirtualTilesetsFile::parse2Ints(const QString &s, int *pa, int *pb)
     return true;
 }
 
-bool VirtualTilesetsFile::parseIsoType(const QString &s, VirtualTile::IsoType &isoType)
+bool OldVirtualTilesetsTxtFile::parseIsoType(const QString &s, VirtualTile::IsoType &isoType)
 {
     if (mNameToType.contains(s)) {
         isoType = mNameToType[s];

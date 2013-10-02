@@ -28,10 +28,12 @@ void TileShapeGrid::paint(QPainter *painter, const QStyleOptionGraphicsItem *, Q
     painter->setPen(Qt::lightGray);
     painter->drawRect(boundingRect());
 
-    for (int y = 0; y <= 32; y++)
+    for (int y = 0; y < 32; y++)
         painter->drawLine(mScene->toScene(0, y / 32.0, mZ), mScene->toScene(1, y / 32.0, mZ));
-    for (int x = 0; x <= 32; x++)
+    painter->drawLine(mScene->toScene(0, 1, mZ), mScene->toScene(1, 1, mZ));
+    for (int x = 0; x < 32; x++)
         painter->drawLine(mScene->toScene(x / 32.0, 0, mZ), mScene->toScene(x / 32.0, 1, mZ));
+    painter->drawLine(mScene->toScene(1, 0, mZ), mScene->toScene(1, 1, mZ));
 
     painter->setPen(Qt::black);
 

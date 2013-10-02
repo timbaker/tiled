@@ -18,7 +18,11 @@
 #include "virtualtilesetdialog.h"
 #include "ui_virtualtilesetdialog.h"
 
+#include "addtexturesdialog.h"
 #include "addvirtualtilesetdialog.h"
+#include "preferences.h"
+#include "texturemanager.h"
+#include "tileshapeeditor.h"
 #include "undoredobuttons.h"
 #include "virtualtileset.h"
 #include "zoomable.h"
@@ -26,6 +30,8 @@
 #include "tile.h"
 #include "tileset.h"
 
+#include <QCloseEvent>
+#include <QFileDialog>
 #include <QFileInfo>
 #include <QImageReader>
 #include <QMessageBox>
@@ -197,16 +203,68 @@ public:
     QVector<VirtualTile*> mTiles;
 };
 
+class AddTexture : public QUndoCommand
+{
+public:
+    AddTexture(VirtualTilesetDialog *d, TextureInfo *tex) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Add Texture")),
+        mDialog(d),
+        mTexture(tex)
+    {
+    }
+
+    void undo()
+    {
+        mDialog->removeTexture(mTexture);
+    }
+
+    void redo()
+    {
+        mDialog->addTexture(mTexture);
+    }
+
+    VirtualTilesetDialog *mDialog;
+    TextureInfo *mTexture;
+};
+
+class RemoveTexture : public QUndoCommand
+{
+public:
+    RemoveTexture(VirtualTilesetDialog *d, TextureInfo *tex) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Remove Texture")),
+        mDialog(d),
+        mTexture(tex)
+    {
+    }
+
+    void undo()
+    {
+        mDialog->addTexture(mTexture);
+    }
+
+    void redo()
+    {
+        mDialog->removeTexture(mTexture);
+    }
+
+    VirtualTilesetDialog *mDialog;
+    TextureInfo *mTexture;
+};
+
 } // namespace
 
+SINGLETON_IMPL(VirtualTilesetDialog)
+
 VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
-    QDialog(parent),
+    QMainWindow(parent),
     ui(new Ui::VirtualTilesetDialog),
     mCurrentVirtualTileset(0),
-    mOrthoTileset(0),
+    mCurrentTexture(0),
+    mTextureTileset(0),
     mIsoTileset(0),
     mIsoCategory(CategoryWall),
     mShowDiskImage(false),
+    mFile(0),
     mUndoGroup(new QUndoGroup(this)),
     mUndoStack(new QUndoStack(this))
 {
@@ -224,6 +282,12 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     toolBar->addAction(ui->actionShowDiskImage);
     ui->vTileToolbarLayout->insertWidget(0, toolBar, 1);
 
+    toolBar = new QToolBar;
+    toolBar->setIconSize(QSize(16, 16));
+    toolBar->addAction(ui->actionAddTexture);
+    toolBar->addAction(ui->actionRemoveTexture);
+    ui->textureToolbarLayout->insertWidget(0, toolBar);
+
     UndoRedoButtons *urb = new UndoRedoButtons(mUndoStack, this);
     ui->buttonsLayout->insertWidget(0, urb->redoButton());
     ui->buttonsLayout->insertWidget(0, urb->undoButton());
@@ -234,6 +298,8 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     ui->vTilesetTiles->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ui->vTilesetTiles->setDragEnabled(true);
     ui->vTilesetTiles->setDragDropMode(QAbstractItemView::DragDrop);
+
+    ui->orthoTiles->setShowLayerNames(false);
 
     Zoomable *zoomable = ui->vTilesetTiles->zoomable();
     delete ui->isoTiles->zoomable();
@@ -260,10 +326,11 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     connect(ui->vTilesetNames, SIGNAL(activated(QModelIndex)), SLOT(editVTileset(QModelIndex)));
     connect(ui->vTilesetTiles->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(updateActions()));
+    connect(ui->vTilesetTiles, SIGNAL(activated(QModelIndex)), SLOT(vTileActivated(QModelIndex)));
     connect(ui->orthoFiles->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
-            SLOT(orthoFileSelectionChanged()));
+            SLOT(textureNameSelectionChanged()));
     connect(ui->orthoTiles->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
-            SLOT(orthoTileSelectionChanged()));
+            SLOT(textureTileSelectionChanged()));
 
     connect(ui->vTilesetTiles->model(), SIGNAL(beginDropTiles()), SLOT(beginDropTiles()));
     connect(ui->vTilesetTiles->model(), SIGNAL(endDropTiles()), SLOT(endDropTiles()));
@@ -276,14 +343,22 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     connect(ui->actionRemoveTileset, SIGNAL(triggered()), SLOT(removeTileset()));
     connect(ui->actionClearVTiles, SIGNAL(triggered()), SLOT(clearVTiles()));
     connect(ui->actionShowDiskImage, SIGNAL(toggled(bool)), SLOT(showDiskImage(bool)));
+    connect(ui->actionAddTexture, SIGNAL(triggered()), SLOT(addTexture()));
+    connect(ui->actionRemoveTexture, SIGNAL(triggered()), SLOT(removeTexture()));
 
     connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetAdded(VirtualTileset*)),
             SLOT(tilesetAdded(VirtualTileset*)));
     connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetRemoved(VirtualTileset*)),
             SLOT(tilesetRemoved(VirtualTileset*)));
 
+    connect(TextureMgr::instancePtr(), SIGNAL(textureAdded(TextureInfo*)),
+            SLOT(textureAdded(TextureInfo*)));
+    connect(TextureMgr::instancePtr(), SIGNAL(textureRemoved(TextureInfo*)),
+            SLOT(textureRemoved(TextureInfo*)));
+
+
     setVirtualTilesetNamesList();
-    setOrthoFilesList();
+    setTextureNamesList();
 
     settings.beginGroup(QLatin1String("VirtualTilesetDialog"));
     QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
@@ -324,25 +399,17 @@ void VirtualTilesetDialog::setVirtualTilesetTilesList()
     ui->vTilesetTiles->model()->setDiskImage(diskImage);
 }
 
-#include "textureunpacker.h"
-void VirtualTilesetDialog::setOrthoFilesList()
+void VirtualTilesetDialog::setTextureNamesList()
 {
-    qDeleteAll(mOrthoTilesets);
-    mOrthoTilesets.clear();
-    TextureUnpacker unpacker;
-    unpacker.unpack(QLatin1String("ntiles_0"));
-    unpacker.unpack(QLatin1String("ntiles_1"));
-    unpacker.unpack(QLatin1String("ntiles_2"));
-    unpacker.unpack(QLatin1String("ntiles_3"));
-    mOrthoTilesets = unpacker.createTilesets();
     ui->orthoFiles->clear();
-    foreach (Tileset *ts, mOrthoTilesets)
-        ui->orthoFiles->addItem(ts->name());
+    foreach (TextureInfo *tex, TextureMgr::instance().textures())
+        ui->orthoFiles->addItem(tex->name());
 }
 
-void VirtualTilesetDialog::setOrthoTilesList()
+void VirtualTilesetDialog::setTextureTilesList()
 {
-    ui->orthoTiles->tilesetModel()->setTileset(mOrthoTileset);
+    ui->orthoTiles->selectionModel()->clear();
+    ui->orthoTiles->tilesetModel()->setTileset(mTextureTileset);
 }
 
 void VirtualTilesetDialog::addTileset(VirtualTileset *vts)
@@ -393,6 +460,16 @@ void VirtualTilesetDialog::changeVTile(VirtualTile *vtile, QString &imageSource,
     ui->vTilesetTiles->model()->redisplay(vtile);
 }
 
+void VirtualTilesetDialog::addTexture(TextureInfo *tex)
+{
+    TextureMgr::instance().addTexture(tex);
+}
+
+void VirtualTilesetDialog::removeTexture(TextureInfo *tex)
+{
+    TextureMgr::instance().removeTexture(tex);
+}
+
 void VirtualTilesetDialog::addTileset()
 {
     AddVirtualTilesetDialog d(this);
@@ -422,6 +499,18 @@ void VirtualTilesetDialog::removeTileset()
                                   QMessageBox::Yes, QMessageBox::No) == QMessageBox::No)
             return;
         mUndoStack->push(new RemoveTileset(this, vts));
+    }
+}
+
+void VirtualTilesetDialog::vTileActivated(const QModelIndex &index)
+{
+    if (VirtualTile *vtile = ui->vTilesetTiles->model()->tileAt(index)) {
+        QString texName = vtile->imageSource();
+        if (TextureInfo *tex = TextureMgr::instance().texture(texName)) {
+            int row = TextureMgr::instance().textures().indexOf(tex);
+            ui->orthoFiles->setCurrentRow(row);
+            ui->orthoTiles->setCurrentIndex(ui->orthoTiles->model()->index(vtile->srcY(), vtile->srcX()));
+        }
     }
 }
 
@@ -501,17 +590,21 @@ void VirtualTilesetDialog::editVTileset(const QModelIndex &index)
     }
 }
 
-void VirtualTilesetDialog::orthoFileSelectionChanged()
+void VirtualTilesetDialog::textureNameSelectionChanged()
 {
     QModelIndexList selected = ui->orthoFiles->selectionModel()->selectedIndexes();
+    mCurrentTexture = 0;
+    mTextureTileset = 0;
     if (!selected.isEmpty()) {
         int row = selected.first().row();
-        mOrthoTileset = mOrthoTilesets.at(row);
+        QString name = ui->orthoFiles->item(row)->text();
+        if (mCurrentTexture = TextureMgr::instance().texture(name))
+            mTextureTileset = TextureMgr::instance().tileset(mCurrentTexture);
     }
-    setOrthoTilesList();
+    setTextureTilesList();
 }
 
-void VirtualTilesetDialog::orthoTileSelectionChanged()
+void VirtualTilesetDialog::textureTileSelectionChanged()
 {
     QModelIndexList selected = ui->orthoTiles->selectionModel()->selectedIndexes();
     if (mIsoTileset) {
@@ -622,10 +715,101 @@ void VirtualTilesetDialog::orthoTileSelectionChanged()
     ui->isoTiles->setTileset(mIsoTileset);
 }
 
+void VirtualTilesetDialog::addTexture()
+{
+    QStringList ignore;
+    foreach (TextureInfo *tex, TextureMgr::instance().textures()) {
+        QString fileName = tex->fileName();
+        if (QDir::isRelativePath(fileName))
+            fileName = QDir(Preferences::instance()->texturesDirectory()).filePath(tex->fileName());
+        ignore += fileName;
+    }
+    AddTexturesDialog dialog(Preferences::instance()->texturesDirectory(),
+                             ignore, true, this);
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    mUndoStack->beginMacro(tr("Add Textures"));
+
+    foreach (QString fileName, dialog.fileNames()) {
+        QFileInfo info(fileName);
+        QString name = info.completeBaseName();
+        if (TextureInfo *old = TextureMgr::instance().texture(name))
+            mUndoStack->push(new RemoveTexture(this, old));
+        QImageReader reader(fileName);
+        QSize imgSize = reader.size();
+        if (imgSize.isValid() && !(imgSize.width() % 32) && !(imgSize.height() % 96)) {
+            TextureInfo *tex = new TextureInfo(name, fileName,
+                                               imgSize.width() / 32,
+                                               imgSize.height() / 96);
+            mUndoStack->push(new AddTexture(this, tex));
+        }
+    }
+
+    mUndoStack->endMacro();
+}
+
+void VirtualTilesetDialog::removeTexture()
+{
+    if (mCurrentTexture) {
+        if (QMessageBox::question(this, tr("Remove Texture"),
+                                  tr("Really remove the texture '%1'?")
+                                  .arg(mCurrentTexture->name()),
+                                  QMessageBox::Yes, QMessageBox::No) == QMessageBox::No)
+            return;
+        mUndoStack->push(new RemoveTexture(this, mCurrentTexture));
+    }
+}
+
+void VirtualTilesetDialog::textureAdded(TextureInfo *tex)
+{
+    foreach (VirtualTileset *vts, mTilesets) {
+        bool changed = false;
+        foreach (VirtualTile *vtile, vts->tiles()) {
+            if (vtile->imageSource() == tex->name()) {
+                vtile->setImage(QImage());
+                // not calling vtile->setImageSource
+                changed = true;
+            }
+        }
+        if (changed) {
+            vts->tileChanged();
+            VirtualTilesetMgr::instance().emitTilesetChanged(vts);
+            if (vts == mCurrentVirtualTileset)
+                ui->vTilesetTiles->model()->redisplay();
+        }
+    }
+
+
+    setTextureNamesList();
+}
+
+void VirtualTilesetDialog::textureRemoved(TextureInfo *tex)
+{
+    foreach (VirtualTileset *vts, mTilesets) {
+        bool changed = false;
+        foreach (VirtualTile *vtile, vts->tiles()) {
+            if (vtile->imageSource() == tex->name()) {
+                vtile->setImage(QImage());
+                // not calling vtile->setImageSource
+                changed = true;
+            }
+        }
+        if (changed) {
+            vts->tileChanged();
+            VirtualTilesetMgr::instance().emitTilesetChanged(vts);
+            if (vts == mCurrentVirtualTileset)
+                ui->vTilesetTiles->model()->redisplay();
+        }
+    }
+
+    setTextureNamesList();
+}
+
 void VirtualTilesetDialog::isoCategoryChanged(int row)
 {
     mIsoCategory = static_cast<IsoCategory>(row);
-    orthoTileSelectionChanged();
+    textureTileSelectionChanged();
 }
 
 void VirtualTilesetDialog::beginDropTiles()
@@ -644,7 +828,6 @@ void VirtualTilesetDialog::tileDropped(VirtualTile *vtile, const QString &imageS
     mUndoStack->push(new ChangeVTile(this, vtile, imageSource, srcX, srcY, isoType));
 }
 
-#include "tileshapeeditor.h"
 void VirtualTilesetDialog::editShape(const QModelIndex &index)
 {
     if (VirtualTile *vtile = ui->isoTiles->model()->tileAt(index)) {
@@ -707,19 +890,154 @@ void VirtualTilesetDialog::restoreSplitterSizes(QSplitter *splitter)
     settings.endGroup();
 }
 
-void VirtualTilesetDialog::done(int r)
+void VirtualTilesetDialog::closeEvent(QCloseEvent *event)
 {
-    QSettings settings;
-    settings.beginGroup(QLatin1String("VirtualTilesetDialog"));
-    settings.setValue(QLatin1String("geometry"), saveGeometry());
-    settings.setValue(QLatin1String("TileScale"), ui->vTilesetTiles->zoomable()->scale());
-    settings.endGroup();
-    saveSplitterSizes(ui->splitter);
+    if (confirmSave()) {
+        QSettings settings;
+        settings.beginGroup(QLatin1String("VirtualTilesetDialog"));
+        settings.setValue(QLatin1String("geometry"), saveGeometry());
+        settings.setValue(QLatin1String("TileScale"), ui->vTilesetTiles->zoomable()->scale());
+        settings.endGroup();
+        saveSplitterSizes(ui->splitter);
 
-    if (!mUndoStack->isClean()) {
-        VirtualTilesetMgr::instance().writeTxt();
-        mUndoStack->setClean();
+        if (!mUndoStack->isClean()) {
+            TextureMgr::instance().writeTxt();
+            VirtualTilesetMgr::instance().writeTxt();
+            mUndoStack->setClean();
+        }
+
+        event->accept();
+    } else
+        event->ignore();
+}
+
+void VirtualTilesetDialog::fileOpen()
+{
+    if (!confirmSave())
+        return;
+
+    QSettings settings;
+    QString key = QLatin1String("VirtualTilesetDialog/LastOpenPath");
+    QString lastPath = settings.value(key).toString();
+
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Choose .vts file"),
+                                                    lastPath,
+                                                    QLatin1String("Virtual tileset files (*.vts)"));
+    if (fileName.isEmpty())
+        return;
+
+    settings.setValue(key, QFileInfo(fileName).absolutePath());
+
+    clearDocument();
+
+    fileOpen(fileName);
+
+//    initStringComboBoxValues();
+//    updateTilesetListLater();
+//    updateUI();
+}
+
+void VirtualTilesetDialog::fileOpen(const QString &fileName)
+{
+    VirtualTilesetsFile *vtsFile = new VirtualTilesetsFile;
+    if (!vtsFile->read(fileName)) {
+        QMessageBox::warning(this, tr("Error reading .vts file"),
+                             vtsFile->errorString());
+        delete vtsFile;
+        return;
     }
 
-    QDialog::done(r);
+    mFile = vtsFile;
+}
+
+bool VirtualTilesetDialog::confirmSave()
+{
+    if (!mFile || mUndoStack->isClean())
+        return true;
+
+    int ret = QMessageBox::warning(
+            this, tr("Unsaved Changes"),
+            tr("There are unsaved changes. Do you want to save now?"),
+            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+
+    switch (ret) {
+    case QMessageBox::Save:    return fileSave();
+    case QMessageBox::Discard: return true;
+    case QMessageBox::Cancel:
+    default:
+        return false;
+    }
+}
+
+QString VirtualTilesetDialog::getSaveLocation()
+{
+    QSettings settings;
+    QString key = QLatin1String("VirtualTilesetDialog/LastOpenPath");
+    QString suggestedFileName = Preferences::instance()->tilesDirectory() +
+            QLatin1String("/virtualtilesets.vts");
+    if (!mFile) {
+        //
+    } else if (mFile->fileName().isEmpty()) {
+        QString lastPath = settings.value(key).toString();
+        if (!lastPath.isEmpty())
+            suggestedFileName = lastPath + QLatin1String("/virtualtilesets.vts");
+    } else {
+        suggestedFileName = mFile->fileName();
+    }
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save As"),
+                                                    suggestedFileName,
+                                                    QLatin1String("Virtual tileset files (*.vts)"));
+    if (fileName.isEmpty())
+        return QString();
+
+    settings.setValue(key, QFileInfo(fileName).absolutePath());
+
+    return fileName;
+}
+
+bool VirtualTilesetDialog::fileSave()
+{
+    if (mFile->fileName().length())
+        return fileSave(mFile->fileName());
+    else
+        return fileSaveAs();
+}
+
+bool VirtualTilesetDialog::fileSaveAs()
+{
+    QString fileName = getSaveLocation();
+    if (fileName.isEmpty())
+        return false;
+    return fileSave(fileName);
+}
+
+bool VirtualTilesetDialog::fileSave(const QString &fileName)
+{
+    if (!mFile)
+        return false;
+
+    if (!mFile->write(fileName)) {
+        QMessageBox::warning(this, tr("Error writing .vts file"),
+                             mFile->errorString());
+        return false;
+    }
+
+    mFile->setFileName(fileName);
+    mUndoStack->setClean();
+
+//    updateWindowTitle();
+
+    return true;
+}
+
+void VirtualTilesetDialog::clearDocument()
+{
+    mUndoStack->clear();
+
+    mTilesets.clear();
+
+    delete mFile;
+    mFile = 0;
+
+    ui->vTilesetNames->clear();
 }

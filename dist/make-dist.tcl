@@ -114,6 +114,7 @@ Translations = translations
 copyFile $SRC $DEST LuaTools.txt
 copyFile $SRC $DEST TileProperties.txt
 copyFile $SRC $DEST Tilesets.txt
+copyFile $SRC $DEST Textures.txt
 copyFile $SRC $DEST VirtualTilesets.txt
 
 puts ---Translations---

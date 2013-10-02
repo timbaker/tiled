@@ -245,7 +245,9 @@ SOURCES += aboutdialog.cpp \
     undoredobuttons.cpp \
     addvirtualtilesetdialog.cpp \
     tileshapeeditor.cpp \
-    textureunpacker.cpp
+    textureunpacker.cpp \
+    texturemanager.cpp \
+    addtexturesdialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -451,7 +453,9 @@ HEADERS += aboutdialog.h \
     undoredobuttons.h \
     addvirtualtilesetdialog.h \
     tileshapeeditor.h \
-    textureunpacker.h
+    textureunpacker.h \
+    texturemanager.h \
+    addtexturesdialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -502,7 +506,8 @@ FORMS += aboutdialog.ui \
     luatooldialog.ui \
     virtualtilesetdialog.ui \
     addvirtualtilesetdialog.ui \
-    tileshapeeditor.ui
+    tileshapeeditor.ui \
+    addtexturesdialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc
@@ -562,6 +567,7 @@ isEmpty(INSTALL_ONLY_BUILD) {
 configTxtFiles.path = $${CONFIG_PREFIX}
 configTxtFiles.files = \
     $${top_srcdir}/LuaTools.txt \
+    $${top_srcdir}/Textures.txt \
     $${top_srcdir}/TileProperties.txt \
     $${top_srcdir}/Tilesets.txt \
     $${top_srcdir}/VirtualTilesets.txt

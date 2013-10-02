@@ -97,6 +97,11 @@ void TileDelegate::paint(QPainter *painter,
         QString name = fm.elidedText(layerName, Qt::ElideRight, option.rect.width());
         painter->drawText(option.rect.left(), option.rect.bottom() - labelHeight, option.rect.width(), labelHeight, Qt::AlignHCenter, name);
     }
+
+    if (mTilesetView->drawGrid()) {
+        painter->fillRect(option.rect.right(), option.rect.top(), 1, option.rect.height(), Qt::lightGray);
+        painter->fillRect(option.rect.left(), option.rect.bottom(), option.rect.width(), 1, Qt::lightGray);
+    }
 #else
     painter->drawPixmap(option.rect.adjusted(0, 0, -extra, -extra), tileImage);
 #endif
@@ -250,6 +255,13 @@ QSize TilesetView::sizeHint() const
 {
     return QSize(130, 100);
 }
+
+#ifdef ZOMBOID
+bool TilesetView::showLayerNames() const
+{
+    return Preferences::instance()->autoSwitchLayer() && mShowLayerNames;
+}
+#endif
 
 /**
  * Override to support zooming in and out using the mouse wheel.

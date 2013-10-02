@@ -1094,7 +1094,7 @@ void TileDefDialog::fileOpen(const QString &fileName)
 {
     TileDefFile *defFile = new TileDefFile;
     if (!defFile->read(fileName)) {
-        QMessageBox::warning(this, tr("Eror reading .tiles file"),
+        QMessageBox::warning(this, tr("Error reading .tiles file"),
                              defFile->errorString());
         delete defFile;
         return;
@@ -1111,7 +1111,7 @@ bool TileDefDialog::fileSave(const QString &fileName)
         return false;
 
     if (!mTileDefFile->write(fileName)) {
-        QMessageBox::warning(this, tr("Eror writing .tiles file"),
+        QMessageBox::warning(this, tr("Error writing .tiles file"),
                              mTileDefFile->errorString());
         return false;
     }

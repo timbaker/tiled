@@ -35,6 +35,7 @@ public:
 
     bool unpack(const QString &prefix);
     QList<Tileset*> createTilesets();
+    void writeImages(const QString &dirName);
     bool readTxt(const QString &fileName);
 
     struct TxtEntry

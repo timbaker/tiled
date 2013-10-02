@@ -24,6 +24,7 @@
 #include <QImage>
 #include <QMap>
 #include <QObject>
+#include <QStringList>
 
 class QGLPixelBuffer;
 
@@ -39,7 +40,7 @@ class VirtualTile
 {
 public:
     enum IsoType {
-        Invalid,
+        Invalid = -1,
         Floor,
 
         // Walls
@@ -95,6 +96,7 @@ public:
 
     int x() const { return mX; }
     int y() const { return mY; }
+    int index() const;
 
     void setImageSource(const QString &imageSource, int srcX, int srcY)
     {
@@ -213,20 +215,74 @@ private:
 
     QMap<int,TileShape*> mShapeByType;
 
-    QMap<QString,Tileset*> mUnpackedTilesets;
-
     int mSourceRevision;
     int mRevision;
     QString mError;
 };
 
+/**
+  * This class represents a single binary *.vts file.
+  */
 class VirtualTilesetsFile
 {
     Q_DECLARE_TR_FUNCTIONS(VirtualTilesetsFile)
-
 public:
     VirtualTilesetsFile();
     ~VirtualTilesetsFile();
+
+    QString fileName() const
+    { return mFileName; }
+
+    void setFileName(const QString &fileName)
+    { mFileName = fileName; }
+
+    bool read(const QString &fileName);
+    bool write(const QString &fileName);
+    bool write(const QString &fileName, const QList<VirtualTileset*> &tilesets);
+
+    QString directory() const;
+
+    void addTileset(VirtualTileset *vts)
+    { mTilesets += vts; mTilesetByName[vts->name()] = vts; }
+
+    void removeTileset(VirtualTileset *vts);
+
+    const QList<VirtualTileset*> &tilesets() const
+    { return mTilesets; }
+
+    QList<VirtualTileset*> takeTilesets()
+    {
+        QList<VirtualTileset*> ret = mTilesets;
+        mTilesets.clear();
+        mTilesetByName.clear();
+        return ret;
+    }
+
+    VirtualTileset *tileset(const QString &name);
+
+    QStringList tilesetNames() const
+    { return mTilesetByName.keys(); }
+
+    QString errorString() const
+    { return mError; }
+
+private:
+    QList<VirtualTileset*> mTilesets;
+    QMap<QString,VirtualTileset*> mTilesetByName;
+    QString mFileName;
+    QString mError;
+
+    QMap<QString,VirtualTile::IsoType> mNameToType;
+    QMap<VirtualTile::IsoType,QString> mTypeToName;
+};
+
+class OldVirtualTilesetsTxtFile
+{
+    Q_DECLARE_TR_FUNCTIONS(OldVirtualTilesetsTxtFile)
+
+public:
+    OldVirtualTilesetsTxtFile();
+    ~OldVirtualTilesetsTxtFile();
 
     bool read(const QString &fileName);
     bool write(const QString &fileName);

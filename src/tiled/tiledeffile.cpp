@@ -79,7 +79,7 @@ bool TileDefFile::read(const QString &fileName)
     if (memcmp(tdef, "tdef", 4) == 0) {
         in >> version;
         if (version < 0 || version > VERSION_LATEST) {
-            mError = tr("Unknown version number %1 in .tiles file\n.%2")
+            mError = tr("Unknown version number %1 in .tiles file.\n%2")
                     .arg(version).arg(fileName);
             return false;
         }

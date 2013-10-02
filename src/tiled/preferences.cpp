@@ -471,6 +471,11 @@ QString Preferences::tilesDirectory() const
     return mTilesDirectory;
 }
 
+QString Preferences::texturesDirectory() const
+{
+    return mTilesDirectory + QLatin1String("/Textures");
+}
+
 qreal Preferences::tilesetScale() const
 {
     return mTilesetScale;
