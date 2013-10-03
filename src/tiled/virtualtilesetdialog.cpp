@@ -251,6 +251,32 @@ public:
     TextureInfo *mTexture;
 };
 
+class EditShape : public QUndoCommand
+{
+public:
+    EditShape(VirtualTilesetDialog *d, TileShape *shape, const QList<TileShape::Element> &faces) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Edit Shape")),
+        mDialog(d),
+        mShape(shape),
+        mFaces(faces)
+    {
+    }
+
+    void undo()
+    {
+        mDialog->editShape(mShape, mFaces);
+    }
+
+    void redo()
+    {
+        mDialog->editShape(mShape, mFaces);
+    }
+
+    VirtualTilesetDialog *mDialog;
+    TileShape *mShape;
+    QList<TileShape::Element> mFaces;
+};
+
 } // namespace
 
 SINGLETON_IMPL(VirtualTilesetDialog)
@@ -471,6 +497,29 @@ void VirtualTilesetDialog::removeTexture(TextureInfo *tex)
     TextureMgr::instance().removeTexture(tex);
 }
 
+void VirtualTilesetDialog::editShape(TileShape *shape, QList<TileShape::Element> &faces)
+{
+    QList<TileShape::Element> oldFaces = shape->mElements;
+    shape->mElements = faces;
+    faces = oldFaces;
+
+    foreach (VirtualTileset *vts, VirtualTilesetMgr::instance().tilesets()) {
+        bool changed = false;
+        foreach (VirtualTile *vtile, vts->tiles()) {
+            if (vtile->shape() == shape) {
+                vtile->setImage(QImage());
+                changed = true;
+            }
+        }
+        if (changed) {
+            vts->tileChanged();
+            VirtualTilesetMgr::instance().emitTilesetChanged(vts);
+        }
+    }
+
+    textureTileSelectionChanged();
+}
+
 void VirtualTilesetDialog::addTileset()
 {
     AddVirtualTilesetDialog d(this);
@@ -609,6 +658,7 @@ void VirtualTilesetDialog::textureTileSelectionChanged()
 {
     QModelIndexList selected = ui->orthoTiles->selectionModel()->selectedIndexes();
     if (mIsoTileset) {
+        ui->isoTiles->setTileset(0);
         delete mIsoTileset;
         mIsoTileset = 0;
     }
@@ -724,8 +774,8 @@ void VirtualTilesetDialog::textureTileSelectionChanged()
 
         mIsoTileset->tileAt(0, 3)->setShape(shape("roof_cap_flat_e1"));
         mIsoTileset->tileAt(1, 3)->setShape(shape("roof_cap_flat_e2"));
-        mIsoTileset->tileAt(2, 3)->setShape(shape("roof_cap_flat_e3"));
-        mIsoTileset->tileAt(3, 3)->setShape(shape("roof_cap_flat_s3"));
+//        mIsoTileset->tileAt(2, 3)->setShape(shape("roof_cap_flat_e3"));
+//        mIsoTileset->tileAt(3, 3)->setShape(shape("roof_cap_flat_s3"));
         mIsoTileset->tileAt(4, 3)->setShape(shape("roof_cap_flat_s2"));
         mIsoTileset->tileAt(5, 3)->setShape(shape("roof_cap_flat_s1"));
     }
@@ -874,6 +924,8 @@ void VirtualTilesetDialog::editShape(const QModelIndex &index)
             TileShapeEditor dialog(shape, this);
             if (dialog.exec() == QDialog::Accepted) {
                 TileShape *shape2 = dialog.tileShape();
+                mUndoStack->push(new EditShape(this, shape, shape2->mElements));
+#if 0
                 shape->mElements = shape2->mElements;
                 vtile->setImage(QImage());
                 vtile->tileset()->tileChanged();
@@ -891,8 +943,7 @@ void VirtualTilesetDialog::editShape(const QModelIndex &index)
                         VirtualTilesetMgr::instance().emitTilesetChanged(vts);
                     }
                 }
-
-                writeShapes();
+#endif
             }
         }
     }

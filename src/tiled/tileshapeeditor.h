@@ -139,6 +139,7 @@ public:
     bool isSelected() const { return mSelected; }
 
     QVector3D tilePos() const;
+    QPointF uv() const;
 
     void setDragOrigin(const QVector3D &pos) { mDragOrigin = pos; }
     QVector3D dragOrigin() const { return mDragOrigin; }

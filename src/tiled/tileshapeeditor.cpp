@@ -701,7 +701,7 @@ TileShapeHandle::TileShapeHandle(TileShapeScene *scene, int elementIndex, int po
 {
     setFlags(QGraphicsItem::ItemIgnoresTransformations |
              QGraphicsItem::ItemIgnoresParentOpacity);
-    setZValue(10000);
+    setZValue(100);
 //    setCursor(Qt::SizeAllCursor);
 
     setPos(mScene->toScene(mScene->tileShape()->mElements[mElementIndex].mGeom[mPointIndex]));
@@ -732,7 +732,12 @@ void TileShapeHandle::setSelected(bool selected)
 
 QVector3D TileShapeHandle::tilePos() const
 {
-     return mScene->tileShape()->mElements[mElementIndex].mGeom[mPointIndex];
+    return mScene->tileShape()->mElements[mElementIndex].mGeom[mPointIndex];
+}
+
+QPointF TileShapeHandle::uv() const
+{
+    return mScene->tileShape()->mElements[mElementIndex].mUV[mPointIndex];
 }
 
 void TileShapeHandle::setDragOffset(const QVector3D &delta)
@@ -750,13 +755,19 @@ void TileShapeHandle::setUV(const QPointF &uv)
 /////
 
 template <class T>
-static T *first(const QList<QGraphicsItem *> &items)
+static T *first(const QList<QGraphicsItem *> &items, QPointF &pos)
 {
+    qreal dist = 10000;
+    T *closest = 0;
     foreach (QGraphicsItem *item, items) {
-        if (T *t = dynamic_cast<T*>(item))
-            return t;
+        if (T *t = dynamic_cast<T*>(item)) {
+            if (QLineF(t->pos(), pos).length() < dist) {
+                closest = t;
+                dist = QLineF(t->pos(), pos).length();
+            }
+        }
     }
-    return 0;
+    return closest;
 }
 
 EditTileShapeElementTool::EditTileShapeElementTool(TileShapeScene *scene) :
@@ -787,7 +798,7 @@ void EditTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         mStartScenePos = event->scenePos();
         if (mMode == NoMode) {
             const QList<QGraphicsItem *> items = mScene->items(mStartScenePos);
-            mClickedHandle = first<TileShapeHandle>(items);
+            mClickedHandle = first<TileShapeHandle>(items, mStartScenePos);
             if (mClickedHandle) {
                 if (!mSelectedHandles.contains(mClickedHandle) && !(event->modifiers() & (Qt::ControlModifier | Qt::ShiftModifier)))
                     setSelectedHandles(QSet<TileShapeHandle*>() << mClickedHandle);
@@ -971,7 +982,7 @@ TileShapeUVGuide::TileShapeUVGuide() :
 
 QRectF TileShapeUVGuide::boundingRect() const
 {
-    return QRectF(0, 0, 32, 96);
+    return QRectF(0, 0, 32, 96).adjusted(-2, -2, 2, 2);
 }
 
 void TileShapeUVGuide::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -980,20 +991,29 @@ void TileShapeUVGuide::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
     painter->fillRect(boundingRect(), Qt::lightGray);
 
-    for (int x = 0; x < 32; x++)
+    for (int x = 0; x <= 32; x++)
         painter->drawLine(x, 0, x, 96);
-    for (int y = 0; y < 96; y++)
+    for (int y = 0; y <= 96; y++)
         painter->drawLine(0, y, 32, y);
 
-    painter->fillRect(mCurrentUV.x() * 32 - 0.25, mCurrentUV.y() * 96 - 0.25, 0.5, 0.5, Qt::gray);
-    painter->fillRect(mCursorUV.x() * 32 - 0.25, mCursorUV.y() * 96 - 0.25, 0.5, 0.5, Qt::blue);
+    painter->setPen(Qt::black);
+    for (int x = 16; x < 32; x += 16)
+        painter->drawLine(x, 0, x, 96);
+    for (int y = 16; y < 96; y += 16)
+        painter->drawLine(0, y, 32, y);
+
+    painter->fillRect(QRectF(mCurrentUV.x() * 32 - 0.35, mCurrentUV.y() * 96 - 0.35, 0.7, 0.7), Qt::gray);
+    painter->fillRect(QRectF(mCursorUV.x() * 32 - 0.35, mCursorUV.y() * 96 - 0.35, 0.7, 0.7), Qt::blue);
 }
 
 QPointF TileShapeUVGuide::toUV(const QPointF &scenePos)
 {
     QPointF itemPos = mapFromScene(scenePos);
-    return QPointF(itemPos.x() / boundingRect().width(),
-                   itemPos.y() / boundingRect().height());
+    qreal x = itemPos.x() / boundingRect().adjusted(2,2,-2,-2).width();
+    qreal y = itemPos.y() / boundingRect().adjusted(2,2,-2,-2).height();
+    x = qFloor(x) + qFloor((x - qFloor(x)) * 32) / 32.0;
+    y = qFloor(y) + qFloor((y - qFloor(y)) * 96) / 96.0;
+    return QPointF(x, y);
 }
 
 void TileShapeUVGuide::setCurrentUV(const QPointF &uv)
@@ -1023,7 +1043,7 @@ TileShapeUVTool::TileShapeUVTool(TileShapeScene *scene) :
     mAction->setText(QLatin1String("EditUV"));
 
     mGuide->setPos(16, 16);
-    mGuide->setZValue(100);
+    mGuide->setZValue(101);
 }
 
 void TileShapeUVTool::activate()
@@ -1036,6 +1056,11 @@ void TileShapeUVTool::activate()
 void TileShapeUVTool::deactivate()
 {
     mScene->removeItem(mGuide);
+
+    qDeleteAll(mHandles);
+    mHandles.clear();
+    mSelectedHandles.clear();
+    mClickedHandle = 0;
 }
 
 void TileShapeUVTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -1043,9 +1068,10 @@ void TileShapeUVTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     if (event->button() == Qt::LeftButton) {
         if (mMode == NoMode) {
             const QList<QGraphicsItem *> items = mScene->items(event->scenePos());
-            mClickedHandle = first<TileShapeHandle>(items);
+            mClickedHandle = first<TileShapeHandle>(items, event->scenePos());
             if (mClickedHandle) {
                 setSelectedHandles(QSet<TileShapeHandle*>() << mClickedHandle);
+                mGuide->setCurrentUV(mClickedHandle->uv());
                 mGuide->show();
                 mMode = SetUV;
             } else {
@@ -1063,6 +1089,12 @@ void TileShapeUVTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             mMode = NoMode;
         }
     }
+    if (event->button() == Qt::RightButton) {
+        if (mMode == SetUV) {
+            mGuide->hide();
+            mMode = NoMode;
+        }
+    }
 }
 
 void TileShapeUVTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
@@ -1070,6 +1102,9 @@ void TileShapeUVTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     if (mMode == SetUV) {
         QPointF uv = mGuide->toUV(event->scenePos());
         mGuide->setCursorUV(uv);
+        emit statusTextChanged(tr("Texture pixel coords %1,%2")
+                               .arg(uv.x() * 32)
+                               .arg(uv.y() * 96));
     }
 }
 

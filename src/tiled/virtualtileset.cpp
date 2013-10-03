@@ -540,8 +540,12 @@ public:
         counts += 4;
         indices << indices.size() << indices.size() + 1 << indices.size() + 2 << indices.size() + 3;
         textureids += textureid;
+#if 1
         colors += QVector3D(1, 1, 1);
-        texcoords << uv1 << uv2 << uv3 << uv4;
+        QVector2D _uv1 = uv1, _uv2 = uv2, _uv3 = uv3, _uv4 = uv4;
+        _uv1.setY(1 - uv1.y()), _uv2.setY(1 - uv2.y()), _uv3.setY(1 - uv3.y()), _uv4.setY(1 - uv4.y());
+#endif
+        texcoords << _uv1 << _uv2 << _uv3 << _uv4;
         vertices << v1 << v2 << v3 << v4;
 
         if (indices.size() > 1024 * 2)
@@ -556,7 +560,12 @@ public:
         indices << indices.size() << indices.size() + 1 << indices.size() + 2;
         textureids += textureid;
         colors += QVector3D(1, 1, 1);
-        texcoords << uv1 << uv2 << uv3;
+#if 1
+        colors += QVector3D(1, 1, 1);
+        QVector2D _uv1 = uv1, _uv2 = uv2, _uv3 = uv3;
+        _uv1.setY(1 - uv1.y()), _uv2.setY(1 - uv2.y()), _uv3.setY(1 - uv3.y());
+#endif
+        texcoords << _uv1 << _uv2 << _uv3;
         vertices << v1 << v2 << v3;
 
         if (indices.size() > 1024 * 2)
@@ -1778,7 +1787,7 @@ bool TileShapesFile::read(const QString &fileName)
                     for (int i = 0; i < xyz.size(); i += 3)
                         e.mGeom += QVector3D(xyz[i], xyz[i+1], xyz[i+2]);
 
-#if 1
+#if 0
                     for (int i = 0; i < e.mGeom.size(); i++)
                         e.mUV += QPointF();
 
@@ -1840,7 +1849,7 @@ bool TileShapesFile::write(const QString &fileName, const QList<TileShape *> &sh
                 geom += QString::fromLatin1("%1 %2 %3 ").arg(v.x()).arg(v.y()).arg(v.z());
             QString uv;
             foreach (QPointF v, e.mUV)
-                uv += QString::fromLatin1("%1 %2 ").arg(v.x(), v.y());
+                uv += QString::fromLatin1("%1 %2 ").arg(v.x()).arg(v.y());
             faceBlock.addValue("geom", geom);
             faceBlock.addValue("uv", uv);
             shapeBlock.blocks += faceBlock;

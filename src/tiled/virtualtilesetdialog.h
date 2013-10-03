@@ -20,6 +20,8 @@
 
 #include <QMainWindow>
 
+#include "tileshapeeditor.h" // for TileShape::Element
+
 #include "BuildingEditor/singleton.h"
 
 class QModelIndex;
@@ -75,6 +77,7 @@ public:
     void changeVTile(VirtualTile *vtile, QString &imageSource, int &srcX, int &srcY, TileShape *&isoType);
     void addTexture(TextureInfo *tex);
     void removeTexture(TextureInfo *tex);
+    void editShape(TileShape *shape, QList<TileShape::Element> &faces);
     //
 
     void closeEvent(QCloseEvent *event);
