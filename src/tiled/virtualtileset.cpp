@@ -1283,8 +1283,9 @@ static QString ReadString(QDataStream &in)
 }
 
 #define VERSION1 1
-#define VERSION2 2 //
-#define VERSION_LATEST VERSION2
+#define VERSION2 2 // imageSrc string -> index
+#define VERSION3 3 // added shape data
+#define VERSION_LATEST VERSION3
 
 bool VirtualTilesetsFile::read(const QString &fileName)
 {
@@ -1298,6 +1299,7 @@ bool VirtualTilesetsFile::read(const QString &fileName)
 
     QDataStream in(&file);
     in.setByteOrder(QDataStream::LittleEndian);
+    in.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
     quint8 tdef[4] = {0};
     in >> tdef[0];
@@ -1320,8 +1322,25 @@ bool VirtualTilesetsFile::read(const QString &fileName)
     qint32 numShapes;
     in >> numShapes;
     QStringList shapes;
-    for (int i = 0; i < numShapes; i++)
+    for (int i = 0; i < numShapes; i++) {
         shapes += ReadString(in);
+        if (version > VERSION2) {
+            qint32 numFaces;
+            in >> numFaces;
+            for (int j = 0; j < numFaces; j++) {
+                qint32 numPts;
+                in >> numPts;
+                for (int k = 0; k < numPts; k++) {
+                    double x, y, z;
+                    in >> x >> y >> z;
+                }
+                for (int k = 0; k < numPts; k++) {
+                    double u, v;
+                    in >> u >> v;
+                }
+            }
+        }
+    }
 
     QStringList srcNames;
     if (version > VERSION1) {
@@ -1400,6 +1419,7 @@ bool VirtualTilesetsFile::write(const QString &fileName, const QList<VirtualTile
 
     QDataStream out(&file);
     out.setByteOrder(QDataStream::LittleEndian);
+    out.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
     out << quint8('v') << quint8('t') << quint8('s') << quint8('f');
     out << qint32(VERSION_LATEST);
@@ -1409,8 +1429,18 @@ bool VirtualTilesetsFile::write(const QString &fileName, const QList<VirtualTile
     foreach (TileShape *shape, VirtualTilesetMgr::instance().tileShapes())
         shapeMap[shape] = i++;
     out << qint32(shapeMap.size());
-    foreach (TileShape *shape, VirtualTilesetMgr::instance().tileShapes())
+    foreach (TileShape *shape, VirtualTilesetMgr::instance().tileShapes()) {
         SaveString(out, shape->name());
+        out << qint32(shape->mElements.size());
+        foreach (TileShape::Element e, shape->mElements) {
+            Q_ASSERT(e.mGeom.size() == e.mUV.size());
+            out << qint32(e.mGeom.size());
+            foreach (QVector3D v, e.mGeom)
+                out << v.x() << v.y() << v.z();
+            foreach (QPointF uv, e.mUV)
+                out << uv.x() << uv.y();
+        }
+    }
 
     QMap<QString,int> srcNameMap;
     foreach (VirtualTileset *ts, tilesets) {
