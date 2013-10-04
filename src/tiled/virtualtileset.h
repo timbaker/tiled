@@ -200,6 +200,8 @@ public:
     bool resolveImageSource(QString &imageSource);
     VirtualTileset *tilesetFromPath(const QString &path);
 
+    QImage originalIsoImage(VirtualTileset *vts);
+
     QImage renderIsoTile(VirtualTile *vtile);
 
     QList<TileShape*> tileShapes() const { return mShapeByName.values(); }
@@ -229,6 +231,8 @@ private:
     QGLPixelBuffer *mPixelBuffer;
 
     QMap<QString,TileShape*> mShapeByName;
+
+    QMap<QString,QImage> mOriginalIsoImages;
 
     int mSourceRevision;
     int mRevision;

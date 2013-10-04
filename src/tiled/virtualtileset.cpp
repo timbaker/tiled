@@ -31,6 +31,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QGLPixelBuffer>
+#include <QImageReader>
 #include <QVector2D>
 #include <QVector3D>
 
@@ -131,7 +132,14 @@ QImage VirtualTileset::image()
         QPainter painter(&mImage);
         for (int i = 0; i < tileCount(); i++) {
             VirtualTile *vtile = tileAt(i);
-            painter.drawImage(vtile->x() * 64, vtile->y() * 128, vtile->image());
+            if (vtile->shape()) {
+                painter.drawImage(vtile->x() * 64, vtile->y() * 128, vtile->image());
+            } else {
+                // Use the original iso tile when there's no virtual one.
+                QImage orig = VirtualTilesetMgr::instance().originalIsoImage(this);
+                if (!orig.isNull())
+                    painter.drawImage(vtile->x() * 64, vtile->y() * 128, orig, vtile->x() * 64, vtile->y() * 128, 64, 128);
+            }
         }
         painter.end();
     }
@@ -407,6 +415,15 @@ VirtualTileset *VirtualTilesetMgr::tilesetFromPath(const QString &path)
     return 0;
 }
 
+QImage VirtualTilesetMgr::originalIsoImage(VirtualTileset *vts)
+{
+    if (mOriginalIsoImages.contains(vts->name()))
+        return mOriginalIsoImages[vts->name()];
+    QString fileName = imageSource(vts);
+    return mOriginalIsoImages[vts->name()] = QImage(fileName); // may be null
+}
+
+#if 0
 struct TextureTile
 {
     TextureTile(int texWidth, int texHeight, int tileWidth, int tileHeight, int texCol, int texRow) :
@@ -520,7 +537,7 @@ struct PBufferFace3D
     int mTileWidth;
     int mTileHeight;
 };
-
+#endif
 class DrawElements
 {
 public:
@@ -531,6 +548,7 @@ public:
         vertices.resize(0);
         texcoords.resize(0);
         textureids.resize(0);
+        colors.resize(0);
     }
 
     void add(GLuint textureid,
@@ -540,8 +558,8 @@ public:
         counts += 4;
         indices << indices.size() << indices.size() + 1 << indices.size() + 2 << indices.size() + 3;
         textureids += textureid;
-#if 1
         colors += QVector3D(1, 1, 1);
+#if 1
         QVector2D _uv1 = uv1, _uv2 = uv2, _uv3 = uv3, _uv4 = uv4;
         _uv1.setY(1 - uv1.y()), _uv2.setY(1 - uv2.y()), _uv3.setY(1 - uv3.y()), _uv4.setY(1 - uv4.y());
 #endif
@@ -561,7 +579,6 @@ public:
         textureids += textureid;
         colors += QVector3D(1, 1, 1);
 #if 1
-        colors += QVector3D(1, 1, 1);
         QVector2D _uv1 = uv1, _uv2 = uv2, _uv3 = uv3;
         _uv1.setY(1 - uv1.y()), _uv2.setY(1 - uv2.y()), _uv3.setY(1 - uv3.y());
 #endif
@@ -609,7 +626,6 @@ public:
     QVector<QVector3D> colors;
 
 };
-
 
 void VirtualTilesetMgr::initPixelBuffer()
 {
@@ -1766,6 +1782,7 @@ TileShapesFile::~TileShapesFile()
     qDeleteAll(mShapes);
 }
 
+#undef VERSION_LATEST
 #define VERSION_LATEST 1
 
 bool TileShapesFile::read(const QString &fileName)
