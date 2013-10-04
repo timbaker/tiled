@@ -16,6 +16,7 @@ namespace Tiled {
 namespace Internal {
 
 class TileShapeScene;
+class Zoomable;
 
 class TileShape
 {
@@ -46,9 +47,16 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
     void setGridZ(qreal z);
+    void setGridSize(int size);
+    int gridSize() const { return mDivisions; }
+
+    QVector3D snapXY(const QVector3D &v);
+    QVector3D snapZ(const QVector3D &v);
+    qreal snapZ(qreal z);
 
 private:
     TileShapeScene *mScene;
+    int mDivisions;
     qreal mZ;
 };
 
@@ -195,7 +203,7 @@ public:
 class TileShapeUVGuide : public QGraphicsItem
 {
 public:
-    TileShapeUVGuide();
+    TileShapeUVGuide(TileShapeScene *scene);
 
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
@@ -204,6 +212,7 @@ public:
     void setCurrentUV(const QPointF &uv);
     void setCursorUV(const QPointF &uv);
 
+    TileShapeScene *mScene;
     QPointF mCurrentUV;
     QPointF mCursorUV;
 };
@@ -260,7 +269,7 @@ public:
     QRectF boundingRect(const QRectF &rect, qreal z) const;
     QRectF boundingRect(TileShape *shape) const;
 
-    int topmostElementAt(const QPointF &scenePos, int *indexPtr);
+    int topmostFaceAt(const QPointF &scenePos, int *indexPtr);
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
@@ -290,11 +299,17 @@ public:
 
     void setHandScrolling(bool handScrolling);
 
+    Zoomable *zoomable() const { return mZoomable; }
+
+private slots:
+    void adjustScale(qreal scale);
+
 private:
     TileShapeScene *mScene;
     QPoint mLastMousePos;
     QPointF mLastMouseScenePos;
     bool mHandScrolling;
+    Zoomable *mZoomable;
 };
 
 class TileShapeEditor : public QDialog
@@ -309,6 +324,8 @@ public:
 
 public slots:
     void toolActivated(bool active);
+    void setGridSize(int size);
+    void done(int r);
 
 private:
     Ui::TileShapeEditor *ui;
