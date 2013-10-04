@@ -657,9 +657,8 @@ void VirtualTilesetDialog::textureNameSelectionChanged()
 void VirtualTilesetDialog::textureTileSelectionChanged()
 {
     QModelIndexList selected = ui->orthoTiles->selectionModel()->selectedIndexes();
+    VirtualTileset *oldTileset = mIsoTileset;
     if (mIsoTileset) {
-        ui->isoTiles->setTileset(0);
-        delete mIsoTileset;
         mIsoTileset = 0;
     }
     if (!selected.isEmpty() && mIsoCategory == CategoryFloor) {
@@ -802,6 +801,7 @@ void VirtualTilesetDialog::textureTileSelectionChanged()
         mIsoTileset->tileAt(3, 2)->setShape(shape("wall_short_se"));
     }
     ui->isoTiles->setTileset(mIsoTileset);
+    delete oldTileset;
 }
 
 void VirtualTilesetDialog::addTexture()
@@ -924,6 +924,10 @@ void VirtualTilesetDialog::editShape(const QModelIndex &index)
             TileShapeEditor dialog(shape, this);
             if (dialog.exec() == QDialog::Accepted) {
                 TileShape *shape2 = dialog.tileShape();
+                foreach (TileShape::Element e, shape2->mElements) {
+                    Q_ASSERT(e.mGeom.size() == e.mUV.size());
+                }
+
                 mUndoStack->push(new EditShape(this, shape, shape2->mElements));
 #if 0
                 shape->mElements = shape2->mElements;
