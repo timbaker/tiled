@@ -92,7 +92,7 @@ TileShapeItem::TileShapeItem(TileShapeScene *scene, TileShape *shape, QGraphicsI
     QGraphicsItem(parent),
     mScene(scene),
     mShape(shape),
-    mSelectedElement(-1),
+    mSelectedFace(-1),
     mHasCursorPoint(false)
 {
     mBoundingRect = mScene->boundingRect(mShape);
@@ -120,15 +120,15 @@ void TileShapeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, Q
 #endif
 
     int index = 0;
-    foreach (TileShape::Element e, mShape->mElements) {
-        if (index != mSelectedElement)
+    foreach (TileShapeFace e, mShape->mFaces) {
+        if (index != mSelectedFace)
             painter->drawPolygon(mScene->toScene(e.mGeom));
 
         index++;
     }
 
-    if (mSelectedElement >= 0 && mSelectedElement < mShape->mElements.size()) {
-        TileShape::Element e = mShape->mElements[mSelectedElement];
+    if (mSelectedFace >= 0 && mSelectedFace < mShape->mFaces.size()) {
+        TileShapeFace e = mShape->mFaces[mSelectedFace];
         QVector<QVector3D> tilePoly = e.mGeom;
         if (mHasCursorPoint) {
             if (mCursorPointReplace)
@@ -142,12 +142,12 @@ void TileShapeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, Q
     }
 }
 
-void TileShapeItem::setSelectedElement(int elementIndex)
+void TileShapeItem::setSelectedFace(int faceIndex)
 {
-    if (mSelectedElement != elementIndex) {
-        mSelectedElement = elementIndex;
+    if (mSelectedFace != faceIndex) {
+        mSelectedFace = faceIndex;
         update();
-        emit selectionChanged(elementIndex);
+        emit selectionChanged(faceIndex);
     }
 }
 
@@ -195,15 +195,15 @@ TileShapeScene::TileShapeScene(QObject *parent) :
     addItem(mGridItem);
 
     TileShape *shape = new TileShape(QLatin1String("SceneShape"));
-    TileShape::Element e;
+    TileShapeFace e;
     e.mGeom << QVector3D(0, 0, 0) << QVector3D(0, 0, 3) << QVector3D(1, 0, 3) << QVector3D(1, 0, 0);
-    shape->mElements += e;
+    shape->mFaces += e;
     addItem(mShapeItem = new TileShapeItem(this, shape));
 }
 
 void TileShapeScene::setTileShape(TileShape *shape)
 {
-    mShapeItem->tileShape()->mElements = shape->mElements;
+    mShapeItem->tileShape()->mFaces = shape->mFaces;
     mShapeItem->shapeChanged();
 }
 
@@ -290,7 +290,7 @@ QRectF TileShapeScene::boundingRect(const QRectF &rect, qreal z) const
 QRectF TileShapeScene::boundingRect(TileShape *shape) const
 {
     QRectF r;
-    foreach (TileShape::Element e, shape->mElements) {
+    foreach (TileShapeFace e, shape->mFaces) {
         r |= toScene(e.mGeom).boundingRect();
     }
     return r;
@@ -313,8 +313,8 @@ static float minimum_distance(QVector2D v, QVector2D w, QVector2D p) {
 
 int TileShapeScene::topmostFaceAt(const QPointF &scenePos, int *indexPtr)
 {
-    for (int i = tileShape()->mElements.size() - 1; i >= 0; i--) {
-        const TileShape::Element &e = tileShape()->mElements.at(i);
+    for (int i = tileShape()->mFaces.size() - 1; i >= 0; i--) {
+        const TileShapeFace &e = tileShape()->mFaces.at(i);
         QVector<QVector3D> tilePoly = e.mGeom;
         tilePoly += e.mGeom.first();
         QPolygonF scenePoly = toScene(tilePoly);
@@ -331,8 +331,8 @@ int TileShapeScene::topmostFaceAt(const QPointF &scenePos, int *indexPtr)
     QVector2D p(scenePos);
     qreal min = 1000;
     int closest = -1;
-    int elementIndex = 0;
-    foreach (TileShape::Element e, tileShape()->mElements) {
+    int faceIndex = 0;
+    foreach (TileShapeFace e, tileShape()->mFaces) {
         QVector<QVector3D> tilePoly = e.mGeom;
         tilePoly += e.mGeom.first();
         QPolygonF scenePoly = toScene(tilePoly);
@@ -342,11 +342,11 @@ int TileShapeScene::topmostFaceAt(const QPointF &scenePos, int *indexPtr)
             qreal dist = minimum_distance(v, w, p);
             if (dist <= radius && dist <= min) {
                 min = dist;
-                closest = elementIndex;
+                closest = faceIndex;
                 if (indexPtr) *indexPtr = i;
             }
         }
-        ++elementIndex;
+        ++faceIndex;
     }
     return closest;
 }
@@ -519,25 +519,25 @@ TileShapeEditor::TileShapeEditor(TileShape *shape, QWidget *parent) :
 
     ui->graphicsView->zoomable()->connectToComboBox(ui->scaleCombo);
 
-    mCreateElementTool = new CreateTileShapeElementTool(ui->graphicsView->scene());
-    mEditElementTool = new EditTileShapeElementTool(ui->graphicsView->scene());
+    mCreateFaceTool = new CreateTileShapeFaceTool(ui->graphicsView->scene());
+    mEditFaceTool = new EditTileShapeFaceTool(ui->graphicsView->scene());
     mUVTool = new TileShapeUVTool(ui->graphicsView->scene());
 
-    ui->graphicsView->scene()->activateTool(mCreateElementTool);
+    ui->graphicsView->scene()->activateTool(mCreateFaceTool);
 
-    ui->toolBar->addAction(mCreateElementTool->action());
-    ui->toolBar->addAction(mEditElementTool->action());
+    ui->toolBar->addAction(mCreateFaceTool->action());
+    ui->toolBar->addAction(mEditFaceTool->action());
     ui->toolBar->addAction(mUVTool->action());
     ui->toolBar->addAction(ui->actionRemoveFace);
 
     ui->actionRemoveFace->setEnabled(false);
     connect(ui->actionRemoveFace, SIGNAL(triggered()), SLOT(removeFace()));
 
-    connect(mCreateElementTool->action(), SIGNAL(toggled(bool)), SLOT(toolActivated(bool)));
-    connect(mCreateElementTool, SIGNAL(statusTextChanged(QString)), ui->status, SLOT(setText(QString)));
+    connect(mCreateFaceTool->action(), SIGNAL(toggled(bool)), SLOT(toolActivated(bool)));
+    connect(mCreateFaceTool, SIGNAL(statusTextChanged(QString)), ui->status, SLOT(setText(QString)));
 
-    connect(mEditElementTool->action(), SIGNAL(toggled(bool)), SLOT(toolActivated(bool)));
-    connect(mEditElementTool, SIGNAL(statusTextChanged(QString)), ui->status, SLOT(setText(QString)));
+    connect(mEditFaceTool->action(), SIGNAL(toggled(bool)), SLOT(toolActivated(bool)));
+    connect(mEditFaceTool, SIGNAL(statusTextChanged(QString)), ui->status, SLOT(setText(QString)));
 
     connect(mUVTool->action(), SIGNAL(toggled(bool)), SLOT(toolActivated(bool)));
     connect(mUVTool, SIGNAL(statusTextChanged(QString)), ui->status, SLOT(setText(QString)));
@@ -574,10 +574,10 @@ TileShape *TileShapeEditor::tileShape() const
 void TileShapeEditor::toolActivated(bool active)
 {
     if (!active) return;
-    if (sender() == mCreateElementTool->action())
-        ui->graphicsView->scene()->activateTool(mCreateElementTool);
-    if (sender() == mEditElementTool->action())
-        ui->graphicsView->scene()->activateTool(mEditElementTool);
+    if (sender() == mCreateFaceTool->action())
+        ui->graphicsView->scene()->activateTool(mCreateFaceTool);
+    if (sender() == mEditFaceTool->action())
+        ui->graphicsView->scene()->activateTool(mEditFaceTool);
     if (sender() == mUVTool->action())
         ui->graphicsView->scene()->activateTool(mUVTool);
 }
@@ -595,11 +595,11 @@ void TileShapeEditor::faceSelectionChanged(int faceIndex)
 void TileShapeEditor::removeFace()
 {
     TileShapeItem *item = ui->graphicsView->scene()->tileShapeItem();
-    int faceIndex = item->selectedElement();
-    if (faceIndex >= 0 && faceIndex < item->tileShape()->mElements.size()) {
-        item->setSelectedElement(-1);
-        mEditElementTool->updateHandles();
-        item->tileShape()->mElements.removeAt(faceIndex);
+    int faceIndex = item->selectedFace();
+    if (faceIndex >= 0 && faceIndex < item->tileShape()->mFaces.size()) {
+        item->setSelectedFace(-1);
+        mEditFaceTool->updateHandles();
+        item->tileShape()->mFaces.removeAt(faceIndex);
         item->shapeChanged();
     }
 }
@@ -745,9 +745,9 @@ BaseTileShapeTool::BaseTileShapeTool(TileShapeScene *scene) :
 
 /////
 
-CreateTileShapeElementTool::CreateTileShapeElementTool(TileShapeScene *scene) :
+CreateTileShapeFaceTool::CreateTileShapeFaceTool(TileShapeScene *scene) :
     BaseTileShapeTool(scene),
-    mElementItem(0),
+    mShapeItem(0),
     mCursorItemX(new QGraphicsLineItem),
     mCursorItemY(new QGraphicsLineItem),
     mMode(NoMode)
@@ -760,7 +760,7 @@ CreateTileShapeElementTool::CreateTileShapeElementTool(TileShapeScene *scene) :
     mCursorItemY->setPen(pen);
 }
 
-void CreateTileShapeElementTool::activate()
+void CreateTileShapeFaceTool::activate()
 {
     mMode = NoMode;
     mCursorGroupXY->show();
@@ -771,7 +771,7 @@ void CreateTileShapeElementTool::activate()
     mScene->addItem(mCursorGroupZ);
 }
 
-void CreateTileShapeElementTool::deactivate()
+void CreateTileShapeFaceTool::deactivate()
 {
     mScene->removeItem(mCursorItemX);
     mScene->removeItem(mCursorItemY);
@@ -784,7 +784,7 @@ void CreateTileShapeElementTool::deactivate()
 // Move mouse up/down to change Z
 // Second click: set point's Z
 
-void CreateTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void CreateTileShapeFaceTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
         switch (mMode) {
@@ -792,14 +792,14 @@ void CreateTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event
             qreal z = 0;
             QVector3D tilePos = mScene->toTile(event->scenePos(), z);
             tilePos = mScene->gridItem()->snapXY(tilePos);
-            TileShape *shape = new TileShape(QLatin1String("CreateTileShapeElementTool-Shape"));
-            TileShape::Element e;
+            TileShape *shape = new TileShape(QLatin1String("CreateTileShapeFaceTool-Shape"));
+            TileShapeFace e;
             e.mGeom += tilePos;
             e.mUV += QPointF();
-            shape->mElements += e;
-            mElementItem = new TileShapeItem(mScene, shape);
-            mElementItem->setSelectedElement(0);
-            mScene->addItem(mElementItem);
+            shape->mFaces += e;
+            mShapeItem = new TileShapeItem(mScene, shape);
+            mShapeItem->setSelectedFace(0);
+            mScene->addItem(mShapeItem);
             mScene->gridItem()->setGridZ(z);
             mCursorGroupXY->hide();
             mCursorGroupZ->show();
@@ -807,10 +807,10 @@ void CreateTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event
             break;
         }
         case SetXY: {
-            TileShape::Element &e = mElementItem->tileShape()->mElements.first();
-            e.mGeom += mElementItem->cursorPoint();
+            TileShapeFace &e = mShapeItem->tileShape()->mFaces.first();
+            e.mGeom += mShapeItem->cursorPoint();
             e.mUV += QPointF();
-            mElementItem->shapeChanged();
+            mShapeItem->shapeChanged();
             mCursorGroupXY->hide();
             mCursorGroupZ->show();
             mMode = SetZ;
@@ -818,9 +818,9 @@ void CreateTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event
             break;
         }
         case SetZ: {
-            TileShape::Element &e = mElementItem->tileShape()->mElements.first();
-            e.mGeom.last() = mElementItem->cursorPoint();
-            mElementItem->shapeChanged();
+            TileShapeFace &e = mShapeItem->tileShape()->mFaces.first();
+            e.mGeom.last() = mShapeItem->cursorPoint();
+            mShapeItem->shapeChanged();
             mCursorGroupXY->show();
             mCursorGroupZ->hide();
             mMode = SetXY;
@@ -830,17 +830,17 @@ void CreateTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event
         mouseMoveEvent(event);
     }
     if (event->button() == Qt::RightButton) {
-        if (mElementItem) {
-            TileShape::Element &e = mElementItem->tileShape()->mElements.first();
+        if (mShapeItem) {
+            TileShapeFace &e = mShapeItem->tileShape()->mFaces.first();
             if (e.mGeom.size() >= 3) {
-                mScene->tileShape()->mElements += e;
+                mScene->tileShape()->mFaces += e;
                 mScene->tileShapeItem()->shapeChanged();
             }
-            mScene->removeItem(mElementItem);
-            TileShape *shape = mElementItem->tileShape();
-            delete mElementItem;
+            mScene->removeItem(mShapeItem);
+            TileShape *shape = mShapeItem->tileShape();
+            delete mShapeItem;
             delete shape;
-            mElementItem = 0;
+            mShapeItem = 0;
             mScene->gridItem()->setGridZ(0);
             mCursorGroupXY->show();
             mCursorGroupZ->hide();
@@ -849,7 +849,7 @@ void CreateTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event
     }
 }
 
-void CreateTileShapeElementTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void CreateTileShapeFaceTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     qreal z = 0;
     QVector3D tilePos = mScene->toTile(event->scenePos(), z);
@@ -857,23 +857,23 @@ void CreateTileShapeElementTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     switch (mMode) {
     case NoMode: {
         tilePos = mScene->gridItem()->snapXY(tilePos);
-        msg = tr("Click to start a new point.");
+        msg = tr("Click to start a new face.");
         break;
     }
     case SetXY: {
-        TileShape::Element &e = mElementItem->tileShape()->mElements.first();
+        TileShapeFace &e = mShapeItem->tileShape()->mFaces.first();
         tilePos.setX(tilePos.x() + e.mGeom.last().z()); tilePos.setY(tilePos.y() + e.mGeom.last().z());
         tilePos = mScene->gridItem()->snapXY(tilePos);
         tilePos.setZ(e.mGeom.last().z());
         z = tilePos.z();
-        mElementItem->setCursorPoint(tilePos, false);
-        mElementItem->shapeChanged();
+        mShapeItem->setCursorPoint(tilePos, false);
+        mShapeItem->shapeChanged();
 //        mScene->gridItem()->setGridZ(tilePos.z());
-        msg = tr("Click to set xy coordinate.  Right-click to finish.");
+        msg = tr("Click to set xy coordinate.  Right-click to finish face.");
         break;
     }
     case SetZ: {
-        TileShape::Element &e = mElementItem->tileShape()->mElements.first();
+        TileShapeFace &e = mShapeItem->tileShape()->mFaces.first();
         tilePos = e.mGeom.last();
         z = -(event->scenePos().y() - event->buttonDownScenePos(Qt::LeftButton).y());
         z /= 32.0; // scene -> tile coord
@@ -881,10 +881,10 @@ void CreateTileShapeElementTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 //        z = qBound(0.0, z, 3.0);
         z = mScene->gridItem()->snapZ(z);
         tilePos.setZ(z);
-        mElementItem->setCursorPoint(tilePos, true);
-        mElementItem->shapeChanged();
+        mShapeItem->setCursorPoint(tilePos, true);
+        mShapeItem->shapeChanged();
         mScene->gridItem()->setGridZ(z);
-        msg = tr("Click to set z coordinate.  Right-click to finish.");
+        msg = tr("Click to set z coordinate.  Right-click to finish face.");
         break;
     }
     }
@@ -900,17 +900,17 @@ void CreateTileShapeElementTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     emit statusTextChanged(QString::fromLatin1("%1,%2,%3: %4").arg(tilePos.x()).arg(tilePos.y()).arg(tilePos.z()).arg(msg));
 }
 
-void CreateTileShapeElementTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void CreateTileShapeFaceTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
 
 }
 
 /////
 
-TileShapeHandle::TileShapeHandle(TileShapeScene *scene, int elementIndex, int pointIndex) :
+TileShapeHandle::TileShapeHandle(TileShapeScene *scene, int faceIndex, int pointIndex) :
     QGraphicsItem(),
     mScene(scene),
-    mElementIndex(elementIndex),
+    mFaceIndex(faceIndex),
     mPointIndex(pointIndex),
     mSelected(false)
 {
@@ -919,7 +919,7 @@ TileShapeHandle::TileShapeHandle(TileShapeScene *scene, int elementIndex, int po
     setZValue(100);
 //    setCursor(Qt::SizeAllCursor);
 
-    setPos(mScene->toScene(mScene->tileShape()->mElements[mElementIndex].mGeom[mPointIndex]));
+    setPos(mScene->toScene(mScene->tileShape()->mFaces[mFaceIndex].mGeom[mPointIndex]));
 }
 
 QRectF TileShapeHandle::boundingRect() const
@@ -947,24 +947,24 @@ void TileShapeHandle::setSelected(bool selected)
 
 QVector3D TileShapeHandle::tilePos() const
 {
-    return mScene->tileShape()->mElements[mElementIndex].mGeom[mPointIndex];
+    return mScene->tileShape()->mFaces[mFaceIndex].mGeom[mPointIndex];
 }
 
 QPointF TileShapeHandle::uv() const
 {
-    return mScene->tileShape()->mElements[mElementIndex].mUV[mPointIndex];
+    return mScene->tileShape()->mFaces[mFaceIndex].mUV[mPointIndex];
 }
 
 void TileShapeHandle::setDragOffset(const QVector3D &delta)
 {
-    mScene->tileShape()->mElements[mElementIndex].mGeom[mPointIndex] = mDragOrigin + delta;
+    mScene->tileShape()->mFaces[mFaceIndex].mGeom[mPointIndex] = mDragOrigin + delta;
     mScene->tileShapeItem()->shapeChanged();
     setPos(mScene->toScene(mDragOrigin + delta));
 }
 
 void TileShapeHandle::setUV(const QPointF &uv)
 {
-    mScene->tileShape()->mElements[mElementIndex].mUV[mPointIndex] = uv;
+    mScene->tileShape()->mFaces[mFaceIndex].mUV[mPointIndex] = uv;
 }
 
 /////
@@ -985,7 +985,7 @@ static T *first(const QList<QGraphicsItem *> &items, QPointF &pos)
     return closest;
 }
 
-EditTileShapeElementTool::EditTileShapeElementTool(TileShapeScene *scene) :
+EditTileShapeFaceTool::EditTileShapeFaceTool(TileShapeScene *scene) :
     BaseTileShapeTool(scene),
     mMode(NoMode),
     mClickedHandle(0)
@@ -993,7 +993,7 @@ EditTileShapeElementTool::EditTileShapeElementTool(TileShapeScene *scene) :
     mAction->setText(QLatin1String("EditFace"));
 }
 
-void EditTileShapeElementTool::activate()
+void EditTileShapeFaceTool::activate()
 {
     updateHandles();
 
@@ -1004,7 +1004,7 @@ void EditTileShapeElementTool::activate()
     mScene->addItem(mCursorGroupZ);
 }
 
-void EditTileShapeElementTool::deactivate()
+void EditTileShapeFaceTool::deactivate()
 {
     qDeleteAll(mHandles);
     mHandles.clear();
@@ -1014,10 +1014,10 @@ void EditTileShapeElementTool::deactivate()
     mScene->removeItem(mCursorGroupXY);
     mScene->removeItem(mCursorGroupZ);
 
-    mScene->tileShapeItem()->setSelectedElement(-1);
+    mScene->tileShapeItem()->setSelectedFace(-1);
 }
 
-void EditTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void EditTileShapeFaceTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
         mStartScenePos = event->scenePos();
@@ -1030,12 +1030,12 @@ void EditTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                 QVector3D tilePos = mClickedHandle->tilePos();
                 emit statusTextChanged(QString::fromLatin1("%1,%2,%3 = Selected handle x,y,z").arg(tilePos.x()).arg(tilePos.y()).arg(tilePos.z()));
             } else {
-                int elementIndex = mScene->topmostFaceAt(event->scenePos(), 0);
-                if (mScene->tileShapeItem()->selectedElement() != elementIndex) {
-                    mScene->tileShapeItem()->setSelectedElement(elementIndex);
+                int faceIndex = mScene->topmostFaceAt(event->scenePos(), 0);
+                if (mScene->tileShapeItem()->selectedFace() != faceIndex) {
+                    mScene->tileShapeItem()->setSelectedFace(faceIndex);
                     updateHandles();
                 }
-                else if (elementIndex != -1)
+                else if (faceIndex != -1)
                     setSelectedHandles(mHandles.toSet());
                 else
                     setSelectedHandles(QSet<TileShapeHandle*>());
@@ -1053,7 +1053,7 @@ void EditTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void EditTileShapeElementTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void EditTileShapeFaceTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
 #if 0
     if (mMode == NoMode && (event->buttons() & Qt::LeftButton)) {
@@ -1072,7 +1072,7 @@ void EditTileShapeElementTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void EditTileShapeElementTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void EditTileShapeFaceTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
         if (mMode == NoMode) {
@@ -1109,24 +1109,24 @@ void EditTileShapeElementTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event
     }
 }
 
-void EditTileShapeElementTool::updateHandles()
+void EditTileShapeFaceTool::updateHandles()
 {
     qDeleteAll(mHandles);
     mHandles.clear();
     mSelectedHandles.clear();
     mClickedHandle = 0;
 
-    int elementIndex = mScene->tileShapeItem()->selectedElement();
-    if (elementIndex != -1) {
-        for (int j = 0; j < mScene->tileShape()->mElements[elementIndex].mGeom.size(); j++) {
-            TileShapeHandle *handle = new TileShapeHandle(mScene, elementIndex, j);
+    int faceIndex = mScene->tileShapeItem()->selectedFace();
+    if (faceIndex != -1) {
+        for (int j = 0; j < mScene->tileShape()->mFaces[faceIndex].mGeom.size(); j++) {
+            TileShapeHandle *handle = new TileShapeHandle(mScene, faceIndex, j);
             mHandles += handle;
             mScene->addItem(handle);
         }
     }
 }
 
-void EditTileShapeElementTool::startMoving()
+void EditTileShapeFaceTool::startMoving()
 {
     if (!mSelectedHandles.contains(mClickedHandle))
         setSelectedHandles(QSet<TileShapeHandle*>() << mClickedHandle);
@@ -1139,7 +1139,7 @@ void EditTileShapeElementTool::startMoving()
     mMode = MoveXY;
 }
 
-void EditTileShapeElementTool::updateMovingItems(const QPointF &scenePos)
+void EditTileShapeFaceTool::updateMovingItems(const QPointF &scenePos)
 {
     QVector3D delta;
 
@@ -1175,7 +1175,7 @@ void EditTileShapeElementTool::updateMovingItems(const QPointF &scenePos)
     }
 }
 
-void EditTileShapeElementTool::finishMoving(const QPointF &scenePos)
+void EditTileShapeFaceTool::finishMoving(const QPointF &scenePos)
 {
     Q_UNUSED(scenePos)
 
@@ -1189,7 +1189,7 @@ void EditTileShapeElementTool::finishMoving(const QPointF &scenePos)
     mScene->gridItem()->setGridZ(0);
 }
 
-void EditTileShapeElementTool::cancelMoving()
+void EditTileShapeFaceTool::cancelMoving()
 {
     mMode = NoMode;
     foreach (TileShapeHandle *handle, mSelectedHandles)
@@ -1198,12 +1198,12 @@ void EditTileShapeElementTool::cancelMoving()
     mScene->gridItem()->setGridZ(0);
 }
 
-void EditTileShapeElementTool::startSelecting()
+void EditTileShapeFaceTool::startSelecting()
 {
 
 }
 
-void EditTileShapeElementTool::setSelectedHandles(const QSet<TileShapeHandle *> &handles)
+void EditTileShapeFaceTool::setSelectedHandles(const QSet<TileShapeHandle *> &handles)
 {
     foreach (TileShapeHandle *handle, mSelectedHandles)
         if (!handles.contains(handle))
@@ -1325,9 +1325,9 @@ void TileShapeUVTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                 mGuide->show();
                 mMode = SetUV;
             } else {
-                int elementIndex = mScene->topmostFaceAt(event->scenePos(), 0);
-                if (mScene->tileShapeItem()->selectedElement() != elementIndex) {
-                    mScene->tileShapeItem()->setSelectedElement(elementIndex);
+                int faceIndex = mScene->topmostFaceAt(event->scenePos(), 0);
+                if (mScene->tileShapeItem()->selectedFace() != faceIndex) {
+                    mScene->tileShapeItem()->setSelectedFace(faceIndex);
                     updateHandles();
                 } else
                     setSelectedHandles(QSet<TileShapeHandle*>());
@@ -1371,10 +1371,10 @@ void TileShapeUVTool::updateHandles()
     mSelectedHandles.clear();
     mClickedHandle = 0;
 
-    int elementIndex = mScene->tileShapeItem()->selectedElement();
-    if (elementIndex != -1) {
-        for (int j = 0; j < mScene->tileShape()->mElements[elementIndex].mGeom.size(); j++) {
-            TileShapeHandle *handle = new TileShapeHandle(mScene, elementIndex, j);
+    int faceIndex = mScene->tileShapeItem()->selectedFace();
+    if (faceIndex != -1) {
+        for (int j = 0; j < mScene->tileShape()->mFaces[faceIndex].mGeom.size(); j++) {
+            TileShapeHandle *handle = new TileShapeHandle(mScene, faceIndex, j);
             mHandles += handle;
             mScene->addItem(handle);
         }

@@ -18,6 +18,13 @@ namespace Internal {
 class TileShapeScene;
 class Zoomable;
 
+class TileShapeFace
+{
+public:
+    QVector<QVector3D> mGeom;
+    QPolygonF mUV;
+};
+
 class TileShape
 {
 public:
@@ -27,15 +34,8 @@ public:
 
     QString name() const { return mName; }
 
-    class Element
-    {
-    public:
-        QVector<QVector3D> mGeom;
-        QPolygonF mUV;
-    };
-
     QString mName;
-    QList<Element> mElements;
+    QList<TileShapeFace> mFaces;
 };
 
 class TileShapeGrid : public QGraphicsItem
@@ -72,8 +72,8 @@ public:
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-    void setSelectedElement(int elementIndex);
-    int selectedElement() const { return mSelectedElement; }
+    void setSelectedFace(int faceIndex);
+    int selectedFace() const { return mSelectedFace; }
 
     void setCursorPoint(const QVector3D &pt, bool replace);
     void clearCursorPoint();
@@ -88,7 +88,7 @@ private:
     TileShapeScene *mScene;
     TileShape *mShape;
     QRectF mBoundingRect;
-    int mSelectedElement;
+    int mSelectedFace;
     QVector3D mCursorPoint;
     bool mCursorPointReplace;
     bool mHasCursorPoint;
@@ -121,10 +121,10 @@ protected:
     QGraphicsItemGroup *mCursorGroupZ;
 };
 
-class CreateTileShapeElementTool : public BaseTileShapeTool
+class CreateTileShapeFaceTool : public BaseTileShapeTool
 {
 public:
-    CreateTileShapeElementTool(TileShapeScene *scene);
+    CreateTileShapeFaceTool(TileShapeScene *scene);
 
     void activate();
     void deactivate();
@@ -133,7 +133,7 @@ public:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
-    TileShapeItem *mElementItem;
+    TileShapeItem *mShapeItem;
     QGraphicsLineItem *mCursorItemX, *mCursorItemY;
 
     enum Mode {
@@ -147,7 +147,7 @@ public:
 class TileShapeHandle : public QGraphicsItem
 {
 public:
-    TileShapeHandle(TileShapeScene *scene, int elementIndex, int pointIndex);
+    TileShapeHandle(TileShapeScene *scene, int faceIndex, int pointIndex);
 
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
@@ -166,16 +166,16 @@ public:
 
 private:
     TileShapeScene *mScene;
-    int mElementIndex;
+    int mFaceIndex;
     int mPointIndex;
     bool mSelected;
     QVector3D mDragOrigin;
 };
 
-class EditTileShapeElementTool : public BaseTileShapeTool
+class EditTileShapeFaceTool : public BaseTileShapeTool
 {
 public:
-    EditTileShapeElementTool(TileShapeScene *scene);
+    EditTileShapeFaceTool(TileShapeScene *scene);
 
     void activate();
     void deactivate();
@@ -340,8 +340,8 @@ public slots:
 
 private:
     Ui::TileShapeEditor *ui;
-    CreateTileShapeElementTool *mCreateElementTool;
-    EditTileShapeElementTool *mEditElementTool;
+    CreateTileShapeFaceTool *mCreateFaceTool;
+    EditTileShapeFaceTool *mEditFaceTool;
     TileShapeUVTool *mUVTool;
 };
 

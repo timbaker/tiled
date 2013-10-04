@@ -654,6 +654,8 @@ void VirtualTilesetMgr::initPixelBuffer()
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
+
+    glClearColor(1,1,1,0);
 }
 
 uint VirtualTilesetMgr::loadGLTexture(const QString &imageSource, int srcX, int srcY)
@@ -690,7 +692,7 @@ uint VirtualTilesetMgr::loadGLTexture(const QString &imageSource, int srcX, int 
 
 QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
 {
-    if (vtile->shape() == 0 || vtile->shape()->mElements.isEmpty())
+    if (vtile->shape() == 0 || vtile->shape()->mFaces.isEmpty())
         return QImage();
 
     const QGLContext *context = QGLContext::currentContext();
@@ -710,7 +712,7 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     DrawElements de;
-    foreach (TileShape::Element e, vtile->shape()->mElements) {
+    foreach (TileShapeFace e, vtile->shape()->mFaces) {
         if (e.mGeom.size() == 4)
             de.add(textureID,
                    QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]), QVector2D(e.mUV[3]),
@@ -920,8 +922,8 @@ bool VirtualTilesetsFile::write(const QString &fileName, const QList<VirtualTile
     out << qint32(shapeMap.size());
     foreach (TileShape *shape, VirtualTilesetMgr::instance().tileShapes()) {
         SaveString(out, shape->name());
-        out << qint32(shape->mElements.size());
-        foreach (TileShape::Element e, shape->mElements) {
+        out << qint32(shape->mFaces.size());
+        foreach (TileShapeFace e, shape->mFaces) {
             Q_ASSERT(e.mGeom.size() == e.mUV.size());
             out << qint32(e.mGeom.size());
             foreach (QVector3D v, e.mGeom)
@@ -1296,7 +1298,7 @@ bool TileShapesFile::read(const QString &fileName)
             TileShape *shape = new TileShape(name);
             foreach (SimpleFileBlock block2, block.blocks) {
                 if (block2.name == QLatin1String("face")) {
-                    TileShape::Element e;
+                    TileShapeFace e;
 
                     QString geom = block2.value("geom");
                     QList<qreal> xyz;
@@ -1329,7 +1331,7 @@ bool TileShapesFile::read(const QString &fileName)
                         e.mUV += QPointF(uvs[i], uvs[i+1]);
 #endif
 
-                    shape->mElements += e;
+                    shape->mFaces += e;
                 } else {
                     mError = tr("Line %1: Unknown block name '%1'.")
                             .arg(block2.lineNumber)
@@ -1361,7 +1363,7 @@ bool TileShapesFile::write(const QString &fileName, const QList<TileShape *> &sh
         SimpleFileBlock shapeBlock;
         shapeBlock.name = QLatin1String("shape");
         shapeBlock.addValue("name", shape->name());
-        foreach (TileShape::Element e, shape->mElements) {
+        foreach (TileShapeFace e, shape->mFaces) {
             SimpleFileBlock faceBlock;
             faceBlock.name = QLatin1String("face");
             QString geom;

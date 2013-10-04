@@ -20,7 +20,7 @@
 
 #include <QMainWindow>
 
-#include "tileshapeeditor.h" // for TileShape::Element
+#include "tileshapeeditor.h" // for TileShapeFace
 
 #include "BuildingEditor/singleton.h"
 
@@ -77,7 +77,7 @@ public:
     void changeVTile(VirtualTile *vtile, QString &imageSource, int &srcX, int &srcY, TileShape *&isoType);
     void addTexture(TextureInfo *tex);
     void removeTexture(TextureInfo *tex);
-    void editShape(TileShape *shape, QList<TileShape::Element> &faces);
+    void editShape(TileShape *shape, QList<TileShapeFace> &faces);
     //
 
     void closeEvent(QCloseEvent *event);

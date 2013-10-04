@@ -254,7 +254,7 @@ public:
 class EditShape : public QUndoCommand
 {
 public:
-    EditShape(VirtualTilesetDialog *d, TileShape *shape, const QList<TileShape::Element> &faces) :
+    EditShape(VirtualTilesetDialog *d, TileShape *shape, const QList<TileShapeFace> &faces) :
         QUndoCommand(QCoreApplication::translate("UndoCommands", "Edit Shape")),
         mDialog(d),
         mShape(shape),
@@ -274,7 +274,7 @@ public:
 
     VirtualTilesetDialog *mDialog;
     TileShape *mShape;
-    QList<TileShape::Element> mFaces;
+    QList<TileShapeFace> mFaces;
 };
 
 } // namespace
@@ -497,10 +497,10 @@ void VirtualTilesetDialog::removeTexture(TextureInfo *tex)
     TextureMgr::instance().removeTexture(tex);
 }
 
-void VirtualTilesetDialog::editShape(TileShape *shape, QList<TileShape::Element> &faces)
+void VirtualTilesetDialog::editShape(TileShape *shape, QList<TileShapeFace> &faces)
 {
-    QList<TileShape::Element> oldFaces = shape->mElements;
-    shape->mElements = faces;
+    QList<TileShapeFace> oldFaces = shape->mFaces;
+    shape->mFaces = faces;
     faces = oldFaces;
 
     foreach (VirtualTileset *vts, VirtualTilesetMgr::instance().tilesets()) {
@@ -924,11 +924,11 @@ void VirtualTilesetDialog::editShape(const QModelIndex &index)
             TileShapeEditor dialog(shape, this);
             if (dialog.exec() == QDialog::Accepted) {
                 TileShape *shape2 = dialog.tileShape();
-                foreach (TileShape::Element e, shape2->mElements) {
+                foreach (TileShapeFace e, shape2->mFaces) {
                     Q_ASSERT(e.mGeom.size() == e.mUV.size());
                 }
 
-                mUndoStack->push(new EditShape(this, shape, shape2->mElements));
+                mUndoStack->push(new EditShape(this, shape, shape2->mFaces));
 #if 0
                 shape->mElements = shape2->mElements;
                 vtile->setImage(QImage());
