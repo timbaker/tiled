@@ -64,6 +64,18 @@
     </layout>
    </item>
   </layout>
+  <action name="actionRemoveFace">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>Remove Face</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove the selected face</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -72,7 +84,9 @@
    <header>tileshapeeditor.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="tiled.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>

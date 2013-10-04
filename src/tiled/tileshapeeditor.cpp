@@ -130,8 +130,12 @@ void TileShapeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, Q
     if (mSelectedElement >= 0 && mSelectedElement < mShape->mElements.size()) {
         TileShape::Element e = mShape->mElements[mSelectedElement];
         QVector<QVector3D> tilePoly = e.mGeom;
-        if (mHasCursorPoint)
-            tilePoly += mCursorPoint;
+        if (mHasCursorPoint) {
+            if (mCursorPointReplace)
+                tilePoly.last() = mCursorPoint;
+            else
+                tilePoly += mCursorPoint;
+        }
         QPen pen(QColor(Qt::green).darker(), 0.5);
         painter->setPen(pen);
         painter->drawPolygon(mScene->toScene(tilePoly));
@@ -140,14 +144,18 @@ void TileShapeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, Q
 
 void TileShapeItem::setSelectedElement(int elementIndex)
 {
-    mSelectedElement = elementIndex;
-    update();
+    if (mSelectedElement != elementIndex) {
+        mSelectedElement = elementIndex;
+        update();
+        emit selectionChanged(elementIndex);
+    }
 }
 
-void TileShapeItem::setCursorPoint(const QVector3D &pt)
+void TileShapeItem::setCursorPoint(const QVector3D &pt, bool replace)
 {
     if (pt != mCursorPoint) {
         mCursorPoint = pt;
+        mCursorPointReplace = replace;
         mHasCursorPoint = true;
         shapeChanged();
     }
@@ -520,6 +528,10 @@ TileShapeEditor::TileShapeEditor(TileShape *shape, QWidget *parent) :
     ui->toolBar->addAction(mCreateElementTool->action());
     ui->toolBar->addAction(mEditElementTool->action());
     ui->toolBar->addAction(mUVTool->action());
+    ui->toolBar->addAction(ui->actionRemoveFace);
+
+    ui->actionRemoveFace->setEnabled(false);
+    connect(ui->actionRemoveFace, SIGNAL(triggered()), SLOT(removeFace()));
 
     connect(mCreateElementTool->action(), SIGNAL(toggled(bool)), SLOT(toolActivated(bool)));
     connect(mCreateElementTool, SIGNAL(statusTextChanged(QString)), ui->status, SLOT(setText(QString)));
@@ -531,6 +543,9 @@ TileShapeEditor::TileShapeEditor(TileShape *shape, QWidget *parent) :
     connect(mUVTool, SIGNAL(statusTextChanged(QString)), ui->status, SLOT(setText(QString)));
 
     connect(ui->gridSize, SIGNAL(valueChanged(int)), SLOT(setGridSize(int)));
+
+    connect(ui->graphicsView->scene()->tileShapeItem(), SIGNAL(selectionChanged(int)),
+            SLOT(faceSelectionChanged(int)));
 
     QSettings settings;
     settings.beginGroup(QLatin1String("TileShapeEditor"));
@@ -572,6 +587,23 @@ void TileShapeEditor::setGridSize(int size)
     ui->graphicsView->scene()->gridItem()->setGridSize(size);
 }
 
+void TileShapeEditor::faceSelectionChanged(int faceIndex)
+{
+    ui->actionRemoveFace->setEnabled(faceIndex != -1);
+}
+
+void TileShapeEditor::removeFace()
+{
+    TileShapeItem *item = ui->graphicsView->scene()->tileShapeItem();
+    int faceIndex = item->selectedElement();
+    if (faceIndex >= 0 && faceIndex < item->tileShape()->mElements.size()) {
+        item->setSelectedElement(-1);
+        mEditElementTool->updateHandles();
+        item->tileShape()->mElements.removeAt(faceIndex);
+        item->shapeChanged();
+    }
+}
+
 void TileShapeEditor::done(int r)
 {
     QSettings settings;
@@ -586,11 +618,129 @@ void TileShapeEditor::done(int r)
 
 /////
 
+class ShapeMoveCursor : public QGraphicsItem
+{
+public:
+    enum Shape {
+        XPlus,
+        XMinus,
+        YPlus,
+        YMinus,
+        ZPlus,
+        ZMinus
+    };
+
+    ShapeMoveCursor(TileShapeScene *scene, Shape shape, QGraphicsItem *parent = 0) :
+        QGraphicsItem(parent),
+        mScene(scene),
+        mShape(shape)
+    {
+        createPoly();
+    }
+
+    QRectF boundingRect() const
+    {
+        return mScene->toScene(mPoly).boundingRect().translated(-mScene->toScene(0,0,0));
+    }
+
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
+    {
+        painter->drawPolygon(mScene->toScene(mPoly).translated(-mScene->toScene(0,0,0)));
+    }
+
+    void createPoly()
+    {
+        const qreal len = 0.2;
+        const qreal wid = 0.2;
+        const qreal d = 0.2;
+        QVector3D offset;
+
+        switch (mShape) {
+        case XMinus:
+            mPoly << QVector3D(-len, 0, 0)
+                  << QVector3D(-len/2,-wid/2,0)
+                  << QVector3D(-len/2,-wid/4,0)
+                  << QVector3D(0,-wid/4,0)
+                  << QVector3D(0,wid/4,0)
+                  << QVector3D(-len/2,wid/4,0)
+                  << QVector3D(-len/2,wid/2,0);
+            offset = QVector3D(-d, 0, 0);
+            break;
+        case XPlus:
+            mPoly << QVector3D(len, 0, 0)
+                  << QVector3D(len/2,-wid/2,0)
+                  << QVector3D(len/2,-wid/4,0)
+                  << QVector3D(0,-wid/4,0)
+                  << QVector3D(0,wid/4,0)
+                  << QVector3D(len/2,wid/4,0)
+                  << QVector3D(len/2,wid/2,0);
+            offset = QVector3D(d, 0, 0);
+            break;
+        case YMinus:
+            mPoly << QVector3D(0, -len, 0)
+                  << QVector3D(-wid/2,-len/2,0)
+                  << QVector3D(-wid/4,-len/2,0)
+                  << QVector3D(-wid/4,0,0)
+                  << QVector3D(wid/4,0,0)
+                  << QVector3D(wid/4,-len/2,0)
+                  << QVector3D(wid/2,-len/2,0);
+            offset = QVector3D(0, -d, 0);
+            break;
+        case YPlus:
+            mPoly << QVector3D(0, len, 0)
+                  << QVector3D(-wid/2,len/2,0)
+                  << QVector3D(-wid/4,len/2,0)
+                  << QVector3D(-wid/4,0,0)
+                  << QVector3D(wid/4,0,0)
+                  << QVector3D(wid/4,len/2,0)
+                  << QVector3D(wid/2,len/2,0);
+            offset = QVector3D(0, d, 0);
+            break;
+        case ZMinus:
+            mPoly << QVector3D(0,0, -len)
+                  << QVector3D(0,-wid/2,-len/2)
+                  << QVector3D(0,-wid/4,-len/2)
+                  << QVector3D(0,-wid/4,0)
+                  << QVector3D(0,wid/4,0)
+                  << QVector3D(0,wid/4,-len/2)
+                  << QVector3D(0,wid/2,-len/2);
+            offset = QVector3D(0, 0, -d);
+            break;
+        case ZPlus:
+            mPoly << QVector3D(0,0,len)
+                  << QVector3D(0,-wid/2,len/2)
+                  << QVector3D(0,-wid/4,len/2)
+                  << QVector3D(0,-wid/4,0)
+                  << QVector3D(0,wid/4,0)
+                  << QVector3D(0,wid/4,len/2)
+                  << QVector3D(0,wid/2,len/2);
+            offset = QVector3D(0, 0, d);
+            break;
+        }
+        for (int i = 0; i < mPoly.size(); i++)
+            mPoly[i] += offset;
+    }
+
+    TileShapeScene *mScene;
+    Shape mShape;
+    QVector<QVector3D> mPoly;
+};
+
 BaseTileShapeTool::BaseTileShapeTool(TileShapeScene *scene) :
     mScene(scene),
-    mAction(new QAction(scene)) // FIXME: fix parent
+    mAction(new QAction(scene)), // FIXME: fix parent
+    mCursorGroupXY(new QGraphicsItemGroup),
+    mCursorGroupZ(new QGraphicsItemGroup)
 {
     mAction->setCheckable(true);
+
+    mCursorGroupXY->addToGroup(new ShapeMoveCursor(mScene, ShapeMoveCursor::XMinus));
+    mCursorGroupXY->addToGroup(new ShapeMoveCursor(mScene, ShapeMoveCursor::XPlus));
+    mCursorGroupXY->addToGroup(new ShapeMoveCursor(mScene, ShapeMoveCursor::YMinus));
+    mCursorGroupXY->addToGroup(new ShapeMoveCursor(mScene, ShapeMoveCursor::YPlus));
+
+    mCursorGroupZ->addToGroup(new ShapeMoveCursor(mScene, ShapeMoveCursor::ZMinus));
+    mCursorGroupZ->addToGroup(new ShapeMoveCursor(mScene, ShapeMoveCursor::ZPlus));
 }
 
 /////
@@ -612,14 +762,21 @@ CreateTileShapeElementTool::CreateTileShapeElementTool(TileShapeScene *scene) :
 
 void CreateTileShapeElementTool::activate()
 {
+    mMode = NoMode;
+    mCursorGroupXY->show();
+    mCursorGroupZ->hide();
     mScene->addItem(mCursorItemX);
     mScene->addItem(mCursorItemY);
+    mScene->addItem(mCursorGroupXY);
+    mScene->addItem(mCursorGroupZ);
 }
 
 void CreateTileShapeElementTool::deactivate()
 {
     mScene->removeItem(mCursorItemX);
     mScene->removeItem(mCursorItemY);
+    mScene->removeItem(mCursorGroupXY);
+    mScene->removeItem(mCursorGroupZ);
 }
 
 // Start in Mode==NoMode
@@ -644,6 +801,8 @@ void CreateTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event
             mElementItem->setSelectedElement(0);
             mScene->addItem(mElementItem);
             mScene->gridItem()->setGridZ(z);
+            mCursorGroupXY->hide();
+            mCursorGroupZ->show();
             mMode = SetZ;
             break;
         }
@@ -652,6 +811,8 @@ void CreateTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event
             e.mGeom += mElementItem->cursorPoint();
             e.mUV += QPointF();
             mElementItem->shapeChanged();
+            mCursorGroupXY->hide();
+            mCursorGroupZ->show();
             mMode = SetZ;
             // TODO: if have 3 points, constrain x/y to keep plane
             break;
@@ -660,6 +821,8 @@ void CreateTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event
             TileShape::Element &e = mElementItem->tileShape()->mElements.first();
             e.mGeom.last() = mElementItem->cursorPoint();
             mElementItem->shapeChanged();
+            mCursorGroupXY->show();
+            mCursorGroupZ->hide();
             mMode = SetXY;
             break;
         }
@@ -679,6 +842,8 @@ void CreateTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event
             delete shape;
             mElementItem = 0;
             mScene->gridItem()->setGridZ(0);
+            mCursorGroupXY->show();
+            mCursorGroupZ->hide();
             mMode = NoMode;
         }
     }
@@ -701,7 +866,7 @@ void CreateTileShapeElementTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         tilePos = mScene->gridItem()->snapXY(tilePos);
         tilePos.setZ(e.mGeom.last().z());
         z = tilePos.z();
-        mElementItem->setCursorPoint(tilePos);
+        mElementItem->setCursorPoint(tilePos, false);
         mElementItem->shapeChanged();
 //        mScene->gridItem()->setGridZ(tilePos.z());
         msg = tr("Click to set xy coordinate.  Right-click to finish.");
@@ -714,10 +879,9 @@ void CreateTileShapeElementTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         z /= 32.0; // scene -> tile coord
         z += e.mGeom.last().z();
 //        z = qBound(0.0, z, 3.0);
-//        z = qFloor(z) + qFloor((z - qFloor(z)) * 32) / 32.0;
+        z = mScene->gridItem()->snapZ(z);
         tilePos.setZ(z);
-        tilePos = mScene->gridItem()->snapZ(tilePos);
-        mElementItem->setCursorPoint(tilePos);
+        mElementItem->setCursorPoint(tilePos, true);
         mElementItem->shapeChanged();
         mScene->gridItem()->setGridZ(z);
         msg = tr("Click to set z coordinate.  Right-click to finish.");
@@ -725,10 +889,13 @@ void CreateTileShapeElementTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
     }
 
-    mCursorItemX->setLine(QLineF(mScene->toScene(tilePos.x(), tilePos.y() - 0.5, z),
-                          mScene->toScene(tilePos.x(), tilePos.y() + 0.5, z)));
-    mCursorItemY->setLine(QLineF(mScene->toScene(tilePos.x() - 0.5, tilePos.y(), z),
-                          mScene->toScene(tilePos.x() + 0.5, tilePos.y(), z)));
+    mCursorItemX->setLine(QLineF(mScene->toScene(tilePos.x(), tilePos.y() - 0.1, z),
+                          mScene->toScene(tilePos.x(), tilePos.y() + 0.1, z)));
+    mCursorItemY->setLine(QLineF(mScene->toScene(tilePos.x() - 0.1, tilePos.y(), z),
+                          mScene->toScene(tilePos.x() + 0.1, tilePos.y(), z)));
+
+    mCursorGroupXY->setPos(mScene->toScene(tilePos));
+    mCursorGroupZ->setPos(mScene->toScene(tilePos));
 
     emit statusTextChanged(QString::fromLatin1("%1,%2,%3: %4").arg(tilePos.x()).arg(tilePos.y()).arg(tilePos.z()).arg(msg));
 }
@@ -829,6 +996,12 @@ EditTileShapeElementTool::EditTileShapeElementTool(TileShapeScene *scene) :
 void EditTileShapeElementTool::activate()
 {
     updateHandles();
+
+    mMode = NoMode;
+    mCursorGroupXY->hide();
+    mCursorGroupZ->hide();
+    mScene->addItem(mCursorGroupXY);
+    mScene->addItem(mCursorGroupZ);
 }
 
 void EditTileShapeElementTool::deactivate()
@@ -837,6 +1010,9 @@ void EditTileShapeElementTool::deactivate()
     mHandles.clear();
     mSelectedHandles.clear();
     mClickedHandle = 0;
+
+    mScene->removeItem(mCursorGroupXY);
+    mScene->removeItem(mCursorGroupZ);
 
     mScene->tileShapeItem()->setSelectedElement(-1);
 }
@@ -871,6 +1047,8 @@ void EditTileShapeElementTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         if (mMode == MoveXY || mMode == MoveZ) {
             cancelMoving();
             emit statusTextChanged(QString());
+            mCursorGroupXY->hide();
+            mCursorGroupZ->hide();
         }
     }
 }
@@ -911,14 +1089,22 @@ void EditTileShapeElementTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event
                     mScene->gridItem()->setGridZ(mClickedHandle->tilePos().z());
 //                    setSelectedHandles(QSet<TileShapeHandle*> () << mClickedHandle);
                     emit statusTextChanged(tr("Click to set XY.  Right-click to cancel."));
+                    mCursorGroupXY->setPos(mScene->toScene(mClickedHandle->tilePos()));
+                    mCursorGroupXY->show();
+                    mCursorGroupZ->hide();
                 }
             }
         } else if (mMode == MoveXY) {
             mMode = MoveZ;
             emit statusTextChanged(tr("Click to set Z.  Right-click to cancel."));
+            mCursorGroupZ->setPos(mScene->toScene(mClickedHandle->tilePos()));
+            mCursorGroupXY->hide();
+            mCursorGroupZ->show();
         } else if (mMode == MoveZ) {
             finishMoving(event->scenePos());
             emit statusTextChanged(QString());
+            mCursorGroupXY->hide();
+            mCursorGroupZ->hide();
         }
     }
 }
@@ -966,6 +1152,8 @@ void EditTileShapeElementTool::updateMovingItems(const QPointF &scenePos)
         mDragOffsetXY = delta.toPointF();
 
         emit statusTextChanged(tr("%1,%2,%3:  Click to set XY.  Right-click to cancel.").arg(tilePos.x()).arg(tilePos.y()).arg(mClickedHandle->tilePos().z()));
+
+        mCursorGroupXY->setPos(mScene->toScene(tilePos));
     }
     if (mMode == MoveZ) {
         qreal z = -(scenePos.y() - mStartScenePos.y());
@@ -978,6 +1166,8 @@ void EditTileShapeElementTool::updateMovingItems(const QPointF &scenePos)
         mScene->gridItem()->setGridZ(tilePos.z());
 
         emit statusTextChanged(tr("%1,%2,%3:  Click to set Z.  Right-click to cancel.").arg(tilePos.x()).arg(tilePos.y()).arg(tilePos.z()));
+
+        mCursorGroupZ->setPos(mScene->toScene(tilePos));
     }
 
     foreach (TileShapeHandle *handle, mSelectedHandles) {

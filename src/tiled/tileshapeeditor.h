@@ -60,8 +60,10 @@ private:
     qreal mZ;
 };
 
-class TileShapeItem : public QGraphicsItem
+class TileShapeItem : public QObject, public QGraphicsItem
 {
+    Q_OBJECT
+    Q_INTERFACES(QGraphicsItem)
 public:
     TileShapeItem(TileShapeScene *scene, TileShape *shape, QGraphicsItem *parent = 0);
 
@@ -73,11 +75,14 @@ public:
     void setSelectedElement(int elementIndex);
     int selectedElement() const { return mSelectedElement; }
 
-    void setCursorPoint(const QVector3D &pt);
+    void setCursorPoint(const QVector3D &pt, bool replace);
     void clearCursorPoint();
     QVector3D cursorPoint() const { return mCursorPoint; }
 
     void shapeChanged();
+
+signals:
+    void selectionChanged(int faceIndex);
 
 private:
     TileShapeScene *mScene;
@@ -85,6 +90,7 @@ private:
     QRectF mBoundingRect;
     int mSelectedElement;
     QVector3D mCursorPoint;
+    bool mCursorPointReplace;
     bool mHasCursorPoint;
 };
 
@@ -110,6 +116,9 @@ signals:
 protected:
     TileShapeScene *mScene;
     QAction *mAction;
+
+    QGraphicsItemGroup *mCursorGroupXY;
+    QGraphicsItemGroup *mCursorGroupZ;
 };
 
 class CreateTileShapeElementTool : public BaseTileShapeTool
@@ -325,6 +334,8 @@ public:
 public slots:
     void toolActivated(bool active);
     void setGridSize(int size);
+    void faceSelectionChanged(int faceIndex);
+    void removeFace();
     void done(int r);
 
 private:
