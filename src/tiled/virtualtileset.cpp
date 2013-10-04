@@ -705,6 +705,10 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
                    QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]),
                     QVector3D(TileShapeScene::toScene(e.mGeom[0])), QVector3D(TileShapeScene::toScene(e.mGeom[1])),
                     QVector3D(TileShapeScene::toScene(e.mGeom[2])));
+
+        QVector3D cross = QVector3D::normal(e.mGeom[0], e.mGeom[1], e.mGeom[2]);
+        if (cross.x() > 0 && cross.y() == 0 /*cross == QVector3D(1, 0, 0)*/)
+            de.color(0.8f,0.8f,0.8f);
         de.flush();
     }
 
