@@ -288,7 +288,7 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     mCurrentTexture(0),
     mTextureTileset(0),
     mIsoTileset(0),
-    mIsoCategory(CategoryWall),
+    mShapeGroup(0),
     mShowDiskImage(false),
     mFile(0),
     mUndoGroup(new QUndoGroup(this)),
@@ -341,11 +341,11 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     zoomable->setScale(scale);
     zoomable->connectToComboBox(ui->scaleCombo);
 
-    ui->comboBox->addItem(QLatin1String("Floor"));
-    ui->comboBox->addItem(QLatin1String("Roofs"));
-    ui->comboBox->addItem(QLatin1String("Roof Caps"));
-    ui->comboBox->addItem(QLatin1String("Walls"));
-    ui->comboBox->setCurrentIndex(mIsoCategory);
+    ui->comboBox->addItems(VirtualTilesetMgr::instance().shapeGroupLabels());
+    if (ui->comboBox->count()) {
+        ui->comboBox->setCurrentIndex(0);
+        mShapeGroup = VirtualTilesetMgr::instance().shapeGroupAt(0);
+    }
     connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(isoCategoryChanged(int)));
 
     connect(ui->vTilesetNames->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
@@ -661,6 +661,42 @@ void VirtualTilesetDialog::textureTileSelectionChanged()
     if (mIsoTileset) {
         mIsoTileset = 0;
     }
+#if 1
+    if (!selected.isEmpty() && mShapeGroup != 0) {
+        Tile *textureTile = ui->orthoTiles->tilesetModel()->tileAt(selected.first());
+        // If there's only one tile in a group (such as Floors), then create a
+        // virtual tile for each selected texture tile.
+        if (mShapeGroup->count() == 1) {
+            QRect r(selected.first().column(), selected.first().row(), 1, 1);
+            foreach (QModelIndex index, selected)
+                r |= QRect(index.column(), index.row(), 1, 1);
+            mIsoTileset = new VirtualTileset(mShapeGroup->label(), r.width(), r.height());
+            if (TileShape *shape = mShapeGroup->shapeAt(0)) {
+                foreach (QModelIndex index, selected) {
+                    Tile *tile = ui->orthoTiles->tilesetModel()->tileAt(index);
+                    int x = index.column() - r.x(), y = index.row() - r.y();
+                    mIsoTileset->tileAt(x, y)->setImageSource(tile->tileset()->name(),
+                                                              tile->id() % tile->tileset()->columnCount(),
+                                                              tile->id() / tile->tileset()->columnCount());
+                    mIsoTileset->tileAt(x, y)->setShape(shape);
+                }
+            }
+        } else {
+            mIsoTileset = new VirtualTileset(mShapeGroup->label(),
+                                             mShapeGroup->columnCount(),
+                                             mShapeGroup->rowCount());
+            for (int i = 0; i < mIsoTileset->tileCount(); i++) {
+                if (TileShape *shape = mShapeGroup->shapeAt(i)) {
+                    mIsoTileset->tileAt(i)->setImageSource(textureTile->tileset()->name(),
+                                                           textureTile->id() % textureTile->tileset()->columnCount(),
+                                                           textureTile->id() / textureTile->tileset()->columnCount());
+                    mIsoTileset->tileAt(i)->setShape(shape);
+                }
+            }
+
+        }
+    }
+#else
     if (!selected.isEmpty() && mIsoCategory == CategoryFloor) {
         QRect r(selected.first().column(), selected.first().row(), 1, 1);
         foreach (QModelIndex index, selected)
@@ -800,6 +836,7 @@ void VirtualTilesetDialog::textureTileSelectionChanged()
         mIsoTileset->tileAt(2, 2)->setShape(shape("wall_short_nw"));
         mIsoTileset->tileAt(3, 2)->setShape(shape("wall_short_se"));
     }
+#endif
     ui->isoTiles->setTileset(mIsoTileset);
     delete oldTileset;
 }
@@ -897,7 +934,7 @@ void VirtualTilesetDialog::textureRemoved(TextureInfo *tex)
 
 void VirtualTilesetDialog::isoCategoryChanged(int row)
 {
-    mIsoCategory = static_cast<IsoCategory>(row);
+    mShapeGroup = VirtualTilesetMgr::instance().shapeGroupAt(row);
     textureTileSelectionChanged();
 }
 

@@ -40,6 +40,7 @@ namespace Internal {
 
 class TextureInfo;
 class TileShape;
+class TileShapeGroup;
 class VirtualTile;
 class VirtualTileset;
 class VirtualTilesetsFile;
@@ -49,13 +50,6 @@ class VirtualTilesetDialog : public QMainWindow, public Singleton<VirtualTileset
     Q_OBJECT
 
 public:
-    enum IsoCategory {
-        CategoryFloor,
-        CategoryRoof,
-        CategoryRoofCap,
-        CategoryWall
-    };
-
     explicit VirtualTilesetDialog(QWidget *parent = 0);
     ~VirtualTilesetDialog();
 
@@ -140,7 +134,7 @@ private:
     QList<Tileset*> mTextureTilesets;
     Tileset *mTextureTileset;
     VirtualTileset *mIsoTileset;
-    IsoCategory mIsoCategory;
+    TileShapeGroup *mShapeGroup;
     bool mShowDiskImage;
     VirtualTilesetsFile *mFile;
 

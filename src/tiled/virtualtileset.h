@@ -25,6 +25,7 @@
 #include <QMap>
 #include <QObject>
 #include <QStringList>
+#include <QVector>
 
 class QGLPixelBuffer;
 
@@ -35,6 +36,56 @@ namespace Internal {
 
 class TileShape;
 class VirtualTileset;
+
+class TileShapeGroup
+{
+public:
+    TileShapeGroup(const QString &label, int columnCount, int rowCount) :
+        mLabel(label),
+        mColumnCount(columnCount),
+        mRowCount(rowCount),
+        mShapes(mColumnCount * mRowCount)
+    {
+
+    }
+
+    QString label() const { return mLabel; }
+    int columnCount() const { return mColumnCount; }
+    int rowCount() const { return mRowCount; }
+    int count() const { return mColumnCount * mRowCount; }
+
+    void setShape(int col, int row, TileShape *shape)
+    {
+        if (contains(col, row))
+            mShapes[col + row * mColumnCount] = shape;
+    }
+
+    TileShape *shapeAt(int col, int row)
+    {
+        return contains(col, row) ? mShapes[col + row * mColumnCount] : 0;
+    }
+
+    TileShape *shapeAt(int index)
+    {
+        return contains(index) ? mShapes[index] : 0;
+    }
+
+    bool contains(int col, int row)
+    {
+        return QRect(0, 0, mColumnCount, mRowCount).contains(col, row);
+    }
+
+    bool contains(int index)
+    {
+        return index >= 0 && index < mShapes.size();
+    }
+
+private:
+    QString mLabel;
+    int mColumnCount;
+    int mRowCount;
+    QVector<TileShape*> mShapes;
+};
 
 class VirtualTile
 {
@@ -206,7 +257,19 @@ public:
 
     QList<TileShape*> tileShapes() const { return mShapeByName.values(); }
     TileShape *tileShape(const QString &name);
-    TileShape *createTileShape(const QString &name);
+
+    QList<TileShapeGroup*> shapeGroups() const { return mShapeGroups; }
+    TileShapeGroup *shapeGroupAt(int index)
+    {
+        return (index >= 0 && index < mShapeGroups.size()) ? mShapeGroups[index] : 0;
+    }
+    QStringList shapeGroupLabels() const
+    {
+        QStringList labels;
+        foreach (TileShapeGroup *group, mShapeGroups)
+            labels += group->label();
+        return labels;
+    }
 
     void emitTilesetChanged(VirtualTileset *vts)
     { emit tilesetChanged(vts); }
@@ -231,6 +294,7 @@ private:
     QGLPixelBuffer *mPixelBuffer;
 
     QMap<QString,TileShape*> mShapeByName;
+    QList<TileShapeGroup*> mShapeGroups;
 
     QMap<QString,QImage> mOriginalIsoImages;
 
@@ -366,7 +430,8 @@ public:
 
     bool read(const QString &fileName);
     bool write(const QString &fileName);
-    bool write(const QString &fileName, const QList<TileShape*> &shapes);
+    bool write(const QString &fileName, const QList<TileShape*> &shapes,
+               const QList<TileShapeGroup *> &groups);
 
     const QList<TileShape*> &shapes() const
     { return mShapes; }
@@ -385,6 +450,25 @@ public:
     QStringList shapeNames() const
     { return mShapeByName.keys(); }
 
+
+    const QList<TileShapeGroup*> &groups() const
+    { return mGroups; }
+
+    QList<TileShapeGroup*> takeGroups()
+    {
+        QList<TileShapeGroup*> ret = mGroups;
+        mGroups.clear();
+        mGroupByName.clear();
+        return ret;
+    }
+
+    TileShapeGroup *group(const QString &name)
+    { return mGroupByName.contains(name) ? mGroupByName[name] : 0; }
+
+    QStringList groupNames() const
+    { return mGroupByName.keys(); }
+
+    bool parse2Ints(const QString &s, int *pa, int *pb);
     bool parseDoubles(const QString &s, int stride, QList<qreal> &out);
 
     QString errorString() const
@@ -393,6 +477,8 @@ public:
 private:
     QList<TileShape*> mShapes;
     QMap<QString,TileShape*> mShapeByName;
+    QList<TileShapeGroup*> mGroups;
+    QMap<QString,TileShapeGroup*> mGroupByName;
     QString mFileName;
     QString mError;
 };

@@ -304,6 +304,7 @@ bool VirtualTilesetMgr::readTxt()
     }
     foreach (TileShape *shape, shapesFile.takeShapes())
         mShapeByName[shape->name()] = shape;
+    mShapeGroups = shapesFile.takeGroups();
 
     VirtualTilesetsFile binFile;
     if (!binFile.read(fileName)) {
@@ -329,7 +330,8 @@ bool VirtualTilesetMgr::writeTxt()
 #endif
 
     TileShapesFile shapesFile;
-    (void) shapesFile.write(Preferences::instance()->configPath(QLatin1String("TileShapes.txt")), tileShapes());
+    (void) shapesFile.write(Preferences::instance()->configPath(QLatin1String("TileShapes.txt")),
+                            tileShapes(), shapeGroups());
 
     QString fileName = Preferences::instance()->tilesDirectory() + QLatin1String("/virtualtilesets.vts");
     VirtualTilesetsFile binFile;
@@ -1281,6 +1283,9 @@ bool TileShapesFile::read(const QString &fileName)
     qDeleteAll(mShapes);
     mShapes.clear();
 
+    qDeleteAll(mGroups);
+    mGroups.clear();
+
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("shape")) {
             QString name = block.value("name");
@@ -1340,6 +1345,65 @@ bool TileShapesFile::read(const QString &fileName)
                 }
             }
             mShapes += shape;
+            mShapeByName[shape->name()] = shape;
+        } else if (block.name == QLatin1String("group")) {
+            QString label = block.value("label");
+            QString sizeStr = block.value("size");
+            int columnCount, rowCount;
+            if (!parse2Ints(sizeStr, &columnCount, &rowCount) ||
+                    !QRect(0, 0, 99, 99).contains(columnCount, rowCount)) {
+                mError = tr("Line %1: Invalid group size '%2'.").arg(block.lineNumber).arg(sizeStr);
+                return false;
+            }
+            TileShapeGroup *group = new TileShapeGroup(label, columnCount, rowCount);
+            mGroups += group;
+            mGroupByName[label] = group; // label needn't be unique
+
+            foreach (SimpleFileKeyValue kv, block.values) {
+                if (kv.name == QLatin1String("shape")) {
+                    QStringList values = kv.values();
+                    if (values.size() != 3) {
+                        mError = tr("Line %1: Expected x y shape.").arg(kv.lineNumber);
+                        return false;
+                    }
+                    bool ok;
+                    int col = values[0].toInt(&ok);
+                    if (!ok) {
+                        mError = tr("Line %1: Expected integer but got '%2'.")
+                                .arg(kv.lineNumber)
+                                .arg(values[0]);
+                        return false;
+                    }
+                    int row = values[1].toInt(&ok);
+                    if (!ok) {
+                        mError = tr("Line %1: Expected integer but got '%2'.")
+                                .arg(kv.lineNumber)
+                                .arg(values[1]);
+                        return false;
+                    }
+                    if (!group->contains(col, row)) {
+                        mError = tr("Line %1: Invalid tile col,row=%2,%3.")
+                                .arg(kv.lineNumber)
+                                .arg(col).arg(row);
+                        return false;
+                    }
+                    QString shapeName = values[2];
+                    TileShape *shape = this->shape(shapeName);
+                    if (shape == 0) {
+                        mError = tr("Line %1: Unknown shape '%2'.")
+                                .arg(kv.lineNumber)
+                                .arg(shapeName);
+                        return false;
+                    }
+                    group->setShape(col, row, shape);
+                } else if (kv.name != QLatin1String("label") &&
+                           kv.name != QLatin1String("size")) {
+                    mError = tr("Line %1: Unknown value name '%2'.")
+                            .arg(kv.lineNumber)
+                            .arg(kv.name);
+                    return false;
+                }
+            }
         } else {
             mError = tr("Line %1: Unknown block name '%1'.")
                     .arg(block.lineNumber)
@@ -1353,10 +1417,11 @@ bool TileShapesFile::read(const QString &fileName)
 
 bool TileShapesFile::write(const QString &fileName)
 {
-    return write(fileName, mShapes);
+    return write(fileName, mShapes, mGroups);
 }
 
-bool TileShapesFile::write(const QString &fileName, const QList<TileShape *> &shapes)
+bool TileShapesFile::write(const QString &fileName, const QList<TileShape *> &shapes,
+                           const QList<TileShapeGroup*> &groups)
 {
     SimpleFile simpleFile;
     foreach (TileShape *shape, shapes) {
@@ -1378,6 +1443,22 @@ bool TileShapesFile::write(const QString &fileName, const QList<TileShape *> &sh
         }
         simpleFile.blocks += shapeBlock;
     }
+    foreach (TileShapeGroup *group, groups) {
+        SimpleFileBlock groupBlock;
+        groupBlock.name = QLatin1String("group");
+        groupBlock.addValue("label", group->label());
+        groupBlock.addValue("size", QString::fromLatin1("%1,%2")
+                            .arg(group->columnCount())
+                            .arg(group->rowCount()));
+        for (int y = 0; y < group->rowCount(); y++) {
+            for (int x = 0; x < group->columnCount(); x++) {
+                if (TileShape *shape = group->shapeAt(x, y))
+                    groupBlock.addValue("shape", QString::fromLatin1("%1 %2 %3")
+                                        .arg(x).arg(y).arg(shape->name()));
+            }
+        }
+        simpleFile.blocks += groupBlock;
+    }
 
     simpleFile.setVersion(VERSION_LATEST);
     if (!simpleFile.write(fileName)) {
@@ -1385,6 +1466,20 @@ bool TileShapesFile::write(const QString &fileName, const QList<TileShape *> &sh
         return false;
     }
 
+    return true;
+}
+
+bool TileShapesFile::parse2Ints(const QString &s, int *pa, int *pb)
+{
+    QStringList coords = s.split(QLatin1Char(','), QString::SkipEmptyParts);
+    if (coords.size() != 2)
+        return false;
+    bool ok;
+    int a = coords[0].toInt(&ok);
+    if (!ok) return false;
+    int b = coords[1].toInt(&ok);
+    if (!ok) return false;
+    *pa = a, *pb = b;
     return true;
 }
 

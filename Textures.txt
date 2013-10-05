@@ -46,6 +46,11 @@ texture
 }
 texture
 {
+    file = fixtures_counters_01
+    size = 8,8
+}
+texture
+{
     file = fixtures_escalators_01
     size = 8,16
 }
@@ -278,6 +283,11 @@ texture
 {
     file = recreational_01
     size = 8,16
+}
+texture
+{
+    file = roofs_01
+    size = 8,8
 }
 texture
 {
