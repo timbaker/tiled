@@ -149,6 +149,7 @@
     <addaction name="actionBuildingEditor"/>
     <addaction name="actionTilesetMetaInfo"/>
     <addaction name="actionTileProperties"/>
+    <addaction name="actionEnflatulator"/>
     <addaction name="actionVirtualTilesetDialog"/>
     <addaction name="actionWorldEd"/>
     <addaction name="separator"/>
@@ -576,6 +577,11 @@
   <action name="actionVirtualTilesetDialog">
    <property name="text">
     <string>Virtual Tilesets...</string>
+   </property>
+  </action>
+  <action name="actionEnflatulator">
+   <property name="text">
+    <string>Enflatulator</string>
    </property>
   </action>
  </widget>

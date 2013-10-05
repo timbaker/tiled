@@ -633,6 +633,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             SLOT(tilesetMetaInfoDialog()));
     connect(mUi->actionTileProperties, SIGNAL(triggered()),
             SLOT(tilePropertiesEditor()));
+    connect(mUi->actionEnflatulator, SIGNAL(triggered()), SLOT(enflatulator()));
     new TextureMgr;
     new VirtualTilesetMgr;
     connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetAdded(VirtualTileset*)),
@@ -1673,6 +1674,13 @@ void MainWindow::tilePropertiesEditor()
     mTileDefDialog = TileDefDialog::instance();
     TileDefDialog::instance()->show();
     TileDefDialog::instance()->raise();
+}
+
+#include "enflatulatordialog.h"
+void MainWindow::enflatulator()
+{
+    EnflatulatorDialog d(this);
+    d.exec();
 }
 
 void MainWindow::virtualTilesetDialog()
