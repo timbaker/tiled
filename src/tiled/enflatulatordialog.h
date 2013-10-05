@@ -39,7 +39,8 @@ public:
     enum Orient {
         Flat,
         West,
-        North
+        North,
+        Roof
     };
 
     QString mLabel;
@@ -51,8 +52,17 @@ public:
 class EnflatulatorShape
 {
 public:
+    QRect bounds() const
+    {
+        QRect r = mFaces.first()->mRect;
+        foreach (EnflatulatorFace *face, mFaces)
+            r |= face->mRect;
+        return r;
+    }
+
     QString mLabel;
     QList<EnflatulatorFace*> mFaces;
+    QImage mImage;
 };
 
 class EnflatulatorShapeItem : public QGraphicsItem

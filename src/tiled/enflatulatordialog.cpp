@@ -20,6 +20,7 @@
 
 #include "preferences.h"
 
+#include <QClipboard>
 #include <QDebug>
 #include <QFileDialog>
 #include <QGraphicsSceneMouseEvent>
@@ -49,8 +50,9 @@ void EnflatulatorShapeItem::paint(QPainter *painter, const QStyleOptionGraphicsI
 {
     if (mShape) {
         painter->setPen(QColor(0,0,0,64));
+        painter->drawImage(0, 0, mShape->mImage);
         foreach (EnflatulatorFace *face, mShape->mFaces) {
-            painter->drawImage(face->mRect.topLeft(), face->mImage);
+//            painter->drawImage(face->mRect.topLeft(), face->mImage);
             painter->drawRect(face->mRect);
         }
     }
@@ -85,7 +87,7 @@ EnflatulatorFaceView::EnflatulatorFaceView(QWidget *parent) :
     mScene(new EnflatulatorFaceScene(this))
 {
     setScene(mScene);
-    setTransform(QTransform::fromScale(4, 4));
+    setTransform(QTransform::fromScale(2, 2));
 }
 
 /////
@@ -127,7 +129,7 @@ void EnflatulatorFaceItem::paint(QPainter *painter, const QStyleOptionGraphicsIt
 QPointF EnflatulatorFaceItem::toScene(qreal x, qreal y, qreal z)
 {
     const int tileWidth = 64, tileHeight = 32;
-    const int originX = tileWidth / 2;
+    const int originX = 0; //tileWidth / 2;
     const int originY = 0;
     x /= 32, y /= 32/*, z /= tileHeight*/;
     return QPointF((x - y) * tileWidth / 2 + originX,
@@ -152,7 +154,7 @@ QPointF EnflatulatorFaceItem::toFace(qreal x, qreal y)
     const int tileHeight = 32;
     const qreal ratio = (qreal) tileWidth / tileHeight;
 
-    x -= tileWidth / 2;
+    //x -= tileWidth / 2;
     const qreal mx = y + (x / ratio);
     const qreal my = y - (x / ratio);
 
@@ -187,31 +189,73 @@ void EnflatulatorFaceItem::moveHandle(int handle, const QPointF &scenePos)
     QPointF p1 = toFace(p);
     QPointF p2 = toFace(mapFromScene(scenePos));
     QPoint delta = ((p2 - p1) * 32).toPoint();
-    qDebug() << delta;
-    QPoint oldTopLeft = mFace->mRect.topLeft();
+    QRect oldRect = mFace->mRect;
     switch (mFace->mOrient) {
     case mFace->Flat:
+        switch (handle) {
+        case 0:
+            mFace->mRect.setTop(qMin(mFace->mRect.top() + delta.y(), mFace->mRect.bottom()));
+            delta = QPoint(0, mFace->mRect.top() - oldRect.top());
+            break;
+        case 1:
+            mFace->mRect.setRight(qMax(mFace->mRect.right() + delta.x(), mFace->mRect.left()));
+            delta = QPoint();
+            break;
+        case 2:
+            mFace->mRect.setBottom(qMax(mFace->mRect.bottom() + delta.y(), mFace->mRect.top()));
+            delta = QPoint();
+            break;
+        case 3:
+            mFace->mRect.setLeft(qMin(mFace->mRect.left() + delta.x(), mFace->mRect.right()));
+            delta = QPoint(mFace->mRect.left() - oldRect.left(), 0);
+            break;
+        }
+        break;
     case mFace->North:
+        switch (handle) {
+        case 0:
+            mFace->mRect.setTop(qMin(mFace->mRect.top() + delta.y(), mFace->mRect.bottom()));
+            delta = QPoint(mFace->mRect.top() - oldRect.top(), mFace->mRect.top() - oldRect.top());
+            break;
+        case 1:
+            mFace->mRect.setRight(qMax(mFace->mRect.right() + delta.x(), mFace->mRect.left()));
+            delta = QPoint();
+            break;
+        case 2:
+            mFace->mRect.setBottom(qMax(mFace->mRect.bottom() + delta.y(), mFace->mRect.top()));
+            delta = QPoint();
+            break;
+        case 3:
+            mFace->mRect.setLeft(qMin(mFace->mRect.left() + delta.x(), mFace->mRect.right()));
+            delta = QPoint(mFace->mRect.left() - oldRect.left(), 0);
+            break;
+        }
+        break;
     case mFace->West:
         switch (handle) {
         case 0:
             mFace->mRect.setTop(qMin(mFace->mRect.top() + delta.y(), mFace->mRect.bottom()));
+            delta = QPoint(mFace->mRect.top() - oldRect.top(), mFace->mRect.top() - oldRect.top());
             break;
         case 1:
-            mFace->mRect.setRight(qMax(mFace->mRect.right() + delta.x(), mFace->mRect.left()));
+            mFace->mRect.setRight(qMax(mFace->mRect.right() - delta.y(), mFace->mRect.left()));
+            delta = QPoint(0, oldRect.right() - mFace->mRect.right());
             break;
         case 2:
             mFace->mRect.setBottom(qMax(mFace->mRect.bottom() + delta.y(), mFace->mRect.top()));
+            delta = QPoint();
             break;
         case 3:
-            mFace->mRect.setLeft(qMin(mFace->mRect.left() + delta.x(), mFace->mRect.right()));
+            mFace->mRect.setLeft(qMin(mFace->mRect.left() - delta.y(), mFace->mRect.right()));
+            delta = QPoint();
             break;
         }
         break;
     }
+
     prepareGeometryChange();
     initPoly();
-    setPos(pos() + mFace->mRect.topLeft() - oldTopLeft);
+    setPos(pos() + (toScene(delta.x(), delta.y(), 0) - toScene(0, 0, 0)));
     update();
 }
 
@@ -237,6 +281,12 @@ void EnflatulatorFaceItem::initPoly()
               << toScene(mFace->mRect.width(), 0, mFace->mRect.height())
               << toScene(0, 0, mFace->mRect.height());
         break;
+    case mFace->Roof:
+        mPoly << toScene(0, 0, 0)
+              << toScene(mFace->mRect.width(), 0, 0)
+              << toScene(mFace->mRect.width() + 32, mFace->mRect.height(), 0)
+              << toScene(32, mFace->mRect.height(), 0);
+        break;
     }
     mPoly += mPoly.first();
 }
@@ -245,14 +295,14 @@ void EnflatulatorFaceItem::enflatulate()
 {
     mFace->mImage = QImage(mFace->mRect.size(), QImage::Format_ARGB32);
     mFace->mImage.fill(Qt::transparent);
-//    QImage isoImg = (mScene->mImageItem->pixmap().toImage()).copy(mFace->mRect.translated(-mFace->mRect.topLeft() + pos().toPoint()));
     QImage isoImg = mScene->mImage;
     switch (mFace->mOrient) {
     case mFace->Flat:
         for (int y = 0; y < mFace->mRect.height(); y++) {
             for (int x = 0; x < mFace->mRect.width(); x++) {
                 QPointF p = pos() + toScene(x, y, 0);
-                mFace->mImage.setPixel(x, y, isoImg.pixel(p.toPoint()));
+                if (isoImg.rect().contains(p.toPoint()))
+                    mFace->mImage.setPixel(x, y, isoImg.pixel(p.toPoint()));
             }
         }
         break;
@@ -260,7 +310,8 @@ void EnflatulatorFaceItem::enflatulate()
         for (int x = 0; x < mFace->mRect.width(); x += 1) {
             for (int y = 0; y < mFace->mRect.height(); y++) {
                 QPointF p = pos() + toScene(0, mFace->mRect.width() - x, y);
-                mFace->mImage.setPixel(x, y, isoImg.pixel(p.toPoint()));
+                if (isoImg.rect().contains(p.toPoint()))
+                    mFace->mImage.setPixel(x, y, isoImg.pixel(p.toPoint()));
             }
         }
         break;
@@ -268,7 +319,17 @@ void EnflatulatorFaceItem::enflatulate()
         for (int x = 0; x < mFace->mRect.width(); x += 1) {
             for (int y = 0; y < mFace->mRect.height(); y++) {
                 QPointF p = pos() + toScene(x, 0, y);
-                mFace->mImage.setPixel(x, y, isoImg.pixel(p.toPoint()));
+                if (isoImg.rect().contains(p.toPoint()))
+                    mFace->mImage.setPixel(x, y, isoImg.pixel(p.toPoint()));
+            }
+        }
+        break;
+    case mFace->Roof:
+        for (int y = 0; y < mFace->mRect.height(); y++) {
+            for (int x = 0; x < mFace->mRect.width(); x++) {
+                QPointF p = pos() + toScene(x + (y/64.0)*32, y, 0);
+                if (isoImg.rect().contains(p.toPoint()))
+                    mFace->mImage.setPixel(x, y, isoImg.pixel(p.toPoint()));
             }
         }
         break;
@@ -299,10 +360,11 @@ void EnflatulatorIsoScene::setShape(EnflatulatorShape *shape)
 {
     qDeleteAll(mFaceItems);
     mFaceItems.clear();
+    mSelectedFaceItem = 0;
 
     qreal x = 16, y = 16;
     foreach (EnflatulatorFace *face, shape->mFaces) {
-#if 1
+#if 0
         mFaceItems += new EnflatulatorFaceItem(this, face);
 #else
         EnflatulatorFace *editFace = new EnflatulatorFace;
@@ -417,38 +479,52 @@ EnflatulatorDialog::EnflatulatorDialog(QWidget *parent) :
         if (EnflatulatorFace *face = new EnflatulatorFace) {
             face->mLabel = tr("Back");
             face->mOrient = face->North;
-            face->mRect = QRect(0, 22, 32, 96);
+            face->mRect = QRect(0, 32, 32, 96);
             shape->mFaces += face;
         }
         if (EnflatulatorFace *face = new EnflatulatorFace) {
             face->mLabel = tr("Left");
             face->mOrient = face->North;
-            face->mRect = QRect(32, 22, 22, 96);
+            face->mRect = QRect(32, 32, 32, 96);
             shape->mFaces += face;
         }
         if (EnflatulatorFace *face = new EnflatulatorFace) {
             face->mLabel = tr("Front");
             face->mOrient = face->North;
-            face->mRect = QRect(32 + 22, 22, 32, 96);
+            face->mRect = QRect(32 + 32, 32, 32, 96);
             shape->mFaces += face;
         }
         if (EnflatulatorFace *face = new EnflatulatorFace) {
             face->mLabel = tr("Right");
             face->mOrient = face->West;
-            face->mRect = QRect(32 + 22 + 32, 22, 22, 96);
+            face->mRect = QRect(32 + 32 + 32, 32, 32, 96);
             shape->mFaces += face;
         }
         if (EnflatulatorFace *face = new EnflatulatorFace) {
             face->mLabel = tr("Top");
             face->mOrient = face->Flat;
-            face->mRect = QRect(32 + 22, 0, 32, 22);
+            face->mRect = QRect(32 + 32, 0, 32, 32);
             shape->mFaces += face;
         }
         mShapes += shape;
     }
 
-    foreach (EnflatulatorShape *shape, mShapes)
+    if (EnflatulatorShape *shape = new EnflatulatorShape) {
+        shape->mLabel = QLatin1String("Roof");
+        if (EnflatulatorFace *face = new EnflatulatorFace) {
+            face->mLabel = tr("Face");
+            face->mOrient = face->Roof;
+            face->mRect = QRect(0, 0, 32, 64);
+            shape->mFaces += face;
+        }
+        mShapes += shape;
+    }
+
+    foreach (EnflatulatorShape *shape, mShapes) {
+        shape->mImage = QImage(shape->bounds().size(), QImage::Format_ARGB32);
+        shape->mImage.fill(Qt::transparent);
         ui->shapeList->addItem(shape->mLabel);
+    }
 
     connect(ui->shapeList, SIGNAL(currentRowChanged(int)), SLOT(currentShapeChanged(int)));
 }
@@ -475,6 +551,16 @@ void EnflatulatorDialog::currentShapeChanged(int row)
 
 void EnflatulatorDialog::faceChanged()
 {
+    QImage &shapeImg = ui->faceView->mScene->mShapeItem->mShape->mImage;
+    shapeImg.fill(Qt::transparent);
+    QPainter p(&shapeImg);
+    for (int i = 0; i < ui->isoView->mScene->mFaceItems.size(); i++) {
+        EnflatulatorFace *face = ui->isoView->mScene->mFaceItems[i]->mFace;
+        p.drawImage(ui->faceView->mScene->mShapeItem->mShape->mFaces[i]->mRect.topLeft(), face->mImage);
+    }
+    p.end();
+    qApp->clipboard()->setImage(shapeImg);
+
     ui->faceView->mScene->mShapeItem->update();
 }
 
