@@ -1,6 +1,7 @@
 #include "tileshapeeditor.h"
 #include "ui_tileshapeeditor.h"
 
+#include "virtualtileset.h"
 #include "zoomable.h"
 
 #include <qmath.h>

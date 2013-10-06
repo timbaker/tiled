@@ -26,6 +26,7 @@
 #include <QObject>
 #include <QStringList>
 #include <QVector>
+#include <QVector3D>
 
 class QGLPixelBuffer;
 
@@ -34,8 +35,27 @@ class Tileset;
 
 namespace Internal {
 
-class TileShape;
 class VirtualTileset;
+
+class TileShapeFace
+{
+public:
+    QVector<QVector3D> mGeom;
+    QPolygonF mUV;
+};
+
+class TileShape
+{
+public:
+    TileShape(const QString &name) :
+        mName(name)
+    {}
+
+    QString name() const { return mName; }
+
+    QString mName;
+    QList<TileShapeFace> mFaces;
+};
 
 class TileShapeGroup
 {

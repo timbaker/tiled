@@ -20,7 +20,7 @@
 
 #include <QMainWindow>
 
-#include "tileshapeeditor.h" // for TileShapeFace
+#include "virtualtileset.h" // for TileShapeFace
 
 #include "BuildingEditor/singleton.h"
 

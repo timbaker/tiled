@@ -20,7 +20,6 @@
 #include "preferences.h"
 #include "texturemanager.h"
 #include "tilesetmanager.h"
-#include "tileshapeeditor.h"
 
 #include "BuildingEditor/buildingtiles.h"
 #include "BuildingEditor/simplefile.h"
@@ -425,6 +424,7 @@ QImage VirtualTilesetMgr::originalIsoImage(VirtualTileset *vts)
     return mOriginalIsoImages[vts->name()] = QImage(fileName); // may be null
 }
 
+namespace {
 #if 0
 struct TextureTile
 {
@@ -629,10 +629,7 @@ public:
 
 };
 
-#define ISO_RENDER 1
-#if ISO_RENDER
-#include <GL/GLU.h>
-#endif
+} // namespace anon
 
 void VirtualTilesetMgr::initPixelBuffer()
 {
@@ -644,21 +641,9 @@ void VirtualTilesetMgr::initPixelBuffer()
 
     mPixelBuffer->makeCurrent();
 
-#if ISO_RENDER
     glViewport(0, 0, width, height);
-#else
-    glViewport(0, 0, width, height);
-#endif
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-#if ISO_RENDER
-#if 0
-    glOrtho(-1, 1, -1, 3, -10, 10);
-    glRotatef(-135,1,0,0);
-    glRotatef(45,0,0,1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-#elif 1
     // http://www.java-gaming.org/index.php?PHPSESSID=911v5td96tpd7t3ufscsujuls1&/topic,10237.msg82081.html#msg82081
 #if 0
     GLfloat m[16] = { 1.0, 0.0,  -1.0, 0.0, // x
@@ -678,20 +663,6 @@ void VirtualTilesetMgr::initPixelBuffer()
     glTranslatef(0,0,-1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-#else
-    GLdouble eye = sqrt(1 / 3.0);
-    gluLookAt(eye, eye, eye,
-              0, 0, 0,
-              0, 0, 1);
-//    glTranslated(0, 0, -0.2);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-#endif
-#else
-    glOrtho(0, width, height, 0, -999999, 999999);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-#endif
 
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
@@ -705,6 +676,10 @@ void VirtualTilesetMgr::initPixelBuffer()
     glDepthFunc(GL_LEQUAL);
 
     glClearColor(1,1,1,0);
+#if QT_VERSION >= 0x050000
+#else
+    glClearDepth(1.0f);
+#endif
 }
 
 uint VirtualTilesetMgr::loadGLTexture(const QString &imageSource, int srcX, int srcY)
@@ -739,14 +714,7 @@ uint VirtualTilesetMgr::loadGLTexture(const QString &imageSource, int srcX, int 
     return textureID;
 }
 
-#if ISO_RENDER
-static QVector3D toGL(const QVector3D &v)
-{
-    return v;
-    return QVector3D(v.y(), v.x(), v.z());
-}
-
-#endif
+#define toGL(v) v
 
 QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
 {
@@ -763,15 +731,10 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
         return QImage();
     }
 
-#if QT_VERSION >= 0x050000
-#else
-    glClearDepth(1.0f);
-#endif
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     DrawElements de;
     foreach (TileShapeFace e, vtile->shape()->mFaces) {
-#if ISO_RENDER
         if (e.mGeom.size() == 4)
             de.add(textureID,
                    QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]), QVector2D(e.mUV[3]),
@@ -780,25 +743,13 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
             de.add(textureID,
                    QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]),
                     toGL(e.mGeom[0]), toGL(e.mGeom[1]), toGL(e.mGeom[2]));
-#else
-        if (e.mGeom.size() == 4)
-            de.add(textureID,
-                   QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]), QVector2D(e.mUV[3]),
-                    QVector3D(TileShapeScene::toScene(e.mGeom[0])), QVector3D(TileShapeScene::toScene(e.mGeom[1])),
-                    QVector3D(TileShapeScene::toScene(e.mGeom[2])), QVector3D(TileShapeScene::toScene(e.mGeom[3])));
-        if (e.mGeom.size() == 3)
-            de.add(textureID,
-                   QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]),
-                    QVector3D(TileShapeScene::toScene(e.mGeom[0])), QVector3D(TileShapeScene::toScene(e.mGeom[1])),
-                    QVector3D(TileShapeScene::toScene(e.mGeom[2])));
-#endif
 
         QVector3D cross = QVector3D::normal(e.mGeom[0], e.mGeom[1], e.mGeom[2]);
         if (cross.x() > 0 && cross.y() == 0 /*cross == QVector3D(1, 0, 0)*/)
             de.color(0.8f,0.8f,0.8f);
         de.flush();
     }
-#if ISO_RENDER
+#if ISO_RENDERxxx
     glBegin(GL_LINES);
 
     glColor3d(1.0, 0.0, 0.0);
@@ -1446,32 +1397,24 @@ bool TileShapesFile::read(const QString &fileName)
             foreach (SimpleFileKeyValue kv, block.values) {
                 if (kv.name == QLatin1String("shape")) {
                     QStringList values = kv.values();
-                    if (values.size() != 3) {
-                        mError = tr("Line %1: Expected x y shape.").arg(kv.lineNumber);
+                    if (values.size() != 2) {
+                        mError = tr("Line %1: Expected x,y shape.").arg(kv.lineNumber);
                         return false;
                     }
-                    bool ok;
-                    int col = values[0].toInt(&ok);
-                    if (!ok) {
-                        mError = tr("Line %1: Expected integer but got '%2'.")
+                    int col, row;
+                    if (!parse2Ints(values[0], &col, &row)) {
+                        mError = tr("Line %1: Expected col,row but got '%2'.")
                                 .arg(kv.lineNumber)
                                 .arg(values[0]);
                         return false;
                     }
-                    int row = values[1].toInt(&ok);
-                    if (!ok) {
-                        mError = tr("Line %1: Expected integer but got '%2'.")
-                                .arg(kv.lineNumber)
-                                .arg(values[1]);
-                        return false;
-                    }
                     if (!group->contains(col, row)) {
-                        mError = tr("Line %1: Invalid tile col,row=%2,%3.")
+                        mError = tr("Line %1: Invalid col,row=%2,%3.")
                                 .arg(kv.lineNumber)
                                 .arg(col).arg(row);
                         return false;
                     }
-                    QString shapeName = values[2];
+                    QString shapeName = values[1];
                     TileShape *shape = this->shape(shapeName);
                     if (shape == 0) {
                         mError = tr("Line %1: Unknown shape '%2'.")
@@ -1537,7 +1480,7 @@ bool TileShapesFile::write(const QString &fileName, const QList<TileShape *> &sh
         for (int y = 0; y < group->rowCount(); y++) {
             for (int x = 0; x < group->columnCount(); x++) {
                 if (TileShape *shape = group->shapeAt(x, y))
-                    groupBlock.addValue("shape", QString::fromLatin1("%1 %2 %3")
+                    groupBlock.addValue("shape", QString::fromLatin1("%1,%2 %3")
                                         .arg(x).arg(y).arg(shape->name()));
             }
         }

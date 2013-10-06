@@ -15,28 +15,9 @@ class TileShapeEditor;
 namespace Tiled {
 namespace Internal {
 
+class TileShape;
 class TileShapeScene;
 class Zoomable;
-
-class TileShapeFace
-{
-public:
-    QVector<QVector3D> mGeom;
-    QPolygonF mUV;
-};
-
-class TileShape
-{
-public:
-    TileShape(const QString &name) :
-        mName(name)
-    {}
-
-    QString name() const { return mName; }
-
-    QString mName;
-    QList<TileShapeFace> mFaces;
-};
 
 class TileShapeGrid : public QGraphicsItem
 {
