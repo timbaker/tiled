@@ -133,6 +133,7 @@ private:
     TextureInfo *mCurrentTexture;
     QList<Tileset*> mTextureTilesets;
     Tileset *mTextureTileset;
+    QImage mTextureTileImage;
     VirtualTileset *mIsoTileset;
     TileShapeGroup *mShapeGroup;
     bool mShowDiskImage;

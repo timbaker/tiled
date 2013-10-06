@@ -662,8 +662,10 @@ void VirtualTilesetDialog::textureTileSelectionChanged()
         mIsoTileset = 0;
     }
 #if 1
+    mTextureTileImage = QImage();
     if (!selected.isEmpty() && mShapeGroup != 0) {
         Tile *textureTile = ui->orthoTiles->tilesetModel()->tileAt(selected.first());
+        mTextureTileImage = textureTile->image();
         // If there's only one tile in a group (such as Floors), then create a
         // virtual tile for each selected texture tile.
         if (mShapeGroup->count() == 1) {
@@ -958,7 +960,7 @@ void VirtualTilesetDialog::editShape(const QModelIndex &index)
 {
     if (VirtualTile *vtile = ui->isoTiles->model()->tileAt(index)) {
         if (TileShape *shape = vtile->shape()) {
-            TileShapeEditor dialog(shape, this);
+            TileShapeEditor dialog(shape, mTextureTileImage, this);
             if (dialog.exec() == QDialog::Accepted) {
                 TileShape *shape2 = dialog.tileShape();
                 foreach (TileShapeFace e, shape2->mFaces) {

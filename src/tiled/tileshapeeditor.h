@@ -224,6 +224,7 @@ public:
     TileShapeScene *mScene;
     QPointF mCurrentUV;
     QPointF mCursorUV;
+    QImage mTexture;
 };
 
 class TileShapeUVTool : public BaseTileShapeTool
@@ -326,7 +327,7 @@ class TileShapeEditor : public QDialog
     Q_OBJECT
 
 public:
-    explicit TileShapeEditor(TileShape *shape, QWidget *parent = 0);
+    explicit TileShapeEditor(TileShape *shape, QImage texture, QWidget *parent = 0);
     ~TileShapeEditor();
 
     TileShape *tileShape() const;

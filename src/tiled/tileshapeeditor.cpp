@@ -508,7 +508,7 @@ void TileShapeView::setHandScrolling(bool handScrolling)
 
 /////
 
-TileShapeEditor::TileShapeEditor(TileShape *shape, QWidget *parent) :
+TileShapeEditor::TileShapeEditor(TileShape *shape, QImage texture, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::TileShapeEditor)
 {
@@ -546,6 +546,8 @@ TileShapeEditor::TileShapeEditor(TileShape *shape, QWidget *parent) :
 
     connect(ui->graphicsView->scene()->tileShapeItem(), SIGNAL(selectionChanged(int)),
             SLOT(faceSelectionChanged(int)));
+
+    mUVTool->mGuide->mTexture = texture;
 
     QSettings settings;
     settings.beginGroup(QLatin1String("TileShapeEditor"));
@@ -1234,6 +1236,8 @@ void TileShapeUVGuide::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     painter->setPen(Qt::gray);
 
     painter->fillRect(boundingRect(), Qt::lightGray);
+
+    painter->drawImage(0, 0, mTexture);
 
     int gridSize = mScene->gridItem()->gridSize();
 
