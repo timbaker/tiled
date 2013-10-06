@@ -110,69 +110,6 @@ private:
 class VirtualTile
 {
 public:
-#if 0
-    enum IsoType {
-        Invalid = -1,
-        Floor,
-
-        // Walls
-        WallW,
-        WallN,
-        WallNW,
-        WallSE,
-        WallWindowW,
-        WallWindowN,
-        WallDoorW,
-        WallDoorN,
-        WallShortW,
-        WallShortN,
-        WallShortNW,
-        WallShortSE,
-
-        // Sloped cap tiles go left-to-right or bottom-to-top
-        CapRiseS1, CapRiseS2, CapRiseS3, CapFallS1, CapFallS2, CapFallS3,
-        CapRiseE1, CapRiseE2, CapRiseE3, CapFallE1, CapFallE2, CapFallE3,
-
-        // Cap tiles with peaked tops
-        CapPeakPt5S, CapPeakOnePt5S, CapPeakTwoPt5S,
-        CapPeakPt5E, CapPeakOnePt5E, CapPeakTwoPt5E,
-
-        // Cap tiles with flat tops
-        CapFlatS1, CapFlatS2, CapFlatS3,
-        CapFlatE1, CapFlatE2, CapFlatE3,
-
-        // Roof steep slopes
-        SlopeS1, SlopeS2, SlopeS3,
-        SlopeE1, SlopeE2, SlopeE3,
-        SlopePt5S, SlopeOnePt5S, SlopeTwoPt5S,
-        SlopePt5E, SlopeOnePt5E, SlopeTwoPt5E,
-
-        // Roof trim
-        TrimS, TrimE, TrimInner, TrimOuter,
-        TrimCornerSW, TrimCornerNE,
-
-        // Roof shallow slopes
-        ShallowSlopeN1, ShallowSlopeN2,
-        ShallowSlopeS1, ShallowSlopeS2,
-        ShallowSlopeW1, ShallowSlopeW2,
-        ShallowSlopeE1, ShallowSlopeE2,
-
-        // Roof corners
-        Inner1, Inner2, Inner3,
-        Outer1, Outer2, Outer3,
-        InnerPt5, InnerOnePt5, InnerTwoPt5,
-        OuterPt5, OuterOnePt5, OuterTwoPt5,
-        CornerSW1, CornerSW2, CornerSW3,
-        CornerNE1, CornerNE2, CornerNE3,
-
-        // Roof tops
-        RoofTopN1, RoofTopN2, RoofTopN3,
-        RoofTopW1, RoofTopW2, RoofTopW3,
-
-        IsoTypeCount
-    };
-#endif
-
     VirtualTile(VirtualTileset *vts, int x, int y);
     VirtualTile(VirtualTileset *vts, int x, int y, const QString &imageSource,
                 int srcX, int srcY, TileShape *shape);

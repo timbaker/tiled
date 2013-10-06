@@ -162,97 +162,6 @@ VirtualTilesetMgr::VirtualTilesetMgr()
     unpacker.unpack(QLatin1String("ntiles_3"));
     unpacker.writeImages(Preferences::instance()->tilesDirectory() + QLatin1String("/Textures"));
 #endif
-
-#if 0
-    VirtualTileset *vts = new VirtualTileset(QLatin1String("walls_exterior_house_01"), 512/64, 1024/128);
-    VirtualTile *vtile = vts->tileAt(0, 0);
-    vtile->setImageSource(QLatin1String("C:\\Users\\Tim\\Desktop\\ProjectZomboid\\Tiles\\Textures\\tex_walls_exterior_house_01.png"), 0, 0);
-    vtile->setType(VirtualTile::WallW);
-    vtile->setImage(renderIsoTile(vtile));
-
-    mTilesetByName[vts->name()] = vts;
-#endif
-
-#if 0
-    VirtualTilesetsFile file;
-    QList<VirtualTile::IsoType> isoType;
-    isoType << VirtualTile::SlopeS1;
-    isoType << VirtualTile::SlopeS2;
-    isoType << VirtualTile::SlopeS3;
-    isoType << VirtualTile::SlopeE3;
-    isoType << VirtualTile::SlopeE2;
-    isoType << VirtualTile::SlopeE1;
-
-    isoType << VirtualTile::SlopePt5S;
-    isoType << VirtualTile::SlopeOnePt5S;
-    isoType << VirtualTile::SlopeTwoPt5S;
-    isoType << VirtualTile::SlopeTwoPt5E;
-    isoType << VirtualTile::SlopeOnePt5E;
-    isoType << VirtualTile::SlopePt5E;
-
-    isoType << VirtualTile::Outer1;
-    isoType << VirtualTile::Outer2;
-    isoType << VirtualTile::Outer3;
-    isoType << VirtualTile::Inner1;
-    isoType << VirtualTile::Inner2;
-    isoType << VirtualTile::Inner3;
-
-    isoType << VirtualTile::OuterPt5;
-    isoType << VirtualTile::OuterOnePt5;
-    isoType << VirtualTile::OuterTwoPt5;
-    isoType << VirtualTile::InnerPt5;
-    isoType << VirtualTile::InnerOnePt5;
-    isoType << VirtualTile::InnerTwoPt5;
-
-    isoType << VirtualTile::CornerSW1;
-    isoType << VirtualTile::CornerSW2;
-    isoType << VirtualTile::CornerSW3;
-    isoType << VirtualTile::CornerNE3;
-    isoType << VirtualTile::CornerNE2;
-    isoType << VirtualTile::CornerNE1;
-
-    isoType << VirtualTile::RoofTopN1;
-    isoType << VirtualTile::RoofTopW1;
-    isoType << VirtualTile::RoofTopN2;
-    isoType << VirtualTile::RoofTopW2;
-    isoType << VirtualTile::RoofTopN3;
-    isoType << VirtualTile::RoofTopW3;
-
-    isoType << VirtualTile::ShallowSlopeE1;
-    isoType << VirtualTile::ShallowSlopeE2;
-    isoType << VirtualTile::ShallowSlopeW2;
-    isoType << VirtualTile::ShallowSlopeW1;
-    isoType << VirtualTile::ShallowSlopeN1;
-    isoType << VirtualTile::ShallowSlopeN2;
-    isoType << VirtualTile::ShallowSlopeS2;
-    isoType << VirtualTile::ShallowSlopeS1;
-
-    isoType << VirtualTile::TrimS;
-    isoType << VirtualTile::TrimE;
-    isoType << VirtualTile::TrimInner;
-    isoType << VirtualTile::TrimOuter;
-    isoType << VirtualTile::TrimCornerSW;
-    isoType << VirtualTile::TrimCornerNE;
-
-    foreach (VirtualTile::IsoType t, isoType) {
-        TileShape *shape = createTileShape(t);
-        mShapeByType[t] = shape;
-
-        QString s;
-        QTextStream ts(&s);
-        ts << file.typeToName(t) << QLatin1String(",");
-        foreach (TileShape::Element e, shape->mElements) {
-            foreach (QVector3D p, e.mGeom) {
-//                p = TileShapeScene::toScene(p);
-                ts << QString::fromLatin1(" %1 %2 %3").arg(p.x()).arg(p.y()).arg(p.z());
-            }
-            foreach (QPointF p, e.mUV)
-                ts << QString::fromLatin1(" %1 %2").arg(p.x()).arg(p.y());
-            ts << QLatin1String(",");
-        }
-        qDebug() << s;
-    }
-#endif
 }
 
 VirtualTilesetMgr::~VirtualTilesetMgr()
@@ -425,121 +334,7 @@ QImage VirtualTilesetMgr::originalIsoImage(VirtualTileset *vts)
 }
 
 namespace {
-#if 0
-struct TextureTile
-{
-    TextureTile(int texWidth, int texHeight, int tileWidth, int tileHeight, int texCol, int texRow) :
-        mTexWid(texWidth),
-        mTexHgt(texHeight),
-        mTileWidth(tileWidth),
-        mTileHeight(tileHeight),
-        mTexCol(texCol),
-        mTexRow(texRow)
-    {}
 
-    QVector2D uv(qreal x, qreal y)
-    {
-        return QVector2D((mTexCol * mTileWidth + x) / qreal(mTexWid),
-                         1 - (mTexRow * mTileHeight + y) / qreal(mTexHgt));
-    }
-
-    int mTexWid;
-    int mTexHgt;
-    int mTileWidth;
-    int mTileHeight;
-    int mTexCol;
-    int mTexRow;
-};
-
-struct PBufferFace
-{
-    PBufferFace(QGLPixelBuffer *pbuffer, int col, int row, int tileWidth, int tileHeight) :
-        mPBuffer(pbuffer),
-        mColumn(col),
-        mRow(row),
-        mTileWidth(tileWidth),
-        mTileHeight(tileHeight)
-    {
-    }
-
-    QVector3D flatNS(qreal x, qreal y, qreal z = 0)
-    {
-        QPointF p = toScene(x / qreal(mTileWidth), y / qreal(mTileHeight));
-        return QVector3D(p.x(), p.y() - z, 0);
-    }
-
-    QVector3D flatWE(qreal x, qreal y, qreal z = 0)
-    {
-        QPointF p = toScene(y / qreal(mTileHeight), 1 - x / qreal(mTileWidth));
-        return QVector3D(p.x(), p.y() - z, 0);
-    }
-
-    QVector3D west(int x, int y, int dx, int dy = 1)
-    {
-        // HACK - dy is the offset from top (the original tilesets were offset by 1)
-        QPointF p = toScene(dx / qreal(mTileWidth), (1 - (x - dy) / qreal(mTileWidth)));
-        return QVector3D(p.x(), p.y() - mTileHeight + y, 0);
-    }
-
-    QVector3D north(int x, int y, int dy)
-    {
-        QPointF p = toScene(x / qreal(mTileWidth), dy / qreal(mTileWidth));
-        return QVector3D(p.x(), p.y() - mTileHeight + y, 0);
-    }
-
-    QPointF toScene(qreal x, qreal y)
-    {
-        const int tileWidth = 64, tileHeight = 32;
-        const int originX = mColumn * 64 + tileWidth / 2;
-        const int originY = mRow * 128 + 96;
-        return QPointF((x - y) * tileWidth / 2 + originX,
-                       (x + y) * tileHeight / 2 + originY);
-    }
-
-    QGLPixelBuffer *mPBuffer;
-    int mColumn;
-    int mRow;
-    int mTileWidth;
-    int mTileHeight;
-};
-
-struct PBufferFace3D
-{
-    PBufferFace3D(int col, int row, int tileWidth, int tileHeight) :
-        mColumn(col),
-        mRow(row),
-        mTileWidth(tileWidth),
-        mTileHeight(tileHeight)
-    {
-    }
-
-    QVector3D flatNS(qreal x, qreal y, qreal z = 0)
-    {
-        return QVector3D(x / qreal(mTileWidth), y / qreal(mTileHeight), z / 32.0);
-    }
-
-    QVector3D flatWE(qreal x, qreal y, qreal z = 0)
-    {
-        return QVector3D(y / qreal(mTileHeight), 1 - x / qreal(mTileWidth), z / 32.0);
-    }
-
-    QVector3D west(int x, int y, int dx, int dy = 1)
-    {
-        // HACK - dy is the offset from y=0 (the original tiles were offset by 1)
-        return QVector3D(dx / qreal(mTileWidth), (1 - (x - dy) / qreal(mTileWidth)), ((mTileHeight - y) / qreal(mTileHeight)) * 3);
-    }
-
-    QVector3D north(int x, int y, int dy)
-    {
-        return QVector3D(x / qreal(mTileWidth), dy / qreal(mTileWidth), ((mTileHeight - y) / qreal(mTileHeight)) * 3);
-    }
-
-    int mColumn;
-    int mRow;
-    int mTileWidth;
-    int mTileHeight;
-};
-#endif
 class DrawElements
 {
 public:
@@ -1349,11 +1144,6 @@ bool TileShapesFile::read(const QString &fileName)
                     for (int i = 0; i < xyz.size(); i += 3)
                         e.mGeom += QVector3D(xyz[i], xyz[i+1], xyz[i+2]);
 
-#if 0
-                    for (int i = 0; i < e.mGeom.size(); i++)
-                        e.mUV += QPointF();
-
-#else
                     QString uv = block2.value("uv");
                     QList<qreal> uvs;
                     if (!parseDoubles(uv, 2, uvs)) {
@@ -1369,7 +1159,6 @@ bool TileShapesFile::read(const QString &fileName)
                     }
                     for (int i = 0; i < uvs.size(); i += 2)
                         e.mUV += QPointF(uvs[i], uvs[i+1]);
-#endif
 
                     shape->mFaces += e;
                 } else {
