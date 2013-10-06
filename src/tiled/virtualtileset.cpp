@@ -629,6 +629,11 @@ public:
 
 };
 
+#define ISO_RENDER 1
+#if ISO_RENDER
+#include <GL/GLU.h>
+#endif
+
 void VirtualTilesetMgr::initPixelBuffer()
 {
     int width = 64, height = 128; // Size of one iso tile
@@ -639,12 +644,54 @@ void VirtualTilesetMgr::initPixelBuffer()
 
     mPixelBuffer->makeCurrent();
 
+#if ISO_RENDER
     glViewport(0, 0, width, height);
+#else
+    glViewport(0, 0, width, height);
+#endif
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
+#if ISO_RENDER
+#if 0
+    glOrtho(-1, 1, -1, 3, -10, 10);
+    glRotatef(-135,1,0,0);
+    glRotatef(45,0,0,1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+#elif 1
+    // http://www.java-gaming.org/index.php?PHPSESSID=911v5td96tpd7t3ufscsujuls1&/topic,10237.msg82081.html#msg82081
+#if 0
+    GLfloat m[16] = { 1.0, 0.0,  -1.0, 0.0, // x
+                      0.5, 1.0,   0.5, 0.0, // y
+                      0.0, -0.05, 0.0, 0.0, // depth
+                      0.0, 0.0,   0.0, 0.0 };
+    // below is transpose of above matrix (OpenGL works with transposed matrices)
+#endif
+    qreal ratio = width / qreal(height);
+    GLfloat m[16] = { 1.0F,  0.5F * ratio, 0.0F,   0.0F,
+                      0.0F,  1.0F * ratio, -0.05F, 0.0F,
+                      -1.0F, 0.5F * ratio, 0.0F,   0.0F,
+                      0.0F,  0.0F, 0.0F,   1.0F };
+    glLoadMatrixf(m);
+    glRotatef(-90,1,0,0);
+    glRotatef(90,0,0,1); // x-right, y-to-camera, z-up same as TileShapeEditor
+    glTranslatef(0,0,-1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+#else
+    GLdouble eye = sqrt(1 / 3.0);
+    gluLookAt(eye, eye, eye,
+              0, 0, 0,
+              0, 0, 1);
+//    glTranslated(0, 0, -0.2);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+#endif
+#else
     glOrtho(0, width, height, 0, -999999, 999999);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+#endif
 
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
@@ -692,6 +739,15 @@ uint VirtualTilesetMgr::loadGLTexture(const QString &imageSource, int srcX, int 
     return textureID;
 }
 
+#if ISO_RENDER
+static QVector3D toGL(const QVector3D &v)
+{
+    return v;
+    return QVector3D(v.y(), v.x(), v.z());
+}
+
+#endif
+
 QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
 {
     if (vtile->shape() == 0 || vtile->shape()->mFaces.isEmpty())
@@ -715,6 +771,16 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
 
     DrawElements de;
     foreach (TileShapeFace e, vtile->shape()->mFaces) {
+#if ISO_RENDER
+        if (e.mGeom.size() == 4)
+            de.add(textureID,
+                   QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]), QVector2D(e.mUV[3]),
+                    toGL(e.mGeom[0]), toGL(e.mGeom[1]), toGL(e.mGeom[2]), toGL(e.mGeom[3]));
+        if (e.mGeom.size() == 3)
+            de.add(textureID,
+                   QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]),
+                    toGL(e.mGeom[0]), toGL(e.mGeom[1]), toGL(e.mGeom[2]));
+#else
         if (e.mGeom.size() == 4)
             de.add(textureID,
                    QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]), QVector2D(e.mUV[3]),
@@ -725,13 +791,31 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
                    QVector2D(e.mUV[0]), QVector2D(e.mUV[1]), QVector2D(e.mUV[2]),
                     QVector3D(TileShapeScene::toScene(e.mGeom[0])), QVector3D(TileShapeScene::toScene(e.mGeom[1])),
                     QVector3D(TileShapeScene::toScene(e.mGeom[2])));
+#endif
 
         QVector3D cross = QVector3D::normal(e.mGeom[0], e.mGeom[1], e.mGeom[2]);
         if (cross.x() > 0 && cross.y() == 0 /*cross == QVector3D(1, 0, 0)*/)
             de.color(0.8f,0.8f,0.8f);
         de.flush();
     }
+#if ISO_RENDER
+    glBegin(GL_LINES);
 
+    glColor3d(1.0, 0.0, 0.0);
+    glVertex3d(0.0, 0.0, 0.0);
+    glVertex3d(1.0, 0.0, 0.0);
+
+    glColor3d(0.0, 1.0, 0.0);
+    glVertex3d(0.0, 0.0, 0.0);
+    glVertex3d(0.0, 1.0, 0.0);
+
+    glColor3d(0.0, 0.0, 1.0);
+    glVertex3d(0.0, 0.0, 0.0);
+    glVertex3d(0.0, 0.0, 1.0);
+
+    glEnd();
+    glFlush();
+#endif
     /////
 
     glDeleteTextures(1, &textureID);
