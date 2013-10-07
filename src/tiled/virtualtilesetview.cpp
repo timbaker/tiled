@@ -86,6 +86,11 @@ void VirtualTilesetDelegate::paint(QPainter *painter,
     painter->fillRect(option.rect.right(), option.rect.top(), 1, option.rect.height(), Qt::lightGray);
     painter->fillRect(option.rect.left(), option.rect.bottom(), option.rect.width(), 1, Qt::lightGray);
 
+    const VirtualTilesetModel *m = static_cast<const VirtualTilesetModel*>(index.model());
+    VirtualTile *vtile = m->tileAt(index);
+    if (vtile && vtile->shape() && vtile->shape()->mSameAs)
+        painter->fillRect(option.rect.right() - 4, option.rect.top() + 2, 2, 2, Qt::gray);
+
     // Overlay with highlight color when selected
     if (option.state & QStyle::State_Selected) {
         const qreal opacity = painter->opacity();

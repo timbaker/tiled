@@ -31,11 +31,36 @@
 #include <QDir>
 #include <QGLPixelBuffer>
 #include <QImageReader>
+#include <QMatrix4x4>
 #include <QVector2D>
 #include <QVector3D>
 
 using namespace Tiled;
 using namespace Internal;
+
+void TileShape::fromSameAs()
+{
+    if (!mSameAs)
+        return;
+
+    mFaces.clear();
+    foreach (TileShapeFace f2, mSameAs->mFaces) {
+        TileShapeFace f;
+        f.mGeom = f2.mGeom;
+        f.mUV = f2.mUV;
+        foreach (TileShape::XForm xform, mXform) {
+            QMatrix4x4 m;
+            m.rotate(xform.mRotate.x(), QVector3D(1, 0, 0));
+            m.rotate(xform.mRotate.y(), QVector3D(0, 1, 0));
+            m.rotate(xform.mRotate.z(), QVector3D(0, 0, 1));
+            for (int i = 0; i < f.mGeom.size(); i++)
+                f.mGeom[i] = m.mapVector(f.mGeom[i]) + xform.mTranslate;
+        }
+        mFaces += f;
+    }
+}
+
+/////
 
 VirtualTile::VirtualTile(VirtualTileset *vts, int x, int y) :
     mTileset(vts),
@@ -1116,6 +1141,17 @@ bool TileShapesFile::read(const QString &fileName)
     qDeleteAll(mGroups);
     mGroups.clear();
 
+    struct SameAs {
+        SameAs() : shapeName(QString()), lineNumber(-1) {}
+        SameAs(QString shapeName, int lineNumber) :
+            shapeName(shapeName),
+            lineNumber(lineNumber)
+        {}
+        QString shapeName;
+        int lineNumber;
+    };
+    QMap<TileShape*,SameAs> sameAsMap;
+
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("shape")) {
             QString name = block.value("name");
@@ -1131,38 +1167,82 @@ bool TileShapesFile::read(const QString &fileName)
                 return false;
             }
             TileShape *shape = new TileShape(name);
+
+            SimpleFileKeyValue kv;
+            if (block.keyValue("sameAs", kv)) {
+                if (block.findBlock(QLatin1String("face")) != -1) {
+                    mError = tr("Line %1: face not allowed with sameAs.")
+                            .arg(block.lineNumber);
+                    return false;
+                }
+                sameAsMap[shape] = SameAs(kv.value, kv.lineNumber);
+            }
+
             foreach (SimpleFileBlock block2, block.blocks) {
                 if (block2.name == QLatin1String("face")) {
+                    if (sameAsMap.contains(shape)) {
+                        mError = tr("Line %1: face not allowed with sameAs.")
+                                .arg(block.lineNumber);
+                        return false;
+                    }
                     TileShapeFace e;
 
                     QString geom = block2.value("geom");
-                    QList<qreal> xyz;
-                    if (!parseDoubles(geom, 3, xyz)) {
+                    QList<QVector3D> xyz;
+                    if (!parseVector3DList(geom, xyz)) {
                         mError = tr("Line %1: Expected X Y Z triplets.").arg(block2.lineNumber);
                         return false;
                     }
-                    for (int i = 0; i < xyz.size(); i += 3)
-                        e.mGeom += QVector3D(xyz[i], xyz[i+1], xyz[i+2]);
+                    e.mGeom = xyz.toVector();
 
                     QString uv = block2.value("uv");
-                    QList<qreal> uvs;
-                    if (!parseDoubles(uv, 2, uvs)) {
+                    QList<QPointF> uvs;
+                    if (!parsePointFList(uv, uvs)) {
                         mError = tr("Line %1: Expected U V pairs.").arg(block2.lineNumber);
                         return false;
                     }
-                    if (uvs.size() / 2 != xyz.size() / 3) {
+                    if (uvs.size() != xyz.size()) {
                         mError = tr("Line %1: %2 uv values but %3 geom values.")
                                 .arg(block2.lineNumber)
-                                .arg(uvs.size() / 2)
-                                .arg(xyz.size() / 3);
+                                .arg(uvs.size())
+                                .arg(xyz.size());
                         return false;
                     }
-                    for (int i = 0; i < uvs.size(); i += 2)
-                        e.mUV += QPointF(uvs[i], uvs[i+1]);
+                    e.mUV = uvs.toVector();
 
                     shape->mFaces += e;
+                } else if (block2.name == QLatin1String("xform")) {
+                    if (!block.hasValue("sameAs")) {
+                        mError = tr("Line %1: xform not allowed without sameAs.")
+                                .arg(block.lineNumber);
+                        return false;
+                    }
+                    foreach (SimpleFileKeyValue kv, block2.values) {
+                        if (kv.name == QLatin1String("rotate")) {
+                            TileShape::XForm xform(TileShape::XForm::Rotate);
+                            if (!parseVector3D(kv.value, xform.mRotate)) {
+                                mError = tr("Line %1: Expected x,y,z but got '%2'.")
+                                        .arg(kv.lineNumber).arg(kv.value);
+                                return false;
+                            }
+                            shape->mXform += xform;
+                        } else if (kv.name == QLatin1String("translate")) {
+                            TileShape::XForm xform(TileShape::XForm::Translate);
+                            if (!parseVector3D(kv.value, xform.mTranslate)) {
+                                mError = tr("Line %1: Expected x,y,z but got '%2'.")
+                                        .arg(kv.lineNumber).arg(kv.value);
+                                return false;
+                            }
+                            shape->mXform += xform;
+                        } else {
+                            mError = tr("Line %1: Unknown value name '%2'.")
+                                    .arg(kv.lineNumber)
+                                    .arg(kv.name);
+                            return false;
+                        }
+                    }
                 } else {
-                    mError = tr("Line %1: Unknown block name '%1'.")
+                    mError = tr("Line %1: Unknown block name '%2'.")
                             .arg(block2.lineNumber)
                             .arg(block2.name);
                     return false;
@@ -1228,6 +1308,19 @@ bool TileShapesFile::read(const QString &fileName)
         }
     }
 
+    // Now resolve sameAs
+    foreach (TileShape *shape, sameAsMap.keys()) {
+        SameAs sameAs = sameAsMap[shape];
+        if (TileShape *shape2 = this->shape(sameAs.shapeName)) {
+            shape->mSameAs = shape2;
+            shape->fromSameAs();
+        } else {
+            mError = tr("Line %1: Unknown shape '%2'.")
+                    .arg(sameAs.lineNumber)
+                    .arg(sameAs.shapeName);
+        }
+    }
+
     return true;
 }
 
@@ -1244,15 +1337,33 @@ bool TileShapesFile::write(const QString &fileName, const QList<TileShape *> &sh
         SimpleFileBlock shapeBlock;
         shapeBlock.name = QLatin1String("shape");
         shapeBlock.addValue("name", shape->name());
+        if (shape->mSameAs) {
+            shapeBlock.addValue("sameAs", shape->mSameAs->mName);
+            if (shape->mXform.size()) {
+                SimpleFileBlock xformBlock;
+                xformBlock.name = QLatin1String("xform");
+                foreach (TileShape::XForm xform, shape->mXform) {
+                    if (xform.mType == xform.Rotate)
+                        xformBlock.addValue("rotate", toString(xform.mRotate));
+                    else if (xform.mType == xform.Translate)
+                        xformBlock.addValue("translate", toString(xform.mTranslate));
+                    else
+                        Q_ASSERT(false);
+                }
+                shapeBlock.blocks += xformBlock;
+            }
+            simpleFile.blocks += shapeBlock;
+            continue;
+        }
         foreach (TileShapeFace e, shape->mFaces) {
             SimpleFileBlock faceBlock;
             faceBlock.name = QLatin1String("face");
             QString geom;
             foreach (QVector3D v, e.mGeom)
-                geom += QString::fromLatin1("%1 %2 %3 ").arg(v.x()).arg(v.y()).arg(v.z());
+                geom += toString(v) + QLatin1String(" ");
             QString uv;
             foreach (QPointF v, e.mUV)
-                uv += QString::fromLatin1("%1 %2 ").arg(v.x()).arg(v.y());
+                uv += QString::fromLatin1("%1,%2 ").arg(v.x()).arg(v.y());
             faceBlock.addValue("geom", geom);
             faceBlock.addValue("uv", uv);
             shapeBlock.blocks += faceBlock;
@@ -1299,6 +1410,62 @@ bool TileShapesFile::parse2Ints(const QString &s, int *pa, int *pb)
     return true;
 }
 
+bool TileShapesFile::parsePointF(const QString &s, QPointF &p)
+{
+    QStringList coords = s.split(QLatin1Char(','), QString::SkipEmptyParts);
+    if (coords.size() != 2)
+        return false;
+    bool ok;
+    double x = coords[0].toDouble(&ok);
+    if (!ok) return false;
+    double y = coords[1].toDouble(&ok);
+    if (!ok) return false;
+    p = QPointF(x, y);
+    return true;
+}
+
+bool TileShapesFile::parsePointFList(const QString &s, QList<QPointF> &out)
+{
+    QStringList values = s.split(QLatin1Char(' '), QString::SkipEmptyParts);
+    out.clear();
+    for (int i = 0; i < values.size(); i++) {
+        QPointF p;
+        if (!parsePointF(values[i], p))
+            return false;
+        out += p;
+    }
+    return true;
+}
+
+bool TileShapesFile::parseVector3D(const QString &s, QVector3D &v)
+{
+    QStringList coords = s.split(QLatin1Char(','), QString::SkipEmptyParts);
+    if (coords.size() != 3)
+        return false;
+    bool ok;
+    double x = coords[0].toDouble(&ok);
+    if (!ok) return false;
+    double y = coords[1].toDouble(&ok);
+    if (!ok) return false;
+    double z = coords[2].toDouble(&ok);
+    if (!ok) return false;
+    v = QVector3D(x, y, z);
+    return true;
+}
+
+bool TileShapesFile::parseVector3DList(const QString &s, QList<QVector3D> &out)
+{
+    QStringList values = s.split(QLatin1Char(' '), QString::SkipEmptyParts);
+    out.clear();
+    for (int i = 0; i < values.size(); i++) {
+        QVector3D v;
+        if (!parseVector3D(values[i], v))
+            return false;
+        out += v;
+    }
+    return true;
+}
+
 bool TileShapesFile::parseDoubles(const QString &s, int stride, QList<qreal> &out)
 {
     QStringList values = s.split(QLatin1Char(' '), QString::SkipEmptyParts);
@@ -1314,3 +1481,9 @@ bool TileShapesFile::parseDoubles(const QString &s, int stride, QList<qreal> &ou
     }
     return true;
 }
+
+QString TileShapesFile::toString(const QVector3D &v)
+{
+    return QString::fromLatin1("%1,%2,%3").arg(v.x()).arg(v.y()).arg(v.z());
+}
+

@@ -377,6 +377,8 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
             SLOT(tilesetAdded(VirtualTileset*)));
     connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetRemoved(VirtualTileset*)),
             SLOT(tilesetRemoved(VirtualTileset*)));
+    connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetChanged(VirtualTileset*)),
+            SLOT(tilesetChanged(VirtualTileset*)));
 
     connect(TextureMgr::instancePtr(), SIGNAL(textureAdded(TextureInfo*)),
             SLOT(textureAdded(TextureInfo*)));
@@ -503,10 +505,16 @@ void VirtualTilesetDialog::editShape(TileShape *shape, QList<TileShapeFace> &fac
     shape->mFaces = faces;
     faces = oldFaces;
 
+    foreach (TileShape *shape2, VirtualTilesetMgr::instance().tileShapes()) {
+        if (shape2->mSameAs == shape)
+            shape2->fromSameAs();
+    }
+
     foreach (VirtualTileset *vts, VirtualTilesetMgr::instance().tilesets()) {
         bool changed = false;
         foreach (VirtualTile *vtile, vts->tiles()) {
-            if (vtile->shape() == shape) {
+            if (vtile->shape() == shape ||
+                    (vtile->shape() && vtile->shape()->mSameAs == shape)) {
                 vtile->setImage(QImage());
                 changed = true;
             }
@@ -593,6 +601,12 @@ void VirtualTilesetDialog::tilesetRemoved(VirtualTileset *vts)
 {
     Q_UNUSED(vts)
     setVirtualTilesetNamesList();
+}
+
+void VirtualTilesetDialog::tilesetChanged(VirtualTileset *vts)
+{
+    if (mCurrentVirtualTileset == vts)
+        ui->vTilesetTiles->model()->redisplay();
 }
 
 void VirtualTilesetDialog::virtualTilesetNameSelected()
@@ -960,6 +974,8 @@ void VirtualTilesetDialog::editShape(const QModelIndex &index)
 {
     if (VirtualTile *vtile = ui->isoTiles->model()->tileAt(index)) {
         if (TileShape *shape = vtile->shape()) {
+            if (shape->mSameAs)
+                shape = shape->mSameAs;
             TileShapeEditor dialog(shape, mTextureTileImage, this);
             if (dialog.exec() == QDialog::Accepted) {
                 TileShape *shape2 = dialog.tileShape();

@@ -48,13 +48,31 @@ class TileShape
 {
 public:
     TileShape(const QString &name) :
-        mName(name)
+        mName(name),
+        mSameAs(0)
     {}
 
     QString name() const { return mName; }
 
+    void fromSameAs();
+
     QString mName;
     QList<TileShapeFace> mFaces;
+
+    TileShape *mSameAs;
+    struct XForm {
+        enum Type {
+            Invalid,
+            Rotate,
+            Translate
+        };
+        XForm() : mType(Invalid), mRotate(QVector3D()), mTranslate(QVector3D()) {}
+        XForm(Type type) : mType(type), mRotate(QVector3D()), mTranslate(QVector3D()) {}
+        Type mType;
+        QVector3D mRotate;
+        QVector3D mTranslate;
+    };
+    QList<XForm> mXform;
 };
 
 class TileShapeGroup
@@ -426,7 +444,12 @@ public:
     { return mGroupByName.keys(); }
 
     bool parse2Ints(const QString &s, int *pa, int *pb);
+    bool parsePointF(const QString &s, QPointF &p);
+    bool parsePointFList(const QString &s, QList<QPointF> &out);
+    bool parseVector3D(const QString &s, QVector3D &v);
+    bool parseVector3DList(const QString &s, QList<QVector3D> &v);
     bool parseDoubles(const QString &s, int stride, QList<qreal> &out);
+    QString toString(const QVector3D &v);
 
     QString errorString() const
     { return mError; }

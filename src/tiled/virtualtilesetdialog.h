@@ -86,6 +86,7 @@ private slots:
 
     void tilesetAdded(VirtualTileset *vts);
     void tilesetRemoved(VirtualTileset *vts);
+    void tilesetChanged(VirtualTileset *vts);
 
     void virtualTilesetNameSelected();
     void editVTileset(const QModelIndex &index);
