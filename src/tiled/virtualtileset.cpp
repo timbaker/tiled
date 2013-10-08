@@ -62,6 +62,24 @@ void TileShape::fromSameAs()
 
 /////
 
+void TileShapeGroup::resize(int columnCount, int rowCount)
+{
+    QVector<TileShape*> shapes(columnCount * rowCount);
+    QRect oldR(0, 0, mColumnCount, mRowCount);
+    QRect newR(0, 0, columnCount, rowCount);
+    QRect same = oldR & newR;
+
+    for (int y = 0; y <= same.bottom(); y++)
+        for (int x = 0; x <= same.right(); x++)
+            shapes[x + y * columnCount] = shapeAt(x, y);
+
+    mShapes = shapes;
+    mColumnCount = columnCount;
+    mRowCount = rowCount;
+}
+
+/////
+
 VirtualTile::VirtualTile(VirtualTileset *vts, int x, int y) :
     mTileset(vts),
     mX(x),
@@ -175,7 +193,8 @@ QImage VirtualTileset::image()
 SINGLETON_IMPL(VirtualTilesetMgr)
 
 #include "textureunpacker.h"
-VirtualTilesetMgr::VirtualTilesetMgr()
+VirtualTilesetMgr::VirtualTilesetMgr() :
+    mUngroupedGroup(new TileShapeGroup(tr("<Ungrouped>"), 0, 0))
 {
     initPixelBuffer();
 
@@ -192,6 +211,7 @@ VirtualTilesetMgr::VirtualTilesetMgr()
 VirtualTilesetMgr::~VirtualTilesetMgr()
 {
     delete mPixelBuffer;
+    // FIXME: delet all groups/shapes
 }
 
 QString VirtualTilesetMgr::txtPath() const
@@ -238,6 +258,7 @@ bool VirtualTilesetMgr::readTxt()
     foreach (TileShape *shape, shapesFile.takeShapes())
         mShapeByName[shape->name()] = shape;
     mShapeGroups = shapesFile.takeGroups();
+    setUngroupedGroup();
 
     VirtualTilesetsFile binFile;
     if (!binFile.read(fileName)) {
@@ -505,7 +526,14 @@ void VirtualTilesetMgr::initPixelBuffer()
 uint VirtualTilesetMgr::loadGLTexture(const QString &imageSource, int srcX, int srcY)
 {
     QImage b;
-    if (TextureInfo *tex = TextureMgr::instance().texture(imageSource)) {
+    if (imageSource.isEmpty()) {
+        b = QImage(32, 32, QImage::Format_ARGB32);
+        QPainter p(&b);
+        for (int y = 0; y < 8; y += 1)
+            for (int x = 0; x < 8; x += 1)
+                p.fillRect(x * 4, y * 4, 4, 4,
+                           ((x % 1) == (y % 1)) ? Qt::darkGray : Qt::lightGray);
+    } else if (TextureInfo *tex = TextureMgr::instance().texture(imageSource)) {
         Tileset *ts = TextureMgr::instance().tileset(tex);
         if (ts->isMissing())
              return 0;
@@ -532,6 +560,28 @@ uint VirtualTilesetMgr::loadGLTexture(const QString &imageSource, int srcX, int 
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 
     return textureID;
+}
+
+void VirtualTilesetMgr::setUngroupedGroup()
+{
+    QList<TileShape*> ungrouped;
+    foreach (TileShape *shape, tileShapes()) {
+        bool used = false;
+        foreach (TileShapeGroup *group, shapeGroups()) {
+            if (group->hasShape(shape)) {
+                used = true;
+                break;
+            }
+        }
+        if (!used)
+            ungrouped += shape;
+    }
+    int cc = 8, rc = (ungrouped.size() + 7) / 8;
+    mUngroupedGroup->resize(cc, rc);
+    for (int i = 0; i < ungrouped.size(); i++)
+        mUngroupedGroup->setShape(i % cc, i / cc, ungrouped[i]);
+    for (int i = ungrouped.size(); i < mUngroupedGroup->count(); i++)
+        mUngroupedGroup->setShape(i % cc, i / cc, 0);
 }
 
 #define toGL(v) v
@@ -605,6 +655,35 @@ TileShape *VirtualTilesetMgr::tileShape(const QString &name)
     if (mShapeByName.contains(name))
         return mShapeByName[name];
     return 0;
+}
+
+void VirtualTilesetMgr::insertShapeGroup(int index, TileShapeGroup *g)
+{
+    Q_ASSERT(!mShapeGroups.contains(g));
+    mShapeGroups.insert(index, g);
+    emit shapeGroupAdded(index, g);
+}
+
+TileShapeGroup *VirtualTilesetMgr::removeShapeGroup(int index)
+{
+    TileShapeGroup *g = mShapeGroups.takeAt(index);
+    emit shapeGroupRemoved(index, g);
+    return g;
+}
+
+void VirtualTilesetMgr::editShapeGroup(TileShapeGroup *g, const QString &label,
+                                       int columnCount, int rowCount)
+{
+    g->setLabel(label);
+    g->resize(columnCount, rowCount);
+    emit shapeGroupChanged(g);
+}
+
+void VirtualTilesetMgr::assignShape(TileShapeGroup *g, int col, int row, TileShape *shape)
+{
+    g->setShape(col, row, shape);
+    setUngroupedGroup();
+    emit shapeAssigned(g, col, row);
 }
 
 /////
@@ -1486,4 +1565,5 @@ QString TileShapesFile::toString(const QVector3D &v)
 {
     return QString::fromLatin1("%1,%2,%3").arg(v.x()).arg(v.y()).arg(v.z());
 }
+
 

@@ -108,6 +108,9 @@ public:
     int rowCount() const { return mRowCount; }
     int count() const { return mColumnCount * mRowCount; }
 
+    void setLabel(const QString &label) { mLabel = label; }
+    void resize(int columnCount, int rowCount);
+
     void setShape(int col, int row, TileShape *shape)
     {
         if (contains(col, row))
@@ -252,6 +255,12 @@ public:
     QList<TileShape*> tileShapes() const { return mShapeByName.values(); }
     TileShape *tileShape(const QString &name);
 
+    void insertShapeGroup(int index, TileShapeGroup *g);
+    TileShapeGroup *removeShapeGroup(int index);
+    void editShapeGroup(TileShapeGroup *g, const QString &label,
+                        int columnCount, int rowCount);
+    void assignShape(TileShapeGroup *g, int col, int row, TileShape *shape);
+
     QList<TileShapeGroup*> shapeGroups() const { return mShapeGroups; }
     TileShapeGroup *shapeGroupAt(int index)
     {
@@ -264,6 +273,7 @@ public:
             labels += group->label();
         return labels;
     }
+    TileShapeGroup *ungroupedGroup() const { return mUngroupedGroup; }
 
     void emitTilesetChanged(VirtualTileset *vts)
     { emit tilesetChanged(vts); }
@@ -274,6 +284,7 @@ public:
 private:
     void initPixelBuffer();
     uint loadGLTexture(const QString &imageSource, int srcX, int srcY);
+    void setUngroupedGroup();
 
 signals:
     void tilesetAdded(VirtualTileset *vts);
@@ -282,6 +293,12 @@ signals:
 
     void tilesetChanged(VirtualTileset *vts);
 
+    void shapeGroupAdded(int index, TileShapeGroup *g);
+    void shapeGroupRemoved(int index, TileShapeGroup *g);
+    void shapeGroupChanged(TileShapeGroup *g);
+
+    void shapeAssigned(TileShapeGroup *g, int col, int row);
+
 private:
     QMap<QString,VirtualTileset*> mTilesetByName;
     QList<VirtualTileset*> mRemovedTilesets;
@@ -289,6 +306,7 @@ private:
 
     QMap<QString,TileShape*> mShapeByName;
     QList<TileShapeGroup*> mShapeGroups;
+    TileShapeGroup *mUngroupedGroup;
 
     QMap<QString,QImage> mOriginalIsoImages;
 

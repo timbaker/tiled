@@ -24,6 +24,7 @@
 #include "texturemanager.h"
 #include "texturepropertiesdialog.h"
 #include "tileshapeeditor.h"
+#include "tileshapegroupdialog.h"
 #include "undoredobuttons.h"
 #include "virtualtileset.h"
 #include "zoomable.h"
@@ -372,32 +373,15 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     zoomable->setScale(scale);
     zoomable->connectToComboBox(ui->scaleCombo);
 
-    {
-        QList<TileShape*> ungrouped;
-        foreach (TileShape *shape, VirtualTilesetMgr::instance().tileShapes()) {
-            bool used = false;
-            foreach (TileShapeGroup *group, VirtualTilesetMgr::instance().shapeGroups()) {
-                if (group->hasShape(shape)) {
-                    used = true;
-                    break;
-                }
-            }
-            if (!used)
-                ungrouped += shape;
-        }
-        if (ungrouped.size()) {
-            mUngroupedGroup = new TileShapeGroup(tr("<Ungrouped>"), 8, (ungrouped.size() + 7) / 8);
-            for (int i = 0; i < ungrouped.size(); i++)
-                mUngroupedGroup->setShape(i % 8, i / 8, ungrouped[i]);
-        }
+    if (mUngroupedGroup = VirtualTilesetMgr::instance().ungroupedGroup())
         ui->comboBox->addItem(mUngroupedGroup->label());
-    }
     ui->comboBox->addItems(VirtualTilesetMgr::instance().shapeGroupLabels());
     if (ui->comboBox->count()) {
         ui->comboBox->setCurrentIndex(0);
         mShapeGroup = mUngroupedGroup ? mUngroupedGroup : VirtualTilesetMgr::instance().shapeGroupAt(0);
     }
     connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(shapeGroupChanged(int)));
+    connect(ui->editGroups, SIGNAL(clicked()), SLOT(editGroups()));
 
     connect(ui->vTilesetNames->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(virtualTilesetNameSelected()));
@@ -1056,6 +1040,12 @@ void VirtualTilesetDialog::shapeGroupChanged(int row)
     else
         mShapeGroup = VirtualTilesetMgr::instance().shapeGroupAt(row - 1);
     textureTileSelectionChanged();
+}
+
+void VirtualTilesetDialog::editGroups()
+{
+    TileShapeGroupDialog d(this);
+    d.exec();
 }
 
 void VirtualTilesetDialog::beginDropTiles()

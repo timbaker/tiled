@@ -103,6 +103,7 @@ private slots:
     void textureRemoved(TextureInfo *tex);
 
     void shapeGroupChanged(int row);
+    void editGroups();
 
     void beginDropTiles();
     void endDropTiles();
