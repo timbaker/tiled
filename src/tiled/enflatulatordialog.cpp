@@ -24,6 +24,7 @@
 #include <QDebug>
 #include <QFileDialog>
 #include <QGraphicsSceneMouseEvent>
+#include <QToolBar>
 
 using namespace Tiled;
 using namespace Internal;
@@ -342,12 +343,11 @@ EnflatulatorIsoScene::EnflatulatorIsoScene(QObject *parent) :
     QGraphicsScene(parent),
     mShape(0),
     mImageItem(new QGraphicsPixmapItem),
-    mSelectedFaceItem(0),
-    mMode(NoMode)
+    mActiveTool(0)
 {
     addItem(mImageItem);
 
-    setIsoImage(QImage(Preferences::instance()->tilesDirectory() + QLatin1String("/appliances_refrigeration_01.png")));
+    setIsoImage(QImage(Preferences::instance()->tilesDirectory() + QLatin1String("/fixtures_doors_01.png")));
 }
 
 void EnflatulatorIsoScene::setIsoImage(const QImage &image)
@@ -356,77 +356,37 @@ void EnflatulatorIsoScene::setIsoImage(const QImage &image)
     mImageItem->setPixmap(QPixmap::fromImage(image));
 }
 
-void EnflatulatorIsoScene::setShape(EnflatulatorShape *shape)
-{
-    qDeleteAll(mFaceItems);
-    mFaceItems.clear();
-    mSelectedFaceItem = 0;
-
-    qreal x = 16, y = 16;
-    foreach (EnflatulatorFace *face, shape->mFaces) {
-#if 0
-        mFaceItems += new EnflatulatorFaceItem(this, face);
-#else
-        EnflatulatorFace *editFace = new EnflatulatorFace;
-        *editFace = *face;
-        mFaceItems += new EnflatulatorFaceItem(this, editFace);
-#endif
-        mFaceItems.last()->setPos(x, y);
-        x += 48;
-        addItem(mFaceItems.last());
-    }
-}
-
-EnflatulatorFaceItem *EnflatulatorIsoScene::faceAt(const QPointF &scenePos)
-{
-    foreach (EnflatulatorFaceItem *item, mFaceItems) {
-        if (item->mPoly.translated(item->pos()).containsPoint(scenePos, Qt::WindingFill))
-            return item;
-    }
-    return 0;
-}
-
 void EnflatulatorIsoScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton) {
-        foreach (EnflatulatorFaceItem *item, mFaceItems) {
-            if (item->mSelected) {
-                if (int handle = item->handleAt(event->scenePos())) {
-                    mHandle = handle;
-                    mLastScenePos = event->scenePos();
-                    mMode = DragHandle;
-                    return;
-                }
-            }
-        }
-        if (mSelectedFaceItem)
-            mSelectedFaceItem->setSelected(false);
-        if (mSelectedFaceItem = faceAt(event->scenePos())) {
-            mSelectedFaceItem->setSelected(true);
-            mLastScenePos = mSelectedFaceItem->pos();
-            mMode = DragFace;
-        }
-    }
+    if (mActiveTool)
+        mActiveTool->mousePressEvent(event);
 }
 
 void EnflatulatorIsoScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (mMode == DragHandle) {
-        mSelectedFaceItem->moveHandle(mHandle, event->scenePos());
-        mLastScenePos = event->scenePos();
-        mSelectedFaceItem->enflatulate();
-        emit faceChanged();
-    }
-    if (mMode == DragFace) {
-        mSelectedFaceItem->setPos(mLastScenePos + (event->scenePos() - event->buttonDownScenePos(Qt::LeftButton)).toPoint());
-        mSelectedFaceItem->enflatulate();
-        emit faceChanged();
-    }
+    if (mActiveTool)
+        mActiveTool->mouseMoveEvent(event);
 }
 
 void EnflatulatorIsoScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-    mMode = NoMode;
+    if (mActiveTool)
+        mActiveTool->mouseReleaseEvent(event);
+}
+
+void EnflatulatorIsoScene::activateTool(BaseEnflatulatorTool *tool)
+{
+    if (mActiveTool) {
+        mActiveTool->deactivate();
+        mActiveTool->mAction->setChecked(false);
+    }
+
+    mActiveTool = tool;
+
+    if (mActiveTool) {
+        mActiveTool->mAction->setChecked(true);
+        mActiveTool->activate();
+    }
 }
 
 /////
@@ -437,7 +397,7 @@ EnflatulatorIsoView::EnflatulatorIsoView(QWidget *parent) :
 {
     setScene(mScene);
     setBackgroundBrush(Qt::lightGray);
-    setTransform(QTransform::fromScale(4, 4));
+    setTransform(QTransform::fromScale(2, 2));
 }
 
 /////
@@ -448,8 +408,16 @@ EnflatulatorDialog::EnflatulatorDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    mShapeTool = new EnflatulatorTool(ui->isoView->mScene);
+    mWNTool = new WestNorthTool(ui->isoView->mScene);
+
+    QToolBar *toolBar = new QToolBar;
+    toolBar->addAction(mShapeTool->mAction);
+    toolBar->addAction(mWNTool->mAction);
+    ui->toolBarLayout->addWidget(toolBar, 1);
+
     connect(ui->chooseImage, SIGNAL(clicked()), SLOT(chooseIsoImage()));
-    connect(ui->isoView->scene(), SIGNAL(faceChanged()), SLOT(faceChanged()));
+    connect(mShapeTool, SIGNAL(faceChanged()), SLOT(faceChanged()));
 
     if (EnflatulatorShape *shape = new EnflatulatorShape) {
         shape->mLabel = QLatin1String("Counter");
@@ -527,11 +495,36 @@ EnflatulatorDialog::EnflatulatorDialog(QWidget *parent) :
     }
 
     connect(ui->shapeList, SIGNAL(currentRowChanged(int)), SLOT(currentShapeChanged(int)));
+
+    connect(mShapeTool->mAction, SIGNAL(toggled(bool)), SLOT(toolToggled(bool)));
+    connect(mWNTool->mAction, SIGNAL(toggled(bool)), SLOT(toolToggled(bool)));
+    ui->isoView->mScene->activateTool(mShapeTool);
 }
 
 EnflatulatorDialog::~EnflatulatorDialog()
 {
     delete ui;
+}
+
+void EnflatulatorDialog::toolToggled(bool active)
+{
+    BaseEnflatulatorTool *tool = 0;
+    if (active) {
+        if (sender() == mShapeTool->mAction)
+            tool = mShapeTool;
+        if (sender() == mWNTool->mAction)
+            tool = mWNTool;
+    }
+    if (tool != ui->isoView->mScene->mActiveTool && tool != mPendingTool) {
+        mPendingTool = tool;
+        QMetaObject::invokeMethod(this, "changeTool", Qt::QueuedConnection);
+    }
+}
+
+void EnflatulatorDialog::changeTool()
+{
+    ui->isoView->mScene->activateTool(mPendingTool);
+    mPendingTool = 0;
 }
 
 void EnflatulatorDialog::chooseIsoImage()
@@ -546,7 +539,7 @@ void EnflatulatorDialog::currentShapeChanged(int row)
 {
     EnflatulatorShape *shape = (row >= 0) ? mShapes.at(row) : 0;
     ui->faceView->mScene->mShapeItem->setShape(shape);
-    ui->isoView->mScene->setShape(shape);
+    mShapeTool->setShape(shape);
 }
 
 void EnflatulatorDialog::faceChanged()
@@ -554,8 +547,8 @@ void EnflatulatorDialog::faceChanged()
     QImage &shapeImg = ui->faceView->mScene->mShapeItem->mShape->mImage;
     shapeImg.fill(Qt::transparent);
     QPainter p(&shapeImg);
-    for (int i = 0; i < ui->isoView->mScene->mFaceItems.size(); i++) {
-        EnflatulatorFace *face = ui->isoView->mScene->mFaceItems[i]->mFace;
+    for (int i = 0; i < mShapeTool->mFaceItems.size(); i++) {
+        EnflatulatorFace *face = mShapeTool->mFaceItems[i]->mFace;
         p.drawImage(ui->faceView->mScene->mShapeItem->mShape->mFaces[i]->mRect.topLeft(), face->mImage);
     }
     p.end();
@@ -564,3 +557,182 @@ void EnflatulatorDialog::faceChanged()
     ui->faceView->mScene->mShapeItem->update();
 }
 
+/////
+
+
+BaseEnflatulatorTool::BaseEnflatulatorTool(EnflatulatorIsoScene *scene) :
+    mScene(scene),
+    mAction(new QAction(this))
+{
+    mAction->setCheckable(true);
+}
+
+/////
+
+EnflatulatorTool::EnflatulatorTool(EnflatulatorIsoScene *scene) :
+    BaseEnflatulatorTool(scene),
+    mSelectedFaceItem(0),
+    mMode(NoMode)
+{
+    mAction->setText(tr("Shape Tool"));
+}
+
+void EnflatulatorTool::activate()
+{
+    mMode = NoMode;
+    foreach (EnflatulatorFaceItem *item, mFaceItems)
+        mScene->addItem(item);
+}
+
+void EnflatulatorTool::deactivate()
+{
+    foreach (EnflatulatorFaceItem *item, mFaceItems)
+        mScene->removeItem(item);
+}
+
+void EnflatulatorTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        foreach (EnflatulatorFaceItem *item, mFaceItems) {
+            if (item->mSelected) {
+                if (int handle = item->handleAt(event->scenePos())) {
+                    mHandle = handle;
+                    mLastScenePos = event->scenePos();
+                    mMode = DragHandle;
+                    return;
+                }
+            }
+        }
+        if (mSelectedFaceItem)
+            mSelectedFaceItem->setSelected(false);
+        if (mSelectedFaceItem = faceAt(event->scenePos())) {
+            mSelectedFaceItem->setSelected(true);
+            mLastScenePos = mSelectedFaceItem->pos();
+            mMode = DragFace;
+        }
+    }
+}
+
+void EnflatulatorTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (mMode == DragHandle) {
+        mSelectedFaceItem->moveHandle(mHandle, event->scenePos());
+        mLastScenePos = event->scenePos();
+        mSelectedFaceItem->enflatulate();
+        emit faceChanged();
+    }
+    if (mMode == DragFace) {
+        mSelectedFaceItem->setPos(mLastScenePos + (event->scenePos() - event->buttonDownScenePos(Qt::LeftButton)).toPoint());
+        mSelectedFaceItem->enflatulate();
+        emit faceChanged();
+    }
+}
+
+void EnflatulatorTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    mMode = NoMode;
+}
+
+void EnflatulatorTool::setShape(EnflatulatorShape *shape)
+{
+    qDeleteAll(mFaceItems);
+    mFaceItems.clear();
+    mSelectedFaceItem = 0;
+
+    qreal x = 16, y = 16;
+    foreach (EnflatulatorFace *face, shape->mFaces) {
+#if 0
+        mFaceItems += new EnflatulatorFaceItem(this, face);
+#else
+        EnflatulatorFace *editFace = new EnflatulatorFace;
+        *editFace = *face;
+        mFaceItems += new EnflatulatorFaceItem(mScene, editFace);
+#endif
+        mFaceItems.last()->setPos(x, y);
+        x += 48;
+
+        if (mScene->mActiveTool == this)
+            mScene->addItem(mFaceItems.last());
+    }
+}
+
+EnflatulatorFaceItem *EnflatulatorTool::faceAt(const QPointF &scenePos)
+{
+    foreach (EnflatulatorFaceItem *item, mFaceItems) {
+        if (item->mPoly.translated(item->pos()).containsPoint(scenePos, Qt::WindingFill))
+            return item;
+    }
+    return 0;
+}
+
+/////
+
+WestNorthTool::WestNorthTool(EnflatulatorIsoScene *scene) :
+    BaseEnflatulatorTool(scene),
+    mFlatTilesetPixmapItem(new QGraphicsPixmapItem)
+{
+    mAction->setText(tr("W/N Tool"));
+}
+
+void WestNorthTool::activate()
+{
+    mFlatTilesetImg = mScene->mImage;
+    mFlatTilesetPixmapItem->setPixmap(QPixmap::fromImage(mFlatTilesetImg));
+    mScene->addItem(mFlatTilesetPixmapItem);
+    mScene->removeItem(mScene->mImageItem);
+}
+
+void WestNorthTool::deactivate()
+{
+    mScene->removeItem(mFlatTilesetPixmapItem);
+    mScene->addItem(mScene->mImageItem);
+}
+
+void WestNorthTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    int tileX = event->scenePos().x() / 64;
+    int tileY = event->scenePos().y() / 128;
+
+    QPainter painter(&mFlatTilesetImg);
+    painter.setCompositionMode(QPainter::CompositionMode_Clear);
+    painter.fillRect(tileX * 64, tileY * 128, 64, 128, Qt::transparent);
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    if (event->button() == Qt::LeftButton) {
+        painter.fillRect(tileX * 64, tileY * 128, 64, 128, Qt::transparent);
+        for (int y = 0; y < 128; y++) {
+            int dy = 32;
+            for (int x = 0; x < 64; x += 2, dy -= 1) {
+                if (y - dy + 16 < 0) continue;
+                mFlatTilesetImg.setPixel(tileX * 64 + x, tileY * 128 + y - dy + 16,
+                                         mScene->mImage.pixel(tileX * 64 + x, tileY * 128 + y));
+                mFlatTilesetImg.setPixel(tileX * 64 + x + 1, tileY * 128 + y - dy + 16,
+                                         mScene->mImage.pixel(tileX * 64 + x + 1, tileY * 128 + y));
+            }
+        }
+        mFlatTilesetPixmapItem->setPixmap(QPixmap::fromImage(mFlatTilesetImg));
+    }
+    if (event->button() == Qt::RightButton) {
+        painter.fillRect(tileX * 64, tileY * 128, 64, 128, Qt::transparent);
+        for (int y = 0; y < 128; y++) {
+            int dy = 0;
+            for (int x = 0; x < 64; x += 2, dy += 1) {
+                if (y - dy + 16 < 0) continue;
+                mFlatTilesetImg.setPixel(tileX * 64 + x, tileY * 128 + y - dy + 16,
+                                         mScene->mImage.pixel(tileX * 64 + x, tileY * 128 + y));
+                mFlatTilesetImg.setPixel(tileX * 64 + x + 1, tileY * 128 + y - dy + 16,
+                                         mScene->mImage.pixel(tileX * 64 + x + 1, tileY * 128 + y));
+            }
+        }
+        mFlatTilesetPixmapItem->setPixmap(QPixmap::fromImage(mFlatTilesetImg));
+    }
+}
+
+void WestNorthTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+
+}
+
+void WestNorthTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+
+}

@@ -126,28 +126,43 @@ public:
     bool mSelected;
 };
 
-/* Shows the iso image file, allows positioning and resizing the faces. */
-class EnflatulatorIsoScene : public QGraphicsScene
+class BaseEnflatulatorTool : public QObject
+{
+public:
+    BaseEnflatulatorTool(EnflatulatorIsoScene *scene);
+
+    virtual void activate() {}
+    virtual void deactivate() {}
+
+    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) = 0;
+    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) = 0;
+    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) = 0;
+
+    EnflatulatorIsoScene *mScene;
+    QAction *mAction;
+};
+
+class EnflatulatorTool : public BaseEnflatulatorTool
 {
     Q_OBJECT
 public:
-    EnflatulatorIsoScene(QObject *parent = 0);
+    EnflatulatorTool(EnflatulatorIsoScene *scene);
 
-    void setIsoImage(const QImage &image);
-    void setShape(EnflatulatorShape *shape);
-
-    EnflatulatorFaceItem *faceAt(const QPointF &scenePos);
+    void activate();
+    void deactivate();
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
+    void setShape(EnflatulatorShape *shape);
+
+    EnflatulatorFaceItem *faceAt(const QPointF &scenePos);
+
 signals:
     void faceChanged();
 
 public:
-    QImage mImage;
-    QGraphicsPixmapItem *mImageItem;
     EnflatulatorShape *mShape;
     QList<EnflatulatorFaceItem*> mFaceItems;
     EnflatulatorFaceItem *mSelectedFaceItem;
@@ -160,6 +175,44 @@ public:
     Mode mMode;
     int mHandle;
     QPointF mLastScenePos;
+};
+
+class WestNorthTool : public BaseEnflatulatorTool
+{
+public:
+    WestNorthTool(EnflatulatorIsoScene *scene);
+
+    void activate();
+    void deactivate();
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
+    QGraphicsPixmapItem *mFlatTilesetPixmapItem;
+    QImage mFlatTilesetImg;
+};
+
+/* Shows the iso image file, allows positioning and resizing the faces. */
+class EnflatulatorIsoScene : public QGraphicsScene
+{
+    Q_OBJECT
+public:
+    EnflatulatorIsoScene(QObject *parent = 0);
+
+    void setIsoImage(const QImage &image);
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
+    void activateTool(BaseEnflatulatorTool *tool);
+
+public:
+    QImage mImage;
+    QGraphicsPixmapItem *mImageItem;
+    EnflatulatorShape *mShape;
+    BaseEnflatulatorTool *mActiveTool;
 };
 
 class EnflatulatorIsoView : public QGraphicsView
@@ -179,6 +232,8 @@ public:
     ~EnflatulatorDialog();
 
 private slots:
+    void toolToggled(bool active);
+    void changeTool();
     void chooseIsoImage();
     void currentShapeChanged(int row);
     void faceChanged();
@@ -186,6 +241,9 @@ private slots:
 private:
     Ui::EnflatulatorDialog *ui;
     QList<EnflatulatorShape*> mShapes;
+    BaseEnflatulatorTool *mPendingTool;
+    EnflatulatorTool *mShapeTool;
+    WestNorthTool *mWNTool;
 };
 
 } // namespace Internal

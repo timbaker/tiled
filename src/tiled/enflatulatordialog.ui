@@ -32,14 +32,21 @@
      <widget class="QWidget" name="verticalLayoutWidget">
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
+        <layout class="QHBoxLayout" name="toolBarLayout"/>
+       </item>
+       <item>
         <widget class="Tiled::Internal::EnflatulatorIsoView" name="isoView"/>
        </item>
        <item>
-        <widget class="QToolButton" name="chooseImage">
-         <property name="text">
-          <string>Image...</string>
-         </property>
-        </widget>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QToolButton" name="chooseImage">
+           <property name="text">
+            <string>Image...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
