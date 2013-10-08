@@ -91,8 +91,11 @@ public:
 
     QAction *action() { return mAction; }
 
+    void setEnabled(bool enabled);
+
 signals:
     void statusTextChanged(const QString &text);
+    void enabledChanged(bool enabled);
 
 protected:
     TileShapeScene *mScene;
@@ -267,6 +270,7 @@ public:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
     void activateTool(BaseTileShapeTool *tool);
+    BaseTileShapeTool *activeTool() { return mActiveTool; }
 
 private:
     TileShapeGrid *mGridItem;
@@ -315,16 +319,39 @@ public:
 
 public slots:
     void toolActivated(bool active);
+    void toolEnabled();
+
     void setGridSize(int size);
     void faceSelectionChanged(int faceIndex);
     void removeFace();
+
+    void sameAsChanged();
+
+    void addRotate();
+    void addTranslate();
+    void moveXformUp();
+    void moveXformDown();
+    void removeTransform();
+
+    void xformSelectionChanged();
+    void xformFromUI();
+
     void done(int r);
 
 private:
+    void setXformList();
+    QString xformItemText(int index);
+    void syncWithGridSize();
+
+private:
     Ui::TileShapeEditor *ui;
+    bool mToolChanging;
+    QList<BaseTileShapeTool*> mTools;
     CreateTileShapeFaceTool *mCreateFaceTool;
     EditTileShapeFaceTool *mEditFaceTool;
     TileShapeUVTool *mUVTool;
+    QList<TileShape*> mSameAsShapes;
+    int mSync;
 };
 
 } // namespace Internal

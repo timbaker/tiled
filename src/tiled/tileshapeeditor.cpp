@@ -10,6 +10,7 @@
 #include <QMouseEvent>
 #include <QScrollBar>
 #include <QSettings>
+#include <QToolBar>
 
 using namespace Tiled;
 using namespace Internal;
@@ -196,15 +197,12 @@ TileShapeScene::TileShapeScene(QObject *parent) :
     addItem(mGridItem);
 
     TileShape *shape = new TileShape(QLatin1String("SceneShape"));
-    TileShapeFace e;
-    e.mGeom << QVector3D(0, 0, 0) << QVector3D(0, 0, 3) << QVector3D(1, 0, 3) << QVector3D(1, 0, 0);
-    shape->mFaces += e;
     addItem(mShapeItem = new TileShapeItem(this, shape));
 }
 
 void TileShapeScene::setTileShape(TileShape *shape)
 {
-    mShapeItem->tileShape()->mFaces = shape->mFaces;
+    mShapeItem->tileShape()->copy(shape);
     mShapeItem->shapeChanged();
 }
 
@@ -411,7 +409,7 @@ TileShapeView::TileShapeView(QWidget *parent) :
     setScene(mScene);
     setMouseTracking(true);
 
-    mZoomable->setZoomFactors(QVector<qreal>() << 1.0 << 2.0 << 3.0 << 4.0 << 5.0 << 6.0 << 7.0 << 8.0 << 9.0 << 10.0);
+    mZoomable->setZoomFactors(QVector<qreal>() << 1.0 << 2.0 << 3.0 << 4.0 << 5.0 << 6.0 << 8.0 << 12.0);
     connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(adjustScale(qreal)));
     mZoomable->setScale(7);
 }
@@ -511,9 +509,15 @@ void TileShapeView::setHandScrolling(bool handScrolling)
 
 TileShapeEditor::TileShapeEditor(TileShape *shape, QImage texture, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::TileShapeEditor)
+    ui(new Ui::TileShapeEditor),
+    mToolChanging(0),
+    mSync(0)
 {
     ui->setupUi(this);
+
+    setWindowTitle(tr("%1 - Tile Shape Editor").arg(shape->name()));
+
+    ui->status->clear();
 
     if (shape)
         ui->graphicsView->scene()->setTileShape(shape);
@@ -524,24 +528,39 @@ TileShapeEditor::TileShapeEditor(TileShape *shape, QImage texture, QWidget *pare
     mEditFaceTool = new EditTileShapeFaceTool(ui->graphicsView->scene());
     mUVTool = new TileShapeUVTool(ui->graphicsView->scene());
 
-    ui->graphicsView->scene()->activateTool(mCreateFaceTool);
+    QToolBar *toolBar = new QToolBar;
+    toolBar->setIconSize(QSize(16, 16));
+    toolBar->addAction(mCreateFaceTool->action());
+    toolBar->addAction(mEditFaceTool->action());
+    toolBar->addAction(mUVTool->action());
+    toolBar->addAction(ui->actionRemoveFace);
+    ui->leftSideLayout->insertWidget(0, toolBar);
 
-    ui->toolBar->addAction(mCreateFaceTool->action());
-    ui->toolBar->addAction(mEditFaceTool->action());
-    ui->toolBar->addAction(mUVTool->action());
-    ui->toolBar->addAction(ui->actionRemoveFace);
+    toolBar = new QToolBar;
+    toolBar->setIconSize(QSize(16, 16));
+    toolBar->addAction(ui->actionAddRotate);
+    toolBar->addAction(ui->actionAddTranslate);
+    toolBar->addAction(ui->actionXFormMoveUp);
+    toolBar->addAction(ui->actionXFormMoveDown);
+    toolBar->addAction(ui->actionRemoveTransform);
+    ui->xformToolBarLayout->addWidget(toolBar, 1);
 
     ui->actionRemoveFace->setEnabled(false);
     connect(ui->actionRemoveFace, SIGNAL(triggered()), SLOT(removeFace()));
 
     connect(mCreateFaceTool->action(), SIGNAL(toggled(bool)), SLOT(toolActivated(bool)));
     connect(mCreateFaceTool, SIGNAL(statusTextChanged(QString)), ui->status, SLOT(setText(QString)));
+    connect(mCreateFaceTool, SIGNAL(enabledChanged(bool)), SLOT(toolEnabled()), Qt::QueuedConnection);
 
     connect(mEditFaceTool->action(), SIGNAL(toggled(bool)), SLOT(toolActivated(bool)));
     connect(mEditFaceTool, SIGNAL(statusTextChanged(QString)), ui->status, SLOT(setText(QString)));
+    connect(mEditFaceTool, SIGNAL(enabledChanged(bool)), SLOT(toolEnabled()), Qt::QueuedConnection);
 
     connect(mUVTool->action(), SIGNAL(toggled(bool)), SLOT(toolActivated(bool)));
     connect(mUVTool, SIGNAL(statusTextChanged(QString)), ui->status, SLOT(setText(QString)));
+    connect(mUVTool, SIGNAL(enabledChanged(bool)), SLOT(toolEnabled()), Qt::QueuedConnection);
+
+    mTools << mCreateFaceTool << mEditFaceTool << mUVTool;
 
     connect(ui->gridSize, SIGNAL(valueChanged(int)), SLOT(setGridSize(int)));
 
@@ -549,6 +568,42 @@ TileShapeEditor::TileShapeEditor(TileShape *shape, QImage texture, QWidget *pare
             SLOT(faceSelectionChanged(int)));
 
     mUVTool->mGuide->mTexture = texture;
+
+    QStringList sameAsNames;
+    foreach (TileShape *shape2, VirtualTilesetMgr::instance().tileShapes()) {
+        if (shape2 != shape && shape2->mSameAs == 0) {
+            mSameAsShapes += shape2;
+            sameAsNames += shape2->name();
+        }
+    }
+    ui->sameAsCombo->addItem(tr("<None>"));
+    ui->sameAsCombo->addItems(sameAsNames);
+    if (shape->mSameAs) {
+        mCreateFaceTool->action()->setEnabled(false);
+        mEditFaceTool->action()->setEnabled(false);
+        mUVTool->action()->setEnabled(false);
+        ui->actionRemoveFace->setEnabled(false);
+        ui->sameAsCombo->setCurrentIndex(sameAsNames.indexOf(shape->mSameAs->name()) + 1);
+    } else {
+        ui->xformGroupBox->setEnabled(false);
+        ui->graphicsView->scene()->activateTool(mCreateFaceTool);
+    }
+
+    connect(ui->sameAsCombo, SIGNAL(activated(int)), SLOT(sameAsChanged()));
+
+    setXformList();
+
+    connect(ui->xformList->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            SLOT(xformSelectionChanged()));
+    connect(ui->actionAddRotate, SIGNAL(triggered()), SLOT(addRotate()));
+    connect(ui->actionAddTranslate, SIGNAL(triggered()), SLOT(addTranslate()));
+    connect(ui->actionXFormMoveUp, SIGNAL(triggered()), SLOT(moveXformUp()));
+    connect(ui->actionXFormMoveDown, SIGNAL(triggered()), SLOT(moveXformDown()));
+    connect(ui->actionRemoveTransform, SIGNAL(triggered()), SLOT(removeTransform()));
+
+    connect(ui->xSpinBox, SIGNAL(valueChanged(double)), SLOT(xformFromUI()));
+    connect(ui->ySpinBox, SIGNAL(valueChanged(double)), SLOT(xformFromUI()));
+    connect(ui->zSpinBox, SIGNAL(valueChanged(double)), SLOT(xformFromUI()));
 
     QSettings settings;
     settings.beginGroup(QLatin1String("TileShapeEditor"));
@@ -574,20 +629,133 @@ TileShape *TileShapeEditor::tileShape() const
     return ui->graphicsView->scene()->tileShape();
 }
 
+void TileShapeEditor::setXformList()
+{
+    ui->xformList->clear();
+    int i = 0;
+    foreach (TileShape::XForm xform, tileShape()->mXform) {
+        QListWidgetItem *item = new QListWidgetItem;
+        item->setText(xformItemText(i));
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setCheckState(Qt::Checked);
+        ui->xformList->addItem(item);
+        i++;
+    }
+}
+
+QString TileShapeEditor::xformItemText(int index)
+{
+    const TileShape::XForm &xform = tileShape()->mXform.at(index);
+    switch (xform.mType) {
+    case xform.Rotate:
+        return tr("Rotate %1,%2,%3")
+                .arg(xform.mRotate.x())
+                .arg(xform.mRotate.y())
+                .arg(xform.mRotate.z());
+        break;
+    case xform.Translate:
+        return tr("Translate %1,%2,%3")
+                .arg(xform.mTranslate.x())
+                .arg(xform.mTranslate.y())
+                .arg(xform.mTranslate.z());
+        break;
+    }
+    return QString();
+}
+
+void TileShapeEditor::syncWithGridSize()
+{
+    int size = ui->graphicsView->scene()->gridItem()->gridSize();
+    int row = ui->xformList->currentRow();
+    if (row == -1 || size <= 0)
+        return;
+    TileShape::XForm &xform = tileShape()->mXform[row];
+    double step = 0.0;
+    switch (xform.mType) {
+    case xform.Rotate:
+        step = 360.0 / size;
+        break;
+    case xform.Translate:
+        step = 1.0 / size;
+        break;
+    }
+    ui->xSpinBox->setSingleStep(step);
+    ui->ySpinBox->setSingleStep(step);
+    ui->zSpinBox->setSingleStep(step);
+}
+
+void TileShapeEditor::xformFromUI()
+{
+    if (mSync)
+        return;
+    int row = ui->xformList->currentRow();
+    if (row == -1)
+        return;
+    TileShape::XForm &xform = tileShape()->mXform[row];
+    switch (xform.mType) {
+    case xform.Rotate:
+        xform.mRotate.setX(ui->xSpinBox->value()); // FIXME: restrict [-360,+360] ?
+        xform.mRotate.setY(ui->ySpinBox->value());
+        xform.mRotate.setZ(ui->zSpinBox->value());
+        break;
+    case xform.Translate:
+        xform.mTranslate.setX(ui->xSpinBox->value());
+        xform.mTranslate.setY(ui->ySpinBox->value());
+        xform.mTranslate.setZ(ui->zSpinBox->value());
+        break;
+    }
+    ui->xformList->item(row)->setText(xformItemText(row));
+    tileShape()->fromSameAs();
+    ui->graphicsView->scene()->tileShapeItem()->shapeChanged();
+}
+
 void TileShapeEditor::toolActivated(bool active)
 {
-    if (!active) return;
-    if (sender() == mCreateFaceTool->action())
-        ui->graphicsView->scene()->activateTool(mCreateFaceTool);
-    if (sender() == mEditFaceTool->action())
-        ui->graphicsView->scene()->activateTool(mEditFaceTool);
-    if (sender() == mUVTool->action())
-        ui->graphicsView->scene()->activateTool(mUVTool);
+    if (mToolChanging)
+        return;
+    BaseTileShapeTool *tool = 0;
+    if (active) {
+        if (sender() == mCreateFaceTool->action())
+            tool = mCreateFaceTool;
+        if (sender() == mEditFaceTool->action())
+            tool = mEditFaceTool;
+        if (sender() == mUVTool->action())
+            tool = mUVTool;
+    }
+    if (tool != ui->graphicsView->scene()->activeTool()) {
+        ui->status->clear();
+        mToolChanging = true;
+        ui->graphicsView->scene()->activateTool(tool);
+        mToolChanging = false;
+    }
+}
+
+void TileShapeEditor::toolEnabled()
+{
+    BaseTileShapeTool *enabledTool = 0, *activeTool = ui->graphicsView->scene()->activeTool();
+    foreach (BaseTileShapeTool *tool, mTools) {
+        if (tool->action()->isEnabled()) {
+            if (!enabledTool)
+                enabledTool = tool;
+        } else {
+            if (tool == ui->graphicsView->scene()->activeTool())
+                activeTool = 0;
+        }
+    }
+    if (!activeTool && enabledTool)
+        activeTool = enabledTool;
+    if (activeTool != ui->graphicsView->scene()->activeTool()) {
+        ui->status->clear();
+        mToolChanging = true;
+        ui->graphicsView->scene()->activateTool(activeTool);
+        mToolChanging = false;
+    }
 }
 
 void TileShapeEditor::setGridSize(int size)
 {
     ui->graphicsView->scene()->gridItem()->setGridSize(size);
+    syncWithGridSize();
 }
 
 void TileShapeEditor::faceSelectionChanged(int faceIndex)
@@ -605,6 +773,82 @@ void TileShapeEditor::removeFace()
         item->tileShape()->mFaces.removeAt(faceIndex);
         item->shapeChanged();
     }
+}
+
+void TileShapeEditor::sameAsChanged()
+{
+    int index = ui->sameAsCombo->currentIndex();
+    tileShape()->mSameAs = (index == 0) ? 0 : mSameAsShapes.at(index - 1);
+    tileShape()->fromSameAs();
+    ui->graphicsView->scene()->tileShapeItem()->shapeChanged();
+
+    ui->xformGroupBox->setEnabled(tileShape()->mSameAs != 0);
+    mCreateFaceTool->setEnabled(tileShape()->mSameAs == 0);
+    mEditFaceTool->setEnabled(tileShape()->mSameAs == 0);
+    mUVTool->setEnabled(tileShape()->mSameAs == 0);
+    ui->actionRemoveFace->setEnabled(tileShape()->mSameAs == 0);
+}
+
+void TileShapeEditor::addRotate()
+{
+    tileShape()->mXform += TileShape::XForm(TileShape::XForm::Rotate);
+    setXformList();
+}
+
+void TileShapeEditor::addTranslate()
+{
+    tileShape()->mXform += TileShape::XForm(TileShape::XForm::Translate);
+    setXformList();
+}
+
+void TileShapeEditor::moveXformUp()
+{
+
+}
+
+void TileShapeEditor::moveXformDown()
+{
+
+}
+
+void TileShapeEditor::removeTransform()
+{
+    int row = ui->xformList->currentRow();
+    if (row == -1)
+        return;
+    delete ui->xformList->takeItem(row);
+    tileShape()->mXform.takeAt(row);
+    tileShape()->fromSameAs();
+    ui->graphicsView->scene()->tileShapeItem()->shapeChanged();
+}
+
+void TileShapeEditor::xformSelectionChanged()
+{
+    QModelIndexList selection = ui->xformList->selectionModel()->selectedIndexes();
+    int row = selection.size() ? selection.first().row() : -1;
+    ui->xformStackedWidget->setEnabled(row != -1);
+    if (row == -1)
+        return;
+
+    mSync++;
+
+    const TileShape::XForm &xform = tileShape()->mXform.at(row);
+    switch (xform.mType) {
+    case xform.Rotate:
+        ui->xSpinBox->setValue(xform.mRotate.x());
+        ui->ySpinBox->setValue(xform.mRotate.y());
+        ui->zSpinBox->setValue(xform.mRotate.z());
+        break;
+    case xform.Translate:
+        ui->xSpinBox->setValue(xform.mTranslate.x());
+        ui->ySpinBox->setValue(xform.mTranslate.y());
+        ui->zSpinBox->setValue(xform.mTranslate.z());
+        break;
+    }
+
+    mSync--;
+
+    syncWithGridSize();
 }
 
 void TileShapeEditor::done(int r)
@@ -744,6 +988,15 @@ BaseTileShapeTool::BaseTileShapeTool(TileShapeScene *scene) :
 
     mCursorGroupZ->addToGroup(new ShapeMoveCursor(mScene, ShapeMoveCursor::ZMinus));
     mCursorGroupZ->addToGroup(new ShapeMoveCursor(mScene, ShapeMoveCursor::ZPlus));
+}
+
+void BaseTileShapeTool::setEnabled(bool enabled)
+{
+    if (enabled == mAction->isEnabled())
+        return;
+
+    mAction->setEnabled(enabled);
+    emit enabledChanged(enabled);
 }
 
 /////

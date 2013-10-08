@@ -40,8 +40,17 @@ AddTexturesDialog::AddTexturesDialog(const QString &dir,
 {
     ui->setupUi(this);
 
+    ui->tileWidth->setValue(32);
+    ui->tileHeight->setValue(96);
+
     connect(ui->checkAll, SIGNAL(clicked()), SLOT(checkAll()));
     connect(ui->uncheckAll, SIGNAL(clicked()), SLOT(uncheckAll()));
+
+    ui->tileSize->addItem(tr("Floor (32x32)"));
+    ui->tileSize->addItem(tr("Wall (32x96)"));
+    connect(ui->tileSize, SIGNAL(itemSelectionChanged()), SLOT(tileSizeSelected()));
+
+    mPrefabSizes << QSize(32, 32) << QSize(32, 96);
 
     setPrompt(QString());
     setAllowBrowse(false);
@@ -86,6 +95,16 @@ QStringList AddTexturesDialog::fileNames()
         }
     }
     return ret;
+}
+
+int AddTexturesDialog::tileWidth() const
+{
+    return ui->tileWidth->value();
+}
+
+int AddTexturesDialog::tileHeight() const
+{
+    return ui->tileHeight->value();
 }
 
 void AddTexturesDialog::setFilesList()
@@ -145,6 +164,16 @@ void AddTexturesDialog::uncheckAll()
 {
     for (int i = 0; i < ui->files->count(); i++)
         ui->files->item(i)->setCheckState(Qt::Unchecked);
+}
+
+void AddTexturesDialog::tileSizeSelected()
+{
+    QModelIndexList selection = ui->tileSize->selectionModel()->selectedRows();
+    int row = selection.size() ? selection.first().row() : -1;
+    if (row != -1) {
+        ui->tileWidth->setValue(mPrefabSizes[row].width());
+        ui->tileHeight->setValue(mPrefabSizes[row].height());
+    }
 }
 
 void AddTexturesDialog::accept()

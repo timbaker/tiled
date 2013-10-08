@@ -22,6 +22,7 @@
 #include "addvirtualtilesetdialog.h"
 #include "preferences.h"
 #include "texturemanager.h"
+#include "texturepropertiesdialog.h"
 #include "tileshapeeditor.h"
 #include "undoredobuttons.h"
 #include "virtualtileset.h"
@@ -251,30 +252,58 @@ public:
     TextureInfo *mTexture;
 };
 
-class EditShape : public QUndoCommand
+class ChangeTexture : public QUndoCommand
 {
 public:
-    EditShape(VirtualTilesetDialog *d, TileShape *shape, const QList<TileShapeFace> &faces) :
-        QUndoCommand(QCoreApplication::translate("UndoCommands", "Edit Shape")),
+    ChangeTexture(VirtualTilesetDialog *d, TextureInfo *tex, int tileWidth, int tileHeight) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Texture")),
         mDialog(d),
-        mShape(shape),
-        mFaces(faces)
+        mTexture(tex),
+        mTileWidth(tileWidth),
+        mTileHeight(tileHeight)
     {
     }
 
     void undo()
     {
-        mDialog->editShape(mShape, mFaces);
+        mDialog->changeTexture(mTexture, mTileWidth, mTileHeight);
     }
 
     void redo()
     {
-        mDialog->editShape(mShape, mFaces);
+        mDialog->changeTexture(mTexture, mTileWidth, mTileHeight);
+    }
+
+    VirtualTilesetDialog *mDialog;
+    TextureInfo *mTexture;
+    int mTileWidth;
+    int mTileHeight;
+};
+
+class EditShape : public QUndoCommand
+{
+public:
+    EditShape(VirtualTilesetDialog *d, TileShape *shape, const TileShape *other) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Edit Shape")),
+        mDialog(d),
+        mShape(shape),
+        mShape2(other)
+    {
+    }
+
+    void undo()
+    {
+        mDialog->editShape(mShape, mShape2);
+    }
+
+    void redo()
+    {
+        mDialog->editShape(mShape, mShape2);
     }
 
     VirtualTilesetDialog *mDialog;
     TileShape *mShape;
-    QList<TileShapeFace> mFaces;
+    TileShape mShape2;
 };
 
 } // namespace
@@ -289,6 +318,7 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     mTextureTileset(0),
     mIsoTileset(0),
     mShapeGroup(0),
+    mUngroupedGroup(0),
     mShowDiskImage(false),
     mFile(0),
     mUndoGroup(new QUndoGroup(this)),
@@ -312,6 +342,7 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     toolBar->setIconSize(QSize(16, 16));
     toolBar->addAction(ui->actionAddTexture);
     toolBar->addAction(ui->actionRemoveTexture);
+    toolBar->addAction(ui->actionTextureProperties);
     ui->textureToolbarLayout->insertWidget(0, toolBar);
 
     UndoRedoButtons *urb = new UndoRedoButtons(mUndoStack, this);
@@ -341,12 +372,32 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     zoomable->setScale(scale);
     zoomable->connectToComboBox(ui->scaleCombo);
 
+    {
+        QList<TileShape*> ungrouped;
+        foreach (TileShape *shape, VirtualTilesetMgr::instance().tileShapes()) {
+            bool used = false;
+            foreach (TileShapeGroup *group, VirtualTilesetMgr::instance().shapeGroups()) {
+                if (group->hasShape(shape)) {
+                    used = true;
+                    break;
+                }
+            }
+            if (!used)
+                ungrouped += shape;
+        }
+        if (ungrouped.size()) {
+            mUngroupedGroup = new TileShapeGroup(tr("<Ungrouped>"), 8, (ungrouped.size() + 7) / 8);
+            for (int i = 0; i < ungrouped.size(); i++)
+                mUngroupedGroup->setShape(i % 8, i / 8, ungrouped[i]);
+        }
+        ui->comboBox->addItem(mUngroupedGroup->label());
+    }
     ui->comboBox->addItems(VirtualTilesetMgr::instance().shapeGroupLabels());
     if (ui->comboBox->count()) {
         ui->comboBox->setCurrentIndex(0);
-        mShapeGroup = VirtualTilesetMgr::instance().shapeGroupAt(0);
+        mShapeGroup = mUngroupedGroup ? mUngroupedGroup : VirtualTilesetMgr::instance().shapeGroupAt(0);
     }
-    connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(isoCategoryChanged(int)));
+    connect(ui->comboBox, SIGNAL(currentIndexChanged(int)), SLOT(shapeGroupChanged(int)));
 
     connect(ui->vTilesetNames->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(virtualTilesetNameSelected()));
@@ -356,6 +407,7 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     connect(ui->vTilesetTiles, SIGNAL(activated(QModelIndex)), SLOT(vTileActivated(QModelIndex)));
     connect(ui->orthoFiles->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(textureNameSelectionChanged()));
+    connect(ui->orthoFiles, SIGNAL(activated(QModelIndex)), SLOT(textureProperties()));
     connect(ui->orthoTiles->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(textureTileSelectionChanged()));
 
@@ -372,6 +424,7 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     connect(ui->actionShowDiskImage, SIGNAL(toggled(bool)), SLOT(showDiskImage(bool)));
     connect(ui->actionAddTexture, SIGNAL(triggered()), SLOT(addTexture()));
     connect(ui->actionRemoveTexture, SIGNAL(triggered()), SLOT(removeTexture()));
+    connect(ui->actionTextureProperties, SIGNAL(triggered()), SLOT(textureProperties()));
 
     connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetAdded(VirtualTileset*)),
             SLOT(tilesetAdded(VirtualTileset*)));
@@ -430,9 +483,16 @@ void VirtualTilesetDialog::setVirtualTilesetTilesList()
 
 void VirtualTilesetDialog::setTextureNamesList()
 {
+    QString name;
+    if (ui->orthoFiles->currentRow() != -1)
+        name = ui->orthoFiles->item(ui->orthoFiles->currentRow())->text();
+
     ui->orthoFiles->clear();
-    foreach (TextureInfo *tex, TextureMgr::instance().textures())
+    foreach (TextureInfo *tex, TextureMgr::instance().textures()) {
         ui->orthoFiles->addItem(tex->name());
+        if (tex->name() == name)
+            ui->orthoFiles->setCurrentRow(ui->orthoFiles->count() - 1);
+    }
 }
 
 void VirtualTilesetDialog::setTextureTilesList()
@@ -499,11 +559,26 @@ void VirtualTilesetDialog::removeTexture(TextureInfo *tex)
     TextureMgr::instance().removeTexture(tex);
 }
 
-void VirtualTilesetDialog::editShape(TileShape *shape, QList<TileShapeFace> &faces)
+void VirtualTilesetDialog::changeTexture(TextureInfo *tex, int &tileWidth, int &tileHeight)
 {
-    QList<TileShapeFace> oldFaces = shape->mFaces;
-    shape->mFaces = faces;
-    faces = oldFaces;
+    int oldTileWidth = tex->tileWidth(), oldTileHeight = tex->tileHeight();
+    tex->setTileSize(tileWidth, tileHeight);
+    tileWidth = oldTileWidth;
+    tileHeight = oldTileHeight;
+
+    delete tex->tileset();
+    tex->setTileset(0);
+
+    textureAdded(tex); // !!!
+
+    setTextureTilesList();
+}
+
+void VirtualTilesetDialog::editShape(TileShape *shape, TileShape &other)
+{
+    TileShape old(shape);
+    shape->copy(&other);
+    other.copy(&old);
 
     foreach (TileShape *shape2, VirtualTilesetMgr::instance().tileShapes()) {
         if (shape2->mSameAs == shape)
@@ -666,6 +741,7 @@ void VirtualTilesetDialog::textureNameSelectionChanged()
             mTextureTileset = TextureMgr::instance().tileset(mCurrentTexture);
     }
     setTextureTilesList();
+    updateActions();
 }
 
 void VirtualTilesetDialog::textureTileSelectionChanged()
@@ -871,6 +947,9 @@ void VirtualTilesetDialog::addTexture()
     if (dialog.exec() != QDialog::Accepted)
         return;
 
+    int tileWidth = dialog.tileWidth();
+    int tileHeight = dialog.tileHeight();
+
     mUndoStack->beginMacro(tr("Add Textures"));
 
     foreach (QString fileName, dialog.fileNames()) {
@@ -880,11 +959,24 @@ void VirtualTilesetDialog::addTexture()
             mUndoStack->push(new RemoveTexture(this, old));
         QImageReader reader(fileName);
         QSize imgSize = reader.size();
-        if (imgSize.isValid() && !(imgSize.width() % 32) && !(imgSize.height() % 96)) {
+        if (imgSize.isValid() && !(imgSize.width() % tileWidth) && !(imgSize.height() % tileHeight)) {
             TextureInfo *tex = new TextureInfo(name, fileName,
-                                               imgSize.width() / 32,
-                                               imgSize.height() / 96);
+                                               imgSize.width() / tileWidth,
+                                               imgSize.height() / tileHeight,
+                                               tileWidth, tileHeight);
             mUndoStack->push(new AddTexture(this, tex));
+        } else {
+            if (!imgSize.isValid()) {
+                QMessageBox::warning(this, tr("Bad Texture"), tr("The texture file '%1' couldn't be read.")
+                                     .arg(info.fileName()));
+                break;
+            } else {
+                QMessageBox::warning(this, tr("Bad Texture"), tr("The texture file '%1' isn't an even number of tiles wide or tall.\nImage size: %2,%3\nTile size: %4,%5")
+                                     .arg(info.fileName())
+                                     .arg(imgSize.width()).arg(imgSize.height())
+                                     .arg(tileWidth).arg(tileHeight));
+                break;
+            }
         }
     }
 
@@ -901,6 +993,15 @@ void VirtualTilesetDialog::removeTexture()
             return;
         mUndoStack->push(new RemoveTexture(this, mCurrentTexture));
     }
+}
+
+void VirtualTilesetDialog::textureProperties()
+{
+    TexturePropertiesDialog d(mCurrentTexture, this);
+    if (d.exec() != QDialog::Accepted)
+        return;
+
+    mUndoStack->push(new ChangeTexture(this, mCurrentTexture, d.tileWidth(), d.tileHeight()));
 }
 
 void VirtualTilesetDialog::textureAdded(TextureInfo *tex)
@@ -948,9 +1049,12 @@ void VirtualTilesetDialog::textureRemoved(TextureInfo *tex)
     setTextureNamesList();
 }
 
-void VirtualTilesetDialog::isoCategoryChanged(int row)
+void VirtualTilesetDialog::shapeGroupChanged(int row)
 {
-    mShapeGroup = VirtualTilesetMgr::instance().shapeGroupAt(row);
+    if (mUngroupedGroup && (row == 0))
+        mShapeGroup = mUngroupedGroup;
+    else
+        mShapeGroup = VirtualTilesetMgr::instance().shapeGroupAt(row - 1);
     textureTileSelectionChanged();
 }
 
@@ -974,8 +1078,8 @@ void VirtualTilesetDialog::editShape(const QModelIndex &index)
 {
     if (VirtualTile *vtile = ui->isoTiles->model()->tileAt(index)) {
         if (TileShape *shape = vtile->shape()) {
-            if (shape->mSameAs)
-                shape = shape->mSameAs;
+//            if (shape->mSameAs)
+//                shape = shape->mSameAs;
             TileShapeEditor dialog(shape, mTextureTileImage, this);
             if (dialog.exec() == QDialog::Accepted) {
                 TileShape *shape2 = dialog.tileShape();
@@ -983,7 +1087,7 @@ void VirtualTilesetDialog::editShape(const QModelIndex &index)
                     Q_ASSERT(e.mGeom.size() == e.mUV.size());
                 }
 
-                mUndoStack->push(new EditShape(this, shape, shape2->mFaces));
+                mUndoStack->push(new EditShape(this, shape, shape2));
 #if 0
                 shape->mElements = shape2->mElements;
                 vtile->setImage(QImage());
@@ -1017,6 +1121,8 @@ void VirtualTilesetDialog::updateActions()
     ui->actionRemoveTileset->setEnabled(ui->vTilesetNames->selectedItems().size() != 0);
     ui->actionClearVTiles->setEnabled(ui->vTilesetTiles->selectionModel()->selectedIndexes().size() != 0);
 //    ui->actionShowDiskImage->setEnabled(ui->vTilesetTiles->model()->diskImageValid());
+    ui->actionRemoveTexture->setEnabled(ui->orthoFiles->selectionModel()->selectedIndexes().size() != 0);
+    ui->actionTextureProperties->setEnabled(ui->orthoFiles->selectionModel()->selectedIndexes().size() != 0);
 }
 
 void VirtualTilesetDialog::saveSplitterSizes(QSplitter *splitter)

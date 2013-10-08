@@ -248,7 +248,8 @@ SOURCES += aboutdialog.cpp \
     textureunpacker.cpp \
     texturemanager.cpp \
     addtexturesdialog.cpp \
-    enflatulatordialog.cpp
+    enflatulatordialog.cpp \
+    texturepropertiesdialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -457,7 +458,8 @@ HEADERS += aboutdialog.h \
     textureunpacker.h \
     texturemanager.h \
     addtexturesdialog.h \
-    enflatulatordialog.h
+    enflatulatordialog.h \
+    texturepropertiesdialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -510,7 +512,8 @@ FORMS += aboutdialog.ui \
     addvirtualtilesetdialog.ui \
     tileshapeeditor.ui \
     addtexturesdialog.ui \
-    enflatulatordialog.ui
+    enflatulatordialog.ui \
+    texturepropertiesdialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

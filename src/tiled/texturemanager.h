@@ -25,6 +25,7 @@
 #include <QCoreApplication>
 #include <QMap>
 #include <QObject>
+#include <QSize>
 
 namespace Tiled {
 class Tileset;
@@ -34,11 +35,14 @@ namespace Internal {
 class TextureInfo
 {
 public:
-    TextureInfo(const QString &name, const QString &fileName, int columnCount, int rowCount) :
+    TextureInfo(const QString &name, const QString &fileName, int columnCount, int rowCount,
+                int tileWidth, int tileHeight) :
         mName(name),
         mFileName(fileName),
         mColumnCount(columnCount),
         mRowCount(rowCount),
+        mTileWidth(tileWidth),
+        mTileHeight(tileHeight),
         mTileset(0)
     {}
 
@@ -46,6 +50,10 @@ public:
     QString fileName() const { return mFileName; }
     int columnCount() const { return mColumnCount; }
     int rowCount() const { return mRowCount; }
+
+    void setTileSize(int width, int height) { mTileWidth = width; mTileHeight = height; }
+    int tileWidth() const { return mTileWidth; }
+    int tileHeight() const { return mTileHeight; }
 
     void setTileset(Tileset *ts) { mTileset = ts; }
     Tileset *tileset() const { return mTileset; }
@@ -55,6 +63,8 @@ private:
     QString mFileName;
     int mColumnCount;
     int mRowCount;
+    int mTileWidth;
+    int mTileHeight;
 
     Tileset *mTileset;
 };
@@ -115,6 +125,7 @@ public:
 
 private:
     bool parse2Ints(const QString &s, int *pa, int *pb);
+    QString toString(int x, int y);
 
 private:
     QList<TextureInfo*> mTextures;

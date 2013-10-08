@@ -210,6 +210,18 @@
     <string>Remove Texture</string>
    </property>
   </action>
+  <action name="actionTextureProperties">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/document-properties.png</normaloff>:/images/16x16/document-properties.png</iconset>
+   </property>
+   <property name="text">
+    <string>Texture Properties</string>
+   </property>
+   <property name="toolTip">
+    <string>Change texture properties</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

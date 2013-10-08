@@ -71,7 +71,8 @@ public:
     void changeVTile(VirtualTile *vtile, QString &imageSource, int &srcX, int &srcY, TileShape *&isoType);
     void addTexture(TextureInfo *tex);
     void removeTexture(TextureInfo *tex);
-    void editShape(TileShape *shape, QList<TileShapeFace> &faces);
+    void changeTexture(TextureInfo *tex, int &tileWidth, int &tileHeight);
+    void editShape(TileShape *shape, TileShape &other);
     //
 
     void closeEvent(QCloseEvent *event);
@@ -96,11 +97,12 @@ private slots:
 
     void addTexture();
     void removeTexture();
+    void textureProperties();
 
     void textureAdded(TextureInfo *tex);
     void textureRemoved(TextureInfo *tex);
 
-    void isoCategoryChanged(int row);
+    void shapeGroupChanged(int row);
 
     void beginDropTiles();
     void endDropTiles();
@@ -137,6 +139,7 @@ private:
     QImage mTextureTileImage;
     VirtualTileset *mIsoTileset;
     TileShapeGroup *mShapeGroup;
+    TileShapeGroup *mUngroupedGroup;
     bool mShowDiskImage;
     VirtualTilesetsFile *mFile;
 

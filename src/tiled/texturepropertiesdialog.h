@@ -1,8 +1,6 @@
 /*
  * Copyright 2013, Tim Baker <treectrl@users.sf.net>
  *
- * This file is part of Tiled.
- *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation; either version 2 of the License, or (at your option)
@@ -17,51 +15,36 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ADDTEXTURESDIALOG_H
-#define ADDTEXTURESDIALOG_H
+#ifndef TEXTUREPROPERTIESDIALOG_H
+#define TEXTUREPROPERTIESDIALOG_H
 
 #include <QDialog>
 
 namespace Ui {
-class AddTexturesDialog;
+class TexturePropertiesDialog;
 }
 
-class AddTexturesDialog : public QDialog
+namespace Tiled {
+namespace Internal {
+
+class TextureInfo;
+
+class TexturePropertiesDialog : public QDialog
 {
     Q_OBJECT
-    
-public:
-    explicit AddTexturesDialog(const QString &dir, const QStringList &ignore,
-                               bool ignoreIsPaths = false,
-                               QWidget *parent = 0);
-    ~AddTexturesDialog();
 
-    void setAllowBrowse(bool browse);
-    void setPrompt(const QString &prompt);
-    
-    QStringList fileNames();
+public:
+    explicit TexturePropertiesDialog(TextureInfo *tex, QWidget *parent = 0);
+    ~TexturePropertiesDialog();
+
     int tileWidth() const;
     int tileHeight() const;
 
 private:
-    void setFilesList();
-
-private slots:
-    void browse();
-
-    void checkAll();
-    void uncheckAll();
-
-    void tileSizeSelected();
-
-    void accept();
-
-private:
-    Ui::AddTexturesDialog *ui;
-    QString mDirectory;
-    QStringList mIgnore;
-    bool mIgnoreIsPaths;
-    QList<QSize> mPrefabSizes;
+    Ui::TexturePropertiesDialog *ui;
 };
 
-#endif // ADDTEXTURESDIALOG_H
+} // namespace Internal
+} // namespace Tiled
+
+#endif // TEXTUREPROPERTIESDIALOG_H

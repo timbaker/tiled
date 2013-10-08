@@ -98,7 +98,7 @@ Tileset *TextureMgr::tileset(TextureInfo *tex)
 {
     Tileset *ts = tex->tileset();
     if (ts == 0) {
-        ts = new Tileset(tex->name(), 32, 96);
+        ts = new Tileset(tex->name(), tex->tileWidth(), tex->tileHeight());
         // ts->setTransparentColor(Qt::white); already transparent XXX
         ts->setMissing(true);
         tex->setTileset(ts);
@@ -179,7 +179,20 @@ bool TexturesFile::read(const QString &fileName)
                 return false;
             }
 
-            TextureInfo *info = new TextureInfo(textureName, texFileName, columns, rows);
+            int tileWidth, tileHeight;
+            if (block.hasValue("tileSize")) {
+                QString sizeStr = block.value("tileSize");
+                if (!parse2Ints(sizeStr, &tileWidth, &tileHeight) || (tileWidth < 1) || (tileHeight < 1)) {
+                    mError = tr("Line %1: Invalid tile size '%2'.")
+                            .arg(block.lineNumber).arg(sizeStr);
+                    return false;
+                }
+            } else {
+                tileWidth = 32, tileHeight = 96;
+            }
+
+            TextureInfo *info = new TextureInfo(textureName, texFileName, columns, rows,
+                                                tileWidth, tileHeight);
             mTextures += info;
             mTextureByName[info->name()] = info;
         } else {
@@ -206,9 +219,9 @@ bool TexturesFile::write(const QString &fileName, const QList<TextureInfo *> &te
         relativePath.truncate(relativePath.length() - 4); // remove .png
         tilesetBlock.addValue("file", relativePath);
 
-        int columns = tex->columnCount();
-        int rows = tex->rowCount();
-        tilesetBlock.addValue("size", QString(QLatin1String("%1,%2")).arg(columns).arg(rows));
+        tilesetBlock.addValue("size", toString(tex->columnCount(), tex->rowCount()));
+
+        tilesetBlock.addValue("tileSize", toString(tex->tileWidth(), tex->tileHeight()));
 
         simpleFile.blocks += tilesetBlock;
     }
@@ -233,4 +246,9 @@ bool TexturesFile::parse2Ints(const QString &s, int *pa, int *pb)
     if (!ok) return false;
     *pa = a, *pb = b;
     return true;
+}
+
+QString TexturesFile::toString(int x, int y)
+{
+     return QString::fromLatin1("%1,%2").arg(x).arg(y);
 }

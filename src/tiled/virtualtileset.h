@@ -52,6 +52,22 @@ public:
         mSameAs(0)
     {}
 
+    TileShape(const TileShape *other) :
+        mName(other->name()),
+        mFaces(other->mFaces),
+        mSameAs(other->mSameAs),
+        mXform(other->mXform)
+    {
+    }
+
+    void copy(const TileShape *other)
+    {
+        mName = other->name();
+        mFaces = other->mFaces;
+        mSameAs = other->mSameAs;
+        mXform = other->mXform;
+    }
+
     QString name() const { return mName; }
 
     void fromSameAs();
@@ -107,6 +123,9 @@ public:
     {
         return contains(index) ? mShapes[index] : 0;
     }
+
+    bool hasShape(TileShape *shape) const
+    { return mShapes.contains(shape); }
 
     bool contains(int col, int row)
     {
