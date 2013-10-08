@@ -198,6 +198,13 @@ VirtualTilesetMgr::VirtualTilesetMgr() :
 {
     initPixelBuffer();
 
+    mCheckerboard = QImage(32, 96, QImage::Format_ARGB32);
+    QPainter p(&mCheckerboard);
+    for (int y = 0; y < mCheckerboard.height() / 4; y += 1)
+        for (int x = 0; x < mCheckerboard.width() / 4; x += 1)
+            p.fillRect(x * 4, y * 4, 4, 4,
+                       ((x & 1) == (y & 1)) ? Qt::darkGray : Qt::lightGray);
+
 #if 0
     TextureUnpacker unpacker;
     unpacker.unpack(QLatin1String("ntiles_0"));
@@ -527,12 +534,7 @@ uint VirtualTilesetMgr::loadGLTexture(const QString &imageSource, int srcX, int 
 {
     QImage b;
     if (imageSource.isEmpty()) {
-        b = QImage(32, 32, QImage::Format_ARGB32);
-        QPainter p(&b);
-        for (int y = 0; y < 8; y += 1)
-            for (int x = 0; x < 8; x += 1)
-                p.fillRect(x * 4, y * 4, 4, 4,
-                           ((x % 1) == (y % 1)) ? Qt::darkGray : Qt::lightGray);
+        b = mCheckerboard;
     } else if (TextureInfo *tex = TextureMgr::instance().texture(imageSource)) {
         Tileset *ts = TextureMgr::instance().tileset(tex);
         if (ts->isMissing())

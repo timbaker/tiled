@@ -14,48 +14,21 @@
    <string>Tile Shape Editor</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,0">
-   <item row="0" column="0">
-    <layout class="QVBoxLayout" name="leftSideLayout">
+   <item row="3" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="Tiled::Internal::TileShapeView" name="graphicsView"/>
-     </item>
-    </layout>
-   </item>
-   <item row="1" column="0">
-    <layout class="QHBoxLayout" name="toolBarLayout">
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Grid Size:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSpinBox" name="gridSize">
-         <property name="minimum">
-          <number>1</number>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QLabel" name="status">
+       <property name="text">
+        <string>prompt</string>
+       </property>
+      </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="scaleCombo"/>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -181,21 +154,48 @@
      </item>
     </layout>
    </item>
-   <item row="3" column="0" colspan="2">
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+   <item row="0" column="0">
+    <layout class="QVBoxLayout" name="leftSideLayout">
      <item>
-      <widget class="QLabel" name="status">
-       <property name="text">
-        <string>prompt</string>
-       </property>
-      </widget>
+      <widget class="Tiled::Internal::TileShapeView" name="graphicsView"/>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0">
+    <layout class="QHBoxLayout" name="toolBarLayout">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Grid Size:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="gridSize">
+         <property name="minimum">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
-      <widget class="QDialogButtonBox" name="buttonBox">
-       <property name="standardButtons">
-        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-       </property>
-      </widget>
+      <widget class="QComboBox" name="scaleCombo"/>
      </item>
     </layout>
    </item>

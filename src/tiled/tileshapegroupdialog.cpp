@@ -18,7 +18,9 @@
 #include "tileshapegroupdialog.h"
 #include "ui_tileshapegroupdialog.h"
 
+#include "tileshapeeditor.h"
 #include "tileshapegrouppropertiesdialog.h"
+#include "tileshapepropertiesdialog.h"
 #include "undoredobuttons.h"
 #include "virtualtileset.h"
 
@@ -180,6 +182,7 @@ TileShapeGroupDialog::TileShapeGroupDialog(QWidget *parent) :
 
     toolBar = new QToolBar;
     toolBar->setIconSize(QSize(16, 16));
+    toolBar->addAction(ui->actionAddShape);
     toolBar->addAction(ui->actionClearShape);
     ui->shapeToolBarLayout->addWidget(toolBar, 1);
 
@@ -343,7 +346,12 @@ void TileShapeGroupDialog::shapeAssigned(TileShapeGroup *g, int col, int row)
 
 void TileShapeGroupDialog::addShape()
 {
-
+    TileShape _shape(tr("my_new_shape"));
+    TileShapePropertiesDialog d(&_shape, this);
+    if (d.exec() != QDialog::Accepted)
+        return;
+    TileShape *shape = new TileShape(d.name());
+//    mUndoStack->push(new AddShape(this, shape));
 }
 
 void TileShapeGroupDialog::clearShape()

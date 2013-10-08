@@ -278,6 +278,8 @@ public:
     void emitTilesetChanged(VirtualTileset *vts)
     { emit tilesetChanged(vts); }
 
+    QImage checkerboard() const { return mCheckerboard; }
+
     QString errorString() const
     { return mError; }
 
@@ -309,6 +311,8 @@ private:
     TileShapeGroup *mUngroupedGroup;
 
     QMap<QString,QImage> mOriginalIsoImages;
+
+    QImage mCheckerboard;
 
     int mSourceRevision;
     int mRevision;
