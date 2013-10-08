@@ -291,6 +291,11 @@ texture
 }
 texture
 {
+    file = roofs_accents_01
+    size = 16,8
+}
+texture
+{
     file = street_trafficlines_01
     size = 8,16
 }
