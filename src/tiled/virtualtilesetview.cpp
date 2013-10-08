@@ -177,6 +177,10 @@ QVariant VirtualTilesetModel::data(const QModelIndex &index, int role) const
             return item->mTile->image();
         }
     }
+    if (role == Qt::ToolTipRole) {
+        if (VirtualTile *vtile = tileAt(index))
+            return vtile->shape() ? vtile->shape()->name() : QString();
+    }
     return QVariant();
 }
 
