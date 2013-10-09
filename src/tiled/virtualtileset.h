@@ -100,7 +100,22 @@ public:
         mRowCount(rowCount),
         mShapes(mColumnCount * mRowCount)
     {
+    }
 
+    TileShapeGroup(const TileShapeGroup *other) :
+        mLabel(other->mLabel),
+        mColumnCount(other->mColumnCount),
+        mRowCount(other->mRowCount),
+        mShapes(other->mShapes)
+    {
+    }
+
+    void copy(const TileShapeGroup *other)
+    {
+        mLabel = other->mLabel;
+        mColumnCount = other->mColumnCount;
+        mRowCount = other->mRowCount;
+        mShapes = other->mShapes;
     }
 
     QString label() const { return mLabel; }
@@ -115,6 +130,12 @@ public:
     {
         if (contains(col, row))
             mShapes[col + row * mColumnCount] = shape;
+    }
+
+    void setShape(int index, TileShape *shape)
+    {
+        if (contains(index))
+            mShapes[index] = shape;
     }
 
     TileShape *shapeAt(int col, int row)
@@ -153,8 +174,11 @@ public:
     VirtualTile(VirtualTileset *vts, int x, int y);
     VirtualTile(VirtualTileset *vts, int x, int y, const QString &imageSource,
                 int srcX, int srcY, TileShape *shape);
+    VirtualTile(const VirtualTile *other);
 
     VirtualTileset *tileset() const { return mTileset; }
+
+    void copy(const VirtualTile *other);
 
     int x() const { return mX; }
     int y() const { return mY; }
@@ -171,6 +195,7 @@ public:
 
     void setShape(TileShape *shape) { mShape = shape; }
     TileShape *shape() const { return mShape; }
+    bool usesShape(TileShape *shape);
 
     void setImage(const QImage &image) { mImage = image; }
     QImage image();
@@ -250,15 +275,20 @@ public:
 
     QImage originalIsoImage(VirtualTileset *vts);
 
+    void changeVTile(VirtualTile *vtile, VirtualTile &other);
+
     QImage renderIsoTile(VirtualTile *vtile);
+
+    void addShape(TileShape *shape);
+    void removeShape(TileShape *shape);
+    void changeShape(TileShape *shape, TileShape &other);
 
     QList<TileShape*> tileShapes() const { return mShapeByName.values(); }
     TileShape *tileShape(const QString &name);
 
     void insertShapeGroup(int index, TileShapeGroup *g);
     TileShapeGroup *removeShapeGroup(int index);
-    void editShapeGroup(TileShapeGroup *g, const QString &label,
-                        int columnCount, int rowCount);
+    void editShapeGroup(TileShapeGroup *g, TileShapeGroup &other);
     void assignShape(TileShapeGroup *g, int col, int row, TileShape *shape);
 
     QList<TileShapeGroup*> shapeGroups() const { return mShapeGroups; }
@@ -298,8 +328,10 @@ signals:
     void shapeGroupAdded(int index, TileShapeGroup *g);
     void shapeGroupRemoved(int index, TileShapeGroup *g);
     void shapeGroupChanged(TileShapeGroup *g);
-
     void shapeAssigned(TileShapeGroup *g, int col, int row);
+    void shapeAdded(TileShape *shape);
+    void shapeRemoved(TileShape *shape);
+    void shapeChanged(TileShape *shape);
 
 private:
     QMap<QString,VirtualTileset*> mTilesetByName;

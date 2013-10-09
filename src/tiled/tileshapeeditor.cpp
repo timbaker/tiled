@@ -605,6 +605,8 @@ TileShapeEditor::TileShapeEditor(TileShape *shape, QImage texture, QWidget *pare
     connect(ui->ySpinBox, SIGNAL(valueChanged(double)), SLOT(xformFromUI()));
     connect(ui->zSpinBox, SIGNAL(valueChanged(double)), SLOT(xformFromUI()));
 
+    xformSelectionChanged();
+
     QSettings settings;
     settings.beginGroup(QLatin1String("TileShapeEditor"));
     QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();

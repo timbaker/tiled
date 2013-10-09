@@ -102,34 +102,27 @@ public:
 class ChangeVTile : public QUndoCommand
 {
 public:
-    ChangeVTile(VirtualTilesetDialog *d, VirtualTile *vtile, const QString &imageSource,
-                int srcX, int srcY, TileShape *shape) :
+    ChangeVTile(VirtualTilesetDialog *d, VirtualTile *vtile, const VirtualTile *other) :
         QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Virtual Tile")),
         mDialog(d),
         mTile(vtile),
-        mImageSource(imageSource),
-        mSrcX(srcX),
-        mSrcY(srcY),
-        mShape(shape)
+        mTile2(other)
     {
     }
 
     void undo()
     {
-        mDialog->changeVTile(mTile, mImageSource, mSrcX, mSrcY, mShape);
+        VirtualTilesetMgr::instance().changeVTile(mTile, mTile2);
     }
 
     void redo()
     {
-        mDialog->changeVTile(mTile, mImageSource, mSrcX, mSrcY, mShape);
+        VirtualTilesetMgr::instance().changeVTile(mTile, mTile2);
     }
 
     VirtualTilesetDialog *mDialog;
     VirtualTile *mTile;
-    QString mImageSource;
-    int mSrcX;
-    int mSrcY;
-    TileShape *mShape;
+    VirtualTile mTile2;
 };
 
 class RenameVTileset : public QUndoCommand
@@ -416,6 +409,16 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
             SLOT(tilesetRemoved(VirtualTileset*)));
     connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetChanged(VirtualTileset*)),
             SLOT(tilesetChanged(VirtualTileset*)));
+    connect(VirtualTilesetMgr::instancePtr(), SIGNAL(shapeChanged(TileShape*)),
+            SLOT(shapeChanged(TileShape*)));
+    connect(VirtualTilesetMgr::instancePtr(), SIGNAL(shapeAssigned(TileShapeGroup*,int,int)),
+            SLOT(shapeAssigned(TileShapeGroup*,int,int)));
+    connect(VirtualTilesetMgr::instancePtr(), SIGNAL(shapeGroupAdded(int,TileShapeGroup*)),
+            SLOT(shapeGroupAdded(int,TileShapeGroup*)));
+    connect(VirtualTilesetMgr::instancePtr(), SIGNAL(shapeGroupRemoved(int,TileShapeGroup*)),
+            SLOT(shapeGroupRemoved(int,TileShapeGroup*)));
+    connect(VirtualTilesetMgr::instancePtr(), SIGNAL(shapeGroupChanged(TileShapeGroup*)),
+            SLOT(shapeGroupChanged(TileShapeGroup*)));
 
     connect(TextureMgr::instancePtr(), SIGNAL(textureAdded(TextureInfo*)),
             SLOT(textureAdded(TextureInfo*)));
@@ -510,29 +513,6 @@ void VirtualTilesetDialog::resizeTileset(VirtualTileset *vts, QSize &size,
     size = oldSize;
 }
 
-void VirtualTilesetDialog::changeVTile(VirtualTile *vtile, QString &imageSource,
-                                       int &srcX, int &srcY, TileShape *&shape)
-{
-    QString mOldImgSrc = vtile->imageSource();
-    int oldSrcX = vtile->srcX();
-    int oldSrcY = vtile->srcY();
-    TileShape *oldShape = vtile->shape();
-
-    vtile->setImageSource(imageSource, srcX, srcY);
-    vtile->setShape(shape);
-    vtile->setImage(QImage());
-
-    vtile->tileset()->tileChanged();
-
-    imageSource = mOldImgSrc;
-    srcX = oldSrcX, srcY = oldSrcY;
-    shape = oldShape;
-
-    VirtualTilesetMgr::instance().emitTilesetChanged(vtile->tileset());
-
-    ui->vTilesetTiles->model()->redisplay(vtile);
-}
-
 void VirtualTilesetDialog::addTexture(TextureInfo *tex)
 {
     TextureMgr::instance().addTexture(tex);
@@ -560,29 +540,7 @@ void VirtualTilesetDialog::changeTexture(TextureInfo *tex, int &tileWidth, int &
 
 void VirtualTilesetDialog::editShape(TileShape *shape, TileShape &other)
 {
-    TileShape old(shape);
-    shape->copy(&other);
-    other.copy(&old);
-
-    foreach (TileShape *shape2, VirtualTilesetMgr::instance().tileShapes()) {
-        if (shape2->mSameAs == shape)
-            shape2->fromSameAs();
-    }
-
-    foreach (VirtualTileset *vts, VirtualTilesetMgr::instance().tilesets()) {
-        bool changed = false;
-        foreach (VirtualTile *vtile, vts->tiles()) {
-            if (vtile->shape() == shape ||
-                    (vtile->shape() && vtile->shape()->mSameAs == shape)) {
-                vtile->setImage(QImage());
-                changed = true;
-            }
-        }
-        if (changed) {
-            vts->tileChanged();
-            VirtualTilesetMgr::instance().emitTilesetChanged(vts);
-        }
-    }
+    VirtualTilesetMgr::instance().changeShape(shape, other);
 
     textureTileSelectionChanged();
 }
@@ -637,8 +595,10 @@ void VirtualTilesetDialog::clearVTiles()
     if (selected.size() > 1)
         mUndoStack->beginMacro(tr("Clear Virtual Tiles"));
     foreach (QModelIndex index, selected) {
-        if (VirtualTile *vtile = ui->vTilesetTiles->model()->tileAt(index))
-            mUndoStack->push(new ChangeVTile(this, vtile, QString(), -1, -1, 0));
+        if (VirtualTile *vtile = ui->vTilesetTiles->model()->tileAt(index)) {
+            VirtualTile changed(0, -1, -1);
+            mUndoStack->push(new ChangeVTile(this, vtile, &changed));
+        }
     }
     if (selected.size() > 1)
         mUndoStack->endMacro();
@@ -735,7 +695,7 @@ void VirtualTilesetDialog::textureTileSelectionChanged()
     if (mIsoTileset) {
         mIsoTileset = 0;
     }
-#if 1
+
     mTextureTileImage = QImage();
     if (!selected.isEmpty() && mShapeGroup != 0) {
         Tile *textureTile = ui->orthoTiles->tilesetModel()->tileAt(selected.first());
@@ -769,150 +729,9 @@ void VirtualTilesetDialog::textureTileSelectionChanged()
                     mIsoTileset->tileAt(i)->setShape(shape);
                 }
             }
-
         }
     }
-#else
-    if (!selected.isEmpty() && mIsoCategory == CategoryFloor) {
-        QRect r(selected.first().column(), selected.first().row(), 1, 1);
-        foreach (QModelIndex index, selected)
-            r |= QRect(index.column(), index.row(), 1, 1);
 
-
-        mIsoTileset = new VirtualTileset(QLatin1String("Dynamic"), r.width(), r.height());
-        foreach (QModelIndex index, selected) {
-            Tile *tile = ui->orthoTiles->tilesetModel()->tileAt(index);
-            int x = index.column() - r.x(), y = index.row() - r.y();
-            mIsoTileset->tileAt(x, y)->setImageSource(tile->tileset()->name(),
-                                                      tile->id() % tile->tileset()->columnCount(),
-                                                      tile->id() / tile->tileset()->columnCount());
-            mIsoTileset->tileAt(x, y)->setShape(shape("floor"));
-        }
-    }
-    if (!selected.isEmpty() && mIsoCategory == CategoryRoof) {
-        Tile *tile = ui->orthoTiles->tilesetModel()->tileAt(selected.first());
-        mIsoTileset = new VirtualTileset(QLatin1String("Dynamic"), 8, 8);
-        for (int i = 0; i < mIsoTileset->tileCount(); i++)
-            mIsoTileset->tileAt(i)->setImageSource(tile->tileset()->name(),
-                                                   tile->id() % tile->tileset()->columnCount(),
-                                                   tile->id() / tile->tileset()->columnCount());
-        mIsoTileset->tileAt(0, 0)->setShape(shape("roof_slope_s1"));
-        mIsoTileset->tileAt(1, 0)->setShape(shape("roof_slope_s2"));
-        mIsoTileset->tileAt(2, 0)->setShape(shape("roof_slope_s3"));
-        mIsoTileset->tileAt(3, 0)->setShape(shape("roof_slope_e3"));
-        mIsoTileset->tileAt(4, 0)->setShape(shape("roof_slope_e2"));
-        mIsoTileset->tileAt(5, 0)->setShape(shape("roof_slope_e1"));
-
-        mIsoTileset->tileAt(0, 1)->setShape(shape("roof_slope_pt5s"));
-        mIsoTileset->tileAt(1, 1)->setShape(shape("roof_slope_1pt5s"));
-        mIsoTileset->tileAt(2, 1)->setShape(shape("roof_slope_2pt5s"));
-        mIsoTileset->tileAt(3, 1)->setShape(shape("roof_slope_2pt5e"));
-        mIsoTileset->tileAt(4, 1)->setShape(shape("roof_slope_1pt5e"));
-        mIsoTileset->tileAt(5, 1)->setShape(shape("roof_slope_pt5e"));
-
-        mIsoTileset->tileAt(0, 2)->setShape(shape("roof_outer1"));
-        mIsoTileset->tileAt(1, 2)->setShape(shape("roof_outer2"));
-        mIsoTileset->tileAt(2, 2)->setShape(shape("roof_outer3"));
-        mIsoTileset->tileAt(3, 2)->setShape(shape("roof_inner1"));
-        mIsoTileset->tileAt(4, 2)->setShape(shape("roof_inner2"));
-        mIsoTileset->tileAt(5, 2)->setShape(shape("roof_inner3"));
-
-        mIsoTileset->tileAt(0, 3)->setShape(shape("roof_outer_pt5"));
-        mIsoTileset->tileAt(1, 3)->setShape(shape("roof_outer_1pt5"));
-        mIsoTileset->tileAt(2, 3)->setShape(shape("roof_outer_2pt5"));
-        mIsoTileset->tileAt(3, 3)->setShape(shape("roof_inner_pt5"));
-        mIsoTileset->tileAt(4, 3)->setShape(shape("roof_inner_1pt5"));
-        mIsoTileset->tileAt(5, 3)->setShape(shape("roof_inner_2pt5"));
-
-        mIsoTileset->tileAt(0, 4)->setShape(shape("roof_corner_sw1"));
-        mIsoTileset->tileAt(1, 4)->setShape(shape("roof_corner_sw2"));
-        mIsoTileset->tileAt(2, 4)->setShape(shape("roof_corner_sw3"));
-        mIsoTileset->tileAt(3, 4)->setShape(shape("roof_corner_ne3"));
-        mIsoTileset->tileAt(4, 4)->setShape(shape("roof_corner_ne2"));
-        mIsoTileset->tileAt(5, 4)->setShape(shape("roof_corner_ne1"));
-
-        mIsoTileset->tileAt(0, 5)->setShape(shape("roof_top_n1"));
-        mIsoTileset->tileAt(1, 5)->setShape(shape("roof_top_w1"));
-        mIsoTileset->tileAt(2, 5)->setShape(shape("roof_top_n2"));
-        mIsoTileset->tileAt(3, 5)->setShape(shape("roof_top_w2"));
-        mIsoTileset->tileAt(4, 5)->setShape(shape("roof_top_n3"));
-        mIsoTileset->tileAt(5, 5)->setShape(shape("roof_top_w3"));
-
-        mIsoTileset->tileAt(0, 6)->setShape(shape("roof_shallow_e1"));
-        mIsoTileset->tileAt(1, 6)->setShape(shape("roof_shallow_e2"));
-        mIsoTileset->tileAt(2, 6)->setShape(shape("roof_shallow_w2"));
-        mIsoTileset->tileAt(3, 6)->setShape(shape("roof_shallow_w1"));
-        mIsoTileset->tileAt(4, 6)->setShape(shape("roof_shallow_n1"));
-        mIsoTileset->tileAt(5, 6)->setShape(shape("roof_shallow_n2"));
-        mIsoTileset->tileAt(6, 6)->setShape(shape("roof_shallow_s2"));
-        mIsoTileset->tileAt(7, 6)->setShape(shape("roof_shallow_s1"));
-
-        mIsoTileset->tileAt(0, 7)->setShape(shape("roof_trim_s"));
-        mIsoTileset->tileAt(1, 7)->setShape(shape("roof_trim_e"));
-        mIsoTileset->tileAt(2, 7)->setShape(shape("roof_trim_inner"));
-        mIsoTileset->tileAt(3, 7)->setShape(shape("roof_trim_outer"));
-        mIsoTileset->tileAt(4, 7)->setShape(shape("roof_trim_corner_sw"));
-        mIsoTileset->tileAt(5, 7)->setShape(shape("roof_trim_corner_ne"));
-    }
-    if (!selected.isEmpty() && mIsoCategory == CategoryRoofCap) {
-        Tile *tile = ui->orthoTiles->tilesetModel()->tileAt(selected.first());
-        mIsoTileset = new VirtualTileset(QLatin1String("Dynamic"), 6, 4);
-        for (int i = 0; i < mIsoTileset->tileCount(); i++)
-            mIsoTileset->tileAt(i)->setImageSource(tile->tileset()->name(),
-                                                   tile->id() % tile->tileset()->columnCount(),
-                                                   tile->id() / tile->tileset()->columnCount());
-
-        mIsoTileset->tileAt(0, 0)->setShape(shape("roof_cap_rise_e1"));
-        mIsoTileset->tileAt(1, 0)->setShape(shape("roof_cap_rise_e2"));
-        mIsoTileset->tileAt(2, 0)->setShape(shape("roof_cap_rise_e3"));
-        mIsoTileset->tileAt(3, 0)->setShape(shape("roof_cap_fall_s3"));
-        mIsoTileset->tileAt(4, 0)->setShape(shape("roof_cap_fall_s2"));
-        mIsoTileset->tileAt(5, 0)->setShape(shape("roof_cap_fall_s1"));
-
-        mIsoTileset->tileAt(0, 1)->setShape(shape("roof_cap_fall_e1"));
-        mIsoTileset->tileAt(1, 1)->setShape(shape("roof_cap_fall_e3"));
-        mIsoTileset->tileAt(2, 1)->setShape(shape("roof_cap_fall_e2"));
-        mIsoTileset->tileAt(3, 1)->setShape(shape("roof_cap_rise_s3"));
-        mIsoTileset->tileAt(4, 1)->setShape(shape("roof_cap_rise_s2"));
-        mIsoTileset->tileAt(5, 1)->setShape(shape("roof_cap_rise_s1"));
-
-        mIsoTileset->tileAt(0, 2)->setShape(shape("roof_cap_peak_pt5e"));
-        mIsoTileset->tileAt(1, 2)->setShape(shape("roof_cap_peak_1pt5e"));
-        mIsoTileset->tileAt(2, 2)->setShape(shape("roof_cap_peak_2pt5e"));
-        mIsoTileset->tileAt(3, 2)->setShape(shape("roof_cap_peak_2pt5s"));
-        mIsoTileset->tileAt(4, 2)->setShape(shape("roof_cap_peak_1pt5s"));
-        mIsoTileset->tileAt(5, 2)->setShape(shape("roof_cap_peak_pt5s"));
-
-        mIsoTileset->tileAt(0, 3)->setShape(shape("roof_cap_flat_e1"));
-        mIsoTileset->tileAt(1, 3)->setShape(shape("roof_cap_flat_e2"));
-//        mIsoTileset->tileAt(2, 3)->setShape(shape("roof_cap_flat_e3"));
-//        mIsoTileset->tileAt(3, 3)->setShape(shape("roof_cap_flat_s3"));
-        mIsoTileset->tileAt(4, 3)->setShape(shape("roof_cap_flat_s2"));
-        mIsoTileset->tileAt(5, 3)->setShape(shape("roof_cap_flat_s1"));
-    }
-    if (!selected.isEmpty() && mIsoCategory == CategoryWall) {
-        Tile *tile = ui->orthoTiles->tilesetModel()->tileAt(selected.first());
-        mIsoTileset = new VirtualTileset(QLatin1String("Dynamic"), 4, 3);
-        for (int i = 0; i < mIsoTileset->tileCount(); i++)
-            mIsoTileset->tileAt(i)->setImageSource(tile->tileset()->name(),
-                                                   tile->id() % tile->tileset()->columnCount(),
-                                                   tile->id() / tile->tileset()->columnCount());
-        mIsoTileset->tileAt(0, 0)->setShape(shape("wall_w"));
-        mIsoTileset->tileAt(1, 0)->setShape(shape("wall_n"));
-        mIsoTileset->tileAt(2, 0)->setShape(shape("wall_nw"));
-        mIsoTileset->tileAt(3, 0)->setShape(shape("wall_se"));
-
-        mIsoTileset->tileAt(0, 1)->setShape(shape("wall_window_w"));
-        mIsoTileset->tileAt(1, 1)->setShape(shape("wall_window_n"));
-        mIsoTileset->tileAt(2, 1)->setShape(shape("wall_door_w"));
-        mIsoTileset->tileAt(3, 1)->setShape(shape("wall_door_n"));
-
-        mIsoTileset->tileAt(0, 2)->setShape(shape("wall_short_w"));
-        mIsoTileset->tileAt(1, 2)->setShape(shape("wall_short_n"));
-        mIsoTileset->tileAt(2, 2)->setShape(shape("wall_short_nw"));
-        mIsoTileset->tileAt(3, 2)->setShape(shape("wall_short_se"));
-    }
-#endif
     ui->isoTiles->setTileset(mIsoTileset);
     delete oldTileset;
 }
@@ -1033,6 +852,17 @@ void VirtualTilesetDialog::textureRemoved(TextureInfo *tex)
     setTextureNamesList();
 }
 
+void VirtualTilesetDialog::shapeGroupAdded(int index, TileShapeGroup *g)
+{
+    ui->comboBox->insertItem(index + 1, g->label());
+}
+
+void VirtualTilesetDialog::shapeGroupRemoved(int index, TileShapeGroup *g)
+{
+    Q_UNUSED(g)
+    ui->comboBox->removeItem(index + 1);
+}
+
 void VirtualTilesetDialog::shapeGroupChanged(int row)
 {
     if (mUngroupedGroup && (row == 0))
@@ -1048,6 +878,28 @@ void VirtualTilesetDialog::editGroups()
     d.exec();
 }
 
+void VirtualTilesetDialog::shapeGroupChanged(TileShapeGroup *group)
+{
+    if (group == mShapeGroup)
+        textureTileSelectionChanged();
+}
+
+void VirtualTilesetDialog::shapeAssigned(TileShapeGroup *g, int col, int row)
+{
+    if (mShapeGroup == g) {
+        VirtualTile *vtile = mIsoTileset->tileAt(col, row);
+        vtile->setShape(g->shapeAt(col, row));
+        vtile->setImage(QImage());
+        ui->isoTiles->model()->redisplay(vtile);
+    }
+}
+
+void VirtualTilesetDialog::shapeChanged(TileShape *shape)
+{
+    if (mShapeGroup && mShapeGroup->hasShape(shape))
+        textureTileSelectionChanged();
+}
+
 void VirtualTilesetDialog::beginDropTiles()
 {
     mUndoStack->beginMacro(tr("Set Virtual Tiles"));
@@ -1061,7 +913,8 @@ void VirtualTilesetDialog::endDropTiles()
 void VirtualTilesetDialog::tileDropped(VirtualTile *vtile, const QString &imageSource,
                                        int srcX, int srcY, TileShape *shape)
 {
-    mUndoStack->push(new ChangeVTile(this, vtile, imageSource, srcX, srcY, shape));
+    VirtualTile changed(0, -1, -1, imageSource, srcX, srcY, shape);
+    mUndoStack->push(new ChangeVTile(this, vtile, &changed));
 }
 
 void VirtualTilesetDialog::editShape(const QModelIndex &index)

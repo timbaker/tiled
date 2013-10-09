@@ -115,6 +115,9 @@
    <property name="text">
     <string>Clear Shape</string>
    </property>
+   <property name="toolTip">
+    <string>Remove selected shapes from current group</string>
+   </property>
   </action>
   <action name="actionAddShape">
    <property name="icon">
@@ -132,6 +135,27 @@
    </property>
    <property name="text">
     <string>Edit Group</string>
+   </property>
+  </action>
+  <action name="actionRemoveShape">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>Remove Shape</string>
+   </property>
+   <property name="toolTip">
+    <string>Destroy selected shape</string>
+   </property>
+  </action>
+  <action name="actionShapeProperties">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/document-properties.png</normaloff>:/images/16x16/document-properties.png</iconset>
+   </property>
+   <property name="text">
+    <string>Shape Properties</string>
    </property>
   </action>
  </widget>

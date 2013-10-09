@@ -63,6 +63,7 @@ public:
     void scaleChanged(qreal scale);
     void redisplay();
     void redisplay(VirtualTile *vtile);
+    void redisplay(TileShape *shape);
 
     void setClickedIndex(const QModelIndex &index) { mClickedIndex = index; }
     void setMovedTiles(QList<VirtualTile*> &tiles) { mMovedTiles = tiles; }

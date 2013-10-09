@@ -69,6 +69,9 @@ void VirtualTilesetDelegate::paint(QPainter *painter,
                                    const QStyleOptionViewItem &option,
                                    const QModelIndex &index) const
 {
+    const VirtualTilesetModel *m = static_cast<const VirtualTilesetModel*>(index.model());
+    VirtualTile *vtile = m->tileAt(index);
+
     const QVariant display = index.model()->data(index, Qt::DisplayRole);
     const QImage tileImage = display.value<QImage>();
     const int extra = 1;
@@ -76,18 +79,17 @@ void VirtualTilesetDelegate::paint(QPainter *painter,
     if (mView->zoomable()->smoothTransform())
         painter->setRenderHint(QPainter::SmoothPixmapTransform);
 
-    if (tileImage.isNull())
+    if (!vtile || !vtile->shape())
         painter->fillRect(option.rect.adjusted(0, 0, -extra, -extra),
                           QColor(240, 240, 240));
-    else
+
+    if (!tileImage.isNull())
         painter->drawImage(option.rect.adjusted(0, 0, -extra, -extra), tileImage);
 
     // Grid
     painter->fillRect(option.rect.right(), option.rect.top(), 1, option.rect.height(), Qt::lightGray);
     painter->fillRect(option.rect.left(), option.rect.bottom(), option.rect.width(), 1, Qt::lightGray);
 
-    const VirtualTilesetModel *m = static_cast<const VirtualTilesetModel*>(index.model());
-    VirtualTile *vtile = m->tileAt(index);
     if (vtile && vtile->shape() && vtile->shape()->mSameAs)
         painter->fillRect(option.rect.right() - 4, option.rect.top() + 2, 2, 2, Qt::gray);
 
@@ -337,6 +339,15 @@ void VirtualTilesetModel::redisplay(VirtualTile *vtile)
     QModelIndex index = this->index(vtile);
     if (index.isValid())
         emit dataChanged(index, index);
+}
+
+void VirtualTilesetModel::redisplay(TileShape *shape)
+{
+    foreach (Item *item, mItems)
+        if (item->mTile->usesShape(shape)) {
+            item->mTile->setImage(QImage());
+            emit dataChanged(index(item->mTile), index(item->mTile));
+        }
 }
 
 void VirtualTilesetModel::setDiskImage(const QImage &image)

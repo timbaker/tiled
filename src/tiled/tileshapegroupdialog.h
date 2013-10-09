@@ -24,6 +24,7 @@ namespace Ui {
 class TileShapeGroupDialog;
 }
 
+class QModelIndex;
 class QUndoGroup;
 class QUndoStack;
 
@@ -46,8 +47,10 @@ public:
     // Undo/Redo
     void insertGroup(int index, TileShapeGroup *g);
     TileShapeGroup *removeGroup(int index);
-    void editGroup(TileShapeGroup *g, QString &label, int &columnCount, int &rowCount);
+    void editGroup(TileShapeGroup *g, TileShapeGroup &other);
     TileShape *assignShape(TileShapeGroup *g, int col, int row, TileShape *shape);
+    void addShape(TileShape *shape);
+    void removeShape(TileShape *shape);
     //
 
 private slots:
@@ -61,9 +64,16 @@ private slots:
     void shapeGroupRemoved(int index, TileShapeGroup *g);
     void shapeGroupChanged(TileShapeGroup *g);
     void shapeAssigned(TileShapeGroup *g, int col, int row);
+//    void shapeAdded(TileShape *shape);
+//    void shapeRemoved(TileShape *shape);
+    void shapeChanged(TileShape *shape);
 
     void addShape();
+    void shapeProperties();
     void clearShape();
+    void removeShape();
+
+    void shapeActivated(const QModelIndex &index);
 
     void beginDropTiles();
     void endDropTiles();

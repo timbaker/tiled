@@ -24,6 +24,7 @@
 #include "undoredobuttons.h"
 #include "virtualtileset.h"
 
+#include <QMessageBox>
 #include <QToolBar>
 #include <QToolButton>
 #include <QUndoCommand>
@@ -102,32 +103,95 @@ public:
 class EditGroup : public QUndoCommand
 {
 public:
-    EditGroup(TileShapeGroupDialog *d, TileShapeGroup *g, const QString &label,
-              int columnCount, int rowCount) :
+    EditGroup(TileShapeGroupDialog *d, TileShapeGroup *g, const TileShapeGroup *other) :
         QUndoCommand(QCoreApplication::translate("UndoCommands", "Edit Group")),
         mDialog(d),
         mGroup(g),
-        mLabel(label),
-        mColumnCount(columnCount),
-        mRowCount(rowCount)
+        mGroup2(other)
     {
     }
 
     void undo()
     {
-        mDialog->editGroup(mGroup, mLabel, mColumnCount, mRowCount);
+        mDialog->editGroup(mGroup, mGroup2);
     }
 
     void redo()
     {
-        mDialog->editGroup(mGroup, mLabel, mColumnCount, mRowCount);
+        mDialog->editGroup(mGroup, mGroup2);
     }
 
     TileShapeGroupDialog *mDialog;
     TileShapeGroup *mGroup;
-    QString mLabel;
-    int mColumnCount;
-    int mRowCount;
+    TileShapeGroup mGroup2;
+};
+
+class AddShape : public QUndoCommand
+{
+public:
+    AddShape(TileShapeGroupDialog *d, TileShape *shape) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Add Shape")),
+        mDialog(d),
+        mShape(shape),
+        mAdded(false)
+    {
+    }
+
+    ~AddShape()
+    {
+        if (!mAdded)
+            delete mShape;
+    }
+
+    void undo()
+    {
+        mDialog->removeShape(mShape);
+        mAdded = false;
+    }
+
+    void redo()
+    {
+        mDialog->addShape(mShape);
+        mAdded = true;
+    }
+
+    TileShapeGroupDialog *mDialog;
+    TileShape *mShape;
+    bool mAdded;
+};
+
+class RemoveShape : public QUndoCommand
+{
+public:
+    RemoveShape(TileShapeGroupDialog *d, TileShape *shape) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Remove Shape")),
+        mDialog(d),
+        mShape(shape),
+        mAdded(true)
+    {
+    }
+
+    ~RemoveShape()
+    {
+        if (!mAdded)
+            delete mShape;
+    }
+
+    void undo()
+    {
+        mDialog->addShape(mShape);
+        mAdded = true;
+    }
+
+    void redo()
+    {
+        mDialog->removeShape(mShape);
+        mAdded = false;
+    }
+
+    TileShapeGroupDialog *mDialog;
+    TileShape *mShape;
+    bool mAdded;
 };
 
 class AssignShape : public QUndoCommand
@@ -160,6 +224,58 @@ public:
     TileShape *mShape;
 };
 
+class ChangeShape : public QUndoCommand
+{
+public:
+    ChangeShape(TileShapeGroupDialog *d, TileShape *shape, const TileShape *other) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Shape")),
+        mDialog(d),
+        mShape(shape),
+        mShape2(other)
+    {
+    }
+
+    void undo()
+    {
+        VirtualTilesetMgr::instance().changeShape(mShape, mShape2);
+    }
+
+    void redo()
+    {
+        VirtualTilesetMgr::instance().changeShape(mShape, mShape2);
+    }
+
+    TileShapeGroupDialog *mDialog;
+    TileShape *mShape;
+    TileShape mShape2;
+};
+
+class ChangeVTile : public QUndoCommand
+{
+public:
+    ChangeVTile(TileShapeGroupDialog *d, VirtualTile *vtile, const VirtualTile *other) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change VTile")),
+        mDialog(d),
+        mTile(vtile),
+        mTile2(other)
+    {
+    }
+
+    void undo()
+    {
+        VirtualTilesetMgr::instance().changeVTile(mTile, mTile2);
+    }
+
+    void redo()
+    {
+        VirtualTilesetMgr::instance().changeVTile(mTile, mTile2);
+    }
+
+    TileShapeGroupDialog *mDialog;
+    VirtualTile *mTile;
+    VirtualTile mTile2;
+};
+
 } // namespace anon
 
 TileShapeGroupDialog::TileShapeGroupDialog(QWidget *parent) :
@@ -183,7 +299,9 @@ TileShapeGroupDialog::TileShapeGroupDialog(QWidget *parent) :
     toolBar = new QToolBar;
     toolBar->setIconSize(QSize(16, 16));
     toolBar->addAction(ui->actionAddShape);
+    toolBar->addAction(ui->actionShapeProperties);
     toolBar->addAction(ui->actionClearShape);
+    toolBar->addAction(ui->actionRemoveShape);
     ui->shapeToolBarLayout->addWidget(toolBar, 1);
 
     UndoRedoButtons *urb = new UndoRedoButtons(mUndoStack, this);
@@ -210,11 +328,14 @@ TileShapeGroupDialog::TileShapeGroupDialog(QWidget *parent) :
     connect(ui->actionRemove_Group, SIGNAL(triggered()), SLOT(removeGroup()));
     connect(ui->actionAddShape, SIGNAL(triggered()), SLOT(addShape()));
     connect(ui->actionClearShape, SIGNAL(triggered()), SLOT(clearShape()));
+    connect(ui->actionShapeProperties, SIGNAL(triggered()), SLOT(shapeProperties()));
+    connect(ui->actionRemoveShape, SIGNAL(triggered()), SLOT(removeShape()));
 
     connect(ui->groupsList->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(selectedGroupChanged()));
     connect(ui->shapesList->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             SLOT(updateActions()));
+    connect(ui->shapesList, SIGNAL(activated(QModelIndex)), SLOT(shapeActivated(QModelIndex)));
     connect(ui->groupCombo, SIGNAL(currentIndexChanged(int)), SLOT(srcGroupSelected(int)));
 
     connect(VirtualTilesetMgr::instancePtr(), SIGNAL(shapeGroupAdded(int,TileShapeGroup*)),
@@ -225,8 +346,12 @@ TileShapeGroupDialog::TileShapeGroupDialog(QWidget *parent) :
             SLOT(shapeGroupChanged(TileShapeGroup*)));
     connect(VirtualTilesetMgr::instancePtr(), SIGNAL(shapeAssigned(TileShapeGroup*,int,int)),
             SLOT(shapeAssigned(TileShapeGroup*,int,int)));
+    connect(VirtualTilesetMgr::instancePtr(), SIGNAL(shapeChanged(TileShape*)),
+            SLOT(shapeChanged(TileShape*)));
 
     setGroupList();
+
+    updateActions();
 }
 
 TileShapeGroupDialog::~TileShapeGroupDialog()
@@ -244,16 +369,9 @@ TileShapeGroup *TileShapeGroupDialog::removeGroup(int index)
     return VirtualTilesetMgr::instance().removeShapeGroup(index);
 }
 
-void TileShapeGroupDialog::editGroup(TileShapeGroup *g, QString &label,
-                                     int &columnCount, int &rowCount)
+void TileShapeGroupDialog::editGroup(TileShapeGroup *g, TileShapeGroup &other)
 {
-    QString oldLabel = g->label();
-    int oldCC = g->columnCount();
-    int oldRC = g->rowCount();
-    VirtualTilesetMgr::instance().editShapeGroup(g, label, columnCount, rowCount);
-    label = oldLabel;
-    columnCount = oldCC;
-    rowCount = oldRC;
+    VirtualTilesetMgr::instance().editShapeGroup(g, other);
 }
 
 TileShape *TileShapeGroupDialog::assignShape(TileShapeGroup *g, int col, int row, TileShape *shape)
@@ -263,10 +381,21 @@ TileShape *TileShapeGroupDialog::assignShape(TileShapeGroup *g, int col, int row
     return old;
 }
 
+void TileShapeGroupDialog::addShape(TileShape *shape)
+{
+    VirtualTilesetMgr::instance().addShape(shape);
+}
+
+void TileShapeGroupDialog::removeShape(TileShape *shape)
+{
+    VirtualTilesetMgr::instance().removeShape(shape);
+}
+
 void TileShapeGroupDialog::addGroup()
 {
     TileShapeGroup _g(tr("New Group"), 8, 8);
     TileShapeGroupPropertiesDialog d(&_g, this);
+    d.setWindowTitle(tr("New Group"));
     if (d.exec() != QDialog::Accepted)
         return;
     TileShapeGroup *g = new TileShapeGroup(d.label(), d.columnCount(), d.rowCount());
@@ -275,15 +404,23 @@ void TileShapeGroupDialog::addGroup()
 
 void TileShapeGroupDialog::removeGroup()
 {
-
+    int q = QMessageBox::question(this, tr("Remove Group"), tr("The shapes in this group will not be destroyed.\nReally remove this group?"),
+                                  QMessageBox::Yes, QMessageBox::No);
+    if (q == QMessageBox::No)
+        return;
+    mUndoStack->push(new RemoveGroup(this, ui->groupsList->currentRow() - 1));
 }
 
 void TileShapeGroupDialog::editGroup()
 {
     TileShapeGroupPropertiesDialog d(mCurrentGroup, this);
+    d.setWindowTitle(tr("Edit Group"));
     if (d.exec() != QDialog::Accepted)
         return;
-    mUndoStack->push(new EditGroup(this, mCurrentGroup, d.label(), d.columnCount(), d.rowCount()));
+    TileShapeGroup changed(mCurrentGroup);
+    changed.setLabel(d.label());
+    changed.resize(d.columnCount(), d.rowCount());
+    mUndoStack->push(new EditGroup(this, mCurrentGroup, &changed));
 }
 
 void TileShapeGroupDialog::selectedGroupChanged()
@@ -344,14 +481,63 @@ void TileShapeGroupDialog::shapeAssigned(TileShapeGroup *g, int col, int row)
         setShapeSrcList();
 }
 
+void TileShapeGroupDialog::shapeChanged(TileShape *shape)
+{
+    if (mCurrentGroup && mCurrentGroup->hasShape(shape))
+        ui->shapesList->model()->redisplay(shape);
+    if (mCurrentSrcGroup && mCurrentSrcGroup->hasShape(shape))
+        ui->shapeSrcList->model()->redisplay(shape);
+}
+
 void TileShapeGroupDialog::addShape()
 {
     TileShape _shape(tr("my_new_shape"));
     TileShapePropertiesDialog d(&_shape, this);
+    d.setWindowTitle(tr("New Shape"));
     if (d.exec() != QDialog::Accepted)
         return;
+
+    mUndoStack->beginMacro(tr("Add Shape"));
+
     TileShape *shape = new TileShape(d.name());
-//    mUndoStack->push(new AddShape(this, shape));
+    mUndoStack->push(new AddShape(this, shape));
+
+    // Add it to the current group
+    if (mCurrentGroup != mUngroupedGroup) {
+        QModelIndexList selection = ui->shapesList->selectionModel()->selectedIndexes();
+        Q_ASSERT(selection.size() == 1);
+        QModelIndex index = selection.first();
+        Q_ASSERT(mCurrentGroup->shapeAt(index.column(), index.row()) == 0);
+        mUndoStack->push(new AssignShape(this, mCurrentGroup, index.column(), index.row(), shape));
+    }
+
+    mUndoStack->endMacro();
+
+    TileShapeEditor ed(shape, VirtualTilesetMgr::instance().checkerboard(), this);
+    if (ed.exec() != QDialog::Accepted)
+        return;
+    mUndoStack->push(new ChangeShape(this, shape, ed.tileShape()));
+#if 0
+    shape->copy(ed.tileShape());
+    if (mCurrentGroup == mUngroupedGroup)
+        setShapeList();
+    if (mCurrentSrcGroup == mUngroupedGroup)
+        setShapeSrcList();
+#endif
+}
+
+void TileShapeGroupDialog::shapeProperties()
+{
+    QModelIndexList selected = ui->shapesList->selectionModel()->selectedIndexes();
+    QModelIndex index = selected.first();
+    TileShape *shape = mCurrentGroup->shapeAt(index.column(), index.row());
+    TileShapePropertiesDialog d(shape, this);
+    d.setWindowTitle(tr("Edit Shape"));
+    if (d.exec() != QDialog::Accepted)
+        return;
+    TileShape changed(shape);
+    changed.mName = d.name();
+    mUndoStack->push(new ChangeShape(this, shape, &changed));
 }
 
 void TileShapeGroupDialog::clearShape()
@@ -361,6 +547,69 @@ void TileShapeGroupDialog::clearShape()
     foreach (QModelIndex index, selected)
         mUndoStack->push(new AssignShape(this, mCurrentGroup, index.column(), index.row(), 0));
     mUndoStack->endMacro();
+}
+
+void TileShapeGroupDialog::removeShape()
+{
+    QModelIndexList selected = ui->shapesList->selectionModel()->selectedIndexes();
+    int q = QMessageBox::question(this, tr("Destroy Shape"), tr("Any tiles the using removed shapes will lose their images!\nReally destroy the selected shapes?"),
+                                  QMessageBox::Yes, QMessageBox::No);
+    if (q == QMessageBox::No)
+        return;
+
+    mUndoStack->beginMacro(tr("Destroy Shapes"));
+    foreach (QModelIndex index, selected) {
+        TileShape *shape = mCurrentGroup->shapeAt(index.column(), index.row());
+
+        // Remove from 'sameAs'
+        foreach (TileShape *shape2, VirtualTilesetMgr::instance().tileShapes()) {
+            if (shape2->mSameAs == shape) {
+                TileShape changed(shape2);
+                changed.mSameAs = 0;
+                changed.mXform.clear();
+                mUndoStack->push(new ChangeShape(this, shape2, &changed));
+            }
+        }
+
+        // Remove shape from groups
+        foreach (TileShapeGroup *group, VirtualTilesetMgr::instance().shapeGroups()) {
+            for (int i = 0; i < group->count(); i++) {
+                if (group->shapeAt(i) == shape)
+                    mUndoStack->push(new AssignShape(this, group,
+                                                     i % group->columnCount(),
+                                                     i / group->columnCount(),
+                                                     0));
+            }
+        }
+
+        // Remove shape from virtual tileset tiles
+        foreach (VirtualTileset *vts, VirtualTilesetMgr::instance().tilesets()) {
+            for (int i = 0; i < vts->tileCount(); i++) {
+                VirtualTile *vtile = vts->tileAt(i);
+                if (vtile->shape() == shape) {
+                    VirtualTile changed(vtile);
+                    changed.setShape(0);
+                    mUndoStack->push(new ChangeVTile(this, vtile, &changed));
+                }
+            }
+        }
+
+        mUndoStack->push(new RemoveShape(this, shape));
+    }
+    mUndoStack->endMacro();
+}
+
+void TileShapeGroupDialog::shapeActivated(const QModelIndex &index)
+{
+    TileShape *shape = mCurrentGroup->shapeAt(index.column(), index.row());
+    if (!shape) {
+        addShape();
+        return;
+    }
+    TileShapeEditor d(shape, VirtualTilesetMgr::instance().checkerboard(), this);
+    if (d.exec() != QDialog::Accepted)
+        return;
+    mUndoStack->push(new ChangeShape(this, shape, d.tileShape()));
 }
 
 void TileShapeGroupDialog::beginDropTiles()
@@ -395,8 +644,18 @@ void TileShapeGroupDialog::updateActions()
 {
     ui->actionEditGroup->setEnabled(mCurrentGroup != 0 && mCurrentGroup != mUngroupedGroup);
     ui->actionRemove_Group->setEnabled(mCurrentGroup != 0 && mCurrentGroup != mUngroupedGroup);
-    ui->actionClearShape->setEnabled(ui->shapesList->selectionModel()->selectedIndexes().size() != 0 &&
-            mCurrentGroup != mUngroupedGroup);
+
+    QModelIndexList selection = ui->shapesList->selectionModel()->selectedIndexes();
+    bool emptyTile = mCurrentGroup == mUngroupedGroup;
+    if ((mCurrentGroup != mUngroupedGroup) && (selection.size() == 1)) {
+        QModelIndex index = selection.first();
+        TileShape *shape = mCurrentGroup->shapeAt(index.column(), index.row());
+        emptyTile = (shape == 0);
+    }
+    ui->actionAddShape->setEnabled((mCurrentGroup == mUngroupedGroup) || emptyTile);
+    ui->actionShapeProperties->setEnabled(selection.size() == 1);
+    ui->actionClearShape->setEnabled(selection.size() != 0 && mCurrentGroup != mUngroupedGroup);
+    ui->actionRemoveShape->setEnabled(selection.size() != 0);
 }
 
 void TileShapeGroupDialog::setGroupList()

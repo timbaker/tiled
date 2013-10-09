@@ -105,6 +105,12 @@ private slots:
     void shapeGroupChanged(int row);
     void editGroups();
 
+    void shapeGroupAdded(int index, TileShapeGroup *g);
+    void shapeGroupRemoved(int index, TileShapeGroup *g);
+    void shapeGroupChanged(TileShapeGroup *group);
+    void shapeAssigned(TileShapeGroup *g, int col, int row);
+    void shapeChanged(TileShape *shape);
+
     void beginDropTiles();
     void endDropTiles();
     void tileDropped(VirtualTile *vtile, const QString &imageSource, int srcX, int srcY, TileShape *shape);

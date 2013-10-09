@@ -104,9 +104,31 @@ VirtualTile::VirtualTile(VirtualTileset *vts, int x, int y, const QString &image
 
 }
 
+VirtualTile::VirtualTile(const VirtualTile *other) :
+    mImageSource(other->mImageSource),
+    mSrcX(other->mSrcX),
+    mSrcY(other->mSrcY),
+    mShape(other->mShape)
+{
+
+}
+
+void VirtualTile::copy(const VirtualTile *other)
+{
+    mImageSource = other->mImageSource;
+    mSrcX = other->mSrcX;
+    mSrcY = other->mSrcY;
+    mShape = other->mShape;
+}
+
 int VirtualTile::index() const
 {
     return mX + mTileset->columnCount() * mY;
+}
+
+bool VirtualTile::usesShape(TileShape *shape)
+{
+    return mShape == shape || (mShape && (mShape->mSameAs == shape));
 }
 
 QImage VirtualTile::image()
@@ -386,6 +408,18 @@ QImage VirtualTilesetMgr::originalIsoImage(VirtualTileset *vts)
     return mOriginalIsoImages[vts->name()] = QImage(fileName); // may be null
 }
 
+void VirtualTilesetMgr::changeVTile(VirtualTile *vtile, VirtualTile &other)
+{
+    VirtualTile old(vtile);
+    vtile->copy(&other);
+    other.copy(&old);
+
+    vtile->setImage(QImage());
+    vtile->tileset()->tileChanged();
+
+    emit tilesetChanged(vtile->tileset());
+}
+
 namespace {
 
 class DrawElements
@@ -652,6 +686,120 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
     return img;
 }
 
+void VirtualTilesetMgr::addShape(TileShape *shape)
+{
+    Q_ASSERT(!mShapeByName.contains(shape->name()));
+    Q_ASSERT(!mShapeByName.values().contains(shape));
+    mShapeByName[shape->name()] = shape;
+    emit shapeAdded(shape);
+
+    setUngroupedGroup();
+    emit shapeGroupChanged(mUngroupedGroup);
+}
+
+void VirtualTilesetMgr::removeShape(TileShape *shape)
+{
+    Q_ASSERT(mShapeByName.contains(shape->name()));
+    Q_ASSERT(mShapeByName.values().contains(shape));
+    mShapeByName.remove(shape->name());
+#if 1 // all this should have been done by undo/redo
+    foreach (TileShape *shape2, tileShapes())
+        Q_ASSERT(shape2->mSameAs != shape);
+    foreach (TileShapeGroup *group, mShapeGroups)
+        Q_ASSERT(!group->hasShape(shape));
+    foreach (VirtualTileset *vts, tilesets()) {
+        for (int i = 0; i < vts->tileCount(); i++)
+            Q_ASSERT(vts->tileAt(i)->shape() != shape);
+    }
+#else
+    QList<TileShape*> shapes;
+    shapes += shape;
+    foreach (TileShape *shape2, tileShapes()) {
+        if (shape2->mSameAs == shape) {
+            shape2->mSameAs = 0;
+            shape2->mFaces.clear();
+            shape2->mXform.clear();
+            shapes += shape2;
+        }
+    }
+
+    foreach (TileShapeGroup *group, mShapeGroups) {
+        bool changed = false;
+        for (int i = 0; i < group->count(); i++)
+            if (group->shapeAt(i) == shape) {
+                group->setShape(i, 0);
+                changed = true;
+            }
+        if (changed)
+            emit shapeGroupChanged(group);
+    }
+
+    foreach (VirtualTileset *vts, tilesets()) {
+        bool changed = false;
+        for (int i = 0; i < vts->tileCount(); i++) {
+            VirtualTile *vtile = vts->tileAt(i);
+            if (vtile->shape() == shape) {
+                vtile->setShape(0);
+                changed = true;
+            }
+            if (vtile->shape() && shapes.contains(vtile->shape())) {
+                vtile->setImage(QImage());
+                changed = true;
+            }
+        }
+        if (changed) {
+            vts->tileChanged();
+            emit tilesetChanged(vts);
+        }
+    }
+#endif
+
+    if (mUngroupedGroup->hasShape(shape)) {
+        setUngroupedGroup();
+        emit shapeGroupChanged(mUngroupedGroup);
+    }
+
+    emit shapeRemoved(shape);
+}
+
+void VirtualTilesetMgr::changeShape(TileShape *shape, TileShape &other)
+{
+    TileShape old(shape);
+    shape->copy(&other);
+    other.copy(&old);
+
+    shape->fromSameAs();
+
+    foreach (TileShape *shape2, tileShapes()) {
+        if (shape2->mSameAs == shape)
+            shape2->fromSameAs();
+    }
+
+    if (shape->name() != old.name()) {
+        Q_ASSERT(mShapeByName.contains(old.name()));
+        Q_ASSERT(!mShapeByName.contains(shape->name()));
+        mShapeByName.remove(old.name());
+        mShapeByName[shape->name()] = shape;
+    }
+
+    emit shapeChanged(shape);
+
+    foreach (VirtualTileset *vts, tilesets()) {
+        bool changed = false;
+        foreach (VirtualTile *vtile, vts->tiles()) {
+            if ((vtile->shape() == shape) ||
+                    (vtile->shape() && vtile->shape()->mSameAs == shape)) {
+                vtile->setImage(QImage());
+                changed = true;
+            }
+        }
+        if (changed) {
+            vts->tileChanged();
+            emit tilesetChanged(vts);
+        }
+    }
+}
+
 TileShape *VirtualTilesetMgr::tileShape(const QString &name)
 {
     if (mShapeByName.contains(name))
@@ -664,20 +812,27 @@ void VirtualTilesetMgr::insertShapeGroup(int index, TileShapeGroup *g)
     Q_ASSERT(!mShapeGroups.contains(g));
     mShapeGroups.insert(index, g);
     emit shapeGroupAdded(index, g);
+
+    setUngroupedGroup();
+    emit shapeGroupChanged(mUngroupedGroup);
 }
 
 TileShapeGroup *VirtualTilesetMgr::removeShapeGroup(int index)
 {
     TileShapeGroup *g = mShapeGroups.takeAt(index);
     emit shapeGroupRemoved(index, g);
+
+    setUngroupedGroup();
+    emit shapeGroupChanged(mUngroupedGroup);
+
     return g;
 }
 
-void VirtualTilesetMgr::editShapeGroup(TileShapeGroup *g, const QString &label,
-                                       int columnCount, int rowCount)
+void VirtualTilesetMgr::editShapeGroup(TileShapeGroup *g, TileShapeGroup &other)
 {
-    g->setLabel(label);
-    g->resize(columnCount, rowCount);
+    TileShapeGroup old(g);
+    g->copy(&other);
+    other.copy(&old);
     emit shapeGroupChanged(g);
 }
 
