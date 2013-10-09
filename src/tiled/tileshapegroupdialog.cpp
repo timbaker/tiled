@@ -276,6 +276,34 @@ public:
     VirtualTile mTile2;
 };
 
+class ReorderGroup : public QUndoCommand
+{
+public:
+    ReorderGroup(TileShapeGroupDialog *d, int oldIndex, int newIndex) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Reorder Group")),
+        mDialog(d),
+        mOldIndex(oldIndex),
+        mNewIndex(newIndex)
+    {
+    }
+
+    void undo()
+    {
+        TileShapeGroup *g = VirtualTilesetMgr::instance().removeShapeGroup(mNewIndex);
+        VirtualTilesetMgr::instance().insertShapeGroup(mOldIndex, g);
+    }
+
+    void redo()
+    {
+        TileShapeGroup *g = VirtualTilesetMgr::instance().removeShapeGroup(mOldIndex);
+        VirtualTilesetMgr::instance().insertShapeGroup(mNewIndex, g);
+    }
+
+    TileShapeGroupDialog *mDialog;
+    int mOldIndex;
+    int mNewIndex;
+};
+
 } // namespace anon
 
 TileShapeGroupDialog::TileShapeGroupDialog(QWidget *parent) :
@@ -285,7 +313,10 @@ TileShapeGroupDialog::TileShapeGroupDialog(QWidget *parent) :
     mCurrentGroup(0),
     mCurrentGroupTileset(0),
     mCurrentSrcGroup(0),
-    mCurrentSrcGroupTileset(0)
+    mCurrentSrcGroupTileset(0),
+    mTextureImage(VirtualTilesetMgr::instance().checkerboard()),
+    mTextureX(-1),
+    mTextureY(-1)
 {
     ui->setupUi(this);
 
@@ -293,6 +324,8 @@ TileShapeGroupDialog::TileShapeGroupDialog(QWidget *parent) :
     toolBar->setIconSize(QSize(16, 16));
     toolBar->addAction(ui->actionAddGroup);
     toolBar->addAction(ui->actionEditGroup);
+    toolBar->addAction(ui->actionMoveGroupUp);
+    toolBar->addAction(ui->actionMoveGroupDown);
     toolBar->addAction(ui->actionRemove_Group);
     ui->groupsToolBarLayout->addWidget(toolBar, 1);
 
@@ -326,6 +359,9 @@ TileShapeGroupDialog::TileShapeGroupDialog(QWidget *parent) :
     connect(ui->actionAddGroup, SIGNAL(triggered()), SLOT(addGroup()));
     connect(ui->actionEditGroup, SIGNAL(triggered()), SLOT(editGroup()));
     connect(ui->actionRemove_Group, SIGNAL(triggered()), SLOT(removeGroup()));
+    connect(ui->actionMoveGroupUp, SIGNAL(triggered()), SLOT(moveGroupUp()));
+    connect(ui->actionMoveGroupDown, SIGNAL(triggered()), SLOT(moveGroupDown()));
+
     connect(ui->actionAddShape, SIGNAL(triggered()), SLOT(addShape()));
     connect(ui->actionClearShape, SIGNAL(triggered()), SLOT(clearShape()));
     connect(ui->actionShapeProperties, SIGNAL(triggered()), SLOT(shapeProperties()));
@@ -357,6 +393,19 @@ TileShapeGroupDialog::TileShapeGroupDialog(QWidget *parent) :
 TileShapeGroupDialog::~TileShapeGroupDialog()
 {
     delete ui;
+}
+
+void TileShapeGroupDialog::selectGroupAndShape(TileShapeGroup *g, int col, int row)
+{
+    int index = (g == mUngroupedGroup) ? 0 : VirtualTilesetMgr::instance().shapeGroups().indexOf(g) + 1;
+    ui->groupsList->setCurrentRow(index);
+    ui->shapesList->setCurrentIndex(ui->shapesList->model()->index(row, col));
+    ui->groupCombo->setCurrentIndex(index);
+}
+
+bool TileShapeGroupDialog::needsSaving() const
+{
+    return !mUndoStack->isClean();
 }
 
 void TileShapeGroupDialog::insertGroup(int index, TileShapeGroup *g)
@@ -423,6 +472,22 @@ void TileShapeGroupDialog::editGroup()
     mUndoStack->push(new EditGroup(this, mCurrentGroup, &changed));
 }
 
+void TileShapeGroupDialog::moveGroupUp()
+{
+    int row = ui->groupsList->currentRow();
+    if (row < 2) return;
+    row -= 1; // mUngroupedGroup
+    mUndoStack->push(new ReorderGroup(this, row, row - 1));
+}
+
+void TileShapeGroupDialog::moveGroupDown()
+{
+    int row = ui->groupsList->currentRow();
+    if (row == -1 || row == ui->groupsList->count() -  1) return;
+    row -= 1; // mUngroupedGroup
+    mUndoStack->push(new ReorderGroup(this, row, row + 1));
+}
+
 void TileShapeGroupDialog::selectedGroupChanged()
 {
     QModelIndexList selected = ui->groupsList->selectionModel()->selectedIndexes();
@@ -438,6 +503,7 @@ void TileShapeGroupDialog::selectedGroupChanged()
 void TileShapeGroupDialog::shapeGroupAdded(int index, TileShapeGroup *g)
 {
     ui->groupsList->insertItem(index + 1, g->label());
+    ui->groupsList->setCurrentRow(index + 1);
     ui->groupCombo->insertItem(index + 1, g->label());
 }
 
@@ -513,7 +579,7 @@ void TileShapeGroupDialog::addShape()
 
     mUndoStack->endMacro();
 
-    TileShapeEditor ed(shape, VirtualTilesetMgr::instance().checkerboard(), this);
+    TileShapeEditor ed(shape, mTextureImage, this);
     if (ed.exec() != QDialog::Accepted)
         return;
     mUndoStack->push(new ChangeShape(this, shape, ed.tileShape()));
@@ -606,7 +672,7 @@ void TileShapeGroupDialog::shapeActivated(const QModelIndex &index)
         addShape();
         return;
     }
-    TileShapeEditor d(shape, VirtualTilesetMgr::instance().checkerboard(), this);
+    TileShapeEditor d(shape, mTextureImage, this);
     if (d.exec() != QDialog::Accepted)
         return;
     mUndoStack->push(new ChangeShape(this, shape, d.tileShape()));
@@ -644,6 +710,10 @@ void TileShapeGroupDialog::updateActions()
 {
     ui->actionEditGroup->setEnabled(mCurrentGroup != 0 && mCurrentGroup != mUngroupedGroup);
     ui->actionRemove_Group->setEnabled(mCurrentGroup != 0 && mCurrentGroup != mUngroupedGroup);
+    ui->actionMoveGroupUp->setEnabled(mCurrentGroup != 0 && mCurrentGroup != mUngroupedGroup
+            && mCurrentGroup != VirtualTilesetMgr::instance().shapeGroups().first());
+    ui->actionMoveGroupDown->setEnabled(mCurrentGroup != 0 && mCurrentGroup != mUngroupedGroup
+            && mCurrentGroup != VirtualTilesetMgr::instance().shapeGroups().last());
 
     QModelIndexList selection = ui->shapesList->selectionModel()->selectedIndexes();
     bool emptyTile = mCurrentGroup == mUngroupedGroup;
@@ -679,8 +749,10 @@ void TileShapeGroupDialog::setShapeList()
         mCurrentGroupTileset = new VirtualTileset(mCurrentGroup->label(),
                                                   mCurrentGroup->columnCount(),
                                                   mCurrentGroup->rowCount());
-        for (int i = 0; i < mCurrentGroup->count(); i++)
+        for (int i = 0; i < mCurrentGroup->count(); i++) {
+            mCurrentGroupTileset->tileAt(i)->setImageSource(mTextureName, mTextureX, mTextureY);
             mCurrentGroupTileset->tileAt(i)->setShape(mCurrentGroup->shapeAt(i));
+        }
     }
     ui->shapesList->setTileset(mCurrentGroupTileset);
     delete vts;
@@ -694,8 +766,10 @@ void TileShapeGroupDialog::setShapeSrcList()
         mCurrentSrcGroupTileset = new VirtualTileset(mCurrentSrcGroup->label(),
                                                   mCurrentSrcGroup->columnCount(),
                                                   mCurrentSrcGroup->rowCount());
-        for (int i = 0; i < mCurrentSrcGroup->count(); i++)
+        for (int i = 0; i < mCurrentSrcGroup->count(); i++) {
+            mCurrentSrcGroupTileset->tileAt(i)->setImageSource(mTextureName, mTextureX, mTextureY);
             mCurrentSrcGroupTileset->tileAt(i)->setShape(mCurrentSrcGroup->shapeAt(i));
+        }
     }
     ui->shapeSrcList->setTileset(mCurrentSrcGroupTileset);
     delete vts;

@@ -158,6 +158,30 @@
     <string>Shape Properties</string>
    </property>
   </action>
+  <action name="actionMoveGroupUp">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/go-up.png</normaloff>:/images/16x16/go-up.png</iconset>
+   </property>
+   <property name="text">
+    <string>Move Up</string>
+   </property>
+   <property name="toolTip">
+    <string>Move the selected group up the list</string>
+   </property>
+  </action>
+  <action name="actionMoveGroupDown">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/go-down.png</normaloff>:/images/16x16/go-down.png</iconset>
+   </property>
+   <property name="text">
+    <string>Move Down</string>
+   </property>
+   <property name="toolTip">
+    <string>Move the selected group down the list</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

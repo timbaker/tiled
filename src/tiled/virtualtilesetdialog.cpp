@@ -41,7 +41,6 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QUndoCommand>
-#include <QUndoGroup>
 #include <QUndoStack>
 
 using namespace Tiled;
@@ -315,7 +314,7 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     mUngroupedGroup(0),
     mShowDiskImage(false),
     mFile(0),
-    mUndoGroup(new QUndoGroup(this)),
+    mShapesEdited(false),
     mUndoStack(new QUndoStack(this))
 {
     ui->setupUi(this);
@@ -876,6 +875,8 @@ void VirtualTilesetDialog::editGroups()
 {
     TileShapeGroupDialog d(this);
     d.exec();
+    if (d.needsSaving())
+        mShapesEdited = true;
 }
 
 void VirtualTilesetDialog::shapeGroupChanged(TileShapeGroup *group)
@@ -919,6 +920,17 @@ void VirtualTilesetDialog::tileDropped(VirtualTile *vtile, const QString &imageS
 
 void VirtualTilesetDialog::editShape(const QModelIndex &index)
 {
+    TileShapeGroupDialog d(this);
+    d.setTexture(mTextureTileImage,
+                 mIsoTileset->tileAt(index.column(), index.row())->imageSource(),
+                 mIsoTileset->tileAt(index.column(), index.row())->srcX(),
+                 mIsoTileset->tileAt(index.column(), index.row())->srcY());
+    d.selectGroupAndShape(mShapeGroup, index.column(), index.row());
+    d.exec();
+    if (d.needsSaving())
+        mShapesEdited = true;
+    return; //// CONFLICTS WITH TileShapeGroupDialog UNDO STACK
+
     if (VirtualTile *vtile = ui->isoTiles->model()->tileAt(index)) {
         if (TileShape *shape = vtile->shape()) {
 //            if (shape->mSameAs)
@@ -1004,7 +1016,7 @@ void VirtualTilesetDialog::closeEvent(QCloseEvent *event)
         settings.endGroup();
         saveSplitterSizes(ui->splitter);
 
-        if (!mUndoStack->isClean()) {
+        if (!mUndoStack->isClean() || mShapesEdited) {
             if (!TextureMgr::instance().writeTxt())
                 QMessageBox::warning(this, tr("Error!"), TextureMgr::instance().errorString()
                                      + tr("during TextureMgr::writeTxt()"));
@@ -1012,6 +1024,7 @@ void VirtualTilesetDialog::closeEvent(QCloseEvent *event)
                 QMessageBox::warning(this, tr("Error!"), VirtualTilesetMgr::instance().errorString()
                                      + tr("during VirtualTilesetMgr::writeTxt()"));
             mUndoStack->setClean();
+            mShapesEdited = false;
         }
 
         event->accept();

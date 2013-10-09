@@ -35,17 +35,28 @@ public:
 
     bool unpack(const QString &prefix);
     QList<Tileset*> createTilesets();
+    void createImages();
     void writeImages(const QString &dirName);
     bool readTxt(const QString &fileName);
 
+    struct TxtEntry;
+    struct Pack
+    {
+        QImage mImage;
+        QList<TxtEntry> mEntries;
+    };
+
     struct TxtEntry
     {
+        Pack *mPack;
         QString mTileName;
         int x1, y1, x2, y2, x3, y3, x4, y4;
     };
 
     QMap<QString,QImage> mTilesetImages;
+    QList<Pack> mPacks;
     QList<TxtEntry> mEntries;
+    QMap<QString,QSize> mTilesetSize;
 };
 
 } // namespace Internal

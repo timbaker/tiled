@@ -123,9 +123,25 @@ void CommandLineHandler::setDisableOpenGL()
     disableOpenGL = true;
 }
 
+#if !defined(QT_NO_DEBUG) && defined(ZOMBOID) && defined(_MSC_VER)
+static void __cdecl invalid_parameter_handler(
+   const wchar_t * expression,
+   const wchar_t * function,
+   const wchar_t * file,
+   unsigned int line,
+   uintptr_t pReserved)
+{
+    qDebug() << expression << function << file << line;
+}
+
+#endif
 
 int main(int argc, char *argv[])
 {
+#if !defined(QT_NO_DEBUG) && defined(ZOMBOID) && defined(_MSC_VER)
+    _set_invalid_parameter_handler(invalid_parameter_handler);
+#endif
+
     /*
      * On X11, Tiled uses the 'raster' graphics system by default, because the
      * X11 native graphics system has performance problems with drawing the

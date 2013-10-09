@@ -43,21 +43,19 @@ bool TextureUnpacker::unpack(const QString &prefix)
     if (image.isNull())
         return false;
 
-    foreach (TxtEntry e, mEntries) {
+    Pack pack;
+    pack.mImage = image;
+    pack.mEntries = mEntries;
+    mPacks += pack;
+
+    for (int i = 0; i < pack.mEntries.size(); i++) {
+        TxtEntry &e = pack.mEntries[i];
+        e.mPack = &mPacks.last();
         QString tilesetName;
         int index;
         if (BuildingEditor::BuildingTilesMgr::parseTileName(e.mTileName, tilesetName, index)) {
-            int tileCol = index % 8, tileRow = index / 8;
-
-            if (!mTilesetImages.contains(tilesetName)) {
-                mTilesetImages[tilesetName] = QImage(32 * 8, 96 * 16, QImage::Format_ARGB32);
-//                mTilesetImages[tilesetName].fill(QColor(254,254,254)); // not pure white???
-                mTilesetImages[tilesetName].fill(Qt::transparent);
-            }
-
-            QImage tileImg = image.copy(e.x1, e.y1, e.x2, e.y2);
-            QPainter p(&mTilesetImages[tilesetName]);
-            p.drawImage(tileCol * 32 + e.x3, tileRow * 96 + e.y3, tileImg);
+            int tileWidth = e.x4, tileHeight = e.y4;
+            mTilesetSize[tilesetName] = mTilesetSize[tilesetName].expandedTo(QSize(tileWidth, tileHeight));
         }
     }
 
@@ -69,13 +67,38 @@ QList<Tileset *> TextureUnpacker::createTilesets()
     QList<Tileset*> ret;
 
     foreach (QString tilesetName, mTilesetImages.keys()) {
-        Tileset *ts = new Tileset(tilesetName, 32, 96);
+        QSize tileSize = mTilesetSize[tilesetName];
+        Tileset *ts = new Tileset(tilesetName, tileSize.width(), tileSize.height());
 //        ts->setTransparentColor(QColor(254,254,254)); // not pure white???
         ts->loadFromImage(mTilesetImages[tilesetName], QString());
         ret += ts;
     }
 
     return ret;
+}
+
+void TextureUnpacker::createImages()
+{
+    foreach (Pack pack, mPacks) {
+        for (int i = 0; i < pack.mEntries.size(); i++) {
+            TxtEntry &e = pack.mEntries[i];
+            QString tilesetName;
+            int index;
+            if (BuildingEditor::BuildingTilesMgr::parseTileName(e.mTileName, tilesetName, index)) {
+                int tileCol = index % 8, tileRow = index / 8;
+                QSize tileSize = mTilesetSize[tilesetName];
+                if (!mTilesetImages.contains(tilesetName)) {
+                    mTilesetImages[tilesetName] = QImage(tileSize.width() * 8, tileSize.height() * 16, QImage::Format_ARGB32);
+                    //                mTilesetImages[tilesetName].fill(QColor(254,254,254)); // not pure white???
+                    mTilesetImages[tilesetName].fill(Qt::transparent);
+                }
+
+                QImage tileImg = pack.mImage.copy(e.x1, e.y1, e.x2, e.y2);
+                QPainter p(&mTilesetImages[tilesetName]);
+                p.drawImage(tileCol * tileSize.width() + e.x3, tileRow * tileSize.height() + e.y3, tileImg);
+            }
+        }
+    }
 }
 
 void TextureUnpacker::writeImages(const QString &dirName)

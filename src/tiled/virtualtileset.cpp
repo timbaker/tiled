@@ -233,7 +233,16 @@ VirtualTilesetMgr::VirtualTilesetMgr() :
     unpacker.unpack(QLatin1String("ntiles_1"));
     unpacker.unpack(QLatin1String("ntiles_2"));
     unpacker.unpack(QLatin1String("ntiles_3"));
+    unpacker.createImages();
     unpacker.writeImages(Preferences::instance()->tilesDirectory() + QLatin1String("/Textures"));
+
+    QList<TextureInfo*> texs;
+    foreach (QString tilesetName, unpacker.mTilesetSize.keys())
+        texs += new TextureInfo(tilesetName, QDir(Preferences::instance()->texturesDirectory()).filePath(tilesetName + QLatin1String(".png")),
+                                8, 16, unpacker.mTilesetSize[tilesetName].width(),
+                                unpacker.mTilesetSize[tilesetName].height());
+    TexturesFile texFile;
+    texFile.write(TextureMgr::instance().txtPath(), texs);
 #endif
 }
 

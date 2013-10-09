@@ -347,11 +347,10 @@ private:
     TileShapeGroup *mUngroupedGroup;
 
     QMap<QString,QImage> mOriginalIsoImages;
-
     QImage mCheckerboard;
 
-    int mSourceRevision;
-    int mRevision;
+//    int mSourceRevision;
+//    int mRevision;
     QString mError;
 };
 

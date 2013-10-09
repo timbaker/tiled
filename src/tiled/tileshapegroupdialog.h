@@ -44,6 +44,17 @@ public:
     explicit TileShapeGroupDialog(QWidget *parent = 0);
     ~TileShapeGroupDialog();
 
+    void selectGroupAndShape(TileShapeGroup *g, int col, int row);
+    void setTexture(const QImage &image, const QString &texture, int srcX, int srcY)
+    {
+        mTextureImage = image;
+        mTextureName = texture;
+        mTextureX = srcX;
+        mTextureY = srcY;
+    }
+
+    bool needsSaving() const;
+
     // Undo/Redo
     void insertGroup(int index, TileShapeGroup *g);
     TileShapeGroup *removeGroup(int index);
@@ -57,6 +68,8 @@ private slots:
     void addGroup();
     void removeGroup();
     void editGroup();
+    void moveGroupUp();
+    void moveGroupDown();
 
     void selectedGroupChanged();
 
@@ -97,6 +110,10 @@ private:
     VirtualTileset *mCurrentGroupTileset;
     TileShapeGroup *mCurrentSrcGroup;
     VirtualTileset *mCurrentSrcGroupTileset;
+    QImage mTextureImage;
+    QString mTextureName;
+    int mTextureX;
+    int mTextureY;
 };
 
 } // namespace Internal

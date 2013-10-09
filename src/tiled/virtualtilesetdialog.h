@@ -149,8 +149,8 @@ private:
     TileShapeGroup *mUngroupedGroup;
     bool mShowDiskImage;
     VirtualTilesetsFile *mFile;
+    bool mShapesEdited;
 
-    QUndoGroup *mUndoGroup;
     QUndoStack *mUndoStack;
 };
 
