@@ -44,6 +44,22 @@ public:
     QPolygonF mUV;
 };
 
+class TileShapeXform
+{
+public:
+    enum Type {
+        Invalid,
+        Rotate,
+        Translate
+    };
+    TileShapeXform() : mType(Invalid) {}
+    TileShapeXform(Type type) : mType(type) {}
+
+    Type mType;
+    QVector3D mRotate;
+    QVector3D mTranslate;
+};
+
 class TileShape
 {
 public:
@@ -76,19 +92,7 @@ public:
     QList<TileShapeFace> mFaces;
 
     TileShape *mSameAs;
-    struct XForm {
-        enum Type {
-            Invalid,
-            Rotate,
-            Translate
-        };
-        XForm() : mType(Invalid), mRotate(QVector3D()), mTranslate(QVector3D()) {}
-        XForm(Type type) : mType(type), mRotate(QVector3D()), mTranslate(QVector3D()) {}
-        Type mType;
-        QVector3D mRotate;
-        QVector3D mTranslate;
-    };
-    QList<XForm> mXform;
+    QList<TileShapeXform> mXform;
 };
 
 class TileShapeGroup

@@ -6,7 +6,10 @@
 #include <QGraphicsView>
 #include <QDialog>
 #include <QSet>
+#include <QTimer>
 #include <QVector3D>
+
+class QUndoStack;
 
 namespace Ui {
 class TileShapeEditor;
@@ -16,6 +19,9 @@ namespace Tiled {
 namespace Internal {
 
 class TileShape;
+class TileShapeXform;
+class TileShapeEditor;
+class TileShapeFace;
 class TileShapeScene;
 class Zoomable;
 
@@ -100,6 +106,11 @@ public:
 
     void setEnabled(bool enabled);
 
+    TileShapeEditor *editor() const;
+    QUndoStack *undoStack() const;
+
+    virtual void shapeChanged() {};
+
 signals:
     void statusTextChanged(const QString &text);
     void enabledChanged(bool enabled);
@@ -146,6 +157,9 @@ public:
     void setSelected(bool selected);
     bool isSelected() const { return mSelected; }
 
+    int faceIndex() const { return mFaceIndex; }
+    int pointIndex() const { return mPointIndex; }
+
     QVector3D tilePos() const;
     QPointF uv() const;
 
@@ -175,6 +189,8 @@ public:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
+    void shapeChanged() { if (!mFinishMoving) updateHandles(); }
+
     void updateHandles();
 
     enum Mode {
@@ -198,10 +214,13 @@ public:
     TileShapeHandle *mClickedHandle;
     QGraphicsLineItem *mCursorItemX, *mCursorItemY;
     QPointF mDragOffsetXY;
+    bool mFinishMoving;
 };
 
-class TileShapeUVGuide : public QGraphicsItem
+class TileShapeUVGuide : public QObject, public QGraphicsItem
 {
+    Q_OBJECT
+    Q_INTERFACES(QGraphicsItem)
 public:
     TileShapeUVGuide(TileShapeScene *scene);
 
@@ -216,6 +235,10 @@ public:
     void setCurrentUV(const QPointF &uv);
     void setCursorUV(const QPointF &uv);
 
+private slots:
+    void blink();
+
+public:
     TileShapeScene *mScene;
     QPointF mCurrentUV;
     QPointF mCursorUV;
@@ -225,6 +248,10 @@ public:
         int x;
         int y;
     } mGridSize;
+
+    QTimer mBlink;
+    QGraphicsRectItem *mBlinkItem;
+    QColor mBlinkColor;
 };
 
 class TileShapeUVTool : public BaseTileShapeTool
@@ -239,6 +266,8 @@ public:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
+    void shapeChanged() { updateHandles(); }
 
     void updateHandles();
     void setSelectedHandles(const QSet<TileShapeHandle *> &handles);
@@ -293,10 +322,14 @@ public:
     void activateTool(BaseTileShapeTool *tool);
     BaseTileShapeTool *activeTool() { return mActiveTool; }
 
+    void setEditor(TileShapeEditor *editor) { mEditor = editor; }
+    TileShapeEditor *editor() const { return mEditor; }
+
 private:
     TileShapeGrid *mGridItem;
     TileShapeItem *mShapeItem;
     BaseTileShapeTool *mActiveTool;
+    TileShapeEditor *mEditor;
 };
 
 class TileShapeView : public QGraphicsView
@@ -338,6 +371,19 @@ public:
 
     TileShape *tileShape() const;
 
+    QUndoStack *undoStack() const { return mUndoStack; }
+
+    // Undo/Redo
+    void insertFace(int index, const TileShapeFace &face);
+    void removeFace(int index);
+    QVector3D changeXYZ(int faceIndex, int pointIndex, const QVector3D &v);
+    QPointF changeUV(int faceIndex, int pointIndex, const QPointF &uv);
+    void insertXform(int index, const TileShapeXform &xform);
+    void removeXform(int index);
+    void changeXform(int index, TileShapeXform &xform);
+    void changeShape(TileShape &other);
+    //
+
 public slots:
     void toolActivated(bool active);
     void toolEnabled();
@@ -361,13 +407,18 @@ public slots:
     void removeTransform();
 
     void xformSelectionChanged();
-    void xformFromUI();
+    void xformXChanged(double value);
+    void xformYChanged(double value);
+    void xformZChanged(double value);
 
     void showUVGrid(bool visible);
+
+    void updateActions();
 
     void done(int r);
 
 private:
+    void xformChanged(double x, double y, double z, int xyz);
     void setXformList();
     QString xformItemText(int index);
     void syncWithGridSize();
@@ -384,6 +435,8 @@ private:
     bool mGridLock;
     bool mUVGridLock;
     int mSync;
+
+    QUndoStack *mUndoStack;
 };
 
 } // namespace Internal

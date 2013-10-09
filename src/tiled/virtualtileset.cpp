@@ -48,7 +48,7 @@ void TileShape::fromSameAs()
         TileShapeFace f;
         f.mGeom = f2.mGeom;
         f.mUV = f2.mUV;
-        foreach (TileShape::XForm xform, mXform) {
+        foreach (TileShapeXform xform, mXform) {
             QMatrix4x4 m;
             m.rotate(xform.mRotate.x(), QVector3D(1, 0, 0));
             m.rotate(xform.mRotate.y(), QVector3D(0, 1, 0));
@@ -1455,7 +1455,7 @@ bool TileShapesFile::read(const QString &fileName)
                     }
                     foreach (SimpleFileKeyValue kv, block2.values) {
                         if (kv.name == QLatin1String("rotate")) {
-                            TileShape::XForm xform(TileShape::XForm::Rotate);
+                            TileShapeXform xform(TileShapeXform::Rotate);
                             if (!parseVector3D(kv.value, xform.mRotate)) {
                                 mError = tr("Line %1: Expected x,y,z but got '%2'.")
                                         .arg(kv.lineNumber).arg(kv.value);
@@ -1463,7 +1463,7 @@ bool TileShapesFile::read(const QString &fileName)
                             }
                             shape->mXform += xform;
                         } else if (kv.name == QLatin1String("translate")) {
-                            TileShape::XForm xform(TileShape::XForm::Translate);
+                            TileShapeXform xform(TileShapeXform::Translate);
                             if (!parseVector3D(kv.value, xform.mTranslate)) {
                                 mError = tr("Line %1: Expected x,y,z but got '%2'.")
                                         .arg(kv.lineNumber).arg(kv.value);
@@ -1578,7 +1578,7 @@ bool TileShapesFile::write(const QString &fileName, const QList<TileShape *> &sh
             if (shape->mXform.size()) {
                 SimpleFileBlock xformBlock;
                 xformBlock.name = QLatin1String("xform");
-                foreach (TileShape::XForm xform, shape->mXform) {
+                foreach (TileShapeXform xform, shape->mXform) {
                     if (xform.mType == xform.Rotate)
                         xformBlock.addValue("rotate", toString(xform.mRotate));
                     else if (xform.mType == xform.Translate)

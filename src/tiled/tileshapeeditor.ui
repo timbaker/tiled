@@ -14,25 +14,7 @@
    <string>Tile Shape Editor</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,0">
-   <item row="3" column="0" colspan="2">
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
-      <widget class="QLabel" name="status">
-       <property name="text">
-        <string>prompt</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDialogButtonBox" name="buttonBox">
-       <property name="standardButtons">
-        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="0" column="1" rowspan="2">
+   <item row="0" column="1" rowspan="3">
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
       <widget class="QGroupBox" name="sameAsGroupBox">
@@ -161,7 +143,7 @@
      </item>
     </layout>
    </item>
-   <item row="1" column="0">
+   <item row="2" column="0">
     <layout class="QHBoxLayout" name="toolBarLayout">
      <item>
       <spacer name="horizontalSpacer">
@@ -251,6 +233,24 @@
       <widget class="QComboBox" name="scaleCombo"/>
      </item>
     </layout>
+   </item>
+   <item row="4" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="status">
+     <property name="text">
+      <string>prompt</string>
+     </property>
+    </widget>
    </item>
   </layout>
   <action name="actionRemoveFace">
