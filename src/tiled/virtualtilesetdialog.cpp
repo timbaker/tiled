@@ -1005,8 +1005,12 @@ void VirtualTilesetDialog::closeEvent(QCloseEvent *event)
         saveSplitterSizes(ui->splitter);
 
         if (!mUndoStack->isClean()) {
-            TextureMgr::instance().writeTxt();
-            VirtualTilesetMgr::instance().writeTxt();
+            if (!TextureMgr::instance().writeTxt())
+                QMessageBox::warning(this, tr("Error!"), TextureMgr::instance().errorString()
+                                     + tr("during TextureMgr::writeTxt()"));
+            if (!VirtualTilesetMgr::instance().writeTxt())
+                QMessageBox::warning(this, tr("Error!"), VirtualTilesetMgr::instance().errorString()
+                                     + tr("during VirtualTilesetMgr::writeTxt()"));
             mUndoStack->setClean();
         }
 
