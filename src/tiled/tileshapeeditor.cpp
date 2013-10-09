@@ -18,7 +18,7 @@ using namespace Internal;
 TileShapeGrid::TileShapeGrid(TileShapeScene *scene, QGraphicsItem *parent) :
     QGraphicsItem(parent),
     mScene(scene),
-    mDivisions(3),
+    mGridSize(32, 32, 32),
     mZ(0)
 {
 
@@ -34,11 +34,11 @@ void TileShapeGrid::paint(QPainter *painter, const QStyleOptionGraphicsItem *, Q
     painter->setPen(Qt::lightGray);
     painter->drawRect(boundingRect());
 
-    for (int y = 0; y < mDivisions; y++)
-        painter->drawLine(mScene->toScene(0, y / qreal(mDivisions), mZ), mScene->toScene(1, y / qreal(mDivisions), mZ));
+    for (int y = 0; y < mGridSize.y; y++)
+        painter->drawLine(mScene->toScene(0, y / qreal(mGridSize.y), mZ), mScene->toScene(1, y / qreal(mGridSize.y), mZ));
     painter->drawLine(mScene->toScene(0, 1, mZ), mScene->toScene(1, 1, mZ));
-    for (int x = 0; x < mDivisions; x++)
-        painter->drawLine(mScene->toScene(x / qreal(mDivisions), 0, mZ), mScene->toScene(x / qreal(mDivisions), 1, mZ));
+    for (int x = 0; x < mGridSize.x; x++)
+        painter->drawLine(mScene->toScene(x / qreal(mGridSize.x), 0, mZ), mScene->toScene(x / qreal(mGridSize.x), 1, mZ));
     painter->drawLine(mScene->toScene(1, 0, mZ), mScene->toScene(1, 1, mZ));
 
     painter->setPen(Qt::black);
@@ -61,18 +61,20 @@ void TileShapeGrid::setGridZ(qreal z)
     update();
 }
 
-void TileShapeGrid::setGridSize(int size)
+void TileShapeGrid::setGridSize(int x, int y, int z)
 {
-    if (mDivisions != size) {
-        mDivisions = size;
+    if (mGridSize.x != x || mGridSize.y != y || mGridSize.z != z) {
+        mGridSize.x = x;
+        mGridSize.y = y;
+        mGridSize.z = z;
         update();
     }
 }
 
 QVector3D TileShapeGrid::snapXY(const QVector3D &v)
 {
-    qreal x = qFloor(v.x()) + qRound((v.x() - qFloor(v.x())) * mDivisions) / qreal(mDivisions);
-    qreal y = qFloor(v.y()) + qRound((v.y() - qFloor(v.y())) * mDivisions) / qreal(mDivisions);
+    qreal x = qFloor(v.x()) + qRound((v.x() - qFloor(v.x())) * mGridSize.x) / qreal(mGridSize.x);
+    qreal y = qFloor(v.y()) + qRound((v.y() - qFloor(v.y())) * mGridSize.y) / qreal(mGridSize.y);
     return QVector3D(x, y, v.z());
 }
 
@@ -84,8 +86,7 @@ QVector3D TileShapeGrid::snapZ(const QVector3D &v)
 
 qreal TileShapeGrid::snapZ(qreal z)
 {
-    int divisions = mDivisions;
-    return qFloor(z) + qRound((z - qFloor(z)) * divisions) / qreal(divisions);
+    return qFloor(z) + qRound((z - qFloor(z)) * mGridSize.z) / qreal(mGridSize.z);
 }
 
 /////
@@ -511,6 +512,9 @@ TileShapeEditor::TileShapeEditor(TileShape *shape, QImage texture, QWidget *pare
     QDialog(parent),
     ui(new Ui::TileShapeEditor),
     mToolChanging(0),
+    mShowUVGrid(false),
+    mGridLock(false),
+    mUVGridLock(false),
     mSync(0)
 {
     ui->setupUi(this);
@@ -562,12 +566,17 @@ TileShapeEditor::TileShapeEditor(TileShape *shape, QImage texture, QWidget *pare
 
     mTools << mCreateFaceTool << mEditFaceTool << mUVTool;
 
-    connect(ui->gridSize, SIGNAL(valueChanged(int)), SLOT(setGridSize(int)));
+    connect(ui->gridLock, SIGNAL(toggled(bool)), SLOT(setGridLock(bool)));
+    connect(ui->gridX, SIGNAL(valueChanged(int)), SLOT(setGridSizeX(int)));
+    connect(ui->gridY, SIGNAL(valueChanged(int)), SLOT(setGridSizeY(int)));
+    connect(ui->gridZ, SIGNAL(valueChanged(int)), SLOT(setGridSizeZ(int)));
 
     connect(ui->graphicsView->scene()->tileShapeItem(), SIGNAL(selectionChanged(int)),
             SLOT(faceSelectionChanged(int)));
 
     mUVTool->mGuide->mTexture = texture;
+    mUVTool->mGuide->setPos((64 - texture.width()) / 2.0f,
+                            (128 - texture.height()) / 2.0f);
 
     QStringList sameAsNames;
     foreach (TileShape *shape2, VirtualTilesetMgr::instance().tileShapes()) {
@@ -605,6 +614,8 @@ TileShapeEditor::TileShapeEditor(TileShape *shape, QImage texture, QWidget *pare
     connect(ui->ySpinBox, SIGNAL(valueChanged(double)), SLOT(xformFromUI()));
     connect(ui->zSpinBox, SIGNAL(valueChanged(double)), SLOT(xformFromUI()));
 
+    connect(mUVTool, SIGNAL(showUVGrid(bool)), SLOT(showUVGrid(bool)));
+
     xformSelectionChanged();
 
     QSettings settings;
@@ -614,10 +625,29 @@ TileShapeEditor::TileShapeEditor(TileShape *shape, QImage texture, QWidget *pare
         restoreGeometry(geom);
     qreal scale = settings.value(QLatin1String("scale"), ui->graphicsView->zoomable()->scale()).toDouble();
     ui->graphicsView->zoomable()->setScale(scale);
-    int gridSize = settings.value(QLatin1String("gridSize"), 32).toInt();
-    gridSize = qBound(1, gridSize, 64);
-    ui->gridSize->setValue(gridSize);
-    ui->graphicsView->scene()->gridItem()->setGridSize(gridSize);
+
+    mGridLock = settings.value(QLatin1String("gridLock"), false).toBool();
+    mUVGridLock = settings.value(QLatin1String("uvGridLock"), false).toBool();
+    ui->gridLock->setChecked(mGridLock);
+
+    QStringList gridSize = settings.value(QLatin1String("gridSize"), QLatin1String("32 32 32")).toStringList();
+    if (gridSize.size() != 3)
+        gridSize = QStringList() << QString::number(32) << QString::number(32) << QString::number(32);
+    int gridX = qBound(1, gridSize[0].toInt(), 256);
+    ui->gridX->setValue(gridX);
+    int gridY = qBound(1, gridSize[1].toInt(), 256);
+    ui->gridY->setValue(gridY);
+    int gridZ = qBound(1, gridSize[2].toInt(), 256);
+    ui->gridZ->setValue(gridZ);
+    ui->graphicsView->scene()->gridItem()->setGridSize(gridX, gridY, gridZ);
+
+    gridSize = settings.value(QLatin1String("uvGridSize"), QLatin1String("32 96")).toStringList();
+    if (gridSize.size() != 2)
+        gridSize = QStringList() << QString::number(32) << QString::number(96);
+    gridX = qBound(1, gridSize[0].toInt(), 256);
+    gridY = qBound(1, gridSize[1].toInt(), 256);
+    mUVTool->mGuide->setGridSize(gridX, gridY);
+
     settings.endGroup();
 }
 
@@ -667,7 +697,10 @@ QString TileShapeEditor::xformItemText(int index)
 
 void TileShapeEditor::syncWithGridSize()
 {
-    int size = ui->graphicsView->scene()->gridItem()->gridSize();
+    if (mShowUVGrid)
+        return;
+
+    int size = ui->graphicsView->scene()->gridItem()->gridSizeX();
     int row = ui->xformList->currentRow();
     if (row == -1 || size <= 0)
         return;
@@ -709,6 +742,25 @@ void TileShapeEditor::xformFromUI()
     ui->xformList->item(row)->setText(xformItemText(row));
     tileShape()->fromSameAs();
     ui->graphicsView->scene()->tileShapeItem()->shapeChanged();
+}
+
+void TileShapeEditor::showUVGrid(bool visible)
+{
+    if (mShowUVGrid != visible) {
+        mShowUVGrid = visible;
+        ui->gridZLabel->setVisible(!visible);
+        ui->gridZ->setVisible(!visible);
+        if (visible) {
+            ui->gridX->setValue(mUVTool->mGuide->gridSizeX());
+            ui->gridY->setValue(mUVTool->mGuide->gridSizeY());
+            ui->gridLock->setChecked(mUVGridLock);
+        } else {
+            ui->gridX->setValue(ui->graphicsView->scene()->gridItem()->gridSizeX());
+            ui->gridY->setValue(ui->graphicsView->scene()->gridItem()->gridSizeY());
+            ui->gridZ->setValue(ui->graphicsView->scene()->gridItem()->gridSizeZ());
+            ui->gridLock->setChecked(mGridLock);
+        }
+    }
 }
 
 void TileShapeEditor::toolActivated(bool active)
@@ -754,10 +806,79 @@ void TileShapeEditor::toolEnabled()
     }
 }
 
-void TileShapeEditor::setGridSize(int size)
+void TileShapeEditor::setGridSizeX(int value)
 {
-    ui->graphicsView->scene()->gridItem()->setGridSize(size);
+    if (mShowUVGrid) {
+        if (mUVGridLock)
+            setUVGridSize(value, value);
+        else
+            setUVGridSize(value, ui->gridY->value());
+    } else {
+        if (mGridLock)
+            setGridSize(value, value, value);
+        else
+            setGridSize(value, ui->gridY->value(), ui->gridZ->value());
+    }
+}
+
+void TileShapeEditor::setGridSizeY(int value)
+{
+    if (mShowUVGrid) {
+        if (mUVGridLock)
+            setUVGridSize(value, value);
+        else
+            setUVGridSize(ui->gridX->value(), value);
+    } else {
+        if (mGridLock)
+            setGridSize(value, value, value);
+        else
+            setGridSize(ui->gridX->value(), value, ui->gridZ->value());
+    }
+}
+
+void TileShapeEditor::setGridSizeZ(int value)
+{
+    if (!mShowUVGrid) {
+        if (mGridLock)
+            setGridSize(value, value, value);
+        else
+            setGridSize(ui->gridX->value(), ui->gridY->value(), value);
+    }
+}
+
+void TileShapeEditor::setGridSize(int x, int y, int z)
+{
+    ui->gridX->setValue(x);
+    ui->gridY->setValue(y);
+    ui->gridZ->setValue(z);
+    ui->graphicsView->scene()->gridItem()->setGridSize(x, y, z);
     syncWithGridSize();
+}
+
+void TileShapeEditor::setUVGridSize(int x, int y)
+{
+    ui->gridX->setValue(x);
+    ui->gridY->setValue(y);
+    mUVTool->mGuide->setGridSize(x, y);
+}
+
+void TileShapeEditor::setGridLock(bool lock)
+{
+    if (mShowUVGrid) {
+        if (mUVGridLock != lock) {
+            mUVGridLock = lock;
+            if (mUVGridLock)
+                ui->gridY->setValue(ui->gridX->value());
+        }
+    } else {
+        if (mGridLock != lock) {
+            mGridLock = lock;
+            if (mGridLock) {
+                ui->gridY->setValue(ui->gridX->value());
+                ui->gridZ->setValue(ui->gridZ->value());
+            }
+        }
+    }
 }
 
 void TileShapeEditor::faceSelectionChanged(int faceIndex)
@@ -859,7 +980,16 @@ void TileShapeEditor::done(int r)
     settings.beginGroup(QLatin1String("TileShapeEditor"));
     settings.setValue(QLatin1String("geometry"), saveGeometry());
     settings.setValue(QLatin1String("scale"), ui->graphicsView->zoomable()->scale());
-    settings.setValue(QLatin1String("gridSize"), ui->graphicsView->scene()->gridItem()->gridSize());
+    settings.setValue(QLatin1String("gridLock"), mGridLock);
+    settings.setValue(QLatin1String("uvGridLock"), mUVGridLock);
+    TileShapeGrid *grid = ui->graphicsView->scene()->gridItem();
+    settings.setValue(QLatin1String("gridSize"), QStringList()
+                      << QString::number(grid->gridSizeX())
+                      << QString::number(grid->gridSizeY())
+                      << QString::number(grid->gridSizeZ()));
+    settings.setValue(QLatin1String("uvGridSize"), QStringList()
+                      << QString::number(mUVTool->mGuide->gridSizeX())
+                      << QString::number(mUVTool->mGuide->gridSizeY()));
     settings.endGroup();
 
     QDialog::done(r);
@@ -1478,13 +1608,16 @@ void EditTileShapeFaceTool::setSelectedHandles(const QSet<TileShapeHandle *> &ha
 
 TileShapeUVGuide::TileShapeUVGuide(TileShapeScene *scene) :
     QGraphicsItem(),
-    mScene(scene)
+    mScene(scene),
+    mGridSize(32, 96)
 {
 }
 
 QRectF TileShapeUVGuide::boundingRect() const
 {
-    return QRectF(0, 0, 32, 96).adjusted(-2, -2, 2, 2);
+    qreal tw = mTexture.width();
+    qreal th = mTexture.height();
+    return QRectF(0, 0, tw, th).adjusted(-2, -2, 2, 2);
 }
 
 void TileShapeUVGuide::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -1494,13 +1627,13 @@ void TileShapeUVGuide::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     painter->fillRect(boundingRect(), Qt::lightGray);
 
     painter->drawImage(0, 0, mTexture);
+    qreal tw = mTexture.width();
+    qreal th = mTexture.height();
 
-    int gridSize = mScene->gridItem()->gridSize();
-
-    for (int x = 0; x <= gridSize; x++)
-        painter->drawLine(QPointF(x * 32.0 / gridSize, 0), QPointF(x * 32.0 / gridSize, 96));
-    for (int y = 0; y <= gridSize * 3; y++)
-        painter->drawLine(QPointF(0, y * 96.0 / (gridSize * 3)), QPointF(32, y * 96.0 / (gridSize * 3)));
+    for (int x = 0; x <= gridSizeX(); x++)
+        painter->drawLine(QPointF(x * tw / gridSizeX(), 0), QPointF(x * tw / gridSizeX(), th));
+    for (int y = 0; y <= gridSizeY(); y++)
+        painter->drawLine(QPointF(0, y * th / gridSizeY()), QPointF(tw, y * th / gridSizeY()));
 #if 0
     painter->setPen(Qt::black);
     for (int x = 16; x < 32; x += 16)
@@ -1509,8 +1642,8 @@ void TileShapeUVGuide::paint(QPainter *painter, const QStyleOptionGraphicsItem *
         painter->drawLine(0, y, 32, y);
 #endif
 
-    painter->fillRect(QRectF(mCurrentUV.x() * 32 - 0.35, mCurrentUV.y() * 96 - 0.35, 0.7, 0.7), Qt::darkGray);
-    painter->fillRect(QRectF(mCursorUV.x() * 32 - 0.4, mCursorUV.y() * 96 - 0.4, 0.8, 0.8), Qt::blue);
+    painter->fillRect(QRectF(mCurrentUV.x() * tw - 0.35, mCurrentUV.y() * th - 0.35, 0.7, 0.7), Qt::darkGray);
+    painter->fillRect(QRectF(mCursorUV.x() * tw - 0.4, mCursorUV.y() * th - 0.4, 0.8, 0.8), Qt::blue);
 }
 
 QPointF TileShapeUVGuide::toUV(const QPointF &scenePos)
@@ -1518,9 +1651,8 @@ QPointF TileShapeUVGuide::toUV(const QPointF &scenePos)
     QPointF itemPos = mapFromScene(scenePos);
     qreal x = itemPos.x() / boundingRect().adjusted(2,2,-2,-2).width();
     qreal y = itemPos.y() / boundingRect().adjusted(2,2,-2,-2).height();
-    int gridSize = mScene->gridItem()->gridSize();
-    x = qFloor(x) + qRound((x - qFloor(x)) * gridSize) / qreal(gridSize);
-    y = qFloor(y) + qRound((y - qFloor(y)) * gridSize * 3) / qreal(gridSize * 3);
+    x = qFloor(x) + qRound((x - qFloor(x)) * gridSizeX()) / qreal(gridSizeX());
+    y = qFloor(y) + qRound((y - qFloor(y)) * gridSizeY()) / qreal(gridSizeY());
     return QPointF(x, y);
 }
 
@@ -1556,6 +1688,7 @@ TileShapeUVTool::TileShapeUVTool(TileShapeScene *scene) :
 
 void TileShapeUVTool::activate()
 {
+    emit showUVGrid(true);
     mMode = NoMode;
     mGuide->hide();
     mScene->addItem(mGuide);
@@ -1565,6 +1698,7 @@ void TileShapeUVTool::activate()
 
 void TileShapeUVTool::deactivate()
 {
+    emit showUVGrid(false);
     mScene->removeItem(mGuide);
 
     qDeleteAll(mHandles);
@@ -1583,6 +1717,7 @@ void TileShapeUVTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
                 setSelectedHandles(QSet<TileShapeHandle*>() << mClickedHandle);
                 mGuide->setCurrentUV(mClickedHandle->uv());
                 mGuide->show();
+                mScene->views().first()->ensureVisible(mGuide);
                 mMode = SetUV;
             } else {
                 int faceIndex = mScene->topmostFaceAt(event->scenePos(), 0);
@@ -1614,8 +1749,8 @@ void TileShapeUVTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         QPointF uv = mGuide->toUV(event->scenePos());
         mGuide->setCursorUV(uv);
         emit statusTextChanged(tr("Texture pixel coords %1,%2.  Right-click to cancel.")
-                               .arg(uv.x() * 32)
-                               .arg(uv.y() * 96));
+                               .arg(uv.x() * mGuide->mTexture.width())
+                               .arg(uv.y() * mGuide->mTexture.height()));
     }
 }
 

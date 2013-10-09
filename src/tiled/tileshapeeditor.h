@@ -28,8 +28,10 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
     void setGridZ(qreal z);
-    void setGridSize(int size);
-    int gridSize() const { return mDivisions; }
+    void setGridSize(int x, int y, int z);
+    int gridSizeX() const { return mGridSize.x; }
+    int gridSizeY() const { return mGridSize.y; }
+    int gridSizeZ() const { return mGridSize.z; }
 
     QVector3D snapXY(const QVector3D &v);
     QVector3D snapZ(const QVector3D &v);
@@ -37,7 +39,12 @@ public:
 
 private:
     TileShapeScene *mScene;
-    int mDivisions;
+    struct GridSize {
+        GridSize(int x, int y, int z) : x(x), y(y), z(z) {}
+        int x;
+        int y;
+        int z;
+    } mGridSize;
     qreal mZ;
 };
 
@@ -201,6 +208,10 @@ public:
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
+    void setGridSize(int x, int y) { mGridSize.x = x; mGridSize.y = y; update(); }
+    int gridSizeX() const { return mGridSize.x; }
+    int gridSizeY() const { return mGridSize.y; }
+
     QPointF toUV(const QPointF &scenePos);
     void setCurrentUV(const QPointF &uv);
     void setCursorUV(const QPointF &uv);
@@ -209,10 +220,16 @@ public:
     QPointF mCurrentUV;
     QPointF mCursorUV;
     QImage mTexture;
+    struct GridSize {
+        GridSize(int x, int y) : x(x), y(y) {}
+        int x;
+        int y;
+    } mGridSize;
 };
 
 class TileShapeUVTool : public BaseTileShapeTool
 {
+    Q_OBJECT
 public:
     TileShapeUVTool(TileShapeScene *scene);
 
@@ -226,6 +243,10 @@ public:
     void updateHandles();
     void setSelectedHandles(const QSet<TileShapeHandle *> &handles);
 
+signals:
+    void showUVGrid(bool show);
+
+public:
     TileShapeUVGuide *mGuide;
     TileShapeHandle *mClickedHandle;
     QSet<TileShapeHandle*> mSelectedHandles;
@@ -321,7 +342,13 @@ public slots:
     void toolActivated(bool active);
     void toolEnabled();
 
-    void setGridSize(int size);
+    void setGridSizeX(int value);
+    void setGridSizeY(int value);
+    void setGridSizeZ(int value);
+    void setGridSize(int x, int y, int z);
+    void setUVGridSize(int x, int y);
+
+    void setGridLock(bool lock);
     void faceSelectionChanged(int faceIndex);
     void removeFace();
 
@@ -335,6 +362,8 @@ public slots:
 
     void xformSelectionChanged();
     void xformFromUI();
+
+    void showUVGrid(bool visible);
 
     void done(int r);
 
@@ -351,6 +380,9 @@ private:
     EditTileShapeFaceTool *mEditFaceTool;
     TileShapeUVTool *mUVTool;
     QList<TileShape*> mSameAsShapes;
+    bool mShowUVGrid;
+    bool mGridLock;
+    bool mUVGridLock;
     int mSync;
 };
 
