@@ -71,6 +71,22 @@ bool TextureMgr::writeTxt()
         return false;
     }
 
+    // For the texture packer, write a file with 'texture tileWid tileHgt'
+    // one per line for each texture.
+    QString fileName = QDir(Preferences::instance()->texturesDirectory()).filePath(QLatin1String("TexturePacker.txt"));
+    QFile f(fileName);
+    if (f.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream out(&f);
+        foreach (TextureInfo *tex, textures())
+            out << QString::fromLatin1("%1 %2 %3\n")
+                   .arg(tex->name())
+                   .arg(tex->tileWidth())
+                   .arg(tex->tileHeight());
+    } else {
+        mError = f.errorString();
+        return false;
+    }
+
     return true;
 }
 
