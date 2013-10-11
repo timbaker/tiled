@@ -19,6 +19,7 @@
 
 #include "texturemanager.h"
 
+#include "filesystemwatcher.h"
 #include "preferences.h"
 #include "tilesetmanager.h"
 
@@ -29,6 +30,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QImage>
+#include <QImageReader>
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -36,10 +38,19 @@ using namespace Tiled::Internal;
 SINGLETON_IMPL(TextureMgr)
 
 TextureMgr::TextureMgr(QObject *parent) :
-    QObject(parent)
+    QObject(parent),
+    mWatcher(new FileSystemWatcher(this))
 {
     connect(TilesetManager::instance(), SIGNAL(textureImageLoaded(QImage*,Tiled::Tileset*)),
             SLOT(textureImageLoaded(QImage*,Tiled::Tileset*)));
+
+    connect(mWatcher, SIGNAL(fileChanged(QString)), SLOT(fileChanged(QString)));
+
+    mChangedFilesTimer.setInterval(500);
+    mChangedFilesTimer.setSingleShot(true);
+
+    connect(&mChangedFilesTimer, SIGNAL(timeout()),
+            this, SLOT(fileChangedTimeout()));
 }
 
 TextureMgr::~TextureMgr()
@@ -151,11 +162,47 @@ Tileset *TextureMgr::tileset(TextureInfo *tex)
 
 void TextureMgr::textureImageLoaded(QImage *image, Tileset *tileset)
 {
+    mWatcher->addPath(tileset->imageSource());
+
     TextureInfo *tex = texture(tileset->name());
     tileset->loadFromImage(*image, tileset->imageSource());
     tileset->setMissing(false);
     tex->setTilesetLoading(false);
     emit textureChanged(tex);
+}
+
+void TextureMgr::fileChanged(const QString &path)
+{
+    /*
+     * Use a one-shot timer since GIMP (for example) seems to generate many
+     * file changes during a save, and some of the intermediate attempts to
+     * reload the tileset images actually fail (at least for .png files).
+     */
+    mChangedFiles.insert(path);
+    mChangedFilesTimer.start();
+}
+
+void TextureMgr::fileChangedTimeout()
+{
+    foreach (TextureInfo *tex, textures()) {
+        if (!tex->tileset())
+            continue;
+        QString fileName = tex->tileset()->imageSource(); // tex->fileName()
+        if (mChangedFiles.contains(fileName)) {
+            if (QImageReader(fileName).size().isValid()) {
+                if (tex->tileset()->loadFromImage(QImage(fileName), fileName)) {
+                    tex->tileset()->setMissing(false);
+                    emit textureChanged(tex);
+                } else {
+                    // TODO setMissing
+                }
+            } else {
+                // TODO setMissing
+            }
+        }
+    }
+
+    mChangedFiles.clear();
 }
 
 /////

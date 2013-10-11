@@ -25,7 +25,9 @@
 #include <QCoreApplication>
 #include <QMap>
 #include <QObject>
+#include <QSet>
 #include <QSize>
+#include <QTimer>
 
 class QImage;
 
@@ -33,6 +35,7 @@ namespace Tiled {
 class Tileset;
 
 namespace Internal {
+class FileSystemWatcher;
 
 class TextureInfo
 {
@@ -108,11 +111,17 @@ signals:
 
 private slots:
     void textureImageLoaded(QImage *image, Tiled::Tileset *tileset);
+    void fileChanged(const QString &fileName);
+    void fileChangedTimeout();
 
 private:
     QMap<QString,TextureInfo*> mTextureByName;
     QList<TextureInfo*> mRemovedTextures;
     QString mError;
+
+    FileSystemWatcher *mWatcher;
+    QSet<QString> mChangedFiles;
+    QTimer mChangedFilesTimer;
 };
 
 class TexturesFile
