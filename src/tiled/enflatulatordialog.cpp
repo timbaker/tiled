@@ -20,6 +20,7 @@
 
 #include "preferences.h"
 
+#include <qmath.h>
 #include <QClipboard>
 #include <QDebug>
 #include <QFileDialog>
@@ -339,13 +340,62 @@ void EnflatulatorFaceItem::enflatulate()
 
 /////
 
+EnflatulatorGridItem::EnflatulatorGridItem(int width, int height) :
+    QGraphicsItem(),
+    mWidth(width),
+    mHeight(height)
+{
+    setFlag(ItemUsesExtendedStyleOption);
+}
+
+QRectF EnflatulatorGridItem::boundingRect() const
+{
+    return QRectF(0, 0, mWidth * 64, mHeight * 128).adjusted(-2, -2, 2, 2);
+}
+
+void EnflatulatorGridItem::paint(QPainter *painter,
+                             const QStyleOptionGraphicsItem *option,
+                             QWidget *)
+{
+    QPen pen(Qt::darkGray);
+    painter->setPen(pen);
+
+    int minX = qFloor(option->exposedRect.left() / 64) - 1;
+    int maxX = qCeil(option->exposedRect.right() / 64) + 1;
+    int minY = qFloor(option->exposedRect.top() / 128) - 1;
+    int maxY = qCeil(option->exposedRect.bottom() / 128) + 1;
+
+    minX = qMax(0, minX);
+    maxX = qMin(maxX, mWidth);
+    minY = qMax(0, minY);
+    maxY = qMin(maxY, mHeight);
+
+    for (int x = minX; x <= maxX; x++)
+        painter->drawLine(x * 64, minY * 128, x * 64, maxY * 128);
+
+    for (int y = minY; y <= maxY; y++)
+        painter->drawLine(minX * 64, y * 128, maxX * 64, y * 128);
+}
+
+void EnflatulatorGridItem::setSize(int width, int height)
+{
+    prepareGeometryChange();
+    mWidth = width;
+    mHeight = height;
+}
+
+/////
+
 EnflatulatorIsoScene::EnflatulatorIsoScene(QObject *parent) :
     QGraphicsScene(parent),
     mShape(0),
     mImageItem(new QGraphicsPixmapItem),
+    mGridItem(new EnflatulatorGridItem(8, 16)),
     mActiveTool(0)
 {
     addItem(mImageItem);
+    mGridItem->setZValue(2);
+    addItem(mGridItem);
 
     setIsoImage(QImage(Preferences::instance()->tilesDirectory() + QLatin1String("/fixtures_doors_01.png")));
 }
@@ -676,7 +726,12 @@ WestNorthTool::WestNorthTool(EnflatulatorIsoScene *scene) :
 
 void WestNorthTool::activate()
 {
-    mFlatTilesetImg = mScene->mImage;
+    mFlatTilesetImg = QImage(mScene->mImage.size(), mScene->mImage.format());
+    mFlatTilesetImg.fill(Qt::transparent);
+    QPainter p(&mFlatTilesetImg);
+    p.drawImage(0, 0, mScene->mImage);
+    p.end();
+
     mFlatTilesetPixmapItem->setPixmap(QPixmap::fromImage(mFlatTilesetImg));
     mScene->addItem(mFlatTilesetPixmapItem);
     mScene->removeItem(mScene->mImageItem);
@@ -697,34 +752,40 @@ void WestNorthTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
     painter.setCompositionMode(QPainter::CompositionMode_Clear);
     painter.fillRect(tileX * 64, tileY * 128, 64, 128, Qt::transparent);
     painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    painter.setPen(QColor(0,0,0,128));
+    int shiftY = 16; // stop tall wooden fence going off the top
     if (event->button() == Qt::LeftButton) {
-        painter.fillRect(tileX * 64, tileY * 128, 64, 128, Qt::transparent);
+//        painter.fillRect(tileX * 64, tileY * 128, 64, 128, Qt::transparent);
         for (int y = 0; y < 128; y++) {
             int dy = 32;
             for (int x = 0; x < 64; x += 2, dy -= 1) {
-                if (y - dy + 16 < 0) continue;
-                mFlatTilesetImg.setPixel(tileX * 64 + x, tileY * 128 + y - dy + 16,
+                if (y - dy + shiftY < 0) continue;
+                mFlatTilesetImg.setPixel(tileX * 64 + x, tileY * 128 + y - dy + shiftY,
                                          mScene->mImage.pixel(tileX * 64 + x, tileY * 128 + y));
-                mFlatTilesetImg.setPixel(tileX * 64 + x + 1, tileY * 128 + y - dy + 16,
+                mFlatTilesetImg.setPixel(tileX * 64 + x + 1, tileY * 128 + y - dy + shiftY,
                                          mScene->mImage.pixel(tileX * 64 + x + 1, tileY * 128 + y));
             }
         }
+//        painter.drawRect(tileX * 64 + 0, tileY * 128 + 0 + shiftY, 32, 96);
         mFlatTilesetPixmapItem->setPixmap(QPixmap::fromImage(mFlatTilesetImg));
     }
     if (event->button() == Qt::RightButton) {
-        painter.fillRect(tileX * 64, tileY * 128, 64, 128, Qt::transparent);
+//        painter.fillRect(tileX * 64, tileY * 128, 64, 128, Qt::transparent);
         for (int y = 0; y < 128; y++) {
             int dy = 0;
             for (int x = 0; x < 64; x += 2, dy += 1) {
-                if (y - dy + 16 < 0) continue;
-                mFlatTilesetImg.setPixel(tileX * 64 + x, tileY * 128 + y - dy + 16,
+                if (y - dy + shiftY < 0) continue;
+                mFlatTilesetImg.setPixel(tileX * 64 + x, tileY * 128 + y - dy + shiftY,
                                          mScene->mImage.pixel(tileX * 64 + x, tileY * 128 + y));
-                mFlatTilesetImg.setPixel(tileX * 64 + x + 1, tileY * 128 + y - dy + 16,
+                mFlatTilesetImg.setPixel(tileX * 64 + x + 1, tileY * 128 + y - dy + shiftY,
                                          mScene->mImage.pixel(tileX * 64 + x + 1, tileY * 128 + y));
             }
         }
+//        painter.drawRect(tileX * 64 + 32, tileY * 128 + 0 + shiftY, 32, 96);
         mFlatTilesetPixmapItem->setPixmap(QPixmap::fromImage(mFlatTilesetImg));
     }
+
+    mFlatTilesetImg.save(QLatin1String("C:/Users/Tim/Desktop/ProjectZomboid/enflatulator.png"));
 }
 
 void WestNorthTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)

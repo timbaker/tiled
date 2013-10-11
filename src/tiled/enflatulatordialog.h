@@ -193,6 +193,22 @@ public:
     QImage mFlatTilesetImg;
 };
 
+class EnflatulatorGridItem : public QGraphicsItem
+{
+public:
+    EnflatulatorGridItem(int width, int height);
+
+    QRectF boundingRect() const;
+
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+    void setSize(int width, int height);
+
+private:
+    int mWidth, mHeight;
+};
+
+
 /* Shows the iso image file, allows positioning and resizing the faces. */
 class EnflatulatorIsoScene : public QGraphicsScene
 {
@@ -211,6 +227,7 @@ public:
 public:
     QImage mImage;
     QGraphicsPixmapItem *mImageItem;
+    EnflatulatorGridItem *mGridItem;
     EnflatulatorShape *mShape;
     BaseEnflatulatorTool *mActiveTool;
 };
