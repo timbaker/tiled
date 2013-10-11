@@ -20,6 +20,7 @@
 #include "texturemanager.h"
 
 #include "preferences.h"
+#include "tilesetmanager.h"
 
 #include "BuildingEditor/simplefile.h"
 
@@ -37,6 +38,8 @@ SINGLETON_IMPL(TextureMgr)
 TextureMgr::TextureMgr(QObject *parent) :
     QObject(parent)
 {
+    connect(TilesetManager::instance(), SIGNAL(textureImageLoaded(QImage*,Tiled::Tileset*)),
+            SLOT(textureImageLoaded(QImage*,Tiled::Tileset*)));
 }
 
 TextureMgr::~TextureMgr()
@@ -110,6 +113,17 @@ void TextureMgr::removeTexture(TextureInfo *tex)
     mRemovedTextures += tex;
 }
 
+void TextureMgr::changeTexture(TextureInfo *tex, int tileWidth, int tileHeight)
+{
+    tex->setTileSize(tileWidth, tileHeight);
+    if (tex->tileset()) {
+        TilesetManager::instance()->textureTilesetRemoved(tex->tileset());
+        delete tex->tileset();
+        tex->setTileset(0);
+    }
+    emit textureChanged(tex);
+}
+
 Tileset *TextureMgr::tileset(TextureInfo *tex)
 {
     Tileset *ts = tex->tileset();
@@ -118,15 +132,30 @@ Tileset *TextureMgr::tileset(TextureInfo *tex)
         // ts->setTransparentColor(Qt::white); already transparent XXX
         ts->setMissing(true);
         tex->setTileset(ts);
+        TilesetManager::instance()->textureTilesetAdded(ts);
     }
-    if (ts->isMissing()) {
+    if (!ts->isLoaded() && !tex->tilesetLoading()/*&& !ts->isMissing()*/) {
         QString imageSource = tex->fileName();
         if (QDir::isRelativePath(imageSource))
             imageSource = QDir(Preferences::instance()->texturesDirectory()).filePath(imageSource);
+#if 1
+        TilesetManager::instance()->loadTextureTileset(ts, imageSource); // async
+        tex->setTilesetLoading(!ts->isLoaded());
+#else
         if (ts->loadFromImage(QImage(imageSource), imageSource))
             ts->setMissing(false);
+#endif
     }
     return ts;
+}
+
+void TextureMgr::textureImageLoaded(QImage *image, Tileset *tileset)
+{
+    TextureInfo *tex = texture(tileset->name());
+    tileset->loadFromImage(*image, tileset->imageSource());
+    tileset->setMissing(false);
+    tex->setTilesetLoading(false);
+    emit textureChanged(tex);
 }
 
 /////

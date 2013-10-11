@@ -423,6 +423,8 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
             SLOT(textureAdded(TextureInfo*)));
     connect(TextureMgr::instancePtr(), SIGNAL(textureRemoved(TextureInfo*)),
             SLOT(textureRemoved(TextureInfo*)));
+    connect(TextureMgr::instancePtr(), SIGNAL(textureChanged(TextureInfo*)),
+            SLOT(textureChanged(TextureInfo*)));
 
 
     setVirtualTilesetNamesList();
@@ -525,12 +527,9 @@ void VirtualTilesetDialog::removeTexture(TextureInfo *tex)
 void VirtualTilesetDialog::changeTexture(TextureInfo *tex, int &tileWidth, int &tileHeight)
 {
     int oldTileWidth = tex->tileWidth(), oldTileHeight = tex->tileHeight();
-    tex->setTileSize(tileWidth, tileHeight);
+    TextureMgr::instance().changeTexture(tex, tileWidth, tileHeight);
     tileWidth = oldTileWidth;
     tileHeight = oldTileHeight;
-
-    delete tex->tileset();
-    tex->setTileset(0);
 
     textureAdded(tex); // !!!
 
@@ -808,6 +807,7 @@ void VirtualTilesetDialog::textureProperties()
 
 void VirtualTilesetDialog::textureAdded(TextureInfo *tex)
 {
+#if 0
     foreach (VirtualTileset *vts, mTilesets) {
         bool changed = false;
         foreach (VirtualTile *vtile, vts->tiles()) {
@@ -824,13 +824,13 @@ void VirtualTilesetDialog::textureAdded(TextureInfo *tex)
                 ui->vTilesetTiles->model()->redisplay();
         }
     }
-
-
+#endif
     setTextureNamesList();
 }
 
 void VirtualTilesetDialog::textureRemoved(TextureInfo *tex)
 {
+#if 0
     foreach (VirtualTileset *vts, mTilesets) {
         bool changed = false;
         foreach (VirtualTile *vtile, vts->tiles()) {
@@ -847,8 +847,23 @@ void VirtualTilesetDialog::textureRemoved(TextureInfo *tex)
                 ui->vTilesetTiles->model()->redisplay();
         }
     }
+#endif
 
     setTextureNamesList();
+}
+
+void VirtualTilesetDialog::textureChanged(TextureInfo *tex)
+{
+    if (tex == mCurrentTexture) {
+        // Either the texture image changed, or the tile size changed causing
+        // the tileset to be recreated.
+        // FIXME: TextureMgr might have destroyed the tileset that is being displayed by us
+        if (tex->tileset() != mTextureTileset) {
+            mTextureTileset = tex->tileset();
+            ui->orthoTiles->tilesetModel()->setTileset(tex->tileset());
+        } else
+            ui->orthoTiles->tilesetModel()->tilesetChanged();
+    }
 }
 
 void VirtualTilesetDialog::shapeGroupAdded(int index, TileShapeGroup *g)

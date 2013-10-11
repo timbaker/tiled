@@ -101,6 +101,7 @@ private slots:
 
     void textureAdded(TextureInfo *tex);
     void textureRemoved(TextureInfo *tex);
+    void textureChanged(TextureInfo *tex);
 
     void shapeGroupChanged(int row);
     void editGroups();

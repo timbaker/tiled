@@ -115,7 +115,11 @@
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="comboBox"/>
+             <widget class="QComboBox" name="comboBox">
+              <property name="sizeAdjustPolicy">
+               <enum>QComboBox::AdjustToContents</enum>
+              </property>
+             </widget>
             </item>
             <item>
              <widget class="QToolButton" name="editGroups">
@@ -159,7 +163,7 @@
   </widget>
   <action name="actionAddTileset">
    <property name="icon">
-    <iconset>
+    <iconset resource="tiled.qrc">
      <normaloff>:/images/16x16/document-new.png</normaloff>:/images/16x16/document-new.png</iconset>
    </property>
    <property name="text">
@@ -171,7 +175,7 @@
   </action>
   <action name="actionRemoveTileset">
    <property name="icon">
-    <iconset>
+    <iconset resource="tiled.qrc">
      <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
    </property>
    <property name="text">
@@ -180,7 +184,7 @@
   </action>
   <action name="actionClearVTiles">
    <property name="icon">
-    <iconset>
+    <iconset resource="tiled.qrc">
      <normaloff>:/images/16x16/edit-clear.png</normaloff>:/images/16x16/edit-clear.png</iconset>
    </property>
    <property name="text">
@@ -192,7 +196,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="tiled.qrc">
      <normaloff>:/images/16x16/drive-harddisk.png</normaloff>:/images/16x16/drive-harddisk.png</iconset>
    </property>
    <property name="text">
@@ -201,7 +205,7 @@
   </action>
   <action name="actionAddTexture">
    <property name="icon">
-    <iconset>
+    <iconset resource="tiled.qrc">
      <normaloff>:/images/16x16/document-new.png</normaloff>:/images/16x16/document-new.png</iconset>
    </property>
    <property name="text">
@@ -210,7 +214,7 @@
   </action>
   <action name="actionRemoveTexture">
    <property name="icon">
-    <iconset>
+    <iconset resource="tiled.qrc">
      <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
    </property>
    <property name="text">
@@ -219,7 +223,7 @@
   </action>
   <action name="actionTextureProperties">
    <property name="icon">
-    <iconset>
+    <iconset resource="tiled.qrc">
      <normaloff>:/images/16x16/document-properties.png</normaloff>:/images/16x16/document-properties.png</iconset>
    </property>
    <property name="text">
@@ -242,7 +246,9 @@
    <header>tilesetview.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="tiled.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>

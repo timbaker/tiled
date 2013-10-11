@@ -191,7 +191,11 @@ public:
     TilesetImageCache *imageCache() const { return mTilesetImageCache; }
 
     void loadTileset(Tileset *tileset, const QString &imageSource);
+    void loadTextureTileset(Tileset *tileset, const QString &imageSource);
     void waitForTilesets(const QList<Tileset *> &tilesets);
+
+    void textureTilesetAdded(Tileset *ts) { mTextureMgrTilesets.insert(ts); }
+    void textureTilesetRemoved(Tileset *ts) { mTextureMgrTilesets.remove(ts); }
 #endif
 
 signals:
@@ -201,6 +205,8 @@ signals:
     void tilesetChanged(Tileset *tileset);
 
 #ifdef ZOMBOID
+    void textureImageLoaded(QImage *image, Tiled::Tileset *tileset);
+
     void tileLayerNameChanged(Tile *tile);
 #endif
 
@@ -241,6 +247,8 @@ private:
     QVector<InterruptibleThread*> mImageReaderThreads;
     QVector<TilesetImageReaderWorker*> mImageReaderWorkers;
     int mNextThreadForJob;
+
+    QSet<Tileset*> mTextureMgrTilesets;
 #endif
 
 #ifdef ZOMBOID

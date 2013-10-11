@@ -244,6 +244,13 @@ VirtualTilesetMgr::VirtualTilesetMgr() :
     TexturesFile texFile;
     texFile.write(TextureMgr::instance().txtPath(), texs);
 #endif
+
+    connect(TextureMgr::instancePtr(), SIGNAL(textureAdded(TextureInfo*)),
+            SLOT(textureAdded(TextureInfo*)));
+    connect(TextureMgr::instancePtr(), SIGNAL(textureRemoved(TextureInfo*)),
+            SLOT(textureRemoved(TextureInfo*)));
+    connect(TextureMgr::instancePtr(), SIGNAL(textureChanged(TextureInfo*)),
+            SLOT(textureChanged(TextureInfo*)));
 }
 
 VirtualTilesetMgr::~VirtualTilesetMgr()
@@ -627,6 +634,35 @@ void VirtualTilesetMgr::setUngroupedGroup()
         mUngroupedGroup->setShape(i % cc, i / cc, ungrouped[i]);
     for (int i = ungrouped.size(); i < mUngroupedGroup->count(); i++)
         mUngroupedGroup->setShape(i % cc, i / cc, 0);
+}
+
+void VirtualTilesetMgr::textureAdded(TextureInfo *tex)
+{
+    textureChanged(tex);
+}
+
+void VirtualTilesetMgr::textureRemoved(TextureInfo *tex)
+{
+    textureChanged(tex);
+}
+
+// Called when a texture tileset image is loaded or when texture-tileset tile size changes
+void VirtualTilesetMgr::textureChanged(TextureInfo *tex)
+{
+    foreach (VirtualTileset *vts, tilesets()) {
+        bool changed = false;
+        foreach (VirtualTile *vtile, vts->tiles()) {
+            if (vtile->imageSource() == tex->name()) {
+                vtile->setImage(QImage());
+                // not calling vtile->setImageSource
+                changed = true;
+            }
+        }
+        if (changed) {
+            vts->tileChanged();
+            emit tilesetChanged(vts);
+        }
+    }
 }
 
 #define toGL(v) v

@@ -35,6 +35,7 @@ class Tileset;
 
 namespace Internal {
 
+class TextureInfo;
 class VirtualTileset;
 
 class TileShapeFace
@@ -336,6 +337,11 @@ signals:
     void shapeAdded(TileShape *shape);
     void shapeRemoved(TileShape *shape);
     void shapeChanged(TileShape *shape);
+
+private slots:
+    void textureAdded(TextureInfo *tex);
+    void textureRemoved(TextureInfo *tex);
+    void textureChanged(TextureInfo *tex);
 
 private:
     QMap<QString,VirtualTileset*> mTilesetByName;

@@ -27,6 +27,8 @@
 #include <QObject>
 #include <QSize>
 
+class QImage;
+
 namespace Tiled {
 class Tileset;
 
@@ -43,7 +45,8 @@ public:
         mRowCount(rowCount),
         mTileWidth(tileWidth),
         mTileHeight(tileHeight),
-        mTileset(0)
+        mTileset(0),
+        mTilesetImageLoading(false)
     {}
 
     QString name() const { return mName; }
@@ -57,6 +60,8 @@ public:
 
     void setTileset(Tileset *ts) { mTileset = ts; }
     Tileset *tileset() const { return mTileset; }
+    void setTilesetLoading(bool loading) { mTilesetImageLoading = loading; }
+    bool tilesetLoading() const { return mTilesetImageLoading; }
 
 private:
     QString mName;
@@ -67,6 +72,7 @@ private:
     int mTileHeight;
 
     Tileset *mTileset;
+    bool mTilesetImageLoading;
 };
 
 class TextureMgr : public QObject, public Singleton<TextureMgr>
@@ -88,6 +94,7 @@ public:
 
     void addTexture(TextureInfo *tex);
     void removeTexture(TextureInfo *tex);
+    void changeTexture(TextureInfo *tex, int tileWidth, int tileHeight);
 
     Tileset *tileset(TextureInfo *tex);
 
@@ -97,6 +104,10 @@ signals:
     void textureAdded(TextureInfo *texture);
     void textureAboutToBeRemoved(TextureInfo *texture);
     void textureRemoved(TextureInfo *texture);
+    void textureChanged(TextureInfo *texture);
+
+private slots:
+    void textureImageLoaded(QImage *image, Tiled::Tileset *tileset);
 
 private:
     QMap<QString,TextureInfo*> mTextureByName;

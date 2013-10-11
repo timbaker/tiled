@@ -308,6 +308,14 @@ void TilesetManager::fileChangedTimeout()
 #ifdef ZOMBOID
 void TilesetManager::imageLoaded(QImage *image, Tileset *tileset)
 {
+    // Check if the tileset belongs to TextureMgr.
+    // If so, the image is a "flat" texture, not an old iso tileset image.
+    if (mTextureMgrTilesets.contains(tileset)) {
+        emit textureImageLoaded(image, tileset);
+        delete image;
+        return;
+    }
+
     Q_ASSERT(mTilesetImageCache->mTilesets.contains(tileset));
 
     // This updates a tileset in the cache.
@@ -383,6 +391,31 @@ void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource_)
             }
             changeTilesetSource(tileset, imageSource, true);
         }
+    }
+}
+
+#include <QPainter>
+void TilesetManager::loadTextureTileset(Tileset *tileset, const QString &imageSource)
+{
+    Q_ASSERT(mTextureMgrTilesets.contains(tileset));
+    tileset->setImageSource(imageSource);
+    if (QImageReader(imageSource).size().isValid()) {
+        tileset->setMissing(false);
+        QMetaObject::invokeMethod(mImageReaderWorkers[mNextThreadForJob],
+                                  "addJob", Qt::QueuedConnection,
+                                  Q_ARG(Tileset*,tileset));
+        mNextThreadForJob = (mNextThreadForJob + 1) % mImageReaderWorkers.size();
+    } else {
+        tileset->setMissing(true);
+        tileset->setLoaded(true);
+        QImage tileImg(tileset->tileWidth(), tileset->tileHeight(), QImage::Format_ARGB32);
+        tileImg.fill(Qt::transparent);
+        QPainter p(&tileImg);
+        for (int y = 0; y < tileImg.height(); y += 128)
+            for (int x = 0; x < tileImg.width(); x += 64)
+                p.drawImage(x, y, mMissingTile->image());
+        for (int i = 0; i < tileset->tileCount(); i++)
+            tileset->tileAt(i)->setImage(tileImg);
     }
 }
 

@@ -119,6 +119,8 @@ void TileDelegate::paint(QPainter *painter,
 QSize TileDelegate::sizeHint(const QStyleOptionViewItem & option,
                              const QModelIndex &index) const
 {
+    if (!index.isValid())
+        return QSize();
     const TilesetModel *m = static_cast<const TilesetModel*>(index.model());
     const Tileset *tileset = m->tileset();
     const qreal zoom = mTilesetView->zoomable()->scale();
