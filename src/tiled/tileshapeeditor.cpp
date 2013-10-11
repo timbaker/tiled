@@ -344,7 +344,7 @@ TileShapeItem::TileShapeItem(TileShapeScene *scene, TileShape *shape, QGraphicsI
     mSelectedFace(-1),
     mHasCursorPoint(false)
 {
-    mBoundingRect = mScene->boundingRect(mShape);
+    mBoundingRect = mScene->boundingRect(mShape).adjusted(-3, -3, 3, 3);
 }
 
 QRectF TileShapeItem::boundingRect() const
@@ -429,6 +429,7 @@ void TileShapeItem::shapeChanged()
         mBoundingRect.setTop(qMin(mBoundingRect.top(), p.y()));
         mBoundingRect.setBottom(qMax(mBoundingRect.bottom(), p.y()));
     }
+    mBoundingRect.adjust(-3, -3, 3, 3);
     update();
 }
 
