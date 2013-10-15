@@ -587,7 +587,7 @@ configTxtFiles.files = \
     $${top_srcdir}/Textures.txt \
     $${top_srcdir}/TileProperties.txt \
     $${top_srcdir}/Tilesets.txt \
-    $${top_srcdir}/VirtualTilesets.txt
+    $${top_srcdir}/TileShapes.txt
 INSTALLS += configTxtFiles
 
 buildingEdTxt.path = $${CONFIG_PREFIX}
