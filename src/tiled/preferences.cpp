@@ -91,6 +91,7 @@ Preferences::Preferences()
                                                QColor(Qt::darkGray).name()).toString());
     mShowAdjacentMaps = mSettings->value(QLatin1String("ShowAdjacentMaps"), true).toBool();
     mHighlightRoomUnderPointer = mSettings->value(QLatin1String("HighlightRoomUnderPointer"), false).toBool();
+    mUseVirtualTilesets = mSettings->value(QLatin1String("Interface/UseVirtualTilesets"), false).toBool();
 #endif
     mSettings->endGroup();
 #ifdef ZOMBOID
@@ -147,9 +148,10 @@ Preferences::Preferences()
 
     mWorldEdFiles = mSettings->value(QLatin1String("WorldEd/ProjectFile")).toStringList();
 #endif
-
+#ifndef ZOMBOID // do this in TilesetManager constructor to avoid infinite loop
     TilesetManager *tilesetManager = TilesetManager::instance();
     tilesetManager->setReloadTilesetsOnChange(mReloadTilesetsOnChange);
+#endif
 }
 
 Preferences::~Preferences()
@@ -595,5 +597,14 @@ void Preferences::setEraserBrushSize(int newSize)
     mEraserBrushSize = newSize;
     mSettings->setValue(QLatin1String("Tools/Eraser/BrushSize"), mEraserBrushSize);
     emit eraserBrushSizeChanged(mEraserBrushSize);
+}
+
+void Preferences::setUseVirtualTilesets(bool use)
+{
+    if (mUseVirtualTilesets == use)
+        return;
+    mUseVirtualTilesets = use;
+    mSettings->setValue(QLatin1String("Interface/UseVirtualTilesets"), mUseVirtualTilesets);
+    emit useVirtualTilesetsChanged(mUseVirtualTilesets);
 }
 #endif // ZOMBOID

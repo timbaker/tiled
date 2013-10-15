@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>462</width>
-    <height>394</height>
+    <height>393</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -544,6 +544,13 @@
         <widget class="QCheckBox" name="showAdjacent">
          <property name="text">
           <string>Show adjacent maps.  Requires closing/opening a map to see changes.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="useVirtualTilesets">
+         <property name="text">
+          <string>Use virtual tilesets (requires restart).</string>
          </property>
         </widget>
        </item>

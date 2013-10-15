@@ -130,6 +130,9 @@ public:
 
     int eraserBrushSize() const
     { return mEraserBrushSize; }
+
+    bool useVirtualTilesets() const
+    { return mUseVirtualTilesets; }
 #endif // ZOMBOID
 
     /**
@@ -155,6 +158,7 @@ public slots:
     void setWorldEdFiles(const QStringList &fileNames);
     void setHighlightRoomUnderPointer(bool highlight);
     void setEraserBrushSize(int newSize);
+    void setUseVirtualTilesets(bool use);
 #endif
 
 signals:
@@ -182,6 +186,7 @@ signals:
     void worldEdFilesChanged(const QStringList &fileNames);
     void highlightRoomUnderPointerChanged(bool highlight);
     void eraserBrushSizeChanged(int newSize);
+    void useVirtualTilesetsChanged(bool use);
 #endif
 
 private:
@@ -220,6 +225,7 @@ private:
     QStringList mWorldEdFiles;
     bool mHighlightRoomUnderPointer;
     int mEraserBrushSize;
+    bool mUseVirtualTilesets;
 #endif
 
     static Preferences *mInstance;

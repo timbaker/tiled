@@ -84,6 +84,11 @@ TilesetManager::TilesetManager():
                 SLOT(imageLoaded(QImage*,Tiled::Tileset*)));
         mImageReaderThreads[i]->start();
     }
+
+    mReloadTilesetsOnChange = Preferences::instance()->reloadTilesetsOnChange();
+
+    // Changing this setting doesn't take effect until TileZed is restarted.
+    mUseVirtualTilesets = Preferences::instance()->useVirtualTilesets();
 #endif
 
     connect(mWatcher, SIGNAL(fileChanged(QString)),
@@ -225,8 +230,10 @@ void TilesetManager::setReloadTilesetsOnChange(bool enabled)
 
 void TilesetManager::fileChanged(const QString &path)
 {
+#ifndef ZOMBOID
     if (!mReloadTilesetsOnChange)
         return;
+#endif
 
     /*
      * Use a one-shot timer since GIMP (for example) seems to generate many
@@ -243,7 +250,10 @@ void TilesetManager::fileChangedTimeout()
     foreach (Tileset *tileset, mTilesetImageCache->mTilesets) {
         QString fileName = tileset->imageSource();
         if (mChangedFiles.contains(fileName)) {
-            if (VirtualTileset *vts = VirtualTilesetMgr::instance().tilesetFromPath(fileName)) {
+            VirtualTileset *vts = useVirtualTilesets()
+                    ? VirtualTilesetMgr::instance().tilesetFromPath(fileName)
+                    : 0;
+            if (vts) {
                 tileset->loadFromImage(vts->image(), fileName);
                 tileset->setMissing(false);
             } else if (QImageReader(fileName).size().isValid()) {
@@ -272,16 +282,18 @@ void TilesetManager::fileChangedTimeout()
     }
 
     // Perhaps a used virtual tileset didn't exist and now it does (fringe case to be sure).
-    foreach (Tileset *ts, tilesets()) {
-        if (ts->isMissing()) {
-            QString imageSource = ts->imageSource();
-            if (VirtualTileset *vts = VirtualTilesetMgr::instance().tilesetFromPath(imageSource)) {
-                VirtualTilesetMgr::instance().resolveImageSource(imageSource);
-                ts->loadFromImage(vts->image(), imageSource);
-                ts->setMissing(false);
-                if (mTilesetImageCache->findMatch(ts, imageSource) == 0)
-                    mTilesetImageCache->addTileset(ts)->setLoaded(true);
-                emit tilesetChanged(ts);
+    if (useVirtualTilesets()) {
+        foreach (Tileset *ts, tilesets()) {
+            if (ts->isMissing()) {
+                QString imageSource = ts->imageSource();
+                if (VirtualTileset *vts = VirtualTilesetMgr::instance().tilesetFromPath(imageSource)) {
+                    VirtualTilesetMgr::instance().resolveImageSource(imageSource);
+                    ts->loadFromImage(vts->image(), imageSource);
+                    ts->setMissing(false);
+                    if (mTilesetImageCache->findMatch(ts, imageSource) == 0)
+                        mTilesetImageCache->addTileset(ts)->setLoaded(true);
+                    emit tilesetChanged(ts);
+                }
             }
         }
     }
@@ -356,13 +368,18 @@ void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource_)
         return;
 
 #if 1
-    // When reading a TMX, virtual tileset image paths won't be canonical,
-    // since they're saved relative to the TMX's directory.
     QString imageSource = imageSource_;
-    VirtualTilesetMgr::instance().resolveImageSource(imageSource);
+    if (useVirtualTilesets()) {
+        // When reading a TMX, virtual tileset image paths won't be canonical,
+        // since they're saved relative to the TMX's directory.
+        VirtualTilesetMgr::instance().resolveImageSource(imageSource);
+    }
 #endif
 
     if (!tileset->isLoaded() /*&& !tileset->isMissing()*/) {
+        VirtualTileset *vts = useVirtualTilesets()
+                ? VirtualTilesetMgr::instance().tilesetFromPath(imageSource)
+                : 0;
         if (Tileset *cached = mTilesetImageCache->findMatch(tileset, imageSource)) {
             // If it !isLoaded(), a thread is reading the image.
             if (cached->isLoaded()) {
@@ -372,7 +389,7 @@ void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource_)
             } else {
                 changeTilesetSource(tileset, imageSource, false);
             }
-        } else if (VirtualTileset *vts = VirtualTilesetMgr::instance().tilesetFromPath(imageSource)) {
+        } else if (vts) {
             tileset->loadFromImage(vts->image(), imageSource);
             tileset->setMissing(false);
             mTilesetImageCache->addTileset(tileset)->setLoaded(true);

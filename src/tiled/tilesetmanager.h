@@ -196,6 +196,8 @@ public:
 
     void textureTilesetAdded(Tileset *ts) { mTextureMgrTilesets.insert(ts); }
     void textureTilesetRemoved(Tileset *ts) { mTextureMgrTilesets.remove(ts); }
+
+    bool useVirtualTilesets() const { return mUseVirtualTilesets; }
 #endif
 
 signals:
@@ -249,6 +251,7 @@ private:
     int mNextThreadForJob;
 
     QSet<Tileset*> mTextureMgrTilesets;
+    bool mUseVirtualTilesets;
 #endif
 
 #ifdef ZOMBOID

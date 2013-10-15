@@ -127,7 +127,10 @@ bool TileDefFile::read(const QString &fileName)
 
         // Deal with the image being a different size now than it was when the
         // .tiles file was saved.
-        if (VirtualTileset *vts = VirtualTilesetMgr::instance().tilesetFromPath(ts->mImageSource)) {
+        VirtualTileset *vts = TilesetManager::instance()->useVirtualTilesets()
+                ? VirtualTilesetMgr::instance().tilesetFromPath(ts->mImageSource)
+                : 0;
+        if (vts) {
             ts->resize(vts->columnCount(), vts->rowCount());
         } else {
             QImageReader bmp(dir.filePath(ts->mImageSource));

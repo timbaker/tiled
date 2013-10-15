@@ -1491,7 +1491,8 @@ void TileDefDialog::loadTilesets()
             QString source = ts->imageSource();
             if (QDir::isRelativePath(ts->imageSource()))
                 source = QDir(tilesDir()).filePath(ts->imageSource());
-            if (VirtualTilesetMgr::instance().resolveImageSource(source)) {
+            if (TilesetManager::instance()->useVirtualTilesets() &&
+                    VirtualTilesetMgr::instance().resolveImageSource(source)) {
                 TilesetManager::instance()->loadTileset(ts, source);
                 continue;
             }
@@ -1508,7 +1509,8 @@ void TileDefDialog::loadTilesets()
 Tileset *TileDefDialog::loadTileset(const QString &source)
 {
     QString canonical = source;
-    if (VirtualTilesetMgr::instance().resolveImageSource(canonical)) {
+    if (TilesetManager::instance()->useVirtualTilesets() &&
+            VirtualTilesetMgr::instance().resolveImageSource(canonical)) {
         QFileInfo info(source);
         Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
         TilesetManager::instance()->loadTileset(ts, canonical);

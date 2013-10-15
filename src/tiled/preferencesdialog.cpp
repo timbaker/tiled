@@ -153,6 +153,8 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
             SLOT(defaultBackgroundColor()));
     connect(mUi->showAdjacent, SIGNAL(toggled(bool)),
             Preferences::instance(), SLOT(setShowAdjacentMaps(bool)));
+    connect(mUi->useVirtualTilesets, SIGNAL(toggled(bool)),
+            Preferences::instance(), SLOT(setUseVirtualTilesets(bool)));
     connect(mUi->listPZW, SIGNAL(currentRowChanged(int)), SLOT(updateActions()));
     connect(mUi->addPZW, SIGNAL(clicked()), SLOT(browseWorlded()));
     connect(mUi->removePZW, SIGNAL(clicked()), SLOT(removePZW()));
@@ -410,6 +412,7 @@ void PreferencesDialog::fromPreferences()
     if (mUi->listPZW->count())
         mUi->listPZW->setCurrentRow(0);
     mUi->showAdjacent->setChecked(prefs->showAdjacentMaps());
+    mUi->useVirtualTilesets->setChecked(prefs->useVirtualTilesets());
 #endif
 }
 
