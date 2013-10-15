@@ -587,7 +587,7 @@ uint VirtualTilesetMgr::loadGLTexture(const QString &imageSource, int srcX, int 
         b = mCheckerboard;
     } else if (TextureInfo *tex = TextureMgr::instance().texture(imageSource)) {
         Tileset *ts = TextureMgr::instance().tileset(tex);
-        if (ts->isMissing())
+        if (!ts->isLoaded())
              return 0;
         if (Tile *tile = ts->tileAt(srcY * ts->columnCount() + srcX))
             b = tile->image();
@@ -698,8 +698,8 @@ QImage VirtualTilesetMgr::renderIsoTile(VirtualTile *vtile)
         QVector3D cross = QVector3D::normal(e.mGeom[0], e.mGeom[1], e.mGeom[2]);
         if (cross.x() > 0 && cross.y() == 0 /*cross == QVector3D(1, 0, 0)*/)
             de.color(0.8f,0.8f,0.8f);
-        de.flush();
     }
+    de.flush();
 #if ISO_RENDERxxx
     glBegin(GL_LINES);
 
