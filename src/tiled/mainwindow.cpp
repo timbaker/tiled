@@ -633,6 +633,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             SLOT(tilesetMetaInfoDialog()));
     connect(mUi->actionTileProperties, SIGNAL(triggered()),
             SLOT(tilePropertiesEditor()));
+    mUi->actionEnflatulator->setVisible(false); // !!!
     connect(mUi->actionEnflatulator, SIGNAL(triggered()), SLOT(enflatulator()));
     new TextureMgr;
     new VirtualTilesetMgr;
