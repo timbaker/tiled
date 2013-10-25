@@ -193,7 +193,7 @@ void EnflatulatorFaceItem::moveHandle(int handle, const QPointF &scenePos)
     QPoint delta = ((p2 - p1) * 32).toPoint();
     QRect oldRect = mFace->mRect;
     switch (mFace->mOrient) {
-    case mFace->Flat:
+    case EnflatulatorFace::Flat:
         switch (handle) {
         case 0:
             mFace->mRect.setTop(qMin(mFace->mRect.top() + delta.y(), mFace->mRect.bottom()));
@@ -213,7 +213,7 @@ void EnflatulatorFaceItem::moveHandle(int handle, const QPointF &scenePos)
             break;
         }
         break;
-    case mFace->North:
+    case EnflatulatorFace::North:
         switch (handle) {
         case 0:
             mFace->mRect.setTop(qMin(mFace->mRect.top() + delta.y(), mFace->mRect.bottom()));
@@ -233,7 +233,7 @@ void EnflatulatorFaceItem::moveHandle(int handle, const QPointF &scenePos)
             break;
         }
         break;
-    case mFace->West:
+    case EnflatulatorFace::West:
         switch (handle) {
         case 0:
             mFace->mRect.setTop(qMin(mFace->mRect.top() + delta.y(), mFace->mRect.bottom()));
@@ -265,25 +265,25 @@ void EnflatulatorFaceItem::initPoly()
 {
     mPoly.clear();
     switch (mFace->mOrient) {
-    case mFace->Flat:
+    case EnflatulatorFace::Flat:
         mPoly << toScene(0, 0, 0)
               << toScene(mFace->mRect.width(), 0, 0)
               << toScene(mFace->mRect.width(), mFace->mRect.height(), 0)
               << toScene(0, mFace->mRect.height(), 0);
         break;
-    case mFace->West:
+    case EnflatulatorFace::West:
         mPoly << toScene(0, mFace->mRect.width(), 0)
               << toScene(0, 0, 0)
               << toScene(0, 0, mFace->mRect.height())
               << toScene(0, mFace->mRect.width(), mFace->mRect.height());
         break;
-    case mFace->North:
+    case EnflatulatorFace::North:
         mPoly << toScene(0, 0, 0)
               << toScene(mFace->mRect.width(), 0, 0)
               << toScene(mFace->mRect.width(), 0, mFace->mRect.height())
               << toScene(0, 0, mFace->mRect.height());
         break;
-    case mFace->Roof:
+    case EnflatulatorFace::Roof:
         mPoly << toScene(0, 0, 0)
               << toScene(mFace->mRect.width(), 0, 0)
               << toScene(mFace->mRect.width() + 32, mFace->mRect.height(), 0)
@@ -299,7 +299,7 @@ void EnflatulatorFaceItem::enflatulate()
     mFace->mImage.fill(Qt::transparent);
     QImage isoImg = mScene->mImage;
     switch (mFace->mOrient) {
-    case mFace->Flat:
+    case EnflatulatorFace::Flat:
         for (int y = 0; y < mFace->mRect.height(); y++) {
             for (int x = 0; x < mFace->mRect.width(); x++) {
                 QPointF p = pos() + toScene(x, y, 0);
@@ -308,7 +308,7 @@ void EnflatulatorFaceItem::enflatulate()
             }
         }
         break;
-    case mFace->West:
+    case EnflatulatorFace::West:
         for (int x = 0; x < mFace->mRect.width(); x += 1) {
             for (int y = 0; y < mFace->mRect.height(); y++) {
                 QPointF p = pos() + toScene(0, mFace->mRect.width() - x, y);
@@ -317,7 +317,7 @@ void EnflatulatorFaceItem::enflatulate()
             }
         }
         break;
-    case mFace->North:
+    case EnflatulatorFace::North:
         for (int x = 0; x < mFace->mRect.width(); x += 1) {
             for (int y = 0; y < mFace->mRect.height(); y++) {
                 QPointF p = pos() + toScene(x, 0, y);
@@ -326,7 +326,7 @@ void EnflatulatorFaceItem::enflatulate()
             }
         }
         break;
-    case mFace->Roof:
+    case EnflatulatorFace::Roof:
         for (int y = 0; y < mFace->mRect.height(); y++) {
             for (int x = 0; x < mFace->mRect.width(); x++) {
                 QPointF p = pos() + toScene(x + (y/64.0)*32, y, 0);
@@ -388,9 +388,9 @@ void EnflatulatorGridItem::setSize(int width, int height)
 
 EnflatulatorIsoScene::EnflatulatorIsoScene(QObject *parent) :
     QGraphicsScene(parent),
-    mShape(0),
     mImageItem(new QGraphicsPixmapItem),
     mGridItem(new EnflatulatorGridItem(8, 16)),
+    mShape(0),
     mActiveTool(0)
 {
     addItem(mImageItem);
@@ -655,7 +655,7 @@ void EnflatulatorTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
         }
         if (mSelectedFaceItem)
             mSelectedFaceItem->setSelected(false);
-        if (mSelectedFaceItem = faceAt(event->scenePos())) {
+        if ((mSelectedFaceItem = faceAt(event->scenePos()))) {
             mSelectedFaceItem->setSelected(true);
             mLastScenePos = mSelectedFaceItem->pos();
             mMode = DragFace;

@@ -1022,13 +1022,13 @@ QString TileShapeEditor::xformItemText(int index)
 {
     const TileShapeXform &xform = tileShape()->mXform.at(index);
     switch (xform.mType) {
-    case xform.Rotate:
+    case TileShapeXform::Rotate:
         return tr("Rotate %1,%2,%3")
                 .arg(xform.mRotate.x())
                 .arg(xform.mRotate.y())
                 .arg(xform.mRotate.z());
         break;
-    case xform.Translate:
+    case TileShapeXform::Translate:
         return tr("Translate %1,%2,%3")
                 .arg(xform.mTranslate.x())
                 .arg(xform.mTranslate.y())
@@ -1050,10 +1050,10 @@ void TileShapeEditor::syncWithGridSize()
     TileShapeXform &xform = tileShape()->mXform[row];
     double step = 0.0;
     switch (xform.mType) {
-    case xform.Rotate:
+    case TileShapeXform::Rotate:
         step = 360.0 / size;
         break;
-    case xform.Translate:
+    case TileShapeXform::Translate:
         step = 1.0 / size;
         break;
     }
@@ -1071,12 +1071,12 @@ void TileShapeEditor::xformChanged(double x, double y, double z, int xyz)
         return;
     TileShapeXform xform = tileShape()->mXform[row];
     switch (xform.mType) {
-    case xform.Rotate:
+    case TileShapeXform::Rotate:
         xform.mRotate.setX(x); // FIXME: restrict [-360,+360] ?
         xform.mRotate.setY(y);
         xform.mRotate.setZ(z);
         break;
-    case xform.Translate:
+    case TileShapeXform::Translate:
         xform.mTranslate.setX(x);
         xform.mTranslate.setY(y);
         xform.mTranslate.setZ(z);
@@ -1307,12 +1307,12 @@ void TileShapeEditor::xformSelectionChanged()
 
     const TileShapeXform &xform = tileShape()->mXform.at(row);
     switch (xform.mType) {
-    case xform.Rotate:
+    case TileShapeXform::Rotate:
         ui->xSpinBox->setValue(xform.mRotate.x());
         ui->ySpinBox->setValue(xform.mRotate.y());
         ui->zSpinBox->setValue(xform.mRotate.z());
         break;
-    case xform.Translate:
+    case TileShapeXform::Translate:
         ui->xSpinBox->setValue(xform.mTranslate.x());
         ui->ySpinBox->setValue(xform.mTranslate.y());
         ui->zSpinBox->setValue(xform.mTranslate.z());
@@ -1745,7 +1745,7 @@ void TileShapeHandle::setUV(const QPointF &uv)
 /////
 
 template <class T>
-static T *first(const QList<QGraphicsItem *> &items, QPointF &pos)
+static T *first(const QList<QGraphicsItem *> &items, const QPointF &pos)
 {
     qreal dist = 10000;
     T *closest = 0;
@@ -2092,8 +2092,8 @@ void TileShapeUVGuide::blink()
 TileShapeUVTool::TileShapeUVTool(TileShapeScene *scene) :
     BaseTileShapeTool(scene),
     mGuide(new TileShapeUVGuide(scene)),
-    mMode(NoMode),
-    mClickedHandle(0)
+    mClickedHandle(0),
+    mMode(NoMode)
 {
     mAction->setText(QLatin1String("EditUV"));
 
