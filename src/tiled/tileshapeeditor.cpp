@@ -277,7 +277,9 @@ QRectF TileShapeGrid::boundingRect() const
 
 void TileShapeGrid::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
-    painter->setPen(Qt::lightGray);
+    QPen pen(Qt::lightGray);
+    pen.setCosmetic(true);
+    painter->setPen(pen);
     painter->drawRect(boundingRect());
 
     for (int y = 0; y < mGridSize.y; y++)
@@ -287,7 +289,8 @@ void TileShapeGrid::paint(QPainter *painter, const QStyleOptionGraphicsItem *, Q
         painter->drawLine(mScene->toScene(x / qreal(mGridSize.x), 0, mZ), mScene->toScene(x / qreal(mGridSize.x), 1, mZ));
     painter->drawLine(mScene->toScene(1, 0, mZ), mScene->toScene(1, 1, mZ));
 
-    painter->setPen(Qt::black);
+    pen.setBrush(Qt::black);
+    painter->setPen(pen);
 
     QPolygonF poly = mScene->toScene(QRectF(0,0,1,1), 0);
     painter->drawPolygon(poly);
@@ -354,8 +357,12 @@ QRectF TileShapeItem::boundingRect() const
 
 void TileShapeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
-    painter->setPen(Qt::lightGray);
-//    painter->drawRect(boundingRect());
+#if 0
+    QPen pen(Qt::lightGray);
+    pen.setCosmetic(true);
+    painter->setPen(pen);
+    painter->drawRect(boundingRect());
+#endif
 
 #if 1
     QPen pen(/*(mSelectedElement >= 0) ? QColor(Qt::blue).lighter() :*/ Qt::blue, 0.5);
@@ -1402,6 +1409,9 @@ public:
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
     {
+        QPen pen(Qt::black);
+        pen.setCosmetic(true);
+        painter->setPen(pen);
         painter->drawPolygon(mScene->toScene(mPoly).translated(-mScene->toScene(0,0,0)));
     }
 
@@ -2016,6 +2026,9 @@ TileShapeUVGuide::TileShapeUVGuide(TileShapeScene *scene) :
     mBlinkItem->setPen(Qt::NoPen);
     mBlink.setInterval(500);
     connect(&mBlink, SIGNAL(timeout()), SLOT(blink()));
+
+    mCurrentUV = QPointF(-1, -1);
+    setCurrentUV(QPointF());
 }
 
 QRectF TileShapeUVGuide::boundingRect() const
@@ -2027,7 +2040,9 @@ QRectF TileShapeUVGuide::boundingRect() const
 
 void TileShapeUVGuide::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
-    painter->setPen(Qt::gray);
+    QPen pen(Qt::gray);
+    pen.setCosmetic(true);
+    painter->setPen(pen);
 
     painter->fillRect(boundingRect(), Qt::lightGray);
 
