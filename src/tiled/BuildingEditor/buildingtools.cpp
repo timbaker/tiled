@@ -128,11 +128,11 @@ void BaseTool::setHandCursor(HandCursor cursor)
         return;
     mHandCursor = cursor;
     if (mHandCursor == HandOpen)
-        mEditor->views().at(0)->setCursor(Qt::OpenHandCursor);
+        mEditor->views().at(0)->viewport()->setCursor(Qt::OpenHandCursor);
     else if (mHandCursor == HandClosed)
-        mEditor->views().at(0)->setCursor(Qt::ClosedHandCursor);
+        mEditor->views().at(0)->viewport()->setCursor(Qt::ClosedHandCursor);
     else
-        mEditor->views().at(0)->unsetCursor();
+        mEditor->views().at(0)->viewport()->unsetCursor();
 }
 
 void BaseTool::makeCurrent()
