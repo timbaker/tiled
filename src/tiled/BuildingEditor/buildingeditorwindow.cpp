@@ -276,6 +276,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     StairsTool::instance()->setAction(ui->actionStairs);
     FurnitureTool::instance()->setAction(ui->actionFurniture);
     RoofTool::instance()->setAction(ui->actionRoof);
+    RoofShallowTool::instance()->setAction(ui->actionRoofShallow);
     RoofCornerTool::instance()->setAction(ui->actionRoofCorner);
     SelectMoveObjectTool::instance()->setAction(ui->actionSelectObject);
 
@@ -1950,6 +1951,7 @@ void BuildingEditorWindow::updateActions()
             currentBuilding()->roofSlopeTile()->asRoofSlope() /*&&
             currentBuilding()->roofTopTile()->asRoofTop()*/;
     RoofTool::instance()->setEnabled(hasEditor && objectMode && showObjects && roofTilesOK);
+    RoofShallowTool::instance()->setEnabled(hasEditor && objectMode && showObjects && roofTilesOK);
     RoofCornerTool::instance()->setEnabled(hasEditor && objectMode && showObjects && roofTilesOK);
     SelectMoveObjectTool::instance()->setEnabled(hasEditor && objectMode && showObjects);
 

@@ -1031,24 +1031,44 @@ void GraphicsRoofHandleItem::synchWithObject()
     case CappedW:
         visible = roof->roofType() != RoofObject::SlopeW &&
                 roof->roofType() != RoofObject::PeakNS &&
+                roof->roofType() != RoofObject::DormerE &&
+                roof->roofType() != RoofObject::DormerN &&
+                roof->roofType() != RoofObject::DormerS &&
+                roof->roofType() != RoofObject::ShallowSlopeW &&
+                roof->roofType() != RoofObject::ShallowPeakNS &&
                 roof->roofType() != RoofObject::CornerOuterNW &&
                 roof->roofType() != RoofObject::CornerOuterSW;
         break;
     case CappedN:
         visible = roof->roofType() != RoofObject::SlopeN &&
                 roof->roofType() != RoofObject::PeakWE &&
+                roof->roofType() != RoofObject::DormerW &&
+                roof->roofType() != RoofObject::DormerE &&
+                roof->roofType() != RoofObject::DormerS &&
+                roof->roofType() != RoofObject::ShallowSlopeN &&
+                roof->roofType() != RoofObject::ShallowPeakWE &&
                 roof->roofType() != RoofObject::CornerOuterNW &&
                 roof->roofType() != RoofObject::CornerOuterNE;
         break;
     case CappedE:
         visible = roof->roofType() != RoofObject::SlopeE &&
                 roof->roofType() != RoofObject::PeakNS &&
+                roof->roofType() != RoofObject::DormerW &&
+                roof->roofType() != RoofObject::DormerN &&
+                roof->roofType() != RoofObject::DormerS &&
+                roof->roofType() != RoofObject::ShallowSlopeE &&
+                roof->roofType() != RoofObject::ShallowPeakNS &&
                 roof->roofType() != RoofObject::CornerOuterNE &&
                 roof->roofType() != RoofObject::CornerOuterSE;
         break;
     case CappedS:
         visible = roof->roofType() != RoofObject::SlopeS &&
                 roof->roofType() != RoofObject::PeakWE &&
+                roof->roofType() != RoofObject::DormerW &&
+                roof->roofType() != RoofObject::DormerE &&
+                roof->roofType() != RoofObject::DormerN &&
+                roof->roofType() != RoofObject::ShallowSlopeS &&
+                roof->roofType() != RoofObject::ShallowPeakWE &&
                 roof->roofType() != RoofObject::CornerOuterSW &&
                 roof->roofType() != RoofObject::CornerOuterSE;
         break;

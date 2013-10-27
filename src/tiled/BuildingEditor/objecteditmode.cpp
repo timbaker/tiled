@@ -70,6 +70,7 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
     addAction(actions->actionWindow);
     addAction(actions->actionStairs);
     addAction(actions->actionRoof);
+    addAction(actions->actionRoofShallow);
     addAction(actions->actionRoofCorner);
     addAction(actions->actionFurniture);
     addAction(actions->actionSelectObject);
@@ -104,10 +105,10 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
     QMenu *roofMenu = new QMenu(this);
     roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeW.png")),
                         mode->tr("Slope (W)"));
-    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeN.png")),
-                         mode->tr("Slope (N)"));
     roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeE.png")),
                          mode->tr("Slope (E)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeN.png")),
+                         mode->tr("Slope (N)"));
     roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeS.png")),
                          mode->tr("Slope (S)"));
     roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_peakWE.png")),
@@ -127,6 +128,27 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
     connect(roofMenu, SIGNAL(triggered(QAction*)), SLOT(roofTypeChanged(QAction*)));
 
     QToolButton *button = static_cast<QToolButton*>(widgetForAction(actions->actionRoof));
+    button->setMenu(roofMenu);
+    button->setPopupMode(QToolButton::MenuButtonPopup);
+    /////
+
+    /////
+    roofMenu = new QMenu(this);
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeW.png")),
+                        mode->tr("Shallow Slope (W)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeE.png")),
+                         mode->tr("Shallow Slope (E)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeN.png")),
+                         mode->tr("Shallow Slope (N)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_slopeS.png")),
+                         mode->tr("Shallow Slope (S)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_peakWE.png")),
+                         mode->tr("Shallow Peak (Horizontal)"));
+    roofMenu->addAction(QPixmap(QLatin1String(":/BuildingEditor/icons/icon_roof_peakNS.png")),
+                         mode->tr("Shallow Peak (Vertical)"));
+    connect(roofMenu, SIGNAL(triggered(QAction*)), SLOT(roofShallowTypeChanged(QAction*)));
+
+    button = static_cast<QToolButton*>(widgetForAction(actions->actionRoofShallow));
     button->setMenu(roofMenu);
     button->setPopupMode(QToolButton::MenuButtonPopup);
     /////
@@ -270,8 +292,8 @@ void ObjectEditModeToolBar::roofTypeChanged(QAction *action)
 
     static RoofObject::RoofType roofTypes[] = {
         RoofObject::SlopeW,
-        RoofObject::SlopeN,
         RoofObject::SlopeE,
+        RoofObject::SlopeN,
         RoofObject::SlopeS,
         RoofObject::PeakWE,
         RoofObject::PeakNS,
@@ -288,7 +310,27 @@ void ObjectEditModeToolBar::roofTypeChanged(QAction *action)
 
     if (!RoofTool::instance()->isCurrent())
         RoofTool::instance()->makeCurrent();
+}
 
+void ObjectEditModeToolBar::roofShallowTypeChanged(QAction *action)
+{
+    int index = action->parentWidget()->actions().indexOf(action);
+
+    static RoofObject::RoofType roofTypes[] = {
+        RoofObject::ShallowSlopeW,
+        RoofObject::ShallowSlopeE,
+        RoofObject::ShallowSlopeN,
+        RoofObject::ShallowSlopeS,
+        RoofObject::ShallowPeakWE,
+        RoofObject::ShallowPeakNS
+    };
+
+    RoofShallowTool::instance()->setRoofType(roofTypes[index]);
+
+    RoofShallowTool::instance()->action()->setIcon(action->icon());
+
+    if (!RoofShallowTool::instance()->isCurrent())
+        RoofShallowTool::instance()->makeCurrent();
 }
 
 void ObjectEditModeToolBar::roofCornerTypeChanged(QAction *action)

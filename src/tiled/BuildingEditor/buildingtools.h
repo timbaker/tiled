@@ -478,6 +478,21 @@ private:
 
 /////
 
+class RoofShallowTool : public RoofTool
+{
+public:
+    static RoofShallowTool *instance();
+
+    RoofShallowTool();
+
+private:
+    Q_DISABLE_COPY(RoofShallowTool)
+    static RoofShallowTool *mInstance;
+    ~RoofShallowTool() { mInstance = 0; }
+};
+
+/////
+
 class RoofCornerTool : public RoofTool
 {
 public:

@@ -1947,6 +1947,23 @@ void RoofTool::updateStatusText()
 
 /////
 
+RoofShallowTool *RoofShallowTool::mInstance = 0;
+
+RoofShallowTool *RoofShallowTool::instance()
+{
+    if (!mInstance)
+        mInstance = new RoofShallowTool;
+    return mInstance;
+}
+
+RoofShallowTool::RoofShallowTool()
+    : RoofTool()
+{
+    setRoofType(RoofObject::ShallowPeakNS);
+}
+
+/////
+
 RoofCornerTool *RoofCornerTool::mInstance = 0;
 
 RoofCornerTool *RoofCornerTool::instance()

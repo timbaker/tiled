@@ -491,7 +491,9 @@ BuildingTileEntry *TileCategoryModel::entryAt(const QModelIndex &index) const
     int itemIndex = index.column() + index.row() * columnCount();
     int entryIndex = itemIndex / itemsPerEntry();
     int shadowIndex = itemIndex % itemsPerEntry();
-    if (entryIndex >= mCategory->entryCount() || shadowIndex >= mCategory->shadowCount())
+    if ((entryIndex >= mCategory->entryCount())
+            || (shadowIndex >= mCategory->shadowCount())
+            || (mCategory->shadowToEnum(shadowIndex) == -1))
         return 0;
     return mCategory->entry(entryIndex);
 }
@@ -503,7 +505,9 @@ int TileCategoryModel::enumAt(const QModelIndex &index) const
     int itemIndex = index.column() + index.row() * columnCount();
     int entryIndex = itemIndex / itemsPerEntry();
     int shadowIndex = itemIndex % itemsPerEntry();
-    if (entryIndex >= mCategory->entryCount() || shadowIndex >= mCategory->shadowCount())
+    if ((entryIndex >= mCategory->entryCount())
+            || (shadowIndex >= mCategory->shadowCount())
+            || (mCategory->shadowToEnum(shadowIndex) == -1))
         return BuildingTileCategory::Invalid;
     return mCategory->shadowToEnum(shadowIndex);
 }

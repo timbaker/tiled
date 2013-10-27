@@ -15,7 +15,16 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
-    <property name="margin">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
      <number>0</number>
     </property>
    </layout>
@@ -682,6 +691,21 @@
    </property>
    <property name="text">
     <string>Crop To Minimum</string>
+   </property>
+  </action>
+  <action name="actionRoofShallow">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_roof_peakNS.png</normaloff>:/BuildingEditor/icons/icon_roof_peakNS.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add Roof (Shallow)</string>
+   </property>
+   <property name="toolTip">
+    <string>Place Roof</string>
    </property>
   </action>
  </widget>
