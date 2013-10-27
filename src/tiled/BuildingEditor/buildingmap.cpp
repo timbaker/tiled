@@ -204,12 +204,16 @@ void BuildingMap::setCursorObject(BuildingFloor *floor, BuildingObject *object)
 {
     if (mCursorObjectFloor && (mCursorObjectFloor != floor)) {
         pendingLayoutToSquares.insert(mCursorObjectFloor);
+        if (mCursorObjectFloor->floorAbove())
+            pendingLayoutToSquares.insert(mCursorObjectFloor->floorAbove());
         schedulePending();
         mCursorObjectFloor = 0;
     }
 
     if (mShadowBuilding->setCursorObject(floor, object)) {
         pendingLayoutToSquares.insert(floor);
+        if (floor && floor->floorAbove())
+            pendingLayoutToSquares.insert(floor->floorAbove());
         schedulePending();
         mCursorObjectFloor = object ? floor : 0;
     }
@@ -219,6 +223,8 @@ void BuildingMap::dragObject(BuildingFloor *floor, BuildingObject *object, const
 {
     mShadowBuilding->dragObject(floor, object, offset);
     pendingLayoutToSquares.insert(floor);
+    if (floor->floorAbove())
+        pendingLayoutToSquares.insert(floor->floorAbove());
     schedulePending();
 }
 
@@ -226,6 +232,8 @@ void BuildingMap::resetDrag(BuildingFloor *floor, BuildingObject *object)
 {
     mShadowBuilding->resetDrag(object);
     pendingLayoutToSquares.insert(floor);
+    if (floor->floorAbove())
+        pendingLayoutToSquares.insert(floor->floorAbove());
     schedulePending();
 }
 
