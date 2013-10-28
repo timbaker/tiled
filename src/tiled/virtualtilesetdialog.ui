@@ -236,6 +236,18 @@
     <string>Change texture properties</string>
    </property>
   </action>
+  <action name="actionTilesetImageToClipboard">
+   <property name="icon">
+    <iconset resource="tiled.qrc">
+     <normaloff>:/images/16x16/edit-copy.png</normaloff>:/images/16x16/edit-copy.png</iconset>
+   </property>
+   <property name="text">
+    <string>Copy Image</string>
+   </property>
+   <property name="toolTip">
+    <string>Copy tileset image to clipboard</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

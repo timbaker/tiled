@@ -84,6 +84,7 @@ private slots:
     void vTileActivated(const QModelIndex &index);
     void clearVTiles();
     void showDiskImage(bool show);
+    void copyToClipboard();
 
     void tilesetAdded(VirtualTileset *vts);
     void tilesetRemoved(VirtualTileset *vts);

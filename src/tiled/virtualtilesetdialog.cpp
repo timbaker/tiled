@@ -32,6 +32,7 @@
 #include "tile.h"
 #include "tileset.h"
 
+#include <QClipboard>
 #include <QCloseEvent>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -329,6 +330,7 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     toolBar->setIconSize(QSize(16, 16));
     toolBar->addAction(ui->actionClearVTiles);
     toolBar->addAction(ui->actionShowDiskImage);
+    toolBar->addAction(ui->actionTilesetImageToClipboard);
     ui->vTileToolbarLayout->insertWidget(0, toolBar, 1);
 
     toolBar = new QToolBar;
@@ -398,6 +400,7 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     connect(ui->actionRemoveTileset, SIGNAL(triggered()), SLOT(removeTileset()));
     connect(ui->actionClearVTiles, SIGNAL(triggered()), SLOT(clearVTiles()));
     connect(ui->actionShowDiskImage, SIGNAL(toggled(bool)), SLOT(showDiskImage(bool)));
+    connect(ui->actionTilesetImageToClipboard, SIGNAL(triggered()), SLOT(copyToClipboard()));
     connect(ui->actionAddTexture, SIGNAL(triggered()), SLOT(addTexture()));
     connect(ui->actionRemoveTexture, SIGNAL(triggered()), SLOT(removeTexture()));
     connect(ui->actionTextureProperties, SIGNAL(triggered()), SLOT(textureProperties()));
@@ -605,6 +608,12 @@ void VirtualTilesetDialog::clearVTiles()
 void VirtualTilesetDialog::showDiskImage(bool show)
 {
     ui->vTilesetTiles->model()->setShowDiskImage(show);
+}
+
+void VirtualTilesetDialog::copyToClipboard()
+{
+    if (mCurrentVirtualTileset)
+        qApp->clipboard()->setImage(mCurrentVirtualTileset->image());
 }
 
 void VirtualTilesetDialog::tilesetAdded(VirtualTileset *vts)
@@ -991,6 +1000,7 @@ void VirtualTilesetDialog::updateActions()
     ui->actionRemoveTileset->setEnabled(ui->vTilesetNames->selectedItems().size() != 0);
     ui->actionClearVTiles->setEnabled(ui->vTilesetTiles->selectionModel()->selectedIndexes().size() != 0);
 //    ui->actionShowDiskImage->setEnabled(ui->vTilesetTiles->model()->diskImageValid());
+    ui->actionTilesetImageToClipboard->setEnabled(mCurrentVirtualTileset != 0);
     ui->actionRemoveTexture->setEnabled(ui->orthoFiles->selectionModel()->selectedIndexes().size() != 0);
     ui->actionTextureProperties->setEnabled(ui->orthoFiles->selectionModel()->selectedIndexes().size() != 0);
 }
