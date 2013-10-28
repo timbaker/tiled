@@ -252,7 +252,8 @@ SOURCES += aboutdialog.cpp \
     texturepropertiesdialog.cpp \
     tileshapegroupdialog.cpp \
     tileshapegrouppropertiesdialog.cpp \
-    tileshapepropertiesdialog.cpp
+    tileshapepropertiesdialog.cpp \
+    pixelbuffer.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -465,7 +466,8 @@ HEADERS += aboutdialog.h \
     texturepropertiesdialog.h \
     tileshapegroupdialog.h \
     tileshapegrouppropertiesdialog.h \
-    tileshapepropertiesdialog.h
+    tileshapepropertiesdialog.h \
+    pixelbuffer.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
