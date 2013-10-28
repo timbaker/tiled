@@ -91,7 +91,7 @@ Preferences::Preferences()
                                                QColor(Qt::darkGray).name()).toString());
     mShowAdjacentMaps = mSettings->value(QLatin1String("ShowAdjacentMaps"), true).toBool();
     mHighlightRoomUnderPointer = mSettings->value(QLatin1String("HighlightRoomUnderPointer"), false).toBool();
-    mUseVirtualTilesets = mSettings->value(QLatin1String("Interface/UseVirtualTilesets"), false).toBool();
+    mUseVirtualTilesets = mSettings->value(QLatin1String("UseVirtualTilesets"), false).toBool();
 #endif
     mSettings->endGroup();
 #ifdef ZOMBOID
