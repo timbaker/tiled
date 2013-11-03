@@ -80,6 +80,7 @@ public:
 private slots:
     void addTileset();
     void removeTileset();
+    void preferences();
 
     void vTileActivated(const QModelIndex &index);
     void clearVTiles();
@@ -152,6 +153,7 @@ private:
     bool mShowDiskImage;
     VirtualTilesetsFile *mFile;
     bool mShapesEdited;
+    bool mAlternateDirChanged;
 
     QUndoStack *mUndoStack;
 };

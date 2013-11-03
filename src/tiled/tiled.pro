@@ -253,7 +253,8 @@ SOURCES += aboutdialog.cpp \
     tileshapegroupdialog.cpp \
     tileshapegrouppropertiesdialog.cpp \
     tileshapepropertiesdialog.cpp \
-    pixelbuffer.cpp
+    pixelbuffer.cpp \
+    vtsprefsdialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -467,7 +468,8 @@ HEADERS += aboutdialog.h \
     tileshapegroupdialog.h \
     tileshapegrouppropertiesdialog.h \
     tileshapepropertiesdialog.h \
-    pixelbuffer.h
+    pixelbuffer.h \
+    vtsprefsdialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -524,7 +526,8 @@ FORMS += aboutdialog.ui \
     texturepropertiesdialog.ui \
     tileshapegroupdialog.ui \
     tileshapegrouppropertiesdialog.ui \
-    tileshapepropertiesdialog.ui
+    tileshapepropertiesdialog.ui \
+    vtsprefsdialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

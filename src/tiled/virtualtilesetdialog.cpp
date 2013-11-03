@@ -27,6 +27,7 @@
 #include "tileshapegroupdialog.h"
 #include "undoredobuttons.h"
 #include "virtualtileset.h"
+#include "vtsprefsdialog.h"
 #include "zoomable.h"
 
 #include "tile.h"
@@ -316,6 +317,7 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     mShowDiskImage(false),
     mFile(0),
     mShapesEdited(false),
+    mAlternateDirChanged(false),
     mUndoStack(new QUndoStack(this))
 {
     ui->setupUi(this);
@@ -324,6 +326,7 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
     toolBar->setIconSize(QSize(16, 16));
     toolBar->addAction(ui->actionAddTileset);
     toolBar->addAction(ui->actionRemoveTileset);
+    toolBar->addAction(ui->actionPreferences);
     ui->vTilesetToolbarLayout->insertWidget(0, toolBar);
 
     toolBar = new QToolBar;
@@ -398,6 +401,7 @@ VirtualTilesetDialog::VirtualTilesetDialog(QWidget *parent) :
 
     connect(ui->actionAddTileset, SIGNAL(triggered()), SLOT(addTileset()));
     connect(ui->actionRemoveTileset, SIGNAL(triggered()), SLOT(removeTileset()));
+    connect(ui->actionPreferences, SIGNAL(triggered()), SLOT(preferences()));
     connect(ui->actionClearVTiles, SIGNAL(triggered()), SLOT(clearVTiles()));
     connect(ui->actionShowDiskImage, SIGNAL(toggled(bool)), SLOT(showDiskImage(bool)));
     connect(ui->actionTilesetImageToClipboard, SIGNAL(triggered()), SLOT(copyToClipboard()));
@@ -575,6 +579,17 @@ void VirtualTilesetDialog::removeTileset()
                                   QMessageBox::Yes, QMessageBox::No) == QMessageBox::No)
             return;
         mUndoStack->push(new RemoveTileset(this, vts));
+    }
+}
+
+void VirtualTilesetDialog::preferences()
+{
+    VirtualTilesetPrefsDialog d(this);
+    if (d.exec() != QDialog::Accepted)
+        return;
+    if (Preferences::instance()->alternateVTSDir() != d.gameDir()) {
+        Preferences::instance()->setAlternateVTSDir(d.gameDir());
+        mAlternateDirChanged = true;
     }
 }
 
@@ -1041,15 +1056,16 @@ void VirtualTilesetDialog::closeEvent(QCloseEvent *event)
         settings.endGroup();
         saveSplitterSizes(ui->splitter);
 
-        if (!mUndoStack->isClean() || mShapesEdited) {
+        if (!mUndoStack->isClean() || mShapesEdited || mAlternateDirChanged) {
             if (!TextureMgr::instance().writeTxt())
                 QMessageBox::warning(this, tr("Error!"), TextureMgr::instance().errorString()
-                                     + tr("during TextureMgr::writeTxt()"));
+                                     + tr("\nduring TextureMgr::writeTxt()"));
             if (!VirtualTilesetMgr::instance().writeTxt())
                 QMessageBox::warning(this, tr("Error!"), VirtualTilesetMgr::instance().errorString()
-                                     + tr("during VirtualTilesetMgr::writeTxt()"));
+                                     + tr("\nduring VirtualTilesetMgr::writeTxt()"));
             mUndoStack->setClean();
             mShapesEdited = false;
+            mAlternateDirChanged = false;
         }
 
         event->accept();

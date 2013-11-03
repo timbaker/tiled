@@ -133,6 +133,9 @@ public:
 
     bool useVirtualTilesets() const
     { return mUseVirtualTilesets; }
+
+    QString alternateVTSDir() const
+    { return mAlternateVTSDir; }
 #endif // ZOMBOID
 
     /**
@@ -159,6 +162,7 @@ public slots:
     void setHighlightRoomUnderPointer(bool highlight);
     void setEraserBrushSize(int newSize);
     void setUseVirtualTilesets(bool use);
+    void setAlternateVTSDir(const QString &path);
 #endif
 
 signals:
@@ -226,6 +230,7 @@ private:
     bool mHighlightRoomUnderPointer;
     int mEraserBrushSize;
     bool mUseVirtualTilesets;
+    QString mAlternateVTSDir;
 #endif
 
     static Preferences *mInstance;

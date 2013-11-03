@@ -334,12 +334,27 @@ bool VirtualTilesetMgr::writeTxt()
 #endif
 
     TileShapesFile shapesFile;
-    (void) shapesFile.write(Preferences::instance()->configPath(QLatin1String("TileShapes.txt")),
-                            tileShapes(), shapeGroups());
+    if (!shapesFile.write(Preferences::instance()->configPath(QLatin1String("TileShapes.txt")),
+                          tileShapes(), shapeGroups())) {
+        mError = shapesFile.errorString();
+        return false;
+    }
 
     QString fileName = Preferences::instance()->tilesDirectory() + QLatin1String("/virtualtilesets.vts");
     VirtualTilesetsFile binFile;
-    return binFile.write(fileName, tilesets());
+    if (!binFile.write(fileName, tilesets())) {
+        mError = binFile.errorString();
+        return false;
+    }
+
+    QString altDir = Preferences::instance()->alternateVTSDir();
+    if (altDir.length()) {
+        fileName = altDir + QLatin1String("/virtualtilesets.vts");
+        if (!binFile.write(fileName, tilesets())) {
+            mError = binFile.errorString() + tr("\nwhile saving copy of virtualtilesets.vts");
+            return false;
+        }
+    }
 
     return true;
 }
