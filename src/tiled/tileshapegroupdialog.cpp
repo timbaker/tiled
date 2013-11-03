@@ -397,7 +397,7 @@ TileShapeGroupDialog::~TileShapeGroupDialog()
 
 void TileShapeGroupDialog::selectGroupAndShape(TileShapeGroup *g, int col, int row)
 {
-    int index = (g == mUngroupedGroup) ? 0 : VirtualTilesetMgr::instance().shapeGroups().indexOf(g) + 1;
+    int index = (g == mUngroupedGroup) ? 0 : VirtualTilesetMgr::instance().indexOf(g) + 1;
     ui->groupsList->setCurrentRow(index);
     ui->shapesList->setCurrentIndex(ui->shapesList->model()->index(row, col));
     ui->groupCombo->setCurrentIndex(index);
@@ -448,7 +448,7 @@ void TileShapeGroupDialog::addGroup()
     if (d.exec() != QDialog::Accepted)
         return;
     TileShapeGroup *g = new TileShapeGroup(d.label(), d.columnCount(), d.rowCount());
-    mUndoStack->push(new AddGroup(this, VirtualTilesetMgr::instance().shapeGroups().size(), g));
+    mUndoStack->push(new AddGroup(this, VirtualTilesetMgr::instance().shapeGroupCount(), g));
 }
 
 void TileShapeGroupDialog::removeGroup()
@@ -516,7 +516,7 @@ void TileShapeGroupDialog::shapeGroupRemoved(int index, TileShapeGroup *g)
 
 void TileShapeGroupDialog::shapeGroupChanged(TileShapeGroup *g)
 {
-    int row = VirtualTilesetMgr::instance().shapeGroups().indexOf(g) + 1;
+    int row = VirtualTilesetMgr::instance().indexOf(g) + 1;
     ui->groupsList->item(row)->setText(g->label());
     if (g == mCurrentGroup)
         setShapeList();

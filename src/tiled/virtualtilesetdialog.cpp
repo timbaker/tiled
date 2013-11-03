@@ -600,7 +600,31 @@ void VirtualTilesetDialog::vTileActivated(const QModelIndex &index)
         if (TextureInfo *tex = TextureMgr::instance().texture(texName)) {
             int row = TextureMgr::instance().textures().indexOf(tex);
             ui->orthoFiles->setCurrentRow(row);
-            ui->orthoTiles->setCurrentIndex(ui->orthoTiles->model()->index(vtile->srcY(), vtile->srcX()));
+            ui->orthoTiles->setCurrentIndex(
+                        ui->orthoTiles->model()->index(vtile->srcY(), vtile->srcX()));
+        }
+        if (TileShape *shape = vtile->shape()) {
+            int row = -1;
+            if (mUngroupedGroup->hasShape(shape)) {
+                row = 0;
+            } else {
+                for (int i = 0; i < VirtualTilesetMgr::instance().shapeGroupCount(); i++) {
+                    if (VirtualTilesetMgr::instance().shapeGroupAt(i)->hasShape(shape)) {
+                        row = 1 + i;
+                        break;
+                    }
+                }
+            }
+            if (row != -1) {
+                ui->comboBox->setCurrentIndex(row);
+                foreach (VirtualTile *vtile2, mIsoTileset->tiles()) {
+                    if (vtile2->shape() == shape) {
+                        ui->isoTiles->setCurrentIndex(
+                                    ui->isoTiles->model()->index(vtile2));
+                        break;
+                    }
+                }
+            }
         }
     }
 }
@@ -831,6 +855,7 @@ void VirtualTilesetDialog::textureProperties()
 
 void VirtualTilesetDialog::textureAdded(TextureInfo *tex)
 {
+    Q_UNUSED(tex)
 #if 0
     foreach (VirtualTileset *vts, mTilesets) {
         bool changed = false;
@@ -854,6 +879,7 @@ void VirtualTilesetDialog::textureAdded(TextureInfo *tex)
 
 void VirtualTilesetDialog::textureRemoved(TextureInfo *tex)
 {
+    Q_UNUSED(tex)
 #if 0
     foreach (VirtualTileset *vts, mTilesets) {
         bool changed = false;
