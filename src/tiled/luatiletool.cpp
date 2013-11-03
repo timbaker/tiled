@@ -1018,6 +1018,17 @@ bool LuaToolFile::read(const QString &fileName)
 
 //    int version = simple.version();
 
+    // There can be a LuaTools.txt in Preferences::configPath() and Preferences::appConfigPath().
+    // In the former case, there should be a subdirectory "lua" containing the tool files.
+    // In the latter case, we expect Preferences::luaPath() to contain the tool files.
+    QDir luaDir = dir.filePath(QLatin1String("lua"));
+    if (!luaDir.exists())
+#if defined(Q_OS_MAC)
+        luaDir = dir.filePath(QLatin1String("../Lua"));
+#else
+        luaDir = dir.filePath(QLatin1String("../lua"));
+#endif
+
     foreach (SimpleFileBlock block, simple.blocks) {
         if (block.name == QLatin1String("tool")) {
             QStringList keys;
@@ -1032,13 +1043,13 @@ bool LuaToolFile::read(const QString &fileName)
             info.mLabel = block.value("label");
 
             QString icon = block.value("icon");
-            info.mIcon = QIcon(dir.filePath(QLatin1String("lua/") + icon));
+            if (QFileInfo(icon).isRelative())
+                icon = luaDir.filePath(icon);
+            info.mIcon = QIcon(icon);
 
             info.mScript = block.value("script");
-            if (QFileInfo(info.mScript).isRelative()) {
-                info.mScript = QLatin1String("lua/") + info.mScript;
-                info.mScript = dir.filePath(info.mScript);
-            }
+            if (QFileInfo(info.mScript).isRelative())
+                info.mScript = luaDir.filePath(info.mScript);
 
             info.mDialogTitle = block.value("dialog-title");
 
