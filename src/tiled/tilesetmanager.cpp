@@ -441,6 +441,9 @@ void TilesetManager::waitForTilesets(const QList<Tileset *> &tilesets)
     foreach (Tileset *ts, tilesets) {
         if (ts->isLoaded())
             continue;
+        // Missing tilesets aren't in mTilesetImageCache
+        if (ts->isMissing())
+            continue;
         // There may be a thread already reading or about to read this image.
         QImage *image = new QImage(ts->imageSource());
         Tileset *cached = mTilesetImageCache->findMatch(ts, ts->imageSource());
