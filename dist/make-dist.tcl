@@ -3,25 +3,29 @@ if {[llength [info commands console]]} {
     update
 }
 
+set QT_DIR C:/Programming/QtSDK/5.1.1/msvc2012_64_opengl
 set BIN C:/Programming/Tiled/build-tiled-Desktop_Qt_5_1_1_MSVC2012_OpenGL_64bit-Release
 set SRC C:/Programming/Tiled/tiled
-set QT_BINARY_DIR C:/Programming/QtSDK/5.1.1/msvc2012_64_opengl/bin
-set QT_PLUGINS_DIR C:/Programming/QtSDK/5.1.1/msvc2012_64_opengl/plugins
-set QT_TRANSLATIONS_DIR C:/Programming/QtSDK/5.1.1/msvc2012_64_opengl/translations
 set DEST {C:\Users\Tim\Desktop\ProjectZomboid\Tools\TileZed}
 set SUFFIX "-64bit"
 set REDIST vcredist_x64.exe
+
+# Qt 5.2.0 release candidate
+set QT_DIR C:/Programming/Qt/qt5-build-msvc2012-x86_64/qtbase
+set BIN C:/Programming/Tiled/build-tiled-Qt_5_2_0_MSVC2012_OpenGL_64bit-Release
 
 if {$argc > 0} {
     switch -- [lindex $argv 0] {
         32bit {
             puts "dist.tcl: 32-bit"
             set BIN C:/Programming/Tiled/build-tiled-Desktop_Qt_5_1_1_MSVC2010_32bit_OpenGL-Release
-            set QT_BINARY_DIR C:/Programming/QtSDK/5.1.1/msvc2010_opengl/bin
-            set QT_PLUGINS_DIR C:/Programming/QtSDK/5.1.1/msvc2010_opengl/plugins
-            set QT_TRANSLATIONS_DIR C:/Programming/QtSDK/5.1.1/msvc2010_opengl/translations
+            set QT_DIR C:/Programming/QtSDK/5.1.1/msvc2010_opengl
             set SUFFIX "-32bit"
             set REDIST vcredist_x86.exe
+
+            # Qt 5.2.0 release candidate
+            set QT_DIR C:/Programming/Qt/qt5-build-msvc2012-x86/qtbase
+            set BIN C:/Programming/Tiled/build-tiled-Qt_5_2_0_MSVC2012_OpenGL_32bit-Release
         }
         64bit {
             puts "dist.tcl: 64-bit"
@@ -31,6 +35,10 @@ if {$argc > 0} {
         }
     }
 }
+
+set QT_BINARY_DIR $QT_DIR/bin
+set QT_PLUGINS_DIR $QT_DIR/plugins
+set QT_TRANSLATIONS_DIR $QT_DIR/translations
 
 proc copyFile {SOURCE DEST name {name2 ""}} {
     if {$name2 == ""} { set name2 $name }
@@ -173,9 +181,11 @@ copyFile $QT_BINARY_DIR $DEST Qt5Network.dll
 copyFile $QT_BINARY_DIR $DEST Qt5OpenGL.dll
 copyFile $QT_BINARY_DIR $DEST Qt5Widgets.dll
 copyFile $QT_BINARY_DIR $DEST Qt5Xml.dll
+if {[string first 5.1.1 $QT_BINARY_DIR] > 0} {
 copyFile $QT_BINARY_DIR $DEST icudt51.dll
 copyFile $QT_BINARY_DIR $DEST icuin51.dll
 copyFile $QT_BINARY_DIR $DEST icuuc51.dll
+}
 
 copyFile $QT_PLUGINS_DIR $DEST/plugins imageformats/qgif.dll
 copyFile $QT_PLUGINS_DIR $DEST/plugins imageformats/qjpeg.dll
