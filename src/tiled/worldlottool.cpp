@@ -272,11 +272,15 @@ void WorldLotTool::beforeWorldChanged()
 
 void WorldLotTool::afterWorldChanged()
 {
+    if (!mScene)
+        return;
     mCell = WorldEd::WorldEdMgr::instance()->cellForMap(mScene->mapDocument()->fileName());
 }
 
 void WorldLotTool::lotVisibilityChanged(WorldCellLot *lot)
 {
+    if (!mScene)
+        return;
     if (lot == mHoverLot && !lot->isVisible())
         updateHoverItem(0);
 }
