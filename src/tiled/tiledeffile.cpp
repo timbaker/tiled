@@ -222,122 +222,6 @@ TileDefTileset *TileDefFile::tileset(const QString &name)
 
 TileDefProperties::TileDefProperties()
 {
-#if 0
-    addBoolean("CollideNorth", "collideN");
-    addBoolean("CollideWest", "collideW");
-    addSeparator();
-
-    static const char *DoorStyle[] = { "None", "North", "West", 0 };
-    addEnum("Door", "door", DoorStyle);
-    addEnum("DoorFrame", "doorFr", DoorStyle);
-    addSeparator();
-
-    addBoolean("IsBed", "bed");
-    addBoolean("FloorOverlay");
-    addBoolean("IsFloor", "solidfloor");
-    addBoolean("IsIndoor", "exterior", true, true);
-    addSeparator();
-
-    static const char *TileBlockStyle[] = {
-        "None",
-        "Solid",
-        "SolidTransparent",
-        0
-    };
-    addEnum("TileBlockStyle", 0, TileBlockStyle);
-    addSeparator();
-
-    static const char *LightPolyStyle[] = {
-        "None",
-        "WallW",
-        "WallN",
-        0
-    };
-    addEnum("LightPolyStyle", 0, LightPolyStyle);
-    addSeparator();
-
-    addString("ContainerType", "container");
-    addBoolean("WheelieBin");
-    addSeparator();
-
-    static const char *RoofStyle[] = {
-        "None",
-        "WestRoofB",
-        "WestRoofM",
-        "WestRoofT",
-        0
-    };
-    addEnum("RoofStyle", 0, RoofStyle);
-    addSeparator();
-
-    addBoolean("ClimbSheetN", "climbSheetN");
-    addBoolean("ClimbSheetW", "climbSheetW");
-    addSeparator();
-
-    static const char *Direction[] = {
-        "None",
-        "N",
-        "NE",
-        "E",
-        "SE",
-        "S",
-        "SW",
-        "W",
-        "NW",
-        0
-    };
-    addEnum("FloorItemShelf", "floor", Direction);
-    addEnum("HighItemShelf", "shelf", Direction);
-    addEnum("TableItemShelf", "table", Direction);
-    addSeparator();
-
-    static const char *StairStyle[] = {
-        "None",
-        "BottomW",
-        "MiddleW",
-        "TopW",
-        "BottomN",
-        "MiddleN",
-        "TopN",
-        0
-    };
-    addEnum("StairStyle", "stairs", StairStyle);
-    addSeparator();
-
-    addBoolean("PreSeen");
-    addSeparator();
-
-    addBoolean("HoppableN");
-    addBoolean("HoppableW");
-    addBoolean("WallOverlay");
-    static const char *WallStyle[] = {
-        "None",
-        "WestWall",
-        "WestWallTrans",
-        "WestWindow",
-        "WestDoorFrame",
-        "NorthWall",
-        "NorthWallTrans",
-        "NorthWindow",
-        "NorthDoorFrame",
-        "NorthWestCorner",
-        "NorthWestCornerTrans",
-        "SouthEastCorner",
-        0
-    };
-    addEnum("WallStyle", 0, WallStyle);
-    addSeparator();
-
-    addInteger("WaterAmount", "waterAmount");
-    addInteger("WaterMaxAmount", "waterMaxAmount");
-    addBoolean("WaterPiped", "waterPiped");
-    addSeparator();
-
-    addInteger("OpenTileOffset");
-    addInteger("SmashedTileOffset");
-    addEnum("Window", "window", DoorStyle);
-    addBoolean("WindowLocked");
-#endif
 }
 
 TileDefProperties::~TileDefProperties()
@@ -387,66 +271,13 @@ void TileDefProperties::addEnum(const QString &name, const QString &shortName,
     mProperties += prop;
     mPropertyByName[name] = prop;
 }
-#if 0
-void TileDefProperties::addEnum(const char *name, const char *shortName,
-                                const char *enums[], const char *defaultValue,
-                                bool valueAsPropertyName)
-{
-    QStringList enums2;
-    for (int i = 0; enums[i]; i++)
-        enums2 += QLatin1String(enums[i]);
-    addEnum(QLatin1String(name), QLatin1String(shortName ? shortName : name),
-            enums2, QLatin1String(defaultValue), valueAsPropertyName);
-}
-#endif
+
 /////
 
 UIProperties::UIProperties()
 {
     const TileDefProperties &props = TilePropertyMgr::instance()->properties();
     foreach (TileDefProperty *prop, props.mProperties) {
-#if 0
-        if (prop->mName == QLatin1String("Door") ||
-                prop->mName == QLatin1String("DoorFrame") ||
-                prop->mName == QLatin1String("Window")) {
-            mProperties[prop->mName] = new PropDoorStyle(prop->mName,
-                                                         prop->mShortName,
-                                                         prop->asEnum()->mEnums);
-            continue;
-        }
-        if (prop->mName == QLatin1String("TileBlockStyle")) {
-            mProperties[prop->mName] = new PropTileBlockStyle(prop->mName,
-                                                              prop->asEnum()->mEnums);
-            continue;
-        }
-        if (prop->mName == QLatin1String("LightPolyStyle")) {
-            mProperties[prop->mName] = new PropLightPolyStyle(prop->mName,
-                                                              prop->asEnum()->mEnums);
-            continue;
-        }
-        if (prop->mName == QLatin1String("RoofStyle")) {
-            mProperties[prop->mName] = new PropRoofStyle(prop->mName,
-                                                         prop->asEnum()->mEnums);
-            continue;
-        }
-        if (prop->mName == QLatin1String("StairStyle")) {
-            mProperties[prop->mName] = new PropStairStyle(prop->mName,
-                                                          prop->mShortName,
-                                                          prop->asEnum()->mEnums);
-            continue;
-        }
-        if (prop->mName.contains(QLatin1String("ItemShelf"))) {
-            mProperties[prop->mName] = new PropDirection(prop->mName,
-                                                         prop->mShortName,
-                                                         prop->asEnum()->mEnums);
-            continue;
-        }
-        if (prop->mName == QLatin1String("WallStyle")) {
-            mProperties[prop->mName] = new PropWallStyle(prop->mName,
-                                                         prop->asEnum()->mEnums);
-            continue;
-        }
-#endif
         if (BooleanTileDefProperty *p = prop->asBoolean()) {
             mProperties[p->mName] = new PropGenericBoolean(prop->mName,
                                                            p->mShortName,
