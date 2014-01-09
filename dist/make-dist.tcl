@@ -3,29 +3,22 @@ if {[llength [info commands console]]} {
     update
 }
 
-set QT_DIR C:/Programming/QtSDK/5.1.1/msvc2012_64_opengl
-set BIN C:/Programming/Tiled/build-tiled-Desktop_Qt_5_1_1_MSVC2012_OpenGL_64bit-Release
-set SRC C:/Programming/Tiled/tiled
+set QT_DIR C:/Programming/QtSDK/5.2.0/msvc2012_64_opengl
+set BIN C:/Programming/TileZed/build-tiled-Qt_5_2_0_MSVC_2012_64bit-Release
+set SRC C:/Programming/TileZed/tiled
 set DEST {C:\Users\Tim\Desktop\ProjectZomboid\Tools\TileZed}
 set SUFFIX "-64bit"
 set REDIST vcredist_x64.exe
-
-# Qt 5.2.0 release candidate
-set QT_DIR C:/Programming/Qt/qt5-build-msvc2012-x86_64/qtbase
-set BIN C:/Programming/Tiled/build-tiled-Qt_5_2_0_MSVC2012_OpenGL_64bit-Release
 
 if {$argc > 0} {
     switch -- [lindex $argv 0] {
         32bit {
             puts "dist.tcl: 32-bit"
-            set BIN C:/Programming/Tiled/build-tiled-Desktop_Qt_5_1_1_MSVC2010_32bit_OpenGL-Release
-            set QT_DIR C:/Programming/QtSDK/5.1.1/msvc2010_opengl
+            append DEST "32"
+            set BIN C:/Programming/TileZed/build-tiled-Qt_5_2_0_MSVC_2010_32bit-Release
+            set QT_DIR C:/Programming/QtSDK/5.2.0/msvc2010_opengl
             set SUFFIX "-32bit"
             set REDIST vcredist_x86.exe
-
-            # Qt 5.2.0 release candidate
-            set QT_DIR C:/Programming/Qt/qt5-build-msvc2012-x86/qtbase
-            set BIN C:/Programming/Tiled/build-tiled-Qt_5_2_0_MSVC2012_OpenGL_32bit-Release
         }
         64bit {
             puts "dist.tcl: 64-bit"
@@ -100,7 +93,7 @@ proc createFile {DEST name contents} {
 }
 
 puts ---Toplevel---
-copyFile {C:\Programming\Tiled} $DEST $REDIST
+copyFile {C:\Programming\TileZed} $DEST $REDIST
 copyFile $BIN $DEST config.exe
 copyFile $BIN $DEST TileZed.exe
 copyFile $BIN $DEST tiled.dll
@@ -181,7 +174,7 @@ copyFile $QT_BINARY_DIR $DEST Qt5Network.dll
 copyFile $QT_BINARY_DIR $DEST Qt5OpenGL.dll
 copyFile $QT_BINARY_DIR $DEST Qt5Widgets.dll
 copyFile $QT_BINARY_DIR $DEST Qt5Xml.dll
-if {[string first 5.1.1 $QT_BINARY_DIR] > 0} {
+if {[file exists $QT_BINARY_DIR/icudt51.dll]} {
 copyFile $QT_BINARY_DIR $DEST icudt51.dll
 copyFile $QT_BINARY_DIR $DEST icuin51.dll
 copyFile $QT_BINARY_DIR $DEST icuuc51.dll
@@ -206,5 +199,5 @@ set ARCHIVE C:/Users/Tim/Desktop/ProjectZomboid/$name
 file delete $ARCHIVE
 cd C:/Users/Tim/Desktop/ProjectZomboid/Tools
 exec {C:\Program Files\7-Zip\7z.exe} a $ARCHIVE TileZed
-cd C:/Programming/Tiled
+cd C:/Programming/TileZed
 puts $name
