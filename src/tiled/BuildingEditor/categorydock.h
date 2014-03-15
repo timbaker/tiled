@@ -127,6 +127,7 @@ private:
     QMenu *mUsedContextMenu;
     QAction *mActionClearUsed;
     bool mSynching;
+    bool mPicking;
 
     struct
     {

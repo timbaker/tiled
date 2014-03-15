@@ -62,6 +62,7 @@ CategoryDock::CategoryDock(QWidget *parent) :
     mUsedContextMenu(new QMenu(this)),
     mActionClearUsed(new QAction(this)),
     mSynching(false),
+    mPicking(false),
     ui(&_ui)
 {
     setObjectName(QLatin1String("CategoryDock"));
@@ -418,7 +419,7 @@ void CategoryDock::currentEWallChanged(BuildingTileEntry *entry, bool mergeable)
         if (objects.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
-    if (anySelected || WallTool::instance()->isCurrent()) {
+    if (anySelected || WallTool::instance()->isCurrent() || mPicking) {
         WallTool::instance()->setCurrentExteriorTile(entry);
         return;
     }
@@ -453,7 +454,7 @@ void CategoryDock::currentIWallChanged(BuildingTileEntry *entry, bool mergeable)
         if (objects.count() > 1)
             mCurrentDocument->undoStack()->endMacro();
     }
-    if (anySelected || WallTool::instance()->isCurrent()) {
+    if (anySelected || WallTool::instance()->isCurrent() || mPicking) {
         WallTool::instance()->setCurrentInteriorTile(entry);
         return;
     }
@@ -997,10 +998,15 @@ void CategoryDock::furnitureSelectionChanged()
 
 void CategoryDock::objectPicked(BuildingObject *object)
 {
+    mPicking = true; // hack for alt-picking with WallTool
     if (FurnitureObject *fobj = object->asFurniture())
         selectAndDisplay(fobj->furnitureTile());
-    else
+    else if (WallObject *wobj = object->asWall()) {
+        selectAndDisplay(wobj->tile(WallObject::TileExterior));
+        selectAndDisplay(wobj->tile(WallObject::TileInterior));
+    } else
         selectAndDisplay(object->tile());
+    mPicking = false;
 }
 
 void CategoryDock::selectAndDisplay(BuildingTileEntry *entry)

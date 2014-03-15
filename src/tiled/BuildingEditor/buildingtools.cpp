@@ -150,7 +150,7 @@ void BaseTool::deactivate()
 {
     if (mHandCursor != HandNone) {
         if (mEditor->views().size())
-            mEditor->views().at(0)->unsetCursor();
+            mEditor->views().at(0)->viewport()->unsetCursor();
         mHandCursor = HandNone;
     }
     document()->disconnect(this);
@@ -911,7 +911,7 @@ void BaseObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
     if (mEyedrop) {
         BuildingObject *object = mEditor->topmostObjectAt(event->scenePos());
-        if (object && (object->asRoof() || object->asWall()))
+        if (object && (object->asRoof() /*|| object->asWall()*/))
             object = 0;
         bool mouseOverObject = object != 0;
         if (mouseOverObject != mMouseOverObject)
@@ -979,9 +979,9 @@ void BaseObjectTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
     if (eyedrop != mEyedrop) {
         mEyedrop = eyedrop;
         if (mEyedrop) {
-            mEditor->views().at(0)->setCursor(Qt::PointingHandCursor);
+            mEditor->views().at(0)->viewport()->setCursor(Qt::PointingHandCursor);
         } else {
-            mEditor->views().at(0)->unsetCursor();
+            mEditor->views().at(0)->viewport()->unsetCursor();
             mEditor->setMouseOverObject(0);
         }
     }
@@ -998,7 +998,7 @@ void BaseObjectTool::deactivate()
 {
     BaseTool::deactivate();
     if (mEyedrop) {
-        mEditor->views().at(0)->unsetCursor();
+        mEditor->views().at(0)->viewport()->unsetCursor();
         mEditor->setMouseOverObject(0);
         mEyedrop = false;
     }
@@ -1052,7 +1052,7 @@ void BaseObjectTool::eyedrop(BuildingObject *object)
     if (object->asFurniture()) tool = FurnitureTool::instance();
 //    if (object->asRoof()) tool = RoofTool::instance();
     if (object->asStairs()) tool = StairsTool::instance();
-//    if (object->asWall()) tool = WallTool::instance();
+    if (object->asWall()) tool = WallTool::instance();
     if (object->asWindow()) tool = WindowTool::instance();
     if (tool && !tool->isCurrent() && tool->action()->isEnabled())
         QMetaObject::invokeMethod(tool, "makeCurrent", Qt::QueuedConnection);
@@ -2389,6 +2389,8 @@ WallTool::WallTool() :
     mHandleObject(0),
     mHandleItem(0),
     mMouseOverHandle(false),
+    mEyedrop(false),
+    mMouseOverObject(false),
     mCurrentExteriorTile(BuildingTilesMgr::instance()->noneTileEntry()),
     mCurrentInteriorTile(BuildingTilesMgr::instance()->noneTileEntry()),
     mCurrentExteriorTrim(BuildingTilesMgr::instance()->noneTileEntry()),
@@ -2399,6 +2401,12 @@ WallTool::WallTool() :
 void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
+        if (mEyedrop) {
+            if (BuildingObject *object = mEditor->topmostObjectAt(event->scenePos())) {
+                eyedrop(object);
+            }
+            return;
+        }
         if (mMode != NoMode)
             return; // ignore clicks when creating/resizing
         mStartTilePos = mCurrentTilePos;
@@ -2461,6 +2469,16 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    if (mEyedrop) {
+        BuildingObject *object = mEditor->topmostObjectAt(event->scenePos());
+        if (object && (object->asRoof() /*|| object->asWall()*/))
+            object = 0;
+        bool mouseOverObject = object != 0;
+        if (mouseOverObject != mMouseOverObject)
+            mMouseOverObject = mouseOverObject;
+        mEditor->setMouseOverObject(object);
+    }
+
     mCurrentTilePos = mEditor->sceneToTile(event->scenePos(), mEditor->currentLevel());
     QPointF p = mEditor->sceneToTileF(event->scenePos(), mEditor->currentLevel());
     QPointF m(p.x() - int(p.x()), p.y() - int(p.y()));
@@ -2469,6 +2487,139 @@ void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     if (m.y() >= 0.5)
         mCurrentTilePos.setY(mCurrentTilePos.y() + 1);
 
+    mScenePos = event->scenePos();
+
+    updateCursor();
+
+
+}
+
+void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button() != Qt::LeftButton)
+        return;
+
+    if (mMode == Resize) {
+        mMode = NoMode;
+        QPoint pos = mHandleObject->pos();
+        int length = mHandleObject->length();
+        if (pos != mOriginalPos || length != mOriginalLength) {
+            mHandleObject->setPos(mOriginalPos);
+            mHandleObject->setLength(mOriginalLength);
+            undoStack()->beginMacro(tr("Resize Wall"));
+            undoStack()->push(new MoveObject(mEditor->document(), mHandleObject,
+                                             pos));
+            undoStack()->push(new ResizeWall(mEditor->document(), mHandleObject,
+                                             length));
+            undoStack()->endMacro();
+            updateStatusText();
+        }
+        mEditor->setCursorObject(0);
+        return;
+    }
+
+    if (mMode == Create) {
+        mMode = NoMode;
+        if (mObject->isValidPos()) {
+            mObject->setTile(mCurrentExteriorTile, WallObject::TileExterior);
+            mObject->setTile(mCurrentInteriorTile, WallObject::TileInterior);
+            mObject->setTile(mCurrentExteriorTrim, WallObject::TileExteriorTrim);
+            mObject->setTile(mCurrentInteriorTrim, WallObject::TileInteriorTrim);
+            BuildingFloor *floor = this->floor();
+            undoStack()->push(new AddObject(mEditor->document(), floor,
+                                            floor->objectCount(), mObject));
+        } else
+            delete mObject;
+        mObject = 0;
+        delete mItem;
+        mItem = 0;
+        updateStatusText();
+        mEditor->setCursorObject(0);
+    }
+}
+
+void WallTool::currentModifiersChanged(Qt::KeyboardModifiers modifiers)
+{
+    bool eyedrop = (modifiers & Qt::AltModifier) != 0;
+    if (eyedrop != mEyedrop) {
+        mEyedrop = eyedrop;
+        if (mEyedrop) {
+            mEditor->views().at(0)->viewport()->setCursor(Qt::PointingHandCursor);
+        } else {
+            mEditor->views().at(0)->viewport()->unsetCursor();
+            mEditor->setMouseOverObject(0);
+        }
+    }
+    updateCursor();
+}
+
+void WallTool::activate()
+{
+    BaseTool::activate();
+    updateStatusText();
+    if (mCursorItem)
+        mEditor->addItem(mCursorItem);
+    currentModifiersChanged(qApp->keyboardModifiers());
+}
+
+void WallTool::deactivate()
+{
+    BaseTool::deactivate();
+    if (mEyedrop) {
+        mEditor->views().at(0)->viewport()->unsetCursor();
+        mEditor->setMouseOverObject(0);
+        mEyedrop = false;
+    }
+    if (mCursorItem)
+        mEditor->removeItem(mCursorItem);
+}
+
+void WallTool::objectAboutToBeRemoved(BuildingObject *object)
+{
+    if (object == mHandleObject) {
+        mHandleObject = 0;
+        mObjectItem = 0;
+        mMouseOverHandle = false;
+        mMode = NoMode;
+    }
+}
+
+void WallTool::eyedrop(BuildingObject *object)
+{
+    updateCursor();
+
+    mEditor->document()->setSelectedObjects(QSet<BuildingObject*>());
+
+    if (FurnitureObject *fobj = object->asFurniture())
+        FurnitureTool::instance()->setCurrentTile(fobj->furnitureTile());
+
+    BaseTool *tool = 0;
+    if (object->asDoor()) tool = DoorTool::instance();
+    if (object->asFurniture()) tool = FurnitureTool::instance();
+//    if (object->asRoof()) tool = RoofTool::instance();
+    if (object->asStairs()) tool = StairsTool::instance();
+    if (object->asWall()) tool = WallTool::instance();
+    if (object->asWindow()) tool = WindowTool::instance();
+    if (tool && !tool->isCurrent() && tool->action()->isEnabled())
+        QMetaObject::invokeMethod(tool, "makeCurrent", Qt::QueuedConnection);
+
+    mEditor->document()->emitObjectPicked(object);
+}
+
+WallObject *WallTool::topmostWallAt(const QPointF &scenePos)
+{
+    foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
+        if (GraphicsWallItem *wallItem = dynamic_cast<GraphicsWallItem*>(item)) {
+            if (wallItem->object()->floor() == floor()) {
+                return wallItem->object()->asWall();
+            }
+        }
+    }
+    return 0;
+}
+
+void WallTool::updateCursor()
+{
     if (mMode == NoMode) {
         if (!mCursorItem) {
             mCursorItem = new QGraphicsPolygonItem;
@@ -2480,10 +2631,10 @@ void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         QRectF rect(mCurrentTilePos.x() - 6.0/30.0, mCurrentTilePos.y() - 6.0/30.0, 12.0/30.0, 12.0/30.0);
         mCursorItem->setPolygon(mEditor->tileToScenePolygonF(rect, mEditor->currentLevel()));
 
-        updateHandle(event->scenePos());
+        updateHandle(mScenePos);
 
         mCursorItem->setVisible(floor()->bounds(1, 1).contains(mCurrentTilePos) &&
-                                !mMouseOverHandle);
+                                !mMouseOverHandle && !mEyedrop);
 
         // See NOTE-SCENE-CORRUPTION
         if (mCursorItem->boundingRect() != mCursorSceneRect) {
@@ -2567,90 +2718,11 @@ void WallTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void WallTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
-{
-    if (event->button() != Qt::LeftButton)
-        return;
-
-    if (mMode == Resize) {
-        mMode = NoMode;
-        QPoint pos = mHandleObject->pos();
-        int length = mHandleObject->length();
-        if (pos != mOriginalPos || length != mOriginalLength) {
-            mHandleObject->setPos(mOriginalPos);
-            mHandleObject->setLength(mOriginalLength);
-            undoStack()->beginMacro(tr("Resize Wall"));
-            undoStack()->push(new MoveObject(mEditor->document(), mHandleObject,
-                                             pos));
-            undoStack()->push(new ResizeWall(mEditor->document(), mHandleObject,
-                                             length));
-            undoStack()->endMacro();
-            updateStatusText();
-        }
-        mEditor->setCursorObject(0);
-        return;
-    }
-
-    if (mMode == Create) {
-        mMode = NoMode;
-        if (mObject->isValidPos()) {
-            mObject->setTile(mCurrentExteriorTile, WallObject::TileExterior);
-            mObject->setTile(mCurrentInteriorTile, WallObject::TileInterior);
-            mObject->setTile(mCurrentExteriorTrim, WallObject::TileExteriorTrim);
-            mObject->setTile(mCurrentInteriorTrim, WallObject::TileInteriorTrim);
-            BuildingFloor *floor = this->floor();
-            undoStack()->push(new AddObject(mEditor->document(), floor,
-                                            floor->objectCount(), mObject));
-        } else
-            delete mObject;
-        mObject = 0;
-        delete mItem;
-        mItem = 0;
-        updateStatusText();
-        mEditor->setCursorObject(0);
-    }
-}
-
-void WallTool::activate()
-{
-    BaseTool::activate();
-    updateStatusText();
-    if (mCursorItem)
-        mEditor->addItem(mCursorItem);
-}
-
-void WallTool::deactivate()
-{
-    BaseTool::deactivate();
-    if (mCursorItem)
-        mEditor->removeItem(mCursorItem);
-}
-
-void WallTool::objectAboutToBeRemoved(BuildingObject *object)
-{
-    if (object == mHandleObject) {
-        mHandleObject = 0;
-        mObjectItem = 0;
-        mMouseOverHandle = false;
-        mMode = NoMode;
-    }
-}
-
-WallObject *WallTool::topmostWallAt(const QPointF &scenePos)
-{
-    foreach (QGraphicsItem *item, mEditor->items(scenePos)) {
-        if (GraphicsWallItem *wallItem = dynamic_cast<GraphicsWallItem*>(item)) {
-            if (wallItem->object()->floor() == floor()) {
-                return wallItem->object()->asWall();
-            }
-        }
-    }
-    return 0;
-}
-
 void WallTool::updateHandle(const QPointF &scenePos)
 {
     WallObject *wall = topmostWallAt(scenePos);
+    if (mEyedrop)
+        wall = 0;
 
     if (mMouseOverHandle) {
         mHandleItem->setHighlight(false);
@@ -2686,7 +2758,8 @@ void WallTool::updateHandle(const QPointF &scenePos)
     }
     mHandleObject = wall;
 
-    mEditor->setMouseOverObject(wall);
+    if (!mEyedrop)
+        mEditor->setMouseOverObject(wall);
 }
 
 void WallTool::updateStatusText()

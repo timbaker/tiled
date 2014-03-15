@@ -581,6 +581,8 @@ public:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
+    void currentModifiersChanged(Qt::KeyboardModifiers modifiers);
+
 public slots:
     void activate();
     void deactivate();
@@ -614,7 +616,9 @@ private slots:
     void objectAboutToBeRemoved(BuildingObject *object);
 
 private:
+    void eyedrop(BuildingObject *object);
     WallObject *topmostWallAt(const QPointF &scenePos);
+    void updateCursor();
     void updateHandle(const QPointF &scenePos);
     void updateStatusText();
     void resizeWall(int length);
@@ -633,10 +637,13 @@ private:
 
     QPoint mStartTilePos;
     QPoint mCurrentTilePos;
+    QPointF mScenePos;
     WallObject *mObject;
     GraphicsObjectItem *mItem;
     QGraphicsPolygonItem *mCursorItem;
     QRectF mCursorSceneRect;
+    bool mEyedrop;
+    bool mMouseOverObject;
 
     GraphicsWallItem *mObjectItem; // item for object mouse is over
     WallObject *mHandleObject; // object mouse is over
