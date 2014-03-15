@@ -146,9 +146,17 @@
      <addaction name="actionRoomDefRemove"/>
      <addaction name="actionRoomDefUnknownWalls"/>
     </widget>
+    <widget class="QMenu" name="menu_pack_files">
+     <property name="title">
+      <string>.pack files</string>
+     </property>
+     <addaction name="actionCreatePack"/>
+     <addaction name="actionPackViewer"/>
+    </widget>
     <addaction name="actionBuildingEditor"/>
     <addaction name="actionTilesetMetaInfo"/>
     <addaction name="actionTileProperties"/>
+    <addaction name="menu_pack_files"/>
     <addaction name="actionEnflatulator"/>
     <addaction name="actionVirtualTilesetDialog"/>
     <addaction name="actionWorldEd"/>
@@ -582,6 +590,16 @@
   <action name="actionEnflatulator">
    <property name="text">
     <string>Enflatulator</string>
+   </property>
+  </action>
+  <action name="actionPackViewer">
+   <property name="text">
+    <string>Pack Viewer</string>
+   </property>
+  </action>
+  <action name="actionCreatePack">
+   <property name="text">
+    <string>Create .pack file...</string>
    </property>
   </action>
  </widget>

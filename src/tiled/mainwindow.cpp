@@ -82,6 +82,7 @@
 #include "changetileselection.h"
 #include "converttolotdialog.h"
 #include "convertorientationdialog.h"
+#include "createpackdialog.h"
 #include "curbtool.h"
 #include "edgetool.h"
 #include "fencetool.h"
@@ -91,6 +92,7 @@
 #include "mapimagemanager.h"
 #include "mapmanager.h"
 #include "mapsdock.h"
+#include "packviewer.h"
 #include "picktiletool.h"
 #include "roomdeftool.h"
 #include "tiledefdialog.h"
@@ -633,6 +635,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             SLOT(tilesetMetaInfoDialog()));
     connect(mUi->actionTileProperties, SIGNAL(triggered()),
             SLOT(tilePropertiesEditor()));
+    connect(mUi->actionPackViewer, SIGNAL(triggered()),
+            SLOT(showPackViewer()));
+    connect(mUi->actionCreatePack, SIGNAL(triggered()),
+            SLOT(createPackFile()));
     mUi->actionEnflatulator->setVisible(false); // !!!
     connect(mUi->actionEnflatulator, SIGNAL(triggered()), SLOT(enflatulator()));
     new TextureMgr;
@@ -1675,6 +1681,19 @@ void MainWindow::tilePropertiesEditor()
     mTileDefDialog = TileDefDialog::instance();
     TileDefDialog::instance()->show();
     TileDefDialog::instance()->raise();
+}
+
+void MainWindow::createPackFile()
+{
+    CreatePackDialog d(this);
+    d.exec();
+}
+
+void MainWindow::showPackViewer()
+{
+    PackViewer *w = new PackViewer(this);
+    w->show();
+    w->raise();
 }
 
 #include "enflatulatordialog.h"

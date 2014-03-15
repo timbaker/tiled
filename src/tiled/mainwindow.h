@@ -221,6 +221,8 @@ public slots:
     void buildingTilePicked(const QString &tileName);
     void tilesetMetaInfoDialog();
     void tilePropertiesEditor();
+    void createPackFile();
+    void showPackViewer();
     void enflatulator();
     void virtualTilesetDialog();
     void launchWorldEd();
