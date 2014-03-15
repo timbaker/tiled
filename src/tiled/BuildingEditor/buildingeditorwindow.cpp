@@ -342,7 +342,9 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(ui->actionOpen, SIGNAL(triggered()), SLOT(openBuilding()));
     connect(ui->actionSave, SIGNAL(triggered()), SLOT(saveBuilding()));
     connect(ui->actionSaveAs, SIGNAL(triggered()), SLOT(saveBuildingAs()));
+
     connect(ui->actionExportTMX, SIGNAL(triggered()), SLOT(exportTMX()));
+    ui->actionExportTMX->setVisible(false);
 
     ui->actionNewBuilding->setShortcuts(QKeySequence::New);
     ui->actionOpen->setShortcuts(QKeySequence::Open);
