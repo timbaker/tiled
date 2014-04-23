@@ -223,6 +223,7 @@ public slots:
     void tilePropertiesEditor();
     void createPackFile();
     void showPackViewer();
+    void comparePackFiles();
     void enflatulator();
     void virtualTilesetDialog();
     void launchWorldEd();

@@ -92,6 +92,7 @@
 #include "mapimagemanager.h"
 #include "mapmanager.h"
 #include "mapsdock.h"
+#include "packcompare.h"
 #include "packviewer.h"
 #include "picktiletool.h"
 #include "roomdeftool.h"
@@ -639,6 +640,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             SLOT(showPackViewer()));
     connect(mUi->actionCreatePack, SIGNAL(triggered()),
             SLOT(createPackFile()));
+    connect(mUi->actionComparePack, SIGNAL(triggered()),
+            SLOT(comparePackFiles()));
     mUi->actionEnflatulator->setVisible(false); // !!!
     connect(mUi->actionEnflatulator, SIGNAL(triggered()), SLOT(enflatulator()));
     new TextureMgr;
@@ -1692,6 +1695,13 @@ void MainWindow::createPackFile()
 void MainWindow::showPackViewer()
 {
     PackViewer *w = new PackViewer(this);
+    w->show();
+    w->raise();
+}
+
+void MainWindow::comparePackFiles()
+{
+    PackCompare *w = new PackCompare(this);
     w->show();
     w->raise();
 }

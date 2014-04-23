@@ -19,6 +19,7 @@
 #include "ui_createpackdialog.h"
 
 #include "texturepacker.h"
+#include "zprogress.h"
 
 #include "BuildingEditor/simplefile.h"
 
@@ -206,6 +207,8 @@ void CreatePackDialog::accept()
 {
     TexturePackSettings settings;
     settingsFromUI(settings);
+
+    PROGRESS progress(tr("Packing..."));
 
     TexturePacker packer;
     if (!packer.pack(settings)) {

@@ -19,10 +19,9 @@
 #define PACKVIEWER_H
 
 #include "texturepackfile.h"
-#include <QMainWindow>
 
-class QGraphicsPixmapItem;
-class QGraphicsRectItem;
+#include <QGraphicsItem>
+#include <QMainWindow>
 
 namespace Ui {
 class PackViewer;
@@ -33,6 +32,15 @@ namespace Internal {
 class Zoomable;
 }
 }
+
+class PackImageItem : public QGraphicsPixmapItem
+{
+public:
+    PackImageItem();
+    void setPackPage(PackPage pp) { mPackPage = pp; }
+    void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
+    PackPage mPackPage;
+};
 
 class PackViewer : public QMainWindow
 {
@@ -48,13 +56,14 @@ private slots:
     void scaleChanged(qreal scale);
     void chooseBackgroundColor();
     void setBackgroundColor(const QColor &color);
+    void extractImages();
 
 private:
     Ui::PackViewer *ui;
     PackFile mPackFile;
     Tiled::Internal::Zoomable *mZoomable;
     QGraphicsRectItem *mRectItem;
-    QGraphicsPixmapItem *mPixmapItem;
+    PackImageItem *mPixmapItem;
 };
 
 #endif // PACKVIEWER_H

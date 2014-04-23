@@ -152,6 +152,7 @@
      </property>
      <addaction name="actionCreatePack"/>
      <addaction name="actionPackViewer"/>
+     <addaction name="actionComparePack"/>
     </widget>
     <addaction name="actionBuildingEditor"/>
     <addaction name="actionTilesetMetaInfo"/>
@@ -600,6 +601,11 @@
   <action name="actionCreatePack">
    <property name="text">
     <string>Create .pack file...</string>
+   </property>
+  </action>
+  <action name="actionComparePack">
+   <property name="text">
+    <string>Compare .pack files...</string>
    </property>
   </action>
  </widget>

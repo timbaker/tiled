@@ -62,6 +62,7 @@
     </property>
     <addaction name="actionOpen"/>
     <addaction name="actionBackgroundColor"/>
+    <addaction name="actionExtractImages"/>
     <addaction name="actionClose"/>
    </widget>
    <addaction name="menuFile"/>
@@ -79,6 +80,11 @@
   <action name="actionBackgroundColor">
    <property name="text">
     <string>Background color...</string>
+   </property>
+  </action>
+  <action name="actionExtractImages">
+   <property name="text">
+    <string>Extract images...</string>
    </property>
   </action>
  </widget>

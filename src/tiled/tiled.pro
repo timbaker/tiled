@@ -258,7 +258,9 @@ SOURCES += aboutdialog.cpp \
     packviewer.cpp \
     createpackdialog.cpp \
     texturepackfile.cpp \
-    texturepacker.cpp
+    texturepacker.cpp \
+    packcompare.cpp \
+    packextractdialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -477,7 +479,9 @@ HEADERS += aboutdialog.h \
     packviewer.h \
     createpackdialog.h \
     texturepackfile.h \
-    texturepacker.h
+    texturepacker.h \
+    packcompare.h \
+    packextractdialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -537,7 +541,9 @@ FORMS += aboutdialog.ui \
     tileshapepropertiesdialog.ui \
     vtsprefsdialog.ui \
     packviewer.ui \
-    createpackdialog.ui
+    createpackdialog.ui \
+    packcompare.ui \
+    packextractdialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

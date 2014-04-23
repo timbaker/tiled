@@ -18,14 +18,17 @@
 #include "packviewer.h"
 #include "ui_packviewer.h"
 
+#include "packextractdialog.h"
 #include "zoomable.h"
 #include "zprogress.h"
 
 #include <QColorDialog>
+#include <QDebug>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QGraphicsDropShadowEffect>
 #include <QGraphicsPixmapItem>
+#include <QGraphicsSceneHoverEvent>
 #include <QSettings>
 
 using namespace Tiled::Internal;
@@ -41,12 +44,14 @@ PackViewer::PackViewer(QWidget *parent) :
     ui->graphicsView->setScene(new QGraphicsScene(ui->graphicsView));
     ui->graphicsView->setBackgroundBrush(Qt::lightGray);
     ui->graphicsView->setAlignment(Qt::AlignCenter);
+    ui->graphicsView->setMouseTracking(true);
 
     mRectItem = ui->graphicsView->scene()->addRect(QRectF(0, 0, 100, 100), QPen(Qt::gray));
     mRectItem->hide();
 //    rect->setGraphicsEffect(new QGraphicsDropShadowEffect);
 
-    mPixmapItem = ui->graphicsView->scene()->addPixmap(QPixmap());
+    mPixmapItem = new PackImageItem;
+    ui->graphicsView->scene()->addItem(mPixmapItem);
     mPixmapItem->hide();
 
     mZoomable = new Zoomable(this);
@@ -57,6 +62,7 @@ PackViewer::PackViewer(QWidget *parent) :
     connect(ui->actionOpen, SIGNAL(triggered()), SLOT(openPack()));
     connect(ui->listWidget, SIGNAL(itemSelectionChanged()), SLOT(itemSelectionChanged()));
     connect(ui->actionBackgroundColor, SIGNAL(triggered()), SLOT(chooseBackgroundColor()));
+    connect(ui->actionExtractImages, SIGNAL(triggered()), SLOT(extractImages()));
     connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
 
     QSettings settings;
@@ -97,6 +103,7 @@ void PackViewer::itemSelectionChanged()
         QPixmap pixmap = QPixmap::fromImage(mPackFile.pages().at(row).image);
         mRectItem->setRect(QRectF(QPoint(-1, -1), pixmap.size() + QSize(1, 1)));
         mRectItem->show();
+        mPixmapItem->setPackPage(mPackFile.pages().at(row));
         mPixmapItem->setPixmap(pixmap);
         mPixmapItem->show();
         ui->graphicsView->scene()->setSceneRect(QRectF(QPoint(), pixmap.size()).adjusted(-32, -32, 32, 32));
@@ -121,4 +128,32 @@ void PackViewer::setBackgroundColor(const QColor &color)
     ui->graphicsView->setBackgroundBrush(color);
     QSettings settings;
     settings.setValue(KEY_BG, color);
+}
+
+void PackViewer::extractImages()
+{
+    PackExtractDialog d(mPackFile, this);
+    d.exec();
+}
+
+/////
+
+PackImageItem::PackImageItem() :
+    QGraphicsPixmapItem()
+{
+    setAcceptHoverEvents(true);
+}
+
+void PackImageItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
+{
+    qreal x = event->scenePos().x();
+    qreal y = event->scenePos().y();
+
+    foreach (PackSubTexInfo info, mPackPage.mInfo) {
+        if (x >= info.x && x < info.x + info.w &&
+                y >= info.y && y < info.y + info.h) {
+            setToolTip(info.name);
+            return;
+        }
+    }
 }
