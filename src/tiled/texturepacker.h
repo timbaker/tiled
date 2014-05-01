@@ -89,6 +89,7 @@ private:
     bool PackImageRectangles();
     bool TestPackingImages(int testWidth, int testHeight, QMap<QString,QRect> &testImagePlacement);
     QImage CreateOutputImage();
+    bool LoadTileNamesFile(QString imageName, int columns);
 
 private:
     QString mError;
@@ -98,6 +99,7 @@ private:
     QSet<QString> mImageNameSet;
     QStringList toPack;
     QMap<QString,QImage> mInputImages;
+    QMap<QString,QString> mTileNames;
 
     class Translation
     {

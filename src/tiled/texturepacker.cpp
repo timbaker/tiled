@@ -20,7 +20,19 @@
 #include "texturepackfile.h"
 
 #include <QDir>
+#include <QFile>
 #include <QImage>
+#include <QRegularExpression>
+#include <QTextStream>
+
+#if defined(Q_OS_WIN) && (_MSC_VER >= 1600)
+// Hmmmm.  libtiled.dll defines the Properties class as so:
+// class TILEDSHARED_EXPORT Properties : public QMap<QString,QString>
+// Suddenly I'm getting a 'multiply-defined symbol' error.
+// I found the solution here:
+// http://www.archivum.info/qt-interest@trolltech.com/2005-12/00242/RE-Linker-Problem-while-using-QMap.html
+template class __declspec(dllimport) QMap<QString, QString>;
+#endif
 
 #define TILE_WIDTH 64
 #define TILE_HEIGHT 128
@@ -65,6 +77,8 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
             if (index.contains(QLatin1String("_INDEX_"))) {
                 QStringList ss = index.split(QLatin1String("_INDEX_"));
                 name = QFileInfo(ss[1]).baseName() + QLatin1String("_") + ss[0];
+                if (mTileNames.contains(index))
+                    name = mTileNames[index];
             } else {
                 name = QFileInfo(index).baseName();
             }
@@ -139,6 +153,9 @@ bool TexturePacker::PackImages(QImage &outputImage)
                 imageTranslation[str] = WorkOutTranslation(image);
                 toPack += str;
             } else {
+                if (!LoadTileNamesFile(str, cols)) {
+                    return false;
+                }
                 for (int y = 0; y < rows; y++) {
                     for (int x = 0; x < cols; x++) {
                         Translation tln = WorkOutTranslation(image, x * TILE_WIDTH, y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
@@ -301,6 +318,54 @@ QImage TexturePacker::CreateOutputImage()
         }
     }
     return bitmap1;
+}
+
+bool TexturePacker::LoadTileNamesFile(QString imageName, int columns)
+{
+    QFileInfo fileInfo(imageName);
+    fileInfo.setFile(fileInfo.absolutePath() + QLatin1String("/") + fileInfo.completeBaseName() + QLatin1String(".pack.txt"));
+    if (!fileInfo.exists())
+        return true;
+
+    QFile file(fileInfo.absoluteFilePath());
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        mError = file.errorString();
+        return false;
+    }
+
+    QString pat(QLatin1String("\\s+"));
+    QRegularExpression re(pat);
+
+    QTextStream ts(&file);
+    int lineNumber = 0;
+    while (!ts.atEnd()) {
+        QString line = ts.readLine().trimmed();
+        ++lineNumber;
+        if (line.isEmpty())
+            continue;
+        if (line.startsWith(QLatin1String("//")))
+            continue;
+        QStringList ss = line.split(re, QString::SkipEmptyParts);
+        if (ss.size() != 3) {
+            mError = tr("\"col row name\" expected on line %1\n%2").arg(lineNumber).arg(imageName);
+            return false;
+        }
+        bool ok;
+        int col = ss[0].toInt(&ok);
+        if (!ok) {
+            mError = tr("\"col row name\" expected on line %1\n%2").arg(lineNumber).arg(imageName);
+        }
+        int row = ss[1].toInt(&ok);
+        if (!ok) {
+            mError = tr("\"col row name\" expected on line %1\n%2").arg(lineNumber).arg(imageName);
+        }
+        if (col < 0 || row < 0 || col >= columns) {
+            mError = tr("invalid column or row on line %1\n%2").arg(lineNumber).arg(imageName);
+        }
+        QString key = QString::fromLatin1("%1_INDEX_%2").arg(col + row * columns).arg(imageName);
+        mTileNames[key] = ss[2];
+    }
+    return true;
 }
 
 TexturePacker::Translation TexturePacker::WorkOutTranslation(QImage image)
