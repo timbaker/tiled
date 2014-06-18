@@ -260,7 +260,10 @@ SOURCES += aboutdialog.cpp \
     texturepackfile.cpp \
     texturepacker.cpp \
     packcompare.cpp \
-    packextractdialog.cpp
+    packextractdialog.cpp \
+    containeroverlayview.cpp \
+    containeroverlayfile.cpp \
+    containeroverlaydialog.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -481,7 +484,10 @@ HEADERS += aboutdialog.h \
     texturepackfile.h \
     texturepacker.h \
     packcompare.h \
-    packextractdialog.h
+    packextractdialog.h \
+    containeroverlayview.h \
+    containeroverlayfile.h \
+    containeroverlaydialog.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -543,7 +549,8 @@ FORMS += aboutdialog.ui \
     packviewer.ui \
     createpackdialog.ui \
     packcompare.ui \
-    packextractdialog.ui
+    packextractdialog.ui \
+    containeroverlaydialog.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

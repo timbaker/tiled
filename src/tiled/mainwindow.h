@@ -42,6 +42,8 @@ class MainWindow;
 }
 
 #ifdef ZOMBOID
+class ContainerOverlayDialog;
+
 namespace BuildingEditor {
 class BuildingEditorWindow;
 }
@@ -224,6 +226,7 @@ public slots:
     void createPackFile();
     void showPackViewer();
     void comparePackFiles();
+    void containerOverlayDialog();
     void enflatulator();
     void virtualTilesetDialog();
     void launchWorldEd();
@@ -336,6 +339,7 @@ private:
 #ifdef ZOMBOID
     BuildingEditor::BuildingEditorWindow *mBuildingEditor;
     TileDefDialog *mTileDefDialog;
+    ContainerOverlayDialog *mContainerOverlayDialog;
 #endif
 };
 

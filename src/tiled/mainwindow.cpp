@@ -80,6 +80,7 @@
 #include "bmpblender.h"
 #include "bmptool.h"
 #include "changetileselection.h"
+#include "containeroverlaydialog.h"
 #include "converttolotdialog.h"
 #include "convertorientationdialog.h"
 #include "createpackdialog.h"
@@ -187,6 +188,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 #ifdef ZOMBOID
     , mBuildingEditor(0)
     , mTileDefDialog(0)
+    , mContainerOverlayDialog(0)
 #endif
 {
 #ifdef ZOMBOID
@@ -642,6 +644,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             SLOT(createPackFile()));
     connect(mUi->actionComparePack, SIGNAL(triggered()),
             SLOT(comparePackFiles()));
+    connect(mUi->actionContainerOverlays, SIGNAL(triggered()),
+            SLOT(containerOverlayDialog()));
     mUi->actionEnflatulator->setVisible(false); // !!!
     connect(mUi->actionEnflatulator, SIGNAL(triggered()), SLOT(enflatulator()));
     new TextureMgr;
@@ -722,6 +726,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if (confirmAllSave() &&
             TileDefDialog::closeYerself() &&
             VirtualTilesetDialog::closeYerself() &&
+            (!mContainerOverlayDialog || mContainerOverlayDialog->close()) &&
             (!mBuildingEditor || mBuildingEditor->closeYerself())) {
 
         /*
@@ -1704,6 +1709,23 @@ void MainWindow::comparePackFiles()
     PackCompare *w = new PackCompare(this);
     w->show();
     w->raise();
+}
+
+void MainWindow::containerOverlayDialog()
+{
+    if (mContainerOverlayDialog == 0)
+        mContainerOverlayDialog = new ContainerOverlayDialog(this);
+    mContainerOverlayDialog->show();
+    mContainerOverlayDialog->raise();
+
+    TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
+    foreach (Tileset *ts, mgr->tilesets()) {
+        if (ts->isMissing()) {
+            PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
+            mgr->loadTilesets();
+            break;
+        }
+    }
 }
 
 #include "enflatulatordialog.h"

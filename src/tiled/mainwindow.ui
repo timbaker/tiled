@@ -158,6 +158,7 @@
     <addaction name="actionTilesetMetaInfo"/>
     <addaction name="actionTileProperties"/>
     <addaction name="menu_pack_files"/>
+    <addaction name="actionContainerOverlays"/>
     <addaction name="actionEnflatulator"/>
     <addaction name="actionVirtualTilesetDialog"/>
     <addaction name="actionWorldEd"/>
@@ -606,6 +607,11 @@
   <action name="actionComparePack">
    <property name="text">
     <string>Compare .pack files...</string>
+   </property>
+  </action>
+  <action name="actionContainerOverlays">
+   <property name="text">
+    <string>Container Overlays...</string>
    </property>
   </action>
  </widget>
