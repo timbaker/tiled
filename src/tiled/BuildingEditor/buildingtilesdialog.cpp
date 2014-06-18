@@ -1420,21 +1420,16 @@ void BuildingTilesDialog::removeTiles()
         return;
     }
 
-#if 1
     BuildingTileEntryView *v = ui->categoryTilesView;
-#else
-    MixedTilesetView *v = ui->categoryTilesView;
-#endif
     QModelIndexList selection = v->selectionModel()->selectedIndexes();
     if (selection.count() > 1)
         mUndoStack->beginMacro(tr("Remove Tiles from %1").arg(mCategory->label()));
+    QList<BuildingTileEntry*> entries;
     foreach (QModelIndex index, selection) {
-#if 1
         BuildingTileEntry *entry = v->entry(index);
-#else
-        BuildingTileEntry *entry = static_cast<BuildingTileEntry*>(
-                    v->model()->userDataAt(index));
-#endif
+        entries += entry;
+    }
+    foreach (BuildingTileEntry *entry, entries) {
         mUndoStack->push(new RemoveTileFromCategory(this, mCategory,
                                                     mCategory->indexOf(entry)));
     }
