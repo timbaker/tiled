@@ -547,6 +547,8 @@ void BuildingBaseScene::setEditingTiles(bool editing)
 
 bool BuildingBaseScene::shouldShowFloorItem(BuildingFloor *floor) const
 {
+    if (!BuildingPreferences::instance()->showLowerFloors())
+        return floor->level() == currentLevel();
     return floor->level() <= currentLevel();
 }
 
@@ -555,6 +557,10 @@ bool BuildingBaseScene::shouldShowObjectItem(BuildingObject *object) const
     // Cursor items are always visible.
     if (!object->floor())
         return true;
+
+    if (!BuildingPreferences::instance()->showLowerFloors())
+        return BuildingPreferences::instance()->showObjects() &&
+                object->floor()->level() == currentLevel();
 
     return BuildingPreferences::instance()->showObjects() &&
             (currentLevel() <= object->floor()->level());
@@ -1499,7 +1505,7 @@ void BuildingOrthoScene::currentFloorChanged()
     int level = mDocument->currentLevel();
     for (int i = 0; i <= level; i++) {
         mFloorItems[i]->setOpacity((i == level) ? 1.0 : 0.15);
-        mFloorItems[i]->setVisible(true);
+        mFloorItems[i]->synchVisibility();
     }
     for (int i = level + 1; i < building()->floorCount(); i++)
         mFloorItems[i]->setVisible(false);

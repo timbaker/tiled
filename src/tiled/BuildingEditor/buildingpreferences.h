@@ -54,6 +54,9 @@ public:
     bool showWalls() const
     { return mShowWalls; }
 
+    bool showLowerFloors() const
+    { return mShowLowerFloors; }
+
     bool showObjects() const
     { return mShowObjects; }
 
@@ -73,6 +76,7 @@ signals:
     void highlightFloorChanged(bool highlight);
     void highlightRoomChanged(bool highlight);
     void showWallsChanged(bool show);
+    void showLowerFloorsChanged(bool show);
     void showObjectsChanged(bool show);
     void tileScaleChanged(qreal scale);
     void useOpenGLChanged(bool useOpenGL);
@@ -85,6 +89,7 @@ public slots:
     void setHighlightFloor(bool highlight);
     void setHighlightRoom(bool highlight);
     void setShowWalls(bool show);
+    void setShowLowerFloors(bool show);
     void setShowObjects(bool show);
     void setTileScale(qreal scale);
     void setUseOpenGL(bool useOpenGL);
@@ -99,6 +104,7 @@ private:
     bool mHighlightFloor;
     bool mHighlightRoom;
     bool mShowWalls;
+    bool mShowLowerFloors;
     bool mShowObjects;
     qreal mTileScale;
     bool mUseOpenGL;

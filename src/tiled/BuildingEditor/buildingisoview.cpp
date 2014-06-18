@@ -259,6 +259,8 @@ BuildingIsoScene::BuildingIsoScene(QObject *parent) :
             SLOT(highlightFloorChanged(bool)));
     connect(prefs(), SIGNAL(highlightRoomChanged(bool)),
             SLOT(highlightRoomChanged(bool)));
+    connect(prefs(), SIGNAL(showLowerFloorsChanged(bool)),
+            SLOT(showLowerFloorsChanged(bool)));
 
     connect(ToolManager::instance(), SIGNAL(currentToolChanged(BaseTool*)),
             SLOT(currentToolChanged(BaseTool*)));
@@ -1007,7 +1009,8 @@ void BuildingIsoScene::highlightFloorChanged(bool highlight)
     int currentLevel = mDocument->currentLevel();
     foreach (CompositeLayerGroupItem *item, mLayerGroupItems) {
         item->setVisible(!highlight ||
-                         (item->layerGroup()->level() <= currentLevel));
+                         (item->layerGroup()->level() == currentLevel) ||
+                         (item->layerGroup()->level() < currentLevel && prefs()->showLowerFloors()));
         if (item->layerGroup()->level() == currentLevel)
             z = item->zValue() - 0.5;
     }
@@ -1020,6 +1023,12 @@ void BuildingIsoScene::highlightRoomChanged(bool highlight)
 {
     Q_UNUSED(highlight)
     setCursorPosition(mHighlightRoomPos);
+}
+
+void BuildingIsoScene::showLowerFloorsChanged(bool show)
+{
+    Q_UNUSED(show)
+    highlightFloorChanged(prefs()->highlightFloor());
 }
 
 void BuildingIsoScene::tilesetAdded(Tileset *tileset)

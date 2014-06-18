@@ -78,6 +78,7 @@
     <addaction name="actionShowGrid"/>
     <addaction name="actionHighlightFloor"/>
     <addaction name="actionHighlightRoom"/>
+    <addaction name="actionShowLowerFloors"/>
     <addaction name="actionShowObjects"/>
     <addaction name="separator"/>
     <addaction name="menuViews"/>
@@ -706,6 +707,14 @@
    </property>
    <property name="toolTip">
     <string>Place Roof</string>
+   </property>
+  </action>
+  <action name="actionShowLowerFloors">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Lower Floors</string>
    </property>
   </action>
  </widget>

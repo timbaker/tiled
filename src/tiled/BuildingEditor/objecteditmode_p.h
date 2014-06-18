@@ -83,6 +83,7 @@ public:
 public slots:
     void updateDocumentTab();
     void showObjectsChanged();
+    void showLowerFloorsChanged();
 
     void zoomIn();
     void zoomOut();

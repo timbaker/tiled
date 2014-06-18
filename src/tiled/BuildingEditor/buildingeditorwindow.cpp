@@ -372,6 +372,12 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(prefs, SIGNAL(highlightRoomChanged(bool)),
             ui->actionHighlightRoom, SLOT(setChecked(bool)));
 
+    ui->actionShowLowerFloors->setChecked(prefs->showLowerFloors());
+    connect(ui->actionShowLowerFloors, SIGNAL(toggled(bool)),
+            prefs, SLOT(setShowLowerFloors(bool)));
+    connect(prefs, SIGNAL(showLowerFloorsChanged(bool)),
+            ui->actionShowLowerFloors, SLOT(setChecked(bool)));
+
     ui->actionShowObjects->setChecked(prefs->showObjects());
     connect(ui->actionShowObjects, SIGNAL(toggled(bool)),
             prefs, SLOT(setShowObjects(bool)));

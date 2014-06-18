@@ -387,6 +387,8 @@ ObjectEditModePerDocumentStuff::ObjectEditModePerDocumentStuff(
 
     connect(BuildingPreferences::instance(), SIGNAL(showObjectsChanged(bool)),
             SLOT(showObjectsChanged()));
+    connect(BuildingPreferences::instance(), SIGNAL(showLowerFloorsChanged(bool)),
+            SLOT(showLowerFloorsChanged()));
 
     connect(ToolManager::instance(), SIGNAL(currentEditorChanged()),
             SLOT(updateActions()));
@@ -453,6 +455,11 @@ void ObjectEditModePerDocumentStuff::updateDocumentTab()
 }
 
 void ObjectEditModePerDocumentStuff::showObjectsChanged()
+{
+    scene()->synchObjectItemVisibility();
+}
+
+void ObjectEditModePerDocumentStuff::showLowerFloorsChanged()
 {
     scene()->synchObjectItemVisibility();
 }
