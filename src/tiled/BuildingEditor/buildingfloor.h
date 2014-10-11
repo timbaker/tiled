@@ -36,6 +36,7 @@ class Door;
 class FloorType;
 class FurnitureObject;
 class FurnitureTile;
+class RoofObject;
 class Room;
 class Stairs;
 class Window;
@@ -319,6 +320,8 @@ private:
     QMap<QString,FloorTileGrid*> mGrimeGrid;
     QMap<QString,qreal> mLayerOpacity;
     QMap<QString,bool> mLayerVisibility;
+    QList<RoofObject*> mFlatRoofsWithDepthThree;
+    QList<Stairs*> mStairs;
 };
 
 } // namespace BuildingEditor

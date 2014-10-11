@@ -223,6 +223,7 @@ public slots:
     void buildingTilePicked(const QString &tileName);
     void tilesetMetaInfoDialog();
     void tilePropertiesEditor();
+    void compareTileDef();
     void createPackFile();
     void showPackViewer();
     void comparePackFiles();

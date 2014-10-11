@@ -59,6 +59,10 @@ static QString ReadString(QDataStream &in)
 
 bool TileDefFile::read(const QString &fileName)
 {
+    qDeleteAll(mTilesets);
+    mTilesets.clear();
+    mTilesetByName.clear();
+
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) {
         mError = tr("Error opening file for reading.\n%1").arg(fileName);

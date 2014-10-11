@@ -1,5 +1,87 @@
 property
 {
+    Type = String
+    Name = FlatTextureOverride
+    ShortName = FlatTextureOverride
+    Default =
+}
+property
+{
+    Type = Integer
+    Name = FlatTextureOffset
+    ShortName = FlatTextureOffset
+    Min = -64
+    Max = 64
+    Default = 0
+}
+
+property
+{
+    Type = Boolean
+    Name = Light
+    ShortName = lightswitch
+    Default = false
+    ReverseLogic = false
+}
+
+
+property
+{
+    Type = Integer
+    Name = LightR
+    ShortName = lightR
+    Min = 0
+    Max = 255
+    Default = 0
+}
+
+property
+{
+    Type = Integer
+    Name = LightG
+    ShortName = lightG
+    Min = 0
+    Max = 255
+    Default = 0
+}
+
+property
+{
+    Type = Integer
+    Name = LightB
+    ShortName = lightB
+    Min = 0
+    Max = 255
+    Default = 0
+}
+
+property
+{
+    Type = Boolean
+    Name = excludeFromIso
+    Name = excludeFromIso
+    ShortName = excludeFromIso
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Enum
+    Name = CanClimb
+    ShortName =
+    Enums
+    {
+        None =
+        North = climbSheetN
+        West = climbSheetW
+        NorthTop = climbSheetTopN
+        WestTop = climbSheetTopW
+    }
+    Default = None
+    ValueAsPropertyName = true
+}
+property
+{
     Type = Boolean
     Name = CollideNorth
     ShortName = collideN
@@ -127,6 +209,14 @@ property
     Default = false
     ReverseLogic = false
 }
+property
+{
+    Type = Boolean
+    Name = NoWallLighting
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
 separator
 {
 }
@@ -181,6 +271,26 @@ property
     ShortName = climbSheetW
     Default = false
     ReverseLogic = false
+}
+property
+{
+    Type = Enum
+    Name = ClimbSheet
+    ShortName =
+    Enums
+    {
+        None =
+        ClimbSheetN = climbSheetN
+        ClimbSheetS = climbSheetS
+        ClimbSheetW = climbSheetW
+        ClimbSheetE = climbSheetE
+        ClimbSheetTopN = climbSheetTopN
+        ClimbSheetTopS = climbSheetTopS
+        ClimbSheetTopW = climbSheetTopW
+        ClimbSheetTopE = climbSheetTopE
+    }
+    Default = None
+    ValueAsPropertyName = true
 }
 separator
 {
@@ -283,6 +393,16 @@ property
     Default = false
     ReverseLogic = false
 }
+
+property
+{
+    Type = Boolean
+    Name = FishingWater
+    ShortName = water
+    Default = false
+    ReverseLogic = false
+}
+
 separator
 {
 }
@@ -326,5 +446,39 @@ property
     Default = false
     ReverseLogic = false
 }
-
+property
+{
+    Type = Boolean
+    Name = MakeWindowInvincible
+    ShortName = makeWindowInvincible
+    Default = false
+    ReverseLogic = false
+}
+separator
+{
+}
+property
+{
+    Type = Enum
+    Name = Tree Size
+    ShortName = tree
+    Enums
+    {
+        None =
+        1/4 = 1
+        2/4 = 2
+        3/4 = 3
+        4/4 = 4
+    }
+    Default = None
+    ValueAsPropertyName = false
+}
+property
+{
+    Type = Boolean
+    Name = Propane Tank
+    ShortName = propaneTank
+    Default = false
+    ReverseLogic = false
+}
 

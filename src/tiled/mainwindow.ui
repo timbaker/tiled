@@ -157,6 +157,7 @@
     <addaction name="actionBuildingEditor"/>
     <addaction name="actionTilesetMetaInfo"/>
     <addaction name="actionTileProperties"/>
+    <addaction name="actionCompareTileDef"/>
     <addaction name="menu_pack_files"/>
     <addaction name="actionContainerOverlays"/>
     <addaction name="actionEnflatulator"/>
@@ -612,6 +613,11 @@
   <action name="actionContainerOverlays">
    <property name="text">
     <string>Container Overlays...</string>
+   </property>
+  </action>
+  <action name="actionCompareTileDef">
+   <property name="text">
+    <string>Compare .tiles files...</string>
    </property>
   </action>
  </widget>

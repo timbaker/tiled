@@ -1274,8 +1274,13 @@ bool ShadowBuilding::setCursorObject(BuildingFloor *floor, BuildingObject *objec
     if (mCursorObjectModifier) {
         // FIXME: any modifier using the recreated shadow object must get updated
         // or they will still point to the old shadow object.
-        if (mOriginalToShadowObject.contains(object))
+        if (mOriginalToShadowObject.contains(object)) {
+//            if (object->sameAs(mOriginalToShadowObject[object])) {
+//                qDebug() << "sameAs";
+//                return false;
+//            }
             recreateObject(floor, object);
+        }
     } else {
         bool cursorObject = floor->indexOf(object) == -1;
         if (cursorObject) {

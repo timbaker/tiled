@@ -651,7 +651,7 @@ void ContainerOverlayView::tilesetRemoved(Tiled::Tileset *tileset)
 void ContainerOverlayView::init()
 {
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
-    setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    setVerticalScrollMode(QAbstractItemView::ScrollPerItem);
     setItemDelegate(mDelegate);
     setShowGrid(false);
 

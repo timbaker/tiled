@@ -8,6 +8,7 @@ set BIN C:/Programming/TileZed/build-tiled-Qt_5_2_0_MSVC_2012_64bit-Release
 set SRC C:/Programming/TileZed/tiled
 set DEST {C:\Users\Tim\Desktop\ProjectZomboid\Tools\TileZed}
 set SUFFIX "-64bit"
+set SUFFIX2 ""
 set REDIST vcredist_x64.exe
 
 if {$argc > 0} {
@@ -18,6 +19,7 @@ if {$argc > 0} {
             set BIN C:/Programming/TileZed/build-tiled-Qt_5_2_0_MSVC_2010_32bit-Release
             set QT_DIR C:/Programming/QtSDK/5.2.0/msvc2010_opengl
             set SUFFIX "-32bit"
+            set SUFFIX2 "32"
             set REDIST vcredist_x86.exe
         }
         64bit {
@@ -198,6 +200,6 @@ set name TileZed-$date$SUFFIX.zip
 set ARCHIVE C:/Users/Tim/Desktop/ProjectZomboid/$name
 file delete $ARCHIVE
 cd C:/Users/Tim/Desktop/ProjectZomboid/Tools
-exec {C:\Program Files\7-Zip\7z.exe} a $ARCHIVE TileZed
+exec {C:\Program Files\7-Zip\7z.exe} a $ARCHIVE TileZed$SUFFIX2
 cd C:/Programming/TileZed
 puts $name

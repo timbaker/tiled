@@ -97,6 +97,7 @@
 #include "packviewer.h"
 #include "picktiletool.h"
 #include "roomdeftool.h"
+#include "tiledefcompare.h"
 #include "tiledefdialog.h"
 #include "tiledeffile.h"
 #include "tilelayerspanel.h"
@@ -638,6 +639,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             SLOT(tilesetMetaInfoDialog()));
     connect(mUi->actionTileProperties, SIGNAL(triggered()),
             SLOT(tilePropertiesEditor()));
+    connect(mUi->actionCompareTileDef, SIGNAL(triggered()),
+            SLOT(compareTileDef()));
     connect(mUi->actionPackViewer, SIGNAL(triggered()),
             SLOT(showPackViewer()));
     connect(mUi->actionCreatePack, SIGNAL(triggered()),
@@ -1689,6 +1692,23 @@ void MainWindow::tilePropertiesEditor()
     mTileDefDialog = TileDefDialog::instance();
     TileDefDialog::instance()->show();
     TileDefDialog::instance()->raise();
+}
+
+void MainWindow::compareTileDef()
+{
+    TilePropertyMgr *mgr = TilePropertyMgr::instance();
+    if (!mgr->hasReadTxt()) {
+        if (!mgr->readTxt()) {
+            QMessageBox::warning(this, tr("It's no good, Jim!"),
+                                 tr("%1\n(while reading %2)")
+                                 .arg(mgr->errorString()).arg(mgr->txtName()));
+            TilePropertyMgr::deleteInstance();
+            return;
+        }
+    }
+    TileDefCompare *w = new TileDefCompare(this);
+    w->show();
+    w->raise();
 }
 
 void MainWindow::createPackFile()
