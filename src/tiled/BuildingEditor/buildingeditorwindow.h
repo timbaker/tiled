@@ -120,6 +120,8 @@ public:
     void setMissingTilesetsReported(bool reported)
     { mMissingTilesetsReported = reported; }
 
+    void focusOn(int x, int y, int z, int objectIndex);
+
 public slots:
     void autoSaveCheck();
     void autoSaveTimeout();
@@ -175,6 +177,8 @@ public:
     BuildingFloor *currentFloor() const;
 
     QString currentLayer() const;
+
+    void focusOn(const QString &file, int x, int y, int z, int objectIndex);
 
 private:
     BuildingDocumentMgr *docman() const;

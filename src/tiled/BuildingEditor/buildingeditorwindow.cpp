@@ -190,6 +190,21 @@ void EditorWindowPerDocumentStuff::viewAddedForDocument(BuildingIsoView *view)
         mIsoView = view;
 }
 
+void EditorWindowPerDocumentStuff::focusOn(int x, int y, int z, int objectIndex)
+{
+    toIsoObject();
+    BuildingFloor *floor = document()->building()->floor(z);
+    if (document()->currentFloor() != floor)
+        document()->setCurrentFloor(floor);
+    mIsoView->centerOn(mIsoView->scene()->tileToScene(QPoint(x, y), z));
+    mIsoView->zoomable()->setScale(4);
+
+    if (objectIndex >= 0 && objectIndex < floor->objectCount()) {
+        BuildingObject *bo = floor->object(objectIndex);
+        document()->setSelectedObjects(QSet<BuildingObject*>() << bo);
+    }
+}
+
 void EditorWindowPerDocumentStuff::autoSaveCheck()
 {
     if (!document()->isModified()) {
@@ -602,6 +617,15 @@ BuildingFloor *BuildingEditorWindow::currentFloor() const
 QString BuildingEditorWindow::currentLayer() const
 {
     return mCurrentDocument ? mCurrentDocument->currentLayer() : QString();
+}
+
+void BuildingEditorWindow::focusOn(const QString &file, int x, int y, int z, int objectIndex)
+{
+    int documentIndex = docman()->findDocument(file);
+    if (documentIndex != -1) {
+        docman()->setCurrentDocument(documentIndex);
+        mCurrentDocumentStuff->focusOn(x, y, z, objectIndex);
+    }
 }
 
 BuildingDocumentMgr *BuildingEditorWindow::docman() const

@@ -220,6 +220,7 @@ public slots:
     void tilePicked(Tile *tile);
 
     void showBuildingEditor();
+    void checkBuildings();
     void buildingTilePicked(const QString &tileName);
     void tilesetMetaInfoDialog();
     void tilePropertiesEditor();

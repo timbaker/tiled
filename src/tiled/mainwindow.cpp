@@ -80,6 +80,7 @@
 #include "bmpblender.h"
 #include "bmptool.h"
 #include "changetileselection.h"
+#include "checkbuildingswindow.h"
 #include "containeroverlaydialog.h"
 #include "converttolotdialog.h"
 #include "convertorientationdialog.h"
@@ -635,6 +636,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 #ifdef ZOMBOID
     connect(mUi->actionBuildingEditor, SIGNAL(triggered()),
             SLOT(showBuildingEditor()));
+    connect(mUi->actionCheckBuildings, SIGNAL(triggered()),
+            SLOT(checkBuildings()));
     connect(mUi->actionTilesetMetaInfo, SIGNAL(triggered()),
             SLOT(tilesetMetaInfoDialog()));
     connect(mUi->actionTileProperties, SIGNAL(triggered()),
@@ -1635,6 +1638,12 @@ void MainWindow::showBuildingEditor()
     mBuildingEditor->show();
     mBuildingEditor->raise();
     mBuildingEditor->activateWindow();
+}
+
+void MainWindow::checkBuildings()
+{
+    CheckBuildingsWindow *d = new CheckBuildingsWindow(this);
+    d->show();
 }
 
 void MainWindow::buildingTilePicked(const QString &tileName)

@@ -155,6 +155,7 @@
      <addaction name="actionComparePack"/>
     </widget>
     <addaction name="actionBuildingEditor"/>
+    <addaction name="actionCheckBuildings"/>
     <addaction name="actionTilesetMetaInfo"/>
     <addaction name="actionTileProperties"/>
     <addaction name="actionCompareTileDef"/>
@@ -618,6 +619,11 @@
   <action name="actionCompareTileDef">
    <property name="text">
     <string>Compare .tiles files...</string>
+   </property>
+  </action>
+  <action name="actionCheckBuildings">
+   <property name="text">
+    <string>Check Buildings...</string>
    </property>
   </action>
  </widget>
