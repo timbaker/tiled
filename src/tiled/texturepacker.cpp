@@ -18,7 +18,9 @@
 #include "texturepacker.h"
 
 #include "texturepackfile.h"
+#include "zprogress.h"
 
+#include <QDebug>
 #include <QDir>
 #include <QFile>
 #include <QImage>
@@ -64,7 +66,7 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
     NextFileList = mImageFileNames;
     while (!NextFileList.isEmpty()) {
         QImage outputImage;
-        if (!PackImages(outputImage))
+        if (!PackImagesNew(outputImage))
             return false;
 
         PackPage packPage;
@@ -188,6 +190,107 @@ bool TexturePacker::PackImages(QImage &outputImage)
     NextFileList = nextFiles;
 
     return true;
+}
+
+bool TexturePacker::PackImagesNew(QImage &outputImage)
+{
+    QStringList packedFiles;
+
+    QFileInfo info(NextFileList.first());
+    PROGRESS progress(QString::fromLatin1("Packing %1").arg(info.fileName()));
+
+    while (!NextFileList.isEmpty()) {
+        QString nextFile = NextFileList.first();
+        QFileInfo info2(nextFile);
+        progress.update(QString::fromLatin1("Packing %1 (%2)").arg(info.fileName()).arg(packedFiles.size()));
+        QStringList testFiles = packedFiles;
+        testFiles << nextFile;
+        if (!PackListOfFiles(testFiles)) {
+            if (packedFiles.isEmpty())
+                return false;
+            if (!PackListOfFiles(packedFiles))
+                return false;
+            break;
+        }
+        packedFiles += nextFile;
+        NextFileList.takeFirst();
+    }
+
+    outputImage = CreateOutputImage();
+    if (outputImage.isNull())
+        return false;
+
+    return true;
+}
+
+bool TexturePacker::PackOneFile(const QString &str)
+{
+    if (mImageTranslationMap.contains(str)) {
+        foreach (QString key, mImageTranslationMap[str].keys()) {
+            imageTranslation[key] = mImageTranslationMap[str][key];
+            toPack += key;
+        }
+        return true;
+    }
+
+    QImage image(str);
+    if (image.isNull()) {
+        mError = tr("Failed to load an input image file.\n%1").arg(str);
+        return false;
+    }
+
+    if (mImageIsTilesheet.contains(str)) {
+        qreal cols = image.width() / (qreal) TILE_WIDTH;
+        qreal rows = image.height() / (qreal) TILE_HEIGHT;
+        if (image.width() % TILE_WIDTH || image.height() % TILE_HEIGHT) {
+            imageTranslation[str] = WorkOutTranslation(image);
+            toPack += str;
+            mImageTranslationMap[str][str] = imageTranslation[str];
+        } else {
+            if (!LoadTileNamesFile(str, cols)) {
+                return false;
+            }
+            for (int y = 0; y < rows; y++) {
+                for (int x = 0; x < cols; x++) {
+                    Translation tln = WorkOutTranslation(image, x * TILE_WIDTH, y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+                    if (!tln.size.isEmpty()) {
+                        QString key = QString::fromLatin1("%1_INDEX_%2").arg(x + y * cols).arg(str);
+                        imageTranslation[key] = tln;
+                        toPack += key;
+                        mImageTranslationMap[str][key] = tln;
+                    }
+                }
+            }
+        }
+    } else {
+        imageTranslation[str] = WorkOutTranslation(image);
+        toPack += str;
+        mImageTranslationMap[str][str] = imageTranslation[str];
+    }
+
+    return true;
+}
+
+bool TexturePacker::PackListOfFiles(const QStringList &files)
+{
+    toPack.clear();
+    imageTranslation.clear();
+    imagePlacement.clear();
+
+    foreach (QString file, files) {
+        if (!PackOneFile(file))
+            return false;
+    }
+
+    Comparator cmp(*this);
+    std::sort(toPack.begin(), toPack.end(), cmp);
+
+    outputWidth = mSettings.mOutputImageSize.width();
+    outputHeight = mSettings.mOutputImageSize.height();
+    if (!PackImageRectangles()) {
+        qDebug() << mError;
+        return false;
+    }
 }
 
 bool TexturePacker::PackImageRectangles()

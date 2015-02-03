@@ -1636,6 +1636,7 @@ void MainWindow::showBuildingEditor()
     }
 
     mBuildingEditor->show();
+    mBuildingEditor->setWindowState(mBuildingEditor->windowState() & ~Qt::WindowMinimized);
     mBuildingEditor->raise();
     mBuildingEditor->activateWindow();
 }

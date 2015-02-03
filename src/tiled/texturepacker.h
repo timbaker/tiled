@@ -86,6 +86,11 @@ public:
 private:
     bool FindImages(const QString &directory, bool imagesAreTilesheets);
     bool PackImages(QImage &outputImage);
+
+    bool PackImagesNew(QImage &outputImage);
+    bool PackOneFile(const QString &str);
+    bool PackListOfFiles(const QStringList &files);
+
     bool PackImageRectangles();
     bool TestPackingImages(int testWidth, int testHeight, QMap<QString,QRect> &testImagePlacement);
     QImage CreateOutputImage();
@@ -131,6 +136,7 @@ private:
     QStringList NextFileList;
     QMap<QString,Translation> imageTranslation;
     QMap<QString,QRect> imagePlacement;
+    QMap<QString,QMap<QString,Translation> > mImageTranslationMap;
     int outputHeight;
     int outputWidth;
 };
