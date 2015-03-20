@@ -1,5 +1,5 @@
 version = 1
-revision = 10
+revision = 11
 layers
 {
     tile = Floor
@@ -28,6 +28,10 @@ layers
     tile = Furniture3
     tile = Furniture4
     tile = Curtains2
+    tile = WallFurniture3
+    tile = WallFurniture4
+    tile = WallOverlay3
+    tile = WallOverlay4
     tile = Roof
     tile = Roof2
     tile = RoofTop
