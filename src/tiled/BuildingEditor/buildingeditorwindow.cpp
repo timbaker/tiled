@@ -1951,6 +1951,22 @@ void BuildingEditorWindow::reportMissingTilesets()
             }
         }
     }
+    foreach (BuildingFloor *floor, building->floors()) {
+        foreach (QString layerName, floor->grimeLayers()) {
+            for (int y = 0; y < floor->height(); y++) {
+                for (int x = 0; x < floor->width(); x++) {
+                    QString tileName = floor->grimeAt(layerName, x, y);
+                    QString tilesetName;
+                    int tileIndex;
+                    if (!tileName.isEmpty() && BuildingTilesMgr::parseTileName(tileName, tilesetName, tileIndex)) {
+                        if (!TileMetaInfoMgr::instance()->tileset(tilesetName))
+                            missingTilesets.insert(tilesetName);
+                    }
+                }
+            }
+        }
+    }
+
     if (missingTilesets.size()) {
         QStringList tilesets(missingTilesets.values());
         tilesets.sort();
