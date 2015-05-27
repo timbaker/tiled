@@ -291,6 +291,8 @@ bool TexturePacker::PackListOfFiles(const QStringList &files)
         qDebug() << mError;
         return false;
     }
+
+    return true;
 }
 
 bool TexturePacker::PackImageRectangles()
