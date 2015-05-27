@@ -397,10 +397,29 @@ property
 property
 {
     Type = Boolean
+    Name = TaintedWater
+    ShortName = taintedWater
+    Default = false
+    ReverseLogic = false
+}
+
+property
+{
+    Type = Boolean
     Name = FishingWater
     ShortName = water
     Default = false
     ReverseLogic = false
+}
+
+property
+{
+    Type = Integer
+    Name = FuelAmount
+    ShortName = fuelAmount
+    Min = 0
+    Max = 1000
+    Default = 0
 }
 
 separator
@@ -433,6 +452,15 @@ property
 {
     Type = Integer
     Name = SmashedTileOffset
+    ShortName =
+    Min = -1000
+    Max = 1000
+    Default = 0
+}
+property
+{
+    Type = Integer
+    Name = GlassRemovedOffset
     ShortName =
     Min = -1000
     Max = 1000
@@ -473,6 +501,44 @@ property
     Default = None
     ValueAsPropertyName = false
 }
+
+property
+{
+    Type = Boolean
+    Name = Can Be Cut (tree)
+    ShortName = canBeCut
+    Default = false
+    ReverseLogic = false
+}
+
+property
+{
+    Type = Boolean
+    Name = Can Be Removed (grass)
+    ShortName = canBeRemoved
+    Default = false
+    ReverseLogic = false
+}
+
+property
+{
+    Type = Integer
+    Name = FireRequirement
+    ShortName = fireRequirement
+    Min = 0
+    Max = 1000000
+    Default = 0
+}
+
+property
+{
+    Type = Boolean
+    Name = Vegitation
+    ShortName = vegitation
+    Default = false
+    ReverseLogic = false
+}
+
 property
 {
     Type = Boolean
