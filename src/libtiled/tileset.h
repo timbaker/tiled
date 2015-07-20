@@ -269,6 +269,9 @@ public:
 
     void setVirtual(bool isVirtual) { mVirtual = isVirtual; }
     bool isVirtual() const { return mVirtual; }
+
+    bool loadImage2x(const QImage &image);
+    QList<Tile*> mTiles2x;
 #endif
 
 private:

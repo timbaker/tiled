@@ -401,8 +401,12 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                     }
                     const Cell *cell = cells[i];
                     if (!cell->isEmpty()) {
-                        const QImage &img = cell->tile->image();
+                        QImage img = cell->tile->image();
                         const QPoint offset = cell->tile->tileset()->tileOffset();
+
+                        if (cell->tile->tileset()->mTiles2x.size() > cell->tile->id()) {
+                            img = cell->tile->tileset()->mTiles2x.at(cell->tile->id())->image();
+                        }
 
                         qreal m11 = 1;      // Horizontal scaling factor
                         qreal m12 = 0;      // Vertical shearing factor
@@ -432,6 +436,20 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                             m22 = -m22;
                             dy += cell->flippedAntiDiagonally ? img.width()
                                                              : img.height();
+                        }
+
+                        if (tileWidth == img.width() * 2) {
+                            m11 *= 2.0f;
+                            m22 *= 2.0f;
+                            dy -= img.height();
+                        } else if (tileWidth == img.width() / 2) {
+                            float scale = 0.5f;
+                            m11 *= scale;
+                            m22 *= scale;
+//                            dx += (tileWidth - img.width() * scale) / 2;
+//                            dy += (cell->tile->tileset()->tileHeight() - img.height() * scale);
+//                            dy -= (tileHeight - tileHeight * scale) / 2;
+                            dy += img.height() / 2;
                         }
 
                         const QTransform transform(m11, m12, m21, m22, dx, dy);

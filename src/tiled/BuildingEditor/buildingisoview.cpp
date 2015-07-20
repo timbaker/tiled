@@ -78,7 +78,9 @@ void CompositeLayerGroupItem::paint(QPainter *p, const QStyleOptionGraphicsItem 
 
     mRenderer->drawTileLayerGroup(p, mLayerGroup, option->exposedRect);
 #if 1 && !defined(QT_NO_DEBUG)
-    p->setPen(Qt::white);
+    QPen pen(Qt::white);
+    pen.setCosmetic(true);
+    p->setPen(pen);
     p->drawRect(mBoundingRect);
 #endif
 }

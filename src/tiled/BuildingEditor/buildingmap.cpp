@@ -46,6 +46,9 @@ using namespace BuildingEditor;
 using namespace Tiled;
 using namespace Tiled::Internal;
 
+#define TILE_ISO_WIDTH (64 * 2)
+#define TILE_ISO_HEIGHT (32 * 2)
+
 BuildingMap::BuildingMap(Building *building) :
     mBuilding(building),
     mMapComposite(0),
@@ -132,7 +135,15 @@ QString BuildingMap::buildingTileAt(int x, int y, const QList<bool> visibleLevel
                         test = tlBlend->cellAt(tx, ty).tile; // building tile
                     if (test) {
                         QRect imageBox(QPoint(), test->image().size());
-                        QPoint p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, 128));
+                        QPoint p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, test->height()));
+                        // Handle double-size tiles
+                        if (mMap->tileWidth() == test->width() * 2) {
+                            p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, test->height() * 2));
+                            p.rx() /= 2;
+                            p.ry() /= 2;
+                        } else if (mMap->tileWidth() == test->width() / 2) {
+
+                        }
                         // Hit test a small box around the cursor?
                         QRect box(p - QPoint(0, 0), p + QPoint(0, 0));
                         for (int px = box.left(); px <= box.right(); px++) {
@@ -469,7 +480,7 @@ void BuildingMap::BuildingToMap()
 
     mMap = new Map(orient,
                    mapSize.width(), mapSize.height(),
-                   64, 32);
+                   64 * 2, 32 * 2);
 
     // Add tilesets from Tilesets.txt
     mMap->addTileset(TilesetManager::instance()->missingTileset());

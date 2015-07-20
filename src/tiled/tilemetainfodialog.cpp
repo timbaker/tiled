@@ -195,6 +195,7 @@ TileMetaInfoDialog::TileMetaInfoDialog(QWidget *parent) :
     ui->tiles->model()->setHighlightLabelledItems(true);
 
     connect(ui->browseTiles, SIGNAL(clicked()), SLOT(browse()));
+    connect(ui->browseTiles2x, SIGNAL(clicked()), SLOT(browse2x()));
     connect(ui->tilesets, SIGNAL(currentRowChanged(int)),
             SLOT(currentTilesetChanged(int)));
     connect(ui->tiles->selectionModel(),
@@ -399,12 +400,18 @@ void TileMetaInfoDialog::browse()
     QString f = QFileDialog::getExistingDirectory(this, tr("Directory"),
                                                   ui->editTiles->text());
     if (!f.isEmpty()) {
-#if 1
-        TileMetaInfoMgr::instance()->changeTilesDirectory(f);
-#else
-        Preferences::instance()->setTilesDirectory(f);
-        TileMetaInfoMgr::instance()->loadTilesets();
-#endif
+        TileMetaInfoMgr::instance()->changeTilesDirectory(f, TileMetaInfoMgr::instance()->tiles2xDirectory());
+        setTilesetList();
+        updateUI();
+    }
+}
+
+void TileMetaInfoDialog::browse2x()
+{
+    QString f = QFileDialog::getExistingDirectory(this, tr("Directory"),
+                                                  ui->editTiles2x->text());
+    if (!f.isEmpty()) {
+        TileMetaInfoMgr::instance()->changeTilesDirectory(TileMetaInfoMgr::instance()->tilesDirectory(), f);
         setTilesetList();
         updateUI();
     }
@@ -424,6 +431,9 @@ void TileMetaInfoDialog::updateUI()
 
     QString tilesDir = TileMetaInfoMgr::instance()->tilesDirectory();
     ui->editTiles->setText(QDir::toNativeSeparators(tilesDir));
+
+    QString tiles2xDir = TileMetaInfoMgr::instance()->tiles2xDirectory();
+    ui->editTiles2x->setText(QDir::toNativeSeparators(tiles2xDir));
 
     ui->actionRemove->setEnabled(mCurrentTileset != 0);
     ui->actionAddToMap->setEnabled((parent() == MainWindow::instance()) &&

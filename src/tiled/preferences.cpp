@@ -132,6 +132,8 @@ Preferences::Preferences()
     mSettings->beginGroup(QLatin1String("Tilesets"));
     mTilesDirectory = mSettings->value(QLatin1String("TilesDirectory"),
                                        tilesDirectory).toString();
+    mTiles2xDirectory = mSettings->value(QLatin1String("Tiles2xDirectory"),
+                                         tilesDirectory).toString();
     mSettings->endGroup();
     if (tilesDirectory.length()) {
         mSettings->setValue(QLatin1String("Tilesets/TilesDirectory"), mTilesDirectory);
@@ -474,6 +476,11 @@ QString Preferences::tilesDirectory() const
     return mTilesDirectory;
 }
 
+QString Preferences::tiles2xDirectory() const
+{
+    return mTiles2xDirectory;
+}
+
 QString Preferences::texturesDirectory() const
 {
     return mTilesDirectory + QLatin1String("/Textures");
@@ -493,6 +500,13 @@ void Preferences::setTilesDirectory(const QString &path)
 {
     mTilesDirectory = path;
     mSettings->setValue(QLatin1String("Tilesets/TilesDirectory"), mTilesDirectory);
+    emit tilesDirectoryChanged();
+}
+
+void Preferences::setTiles2xDirectory(const QString &path)
+{
+    mTiles2xDirectory = path;
+    mSettings->setValue(QLatin1String("Tilesets/Tiles2xDirectory"), mTiles2xDirectory);
     emit tilesDirectoryChanged();
 }
 
