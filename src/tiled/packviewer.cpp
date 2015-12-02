@@ -90,9 +90,13 @@ void PackViewer::openPack()
         return;
 
     ui->listWidget->clear();
+    int numImages = 0;
     foreach (PackPage page, mPackFile.pages()) {
         ui->listWidget->addItem(page.name);
+        numImages += page.subTextures().size();
     }
+
+    ui->label->setText(QString::fromLatin1("%1 images").arg(numImages));
 }
 
 void PackViewer::itemSelectionChanged()

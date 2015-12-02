@@ -66,7 +66,7 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
     NextFileList = mImageFileNames;
     while (!NextFileList.isEmpty()) {
         QImage outputImage;
-        if (!PackImagesNew(outputImage))
+        if (!PackImagesNewNew(outputImage))
             return false;
 
         PackPage packPage;
@@ -205,6 +205,50 @@ bool TexturePacker::PackImagesNew(QImage &outputImage)
         progress.update(QString::fromLatin1("Packing %1 (%2)").arg(info.fileName()).arg(packedFiles.size()));
         QStringList testFiles = packedFiles;
         testFiles << nextFile;
+        if (!PackListOfFiles(testFiles)) {
+            if (packedFiles.isEmpty())
+                return false;
+            if (!PackListOfFiles(packedFiles))
+                return false;
+            break;
+        }
+        packedFiles += nextFile;
+        NextFileList.takeFirst();
+    }
+
+    outputImage = CreateOutputImage();
+    if (outputImage.isNull())
+        return false;
+
+    return true;
+}
+
+bool TexturePacker::PackImagesNewNew(QImage &outputImage)
+{
+    QStringList packedFiles;
+
+    QFileInfo info(NextFileList.first());
+    PROGRESS progress(QString::fromLatin1("Packing %1").arg(info.fileName()));
+
+    // Guestimate the number we can pack
+    int guess = 50;
+    for (; guess < NextFileList.size(); guess += 50) {
+        progress.update(QString::fromLatin1("Trying %2 images").arg(guess));
+        QStringList testFiles = NextFileList.mid(0, guess);
+        if (!PackListOfFiles(testFiles)) {
+            if (guess > 50) {
+                packedFiles = NextFileList.mid(0, guess - 50);
+                NextFileList = NextFileList.mid(guess - 50);
+            }
+            break;
+        }
+    }
+
+    while (!NextFileList.isEmpty()) {
+        QString nextFile = NextFileList.first();
+        progress.update(QString::fromLatin1("Packing %1 (%2)").arg(info.fileName()).arg(packedFiles.size()));
+        QStringList testFiles = packedFiles;
+        testFiles += nextFile;
         if (!PackListOfFiles(testFiles)) {
             if (packedFiles.isEmpty())
                 return false;

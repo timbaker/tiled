@@ -88,6 +88,7 @@ private:
     bool PackImages(QImage &outputImage);
 
     bool PackImagesNew(QImage &outputImage);
+    bool PackImagesNewNew(QImage &outputImage);
     bool PackOneFile(const QString &str);
     bool PackListOfFiles(const QStringList &files);
 
