@@ -25,7 +25,9 @@
 #include "maprenderer.h"
 #include "tile.h"
 #include "tilelayer.h"
+#include "tileset.h"
 
+#include <QDebug>
 #include <QGraphicsView>
 
 using namespace Tiled;
@@ -79,7 +81,11 @@ void PickTileTool::mousePressed(QGraphicsSceneMouseEvent *event)
                 for (int i = 0; i < cells.size(); i++) {
                     Tile *test = cells[i]->tile;
                     QRect imageBox(QPoint(), test->image().size());
-                    QPoint p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, 128));
+                    QPoint p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, test->height()));
+                    if (test->width() == tileBox.width() / 2) {
+                        p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, test->height() * 2));
+                        p /= 2;
+                    }
                     if (imageBox.contains(p.x(), p.y())) {
                         QRgb pixel = test->image().pixel(p.x(), p.y());
                         if (qAlpha(pixel) > 0)
@@ -93,7 +99,63 @@ void PickTileTool::mousePressed(QGraphicsSceneMouseEvent *event)
     if (tile)
         emit tilePicked(tile);
 }
+/*
+#include "brushitem.h"
+void PickTileTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
+{
+    MapComposite *mc = mapDocument()->mapComposite();
 
-void PickTileTool::tilePositionChanged(const QPoint &)
+    Tile *tile = 0;
+    QPoint _tilePos;
+    int x = pos.x(), y = pos.y();
+    bool highlightLevel = Preferences::instance()->highlightCurrentLayer();
+
+    QVector<const Cell*> cells;
+    QVector<qreal> opacities;
+    foreach (CompositeLayerGroup *lg, mc->layerGroups()) {
+        if (!lg->isVisible()) continue;
+        if (highlightLevel && lg->level() > mapDocument()->currentLevel()) continue;
+        QPoint tilePos = mapDocument()->renderer()->pixelToTileCoordsInt(pos, lg->level());
+        lg->prepareDrawing(mapDocument()->renderer(),
+                           mapDocument()->renderer()->boundingRect(
+                               QRect(tilePos - QPoint(4, 4), QSize(9, 9)), lg->level()));
+        for (int ty = tilePos.y() - 4; ty <= tilePos.y() + 4; ty++) {
+            for (int tx = tilePos.x() - 4; tx <= tilePos.x() + 4; tx++) {
+                QRectF tileBox = mapDocument()->renderer()->boundingRect(QRect(tx, ty, 1, 1), lg->level());
+                cells.resize(0);
+                if (!lg->orderedCellsAt(QPoint(tx, ty), cells, opacities))
+                    continue;
+                for (int i = 0; i < cells.size(); i++) {
+                    Tile *test = cells[i]->tile;
+                    QRect imageBox(QPoint(), test->image().size());
+                    QPoint p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, test->height()));
+                    if (test->width() == mc->map()->tileWidth() / 2) {
+                        p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, test->height() * 2));
+                        p /= 2;
+                    }
+                    if (imageBox.contains(p.x(), p.y())) {
+                        QRgb pixel = test->image().pixel(p.x(), p.y());
+                        if (qAlpha(pixel) > 0) {
+                            qDebug() << tilePos << pos << tileBox;
+                            tile = test;
+                            _tilePos = QPoint(tx, ty);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    TileLayer *stamp = new TileLayer(QString(), 0, 0, 1, 1);
+    if (tile)
+        stamp->setCell(0, 0, Cell(tile));
+    brushItem()->setTileLayer(stamp);
+//    brushItem()->setTileRegion(QRect(tilePos, QSize(1, 1)));
+    brushItem()->setTileLayerPosition(_tilePos);
+
+    AbstractTileTool::mouseMoved(pos, modifiers);
+}
+*/
+void PickTileTool::tilePositionChanged(const QPoint &tilePos)
 {
 }

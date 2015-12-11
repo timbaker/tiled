@@ -158,6 +158,8 @@ void BrushItem::updateBoundingRect()
 #ifdef ZOMBOID
         drawMargins.setTop(qMax(0, drawMargins.top() - map->tileHeight()));
         drawMargins.setRight(qMax(0, drawMargins.right() - map->tileWidth()));
+        if (mMapDocument->renderer()->is2x())
+            drawMargins *= 2;
 #else
         drawMargins.setTop(drawMargins.top() - map->tileHeight());
         drawMargins.setRight(drawMargins.right() - map->tileWidth());

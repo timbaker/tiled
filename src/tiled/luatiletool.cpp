@@ -794,7 +794,7 @@ void LuaTileTool::clearToolTiles()
                 TileLayer *tl = mapDocument()->map()->layerAt(n)->asTileLayer();
                 mapDocument()->mapComposite()->layerGroupForLayer(tl)->clearToolTiles();
                 QRect r = mapDocument()->renderer()->boundingRect(mToolTileRegions[layerName].boundingRect(),
-                                                                  tl->level()).adjusted(-3, -(128-32) - 3, 3, 3);
+                                                                  tl->level()).adjusted(-3, -(128-32)*(mapDocument()->renderer()->is2x()?2:1) - 3, 3, 3);
                 mScene->update(r);
             }
             mToolTileRegions[layerName] = QRegion();
@@ -829,7 +829,7 @@ void LuaTileTool::setToolTile(const char *layer, int x, int y, Tile *tile)
                         tlTool, QPoint(), mToolTileRegions[layerName], tl);
             QRect r = mapDocument()->renderer()->boundingRect(
                         mToolTileRegions[layerName].boundingRect(),
-                        tl->level()).adjusted(-3, -(128-32) - 3, 3, 3);
+                        tl->level()).adjusted(-3, -(128-32)*(mapDocument()->renderer()->is2x() ? 2 : 1) - 3, 3, 3);
             mScene->update(r);
         }
     }
@@ -853,7 +853,7 @@ void LuaTileTool::clearToolNoBlends()
                 TileLayer *tl = mapDocument()->map()->layerAt(n)->asTileLayer();
                 mapDocument()->mapComposite()->layerGroupForLayer(tl)->clearToolNoBlends();
                 QRect r = mapDocument()->renderer()->boundingRect(mToolNoBlendRegions[layerName].boundingRect(),
-                                                                  tl->level()).adjusted(-3, -(128-32) - 3, 3, 3);
+                                                                  tl->level()).adjusted(-3, -(128-32)*(mapDocument()->renderer()->is2x()?2:1) - 3, 3, 3);
                 mScene->update(r);
             }
             mToolNoBlendRegions[layerName] = QRegion();
@@ -886,7 +886,7 @@ void LuaTileTool::setToolNoBlend(const char *layer, int x, int y, bool noBlend)
                         nb->copy(rgn), rgn.boundingRect().topLeft(), rgn, tl);
             QRect r = mapDocument()->renderer()->boundingRect(
                         rgn.boundingRect(),
-                        tl->level()).adjusted(-3, -(128-32) - 3, 3, 3);
+                        tl->level()).adjusted(-3, -(128-32)*(mapDocument()->renderer()->is2x()?2:1) - 3, 3, 3);
             mScene->update(r);
         }
     }

@@ -36,6 +36,7 @@ public:
     void activate(MapScene *scene);
     void deactivate(MapScene *scene);
 
+//    void mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers);
     void mousePressed(QGraphicsSceneMouseEvent *event);
     void mouseReleased(QGraphicsSceneMouseEvent *) {}
 
