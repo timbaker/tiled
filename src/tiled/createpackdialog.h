@@ -62,6 +62,8 @@ public:
 private:
     void settingsToUI(const TexturePackSettings &settings);
     void settingsFromUI(TexturePackSettings &settings);
+    void readSettings();
+    void writeSettings();
 
 private slots:
     void savePackAs();

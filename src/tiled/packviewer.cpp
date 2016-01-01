@@ -69,6 +69,8 @@ PackViewer::PackViewer(QWidget *parent) :
     QVariant v = settings.value(KEY_BG, QColor(Qt::lightGray));
     if (v.canConvert<QColor>())
         setBackgroundColor(v.value<QColor>());
+
+    readSettings();
 }
 
 PackViewer::~PackViewer()
@@ -79,12 +81,15 @@ PackViewer::~PackViewer()
 void PackViewer::openPack()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Choose .pack file"),
-                                                    QString(),
+                                                    mPackDirectory,
                                                     QLatin1String("PZ pack files (*.pack)"));
     if (fileName.isEmpty())
         return;
 
-    PROGRESS progress(tr("Loading %1").arg(QFileInfo(fileName).completeBaseName()), this);
+    mPackDirectory = QFileInfo(fileName).absolutePath();
+    writeSettings();
+
+    PROGRESS *progress = new PROGRESS(tr("Loading %1").arg(QFileInfo(fileName).completeBaseName()), this);
 
     if (!mPackFile.read(fileName))
         return;
@@ -95,8 +100,15 @@ void PackViewer::openPack()
         ui->listWidget->addItem(page.name);
         numImages += page.subTextures().size();
     }
+    if (numImages > 0)
+        ui->listWidget->setCurrentRow(0);
 
     ui->label->setText(QString::fromLatin1("%1 images").arg(numImages));
+
+    delete progress;
+    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    raise();
+    activateWindow();
 }
 
 void PackViewer::itemSelectionChanged()
@@ -138,6 +150,26 @@ void PackViewer::extractImages()
 {
     PackExtractDialog d(mPackFile, this);
     d.exec();
+}
+
+void PackViewer::readSettings()
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("PackViewer"));
+    QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
+    if (!geom.isEmpty())
+        restoreGeometry(geom);
+    mPackDirectory = settings.value(QLatin1String("directory")).toString();
+    settings.endGroup();
+}
+
+void PackViewer::writeSettings()
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("PackViewer"));
+    settings.setValue(QLatin1String("geometry"), saveGeometry());
+    settings.setValue(QLatin1String("directory"), mPackDirectory);
+    settings.endGroup();
 }
 
 /////

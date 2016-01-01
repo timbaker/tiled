@@ -26,6 +26,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QSettings>
 #include <QToolBar>
 
 #if defined(Q_OS_WIN) && (_MSC_VER >= 1600)
@@ -59,6 +60,8 @@ CreatePackDialog::CreatePackDialog(QWidget *parent) :
     connect(ui->btnSaveAs, SIGNAL(clicked()), SLOT(saveSettingsAs()));
 
     ui->texSizeCombo->setCurrentIndex(1);
+
+    readSettings();
 
     syncUI();
 }
@@ -151,7 +154,7 @@ void CreatePackDialog::syncUI()
 void CreatePackDialog::loadSettings()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open settings file"),
-                                                    ui->label->text(),
+                                                    ui->settingsName->text(),
                                                     QLatin1String("Pack settings file (*.txt)"));
     if (fileName.isEmpty())
         return;
@@ -224,7 +227,35 @@ void CreatePackDialog::accept()
         QMessageBox::warning(this, tr("Error creating .pack file"), packer.errorString());
     }
 
+    writeSettings();
+
     QDialog::accept();
+}
+
+void CreatePackDialog::readSettings()
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("CreatePackDialog"));
+    QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
+    if (!geom.isEmpty())
+        restoreGeometry(geom);
+    QString fileName = settings.value(QLatin1String("file")).toString();
+    PackSettingsFile file;
+    if (!fileName.isEmpty() && file.read(fileName)) {
+        mSettingsFileName = fileName;
+        ui->settingsName->setText(QDir::toNativeSeparators(mSettingsFileName));
+        settingsToUI(file.settings());
+    }
+    settings.endGroup();
+}
+
+void CreatePackDialog::writeSettings()
+{
+    QSettings settings;
+    settings.beginGroup(QLatin1String("CreatePackDialog"));
+    settings.setValue(QLatin1String("geometry"), saveGeometry());
+    settings.setValue(QLatin1String("file"), mSettingsFileName);
+    settings.endGroup();
 }
 
 /////

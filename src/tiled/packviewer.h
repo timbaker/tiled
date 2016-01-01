@@ -59,8 +59,12 @@ private slots:
     void extractImages();
 
 private:
+    void readSettings();
+    void writeSettings();
+
     Ui::PackViewer *ui;
     PackFile mPackFile;
+    QString mPackDirectory;
     Tiled::Internal::Zoomable *mZoomable;
     QGraphicsRectItem *mRectItem;
     PackImageItem *mPixmapItem;
