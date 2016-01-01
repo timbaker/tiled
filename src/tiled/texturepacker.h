@@ -85,16 +85,24 @@ public:
 
 private:
     bool FindImages(const QString &directory, bool imagesAreTilesheets);
+#if 1
+    bool PackImages(int pageNum, QStringList& toPack, QStringList& toPackPage, QImage &outputImage);
+    bool PackList(const QStringList &toPack);
+    bool PackImageRectangles(const QStringList &toPack);
+    bool TestPackingImages(const QStringList &toPack, int testWidth, int testHeight, QMap<QString,QRect> &testImagePlacement);
+#else
     bool PackImages(QImage &outputImage);
 
     bool PackImagesNew(QImage &outputImage);
     bool PackImagesNewNew(QImage &outputImage);
+
     bool PackOneFile(const QString &str);
     bool PackListOfFiles(const QStringList &files);
 
     bool PackImageRectangles();
     bool TestPackingImages(int testWidth, int testHeight, QMap<QString,QRect> &testImagePlacement);
-    QImage CreateOutputImage();
+#endif
+    QImage CreateOutputImage(const QStringList &toPack);
     bool LoadTileNamesFile(QString imageName, int columns);
 
 private:
@@ -103,7 +111,6 @@ private:
     QStringList mImageFileNames;
     QSet<QString> mImageIsTilesheet;
     QSet<QString> mImageNameSet;
-    QStringList toPack;
     QMap<QString,QImage> mInputImages;
     QMap<QString,QString> mTileNames;
 

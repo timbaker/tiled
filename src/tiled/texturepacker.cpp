@@ -24,6 +24,7 @@
 #include <QDir>
 #include <QFile>
 #include <QImage>
+#include <QImageReader>
 #include <QRegularExpression>
 #include <QTextStream>
 
@@ -36,8 +37,8 @@
 template class __declspec(dllimport) QMap<QString, QString>;
 #endif
 
-#define TILE_WIDTH 64
-#define TILE_HEIGHT 128
+#define TILE_WIDTH (64*2)
+#define TILE_HEIGHT (128*2)
 
 TexturePacker::TexturePacker()
 {
@@ -60,9 +61,64 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
         return false;
     }
 
+#if 1
+    PROGRESS progress(tr("Reading image files"));
+
+    QStringList toPack;
+    for (int i = 0; i < mImageFileNames.size(); i++) {
+        progress.update(tr("Reading file %1 / %2").arg(i+1).arg(mImageFileNames.size()));
+        QString str = mImageFileNames[i];
+        QImage image(str);
+        if (image.isNull()) {
+            mError = tr("Failed to load an input image file.\n%1").arg(str);
+            return false;
+        }
+        if (mImageIsTilesheet.contains(str)) {
+            if (image.width() % TILE_WIDTH || image.height() % TILE_HEIGHT) {
+                imageTranslation[str] = WorkOutTranslation(image);
+                toPack += str;
+                mImageTranslationMap[str][str] = imageTranslation[str];
+            } else {
+                int cols = image.width() / TILE_WIDTH;
+                int rows = image.height() / TILE_HEIGHT;
+                if (!LoadTileNamesFile(str, cols)) {
+                    return false;
+                }
+                for (int y = 0; y < rows; y++) {
+                    for (int x = 0; x < cols; x++) {
+                        Translation tln = WorkOutTranslation(image, x * TILE_WIDTH, y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+                        if (!tln.size.isEmpty()) {
+                            QString key = QString::fromLatin1("%1_INDEX_%2").arg(x + y * cols).arg(str);
+                            imageTranslation[key] = tln;
+                            toPack += key;
+                            mImageTranslationMap[str][key] = tln;
+                        }
+                    }
+                }
+            }
+        } else {
+            imageTranslation[str] = WorkOutTranslation(image);
+            toPack += str;
+            mImageTranslationMap[str][str] = imageTranslation[str];
+        }
+    }
+#endif
+
     PackFile packFile;
     int pageNum = 0;
 
+#if 1
+    while (!toPack.isEmpty()) {
+        QStringList toPackPage;
+        QImage outputImage;
+        if (!PackImages(pageNum, toPack, toPackPage, outputImage))
+            return false;
+
+        PackPage packPage;
+        packPage.name = QFileInfo(mSettings.mPackFileName).baseName() + QString::number(pageNum);
+        packPage.image = outputImage;
+        foreach (QString index, toPackPage) {
+#else
     NextFileList = mImageFileNames;
     while (!NextFileList.isEmpty()) {
         QImage outputImage;
@@ -73,6 +129,7 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
         packPage.name = QFileInfo(mSettings.mPackFileName).baseName() + QString::number(pageNum);
         packPage.image = outputImage;
         foreach (QString index, toPack) {
+#endif
             QRect rectangle1(imagePlacement[index].topLeft(), imageTranslation[index].size);
             QRect rectangle2(imageTranslation[index].topLeft - imageTranslation[index].sheetOffset, imageTranslation[index].originalSize);
             QString name;
@@ -94,6 +151,7 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
         pageNum++;
     }
 
+    progress.update(tr("Saving %1").arg(QFileInfo(mSettings.mPackFileName).fileName()));
     packFile.write(mSettings.mPackFileName);
 
     return true;
@@ -128,6 +186,161 @@ bool TexturePacker::CompareSubImages(const QString &lhs1, const QString &rhs1)
         return lhs.size.height() > rhs.size.height();
     return lhs1 < rhs1;
 }
+
+#if 1
+
+bool TexturePacker::PackImages(int pageNum, QStringList& toPack, QStringList &toPackPage, QImage &outputImage)
+{
+    PROGRESS progress(QString::fromLatin1("Packing page %1.    Images to pack: %2").arg(pageNum+1).arg(toPack.size()));
+
+    // Guestimate the number we can pack
+    const int NUM = 20;
+    int guess = NUM;
+    for (; guess < toPack.size(); guess += NUM) {
+        QStringList test = toPack.mid(0, guess);
+        if (!PackList(test)) {
+            if (guess > NUM) {
+                toPackPage = toPack.mid(0, guess - NUM);
+                toPack = toPack.mid(guess - NUM);
+            }
+            break;
+        }
+    }
+
+    // Keep adding 1 image until no more fit
+    while (!toPack.isEmpty()) {
+        QString next = toPack.first();
+        QStringList test = toPackPage;
+        test += next;
+        if (!PackList(test)) {
+            if (toPackPage.isEmpty())
+                return false;
+            if (!PackList(toPackPage))
+                return false;
+            break;
+        }
+        toPackPage += next;
+        toPack.takeFirst();
+    }
+
+    outputImage = CreateOutputImage(toPackPage);
+    if (outputImage.isNull())
+        return false;
+
+    return true;
+}
+
+bool TexturePacker::PackList(const QStringList &toPack)
+{
+    imagePlacement.clear();
+
+    Comparator cmp(*this);
+    QStringList toPackCopy(toPack);
+    std::sort(toPackCopy.begin(), toPackCopy.end(), cmp);
+
+    outputWidth = mSettings.mOutputImageSize.width();
+    outputHeight = mSettings.mOutputImageSize.height();
+
+    if (!PackImageRectangles(toPackCopy)) {
+        qDebug() << mError;
+        return false;
+    }
+
+    return true;
+}
+
+bool TexturePacker::PackImageRectangles(const QStringList &toPack)
+{
+    int minWidth = INT_MAX;
+    int minHeight = INT_MAX;
+    foreach (QString index, toPack) {
+        Translation xln = imageTranslation[index];
+        minWidth = qMin(minWidth, xln.size.width());
+        minHeight = qMin(minHeight, xln.size.height());
+    }
+
+    int newWidth = outputWidth;
+    int testHeight = outputHeight;
+    QMap<QString,QRect> testImagePlacement;
+    bool flag = false;
+    while (true)
+    {
+        testImagePlacement.clear();
+        if (!TestPackingImages(toPack, newWidth, testHeight, testImagePlacement))
+        {
+            if (imagePlacement.size() != 0)
+            {
+                if (!flag)
+                {
+                    flag = true;
+                    newWidth += minWidth + mSettings.padding + mSettings.padding;
+                    testHeight += minHeight + mSettings.padding + mSettings.padding;
+                }
+                else
+                    return true;
+            }
+            else {
+                break;
+            }
+        }
+        else
+        {
+            imagePlacement = testImagePlacement;
+            int val1_3;
+            newWidth = val1_3 = 0;
+            QMapIterator<QString,QRect> it(imagePlacement);
+            while (it.hasNext())
+            {
+                it.next();
+                newWidth = qMax(newWidth, it.value().right() + 1);
+                val1_3 = qMax(val1_3, it.value().bottom() + 1);
+            }
+            if (!flag)
+                newWidth -= mSettings.padding;
+            int newHeight = val1_3 - mSettings.padding;
+/*
+            if (this.requirePow2)
+            {
+                num1 = MiscHelper.FindNextPowerOfTwo(num1);
+                num2 = MiscHelper.FindNextPowerOfTwo(num2);
+            }
+            if (this.requireSquare)
+                num1 = num2 = Math.Max(num1, num2);
+*/
+            if (newWidth == outputWidth && newHeight == outputHeight)
+            {
+                if (!flag)
+                    flag = true;
+                else
+                    return true;
+            }
+            outputWidth = newWidth;
+            outputHeight = newHeight;
+            if (!flag)
+                newWidth -= minWidth;
+            testHeight = newHeight - minHeight;
+        }
+    }
+    return false;
+}
+
+bool TexturePacker::TestPackingImages(const QStringList &toPack, int testWidth, int testHeight, QMap<QString,QRect> &testImagePlacement)
+{
+    LemmyRectanglePacker lemmyRectanglePacker(testWidth, testHeight);
+    foreach (QString key, toPack)
+    {
+        QSize size = imageTranslation[key].size;
+        QPoint placement;
+        if (!lemmyRectanglePacker.TryPack(size.width() + mSettings.padding, size.height() + mSettings.padding, placement)) {
+            mError = tr("Couldn't pack %1").arg(key);
+            return false;
+        }
+        testImagePlacement[key] = QRect(placement.x(), placement.y(), size.width() + mSettings.padding, size.height() + mSettings.padding);
+    }
+    return true;
+}
+
+#else
 
 bool TexturePacker::PackImages(QImage &outputImage)
 {
@@ -431,7 +644,9 @@ bool TexturePacker::TestPackingImages(int testWidth, int testHeight, QMap<QStrin
     return true;
 }
 
-QImage TexturePacker::CreateOutputImage()
+#endif
+
+QImage TexturePacker::CreateOutputImage(const QStringList &toPack)
 {
     QImage bitmap1(outputWidth, outputHeight, QImage::Format_ARGB32);
     bitmap1.fill(Qt::transparent);
