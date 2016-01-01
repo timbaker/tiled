@@ -248,9 +248,12 @@ void TilesetManager::fileChanged(const QString &path)
     mChangedFilesTimer.start();
 }
 
+static bool resolveImageSource(QString &imageSource);
+
 void TilesetManager::fileChangedTimeout()
 {
 #ifdef ZOMBOID
+    qDebug() << "fileChangedTimeout " << mChangedFiles;
     foreach (Tileset *tileset, mTilesetImageCache->mTilesets) {
         QString fileName = tileset->imageSource();
         if (mChangedFiles.contains(fileName)) {
@@ -271,6 +274,12 @@ void TilesetManager::fileChangedTimeout()
                 tileset->setMissing(true);
             }
         }
+        QString imageSource2x = fileName;
+        if (resolveImageSource(imageSource2x) && mChangedFiles.contains(imageSource2x)) {
+            if (QImageReader(imageSource2x).size().isValid()) {
+                tileset->loadImage2x(QImage(imageSource2x));
+            }
+        }
     }
     foreach (Tileset *tileset, tilesets()) {
         QString fileName = tileset->imageSource();
@@ -279,6 +288,14 @@ void TilesetManager::fileChangedTimeout()
                 if (tileset->loadFromCache(cached)) {
                     tileset->setMissing(cached->isMissing());
                     syncTileLayerNames(tileset);
+                    emit tilesetChanged(tileset);
+                }
+            }
+        }
+        QString imageSource2x = fileName;
+        if (resolveImageSource(imageSource2x) && mChangedFiles.contains(imageSource2x)) {
+            if (Tileset *cached = mTilesetImageCache->findMatch(tileset, fileName)) {
+                if (tileset->loadFromCache(cached)) {
                     emit tilesetChanged(tileset);
                 }
             }
@@ -340,6 +357,11 @@ void TilesetManager::imageLoaded(QImage *image, QImage *image2x, Tileset *tilese
     if (image2x != 0) {
         tileset->loadImage2x(*image2x);
         delete image2x;
+        QString imageSource2x = tileset->imageSource();
+        if (resolveImageSource(imageSource2x)) {
+            qDebug() << "2x: watching " << imageSource2x;
+            mWatcher->addPath(imageSource2x);
+        }
     } else {
         qDeleteAll(tileset->mTiles2x);
         tileset->mTiles2x.clear();
@@ -395,7 +417,7 @@ static bool resolveImageSource(QString &imageSource)
     if (QDir::cleanPath(tilesDir) == QDir::cleanPath(info.absolutePath())) {
         QString imageSource2x = QDir(tiles2xDir).filePath(info.fileName());
         if (QFileInfo(imageSource2x).exists()) {
-            imageSource = imageSource2x;
+            imageSource = QFileInfo(imageSource2x).canonicalFilePath();
             return true;
         }
     }
