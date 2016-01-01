@@ -282,6 +282,7 @@ ContainerOverlayDialog::ContainerOverlayDialog(QWidget *parent) :
 //    ui->listWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
     connect(ui->tilesetList, SIGNAL(itemSelectionChanged()),
             SLOT(tilesetSelectionChanged()));
+    connect(ui->tilesetMgr, SIGNAL(clicked(bool)), SLOT(manageTilesets()));
 
     connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetAdded(Tiled::Tileset*)),
             SLOT(tilesetAdded(Tiled::Tileset*)));
