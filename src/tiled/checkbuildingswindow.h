@@ -99,8 +99,8 @@ private:
     void check(const QString &filePath);
     void check(BuildingEditor::BuildingMap *bmap, BuildingEditor::Building *building, Tiled::Map *map, const QString &fileName);
     void issue(Issue::Type type, const QString &detail, int x, int y, int z);
-    void issue(Issue::Type type, char *detail, int x, int y, int z);
-    void issue(Issue::Type type, char *detail, BuildingEditor::BuildingObject *object);
+    void issue(Issue::Type type, const char *detail, int x, int y, int z);
+    void issue(Issue::Type type, const char *detail, BuildingEditor::BuildingObject *object);
     void updateList(IssueFile *file);
     void syncList(IssueFile *file);
 

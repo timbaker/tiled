@@ -336,13 +336,13 @@ void CheckBuildingsWindow::issue(Issue::Type type, const QString &detail, int x,
     mCurrentIssueFile->issues += Issue(mCurrentIssueFile, type, detail, x, y, z);
 }
 
-void CheckBuildingsWindow::issue(Issue::Type type, char *detail, int x, int y, int z)
+void CheckBuildingsWindow::issue(Issue::Type type, const char *detail, int x, int y, int z)
 {
 //    qDebug() << detail << x << "," << y << "," << z;
     mCurrentIssueFile->issues += Issue(mCurrentIssueFile, type, QString::fromLatin1(detail), x, y, z);
 }
 
-void CheckBuildingsWindow::issue(Issue::Type type, char *detail, BuildingObject *object)
+void CheckBuildingsWindow::issue(Issue::Type type, const char *detail, BuildingObject *object)
 {
     mCurrentIssueFile->issues += Issue(mCurrentIssueFile, type, QString::fromLatin1(detail), object);
 }

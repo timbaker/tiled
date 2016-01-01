@@ -19,6 +19,7 @@
 #define BUILDINGTEMPLATES_H
 
 #include <QList>
+#include <QObject>
 #include <QMap>
 #include <QPair>
 #include <QString>
