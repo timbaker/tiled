@@ -44,6 +44,9 @@
 #include <QPainter>
 #include <QUndoCommand>
 #include <QWheelEvent>
+#ifdef ZOMBOID
+#include <QScrollBar>
+#endif
 
 using namespace Tiled;
 using namespace Tiled::Internal;
@@ -150,6 +153,7 @@ TilesetView::TilesetView(QWidget *parent)
 {
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    verticalScrollBar()->setSingleStep(32);
     setItemDelegate(new TileDelegate(this, this));
     setShowGrid(false);
 
@@ -201,6 +205,7 @@ TilesetView::TilesetView(MapDocument *mapDocument, Zoomable *zoomable, QWidget *
 {
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    verticalScrollBar()->setSingleStep(32);
     setItemDelegate(new TileDelegate(this, this));
     setShowGrid(false);
 

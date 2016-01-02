@@ -33,6 +33,7 @@
 #include <QHeaderView>
 #include <QMimeData>
 #include <QPainter>
+#include <QScrollBar>
 #include <QStyleOption>
 
 using namespace BuildingEditor;
@@ -309,6 +310,7 @@ void TileCategoryView::init()
 {
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    verticalScrollBar()->setSingleStep(32);
     setItemDelegate(mDelegate);
     setShowGrid(false);
 

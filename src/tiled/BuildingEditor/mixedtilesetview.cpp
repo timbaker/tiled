@@ -28,6 +28,7 @@
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QScrollBar>
 #include <QStyleOption>
 #include <QToolTip>
 
@@ -359,6 +360,7 @@ void MixedTilesetView::init()
 {
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    verticalScrollBar()->setSingleStep(32);
     setItemDelegate(new TileDelegate(this, this));
     setShowGrid(false);
 
