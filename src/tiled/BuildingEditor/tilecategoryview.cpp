@@ -114,6 +114,48 @@ void BuildingEntryDelegate::paint(QPainter *painter,
     // Draw the tile image.
     if (BuildingTile *btile = entry->tile(e)) {
         if (!btile->isNone()) {
+            // Hack for split shutter tiles
+            if (entry->asShutters()) {
+                int tileOffset = 0, tx1 = 0, ty1 = 0, tx2 = 0, ty2 = 0;
+                if (e == BTC_Shutters::WestBelow) {
+                    tileOffset = 1;
+                    ty2 = -1;
+                }
+                if (e == BTC_Shutters::WestAbove) {
+                    ty1 = -1;
+                    tileOffset = -1;
+                }
+                if (e == BTC_Shutters::NorthLeft) {
+                    tx1 = -1;
+                    tileOffset = 1;
+                }
+                if (e == BTC_Shutters::NorthRight) {
+                    tileOffset = -1;
+                    tx2 = -1;
+                }
+                if (Tile *tile = BuildingTilesMgr::instance()->tileFor(btile)) {
+                    QPointF offset = entry->offset(e);
+                    QPointF p1 = tileToPixelCoords(offset.x() + tx1, offset.y() + ty1) + tileMargins + r.topLeft();
+                    QRect target((p1 - QPointF(tileWidth/2, imageHeight - tileHeight)).toPoint(),
+                            QSize(tileWidth, imageHeight));
+                    QRegion clipRgn = painter->clipRegion();
+                    bool hasClipping = painter->hasClipping();
+                    painter->setClipRect(r);
+                    painter->drawImage(target, tile->image());
+                    painter->setClipRegion(clipRgn, hasClipping ? Qt::ReplaceClip : Qt::NoClip);
+                }
+                if (Tile *tile = BuildingTilesMgr::instance()->tileFor(btile, tileOffset)) {
+                    QPointF offset = entry->offset(e);
+                    QPointF p1 = tileToPixelCoords(offset.x() + tx2, offset.y() + ty2) + tileMargins + r.topLeft();
+                    QRect target((p1 - QPointF(tileWidth/2, imageHeight - tileHeight)).toPoint(),
+                            QSize(tileWidth, imageHeight));
+                    QRegion clipRgn = painter->clipRegion();
+                    bool hasClipping = painter->hasClipping();
+                    painter->setClipRect(r);
+                    painter->drawImage(target, tile->image());
+                    painter->setClipRegion(clipRgn, hasClipping ? Qt::ReplaceClip : Qt::NoClip);
+                }
+            } else
             if (Tile *tile = BuildingTilesMgr::instance()->tileFor(btile)) { // FIXME: calc this elsewhere
                 QPointF offset = entry->offset(e);
                 QPointF p1 = tileToPixelCoords(offset.x(), offset.y()) + tileMargins + r.topLeft();
