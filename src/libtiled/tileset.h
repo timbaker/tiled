@@ -270,8 +270,10 @@ public:
     void setVirtual(bool isVirtual) { mVirtual = isVirtual; }
     bool isVirtual() const { return mVirtual; }
 
-    bool loadImage2x(const QImage &image);
-    QList<Tile*> mTiles2x;
+    void setImageSource2x(const QString &source)
+    { mImageSource2x = source; }
+
+    const QString &imageSource2x() const { return mImageSource2x; }
 #endif
 
 private:
@@ -292,6 +294,7 @@ private:
     bool mMissing;
     bool mLoaded;
     bool mVirtual;
+    QString mImageSource2x;
 #endif
 };
 
