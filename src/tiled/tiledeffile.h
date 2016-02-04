@@ -809,6 +809,7 @@ public:
     TileDefTileset();
     ~TileDefTileset();
 
+    TileDefTile *tileAt(int index);
     void resize(int columns, int rows);
 
     QString mName;

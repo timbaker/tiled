@@ -330,4 +330,30 @@ private:
 
 } // namespace BuildingEditor
 
+namespace Tiled {
+namespace Internal {
+class FileSystemWatcher;
+class TileDefFile;
+
+class TileDefWatcher : public QObject
+{
+        Q_OBJECT
+public:
+    TileDefWatcher();
+
+    void check();
+
+public slots:
+    void fileChanged(const QString &path);
+
+public:
+    Tiled::Internal::FileSystemWatcher *mWatcher;
+    Tiled::Internal::TileDefFile *mTileDefFile;
+    bool tileDefFileChecked;
+    bool watching;
+};
+
+}
+}
+
 #endif // BUILDINGFLOOR_H
