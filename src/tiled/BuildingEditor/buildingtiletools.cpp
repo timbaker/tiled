@@ -239,7 +239,8 @@ void DrawTileTool::setCaptureTiles(FloorTileGrid *tiles, const QRegion &rgn)
     clearCaptureTiles();
     mCaptureTiles = tiles;
     mCaptureTilesRgn = rgn/*.translated(-rgn.boundingRect().topLeft())*/;
-    updateCursor(mMouseScenePos);
+    if (mEditor)
+        updateCursor(mMouseScenePos);
 }
 
 void DrawTileTool::activate()
