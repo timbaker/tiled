@@ -88,7 +88,7 @@ void BuildingPropertiesDialog::setTilePixmap()
 {
     if (BuildingTileEntry *entry = selectedTile()) {
         Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile());
-        ui->tileLabel->setPixmap(QPixmap::fromImage(tile->image()));
+        ui->tileLabel->setPixmap(QPixmap::fromImage(tile->image().scaled(64, 128)));
     } else {
         ui->tileLabel->clear();
     }
