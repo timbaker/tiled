@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Compare .tiles files</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -20,7 +20,7 @@
       <item>
        <widget class="QLabel" name="packLabel1">
         <property name="text">
-         <string>Pack 1:</string>
+         <string>File 1:</string>
         </property>
        </widget>
       </item>
@@ -41,7 +41,7 @@
       <item>
        <widget class="QLabel" name="packLabel2">
         <property name="text">
-         <string>Pack 2:</string>
+         <string>File 2:</string>
         </property>
        </widget>
       </item>

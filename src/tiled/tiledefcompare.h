@@ -28,6 +28,10 @@ private slots:
     void currentRowChanged(int row);
 
 private:
+    QString propertiesString(int fileIndex, Tiled::Internal::TileDefTile *tdt);
+    QString listString(int use, Tiled::Internal::TileDefTile *tdt, Tiled::Internal::TileDefTile *tdt2);
+    void readSettings();
+    void writeSettings();
     QImage getTileImage(Tiled::Internal::TileDefTile *tdt);
 
 private:
@@ -37,6 +41,7 @@ private:
     Tiled::Internal::TileDefFile mMergedFile;
     QMap<QListWidgetItem*,Tiled::Internal::TileDefTile*> mTileMap1;
     QMap<QListWidgetItem*,Tiled::Internal::TileDefTile*> mTileMap2;
+    QMap<QListWidgetItem*,int> mUseMap;
 };
 
 #endif // TILEDEFCOMPARE_H
