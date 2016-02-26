@@ -1472,6 +1472,8 @@ int TileDefDialog::rowOf(const QString &name) const
     return tilesetNames().indexOf(name);
 }
 
+extern bool resolveImageSource(QString &imageSource);
+
 void TileDefDialog::loadTilesets()
 {
     bool anyMissing = false;
@@ -1570,15 +1572,30 @@ void TileDefDialog::tilesDirChanged()
         QString imageSource = dir.filePath(tsDef->mImageSource);
         if (QFileInfo(imageSource).exists()) {
             imageSource = QFileInfo(imageSource).canonicalFilePath();
-            QImageReader ir(imageSource);
-            if (ir.size().isValid()) {
-                int columns = ir.size().width() / 64;
-                int rows = ir.size().height() / 128 ;
-                if (QSize(columns, rows) != QSize(tsDef->mColumns, tsDef->mRows)) {
-                    resized += ResizedTileset(tsDef->mName,
-                                              QSize(tsDef->mColumns, tsDef->mRows),
-                                              QSize(columns, rows));
-                    tsDef->resize(columns, rows);
+            QString imageSource2x = imageSource;
+            if (resolveImageSource(imageSource2x)) {
+                QImageReader ir(imageSource2x);
+                if (ir.size().isValid()) {
+                    int columns = ir.size().width() / (64 * 2);
+                    int rows = ir.size().height() / (128 * 2);
+                    if (QSize(columns, rows) != QSize(tsDef->mColumns, tsDef->mRows)) {
+                        resized += ResizedTileset(tsDef->mName,
+                                                  QSize(tsDef->mColumns, tsDef->mRows),
+                                                  QSize(columns, rows));
+                        tsDef->resize(columns, rows);
+                    }
+                }
+            } else {
+                QImageReader ir(imageSource);
+                if (ir.size().isValid()) {
+                    int columns = ir.size().width() / 64;
+                    int rows = ir.size().height() / 128 ;
+                    if (QSize(columns, rows) != QSize(tsDef->mColumns, tsDef->mRows)) {
+                        resized += ResizedTileset(tsDef->mName,
+                                                  QSize(tsDef->mColumns, tsDef->mRows),
+                                                  QSize(columns, rows));
+                        tsDef->resize(columns, rows);
+                    }
                 }
             }
         }

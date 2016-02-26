@@ -248,7 +248,7 @@ void TilesetManager::fileChanged(const QString &path)
     mChangedFilesTimer.start();
 }
 
-static bool resolveImageSource(QString &imageSource);
+extern bool resolveImageSource(QString &imageSource);
 
 void TilesetManager::fileChangedTimeout()
 {
@@ -369,7 +369,7 @@ void TilesetManager::virtualTilesetChanged(VirtualTileset *vts)
 }
 
 // If imageSource is in the Tiles directory, make it relative to Tiles2x directory.
-static bool resolveImageSource(QString &imageSource)
+bool resolveImageSource(QString &imageSource)
 {
     QString tiles2xDir = Preferences::instance()->tiles2xDirectory();
     if (tiles2xDir.isEmpty())

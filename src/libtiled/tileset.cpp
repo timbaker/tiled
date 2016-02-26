@@ -139,6 +139,15 @@ bool Tileset::loadFromCache(Tileset *cached)
     Q_ASSERT(mMargin == cached->margin());
     Q_ASSERT(mTransparentColor == cached->transparentColor());
 
+#ifdef ZOMBOID
+    int mTileWidth = this->mTileWidth;
+    int mTileHeight = this->mTileHeight;
+    if (!cached->mImageSource2x.isEmpty()) {
+        mTileWidth *= 2;
+        mTileHeight *= 2;
+    }
+#endif
+
     int oldTilesetSize = mTiles.size();
     int tileNum = 0;
 
