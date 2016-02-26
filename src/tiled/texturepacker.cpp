@@ -194,16 +194,32 @@ bool TexturePacker::PackImages(int pageNum, QStringList& toPack, QStringList &to
     PROGRESS progress(QString::fromLatin1("Packing page %1.    Images to pack: %2").arg(pageNum+1).arg(toPack.size()));
 
     // Guestimate the number we can pack
-    const int NUM = 20;
+    int NUM = 100;
     int guess = NUM;
     for (; guess < toPack.size(); guess += NUM) {
         QStringList test = toPack.mid(0, guess);
+        progress.update(QString::fromLatin1("Packing page %1.    Images to pack: %2    Trying: %3").arg(pageNum+1).arg(toPack.size()).arg(guess));
         if (!PackList(test)) {
+            if (NUM == 100) {
+                guess -= NUM;
+                NUM = 20;
+                guess -= NUM;
+                continue;
+            }
             if (guess > NUM) {
                 toPackPage = toPack.mid(0, guess - NUM);
                 toPack = toPack.mid(guess - NUM);
             }
             break;
+        }
+        if (guess + NUM > toPack.size()) {
+            if (NUM == 100) {
+                NUM = 20;
+                guess -= NUM;
+                continue;
+            }
+            toPackPage = toPack.mid(0, guess);
+            toPack = toPack.mid(guess);
         }
     }
 
@@ -212,6 +228,7 @@ bool TexturePacker::PackImages(int pageNum, QStringList& toPack, QStringList &to
         QString next = toPack.first();
         QStringList test = toPackPage;
         test += next;
+        progress.update(QString::fromLatin1("Packing page %1.    Images to pack: %2    Trying: %3").arg(pageNum+1).arg(toPack.size()).arg(test.size()));
         if (!PackList(test)) {
             if (toPackPage.isEmpty())
                 return false;
