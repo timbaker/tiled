@@ -38,8 +38,8 @@ void PackExtractDialog::browse()
 void PackExtractDialog::accept()
 {
     QString prefix = ui->prefixEdit->text();
-    if (prefix.isEmpty())
-        return;
+//    if (prefix.isEmpty())
+//        return;
 
     QDir outputDir(ui->outputEdit->text());
     if (!outputDir.exists())
@@ -48,7 +48,7 @@ void PackExtractDialog::accept()
     if (ui->radioMultiple->isChecked()) {
         foreach (PackPage page, mPackFile.pages()) {
             foreach (PackSubTexInfo tex, page.mInfo) {
-                if (tex.name.startsWith(prefix, Qt::CaseInsensitive)) {
+                if (prefix.isEmpty() || tex.name.startsWith(prefix, Qt::CaseInsensitive)) {
                     QImage image(tex.fx, tex.fy, QImage::Format_ARGB32);
                     image.fill(Qt::transparent);
                     QPainter painter(&image);
@@ -58,7 +58,7 @@ void PackExtractDialog::accept()
                 }
             }
         }
-    } else {
+    } else if (!prefix.isEmpty()) {
         struct TileInfo {
             QString tileName;
             int tileIndex;
