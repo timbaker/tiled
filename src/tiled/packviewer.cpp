@@ -180,6 +180,9 @@ PackImageItem::PackImageItem() :
     setAcceptHoverEvents(true);
 }
 
+#include <QGraphicsWidget>
+#include <QToolTip>
+
 void PackImageItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
 {
     qreal x = event->scenePos().x();
@@ -188,8 +191,11 @@ void PackImageItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
     foreach (PackSubTexInfo info, mPackPage.mInfo) {
         if (x >= info.x && x < info.x + info.w &&
                 y >= info.y && y < info.y + info.h) {
-            setToolTip(info.name);
-            return;
+//            setToolTip(info.name);
+            QGraphicsView *v = (QGraphicsView*)event->widget();
+            QRect sceneRect(scenePos().x() + info.x, scenePos().y() + info.y, info.w, info.h);
+            QRect viewportRect = v->mapFromScene(sceneRect).boundingRect();
+            QToolTip::showText(event->screenPos(), info.name, v, viewportRect);
         }
     }
 }
