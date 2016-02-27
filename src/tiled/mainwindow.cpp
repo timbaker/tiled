@@ -2332,6 +2332,24 @@ void MainWindow::ApplyScriptChanges(MapDocument *doc, const QString &undoText, L
 
     // Map resizing.
 
+    // Tilesets added.
+    for (int i = 0; i < mMap->tilesetCount(); i++) {
+        Tileset *lts = mMap->tilesetAt(i);
+        bool found = false;
+        foreach (Tileset *ts, doc->map()->tilesets()) {
+            if (ts->name() == lts->name()) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            if (lts->isMissing()) {
+                TilesetManager::instance()->loadTileset(lts, lts->imageSource());
+            }
+            us->push(new AddTileset(doc, lts));
+        }
+    }
+
     // Handle deleted layers
     foreach (Lua::LuaLayer *ll, mMap->mRemovedLayers) {
         if (ll->mOrig) {

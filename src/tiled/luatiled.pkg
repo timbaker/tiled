@@ -92,7 +92,7 @@ class LuaTileLayer @ TileLayer : public LuaLayer
     void fill(LuaRegion &rgn, Tile *tile);
     void fill(Tile *tile);
 
-    void replaceTile(Tile *oldTile, Tile *newTile);
+    bool replaceTile(Tile *oldTile, Tile *newTile);
 };
 
 class LuaMapObject @ MapObject
@@ -229,6 +229,8 @@ class LuaMap @ Map
 
     void setTileSelection(LuaRegion &rgn);
     LuaRegion tileSelection();
+
+    void replaceTilesByName(const char *names);
 
     LuaMapBmp &bmp(int index);
 

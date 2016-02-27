@@ -20,6 +20,7 @@
 #include "bmpblender.h"
 #include "luaconsole.h"
 #include "mapcomposite.h"
+#include "tilemetainfomgr.h"
 #include "tilesetmanager.h"
 #include "tmxmapwriter.h"
 
@@ -395,18 +396,46 @@ void LuaTileLayer::fill(Tile *tile)
     fill(mClone ? mClone->bounds() : mOrig->bounds(), tile);
 }
 
-void LuaTileLayer::replaceTile(Tile *oldTile, Tile *newTile)
+bool LuaTileLayer::replaceTile(Tile *oldTile, Tile *newTile)
 {
     if (newTile == LuaMap::noneTile()) newTile = 0;
     initClone();
+    bool replaced = false;
     for (int y = 0; y < mClone->width(); y++) {
         for (int x = 0; x < mClone->width(); x++) {
             if (mCloneTileLayer->cellAt(x, y).tile == oldTile) {
                 mCloneTileLayer->setCell(x, y, Cell(newTile));
                 mAltered += QRect(x, y, 1, 1);
+                replaced = true;
             }
         }
     }
+    return replaced;
+}
+
+bool LuaTileLayer::replaceTiles(QList<Tile *> &tiles)
+{
+    if (tiles.size() % 2)
+        return false;
+    initClone();
+    bool replaced = false;
+    for (int y = 0; y < mClone->width(); y++) {
+        for (int x = 0; x < mClone->width(); x++) {
+            for (int i = 0; i < tiles.size(); i += 2) {
+                Tile *oldTile = tiles[i];
+                Tile *newTile = tiles[i + 1];
+                if (newTile == LuaMap::noneTile())
+                    newTile = 0;
+                if (mCloneTileLayer->cellAt(x, y).tile == oldTile) {
+                    mCloneTileLayer->setCell(x, y, Cell(newTile));
+                    mAltered += QRect(x, y, 1, 1);
+                    replaced = true;
+                    break;
+                }
+            }
+        }
+    }
+    return replaced;
 }
 
 /////
@@ -650,6 +679,74 @@ Tileset *LuaMap::tilesetAt(int index)
     if (index >= 0 && index < mClone->tilesets().size())
         return mClone->tilesets()[index];
     return 0;
+}
+
+void LuaMap::replaceTilesByName(const char *names)
+{
+    QString ss = QString::fromLatin1(names);
+    QStringList _names = ss.split(QLatin1Char(';'), QString::SkipEmptyParts);
+    if (_names.size() % 2)
+        return; // error
+
+    QList<Tileset*> addTilesets;
+    QList<Tile*> tiles;
+    for (int i = 0; i < _names.size(); i += 2) {
+        TileName from(_names[i]);
+        TileName to(_names[i+1]);
+        if (!from.isValid() || !to.isValid())
+            goto errorExit;
+        Tileset *tsFrom = _tileset(from.tileset());
+        Tileset *tsTo = _tileset(to.tileset());
+        if (tsFrom == 0) {
+            if (Tileset *ts = Tiled::Internal::TileMetaInfoMgr::instance()->tileset(from.tileset())) {
+                Tiled::Internal::TileMetaInfoMgr::instance()->loadTilesets(QList<Tileset*>() << ts);
+                tsFrom = ts->clone();
+            }
+            if (tsFrom == 0) {
+                goto errorExit;
+            }
+            addTilesets += tsFrom;
+        }
+        if (tsTo == 0) {
+            if (Tileset *ts = Tiled::Internal::TileMetaInfoMgr::instance()->tileset(to.tileset())) {
+                Tiled::Internal::TileMetaInfoMgr::instance()->loadTilesets(QList<Tileset*>() << ts);
+                tsTo = ts->clone();
+            }
+            if (tsTo == 0)
+                goto errorExit;
+            addTilesets += tsTo;
+        }
+        Tile *tileFrom = tsFrom->tileAt(from.id());
+        if (tileFrom == 0)
+            goto errorExit;
+        Tile *tileTo = tsTo->tileAt(to.id());
+        if (tileTo == 0)
+            goto errorExit;
+        tiles += tileFrom;
+        tiles += tileTo;
+    }
+
+    bool replaced = false;
+    for (int layerIndex = 0; layerIndex < layerCount(); layerIndex++) {
+        LuaLayer *layer = layerAt(layerIndex);
+        if (LuaTileLayer *tl = layer->asTileLayer()) {
+            if (tl->replaceTiles(tiles)) {
+                replaced = true;
+            }
+        }
+    }
+
+    foreach (Tileset *ts, addTilesets) {
+        if (replaced) {
+            addTileset(ts);
+        } else {
+            delete ts;
+        }
+    }
+    return;
+
+errorExit:
+    qDeleteAll(addTilesets);
 }
 
 LuaMapBmp &LuaMap::bmp(int index)
@@ -1092,4 +1189,20 @@ bool LuaMapNoBlend::get(int x, int y)
     if (x < 0 || x >= mClone->width()) return false; // error
     if (y < 0 || y >= mClone->height()) return false; // error
     return mClone->get(x, y);
+}
+
+/////
+
+TileName::TileName(const char *tileName)
+{
+    if (!parseTileName(QString::fromLatin1(tileName), mTilesetName, mTileID)) {
+        mTilesetName.clear();
+    }
+}
+
+TileName::TileName(const QString &tileName)
+{
+    if (!parseTileName(tileName, mTilesetName, mTileID)) {
+        mTilesetName.clear();
+    }
 }

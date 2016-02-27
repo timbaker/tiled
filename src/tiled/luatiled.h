@@ -48,6 +48,20 @@ class LuaMap;
 class LuaObjectGroup;
 class LuaTileLayer;
 
+class TileName
+{
+public:
+    QString mTilesetName;
+    int mTileID;
+
+    TileName(const char *tileName);
+    TileName(const QString &tileName);
+
+    bool isValid() { return !mTilesetName.isEmpty(); }
+    QString tileset() { return mTilesetName; }
+    int id() { return mTileID; }
+};
+
 class LuaColor
 {
 public:
@@ -139,7 +153,8 @@ public:
     void fill(const LuaRegion &rgn, Tile *tile);
     void fill(Tile *tile);
 
-    void replaceTile(Tile *oldTile, Tile *newTile);
+    bool replaceTile(Tile *oldTile, Tile *newTile);
+    bool replaceTiles(QList<Tile*> &tiles);
 
     TileLayer *mCloneTileLayer;
     QRegion mAltered;
@@ -333,6 +348,8 @@ public:
     Tileset *_tileset(const QString &name);
     Tileset *tileset(const char *name);
     Tileset *tilesetAt(int index);
+
+    void replaceTilesByName(const char *names);
 
     LuaMapBmp &bmp(int index);
 
