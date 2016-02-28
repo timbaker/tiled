@@ -89,7 +89,11 @@ void TileDelegate::paint(QPainter *painter,
 #ifdef ZOMBOID
     const QFontMetrics fm = painter->fontMetrics();
     const int labelHeight = mTilesetView->showLayerNames() ? fm.lineSpacing() : 0;
-    painter->drawPixmap(option.rect.adjusted(0, 0, -extra, -extra - labelHeight), tileImage);
+    const TilesetModel *m = static_cast<const TilesetModel*>(index.model());
+    if (Tile *tile = m->tileAt(index)) {
+        const QMargins margins = tile->drawMargins(mTilesetView->zoomable()->scale());
+        painter->drawPixmap(option.rect.adjusted(margins.left(), margins.top(), -extra - margins.right(), -extra - labelHeight - margins.bottom()), tileImage);
+    }
 
     if (mTilesetView->showLayerNames()) {
         const QVariant decoration = index.model()->data(index, Qt::DecorationRole);

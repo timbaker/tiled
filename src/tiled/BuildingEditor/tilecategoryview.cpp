@@ -138,6 +138,8 @@ void BuildingEntryDelegate::paint(QPainter *painter,
                     QPointF p1 = tileToPixelCoords(offset.x() + tx1, offset.y() + ty1) + tileMargins + r.topLeft();
                     QRect target((p1 - QPointF(tileWidth/2, imageHeight - tileHeight)).toPoint(),
                             QSize(tileWidth, imageHeight));
+                    const QMargins margins = tile->drawMargins(scale);
+                    target.adjust(margins.left(), margins.top(), -margins.right(), -margins.bottom());
                     QRegion clipRgn = painter->clipRegion();
                     bool hasClipping = painter->hasClipping();
                     painter->setClipRect(r);
@@ -149,6 +151,8 @@ void BuildingEntryDelegate::paint(QPainter *painter,
                     QPointF p1 = tileToPixelCoords(offset.x() + tx2, offset.y() + ty2) + tileMargins + r.topLeft();
                     QRect target((p1 - QPointF(tileWidth/2, imageHeight - tileHeight)).toPoint(),
                             QSize(tileWidth, imageHeight));
+                    const QMargins margins = tile->drawMargins(scale);
+                    target.adjust(margins.left(), margins.top(), -margins.right(), -margins.bottom());
                     QRegion clipRgn = painter->clipRegion();
                     bool hasClipping = painter->hasClipping();
                     painter->setClipRect(r);
@@ -161,6 +165,8 @@ void BuildingEntryDelegate::paint(QPainter *painter,
                 QPointF p1 = tileToPixelCoords(offset.x(), offset.y()) + tileMargins + r.topLeft();
                 QRect target((p1 - QPointF(tileWidth/2, imageHeight - tileHeight)).toPoint(),
                         QSize(tileWidth, imageHeight));
+                const QMargins margins = tile->drawMargins(scale);
+                target.adjust(margins.left(), margins.top(), -margins.right(), -margins.bottom());
                 QRegion clipRgn = painter->clipRegion();
                 bool hasClipping = painter->hasClipping();
                 painter->setClipRect(r);

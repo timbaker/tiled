@@ -107,6 +107,8 @@ void ContainerOverlayDelegate::paint(QPainter *painter,
         if (Tile *tile = BuildingEditor::BuildingTilesMgr::instance()->tileFor(overlay->mTileName)) {
             QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
             r.setRight(r.left() + tileWidth);
+            QMargins margins = tile->drawMargins(scale);
+            r.adjust(margins.left(), margins.top(), -margins.right(), -margins.bottom());
             painter->drawImage(r, tile->image());
         }
     }
@@ -117,17 +119,20 @@ void ContainerOverlayDelegate::paint(QPainter *painter,
         Tile *baseTile = BuildingEditor::BuildingTilesMgr::instance()->tileFor(entry->mParent->mTileName);
         QRect r = option.rect.adjusted(extra, extra + fontHgt, -extra, -extra);
         r.setRight(r.left() + tileWidth);
+        QMargins margins = baseTile->drawMargins(scale);
         for (int i = 0; i < entry->mTiles.size(); i++) {
             QString tileName = entry->mTiles[i];
             if (baseTile) {
-                painter->drawImage(r, baseTile->image());
+                painter->drawImage(r.adjusted(margins.left(), margins.top(), -margins.right(), -margins.bottom()), baseTile->image());
             }
             if (!tileName.isEmpty()) {
                 Tile *tile = (tileName == QLatin1Literal("none")) ?
                             BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile() :
                             BuildingEditor::BuildingTilesMgr::instance()->tileFor(tileName);
-                if (tile)
-                    painter->drawImage(r, tile->image());
+                if (tile) {
+                    QMargins margins2 = tile->drawMargins(scale);
+                    painter->drawImage(r.adjusted(margins2.left(), margins2.top(), -margins2.right(), -margins2.bottom()), tile->image());
+                }
             }
             if (m->dropEntryIndex() == i && m->dropIndex() == index)
                 painter->drawRect(r);

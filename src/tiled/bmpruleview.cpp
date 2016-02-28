@@ -167,11 +167,13 @@ void BmpRuleDelegate::paint(QPainter *painter,
             if (mView->zoomable()->smoothTransform())
                 painter->setRenderHint(QPainter::SmoothPixmapTransform);
 
-            if (tile != BuildingTilesMgr::instance()->noneTiledTile())
+            if (tile != BuildingTilesMgr::instance()->noneTiledTile()) {
+                QMargins margins = tile->drawMargins(scale);
                 painter->drawPixmap(QRect(option.rect.left() + extra + (n % columns) * tileWidth,
                                           option.rect.top() + extra + labelHeight + (n / columns) * tileHeight + extra,
-                                          tileWidth, tileHeight),
+                                          tileWidth, tileHeight).adjusted(margins.left(), margins.top(), -margins.right(), -margins.bottom()),
                                     QPixmap::fromImage(tile->image()));
+            }
             n++;
         }
     }

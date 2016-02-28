@@ -274,11 +274,12 @@ void RoomsDialog::tileSelectionChanged()
     synchUI();
 }
 
+
 void RoomsDialog::setTilePixmap()
 {
     if (BuildingTileEntry *entry = selectedTile()) {
         Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->displayTile());
-        ui->tileLabel->setPixmap(QPixmap::fromImage(tile->image().scaled(64, 128)));
+        ui->tileLabel->setPixmap(QPixmap::fromImage(tile->finalImage(64, 128)));
     } else {
         ui->tileLabel->clear();
     }

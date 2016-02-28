@@ -114,8 +114,11 @@ void LayersPanelDelegate::paint(QPainter *painter,
             painter->setRenderHint(QPainter::SmoothPixmapTransform);
 
         const int dw = option.rect.width() - tileWidth;
+        QMargins margins = tile->drawMargins(mView->zoomable()->scale());
         painter->drawPixmap(option.rect.adjusted(dw/2, extra + labelHeight + extra,
-                                                 -(dw - dw/2), -extra), tileImage);
+                                                 -(dw - dw/2), -extra)
+                            .adjusted(margins.left(), margins.top(), -margins.right(), -margins.bottom()),
+                            tileImage);
     }
 #if 0
     // Overlay with highlight color when selected
