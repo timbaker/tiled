@@ -54,7 +54,8 @@ TilesetManager::TilesetManager():
     mMissingTileset = new Tileset(QLatin1String("missing"), TILE_WIDTH, TILE_HEIGHT);
     mMissingTileset->setTransparentColor(Qt::white);
     mMissingTileset->setMissing(true);
-    QString fileName = QLatin1String(":/BuildingEditor/icons/missing-tile.png");
+//    QString fileName = QLatin1String(":/BuildingEditor/icons/missing-tile.png");
+    QString fileName = QLatin1String(":/images/missing-tile.png");
     if (!mMissingTileset->loadFromImage(QImage(fileName), fileName)) {
         QImage image(TILE_WIDTH, TILE_HEIGHT, QImage::Format_ARGB32);
         image.fill(Qt::red);
@@ -400,6 +401,9 @@ bool resolveImageSource(QString &imageSource)
 
 void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource_)
 {
+    if (tileset == mMissingTileset) {
+        int i = 0;
+    }
     // Hack to ignore TileMetaInfoMgr's tilesets that haven't been loaded,
     // their paths are relative to the Tiles Directory.
     if (QDir(imageSource_).isRelative())

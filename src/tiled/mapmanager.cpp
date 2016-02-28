@@ -695,7 +695,9 @@ void MapManager::mapLoadedByThread(MapManager::Map *map, MapInfo *mapInfo)
 
     Tile *missingTile = TilesetManager::instance()->missingTile();
     foreach (Tileset *tileset, map->missingTilesets()) {
-        if (tileset->tileHeight() == 128 && tileset->tileWidth() == 64) {
+        if (tileset == missingTile->tileset())
+            continue;
+        if (tileset->tileHeight() == missingTile->height() && tileset->tileWidth() == missingTile->width()) {
             // Replace the all-red image with something nicer.
             for (int i = 0; i < tileset->tileCount(); i++)
                 tileset->tileAt(i)->setImage(missingTile->image());

@@ -21,6 +21,7 @@
 #include "mapdocument.h"
 #include "mapscene.h"
 #include "preferences.h"
+#include "tilesetmanager.h"
 
 #include "maprenderer.h"
 #include "tile.h"
@@ -80,16 +81,20 @@ void PickTileTool::mousePressed(QGraphicsSceneMouseEvent *event)
                     continue;
                 for (int i = 0; i < cells.size(); i++) {
                     Tile *test = cells[i]->tile;
-                    QRect imageBox(QPoint(), test->image().size());
+                    Tile *realTile = test;
+                    if (test->image().isNull()) {
+                        test = TilesetManager::instance()->missingTile();
+                    }
+                    QRect imageBox(test->offset(), test->image().size());
                     QPoint p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, test->height()));
                     if (test->width() == tileBox.width() / 2) {
                         p = QPoint(x, y) - (tileBox.bottomLeft().toPoint() - QPoint(0, test->height() * 2));
                         p /= 2;
                     }
                     if (imageBox.contains(p.x(), p.y())) {
-                        QRgb pixel = test->image().pixel(p.x(), p.y());
+                        QRgb pixel = test->image().pixel(p.x() - imageBox.x(), p.y() - imageBox.y());
                         if (qAlpha(pixel) > 0)
-                            tile = test;
+                            tile = realTile;
                     }
                 }
             }

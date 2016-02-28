@@ -982,8 +982,10 @@ QString BuildingTilesDialog::changeFurnitureTile(FurnitureTile *ftile,
 {
     QString old = ftile->tile(x, y) ? ftile->tile(x, y)->name() : QString();
     QSize oldSize = ftile->size();
-    ftile->setTile(x, y, tileName.isEmpty()
-                   ? 0 : BuildingTilesMgr::instance()->get(tileName));
+    BuildingTile *btile = tileName.isEmpty() ? 0 : BuildingTilesMgr::instance()->get(tileName);
+    if (btile && BuildingTilesMgr::instance()->tileFor(btile) && BuildingTilesMgr::instance()->tileFor(btile)->image().isNull())
+        btile = 0;
+    ftile->setTile(x, y, btile);
 
     FurnitureGroups::instance()->tileChanged(ftile);
 

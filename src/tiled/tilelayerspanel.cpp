@@ -22,6 +22,7 @@
 #include "mapcomposite.h"
 #include "mapdocument.h"
 #include "preferences.h"
+#include "tilesetmanager.h"
 #include "zoomable.h"
 
 #include "BuildingEditor/buildingtiles.h"
@@ -98,6 +99,8 @@ void LayersPanelDelegate::paint(QPainter *painter,
         return;
     if (tile == BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile())
         tile = 0;
+    if (tile && tile->image().isNull())
+        tile = TilesetManager::instance()->missingTile();
 
     const int extra = 2;
 
@@ -107,7 +110,7 @@ void LayersPanelDelegate::paint(QPainter *painter,
     // Draw the tile image
     if (tile != 0) {
         const QVariant display = index.model()->data(index, Qt::DisplayRole);
-        const QPixmap tileImage = display.value<QPixmap>();
+        const QPixmap tileImage = QPixmap::fromImage(tile->image()); //display.value<QPixmap>();
         const int tileWidth = qCeil(tile->tileset()->tileWidth() * mView->zoomable()->scale());
 
         if (mView->zoomable()->smoothTransform())
