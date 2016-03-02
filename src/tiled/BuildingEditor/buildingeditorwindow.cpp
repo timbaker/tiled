@@ -197,7 +197,7 @@ void EditorWindowPerDocumentStuff::focusOn(int x, int y, int z, int objectIndex)
     if (document()->currentFloor() != floor)
         document()->setCurrentFloor(floor);
     mIsoView->centerOn(mIsoView->scene()->tileToScene(QPoint(x, y), z));
-    mIsoView->zoomable()->setScale(4);
+    mIsoView->zoomable()->setScale(2);
 
     if (objectIndex >= 0 && objectIndex < floor->objectCount()) {
         BuildingObject *bo = floor->object(objectIndex);

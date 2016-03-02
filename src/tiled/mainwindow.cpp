@@ -53,6 +53,7 @@
 #include "newtilesetdialog.h"
 #include "pluginmanager.h"
 #include "propertiesdialog.h"
+#include "rearrangetiles.h"
 #include "resizedialog.h"
 #include "objectselectiontool.h"
 #include "objectgroup.h"
@@ -81,6 +82,7 @@
 #include "bmptool.h"
 #include "changetileselection.h"
 #include "checkbuildingswindow.h"
+#include "checkmapswindow.h"
 #include "containeroverlaydialog.h"
 #include "converttolotdialog.h"
 #include "convertorientationdialog.h"
@@ -638,8 +640,12 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             SLOT(showBuildingEditor()));
     connect(mUi->actionCheckBuildings, SIGNAL(triggered()),
             SLOT(checkBuildings()));
+    connect(mUi->actionCheckMaps, SIGNAL(triggered()),
+            SLOT(checkMaps()));
     connect(mUi->actionTilesetMetaInfo, SIGNAL(triggered()),
             SLOT(tilesetMetaInfoDialog()));
+    connect(mUi->actionRearrangeTiles, SIGNAL(triggered()),
+            SLOT(rearrangeTiles()));
     connect(mUi->actionTileProperties, SIGNAL(triggered()),
             SLOT(tilePropertiesEditor()));
     connect(mUi->actionCompareTileDef, SIGNAL(triggered()),
@@ -1647,6 +1653,12 @@ void MainWindow::checkBuildings()
     d->show();
 }
 
+void MainWindow::checkMaps()
+{
+    CheckMapsWindow *d = new CheckMapsWindow(this);
+    d->show();
+}
+
 void MainWindow::buildingTilePicked(const QString &tileName)
 {
     if (mTileDefDialog && TileDefDialog::instance()->isVisible())
@@ -1685,6 +1697,12 @@ void MainWindow::tilesetMetaInfoDialog()
     if (!mgr->writeTxt()) {
         QMessageBox::warning(this, tr("It's no good, Jim!"), mgr->errorString());
     }
+}
+
+void MainWindow::rearrangeTiles()
+{
+    RearrangeTiles::instance()->show();
+    RearrangeTiles::instance()->raise();
 }
 
 void MainWindow::tilePropertiesEditor()
@@ -2333,8 +2351,7 @@ void MainWindow::ApplyScriptChanges(MapDocument *doc, const QString &undoText, L
     // Map resizing.
 
     // Tilesets added.
-    for (int i = 0; i < mMap->tilesetCount(); i++) {
-        Tileset *lts = mMap->tilesetAt(i);
+    foreach (Tileset *lts, mMap->mNewTilesets) {
         bool found = false;
         foreach (Tileset *ts, doc->map()->tilesets()) {
             if (ts->name() == lts->name()) {

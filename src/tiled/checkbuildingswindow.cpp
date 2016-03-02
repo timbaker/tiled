@@ -5,6 +5,7 @@
 #include "mapcomposite.h"
 #include "mapmanager.h"
 #include "preferences.h"
+#include "rearrangetiles.h"
 #include "tilesetmanager.h"
 #include "tilemetainfomgr.h"
 #include "zprogress.h"
@@ -38,6 +39,8 @@ CheckBuildingsWindow::CheckBuildingsWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    setAttribute(Qt::WA_DeleteOnClose);
+
     connect(ui->dirBrowse, SIGNAL(clicked()), SLOT(browse()));
     connect(ui->checkNow, SIGNAL(clicked()), SLOT(check()));
     connect(ui->treeWidget, SIGNAL(itemActivated(QTreeWidgetItem*,int)), SLOT(itemActivated(QTreeWidgetItem*,int)));
@@ -47,6 +50,7 @@ CheckBuildingsWindow::CheckBuildingsWindow(QWidget *parent) :
     connect(ui->checkRoomLight, SIGNAL(clicked()), SLOT(syncList()));
     connect(ui->checkGrime, SIGNAL(clicked()), SLOT(syncList()));
     connect(ui->checkSink, SIGNAL(clicked()), SLOT(syncList()));
+    connect(ui->check2x, SIGNAL(clicked()), SLOT(syncList()));
 
     ui->dirEdit->setText(BuildingPreferences::instance()->mapsDirectory());
 //    ui->dirEdit->setText(QLatin1Literal("C:/Users/Tim/Desktop/ProjectZomboid/Buildings"));
@@ -141,6 +145,8 @@ void CheckBuildingsWindow::syncList(IssueFile *file)
                 visible = false;
             if (issue.type == Issue::Sinks && !ui->checkSink->isChecked())
                 visible = false;
+            if (issue.type == Issue::Rearranged && !ui->check2x->isChecked())
+                visible = false;
             QTreeWidgetItem *issueItem = fileItem->child(i);
             issueItem->setHidden(!visible);
             if (visible) anyVisible = true;
@@ -151,6 +157,8 @@ void CheckBuildingsWindow::syncList(IssueFile *file)
 
 void CheckBuildingsWindow::check(const QString &filePath)
 {
+    RearrangeTiles::instance()->readTxtIfNeeded();
+
     BuildingReader reader;
     if (Building *building = reader.read(filePath)) {
         reader.fix(building);
@@ -207,7 +215,7 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                     }
                     if (btile->mTilesetName == QLatin1Literal("lighting_indoor_01")) {
                         BuildingFloor::Square &square = floor->squares[x][y];
-                        if (btile->mIndex == NORTH_SWITCH) {
+                        if (btile->mIndex == NORTH_SWITCH || btile->mIndex == NORTH_SWITCH + 4) {
                             if (!square.IsWallOrient(BuildingFloor::Square::WallOrientN) && !square.IsWallOrient(BuildingFloor::Square::WallOrientNW))
                                 issue(Issue::LightSwitch, "North Switch not on a Wall", bo);
                             if (square.mEntries[BuildingFloor::Square::SectionDoor] != 0 && square.mEntryEnum[BuildingFloor::Square::SectionDoor] == BTC_Doors::North)
@@ -215,7 +223,7 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                             if (square.mEntries[BuildingFloor::Square::SectionWindow] != 0 && square.mEntryEnum[BuildingFloor::Square::SectionWindow] == BTC_Windows::North)
                                 issue(Issue::LightSwitch, "North Switch on a Window", bo);
                         }
-                        if (btile->mIndex == WEST_SWITCH) {
+                        if (btile->mIndex == WEST_SWITCH || btile->mIndex == WEST_SWITCH + 4) {
                             if (!square.IsWallOrient(BuildingFloor::Square::WallOrientW) && !square.IsWallOrient(BuildingFloor::Square::WallOrientNW))
                                 issue(Issue::LightSwitch, "West Switch not on a Wall", bo);
                             if (square.mEntries[BuildingFloor::Square::SectionDoor] != 0 && square.mEntryEnum[BuildingFloor::Square::SectionDoor] == BTC_Doors::West)
@@ -223,7 +231,7 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                             if (square.mEntries[BuildingFloor::Square::SectionWindow] != 0 && square.mEntryEnum[BuildingFloor::Square::SectionWindow] == BTC_Windows::West)
                                 issue(Issue::LightSwitch, "West Switch on a Window", bo);
                         }
-                        if (btile->mIndex == EAST_SWITCH) {
+                        if (btile->mIndex == EAST_SWITCH || btile->mIndex == EAST_SWITCH + 4) {
                             BuildingFloor::Square &square = floor->squares[x+1][y];
                             if (!square.IsWallOrient(BuildingFloor::Square::WallOrientW) && !square.IsWallOrient(BuildingFloor::Square::WallOrientNW))
                                 issue(Issue::LightSwitch, "East Switch not on a Wall", bo);
@@ -232,7 +240,7 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                             if (square.mEntries[BuildingFloor::Square::SectionWindow] != 0 && square.mEntryEnum[BuildingFloor::Square::SectionWindow] == BTC_Windows::West)
                                 issue(Issue::LightSwitch, "East Switch on a Window", bo);
                         }
-                        if (btile->mIndex == SOUTH_SWITCH) {
+                        if (btile->mIndex == SOUTH_SWITCH || btile->mIndex == SOUTH_SWITCH + 4) {
                             BuildingFloor::Square &square = floor->squares[x][y+1];
                             if (!square.IsWallOrient(BuildingFloor::Square::WallOrientN) && !square.IsWallOrient(BuildingFloor::Square::WallOrientNW))
                                 issue(Issue::LightSwitch, "South Switch not on a Wall", bo);
@@ -241,9 +249,11 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                             if (square.mEntries[BuildingFloor::Square::SectionWindow] != 0 && square.mEntryEnum[BuildingFloor::Square::SectionWindow] == BTC_Windows::North)
                                 issue(Issue::LightSwitch, "South Switch on a Window", bo);
                         }
-                        if (btile->mIndex == NORTH_SWITCH || btile->mIndex == WEST_SWITCH || btile->mIndex == EAST_SWITCH || btile->mIndex == SOUTH_SWITCH)
+                        if (btile->mIndex == NORTH_SWITCH || btile->mIndex == WEST_SWITCH || btile->mIndex == EAST_SWITCH || btile->mIndex == SOUTH_SWITCH ||
+                                btile->mIndex == NORTH_SWITCH + 4 || btile->mIndex == WEST_SWITCH + 4 || btile->mIndex == EAST_SWITCH + 4 || btile->mIndex == SOUTH_SWITCH + 4) {
                             if (Room *room = floor->GetRoomAt(x, y))
                                 roomWithSwitch |= room;
+                        }
                         break;
                     }
                 }
@@ -307,6 +317,9 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                         if (tile != 0 && tile->tileset()->name().startsWith(QLatin1Literal("overlay_grime_"))) {
                             issue(Issue::Grime, "Grime in the floor layer", x, y, z);
                         }
+                    }
+                    if (tile != 0 && RearrangeTiles::instance()->isRearranged(tile)) {
+                        issue(Issue::Rearranged, tr("Rearranged tile (%1)").arg(BuildingTilesMgr::instance()->nameForTile(tile)), x, y, z);
                     }
                 }
                 if (Room *room = floor->GetRoomAt(x, y)) {

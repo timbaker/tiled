@@ -1,14 +1,31 @@
-#ifndef CHECKBUILDINGSWINDOW_H
-#define CHECKBUILDINGSWINDOW_H
+/*
+ * Copyright 2016, Tim Baker <treectrl@users.sf.net>
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef CHECKMAPSWINDOW_H
+#define CHECKMAPSWINDOW_H
 
 #include <QMainWindow>
 #include <QSet>
 #include <QTimer>
 
-namespace BuildingEditor {
-class Building;
-class BuildingObject;
-class BuildingMap;
+class QTreeWidgetItem;
+
+namespace Ui {
+class CheckMapsWindow;
 }
 
 namespace Tiled {
@@ -18,25 +35,18 @@ class FileSystemWatcher;
 }
 }
 
-namespace Ui {
-class CheckBuildingsWindow;
-}
-
-class QTreeWidgetItem;
-
-class CheckBuildingsWindow : public QMainWindow
+class CheckMapsWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit CheckBuildingsWindow(QWidget *parent = 0);
-    ~CheckBuildingsWindow();
+    explicit CheckMapsWindow(QWidget *parent = 0);
+    ~CheckMapsWindow();
 
 private slots:
     void browse();
     void check();
     void itemActivated(QTreeWidgetItem *item, int column);
-    void syncList();
     void fileChanged(const QString &fileName);
     void fileChangedTimeout();
 
@@ -48,12 +58,7 @@ private:
     public:
         enum Type
         {
-            LightSwitch,
-            InteriorOutside,
-            RoomLight,
-            Grime,
-            Sinks,
-            Rearranged
+            Bogus
         };
 
         Issue(IssueFile *file, Type type, const QString &detail, int x, int y, int z) :
@@ -62,13 +67,10 @@ private:
             detail(detail),
             x(x),
             y(y),
-            z(z),
-            objectIndex(-1)
+            z(z)
         {
 
         }
-
-        Issue(IssueFile *file, Type type, const QString &detail, BuildingEditor::BuildingObject *object);
 
         QString toString()
         {
@@ -81,7 +83,6 @@ private:
         int x;
         int y;
         int z;
-        int objectIndex;
     };
 
     class IssueFile
@@ -97,16 +98,14 @@ private:
         QList<Issue> issues;
     };
 
-    void check(const QString &filePath);
-    void check(BuildingEditor::BuildingMap *bmap, BuildingEditor::Building *building, Tiled::Map *map, const QString &fileName);
+    void check(const QString &fileName);
     void issue(Issue::Type type, const QString &detail, int x, int y, int z);
-    void issue(Issue::Type type, const char *detail, int x, int y, int z);
-    void issue(Issue::Type type, const char *detail, BuildingEditor::BuildingObject *object);
-    void updateList(IssueFile *file);
+    void updateList(CheckMapsWindow::IssueFile *file);
+    void syncList();
     void syncList(IssueFile *file);
 
 private:
-    Ui::CheckBuildingsWindow *ui;
+    Ui::CheckMapsWindow *ui;
     QList<IssueFile*> mFiles;
     IssueFile *mCurrentIssueFile;
 
@@ -116,4 +115,4 @@ private:
     QTimer mChangedFilesTimer;
 };
 
-#endif // CHECKBUILDINGSWINDOW_H
+#endif // CHECKMAPSWINDOW_H

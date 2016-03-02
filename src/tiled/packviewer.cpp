@@ -193,9 +193,11 @@ void PackImageItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
                 y >= info.y && y < info.y + info.h) {
 //            setToolTip(info.name);
             QGraphicsView *v = (QGraphicsView*)event->widget();
-            QRect sceneRect(scenePos().x() + info.x, scenePos().y() + info.y, info.w, info.h);
-            QRect viewportRect = v->mapFromScene(sceneRect).boundingRect();
-            QToolTip::showText(event->screenPos(), info.name, v, viewportRect);
+            if (v != 0) {
+                QRect sceneRect(scenePos().x() + info.x, scenePos().y() + info.y, info.w, info.h);
+                QRect viewportRect = v->mapFromScene(sceneRect).boundingRect();
+                QToolTip::showText(event->screenPos(), info.name, v, viewportRect);
+            }
         }
     }
 }

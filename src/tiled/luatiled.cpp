@@ -505,6 +505,8 @@ LuaMap::~LuaMap()
     qDeleteAll(mLayers);
     qDeleteAll(mRemovedLayers);
     delete mClone;
+
+    Tiled::Internal::TilesetManager::instance()->removeReferences(mNewTilesets);
 }
 
 LuaMap::Orientation LuaMap::orientation()
@@ -696,7 +698,14 @@ void LuaMap::replaceTilesByName(const char *names)
         if (!from.isValid() || !to.isValid())
             goto errorExit;
         Tileset *tsFrom = _tileset(from.tileset());
-        Tileset *tsTo = _tileset(to.tileset());
+        if (tsFrom == 0) {
+            for (int j = 0; j < addTilesets.size(); j++) {
+                if (addTilesets[j]->name() == from.tileset()) {
+                    tsFrom = addTilesets[j];
+                    break;
+                }
+            }
+        }
         if (tsFrom == 0) {
             if (Tileset *ts = Tiled::Internal::TileMetaInfoMgr::instance()->tileset(from.tileset())) {
                 Tiled::Internal::TileMetaInfoMgr::instance()->loadTilesets(QList<Tileset*>() << ts);
@@ -706,6 +715,15 @@ void LuaMap::replaceTilesByName(const char *names)
                 goto errorExit;
             }
             addTilesets += tsFrom;
+        }
+        Tileset *tsTo = _tileset(to.tileset());
+        if (tsTo == 0) {
+            for (int j = 0; j < addTilesets.size(); j++) {
+                if (addTilesets[j]->name() == to.tileset()) {
+                    tsTo = addTilesets[j];
+                    break;
+                }
+            }
         }
         if (tsTo == 0) {
             if (Tileset *ts = Tiled::Internal::TileMetaInfoMgr::instance()->tileset(to.tileset())) {
@@ -739,6 +757,8 @@ void LuaMap::replaceTilesByName(const char *names)
     foreach (Tileset *ts, addTilesets) {
         if (replaced) {
             addTileset(ts);
+            Tiled::Internal::TilesetManager::instance()->addReference(ts);
+            mNewTilesets += ts;
         } else {
             delete ts;
         }

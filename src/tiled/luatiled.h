@@ -375,6 +375,7 @@ public:
     Map *mClone;
     Map *mOrig;
     QMap<QString,Tileset*> mTilesetByName;
+    QList<Tileset*> mNewTilesets;
     QList<LuaLayer*> mLayers;
     QList<LuaLayer*> mRemovedLayers;
     QMap<QString,LuaLayer*> mLayerByName;

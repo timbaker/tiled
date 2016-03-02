@@ -156,11 +156,13 @@
     </widget>
     <addaction name="actionBuildingEditor"/>
     <addaction name="actionCheckBuildings"/>
+    <addaction name="actionCheckMaps"/>
     <addaction name="actionTilesetMetaInfo"/>
     <addaction name="actionTileProperties"/>
     <addaction name="actionCompareTileDef"/>
     <addaction name="menu_pack_files"/>
     <addaction name="actionContainerOverlays"/>
+    <addaction name="actionRearrangeTiles"/>
     <addaction name="actionEnflatulator"/>
     <addaction name="actionVirtualTilesetDialog"/>
     <addaction name="actionWorldEd"/>
@@ -624,6 +626,16 @@
   <action name="actionCheckBuildings">
    <property name="text">
     <string>Check Buildings...</string>
+   </property>
+  </action>
+  <action name="actionCheckMaps">
+   <property name="text">
+    <string>Check Maps...</string>
+   </property>
+  </action>
+  <action name="actionRearrangeTiles">
+   <property name="text">
+    <string>Rearrange Tiles...</string>
    </property>
   </action>
  </widget>

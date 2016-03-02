@@ -4,6 +4,10 @@ include(../qtsingleapplication/qtsingleapplication.pri)
 include(../qtlockedfile/qtlockedfile.pri)
 include(../worlded/worlded.pri)
 
+QMAKE_CFLAGS_RELEASE += -Zi
+QMAKE_CXXFLAGS_RELEASE += -Zi
+QMAKE_LFLAGS_RELEASE += /DEBUG /OPT:REF
+
 TEMPLATE = app
 TARGET = TileZed
 isEmpty(INSTALL_ONLY_BUILD) {
@@ -265,7 +269,9 @@ SOURCES += aboutdialog.cpp \
     containeroverlayfile.cpp \
     containeroverlaydialog.cpp \
     tiledefcompare.cpp \
-    checkbuildingswindow.cpp
+    checkbuildingswindow.cpp \
+    checkmapswindow.cpp \
+    rearrangetiles.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -491,7 +497,9 @@ HEADERS += aboutdialog.h \
     containeroverlayfile.h \
     containeroverlaydialog.h \
     tiledefcompare.h \
-    checkbuildingswindow.h
+    checkbuildingswindow.h \
+    checkmapswindow.h \
+    rearrangetiles.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
@@ -556,7 +564,9 @@ FORMS += aboutdialog.ui \
     packextractdialog.ui \
     containeroverlaydialog.ui \
     tiledefcompare.ui \
-    checkbuildingswindow.ui
+    checkbuildingswindow.ui \
+    checkmapswindow.ui \
+    rearrangetiles.ui
 
 RESOURCES += tiled.qrc \
     BuildingEditor/buildingeditor.qrc

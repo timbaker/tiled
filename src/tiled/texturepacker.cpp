@@ -18,6 +18,8 @@
 #include "texturepacker.h"
 
 #include "texturepackfile.h"
+#include "preferences.h"
+#include "tiledeffile.h"
 #include "zprogress.h"
 
 #include <QDebug>
@@ -36,6 +38,9 @@
 // http://www.archivum.info/qt-interest@trolltech.com/2005-12/00242/RE-Linker-Problem-while-using-QMap.html
 template class __declspec(dllimport) QMap<QString, QString>;
 #endif
+
+using namespace Tiled;
+using namespace Tiled::Internal;
 
 #define TILE_WIDTH (64*2)
 #define TILE_HEIGHT (128*2)
@@ -64,7 +69,13 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
 #if 1
     PROGRESS progress(tr("Reading image files"));
 
-    QStringList toPack;
+    TileDefFile tileDefFile;
+    QFileInfo fileInfo(Preferences::instance()->tilesDirectory() + QString::fromLatin1("/newtiledefinitions.tiles"));
+    if (fileInfo.exists()) {
+        tileDefFile.read(fileInfo.absoluteFilePath());
+    }
+
+    QStringList toPack, toPackFloor;
     for (int i = 0; i < mImageFileNames.size(); i++) {
         progress.update(tr("Reading file %1 / %2").arg(i+1).arg(mImageFileNames.size()));
         QString str = mImageFileNames[i];
@@ -74,6 +85,7 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
             return false;
         }
         if (mImageIsTilesheet.contains(str)) {
+            TileDefTileset *tdts = tileDefFile.tileset(QFileInfo(str).baseName());
             if (image.width() % TILE_WIDTH || image.height() % TILE_HEIGHT) {
                 imageTranslation[str] = WorkOutTranslation(image);
                 toPack += str;
@@ -90,7 +102,18 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
                         if (!tln.size.isEmpty()) {
                             QString key = QString::fromLatin1("%1_INDEX_%2").arg(x + y * cols).arg(str);
                             imageTranslation[key] = tln;
-                            toPack += key;
+                            if (tdts) {
+                                if (TileDefTile *tdt = tdts->tileAt(x + y * cols)) {
+                                    if (tdt->mProperties.contains(QLatin1Literal("solidfloor")))
+                                        toPackFloor += key;
+                                    else
+                                        toPack += key;
+                                } else {
+                                    toPack += key;
+                                }
+                            } else {
+                                toPack += key;
+                            }
                             mImageTranslationMap[str][key] = tln;
                         }
                     }
@@ -153,6 +176,47 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
 
     progress.update(tr("Saving %1").arg(QFileInfo(mSettings.mPackFileName).fileName()));
     packFile.write(mSettings.mPackFileName);
+
+#if 1
+    PackFile packFileFloor;
+    pageNum = 0;
+
+    while (!toPackFloor.isEmpty()) {
+        QStringList toPackPage;
+        QImage outputImage;
+        if (!PackImages(pageNum, toPackFloor, toPackPage, outputImage))
+            return false;
+
+        PackPage packPage;
+        packPage.name = QFileInfo(mSettings.mPackFileName).baseName() + QString::number(pageNum);
+        packPage.image = outputImage;
+        foreach (QString index, toPackPage) {
+            QRect rectangle1(imagePlacement[index].topLeft(), imageTranslation[index].size);
+            QRect rectangle2(imageTranslation[index].topLeft - imageTranslation[index].sheetOffset, imageTranslation[index].originalSize);
+            QString name;
+            if (index.contains(QLatin1String("_INDEX_"))) {
+                QStringList ss = index.split(QLatin1String("_INDEX_"));
+                name = QFileInfo(ss[1]).baseName() + QLatin1String("_") + ss[0];
+                if (mTileNames.contains(index))
+                    name = mTileNames[index];
+            } else {
+                name = QFileInfo(index).baseName();
+            }
+            PackSubTexInfo texInfo(rectangle1.x(), rectangle1.y(), rectangle1.width(), rectangle1.height(),
+                                   rectangle2.x(), rectangle2.y(), rectangle2.width(), rectangle2.height(),
+                                   name);
+            packPage.mInfo += texInfo;
+        }
+        packFileFloor.addPage(packPage);
+        pageNum++;
+    }
+
+    if (pageNum > 0) {
+        fileInfo = QFileInfo(mSettings.mPackFileName);
+        progress.update(tr("Saving %1").arg(fileInfo.fileName()));
+        packFileFloor.write(fileInfo.absolutePath() + QLatin1String("/") + fileInfo.baseName() + QLatin1String(".floor.") + fileInfo.suffix());
+    }
+#endif
 
     return true;
 }

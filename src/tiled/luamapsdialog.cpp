@@ -116,7 +116,11 @@ bool LuaMapsDialog::processMap(const QString &mapFilePath)
         return false;
     }
 
+    bool showAdjacentMaps = Preferences::instance()->showAdjacentMaps();
+    Preferences::instance()->setShowAdjacentMaps(false);
     QScopedPointer<MapDocument> doc(new MapDocument(map, mapFilePath));
+    Preferences::instance()->setShowAdjacentMaps(showAdjacentMaps);
+
     if (!MainWindow::instance()->LuaScript(doc.data(), ui->scriptEdit->text())) {
         QMessageBox::critical(this, tr("LUA Error"),
                               tr("The LUA script returned an error.\nCheck the console."));
