@@ -99,7 +99,6 @@ void CreatePackDialog::settingsFromUI(TexturePackSettings &settings)
         tpd.mImagesAreTilesheets = ui->dirList->item(i)->checkState() == Qt::Checked;
         settings.mInputImageDirectories += tpd;
     }
-    settings.padding = 1;
     if (ui->texSizeCombo->currentIndex() == 0)
         settings.mOutputImageSize = QSize(512, 512);
     else if (ui->texSizeCombo->currentIndex() == 2)
@@ -107,7 +106,7 @@ void CreatePackDialog::settingsFromUI(TexturePackSettings &settings)
     else
         settings.mOutputImageSize = QSize(1024, 1024);
     settings.mPackFileName = ui->packNameEdit->text();
-    settings.padding = 1;
+    settings.padding = 2;
 }
 
 void CreatePackDialog::savePackAs()
