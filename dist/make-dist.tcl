@@ -16,7 +16,7 @@ if {$argc > 0} {
         32bit {
             puts "dist.tcl: 32-bit"
             append DEST "32"
-            set BIN C:/Programming/TileZed/build-tiled-Desktop_Qt_5_2_1_MSVC2010_OpenGL_32bit-Release
+            set BIN C:/Programming/TileZed/build-tiled-Desktop_Qt_5_2_1_MSVC2010_32bit_OpenGL-Release
             set QT_DIR C:/Programming/QtSDK2015/5.2.1/msvc2010_opengl
             set SUFFIX "-32bit"
             set SUFFIX2 "32"
