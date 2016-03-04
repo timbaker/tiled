@@ -18,6 +18,7 @@
 #include "checkmapswindow.h"
 #include "ui_checkmapswindow.h"
 
+#include "bmpblender.h"
 #include "documentmanager.h"
 #include "filesystemwatcher.h"
 #include "mainwindow.h"
@@ -29,6 +30,8 @@
 #include "tilemetainfomgr.h"
 #include "tmxmapreader.h"
 #include "zprogress.h"
+
+#include "BuildingEditor/buildingtiles.h"
 
 #include "tile.h"
 #include "tileset.h"
@@ -167,9 +170,12 @@ void CheckMapsWindow::check(const QString &fileName)
     bool showAdjacentMaps = Preferences::instance()->showAdjacentMaps();
     Preferences::instance()->setShowAdjacentMaps(false);
     QScopedPointer<MapDocument> doc(new MapDocument(map, fileName));
-    Preferences::instance()->setShowAdjacentMaps(true);
+    Preferences::instance()->setShowAdjacentMaps(showAdjacentMaps);
 
     MapComposite *mc = doc.data()->mapComposite();
+
+    if (mc->bmpBlender())
+        mc->bmpBlender()->flush(QRect(0, 0, map->width() - 1, map->height() - 1));
 
     mCurrentIssueFile = 0;
     foreach (IssueFile *file, mFiles) {
@@ -207,8 +213,36 @@ void CheckMapsWindow::check(const QString &fileName)
                             issue(Issue::Bogus, tr("old grass tile, fix with replace_vegetation_groundcover.lua"), x, y, level);
                             oldGrass++;
                         }
+                    } else if (cell->tile->tileset()->name() == QLatin1Literal("vegetation_foliage_01")) {
+                        bool foundBlendsNatural = false;
+                        for (int i = 0; i < cells.size(); i++) {
+                            if (!cells[i]->isEmpty() && cells[i]->tile->tileset()->name().startsWith(QLatin1Literal("blends_natural"))) {
+                                foundBlendsNatural = true;
+                                break;
+                            }
+                        }
+                        if (!foundBlendsNatural && mc->bmpBlender()) {
+                            QStringList blendLayerNames = mc->bmpBlender()->blendLayers();
+                                foreach (TileLayer *blendLayer, lg->bmpBlendLayers()) {
+                                    if (blendLayer && blendLayer->contains(x, y)) {
+                                        if (!blendLayerNames.contains(blendLayer->name()) || !map->noBlend(blendLayer->name())->get(x, y)) {
+                                            if (Tile *blendTile = blendLayer->cellAt(x, y).tile) {
+                                                if (blendTile->tileset()->name().startsWith(QLatin1Literal("blends_natural"))) {
+                                                    foundBlendsNatural = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (foundBlendsNatural)
+                                        break;
+                                }
+                        }
+                        if (!foundBlendsNatural) {
+                            issue(Issue::Bogus, tr("vegetation_foliage must be on blends_natural"), x, y, level);
+                        }
                     } else if (RearrangeTiles::instance()->isRearranged(cell->tile)) {
-                        issue(Issue::Bogus, tr("tile marked 'rearranged' needs looking at"), x, y, level);
+                        issue(Issue::Bogus, tr("Rearranged tile (%1)").arg(BuildingEditor::BuildingTilesMgr::instance()->nameForTile(cell->tile)), x, y, level);
                     }
                 }
             }

@@ -318,6 +318,20 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                             issue(Issue::Grime, "Grime in the floor layer", x, y, z);
                         }
                     }
+                    if (tile != 0 && tile->tileset()->name() == QLatin1Literal("vegetation_foliage_01")) {
+                        bool foundBlendsNatural = false;
+                        foreach (TileLayer *tl2, layers->layers()) {
+                            if (tl2 == layer)
+                                break;
+                            if (!tl2->cellAt(x, y).isEmpty() && tl2->cellAt(x, y).tile->tileset()->name().startsWith(QLatin1Literal(""))) {
+                                foundBlendsNatural = true;
+                                break;
+                            }
+                        }
+                        if (!foundBlendsNatural) {
+                            issue(Issue::Rearranged, tr("vegetation_foliage tile must be on blends_natural for erosion to work"), x, y, z);
+                        }
+                    }
                     if (tile != 0 && RearrangeTiles::instance()->isRearranged(tile)) {
                         issue(Issue::Rearranged, tr("Rearranged tile (%1)").arg(BuildingTilesMgr::instance()->nameForTile(tile)), x, y, z);
                     }
