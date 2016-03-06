@@ -115,6 +115,7 @@ Translations = translations
 }
 
 copyFile $SRC $DEST LuaTools.txt
+copyFile $SRC $DEST Rearrange.txt
 copyFile $SRC $DEST TileProperties.txt
 copyFile $SRC $DEST Tilesets.txt
 copyFile $SRC $DEST Textures.txt
