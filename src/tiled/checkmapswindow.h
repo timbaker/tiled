@@ -32,6 +32,7 @@ namespace Tiled {
 class Map;
 namespace Internal {
 class FileSystemWatcher;
+class MapDocument;
 }
 }
 
@@ -46,6 +47,7 @@ public:
 private slots:
     void browse();
     void check();
+    void checkCurrent();
     void itemActivated(QTreeWidgetItem *item, int column);
     void fileChanged(const QString &fileName);
     void fileChangedTimeout();
@@ -99,6 +101,7 @@ private:
     };
 
     void check(const QString &fileName);
+    void check(Tiled::Internal::MapDocument *doc);
     void issue(Issue::Type type, const QString &detail, int x, int y, int z);
     void updateList(CheckMapsWindow::IssueFile *file);
     void syncList();

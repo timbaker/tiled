@@ -53,6 +53,7 @@ CheckMapsWindow::CheckMapsWindow(QWidget *parent) :
 
     connect(ui->dirBrowse, SIGNAL(clicked()), SLOT(browse()));
     connect(ui->checkNow, SIGNAL(clicked()), SLOT(check()));
+    connect(ui->checkCurrent, SIGNAL(clicked()), SLOT(checkCurrent()));
     connect(ui->treeWidget, SIGNAL(itemActivated(QTreeWidgetItem*,int)), SLOT(itemActivated(QTreeWidgetItem*,int)));
 
     ui->dirEdit->setText(Preferences::instance()->mapsDirectory());
@@ -116,6 +117,16 @@ void CheckMapsWindow::check()
     }
 }
 
+#include "documentmanager.h"
+
+void CheckMapsWindow::checkCurrent()
+{
+    MapDocument *doc = DocumentManager::instance()->currentDocument();
+    if (!doc)
+        return;
+    check(doc->fileName());
+}
+
 void CheckMapsWindow::itemActivated(QTreeWidgetItem *item, int column)
 {
     if (item->parent() == 0)
@@ -172,28 +183,38 @@ void CheckMapsWindow::check(const QString &fileName)
     QScopedPointer<MapDocument> doc(new MapDocument(map, fileName));
     Preferences::instance()->setShowAdjacentMaps(showAdjacentMaps);
 
-    MapComposite *mc = doc.data()->mapComposite();
+    check(doc.data());
+}
+
+void CheckMapsWindow::check(MapDocument *doc)
+{
+    MapComposite *mc = doc->mapComposite();
+    Map *map = mc->map();
 
     if (mc->bmpBlender())
         mc->bmpBlender()->flush(QRect(0, 0, map->width() - 1, map->height() - 1));
 
     mCurrentIssueFile = 0;
     foreach (IssueFile *file, mFiles) {
-        if (file->path == fileName) {
+        if (file->path == doc->fileName()) {
             mCurrentIssueFile = file;
             file->issues.clear();
             break;
         }
     }
     if (mCurrentIssueFile == 0) {
-        mCurrentIssueFile = new IssueFile(fileName);
+        mCurrentIssueFile = new IssueFile(doc->fileName());
         mFiles += mCurrentIssueFile;
     }
 
     RearrangeTiles::instance()->readTxtIfNeeded();
 
+    for (int level = 0; level < mc->layerGroupCount(); level++) {
+        CompositeLayerGroup *lg = mc->tileLayersForLevel(level);
+        lg->prepareDrawing2();
+    }
+
     QVector<const Cell*> cells;
-    QVector<qreal> opacities;
     int numLevels = mc->layerGroupCount();
     for (int level = numLevels - 1; level >= 0; --level) {
         CompositeLayerGroup *lg = mc->tileLayersForLevel(level);
@@ -201,26 +222,101 @@ void CheckMapsWindow::check(const QString &fileName)
         for (int y = 0; y < map->height(); y++) {
             for (int x = 0; x < map->width(); x++) {
                 cells.clear();
-                if (!lg->orderedCellsAt(QPoint(x, y), cells, opacities))
+                if (!lg->orderedCellsAt2(QPoint(x, y), cells))
                     continue;
                 foreach (const Cell *cell, cells) {
                     if (cell->isEmpty())
                         continue;
                     if (cell->tile->image().isNull()) {
                         issue(Issue::Bogus, tr("invisible tile"), x, y, level);
-                    } else if (oldGrass < 10 && cell->tile->tileset()->name() == QLatin1Literal("vegetation_groundcover_01")) {
+                    } else if (cell->tile->tileset()->name() == QLatin1Literal("vegetation_groundcover_01")) {
                         if ((cell->tile->id() < 6) || (cell->tile->id() >= 44 && cell->tile->id() <= 46)) {
-                            issue(Issue::Bogus, tr("old grass tile, fix with replace_vegetation_groundcover.lua"), x, y, level);
-                            oldGrass++;
+                            if (oldGrass < 10) {
+                                issue(Issue::Bogus, tr("old grass tile, fix with replace_vegetation_groundcover.lua"), x, y, level);
+                                oldGrass++;
+                            }
+                        } else if (cell->tile->id() >= 18 && cell->tile->id() <= 23) {
+                            // Don't allow plant and tree on the same square (only one erosion object per square is supported)
+                            foreach (const Cell *cell2, cells) {
+                                if (cell2 != cell && !cell2->isEmpty() && cell2->tile->tileset()->name().startsWith(QLatin1Literal("vegetation_trees_01"))) {
+                                    issue(Issue::Bogus, tr("tree and plant on the same square, fix with fix_tree_and_plant.lua"), x, y, level);
+                                    break;
+                                }
+                            }
+
+                            // Only one plant on a square
+                            foreach (const Cell *cell2, cells) {
+                                if (cell2 != cell && !cell2->isEmpty() && (cell2->tile->tileset()->name() == QLatin1Literal("vegetation_groundcover_01")) &&
+                                        (cell2->tile->id() >= 18 && cell2->tile->id() <= 23)) {
+                                    issue(Issue::Bogus, tr("two plants on the same square"), x, y, level);
+                                    break;
+                                }
+                                if (cell2 != cell && !cell2->isEmpty() && (cell2->tile->tileset()->name() == QLatin1Literal("vegetation_foliage_01"))) {
+                                    issue(Issue::Bogus, tr("two plants on the same square"), x, y, level);
+                                    break;
+                                }
+                            }
+
+                            // Plant must be on blends_natural or else Erosion ignores it
+                            bool foundBlendsNatural = false;
+                            for (int i = 0; i < cells.size(); i++) {
+                                if (!cells[i]->isEmpty() && cells[i]->tile->tileset()->name().startsWith(QLatin1Literal("blends_natural"))) {
+                                    int id = cells[i]->tile->id();
+                                    if ((((id % 8) == 0) || ((id % 8) >= 5)) && (id / 8 % 2 == 0)) { // solid tile, not blend edge
+                                        foundBlendsNatural = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            /*
+                            if (!foundBlendsNatural && mc->bmpBlender()) {
+                                QStringList blendLayerNames = mc->bmpBlender()->blendLayers();
+                                    foreach (TileLayer *blendLayer, lg->bmpBlendLayers()) {
+                                        if (blendLayer && blendLayer->contains(x, y)) {
+                                            if (!blendLayerNames.contains(blendLayer->name()) || !map->noBlend(blendLayer->name())->get(x, y)) {
+                                                if (Tile *blendTile = blendLayer->cellAt(x, y).tile) {
+                                                    if (blendTile->tileset()->name().startsWith(QLatin1Literal("blends_natural"))) {
+                                                        foundBlendsNatural = true;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if (foundBlendsNatural)
+                                            break;
+                                    }
+                            }
+                            */
+                            if (!foundBlendsNatural) {
+                                issue(Issue::Bogus, tr("vegetation_groundcover plant must be on blends_natural"), x, y, level);
+                            }
+                        } else {
+                            // vegetation_groundcover_01_16,17
+//                            issue(Issue::Bogus, tr("no 2x equivalent for vegetation_groundcover"), x, y, level);
                         }
                     } else if (cell->tile->tileset()->name() == QLatin1Literal("vegetation_foliage_01")) {
-                        bool foundBlendsNatural = false;
-                        for (int i = 0; i < cells.size(); i++) {
-                            if (!cells[i]->isEmpty() && cells[i]->tile->tileset()->name().startsWith(QLatin1Literal("blends_natural"))) {
-                                foundBlendsNatural = true;
+
+                        // Bush on plant not allowed
+                        foreach (const Cell *cell2, cells) {
+                            if (cell2 != cell && !cell2->isEmpty() && (cell2->tile->tileset()->name() == QLatin1Literal("vegetation_groundcover_01")) &&
+                                    (cell2->tile->id() >= 16 && cell2->tile->id() <= 17)) {
+                                issue(Issue::Bogus, tr("bush and plant on the same square"), x, y, level);
                                 break;
                             }
                         }
+
+
+                        bool foundBlendsNatural = false;
+                        for (int i = 0; i < cells.size(); i++) {
+                            if (!cells[i]->isEmpty() && cells[i]->tile->tileset()->name().startsWith(QLatin1Literal("blends_natural"))) {
+                                int id = cells[i]->tile->id();
+                                if ((((id % 8) == 0) || ((id % 8) >= 5)) && (id / 8 % 2 == 0)) { // solid tile, not blend edge
+                                    foundBlendsNatural = true;
+                                    break;
+                                }
+                            }
+                        }
+                        /*
                         if (!foundBlendsNatural && mc->bmpBlender()) {
                             QStringList blendLayerNames = mc->bmpBlender()->blendLayers();
                                 foreach (TileLayer *blendLayer, lg->bmpBlendLayers()) {
@@ -238,6 +334,7 @@ void CheckMapsWindow::check(const QString &fileName)
                                         break;
                                 }
                         }
+                        */
                         if (!foundBlendsNatural) {
                             issue(Issue::Bogus, tr("vegetation_foliage must be on blends_natural"), x, y, level);
                         }

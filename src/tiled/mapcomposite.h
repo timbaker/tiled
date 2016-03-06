@@ -59,10 +59,8 @@ public:
 
     QRectF boundingRect(const Tiled::MapRenderer *renderer);
 
-#ifdef WORLDED
     void prepareDrawing2();
     bool orderedCellsAt2(const QPoint &pos, QVector<const Tiled::Cell*>& cells) const;
-#endif
 
     bool setLayerVisibility(const QString &layerName, bool visible);
     bool setLayerVisibility(Tiled::TileLayer *tl, bool visible);
@@ -181,6 +179,10 @@ private:
     QString mHighlightLayer;
     QVector<bool> mForceNonEmpty;
 #endif // BUILDINGED
+#if 1 // ROAD_CRUD
+    Tiled::TileLayer *mRoadLayer0; // 0_Floor
+    Tiled::TileLayer *mRoadLayer1; // 0_FloorOverlay
+#endif // ROAD_CRUD
 };
 
 class MapComposite : public QObject

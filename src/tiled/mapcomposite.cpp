@@ -95,6 +95,10 @@ CompositeLayerGroup::CompositeLayerGroup(MapComposite *owner, int level)
     , mAnyVisibleLayers(false)
     , mNeedsSynch(true)
     , mNoBlendCell(Tiled::Internal::TilesetManager::instance()->noBlendTile())
+#if 1 // ROAD_CRUD
+    , mRoadLayer0(0)
+    , mRoadLayer1(0)
+#endif // ROAD_CRUD
 {
 
 }
@@ -293,7 +297,6 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
     return !cells.isEmpty();
 }
 
-#ifdef WORLDED
 void CompositeLayerGroup::prepareDrawing2()
 {
     mPreparedSubMapLayers.resize(0);
@@ -327,7 +330,7 @@ bool CompositeLayerGroup::orderedCellsAt2(const QPoint &pos, QVector<const Cell 
         MapNoBlend *noBlend = mNoBlends[index];
         QPoint subPos = pos - mOwner->orientAdjustTiles() * mLevel;
         if (tl->contains(subPos)) {
-#if 1 // ROAD_CRUD
+#if WORLDED // ROAD_CRUD
             if (tl == mRoadLayer0 || tl == mRoadLayer1) {
                 const Cell *cell = (tl == mRoadLayer0)
                         ? &mOwner->roadLayer0()->cellAt(subPos)
@@ -373,7 +376,6 @@ bool CompositeLayerGroup::orderedCellsAt2(const QPoint &pos, QVector<const Cell 
 
     return !cells.isEmpty();
 }
-#endif // WORLDED
 
 bool CompositeLayerGroup::isLayerEmpty(int index) const
 {
