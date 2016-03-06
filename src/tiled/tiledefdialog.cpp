@@ -1620,7 +1620,7 @@ void TileDefDialog::tilesDirChanged()
         tileset->loadFromNothing(QSize(width, height), imageSource);
         Tile *missingTile = TilesetManager::instance()->missingTile();
         for (int i = 0; i < tileset->tileCount(); i++)
-            tileset->tileAt(i)->setImage(missingTile->image());
+            tileset->tileAt(i)->setImage(missingTile);
         tileset->setMissing(true);
 
         mTilesets += tileset;

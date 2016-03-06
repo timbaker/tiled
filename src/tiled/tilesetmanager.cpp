@@ -270,7 +270,7 @@ void TilesetManager::fileChangedTimeout()
             } else {
                 if (tileset->tileHeight() == mMissingTile->width() && tileset->tileWidth() == mMissingTile->height()) {
                     for (int i = 0; i < tileset->tileCount(); i++)
-                        tileset->tileAt(i)->setImage(mMissingTile->image());
+                        tileset->tileAt(i)->setImage(mMissingTile);
                 }
                 tileset->setMissing(true);
             }
@@ -401,9 +401,6 @@ bool resolveImageSource(QString &imageSource)
 
 void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource_)
 {
-    if (tileset == mMissingTileset) {
-        int i = 0;
-    }
     // Hack to ignore TileMetaInfoMgr's tilesets that haven't been loaded,
     // their paths are relative to the Tiles Directory.
     if (QDir(imageSource_).isRelative())
@@ -472,7 +469,7 @@ void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource_)
         } else {
             if (tileset->tileHeight() == mMissingTile->height() && tileset->tileWidth() == mMissingTile->width()) {
                 for (int i = 0; i < tileset->tileCount(); i++)
-                    tileset->tileAt(i)->setImage(mMissingTile->image());
+                    tileset->tileAt(i)->setImage(mMissingTile);
             }
             changeTilesetSource(tileset, imageSource, true);
             tileset->setImageSource2x(QString());
