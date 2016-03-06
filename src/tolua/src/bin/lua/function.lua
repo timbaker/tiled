@@ -233,6 +233,8 @@ function classFunction:supcode ()
      else
       output('   tolua_push'..t..'(tolua_S,(',ct,')tolua_ret);')
      end
+   elseif self.type == 'QString' then
+     output('   lua_pushstring(tolua_S, Lua::cstring(tolua_ret));')
    else
 			 t = self.type
     if self.ptr == '' then

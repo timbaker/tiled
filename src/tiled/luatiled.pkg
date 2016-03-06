@@ -61,6 +61,12 @@ class LuaRegion @ Region
 class Tile
 {
     Tileset *tileset();
+    int id();
+};
+
+class Tileset
+{
+    QString name();
 };
 
 class LuaLayer @ Layer

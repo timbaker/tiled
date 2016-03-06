@@ -1,4 +1,7 @@
-local tiles = "vegetation_ornamental_01_0;f_bushes_2_0;vegetation_ornamental_01_1;f_bushes_2_1;vegetation_ornamental_01_2;f_bushes_2_2;vegetation_ornamental_01_3;f_bushes_2_3;vegetation_ornamental_01_4;f_bushes_2_4;vegetation_ornamental_01_5;f_bushes_2_5;vegetation_ornamental_01_6;f_bushes_2_6;vegetation_ornamental_01_7;f_bushes_2_7;vegetation_ornamental_01_8;f_bushes_2_8;vegetation_ornamental_01_9;f_bushes_2_9",
+local tiles = ""
+for i=0,9 do
+    tiles = tiles .. "vegetation_ornamental_01_" .. i .. ";" .. "f_bushes_2_" .. i .. ";"
+end
 
 map:replaceTilesByName(tiles)
 
