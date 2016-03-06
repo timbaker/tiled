@@ -88,6 +88,8 @@ void CreatePackDialog::settingsToUI(const TexturePackSettings &settings)
         ui->texSizeCombo->setCurrentIndex(2);
     else
         ui->texSizeCombo->setCurrentIndex(1); // default 1024x1024
+
+    ui->scale50->setChecked(settings.mScale50);
 }
 
 void CreatePackDialog::settingsFromUI(TexturePackSettings &settings)
@@ -105,6 +107,7 @@ void CreatePackDialog::settingsFromUI(TexturePackSettings &settings)
         settings.mOutputImageSize = QSize(2048, 2048);
     else
         settings.mOutputImageSize = QSize(1024, 1024);
+    settings.mScale50 = ui->scale50->isChecked();
     settings.mPackFileName = ui->packNameEdit->text();
     settings.padding = 2;
 }
@@ -288,6 +291,9 @@ bool PackSettingsFile::read(const QString &fileName)
                 return false;
             }
 
+            QString scaleStr = block.value("scale50");
+            mSettings.mScale50 = (scaleStr == QLatin1Literal("true"));
+
             foreach (SimpleFileBlock block2, block.blocks) {
                 if (block2.name == QLatin1String("inputImageDirectory")) {
                     TexturePackSettings::Directory tpd;
@@ -326,6 +332,7 @@ bool PackSettingsFile::write(const QString &fileName)
     settingsBlock.addValue("outputImageSize", QString::fromLatin1("%1,%2")
                            .arg(mSettings.mOutputImageSize.width())
                            .arg(mSettings.mOutputImageSize.height()));
+    settingsBlock.addValue("scale50", QLatin1Literal(mSettings.mScale50 ? "true" : "false"));
 
     foreach (TexturePackSettings::Directory tpd, mSettings.mInputImageDirectories) {
         SimpleFileBlock dirBlock;

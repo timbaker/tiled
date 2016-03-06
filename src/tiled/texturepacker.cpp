@@ -42,9 +42,6 @@ template class __declspec(dllimport) QMap<QString, QString>;
 using namespace Tiled;
 using namespace Tiled::Internal;
 
-#define TILE_WIDTH (64*2)
-#define TILE_HEIGHT (128*2)
-
 TexturePacker::TexturePacker()
 {
 }
@@ -66,7 +63,6 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
         return false;
     }
 
-#if 1
     PROGRESS progress(tr("Reading image files"));
 
     TileDefFile tileDefFile;
@@ -74,6 +70,9 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
     if (fileInfo.exists()) {
         tileDefFile.read(fileInfo.absoluteFilePath());
     }
+
+    const int TILE_WIDTH = mSettings.mScale50 ? 64 : (64 * 2);
+    const int TILE_HEIGHT = mSettings.mScale50 ? 128 : (128 * 2);
 
     QStringList toPack, toPackFloor;
     for (int i = 0; i < mImageFileNames.size(); i++) {
@@ -91,6 +90,9 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
                 toPack += str;
                 mImageTranslationMap[str][str] = imageTranslation[str];
             } else {
+                if (mSettings.mScale50) {
+                    image = image.scaled(image.width() / 2, image.height() / 2);
+                }
                 int cols = image.width() / TILE_WIDTH;
                 int rows = image.height() / TILE_HEIGHT;
                 if (!LoadTileNamesFile(str, cols)) {
@@ -125,12 +127,10 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
             mImageTranslationMap[str][str] = imageTranslation[str];
         }
     }
-#endif
 
     PackFile packFile;
     int pageNum = 0;
 
-#if 1
     while (!toPack.isEmpty()) {
         QStringList toPackPage;
         QImage outputImage;
@@ -141,18 +141,6 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
         packPage.name = QFileInfo(mSettings.mPackFileName).baseName() + QString::number(pageNum);
         packPage.image = outputImage;
         foreach (QString index, toPackPage) {
-#else
-    NextFileList = mImageFileNames;
-    while (!NextFileList.isEmpty()) {
-        QImage outputImage;
-        if (!PackImagesNewNew(outputImage))
-            return false;
-
-        PackPage packPage;
-        packPage.name = QFileInfo(mSettings.mPackFileName).baseName() + QString::number(pageNum);
-        packPage.image = outputImage;
-        foreach (QString index, toPack) {
-#endif
             QRect rectangle1(imagePlacement[index].topLeft(), imageTranslation[index].size);
             QRect rectangle2(imageTranslation[index].topLeft - imageTranslation[index].sheetOffset, imageTranslation[index].originalSize);
             QString name;
@@ -177,7 +165,7 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
     progress.update(tr("Saving %1").arg(QFileInfo(mSettings.mPackFileName).fileName()));
     packFile.write(mSettings.mPackFileName);
 
-#if 1
+    // Create a second pack file with floor tiles only.
     PackFile packFileFloor;
     pageNum = 0;
 
@@ -216,7 +204,6 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
         progress.update(tr("Saving %1").arg(fileInfo.fileName()));
         packFileFloor.write(fileInfo.absolutePath() + QLatin1String("/") + fileInfo.baseName() + QLatin1String(".floor.") + fileInfo.suffix());
     }
-#endif
 
     return true;
 }
@@ -746,8 +733,11 @@ QImage TexturePacker::CreateOutputImage(const QStringList &toPack)
             file = strArray[0];
             palette = strArray[1];
         }
-        if (!mInputImages.contains(file))
+        if (!mInputImages.contains(file)) {
             mInputImages[file] = QImage(file);
+            if (mSettings.mScale50 && mImageIsTilesheet.contains(file))
+                mInputImages[file] = mInputImages[file].scaled(mInputImages[file].width() / 2, mInputImages[file].height() / 2);
+        }
 //        QImage bitmap2(file/*, palette*/);
         QImage bitmap2 = mInputImages[file];
         if (bitmap2.isNull()) {

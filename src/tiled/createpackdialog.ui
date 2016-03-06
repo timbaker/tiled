@@ -66,6 +66,13 @@
        </item>
       </widget>
      </item>
+     <item row="2" column="0">
+      <widget class="QCheckBox" name="scale50">
+       <property name="text">
+        <string>Scale to 1x</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item row="3" column="1">

@@ -44,6 +44,7 @@ public:
 
     QString mPackFileName;
     QSize mOutputImageSize;
+    bool mScale50;
     QList<Directory> mInputImageDirectories;
     int padding;
 };
