@@ -305,6 +305,23 @@ void CheckMapsWindow::check(MapDocument *doc)
                             }
                         }
 
+                        // Bush on bush not allowed
+                        foreach (const Cell *cell2, cells) {
+                            if (cell2 == cell)
+                                break; // report for topmost bush only
+                            if (cell2 != cell && !cell2->isEmpty() && (cell2->tile->tileset()->name() == QLatin1Literal("vegetation_foliage_01"))) {
+                                issue(Issue::Bogus, tr("two bushes on the same square"), x, y, level);
+                                break;
+                            }
+                        }
+
+                        // Tree on bush
+                        foreach (const Cell *cell2, cells) {
+                            if (cell2 != cell && !cell2->isEmpty() && cell2->tile->tileset()->name().startsWith(QLatin1Literal("vegetation_trees_01"))) {
+                                issue(Issue::Bogus, tr("tree and bush on the same square"), x, y, level);
+                                break;
+                            }
+                        }
 
                         bool foundBlendsNatural = false;
                         for (int i = 0; i < cells.size(); i++) {
