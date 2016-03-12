@@ -127,8 +127,11 @@ bool TileDefFile::read(const QString &fileName)
             tile->mProperties = properties;
             tiles[j] = tile;
         }
+        for (int j = tileCount; j < tiles.size(); j++) {
+            tiles[j] = new TileDefTile(ts, j);
+        }
         ts->mTiles = tiles;
-
+/*
         // Deal with the image being a different size now than it was when the
         // .tiles file was saved.
         VirtualTileset *vts = TilesetManager::instance()->useVirtualTilesets()
@@ -144,7 +147,7 @@ bool TileDefFile::read(const QString &fileName)
                 ts->resize(columns, rows);
             }
         }
-
+*/
         insertTileset(mTilesets.size(), ts);
     }
 
@@ -363,7 +366,7 @@ void TileDefTileset::resize(int columns, int rows)
 
     mColumns = columns;
     mRows = rows;
-    mTiles.resize(mColumns * mRows);
+    mTiles = QVector<TileDefTile*>(mColumns * mRows);
     for (int y = 0; y < qMin(mRows, oldRows); y++) {
         for (int x = 0; x < qMin(mColumns, oldColumns); x++) {
             mTiles[x + y * mColumns] = oldTiles[x + y * oldColumns];
