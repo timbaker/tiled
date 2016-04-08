@@ -3843,6 +3843,14 @@ category
         NorthWindow = overlay_grime_wall_01_009
         WestDoor = overlay_grime_wall_01_010
         NorthDoor = overlay_grime_wall_01_011
+        WestTrim = overlay_grime_wall_01_032
+        NorthTrim = overlay_grime_wall_01_033
+        NorthWestTrim = overlay_grime_wall_01_034
+        SouthEastTrim = overlay_grime_wall_01_035
+        WestDoubleLeft = overlay_grime_wall_01_036
+        WestDoubleRight = overlay_grime_wall_01_037
+        NorthDoubleLeft = overlay_grime_wall_01_038
+        NorthDoubleRight = overlay_grime_wall_01_039
     }
     entry
     {
@@ -3854,6 +3862,14 @@ category
         NorthWindow = overlay_grime_wall_01_025
         WestDoor = overlay_grime_wall_01_026
         NorthDoor = overlay_grime_wall_01_027
+        WestTrim = overlay_grime_wall_01_040
+        NorthTrim = overlay_grime_wall_01_041
+        NorthWestTrim = overlay_grime_wall_01_042
+        SouthEastTrim = overlay_grime_wall_01_043
+        WestDoubleLeft = overlay_grime_wall_01_044
+        WestDoubleRight = overlay_grime_wall_01_045
+        NorthDoubleLeft = overlay_grime_wall_01_046
+        NorthDoubleRight = overlay_grime_wall_01_047
     }
 }
 category

@@ -83,6 +83,8 @@ tileset
     tile = 1,6
     tile = 2,6
     tile = 3,6
+    tile = 7,2
+    tile = 6,2
 }
 tileset
 {
@@ -414,4 +416,16 @@ tileset
     tile = 0,4
     tile = 0,5
     tile = 1,5
+}
+tileset
+{
+    name = location_shop_mall_signs_01
+    tile = 0,0
+    tile = 1,0
+    tile = 2,0
+    tile = 3,0
+    tile = 4,0
+    tile = 5,0
+    tile = 6,0
+    tile = 7,0
 }

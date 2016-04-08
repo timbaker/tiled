@@ -13,6 +13,23 @@ property
     Min = -64
     Max = 64
     Default = 0
+}                 
+
+property
+{
+    Type = Enum
+    Name = GrimeType
+    ShortName =
+    Enums
+    {
+        None =
+        FullWindow =
+        Trim =
+        DoubleLeft =
+        DoubleRight =
+    }
+    Default = None
+    ValueAsPropertyName = false
 }
 
 property
@@ -127,6 +144,14 @@ property
     Default = None
     ValueAsPropertyName = true
 }
+property
+{
+    Type = Boolean
+    Name = Door Transparent
+    ShortName = doorTrans
+    Default = false
+    ReverseLogic = false
+}
 separator
 {
 }
@@ -226,6 +251,23 @@ property
     Name = ContainerType
     ShortName = container
     Default =
+}
+property
+{
+    Type = Boolean
+    Name = Freezer
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Integer
+    Name = FreezerCapacity
+    ShortName = 
+    Min = 0
+    Max = 50
+    Default = 0
 }
 property
 {
@@ -360,6 +402,46 @@ property
 {
     Type = Boolean
     Name = WallOverlay
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = attachedN
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = attachedS
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = attachedE
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = attachedW
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = attachedNW
     ShortName =
     Default = false
     ReverseLogic = false
@@ -546,5 +628,204 @@ property
     ShortName = propaneTank
     Default = false
     ReverseLogic = false
+}
+
+separator
+{
+}
+property
+{
+    Type = Boolean
+    Name = IsMoveAble
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = IsSurfaceOffset
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Integer
+    Name = Surface
+    ShortName = 
+    Min = 0
+    Max = 128
+    Default = 0
+}
+property
+{
+    Type = Integer
+    Name = PickUpWeight
+    ShortName = 
+    Min = 0
+    Max = 100
+    Default = 0
+}
+property
+{
+    Type = Boolean
+    Name = IsTable
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = IsTableTop
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = BlocksPlacement
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = String
+    Name = CustomName
+    ShortName = 
+    Default =
+}
+property
+{
+    Type = String
+    Name = GroupName
+    ShortName = 
+    Default =
+}
+property
+{
+    Type = String
+    Name = CustomItem
+    ShortName = 
+    Default =
+}
+property
+{
+    Type = Enum
+    Name = Facing
+    ShortName =
+    Enums
+    {
+        None =
+        West = W
+        North = N
+        East = E
+        South = S
+    }
+    Default = None
+    ValueAsPropertyName = false
+}
+property
+{
+    Type = String
+    Name = IsoType
+    ShortName = 
+    Default =
+}
+property
+{
+    Type = String
+    Name = MoveType
+    ShortName = 
+    Default =
+}
+property
+{
+    Type = String
+    Name = Material
+    ShortName = 
+    Default =
+}
+property
+{
+    Type = String
+    Name = signal
+    ShortName = 
+    Default =
+}
+property
+{
+    Type = Integer
+    Name = StackReplaceTileOffset
+    ShortName = 
+    Min = -1000
+    Max = 1000
+    Default = 0
+}
+property
+{
+    Type = Boolean
+    Name = IsStackable
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = IsWaterCollector
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = CanBreak
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = IsLow
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = IsHigh
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Integer
+    Name = PickUpLevel
+    ShortName = 
+    Min = 0
+    Max = 1000
+    Default = 0
+}
+property
+{
+    Type = String
+    Name = PickUpTool
+    ShortName = 
+    Default =
+}
+property
+{
+    Type = String
+    Name = PlaceTool
+    ShortName = 
+    Default =
 }
 

@@ -1210,10 +1210,14 @@ void TileDefDialog::setTilesList()
 
     if (mCurrentTileset) {
         TileDefTileset *defTileset = mCurrentDefTileset;
+        QList<Tile*> tiles;
         QList<void*> userData;
-        foreach (TileDefTile *defTile, defTileset->mTiles)
-            userData += defTile;
-        ui->tiles->setTileset(mCurrentTileset, userData);
+        for (int i = 0; i < defTileset->mTiles.size(); i++) {
+            if (i < mCurrentTileset->tileCount())
+                tiles += mCurrentTileset->tileAt(i);
+            userData += defTileset->tileAt(i); // danger
+        }
+        ui->tiles->setTiles(tiles, userData);
 
         // Tooltip shows properties with non-default value.
         for (int i = 0; i < defTileset->mTiles.size(); i++) {
@@ -1433,12 +1437,13 @@ void TileDefDialog::initStringComboBoxValues()
     foreach (TileDefProperty *prop, mTileDefProperties->mProperties) {
         if (StringTileDefProperty *p = prop->asString()) {
             if (values.contains(p->mName)) {
-                QComboBox *w = mComboBoxes[p->mName];
-                w->clear();
-                QStringList names(values[p->mName].toList());
-                names.sort();
-                w->addItems(names);
-                w->clearEditText();
+                if (QComboBox *w = mComboBoxes[p->mName]) {
+                    w->clear();
+                    QStringList names(values[p->mName].toList());
+                    names.sort();
+                    w->addItems(names);
+                    w->clearEditText();
+                }
             }
         }
     }
