@@ -42,6 +42,7 @@ TileDefCompare::TileDefCompare(QWidget *parent) :
 
     connect(ui->packBrowse1, SIGNAL(clicked()), SLOT(browse1()));
     connect(ui->packBrowse2, SIGNAL(clicked()), SLOT(browse2()));
+    connect(ui->switchButton, SIGNAL(clicked(bool)), SLOT(swapPaths()));
     connect(ui->compare, SIGNAL(clicked()), SLOT(compare()));
     connect(ui->use1, SIGNAL(clicked()), SLOT(use1()));
     connect(ui->use2, SIGNAL(clicked()), SLOT(use2()));
@@ -76,6 +77,13 @@ void TileDefCompare::browse2()
         ui->packEdit2->setText(QDir::toNativeSeparators(f));
         writeSettings();
     }
+}
+
+void TileDefCompare::swapPaths()
+{
+    QString temp = ui->packEdit1->text();
+    ui->packEdit1->setText(ui->packEdit2->text());
+    ui->packEdit2->setText(temp);
 }
 
 void TileDefCompare::compare()

@@ -76,6 +76,16 @@
        </spacer>
       </item>
       <item>
+       <widget class="QPushButton" name="switchButton">
+        <property name="toolTip">
+         <string>Swap File 1 with File2 paths.</string>
+        </property>
+        <property name="text">
+         <string>Swap Paths</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="compare">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">

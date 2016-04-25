@@ -21,6 +21,7 @@ public:
 private slots:
     void browse1();
     void browse2();
+    void swapPaths();
     void compare();
     void use1();
     void use2();
