@@ -41,6 +41,8 @@ BuildingTileEntryView::BuildingTileEntryView(QWidget *parent) :
             SLOT(tilesetAboutToBeRemoved(Tiled::Tileset*)));
     connect(TileMetaInfoMgr::instance(), SIGNAL(tilesetRemoved(Tiled::Tileset*)),
             SLOT(tilesetRemoved(Tiled::Tileset*)));
+
+    model()->setShowEmptyTilesAsMissig(true);
 }
 
 void BuildingTileEntryView::clear()

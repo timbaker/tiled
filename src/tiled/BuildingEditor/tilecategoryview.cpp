@@ -165,12 +165,16 @@ void BuildingEntryDelegate::paint(QPainter *painter,
                 QPointF p1 = tileToPixelCoords(offset.x(), offset.y()) + tileMargins + r.topLeft();
                 QRect target((p1 - QPointF(tileWidth/2, imageHeight - tileHeight)).toPoint(),
                         QSize(tileWidth, imageHeight));
+                if (tile->image().isNull()) {
+                    tile = TilesetManager::instance()->missingTile();
+                }
+                QImage image = tile->image();
                 const QMargins margins = tile->drawMargins(scale);
                 target.adjust(margins.left(), margins.top(), -margins.right(), -margins.bottom());
                 QRegion clipRgn = painter->clipRegion();
                 bool hasClipping = painter->hasClipping();
                 painter->setClipRect(r);
-                painter->drawImage(target, tile->image());
+                painter->drawImage(target, image);
                 painter->setClipRegion(clipRgn, hasClipping ? Qt::ReplaceClip : Qt::NoClip);
             }
         }
@@ -472,6 +476,8 @@ QModelIndex TileCategoryModel::index(int row, int column, const QModelIndex &par
 
 QModelIndex TileCategoryModel::index(BuildingTileEntry *entry, int e) const
 {
+    if (!mCategory)
+        return QModelIndex();
     int entryIndex = mCategory->indexOf(entry);
     int shadowIndex = mCategory->enumToShadow(e);
     if (shadowIndex < 0 || shadowIndex >= mCategory->shadowCount())
