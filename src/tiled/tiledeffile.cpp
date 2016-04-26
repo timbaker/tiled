@@ -20,7 +20,6 @@
 #include "tiledeffile.h"
 
 #include "tilesetmanager.h"
-#include "virtualtileset.h"
 
 #include "tileset.h"
 
@@ -131,23 +130,6 @@ bool TileDefFile::read(const QString &fileName)
             tiles[j] = new TileDefTile(ts, j);
         }
         ts->mTiles = tiles;
-/*
-        // Deal with the image being a different size now than it was when the
-        // .tiles file was saved.
-        VirtualTileset *vts = TilesetManager::instance()->useVirtualTilesets()
-                ? VirtualTilesetMgr::instance().tilesetFromPath(ts->mImageSource)
-                : 0;
-        if (vts) {
-            ts->resize(vts->columnCount(), vts->rowCount());
-        } else {
-            QImageReader bmp(dir.filePath(ts->mImageSource));
-            if (bmp.size().isValid()) {
-                int columns = bmp.size().width() / 64;
-                int rows = bmp.size().height() / 128;
-                ts->resize(columns, rows);
-            }
-        }
-*/
         insertTileset(mTilesets.size(), ts);
     }
 

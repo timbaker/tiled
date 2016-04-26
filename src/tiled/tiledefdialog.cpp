@@ -26,7 +26,6 @@
 #include "tilesetmanager.h"
 #include "zoomable.h"
 #include "utils.h"
-#include "virtualtileset.h"
 #include "zprogress.h"
 
 #include "BuildingEditor/listofstringsdialog.h"
@@ -1498,11 +1497,6 @@ void TileDefDialog::loadTilesets()
             QString source = ts->imageSource();
             if (QDir::isRelativePath(ts->imageSource()))
                 source = QDir(tilesDir()).filePath(ts->imageSource());
-            if (TilesetManager::instance()->useVirtualTilesets() &&
-                    VirtualTilesetMgr::instance().resolveImageSource(source)) {
-                TilesetManager::instance()->loadTileset(ts, source);
-                continue;
-            }
             QImageReader reader(source);
             if (reader.size().isValid()) {
                 ts->loadFromNothing(reader.size(), ts->imageSource());
@@ -1516,13 +1510,6 @@ void TileDefDialog::loadTilesets()
 Tileset *TileDefDialog::loadTileset(const QString &source)
 {
     QString canonical = source;
-    if (TilesetManager::instance()->useVirtualTilesets() &&
-            VirtualTilesetMgr::instance().resolveImageSource(canonical)) {
-        QFileInfo info(source);
-        Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
-        TilesetManager::instance()->loadTileset(ts, canonical);
-        return ts;
-    }
     QImageReader reader(source);
     if (reader.size().isValid()) {
         QFileInfo info(source);

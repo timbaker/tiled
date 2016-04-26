@@ -243,22 +243,9 @@ SOURCES += aboutdialog.cpp \
     luatiletool.cpp \
     luatooldialog.cpp \
     luatooloptions.cpp \
-    virtualtilesetdialog.cpp \
-    virtualtilesetview.cpp \
-    virtualtileset.cpp \
     undoredobuttons.cpp \
-    addvirtualtilesetdialog.cpp \
-    tileshapeeditor.cpp \
     textureunpacker.cpp \
-    texturemanager.cpp \
-    addtexturesdialog.cpp \
     enflatulatordialog.cpp \
-    texturepropertiesdialog.cpp \
-    tileshapegroupdialog.cpp \
-    tileshapegrouppropertiesdialog.cpp \
-    tileshapepropertiesdialog.cpp \
-    pixelbuffer.cpp \
-    vtsprefsdialog.cpp \
     packviewer.cpp \
     createpackdialog.cpp \
     texturepackfile.cpp \
@@ -471,22 +458,9 @@ HEADERS += aboutdialog.h \
     luatiletool.h \
     luatooldialog.h \
     luatooloptions.h \
-    virtualtilesetdialog.h \
-    virtualtilesetview.h \
-    virtualtileset.h \
     undoredobuttons.h \
-    addvirtualtilesetdialog.h \
-    tileshapeeditor.h \
     textureunpacker.h \
-    texturemanager.h \
-    addtexturesdialog.h \
     enflatulatordialog.h \
-    texturepropertiesdialog.h \
-    tileshapegroupdialog.h \
-    tileshapegrouppropertiesdialog.h \
-    tileshapepropertiesdialog.h \
-    pixelbuffer.h \
-    vtsprefsdialog.h \
     packviewer.h \
     createpackdialog.h \
     texturepackfile.h \
@@ -548,16 +522,7 @@ FORMS += aboutdialog.ui \
     curbtooldialog.ui \
     fencetooldialog.ui \
     luatooldialog.ui \
-    virtualtilesetdialog.ui \
-    addvirtualtilesetdialog.ui \
-    tileshapeeditor.ui \
-    addtexturesdialog.ui \
     enflatulatordialog.ui \
-    texturepropertiesdialog.ui \
-    tileshapegroupdialog.ui \
-    tileshapegrouppropertiesdialog.ui \
-    tileshapepropertiesdialog.ui \
-    vtsprefsdialog.ui \
     packviewer.ui \
     createpackdialog.ui \
     packcompare.ui \
@@ -626,10 +591,9 @@ isEmpty(INSTALL_ONLY_BUILD) {
 configTxtFiles.path = $${CONFIG_PREFIX}
 configTxtFiles.files = \
     $${top_srcdir}/LuaTools.txt \
-    $${top_srcdir}/Textures.txt \
+    $${top_srcdir}/Rearrange.txt \
     $${top_srcdir}/TileProperties.txt \
-    $${top_srcdir}/Tilesets.txt \
-    $${top_srcdir}/TileShapes.txt
+    $${top_srcdir}/Tilesets.txt
 INSTALLS += configTxtFiles
 
 buildingEdTxt.path = $${CONFIG_PREFIX}

@@ -22,7 +22,6 @@
 #include "mainwindow.h"
 #include "preferences.h"
 #include "tilesetmanager.h"
-#include "virtualtileset.h"
 
 #include "tile.h"
 #include "tileset.h"
@@ -61,15 +60,9 @@ void TileMetaInfoMgr::changeTilesDirectory(const QString &path, const QString &p
     QDir tilesDir(tilesDirectory());
     Preferences::instance()->setTilesDirectory(path);
     Preferences::instance()->setTiles2xDirectory(path2x); // must be done before loading tilesets, see TilesetManager.resolveImageSource
-    QList<Tileset*> virtualTilesets;
     foreach (Tileset *ts, tilesets()) {
         if (ts->isMissing())
             continue; // keep the relative path
-        if (TilesetManager::instance()->useVirtualTilesets() &&
-                VirtualTilesetMgr::instance().tilesetFromPath(ts->imageSource())) {
-            virtualTilesets += ts;
-            continue;
-        }
         QString relativePath = tilesDir.relativeFilePath(ts->imageSource());
         if (!QDir::isRelativePath(relativePath))
             continue;
@@ -86,10 +79,6 @@ void TileMetaInfoMgr::changeTilesDirectory(const QString &path, const QString &p
                 ts->tileAt(i)->setImage(missingTile);
             TilesetManager::instance()->changeTilesetSource(ts, relativePath, true);
         }
-    }
-    foreach (Tileset *ts, virtualTilesets) {
-        if (VirtualTileset *vts = VirtualTilesetMgr::instance().tileset(ts->name()))
-            ts->setImageSource(VirtualTilesetMgr::instance().imageSource(vts));
     }
     loadTilesets();
 }
@@ -378,11 +367,6 @@ bool TileMetaInfoMgr::loadTilesetImage(Tileset *ts, const QString &source)
 {
 #if 1
     QString canonical = source;
-    if (TilesetManager::instance()->useVirtualTilesets() &&
-            VirtualTilesetMgr::instance().resolveImageSource(canonical)) {
-        TilesetManager::instance()->loadTileset(ts, canonical);
-        return true;
-    }
     QImageReader reader(source);
     if (reader.size().isValid()) {
         ts->loadFromNothing(reader.size(), source);
@@ -446,11 +430,6 @@ void TileMetaInfoMgr::loadTilesets(const QList<Tileset *> &tilesets)
                         // This is the name that was saved in Tilesets.txt,
                         // relative to Tiles directory, plus .png.
                         + ts->imageSource();
-            }
-            if (TilesetManager::instance()->useVirtualTilesets() &&
-                    VirtualTilesetMgr::instance().resolveImageSource(source)) {
-                TilesetManager::instance()->loadTileset(ts, source);
-                continue;
             }
             QImageReader reader(source);
             if (reader.size().isValid()) {

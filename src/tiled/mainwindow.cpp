@@ -63,7 +63,6 @@
 #include "quickstampmanager.h"
 #include "saveasimagedialog.h"
 #include "stampbrush.h"
-#include "texturemanager.h"
 #include "tilelayer.h"
 #include "tileselectiontool.h"
 #include "tileset.h"
@@ -106,8 +105,6 @@
 #include "tilelayerspanel.h"
 #include "tilemetainfodialog.h"
 #include "tilemetainfomgr.h"
-#include "virtualtileset.h"
-#include "virtualtilesetdialog.h"
 #include "zlevelsdock.h"
 #include "zprogress.h"
 #include "worldeddock.h"
@@ -660,16 +657,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             SLOT(containerOverlayDialog()));
     mUi->actionEnflatulator->setVisible(false); // !!!
     connect(mUi->actionEnflatulator, SIGNAL(triggered()), SLOT(enflatulator()));
-    new TextureMgr;
-    new VirtualTilesetMgr;
-    connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetAdded(VirtualTileset*)),
-            TilesetManager::instance(), SLOT(virtualTilesetChanged(VirtualTileset*)));
-    connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetRemoved(VirtualTileset*)),
-            TilesetManager::instance(), SLOT(virtualTilesetChanged(VirtualTileset*)));
-    connect(VirtualTilesetMgr::instancePtr(), SIGNAL(tilesetChanged(VirtualTileset*)),
-            TilesetManager::instance(), SLOT(virtualTilesetChanged(VirtualTileset*)));
-    connect(mUi->actionVirtualTilesetDialog, SIGNAL(triggered()),
-            SLOT(virtualTilesetDialog()));
     connect(mUi->actionWorldEd, SIGNAL(triggered()),
             SLOT(launchWorldEd()));
 #endif
@@ -706,7 +693,6 @@ MainWindow::~MainWindow()
     BuildingTMX::deleteInstance();
     BuildingPreferences::deleteInstance();
 #endif
-    TextureMgr::deleteInstance();
     MapImageManager::deleteInstance();
     MapManager::deleteInstance();
     TileMetaInfoMgr::deleteInstance();
@@ -737,7 +723,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
     writeSettings();
     if (confirmAllSave() &&
             TileDefDialog::closeYerself() &&
-            VirtualTilesetDialog::closeYerself() &&
             (!mContainerOverlayDialog || mContainerOverlayDialog->close()) &&
             (!mBuildingEditor || mBuildingEditor->closeYerself())) {
 
@@ -997,9 +982,6 @@ bool MainWindow::InitConfigFiles()
     configFiles += BuildingTilesMgr::instance()->txtName();
     configFiles += BuildingTMX::instance()->txtName();
     configFiles += FurnitureGroups::instance()->txtName();
-    configFiles += TextureMgr::instance().txtName();
-    configFiles += VirtualTilesetMgr::instance().txtName();
-    configFiles += QLatin1String("TileShapes.txt");
 
     foreach (QString configFile, configFiles) {
         QString fileName = configPath + QLatin1Char('/') + configFile;
@@ -1055,22 +1037,6 @@ bool MainWindow::InitConfigFiles()
                               tr("Error while reading %1\n%2")
                               .arg(BuildingTemplates::instance()->txtName())
                               .arg(BuildingTemplates::instance()->errorString()));
-        return false;
-    }
-
-    if (!TextureMgr::instance().readTxt()) {
-        QMessageBox::critical(this, tr("It's no good, Jim!"),
-                              tr("Error while reading %1\n%2")
-                              .arg(TextureMgr::instance().txtName())
-                              .arg(TextureMgr::instance().errorString()));
-        return false;
-    }
-
-    if (!VirtualTilesetMgr::instance().readTxt()) {
-        QMessageBox::critical(this, tr("It's no good, Jim!"),
-                              tr("Error while reading %1\n%2")
-                              .arg(VirtualTilesetMgr::instance().txtName())
-                              .arg(VirtualTilesetMgr::instance().errorString()));
         return false;
     }
 
@@ -1781,16 +1747,6 @@ void MainWindow::enflatulator()
 {
     EnflatulatorDialog d(this);
     d.exec();
-}
-
-void MainWindow::virtualTilesetDialog()
-{
-    static VirtualTilesetDialog *dialog = 0;
-    if (!dialog) {
-        dialog = new VirtualTilesetDialog(this);
-    }
-    dialog->show();
-    dialog->raise();
 }
 
 void MainWindow::launchWorldEd()

@@ -164,7 +164,6 @@
     <addaction name="actionContainerOverlays"/>
     <addaction name="actionRearrangeTiles"/>
     <addaction name="actionEnflatulator"/>
-    <addaction name="actionVirtualTilesetDialog"/>
     <addaction name="actionWorldEd"/>
     <addaction name="separator"/>
     <addaction name="actionConvertOrientation"/>
@@ -641,8 +640,8 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="tiled.qrc"/>
   <include location="BuildingEditor/buildingeditor.qrc"/>
+  <include location="tiled.qrc"/>
  </resources>
  <connections/>
 </ui>

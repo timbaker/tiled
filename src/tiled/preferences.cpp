@@ -91,7 +91,6 @@ Preferences::Preferences()
                                                QColor(Qt::darkGray).name()).toString());
     mShowAdjacentMaps = mSettings->value(QLatin1String("ShowAdjacentMaps"), true).toBool();
     mHighlightRoomUnderPointer = mSettings->value(QLatin1String("HighlightRoomUnderPointer"), false).toBool();
-    mUseVirtualTilesets = mSettings->value(QLatin1String("UseVirtualTilesets"), false).toBool();
 #endif
     mSettings->endGroup();
 #ifdef ZOMBOID
@@ -149,7 +148,6 @@ Preferences::Preferences()
                                         configPath).toString();
 
     mWorldEdFiles = mSettings->value(QLatin1String("WorldEd/ProjectFile")).toStringList();
-    mAlternateVTSDir = mSettings->value(QLatin1String("AlternateVTSDir")).toString();
 #endif
 #ifndef ZOMBOID // do this in TilesetManager constructor to avoid infinite loop
     TilesetManager *tilesetManager = TilesetManager::instance();
@@ -481,11 +479,6 @@ QString Preferences::tiles2xDirectory() const
     return mTiles2xDirectory;
 }
 
-QString Preferences::texturesDirectory() const
-{
-    return mTilesDirectory + QLatin1String("/Textures");
-}
-
 qreal Preferences::tilesetScale() const
 {
     return mTilesetScale;
@@ -614,20 +607,4 @@ void Preferences::setEraserBrushSize(int newSize)
     emit eraserBrushSizeChanged(mEraserBrushSize);
 }
 
-void Preferences::setUseVirtualTilesets(bool use)
-{
-    if (mUseVirtualTilesets == use)
-        return;
-    mUseVirtualTilesets = use;
-    mSettings->setValue(QLatin1String("Interface/UseVirtualTilesets"), mUseVirtualTilesets);
-    emit useVirtualTilesetsChanged(mUseVirtualTilesets);
-}
-
-void Preferences::setAlternateVTSDir(const QString &path)
-{
-    if (path == mAlternateVTSDir)
-        return;
-    mAlternateVTSDir = path;
-    mSettings->setValue(QLatin1String("AlternateVTSDir"), path);
-}
 #endif // ZOMBOID

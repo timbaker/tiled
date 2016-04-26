@@ -20,7 +20,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -544,13 +544,6 @@
         <widget class="QCheckBox" name="showAdjacent">
          <property name="text">
           <string>Show adjacent maps.  Requires closing/opening a map to see changes.</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="useVirtualTilesets">
-         <property name="text">
-          <string>Use virtual tilesets (requires restart).</string>
          </property>
         </widget>
        </item>

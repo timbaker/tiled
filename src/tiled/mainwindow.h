@@ -232,7 +232,6 @@ public slots:
     void comparePackFiles();
     void containerOverlayDialog();
     void enflatulator();
-    void virtualTilesetDialog();
     void launchWorldEd();
 
     void brushSizeMinus();
