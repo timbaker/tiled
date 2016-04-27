@@ -297,7 +297,7 @@ private:
     BuildingDocument *mCurrentDocument;
     EditorWindowPerDocumentStuff *mCurrentDocumentStuff;
     QUndoGroup *mUndoGroup;
-    QSettings mSettings;
+    QSettings &mSettings;
     QString mError;
     bool mSynching;
 

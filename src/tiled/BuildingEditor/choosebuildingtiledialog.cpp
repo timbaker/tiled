@@ -52,8 +52,8 @@ ChooseBuildingTileDialog::ChooseBuildingTileDialog(const QString &prompt,
 
     connect(ui->tableView, SIGNAL(activated(QModelIndex)), SLOT(accept()));
 
-    QSettings settings;
-    settings.beginGroup(QLatin1String("BuildingEditor/ChooseBuildingTileDialog"));
+    QSettings &settings = BuildingPreferences::instance()->settings();
+    settings.beginGroup(QLatin1String("ChooseBuildingTileDialog"));
     QByteArray geom = settings.value(QLatin1String("geometry")).toByteArray();
     if (!geom.isEmpty())
         restoreGeometry(geom);
@@ -146,8 +146,8 @@ void ChooseBuildingTileDialog::setTilesList(BuildingTileCategory *category,
 
 void ChooseBuildingTileDialog::saveSettings()
 {
-    QSettings settings;
-    settings.beginGroup(QLatin1String("BuildingEditor/ChooseBuildingTileDialog"));
+    QSettings &settings = BuildingPreferences::instance()->settings();
+    settings.beginGroup(QLatin1String("ChooseBuildingTileDialog"));
     settings.setValue(QLatin1String("geometry"), saveGeometry());
     settings.setValue(QLatin1String("scale"), mZoomable->scale());
     settings.endGroup();

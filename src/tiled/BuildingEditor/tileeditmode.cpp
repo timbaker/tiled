@@ -304,7 +304,7 @@ TileEditMode::TileEditMode(QObject *parent) :
 #define WIDGET_STATE_VERSION 0
 void TileEditMode::readSettings(QSettings &settings)
 {
-    settings.beginGroup(QLatin1String("BuildingEditor/TileEditMode"));
+    settings.beginGroup(QLatin1String("TileEditMode"));
     mMainWindow->readSettings(settings);
     mFurnitureDock->readSettings(settings);
     settings.endGroup();
@@ -312,7 +312,7 @@ void TileEditMode::readSettings(QSettings &settings)
 
 void TileEditMode::writeSettings(QSettings &settings)
 {
-    settings.beginGroup(QLatin1String("BuildingEditor/TileEditMode"));
+    settings.beginGroup(QLatin1String("TileEditMode"));
     mMainWindow->writeSettings(settings);
     mFurnitureDock->writeSettings(settings);
     settings.endGroup();

@@ -607,7 +607,7 @@ Room *ObjectEditMode::currentRoom() const
 #define WIDGET_STATE_VERSION 0
 void ObjectEditMode::readSettings(QSettings &settings)
 {
-    settings.beginGroup(QString::fromLatin1("BuildingEditor/%1ObjectEditMode").arg(mSettingsPrefix));
+    settings.beginGroup(QString::fromLatin1("%1ObjectEditMode").arg(mSettingsPrefix));
     mMainWindow->readSettings(settings);
     mCategoryDock->readSettings(settings);
     settings.endGroup();
@@ -615,7 +615,7 @@ void ObjectEditMode::readSettings(QSettings &settings)
 
 void ObjectEditMode::writeSettings(QSettings &settings)
 {
-    settings.beginGroup(QString::fromLatin1("BuildingEditor/%1ObjectEditMode").arg(mSettingsPrefix));
+    settings.beginGroup(QString::fromLatin1("%1ObjectEditMode").arg(mSettingsPrefix));
     mMainWindow->writeSettings(settings);
     mCategoryDock->writeSettings(settings);
     settings.endGroup();

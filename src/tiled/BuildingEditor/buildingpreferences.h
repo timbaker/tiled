@@ -36,6 +36,8 @@ public:
     QString configPath() const;
     QString configPath(const QString &fileName) const;
 
+    QSettings &settings() { return mSettings; }
+
     QString mapsDirectory() const
     { return mMapsDirectory; }
 

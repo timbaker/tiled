@@ -23,8 +23,8 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     // NOTE: Using TileZed's application settings.
-    a.setOrganizationDomain(QLatin1String("mapeditor.org"));
-    a.setApplicationName(QLatin1String("Tiled"));
+    a.setOrganizationName(QLatin1String("TheIndieStone"));
+    a.setApplicationName(QLatin1String("TileZed"));
 #ifdef BUILD_INFO_VERSION
     a.setApplicationVersion(QLatin1String(AS_STRING(BUILD_INFO_VERSION)));
 #else

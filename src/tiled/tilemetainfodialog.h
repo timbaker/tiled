@@ -69,7 +69,6 @@ private slots:
     void redoTextChanged(const QString &text);
 
     void browse();
-    void browse2x();
 
     void tilesetChanged(Tileset *tileset);
 

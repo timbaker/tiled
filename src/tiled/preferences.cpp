@@ -115,8 +115,9 @@ Preferences::Preferences()
     mSettings->endGroup();
 
 #ifdef ZOMBOID
-    QString KEY_TILES_DIR = QLatin1String("BuildingEditor/TilesDirectory");
-    QString tilesDirectory = mSettings->value(KEY_TILES_DIR).toString();
+    QSettings settings(QLatin1String("TheIndieStone"), QLatin1String("BuildingEd"));
+    QString KEY_TILES_DIR = QLatin1String("TilesDirectory");
+    QString tilesDirectory = settings.value(KEY_TILES_DIR).toString();
     if (tilesDirectory.isEmpty() || !QDir(tilesDirectory).exists()) {
         tilesDirectory = QCoreApplication::applicationDirPath() +
                 QLatin1Char('/') + QLatin1String("../Tiles");
@@ -131,8 +132,6 @@ Preferences::Preferences()
     mSettings->beginGroup(QLatin1String("Tilesets"));
     mTilesDirectory = mSettings->value(QLatin1String("TilesDirectory"),
                                        tilesDirectory).toString();
-    mTiles2xDirectory = mSettings->value(QLatin1String("Tiles2xDirectory"),
-                                         tilesDirectory).toString();
     mSettings->endGroup();
     if (tilesDirectory.length()) {
         mSettings->setValue(QLatin1String("Tilesets/TilesDirectory"), mTilesDirectory);
@@ -476,7 +475,9 @@ QString Preferences::tilesDirectory() const
 
 QString Preferences::tiles2xDirectory() const
 {
-    return mTiles2xDirectory;
+    if (mTilesDirectory.isEmpty())
+        return QString();
+    return mTilesDirectory + QLatin1Char('/') + QLatin1String("2x");
 }
 
 qreal Preferences::tilesetScale() const
@@ -493,13 +494,6 @@ void Preferences::setTilesDirectory(const QString &path)
 {
     mTilesDirectory = path;
     mSettings->setValue(QLatin1String("Tilesets/TilesDirectory"), mTilesDirectory);
-    emit tilesDirectoryChanged();
-}
-
-void Preferences::setTiles2xDirectory(const QString &path)
-{
-    mTiles2xDirectory = path;
-    mSettings->setValue(QLatin1String("Tilesets/Tiles2xDirectory"), mTiles2xDirectory);
     emit tilesDirectoryChanged();
 }
 

@@ -264,6 +264,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     mCurrentDocument(0),
     mCurrentDocumentStuff(0),
     mUndoGroup(new QUndoGroup(this)),
+    mSettings(BuildingPreferences::instance()->settings()),
     mSynching(false),
     mOrthoObjectEditMode(0),
     mIsoObjectEditMode(0),
@@ -635,7 +636,7 @@ BuildingDocumentMgr *BuildingEditorWindow::docman() const
 
 void BuildingEditorWindow::readSettings()
 {
-    mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
+    mSettings.beginGroup(QLatin1String("MainWindow"));
     QByteArray geom = mSettings.value(QLatin1String("geometry")).toByteArray();
     if (!geom.isEmpty())
         restoreGeometry(geom);
@@ -662,7 +663,7 @@ void BuildingEditorWindow::readSettings()
 
 void BuildingEditorWindow::writeSettings()
 {
-    mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
+    mSettings.beginGroup(QLatin1String("MainWindow"));
     mSettings.setValue(QLatin1String("geometry"), saveGeometry());
     mSettings.setValue(QLatin1String("state"), saveState());
 #if 0
@@ -681,7 +682,7 @@ void BuildingEditorWindow::writeSettings()
 
 void BuildingEditorWindow::saveSplitterSizes(QSplitter *splitter)
 {
-//    mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
+//    mSettings.beginGroup(QLatin1String("MainWindow"));
     QVariantList v;
     foreach (int size, splitter->sizes())
         v += size;
@@ -691,7 +692,7 @@ void BuildingEditorWindow::saveSplitterSizes(QSplitter *splitter)
 
 void BuildingEditorWindow::restoreSplitterSizes(QSplitter *splitter)
 {
-//    mSettings.beginGroup(QLatin1String("BuildingEditor/MainWindow"));
+//    mSettings.beginGroup(QLatin1String("MainWindow"));
     QVariant v = mSettings.value(tr("%1.sizes").arg(splitter->objectName()));
     if (v.canConvert(QVariant::List)) {
         QList<int> sizes;
@@ -806,13 +807,13 @@ void BuildingEditorWindow::openBuilding()
     filter += tr("All Files (*)");
 
     QString initialDir = mSettings.value(
-                QLatin1String("BuildingEditor/OpenSaveDirectory")).toString();
+                QLatin1String("OpenSaveDirectory")).toString();
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Building"),
                                                     initialDir, filter);
     if (fileName.isEmpty())
         return;
 
-    mSettings.setValue(QLatin1String("BuildingEditor/OpenSaveDirectory"),
+    mSettings.setValue(QLatin1String("OpenSaveDirectory"),
                        QFileInfo(fileName).absolutePath());
 
     QString error;
@@ -852,7 +853,7 @@ bool BuildingEditorWindow::saveBuildingAs()
         suggestedFileName += QLatin1String(".tbx");
     } else {
         suggestedFileName = mSettings.value(
-                    QLatin1String("BuildingEditor/OpenSaveDirectory")).toString();
+                    QLatin1String("OpenSaveDirectory")).toString();
         suggestedFileName += QLatin1Char('/');
         suggestedFileName += tr("untitled.tbx");
     }
@@ -861,7 +862,7 @@ bool BuildingEditorWindow::saveBuildingAs()
             QFileDialog::getSaveFileName(this, QString(), suggestedFileName,
                                          tr("TileZed building files (*.tbx)"));
     if (!fileName.isEmpty()) {
-        mSettings.setValue(QLatin1String("BuildingEditor/OpenSaveDirectory"),
+        mSettings.setValue(QLatin1String("OpenSaveDirectory"),
                            QFileInfo(fileName).absolutePath());
         bool ok = writeBuilding(mCurrentDocument, fileName);
         if (ok)
@@ -914,7 +915,7 @@ bool BuildingEditorWindow::confirmSave()
 
 QStringList BuildingEditorWindow::recentFiles() const
 {
-    return mSettings.value(QLatin1String("BuildingEditor/RecentFiles"))
+    return mSettings.value(QLatin1String("RecentFiles"))
             .toStringList();
 }
 
@@ -934,7 +935,7 @@ void BuildingEditorWindow::addRecentFile(const QString &fileName)
     while (files.size() > MaxRecentFiles)
         files.removeLast();
 
-    mSettings.setValue(QLatin1String("BuildingEditor/RecentFiles"), files);
+    mSettings.setValue(QLatin1String("RecentFiles"), files);
     emit recentFilesChanged();
 }
 
@@ -1215,7 +1216,7 @@ void BuildingEditorWindow::updateWindowTitle()
 void BuildingEditorWindow::exportTMX()
 {
     QString initialDir = mSettings.value(
-                QLatin1String("BuildingEditor/ExportDirectory")).toString();
+                QLatin1String("ExportDirectory")).toString();
 
     if (!mCurrentDocument->fileName().isEmpty()) {
         QFileInfo info(mCurrentDocument->fileName());
@@ -1234,7 +1235,7 @@ void BuildingEditorWindow::exportTMX()
 
     }
 
-    mSettings.setValue(QLatin1String("BuildingEditor/ExportDirectory"),
+    mSettings.setValue(QLatin1String("ExportDirectory"),
                        QFileInfo(fileName).absolutePath());
 }
 

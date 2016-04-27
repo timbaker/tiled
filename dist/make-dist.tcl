@@ -3,8 +3,8 @@ if {[llength [info commands console]]} {
     update
 }
 
-set QT_DIR C:/Programming/QtSDK2015/5.2.1/msvc2012_64_opengl
-set BIN C:/Programming/TileZed/build-tiled-Desktop_Qt_5_2_1_MSVC2012_OpenGL_64bit-Release
+set QT_DIR C:/Programming/QtSDK2015/5.5/msvc2013_64
+set BIN C:/Programming/TileZed/build-tiled-Desktop_Qt_5_5_0_MSVC2013_64bit-Release
 set SRC C:/Programming/TileZed/tiled
 set DEST {C:\Users\Tim\Desktop\ProjectZomboid\Tools\TileZed}
 set SUFFIX "-64bit"
@@ -16,8 +16,8 @@ if {$argc > 0} {
         32bit {
             puts "dist.tcl: 32-bit"
             append DEST "32"
-            set BIN C:/Programming/TileZed/build-tiled-Desktop_Qt_5_2_1_MSVC2010_32bit_OpenGL-Release
-            set QT_DIR C:/Programming/QtSDK2015/5.2.1/msvc2010_opengl
+            set BIN C:/Programming/TileZed/build-tiled-Desktop_Qt_5_5_0_MSVC2013_32bit-Release
+            set QT_DIR C:/Programming/QtSDK2015/5.5/msvc2013
             set SUFFIX "-32bit"
             set SUFFIX2 "32"
             set REDIST vcredist_x86.exe
@@ -106,6 +106,7 @@ copyFile $SRC $DEST AUTHORS AUTHORS.txt
 copyFile $SRC $DEST COPYING COPYING.txt
 copyFile $SRC $DEST LICENSE.BSD LICENSE.BSD.txt
 copyFile $SRC $DEST LICENSE.GPL LICENSE.GPL.txt
+copyFile $SRC $DEST LICENSE.QT5 LICENSE.QT5.txt
 copyFile $SRC $DEST NEWS NEWS.txt
 copyFile $SRC $DEST README.md README.txt
 

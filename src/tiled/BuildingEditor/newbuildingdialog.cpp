@@ -19,11 +19,12 @@
 #include "ui_newbuildingdialog.h"
 
 #include "buildingeditorwindow.h"
+#include "buildingpreferences.h"
 #include "buildingtemplates.h"
 
 #include <QSettings>
 
-static const char *KEY_TEMPLATE = "BuildingEditor/NewBuildingDialog/Template";
+static const char *KEY_TEMPLATE = "NewBuildingDialog/Template";
 
 using namespace BuildingEditor;
 
@@ -33,7 +34,7 @@ NewBuildingDialog::NewBuildingDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QSettings settings;
+    QSettings &settings = BuildingPreferences::instance()->settings();
     QString templateName = settings.value(QLatin1String(KEY_TEMPLATE)).toString();
 
     ui->comboBox->addItem(QLatin1String("<None>"));
@@ -68,7 +69,7 @@ BuildingTemplate *NewBuildingDialog::buildingTemplate() const
 
 void NewBuildingDialog::accept()
 {
-    QSettings settings;
+    QSettings &settings = BuildingPreferences::instance()->settings();
     BuildingTemplate *btemplate = buildingTemplate();
     settings.setValue(QLatin1String(KEY_TEMPLATE),
                       btemplate ? btemplate->name() : QString());

@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 
     QApplication a(argc, argv);
 
-    a.setOrganizationDomain(QLatin1String("mapeditor.org"));
+    a.setOrganizationName(QLatin1String("TheIndieStone"));
     a.setApplicationName(QLatin1String("TmxViewer"));
     a.setApplicationVersion(QLatin1String("1.0"));
 

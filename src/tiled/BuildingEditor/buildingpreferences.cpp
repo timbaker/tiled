@@ -22,17 +22,17 @@
 
 using namespace BuildingEditor;
 
-static const char *KEY_MAPS_DIRECTORY = "BuildingEditor/MapsDirectory";
-static const char *KEY_TILE_SCALE = "BuildingEditor/MainWindow/CategoryScale";
-static const char *KEY_SHOW_GRID = "BuildingEditor/ShowGrid";
-static const char *KEY_GRID_COLOR = "BuildingEditor/GridColor";
-static const char *KEY_HIGHLIGHT_FLOOR = "BuildingEditor/PreviewWindow/HighlightFloor";
-static const char *KEY_HIGHLIGHT_ROOM = "BuildingEditor/HighlightRoom";
-static const char *KEY_SHOW_WALLS = "BuildingEditor/PreviewWindow/ShowWalls";
-static const char *KEY_SHOW_LOWER_FLOORS = "BuildingEditor/PreviewWindow/ShowLowerFloors";
-static const char *KEY_SHOW_OBJECTS = "BuildingEditor/PreviewWindow/ShowObjects";
-static const char *KEY_OPENGL = "BuildingEditor/OpenGL";
-static const char *KEY_LEVEL_ISO = "BuildingEditor/LevelIsomettric";
+static const char *KEY_MAPS_DIRECTORY = "MapsDirectory";
+static const char *KEY_TILE_SCALE = "MainWindow/CategoryScale";
+static const char *KEY_SHOW_GRID = "ShowGrid";
+static const char *KEY_GRID_COLOR = "GridColor";
+static const char *KEY_HIGHLIGHT_FLOOR = "PreviewWindow/HighlightFloor";
+static const char *KEY_HIGHLIGHT_ROOM = "HighlightRoom";
+static const char *KEY_SHOW_WALLS = "PreviewWindow/ShowWalls";
+static const char *KEY_SHOW_LOWER_FLOORS = "PreviewWindow/ShowLowerFloors";
+static const char *KEY_SHOW_OBJECTS = "PreviewWindow/ShowObjects";
+static const char *KEY_OPENGL = "OpenGL";
+static const char *KEY_LEVEL_ISO = "LevelIsomettric";
 
 BuildingPreferences *BuildingPreferences::mInstance = 0;
 
@@ -50,7 +50,8 @@ void BuildingPreferences::deleteInstance()
 }
 
 BuildingPreferences::BuildingPreferences(QObject *parent) :
-    QObject(parent)
+    QObject(parent),
+    mSettings(QLatin1String("TheIndieStone"), QLatin1String("BuildingEd"))
 {
     mMapsDirectory = mSettings.value(QLatin1String(KEY_MAPS_DIRECTORY),
                                      Tiled::Internal::Preferences::instance()->mapsDirectory()).toString();

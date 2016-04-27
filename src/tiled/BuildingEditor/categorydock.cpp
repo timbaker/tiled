@@ -151,8 +151,8 @@ CategoryDock::CategoryDock(QWidget *parent) :
 
     /////
 
-    QSettings mSettings;
-    mSettings.beginGroup(QLatin1String("BuildingEditor/CategoryDock"));
+    QSettings &mSettings = BuildingPreferences::instance()->settings();
+    mSettings.beginGroup(QLatin1String("CategoryDock"));
     QString categoryName = mSettings.value(QLatin1String("SelectedCategory")).toString();
     if (!categoryName.isEmpty()) {
         int index = BuildingTilesMgr::instance()->indexOf(categoryName);

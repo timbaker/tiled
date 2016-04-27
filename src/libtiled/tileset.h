@@ -90,8 +90,7 @@ public:
   #ifdef ZOMBOID
         ,
         mMissing(false),
-        mLoaded(false),
-        mVirtual(false)
+        mLoaded(false)
   #endif
     {
         Q_ASSERT(tileSpacing >= 0);
@@ -267,9 +266,6 @@ public:
     bool isLoaded() const
     { return mLoaded; }
 
-    void setVirtual(bool isVirtual) { mVirtual = isVirtual; }
-    bool isVirtual() const { return mVirtual; }
-
     void setImageSource2x(const QString &source)
     { mImageSource2x = source; }
 
@@ -293,7 +289,6 @@ private:
 #ifdef ZOMBOID
     bool mMissing;
     bool mLoaded;
-    bool mVirtual;
     QString mImageSource2x;
 #endif
 };

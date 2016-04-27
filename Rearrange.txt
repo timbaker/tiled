@@ -429,3 +429,9 @@ tileset
     tile = 6,0
     tile = 7,0
 }
+tileset
+{
+    name = furniture_tables_low_01
+    tile = 4,0
+    tile = 5,0
+}

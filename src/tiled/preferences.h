@@ -146,7 +146,6 @@ public slots:
     void setShowTilesetGrid(bool showTilesetGrid);
 #ifdef ZOMBOID
     void setTilesDirectory(const QString &path);
-    void setTiles2xDirectory(const QString &path);
     void setTilesetScale(qreal scale);
     void setSortTilesets(bool sort);
     void setShowMiniMap(bool show);
@@ -211,7 +210,6 @@ private:
     QString mConfigDirectory;
     bool mAutoSwitchLayer;
     QString mTilesDirectory;
-    QString mTiles2xDirectory;
     qreal mTilesetScale;
     bool mSortTilesets;
     bool mShowMiniMap;
