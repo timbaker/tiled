@@ -4,7 +4,7 @@ if {[llength [info commands console]]} {
 }
 
 set QT_DIR C:/Programming/QtSDK2015/5.5/msvc2013_64
-set BIN C:/Programming/TileZed/build-tiled-Desktop_Qt_5_5_0_MSVC2013_64bit-Release
+set BIN C:/Programming/TileZed/dist64
 set SRC C:/Programming/TileZed/tiled
 set DEST {C:\Users\Tim\Desktop\ProjectZomboid\Tools\TileZed}
 set SUFFIX "-64bit"
@@ -16,7 +16,7 @@ if {$argc > 0} {
         32bit {
             puts "dist.tcl: 32-bit"
             append DEST "32"
-            set BIN C:/Programming/TileZed/build-tiled-Desktop_Qt_5_5_0_MSVC2013_32bit-Release
+            set BIN C:/Programming/TileZed/dist32
             set QT_DIR C:/Programming/QtSDK2015/5.5/msvc2013
             set SUFFIX "-32bit"
             set SUFFIX2 "32"
@@ -119,8 +119,6 @@ copyFile $SRC $DEST LuaTools.txt
 copyFile $SRC $DEST Rearrange.txt
 copyFile $SRC $DEST TileProperties.txt
 copyFile $SRC $DEST Tilesets.txt
-copyFile $SRC $DEST Textures.txt
-copyFile $SRC $DEST TileShapes.txt
 
 puts ---Translations---
 set qt_trs {qt_cs.qm qt_de.qm qt_es.qm qt_fr.qm qt_he.qm qt_ja.qm qt_pt.qm qt_ru.qm qt_zh_CN.qm qt_zh_TW.qm}
@@ -178,10 +176,10 @@ copyFile $QT_BINARY_DIR $DEST Qt5Network.dll
 copyFile $QT_BINARY_DIR $DEST Qt5OpenGL.dll
 copyFile $QT_BINARY_DIR $DEST Qt5Widgets.dll
 copyFile $QT_BINARY_DIR $DEST Qt5Xml.dll
-if {[file exists $QT_BINARY_DIR/icudt51.dll]} {
-copyFile $QT_BINARY_DIR $DEST icudt51.dll
-copyFile $QT_BINARY_DIR $DEST icuin51.dll
-copyFile $QT_BINARY_DIR $DEST icuuc51.dll
+if {[file exists $QT_BINARY_DIR/icudt54.dll]} {
+copyFile $QT_BINARY_DIR $DEST icudt54.dll
+copyFile $QT_BINARY_DIR $DEST icuin54.dll
+copyFile $QT_BINARY_DIR $DEST icuuc54.dll
 }
 
 copyFile $QT_PLUGINS_DIR $DEST/plugins imageformats/qgif.dll
@@ -195,6 +193,7 @@ copyFile $QT_PLUGINS_DIR $DEST/plugins platforms/qwindows.dll
 #copyFile $QT_PLUGINS_DIR $DEST/plugins codecs/qkrcodecs4.dll
 #copyFile $QT_PLUGINS_DIR $DEST/plugins codecs/qtwcodecs4.dll
 
+if false {
 ### Archive creation
 puts "---Archive Creation---"
 set date [clock format [clock seconds] -format "%b-%d-%Y"]
@@ -205,3 +204,4 @@ cd C:/Users/Tim/Desktop/ProjectZomboid/Tools
 exec {C:\Program Files\7-Zip\7z.exe} a $ARCHIVE TileZed$SUFFIX2
 cd C:/Programming/TileZed
 puts $name
+}
