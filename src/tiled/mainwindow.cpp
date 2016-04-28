@@ -1644,7 +1644,8 @@ void MainWindow::tilesetMetaInfoDialog()
     foreach (Tileset *ts, mgr->tilesets()) {
         if (ts->isMissing()) {
             PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
-            mgr->loadTilesets();
+            mgr->loadTilesets(true);
+            TilesetManager::instance()->waitForTilesets();
             break;
         }
     }
@@ -1742,7 +1743,8 @@ void MainWindow::containerOverlayDialog()
     foreach (Tileset *ts, mgr->tilesets()) {
         if (ts->isMissing()) {
             PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
-            mgr->loadTilesets();
+            mgr->loadTilesets(true);
+            TilesetManager::instance()->waitForTilesets();
             break;
         }
     }

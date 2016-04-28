@@ -575,7 +575,8 @@ bool BuildingEditorWindow::Startup()
     foreach (Tileset *ts, TileMetaInfoMgr::instance()->tilesets()) {
         if (ts->isMissing()) {
             PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
-            TileMetaInfoMgr::instance()->loadTilesets();
+            TileMetaInfoMgr::instance()->loadTilesets(true);
+            TilesetManager::instance()->waitForTilesets();
             break;
         }
     }

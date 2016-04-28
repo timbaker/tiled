@@ -47,9 +47,11 @@ public:
 
     ~TilesetImageReaderWorker();
 
+    bool busy();
+
     typedef Tiled::Tileset Tileset;
 signals:
-    void imageLoaded(QImage *image, Tiled::Tileset *tileset);
+    void imageLoaded(Tiled::Tileset *tileset, Tiled::Tileset *fromThread);
 
 public slots:
     void work();
@@ -68,7 +70,8 @@ private:
     QList<Job> mJobs;
 
     int mID;
-    bool mWorkPending;
+    QMutex mJobsMutex;
+    bool mHasJobs;
 };
 #endif // ZOMBOID
 
@@ -190,8 +193,7 @@ public:
     TilesetImageCache *imageCache() const { return mTilesetImageCache; }
 
     void loadTileset(Tileset *tileset, const QString &imageSource);
-    void loadTextureTileset(Tileset *tileset, const QString &imageSource);
-    void waitForTilesets(const QList<Tileset *> &tilesets);
+    void waitForTilesets(const QList<Tileset *> &tilesets = QList<Tileset*>());
 #endif
 
 signals:
@@ -201,8 +203,6 @@ signals:
     void tilesetChanged(Tileset *tileset);
 
 #ifdef ZOMBOID
-    void textureImageLoaded(QImage *image, Tiled::Tileset *tileset);
-
     void tileLayerNameChanged(Tile *tile);
 #endif
 
@@ -212,6 +212,7 @@ private slots:
 
 #ifdef ZOMBOID
     void imageLoaded(QImage *image, Tiled::Tileset *tileset);
+    void imageLoaded(Tiled::Tileset *fromThread, Tiled::Tileset *tileset);
 #endif
 
 private:

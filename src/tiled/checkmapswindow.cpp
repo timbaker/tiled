@@ -28,6 +28,7 @@
 #include "preferences.h"
 #include "rearrangetiles.h"
 #include "tilemetainfomgr.h"
+#include "tilesetmanager.h"
 #include "tmxmapreader.h"
 #include "zprogress.h"
 
@@ -87,7 +88,8 @@ void CheckMapsWindow::check()
     foreach (Tileset *ts, TileMetaInfoMgr::instance()->tilesets()) {
         if (ts->isMissing()) {
             PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
-            TileMetaInfoMgr::instance()->loadTilesets();
+            TileMetaInfoMgr::instance()->loadTilesets(true);
+            TilesetManager::instance()->waitForTilesets();
             break;
         }
     }
