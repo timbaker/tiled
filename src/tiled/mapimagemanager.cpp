@@ -156,6 +156,7 @@ MapImage *MapImageManager::getMapImage(const QString &mapName, const QString &re
                                           mapInfo);
         mapImage->mLoaded = true;
         mMapImages[keyName] = mapImage;
+        mapImage->chopIntoPieces();
         return mapImage;
     }
 #endif
@@ -807,6 +808,9 @@ MapImage::MapImage(QImage image, qreal scale, const QRectF &levelZeroBounds, con
     , mMapSize(mapSize)
     , mTileSize(tileSize)
     , mLoaded(false)
+#ifdef WORLDED
+    , mImageSize(image.size())
+#endif
 {
 }
 
@@ -862,6 +866,24 @@ void MapImage::mapFileChanged(QImage image, qreal scale, const QRectF &levelZero
     mMapSize = mapSize;
     mTileSize = tileSize;
 }
+
+#ifdef WORLDED
+void MapImage::chopIntoPieces()
+{
+    int columns = subImageColumns();
+    int rows = subImageRows();
+    mSubImages.resize(columns * rows);
+    QRect r(QPoint(), image().size());
+    for (int x = 0; x < columns; x++) {
+        for (int y = 0; y < rows; y++) {
+            QRect subr = QRect(x * 512, y * 512, 512, 512) & r;
+            mSubImages[x + y * columns] = image().copy(subr);
+        }
+    }
+    mMiniMapImage = mImage.scaledToWidth(512);
+    mImage = QImage();
+}
+#endif /* WORLDED */
 
 /////
 
