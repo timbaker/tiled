@@ -1761,11 +1761,11 @@ void MainWindow::launchWorldEd()
 {
     QString path = QApplication::applicationDirPath();
 #ifdef Q_OS_WIN
-    path += QLatin1String("/WorldEd/PZWorldEd.exe");
+    path += QLatin1String("/../WorldEd/PZWorldEd.exe");
 #elif defined(Q_OS_MAC)
-    path += QLatin1String("/WorldEd/PZWorldEd"); // FIXME: .app ?
+    path += QLatin1String("/../WorldEd/PZWorldEd"); // FIXME: .app ?
 #else
-    path += QLatin1String("/WorldEd/PZWorldEd");
+    path += QLatin1String("/../WorldEd/PZWorldEd");
 #endif
     path = QDir::cleanPath(path);
     path = QDir::toNativeSeparators(path);
