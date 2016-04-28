@@ -313,6 +313,10 @@ bool TileMetaInfoMgr::writeTxt()
 
         int columns = tileset->columnCount();
         int rows = tileset->tileCount() / columns;
+        if (tileset->isLoaded()) {
+            columns = tileset->columnCountForWidth(tileset->imageWidth());
+            rows = tileset->imageHeight() / (tileset->imageSource2x().isEmpty() ? 128 : (128 * 2));
+        }
         tilesetBlock.addValue("size", QString(QLatin1String("%1,%2")).arg(columns).arg(rows));
 
         if (mTilesetInfo.contains(tileset->name())) {
