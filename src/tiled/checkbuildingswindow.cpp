@@ -231,7 +231,7 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                             if (square.mEntries[BuildingFloor::Square::SectionWindow] != 0 && square.mEntryEnum[BuildingFloor::Square::SectionWindow] == BTC_Windows::West)
                                 issue(Issue::LightSwitch, "West Switch on a Window", bo);
                         }
-                        if (btile->mIndex == EAST_SWITCH || btile->mIndex == EAST_SWITCH + 4) {
+                        if (btile->mIndex == EAST_SWITCH || btile->mIndex == EAST_SWITCH + 5) {
                             BuildingFloor::Square &square = floor->squares[x+1][y];
                             if (!square.IsWallOrient(BuildingFloor::Square::WallOrientW) && !square.IsWallOrient(BuildingFloor::Square::WallOrientNW))
                                 issue(Issue::LightSwitch, "East Switch not on a Wall", bo);
@@ -240,7 +240,7 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                             if (square.mEntries[BuildingFloor::Square::SectionWindow] != 0 && square.mEntryEnum[BuildingFloor::Square::SectionWindow] == BTC_Windows::West)
                                 issue(Issue::LightSwitch, "East Switch on a Window", bo);
                         }
-                        if (btile->mIndex == SOUTH_SWITCH || btile->mIndex == SOUTH_SWITCH + 4) {
+                        if (btile->mIndex == SOUTH_SWITCH || btile->mIndex == SOUTH_SWITCH + 3) {
                             BuildingFloor::Square &square = floor->squares[x][y+1];
                             if (!square.IsWallOrient(BuildingFloor::Square::WallOrientN) && !square.IsWallOrient(BuildingFloor::Square::WallOrientNW))
                                 issue(Issue::LightSwitch, "South Switch not on a Wall", bo);
