@@ -283,11 +283,13 @@ TileEditMode::TileEditMode(QObject *parent) :
     connect(mTabWidget, SIGNAL(tabCloseRequested(int)),
             SLOT(documentTabCloseRequested(int)));
 
+#ifndef BUILDINGED_SA
     if (mFirstTimeSeen) {
         mFirstTimeSeen = false;
         mFurnitureDock->switchTo();
         mTilesetDock->firstTimeSetup();
     }
+#endif
 
     setWidget(mMainWindow);
 
@@ -337,6 +339,14 @@ void TileEditMode::onActiveStateChanged(bool active)
         menu->addSeparator();
         foreach (QToolBar *toolBar, mMainWindow->toolBars())
             menu->addAction(toolBar->toggleViewAction());
+
+#ifdef BUILDINGED_SA
+        if (mFirstTimeSeen) {
+            mFirstTimeSeen = false;
+            mFurnitureDock->switchTo();
+            mTilesetDock->firstTimeSetup();
+        }
+#endif
     } else {
         if (mCurrentDocumentStuff)
             mCurrentDocumentStuff->deactivate();

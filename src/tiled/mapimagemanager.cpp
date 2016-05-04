@@ -877,7 +877,7 @@ void MapImage::chopIntoPieces()
     for (int x = 0; x < columns; x++) {
         for (int y = 0; y < rows; y++) {
             QRect subr = QRect(x * 512, y * 512, 512, 512) & r;
-            mSubImages[x + y * columns] = image().copy(subr);
+            mSubImages[x + y * columns] = image().copy(subr).convertToFormat(QImage::Format_ARGB4444_Premultiplied);
         }
     }
     mMiniMapImage = mImage.scaledToWidth(512);
