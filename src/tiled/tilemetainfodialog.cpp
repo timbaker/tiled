@@ -241,8 +241,8 @@ void TileMetaInfoDialog::addTileset()
     const QString tilesDir = TileMetaInfoMgr::instance()->tilesDirectory();
 
     AddTilesetsDialog dialog(tilesDir,
-                             TileMetaInfoMgr::instance()->tilesetPaths(),
-                             true,
+                             TileMetaInfoMgr::instance()->tilesetNames(),
+                             false,
                              this);
     dialog.setAllowBrowse(true);
     if (dialog.exec() != QDialog::Accepted)

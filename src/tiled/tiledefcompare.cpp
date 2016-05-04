@@ -17,6 +17,7 @@
 
 #include "tiledefcompare.h"
 #include "zprogress.h"
+#include "tilemetainfomgr.h"
 #include "ui_tiledefcompare.h"
 
 #include <QFileDialog>
@@ -255,10 +256,10 @@ void TileDefCompare::writeSettings()
 #include "tile.h"
 #include "tileset.h"
 
-static Tiled::Tileset *findTileset(QString imageSource)
+static Tiled::Tileset *findTileset(QString name)
 {
-    foreach (Tiled::Tileset *tileset, TilesetManager::instance()->tilesets()) {
-        if (tileset->imageSource() == imageSource)
+    foreach (Tiled::Tileset *tileset, TileMetaInfoMgr::instance()->tilesets()) {
+        if (tileset->name() == name)
             return tileset;
     }
     return 0;
@@ -266,13 +267,12 @@ static Tiled::Tileset *findTileset(QString imageSource)
 
 QImage TileDefCompare::getTileImage(TileDefTile *tdt)
 {
-    QString fileName = QDir(Preferences::instance()->tilesDirectory()).filePath(tdt->mTileset->mImageSource);
-    fileName = QFileInfo(fileName).canonicalFilePath();
-    if (!fileName.isEmpty()) {
-        Tiled::Tileset *ts = findTileset(fileName);
-        if (ts != 0) {
-            return ts->tileAt(tdt->id())->image();
+    if (Tiled::Tileset *ts = TileMetaInfoMgr::instance()->tileset(tdt->mTileset->mName)) {
+        if (ts->isMissing()) {
+            TileMetaInfoMgr::instance()->loadTilesets(QList<Tiled::Tileset*>() << ts, true);
+            TilesetManager::instance()->waitForTilesets();
         }
+        return ts->tileAt(tdt->id())->image();
     }
     return TilesetManager::instance()->missingTile()->image();
 }

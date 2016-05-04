@@ -81,7 +81,7 @@ QStringList AddTilesetsDialog::fileNames()
         QListWidgetItem *item = ui->files->item(i);
         if (item->checkState() == Qt::Checked) {
             QString fileName = QDir(mDirectory).filePath(item->text());
-            ret += QFileInfo(fileName).canonicalFilePath();
+            ret += fileName; //QFileInfo(fileName).canonicalFilePath();
         }
     }
     return ret;
@@ -91,7 +91,7 @@ void AddTilesetsDialog::setFilesList()
 {
     ui->files->clear();
 
-    QDir dir(mDirectory);
+    QDir dir(mDirectory + QLatin1String("/2x"));
     dir.setFilter(QDir::Files);
     dir.setSorting(QDir::Name);
     QStringList nameFilters;

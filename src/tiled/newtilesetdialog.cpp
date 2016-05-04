@@ -133,7 +133,7 @@ void NewTilesetDialog::tryAccept()
 
 #ifdef ZOMBOID
     if (TilesetImageCache *imageCache = TilesetManager::instance()->imageCache()) {
-        Tileset *cached = imageCache->findMatch(tileset.get(), image);
+        Tileset *cached = imageCache->findMatch(tileset.get(), image, QString());
         if (!cached || !tileset->loadFromCache(cached)) {
             if (!tileset->loadFromImage(QImage(image), image)) {
                 QMessageBox::critical(this, tr("Error"),

@@ -53,7 +53,7 @@ class TILEDSHARED_EXPORT TilesetImageCache
 public:
     ~TilesetImageCache();
     Tileset *addTileset(Tileset *ts);
-    Tileset *findMatch(Tileset *ts, const QString &imageSource);
+    Tileset *findMatch(Tileset *ts, const QString &imageSource, const QString &imageSource2x);
     QList<Tileset*> mTilesets;
 };
 
@@ -88,8 +88,7 @@ public:
         mImageHeight(0),
         mColumnCount(0)
   #ifdef ZOMBOID
-        ,
-        mMissing(false),
+        , mMissing(false),
         mLoaded(false)
   #endif
     {

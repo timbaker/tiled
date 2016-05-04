@@ -245,8 +245,6 @@ void TilesetManager::fileChanged(const QString &path)
     mChangedFilesTimer.start();
 }
 
-extern bool resolveImageSource(QString &imageSource);
-
 void TilesetManager::fileChangedTimeout()
 {
 #ifdef ZOMBOID
@@ -270,7 +268,7 @@ void TilesetManager::fileChangedTimeout()
         QString fileName = tileset->imageSource();
         QString fileName2 = tileset->imageSource2x().isEmpty() ? tileset->imageSource() : tileset->imageSource2x();
         if (mChangedFiles.contains(fileName2)) {
-            if (Tileset *cached = mTilesetImageCache->findMatch(tileset, fileName)) {
+            if (Tileset *cached = mTilesetImageCache->findMatch(tileset, fileName, fileName2)) {
                 if (tileset->loadFromCache(cached)) {
                     tileset->setMissing(cached->isMissing());
                     syncTileLayerNames(tileset);
@@ -314,7 +312,7 @@ void TilesetManager::imageLoaded(QImage *image, Tileset *tileset)
     foreach (Tileset *candidate, tilesets()) {
         if (candidate->isLoaded())
             continue;
-        if (candidate->imageSource() == tileset->imageSource()
+        if (((candidate->imageSource() == tileset->imageSource()) || (!tileset->imageSource2x().isEmpty() && (candidate->imageSource2x() == tileset->imageSource2x())))
                 && candidate->tileWidth() == tileset->tileWidth()
                 && candidate->tileHeight() == tileset->tileHeight()
                 && candidate->tileSpacing() == tileset->tileSpacing()
@@ -344,7 +342,7 @@ void TilesetManager::imageLoaded(Tileset *fromThread, Tileset *tileset)
     foreach (Tileset *candidate, tilesets()) {
         if (candidate->isLoaded())
             continue;
-        if (candidate->imageSource() == tileset->imageSource()
+        if (((candidate->imageSource() == tileset->imageSource()) || (!tileset->imageSource2x().isEmpty() && (candidate->imageSource2x() == tileset->imageSource2x())))
                 && candidate->tileWidth() == tileset->tileWidth()
                 && candidate->tileHeight() == tileset->tileHeight()
                 && candidate->tileSpacing() == tileset->tileSpacing()
@@ -357,36 +355,6 @@ void TilesetManager::imageLoaded(Tileset *fromThread, Tileset *tileset)
     }
 }
 
-// If imageSource is in the Tiles directory, make it relative to Tiles2x directory.
-bool resolveImageSource(QString &imageSource)
-{
-    QString tiles2xDir = Preferences::instance()->tiles2xDirectory();
-    if (tiles2xDir.isEmpty())
-        return false;
-    QFileInfo tiles2xInfo(tiles2xDir);
-    if (tiles2xInfo.isRelative() || !tiles2xInfo.exists())
-        return false;
-    tiles2xDir = tiles2xInfo.canonicalFilePath();
-
-    if (imageSource.isEmpty())
-        return false;
-    QFileInfo info(imageSource);
-    if (info.isRelative())
-        return false;
-    QString tilesDir = Preferences::instance()->tilesDirectory();
-    if (tilesDir.isEmpty() || QFileInfo(tilesDir).isRelative())
-        return false;
-    // FIXME: use QFileInfo::operator==() if both exist
-    if (QDir::cleanPath(tilesDir) == QDir::cleanPath(info.absolutePath())) {
-        QString imageSource2x = QDir(tiles2xDir).filePath(info.fileName());
-        if (QFileInfo(imageSource2x).exists()) {
-            imageSource = QFileInfo(imageSource2x).canonicalFilePath();
-            return true;
-        }
-    }
-    return false;
-}
-
 void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource_)
 {
     // Hack to ignore TileMetaInfoMgr's tilesets that haven't been loaded,
@@ -394,13 +362,12 @@ void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource_)
     if (QDir(imageSource_).isRelative())
         return;
 
-#if 1
-    QString imageSource = imageSource_;
-#endif
-
     if (!tileset->isLoaded() /*&& !tileset->isMissing()*/) {
-        QString imageSource2x = imageSource;
-        if (Tileset *cached = mTilesetImageCache->findMatch(tileset, imageSource)) {
+        QString tilesDir = Preferences::instance()->tilesDirectory();
+        QString tiles2xDir = Preferences::instance()->tiles2xDirectory();
+        QString imageSource = QDir(tilesDir).filePath(tileset->name() + QLatin1Literal(".png"));
+        QString imageSource2x = QDir(tiles2xDir).filePath(tileset->name() + QLatin1Literal(".png"));
+        if (Tileset *cached = mTilesetImageCache->findMatch(tileset, imageSource, imageSource2x)) {
             // If it !isLoaded(), a thread is reading the image.
             // FIXME: 1) load TMX with tilesets from not-TilesDirectory -> no 2x images loaded
             //        2) switch TilesDirectory to the same not-TilesDirectory in 1)
@@ -413,7 +380,7 @@ void TilesetManager::loadTileset(Tileset *tileset, const QString &imageSource_)
                 changeTilesetSource(tileset, imageSource, false);
                 tileset->setImageSource2x(cached->imageSource2x());
             }
-        } else if (resolveImageSource(imageSource2x) && QImageReader(imageSource2x).size().isValid()) {
+        } else if (QImageReader(imageSource2x).size().isValid()) {
             qDebug() << "2x YES " << imageSource;
             changeTilesetSource(tileset, imageSource, false);
             tileset->setImageSource2x(imageSource2x);
@@ -478,7 +445,7 @@ void TilesetManager::waitForTilesets(const QList<Tileset *> &tilesets)
             continue;
         // There may be a thread already reading or about to read this image.
         QImage *image = new QImage(ts->imageSource2x().isEmpty() ? ts->imageSource() : ts->imageSource2x());
-        Tileset *cached = mTilesetImageCache->findMatch(ts, ts->imageSource());
+        Tileset *cached = mTilesetImageCache->findMatch(ts, ts->imageSource(), ts->imageSource2x());
         Q_ASSERT(cached != 0 && !cached->isLoaded());
         if (cached) {
             imageLoaded(image, cached); // deletes image

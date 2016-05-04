@@ -373,7 +373,11 @@ TileDefDialog::TileDefDialog(QWidget *parent) :
     connect(ui->actionSave, SIGNAL(triggered()), SLOT(fileSave()));
     connect(ui->actionSaveAs, SIGNAL(triggered()), SLOT(fileSaveAs()));
     connect(ui->actionAddTileset, SIGNAL(triggered()), SLOT(addTileset()));
+#ifdef TDEF_TILES_DIR
     connect(ui->actionTilesDirectory, SIGNAL(triggered()), SLOT(chooseTilesDirectory()));
+#else
+    ui->actionTilesDirectory->setVisible(false);
+#endif
     connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
 
     connect(ui->actionUserGuide, SIGNAL(triggered()), SLOT(help()));
@@ -530,6 +534,7 @@ void TileDefDialog::removeTileset()
     }
 }
 
+#ifdef TDEF_TILES_DIR
 void TileDefDialog::chooseTilesDirectory()
 {
     if (!mTileDefFile)
@@ -545,6 +550,7 @@ void TileDefDialog::chooseTilesDirectory()
     tilesDirChanged();
     updateTilesetListLater();
 }
+#endif
 
 void TileDefDialog::insertTileset(int index, Tileset *ts, TileDefTileset *defTileset)
 {
@@ -1100,7 +1106,9 @@ void TileDefDialog::fileOpen(const QString &fileName)
     }
 
     mTileDefFile = defFile;
+#ifdef TDEF_TILES_DIR
     mTilesDirectory.clear();
+#endif
     tilesDirChanged();
 }
 
@@ -1116,7 +1124,9 @@ bool TileDefDialog::fileSave(const QString &fileName)
     }
 
     mTileDefFile->setFileName(fileName);
+#ifdef TDEF_TILES_DIR
     setTilesDir(tilesDir());
+#endif
     mUndoStack->setClean();
 
     updateWindowTitle();
@@ -1476,8 +1486,6 @@ int TileDefDialog::rowOf(const QString &name) const
     return tilesetNames().indexOf(name);
 }
 
-extern bool resolveImageSource(QString &imageSource);
-
 void TileDefDialog::loadTilesets()
 {
     bool anyMissing = false;
@@ -1494,13 +1502,21 @@ void TileDefDialog::loadTilesets()
 
     foreach (Tileset *ts, mTilesets) {
         if (ts->isMissing()) {
-            QString source = ts->imageSource();
-            if (QDir::isRelativePath(ts->imageSource()))
-                source = QDir(tilesDir()).filePath(ts->imageSource());
-            QImageReader reader(source);
+            QString tilesDir = Preferences::instance()->tilesDirectory();
+            QString tiles2xDir = Preferences::instance()->tiles2xDirectory();
+            QString imageSource = QDir(tilesDir).filePath(ts->name() + QLatin1Literal(".png"));
+            QString imageSource2x = QDir(tiles2xDir).filePath(ts->name() + QLatin1Literal(".png"));
+            QImageReader ir2x(imageSource2x);
+            if (ir2x.size().isValid()) {
+                ts->loadFromNothing(ir2x.size() / 2, imageSource);
+                // can't use canonicalFilePath since the 1x tileset may not exist
+                TilesetManager::instance()->loadTileset(ts, imageSource);
+                continue;
+            }
+            QImageReader reader(imageSource);
             if (reader.size().isValid()) {
-                ts->loadFromNothing(reader.size(), ts->imageSource());
-                QFileInfo info(source);
+                ts->loadFromNothing(reader.size(), imageSource);
+                QFileInfo info(imageSource);
                 TilesetManager::instance()->loadTileset(ts, info.canonicalFilePath());
             }
         }
@@ -1509,14 +1525,30 @@ void TileDefDialog::loadTilesets()
 
 Tileset *TileDefDialog::loadTileset(const QString &source)
 {
-    QString canonical = source;
-    QImageReader reader(source);
+    QFileInfo info(source);
+    QString tilesetName = info.completeBaseName();
+    QString tilesDir = Preferences::instance()->tilesDirectory();
+    QString tiles2xDir = Preferences::instance()->tiles2xDirectory();
+    QString imageSource = QDir(tilesDir).filePath(tilesetName + QLatin1Literal(".png"));
+    QString imageSource2x = QDir(tiles2xDir).filePath(tilesetName + QLatin1Literal(".png"));
+
+    QImageReader ir2x(imageSource2x);
+    if (ir2x.size().isValid()) {
+        Tileset *ts = new Tileset(tilesetName, 64, 128);
+        ts->loadFromNothing(ir2x.size() / 2, imageSource);
+        ts->setMissing(true);
+        // can't use canonicalFilePath since the 1x tileset may not exist
+        TilesetManager::instance()->loadTileset(ts, imageSource);
+        return ts;
+    }
+
+    QImageReader reader(imageSource);
     if (reader.size().isValid()) {
-        QFileInfo info(source);
-        Tileset *ts = new Tileset(info.completeBaseName(), 64, 128);
-        ts->loadFromNothing(reader.size(), source/*info.canonicalFilePath()*/);
+        info = QFileInfo(imageSource);
+        Tileset *ts = new Tileset(tilesetName, 64, 128);
+        ts->loadFromNothing(reader.size(), info.canonicalFilePath());
         ts->setMissing(true); // prevent FileSystemWatcher warning in TilesetManager::changeTilesetSource
-        TilesetManager::instance()->loadTileset(ts, source/*info.canonicalFilePath()*/);
+        TilesetManager::instance()->loadTileset(ts, info.canonicalFilePath());
         return ts;
     }
     return 0;
@@ -1557,37 +1589,40 @@ void TileDefDialog::tilesDirChanged()
     mTilesetByName.clear();
 
     QDir dir(tilesDir());
+    QDir dir2x(tilesDir() + QLatin1Literal("/2x"));
 
     QList<ResizedTileset> resized;
 
     foreach (TileDefTileset *tsDef, mTileDefFile->tilesets()) {
         QString imageSource = dir.filePath(tsDef->mImageSource);
-        if (QFileInfo(imageSource).exists()) {
-            imageSource = QFileInfo(imageSource).canonicalFilePath();
-            QString imageSource2x = imageSource;
-            if (resolveImageSource(imageSource2x)) {
-                QImageReader ir(imageSource2x);
-                if (ir.size().isValid()) {
-                    int columns = ir.size().width() / (64 * 2);
-                    int rows = ir.size().height() / (128 * 2);
-                    if (QSize(columns, rows) != QSize(tsDef->mColumns, tsDef->mRows)) {
-                        resized += ResizedTileset(tsDef->mName,
-                                                  QSize(tsDef->mColumns, tsDef->mRows),
-                                                  QSize(columns, rows));
-                        tsDef->resize(columns, rows);
-                    }
+        QString imageSource2x = dir2x.filePath(tsDef->mImageSource);
+        if (QFileInfo(imageSource2x).exists()) {
+            imageSource2x = QFileInfo(imageSource2x).canonicalFilePath();
+            QImageReader ir(imageSource2x);
+            if (ir.size().isValid()) {
+                int columns = ir.size().width() / (64 * 2);
+                int rows = ir.size().height() / (128 * 2);
+                if (QSize(columns, rows) != QSize(tsDef->mColumns, tsDef->mRows)) {
+                    resized += ResizedTileset(tsDef->mName,
+                                              QSize(tsDef->mColumns, tsDef->mRows),
+                                              QSize(columns, rows));
+                    tsDef->resize(columns, rows);
                 }
-            } else {
-                QImageReader ir(imageSource);
-                if (ir.size().isValid()) {
-                    int columns = ir.size().width() / 64;
-                    int rows = ir.size().height() / 128 ;
-                    if (QSize(columns, rows) != QSize(tsDef->mColumns, tsDef->mRows)) {
-                        resized += ResizedTileset(tsDef->mName,
-                                                  QSize(tsDef->mColumns, tsDef->mRows),
-                                                  QSize(columns, rows));
-                        tsDef->resize(columns, rows);
-                    }
+            }
+            if (QFileInfo(imageSource).exists()) {
+               imageSource = QFileInfo(imageSource).canonicalFilePath();
+            }
+        } else if (QFileInfo(imageSource).exists()) {
+            imageSource = QFileInfo(imageSource).canonicalFilePath();
+            QImageReader ir(imageSource);
+            if (ir.size().isValid()) {
+                int columns = ir.size().width() / 64;
+                int rows = ir.size().height() / 128 ;
+                if (QSize(columns, rows) != QSize(tsDef->mColumns, tsDef->mRows)) {
+                    resized += ResizedTileset(tsDef->mName,
+                                              QSize(tsDef->mColumns, tsDef->mRows),
+                                              QSize(columns, rows));
+                    tsDef->resize(columns, rows);
                 }
             }
         }
@@ -1595,7 +1630,7 @@ void TileDefDialog::tilesDirChanged()
         // Try to reuse a tileset from our list of removed tilesets.
         bool reused = false;
         foreach (Tileset *ts, mRemovedTilesets) {
-            if (ts->imageSource() == imageSource) {
+            if ((ts->imageSource() == imageSource) || (!imageSource2x.isEmpty() && (imageSource2x == ts->imageSource2x()))) {
                 mTilesets += ts;
                 mTilesetByName[ts->name()] = ts;
                 // Don't addReferences().
@@ -1640,6 +1675,7 @@ void TileDefDialog::tilesDirChanged()
 
 QString TileDefDialog::tilesDir()
 {
+#ifdef TDEF_TILES_DIR
     // If the user never set the directory, it will be the same as the TileDefFile
     // directory.  If it was set, it is saved by QSettings, not in the file itself.
     if (mTilesDirectory.isEmpty()) {
@@ -1658,8 +1694,12 @@ QString TileDefDialog::tilesDir()
         return mTileDefFile->directory();
     }
     return mTilesDirectory;
+#else
+    return Preferences::instance()->tilesDirectory();
+#endif
 }
 
+#ifdef TDEF_TILES_DIR
 void TileDefDialog::setTilesDir(const QString &path)
 {
     QFileInfo info(mTileDefFile->fileName());
@@ -1701,6 +1741,7 @@ void TileDefDialog::getTilesDirKeyValues(QMap<QString, QString> &map)
     }
     settings.endArray();
 }
+#endif // TDEF_TILES_DIR
 
 int TileDefDialog::uniqueTilesetID()
 {
