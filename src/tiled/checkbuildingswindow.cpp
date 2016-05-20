@@ -147,6 +147,8 @@ void CheckBuildingsWindow::syncList(IssueFile *file)
                 visible = false;
             if (issue.type == Issue::Rearranged && !ui->check2x->isChecked())
                 visible = false;
+            if (issue.type == Issue::MultipleContainers && !ui->checkContainers->isChecked())
+                visible = false;
             QTreeWidgetItem *issueItem = fileItem->child(i);
             issueItem->setHidden(!visible);
             if (visible) anyVisible = true;
@@ -267,6 +269,7 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
         for (int y = 0; y < floor->height(); y++) {
             for (int x = 0; x < floor->width(); x++) {
                 BuildingFloor::Square &square = floor->squares[x][y];
+                int counters = 0;
                 foreach (TileLayer *layer, layers->layers()) {
                     Tile *tile = layer->cellAt(x, y).tile;
                     /*
@@ -332,9 +335,18 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                             issue(Issue::Rearranged, tr("vegetation_foliage tile must be on blends_natural for erosion to work"), x, y, z);
                         }
                     }
+                    if (tile != 0 && tile->tileset()->name() == QLatin1Literal("vegetation_walls_01")) {
+                        issue(Issue::Rearranged, tr("Replace vegetation_walls_01 with f_wallvines_1"), x, y, z);
+                    }
                     if (tile != 0 && RearrangeTiles::instance()->isRearranged(tile)) {
                         issue(Issue::Rearranged, tr("Rearranged tile (%1)").arg(BuildingTilesMgr::instance()->nameForTile(tile)), x, y, z);
                     }
+                    if (tile != 0 && tile->tileset()->name().startsWith(QLatin1Literal("fixtures_counters_01"))) {
+                        counters++;
+                    }
+                }
+                if (counters > 1) {
+                    issue(Issue::MultipleContainers, tr("Multiple counters on same square"), x, y, z);
                 }
                 if (Room *room = floor->GetRoomAt(x, y)) {
                     if (!roomPos.contains(room))

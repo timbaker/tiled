@@ -53,7 +53,8 @@ private:
             RoomLight,
             Grime,
             Sinks,
-            Rearranged
+            Rearranged,
+            MultipleContainers,
         };
 
         Issue(IssueFile *file, Type type, const QString &detail, int x, int y, int z) :
