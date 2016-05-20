@@ -70,6 +70,8 @@ private slots:
     void addDirectory();
     void removeDirectory();
     void syncUI();
+    void tileSizeChangedX(int value);
+    void tileSizeChangedY(int value);
 
     void loadSettings();
     void saveSettings();

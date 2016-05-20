@@ -91,12 +91,6 @@
       <string>Input image directories:</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="2" column="0">
-       <layout class="QHBoxLayout" name="directoryToolbarLayout"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QListWidget" name="dirList"/>
-      </item>
       <item row="0" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
@@ -106,6 +100,56 @@
          <bool>true</bool>
         </property>
        </widget>
+      </item>
+      <item row="4" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Custom tile size (jumbo trees):</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="jumboX">
+          <property name="maximum">
+           <number>512</number>
+          </property>
+          <property name="value">
+           <number>128</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="jumboY">
+          <property name="maximum">
+           <number>512</number>
+          </property>
+          <property name="value">
+           <number>256</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item row="6" column="0">
+       <layout class="QHBoxLayout" name="directoryToolbarLayout"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QListWidget" name="dirList"/>
       </item>
      </layout>
     </widget>

@@ -40,6 +40,7 @@ public:
     public:
         QString mPath;
         bool mImagesAreTilesheets;
+        QSize mCustomTileSize;
     };
 
     QString mPackFileName;
@@ -85,7 +86,7 @@ public:
     QString errorString() { return mError; }
 
 private:
-    bool FindImages(const QString &directory, bool imagesAreTilesheets);
+    bool FindImages(const QString &directory, bool imagesAreTilesheets, const QSize &tileSize);
 #if 1
     bool PackImages(int pageNum, QStringList& toPack, QStringList& toPackPage, QImage &outputImage);
     bool PackList(const QStringList &toPack);
@@ -112,6 +113,7 @@ private:
     QStringList mImageFileNames;
     QSet<QString> mImageIsTilesheet;
     QSet<QString> mImageNameSet;
+    QMap<QString,QSize> mImageTileSize;
     QMap<QString,QImage> mInputImages;
     QMap<QString,QString> mTileNames;
 

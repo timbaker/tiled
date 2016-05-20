@@ -52,9 +52,10 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
     mImageNameSet.clear();
     mImageFileNames.clear();
     mImageIsTilesheet.clear();
+    mImageTileSize.clear();
 
     foreach (TexturePackSettings::Directory tpd, settings.mInputImageDirectories) {
-        if (!FindImages(tpd.mPath, tpd.mImagesAreTilesheets))
+        if (!FindImages(tpd.mPath, tpd.mImagesAreTilesheets, tpd.mCustomTileSize))
             return false;
     }
 
@@ -71,9 +72,6 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
         tileDefFile.read(fileInfo.absoluteFilePath());
     }
 
-    const int TILE_WIDTH = mSettings.mScale50 ? 64 : (64 * 2);
-    const int TILE_HEIGHT = mSettings.mScale50 ? 128 : (128 * 2);
-
     QStringList toPack, toPackFloor;
     for (int i = 0; i < mImageFileNames.size(); i++) {
         progress.update(tr("Reading file %1 / %2").arg(i+1).arg(mImageFileNames.size()));
@@ -84,6 +82,8 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
             return false;
         }
         if (mImageIsTilesheet.contains(str)) {
+            const int TILE_WIDTH = mImageTileSize[str].width() * (mSettings.mScale50 ? 0.5f : 1);
+            const int TILE_HEIGHT = mImageTileSize[str].height() * (mSettings.mScale50 ? 0.5f : 1);
             TileDefTileset *tdts = tileDefFile.tileset(QFileInfo(str).baseName());
             if (image.width() % TILE_WIDTH || image.height() % TILE_HEIGHT) {
                 imageTranslation[str] = WorkOutTranslation(image);
@@ -208,7 +208,7 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
     return true;
 }
 
-bool TexturePacker::FindImages(const QString &directory, bool imagesAreTilesheets)
+bool TexturePacker::FindImages(const QString &directory, bool imagesAreTilesheets, const QSize &tileSize)
 {
     QDir dir(directory);
     QStringList filters;
@@ -217,12 +217,14 @@ bool TexturePacker::FindImages(const QString &directory, bool imagesAreTilesheet
         QString baseName = fileInfo.baseName();
         if (mImageNameSet.contains(baseName)) {
             mError = tr("There are two input image files with the same name.\nThe conflicting name is \"%1\".")
-                    .arg(baseName);
+                        .arg(baseName);
+            return false;
         }
         mImageFileNames += fileInfo.absoluteFilePath();
         mImageNameSet += baseName;
         if (imagesAreTilesheets)
             mImageIsTilesheet += fileInfo.absoluteFilePath();
+        mImageTileSize[fileInfo.absoluteFilePath()] = tileSize;
     }
     return true;
 }

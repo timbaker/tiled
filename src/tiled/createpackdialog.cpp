@@ -58,6 +58,8 @@ CreatePackDialog::CreatePackDialog(QWidget *parent) :
     connect(ui->btnLoad, SIGNAL(clicked()), SLOT(loadSettings()));
     connect(ui->btnSave, SIGNAL(clicked()), SLOT(saveSettings()));
     connect(ui->btnSaveAs, SIGNAL(clicked()), SLOT(saveSettingsAs()));
+    connect(ui->jumboX, SIGNAL(valueChanged(int)), SLOT(tileSizeChangedX(int)));
+    connect(ui->jumboY, SIGNAL(valueChanged(int)), SLOT(tileSizeChangedY(int)));
 
     ui->texSizeCombo->setCurrentIndex(1);
 
@@ -79,6 +81,7 @@ void CreatePackDialog::settingsToUI(const TexturePackSettings &settings)
     foreach (TexturePackSettings::Directory tpd, settings.mInputImageDirectories) {
         QListWidgetItem *item = new QListWidgetItem(QDir::toNativeSeparators(tpd.mPath));
         item->setCheckState(tpd.mImagesAreTilesheets ? Qt::Checked : Qt::Unchecked);
+        item->setData(Qt::UserRole, tpd.mCustomTileSize);
         ui->dirList->addItem(item);
     }
 
@@ -97,8 +100,10 @@ void CreatePackDialog::settingsFromUI(TexturePackSettings &settings)
     settings = TexturePackSettings();
     for (int i = 0; i < ui->dirList->count(); i++) {
         TexturePackSettings::Directory tpd;
-        tpd.mPath = ui->dirList->item(i)->text();
-        tpd.mImagesAreTilesheets = ui->dirList->item(i)->checkState() == Qt::Checked;
+        QListWidgetItem *item = ui->dirList->item(i);
+        tpd.mPath = item->text();
+        tpd.mImagesAreTilesheets = item->checkState() == Qt::Checked;
+        tpd.mCustomTileSize = item->data(Qt::UserRole).value<QSize>();
         settings.mInputImageDirectories += tpd;
     }
     if (ui->texSizeCombo->currentIndex() == 0)
@@ -132,6 +137,7 @@ void CreatePackDialog::addDirectory()
 
     QListWidgetItem *item = new QListWidgetItem(QDir::toNativeSeparators(path));
     item->setCheckState(Qt::Checked);
+    item->setData(Qt::UserRole, QSize(64*2, 128*2));
     ui->dirList->addItem(item);
 }
 
@@ -151,6 +157,39 @@ void CreatePackDialog::syncUI()
     ui->actionRemoveDirectory->setEnabled(items.size() == 1);
     ui->btnSave->setEnabled(!mSettingsFileName.isEmpty());
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(!ui->packNameEdit->text().isEmpty());
+
+    if (items.size() == 1) {
+        ui->jumboX->setEnabled(true);
+        ui->jumboY->setEnabled(true);
+        QListWidgetItem *item = items.first();
+        ui->jumboX->setValue(item->data(Qt::UserRole).value<QSize>().width());
+        ui->jumboY->setValue(item->data(Qt::UserRole).value<QSize>().height());
+    } else {
+        ui->jumboX->setEnabled(false);
+        ui->jumboY->setEnabled(false);
+    }
+}
+
+void CreatePackDialog::tileSizeChangedX(int value)
+{
+    QList<QListWidgetItem*> items = ui->dirList->selectedItems();
+    if (items.size() == 1) {
+        QListWidgetItem *item = items.first();
+        QSize size = item->data(Qt::UserRole).value<QSize>();
+        size.setWidth(value);
+        item->setData(Qt::UserRole, size);
+    }
+}
+
+void CreatePackDialog::tileSizeChangedY(int value)
+{
+    QList<QListWidgetItem*> items = ui->dirList->selectedItems();
+    if (items.size() == 1) {
+        QListWidgetItem *item = items.first();
+        QSize size = item->data(Qt::UserRole).value<QSize>();
+        size.setHeight(value);
+        item->setData(Qt::UserRole, size);
+    }
 }
 
 void CreatePackDialog::loadSettings()
@@ -299,6 +338,12 @@ bool PackSettingsFile::read(const QString &fileName)
                     TexturePackSettings::Directory tpd;
                     tpd.mPath = QDir::cleanPath(dir.filePath(block2.value("path")));
                     tpd.mImagesAreTilesheets = block2.value("imagesAreTilesheets") == QLatin1String("true");
+                    if (block2.hasValue("tileSize")) {
+                        if (!stringToSize(block2.value("tileSize"), tpd.mCustomTileSize))
+                            return false;
+                    } else {
+                        tpd.mCustomTileSize = QSize(0, 0);
+                    }
                     mSettings.mInputImageDirectories += tpd;
                 } else {
                     mError = tr("Line %1: Unknown block name '%2'.")
@@ -339,6 +384,10 @@ bool PackSettingsFile::write(const QString &fileName)
         dirBlock.name = QLatin1String("inputImageDirectory");
         dirBlock.addValue("path", dir.relativeFilePath(tpd.mPath));
         dirBlock.addValue("imagesAreTilesheets", QLatin1String(tpd.mImagesAreTilesheets ? "true" : "false"));
+        if (tpd.mCustomTileSize != QSize(64*2, 128*2) && tpd.mCustomTileSize != QSize(0, 0))
+            dirBlock.addValue("tileSize", QString::fromLatin1("%1,%2")
+                              .arg(tpd.mCustomTileSize.width())
+                              .arg(tpd.mCustomTileSize.height()));
         settingsBlock.blocks += dirBlock;
     }
 
