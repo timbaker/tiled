@@ -257,6 +257,9 @@ class LuaMap @ Map
     void reloadBlends();
 
     bool write(const char *path);
+
+    int cellX();
+    int cellY();
 };
 
 class LuaTileTool @ TileTool
@@ -278,4 +281,10 @@ class LuaTileTool @ TileTool
     void clearDistanceIndicators();
     void indicateDistance(int x1, int y1, int x2, int y2);
     bool dragged();
+};
+
+class LuaPerlin @ Perlin
+{
+    LuaPerlin();
+    double perlin(double x, double y, double z);
 };

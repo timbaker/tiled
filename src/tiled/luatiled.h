@@ -312,6 +312,7 @@ public:
     };
 
     LuaMap(Map *orig);
+    LuaMap(Map *orig, int cellX, int cellY);
     LuaMap(Orientation orient, int width, int height, int tileWidth, int tileHeight);
     ~LuaMap();
 
@@ -372,6 +373,9 @@ public:
 
     bool write(const char *path);
 
+    int cellX() { return mCellX; }
+    int cellY() { return mCellY; }
+
     Map *mClone;
     Map *mOrig;
     QMap<QString,Tileset*> mTilesetByName;
@@ -395,12 +399,16 @@ public:
 
     bool mRulesChanged;
     bool mBlendsChanged;
+
+    int mCellX;
+    int mCellY;
 };
 
 class LuaScript
 {
 public:
     LuaScript(Map *map);
+    LuaScript(Map *map, int cellX, int cellY);
     ~LuaScript();
 
     lua_State *init();
@@ -408,6 +416,21 @@ public:
 
     lua_State *L;
     LuaMap mMap;
+};
+
+class LuaPerlin
+{
+public:
+    int repeat;
+    static const int permutation[];
+    int *p;
+
+    LuaPerlin();
+    double perlin(double x, double y, double z);
+    int inc(int num);
+    double grad(int hash, double x, double y, double z);
+    double fade(double t);
+    double lerp(double a, double b, double x);
 };
 
 extern LuaColor Lua_rgb(int r, int g, int b);

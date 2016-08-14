@@ -110,6 +110,8 @@
 #include "worldeddock.h"
 #include "worldlottool.h"
 
+#include "worlded/world.h"
+#include "worlded/worldcell.h"
 #include "worlded/worldedmgr.h"
 
 #include <QDebug>
@@ -2458,7 +2460,13 @@ bool MainWindow::LuaScript(MapDocument *doc, const QString &filePath)
 
     LuaConsole::instance()->setFile(f);
 
-    Lua::LuaScript scripter(doc->map());
+    int cellX = -1, cellY = -1;
+    if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(doc->fileName())) {
+        const GenerateLotsSettings &settings = cell->world()->getGenerateLotsSettings();
+        cellX = settings.worldOrigin.x() + cell->x();
+        cellY = settings.worldOrigin.y() + cell->y();
+    }
+    Lua::LuaScript scripter(doc->map(), cellX, cellY);
     scripter.mMap.mSelection = doc->tileSelection();
     QString output;
     bool ok = scripter.dofile(f, output);
