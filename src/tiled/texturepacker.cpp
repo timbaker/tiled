@@ -55,7 +55,10 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
     mImageTileSize.clear();
 
     foreach (TexturePackSettings::Directory tpd, settings.mInputImageDirectories) {
-        if (!FindImages(tpd.mPath, tpd.mImagesAreTilesheets, tpd.mCustomTileSize))
+        QSize tileSize = tpd.mCustomTileSize;
+        if (tileSize == QSize(0,0))
+            tileSize = QSize(64*2, 128*2);
+        if (!FindImages(tpd.mPath, tpd.mImagesAreTilesheets, tileSize))
             return false;
     }
 
