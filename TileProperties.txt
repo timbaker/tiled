@@ -5,6 +5,15 @@ property
     ShortName = FlatTextureOverride
     Default =
 }
+
+property
+{
+    Type = String
+    Name = BurntTile
+    ShortName = BurntTile
+    Default =
+}
+
 property
 {
     Type = Integer
@@ -251,6 +260,15 @@ property
     Name = ContainerType
     ShortName = container
     Default =
+}
+property
+{
+    Type = Integer
+    Name = ContainerCapacity
+    ShortName = 
+    Min = 0
+    Max = 100
+    Default = 0
 }
 property
 {
