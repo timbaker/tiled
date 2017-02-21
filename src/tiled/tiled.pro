@@ -4,9 +4,12 @@ include(../qtsingleapplication/qtsingleapplication.pri)
 include(../qtlockedfile/qtlockedfile.pri)
 include(../worlded/worlded.pri)
 
-QMAKE_CFLAGS_RELEASE += -Zi
-QMAKE_CXXFLAGS_RELEASE += -Zi
-QMAKE_LFLAGS_RELEASE += /DEBUG /OPT:REF
+# MSVC
+win32 {
+    QMAKE_CFLAGS_RELEASE += -Zi
+    QMAKE_CXXFLAGS_RELEASE += -Zi
+    QMAKE_LFLAGS_RELEASE += /DEBUG /OPT:REF
+}
 
 TEMPLATE = app
 TARGET = TileZed

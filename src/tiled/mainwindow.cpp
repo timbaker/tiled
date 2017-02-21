@@ -1767,7 +1767,7 @@ void MainWindow::launchWorldEd()
 #elif defined(Q_OS_MAC)
     path += QLatin1String("/../WorldEd/PZWorldEd"); // FIXME: .app ?
 #else
-    path += QLatin1String("/../WorldEd/PZWorldEd");
+    path += QLatin1String("/../../WorldEd/PZWorldEd.sh");
 #endif
     path = QDir::cleanPath(path);
     path = QDir::toNativeSeparators(path);

@@ -758,7 +758,7 @@ void LuaMap::replaceTilesByName(const char *names)
         tiles += tileFrom;
         tiles += tileTo;
     }
-
+{
     bool replaced = false;
     for (int layerIndex = 0; layerIndex < layerCount(); layerIndex++) {
         LuaLayer *layer = layerAt(layerIndex);
@@ -779,7 +779,7 @@ void LuaMap::replaceTilesByName(const char *names)
         }
     }
     return;
-
+}
 errorExit:
     qDeleteAll(addTilesets);
 }
