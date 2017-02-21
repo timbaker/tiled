@@ -1803,6 +1803,28 @@ void RoofTool::deactivate()
     BaseTool::deactivate();
     if (mCursorItem)
         mEditor->removeItem(mCursorItem);
+
+    if (mMouseOverHandle) {
+        mHandleItem->setHighlight(false);
+        mMouseOverHandle = false;
+    }
+    mHandleObject = 0;
+    if (mObjectItem) {
+        mObjectItem->setShowHandles(false);
+        mObjectItem->setZValue(mObjectItem->object()->index());
+        mObjectItem = 0;
+    }
+
+    if (mMode == Create) {
+        delete mObject;
+        mObject = 0;
+        delete mItem;
+        mItem = 0;
+        mMode = NoMode;
+        mEditor->setCursorObject(0);
+    }
+
+    mMode = NoMode;
 }
 
 void RoofTool::objectAboutToBeRemoved(BuildingObject *object)
@@ -2188,6 +2210,13 @@ void SelectMoveObjectTool::deactivate()
     BaseTool::deactivate();
 }
 
+void SelectMoveObjectTool::objectAboutToBeRemoved(BuildingObject *object)
+{
+    if (mMovingObjects.contains(object)) {
+        mMovingObjects.remove(object);
+    }
+}
+
 void SelectMoveObjectTool::updateSelection(const QPointF &pos,
                                            Qt::KeyboardModifiers modifiers)
 {
@@ -2307,6 +2336,10 @@ void SelectMoveObjectTool::finishMoving(const QPointF &pos)
         undoStack->push(new SetSelectedObjects(mEditor->document(), clones));
         undoStack->endMacro();
     } else {
+        // Handle 'delete' while moving
+        if (mMovingObjects.isEmpty())
+            return;
+
         undoStack->beginMacro(tr("Move %n Object(s)", "", mMovingObjects.size()));
         foreach (BuildingObject *object, mMovingObjects) {
             if (!object->isValidPos(mDragOffset))

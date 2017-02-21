@@ -526,6 +526,8 @@ public slots:
     void activate();
     void deactivate();
 
+    void objectAboutToBeRemoved(BuildingObject *object);
+
 private:
     enum Mode {
         NoMode,
