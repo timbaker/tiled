@@ -43,14 +43,24 @@ public:
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void hoverEnterEvent(QGraphicsSceneHoverEvent *);
+    void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *);
+
+    const QString &filePath()
+    { return mFilePath; }
+
+    void allowRemove();
 
 signals:
     void clicked();
     void hovered(bool hover);
+    void clickedRemove();
 
 private:
+    QString mFilePath;
     QRectF mBoundingRect;
+    QGraphicsItem *mRemoveItem;
+    QGraphicsItem *mRemoveBGItem;
 };
 }
 
@@ -77,7 +87,11 @@ public slots:
 
     void setRecentFiles();
     void linkClicked();
+    void linkClickedRemove();
     void linkHovered(bool hover);
+
+private:
+    void setAutoSaveFiles();
 
 private:
     Ui::WelcomeMode *ui;
@@ -88,6 +102,7 @@ private:
     WelcomeModeNS::LinkItem *mNewItem;
     WelcomeModeNS::LinkItem *mOpenItem;
     QList<WelcomeModeNS::LinkItem*> mRecentItems;
+    QList<WelcomeModeNS::LinkItem*> mAutoSaveItems;
 };
 
 } // namespace BuildingEditor

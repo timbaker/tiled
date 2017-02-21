@@ -160,6 +160,7 @@ public:
     void closeEvent(QCloseEvent *event);
 
     bool openFile(const QString &fileName);
+    bool openAutoSave(const QString &fileName);
 
     bool confirmAllSave();
     bool closeYerself();

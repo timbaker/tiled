@@ -31,9 +31,11 @@
 #include <QFileDialog>
 #include <QFileSystemModel>
 #include <QGraphicsScene>
+#include <QGraphicsSceneMouseEvent>
 #include <QGraphicsTextItem>
 #include <QHeaderView>
 #include <QLabel>
+#include <QMessageBox>
 
 using namespace BuildingEditor;
 
@@ -45,7 +47,8 @@ static QRectF sceneRectOfItem(QGraphicsItem *item)
 namespace WelcomeModeNS {
 
 LinkItem::LinkItem(const QString &text1, const QString &text2, QGraphicsItem *parent) :
-    QGraphicsItem(parent)
+    QGraphicsItem(parent),
+    mRemoveItem(0)
 {
     QGraphicsRectItem *bg = new QGraphicsRectItem(this);
     bg->setBrush(QColor(QLatin1String("#f3f3f3")));
@@ -65,6 +68,7 @@ LinkItem::LinkItem(const QString &text1, const QString &text2, QGraphicsItem *pa
         item2->setDefaultTextColor(QColor("#6b6b6b"));
         item2->setPos(0, item1->boundingRect().height());
 
+        mFilePath = text2;
         mBoundingRect |= sceneRectOfItem(item2);
     }
 
@@ -88,20 +92,57 @@ void LinkItem::paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *)
 
 void LinkItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    Q_UNUSED(event)
+//    Q_UNUSED(event)
+    if (mRemoveItem != 0 && event->pos().x() > mBoundingRect.right() - 32) {
+        emit clickedRemove();
+        return;
+    }
     emit clicked();
 }
 
 void LinkItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
 {
     childItems().first()->setVisible(true);
+    if (mRemoveItem != 0)
+        mRemoveItem->setVisible(true);
     emit hovered(true);
+}
+
+void LinkItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
+{
+    if (mRemoveItem != 0) {
+        if (event->pos().x() > mBoundingRect.right() - 32) {
+            mRemoveBGItem->setVisible(true);
+        } else {
+            mRemoveBGItem->setVisible(false);
+        }
+    }
 }
 
 void LinkItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *)
 {
     childItems().first()->setVisible(false);
+    if (mRemoveItem != 0) {
+        mRemoveBGItem->setVisible(false);
+        mRemoveItem->setVisible(false);
+    }
     emit hovered(false);
+}
+
+void LinkItem::allowRemove()
+{
+    QGraphicsRectItem *bg = new QGraphicsRectItem(this);
+    bg->setBrush(QColor(QLatin1String("#e0e0e0")));
+    bg->setPen(Qt::NoPen);
+    bg->setRect(mBoundingRect.adjusted(mBoundingRect.right() - 32, 0, 0, 0));
+    bg->setVisible(false);
+    mRemoveBGItem = bg;
+
+    QGraphicsPixmapItem *item = new QGraphicsPixmapItem(QPixmap(QLatin1String(":/images/16x16/edit-delete.png")), this);
+    item->setX(mBoundingRect.right() - item->boundingRect().width() - 8);
+    item->setY((mBoundingRect.height() - item->boundingRect().height()) / 2);
+    item->setVisible(false);
+    mRemoveItem = item;
 }
 
 }
@@ -161,6 +202,12 @@ WelcomeMode::WelcomeMode(QObject *parent) :
     setRecentFiles();
 
     scene->setSceneRect(0, 0, 400, 600);
+
+    setAutoSaveFiles();
+    if (!mAutoSaveItems.isEmpty()) {
+        QGraphicsTextItem *item2 = scene->addText(tr("Restore Autosave"), QFont(QLatin1String("Helvetica"), 16, 1));
+        item2->setPos(400 + 48, sceneRectOfItem(item).y());
+    }
 
     {
         QDirModel *model = new QDirModel(this);
@@ -339,6 +386,8 @@ void WelcomeMode::setRecentFiles()
     QRectF sceneRect(0, 0, 400, 300);
     if (mRecentItems.size())
         sceneRect |= sceneRectOfItem(mRecentItems.last());
+    if (mAutoSaveItems.size())
+        sceneRect |= sceneRectOfItem(mAutoSaveItems.last());
     ui->graphicsView->setSceneRect(sceneRect);
 }
 
@@ -352,6 +401,26 @@ void WelcomeMode::linkClicked()
         QString fileName = BuildingEditorWindow::instance()->recentFiles().at(index);
         BuildingEditorWindow::instance()->openFile(fileName);
     }
+    index = mAutoSaveItems.indexOf(link);
+    if (index >= 0) {
+        BuildingEditorWindow::instance()->openAutoSave(link->filePath());
+    }
+}
+
+void WelcomeMode::linkClickedRemove()
+{
+    WelcomeModeNS::LinkItem *link = static_cast<WelcomeModeNS::LinkItem *>(sender());
+    QFileInfo fileInfo(link->filePath());
+    if (fileInfo.exists()) {
+        if (QMessageBox::question(BuildingEditorWindow::instance(), tr("Remove Autosave File"),
+                                  tr("Remove this file from your computer?\n%1").arg(link->filePath()),
+                                  QMessageBox::Yes, QMessageBox::No) != QMessageBox::Yes)
+            return;
+        if (QFile::remove(link->filePath()) == false)
+            QMessageBox::warning(BuildingEditorWindow::instance(), tr("Remove File Failed"),
+                                 tr("Something went wrong trying to remove this file:\n%1").arg(link->filePath()));
+    }
+    setAutoSaveFiles();
 }
 
 void WelcomeMode::linkHovered(bool hover)
@@ -372,8 +441,56 @@ void WelcomeMode::linkHovered(bool hover)
                 ui->label->setPixmap(QPixmap());
             mPreviewMapImage = mapImage;
         }
+        index = mAutoSaveItems.indexOf(link);
+        if (index >= 0) {
+            MapImage *mapImage = MapImageManager::instance()->getMapImage(link->filePath());
+            if (mapImage) {
+                if (mapImage->isLoaded()) {
+                    QImage image = mapImage->image().scaled(ui->label->width(), ui->label->height(), Qt::KeepAspectRatio,
+                                                            Qt::SmoothTransformation);
+                    ui->label->setPixmap(QPixmap::fromImage(image));
+                }
+            } else
+                ui->label->setPixmap(QPixmap());
+            mPreviewMapImage = mapImage;
+        }
     } else if (mPreviewMapImage) {
         ui->label->setPixmap(QPixmap());
         mPreviewMapImage = 0;
     }
+}
+
+void WelcomeMode::setAutoSaveFiles()
+{
+    qDeleteAll(mAutoSaveItems);
+    mAutoSaveItems.clear();
+
+    QString configPath = BuildingPreferences::instance()->configPath();
+    QDir configDir(configPath);
+    QStringList nameFilters;
+    nameFilters += QLatin1String("*.autosave");
+    QFileInfoList fileInfos = configDir.entryInfoList(nameFilters);
+    if (fileInfos.isEmpty())
+        return;
+
+    int x = 400 + 48;
+    int y = mRecentItemsY;
+    foreach (QFileInfo fileInfo, fileInfos) {
+        WelcomeModeNS::LinkItem *link = new WelcomeModeNS::LinkItem(fileInfo.fileName(), QDir::toNativeSeparators(fileInfo.filePath()));
+        link->allowRemove();
+        ui->graphicsView->scene()->addItem(link);
+        link->setPos(x + 6, y);
+        mAutoSaveItems += link;
+        connect(link, SIGNAL(clicked()), SLOT(linkClicked()));
+        connect(link, SIGNAL(clickedRemove()), SLOT(linkClickedRemove()));
+        connect(link, SIGNAL(hovered(bool)), SLOT(linkHovered(bool)));
+        y += link->boundingRect().height() + 12;
+    }
+
+    QRectF sceneRect(0, 0, 400, 300);
+    if (mRecentItems.size())
+        sceneRect |= sceneRectOfItem(mRecentItems.last());
+    if (mAutoSaveItems.size())
+        sceneRect |= sceneRectOfItem(mAutoSaveItems.last());
+    ui->graphicsView->setSceneRect(sceneRect);
 }

@@ -543,6 +543,18 @@ bool BuildingEditorWindow::openFile(const QString &fileName)
     return false;
 }
 
+bool BuildingEditorWindow::openAutoSave(const QString &fileName)
+{
+    QString error;
+    if (BuildingDocument *doc = BuildingDocument::read(fileName, error)) {
+        docman()->addDocument(doc);
+        return true;
+    }
+
+    QMessageBox::warning(this, tr("Error reading building"), error);
+    return false;
+}
+
 bool BuildingEditorWindow::confirmAllSave()
 {
     foreach (BuildingDocument *doc, docman()->documents()) {

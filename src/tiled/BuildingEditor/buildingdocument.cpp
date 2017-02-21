@@ -125,6 +125,8 @@ BuildingDocument *BuildingDocument::read(const QString &fileName, QString &error
         reader.fix(building);
         BuildingMap::loadNeededTilesets(building);
         BuildingDocument *doc = new BuildingDocument(building, fileName);
+        if (fileName.endsWith(QLatin1String(".autosave")))
+            doc->mFileName.clear();
         return doc;
     }
     error = reader.errorString();
