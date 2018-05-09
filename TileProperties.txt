@@ -1,11 +1,474 @@
 property
 {
+    Type = Integer
+    Name = Surface
+    ShortName = 
+    Min = 0
+    Max = 128
+    Default = 0
+}
+property
+{
+    Type = Boolean
+    Name = IsSurfaceOffset
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = IgnoreSurfaceSnap
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+
+separator
+{
+}
+
+property
+{
+    Type = Boolean
+    Name = IsMoveAble
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Enum
+    Name = MoveType
+    ShortName =
+    Enums
+    {
+        Normal = Object
+        WallObject = WallObject
+        WindowObject = WindowObject
+        Window = Window
+        FloorTile = FloorTile
+        FloorRug = FloorRug
+        Vegitation = Vegitation
+    }
+    Default = Normal
+    ValueAsPropertyName = false
+}
+property
+{
+    Type = Boolean
+    Name = WallObjectAllowDoorframe
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = String
+    Name = CustomName
+    ShortName =
+    Default = 
+}
+property
+{
+    Type = Enum
+    Name = PickUpTool
+    ShortName =
+    Enums
+    {
+        None =
+        Hammer = Hammer
+        Crowbar = Crowbar
+        Electrician = Electrician
+        Cutter = Cutter
+        Shovel = Shovel
+    }
+    Default = None
+    ValueAsPropertyName = false
+}
+property
+{
+    Type = Enum
+    Name = PlaceTool
+    ShortName =
+    Enums
+    {
+        None =
+        Hammer = Hammer
+        Crowbar = Crowbar
+        Electrician = Electrician
+        Cutter = Cutter
+        Shovel = Shovel
+    }
+    Default = None
+    ValueAsPropertyName = false
+}
+property
+{
+    Type = Integer
+    Name = PickUpLevel
+    ShortName =
+    Min = 0
+    Max = 5
+    Default = 0
+}
+property
+{
+    Type = Integer
+    Name = PickUpWeight
+    ShortName =
+    Min = 0
+    Max = 1000
+    Default = 0
+}
+property
+{
+    Type = Boolean
+    Name = CanBreak
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = IsClosedState
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = String
+    Name = GroupName
+    ShortName = 
+    Default =
+}
+property
+{
+    Type = Enum
+    Name = Facing
+    ShortName =
+    Enums
+    {
+        None = none
+        North = N
+        West = W
+        South = S
+        East = E
+    }
+    Default = None
+    ValueAsPropertyName = false
+}
+property
+{
+    Type = Enum
+    Name = SpriteGridPos
+    ShortName =
+    Enums
+    {
+        None =
+        0,0 = 0,0
+        0,1 = 0,1
+        0,2 = 0,2
+        0,3 = 0,3
+        1,0 = 1,0
+        1,1 = 1,1
+        1,2 = 1,2
+        1,3 = 1,3
+        2,0 = 2,0
+        2,1 = 2,1
+        2,2 = 2,2
+        2,3 = 2,3
+        3,0 = 3,0
+        3,1 = 3,1
+        3,2 = 3,2
+        3,3 = 3,3
+    }
+    Default = None
+    ValueAsPropertyName = false
+}
+property
+{
+    Type = Boolean
+    Name = ForceSingleItem
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = IsGridExtensionTile
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Enum
+    Name = IsoType
+    ShortName =
+    Enums
+    {
+        IsoObject = IsoObject
+        IsoBarbecue = IsoBarbecue
+        IsoFireplace = IsoFireplace
+        IsoRadio = IsoRadio
+        IsoJukebox = IsoJukebox
+        IsoStove = IsoStove
+        IsoTelevision = IsoTelevision
+        IsoMultiMedia = IsoMultiMedia
+    }
+    Default = IsoObject
+    ValueAsPropertyName = false
+}
+property
+{
+    Type = String
+    Name = Item (full name)
+    ShortName = CustomItem
+    Default =
+}
+separator
+{
+}
+property
+{
+    Type = Boolean
+    Name = BlocksPlacement
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = IsHigh (only occupies upper half)
+    ShortName = IsHigh
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = IsLow (only occupies lower half)
+    ShortName = IsLow
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = IsTable
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = IsTableTop
+    ShortName = 
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Enum
+    Name = signal
+    ShortName =
+    Enums
+    {
+        none = none
+        Radio Device = radio
+        Television Device = tv
+    }
+    Default = none
+    ValueAsPropertyName = false
+}
+property
+{
+    Type = Enum
+    Name = Material
+    ShortName =
+    Enums
+    {
+        Undefined = Undefined
+        AluminumScrap = AluminumScrap
+        Brick = Brick
+        Door = Door
+        Electric = Electric
+        Fabric = Fabric
+        Foam = Foam
+        Glass = Glass
+        Leather = Leather
+        Mechanical = Mechanical
+        MetalBars = MetalBars
+        MetalPlates = MetalPlates
+        MetalScrap = MetalScrap
+        Mirror = Mirror
+        Nails = Nails
+        Natural = Natural
+        Paper = Paper
+        Pipes = Pipes
+        Plastic = Plastic
+        PlasticBag = PlasticBag
+        PlasticHard = PlasticHard
+        Plumbing = Plumbing
+        Rubber = Rubber
+        Screws = Screws
+        Sink = Sink
+        Steel = Steel
+        Stone = Stone
+        Transmission = Transmission
+        WaterContainer = WaterContainer
+        Wood = Wood
+    }
+    Default = Undefined
+    ValueAsPropertyName = false
+}
+property
+{
+    Type = Enum
+    Name = Material2
+    ShortName =
+    Enums
+    {
+        Undefined = Undefined
+        AluminumScrap = AluminumScrap
+        Brick = Brick
+        Door = Door
+        Electric = Electric
+        Fabric = Fabric
+        Foam = Foam
+        Glass = Glass
+        Leather = Leather
+        Mechanical = Mechanical
+        MetalBars = MetalBars
+        MetalPlates = MetalPlates
+        MetalScrap = MetalScrap
+        Mirror = Mirror
+        Nails = Nails
+        Natural = Natural
+        Paper = Paper
+        Pipes = Pipes
+        Plastic = Plastic
+        PlasticBag = PlasticBag
+        PlasticHard = PlasticHard
+        Plumbing = Plumbing
+        Rubber = Rubber
+        Screws = Screws
+        Sink = Sink
+        Steel = Steel
+        Stone = Stone
+        Transmission = Transmission
+        WaterContainer = WaterContainer
+        Wood = Wood
+    }
+    Default = Undefined
+    ValueAsPropertyName = false
+}
+property
+{
+    Type = Enum
+    Name = Material3
+    ShortName =
+    Enums
+    {
+        Undefined = Undefined
+        AluminumScrap = AluminumScrap
+        Brick = Brick
+        Door = Door
+        Electric = Electric
+        Fabric = Fabric
+        Foam = Foam
+        Glass = Glass
+        Leather = Leather
+        Mechanical = Mechanical
+        MetalBars = MetalBars
+        MetalPlates = MetalPlates
+        MetalScrap = MetalScrap
+        Mirror = Mirror
+        Nails = Nails
+        Natural = Natural
+        Paper = Paper
+        Pipes = Pipes
+        Plastic = Plastic
+        PlasticBag = PlasticBag
+        PlasticHard = PlasticHard
+        Plumbing = Plumbing
+        Rubber = Rubber
+        Screws = Screws
+        Sink = Sink
+        Steel = Steel
+        Stone = Stone
+        Transmission = Transmission
+        WaterContainer = WaterContainer
+        Wood = Wood
+    }
+    Default = Undefined
+    ValueAsPropertyName = false
+}
+property
+{
+    Type = Boolean
+    Name = CanScrap
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = ScrapUseTool
+    ShortName =
+    Default = true
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = ScrapUseSkill
+    ShortName =
+    Default = true
+    ReverseLogic = false
+}
+property
+{
+    Type = Enum
+    Name = ScrapSize
+    ShortName =
+    Enums
+    {
+        Small = Small
+        Medium = Medium
+        Large = Large
+    }
+    Default = Medium
+    ValueAsPropertyName = false
+}
+property
+{
+    Type = Integer
+    Name = ScrapToolUseOverride
+    ShortName =
+    Min = -1
+    Max = 100
+    Default = -1
+}
+
+separator
+{
+}
+
+property
+{
     Type = String
     Name = FlatTextureOverride
     ShortName = FlatTextureOverride
     Default =
 }
-
 property
 {
     Type = String
@@ -13,7 +476,6 @@ property
     ShortName = BurntTile
     Default =
 }
-
 property
 {
     Type = Integer
@@ -53,6 +515,25 @@ property
 
 property
 {
+    Type = Boolean
+    Name = Disable Fade
+    ShortName = disableFade
+    Default = false
+    ReverseLogic = false
+}
+
+property
+{
+    Type = Boolean
+    Name = Force Fade
+    ShortName = forceFade
+    Default = false
+    ReverseLogic = false
+}
+
+
+property
+{
     Type = Integer
     Name = LightR
     ShortName = lightR
@@ -84,27 +565,20 @@ property
 property
 {
     Type = Boolean
+    Name = Streetlight
+    ShortName = streetlight
+    Default = false
+    ReverseLogic = false
+}
+
+property
+{
+    Type = Boolean
     Name = excludeFromIso
     Name = excludeFromIso
     ShortName = excludeFromIso
     Default = false
     ReverseLogic = false
-}
-property
-{
-    Type = Enum
-    Name = CanClimb
-    ShortName =
-    Enums
-    {
-        None =
-        North = climbSheetN
-        West = climbSheetW
-        NorthTop = climbSheetTopN
-        WestTop = climbSheetTopW
-    }
-    Default = None
-    ValueAsPropertyName = true
 }
 property
 {
@@ -318,22 +792,6 @@ separator
 }
 property
 {
-    Type = Boolean
-    Name = ClimbSheetN
-    ShortName = climbSheetN
-    Default = false
-    ReverseLogic = false
-}
-property
-{
-    Type = Boolean
-    Name = ClimbSheetW
-    ShortName = climbSheetW
-    Default = false
-    ReverseLogic = false
-}
-property
-{
     Type = Enum
     Name = ClimbSheet
     ShortName =
@@ -464,6 +922,14 @@ property
     Default = false
     ReverseLogic = false
 }
+property
+{
+    Type = Boolean
+    Name = attachedFloor
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
 separator
 {
 }
@@ -582,6 +1048,15 @@ property
     Default = false
     ReverseLogic = false
 }
+property
+{
+    Type = Boolean
+    Name = Other
+    ShortName = othe
+    Default = false
+    ReverseLogic = false
+}
+
 separator
 {
 }
@@ -651,129 +1126,7 @@ property
 separator
 {
 }
-property
-{
-    Type = Boolean
-    Name = IsMoveAble
-    ShortName = 
-    Default = false
-    ReverseLogic = false
-}
-property
-{
-    Type = Boolean
-    Name = IsSurfaceOffset
-    ShortName = 
-    Default = false
-    ReverseLogic = false
-}
-property
-{
-    Type = Integer
-    Name = Surface
-    ShortName = 
-    Min = 0
-    Max = 128
-    Default = 0
-}
-property
-{
-    Type = Integer
-    Name = PickUpWeight
-    ShortName = 
-    Min = 0
-    Max = 100
-    Default = 0
-}
-property
-{
-    Type = Boolean
-    Name = IsTable
-    ShortName = 
-    Default = false
-    ReverseLogic = false
-}
-property
-{
-    Type = Boolean
-    Name = IsTableTop
-    ShortName = 
-    Default = false
-    ReverseLogic = false
-}
-property
-{
-    Type = Boolean
-    Name = BlocksPlacement
-    ShortName = 
-    Default = false
-    ReverseLogic = false
-}
-property
-{
-    Type = String
-    Name = CustomName
-    ShortName = 
-    Default =
-}
-property
-{
-    Type = String
-    Name = GroupName
-    ShortName = 
-    Default =
-}
-property
-{
-    Type = String
-    Name = CustomItem
-    ShortName = 
-    Default =
-}
-property
-{
-    Type = Enum
-    Name = Facing
-    ShortName =
-    Enums
-    {
-        None =
-        West = W
-        North = N
-        East = E
-        South = S
-    }
-    Default = None
-    ValueAsPropertyName = false
-}
-property
-{
-    Type = String
-    Name = IsoType
-    ShortName = 
-    Default =
-}
-property
-{
-    Type = String
-    Name = MoveType
-    ShortName = 
-    Default =
-}
-property
-{
-    Type = String
-    Name = Material
-    ShortName = 
-    Default =
-}
-property
-{
-    Type = String
-    Name = signal
-    ShortName = 
-    Default =
-}
+
 property
 {
     Type = Integer
@@ -799,51 +1152,5 @@ property
     Default = false
     ReverseLogic = false
 }
-property
-{
-    Type = Boolean
-    Name = CanBreak
-    ShortName = 
-    Default = false
-    ReverseLogic = false
-}
-property
-{
-    Type = Boolean
-    Name = IsLow
-    ShortName = 
-    Default = false
-    ReverseLogic = false
-}
-property
-{
-    Type = Boolean
-    Name = IsHigh
-    ShortName = 
-    Default = false
-    ReverseLogic = false
-}
-property
-{
-    Type = Integer
-    Name = PickUpLevel
-    ShortName = 
-    Min = 0
-    Max = 1000
-    Default = 0
-}
-property
-{
-    Type = String
-    Name = PickUpTool
-    ShortName = 
-    Default =
-}
-property
-{
-    Type = String
-    Name = PlaceTool
-    ShortName = 
-    Default =
-}
+
 
