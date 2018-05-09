@@ -87,6 +87,7 @@ private slots:
 
     void buildingTilePicked(const QString &tileName);
 
+    void filterEdited(const QString &text);
 private:
     Ui::BuildingTilesetDock *ui;
     BuildingDocument *mDocument;

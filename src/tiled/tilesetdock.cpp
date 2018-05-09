@@ -831,7 +831,8 @@ TilesetDock::TilesetDock(QWidget *parent):
     mZoomable(new Zoomable(this)),
     mZoomComboBox(new QComboBox(this)),
     mTilesetView(new TilesetView(mZoomable, this)),
-    mTilesetNamesView(new QListWidget(this))
+    mTilesetNamesView(new QListWidget(this)),
+    mFilter(new QLineEdit(this))
 {
     setObjectName(QLatin1String("TilesetDock"));
 
@@ -945,6 +946,10 @@ TilesetDock::TilesetDock(QWidget *parent):
     button = dynamic_cast<QToolButton*>(toolbar->widgetForAction(mActionTilesetDown));
     button->setAutoRepeat(true);
 
+    mFilter->setClearButtonEnabled(true);
+    connect(mFilter, &QLineEdit::textEdited, this, &TilesetDock::filterEdited);
+
+    tilesetNamesLayout->addWidget(mFilter);
     tilesetNamesLayout->addWidget(mTilesetNamesView);
     tilesetNamesLayout->addWidget(toolbar);
 
@@ -1433,6 +1438,46 @@ void TilesetDock::switchLayerForTile(Tile *tile)
     }
 }
 
+void TilesetDock::filterEdited(const QString &text)
+{
+    for (int row = 0; row < mTilesetNamesView->count(); row++) {
+        QListWidgetItem* item = mTilesetNamesView->item(row);
+        item->setHidden(text.trimmed().isEmpty() ? false : !item->text().contains(text));
+    }
+
+    QListWidgetItem* current = mTilesetNamesView->currentItem();
+    if (current != nullptr && current->isHidden()) {
+        // Select previous visible row.
+        int row = mTilesetNamesView->row(current) - 1;
+        while (row >= 0 && mTilesetNamesView->item(row)->isHidden())
+            row--;
+        if (row >= 0) {
+            current = mTilesetNamesView->item(row);
+            mTilesetNamesView->setCurrentItem(current);
+            mTilesetNamesView->scrollToItem(current);
+            return;
+        }
+
+        // Select next visible row.
+        row = mTilesetNamesView->row(current) + 1;
+        while (row < mTilesetNamesView->count() && mTilesetNamesView->item(row)->isHidden())
+            row++;
+        if (row < mTilesetNamesView->count()) {
+            current = mTilesetNamesView->item(row);
+            mTilesetNamesView->setCurrentItem(current);
+            mTilesetNamesView->scrollToItem(current);
+            return;
+        }
+
+        // All items hidden
+        mTilesetNamesView->setCurrentItem(nullptr);
+    }
+
+    current = mTilesetNamesView->currentItem();
+    if (current != nullptr)
+        mTilesetNamesView->scrollToItem(current);
+}
+
 void TilesetDock::setTilesetNamesList()
 {
     mCurrentTileset = 0;
@@ -1464,6 +1509,8 @@ void TilesetDock::setTilesetNamesList()
         mTilesetNamesView->setFixedWidth(maxWidth + 16 +
             mTilesetNamesView->verticalScrollBar()->sizeHint().width());
     }
+
+    filterEdited(mFilter->text());
 }
 
 void TilesetDock::setTilesetList()

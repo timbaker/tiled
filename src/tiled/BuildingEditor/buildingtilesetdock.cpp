@@ -50,6 +50,8 @@ BuildingTilesetDock::BuildingTilesetDock(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    connect(ui->filter, &QLineEdit::textEdited, this, &BuildingTilesetDock::filterEdited);
+
     mIconTileLayer = QIcon(QLatin1String(":/images/16x16/layer-tile.png"));
     mIconTileLayerStop = QIcon(QLatin1String(":/images/16x16/layer-tile-stop.png"));
     mActionSwitchLayer->setCheckable(true);
@@ -147,6 +149,48 @@ void BuildingTilesetDock::retranslateUi()
     mActionSwitchLayer->setText(text);
 }
 
+void BuildingTilesetDock::filterEdited(const QString &text)
+{
+    QListWidget* listWidget = ui->tilesets;
+
+    for (int row = 0; row < listWidget->count(); row++) {
+        QListWidgetItem* item = listWidget->item(row);
+        item->setHidden(text.trimmed().isEmpty() ? false : !item->text().contains(text));
+    }
+
+    QListWidgetItem* current = listWidget->currentItem();
+    if (current != nullptr && current->isHidden()) {
+        // Select previous visible row.
+        int row = listWidget->row(current) - 1;
+        while (row >= 0 && listWidget->item(row)->isHidden())
+            row--;
+        if (row >= 0) {
+            current = listWidget->item(row);
+            listWidget->setCurrentItem(current);
+            listWidget->scrollToItem(current);
+            return;
+        }
+
+        // Select next visible row.
+        row = listWidget->row(current) + 1;
+        while (row < listWidget->count() && listWidget->item(row)->isHidden())
+            row++;
+        if (row < listWidget->count()) {
+            current = listWidget->item(row);
+            listWidget->setCurrentItem(current);
+            listWidget->scrollToItem(current);
+            return;
+        }
+
+        // All items hidden
+        listWidget->setCurrentItem(nullptr);
+    }
+
+    current = listWidget->currentItem();
+    if (current != nullptr)
+        listWidget->scrollToItem(current);
+}
+
 void BuildingTilesetDock::setTilesetList()
 {
     ui->tilesets->clear();
@@ -163,6 +207,8 @@ void BuildingTilesetDock::setTilesetList()
     }
     int sbw = ui->tilesets->verticalScrollBar()->sizeHint().width();
     ui->tilesets->setFixedWidth(width + 16 + sbw);
+
+    filterEdited(ui->filter->text());
 }
 
 void BuildingTilesetDock::setTilesList()

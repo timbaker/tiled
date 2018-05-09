@@ -157,6 +157,7 @@ private:
 #else  // ZOMBOID
 
 #include <QDockWidget>
+#include <QLineEdit>
 #include <QMap>
 #include <QIcon>
 
@@ -264,6 +265,8 @@ private slots:
     void autoSwitchLayerChanged(bool enable);
     void switchLayerForTile(Tile *tile);
 
+    void filterEdited(const QString& text);
+
 private:
     void setTilesetNamesList();
     void setTilesetList();
@@ -303,6 +306,8 @@ private:
 
     TilesetView *mTilesetView;
     QListWidget *mTilesetNamesView;
+
+    QLineEdit* mFilter;
 };
 
 } // namespace Internal

@@ -1394,12 +1394,13 @@ void TileDefDialog::setPropertiesPage()
         }
         if (EnumTileDefProperty *p = prop->asEnum()) {
             if (QComboBox *w = mComboBoxes[p->mName]) {
-                int index = p->mEnums.indexOf(p->mDefault);
+                int indexDefault = p->mEnums.indexOf(p->mDefault);
+                int index = indexDefault;
                 if (defTile) {
                     index = p->mEnums.indexOf(defTile->getEnum(p->mName));
                 }
                 w->setCurrentIndex(index);
-                setBold(w, index != 0 /*p->mDefault*/);
+                setBold(w, index != indexDefault);
             }
             continue;
         }
