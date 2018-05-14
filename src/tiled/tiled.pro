@@ -261,7 +261,8 @@ SOURCES += aboutdialog.cpp \
     tiledefcompare.cpp \
     checkbuildingswindow.cpp \
     checkmapswindow.cpp \
-    rearrangetiles.cpp
+    rearrangetiles.cpp \
+    BuildingEditor/roofhiding.cpp
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
@@ -476,7 +477,8 @@ HEADERS += aboutdialog.h \
     tiledefcompare.h \
     checkbuildingswindow.h \
     checkmapswindow.h \
-    rearrangetiles.h
+    rearrangetiles.h \
+    BuildingEditor/roofhiding.h
 
 macx {
     OBJECTIVE_SOURCES += macsupport.mm
