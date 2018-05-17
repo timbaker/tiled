@@ -635,6 +635,15 @@ property
     Default = false
     ReverseLogic = false
 }
+property
+{
+    Type = Integer
+    Name = DoubleDoor
+    ShortName = 
+    Min = 0
+    Max = 8
+    Default = 0
+}
 separator
 {
 }
