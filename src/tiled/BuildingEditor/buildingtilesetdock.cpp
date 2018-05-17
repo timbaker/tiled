@@ -207,6 +207,7 @@ void BuildingTilesetDock::setTilesetList()
     }
     int sbw = ui->tilesets->verticalScrollBar()->sizeHint().width();
     ui->tilesets->setFixedWidth(width + 16 + sbw);
+    ui->filter->setFixedWidth(ui->tilesets->width());
 
     filterEdited(ui->filter->text());
 }

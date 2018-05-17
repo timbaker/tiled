@@ -1508,6 +1508,7 @@ void TilesetDock::setTilesetNamesList()
         }
         mTilesetNamesView->setFixedWidth(maxWidth + 16 +
             mTilesetNamesView->verticalScrollBar()->sizeHint().width());
+        mFilter->setFixedWidth(mTilesetNamesView->width());
     }
 
     filterEdited(mFilter->text());
