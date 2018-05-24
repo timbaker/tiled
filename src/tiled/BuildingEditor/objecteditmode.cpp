@@ -81,7 +81,7 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
 
     mRoomComboBox = new QComboBox;
     mRoomComboBox->setIconSize(QSize(20, 20));
-    mRoomComboBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+//    mRoomComboBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);
 
     addWidget(mRoomComboBox);
     addAction(actions->actionRooms);
@@ -234,6 +234,10 @@ void ObjectEditModeToolBar::updateRoomComboBox()
     // currently-selected tool.
     mRoomComboBox->blockSignals(true);
     mRoomComboBox->clear();
+
+    int scrollBarWidth = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+    int minWidth = 0;
+
     if (mCurrentDocument) {
         int index = 0;
         foreach (Room *room, currentBuilding()->rooms()) {
@@ -244,6 +248,8 @@ void ObjectEditModeToolBar::updateRoomComboBox()
             mRoomComboBox->addItem(room->Name);
             mRoomComboBox->setItemIcon(index, QPixmap::fromImage(image));
             index++;
+
+            minWidth = qMax(minWidth, 20 + mRoomComboBox->view()->fontMetrics().width(room->Name) + scrollBarWidth + 20);
         }
 
         index = currentBuilding()->indexOf(currentRoom);
@@ -253,6 +259,8 @@ void ObjectEditModeToolBar::updateRoomComboBox()
             roomIndexChanged(mRoomComboBox->currentIndex());
     }
     mRoomComboBox->blockSignals(false);
+
+    mRoomComboBox->setMinimumWidth(minWidth);
 }
 
 void ObjectEditModeToolBar::roomIndexChanged(int index)

@@ -19,8 +19,8 @@
 #define BUILDINGTEMPLATES_H
 
 #include <QList>
-#include <QObject>
 #include <QMap>
+#include <QObject>
 #include <QPair>
 #include <QString>
 #include <QStringList>
