@@ -334,7 +334,11 @@ void TilesetView::contextMenuEvent(QContextMenuEvent *event)
     const TilesetModel *m = tilesetModel();
     Tile *tile = m->tileAt(index);
 
+#ifdef ZOMBOID
+    const bool isExternal = (m->tileset() != nullptr) && m->tileset()->isExternal();
+#else
     const bool isExternal = m->tileset()->isExternal();
+#endif
     QMenu menu;
 
     QIcon propIcon(QLatin1String(":images/16x16/document-properties.png"));
