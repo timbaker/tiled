@@ -947,6 +947,7 @@ TilesetDock::TilesetDock(QWidget *parent):
     button->setAutoRepeat(true);
 
     mFilter->setClearButtonEnabled(true);
+    mFilter->setEnabled(false);
     connect(mFilter, &QLineEdit::textEdited, this, &TilesetDock::filterEdited);
 
     tilesetNamesLayout->addWidget(mFilter);
@@ -1484,6 +1485,7 @@ void TilesetDock::setTilesetNamesList()
     mTilesets.clear();
     mTilesetByName.clear();
     mTilesetNamesView->clear();
+    mFilter->setEnabled(false);
 
     if (mMapDocument && mMapDocument->map()->tilesets().size()) {
         if (Preferences::instance()->sortTilesets()) {
@@ -1509,6 +1511,7 @@ void TilesetDock::setTilesetNamesList()
         mTilesetNamesView->setFixedWidth(maxWidth + 16 +
             mTilesetNamesView->verticalScrollBar()->sizeHint().width());
         mFilter->setFixedWidth(mTilesetNamesView->width());
+        mFilter->setEnabled(true);
     }
 
     filterEdited(mFilter->text());
