@@ -17,8 +17,6 @@
 
 #include "roofhiding.h"
 
-#include <QString>
-
 using namespace BuildingEditor;
 
 bool RoofHiding::isEmptyOutside(const QString &roomName)

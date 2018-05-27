@@ -18,7 +18,7 @@
 #ifndef ROOFHIDING_H
 #define ROOFHIDING_H
 
-class QString;
+#include <QString>
 
 namespace BuildingEditor {
 

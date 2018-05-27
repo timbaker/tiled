@@ -193,8 +193,9 @@ void BuildingFloorsDialog::redoTextChanged(const QString &text)
 void BuildingFloorsDialog::updateUI()
 {
     int row = ui->floors->currentRow();
+    ui->actionAdd->setEnabled(ui->floors->count() < MAX_BUILDING_FLOORS);
     ui->actionRemove->setEnabled((row != -1) && (ui->floors->count() > 1));
-    ui->actionDuplicate->setEnabled(row != -1);
+    ui->actionDuplicate->setEnabled(row != -1 && (ui->floors->count() < MAX_BUILDING_FLOORS));
     ui->actionMoveUp->setEnabled(row > 0);
     ui->actionMoveDown->setEnabled(row != -1 && row < ui->floors->count() - 1);
 

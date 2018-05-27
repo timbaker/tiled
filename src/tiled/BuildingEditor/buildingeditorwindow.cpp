@@ -2047,10 +2047,9 @@ void BuildingEditorWindow::updateActions()
     ui->actionRotateRight->setEnabled(hasDoc);
     ui->actionRotateLeft->setEnabled(hasDoc);
 
-    ui->actionInsertFloorAbove->setEnabled(hasDoc);
-    ui->actionInsertFloorBelow->setEnabled(hasDoc);
-    ui->actionRemoveFloor->setEnabled(hasDoc &&
-                                      mCurrentDocument->building()->floorCount() > 1);
+    ui->actionInsertFloorAbove->setEnabled(hasDoc && currentBuilding()->floorCount() < MAX_BUILDING_FLOORS);
+    ui->actionInsertFloorBelow->setEnabled(hasDoc && currentBuilding()->floorCount() < MAX_BUILDING_FLOORS);
+    ui->actionRemoveFloor->setEnabled(hasDoc && currentBuilding()->floorCount() > 1);
     ui->actionFloors->setEnabled(hasDoc);
 
     bool hasTileSel = hasDoc && !objectMode && !mCurrentDocument->tileSelection().isEmpty();

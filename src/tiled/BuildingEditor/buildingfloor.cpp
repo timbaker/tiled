@@ -2354,7 +2354,7 @@ struct GrimeProperties
 {
     bool West;
     bool North;
-    bool SouthEast; // TODO
+    bool SouthEast;
     bool FullWindow;
     bool Trim;
     bool DoubleLeft;
