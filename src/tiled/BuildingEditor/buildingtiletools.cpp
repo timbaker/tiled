@@ -77,7 +77,7 @@ void DrawTileToolCursor::setTileRegion(const QRegion &tileRgn)
         QRectF bounds = polygon.boundingRect();
 
         // Add tile bounds and pen width to the shape.
-        bounds.adjust(-4, -(128-32), 5, 5);
+        bounds.adjust(-4, -(128-32)*2, 5, 5);
 
         if (bounds != mBoundingRect) {
             // NOTE-SCENE-CORRUPTION

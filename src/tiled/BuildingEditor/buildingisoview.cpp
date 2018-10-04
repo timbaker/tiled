@@ -560,7 +560,7 @@ void BuildingIsoScene::setToolTiles(const FloorTileGrid *tiles,
     mLayerGroupWithToolTiles = layerGroup;
 
     QRectF r = mBuildingMap->mapRenderer()->boundingRect(tiles->bounds().translated(pos), currentLevel())
-            .adjusted(0, -(128-32), 0, 0); // use mMap->drawMargins()
+            .adjusted(0, -(128-32)*2, 0, 0); // use mMap->drawMargins()
     update(r);
 }
 
@@ -1166,7 +1166,7 @@ void BuildingIsoScene::layersUpdated(int level, const QRegion &rgn)
             }
         }
         foreach (QRect r, rgn.rects())
-            item->update(mapRenderer()->boundingRect(r, level).adjusted(0,-(128-32),0,0));
+            item->update(mapRenderer()->boundingRect(r, level).adjusted(0,-(128-32)*2,0,0));
     }
 }
 
