@@ -201,6 +201,14 @@ TileEntry
     NorthWindow = overlay_grime_wall_01_009
     WestDoor = overlay_grime_wall_01_010
     NorthDoor = overlay_grime_wall_01_011
+    WestTrim = 
+    NorthTrim = 
+    NorthWestTrim = 
+    SouthEastTrim = 
+    WestDoubleLeft = 
+    WestDoubleRight = 
+    NorthDoubleLeft = 
+    NorthDoubleRight = 
 }
 TileEntry
 {
@@ -421,6 +429,14 @@ TileEntry
     CapGapE1 = 
     CapGapE2 = 
     CapGapE3 = location_barn_01_000
+    CapShallowRiseS1 = 
+    CapShallowRiseS2 = 
+    CapShallowFallS1 = 
+    CapShallowFallS2 = 
+    CapShallowRiseE1 = 
+    CapShallowRiseE2 = 
+    CapShallowFallE1 = 
+    CapShallowFallE2 = 
 }
 TileEntry
 {
@@ -437,12 +453,26 @@ TileEntry
     SlopeOnePt5E = roofs_01_014
     SlopeTwoPt5S = roofs_01_015
     SlopeTwoPt5E = roofs_01_014
+    ShallowSlopeW1 = 
+    ShallowSlopeW2 = 
+    ShallowSlopeE1 = 
+    ShallowSlopeE2 = 
+    ShallowSlopeN1 = 
+    ShallowSlopeN2 = 
+    ShallowSlopeS1 = 
+    ShallowSlopeS2 = 
     Inner1 = roofs_01_011
     Inner2 = roofs_01_012
     Inner3 = roofs_01_013
     Outer1 = roofs_01_008
     Outer2 = roofs_01_009
     Outer3 = roofs_01_010
+    InnerPt5 = 
+    InnerOnePt5 = 
+    InnerTwoPt5 = 
+    OuterPt5 = 
+    OuterOnePt5 = 
+    OuterTwoPt5 = 
     CornerSW1 = 
     CornerSW2 = 
     CornerSW3 = 
@@ -898,10 +928,12 @@ Template
 {
     Name = Old Suburban
     ExteriorWall = 11
+    ExteriorWallTrim = 0
     Door = 3
     DoorFrame = 2
     Window = 48
     Curtains = 0
+    Shutters = 0
     Stairs = 47
     RoofCap = 0
     RoofSlope = 0
@@ -915,6 +947,7 @@ Template
         Color = 255 255 255
         InternalName = foyer
         InteriorWall = 28
+        InteriorWallTrim = 0
         Floor = 23
         GrimeFloor = 0
         GrimeWall = 0
@@ -925,6 +958,7 @@ Template
         Color = 200 200 200
         InternalName = hall
         InteriorWall = 28
+        InteriorWallTrim = 0
         Floor = 23
         GrimeFloor = 0
         GrimeWall = 0
@@ -935,6 +969,7 @@ Template
         Color = 255 0 0
         InternalName = livingroom
         InteriorWall = 28
+        InteriorWallTrim = 0
         Floor = 23
         GrimeFloor = 0
         GrimeWall = 0
@@ -945,6 +980,7 @@ Template
         Color = 255 0 128
         InternalName = diningroom
         InteriorWall = 28
+        InteriorWallTrim = 0
         Floor = 23
         GrimeFloor = 0
         GrimeWall = 0
@@ -955,6 +991,7 @@ Template
         Color = 255 128 0
         InternalName = bathroom
         InteriorWall = 28
+        InteriorWallTrim = 0
         Floor = 23
         GrimeFloor = 0
         GrimeWall = 0
@@ -965,6 +1002,7 @@ Template
         Color = 0 255 0
         InternalName = kitchen
         InteriorWall = 28
+        InteriorWallTrim = 0
         Floor = 23
         GrimeFloor = 0
         GrimeWall = 0
@@ -975,6 +1013,7 @@ Template
         Color = 0 0 255
         InternalName = bedroom
         InteriorWall = 27
+        InteriorWallTrim = 0
         Floor = 23
         GrimeFloor = 0
         GrimeWall = 0
@@ -985,6 +1024,7 @@ Template
         Color = 0 64 255
         InternalName = bedroom
         InteriorWall = 27
+        InteriorWallTrim = 0
         Floor = 23
         GrimeFloor = 0
         GrimeWall = 0
@@ -995,6 +1035,7 @@ Template
         Color = 0 128 255
         InternalName = bedroom
         InteriorWall = 27
+        InteriorWallTrim = 0
         Floor = 23
         GrimeFloor = 0
         GrimeWall = 0
@@ -1004,10 +1045,12 @@ Template
 {
     Name = Suburban 1
     ExteriorWall = 11
+    ExteriorWallTrim = 0
     Door = 3
     DoorFrame = 2
     Window = 48
     Curtains = 0
+    Shutters = 0
     Stairs = 47
     RoofCap = 0
     RoofSlope = 0
@@ -1021,6 +1064,7 @@ Template
         Color = 255 0 0
         InternalName = livingroom
         InteriorWall = 36
+        InteriorWallTrim = 0
         Floor = 22
         GrimeFloor = 0
         GrimeWall = 0
@@ -1031,6 +1075,7 @@ Template
         Color = 255 0 128
         InternalName = diningroom
         InteriorWall = 36
+        InteriorWallTrim = 0
         Floor = 22
         GrimeFloor = 0
         GrimeWall = 0
@@ -1041,6 +1086,7 @@ Template
         Color = 255 128 0
         InternalName = bathroom
         InteriorWall = 37
+        InteriorWallTrim = 0
         Floor = 17
         GrimeFloor = 0
         GrimeWall = 0
@@ -1051,6 +1097,7 @@ Template
         Color = 0 255 0
         InternalName = kitchen
         InteriorWall = 38
+        InteriorWallTrim = 0
         Floor = 17
         GrimeFloor = 0
         GrimeWall = 0
@@ -1061,6 +1108,7 @@ Template
         Color = 0 0 255
         InternalName = bedroom
         InteriorWall = 39
+        InteriorWallTrim = 0
         Floor = 13
         GrimeFloor = 0
         GrimeWall = 0
@@ -1071,6 +1119,7 @@ Template
         Color = 0 64 255
         InternalName = bedroom
         InteriorWall = 41
+        InteriorWallTrim = 0
         Floor = 13
         GrimeFloor = 0
         GrimeWall = 0
@@ -1081,6 +1130,7 @@ Template
         Color = 0 128 255
         InternalName = bedroom
         InteriorWall = 41
+        InteriorWallTrim = 0
         Floor = 13
         GrimeFloor = 0
         GrimeWall = 0
@@ -1090,10 +1140,12 @@ Template
 {
     Name = Suburban 2
     ExteriorWall = 10
+    ExteriorWallTrim = 0
     Door = 3
     DoorFrame = 2
     Window = 48
     Curtains = 0
+    Shutters = 0
     Stairs = 47
     RoofCap = 0
     RoofSlope = 0
@@ -1107,6 +1159,7 @@ Template
         Color = 255 255 255
         InternalName = hall
         InteriorWall = 42
+        InteriorWallTrim = 0
         Floor = 19
         GrimeFloor = 0
         GrimeWall = 0
@@ -1117,6 +1170,7 @@ Template
         Color = 200 200 200
         InternalName = hall
         InteriorWall = 42
+        InteriorWallTrim = 0
         Floor = 19
         GrimeFloor = 0
         GrimeWall = 0
@@ -1127,6 +1181,7 @@ Template
         Color = 255 0 0
         InternalName = livingroom
         InteriorWall = 42
+        InteriorWallTrim = 0
         Floor = 16
         GrimeFloor = 0
         GrimeWall = 0
@@ -1137,6 +1192,7 @@ Template
         Color = 255 0 128
         InternalName = diningroom
         InteriorWall = 42
+        InteriorWallTrim = 0
         Floor = 16
         GrimeFloor = 0
         GrimeWall = 0
@@ -1147,6 +1203,7 @@ Template
         Color = 255 128 0
         InternalName = bathroom
         InteriorWall = 41
+        InteriorWallTrim = 0
         Floor = 17
         GrimeFloor = 0
         GrimeWall = 0
@@ -1157,6 +1214,7 @@ Template
         Color = 0 255 0
         InternalName = kitchen
         InteriorWall = 38
+        InteriorWallTrim = 0
         Floor = 17
         GrimeFloor = 0
         GrimeWall = 0
@@ -1167,6 +1225,7 @@ Template
         Color = 0 0 255
         InternalName = bedroom
         InteriorWall = 40
+        InteriorWallTrim = 0
         Floor = 14
         GrimeFloor = 0
         GrimeWall = 0
@@ -1177,6 +1236,7 @@ Template
         Color = 0 64 255
         InternalName = bedroom
         InteriorWall = 42
+        InteriorWallTrim = 0
         Floor = 14
         GrimeFloor = 0
         GrimeWall = 0
@@ -1187,6 +1247,7 @@ Template
         Color = 0 128 255
         InternalName = bedroom
         InteriorWall = 42
+        InteriorWallTrim = 0
         Floor = 14
         GrimeFloor = 0
         GrimeWall = 0
@@ -1196,10 +1257,12 @@ Template
 {
     Name = Wooden Shack
     ExteriorWall = 12
+    ExteriorWallTrim = 0
     Door = 3
     DoorFrame = 2
     Window = 48
     Curtains = 0
+    Shutters = 0
     Stairs = 47
     RoofCap = 0
     RoofSlope = 0
@@ -1213,6 +1276,7 @@ Template
         Color = 255 255 255
         InternalName = hall
         InteriorWall = 36
+        InteriorWallTrim = 0
         Floor = 22
         GrimeFloor = 0
         GrimeWall = 0
@@ -1223,6 +1287,7 @@ Template
         Color = 200 200 200
         InternalName = hall
         InteriorWall = 36
+        InteriorWallTrim = 0
         Floor = 22
         GrimeFloor = 0
         GrimeWall = 0
@@ -1233,6 +1298,7 @@ Template
         Color = 255 0 0
         InternalName = livingroom
         InteriorWall = 34
+        InteriorWallTrim = 0
         Floor = 15
         GrimeFloor = 0
         GrimeWall = 0
@@ -1243,6 +1309,7 @@ Template
         Color = 255 0 128
         InternalName = diningroom
         InteriorWall = 34
+        InteriorWallTrim = 0
         Floor = 15
         GrimeFloor = 0
         GrimeWall = 0
@@ -1253,6 +1320,7 @@ Template
         Color = 255 128 0
         InternalName = bathroom
         InteriorWall = 34
+        InteriorWallTrim = 0
         Floor = 15
         GrimeFloor = 0
         GrimeWall = 0
@@ -1263,6 +1331,7 @@ Template
         Color = 0 255 0
         InternalName = kitchen
         InteriorWall = 34
+        InteriorWallTrim = 0
         Floor = 15
         GrimeFloor = 0
         GrimeWall = 0
@@ -1273,6 +1342,7 @@ Template
         Color = 0 0 255
         InternalName = bedroom
         InteriorWall = 34
+        InteriorWallTrim = 0
         Floor = 15
         GrimeFloor = 0
         GrimeWall = 0
@@ -1283,6 +1353,7 @@ Template
         Color = 0 64 255
         InternalName = bedroom
         InteriorWall = 34
+        InteriorWallTrim = 0
         Floor = 15
         GrimeFloor = 0
         GrimeWall = 0
@@ -1293,6 +1364,7 @@ Template
         Color = 0 128 255
         InternalName = bedroom
         InteriorWall = 34
+        InteriorWallTrim = 0
         Floor = 15
         GrimeFloor = 0
         GrimeWall = 0
@@ -1302,10 +1374,12 @@ Template
 {
     Name = Spiffo's
     ExteriorWall = 8
+    ExteriorWallTrim = 0
     Door = 6
     DoorFrame = 0
     Window = 48
     Curtains = 0
+    Shutters = 0
     Stairs = 47
     RoofCap = 43
     RoofSlope = 44
@@ -1319,6 +1393,7 @@ Template
         Color = 200 200 200
         InternalName = dining
         InteriorWall = 31
+        InteriorWallTrim = 0
         Floor = 24
         GrimeFloor = 0
         GrimeWall = 0
@@ -1329,6 +1404,7 @@ Template
         Color = 128 128 128
         InternalName = kitchen
         InteriorWall = 32
+        InteriorWallTrim = 0
         Floor = 20
         GrimeFloor = 0
         GrimeWall = 0
@@ -1339,6 +1415,7 @@ Template
         Color = 255 0 0
         InternalName = bathroom
         InteriorWall = 35
+        InteriorWallTrim = 0
         Floor = 21
         GrimeFloor = 0
         GrimeWall = 0
@@ -1349,6 +1426,7 @@ Template
         Color = 0 0 255
         InternalName = bathroom
         InteriorWall = 35
+        InteriorWallTrim = 0
         Floor = 21
         GrimeFloor = 0
         GrimeWall = 0
@@ -1359,6 +1437,7 @@ Template
         Color = 0 255 0
         InternalName = hall
         InteriorWall = 31
+        InteriorWallTrim = 0
         Floor = 24
         GrimeFloor = 0
         GrimeWall = 0
@@ -1368,10 +1447,12 @@ Template
 {
     Name = Seahorse
     ExteriorWall = 7
+    ExteriorWallTrim = 0
     Door = 5
     DoorFrame = 0
     Window = 48
     Curtains = 0
+    Shutters = 0
     Stairs = 47
     RoofCap = 43
     RoofSlope = 44
@@ -1385,6 +1466,7 @@ Template
         Color = 200 200 200
         InternalName = dining
         InteriorWall = 29
+        InteriorWallTrim = 0
         Floor = 22
         GrimeFloor = 0
         GrimeWall = 0
@@ -1395,6 +1477,7 @@ Template
         Color = 128 128 128
         InternalName = kitchen
         InteriorWall = 30
+        InteriorWallTrim = 0
         Floor = 18
         GrimeFloor = 0
         GrimeWall = 0
@@ -1405,6 +1488,7 @@ Template
         Color = 255 0 0
         InternalName = bathroom
         InteriorWall = 38
+        InteriorWallTrim = 0
         Floor = 20
         GrimeFloor = 0
         GrimeWall = 0
@@ -1415,6 +1499,7 @@ Template
         Color = 0 255 0
         InternalName = bathroom
         InteriorWall = 38
+        InteriorWallTrim = 0
         Floor = 20
         GrimeFloor = 0
         GrimeWall = 0
@@ -1425,6 +1510,7 @@ Template
         Color = 0 0 255
         InternalName = hall
         InteriorWall = 29
+        InteriorWallTrim = 0
         Floor = 22
         GrimeFloor = 0
         GrimeWall = 0
@@ -1434,10 +1520,12 @@ Template
 {
     Name = Trailer
     ExteriorWall = 9
+    ExteriorWallTrim = 0
     Door = 4
     DoorFrame = 0
     Window = 49
     Curtains = 1
+    Shutters = 0
     Stairs = 47
     RoofCap = 43
     RoofSlope = 44
@@ -1451,6 +1539,7 @@ Template
         Color = 200 200 200
         InternalName = livingroom
         InteriorWall = 33
+        InteriorWallTrim = 0
         Floor = 20
         GrimeFloor = 25
         GrimeWall = 26
@@ -1461,6 +1550,7 @@ Template
         Color = 128 128 128
         InternalName = bathroom
         InteriorWall = 33
+        InteriorWallTrim = 0
         Floor = 20
         GrimeFloor = 0
         GrimeWall = 0
@@ -1471,6 +1561,7 @@ Template
         Color = 255 0 0
         InternalName = bedroom
         InteriorWall = 33
+        InteriorWallTrim = 0
         Floor = 20
         GrimeFloor = 25
         GrimeWall = 26
