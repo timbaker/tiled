@@ -82,6 +82,7 @@ property
         Electrician = Electrician
         Cutter = Cutter
         Shovel = Shovel
+        Wrench = Wrench
     }
     Default = None
     ValueAsPropertyName = false
@@ -99,6 +100,7 @@ property
         Electrician = Electrician
         Cutter = Cutter
         Shovel = Shovel
+        Wrench = Wrench
     }
     Default = None
     ValueAsPropertyName = false
@@ -637,6 +639,14 @@ property
 }
 property
 {
+    Type = Boolean
+    Name = Force Locked
+    ShortName = forceLocked
+    Default = false
+    ReverseLogic = false
+}
+property
+{
     Type = Integer
     Name = DoubleDoor
     ShortName = 
@@ -657,6 +667,21 @@ property
 }
 property
 {
+    Type = Enum
+    Name = BedType
+    ShortName =
+    Enums
+    {
+        None =       
+        Good Bed = goodBed
+        Average Bed = averageBed
+        Bad Bed = badBed
+    }
+    Default = None
+    ValueAsPropertyName = false
+}
+property
+{
     Type = Boolean
     Name = FloorOverlay
     ShortName =
@@ -673,11 +698,41 @@ property
 }
 property
 {
+    Type = Enum
+    Name = FloorHeight
+    ShortName =
+    Enums
+    {
+        Flat =
+        OneThird =
+        TwoThirds =
+    }
+    Default = Flat
+    ValueAsPropertyName = false
+}
+property
+{
     Type = Boolean
     Name = IsIndoor
     ShortName = exterior
     Default = true
     ReverseLogic = false
+}
+property
+{
+    Type = Enum
+    Name = Curtain
+    ShortName =
+    Enums
+    {
+        None =
+        North = curtainN
+        West = curtainW
+        South = curtainS
+        East = curtainE
+    }
+    Default = None
+    ValueAsPropertyName = true
 }
 separator
 {
@@ -698,17 +753,12 @@ property
 }
 property
 {
-    Type = Enum
-    Name = LightPolyStyle
+    Type = Integer
+    Name = SpeedFactor
     ShortName =
-    Enums
-    {
-        None =
-        WallW =
-        WallN =
-    }
-    Default = None
-    ValueAsPropertyName = false
+    Min = 1
+    Max = 100
+    Default = 100
 }
 property
 {
@@ -866,6 +916,21 @@ property
     Default = None
     ValueAsPropertyName = true
     ExtraPropertyIfSet = wall
+}
+property
+{
+    Type = String
+    Name = PaintingType
+    ShortName =
+    Default = 
+}
+property
+{
+    Type = Boolean
+    Name = IsPaintable
+    ShortName =
+    Default = false
+    ReverseLogic = false
 }
 property
 {
@@ -1162,4 +1227,89 @@ property
     ReverseLogic = false
 }
 
+separator
+{
+}
 
+property
+{
+    Type = Boolean
+    Name = Can be hit by car
+    ShortName = HitByCar
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = Stop car (when hit)
+    ShortName = StopCar
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Integer
+    Name = Minimum Speed To Damage
+    ShortName = MinimumCarSpeedDmg
+    Min = 0
+    Max = 120
+    Default = 0
+}
+property
+{
+    Type = Integer
+    Name = Car Slow Factor
+    ShortName = CarSlowFactor
+    Min = 0
+    Max = 34
+    Default = 0
+}
+property
+{
+    Type = String
+    Name = Damaged Sprite (by car)
+    ShortName = DamagedSprite
+    Default = 
+}
+property
+{
+    Type = Enum
+    Name = PhysicsShape
+    ShortName =
+    Enums
+    {
+        None =
+        Solid = Solid
+        WallN = WallN
+        WallW = WallW
+        WallE = WallE
+        WallS = WallS
+        Tree = Tree
+        Floor = Floor
+    }
+    Default = None
+    ValueAsPropertyName = false
+}
+
+separator
+{
+}
+
+property
+{
+    Type = Boolean
+    Name = MoveWithWind
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Integer
+    Name = WindType
+    ShortName =
+    Min = 1
+    Max = 3
+    Default = 1
+}
