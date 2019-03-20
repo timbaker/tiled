@@ -307,7 +307,10 @@ property
         Leather = Leather
         Mechanical = Mechanical
         MetalBars = MetalBars
+        Fridge = Fridge
+        MetalPipe = MetalPipe
         MetalPlates = MetalPlates
+        SmallMetalPlates = SmallMetalPlates
         MetalScrap = MetalScrap
         Mirror = Mirror
         Nails = Nails
@@ -348,7 +351,10 @@ property
         Leather = Leather
         Mechanical = Mechanical
         MetalBars = MetalBars
+        Fridge = Fridge
+        MetalPipe = MetalPipe
         MetalPlates = MetalPlates
+        SmallMetalPlates = SmallMetalPlates
         MetalScrap = MetalScrap
         Mirror = Mirror
         Nails = Nails
@@ -389,7 +395,10 @@ property
         Leather = Leather
         Mechanical = Mechanical
         MetalBars = MetalBars
+        Fridge = Fridge
+        MetalPipe = MetalPipe
         MetalPlates = MetalPlates
+        SmallMetalPlates = SmallMetalPlates
         MetalScrap = MetalScrap
         Mirror = Mirror
         Nails = Nails
@@ -654,6 +663,23 @@ property
     Max = 8
     Default = 0
 }
+property
+{
+    Type = Integer
+    Name = GarageDoor
+    ShortName = 
+    Min = 0
+    Max = 6
+    Default = 0
+}
+property
+{
+    Type = Boolean
+    Name = Door Interior Side
+    ShortName = InteriorSide
+    Default = false
+    ReverseLogic = false
+}
 separator
 {
 }
@@ -805,6 +831,20 @@ property
 }
 property
 {
+    Type = Enum
+    Name = ContainerPosition
+    ShortName =
+    Enums
+    {
+    	Normal = 
+    	Low = Low
+    	High = High
+    }
+    Default = Normal
+    ValueAsPropertyName = false
+}
+property
+{
     Type = Boolean
     Name = Freezer
     ShortName =
@@ -819,6 +859,20 @@ property
     Min = 0
     Max = 50
     Default = 0
+}
+property
+{
+    Type = Enum
+    Name = FreezerPosition
+    ShortName =
+    Enums
+    {
+    	Normal = 
+    	Low = Low
+    	High = High
+    }
+    Default = Normal
+    ValueAsPropertyName = false
 }
 property
 {
