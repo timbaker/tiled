@@ -114,7 +114,8 @@ void CreatePackDialog::settingsFromUI(TexturePackSettings &settings)
         settings.mOutputImageSize = QSize(1024, 1024);
     settings.mScale50 = ui->scale50->isChecked();
     settings.mPackFileName = ui->packNameEdit->text();
-    settings.padding = 2;
+    settings.padding = 0;
+    settings.extra = 6;
 }
 
 void CreatePackDialog::savePackAs()

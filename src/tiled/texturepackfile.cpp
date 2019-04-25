@@ -134,6 +134,22 @@ bool PackFile::read(const QString &fileName)
         qDebug() << "Creating PNG" << page.name << "size=" << buf.size();
         page.image.loadFromData(buf.buffer(), "PNG");
 
+#if 0
+        for (int y = 0; y < page.image.height(); y++) {
+            for (int x = 0; x < page.image.width(); x++) {
+                QRgb rgb = page.image.pixel(x, y);
+                if (qAlpha(rgb) == 0) {
+                    int red = qRed(rgb);
+                    int green = qGreen(rgb);
+                    int blue = qBlue(rgb);
+                    if (red + green + blue > 0) {
+                        int dbg = 1;
+                    }
+                }
+            }
+        }
+#endif
+
 //        quint32 magic = readInt(in);
 //        if (magic != 0xDEADBEEF) {
 //            mError = tr("Expected 0xDEADBEEF after PNG data");
@@ -145,6 +161,9 @@ bool PackFile::read(const QString &fileName)
 
     return true;
 }
+
+#include <QDir>
+#include <QFileInfo>
 
 bool PackFile::write(const QString &fileName)
 {
@@ -159,6 +178,9 @@ bool PackFile::write(const QString &fileName)
 
     out << (qint32) mPages.size();
 
+#if 0
+    int pageNum = 1;
+#endif
     foreach (PackPage page, mPages) {
         SaveString(out, page.name);
         out << (qint32) page.mInfo.size();
@@ -179,6 +201,11 @@ bool PackFile::write(const QString &fileName)
         page.image.save(&b, "PNG");
         out.writeRawData(b.buffer().data(), b.buffer().length());
         out << (quint32) 0xDEADBEEF;
+
+#if 0
+        page.image.save(QFileInfo(fileName).dir().filePath(QStringLiteral("page%1.png").arg(pageNum)));
+        pageNum++;
+#endif
     }
 
     return true;

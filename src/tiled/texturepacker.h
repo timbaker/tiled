@@ -48,6 +48,7 @@ public:
     bool mScale50;
     QList<Directory> mInputImageDirectories;
     int padding;
+    int extra;
 };
 
 class LemmyRectanglePacker
@@ -127,6 +128,9 @@ private:
     };
     TexturePacker::Translation WorkOutTranslation(QImage image);
     TexturePacker::Translation WorkOutTranslation(QImage image, int sx, int sy, int cutWidth, int cutHeight);
+
+    void expandPixel(QImage& image, QImage& orig, int x, int y);
+    void addPixelsAroundEdges(QImage& image);
 
     class Comparator
     {

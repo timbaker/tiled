@@ -54,7 +54,7 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
     mImageIsTilesheet.clear();
     mImageTileSize.clear();
 
-    foreach (TexturePackSettings::Directory tpd, settings.mInputImageDirectories) {
+    for (TexturePackSettings::Directory tpd : settings.mInputImageDirectories) {
         QSize tileSize = tpd.mCustomTileSize;
         if (tileSize == QSize(0,0))
             tileSize = QSize(64*2, 128*2);
@@ -143,8 +143,8 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
         PackPage packPage;
         packPage.name = QFileInfo(mSettings.mPackFileName).baseName() + QString::number(pageNum);
         packPage.image = outputImage;
-        foreach (QString index, toPackPage) {
-            QRect rectangle1(imagePlacement[index].topLeft(), imageTranslation[index].size);
+        for (QString index : toPackPage) {
+            QRect rectangle1(imagePlacement[index].topLeft(), imageTranslation[index].size + QSize(mSettings.extra * 2, mSettings.extra * 2));
             QRect rectangle2(imageTranslation[index].topLeft - imageTranslation[index].sheetOffset, imageTranslation[index].originalSize);
             QString name;
             if (index.contains(QLatin1String("_INDEX_"))) {
@@ -181,8 +181,8 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
         PackPage packPage;
         packPage.name = QFileInfo(mSettings.mPackFileName).baseName() + QString::number(pageNum);
         packPage.image = outputImage;
-        foreach (QString index, toPackPage) {
-            QRect rectangle1(imagePlacement[index].topLeft(), imageTranslation[index].size);
+        for (QString index : toPackPage) {
+            QRect rectangle1(imagePlacement[index].topLeft(), imageTranslation[index].size + QSize(mSettings.extra * 2, mSettings.extra * 2));
             QRect rectangle2(imageTranslation[index].topLeft - imageTranslation[index].sheetOffset, imageTranslation[index].originalSize);
             QString name;
             if (index.contains(QLatin1String("_INDEX_"))) {
@@ -204,7 +204,7 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
 
     if (pageNum > 0) {
         fileInfo = QFileInfo(mSettings.mPackFileName);
-        progress.update(tr("Saving %1").arg(fileInfo.fileName()));
+        progress.update(tr("Saving %1").arg(fileInfo.baseName() + QLatin1String(".floor.") + fileInfo.suffix()));
         packFileFloor.write(fileInfo.absolutePath() + QLatin1String("/") + fileInfo.baseName() + QLatin1String(".floor.") + fileInfo.suffix());
     }
 
@@ -216,7 +216,7 @@ bool TexturePacker::FindImages(const QString &directory, bool imagesAreTilesheet
     QDir dir(directory);
     QStringList filters;
     filters += QLatin1String("*.png");
-    foreach (QFileInfo fileInfo, dir.entryInfoList(filters)) {
+    for (QFileInfo fileInfo : dir.entryInfoList(filters)) {
         QString baseName = fileInfo.baseName();
         if (mImageNameSet.contains(baseName)) {
             mError = tr("There are two input image files with the same name.\nThe conflicting name is \"%1\".")
@@ -326,7 +326,7 @@ bool TexturePacker::PackImageRectangles(const QStringList &toPack)
 {
     int minWidth = INT_MAX;
     int minHeight = INT_MAX;
-    foreach (QString index, toPack) {
+    for (QString index : toPack) {
         Translation xln = imageTranslation[index];
         minWidth = qMin(minWidth, xln.size.width());
         minHeight = qMin(minHeight, xln.size.height());
@@ -359,18 +359,18 @@ bool TexturePacker::PackImageRectangles(const QStringList &toPack)
         else
         {
             imagePlacement = testImagePlacement;
-            int val1_3;
-            newWidth = val1_3 = 0;
+            int bottom = 0;
+            newWidth = 0;
             QMapIterator<QString,QRect> it(imagePlacement);
             while (it.hasNext())
             {
                 it.next();
                 newWidth = qMax(newWidth, it.value().right() + 1);
-                val1_3 = qMax(val1_3, it.value().bottom() + 1);
+                bottom = qMax(bottom, it.value().bottom() + 1);
             }
             if (!flag)
                 newWidth -= mSettings.padding;
-            int newHeight = val1_3 - mSettings.padding;
+            int newHeight = bottom - mSettings.padding;
 /*
             if (this.requirePow2)
             {
@@ -400,15 +400,19 @@ bool TexturePacker::PackImageRectangles(const QStringList &toPack)
 bool TexturePacker::TestPackingImages(const QStringList &toPack, int testWidth, int testHeight, QMap<QString,QRect> &testImagePlacement)
 {
     LemmyRectanglePacker lemmyRectanglePacker(testWidth, testHeight);
-    foreach (QString key, toPack)
+    for (QString key : toPack)
     {
         QSize size = imageTranslation[key].size;
         QPoint placement;
-        if (!lemmyRectanglePacker.TryPack(size.width() + mSettings.padding, size.height() + mSettings.padding, placement)) {
+        if (!lemmyRectanglePacker.TryPack(size.width() + mSettings.padding + mSettings.extra * 2,
+                                          size.height() + mSettings.padding + mSettings.extra * 2,
+                                          placement)) {
             mError = tr("Couldn't pack %1").arg(key);
             return false;
         }
-        testImagePlacement[key] = QRect(placement.x(), placement.y(), size.width() + mSettings.padding, size.height() + mSettings.padding);
+        testImagePlacement[key] = QRect(placement.x(), placement.y(),
+                                        size.width() + mSettings.padding + mSettings.extra * 2,
+                                        size.height() + mSettings.padding + mSettings.extra * 2);
     }
     return true;
 }
@@ -723,7 +727,7 @@ QImage TexturePacker::CreateOutputImage(const QStringList &toPack)
 {
     QImage bitmap1(outputWidth, outputHeight, QImage::Format_ARGB32);
     bitmap1.fill(Qt::transparent);
-    foreach (QString index, toPack)
+    for (QString index : toPack)
     {
         QRect rectangle = imagePlacement[index];
         Translation translation = imageTranslation[index];
@@ -749,14 +753,27 @@ QImage TexturePacker::CreateOutputImage(const QStringList &toPack)
             mError = tr("Failed to load input image.\n%1").arg(file);
             return QImage();
         }
-        for (int x = translation.topLeft.x(); x < translation.topLeft.x() + translation.size.width(); ++x)
-        {
-            for (int y = translation.topLeft.y(); y < translation.topLeft.y() + translation.size.height(); ++y)
-                bitmap1.setPixel(rectangle.x() + (x - translation.topLeft.x()),
-                                 rectangle.y() + (y - translation.topLeft.y()),
+        for (int x = translation.topLeft.x(); x < translation.topLeft.x() + translation.size.width(); ++x) {
+            for (int y = translation.topLeft.y(); y < translation.topLeft.y() + translation.size.height(); ++y) {
+                bitmap1.setPixel(rectangle.x() + (x - translation.topLeft.x()) + mSettings.extra,
+                                 rectangle.y() + (y - translation.topLeft.y()) + mSettings.extra,
                                  bitmap2.pixel(x, y));
+#if 0
+                QRgb rgb = bitmap1.pixel(rectangle.x() + (x - translation.topLeft.x()),
+                                         rectangle.y() + (y - translation.topLeft.y()));
+                if (qAlpha(rgb) == 0) {
+                    int red = qRed(rgb);
+                    int green = qGreen(rgb);
+                    int blue = qBlue(rgb);
+                    if (red + green + blue > 0) {
+                        int dbg = 0;
+                    }
+                }
+#endif
+            }
         }
     }
+    addPixelsAroundEdges(bitmap1);
     return bitmap1;
 }
 
@@ -858,7 +875,15 @@ TexturePacker::Translation TexturePacker::WorkOutTranslation(QImage image)
             }
         }
     }
-
+#if 0
+    const int PAD = 6; // Padding for texture sampling due to zoom in-game
+    int x2 = qMin(image.width(), x1 + width + PAD);
+    int y2 = qMin(image.height(), y1 + height + PAD);
+    x1 = qMax(0, x1 - PAD);
+    y1 = qMax(0, y1 - PAD);
+    width = x2 - x1;
+    height = y2 - y1;
+#endif
     Translation tln;
     tln.topLeft = QPoint(x1, y1);
     tln.size = QSize(width, height);
@@ -939,6 +964,16 @@ TexturePacker::Translation TexturePacker::WorkOutTranslation(QImage image, int s
     if (!flag4)
         return Translation();
 
+#if 0
+    const int PAD = 6; // Padding for texture sampling due to zoom in-game
+    int x2 = qMin(image.width(), x1 + width1 + PAD);
+    int y2 = qMin(image.height(), y1 + height + PAD);
+    x1 = qMax(0, x1 - PAD);
+    y1 = qMax(0, y1 - PAD);
+    width1 = x2 - x1;
+    height = y2 - y1;
+#endif
+
     Translation tln;
     tln.topLeft = QPoint(x1, y1);
     tln.size = QSize(width1, height);
@@ -949,13 +984,232 @@ TexturePacker::Translation TexturePacker::WorkOutTranslation(QImage image, int s
     return tln;
 }
 
+void TexturePacker::expandPixel(QImage &image, QImage &orig, int x, int y)
+{
+    for (int dy = -4; dy <= 4; dy++) {
+        for (int dx = -4; dx <= 4; dx++) {
+            if (dx == 0 && dy == 0)
+                continue;
+            // Assumes pixel is in bounds due to mSettings.extra > 0
+            QRgb pixel = orig.pixel(x + dx, y + dy);
+            if (qAlpha(pixel) == 0) {
+                image.setPixel(x + dx, y + dy, qRgba(255,0,0,255));
+            }
+        }
+    }
+}
+
+void TexturePacker::addPixelsAroundEdges(QImage &image)
+{
+    QImage copy(image);
+
+    QVector<unsigned char> outerPixels;
+    outerPixels.resize(image.width() * image.height());
+    outerPixels.fill(0);
+
+#if 1
+    const int EXTRA = mSettings.extra;
+    // Step 1: Dilation.
+    for (int y = 0+EXTRA; y < image.height()-EXTRA; ++y) {
+        for (int x = 0+EXTRA; x < image.width()-EXTRA; ++x) {
+            QRgb pixel = copy.pixel(x, y);
+            if (qAlpha(pixel) > 0)
+                continue;
+            bool done = false;
+            for (int dy = -EXTRA; dy <= EXTRA && !done; dy++) {
+                for (int dx = -EXTRA; dx <= EXTRA && !done; dx++) {
+                    if (dx == 0 && dy == 0)
+                        continue;
+                    pixel = copy.pixel(x + dx, y + dy);
+                    if (qAlpha(pixel) > 0) {
+                        // Background pixel is adjacent to a foreground pixel.
+                        outerPixels[x + y * image.width()] |= 0x01;
+                        done = true;
+                    }
+                }
+            }
+        }
+    }
+
+#if 0
+    // Step 2: Remove interior holes.
+    for (int y = -4; y < translation.size.height() + 4; ++y) {
+        int left = -1;
+        for (int x = -4; x < translation.size.width() + 4; ++x) {
+            int x1 = topLeft.x() + x + mSettings.extra;
+            int y1 = topLeft.y() + y + mSettings.extra;
+            if (outerPixels[x1 + y1 * image.width()] & 0x01) {
+                for (int dx = 0; dx < 4; dx++)
+                    outerPixels[(x1 + dx) + y1 * image.width()] |= 0x02; // keep
+                left = x;
+                break;
+            }
+        }
+        int right = -1;
+        for (int x = translation.size.width() + 4 - 1; x > left + 4; --x) {
+            int x1 = topLeft.x() + x + mSettings.extra;
+            int y1 = topLeft.y() + y + mSettings.extra;
+            if (outerPixels[x1 + y1 * image.width()] & 0x01) {
+                for (int dx = 0; dx < 4; dx++)
+                    outerPixels[(x1 - dx) + y1 * image.width()] |= 0x02; // keep
+                right = x;
+                break;
+            }
+        }
+    }
+    for (int x = -4; x < translation.size.width() + 4; ++x) {
+        int top = -1;
+        for (int y = -4; y < translation.size.height() + 4; ++y) {
+            int x1 = topLeft.x() + x + mSettings.extra;
+            int y1 = topLeft.y() + y + mSettings.extra;
+            if (outerPixels[x1 + y1 * image.width()] & 0x01) {
+                for (int dy = 0; dy < 4; dy++)
+                    outerPixels[x1 + (y1 + dy) * image.width()] |= 0x02; // keep
+                top = y;
+                break;
+            }
+        }
+        int bottom = -1;
+        for (int y = translation.size.height() + 4 - 1; y > top - 4; --y) {
+            int x1 = topLeft.x() + x + mSettings.extra;
+            int y1 = topLeft.y() + y + mSettings.extra;
+            if (outerPixels[x1 + y1 * image.width()] & 0x01) {
+                for (int dy = 0; dy < 4; dy++)
+                    outerPixels[x1 + (y1 - dy) * image.width()] |= 0x02; // keep
+                bottom = y;
+                break;
+            }
+        }
+    }
+#endif
+    for (int y = 0+EXTRA; y < image.height()-EXTRA; ++y) {
+        for (int x = 0+EXTRA; x < image.width()-EXTRA; ++x) {
+            if (outerPixels[x + y * image.width()] & 0x01) {
+                int numPixels = 0;
+                int red = 0, green = 0, blue = 0;
+                for (int dy = -EXTRA; dy <= EXTRA; dy++) {
+                    for (int dx = -EXTRA; dx <= EXTRA; dx++) {
+                        if (dx == 0 && dy == 0)
+                            continue;
+                        QRgb pixel = copy.pixel(x + dx, y + dy);
+                        if (qAlpha(pixel) > 0) {
+                            red += qRed(pixel);
+                            green += qGreen(pixel);
+                            blue += qBlue(pixel);
+                            numPixels++;
+                        }
+                    }
+                }
+                image.setPixel(x, y, qRgba(red / numPixels, green / numPixels, blue / numPixels, 0));
+            }
+        }
+    }
+
+#else
+    // Step 1: Fill in all the "interior" holes (horizontally)
+    for (int y = 0; y < translation.size.height(); ++y) {
+        int left = -1;
+        for (int x = 0; x < translation.size.width(); ++x) {
+            int x1 = topLeft.x() + x + mSettings.extra;
+            int y1 = topLeft.y() + y + mSettings.extra;
+            QRgb pixel = copy.pixel(x1, y1);
+            outerPixels[x1 + y1 * image.width()] |= 0x01;
+            if (qAlpha(pixel) > 0) {
+                outerPixels[x1 + y1 * image.width()] |= 0x02;
+                left = x;
+                break;
+            }
+        }
+        int right = -1;
+        for (int x = translation.size.width() - 1; x > left; --x) {
+            int x1 = topLeft.x() + x + mSettings.extra;
+            int y1 = topLeft.y() + y + mSettings.extra;
+            QRgb pixel = copy.pixel(x1, y1);
+            outerPixels[x1 + y1 * image.width()] |= 0x01;
+            if (qAlpha(pixel) > 0) {
+                outerPixels[x1 + y1 * image.width()] |= 0x02;
+                right = x;
+                break;
+            }
+        }
+#if 0
+        // Fill in non-tranparent interior pixels.
+        for (int x = left; x <= right; x++) {
+            int x1 = topLeft.x() + x + mSettings.extra;
+            int y1 = topLeft.y() + y + mSettings.extra;
+            if (outerPixels[x1 + y1 * image.width()] & 0x01)
+                continue;
+            QRgb pixel = copy.pixel(x1, y1);
+            if (qAlpha(pixel) == 0) {
+                copy.setPixel(x1, y1, qRgba(255,0,0,255));
+            }
+        }
+#endif
+    }
+
+    // Step 1: Fill in all the "interior" holes (vertically)
+    for (int x = 0; x < translation.size.width(); ++x) {
+        int top = -1;
+        for (int y = 0; y < translation.size.height(); ++y) {
+            int x1 = topLeft.x() + x + mSettings.extra;
+            int y1 = topLeft.y() + y + mSettings.extra;
+            QRgb pixel = copy.pixel(x1, y1);
+            outerPixels[x1 + y1 * image.width()] |= 0x01;
+            if (qAlpha(pixel) > 0) {
+                outerPixels[x1 + y1 * image.width()] |= 0x04;
+                top = y;
+                break;
+            }
+        }
+        int bottom = -1;
+        for (int y = translation.size.height() - 1; y > top; --y) {
+            int x1 = topLeft.x() + x + mSettings.extra;
+            int y1 = topLeft.y() + y + mSettings.extra;
+            QRgb pixel = copy.pixel(x1, y1);
+            outerPixels[x1 + y1 * image.width()] |= 0x01;
+            if (qAlpha(pixel) > 0) {
+                outerPixels[x1 + y1 * image.width()] |= 0x04;
+                bottom = y;
+                break;
+            }
+        }
+#if 0
+        // Fill in non-tranparent interior pixels.
+        for (int y = top; y <= bottom; y++) {
+            int x1 = topLeft.x() + x + mSettings.extra;
+            int y1 = topLeft.y() + y + mSettings.extra;
+            if (outerPixels[x1 + y1 * image.width()] & 0x01)
+                continue;
+            QRgb pixel = copy.pixel(x1, y1);
+            if (qAlpha(pixel) == 0) {
+                copy.setPixel(x1, y1, qRgba(255,0,0,255));
+            }
+        }
+#endif
+    }
+#endif
+
+#if 0
+    // Step 2: Expand the outermost pixels.
+    for (int y = 0; y < translation.size.height(); ++y) {
+        for (int x = 0; x < translation.size.width(); ++x) {
+            int x1 = topLeft.x() + x + mSettings.extra;
+            int y1 = topLeft.y() + y + mSettings.extra;
+            if (outerPixels[x1 + y1 * image.width()] & 0x01) {
+                expandPixel(image, copy, x1, y1);
+            }
+        }
+    }
+#endif
+}
+
 /////
 
 LemmyRectanglePacker::LemmyRectanglePacker(int packingAreaWidth, int packingAreaHeight) :
-    PackingAreaWidth(packingAreaWidth),
     PackingAreaHeight(packingAreaHeight),
-    actualPackingAreaWidth(1),
-    actualPackingAreaHeight(1)
+    PackingAreaWidth(packingAreaWidth),
+    actualPackingAreaHeight(1),
+    actualPackingAreaWidth(1)
 {
     anchors += QPoint();
 }
