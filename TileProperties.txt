@@ -2,7 +2,7 @@ property
 {
     Type = Integer
     Name = Surface
-    ShortName = 
+    ShortName =
     Min = 0
     Max = 128
     Default = 0
@@ -11,7 +11,7 @@ property
 {
     Type = Boolean
     Name = IsSurfaceOffset
-    ShortName = 
+    ShortName =
     Default = false
     ReverseLogic = false
 }
@@ -32,7 +32,7 @@ property
 {
     Type = Boolean
     Name = IsMoveAble
-    ShortName = 
+    ShortName =
     Default = false
     ReverseLogic = false
 }
@@ -127,7 +127,7 @@ property
 {
     Type = Boolean
     Name = CanBreak
-    ShortName = 
+    ShortName =
     Default = false
     ReverseLogic = false
 }
@@ -143,7 +143,7 @@ property
 {
     Type = String
     Name = GroupName
-    ShortName = 
+    ShortName =
     Default =
 }
 property
@@ -215,6 +215,7 @@ property
     {
         IsoObject = IsoObject
         IsoBarbecue = IsoBarbecue
+        IsoBrokenGlass = IsoBrokenGlass
         IsoFireplace = IsoFireplace
         IsoRadio = IsoRadio
         IsoJukebox = IsoJukebox
@@ -239,7 +240,7 @@ property
 {
     Type = Boolean
     Name = BlocksPlacement
-    ShortName = 
+    ShortName =
     Default = false
     ReverseLogic = false
 }
@@ -263,7 +264,7 @@ property
 {
     Type = Boolean
     Name = IsTable
-    ShortName = 
+    ShortName =
     Default = false
     ReverseLogic = false
 }
@@ -271,7 +272,7 @@ property
 {
     Type = Boolean
     Name = IsTableTop
-    ShortName = 
+    ShortName =
     Default = false
     ReverseLogic = false
 }
@@ -658,7 +659,7 @@ property
 {
     Type = Integer
     Name = DoubleDoor
-    ShortName = 
+    ShortName =
     Min = 0
     Max = 8
     Default = 0
@@ -779,12 +780,11 @@ property
 }
 property
 {
-    Type = Integer
-    Name = SpeedFactor
+    Type = Boolean
+    Name = Bush
     ShortName =
-    Min = 1
-    Max = 100
-    Default = 100
+    Default = false
+    ReverseLogic = false
 }
 property
 {
@@ -1001,6 +1001,15 @@ property
     ShortName =
     Default = false
     ReverseLogic = false
+}
+property
+{
+    Type = Integer
+    Name = CloseSneakBonus
+    ShortName =
+    Min = 0
+    Max = 10000
+    Default = 0
 }
 property
 {
