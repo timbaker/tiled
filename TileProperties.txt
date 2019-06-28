@@ -216,7 +216,10 @@ property
         IsoObject = IsoObject
         IsoBarbecue = IsoBarbecue
         IsoBrokenGlass = IsoBrokenGlass
+        IsoClothingDryer = IsoClothingDryer
+        IsoClothingWasher = IsoClothingWasher
         IsoFireplace = IsoFireplace
+        IsoMannequin = IsoMannequin
         IsoRadio = IsoRadio
         IsoJukebox = IsoJukebox
         IsoStove = IsoStove
