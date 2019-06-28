@@ -30,8 +30,25 @@ overlay2 = map:tileLayer('0_FloorOverlay2')
 overlay3 = map:tileLayer('0_FloorOverlay3')
 overlay4 = map:tileLayer('0_FloorOverlay4')
 
-for y=0,map:height()-1 do
-    for x=0,map:width()-1 do
+left = 0
+top = 0
+right = map:width() - 1
+height = map:height() - 1
+
+sel = map:tileSelection()
+if sel:isEmpty() then
+    print('selection is empty, runningon entire map')
+else
+    print('selection is not empty, running on selected area only')
+    bounds = map:tileSelection():boundingRect()
+    left = bounds:left()
+    top = bounds:top()
+    right = bounds:right()
+    bottom = bounds:bottom()
+end
+
+for y=top,bottom do
+    for x=left,right do
 	tile = overlay1:tileAt(x,y)
 	if tile and blendTilesByLayer['0_FloorOverlay'][tile] then
 	    overlay1:clearTile(x,y)

@@ -49,9 +49,26 @@ for _,rule in ipairs(map:rules()) do
     end
 end
 
+left = 0
+top = 0
+right = map:width() - 1
+height = map:height() - 1
+
+sel = map:tileSelection()
+if sel:isEmpty() then
+    print('selection is empty, runningon entire map')
+else
+    print('selection is not empty, running on selected area only')
+    bounds = map:tileSelection():boundingRect()
+    left = bounds:left()
+    top = bounds:top()
+    right = bounds:right()
+    bottom = bounds:bottom()
+end
+
 black = rgb(0,0,0).pixel
-for y=0,map:height()-1 do
-    for x=0,map:width()-1 do
+for y=top,bottom do
+    for x=left,right do
 	tile = floor:tileAt(x,y)
 	if tile and bmp0:pixel(x,y) == black then
 	    rule = tileToRule[tile]
