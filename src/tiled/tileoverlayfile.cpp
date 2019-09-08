@@ -161,41 +161,10 @@ TileOverlayFile::TileOverlayFile()
 {
 }
 
-// overlayMap["location_shop_generic_01_40"] = {
-//   clothesstore = { "clothing_01_8", "clothing_01_16" },
-//   departmentstore = {"clothing_01_8", "clothing_01_16"},
-//   generalstore = {"clothing_01_8", "clothing_01_16"}
+// overlayMap["location_business_office_generic_01_7"] = {
+//     { name = "other", chance = 2, tiles = {"papernotices_01_9"} }
 // }
-bool TileOverlayFile::readV0(LuaTable* table)
-{
-    QMap<QString,TileOverlay*> map;
-    for (LuaTableKeyValue *kv : table->kv) {
-        TileOverlay *overlay = new TileOverlay;
-        overlay->mTileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(kv->key);
-        for (LuaTableKeyValue *kv2 : kv->t->kv) {
-            TileOverlayEntry *entry = new TileOverlayEntry;
-            entry->mParent = overlay;
-            entry->mRoomName = kv2->key;
-            for (LuaTableKeyValue *kv3 : kv2->t->kv) {
-                QString tileName = kv3->s;
-                if (tileName != QLatin1String("none")) {
-                    tileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(tileName);
-                }
-                entry->mTiles << tileName;
-            }
-            overlay->mEntries += entry;
-        }
-        map[overlay->mTileName] = overlay;
-    }
-    mOverlays = map.values();
-    return true;
-}
 
-// overlayMap["location_shop_generic_01_40"] = {
-//   { name = "clothesstore", tiles = { "clothing_01_8", "clothing_01_16" } },
-//   { name = "departmentstore", tiles = { "clothing_01_8", "clothing_01_16" } },
-//   { name = "generalstore", tiles = { "clothing_01_8", "clothing_01_16" } }
-// }
 bool TileOverlayFile::readV1(LuaTable* table)
 {
     QMap<QString,TileOverlay*> map;
@@ -219,6 +188,17 @@ bool TileOverlayFile::readV1(LuaTable* table)
             if (!roomTable->getString(QLatin1Literal("name"), entry->mRoomName)) {
                 // FIXME: delete 'map'
                 mError = QString::fromUtf8("expected \"name\"");
+                return false;
+            }
+            QString chanceStr;
+            if (!roomTable->getString(QLatin1Literal("chance"), chanceStr)) {
+                mError = QString::fromUtf8("expected \"chance\"");
+                return false;
+            }
+            bool ok;
+            entry->mChance = chanceStr.toInt(&ok);
+            if ((ok == false) || (entry->mChance < 1)) {
+                mError = QString::fromUtf8("expected integer chance > 1");
                 return false;
             }
             LuaTable* tileTable = roomTable->getTable(QLatin1Literal("tiles"));
@@ -254,7 +234,8 @@ bool TileOverlayFile::read(const QString &fileName)
         }
         LuaTableKeyValue* versionKV = table->find(QLatin1Literal("VERSION"));
         if (versionKV == nullptr) {
-            return readV0(table.data());
+            mError = QString::fromUtf8("missing overlayMap.VERSION");
+            return false;
         }
         if (versionKV->s == QLatin1Literal("1")) {
             return readV1(table.data());

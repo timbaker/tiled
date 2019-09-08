@@ -217,6 +217,10 @@ QSize ContainerOverlayDelegate::sizeHint(const QStyleOptionViewItem &option,
             nTiles++;
         }
         size.setWidth((extra + tileWidth) * nTiles + extra);
+        if (m->moreThan2Tiles()) {
+            // Leave room for "chance = 1 in 10"
+            size.setWidth(qMax(size.width(), 150 + 150));
+        }
     }
 
     return size;

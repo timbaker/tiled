@@ -968,7 +968,7 @@ bool ContainerOverlayDialog::fileOpen(const QString &fileName, QList<AbstractOve
         return false;
     }
 
-    mFileName = fileName;
+    overlays.clear();
     for (ContainerOverlay* overlay : cof.takeOverlays()) {
         overlays << overlay;
     }

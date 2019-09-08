@@ -31,14 +31,14 @@ TileOverlayDialog::TileOverlayDialog(QWidget* parent)
 
 bool TileOverlayDialog::fileOpen(const QString &fileName, QList<AbstractOverlay *> &overlays)
 {
-    TileOverlayFile cof;
-    if (!cof.read(fileName)) {
-        mError = cof.errorString();
+    TileOverlayFile tof;
+    if (!tof.read(fileName)) {
+        mError = tof.errorString();
         return false;
     }
 
-    mFileName = fileName;
-    for (TileOverlay* overlay : cof.takeOverlays()) {
+    overlays.clear();
+    for (TileOverlay* overlay : tof.takeOverlays()) {
         overlays << overlay;
     }
     return true;
@@ -46,13 +46,13 @@ bool TileOverlayDialog::fileOpen(const QString &fileName, QList<AbstractOverlay 
 
 bool TileOverlayDialog::fileSave(const QString &fileName, const QList<AbstractOverlay *> &overlays)
 {
-    TileOverlayFile cof;
+    TileOverlayFile tof;
     QList<TileOverlay*> overlays1;
     for (AbstractOverlay* overlay : overlays) {
         overlays1 << static_cast<TileOverlay*>(overlay);
     }
-    if (!cof.write(fileName, overlays1)) {
-        mError = cof.errorString();
+    if (!tof.write(fileName, overlays1)) {
+        mError = tof.errorString();
         return false;
     }
     return true;
