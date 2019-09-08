@@ -94,6 +94,7 @@ signals:
     void tileDropped(AbstractOverlay *overlay, const QString &tileName);
     void tileDropped(AbstractOverlayEntry *entry, int index, const QString &tileName);
     void entryRoomNameEdited(AbstractOverlayEntry *entry, const QString &roomName);
+    void entryChanceEdited(AbstractOverlayEntry *entry, int chance);
 
 private:
     class Item

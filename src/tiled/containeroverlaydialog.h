@@ -51,6 +51,7 @@ public:
     void removeEntryTile(AbstractOverlayEntry *entry, int index);
     QString setEntryTile(AbstractOverlayEntry *entry, int index, const QString &tileName);
     QString setEntryRoomName(AbstractOverlayEntry *entry, const QString &roomName);
+    int setEntryChance(AbstractOverlayEntry *entry, int chance);
 
     void insertOverlay(int index, AbstractOverlay *overlay);
     void removeOverlay(int index);
@@ -89,6 +90,7 @@ private slots:
     void tileDropped(AbstractOverlay *overlay, const QString &tileName);
     void tileDropped(AbstractOverlayEntry *entry, int index, const QString &tileName);
     void entryRoomNameEdited(AbstractOverlayEntry *entry, const QString &roomName);
+    void entryChanceEdited(AbstractOverlayEntry *entry, int chance);
     void removeTile(AbstractOverlayEntry *entry, int index);
 
     void fileOpen();

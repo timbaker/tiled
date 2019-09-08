@@ -17,6 +17,9 @@
 
 #include "containeroverlayview.h"
 
+// FIXME: shouldn't know anything about this class
+#include "tileoverlayfile.h"
+
 #include "BuildingEditor/buildingtiles.h"
 
 #include "containeroverlayfile.h"
@@ -34,6 +37,7 @@
 #include <QLineEdit>
 #include <QMimeData>
 #include <QPainter>
+#include <QSpinBox>
 #include <QStyledItemDelegate>
 #include <QStyleOption>
 
@@ -66,8 +70,11 @@ public:
     void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;
     void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const;
 
+    // FIXME: this base class shouldn't know anything about TileOverlayEntry
+    void setEditChance(bool edit) { mEditChance = edit; }
 private:
     ContainerOverlayView *mView;
+    bool mEditChance = false;
 };
 
 void ContainerOverlayDelegate::paint(QPainter *painter,
@@ -163,6 +170,14 @@ void ContainerOverlayDelegate::paint(QPainter *painter,
                           Qt::AlignTop | Qt::AlignLeft,
                           entry->roomName(),
                           &textRect);
+
+        // FIXME: this base class shouldn't know anything about TileOverlayEntry
+        if (TileOverlayEntry* toe = dynamic_cast<TileOverlayEntry*>(entry)) {
+            painter->drawText(option.rect.adjusted(extra + 150, extra, 0, 0),
+                              Qt::AlignTop | Qt::AlignLeft,
+                              tr("chance: 1 in %1").arg(toe->mChance),
+                              &textRect);
+        }
     }
 
     // Focus rect around 'current' item
@@ -233,6 +248,12 @@ int ContainerOverlayDelegate::dropCoords(const QPoint &dragPos,
 
 QWidget *ContainerOverlayDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &/*option*/, const QModelIndex &/*index*/) const
 {
+    // FIXME: this base class shouldn't know anything about TileOverlayEntry
+    if (mEditChance) {
+        QSpinBox *editor = new QSpinBox(parent);
+        editor->installEventFilter(const_cast<ContainerOverlayDelegate*>(this));
+        return editor;
+    }
     QLineEdit *editor = new QLineEdit(parent);
     editor->installEventFilter(const_cast<ContainerOverlayDelegate*>(this));
     return editor;
@@ -242,7 +263,14 @@ void ContainerOverlayDelegate::setEditorData(QWidget *editor, const QModelIndex 
 {
     const ContainerOverlayModel *m = static_cast<const ContainerOverlayModel*>(index.model());
     AbstractOverlayEntry *entry = m->entryAt(index);
-    ((QLineEdit *)editor)->setText(entry ? entry->roomName() : QLatin1String(""));
+    // FIXME: this base class shouldn't know anything about TileOverlayEntry
+    if (mEditChance) {
+        TileOverlayEntry* toe = static_cast<TileOverlayEntry*>(entry);
+        static_cast<QSpinBox*>(editor)->setValue(toe->mChance);
+        static_cast<QSpinBox*>(editor)->setRange(1, 100000);
+        return;
+    }
+    static_cast<QLineEdit*>(editor)->setText(entry ? entry->roomName() : QLatin1String(""));
 }
 
 void ContainerOverlayDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
@@ -250,7 +278,13 @@ void ContainerOverlayDelegate::setModelData(QWidget *editor, QAbstractItemModel 
     ContainerOverlayModel *m = static_cast<ContainerOverlayModel*>(model);
     AbstractOverlayEntry *entry = m->entryAt(index);
     if (entry) {
-        QString text = ((QLineEdit*)editor)->text();
+        // FIXME: this base class shouldn't know anything about TileOverlayEntry
+        if (mEditChance) {
+            QSpinBox *spinBox = static_cast<QSpinBox*>(editor);
+            emit m->entryChanceEdited(entry, spinBox->value());
+            return;
+        }
+        QString text = static_cast<QLineEdit*>(editor)->text();
         if (!text.isEmpty() && !text.contains(QLatin1String(" ")) && text != entry->roomName())
             emit m->entryRoomNameEdited(entry, text);
     }
@@ -259,6 +293,13 @@ void ContainerOverlayDelegate::setModelData(QWidget *editor, QAbstractItemModel 
 void ContainerOverlayDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &/*index*/) const
 {
     QRect rect = option.rect;
+    // FIXME: this base class shouldn't know anything about TileOverlayEntry
+    if (mEditChance) {
+        rect.adjust(150, 0, 0, 0);
+        rect.setWidth(100);
+    } else {
+        rect.setWidth(150);
+    }
     rect.setHeight(editor->sizeHint().height());
     editor->setGeometry(rect);
 }
@@ -614,8 +655,10 @@ void ContainerOverlayView::mouseMoveEvent(QMouseEvent *event)
 void ContainerOverlayView::mouseDoubleClickEvent(QMouseEvent *event)
 {
     QModelIndex index = indexAt(event->pos());
-    if (model()->entryAt(index)) {
+    if (AbstractOverlayEntry *entry = model()->entryAt(index)) {
         if (event->pos().y() < visualRect(index).y() + fontMetrics().lineSpacing()) {
+            // FIXME: this base class shouldn't know anything about TileOverlayEntry
+            mDelegate->setEditChance((event->pos().x() > visualRect(index).x() + 150) && dynamic_cast<TileOverlayEntry*>(entry));
             edit(index);
             return;
         }

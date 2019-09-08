@@ -18,6 +18,9 @@
 #include "containeroverlaydialog.h"
 #include "ui_containeroverlaydialog.h"
 
+// FIXME: shouldn't know anything about this class
+#include "tileoverlayfile.h"
+
 #include "containeroverlayfile.h"
 #include "tilemetainfodialog.h"
 #include "tilemetainfomgr.h"
@@ -182,6 +185,31 @@ public:
     QString mRoomName;
 };
 
+// FIXME: this base class shouldn't know anything about TileOverlayEntry
+class SetEntryChance : public BaseOverlayCommand
+{
+public:
+    SetEntryChance(AbstractOverlayDialog *d, AbstractOverlayEntry *entry, int chance) :
+        BaseOverlayCommand(d, "Set Chance"),
+        mEntry(entry),
+        mChance(chance)
+    {
+    }
+
+    void undo()
+    {
+        mChance = mDialog->setEntryChance(mEntry, mChance);
+    }
+
+    void redo()
+    {
+        mChance = mDialog->setEntryChance(mEntry, mChance);
+    }
+
+    AbstractOverlayEntry *mEntry;
+    int mChance;
+};
+
 class InsertOverlay : public BaseOverlayCommand
 {
 public:
@@ -331,6 +359,10 @@ AbstractOverlayDialog::AbstractOverlayDialog(QWidget *parent) :
             this, QOverload<AbstractOverlayEntry*,const QString&>::of(&AbstractOverlayDialog::entryRoomNameEdited));
     connect(ui->overlayView, &ContainerOverlayView::removeTile, this, &AbstractOverlayDialog::removeTile);
 
+    // FIXME: this base class shouldn't know anything about TileOverlayEntry
+    connect(ui->overlayView->model(), QOverload<AbstractOverlayEntry*,int>::of(&ContainerOverlayModel::entryChanceEdited),
+            this, QOverload<AbstractOverlayEntry*,int>::of(&AbstractOverlayDialog::entryChanceEdited));
+
     ui->tilesetList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 //    ui->listWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
     connect(ui->tilesetList, SIGNAL(itemSelectionChanged()),
@@ -432,6 +464,18 @@ QString AbstractOverlayDialog::setEntryRoomName(AbstractOverlayEntry *entry, con
     QString old = entry->roomName();
     entry->setRoomName(roomName);
     ui->overlayView->redisplay(entry);
+    return old;
+}
+
+// FIXME: this base class shouldn't know anything about TileOverlayEntry
+int AbstractOverlayDialog::setEntryChance(AbstractOverlayEntry *entry, int chance)
+{
+    int old = 1;
+    if (TileOverlayEntry *toe = dynamic_cast<TileOverlayEntry*>(entry)) {
+        old = toe->mChance;
+        toe->mChance = chance;
+        ui->overlayView->redisplay(entry);
+    }
     return old;
 }
 
@@ -720,6 +764,12 @@ void AbstractOverlayDialog::tileDropped(AbstractOverlayEntry *entry, int index, 
 void AbstractOverlayDialog::entryRoomNameEdited(AbstractOverlayEntry *entry, const QString &roomName)
 {
     mUndoStack->push(new SetEntryRoomName(this, entry, roomName));
+}
+
+// FIXME: this base class shouldn't know anything about TileOverlayEntry
+void AbstractOverlayDialog::entryChanceEdited(AbstractOverlayEntry *entry, int chance)
+{
+    mUndoStack->push(new SetEntryChance(this, entry, chance));
 }
 
 void AbstractOverlayDialog::removeTile(AbstractOverlayEntry *entry, int index)
