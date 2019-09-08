@@ -47,19 +47,19 @@ namespace {
 class BaseOverlayCommand : public QUndoCommand
 {
 public:
-    BaseOverlayCommand(ContainerOverlayDialog *d, const char *text) :
+    BaseOverlayCommand(AbstractOverlayDialog *d, const char *text) :
         QUndoCommand(QCoreApplication::translate("UndoCommands", text)),
         mDialog(d)
     {
     }
 
-    ContainerOverlayDialog *mDialog;
+    AbstractOverlayDialog *mDialog;
 };
 
 class SetBaseTile : public BaseOverlayCommand
 {
 public:
-    SetBaseTile(ContainerOverlayDialog *d, ContainerOverlay *overlay, const QString &tileName) :
+    SetBaseTile(AbstractOverlayDialog *d, AbstractOverlay *overlay, const QString &tileName) :
         BaseOverlayCommand(d, "Set Overlay Base Tile"),
         mOverlay(overlay),
         mTileName(tileName)
@@ -76,14 +76,66 @@ public:
         mTileName = mDialog->setBaseTile(mOverlay, mTileName);
     }
 
-    ContainerOverlay *mOverlay;
+    AbstractOverlay *mOverlay;
+    QString mTileName;
+};
+
+class AddEntryTile : public BaseOverlayCommand
+{
+public:
+    AddEntryTile(AbstractOverlayDialog *d, AbstractOverlayEntry *entry, const QString &tileName) :
+        BaseOverlayCommand(d, "Add Overlay Tile"),
+        mEntry(entry),
+        mIndex(entry->tiles().size()),
+        mTileName(tileName)
+    {
+    }
+
+    void undo()
+    {
+        mDialog->removeEntryTile(mEntry, mIndex);
+    }
+
+    void redo()
+    {
+        mDialog->addEntryTile(mEntry, mIndex, mTileName);
+    }
+
+    AbstractOverlayEntry *mEntry;
+    int mIndex;
+    QString mTileName;
+};
+
+class RemoveEntryTile : public BaseOverlayCommand
+{
+public:
+    RemoveEntryTile(AbstractOverlayDialog *d, AbstractOverlayEntry *entry, int index) :
+        BaseOverlayCommand(d, "Remove Overlay Tile"),
+        mEntry(entry),
+        mIndex(index),
+        mTileName(entry->tiles()[index])
+    {
+    }
+
+    void undo()
+    {
+        mDialog->addEntryTile(mEntry, mIndex, mTileName);
+    }
+
+    void redo()
+    {
+        mDialog->removeEntryTile(mEntry, mIndex);
+    }
+
+    AbstractOverlayEntry *mEntry;
+    int mIndex;
     QString mTileName;
 };
 
 class SetEntryTile : public BaseOverlayCommand
 {
 public:
-    SetEntryTile(ContainerOverlayDialog *d, ContainerOverlayEntry *entry, int index, const QString &tileName) :
+    SetEntryTile(AbstractOverlayDialog *d, AbstractOverlayEntry *entry, int index, const QString &tileName) :
         BaseOverlayCommand(d, "Set Overlay Tile"),
         mEntry(entry),
         mIndex(index),
@@ -101,7 +153,7 @@ public:
         mTileName = mDialog->setEntryTile(mEntry, mIndex, mTileName);
     }
 
-    ContainerOverlayEntry *mEntry;
+    AbstractOverlayEntry *mEntry;
     int mIndex;
     QString mTileName;
 };
@@ -109,7 +161,7 @@ public:
 class SetEntryRoomName : public BaseOverlayCommand
 {
 public:
-    SetEntryRoomName(ContainerOverlayDialog *d, ContainerOverlayEntry *entry, const QString &roomName) :
+    SetEntryRoomName(AbstractOverlayDialog *d, AbstractOverlayEntry *entry, const QString &roomName) :
         BaseOverlayCommand(d, "Set Room Name"),
         mEntry(entry),
         mRoomName(roomName)
@@ -126,14 +178,14 @@ public:
         mRoomName = mDialog->setEntryRoomName(mEntry, mRoomName);
     }
 
-    ContainerOverlayEntry *mEntry;
+    AbstractOverlayEntry *mEntry;
     QString mRoomName;
 };
 
 class InsertOverlay : public BaseOverlayCommand
 {
 public:
-    InsertOverlay(ContainerOverlayDialog *d, int index, ContainerOverlay *overlay) :
+    InsertOverlay(AbstractOverlayDialog *d, int index, AbstractOverlay *overlay) :
         BaseOverlayCommand(d, "Insert Overlay"),
         mOverlay(overlay),
         mIndex(index)
@@ -151,13 +203,13 @@ public:
     }
 
     int mIndex;
-    ContainerOverlay *mOverlay;
+    AbstractOverlay *mOverlay;
 };
 
 class RemoveOverlay : public BaseOverlayCommand
 {
 public:
-    RemoveOverlay(ContainerOverlayDialog *d, int index, ContainerOverlay *overlay) :
+    RemoveOverlay(AbstractOverlayDialog *d, int index, AbstractOverlay *overlay) :
         BaseOverlayCommand(d, "Remove Overlay"),
         mOverlay(overlay),
         mIndex(index)
@@ -175,13 +227,13 @@ public:
     }
 
     int mIndex;
-    ContainerOverlay *mOverlay;
+    AbstractOverlay *mOverlay;
 };
 
 class InsertEntry : public BaseOverlayCommand
 {
 public:
-    InsertEntry(ContainerOverlayDialog *d, ContainerOverlay *overlay, int index, ContainerOverlayEntry *entry) :
+    InsertEntry(AbstractOverlayDialog *d, AbstractOverlay *overlay, int index, AbstractOverlayEntry *entry) :
         BaseOverlayCommand(d, "Add Room"),
         mOverlay(overlay),
         mIndex(index),
@@ -199,17 +251,17 @@ public:
         mDialog->insertEntry(mOverlay, mIndex, mEntry);
     }
 
-    ContainerOverlay *mOverlay;
+    AbstractOverlay *mOverlay;
     int mIndex;
-    ContainerOverlayEntry *mEntry;
+    AbstractOverlayEntry *mEntry;
 };
 
 class RemoveEntry : public BaseOverlayCommand
 {
 public:
-    RemoveEntry(ContainerOverlayDialog *d, int index, ContainerOverlayEntry *entry) :
+    RemoveEntry(AbstractOverlayDialog *d, int index, AbstractOverlayEntry *entry) :
         BaseOverlayCommand(d, "Remove Room"),
-        mOverlay(entry->mParent),
+        mOverlay(entry->parent()),
         mIndex(index),
         mEntry(entry)
     {
@@ -225,20 +277,20 @@ public:
         mDialog->removeEntry(mOverlay, mIndex);
     }
 
-    ContainerOverlay *mOverlay;
+    AbstractOverlay *mOverlay;
     int mIndex;
-    ContainerOverlayEntry *mEntry;
+    AbstractOverlayEntry *mEntry;
 };
 
 } // namespace anon
 
 /////
 
-ContainerOverlayDialog::ContainerOverlayDialog(QWidget *parent) :
+AbstractOverlayDialog::AbstractOverlayDialog(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::ContainerOverlayDialog),
     mZoomable(new Zoomable),
-    mCurrentTileset(0),
+    mCurrentTileset(nullptr),
     mUndoGroup(new QUndoGroup(this)),
     mUndoStack(new QUndoStack(this))
 {
@@ -271,12 +323,13 @@ ContainerOverlayDialog::ContainerOverlayDialog(QWidget *parent) :
             SLOT(syncUI()));
     connect(ui->overlayView, SIGNAL(activated(QModelIndex)),
            SLOT(overlayActivated(QModelIndex)));
-    connect(ui->overlayView->model(), SIGNAL(tileDropped(ContainerOverlay*,QString)),
-            SLOT(tileDropped(ContainerOverlay*,QString)));
-    connect(ui->overlayView->model(), SIGNAL(tileDropped(ContainerOverlayEntry*,int,QString)),
-            SLOT(tileDropped(ContainerOverlayEntry*,int,QString)));
-    connect(ui->overlayView->model(), SIGNAL(entryRoomNameEdited(ContainerOverlayEntry*,QString)),
-            SLOT(entryRoomNameEdited(ContainerOverlayEntry*,QString)));
+    connect(ui->overlayView->model(), QOverload<AbstractOverlay*,const QString&>::of(&ContainerOverlayModel::tileDropped),
+            this, QOverload<AbstractOverlay*,const QString&>::of(&AbstractOverlayDialog::tileDropped));
+    connect(ui->overlayView->model(), QOverload<AbstractOverlayEntry*,int,const QString&>::of(&ContainerOverlayModel::tileDropped),
+            this, QOverload<AbstractOverlayEntry*,int,const QString&>::of(&AbstractOverlayDialog::tileDropped));
+    connect(ui->overlayView->model(), QOverload<AbstractOverlayEntry*,const QString&>::of(&ContainerOverlayModel::entryRoomNameEdited),
+            this, QOverload<AbstractOverlayEntry*,const QString&>::of(&AbstractOverlayDialog::entryRoomNameEdited));
+    connect(ui->overlayView, &ContainerOverlayView::removeTile, this, &AbstractOverlayDialog::removeTile);
 
     ui->tilesetList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 //    ui->listWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
@@ -337,40 +390,52 @@ ContainerOverlayDialog::ContainerOverlayDialog(QWidget *parent) :
     syncUI();
 }
 
-ContainerOverlayDialog::~ContainerOverlayDialog()
+AbstractOverlayDialog::~AbstractOverlayDialog()
 {
     delete ui;
 }
 
-QString ContainerOverlayDialog::setBaseTile(ContainerOverlay *overlay,
-                                            const QString &tileName)
+QString AbstractOverlayDialog::setBaseTile(AbstractOverlay *overlay, const QString &tileName)
 {
-    QString old = overlay->mTileName;
-    overlay->mTileName = tileName;
+    QString old = overlay->tileName();
+    overlay->setTileName(tileName);
     ui->overlayView->redisplay(overlay);
     updateUsedTiles();
     return old;
 }
 
-QString ContainerOverlayDialog::setEntryTile(ContainerOverlayEntry *entry,
-                                             int index, const QString &tileName)
+void AbstractOverlayDialog::addEntryTile(AbstractOverlayEntry *entry, int index, const QString &tileName)
 {
-    QString old = entry->mTiles[index];
-    entry->mTiles[index] = tileName;
+    entry->tiles().insert(index, tileName);
+    ui->overlayView->redisplay(entry);
+    updateUsedTiles();
+}
+
+void AbstractOverlayDialog::removeEntryTile(AbstractOverlayEntry *entry, int index)
+{
+    entry->tiles().removeAt(index);
+    ui->overlayView->redisplay(entry);
+    updateUsedTiles();
+}
+
+QString AbstractOverlayDialog::setEntryTile(AbstractOverlayEntry *entry, int index, const QString &tileName)
+{
+    QString old = entry->tiles()[index];
+    entry->tiles()[index] = tileName;
     ui->overlayView->redisplay(entry);
     updateUsedTiles();
     return old;
 }
 
-QString ContainerOverlayDialog::setEntryRoomName(ContainerOverlayEntry *entry, const QString &roomName)
+QString AbstractOverlayDialog::setEntryRoomName(AbstractOverlayEntry *entry, const QString &roomName)
 {
-    QString old = entry->mRoomName;
-    entry->mRoomName = roomName;
+    QString old = entry->roomName();
+    entry->setRoomName(roomName);
     ui->overlayView->redisplay(entry);
     return old;
 }
 
-void ContainerOverlayDialog::insertOverlay(int index, ContainerOverlay *overlay)
+void AbstractOverlayDialog::insertOverlay(int index, AbstractOverlay *overlay)
 {
     mOverlays.insert(index, overlay);
     ui->overlayView->model()->insertOverlay(index, overlay);
@@ -378,35 +443,35 @@ void ContainerOverlayDialog::insertOverlay(int index, ContainerOverlay *overlay)
     updateUsedTiles();
 }
 
-void ContainerOverlayDialog::removeOverlay(int index)
+void AbstractOverlayDialog::removeOverlay(int index)
 {
-    ContainerOverlay *overlay = mOverlays.takeAt(index);
+    AbstractOverlay *overlay = mOverlays.takeAt(index);
     ui->overlayView->model()->removeOverlay(overlay);
     updateUsedTiles();
 }
 
-void ContainerOverlayDialog::insertEntry(ContainerOverlay *overlay, int index, ContainerOverlayEntry *entry)
+void AbstractOverlayDialog::insertEntry(AbstractOverlay *overlay, int index, AbstractOverlayEntry *entry)
 {
-    overlay->mEntries.insert(index, entry);
+    overlay->insertEntry(index, entry);
     ui->overlayView->model()->insertEntry(overlay, index, entry);
     ui->overlayView->setCurrentIndex(ui->overlayView->model()->index(entry));
     updateUsedTiles();
 }
 
-void ContainerOverlayDialog::removeEntry(ContainerOverlay *overlay, int index)
+void AbstractOverlayDialog::removeEntry(AbstractOverlay *overlay, int index)
 {
-    /*ContainerOverlayEntry *entry = */overlay->mEntries.takeAt(index);
+    overlay->removeEntry(index);
     ui->overlayView->model()->removeEntry(overlay, index);
     updateUsedTiles();
 }
 
-void ContainerOverlayDialog::setTilesetList()
+void AbstractOverlayDialog::setTilesetList()
 {
     ui->tilesetList->clear();
     // Add the list of tilesets, and resize it to fit
     int width = 64;
     QFontMetrics fm = ui->tilesetList->fontMetrics();
-    foreach (Tileset *tileset, TileMetaInfoMgr::instance()->tilesets()) {
+    for (Tileset *tileset : TileMetaInfoMgr::instance()->tilesets()) {
         QListWidgetItem *item = new QListWidgetItem();
         item->setText(tileset->name());
         if (tileset->isMissing())
@@ -418,90 +483,89 @@ void ContainerOverlayDialog::setTilesetList()
     ui->tilesetList->setFixedWidth(width + 16 + sbw);
 }
 
-bool ContainerOverlayDialog::isOverlayTileUsed(const QString &_tileName)
+bool AbstractOverlayDialog::isOverlayTileUsed(const QString &_tileName)
 {
     QString tileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(_tileName);
-    foreach (ContainerOverlay *overlay, mOverlays)
-        if (overlay->mTileName == tileName)
+    for (AbstractOverlay *overlay : mOverlays) {
+        if (overlay->tileName() == tileName) {
             return true;
-    return false;
-}
-
-bool ContainerOverlayDialog::isEntryTileUsed(const QString &_tileName)
-{
-    QString tileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(_tileName);
-    foreach (ContainerOverlay *overlay, mOverlays) {
-        foreach (ContainerOverlayEntry *entry, overlay->mEntries) {
-            if (entry->mTiles.contains(tileName))
-                return true;
         }
     }
     return false;
 }
 
-void ContainerOverlayDialog::addOverlay()
+bool AbstractOverlayDialog::isEntryTileUsed(const QString &_tileName)
+{
+    QString tileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(_tileName);
+    for (AbstractOverlay *overlay : mOverlays) {
+        for (int i = 0; i < overlay->entryCount(); i++) {
+            AbstractOverlayEntry *entry = overlay->entry(i);
+            if (entry->tiles().contains(tileName)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void AbstractOverlayDialog::addOverlay()
 {
     QModelIndex index = ui->tilesetTilesView->currentIndex();
     Tile *tile = ui->tilesetTilesView->model()->tileAt(index);
     if (!tile)
         return;
-    ContainerOverlay *overlay = new ContainerOverlay;
-    overlay->mTileName = BuildingEditor::BuildingTilesMgr::nameForTile(tile);
-    ContainerOverlayEntry *entry = new ContainerOverlayEntry;
-    entry->mParent = overlay;
-    entry->mRoomName = QLatin1String("other");
-    entry->mTiles += QLatin1String("none");
-    entry->mTiles += QLatin1String("none");
-    overlay->mEntries += entry;
+    AbstractOverlay *overlay = createOverlay(tile);
 
-    QMap<QString, ContainerOverlay*> map;
-    foreach (ContainerOverlay *overlay, mOverlays)
-        map[overlay->mTileName] = overlay;
-    map[overlay->mTileName] = overlay;
-    QList<ContainerOverlay*> sorted = map.values();
+    QMap<QString, AbstractOverlay*> map;
+    for (AbstractOverlay *overlay : mOverlays) {
+        map[overlay->tileName()] = overlay;
+    }
+    map[overlay->tileName()] = overlay;
+    QList<AbstractOverlay*> sorted = map.values();
     int index2 = sorted.indexOf(overlay);
 
     mUndoStack->push(new InsertOverlay(this, index2, overlay));
 }
 
-void ContainerOverlayDialog::addEntry()
+void AbstractOverlayDialog::addEntry()
 {
     QModelIndex index = ui->overlayView->currentIndex();
-    ContainerOverlay *overlay = ui->overlayView->model()->overlayAt(index);
+    AbstractOverlay *overlay = ui->overlayView->model()->overlayAt(index);
     if (!overlay)
         return;
-    ContainerOverlayEntry *entry = new ContainerOverlayEntry;
-    entry->mParent = overlay;
-    entry->mRoomName = QLatin1String("other");
-    entry->mTiles += QLatin1String("none");
-    entry->mTiles += QLatin1String("none");
-    mUndoStack->push(new InsertEntry(this, overlay, overlay->mEntries.size(), entry));
+    AbstractOverlayEntry *entry = createEntry(overlay);
+    mUndoStack->push(new InsertEntry(this, overlay, overlay->entryCount(), entry));
 }
 
-void ContainerOverlayDialog::setToNone()
+void AbstractOverlayDialog::setToNone()
 {
     QModelIndex index = ui->overlayView->currentIndex();
-    ContainerOverlayEntry *entry = ui->overlayView->model()->entryAt(index);
+    AbstractOverlayEntry *entry = ui->overlayView->model()->entryAt(index);
     if (!entry)
         return;
     QList<QUndoCommand*> commands;
-    for (int i = 0; i < entry->mTiles.size(); i++)
-        if (entry->mTiles[i] != QLatin1String("none"))
+    for (int i = 0; i < entry->tiles().size(); i++) {
+        if (entry->tiles()[i] != QLatin1String("none")) {
             commands += new SetEntryTile(this, entry, i, QLatin1String("none"));
-    if (commands.size() > 1)
+        }
+    }
+    if (commands.size() > 1) {
         mUndoStack->beginMacro(QLatin1String("Set To None"));
-    foreach (QUndoCommand *uc, commands)
+    }
+    for (QUndoCommand *uc : commands) {
         mUndoStack->push(uc);
-    if (commands.size() > 1)
+    }
+    if (commands.size() > 1) {
         mUndoStack->endMacro();
+    }
 }
 
-void ContainerOverlayDialog::overlayActivated(const QModelIndex &index)
+void AbstractOverlayDialog::overlayActivated(const QModelIndex &index)
 {
-    ContainerOverlay *overlay = ui->overlayView->model()->overlayAt(index);
-    ContainerOverlayEntry *entry = ui->overlayView->model()->entryAt(index);
+    AbstractOverlay *overlay = ui->overlayView->model()->overlayAt(index);
+    AbstractOverlayEntry *entry = ui->overlayView->model()->entryAt(index);
     if (overlay) {
-        if (Tiled::Tile *tile = BuildingEditor::BuildingTilesMgr::instance()->tileFor(overlay->mTileName)) {
+        if (Tiled::Tile *tile = BuildingEditor::BuildingTilesMgr::instance()->tileFor(overlay->tileName())) {
             int row = TileMetaInfoMgr::instance()->indexOf(tile->tileset()->name());
             ui->tilesetList->setCurrentRow(row);
             QModelIndex tileIndex = ui->tilesetTilesView->model()->index(tile);
@@ -511,7 +575,7 @@ void ContainerOverlayDialog::overlayActivated(const QModelIndex &index)
         }
     }
     if (entry) {
-        if (Tiled::Tile *tile = BuildingEditor::BuildingTilesMgr::instance()->tileFor(entry->mTiles.first())) {
+        if (Tiled::Tile *tile = BuildingEditor::BuildingTilesMgr::instance()->tileFor(entry->tiles().first())) {
             int row = TileMetaInfoMgr::instance()->indexOf(tile->tileset()->name());
             ui->tilesetList->setCurrentRow(row);
             QModelIndex tileIndex = ui->tilesetTilesView->model()->index(tile);
@@ -522,38 +586,40 @@ void ContainerOverlayDialog::overlayActivated(const QModelIndex &index)
     }
 }
 
-void ContainerOverlayDialog::scrollToNow(const QModelIndex &index)
+void AbstractOverlayDialog::scrollToNow(const QModelIndex &index)
 {
     ui->tilesetTilesView->scrollTo(index);
 }
 
-void ContainerOverlayDialog::tileActivated(const QModelIndex &index)
+void AbstractOverlayDialog::tileActivated(const QModelIndex &index)
 {
     Tile *tile = ui->tilesetTilesView->model()->tileAt(index);
-    if (tile == 0)
+    if (tile == nullptr)
         return;
 
-    foreach (ContainerOverlay *overlay, mOverlays) {
-        if (BuildingEditor::BuildingTilesMgr::normalizeTileName(overlay->mTileName) == BuildingEditor::BuildingTilesMgr::nameForTile(tile)) {
+    for (AbstractOverlay *overlay : mOverlays) {
+        if (BuildingEditor::BuildingTilesMgr::normalizeTileName(overlay->tileName()) == BuildingEditor::BuildingTilesMgr::nameForTile(tile)) {
             ui->overlayView->setCurrentIndex(ui->overlayView->model()->index(overlay));
             return;
         }
 
-        foreach (ContainerOverlayEntry *entry, overlay->mEntries) {
-            foreach (QString tileName, entry->mTiles)
-            if (BuildingEditor::BuildingTilesMgr::normalizeTileName(tileName) == BuildingEditor::BuildingTilesMgr::nameForTile(tile)) {
-                ui->overlayView->setCurrentIndex(ui->overlayView->model()->index(entry));
-                return;
+        for (int i = 0; i < overlay->entryCount(); i++) {
+            AbstractOverlayEntry *entry = overlay->entry(i);
+            for (QString tileName : entry->tiles()) {
+                if (BuildingEditor::BuildingTilesMgr::normalizeTileName(tileName) == BuildingEditor::BuildingTilesMgr::nameForTile(tile)) {
+                    ui->overlayView->setCurrentIndex(ui->overlayView->model()->index(entry));
+                    return;
+                }
             }
         }
     }
 }
 
-void ContainerOverlayDialog::tilesetSelectionChanged()
+void AbstractOverlayDialog::tilesetSelectionChanged()
 {
     QList<QListWidgetItem*> selection = ui->tilesetList->selectedItems();
-    QListWidgetItem *item = selection.count() ? selection.first() : 0;
-    mCurrentTileset = 0;
+    QListWidgetItem *item = selection.count() ? selection.first() : nullptr;
+    mCurrentTileset = nullptr;
     if (item) {
         int row = ui->tilesetList->row(item);
         mCurrentTileset = TileMetaInfoMgr::instance()->tileset(row);
@@ -569,7 +635,7 @@ void ContainerOverlayDialog::tilesetSelectionChanged()
     syncUI();
 }
 
-void ContainerOverlayDialog::updateUsedTiles()
+void AbstractOverlayDialog::updateUsedTiles()
 {
     if (!mCurrentTileset)
         return;
@@ -584,7 +650,7 @@ void ContainerOverlayDialog::updateUsedTiles()
     ui->tilesetTilesView->model()->redisplay();
 }
 
-void ContainerOverlayDialog::manageTilesets()
+void AbstractOverlayDialog::manageTilesets()
 {
     TileMetaInfoDialog dialog(this);
     dialog.exec();
@@ -594,7 +660,7 @@ void ContainerOverlayDialog::manageTilesets()
         QMessageBox::warning(this, tr("It's no good, Jim!"), mgr->errorString());
 }
 
-void ContainerOverlayDialog::tilesetAdded(Tileset *tileset)
+void AbstractOverlayDialog::tilesetAdded(Tileset *tileset)
 {
     setTilesetList();
     int row = TileMetaInfoMgr::instance()->indexOf(tileset);
@@ -604,13 +670,13 @@ void ContainerOverlayDialog::tilesetAdded(Tileset *tileset)
 #endif
 }
 
-void ContainerOverlayDialog::tilesetAboutToBeRemoved(Tileset *tileset)
+void AbstractOverlayDialog::tilesetAboutToBeRemoved(Tileset *tileset)
 {
     int row = TileMetaInfoMgr::instance()->indexOf(tileset);
     delete ui->tilesetList->takeItem(row);
 }
 
-void ContainerOverlayDialog::tilesetRemoved(Tileset *tileset)
+void AbstractOverlayDialog::tilesetRemoved(Tileset *tileset)
 {
     Q_UNUSED(tileset)
 #if 0
@@ -619,7 +685,7 @@ void ContainerOverlayDialog::tilesetRemoved(Tileset *tileset)
 }
 
 // Called when a tileset image changes or a missing tileset was found.
-void ContainerOverlayDialog::tilesetChanged(Tileset *tileset)
+void AbstractOverlayDialog::tilesetChanged(Tileset *tileset)
 {
     if (tileset == mCurrentTileset) {
         if (tileset->isMissing())
@@ -633,25 +699,35 @@ void ContainerOverlayDialog::tilesetChanged(Tileset *tileset)
         item->setForeground(tileset->isMissing() ? Qt::red : Qt::black);
 }
 
-void ContainerOverlayDialog::tileDropped(ContainerOverlay *overlay, const QString &tileName)
+void AbstractOverlayDialog::tileDropped(AbstractOverlay *overlay, const QString &tileName)
 {
     if (isOverlayTileUsed(tileName))
         return;
     mUndoStack->push(new SetBaseTile(this, overlay, tileName));
 }
 
-void ContainerOverlayDialog::tileDropped(ContainerOverlayEntry *entry,
-                                         int index, const QString &tileName)
+void AbstractOverlayDialog::tileDropped(AbstractOverlayEntry *entry, int index, const QString &tileName)
 {
+    if (index >= entry->tiles().size()) {
+        if (ui->overlayView->model()->moreThan2Tiles()) {
+            mUndoStack->push(new AddEntryTile(this, entry, tileName));
+        }
+        return;
+    }
     mUndoStack->push(new SetEntryTile(this, entry, index, tileName));
 }
 
-void ContainerOverlayDialog::entryRoomNameEdited(ContainerOverlayEntry *entry, const QString &roomName)
+void AbstractOverlayDialog::entryRoomNameEdited(AbstractOverlayEntry *entry, const QString &roomName)
 {
     mUndoStack->push(new SetEntryRoomName(this, entry, roomName));
 }
 
-void ContainerOverlayDialog::fileOpen()
+void AbstractOverlayDialog::removeTile(AbstractOverlayEntry *entry, int index)
+{
+    mUndoStack->push(new RemoveEntryTile(this, entry, index));
+}
+
+void AbstractOverlayDialog::fileOpen()
 {
     if (!confirmSave())
         return;
@@ -673,24 +749,21 @@ void ContainerOverlayDialog::fileOpen()
     syncUI();
 }
 
-void ContainerOverlayDialog::fileOpen(const QString &fileName)
+void AbstractOverlayDialog::fileOpen(const QString &fileName)
 {
-    ContainerOverlayFile cof;
-    if (!cof.read(fileName)) {
-        QMessageBox::warning(this, tr("Error reading file"), cof.errorString());
+    if (!fileOpen(fileName, mOverlays)) {
+        QMessageBox::warning(this, tr("Error reading file"), mError);
         return;
     }
 
     mFileName = fileName;
-    mOverlays = cof.mOverlays;
-    cof.mOverlays.clear();
     ui->overlayView->setOverlays(mOverlays);
     updateUsedTiles();
 
     syncUI();
 }
 
-void ContainerOverlayDialog::closeEvent(QCloseEvent *event)
+void AbstractOverlayDialog::closeEvent(QCloseEvent *event)
 {
     if (confirmSave()) {
         mFileName.clear();
@@ -717,7 +790,7 @@ void ContainerOverlayDialog::closeEvent(QCloseEvent *event)
 //    QMainWindow::closeEvent(event);
 }
 
-bool ContainerOverlayDialog::confirmSave()
+bool AbstractOverlayDialog::confirmSave()
 {
     if (mFileName.isEmpty() || mUndoStack->isClean())
         return true;
@@ -736,7 +809,7 @@ bool ContainerOverlayDialog::confirmSave()
     }
 }
 
-QString ContainerOverlayDialog::getSaveLocation()
+QString AbstractOverlayDialog::getSaveLocation()
 {
     QSettings settings;
     QString key = QLatin1String("ContainerOverlay/LastOpenPath");
@@ -759,7 +832,7 @@ QString ContainerOverlayDialog::getSaveLocation()
     return fileName;
 }
 
-bool ContainerOverlayDialog::fileSave()
+bool AbstractOverlayDialog::fileSave()
 {
     if (mFileName.length())
         return fileSave(mFileName);
@@ -767,7 +840,7 @@ bool ContainerOverlayDialog::fileSave()
         return fileSaveAs();
 }
 
-bool ContainerOverlayDialog::fileSaveAs()
+bool AbstractOverlayDialog::fileSaveAs()
 {
     QString fileName = getSaveLocation();
     if (fileName.isEmpty())
@@ -775,53 +848,43 @@ bool ContainerOverlayDialog::fileSaveAs()
     return fileSave(fileName);
 }
 
-bool ContainerOverlayDialog::fileSave(const QString &fileName)
+bool AbstractOverlayDialog::fileSave(const QString &fileName)
 {
-    ContainerOverlayFile cof;
-    cof.mOverlays = mOverlays;
-
-    if (!cof.write(fileName)) {
-        cof.mOverlays.clear();
-        QMessageBox::warning(this, tr("Error writing file"), cof.errorString());
+    if (!fileSave(fileName, mOverlays)) {
+        QMessageBox::warning(this, tr("Error writing file"), mError);
         return false;
     }
-    cof.mOverlays.clear();
-
     mFileName = fileName;
     mUndoStack->setClean();
-
     syncUI();
-
     return true;
 }
 
-void ContainerOverlayDialog::updateWindowTitle()
+void AbstractOverlayDialog::updateWindowTitle()
 {
     if (mFileName.length()) {
         QString fileName = QDir::toNativeSeparators(mFileName);
         setWindowTitle(tr("[*]%1").arg(fileName));
-//    } else if (mTileDefFile) {
-//        setWindowTitle(tr("[*]Untitled"));
     } else {
-        setWindowTitle(tr("Container Overlays"));
+        setWindowTitle(defaultWindowTitle());
     }
     setWindowModified(!mUndoStack->isClean());
 }
 
-void ContainerOverlayDialog::remove()
+void AbstractOverlayDialog::remove()
 {
     QModelIndexList selected = ui->overlayView->selectionModel()->selectedIndexes();
-    ContainerOverlay *overlay = ui->overlayView->model()->overlayAt(selected.first());
-    ContainerOverlayEntry *entry = ui->overlayView->model()->entryAt(selected.first());
+    AbstractOverlay *overlay = ui->overlayView->model()->overlayAt(selected.first());
+    AbstractOverlayEntry *entry = ui->overlayView->model()->entryAt(selected.first());
     if (overlay) {
         mUndoStack->push(new RemoveOverlay(this, mOverlays.indexOf(overlay), overlay));
     }
     if (entry) {
-        mUndoStack->push(new RemoveEntry(this, entry->mParent->mEntries.indexOf(entry), entry));
+        mUndoStack->push(new RemoveEntry(this, entry->indexOf(), entry));
     }
 }
 
-void ContainerOverlayDialog::syncUI()
+void AbstractOverlayDialog::syncUI()
 {
     ui->actionSave->setEnabled(!mFileName.isEmpty() && !mUndoStack->isClean());
     ui->actionSaveAs->setEnabled(!mFileName.isEmpty());
@@ -837,4 +900,59 @@ void ContainerOverlayDialog::syncUI()
     ui->actionRemove->setEnabled(selected.size() > 0);
 
     updateWindowTitle();
+}
+
+// // // // //
+
+ContainerOverlayDialog::ContainerOverlayDialog(QWidget *parent)
+    : AbstractOverlayDialog(parent)
+{
+
+}
+
+bool ContainerOverlayDialog::fileOpen(const QString &fileName, QList<AbstractOverlay *> &overlays)
+{
+    ContainerOverlayFile cof;
+    if (!cof.read(fileName)) {
+        mError = cof.errorString();
+        return false;
+    }
+
+    mFileName = fileName;
+    for (ContainerOverlay* overlay : cof.takeOverlays()) {
+        overlays << overlay;
+    }
+    return true;
+}
+
+bool ContainerOverlayDialog::fileSave(const QString &fileName, const QList<AbstractOverlay *> &overlays)
+{
+    ContainerOverlayFile cof;
+    QList<ContainerOverlay*> overlays1;
+    for (AbstractOverlay* overlay : overlays) {
+        overlays1 << static_cast<ContainerOverlay*>(overlay);
+    }
+    if (!cof.write(fileName, overlays1)) {
+        mError = cof.errorString();
+        return false;
+    }
+    return true;
+}
+
+AbstractOverlay *ContainerOverlayDialog::createOverlay(Tile *tile)
+{
+    ContainerOverlay *overlay = new ContainerOverlay;
+    overlay->mTileName = BuildingEditor::BuildingTilesMgr::nameForTile(tile);
+    overlay->insertEntry(overlay->entryCount(), createEntry(overlay));
+    return overlay;
+}
+
+AbstractOverlayEntry *ContainerOverlayDialog::createEntry(AbstractOverlay *overlay)
+{
+    ContainerOverlayEntry *entry = new ContainerOverlayEntry();
+    entry->mParent = static_cast<ContainerOverlay*>(overlay);
+    entry->mRoomName = QLatin1String("other");
+    entry->mTiles += QLatin1String("none");
+    entry->mTiles += QLatin1String("none");
+    return entry;
 }

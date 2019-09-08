@@ -30,8 +30,8 @@ class Zoomable;
 }
 }
 
-class ContainerOverlay;
-class ContainerOverlayEntry;
+class AbstractOverlay;
+class AbstractOverlayEntry;
 
 class ContainerOverlayDelegate;
 
@@ -39,7 +39,7 @@ class ContainerOverlayModel : public QAbstractListModel
 {
     Q_OBJECT
 public:
-    ContainerOverlayModel(QObject *parent = 0);
+    ContainerOverlayModel(QObject *parent = nullptr);
     ~ContainerOverlayModel();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
@@ -54,28 +54,28 @@ public:
                         int role = Qt::DisplayRole) const;
 
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
-    QModelIndex index(ContainerOverlay *overlay);
-    QModelIndex index(ContainerOverlayEntry *entry);
+    QModelIndex index(AbstractOverlay *overlay);
+    QModelIndex index(AbstractOverlayEntry *entry);
 
     QStringList mimeTypes() const;
     bool dropMimeData(const QMimeData *data, Qt::DropAction action,
                       int row, int column, const QModelIndex &parent);
 
     void clear();
-    void setOverlays(const QList<ContainerOverlay *> &overlays);
+    void setOverlays(const QList<AbstractOverlay *> &overlays);
 
-    ContainerOverlay *overlayAt(const QModelIndex &index) const;
-    ContainerOverlayEntry *entryAt(const QModelIndex &index) const;
+    AbstractOverlay *overlayAt(const QModelIndex &index) const;
+    AbstractOverlayEntry *entryAt(const QModelIndex &index) const;
 
-    void insertOverlay(int index, ContainerOverlay *overlay);
-    void removeOverlay(ContainerOverlay *overlay);
-    void insertEntry(ContainerOverlay *overlay, int index, ContainerOverlayEntry *entry);
-    void removeEntry(ContainerOverlay *overlay, int index);
+    void insertOverlay(int index, AbstractOverlay *overlay);
+    void removeOverlay(AbstractOverlay *overlay);
+    void insertEntry(AbstractOverlay *overlay, int index, AbstractOverlayEntry *entry);
+    void removeEntry(AbstractOverlay *overlay, int index);
 
     void scaleChanged(qreal scale);
 
     void setDropCoords(int entryIndex, const QModelIndex &dropIndex)
-    { mDropEntryIndex = entryIndex, mDropIndex = dropIndex; }
+    { mDropEntryIndex = entryIndex; mDropIndex = dropIndex; }
 
     int dropEntryIndex() const
     { return mDropEntryIndex; }
@@ -84,66 +84,72 @@ public:
     { return mDropIndex; }
 
     void redisplay();
-    void redisplay(ContainerOverlay *overlay);
-    void redisplay(ContainerOverlayEntry *entry);
+    void redisplay(AbstractOverlay *overlay);
+    void redisplay(AbstractOverlayEntry *entry);
+
+    void setMoreThan2Tiles(bool moreThan2);
+    bool moreThan2Tiles() const { return mMoreThan2Tiles; }
 
 signals:
-    void tileDropped(ContainerOverlay *overlay, const QString &tileName);
-    void tileDropped(ContainerOverlayEntry *entry, int index, const QString &tileName);
-    void entryRoomNameEdited(ContainerOverlayEntry *entry, const QString &roomName);
+    void tileDropped(AbstractOverlay *overlay, const QString &tileName);
+    void tileDropped(AbstractOverlayEntry *entry, int index, const QString &tileName);
+    void entryRoomNameEdited(AbstractOverlayEntry *entry, const QString &roomName);
 
 private:
     class Item
     {
     public:
         Item() :
-            mOverlay(0),
-            mEntry(0)
+            mOverlay(nullptr),
+            mEntry(nullptr)
         {
         }
 
-        Item(ContainerOverlay *overlay) :
+        Item(AbstractOverlay *overlay) :
             mOverlay(overlay),
-            mEntry(0)
+            mEntry(nullptr)
         {
         }
 
-        Item(ContainerOverlayEntry *entry) :
-            mOverlay(0),
+        Item(AbstractOverlayEntry *entry) :
+            mOverlay(nullptr),
             mEntry(entry)
         {
         }
 
-        ContainerOverlay *mOverlay;
-        ContainerOverlayEntry *mEntry;
+        AbstractOverlay *mOverlay;
+        AbstractOverlayEntry *mEntry;
     };
 
     Item *toItem(const QModelIndex &index) const;
-    Item *toItem(ContainerOverlay *overlay) const;
-    Item *toItem(ContainerOverlayEntry *entry) const;
+    Item *toItem(AbstractOverlay *overlay) const;
+    Item *toItem(AbstractOverlayEntry *entry) const;
 
     static QString mMimeType;
     QList<Item*> mItems;
-    int mDropEntryIndex;
+    int mDropEntryIndex = -1;
     QModelIndex mDropIndex;
+    bool mMoreThan2Tiles = false;
 };
 
 class ContainerOverlayView : public QTableView
 {
     Q_OBJECT
 public:
-    explicit ContainerOverlayView(QWidget *parent = 0);
-    explicit ContainerOverlayView(Tiled::Internal::Zoomable *zoomable, QWidget *parent = 0);
+    explicit ContainerOverlayView(QWidget *parent = nullptr);
+    explicit ContainerOverlayView(Tiled::Internal::Zoomable *zoomable, QWidget *parent = nullptr);
 
-    QSize sizeHint() const;
+    QSize sizeHint() const override;
 
-    void mouseDoubleClickEvent(QMouseEvent *event);
+    void leaveEvent(QEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
 
-    void wheelEvent(QWheelEvent *event);
+    void wheelEvent(QWheelEvent *event) override;
 
-    void dragMoveEvent(QDragMoveEvent *event);
-    void dragLeaveEvent(QDragLeaveEvent *event);
-    void dropEvent(QDropEvent *event);
+    void dragMoveEvent(QDragMoveEvent *event) override;
+    void dragLeaveEvent(QDragLeaveEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
 
     ContainerOverlayModel *model() const
     { return mModel; }
@@ -156,20 +162,32 @@ public:
     Tiled::Internal::Zoomable *zoomable() const
     { return mZoomable; }
 
+    void setMoreThan2Tiles(bool moreThan2);
+
+    QModelIndex getHoverIndex() { return mHoverIndex; }
+    int getHoverEntryIndex() { return mHoverEntryIndex; }
+
     void clear();
-    void setOverlays(const QList<ContainerOverlay*> &overlays);
+    void setOverlays(const QList<AbstractOverlay*> &overlays);
 
     void redisplay();
-    void redisplay(ContainerOverlay *overlay);
-    void redisplay(ContainerOverlayEntry *entry);
+    void redisplay(AbstractOverlay *overlay);
+    void redisplay(AbstractOverlayEntry *entry);
 
     typedef Tiled::Tileset Tileset;
+
+signals:
+    void removeTile(AbstractOverlayEntry *entry, int index);
+
 public slots:
     void scaleChanged(qreal scale);
 
     void tilesetChanged(Tileset *tileset);
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetRemoved(Tiled::Tileset *tileset);
+
+protected:
+    void contextMenuEvent(QContextMenuEvent *event);
 
 private:
     void init();
@@ -178,6 +196,8 @@ private:
     ContainerOverlayModel *mModel;
     ContainerOverlayDelegate *mDelegate;
     Tiled::Internal::Zoomable *mZoomable;
+    QModelIndex mHoverIndex;
+    int mHoverEntryIndex = -1;
 };
 
 #endif // CONTAINEROVERLAYVIEW_H

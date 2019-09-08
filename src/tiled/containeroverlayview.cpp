@@ -45,7 +45,7 @@ using namespace Internal;
 class ContainerOverlayDelegate : public QStyledItemDelegate
 {
 public:
-    ContainerOverlayDelegate(ContainerOverlayView *view, QObject *parent = 0)
+    ContainerOverlayDelegate(ContainerOverlayView *view, QObject *parent = nullptr)
         : QStyledItemDelegate(parent)
         , mView(view)
     { }
@@ -76,8 +76,8 @@ void ContainerOverlayDelegate::paint(QPainter *painter,
 {
     const ContainerOverlayModel *m = static_cast<const ContainerOverlayModel*>(index.model());
 
-    ContainerOverlay *overlay = m->overlayAt(index);
-    ContainerOverlayEntry *entry = m->entryAt(index);
+    AbstractOverlay *overlay = m->overlayAt(index);
+    AbstractOverlayEntry *entry = m->entryAt(index);
     if (!overlay && !entry)
         return;
 
@@ -104,7 +104,7 @@ void ContainerOverlayDelegate::paint(QPainter *painter,
 
     if (overlay) {
         painter->drawLine(option.rect.topLeft(), option.rect.topRight());
-        if (Tile *tile = BuildingEditor::BuildingTilesMgr::instance()->tileFor(overlay->mTileName)) {
+        if (Tile *tile = BuildingEditor::BuildingTilesMgr::instance()->tileFor(overlay->tileName())) {
             QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
             r.setRight(r.left() + tileWidth);
             QMargins margins = tile->drawMargins(scale);
@@ -116,12 +116,12 @@ void ContainerOverlayDelegate::paint(QPainter *painter,
         painter->setPen(QColor(Qt::lightGray));
         painter->drawLine(option.rect.topLeft(), option.rect.topRight());
         painter->setPen(pen);
-        Tile *baseTile = BuildingEditor::BuildingTilesMgr::instance()->tileFor(entry->mParent->mTileName);
+        Tile *baseTile = BuildingEditor::BuildingTilesMgr::instance()->tileFor(entry->parent()->tileName());
         QRect r = option.rect.adjusted(extra, extra + fontHgt, -extra, -extra);
         r.setRight(r.left() + tileWidth);
         QMargins margins = baseTile->drawMargins(scale);
-        for (int i = 0; i < entry->mTiles.size(); i++) {
-            QString tileName = entry->mTiles[i];
+        for (int i = 0; i < entry->tiles().size(); i++) {
+            QString tileName = entry->tiles()[i];
             if (baseTile) {
                 painter->drawImage(r.adjusted(margins.left(), margins.top(), -margins.right(), -margins.bottom()), baseTile->image());
             }
@@ -134,9 +134,25 @@ void ContainerOverlayDelegate::paint(QPainter *painter,
                     painter->drawImage(r.adjusted(margins2.left(), margins2.top(), -margins2.right(), -margins2.bottom()), tile->image());
                 }
             }
-            if (m->dropEntryIndex() == i && m->dropIndex() == index)
+            if ((m->dropEntryIndex() == i) && (m->dropIndex() == index)) {
                 painter->drawRect(r);
+            }
+            if ((m->dropEntryIndex() == -1) && (option.state & QStyle::State_MouseOver)) {
+                if (mView->getHoverIndex() == index && mView->getHoverEntryIndex() == i) {
+                    painter->drawRect(r);
+                }
+            }
             r.translate(tileWidth + extra, 0);
+        }
+        if (m->moreThan2Tiles()) {
+            if (baseTile) {
+                painter->setOpacity(qreal(0.25));
+                painter->drawImage(r.adjusted(margins.left(), margins.top(), -margins.right(), -margins.bottom()), baseTile->image());
+                painter->setOpacity(qreal(1.0));
+            }
+            if ((m->dropEntryIndex() == entry->tiles().size()) && (m->dropIndex() == index)) {
+                painter->drawRect(r);
+            }
         }
     }
 
@@ -145,7 +161,7 @@ void ContainerOverlayDelegate::paint(QPainter *painter,
         QRectF textRect;
         painter->drawText(option.rect.adjusted(extra, extra, 0, 0),
                           Qt::AlignTop | Qt::AlignLeft,
-                          entry->mRoomName,
+                          entry->roomName(),
                           &textRect);
     }
 
@@ -160,7 +176,7 @@ void ContainerOverlayDelegate::paint(QPainter *painter,
                                   ? QPalette::Normal : QPalette::Disabled;
         o.backgroundColor = option.palette.color(cg, (option.state & QStyle::State_Selected)
                                                  ? QPalette::Highlight : QPalette::Window);
-        const QWidget *widget = 0/*d->widget(option)*/;
+        const QWidget *widget = nullptr/*d->widget(option)*/;
         QStyle *style = /*widget ? widget->style() :*/ QApplication::style();
         style->drawPrimitive(QStyle::PE_FrameFocusRect, &o, painter, widget);
     }
@@ -174,14 +190,18 @@ QSize ContainerOverlayDelegate::sizeHint(const QStyleOptionViewItem &option,
     const ContainerOverlayModel *m = static_cast<const ContainerOverlayModel*>(index.model());
     const qreal scale = this->scale();
     const int extra = 2;
-    ContainerOverlay *overlay = m->overlayAt(index);
-    ContainerOverlayEntry *entry = m->entryAt(index);
+    AbstractOverlay *overlay = m->overlayAt(index);
+    AbstractOverlayEntry *entry = m->entryAt(index);
     int tileWidth = 64 * scale, tileHeight = 128 * scale;
     int fontHgt = overlay ? 0 : option.fontMetrics.lineSpacing();
     QSize size(extra + tileWidth + extra, extra + fontHgt + tileHeight + extra);
 
     if (entry) {
-        size.setWidth((extra + tileWidth) * entry->mTiles.size() + extra);
+        int nTiles = entry->tiles().size();
+        if (m->moreThan2Tiles()) {
+            nTiles++;
+        }
+        size.setWidth((extra + tileWidth) * nTiles + extra);
     }
 
     return size;
@@ -192,15 +212,19 @@ int ContainerOverlayDelegate::dropCoords(const QPoint &dragPos,
 {
     const ContainerOverlayModel *m = static_cast<const ContainerOverlayModel*>(index.model());
     QRect r = mView->visualRect(index);
-    ContainerOverlay *overlay = m->overlayAt(index);
-    ContainerOverlayEntry *entry = m->entryAt(index);
+    AbstractOverlay *overlay = m->overlayAt(index);
+    AbstractOverlayEntry *entry = m->entryAt(index);
     const int extra = 2;
     int tileWid = 64 * scale();
     if (overlay)
         return 0;
     if (entry) {
+        int nTiles = entry->tiles().size();
+        if (m->moreThan2Tiles()) {
+            nTiles++;
+        }
         int index = (dragPos.x() - r.x()) / (extra + tileWid);
-        if (index < 0 || index >= entry->mTiles.size())
+        if (index < 0 || index >= nTiles)
             return -1;
         return index;
     }
@@ -217,17 +241,17 @@ QWidget *ContainerOverlayDelegate::createEditor(QWidget *parent, const QStyleOpt
 void ContainerOverlayDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
     const ContainerOverlayModel *m = static_cast<const ContainerOverlayModel*>(index.model());
-    ContainerOverlayEntry *entry = m->entryAt(index);
-    ((QLineEdit *)editor)->setText(entry ? entry->mRoomName : QLatin1String(""));
+    AbstractOverlayEntry *entry = m->entryAt(index);
+    ((QLineEdit *)editor)->setText(entry ? entry->roomName() : QLatin1String(""));
 }
 
 void ContainerOverlayDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 {
     ContainerOverlayModel *m = static_cast<ContainerOverlayModel*>(model);
-    ContainerOverlayEntry *entry = m->entryAt(index);
+    AbstractOverlayEntry *entry = m->entryAt(index);
     if (entry) {
         QString text = ((QLineEdit*)editor)->text();
-        if (!text.isEmpty() && !text.contains(QLatin1String(" ")) && text != entry->mRoomName)
+        if (!text.isEmpty() && !text.contains(QLatin1String(" ")) && text != entry->roomName())
             emit m->entryRoomNameEdited(entry, text);
     }
 }
@@ -318,7 +342,7 @@ QModelIndex ContainerOverlayModel::index(int row, int column, const QModelIndex 
     return createIndex(row, column, mItems.at(itemIndex));
 }
 
-QModelIndex ContainerOverlayModel::index(ContainerOverlay *overlay)
+QModelIndex ContainerOverlayModel::index(AbstractOverlay *overlay)
 {
     int itemIndex = mItems.indexOf(toItem(overlay));
     if (itemIndex != -1)
@@ -326,7 +350,7 @@ QModelIndex ContainerOverlayModel::index(ContainerOverlay *overlay)
     return QModelIndex();
 }
 
-QModelIndex ContainerOverlayModel::index(ContainerOverlayEntry *entry)
+QModelIndex ContainerOverlayModel::index(AbstractOverlayEntry *entry)
 {
     int itemIndex = mItems.indexOf(toItem(entry));
     if (itemIndex != -1)
@@ -358,7 +382,7 @@ bool ContainerOverlayModel::dropMimeData(const QMimeData *data, Qt::DropAction a
      if (!item)
          return false;
 
-     if (item->mEntry && mDropEntryIndex == -1)
+     if (item->mEntry && (mDropEntryIndex == -1))
          return false;
 
      QByteArray encodedData = data->data(mMimeType);
@@ -381,19 +405,20 @@ bool ContainerOverlayModel::dropMimeData(const QMimeData *data, Qt::DropAction a
 
 void ContainerOverlayModel::clear()
 {
-    setOverlays(QList<ContainerOverlay*>());
+    setOverlays(QList<AbstractOverlay*>());
 }
 
-void ContainerOverlayModel::setOverlays(const QList<ContainerOverlay *> &overlays)
+void ContainerOverlayModel::setOverlays(const QList<AbstractOverlay *> &overlays)
 {
     beginResetModel();
 
     qDeleteAll(mItems);
     mItems.clear();
 
-    foreach (ContainerOverlay *overlay, overlays) {
+    for (AbstractOverlay *overlay : overlays) {
         mItems += new Item(overlay);
-        foreach (ContainerOverlayEntry *entry, overlay->mEntries) {
+        for (int i = 0; i < overlay->entryCount(); i++) {
+            AbstractOverlayEntry *entry = overlay->entry(i);
             mItems += new Item(entry);
         }
     }
@@ -401,21 +426,21 @@ void ContainerOverlayModel::setOverlays(const QList<ContainerOverlay *> &overlay
     endResetModel();
 }
 
-ContainerOverlay *ContainerOverlayModel::overlayAt(const QModelIndex &index) const
+AbstractOverlay *ContainerOverlayModel::overlayAt(const QModelIndex &index) const
 {
     if (Item *item = toItem(index))
         return item->mOverlay;
-    return 0;
+    return nullptr;
 }
 
-ContainerOverlayEntry *ContainerOverlayModel::entryAt(const QModelIndex &index) const
+AbstractOverlayEntry *ContainerOverlayModel::entryAt(const QModelIndex &index) const
 {
     if (Item *item = toItem(index))
         return item->mEntry;
-    return 0;
+    return nullptr;
 }
 
-void ContainerOverlayModel::insertOverlay(int index, ContainerOverlay *overlay)
+void ContainerOverlayModel::insertOverlay(int index, AbstractOverlay *overlay)
 {
     int overlayIndex = 0, row = 0;
     foreach (Item *item, mItems) {
@@ -428,27 +453,30 @@ void ContainerOverlayModel::insertOverlay(int index, ContainerOverlay *overlay)
     }
 
     Item *item = new Item(overlay);
-    beginInsertRows(QModelIndex(), row, row + overlay->mEntries.size());
+    beginInsertRows(QModelIndex(), row, row + overlay->entryCount());
     mItems.insert(row, item);
-    foreach (ContainerOverlayEntry *entry, overlay->mEntries)
+    for (int i = 0; i < overlay->entryCount(); i++) {
+        AbstractOverlayEntry *entry = overlay->entry(i);
         mItems.insert(++row, new Item(entry));
+    }
     endInsertRows();
 }
 
-void ContainerOverlayModel::removeOverlay(ContainerOverlay *overlay)
+void ContainerOverlayModel::removeOverlay(AbstractOverlay *overlay)
 {
     Item *item = toItem(overlay);
     int row = mItems.indexOf(item) / columnCount();
-    beginRemoveRows(QModelIndex(), row, row + overlay->mEntries.size());
+    beginRemoveRows(QModelIndex(), row, row + overlay->entryCount());
     int i = mItems.indexOf(item);
     delete mItems.takeAt(i);
-    for (int j = 0; j < overlay->mEntries.size(); j++)
+    for (int j = 0; j < overlay->entryCount(); j++) {
         delete mItems.takeAt(i);
+    }
     endRemoveRows();
 }
 
-void ContainerOverlayModel::insertEntry(ContainerOverlay *overlay, int index,
-                                        ContainerOverlayEntry *entry)
+void ContainerOverlayModel::insertEntry(AbstractOverlay *overlay, int index,
+                                        AbstractOverlayEntry *entry)
 {
     int row = this->index(overlay).row();
     beginInsertRows(QModelIndex(), row + index + 1, row + index + 1);
@@ -456,7 +484,7 @@ void ContainerOverlayModel::insertEntry(ContainerOverlay *overlay, int index,
     endInsertRows();
 }
 
-void ContainerOverlayModel::removeEntry(ContainerOverlay *overlay, int index)
+void ContainerOverlayModel::removeEntry(AbstractOverlay *overlay, int index)
 {
     Item *item = toItem(overlay);
     int row = mItems.indexOf(item) / columnCount();
@@ -480,38 +508,43 @@ void ContainerOverlayModel::redisplay()
         emit dataChanged(index(0, 0), index(maxRow, maxColumn));
 }
 
-void ContainerOverlayModel::redisplay(ContainerOverlay *overlay)
+void ContainerOverlayModel::redisplay(AbstractOverlay *overlay)
 {
     int row = index(overlay).row();
-    emit dataChanged(index(row, 0), index(row + overlay->mEntries.size(), 0));
+    emit dataChanged(index(row, 0), index(row + overlay->entryCount(), 0));
 }
 
-void ContainerOverlayModel::redisplay(ContainerOverlayEntry *entry)
+void ContainerOverlayModel::redisplay(AbstractOverlayEntry *entry)
 {
     emit dataChanged(index(entry), index(entry));
+}
+
+void ContainerOverlayModel::setMoreThan2Tiles(bool moreThan2)
+{
+    mMoreThan2Tiles = moreThan2;
 }
 
 ContainerOverlayModel::Item *ContainerOverlayModel::toItem(const QModelIndex &index) const
 {
     if (index.isValid())
         return static_cast<Item*>(index.internalPointer());
-    return 0;
+    return nullptr;
 }
 
-ContainerOverlayModel::Item *ContainerOverlayModel::toItem(ContainerOverlay *overlay) const
+ContainerOverlayModel::Item *ContainerOverlayModel::toItem(AbstractOverlay *overlay) const
 {
     foreach (Item *item, mItems)
         if (item->mOverlay == overlay)
             return item;
-    return 0;
+    return nullptr;
 }
 
-ContainerOverlayModel::Item *ContainerOverlayModel::toItem(ContainerOverlayEntry *entry) const
+ContainerOverlayModel::Item *ContainerOverlayModel::toItem(AbstractOverlayEntry *entry) const
 {
     foreach (Item *item, mItems)
         if (item->mEntry == entry)
             return item;
-    return 0;
+    return nullptr;
 }
 
 /////
@@ -538,6 +571,44 @@ ContainerOverlayView::ContainerOverlayView(Zoomable *zoomable, QWidget *parent) 
 QSize ContainerOverlayView::sizeHint() const
 {
     return QSize(64 * 4, 128);
+}
+
+void ContainerOverlayView::leaveEvent(QEvent *event)
+{
+    QTableView::leaveEvent(event);
+
+    if (mHoverIndex.isValid()) {
+        mHoverIndex = QModelIndex();
+        mHoverEntryIndex = -1;
+        redisplay();
+    }
+}
+
+void ContainerOverlayView::mouseMoveEvent(QMouseEvent *event)
+{
+    QTableView::mouseMoveEvent(event);
+
+    QModelIndex index = indexAt(event->pos());
+
+     if (index.isValid() && (model()->entryAt(index) == nullptr)) {
+        index = QModelIndex();
+    }
+    if (index == mHoverIndex) {
+        if (index.isValid()) {
+            int entryIndex = mDelegate->dropCoords(event->pos(), index);
+            if (entryIndex != mHoverEntryIndex) {
+                mHoverEntryIndex = entryIndex;
+                redisplay();
+            }
+        }
+    } else {
+        mHoverIndex = index;
+        mHoverEntryIndex = -1;
+        if (index.isValid()) {
+            mHoverEntryIndex = mDelegate->dropCoords(event->pos(), index);
+        }
+        redisplay();
+    }
 }
 
 void ContainerOverlayView::mouseDoubleClickEvent(QMouseEvent *event)
@@ -603,13 +674,18 @@ void ContainerOverlayView::setZoomable(Zoomable *zoomable)
         connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(scaleChanged(qreal)));
 }
 
+void ContainerOverlayView::setMoreThan2Tiles(bool moreThan2)
+{
+    model()->setMoreThan2Tiles(moreThan2);
+}
+
 void ContainerOverlayView::clear()
 {
     selectionModel()->clear(); // because the model calls reset()
     model()->clear();
 }
 
-void ContainerOverlayView::setOverlays(const QList<ContainerOverlay *> &overlays)
+void ContainerOverlayView::setOverlays(const QList<AbstractOverlay *> &overlays)
 {
     selectionModel()->clear(); // because the model calls reset()
     model()->setOverlays(overlays);
@@ -620,12 +696,12 @@ void ContainerOverlayView::redisplay()
     model()->redisplay();
 }
 
-void ContainerOverlayView::redisplay(ContainerOverlay *overlay)
+void ContainerOverlayView::redisplay(AbstractOverlay *overlay)
 {
     model()->redisplay(overlay);
 }
 
-void ContainerOverlayView::redisplay(ContainerOverlayEntry *entry)
+void ContainerOverlayView::redisplay(AbstractOverlayEntry *entry)
 {
     model()->redisplay(entry);
 }
@@ -653,6 +729,29 @@ void ContainerOverlayView::tilesetRemoved(Tiled::Tileset *tileset)
     redisplay();
 }
 
+#include <QMenu>
+
+void ContainerOverlayView::contextMenuEvent(QContextMenuEvent *event)
+{
+    const QModelIndex index = indexAt(event->pos());
+    ContainerOverlayModel *m = model();
+    if (AbstractOverlayEntry *entry = m->entryAt(index)) {
+        int entryIndex = mDelegate->dropCoords(event->pos(), index);
+        if ((entryIndex < 0) || (entryIndex >= entry->tiles().size())) {
+            return;
+        }
+        if (!m->moreThan2Tiles()) {
+            return;
+        }
+        QMenu menu;
+        QAction *actionRemove = menu.addAction(tr("Remove Tile"));
+        QAction *action = menu.exec(event->globalPos());
+        if (action == actionRemove) {
+            emit removeTile(entry, entryIndex);
+        }
+    }
+}
+
 void ContainerOverlayView::init()
 {
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -663,6 +762,8 @@ void ContainerOverlayView::init()
     setSelectionMode(SingleSelection);
 
     setAcceptDrops(true);
+
+    setMouseTracking(true);
 
     setEditTriggers(QAbstractItemView::NoEditTriggers);
 

@@ -105,6 +105,7 @@
 #include "tilelayerspanel.h"
 #include "tilemetainfodialog.h"
 #include "tilemetainfomgr.h"
+#include "tileoverlaydialog.h"
 #include "zlevelsdock.h"
 #include "zprogress.h"
 #include "worldeddock.h"
@@ -657,6 +658,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             SLOT(comparePackFiles()));
     connect(mUi->actionContainerOverlays, SIGNAL(triggered()),
             SLOT(containerOverlayDialog()));
+    connect(mUi->actionTileOverlays, &QAction::triggered, this, &MainWindow::tileOverlayDialog);
     mUi->actionEnflatulator->setVisible(false); // !!!
     connect(mUi->actionEnflatulator, SIGNAL(triggered()), SLOT(enflatulator()));
     connect(mUi->actionWorldEd, SIGNAL(triggered()),
@@ -1736,13 +1738,33 @@ void MainWindow::comparePackFiles()
 
 void MainWindow::containerOverlayDialog()
 {
-    if (mContainerOverlayDialog == 0)
+    if (mContainerOverlayDialog == nullptr) {
         mContainerOverlayDialog = new ContainerOverlayDialog(this);
+    }
     mContainerOverlayDialog->show();
     mContainerOverlayDialog->raise();
 
     TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
-    foreach (Tileset *ts, mgr->tilesets()) {
+    for (Tileset *ts : mgr->tilesets()) {
+        if (ts->isMissing()) {
+            PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
+            mgr->loadTilesets(true);
+            TilesetManager::instance()->waitForTilesets();
+            break;
+        }
+    }
+}
+
+void MainWindow::tileOverlayDialog()
+{
+    if (mTileOverlayDialog == nullptr) {
+        mTileOverlayDialog = new TileOverlayDialog(this);
+    }
+    mTileOverlayDialog->show();
+    mTileOverlayDialog->raise();
+
+    TileMetaInfoMgr *mgr = TileMetaInfoMgr::instance();
+    for (Tileset *ts : mgr->tilesets()) {
         if (ts->isMissing()) {
             PROGRESS progress(tr("Loading Tilesets.txt tilesets"), this);
             mgr->loadTilesets(true);
