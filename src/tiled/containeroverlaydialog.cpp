@@ -806,6 +806,7 @@ void AbstractOverlayDialog::fileOpen(const QString &fileName)
         return;
     }
 
+    mUndoStack->clear();
     mFileName = fileName;
     ui->overlayView->setOverlays(mOverlays);
     updateUsedTiles();

@@ -278,32 +278,34 @@ bool TileOverlayFile::write(const QString &filePath, const QList<TileOverlay*> &
         QString line;
         bool prev = false;
         // sort by room name
-        QMap<QString,TileOverlayEntry*> entryMap;
+        QMap<QString,QList<TileOverlayEntry*>> entryMap;
         for (TileOverlayEntry *entry : overlay->mEntries) {
-            entryMap[entry->mRoomName] = entry;
+            entryMap[entry->mRoomName] += entry;
         }
-        for (TileOverlayEntry *entry : entryMap.values()) {
-            QString tiles;
-            for (QString tileName : entry->mTiles) {
-                if (tileName.isEmpty())
-                    continue;
-                if (tileName == QLatin1String("none") && !tiles.isEmpty()) {
-                    continue;
+        for (QList<TileOverlayEntry *> entries : entryMap.values()) {
+            for (TileOverlayEntry* entry : entries) {
+                QString tiles;
+                for (QString tileName : entry->mTiles) {
+                    if (tileName.isEmpty())
+                        continue;
+                    if (tileName == QLatin1String("none") && !tiles.isEmpty()) {
+                        continue;
+                    }
+                    if (!tiles.isEmpty()) {
+                        tiles += QLatin1Literal(", ");
+                    }
+                    tiles += QString(QLatin1Literal("\"%1\"")).arg(shortTileName(tileName));
                 }
                 if (!tiles.isEmpty()) {
-                    tiles += QLatin1Literal(", ");
+                    if (prev) {
+                        line += QLatin1Literal(", ");
+                    }
+                    line += QString(QLatin1Literal("{ name = \"%1\", chance = %2, tiles = {%3} }"))
+                            .arg(entry->mRoomName)
+                            .arg(entry->mChance)
+                            .arg(tiles);
+                    prev = true;
                 }
-                tiles += QString(QLatin1Literal("\"%1\"")).arg(shortTileName(tileName));
-            }
-            if (!tiles.isEmpty()) {
-                if (prev) {
-                    line += QLatin1Literal(", ");
-                }
-                line += QString(QLatin1Literal("{ name = \"%1\", chance = %2, tiles = {%3} }"))
-                        .arg(entry->mRoomName)
-                        .arg(entry->mChance)
-                        .arg(tiles);
-                prev = true;
             }
         }
         if (prev) {
