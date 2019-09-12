@@ -30,6 +30,8 @@ public:
     virtual void setRoomName(const QString& roomName) = 0;
     virtual QString roomName() const = 0;
     virtual QStringList &tiles() = 0;
+    virtual void setUsage(const QString& usage) = 0;
+    virtual QString usage() const = 0;
     virtual int indexOf() const = 0;
 };
 

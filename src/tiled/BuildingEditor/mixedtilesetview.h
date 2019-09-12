@@ -113,20 +113,20 @@ private:
     {
     public:
         Item() :
-            mTile(0),
-            mUserData(0)
+            mTile(nullptr),
+            mUserData(nullptr)
         {
         }
 
-        Item(Tiled::Tile *tile, void *userData = 0) :
+        Item(Tiled::Tile *tile, void *userData = nullptr) :
             mTile(tile),
             mUserData(userData)
         {
 
         }
         Item(const QString &tilesetName) :
-            mTile(0),
-            mUserData(0),
+            mTile(nullptr),
+            mUserData(nullptr),
             mTilesetName(tilesetName)
         {
 

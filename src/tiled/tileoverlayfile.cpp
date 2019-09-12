@@ -185,22 +185,28 @@ bool TileOverlayFile::readV1(LuaTable* table)
             }
             TileOverlayEntry *entry = new TileOverlayEntry;
             entry->mParent = overlay;
+
             if (!roomTable->getString(QLatin1Literal("name"), entry->mRoomName)) {
                 // FIXME: delete 'map'
                 mError = QString::fromUtf8("expected \"name\"");
                 return false;
             }
+
             QString chanceStr;
             if (!roomTable->getString(QLatin1Literal("chance"), chanceStr)) {
                 mError = QString::fromUtf8("expected \"chance\"");
                 return false;
             }
+
+            roomTable->getString(QLatin1Literal("usage"), entry->mUsage);
+
             bool ok;
             entry->mChance = chanceStr.toInt(&ok);
             if ((ok == false) || (entry->mChance < 1)) {
                 mError = QString::fromUtf8("expected integer chance > 1");
                 return false;
             }
+
             LuaTable* tileTable = roomTable->getTable(QLatin1Literal("tiles"));
             if (tileTable == nullptr) {
                 // FIXME: delete 'map'
@@ -300,9 +306,10 @@ bool TileOverlayFile::write(const QString &filePath, const QList<TileOverlay*> &
                     if (prev) {
                         line += QLatin1Literal(", ");
                     }
-                    line += QString(QLatin1Literal("{ name = \"%1\", chance = %2, tiles = {%3} }"))
+                    line += QString(QLatin1Literal("{ name = \"%1\", chance = %2, usage = \"%3\", tiles = {%4} }"))
                             .arg(entry->mRoomName)
                             .arg(entry->mChance)
+                            .arg(entry->mUsage)
                             .arg(tiles);
                     prev = true;
                 }

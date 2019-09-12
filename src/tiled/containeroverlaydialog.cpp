@@ -185,6 +185,30 @@ public:
     QString mRoomName;
 };
 
+class SetEntryUsage : public BaseOverlayCommand
+{
+public:
+    SetEntryUsage(AbstractOverlayDialog *d, AbstractOverlayEntry *entry, const QString &usage) :
+        BaseOverlayCommand(d, "Set Usage"),
+        mEntry(entry),
+        mUsage(usage)
+    {
+    }
+
+    void undo()
+    {
+        mUsage = mDialog->setEntryUsage(mEntry, mUsage);
+    }
+
+    void redo()
+    {
+        mUsage = mDialog->setEntryUsage(mEntry, mUsage);
+    }
+
+    AbstractOverlayEntry *mEntry;
+    QString mUsage;
+};
+
 // FIXME: this base class shouldn't know anything about TileOverlayEntry
 class SetEntryChance : public BaseOverlayCommand
 {
@@ -215,8 +239,8 @@ class InsertOverlay : public BaseOverlayCommand
 public:
     InsertOverlay(AbstractOverlayDialog *d, int index, AbstractOverlay *overlay) :
         BaseOverlayCommand(d, "Insert Overlay"),
-        mOverlay(overlay),
-        mIndex(index)
+        mIndex(index),
+        mOverlay(overlay)
     {
     }
 
@@ -239,8 +263,8 @@ class RemoveOverlay : public BaseOverlayCommand
 public:
     RemoveOverlay(AbstractOverlayDialog *d, int index, AbstractOverlay *overlay) :
         BaseOverlayCommand(d, "Remove Overlay"),
-        mOverlay(overlay),
-        mIndex(index)
+        mIndex(index),
+        mOverlay(overlay)
     {
     }
 
@@ -351,12 +375,16 @@ AbstractOverlayDialog::AbstractOverlayDialog(QWidget *parent) :
             SLOT(syncUI()));
     connect(ui->overlayView, SIGNAL(activated(QModelIndex)),
            SLOT(overlayActivated(QModelIndex)));
-    connect(ui->overlayView->model(), QOverload<AbstractOverlay*,const QString&>::of(&ContainerOverlayModel::tileDropped),
-            this, QOverload<AbstractOverlay*,const QString&>::of(&AbstractOverlayDialog::tileDropped));
-    connect(ui->overlayView->model(), QOverload<AbstractOverlayEntry*,int,const QString&>::of(&ContainerOverlayModel::tileDropped),
-            this, QOverload<AbstractOverlayEntry*,int,const QString&>::of(&AbstractOverlayDialog::tileDropped));
+    connect(ui->overlayView, &ContainerOverlayView::overlayEntryHover, this, &AbstractOverlayDialog::overlayEntryHover);
+
+    connect(ui->overlayView->model(), QOverload<AbstractOverlay*,const QStringList&>::of(&ContainerOverlayModel::tileDropped),
+            this, QOverload<AbstractOverlay*,const QStringList&>::of(&AbstractOverlayDialog::tileDropped));
+    connect(ui->overlayView->model(), QOverload<AbstractOverlayEntry*,int,const QStringList&>::of(&ContainerOverlayModel::tileDropped),
+            this, QOverload<AbstractOverlayEntry*,int,const QStringList&>::of(&AbstractOverlayDialog::tileDropped));
     connect(ui->overlayView->model(), QOverload<AbstractOverlayEntry*,const QString&>::of(&ContainerOverlayModel::entryRoomNameEdited),
             this, QOverload<AbstractOverlayEntry*,const QString&>::of(&AbstractOverlayDialog::entryRoomNameEdited));
+    connect(ui->overlayView->model(), QOverload<AbstractOverlayEntry*,const QString&>::of(&ContainerOverlayModel::entryUsageEdited),
+            this, QOverload<AbstractOverlayEntry*,const QString&>::of(&AbstractOverlayDialog::entryUsageEdited));
     connect(ui->overlayView, &ContainerOverlayView::removeTile, this, &AbstractOverlayDialog::removeTile);
 
     // FIXME: this base class shouldn't know anything about TileOverlayEntry
@@ -467,6 +495,14 @@ QString AbstractOverlayDialog::setEntryRoomName(AbstractOverlayEntry *entry, con
     return old;
 }
 
+QString AbstractOverlayDialog::setEntryUsage(AbstractOverlayEntry *entry, const QString &usage)
+{
+    QString old = entry->usage();
+    entry->setUsage(usage);
+    ui->overlayView->redisplay(entry);
+    return old;
+}
+
 // FIXME: this base class shouldn't know anything about TileOverlayEntry
 int AbstractOverlayDialog::setEntryChance(AbstractOverlayEntry *entry, int chance)
 {
@@ -554,31 +590,83 @@ bool AbstractOverlayDialog::isEntryTileUsed(const QString &_tileName)
 
 void AbstractOverlayDialog::addOverlay()
 {
-    QModelIndex index = ui->tilesetTilesView->currentIndex();
-    Tile *tile = ui->tilesetTilesView->model()->tileAt(index);
-    if (!tile)
-        return;
-    AbstractOverlay *overlay = createOverlay(tile);
+    QModelIndexList selection = ui->tilesetTilesView->selectionModel()->selectedIndexes();
+    QList<Tile*> tiles;
+    for (QModelIndex index : selection) {
+        Tile *tile = ui->tilesetTilesView->model()->tileAt(index);
+        if (!tile) {
+            continue;
+        }
 
-    QMap<QString, AbstractOverlay*> map;
-    for (AbstractOverlay *overlay : mOverlays) {
-        map[overlay->tileName()] = overlay;
+        QString tileName = BuildingEditor::BuildingTilesMgr::nameForTile(tile);
+        if (isOverlayTileUsed(tileName)) {
+            continue;
+        }
+        tiles += tile;
     }
-    map[overlay->tileName()] = overlay;
-    QList<AbstractOverlay*> sorted = map.values();
-    int index2 = sorted.indexOf(overlay);
+    if (tiles.isEmpty()) {
+        return;
+    }
+    if (tiles.size() > 1) {
+        mUndoStack->beginMacro(tr("Add %n Overlays", "", tiles.size()));
+    }
+    QList<AbstractOverlay*> overlays;
+    for (Tile *tile : tiles) {
+        AbstractOverlay *overlay = createOverlay(tile);
 
-    mUndoStack->push(new InsertOverlay(this, index2, overlay));
+        QMap<QString, AbstractOverlay*> map;
+        for (AbstractOverlay *overlay : mOverlays) {
+            map[overlay->tileName()] = overlay;
+        }
+        map[overlay->tileName()] = overlay;
+
+        QList<AbstractOverlay*> sorted = map.values();
+        int index2 = sorted.indexOf(overlay);
+
+        mUndoStack->push(new InsertOverlay(this, index2, overlay));
+
+        overlays += overlay;
+    }
+    if (tiles.size() > 1) {
+        mUndoStack->endMacro();
+    }
+    ui->overlayView->selectionModel()->clear();
+    for (AbstractOverlay *overlay : overlays) {
+        QModelIndex index = ui->overlayView->model()->index(overlay);
+        ui->overlayView->selectionModel()->select(index, QItemSelectionModel::Select);
+    }
 }
 
 void AbstractOverlayDialog::addEntry()
 {
-    QModelIndex index = ui->overlayView->currentIndex();
-    AbstractOverlay *overlay = ui->overlayView->model()->overlayAt(index);
-    if (!overlay)
+    QModelIndexList selection = ui->overlayView->selectionModel()->selectedIndexes();
+    QList<AbstractOverlayEntry*> entries;
+    for (QModelIndex index : selection) {
+        AbstractOverlay *overlay = ui->overlayView->model()->overlayAt(index);
+        if (!overlay) {
+            continue;
+        }
+        AbstractOverlayEntry *entry = createEntry(overlay);
+        entries += entry;
+    }
+    if (entries.isEmpty()) {
         return;
-    AbstractOverlayEntry *entry = createEntry(overlay);
-    mUndoStack->push(new InsertEntry(this, overlay, overlay->entryCount(), entry));
+    }
+    if (entries.size() > 1) {
+        mUndoStack->beginMacro(tr("Add %n Rooms", "", entries.size()));
+    }
+    for (AbstractOverlayEntry *entry : entries) {
+        AbstractOverlay *overlay = entry->parent();
+        mUndoStack->push(new InsertEntry(this, overlay, overlay->entryCount(), entry));
+    }
+    if (entries.size() > 1) {
+        mUndoStack->endMacro();
+    }
+    ui->overlayView->selectionModel()->clear();
+    for (AbstractOverlayEntry *entry : entries) {
+        QModelIndex index = ui->overlayView->model()->index(entry);
+        ui->overlayView->selectionModel()->select(index, QItemSelectionModel::Select);
+    }
 }
 
 void AbstractOverlayDialog::setToNone()
@@ -627,6 +715,21 @@ void AbstractOverlayDialog::overlayActivated(const QModelIndex &index)
             QMetaObject::invokeMethod(this, "scrollToNow", Qt::QueuedConnection,
                                       Q_ARG(QModelIndex, tileIndex));
         }
+    }
+}
+
+void AbstractOverlayDialog::overlayEntryHover(const QModelIndex &index, int entryIndex)
+{
+    mHoverTileName.clear();
+    if (index.isValid()) {
+        if (AbstractOverlayEntry* entry = ui->overlayView->model()->entryAt(index)) {
+            if (entryIndex >= 0 && entryIndex < entry->tiles().size()) {
+                mHoverTileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(entry->tiles()[entryIndex]);
+                updateUsedTiles();
+            }
+        }
+    } else {
+        updateUsedTiles();
     }
 }
 
@@ -686,6 +789,14 @@ void AbstractOverlayDialog::updateUsedTiles()
 
     for (int i = 0; i < mCurrentTileset->tileCount(); i++) {
         QString tileName = BuildingEditor::BuildingTilesMgr::nameForTile(mCurrentTileset->name(), i);
+        if (mHoverTileName.isEmpty() == false) {
+            if (mHoverTileName == tileName) {
+                ui->tilesetTilesView->model()->setCategoryBounds(i, QRect(0, 0, 1, 1));
+            } else {
+                ui->tilesetTilesView->model()->setCategoryBounds(i, QRect());
+            }
+            continue;
+        }
         if (isOverlayTileUsed(tileName) || isEntryTileUsed(tileName))
             ui->tilesetTilesView->model()->setCategoryBounds(i, QRect(0, 0, 1, 1));
         else
@@ -743,33 +854,85 @@ void AbstractOverlayDialog::tilesetChanged(Tileset *tileset)
         item->setForeground(tileset->isMissing() ? Qt::red : Qt::black);
 }
 
-void AbstractOverlayDialog::tileDropped(AbstractOverlay *overlay, const QString &tileName)
+void AbstractOverlayDialog::tileDropped(AbstractOverlay *overlay, const QStringList &tileNames)
 {
-    if (isOverlayTileUsed(tileName))
-        return;
-    mUndoStack->push(new SetBaseTile(this, overlay, tileName));
+    for (QString tileName : tileNames) {
+        if (isOverlayTileUsed(tileName)) {
+            continue;
+        }
+        mUndoStack->push(new SetBaseTile(this, overlay, tileName));
+        break; // <---------
+    }
 }
 
-void AbstractOverlayDialog::tileDropped(AbstractOverlayEntry *entry, int index, const QString &tileName)
+void AbstractOverlayDialog::tileDropped(AbstractOverlayEntry *entry, int index, const QStringList &tileNames)
 {
     if (index >= entry->tiles().size()) {
         if (ui->overlayView->model()->moreThan2Tiles()) {
-            mUndoStack->push(new AddEntryTile(this, entry, tileName));
+            for (QString tileName : tileNames) {
+                mUndoStack->push(new AddEntryTile(this, entry, tileName));
+            }
         }
         return;
     }
-    mUndoStack->push(new SetEntryTile(this, entry, index, tileName));
+    mUndoStack->push(new SetEntryTile(this, entry, index, tileNames[0]));
 }
 
 void AbstractOverlayDialog::entryRoomNameEdited(AbstractOverlayEntry *entry, const QString &roomName)
 {
-    mUndoStack->push(new SetEntryRoomName(this, entry, roomName));
+    QModelIndexList selection = ui->overlayView->selectionModel()->selectedIndexes();
+    if (selection.size() == 1) {
+        mUndoStack->push(new SetEntryRoomName(this, entry, roomName));
+        return;
+    }
+    QList<AbstractOverlayEntry*> entries;
+    for (QModelIndex index : selection) {
+        if (AbstractOverlayEntry* entry1 = ui->overlayView->model()->entryAt(index)) {
+            entries += entry1;
+        }
+    }
+    mUndoStack->beginMacro(tr("Set Usage on %n Rooms", "", entries.size()));
+    for (AbstractOverlayEntry* entry1 : entries) {
+        mUndoStack->push(new SetEntryRoomName(this, entry1, roomName));
+    }
+    mUndoStack->endMacro();
+}
+
+void AbstractOverlayDialog::entryUsageEdited(AbstractOverlayEntry *entry, const QString &usage)
+{
+    QModelIndexList selection = ui->overlayView->selectionModel()->selectedIndexes();
+    if (selection.size() == 1) {
+        mUndoStack->push(new SetEntryUsage(this, entry, usage));
+        return;
+    }
+    QList<AbstractOverlayEntry*> entries;
+    for (QModelIndex index : selection) {
+        if (AbstractOverlayEntry* entry1 = ui->overlayView->model()->entryAt(index)) {
+            entries += entry1;
+        }
+    }
+    mUndoStack->beginMacro(tr("Set Usage on %n Rooms", "", entries.size()));
+    for (AbstractOverlayEntry* entry1 : entries) {
+        mUndoStack->push(new SetEntryUsage(this, entry1, usage));
+    }
+    mUndoStack->endMacro();
 }
 
 // FIXME: this base class shouldn't know anything about TileOverlayEntry
 void AbstractOverlayDialog::entryChanceEdited(AbstractOverlayEntry *entry, int chance)
 {
-    mUndoStack->push(new SetEntryChance(this, entry, chance));
+    QModelIndexList selection = ui->overlayView->selectionModel()->selectedIndexes();
+    QList<AbstractOverlayEntry*> entries;
+    for (QModelIndex index : selection) {
+        if (AbstractOverlayEntry* entry1 = ui->overlayView->model()->entryAt(index)) {
+            entries += entry1;
+        }
+    }
+    mUndoStack->beginMacro(tr("Set Chance on %n Rooms", "", entries.size()));
+    for (AbstractOverlayEntry* entry1 : entries) {
+        mUndoStack->push(new SetEntryChance(this, entry1, chance));
+    }
+    mUndoStack->endMacro();
 }
 
 void AbstractOverlayDialog::removeTile(AbstractOverlayEntry *entry, int index)
@@ -957,6 +1120,11 @@ void AbstractOverlayDialog::syncUI()
 
 ContainerOverlayDialog::ContainerOverlayDialog(QWidget *parent)
     : AbstractOverlayDialog(parent)
+{
+
+}
+
+void ContainerOverlayDialog::showContextMenu(const QModelIndex &index, int entryIndex, QContextMenuEvent *event)
 {
 
 }

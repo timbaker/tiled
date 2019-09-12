@@ -35,6 +35,14 @@ class AbstractOverlayEntry;
 
 class ContainerOverlayDelegate;
 
+enum struct EditAbstractOverlay
+{
+    RoomName,
+    Usage,
+    Chance,
+};
+
+
 class ContainerOverlayModel : public QAbstractListModel
 {
     Q_OBJECT
@@ -91,9 +99,10 @@ public:
     bool moreThan2Tiles() const { return mMoreThan2Tiles; }
 
 signals:
-    void tileDropped(AbstractOverlay *overlay, const QString &tileName);
-    void tileDropped(AbstractOverlayEntry *entry, int index, const QString &tileName);
+    void tileDropped(AbstractOverlay *overlay, const QStringList &tileName);
+    void tileDropped(AbstractOverlayEntry *entry, int index, const QStringList &tileName);
     void entryRoomNameEdited(AbstractOverlayEntry *entry, const QString &roomName);
+    void entryUsageEdited(AbstractOverlayEntry *entry, const QString &usage);
     void entryChanceEdited(AbstractOverlayEntry *entry, int chance);
 
 private:
@@ -152,6 +161,8 @@ public:
     void dragLeaveEvent(QDragLeaveEvent *event) override;
     void dropEvent(QDropEvent *event) override;
 
+    void edit(const QModelIndex& index, EditAbstractOverlay edit);
+
     ContainerOverlayModel *model() const
     { return mModel; }
 
@@ -179,6 +190,8 @@ public:
 
 signals:
     void removeTile(AbstractOverlayEntry *entry, int index);
+    void overlayEntryHover(const QModelIndex &index, int entryIndex);
+    void showContextMenu(const QModelIndex &index, int entryIndex, QContextMenuEvent *event);
 
 public slots:
     void scaleChanged(qreal scale);

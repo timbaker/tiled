@@ -33,12 +33,15 @@ public:
     void setRoomName(const QString& roomName) override { mRoomName = roomName; }
     QString roomName() const override { return mRoomName; }
     QStringList &tiles() override { return mTiles; }
+    virtual void setUsage(const QString& usage) override { mUsage = usage; }
+    virtual QString usage() const override { return mUsage; };
     int indexOf() const override;
 
     TileOverlay *mParent;
     QString mRoomName;
     int mChance = 1;
     QStringList mTiles;
+    QString mUsage;
 };
 
 class TileOverlay : public AbstractOverlay

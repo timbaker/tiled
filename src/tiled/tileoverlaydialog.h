@@ -27,6 +27,9 @@ class TileOverlayDialog : public AbstractOverlayDialog
 public:
     explicit TileOverlayDialog(QWidget *parent = nullptr);
 
+protected slots:
+    void showContextMenu(const QModelIndex &index, int entryIndex, QContextMenuEvent *event);
+
 protected:
     bool fileOpen(const QString &fileName, QList<AbstractOverlay*> &overlays) override;
     bool fileSave(const QString &fileName, const QList<AbstractOverlay*> &overlays) override;

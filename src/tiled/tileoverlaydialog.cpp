@@ -22,11 +22,43 @@
 
 #include "BuildingEditor/buildingtiles.h"
 
+#include <QContextMenuEvent>
+
 TileOverlayDialog::TileOverlayDialog(QWidget* parent)
     : AbstractOverlayDialog(parent)
 {
     ui->overlayView->setMoreThan2Tiles(true);
     setWindowTitle(QLatin1Literal("Tile Overlays"));
+
+    connect(ui->overlayView, &ContainerOverlayView::showContextMenu, this, &TileOverlayDialog::showContextMenu);
+}
+
+void TileOverlayDialog::showContextMenu(const QModelIndex &index, int entryIndex, QContextMenuEvent *event)
+{
+    ContainerOverlayModel *m = ui->overlayView->model();
+    if (!m->moreThan2Tiles()) {
+        return;
+    }
+    AbstractOverlayEntry *entry = m->entryAt(index);
+
+    QMenu menu;
+    QAction *actionEditRoom = menu.addAction(tr("Edit Room"));
+    QAction *actionEditChance = menu.addAction(tr("Edit Chance"));
+    QAction *actionEditUsage = menu.addAction(tr("Edit Usage"));
+    QAction *actionRemove = (entryIndex > 0 && entryIndex < entry->tiles().size()) ? menu.addAction(tr("Remove Tile")) : nullptr;
+    QAction *action = menu.exec(event->globalPos());
+    if (action == actionEditRoom) {
+        ui->overlayView->edit(index, EditAbstractOverlay::RoomName);
+    }
+    if (action == actionEditUsage) {
+        ui->overlayView->edit(index, EditAbstractOverlay::Usage);
+    }
+    if (action == actionEditChance) {
+        ui->overlayView->edit(index, EditAbstractOverlay::Chance);
+    }
+    if ((actionRemove != nullptr) && (action == actionRemove)) {
+        removeTile(entry, entryIndex);
+    }
 }
 
 bool TileOverlayDialog::fileOpen(const QString &fileName, QList<AbstractOverlay *> &overlays)

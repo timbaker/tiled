@@ -33,11 +33,14 @@ public:
     void setRoomName(const QString& roomName) { mRoomName = roomName; }
     QString roomName() const override { return mRoomName; }
     QStringList &tiles() override { return mTiles; }
+    virtual void setUsage(const QString& usage) override { mUsage = usage; }
+    virtual QString usage() const override { return mUsage; };
     int indexOf() const override;
 
     ContainerOverlay *mParent;
     QString mRoomName;
     QStringList mTiles;
+    QString mUsage;
 };
 
 class ContainerOverlay : public AbstractOverlay

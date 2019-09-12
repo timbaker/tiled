@@ -51,6 +51,7 @@ public:
     void removeEntryTile(AbstractOverlayEntry *entry, int index);
     QString setEntryTile(AbstractOverlayEntry *entry, int index, const QString &tileName);
     QString setEntryRoomName(AbstractOverlayEntry *entry, const QString &roomName);
+    QString setEntryUsage(AbstractOverlayEntry *entry, const QString &usage);
     int setEntryChance(AbstractOverlayEntry *entry, int chance);
 
     void insertOverlay(int index, AbstractOverlay *overlay);
@@ -73,11 +74,12 @@ protected:
     virtual bool fileSave(const QString &fileName, const QList<AbstractOverlay*> &overlays) = 0;
 
     typedef Tiled::Tileset Tileset;
-private slots:
+protected slots:
     void addOverlay();
     void addEntry();
     void setToNone();
     void overlayActivated(const QModelIndex &index);
+    void overlayEntryHover(const QModelIndex &index, int entryIndex);
     void scrollToNow(const QModelIndex &index);
     void tileActivated(const QModelIndex &index);
     void tilesetSelectionChanged();
@@ -87,9 +89,10 @@ private slots:
     void tilesetRemoved(Tiled::Tileset *tileset);
     void tilesetChanged(Tileset *tileset);
 
-    void tileDropped(AbstractOverlay *overlay, const QString &tileName);
-    void tileDropped(AbstractOverlayEntry *entry, int index, const QString &tileName);
+    void tileDropped(AbstractOverlay *overlay, const QStringList &tileNames);
+    void tileDropped(AbstractOverlayEntry *entry, int index, const QStringList &tileName);
     void entryRoomNameEdited(AbstractOverlayEntry *entry, const QString &roomName);
+    void entryUsageEdited(AbstractOverlayEntry *entry, const QString &usage);
     void entryChanceEdited(AbstractOverlayEntry *entry, int chance);
     void removeTile(AbstractOverlayEntry *entry, int index);
 
@@ -113,6 +116,7 @@ protected:
     Tiled::Internal::Zoomable *mZoomable;
     QList<AbstractOverlay*> mOverlays;
     Tileset *mCurrentTileset;
+    QString mHoverTileName;
     QString mError;
 
     QUndoGroup *mUndoGroup;
@@ -121,8 +125,12 @@ protected:
 
 class ContainerOverlayDialog : public AbstractOverlayDialog
 {
+    Q_OBJECT
 public:
     explicit ContainerOverlayDialog(QWidget *parent = nullptr);
+
+protected slots:
+    void showContextMenu(const QModelIndex &index, int entryIndex, QContextMenuEvent *event);
 
 protected:
     bool fileOpen(const QString &fileName, QList<AbstractOverlay*> &overlays) override;
