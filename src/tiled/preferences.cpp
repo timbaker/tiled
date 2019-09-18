@@ -84,6 +84,7 @@ Preferences::Preferences()
     mAutoSwitchLayer = mSettings->value(QLatin1String("AutoSwitchLayer"), true).toBool();
     mTilesetScale = mSettings->value(QLatin1String("TilesetScale"), 1.0).toReal();
     mSortTilesets = mSettings->value(QLatin1String("SortTilesets"), false).toBool();
+    mShowLotFloorsOnly = mSettings->value(QLatin1String("ShowLotFloorsOnly"), false).toBool();
     mShowMiniMap = mSettings->value(QLatin1String("ShowMiniMap"), true).toBool();
     mMiniMapWidth = mSettings->value(QLatin1String("MiniMapWidth"), 256).toInt();
     mShowTileLayersPanel = mSettings->value(QLatin1String("ShowTileLayersPanel"), true).toBool();
@@ -513,6 +514,15 @@ void Preferences::setSortTilesets(bool sort)
     mSortTilesets = sort;
     mSettings->setValue(QLatin1String("Interface/SortTilesets"), sort);
     emit sortTilesetsChanged(mSortTilesets);
+}
+
+void Preferences::setShowLotFloorsOnly(bool show)
+{
+    if (mShowLotFloorsOnly == show)
+        return;
+    mShowLotFloorsOnly = show;
+    mSettings->setValue(QLatin1String("Interface/ShowLotFloorsOnly"), show);
+    emit showLotFloorsOnlyChanged(mShowLotFloorsOnly);
 }
 
 bool Preferences::showMiniMap() const

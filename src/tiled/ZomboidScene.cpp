@@ -178,6 +178,7 @@ void ZomboidScene::setMapDocument(MapDocument *mapDoc)
 
         connect(Preferences::instance(), SIGNAL(highlightRoomUnderPointerChanged(bool)),
                 SLOT(highlightRoomUnderPointerChanged(bool)));
+        connect(Preferences::instance(), &Preferences::showLotFloorsOnlyChanged, this, &ZomboidScene::showLotFloorsOnlyChanged);
     }
 }
 
@@ -738,6 +739,13 @@ void ZomboidScene::highlightRoomUnderPointerChanged(bool highlight)
 {
     Q_UNUSED(highlight)
     setHighlightRoomPosition(mHighlightRoomPosition);
+}
+
+void ZomboidScene::showLotFloorsOnlyChanged(bool show)
+{
+    MapComposite *mc = mMapDocument->mapComposite();
+    mc->setShowLotFloorsOnly(show);
+    update();
 }
 
 void ZomboidScene::handlePendingUpdates()

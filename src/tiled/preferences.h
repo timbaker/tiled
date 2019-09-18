@@ -128,6 +128,9 @@ public:
     bool highlightRoomUnderPointer() const
     { return mHighlightRoomUnderPointer; }
 
+    bool showLotFloorsOnly() const
+    { return mShowLotFloorsOnly; }
+
     int eraserBrushSize() const
     { return mEraserBrushSize; }
 #endif // ZOMBOID
@@ -148,6 +151,7 @@ public slots:
     void setTilesDirectory(const QString &path);
     void setTilesetScale(qreal scale);
     void setSortTilesets(bool sort);
+    void setShowLotFloorsOnly(bool show);
     void setShowMiniMap(bool show);
     void setShowTileLayersPanel(bool show);
     void setBackgroundColor(const QColor &bgColor);
@@ -174,6 +178,7 @@ signals:
     void tilesDirectoryChanged();
     void tilesetScaleChanged(qreal scale);
     void sortTilesetsChanged(bool sort);
+    void showLotFloorsOnlyChanged(bool show);
     void showMiniMapChanged(bool show);
     void miniMapWidthChanged(int width);
     void showTileLayersPanelChanged(bool show);
@@ -211,6 +216,7 @@ private:
     bool mAutoSwitchLayer;
     QString mTilesDirectory;
     qreal mTilesetScale;
+    bool mShowLotFloorsOnly = false;
     bool mSortTilesets;
     bool mShowMiniMap;
     int mMiniMapWidth;

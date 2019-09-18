@@ -158,13 +158,13 @@ using namespace BuildingEditor;
 
 #ifdef ZOMBOID
 extern bool gStartupBlockRendering;
-MainWindow *MainWindow::mInstance = 0;
+MainWindow *MainWindow::mInstance = nullptr;
 #endif
 
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     : QMainWindow(parent, flags)
     , mUi(new Ui::MainWindow)
-    , mMapDocument(0)
+    , mMapDocument(nullptr)
     , mActionHandler(new MapDocumentActionHandler(this))
     , mLayerDock(new LayerDock(this))
     , mObjectsDock(new ObjectsDock())
@@ -184,15 +184,15 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 #else
     , mCurrentLayerLabel(new QLabel)
 #endif
-    , mZoomable(0)
+    , mZoomable(nullptr)
     , mZoomComboBox(new QComboBox)
     , mStatusInfoLabel(new QLabel)
     , mClipboardManager(new ClipboardManager(this))
     , mDocumentManager(DocumentManager::instance())
 #ifdef ZOMBOID
-    , mBuildingEditor(0)
-    , mTileDefDialog(0)
-    , mContainerOverlayDialog(0)
+    , mBuildingEditor(nullptr)
+    , mTileDefDialog(nullptr)
+    , mContainerOverlayDialog(nullptr)
 #endif
 {
 #ifdef ZOMBOID
@@ -273,7 +273,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     tabifyDockWidget(mWorldEdDock, mMapsDock);
     tabifyDockWidget(undoDock, mTilesetDock);
 
-    setStatusBar(0);
+    setStatusBar(nullptr);
 
     QHBoxLayout *statusBarLayout = new QHBoxLayout(mUi->statusBarFrame);
     statusBarLayout->setObjectName(QLatin1String("statusBarLayout"));
@@ -307,6 +307,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     mUi->actionHighlightCurrentLayer->setChecked(preferences->highlightCurrentLayer());
 #ifdef ZOMBOID
     mUi->actionHighlightRoomUnderPointer->setChecked(preferences->highlightRoomUnderPointer());
+    mUi->actionShowLotFloorsOnly->setChecked(preferences->showLotFloorsOnly());
     mUi->actionShowMiniMap->setChecked(preferences->showMiniMap());
     mUi->actionShowTileLayersPanel->setChecked(preferences->showTileLayersPanel());
 #endif
@@ -401,6 +402,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 #ifdef ZOMBOID
     connect(mUi->actionHighlightRoomUnderPointer, SIGNAL(toggled(bool)),
             preferences, SLOT(setHighlightRoomUnderPointer(bool)));
+    connect(mUi->actionShowLotFloorsOnly, &QAction::toggled, preferences, &Preferences::setShowLotFloorsOnly);
     connect(mUi->actionShowMiniMap, SIGNAL(toggled(bool)),
             preferences, SLOT(setShowMiniMap(bool)));
     connect(mUi->actionShowTileLayersPanel, SIGNAL(toggled(bool)),

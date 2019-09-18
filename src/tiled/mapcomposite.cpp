@@ -176,7 +176,7 @@ void CompositeLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRec
     mPreparedSubMapLayers.resize(0);
     if (mAnyVisibleLayers == false)
         return;
-    foreach (const SubMapLayers &subMapLayer, mVisibleSubMapLayers) {
+    for (const SubMapLayers &subMapLayer : mVisibleSubMapLayers) {
         CompositeLayerGroup *layerGroup = subMapLayer.mLayerGroup;
         if (subMapLayer.mSubMap->isHiddenDuringDrag())
             continue;
@@ -229,6 +229,12 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
         const Cell *cell = &tl->cellAt(subPos);
         if (!mOwner->parent() && !mOwner->showMapTiles())
             cell = &emptyCell;
+        if (mOwner->parent() != nullptr && mOwner->parent()->showLotFloorsOnly()) {
+            bool isFloor = !mLevel && !index && (tl->name() == sFloor);
+            if (!isFloor) {
+                cell = &emptyCell;
+            }
+        }
         if (tlBmpBlend && tlBmpBlend->contains(subPos) && !tlBmpBlend->cellAt(subPos).isEmpty())
             if (mOwner->parent() || mOwner->showBMPTiles()) {
                 if (!noBlend || !noBlend->get(subPos - nbPos))
@@ -285,7 +291,7 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
     // Chop off sub-map cells that aren't in the root- or adjacent-map's bounds.
     QRect rootBounds(root->originRecursive(), root->mapInfo()->size());
     bool inRoot = (rootBounds.size() != QSize(300, 300)) || rootBounds.contains(rootPos);
-    foreach (const SubMapLayers& subMapLayer, mPreparedSubMapLayers) {
+    for (const SubMapLayers& subMapLayer : mPreparedSubMapLayers) {
         if (!inRoot && !subMapLayer.mSubMap->isAdjacentMap())
             continue;
         if (!subMapLayer.mBounds.contains(pos))
@@ -300,7 +306,7 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
 void CompositeLayerGroup::prepareDrawing2()
 {
     mPreparedSubMapLayers.resize(0);
-    foreach (MapComposite *subMap, mOwner->subMaps()) {
+    for (MapComposite *subMap : mOwner->subMaps()) {
         int levelOffset = subMap->levelOffset();
         CompositeLayerGroup *layerGroup = subMap->tileLayersForLevel(mLevel - levelOffset);
         if (layerGroup) {
@@ -730,10 +736,10 @@ bool CompositeLayerGroup::regionAltered(Tiled::TileLayer *tl)
     return false;
 }
 
-QRectF CompositeLayerGroup::boundingRect(const MapRenderer *renderer)
+QRectF CompositeLayerGroup::boundingRect(const MapRenderer *renderer) const
 {
     if (mNeedsSynch)
-        synch();
+        const_cast<CompositeLayerGroup*>(this)->synch();
 
     QRectF boundingRect = renderer->boundingRect(mTileBounds.translated(mOwner->originRecursive()),
                                                  mLevel + mOwner->levelRecursive());
@@ -1086,21 +1092,21 @@ CompositeLayerGroup *MapComposite::tileLayersForLevel(int level) const
 {
     if (mLayerGroups.contains(level))
         return mLayerGroups[level];
-    return 0;
+    return nullptr;
 }
 
 CompositeLayerGroup *MapComposite::layerGroupForLevel(int level) const
 {
     if (mLayerGroups.contains(level))
         return mLayerGroups[level];
-    return 0;
+    return nullptr;
 }
 
 CompositeLayerGroup *MapComposite::layerGroupForLayer(TileLayer *tl) const
 {
     if (tl->group())
         return tileLayersForLevel(tl->level());
-    return 0;
+    return nullptr;
 }
 
 QList<MapComposite *> MapComposite::maps()

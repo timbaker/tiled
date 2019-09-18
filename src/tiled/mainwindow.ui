@@ -126,6 +126,7 @@
     <addaction name="actionSnapToGrid"/>
     <addaction name="actionHighlightCurrentLayer"/>
     <addaction name="actionHighlightRoomUnderPointer"/>
+    <addaction name="actionShowLotFloorsOnly"/>
     <addaction name="actionShowMiniMap"/>
     <addaction name="actionShowTileLayersPanel"/>
     <addaction name="separator"/>
@@ -650,6 +651,14 @@
    </property>
    <property name="toolTip">
     <string>Non-container overlays</string>
+   </property>
+  </action>
+  <action name="actionShowLotFloorsOnly">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Lot Floors Only</string>
    </property>
   </action>
  </widget>
