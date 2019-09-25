@@ -361,6 +361,7 @@ AbstractOverlayDialog::AbstractOverlayDialog(QWidget *parent) :
 
     connect(mUndoGroup, SIGNAL(cleanChanged(bool)), SLOT(syncUI()));
 
+    connect(ui->actionNew, &QAction::triggered, this, &AbstractOverlayDialog::fileNew);
     connect(ui->actionOpen, SIGNAL(triggered()), SLOT(fileOpen()));
     connect(ui->actionSave, SIGNAL(triggered()), SLOT(fileSave()));
     connect(ui->actionSaveAs, SIGNAL(triggered()), SLOT(fileSaveAs()));
@@ -940,6 +941,24 @@ void AbstractOverlayDialog::removeTile(AbstractOverlayEntry *entry, int index)
     mUndoStack->push(new RemoveEntryTile(this, entry, index));
 }
 
+void AbstractOverlayDialog::fileNew()
+{
+    if (!confirmSave())
+        return;
+
+    QString fileName = getSaveLocation();
+    if (fileName.isEmpty())
+        return;
+
+    mUndoStack->clear();
+    mFileName = fileName;
+    mOverlays.clear();
+    ui->overlayView->setOverlays(mOverlays);
+    updateUsedTiles();
+
+    syncUI();
+}
+
 void AbstractOverlayDialog::fileOpen()
 {
     if (!confirmSave())
@@ -1088,13 +1107,44 @@ void AbstractOverlayDialog::updateWindowTitle()
 void AbstractOverlayDialog::remove()
 {
     QModelIndexList selected = ui->overlayView->selectionModel()->selectedIndexes();
-    AbstractOverlay *overlay = ui->overlayView->model()->overlayAt(selected.first());
-    AbstractOverlayEntry *entry = ui->overlayView->model()->entryAt(selected.first());
-    if (overlay) {
-        mUndoStack->push(new RemoveOverlay(this, mOverlays.indexOf(overlay), overlay));
+    QList<AbstractOverlay*> overlays;
+    QList<AbstractOverlayEntry*> entries;
+    for (QModelIndex &index : selected) {
+        if (AbstractOverlay *overlay = ui->overlayView->model()->overlayAt(index)) {
+            overlays << overlay;
+        }
+        if (AbstractOverlayEntry *entry = ui->overlayView->model()->entryAt(index)) {
+            entries << entry;
+        }
     }
-    if (entry) {
+
+    QList<AbstractOverlayEntry*> entries1 = entries;
+    for (AbstractOverlayEntry *entry : entries1) {
+        if (overlays.contains(entry->parent())) {
+            entries.removeAll(entry);
+        }
+    }
+
+    bool multiple = true;
+    if (overlays.size() > 0 && entries.size() > 0) {
+        mUndoStack->beginMacro(tr("Remove %1 Overlays and %2 Rooms").arg(overlays.size()).arg(entries.size()));
+    } else if (overlays.size() > 1) {
+        mUndoStack->beginMacro(tr("Remove %1 Overlays ").arg(overlays.size()));
+    } else if (entries.size() > 1) {
+        mUndoStack->beginMacro(tr("Remove %1 Rooms ").arg(entries.size()));
+    } else {
+        multiple = false;
+    }
+
+    for (AbstractOverlay *overlay : overlays) {
+           mUndoStack->push(new RemoveOverlay(this, mOverlays.indexOf(overlay), overlay));
+    }
+    for (AbstractOverlayEntry *entry : entries) {
         mUndoStack->push(new RemoveEntry(this, entry->indexOf(), entry));
+    }
+
+    if (multiple) {
+        mUndoStack->endMacro();
     }
 }
 

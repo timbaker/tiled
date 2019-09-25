@@ -96,6 +96,7 @@ protected slots:
     void entryChanceEdited(AbstractOverlayEntry *entry, int chance);
     void removeTile(AbstractOverlayEntry *entry, int index);
 
+    void fileNew();
     void fileOpen();
     bool fileSave();
     bool fileSaveAs();
