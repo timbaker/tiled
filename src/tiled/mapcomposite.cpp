@@ -190,12 +190,13 @@ void CompositeLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRec
         mOwner->bmpBlender()->flush(renderer, rect, mOwner->originRecursive());
 }
 
+static QLatin1String sFloor("0_Floor"); // FIXME: thread safe?
+static QLatin1String sAboveLot("_AboveLot");
+
 bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                                          QVector<const Cell *> &cells,
                                          QVector<qreal> &opacities) const
 {
-    static QLatin1String sFloor("0_Floor"); // FIXME: thread safe?
-
     MapComposite *root = mOwner->rootOrAdjacent();
     if (root == mOwner)
         root->mKeepFloorLayerCount = 0;
@@ -204,6 +205,8 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
     if (mOwner->levelRecursive() + level() == mOwner->root()->suppressLevel())
         suppressRgn = mOwner->root()->suppressRegion();
     const QPoint rootPos = pos + mOwner->originRecursive();
+
+    QVector<const Cell*> aboveLotCells;
 
     bool cleared = false;
     const Cell emptyCell;
@@ -250,6 +253,10 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
 #endif // BUILDINGED
         if (index && suppressRgn.contains(rootPos))
             cell = &emptyCell;
+        if (!cell->isEmpty() && (root == mOwner) && tl->name().contains(sAboveLot)) {
+            aboveLotCells += cell;
+            cell = &emptyCell;
+        }
         if (!cell->isEmpty()) {
             if (!cleared) {
                 bool isFloor = !mLevel && !index && (tl->name() == sFloor);
@@ -300,6 +307,8 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
                                                 cells, opacities);
     }
 
+    cells += aboveLotCells;
+
     return !cells.isEmpty();
 }
 
@@ -322,11 +331,11 @@ void CompositeLayerGroup::prepareDrawing2()
 // layers (so NoRender layers are included) and visibility of sub-maps.
 bool CompositeLayerGroup::orderedCellsAt2(const QPoint &pos, QVector<const Cell *> &cells) const
 {
-    static QLatin1String sFloor("0_Floor");
-
     MapComposite *root = mOwner->root();
     if (root == mOwner)
         root->mKeepFloorLayerCount = 0;
+
+    QVector<const Cell*> aboveLotCells;
 
     bool cleared = false;
     int index = -1;
@@ -356,9 +365,15 @@ bool CompositeLayerGroup::orderedCellsAt2(const QPoint &pos, QVector<const Cell 
             }
 #endif // ROAD_CRUD
             const Cell *cell = &tl->cellAt(subPos);
-            if (tlBmpBlend && tlBmpBlend->contains(subPos) && !tlBmpBlend->cellAt(subPos).isEmpty())
-                if (!noBlend || !noBlend->get(subPos))
+            if (tlBmpBlend && tlBmpBlend->contains(subPos) && !tlBmpBlend->cellAt(subPos).isEmpty()) {
+                if (!noBlend || !noBlend->get(subPos)) {
                     cell = &tlBmpBlend->cellAt(subPos);
+                }
+            }
+            if (!cell->isEmpty() && (root == mOwner) && tl->name().contains(sAboveLot)) {
+                aboveLotCells += cell;
+                continue;
+            }
             if (!cell->isEmpty()) {
                 if (!cleared) {
                     bool isFloor = !mLevel && !index && (tl->name() == sFloor);
@@ -374,11 +389,13 @@ bool CompositeLayerGroup::orderedCellsAt2(const QPoint &pos, QVector<const Cell 
     }
 
     // Overwrite map cells with sub-map cells at this location
-    foreach (const SubMapLayers& subMapLayer, mPreparedSubMapLayers) {
+    for (const SubMapLayers& subMapLayer : mPreparedSubMapLayers) {
         if (!subMapLayer.mBounds.contains(pos))
             continue;
         subMapLayer.mLayerGroup->orderedCellsAt2(pos - subMapLayer.mSubMap->origin(), cells);
     }
+
+    cells += aboveLotCells;
 
     return !cells.isEmpty();
 }
@@ -424,7 +441,7 @@ void CompositeLayerGroup::synch()
         mDrawMargins = QMargins(0, mOwner->map()->tileHeight(), mOwner->map()->tileWidth(), 0);
         mVisibleSubMapLayers.clear();
 #ifdef BUILDINGED
-        mBlendOverLayers.fill(0);
+        mBlendOverLayers.fill(nullptr);
 #endif
         mNeedsSynch = false;
         return;
@@ -455,7 +472,7 @@ void CompositeLayerGroup::synch()
 
 #ifdef BUILDINGED
     // Do this before the isLayerEmpty() call below.
-    mBlendOverLayers.fill(0);
+    mBlendOverLayers.fill(nullptr);
     if (MapComposite *blendOverMap = mOwner->blendOverMap()) {
         if (CompositeLayerGroup *layerGroup = blendOverMap->tileLayersForLevel(mLevel)) {
             for (int i = 0; i < mLayers.size(); i++) {
