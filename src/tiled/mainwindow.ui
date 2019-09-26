@@ -660,6 +660,9 @@
    <property name="text">
     <string>Show Lot Floors Only</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
+   </property>
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
