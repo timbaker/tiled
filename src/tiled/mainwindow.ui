@@ -126,6 +126,7 @@
     <addaction name="actionSnapToGrid"/>
     <addaction name="actionHighlightCurrentLayer"/>
     <addaction name="actionHighlightRoomUnderPointer"/>
+    <addaction name="actionShowLotFloorsOnly"/>
     <addaction name="actionShowMiniMap"/>
     <addaction name="actionShowTileLayersPanel"/>
     <addaction name="separator"/>
@@ -154,6 +155,13 @@
      <addaction name="actionPackViewer"/>
      <addaction name="actionComparePack"/>
     </widget>
+    <widget class="QMenu" name="menuOverlays">
+     <property name="title">
+      <string>Overlays</string>
+     </property>
+     <addaction name="actionContainerOverlays"/>
+     <addaction name="actionTileOverlays"/>
+    </widget>
     <addaction name="actionBuildingEditor"/>
     <addaction name="actionCheckBuildings"/>
     <addaction name="actionCheckMaps"/>
@@ -161,7 +169,7 @@
     <addaction name="actionTileProperties"/>
     <addaction name="actionCompareTileDef"/>
     <addaction name="menu_pack_files"/>
-    <addaction name="actionContainerOverlays"/>
+    <addaction name="menuOverlays"/>
     <addaction name="actionRearrangeTiles"/>
     <addaction name="actionEnflatulator"/>
     <addaction name="actionWorldEd"/>
@@ -635,6 +643,25 @@
   <action name="actionRearrangeTiles">
    <property name="text">
     <string>Rearrange Tiles...</string>
+   </property>
+  </action>
+  <action name="actionTileOverlays">
+   <property name="text">
+    <string>Other Overlays...</string>
+   </property>
+   <property name="toolTip">
+    <string>Non-container overlays</string>
+   </property>
+  </action>
+  <action name="actionShowLotFloorsOnly">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Lot Floors Only</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
    </property>
   </action>
  </widget>

@@ -3,13 +3,13 @@ if {[llength [info commands console]]} {
     update
 }
 
-set QT_DIR C:/Programming/QtSDK2015/5.7/msvc2013_64
+set QT_DIR C:/Programming/QtSDK2015/5.9.3/msvc2017_64
 set BIN C:/Programming/TileZed/dist64
 set SRC C:/Programming/TileZed/tiled
 set DEST {C:\Users\Tim\Desktop\ProjectZomboid\Tools\TileZed}
 set SUFFIX "-64bit"
 set SUFFIX2 ""
-set REDIST vcredist_x64.exe
+set REDIST vcredist.x64.exe
 
 if {$argc > 0} {
     switch -- [lindex $argv 0] {
@@ -17,10 +17,10 @@ if {$argc > 0} {
             puts "dist.tcl: 32-bit"
             append DEST "32"
             set BIN C:/Programming/TileZed/dist32
-            set QT_DIR C:/Programming/QtSDK2015/5.7/msvc2013
+            set QT_DIR C:/Programming/QtSDK2015/5.9.3/msvc2017
             set SUFFIX "-32bit"
             set SUFFIX2 "32"
-            set REDIST vcredist_x86.exe
+            set REDIST vcredist.x86.exe
         }
         64bit {
             puts "dist.tcl: 64-bit"

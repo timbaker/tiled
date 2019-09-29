@@ -93,6 +93,7 @@ SOURCES += aboutdialog.cpp \
     languagemanager.cpp \
     layerdock.cpp \
     layermodel.cpp \
+    luatable.cpp \
     main.cpp \
     mainwindow.cpp \
     mapdocumentactionhandler.cpp \
@@ -136,6 +137,8 @@ SOURCES += aboutdialog.cpp \
     stampbrush.cpp \
     tiledapplication.cpp \
     tilelayeritem.cpp \
+    tileoverlaydialog.cpp \
+    tileoverlayfile.cpp \
     tilepainter.cpp \
     tileselectionitem.cpp \
     tileselectiontool.cpp \
@@ -266,6 +269,7 @@ SOURCES += aboutdialog.cpp \
 
 HEADERS += aboutdialog.h \
     abstractobjecttool.h \
+    abstractoverlay.h \
     abstracttiletool.h \
     abstracttool.h \
     addremovelayer.h \
@@ -302,6 +306,7 @@ HEADERS += aboutdialog.h \
     languagemanager.h \
     layerdock.h \
     layermodel.h \
+    luatable.h \
     macsupport.h \
     mainwindow.h \
     mapdocumentactionhandler.h \
@@ -348,6 +353,8 @@ HEADERS += aboutdialog.h \
     stampbrush.h \
     tiledapplication.h \
     tilelayeritem.h \
+    tileoverlaydialog.h \
+    tileoverlayfile.h \
     tilepainter.h \
     tileselectionitem.h \
     tileselectiontool.h \

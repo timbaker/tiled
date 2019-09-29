@@ -20,12 +20,12 @@
 
 #include <QMainWindow>
 
+class AbstractOverlay;
+class AbstractOverlayEntry;
+
 namespace Ui {
 class ContainerOverlayDialog;
 }
-
-class ContainerOverlay;
-class ContainerOverlayEntry;
 
 namespace Tiled {
 class Tile;
@@ -38,22 +38,26 @@ class Zoomable;
 class QUndoGroup;
 class QUndoStack;
 
-class ContainerOverlayDialog : public QMainWindow
+class AbstractOverlayDialog : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit ContainerOverlayDialog(QWidget *parent = 0);
-    ~ContainerOverlayDialog();
+    explicit AbstractOverlayDialog(QWidget *parent = nullptr);
+    ~AbstractOverlayDialog();
 
-    QString setBaseTile(ContainerOverlay *overlay, const QString &tileName);
-    QString setEntryTile(ContainerOverlayEntry *entry, int index, const QString &tileName);
-    QString setEntryRoomName(ContainerOverlayEntry *entry, const QString &roomName);
+    QString setBaseTile(AbstractOverlay *overlay, const QString &tileName);
+    void addEntryTile(AbstractOverlayEntry *entry, int index, const QString &tileName);
+    void removeEntryTile(AbstractOverlayEntry *entry, int index);
+    QString setEntryTile(AbstractOverlayEntry *entry, int index, const QString &tileName);
+    QString setEntryRoomName(AbstractOverlayEntry *entry, const QString &roomName);
+    QString setEntryUsage(AbstractOverlayEntry *entry, const QString &usage);
+    int setEntryChance(AbstractOverlayEntry *entry, int chance);
 
-    void insertOverlay(int index, ContainerOverlay *overlay);
+    void insertOverlay(int index, AbstractOverlay *overlay);
     void removeOverlay(int index);
-    void insertEntry(ContainerOverlay *overlay, int index, ContainerOverlayEntry *entry);
-    void removeEntry(ContainerOverlay *overlay, int index);
+    void insertEntry(AbstractOverlay *overlay, int index, AbstractOverlayEntry *entry);
+    void removeEntry(AbstractOverlay *overlay, int index);
 
 protected:
     void setTilesetList();
@@ -66,13 +70,16 @@ protected:
     QString getSaveLocation();
     void fileOpen(const QString &fileName);
     bool fileSave(const QString &fileName);
+    virtual bool fileOpen(const QString &fileName, QList<AbstractOverlay*> &overlays) = 0;
+    virtual bool fileSave(const QString &fileName, const QList<AbstractOverlay*> &overlays) = 0;
 
     typedef Tiled::Tileset Tileset;
-private slots:
+protected slots:
     void addOverlay();
     void addEntry();
     void setToNone();
     void overlayActivated(const QModelIndex &index);
+    void overlayEntryHover(const QModelIndex &index, int entryIndex);
     void scrollToNow(const QModelIndex &index);
     void tileActivated(const QModelIndex &index);
     void tilesetSelectionChanged();
@@ -82,10 +89,14 @@ private slots:
     void tilesetRemoved(Tiled::Tileset *tileset);
     void tilesetChanged(Tileset *tileset);
 
-    void tileDropped(ContainerOverlay *overlay, const QString &tileName);
-    void tileDropped(ContainerOverlayEntry *entry, int index, const QString &tileName);
-    void entryRoomNameEdited(ContainerOverlayEntry *entry, const QString &roomName);
+    void tileDropped(AbstractOverlay *overlay, const QStringList &tileNames);
+    void tileDropped(AbstractOverlayEntry *entry, int index, const QStringList &tileName);
+    void entryRoomNameEdited(AbstractOverlayEntry *entry, const QString &roomName);
+    void entryUsageEdited(AbstractOverlayEntry *entry, const QString &usage);
+    void entryChanceEdited(AbstractOverlayEntry *entry, int chance);
+    void removeTile(AbstractOverlayEntry *entry, int index);
 
+    void fileNew();
     void fileOpen();
     bool fileSave();
     bool fileSaveAs();
@@ -95,15 +106,40 @@ private slots:
     void updateWindowTitle();
     void syncUI();
 
-private:
+protected:
+    virtual QString defaultWindowTitle() const { return QLatin1Literal("Overlays"); }
+    virtual AbstractOverlay *createOverlay(Tiled::Tile *tile) = 0;
+    virtual AbstractOverlayEntry *createEntry(AbstractOverlay* parent) = 0;
+
+protected:
     Ui::ContainerOverlayDialog *ui;
     QString mFileName;
     Tiled::Internal::Zoomable *mZoomable;
-    QList<ContainerOverlay*> mOverlays;
+    QList<AbstractOverlay*> mOverlays;
     Tileset *mCurrentTileset;
+    QString mHoverTileName;
+    QString mError;
 
     QUndoGroup *mUndoGroup;
     QUndoStack *mUndoStack;
+};
+
+class ContainerOverlayDialog : public AbstractOverlayDialog
+{
+    Q_OBJECT
+public:
+    explicit ContainerOverlayDialog(QWidget *parent = nullptr);
+
+protected slots:
+    void showContextMenu(const QModelIndex &index, int entryIndex, QContextMenuEvent *event);
+
+protected:
+    bool fileOpen(const QString &fileName, QList<AbstractOverlay*> &overlays) override;
+    bool fileSave(const QString &fileName, const QList<AbstractOverlay*> &overlays) override;
+    QString defaultWindowTitle() const override
+    { return tr("Container Overlays"); }
+    AbstractOverlay *createOverlay(Tiled::Tile *tile) override;
+    AbstractOverlayEntry *createEntry(AbstractOverlay* parent) override;
 };
 
 #endif // CONTAINEROVERLAYDIALOG_H

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014, Tim Baker <treectrl@users.sf.net>
+ * Copyright 2019, Tim Baker <treectrl@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -15,8 +15,8 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CONTAINEROVERLAYFILE_H
-#define CONTAINEROVERLAYFILE_H
+#ifndef TILEOVERLAYFILE_H
+#define TILEOVERLAYFILE_H
 
 #include "abstractoverlay.h"
 
@@ -24,52 +24,53 @@
 
 class LuaTable;
 
-class ContainerOverlay;
+class TileOverlay;
 
-class ContainerOverlayEntry : public AbstractOverlayEntry
+class TileOverlayEntry : public AbstractOverlayEntry
 {
 public:
     AbstractOverlay *parent() const override;
-    void setRoomName(const QString& roomName) { mRoomName = roomName; }
+    void setRoomName(const QString& roomName) override { mRoomName = roomName; }
     QString roomName() const override { return mRoomName; }
     QStringList &tiles() override { return mTiles; }
     virtual void setUsage(const QString& usage) override { mUsage = usage; }
     virtual QString usage() const override { return mUsage; };
     int indexOf() const override;
 
-    ContainerOverlay *mParent;
+    TileOverlay *mParent;
     QString mRoomName;
+    int mChance = 1;
     QStringList mTiles;
     QString mUsage;
 };
 
-class ContainerOverlay : public AbstractOverlay
+class TileOverlay : public AbstractOverlay
 {
 public:
-    void setTileName(const QString& tileName) { mTileName = tileName; }
+    void setTileName(const QString& tileName) override { mTileName = tileName; }
     QString tileName() override { return mTileName; }
     int entryCount() const override { return mEntries.size(); }
     AbstractOverlayEntry *entry(int index) const override
     {
         return (index >= 0 && index < mEntries.size()) ? mEntries[index] : nullptr;
     }
-    void insertEntry(int index, AbstractOverlayEntry *entry) { mEntries.insert(index, static_cast<ContainerOverlayEntry*>(entry)); }
-    AbstractOverlayEntry *removeEntry(int index) { return mEntries.takeAt(index); }
+    void insertEntry(int index, AbstractOverlayEntry *entry) override { mEntries.insert(index, static_cast<TileOverlayEntry*>(entry)); }
+    TileOverlayEntry *removeEntry(int index) override { return mEntries.takeAt(index); }
 
     QString mTileName;
-    QList<ContainerOverlayEntry*> mEntries;
+    QList<TileOverlayEntry*> mEntries;
 };
 
-class ContainerOverlayFile
+class TileOverlayFile
 {
 public:
-    ContainerOverlayFile();
-    ~ContainerOverlayFile() { qDeleteAll(mOverlays); }
+    TileOverlayFile();
+    ~TileOverlayFile() { qDeleteAll(mOverlays); }
 
     bool read(const QString &fileName);
-    bool write(const QString &fileName, const QList<ContainerOverlay*> overlays);
+    bool write(const QString &fileName, const QList<TileOverlay*> &overlays);
 
-    QList<ContainerOverlay*> takeOverlays();
+    QList<TileOverlay*> takeOverlays();
 
     QString errorString() { return mError; }
 
@@ -77,9 +78,9 @@ private:
     bool readV0(LuaTable* table);
     bool readV1(LuaTable* table);
 
-private:
-    QList<ContainerOverlay*> mOverlays;
+public:
+    QList<TileOverlay*> mOverlays;
     QString mError;
 };
 
-#endif // CONTAINEROVERLAYFILE_H
+#endif // TILEOVERLAYFILE_H

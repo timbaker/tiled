@@ -30,6 +30,7 @@
 #include <QGraphicsPixmapItem>
 #include <QGraphicsSceneHoverEvent>
 #include <QSettings>
+#include <QToolTip>
 
 using namespace Tiled::Internal;
 
@@ -180,23 +181,20 @@ PackImageItem::PackImageItem() :
     setAcceptHoverEvents(true);
 }
 
-#include <QGraphicsWidget>
-#include <QToolTip>
-
 void PackImageItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
 {
     qreal x = event->scenePos().x();
     qreal y = event->scenePos().y();
 
-    foreach (PackSubTexInfo info, mPackPage.mInfo) {
+    for (PackSubTexInfo info : mPackPage.mInfo) {
         if (x >= info.x && x < info.x + info.w &&
                 y >= info.y && y < info.y + info.h) {
 //            setToolTip(info.name);
-            QGraphicsView *v = (QGraphicsView*)event->widget();
-            if (v != 0) {
-                QRect sceneRect(scenePos().x() + info.x, scenePos().y() + info.y, info.w, info.h);
+            if (QGraphicsView *v = qobject_cast<QGraphicsView*>(event->widget()->parent())) {
+                QRect sceneRect(int(scenePos().x()) + info.x, int(scenePos().y()) + info.y, info.w, info.h);
                 QRect viewportRect = v->mapFromScene(sceneRect).boundingRect();
                 QToolTip::showText(event->screenPos(), info.name, v, viewportRect);
+                break;
             }
         }
     }

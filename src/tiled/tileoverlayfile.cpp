@@ -1,5 +1,5 @@
 /*
- * Copyright 2014, Tim Baker <treectrl@users.sf.net>
+ * Copyright 2019, Tim Baker <treectrl@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -15,7 +15,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "containeroverlayfile.h"
+#include "tileoverlayfile.h"
 
 #include "luaconsole.h"
 #include "luatable.h"
@@ -44,11 +44,11 @@ extern int traceback(lua_State *L);
 
 namespace {
 
-class WorldFillerFile
+class TileOverlayParser
 {
 public:
-    WorldFillerFile();
-    ~WorldFillerFile();
+    TileOverlayParser();
+    ~TileOverlayParser();
 
     lua_State *init();
     bool dofile(const QString &f, QString &output);
@@ -60,19 +60,19 @@ public:
 
 } // namespace anon
 
-WorldFillerFile::WorldFillerFile() :
+TileOverlayParser::TileOverlayParser() :
     L(nullptr)
 {
 }
 
-WorldFillerFile::~WorldFillerFile()
+TileOverlayParser::~TileOverlayParser()
 {
     if (L) {
         lua_close(L);
     }
 }
 
-lua_State *WorldFillerFile::init()
+lua_State *TileOverlayParser::init()
 {
     L = luaL_newstate();
     luaL_openlibs(L);
@@ -83,7 +83,7 @@ lua_State *WorldFillerFile::init()
     return L;
 }
 
-bool WorldFillerFile::dofile(const QString &f, QString &output)
+bool TileOverlayParser::dofile(const QString &f, QString &output)
 {
     lua_State *L = init();
 
@@ -107,21 +107,20 @@ bool WorldFillerFile::dofile(const QString &f, QString &output)
 
 #include <tolua.h>
 
-LuaTable *WorldFillerFile::parseOverlayMap()
+LuaTable *TileOverlayParser::parseOverlayMap()
 {
     tolua_Error err;
     if ((lua_gettop(L) >= 1) && (tolua_istable(L, -1, 0, &err) == 1)) {
         // VERSION 1: file-local "overlayMap" return-value
     } else {
-        // VERSION 0: global "overlayMap"
-        lua_getglobal(L, "overlayMap");
+       return nullptr;
     }
     LuaTable *table = parseTable();
     lua_pop(L, 1);
     return table;
 }
 
-LuaTable *WorldFillerFile::parseTable()
+LuaTable *TileOverlayParser::parseTable()
 {
     LuaTable *table = new LuaTable;
     lua_pushnil(L); // push key
@@ -146,70 +145,36 @@ LuaTable *WorldFillerFile::parseTable()
 
 /////
 
-AbstractOverlay* ContainerOverlayEntry::parent() const
+AbstractOverlay *TileOverlayEntry::parent() const
 {
     return mParent;
 }
 
-int ContainerOverlayEntry::indexOf() const
+int TileOverlayEntry::indexOf() const
 {
-    return mParent->mEntries.indexOf(const_cast<ContainerOverlayEntry*>(this));
+    return mParent->mEntries.indexOf(const_cast<TileOverlayEntry*>(this));
 }
 
 /////
 
-ContainerOverlayFile::ContainerOverlayFile()
+TileOverlayFile::TileOverlayFile()
 {
 }
 
-// overlayMap["location_shop_generic_01_40"] = {
-//   clothesstore = { "clothing_01_8", "clothing_01_16" },
-//   departmentstore = {"clothing_01_8", "clothing_01_16"},
-//   generalstore = {"clothing_01_8", "clothing_01_16"}
+// overlayMap["location_business_office_generic_01_7"] = {
+//     { name = "other", chance = 2, tiles = {"papernotices_01_9"} }
 // }
-bool ContainerOverlayFile::readV0(LuaTable* table)
-{
-    QMap<QString,ContainerOverlay*> map;
-    for (LuaTableKeyValue *kv : table->kv) {
-        ContainerOverlay *overlay = new ContainerOverlay;
-        overlay->mTileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(kv->key);
-        for (LuaTableKeyValue *kv2 : kv->t->kv) {
-            ContainerOverlayEntry *entry = new ContainerOverlayEntry;
-            entry->mParent = overlay;
-            entry->mRoomName = kv2->key;
-            for (LuaTableKeyValue *kv3 : kv2->t->kv) {
-                QString tileName = kv3->s;
-                if (tileName != QLatin1String("none")) {
-                    tileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(tileName);
-                }
-                entry->mTiles << tileName;
-            }
-            while (entry->mTiles.size() < 2) {
-                entry->mTiles += QLatin1String("none");
-            }
-            overlay->mEntries += entry;
-        }
-        map[overlay->mTileName] = overlay;
-    }
-    mOverlays = map.values();
-    return true;
-}
 
-// overlayMap["location_shop_generic_01_40"] = {
-//   { name = "clothesstore", tiles = { "clothing_01_8", "clothing_01_16" } },
-//   { name = "departmentstore", tiles = { "clothing_01_8", "clothing_01_16" } },
-//   { name = "generalstore", tiles = { "clothing_01_8", "clothing_01_16" } }
-// }
-bool ContainerOverlayFile::readV1(LuaTable* table)
+bool TileOverlayFile::readV1(LuaTable* table)
 {
-    QMap<QString,ContainerOverlay*> map;
+    QMap<QString,TileOverlay*> map;
     for (LuaTableKeyValue *overlayKV : table->kv) {
         LuaTable* overlayTable = overlayKV->t;
         if (overlayTable == nullptr) {
             Q_ASSERT(overlayKV->key == QLatin1Literal("VERSION"));
             continue;
         }
-        ContainerOverlay *overlay = new ContainerOverlay;
+        TileOverlay *overlay = new TileOverlay;
         overlay->mTileName = BuildingEditor::BuildingTilesMgr::normalizeTileName(overlayKV->key);
         for (LuaTableKeyValue *roomKV : overlayTable->kv) {
             LuaTable* roomTable = roomKV->t;
@@ -218,13 +183,30 @@ bool ContainerOverlayFile::readV1(LuaTable* table)
                 mError = QString::fromUtf8("expected room table");
                 return false;
             }
-            ContainerOverlayEntry *entry = new ContainerOverlayEntry;
+            TileOverlayEntry *entry = new TileOverlayEntry;
             entry->mParent = overlay;
+
             if (!roomTable->getString(QLatin1Literal("name"), entry->mRoomName)) {
                 // FIXME: delete 'map'
                 mError = QString::fromUtf8("expected \"name\"");
                 return false;
             }
+
+            QString chanceStr;
+            if (!roomTable->getString(QLatin1Literal("chance"), chanceStr)) {
+                mError = QString::fromUtf8("expected \"chance\"");
+                return false;
+            }
+
+            roomTable->getString(QLatin1Literal("usage"), entry->mUsage);
+
+            bool ok;
+            entry->mChance = chanceStr.toInt(&ok);
+            if ((ok == false) || (entry->mChance < 1)) {
+                mError = QString::fromUtf8("expected integer chance > 1");
+                return false;
+            }
+
             LuaTable* tileTable = roomTable->getTable(QLatin1Literal("tiles"));
             if (tileTable == nullptr) {
                 // FIXME: delete 'map'
@@ -238,9 +220,6 @@ bool ContainerOverlayFile::readV1(LuaTable* table)
                 }
                 entry->mTiles << tileName;
             }
-            while (entry->mTiles.size() < 2) {
-                entry->mTiles += QLatin1String("none");
-            }
             overlay->mEntries += entry;
         }
         map[overlay->mTileName] = overlay;
@@ -249,15 +228,20 @@ bool ContainerOverlayFile::readV1(LuaTable* table)
     return true;
 }
 
-bool ContainerOverlayFile::read(const QString &fileName)
+bool TileOverlayFile::read(const QString &fileName)
 {
-    WorldFillerFile wff;
+    TileOverlayParser wff;
     QString output;
     if (wff.dofile(fileName, output)) {
         QScopedPointer<LuaTable> table(wff.parseOverlayMap());
+        if (table.isNull()) {
+            mError = QString::fromUtf8("failed to parse overlayMap");
+            return false;
+        }
         LuaTableKeyValue* versionKV = table->find(QLatin1Literal("VERSION"));
         if (versionKV == nullptr) {
-            return readV0(table.data());
+            mError = QString::fromUtf8("missing overlayMap.VERSION");
+            return false;
         }
         if (versionKV->s == QLatin1Literal("1")) {
             return readV1(table.data());
@@ -283,7 +267,7 @@ static QString shortTileName(const QString &tileName)
 static const int VERSION1 = 1;
 static const int VERSION = VERSION1;
 
-bool ContainerOverlayFile::write(const QString &filePath, const QList<ContainerOverlay*> overlays)
+bool TileOverlayFile::write(const QString &filePath, const QList<TileOverlay*> &overlays)
 {
     QTemporaryFile tempFile;
     if (!tempFile.open()) {
@@ -296,21 +280,20 @@ bool ContainerOverlayFile::write(const QString &filePath, const QList<ContainerO
     ts << QLatin1Literal("-- THIS FILE WAS AUTOMATICALLY GENERATED BY TileZed\n");
     ts << QLatin1Literal("local overlayMap = {}\n");
     ts << QString::fromUtf8("overlayMap.VERSION = %1\n").arg(VERSION);
-    for (ContainerOverlay *overlay : overlays) {
+    for (TileOverlay *overlay : overlays) {
         QString line;
         bool prev = false;
         // sort by room name
-        QMap<QString,QList<ContainerOverlayEntry*>> entryMap;
-        for (ContainerOverlayEntry *entry : overlay->mEntries) {
+        QMap<QString,QList<TileOverlayEntry*>> entryMap;
+        for (TileOverlayEntry *entry : overlay->mEntries) {
             entryMap[entry->mRoomName] += entry;
         }
-        for (QList<ContainerOverlayEntry *> entries : entryMap.values()) {
-            for (ContainerOverlayEntry* entry : entries) {
+        for (QList<TileOverlayEntry *> entries : entryMap.values()) {
+            for (TileOverlayEntry* entry : entries) {
                 QString tiles;
                 for (QString tileName : entry->mTiles) {
-                    if (tileName.isEmpty()) {
+                    if (tileName.isEmpty())
                         continue;
-                    }
                     if (tileName == QLatin1String("none") && !tiles.isEmpty()) {
                         continue;
                     }
@@ -323,7 +306,11 @@ bool ContainerOverlayFile::write(const QString &filePath, const QList<ContainerO
                     if (prev) {
                         line += QLatin1Literal(", ");
                     }
-                    line += QString(QLatin1Literal("{ name = \"%1\", tiles = {%2} }")).arg(entry->mRoomName).arg(tiles);
+                    line += QString(QLatin1Literal("{ name = \"%1\", chance = %2, usage = \"%3\", tiles = {%4} }"))
+                            .arg(entry->mRoomName)
+                            .arg(entry->mChance)
+                            .arg(entry->mUsage)
+                            .arg(tiles);
                     prev = true;
                 }
             }
@@ -332,7 +319,7 @@ bool ContainerOverlayFile::write(const QString &filePath, const QList<ContainerO
             ts << QString(QLatin1Literal("overlayMap[\"%1\"] = {%2}\n")).arg(shortTileName(overlay->mTileName)).arg(line);
         }
     }
-    ts << QLatin1Literal("\nif not TILEZED then\n\tgetContainerOverlays():addOverlays(overlayMap)\nend\n");
+    ts << QLatin1Literal("\nif not TILEZED then\n\tgetTileOverlays():addOverlays(overlayMap)\nend\n");
     ts << QLatin1Literal("\nreturn overlayMap\n");
 
     if (tempFile.error() != QFile::NoError) {
@@ -383,9 +370,9 @@ bool ContainerOverlayFile::write(const QString &filePath, const QList<ContainerO
     return true;
 }
 
-QList<ContainerOverlay *> ContainerOverlayFile::takeOverlays()
+QList<TileOverlay *> TileOverlayFile::takeOverlays()
 {
-    QList<ContainerOverlay*> overlays = mOverlays;
+    QList<TileOverlay *> overlays = mOverlays;
     mOverlays.clear();
     return overlays;
 }

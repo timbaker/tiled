@@ -75,8 +75,8 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     mMapObjectModel(new MapObjectModel(this)),
 #ifdef ZOMBOID
     mLevelsModel(new ZLevelsModel(this)),
-    mMapComposite(0),
-    mWorldCell(0),
+    mMapComposite(nullptr),
+    mWorldCell(nullptr),
 #endif
     mUndoStack(new QUndoStack(this))
 {
@@ -175,6 +175,8 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
 #ifdef ZOMBOID
     connect(tilesetManager, SIGNAL(tileLayerNameChanged(Tile*)),
             SIGNAL(tileLayerNameChanged(Tile*)));
+
+    mMapComposite->setShowLotFloorsOnly(Preferences::instance()->showLotFloorsOnly());
 #endif
 }
 

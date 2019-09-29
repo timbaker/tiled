@@ -491,7 +491,7 @@ TileDefDialog::~TileDefDialog()
     delete mClipboard;
     //delete mTileDefProperties;
 
-    mInstance = 0;
+    mInstance = nullptr;
 }
 
 void TileDefDialog::addTileset()
@@ -1552,7 +1552,7 @@ Tileset *TileDefDialog::loadTileset(const QString &source)
         TilesetManager::instance()->loadTileset(ts, info.canonicalFilePath());
         return ts;
     }
-    return 0;
+    return nullptr;
 }
 
 #if 0

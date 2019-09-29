@@ -115,6 +115,7 @@ private slots:
     void synchNoBlendVisible();
 
     void highlightRoomUnderPointerChanged(bool highlight);
+    void showLotFloorsOnlyChanged(bool show);
 
     void handlePendingUpdates();
 
