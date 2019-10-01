@@ -36,10 +36,12 @@ class Zoomable;
 class PackImageItem : public QGraphicsPixmapItem
 {
 public:
-    PackImageItem();
+    PackImageItem(QGraphicsRectItem *rectItem);
     void setPackPage(PackPage pp) { mPackPage = pp; }
     void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
+
     PackPage mPackPage;
+    QGraphicsRectItem *mTileRectItem;
 };
 
 class PackViewer : public QMainWindow
@@ -47,7 +49,7 @@ class PackViewer : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit PackViewer(QWidget *parent = 0);
+    explicit PackViewer(QWidget *parent = nullptr);
     ~PackViewer();
 
 private slots:
@@ -67,6 +69,7 @@ private:
     QString mPackDirectory;
     Tiled::Internal::Zoomable *mZoomable;
     QGraphicsRectItem *mRectItem;
+    QGraphicsRectItem *mTileRectItem;
     PackImageItem *mPixmapItem;
 };
 
