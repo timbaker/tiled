@@ -51,9 +51,14 @@ PackViewer::PackViewer(QWidget *parent) :
     mRectItem->hide();
 //    rect->setGraphicsEffect(new QGraphicsDropShadowEffect);
 
-    mPixmapItem = new PackImageItem;
+    mTileRectItem = ui->graphicsView->scene()->addRect(QRectF(0, 0, 100, 100), QPen(Qt::gray));
+    mTileRectItem->hide();
+
+    mPixmapItem = new PackImageItem(mTileRectItem);
     ui->graphicsView->scene()->addItem(mPixmapItem);
     mPixmapItem->hide();
+
+    mTileRectItem->setZValue(mPixmapItem->zValue() + 1);
 
     mZoomable = new Zoomable(this);
     mZoomable->setZoomFactors(QVector<qreal>() << 0.25 << 0.5 << 1.0 << 2.0 << 4.0);
@@ -175,8 +180,9 @@ void PackViewer::writeSettings()
 
 /////
 
-PackImageItem::PackImageItem() :
-    QGraphicsPixmapItem()
+PackImageItem::PackImageItem(QGraphicsRectItem *rectItem) :
+    QGraphicsPixmapItem(),
+    mTileRectItem(rectItem)
 {
     setAcceptHoverEvents(true);
 }
@@ -194,6 +200,9 @@ void PackImageItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
                 QRect sceneRect(int(scenePos().x()) + info.x, int(scenePos().y()) + info.y, info.w, info.h);
                 QRect viewportRect = v->mapFromScene(sceneRect).boundingRect();
                 QToolTip::showText(event->screenPos(), info.name, v, viewportRect);
+
+                mTileRectItem->setRect(sceneRect);
+                mTileRectItem->show();
                 break;
             }
         }
