@@ -144,7 +144,7 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
         packPage.name = QFileInfo(mSettings.mPackFileName).baseName() + QString::number(pageNum);
         packPage.image = outputImage;
         for (QString index : toPackPage) {
-            QRect rectangle1(imagePlacement[index].topLeft(), imageTranslation[index].size + QSize(mSettings.extra * 2, mSettings.extra * 2));
+            QRect rectangle1(imagePlacement[index].topLeft() + QPoint(mSettings.extra, mSettings.extra), imageTranslation[index].size /*+ QSize(mSettings.extra * 2, mSettings.extra * 2)*/);
             QRect rectangle2(imageTranslation[index].topLeft - imageTranslation[index].sheetOffset, imageTranslation[index].originalSize);
             QString name;
             if (index.contains(QLatin1String("_INDEX_"))) {
@@ -182,7 +182,7 @@ bool TexturePacker::pack(const TexturePackSettings &settings)
         packPage.name = QFileInfo(mSettings.mPackFileName).baseName() + QString::number(pageNum);
         packPage.image = outputImage;
         for (QString index : toPackPage) {
-            QRect rectangle1(imagePlacement[index].topLeft(), imageTranslation[index].size + QSize(mSettings.extra * 2, mSettings.extra * 2));
+            QRect rectangle1(imagePlacement[index].topLeft() + QPoint(mSettings.extra, mSettings.extra), imageTranslation[index].size);
             QRect rectangle2(imageTranslation[index].topLeft - imageTranslation[index].sheetOffset, imageTranslation[index].originalSize);
             QString name;
             if (index.contains(QLatin1String("_INDEX_"))) {
