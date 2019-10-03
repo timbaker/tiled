@@ -1503,21 +1503,19 @@ void TileDefDialog::loadTilesets()
 
     foreach (Tileset *ts, mTilesets) {
         if (ts->isMissing()) {
-            QString tilesDir = Preferences::instance()->tilesDirectory();
-            QString tiles2xDir = Preferences::instance()->tiles2xDirectory();
-            QString imageSource = QDir(tilesDir).filePath(ts->name() + QLatin1Literal(".png"));
-            QString imageSource2x = QDir(tiles2xDir).filePath(ts->name() + QLatin1Literal(".png"));
+            QString imageSource1x, imageSource2x;
+            TilesetManager::instance()->getTilesetFileName(ts->name(), imageSource1x, imageSource2x);
             QImageReader ir2x(imageSource2x);
             if (ir2x.size().isValid()) {
-                ts->loadFromNothing(ir2x.size() / 2, imageSource);
+                ts->loadFromNothing(ir2x.size() / 2, imageSource1x);
                 // can't use canonicalFilePath since the 1x tileset may not exist
-                TilesetManager::instance()->loadTileset(ts, imageSource);
+                TilesetManager::instance()->loadTileset(ts, imageSource1x);
                 continue;
             }
-            QImageReader reader(imageSource);
+            QImageReader reader(imageSource1x);
             if (reader.size().isValid()) {
-                ts->loadFromNothing(reader.size(), imageSource);
-                QFileInfo info(imageSource);
+                ts->loadFromNothing(reader.size(), imageSource1x);
+                QFileInfo info(imageSource1x);
                 TilesetManager::instance()->loadTileset(ts, info.canonicalFilePath());
             }
         }
@@ -1528,10 +1526,8 @@ Tileset *TileDefDialog::loadTileset(const QString &source)
 {
     QFileInfo info(source);
     QString tilesetName = info.completeBaseName();
-    QString tilesDir = Preferences::instance()->tilesDirectory();
-    QString tiles2xDir = Preferences::instance()->tiles2xDirectory();
-    QString imageSource = QDir(tilesDir).filePath(tilesetName + QLatin1Literal(".png"));
-    QString imageSource2x = QDir(tiles2xDir).filePath(tilesetName + QLatin1Literal(".png"));
+    QString imageSource, imageSource2x;
+    TilesetManager::instance()->getTilesetFileName(tilesetName, imageSource, imageSource2x);
 
     QImageReader ir2x(imageSource2x);
     if (ir2x.size().isValid()) {

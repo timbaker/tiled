@@ -21,6 +21,9 @@
 #include "ui_addtilesetsdialog.h"
 
 #include "preferences.h"
+#include "tilemetainfomgr.h"
+
+#include "tileset.h"
 
 #include <QDir>
 #include <QFileDialog>
@@ -35,7 +38,8 @@ AddTilesetsDialog::AddTilesetsDialog(const QString &dir,
     ui(new Ui::AddTilesetsDialog),
     mDirectory(dir),
     mIgnore(ignore),
-    mIgnoreIsPaths(ignoreIsPaths)
+    mIgnoreIsPaths(ignoreIsPaths),
+    mAllowBrowse(false)
 {
     ui->setupUi(this);
 
@@ -44,8 +48,6 @@ AddTilesetsDialog::AddTilesetsDialog(const QString &dir,
 
     setPrompt(QString());
     setAllowBrowse(false);
-
-    setFilesList();
 }
 
 AddTilesetsDialog::~AddTilesetsDialog()
@@ -55,6 +57,7 @@ AddTilesetsDialog::~AddTilesetsDialog()
 
 void AddTilesetsDialog::setAllowBrowse(bool browse)
 {
+    mAllowBrowse = browse;
     if (browse) {
         ui->path->show();
         ui->browse->show();
@@ -80,6 +83,14 @@ QStringList AddTilesetsDialog::fileNames()
     for (int i = 0; i < ui->files->count(); i++) {
         QListWidgetItem *item = ui->files->item(i);
         if (item->checkState() == Qt::Checked) {
+            // Hack: When browse=false, display TileMetaInfoMgr's tilesets.  This is used by TileDefDialog.
+            if (mAllowBrowse == false) {
+                QString tilesetName = item->data(Qt::UserRole).toString();
+                if (Tiled::Tileset *tileset = TileMetaInfoMgr::instance()->tileset(tilesetName)) {
+                    ret += tileset->imageSource2x().isEmpty() ? tileset->imageSource() : tileset->imageSource2x();
+                }
+                continue;
+            }
             QString fileName = QDir(mDirectory).filePath(item->text());
             ret += fileName; //QFileInfo(fileName).canonicalFilePath();
         }
@@ -91,7 +102,22 @@ void AddTilesetsDialog::setFilesList()
 {
     ui->files->clear();
 
-    QDir dir(mDirectory + QLatin1String("/2x"));
+    // Hack: When browse=false, display TileMetaInfoMgr's tilesets.  This is used by TileDefDialog.
+    if (mAllowBrowse == false) {
+        for (Tiled::Tileset *tileset : TileMetaInfoMgr::instance()->tilesets()) {
+            Q_ASSERT(mIgnoreIsPaths == false);
+            if (mIgnore.contains(tileset->name()))
+                continue;
+            QListWidgetItem *item = new QListWidgetItem;
+            item->setText(tileset->name());
+            item->setCheckState(Qt::Unchecked);
+            item->setData(Qt::UserRole, tileset->name());
+            ui->files->addItem(item);
+        }
+        return;
+    }
+
+    QDir dir(mDirectory/* + QLatin1String("/2x")*/);
     dir.setFilter(QDir::Files);
     dir.setSorting(QDir::Name);
     QStringList nameFilters;
@@ -121,6 +147,12 @@ void AddTilesetsDialog::setFilesList()
         item->setCheckState(Qt::Unchecked);
         ui->files->addItem(item);
     }
+}
+
+int AddTilesetsDialog::exec()
+{
+    setFilesList();
+    return QDialog::exec();
 }
 
 void AddTilesetsDialog::browse()

@@ -69,7 +69,7 @@ public:
     {
         if (mTilesetByName.contains(tilesetName))
             return mTilesetByName[tilesetName];
-        return 0;
+        return nullptr;
     }
 
     int indexOf(Tileset *ts)
@@ -137,7 +137,7 @@ private:
 
 private:
     static TileMetaInfoMgr *mInstance;
-    TileMetaInfoMgr(QObject *parent = 0);
+    TileMetaInfoMgr(QObject *parent = nullptr);
     ~TileMetaInfoMgr();
 
     QMap<QString,Tileset*> mTilesetByName;

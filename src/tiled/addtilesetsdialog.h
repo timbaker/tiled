@@ -33,13 +33,16 @@ class AddTilesetsDialog : public QDialog
 public:
     explicit AddTilesetsDialog(const QString &dir, const QStringList &ignore,
                                bool ignoreIsPaths = false,
-                               QWidget *parent = 0);
+                               QWidget *parent = nullptr);
     ~AddTilesetsDialog();
 
     void setAllowBrowse(bool browse);
     void setPrompt(const QString &prompt);
     
     QStringList fileNames();
+
+public slots:
+    int exec() override;
 
 private:
     void setFilesList();
@@ -57,6 +60,7 @@ private:
     QString mDirectory;
     QStringList mIgnore;
     bool mIgnoreIsPaths;
+    bool mAllowBrowse;
 };
 
 #endif // ADDTILESETSDIALOG_H
