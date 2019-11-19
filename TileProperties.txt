@@ -976,6 +976,14 @@ property
 }
 property
 {
+    Type = Boolean
+    Name = CantClimb
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}              
+property
+{
     Type = String
     Name = PaintingType
     ShortName =

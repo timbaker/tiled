@@ -91,6 +91,13 @@
         </property>
        </widget>
       </item>
+      <item row="4" column="1">
+       <widget class="QCheckBox" name="checkDoorInWall">
+        <property name="text">
+         <string>Door In Wall</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
     <item row="3" column="0">

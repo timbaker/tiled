@@ -1,6 +1,8 @@
 #ifndef CHECKBUILDINGSWINDOW_H
 #define CHECKBUILDINGSWINDOW_H
 
+#include "tiledeffile.h"
+
 #include <QMainWindow>
 #include <QSet>
 #include <QTimer>
@@ -55,6 +57,7 @@ private:
             Sinks,
             Rearranged,
             MultipleContainers,
+            DoorInWall,
         };
 
         Issue(IssueFile *file, Type type, const QString &detail, int x, int y, int z) :
@@ -110,6 +113,7 @@ private:
     Ui::CheckBuildingsWindow *ui;
     QList<IssueFile*> mFiles;
     IssueFile *mCurrentIssueFile;
+    Tiled::Internal::TileDefFile mTileDefFile;
 
     Tiled::Internal::FileSystemWatcher *mFileSystemWatcher;
     QList<QString> mWatchedFiles;
