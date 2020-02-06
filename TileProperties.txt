@@ -479,18 +479,21 @@ separator
 
 property
 {
+    Type = Boolean
+    Name = TileOverlay
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+
+property
+{
     Type = String
     Name = FlatTextureOverride
     ShortName = FlatTextureOverride
     Default =
 }
-property
-{
-    Type = String
-    Name = BurntTile
-    ShortName = BurntTile
-    Default =
-}
+
 property
 {
     Type = Integer
@@ -500,6 +503,14 @@ property
     Max = 64
     Default = 0
 }                 
+
+property
+{
+    Type = String
+    Name = BurntTile
+    ShortName = BurntTile
+    Default =
+}
 
 property
 {
@@ -723,6 +734,14 @@ property
     Type = Boolean
     Name = IsFloor
     ShortName = solidfloor
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = Zac Diamond Floor
+    ShortName = diamondFloor
     Default = false
     ReverseLogic = false
 }
@@ -984,6 +1003,22 @@ property
 }              
 property
 {
+    Type = Boolean
+    Name = TallHoppableW
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}              
+property
+{
+    Type = Boolean
+    Name = TallHoppableN
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}              
+property
+{
     Type = String
     Name = PaintingType
     ShortName =
@@ -1066,6 +1101,14 @@ property
 {
     Type = Boolean
     Name = attachedNW
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
+property
+{
+    Type = Boolean
+    Name = attachedSE
     ShortName =
     Default = false
     ReverseLogic = false
