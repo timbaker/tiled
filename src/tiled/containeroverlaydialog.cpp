@@ -1174,6 +1174,19 @@ ContainerOverlayDialog::ContainerOverlayDialog(QWidget *parent)
 
 }
 
+void ContainerOverlayDialog::tileDropped(AbstractOverlay *overlay, const QStringList &tileNames)
+{
+    // Dropping 2 tiles onto the base tile creates a new room with those 2 tiles.
+    if (tileNames.size() == 2)
+    {
+        AbstractOverlayEntry* entry = createEntry(static_cast<ContainerOverlay*>(overlay));
+        entry->tiles() = tileNames;
+        mUndoStack->push(new InsertEntry(this, overlay, overlay->entryCount(), entry));
+        return;
+    }
+    AbstractOverlayDialog::tileDropped(overlay, tileNames);
+}
+
 void ContainerOverlayDialog::showContextMenu(const QModelIndex &index, int entryIndex, QContextMenuEvent *event)
 {
 

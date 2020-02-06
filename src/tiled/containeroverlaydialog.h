@@ -89,7 +89,7 @@ protected slots:
     void tilesetRemoved(Tiled::Tileset *tileset);
     void tilesetChanged(Tileset *tileset);
 
-    void tileDropped(AbstractOverlay *overlay, const QStringList &tileNames);
+    virtual void tileDropped(AbstractOverlay *overlay, const QStringList &tileNames);
     void tileDropped(AbstractOverlayEntry *entry, int index, const QStringList &tileName);
     void entryRoomNameEdited(AbstractOverlayEntry *entry, const QString &roomName);
     void entryUsageEdited(AbstractOverlayEntry *entry, const QString &usage);
@@ -131,6 +131,7 @@ public:
     explicit ContainerOverlayDialog(QWidget *parent = nullptr);
 
 protected slots:
+    void tileDropped(AbstractOverlay *overlay, const QStringList &tileNames);
     void showContextMenu(const QModelIndex &index, int entryIndex, QContextMenuEvent *event);
 
 protected:
