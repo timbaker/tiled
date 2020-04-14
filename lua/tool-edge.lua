@@ -126,23 +126,51 @@ function wnes(x, y)
     return 's'
 end
 
+function varToTiles(v)
+    local ret = {}
+    if type(v) == 'table' then
+	for _,str in ipairs(v) do
+	    table.insert(ret, map:tile(str) or map:noneTile())
+	end
+    else
+	table.insert(ret, map:tile(v) or map:noneTile())
+    end
+    return ret
+end
+
+function isOneOf(var, tbl)
+    for _,v in ipairs(tbl) do
+	if v == var then
+	    return true
+	end
+    end
+    return false
+end
+
+function randomTile(x, y, tbl)
+    if #tbl == 0 then
+	return map:noneTile()
+    end
+    return tbl[map:bmp(0):rand(x, y) % #tbl + 1]
+end
+
 function edgeTiles()
     return {
-	w = map:tile(EDGE.w) or map:noneTile(),
-	n = map:tile(EDGE.n) or map:noneTile(),
-	e = map:tile(EDGE.e) or map:noneTile(),
-	s = map:tile(EDGE.s) or map:noneTile(),
+	w = varToTiles(EDGE.w),
+	n = varToTiles(EDGE.n),
+	e = varToTiles(EDGE.e),
+	s = varToTiles(EDGE.s),
 	inner = {
-	    nw = map:tile(EDGE.inner.nw) or map:noneTile(),
-	    ne = map:tile(EDGE.inner.ne) or map:noneTile(),
-	    se = map:tile(EDGE.inner.se) or map:noneTile(),
-	    sw = map:tile(EDGE.inner.sw) or map:noneTile(),
+	    nw = varToTiles(EDGE.inner.nw),
+	    ne = varToTiles(EDGE.inner.ne),
+	    se = varToTiles(EDGE.inner.se),
+	    sw = varToTiles(EDGE.inner.sw),
 	},
 	outer = {
-	    nw = map:tile(EDGE.outer.nw) or map:noneTile(),
-	    ne = map:tile(EDGE.outer.ne) or map:noneTile(),
-	    se = map:tile(EDGE.outer.se) or map:noneTile(),
-	    sw = map:tile(EDGE.outer.sw) or map:noneTile(),
+	    nw = varToTiles(EDGE.outer.nw),
+	    ne = varToTiles(EDGE.outer.ne),
+	    se = varToTiles(EDGE.outer.se),
+	    sw = varToTiles(EDGE.outer.sw),
 	}
     }
 end
@@ -174,19 +202,19 @@ function westEdge(sx, sy, ey)
 	if len > 0 then
 	    if contains(sx, y) then
 		local current = currentTiles(sx, y)
-		tile = tiles.w
-		if (current.w == tiles.n or current.w == tiles.outer.nw or current.w == tiles.inner.sw) then
-		    tile = tiles.inner.se
-		elseif (current.w == tiles.s or current.w == tiles.outer.sw or current.w == tiles.inner.nw) then
-		    tile = tiles.inner.ne
-		elseif (current.e == tiles.n or current.e == tiles.outer.ne or current.e == tiles.inner.se) then
-		    tile = tiles.outer.nw
-		elseif (current.e == tiles.s or current.e == tiles.outer.se or current.e == tiles.inner.ne) then
-		    tile = tiles.outer.sw
-		elseif current.at == tiles.n then
-		    tile = tiles.outer.nw
-		elseif current.at == tiles.s then
-		    tile = tiles.outer.sw
+		tile = randomTile(sx, y, tiles.w)
+		if (isOneOf(current.w, tiles.n) or isOneOf(current.w, tiles.outer.nw) or isOneOf(current.w, tiles.inner.sw)) then
+		    tile = randomTile(sx, y, tiles.inner.se)
+		elseif (isOneOf(current.w, tiles.s) or isOneOf(current.w, tiles.outer.sw) or isOneOf(current.w, tiles.inner.nw)) then
+		    tile = randomTile(sx, y, tiles.inner.ne)
+		elseif (isOneOf(current.e, tiles.n) or isOneOf(current.e, tiles.outer.ne) or isOneOf(current.e, tiles.inner.se)) then
+		    tile = randomTile(sx, y, tiles.outer.nw)
+		elseif (isOneOf(current.e, tiles.s) or isOneOf(current.e, tiles.outer.se) or isOneOf(current.e, tiles.inner.ne)) then
+		    tile = randomTile(sx, y, tiles.outer.sw)
+		elseif isOneOf(current.at, tiles.n) then
+		    tile = randomTile(sx, y, tiles.outer.nw)
+		elseif isOneOf(current.at, tiles.s) then
+		    tile = randomTile(sx, y, tiles.outer.sw)
 		end
 		self.tiles[#self.tiles+1] = { sx, y, tile }
 	    end
@@ -215,19 +243,19 @@ function eastEdge(sx, sy, ey)
 	if len > 0 then
 	    if contains(sx, y) then
 		local current = currentTiles(sx, y)
-		tile = tiles.e
-		if (current.e == tiles.n or current.e == tiles.outer.ne or current.e == tiles.inner.se) then
-		    tile = tiles.inner.sw
-		elseif (current.e == tiles.s or current.e == tiles.outer.se or current.e == tiles.inner.ne) then
-		    tile = tiles.inner.nw
-		elseif (current.w == tiles.n or current.w == tiles.outer.nw or current.w == tiles.inner.sw) then
-		    tile = tiles.outer.ne
-		elseif (current.w == tiles.s or current.w == tiles.outer.sw or current.w == tiles.inner.nw) then
-		    tile = tiles.outer.se
-		elseif current.at == tiles.n then
-		    tile = tiles.outer.ne
-		elseif current.at == tiles.s then
-		    tile = tiles.outer.se
+		tile = randomTile(sx, y, tiles.e)
+		if (isOneOf(current.e, tiles.n) or isOneOf(current.e, tiles.outer.ne) or isOneOf(current.e, tiles.inner.se)) then
+		    tile = randomTile(sx, y, tiles.inner.sw)
+		elseif (isOneOf(current.e, tiles.s) or isOneOf(current.e, tiles.outer.se) or isOneOf(current.e, tiles.inner.ne)) then
+		    tile = randomTile(sx, y, tiles.inner.nw)
+		elseif (isOneOf(current.w, tiles.n) or isOneOf(current.w, tiles.outer.nw) or isOneOf(current.w, tiles.inner.sw)) then
+		    tile = randomTile(sx, y, tiles.outer.ne)
+		elseif (isOneOf(current.w, tiles.s) or isOneOf(current.w, tiles.outer.sw) or isOneOf(current.w, tiles.inner.nw)) then
+		    tile = randomTile(sx, y, tiles.outer.se)
+		elseif isOneOf(current.at, tiles.n) then
+		    tile = randomTile(sx, y, tiles.outer.ne)
+		elseif isOneOf(current.at, tiles.s) then
+		    tile = randomTile(sx, y, tiles.outer.se)
 		end
 		self.tiles[#self.tiles+1] = { sx, y, tile }
 	    end
@@ -256,19 +284,19 @@ function northEdge(sx, sy, ex)
 	if len > 0 then
 	    if contains(x, sy) then
 		local current = currentTiles(x, sy)
-		tile = tiles.n
-		if (current.n == tiles.e or current.n == tiles.outer.ne or current.n == tiles.inner.nw) then
-		    tile = tiles.inner.sw
-		elseif (current.n == tiles.w or current.n == tiles.outer.nw or current.n == tiles.inner.ne) then
-		    tile = tiles.inner.se
-		elseif (current.s == tiles.w or current.s == tiles.outer.sw or current.s == tiles.inner.se) then
-		    tile = tiles.outer.nw
-		elseif (current.s == tiles.e or current.s == tiles.outer.se or current.s == tiles.inner.sw) then
-		    tile = tiles.outer.ne
-		elseif current.at == tiles.w then
-		    tile = tiles.outer.nw
-		elseif current.at == tiles.e then
-		    tile = tiles.outer.ne
+		tile = randomTile(x, sy, tiles.n)
+		if (isOneOf(current.n, tiles.e) or isOneOf(current.n, tiles.outer.ne) or isOneOf(current.n, tiles.inner.nw)) then
+		    tile = randomTile(x, sy, tiles.inner.sw)
+		elseif (isOneOf(current.n, tiles.w) or isOneOf(current.n, tiles.outer.nw) or isOneOf(current.n, tiles.inner.ne)) then
+		    tile = randomTile(x, sy, tiles.inner.se)
+		elseif (isOneOf(current.s, tiles.w) or isOneOf(current.s, tiles.outer.sw) or isOneOf(current.s, tiles.inner.se)) then
+		    tile = randomTile(x, sy, tiles.outer.nw)
+		elseif (isOneOf(current.s, tiles.e) or isOneOf(current.s, tiles.outer.se) or isOneOf(current.s, tiles.inner.sw)) then
+		    tile = randomTile(x, sy, tiles.outer.ne)
+		elseif isOneOf(current.at, tiles.w) then
+		    tile = randomTile(x, sy, tiles.outer.nw)
+		elseif isOneOf(current.at, tiles.e) then
+		    tile = randomTile(x, sy, tiles.outer.ne)
 		end
 		self.tiles[#self.tiles+1] = { x, sy, tile }
 	    end
@@ -297,19 +325,19 @@ function southEdge(sx, sy, ex)
 	if len > 0 then
 	    if contains(x, sy) then
 		local current = currentTiles(x, sy)
-		tile = tiles.s
-		if (current.s == tiles.e or current.s == tiles.outer.se or current.s == tiles.inner.sw) then
-		    tile = tiles.inner.nw
-		elseif (current.s == tiles.w or current.s == tiles.outer.sw or current.s == tiles.inner.se) then
-		    tile = tiles.inner.ne
-		elseif (current.n == tiles.w or current.n == tiles.outer.nw or current.n == tiles.inner.ne) then
-		    tile = tiles.outer.sw
-		elseif (current.n == tiles.e or current.n == tiles.outer.ne or current.n == tiles.inner.nw) then
-		    tile = tiles.outer.se
-		elseif current.at == tiles.w then
-		    tile = tiles.outer.sw
-		elseif current.at == tiles.e then
-		    tile = tiles.outer.se
+		tile = randomTile(x, sy, tiles.s)
+		if (isOneOf(current.s, tiles.e) or isOneOf(current.s, tiles.outer.se) or isOneOf(current.s, tiles.inner.sw)) then
+		    tile = randomTile(x, sy, tiles.inner.nw)
+		elseif (isOneOf(current.s, tiles.w) or isOneOf(current.s, tiles.outer.sw) or isOneOf(current.s, tiles.inner.se)) then
+		    tile = randomTile(x, sy, tiles.inner.ne)
+		elseif (isOneOf(current.n, tiles.w) or isOneOf(current.n, tiles.outer.nw) or isOneOf(current.n, tiles.inner.ne)) then
+		    tile = randomTile(x, sy, tiles.outer.sw)
+		elseif (isOneOf(current.n, tiles.e) or isOneOf(current.n, tiles.outer.ne) or isOneOf(current.n, tiles.inner.nw)) then
+		    tile = randomTile(x, sy, tiles.outer.se)
+		elseif isOneOf(current.at, tiles.w) then
+		    tile = randomTile(x, sy, tiles.outer.sw)
+		elseif isOneOf(current.at, tiles.e) then
+		    tile = randomTile(x, sy, tiles.outer.se)
 		end
 		self.tiles[#self.tiles+1] = { x, sy, tile }
 	    end

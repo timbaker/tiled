@@ -1028,6 +1028,11 @@ void LuaMapBmp::replace(const LuaColor &oldColor, const LuaColor &newColor)
     }
 }
 
+int LuaMapBmp::rand(int x, int y)
+{
+    return mBmp.rand(x, y);
+}
+
 /////
 
 LuaColor Lua::Lua_rgb(int r, int g, int b)

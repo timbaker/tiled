@@ -150,6 +150,8 @@ class LuaMapBmp & MapBmp
     void fill(LuaColor &c);
 
     void replace(LuaColor &oldColor, LuaColor &newColor);
+
+    int rand(int x, int y);
 };
 
 class LuaBmpAlias @ BmpAlias

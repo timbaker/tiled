@@ -222,6 +222,8 @@ public:
 
     void replace(const LuaColor &oldColor, const LuaColor &newColor);
 
+    int rand(int x, int y);
+
     MapBmp &mBmp;
     QRegion mAltered;
 };
