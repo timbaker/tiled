@@ -769,6 +769,14 @@ property
 }
 property
 {
+    Type = Boolean
+    Name = Transparent Floor
+    ShortName = transparentFloor
+    Default = false
+    ReverseLogic = false
+}
+property
+{
     Type = Enum
     Name = Curtain
     ShortName =
