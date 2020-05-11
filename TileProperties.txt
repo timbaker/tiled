@@ -307,15 +307,16 @@ property
         Electric = Electric
         Fabric = Fabric
         Foam = Foam
+        Fridge = Fridge
         Glass = Glass
         Leather = Leather
         Mechanical = Mechanical
         MetalBars = MetalBars
-        Fridge = Fridge
         MetalPipe = MetalPipe
         MetalPlates = MetalPlates
         SmallMetalPlates = SmallMetalPlates
         MetalScrap = MetalScrap
+        MetalWire = MetalWire
         Mirror = Mirror
         Nails = Nails
         Natural = Natural
@@ -351,15 +352,16 @@ property
         Electric = Electric
         Fabric = Fabric
         Foam = Foam
+        Fridge = Fridge
         Glass = Glass
         Leather = Leather
         Mechanical = Mechanical
         MetalBars = MetalBars
-        Fridge = Fridge
         MetalPipe = MetalPipe
         MetalPlates = MetalPlates
         SmallMetalPlates = SmallMetalPlates
         MetalScrap = MetalScrap
+        MetalWire = MetalWire
         Mirror = Mirror
         Nails = Nails
         Natural = Natural
@@ -395,15 +397,16 @@ property
         Electric = Electric
         Fabric = Fabric
         Foam = Foam
+        Fridge = Fridge
         Glass = Glass
         Leather = Leather
         Mechanical = Mechanical
         MetalBars = MetalBars
-        Fridge = Fridge
         MetalPipe = MetalPipe
         MetalPlates = MetalPlates
         SmallMetalPlates = SmallMetalPlates
         MetalScrap = MetalScrap
+        MetalWire = MetalWire
         Mirror = Mirror
         Nails = Nails
         Natural = Natural
@@ -537,7 +540,14 @@ property
     Default = false
     ReverseLogic = false
 }
-
+property
+{
+    Type = Boolean
+    Name = IsMirror
+    ShortName =
+    Default = false
+    ReverseLogic = false
+}
 
 property
 {
@@ -585,6 +595,15 @@ property
     ShortName = lightB
     Min = 0
     Max = 255
+    Default = 0
+}
+property
+{
+    Type = Integer
+    Name = LightRadius
+    ShortName =
+    Min = 0
+    Max = 128
     Default = 0
 }
 
@@ -858,6 +877,14 @@ property
     Min = 0
     Max = 100
     Default = 0
+}
+property
+{
+    Type = Boolean
+    Name = IsTrashCan
+    ShortName =
+    Default = false
+    ReverseLogic = false
 }
 property
 {
