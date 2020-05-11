@@ -332,7 +332,19 @@ void MiniMapRenderWorker::work()
         }
     }
 
+    painter.end();
+
     if (!aborted) {
+        for (int y = 0; y < mImage.height(); y++) {
+            QRgb *pixels = reinterpret_cast<QRgb*>(mImage.scanLine(y));
+            for (int x = 0; x < mImage.width(); x++) {
+                QRgb pixel = pixels[x];
+                if (qAlpha(pixel) > 0.01f) {
+                    pixels[x] = qRgba(qRed(pixel), qGreen(pixel), qBlue(pixel), 255);
+                }
+            }
+        }
+
         noise() << "MiniMapRenderWorker: painting took" << timer.elapsed() << "ms" << this;
         mRedrawAll = false;
         mDirtyRect = QRectF();
