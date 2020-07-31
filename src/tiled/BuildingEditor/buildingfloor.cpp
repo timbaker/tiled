@@ -2321,7 +2321,7 @@ void TileDefWatcher::check()
     if (!tileDefFileChecked) {
         QFileInfo fileInfo(TileMetaInfoMgr::instance()->tilesDirectory() + QString::fromLatin1("/newtiledefinitions.tiles"));
 #if 1
-        QFileInfo info2(QLatin1Literal("D:/pz/steam-network/workdir/media/newtiledefinitions.tiles"));
+        QFileInfo info2(QLatin1Literal("D:/zomboid-svn/Anims2/workdir/media/newtiledefinitions.tiles"));
         if (info2.exists())
             fileInfo = info2;
 #endif
@@ -2348,7 +2348,20 @@ void TileDefWatcher::fileChanged(const QString &path)
 } // namespace Internal
 } // namespace Tiled
 
-static Tiled::Internal::TileDefWatcher *tileDefWatcher = 0;
+static Tiled::Internal::TileDefWatcher *tileDefWatcher = nullptr;
+
+namespace BuildingEditor
+{
+
+Tiled::Internal::TileDefWatcher *getTileDefWatcher()
+{
+    if (tileDefWatcher == nullptr) {
+        tileDefWatcher = new Tiled::Internal::TileDefWatcher();
+    }
+    return tileDefWatcher;
+}
+
+} // namespace BuildingEditor
 
 struct GrimeProperties
 {
@@ -2363,11 +2376,10 @@ struct GrimeProperties
 
 static bool tileHasGrimeProperties(BuildingTile *btile, GrimeProperties *props)
 {
-    if (btile == 0)
+    if (btile == nullptr)
         return false;
 
-    if (tileDefWatcher == 0)
-        tileDefWatcher = new Tiled::Internal::TileDefWatcher();
+    Tiled::Internal::TileDefWatcher *tileDefWatcher = getTileDefWatcher();
     tileDefWatcher->check();
 
     if (props) {

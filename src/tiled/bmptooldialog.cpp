@@ -181,6 +181,7 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
             SLOT(showBMPTiles(bool)));
     connect(ui->showMapTiles, SIGNAL(toggled(bool)),
             SLOT(showMapTiles(bool)));
+    connect(ui->blendEdgesEverywhere, &QCheckBox::toggled, this, &BmpToolDialog::blendEdgesEverywhere);
 
     connect(ui->reloadRules, SIGNAL(clicked()), SLOT(reloadRules()));
     connect(ui->importRules, SIGNAL(clicked()), SLOT(importRules()));
@@ -462,6 +463,13 @@ void BmpToolDialog::bmpBlendsChanged()
     setDocument(mDocument);
 }
 
+void BmpToolDialog::bmpBlendEdgesEverywhereChanged()
+{
+    if (mDocument == nullptr)
+        return;
+    ui->blendEdgesEverywhere->setChecked(mDocument->map()->bmpSettings()->isBlendEdgesEverywhere());
+}
+
 void BmpToolDialog::brushChanged()
 {
     int brushSize = BmpBrushTool::instance()->brushSize();
@@ -500,16 +508,16 @@ void BmpToolDialog::setDocument(MapDocument *doc)
     ui->rulesFile->setText(tr("<none>"));
     ui->blendsFile->setText(tr("<none>"));
 
-    ui->reloadRules->setEnabled(mDocument != 0 &&
+    ui->reloadRules->setEnabled((mDocument != nullptr) &&
             !mDocument->map()->bmpSettings()->rulesFile().isEmpty());
-    ui->importRules->setEnabled(mDocument != 0);
-    ui->exportRules->setEnabled(mDocument != 0);
+    ui->importRules->setEnabled(mDocument != nullptr);
+    ui->exportRules->setEnabled(mDocument != nullptr);
     ui->trashRules->setEnabled(ui->reloadRules->isEnabled());
 
-    ui->reloadBlends->setEnabled(mDocument != 0 &&
+    ui->reloadBlends->setEnabled((mDocument != nullptr) &&
             !mDocument->map()->bmpSettings()->blendsFile().isEmpty());
-    ui->importBlends->setEnabled(mDocument != 0);
-    ui->exportBlends->setEnabled(mDocument != 0);
+    ui->importBlends->setEnabled(mDocument != nullptr);
+    ui->exportBlends->setEnabled(mDocument != nullptr);
     ui->trashBlends->setEnabled(ui->reloadBlends->isEnabled());
 
     switch (BmpBrushTool::instance()->brushShape()) {
@@ -517,8 +525,9 @@ void BmpToolDialog::setDocument(MapDocument *doc)
     case BmpBrushTool::Circle: ui->brushCircle->setChecked(true); break;
     }
     ui->restrictToSelection->setChecked(BmpBrushTool::instance()->restrictToSelection());
-    ui->showBMPTiles->setEnabled(mDocument != 0);
-    ui->showMapTiles->setEnabled(mDocument != 0);
+    ui->showBMPTiles->setEnabled(mDocument != nullptr);
+    ui->showMapTiles->setEnabled(mDocument != nullptr);
+    ui->blendEdgesEverywhere->setEnabled(mDocument != nullptr);
 
     if (mDocument) {
         ui->tableView->setRules(mDocument->map());
@@ -544,10 +553,12 @@ void BmpToolDialog::setDocument(MapDocument *doc)
 
         ui->showBMPTiles->setChecked(mDocument->mapComposite()->showBMPTiles());
         ui->showMapTiles->setChecked(mDocument->mapComposite()->showMapTiles());
+        ui->blendEdgesEverywhere->setChecked(mDocument->map()->bmpSettings()->isBlendEdgesEverywhere());
 
         connect(mDocument, SIGNAL(bmpAliasesChanged()), SLOT(bmpRulesChanged())); // XXXXX
         connect(mDocument, SIGNAL(bmpRulesChanged()), SLOT(bmpRulesChanged()));
         connect(mDocument, SIGNAL(bmpBlendsChanged()), SLOT(bmpBlendsChanged()));
+        connect(mDocument, &MapDocument::bmpBlendEdgesEverywhereChanged, this, &BmpToolDialog::bmpBlendEdgesEverywhereChanged);
         connect(mDocument->mapComposite()->bmpBlender(), SIGNAL(warningsChanged()),
                 SLOT(warningsChanged()));
 
@@ -638,4 +649,11 @@ void BmpToolDialog::showMapTiles(bool show)
     if (mDocument->map()->layerCount())
         mDocument->emitRegionChanged(QRect(QPoint(0, 0), mDocument->map()->size()),
                                      mDocument->map()->layerAt(0));
+}
+
+void BmpToolDialog::blendEdgesEverywhere(bool everywhere)
+{
+    if (mDocument == nullptr)
+        return;
+    mDocument->setBlendEdgesEverywhere(everywhere);
 }

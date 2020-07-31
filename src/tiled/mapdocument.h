@@ -293,6 +293,8 @@ public:
     void emitRegionAltered(const QRegion &region, Layer *layer);
 
     void setTileLayerName(Tile *tile, const QString &name);
+
+    void setBlendEdgesEverywhere(bool enabled);
 #endif
 
     /**
@@ -403,6 +405,7 @@ signals:
     void bmpAliasesChanged();
     void bmpRulesChanged();
     void bmpBlendsChanged();
+    void bmpBlendEdgesEverywhereChanged();
 
     void noBlendPainted(MapNoBlend *noBlend, const QRegion &rgn);
 #endif

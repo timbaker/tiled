@@ -357,4 +357,8 @@ public:
 }
 }
 
+namespace BuildingEditor {
+extern Tiled::Internal::TileDefWatcher *getTileDefWatcher();
+}
+
 #endif // BUILDINGFLOOR_H

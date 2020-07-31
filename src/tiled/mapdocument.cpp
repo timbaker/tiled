@@ -804,6 +804,59 @@ void MapDocument::setTileLayerName(Tile *tile, const QString &name)
 {
     TilesetManager::instance()->setLayerName(tile, name);
 }
+
+#include "mainwindow.h"
+#include "zprogress.h"
+
+class SetBlendEdgesEverywhere : public QUndoCommand
+{
+public:
+    SetBlendEdgesEverywhere(MapDocument *mapDocument, bool enabled)
+        : mDocument(mapDocument)
+        , mEnabled(enabled)
+        , mTileSelection(mapDocument->tileSelection())
+    {
+        setText(QCoreApplication::translate("Undo Commands", "Toggle Blend Edges Everywhere"));
+    }
+
+    void swap(bool redo)
+    {
+        bool oldValue = mDocument->map()->bmpSettings()->isBlendEdgesEverywhere();
+        mDocument->map()->rbmpSettings()->setBlendEdgesEverywhere(mEnabled);
+
+        // Highlight changed parts of the map.
+        PROGRESS progress(QLatin1Literal("BMP blending..."), Tiled::Internal::MainWindow::instance());
+        QRegion tileSelection;
+        mDocument->mapComposite()->bmpBlender()->testBlendEdgesEverywhere(mEnabled, tileSelection);
+
+        mDocument->mapComposite()->bmpBlender()->setBlendEdgesEverywhere(mEnabled);
+        mEnabled = oldValue;
+        mDocument->setTileSelection(redo ? tileSelection : mTileSelection);
+        emit mDocument->bmpBlendEdgesEverywhereChanged();
+    }
+
+    void undo()
+    {
+        swap(false);
+    }
+
+    void redo()
+    {
+        swap(true);
+    }
+
+    MapDocument *mDocument;
+    bool mEnabled;
+    QRegion mTileSelection;
+};
+
+void MapDocument::setBlendEdgesEverywhere(bool enabled)
+{
+    if (enabled == mMap->bmpSettings()->isBlendEdgesEverywhere())
+        return;
+    mUndoStack->push(new SetBlendEdgesEverywhere(this, enabled));
+}
+
 #endif // ZOMBOID
 
 /**

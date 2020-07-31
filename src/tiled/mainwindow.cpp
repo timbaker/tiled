@@ -2690,7 +2690,7 @@ void MainWindow::updateRecentFiles()
 
 void MainWindow::updateActions()
 {
-    Map *map = 0;
+    Map *map = nullptr;
     bool tileLayerSelected = false;
     bool objectsSelected = false;
     QRegion selection;
@@ -2699,7 +2699,7 @@ void MainWindow::updateActions()
         Layer *currentLayer = mMapDocument->currentLayer();
 
         map = mMapDocument->map();
-        tileLayerSelected = dynamic_cast<TileLayer*>(currentLayer) != 0;
+        tileLayerSelected = dynamic_cast<TileLayer*>(currentLayer) != nullptr;
         objectsSelected = !mMapDocument->selectedObjects().isEmpty();
         selection = mMapDocument->tileSelection();
     }
@@ -2731,7 +2731,7 @@ void MainWindow::updateActions()
 
     updateZoomLabel(); // for the zoom actions
 
-    Layer *layer = mMapDocument ? mMapDocument->currentLayer() : 0;
+    Layer *layer = mMapDocument ? mMapDocument->currentLayer() : nullptr;
 #ifdef ZOMBOID
     if (layer) {
         mCurrentLevelButton->setEnabled(true);

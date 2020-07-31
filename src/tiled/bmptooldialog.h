@@ -63,6 +63,7 @@ private slots:
     void toggleOverlayLayers();
     void showBMPTiles(bool show);
     void showMapTiles(bool show);
+    void blendEdgesEverywhere(bool everywhere);
     void setVisibleNow();
 
     void blendHighlighted(BmpBlend *blend, int dir);
@@ -84,6 +85,7 @@ private slots:
 
     void bmpRulesChanged();
     void bmpBlendsChanged();
+    void bmpBlendEdgesEverywhereChanged();
 
     void brushChanged();
 

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>253</width>
-    <height>358</height>
+    <height>394</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,7 +29,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -377,6 +377,18 @@
            </layout>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="blendEdgesEverywhere">
+         <property name="toolTip">
+          <string>When checked, edge tiles may be placed onto floor tiles that are not BMP floor tiles.
+When unchecked, edge tiles are only placed on BMP floor tiles.
+This is a permanent per-map setting.</string>
+         </property>
+         <property name="text">
+          <string>Blend Edges Everywhere</string>
+         </property>
         </widget>
        </item>
        <item>
