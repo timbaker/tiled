@@ -79,6 +79,7 @@
     <addaction name="actionSaveAs"/>
     <addaction name="actionSaveAsImage"/>
     <addaction name="actionExport"/>
+    <addaction name="actionExportNewBinary"/>
     <addaction name="separator"/>
     <addaction name="actionClose"/>
     <addaction name="actionCloseAll"/>
@@ -662,6 +663,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+L</string>
+   </property>
+  </action>
+  <action name="actionExportNewBinary">
+   <property name="text">
+    <string>Export New Binary...</string>
+   </property>
+   <property name="toolTip">
+    <string>Export New Binary</string>
    </property>
   </action>
  </widget>

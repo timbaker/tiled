@@ -48,6 +48,7 @@
     <addaction name="actionSaveAs"/>
     <addaction name="separator"/>
     <addaction name="actionExportTMX"/>
+    <addaction name="actionExportNewBinary"/>
     <addaction name="separator"/>
     <addaction name="actionClose"/>
    </widget>
@@ -717,10 +718,15 @@
     <string>Show Lower Floors</string>
    </property>
   </action>
+  <action name="actionExportNewBinary">
+   <property name="text">
+    <string>Export New Binary...</string>
+   </property>
+  </action>
  </widget>
  <resources>
-  <include location="../tiled.qrc"/>
   <include location="buildingeditor.qrc"/>
+  <include location="../tiled.qrc"/>
  </resources>
  <connections/>
 </ui>

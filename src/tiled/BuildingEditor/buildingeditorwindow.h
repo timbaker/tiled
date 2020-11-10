@@ -239,6 +239,7 @@ private slots:
     bool saveBuilding();
     bool saveBuildingAs();
     void exportTMX();
+    void exportNewBinary();
 
     void editCut();
     void editCopy();

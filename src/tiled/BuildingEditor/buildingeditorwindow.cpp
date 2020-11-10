@@ -361,6 +361,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 
     connect(ui->actionExportTMX, SIGNAL(triggered()), SLOT(exportTMX()));
     ui->actionExportTMX->setVisible(false);
+    connect(ui->actionExportNewBinary, &QAction::triggered, this, &BuildingEditorWindow::exportNewBinary);
 
     ui->actionNewBuilding->setShortcuts(QKeySequence::New);
     ui->actionOpen->setShortcuts(QKeySequence::Open);
@@ -1252,6 +1253,84 @@ void BuildingEditorWindow::exportTMX()
                        QFileInfo(fileName).absolutePath());
 }
 
+#include "buildingmap.h"
+#include "mapcomposite.h"
+#include "mapmanager.h"
+#include "newmapbinaryfile.h"
+
+void BuildingEditorWindow::exportNewBinary()
+{
+    if (mCurrentDocument == nullptr)
+        return;
+    QFileInfo fileInfo(mCurrentDocument->fileName());
+    QString dir = fileInfo.dir().path();
+    QString fileName = fileInfo.dir().filePath(fileInfo.baseName() + QLatin1Literal(".pzby"));
+    fileName = QFileDialog::getSaveFileName(this, tr("Export New Binary"), fileName, tr("Project Zomboid Map Binary (*.pzby)"));
+    if (fileName.isEmpty())
+        return;
+
+    Building* building = mCurrentDocument->building();
+    BuildingMap bmap(building);
+    Map *map = bmap.mergedMap();
+
+#if 0
+    if (map->orientation() == Map::LevelIsometric) {
+        if (!BuildingPreferences::instance()->levelIsometric()) {
+            Map *isoMap = MapManager::instance()->convertOrientation(map, Map::Isometric);
+            TilesetManager::instance()->removeReferences(map->tilesets());
+            delete map;
+            map = isoMap;
+        }
+    }
+#endif
+    for (BuildingFloor *floor : building->floors()) {
+#if 0
+        // The given map has layers required by the editor, i.e., Floors, Walls,
+        // Doors, etc.  The TMXConfig.txt file may specify extra layer names.
+        // So we need to insert any extra layers in the order specified in
+        // TMXConfig.txt.  If the layer name has a N_ prefix, it is only added
+        // to level N, otherwise it is added to every level.  Object layers are
+        // added above *all* the tile layers in the map.
+        int previousExistingLayer = -1;
+        foreach (LayerInfo layerInfo, mLayers) {
+            QString layerName = layerInfo.mName;
+            int level;
+            if (MapComposite::levelForLayer(layerName, &level)) {
+                if (level != floor->level())
+                    continue;
+            } else {
+                layerName = tr("%1_%2").arg(floor->level()).arg(layerName);
+            }
+            int n;
+            if ((n = map->indexOfLayer(layerName)) >= 0) {
+                previousExistingLayer = n;
+                continue;
+            }
+            if (layerInfo.mType == LayerInfo::Tile) {
+                TileLayer *tl = new TileLayer(layerName, 0, 0,
+                                              map->width(), map->height());
+                if (previousExistingLayer < 0)
+                    previousExistingLayer = 0;
+                map->insertLayer(previousExistingLayer + 1, tl);
+                previousExistingLayer++;
+            } else {
+                ObjectGroup *og = new ObjectGroup(layerName,
+                                                  0, 0, map->width(), map->height());
+                map->addLayer(og);
+            }
+        }
+#endif
+
+        bmap.addRoomDefObjects(map, floor);
+    }
+
+    MapInfo* mapInfo = MapManager::instance()->newFromMap(map);
+    MapComposite mapComposite(mapInfo);
+
+    NewMapBinaryFile file;
+    file.write(&mapComposite, fileName);
+}
+
 void BuildingEditorWindow::editCut()
 {
     if (!mCurrentDocument || currentLayer().isEmpty())
@@ -2030,6 +2109,7 @@ void BuildingEditorWindow::updateActions()
     ui->actionSave->setEnabled(hasDoc);
     ui->actionSaveAs->setEnabled(hasDoc);
     ui->actionExportTMX->setEnabled(hasDoc);
+    ui->actionExportNewBinary->setEnabled(hasDoc);
 
     ui->actionShowObjects->setEnabled(hasDoc);
 

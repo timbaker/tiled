@@ -382,6 +382,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     connect(mUi->actionSaveAs, SIGNAL(triggered()), SLOT(saveFileAs()));
     connect(mUi->actionSaveAsImage, SIGNAL(triggered()), SLOT(saveAsImage()));
     connect(mUi->actionExport, SIGNAL(triggered()), SLOT(exportAs()));
+#ifdef ZOMBOID
+    connect(mUi->actionExportNewBinary, &QAction::triggered, this, &MainWindow::exportNewBinary);
+#endif
     connect(mUi->actionClose, SIGNAL(triggered()), SLOT(closeFile()));
     connect(mUi->actionCloseAll, SIGNAL(triggered()), SLOT(closeAllFiles()));
     connect(mUi->actionQuit, SIGNAL(triggered()), SLOT(close()));
@@ -1284,6 +1287,26 @@ void MainWindow::exportAs()
                               chosenWriter->errorString());
     }
 }
+
+#ifdef ZOMBOID
+#include "newmapbinaryfile.h"
+void MainWindow::exportNewBinary()
+{
+    if (!mMapDocument)
+        return;
+
+    QString filter = tr("Project Zomboid Map Binary (*.pzby)");
+    QString selectedFilter;
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Export As..."),
+                                                    QLatin1Literal("test.pzby"),
+                                                    filter, &selectedFilter);
+    if (fileName.isEmpty())
+        return;
+    NewMapBinaryFile file;
+    MapComposite* mapComposite = mMapDocument->mapComposite();
+    file.write(mapComposite, fileName);
+}
+#endif
 
 void MainWindow::closeFile()
 {
@@ -2716,6 +2739,7 @@ void MainWindow::updateActions()
     mUi->actionCopy->setEnabled(canCopy);
     mUi->actionPaste->setEnabled(mClipboardManager->hasMap());
 #ifdef ZOMBOID
+    mUi->actionExportNewBinary->setEnabled(map != nullptr);
     mUi->actionDelete->setEnabled(canCopy || (mMapDocument && !mMapDocument->bmpSelection().isEmpty()));
 #else
     mUi->actionDelete->setEnabled(canCopy);

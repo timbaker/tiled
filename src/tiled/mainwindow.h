@@ -155,6 +155,9 @@ public slots:
     bool saveFileAs();
     void saveAsImage();
     void exportAs();
+#ifdef ZOMBOID
+    void exportNewBinary();
+#endif
     void closeFile();
     void closeAllFiles();
 
