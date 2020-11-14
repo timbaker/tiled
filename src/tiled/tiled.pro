@@ -146,6 +146,7 @@ SOURCES += aboutdialog.cpp \
     tilesetdock.cpp \
     tilesetmanager.cpp \
     tilesetmodel.cpp \
+    tilesetstxtfile.cpp \
     tilesetview.cpp \
     tmxmapreader.cpp \
     tmxmapwriter.cpp \
@@ -363,6 +364,7 @@ HEADERS += aboutdialog.h \
     tilesetdock.h \
     tilesetmanager.h \
     tilesetmodel.h \
+    tilesetstxtfile.h \
     tilesetview.h \
     tmxmapreader.h \
     tmxmapwriter.h \

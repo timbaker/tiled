@@ -1,5 +1,5 @@
 version = 0
-revision = 128
+revision = 129
 meta-enums
 {
     DoorW = 1
@@ -15,12 +15,37 @@ tileset
 }
 tileset
 {
-    file = appliances_cooking_01
+    file = advertising_02
     size = 8,8
 }
 tileset
 {
+    file = overlays/appliances_01
+    size = 8,12
+}
+tileset
+{
+    file = appliances_com_01
+    size = 8,10
+}
+tileset
+{
+    file = appliances_cooking_01
+    size = 8,16
+}
+tileset
+{
     file = appliances_laundry_01
+    size = 8,8
+}
+tileset
+{
+    file = appliances_misc_01
+    size = 8,8
+}
+tileset
+{
+    file = appliances_radio_01
     size = 8,8
 }
 tileset
@@ -31,12 +56,12 @@ tileset
 tileset
 {
     file = appliances_television_01
-    size = 8,8
+    size = 8,16
 }
 tileset
 {
     file = blends_grassoverlays_01
-    size = 8,20
+    size = 8,10
 }
 tileset
 {
@@ -56,7 +81,7 @@ tileset
 tileset
 {
     file = blends_streetoverlays_01
-    size = 8,20
+    size = 8,10
 }
 tileset
 {
@@ -67,6 +92,16 @@ tileset
 {
     file = books&misc_01
     size = 8,16
+}
+tileset
+{
+    file = books&misc_02
+    size = 8,16
+}
+tileset
+{
+    file = brokenglass_1
+    size = 8,10
 }
 tileset
 {
@@ -81,7 +116,7 @@ tileset
 tileset
 {
     file = carpentry_02
-    size = 8,8
+    size = 8,16
 }
 tileset
 {
@@ -90,7 +125,17 @@ tileset
 }
 tileset
 {
+    file = clothing_02
+    size = 8,8
+}
+tileset
+{
     file = constructedobjects_01
+    size = 8,12
+}
+tileset
+{
+    file = constructedobjects_signs_01
     size = 8,8
 }
 tileset
@@ -105,12 +150,167 @@ tileset
 }
 tileset
 {
-    file = fencing_01
+    file = d_floorleaves_1
+    size = 4,8
+}
+tileset
+{
+    file = d_generic_1
+    size = 16,10
+}
+tileset
+{
+    file = d_plants_1
     size = 8,8
 }
 tileset
 {
+    file = d_streetcracks_1
+    size = 8,16
+}
+tileset
+{
+    file = d_trash_1
+    size = 10,8
+}
+tileset
+{
+    file = d_wallcracks_1
+    size = 9,8
+}
+tileset
+{
+    file = damaged_objects_01
+    size = 8,16
+}
+tileset
+{
+    file = desks_01
+    size = 8,12
+}
+tileset
+{
+    file = e_americanholly_1
+    size = 4,8
+}
+tileset
+{
+    file = e_americanlinden_1
+    size = 4,8
+}
+tileset
+{
+    file = e_canadianhemlock_1
+    size = 4,8
+}
+tileset
+{
+    file = e_carolinasilverbell_1
+    size = 4,8
+}
+tileset
+{
+    file = e_cockspurhawthorn_1
+    size = 4,8
+}
+tileset
+{
+    file = e_dogwood_1
+    size = 4,8
+}
+tileset
+{
+    file = e_easternredbud_1
+    size = 4,8
+}
+tileset
+{
+    file = e_exterior_snow_1
+    size = 2,1
+}
+tileset
+{
+    file = e_newgrass_1
+    size = 6,15
+}
+tileset
+{
+    file = e_newgrassbase_snow_1
+    size = 8,4
+}
+tileset
+{
+    file = e_newsnow_ground_1
+    size = 8,6
+}
+tileset
+{
+    file = e_redmaple_1
+    size = 4,8
+}
+tileset
+{
+    file = e_riverbirch_1
+    size = 4,8
+}
+tileset
+{
+    file = e_roof_snow_1
+    size = 8,14
+}
+tileset
+{
+    file = e_virginiapine_1
+    size = 4,8
+}
+tileset
+{
+    file = e_yellowwood_1
+    size = 4,8
+}
+tileset
+{
+    file = f_bushes_1
+    size = 16,8
+}
+tileset
+{
+    file = f_bushes_2
+    size = 10,8
+}
+tileset
+{
+    file = f_flowerbed_1
+    size = 12,4
+}
+tileset
+{
+    file = f_wallvines_1
+    size = 6,12
+}
+tileset
+{
+    file = fencing_01
+    size = 8,16
+}
+tileset
+{
     file = fencing_burnt_01
+    size = 8,8
+}
+tileset
+{
+    file = fencing_damaged_01
+    size = 8,24
+}
+tileset
+{
+    file = fencing_damaged_02
+    size = 8,24
+}
+tileset
+{
+    file = overlays/fixtures_01
     size = 8,8
 }
 tileset
@@ -131,7 +331,7 @@ tileset
 tileset
 {
     file = fixtures_doors_01
-    size = 8,8
+    size = 8,16
     tile
     {
         xy = 0,0
@@ -165,6 +365,16 @@ tileset
     tile
     {
         xy = 0,6
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 0,7
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 0,8
         meta-enum = DoorW
     }
     tile
@@ -204,6 +414,16 @@ tileset
     }
     tile
     {
+        xy = 1,7
+        meta-enum = DoorN
+    }
+    tile
+    {
+        xy = 1,8
+        meta-enum = DoorN
+    }
+    tile
+    {
         xy = 4,0
         meta-enum = DoorW
     }
@@ -235,6 +455,11 @@ tileset
     tile
     {
         xy = 4,6
+        meta-enum = DoorW
+    }
+    tile
+    {
+        xy = 4,7
         meta-enum = DoorW
     }
     tile
@@ -272,16 +497,21 @@ tileset
         xy = 5,6
         meta-enum = DoorN
     }
+    tile
+    {
+        xy = 5,7
+        meta-enum = DoorN
+    }
 }
 tileset
 {
     file = fixtures_doors_02
-    size = 8,8
+    size = 8,16
 }
 tileset
 {
     file = fixtures_doors_fences_01
-    size = 8,8
+    size = 8,15
 }
 tileset
 {
@@ -300,8 +530,13 @@ tileset
 }
 tileset
 {
+    file = fixtures_overlay_counters_01
+    size = 8,16
+}
+tileset
+{
     file = fixtures_railings_01
-    size = 8,8
+    size = 8,18
 }
 tileset
 {
@@ -335,6 +570,11 @@ tileset
 }
 tileset
 {
+    file = fixtures_windows_detailing_02
+    size = 8,8
+}
+tileset
+{
     file = floors_burnt_01
     size = 8,8
 }
@@ -361,7 +601,27 @@ tileset
 tileset
 {
     file = floors_interior_tilesandwood_01
-    size = 8,8
+    size = 8,16
+}
+tileset
+{
+    file = overlays/floors_overlay_street_01
+    size = 8,9
+}
+tileset
+{
+    file = overlays/floors_overlay_tiles_01
+    size = 8,9
+}
+tileset
+{
+    file = overlays/floors_overlay_tiles_02
+    size = 8,9
+}
+tileset
+{
+    file = overlays/floors_overlay_wood_01
+    size = 8,9
 }
 tileset
 {
@@ -375,13 +635,18 @@ tileset
 }
 tileset
 {
+    file = food_02
+    size = 8,16
+}
+tileset
+{
     file = foraging_01
     size = 8,8
 }
 tileset
 {
     file = furniture_bedding_01
-    size = 8,8
+    size = 8,16
 }
 tileset
 {
@@ -396,7 +661,7 @@ tileset
 tileset
 {
     file = furniture_seating_indoor_03
-    size = 8,8
+    size = 8,10
 }
 tileset
 {
@@ -436,7 +701,7 @@ tileset
 tileset
 {
     file = industry_02
-    size = 8,8
+    size = 8,32
 }
 tileset
 {
@@ -480,6 +745,11 @@ tileset
 }
 tileset
 {
+    file = invisible_01
+    size = 8,8
+}
+tileset
+{
     file = lighting_indoor_01
     size = 8,8
     tile
@@ -502,6 +772,26 @@ tileset
         xy = 3,0
         meta-enum = LightSwitch
     }
+    tile
+    {
+        xy = 4,0
+        meta-enum = LightSwitch
+    }
+    tile
+    {
+        xy = 5,0
+        meta-enum = LightSwitch
+    }
+    tile
+    {
+        xy = 6,0
+        meta-enum = LightSwitch
+    }
+    tile
+    {
+        xy = 7,0
+        meta-enum = LightSwitch
+    }
 }
 tileset
 {
@@ -520,8 +810,8 @@ tileset
 }
 tileset
 {
-    file = location_business_machinery
-    size = 8,8
+    file = location_business_distillery_01
+    size = 8,16
 }
 tileset
 {
@@ -541,7 +831,7 @@ tileset
 tileset
 {
     file = location_community_church_small_01
-    size = 8,8
+    size = 8,16
 }
 tileset
 {
@@ -551,7 +841,7 @@ tileset
 tileset
 {
     file = location_community_medical_01
-    size = 8,8
+    size = 8,16
 }
 tileset
 {
@@ -570,6 +860,16 @@ tileset
 }
 tileset
 {
+    file = unreleased/location_entertainment_gallery_01
+    size = 8,16
+}
+tileset
+{
+    file = unreleased/location_entertainment_gallery_02
+    size = 8,16
+}
+tileset
+{
     file = location_entertainment_theatre_01
     size = 8,16
 }
@@ -581,7 +881,7 @@ tileset
 tileset
 {
     file = location_hospitality_sunstarmotel_01
-    size = 8,8
+    size = 8,9
 }
 tileset
 {
@@ -590,8 +890,23 @@ tileset
 }
 tileset
 {
-    file = location_restaurant_bar_01
+    file = unreleased/location_military_generic_01
     size = 8,8
+}
+tileset
+{
+    file = unreleased/location_military_knox_01
+    size = 8,8
+}
+tileset
+{
+    file = unreleased/location_military_tent_01
+    size = 8,16
+}
+tileset
+{
+    file = location_restaurant_bar_01
+    size = 8,12
 }
 tileset
 {
@@ -635,6 +950,11 @@ tileset
 }
 tileset
 {
+    file = location_restaurant_spiffos_03
+    size = 8,8
+}
+tileset
+{
     file = location_services_beauty_01
     size = 8,10
 }
@@ -651,7 +971,7 @@ tileset
 tileset
 {
     file = location_shop_accessories_genericsigns_01
-    size = 8,8
+    size = 8,16
 }
 tileset
 {
@@ -710,7 +1030,17 @@ tileset
 }
 tileset
 {
-    file = ../../../maptools/missing_tileset_666
+    file = missing_tileset_666
+    size = 8,8
+}
+tileset
+{
+    file = office_01
+    size = 8,8
+}
+tileset
+{
+    file = overlay_blood_fence_01
     size = 8,8
 }
 tileset
@@ -731,7 +1061,7 @@ tileset
 tileset
 {
     file = overlay_grime_floor_01
-    size = 8,8
+    size = 8,12
 }
 tileset
 {
@@ -756,7 +1086,7 @@ tileset
 tileset
 {
     file = recreational_sports_01
-    size = 8,8
+    size = 8,16
 }
 tileset
 {
@@ -776,12 +1106,12 @@ tileset
 tileset
 {
     file = roofs_04
-    size = 8,10
+    size = 8,15
 }
 tileset
 {
     file = roofs_05
-    size = 8,15
+    size = 8,23
 }
 tileset
 {
@@ -795,18 +1125,48 @@ tileset
 }
 tileset
 {
+    file = overlays/seating_01
+    size = 8,8
+}
+tileset
+{
     file = security_01
     size = 8,10
 }
 tileset
 {
     file = signs_miscbrands_01
-    size = 8,8
+    size = 8,16
 }
 tileset
 {
     file = signs_one-off_01
     size = 8,16
+}
+tileset
+{
+    file = signs_one-off_02
+    size = 8,64
+}
+tileset
+{
+    file = signs_one-off_03
+    size = 8,64
+}
+tileset
+{
+    file = signs_one-off_04
+    size = 8,64
+}
+tileset
+{
+    file = stashes_01
+    size = 8,16
+}
+tileset
+{
+    file = overlays/storage_01
+    size = 8,10
 }
 tileset
 {
@@ -816,7 +1176,7 @@ tileset
 tileset
 {
     file = street_decoration_01
-    size = 8,8
+    size = 8,16
 }
 tileset
 {
@@ -831,7 +1191,7 @@ tileset
 tileset
 {
     file = trash&junk_01
-    size = 8,16
+    size = 8,10
 }
 tileset
 {
@@ -911,17 +1271,17 @@ tileset
 tileset
 {
     file = walls_commercial_03
-    size = 8,8
+    size = 8,12
 }
 tileset
 {
     file = walls_decoration_01
-    size = 8,8
+    size = 8,16
 }
 tileset
 {
     file = walls_detailing_01
-    size = 8,8
+    size = 8,16
 }
 tileset
 {
@@ -1030,8 +1390,18 @@ tileset
 }
 tileset
 {
+    file = walls_exterior_roofs_08
+    size = 8,10
+}
+tileset
+{
+    file = walls_exterior_roofs_09
+    size = 8,21
+}
+tileset
+{
     file = walls_exterior_wooden_01
-    size = 8,8
+    size = 8,10
 }
 tileset
 {
@@ -1050,8 +1420,123 @@ tileset
 }
 tileset
 {
+    file = overlays/walls_house_blocks_01
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_blocks_01_MIRRORED
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_blocks_LIGHT_01
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_blocks_LIGHT_01_MIRRORED
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_brick_01
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_brick_01_MIRRORED
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_brick_LIGHT_01
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_brick_LIGHT_01_MIRRORED
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_clapboard_01
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_clapboard_01_MIRRORED
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_clapboard_LIGHT_01
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_clapboard_LIGHT_01_MIRRORED
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_flatstone_01
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_flatstone_01_MIRRORED
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_smooth_01
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_smooth_01_MIRRORED
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_stone_01
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_stone_01_MIRRORED
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_trailer_01
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_trailer_01_MIRRORED
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_wood_01
+    size = 8,8
+}
+tileset
+{
+    file = overlays/walls_house_wood_01_MIRRORED
+    size = 8,8
+}
+tileset
+{
     file = walls_interior_bathroom_01
     size = 8,8
+}
+tileset
+{
+    file = walls_interior_cutaways_01
+    size = 8,16
 }
 tileset
 {
@@ -1076,6 +1561,11 @@ tileset
 tileset
 {
     file = walls_interior_house_04
+    size = 8,16
+}
+tileset
+{
+    file = walls_special_01
     size = 8,16
 }
 tileset
