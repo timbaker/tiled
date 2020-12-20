@@ -861,6 +861,9 @@ void AbstractOverlayDialog::tileDropped(AbstractOverlay *overlay, const QStringL
         if (isOverlayTileUsed(tileName)) {
             continue;
         }
+        if (isEmptySprite(tileName)) {
+            tileName = QLatin1Literal("none");
+        }
         mUndoStack->push(new SetBaseTile(this, overlay, tileName));
         break; // <---------
     }
@@ -871,12 +874,19 @@ void AbstractOverlayDialog::tileDropped(AbstractOverlayEntry *entry, int index, 
     if (index >= entry->tiles().size()) {
         if (ui->overlayView->model()->moreThan2Tiles()) {
             for (QString tileName : tileNames) {
+                if (isEmptySprite(tileName)) {
+                    tileName = QLatin1Literal("none");
+                }
                 mUndoStack->push(new AddEntryTile(this, entry, tileName));
             }
         }
         return;
     }
-    mUndoStack->push(new SetEntryTile(this, entry, index, tileNames[0]));
+    QString tileName = tileNames[0];
+    if (isEmptySprite(tileName)) {
+        tileName = QLatin1Literal("none");
+    }
+    mUndoStack->push(new SetEntryTile(this, entry, index, tileName));
 }
 
 void AbstractOverlayDialog::entryRoomNameEdited(AbstractOverlayEntry *entry, const QString &roomName)
@@ -1091,6 +1101,28 @@ bool AbstractOverlayDialog::fileSave(const QString &fileName)
     mUndoStack->setClean();
     syncUI();
     return true;
+}
+
+bool AbstractOverlayDialog::isEmptySprite(const QString &tileName)
+{
+    Tile *tile = BuildingEditor::BuildingTilesMgr::instance()->tileFor(tileName);
+    if (tile == TilesetManager::instance()->missingTile())
+    {
+        return false;
+    }
+    return tile->image().isNull();
+    /*
+    const QImage& image = tile->image();
+    for (int y = 0; y < image.height(); y++) {
+        for (int x = 0; x < image.width(); x++) {
+            QRgb rgb = image.pixel(x, y);
+//            if (qAlpha(rgb) > 0)
+            if (rgb != tile->tileset()->transparentColor().rgb())
+                return false;
+        }
+    }
+    return true;
+    */
 }
 
 void AbstractOverlayDialog::updateWindowTitle()

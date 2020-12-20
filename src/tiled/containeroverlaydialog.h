@@ -72,6 +72,7 @@ protected:
     bool fileSave(const QString &fileName);
     virtual bool fileOpen(const QString &fileName, QList<AbstractOverlay*> &overlays) = 0;
     virtual bool fileSave(const QString &fileName, const QList<AbstractOverlay*> &overlays) = 0;
+    bool isEmptySprite(const QString& tileName);
 
     typedef Tiled::Tileset Tileset;
 protected slots:

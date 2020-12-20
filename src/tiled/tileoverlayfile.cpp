@@ -294,9 +294,9 @@ bool TileOverlayFile::write(const QString &filePath, const QList<TileOverlay*> &
                 for (QString tileName : entry->mTiles) {
                     if (tileName.isEmpty())
                         continue;
-                    if (tileName == QLatin1String("none") && !tiles.isEmpty()) {
-                        continue;
-                    }
+//                    if (tileName == QLatin1String("none") && !tiles.isEmpty()) {
+//                        continue;
+//                    }
                     if (!tiles.isEmpty()) {
                         tiles += QLatin1Literal(", ");
                     }
