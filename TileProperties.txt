@@ -767,6 +767,19 @@ property
 property
 {
     Type = Enum
+    Name = Render Layer
+    ShortName = RenderLayer
+    Enums
+    {
+        Default =
+        Floor =
+    }
+    Default = Default
+    ValueAsPropertyName = false
+}
+property
+{
+    Type = Enum
     Name = FloorHeight
     ShortName =
     Enums
@@ -826,6 +839,20 @@ property
     }
     Default = None
     ValueAsPropertyName = true
+}
+property
+{
+    Type = Enum
+    Name = Movement
+    ShortName =
+    Enums
+    {
+        NoEffect =
+        HedgeLow =
+        HedgeHigh =
+    }
+    Default = NoEffect
+    ValueAsPropertyName = false
 }
 property
 {
