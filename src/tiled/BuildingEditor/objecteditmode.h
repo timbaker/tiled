@@ -45,13 +45,13 @@ class ObjectEditMode : public IMode
 {
     Q_OBJECT
 public:
-    ObjectEditMode(QObject *parent = 0);
+    ObjectEditMode(QObject *parent = nullptr);
 
     Building *currentBuilding() const;
     Room *currentRoom() const;
 
-    void readSettings(QSettings &settings);
-    void writeSettings(QSettings &settings);
+    void readSettings(QSettings &settings) override;
+    void writeSettings(QSettings &settings) override;
 
 protected slots:
     void onActiveStateChanged(bool active);
@@ -64,6 +64,14 @@ protected slots:
     void documentTabCloseRequested(int index);
 
     void updateActions();
+
+    void setRotationNotRotated();
+    void setRotationClockwise90();
+    void setRotationClockwise180();
+    void setRotationClockwise270();
+
+protected:
+    void setRotation(Tiled::MapRotation rotation);
 
 protected:
     EmbeddedMainWindow *mMainWindow;

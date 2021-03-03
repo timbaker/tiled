@@ -222,14 +222,14 @@ void TileModeSelectionItem::updateBoundingRect()
 
 BuildingIsoScene::BuildingIsoScene(QObject *parent) :
     BuildingBaseScene(parent),
-    mBuildingMap(0),
-    mGridItem(0),
-    mTileSelectionItem(0),
+    mBuildingMap(nullptr),
+    mGridItem(nullptr),
+    mTileSelectionItem(nullptr),
     mDarkRectangle(new QGraphicsRectItem),
-    mCurrentTool(0),
-    mLayerGroupWithToolTiles(0),
+    mCurrentTool(nullptr),
+    mLayerGroupWithToolTiles(nullptr),
     mToolTiles(QString(), 0, 0, 1, 1),
-    mNonEmptyLayerGroupItem(0),
+    mNonEmptyLayerGroupItem(nullptr),
     mShowBuildingTiles(true),
     mShowUserTiles(true),
     mCurrentLevel(0),
@@ -238,7 +238,7 @@ BuildingIsoScene::BuildingIsoScene(QObject *parent) :
     ZVALUE_CURSOR = 1000;
     ZVALUE_GRID = 1001;
 
-    mRenderer = new IsoBuildingRenderer;
+    mRenderer = new IsoBuildingRenderer();
 
     setBackgroundBrush(Qt::darkGray);
 
@@ -304,27 +304,27 @@ void BuildingIsoScene::setDocument(BuildingDocument *doc)
 
     // Delete before clearing mDocument.
     delete mTileSelectionItem;
-    mTileSelectionItem = 0;
+    mTileSelectionItem = nullptr;
 
     mDocument = doc;
 
     qDeleteAll(mFloorItems);
     mFloorItems.clear();
     mSelectedObjectItems.clear();
-    mMouseOverObject = 0;
+    mMouseOverObject = nullptr;
 
     if (mBuildingMap) {
         delete mBuildingMap;
-        mBuildingMap = 0;
+        mBuildingMap = nullptr;
 
         qDeleteAll(mLayerGroupItems);
         mLayerGroupItems.clear();
         delete mGridItem;
 
-        dynamic_cast<IsoBuildingRenderer*>(mRenderer)->mMapRenderer = 0;
+        dynamic_cast<IsoBuildingRenderer*>(mRenderer)->mMapRenderer = nullptr;
 
-        mLayerGroupWithToolTiles = 0;
-        mNonEmptyLayerGroupItem = 0;
+        mLayerGroupWithToolTiles = nullptr;
+        mNonEmptyLayerGroupItem = nullptr;
         mNonEmptyLayer.clear();
     }
 
@@ -400,7 +400,7 @@ void BuildingIsoScene::setDocument(BuildingDocument *doc)
 
 void BuildingIsoScene::clearDocument()
 {
-    setDocument(0);
+    setDocument(nullptr);
     emit documentChanged();
 }
 
@@ -504,6 +504,16 @@ QPolygonF IsoBuildingRenderer::tileToScenePolygon(const QPolygonF &tilePolygon, 
 void IsoBuildingRenderer::drawLine(QPainter *painter, qreal x1, qreal y1, qreal x2, qreal y2, int level)
 {
     painter->drawLine(tileToSceneF(QPointF(x1, y1), level), tileToSceneF(QPointF(x2, y2), level));
+}
+
+void IsoBuildingRenderer::setRotation(MapRotation rotation)
+{
+    mMapRenderer->setRotation(rotation);
+}
+
+MapRotation IsoBuildingRenderer::getRotation() const
+{
+    return mMapRenderer->getRotation();
 }
 
 bool BuildingIsoScene::currentFloorContains(const QPoint &tilePos, int dw, int dh)
@@ -750,8 +760,8 @@ void BuildingIsoScene::BuildingToMap()
         delete mGridItem;
         delete mTileSelectionItem;
 
-        mLayerGroupWithToolTiles = 0;
-        mNonEmptyLayerGroupItem = 0;
+        mLayerGroupWithToolTiles = nullptr;
+        mNonEmptyLayerGroupItem = nullptr;
         mNonEmptyLayer.clear();
     }
 
@@ -1074,14 +1084,14 @@ void BuildingIsoScene::aboutToRecreateLayers()
     qDeleteAll(mLayerGroupItems);
     mLayerGroupItems.clear();
 
-    mLayerGroupWithToolTiles = 0;
-    mNonEmptyLayerGroupItem = 0;
+    mLayerGroupWithToolTiles = nullptr;
+    mNonEmptyLayerGroupItem = nullptr;
     mNonEmptyLayer.clear();
 
     delete mGridItem; // It uses the MapRenderer, which is being recreated.
-    mGridItem = 0;
+    mGridItem = nullptr;
 
-    mRenderer->asIso()->mMapRenderer = 0;
+    mRenderer->asIso()->mMapRenderer = nullptr;
 }
 
 void BuildingIsoScene::layersRecreated()
@@ -1094,8 +1104,8 @@ void BuildingIsoScene::layersRecreated()
     qDeleteAll(mLayerGroupItems);
     mLayerGroupItems.clear();
 
-    mLayerGroupWithToolTiles = 0;
-    mNonEmptyLayerGroupItem = 0;
+    mLayerGroupWithToolTiles = nullptr;
+    mNonEmptyLayerGroupItem = nullptr;
     mNonEmptyLayer.clear();
 
     foreach (CompositeLayerGroup *layerGroup, mBuildingMap->mapComposite()->layerGroups()) {
@@ -1107,7 +1117,7 @@ void BuildingIsoScene::layersRecreated()
         mLayerGroupItems[layerGroup->level()] = item;
     }
 
-    Q_ASSERT(mGridItem == 0);
+    Q_ASSERT(mGridItem == nullptr);
     mGridItem = new TileModeGridItem(mDocument, mBuildingMap->mapRenderer());
     mGridItem->setEditingTiles(editingTiles());
     mGridItem->synchWithBuilding();

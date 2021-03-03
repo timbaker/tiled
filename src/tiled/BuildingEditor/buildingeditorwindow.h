@@ -18,6 +18,8 @@
 #ifndef BUILDINGEDITORWINDOW_H
 #define BUILDINGEDITORWINDOW_H
 
+#include "maprotation.h"
+
 #include <QItemSelection>
 #include <QMainWindow>
 #include <QMap>
@@ -122,6 +124,8 @@ public:
 
     void focusOn(int x, int y, int z, int objectIndex);
 
+    void setRotation(Tiled::MapRotation rotation);
+
 public slots:
     void autoSaveCheck();
     void autoSaveTimeout();
@@ -154,7 +158,7 @@ public:
     static BuildingEditorWindow *instance()
     { return mInstance; }
 
-    explicit BuildingEditorWindow(QWidget *parent = 0);
+    explicit BuildingEditorWindow(QWidget *parent = nullptr);
     ~BuildingEditorWindow();
 
     void closeEvent(QCloseEvent *event);

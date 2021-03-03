@@ -70,7 +70,9 @@ class WelcomeMode : public IMode
 {
     Q_OBJECT
 public:
-    WelcomeMode(QObject *parent = 0);
+    WelcomeMode(QObject *parent = nullptr);
+
+    void setRotation(Tiled::MapRotation rotation) { Q_UNUSED(rotation) }
 
     void readSettings(QSettings &settings);
     void writeSettings(QSettings &settings);

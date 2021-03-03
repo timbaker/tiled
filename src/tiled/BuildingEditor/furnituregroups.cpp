@@ -600,14 +600,14 @@ bool FurnitureTile::equals(FurnitureTile *other) const
 void FurnitureTile::setTile(int x, int y, BuildingTile *btile)
 {
     // Get larger if needed
-    if ((btile != 0) && (x >= mSize.width() || y >= mSize.height())) {
+    if ((btile != nullptr) && (x >= mSize.width() || y >= mSize.height())) {
         resize(qMax(mSize.width(), x + 1), qMax(mSize.height(), y + 1));
     }
 
     mTiles[x + y * mSize.width()] = btile;
 
     // Get smaller if needed
-    if ((btile == 0) && (x == mSize.width() - 1 || y == mSize.height() - 1)) {
+    if ((btile == nullptr) && (x == mSize.width() - 1 || y == mSize.height() - 1)) {
         int width = mSize.width(), height = mSize.height();
         while (width > 1 && columnEmpty(width - 1))
             width--;
@@ -620,15 +620,15 @@ void FurnitureTile::setTile(int x, int y, BuildingTile *btile)
 
 BuildingTile *FurnitureTile::tile(int x, int y) const
 {
-    if (x < 0 || x >= mSize.width()) return 0;
-    if (y < 0 || y >= mSize.height()) return 0;
+    if (x < 0 || x >= mSize.width()) return nullptr;
+    if (y < 0 || y >= mSize.height()) return nullptr;
     return mTiles[x + y * mSize.width()];
 }
 
 bool FurnitureTile::isEmpty() const
 {
     foreach (BuildingTile *btile, mTiles)
-        if (btile != 0)
+        if (btile != nullptr)
             return false;
     return true;
 }
@@ -708,8 +708,8 @@ bool FurnitureTile::rowEmpty(int y)
 /////
 
 FurnitureTiles::FurnitureTiles(bool corners) :
-    mGroup(0),
-    mTiles(8, 0),
+    mGroup(nullptr),
+    mTiles(8, nullptr),
     mCorners(corners),
     mLayer(LayerFurniture)
 {
@@ -752,7 +752,7 @@ FurnitureTile *FurnitureTiles::tile(int orient) const
     Q_ASSERT(orient >= 0 && orient < FurnitureTile::OrientCount);
     if (orient >= 0 && orient < FurnitureTile::OrientCount)
         return mTiles[orient];
-    return 0;
+    return nullptr;
 }
 
 bool FurnitureTiles::equals(const FurnitureTiles *other)

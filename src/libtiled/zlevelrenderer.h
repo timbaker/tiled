@@ -30,6 +30,8 @@
 
 namespace Tiled {
 
+class Tile;
+
 /**
  * Modified isometric map renderer for Project Zomboid.
  * Tile layers are arranged into groups, one group per level/story/floor of a map.
@@ -37,7 +39,7 @@ namespace Tiled {
 class TILEDSHARED_EXPORT ZLevelRenderer : public MapRenderer
 {
 public:
-    ZLevelRenderer(const Map *map) : MapRenderer(map) { set2x(true); }
+    ZLevelRenderer(const Map *map);
 
     QSize mapSize() const;
 
@@ -85,6 +87,10 @@ public:
                             int level = 0) const;
 
 private:
+    int rotateWidth() const;
+    int rotateHeight() const;
+    QPoint rotateSquare(const QPoint& pos) const;
+
     QPolygonF tileRectToPolygon(const QRect &rect, int level = 0) const;
     QPolygonF tileRectToPolygon(const QRectF &rect, int level = 0) const;
 };

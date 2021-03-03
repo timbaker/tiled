@@ -141,6 +141,8 @@ SOURCES += aboutdialog.cpp \
     tileoverlaydialog.cpp \
     tileoverlayfile.cpp \
     tilepainter.cpp \
+    tilerotation.cpp \
+    tilerotationfile.cpp \
     tileselectionitem.cpp \
     tileselectiontool.cpp \
     tilesetdock.cpp \
@@ -359,6 +361,8 @@ HEADERS += aboutdialog.h \
     tileoverlaydialog.h \
     tileoverlayfile.h \
     tilepainter.h \
+    tilerotation.h \
+    tilerotationfile.h \
     tileselectionitem.h \
     tileselectiontool.h \
     tilesetdock.h \

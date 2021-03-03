@@ -18,6 +18,8 @@
 #ifndef BUILDINGORTHOVIEW_H
 #define BUILDINGORTHOVIEW_H
 
+#include "zlevelrenderer.h"
+
 #include <QGraphicsItem>
 //#include <QGraphicsEllipseItem>
 #include <QGraphicsScene>
@@ -334,27 +336,36 @@ public:
                             const QPoint &mDragOffset, bool mValidPos,
                             bool mSelected, bool mMouseOver, int level);
 
-    virtual OrthoBuildingRenderer *asOrtho() { return 0; }
-    virtual IsoBuildingRenderer *asIso() { return 0; }
+    virtual OrthoBuildingRenderer *asOrtho() { return nullptr; }
+    virtual IsoBuildingRenderer *asIso() { return nullptr; }
+
+    virtual void setRotation(Tiled::MapRotation rotation) = 0;
+    virtual Tiled::MapRotation getRotation() const = 0;
 };
 
 class OrthoBuildingRenderer : public BuildingRenderer
 {
 public:
-    QPoint sceneToTile(const QPointF &scenePos, int level);
-    QPointF sceneToTileF(const QPointF &scenePos, int level);
-    QRect sceneToTileRect(const QRectF &sceneRect, int level);
-    QRectF sceneToTileRectF(const QRectF &sceneRect, int level);
-    QPointF tileToScene(const QPoint &tilePos, int level);
-    QPointF tileToSceneF(const QPointF &tilePos, int level);
-    QPolygonF tileToScenePolygon(const QPoint &tilePos, int level);
-    QPolygonF tileToScenePolygon(const QRect &tileRect, int level);
-    QPolygonF tileToScenePolygonF(const QRectF &tileRect, int level);
-    QPolygonF tileToScenePolygon(const QPolygonF &tilePolygon, int level);
+    QPoint sceneToTile(const QPointF &scenePos, int level) override;
+    QPointF sceneToTileF(const QPointF &scenePos, int level) override;
+    QRect sceneToTileRect(const QRectF &sceneRect, int level) override;
+    QRectF sceneToTileRectF(const QRectF &sceneRect, int level) override;
+    QPointF tileToScene(const QPoint &tilePos, int level) override;
+    QPointF tileToSceneF(const QPointF &tilePos, int level) override;
+    QPolygonF tileToScenePolygon(const QPoint &tilePos, int level) override;
+    QPolygonF tileToScenePolygon(const QRect &tileRect, int level) override;
+    QPolygonF tileToScenePolygonF(const QRectF &tileRect, int level) override;
+    QPolygonF tileToScenePolygon(const QPolygonF &tilePolygon, int level) override;
 
-    void drawLine(QPainter *painter, qreal x1, qreal y1, qreal x2, qreal y2, int level);
+    void drawLine(QPainter *painter, qreal x1, qreal y1, qreal x2, qreal y2, int level) override;
 
-    OrthoBuildingRenderer *asOrtho() { return this; }
+    OrthoBuildingRenderer *asOrtho() override { return this; }
+
+    void setRotation(Tiled::MapRotation rotation) override;
+    Tiled::MapRotation getRotation() const override;
+
+private:
+    Tiled::MapRotation mRotation;
 };
 
 /////
@@ -392,7 +403,7 @@ class RoomSelectionItem : public QObject, public BuildingRegionItem
     Q_OBJECT
     Q_INTERFACES(QGraphicsItem)
 public:
-    RoomSelectionItem(BuildingBaseScene *scene, QGraphicsItem *parent = 0);
+    RoomSelectionItem(BuildingBaseScene *scene, QGraphicsItem *parent = nullptr);
 
     BuildingDocument *document() const;
 
@@ -412,7 +423,7 @@ public:
     int ZVALUE_CURSOR;
     int ZVALUE_GRID;
 
-    BuildingBaseScene(QObject *parent = 0);
+    BuildingBaseScene(QObject *parent = nullptr);
     ~BuildingBaseScene();
 
     BuildingDocument *document() const
@@ -490,6 +501,9 @@ public:
     RoomSelectionItem *roomSelectionItem() const
     { return mRoomSelectionItem; }
 
+    void setRotation(Tiled::MapRotation rotation);
+    Tiled::MapRotation getRotation() const;
+
     /////
     // Tile-editing-only methods
     virtual void setToolTiles(const FloorTileGrid *tiles,
@@ -540,7 +554,7 @@ class BuildingOrthoScene : public BuildingBaseScene
 
 public:
 
-    explicit BuildingOrthoScene(QObject *parent = 0);
+    explicit BuildingOrthoScene(QObject *parent = nullptr);
     ~BuildingOrthoScene();
 
     bool eventFilter(QObject *watched, QEvent *event);

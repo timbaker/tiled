@@ -53,7 +53,7 @@ using namespace BuildingEditor;
 
 ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *parent) :
     QToolBar(parent),
-    mCurrentDocument(0)
+    mCurrentDocument(nullptr)
 {
     Q_UNUSED(mode)
 
@@ -62,7 +62,7 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
 
     Ui::BuildingEditorWindow *actions = BuildingEditorWindow::instance()->actionIface();
 
-    addAction(actions->actionPecil);
+    addAction(actions->actionPencil);
     addAction(actions->actionWall);
     addAction(actions->actionSelectRooms);
     addSeparator();
@@ -78,6 +78,10 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
     addAction(actions->actionUpLevel);
     addAction(actions->actionDownLevel);
     addSeparator();
+    addAction(actions->actionNotRotated);
+    addAction(actions->actionClockwise90);
+    addAction(actions->actionClockwise180);
+    addAction(actions->actionClockwise270);
 
     mRoomComboBox = new QComboBox;
     mRoomComboBox->setIconSize(QSize(20, 20));
@@ -551,8 +555,8 @@ Tiled::Internal::Zoomable *IsoObjectEditModePerDocumentStuff::zoomable() const
 ObjectEditMode::ObjectEditMode(QObject *parent) :
     IMode(parent),
     mCategoryDock(new CategoryDock),
-    mCurrentDocument(0),
-    mCurrentDocumentStuff(0)
+    mCurrentDocument(nullptr),
+    mCurrentDocumentStuff(nullptr)
 {
     mMainWindow = new EmbeddedMainWindow;
     mMainWindow->setObjectName(QLatin1String("ObjectEditMode.Widget"));
@@ -600,16 +604,23 @@ ObjectEditMode::ObjectEditMode(QObject *parent) :
             SLOT(documentAboutToClose(int,BuildingDocument*)));
 
     connect(this, SIGNAL(activeStateChanged(bool)), SLOT(onActiveStateChanged(bool)));
+
+    Ui::BuildingEditorWindow *actions = BuildingEditorWindow::instance()->actionIface();
+
+    connect(actions->actionNotRotated, &QAction::triggered, this, &ObjectEditMode::setRotationNotRotated);
+    connect(actions->actionClockwise90, &QAction::triggered, this, &ObjectEditMode::setRotationClockwise90);
+    connect(actions->actionClockwise180, &QAction::triggered, this, &ObjectEditMode::setRotationClockwise180);
+    connect(actions->actionClockwise270, &QAction::triggered, this, &ObjectEditMode::setRotationClockwise270);
 }
 
 Building *ObjectEditMode::currentBuilding() const
 {
-    return mCurrentDocument ? mCurrentDocument->building() : 0;
+    return mCurrentDocument ? mCurrentDocument->building() : nullptr;
 }
 
 Room *ObjectEditMode::currentRoom() const
 {
-    return mCurrentDocument ? mCurrentDocument->currentRoom() : 0;
+    return mCurrentDocument ? mCurrentDocument->currentRoom() : nullptr;
 }
 
 #define WIDGET_STATE_VERSION 0
@@ -674,7 +685,7 @@ void ObjectEditMode::currentDocumentChanged(BuildingDocument *doc)
     }
 
     mCurrentDocument = doc;
-    mCurrentDocumentStuff = doc ? mDocumentStuff[doc] : 0;
+    mCurrentDocumentStuff = doc ? mDocumentStuff[doc] : nullptr;
 
     if (mCurrentDocument) {
         mTabWidget->setCurrentIndex(docman()->indexOf(doc));
@@ -704,6 +715,33 @@ void ObjectEditMode::documentTabCloseRequested(int index)
 
 void ObjectEditMode::updateActions()
 {
+}
+
+void ObjectEditMode::setRotationNotRotated()
+{
+    setRotation(Tiled::MapRotation::NotRotated);
+}
+
+void ObjectEditMode::setRotationClockwise90()
+{
+    setRotation(Tiled::MapRotation::Clockwise90);
+}
+
+void ObjectEditMode::setRotationClockwise180()
+{
+    setRotation(Tiled::MapRotation::Clockwise180);
+}
+
+void ObjectEditMode::setRotationClockwise270()
+{
+    setRotation(Tiled::MapRotation::Clockwise270);
+}
+
+void ObjectEditMode::setRotation(Tiled::MapRotation rotation)
+{
+    if (mCurrentDocument == nullptr)
+        return;
+    mCurrentDocumentStuff->scene()->setRotation(rotation);
 }
 
 /////

@@ -41,10 +41,16 @@ using namespace Tiled;
 #define DISPLAY_TILE_WIDTH (map()->tileWidth() * (is2x() ? 2 : 1))
 #define DISPLAY_TILE_HEIGHT (map()->tileHeight() * (is2x() ? 2 : 1))
 
+ZLevelRenderer::ZLevelRenderer(const Map *map)
+    : MapRenderer(map)
+{
+    set2x(true);
+}
+
 QSize ZLevelRenderer::mapSize() const
 {
     // Map width and height contribute equally in both directions
-    const int side = map()->height() + map()->width();
+    const int side = rotateHeight() + rotateWidth();
     return QSize(side * DISPLAY_TILE_WIDTH / 2
                  + maxLevel() * map()->cellsPerLevel().x() * DISPLAY_TILE_WIDTH,
                  side * DISPLAY_TILE_HEIGHT / 2
@@ -56,7 +62,7 @@ QRect ZLevelRenderer::boundingRect(const QRect &rect, int level) const
     const int tileWidth = DISPLAY_TILE_WIDTH;
     const int tileHeight = DISPLAY_TILE_HEIGHT;
 
-    const int originX = map()->height() * tileWidth / 2;
+    const int originX = rotateHeight() * tileWidth / 2;
     const QPoint pos((rect.x() - (rect.y() + rect.height()))
                      * tileWidth / 2 + originX,
                      (rect.x() + rect.y()) * tileHeight / 2
@@ -110,7 +116,7 @@ AddRemoveMapObject::removeObject
                         MapObjectItem::shape()
                             <this function>
     */
-    if (layer == 0)
+    if (layer == nullptr)
         return QPainterPath();
 #else
     Q_ASSERT(layer);
@@ -160,12 +166,12 @@ void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect,
     r.adjust(-tileWidth / 2, -tileHeight / 2,
              tileWidth / 2, tileHeight / 2);
 
-    const int startX = qMax(qreal(b.left()), pixelToTileCoords(r.topLeft(), level).x());
-    const int startY = qMax(qreal(b.top()), pixelToTileCoords(r.topRight(), level).y());
-    const int endX = qMin(qreal(b.right() + 1),
-                          pixelToTileCoords(r.bottomRight(), level).x());
-    const int endY = qMin(qreal(b.bottom() + 1),
-                          pixelToTileCoords(r.bottomLeft(), level).y());
+    const int startX = int(qMax(qreal(b.left()), pixelToTileCoords(r.topLeft(), level).x()));
+    const int startY = int(qMax(qreal(b.top()), pixelToTileCoords(r.topRight(), level).y()));
+    const int endX = int(qMin(qreal(b.right() + 1),
+                          pixelToTileCoords(r.bottomRight(), level).x()));
+    const int endY = int(qMin(qreal(b.bottom() + 1),
+                          pixelToTileCoords(r.bottomLeft(), level).y()));
 
     gridColor.setAlpha(128);
 
@@ -178,18 +184,18 @@ void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect,
     painter->setPen(pen);
 
     for (int y = startY; y <= endY; ++y) {
-        const QPointF start = tileToPixelCoords(startX, (qreal)y, level);
-        const QPointF end = tileToPixelCoords(endX, (qreal)y, level);
+        const QPointF start = tileToPixelCoords(startX, qreal(y), level);
+        const QPointF end = tileToPixelCoords(endX, qreal(y), level);
         painter->drawLine(start, end);
     }
     for (int x = startX; x <= endX; ++x) {
-        const QPointF start = tileToPixelCoords(x, (qreal)startY, level);
-        const QPointF end = tileToPixelCoords(x, (qreal)endY, level);
+        const QPointF start = tileToPixelCoords(x, qreal(startY), level);
+        const QPointF end = tileToPixelCoords(x, qreal(endY), level);
         painter->drawLine(start, end);
     }
 }
 
-static Tile *g_missing_tile = 0;
+static Tile *g_missing_tile = nullptr;
 
 void ZLevelRenderer::drawTileLayer(QPainter *painter,
                                       const TileLayer *layer,
@@ -218,8 +224,8 @@ void ZLevelRenderer::drawTileLayer(QPainter *painter,
 
     // Determine the tile and pixel coordinates to start at
     QPointF tilePos = pixelToTileCoords(rect.x(), rect.y(), level);
-    QPoint rowItr = QPoint((int) std::floor(tilePos.x()),
-                           (int) std::floor(tilePos.y()));
+    QPoint rowItr = QPoint(int(std::floor(tilePos.x())),
+                           int(std::floor(tilePos.y())));
     QPointF startPos = tileToPixelCoords(rowItr, level);
 
     startPos.rx() -= tileWidth / 2;
@@ -252,8 +258,7 @@ void ZLevelRenderer::drawTileLayer(QPainter *painter,
 
     QTransform baseTransform = painter->transform();
 
-    for (int y = startPos.y(); y - tileHeight < rect.bottom();
-         y += tileHeight / 2)
+    for (int y = startPos.y(); y - tileHeight < rect.bottom(); y += tileHeight / 2)
     {
         QPoint columnItr = rowItr;
 
@@ -300,12 +305,12 @@ void ZLevelRenderer::drawTileLayer(QPainter *painter,
                     }
 
                     if (tileWidth == cell.tile->width() * 2) {
-                        m11 *= 2.0f;
-                        m22 *= 2.0f;
+                        m11 *= qreal(2.0);
+                        m22 *= qreal(2.0);
                         dx += cell.tile->offset().x();
                         dy -= cell.tile->height() - cell.tile->offset().y();
                     } else if (tileWidth == cell.tile->width() / 2) {
-                        float scale = 0.5f;
+                        qreal scale = qreal(0.5);
                         m11 *= scale;
                         m22 *= scale;
                         dy += cell.tile->height() / 2;
@@ -365,8 +370,8 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
 
     // Determine the tile and pixel coordinates to start at
     QPointF tilePos = pixelToTileCoords(rect.x(), rect.y(), level);
-    QPoint rowItr = QPoint((int) std::floor(tilePos.x()),
-                           (int) std::floor(tilePos.y()));
+    QPoint rowItr = QPoint(int(std::floor(tilePos.x())),
+                           int(std::floor(tilePos.y())));
     QPointF startPos = tileToPixelCoords(rowItr, level);
     startPos.rx() -= tileWidth / 2;
     startPos.ry() += tileHeight;
@@ -409,7 +414,8 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
 
         for (int x = startPos.x(); x < rect.right(); x += tileWidth) {
             cells.resize(0);
-            if (layerGroup->orderedCellsAt(columnItr, cells, opacities)) {
+            QPoint cellPos = rotateSquare(columnItr);
+            if (layerGroup->orderedCellsAt(cellPos, cells, opacities)) {
                 for (int i = 0; i < cells.size(); i++) {
                     // Multi-threading
                     if (mAbortDrawing && *mAbortDrawing) {
@@ -418,9 +424,9 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                     }
                     const Cell *cell = cells[i];
                     if (!cell->isEmpty()) {
-                        Tile *tile = cell->tile;
+                        Tile *tile = rotateTile(cell->tile, getRotation());
                         if (tile->image().isNull()) {
-                            if (g_missing_tile == 0) {
+                            if (g_missing_tile == nullptr) {
                                 Tileset *ts = new Tileset(QLatin1String("MISSING"), 64, 128);
                                 if (ts->loadFromImage(QImage(QLatin1String(":/images/missing-tile.png")), QLatin1String(":/images/missing-tile.png"))) {
                                     g_missing_tile = ts->tileAt(0);
@@ -463,12 +469,12 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                         }
 
                         if (tileWidth == tile->width() * 2) {
-                            m11 *= 2.0f;
-                            m22 *= 2.0f;
+                            m11 *= qreal(2.0);
+                            m22 *= qreal(2.0);
                             dx += tile->offset().x();
                             dy -= tile->height() - tile->offset().y();
                         } else if (tileWidth == tile->width() / 2) {
-                            float scale = 0.5f;
+                            qreal scale = qreal(0.5);
                             m11 *= scale;
                             m22 *= scale;
 //                            dx += (tileWidth - img.width() * scale) / 2;
@@ -643,6 +649,45 @@ void ZLevelRenderer::drawFancyRectangle(QPainter *painter,
     painter->restore();
 }
 
+int ZLevelRenderer::rotateWidth() const
+{
+    switch (getRotation())
+    {
+    case MapRotation::Clockwise90:
+    case MapRotation::Clockwise270:
+        return map()->width();
+    default:
+        return map()->height();
+    }
+}
+
+int ZLevelRenderer::rotateHeight() const
+{
+    switch (getRotation())
+    {
+    case MapRotation::Clockwise90:
+    case MapRotation::Clockwise270:
+        return map()->height();
+    default:
+        return map()->width();
+    }
+}
+
+QPoint ZLevelRenderer::rotateSquare(const QPoint &pos) const
+{
+    switch (getRotation())
+    {
+    case MapRotation::NotRotated:
+        return pos;
+    case MapRotation::Clockwise90:
+        return QPoint(map()->height() - pos.y(), pos.x());
+    case MapRotation::Clockwise180:
+        return QPoint(map()->width() - pos.x(), map()->height() - pos.y());
+    case MapRotation::Clockwise270:
+        return QPoint(pos.y(), map()->height() - pos.y());
+    }
+}
+
 void ZLevelRenderer::drawImageLayer(QPainter *painter,
                                        const ImageLayer *imageLayer,
                                        const QRectF &exposed) const
@@ -663,7 +708,7 @@ QPointF ZLevelRenderer::pixelToTileCoords(qreal x, qreal y, int level) const
     const int tileHeight = DISPLAY_TILE_HEIGHT;
     const qreal ratio = (qreal) tileWidth / tileHeight;
 
-    x -= map()->height() * tileWidth / 2;
+    x -= rotateHeight() * tileWidth / 2;
 #ifdef ZOMBOID
     y -= map()->cellsPerLevel().y() * (maxLevel() - level) * tileHeight;
 #endif
@@ -679,7 +724,7 @@ QPointF ZLevelRenderer::tileToPixelCoords(qreal x, qreal y, int level) const
     const int tileWidth = DISPLAY_TILE_WIDTH;
     const int tileHeight = DISPLAY_TILE_HEIGHT;
 #ifdef ZOMBOID
-    const int originX = map()->height() * tileWidth / 2; // top-left corner
+    const int originX = rotateHeight() * tileWidth / 2; // top-left corner
     const int originY = map()->cellsPerLevel().y() * (maxLevel() - level) * tileHeight;
     return QPointF((x - y) * tileWidth / 2 + originX,
                    (x + y) * tileHeight / 2 + originY);

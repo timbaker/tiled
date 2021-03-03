@@ -20,6 +20,8 @@
 
 #include "singleton.h"
 
+#include "maprotation.h"
+
 #include <QObject>
 #include <QIcon>
 
@@ -38,7 +40,7 @@ class IMode : public QObject
 {
     Q_OBJECT
 public:
-    explicit IMode(QObject *parent = 0);
+    explicit IMode(QObject *parent = nullptr);
     
     void setWidget(QWidget *widget) { mWidget = widget; }
     QWidget *widget() const { return mWidget; }

@@ -49,6 +49,7 @@ HEADERS += compression.h \
     mapobject.h \
     mapreader.h \
     maprenderer.h \
+    maprotation.h \
     mapwriter.h \
     object.h \
     objectgroup.h \

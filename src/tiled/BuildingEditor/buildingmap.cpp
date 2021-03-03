@@ -29,6 +29,7 @@
 #include "mapcomposite.h"
 #include "mapmanager.h"
 #include "tilemetainfomgr.h"
+#include "tilerotation.h"
 #include "tilesetmanager.h"
 
 #include "isometricrenderer.h"
@@ -47,15 +48,37 @@ using namespace BuildingEditor;
 using namespace Tiled;
 using namespace Tiled::Internal;
 
+// // // // //
+
+namespace  {
+
+class BuildingZLevelRenderer : public ZLevelRenderer
+{
+public:
+    BuildingZLevelRenderer(const Map *map)
+        : ZLevelRenderer(map)
+    {
+
+    }
+
+    Tile* rotateTile(Tile* tile, MapRotation rotation) const override
+    {
+        return TileRotation::instance()->rotateTile(tile, rotation);
+    }
+};
+
+}
+// // // // //
+
 BuildingMap::BuildingMap(Building *building) :
     mBuilding(building),
-    mMapComposite(0),
-    mMap(0),
-    mBlendMapComposite(0),
-    mBlendMap(0),
-    mMapRenderer(0),
-    mCursorObjectFloor(0),
-    mShadowBuilding(0),
+    mMapComposite(nullptr),
+    mMap(nullptr),
+    mBlendMapComposite(nullptr),
+    mBlendMap(nullptr),
+    mMapRenderer(nullptr),
+    mCursorObjectFloor(nullptr),
+    mShadowBuilding(nullptr),
     pending(false),
     pendingRecreateAll(false),
     pendingBuildingResized(false)
@@ -493,7 +516,7 @@ void BuildingMap::BuildingToMap()
         mMapRenderer = new IsometricRenderer(mMap);
         break;
     case Map::LevelIsometric:
-        mMapRenderer = new ZLevelRenderer(mMap);
+        mMapRenderer = new BuildingZLevelRenderer(mMap);
         break;
     default:
         return;

@@ -176,7 +176,7 @@
     <string>New...</string>
    </property>
   </action>
-  <action name="actionPecil">
+  <action name="actionPencil">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -723,10 +723,46 @@
     <string>Export New Binary...</string>
    </property>
   </action>
+  <action name="actionNotRotated">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_roof_dormerN.png</normaloff>:/BuildingEditor/icons/icon_roof_dormerN.png</iconset>
+   </property>
+   <property name="text">
+    <string>NotRotated</string>
+   </property>
+  </action>
+  <action name="actionClockwise90">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_roof_dormerE.png</normaloff>:/BuildingEditor/icons/icon_roof_dormerE.png</iconset>
+   </property>
+   <property name="text">
+    <string>Clockwise90</string>
+   </property>
+  </action>
+  <action name="actionClockwise180">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_roof_dormerS.png</normaloff>:/BuildingEditor/icons/icon_roof_dormerS.png</iconset>
+   </property>
+   <property name="text">
+    <string>Clockwise180</string>
+   </property>
+  </action>
+  <action name="actionClockwise270">
+   <property name="icon">
+    <iconset resource="buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_roof_dormerW.png</normaloff>:/BuildingEditor/icons/icon_roof_dormerW.png</iconset>
+   </property>
+   <property name="text">
+    <string>Clockwise270</string>
+   </property>
+  </action>
  </widget>
  <resources>
-  <include location="buildingeditor.qrc"/>
   <include location="../tiled.qrc"/>
+  <include location="buildingeditor.qrc"/>
  </resources>
  <connections/>
 </ui>

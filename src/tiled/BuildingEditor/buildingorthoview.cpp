@@ -199,7 +199,6 @@ void BuildingRenderer::drawObject(QPainter *painter, BuildingObject *mObject,
             for (int y = 30; y <= 120; y += 10)
                 drawLine(painter, r.left(), r.top()+y/30.0, r.right(),r.top()+y/30.0,
                                   level);
-
         }
     }
 
@@ -327,11 +326,11 @@ void BuildingRenderer::drawObject(QPainter *painter, BuildingObject *mObject,
 
 BuildingBaseScene::BuildingBaseScene(QObject *parent) :
     QGraphicsScene(parent),
-    mDocument(0),
-    mRenderer(0),
-    mMouseOverObject(0),
+    mDocument(nullptr),
+    mRenderer(nullptr),
+    mMouseOverObject(nullptr),
     mEditingTiles(false),
-    mRoomSelectionItem(0)
+    mRoomSelectionItem(nullptr)
 {
 }
 
@@ -342,7 +341,7 @@ BuildingBaseScene::~BuildingBaseScene()
 
 Building *BuildingBaseScene::building() const
 {
-    return mDocument ? mDocument->building() : 0;
+    return mDocument ? mDocument->building() : nullptr;
 }
 
 int BuildingBaseScene::currentLevel() const
@@ -352,7 +351,7 @@ int BuildingBaseScene::currentLevel() const
 
 BuildingFloor *BuildingBaseScene::currentFloor()
 {
-    return mDocument ? mDocument->currentFloor() : 0;
+    return mDocument ? mDocument->currentFloor() : nullptr;
 }
 
 QString BuildingBaseScene::currentLayerName() const
@@ -450,7 +449,7 @@ void BuildingBaseScene::objectAboutToBeRemoved(BuildingObject *object)
     delete item;
 
     if (object == mMouseOverObject)
-        mMouseOverObject = 0;
+        mMouseOverObject = nullptr;
 }
 
 void BuildingBaseScene::objectMoved(BuildingObject *object)
@@ -513,7 +512,7 @@ BuildingObject *BuildingBaseScene::topmostObjectAt(const QPointF &scenePos)
                 return objectItem->object();
         }
     }
-    return 0;
+    return nullptr;
 }
 
 QSet<BuildingObject*> BuildingBaseScene::objectsInRect(const QRectF &tileRect)
@@ -572,6 +571,16 @@ void BuildingBaseScene::synchObjectItemVisibility()
         item->synchVisibility();
 }
 
+void BuildingBaseScene::setRotation(MapRotation rotation)
+{
+    mRenderer->setRotation(rotation);
+}
+
+MapRotation BuildingBaseScene::getRotation() const
+{
+    return mRenderer->getRotation();
+}
+
 void BuildingOrthoScene::setToolTiles(const FloorTileGrid *tiles, const QPoint &pos,
                                    const QString &layerName)
 {
@@ -616,7 +625,7 @@ GraphicsFloorItem::GraphicsFloorItem(BuildingBaseScene *editor, BuildingFloor *f
     mEditor(editor),
     mFloor(floor),
     mBmp(new QImage(mFloor->width(), mFloor->height(), QImage::Format_RGB32)),
-    mDragBmp(0)
+    mDragBmp(nullptr)
 {
     setFlag(ItemUsesExtendedStyleOption);
     if (mEditor->renderer()->asIso()) {
@@ -685,7 +694,7 @@ GraphicsObjectItem *GraphicsFloorItem::itemForObject(BuildingObject *object) con
         if (item->object() == object)
             return item;
     }
-    return 0;
+    return nullptr;
 }
 
 void GraphicsFloorItem::synchWithFloor()
@@ -908,7 +917,7 @@ void GraphicsObjectItem::setMouseOver(bool mouseOver)
 {
     if (mouseOver != mMouseOver) {
         mMouseOver = mouseOver;
-        if (dynamic_cast<OrthoBuildingRenderer*>(mEditor->renderer()) == 0)
+        if (dynamic_cast<OrthoBuildingRenderer*>(mEditor->renderer()) == nullptr)
             setOpacity(mMouseOver ? 0.55 : 0.25);
         update();
     }
@@ -1272,7 +1281,7 @@ void GraphicsWallItem::setShowHandles(bool show)
 
 BuildingOrthoScene::BuildingOrthoScene(QObject *parent) :
     BuildingBaseScene(parent),
-    mCurrentTool(0)
+    mCurrentTool(nullptr)
 {
     ZVALUE_GRID = 20;
     ZVALUE_CURSOR = 100;
@@ -1339,7 +1348,7 @@ void BuildingOrthoScene::setDocument(BuildingDocument *doc)
 
     mFloorItems.clear();
     mSelectedObjectItems.clear();
-    mMouseOverObject = 0;
+    mMouseOverObject = nullptr;
 
     if (mDocument) {
         foreach (BuildingFloor *floor, building()->floors())
@@ -1402,7 +1411,7 @@ void BuildingOrthoScene::setDocument(BuildingDocument *doc)
 
 void BuildingOrthoScene::clearDocument()
 {
-    setDocument(0);
+    setDocument(nullptr);
 }
 
 void BuildingOrthoScene::currentToolChanged(BaseTool *tool)
@@ -1498,6 +1507,16 @@ QPolygonF OrthoBuildingRenderer::tileToScenePolygon(const QPolygonF &tilePolygon
 void OrthoBuildingRenderer::drawLine(QPainter *painter, qreal x1, qreal y1, qreal x2, qreal y2, int level)
 {
     painter->drawLine(tileToSceneF(QPointF(x1, y1), level), tileToSceneF(QPointF(x2, y2), level));
+}
+
+void OrthoBuildingRenderer::setRotation(MapRotation rotation)
+{
+    mRotation = rotation;
+}
+
+MapRotation OrthoBuildingRenderer::getRotation() const
+{
+    return mRotation;
 }
 
 void BuildingOrthoScene::currentFloorChanged()

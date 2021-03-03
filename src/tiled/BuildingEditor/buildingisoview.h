@@ -62,7 +62,7 @@ class CompositeLayerGroupItem : public QGraphicsItem
 public:
     CompositeLayerGroupItem(CompositeLayerGroup *layerGroup,
                             Tiled::MapRenderer *renderer,
-                            QGraphicsItem *parent = 0);
+                            QGraphicsItem *parent = nullptr);
 
     QRectF boundingRect() const;
     void paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *);
@@ -132,20 +132,23 @@ private:
 class IsoBuildingRenderer : public BuildingRenderer
 {
 public:
-    QPoint sceneToTile(const QPointF &scenePos, int level);
-    QPointF sceneToTileF(const QPointF &scenePos, int level);
-    QRect sceneToTileRect(const QRectF &sceneRect, int level);
-    QRectF sceneToTileRectF(const QRectF &sceneRect, int level);
-    QPointF tileToScene(const QPoint &tilePos, int level);
-    QPointF tileToSceneF(const QPointF &tilePos, int level);
-    QPolygonF tileToScenePolygon(const QPoint &tilePos, int level);
-    QPolygonF tileToScenePolygon(const QRect &tileRect, int level);
-    QPolygonF tileToScenePolygonF(const QRectF &tileRect, int level);
-    QPolygonF tileToScenePolygon(const QPolygonF &tilePolygon, int level);
+    QPoint sceneToTile(const QPointF &scenePos, int level) override;
+    QPointF sceneToTileF(const QPointF &scenePos, int level) override;
+    QRect sceneToTileRect(const QRectF &sceneRect, int level) override;
+    QRectF sceneToTileRectF(const QRectF &sceneRect, int level) override;
+    QPointF tileToScene(const QPoint &tilePos, int level) override;
+    QPointF tileToSceneF(const QPointF &tilePos, int level) override;
+    QPolygonF tileToScenePolygon(const QPoint &tilePos, int level) override;
+    QPolygonF tileToScenePolygon(const QRect &tileRect, int level) override;
+    QPolygonF tileToScenePolygonF(const QRectF &tileRect, int level) override;
+    QPolygonF tileToScenePolygon(const QPolygonF &tilePolygon, int level) override;
 
-    void drawLine(QPainter *painter, qreal x1, qreal y1, qreal x2, qreal y2, int level);
+    void drawLine(QPainter *painter, qreal x1, qreal y1, qreal x2, qreal y2, int level) override;
 
-    IsoBuildingRenderer *asIso() { return this; }
+    IsoBuildingRenderer *asIso() override { return this; }
+
+    void setRotation(Tiled::MapRotation rotation) override;
+    Tiled::MapRotation getRotation() const override;
 
     Tiled::MapRenderer *mMapRenderer;
 };
@@ -154,7 +157,7 @@ class BuildingIsoScene : public BuildingBaseScene
 {
     Q_OBJECT
 public:
-    BuildingIsoScene(QObject *parent = 0);
+    BuildingIsoScene(QObject *parent = nullptr);
     ~BuildingIsoScene();
 
     Tiled::MapRenderer *mapRenderer() const;
@@ -284,7 +287,7 @@ class BuildingIsoView : public QGraphicsView
 {
     Q_OBJECT
 public:
-    BuildingIsoView(QWidget *parent = 0);
+    BuildingIsoView(QWidget *parent = nullptr);
     ~BuildingIsoView();
 
     BuildingIsoScene *scene() const

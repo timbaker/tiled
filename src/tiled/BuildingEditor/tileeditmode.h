@@ -46,7 +46,7 @@ class TileEditModeToolBar : public QToolBar
 {
     Q_OBJECT
 public:
-    TileEditModeToolBar(QWidget *parent = 0);
+    TileEditModeToolBar(QWidget *parent = nullptr);
 
 private slots:
     void currentDocumentChanged(BuildingDocument *doc);
@@ -62,10 +62,10 @@ class TileEditMode : public IMode
 {
     Q_OBJECT
 public:
-    explicit TileEditMode(QObject *parent = 0);
+    explicit TileEditMode(QObject *parent = nullptr);
 
-    void readSettings(QSettings &settings);
-    void writeSettings(QSettings &settings);
+    void readSettings(QSettings &settings) override;
+    void writeSettings(QSettings &settings) override;
 
 signals:
     void viewAddedForDocument(BuildingDocument *doc, BuildingIsoView *view);

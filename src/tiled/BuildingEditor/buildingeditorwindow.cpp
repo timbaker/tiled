@@ -205,6 +205,11 @@ void EditorWindowPerDocumentStuff::focusOn(int x, int y, int z, int objectIndex)
     }
 }
 
+void EditorWindowPerDocumentStuff::setRotation(MapRotation rotation)
+{
+    mIsoView->scene()->setRotation(rotation);
+}
+
 void EditorWindowPerDocumentStuff::autoSaveCheck()
 {
     if (!document()->isModified()) {
@@ -284,7 +289,7 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
     connect(docman(), SIGNAL(currentDocumentChanged(BuildingDocument*)),
             SLOT(currentDocumentChanged(BuildingDocument*)));
 
-    PencilTool::instance()->setAction(ui->actionPecil);
+    PencilTool::instance()->setAction(ui->actionPencil);
     SelectMoveRoomsTool::instance()->setAction(ui->actionSelectRooms);
     DoorTool::instance()->setAction(ui->actionDoor);
     WallTool::instance()->setAction(ui->actionWall);

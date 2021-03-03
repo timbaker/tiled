@@ -239,8 +239,8 @@ TileEditMode::TileEditMode(QObject *parent) :
     mLayersDock(new BuildingLayersDock),
     mTilesetDock(new BuildingTilesetDock),
     mFirstTimeSeen(true),
-    mCurrentDocument(0),
-    mCurrentDocumentStuff(0)
+    mCurrentDocument(nullptr),
+    mCurrentDocumentStuff(nullptr)
 {
     setDisplayName(tr("Tile"));
     setIcon(QIcon(QLatin1String(":/BuildingEditor/icons/mode_tile.png")));

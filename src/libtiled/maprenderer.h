@@ -30,6 +30,7 @@
 #define MAPRENDERER_H
 
 #include "tiled_global.h"
+#include "maprotation.h"
 
 #include <QPainter>
 
@@ -40,6 +41,7 @@ class Map;
 class MapObject;
 class TileLayer;
 #ifdef ZOMBOID
+class Tile;
 class ZTileLayerGroup;
 #endif
 class ImageLayer;
@@ -54,10 +56,11 @@ class TILEDSHARED_EXPORT MapRenderer
 public:
 #ifdef ZOMBOID
     MapRenderer(const Map *map)
-        : mAbortDrawing(0)
+        : mAbortDrawing(nullptr)
         , mMap(map)
         , mMaxLevel(0)
         , m2x(false)
+        , mRotation(MapRotation::NotRotated)
     {}
 #else
     MapRenderer(const Map *map) : mMap(map) {}
@@ -220,6 +223,10 @@ public:
     void setMaxLevel(int level) { mMaxLevel = level; }
     int maxLevel() const { return mMaxLevel; }
 
+    void setRotation(MapRotation rotation);
+    MapRotation getRotation() const;
+    virtual Tile* rotateTile(Tile* tile, MapRotation rotation) const;
+
     bool *mAbortDrawing;
 
 #else
@@ -261,6 +268,7 @@ private:
 #ifdef ZOMBOID
     int mMaxLevel;
     bool m2x;
+    MapRotation mRotation;
 #endif
 };
 

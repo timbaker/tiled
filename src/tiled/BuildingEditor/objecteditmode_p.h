@@ -35,7 +35,7 @@ class ObjectEditModeToolBar : public QToolBar
 {
     Q_OBJECT
 public:
-    ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *parent = 0);
+    ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *parent = nullptr);
 
     Building *currentBuilding() const;
     Room *currentRoom() const;
