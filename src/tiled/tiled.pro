@@ -143,6 +143,7 @@ SOURCES += aboutdialog.cpp \
     tilepainter.cpp \
     tilerotation.cpp \
     tilerotationfile.cpp \
+    tilerotationwindow.cpp \
     tileselectionitem.cpp \
     tileselectiontool.cpp \
     tilesetdock.cpp \
@@ -363,6 +364,7 @@ HEADERS += aboutdialog.h \
     tilepainter.h \
     tilerotation.h \
     tilerotationfile.h \
+    tilerotationwindow.h \
     tileselectionitem.h \
     tileselectiontool.h \
     tilesetdock.h \
@@ -534,6 +536,7 @@ FORMS += aboutdialog.ui \
     BuildingEditor/buildingpropertiesdialog.ui \
     roomdefnamedialog.ui \
     luaconsole.ui \
+    tilerotationwindow.ui \
     worldeddock.ui \
     BuildingEditor/welcomemode.ui \
     luamapsdialog.ui \

@@ -230,6 +230,7 @@ public slots:
     void tilesetMetaInfoDialog();
     void rearrangeTiles();
     void tilePropertiesEditor();
+    void tileRotationEditor();
     void compareTileDef();
     void createPackFile();
     void showPackViewer();

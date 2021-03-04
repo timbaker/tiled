@@ -168,6 +168,7 @@
     <addaction name="actionCheckMaps"/>
     <addaction name="actionTilesetMetaInfo"/>
     <addaction name="actionTileProperties"/>
+    <addaction name="actionTileRotation"/>
     <addaction name="actionCompareTileDef"/>
     <addaction name="menu_pack_files"/>
     <addaction name="menuOverlays"/>
@@ -673,11 +674,20 @@
     <string>Export New Binary</string>
    </property>
   </action>
+  <action name="actionTileRotation">
+   <property name="icon">
+    <iconset resource="BuildingEditor/buildingeditor.qrc">
+     <normaloff>:/BuildingEditor/icons/icon_rotate_right.png</normaloff>:/BuildingEditor/icons/icon_rotate_right.png</iconset>
+   </property>
+   <property name="text">
+    <string>Tile Rotation</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="BuildingEditor/buildingeditor.qrc"/>
   <include location="tiled.qrc"/>
+  <include location="BuildingEditor/buildingeditor.qrc"/>
  </resources>
  <connections/>
 </ui>

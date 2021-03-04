@@ -157,7 +157,10 @@ void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect,
 {
     QRect b = tileBounds;
     if (b.isEmpty())
-        b = QRect(QPoint(0, 0), map()->size());
+        b = QRect(0, 0, map()->width(), map()->height());
+    int w = b.width(), h = b.height();
+    b.setWidth(rotateWidth(w, h));
+    b.setHeight(rotateHeight(w, h));
 
     const int tileWidth = DISPLAY_TILE_WIDTH;
     const int tileHeight = DISPLAY_TILE_HEIGHT;
@@ -414,7 +417,7 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
 
         for (int x = startPos.x(); x < rect.right(); x += tileWidth) {
             cells.resize(0);
-            QPoint cellPos = rotateSquare(columnItr);
+            QPoint cellPos = unrotateSquare(columnItr);
             if (layerGroup->orderedCellsAt(cellPos, cells, opacities)) {
                 for (int i = 0; i < cells.size(); i++) {
                     // Multi-threading
@@ -425,6 +428,8 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                     const Cell *cell = cells[i];
                     if (!cell->isEmpty()) {
                         Tile *tile = rotateTile(cell->tile, getRotation());
+                        if (tile->tileset()->name() == QLatin1String("none"))
+                            continue; // rotated
                         if (tile->image().isNull()) {
                             if (g_missing_tile == nullptr) {
                                 Tileset *ts = new Tileset(QLatin1String("MISSING"), 64, 128);
@@ -651,25 +656,35 @@ void ZLevelRenderer::drawFancyRectangle(QPainter *painter,
 
 int ZLevelRenderer::rotateWidth() const
 {
-    switch (getRotation())
-    {
-    case MapRotation::Clockwise90:
-    case MapRotation::Clockwise270:
-        return map()->width();
-    default:
-        return map()->height();
-    }
+    return rotateHeight(map()->width(), map()->height());
 }
 
 int ZLevelRenderer::rotateHeight() const
+{
+    return rotateHeight(map()->width(), map()->height());
+}
+
+int ZLevelRenderer::rotateWidth(int width, int height) const
 {
     switch (getRotation())
     {
     case MapRotation::Clockwise90:
     case MapRotation::Clockwise270:
-        return map()->height();
+        return height;
     default:
-        return map()->width();
+        return width;
+    }
+}
+
+int ZLevelRenderer::rotateHeight(int width, int height) const
+{
+    switch (getRotation())
+    {
+    case MapRotation::Clockwise90:
+    case MapRotation::Clockwise270:
+        return width;
+    default:
+        return height;
     }
 }
 
@@ -680,11 +695,26 @@ QPoint ZLevelRenderer::rotateSquare(const QPoint &pos) const
     case MapRotation::NotRotated:
         return pos;
     case MapRotation::Clockwise90:
-        return QPoint(map()->height() - pos.y(), pos.x());
+        return QPoint(map()->height() - pos.y() - 1, pos.x());
     case MapRotation::Clockwise180:
-        return QPoint(map()->width() - pos.x(), map()->height() - pos.y());
+        return QPoint(map()->width() - pos.x() - 1, map()->height() - pos.y() - 1);
     case MapRotation::Clockwise270:
-        return QPoint(pos.y(), map()->height() - pos.y());
+        return QPoint(map()->height() - pos.y() - 1, map()->width() - pos.x() - 1);
+    }
+}
+
+QPoint ZLevelRenderer::unrotateSquare(const QPoint &pos) const
+{
+    switch (getRotation())
+    {
+    case MapRotation::NotRotated:
+        return pos;
+    case MapRotation::Clockwise90:
+        return QPoint(pos.y(), map()->height() - pos.x() - 1);
+    case MapRotation::Clockwise180:
+        return QPoint(map()->width() - pos.x() - 1, map()->height() - pos.y() - 1);
+    case MapRotation::Clockwise270:
+        return QPoint(map()->height() - pos.y() - 1, pos.x());
     }
 }
 

@@ -1332,7 +1332,7 @@ void BuildingTilesDialog::tilesetSelectionChanged()
 
 void BuildingTilesDialog::addTiles()
 {
-    if (mFurnitureGroup != 0) {
+    if (mFurnitureGroup != nullptr) {
         int index = mFurnitureGroup->mTiles.count();
         if (mCurrentFurniture)
             index = mFurnitureGroup->mTiles.indexOf(mCurrentFurniture->owner()) + 1;

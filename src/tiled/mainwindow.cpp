@@ -64,6 +64,7 @@
 #include "saveasimagedialog.h"
 #include "stampbrush.h"
 #include "tilelayer.h"
+#include "tilerotationwindow.h"
 #include "tileselectiontool.h"
 #include "tileset.h"
 #include "tilesetdock.h"
@@ -653,6 +654,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
             SLOT(rearrangeTiles()));
     connect(mUi->actionTileProperties, SIGNAL(triggered()),
             SLOT(tilePropertiesEditor()));
+    connect(mUi->actionTileRotation, &QAction::triggered, this, &MainWindow::tileRotationEditor);
     connect(mUi->actionCompareTileDef, SIGNAL(triggered()),
             SLOT(compareTileDef()));
     connect(mUi->actionPackViewer, SIGNAL(triggered()),
@@ -1722,6 +1724,13 @@ void MainWindow::tilePropertiesEditor()
     mTileDefDialog = TileDefDialog::instance();
     TileDefDialog::instance()->show();
     TileDefDialog::instance()->raise();
+}
+
+void MainWindow::tileRotationEditor()
+{
+    TileRotationWindow *window = new TileRotationWindow(this);
+    window->show();
+    window->raise();
 }
 
 void MainWindow::compareTileDef()

@@ -19,10 +19,13 @@
 
 #include "tilerotation.h"
 
+#include "BuildingEditor/buildingtiles.h"
+#include "BuildingEditor/furnituregroups.h"
 #include "BuildingEditor/simplefile.h"
 
 #include <QFileInfo>
 
+using namespace BuildingEditor;
 using namespace Tiled;
 
 TileRotationFile::TileRotationFile()
@@ -60,12 +63,22 @@ bool TileRotationFile::read(const QString &path)
 
     for (const SimpleFileBlock& block : simple.blocks) {
         if (block.name == QLatin1String("tiles")) {
-            TileRotateInfo entry;
-            entry.mTileNames[0] = block.value("tile1");
-            entry.mTileNames[1] = block.value("tile2");
-            entry.mTileNames[2] = block.value("tile3");
-            entry.mTileNames[3] = block.value("tile4");
-            mTiles += new TileRotateInfo(entry);
+            FurnitureTiles* furnitureTiles = furnitureTilesFromSFB(block, mError);
+            if (furnitureTiles == nullptr) {
+                return false;
+            }
+            mTiles += furnitureTiles;
+        } else if (block.name == QLatin1String("noRotate")) {
+            for (const SimpleFileKeyValue& kv : block.values) {
+                if (kv.name == QLatin1Literal("tile")) {
+                    mNoRotateTileNames += kv.value;
+                } else {
+                    mError = tr("Unknown noRotate value '%1'.\n%2")
+                            .arg(block.name)
+                            .arg(path);
+                    return false;
+                }
+            }
         } else {
             mError = tr("Unknown block name '%1'.\n%2")
                     .arg(block.name)
@@ -77,18 +90,113 @@ bool TileRotationFile::read(const QString &path)
     return true;
 }
 
-bool TileRotationFile::write(const QString &path, const QList<TileRotateInfo *> &tiles)
+FurnitureTiles *TileRotationFile::furnitureTilesFromSFB(const SimpleFileBlock &furnitureBlock, QString &error)
+{
+#if 0
+    bool corners = furnitureBlock.value("corners") == QLatin1String("true");
+
+    QString layerString = furnitureBlock.value("layer");
+    FurnitureTiles::FurnitureLayer layer = layerString.isEmpty() ?
+            FurnitureTiles::LayerFurniture : FurnitureTiles::layerFromString(layerString);
+    if (layer == FurnitureTiles::InvalidLayer) {
+        error = tr("Invalid furniture layer '%1'.").arg(layerString);
+        return nullptr;
+    }
+#endif
+
+    bool corners = false;
+    FurnitureTiles *tiles = new FurnitureTiles(corners);
+#if 0
+    tiles->setLayer(layer);
+#endif
+    for (const SimpleFileBlock& entryBlock : furnitureBlock.blocks) {
+        if (entryBlock.name == QLatin1String("entry")) {
+            FurnitureTile::FurnitureOrientation orient = FurnitureGroups::orientFromString(entryBlock.value(QLatin1String("orient")));
+#if 0
+            QString grimeString = entryBlock.value(QLatin1String("grime"));
+            bool grime = true;
+            if (grimeString.length() && !booleanFromString(grimeString, grime)) {
+                error = mError;
+                delete tiles;
+                return nullptr;
+            }
+#endif
+            FurnitureTile *tile = new FurnitureTile(tiles, orient);
+#if 0
+            tile->setAllowGrime(grime);
+#endif
+            for (const SimpleFileKeyValue& kv : entryBlock.values) {
+                if (!kv.name.contains(QLatin1Char(',')))
+                    continue;
+                QStringList values = kv.name.split(QLatin1Char(','), QString::SkipEmptyParts);
+                int x = values[0].toInt();
+                int y = values[1].toInt();
+                if (x < 0 || x >= 50 || y < 0 || y >= 50) {
+                    error = tr("Invalid tile coordinates (%1,%2).")
+                            .arg(x).arg(y);
+                    delete tiles;
+                    return nullptr;
+                }
+                QString tilesetName;
+                int tileIndex;
+                if (!BuildingTilesMgr::parseTileName(kv.value, tilesetName, tileIndex)) {
+                    error = tr("Can't parse tile name '%1'.").arg(kv.value);
+                    delete tiles;
+                    return nullptr;
+                }
+                tile->setTile(x, y, BuildingTilesMgr::instance()->get(kv.value));
+            }
+            tiles->setTile(tile);
+        } else {
+            error = tr("Unknown block name '%1'.")
+                    .arg(entryBlock.name);
+            delete tiles;
+            return nullptr;
+        }
+    }
+
+    return tiles;
+}
+
+bool TileRotationFile::write(const QString &path, const QList<FurnitureTiles *> &tiles, const QStringList &noRotateTileNames)
 {
     SimpleFile simpleFile;
 
-    for (const TileRotateInfo *entry : tiles) {
-        SimpleFileBlock tilesBlock;
-        tilesBlock.name = QLatin1String("tiles");
-        tilesBlock.addValue("tile1", entry->mTileNames[0]);
-        tilesBlock.addValue("tile2", entry->mTileNames[1]);
-        tilesBlock.addValue("tile3", entry->mTileNames[2]);
-        tilesBlock.addValue("tile4", entry->mTileNames[3]);
-        simpleFile.blocks += tilesBlock;
+    SimpleFileBlock noRotateBlock;
+    noRotateBlock.name = QLatin1String("noRotate");
+    for (const QString& tileName : noRotateTileNames) {
+        noRotateBlock.addValue("tile", tileName);
+    }
+    simpleFile.blocks += noRotateBlock;
+
+    for (FurnitureTiles *ftiles : tiles) {
+        SimpleFileBlock furnitureBlock;
+        furnitureBlock.name = QLatin1String("tiles");
+//        if (ftiles->hasCorners())
+//            furnitureBlock.addValue("corners", QLatin1String("true"));
+//        if (ftiles->layer() != FurnitureTiles::LayerFurniture)
+//            furnitureBlock.addValue("layer", ftiles->layerToString());
+        for (FurnitureTile *ftile : ftiles->tiles()) {
+            if (ftile->isEmpty())
+                continue;
+            SimpleFileBlock entryBlock;
+            entryBlock.name = QLatin1String("entry");
+            entryBlock.values += SimpleFileKeyValue(QLatin1String("orient"),
+                                                    ftile->orientToString());
+//            if (!ftile->allowGrime())
+//                entryBlock.addValue("grime", QLatin1String("false"));
+            for (int x = 0; x < ftile->width(); x++) {
+                for (int y = 0; y < ftile->height(); y++) {
+                    if (BuildingTile *btile = ftile->tile(x, y)) {
+                        entryBlock.values += SimpleFileKeyValue(
+                                    QString(QLatin1String("%1,%2")).arg(x).arg(y),
+                                    btile->name());
+                    }
+                }
+            }
+            furnitureBlock.blocks += entryBlock;
+        }
+        simpleFile.blocks += furnitureBlock;
     }
 
     simpleFile.setVersion(VERSION_LATEST);
@@ -99,9 +207,16 @@ bool TileRotationFile::write(const QString &path, const QList<TileRotateInfo *> 
     return true;
 }
 
-QList<Tiled::TileRotateInfo *> Tiled::TileRotationFile::takeTiles()
+QList<FurnitureTiles *> Tiled::TileRotationFile::takeTiles()
 {
-    QList<Tiled::TileRotateInfo *> result(mTiles);
+    QList<FurnitureTiles *> result(mTiles);
     mTiles.clear();
+    return result;
+}
+
+QStringList TileRotationFile::takeNoRotateTileNames()
+{
+    QStringList result = mNoRotateTileNames;
+    mNoRotateTileNames.clear();
     return result;
 }

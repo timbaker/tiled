@@ -21,6 +21,8 @@
 #include "maprotation.h"
 #include "tile.h"
 
+#include "BuildingEditor/furnituregroups.h"
+
 namespace Tiled
 {
 
@@ -44,6 +46,8 @@ public:
     TileRotation();
 
     void readFile(const QString& filePath);
+
+    const QList<BuildingEditor::FurnitureTiles*> furnitureTiles() const;
 
     Tile* rotateTile(Tile* tile, MapRotation rotation);
 

@@ -100,7 +100,7 @@ FurnitureTiles *FurnitureGroups::furnitureTilesFromSFB(SimpleFileBlock &furnitur
             FurnitureTiles::LayerFurniture : FurnitureTiles::layerFromString(layerString);
     if (layer == FurnitureTiles::InvalidLayer) {
         error = tr("Invalid furniture layer '%1'.").arg(layerString);
-        return 0;
+        return nullptr;
     }
 
     FurnitureTiles *tiles = new FurnitureTiles(corners);
@@ -114,7 +114,7 @@ FurnitureTiles *FurnitureGroups::furnitureTilesFromSFB(SimpleFileBlock &furnitur
             if (grimeString.length() && !booleanFromString(grimeString, grime)) {
                 error = mError;
                 delete tiles;
-                return 0;
+                return nullptr;
             }
             FurnitureTile *tile = new FurnitureTile(tiles, orient);
             tile->setAllowGrime(grime);
@@ -129,14 +129,14 @@ FurnitureTiles *FurnitureGroups::furnitureTilesFromSFB(SimpleFileBlock &furnitur
                     error = tr("Invalid tile coordinates (%1,%2).")
                             .arg(x).arg(y);
                     delete tiles;
-                    return 0;
+                    return nullptr;
                 }
                 QString tilesetName;
                 int tileIndex;
                 if (!BuildingTilesMgr::parseTileName(kv.value, tilesetName, tileIndex)) {
                     error = tr("Can't parse tile name '%1'.").arg(kv.value);
                     delete tiles;
-                    return 0;
+                    return nullptr;
                 }
                 tile->setTile(x, y, BuildingTilesMgr::instance()->get(kv.value));
             }
@@ -145,7 +145,7 @@ FurnitureTiles *FurnitureGroups::furnitureTilesFromSFB(SimpleFileBlock &furnitur
             error = tr("Unknown block name '%1'.")
                     .arg(entryBlock.name);
             delete tiles;
-            return 0;
+            return nullptr;
         }
     }
 
@@ -726,6 +726,11 @@ FurnitureTiles::FurnitureTiles(bool corners) :
 FurnitureTiles::~FurnitureTiles()
 {
     qDeleteAll(mTiles);
+}
+
+int FurnitureTiles::indexInGroup()
+{
+    return group()->mTiles.indexOf(this);
 }
 
 bool FurnitureTiles::isEmpty() const

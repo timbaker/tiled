@@ -89,7 +89,10 @@ public:
 private:
     int rotateWidth() const;
     int rotateHeight() const;
+    int rotateWidth(int width, int height) const;
+    int rotateHeight(int width, int height) const;
     QPoint rotateSquare(const QPoint& pos) const;
+    QPoint unrotateSquare(const QPoint& pos) const;
 
     QPolygonF tileRectToPolygon(const QRect &rect, int level = 0) const;
     QPolygonF tileRectToPolygon(const QRectF &rect, int level = 0) const;

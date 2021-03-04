@@ -56,7 +56,7 @@ static QSize isometricSize(int numX, int numY, int tileWidth, int tileHeight)
 class FurnitureTileDelegate : public QAbstractItemDelegate
 {
 public:
-    FurnitureTileDelegate(FurnitureView *view, QObject *parent = 0)
+    FurnitureTileDelegate(FurnitureView *view, QObject *parent = nullptr)
         : QAbstractItemDelegate(parent)
         , mView(view)
     { }
@@ -129,8 +129,10 @@ void FurnitureTileDelegate::paint(QPainter *painter,
     QPointF tileMargins(0, imageHeight - tileHeight);
     int mapWidth = ftile->width();
     int mapHeight = ftile->height();
-    if (mView->acceptDrops())
-        mapWidth += 1, mapHeight += 1;
+    if (mView->acceptDrops()) {
+        mapWidth += 1;
+        mapHeight += 1;
+    }
 
     // Draw the tile images.
     for (int y = 0; y < ftile->height(); y++) {
@@ -210,7 +212,7 @@ void FurnitureTileDelegate::paint(QPainter *painter,
                                   ? QPalette::Normal : QPalette::Disabled;
         o.backgroundColor = option.palette.color(cg, (option.state & QStyle::State_Selected)
                                                  ? QPalette::Highlight : QPalette::Window);
-        const QWidget *widget = 0/*d->widget(option)*/;
+        const QWidget *widget = nullptr/*d->widget(option)*/;
         QStyle *style = /*widget ? widget->style() :*/ QApplication::style();
         style->drawPrimitive(QStyle::PE_FrameFocusRect, &o, painter, widget);
     }
@@ -324,7 +326,7 @@ FurnitureView::FurnitureView(QWidget *parent) :
     mModel(new FurnitureModel(this)),
     mDelegate(new FurnitureTileDelegate(this, this)),
     mZoomable(new Zoomable(this)),
-    mContextMenu(0)
+    mContextMenu(nullptr)
 {
     init();
 }
@@ -334,7 +336,7 @@ FurnitureView::FurnitureView(Zoomable *zoomable, QWidget *parent) :
     mModel(new FurnitureModel(this)),
     mDelegate(new FurnitureTileDelegate(this, this)),
     mZoomable(zoomable),
-    mContextMenu(0)
+    mContextMenu(nullptr)
 {
     init();
 }

@@ -21,10 +21,15 @@
 #include <QObject>
 #include <QList>
 
+class SimpleFileBlock;
+
+namespace BuildingEditor
+{
+class FurnitureTiles;
+}
+
 namespace Tiled
 {
-
-class TileRotateInfo;
 
 class TileRotationFile : public QObject
 {
@@ -37,15 +42,20 @@ public:
     ~TileRotationFile();
 
     bool read(const QString& path);
-    bool write(const QString& path, const QList<TileRotateInfo*>& tiles);
+    bool write(const QString& path, const QList<BuildingEditor::FurnitureTiles*>& tiles, const QStringList& noRotateTileNames);
 
     const QString& errorString() const { return mError; }
 
-    QList<TileRotateInfo *> takeTiles();
+    QList<BuildingEditor::FurnitureTiles *> takeTiles();
+    QStringList takeNoRotateTileNames();
+
+private:
+    BuildingEditor::FurnitureTiles *furnitureTilesFromSFB(const SimpleFileBlock &furnitureBlock, QString &error);
 
 private:
     QString mError;
-    QList<TileRotateInfo*> mTiles;
+    QList<BuildingEditor::FurnitureTiles*> mTiles;
+    QStringList mNoRotateTileNames;
 };
 
 // namespace Tiled

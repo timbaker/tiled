@@ -141,6 +141,8 @@ public:
     FurnitureGroup *group() const
     { return mGroup; }
 
+    int indexInGroup();
+
     bool isEmpty() const;
 
     bool hasCorners() const
