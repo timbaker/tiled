@@ -781,7 +781,7 @@ QRectF CompositeLayerGroup::boundingRect(const MapRenderer *renderer) const
                 qMax(0, mDrawMargins.right() - owner()->map()->tileWidth()),
                 mDrawMargins.bottom());
 
-    foreach (const SubMapLayers &subMapLayer, mVisibleSubMapLayers) {
+    for (const SubMapLayers &subMapLayer : mVisibleSubMapLayers) {
         QRectF bounds = subMapLayer.mLayerGroup->boundingRect(renderer);
         unionSceneRects(boundingRect, bounds, boundingRect);
     }

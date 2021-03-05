@@ -208,6 +208,9 @@ public:
 
     void setCursorPosition(const QPoint &pos);
 
+protected:
+    void setRotationDerive()/* override*/;
+
 private:
     void BuildingToMap();
     CompositeLayerGroupItem *itemForFloor(BuildingFloor *floor);

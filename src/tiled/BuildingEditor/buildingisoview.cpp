@@ -333,7 +333,7 @@ void BuildingIsoScene::setDocument(BuildingDocument *doc)
 
     BuildingToMap();
 
-    foreach (BuildingFloor *floor, mDocument->building()->floors())
+    for (BuildingFloor *floor : mDocument->building()->floors())
         BuildingBaseScene::floorAdded(floor);
 
     mLoading = true;
@@ -462,6 +462,8 @@ QPointF IsoBuildingRenderer::tileToSceneF(const QPointF &tilePos, int level)
 
 QPolygonF IsoBuildingRenderer::tileToScenePolygon(const QPoint &tilePos, int level)
 {
+    return mMapRenderer->tileToPixelCoords(QRect(tilePos, QSize(1,1)));
+#if 0
     QPolygonF polygon;
     polygon += tilePos;
     polygon += tilePos + QPoint(1, 0);
@@ -469,10 +471,13 @@ QPolygonF IsoBuildingRenderer::tileToScenePolygon(const QPoint &tilePos, int lev
     polygon += tilePos + QPoint(0, 1);
     polygon += polygon.first();
     return mMapRenderer->tileToPixelCoords(polygon, level);
+#endif
 }
 
 QPolygonF IsoBuildingRenderer::tileToScenePolygon(const QRect &tileRect, int level)
 {
+    return mMapRenderer->tileToPixelCoords(tileRect, level);
+#if 0
     QPolygonF polygon;
     polygon += tileRect.topLeft();
     polygon += tileRect.topRight() + QPoint(1, 0);
@@ -480,10 +485,13 @@ QPolygonF IsoBuildingRenderer::tileToScenePolygon(const QRect &tileRect, int lev
     polygon += tileRect.bottomLeft() + QPoint(0, 1);
     polygon += polygon.first();
     return mMapRenderer->tileToPixelCoords(polygon, level);
+#endif
 }
 
 QPolygonF IsoBuildingRenderer::tileToScenePolygonF(const QRectF &tileRect, int level)
 {
+    return mMapRenderer->tileToPixelCoords(tileRect, level);
+#if 0
     QPolygonF polygon;
     polygon += tileRect.topLeft();
     polygon += tileRect.topRight();
@@ -491,6 +499,7 @@ QPolygonF IsoBuildingRenderer::tileToScenePolygonF(const QRectF &tileRect, int l
     polygon += tileRect.bottomLeft();
     polygon += polygon.first();
     return mMapRenderer->tileToPixelCoords(polygon, level);
+#endif
 }
 
 QPolygonF IsoBuildingRenderer::tileToScenePolygon(const QPolygonF &tilePolygon, int level)
@@ -530,7 +539,7 @@ void BuildingIsoScene::setToolTiles(const FloorTileGrid *tiles,
     CompositeLayerGroupItem *item = itemForFloor(currentFloor());
     CompositeLayerGroup *layerGroup = item->layerGroup();
 
-    TileLayer *layer = 0;
+    TileLayer *layer = nullptr;
     foreach (TileLayer *tl, layerGroup->layers()) {
         if (layerName == MapComposite::layerNameWithoutPrefix(tl)) {
             layer = tl;
@@ -803,7 +812,7 @@ CompositeLayerGroupItem *BuildingIsoScene::itemForFloor(BuildingFloor *floor)
 {
     if (mLayerGroupItems.contains(floor->level()))
         return mLayerGroupItems[floor->level()];
-    return 0;
+    return nullptr;
 }
 
 BuildingPreferences *BuildingIsoScene::prefs() const
@@ -1158,6 +1167,15 @@ void BuildingIsoScene::mapResized()
     QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
 }
 
+void BuildingIsoScene::setRotationDerive()
+{
+    QRectF sceneRect = mBuildingMap->mapComposite()->boundingRect(mBuildingMap->mapRenderer());
+    if (sceneRect != this->sceneRect()) {
+        setSceneRect(sceneRect);
+        mDarkRectangle->setRect(sceneRect);
+    }
+}
+
 void BuildingIsoScene::layersUpdated(int level, const QRegion &rgn)
 {
     if (mLayerGroupItems.contains(level)) {
@@ -1175,7 +1193,7 @@ void BuildingIsoScene::layersUpdated(int level, const QRegion &rgn)
                 mDarkRectangle->setRect(sceneRect);
             }
         }
-        foreach (QRect r, rgn.rects())
+        for (const QRect& r : rgn.rects())
             item->update(mapRenderer()->boundingRect(r, level).adjusted(0,-(128-32)*2,0,0));
     }
 }

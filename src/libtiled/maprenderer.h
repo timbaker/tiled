@@ -182,21 +182,28 @@ public:
 #ifdef ZOMBOID
     QPolygonF tileToPixelCoords(const QRect &rect, int level = 0) const
     {
-        QPolygonF polygon;
-        polygon << QPointF(tileToPixelCoords(rect.topLeft(), level));
-        polygon << QPointF(tileToPixelCoords(rect.topRight() + QPoint(1, 0), level));
-        polygon << QPointF(tileToPixelCoords(rect.bottomRight() + QPoint(1, 1), level));
-        polygon << QPointF(tileToPixelCoords(rect.bottomLeft() + QPoint(0, 1), level));
-        return polygon;
+        return tileToPixelCoords(QRectF(rect), level);
     }
 
     QPolygonF tileToPixelCoords(const QRectF &rect, int level = 0) const
     {
         QPolygonF polygon;
-        polygon << QPointF(tileToPixelCoords(rect.topLeft(), level));
-        polygon << QPointF(tileToPixelCoords(rect.topRight(), level));
-        polygon << QPointF(tileToPixelCoords(rect.bottomRight(), level));
-        polygon << QPointF(tileToPixelCoords(rect.bottomLeft(), level));
+        polygon << tileToPixelCoords(rect.topLeft(), level);
+        polygon << tileToPixelCoords(rect.topRight(), level);
+        polygon << tileToPixelCoords(rect.bottomRight(), level);
+        polygon << tileToPixelCoords(rect.bottomLeft(), level);
+#if 0
+        int n = 0;
+        for (int i = 0; i < polygon.size(); i++) {
+            const QPointF& p1 = polygon[i];
+            const QPointF& p2 = polygon[(i + 1) % polygon.size()];
+            n += (p2.x() - p1.x()) * (p2.y() + p1.y());
+        }
+        if (n < 0) {
+            // counter-clockwise -> closwise
+            std::reverse(polygon.begin(), polygon.end());
+        }
+#endif
         return polygon;
     }
 

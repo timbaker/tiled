@@ -82,6 +82,7 @@ public:
     void synchWithFloor();
 
     void mapResized();
+    void sceneRotationChanged();
 
     void floorEdited();
     void roomChanged(Room *room);
@@ -155,9 +156,9 @@ public:
     bool isValidPos() const
     { return mValidPos; }
 
-    virtual GraphicsRoofItem *asRoof() { return 0; }
-    virtual GraphicsRoofCornerItem *asRoofCorner() { return 0; }
-    virtual GraphicsWallItem *asWall() { return 0; }
+    virtual GraphicsRoofItem *asRoof() { return nullptr; }
+    virtual GraphicsRoofCornerItem *asRoofCorner() { return nullptr; }
+    virtual GraphicsWallItem *asWall() { return nullptr; }
 
 protected:
     void initialize();
@@ -373,7 +374,7 @@ private:
 class BuildingRegionItem : public QGraphicsItem
 {
 public:
-    BuildingRegionItem(BuildingBaseScene *scene, QGraphicsItem *parent = 0);
+    BuildingRegionItem(BuildingBaseScene *scene, QGraphicsItem *parent = nullptr);
 
     QRectF boundingRect() const;
 
@@ -412,6 +413,7 @@ public:
 private slots:
     void roomSelectionChanged();
     void currentLevelChanged();
+    void sceneRotationChanged();
 };
 
 /////
@@ -517,8 +519,12 @@ public:
     virtual void setHighlightRoomLock(bool lock) { Q_UNUSED(lock) }
     /////
 
+protected:
+    virtual void setRotationDerive() {}
+
 signals:
     void documentChanged();
+    void sceneRotationChanged();
 
 protected slots:
     void buildingResized();

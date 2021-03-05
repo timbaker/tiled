@@ -62,7 +62,7 @@ QPainterPath BuildingRegionItem::shape() const
 {
     BuildingRenderer *renderer = mScene->renderer();
     QPainterPath path;
-    foreach (const QRect &r, mRegion.rects()) {
+    for (const QRect &r : mRegion.rects()) {
         QPolygonF polygon = renderer->tileToScenePolygonF(r, mLevel);
         path.addPolygon(polygon);
     }
@@ -79,7 +79,7 @@ void BuildingRegionItem::paint(QPainter *painter,
     painter->setPen(Qt::NoPen);
 
     BuildingRenderer *renderer = mScene->renderer();
-    foreach (const QRect &r, mRegion.rects()) {
+    for (const QRect &r : mRegion.rects()) {
         QPolygonF polygon = renderer->tileToScenePolygonF(r, mLevel);
         if (QRectF(polygon.boundingRect()).intersects(option->exposedRect))
             painter->drawConvexPolygon(polygon);
@@ -151,6 +151,7 @@ RoomSelectionItem::RoomSelectionItem(BuildingBaseScene *scene, QGraphicsItem *pa
             SLOT(roomSelectionChanged()));
     connect(document(), SIGNAL(currentFloorChanged()),
             SLOT(currentLevelChanged()));
+    connect(scene, &BuildingBaseScene::sceneRotationChanged, this, &RoomSelectionItem::sceneRotationChanged);
 }
 
 BuildingDocument *RoomSelectionItem::document() const
@@ -171,6 +172,11 @@ void RoomSelectionItem::roomSelectionChanged()
 void RoomSelectionItem::currentLevelChanged()
 {
     setRegion(document()->roomSelection(), document()->currentLevel());
+}
+
+void RoomSelectionItem::sceneRotationChanged()
+{
+    setRegion(document()->roomSelection(), document()->currentLevel(), true);
 }
 
 /////
@@ -392,7 +398,7 @@ void BuildingBaseScene::buildingRotated()
 
 void BuildingBaseScene::mapResized()
 {
-    foreach (GraphicsFloorItem *item, mFloorItems)
+    for (GraphicsFloorItem *item : mFloorItems)
         item->mapResized();
 
     if (mRoomSelectionItem)
@@ -567,13 +573,20 @@ bool BuildingBaseScene::shouldShowObjectItem(BuildingObject *object) const
 
 void BuildingBaseScene::synchObjectItemVisibility()
 {
-    foreach (GraphicsFloorItem *item, mFloorItems)
+    for (GraphicsFloorItem *item : mFloorItems)
         item->synchVisibility();
 }
 
 void BuildingBaseScene::setRotation(MapRotation rotation)
 {
+    if (rotation == getRotation())
+        return;
     mRenderer->setRotation(rotation);
+    setRotationDerive();
+    for (GraphicsFloorItem *item : mFloorItems)
+        item->sceneRotationChanged();
+    emit sceneRotationChanged();
+    invalidate();
 }
 
 MapRotation BuildingBaseScene::getRotation() const
@@ -690,7 +703,7 @@ void GraphicsFloorItem::objectAboutToBeRemoved(GraphicsObjectItem *item)
 
 GraphicsObjectItem *GraphicsFloorItem::itemForObject(BuildingObject *object) const
 {
-    foreach (GraphicsObjectItem *item, mObjectItems) {
+    for (GraphicsObjectItem *item : mObjectItems) {
         if (item->object() == object)
             return item;
     }
@@ -702,7 +715,7 @@ void GraphicsFloorItem::synchWithFloor()
     delete mBmp;
     mBmp = new QImage(mFloor->width(), mFloor->height(), QImage::Format_RGB32);
 
-    foreach (GraphicsObjectItem *item, mObjectItems)
+    for (GraphicsObjectItem *item : mObjectItems)
         item->synchWithObject();
 }
 
@@ -712,7 +725,7 @@ void GraphicsFloorItem::mapResized()
     // BuildingMap::mMap has been resized to match the building size.  When the
     // map is finally resized, we must update the GraphicsObjectItems again.
     // This also needs doing when the max level changes.
-    foreach (GraphicsObjectItem *item, mObjectItems)
+    for (GraphicsObjectItem *item : mObjectItems)
         item->synchWithObject();
 }
 
@@ -755,8 +768,14 @@ void GraphicsFloorItem::setDragBmp(QImage *bmp)
 void GraphicsFloorItem::synchVisibility()
 {
     setVisible(mEditor->shouldShowFloorItem(mFloor));
-    foreach (GraphicsObjectItem *item, mObjectItems)
+    for (GraphicsObjectItem *item : mObjectItems)
         item->setVisible(mEditor->shouldShowObjectItem(item->object()));
+}
+
+void GraphicsFloorItem::sceneRotationChanged()
+{
+    for (GraphicsObjectItem *item : mObjectItems)
+        item->synchWithObject();
 }
 
 /////

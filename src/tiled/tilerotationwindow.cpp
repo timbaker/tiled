@@ -203,6 +203,7 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     setTilesetList();
     syncUI();
 
+#if 0
     // FIXME: load from file
     mUndoStack->beginMacro(QLatin1Literal("TEST"));
     auto& furnitureTiles = TileRotation::instance()->furnitureTiles();
@@ -226,7 +227,7 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     mUndoStack->endMacro();
     mFileName = QLatin1Literal("D:/pz/TileRotation.txt");
     ui->furnitureView->setTiles(mFurnitureGroup->mTiles);
-
+#endif
 }
 
 TileRotationWindow::~TileRotationWindow()
@@ -305,6 +306,7 @@ void TileRotationWindow::closeEvent(QCloseEvent *event)
         mFurnitureGroup->mTiles.clear();
         mUndoStack->clear();
         syncUI();
+        TileRotation::instance()->reload(); // hack
         event->accept();
     } else {
         event->ignore();
@@ -476,6 +478,7 @@ void TileRotationWindow::syncUI()
     ui->actionSaveAs->setEnabled(!mFileName.isEmpty());
 
     QModelIndexList selected = ui->furnitureView->selectionModel()->selectedIndexes();
+    ui->actionAddTiles->setEnabled(!mFileName.isEmpty());
     ui->actionClearTiles->setEnabled(selected.size() > 0);
     ui->actionRemove->setEnabled(selected.size() > 0);
 

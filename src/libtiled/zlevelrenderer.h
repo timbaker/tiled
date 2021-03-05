@@ -91,8 +91,22 @@ private:
     int rotateHeight() const;
     int rotateWidth(int width, int height) const;
     int rotateHeight(int width, int height) const;
-    QPoint rotateSquare(const QPoint& pos) const;
-    QPoint unrotateSquare(const QPoint& pos) const;
+    QPoint rotatePoint(const QPoint& pos) const;
+    QPoint unrotatePoint(const QPoint& pos) const;
+    QPointF rotatePointF(const QPointF& pos) const;
+    QPointF unrotatePointF(const QPointF& pos) const;
+
+    QPointF pixelToTileCoordsNR(qreal x, qreal y, int level = 0) const;
+    QPointF pixelToTileCoordsNR(const QPointF& pos, int level = 0) const
+    {
+        return pixelToTileCoordsNR(pos.x(), pos.y(), level);
+    }
+
+    QPointF tileToPixelCoordsNR(qreal x, qreal y, int level = 0) const;
+    QPointF tileToPixelCoordsNR(const QPointF& pos, int level = 0) const
+    {
+        return tileToPixelCoordsNR(pos.x(), pos.y(), level);
+    }
 
     QPolygonF tileRectToPolygon(const QRect &rect, int level = 0) const;
     QPolygonF tileRectToPolygon(const QRectF &rect, int level = 0) const;

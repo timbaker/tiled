@@ -51,6 +51,8 @@ public:
 
     Tile* rotateTile(Tile* tile, MapRotation rotation);
 
+    void reload();
+
 private:
     static TileRotation *mInstance;
     TileRotationPrivate *mPrivate;

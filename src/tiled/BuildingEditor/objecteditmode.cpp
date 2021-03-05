@@ -742,7 +742,6 @@ void ObjectEditMode::setRotation(Tiled::MapRotation rotation)
     if (mCurrentDocument == nullptr)
         return;
     mCurrentDocumentStuff->scene()->setRotation(rotation);
-    mCurrentDocumentStuff->scene()->invalidate();
 }
 
 /////
