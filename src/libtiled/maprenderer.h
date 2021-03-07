@@ -231,8 +231,7 @@ public:
     int maxLevel() const { return mMaxLevel; }
 
     void setRotation(MapRotation rotation);
-    MapRotation getRotation() const;
-    virtual Tile* rotateTile(Tile* tile, MapRotation rotation) const;
+    MapRotation rotation() const;
 
     bool *mAbortDrawing;
 

@@ -77,7 +77,7 @@ void PickTileTool::mousePressed(QGraphicsSceneMouseEvent *event)
             for (int tx = tilePos.x() - 4; tx <= tilePos.x() + 4; tx++) {
                 QRectF tileBox = mapDocument()->renderer()->boundingRect(QRect(tx, ty, 1, 1), lg->level());
                 cells.resize(0);
-                if (!lg->orderedCellsAt(QPoint(tx, ty), cells, opacities))
+                if (!lg->orderedCellsAt(mapDocument()->renderer(), QPoint(tx, ty), cells, opacities))
                     continue;
                 for (int i = 0; i < cells.size(); i++) {
                     Tile *test = cells[i]->tile;

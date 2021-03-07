@@ -196,15 +196,15 @@ void CheckMapsWindow::check(MapDocument *doc)
     if (mc->bmpBlender())
         mc->bmpBlender()->flush(QRect(0, 0, map->width() - 1, map->height() - 1));
 
-    mCurrentIssueFile = 0;
-    foreach (IssueFile *file, mFiles) {
+    mCurrentIssueFile = nullptr;
+    for (IssueFile *file : mFiles) {
         if (file->path == doc->fileName()) {
             mCurrentIssueFile = file;
             file->issues.clear();
             break;
         }
     }
-    if (mCurrentIssueFile == 0) {
+    if (mCurrentIssueFile == nullptr) {
         mCurrentIssueFile = new IssueFile(doc->fileName());
         mFiles += mCurrentIssueFile;
     }
@@ -226,7 +226,7 @@ void CheckMapsWindow::check(MapDocument *doc)
                 cells.clear();
                 if (!lg->orderedCellsAt2(QPoint(x, y), cells))
                     continue;
-                foreach (const Cell *cell, cells) {
+                for (const Cell *cell : cells) {
                     if (cell->isEmpty())
                         continue;
                     if (cell->tile->image().isNull()) {
@@ -239,7 +239,7 @@ void CheckMapsWindow::check(MapDocument *doc)
                             }
                         } else if (cell->tile->id() >= 18 && cell->tile->id() <= 23) {
                             // Don't allow plant and tree on the same square (only one erosion object per square is supported)
-                            foreach (const Cell *cell2, cells) {
+                            for (const Cell *cell2 : cells) {
                                 if (cell2 != cell && !cell2->isEmpty() && cell2->tile->tileset()->name().startsWith(QLatin1Literal("vegetation_trees_01"))) {
                                     issue(Issue::Bogus, tr("tree and plant on the same square, fix with fix_tree_and_plant.lua"), x, y, level);
                                     break;
@@ -247,7 +247,7 @@ void CheckMapsWindow::check(MapDocument *doc)
                             }
 
                             // Only one plant on a square
-                            foreach (const Cell *cell2, cells) {
+                            for (const Cell *cell2 : cells) {
                                 if (cell2 != cell && !cell2->isEmpty() && (cell2->tile->tileset()->name() == QLatin1Literal("vegetation_groundcover_01")) &&
                                         (cell2->tile->id() >= 18 && cell2->tile->id() <= 23)) {
                                     issue(Issue::Bogus, tr("two plants on the same square"), x, y, level);
@@ -299,7 +299,7 @@ void CheckMapsWindow::check(MapDocument *doc)
                     } else if (cell->tile->tileset()->name() == QLatin1Literal("vegetation_foliage_01")) {
 
                         // Bush on plant not allowed
-                        foreach (const Cell *cell2, cells) {
+                        for (const Cell *cell2 : cells) {
                             if (cell2 != cell && !cell2->isEmpty() && (cell2->tile->tileset()->name() == QLatin1Literal("vegetation_groundcover_01")) &&
                                     (cell2->tile->id() >= 16 && cell2->tile->id() <= 17)) {
                                 issue(Issue::Bogus, tr("bush and plant on the same square"), x, y, level);
@@ -308,7 +308,7 @@ void CheckMapsWindow::check(MapDocument *doc)
                         }
 
                         // Bush on bush not allowed
-                        foreach (const Cell *cell2, cells) {
+                        for (const Cell *cell2 : cells) {
                             if (cell2 == cell)
                                 break; // report for topmost bush only
                             if (cell2 != cell && !cell2->isEmpty() && (cell2->tile->tileset()->name() == QLatin1Literal("vegetation_foliage_01"))) {
@@ -318,7 +318,7 @@ void CheckMapsWindow::check(MapDocument *doc)
                         }
 
                         // Tree on bush
-                        foreach (const Cell *cell2, cells) {
+                        for (const Cell *cell2 : cells) {
                             if (cell2 != cell && !cell2->isEmpty() && cell2->tile->tileset()->name().startsWith(QLatin1Literal("vegetation_trees_01"))) {
                                 issue(Issue::Bogus, tr("tree and bush on the same square"), x, y, level);
                                 break;

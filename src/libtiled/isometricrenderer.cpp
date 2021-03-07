@@ -410,7 +410,7 @@ void IsometricRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *l
 
         for (int x = startPos.x(); x < rect.right(); x += tileWidth) {
             cells.resize(0);
-            if (layerGroup->orderedCellsAt(columnItr, cells, opacities)) {
+            if (layerGroup->orderedCellsAt(this, columnItr, cells, opacities)) {
                 for (int i = 0; i < cells.size(); i++) {
                     // Multi-threading
                     if (mAbortDrawing && *mAbortDrawing) {

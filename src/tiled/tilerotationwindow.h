@@ -18,6 +18,8 @@
 #ifndef TILEROTATIONWINDOW_H
 #define TILEROTATIONWINDOW_H
 
+#include "tilerotation.h"
+
 #include <QMainWindow>
 
 namespace Ui {
@@ -33,10 +35,15 @@ class FurnitureTiles;
 
 namespace Tiled {
 class Tile;
+class TileRotateFileInfo;
 class Tileset;
 namespace Internal {
 class Zoomable;
 }
+}
+
+namespace {
+class TRWFurnitureTiles;
 }
 
 class QUndoGroup;
@@ -56,16 +63,17 @@ protected:
     QString getSaveLocation();
     void fileOpen(const QString &fileName);
     bool fileSave(const QString &fileName);
-    bool fileOpen(const QString &fileName, QList<BuildingEditor::FurnitureTiles*> &tiles, QStringList& noRotateTileNames);
-    bool fileSave(const QString &fileName, const QList<BuildingEditor::FurnitureTiles*> &tiles, const QStringList& noRotateTileNames);
+    bool fileOpen(const QString &fileName, QList<Tiled::TileRotateFileInfo*> &tiles);
+    bool fileSave(const QString &fileName, const QList<Tiled::TileRotateFileInfo*> &tiles);
     void setTilesetList();
     void updateUsedTiles();
     bool isTileUsed(const QString &_tileName);
     void displayTileInTileset(Tiled::Tile *tile);
     void displayTileInTileset(BuildingEditor::BuildingTile *tile);
-    void insertFurnitureTiles(BuildingEditor::FurnitureGroup *group, int index, BuildingEditor::FurnitureTiles *ftiles);
-    BuildingEditor::FurnitureTiles* removeFurnitureTiles(BuildingEditor::FurnitureGroup *group, int index);
+    void insertFurnitureTiles(BuildingEditor::FurnitureGroup *group, int index, TRWFurnitureTiles *ftiles);
+    TRWFurnitureTiles *removeFurnitureTiles(BuildingEditor::FurnitureGroup *group, int index);
     QString changeFurnitureTile(BuildingEditor::FurnitureTile *ftile, int x, int y, const QString &tileName);
+    Tiled::TileRotateType changeRotateType(BuildingEditor::FurnitureTile *ftile, Tiled::TileRotateType rotateType);
 
 protected slots:
     void fileNew();
@@ -87,6 +95,7 @@ protected slots:
     void tilesetChanged(Tiled::Tileset *tileset);
     void furnitureTileDropped(BuildingEditor::FurnitureTile *ftile, int x, int y, const QString &tileName);
     void furnitureActivated(const QModelIndex &index);
+    void typeComboActivated(int index);
 
 private:
     Ui::TileRotationWindow *ui;
@@ -98,10 +107,10 @@ private:
     QUndoGroup *mUndoGroup;
     QUndoStack *mUndoStack;
     BuildingEditor::FurnitureGroup* mFurnitureGroup;
-    QStringList mNoRotateTileNames;
 
     friend class AddFurnitureTiles;
     friend class ChangeFurnitureTile;
+    friend class ChangeRotateType;
     friend class RemoveFurnitureTiles;
 };
 

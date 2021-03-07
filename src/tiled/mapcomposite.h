@@ -47,17 +47,20 @@ class CompositeLayerGroup : public Tiled::ZTileLayerGroup
 public:
     CompositeLayerGroup(MapComposite *owner, int level);
 
-    void addTileLayer(Tiled::TileLayer *layer, int index);
-    void removeTileLayer(Tiled::TileLayer *layer);
+    void addTileLayer(Tiled::TileLayer *layer, int index) override;
+    void removeTileLayer(Tiled::TileLayer *layer) override;
 
-    void prepareDrawing(const Tiled::MapRenderer *renderer, const QRect &rect);
-    bool orderedCellsAt(const QPoint &pos, QVector<const Tiled::Cell*>& cells,
-                        QVector<qreal> &opacities) const;
+    void prepareDrawing(const Tiled::MapRenderer *renderer, const QRect &rect) override;
+    bool orderedCellsAt(const Tiled::MapRenderer *renderer, const QPoint &pos,
+                        QVector<const Tiled::Cell*>& cells,
+                        QVector<qreal> &opacities) const override;
+    bool orderedTilesAt(const Tiled::MapRenderer *renderer, const QPoint &point,
+                        QVector<Tiled::ZTileRenderInfo>& tileInfos) const override;
 
-    QRect bounds() const;
-    QMargins drawMargins() const;
+    QRect bounds() const override;
+    QMargins drawMargins() const override;
 
-    QRectF boundingRect(const Tiled::MapRenderer *renderer) const;
+    QRectF boundingRect(const Tiled::MapRenderer *renderer) const override;
 
     void prepareDrawing2();
     bool orderedCellsAt2(const QPoint &pos, QVector<const Tiled::Cell*>& cells) const;
@@ -121,7 +124,11 @@ public:
 
     void setHighlightLayer(const QString &layerName)
     { mHighlightLayer = layerName; }
+
 #endif
+
+private:
+    void sortForRendering(const Tiled::MapRenderer *renderer, QVector<Tiled::ZTileRenderInfo> &tileInfo) const;
 
 private:
     MapComposite *mOwner;

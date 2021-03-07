@@ -408,8 +408,7 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
 
     QTransform baseTransform = painter->transform();
 
-    /*static*/ QVector<const Cell*> cells(40); // or QVarLengthArray
-    /*static*/ QVector<qreal> opacities(40); // or QVarLengthArray
+    QVector<ZTileRenderInfo> tileInfos(40);
 
     layerGroup->prepareDrawing(this, rect);
 
@@ -418,11 +417,11 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
     for (int y = int(startPos.y()); y - tileHeight < rect.bottom(); y += tileHeight / 2) {
         QPoint columnItr = rowItr;
         for (int x = int(startPos.x()); x < rect.right(); x += tileWidth) {
-            cells.resize(0);
+            tileInfos.resize(0);
             QPoint cellPos = unrotatePoint(columnItr);
             // FIXME
             {
-                switch (getRotation()) {
+                switch (rotation()) {
                 case MapRotation::NotRotated:
                     break;
                 case MapRotation::Clockwise90:
@@ -437,16 +436,16 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                     break;
                 }
             }
-            if (layerGroup->orderedCellsAt(cellPos, cells, opacities)) {
-                for (int i = 0; i < cells.size(); i++) {
+            if (layerGroup->orderedTilesAt(this, cellPos, tileInfos)) {
+                for (int i = 0; i < tileInfos.size(); i++) {
                     // Multi-threading
                     if (mAbortDrawing && *mAbortDrawing) {
                         painter->setTransform(baseTransform);
                         return;
                     }
-                    const Cell *cell = cells[i];
-                    if (!cell->isEmpty()) {
-                        Tile *tile = rotateTile(cell->tile, getRotation());
+                    const ZTileRenderInfo& tileInfo = tileInfos[i];
+                    if (tileInfo.mTile != nullptr) {
+                        Tile *tile = tileInfo.mTile;
                         if (tile->tileset()->name() == QLatin1String("none"))
                             continue; // rotated
                         if (tile->image().isNull()) {
@@ -469,6 +468,9 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                         qreal dx = offset.x() + x;
                         qreal dy = offset.y() + y - tile->height();
 
+                        dx += tileInfo.mOffset.x();
+                        dy += tileInfo.mOffset.y();
+#if 0
                         if (cell->flippedAntiDiagonally) {
                             // Use shearing to swap the X/Y axis
                             m11 = 0;
@@ -491,7 +493,7 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                             dy += cell->flippedAntiDiagonally ? img.width()
                                                              : img.height();
                         }
-
+#endif
                         if (tileWidth == tile->width() * 2) {
                             m11 *= qreal(2.0);
                             m22 *= qreal(2.0);
@@ -510,7 +512,7 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                         const QTransform transform(m11, m12, m21, m22, dx, dy);
                         painter->setTransform(transform * baseTransform);
 
-                        painter->setOpacity(opacities[i] * opacity);
+                        painter->setOpacity(tileInfo.mOpacity * opacity);
 
                         painter->drawImage(0, 0, img);
                     }
@@ -685,7 +687,7 @@ int ZLevelRenderer::rotateHeight() const
 
 int ZLevelRenderer::rotateWidth(int width, int height) const
 {
-    switch (getRotation())
+    switch (rotation())
     {
     case MapRotation::Clockwise90:
     case MapRotation::Clockwise270:
@@ -697,7 +699,7 @@ int ZLevelRenderer::rotateWidth(int width, int height) const
 
 int ZLevelRenderer::rotateHeight(int width, int height) const
 {
-    switch (getRotation())
+    switch (rotation())
     {
     case MapRotation::Clockwise90:
     case MapRotation::Clockwise270:
@@ -709,7 +711,7 @@ int ZLevelRenderer::rotateHeight(int width, int height) const
 
 QPoint ZLevelRenderer::rotatePoint(const QPoint &pos) const
 {
-    switch (getRotation())
+    switch (rotation())
     {
     case MapRotation::NotRotated:
         return pos;
@@ -724,7 +726,7 @@ QPoint ZLevelRenderer::rotatePoint(const QPoint &pos) const
 
 QPoint ZLevelRenderer::unrotatePoint(const QPoint &pos) const
 {
-    switch (getRotation())
+    switch (rotation())
     {
     case MapRotation::NotRotated:
         return pos;
@@ -739,7 +741,7 @@ QPoint ZLevelRenderer::unrotatePoint(const QPoint &pos) const
 
 QPointF ZLevelRenderer::rotatePointF(const QPointF &pos) const
 {
-    switch (getRotation())
+    switch (rotation())
     {
     case MapRotation::NotRotated:
         return pos;
@@ -754,7 +756,7 @@ QPointF ZLevelRenderer::rotatePointF(const QPointF &pos) const
 
 QPointF ZLevelRenderer::unrotatePointF(const QPointF &pos) const
 {
-    switch (getRotation())
+    switch (rotation())
     {
     case MapRotation::NotRotated:
         return pos;

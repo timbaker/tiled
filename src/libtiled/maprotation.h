@@ -39,6 +39,8 @@ enum class MapRotation
     Clockwise270
 };
 
+#define MAP_ROTATION_COUNT 4
+
 // namespace Tiled
 }
 

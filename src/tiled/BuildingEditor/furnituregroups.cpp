@@ -573,14 +573,24 @@ FurnitureTile::FurnitureTile(FurnitureTiles *ftiles, FurnitureOrientation orient
     mOwner(ftiles),
     mOrient(orient),
     mSize(1, 1),
-    mTiles(1, 0),
+    mTiles(1, nullptr),
     mGrime(true)
 {
 }
 
+FurnitureTile::FurnitureTile(FurnitureTiles *ftiles, FurnitureTile *&other)
+    : mOwner(ftiles)
+    , mOrient(other->mOrient)
+    , mSize(other->mSize)
+    , mTiles(other->mTiles)
+    , mGrime(other->mGrime)
+{
+
+}
+
 void FurnitureTile::clear()
 {
-    mTiles.fill(0, 1);
+    mTiles.fill(nullptr, 1);
     mSize = QSize(1, 1);
 }
 

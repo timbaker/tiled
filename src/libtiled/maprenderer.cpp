@@ -42,15 +42,9 @@ void MapRenderer::setRotation(MapRotation rotation)
     mRotation = rotation;
 }
 
-MapRotation MapRenderer::getRotation() const
+MapRotation MapRenderer::rotation() const
 {
     return mRotation;
-}
-
-Tile *MapRenderer::rotateTile(Tile *tile, MapRotation rotation) const
-{
-    Q_UNUSED(rotation)
-    return tile;
 }
 
 #endif // ZOMBOID

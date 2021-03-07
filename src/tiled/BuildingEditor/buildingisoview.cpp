@@ -522,7 +522,7 @@ void IsoBuildingRenderer::setRotation(MapRotation rotation)
 
 MapRotation IsoBuildingRenderer::getRotation() const
 {
-    return mMapRenderer->getRotation();
+    return mMapRenderer->rotation();
 }
 
 bool BuildingIsoScene::currentFloorContains(const QPoint &tilePos, int dw, int dh)

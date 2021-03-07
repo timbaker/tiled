@@ -31,6 +31,8 @@ class FurnitureTiles;
 namespace Tiled
 {
 
+class TileRotateFileInfo;
+
 class TileRotationFile : public QObject
 {
     Q_OBJECT
@@ -42,21 +44,21 @@ public:
     ~TileRotationFile();
 
     bool read(const QString& path);
-    bool write(const QString& path, const QList<BuildingEditor::FurnitureTiles*>& tiles, const QStringList& noRotateTileNames);
+    bool write(const QString& path, const QList<TileRotateFileInfo*>& tiles);
 
     const QString& errorString() const { return mError; }
 
-    QList<BuildingEditor::FurnitureTiles *> takeTiles();
-    QStringList takeNoRotateTileNames();
+    QList<TileRotateFileInfo *> takeTiles();
 
 private:
-    BuildingEditor::FurnitureTiles *furnitureTilesFromSFB(const SimpleFileBlock &furnitureBlock, QString &error);
+    TileRotateFileInfo *furnitureTilesFromSFB(const SimpleFileBlock &furnitureBlock, QString &error);
 
 private:
     QString mError;
-    QList<BuildingEditor::FurnitureTiles*> mTiles;
-    QStringList mNoRotateTileNames;
+    QList<TileRotateFileInfo*> mTiles;
 };
+
+extern const char *TILE_ROTATE_NAMES[];
 
 // namespace Tiled
 }

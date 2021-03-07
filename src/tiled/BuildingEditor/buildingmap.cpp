@@ -48,28 +48,6 @@ using namespace BuildingEditor;
 using namespace Tiled;
 using namespace Tiled::Internal;
 
-// // // // //
-
-namespace  {
-
-class BuildingZLevelRenderer : public ZLevelRenderer
-{
-public:
-    BuildingZLevelRenderer(const Map *map)
-        : ZLevelRenderer(map)
-    {
-
-    }
-
-    Tile* rotateTile(Tile* tile, MapRotation rotation) const override
-    {
-        return TileRotation::instance()->rotateTile(tile, rotation);
-    }
-};
-
-}
-// // // // //
-
 BuildingMap::BuildingMap(Building *building) :
     mBuilding(building),
     mMapComposite(nullptr),
@@ -516,7 +494,7 @@ void BuildingMap::BuildingToMap()
         mMapRenderer = new IsometricRenderer(mMap);
         break;
     case Map::LevelIsometric:
-        mMapRenderer = new BuildingZLevelRenderer(mMap);
+        mMapRenderer = new ZLevelRenderer(mMap);
         break;
     default:
         return;

@@ -19,6 +19,7 @@
 
 #include "bmpblender.h"
 #include "mapmanager.h"
+#include "tilerotation.h"
 #include "tilesetmanager.h"
 
 #include "mapobject.h"
@@ -193,7 +194,8 @@ void CompositeLayerGroup::prepareDrawing(const MapRenderer *renderer, const QRec
 static QLatin1String sFloor("0_Floor"); // FIXME: thread safe?
 static QLatin1String sAboveLot("_AboveLot");
 
-bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
+bool CompositeLayerGroup::orderedCellsAt(const Tiled::MapRenderer *renderer,
+                                         const QPoint &pos,
                                          QVector<const Cell *> &cells,
                                          QVector<qreal> &opacities) const
 {
@@ -305,7 +307,7 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
             continue;
         if (!subMapLayer.mBounds.contains(pos))
             continue;
-        subMapLayer.mLayerGroup->orderedCellsAt(pos - subMapLayer.mSubMap->origin(),
+        subMapLayer.mLayerGroup->orderedCellsAt(renderer, pos - subMapLayer.mSubMap->origin(),
                                                 cells, opacities);
     }
 
@@ -313,6 +315,33 @@ bool CompositeLayerGroup::orderedCellsAt(const QPoint &pos,
     opacities += aboveLotOpacities;
 
     return !cells.isEmpty();
+}
+
+bool CompositeLayerGroup::orderedTilesAt(const MapRenderer *renderer, const QPoint &point,
+                                         QVector<ZTileRenderInfo> &tileInfos) const
+{
+    QVector<const Cell *> cells(40);
+    QVector<qreal> opacities(40);
+    cells.resize(0);
+    opacities.resize(0);
+    orderedCellsAt(renderer, point, cells, opacities);
+
+    tileInfos.clear();
+
+    for (int i = 0; i < cells.size(); i++) {
+        const Cell* cell = cells[i];
+        if (cell->isEmpty())
+            continue;
+        int j = tileInfos.size();
+        TileRotation::instance()->rotateTile(cells[i]->tile, renderer->rotation(), tileInfos);
+        for (; j < tileInfos.size(); j++) {
+            tileInfos[j].mOpacity = opacities[i];
+        }
+    }
+
+    sortForRendering(renderer, tileInfos);
+
+    return !tileInfos.isEmpty();
 }
 
 void CompositeLayerGroup::prepareDrawing2()
@@ -638,6 +667,79 @@ bool CompositeLayerGroup::setLayerNonEmpty(TileLayer *tl, bool force)
         mNeedsSynch = true;
     }
     return mNeedsSynch;
+}
+
+void CompositeLayerGroup::sortForRendering(const MapRenderer *renderer, QVector<ZTileRenderInfo> &tileInfo) const
+{
+    if (renderer->rotation() == MapRotation::NotRotated) {
+        return;
+    }
+
+    int size = tileInfo.size();
+    QVector<ZTileRenderInfo> sorted(size);
+    sorted.resize(0);
+
+    // West Wall Lowest -> Highest
+    for (int i = 0; i < size; i++) {
+        const ZTileRenderInfo& tri = tileInfo[i];
+        switch (tri.mOrder) {
+        case ZTileRenderOrder::WestWall:
+            sorted += tri;
+            break;
+        default:
+            break;
+        }
+    }
+
+    // North Wall Lowest -> Highest
+    for (int i = 0; i < size; i++) {
+        const ZTileRenderInfo& tri = tileInfo[i];
+        switch (tri.mOrder) {
+        case ZTileRenderOrder::NorthWall:
+            sorted += tri;
+            break;
+        default:
+            break;
+        }
+    }
+
+    // Non-walls
+    for (int i = 0; i < size; i++) {
+        const ZTileRenderInfo& tri = tileInfo[i];
+        switch (tri.mOrder) {
+        case ZTileRenderOrder::West:
+            sorted += tri;
+            break;
+        default:
+            break;
+        }
+    }
+
+    // East Wall Highest -> lowest
+    for (int i = size - 1; i >= 0; i--) {
+        const ZTileRenderInfo& tri = tileInfo[i];
+        switch (tri.mOrder) {
+        case ZTileRenderOrder::EastWall:
+            sorted += tri;
+            break;
+        default:
+            break;
+        }
+    }
+
+    // Highest -> lowest
+    for (int i = size - 1; i >= 0; i--) {
+        const ZTileRenderInfo& tri = tileInfo[i];
+        switch (tri.mOrder) {
+        case ZTileRenderOrder::SouthWall:
+            sorted += tri;
+            break;
+        default:
+            break;
+        }
+    }
+
+    tileInfo = sorted;
 }
 #endif // BUILDINGED
 

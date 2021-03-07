@@ -55,22 +55,26 @@ public:
             }
             for (int i = 0; i < 4; i++) {
                 Tile* tile = entry->mTiles[i];
-                if ((i == 1) && mEastWallTiles.contains(entry->mTiles[3])) {
-                    tile = mEastWallTiles.value(entry->mTiles[3]);
-                }
-                if ((i == 2) && mSouthWallTiles.contains(entry->mTiles[0])) {
-                    tile = mSouthWallTiles.value(entry->mTiles[0]);
-                }
-                entry->mTiles[i] = tile;
-                if (tile != BuildingTilesMgr::instance()->noneTiledTile()) {
+                if (tile == BuildingTilesMgr::instance()->noneTiledTile()) {
+                    if (i == 1 && mEastWallTiles.contains(entry->mTiles[3])) {
+                        entry->mRenderInfo[i] = mEastWallTiles[entry->mTiles[3]];
+                    } else if (i == 0 && mNorthEastWallTiles.contains(entry->mTiles[3])) {
+                        entry->mRenderInfo[i] = mNorthEastWallTiles[entry->mTiles[3]];
+                    } else if (i == 1 && mSouthEastWallTiles.contains(entry->mTiles[3])) {
+                        entry->mRenderInfo[i] = mSouthEastWallTiles[entry->mTiles[3]];
+                    } else if (i == 2 && mSouthWestWallTiles.contains(entry->mTiles[3])) {
+                        entry->mRenderInfo[i] = mSouthWestWallTiles[entry->mTiles[3]];
+                    } else if (i == 2 && mSouthWallTiles.contains(entry->mTiles[0])) {
+                        entry->mRenderInfo[i] = mSouthWallTiles[entry->mTiles[0]];
+                    }
+                } else {
+                    if (mRenderInfo.contains(tile)) {
+                        entry->mRenderInfo[i] += mRenderInfo[tile];
+                    } else {
+                        entry->mRenderInfo[i] += ZTileRenderInfo(tile);
+                    }
                     mTileLookup[tile] = entry;
                 }
-            }
-        }
-        for (const QString& tileName : mNoRotateTileNames) {
-            Tile* tile = BuildingTilesMgr::instance()->tileFor(tileName);
-            if (tile != BuildingTilesMgr::instance()->noneTiledTile()) {
-                mNoRotateTiles += tile;
             }
         }
     }
@@ -104,6 +108,8 @@ public:
             return QPoint(width - pos.y() - 1, pos.x());
         }
     }
+
+#if 0
 
     void initFromBuildingTiles(const QList<BuildingTileEntry*> &entries, int n, int e, int s, int w)
     {
@@ -265,14 +271,425 @@ public:
 
         fileLoaded();
     }
+#endif
+
+#if 1
+    void initDoors(BuildingTileEntry *entry)
+    {
+        int floorWidth = 64 * 2;
+        int floorHeight = 32 * 2;
+
+        // Offset North doors onto the south edge
+        BuildingTile *btileN = entry->tile(BTC_Doors::North);
+        if (!btileN->isNone()) {
+            Tile* tileN = BuildingTilesMgr::instance()->tileFor(btileN);
+            ZTileRenderInfo tileInfo(tileN);
+            tileInfo.mOffset = QPoint(-floorWidth / 2, floorHeight / 2);
+            tileInfo.mOrder = ZTileRenderOrder::SouthWall;
+            mSouthWallTiles[tileN] += tileInfo;
+            // Set render order
+            tileInfo.mOrder = ZTileRenderOrder::NorthWall;
+            tileInfo.mOffset = QPoint();
+            mRenderInfo[tileN] += tileInfo;
+        }
+
+        // Offset West doors onto the east edge
+        BuildingTile *btileW = entry->tile(BTC_Doors::West);
+        if (!btileW->isNone()) {
+            Tile* tileW = BuildingTilesMgr::instance()->tileFor(btileW);
+            ZTileRenderInfo tileInfo(tileW);
+            tileInfo.mOffset = QPoint(floorWidth / 2, floorHeight / 2);
+            tileInfo.mOrder = ZTileRenderOrder::EastWall;
+            mEastWallTiles[tileW] += tileInfo;
+            // Set render order
+            tileInfo.mOrder = ZTileRenderOrder::WestWall;
+            tileInfo.mOffset = QPoint();
+            mRenderInfo[tileW] += tileInfo;
+        }
+    }
+
+    bool isNone(Tile *tile)
+    {
+        return tile == nullptr || tile == BuildingTilesMgr::instance()->noneTiledTile();
+    }
+
+    void initWalls(TileRotateInfo* tileInfo)
+    {
+        int floorWidth = 64 * 2;
+        int floorHeight = 32 * 2;
+
+        // Offset North walls onto the south edge
+        BuildingTile *btileN = BuildingTilesMgr::instance()->get(tileInfo->mTileNames[0]);
+        if (!btileN->isNone()) {
+            Tile* tileN = BuildingTilesMgr::instance()->tileFor(btileN);
+            ZTileRenderInfo tileInfo(tileN);
+            tileInfo.mOffset = QPoint(-floorWidth / 2, floorHeight / 2);
+            tileInfo.mOrder = ZTileRenderOrder::SouthWall;
+            mSouthWallTiles[tileN] += tileInfo;
+            // Set render order
+            tileInfo.mOrder = ZTileRenderOrder::NorthWall;
+            tileInfo.mOffset = QPoint();
+            mRenderInfo[tileN] += tileInfo;
+        }
+
+        // Offset West walls onto the east edge
+        BuildingTile *btileW = BuildingTilesMgr::instance()->get(tileInfo->mTileNames[3]);
+        if (!btileW->isNone()) {
+            Tile* tileW = BuildingTilesMgr::instance()->tileFor(btileW);
+            ZTileRenderInfo tileInfo(tileW);
+            tileInfo.mOffset = QPoint(floorWidth / 2, floorHeight / 2);
+            tileInfo.mOrder = ZTileRenderOrder::EastWall;
+            mEastWallTiles[tileW] += tileInfo;
+            // Set render order
+            tileInfo.mOrder = ZTileRenderOrder::WestWall;
+            tileInfo.mOffset = QPoint();
+            mRenderInfo[tileW] += tileInfo;
+        }
+#if 0 // FIXME
+        // NorthWest walls become 2 tiles
+        if (tileInfo->mCorners) {
+            if (!btileNW->isNone() && !btileN->isNone() && !btileW->isNone()) {
+                Tile* tileNW = BuildingTilesMgr::instance()->tileFor(btileNW);
+                Tile* tileN = BuildingTilesMgr::instance()->tileFor(btileN);
+                Tile* tileW = BuildingTilesMgr::instance()->tileFor(btileW);
+                // NorthWest -> NorthEast
+                {
+                    // North wall is unchanged
+                    ZTileRenderInfo tileInfoN(tileN);
+                    tileInfoN.mOrder = ZTileRenderOrder::NorthWall;
+                    mNorthEastWallTiles[tileNW] += tileInfoN;
+                    // Offset West walls onto the east edge
+                    ZTileRenderInfo tileInfoW(tileW);
+                    tileInfoW.mOffset = QPoint(floorWidth / 2, floorHeight / 2);
+                    tileInfoW.mOrder = ZTileRenderOrder::EastWall;
+                    mNorthEastWallTiles[tileNW] += tileInfoW;
+                }
+                // NorthWest -> SouthEast
+                {
+                    // Offset North walls onto the south edge
+                    ZTileRenderInfo tileInfoN(tileN);
+                    tileInfoN.mOffset = QPoint(-floorWidth / 2, floorHeight / 2);
+                    tileInfoN.mOrder = ZTileRenderOrder::SouthWall;
+                    mSouthEastWallTiles[tileNW] += tileInfoN;
+                    // Offset West walls onto the east edge
+                    ZTileRenderInfo tileInfoW(tileW);
+                    tileInfoW.mOffset = QPoint(floorWidth / 2, floorHeight / 2);
+                    tileInfoW.mOrder = ZTileRenderOrder::EastWall;
+                    mSouthEastWallTiles[tileNW] += tileInfoW;
+                }
+                // NorthWest -> SouthWest
+                {
+                    // Offset North walls onto the south edge
+                    ZTileRenderInfo tileInfoN(tileN);
+                    tileInfoN.mOffset = QPoint(-floorWidth / 2, floorHeight / 2);
+                    tileInfoN.mOrder = ZTileRenderOrder::SouthWall;
+                    mSouthWestWallTiles[tileNW] += tileInfoN;
+                    // West wall is unchanged
+                    ZTileRenderInfo tileInfoW(tileW);
+                    tileInfoW.mOrder = ZTileRenderOrder::WestWall;
+                    mSouthWestWallTiles[tileNW] += tileInfoW;
+                }
+            }
+        }
+#endif
+    }
+
+    void initWalls()
+    {
+        for (TileRotateInfo* tileInfo : mTiles) {
+            switch (tileInfo->mType) {
+            case TileRotateType::Door:
+            case TileRotateType::DoorFrame:
+            case TileRotateType::Wall:
+            case TileRotateType::Window:
+            case TileRotateType::WindowFrame:
+                initWalls(tileInfo);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+#else
+    void initDoors(BuildingTileEntry *entry)
+    {
+        int floorWidth = 64 * 2;
+        int floorHeight = 32 * 2;
+
+        // Offset North doors onto the south edge
+        BuildingTile *btileN = entry->tile(BTC_Doors::North);
+        if (!btileN->isNone()) {
+            Tile* tileN = BuildingTilesMgr::instance()->tileFor(btileN);
+            ZTileRenderInfo tileInfo(tileN);
+            tileInfo.mOffset = QPoint(-floorWidth / 2, floorHeight / 2);
+            tileInfo.mOrder = ZTileRenderOrder::SouthWall;
+            mSouthWallTiles[tileN] += tileInfo;
+            // Set render order
+            tileInfo.mOrder = ZTileRenderOrder::NorthWall;
+            tileInfo.mOffset = QPoint();
+            mRenderInfo[tileN] += tileInfo;
+        }
+
+        // Offset West doors onto the east edge
+        BuildingTile *btileW = entry->tile(BTC_Doors::West);
+        if (!btileW->isNone()) {
+            Tile* tileW = BuildingTilesMgr::instance()->tileFor(btileW);
+            ZTileRenderInfo tileInfo(tileW);
+            tileInfo.mOffset = QPoint(floorWidth / 2, floorHeight / 2);
+            tileInfo.mOrder = ZTileRenderOrder::EastWall;
+            mEastWallTiles[tileW] += tileInfo;
+            // Set render order
+            tileInfo.mOrder = ZTileRenderOrder::WestWall;
+            tileInfo.mOffset = QPoint();
+            mRenderInfo[tileW] += tileInfo;
+        }
+
+    }
+
+    void initWalls(BuildingTileEntry* entry)
+    {
+        int floorWidth = 64 * 2;
+        int floorHeight = 32 * 2;
+
+        // Offset North walls onto the south edge
+        BuildingTile *btileN = entry->tile(BTC_Walls::North);
+        if (!btileN->isNone()) {
+            Tile* tileN = BuildingTilesMgr::instance()->tileFor(btileN);
+            ZTileRenderInfo tileInfo(tileN);
+            tileInfo.mOffset = QPoint(-floorWidth / 2, floorHeight / 2);
+            tileInfo.mOrder = ZTileRenderOrder::SouthWall;
+            mSouthWallTiles[tileN] += tileInfo;
+            // Set render order
+            tileInfo.mOrder = ZTileRenderOrder::NorthWall;
+            tileInfo.mOffset = QPoint();
+            mRenderInfo[tileN] += tileInfo;
+        }
+        // Offset North door frames onto the south edge
+        BuildingTile *btileDoorFrameN = entry->tile(BTC_Walls::NorthDoor);
+        if (!btileDoorFrameN->isNone()) {
+            Tile* tileN = BuildingTilesMgr::instance()->tileFor(btileDoorFrameN);
+            ZTileRenderInfo tileInfo(tileN);
+            tileInfo.mOffset = QPoint(-floorWidth / 2, floorHeight / 2);
+            tileInfo.mOrder = ZTileRenderOrder::SouthWall;
+            mSouthWallTiles[tileN] += tileInfo;
+            // Set render order
+            tileInfo.mOrder = ZTileRenderOrder::NorthWall;
+            tileInfo.mOffset = QPoint();
+            mRenderInfo[tileN] += tileInfo;
+        }
+        // Offset North window frames onto the south edge
+        BuildingTile *btileWindowFrameN = entry->tile(BTC_Walls::NorthWindow);
+        if (!btileWindowFrameN->isNone()) {
+            Tile* tileN = BuildingTilesMgr::instance()->tileFor(btileWindowFrameN);
+            ZTileRenderInfo tileInfo(tileN);
+            tileInfo.mOffset = QPoint(-floorWidth / 2, floorHeight / 2);
+            tileInfo.mOrder = ZTileRenderOrder::SouthWall;
+            mSouthWallTiles[tileN] += tileInfo;
+            // Set render order
+            tileInfo.mOrder = ZTileRenderOrder::NorthWall;
+            tileInfo.mOffset = QPoint();
+            mRenderInfo[tileN] += tileInfo;
+        }
+
+        // Offset West walls onto the east edge
+        BuildingTile *btileW = entry->tile(BTC_Walls::West);
+        if (!btileW->isNone()) {
+            Tile* tileW = BuildingTilesMgr::instance()->tileFor(btileW);
+            ZTileRenderInfo tileInfo(tileW);
+            tileInfo.mOffset = QPoint(floorWidth / 2, floorHeight / 2);
+            tileInfo.mOrder = ZTileRenderOrder::EastWall;
+            mEastWallTiles[tileW] += tileInfo;
+            // Set render order
+            tileInfo.mOrder = ZTileRenderOrder::WestWall;
+            tileInfo.mOffset = QPoint();
+            mRenderInfo[tileW] += tileInfo;
+        }
+        // Offset West door frames onto the east edge
+        BuildingTile *btileDoorFrameW = entry->tile(BTC_Walls::WestDoor);
+        if (!btileDoorFrameW->isNone()) {
+            Tile* tileW = BuildingTilesMgr::instance()->tileFor(btileDoorFrameW);
+            ZTileRenderInfo tileInfo(tileW);
+            tileInfo.mOffset = QPoint(floorWidth / 2, floorHeight / 2);
+            tileInfo.mOrder = ZTileRenderOrder::EastWall;
+            mEastWallTiles[tileW] += tileInfo;
+            // Set render order
+            tileInfo.mOrder = ZTileRenderOrder::WestWall;
+            tileInfo.mOffset = QPoint();
+            mRenderInfo[tileW] += tileInfo;
+        }
+        // Offset West window frames onto the east edge
+        BuildingTile *btileWindowFrameW = entry->tile(BTC_Walls::WestWindow);
+        if (!btileWindowFrameW->isNone()) {
+            Tile* tileW = BuildingTilesMgr::instance()->tileFor(btileWindowFrameW);
+            ZTileRenderInfo tileInfo(tileW);
+            tileInfo.mOffset = QPoint(floorWidth / 2, floorHeight / 2);
+            tileInfo.mOrder = ZTileRenderOrder::EastWall;
+            mEastWallTiles[tileW] += tileInfo;
+            // Set render order
+            tileInfo.mOrder = ZTileRenderOrder::WestWall;
+            tileInfo.mOffset = QPoint();
+            mRenderInfo[tileW] += tileInfo;
+        }
+
+        // NorthWest walls become 2 tiles
+        BuildingTile *btileNW = entry->tile(BTC_Walls::NorthWest);
+        if (!btileNW->isNone() && !btileN->isNone() && !btileW->isNone()) {
+            Tile* tileNW = BuildingTilesMgr::instance()->tileFor(btileNW);
+            Tile* tileN = BuildingTilesMgr::instance()->tileFor(btileN);
+            Tile* tileW = BuildingTilesMgr::instance()->tileFor(btileW);
+            // NorthWest -> NorthEast
+            {
+                // North wall is unchanged
+                ZTileRenderInfo tileInfoN(tileN);
+                tileInfoN.mOrder = ZTileRenderOrder::NorthWall;
+                mNorthEastWallTiles[tileNW] += tileInfoN;
+                // Offset West walls onto the east edge
+                ZTileRenderInfo tileInfoW(tileW);
+                tileInfoW.mOffset = QPoint(floorWidth / 2, floorHeight / 2);
+                tileInfoW.mOrder = ZTileRenderOrder::EastWall;
+                mNorthEastWallTiles[tileNW] += tileInfoW;
+            }
+            // NorthWest -> SouthEast
+            {
+                // Offset North walls onto the south edge
+                ZTileRenderInfo tileInfoN(tileN);
+                tileInfoN.mOffset = QPoint(-floorWidth / 2, floorHeight / 2);
+                tileInfoN.mOrder = ZTileRenderOrder::SouthWall;
+                mSouthEastWallTiles[tileNW] += tileInfoN;
+                // Offset West walls onto the east edge
+                ZTileRenderInfo tileInfoW(tileW);
+                tileInfoW.mOffset = QPoint(floorWidth / 2, floorHeight / 2);
+                tileInfoW.mOrder = ZTileRenderOrder::EastWall;
+                mSouthEastWallTiles[tileNW] += tileInfoW;
+            }
+            // NorthWest -> SouthWest
+            {
+                // Offset North walls onto the south edge
+                ZTileRenderInfo tileInfoN(tileN);
+                tileInfoN.mOffset = QPoint(-floorWidth / 2, floorHeight / 2);
+                tileInfoN.mOrder = ZTileRenderOrder::SouthWall;
+                mSouthWestWallTiles[tileNW] += tileInfoN;
+                // West wall is unchanged
+                ZTileRenderInfo tileInfoW(tileW);
+                tileInfoW.mOrder = ZTileRenderOrder::WestWall;
+                mSouthWestWallTiles[tileNW] += tileInfoW;
+            }
+        }
+    }
+
+    void initWalls()
+    {
+        auto* category = BuildingTilesMgr::instance()->catEWalls();
+        for (auto* entry : category->entries()) {
+            initWalls(entry);
+        }
+
+        category = BuildingTilesMgr::instance()->catIWalls();
+        for (auto* entry : category->entries()) {
+            initWalls(entry);
+        }
+
+        category = BuildingTilesMgr::instance()->catDoors();
+        for (auto* entry : category->entries()) {
+            initDoors(entry);
+        }
+    }
+#endif
+
+#if 0
+    Tileset* initRuntimeTilesets(Tileset *newTileset, int &tileCount, BuildingTileEntry* entry, int north, int west)
+    {
+        int floorWidth = 64;
+        int floorHeight = 32;
+
+        int tileWidth = 64;
+        int tileHeight = 128;
+        int columns = 8;
+        int rows = 16;
+
+        BuildingTile *btileN = entry->tile(north);
+        if (!btileN->isNone()) {
+            Tile* tileN = BuildingTilesMgr::instance()->tileFor(btileN);
+            Tile* newTile = newTileset->tileAt(tileCount);
+            QImage image(tileWidth, tileHeight, QImage::Format_ARGB32_Premultiplied);
+            image.fill(Qt::transparent);
+            QPainter painter(&image);
+            float scale = 0.5f;
+            QRect r(0, 0, tileN->image().width() * scale, tileN->image().height() * scale);
+            r.translate(tileN->offset() * scale);
+            r.translate(-floorWidth / 2, floorHeight / 2); // onto south edge
+            painter.drawImage(r, tileN->image());
+            painter.end();
+            newTile->setImage(image);
+            mSouthWallTiles[tileN] = newTile;
+//                qDebug() << "initRuntimeTilesets " << tileN->tileset()->name() << "_" << tileN->id();
+            ++tileCount;
+            if (tileCount == newTileset->tileCount()) {
+                newTileset = new Tileset(QString(QLatin1Literal("ROTATE_%1")).arg(mRuntimeTilesets.size() + 1), tileWidth, tileHeight);
+                newTileset->loadFromNothing(QSize(columns * tileWidth, rows * tileHeight), QLatin1Literal("TileRotation.png"));
+                mRuntimeTilesets += newTileset;
+                tileCount = 0;
+            }
+        }
+
+        BuildingTile *btileW = entry->tile(west);
+        if (!btileW->isNone()) {
+            Tile* tileW = BuildingTilesMgr::instance()->tileFor(btileW);
+            Tile* newTile = newTileset->tileAt(tileCount);
+            QImage image(tileWidth, tileHeight, QImage::Format_ARGB32_Premultiplied);
+            image.fill(Qt::transparent);
+            QPainter painter(&image);
+            float scale = 0.5f;
+            QRect r(0, 0, tileW->image().width() * scale, tileW->image().height() * scale);
+            r.translate(tileW->offset() * scale);
+            r.translate(floorWidth / 2, floorHeight / 2); // onto east edge
+            painter.drawImage(r, tileW->image());
+            painter.end();
+            newTile->setImage(image);
+            mEastWallTiles[tileW] = newTile;
+//                qDebug() << "initRuntimeTilesets " << tileN->tileset()->name() << "_" << tileN->id();
+            ++tileCount;
+            if (tileCount == newTileset->tileCount()) {
+                newTileset = new Tileset(QString(QLatin1Literal("ROTATE_%1")).arg(mRuntimeTilesets.size() + 1), tileWidth, tileHeight);
+                newTileset->loadFromNothing(QSize(columns * tileWidth, rows * tileHeight), QLatin1Literal("TileRotation.png"));
+                mRuntimeTilesets += newTileset;
+                tileCount = 0;
+            }
+        }
+
+        BuildingTile *btileNW = entry->tile(BTC_Walls::NorthWest);
+        if (!btileNW->isNone()) {
+            Tile* tileNW = BuildingTilesMgr::instance()->tileFor(btileNW);
+            Tile* newTile = newTileset->tileAt(tileCount);
+            QImage image(tileWidth, tileHeight, QImage::Format_ARGB32_Premultiplied);
+            image.fill(Qt::transparent);
+            QPainter painter(&image);
+            QImage imageNW = tileNW->finalImage(tileWidth, tileHeight);
+            QRectF r(0, 0, tileWidth / 2, tileHeight);
+            r.translate(floorWidth / 2, floorHeight / 2);
+            // west half onto east edge
+            painter.drawImage(r, imageNW, QRectF(0, 0, tileWidth / 2, tileHeight));
+            // north half onto south edge
+            painter.drawImage(QRectF(0, 0, tileWidth / 2, tileHeight), imageNW, QRectF(tileWidth / 2, 0, tileWidth / 2, tileHeight));
+            painter.end();
+            newTile->setImage(image);
+            mSouthEastWallTiles[tileNW] = newTile;
+            ++tileCount;
+            if (tileCount == newTileset->tileCount()) {
+                newTileset = new Tileset(QString(QLatin1Literal("ROTATE_%1")).arg(mRuntimeTilesets.size() + 1), tileWidth, tileHeight);
+                newTileset->loadFromNothing(QSize(columns * tileWidth, rows * tileHeight), QLatin1Literal("TileRotation.png"));
+                mRuntimeTilesets += newTileset;
+                tileCount = 0;
+            }
+        }
+
+        return newTileset;
+    }
 
     void initRuntimeTilesets()
     {
         qDeleteAll(mRuntimeTilesets);
         mRuntimeTilesets.clear();
-
-        int floorWidth = 64;
-        int floorHeight = 32;
 
         int tileWidth = 64;
         int tileHeight = 128;
@@ -282,59 +699,25 @@ public:
         newTileset->loadFromNothing(QSize(columns * tileWidth, rows * tileHeight), QLatin1Literal("TileRotation.png"));
         mRuntimeTilesets += newTileset;
         int tileCount = 0;
+
         auto* category = BuildingTilesMgr::instance()->catEWalls();
         for (auto* entry : category->entries()) {
-            BuildingTile *btileN = entry->tile(BTC_Walls::North);
-            if (!btileN->isNone()) {
-                Tile* tileN = BuildingTilesMgr::instance()->tileFor(btileN);
-                Tile* newTile = newTileset->tileAt(tileCount);
-                QImage image(tileWidth, tileHeight, QImage::Format_ARGB32_Premultiplied);
-                image.fill(Qt::transparent);
-                QPainter painter(&image);
-                float scale = 0.5f;
-                QRect r(0, 0, tileN->image().width() * scale, tileN->image().height() * scale);
-                r.translate(tileN->offset() * scale);
-                r.translate(-floorWidth / 2, floorHeight / 2); // onto south edge
-                painter.drawImage(r, tileN->image());
-                painter.end();
-                newTile->setImage(image);
-                mSouthWallTiles[tileN] = newTile;
-//                qDebug() << "initRuntimeTilesets " << tileN->tileset()->name() << "_" << tileN->id();
-                ++tileCount;
-                if (tileCount == newTileset->tileCount()) {
-                    newTileset = new Tileset(QString(QLatin1Literal("ROTATE_%1")).arg(mRuntimeTilesets.size() + 1), tileWidth, tileHeight);
-                    newTileset->loadFromNothing(QSize(columns * tileWidth, rows * tileHeight), QLatin1Literal("TileRotation.png"));
-                    mRuntimeTilesets += newTileset;
-                    tileCount = 0;
-                }
-            }
-            BuildingTile *btileW = entry->tile(BTC_Walls::West);
-            if (!btileW->isNone()) {
-                Tile* tileW = BuildingTilesMgr::instance()->tileFor(btileW);
-                Tile* newTile = newTileset->tileAt(tileCount);
-                QImage image(tileWidth, tileHeight, QImage::Format_ARGB32_Premultiplied);
-                image.fill(Qt::transparent);
-                QPainter painter(&image);
-                float scale = 0.5f;
-                QRect r(0, 0, tileW->image().width() * scale, tileW->image().height() * scale);
-                r.translate(tileW->offset() * scale);
-                r.translate(floorWidth / 2, floorHeight / 2); // onto east edge
-                painter.drawImage(r, tileW->image());
-                painter.end();
-                newTile->setImage(image);
-                mEastWallTiles[tileW] = newTile;
-//                qDebug() << "initRuntimeTilesets " << tileN->tileset()->name() << "_" << tileN->id();
-                ++tileCount;
-                if (tileCount == newTileset->tileCount()) {
-                    newTileset = new Tileset(QString(QLatin1Literal("ROTATE_%1")).arg(mRuntimeTilesets.size() + 1), tileWidth, tileHeight);
-                    newTileset->loadFromNothing(QSize(columns * tileWidth, rows * tileHeight), QLatin1Literal("TileRotation.png"));
-                    mRuntimeTilesets += newTileset;
-                    tileCount = 0;
-                }
-            }
+            newTileset = initRuntimeTilesets(newTileset, tileCount, entry, BTC_Walls::North, BTC_Walls::West);
         }
 
+        category = BuildingTilesMgr::instance()->catIWalls();
+        for (auto* entry : category->entries()) {
+            newTileset = initRuntimeTilesets(newTileset, tileCount, entry, BTC_Walls::North, BTC_Walls::West);
+        }
     }
+#endif
+
+    MapRotation rotation[4] = {
+        MapRotation::NotRotated,
+        MapRotation::Clockwise90,
+        MapRotation::Clockwise180,
+        MapRotation::Clockwise270
+    };
 
     void tempLazyInit()
     {
@@ -342,19 +725,21 @@ public:
         TileRotationFile file;
         if (file.read(QLatin1Literal("D:\\pz\\TileRotation.txt"))) {
             mFurnitureTiles = file.takeTiles();
-            mNoRotateTileNames = file.takeNoRotateTileNames();
             qDeleteAll(mTiles);
             {
-                for (FurnitureTiles* furnitureTiles : mFurnitureTiles) {
+                for (TileRotateFileInfo* fileInfo : mFurnitureTiles) {
+                    FurnitureTiles* furnitureTiles = fileInfo->mFurnitureTiles;
                     FurnitureTile* ft[4];
                     ft[0] = furnitureTiles->tile(FurnitureTile::FurnitureN);
                     ft[1] = furnitureTiles->tile(FurnitureTile::FurnitureE);
                     ft[2] = furnitureTiles->tile(FurnitureTile::FurnitureS);
                     ft[3] = furnitureTiles->tile(FurnitureTile::FurnitureW);
+#if 0
                     if (ft[1]->isEmpty())
                         ft[1] = ft[3]; // E = W
                     if (ft[2]->isEmpty())
                         ft[2] = ft[0]; // S = N
+#endif
                     int width = ft[0]->width();
                     int height = ft[0]->height();
                     for (int dy = 0; dy < height; dy++) {
@@ -371,32 +756,38 @@ public:
                             }
                             if (empty)
                                 continue;
-                            mTiles += new TileRotateInfo(entry);
+                            TileRotateInfo *tileInfo = new TileRotateInfo(entry);
+                            tileInfo->mType = fileInfo->mType;
+                            mTiles += tileInfo;
                         }
                     }
                 }
             }
+            initWalls();
+#if 0
             initRuntimeTilesets();
+#endif
             fileLoaded();
         }
     }
 
-    Tile *rotateTile(Tile *tile, MapRotation rotation)
+    void rotateTile(Tile *tile, MapRotation rotation, QVector<Tiled::ZTileRenderInfo>& tileInfos)
     {
+        if (rotation == MapRotation::NotRotated) {
+            tileInfos += ZTileRenderInfo(tile);
+            return;
+        }
+
         // FIXME: temporary lazy init
         if (mTiles.isEmpty()) {
             tempLazyInit();
         }
 
-        // Floors, etc
-        if (mNoRotateTiles.contains(tile)) {
-            return tile;
-        }
-
         TileRotateInfo* info = mTileLookup.value(tile);
         if (info == nullptr) {
 //            if (rotation == MapRotation::NotRotated)
-                return tile;
+            tileInfos += ZTileRenderInfo(tile);
+            return;
 //            return BuildingTilesMgr::instance()->noneTiledTile();
         }
         int index = 0;
@@ -422,9 +813,31 @@ public:
             index += 2;
         else if (info->mTiles[3] == tile)
             index += 3;
-        return info->mTiles[index % 4];
+        tileInfos += info->mRenderInfo[index % 4];
     }
+#if 0
+    MapRotation rotationOf(Tile* tile)
+    {
+        // FIXME: temporary lazy init
+        if (mTiles.isEmpty()) {
+            tempLazyInit();
+        }
 
+        TileRotateInfo* info = mTileLookup.value(tile);
+        if (info == nullptr) {
+            return MapRotation::NotRotated;
+        }
+        if (info->mTiles[0] == tile)
+            return MapRotation::NotRotated;
+        else if (info->mTiles[1] == tile)
+            return MapRotation::Clockwise90;
+        else if (info->mTiles[2] == tile)
+            return MapRotation::Clockwise180;
+        else if (info->mTiles[3] == tile)
+            return MapRotation::Clockwise270;
+        return MapRotation::NotRotated;
+    }
+#endif
     void reload()
     {
         qDeleteAll(mTiles);
@@ -432,20 +845,43 @@ public:
         mTileLookup.clear();
         qDeleteAll(mFurnitureTiles);
         mFurnitureTiles.clear();
-        mNoRotateTileNames.clear();
-        mNoRotateTiles.clear();
+        mRenderInfo.clear();
+        mEastWallTiles.clear();
+        mSouthWallTiles.clear();
+        mNorthEastWallTiles.clear();
+        mSouthEastWallTiles.clear();
+        mSouthWestWallTiles.clear();
     }
 
     TileRotation& mOuter;
     QList<TileRotateInfo*> mTiles;
     QMap<Tile*, TileRotateInfo*> mTileLookup;
-    QList<FurnitureTiles *> mFurnitureTiles;
-    QStringList mNoRotateTileNames;
-    QSet<Tile*> mNoRotateTiles;
-    QMap<Tile*, Tile*> mEastWallTiles;
-    QMap<Tile*, Tile*> mSouthWallTiles;
+    QList<TileRotateFileInfo *> mFurnitureTiles;
+    QMap<Tile*, QVector<ZTileRenderInfo>> mRenderInfo;
+    QMap<Tile*, QVector<ZTileRenderInfo>> mEastWallTiles;
+    QMap<Tile*, QVector<ZTileRenderInfo>> mSouthWallTiles;
+    QMap<Tile*, QVector<ZTileRenderInfo>> mNorthEastWallTiles;
+    QMap<Tile*, QVector<ZTileRenderInfo>> mSouthEastWallTiles;
+    QMap<Tile*, QVector<ZTileRenderInfo>> mSouthWestWallTiles;
+#if 0
     QList<Tileset*> mRuntimeTilesets;
+#endif
 };
+
+// // // // //
+
+TileRotateFileInfo::TileRotateFileInfo()
+    : mFurnitureTiles(new FurnitureTiles(false))
+{
+
+}
+
+TileRotateFileInfo::~TileRotateFileInfo()
+{
+    if (mOwnsFurniture) {
+        delete mFurnitureTiles;
+    }
+}
 
 // namespace Tiled
 }
@@ -484,15 +920,22 @@ void TileRotation::readFile(const QString &filePath)
     mPrivate->fileLoaded();
 }
 
-const QList<FurnitureTiles *> TileRotation::furnitureTiles() const
+const QList<TileRotateFileInfo *> TileRotation::furnitureTiles() const
 {
     return mPrivate->mFurnitureTiles;
 }
 
-Tile *TileRotation::rotateTile(Tile *tile, MapRotation rotation)
+void TileRotation::rotateTile(Tile *tile, MapRotation rotation, QVector<Tiled::ZTileRenderInfo>& tileInfos)
 {
-    return mPrivate->rotateTile(tile, rotation);
+    mPrivate->rotateTile(tile, rotation, tileInfos);
 }
+
+#if 0
+MapRotation TileRotation::rotationOf(Tile *tile) const
+{
+    return mPrivate->rotationOf(tile);
+}
+#endif
 
 void TileRotation::reload()
 {
