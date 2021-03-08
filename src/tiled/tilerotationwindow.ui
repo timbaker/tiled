@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>1198</width>
+    <height>646</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,35 +24,49 @@
        <bool>false</bool>
       </property>
       <widget class="QWidget" name="verticalLayoutWidget">
-       <layout class="QVBoxLayout" name="verticalLayout">
+       <layout class="QHBoxLayout" name="leftLayout">
         <item>
-         <widget class="BuildingEditor::FurnitureView" name="furnitureView"/>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
+         <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
-           <widget class="QLabel" name="label">
-            <property name="text">
-             <string>Type:</string>
-            </property>
-           </widget>
+           <widget class="QLineEdit" name="tilesetRotatedFilter"/>
           </item>
           <item>
-           <widget class="QComboBox" name="typeComboBox">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>1</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-           </widget>
+           <widget class="QListWidget" name="tilesetRotatedList"/>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <widget class="Tiled::TileRotateView" name="tileRotateView"/>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="comboLayout">
+            <item>
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>Type:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="typeComboBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>
        </layout>
       </widget>
       <widget class="QWidget" name="layoutWidget">
-       <layout class="QHBoxLayout" name="tilesetLayout">
+       <layout class="QHBoxLayout" name="rightLayout">
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
@@ -91,7 +105,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>1198</width>
      <height>21</height>
     </rect>
    </property>
@@ -207,9 +221,9 @@
    <header>BuildingEditor/mixedtilesetview.h</header>
   </customwidget>
   <customwidget>
-   <class>BuildingEditor::FurnitureView</class>
+   <class>Tiled::TileRotateView</class>
    <extends>QTableWidget</extends>
-   <header>BuildingEditor/furnitureview.h</header>
+   <header>tilerotateview.h</header>
   </customwidget>
  </customwidgets>
  <resources>

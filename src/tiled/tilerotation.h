@@ -43,34 +43,46 @@ enum class TileRotateType
     MAX
 };
 
-class TileRotateInfo
+class TilesetRotated;
+
+class TileRotatedDirection
 {
 public:
-    static const int NORTH = 0;
-    static const int EAST = 1;
-    static const int SOUTH = 2;
-    static const int WEST = 3;
-
-    TileRotateInfo()
-    {
-        mTiles[0] = mTiles[1] = mTiles[2] = mTiles[3] = nullptr;
-        mType = TileRotateType::None;
-    }
-    // NotRotated, Clockwise90, Clockwise180, Clockwise270
-    QString mTileNames[MAP_ROTATION_COUNT];
-    Tile* mTiles[MAP_ROTATION_COUNT];
-    QVector<ZTileRenderInfo> mRenderInfo[MAP_ROTATION_COUNT];
-    TileRotateType mType;
+    QStringList mTileNames;
 };
 
-class TileRotateFileInfo
+class PropertyRotateInfo
 {
 public:
-    TileRotateFileInfo();
-    ~TileRotateFileInfo();
-    BuildingEditor::FurnitureTiles* mFurnitureTiles;
-    TileRotateType mType = TileRotateType::None;
-    bool mOwnsFurniture = true;
+    QString mName;
+    QString mValue;
+};
+
+class TileRotated
+{
+public:
+    TileRotated()
+        : mTileset(nullptr)
+    {
+    }
+    TilesetRotated *mTileset;
+    int mID;
+    QPoint mXY;
+    TileRotatedDirection r90;
+    TileRotatedDirection r180;
+    TileRotatedDirection r270;
+    QList<PropertyRotateInfo> mProperties;
+};
+
+class TilesetRotated
+{
+public:
+    ~TilesetRotated();
+
+    QString mName;
+    int mColumnCount;
+    QList<TileRotated*> mTiles;
+    QVector<TileRotated*> mTileByID;
 };
 
 class TileRotation : public QObject
@@ -85,11 +97,13 @@ public:
 
     void readFile(const QString& filePath);
 
-    const QList<TileRotateFileInfo *> furnitureTiles() const;
-
     void rotateTile(Tile* tile, MapRotation rotation, QVector<Tiled::ZTileRenderInfo>& tileInfos);
 
     void reload();
+
+    Tile* getRotatedTileDX(const QString &tilesetName, int index);
+    Tile* getRotatedTileDY(const QString &tilesetName, int index);
+    Tile* getRotatedTile(const QString &tileName);
 
 private:
     static TileRotation *mInstance;

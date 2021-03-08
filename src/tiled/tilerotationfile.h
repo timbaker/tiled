@@ -23,15 +23,12 @@
 
 class SimpleFileBlock;
 
-namespace BuildingEditor
-{
-class FurnitureTiles;
-}
-
 namespace Tiled
 {
 
-class TileRotateFileInfo;
+class TileRotated;
+class TileRotatedDirection;
+class TilesetRotated;
 
 class TileRotationFile : public QObject
 {
@@ -44,18 +41,23 @@ public:
     ~TileRotationFile();
 
     bool read(const QString& path);
-    bool write(const QString& path, const QList<TileRotateFileInfo*>& tiles);
+    bool write(const QString& path, const QList<TilesetRotated*>& tilesets);
 
     const QString& errorString() const { return mError; }
 
-    QList<TileRotateFileInfo *> takeTiles();
+    QList<TilesetRotated *> takeTilesets();
 
 private:
-    TileRotateFileInfo *furnitureTilesFromSFB(const SimpleFileBlock &furnitureBlock, QString &error);
+    TilesetRotated *readTileset(const SimpleFileBlock& block);
+    TileRotated *readTile(const SimpleFileBlock& block);
+    bool readDirection(const SimpleFileBlock& block, TileRotatedDirection& direction);
+    bool parse2Ints(const QString &s, int *pa, int *pb);
+    void writeTile(TileRotated *tile, SimpleFileBlock& tileBlock);
+    void writeDirection(TileRotatedDirection& direction, SimpleFileBlock& directionBlock);
 
 private:
     QString mError;
-    QList<TileRotateFileInfo*> mTiles;
+    QList<TilesetRotated*> mTilesets;
 };
 
 extern const char *TILE_ROTATE_NAMES[];

@@ -72,131 +72,192 @@ public:
 // namespace {}
 }
 
-class AddFurnitureTiles : public QUndoCommand
+class AddTile : public QUndoCommand
 {
 public:
-    AddFurnitureTiles(TileRotationWindow *d, FurnitureGroup *group, int index, TRWFurnitureTiles *ftiles) :
-        QUndoCommand(QCoreApplication::translate("UndoCommands", "Add Furniture Tiles")),
+    AddTile(TileRotationWindow *d, TileRotated *tile, int index, const QString& tileName) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Add Tile")),
         mDialog(d),
-        mGroup(group),
+        mTile(tile),
         mIndex(index),
-        mTiles(ftiles)
-    {
-    }
-
-    ~AddFurnitureTiles() override
-    {
-        delete mTiles;
-    }
-
-    void undo() override
-    {
-        mTiles = mDialog->removeFurnitureTiles(mGroup, mIndex);
-    }
-
-    void redo() override
-    {
-        mDialog->insertFurnitureTiles(mGroup, mIndex, mTiles);
-        mTiles = nullptr;
-    }
-
-    TileRotationWindow *mDialog;
-    FurnitureGroup *mGroup;
-    int mIndex;
-    TRWFurnitureTiles *mTiles;
-};
-
-class ChangeFurnitureTile : public QUndoCommand
-{
-public:
-    ChangeFurnitureTile(TileRotationWindow *d, FurnitureTile *ftile, int x, int y, const QString &tileName = QString()) :
-        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Furniture Tile")),
-        mDialog(d),
-        mTile(ftile),
-        mX(x),
-        mY(y),
         mTileName(tileName)
     {
     }
 
     void undo() override
     {
-        mTileName = mDialog->changeFurnitureTile(mTile, mX, mY, mTileName);
+        mTileName = mDialog->removeTile(mTile, mIndex);
     }
 
     void redo() override
     {
-        mTileName = mDialog->changeFurnitureTile(mTile, mX, mY, mTileName);
+        mDialog->addTile(mTile, mIndex, mTileName);
     }
 
     TileRotationWindow *mDialog;
-    FurnitureTile *mTile;
-    int mX;
-    int mY;
+    TileRotated *mTile;
+    int mIndex;
     QString mTileName;
 };
 
-class ChangeRotateType : public QUndoCommand
+class ChangeTiles : public QUndoCommand
 {
 public:
-    ChangeRotateType(TileRotationWindow *d, FurnitureTile *ftile, TileRotateType rotateType) :
-        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Rotate Type")),
+    ChangeTiles(TileRotationWindow *d, TileRotated *tile, int x, const QStringList& tileNames) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Tiles")),
         mDialog(d),
-        mTile(ftile),
-        mRotateType(rotateType)
+        mTile(tile),
+        mX(x),
+        mTileNames(tileNames)
     {
     }
 
     void undo() override
     {
-        mRotateType = mDialog->changeRotateType(mTile, mRotateType);
+        mTileNames = mDialog->changeTiles(mTile, mX, mTileNames);
     }
 
     void redo() override
     {
-        mRotateType = mDialog->changeRotateType(mTile, mRotateType);
+        mTileNames = mDialog->changeTiles(mTile, mX, mTileNames);
     }
 
     TileRotationWindow *mDialog;
-    FurnitureTile *mTile;
-    TileRotateType mRotateType;
-};
-
-class RemoveFurnitureTiles : public QUndoCommand
-{
-public:
-    RemoveFurnitureTiles(TileRotationWindow *d, FurnitureGroup *group, int index) :
-        QUndoCommand(QCoreApplication::translate("UndoCommands", "Remove Furniture Tiles")),
-        mDialog(d),
-        mGroup(group),
-        mIndex(index),
-        mTiles(nullptr)
-    {
-    }
-
-    ~RemoveFurnitureTiles() override
-    {
-        delete mTiles;
-    }
-
-    void undo() override
-    {
-        mDialog->insertFurnitureTiles(mGroup, mIndex, mTiles);
-        mTiles = nullptr;
-    }
-
-    void redo() override
-    {
-        mTiles = mDialog->removeFurnitureTiles(mGroup, mIndex);
-    }
-
-    TileRotationWindow *mDialog;
-    FurnitureGroup *mGroup;
-    int mIndex;
-    TRWFurnitureTiles *mTiles;
+    TileRotated *mTile;
+    int mX;
+    QStringList mTileNames;
 };
 
 #if 1
+
+// This is temporary code to bootstrap creation of TileRotation.txt from the existing BuildingEd information.
+class InitFromBuildingTiles
+{
+public:
+    void initFromBuildingTiles(const QList<BuildingTileEntry*> &entries, int n, int w, TileRotateType rotateType)
+    {
+        for (BuildingTileEntry* bte : entries) {
+            initFromBuildingTiles(bte, n, w, rotateType);
+        }
+    }
+
+    void initFromBuildingTiles(BuildingTileEntry* bte, int n, int w, int nw, TileRotateType rotateType)
+    {
+        BuildingTile *btileN = bte->tile(n);
+        BuildingTile *btileW = bte->tile(w);
+        if (btileN->isNone() && btileW->isNone())
+            return;
+
+        TileRotated* tileRotatedN = getTileRotated(btileN);
+        tileRotatedN->r90.mTileNames += getTileNameDX(btileW);
+        tileRotatedN->r180.mTileNames += getTileNameDY(btileN);
+        tileRotatedN->r270.mTileNames += btileW->name();
+
+        TileRotated* tileRotatedW = getTileRotated(btileW);
+        tileRotatedW->r90.mTileNames += btileN->name();
+        tileRotatedW->r180.mTileNames += getTileNameDX(btileW);
+        tileRotatedW->r270.mTileNames += getTileNameDY(btileN);
+
+        if (nw != -1) {
+            BuildingTile *btileNW = bte->tile(nw);
+            if (!btileNW->isNone()) {
+                TileRotated* tileRotatedNW = getTileRotated(btileNW);
+
+                tileRotatedNW->r90.mTileNames += btileN->name();
+                tileRotatedNW->r90.mTileNames += getTileNameDX(btileW);
+
+                tileRotatedNW->r180.mTileNames += getTileNameDX(btileW);
+                tileRotatedNW->r180.mTileNames += getTileNameDY(btileN);
+
+                tileRotatedNW->r270.mTileNames += btileW->name();
+                tileRotatedNW->r270.mTileNames += getTileNameDY(btileN);
+            }
+        }
+    }
+
+    void initFromBuildingTiles(BuildingTileEntry* bte, int n, int w, TileRotateType rotateType)
+    {
+        int nw = (rotateType == TileRotateType::Wall) ? BTC_Walls::NorthWest : -1;
+        initFromBuildingTiles(bte, n, w, nw, rotateType);
+    }
+
+    QString getTilesetNameDX(const QString& tilesetName)
+    {
+       return QString(QLatin1Literal("%1_DX")).arg(tilesetName);
+    }
+
+    QString getTilesetNameDY(const QString& tilesetName)
+    {
+       return QString(QLatin1Literal("%1_DY")).arg(tilesetName);
+    }
+
+    QString getTileNameDX(BuildingTile *buildingTile)
+    {
+       return BuildingTilesMgr::instance()->nameForTile(getTilesetNameDX(buildingTile->mTilesetName), buildingTile->mIndex);
+    }
+
+    QString getTileNameDY(BuildingTile *buildingTile)
+    {
+        return BuildingTilesMgr::instance()->nameForTile(getTilesetNameDY(buildingTile->mTilesetName), buildingTile->mIndex);
+    }
+
+    TilesetRotated* getTilesetRotated(const QString &tilesetName)
+    {
+        TilesetRotated *tileset = mTilesetLookup[tilesetName];
+        if (tileset == nullptr) {
+            tileset = new TilesetRotated();
+            tileset->mName = tilesetName;
+            tileset->mColumnCount = TileMetaInfoMgr::instance()->tileset(tilesetName)->columnCount();
+            mTilesetLookup[tilesetName] = tileset;
+        }
+        return tileset;
+    }
+
+    TileRotated* getTileRotated(BuildingTile *buildingTile)
+    {
+        TilesetRotated *tileset = getTilesetRotated(buildingTile->mTilesetName);
+        return getTileRotated(tileset, buildingTile->mIndex);
+    }
+
+    TileRotated* getTileRotated(TilesetRotated *tileset, int index)
+    {
+        if (index >= tileset->mTileByID.size() || tileset->mTileByID[index] == nullptr) {
+            TileRotated* tile = new TileRotated();
+            tile->mTileset = tileset;
+            tile->mID = index;
+            tile->mXY = QPoint(index % tileset->mColumnCount, index / tileset->mColumnCount);
+            tileset->mTiles += tile;
+            if (index >= tileset->mTileByID.size()) {
+                tileset->mTileByID.resize(index + 1);
+            }
+            tileset->mTileByID[index] = tile;
+        }
+        return tileset->mTileByID[index];
+    }
+
+    void init()
+    {
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catDoors()->entries(), BTC_Doors::North, BTC_Doors::West, TileRotateType::Door);
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catDoorFrames()->entries(), BTC_DoorFrames::North, BTC_DoorFrames::West, TileRotateType::DoorFrame);
+
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catEWalls()->entries(), BTC_Walls::North, BTC_Walls::West, TileRotateType::Wall);
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catEWalls()->entries(), BTC_Walls::NorthDoor, BTC_Walls::WestDoor, TileRotateType::DoorFrame);
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catEWalls()->entries(), BTC_Walls::NorthWindow, BTC_Walls::WestWindow, TileRotateType::WindowFrame);
+
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catIWalls()->entries(), BTC_Walls::North, BTC_Walls::West, TileRotateType::Wall);
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catIWalls()->entries(), BTC_Walls::NorthDoor, BTC_Walls::WestDoor, TileRotateType::DoorFrame);
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catIWalls()->entries(), BTC_Walls::NorthWindow, BTC_Walls::WestWindow, TileRotateType::WindowFrame);
+
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catEWallTrim()->entries(), BTC_Walls::North, BTC_Walls::West, TileRotateType::WallExtra);
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catIWallTrim()->entries(), BTC_Walls::North, BTC_Walls::West, TileRotateType::WallExtra);
+
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catWindows()->entries(), BTC_Windows::North, BTC_Windows::West, TileRotateType::Window);
+    }
+
+    QMap<QString, TilesetRotated*> mTilesetLookup;
+};
+
+#else
 
 // This is temporary code to bootstrap creation of TileRotation.txt from the existing BuildingEd furniture information.
 class InitFromBuildingTiles
@@ -632,10 +693,10 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::TileRotationWindow),
     mZoomable(new Zoomable),
+    mCurrentTilesetRotated(nullptr),
     mCurrentTileset(nullptr),
     mUndoGroup(new QUndoGroup(this)),
-    mUndoStack(new QUndoStack(this)),
-    mFurnitureGroup(new FurnitureGroup())
+    mUndoStack(new QUndoStack(this))
 {
     ui->setupUi(this);
 
@@ -668,6 +729,9 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     connect(ui->actionClearTiles, &QAction::triggered, this, &TileRotationWindow::clearTiles);
     connect(ui->actionRemove, &QAction::triggered, this, &TileRotationWindow::removeTiles);
 
+    ui->tilesetRotatedList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    connect(ui->tilesetRotatedList, &QListWidget::itemSelectionChanged, this, &TileRotationWindow::tilesetRotatedSelectionChanged);
+
     ui->tilesetList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     connect(ui->tilesetList, &QListWidget::itemSelectionChanged, this, &TileRotationWindow::tilesetSelectionChanged);
     connect(ui->tilesetMgr, &QToolButton::clicked, this,&TileRotationWindow::manageTilesets);
@@ -688,54 +752,36 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
 //    connect(ui->tilesetTilesView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TileRotationWindow::syncUI);
     connect(ui->tilesetTilesView, &MixedTilesetView::activated, this, &TileRotationWindow::tileActivated);
 
-    ui->furnitureView->setZoomable(mZoomable);
-    ui->furnitureView->setAcceptDrops(true);
-    ui->furnitureView->model()->setShowResolved(false); // show the grid
-    connect(ui->furnitureView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TileRotationWindow::syncUI);
-    connect(ui->furnitureView->model(), &FurnitureModel::furnitureTileDropped, this, &TileRotationWindow::furnitureTileDropped);
-    connect(ui->furnitureView, &FurnitureView::activated, this, &TileRotationWindow::furnitureActivated);
+    ui->tileRotateView->setZoomable(mZoomable);
+    ui->tileRotateView->setAcceptDrops(true);
+    connect(ui->tileRotateView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TileRotationWindow::syncUI);
+    connect(ui->tileRotateView->model(), &TileRotateModel::tileDropped, this, &TileRotationWindow::tileDropped);
+    connect(ui->tileRotateView, &TileRotateView::activated, this, &TileRotationWindow::tileRotatedActivated);
 
     setTilesetList();
     syncUI();
 
 #if 1
     InitFromBuildingTiles initFromBuildingTiles;
-    initFromBuildingTiles.initFromBuildingTiles();
-
-    mUndoStack->beginMacro(QLatin1Literal("TEST"));
-    auto& furnitureTiles = initFromBuildingTiles.mFurnitureTiles;
-    for (auto* furnitureTiles1 : furnitureTiles) {
-//        TRWFurnitureTiles* furnitureTiles1 = new TRWFurnitureTiles();
-        furnitureTiles1->setGroup(mFurnitureGroup);
-#if 0
-//        furnitureTiles1->mType = TODO;
-        for (FurnitureTile* furnitureTile : furnitureTiles->tiles()) {
-            FurnitureTile* furnitureTile1 = new FurnitureTile(furnitureTiles1, furnitureTile->orient());
-            for (int dy = 0; dy < furnitureTile->height(); dy++) {
-                for (int dx = 0; dx < furnitureTile->width(); dx++) {
-                    if (BuildingTile* buildingTile = furnitureTile->tile(dx, dy)) {
-                        furnitureTile1->setTile(dx, dy, buildingTile);
-                    }
-                }
-            }
-            furnitureTiles1->setTile(furnitureTile1);
-        }
-#endif
-        mUndoStack->push(new AddFurnitureTiles(this, mFurnitureGroup, mFurnitureGroup->mTiles.size(), furnitureTiles1));
-//        mFurnitureGroup->mTiles += furnitureTiles1;
+    initFromBuildingTiles.init();
+    mTilesets = initFromBuildingTiles.mTilesetLookup.values();
+    mCurrentTilesetRotated = nullptr;
+    for (TilesetRotated *tileset : mTilesets) {
+        if (tileset == nullptr)
+            continue;
+        mCurrentTilesetRotated = tileset;
+        ui->tileRotateView->setTiles(mCurrentTilesetRotated->mTiles);
+        break;
     }
-    mUndoStack->endMacro();
+    setTilesetRotatedList();
     mFileName = QLatin1Literal("D:/pz/TileRotation.txt");
-    ui->furnitureView->setTiles(mFurnitureGroup->mTiles);
 #endif
 }
 
 TileRotationWindow::~TileRotationWindow()
 {
     delete ui;
-    qDeleteAll(mFurnitureGroup->mTiles);
-    mFurnitureGroup->mTiles.clear();
-    delete mFurnitureGroup;
+    qDeleteAll(mTilesets);
 }
 
 void TileRotationWindow::fileNew()
@@ -749,9 +795,10 @@ void TileRotationWindow::fileNew()
 
     mUndoStack->clear();
     mFileName = fileName;
-    qDeleteAll(mFurnitureGroup->mTiles);
-    mFurnitureGroup->mTiles.clear();
-    ui->furnitureView->setTiles(mFurnitureGroup->mTiles);
+    qDeleteAll(mTilesets);
+    mTilesets.clear();
+    mCurrentTilesetRotated = nullptr;
+    ui->tileRotateView->setTiles(QList<TileRotated*>());
 
     syncUI();
 }
@@ -780,23 +827,25 @@ void TileRotationWindow::fileOpen()
 
 void TileRotationWindow::fileOpen(const QString &fileName)
 {
-    QList<TileRotateFileInfo*> tileInfos;
-    if (!fileOpen(fileName, tileInfos)) {
+    QList<TilesetRotated*> tilesets;
+    if (!fileOpen(fileName, tilesets)) {
         QMessageBox::warning(this, tr("Error reading file"), mError);
         return;
     }
 
     mUndoStack->clear();
     mFileName = fileName;
-    qDeleteAll(mFurnitureGroup->mTiles);
-    mFurnitureGroup->mTiles.clear();
-    for (TileRotateFileInfo *tileInfo : tileInfos) {
-        TRWFurnitureTiles *ftCopy = new TRWFurnitureTiles(tileInfo->mFurnitureTiles);
-        ftCopy->setGroup(mFurnitureGroup);
-        ftCopy->mType = tileInfo->mType;
-        mFurnitureGroup->mTiles += ftCopy;
+    qDeleteAll(mTilesets);
+    mTilesets = tilesets;
+    mCurrentTilesetRotated = nullptr;
+    for (TilesetRotated *tileset : mTilesets) {
+        if (tileset == nullptr)
+            continue;
+        mCurrentTilesetRotated = tileset;
+        ui->tileRotateView->setTiles(mCurrentTilesetRotated->mTiles);
+        break;
     }
-    ui->furnitureView->setTiles(mFurnitureGroup->mTiles);
+    setTilesetRotatedList();
     syncUI();
 }
 
@@ -804,9 +853,9 @@ void TileRotationWindow::closeEvent(QCloseEvent *event)
 {
     if (confirmSave()) {
         mFileName.clear();
-        ui->furnitureView->clear();
-        qDeleteAll(mFurnitureGroup->mTiles);
-        mFurnitureGroup->mTiles.clear();
+        ui->tileRotateView->clear();
+        qDeleteAll(mTilesets);
+        mTilesets.clear();
         mUndoStack->clear();
         syncUI();
         event->accept();
@@ -875,78 +924,32 @@ bool TileRotationWindow::fileSaveAs()
 
 void TileRotationWindow::addTiles()
 {
-    int index = mFurnitureGroup->mTiles.size();
-//    if (mCurrentFurniture)
-//        index = mFurnitureGroup->mTiles.indexOf(mCurrentFurniture->owner()) + 1;
-    TRWFurnitureTiles *tiles = new TRWFurnitureTiles();
-    tiles->mType = TileRotateType::None;
-    mUndoStack->push(new AddFurnitureTiles(this, mFurnitureGroup, index, tiles));
+
 }
 
 void TileRotationWindow::clearTiles()
 {
-    FurnitureView *v = ui->furnitureView;
-    QList<FurnitureTile*> clear;
+    TileRotateView *v = ui->tileRotateView;
     QModelIndexList selection = v->selectionModel()->selectedIndexes();
     for (QModelIndex index : selection) {
-        FurnitureTile *tile = v->model()->tileAt(index);
-        if (!tile->isEmpty())
-            clear += tile;
+        TileRotated *tile = v->model()->tileAt(index);
     }
-    if (clear.isEmpty())
-        return;
-    mUndoStack->beginMacro(tr("Clear Furniture Tiles"));
-    for (FurnitureTile* ftile : clear) {
-        for (int x = 0; x < ftile->width(); x++) {
-            for (int y = 0; y < ftile->height(); y++) {
-                if (ftile->tile(x, y)) {
-                    mUndoStack->push(new ChangeFurnitureTile(this, ftile, x, y));
-                }
-            }
-        }
-    }
+    mUndoStack->beginMacro(tr("Clear Tiles"));
+    // TODO: r90 or r180 or r270
     mUndoStack->endMacro();
 }
 
 void TileRotationWindow::removeTiles()
 {
-    FurnitureView *v = ui->furnitureView;
-    QList<FurnitureTiles*> remove;
-    QModelIndexList selection = v->selectionModel()->selectedIndexes();
-    for (QModelIndex& index : selection) {
-        FurnitureTile *tile = v->model()->tileAt(index);
-        if (!remove.contains(tile->owner())) {
-            remove += tile->owner();
-        }
-    }
-    if (remove.count() > 1) {
-        mUndoStack->beginMacro(tr("Remove Furniture Tiles"));
-    }
-    for (FurnitureTiles *tiles : remove) {
-        mUndoStack->push(new RemoveFurnitureTiles(this, tiles->group(), tiles->indexInGroup()));
-    }
-    if (remove.count() > 1) {
-        mUndoStack->endMacro();
-    }
+
 }
 
 bool TileRotationWindow::fileSave(const QString &fileName)
 {
-    QList<TileRotateFileInfo*> tileInfos;
-    for (FurnitureTiles *furnitureTiles : mFurnitureGroup->mTiles) {
-        TRWFurnitureTiles *trwft = dynamic_cast<TRWFurnitureTiles*>(furnitureTiles);
-        TileRotateFileInfo *tileInfo = new TileRotateFileInfo();
-        tileInfo->mFurnitureTiles = furnitureTiles;
-        tileInfo->mType = trwft->mType;
-        tileInfo->mOwnsFurniture = false;
-        tileInfos += tileInfo;
-    }
-    if (!fileSave(fileName, tileInfos)) {
-        qDeleteAll(tileInfos);
+    if (!fileSave(fileName, mTilesets)) {
         QMessageBox::warning(this, tr("Error writing file"), mError);
         return false;
     }
-    qDeleteAll(tileInfos);
     mFileName = fileName;
     mUndoStack->setClean();
     syncUI();
@@ -954,21 +957,21 @@ bool TileRotationWindow::fileSave(const QString &fileName)
     return true;
 }
 
-bool TileRotationWindow::fileOpen(const QString &fileName, QList<TileRotateFileInfo *> &tiles)
+bool TileRotationWindow::fileOpen(const QString &fileName, QList<TilesetRotated *> &tilesets)
 {
     TileRotationFile file;
     if (!file.read(fileName)) {
         mError = file.errorString();
         return false;
     }
-    tiles = file.takeTiles();
+    tilesets = file.takeTilesets();
     return true;
 }
 
-bool TileRotationWindow::fileSave(const QString &fileName, const QList<TileRotateFileInfo *> &tiles)
+bool TileRotationWindow::fileSave(const QString &fileName, const QList<TilesetRotated *> &tilesets)
 {
     TileRotationFile file;
-    if (!file.write(fileName, tiles)) {
+    if (!file.write(fileName, tilesets)) {
         mError = file.errorString();
         return false;
     }
@@ -991,7 +994,7 @@ void TileRotationWindow::syncUI()
     ui->actionSave->setEnabled(!mFileName.isEmpty() && !mUndoStack->isClean());
     ui->actionSaveAs->setEnabled(!mFileName.isEmpty());
 
-    QModelIndexList selected = ui->furnitureView->selectionModel()->selectedIndexes();
+    QModelIndexList selected = ui->tileRotateView->selectionModel()->selectedIndexes();
     ui->actionAddTiles->setEnabled(!mFileName.isEmpty());
     ui->actionClearTiles->setEnabled(selected.size() > 0);
     ui->actionRemove->setEnabled(selected.size() > 0);
@@ -1000,9 +1003,9 @@ void TileRotationWindow::syncUI()
     if (selected.isEmpty()) {
         ui->typeComboBox->setCurrentIndex(0);
     } else {
-        FurnitureTile* furnitureTile = ui->furnitureView->model()->tileAt(selected.first());
-        TRWFurnitureTiles* furnitureTiles = dynamic_cast<TRWFurnitureTiles*>(furnitureTile->owner());
-        ui->typeComboBox->setCurrentIndex(int(furnitureTiles->mType));
+        TileRotated *tile = ui->tileRotateView->model()->tileAt(selected.first());
+//        TRWFurnitureTiles* furnitureTiles = dynamic_cast<TRWFurnitureTiles*>(furnitureTile->owner());
+//        ui->typeComboBox->setCurrentIndex(int(furnitureTiles->mType));
     }
 
     updateWindowTitle();
@@ -1015,12 +1018,10 @@ void TileRotationWindow::tileActivated(const QModelIndex &index)
         return;
     QString tileName = BuildingTilesMgr::nameForTile(tile);
     BuildingTile* buildingTile = BuildingTilesMgr::instance()->get(tileName);
-    for (FurnitureTiles* furnitureTiles : mFurnitureGroup->mTiles) {
-        for (FurnitureTile* furnitureTile : furnitureTiles->tiles()) {
-            if (furnitureTile->tiles().contains(buildingTile)) {
-                ui->furnitureView->setCurrentIndex(ui->furnitureView->model()->index(furnitureTile));
-                return;
-            }
+    for (TileRotated *tile : mCurrentTilesetRotated->mTiles) {
+        if (BuildingTilesMgr::instance()->nameForTile(tile->mTileset->mName, tile->mID) == tileName) {
+            ui->tileRotateView->setCurrentIndex(ui->tileRotateView->model()->index(tile));
+            return;
         }
     }
 }
@@ -1045,29 +1046,39 @@ void TileRotationWindow::tilesetSelectionChanged()
     syncUI();
 }
 
-void TileRotationWindow::furnitureActivated(const QModelIndex &index)
+void TileRotationWindow::tileRotatedActivated(const QModelIndex &index)
 {
-    FurnitureModel *m = ui->furnitureView->model();
-    if (FurnitureTile *ftile = m->tileAt(index)) {
+    TileRotateModel *m = ui->tileRotateView->model();
+    if (TileRotated *tile = m->tileAt(index)) {
+#if 0 // TODO
         for (BuildingTile *btile : ftile->tiles()) {
             if (btile != nullptr) {
                 displayTileInTileset(btile);
                 break;
             }
         }
+#endif
     }
+}
+
+void TileRotationWindow::tilesetRotatedSelectionChanged()
+{
+    QList<QListWidgetItem*> selection = ui->tilesetRotatedList->selectedItems();
+    QListWidgetItem *item = selection.count() ? selection.first() : nullptr;
+    mCurrentTilesetRotated = nullptr;
+    if (item) {
+        int row = ui->tilesetRotatedList->row(item);
+        mCurrentTilesetRotated = mTilesets[row];
+        ui->tileRotateView->setTiles(mCurrentTilesetRotated->mTiles);
+        updateUsedTiles();
+    } else {
+        ui->tileRotateView->clear();
+    }
+    syncUI();
 }
 
 void TileRotationWindow::typeComboActivated(int index)
 {
-    if (index < 0 || index >= int(TileRotateType::MAX))
-        return;
-    TileRotateType type = TileRotateType(index);
-    QModelIndexList selected = ui->furnitureView->selectionModel()->selectedIndexes();
-    if (selected.isEmpty())
-        return;
-    FurnitureTile* furnitureTile = ui->furnitureView->model()->tileAt(selected.first());
-    mUndoStack->push(new ChangeRotateType(this, furnitureTile, type));
 }
 
 void TileRotationWindow::displayTileInTileset(Tiled::Tile *tile)
@@ -1084,6 +1095,45 @@ void TileRotationWindow::displayTileInTileset(Tiled::Tile *tile)
 void TileRotationWindow::displayTileInTileset(BuildingTile *tile)
 {
     displayTileInTileset(BuildingTilesMgr::instance()->tileFor(tile));
+}
+
+void TileRotationWindow::setTilesetRotatedList()
+{
+    ui->tilesetRotatedList->clear();
+    ui->tilesetRotatedFilter->setEnabled(!mTilesets.isEmpty());
+    // Add the list of tilesets, and resize it to fit
+    int width = 64;
+    QFontMetrics fm = ui->tilesetRotatedList->fontMetrics();
+    for (TilesetRotated *tileset : mTilesets) {
+        QListWidgetItem *item = new QListWidgetItem();
+        item->setText(tileset->mName);
+        ui->tilesetRotatedList->addItem(item);
+        width = qMax(width, fm.width(tileset->mName));
+    }
+    int sbw = ui->tilesetRotatedList->verticalScrollBar()->sizeHint().width();
+    ui->tilesetRotatedList->setFixedWidth(width + 16 + sbw);
+    ui->tilesetRotatedFilter->setFixedWidth(ui->tilesetRotatedList->width());
+}
+
+void TileRotationWindow::setTilesetList()
+{
+    ui->tilesetList->clear();
+    ui->tilesetFilter->setEnabled(!TileMetaInfoMgr::instance()->tilesets().isEmpty());
+    // Add the list of tilesets, and resize it to fit
+    int width = 64;
+    QFontMetrics fm = ui->tilesetList->fontMetrics();
+    for (Tileset *tileset : TileMetaInfoMgr::instance()->tilesets()) {
+        QListWidgetItem *item = new QListWidgetItem();
+        item->setText(tileset->name());
+        if (tileset->isMissing()) {
+            item->setForeground(Qt::red);
+        }
+        ui->tilesetList->addItem(item);
+        width = qMax(width, fm.width(tileset->name()));
+    }
+    int sbw = ui->tilesetList->verticalScrollBar()->sizeHint().width();
+    ui->tilesetList->setFixedWidth(width + 16 + sbw);
+    ui->tilesetFilter->setFixedWidth(ui->tilesetList->width());
 }
 
 void TileRotationWindow::updateUsedTiles()
@@ -1108,27 +1158,6 @@ void TileRotationWindow::updateUsedTiles()
         }
     }
     ui->tilesetTilesView->model()->redisplay();
-}
-
-void TileRotationWindow::setTilesetList()
-{
-    ui->tilesetList->clear();
-    ui->tilesetFilter->setEnabled(!TileMetaInfoMgr::instance()->tilesets().isEmpty());
-    // Add the list of tilesets, and resize it to fit
-    int width = 64;
-    QFontMetrics fm = ui->tilesetList->fontMetrics();
-    for (Tileset *tileset : TileMetaInfoMgr::instance()->tilesets()) {
-        QListWidgetItem *item = new QListWidgetItem();
-        item->setText(tileset->name());
-        if (tileset->isMissing()) {
-            item->setForeground(Qt::red);
-        }
-        ui->tilesetList->addItem(item);
-        width = qMax(width, fm.width(tileset->name()));
-    }
-    int sbw = ui->tilesetList->verticalScrollBar()->sizeHint().width();
-    ui->tilesetList->setFixedWidth(width + 16 + sbw);
-    ui->tilesetFilter->setFixedWidth(ui->tilesetList->width());
 }
 
 void TileRotationWindow::filterEdited(const QString &text)
@@ -1178,12 +1207,9 @@ void TileRotationWindow::filterEdited(const QString &text)
 
 bool TileRotationWindow::isTileUsed(const QString &_tileName)
 {
-    BuildingTile* buildingTile = BuildingTilesMgr::instance()->get(_tileName);
-    if (buildingTile == nullptr)
-        return false;
-    for (FurnitureTiles* furnitureTiles : mFurnitureGroup->mTiles) {
-        for (FurnitureTile* furnitureTile : furnitureTiles->tiles()) {
-            if (furnitureTile->tiles().contains(buildingTile)) {
+    for (TilesetRotated *tileset : mTilesets) {
+        for (TileRotated *tile : tileset->mTiles) {
+            if (BuildingTilesMgr::instance()->nameForTile(tileset->mName, tile->mID) == _tileName) {
                 return true;
             }
         }
@@ -1237,51 +1263,45 @@ void TileRotationWindow::tilesetChanged(Tileset *tileset)
     }
 }
 
-void TileRotationWindow::furnitureTileDropped(FurnitureTile *ftile, int x, int y, const QString &tileName)
+void TileRotationWindow::tileDropped(TileRotated *tile, int x, const QString &tileName)
 {
-    mUndoStack->push(new ChangeFurnitureTile(this, ftile, x, y, tileName));
+    mUndoStack->push(new AddTile(this, tile, x, tileName));
 }
 
-void TileRotationWindow::insertFurnitureTiles(FurnitureGroup *group, int index, TRWFurnitureTiles *ftiles)
+void TileRotationWindow::addTile(TileRotated *tile, int index, const QString& tileName)
 {
-    group->mTiles.insert(index, ftiles);
-    ftiles->setGroup(group);
-    ui->furnitureView->setTiles(group->mTiles);
-    updateUsedTiles();
-}
-
-TRWFurnitureTiles *TileRotationWindow::removeFurnitureTiles(FurnitureGroup *group, int index)
-{
-    TRWFurnitureTiles *ftiles = static_cast<TRWFurnitureTiles*>(group->mTiles.takeAt(index));
-    ftiles->setGroup(nullptr);
-    ui->furnitureView->model()->removeTiles(ftiles);
-    updateUsedTiles();
-    return ftiles;
-}
-
-QString TileRotationWindow::changeFurnitureTile(FurnitureTile *ftile, int x, int y, const QString &tileName)
-{
-    QString old = ftile->tile(x, y) ? ftile->tile(x, y)->name() : QString();
-    QSize oldSize = ftile->size();
-    BuildingTile *btile = tileName.isEmpty() ? nullptr : BuildingTilesMgr::instance()->get(tileName);
-    if (btile && BuildingTilesMgr::instance()->tileFor(btile) && BuildingTilesMgr::instance()->tileFor(btile)->image().isNull()) {
-        btile = nullptr;
+    switch (index) {
+    case 1:
+        tile->r90.mTileNames += tileName;
+        break;
+    case 2:
+        tile->r180.mTileNames += tileName;
+        break;
+    case 3:
+        tile->r270.mTileNames += tileName;
+        break;
     }
-    ftile->setTile(x, y, btile);
-    if (ftile->size() != oldSize) {
-        ui->furnitureView->furnitureTileResized(ftile);
-    }
-    ui->furnitureView->update(ui->furnitureView->model()->index(ftile));
     updateUsedTiles();
-    return old;
 }
 
-TileRotateType TileRotationWindow::changeRotateType(FurnitureTile *ftile, TileRotateType rotateType)
+QString TileRotationWindow::removeTile(TileRotated *tile, int index)
 {
-    TRWFurnitureTiles *ftiles = static_cast<TRWFurnitureTiles*>(ftile->owner());
-    TileRotateType old = ftiles->mType;
-    ftiles->mType = rotateType;
-    ui->typeComboBox->setCurrentIndex(int(rotateType));
+    QString old;
+    switch (index) {
+    case 1:
+        old = tile->r90.mTileNames.last();
+        tile->r90.mTileNames.removeAt(tile->r90.mTileNames.size() - 1);
+        break;
+    case 2:
+        old = tile->r180.mTileNames.last();
+        tile->r180.mTileNames.removeAt(tile->r180.mTileNames.size() - 1);
+        break;
+    case 3:
+        old = tile->r270.mTileNames.last();
+        tile->r270.mTileNames.removeAt(tile->r270.mTileNames.size() - 1);
+        break;
+    }
+    updateUsedTiles();
     return old;
 }
 

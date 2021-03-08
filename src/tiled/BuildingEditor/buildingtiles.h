@@ -731,6 +731,7 @@ public:
 
     Tiled::Tile *tileFor(const QString &tileName);
     Tiled::Tile *tileFor(BuildingTile *tile, int offset = 0);
+    Tiled::Tile *tileFor(const QString& tilesetName, int index);
 
     BuildingTile *fromTiledTile(Tiled::Tile *tile);
 

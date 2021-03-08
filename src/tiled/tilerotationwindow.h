@@ -28,22 +28,14 @@ class TileRotationWindow;
 
 namespace BuildingEditor {
 class BuildingTile;
-class FurnitureGroup;
-class FurnitureTile;
-class FurnitureTiles;
 }
 
 namespace Tiled {
 class Tile;
-class TileRotateFileInfo;
 class Tileset;
 namespace Internal {
 class Zoomable;
 }
-}
-
-namespace {
-class TRWFurnitureTiles;
 }
 
 class QUndoGroup;
@@ -63,17 +55,17 @@ protected:
     QString getSaveLocation();
     void fileOpen(const QString &fileName);
     bool fileSave(const QString &fileName);
-    bool fileOpen(const QString &fileName, QList<Tiled::TileRotateFileInfo*> &tiles);
-    bool fileSave(const QString &fileName, const QList<Tiled::TileRotateFileInfo*> &tiles);
+    bool fileOpen(const QString &fileName, QList<Tiled::TilesetRotated*> &tiles);
+    bool fileSave(const QString &fileName, const QList<Tiled::TilesetRotated*> &tilesets);
+    void setTilesetRotatedList();
     void setTilesetList();
     void updateUsedTiles();
     bool isTileUsed(const QString &_tileName);
     void displayTileInTileset(Tiled::Tile *tile);
     void displayTileInTileset(BuildingEditor::BuildingTile *tile);
-    void insertFurnitureTiles(BuildingEditor::FurnitureGroup *group, int index, TRWFurnitureTiles *ftiles);
-    TRWFurnitureTiles *removeFurnitureTiles(BuildingEditor::FurnitureGroup *group, int index);
-    QString changeFurnitureTile(BuildingEditor::FurnitureTile *ftile, int x, int y, const QString &tileName);
-    Tiled::TileRotateType changeRotateType(BuildingEditor::FurnitureTile *ftile, Tiled::TileRotateType rotateType);
+    void addTile(Tiled::TileRotated *tile, int index, const QString& tileName);
+    QString removeTile(Tiled::TileRotated *tile, int index);
+    QStringList changeTiles(Tiled::TileRotated *tile, int index, const QStringList& tileNames);
 
 protected slots:
     void fileNew();
@@ -88,30 +80,30 @@ protected slots:
     void filterEdited(const QString &text);
     void tileActivated(const QModelIndex &index);
     void tilesetSelectionChanged();
+    void tileRotatedActivated(const QModelIndex &index);
+    void tilesetRotatedSelectionChanged();
     void manageTilesets();
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
     void tilesetRemoved(Tiled::Tileset *tileset);
     void tilesetChanged(Tiled::Tileset *tileset);
-    void furnitureTileDropped(BuildingEditor::FurnitureTile *ftile, int x, int y, const QString &tileName);
-    void furnitureActivated(const QModelIndex &index);
+    void tileDropped(Tiled::TileRotated *tile, int x, const QString &tileName);
     void typeComboActivated(int index);
 
 private:
     Ui::TileRotationWindow *ui;
     QString mFileName;
     Tiled::Internal::Zoomable *mZoomable;
+    Tiled::TilesetRotated *mCurrentTilesetRotated;
     Tiled::Tileset *mCurrentTileset;
     QString mHoverTileName;
     QString mError;
     QUndoGroup *mUndoGroup;
     QUndoStack *mUndoStack;
-    BuildingEditor::FurnitureGroup* mFurnitureGroup;
+    QList<Tiled::TilesetRotated*> mTilesets;
 
-    friend class AddFurnitureTiles;
-    friend class ChangeFurnitureTile;
-    friend class ChangeRotateType;
-    friend class RemoveFurnitureTiles;
+    friend class AddTile;
+    friend class ChangeTiles;
 };
 
 #endif // TILEROTATIONWINDOW_H
