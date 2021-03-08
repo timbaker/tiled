@@ -82,6 +82,7 @@ ObjectEditModeToolBar::ObjectEditModeToolBar(ObjectEditMode *mode, QWidget *pare
     addAction(actions->actionClockwise90);
     addAction(actions->actionClockwise180);
     addAction(actions->actionClockwise270);
+    addSeparator();
 
     mRoomComboBox = new QComboBox;
     mRoomComboBox->setIconSize(QSize(20, 20));
@@ -607,6 +608,12 @@ ObjectEditMode::ObjectEditMode(QObject *parent) :
 
     Ui::BuildingEditorWindow *actions = BuildingEditorWindow::instance()->actionIface();
 
+    QActionGroup *actionGroup = new QActionGroup(this);
+    actionGroup->setExclusive(true);
+    actionGroup->addAction(actions->actionNotRotated);
+    actionGroup->addAction(actions->actionClockwise90);
+    actionGroup->addAction(actions->actionClockwise180);
+    actionGroup->addAction(actions->actionClockwise270);
     connect(actions->actionNotRotated, &QAction::triggered, this, &ObjectEditMode::setRotationNotRotated);
     connect(actions->actionClockwise90, &QAction::triggered, this, &ObjectEditMode::setRotationClockwise90);
     connect(actions->actionClockwise180, &QAction::triggered, this, &ObjectEditMode::setRotationClockwise180);

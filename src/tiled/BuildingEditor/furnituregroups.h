@@ -150,6 +150,9 @@ public:
     bool hasCorners() const
     { return mCorners; }
 
+    void setCorners(bool hasCorners)
+    { mCorners = hasCorners; }
+
     void toggleCorners()
     { mCorners = !mCorners; }
 

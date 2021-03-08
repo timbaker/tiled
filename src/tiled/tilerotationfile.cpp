@@ -34,6 +34,7 @@ const char *Tiled::TILE_ROTATE_NAMES[] = {
     "Door",
     "DoorFrame",
     "Wall",
+    "WallExtra",
     "Window",
     "WindowFrame",
     nullptr

@@ -51,12 +51,14 @@ class TRWFurnitureTiles : public FurnitureTiles
 public:
     TRWFurnitureTiles()
         : FurnitureTiles(false)
+        , mType(TileRotateType::None)
     {
 
     }
 
     TRWFurnitureTiles(FurnitureTiles *other)
         : FurnitureTiles(false)
+        , mType(TileRotateType::None)
     {
         for (FurnitureTile *furnitureTile : other->tiles()) {
             FurnitureTile* ftCopy = new FurnitureTile(this, furnitureTile);
@@ -196,6 +198,7 @@ public:
 
 #if 1
 
+// This is temporary code to bootstrap creation of TileRotation.txt from the existing BuildingEd furniture information.
 class InitFromBuildingTiles
 {
 public:
@@ -217,15 +220,32 @@ public:
     void initFromBuildingTiles(const QList<BuildingTileEntry*> &entries, int n, int w, TileRotateType rotateType)
     {
         for (BuildingTileEntry* bte : entries) {
-            BuildingTile *tileN = bte->tile(n);
-            BuildingTile *tileW = bte->tile(w);
-            if (tileN->isNone() && tileW->isNone())
-                continue;
-            QString tileNames[MAP_ROTATION_COUNT];
-            tileNames[0] = tileN->name();
-            tileNames[3] = tileW->name();
-            addFurnitureTilesForRotateInfo(tileNames, rotateType);
+            initFromBuildingTiles(bte, n, w, rotateType);
         }
+    }
+
+    void initFromBuildingTiles(BuildingTileEntry* bte, int n, int w, int nw, TileRotateType rotateType)
+    {
+        BuildingTile *tileN = bte->tile(n);
+        BuildingTile *tileW = bte->tile(w);
+        if (tileN->isNone() && tileW->isNone())
+            return;
+        QString tileNames[MAP_ROTATION_COUNT];
+        tileNames[0] = tileN->name();
+        tileNames[3] = tileW->name();
+        if (nw != -1) {
+            BuildingTile *tileNW = bte->tile(nw);
+            if (!tileNW->isNone()) {
+                tileNames[1] = tileNW->name();
+            }
+        }
+        addFurnitureTilesForRotateInfo(tileNames, rotateType);
+    }
+
+    void initFromBuildingTiles(BuildingTileEntry* bte, int n, int w, TileRotateType rotateType)
+    {
+        int nw = (rotateType == TileRotateType::Wall) ? BTC_Walls::NorthWest : -1;
+        initFromBuildingTiles(bte, n, w, nw, rotateType);
     }
 
     FurnitureTile::FurnitureOrientation orient[MAP_ROTATION_COUNT] = {
@@ -257,19 +277,241 @@ public:
         MapRotation::Clockwise270
     };
 
+    bool initFromBuildingTiles(FurnitureTile* ft[4])
+    {
+        if (ft[0]->isEmpty() && ft[1]->isEmpty() && ft[2]->isEmpty() && ft[3]->isEmpty())
+            return false;
+        int width = ft[0]->width();
+        int height = ft[0]->height();
+        for (int dy = 0; dy < height; dy++) {
+            for (int dx = 0; dx < width; dx++) {
+                for (int i = 0; i < 4; i++) {
+                    QPoint p = rotatePoint(width, height, rotation[i], QPoint(dx, dy));
+                    BuildingTile* buildingTile = ft[i]->tile(p.x(), p.y());
+                    if (buildingTile != nullptr) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    void initGrime()
+    {
+#if 0
+        West,
+        North,
+        NorthWest,
+        SouthEast,
+        WestWindow,
+        NorthWindow,
+        WestDoor,
+        NorthDoor,
+        WestTrim,
+        NorthTrim,
+        NorthWestTrim,
+        SouthEastTrim,
+        WestDoubleLeft,
+        WestDoubleRight,
+        NorthDoubleLeft,
+        NorthDoubleRight,
+#endif
+        BuildingTileCategory *slopes = BuildingTilesMgr::instance()->catGrimeWall();
+        for (BuildingTileEntry *entry : slopes->entries()) {
+            initFromBuildingTiles(entry, BTC_GrimeWall::North, BTC_GrimeWall::West, BTC_GrimeWall::NorthWest, TileRotateType::Wall);
+            initFromBuildingTiles(entry, BTC_GrimeWall::NorthDoor, BTC_GrimeWall::WestDoor, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_GrimeWall::NorthWindow, BTC_GrimeWall::WestWindow, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_GrimeWall::NorthTrim, BTC_GrimeWall::WestTrim, BTC_GrimeWall::NorthWestTrim, TileRotateType::Wall);
+            // DoubleLeft/DoubleRight should be single FurnitureTile
+        }
+    }
+
+    void initRoofCaps()
+    {
+#if 0
+        // Sloped cap tiles go left-to-right or bottom-to-top
+        CapRiseE1, CapRiseE2, CapRiseE3, CapFallE1, CapFallE2, CapFallE3,
+        CapRiseS1, CapRiseS2, CapRiseS3, CapFallS1, CapFallS2, CapFallS3,
+
+        // Cap tiles with peaked tops
+        PeakPt5S, PeakPt5E,
+        PeakOnePt5S, PeakOnePt5E,
+        PeakTwoPt5S, PeakTwoPt5E,
+
+        // Cap tiles with flat tops
+        CapGapS1, CapGapS2, CapGapS3,
+        CapGapE1, CapGapE2, CapGapE3,
+
+        // Cap tiles for shallow (garage, trailer, etc) roofs
+        CapShallowRiseS1, CapShallowRiseS2, CapShallowFallS1, CapShallowFallS2,
+        CapShallowRiseE1, CapShallowRiseE2, CapShallowFallE1, CapShallowFallE2,
+#endif
+        BuildingTileCategory *category = BuildingTilesMgr::instance()->catRoofCaps();
+        for (BuildingTileEntry *entry : category->entries()) {
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapRiseS1, BTC_RoofCaps::CapRiseE1, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapRiseS2, BTC_RoofCaps::CapRiseE2, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapRiseS3, BTC_RoofCaps::CapRiseE3, TileRotateType::WallExtra);
+
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapFallS1, BTC_RoofCaps::CapFallE1, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapFallS2, BTC_RoofCaps::CapFallE2, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapFallS3, BTC_RoofCaps::CapFallE3, TileRotateType::WallExtra);
+
+            initFromBuildingTiles(entry, BTC_RoofCaps::PeakPt5S, BTC_RoofCaps::PeakPt5E, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_RoofCaps::PeakOnePt5S, BTC_RoofCaps::PeakOnePt5E, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_RoofCaps::PeakTwoPt5S, BTC_RoofCaps::PeakTwoPt5E, TileRotateType::WallExtra);
+
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapGapS1, BTC_RoofCaps::CapGapE1, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapGapS2, BTC_RoofCaps::CapGapE2, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapGapS3, BTC_RoofCaps::CapGapE3, TileRotateType::WallExtra);
+
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapShallowRiseS1, BTC_RoofCaps::CapShallowRiseE1, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapShallowRiseS2, BTC_RoofCaps::CapShallowRiseE2, TileRotateType::WallExtra);
+
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapShallowFallS1, BTC_RoofCaps::CapShallowFallE1, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapShallowFallS2, BTC_RoofCaps::CapShallowFallE2, TileRotateType::WallExtra);
+        }
+    }
+
+    void initRoofSlope(BuildingTileEntry *entry, int north, int west)
+    {
+        initFromBuildingTiles(entry, north, west, TileRotateType::None);
+    }
+
+    void initRoofSlope(BuildingTileEntry *bte, int north, int east, int west)
+    {
+        BuildingTile *tileN = bte->tile(north);
+        BuildingTile *tileE = bte->tile(east);
+        BuildingTile *tileW = bte->tile(west);
+        if (tileN->isNone() || tileE->isNone() || tileW->isNone())
+            return;
+        QString tileNames[MAP_ROTATION_COUNT];
+        tileNames[TileRotateInfo::NORTH] = tileN->name();
+        tileNames[TileRotateInfo::EAST] = tileE->name();
+        tileNames[TileRotateInfo::WEST] = tileW->name();
+        addFurnitureTilesForRotateInfo(tileNames, TileRotateType::None);
+    }
+
+    void initRoofSlopes()
+    {
+#if 0
+        // Sloped sides
+        SlopeS1, SlopeS2, SlopeS3,
+        SlopeE1, SlopeE2, SlopeE3,
+        SlopePt5S, SlopePt5E,
+        SlopeOnePt5S, SlopeOnePt5E,
+        SlopeTwoPt5S, SlopeTwoPt5E,
+
+        // Shallow sides
+        ShallowSlopeW1, ShallowSlopeW2,
+        ShallowSlopeE1, ShallowSlopeE2,
+        ShallowSlopeN1, ShallowSlopeN2,
+        ShallowSlopeS1, ShallowSlopeS2,
+
+        // Sloped corners
+        Inner1, Inner2, Inner3,
+        Outer1, Outer2, Outer3,
+        InnerPt5, InnerOnePt5, InnerTwoPt5,
+        OuterPt5, OuterOnePt5, OuterTwoPt5,
+        CornerSW1, CornerSW2, CornerSW3,
+        CornerNE1, CornerNE2, CornerNE3,
+#endif
+        BuildingTileCategory *category = BuildingTilesMgr::instance()->catRoofSlopes();
+        for (BuildingTileEntry *entry : category->entries()) {
+            initRoofSlope(entry, BTC_RoofSlopes::SlopeS1, BTC_RoofSlopes::SlopeE1);
+            initRoofSlope(entry, BTC_RoofSlopes::SlopeS2, BTC_RoofSlopes::SlopeE2);
+            initRoofSlope(entry, BTC_RoofSlopes::SlopeS3, BTC_RoofSlopes::SlopeE3);
+
+            initRoofSlope(entry, BTC_RoofSlopes::SlopePt5S, BTC_RoofSlopes::SlopePt5E);
+            initRoofSlope(entry, BTC_RoofSlopes::SlopeOnePt5S, BTC_RoofSlopes::SlopeOnePt5E);
+            initRoofSlope(entry, BTC_RoofSlopes::SlopeTwoPt5S, BTC_RoofSlopes::SlopeTwoPt5E);
+
+            {
+                BuildingTile *tileN = entry->tile(BTC_RoofSlopes::ShallowSlopeN1);
+                BuildingTile *tileE = entry->tile(BTC_RoofSlopes::ShallowSlopeE1);
+                BuildingTile *tileS = entry->tile(BTC_RoofSlopes::ShallowSlopeS1);
+                BuildingTile *tileW = entry->tile(BTC_RoofSlopes::ShallowSlopeW1);
+                if (!tileN->isNone() && !tileE->isNone() && !tileS->isNone() && !tileW->isNone()) {
+                    QString tileNames[MAP_ROTATION_COUNT];
+                    tileNames[TileRotateInfo::NORTH] = tileN->name();
+                    tileNames[TileRotateInfo::EAST] = tileE->name();
+                    tileNames[TileRotateInfo::SOUTH] = tileS->name();
+                    tileNames[TileRotateInfo::WEST] = tileW->name();
+                    addFurnitureTilesForRotateInfo(tileNames, TileRotateType::None);
+                }
+            }
+
+            {
+                BuildingTile *tileN = entry->tile(BTC_RoofSlopes::ShallowSlopeN2);
+                BuildingTile *tileE = entry->tile(BTC_RoofSlopes::ShallowSlopeE2);
+                BuildingTile *tileS = entry->tile(BTC_RoofSlopes::ShallowSlopeS2);
+                BuildingTile *tileW = entry->tile(BTC_RoofSlopes::ShallowSlopeW2);
+                if (!tileN->isNone() && !tileE->isNone() && !tileS->isNone() && !tileW->isNone()) {
+                    QString tileNames[MAP_ROTATION_COUNT];
+                    tileNames[TileRotateInfo::NORTH] = tileN->name();
+                    tileNames[TileRotateInfo::EAST] = tileE->name();
+                    tileNames[TileRotateInfo::SOUTH] = tileS->name();
+                    tileNames[TileRotateInfo::WEST] = tileW->name();
+                    addFurnitureTilesForRotateInfo(tileNames, TileRotateType::None);
+                }
+            }
+
+            initRoofSlope(entry, BTC_RoofSlopes::Outer1, BTC_RoofSlopes::CornerSW1, BTC_RoofSlopes::CornerNE1);
+            initRoofSlope(entry, BTC_RoofSlopes::Outer2, BTC_RoofSlopes::CornerSW2, BTC_RoofSlopes::CornerNE2);
+            initRoofSlope(entry, BTC_RoofSlopes::Outer3, BTC_RoofSlopes::CornerSW3, BTC_RoofSlopes::CornerNE3);
+        }
+    }
+
     void initFromBuildingTiles()
     {
         initFromBuildingTiles(BuildingTilesMgr::instance()->catDoors()->entries(), BTC_Doors::North, BTC_Doors::West, TileRotateType::Door);
         initFromBuildingTiles(BuildingTilesMgr::instance()->catDoorFrames()->entries(), BTC_DoorFrames::North, BTC_DoorFrames::West, TileRotateType::DoorFrame);
+
         initFromBuildingTiles(BuildingTilesMgr::instance()->catEWalls()->entries(), BTC_Walls::North, BTC_Walls::West, TileRotateType::Wall);
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catEWalls()->entries(), BTC_Walls::NorthDoor, BTC_Walls::WestDoor, TileRotateType::DoorFrame);
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catEWalls()->entries(), BTC_Walls::NorthWindow, BTC_Walls::WestWindow, TileRotateType::WindowFrame);
+
         initFromBuildingTiles(BuildingTilesMgr::instance()->catIWalls()->entries(), BTC_Walls::North, BTC_Walls::West, TileRotateType::Wall);
-        initFromBuildingTiles(BuildingTilesMgr::instance()->catEWallTrim()->entries(), BTC_Walls::North, BTC_Walls::West, TileRotateType::Wall);
-        initFromBuildingTiles(BuildingTilesMgr::instance()->catIWallTrim()->entries(), BTC_Walls::North, BTC_Walls::West, TileRotateType::Wall);
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catIWalls()->entries(), BTC_Walls::NorthDoor, BTC_Walls::WestDoor, TileRotateType::DoorFrame);
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catIWalls()->entries(), BTC_Walls::NorthWindow, BTC_Walls::WestWindow, TileRotateType::WindowFrame);
+
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catEWallTrim()->entries(), BTC_Walls::North, BTC_Walls::West, TileRotateType::WallExtra);
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catIWallTrim()->entries(), BTC_Walls::North, BTC_Walls::West, TileRotateType::WallExtra);
+
+        initFromBuildingTiles(BuildingTilesMgr::instance()->catWindows()->entries(), BTC_Windows::North, BTC_Windows::West, TileRotateType::Window);
+
+        initGrime();
+        initRoofCaps();
+        initRoofSlopes();
+
 
         QList<FurnitureTile*> addThese;
-
-        // size=1x1
         const QList<FurnitureGroup*> furnitureGroups = FurnitureGroups::instance()->groups();
+#if 1
+        for (FurnitureGroup* furnitureGroup : furnitureGroups) {
+            for (FurnitureTiles* furnitureTiles : furnitureGroup->mTiles) {
+                FurnitureTile* ft[4];
+                ft[0] = furnitureTiles->tile(FurnitureTile::FurnitureN);
+                ft[1] = furnitureTiles->tile(FurnitureTile::FurnitureE);
+                ft[2] = furnitureTiles->tile(FurnitureTile::FurnitureS);
+                ft[3] = furnitureTiles->tile(FurnitureTile::FurnitureW);
+                if (initFromBuildingTiles(ft)) {
+                    addThese << ft[0] << ft[1] << ft[2] << ft[3];
+                }
+
+                if (furnitureTiles->hasCorners()) {
+                    ft[0] = furnitureTiles->tile(FurnitureTile::FurnitureNE);
+                    ft[1] = furnitureTiles->tile(FurnitureTile::FurnitureSE);
+                    ft[2] = furnitureTiles->tile(FurnitureTile::FurnitureSW);
+                    ft[3] = furnitureTiles->tile(FurnitureTile::FurnitureNW);
+                    if (initFromBuildingTiles(ft)) {
+                        addThese << ft[0] << ft[1] << ft[2] << ft[3];
+                    }
+                }
+            }
+        }
+#else
+        // size=1x1
         for (FurnitureGroup* furnitureGroup : furnitureGroups) {
             for (FurnitureTiles* furnitureTiles : furnitureGroup->mTiles) {
                 FurnitureTile* ft[4];
@@ -295,7 +537,6 @@ public:
                 addThese << ft[0] << ft[1] << ft[2] << ft[3];
             }
         }
-
         // size > 1x1
         for (FurnitureGroup* furnitureGroup : furnitureGroups) {
             for (FurnitureTiles* furnitureTiles : furnitureGroup->mTiles) {
@@ -306,11 +547,12 @@ public:
                 ft[3] = furnitureTiles->tile(FurnitureTile::FurnitureW);
                 if (ft[0]->isEmpty() && ft[1]->isEmpty() && ft[2]->isEmpty() && ft[3]->isEmpty())
                     continue;
-                if (ft[0]->size() == QSize(1, 1))
-                    continue;
+//                if (ft[0]->size() == QSize(1, 1))
+//                    continue;
                 int width = ft[0]->width();
                 int height = ft[0]->height();
                 int add = false;
+                // One new TileRotateEntry per BuildingTile in the grid.
                 for (int dy = 0; dy < height; dy++) {
                     for (int dx = 0; dx < width; dx++) {
                         TileRotateInfo entry;
@@ -333,6 +575,7 @@ public:
                 }
             }
         }
+#endif
 
         FurnitureTile::FurnitureOrientation orient[4] = {
             FurnitureTile::FurnitureN,
@@ -348,7 +591,21 @@ public:
             ft[2] = addThese[i+2];
             ft[3] = addThese[i+3];
             TRWFurnitureTiles* furnitureTiles1 = new TRWFurnitureTiles();
-            furnitureTiles1->mType = TileRotateType::None;
+            FurnitureTiles::FurnitureLayer layer = FurnitureTiles::FurnitureLayer::InvalidLayer;
+            if (ft[0])
+                layer = ft[0]->owner()->layer();
+            else if (ft[1])
+                layer = ft[1]->owner()->layer();
+            switch (layer) {
+            case FurnitureTiles::FurnitureLayer::LayerWallOverlay:
+            case FurnitureTiles::FurnitureLayer::LayerFrames:
+            case FurnitureTiles::FurnitureLayer::LayerWalls:
+                furnitureTiles1->mType = TileRotateType::WallExtra;
+                break;
+            default:
+                furnitureTiles1->mType = TileRotateType::None;
+                break;
+            }
             for (int j = 0; j < 4; j++) {
                 FurnitureTile* furnitureTile1 = new FurnitureTile(furnitureTiles1, orient[j]);
                 for (int dy = 0; dy < ft[j]->height(); dy++) {
@@ -622,6 +879,7 @@ void TileRotationWindow::addTiles()
 //    if (mCurrentFurniture)
 //        index = mFurnitureGroup->mTiles.indexOf(mCurrentFurniture->owner()) + 1;
     TRWFurnitureTiles *tiles = new TRWFurnitureTiles();
+    tiles->mType = TileRotateType::None;
     mUndoStack->push(new AddFurnitureTiles(this, mFurnitureGroup, index, tiles));
 }
 

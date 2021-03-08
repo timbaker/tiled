@@ -30,12 +30,14 @@ namespace Tiled
 
 class TileRotationPrivate;
 
+// See TILE_ROTATE_NAMES in tilerotationfile.h
 enum class TileRotateType
 {
     None,
     Door,
     DoorFrame,
     Wall,
+    WallExtra,
     Window,
     WindowFrame,
     MAX
@@ -44,6 +46,11 @@ enum class TileRotateType
 class TileRotateInfo
 {
 public:
+    static const int NORTH = 0;
+    static const int EAST = 1;
+    static const int SOUTH = 2;
+    static const int WEST = 3;
+
     TileRotateInfo()
     {
         mTiles[0] = mTiles[1] = mTiles[2] = mTiles[3] = nullptr;
@@ -54,7 +61,6 @@ public:
     Tile* mTiles[MAP_ROTATION_COUNT];
     QVector<ZTileRenderInfo> mRenderInfo[MAP_ROTATION_COUNT];
     TileRotateType mType;
-    bool mCorners;
 };
 
 class TileRotateFileInfo
@@ -64,7 +70,6 @@ public:
     ~TileRotateFileInfo();
     BuildingEditor::FurnitureTiles* mFurnitureTiles;
     TileRotateType mType = TileRotateType::None;
-    bool mCorners;
     bool mOwnsFurniture = true;
 };
 
@@ -83,9 +88,7 @@ public:
     const QList<TileRotateFileInfo *> furnitureTiles() const;
 
     void rotateTile(Tile* tile, MapRotation rotation, QVector<Tiled::ZTileRenderInfo>& tileInfos);
-#if 0
-    MapRotation rotationOf(Tile* tile) const;
-#endif
+
     void reload();
 
 private:

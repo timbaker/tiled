@@ -201,6 +201,19 @@ void ZLevelRenderer::drawGrid(QPainter *painter, const QRectF &rect,
         const QPointF end = tileToPixelCoordsNR(x, qreal(endY), level);
         painter->drawLine(start, end);
     }
+
+    brush = QBrush(QColor(0, 255, 255));
+    pen.setBrush(brush);
+    painter->setPen(pen);
+    if (rotation() != MapRotation::NotRotated) {
+        b = tileBounds;
+        if (b.isEmpty()) {
+            b = QRect(0, 0, map()->width(), map()->height());
+        }
+        const QPointF start = tileToPixelCoords(b.x(), b.y(), level);
+        const QPointF end = tileToPixelCoords(b.right() + 1, b.y(), level);
+        painter->drawLine(start, end);
+    }
 }
 
 static Tile *g_missing_tile = nullptr;

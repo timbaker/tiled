@@ -724,6 +724,9 @@
    </property>
   </action>
   <action name="actionNotRotated">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="buildingeditor.qrc">
      <normaloff>:/BuildingEditor/icons/icon_roof_dormerN.png</normaloff>:/BuildingEditor/icons/icon_roof_dormerN.png</iconset>
@@ -733,6 +736,9 @@
    </property>
   </action>
   <action name="actionClockwise90">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="buildingeditor.qrc">
      <normaloff>:/BuildingEditor/icons/icon_roof_dormerE.png</normaloff>:/BuildingEditor/icons/icon_roof_dormerE.png</iconset>
@@ -742,6 +748,9 @@
    </property>
   </action>
   <action name="actionClockwise180">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="buildingeditor.qrc">
      <normaloff>:/BuildingEditor/icons/icon_roof_dormerS.png</normaloff>:/BuildingEditor/icons/icon_roof_dormerS.png</iconset>
@@ -751,6 +760,9 @@
    </property>
   </action>
   <action name="actionClockwise270">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="buildingeditor.qrc">
      <normaloff>:/BuildingEditor/icons/icon_roof_dormerW.png</normaloff>:/BuildingEditor/icons/icon_roof_dormerW.png</iconset>
@@ -761,8 +773,8 @@
   </action>
  </widget>
  <resources>
-  <include location="../tiled.qrc"/>
   <include location="buildingeditor.qrc"/>
+  <include location="../tiled.qrc"/>
  </resources>
  <connections/>
 </ui>
