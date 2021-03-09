@@ -158,7 +158,7 @@ void BaseTool::deactivate()
 
 /////
 
-ToolManager *ToolManager::mInstance = 0;
+ToolManager *ToolManager::mInstance = nullptr;
 
 ToolManager *ToolManager::instance()
 {
@@ -170,13 +170,13 @@ ToolManager *ToolManager::instance()
 void ToolManager::deleteInstance()
 {
     delete mInstance;
-    mInstance = 0;
+    mInstance = nullptr;
 }
 
 ToolManager::ToolManager() :
     QObject(),
-    mCurrentTool(0),
-    mCurrentEditor(0)
+    mCurrentTool(nullptr),
+    mCurrentEditor(nullptr)
 {
 }
 
@@ -188,7 +188,7 @@ void ToolManager::addTool(BaseTool *tool)
 void ToolManager::activateTool(BaseTool *tool)
 {
     if (mCurrentTool) {
-        mCurrentTool->setEditor(0);
+        mCurrentTool->setEditor(nullptr);
         mCurrentTool->action()->setChecked(false);
         mCurrentTool->disconnect(this);
     }
@@ -198,7 +198,7 @@ void ToolManager::activateTool(BaseTool *tool)
     if (mCurrentTool) {
         connect(mCurrentTool, SIGNAL(statusTextChanged()),
                 SLOT(currentToolStatusTextChanged()));
-        Q_ASSERT(mCurrentEditor != 0);
+        Q_ASSERT(mCurrentEditor != nullptr);
         mCurrentTool->setEditor(mCurrentEditor);
         mCurrentTool->action()->setChecked(true);
     }
@@ -219,7 +219,7 @@ void ToolManager::toolEnabledChanged(BaseTool *tool, bool enabled)
                 return;
             }
         }
-        activateTool(0);
+        activateTool(nullptr);
     }
 }
 
@@ -238,10 +238,10 @@ void ToolManager::clearDocument()
     // When updateActions() calls setEnabled(false) on each tool one-by-one,
     // another tool is activated (see toolEnabledChanged()).
     // No tool should become active when a document is closing.
-    activateTool(0);
+    activateTool(nullptr);
     foreach (BaseTool *tool, mTools)
         tool->action()->setEnabled(false);
-    mCurrentEditor = 0;
+    mCurrentEditor = nullptr;
 }
 
 void ToolManager::setEditor(BuildingBaseScene *editor)
@@ -265,7 +265,7 @@ void ToolManager::currentToolStatusTextChanged()
 
 /////
 
-PencilTool *PencilTool::mInstance = 0;
+PencilTool *PencilTool::mInstance = nullptr;
 
 PencilTool *PencilTool::instance()
 {
@@ -278,7 +278,7 @@ PencilTool::PencilTool() :
     BaseTool(),
     mMouseDown(false),
     mErasing(false),
-    mCursor(0)
+    mCursor(nullptr)
 {
     updateStatusText();
 }
@@ -328,8 +328,8 @@ void PencilTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         for (int x = r.left(); x <= r.right(); x++) {
             for (int y = r.top(); y <= r.bottom(); y++) {
                 if (mErasing) {
-                    if (grid[x][y] != 0) {
-                        grid[x][y] = 0;
+                    if (grid[x][y] != nullptr) {
+                        grid[x][y] = nullptr;
                         changed = true;
                     }
                 } else {

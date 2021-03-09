@@ -1,6 +1,8 @@
 #ifndef OBJECTEDITMODE_P_H
 #define OBJECTEDITMODE_P_H
 
+#include "maprotation.h"
+
 #include <QObject>
 #include <QToolBar>
 
@@ -90,6 +92,8 @@ public slots:
     void zoomNormal();
 
     void updateActions();
+
+    void mapRotationChanged(Tiled::MapRotation rotation);
 
 private:
     ObjectEditMode *mMode;

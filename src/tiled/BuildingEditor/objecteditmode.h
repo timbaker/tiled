@@ -65,14 +65,6 @@ protected slots:
 
     void updateActions();
 
-    void setRotationNotRotated();
-    void setRotationClockwise90();
-    void setRotationClockwise180();
-    void setRotationClockwise270();
-
-protected:
-    void setRotation(Tiled::MapRotation rotation);
-
 protected:
     EmbeddedMainWindow *mMainWindow;
     QTabWidget *mTabWidget;

@@ -58,6 +58,8 @@ TileEditModeToolBar::TileEditModeToolBar(QWidget *parent) :
     setObjectName(QString::fromUtf8("TileEditModeToolBar"));
     setWindowTitle(tr("Tile ToolBar"));
 
+    Ui::BuildingEditorWindow *actions = BuildingEditorWindow::instance()->actionIface();
+
     mFloorLabel = new QToolButton;
     mFloorLabel->setMinimumWidth(90);
     mFloorLabel->setAutoRaise(true);
@@ -66,13 +68,19 @@ TileEditModeToolBar::TileEditModeToolBar(QWidget *parent) :
     connect(mFloorLabel, SIGNAL(clicked()),
             BuildingEditorWindow::instance(), SLOT(floorsDialog()));
 
-    addAction(BuildingEditorWindow::instance()->actionIface()->actionDrawTiles);
-    addAction(BuildingEditorWindow::instance()->actionIface()->actionSelectTiles);
-    addAction(BuildingEditorWindow::instance()->actionIface()->actionPickTiles);
+    addAction(actions->actionDrawTiles);
+    addAction(actions->actionSelectTiles);
+    addAction(actions->actionPickTiles);
     addSeparator();
     addWidget(mFloorLabel);
-    addAction(BuildingEditorWindow::instance()->actionIface()->actionUpLevel);
-    addAction(BuildingEditorWindow::instance()->actionIface()->actionDownLevel);
+    addAction(actions->actionUpLevel);
+    addAction(actions->actionDownLevel);
+
+    addSeparator();
+    addAction(actions->actionNotRotated);
+    addAction(actions->actionClockwise90);
+    addAction(actions->actionClockwise180);
+    addAction(actions->actionClockwise270);
 
     connect(docman(), SIGNAL(currentDocumentChanged(BuildingDocument*)),
             SLOT(currentDocumentChanged(BuildingDocument*)));
@@ -105,7 +113,7 @@ void TileEditModeToolBar::updateActions()
                              .arg(mCurrentDocument->building()->floorCount()));
     else
         mFloorLabel->setText(QString());
-    mFloorLabel->setEnabled(mCurrentDocument != 0);
+    mFloorLabel->setEnabled(mCurrentDocument != nullptr);
 }
 
 /////
@@ -168,6 +176,25 @@ void TileEditModePerDocumentStuff::activate()
             SLOT(zoomOut()));
     connect(actions->actionNormalSize, SIGNAL(triggered()),
             SLOT(zoomNormal()));
+
+    connect(document(), &BuildingDocument::mapRotationChanged, this, &TileEditModePerDocumentStuff::mapRotationChanged);
+
+    mapRotationChanged(document()->mapRotation());
+
+    switch (document()->mapRotation()) {
+    case Tiled::MapRotation::NotRotated:
+        actions->actionNotRotated->setChecked(true);
+        break;
+    case Tiled::MapRotation::Clockwise90:
+        actions->actionClockwise90->setChecked(true);
+        break;
+    case Tiled::MapRotation::Clockwise180:
+        actions->actionClockwise180->setChecked(true);
+        break;
+    case Tiled::MapRotation::Clockwise270:
+        actions->actionClockwise270->setChecked(true);
+        break;
+    }
 }
 
 void TileEditModePerDocumentStuff::deactivate()
@@ -186,6 +213,8 @@ void TileEditModePerDocumentStuff::deactivate()
     actions->actionZoomIn->setEnabled(false);
     actions->actionZoomOut->setEnabled(false);
     actions->actionNormalSize->setEnabled(false);
+
+    document()->disconnect(document(), &BuildingDocument::mapRotationChanged, this, &TileEditModePerDocumentStuff::mapRotationChanged);
 }
 
 void TileEditModePerDocumentStuff::updateDocumentTab()
@@ -217,6 +246,12 @@ void TileEditModePerDocumentStuff::zoomOut()
 void TileEditModePerDocumentStuff::zoomNormal()
 {
     zoomable()->resetZoom();
+}
+
+void TileEditModePerDocumentStuff::mapRotationChanged(Tiled::MapRotation rotation)
+{
+//    document()->setMapRotation(rotation);
+    scene()->setRotation(rotation);
 }
 
 void TileEditModePerDocumentStuff::updateActions()
@@ -375,7 +410,7 @@ void TileEditMode::currentDocumentChanged(BuildingDocument *doc)
     }
 
     mCurrentDocument = doc;
-    mCurrentDocumentStuff = doc ? mDocumentStuff[doc] : 0;
+    mCurrentDocumentStuff = doc ? mDocumentStuff[doc] : nullptr;
 
     if (mCurrentDocument) {
         mTabWidget->setCurrentIndex(docman()->indexOf(doc));

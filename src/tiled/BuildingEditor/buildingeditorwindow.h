@@ -297,6 +297,11 @@ private slots:
 
     void viewAddedForDocument(BuildingDocument *doc, BuildingIsoView *view);
 
+    void setRotationNotRotated();
+    void setRotationClockwise90();
+    void setRotationClockwise180();
+    void setRotationClockwise270();
+
 private:
     static BuildingEditorWindow *mInstance;
     Ui::BuildingEditorWindow *ui;

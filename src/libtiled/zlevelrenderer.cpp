@@ -481,8 +481,8 @@ void ZLevelRenderer::drawTileLayerGroup(QPainter *painter, ZTileLayerGroup *laye
                         qreal dx = offset.x() + x;
                         qreal dy = offset.y() + y - tile->height();
 
-                        dx += tileInfo.mOffset.x();
-                        dy += tileInfo.mOffset.y();
+                        dx += tileInfo.mOffset.x() * (is2x() ? 2 : 1);
+                        dy += tileInfo.mOffset.y() * (is2x() ? 2 : 1);
 #if 0
                         if (cell->flippedAntiDiagonally) {
                             // Use shearing to swap the X/Y axis

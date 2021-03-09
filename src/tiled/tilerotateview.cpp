@@ -141,8 +141,9 @@ void TileRotateDelegate::paint(QPainter *painter,
         TileRotatedDirection& direction = ftile->r90;
         for (const QString& tileName : direction.mTileNames) {
             QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-            if (Tile *tile = TileRotation::instance()->getRotatedTile(tileName)) { // FIXME: calc this elsewhere
-                QRect r1(r.topLeft(), QSize(tileWidth, imageHeight));
+            QPoint tileOffset;
+            if (Tile *tile = TileRotation::instance()->getRotatedTile(tileName, tileOffset)) { // FIXME: calc this elsewhere
+                QRect r1(r.topLeft() + tileOffset * scale, QSize(tileWidth, imageHeight));
                 if (tile->image().isNull())
                     tile = TilesetManager::instance()->missingTile();
                 const QMargins margins = tile->drawMargins(scale);
@@ -154,8 +155,9 @@ void TileRotateDelegate::paint(QPainter *painter,
         TileRotatedDirection& direction = ftile->r180;
         for (const QString& tileName : direction.mTileNames) {
             QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-            if (Tile *tile = TileRotation::instance()->getRotatedTile(tileName)) { // FIXME: calc this elsewhere
-                QRect r1(r.topLeft(), QSize(tileWidth, imageHeight));
+            QPoint tileOffset;
+            if (Tile *tile = TileRotation::instance()->getRotatedTile(tileName, tileOffset)) { // FIXME: calc this elsewhere
+                QRect r1(r.topLeft() + tileOffset * scale, QSize(tileWidth, imageHeight));
                 if (tile->image().isNull())
                     tile = TilesetManager::instance()->missingTile();
                 const QMargins margins = tile->drawMargins(scale);
@@ -167,8 +169,9 @@ void TileRotateDelegate::paint(QPainter *painter,
         TileRotatedDirection& direction = ftile->r270;
         for (const QString& tileName : direction.mTileNames) {
             QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-            if (Tile *tile = TileRotation::instance()->getRotatedTile(tileName)) { // FIXME: calc this elsewhere
-                QRect r1(r.topLeft(), QSize(tileWidth, imageHeight));
+            QPoint tileOffset;
+            if (Tile *tile = TileRotation::instance()->getRotatedTile(tileName, tileOffset)) { // FIXME: calc this elsewhere
+                QRect r1(r.topLeft() + tileOffset * scale, QSize(tileWidth, imageHeight));
                 if (tile->image().isNull())
                     tile = TilesetManager::instance()->missingTile();
                 const QMargins margins = tile->drawMargins(scale);
@@ -176,7 +179,18 @@ void TileRotateDelegate::paint(QPainter *painter,
             }
         }
     }
-#if 0
+#if 1
+    // Draw the "floor"
+    if (true) {
+        QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
+        QPointF p1(r.left() + r.width() / 2, r.bottom() - tileHeight);
+        QPointF p2(r.right(), r.bottom() - tileHeight / 2);
+        QPointF p3(r.left() + r.width() / 2, r.bottom());
+        QPointF p4(r.left(), r.bottom() - tileHeight / 2);
+        painter->drawLine(p1, p2); painter->drawLine(p2, p3);
+        painter->drawLine(p3, p4); painter->drawLine(p4, p1);
+    }
+#else
     if (false) {
         // Draw the tile grid.
         for (int y = 0; y < mapHeight; y++) {
@@ -215,16 +229,22 @@ void TileRotateDelegate::paint(QPainter *painter,
                           option.palette.highlight());
         painter->setOpacity(opacity);
     }
-
+#if 0
     QRectF textRect;
     painter->drawText(option.rect.adjusted(extra, extra, 0, 0),
                       Qt::AlignTop | Qt::AlignLeft,
                       ftile->mTileset->mName + QLatin1Literal("_") + QString::number(ftile->mID),
                       &textRect);
-
     // Draw resolved-tiles indicator
     if (false)
         painter->fillRect(textRect.right() + 3, textRect.center().y()-2, 4, 4, Qt::gray);
+#endif
+
+    // Grid lines
+    if (true) {
+        painter->fillRect(option.rect.right(), option.rect.top(), 1, option.rect.height(), Qt::lightGray);
+        painter->fillRect(option.rect.left(), option.rect.bottom(), option.rect.width(), 1, Qt::lightGray);
+    }
 
     // Focus rect around 'current' item
     if (option.state & QStyle::State_HasFocus) {

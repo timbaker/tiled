@@ -21,7 +21,10 @@
 #include "buildingfloor.h"
 #include "buildingdocument.h"
 #include "buildingisoview.h"
+#include "buildingtiles.h"
 #include "buildingundoredo.h"
+
+#include "tilerotation.h"
 
 #include "maprenderer.h"
 
@@ -186,7 +189,11 @@ void DrawTileTool::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             FloorTileGrid *tiles = floor()->grimeAt(layerName(), r);
             QRegion rgn;
             if (!mCaptureTiles) {
+#if 1
+                QString tileName = mErasing ? QString() : unrotateTile(mTileName);
+#else
                 QString tileName = mErasing ? QString() : mTileName;
+#endif
                 changed = tiles->replace(tileName);
                 rgn = QRegion(r);
             } else if (mErasing) {
@@ -232,6 +239,31 @@ void DrawTileTool::setTile(const QString &tileName)
     clearCaptureTiles();
 }
 
+QString DrawTileTool::unrotateTile(const QString &tileName)
+{
+    Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(mTileName);
+    Tiled::MapRotation mapRotation = document()->mapRotation();
+    switch (mapRotation) {
+    case Tiled::MapRotation::NotRotated:
+        break;
+    case Tiled::MapRotation::Clockwise90:
+        mapRotation = Tiled::MapRotation::Clockwise270;
+        break;
+    case Tiled::MapRotation::Clockwise180:
+        mapRotation = Tiled::MapRotation::Clockwise180;
+        break;
+    case Tiled::MapRotation::Clockwise270:
+        mapRotation = Tiled::MapRotation::Clockwise90;
+        break;
+    }
+    QVector<Tiled::ZTileRenderInfo> renderInfos;
+    Tiled::TileRotation::instance()->rotateTile(tile, mapRotation, renderInfos);
+    if (renderInfos.isEmpty()) {
+        return QString();
+    }
+    return BuildingTilesMgr::instance()->nameForTile(renderInfos[0].mTile);
+}
+
 void DrawTileTool::setCaptureTiles(FloorTileGrid *tiles, const QRegion &rgn)
 {
     Q_ASSERT(tiles->bounds().contains(rgn.boundingRect()));
@@ -256,7 +288,7 @@ void DrawTileTool::deactivate()
     BaseTool::deactivate();
     if (mCursor) {
         mEditor->removeItem(mCursor);
-        mCursor->setEditor(0);
+        mCursor->setEditor(nullptr);
         mEditor->clearToolTiles();
     }
     mMouseDown = false;
@@ -305,7 +337,7 @@ void DrawTileTool::endCapture()
 void DrawTileTool::clearCaptureTiles()
 {
     delete mCaptureTiles;
-    mCaptureTiles = 0;
+    mCaptureTiles = nullptr;
 }
 
 void DrawTileTool::updateCursor(const QPointF &scenePos, bool force)
@@ -394,7 +426,11 @@ void DrawTileTool::updateCursor(const QPointF &scenePos, bool force)
                 tiles.replace(x, y, mEditor->buildingTileAt(r.x() + x, r.y() + y));
         }
     } else {
+#if 1
+        tiles.replace(unrotateTile(mTileName));
+#else
         tiles.replace(mTileName);
+#endif
     }
     mEditor->setToolTiles(&tiles, mCursorTileBounds.topLeft(), layerName());
 }

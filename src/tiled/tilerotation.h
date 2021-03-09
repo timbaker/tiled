@@ -103,7 +103,7 @@ public:
 
     Tile* getRotatedTileDX(const QString &tilesetName, int index);
     Tile* getRotatedTileDY(const QString &tilesetName, int index);
-    Tile* getRotatedTile(const QString &tileName);
+    Tile* getRotatedTile(const QString &tileName, QPoint& offset);
 
 private:
     static TileRotation *mInstance;

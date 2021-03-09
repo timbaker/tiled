@@ -181,6 +181,117 @@ public:
         initFromBuildingTiles(bte, n, w, nw, rotateType);
     }
 
+    void initRoofSlope(BuildingTileEntry *entry, int north, int west)
+    {
+        BuildingTile *btileN = entry->tile(north);
+        BuildingTile *btileW = entry->tile(west);
+        if (btileN->isNone() && btileW->isNone())
+            return;
+
+        TileRotated* tileRotatedN = getTileRotated(btileN);
+        tileRotatedN->r270.mTileNames += btileW->name();
+
+        TileRotated* tileRotatedW = getTileRotated(btileW);
+        tileRotatedW->r90.mTileNames += btileN->name();
+    }
+
+    void initRoofSlope(BuildingTileEntry *bte, int north, int east, int west)
+    {
+        BuildingTile *btileN = bte->tile(north);
+        BuildingTile *btileE = bte->tile(east);
+        BuildingTile *btileW = bte->tile(west);
+        if (btileN->isNone() || btileE->isNone() || btileW->isNone())
+            return;
+        TileRotated* tileRotatedN = getTileRotated(btileN);
+        tileRotatedN->r90.mTileNames += btileE->name();
+        // No south tile
+        tileRotatedN->r270.mTileNames += btileW->name();
+
+        TileRotated* tileRotatedE = getTileRotated(btileE);
+        // No south tile
+        tileRotatedE->r180.mTileNames += btileW->name();
+        tileRotatedE->r270.mTileNames += btileN->name();
+
+        TileRotated* tileRotatedW = getTileRotated(btileW);
+        tileRotatedW->r90.mTileNames += btileN->name();
+        tileRotatedW->r180.mTileNames += btileE->name();
+        // No south tile
+    }
+
+    void initRoofSlope(BuildingTile *btileN, BuildingTile *btileE, BuildingTile *btileS, BuildingTile *btileW)
+    {
+        TileRotated* tileRotatedN = getTileRotated(btileN);
+        tileRotatedN->r90.mTileNames += btileE->name();
+        tileRotatedN->r180.mTileNames += btileS->name();
+        tileRotatedN->r270.mTileNames += btileW->name();
+    }
+
+    void initRoofSlopes()
+    {
+#if 0
+        // Sloped sides
+        SlopeS1, SlopeS2, SlopeS3,
+        SlopeE1, SlopeE2, SlopeE3,
+        SlopePt5S, SlopePt5E,
+        SlopeOnePt5S, SlopeOnePt5E,
+        SlopeTwoPt5S, SlopeTwoPt5E,
+
+        // Shallow sides
+        ShallowSlopeW1, ShallowSlopeW2,
+        ShallowSlopeE1, ShallowSlopeE2,
+        ShallowSlopeN1, ShallowSlopeN2,
+        ShallowSlopeS1, ShallowSlopeS2,
+
+        // Sloped corners
+        Inner1, Inner2, Inner3,
+        Outer1, Outer2, Outer3,
+        InnerPt5, InnerOnePt5, InnerTwoPt5,
+        OuterPt5, OuterOnePt5, OuterTwoPt5,
+        CornerSW1, CornerSW2, CornerSW3,
+        CornerNE1, CornerNE2, CornerNE3,
+#endif
+        BuildingTileCategory *category = BuildingTilesMgr::instance()->catRoofSlopes();
+        for (BuildingTileEntry *entry : category->entries()) {
+            initRoofSlope(entry, BTC_RoofSlopes::SlopeS1, BTC_RoofSlopes::SlopeE1);
+            initRoofSlope(entry, BTC_RoofSlopes::SlopeS2, BTC_RoofSlopes::SlopeE2);
+            initRoofSlope(entry, BTC_RoofSlopes::SlopeS3, BTC_RoofSlopes::SlopeE3);
+
+            initRoofSlope(entry, BTC_RoofSlopes::SlopePt5S, BTC_RoofSlopes::SlopePt5E);
+            initRoofSlope(entry, BTC_RoofSlopes::SlopeOnePt5S, BTC_RoofSlopes::SlopeOnePt5E);
+            initRoofSlope(entry, BTC_RoofSlopes::SlopeTwoPt5S, BTC_RoofSlopes::SlopeTwoPt5E);
+
+            {
+                BuildingTile *tileN = entry->tile(BTC_RoofSlopes::ShallowSlopeN1);
+                BuildingTile *tileE = entry->tile(BTC_RoofSlopes::ShallowSlopeE1);
+                BuildingTile *tileS = entry->tile(BTC_RoofSlopes::ShallowSlopeS1);
+                BuildingTile *tileW = entry->tile(BTC_RoofSlopes::ShallowSlopeW1);
+                if (!tileN->isNone() && !tileE->isNone() && !tileS->isNone() && !tileW->isNone()) {
+                    initRoofSlope(tileN, tileE, tileS, tileW);
+                    initRoofSlope(tileE, tileS, tileW, tileN);
+                    initRoofSlope(tileS, tileW, tileN, tileE);
+                    initRoofSlope(tileW, tileN, tileE, tileS);
+                }
+            }
+
+            {
+                BuildingTile *tileN = entry->tile(BTC_RoofSlopes::ShallowSlopeN2);
+                BuildingTile *tileE = entry->tile(BTC_RoofSlopes::ShallowSlopeE2);
+                BuildingTile *tileS = entry->tile(BTC_RoofSlopes::ShallowSlopeS2);
+                BuildingTile *tileW = entry->tile(BTC_RoofSlopes::ShallowSlopeW2);
+                if (!tileN->isNone() && !tileE->isNone() && !tileS->isNone() && !tileW->isNone()) {
+                    initRoofSlope(tileN, tileE, tileS, tileW);
+                    initRoofSlope(tileE, tileS, tileW, tileN);
+                    initRoofSlope(tileS, tileW, tileN, tileE);
+                    initRoofSlope(tileW, tileN, tileE, tileS);
+                }
+            }
+
+            initRoofSlope(entry, BTC_RoofSlopes::Outer1, BTC_RoofSlopes::CornerSW1, BTC_RoofSlopes::CornerNE1);
+            initRoofSlope(entry, BTC_RoofSlopes::Outer2, BTC_RoofSlopes::CornerSW2, BTC_RoofSlopes::CornerNE2);
+            initRoofSlope(entry, BTC_RoofSlopes::Outer3, BTC_RoofSlopes::CornerSW3, BTC_RoofSlopes::CornerNE3);
+        }
+    }
+
     QString getTilesetNameDX(const QString& tilesetName)
     {
        return QString(QLatin1Literal("%1_DX")).arg(tilesetName);
@@ -252,6 +363,8 @@ public:
         initFromBuildingTiles(BuildingTilesMgr::instance()->catIWallTrim()->entries(), BTC_Walls::North, BTC_Walls::West, TileRotateType::WallExtra);
 
         initFromBuildingTiles(BuildingTilesMgr::instance()->catWindows()->entries(), BTC_Windows::North, BTC_Windows::West, TileRotateType::Window);
+
+        initRoofSlopes();
     }
 
     QMap<QString, TilesetRotated*> mTilesetLookup;

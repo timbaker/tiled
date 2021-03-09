@@ -103,8 +103,8 @@ EditorWindowPerDocumentStuff::EditorWindowPerDocumentStuff(BuildingDocument *doc
     mPrevObjectTool(PencilTool::instance()),
     mPrevTileTool(DrawTileTool::instance()),
     mMissingTilesetsReported(false),
-    mIsoView(0),
-    mTileView(0)
+    mIsoView(nullptr),
+    mTileView(nullptr)
 {
     connect(document()->undoStack(), SIGNAL(cleanChanged(bool)), SLOT(autoSaveCheck()));
     connect(document()->undoStack(), SIGNAL(indexChanged(int)), SLOT(autoSaveCheck()));
@@ -446,6 +446,18 @@ BuildingEditorWindow::BuildingEditorWindow(QWidget *parent) :
 
     connect(ui->actionHelp, SIGNAL(triggered()), SLOT(help()));
     connect(ui->actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+
+    QActionGroup *actionGroup = new QActionGroup(this);
+    actionGroup->setExclusive(true);
+    actionGroup->addAction(ui->actionNotRotated);
+    actionGroup->addAction(ui->actionClockwise90);
+    actionGroup->addAction(ui->actionClockwise180);
+    actionGroup->addAction(ui->actionClockwise270);
+
+    connect(ui->actionNotRotated, &QAction::triggered, this, &BuildingEditorWindow::setRotationNotRotated);
+    connect(ui->actionClockwise90, &QAction::triggered, this, &BuildingEditorWindow::setRotationClockwise90);
+    connect(ui->actionClockwise180, &QAction::triggered, this, &BuildingEditorWindow::setRotationClockwise180);
+    connect(ui->actionClockwise270, &QAction::triggered, this, &BuildingEditorWindow::setRotationClockwise270);
 
     // Do this after connect() calls above -> esp. documentAdded()
     mWelcomeMode = new WelcomeMode(this);
@@ -1113,7 +1125,7 @@ void BuildingEditorWindow::currentDocumentChanged(BuildingDocument *doc)
     mCurrentDocumentStuff = doc ? mDocumentStuff[doc] : 0; // FIXME: unset when deleted
 
     if (mCurrentDocument) {
-        IMode *mode = 0;
+        IMode *mode = nullptr;
         switch (mCurrentDocumentStuff->editMode()) {
         case EditorWindowPerDocumentStuff::OrthoObjectMode:
             mode = mOrthoObjectEditMode;
@@ -2080,19 +2092,19 @@ void BuildingEditorWindow::reportMissingTilesets()
 void BuildingEditorWindow::updateActions()
 {
     bool hasDoc = (ModeManager::instance().currentMode() != mWelcomeMode) &&
-            mCurrentDocument != 0;
+            mCurrentDocument != nullptr;
     bool showObjects = BuildingPreferences::instance()->showObjects();
     bool objectMode = hasDoc && mCurrentDocumentStuff->isObject();
 
-    bool hasEditor = ToolManager::instance()->currentEditor() != 0;
-    PencilTool::instance()->setEnabled(hasEditor && objectMode && currentRoom() != 0);
+    bool hasEditor = ToolManager::instance()->currentEditor() != nullptr;
+    PencilTool::instance()->setEnabled(hasEditor && objectMode && currentRoom() != nullptr);
     WallTool::instance()->setEnabled(hasEditor && objectMode && showObjects);
     SelectMoveRoomsTool::instance()->setEnabled(hasEditor && objectMode);
     DoorTool::instance()->setEnabled(hasEditor && objectMode && showObjects);
     WindowTool::instance()->setEnabled(hasEditor && objectMode && showObjects);
     StairsTool::instance()->setEnabled(hasEditor && objectMode && showObjects);
     FurnitureTool::instance()->setEnabled(hasEditor && objectMode && showObjects &&
-            FurnitureTool::instance()->currentTile() != 0);
+            FurnitureTool::instance()->currentTile() != nullptr);
     bool roofTilesOK = hasDoc && currentBuilding()->roofCapTile()->asRoofCap() &&
             currentBuilding()->roofSlopeTile()->asRoofSlope() /*&&
             currentBuilding()->roofTopTile()->asRoofTop()*/;
@@ -2206,6 +2218,34 @@ void BuildingEditorWindow::currentModeChanged()
 void BuildingEditorWindow::viewAddedForDocument(BuildingDocument *doc, BuildingIsoView *view)
 {
     mDocumentStuff[doc]->viewAddedForDocument(view);
+}
+
+void BuildingEditorWindow::setRotationNotRotated()
+{
+    if (mCurrentDocument == nullptr)
+        return;
+    mCurrentDocument->setMapRotation(Tiled::MapRotation::NotRotated);
+}
+
+void BuildingEditorWindow::setRotationClockwise90()
+{
+    if (mCurrentDocument == nullptr)
+        return;
+    mCurrentDocument->setMapRotation(Tiled::MapRotation::Clockwise90);
+}
+
+void BuildingEditorWindow::setRotationClockwise180()
+{
+    if (mCurrentDocument == nullptr)
+        return;
+    mCurrentDocument->setMapRotation(Tiled::MapRotation::Clockwise180);
+}
+
+void BuildingEditorWindow::setRotationClockwise270()
+{
+    if (mCurrentDocument == nullptr)
+        return;
+    mCurrentDocument->setMapRotation(Tiled::MapRotation::Clockwise270);
 }
 
 #if 0

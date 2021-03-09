@@ -41,9 +41,10 @@ BuildingDocument::BuildingDocument(Building *building, const QString &fileName) 
     mFileName(fileName),
     mUndoStack(new QUndoStack(this)),
     mTileChanges(false),
-    mCurrentFloor(0),
-    mCurrentRoom(0),
-    mClipboardTiles(0)
+    mCurrentFloor(nullptr),
+    mCurrentRoom(nullptr),
+    mClipboardTiles(nullptr),
+    mMapRotation(Tiled::MapRotation::NotRotated)
 {
     // Roof tiles need to be non-none to enable the roof tools.
     // Old templates will have 'none' for these tiles.

@@ -81,6 +81,8 @@ public:
     QString currentTile() const
     { return mTileName; }
 
+    QString unrotateTile(const QString &tileName);
+
     void setCaptureTiles(FloorTileGrid *tiles, const QRegion &rgn);
 
 public slots:

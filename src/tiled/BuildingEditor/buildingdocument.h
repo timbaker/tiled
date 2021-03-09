@@ -18,6 +18,8 @@
 #ifndef BUILDINGDOCUMENT_H
 #define BUILDINGDOCUMENT_H
 
+#include "maprotation.h"
+
 #include <QObject>
 #include <QRect>
 #include <QRegion>
@@ -119,6 +121,19 @@ public:
 
     QRegion clipboardTilesRgn() const
     { return mClipboardTilesRgn; }
+
+    void setMapRotation(Tiled::MapRotation mapRotation)
+    {
+        if (mapRotation == mMapRotation)
+            return;
+        mMapRotation = mapRotation;
+        emit mapRotationChanged(mMapRotation);
+    }
+
+    Tiled::MapRotation mapRotation() const
+    {
+        return mMapRotation;
+    }
 
     // +UNDO/REDO
     Room *changeRoomAtPosition(BuildingFloor *floor, const QPoint &pos, Room *room);
@@ -222,6 +237,8 @@ signals:
     void usedTilesChanged();
     void usedFurnitureChanged();
 
+    void mapRotationChanged(Tiled::MapRotation mapRotation);
+
 private:
     void checkUsedTile(BuildingTileEntry *entry);
     void checkUsedFurniture(FurnitureTiles *ftiles);
@@ -244,6 +261,7 @@ private:
     QRegion mTileSelection;
     FloorTileGrid *mClipboardTiles;
     QRegion mClipboardTilesRgn;
+    Tiled::MapRotation mMapRotation;
 };
 
 } // namespace BuildingEditor

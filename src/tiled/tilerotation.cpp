@@ -54,39 +54,25 @@ public:
                 Tile *tile1 = BuildingTilesMgr::instance()->tileFor(tile->mTileset->mName, tile->mID);
                 if (isNone(tile1) || (tile1 == Tiled::Internal::TilesetManager::instance()->missingTile()))
                     continue;
-                int floorWidth = 64 * 2;
-                int floorHeight = 32 * 2;
                 for (const QString& tileName : tile->r90.mTileNames) {
-                    Tile* tile2 = mOuter.getRotatedTile(tileName);
                     ZTileRenderInfo renderInfo;
+                    Tile* tile2 = mOuter.getRotatedTile(tileName, renderInfo.mOffset);
                     renderInfo.mTile = tile2;
 //                    renderInfo.mOrder = ???;  from tile.mProperties
-                    if (tile2->tileset()->name().endsWith(QLatin1Literal("_DX")))
-                        renderInfo.mOffset = QPoint(floorWidth/2, floorHeight/2);
-                    else if (tile2->tileset()->name().endsWith(QLatin1Literal("_DY")))
-                        renderInfo.mOffset = QPoint(-floorWidth/2, floorHeight/2);
                     mRenderInfo90[tile1] += renderInfo;
                 }
                 for (const QString& tileName : tile->r180.mTileNames) {
-                    Tile* tile2 = mOuter.getRotatedTile(tileName);
                     ZTileRenderInfo renderInfo;
+                    Tile* tile2 = mOuter.getRotatedTile(tileName, renderInfo.mOffset);
                     renderInfo.mTile = tile2;
 //                    renderInfo.mOrder = ???;  from tile.mProperties
-                    if (tile2->tileset()->name().endsWith(QLatin1Literal("_DX")))
-                        renderInfo.mOffset = QPoint(floorWidth/2, floorHeight/2);
-                    else if (tile2->tileset()->name().endsWith(QLatin1Literal("_DY")))
-                        renderInfo.mOffset = QPoint(-floorWidth/2, floorHeight/2);
                     mRenderInfo180[tile1] += renderInfo;
                 }
                 for (const QString& tileName : tile->r270.mTileNames) {
-                    Tile* tile2 = mOuter.getRotatedTile(tileName);
                     ZTileRenderInfo renderInfo;
+                    Tile* tile2 = mOuter.getRotatedTile(tileName, renderInfo.mOffset);
                     renderInfo.mTile = tile2;
 //                    renderInfo.mOrder = ???;  from tile.mProperties
-                    if (tile2->tileset()->name().endsWith(QLatin1Literal("_DX")))
-                        renderInfo.mOffset = QPoint(floorWidth/2, floorHeight/2);
-                    else if (tile2->tileset()->name().endsWith(QLatin1Literal("_DY")))
-                        renderInfo.mOffset = QPoint(-floorWidth/2, floorHeight/2);
                     mRenderInfo270[tile1] += renderInfo;
                 }
             }
@@ -326,16 +312,23 @@ Tile *TileRotation::getRotatedTileDY(const QString &tilesetName, int index)
     return mPrivate->getRotatedTileDY(tilesetName, index);
 }
 
-Tile *TileRotation::getRotatedTile(const QString &tileName)
+Tile *TileRotation::getRotatedTile(const QString &tileName, QPoint &offset)
 {
+    offset = QPoint();
     QString tilesetName;
     int index;
     if (BuildingTilesMgr::instance()->parseTileName(tileName, tilesetName, index) == false) {
         return nullptr;
     }
-    if (tilesetName.endsWith(QLatin1Literal("_DX")))
+    int floorWidth = 64;
+    int floorHeight = 32;
+    if (tilesetName.endsWith(QLatin1Literal("_DX"))) {
+        offset = QPoint(floorWidth / 2, floorHeight / 2);
         return mPrivate->getRotatedTileDX(tilesetName.left(tilesetName.length() - 3), index);
-    if (tilesetName.endsWith(QLatin1Literal("_DY")))
+    }
+    if (tilesetName.endsWith(QLatin1Literal("_DY"))) {
+        offset = QPoint(-floorWidth / 2, floorHeight / 2);
         return mPrivate->getRotatedTileDY(tilesetName.left(tilesetName.length() - 3), index);
+    }
     return BuildingTilesMgr::instance()->tileFor(tilesetName, index);
 }

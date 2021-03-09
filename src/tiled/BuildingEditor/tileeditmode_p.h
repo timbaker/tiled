@@ -1,6 +1,8 @@
 #ifndef TILEEDITMODE_P_H
 #define TILEEDITMODE_P_H
 
+#include "maprotation.h"
+
 #include <QObject>
 
 class QGraphicsView;
@@ -45,6 +47,8 @@ public slots:
     void zoomNormal();
 
     void updateActions();
+
+    void mapRotationChanged(Tiled::MapRotation rotation);
 
 private:
     TileEditMode *mMode;
