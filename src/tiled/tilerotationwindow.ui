@@ -38,7 +38,7 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <widget class="Tiled::TileRotateView" name="tileRotateView"/>
+           <widget class="Tiled::Internal::MixedTilesetView" name="tileRotateView"/>
           </item>
           <item>
            <layout class="QHBoxLayout" name="comboLayout">
@@ -219,11 +219,6 @@
    <class>Tiled::Internal::MixedTilesetView</class>
    <extends>QTableWidget</extends>
    <header>BuildingEditor/mixedtilesetview.h</header>
-  </customwidget>
-  <customwidget>
-   <class>Tiled::TileRotateView</class>
-   <extends>QTableWidget</extends>
-   <header>tilerotateview.h</header>
   </customwidget>
  </customwidgets>
  <resources>

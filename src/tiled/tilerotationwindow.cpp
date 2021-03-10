@@ -44,30 +44,205 @@ using namespace Tiled::Internal;
 
 // // // // //
 
+#include <QPainter>
+
 namespace  {
 
-class TRWFurnitureTiles : public FurnitureTiles
+// Copied from MixedTilesetView, changed to draw runtime-created rotated tilesets.
+
+class TileRotateDelegate : public QAbstractItemDelegate
 {
 public:
-    TRWFurnitureTiles()
-        : FurnitureTiles(false)
-        , mType(TileRotateType::None)
-    {
+    TileRotateDelegate(MixedTilesetView *view, QObject *parent = nullptr)
+        : QAbstractItemDelegate(parent)
+        , mView(view)
+    { }
 
+    void paint(QPainter *painter, const QStyleOptionViewItem &option,
+               const QModelIndex &index) const;
+
+    QSize sizeHint(const QStyleOptionViewItem &option,
+                   const QModelIndex &index) const;
+
+    QPoint dropCoords(const QPoint &dragPos, const QModelIndex &index);
+
+    qreal scale() const
+    { return mView->zoomable()->scale(); }
+
+    void itemResized(const QModelIndex &index);
+
+private:
+    MixedTilesetView *mView;
+};
+
+void TileRotateDelegate::paint(QPainter *painter,
+                         const QStyleOptionViewItem &option,
+                         const QModelIndex &index) const
+{
+    const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
+
+    QBrush brush = qvariant_cast<QBrush>(m->data(index, Qt::BackgroundRole));
+    painter->fillRect(option.rect, brush);
+
+    QString tilesetName = m->headerAt(index);
+    if (!tilesetName.isEmpty()) {
+        if (index.row() > 0) {
+            painter->setPen(Qt::darkGray);
+            painter->drawLine(option.rect.topLeft(), option.rect.topRight());
+            painter->setPen(Qt::black);
+        }
+        // One slice of the tileset name is drawn in each column.
+        if (index.column() == 0)
+            painter->drawText(option.rect.adjusted(2, 2, 0, 0), Qt::AlignLeft,
+                              tilesetName);
+        else {
+            QRect r = option.rect.adjusted(-index.column() * option.rect.width(),
+                                           0, 0, 0);
+            painter->save();
+            painter->setClipRect(option.rect);
+            painter->drawText(r.adjusted(2, 2, 0, 0), Qt::AlignLeft, tilesetName);
+            painter->restore();
+        }
+        return;
     }
 
-    TRWFurnitureTiles(FurnitureTiles *other)
-        : FurnitureTiles(false)
-        , mType(TileRotateType::None)
-    {
-        for (FurnitureTile *furnitureTile : other->tiles()) {
-            FurnitureTile* ftCopy = new FurnitureTile(this, furnitureTile);
-            setTile(ftCopy);
+    Tile *tile;
+    if (!(tile = m->tileAt(index))) {
+#if 0
+        painter->drawLine(option.rect.topLeft(), option.rect.bottomRight());
+        painter->drawLine(option.rect.topRight(), option.rect.bottomLeft());
+#endif
+        return;
+    }
+    if (m->showEmptyTilesAsMissing() && tile->image().isNull())
+        tile = TilesetManager::instance()->missingTile();
+
+    const int extra = 2;
+
+    QString label = index.data(Qt::DecorationRole).toString();
+
+    QRect r = m->categoryBounds(index);
+    if (m->showLabels() && m->highlightLabelledItems() && label.length())
+        r = QRect(index.column(),index.row(),1,1);
+    if (r.isValid() && !(option.state & QStyle::State_Selected)) {
+        int left = option.rect.left();
+        int right = option.rect.right();
+        int top = option.rect.top();
+        int bottom = option.rect.bottom();
+        if (index.column() == r.left())
+            left += extra;
+        if (index.column() == r.right())
+            right -= extra;
+        if (index.row() == r.top())
+            top += extra;
+        if (index.row() == r.bottom())
+            bottom -= extra;
+
+        QBrush brush = qvariant_cast<QBrush>(index.data(MixedTilesetModel::CategoryBgRole));
+        painter->fillRect(left, top, right-left+1, bottom-top+1, brush);
+
+        painter->setPen(Qt::darkGray);
+        if (index.column() == r.left())
+            painter->drawLine(left, top, left, bottom);
+        if (index.column() == r.right())
+            painter->drawLine(right, top, right, bottom);
+        if (index.row() == r.top())
+            painter->drawLine(left, top, right, top);
+        if (index.row() == r.bottom())
+            painter->drawLine(left, bottom, right, bottom);
+        painter->setPen(Qt::black);
+    }
+
+    // Draw the tile image
+//    const QVariant display = index.model()->data(index, Qt::DisplayRole);
+//    const QPixmap tileImage = display.value<QPixmap>();
+    qreal scale = mView->zoomable()->scale();
+    const int tileWidth = tile->tileset()->tileWidth() * scale;
+    const int tileHeight = tile->tileset()->tileHeight() * scale;
+
+    if (mView->zoomable()->smoothTransform())
+        painter->setRenderHint(QPainter::SmoothPixmapTransform);
+
+    const QFontMetrics fm = painter->fontMetrics();
+    const int labelHeight = m->showLabels() ? fm.lineSpacing() : 0;
+    const int dw = option.rect.width() - tileWidth;
+    const QMargins margins = tile->drawMargins(mView->zoomable()->scale());
+#if 1
+    if (TileRotated *tileR = TileRotation::instance()->rotatedTileFor(tile)) {
+        if (tileR->mTileset->mNameRotated == QLatin1Literal("industry_01_R0")) {
+            int dbg = 1;
+        }
+        TileRotatedVisual& direction = tileR->mVisual;
+        for (int i = 0; i < direction.mTileNames.size(); i++) {
+            const QString& tileName = direction.mTileNames[i];
+            const QPoint tileOffset = direction.pixelOffset(i);
+            QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
+            if (Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName)) { // FIXME: calc this elsewhere
+                QRect r1(r.topLeft() + tileOffset * scale, QSize(tileWidth, tileHeight));
+                if (tile->image().isNull())
+                    tile = TilesetManager::instance()->missingTile();
+                const QMargins margins = tile->drawMargins(scale);
+                painter->drawImage(r1.adjusted(margins.left(), margins.top(), -margins.right(), -margins.bottom()), tile->image());
+            }
         }
     }
+#else
+    painter->drawImage(option.rect.adjusted(dw/2 + margins.left(), extra + margins.top(), -(dw - dw/2) - margins.right(), -extra - labelHeight - margins.bottom()), tile->image());
+#endif
 
-    TileRotateType mType;
-};
+    if (m->showLabels()) {
+        QString name = fm.elidedText(label, Qt::ElideRight, option.rect.width());
+        painter->drawText(option.rect.left(), option.rect.bottom() - labelHeight,
+                          option.rect.width(), labelHeight, Qt::AlignHCenter, name);
+    }
+
+    // Overlay with highlight color when selected
+    if (option.state & QStyle::State_Selected) {
+        const qreal opacity = painter->opacity();
+        painter->setOpacity(0.5);
+        painter->fillRect(option.rect.adjusted(extra, extra, -extra, -extra),
+                          option.palette.highlight());
+        painter->setOpacity(opacity);
+    }
+
+    // Focus rect around 'current' item
+    if (option.state & QStyle::State_HasFocus) {
+        QStyleOptionFocusRect o;
+        o.QStyleOption::operator=(option);
+        o.rect = option.rect.adjusted(1,1,-1,-1);
+        o.state |= QStyle::State_KeyboardFocusChange;
+        o.state |= QStyle::State_Item;
+        QPalette::ColorGroup cg = (option.state & QStyle::State_Enabled)
+                                  ? QPalette::Normal : QPalette::Disabled;
+        o.backgroundColor = option.palette.color(cg, (option.state & QStyle::State_Selected)
+                                                 ? QPalette::Highlight : QPalette::Window);
+        const QWidget *widget = nullptr/*d->widget(option)*/;
+        QStyle *style = /*widget ? widget->style() :*/ QApplication::style();
+        style->drawPrimitive(QStyle::PE_FrameFocusRect, &o, painter, widget);
+    }
+}
+
+QSize TileRotateDelegate::sizeHint(const QStyleOptionViewItem &option,
+                             const QModelIndex &index) const
+{
+    const MixedTilesetModel *m = static_cast<const MixedTilesetModel*>(index.model());
+    const qreal zoom = mView->zoomable()->scale();
+    const int extra = 2 * 2;
+    if (m->headerAt(index).length()) {
+        if (m->columnCount() == 1)
+            return QSize(mView->maxHeaderWidth() + extra,
+                         option.fontMetrics.lineSpacing() + 2);
+        return QSize(64 * zoom + extra, option.fontMetrics.lineSpacing() + 2);
+    }
+    if (!m->tileAt(index))
+        return QSize(64 * zoom + extra, 128 * zoom + extra);
+    const Tileset *tileset = m->tileAt(index)->tileset();
+    const int tileWidth = tileset->tileWidth() + (m->showLabels() ? 16 : 0);
+    const QFontMetrics &fm = option.fontMetrics;
+    const int labelHeight = m->showLabels() ? fm.lineSpacing() : 0;
+    return QSize(tileWidth * zoom + extra,
+                 tileset->tileHeight() * zoom + extra + labelHeight);
+}
 
 // namespace {}
 }
@@ -128,6 +303,8 @@ public:
     QStringList mTileNames;
 };
 
+// TODO: NR / 90 / 180 / 270 tabs over the tileset view
+
 #if 1
 
 // This is temporary code to bootstrap creation of TileRotation.txt from the existing BuildingEd information.
@@ -145,32 +322,58 @@ public:
     {
         BuildingTile *btileN = bte->tile(n);
         BuildingTile *btileW = bte->tile(w);
-        if (btileN->isNone() && btileW->isNone())
+        if (btileN->isNone() || btileW->isNone())
             return;
 
-        TileRotated* tileRotatedN = getTileRotated(btileN);
-        tileRotatedN->r90.mTileNames += getTileNameDX(btileW);
-        tileRotatedN->r180.mTileNames += getTileNameDY(btileN);
-        tileRotatedN->r270.mTileNames += btileW->name();
+        TileRotated* tileRotatedN = getTileRotatedR0(btileN);
+        tileRotatedN->clear();
+        tileRotatedN->mVisual.addTile(btileN->name());
 
-        TileRotated* tileRotatedW = getTileRotated(btileW);
-        tileRotatedW->r90.mTileNames += btileN->name();
-        tileRotatedW->r180.mTileNames += getTileNameDX(btileW);
-        tileRotatedW->r270.mTileNames += getTileNameDY(btileN);
+        TileRotated* tileRotatedE = getTileRotatedR90(btileN);
+        tileRotatedE->clear();
+        tileRotatedE->mVisual.addTileDX(btileW->name());
+
+        TileRotated* tileRotatedS = getTileRotatedR180(btileN);
+        tileRotatedS->clear();
+        tileRotatedS->mVisual.addTileDY(btileN->name());
+
+        TileRotated* tileRotatedW = getTileRotatedR270(btileN);
+        tileRotatedW->clear();
+        tileRotatedW->mVisual.addTile(btileW->name());
+
+        mMapping[btileN->name()] = tileRotatedN->name();
+        mMapping[btileW->name()] = tileRotatedW->name();
+
+//        {
+//            getTileRotatedR0(btileW)->mVisual = tileRotatedN->mVisual;
+//            getTileRotatedR90(btileW)->mVisual = tileRotatedE->mVisual;
+//            getTileRotatedR180(btileW)->mVisual = tileRotatedS->mVisual;
+//            getTileRotatedR270(btileW)->mVisual = tileRotatedW->mVisual;
+//        }
 
         if (nw != -1) {
             BuildingTile *btileNW = bte->tile(nw);
             if (!btileNW->isNone()) {
-                TileRotated* tileRotatedNW = getTileRotated(btileNW);
+                TileRotated* tileRotatedNW = getTileRotatedR0(btileNW);
+                tileRotatedNW->clear();
+                tileRotatedNW->mVisual.addTile(btileNW->name());
 
-                tileRotatedNW->r90.mTileNames += btileN->name();
-                tileRotatedNW->r90.mTileNames += getTileNameDX(btileW);
+                TileRotated *tileRotatedNE = getTileRotatedR90(btileNW);
+                tileRotatedNE->clear();
+                tileRotatedNE->mVisual.addTile(btileN->name());
+                tileRotatedNE->mVisual.addTileDX(btileW->name());
 
-                tileRotatedNW->r180.mTileNames += getTileNameDX(btileW);
-                tileRotatedNW->r180.mTileNames += getTileNameDY(btileN);
+                TileRotated *tileRotatedSE = getTileRotatedR180(btileNW);
+                tileRotatedSE->clear();
+                tileRotatedSE->mVisual.addTileDX(btileW->name());
+                tileRotatedSE->mVisual.addTileDY(btileN->name());
 
-                tileRotatedNW->r270.mTileNames += btileW->name();
-                tileRotatedNW->r270.mTileNames += getTileNameDY(btileN);
+                TileRotated *tileRotatedSW = getTileRotatedR270(btileNW);
+                tileRotatedSW->clear();
+                tileRotatedSW->mVisual.addTile(btileW->name());
+                tileRotatedSW->mVisual.addTileDY(btileN->name());
+
+                mMapping[btileNW->name()] = tileRotatedNW->name();
             }
         }
     }
@@ -181,6 +384,107 @@ public:
         initFromBuildingTiles(bte, n, w, nw, rotateType);
     }
 
+    void initGrime()
+    {
+#if 0
+        West,
+        North,
+        NorthWest,
+        SouthEast,
+        WestWindow,
+        NorthWindow,
+        WestDoor,
+        NorthDoor,
+        WestTrim,
+        NorthTrim,
+        NorthWestTrim,
+        SouthEastTrim,
+        WestDoubleLeft,
+        WestDoubleRight,
+        NorthDoubleLeft,
+        NorthDoubleRight,
+#endif
+        BuildingTileCategory *slopes = BuildingTilesMgr::instance()->catGrimeWall();
+        for (BuildingTileEntry *entry : slopes->entries()) {
+            initFromBuildingTiles(entry, BTC_GrimeWall::North, BTC_GrimeWall::West, BTC_GrimeWall::NorthWest, TileRotateType::Wall);
+            initFromBuildingTiles(entry, BTC_GrimeWall::NorthDoor, BTC_GrimeWall::WestDoor, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_GrimeWall::NorthWindow, BTC_GrimeWall::WestWindow, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_GrimeWall::NorthTrim, BTC_GrimeWall::WestTrim, BTC_GrimeWall::NorthWestTrim, TileRotateType::Wall);
+            // DoubleLeft/DoubleRight should be single FurnitureTile
+        }
+    }
+
+    void initRoofCaps(BuildingTileEntry *entry, int n, int e, int s, int w)
+    {
+        BuildingTile *btileN = entry->tile(n);
+        BuildingTile *btileE = entry->tile(e);
+        BuildingTile *btileS = entry->tile(s);
+        BuildingTile *btileW = entry->tile(w);
+        if (btileN->isNone() || btileE->isNone() || btileS->isNone() || btileW->isNone())
+            return;
+        TileRotated* tileRotatedN = getTileRotatedR0(btileN);
+        tileRotatedN->clear();
+        tileRotatedN->mVisual.addTile(btileN->name());
+
+        TileRotated* tileRotatedE = getTileRotatedR90(btileN);
+        tileRotatedE->clear();
+        tileRotatedE->mVisual.addTileDX(btileE->name());
+
+        TileRotated* tileRotatedS = getTileRotatedR180(btileN);
+        tileRotatedS->clear();
+        tileRotatedS->mVisual.addTileDY(btileS->name());
+
+        TileRotated* tileRotatedW = getTileRotatedR270(btileN);
+        tileRotatedW->clear();
+        tileRotatedW->mVisual.addTile(btileW->name());
+
+        mMapping[btileN->name()] = tileRotatedN->name();
+        mMapping[btileE->name()] = tileRotatedE->name();
+        mMapping[btileW->name()] = tileRotatedW->name();
+        mMapping[btileS->name()] = tileRotatedS->name();
+
+    }
+
+    void initRoofCaps()
+    {
+#if 0
+        // Sloped cap tiles go left-to-right or bottom-to-top
+        CapRiseE1, CapRiseE2, CapRiseE3, CapFallE1, CapFallE2, CapFallE3,
+        CapRiseS1, CapRiseS2, CapRiseS3, CapFallS1, CapFallS2, CapFallS3,
+
+        // Cap tiles with peaked tops
+        PeakPt5S, PeakPt5E,
+        PeakOnePt5S, PeakOnePt5E,
+        PeakTwoPt5S, PeakTwoPt5E,
+
+        // Cap tiles with flat tops
+        CapGapS1, CapGapS2, CapGapS3,
+        CapGapE1, CapGapE2, CapGapE3,
+
+        // Cap tiles for shallow (garage, trailer, etc) roofs
+        CapShallowRiseS1, CapShallowRiseS2, CapShallowFallS1, CapShallowFallS2,
+        CapShallowRiseE1, CapShallowRiseE2, CapShallowFallE1, CapShallowFallE2,
+#endif
+        BuildingTileCategory *category = BuildingTilesMgr::instance()->catRoofCaps();
+        for (BuildingTileEntry *entry : category->entries()) {
+            initRoofCaps(entry, BTC_RoofCaps::CapRiseS1, BTC_RoofCaps::CapFallE1, BTC_RoofCaps::CapFallS1, BTC_RoofCaps::CapRiseE1);
+            initRoofCaps(entry, BTC_RoofCaps::CapRiseS2, BTC_RoofCaps::CapFallE2, BTC_RoofCaps::CapFallS2, BTC_RoofCaps::CapRiseE2);
+            initRoofCaps(entry, BTC_RoofCaps::CapRiseS3, BTC_RoofCaps::CapFallE3, BTC_RoofCaps::CapFallS3, BTC_RoofCaps::CapRiseE3);
+
+            initFromBuildingTiles(entry, BTC_RoofCaps::PeakPt5S, BTC_RoofCaps::PeakPt5E, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_RoofCaps::PeakOnePt5S, BTC_RoofCaps::PeakOnePt5E, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_RoofCaps::PeakTwoPt5S, BTC_RoofCaps::PeakTwoPt5E, TileRotateType::WallExtra);
+
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapGapS1, BTC_RoofCaps::CapGapE1, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapGapS2, BTC_RoofCaps::CapGapE2, TileRotateType::WallExtra);
+            initFromBuildingTiles(entry, BTC_RoofCaps::CapGapS3, BTC_RoofCaps::CapGapE3, TileRotateType::WallExtra);
+
+            initRoofCaps(entry, BTC_RoofCaps::CapShallowRiseS1, BTC_RoofCaps::CapShallowFallE1, BTC_RoofCaps::CapShallowFallS1, BTC_RoofCaps::CapShallowRiseE1);
+            initRoofCaps(entry, BTC_RoofCaps::CapShallowRiseS2, BTC_RoofCaps::CapShallowFallE2, BTC_RoofCaps::CapShallowFallS2, BTC_RoofCaps::CapShallowRiseE2);
+         }
+    }
+
+
     void initRoofSlope(BuildingTileEntry *entry, int north, int west)
     {
         BuildingTile *btileN = entry->tile(north);
@@ -188,42 +492,85 @@ public:
         if (btileN->isNone() && btileW->isNone())
             return;
 
-        TileRotated* tileRotatedN = getTileRotated(btileN);
-        tileRotatedN->r270.mTileNames += btileW->name();
+        TileRotated* tileRotatedN = getTileRotatedR0(btileN);
+        tileRotatedN->clear();
+//        tileRotatedN->mRotation = TileRotated::Rotation::North;
+        tileRotatedN->mVisual.addTile(btileN->name());
+//        tileRotatedN->r270.addTile(btileW->name());
 
-        TileRotated* tileRotatedW = getTileRotated(btileW);
-        tileRotatedW->r90.mTileNames += btileN->name();
+        TileRotated* tileRotatedW = getTileRotatedR270(btileN);
+        tileRotatedW->clear();
+//        tileRotatedW->mRotation = TileRotated::Rotation::West;
+//        tileRotatedW->mRotationOf = tileRotatedN;
+        tileRotatedW->mVisual.addTile(btileW->name());
+//        tileRotatedW->r90.addTile(btileN->name());
+
+        mMapping[btileN->name()] = tileRotatedN->name();
+        mMapping[btileW->name()] = tileRotatedW->name();
     }
 
-    void initRoofSlope(BuildingTileEntry *bte, int north, int east, int west)
+    // Corners
+    void initRoofSlope(BuildingTileEntry *bte, int se, int ne, int sw)
     {
-        BuildingTile *btileN = bte->tile(north);
-        BuildingTile *btileE = bte->tile(east);
-        BuildingTile *btileW = bte->tile(west);
-        if (btileN->isNone() || btileE->isNone() || btileW->isNone())
+        BuildingTile *btileSE = bte->tile(se);
+        BuildingTile *btileNE = bte->tile(ne);
+        BuildingTile *btileSW = bte->tile(sw);
+        if (btileSE->isNone() || btileNE->isNone() || btileSW->isNone())
             return;
-        TileRotated* tileRotatedN = getTileRotated(btileN);
-        tileRotatedN->r90.mTileNames += btileE->name();
-        // No south tile
-        tileRotatedN->r270.mTileNames += btileW->name();
 
-        TileRotated* tileRotatedE = getTileRotated(btileE);
-        // No south tile
-        tileRotatedE->r180.mTileNames += btileW->name();
-        tileRotatedE->r270.mTileNames += btileN->name();
+        // Missing NW
 
-        TileRotated* tileRotatedW = getTileRotated(btileW);
-        tileRotatedW->r90.mTileNames += btileN->name();
-        tileRotatedW->r180.mTileNames += btileE->name();
+        TileRotated* tileRotatedNE = getTileRotatedR90(btileNE);
+        tileRotatedNE->clear();
+        tileRotatedNE->mVisual.addTile(btileNE->name());
         // No south tile
+//        tileRotatedE->r180.addTile(btileW->name());
+//        tileRotatedE->r270.addTile(btileN->name());
+
+        TileRotated* tileRotatedSE = getTileRotatedR180(btileNE);
+        tileRotatedSE->clear();
+//        tileRotatedN->mRotation = TileRotated::Rotation::North;
+        tileRotatedSE->mVisual.addTile(btileSE->name());
+//        tileRotatedN->r90.addTile(btileE->name());
+//        // No south tile
+//        tileRotatedN->r270.addTile(btileW->name());
+
+        TileRotated* tileRotatedSW = getTileRotatedR270(btileNE);
+        tileRotatedSW->clear();
+//        tileRotatedW->mRotation = TileRotated::Rotation::West;
+//        tileRotatedW->mRotationOf = tileRotatedN;
+        tileRotatedSW->mVisual.addTile(btileSW->name());
+//        tileRotatedW->r90.addTile(btileN->name());
+//        tileRotatedW->r180.addTile(btileE->name());
+        // No south tile
+
+        mMapping[btileNE->name()] = tileRotatedNE->name();
+        mMapping[btileSE->name()] = tileRotatedSE->name();
+        mMapping[btileSW->name()] = tileRotatedSW->name();
     }
 
     void initRoofSlope(BuildingTile *btileN, BuildingTile *btileE, BuildingTile *btileS, BuildingTile *btileW)
     {
-        TileRotated* tileRotatedN = getTileRotated(btileN);
-        tileRotatedN->r90.mTileNames += btileE->name();
-        tileRotatedN->r180.mTileNames += btileS->name();
-        tileRotatedN->r270.mTileNames += btileW->name();
+        TileRotated* tileRotatedN = getTileRotatedR0(btileN);
+        tileRotatedN->clear();
+        tileRotatedN->mVisual.addTile(btileN->name());
+
+        TileRotated* tileRotatedE = getTileRotatedR90(btileN);
+        tileRotatedE->clear();
+        tileRotatedE->mVisual.addTile(btileE->name());
+
+        TileRotated* tileRotatedS = getTileRotatedR180(btileN);
+        tileRotatedS->clear();
+        tileRotatedS->mVisual.addTile(btileS->name());
+
+        TileRotated* tileRotatedW = getTileRotatedR270(btileN);
+        tileRotatedW->clear();
+        tileRotatedW->mVisual.addTile(btileW->name());
+
+        mMapping[btileN->name()] = tileRotatedN->name();
+        mMapping[btileE->name()] = tileRotatedE->name();
+        mMapping[btileS->name()] = tileRotatedS->name();
+        mMapping[btileW->name()] = tileRotatedW->name();
     }
 
     void initRoofSlopes()
@@ -292,42 +639,173 @@ public:
         }
     }
 
-    QString getTilesetNameDX(const QString& tilesetName)
+    QPoint rotatePoint(int width, int height, MapRotation rotation, const QPoint &pos) const
     {
-       return QString(QLatin1Literal("%1_DX")).arg(tilesetName);
+        switch (rotation)
+        {
+        case MapRotation::NotRotated: // w,h=3,2 x,y=2,1 -> 2,1
+            return pos;
+        case MapRotation::Clockwise90:
+            return QPoint(height - pos.y() - 1, pos.x()); // w,h=3,2 x,y=2,1 -> 0,2
+        case MapRotation::Clockwise180:
+            return QPoint(width - pos.x() - 1, height - pos.y() - 1); // w,h=3,2 x,y=2,1 -> 0,0
+        case MapRotation::Clockwise270:
+            return QPoint(pos.y(), width - pos.x() - 1); // w,h=3,2 x,y=2,1 -> 1,0
+        }
     }
 
-    QString getTilesetNameDY(const QString& tilesetName)
+    MapRotation ROTATION[MAP_ROTATION_COUNT] = {
+        MapRotation::NotRotated,
+        MapRotation::Clockwise90,
+        MapRotation::Clockwise180,
+        MapRotation::Clockwise270
+    };
+
+    bool isFurnitureOK(FurnitureTile* ft[4])
     {
-       return QString(QLatin1Literal("%1_DY")).arg(tilesetName);
+        if (ft[0]->isEmpty() && ft[1]->isEmpty() && ft[2]->isEmpty() && ft[3]->isEmpty())
+            return false;
+        return true;
     }
 
-    QString getTileNameDX(BuildingTile *buildingTile)
+    bool initFurniture(FurnitureTile* ft[4])
     {
-       return BuildingTilesMgr::instance()->nameForTile(getTilesetNameDX(buildingTile->mTilesetName), buildingTile->mIndex);
+        int width = ft[0]->width();
+        int height = ft[0]->height();
+        for (int dy = 0; dy < height; dy++) {
+            for (int dx = 0; dx < width; dx++) {
+                BuildingTile *tiles[MAP_ROTATION_COUNT];
+                BuildingTile *masterTile = nullptr; // normally this is the North/NotRotated tile
+                for (int i = 0; i < MAP_ROTATION_COUNT; i++) {
+                    QPoint p = rotatePoint(width, height, ROTATION[i], QPoint(dx, dy));
+                    tiles[i] = ft[i]->tile(p.x(), p.y());
+                    if (masterTile == nullptr && tiles[i] != nullptr) {
+                        masterTile = tiles[i];
+                    }
+                }
+                if (masterTile == nullptr)
+                    continue;
+                for (int i = 0; i < MAP_ROTATION_COUNT; i++) {
+                    BuildingTile *btile = tiles[i];
+                    if (btile == nullptr)
+                        continue;
+                    TileRotated *tileR = getTileRotated(masterTile, i * 90, ROTATION[i]);
+                    tileR->clear();
+                    tileR->mVisual.addTile(btile->name());
+                    mMapping[btile->name()] = tileR->name();
+                }
+            }
+        }
+        return false;
     }
 
-    QString getTileNameDY(BuildingTile *buildingTile)
+    void initFurniture()
     {
-        return BuildingTilesMgr::instance()->nameForTile(getTilesetNameDY(buildingTile->mTilesetName), buildingTile->mIndex);
+        const QList<FurnitureGroup*> furnitureGroups = FurnitureGroups::instance()->groups();
+        for (FurnitureGroup* furnitureGroup : furnitureGroups) {
+            for (FurnitureTiles* furnitureTiles : furnitureGroup->mTiles) {
+                FurnitureTile* ft[4];
+                ft[0] = furnitureTiles->tile(FurnitureTile::FurnitureN);
+                ft[1] = furnitureTiles->tile(FurnitureTile::FurnitureE);
+                ft[2] = furnitureTiles->tile(FurnitureTile::FurnitureS);
+                ft[3] = furnitureTiles->tile(FurnitureTile::FurnitureW);
+                if (isFurnitureOK(ft)) {
+                    initFurniture(ft);
+                }
+
+                if (furnitureTiles->hasCorners()) {
+                    ft[0] = furnitureTiles->tile(FurnitureTile::FurnitureNW);
+                    ft[1] = furnitureTiles->tile(FurnitureTile::FurnitureNE);
+                    ft[2] = furnitureTiles->tile(FurnitureTile::FurnitureSE);
+                    ft[3] = furnitureTiles->tile(FurnitureTile::FurnitureSW);
+                    if (isFurnitureOK(ft)) {
+                        initFurniture(ft);
+                    }
+                }
+            }
+        }
     }
 
-    TilesetRotated* getTilesetRotated(const QString &tilesetName)
+    QString getTilesetNameR(const QString& tilesetName, int degrees)
     {
-        TilesetRotated *tileset = mTilesetLookup[tilesetName];
+       return QString(QLatin1Literal("%1_R%2")).arg(tilesetName).arg(degrees);
+    }
+
+    QString getTileName0(BuildingTile *buildingTile)
+    {
+        QString tilesetName = getTilesetNameR(buildingTile->mTilesetName, 0);
+        return BuildingTilesMgr::instance()->nameForTile(tilesetName, buildingTile->mIndex);
+    }
+
+    QString getTileName90(BuildingTile *buildingTile)
+    {
+        QString tilesetName = getTilesetNameR(buildingTile->mTilesetName, 90);
+        return BuildingTilesMgr::instance()->nameForTile(tilesetName, buildingTile->mIndex);
+    }
+
+    QString getTileName180(BuildingTile *buildingTile)
+    {
+        QString tilesetName = getTilesetNameR(buildingTile->mTilesetName, 180);
+        return BuildingTilesMgr::instance()->nameForTile(tilesetName, buildingTile->mIndex);
+    }
+
+    QString getTileName270(BuildingTile *buildingTile)
+    {
+        QString tilesetName = getTilesetNameR(buildingTile->mTilesetName, 270);
+        return BuildingTilesMgr::instance()->nameForTile(tilesetName, buildingTile->mIndex);
+    }
+
+    QMap<QString,TilesetRotated*>* tilesetLookup(int degrees)
+    {
+        switch (degrees) {
+        case 0: return &mTilesetR0;
+        case 90: return &mTilesetR90;
+        case 180: return &mTilesetR180;
+        case 270: return &mTilesetR270;
+        }
+        return nullptr;
+    }
+
+    TilesetRotated* getTilesetRotated(const QString &tilesetName, int degrees, MapRotation mapRotation)
+    {
+        QMap<QString, TilesetRotated*>& lookup = *tilesetLookup(degrees);
+        TilesetRotated *tileset = lookup[tilesetName];
         if (tileset == nullptr) {
             tileset = new TilesetRotated();
-            tileset->mName = tilesetName;
+            tileset->mNameUnrotated = tilesetName;
+            tileset->mNameRotated = getTilesetNameR(tilesetName, degrees);
             tileset->mColumnCount = TileMetaInfoMgr::instance()->tileset(tilesetName)->columnCount();
-            mTilesetLookup[tilesetName] = tileset;
+            tileset->mRotation = mapRotation;
+            lookup[tilesetName] = tileset;
+            mTilesets += tileset;
         }
         return tileset;
     }
 
-    TileRotated* getTileRotated(BuildingTile *buildingTile)
+    TileRotated* getTileRotated(BuildingTile *buildingTile, int degrees, MapRotation mapRotation)
     {
-        TilesetRotated *tileset = getTilesetRotated(buildingTile->mTilesetName);
+        TilesetRotated *tileset = getTilesetRotated(buildingTile->mTilesetName, degrees, mapRotation);
         return getTileRotated(tileset, buildingTile->mIndex);
+    }
+
+    TileRotated* getTileRotatedR0(BuildingTile *buildingTile)
+    {
+        return getTileRotated(buildingTile, 0, MapRotation::NotRotated);
+    }
+
+    TileRotated* getTileRotatedR90(BuildingTile *buildingTile)
+    {
+        return getTileRotated(buildingTile, 90, MapRotation::Clockwise90);
+    }
+
+    TileRotated* getTileRotatedR180(BuildingTile *buildingTile)
+    {
+        return getTileRotated(buildingTile, 180, MapRotation::Clockwise180);
+    }
+
+    TileRotated* getTileRotatedR270(BuildingTile *buildingTile)
+    {
+        return getTileRotated(buildingTile, 270, MapRotation::Clockwise270);
     }
 
     TileRotated* getTileRotated(TilesetRotated *tileset, int index)
@@ -348,6 +826,21 @@ public:
 
     void init()
     {
+        BuildingTileCategory *category = BuildingTilesMgr::instance()->catFloors();
+        for (BuildingTileEntry *entry : category->entries()) {
+            BuildingTile *btile = entry->tile(BTC_Floors::Floor);
+            if (btile->isNone())
+                continue;
+            TileRotated *tileR0 = getTileRotatedR0(btile);
+            tileR0->mVisual.addTile(btile->name());
+            TileRotated *tileR90 = getTileRotatedR90(btile);
+            tileR90->mVisual.addTile(btile->name());
+            TileRotated *tileR180 = getTileRotatedR180(btile);
+            tileR180->mVisual.addTile(btile->name());
+            TileRotated *tileR270 = getTileRotatedR270(btile);
+            tileR270->mVisual.addTile(btile->name());
+        }
+
         initFromBuildingTiles(BuildingTilesMgr::instance()->catDoors()->entries(), BTC_Doors::North, BTC_Doors::West, TileRotateType::Door);
         initFromBuildingTiles(BuildingTilesMgr::instance()->catDoorFrames()->entries(), BTC_DoorFrames::North, BTC_DoorFrames::West, TileRotateType::DoorFrame);
 
@@ -364,10 +857,19 @@ public:
 
         initFromBuildingTiles(BuildingTilesMgr::instance()->catWindows()->entries(), BTC_Windows::North, BTC_Windows::West, TileRotateType::Window);
 
+        initGrime();
+        initRoofCaps();
         initRoofSlopes();
+
+        initFurniture();
     }
 
-    QMap<QString, TilesetRotated*> mTilesetLookup;
+    QList<TilesetRotated*> mTilesets;
+    QMap<QString, QString> mMapping;
+    QMap<QString, TilesetRotated*> mTilesetR0;
+    QMap<QString, TilesetRotated*> mTilesetR90;
+    QMap<QString, TilesetRotated*> mTilesetR180;
+    QMap<QString, TilesetRotated*> mTilesetR270;
 };
 
 #else
@@ -867,23 +1369,31 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
 
     ui->tileRotateView->setZoomable(mZoomable);
     ui->tileRotateView->setAcceptDrops(true);
+#if 1
+    ui->tileRotateView->setItemDelegate(new TileRotateDelegate(ui->tileRotateView, ui->tileRotateView));
+#else
     connect(ui->tileRotateView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TileRotationWindow::syncUI);
     connect(ui->tileRotateView->model(), &TileRotateModel::tileDropped, this, &TileRotationWindow::tileDropped);
     connect(ui->tileRotateView, &TileRotateView::activated, this, &TileRotationWindow::tileRotatedActivated);
-
+#endif
     setTilesetList();
     syncUI();
 
 #if 1
     InitFromBuildingTiles initFromBuildingTiles;
     initFromBuildingTiles.init();
-    mTilesets = initFromBuildingTiles.mTilesetLookup.values();
+    mTilesets = initFromBuildingTiles.mTilesets;
+    mMapping = initFromBuildingTiles.mMapping;
     mCurrentTilesetRotated = nullptr;
     for (TilesetRotated *tileset : mTilesets) {
         if (tileset == nullptr)
             continue;
         mCurrentTilesetRotated = tileset;
+#if 1
+        ui->tileRotateView->setTileset(TileRotation::instance()->rotatedTilesetFor(tileset));
+#else
         ui->tileRotateView->setTiles(mCurrentTilesetRotated->mTiles);
+#endif
         break;
     }
     setTilesetRotatedList();
@@ -911,8 +1421,11 @@ void TileRotationWindow::fileNew()
     qDeleteAll(mTilesets);
     mTilesets.clear();
     mCurrentTilesetRotated = nullptr;
+#if 1
+    ui->tileRotateView->clear();
+#else
     ui->tileRotateView->setTiles(QList<TileRotated*>());
-
+#endif
     syncUI();
 }
 
@@ -941,7 +1454,8 @@ void TileRotationWindow::fileOpen()
 void TileRotationWindow::fileOpen(const QString &fileName)
 {
     QList<TilesetRotated*> tilesets;
-    if (!fileOpen(fileName, tilesets)) {
+    QMap<QString, QString> mapping;
+    if (!fileOpen(fileName, tilesets, mapping)) {
         QMessageBox::warning(this, tr("Error reading file"), mError);
         return;
     }
@@ -950,12 +1464,17 @@ void TileRotationWindow::fileOpen(const QString &fileName)
     mFileName = fileName;
     qDeleteAll(mTilesets);
     mTilesets = tilesets;
+    mMapping = mapping;
     mCurrentTilesetRotated = nullptr;
     for (TilesetRotated *tileset : mTilesets) {
         if (tileset == nullptr)
             continue;
         mCurrentTilesetRotated = tileset;
+#if 1
+        ui->tileRotateView->setTileset(TileRotation::instance()->rotatedTilesetFor(tileset));
+#else
         ui->tileRotateView->setTiles(mCurrentTilesetRotated->mTiles);
+#endif
         break;
     }
     setTilesetRotatedList();
@@ -1042,6 +1561,7 @@ void TileRotationWindow::addTiles()
 
 void TileRotationWindow::clearTiles()
 {
+#if 0
     TileRotateView *v = ui->tileRotateView;
     QModelIndexList selection = v->selectionModel()->selectedIndexes();
     for (QModelIndex index : selection) {
@@ -1050,6 +1570,7 @@ void TileRotationWindow::clearTiles()
     mUndoStack->beginMacro(tr("Clear Tiles"));
     // TODO: r90 or r180 or r270
     mUndoStack->endMacro();
+#endif
 }
 
 void TileRotationWindow::removeTiles()
@@ -1059,7 +1580,7 @@ void TileRotationWindow::removeTiles()
 
 bool TileRotationWindow::fileSave(const QString &fileName)
 {
-    if (!fileSave(fileName, mTilesets)) {
+    if (!fileSave(fileName, mTilesets, mMapping)) {
         QMessageBox::warning(this, tr("Error writing file"), mError);
         return false;
     }
@@ -1070,7 +1591,7 @@ bool TileRotationWindow::fileSave(const QString &fileName)
     return true;
 }
 
-bool TileRotationWindow::fileOpen(const QString &fileName, QList<TilesetRotated *> &tilesets)
+bool TileRotationWindow::fileOpen(const QString &fileName, QList<TilesetRotated *> &tilesets, QMap<QString, QString> &mapping)
 {
     TileRotationFile file;
     if (!file.read(fileName)) {
@@ -1078,13 +1599,14 @@ bool TileRotationWindow::fileOpen(const QString &fileName, QList<TilesetRotated 
         return false;
     }
     tilesets = file.takeTilesets();
+    mapping = file.takeMapping();
     return true;
 }
 
-bool TileRotationWindow::fileSave(const QString &fileName, const QList<TilesetRotated *> &tilesets)
+bool TileRotationWindow::fileSave(const QString &fileName, const QList<TilesetRotated *> &tilesets, const QMap<QString, QString> &mapping)
 {
     TileRotationFile file;
-    if (!file.write(fileName, tilesets)) {
+    if (!file.write(fileName, tilesets, mapping)) {
         mError = file.errorString();
         return false;
     }
@@ -1116,7 +1638,7 @@ void TileRotationWindow::syncUI()
     if (selected.isEmpty()) {
         ui->typeComboBox->setCurrentIndex(0);
     } else {
-        TileRotated *tile = ui->tileRotateView->model()->tileAt(selected.first());
+//        TileRotated *tile = ui->tileRotateView->model()->tileAt(selected.first());
 //        TRWFurnitureTiles* furnitureTiles = dynamic_cast<TRWFurnitureTiles*>(furnitureTile->owner());
 //        ui->typeComboBox->setCurrentIndex(int(furnitureTiles->mType));
     }
@@ -1130,9 +1652,9 @@ void TileRotationWindow::tileActivated(const QModelIndex &index)
     if (tile == nullptr)
         return;
     QString tileName = BuildingTilesMgr::nameForTile(tile);
-    BuildingTile* buildingTile = BuildingTilesMgr::instance()->get(tileName);
+//    BuildingTile* buildingTile = BuildingTilesMgr::instance()->get(tileName);
     for (TileRotated *tile : mCurrentTilesetRotated->mTiles) {
-        if (BuildingTilesMgr::instance()->nameForTile(tile->mTileset->mName, tile->mID) == tileName) {
+        if (BuildingTilesMgr::instance()->nameForTile(tile->mTileset->nameUnrotated(), tile->mID) == tileName) {
             ui->tileRotateView->setCurrentIndex(ui->tileRotateView->model()->index(tile));
             return;
         }
@@ -1161,17 +1683,17 @@ void TileRotationWindow::tilesetSelectionChanged()
 
 void TileRotationWindow::tileRotatedActivated(const QModelIndex &index)
 {
+#if 0 // TODO
     TileRotateModel *m = ui->tileRotateView->model();
     if (TileRotated *tile = m->tileAt(index)) {
-#if 0 // TODO
         for (BuildingTile *btile : ftile->tiles()) {
             if (btile != nullptr) {
                 displayTileInTileset(btile);
                 break;
             }
         }
-#endif
     }
+#endif
 }
 
 void TileRotationWindow::tilesetRotatedSelectionChanged()
@@ -1182,7 +1704,11 @@ void TileRotationWindow::tilesetRotatedSelectionChanged()
     if (item) {
         int row = ui->tilesetRotatedList->row(item);
         mCurrentTilesetRotated = mTilesets[row];
+#if 1
+        ui->tileRotateView->setTileset(TileRotation::instance()->rotatedTilesetFor(mCurrentTilesetRotated));
+#else
         ui->tileRotateView->setTiles(mCurrentTilesetRotated->mTiles);
+#endif
         updateUsedTiles();
     } else {
         ui->tileRotateView->clear();
@@ -1219,9 +1745,9 @@ void TileRotationWindow::setTilesetRotatedList()
     QFontMetrics fm = ui->tilesetRotatedList->fontMetrics();
     for (TilesetRotated *tileset : mTilesets) {
         QListWidgetItem *item = new QListWidgetItem();
-        item->setText(tileset->mName);
+        item->setText(tileset->nameRotated());
         ui->tilesetRotatedList->addItem(item);
-        width = qMax(width, fm.width(tileset->mName));
+        width = qMax(width, fm.width(tileset->nameRotated()));
     }
     int sbw = ui->tilesetRotatedList->verticalScrollBar()->sizeHint().width();
     ui->tilesetRotatedList->setFixedWidth(width + 16 + sbw);
@@ -1322,7 +1848,7 @@ bool TileRotationWindow::isTileUsed(const QString &_tileName)
 {
     for (TilesetRotated *tileset : mTilesets) {
         for (TileRotated *tile : tileset->mTiles) {
-            if (BuildingTilesMgr::instance()->nameForTile(tileset->mName, tile->mID) == _tileName) {
+            if (BuildingTilesMgr::instance()->nameForTile(tileset->nameUnrotated(), tile->mID) == _tileName) {
                 return true;
             }
         }
@@ -1383,37 +1909,15 @@ void TileRotationWindow::tileDropped(TileRotated *tile, int x, const QString &ti
 
 void TileRotationWindow::addTile(TileRotated *tile, int index, const QString& tileName)
 {
-    switch (index) {
-    case 1:
-        tile->r90.mTileNames += tileName;
-        break;
-    case 2:
-        tile->r180.mTileNames += tileName;
-        break;
-    case 3:
-        tile->r270.mTileNames += tileName;
-        break;
-    }
+    tile->mVisual.addTile(tileName);
     updateUsedTiles();
 }
 
 QString TileRotationWindow::removeTile(TileRotated *tile, int index)
 {
-    QString old;
-    switch (index) {
-    case 1:
-        old = tile->r90.mTileNames.last();
-        tile->r90.mTileNames.removeAt(tile->r90.mTileNames.size() - 1);
-        break;
-    case 2:
-        old = tile->r180.mTileNames.last();
-        tile->r180.mTileNames.removeAt(tile->r180.mTileNames.size() - 1);
-        break;
-    case 3:
-        old = tile->r270.mTileNames.last();
-        tile->r270.mTileNames.removeAt(tile->r270.mTileNames.size() - 1);
-        break;
-    }
+    QString old = tile->mVisual.mTileNames.last();
+    tile->mVisual.mTileNames.removeAt(tile->mVisual.mTileNames.size() - 1);
+    // FIXME: and mOffsets and mEdges
     updateUsedTiles();
     return old;
 }

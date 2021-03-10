@@ -45,10 +45,68 @@ enum class TileRotateType
 
 class TilesetRotated;
 
-class TileRotatedDirection
+class TileRotatedVisual
 {
 public:
-    QStringList mTileNames;
+    enum class Edge
+    {
+        None,
+        North,
+        East,
+        South,
+        West,
+        MAX
+    };
+
+    static const char *EDGE_NAMES[int(Edge::MAX) + 1];
+
+    void addTile(const QString& tileName, const QPoint& offset, Edge edge)
+    {
+        mTileNames += tileName;
+        mOffsets += offset;
+        mEdges += edge;
+    }
+
+    void addTile(const QString& tileName)
+    {
+        addTile(tileName, QPoint(), Edge::None);
+    }
+
+    void addTileDX(const QString& tileName)
+    {
+        addTile(tileName, QPoint(1, 0), Edge::East);
+    }
+
+    void addTileDY(const QString& tileName)
+    {
+        addTile(tileName, QPoint(0, 1), Edge::South);
+    }
+
+    void clear()
+    {
+        mTileNames.clear();
+        mOffsets.clear();
+        mEdges.clear();
+    }
+
+    QPoint pixelOffset(int i)
+    {
+        if (i < 0 || i >= mOffsets.size()) {
+            return QPoint();
+        }
+        int floorWidth = 64;
+        int floorHeight = 32;
+        QPoint offset = mOffsets[i];
+        if (offset == QPoint(1, 0))
+            return QPoint(floorWidth / 2, floorHeight / 2);
+        else if (offset == QPoint(0, 1))
+            return QPoint(-floorWidth / 2, floorHeight / 2);
+        return QPoint();
+    }
+
+    QStringList mTileNames; // The real tiles to get images from.
+    QVector<QPoint> mOffsets; // How to offset the tile images when rendering.
+    QVector<Edge> mEdges;
 };
 
 class PropertyRotateInfo
@@ -63,14 +121,27 @@ class TileRotated
 public:
     TileRotated()
         : mTileset(nullptr)
+//        , mRotationOf(nullptr)
     {
+    }
+    QString name() const;
+    void clear()
+    {
+//        mRotationOf = nullptr;
+//        r0.clear();
+//        r90.clear();
+//        r180.clear();
+//        r270.clear();
+        mVisual.clear();
     }
     TilesetRotated *mTileset;
     int mID;
-    QPoint mXY;
-    TileRotatedDirection r90;
-    TileRotatedDirection r180;
-    TileRotatedDirection r270;
+    QPoint mXY; // column,row in the tileset
+//    TileRotated *mRotationOf;
+    TileRotatedVisual mVisual;
+//    TileRotatedVisual r90;
+//    TileRotatedVisual r180;
+//    TileRotatedVisual r270;
     QList<PropertyRotateInfo> mProperties;
 };
 
@@ -79,10 +150,22 @@ class TilesetRotated
 public:
     ~TilesetRotated();
 
-    QString mName;
+    QString nameUnrotated()
+    {
+        return mNameUnrotated;
+    }
+
+    QString nameRotated()
+    {
+        return mNameRotated;
+    }
+
+    QString mNameUnrotated;
+    QString mNameRotated;
     int mColumnCount;
     QList<TileRotated*> mTiles;
     QVector<TileRotated*> mTileByID;
+    MapRotation mRotation;
 };
 
 class TileRotation : public QObject
@@ -98,12 +181,16 @@ public:
     void readFile(const QString& filePath);
 
     void rotateTile(Tile* tile, MapRotation rotation, QVector<Tiled::ZTileRenderInfo>& tileInfos);
+    Tile *tileFor(const QString& tilesetName, int tileID);
 
     void reload();
 
     Tile* getRotatedTileDX(const QString &tilesetName, int index);
     Tile* getRotatedTileDY(const QString &tilesetName, int index);
     Tile* getRotatedTile(const QString &tileName, QPoint& offset);
+
+    TileRotated *rotatedTileFor(Tile *tileR);
+    Tileset *rotatedTilesetFor(TilesetRotated* tilesetR);
 
 private:
     static TileRotation *mInstance;

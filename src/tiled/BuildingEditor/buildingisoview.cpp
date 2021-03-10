@@ -30,6 +30,7 @@
 #include "mapcomposite.h"
 #include "mapmanager.h"
 #include "tilemetainfomgr.h"
+#include "tilerotation.h"
 #include "tilesetmanager.h"
 #include "zoomable.h"
 
@@ -548,8 +549,9 @@ void BuildingIsoScene::setToolTiles(const FloorTileGrid *tiles,
     }
 
     QMap<QString,Tileset*> tilesetByName;
-    foreach (Tileset *ts, mBuildingMap->map()->tilesets())
+    for (Tileset *ts : mBuildingMap->map()->tilesets()) {
         tilesetByName[ts->name()] = ts;
+    }
 
     QSize tilesSize(tiles->width(), tiles->height());
     mToolTiles.resize(tilesSize, QPoint());
@@ -557,14 +559,20 @@ void BuildingIsoScene::setToolTiles(const FloorTileGrid *tiles,
     for (int x = 0; x < tiles->width(); x++) {
         for (int y = 0; y < tiles->height(); y++) {
             QString tileName = tiles->at(x, y);
-            Tile *tile = 0;
+            Tile *tile = nullptr;
             if (!tileName.isEmpty()) {
                 tile = TilesetManager::instance()->missingTile();
                 QString tilesetName;
                 int index;
                 if (BuildingTilesMgr::parseTileName(tileName, tilesetName, index)) {
-                    if (tilesetByName.contains(tilesetName))
+                    if (tilesetByName.contains(tilesetName)) {
                         tile = tilesetByName[tilesetName]->tileAt(index);
+                    }
+#if 1
+                    else if (Tile *tile1 = Tiled::TileRotation::instance()->tileFor(tilesetName, index)) {
+                        tile = tile1;
+                    }
+#endif
                 }
             }
             mToolTiles.setCell(x, y, Cell(tile));

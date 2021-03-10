@@ -55,8 +55,8 @@ protected:
     QString getSaveLocation();
     void fileOpen(const QString &fileName);
     bool fileSave(const QString &fileName);
-    bool fileOpen(const QString &fileName, QList<Tiled::TilesetRotated*> &tiles);
-    bool fileSave(const QString &fileName, const QList<Tiled::TilesetRotated*> &tilesets);
+    bool fileOpen(const QString &fileName, QList<Tiled::TilesetRotated*> &tiles, QMap<QString, QString> &mapping);
+    bool fileSave(const QString &fileName, const QList<Tiled::TilesetRotated*> &tilesets, const QMap<QString, QString>& mapping);
     void setTilesetRotatedList();
     void setTilesetList();
     void updateUsedTiles();
@@ -101,6 +101,7 @@ private:
     QUndoGroup *mUndoGroup;
     QUndoStack *mUndoStack;
     QList<Tiled::TilesetRotated*> mTilesets;
+    QMap<QString, QString> mMapping;
 
     friend class AddTile;
     friend class ChangeTiles;

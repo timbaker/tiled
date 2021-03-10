@@ -27,6 +27,7 @@
 #include "tilerotation.h"
 
 #include "maprenderer.h"
+#include "tileset.h"
 
 #include <QAction>
 #include <QApplication>
@@ -241,27 +242,41 @@ void DrawTileTool::setTile(const QString &tileName)
 
 QString DrawTileTool::unrotateTile(const QString &tileName)
 {
-    Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(mTileName);
+    QString tilesetName;
+    int tileIndex;
+    if (!BuildingTilesMgr::instance()->parseTileName(tileName, tilesetName, tileIndex)) {
+        return tileName;
+    }
+//    Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(tilesetName, tileIndex);
+    int tileRotation = 0;
+    if (tilesetName.endsWith(QLatin1Literal("_R90"))) {
+        tileRotation = 90;
+    } else if (tilesetName.endsWith(QLatin1Literal("_R180"))) {
+        tileRotation = 180;
+    } else if (tilesetName.endsWith(QLatin1Literal("_R270"))) {
+        tileRotation = 270;
+    }
+    QString tileName1 = tileName;
     Tiled::MapRotation mapRotation = document()->mapRotation();
     switch (mapRotation) {
     case Tiled::MapRotation::NotRotated:
         break;
     case Tiled::MapRotation::Clockwise90:
-        mapRotation = Tiled::MapRotation::Clockwise270;
+        tileRotation += 270;
         break;
     case Tiled::MapRotation::Clockwise180:
-        mapRotation = Tiled::MapRotation::Clockwise180;
+        tileRotation += 180;
         break;
     case Tiled::MapRotation::Clockwise270:
-        mapRotation = Tiled::MapRotation::Clockwise90;
+        tileRotation += 90;
         break;
     }
-    QVector<Tiled::ZTileRenderInfo> renderInfos;
-    Tiled::TileRotation::instance()->rotateTile(tile, mapRotation, renderInfos);
-    if (renderInfos.isEmpty()) {
-        return QString();
+    tileRotation %= 360;
+    if (tileRotation != 0)
+    {
+        tileName1 = tilesetName + QLatin1Literal("_R") + QString::number(tileRotation) + QLatin1Literal("_") + QString::number(tileIndex);
     }
-    return BuildingTilesMgr::instance()->nameForTile(renderInfos[0].mTile);
+    return tileName1;
 }
 
 void DrawTileTool::setCaptureTiles(FloorTileGrid *tiles, const QRegion &rgn)

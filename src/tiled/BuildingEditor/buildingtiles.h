@@ -750,7 +750,7 @@ public:
     QString txtPath();
 
     bool readTxt();
-    void writeTxt(QWidget *parent = 0);
+    void writeTxt(QWidget *parent = nullptr);
 
     BuildingTileCategory *catEWalls() const { return mCatEWalls; }
     BuildingTileCategory *catIWalls() const { return mCatIWalls; }

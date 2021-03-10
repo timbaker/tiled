@@ -18,6 +18,8 @@
 #ifndef TILEROTATIONFILE_H
 #define TILEROTATIONFILE_H
 
+#include "maprotation.h"
+
 #include <QObject>
 #include <QList>
 
@@ -27,7 +29,7 @@ namespace Tiled
 {
 
 class TileRotated;
-class TileRotatedDirection;
+class TileRotatedVisual;
 class TilesetRotated;
 
 class TileRotationFile : public QObject
@@ -41,23 +43,27 @@ public:
     ~TileRotationFile();
 
     bool read(const QString& path);
-    bool write(const QString& path, const QList<TilesetRotated*>& tilesets);
+    bool write(const QString& path, const QList<TilesetRotated*>& tilesets, const QMap<QString, QString>& mapping);
 
     const QString& errorString() const { return mError; }
 
     QList<TilesetRotated *> takeTilesets();
+    QMap<QString, QString> takeMapping();
 
 private:
     TilesetRotated *readTileset(const SimpleFileBlock& block);
+    Tiled::MapRotation parseRotation(const QString& str);
     TileRotated *readTile(const SimpleFileBlock& block);
-    bool readDirection(const SimpleFileBlock& block, TileRotatedDirection& direction);
+    bool readDirection(const SimpleFileBlock& block, TileRotatedVisual& direction);
     bool parse2Ints(const QString &s, int *pa, int *pb);
+    QString twoInts(int a, int b);
     void writeTile(TileRotated *tile, SimpleFileBlock& tileBlock);
-    void writeDirection(TileRotatedDirection& direction, SimpleFileBlock& directionBlock);
+    void writeDirection(TileRotatedVisual& direction, SimpleFileBlock& directionBlock);
 
 private:
     QString mError;
     QList<TilesetRotated*> mTilesets;
+    QMap<QString, QString> mMapping;
 };
 
 extern const char *TILE_ROTATE_NAMES[];

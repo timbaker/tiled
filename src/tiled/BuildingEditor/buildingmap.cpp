@@ -650,6 +650,11 @@ void BuildingMap::userTilesToLayer(BuildingFloor *floor,
                     if (tilesetByName.contains(tilesetName)) {
                         tile = tilesetByName[tilesetName]->tileAt(index);
                     }
+#if 1
+                    else if (Tile* tile1 = TileRotation::instance()->tileFor(tilesetName, index)) {
+                        tile = tile1;
+                    }
+#endif
                 }
             }
             layer->setCell(x, y, Cell(tile));

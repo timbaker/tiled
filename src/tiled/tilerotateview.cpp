@@ -45,14 +45,6 @@ using namespace Internal;
 
 namespace Tiled {
 
-static QSize isometricSize(int numX, int numY, int tileWidth, int tileHeight)
-{
-    // Map width and height contribute equally in both directions
-    const int side = numX + numY;
-    return QSize(side * tileWidth / 2, side * tileHeight / 2)
-            + QSize(0, 128 - tileHeight);
-}
-
 class TileRotateDelegate : public QAbstractItemDelegate
 {
 public:
@@ -127,22 +119,29 @@ void TileRotateDelegate::paint(QPainter *painter,
     QPointF tileMargins(0, imageHeight - tileHeight);
 
     // Draw the tile images.
-    if (mapRotation == MapRotation::NotRotated) {
-        QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-        if (Tile *tile = BuildingTilesMgr::instance()->tileFor(ftile->mTileset->mName, ftile->mID)) { // FIXME: calc this elsewhere
-            QRect r1(r.topLeft(), QSize(tileWidth, imageHeight));
-            if (tile->image().isNull())
-                tile = TilesetManager::instance()->missingTile();
-            const QMargins margins = tile->drawMargins(scale);
-            painter->drawImage(r1.adjusted(margins.left(), margins.top(), -margins.right(), -margins.bottom()), tile->image());
+    /*if (mapRotation == MapRotation::NotRotated)*/ {
+        TileRotatedVisual& direction = ftile->mVisual;
+        for (int i = 0; i < direction.mTileNames.size(); i++) {
+            const QString& tileName = direction.mTileNames[i];
+            const QPoint tileOffset = direction.pixelOffset(i);
+            QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
+            if (Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName)) { // FIXME: calc this elsewhere
+                QRect r1(r.topLeft() + tileOffset * scale, QSize(tileWidth, imageHeight));
+                if (tile->image().isNull())
+                    tile = TilesetManager::instance()->missingTile();
+                const QMargins margins = tile->drawMargins(scale);
+                painter->drawImage(r1.adjusted(margins.left(), margins.top(), -margins.right(), -margins.bottom()), tile->image());
+            }
         }
     }
+#if 0
     if (mapRotation == MapRotation::Clockwise90) {
-        TileRotatedDirection& direction = ftile->r90;
-        for (const QString& tileName : direction.mTileNames) {
+        TileRotatedVisual& direction = ftile->r90;
+        for (int i = 0; i < direction.mTileNames.size(); i++) {
+            const QString& tileName = direction.mTileNames[i];
+            const QPoint tileOffset = direction.pixelOffset(i);
             QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-            QPoint tileOffset;
-            if (Tile *tile = TileRotation::instance()->getRotatedTile(tileName, tileOffset)) { // FIXME: calc this elsewhere
+            if (Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName)) { // FIXME: calc this elsewhere
                 QRect r1(r.topLeft() + tileOffset * scale, QSize(tileWidth, imageHeight));
                 if (tile->image().isNull())
                     tile = TilesetManager::instance()->missingTile();
@@ -152,11 +151,12 @@ void TileRotateDelegate::paint(QPainter *painter,
         }
     }
     if (mapRotation == MapRotation::Clockwise180) {
-        TileRotatedDirection& direction = ftile->r180;
-        for (const QString& tileName : direction.mTileNames) {
+        TileRotatedVisual& direction = ftile->r180;
+        for (int i = 0; i < direction.mTileNames.size(); i++) {
+            const QString& tileName = direction.mTileNames[i];
+            const QPoint tileOffset = direction.pixelOffset(i);
             QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-            QPoint tileOffset;
-            if (Tile *tile = TileRotation::instance()->getRotatedTile(tileName, tileOffset)) { // FIXME: calc this elsewhere
+            if (Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName)) { // FIXME: calc this elsewhere
                 QRect r1(r.topLeft() + tileOffset * scale, QSize(tileWidth, imageHeight));
                 if (tile->image().isNull())
                     tile = TilesetManager::instance()->missingTile();
@@ -166,11 +166,12 @@ void TileRotateDelegate::paint(QPainter *painter,
         }
     }
     if (mapRotation == MapRotation::Clockwise270) {
-        TileRotatedDirection& direction = ftile->r270;
-        for (const QString& tileName : direction.mTileNames) {
+        TileRotatedVisual& direction = ftile->r270;
+        for (int i = 0; i < direction.mTileNames.size(); i++) {
+            const QString& tileName = direction.mTileNames[i];
+            const QPoint tileOffset = direction.pixelOffset(i);
             QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-            QPoint tileOffset;
-            if (Tile *tile = TileRotation::instance()->getRotatedTile(tileName, tileOffset)) { // FIXME: calc this elsewhere
+            if (Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName)) { // FIXME: calc this elsewhere
                 QRect r1(r.topLeft() + tileOffset * scale, QSize(tileWidth, imageHeight));
                 if (tile->image().isNull())
                     tile = TilesetManager::instance()->missingTile();
@@ -179,6 +180,7 @@ void TileRotateDelegate::paint(QPainter *painter,
             }
         }
     }
+#endif
 #if 1
     // Draw the "floor"
     if (true) {
