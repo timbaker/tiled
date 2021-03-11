@@ -463,7 +463,7 @@ QPointF IsoBuildingRenderer::tileToSceneF(const QPointF &tilePos, int level)
 
 QPolygonF IsoBuildingRenderer::tileToScenePolygon(const QPoint &tilePos, int level)
 {
-    return mMapRenderer->tileToPixelCoords(QRect(tilePos, QSize(1,1)));
+    return mMapRenderer->tileToPixelCoords(QRect(tilePos, QSize(1,1)), level);
 #if 0
     QPolygonF polygon;
     polygon += tilePos;

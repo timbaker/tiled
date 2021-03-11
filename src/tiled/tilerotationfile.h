@@ -22,6 +22,7 @@
 
 #include <QObject>
 #include <QList>
+#include <QSharedPointer>
 
 class SimpleFileBlock;
 
@@ -30,6 +31,7 @@ namespace Tiled
 
 class TileRotated;
 class TileRotatedVisual;
+class TileRotatedVisualData;
 class TilesetRotated;
 
 class TileRotationFile : public QObject
@@ -43,27 +45,33 @@ public:
     ~TileRotationFile();
 
     bool read(const QString& path);
-    bool write(const QString& path, const QList<TilesetRotated*>& tilesets, const QMap<QString, QString>& mapping);
+    bool write(const QString& path, const QList<TilesetRotated*>& tilesets, const QList<QSharedPointer<TileRotatedVisual>>& visuals);
 
     const QString& errorString() const { return mError; }
 
     QList<TilesetRotated *> takeTilesets();
-    QMap<QString, QString> takeMapping();
+    QList<QSharedPointer<TileRotatedVisual>> takeVisuals();
 
 private:
     TilesetRotated *readTileset(const SimpleFileBlock& block);
     Tiled::MapRotation parseRotation(const QString& str);
+    TileRotatedVisual *readVisual(const SimpleFileBlock& block);
     TileRotated *readTile(const SimpleFileBlock& block);
-    bool readDirection(const SimpleFileBlock& block, TileRotatedVisual& direction);
+    bool readDirection(const SimpleFileBlock& block, TileRotatedVisualData& direction);
     bool parse2Ints(const QString &s, int *pa, int *pb);
+
     QString twoInts(int a, int b);
+    void writeVisual(TileRotatedVisual *visual, SimpleFileBlock& visualBlock);
     void writeTile(TileRotated *tile, SimpleFileBlock& tileBlock);
-    void writeDirection(TileRotatedVisual& direction, SimpleFileBlock& directionBlock);
+    void writeDirection(TileRotatedVisualData& direction, SimpleFileBlock& directionBlock);
+
+    QSharedPointer<TileRotatedVisual> getVisual(const QString& uuidStr);
 
 private:
     QString mError;
+    QMap<QUuid, QSharedPointer<TileRotatedVisual>> mVisualLookup;
     QList<TilesetRotated*> mTilesets;
-    QMap<QString, QString> mMapping;
+//    QMap<QString, QString> mMapping;
 };
 
 extern const char *TILE_ROTATE_NAMES[];

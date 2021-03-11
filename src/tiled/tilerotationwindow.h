@@ -55,8 +55,8 @@ protected:
     QString getSaveLocation();
     void fileOpen(const QString &fileName);
     bool fileSave(const QString &fileName);
-    bool fileOpen(const QString &fileName, QList<Tiled::TilesetRotated*> &tiles, QMap<QString, QString> &mapping);
-    bool fileSave(const QString &fileName, const QList<Tiled::TilesetRotated*> &tilesets, const QMap<QString, QString>& mapping);
+    bool fileOpen(const QString &fileName, QList<Tiled::TilesetRotated*> &tiles, QList<QSharedPointer<Tiled::TileRotatedVisual>>& visuals);
+    bool fileSave(const QString &fileName, const QList<Tiled::TilesetRotated*> &tilesets, const QList<QSharedPointer<Tiled::TileRotatedVisual>>& visuals);
     void setTilesetRotatedList();
     void setTilesetList();
     void updateUsedTiles();
@@ -66,6 +66,8 @@ protected:
     void addTile(Tiled::TileRotated *tile, int index, const QString& tileName);
     QString removeTile(Tiled::TileRotated *tile, int index);
     QStringList changeTiles(Tiled::TileRotated *tile, int index, const QStringList& tileNames);
+    Tiled::Tileset* getRotatedTileset(const QString tilesetName);
+    Tiled::TileRotated *rotatedTileFor(Tiled::Tile *tileR);
 
 protected slots:
     void fileNew();
@@ -101,10 +103,13 @@ private:
     QUndoGroup *mUndoGroup;
     QUndoStack *mUndoStack;
     QList<Tiled::TilesetRotated*> mTilesets;
-    QMap<QString, QString> mMapping;
+    QList<QSharedPointer<Tiled::TileRotatedVisual>> mVisuals;
+    QMap<QString, Tiled::Tileset*> mTilesetRotated;
+    QMap<QString, Tiled::TilesetRotated*> mTilesetByNameRotated;
 
     friend class AddTile;
     friend class ChangeTiles;
+    friend class TileRotateDelegate;
 };
 
 #endif // TILEROTATIONWINDOW_H

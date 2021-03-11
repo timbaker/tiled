@@ -113,7 +113,7 @@ void DrawTileToolCursor::setEditor(BuildingBaseScene *editor)
 
 /////
 
-DrawTileTool *DrawTileTool::mInstance = 0;
+DrawTileTool *DrawTileTool::mInstance = nullptr;
 
 DrawTileTool *DrawTileTool::instance()
 {
@@ -127,9 +127,9 @@ DrawTileTool::DrawTileTool() :
     mMouseDown(false),
     mMouseMoved(false),
     mErasing(false),
-    mCursor(0),
+    mCursor(nullptr),
     mCapturing(false),
-    mCaptureTiles(0)
+    mCaptureTiles(nullptr)
 {
     updateStatusText();
 }
@@ -242,6 +242,9 @@ void DrawTileTool::setTile(const QString &tileName)
 
 QString DrawTileTool::unrotateTile(const QString &tileName)
 {
+#if 1
+    return Tiled::TileRotation::instance()->unrotateTile(tileName, document()->mapRotation());
+#else
     QString tilesetName;
     int tileIndex;
     if (!BuildingTilesMgr::instance()->parseTileName(tileName, tilesetName, tileIndex)) {
@@ -277,6 +280,7 @@ QString DrawTileTool::unrotateTile(const QString &tileName)
         tileName1 = tilesetName + QLatin1Literal("_R") + QString::number(tileRotation) + QLatin1Literal("_") + QString::number(tileIndex);
     }
     return tileName1;
+#endif
 }
 
 void DrawTileTool::setCaptureTiles(FloorTileGrid *tiles, const QRegion &rgn)

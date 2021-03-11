@@ -120,7 +120,7 @@ void TileRotateDelegate::paint(QPainter *painter,
 
     // Draw the tile images.
     /*if (mapRotation == MapRotation::NotRotated)*/ {
-        TileRotatedVisual& direction = ftile->mVisual;
+        TileRotatedVisualData& direction = ftile->mVisual->mData[0];
         for (int i = 0; i < direction.mTileNames.size(); i++) {
             const QString& tileName = direction.mTileNames[i];
             const QPoint tileOffset = direction.pixelOffset(i);
