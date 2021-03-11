@@ -171,7 +171,7 @@ void TileRotateDelegate::paint(QPainter *painter,
     const QMargins margins = tile->drawMargins(mView->zoomable()->scale());
 #if 1
     if (TileRotated *tileR = mWindow->rotatedTileFor(tile)) {
-        int m = (int(tileR->mTileset->mRotation) + int(tileR->mMapRotation)) % MAP_ROTATION_COUNT;
+        int m = (int(tileR->mTileset->mRotation) + int(tileR->mRotation)) % MAP_ROTATION_COUNT;
         TileRotatedVisualData& direction = tileR->mVisual->mData[m];
         for (int i = 0; i < direction.mTileNames.size(); i++) {
             const QString& tileName = direction.mTileNames[i];
@@ -189,6 +189,18 @@ void TileRotateDelegate::paint(QPainter *painter,
 #else
     painter->drawImage(option.rect.adjusted(dw/2 + margins.left(), extra + margins.top(), -(dw - dw/2) - margins.right(), -extra - labelHeight - margins.bottom()), tile->image());
 #endif
+
+    // Draw the "floor"
+    if (true) {
+        qreal floorHeight = 32 * scale;
+        QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
+        QPointF p1(r.left() + r.width() / 2, r.bottom() - floorHeight);
+        QPointF p2(r.right(), r.bottom() - floorHeight / 2);
+        QPointF p3(r.left() + r.width() / 2, r.bottom());
+        QPointF p4(r.left(), r.bottom() - floorHeight / 2);
+        painter->drawLine(p1, p2); painter->drawLine(p2, p3);
+        painter->drawLine(p3, p4); painter->drawLine(p4, p1);
+    }
 
     if (m->showLabels()) {
         QString name = fm.elidedText(label, Qt::ElideRight, option.rect.width());
@@ -411,14 +423,7 @@ public:
         visual->mData[3].addTile(btileW->name());
 
         initVisual(btileN, visual, MapRotation::NotRotated);
-        initVisual(btileE, visual, MapRotation::Clockwise90);
-        initVisual(btileS, visual, MapRotation::Clockwise180);
         initVisual(btileW, visual, MapRotation::Clockwise270);
-
-//        mMapping[btileN->name()] = tileRotatedN->name();
-//        mMapping[btileE->name()] = tileRotatedE->name();
-//        mMapping[btileW->name()] = tileRotatedW->name();
-//        mMapping[btileS->name()] = tileRotatedS->name();
     }
 
     void initRoofCaps()
@@ -447,6 +452,10 @@ public:
             initRoofCaps(entry, BTC_RoofCaps::CapRiseS2, BTC_RoofCaps::CapFallE2, BTC_RoofCaps::CapFallS2, BTC_RoofCaps::CapRiseE2);
             initRoofCaps(entry, BTC_RoofCaps::CapRiseS3, BTC_RoofCaps::CapFallE3, BTC_RoofCaps::CapFallS3, BTC_RoofCaps::CapRiseE3);
 
+            initRoofCaps(entry, BTC_RoofCaps::CapFallS1, BTC_RoofCaps::CapRiseE1, BTC_RoofCaps::CapRiseS1, BTC_RoofCaps::CapFallE1);
+            initRoofCaps(entry, BTC_RoofCaps::CapFallS2, BTC_RoofCaps::CapRiseE2, BTC_RoofCaps::CapRiseS2, BTC_RoofCaps::CapFallE2);
+            initRoofCaps(entry, BTC_RoofCaps::CapFallS3, BTC_RoofCaps::CapRiseE3, BTC_RoofCaps::CapRiseS3, BTC_RoofCaps::CapFallE3);
+
             initFromBuildingTiles(entry, BTC_RoofCaps::PeakPt5S, BTC_RoofCaps::PeakPt5E, TileRotateType::WallExtra);
             initFromBuildingTiles(entry, BTC_RoofCaps::PeakOnePt5S, BTC_RoofCaps::PeakOnePt5E, TileRotateType::WallExtra);
             initFromBuildingTiles(entry, BTC_RoofCaps::PeakTwoPt5S, BTC_RoofCaps::PeakTwoPt5E, TileRotateType::WallExtra);
@@ -457,7 +466,10 @@ public:
 
             initRoofCaps(entry, BTC_RoofCaps::CapShallowRiseS1, BTC_RoofCaps::CapShallowFallE1, BTC_RoofCaps::CapShallowFallS1, BTC_RoofCaps::CapShallowRiseE1);
             initRoofCaps(entry, BTC_RoofCaps::CapShallowRiseS2, BTC_RoofCaps::CapShallowFallE2, BTC_RoofCaps::CapShallowFallS2, BTC_RoofCaps::CapShallowRiseE2);
-         }
+
+            initRoofCaps(entry, BTC_RoofCaps::CapShallowFallS1, BTC_RoofCaps::CapShallowRiseE1, BTC_RoofCaps::CapShallowRiseS1, BTC_RoofCaps::CapShallowFallE1);
+            initRoofCaps(entry, BTC_RoofCaps::CapShallowFallS2, BTC_RoofCaps::CapShallowRiseE2, BTC_RoofCaps::CapShallowRiseS2, BTC_RoofCaps::CapShallowFallE2);
+        }
     }
 
     void initRoofSlope(BuildingTileEntry *entry, int north, int west)
@@ -479,12 +491,12 @@ public:
     }
 
     // Corners
-    void initRoofSlope(BuildingTileEntry *bte, int se, int ne, int sw)
+    void initRoofSlope(BuildingTileEntry *bte, int se, int sw, int ne)
     {
         BuildingTile *btileSE = bte->tile(se);
-        BuildingTile *btileNE = bte->tile(ne);
         BuildingTile *btileSW = bte->tile(sw);
-        if (btileSE->isNone() || btileNE->isNone() || btileSW->isNone())
+        BuildingTile *btileNE = bte->tile(ne);
+         if (btileSE->isNone() || btileNE->isNone() || btileSW->isNone())
             return;
 
         QSharedPointer<TileRotatedVisual> visual = allocVisual();
@@ -781,19 +793,19 @@ public:
     {
         TileRotated* tileRotatedN = getTileRotatedR0(buildingTile);
         tileRotatedN->mVisual = visual;
-        tileRotatedN->mMapRotation = mapRotation;
+        tileRotatedN->mRotation = mapRotation;
 
         TileRotated* tileRotatedE = getTileRotatedR90(buildingTile);
         tileRotatedE->mVisual = visual;
-        tileRotatedE->mMapRotation = mapRotation;
+        tileRotatedE->mRotation = mapRotation;
 
         TileRotated* tileRotatedS = getTileRotatedR180(buildingTile);
         tileRotatedS->mVisual = visual;
-        tileRotatedS->mMapRotation = mapRotation;
+        tileRotatedS->mRotation = mapRotation;
 
         TileRotated* tileRotatedW = getTileRotatedR270(buildingTile);
         tileRotatedW->mVisual = visual;
-        tileRotatedW->mMapRotation = mapRotation;
+        tileRotatedW->mRotation = mapRotation;
     }
 
     void init()
@@ -1324,6 +1336,11 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     connect(ui->actionClearTiles, &QAction::triggered, this, &TileRotationWindow::clearTiles);
     connect(ui->actionRemove, &QAction::triggered, this, &TileRotationWindow::removeTiles);
 
+    ui->tilesetRotatedFilter->setClearButtonEnabled(true);
+    ui->tilesetRotatedFilter->setEnabled(false);
+    connect(ui->tilesetRotatedFilter, &QLineEdit::textEdited, this, &TileRotationWindow::rotatedFilterEdited);
+
+
     ui->tilesetRotatedList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     connect(ui->tilesetRotatedList, &QListWidget::itemSelectionChanged, this, &TileRotationWindow::tilesetRotatedSelectionChanged);
 
@@ -1365,6 +1382,13 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     mTilesets = initFromBuildingTiles.mTilesets;
     mVisuals = initFromBuildingTiles.mVisuals;
     mCurrentTilesetRotated = nullptr;
+    std::sort(mTilesets.begin(), mTilesets.end(),
+              [](TilesetRotated* a, TilesetRotated *b) {
+        if (a->nameUnrotated() == b->nameUnrotated()) {
+            return int(a->mRotation) < int(b->mRotation);
+        }
+                  return a->nameRotated() < b->nameRotated();
+              });
     for (TilesetRotated *tileset : mTilesets) {
         mTilesetByNameRotated[tileset->nameRotated()] = tileset;
     }
@@ -1670,6 +1694,51 @@ void TileRotationWindow::tilesetSelectionChanged()
     syncUI();
 }
 
+void TileRotationWindow::rotatedFilterEdited(const QString &text)
+{
+    QListWidget* mTilesetNamesView = ui->tilesetRotatedList;
+
+    for (int row = 0; row < mTilesetNamesView->count(); row++) {
+        QListWidgetItem* item = mTilesetNamesView->item(row);
+        item->setHidden(text.trimmed().isEmpty() ? false : !item->text().contains(text));
+    }
+
+    QListWidgetItem* current = mTilesetNamesView->currentItem();
+    if (current != nullptr && current->isHidden()) {
+        // Select previous visible row.
+        int row = mTilesetNamesView->row(current) - 1;
+        while (row >= 0 && mTilesetNamesView->item(row)->isHidden()) {
+            row--;
+        }
+        if (row >= 0) {
+            current = mTilesetNamesView->item(row);
+            mTilesetNamesView->setCurrentItem(current);
+            mTilesetNamesView->scrollToItem(current);
+            return;
+        }
+
+        // Select next visible row.
+        row = mTilesetNamesView->row(current) + 1;
+        while (row < mTilesetNamesView->count() && mTilesetNamesView->item(row)->isHidden()) {
+            row++;
+        }
+        if (row < mTilesetNamesView->count()) {
+            current = mTilesetNamesView->item(row);
+            mTilesetNamesView->setCurrentItem(current);
+            mTilesetNamesView->scrollToItem(current);
+            return;
+        }
+
+        // All items hidden
+        mTilesetNamesView->setCurrentItem(nullptr);
+    }
+
+    current = mTilesetNamesView->currentItem();
+    if (current != nullptr) {
+        mTilesetNamesView->scrollToItem(current);
+    }
+}
+
 void TileRotationWindow::tileRotatedActivated(const QModelIndex &index)
 {
 #if 0 // TODO
@@ -1766,6 +1835,8 @@ void TileRotationWindow::setTilesetList()
 
 void TileRotationWindow::updateUsedTiles()
 {
+    return; // FIXME: slow
+
     if (mCurrentTileset == nullptr)
         return;
 

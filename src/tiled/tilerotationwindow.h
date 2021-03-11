@@ -82,6 +82,7 @@ protected slots:
     void filterEdited(const QString &text);
     void tileActivated(const QModelIndex &index);
     void tilesetSelectionChanged();
+    void rotatedFilterEdited(const QString &text);
     void tileRotatedActivated(const QModelIndex &index);
     void tilesetRotatedSelectionChanged();
     void manageTilesets();

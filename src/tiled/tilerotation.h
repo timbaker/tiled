@@ -133,7 +133,7 @@ class TileRotated
 public:
     TileRotated()
         : mTileset(nullptr)
-        , mMapRotation(MapRotation::NotRotated)
+        , mRotation(MapRotation::NotRotated)
         , mVisual(nullptr)
     {
     }
@@ -148,7 +148,7 @@ public:
     TilesetRotated *mTileset;
     int mID;
     QPoint mXY; // column,row in the tileset
-    MapRotation mMapRotation; // The rotation of the original real tile.
+    MapRotation mRotation; // The rotation of the original real tile.
     QSharedPointer<TileRotatedVisual> mVisual;
     QList<TileRotatedProperty> mProperties;
 };
@@ -190,7 +190,7 @@ public:
 
     QSharedPointer<TileRotatedVisual> allocVisual();
 
-    void rotateTile(Tile* tile, MapRotation rotation, QVector<Tiled::ZTileRenderInfo>& tileInfos);
+    void rotateTile(Tile* tile, MapRotation viewRotation, QVector<Tiled::ZTileRenderInfo>& tileInfos);
     Tile *rotateTile(Tile* tile, MapRotation rotation);
     Tile *tileFor(const QString& tilesetName, int tileID);
 
@@ -203,7 +203,7 @@ public:
     TileRotated *rotatedTileFor(Tile *tileR);
     Tileset *rotatedTilesetFor(TilesetRotated* tilesetR);
 
-    QString unrotateTile(const QString &tileName, MapRotation mapRotation);
+    QString unrotateTile(const QString &tileName, MapRotation viewRotation);
 
 private:
     static TileRotation *mInstance;

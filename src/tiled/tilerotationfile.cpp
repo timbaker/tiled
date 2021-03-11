@@ -201,7 +201,7 @@ TileRotated *TileRotationFile::readTile(const SimpleFileBlock &tileBlock)
 {
     TileRotated *tile = new TileRotated(); // QScopedPointer
     parse2Ints(tileBlock.value("xy"), &tile->mXY.rx(), &tile->mXY.ry());
-    tile->mMapRotation = parseRotation(tileBlock.value("rotation"));
+    tile->mRotation = parseRotation(tileBlock.value("rotation"));
     tile->mVisual = getVisual(tileBlock.value("visual"));
     return tile;
 }
@@ -342,7 +342,7 @@ void TileRotationFile::writeTile(TileRotated *tile, SimpleFileBlock &tileBlock)
 {
     tileBlock.name = QLatin1Literal("tile");
     tileBlock.addValue("xy", twoInts(tile->mXY.x(), tile->mXY.y()));
-    tileBlock.addValue("rotation", QLatin1Literal(MAP_ROTATION_NAMES[int(tile->mMapRotation)]));
+    tileBlock.addValue("rotation", QLatin1Literal(MAP_ROTATION_NAMES[int(tile->mRotation)]));
     tileBlock.addValue("visual", tile->mVisual->mUuid.toString());
 }
 
