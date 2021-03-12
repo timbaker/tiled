@@ -35,16 +35,17 @@ class Zoomable;
 namespace Tiled {
 
 class TileRotated;
+class TileRotatedVisual;
 class TilesetRotated;
 
 class TileRotateDelegate;
 
-class TileRotateModel : public QAbstractListModel
+class TileRotatedVisualModel : public QAbstractListModel
 {
     Q_OBJECT
 public:
-    TileRotateModel(QObject *parent = nullptr);
-    ~TileRotateModel();
+    TileRotatedVisualModel(QObject *parent = nullptr);
+    ~TileRotatedVisualModel();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
@@ -58,31 +59,21 @@ public:
                         int role = Qt::DisplayRole) const;
 
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
-    QModelIndex index(TileRotated *tile);
+    QModelIndex index(QSharedPointer<TileRotatedVisual> visual);
 
     QStringList mimeTypes() const;
     bool dropMimeData(const QMimeData *data, Qt::DropAction action,
                       int row, int column, const QModelIndex &parent);
 
     void clear();
-    void setTiles(const QList<TileRotated*> &tilesList);
+    void setVisuals(const QList<QSharedPointer<TileRotatedVisual> > &visuals);
 
-    TileRotated *tileAt(const QModelIndex &index) const;
-    MapRotation mapRotationAt(const QModelIndex &index) const;
+    QSharedPointer<TileRotatedVisual> visualAt(const QModelIndex &index, MapRotation& rotation) const;
     QString headerAt(const QModelIndex &index) const;
 
 //    void removeTiles(FurnitureTiles *ftiles);
 
     void scaleChanged(qreal scale);
-
-    void setDropCoords(const QPoint &dropCoord, const QModelIndex &dropIndex)
-    {
-        mDropCoords = dropCoord;
-        mDropIndex = dropIndex;
-    }
-
-    QPoint dropCoords() const
-    { return mDropCoords; }
 
     QModelIndex dropIndex() const
     { return mDropIndex; }
@@ -90,52 +81,52 @@ public:
     void redisplay();
 
 signals:
-    void tileDropped(TileRotated *tile, int index, const QString &tileName);
+    void tileDropped(QSharedPointer<TileRotatedVisual> visual, MapRotation mapRotation, const QString &tileName);
 
 private:
     class Item
     {
     public:
         Item() :
-            mTile(nullptr),
+            mVisual(nullptr),
             mMapRotation(MapRotation::NotRotated)
         {
         }
 
-        Item(TileRotated *tile, MapRotation mapRotation) :
-            mTile(tile),
+        Item(QSharedPointer<TileRotatedVisual> visual, MapRotation mapRotation) :
+            mVisual(visual),
             mMapRotation(mapRotation)
         {
         }
+
         Item(const QString &heading) :
-            mTile(nullptr),
+            mVisual(nullptr),
             mMapRotation(MapRotation::NotRotated),
             mHeading(heading)
         {
         }
 
-        TileRotated *mTile;
+        QSharedPointer<TileRotatedVisual> mVisual;
         MapRotation mMapRotation;
         QString mHeading;
     };
 
     Item *toItem(const QModelIndex &index) const;
-    Item *toItem(TileRotated *tile) const;
+    Item *toItem(QSharedPointer<TileRotatedVisual> visual) const;
 
     QList<Item*> mItems;
-    QList<TileRotated*> mTiles;
+    QList<TileRotatedVisual*> mVisuals;
     static QString mMimeType;
-    QPoint mDropCoords;
     QModelIndex mDropIndex;
     bool mShowHeaders;
 };
 
-class TileRotateView : public QTableView
+class TileRotatedVisualView : public QTableView
 {
     Q_OBJECT
 public:
-    explicit TileRotateView(QWidget *parent = nullptr);
-    explicit TileRotateView(Tiled::Internal::Zoomable *zoomable, QWidget *parent = nullptr);
+    explicit TileRotatedVisualView(QWidget *parent = nullptr);
+    explicit TileRotatedVisualView(Tiled::Internal::Zoomable *zoomable, QWidget *parent = nullptr);
 
     QSize sizeHint() const;
 
@@ -145,7 +136,7 @@ public:
     void dragLeaveEvent(QDragLeaveEvent *event);
     void dropEvent(QDropEvent *event);
 
-    TileRotateModel *model() const
+    TileRotatedVisualModel *model() const
     { return mModel; }
 
     TileRotateDelegate *itemDelegate() const
@@ -163,7 +154,7 @@ public:
     { mContextMenu = menu; }
 
     void clear();
-    void setTiles(const QList<TileRotated*> &tilesList);
+    void setVisuals(const QList<QSharedPointer<TileRotatedVisual> > &visuals);
     void redisplay();
 
     typedef Tiled::Tileset Tileset;
@@ -178,7 +169,7 @@ private:
     void init();
 
 private:
-    TileRotateModel *mModel;
+    TileRotatedVisualModel *mModel;
     TileRotateDelegate *mDelegate;
     Tiled::Internal::Zoomable *mZoomable;
     QMenu *mContextMenu;

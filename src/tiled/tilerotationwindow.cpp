@@ -46,7 +46,8 @@ using namespace Tiled::Internal;
 
 #include <QPainter>
 
-//namespace  {
+#if 0
+namespace Tiled {
 
 // Copied from MixedTilesetView, changed to draw runtime-created rotated tilesets.
 
@@ -256,63 +257,113 @@ QSize TileRotateDelegate::sizeHint(const QStyleOptionViewItem &option,
                  tileset->tileHeight() * zoom + extra + labelHeight);
 }
 
-// namespace {}
-//}
+// namespace Tiled
+}
+#endif
 
-class AddTile : public QUndoCommand
+class CreateVisual : public QUndoCommand
 {
 public:
-    AddTile(TileRotationWindow *d, TileRotated *tile, int index, const QString& tileName) :
-        QUndoCommand(QCoreApplication::translate("UndoCommands", "Add Tile")),
+    CreateVisual(TileRotationWindow *d, int index, QSharedPointer<TileRotatedVisual> visual) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Create Visual")),
         mDialog(d),
-        mTile(tile),
-        mIndex(index),
-        mTileName(tileName)
+        mVisual(visual),
+        mIndex(index)
     {
     }
 
     void undo() override
     {
-        mTileName = mDialog->removeTile(mTile, mIndex);
+        mVisual = mDialog->removeVisual(mIndex);
     }
 
     void redo() override
     {
-        mDialog->addTile(mTile, mIndex, mTileName);
+        mDialog->addVisual(mVisual, mIndex);
     }
 
     TileRotationWindow *mDialog;
-    TileRotated *mTile;
+    QSharedPointer<TileRotatedVisual> mVisual;
     int mIndex;
-    QString mTileName;
+};
+
+class DeleteVisual : public QUndoCommand
+{
+public:
+    DeleteVisual(TileRotationWindow *d, int index) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Create Visual")),
+        mDialog(d),
+        mIndex(index)
+    {
+    }
+
+    void undo() override
+    {
+        mDialog->addVisual(mVisual, mIndex);
+    }
+
+    void redo() override
+    {
+        mVisual = mDialog->removeVisual(mIndex);
+    }
+
+    TileRotationWindow *mDialog;
+    QSharedPointer<TileRotatedVisual> mVisual;
+    int mIndex;
+};
+
+class AssignVisual : public QUndoCommand
+{
+public:
+    AssignVisual(TileRotationWindow *d, TileRotated *tileR, QSharedPointer<TileRotatedVisual> visual, MapRotation mapRotation) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Assign Visual")),
+        mDialog(d),
+        mTileRotated(tileR),
+        mAV(visual, mapRotation)
+    {
+    }
+
+    void undo() override
+    {
+        mAV = mDialog->assignVisual(mTileRotated, mAV.mVisual, mAV.mMapRotation);
+    }
+
+    void redo() override
+    {
+        mAV = mDialog->assignVisual(mTileRotated, mAV.mVisual, mAV.mMapRotation);
+    }
+
+    TileRotationWindow *mDialog;
+    TileRotated *mTileRotated;
+    TileRotationWindow::AssignedVisual mAV;
 };
 
 class ChangeTiles : public QUndoCommand
 {
 public:
-    ChangeTiles(TileRotationWindow *d, TileRotated *tile, int x, const QStringList& tileNames) :
-        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Tiles")),
+    ChangeTiles(TileRotationWindow *d, QSharedPointer<TileRotatedVisual> visual, MapRotation mapRotation, const TileRotatedVisualData& data) :
+        QUndoCommand(QCoreApplication::translate("UndoCommands", "Change Visual Appearance")),
         mDialog(d),
-        mTile(tile),
-        mX(x),
-        mTileNames(tileNames)
+        mVisual(visual),
+        mMapRotation(mapRotation),
+        mData(data)
     {
     }
 
     void undo() override
     {
-        mTileNames = mDialog->changeTiles(mTile, mX, mTileNames);
+        mData = mDialog->changeVisualData(mVisual, mMapRotation, mData);
     }
 
     void redo() override
     {
-        mTileNames = mDialog->changeTiles(mTile, mX, mTileNames);
+        mData = mDialog->changeVisualData(mVisual, mMapRotation, mData);
     }
 
     TileRotationWindow *mDialog;
-    TileRotated *mTile;
-    int mX;
-    QStringList mTileNames;
+    QSharedPointer<TileRotatedVisual> mVisual;
+    MapRotation mMapRotation;
+    TileRotatedVisualData mData;
 };
 
 // TODO: NR / 90 / 180 / 270 tabs over the tileset view
@@ -727,8 +778,9 @@ public:
         return nullptr;
     }
 
-    TilesetRotated* getTilesetRotated(const QString &tilesetName, int degrees, MapRotation mapRotation)
+    TilesetRotated* getTilesetRotated(const QString &tilesetName, MapRotation mapRotation)
     {
+        int degrees = int(mapRotation) * 90;
         QMap<QString, TilesetRotated*>& lookup = *tilesetLookup(degrees);
         TilesetRotated *tileset = lookup[tilesetName];
         if (tileset == nullptr) {
@@ -747,30 +799,30 @@ public:
         return tileset;
     }
 
-    TileRotated* getTileRotated(BuildingTile *buildingTile, int degrees, MapRotation mapRotation)
+    TileRotated* getTileRotated(BuildingTile *buildingTile, MapRotation mapRotation)
     {
-        TilesetRotated *tileset = getTilesetRotated(buildingTile->mTilesetName, degrees, mapRotation);
+        TilesetRotated *tileset = getTilesetRotated(buildingTile->mTilesetName, mapRotation);
         return getTileRotated(tileset, buildingTile->mIndex);
     }
 
     TileRotated* getTileRotatedR0(BuildingTile *buildingTile)
     {
-        return getTileRotated(buildingTile, 0, MapRotation::NotRotated);
+        return getTileRotated(buildingTile, MapRotation::NotRotated);
     }
 
     TileRotated* getTileRotatedR90(BuildingTile *buildingTile)
     {
-        return getTileRotated(buildingTile, 90, MapRotation::Clockwise90);
+        return getTileRotated(buildingTile, MapRotation::Clockwise90);
     }
 
     TileRotated* getTileRotatedR180(BuildingTile *buildingTile)
     {
-        return getTileRotated(buildingTile, 180, MapRotation::Clockwise180);
+        return getTileRotated(buildingTile, MapRotation::Clockwise180);
     }
 
     TileRotated* getTileRotatedR270(BuildingTile *buildingTile)
     {
-        return getTileRotated(buildingTile, 270, MapRotation::Clockwise270);
+        return getTileRotated(buildingTile, MapRotation::Clockwise270);
     }
 
     TileRotated* getTileRotated(TilesetRotated *tileset, int index)
@@ -808,8 +860,10 @@ public:
         tileRotatedW->mRotation = mapRotation;
     }
 
-    void init()
+    void init(TileRotationWindow *window)
     {
+        mWindow = window;
+
         BuildingTileCategory *category = BuildingTilesMgr::instance()->catFloors();
         for (BuildingTileEntry *entry : category->entries()) {
             BuildingTile *btile = entry->tile(BTC_Floors::Floor);
@@ -855,6 +909,7 @@ public:
         return visual;
     }
 
+    TileRotationWindow *mWindow;
     QList<TilesetRotated*> mTilesets;
     QList<QSharedPointer<TileRotatedVisual>> mVisuals;
 //    QMap<QString, QString> mMapping;
@@ -1300,7 +1355,7 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::TileRotationWindow),
     mZoomable(new Zoomable),
-    mCurrentTilesetRotated(nullptr),
+    mCurrentVisual(nullptr),
     mCurrentTileset(nullptr),
     mUndoGroup(new QUndoGroup(this)),
     mUndoStack(new QUndoStack(this))
@@ -1332,17 +1387,14 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     connect(ui->actionSave, &QAction::triggered, this, QOverload<>::of(&TileRotationWindow::fileSave));
     connect(ui->actionSaveAs, &QAction::triggered, this, &TileRotationWindow::fileSaveAs);
     connect(ui->actionClose, &QAction::triggered, this, &TileRotationWindow::close);
-    connect(ui->actionAddTiles, &QAction::triggered, this, &TileRotationWindow::addTiles);
-    connect(ui->actionClearTiles, &QAction::triggered, this, &TileRotationWindow::clearTiles);
-    connect(ui->actionRemove, &QAction::triggered, this, &TileRotationWindow::removeTiles);
+    connect(ui->actionCreateVisual, &QAction::triggered, this, &TileRotationWindow::createVisual);
+    connect(ui->actionClearVisualTiles, &QAction::triggered, this, &TileRotationWindow::clearVisual);
+    connect(ui->actionDeleteVisual, &QAction::triggered, this, &TileRotationWindow::deleteVisual);
 
-    ui->tilesetRotatedFilter->setClearButtonEnabled(true);
-    ui->tilesetRotatedFilter->setEnabled(false);
-    connect(ui->tilesetRotatedFilter, &QLineEdit::textEdited, this, &TileRotationWindow::rotatedFilterEdited);
-
-
-    ui->tilesetRotatedList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    connect(ui->tilesetRotatedList, &QListWidget::itemSelectionChanged, this, &TileRotationWindow::tilesetRotatedSelectionChanged);
+    ui->visualList->setAcceptDrops(true);
+    ui->visualList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    connect(ui->visualList->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TileRotationWindow::visualListSelectionChanged);
+    connect(ui->visualList->model(), &TileRotatedVisualModel::tileDropped, this, &TileRotationWindow::tileDropped);
 
     ui->tilesetList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     connect(ui->tilesetList, &QListWidget::itemSelectionChanged, this, &TileRotationWindow::tilesetSelectionChanged);
@@ -1367,7 +1419,7 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     ui->tileRotateView->setZoomable(mZoomable);
     ui->tileRotateView->setAcceptDrops(true);
 #if 1
-    ui->tileRotateView->setItemDelegate(new TileRotateDelegate(ui->tileRotateView, ui->tileRotateView, this));
+//    ui->tileRotateView->setItemDelegate(new ::TileRotateDelegate(ui->tileRotateView, ui->tileRotateView, this));
 #else
     connect(ui->tileRotateView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TileRotationWindow::syncUI);
     connect(ui->tileRotateView->model(), &TileRotateModel::tileDropped, this, &TileRotationWindow::tileDropped);
@@ -1378,10 +1430,10 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
 
 #if 1
     InitFromBuildingTiles initFromBuildingTiles;
-    initFromBuildingTiles.init();
+    initFromBuildingTiles.init(this);
     mTilesets = initFromBuildingTiles.mTilesets;
     mVisuals = initFromBuildingTiles.mVisuals;
-    mCurrentTilesetRotated = nullptr;
+    mCurrentVisual = nullptr;
     std::sort(mTilesets.begin(), mTilesets.end(),
               [](TilesetRotated* a, TilesetRotated *b) {
         if (a->nameUnrotated() == b->nameUnrotated()) {
@@ -1392,18 +1444,7 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     for (TilesetRotated *tileset : mTilesets) {
         mTilesetByNameRotated[tileset->nameRotated()] = tileset;
     }
-    for (TilesetRotated *tileset : mTilesets) {
-        if (tileset == nullptr)
-            continue;
-        mCurrentTilesetRotated = tileset;
-#if 1
-        ui->tileRotateView->setTileset(getRotatedTileset(tileset->nameRotated()));
-#else
-        ui->tileRotateView->setTiles(mCurrentTilesetRotated->mTiles);
-#endif
-        break;
-    }
-    setTilesetRotatedList();
+    setVisualList();
     mFileName = QLatin1Literal("D:/pz/TileRotation.txt");
 #endif
 }
@@ -1429,12 +1470,10 @@ void TileRotationWindow::fileNew()
     mTilesets.clear();
     qDeleteAll(mTilesetRotated);
     mTilesetRotated.clear();
-    mCurrentTilesetRotated = nullptr;
-#if 1
+    mTilesetByNameRotated.clear();
+    mCurrentVisual = nullptr;
+    ui->visualList->clear();
     ui->tileRotateView->clear();
-#else
-    ui->tileRotateView->setTiles(QList<TileRotated*>());
-#endif
     syncUI();
 }
 
@@ -1444,7 +1483,7 @@ void TileRotationWindow::fileOpen()
         return;
 
     QSettings settings;
-    QString key = QLatin1String("ContainerOverlay/LastOpenPath");
+    QString key = QLatin1String("TileRotationWindow/LastOpenPath");
     QString lastPath = settings.value(key).toString();
 
     QString fileName = QFileDialog::getOpenFileName(this, tr("Choose .txt file"),
@@ -1478,19 +1517,8 @@ void TileRotationWindow::fileOpen(const QString &fileName)
     for (TilesetRotated *tileset : mTilesets) {
         mTilesetByNameRotated[tileset->nameRotated()] = tileset;
     }
-    mCurrentTilesetRotated = nullptr;
-    for (TilesetRotated *tileset : mTilesets) {
-        if (tileset == nullptr)
-            continue;
-        mCurrentTilesetRotated = tileset;
-#if 1
-        ui->tileRotateView->setTileset(getRotatedTileset(tileset->nameRotated()));
-#else
-        ui->tileRotateView->setTiles(mCurrentTilesetRotated->mTiles);
-#endif
-        break;
-    }
-    setTilesetRotatedList();
+    mCurrentVisual = nullptr;
+    setVisualList();
     syncUI();
 }
 
@@ -1531,7 +1559,7 @@ bool TileRotationWindow::confirmSave()
 QString TileRotationWindow::getSaveLocation()
 {
     QSettings settings;
-    QString key = QLatin1String("ContainerOverlay/LastOpenPath");
+    QString key = QLatin1String("TileRotationWindow/LastOpenPath");
     QString suggestedFileName = QLatin1String("TileRotation.txt");
     if (mFileName.isEmpty()) {
         QString lastPath = settings.value(key).toString();
@@ -1567,13 +1595,19 @@ bool TileRotationWindow::fileSaveAs()
     return fileSave(fileName);
 }
 
-void TileRotationWindow::addTiles()
+void TileRotationWindow::createVisual()
 {
-
+    QSharedPointer<TileRotatedVisual> visual(new TileRotatedVisual());
+    visual->mUuid = QUuid::createUuid();
+    mUnassignedVisuals += visual;
+    mUndoStack->push(new CreateVisual(this, mVisuals.size(), visual));
 }
 
-void TileRotationWindow::clearTiles()
+void TileRotationWindow::clearVisual()
 {
+    if (mCurrentVisual == nullptr) {
+        return;
+    }
 #if 0
     TileRotateView *v = ui->tileRotateView;
     QModelIndexList selection = v->selectionModel()->selectedIndexes();
@@ -1586,9 +1620,27 @@ void TileRotationWindow::clearTiles()
 #endif
 }
 
-void TileRotationWindow::removeTiles()
+void TileRotationWindow::deleteVisual()
 {
-
+    if (mCurrentVisual == nullptr) {
+        return;
+    }
+    int index = mVisuals.indexOf(mCurrentVisual);
+    if (index == -1) {
+        return;
+    }
+    // Un-assign from all tiles
+    mUndoStack->beginMacro(tr("Delete Visual"));
+    for (TilesetRotated *tilesetR : mTilesets) {
+        for (TileRotated *tileR : tilesetR->mTiles) {
+            if (tileR->mVisual != mCurrentVisual) {
+                continue;
+            }
+            mUndoStack->push(new AssignVisual(this, tileR, nullptr, MapRotation::NotRotated));
+        }
+    }
+    mUndoStack->push(new DeleteVisual(this, index));
+    mUndoStack->endMacro();
 }
 
 bool TileRotationWindow::fileSave(const QString &fileName)
@@ -1642,10 +1694,10 @@ void TileRotationWindow::syncUI()
     ui->actionSave->setEnabled(!mFileName.isEmpty() && !mUndoStack->isClean());
     ui->actionSaveAs->setEnabled(!mFileName.isEmpty());
 
-    QModelIndexList selected = ui->tileRotateView->selectionModel()->selectedIndexes();
-    ui->actionAddTiles->setEnabled(!mFileName.isEmpty());
-    ui->actionClearTiles->setEnabled(selected.size() > 0);
-    ui->actionRemove->setEnabled(selected.size() > 0);
+    QModelIndexList selected = ui->visualList->selectionModel()->selectedIndexes();
+    ui->actionCreateVisual->setEnabled(!mFileName.isEmpty());
+    ui->actionClearVisualTiles->setEnabled(selected.size() > 0);
+    ui->actionDeleteVisual->setEnabled(selected.size() > 0);
 
     ui->typeComboBox->setEnabled(selected.isEmpty() == false);
     if (selected.isEmpty()) {
@@ -1665,6 +1717,7 @@ void TileRotationWindow::tileActivated(const QModelIndex &index)
     if (tile == nullptr)
         return;
     QString tileName = BuildingTilesMgr::nameForTile(tile);
+#if 0
 //    BuildingTile* buildingTile = BuildingTilesMgr::instance()->get(tileName);
     for (TileRotated *tile : mCurrentTilesetRotated->mTiles) {
         if (BuildingTilesMgr::instance()->nameForTile(tile->mTileset->nameUnrotated(), tile->mID) == tileName) {
@@ -1672,6 +1725,7 @@ void TileRotationWindow::tileActivated(const QModelIndex &index)
             return;
         }
     }
+#endif
 }
 
 void TileRotationWindow::tilesetSelectionChanged()
@@ -1691,52 +1745,8 @@ void TileRotationWindow::tilesetSelectionChanged()
     } else {
         ui->tilesetTilesView->clear();
     }
+    setVisualList();
     syncUI();
-}
-
-void TileRotationWindow::rotatedFilterEdited(const QString &text)
-{
-    QListWidget* mTilesetNamesView = ui->tilesetRotatedList;
-
-    for (int row = 0; row < mTilesetNamesView->count(); row++) {
-        QListWidgetItem* item = mTilesetNamesView->item(row);
-        item->setHidden(text.trimmed().isEmpty() ? false : !item->text().contains(text));
-    }
-
-    QListWidgetItem* current = mTilesetNamesView->currentItem();
-    if (current != nullptr && current->isHidden()) {
-        // Select previous visible row.
-        int row = mTilesetNamesView->row(current) - 1;
-        while (row >= 0 && mTilesetNamesView->item(row)->isHidden()) {
-            row--;
-        }
-        if (row >= 0) {
-            current = mTilesetNamesView->item(row);
-            mTilesetNamesView->setCurrentItem(current);
-            mTilesetNamesView->scrollToItem(current);
-            return;
-        }
-
-        // Select next visible row.
-        row = mTilesetNamesView->row(current) + 1;
-        while (row < mTilesetNamesView->count() && mTilesetNamesView->item(row)->isHidden()) {
-            row++;
-        }
-        if (row < mTilesetNamesView->count()) {
-            current = mTilesetNamesView->item(row);
-            mTilesetNamesView->setCurrentItem(current);
-            mTilesetNamesView->scrollToItem(current);
-            return;
-        }
-
-        // All items hidden
-        mTilesetNamesView->setCurrentItem(nullptr);
-    }
-
-    current = mTilesetNamesView->currentItem();
-    if (current != nullptr) {
-        mTilesetNamesView->scrollToItem(current);
-    }
 }
 
 void TileRotationWindow::tileRotatedActivated(const QModelIndex &index)
@@ -1754,19 +1764,13 @@ void TileRotationWindow::tileRotatedActivated(const QModelIndex &index)
 #endif
 }
 
-void TileRotationWindow::tilesetRotatedSelectionChanged()
+void TileRotationWindow::visualListSelectionChanged()
 {
-    QList<QListWidgetItem*> selection = ui->tilesetRotatedList->selectedItems();
-    QListWidgetItem *item = selection.count() ? selection.first() : nullptr;
-    mCurrentTilesetRotated = nullptr;
-    if (item) {
-        int row = ui->tilesetRotatedList->row(item);
-        mCurrentTilesetRotated = mTilesets[row];
-#if 1
-        ui->tileRotateView->setTileset(getRotatedTileset(mCurrentTilesetRotated->nameRotated()));
-#else
-        ui->tileRotateView->setTiles(mCurrentTilesetRotated->mTiles);
-#endif
+    QModelIndexList selection = ui->visualList->selectionModel()->selectedIndexes();
+    mCurrentVisual = nullptr;
+    if (selection.isEmpty() == false) {
+        int row = selection.first().row();
+        mCurrentVisual = mVisuals[row];
         updateUsedTiles();
     } else {
         ui->tileRotateView->clear();
@@ -1794,22 +1798,30 @@ void TileRotationWindow::displayTileInTileset(BuildingTile *tile)
     displayTileInTileset(BuildingTilesMgr::instance()->tileFor(tile));
 }
 
-void TileRotationWindow::setTilesetRotatedList()
+void TileRotationWindow::setVisualList()
 {
-    ui->tilesetRotatedList->clear();
-    ui->tilesetRotatedFilter->setEnabled(!mTilesets.isEmpty());
-    // Add the list of tilesets, and resize it to fit
-    int width = 64;
-    QFontMetrics fm = ui->tilesetRotatedList->fontMetrics();
-    for (TilesetRotated *tileset : mTilesets) {
-        QListWidgetItem *item = new QListWidgetItem();
-        item->setText(tileset->nameRotated());
-        ui->tilesetRotatedList->addItem(item);
-        width = qMax(width, fm.width(tileset->nameRotated()));
+    QSet<TileRotatedVisual*> visualSet;
+    QList<QSharedPointer<TileRotatedVisual>> visuals;
+    if (mCurrentTileset != nullptr) {
+        if (TilesetRotated *tilesetR = mTilesetByNameRotated[mCurrentTileset->name() + QLatin1Literal("_R0")]) {
+            for (int i = 0; i < tilesetR->mTileByID.size(); i++) {
+                TileRotated *tileR = tilesetR->mTileByID[i];
+                if (tileR == nullptr)
+                    continue;
+                if (tileR->mVisual && !visualSet.contains(tileR->mVisual.data())) {
+                    visuals += tileR->mVisual;
+                    visualSet += tileR->mVisual.data();
+                }
+            }
+        }
     }
-    int sbw = ui->tilesetRotatedList->verticalScrollBar()->sizeHint().width();
-    ui->tilesetRotatedList->setFixedWidth(width + 16 + sbw);
-    ui->tilesetRotatedFilter->setFixedWidth(ui->tilesetRotatedList->width());
+
+    // Also display any created but unassigned visuals.
+    for (QSharedPointer<TileRotatedVisual> visual : mUnassignedVisuals) {
+        visuals += visual;
+    }
+
+    ui->visualList->setVisuals(visuals);
 }
 
 void TileRotationWindow::setTilesetList()
@@ -1835,8 +1847,6 @@ void TileRotationWindow::setTilesetList()
 
 void TileRotationWindow::updateUsedTiles()
 {
-    return; // FIXME: slow
-
     if (mCurrentTileset == nullptr)
         return;
 
@@ -1906,14 +1916,17 @@ void TileRotationWindow::filterEdited(const QString &text)
 
 bool TileRotationWindow::isTileUsed(const QString &_tileName)
 {
-    for (TilesetRotated *tileset : mTilesets) {
-        for (TileRotated *tile : tileset->mTiles) {
-            if (BuildingTilesMgr::instance()->nameForTile(tileset->nameUnrotated(), tile->mID) == _tileName) {
-                return true;
-            }
-        }
+    QString tilesetName;
+    int index;
+    if (!BuildingTilesMgr::instance()->parseTileName(_tileName, tilesetName, index)) {
+        return false;
     }
-    return false;
+    QString tilesetNameR = getTilesetNameR(tilesetName, MapRotation::NotRotated);
+    if (mTilesetByNameRotated[tilesetNameR] == nullptr) {
+        return false;
+    }
+    TilesetRotated *tilesetR = mTilesetByNameRotated[tilesetNameR];
+    return index < tilesetR->mTileByID.size() && tilesetR->mTileByID[index] != nullptr;
 }
 
 void TileRotationWindow::manageTilesets()
@@ -1962,25 +1975,104 @@ void TileRotationWindow::tilesetChanged(Tileset *tileset)
     }
 }
 
-void TileRotationWindow::tileDropped(TileRotated *tile, int x, const QString &tileName)
+// Called when a Tile is dragged onto a TileRotatedVisual (one of the 4 rotations).
+void TileRotationWindow::tileDropped(QSharedPointer<TileRotatedVisual> visual, MapRotation mapRotation, const QString &tileName)
 {
-    mUndoStack->push(new AddTile(this, tile, x, tileName));
+    TileRotatedVisualData data;
+    data.addTile(tileName);
+    mUndoStack->beginMacro(tr("Change Visual Appearance"));
+    mUndoStack->push(new ChangeTiles(this, visual, mapRotation, data));
+    {
+        Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName);
+        if ((tile != BuildingTilesMgr::instance()->noneTiledTile()) && (tile != TilesetManager::instance()->missingTile())) {
+            if (TileRotated *tileR = getOrCreateRotatedTileFor(tile, mapRotation)) {
+                if (tileR->mVisual != visual) {
+                    mUndoStack->push(new AssignVisual(this, tileR, visual, mapRotation));
+                }
+            }
+        }
+    }
+    mUndoStack->endMacro();
 }
 
-void TileRotationWindow::addTile(TileRotated *tile, int index, const QString& tileName)
+void TileRotationWindow::addVisual(QSharedPointer<TileRotatedVisual> visual, int index)
 {
+    mVisuals.insert(index, visual);
+    setVisualList();
 //    tile->mVisual.addTile(tileName);
 //    updateUsedTiles();
 }
 
-QString TileRotationWindow::removeTile(TileRotated *tile, int index)
+QSharedPointer<TileRotatedVisual> TileRotationWindow::removeVisual(int index)
 {
-//    QString old = tile->mVisual.mTileNames.last();
-//    tile->mVisual.mTileNames.removeAt(tile->mVisual.mTileNames.size() - 1);
-    // FIXME: and mOffsets and mEdges
-//    updateUsedTiles();
-//    return old;
-    return QString();
+    if (index < 0 || index >= mVisuals.size()) {
+        return QSharedPointer<TileRotatedVisual>();
+    }
+    QSharedPointer<TileRotatedVisual> result = mVisuals.takeAt(index);
+    if (mUnassignedVisuals.contains(result)) {
+        mUnassignedVisuals.removeOne(result);
+    }
+    setVisualList();
+    return result;
+}
+
+TileRotationWindow::AssignedVisual TileRotationWindow::assignVisual(TileRotated *tileR, QSharedPointer<TileRotatedVisual> visual, MapRotation mapRotation)
+{
+    AssignedVisual old(tileR);
+    tileR->mVisual = visual;
+    tileR->mRotation = mapRotation;
+    if ((visual != nullptr) && mUnassignedVisuals.contains(visual)) {
+        mUnassignedVisuals.removeAll(visual);
+    }
+    return old;
+}
+
+TileRotatedVisualData TileRotationWindow::changeVisualData(QSharedPointer<TileRotatedVisual> visual, MapRotation mapRotation, const TileRotatedVisualData &data)
+{
+    TileRotatedVisualData old = visual->mData[int(mapRotation)];
+    visual->mData[int(mapRotation)] = data;
+    return old;
+}
+
+QString TileRotationWindow::getTilesetNameR(const QString& tilesetName, MapRotation mapRotation)
+{
+    int degrees = int(mapRotation) * 90;
+   return QString(QLatin1Literal("%1_R%2")).arg(tilesetName).arg(degrees);
+}
+
+TilesetRotated* TileRotationWindow::getOrCreateTilesetRotated(const QString &tilesetName, MapRotation mapRotation)
+{
+    TilesetRotated *tileset = mTilesetByNameRotated[tilesetName];
+    if (tileset == nullptr) {
+        tileset = new TilesetRotated();
+        tileset->mNameUnrotated = tilesetName;
+        tileset->mNameRotated = getTilesetNameR(tilesetName, mapRotation);
+        if (Tileset *tileset1 = TileMetaInfoMgr::instance()->tileset(tilesetName)) {
+            tileset->mColumnCount = tileset1->columnCount();
+        } else {
+            tileset->mColumnCount = 8; // FIXME
+        }
+        tileset->mRotation = mapRotation;
+        mTilesetByNameRotated[tileset->nameRotated()] = tileset;
+        mTilesets += tileset;
+    }
+    return tileset;
+}
+
+TileRotated* TileRotationWindow::getOrCreateTileRotated(TilesetRotated *tileset, int tileID)
+{
+    if (tileID >= tileset->mTileByID.size() || (tileset->mTileByID[tileID] == nullptr)) {
+        TileRotated* tile = new TileRotated();
+        tile->mTileset = tileset;
+        tile->mID = tileID;
+        tile->mXY = QPoint(tileID % tileset->mColumnCount, tileID / tileset->mColumnCount);
+        tileset->mTiles += tile;
+        if (tileID >= tileset->mTileByID.size()) {
+            tileset->mTileByID.resize(tileID + 1);
+        }
+        tileset->mTileByID[tileID] = tile;
+    }
+    return tileset->mTileByID[tileID];
 }
 
 Tileset* TileRotationWindow::getRotatedTileset(const QString tilesetName)
@@ -2009,5 +2101,16 @@ TileRotated *TileRotationWindow::rotatedTileFor(Tile *tileR)
         return nullptr;
     }
     return tilesetR->mTileByID[tileR->id()];
+}
+
+TileRotated *TileRotationWindow::getOrCreateRotatedTileFor(Tile *tile, MapRotation mapRotation)
+{
+    if (mTilesetByNameRotated.contains(tile->tileset()->name())) {
+        return nullptr;
+    }
+    if (TilesetRotated *tilesetR = getOrCreateTilesetRotated(tile->tileset()->name(), mapRotation)) {
+        return getOrCreateTileRotated(tilesetR, tile->id());
+    }
+    return nullptr;
 }
 

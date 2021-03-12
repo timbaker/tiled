@@ -28,10 +28,7 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
-           <widget class="QLineEdit" name="tilesetRotatedFilter"/>
-          </item>
-          <item>
-           <widget class="QListWidget" name="tilesetRotatedList"/>
+           <widget class="Tiled::TileRotatedVisualView" name="visualList"/>
           </item>
          </layout>
         </item>
@@ -138,9 +135,9 @@
    <addaction name="actionSave"/>
    <addaction name="actionSaveAs"/>
    <addaction name="separator"/>
-   <addaction name="actionAddTiles"/>
-   <addaction name="actionClearTiles"/>
-   <addaction name="actionRemove"/>
+   <addaction name="actionCreateVisual"/>
+   <addaction name="actionClearVisualTiles"/>
+   <addaction name="actionDeleteVisual"/>
   </widget>
   <action name="actionOpen">
    <property name="icon">
@@ -183,34 +180,40 @@
     <string>Close</string>
    </property>
   </action>
-  <action name="actionRemove">
+  <action name="actionDeleteVisual">
    <property name="icon">
     <iconset resource="tiled.qrc">
      <normaloff>:/images/16x16/edit-delete.png</normaloff>:/images/16x16/edit-delete.png</iconset>
    </property>
    <property name="text">
-    <string>Remove</string>
+    <string>Delete Visual</string>
+   </property>
+   <property name="toolTip">
+    <string>Delete Visual</string>
    </property>
   </action>
-  <action name="actionAddTiles">
+  <action name="actionCreateVisual">
    <property name="icon">
     <iconset resource="tiled.qrc">
      <normaloff>:/images/22x22/add.png</normaloff>:/images/22x22/add.png</iconset>
    </property>
    <property name="text">
-    <string>Add Tiles</string>
+    <string>Create Visual</string>
+   </property>
+   <property name="toolTip">
+    <string>Create Visual</string>
    </property>
   </action>
-  <action name="actionClearTiles">
+  <action name="actionClearVisualTiles">
    <property name="icon">
     <iconset resource="tiled.qrc">
      <normaloff>:/images/16x16/edit-clear.png</normaloff>:/images/16x16/edit-clear.png</iconset>
    </property>
    <property name="text">
-    <string>Clear Tiles</string>
+    <string>Clear Visual Tiles</string>
    </property>
    <property name="toolTip">
-    <string>Clear selected tiles</string>
+    <string>Clear Visual Appearance</string>
    </property>
   </action>
  </widget>
@@ -219,6 +222,11 @@
    <class>Tiled::Internal::MixedTilesetView</class>
    <extends>QTableWidget</extends>
    <header>BuildingEditor/mixedtilesetview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Tiled::TileRotatedVisualView</class>
+   <extends>QTableView</extends>
+   <header>tilerotatedvisualview.h</header>
   </customwidget>
  </customwidgets>
  <resources>

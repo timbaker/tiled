@@ -572,6 +572,10 @@ void BuildingIsoScene::setToolTiles(const FloorTileGrid *tiles,
                     else if (Tile *tile1 = Tiled::TileRotation::instance()->tileFor(tilesetName, index)) {
                         tile = tile1;
                     }
+                    else
+                    {
+                        int dbg = 1;
+                    }
 #endif
                 }
             }

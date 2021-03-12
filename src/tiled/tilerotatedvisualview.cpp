@@ -15,7 +15,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tilerotateview.h"
+#include "tilerotatedvisualview.h"
 
 #include "BuildingEditor/buildingtiles.h"
 
@@ -48,7 +48,7 @@ namespace Tiled {
 class TileRotateDelegate : public QAbstractItemDelegate
 {
 public:
-    TileRotateDelegate(TileRotateView *view, QObject *parent = nullptr)
+    TileRotateDelegate(TileRotatedVisualView *view, QObject *parent = nullptr)
         : QAbstractItemDelegate(parent)
         , mView(view)
     { }
@@ -67,14 +67,14 @@ public:
     void itemResized(const QModelIndex &index);
 
 private:
-    TileRotateView *mView;
+    TileRotatedVisualView *mView;
 };
 
 void TileRotateDelegate::paint(QPainter *painter,
                          const QStyleOptionViewItem &option,
                          const QModelIndex &index) const
 {
-    const TileRotateModel *m = static_cast<const TileRotateModel*>(index.model());
+    const TileRotatedVisualModel *m = static_cast<const TileRotatedVisualModel*>(index.model());
 
     QString header = m->headerAt(index);
     if (!header.isEmpty()) {
@@ -99,13 +99,10 @@ void TileRotateDelegate::paint(QPainter *painter,
         return;
     }
 
-    TileRotated *ftile = m->tileAt(index);
-    if (!ftile)
+    MapRotation mapRotation;
+    QSharedPointer<TileRotatedVisual> visual = m->visualAt(index, mapRotation);
+    if (!visual)
         return;
-
-    MapRotation mapRotation = m->mapRotationAt(index);
-
-    TileRotated *original = ftile;
 
     if (mView->zoomable()->smoothTransform())
         painter->setRenderHint(QPainter::SmoothPixmapTransform);
@@ -119,69 +116,20 @@ void TileRotateDelegate::paint(QPainter *painter,
     QPointF tileMargins(0, imageHeight - tileHeight);
 
     // Draw the tile images.
-    /*if (mapRotation == MapRotation::NotRotated)*/ {
-        TileRotatedVisualData& direction = ftile->mVisual->mData[0];
-        for (int i = 0; i < direction.mTileNames.size(); i++) {
-            const QString& tileName = direction.mTileNames[i];
-            const QPoint tileOffset = direction.pixelOffset(i);
-            QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-            if (Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName)) { // FIXME: calc this elsewhere
-                QRect r1(r.topLeft() + tileOffset * scale, QSize(tileWidth, imageHeight));
-                if (tile->image().isNull())
-                    tile = TilesetManager::instance()->missingTile();
-                const QMargins margins = tile->drawMargins(scale);
-                painter->drawImage(r1.adjusted(margins.left(), margins.top(), -margins.right(), -margins.bottom()), tile->image());
-            }
+    TileRotatedVisualData& direction = visual->mData[int(mapRotation)];
+    for (int i = 0; i < direction.mTileNames.size(); i++) {
+        const QString& tileName = direction.mTileNames[i];
+        const QPoint tileOffset = direction.pixelOffset(i);
+        QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
+        if (Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName)) { // FIXME: calc this elsewhere
+            QRect r1(r.topLeft() + tileOffset * scale, QSize(tileWidth, imageHeight));
+            if (tile->image().isNull())
+                tile = TilesetManager::instance()->missingTile();
+            const QMargins margins = tile->drawMargins(scale);
+            painter->drawImage(r1.adjusted(margins.left(), margins.top(), -margins.right(), -margins.bottom()), tile->image());
         }
     }
-#if 0
-    if (mapRotation == MapRotation::Clockwise90) {
-        TileRotatedVisual& direction = ftile->r90;
-        for (int i = 0; i < direction.mTileNames.size(); i++) {
-            const QString& tileName = direction.mTileNames[i];
-            const QPoint tileOffset = direction.pixelOffset(i);
-            QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-            if (Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName)) { // FIXME: calc this elsewhere
-                QRect r1(r.topLeft() + tileOffset * scale, QSize(tileWidth, imageHeight));
-                if (tile->image().isNull())
-                    tile = TilesetManager::instance()->missingTile();
-                const QMargins margins = tile->drawMargins(scale);
-                painter->drawImage(r1.adjusted(margins.left(), margins.top(), -margins.right(), -margins.bottom()), tile->image());
-            }
-        }
-    }
-    if (mapRotation == MapRotation::Clockwise180) {
-        TileRotatedVisual& direction = ftile->r180;
-        for (int i = 0; i < direction.mTileNames.size(); i++) {
-            const QString& tileName = direction.mTileNames[i];
-            const QPoint tileOffset = direction.pixelOffset(i);
-            QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-            if (Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName)) { // FIXME: calc this elsewhere
-                QRect r1(r.topLeft() + tileOffset * scale, QSize(tileWidth, imageHeight));
-                if (tile->image().isNull())
-                    tile = TilesetManager::instance()->missingTile();
-                const QMargins margins = tile->drawMargins(scale);
-                painter->drawImage(r1.adjusted(margins.left(), margins.top(), -margins.right(), -margins.bottom()), tile->image());
-            }
-        }
-    }
-    if (mapRotation == MapRotation::Clockwise270) {
-        TileRotatedVisual& direction = ftile->r270;
-        for (int i = 0; i < direction.mTileNames.size(); i++) {
-            const QString& tileName = direction.mTileNames[i];
-            const QPoint tileOffset = direction.pixelOffset(i);
-            QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-            if (Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName)) { // FIXME: calc this elsewhere
-                QRect r1(r.topLeft() + tileOffset * scale, QSize(tileWidth, imageHeight));
-                if (tile->image().isNull())
-                    tile = TilesetManager::instance()->missingTile();
-                const QMargins margins = tile->drawMargins(scale);
-                painter->drawImage(r1.adjusted(margins.left(), margins.top(), -margins.right(), -margins.bottom()), tile->image());
-            }
-        }
-    }
-#endif
-#if 1
+
     // Draw the "floor"
     if (true) {
         QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
@@ -189,40 +137,31 @@ void TileRotateDelegate::paint(QPainter *painter,
         QPointF p2(r.right(), r.bottom() - tileHeight / 2);
         QPointF p3(r.left() + r.width() / 2, r.bottom());
         QPointF p4(r.left(), r.bottom() - tileHeight / 2);
-        painter->drawLine(p1, p2); painter->drawLine(p2, p3);
-        painter->drawLine(p3, p4); painter->drawLine(p4, p1);
-    }
-#else
-    if (false) {
-        // Draw the tile grid.
-        for (int y = 0; y < mapHeight; y++) {
-            for (int x = 0; x < mapWidth; x++) {
-                QRect r = option.rect.adjusted(extra, extra, -extra, -extra);
-                QPointF p1 = tileToPixelCoords(mapWidth, mapHeight, x, y) + tileMargins + r.topLeft();
-                QPointF p2 = tileToPixelCoords(mapWidth, mapHeight, x+1, y) + tileMargins + r.topLeft();
-                QPointF p3 = tileToPixelCoords(mapWidth, mapHeight, x, y+1) + tileMargins + r.topLeft();
-                QPointF p4 = tileToPixelCoords(mapWidth, mapHeight, x+1, y+1) + tileMargins + r.topLeft();
-
-                if (QPoint(x,y) == m->dropCoords() && index == m->dropIndex()) {
-                    QBrush brush(Qt::gray, Qt::Dense4Pattern);
-                    QPolygonF poly;
-                    poly << p1 << p2 << p4 << p3 << p1;
-                    QPainterPath path;
-                    path.addPolygon(poly);
-                    painter->fillPath(path, brush);
-                    QPen pen;
-                    pen.setWidth(3);
-                    painter->setPen(pen);
-                    painter->drawPath(path);
-                    painter->setPen(QPen());
-                }
-
-                painter->drawLine(p1, p2); painter->drawLine(p3, p4);
-                painter->drawLine(p1, p3); painter->drawLine(p2, p4);
-            }
+        painter->drawLine(p1, p2);
+        painter->drawLine(p2, p3);
+        painter->drawLine(p3, p4);
+        painter->drawLine(p4, p1);
+        QPen penOld = painter->pen();
+        QPen pen = painter->pen();
+        pen.setWidth(3);
+        painter->setPen(pen);
+        switch (mapRotation) {
+        case MapRotation::NotRotated:
+            painter->drawLine(p1, p2);
+            break;
+        case MapRotation::Clockwise90:
+            painter->drawLine(p2, p3);
+            break;
+        case MapRotation::Clockwise180:
+            painter->drawLine(p3, p4);
+            break;
+        case MapRotation::Clockwise270:
+            painter->drawLine(p4, p1);
+            break;
         }
+        painter->setPen(penOld);
     }
-#endif
+
     // Overlay with highlight color when selected
     if (option.state & QStyle::State_Selected) {
         const qreal opacity = painter->opacity();
@@ -270,7 +209,7 @@ QSize TileRotateDelegate::sizeHint(const QStyleOptionViewItem & option, const QM
     Q_UNUSED(option)
     Q_UNUSED(index)
     int width = 2, height = 2;
-    const TileRotateModel *m = static_cast<const TileRotateModel*>(index.model());
+    const TileRotatedVisualModel *m = static_cast<const TileRotatedVisualModel*>(index.model());
     const qreal zoom = scale();
     const int extra = 2 * 2;
     if (m->headerAt(index).length())
@@ -282,16 +221,16 @@ QSize TileRotateDelegate::sizeHint(const QStyleOptionViewItem & option, const QM
 
 QPoint TileRotateDelegate::dropCoords(const QPoint &dragPos, const QModelIndex &index)
 {
-    const TileRotateModel *m = static_cast<const TileRotateModel*>(index.model());
-    TileRotated *ftile = m->tileAt(index);
+    const TileRotatedVisualModel *m = static_cast<const TileRotatedVisualModel*>(index.model());
+    MapRotation mapRotation;
+    QSharedPointer<TileRotatedVisual> visual = m->visualAt(index, mapRotation);
     QRect r = mView->visualRect(index);
     const int extra = 2;
     qreal x = dragPos.x() - r.left() - extra;
     qreal y = dragPos.y() - r.top() - extra;
-    int tileWidth = 64, tileHeight = 128;
     if (x < 0 || y < 0)
         return QPoint(-1, -1);
-    switch (m->mapRotationAt(index)) {
+    switch (mapRotation) {
     case MapRotation::NotRotated:
         return QPoint(0, 0);
     case MapRotation::Clockwise90:
@@ -314,9 +253,9 @@ void TileRotateDelegate::itemResized(const QModelIndex &index)
 /////
 
 // This constructor is for the benefit of QtDesigner
-TileRotateView::TileRotateView(QWidget *parent) :
+TileRotatedVisualView::TileRotatedVisualView(QWidget *parent) :
     QTableView(parent),
-    mModel(new TileRotateModel(this)),
+    mModel(new TileRotatedVisualModel(this)),
     mDelegate(new TileRotateDelegate(this, this)),
     mZoomable(new Zoomable(this)),
     mContextMenu(nullptr)
@@ -324,9 +263,9 @@ TileRotateView::TileRotateView(QWidget *parent) :
     init();
 }
 
-TileRotateView::TileRotateView(Zoomable *zoomable, QWidget *parent) :
+TileRotatedVisualView::TileRotatedVisualView(Zoomable *zoomable, QWidget *parent) :
     QTableView(parent),
-    mModel(new TileRotateModel(this)),
+    mModel(new TileRotatedVisualModel(this)),
     mDelegate(new TileRotateDelegate(this, this)),
     mZoomable(zoomable),
     mContextMenu(nullptr)
@@ -334,12 +273,12 @@ TileRotateView::TileRotateView(Zoomable *zoomable, QWidget *parent) :
     init();
 }
 
-QSize TileRotateView::sizeHint() const
+QSize TileRotatedVisualView::sizeHint() const
 {
     return QSize(64 * 4, 128);
 }
 
-void TileRotateView::wheelEvent(QWheelEvent *event)
+void TileRotatedVisualView::wheelEvent(QWheelEvent *event)
 {
     if (event->modifiers() & Qt::ControlModifier
         && event->orientation() == Qt::Vertical)
@@ -351,95 +290,86 @@ void TileRotateView::wheelEvent(QWheelEvent *event)
     QTableView::wheelEvent(event);
 }
 
-void TileRotateView::dragMoveEvent(QDragMoveEvent *event)
+void TileRotatedVisualView::dragMoveEvent(QDragMoveEvent *event)
 {
     QAbstractItemView::dragMoveEvent(event);
 
     if (event->isAccepted()) {
         QModelIndex index = indexAt(event->pos());
-        if (TileRotated *ftile = model()->tileAt(index)) {
-            QPoint dropCoords = mDelegate->dropCoords(event->pos(), index);
-            if (!QRect(0, 0, 4, 1).contains(dropCoords)) {
-                model()->setDropCoords(QPoint(-1,-1), QModelIndex());
-//                update(index);
-                event->ignore();
-                return;
-            }
-            model()->setDropCoords(dropCoords, index);
+        MapRotation mapRotation;
+        if (QSharedPointer<TileRotatedVisual> visual = model()->visualAt(index, mapRotation)) {
+            //
         } else {
-            model()->setDropCoords(QPoint(-1,-1), QModelIndex());
             event->ignore();
             return;
         }
     }
 }
 
-void TileRotateView::dragLeaveEvent(QDragLeaveEvent *event)
+void TileRotatedVisualView::dragLeaveEvent(QDragLeaveEvent *event)
 {
-    model()->setDropCoords(QPoint(-1,-1), QModelIndex());
     QAbstractItemView::dragLeaveEvent(event);
 }
 
-void TileRotateView::dropEvent(QDropEvent *event)
+void TileRotatedVisualView::dropEvent(QDropEvent *event)
 {
     QAbstractItemView::dropEvent(event);
-    model()->setDropCoords(QPoint(-1,-1), QModelIndex());
 }
 
-void TileRotateView::setZoomable(Zoomable *zoomable)
+void TileRotatedVisualView::setZoomable(Zoomable *zoomable)
 {
     mZoomable = zoomable;
     if (zoomable)
         connect(mZoomable, SIGNAL(scaleChanged(qreal)), SLOT(scaleChanged(qreal)));
 }
 
-void TileRotateView::contextMenuEvent(QContextMenuEvent *event)
+void TileRotatedVisualView::contextMenuEvent(QContextMenuEvent *event)
 {
     if (mContextMenu)
         mContextMenu->exec(event->globalPos());
 }
 
-void TileRotateView::clear()
+void TileRotatedVisualView::clear()
 {
     selectionModel()->clear(); // because the model calls reset()
     model()->clear();
 }
 
-void TileRotateView::setTiles(const QList<TileRotated *> &tilesList)
+void TileRotatedVisualView::setVisuals(const QList<QSharedPointer<TileRotatedVisual>> &visuals)
 {
     selectionModel()->clear(); // because the model calls reset()
-    model()->setTiles(tilesList);
+    model()->setVisuals(visuals);
 }
 
-void TileRotateView::redisplay()
+void TileRotatedVisualView::redisplay()
 {
     model()->redisplay();
 }
 
-void TileRotateView::scaleChanged(qreal scale)
+void TileRotatedVisualView::scaleChanged(qreal scale)
 {
     model()->scaleChanged(scale);
 }
 
-void TileRotateView::tilesetChanged(Tileset *tileset)
+void TileRotatedVisualView::tilesetChanged(Tileset *tileset)
 {
     Q_UNUSED(tileset)
     redisplay(); // FIXME: only if it is a TileMetaInfoMgr tileset
 }
 
-void TileRotateView::tilesetAdded(Tiled::Tileset *tileset)
+void TileRotatedVisualView::tilesetAdded(Tiled::Tileset *tileset)
 {
     Q_UNUSED(tileset)
     redisplay();
 }
 
-void TileRotateView::tilesetRemoved(Tiled::Tileset *tileset)
+void TileRotatedVisualView::tilesetRemoved(Tiled::Tileset *tileset)
 {
     Q_UNUSED(tileset)
     redisplay();
 }
 
-void TileRotateView::init()
+void TileRotatedVisualView::init()
 {
     setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -488,18 +418,18 @@ void TileRotateView::init()
 
 #define COLUMN_COUNT 4 // NotRotated, Clockwise90, Clockwise180, Clockwise270
 
-TileRotateModel::TileRotateModel(QObject *parent) :
+TileRotatedVisualModel::TileRotatedVisualModel(QObject *parent) :
     QAbstractListModel(parent),
     mShowHeaders(true)
 {
 }
 
-TileRotateModel::~TileRotateModel()
+TileRotatedVisualModel::~TileRotatedVisualModel()
 {
     qDeleteAll(mItems);
 }
 
-int TileRotateModel::rowCount(const QModelIndex &parent) const
+int TileRotatedVisualModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
         return 0;
@@ -517,29 +447,30 @@ int TileRotateModel::rowCount(const QModelIndex &parent) const
     return rows;
 }
 
-int TileRotateModel::columnCount(const QModelIndex &parent) const
+int TileRotatedVisualModel::columnCount(const QModelIndex &parent) const
 {
     return parent.isValid() ? 0 : COLUMN_COUNT;
 }
 
-Qt::ItemFlags TileRotateModel::flags(const QModelIndex &index) const
+Qt::ItemFlags TileRotatedVisualModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags flags = QAbstractListModel::flags(index);
-    if (!tileAt(index))
+    MapRotation mapRotation;
+    if (visualAt(index, mapRotation) == nullptr)
         flags &= ~(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
     else
         flags |= Qt::ItemIsDropEnabled;
     return flags;
 }
 
-QVariant TileRotateModel::data(const QModelIndex &index, int role) const
+QVariant TileRotatedVisualModel::data(const QModelIndex &index, int role) const
 {
     Q_UNUSED(index)
     Q_UNUSED(role)
     return QVariant();
 }
 
-QVariant TileRotateModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant TileRotatedVisualModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     Q_UNUSED(section)
     Q_UNUSED(orientation)
@@ -548,7 +479,7 @@ QVariant TileRotateModel::headerData(int section, Qt::Orientation orientation, i
     return QVariant();
 }
 
-QModelIndex TileRotateModel::index(int row, int column, const QModelIndex &parent) const
+QModelIndex TileRotatedVisualModel::index(int row, int column, const QModelIndex &parent) const
 {
     if (parent.isValid())
         return QModelIndex();
@@ -560,22 +491,22 @@ QModelIndex TileRotateModel::index(int row, int column, const QModelIndex &paren
     return createIndex(row, column, mItems.at(tileIndex));
 }
 
-QModelIndex TileRotateModel::index(TileRotated *tile)
+QModelIndex TileRotatedVisualModel::index(QSharedPointer<TileRotatedVisual> visual)
 {
-    int tileIndex = mItems.indexOf(toItem(tile));
+    int tileIndex = mItems.indexOf(toItem(visual));
     if (tileIndex != -1)
         return index(tileIndex / columnCount(), tileIndex % columnCount());
     return QModelIndex();
 }
 
-QString TileRotateModel::mMimeType(QLatin1String("application/x-tilezed-tile"));
+QString TileRotatedVisualModel::mMimeType(QLatin1String("application/x-tilezed-tile"));
 
-QStringList TileRotateModel::mimeTypes() const
+QStringList TileRotatedVisualModel::mimeTypes() const
 {
     return QStringList() << mMimeType;
 }
 
-bool TileRotateModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
+bool TileRotatedVisualModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
                                    int row, int column, const QModelIndex &parent)
  {
     Q_UNUSED(row)
@@ -588,11 +519,9 @@ bool TileRotateModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
          return false;
 
      QModelIndex index = parent; // this->index(row, column, parent);
-     TileRotated *tile = tileAt(index);
-     if (!tile)
-         return false;
-
-     if (!QRect(0, 0, 4, 1).contains(mDropCoords))
+     MapRotation mapRotation;
+     QSharedPointer<TileRotatedVisual> visual = visualAt(index, mapRotation);
+     if (visual == nullptr)
          return false;
 
      QByteArray encodedData = data->data(mMimeType);
@@ -604,27 +533,27 @@ bool TileRotateModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
          int tileId;
          stream >> tileId;
          QString tileName = BuildingTilesMgr::nameForTile(tilesetName, tileId);
-         emit tileDropped(tile, mDropCoords.x(), tileName);
+         emit tileDropped(visual, mapRotation, tileName);
      }
 
      return true;
 }
 
-void TileRotateModel::clear()
+void TileRotatedVisualModel::clear()
 {
-    setTiles(QList<TileRotated*>());
+    setVisuals(QList<QSharedPointer<TileRotatedVisual>>());
 }
 
-void TileRotateModel::setTiles(const QList<TileRotated *> &tilesList)
+void TileRotatedVisualModel::setVisuals(const QList<QSharedPointer<TileRotatedVisual>> &visuals)
 {
     beginResetModel();
 
     qDeleteAll(mItems);
     mItems.clear();
-    mTiles.clear();
+    mVisuals.clear();
 
     QString header;
-    for (TileRotated *tile : tilesList) {
+    for (QSharedPointer<TileRotatedVisual> visual : visuals) {
         QString label = QLatin1String("<TODO: Label>");
         if (mShowHeaders && (label != header)) {
             while (mItems.count() % columnCount())
@@ -633,43 +562,38 @@ void TileRotateModel::setTiles(const QList<TileRotated *> &tilesList)
             for (int i = 0; i < columnCount(); i++)
                 mItems += new Item(header);
         }
-        mItems += new Item(tile, MapRotation::NotRotated);
-        mItems += new Item(tile, MapRotation::Clockwise90);
-        mItems += new Item(tile, MapRotation::Clockwise180);
-        mItems += new Item(tile, MapRotation::Clockwise270);
+        mItems += new Item(visual, MapRotation::NotRotated);
+        mItems += new Item(visual, MapRotation::Clockwise90);
+        mItems += new Item(visual, MapRotation::Clockwise180);
+        mItems += new Item(visual, MapRotation::Clockwise270);
     }
 
     endResetModel();
 }
 
-TileRotated *TileRotateModel::tileAt(const QModelIndex &index) const
+QSharedPointer<TileRotatedVisual> TileRotatedVisualModel::visualAt(const QModelIndex &index, MapRotation& mapRotation) const
 {
-    if (Item *item = toItem(index))
-        return item->mTile;
+    if (Item *item = toItem(index)) {
+        mapRotation = item->mMapRotation;
+        return item->mVisual;
+    }
     return nullptr;
 }
 
-MapRotation TileRotateModel::mapRotationAt(const QModelIndex &index) const
-{
-    if (Item *item = toItem(index))
-        return item->mMapRotation;
-    return MapRotation::NotRotated;
-}
-
-QString TileRotateModel::headerAt(const QModelIndex &index) const
+QString TileRotatedVisualModel::headerAt(const QModelIndex &index) const
 {
     if (Item *item = toItem(index))
         return item->mHeading;
     return QString();
 }
 
-void TileRotateModel::scaleChanged(qreal scale)
+void TileRotatedVisualModel::scaleChanged(qreal scale)
 {
     Q_UNUSED(scale)
     redisplay();
 }
 
-void TileRotateModel::redisplay()
+void TileRotatedVisualModel::redisplay()
 {
     int maxRow = rowCount() - 1;
     int maxColumn = columnCount() - 1;
@@ -677,18 +601,19 @@ void TileRotateModel::redisplay()
         emit dataChanged(index(0, 0), index(maxRow, maxColumn));
 }
 
-TileRotateModel::Item *TileRotateModel::toItem(const QModelIndex &index) const
+TileRotatedVisualModel::Item *TileRotatedVisualModel::toItem(const QModelIndex &index) const
 {
     if (index.isValid())
         return static_cast<Item*>(index.internalPointer());
     return nullptr;
 }
 
-TileRotateModel::Item *TileRotateModel::toItem(TileRotated *ftile) const
+TileRotatedVisualModel::Item *TileRotatedVisualModel::toItem(QSharedPointer<TileRotatedVisual> visual) const
 {
     for (Item *item : mItems) {
-        if (item->mTile == ftile)
+        if (item->mVisual == visual) {
             return item;
+        }
     }
     return nullptr;
 }

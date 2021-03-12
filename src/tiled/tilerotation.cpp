@@ -177,6 +177,9 @@ public:
 
     void rotateTile(Tile *tile, MapRotation viewRotation, QVector<Tiled::ZTileRenderInfo>& tileInfos)
     {
+        if (tile->tileset()->isMissing()) {
+            int dbg = 1;
+        }
         // FIXME: temporary lazy init
         if (mTilesets.isEmpty()) {
             tempLazyInit();
@@ -440,7 +443,11 @@ QString TileRotation::unrotateTile(const QString &tileName, MapRotation viewRota
             }
         }
     }
-    return BuildingTilesMgr::instance()->nameForTile(tilesetName + QLatin1Literal("_R") +  QString::number(tilesetRInt * 90), tileIndex);
+    QString tilesetNameR = tilesetName + QLatin1Literal("_R") +  QString::number(tilesetRInt * 90);
+    if (mPrivate->mTilesetByNameRotated.contains(tilesetNameR)) {
+        return BuildingTilesMgr::instance()->nameForTile(tilesetNameR, tileIndex);
+    }
+    return tileName;
 }
 
 #if 0

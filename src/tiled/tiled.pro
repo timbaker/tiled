@@ -141,7 +141,7 @@ SOURCES += aboutdialog.cpp \
     tileoverlaydialog.cpp \
     tileoverlayfile.cpp \
     tilepainter.cpp \
-    tilerotateview.cpp \
+    tilerotatedvisualview.cpp \
     tilerotation.cpp \
     tilerotationfile.cpp \
     tilerotationwindow.cpp \
@@ -363,7 +363,7 @@ HEADERS += aboutdialog.h \
     tileoverlaydialog.h \
     tileoverlayfile.h \
     tilepainter.h \
-    tilerotateview.h \
+    tilerotatedvisualview.h \
     tilerotation.h \
     tilerotationfile.h \
     tilerotationwindow.h \
