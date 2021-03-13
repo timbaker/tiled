@@ -59,7 +59,7 @@ public:
                         int role = Qt::DisplayRole) const;
 
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
-    QModelIndex index(QSharedPointer<TileRotatedVisual> visual);
+    QModelIndex index(QSharedPointer<TileRotatedVisual> visual, MapRotation mapRotation);
 
     QStringList mimeTypes() const;
     bool dropMimeData(const QMimeData *data, Qt::DropAction action,
@@ -112,7 +112,7 @@ private:
     };
 
     Item *toItem(const QModelIndex &index) const;
-    Item *toItem(QSharedPointer<TileRotatedVisual> visual) const;
+    Item *toItem(QSharedPointer<TileRotatedVisual> visual, MapRotation mapRotation) const;
 
     QList<Item*> mItems;
     QList<TileRotatedVisual*> mVisuals;

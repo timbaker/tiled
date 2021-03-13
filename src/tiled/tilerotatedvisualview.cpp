@@ -491,9 +491,9 @@ QModelIndex TileRotatedVisualModel::index(int row, int column, const QModelIndex
     return createIndex(row, column, mItems.at(tileIndex));
 }
 
-QModelIndex TileRotatedVisualModel::index(QSharedPointer<TileRotatedVisual> visual)
+QModelIndex TileRotatedVisualModel::index(QSharedPointer<TileRotatedVisual> visual, MapRotation mapRotation)
 {
-    int tileIndex = mItems.indexOf(toItem(visual));
+    int tileIndex = mItems.indexOf(toItem(visual, mapRotation));
     if (tileIndex != -1)
         return index(tileIndex / columnCount(), tileIndex % columnCount());
     return QModelIndex();
@@ -608,10 +608,10 @@ TileRotatedVisualModel::Item *TileRotatedVisualModel::toItem(const QModelIndex &
     return nullptr;
 }
 
-TileRotatedVisualModel::Item *TileRotatedVisualModel::toItem(QSharedPointer<TileRotatedVisual> visual) const
+TileRotatedVisualModel::Item *TileRotatedVisualModel::toItem(QSharedPointer<TileRotatedVisual> visual, MapRotation mapRotation) const
 {
     for (Item *item : mItems) {
-        if (item->mVisual == visual) {
+        if ((item->mVisual == visual) && (item->mMapRotation == mapRotation)) {
             return item;
         }
     }

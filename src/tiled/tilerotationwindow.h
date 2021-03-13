@@ -59,6 +59,7 @@ protected:
     bool fileOpen(const QString &fileName, QList<Tiled::TilesetRotated*> &tiles, QList<QSharedPointer<Tiled::TileRotatedVisual>>& visuals);
     bool fileSave(const QString &fileName, const QList<Tiled::TilesetRotated*> &tilesets, const QList<QSharedPointer<Tiled::TileRotatedVisual>>& visuals);
     void setVisualList();
+    void setVisualDataList();
     void setTilesetList();
     void updateUsedTiles();
     bool isTileUsed(const QString &_tileName);
@@ -84,12 +85,14 @@ protected:
 
     AssignedVisual assignVisual(Tiled::TileRotated *tileR, QSharedPointer<Tiled::TileRotatedVisual> visual, Tiled::MapRotation mapRotation);
     Tiled::TileRotatedVisualData changeVisualData(QSharedPointer<Tiled::TileRotatedVisual> visual, Tiled::MapRotation mapRotation, const Tiled::TileRotatedVisualData& data);
-    Tiled::Tileset* getRotatedTileset(const QString tilesetName);
+    Tiled::Tileset* getOrCreateTilesetForTilesetRotated(const QString tilesetNameR);
     Tiled::TileRotated *rotatedTileFor(Tiled::Tile *tileR);
-    Tiled::TileRotated *getOrCreateRotatedTileFor(Tiled::Tile *tile, Tiled::MapRotation mapRotation);
-    QString getTilesetNameR(const QString& tilesetName, Tiled::MapRotation mapRotation);
+    Tiled::TileRotated *getOrCreateTileRotatedForTileReal(Tiled::Tile *tileReal, Tiled::MapRotation mapRotation);
+    Tiled::TileRotated *getTileRotatedForTileReal(Tiled::Tile *tileReal, Tiled::MapRotation mapRotation);
+    QString getTilesetRotatedName(const QString& tilesetName, Tiled::MapRotation mapRotation);
     Tiled::TilesetRotated* getOrCreateTilesetRotated(const QString &tilesetName, Tiled::MapRotation mapRotation);
-    Tiled::TileRotated* getOrCreateTileRotated(Tiled::TilesetRotated *tileset, int tileID);
+    Tiled::TilesetRotated* getTilesetRotated(const QString &tilesetName, Tiled::MapRotation mapRotation);
+    Tiled::TileRotated* getOrCreateTileRotated(Tiled::TilesetRotated *tilesetR, int tileID);
 
 protected slots:
     void fileNew();
@@ -106,34 +109,40 @@ protected slots:
     void tilesetSelectionChanged();
     void tileRotatedActivated(const QModelIndex &index);
     void visualListSelectionChanged();
+    void visualActivated(const QModelIndex &index);
+    void visualDataSelectionChanged();
     void manageTilesets();
     void tilesetAdded(Tiled::Tileset *tileset);
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
     void tilesetRemoved(Tiled::Tileset *tileset);
     void tilesetChanged(Tiled::Tileset *tileset);
     void tileDropped(QSharedPointer<Tiled::TileRotatedVisual> visual, Tiled::MapRotation mapRotation, const QString &tileName);
-    void typeComboActivated(int index);
+    void edgeComboActivated(int index);
+    void changeDataOffsetDX(bool dx);
+    void changeDataOffsetDY(bool dy);
 
 private:
     Ui::TileRotationWindow *ui;
     QString mFileName;
     Tiled::Internal::Zoomable *mZoomable;
     QSharedPointer<Tiled::TileRotatedVisual> mCurrentVisual;
+    Tiled::MapRotation mCurrentVisualRotation;
     Tiled::Tileset *mCurrentTileset;
     QString mHoverTileName;
     QString mError;
     QUndoGroup *mUndoGroup;
     QUndoStack *mUndoStack;
-    QList<Tiled::TilesetRotated*> mTilesets;
+    QList<Tiled::TilesetRotated*> mTilesetRotatedList;
     QList<QSharedPointer<Tiled::TileRotatedVisual>> mVisuals;
     QList<QSharedPointer<Tiled::TileRotatedVisual>> mUnassignedVisuals;
-    QMap<QString, Tiled::Tileset*> mTilesetRotated;
+    QMap<QString, Tiled::Tileset*> mFakeTilesetLookup;
     QMap<QString, Tiled::TilesetRotated*> mTilesetByNameRotated;
 
     friend class AssignVisual;
     friend class CreateVisual;
     friend class DeleteVisual;
     friend class ChangeTiles;
+    friend class InitFromBuildingTiles;
     friend class Tiled::TileRotateDelegate;
 };
 

@@ -93,7 +93,7 @@ bool TileRotationFile::read(const QString &path)
         if (block.name == QLatin1String("visuals")) {
             for (const SimpleFileBlock& block1 : block.blocks) {
                 if (TileRotatedVisual *visual = readVisual(block1)) {
-                    mVisualLookup[visual->mUuid] = QSharedPointer<TileRotatedVisual>(visual);
+                    mVisualLookup[visual->mUuid.toString()] = QSharedPointer<TileRotatedVisual>(visual);
                 }
             }
         } else if (block.name == QLatin1String("tileset")) {
@@ -258,6 +258,9 @@ bool TileRotationFile::write(const QString &path, const QList<TilesetRotated *> 
         tilesetBlock.addValue("columns", QString::number(tileset->mColumnCount));
         tilesetBlock.addValue("rotation", QLatin1Literal(MAP_ROTATION_NAMES[int(tileset->mRotation)]));
         for (TileRotated *tile : tileset->mTiles) {
+            if (tile->mVisual == nullptr) {
+                continue;
+            }
             SimpleFileBlock tileBlock;
             writeTile(tile, tileBlock);
             tilesetBlock.blocks += tileBlock;
@@ -370,8 +373,10 @@ QSharedPointer<TileRotatedVisual> TileRotationFile::getVisual(const QString &uui
     if (mVisualLookup.contains(uuidStr)) {
         return mVisualLookup[uuidStr];
     }
+    // This should never happen.
     QSharedPointer<TileRotatedVisual> visual = QSharedPointer<TileRotatedVisual>::create();
     visual->mUuid = uuidStr;
+    Q_ASSERT(visual->mUuid.toString() == uuidStr);
     mVisualLookup[uuidStr] = visual;
     return visual;
 }

@@ -69,7 +69,7 @@ private:
 
 private:
     QString mError;
-    QMap<QUuid, QSharedPointer<TileRotatedVisual>> mVisualLookup;
+    QMap<QString, QSharedPointer<TileRotatedVisual>> mVisualLookup;
     QList<TilesetRotated*> mTilesets;
 //    QMap<QString, QString> mMapping;
 };

@@ -168,6 +168,13 @@ public:
         return mNameRotated;
     }
 
+    TileRotated *createTile(int tileID);
+
+    TileRotated *tileAt(int index)
+    {
+        return (index >= 0 && index < mTileByID.size()) ? mTileByID[index] : nullptr;
+    }
+
     QString mNameUnrotated;
     QString mNameRotated;
     int mColumnCount;
@@ -190,6 +197,7 @@ public:
 
     QSharedPointer<TileRotatedVisual> allocVisual();
 
+    void initRenderInfo(const QList<QSharedPointer<TileRotatedVisual>>& visuals);
     void rotateTile(Tile* tile, MapRotation viewRotation, QVector<Tiled::ZTileRenderInfo>& tileInfos);
     Tile *rotateTile(Tile* tile, MapRotation rotation);
     Tile *tileFor(const QString& tilesetName, int tileID);
