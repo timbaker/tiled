@@ -1399,7 +1399,7 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
 
 //    ui->tilesetTilesView->setZoomable(mZoomable);
     ui->tilesetTilesView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    ui->tilesetTilesView->setDragEnabled(false);
+    ui->tilesetTilesView->setDragEnabled(true);
 //    connect(ui->tilesetTilesView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TileRotationWindow::syncUI);
     connect(ui->tilesetTilesView, &MixedTilesetView::activated, this, &TileRotationWindow::tileActivated);
 

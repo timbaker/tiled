@@ -95,7 +95,7 @@ public:
 
     // Check for the universal null entry
     virtual bool isNone() const { return false; }
-    virtual BuildingTileEntry *asNone() { return 0; }
+    virtual BuildingTileEntry *asNone() { return nullptr; }
 
     bool equals(BuildingTileEntry *other) const;
 
@@ -399,7 +399,7 @@ public:
         West,
         North,
         NorthWest,
-        SouthEast,
+        SouthEast, // Pillar
         WestWindow,
         NorthWindow,
         WestDoor,

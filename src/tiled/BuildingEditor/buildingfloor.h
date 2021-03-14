@@ -94,109 +94,152 @@ private:
     QString mEmptyCell;
 };
 
+class BuildingSquare
+{
+public:
+    // The order must match buildingmap.cpp:gLayerNames[]
+    enum SquareSection
+    {
+        SectionInvalid = -1,
+        SectionFloor,
+        SectionFloorGrime,
+        SectionFloorGrime2,
+        SectionWallN,
+        SectionWallTrimN,
+        SectionWallW,
+        SectionWallTrimW,
+        SectionRoofCap,
+        SectionRoofCap2,
+        SectionWallOverlayN,
+        SectionWallOverlayW,
+        SectionWallGrimeN,
+        SectionWallGrimeW,
+        SectionWallFurnitureN,
+        SectionWallFurnitureW,
+        SectionFrame,
+        SectionDoorN,
+        SectionDoorW,
+        SectionWindowN,
+        SectionWindowW,
+        SectionCurtainsN,
+        SectionCurtainsW,
+        SectionFurniture,
+        SectionFurniture2,
+        SectionFurniture3,
+        SectionFurniture4,
+        SectionCurtainsE,
+        SectionCurtainsS,
+        SectionWindowE,
+        SectionWindowS,
+        SectionDoorE,
+        SectionDoorS,
+        SectionWallFurnitureE,
+        SectionWallFurnitureS,
+        SectionWallOverlayE,
+        SectionWallOverlayS,
+        SectionWallE,
+        SectionWallS,
+        SectionRoof,
+        SectionRoof2,
+        SectionRoofTop,
+        MaxSection
+    };
+
+    enum class WallEdge
+    {
+        N,
+        E,
+        S,
+        W
+    };
+
+    enum class WallType
+    {
+        Invalid = -1,
+        Simple,
+        TwoWallCorner,
+        Pillar
+    };
+
+    BuildingSquare();
+    ~BuildingSquare();
+
+    QVector<BuildingTileEntry*> mEntries;
+    QVector<int> mEntryEnum;
+//        WallOrientation mWallOrientation;
+    bool mExterior;
+    QVector<BuildingTile*> mTiles;
+
+    struct WallInfo {
+        WallInfo(WallEdge edge) :
+            edge(edge),
+            entry(nullptr),
+            trim(nullptr),
+            furniture(nullptr),
+            furnitureBldgTile(nullptr),
+            type(WallType::Invalid)
+        {
+
+        }
+        WallEdge edge;
+        BuildingTileEntry *entry;
+        BuildingTileEntry *trim;
+        FurnitureTile *furniture;
+        BuildingTile *furnitureBldgTile;
+        WallType type;
+    };
+
+    WallInfo mWallN = WallInfo(WallEdge::N);
+    WallInfo mWallW = WallInfo(WallEdge::W);
+    WallInfo mWallE = WallInfo(WallEdge::E);
+    WallInfo mWallS = WallInfo(WallEdge::S);
+
+    void SetWallN(BuildingTileEntry *tile);
+    void SetWallW(BuildingTileEntry *tile);
+    void SetWallN(FurnitureTile *ftile, BuildingTile *btile);
+    void SetWallW(FurnitureTile *ftile, BuildingTile *btile);
+    void SetWallTrimN(BuildingTileEntry *tile);
+    void SetWallTrimW(BuildingTileEntry *tile);
+
+    void SetWallS(BuildingTileEntry *tile);
+    void SetWallE(BuildingTileEntry *tile);
+    void SetWallS(FurnitureTile *ftile, BuildingTile *btile);
+    void SetWallE(FurnitureTile *ftile, BuildingTile *btile);
+
+    bool HasWallN() const;
+    bool HasWallW() const;
+    bool HasDoorN() const;
+    bool HasDoorS() const;
+    bool HasDoorW() const;
+    bool HasDoorE() const;
+    bool HasWindowN() const;
+    bool HasWindowS() const;
+    bool HasWindowW() const;
+    bool HasWindowE() const;
+
+    void ReplaceFloor(BuildingTileEntry *tile, int offset);
+    void ReplaceWall(BuildingTileEntry *tile, SquareSection section, const WallInfo &wallInfo);
+    void ReplaceDoor(BuildingTileEntry *tile, SquareSection section, int offset);
+    void ReplaceFrame(BuildingTileEntry *tile, int offset);
+    void ReplaceWindow(BuildingTileEntry *tile, SquareSection section, int offset);
+    void ReplaceCurtains(Window *window, SquareSection section);
+    void ReplaceShutters(Window *window, bool first);
+    void ReplaceFurniture(BuildingTileEntry *tile, int offset = 0);
+    void ReplaceFurniture(BuildingTile *btile, SquareSection sectionMin, SquareSection sectionMax);
+    void ReplaceRoof(BuildingTileEntry *tile, int offset = 0);
+    void ReplaceRoofCap(BuildingTileEntry *tile, int offset = 0);
+    void ReplaceRoofTop(BuildingTileEntry *tile, int offset);
+    void ReplaceFloorGrime(BuildingTileEntry *grimeTile);
+    void ReplaceWallGrime(BuildingTileEntry *grimeTile, const QString &userTileWalls, const QString &userTileWalls2);
+    void ReplaceWallTrim();
+
+    int getWallOffset(const WallInfo& wallInfo, SquareSection section);
+};
+
 class BuildingFloor
 {
 public:
-
-    class Square
-    {
-    public:
-        // The order must match buildingmap.cpp:gLayerNames[]
-        enum SquareSection
-        {
-            SectionInvalid = -1,
-            SectionFloor,
-            SectionFloorGrime,
-            SectionFloorGrime2,
-            SectionWall,
-            SectionWallTrim,
-            SectionWall2,
-            SectionWallTrim2,
-            SectionRoofCap,
-            SectionRoofCap2,
-            SectionWallOverlay, // West, North walls
-            SectionWallOverlay2, // West, North walls
-            SectionWallGrime,
-            SectionWallGrime2,
-            SectionWallFurniture, // West, North walls
-            SectionWallFurniture2, // West, North walls
-            SectionFrame,
-            SectionDoor,
-            SectionWindow,
-            SectionCurtains, // West, North windows
-            SectionFurniture,
-            SectionFurniture2,
-            SectionFurniture3,
-            SectionFurniture4,
-            SectionCurtains2, // East, South windows
-            SectionWallFurniture3, // East, South walls
-            SectionWallFurniture4, // East, South walls
-            SectionWallOverlay3, // East, South walls
-            SectionWallOverlay4, // East, South walls
-            SectionRoof,
-            SectionRoof2,
-            SectionRoofTop,
-            MaxSection
-        };
-
-        enum WallOrientation
-        {
-            WallOrientInvalid = -1,
-            WallOrientN,
-            WallOrientW,
-            WallOrientNW,
-            WallOrientSE
-        };
-
-        Square();
-        ~Square();
-
-        QVector<BuildingTileEntry*> mEntries;
-        QVector<int> mEntryEnum;
-        WallOrientation mWallOrientation;
-        bool mExterior;
-        QVector<BuildingTile*> mTiles;
-
-        struct WallInfo {
-            WallInfo() :
-                entry(0), trim(0), furniture(0), furnitureBldgTile(0)
-            {}
-            BuildingTileEntry *entry;
-            BuildingTileEntry *trim;
-            FurnitureTile *furniture;
-            BuildingTile *furnitureBldgTile;
-        } mWallN, mWallW;
-
-        void SetWallN(BuildingTileEntry *tile);
-        void SetWallW(BuildingTileEntry *tile);
-        void SetWallN(FurnitureTile *ftile, BuildingTile *btile);
-        void SetWallW(FurnitureTile *ftile, BuildingTile *btile);
-        void SetWallTrimN(BuildingTileEntry *tile);
-        void SetWallTrimW(BuildingTileEntry *tile);
-
-        bool IsWallOrient(WallOrientation orient);
-
-        void ReplaceFloor(BuildingTileEntry *tile, int offset);
-        void ReplaceWall(BuildingTileEntry *tile, WallOrientation orient);
-        void ReplaceDoor(BuildingTileEntry *tile, int offset);
-        void ReplaceFrame(BuildingTileEntry *tile, int offset);
-        void ReplaceWindow(BuildingTileEntry *tile, int offset);
-        void ReplaceCurtains(Window *window, bool exterior);
-        void ReplaceShutters(Window *window, bool first);
-        void ReplaceFurniture(BuildingTileEntry *tile, int offset = 0);
-        void ReplaceFurniture(BuildingTile *btile, SquareSection sectionMin,
-                              SquareSection sectionMax);
-        void ReplaceRoof(BuildingTileEntry *tile, int offset = 0);
-        void ReplaceRoofCap(BuildingTileEntry *tile, int offset = 0);
-        void ReplaceRoofTop(BuildingTileEntry *tile, int offset);
-        void ReplaceFloorGrime(BuildingTileEntry *grimeTile);
-        void ReplaceWallGrime(BuildingTileEntry *grimeTile, const QString &userTileWalls, const QString &userTileWalls2);
-        void ReplaceWallTrim();
-
-        int getWallOffset();
-    };
-
-    QVector<QVector<Square> > squares;
+    QVector<QVector<BuildingSquare> > squares;
 
     BuildingFloor(Building *building, int level);
     ~BuildingFloor();

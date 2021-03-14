@@ -174,31 +174,41 @@ static const char *gLayerNames[] = {
     "Floor",
     "FloorGrime",
     "FloorGrime2",
-    "Walls",
-    "WallTrim",
-    "Walls2",
-    "WallTrim2",
+    "WallN",
+    "WallTrimN",
+    "WallW",
+    "WallTrimW",
     "RoofCap",
     "RoofCap2",
-    "WallOverlay",
-    "WallOverlay2",
-    "WallGrime",
-    "WallGrime2",
-    "WallFurniture",
-    "WallFurniture2",
+    "WallOverlayN",
+    "WallOverlayW",
+    "WallGrimeN",
+    "WallGrimeW",
+    "WallFurnitureN",
+    "WallFurnitureW",
     "Frames",
-    "Doors",
-    "Windows",
-    "Curtains",
+    "DoorN",
+    "DoorW",
+    "WindowN",
+    "WindowW",
+    "CurtainsN",
+    "CurtainsW",
     "Furniture",
     "Furniture2",
     "Furniture3",
     "Furniture4",
-    "Curtains2",
-    "WallFurniture3",
-    "WallFurniture4",
-    "WallOverlay3",
-    "WallOverlay4",
+    "CurtainsE",
+    "CurtainsS",
+    "WindowE",
+    "WindowS",
+    "DoorE",
+    "DoorS",
+    "WallFurnitureE",
+    "WallFurnitureS",
+    "WallOverlayE",
+    "WallOverlayS",
+    "WallE",
+    "WallS",
     "Roof",
     "Roof2",
     "RoofTop",
@@ -500,7 +510,7 @@ void BuildingMap::BuildingToMap()
         return;
     }
 
-    Q_ASSERT(sizeof(gLayerNames)/sizeof(gLayerNames[0]) == BuildingFloor::Square::MaxSection + 1);
+    Q_ASSERT(sizeof(gLayerNames)/sizeof(gLayerNames[0]) == BuildingSquare::MaxSection + 1);
 
     QMap<QString,int> layerToSection;
     for (int i = 0; gLayerNames[i]; i++)
@@ -569,7 +579,7 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
         suppress = mSuppressTiles[floor];
 
     int layerIndex = 0;
-    foreach (TileLayer *tl, layerGroup->layers()) {
+    for (TileLayer *tl : layerGroup->layers()) {
         int section = mLayerToSection[tl->name()];
         if (section == -1) // Skip user-added layers.
             continue;
@@ -579,25 +589,41 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
             tl->erase(area/*.adjusted(0,0,1,1)*/);
         for (int x = area.x(); x <= area.right(); x++) {
             for (int y = area.y(); y <= area.bottom(); y++) {
-                if (section != BuildingFloor::Square::SectionFloor
-                        && suppress.contains(QPoint(x, y)))
+                if (section != BuildingSquare::SectionFloor
+                        && suppress.contains(QPoint(x, y))) {
                     continue;
-                const BuildingFloor::Square &square = shadowFloor->squares[x][y];
+                }
+                const BuildingSquare &square = shadowFloor->squares[x][y];
                 if (BuildingTile *btile = square.mTiles[section]) {
                     if (!btile->isNone()) {
-                        if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(btile))
+                        if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(btile)) {
                             tl->setCell(x + offset, y + offset, Cell(tile));
+                        }
                     }
                     continue;
                 }
                 if (BuildingTileEntry *entry = square.mEntries[section]) {
                     int tileOffset = square.mEntryEnum[section];
-                    if (entry->isNone() || entry->tile(tileOffset)->isNone())
+                    if (entry->isNone() || entry->tile(tileOffset)->isNone()) {
                         continue;
-                    if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(entry->tile(tileOffset)))
+                    }
+                    BuildingTile *buildingTile = entry->tile(tileOffset);
+#if 1 // HACK
+                    if (!buildingTile->isNone()) {
+                        if (section == BuildingSquare::SquareSection::SectionWallE) {
+                            QString tileName = buildingTile->mTilesetName + QLatin1Literal("_R180_") + QString::number(buildingTile->mIndex);
+                            buildingTile = BuildingTilesMgr::instance()->get(tileName);
+                        }
+                        if (section == BuildingSquare::SquareSection::SectionWallS) {
+                            QString tileName = buildingTile->mTilesetName + QLatin1Literal("_R180_") + QString::number(buildingTile->mIndex);
+                            buildingTile = BuildingTilesMgr::instance()->get(tileName);
+                        }
+                    }
+#endif
+                    if (Tiled::Tile *tile = BuildingTilesMgr::instance()->tileFor(buildingTile)) {
                         tl->setCell(x + offset, y + offset, Cell(tile));
+                    }
                 }
-
             }
         }
         layerGroup->regionAltered(tl); // possibly set mNeedsSynch

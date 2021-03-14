@@ -294,7 +294,7 @@ protected:
     virtual void eyedrop(BuildingObject *object);
     virtual void updateStatusText() {}
 
-    enum TileEdge {
+    enum class TileEdge {
         Center,
         N,
         S,
@@ -329,7 +329,7 @@ public:
 private:
     Q_DISABLE_COPY(DoorTool)
     static DoorTool *mInstance;
-    ~DoorTool() { mInstance = 0; }
+    ~DoorTool() { mInstance = nullptr; }
 };
 
 class WindowTool : public BaseObjectTool

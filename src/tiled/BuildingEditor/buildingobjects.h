@@ -40,7 +40,7 @@ class Window;
 class BuildingObject
 {
 public:
-    enum Direction
+    enum class Direction
     {
         N,
         S,
@@ -64,7 +64,7 @@ public:
     { return QRect(mX, mY, 1, 1); }
 
     void setPos(int x, int y)
-    { mX = x, mY = y; }
+    { mX = x; mY = y; }
 
     void setPos(const QPoint &pos)
     { setPos(pos.x(), pos.y()); }
@@ -82,10 +82,10 @@ public:
     { return mDir; }
 
     bool isW() const
-    { return mDir == W; }
+    { return mDir == Direction::W; }
 
     bool isN() const
-    { return mDir == N; }
+    { return mDir == Direction::N; }
 
     QString dirString() const;
     static Direction dirFromString(const QString &s);
@@ -158,7 +158,7 @@ public:
     Door *asDoor() { return this; }
 
     int getOffset()
-    { return (mDir == N) ? 1 : 0; }
+    { return (mDir == Direction::N) ? 1 : 0; }
 
     void setTile(BuildingTileEntry *tile, int alternate = 0)
     { alternate ? mFrameTile = tile : mTile = tile; }
@@ -318,7 +318,7 @@ public:
     Window *asWindow() { return this; }
 
     int getOffset() const
-    { return (mDir == N) ? 1 : 0; }
+    { return (mDir == Direction::N) ? 1 : 0; }
 
     BuildingTileEntry *curtainsTile()
     { return mCurtainsTile; }

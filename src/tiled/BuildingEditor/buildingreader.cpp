@@ -813,7 +813,7 @@ BuildingObject *BuildingReaderPrivate::readObject(BuildingFloor *floor)
         readDir = false;
 
     BuildingObject::Direction dir = BuildingObject::dirFromString(dirString);
-    if (readDir && dir == BuildingObject::Invalid) {
+    if (readDir && dir == BuildingObject::Direction::Invalid) {
         xml.raiseError(tr("Invalid object direction '%1'").arg(dirString));
         return 0;
     }

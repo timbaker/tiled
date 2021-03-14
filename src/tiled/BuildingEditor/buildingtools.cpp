@@ -856,10 +856,10 @@ void SelectMoveRoomsTool::finishMovingFloor(BuildingFloor *floor, bool objectsTo
 
 BaseObjectTool::BaseObjectTool() :
     BaseTool(),
-    mTileEdge(Center),
+    mTileEdge(TileEdge::Center),
     mTileCenters(false),
-    mCursorObject(0),
-    mCursorItem(0),
+    mCursorObject(nullptr),
+    mCursorItem(nullptr),
     mEyedrop(false),
     mMouseDown(false),
     mRightClicked(false),
@@ -912,8 +912,8 @@ void BaseObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     if (mEyedrop) {
         BuildingObject *object = mEditor->topmostObjectAt(event->scenePos());
         if (object && (object->asRoof() /*|| object->asWall()*/))
-            object = 0;
-        bool mouseOverObject = object != 0;
+            object = nullptr;
+        bool mouseOverObject = object != nullptr;
         if (mouseOverObject != mMouseOverObject)
             mMouseOverObject = mouseOverObject;
         mEditor->setMouseOverObject(object);
@@ -927,27 +927,27 @@ void BaseObjectTool::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     QPointF p = mEditor->sceneToTileF(event->scenePos(), mEditor->currentLevel());
     QPointF m(p.x() - int(p.x()), p.y() - int(p.y()));
     if (mTileCenters) {
-        TileEdge xEdge = Center, yEdge = Center;
+        TileEdge xEdge = TileEdge::Center, yEdge = TileEdge::Center;
         if (m.x() < 0.25)
-            xEdge = W;
+            xEdge = TileEdge::W;
         else if (m.x() >= 0.75)
-            xEdge = E;
+            xEdge = TileEdge::E;
         if (m.y() < 0.25)
-            yEdge = N;
+            yEdge = TileEdge::N;
         else if (m.y() >= 0.75)
-            yEdge = S;
-        if ((xEdge == Center && yEdge == Center) || (xEdge != Center && yEdge != Center))
-            mTileEdge = Center;
-        else if (xEdge != Center)
+            yEdge = TileEdge::S;
+        if ((xEdge == TileEdge::Center && yEdge == TileEdge::Center) || (xEdge != TileEdge::Center && yEdge != TileEdge::Center))
+            mTileEdge = TileEdge::Center;
+        else if (xEdge != TileEdge::Center)
             mTileEdge = xEdge;
         else
             mTileEdge = yEdge;
     } else {
         qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
         if (dW < dE) {
-            mTileEdge = (dW < dN && dW < dS) ? W : ((dN < dS) ? N : S);
+            mTileEdge = (dW < dN && dW < dS) ? TileEdge::W : ((dN < dS) ? TileEdge::N : TileEdge::S);
         } else {
-            mTileEdge = (dE < dN && dE < dS) ? E : ((dN < dS) ? N : S);
+            mTileEdge = (dE < dN && dE < dS) ? TileEdge::E : ((dN < dS) ? TileEdge::N : TileEdge::S);
         }
     }
 
@@ -999,14 +999,14 @@ void BaseObjectTool::deactivate()
     BaseTool::deactivate();
     if (mEyedrop) {
         mEditor->views().at(0)->viewport()->unsetCursor();
-        mEditor->setMouseOverObject(0);
+        mEditor->setMouseOverObject(nullptr);
         mEyedrop = false;
     }
     if (mCursorItem) {
         mEditor->removeItem(mCursorItem);
         delete mCursorItem;
-        mCursorItem = 0;
-        mEditor->setCursorObject(0);
+        mCursorItem = nullptr;
+        mEditor->setCursorObject(nullptr);
     }
 }
 
@@ -1090,8 +1090,8 @@ void DoorTool::placeObject()
 
 void DoorTool::updateCursorObject()
 {
-    if (mEyedrop || mTileEdge == Center || !mEditor->currentFloorContains(mTilePos)) {
-        setCursorObject(0);
+    if (mEyedrop || mTileEdge == TileEdge::Center || !mEditor->currentFloorContains(mTilePos)) {
+        setCursorObject(nullptr);
         return;
     }
 
@@ -1099,19 +1099,19 @@ void DoorTool::updateCursorObject()
         mCursorItem->setVisible(true);
 
     int x = mTilePos.x(), y = mTilePos.y();
-    BuildingObject::Direction dir = BuildingObject::N;
+    BuildingObject::Direction dir = BuildingObject::Direction::N;
 
-    if (mTileEdge == W)
-        dir = BuildingObject::W;
-    else if (mTileEdge == E) {
+    if (mTileEdge == TileEdge::W)
+        dir = BuildingObject::Direction::W;
+    else if (mTileEdge == TileEdge::E) {
         x++;
-        dir = BuildingObject::W;
+        dir = BuildingObject::Direction::W;
     }
-    else if (mTileEdge == S)
+    else if (mTileEdge == TileEdge::S)
         y++;
 
     if (!mCursorObject) {
-        BuildingFloor *floor = 0; //floor();
+        BuildingFloor *floor = nullptr; //floor();
         mCursorObject = new Door(floor, x, y, dir);
     }
     // mCursorDoor->setFloor()
@@ -1125,7 +1125,7 @@ void DoorTool::updateCursorObject()
 
 /////
 
-WindowTool *WindowTool::mInstance = 0;
+WindowTool *WindowTool::mInstance = nullptr;
 
 WindowTool *WindowTool::instance()
 {
@@ -1154,8 +1154,8 @@ void WindowTool::placeObject()
 
 void WindowTool::updateCursorObject()
 {
-    if (mEyedrop || mTileEdge == Center || !mEditor->currentFloorContains(mTilePos)) {
-        setCursorObject(0);
+    if (mEyedrop || mTileEdge == TileEdge::Center || !mEditor->currentFloorContains(mTilePos)) {
+        setCursorObject(nullptr);
         return;
     }
 
@@ -1163,19 +1163,19 @@ void WindowTool::updateCursorObject()
         mCursorItem->setVisible(true);
 
     int x = mTilePos.x(), y = mTilePos.y();
-    BuildingObject::Direction dir = BuildingObject::N;
+    BuildingObject::Direction dir = BuildingObject::Direction::N;
 
-    if (mTileEdge == W)
-        dir = BuildingObject::W;
-    else if (mTileEdge == E) {
+    if (mTileEdge == TileEdge::W)
+        dir = BuildingObject::Direction::W;
+    else if (mTileEdge == TileEdge::E) {
         x++;
-        dir = BuildingObject::W;
+        dir = BuildingObject::Direction::W;
     }
-    else if (mTileEdge == S)
+    else if (mTileEdge == TileEdge::S)
         y++;
 
     if (!mCursorObject) {
-        BuildingFloor *floor = 0; //floor();
+        BuildingFloor *floor = nullptr; //floor();
         mCursorObject = new Window(floor, x, y, dir);
     }
     // mCursorDoor->setFloor()
@@ -1190,7 +1190,7 @@ void WindowTool::updateCursorObject()
 
 /////
 
-StairsTool *StairsTool::mInstance = 0;
+StairsTool *StairsTool::mInstance = nullptr;
 
 StairsTool *StairsTool::instance()
 {
@@ -1217,8 +1217,8 @@ void StairsTool::placeObject()
 
 void StairsTool::updateCursorObject()
 {
-    if (mEyedrop || mTileEdge == Center || !mEditor->currentFloorContains(mTilePos)) {
-        setCursorObject(0);
+    if (mEyedrop || mTileEdge == TileEdge::Center || !mEditor->currentFloorContains(mTilePos)) {
+        setCursorObject(nullptr);
         return;
     }
 
@@ -1226,13 +1226,13 @@ void StairsTool::updateCursorObject()
         mCursorItem->setVisible(true);
 
     int x = mTilePos.x(), y = mTilePos.y();
-    BuildingObject::Direction dir = BuildingObject::N;
+    BuildingObject::Direction dir = BuildingObject::Direction::N;
 
-    if (mTileEdge == E || mTileEdge == N)
-        dir = BuildingObject::W;
+    if (mTileEdge == TileEdge::E || mTileEdge == TileEdge::N)
+        dir = BuildingObject::Direction::W;
 
     if (!mCursorObject) {
-        BuildingFloor *floor = 0; //floor();
+        BuildingFloor *floor = nullptr; //floor();
         mCursorObject = new Stairs(floor, x, y, dir);
     }
     // mCursorDoor->setFloor()
@@ -1245,7 +1245,7 @@ void StairsTool::updateCursorObject()
 
 /////
 
-FurnitureTool *FurnitureTool::mInstance = 0;
+FurnitureTool *FurnitureTool::mInstance = nullptr;
 
 FurnitureTool *FurnitureTool::instance()
 {
@@ -1316,7 +1316,7 @@ void FurnitureTool::placeObject()
 void FurnitureTool::updateCursorObject()
 {
     if (mEyedrop || !mEditor->currentFloorContains(mTilePos)) {
-        setCursorObject(0);
+        setCursorObject(nullptr);
         return;
     }
 
@@ -1325,7 +1325,7 @@ void FurnitureTool::updateCursorObject()
 
     int x = mTilePos.x(), y = mTilePos.y();
     if (!mCursorObject) {
-        BuildingFloor *floor = 0; //floor();
+        BuildingFloor *floor = nullptr; //floor();
         FurnitureObject *object = new FurnitureObject(floor, x, y);
         mCursorObject = object;
     }
@@ -1338,22 +1338,22 @@ void FurnitureTool::updateCursorObject()
         case OrientNone: break;
         case OrientNW: orient = ftiles->hasCorners()
                     ? FurnitureTile::FurnitureNW
-                    : ((mTileEdge == W || mTileEdge == S)
+                    : ((mTileEdge == TileEdge::W || mTileEdge == TileEdge::S)
                        ? FurnitureTile::FurnitureW : FurnitureTile::FurnitureN);
             break;
         case OrientNE: orient = ftiles->hasCorners()
                     ? FurnitureTile::FurnitureNE
-                    : ((mTileEdge == E || mTileEdge == S)
+                    : ((mTileEdge == TileEdge::E || mTileEdge == TileEdge::S)
                        ? FurnitureTile::FurnitureE : FurnitureTile::FurnitureN);
             break;
         case OrientSW: orient = ftiles->hasCorners()
                     ? FurnitureTile::FurnitureSW
-                    : ((mTileEdge == W || mTileEdge == N)
+                    : ((mTileEdge == TileEdge::W || mTileEdge == TileEdge::N)
                        ? FurnitureTile::FurnitureW : FurnitureTile::FurnitureS);
             break;
         case OrientSE: orient = ftiles->hasCorners()
                     ? FurnitureTile::FurnitureSE
-                    : ((mTileEdge == E || mTileEdge == N)
+                    : ((mTileEdge == TileEdge::E || mTileEdge == TileEdge::N)
                        ? FurnitureTile::FurnitureE : FurnitureTile::FurnitureS);
             break;
         case OrientW: orient = FurnitureTile::FurnitureW; break;
@@ -1427,8 +1427,18 @@ void FurnitureTool::setCurrentTile(FurnitureTile *tile)
         mCursorObject->asFurniture()->setFurnitureTile(tile);
 }
 
-static FurnitureTool::Orient wallOrient(const BuildingFloor::Square &square)
+static FurnitureTool::Orient wallOrient(const BuildingSquare &square)
 {
+    if (square.HasWallN() && square.HasWallW()) {
+        return FurnitureTool::OrientNW;
+    }
+    if (square.HasWallN()) {
+        return FurnitureTool::OrientN;
+    }
+    if (square.HasWallW()) {
+        return FurnitureTool::OrientW;
+    }
+#if 0
     if ((square.mEntries[BuildingFloor::Square::SectionWall] &&
          !square.mEntries[BuildingFloor::Square::SectionWall]->isNone()) ||
             square.mTiles[BuildingFloor::Square::SectionWall])
@@ -1444,6 +1454,7 @@ static FurnitureTool::Orient wallOrient(const BuildingFloor::Square &square)
         case BuildingFloor::Square::WallOrientSE:
             return FurnitureTool::OrientSE;
         }
+#endif
     return FurnitureTool::OrientNone;
 }
 
@@ -2468,7 +2479,7 @@ void WallTool::mousePressEvent(QGraphicsSceneMouseEvent *event)
             return;
         mObject = new WallObject(floor(),
                                  mStartTilePos.x(), mStartTilePos.y(),
-                                 BuildingObject::W,
+                                 BuildingObject::Direction::W,
                                  /*length=*/1);
         mItem = new GraphicsWallItem(mEditor, mObject);
         mItem->setZValue(mEditor->ZVALUE_CURSOR);
@@ -2741,10 +2752,10 @@ void WallTool::updateCursor()
         QPoint pos = mStartTilePos;
 
         if (qAbs(diff.x()) >= qAbs(diff.y())) {
-            mObject->setDir(BuildingObject::W);
+            mObject->setDir(BuildingObject::Direction::W);
             mObject->setLength(qMax(1, qAbs(diff.x())));
         } else {
-            mObject->setDir(BuildingObject::N);
+            mObject->setDir(BuildingObject::Direction::N);
             mObject->setLength(qMax(1, qAbs(diff.y())));
         }
 
