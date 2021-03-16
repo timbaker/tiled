@@ -611,12 +611,16 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
 #if 1 // HACK
                     if (!buildingTile->isNone()) {
                         if (section == BuildingSquare::SquareSection::SectionWallE) {
-                            QString tileName = buildingTile->mTilesetName + QLatin1Literal("_R180_") + QString::number(buildingTile->mIndex);
-                            buildingTile = BuildingTilesMgr::instance()->get(tileName);
+                            if (TileRotation::instance()->hasTileRotated(buildingTile->mTilesetName, buildingTile->mIndex)) {
+                                QString tileName = buildingTile->mTilesetName + QLatin1Literal("_R180_") + QString::number(buildingTile->mIndex);
+                                buildingTile = BuildingTilesMgr::instance()->get(tileName);
+                            }
                         }
                         if (section == BuildingSquare::SquareSection::SectionWallS) {
-                            QString tileName = buildingTile->mTilesetName + QLatin1Literal("_R180_") + QString::number(buildingTile->mIndex);
-                            buildingTile = BuildingTilesMgr::instance()->get(tileName);
+                            if (TileRotation::instance()->hasTileRotated(buildingTile->mTilesetName, buildingTile->mIndex)) {
+                                QString tileName = buildingTile->mTilesetName + QLatin1Literal("_R180_") + QString::number(buildingTile->mIndex);
+                                buildingTile = BuildingTilesMgr::instance()->get(tileName);
+                            }
                         }
                     }
 #endif

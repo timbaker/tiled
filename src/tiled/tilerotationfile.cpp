@@ -233,7 +233,7 @@ bool TileRotationFile::readDirection(const SimpleFileBlock &block, TileRotatedVi
                 }
             }
         }
-        direction.addTile(tileName, offset ,edge);
+        direction.addTile(tileName, offset, edge);
     }
     return true;
 }

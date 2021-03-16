@@ -292,7 +292,7 @@ class BuildingEditor::BuildingReaderPrivate
 public:
     BuildingReaderPrivate(BuildingReader *reader):
         p(reader),
-        mBuilding(0)
+        mBuilding(nullptr)
     {}
 
     Building *readBuilding(QIODevice *device, const QString &path);
@@ -365,6 +365,8 @@ private:
     QSet<BuildingTile*> deadTiles;
 
     QSet<BuildingTileCategory*> deadCategories;
+
+    void fixTileRotationLayerNames(Building *building);
 
     QXmlStreamReader xml;
 };
@@ -1239,6 +1241,8 @@ void BuildingReaderPrivate::fix(Building *building)
     qDeleteAll(deadFurniture);
     qDeleteAll(deadCategories);
     qDeleteAll(deadTiles);
+
+    fixTileRotationLayerNames(building);
 }
 
 FurnitureTiles *BuildingReaderPrivate::fixFurniture(FurnitureTiles *ftiles)
@@ -1293,4 +1297,74 @@ BuildingTileEntry *BuildingReaderPrivate::fixEntry(BuildingTileEntry *entry)
         }
     }
     return fixedEntries[entry];
+}
+
+#include "buildingfloorV1.h"
+
+static bool isSameBuildingTile(BuildingSquare &square, BuildingSquare::SquareSection section,
+                        BuildingFloorV1::Square &squareV1, BuildingFloorV1::Square::SquareSection sectionV1)
+{
+    return square.mEntries[section] != nullptr &&
+            square.mEntries[section] == squareV1.mEntries[sectionV1] &&
+            square.mEntryEnum[section] == squareV1.mEntryEnum[sectionV1];
+}
+
+void BuildingReaderPrivate::fixTileRotationLayerNames(Building *building)
+{
+    for (BuildingFloor *floor : building->floors()) {
+        if (!floor->hasUserTiles()) {
+            continue;
+        }
+        floor->LayoutToSquares();
+
+        BuildingFloorV1 floorV1(building, floor->level());
+        floorV1.LayoutToSquares();
+
+        for (int y = 0; y < floor->height() + 1; y++) {
+            for (int x = 0; x < floor->width() + 1; x++) {
+                BuildingSquare &square = floor->squares[x][y];
+                BuildingFloorV1::Square &squareV1 = floorV1.squares[x][y];
+                // Before double-sided walls were added, SectionWall and SectionWall2 could contain
+                // either north or west walls, depending on how they were stacked.
+                QString grimeTileName = floor->grimeAt(QLatin1String("Walls"), x, y);
+                if (!grimeTileName.isEmpty()) {
+                    floor->setGrime(QLatin1String("Walls"), x, y, QString());
+                    if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallN,
+                                           squareV1, BuildingFloorV1::Square::SquareSection::SectionWall)) {
+                        floor->setGrime(QLatin1String("WallN"), x, y, grimeTileName);
+                    }
+                    else if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallW,
+                                           squareV1, BuildingFloorV1::Square::SquareSection::SectionWall)) {
+                        // West wall is lower than the north wall, which is reverse of the new way.
+                        floor->setGrime(QLatin1String("WallW"), x, y, grimeTileName);
+                    }
+                    else if (squareV1.mEntries[BuildingFloorV1::Square::SquareSection::SectionWall] == nullptr) {
+                        floor->setGrime(QLatin1String("WallW"), x, y, grimeTileName);
+                    }
+                    else {
+                        floor->setGrime(QLatin1String("WallN"), x, y, grimeTileName);
+                    }
+                }
+                QString grimeTileName2 = floor->grimeAt(QLatin1String("Walls2"), x, y);
+                if (!grimeTileName2.isEmpty()) {
+                    floor->setGrime(QLatin1String("Walls2"), x, y, QString());
+                    if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallW,
+                                           squareV1, BuildingFloorV1::Square::SquareSection::SectionWall2)) {
+                        floor->setGrime(QLatin1String("WallW"), x, y, grimeTileName2);
+                    }
+                    else if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallN,
+                                           squareV1, BuildingFloorV1::Square::SquareSection::SectionWall2)) {
+                        // North wall is higher than the west wall, which is reverse of the new way.
+                        floor->setGrime(QLatin1String("WallN"), x, y, grimeTileName2);
+                    }
+                    else if (squareV1.mEntries[BuildingFloorV1::Square::SquareSection::SectionWall2] == nullptr) {
+                        floor->setGrime(QLatin1String("WallN"), x, y, grimeTileName2);
+                    }
+                    else {
+                        floor->setGrime(QLatin1String("WallW"), x, y, grimeTileName2);
+                    }
+                }
+            }
+        }
+    }
 }

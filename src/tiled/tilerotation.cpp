@@ -247,12 +247,30 @@ public:
         }
     }
 
-    Tile *tileFor(const QString &tilesetName, int tileID)
+    Tile *tileFor(const QString &tilesetNameR, int tileID)
     {
-        Tileset* tileset = geOrCreateFakeTileset(tilesetName);
+        Tileset* tileset = getOrCreateFakeTileset(tilesetNameR);
         if (tileset == nullptr)
             return nullptr;
         return tileset->tileAt(tileID);
+    }
+
+    bool hasTileRotated(const QString &tilesetName, int tileID)
+    {
+        if (mTilesetByNameRotated.contains(tilesetName)) {
+            if (TileRotated *tileR = mTilesetByNameRotated[tilesetName]->tileAt(tileID)) {
+                return tileR->mVisual != nullptr;
+            }
+            return false;
+        }
+        QString tilesetNameR = tilesetName + QLatin1Literal("_R0");
+        if (mTilesetByNameRotated.contains(tilesetNameR)) {
+            if (TileRotated *tileR = mTilesetByNameRotated[tilesetNameR]->tileAt(tileID)) {
+                return tileR->mVisual != nullptr;
+            }
+            return false;
+        }
+        return false;
     }
 
     void reload()
@@ -264,25 +282,25 @@ public:
         // Don't delete mTilesetRotated, they may be in use.
     }
 
-    Tileset* geOrCreateFakeTileset(const QString tilesetName)
+    Tileset* getOrCreateFakeTileset(const QString tilesetNameR)
     {
-        if (!tilesetName.contains(QLatin1Literal("_R")))
+        if (!tilesetNameR.contains(QLatin1Literal("_R")))
             return nullptr;
-        if (mTilesetByNameRotated.contains(tilesetName) == false) {
+        if (mTilesetByNameRotated.contains(tilesetNameR) == false) {
             return nullptr;
         }
-        Tileset *tileset = mFakeTilesets[tilesetName];
+        Tileset *tileset = mFakeTilesets[tilesetNameR];
         if (tileset == nullptr) {
-            tileset = new Tileset(tilesetName, 64, 128);
-            tileset->loadFromNothing(QSize(64 * 8, 128 * 16), tilesetName + QLatin1Literal(".png"));
-            mFakeTilesets[tilesetName] = tileset;
+            tileset = new Tileset(tilesetNameR, 64, 128);
+            tileset->loadFromNothing(QSize(64 * 8, 128 * 16), tilesetNameR + QLatin1Literal(".png"));
+            mFakeTilesets[tilesetNameR] = tileset;
         }
         return tileset;
     }
 
-    Tileset* geOrCreateFakeTileset(TilesetRotated* tilesetR)
+    Tileset* getOrCreateFakeTileset(TilesetRotated* tilesetR)
     {
-        return geOrCreateFakeTileset(tilesetR->nameRotated());
+        return getOrCreateFakeTileset(tilesetR->nameRotated());
     }
 
     TileRotation& mOuter;
@@ -386,6 +404,11 @@ Tile *TileRotation::tileFor(const QString &tilesetName, int tileID)
     return mPrivate->tileFor(tilesetName, tileID);
 }
 
+bool TileRotation::hasTileRotated(const QString &tilesetName, int tileID)
+{
+    return mPrivate->hasTileRotated(tilesetName, tileID);
+}
+
 void TileRotation::rotateTile(Tile *tile, MapRotation viewRotation, QVector<Tiled::ZTileRenderInfo>& tileInfos)
 {
     mPrivate->rotateTile(tile, viewRotation, tileInfos);
@@ -417,7 +440,7 @@ TileRotated *TileRotation::rotatedTileFor(Tile *tileR)
 
 Tileset *TileRotation::rotatedTilesetFor(TilesetRotated *tilesetR)
 {
-    return mPrivate->geOrCreateFakeTileset(tilesetR);
+    return mPrivate->getOrCreateFakeTileset(tilesetR);
 }
 
 static bool isRotatedTilesetName(const QString& tilesetName)

@@ -1,0 +1,286 @@
+/*
+ * buildingfloorV1.h
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef BUILDINGFLOORV1_H
+#define BUILDINGFLOORV1_H
+
+#include <QHash>
+#include <QList>
+#include <QMap>
+#include <QRegion>
+#include <QString>
+#include <QStringList>
+#include <QVector>
+
+namespace BuildingEditor {
+
+class BuildingObject;
+class Building;
+class BuildingFloor;
+class BuildingTile;
+class BuildingTileEntry;
+class Door;
+class FloorTileGrid;
+class FloorType;
+class FurnitureObject;
+class FurnitureTile;
+class RoofObject;
+class Room;
+class Stairs;
+class Window;
+
+class BuildingFloorV1
+{
+public:
+
+    class Square
+    {
+    public:
+        // The order must match buildingmap.cpp:gLayerNames[]
+        enum SquareSection
+        {
+            SectionInvalid = -1,
+            SectionFloor,
+            SectionFloorGrime,
+            SectionFloorGrime2,
+            SectionWall,
+            SectionWallTrim,
+            SectionWall2,
+            SectionWallTrim2,
+            SectionRoofCap,
+            SectionRoofCap2,
+            SectionWallOverlay, // West, North walls
+            SectionWallOverlay2, // West, North walls
+            SectionWallGrime,
+            SectionWallGrime2,
+            SectionWallFurniture, // West, North walls
+            SectionWallFurniture2, // West, North walls
+            SectionFrame,
+            SectionDoor,
+            SectionWindow,
+            SectionCurtains, // West, North windows
+            SectionFurniture,
+            SectionFurniture2,
+            SectionFurniture3,
+            SectionFurniture4,
+            SectionCurtains2, // East, South windows
+            SectionWallFurniture3, // East, South walls
+            SectionWallFurniture4, // East, South walls
+            SectionWallOverlay3, // East, South walls
+            SectionWallOverlay4, // East, South walls
+            SectionRoof,
+            SectionRoof2,
+            SectionRoofTop,
+            MaxSection
+        };
+
+        enum WallOrientation
+        {
+            WallOrientInvalid = -1,
+            WallOrientN,
+            WallOrientW,
+            WallOrientNW,
+            WallOrientSE
+        };
+
+        Square();
+        ~Square();
+
+        QVector<BuildingTileEntry*> mEntries;
+        QVector<int> mEntryEnum;
+        WallOrientation mWallOrientation;
+        bool mExterior;
+        QVector<BuildingTile*> mTiles;
+
+        struct WallInfo {
+            WallInfo() :
+                entry(0), trim(0), furniture(0), furnitureBldgTile(0)
+            {}
+            BuildingTileEntry *entry;
+            BuildingTileEntry *trim;
+            FurnitureTile *furniture;
+            BuildingTile *furnitureBldgTile;
+        } mWallN, mWallW;
+
+        void SetWallN(BuildingTileEntry *tile);
+        void SetWallW(BuildingTileEntry *tile);
+        void SetWallN(FurnitureTile *ftile, BuildingTile *btile);
+        void SetWallW(FurnitureTile *ftile, BuildingTile *btile);
+        void SetWallTrimN(BuildingTileEntry *tile);
+        void SetWallTrimW(BuildingTileEntry *tile);
+
+        bool IsWallOrient(WallOrientation orient);
+
+        void ReplaceFloor(BuildingTileEntry *tile, int offset);
+        void ReplaceWall(BuildingTileEntry *tile, WallOrientation orient);
+        void ReplaceDoor(BuildingTileEntry *tile, int offset);
+        void ReplaceFrame(BuildingTileEntry *tile, int offset);
+        void ReplaceWindow(BuildingTileEntry *tile, int offset);
+        void ReplaceCurtains(Window *window, bool exterior);
+        void ReplaceShutters(Window *window, bool first);
+        void ReplaceFurniture(BuildingTileEntry *tile, int offset = 0);
+        void ReplaceFurniture(BuildingTile *btile, SquareSection sectionMin,
+                              SquareSection sectionMax);
+        void ReplaceRoof(BuildingTileEntry *tile, int offset = 0);
+        void ReplaceRoofCap(BuildingTileEntry *tile, int offset = 0);
+        void ReplaceRoofTop(BuildingTileEntry *tile, int offset);
+        void ReplaceFloorGrime(BuildingTileEntry *grimeTile);
+        void ReplaceWallGrime(BuildingTileEntry *grimeTile, const QString &userTileWalls, const QString &userTileWalls2);
+        void ReplaceWallTrim();
+
+        int getWallOffset();
+    };
+
+    QVector<QVector<Square> > squares;
+
+    BuildingFloorV1(Building *building, int level);
+    ~BuildingFloorV1();
+
+    void setLevel(int level)
+    { mLevel = level; }
+
+    Building *building() const
+    { return mBuilding; }
+
+    BuildingFloor *floorAbove() const;
+    BuildingFloor *floorBelow() const;
+
+    bool isTopFloor() const;
+    bool isBottomFloor() const;
+
+    void insertObject(int index, BuildingObject *object);
+    BuildingObject *removeObject(int index);
+
+    int indexOf(BuildingObject *object)
+    { return mObjects.indexOf(object); }
+
+    BuildingObject *object(int index) const
+    { return mObjects.at(index); }
+
+    const QList<BuildingObject*> &objects() const
+    { return mObjects; }
+
+    int objectCount() const
+    { return mObjects.size(); }
+
+    BuildingObject *objectAt(int x, int y);
+
+    inline BuildingObject *objectAt(const QPoint &pos)
+    { return objectAt(pos.x(), pos.y()); }
+
+    Door *GetDoorAt(int x, int y);
+    Window *GetWindowAt(int x, int y);
+    Stairs *GetStairsAt(int x, int y);
+    FurnitureObject *GetFurnitureAt(int x, int y);
+
+    void SetRoomAt(int x, int y, Room *room);
+
+    inline void SetRoomAt(const QPoint &pos, Room *room)
+    { SetRoomAt(pos.x(), pos.y(), room); }
+
+    Room *GetRoomAt(const QPoint &pos);
+    Room *GetRoomAt(int x, int y)
+    { return GetRoomAt(QPoint(x, y)); }
+
+    void setGrid(const QVector<QVector<Room*> > &grid);
+
+    const QVector<QVector<Room*> > &grid() const
+    { return mRoomAtPos; }
+
+    void LayoutToSquares();
+
+    int width() const;
+    int height() const;
+
+    QRect bounds(int dw = 0, int dh = 0) const;
+
+    int level() const
+    { return mLevel; }
+
+    bool contains(int x, int y, int dw = 0, int dh = 0);
+    bool contains(const QPoint &p, int dw = 0, int dh = 0);
+
+    QVector<QRect> roomRegion(Room *room);
+
+    QVector<QVector<Room*> > resizeGrid(const QSize &newSize) const;
+    QMap<QString,FloorTileGrid*> resizeGrime(const QSize &newSize) const;
+
+    void rotate(bool right);
+    void flip(bool horizontal);
+
+#if 0
+    BuildingFloor *clone();
+#endif
+
+    const QMap<QString,FloorTileGrid*> &grime() const
+    { return mGrimeGrid; }
+
+    QStringList grimeLayers() const
+    { return mGrimeGrid.keys(); }
+
+    QString grimeAt(const QString &layerName, int x, int y) const;
+    FloorTileGrid *grimeAt(const QString &layerName, const QRect &r);
+    FloorTileGrid *grimeAt(const QString &layerName, const QRect &r, const QRegion &rgn);
+
+    QMap<QString,FloorTileGrid*> grimeClone() const;
+
+    QMap<QString,FloorTileGrid*> setGrime(const QMap<QString,FloorTileGrid*> &grime);
+    void setGrime(const QString &layerName, int x, int y, const QString &tileName);
+    void setGrime(const QString &layerName, const QPoint &p, const FloorTileGrid *other);
+    void setGrime(const QString &layerName, const QRegion &rgn, const QString &tileName);
+    void setGrime(const QString &layerName, const QRegion &rgn, const QPoint &pos, const FloorTileGrid *other);
+
+    bool hasUserTiles() const;
+    bool hasUserTiles(const QString &layerName);
+
+    void setLayerOpacity(const QString &layerName, qreal opacity)
+    { mLayerOpacity[layerName] = opacity; }
+
+    qreal layerOpacity(const QString &layerName) const
+    {
+        if (mLayerOpacity.contains(layerName))
+            return mLayerOpacity[layerName];
+        return 1.0f;
+    }
+
+    void setLayerVisibility(const QString &layerName, bool visible)
+    { mLayerVisibility[layerName] = visible; }
+
+    bool layerVisibility(const QString &layerName) const
+    {
+        if (mLayerVisibility.contains(layerName))
+            return mLayerVisibility[layerName];
+        return 1.0f;
+    }
+
+private:
+    Building *mBuilding;
+    QVector<QVector<Room*> > mRoomAtPos;
+    QVector<QVector<int> > mIndexAtPos;
+    int mLevel;
+    QList<BuildingObject*> mObjects;
+    QMap<QString,FloorTileGrid*> mGrimeGrid;
+    QMap<QString,qreal> mLayerOpacity;
+    QMap<QString,bool> mLayerVisibility;
+    QList<RoofObject*> mFlatRoofsWithDepthThree;
+    QList<Stairs*> mStairs;
+};
+
+} // namespace BuildingEditor
+
+#endif // BUILDINGFLOORV1_H
+

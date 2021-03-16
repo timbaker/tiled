@@ -326,6 +326,10 @@ bool CompositeLayerGroup::orderedTilesAt(const MapRenderer *renderer, const QPoi
     opacities.resize(0);
     orderedCellsAt(renderer, point, cells, opacities);
 
+    if (point.x() ==14 && point.y() == 20) {
+        int dbg = 1;
+    }
+
     tileInfos.clear();
 
     for (int i = 0; i < cells.size(); i++) {
@@ -669,11 +673,55 @@ bool CompositeLayerGroup::setLayerNonEmpty(TileLayer *tl, bool force)
     return mNeedsSynch;
 }
 
+static ZTileRenderOrder viewRenderOrder(ZTileRenderOrder unRotatedOrder, MapRotation viewRotation)
+{
+    if (true)
+        return unRotatedOrder;
+
+    int vi = int(viewRotation);
+    int ui = -1;
+
+    switch (unRotatedOrder) {
+    case ZTileRenderOrder::NorthWall:
+        ui = int(MapRotation::NotRotated);
+        break;
+    case ZTileRenderOrder::EastWall:
+        ui = int(MapRotation::Clockwise90);
+        break;
+    case ZTileRenderOrder::SouthWall:
+        ui = int(MapRotation::Clockwise180);
+        break;
+    case ZTileRenderOrder::WestWall:
+        ui = int(MapRotation::Clockwise270);
+        break;
+    default:
+        return unRotatedOrder; // West
+    }
+
+    int i = (vi + ui) % MAP_ROTATION_COUNT;
+    switch (i) {
+    case 0:
+        return ZTileRenderOrder::NorthWall;
+    case 1:
+        return ZTileRenderOrder::EastWall;
+    case 2:
+        return ZTileRenderOrder::SouthWall;
+    case 3:
+        return ZTileRenderOrder::WestWall;
+    default:
+        Q_ASSERT(false);
+        return unRotatedOrder;
+    }
+}
+
 void CompositeLayerGroup::sortForRendering(const MapRenderer *renderer, QVector<ZTileRenderInfo> &tileInfo) const
 {
     if (renderer->rotation() == MapRotation::NotRotated) {
         return;
     }
+
+    // We know which edge each tile is on in the *un-rotated* view.
+
 
     int size = tileInfo.size();
     QVector<ZTileRenderInfo> sorted(size);
@@ -682,7 +730,7 @@ void CompositeLayerGroup::sortForRendering(const MapRenderer *renderer, QVector<
     // West Wall Lowest -> Highest
     for (int i = 0; i < size; i++) {
         const ZTileRenderInfo& tri = tileInfo[i];
-        switch (tri.mOrder) {
+        switch (viewRenderOrder(tri.mOrder, renderer->rotation())) {
         case ZTileRenderOrder::WestWall:
             sorted += tri;
             break;
@@ -694,7 +742,7 @@ void CompositeLayerGroup::sortForRendering(const MapRenderer *renderer, QVector<
     // North Wall Lowest -> Highest
     for (int i = 0; i < size; i++) {
         const ZTileRenderInfo& tri = tileInfo[i];
-        switch (tri.mOrder) {
+        switch (viewRenderOrder(tri.mOrder, renderer->rotation())) {
         case ZTileRenderOrder::NorthWall:
             sorted += tri;
             break;
@@ -706,7 +754,7 @@ void CompositeLayerGroup::sortForRendering(const MapRenderer *renderer, QVector<
     // Non-walls
     for (int i = 0; i < size; i++) {
         const ZTileRenderInfo& tri = tileInfo[i];
-        switch (tri.mOrder) {
+        switch (viewRenderOrder(tri.mOrder, renderer->rotation())) {
         case ZTileRenderOrder::West:
             sorted += tri;
             break;
@@ -718,7 +766,7 @@ void CompositeLayerGroup::sortForRendering(const MapRenderer *renderer, QVector<
     // East Wall Highest -> lowest
     for (int i = size - 1; i >= 0; i--) {
         const ZTileRenderInfo& tri = tileInfo[i];
-        switch (tri.mOrder) {
+        switch (viewRenderOrder(tri.mOrder, renderer->rotation())) {
         case ZTileRenderOrder::EastWall:
             sorted += tri;
             break;
@@ -730,7 +778,7 @@ void CompositeLayerGroup::sortForRendering(const MapRenderer *renderer, QVector<
     // Highest -> lowest
     for (int i = size - 1; i >= 0; i--) {
         const ZTileRenderInfo& tri = tileInfo[i];
-        switch (tri.mOrder) {
+        switch (viewRenderOrder(tri.mOrder, renderer->rotation())) {
         case ZTileRenderOrder::SouthWall:
             sorted += tri;
             break;

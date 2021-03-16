@@ -127,6 +127,7 @@ public:
         SectionFurniture2,
         SectionFurniture3,
         SectionFurniture4,
+        // East and south are reverse order of the north and west
         SectionCurtainsE,
         SectionCurtainsS,
         SectionWindowE,

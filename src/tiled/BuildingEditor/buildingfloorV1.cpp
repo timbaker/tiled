@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, Tim Baker <treectrl@users.sf.net>
+ * buildingfloorV1.cpp
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -15,9 +15,10 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "buildingfloor.h"
+#include "buildingfloorV1.h"
 
 #include "building.h"
+#include "buildingfloor.h"
 #include "buildingobjects.h"
 #include "buildingtemplates.h"
 #include "buildingtiles.h"
@@ -30,199 +31,13 @@
 // Suddenly I'm getting a 'multiply-defined symbol' error.
 // I found the solution here:
 // http://www.archivum.info/qt-interest@trolltech.com/2005-12/00242/RE-Linker-Problem-while-using-QMap.html
+template class __declspec(dllimport) QMap<QString, QString>;
 template class __declspec(dllimport) QVector<QVector<int> >;
 #endif
 
 using namespace BuildingEditor;
 
-/////
-
-FloorTileGrid::FloorTileGrid(int width, int height) :
-    mWidth(width),
-    mHeight(height),
-    mCount(0),
-    mUseVector(false)
-{
-}
-
-const QString &FloorTileGrid::at(int index) const
-{
-    if (mUseVector)
-        return mCellsVector[index];
-    QHash<int,QString>::const_iterator it = mCells.find(index);
-    if (it != mCells.end())
-        return *it;
-    return mEmptyCell;
-}
-
-void FloorTileGrid::replace(int index, const QString &tile)
-{
-    if (mUseVector) {
-        if (!mCellsVector[index].isEmpty() && tile.isEmpty()) mCount--;
-        if (mCellsVector[index].isEmpty() && !tile.isEmpty()) mCount++;
-        mCellsVector[index] = tile;
-        return;
-    }
-    QHash<int,QString>::iterator it = mCells.find(index);
-    if (it == mCells.end()) {
-        if (tile.isEmpty())
-            return;
-        mCells.insert(index, tile);
-        mCount++;
-    } else if (!tile.isEmpty()) {
-        (*it) = tile;
-        mCount++;
-    } else {
-        mCells.erase(it);
-        mCount--;
-    }
-    if (mCells.size() > 300 * 300 / 3)
-        swapToVector();
-}
-
-void FloorTileGrid::replace(int x, int y, const QString &tile)
-{
-    Q_ASSERT(contains(x, y));
-    replace(y * mWidth + x, tile);
-}
-
-bool FloorTileGrid::replace(const QString &tile)
-{
-    bool changed = false;
-    for (int x = 0; x < mWidth; x++) {
-        for (int y = 0; y < mHeight; y++) {
-            if (at(x, y) != tile) {
-                replace(x, y, tile);
-                changed = true;
-            }
-        }
-    }
-    return changed;
-}
-
-bool FloorTileGrid::replace(const QRegion &rgn, const QString &tile)
-{
-    bool changed = false;
-    foreach (QRect r2, rgn.rects()) {
-        r2 &= bounds();
-        for (int x = r2.left(); x <= r2.right(); x++) {
-            for (int y = r2.top(); y <= r2.bottom(); y++) {
-                if (at(x, y) != tile) {
-                    replace(x, y, tile);
-                    changed = true;
-                }
-            }
-        }
-    }
-    return changed;
-}
-
-bool FloorTileGrid::replace(const QRegion &rgn, const QPoint &p,
-                            const FloorTileGrid *other)
-{
-    Q_ASSERT(other->bounds().translated(p).contains(rgn.boundingRect()));
-    bool changed = false;
-    foreach (QRect r2, rgn.rects()) {
-        r2 &= bounds();
-        for (int x = r2.left(); x <= r2.right(); x++) {
-            for (int y = r2.top(); y <= r2.bottom(); y++) {
-                QString tile = other->at(x - p.x(), y - p.y());
-                if (at(x, y) != tile) {
-                    replace(x, y, tile);
-                    changed = true;
-                }
-            }
-        }
-    }
-    return changed;
-}
-
-bool FloorTileGrid::replace(const QRect &r, const QString &tile)
-{
-    bool changed = false;
-    for (int x = r.left(); x <= r.right(); x++) {
-        for (int y = r.top(); y <= r.bottom(); y++) {
-            if (at(x, y) != tile) {
-                replace(x, y, tile);
-                changed = true;
-            }
-        }
-    }
-    return changed;
-}
-
-bool FloorTileGrid::replace(const QPoint &p, const FloorTileGrid *other)
-{
-    const QRect r = other->bounds().translated(p) & bounds();
-    bool changed = false;
-    for (int x = r.left(); x <= r.right(); x++) {
-        for (int y = r.top(); y <= r.bottom(); y++) {
-            QString tile = other->at(x - p.x(), y - p.y());
-            if (at(x, y) != tile) {
-                replace(x, y, tile);
-                changed = true;
-            }
-        }
-    }
-    return changed;
-}
-
-void FloorTileGrid::clear()
-{
-    if (mUseVector)
-        mCellsVector.fill(mEmptyCell);
-    else
-        mCells.clear();
-    mCount = 0;
-}
-
-FloorTileGrid *FloorTileGrid::clone()
-{
-    return new FloorTileGrid(*this);
-}
-
-FloorTileGrid *FloorTileGrid::clone(const QRect &r)
-{
-    FloorTileGrid *klone = new FloorTileGrid(r.width(), r.height());
-    const QRect r2 = r & bounds();
-    for (int x = r2.left(); x <= r2.right(); x++) {
-        for (int y = r2.top(); y <= r2.bottom(); y++) {
-            klone->replace(x - r.x(), y - r.y(), at(x, y));
-        }
-    }
-    return klone;
-}
-
-FloorTileGrid *FloorTileGrid::clone(const QRect &r, const QRegion &rgn)
-{
-    FloorTileGrid *klone = new FloorTileGrid(r.width(), r.height());
-    foreach (QRect r2, rgn.rects()) {
-        r2 &= bounds() & r;
-        for (int x = r2.left(); x <= r2.right(); x++) {
-            for (int y = r2.top(); y <= r2.bottom(); y++) {
-                klone->replace(x - r.x(), y - r.y(), at(x, y));
-            }
-        }
-    }
-    return klone;
-}
-
-void FloorTileGrid::swapToVector()
-{
-    Q_ASSERT(!mUseVector);
-    mCellsVector.resize(size());
-    QHash<int,QString>::const_iterator it = mCells.begin();
-    while (it != mCells.end()) {
-        mCellsVector[it.key()] = (*it);
-        ++it;
-    }
-    mCells.clear();
-    mUseVector = true;
-}
-
-/////
-
-BuildingFloor::BuildingFloor(Building *building, int level) :
+BuildingFloorV1::BuildingFloorV1(Building *building, int level) :
     mBuilding(building),
     mLevel(level)
 {
@@ -235,42 +50,51 @@ BuildingFloor::BuildingFloor(Building *building, int level) :
         mRoomAtPos[x].resize(h);
         mIndexAtPos[x].resize(h);
         for (int y = 0; y < h; y++) {
-            mRoomAtPos[x][y] = nullptr;
+            mRoomAtPos[x][y] = 0;
+        }
+    }
+
+    // Copy stuff from the real floor
+    BuildingFloor *floor = building->floor(level);
+    mObjects = floor->objects();
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            SetRoomAt(x, y, floor->GetRoomAt(x, y));
         }
     }
 }
 
-BuildingFloor::~BuildingFloor()
+BuildingFloorV1::~BuildingFloorV1()
 {
-    qDeleteAll(mObjects);
+//    qDeleteAll(mObjects);
 }
 
-BuildingFloor *BuildingFloor::floorAbove() const
+BuildingFloor *BuildingFloorV1::floorAbove() const
 {
-    return isTopFloor() ? nullptr : mBuilding->floor(mLevel + 1);
+    return isTopFloor() ? 0 : mBuilding->floor(mLevel + 1);
 }
 
-BuildingFloor *BuildingFloor::floorBelow() const
+BuildingFloor *BuildingFloorV1::floorBelow() const
 {
-    return isBottomFloor() ? nullptr : mBuilding->floor(mLevel - 1);
+    return isBottomFloor() ? 0 : mBuilding->floor(mLevel - 1);
 }
 
-bool BuildingFloor::isTopFloor() const
+bool BuildingFloorV1::isTopFloor() const
 {
     return mLevel == mBuilding->floorCount() - 1;
 }
 
-bool BuildingFloor::isBottomFloor() const
+bool BuildingFloorV1::isBottomFloor() const
 {
     return mLevel == 0;
 }
 
-void BuildingFloor::insertObject(int index, BuildingObject *object)
+void BuildingFloorV1::insertObject(int index, BuildingObject *object)
 {
     mObjects.insert(index, object);
 }
 
-BuildingObject *BuildingFloor::removeObject(int index)
+BuildingObject *BuildingFloorV1::removeObject(int index)
 {
     BuildingObject *object = mObjects.takeAt(index);
     if (RoofObject *ro = object->asRoof())
@@ -280,26 +104,25 @@ BuildingObject *BuildingFloor::removeObject(int index)
     return object;
 }
 
-BuildingObject *BuildingFloor::objectAt(int x, int y)
+BuildingObject *BuildingFloorV1::objectAt(int x, int y)
 {
     foreach (BuildingObject *object, mObjects)
         if (object->bounds().contains(x, y))
             return object;
-    return nullptr;
+    return 0;
 }
 
-void BuildingFloor::setGrid(const QVector<QVector<Room *> > &grid)
+void BuildingFloorV1::setGrid(const QVector<QVector<Room *> > &grid)
 {
     mRoomAtPos = grid;
 
     mIndexAtPos.resize(mRoomAtPos.size());
-    for (int x = 0; x < mIndexAtPos.size(); x++) {
+    for (int x = 0; x < mIndexAtPos.size(); x++)
         mIndexAtPos[x].resize(mRoomAtPos[x].size());
-    }
 }
 
 static void ReplaceRoofSlope(RoofObject *ro, const QRect &r,
-                             QVector<QVector<BuildingSquare> > &squares,
+                             QVector<QVector<BuildingFloorV1::Square> > &squares,
                              RoofObject::RoofTile tile)
 {
     if (r.isEmpty()) return;
@@ -307,27 +130,23 @@ static void ReplaceRoofSlope(RoofObject *ro, const QRect &r,
     QPoint tileOffset = ro->slopeTiles()->offset(offset);
     QRect bounds(0, 0, squares.size(), squares[0].size());
     QRect rOffset = r.translated(tileOffset) & bounds;
-    for (int x = rOffset.left(); x <= rOffset.right(); x++) {
-        for (int y = rOffset.top(); y <= rOffset.bottom(); y++) {
+    for (int x = rOffset.left(); x <= rOffset.right(); x++)
+        for (int y = rOffset.top(); y <= rOffset.bottom(); y++)
             squares[x][y].ReplaceRoof(ro->slopeTiles(), offset);
-        }
-    }
 }
 
 static void ReplaceRoofSlope(RoofObject *ro, const QRect &r,
                            const QVector<RoofObject::RoofTile> &tiles,
-                           QVector<QVector<BuildingSquare> > &squares)
+                           QVector<QVector<BuildingFloorV1::Square> > &squares)
 {
     if (tiles.isEmpty()) return;
-    for (int y = r.top(); y <= r.bottom(); y++) {
-        for (int x = r.left(); x <= r.right(); x++) {
+    for (int y = r.top(); y <= r.bottom(); y++)
+        for (int x = r.left(); x <= r.right(); x++)
             ReplaceRoofSlope(ro, QRect(x, y, 1, 1), squares, tiles.at(x - r.left() + (y - r.top()) * r.width()));
-        }
-    }
 }
 
 static void ReplaceRoofGap(RoofObject *ro, const QRect &r,
-                           QVector<QVector<BuildingSquare> > &squares,
+                           QVector<QVector<BuildingFloorV1::Square> > &squares,
                            RoofObject::RoofTile tile)
 {
     if (r.isEmpty()) return;
@@ -335,40 +154,35 @@ static void ReplaceRoofGap(RoofObject *ro, const QRect &r,
     QPoint tileOffset = ro->capTiles()->offset(offset);
     QRect bounds(0, 0, squares.size(), squares[0].size());
     QRect rOffset = r.translated(tileOffset) & bounds;
-    for (int x = rOffset.left(); x <= rOffset.right(); x++) {
-        for (int y = rOffset.top(); y <= rOffset.bottom(); y++) {
+    for (int x = rOffset.left(); x <= rOffset.right(); x++)
+        for (int y = rOffset.top(); y <= rOffset.bottom(); y++)
             squares[x][y].ReplaceRoofCap(ro->capTiles(), offset);
-        }
-    }
 }
 
 static void ReplaceRoofCap(RoofObject *ro, int x, int y,
-                           QVector<QVector<BuildingSquare> > &squares,
+                           QVector<QVector<BuildingFloorV1::Square> > &squares,
                            RoofObject::RoofTile tile)
 {
     int offset = ro->getOffset(tile);
     QPoint tileOffset = ro->capTiles()->offset(offset);
     QRect bounds(0, 0, squares.size(), squares[0].size());
     QPoint p = QPoint(x, y) + tileOffset;
-    if (bounds.contains(p)) {
+    if (bounds.contains(p))
         squares[p.x()][p.y()].ReplaceRoofCap(ro->capTiles(), offset);
-    }
 }
 
 static void ReplaceRoofCap(RoofObject *ro, const QRect &r,
                            const QVector<RoofObject::RoofTile> &tiles,
-                           QVector<QVector<BuildingSquare> > &squares)
+                           QVector<QVector<BuildingFloorV1::Square> > &squares)
 {
     if (tiles.isEmpty()) return;
-    for (int y = r.top(); y <= r.bottom(); y++) {
-        for (int x = r.left(); x <= r.right(); x++) {
+    for (int y = r.top(); y <= r.bottom(); y++)
+        for (int x = r.left(); x <= r.right(); x++)
             ReplaceRoofCap(ro, x, y, squares, tiles.at(x - r.left() + (y - r.top()) * r.width()));
-        }
-    }
 }
 
 static void ReplaceRoofTop(RoofObject *ro, const QRect &r,
-                           QVector<QVector<BuildingSquare> > &squares)
+                           QVector<QVector<BuildingFloorV1::Square> > &squares)
 {
     if (r.isEmpty()) return;
     int offset = 0;
@@ -383,94 +197,73 @@ static void ReplaceRoofTop(RoofObject *ro, const QRect &r,
     QPoint tileOffset = ro->topTiles()->offset(offset);
     QRect bounds(0, 0, squares.size(), squares[0].size());
     QRect rOffset = r.translated(tileOffset) & bounds;
-    for (int x = rOffset.left(); x <= rOffset.right(); x++) {
-        for (int y = rOffset.top(); y <= rOffset.bottom(); y++) {
+    for (int x = rOffset.left(); x <= rOffset.right(); x++)
+        for (int y = rOffset.top(); y <= rOffset.bottom(); y++)
             (ro->depth() == RoofObject::Zero || ro->depth() == RoofObject::Three)
                 ? squares[x][y].ReplaceFloor(ro->topTiles(), offset)
                 : squares[x][y].ReplaceRoofTop(ro->topTiles(), offset);
-        }
-    }
 }
 
 static void ReplaceRoofCorner(RoofObject *ro, int x, int y,
-                              QVector<QVector<BuildingSquare> > &squares,
+                              QVector<QVector<BuildingFloorV1::Square> > &squares,
                               RoofObject::RoofTile tile)
 {
     int offset = ro->getOffset(tile);
     QPoint tileOffset = ro->slopeTiles()->offset(offset);
     QRect bounds(0, 0, squares.size(), squares[0].size());
     QPoint p = QPoint(x, y) + tileOffset;
-    if (bounds.contains(p)) {
+    if (bounds.contains(p))
         squares[p.x()][p.y()].ReplaceRoof(ro->slopeTiles(), offset);
-    }
 }
 
 static void ReplaceRoofCorner(RoofObject *ro, const QRect &r,
                               const QVector<RoofObject::RoofTile> &tiles,
-                              QVector<QVector<BuildingSquare> > &squares)
+                              QVector<QVector<BuildingFloorV1::Square> > &squares)
 {
     if (tiles.isEmpty()) return;
-    for (int y = r.top(); y <= r.bottom(); y++) {
+    for (int y = r.top(); y <= r.bottom(); y++)
         for (int x = r.left(); x <= r.right(); x++) {
             RoofObject::RoofTile tile = tiles.at(x - r.left() + (y - r.top()) * r.width());
             if (tile != RoofObject::TileCount)
                 ReplaceRoofCorner(ro, x, y, squares, tile);
         }
-    }
 }
 
 static void ReplaceFurniture(int x, int y,
-                             QVector<QVector<BuildingSquare> > &squares,
+                             QVector<QVector<BuildingFloorV1::Square> > &squares,
                              BuildingTile *btile,
-                             BuildingSquare::SquareSection sectionMin,
-                             BuildingSquare::SquareSection sectionMax,
+                             BuildingFloorV1::Square::SquareSection sectionMin,
+                             BuildingFloorV1::Square::SquareSection sectionMax,
                              int dw = 0, int dh = 0)
 {
     if (!btile)
         return;
     Q_ASSERT(dw <= 1 && dh <= 1);
     QRect bounds(0, 0, squares.size() - 1 + dw, squares[0].size() - 1 + dh);
-    if (bounds.contains(x, y)) {
+    if (bounds.contains(x, y))
         squares[x][y].ReplaceFurniture(btile, sectionMin, sectionMax);
-    }
 }
 
-static void ReplaceDoor(Door *door, QVector<QVector<BuildingSquare> > &squares)
+static void ReplaceDoor(Door *door, QVector<QVector<BuildingFloorV1::Square> > &squares)
 {
     int x = door->x(), y = door->y();
     QRect bounds(0, 0, squares.size(), squares[0].size());
     if (bounds.contains(x, y)) {
         squares[x][y].ReplaceDoor(door->tile(),
-                                  door->isW() ? BuildingSquare::SquareSection::SectionDoorW
-                                              : BuildingSquare::SquareSection::SectionDoorN,
                                   door->isW() ? BTC_Doors::West
                                               : BTC_Doors::North);
         squares[x][y].ReplaceFrame(door->frameTile(),
                                    door->isW() ? BTC_DoorFrames::West
                                                : BTC_DoorFrames::North);
-        if (door->isN() && (y > 0)) {
-            BuildingSquare& squareN = squares[x][y - 1];
-            if (squareN.mWallS.type != BuildingSquare::WallType::Invalid) {
-                squareN.mEntryEnum[BuildingSquare::SquareSection::SectionWallS] = squareN.getWallOffset(squareN.mWallS, BuildingSquare::SquareSection::SectionWallS);
-            }
-        }
-        if (door->isW() && (x > 0)) {
-            BuildingSquare& squareW = squares[x - 1][y];
-            if (squareW.mWallE.type != BuildingSquare::WallType::Invalid) {
-                squareW.mEntryEnum[BuildingSquare::SquareSection::SectionWallE] = squareW.getWallOffset(squareW.mWallE, BuildingSquare::SquareSection::SectionWallE);
-            }
-        }
     }
 }
 
-static void ReplaceWindow(Window *window, QVector<QVector<BuildingSquare> > &squares)
+static void ReplaceWindow(Window *window, QVector<QVector<BuildingFloorV1::Square> > &squares)
 {
     int x = window->x(), y = window->y();
     QRect bounds(0, 0, squares.size(), squares[0].size());
     if (bounds.contains(x, y)) {
         squares[x][y].ReplaceWindow(window->tile(),
-                                    window->isW() ? BuildingSquare::SquareSection::SectionWindowW
-                                                : BuildingSquare::SquareSection::SectionWindowN,
                                     window->isW() ? BTC_Windows::West
                                                   : BTC_Windows::North);
 
@@ -479,16 +272,10 @@ static void ReplaceWindow(Window *window, QVector<QVector<BuildingSquare> > &squ
         if (squares[x][y].mExterior) {
             int dx = window->isW() ? 1 : 0;
             int dy = window->isN() ? 1 : 0;
-            if ((x - dx >= 0) && (y - dy >= 0)) {
-                squares[x - dx][y - dy].ReplaceCurtains(window,
-                                                        dx ? BuildingSquare::SquareSection::SectionCurtainsE
-                                                           : BuildingSquare::SquareSection::SectionCurtainsS);
-            }
-        } else {
-            squares[x][y].ReplaceCurtains(window, window->isW()
-                                          ? BuildingSquare::SquareSection::SectionCurtainsW
-                                          : BuildingSquare::SquareSection::SectionCurtainsN);
-        }
+            if ((x - dx >= 0) && (y - dy >= 0))
+                squares[x - dx][y - dy].ReplaceCurtains(window, true);
+        } else
+            squares[x][y].ReplaceCurtains(window, false);
 
         if (squares[x][y].mExterior) {
             if (window->isN()) {
@@ -509,64 +296,28 @@ static void ReplaceWindow(Window *window, QVector<QVector<BuildingSquare> > &squ
         } else {
 
         }
-
-        if (window->isN() && (y > 0)) {
-            BuildingSquare& squareN = squares[x][y - 1];
-            if (squareN.mWallS.type != BuildingSquare::WallType::Invalid) {
-                squareN.mEntryEnum[BuildingSquare::SquareSection::SectionWallS] = squareN.getWallOffset(squareN.mWallS, BuildingSquare::SquareSection::SectionWallS);
-            }
-        }
-        if (window->isW() && (x > 0)) {
-            BuildingSquare& squareW = squares[x - 1][y];
-            if (squareW.mWallE.type != BuildingSquare::WallType::Invalid) {
-                squareW.mEntryEnum[BuildingSquare::SquareSection::SectionWallE] = squareW.getWallOffset(squareW.mWallE, BuildingSquare::SquareSection::SectionWallE);
-            }
-        }
     }
 }
 
-static bool canPlaceWallE(BuildingFloor *floor, int x, int y)
+void BuildingFloorV1::LayoutToSquares()
 {
-    if (x < floor->width()) {
-        if (floor->grimeAt(QLatin1Literal("WallW"), x + 1, y).isEmpty()) {
-            return true;
-        }
-    }
-    return false;
-}
-
-static bool canPlaceWallS(BuildingFloor *floor, int x, int y)
-{
-    if (y < floor->height()) {
-        if (floor->grimeAt(QLatin1Literal("WallN"), x, y + 1).isEmpty()) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void BuildingFloor::LayoutToSquares()
-{
-    // +1 for the outside walls;
     int w = width() + 1;
     int h = height() + 1;
-
-    static const BuildingSquare EMPTY_SQUARE;
-
+    // +1 for the outside walls;
+    static const Square empty;
     squares.resize(w);
-    for (int x = 0; x < w; x++) {
-        squares[x].fill(EMPTY_SQUARE, h);
-    }
+    for (int x = 0; x < w; x++)
+        squares[x].fill(empty, h);
 
-    BuildingTileEntry *wtype = nullptr;
+    BuildingTileEntry *wtype = 0;
 
     BuildingTileEntry *exteriorWall = mBuilding->exteriorWall();
-    BuildingTileEntry *exteriorWallTrim = level() ? nullptr : mBuilding->exteriorWallTrim();
+    BuildingTileEntry *exteriorWallTrim = level() ? 0 : mBuilding->exteriorWallTrim();
     QVector<BuildingTileEntry*> interiorWalls;
     QVector<BuildingTileEntry*> interiorWallTrim;
     QVector<BuildingTileEntry*> floors;
 
-    for (Room *room : mBuilding->rooms()) {
+    foreach (Room *room, mBuilding->rooms()) {
         interiorWalls += room->tile(Room::InteriorWall);
         interiorWallTrim += room->tile(Room::InteriorWallTrim);
         floors += room->tile(Room::Floor);
@@ -578,75 +329,47 @@ void BuildingFloor::LayoutToSquares()
             if (room != nullptr && RoofHiding::isEmptyOutside(room->Name))
                 room = nullptr;
             mIndexAtPos[x][y] = room ? mBuilding->indexOf(room) : -1;
-            squares[x][y].mExterior = room == nullptr;
+            squares[x][y].mExterior = room == 0;
         }
     }
 
     for (int x = 0; x < width() + 1; x++) {
         for (int y = 0; y < height() + 1; y++) {
-            // Place N and S walls...
+            // Place N walls...
             if (x < width()) {
                 if (y == height() && mIndexAtPos[x][y - 1] >= 0) {
                     squares[x][y].SetWallN(exteriorWall);
                     squares[x][y].SetWallTrimN(exteriorWallTrim);
-                    if (canPlaceWallS(this, x, y - 1)) {
-                        squares[x][y-1].SetWallS(interiorWalls[mIndexAtPos[x][y-1]]);
-                    }
                 } else if (y < height() && mIndexAtPos[x][y] < 0 && y > 0 &&
                            mIndexAtPos[x][y-1] != mIndexAtPos[x][y]) {
                     squares[x][y].SetWallN(exteriorWall);
                     squares[x][y].SetWallTrimN(exteriorWallTrim);
-                    if (canPlaceWallS(this, x, y - 1)) {
-                        squares[x][y-1].SetWallS(interiorWalls[mIndexAtPos[x][y-1]]);
-                    }
                 } else if (y < height() && (y == 0 || mIndexAtPos[x][y-1] != mIndexAtPos[x][y])
                            && mIndexAtPos[x][y] >= 0) {
                     squares[x][y].SetWallN(interiorWalls[mIndexAtPos[x][y]]);
                     squares[x][y].SetWallTrimN(interiorWallTrim[mIndexAtPos[x][y]]);
-                    if (canPlaceWallS(this, x, y - 1)) {
-                        if ((y > 0) && (mIndexAtPos[x][y-1] == -1)) {
-                            squares[x][y-1].SetWallS(exteriorWall);
-                        } else if (y > 0) {
-                            squares[x][y-1].SetWallS(interiorWalls[mIndexAtPos[x][y-1]]);
-                        }
-                    }
                 }
-                // TODO: south walls at y=-1
             }
-            // Place W and E walls...
+            // Place W walls...
             if (y < height()) {
                 if (x == width() && mIndexAtPos[x - 1][y] >= 0) {
                     squares[x][y].SetWallW(exteriorWall);
                     squares[x][y].SetWallTrimW(exteriorWallTrim);
-                    if (canPlaceWallE(this, x - 1, y)) {
-                        squares[x-1][y].SetWallE(interiorWalls[mIndexAtPos[x-1][y]]);
-                    }
                 } else if (x < width() && mIndexAtPos[x][y] < 0 && x > 0
                            && mIndexAtPos[x - 1][y] != mIndexAtPos[x][y]) {
                     squares[x][y].SetWallW(exteriorWall);
                     squares[x][y].SetWallTrimW(exteriorWallTrim);
-                    if (canPlaceWallE(this, x - 1, y)) {
-                        squares[x-1][y].SetWallE(interiorWalls[mIndexAtPos[x-1][y]]);
-                    }
                 } else if (x < width() && mIndexAtPos[x][y] >= 0 &&
                            (x == 0 || mIndexAtPos[x - 1][y] != mIndexAtPos[x][y])) {
                     squares[x][y].SetWallW(interiorWalls[mIndexAtPos[x][y]]);
                     squares[x][y].SetWallTrimW(interiorWallTrim[mIndexAtPos[x][y]]);
-                    if (canPlaceWallE(this, x - 1, y)) {
-                        if ((x > 0) && (mIndexAtPos[x-1][y] == -1)) {
-                            squares[x-1][y].SetWallE(exteriorWall);
-                        } else if (x > 0) {
-                            squares[x-1][y].SetWallE(interiorWalls[mIndexAtPos[x-1][y]]);
-                        }
-                    }
                 }
-                // TODO: east walls at x=-1
             }
         }
     }
 
     // Handle WallObjects.
-    for (BuildingObject *object : mObjects) {
+    foreach (BuildingObject *object, mObjects) {
         if (WallObject *wall = object->asWall()) {
             int x = wall->x(), y = wall->y();
             if (wall->isN()) {
@@ -675,7 +398,7 @@ void BuildingFloor::LayoutToSquares()
 
     // Furniture in the Walls layer replaces wall entries with tiles.
     QList<FurnitureObject*> wallReplacement;
-    for (BuildingObject *object : mObjects) {
+    foreach (BuildingObject *object, mObjects) {
         if (FurnitureObject *fo = object->asFurniture()) {
             FurnitureTile *ftile = fo->furnitureTile()->resolved();
             if (ftile->owner()->layer() == FurnitureTiles::LayerWalls) {
@@ -702,12 +425,11 @@ void BuildingFloor::LayoutToSquares()
                 default:
                     break;
                 }
-                // TODO: setWallE() and setWallS() on opposite squares
                 for (int i = 0; i < ftile->size().height(); i++) {
                     for (int j = 0; j < ftile->size().width(); j++) {
                         int sx = x + j + dx, sy = y + i + dy;
                         if (bounds(1, 1).contains(sx, sy)) {
-                            BuildingSquare &sq = squares[sx][sy];
+                            Square &sq = squares[sx][sy];
                             if (killW)
                                 sq.SetWallW(fo->furnitureTile(), ftile->tile(j, i));
                             if (killN)
@@ -719,85 +441,73 @@ void BuildingFloor::LayoutToSquares()
         }
     }
 
-    // Determine if wall sprites on each square should be door frames, window frames, 2-wall corners, or walls.
     for (int x = 0; x < width() + 1; x++) {
         for (int y = 0; y < height() + 1; y++) {
-            BuildingSquare &s = squares[x][y];
+            Square &s = squares[x][y];
             BuildingTileEntry *wallN = s.mWallN.entry;
             BuildingTileEntry *wallW = s.mWallW.entry;
             if (wallN || wallW) {
                 if (!wallN) wallN = BuildingTilesMgr::instance()->noneTileEntry();
                 if (!wallW) wallW = BuildingTilesMgr::instance()->noneTileEntry();
                 if (wallN == wallW) { // may be "none"
-                    s.mWallN.type = BuildingSquare::WallType::TwoWallCorner;
-                    s.ReplaceWall(wallN, BuildingSquare::SectionWallN, s.mWallN);
+                    s.ReplaceWall(wallN, Square::WallOrientNW);
                 } else if (wallW->isNone()) {
-                    s.mWallN.type = BuildingSquare::WallType::Simple;
-                    s.ReplaceWall(wallN, BuildingSquare::SectionWallN, s.mWallN);
+                    s.ReplaceWall(wallN, Square::WallOrientN);
                 } else if (wallN->isNone()) {
-                    s.mWallW.type = BuildingSquare::WallType::Simple;
-                    s.ReplaceWall(wallW, BuildingSquare::SectionWallW, s.mWallW);
+                    s.ReplaceWall(wallW, Square::WallOrientW);
                 } else {
                     // Different non-none tiles.
-                    s.mWallN.type = BuildingSquare::WallType::Simple;
-                    s.ReplaceWall(wallN, BuildingSquare::SectionWallN, s.mWallN);
-                    s.mWallW.type = BuildingSquare::WallType::Simple;
-                    s.ReplaceWall(wallW, BuildingSquare::SectionWallW, s.mWallW);
-//                    s.mWallOrientation = Square::WallOrientNW;
+                    s.mEntries[Square::SectionWall] = wallN;
+                    s.mWallOrientation = Square::WallOrientN; // must be set before getWallOffset
+                    s.mEntryEnum[Square::SectionWall] = s.getWallOffset();
+
+                    s.mEntries[Square::SectionWall2] = wallW;
+                    s.mWallOrientation = Square::WallOrientW; // must be set before getWallOffset
+                    s.mEntryEnum[Square::SectionWall2] = s.getWallOffset();
+
+                    s.mWallOrientation = Square::WallOrientNW;
                 }
-            }
-            BuildingTileEntry *wallS = s.mWallS.entry;
-            BuildingTileEntry *wallE = s.mWallE.entry;
-            if (wallS) {
-                s.mWallS.type = BuildingSquare::WallType::Simple;
-                s.ReplaceWall(wallS, BuildingSquare::SectionWallS, s.mWallS);
-            }
-            if (wallE) {
-                s.mWallE.type = BuildingSquare::WallType::Simple;
-                s.ReplaceWall(wallE, BuildingSquare::SectionWallE, s.mWallE);
             }
         }
     }
 
-    // Place wall pillars at the corners of two perpendicular walls.
     for (int x = 0; x < width() + 1; x++) {
         for (int y = 0; y < height() + 1; y++) {
-            BuildingSquare &sq = squares[x][y];
-            if ((sq.mEntries[BuildingSquare::SectionWallN] && !sq.mEntries[BuildingSquare::SectionWallN]->isNone()) ||
-                    (sq.mEntries[BuildingSquare::SectionWallW] && !sq.mEntries[BuildingSquare::SectionWallW]->isNone()) ||
-                    (sq.mWallW.furniture) || (sq.mWallN.furniture)) {
+            Square &sq = squares[x][y];
+            if ((sq.mEntries[Square::SectionWall] &&
+                    !sq.mEntries[Square::SectionWall]->isNone()) ||
+                    (sq.mWallW.furniture) || (sq.mWallN.furniture))
                 continue;
-            }
             // Put in the SE piece...
             if ((x > 0) && (y > 0) &&
-                    squares[x][y - 1].HasWallW() &&
-                    squares[x - 1][y].HasWallN()) {
+                    (squares[x][y - 1].IsWallOrient(Square::WallOrientW) ||
+                     squares[x][y - 1].IsWallOrient(Square::WallOrientNW)) &&
+                    (squares[x - 1][y].IsWallOrient(Square::WallOrientN) ||
+                     squares[x - 1][y].IsWallOrient(Square::WallOrientNW))) {
+
                 // With WallObjects, there could be 2 different tiles meeting
                 // at this SE corner.
                 wtype = squares[x][y - 1].mWallW.entry;
-                sq.mWallW.type = BuildingSquare::WallType::Pillar;
-                sq.mWallW.entry = wtype;
-                sq.ReplaceWall(wtype, BuildingSquare::SectionWallW, sq.mWallW);
+
+                sq.ReplaceWall(wtype, Square::WallOrientSE);
             }
             // South end of a north-south wall.
             else if ((y > 0) &&
-                     squares[x][y - 1].HasWallW()) {
+                     (squares[x][y - 1].IsWallOrient(Square::WallOrientW) ||
+                      squares[x][y - 1].IsWallOrient(Square::WallOrientNW))) {
                 wtype = squares[x][y - 1].mWallW.entry;
-                sq.mWallW.type = BuildingSquare::WallType::Pillar;
-                sq.mWallW.entry = wtype;
-                sq.mEntries[BuildingSquare::SectionWallW] = wtype;
-                sq.mEntryEnum[BuildingSquare::SectionWallW] = BTC_Walls::SouthEast;
-//                sq.mWallOrientation = Square::WallOrientInvalid;
+                sq.mEntries[Square::SectionWall] = wtype;
+                sq.mEntryEnum[Square::SectionWall] = BTC_Walls::SouthEast;
+                sq.mWallOrientation = Square::WallOrientInvalid;
             }
             // East end of a west-east wall.
             else if ((x > 0) &&
-                     squares[x - 1][y].HasWallN()) {
+                     (squares[x - 1][y].IsWallOrient(Square::WallOrientN) ||
+                      squares[x - 1][y].IsWallOrient(Square::WallOrientNW))) {
                 wtype = squares[x - 1][y].mWallN.entry;
-                sq.mWallN.type = BuildingSquare::WallType::Pillar;
-                sq.mWallN.entry = wtype;
-                sq.mEntries[BuildingSquare::SectionWallN] = wtype;
-                sq.mEntryEnum[BuildingSquare::SectionWallN] = BTC_Walls::SouthEast;
-//                sq.mWallOrientation = Square::WallOrientInvalid;
+                sq.mEntries[Square::SectionWall] = wtype;
+                sq.mEntryEnum[Square::SectionWall] = BTC_Walls::SouthEast;
+                sq.mWallOrientation = Square::WallOrientInvalid;
             }
         }
     }
@@ -805,7 +515,7 @@ void BuildingFloor::LayoutToSquares()
     mFlatRoofsWithDepthThree.clear();
     mStairs.clear();
 
-    for (BuildingObject *object : mObjects) {
+    foreach (BuildingObject *object, mObjects) {
         int x = object->x();
         int y = object->y();
         if (Door *door = object->asDoor()) {
@@ -820,14 +530,14 @@ void BuildingFloor::LayoutToSquares()
                 for (int i = 1; i <= 3; i++)
                     ReplaceFurniture(x, y + i, squares,
                                      stairs->tile()->tile(stairs->getOffset(x, y + i)),
-                                     BuildingSquare::SectionFurniture,
-                                     BuildingSquare::SectionFurniture4);
+                                     Square::SectionFurniture,
+                                     Square::SectionFurniture4);
             } else {
                 for (int i = 1; i <= 3; i++)
                     ReplaceFurniture(x + i, y, squares,
                                      stairs->tile()->tile(stairs->getOffset(x + i, y)),
-                                     BuildingSquare::SectionFurniture,
-                                     BuildingSquare::SectionFurniture4);
+                                     Square::SectionFurniture,
+                                     Square::SectionFurniture4);
             }
             mStairs += stairs;
         }
@@ -848,87 +558,29 @@ void BuildingFloor::LayoutToSquares()
                         if (fo->furnitureTile()->isS()) ++dy;
                         ReplaceFurniture(x + j + dx, y + i + dy,
                                          squares, ftile->tile(j, i),
-                                         BuildingSquare::SectionRoofCap,
-                                         BuildingSquare::SectionRoofCap2,
+                                         Square::SectionRoofCap,
+                                         Square::SectionRoofCap2,
                                          dx, dy);
                         break;
                     }
-                    case FurnitureTiles::LayerWallOverlay: {
-                        BuildingSquare::SquareSection sectionMin;
-                        BuildingSquare::SquareSection sectionMax;
-                        switch (ftile->orient()) {
-                        case FurnitureTile::FurnitureOrientation::FurnitureW:
-                            sectionMin = BuildingSquare::SquareSection::SectionWallOverlayW;
-                            sectionMax = sectionMin;
-                            break;
-                        case FurnitureTile::FurnitureOrientation::FurnitureN:
-                            sectionMin = BuildingSquare::SquareSection::SectionWallOverlayN;
-                            sectionMax = sectionMin;
-                            break;
-                        case FurnitureTile::FurnitureOrientation::FurnitureE:
-                            sectionMin = BuildingSquare::SquareSection::SectionWallOverlayE;
-                            sectionMax = sectionMin;
-                            break;
-                        case FurnitureTile::FurnitureOrientation::FurnitureS:
-                            sectionMin = BuildingSquare::SquareSection::SectionWallOverlayS;
-                            sectionMax = sectionMin;
-                            break;
-                        default:
-                            sectionMin = BuildingSquare::SquareSection::SectionInvalid;
-                            sectionMax = BuildingSquare::SquareSection::SectionInvalid;
-                            break;
-                        }
-                        // FIXME: possibly NW/NE/SE/SW ???
-                        if (sectionMin == BuildingSquare::SquareSection::SectionInvalid) {
-                            break;
-                        }
+                    case FurnitureTiles::LayerWallOverlay:
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
-                                         sectionMin,
-                                         sectionMax);
+                                         (ftile->isW() || ftile->isN()) ? Square::SectionWallOverlay : Square::SectionWallOverlay3,
+                                         (ftile->isW() || ftile->isN()) ? Square::SectionWallOverlay2 : Square::SectionWallOverlay4);
                         break;
-                    }
-                    case FurnitureTiles::LayerWallFurniture: {
-                        BuildingSquare::SquareSection sectionMin;
-                        BuildingSquare::SquareSection sectionMax;
-                        switch (ftile->orient()) {
-                        case FurnitureTile::FurnitureOrientation::FurnitureW:
-                            sectionMin = BuildingSquare::SquareSection::SectionWallFurnitureW;
-                            sectionMax = sectionMin;
-                            break;
-                        case FurnitureTile::FurnitureOrientation::FurnitureN:
-                            sectionMin = BuildingSquare::SquareSection::SectionWallFurnitureN;
-                            sectionMax = sectionMin;
-                            break;
-                        case FurnitureTile::FurnitureOrientation::FurnitureE:
-                            sectionMin = BuildingSquare::SquareSection::SectionWallFurnitureE;
-                            sectionMax = sectionMin;
-                            break;
-                        case FurnitureTile::FurnitureOrientation::FurnitureS:
-                            sectionMin = BuildingSquare::SquareSection::SectionWallFurnitureS;
-                            sectionMax = sectionMin;
-                            break;
-                        default:
-                            sectionMin = BuildingSquare::SquareSection::SectionInvalid;
-                            sectionMax = BuildingSquare::SquareSection::SectionInvalid;
-                            break;
-                        }
-                        // FIXME: possibly NW/NE/SE/SW ???
-                        if (sectionMin == BuildingSquare::SquareSection::SectionInvalid) {
-                            break;
-                        }
+                    case FurnitureTiles::LayerWallFurniture:
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
-                                         sectionMin,
-                                         sectionMax);
+                                         (ftile->isW() || ftile->isN()) ? Square::SectionWallFurniture : Square::SectionWallFurniture3,
+                                         (ftile->isW() || ftile->isN()) ? Square::SectionWallFurniture2 : Square::SectionWallFurniture4);
                         break;
-                    }
                     case FurnitureTiles::LayerFrames: {
                         int dx = 0, dy = 0;
                         if (fo->furnitureTile()->isE()) ++dx;
                         if (fo->furnitureTile()->isS()) ++dy;
                         ReplaceFurniture(x + j + dx, y + i + dy,
                                          squares, ftile->tile(j, i),
-                                         BuildingSquare::SectionFrame,
-                                         BuildingSquare::SectionFrame,
+                                         Square::SectionFrame,
+                                         Square::SectionFrame,
                                          dx, dy);
                         break;
                     }
@@ -938,20 +590,20 @@ void BuildingFloor::LayoutToSquares()
                         if (fo->furnitureTile()->isS()) ++dy;
                         ReplaceFurniture(x + j + dx, y + i + dy,
                                          squares, ftile->tile(j, i),
-                                         fo->furnitureTile()->isN() ? BuildingSquare::SectionDoorN : BuildingSquare::SectionDoorW,
-                                         fo->furnitureTile()->isN() ? BuildingSquare::SectionDoorN : BuildingSquare::SectionDoorW,
+                                         Square::SectionDoor,
+                                         Square::SectionDoor,
                                          dx, dy);
                         break;
                     }
                     case FurnitureTiles::LayerFurniture:
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
-                                         BuildingSquare::SectionFurniture,
-                                         BuildingSquare::SectionFurniture4);
+                                         Square::SectionFurniture,
+                                         Square::SectionFurniture4);
                         break;
                     case FurnitureTiles::LayerRoof:
                         ReplaceFurniture(x + j, y + i, squares, ftile->tile(j, i),
-                                         BuildingSquare::SectionRoof,
-                                         BuildingSquare::SectionRoof2);
+                                         Square::SectionRoof,
+                                         Square::SectionRoof2);
                         break;
                     default:
                         Q_ASSERT(false);
@@ -961,6 +613,8 @@ void BuildingFloor::LayoutToSquares()
             }
         }
         if (RoofObject *ro = object->asRoof()) {
+            QRect r = ro->bounds();
+
             QRect tileRect;
             QVector<RoofObject::RoofTile> tiles;
 
@@ -991,106 +645,19 @@ void BuildingFloor::LayoutToSquares()
         }
     }
 
-    // Pick a wall variant based on the presence of doors and windows,
-    // and merge identical north and west walls into north-west corners.
-    for (int x = 0; x < width() + 1; x++) {
-        for (int y = 0; y < height() + 1; y++) {
-            BuildingSquare& square = squares[x][y];
-            BuildingTileEntry *entryN = square.mWallN.entry;
-            BuildingTileEntry *entryW = square.mWallW.entry;
-            if (entryN != nullptr && entryN->isNone())
-                entryN = nullptr;
-            if (entryW != nullptr && entryW->isNone())
-                entryW = nullptr;
-            const int SectionWallN = BuildingSquare::SquareSection::SectionWallN;
-            const int SectionWallW = BuildingSquare::SquareSection::SectionWallW;
-            if (entryN != nullptr) {
-                BuildingSquare *squareN = (y > 0) ? &squares[x][y - 1] : nullptr;
-                if (square.mWallN.type == BuildingSquare::WallType::Pillar) {
-                    square.mEntryEnum[SectionWallN] = BTC_Walls::SouthEast;
-                } else if (square.HasDoorN() || (squareN != nullptr && squareN->HasDoorS())) {
-                    square.mEntryEnum[SectionWallN] = BTC_Walls::NorthDoor;
-                } else if (square.HasWindowN() || (squareN != nullptr && squareN->HasWindowS())) {
-                    square.mEntryEnum[SectionWallN] = BTC_Walls::NorthWindow;
-                } else {
-                    square.mEntryEnum[SectionWallN] = BTC_Walls::North;
-                }
-            }
-            if (entryW != nullptr) {
-                BuildingSquare *squareW = (x > 0) ? &squares[x- 1][y ] : nullptr;
-                if (square.mWallW.type == BuildingSquare::WallType::Pillar) {
-                    square.mEntryEnum[SectionWallW] = BTC_Walls::SouthEast;
-                } else if (square.HasDoorW() || (squareW != nullptr && squareW->HasDoorE())) {
-                    square.mEntryEnum[SectionWallW] = BTC_Walls::WestDoor;
-                } else if (square.HasWindowW() || (squareW != nullptr && squareW->HasWindowE())) {
-                    square.mEntryEnum[SectionWallW] = BTC_Walls::WestWindow;
-                } else {
-                    square.mEntryEnum[SectionWallW] = BTC_Walls::West;
-                }
-            }
-            if (entryN != nullptr && entryW != nullptr && entryN == entryW &&
-                    square.mEntryEnum[SectionWallN] == BTC_Walls::North &&
-                    square.mEntryEnum[SectionWallW] == BTC_Walls::West) {
-                square.mEntryEnum[SectionWallN] = BTC_Walls::NorthWest;
-                square.mEntries[SectionWallW] = nullptr;
-                square.mEntryEnum[SectionWallW] = 0;
-            }
-
-            BuildingTileEntry *entryS = square.mWallS.entry;
-            BuildingTileEntry *entryE = square.mWallE.entry;
-            if (entryS != nullptr && entryS->isNone())
-                entryS = nullptr;
-            if (entryE != nullptr && entryE->isNone())
-                entryE = nullptr;
-            const int SectionWallS = BuildingSquare::SquareSection::SectionWallS;
-            const int SectionWallE = BuildingSquare::SquareSection::SectionWallE;
-            if (entryS != nullptr) {
-                BuildingSquare *squareS = (y < height() + 1) ? &squares[x][y + 1] : nullptr;
-                if (square.mWallS.type == BuildingSquare::WallType::Pillar) {
-                    //
-                } else if (square.HasDoorS() || (squareS != nullptr && squareS->HasDoorN())) {
-                    square.mEntryEnum[SectionWallS] = BTC_Walls::NorthDoor;
-                } else if (square.HasWindowN() || (squareS != nullptr && squareS->HasWindowN())) {
-                    square.mEntryEnum[SectionWallS] = BTC_Walls::NorthWindow;
-                } else {
-                    square.mEntryEnum[SectionWallS] = BTC_Walls::North;
-                }
-            }
-            if (entryE != nullptr) {
-                BuildingSquare *squareE = (x < width() + 1) ? &squares[x + 1][y] : nullptr;
-                if (square.mWallE.type == BuildingSquare::WallType::Pillar) {
-                    //
-                } else if (square.HasDoorE() || (squareE != nullptr && squareE->HasDoorW())) {
-                    square.mEntryEnum[SectionWallE] = BTC_Walls::WestDoor;
-                } else if (square.HasWindowE() || (squareE != nullptr && squareE->HasWindowW())) {
-                    square.mEntryEnum[SectionWallE] = BTC_Walls::WestWindow;
-                } else {
-                    square.mEntryEnum[SectionWallE] = BTC_Walls::West;
-                }
-            }
-        }
-    }
-
-    for (FurnitureObject *fo : wallReplacement) {
+    foreach (FurnitureObject *fo, wallReplacement) {
         FurnitureTile *ftile = fo->furnitureTile()->resolved();
         int x = fo->x(), y = fo->y();
         int dx = 0, dy = 0;
-        BuildingSquare::SquareSection section;
         switch (fo->furnitureTile()->orient()) {
         case FurnitureTile::FurnitureW:
-            section = BuildingSquare::SectionWallW;
             break;
         case FurnitureTile::FurnitureE:
-            // FIXME: we didn't have E wall sprites before; this is going on the square to the east.
-            section = BuildingSquare::SectionWallW;
             dx = 1;
             break;
         case FurnitureTile::FurnitureN:
-            section = BuildingSquare::SectionWallN;
             break;
         case FurnitureTile::FurnitureS:
-            // FIXME: we didn't have S wall sprites before; this is going on the square to the south.
-            section = BuildingSquare::SectionWallN;
             dy = 1;
             break;
 #if 0
@@ -1102,17 +669,13 @@ void BuildingFloor::LayoutToSquares()
             break;
 #endif
         default:
-            section = BuildingSquare::SectionInvalid;
             break;
         }
         for (int i = 0; i < ftile->size().height(); i++) {
-            if (section == BuildingSquare::SectionInvalid) {
-                continue;
-            }
             for (int j = 0; j < ftile->size().width(); j++) {
                 if (bounds(1, 1).contains(x + j + dx, y + i + dy)) {
-                    BuildingSquare &s = squares[x + j + dx][y + i + dy];
-#if 0
+                    Square &s = squares[x + j + dx][y + i + dy];
+                    Square::SquareSection section = Square::SectionWall;
                     if (s.mEntries[section] && !s.mEntries[section]->isNone()) {
                         // FIXME: if SectionWall2 is occupied, push it down to SectionWall
                         section = Square::SectionWall2;
@@ -1121,25 +684,24 @@ void BuildingFloor::LayoutToSquares()
                         // FIXME: if SectionWall2 is occupied, push it down to SectionWall
                         section = Square::SectionWall2;
                     }
-#endif
                     s.mTiles[section] = ftile->tile(j, i);
-                    s.mEntries[section] = nullptr;
+                    s.mEntries[section] = 0;
                     s.mEntryEnum[section] = 0;
 
                     switch (fo->furnitureTile()->orient()) {
                     case FurnitureTile::FurnitureW:
                     case FurnitureTile::FurnitureE:
-                        if (s.HasWallN())
-                            s.mWallN.type = BuildingSquare::WallType::TwoWallCorner;
+                        if (s.mWallOrientation == Square::WallOrientN)
+                            s.mWallOrientation = Square::WallOrientNW;
                         else
-                            s.mWallW.type = BuildingSquare::WallType::Simple;
+                            s.mWallOrientation = Square::WallOrientW;
                         break;
                     case FurnitureTile::FurnitureN:
                     case FurnitureTile::FurnitureS:
-                        if (s.HasWallW())
-                            s.mWallN.type = BuildingSquare::WallType::TwoWallCorner;
+                        if (s.mWallOrientation == Square::WallOrientW)
+                            s.mWallOrientation = Square::WallOrientNW;
                         else
-                            s.mWallN.type = BuildingSquare::WallType::Simple;
+                            s.mWallOrientation = Square::WallOrientN;
                         break;
                     default:
                         break;
@@ -1149,7 +711,6 @@ void BuildingFloor::LayoutToSquares()
         }
     }
 
-
     // Place floors
     for (int x = 0; x < width(); x++) {
         for (int y = 0; y < height(); y++) {
@@ -1158,49 +719,51 @@ void BuildingFloor::LayoutToSquares()
         }
     }
 
+#if 0 // BuildingFloorV1: this requires private member access, but we don't care about these as far as user-tiles are concerned.
     if (BuildingFloor *floorBelow = this->floorBelow()) {
         // Place flat roof tops above roofs on the floor below
-        for (RoofObject *ro : floorBelow->mFlatRoofsWithDepthThree) {
+        foreach (RoofObject *ro, floorBelow->mFlatRoofsWithDepthThree) {
             ReplaceRoofTop(ro, ro->flatTop(), squares);
         }
 
         // Nuke floors that have stairs on the floor below.
-        for (Stairs *stairs : floorBelow->mStairs) {
+        foreach (Stairs *stairs, floorBelow->mStairs) {
             int x = stairs->x(), y = stairs->y();
             if (stairs->isW()) {
                 if (x + 1 < 0 || x + 3 >= width() || y < 0 || y >= height())
                     continue;
-                squares[x+1][y].ReplaceFloor(nullptr, 0);
-                squares[x+2][y].ReplaceFloor(nullptr, 0);
-                squares[x+3][y].ReplaceFloor(nullptr, 0);
+                squares[x+1][y].ReplaceFloor(0, 0);
+                squares[x+2][y].ReplaceFloor(0, 0);
+                squares[x+3][y].ReplaceFloor(0, 0);
             }
             if (stairs->isN()) {
                 if (x < 0 || x >= width() || y + 1 < 0 || y + 3 >= height())
                     continue;
-                squares[x][y+1].ReplaceFloor(nullptr, 0);
-                squares[x][y+2].ReplaceFloor(nullptr, 0);
-                squares[x][y+3].ReplaceFloor(nullptr, 0);
+                squares[x][y+1].ReplaceFloor(0, 0);
+                squares[x][y+2].ReplaceFloor(0, 0);
+                squares[x][y+3].ReplaceFloor(0, 0);
             }
         }
     }
+#endif
 
-    FloorTileGrid *userTilesWalls = mGrimeGrid.contains(QLatin1Literal("WallN")) ? mGrimeGrid[QLatin1Literal("WallN")] : nullptr;
-    FloorTileGrid *userTilesWalls2 = mGrimeGrid.contains(QLatin1Literal("WallW")) ? mGrimeGrid[QLatin1Literal("WallW")] : nullptr;
+    FloorTileGrid *userTilesWalls = mGrimeGrid.contains(QLatin1Literal("Walls")) ? mGrimeGrid[QLatin1Literal("Walls")] : 0;
+    FloorTileGrid *userTilesWalls2 = mGrimeGrid.contains(QLatin1Literal("Walls2")) ? mGrimeGrid[QLatin1Literal("Walls2")] : 0;
 
     for (int x = 0; x < w; x++) {
         for (int y = 0; y < h; y++) {
-            BuildingSquare &sq = squares[x][y];
+            Square &sq = squares[x][y];
 
             sq.ReplaceWallTrim();
-            if (sq.mEntryEnum[BuildingSquare::SectionWallW] == BTC_Walls::SouthEast) {
+            if (sq.mEntryEnum[Square::SectionWall] == BTC_Walls::SouthEast) {
                 if (y > 0 && squares[x][y-1].mWallW.trim) {
                     // SouthEast corner or south end of north-south wall
-                    sq.mEntries[BuildingSquare::SectionWallTrimW] = squares[x][y-1].mWallW.trim;
-                    sq.mEntryEnum[BuildingSquare::SectionWallTrimW] = BTC_Walls::SouthEast;
+                    sq.mEntries[Square::SectionWallTrim] = squares[x][y-1].mWallW.trim;
+                    sq.mEntryEnum[Square::SectionWallTrim] = BTC_Walls::SouthEast;
                 } else if (x > 0 && squares[x-1][y].mWallN.trim) {
                     // East end of west-east wall
-                    sq.mEntries[BuildingSquare::SectionWallTrimN] = squares[x-1][y].mWallN.trim;
-                    sq.mEntryEnum[BuildingSquare::SectionWallTrimN] = BTC_Walls::SouthEast;
+                    sq.mEntries[Square::SectionWallTrim] = squares[x-1][y].mWallN.trim;
+                    sq.mEntryEnum[Square::SectionWallTrim] = BTC_Walls::SouthEast;
                 }
             }
 
@@ -1212,21 +775,22 @@ void BuildingFloor::LayoutToSquares()
                 QString userTileWalls2 = userTilesWalls2 ? userTilesWalls2->at(x, y) : QString();
                 BuildingTileEntry *grimeTile = building()->tile(Building::GrimeWall);
                 sq.ReplaceWallGrime(grimeTile, userTileWalls, userTileWalls2);
+
             } else {
                 Room *room = GetRoomAt(x, y);
-                BuildingTileEntry *grimeTile = room ? room->tile(Room::GrimeFloor) : nullptr;
+                BuildingTileEntry *grimeTile = room ? room->tile(Room::GrimeFloor) : 0;
                 sq.ReplaceFloorGrime(grimeTile);
 
                 QString userTileWalls = userTilesWalls ? userTilesWalls->at(x, y) : QString();
                 QString userTileWalls2 = userTilesWalls2 ? userTilesWalls2->at(x, y) : QString();
-                grimeTile = room ? room->tile(Room::GrimeWall) : nullptr;
+                grimeTile = room ? room->tile(Room::GrimeWall) : 0;
                 sq.ReplaceWallGrime(grimeTile, userTileWalls, userTileWalls2);
             }
         }
     }
 }
 
-Door *BuildingFloor::GetDoorAt(int x, int y)
+Door *BuildingFloorV1::GetDoorAt(int x, int y)
 {
     foreach (BuildingObject *o, mObjects) {
         if (!o->bounds().contains(x, y))
@@ -1237,7 +801,7 @@ Door *BuildingFloor::GetDoorAt(int x, int y)
     return 0;
 }
 
-Window *BuildingFloor::GetWindowAt(int x, int y)
+Window *BuildingFloorV1::GetWindowAt(int x, int y)
 {
     foreach (BuildingObject *o, mObjects) {
         if (!o->bounds().contains(x, y))
@@ -1248,7 +812,7 @@ Window *BuildingFloor::GetWindowAt(int x, int y)
     return 0;
 }
 
-Stairs *BuildingFloor::GetStairsAt(int x, int y)
+Stairs *BuildingFloorV1::GetStairsAt(int x, int y)
 {
     foreach (BuildingObject *o, mObjects) {
         if (!o->bounds().contains(x, y))
@@ -1259,7 +823,7 @@ Stairs *BuildingFloor::GetStairsAt(int x, int y)
     return 0;
 }
 
-FurnitureObject *BuildingFloor::GetFurnitureAt(int x, int y)
+FurnitureObject *BuildingFloorV1::GetFurnitureAt(int x, int y)
 {
     foreach (BuildingObject *o, mObjects) {
         if (!o->bounds().contains(x, y))
@@ -1270,44 +834,44 @@ FurnitureObject *BuildingFloor::GetFurnitureAt(int x, int y)
     return 0;
 }
 
-void BuildingFloor::SetRoomAt(int x, int y, Room *room)
+void BuildingFloorV1::SetRoomAt(int x, int y, Room *room)
 {
     mRoomAtPos[x][y] = room;
 }
 
-Room *BuildingFloor::GetRoomAt(const QPoint &pos)
+Room *BuildingFloorV1::GetRoomAt(const QPoint &pos)
 {
     if (!contains(pos))
         return 0;
     return mRoomAtPos[pos.x()][pos.y()];
 }
 
-int BuildingFloor::width() const
+int BuildingFloorV1::width() const
 {
     return mBuilding->width();
 }
 
-int BuildingFloor::height() const
+int BuildingFloorV1::height() const
 {
     return mBuilding->height();
 }
 
-QRect BuildingFloor::bounds(int dw, int dh) const
+QRect BuildingFloorV1::bounds(int dw, int dh) const
 {
     return mBuilding->bounds().adjusted(0, 0, dw, dh);
 }
 
-bool BuildingFloor::contains(int x, int y, int dw, int dh)
+bool BuildingFloorV1::contains(int x, int y, int dw, int dh)
 {
     return bounds(dw, dh).contains(x, y);
 }
 
-bool BuildingFloor::contains(const QPoint &p, int dw, int dh)
+bool BuildingFloorV1::contains(const QPoint &p, int dw, int dh)
 {
     return contains(p.x(), p.y(), dw, dh);
 }
 
-QVector<QRect> BuildingFloor::roomRegion(Room *room)
+QVector<QRect> BuildingFloorV1::roomRegion(Room *room)
 {
     QRegion region;
     for (int y = 0; y < height(); y++) {
@@ -1348,7 +912,7 @@ QVector<QRect> BuildingFloor::roomRegion(Room *room)
     return result;
 }
 
-QVector<QVector<Room *> > BuildingFloor::resizeGrid(const QSize &newSize) const
+QVector<QVector<Room *> > BuildingFloorV1::resizeGrid(const QSize &newSize) const
 {
     QVector<QVector<Room *> > grid = mRoomAtPos;
     grid.resize(newSize.width());
@@ -1357,7 +921,7 @@ QVector<QVector<Room *> > BuildingFloor::resizeGrid(const QSize &newSize) const
     return grid;
 }
 
-QMap<QString,FloorTileGrid*> BuildingFloor::resizeGrime(const QSize &newSize) const
+QMap<QString,FloorTileGrid*> BuildingFloorV1::resizeGrime(const QSize &newSize) const
 {
     QMap<QString,FloorTileGrid*> grid;
     foreach (QString key, mGrimeGrid.keys()) {
@@ -1371,7 +935,7 @@ QMap<QString,FloorTileGrid*> BuildingFloor::resizeGrime(const QSize &newSize) co
     return grid;
 }
 
-void BuildingFloor::rotate(bool right)
+void BuildingFloorV1::rotate(bool right)
 {
     int oldWidth = mRoomAtPos.size();
     int oldHeight = mRoomAtPos[0].size();
@@ -1384,7 +948,7 @@ void BuildingFloor::rotate(bool right)
     for (int x = 0; x < newWidth; x++) {
         roomAtPos[x].resize(newHeight);
         for (int y = 0; y < newHeight; y++) {
-            roomAtPos[x][y] = nullptr;
+            roomAtPos[x][y] = 0;
         }
     }
 
@@ -1404,7 +968,7 @@ void BuildingFloor::rotate(bool right)
         object->rotate(right);
 }
 
-void BuildingFloor::flip(bool horizontal)
+void BuildingFloorV1::flip(bool horizontal)
 {
     if (horizontal) {
         for (int x = 0; x < width() / 2; x++)
@@ -1419,9 +983,10 @@ void BuildingFloor::flip(bool horizontal)
         object->flip(horizontal);
 }
 
-BuildingFloor *BuildingFloor::clone()
+#if 0
+BuildingFloorV1 *BuildingFloorV1::clone()
 {
-    BuildingFloor *klone = new BuildingFloor(mBuilding, mLevel);
+    BuildingFloorV1 *klone = new BuildingFloorV1(mBuilding, mLevel);
     klone->mIndexAtPos = mIndexAtPos;
     klone->mRoomAtPos = mRoomAtPos;
     foreach (BuildingObject *object, mObjects) {
@@ -1434,22 +999,23 @@ BuildingFloor *BuildingFloor::clone()
         klone->mGrimeGrid[key] = new FloorTileGrid(*klone->mGrimeGrid[key]);
     return klone;
 }
+#endif
 
-QString BuildingFloor::grimeAt(const QString &layerName, int x, int y) const
+QString BuildingFloorV1::grimeAt(const QString &layerName, int x, int y) const
 {
     if (mGrimeGrid.contains(layerName))
         return mGrimeGrid[layerName]->at(x, y);
     return QString();
 }
 
-FloorTileGrid *BuildingFloor::grimeAt(const QString &layerName, const QRect &r)
+FloorTileGrid *BuildingFloorV1::grimeAt(const QString &layerName, const QRect &r)
 {
     if (mGrimeGrid.contains(layerName))
         return mGrimeGrid[layerName]->clone(r);
     return new FloorTileGrid(r.width(), r.height());
 }
 
-FloorTileGrid *BuildingFloor::grimeAt(const QString &layerName, const QRect &r,
+FloorTileGrid *BuildingFloorV1::grimeAt(const QString &layerName, const QRect &r,
                                       const QRegion &rgn)
 {
     if (mGrimeGrid.contains(layerName))
@@ -1457,7 +1023,7 @@ FloorTileGrid *BuildingFloor::grimeAt(const QString &layerName, const QRect &r,
     return new FloorTileGrid(r.width(), r.height());
 }
 
-QMap<QString,FloorTileGrid*> BuildingFloor::grimeClone() const
+QMap<QString,FloorTileGrid*> BuildingFloorV1::grimeClone() const
 {
     QMap<QString,FloorTileGrid*> clone;
     foreach (QString key, mGrimeGrid.keys()) {
@@ -1466,7 +1032,7 @@ QMap<QString,FloorTileGrid*> BuildingFloor::grimeClone() const
     return clone;
 }
 
-QMap<QString, FloorTileGrid *> BuildingFloor::setGrime(const QMap<QString,
+QMap<QString, FloorTileGrid *> BuildingFloorV1::setGrime(const QMap<QString,
                                                        FloorTileGrid *> &grime)
 {
     QMap<QString,FloorTileGrid*> old = mGrimeGrid;
@@ -1474,7 +1040,7 @@ QMap<QString, FloorTileGrid *> BuildingFloor::setGrime(const QMap<QString,
     return old;
 }
 
-void BuildingFloor::setGrime(const QString &layerName, int x, int y,
+void BuildingFloorV1::setGrime(const QString &layerName, int x, int y,
                              const QString &tileName)
 {
     if (!mGrimeGrid.contains(layerName))
@@ -1483,7 +1049,7 @@ void BuildingFloor::setGrime(const QString &layerName, int x, int y,
 }
 
 
-void BuildingFloor::setGrime(const QString &layerName, const QPoint &p,
+void BuildingFloorV1::setGrime(const QString &layerName, const QPoint &p,
                              const FloorTileGrid *other)
 {
     if (!mGrimeGrid.contains(layerName))
@@ -1491,7 +1057,7 @@ void BuildingFloor::setGrime(const QString &layerName, const QPoint &p,
     mGrimeGrid[layerName]->replace(p, other);
 }
 
-void BuildingFloor::setGrime(const QString &layerName, const QRegion &rgn,
+void BuildingFloorV1::setGrime(const QString &layerName, const QRegion &rgn,
                              const QString &tileName)
 {
     if (!mGrimeGrid.contains(layerName)) {
@@ -1502,7 +1068,7 @@ void BuildingFloor::setGrime(const QString &layerName, const QRegion &rgn,
     mGrimeGrid[layerName]->replace(rgn, tileName);
 }
 
-void BuildingFloor::setGrime(const QString &layerName, const QRegion &rgn,
+void BuildingFloorV1::setGrime(const QString &layerName, const QRegion &rgn,
                              const QPoint &pos, const FloorTileGrid *other)
 {
     if (!mGrimeGrid.contains(layerName))
@@ -1510,14 +1076,14 @@ void BuildingFloor::setGrime(const QString &layerName, const QRegion &rgn,
     mGrimeGrid[layerName]->replace(rgn, pos, other);
 }
 
-bool BuildingFloor::hasUserTiles() const
+bool BuildingFloorV1::hasUserTiles() const
 {
     foreach (FloorTileGrid *g, mGrimeGrid)
         if (!g->isEmpty()) return true;
     return false;
 }
 
-bool BuildingFloor::hasUserTiles(const QString &layerName)
+bool BuildingFloorV1::hasUserTiles(const QString &layerName)
 {
     if (mGrimeGrid.contains(layerName))
         return !mGrimeGrid[layerName]->isEmpty();
@@ -1526,366 +1092,218 @@ bool BuildingFloor::hasUserTiles(const QString &layerName)
 
 /////
 
-BuildingSquare::BuildingSquare() :
-    mEntries(MaxSection, nullptr),
+BuildingFloorV1::Square::Square() :
+    mEntries(MaxSection, 0),
     mEntryEnum(MaxSection, 0),
-//    mWallOrientation(WallOrientInvalid),
+    mWallOrientation(WallOrientInvalid),
     mExterior(true),
-    mTiles(MaxSection, nullptr)
+    mTiles(MaxSection, 0)
 {
 }
 
 
-BuildingSquare::~BuildingSquare()
+BuildingFloorV1::Square::~Square()
 {
     // mTiles are owned by BuildingTiles
 //    for (int i = 0; i < MaxSection; i++)
     //        delete mTiles[i];
 }
 
-void BuildingSquare::SetWallN(BuildingTileEntry *tile)
+void BuildingFloorV1::Square::SetWallN(BuildingTileEntry *tile)
 {
     mWallN.entry = tile;
-    mWallN.furniture = nullptr;
-    mWallN.furnitureBldgTile = nullptr;
+    mWallN.furniture = 0;
+    mWallN.furnitureBldgTile = 0;
 }
 
-void BuildingSquare::SetWallW(BuildingTileEntry *tile)
+void BuildingFloorV1::Square::SetWallW(BuildingTileEntry *tile)
 {
     mWallW.entry = tile;
-    mWallW.furniture = nullptr;
-    mWallW.furnitureBldgTile = nullptr;
+    mWallW.furniture = 0;
+    mWallW.furnitureBldgTile = 0;
 }
 
-void BuildingSquare::SetWallN(FurnitureTile *ftile, BuildingTile *btile)
+void BuildingFloorV1::Square::SetWallN(FurnitureTile *ftile, BuildingTile *btile)
 {
-    mWallN.entry = nullptr;
+    mWallN.entry = 0;
     mWallN.furniture = ftile;
     mWallN.furnitureBldgTile = btile;
 }
 
-void BuildingSquare::SetWallW(FurnitureTile *ftile, BuildingTile *btile)
+void BuildingFloorV1::Square::SetWallW(FurnitureTile *ftile, BuildingTile *btile)
 {
-    mWallW.entry = nullptr;
+    mWallW.entry = 0;
     mWallW.furniture = ftile;
     mWallW.furnitureBldgTile = btile;
 }
 
-void BuildingSquare::SetWallS(BuildingTileEntry *tile)
-{
-    mWallS.entry = tile;
-    mWallS.furniture = nullptr;
-    mWallS.furnitureBldgTile = nullptr;
-}
-
-void BuildingSquare::SetWallE(BuildingTileEntry *tile)
-{
-    mWallE.entry = tile;
-    mWallE.furniture = nullptr;
-    mWallE.furnitureBldgTile = nullptr;
-}
-
-void BuildingSquare::SetWallS(FurnitureTile *ftile, BuildingTile *btile)
-{
-    mWallS.entry = nullptr;
-    mWallS.furniture = ftile;
-    mWallS.furnitureBldgTile = btile;
-}
-
-void BuildingSquare::SetWallE(FurnitureTile *ftile, BuildingTile *btile)
-{
-    mWallE.entry = nullptr;
-    mWallE.furniture = ftile;
-    mWallE.furnitureBldgTile = btile;
-}
-
-void BuildingSquare::SetWallTrimN(BuildingTileEntry *tile)
+void BuildingFloorV1::Square::SetWallTrimN(BuildingTileEntry *tile)
 {
     mWallN.trim = tile;
 }
 
-void BuildingSquare::SetWallTrimW(BuildingTileEntry *tile)
+void BuildingFloorV1::Square::SetWallTrimW(BuildingTileEntry *tile)
 {
     mWallW.trim = tile;
 }
 
-bool BuildingSquare::HasWallN() const
+bool BuildingFloorV1::Square::IsWallOrient(BuildingFloorV1::Square::WallOrientation orient)
 {
-    return mEntries[SectionWallN] != nullptr &&
-            !mEntries[SectionWallN]->isNone() &&
-            mWallN.type != WallType::Pillar;
+    return mEntries[SectionWall] &&
+            !mEntries[SectionWall]->isNone() &&
+            (mWallOrientation == orient);
 }
 
-bool BuildingSquare::HasWallW() const
-{
-    return mEntries[SectionWallW] != nullptr &&
-            !mEntries[SectionWallW]->isNone() &&
-            mWallW.type != WallType::Pillar;
-}
-
-bool BuildingSquare::HasDoorN() const
-{
-    return mEntries[SectionDoorN] != nullptr &&
-            !mEntries[SectionDoorN]->isNone();
-}
-
-bool BuildingSquare::HasDoorS() const
-{
-    return mEntries[SectionDoorS] != nullptr &&
-            !mEntries[SectionDoorS]->isNone();
-}
-
-bool BuildingSquare::HasDoorW() const
-{
-    return mEntries[SectionDoorW] != nullptr &&
-            !mEntries[SectionDoorW]->isNone();
-}
-
-bool BuildingSquare::HasDoorE() const
-{
-    return mEntries[SectionDoorE] != nullptr &&
-            !mEntries[SectionDoorE]->isNone();
-}
-
-bool BuildingSquare::HasWindowN() const
-{
-    return mEntries[SectionWindowN] != nullptr &&
-            !mEntries[SectionWindowN]->isNone();
-}
-
-bool BuildingSquare::HasWindowS() const
-{
-    return mEntries[SectionWindowS] != nullptr &&
-            !mEntries[SectionWindowS]->isNone();
-}
-
-bool BuildingSquare::HasWindowW() const
-{
-    return mEntries[SectionWindowW] != nullptr &&
-            !mEntries[SectionWindowW]->isNone();
-}
-
-bool BuildingSquare::HasWindowE() const
-{
-    return mEntries[SectionWindowE] != nullptr &&
-            !mEntries[SectionWindowE]->isNone();
-}
-
-void BuildingSquare::ReplaceFloor(BuildingTileEntry *tile, int offset)
+void BuildingFloorV1::Square::ReplaceFloor(BuildingTileEntry *tile, int offset)
 {
     mEntries[SectionFloor] = tile;
     mEntryEnum[SectionFloor] = offset;
 }
 
-void BuildingSquare::ReplaceWall(BuildingTileEntry *tile,
-                                 BuildingSquare::SquareSection section,
-                                 const WallInfo& wallInfo)
+void BuildingFloorV1::Square::ReplaceWall(BuildingTileEntry *tile,
+                                        WallOrientation orient)
 {
-    mEntries[section] = tile;
-//    mWallOrientation = orient; // Must set this before getWallOffset() is called
-    // This is done after doors and windows are placed.
-    mEntryEnum[section] = -1; // getWallOffset(wallInfo, section);
+    mEntries[SectionWall] = tile;
+    mWallOrientation = orient; // Must set this before getWallOffset() is called
+    mEntryEnum[SectionWall] = getWallOffset();
 }
 
-void BuildingSquare::ReplaceDoor(BuildingTileEntry *tile, SquareSection section, int offset)
+void BuildingFloorV1::Square::ReplaceDoor(BuildingTileEntry *tile, int offset)
 {
     // Must put a non-zero tile here.  See getWallOffset().
-    mEntries[section] = tile ? tile : BuildingTilesMgr::instance()->noneTileEntry();
-    mEntryEnum[section] = offset;
-
-    WallInfo *wallInfo = nullptr;
-
-    SquareSection sectionWall;
-    SquareSection sectionWindow;
-    switch (section) {
-    case SquareSection::SectionDoorN:
-        wallInfo = &mWallN;
-        sectionWall = SquareSection::SectionWallN;
-        sectionWindow = SquareSection::SectionWindowN;
-        break;
-    case SquareSection::SectionDoorW:
-        wallInfo = &mWallW;
-        sectionWall = SquareSection::SectionWallW;
-        sectionWindow = SquareSection::SectionWindowW;
-        break;
-    case SquareSection::SectionDoorE:
-        wallInfo = &mWallE;
-        sectionWall = SquareSection::SectionWallE;
-        sectionWindow = SquareSection::SectionWindowE;
-        break;
-    case SquareSection::SectionDoorS:
-        wallInfo = &mWallS;
-        sectionWall = SquareSection::SectionWallS;
-        sectionWindow = SquareSection::SectionWindowS;
-        break;
-    default:
-        Q_ASSERT(false);
-        return;
-    }
+    mEntries[SectionDoor] = tile ? tile : BuildingTilesMgr::instance()->noneTileEntry();
+    mEntryEnum[SectionDoor] = offset;
 
     // Nuke any existing window
-    if (mEntries[sectionWindow]) {
-        mEntries[sectionWindow] = nullptr;
-        mEntryEnum[sectionWindow] = 0;
+    if (mEntries[SectionWindow]) {
+        if ((mEntryEnum[SectionWindow] == BTC_Windows::West) == (offset == BTC_Doors::West)) {
+            mEntries[SectionWindow] = 0;
+            mEntryEnum[SectionWindow] = 0;
+        }
     }
-#if 0
-    if (wallInfo->type == WallType::TwoWallCorner) {
-        BuildingTileEntry *entry1 = mEntries[SectionWallN];
-        BuildingTileEntry *entry2 = mEntries[SectionWallW];
+
+    if (mWallOrientation == WallOrientNW) {
+        BuildingTileEntry *entry1 = mEntries[SectionWall];
+        BuildingTileEntry *entry2 = mEntries[SectionWall2];
         if (!entry1) entry1 = BuildingTilesMgr::instance()->noneTileEntry();
         if (!entry2) entry2 = BuildingTilesMgr::instance()->noneTileEntry();
         if (!entry1->isNone() && !entry2->isNone()) {
             // 2 different walls
             if (offset == BTC_Doors::West) {
-                mEntryEnum[SectionWallW] = BTC_Walls::WestDoor;
+                if (mEntryEnum[SectionWall] == BTC_Walls::West || mEntryEnum[SectionWall] == BTC_Walls::WestWindow)
+                    mEntryEnum[SectionWall] = BTC_Walls::WestDoor;
+                else if (mEntryEnum[SectionWall2] == BTC_Walls::West || mEntryEnum[SectionWall2] == BTC_Walls::WestWindow)
+                    mEntryEnum[SectionWall2] = BTC_Walls::WestDoor;
             } else if (offset == BTC_Doors::North) {
-                mEntryEnum[SectionWallN] = BTC_Walls::NorthDoor;
+                if (mEntryEnum[SectionWall] == BTC_Walls::North || mEntryEnum[SectionWall] == BTC_Walls::NorthWindow)
+                    mEntryEnum[SectionWall] = BTC_Walls::NorthDoor;
+                else if (mEntryEnum[SectionWall2] == BTC_Walls::North || mEntryEnum[SectionWall2] == BTC_Walls::NorthWindow)
+                    mEntryEnum[SectionWall2] = BTC_Walls::NorthDoor;
             }
         } else {
             // Single NW tile -> split into 2.
             // Stack the wall containing the door on top of the other wall.
-            mEntries[SectionWallN] = entry1;
+            mEntries[SectionWall2] = entry1;
             if (offset == BTC_Doors::West) {
-                mEntryEnum[SectionWallN] = BTC_Walls::North;
-                mEntryEnum[SectionWallW] = BTC_Walls::WestDoor;
+                mEntryEnum[SectionWall] = BTC_Walls::North;
+                mEntryEnum[SectionWall2] = BTC_Walls::WestDoor;
             } else {
-                mEntryEnum[SectionWallN] = BTC_Walls::NorthDoor;
-                mEntryEnum[SectionWallW] = BTC_Walls::West;
+                mEntryEnum[SectionWall] = BTC_Walls::West;
+                mEntryEnum[SectionWall2] = BTC_Walls::NorthDoor;
             }
         }
         return;
     }
 
-    if (wallInfo->type != WallType::Invalid) {
-        mEntryEnum[sectionWall] = getWallOffset(*wallInfo, sectionWall);
-    }
-#endif
+    if (mWallOrientation != WallOrientInvalid)
+        mEntryEnum[SectionWall] = getWallOffset();
 }
 
-void BuildingSquare::ReplaceFrame(BuildingTileEntry *tile, int offset)
+void BuildingFloorV1::Square::ReplaceFrame(BuildingTileEntry *tile, int offset)
 {
     // Must put a non-zero tile here.  See getWallOffset().
     mEntries[SectionFrame] = tile ? tile : BuildingTilesMgr::instance()->noneTileEntry();
     mEntryEnum[SectionFrame] = offset;
 }
 
-void BuildingSquare::ReplaceWindow(BuildingTileEntry *tile, SquareSection section, int offset)
+void BuildingFloorV1::Square::ReplaceWindow(BuildingTileEntry *tile, int offset)
 {
     // Must put a non-zero tile here.  See getWallOffset().
-    mEntries[section] = tile ? tile : BuildingTilesMgr::instance()->noneTileEntry();
-    mEntryEnum[section] = offset;
-
-    WallInfo *wallInfo = nullptr;
-
-    SquareSection sectionWall;
-    SquareSection sectionDoor;
-    switch (section) {
-    case SquareSection::SectionWindowN:
-        wallInfo = &mWallN;
-        sectionWall = SquareSection::SectionWallN;
-        sectionDoor = SquareSection::SectionDoorN;
-        break;
-    case SquareSection::SectionWindowW:
-        wallInfo = &mWallW;
-        sectionWall = SquareSection::SectionWallW;
-        sectionDoor = SquareSection::SectionDoorW;
-        break;
-    case SquareSection::SectionWindowE:
-        wallInfo = &mWallE;
-        sectionWall = SquareSection::SectionWallE;
-        sectionDoor = SquareSection::SectionDoorE;
-        break;
-    case SquareSection::SectionWindowS:
-        wallInfo = &mWallS;
-        sectionWall = SquareSection::SectionWallS;
-        sectionDoor = SquareSection::SectionDoorS;
-        break;
-    default:
-        Q_ASSERT(false);
-        return;
-    }
+    mEntries[SectionWindow] = tile ? tile : BuildingTilesMgr::instance()->noneTileEntry();
+    mEntryEnum[SectionWindow] = offset;
 
     // Nuke any existing door
-    if (mEntries[sectionDoor]) {
-        mEntries[sectionDoor] = nullptr;
-        mEntryEnum[sectionDoor] = 0;
+    if (mEntries[SectionDoor]) {
+        if ((mEntryEnum[SectionDoor] == BTC_Doors::West) == (offset == BTC_Windows::West)) {
+            mEntries[SectionDoor] = 0;
+            mEntryEnum[SectionDoor] = 0;
+        }
     }
-#if 0
-    if (wallInfo->type == WallType::TwoWallCorner) {
-        BuildingTileEntry *entry1 = mEntries[SectionWallN];
-        BuildingTileEntry *entry2 = mEntries[SectionWallW];
+
+    if (mWallOrientation == WallOrientNW) {
+        BuildingTileEntry *entry1 = mEntries[SectionWall];
+        BuildingTileEntry *entry2 = mEntries[SectionWall2];
         if (!entry1) entry1 = BuildingTilesMgr::instance()->noneTileEntry();
         if (!entry2) entry2 = BuildingTilesMgr::instance()->noneTileEntry();
         if (!entry1->isNone() && !entry2->isNone()) {
             // 2 different walls
             if (offset == BTC_Windows::West) {
-                mEntryEnum[SectionWallW] = BTC_Walls::WestWindow;
+                if (mEntryEnum[SectionWall] == BTC_Walls::West || mEntryEnum[SectionWall] == BTC_Walls::WestDoor)
+                    mEntryEnum[SectionWall] = BTC_Walls::WestWindow;
+                else if (mEntryEnum[SectionWall2] == BTC_Walls::West || mEntryEnum[SectionWall2] == BTC_Walls::WestDoor)
+                    mEntryEnum[SectionWall2] = BTC_Walls::WestWindow;
             } else if (offset == BTC_Windows::North) {
-                mEntryEnum[SectionWallN] = BTC_Walls::NorthWindow;
+                if (mEntryEnum[SectionWall] == BTC_Walls::North || mEntryEnum[SectionWall] == BTC_Walls::NorthDoor)
+                    mEntryEnum[SectionWall] = BTC_Walls::NorthWindow;
+                else if (mEntryEnum[SectionWall2] == BTC_Walls::North || mEntryEnum[SectionWall2] == BTC_Walls::NorthDoor)
+                    mEntryEnum[SectionWall2] = BTC_Walls::NorthWindow;
             }
         } else {
             // Single NW tile -> split into 2.
             // Stack the wall containing the window on top of the other wall.
-            mEntries[SectionWallN] = entry1;
+            mEntries[SectionWall2] = entry1;
             if (offset == BTC_Windows::West) {
-                mEntryEnum[SectionWallN] = BTC_Walls::North;
-                mEntryEnum[SectionWallW] = BTC_Walls::WestWindow;
+                mEntryEnum[SectionWall] = BTC_Walls::North;
+                mEntryEnum[SectionWall2] = BTC_Walls::WestWindow;
             } else {
-                mEntryEnum[SectionWallN] = BTC_Walls::NorthWindow;
-                mEntryEnum[SectionWallW] = BTC_Walls::West;
+                mEntryEnum[SectionWall] = BTC_Walls::West;
+                mEntryEnum[SectionWall2] = BTC_Walls::NorthWindow;
             }
         }
         return;
     }
 
-    if (wallInfo->type != WallType::Invalid) {
-        mEntryEnum[sectionWall] = getWallOffset(*wallInfo, sectionWall);
-    }
-#endif
+    if (mWallOrientation != WallOrientInvalid)
+        mEntryEnum[SectionWall] = getWallOffset();
 }
 
-void BuildingSquare::ReplaceCurtains(Window *window, SquareSection section)
+void BuildingFloorV1::Square::ReplaceCurtains(Window *window, bool exterior)
 {
-    mEntries[section] = window->curtainsTile();
-    switch (section) {
-    case SquareSection::SectionCurtainsN:
-        mEntryEnum[section] = BTC_Curtains::North;
-        break;
-    case SquareSection::SectionCurtainsW:
-        mEntryEnum[section] = BTC_Curtains::West;
-        break;
-    case SquareSection::SectionCurtainsE:
-        mEntryEnum[section] = BTC_Curtains::East;
-        break;
-    case SquareSection::SectionCurtainsS:
-        mEntryEnum[section] = BTC_Curtains::South;
-        break;
-    default:
-        Q_ASSERT(false);
-        break;
-    }
+    mEntries[exterior ? SectionCurtains2 : SectionCurtains] = window->curtainsTile();
+    mEntryEnum[exterior ? SectionCurtains2 : SectionCurtains] = window->isW()
+            ? (exterior ? BTC_Curtains::East : BTC_Curtains::West)
+            : (exterior ? BTC_Curtains::South : BTC_Curtains::North);
 }
 
-void BuildingSquare::ReplaceShutters(Window *window, bool first)
+void BuildingFloorV1::Square::ReplaceShutters(Window *window, bool first)
 {
     if (!window->shuttersTile() || window->shuttersTile()->isNone())
         return;
 
     if (mExterior) {
-        // TODO: East and West
         if (window->isN()) {
             ReplaceFurniture(window->shuttersTile()->tile(first ? BTC_Shutters::NorthLeft : BTC_Shutters::NorthRight),
-                             SectionWallFurnitureN, SectionWallFurnitureN);
+                             SectionWallFurniture, SectionWallFurniture2);
         } else {
             ReplaceFurniture(window->shuttersTile()->tile(first ? BTC_Shutters::WestAbove : BTC_Shutters::WestBelow),
-                             SectionWallFurnitureW, SectionWallFurnitureW);
+                             SectionWallFurniture, SectionWallFurniture2);
         }
     } else {
 
     }
 }
 
-void BuildingSquare::ReplaceFurniture(BuildingTileEntry *tile, int offset)
+void BuildingFloorV1::Square::ReplaceFurniture(BuildingTileEntry *tile, int offset)
 {
     if (offset < 0) { // see getStairsOffset
         mEntries[SectionFurniture] = 0;
@@ -1901,7 +1319,7 @@ void BuildingSquare::ReplaceFurniture(BuildingTileEntry *tile, int offset)
     mEntryEnum[SectionFurniture] = offset;
 }
 
-void BuildingSquare::ReplaceFurniture(BuildingTile *btile,
+void BuildingFloorV1::Square::ReplaceFurniture(BuildingTile *btile,
                                              SquareSection sectionMin,
                                              SquareSection sectionMax)
 {
@@ -1920,7 +1338,7 @@ void BuildingSquare::ReplaceFurniture(BuildingTile *btile,
     mEntryEnum[sectionMax] = 0;
 }
 
-void BuildingSquare::ReplaceRoof(BuildingTileEntry *tile, int offset)
+void BuildingFloorV1::Square::ReplaceRoof(BuildingTileEntry *tile, int offset)
 {
     if (mEntries[SectionRoof] && !mEntries[SectionRoof]->isNone()) {
         mEntries[SectionRoof2] = tile;
@@ -1931,7 +1349,7 @@ void BuildingSquare::ReplaceRoof(BuildingTileEntry *tile, int offset)
     mEntryEnum[SectionRoof] = offset;
 }
 
-void BuildingSquare::ReplaceRoofCap(BuildingTileEntry *tile, int offset)
+void BuildingFloorV1::Square::ReplaceRoofCap(BuildingTileEntry *tile, int offset)
 {
     if (mEntries[SectionRoofCap] && !mEntries[SectionRoofCap]->isNone()) {
         mEntries[SectionRoofCap2] = tile;
@@ -1942,69 +1360,57 @@ void BuildingSquare::ReplaceRoofCap(BuildingTileEntry *tile, int offset)
     mEntryEnum[SectionRoofCap] = offset;
 }
 
-void BuildingSquare::ReplaceRoofTop(BuildingTileEntry *tile, int offset)
+void BuildingFloorV1::Square::ReplaceRoofTop(BuildingTileEntry *tile, int offset)
 {
     mEntries[SectionRoofTop] = tile;
     mEntryEnum[SectionRoofTop] = offset;
 }
 
-void BuildingSquare::ReplaceFloorGrime(BuildingTileEntry *grimeTile)
+void BuildingFloorV1::Square::ReplaceFloorGrime(BuildingTileEntry *grimeTile)
 {
     if (!grimeTile || grimeTile->isNone())
         return;
 
-    BuildingTileEntry *wallTileN = mEntries[SectionWallN];
-    if (wallTileN && wallTileN->isNone()) wallTileN = nullptr;
+    BuildingTileEntry *wallTile1 = mEntries[SectionWall];
+    if (wallTile1 && wallTile1->isNone()) wallTile1 = 0;
 
-    BuildingTileEntry *wallTileW = mEntries[SectionWallW];
-    if (wallTileW && wallTileW->isNone()) wallTileW = nullptr;
+    BuildingTileEntry *wallTile2 = mEntries[SectionWall2];
+    if (wallTile2 && wallTile2->isNone()) wallTile2 = 0;
 
-//    Q_ASSERT(!(wallTileN == nullptr && wallTileW != nullptr));
+    Q_ASSERT(!(wallTile1 == 0 && wallTile2 != 0));
 
     int grimeEnumW = -1, grimeEnumN = -1;
 
-    if (wallTileN) {
-        switch (mEntryEnum[SectionWallN]) {
+    if (wallTile1) {
+        switch (mEntryEnum[SectionWall]) {
+        case BTC_Walls::West:
+        case BTC_Walls::WestWindow: grimeEnumW = BTC_GrimeFloor::West; break;
+        case BTC_Walls::WestDoor: break; // no grime by doors
         case BTC_Walls::North:
-        case BTC_Walls::NorthWindow:
-            grimeEnumN = BTC_GrimeFloor::North;
-            break;
-        case BTC_Walls::NorthDoor:
-             // no grime by doors
-            break;
+        case BTC_Walls::NorthWindow: grimeEnumN = BTC_GrimeFloor::North; break;
+        case BTC_Walls::NorthDoor: break; // no grime by doors
         case BTC_Walls::NorthWest:
             grimeEnumW = BTC_GrimeFloor::West;
             grimeEnumN = BTC_GrimeFloor::North;
             break;
         case BTC_Walls::SouthEast:
             // Hack - ignore "end cap" of a wall object.
-            if (mWallN.type != WallType::Pillar)
+            if (mWallOrientation != Square::WallOrientSE)
                 break;
             grimeEnumW = BTC_GrimeFloor::NorthWest;
             break;
         }
     }
-
-    if (wallTileW) {
-        switch (mEntryEnum[SectionWallW]) {
+    if (wallTile2) {
+        switch (mEntryEnum[SectionWall2]) {
         case BTC_Walls::West:
-        case BTC_Walls::WestWindow:
-            grimeEnumW = BTC_GrimeFloor::West;
-            break;
-        case BTC_Walls::WestDoor:
-             // no grime by doors
-            break;
-        case BTC_Walls::NorthWest:
-            Q_ASSERT(false);
-            grimeEnumW = BTC_GrimeFloor::West;
-            grimeEnumN = BTC_GrimeFloor::North;
-            break;
-        case BTC_Walls::SouthEast:
-            // Hack - ignore "end cap" of a wall object.
-            if (mWallW.type != WallType::Pillar)
-                break;
-            grimeEnumW = BTC_GrimeFloor::NorthWest;
-            break;
+        case BTC_Walls::WestWindow: grimeEnumW = BTC_GrimeFloor::West; break;
+        case BTC_Walls::WestDoor: break;
+        case BTC_Walls::North:
+        case BTC_Walls::NorthWindow: grimeEnumN = BTC_GrimeFloor::North; break;
+        case BTC_Walls::NorthDoor: break;
+        case BTC_Walls::NorthWest: Q_ASSERT(false); break;
+        case BTC_Walls::SouthEast: Q_ASSERT(false); break;
         }
     }
 
@@ -2024,80 +1430,11 @@ void BuildingSquare::ReplaceFloorGrime(BuildingTileEntry *grimeTile)
     }
 }
 
-#include "filesystemwatcher.h"
 #include "tiledeffile.h"
 #include "tilemetainfomgr.h"
-#include <QFileInfo>
 
-#if defined(Q_OS_WIN) && (_MSC_VER >= 1600)
-// Hmmmm.  libtiled.dll defines the Properties class as so:
-// class TILEDSHARED_EXPORT Properties : public QMap<QString,QString>
-// Suddenly I'm getting a 'multiply-defined symbol' error.
-// I found the solution here:
-// http://www.archivum.info/qt-interest@trolltech.com/2005-12/00242/RE-Linker-Problem-while-using-QMap.html
-template class __declspec(dllimport) QMap<QString, QString>;
-#endif
-
-namespace Tiled {
-namespace Internal {
-
-TileDefWatcher::TileDefWatcher() :
-    mWatcher(new FileSystemWatcher(this)),
-    mTileDefFile(new TileDefFile()),
-    tileDefFileChecked(false),
-    watching(false)
+namespace
 {
-    connect(mWatcher, SIGNAL(fileChanged(QString)), SLOT(fileChanged(QString)));
-}
-
-
-void TileDefWatcher::check()
-{
-    if (!tileDefFileChecked) {
-        QFileInfo fileInfo(TileMetaInfoMgr::instance()->tilesDirectory() + QString::fromLatin1("/newtiledefinitions.tiles"));
-#if 1
-        QFileInfo info2(QLatin1Literal("D:/zomboid-svn/Anims2/workdir/media/newtiledefinitions.tiles"));
-        if (info2.exists())
-            fileInfo = info2;
-#endif
-        if (fileInfo.exists()) {
-            qDebug() << "TileDefWatcher read " << fileInfo.absoluteFilePath();
-            mTileDefFile->read(fileInfo.absoluteFilePath());
-            if (!watching) {
-                mWatcher->addPath(fileInfo.canonicalFilePath());
-                watching = true;
-            }
-        }
-        tileDefFileChecked = true;
-    }
-}
-
-void TileDefWatcher::fileChanged(const QString &path)
-{
-    qDebug() << "TileDefWatcher.fileChanged() " << path;
-    tileDefFileChecked = false;
-    //        removePath(path);
-    //        addPath(path);
-}
-
-} // namespace Internal
-} // namespace Tiled
-
-static Tiled::Internal::TileDefWatcher *tileDefWatcher = nullptr;
-
-namespace BuildingEditor
-{
-
-Tiled::Internal::TileDefWatcher *getTileDefWatcher()
-{
-    if (tileDefWatcher == nullptr) {
-        tileDefWatcher = new Tiled::Internal::TileDefWatcher();
-    }
-    return tileDefWatcher;
-}
-
-} // namespace BuildingEditor
-
 struct GrimeProperties
 {
     bool West;
@@ -2108,6 +1445,7 @@ struct GrimeProperties
     bool DoubleLeft;
     bool DoubleRight;
 };
+}
 
 static bool tileHasGrimeProperties(BuildingTile *btile, GrimeProperties *props)
 {
@@ -2168,27 +1506,39 @@ static bool tileHasGrimeProperties(BuildingTile *btile, GrimeProperties *props)
     return false;
 }
 
-void BuildingSquare::ReplaceWallGrime(BuildingTileEntry *grimeTile, const QString &userTileWalls, const QString &userTileWalls2)
+void BuildingFloorV1::Square::ReplaceWallGrime(BuildingTileEntry *grimeTile, const QString &userTileWalls, const QString &userTileWalls2)
 {
     if (!grimeTile || grimeTile->isNone())
         return;
 
-    BuildingTileEntry *tileEntry1 = mEntries[SectionWallN];
+    BuildingTileEntry *tileEntry1 = mEntries[SectionWall];
     if (tileEntry1 && tileEntry1->isNone())
-        tileEntry1 = nullptr;
+        tileEntry1 = 0;
 
-    BuildingTileEntry *tileEntry2 = mEntries[SectionWallW];
+    BuildingTileEntry *tileEntry2 = mEntries[SectionWall2];
     if (tileEntry2 && tileEntry2->isNone())
-        tileEntry2 = nullptr;
+        tileEntry2 = 0;
 
-//    Q_ASSERT(!(tileEntry1 == nullptr && tileEntry2 != nullptr));
+    Q_ASSERT(!(tileEntry1 == 0 && tileEntry2 != 0));
 
-    BuildingTile *tileW = nullptr, *tileN = nullptr, *tileNW = nullptr, *tileSE = nullptr;
+    BuildingTile *tileW = 0, *tileN = 0, *tileNW = 0, *tileSE = 0;
     int grimeEnumW = -1, grimeEnumN = -1;
 
     if (tileEntry1) {
-        BuildingTile *btile = tileEntry1->tile(mEntryEnum[SectionWallN]);
-        switch (mEntryEnum[SectionWallN]) {
+        BuildingTile *btile = tileEntry1->tile(mEntryEnum[SectionWall]);
+        switch (mEntryEnum[SectionWall]) {
+        case BTC_Walls::West:
+            tileW = btile;
+            grimeEnumW = BTC_GrimeWall::West;
+            break;
+        case BTC_Walls::WestDoor:
+            tileW = btile;
+            grimeEnumW = BTC_GrimeWall::WestDoor;
+            break;
+        case BTC_Walls::WestWindow:
+            tileW = btile;
+            grimeEnumW = BTC_GrimeWall::WestWindow;
+            break;
         case BTC_Walls::North:
             grimeEnumN = BTC_GrimeWall::North;
             tileN = btile;
@@ -2213,8 +1563,8 @@ void BuildingSquare::ReplaceWallGrime(BuildingTileEntry *grimeTile, const QStrin
         }
     }
     if (tileEntry2) {
-        BuildingTile *btile = tileEntry2->tile(mEntryEnum[SectionWallW]);
-        switch (mEntryEnum[SectionWallW]) {
+        BuildingTile *btile = tileEntry2->tile(mEntryEnum[SectionWall2]);
+        switch (mEntryEnum[SectionWall2]) {
         case BTC_Walls::West:
             tileW = btile;
             grimeEnumW = BTC_GrimeWall::West;
@@ -2226,6 +1576,18 @@ void BuildingSquare::ReplaceWallGrime(BuildingTileEntry *grimeTile, const QStrin
         case BTC_Walls::WestWindow:
             tileW = btile;
             grimeEnumW = BTC_GrimeWall::WestWindow;
+            break;
+        case BTC_Walls::North:
+            grimeEnumN = BTC_GrimeWall::North;
+            tileN = btile;
+            break;
+        case BTC_Walls::NorthDoor:
+            tileN = btile;
+            grimeEnumN = BTC_GrimeWall::NorthDoor;
+            break;
+        case BTC_Walls::NorthWindow:
+            tileN = btile;
+            grimeEnumN = BTC_GrimeWall::NorthWindow;
             break;
         case BTC_Walls::NorthWest:
             tileNW = btile;
@@ -2351,22 +1713,22 @@ void BuildingSquare::ReplaceWallGrime(BuildingTileEntry *grimeTile, const QStrin
     }
 
     if (grimeEnumW >= 0) {
-        mEntries[SectionWallGrimeW] = grimeTile;
-        mEntryEnum[SectionWallGrimeW] = grimeEnumW;
+        mEntries[SectionWallGrime] = grimeTile;
+        mEntryEnum[SectionWallGrime] = grimeEnumW;
     }
     if (grimeEnumN >= 0) {
-        mEntries[SectionWallGrimeN] = grimeTile;
-        mEntryEnum[SectionWallGrimeN] = grimeEnumN;
+        mEntries[SectionWallGrime2] = grimeTile;
+        mEntryEnum[SectionWallGrime2] = grimeEnumN;
     }
 }
 
-void BuildingSquare::ReplaceWallTrim()
+void BuildingFloorV1::Square::ReplaceWallTrim()
 {
-    BuildingTileEntry *wallTile1 = mEntries[SectionWallN];
-    if (wallTile1 && wallTile1->isNone()) wallTile1 = nullptr;
+    BuildingTileEntry *wallTile1 = mEntries[SectionWall];
+    if (wallTile1 && wallTile1->isNone()) wallTile1 = 0;
 
-    BuildingTileEntry *wallTile2 = mEntries[SectionWallW];
-    if (wallTile2 && wallTile2->isNone()) wallTile2 = nullptr;
+    BuildingTileEntry *wallTile2 = mEntries[SectionWall2];
+    if (wallTile2 && wallTile2->isNone()) wallTile2 = 0;
 
     if (!wallTile1 && !wallTile2) return;
 
@@ -2374,39 +1736,54 @@ void BuildingSquare::ReplaceWallTrim()
     BuildingTileEntry *trimN = mWallN.trim;
 
     // No trim over furniture in the Walls layer
-    if (trimW && mWallW.furniture) trimW = nullptr;
-    if (trimN && mWallN.furniture) trimN = nullptr;
+    if (trimW && mWallW.furniture) trimW = 0;
+    if (trimN && mWallN.furniture) trimN = 0;
 
     if (!trimW && !trimN) return;
 
     int enumW = -1;
     int enumN = -1;
 
-    // SectionWallN could be a north, or north-west wall
+    // SectionWall could be a west, north, or north-west wall
     if (wallTile1) {
-        enumN = mEntryEnum[SectionWallN];
-        if (enumN == BTC_Walls::NorthWest) {
-            enumW = BTC_Walls::West;
-            enumN = BTC_Walls::North;
+        if (mEntryEnum[SectionWall] == BTC_Walls::West ||
+                mEntryEnum[SectionWall] == BTC_Walls::WestDoor ||
+                mEntryEnum[SectionWall] == BTC_Walls::WestWindow ||
+                mEntryEnum[SectionWall] == BTC_Walls::NorthWest) {
+            enumW = mEntryEnum[SectionWall];
+            if (enumW == BTC_Walls::NorthWest) {
+                enumW = BTC_Walls::West;
+                enumN = BTC_Walls::North;
+            }
+        } else {
+            enumN = mEntryEnum[SectionWall];
         }
     }
 
     // Use the same stacking order as the walls
-    int sectionW = SectionWallTrimW;
-    int sectionN = SectionWallTrimN;
+    int sectionW = SectionWallTrim2;
+    int sectionN = SectionWallTrim;
 
     // 2 different wall tiles forming north-west corner
     if (wallTile2) {
-        enumW = mEntryEnum[SectionWallW];
-        if (enumW == BTC_Walls::NorthWest) {
-            enumW = BTC_Walls::West;
-            enumN = BTC_Walls::North;
+        if (mEntryEnum[SectionWall2] == BTC_Walls::West ||
+                mEntryEnum[SectionWall2] == BTC_Walls::WestDoor ||
+                mEntryEnum[SectionWall2] == BTC_Walls::WestWindow) {
+            enumW = mEntryEnum[SectionWall2];
+        } else {
+            enumN = mEntryEnum[SectionWall2];
+            qSwap(sectionW, sectionN);
         }
     }
 
     if ((enumW == BTC_Walls::West && enumN == BTC_Walls::North) && (trimW == trimN)) {
-        enumN = BTC_Walls::NorthWest;
-        enumW = -1;
+        if (sectionN == SectionWallTrim2) {
+            enumN = BTC_Walls::NorthWest;
+            enumW = -1;
+        } else {
+            enumW = BTC_Walls::NorthWest;
+            enumN = -1;
+        }
     }
 
     if (enumW >= 0) {
@@ -2419,52 +1796,44 @@ void BuildingSquare::ReplaceWallTrim()
     }
 }
 
-int BuildingSquare::getWallOffset(const WallInfo &wallInfo, SquareSection section)
+int BuildingFloorV1::Square::getWallOffset()
 {
-    BuildingTileEntry *tile = mEntries[section];
+    BuildingTileEntry *tile = mEntries[SectionWall];
     if (!tile)
         return -1;
 
     int offset = BTC_Walls::West;
 
-    // TODO: need to check for door/window on opposite square.  i.e. If door on south edge of north square, put door frame on north edge of this square.
-
-    switch (wallInfo.edge) {
-    case WallEdge::N:
-        if (wallInfo.type == WallType::TwoWallCorner)
-            offset = BTC_Walls::NorthWest;
-        else if (wallInfo.type == WallType::Pillar)
-            offset = BTC_Walls::SouthEast;
-        else if (mEntries[SquareSection::SectionDoorN] != nullptr && mEntryEnum[SquareSection::SectionDoorN] == BTC_Doors::North)
+    switch (mWallOrientation) {
+    case WallOrientN:
+        if (mEntries[SectionDoor] != 0 &&
+                mEntryEnum[SectionDoor] == BTC_Doors::North)
             offset = BTC_Walls::NorthDoor;
-        else if (mEntries[SquareSection::SectionWindowN] != nullptr && mEntryEnum[SectionWindowN] == BTC_Doors::North)
+        else if (mEntries[SectionWindow] != 0 &&
+                 mEntryEnum[SectionWindow] == BTC_Windows::North)
             offset = BTC_Walls::NorthWindow;
         else
             offset = BTC_Walls::North;
         break;
-    case WallEdge::W:
-        if (wallInfo.type == WallType::TwoWallCorner)
-            offset = BTC_Walls::NorthWest;
-        else if (wallInfo.type == WallType::Pillar)
-            offset = BTC_Walls::SouthEast;
-        else if (mEntries[SquareSection::SectionDoorW] != nullptr && mEntryEnum[SquareSection::SectionDoorW] == BTC_Doors::West)
+    case WallOrientNW:
+        offset = BTC_Walls::NorthWest;
+        break;
+    case WallOrientW:
+        if (mEntries[SectionDoor] != 0 &&
+                mEntryEnum[SectionDoor] == BTC_Doors::West)
             offset = BTC_Walls::WestDoor;
-        else if (mEntries[SquareSection::SectionWindowW] != nullptr && mEntryEnum[SectionWindowN] == BTC_Doors::West)
+        else if (mEntries[SectionWindow] != 0 &&
+                 mEntryEnum[SectionWindow] == BTC_Windows::West)
             offset = BTC_Walls::WestWindow;
-        else
-            offset = BTC_Walls::West;
         break;
-    case WallEdge::E:
-        offset = BTC_Walls::West;
-        break;
-    case WallEdge::S:
-        // TODO
-        offset = BTC_Walls::North;
+    case WallOrientSE:
+        offset = BTC_Walls::SouthEast;
         break;
     default:
         Q_ASSERT(false);
-        return -1;
+        break;
     }
 
     return offset;
 }
+

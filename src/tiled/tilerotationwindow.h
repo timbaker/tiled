@@ -116,7 +116,8 @@ protected slots:
     void tilesetAboutToBeRemoved(Tiled::Tileset *tileset);
     void tilesetRemoved(Tiled::Tileset *tileset);
     void tilesetChanged(Tiled::Tileset *tileset);
-    void tileDropped(QSharedPointer<Tiled::TileRotatedVisual> visual, Tiled::MapRotation mapRotation, const QString &tileName);
+    void tileDroppedOntoVisualView(QSharedPointer<Tiled::TileRotatedVisual> visual, Tiled::MapRotation mapRotation, const QString &tileName);
+    void tileDroppedOntoVisualDataView(const QString &tilesetName, int tileID);
     void edgeComboActivated(int index);
     void changeDataOffsetDX(bool dx);
     void changeDataOffsetDY(bool dy);
@@ -137,6 +138,7 @@ private:
     QList<QSharedPointer<Tiled::TileRotatedVisual>> mUnassignedVisuals;
     QMap<QString, Tiled::Tileset*> mFakeTilesetLookup;
     QMap<QString, Tiled::TilesetRotated*> mTilesetByNameRotated;
+    bool mSynchingUI = false;
 
     friend class AssignVisual;
     friend class CreateVisual;

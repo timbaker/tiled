@@ -79,12 +79,22 @@ public:
         addTile(tileName, QPoint(), TileRotatedVisualEdge::None);
     }
 
-    void addTileDX(const QString& tileName)
+    void addTileN(const QString& tileName)
+    {
+        addTile(tileName, QPoint(), TileRotatedVisualEdge::North);
+    }
+
+    void addTileW(const QString& tileName)
+    {
+        addTile(tileName, QPoint(), TileRotatedVisualEdge::West);
+    }
+
+    void addTileE(const QString& tileName)
     {
         addTile(tileName, QPoint(1, 0), TileRotatedVisualEdge::East);
     }
 
-    void addTileDY(const QString& tileName)
+    void addTileS(const QString& tileName)
     {
         addTile(tileName, QPoint(0, 1), TileRotatedVisualEdge::South);
     }
@@ -201,6 +211,7 @@ public:
     void rotateTile(Tile* tile, MapRotation viewRotation, QVector<Tiled::ZTileRenderInfo>& tileInfos);
     Tile *rotateTile(Tile* tile, MapRotation rotation);
     Tile *tileFor(const QString& tilesetName, int tileID);
+    bool hasTileRotated(const QString& tilesetName, int tileID);
 
     void reload();
 

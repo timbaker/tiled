@@ -56,6 +56,7 @@ macx {
 #OBJECTS_DIR = .obj
 
 SOURCES += aboutdialog.cpp \
+    BuildingEditor/buildingfloorV1.cpp \
     abstractobjecttool.cpp \
     abstracttiletool.cpp \
     abstracttool.cpp \
@@ -274,6 +275,7 @@ SOURCES += aboutdialog.cpp \
     BuildingEditor/roofhiding.cpp
 
 HEADERS += aboutdialog.h \
+    BuildingEditor/buildingfloorV1.h \
     abstractobjecttool.h \
     abstractoverlay.h \
     abstracttiletool.h \

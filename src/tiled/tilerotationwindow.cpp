@@ -397,10 +397,10 @@ public:
             return;
 
         QSharedPointer<TileRotatedVisual> visual = allocVisual();
-        visual->mData[0].addTile(btileN->name());
-        visual->mData[1].addTileDX(btileW->name());
-        visual->mData[2].addTileDY(btileN->name());
-        visual->mData[3].addTile(btileW->name());
+        visual->mData[0].addTileN(btileN->name());
+        visual->mData[1].addTileE(btileW->name());
+        visual->mData[2].addTileS(btileN->name());
+        visual->mData[3].addTileW(btileW->name());
 
         initVisual(btileN, visual, MapRotation::NotRotated);
         initVisual(btileW, visual, MapRotation::Clockwise270);
@@ -412,16 +412,16 @@ public:
             BuildingTile *btileNW = bte->tile(nw);
             if (!btileNW->isNone()) {
                 visual = allocVisual();
-                visual->mData[0].addTile(btileNW->name());
+                visual->mData[0].addTileN(btileNW->name());
 
-                visual->mData[1].addTile(btileN->name());
-                visual->mData[1].addTileDX(btileW->name());
+                visual->mData[1].addTileN(btileN->name());
+                visual->mData[1].addTileE(btileW->name());
 
-                visual->mData[2].addTileDX(btileW->name());
-                visual->mData[2].addTileDY(btileN->name());
+                visual->mData[2].addTileE(btileW->name());
+                visual->mData[2].addTileS(btileN->name());
 
-                visual->mData[3].addTile(btileW->name());
-                visual->mData[3].addTileDY(btileN->name());
+                visual->mData[3].addTileW(btileW->name());
+                visual->mData[3].addTileS(btileN->name());
 
                 initVisual(btileNW, visual, MapRotation::NotRotated);
 
@@ -476,10 +476,10 @@ public:
             return;
 
         QSharedPointer<TileRotatedVisual> visual = allocVisual();
-        visual->mData[0].addTile(btileN->name());
-        visual->mData[1].addTileDX(btileE->name());
-        visual->mData[2].addTileDY(btileS->name());
-        visual->mData[3].addTile(btileW->name());
+        visual->mData[0].addTileN(btileN->name());
+        visual->mData[1].addTileE(btileE->name());
+        visual->mData[2].addTileS(btileS->name());
+        visual->mData[3].addTileW(btileW->name());
 
         initVisual(btileN, visual, MapRotation::NotRotated);
         initVisual(btileW, visual, MapRotation::Clockwise270);
@@ -1381,7 +1381,7 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     ui->visualList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     connect(ui->visualList->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TileRotationWindow::visualListSelectionChanged);
     connect(ui->visualList, &QTableView::activated, this, &TileRotationWindow::visualActivated);
-    connect(ui->visualList->model(), &TileRotatedVisualModel::tileDropped, this, &TileRotationWindow::tileDropped);
+    connect(ui->visualList->model(), &TileRotatedVisualModel::tileDropped, this, &TileRotationWindow::tileDroppedOntoVisualView);
 
     ui->tilesetList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     connect(ui->tilesetList, &QListWidget::itemSelectionChanged, this, &TileRotationWindow::tilesetSelectionChanged);
@@ -1406,6 +1406,7 @@ TileRotationWindow::TileRotationWindow(QWidget *parent) :
     ui->visualDataView->setZoomable(mZoomable);
     ui->visualDataView->setAcceptDrops(true);
     connect(ui->visualDataView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TileRotationWindow::visualDataSelectionChanged);
+    connect(ui->visualDataView->model(), &MixedTilesetModel::tileDropped, this, &TileRotationWindow::tileDroppedOntoVisualDataView);
 #if 1
 //    ui->tileRotateView->setItemDelegate(new ::TileRotateDelegate(ui->tileRotateView, ui->tileRotateView, this));
 #else
@@ -1695,6 +1696,9 @@ void TileRotationWindow::updateWindowTitle()
 
 void TileRotationWindow::syncUI()
 {
+    bool wasSynchingUI = mSynchingUI;
+    mSynchingUI = true;
+
     ui->actionSave->setEnabled(!mFileName.isEmpty() && !mUndoStack->isClean());
     ui->actionSaveAs->setEnabled(!mFileName.isEmpty());
 
@@ -1704,29 +1708,39 @@ void TileRotationWindow::syncUI()
     ui->actionDeleteVisual->setEnabled(selected.size() > 0);
 
     {
-        QModelIndex dataIndex = ui->visualDataView->selectionModel()->currentIndex();
-        if (mCurrentVisual != nullptr && dataIndex.isValid()) {
+        if (mCurrentVisual != nullptr && !ui->visualDataView->selectionModel()->selectedIndexes().isEmpty()) {
             int mr = int(mCurrentVisualRotation);
             const TileRotatedVisualData& data = mCurrentVisual->mData[mr];
+            QModelIndex dataIndex = ui->visualDataView->selectionModel()->selectedIndexes().first();
             int di = dataIndex.column();
-            ui->edgeComboBox->setCurrentIndex(int(data.mEdges[di]));
-            ui->checkBoxDX->setChecked(data.mOffsets[di].x() != 0);
-            ui->checkBoxDY->setChecked(data.mOffsets[di].y() != 0);
-            ui->edgeComboBox->setEnabled(true);
-            ui->checkBoxDX->setEnabled(true);
-            ui->checkBoxDY->setEnabled(true);
+            if (di < data.mTileNames.size()) {
+                ui->edgeComboBox->setCurrentIndex(int(data.mEdges[di]));
+                ui->checkBoxDX->setChecked(data.mOffsets[di].x() != 0);
+                ui->checkBoxDY->setChecked(data.mOffsets[di].y() != 0);
+                ui->edgeComboBox->setEnabled(true);
+                ui->checkBoxDX->setEnabled(true);
+                ui->checkBoxDY->setEnabled(true);
+            } else {
+                ui->edgeComboBox->setCurrentIndex(0);
+                ui->edgeComboBox->setEnabled(false);
+                ui->checkBoxDX->setChecked(false);
+                ui->checkBoxDY->setChecked(false);
+                ui->checkBoxDX->setEnabled(false);
+                ui->checkBoxDY->setEnabled(false);
+            }
         } else {
             ui->edgeComboBox->setCurrentIndex(0);
             ui->edgeComboBox->setEnabled(false);
+            ui->checkBoxDX->setChecked(false);
+            ui->checkBoxDY->setChecked(false);
             ui->checkBoxDX->setEnabled(false);
             ui->checkBoxDY->setEnabled(false);
         }
-//        TileRotated *tile = ui->tileRotateView->model()->tileAt(selected.first());
-//        TRWFurnitureTiles* furnitureTiles = dynamic_cast<TRWFurnitureTiles*>(furnitureTile->owner());
-//        ui->typeComboBox->setCurrentIndex(int(furnitureTiles->mType));
     }
 
     updateWindowTitle();
+
+    mSynchingUI = wasSynchingUI;
 }
 
 void TileRotationWindow::tileActivated(const QModelIndex &index)
@@ -1805,6 +1819,11 @@ void TileRotationWindow::visualListSelectionChanged()
         ui->visualDataView->clear();
     }
     setVisualDataList();
+    if ((mCurrentVisual != nullptr) && !mCurrentVisual->mData[int(mCurrentVisualRotation)].mTileNames.isEmpty()) {
+        QModelIndex index = ui->visualDataView->model()->index(1, 0); // row=1 due to hidden header?
+        Tile *tile = ui->visualDataView->model()->tileAt(index);
+        ui->visualDataView->selectionModel()->select(index, QItemSelectionModel::SelectCurrent/* | QItemSelectionModel::Rows*/);
+    }
     syncUI();
 }
 
@@ -1845,29 +1864,43 @@ void TileRotationWindow::visualDataSelectionChanged()
 
 void TileRotationWindow::edgeComboActivated(int index)
 {
+    if (mSynchingUI)
+        return;
+    QModelIndex dataIndex = ui->visualDataView->selectionModel()->currentIndex();
+    if (dataIndex.isValid()) {
+        int mr = int(mCurrentVisualRotation);
+        TileRotatedVisualData data = mCurrentVisual->mData[mr];
+        int di = dataIndex.column();
+        data.mEdges[di] = TileRotatedVisualEdge(index);
+        mUndoStack->push(new ChangeTiles(this, mCurrentVisual, mCurrentVisualRotation, data));
+    }
 }
 
 void TileRotationWindow::changeDataOffsetDX(bool dx)
 {
+    if (mSynchingUI)
+        return;
     QModelIndex dataIndex = ui->visualDataView->selectionModel()->currentIndex();
     if (dataIndex.isValid()) {
         int mr = int(mCurrentVisualRotation);
-        TileRotatedVisualData& data = mCurrentVisual->mData[mr];
+        TileRotatedVisualData data = mCurrentVisual->mData[mr];
         int di = dataIndex.column();
-        // TODO: undo/redo
         data.mOffsets[di].setX(dx ? 1 : 0);
+        mUndoStack->push(new ChangeTiles(this, mCurrentVisual, mCurrentVisualRotation, data));
     }
 }
 
 void TileRotationWindow::changeDataOffsetDY(bool dy)
 {
+    if (mSynchingUI)
+        return;
     QModelIndex dataIndex = ui->visualDataView->selectionModel()->currentIndex();
     if (dataIndex.isValid()) {
         int mr = int(mCurrentVisualRotation);
-        TileRotatedVisualData& data = mCurrentVisual->mData[mr];
+        TileRotatedVisualData data = mCurrentVisual->mData[mr];
         int di = dataIndex.column();
-        // TODO: undo/redo
         data.mOffsets[di].setY(dy ? 1 : 0);
+        mUndoStack->push(new ChangeTiles(this, mCurrentVisual, mCurrentVisualRotation, data));
     }
 }
 
@@ -2097,8 +2130,7 @@ void TileRotationWindow::tilesetChanged(Tileset *tileset)
     }
 }
 
-// Called when a Tile is dragged onto a TileRotatedVisual (one of the 4 rotations).
-void TileRotationWindow::tileDropped(QSharedPointer<TileRotatedVisual> visual, MapRotation mapRotation, const QString &tileName)
+void TileRotationWindow::tileDroppedOntoVisualView(QSharedPointer<TileRotatedVisual> visual, MapRotation mapRotation, const QString &tileName)
 {
     Tile *tile = BuildingTilesMgr::instance()->tileFor(tileName);
     if ((tile == BuildingTilesMgr::instance()->noneTiledTile()) || (tile == TilesetManager::instance()->missingTile())) {
@@ -2119,6 +2151,15 @@ void TileRotationWindow::tileDropped(QSharedPointer<TileRotatedVisual> visual, M
         }
     }
     mUndoStack->endMacro();
+}
+
+void TileRotationWindow::tileDroppedOntoVisualDataView(const QString &tilesetName, int tileID)
+{
+    QString tileName = BuildingTilesMgr::instance()->nameForTile(tilesetName, tileID);
+
+    TileRotatedVisualData data = mCurrentVisual->mData[int(mCurrentVisualRotation)];
+    data.addTile(tileName);
+    mUndoStack->push(new ChangeTiles(this, mCurrentVisual, mCurrentVisualRotation, data));
 }
 
 void TileRotationWindow::addVisual(QSharedPointer<TileRotatedVisual> visual, int index)
@@ -2161,6 +2202,9 @@ TileRotatedVisualData TileRotationWindow::changeVisualData(QSharedPointer<TileRo
 {
     TileRotatedVisualData old = visual->mData[int(mapRotation)];
     visual->mData[int(mapRotation)] = data;
+    setVisualDataList();
+    syncUI();
+    ui->visualList->model()->redisplay();
     return old;
 }
 
