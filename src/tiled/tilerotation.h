@@ -115,9 +115,9 @@ public:
         int floorHeight = 32;
         QPoint offset = mOffsets[i];
         if (offset == QPoint(1, 0))
-            return QPoint(floorWidth / 2, floorHeight / 2);
+            return QPoint(floorWidth / 2 - 2, floorHeight / 2 - 1);
         else if (offset == QPoint(0, 1))
-            return QPoint(-floorWidth / 2, floorHeight / 2);
+            return QPoint(-floorWidth / 2 + 2, floorHeight / 2 - 1);
         return QPoint();
     }
 };

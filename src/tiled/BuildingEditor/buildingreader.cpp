@@ -34,6 +34,15 @@ using namespace SharedTools;
 #include <QString>
 #include <QXmlStreamReader>
 
+#if defined(Q_OS_WIN) && (_MSC_VER >= 1600)
+// Hmmmm.  libtiled.dll defines the MapRands class as so:
+// class TILEDSHARED_EXPORT MapRands : public QVector<QVector<int> >
+// Suddenly I'm getting a 'multiply-defined symbol' error.
+// I found the solution here:
+// http://www.archivum.info/qt-interest@trolltech.com/2005-12/00242/RE-Linker-Problem-while-using-QMap.html
+template class __declspec(dllimport) QMap<QString, QString>;
+#endif
+
 using namespace BuildingEditor;
 
 // version="1.0"
@@ -44,7 +53,10 @@ using namespace BuildingEditor;
 // added FurnitureTiles::mCorners
 #define VERSION2 2
 
-#define VERSION_LATEST VERSION2
+// Renamed some layers
+#define VERSION3 3
+
+#define VERSION_LATEST VERSION3
 
 namespace BuildingEditor {
 
@@ -366,7 +378,7 @@ private:
 
     QSet<BuildingTileCategory*> deadCategories;
 
-    void fixTileRotationLayerNames(Building *building);
+//    void fixTileRotationLayerNames(Building *building);
 
     QXmlStreamReader xml;
 };
@@ -430,7 +442,7 @@ Building *BuildingReaderPrivate::readBuilding()
         mVersion = versionString.toInt();
         if (mVersion <= 0 || mVersion > VERSION_LATEST) {
             xml.raiseError(tr("Unknown building version '%1'").arg(versionString));
-            return 0;
+            return nullptr;
         }
     }
     const int width = atts.value(QLatin1String("width")).toString().toInt();
@@ -484,7 +496,7 @@ Building *BuildingReaderPrivate::readBuilding()
     // Clean up in case of error
     if (xml.hasError()) {
         delete mBuilding;
-        mBuilding = 0;
+        mBuilding = nullptr;
     }
 
     return mBuilding;
@@ -771,12 +783,24 @@ BuildingFloor *BuildingReaderPrivate::readFloor()
             }
         } else if (xml.name() == QLatin1String("tiles")) {
             const QXmlStreamAttributes atts = xml.attributes();
-            const QString layerName = atts.value(QLatin1String("layer")).toString();
+            QString layerName = atts.value(QLatin1String("layer")).toString();
             if (layerName.isEmpty()) {
                 xml.raiseError(tr("Empty/missing layer name for <tiles> on floor %1")
                                .arg(floor->level()));
                 delete floor;
-                return 0;
+                return nullptr;
+            }
+            if (mVersion == VERSION2) {
+                QMap<QString, QString> renameLookup;
+                renameLookup[QLatin1Literal("Curtains2")] = QLatin1Literal("Curtains3");
+                renameLookup[QLatin1Literal("Doors")] = QLatin1Literal("Door");
+                renameLookup[QLatin1Literal("Frames")] = QLatin1Literal("Frame");
+                renameLookup[QLatin1Literal("Walls")] = QLatin1Literal("Wall");
+                renameLookup[QLatin1Literal("Walls2")] = QLatin1Literal("Wall2");
+                renameLookup[QLatin1Literal("Windows")] = QLatin1Literal("Window");
+                if (renameLookup.contains(layerName)) {
+                    layerName = renameLookup[layerName];
+                }
             }
             while (xml.readNext() != QXmlStreamReader::Invalid) {
                 if (xml.isEndElement())
@@ -1242,7 +1266,7 @@ void BuildingReaderPrivate::fix(Building *building)
     qDeleteAll(deadCategories);
     qDeleteAll(deadTiles);
 
-    fixTileRotationLayerNames(building);
+//    fixTileRotationLayerNames(building);
 }
 
 FurnitureTiles *BuildingReaderPrivate::fixFurniture(FurnitureTiles *ftiles)
@@ -1304,11 +1328,12 @@ BuildingTileEntry *BuildingReaderPrivate::fixEntry(BuildingTileEntry *entry)
 static bool isSameBuildingTile(BuildingSquare &square, BuildingSquare::SquareSection section,
                         BuildingFloorV1::Square &squareV1, BuildingFloorV1::Square::SquareSection sectionV1)
 {
-    return square.mEntries[section] != nullptr &&
+    return square.mEntries[section] != nullptr && !square.mEntries[section]->isNone() &&
             square.mEntries[section] == squareV1.mEntries[sectionV1] &&
             square.mEntryEnum[section] == squareV1.mEntryEnum[sectionV1];
 }
 
+#if 0
 void BuildingReaderPrivate::fixTileRotationLayerNames(Building *building)
 {
     for (BuildingFloor *floor : building->floors()) {
@@ -1326,45 +1351,114 @@ void BuildingReaderPrivate::fixTileRotationLayerNames(Building *building)
                 BuildingFloorV1::Square &squareV1 = floorV1.squares[x][y];
                 // Before double-sided walls were added, SectionWall and SectionWall2 could contain
                 // either north or west walls, depending on how they were stacked.
-                QString grimeTileName = floor->grimeAt(QLatin1String("Walls"), x, y);
-                if (!grimeTileName.isEmpty()) {
+                QString wallTileName = floor->grimeAt(QLatin1String("Walls"), x, y);
+                if (!wallTileName.isEmpty()) {
                     floor->setGrime(QLatin1String("Walls"), x, y, QString());
                     if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallN,
                                            squareV1, BuildingFloorV1::Square::SquareSection::SectionWall)) {
-                        floor->setGrime(QLatin1String("WallN"), x, y, grimeTileName);
+                        floor->setGrime(QLatin1String("WallN"), x, y, wallTileName);
                     }
                     else if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallW,
                                            squareV1, BuildingFloorV1::Square::SquareSection::SectionWall)) {
                         // West wall is lower than the north wall, which is reverse of the new way.
-                        floor->setGrime(QLatin1String("WallW"), x, y, grimeTileName);
+                        floor->setGrime(QLatin1String("WallW"), x, y, wallTileName);
                     }
                     else if (squareV1.mEntries[BuildingFloorV1::Square::SquareSection::SectionWall] == nullptr) {
-                        floor->setGrime(QLatin1String("WallW"), x, y, grimeTileName);
+                        floor->setGrime(QLatin1String("WallW"), x, y, wallTileName);
                     }
                     else {
-                        floor->setGrime(QLatin1String("WallN"), x, y, grimeTileName);
+                        floor->setGrime(QLatin1String("WallN"), x, y, wallTileName);
                     }
                 }
-                QString grimeTileName2 = floor->grimeAt(QLatin1String("Walls2"), x, y);
-                if (!grimeTileName2.isEmpty()) {
+                QString wallTileName2 = floor->grimeAt(QLatin1String("Walls2"), x, y);
+                if (!wallTileName2.isEmpty()) {
                     floor->setGrime(QLatin1String("Walls2"), x, y, QString());
                     if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallW,
                                            squareV1, BuildingFloorV1::Square::SquareSection::SectionWall2)) {
-                        floor->setGrime(QLatin1String("WallW"), x, y, grimeTileName2);
+                        floor->setGrime(QLatin1String("WallW"), x, y, wallTileName2);
                     }
                     else if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallN,
                                            squareV1, BuildingFloorV1::Square::SquareSection::SectionWall2)) {
                         // North wall is higher than the west wall, which is reverse of the new way.
-                        floor->setGrime(QLatin1String("WallN"), x, y, grimeTileName2);
+                        floor->setGrime(QLatin1String("WallN"), x, y, wallTileName2);
                     }
                     else if (squareV1.mEntries[BuildingFloorV1::Square::SquareSection::SectionWall2] == nullptr) {
-                        floor->setGrime(QLatin1String("WallN"), x, y, grimeTileName2);
+                        floor->setGrime(QLatin1String("WallN"), x, y, wallTileName2);
                     }
                     else {
-                        floor->setGrime(QLatin1String("WallW"), x, y, grimeTileName2);
+                        floor->setGrime(QLatin1String("WallW"), x, y, wallTileName2);
+                    }
+                }
+
+                QString grimeTileName = floor->grimeAt(QLatin1String("WallGrime"), x, y);
+                if (!grimeTileName.isEmpty()) {
+                    floor->setGrime(QLatin1String("WallGrime"), x, y, QString());
+                    if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallGrimeN,
+                                           squareV1, BuildingFloorV1::Square::SquareSection::SectionWallGrime)) {
+                        floor->setGrime(QLatin1String("WallGrimeN"), x, y, grimeTileName);
+                    }
+                    else if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallGrimeW,
+                                           squareV1, BuildingFloorV1::Square::SquareSection::SectionWallGrime)) {
+                        floor->setGrime(QLatin1String("WallGrimeW"), x, y, grimeTileName);
+                    }
+                    else if (squareV1.mEntries[BuildingFloorV1::Square::SquareSection::SectionWallGrime] == nullptr) {
+                        floor->setGrime(QLatin1String("WallGrimeW"), x, y, grimeTileName);
+                    }
+                    else {
+                        floor->setGrime(QLatin1String("WallGrimeN"), x, y, grimeTileName);
+                    }
+                }
+                QString grimeTileName2 = floor->grimeAt(QLatin1String("WallGrime2"), x, y);
+                if (!grimeTileName2.isEmpty()) {
+                    floor->setGrime(QLatin1String("WallGrime2"), x, y, QString());
+                    if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallGrimeW,
+                                           squareV1, BuildingFloorV1::Square::SquareSection::SectionWallGrime2)) {
+                        floor->setGrime(QLatin1String("WallGrimeW"), x, y, grimeTileName2);
+                    }
+                    else if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallGrimeN,
+                                           squareV1, BuildingFloorV1::Square::SquareSection::SectionWallGrime2)) {
+                        floor->setGrime(QLatin1String("WallGrimeN"), x, y, grimeTileName2);
+                    }
+                    else if (squareV1.mEntries[BuildingFloorV1::Square::SquareSection::SectionWallGrime2] == nullptr) {
+                        floor->setGrime(QLatin1String("WallGrimeN"), x, y, grimeTileName2);
+                    }
+                    else {
+                        floor->setGrime(QLatin1String("WallGrimeW"), x, y, grimeTileName2);
+                    }
+                }
+
+                QString trimTileName = floor->grimeAt(QLatin1String("WallTrim"), x, y);
+                if (!trimTileName.isEmpty()) {
+                    floor->setGrime(QLatin1String("WallTrim"), x, y, QString());
+                    if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallTrimN,
+                                           squareV1, BuildingFloorV1::Square::SquareSection::SectionWallTrim)) {
+                        floor->setGrime(QLatin1String("WallTrimN"), x, y, trimTileName);
+                    }
+                    else if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallTrimW,
+                                           squareV1, BuildingFloorV1::Square::SquareSection::SectionWallTrim)) {
+                        floor->setGrime(QLatin1String("WallTrimW"), x, y, trimTileName);
+                    }
+                    else {
+                        floor->setGrime(QLatin1String("WallTrimN"), x, y, trimTileName);
+                    }
+                }
+                QString trimTileName2 = floor->grimeAt(QLatin1String("WallTrim2"), x, y);
+                if (!trimTileName2.isEmpty()) {
+                    floor->setGrime(QLatin1String("WallTrim2"), x, y, QString());
+                    if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallTrimW,
+                                           squareV1, BuildingFloorV1::Square::SquareSection::SectionWallTrim2)) {
+                        floor->setGrime(QLatin1String("WallTrimW"), x, y, trimTileName2);
+                    }
+                    else if (isSameBuildingTile(square, BuildingSquare::SquareSection::SectionWallTrimN,
+                                           squareV1, BuildingFloorV1::Square::SquareSection::SectionWallTrim2)) {
+                        floor->setGrime(QLatin1String("WallTrimN"), x, y, trimTileName2);
+                    }
+                    else {
+                        floor->setGrime(QLatin1String("WallTrimW"), x, y, trimTileName2);
                     }
                 }
             }
         }
     }
 }
+#endif

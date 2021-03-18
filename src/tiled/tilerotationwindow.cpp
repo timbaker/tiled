@@ -1607,16 +1607,22 @@ void TileRotationWindow::clearVisual()
     if (mCurrentVisual == nullptr) {
         return;
     }
-#if 0
-    TileRotateView *v = ui->tileRotateView;
-    QModelIndexList selection = v->selectionModel()->selectedIndexes();
-    for (QModelIndex index : selection) {
-        TileRotated *tile = v->model()->tileAt(index);
-    }
+
     mUndoStack->beginMacro(tr("Clear Tiles"));
-    // TODO: r90 or r180 or r270
+
+    for (TilesetRotated *tilesetR : mTilesetRotatedList) {
+        for (TileRotated *tileR : tilesetR->mTiles) {
+            if (tileR->mVisual != mCurrentVisual || tileR->mRotation != mCurrentVisualRotation) {
+                continue;
+            }
+            mUndoStack->push(new AssignVisual(this, tileR, nullptr, MapRotation::NotRotated));
+        }
+    }
+
+    TileRotatedVisualData data;
+    mUndoStack->push(new ChangeTiles(this, mCurrentVisual, mCurrentVisualRotation, data));
+
     mUndoStack->endMacro();
-#endif
 }
 
 void TileRotationWindow::deleteVisual()
@@ -1866,7 +1872,10 @@ void TileRotationWindow::edgeComboActivated(int index)
 {
     if (mSynchingUI)
         return;
-    QModelIndex dataIndex = ui->visualDataView->selectionModel()->currentIndex();
+    QModelIndexList selection = ui->visualDataView->selectionModel()->selectedIndexes();
+    if (selection.isEmpty())
+        return;
+    QModelIndex dataIndex = selection.first();
     if (dataIndex.isValid()) {
         int mr = int(mCurrentVisualRotation);
         TileRotatedVisualData data = mCurrentVisual->mData[mr];
@@ -1880,7 +1889,10 @@ void TileRotationWindow::changeDataOffsetDX(bool dx)
 {
     if (mSynchingUI)
         return;
-    QModelIndex dataIndex = ui->visualDataView->selectionModel()->currentIndex();
+    QModelIndexList selection = ui->visualDataView->selectionModel()->selectedIndexes();
+    if (selection.isEmpty())
+        return;
+    QModelIndex dataIndex = selection.first();
     if (dataIndex.isValid()) {
         int mr = int(mCurrentVisualRotation);
         TileRotatedVisualData data = mCurrentVisual->mData[mr];

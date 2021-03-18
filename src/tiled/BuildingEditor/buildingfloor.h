@@ -104,42 +104,47 @@ public:
         SectionFloor,
         SectionFloorGrime,
         SectionFloorGrime2,
-        SectionWallN,
-        SectionWallTrimN,
-        SectionWallW,
-        SectionWallTrimW,
+        // North, West walls start here
+        SectionWall,
+        SectionWallTrim,
+        SectionWall2,
+        SectionWallTrim2,
+        SectionWall3,
+        SectionWallTrim3,
+        SectionWall4,
+        SectionWallTrim4,
         SectionRoofCap,
         SectionRoofCap2,
-        SectionWallOverlayN,
-        SectionWallOverlayW,
-        SectionWallGrimeN,
-        SectionWallGrimeW,
-        SectionWallFurnitureN,
-        SectionWallFurnitureW,
-        SectionFrame,
-        SectionDoorN,
-        SectionDoorW,
-        SectionWindowN,
-        SectionWindowW,
-        SectionCurtainsN,
-        SectionCurtainsW,
+        SectionWallOverlay,
+        SectionWallOverlay2,
+        SectionWallOverlay3,
+        SectionWallOverlay4,
+        SectionWallGrime,
+        SectionWallGrime2,
+        SectionWallFurniture,
+        SectionWallFurniture2,
+        SectionWallFurniture3,
+        SectionWallFurniture4,
+        SectionFrame1,
+        SectionFrame2,
+        SectionFrame3,
+        SectionFrame4,
+        SectionDoor1,
+        SectionDoor2,
+        SectionDoor3,
+        SectionDoor4,
+        SectionWindow1,
+        SectionWindow2,
+        SectionWindow3,
+        SectionWindow4,
+        SectionCurtains1,
+        SectionCurtains2,
+        SectionCurtains3,
+        SectionCurtains4,
         SectionFurniture,
         SectionFurniture2,
         SectionFurniture3,
         SectionFurniture4,
-        // East and south are reverse order of the north and west
-        SectionCurtainsE,
-        SectionCurtainsS,
-        SectionWindowE,
-        SectionWindowS,
-        SectionDoorE,
-        SectionDoorS,
-        SectionWallFurnitureE,
-        SectionWallFurnitureS,
-        SectionWallOverlayE,
-        SectionWallOverlayS,
-        SectionWallE,
-        SectionWallS,
         SectionRoof,
         SectionRoof2,
         SectionRoofTop,
@@ -167,15 +172,14 @@ public:
 
     QVector<BuildingTileEntry*> mEntries;
     QVector<int> mEntryEnum;
-//        WallOrientation mWallOrientation;
     bool mExterior;
     QVector<BuildingTile*> mTiles;
 
     struct WallInfo {
         WallInfo(WallEdge edge) :
             edge(edge),
-            entry(nullptr),
-            trim(nullptr),
+            entryWall(nullptr),
+            entryTrim(nullptr),
             furniture(nullptr),
             furnitureBldgTile(nullptr),
             type(WallType::Invalid)
@@ -183,8 +187,10 @@ public:
 
         }
         WallEdge edge;
-        BuildingTileEntry *entry;
-        BuildingTileEntry *trim;
+        BuildingTileEntry *entryWall;
+        BuildingTileEntry *entryTrim;
+        Door *door;
+        Window *window;
         FurnitureTile *furniture;
         BuildingTile *furnitureBldgTile;
         WallType type;
@@ -199,8 +205,11 @@ public:
     void SetWallW(BuildingTileEntry *tile);
     void SetWallN(FurnitureTile *ftile, BuildingTile *btile);
     void SetWallW(FurnitureTile *ftile, BuildingTile *btile);
+
     void SetWallTrimN(BuildingTileEntry *tile);
     void SetWallTrimW(BuildingTileEntry *tile);
+    void SetWallTrimE(BuildingTileEntry *tile);
+    void SetWallTrimS(BuildingTileEntry *tile);
 
     void SetWallS(BuildingTileEntry *tile);
     void SetWallE(BuildingTileEntry *tile);
@@ -209,21 +218,38 @@ public:
 
     bool HasWallN() const;
     bool HasWallW() const;
+
     bool HasDoorN() const;
     bool HasDoorS() const;
     bool HasDoorW() const;
     bool HasDoorE() const;
+
+    bool HasDoorFrameN() const;
+    bool HasDoorFrameS() const;
+    bool HasDoorFrameW() const;
+    bool HasDoorFrameE() const;
+
     bool HasWindowN() const;
     bool HasWindowS() const;
     bool HasWindowW() const;
     bool HasWindowE() const;
 
+    bool HasCurtainsN() const;
+    bool HasCurtainsS() const;
+    bool HasCurtainsW() const;
+    bool HasCurtainsE() const;
+
+    bool HasShuttersN() const;
+    bool HasShuttersS() const;
+    bool HasShuttersW() const;
+    bool HasShuttersE() const;
+
     void ReplaceFloor(BuildingTileEntry *tile, int offset);
     void ReplaceWall(BuildingTileEntry *tile, SquareSection section, const WallInfo &wallInfo);
     void ReplaceDoor(BuildingTileEntry *tile, SquareSection section, int offset);
-    void ReplaceFrame(BuildingTileEntry *tile, int offset);
+    void ReplaceFrame(BuildingTileEntry *tile, SquareSection section, int offset);
     void ReplaceWindow(BuildingTileEntry *tile, SquareSection section, int offset);
-    void ReplaceCurtains(Window *window, SquareSection section);
+    void ReplaceCurtains(Window *window, SquareSection section, int offset);
     void ReplaceShutters(Window *window, bool first);
     void ReplaceFurniture(BuildingTileEntry *tile, int offset = 0);
     void ReplaceFurniture(BuildingTile *btile, SquareSection sectionMin, SquareSection sectionMax);
@@ -233,8 +259,7 @@ public:
     void ReplaceFloorGrime(BuildingTileEntry *grimeTile);
     void ReplaceWallGrime(BuildingTileEntry *grimeTile, const QString &userTileWalls, const QString &userTileWalls2);
     void ReplaceWallTrim();
-
-    int getWallOffset(const WallInfo& wallInfo, SquareSection section);
+    void ReplaceWallTrimES();
 };
 
 class BuildingFloor

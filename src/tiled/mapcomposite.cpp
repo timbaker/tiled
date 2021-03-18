@@ -716,9 +716,9 @@ static ZTileRenderOrder viewRenderOrder(ZTileRenderOrder unRotatedOrder, MapRota
 
 void CompositeLayerGroup::sortForRendering(const MapRenderer *renderer, QVector<ZTileRenderInfo> &tileInfo) const
 {
-    if (renderer->rotation() == MapRotation::NotRotated) {
-        return;
-    }
+//    if (renderer->rotation() == MapRotation::NotRotated) {
+//        return;
+//    }
 
     // We know which edge each tile is on in the *un-rotated* view.
 
@@ -775,7 +775,7 @@ void CompositeLayerGroup::sortForRendering(const MapRenderer *renderer, QVector<
         }
     }
 
-    // Highest -> lowest
+    // South Wall Highest -> lowest
     for (int i = size - 1; i >= 0; i--) {
         const ZTileRenderInfo& tri = tileInfo[i];
         switch (viewRenderOrder(tri.mOrder, renderer->rotation())) {

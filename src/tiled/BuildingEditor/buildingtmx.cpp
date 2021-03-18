@@ -41,13 +41,22 @@
 
 #include <QDebug>
 
+#if defined(Q_OS_WIN) && (_MSC_VER >= 1600)
+// Hmmmm.  libtiled.dll defines the MapRands class as so:
+// class TILEDSHARED_EXPORT MapRands : public QVector<QVector<int> >
+// Suddenly I'm getting a 'multiply-defined symbol' error.
+// I found the solution here:
+// http://www.archivum.info/qt-interest@trolltech.com/2005-12/00242/RE-Linker-Problem-while-using-QMap.html
+template class __declspec(dllimport) QMap<QString, QString>;
+#endif
+
 using namespace BuildingEditor;
 using namespace Tiled;
 using namespace Tiled::Internal;
 
 static const char *TXT_FILE = "TMXConfig.txt";
 
-BuildingTMX *BuildingTMX::mInstance = 0;
+BuildingTMX *BuildingTMX::mInstance = nullptr;
 
 BuildingTMX *BuildingTMX::instance()
 {
@@ -59,7 +68,7 @@ BuildingTMX *BuildingTMX::instance()
 void BuildingTMX::deleteInstance()
 {
     delete mInstance;
-    mInstance = 0;
+    mInstance = nullptr;
 }
 
 BuildingTMX::BuildingTMX()
@@ -193,7 +202,9 @@ QString BuildingTMX::txtPath()
 // VERSION1
 // Move tilesets block to Tilesets.txt
 #define VERSION1 1
-#define VERSION_LATEST VERSION1
+// Renamed some layers
+#define VERSION2 2
+#define VERSION_LATEST VERSION2
 
 bool BuildingTMX::readTxt()
 {
@@ -332,9 +343,9 @@ bool BuildingTMX::upgradeTxt()
         int index = userFile.findBlock(QLatin1String("tilesets"));
         if (index >= 0) {
             SimpleFileBlock tilesetsBlock = userFile.blocks[index];
-            foreach (SimpleFileKeyValue kv, tilesetsBlock.values) {
+            for (const SimpleFileKeyValue &kv : tilesetsBlock.values) {
                 QString tilesetName = QFileInfo(kv.value).completeBaseName();
-                if (TileMetaInfoMgr::instance()->tileset(tilesetName) == 0) {
+                if (TileMetaInfoMgr::instance()->tileset(tilesetName) == nullptr) {
                     Tileset *ts = new Tileset(tilesetName, 64, 128);
                     // Since the tileset image height/width wasn't saved, create
                     // a tileset with only a single tile.
@@ -346,6 +357,28 @@ bool BuildingTMX::upgradeTxt()
             }
             userFile.blocks.removeAt(index);
             TileMetaInfoMgr::instance()->writeTxt();
+        }
+    }
+
+    // Version 2: rename some layers
+    if (userVersion == VERSION1) {
+        QMap<QString, QString> renameLookup;
+        renameLookup[QLatin1Literal("Curtains2")] = QLatin1Literal("Curtains3");
+        renameLookup[QLatin1Literal("Doors")] = QLatin1Literal("Door");
+        renameLookup[QLatin1Literal("Frames")] = QLatin1Literal("Frame");
+        renameLookup[QLatin1Literal("Walls")] = QLatin1Literal("Wall");
+        renameLookup[QLatin1Literal("Walls2")] = QLatin1Literal("Wall2");
+        renameLookup[QLatin1Literal("Windows")] = QLatin1Literal("Window");
+        int index = userFile.findBlock(QLatin1String("layers"));
+        if (index >= 0) {
+            SimpleFileBlock &layersBlock = userFile.blocks[index];
+            for (SimpleFileKeyValue &kv : layersBlock.values) {
+                if (kv.name == QLatin1Literal("tile")) {
+                    if (renameLookup.contains(kv.value)) {
+                        kv.value = renameLookup[kv.value];
+                    }
+                }
+            }
         }
     }
 

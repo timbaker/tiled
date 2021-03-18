@@ -227,35 +227,35 @@ void CheckBuildingsWindow::check(BuildingMap *bmap, Building *building, Map *map
                         if (btile->mIndex == NORTH_SWITCH || btile->mIndex == NORTH_SWITCH + 4) {
                             if (!square.HasWallN())
                                 issue(Issue::LightSwitch, "North Switch not on a Wall", bo);
-                            if (square.mEntries[BuildingSquare::SectionDoorN] != nullptr && square.mEntryEnum[BuildingSquare::SectionDoorN] == BTC_Doors::North)
+                            if (square.HasDoorN() || square.HasDoorFrameN())
                                 issue(Issue::LightSwitch, "North Switch on a Door", bo);
-                            if (square.mEntries[BuildingSquare::SectionWindowN] != nullptr && square.mEntryEnum[BuildingSquare::SectionWindowN] == BTC_Windows::North)
+                            if (square.HasWindowN())
                                 issue(Issue::LightSwitch, "North Switch on a Window", bo);
                         }
                         if (btile->mIndex == WEST_SWITCH || btile->mIndex == WEST_SWITCH + 4) {
                             if (!square.HasWallW())
                                 issue(Issue::LightSwitch, "West Switch not on a Wall", bo);
-                            if (square.mEntries[BuildingSquare::SectionDoorW] != nullptr && square.mEntryEnum[BuildingSquare::SectionDoorW] == BTC_Doors::West)
+                            if (square.HasDoorW() || square.HasDoorFrameW())
                                 issue(Issue::LightSwitch, "West Switch on a Door", bo);
-                            if (square.mEntries[BuildingSquare::SectionWindowW] != nullptr && square.mEntryEnum[BuildingSquare::SectionWindowW] == BTC_Windows::West)
+                            if (square.HasWindowW())
                                 issue(Issue::LightSwitch, "West Switch on a Window", bo);
                         }
                         if (btile->mIndex == EAST_SWITCH || btile->mIndex == EAST_SWITCH + 5) {
                             BuildingSquare &square = floor->squares[x+1][y];
                             if (!square.HasWallW())
                                 issue(Issue::LightSwitch, "East Switch not on a Wall", bo);
-                            if (square.mEntries[BuildingSquare::SectionDoorW] != nullptr && square.mEntryEnum[BuildingSquare::SectionDoorW] == BTC_Doors::West)
+                            if (square.HasDoorW() || square.HasDoorFrameW())
                                 issue(Issue::LightSwitch, "East Switch on a Door", bo);
-                            if (square.mEntries[BuildingSquare::SectionWindowW] != nullptr && square.mEntryEnum[BuildingSquare::SectionWindowW] == BTC_Windows::West)
+                            if (square.HasWindowW())
                                 issue(Issue::LightSwitch, "East Switch on a Window", bo);
                         }
                         if (btile->mIndex == SOUTH_SWITCH || btile->mIndex == SOUTH_SWITCH + 3) {
                             BuildingSquare &square = floor->squares[x][y+1];
                             if (!square.HasWallN())
                                 issue(Issue::LightSwitch, "South Switch not on a Wall", bo);
-                            if (square.mEntries[BuildingSquare::SectionDoorN] != nullptr && square.mEntryEnum[BuildingSquare::SectionDoorN] == BTC_Doors::North)
+                            if (square.HasDoorN() || square.HasDoorFrameN())
                                 issue(Issue::LightSwitch, "South Switch on a Door", bo);
-                            if (square.mEntries[BuildingSquare::SectionWindowN] != nullptr && square.mEntryEnum[BuildingSquare::SectionWindowN] == BTC_Windows::North)
+                            if (square.HasWindowN())
                                 issue(Issue::LightSwitch, "South Switch on a Window", bo);
                         }
                         if (btile->mIndex == NORTH_SWITCH || btile->mIndex == WEST_SWITCH || btile->mIndex == EAST_SWITCH || btile->mIndex == SOUTH_SWITCH ||

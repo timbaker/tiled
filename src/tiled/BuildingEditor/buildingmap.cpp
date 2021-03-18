@@ -174,41 +174,46 @@ static const char *gLayerNames[] = {
     "Floor",
     "FloorGrime",
     "FloorGrime2",
-    "WallN",
-    "WallTrimN",
-    "WallW",
-    "WallTrimW",
+    "Wall",
+    "WallTrim",
+    "Wall2",
+    "WallTrim2",
+    "Wall3",
+    "WallTrim3",
+    "Wall4",
+    "WallTrim4",
     "RoofCap",
     "RoofCap2",
-    "WallOverlayN",
-    "WallOverlayW",
-    "WallGrimeN",
-    "WallGrimeW",
-    "WallFurnitureN",
-    "WallFurnitureW",
-    "Frames",
-    "DoorN",
-    "DoorW",
-    "WindowN",
-    "WindowW",
-    "CurtainsN",
-    "CurtainsW",
+    "WallOverlay",
+    "WallOverlay2",
+    "WallOverlay3",
+    "WallOverlay4",
+    "WallGrime",
+    "WallGrime2",
+    "WallFurniture",
+    "WallFurniture2",
+    "WallFurniture3",
+    "WallFurniture4",
+    "Frame",
+    "Frame2",
+    "Frame3",
+    "Frame4",
+    "Door",
+    "Door2",
+    "Door3",
+    "Door4",
+    "Window",
+    "Window2",
+    "Window3",
+    "Window4",
+    "Curtains",
+    "Curtains2",
+    "Curtains3",
+    "Curtains4",
     "Furniture",
     "Furniture2",
     "Furniture3",
     "Furniture4",
-    "CurtainsE",
-    "CurtainsS",
-    "WindowE",
-    "WindowS",
-    "DoorE",
-    "DoorS",
-    "WallFurnitureE",
-    "WallFurnitureS",
-    "WallOverlayE",
-    "WallOverlayS",
-    "WallE",
-    "WallS",
     "Roof",
     "Roof2",
     "RoofTop",
@@ -608,15 +613,13 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
                         continue;
                     }
                     BuildingTile *buildingTile = entry->tile(tileOffset);
-#if 1 // HACK
+#if 1
+                    // HACK
                     if (!buildingTile->isNone()) {
-                        if (section == BuildingSquare::SquareSection::SectionWallE) {
-                            if (TileRotation::instance()->hasTileRotated(buildingTile->mTilesetName, buildingTile->mIndex)) {
-                                QString tileName = buildingTile->mTilesetName + QLatin1Literal("_R180_") + QString::number(buildingTile->mIndex);
-                                buildingTile = BuildingTilesMgr::instance()->get(tileName);
-                            }
-                        }
-                        if (section == BuildingSquare::SquareSection::SectionWallS) {
+                        if (section == BuildingSquare::SquareSection::SectionWall3 ||
+                                section == BuildingSquare::SquareSection::SectionWall4 ||
+                                section == BuildingSquare::SquareSection::SectionWallTrim3 ||
+                                section == BuildingSquare::SquareSection::SectionWallTrim4) {
                             if (TileRotation::instance()->hasTileRotated(buildingTile->mTilesetName, buildingTile->mIndex)) {
                                 QString tileName = buildingTile->mTilesetName + QLatin1Literal("_R180_") + QString::number(buildingTile->mIndex);
                                 buildingTile = BuildingTilesMgr::instance()->get(tileName);
@@ -735,7 +738,7 @@ void BuildingMap::floorTilesChanged(BuildingFloor *floor, const QString &layerNa
     pendingUserTilesToLayer[floor][layerName] |= bounds;
 
     // Painting tiles in the Walls/Walls2 layer affects which grime tiles are chosen.
-    if (layerName == QLatin1Literal("Walls") || layerName == QLatin1Literal("Walls2"))
+    if (layerName == QLatin1Literal("Wall") || layerName == QLatin1Literal("Wall2"))
         pendingLayoutToSquares.insert(floor);
 
     schedulePending();
