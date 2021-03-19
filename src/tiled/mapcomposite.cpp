@@ -727,6 +727,18 @@ void CompositeLayerGroup::sortForRendering(const MapRenderer *renderer, QVector<
     QVector<ZTileRenderInfo> sorted(size);
     sorted.resize(0);
 
+    // Floors Lowest -> Highest
+    for (int i = 0; i < size; i++) {
+        const ZTileRenderInfo& tri = tileInfo[i];
+        switch (viewRenderOrder(tri.mOrder, renderer->rotation())) {
+        case ZTileRenderOrder::Floor:
+            sorted += tri;
+            break;
+        default:
+            break;
+        }
+    }
+
     // West Wall Lowest -> Highest
     for (int i = 0; i < size; i++) {
         const ZTileRenderInfo& tri = tileInfo[i];

@@ -48,9 +48,11 @@ enum class TileRotateType
 
 class TilesetRotated;
 
+// See TileRotatedVisual::EDGE_NAMES[]
 enum class TileRotatedVisualEdge
 {
     None,
+    Floor,
     North,
     East,
     South,

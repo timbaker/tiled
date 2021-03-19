@@ -212,8 +212,8 @@ MapObjectItem::MapObjectItem(MapObject *object, MapDocument *mapDocument,
     mSyncing(false),
     mResizeHandle(new ResizeHandle(this))
 #ifdef ZOMBOID
-  , mLot(0)
-  , mMapImage(0)
+  , mLot(nullptr)
+  , mMapImage(nullptr)
   , mDragging(false)
   , mHoverRefCount(0)
 #endif

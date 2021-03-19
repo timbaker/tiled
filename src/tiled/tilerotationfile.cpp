@@ -244,7 +244,21 @@ bool TileRotationFile::write(const QString &path, const QList<TilesetRotated *> 
 
     SimpleFileBlock visualsBlock;
     visualsBlock.name = QLatin1Literal("visuals");
-    for (auto& visual : visuals) {
+    QList<QSharedPointer<TileRotatedVisual>> visualsSorted = visuals;
+    std::sort(visualsSorted.begin(), visualsSorted.end(), [](auto &a, auto &b) {
+        QString tileNameA;
+        QString tileNameB;
+        for (int i = 0; i < MAP_ROTATION_COUNT; i++) {
+            if (tileNameA.isEmpty() && !a->mData[i].mTileNames.isEmpty())
+                tileNameA = a->mData[i].mTileNames[0];
+            if (tileNameB.isEmpty() && !b->mData[i].mTileNames.isEmpty())
+                tileNameB = b->mData[i].mTileNames[0];
+            if (!tileNameA.isEmpty() && !tileNameB.isEmpty())
+                break;
+        }
+        return tileNameA < tileNameB;
+    });
+    for (auto& visual : visualsSorted) {
         SimpleFileBlock visualBlock;
         writeVisual(visual.data(), visualBlock);
         visualsBlock.blocks += visualBlock;

@@ -18,6 +18,8 @@
 #ifndef BUILDINGFLOOR_H
 #define BUILDINGFLOOR_H
 
+#include "maprotation.h"
+
 #include <QHash>
 #include <QList>
 #include <QMap>
@@ -104,7 +106,8 @@ public:
         SectionFloor,
         SectionFloorGrime,
         SectionFloorGrime2,
-        // North, West walls start here
+        SectionFloorGrime3,
+        SectionFloorGrime4,
         SectionWall,
         SectionWallTrim,
         SectionWall2,
@@ -121,6 +124,8 @@ public:
         SectionWallOverlay4,
         SectionWallGrime,
         SectionWallGrime2,
+        SectionWallGrime3,
+        SectionWallGrime4,
         SectionWallFurniture,
         SectionWallFurniture2,
         SectionWallFurniture3,
@@ -174,6 +179,7 @@ public:
     QVector<int> mEntryEnum;
     bool mExterior;
     QVector<BuildingTile*> mTiles;
+    QVector<Tiled::MapRotation> mRotation;
 
     struct WallInfo {
         WallInfo(WallEdge edge) :
@@ -246,18 +252,20 @@ public:
 
     void ReplaceFloor(BuildingTileEntry *tile, int offset);
     void ReplaceWall(BuildingTileEntry *tile, SquareSection section, const WallInfo &wallInfo);
-    void ReplaceDoor(BuildingTileEntry *tile, SquareSection section, int offset);
-    void ReplaceFrame(BuildingTileEntry *tile, SquareSection section, int offset);
-    void ReplaceWindow(BuildingTileEntry *tile, SquareSection section, int offset);
-    void ReplaceCurtains(Window *window, SquareSection section, int offset);
-    void ReplaceShutters(Window *window, bool first);
+    void ReplaceDoor(BuildingTileEntry *tile, SquareSection section, int offset, Tiled::MapRotation rotation);
+    void ReplaceFrame(BuildingTileEntry *tile, SquareSection section, int offset, Tiled::MapRotation rotation);
+    void ReplaceWindow(BuildingTileEntry *tile, SquareSection section, int offset, Tiled::MapRotation rotation);
+    void ReplaceCurtains(Window *window, SquareSection section, int offset, Tiled::MapRotation rotation);
+    void ReplaceShutters(Window *window, bool first, Tiled::MapRotation rotation);
     void ReplaceFurniture(BuildingTileEntry *tile, int offset = 0);
     void ReplaceFurniture(BuildingTile *btile, SquareSection sectionMin, SquareSection sectionMax);
     void ReplaceRoof(BuildingTileEntry *tile, int offset = 0);
     void ReplaceRoofCap(BuildingTileEntry *tile, int offset = 0);
     void ReplaceRoofTop(BuildingTileEntry *tile, int offset);
     void ReplaceFloorGrime(BuildingTileEntry *grimeTile);
-    void ReplaceWallGrime(BuildingTileEntry *grimeTile, const QString &userTileWalls, const QString &userTileWalls2);
+    void ReplaceFloorGrimeES(BuildingTileEntry *grimeTile);
+    void ReplaceWallGrime(BuildingTileEntry *grimeTile, const QString &userTileWall, const QString &userTileWall2);
+    void ReplaceWallGrimeES(BuildingTileEntry *grimeTile, const QString &userTileWall3, const QString &userTileWall4);
     void ReplaceWallTrim();
     void ReplaceWallTrimES();
 };

@@ -663,14 +663,14 @@ public:
     {
         switch (rotation)
         {
-        case MapRotation::NotRotated: // w,h=3,2 x,y=2,1 -> 2,1
+        case MapRotation::NotRotated:
             return pos;
         case MapRotation::Clockwise90:
-            return QPoint(height - pos.y() - 1, pos.x()); // w,h=3,2 x,y=2,1 -> 0,2
+            return QPoint(height - pos.y() - 1, pos.x());
         case MapRotation::Clockwise180:
-            return QPoint(width - pos.x() - 1, height - pos.y() - 1); // w,h=3,2 x,y=2,1 -> 0,0
+            return QPoint(width - pos.x() - 1, height - pos.y() - 1);
         case MapRotation::Clockwise270:
-            return QPoint(pos.y(), width - pos.x() - 1); // w,h=3,2 x,y=2,1 -> 1,0
+            return QPoint(pos.y(), width - pos.x() - 1);
         }
     }
 
@@ -855,10 +855,10 @@ public:
             if (btile->isNone())
                 continue;
             QSharedPointer<TileRotatedVisual> visual = allocVisual();
-            visual->mData[0].addTile(btile->name());
-            visual->mData[1].addTile(btile->name());
-            visual->mData[2].addTile(btile->name());
-            visual->mData[3].addTile(btile->name());
+            visual->mData[0].addTile(btile->name(), QPoint(), TileRotatedVisualEdge::Floor);
+            visual->mData[1].addTile(btile->name(), QPoint(), TileRotatedVisualEdge::Floor);
+            visual->mData[2].addTile(btile->name(), QPoint(), TileRotatedVisualEdge::Floor);
+            visual->mData[3].addTile(btile->name(), QPoint(), TileRotatedVisualEdge::Floor);
             initVisual(btile, visual, MapRotation::NotRotated);
         }
 
@@ -877,6 +877,7 @@ public:
         initFromBuildingTiles(BuildingTilesMgr::instance()->catIWallTrim()->entries(), BTC_Walls::North, BTC_Walls::West, TileRotateType::WallExtra);
 
         initFromBuildingTiles(BuildingTilesMgr::instance()->catWindows()->entries(), BTC_Windows::North, BTC_Windows::West, TileRotateType::Window);
+        // TODO: BTC_Curtains
 
         initGrime();
         initRoofCaps();

@@ -150,9 +150,9 @@ bool Door::sameAs(BuildingObject *other)
 QPolygonF Door::calcShape() const
 {
     if (isN())
-        return QRectF(mX, mY - 5/30.0, 30/30.0, 10/30.0);
+        return QRectF(mX, mY /*- 5/30.0*/, 30/30.0, 10/30.0);
     if (isW())
-        return QRectF(mX - 5/30.0, mY, 10/30.0, 30/30.0);
+        return QRectF(mX /*- 5/30.0*/, mY, 10/30.0, 30/30.0);
     return QPolygonF();
 }
 
@@ -2505,9 +2505,9 @@ bool Window::sameAs(BuildingObject *other)
 QPolygonF Window::calcShape() const
 {
     if (isN())
-        return QRectF(mX + 7/30.0, mY - 3/30.0, 16/30.0, 6/30.0);
+        return QRectF(mX + 7/30.0, mY/* - 3/30.0*/, 16/30.0, 6/30.0);
     if (isW())
-        return QRectF(mX - 3/30.0, mY + 7/30.0, 6/30.0, 16/30.0);
+        return QRectF(mX /*- 3/30.0*/, mY + 7/30.0, 6/30.0, 16/30.0);
     return QPolygonF();
 }
 

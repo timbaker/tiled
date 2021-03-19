@@ -174,6 +174,8 @@ static const char *gLayerNames[] = {
     "Floor",
     "FloorGrime",
     "FloorGrime2",
+    "FloorGrime3",
+    "FloorGrime4",
     "Wall",
     "WallTrim",
     "Wall2",
@@ -190,6 +192,8 @@ static const char *gLayerNames[] = {
     "WallOverlay4",
     "WallGrime",
     "WallGrime2",
+    "WallGrime3",
+    "WallGrime4",
     "WallFurniture",
     "WallFurniture2",
     "WallFurniture3",
@@ -614,6 +618,13 @@ void BuildingMap::BuildingSquaresToTileLayers(BuildingFloor *floor,
                     }
                     BuildingTile *buildingTile = entry->tile(tileOffset);
 #if 1
+                    if (square.mRotation[section] != MapRotation::NotRotated) {
+                        if (TileRotation::instance()->hasTileRotated(buildingTile->mTilesetName, buildingTile->mIndex)) {
+                            QString tileName = QString(QLatin1Literal("%1_R%2_%3")).arg(buildingTile->mTilesetName).arg(int(square.mRotation[section]) * 90).arg(buildingTile->mIndex);
+                            buildingTile = BuildingTilesMgr::instance()->get(tileName);
+                        }
+                    }
+#else
                     // HACK
                     if (!buildingTile->isNone()) {
                         if (section == BuildingSquare::SquareSection::SectionWall3 ||

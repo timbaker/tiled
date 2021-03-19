@@ -42,6 +42,7 @@ class TileLayer;
 
 enum class ZTileRenderOrder
 {
+    Floor,
     WestWall,
     NorthWall,
     West,

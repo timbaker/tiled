@@ -42,6 +42,7 @@ namespace Tiled
 const char *TileRotatedVisual::EDGE_NAMES[] =
 {
     "None",
+    "Floor",
     "North",
     "East",
     "South",
@@ -62,6 +63,8 @@ public:
     {
         switch (edge)
         {
+        case TileRotatedVisualEdge::Floor:
+            return ZTileRenderOrder::Floor;
         case TileRotatedVisualEdge::North:
             return ZTileRenderOrder::NorthWall;
         case TileRotatedVisualEdge::East:
@@ -197,8 +200,8 @@ public:
 
         // This is a real tile in an unrotated view.
         if (viewRotation == MapRotation::NotRotated) {
-            tileInfos += ZTileRenderInfo(tile);
-            return;
+//            tileInfos += ZTileRenderInfo(tile);
+//            return;
         }
 
         // This is a real tile in a rotated view.
@@ -206,10 +209,7 @@ public:
         QString tilesetNameR = tile->tileset()->name() + QLatin1Literal("_R") + QString::number(m * 90);
         if (mTilesetByNameRotated.contains(tilesetNameR)) {
             TilesetRotated* tilesetR = mTilesetByNameRotated[tilesetNameR];
-            if (tile->id() >= tilesetR->mTileByID.size()) {
-                return;
-            }
-            if (TileRotated *tileR = tilesetR->mTileByID[tile->id()]) {
+            if (TileRotated *tileR = tilesetR->tileAt(tile->id())) {
                 int m2 = (m + int(tileR->mRotation)) % MAP_ROTATION_COUNT;
                 tileInfos += tileR->mVisual->mData[m2].mRenderInfo;
                 return;

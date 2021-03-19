@@ -6,6 +6,8 @@ layers
     tile = FloorOverlay
     tile = FloorGrime
     tile = FloorGrime2
+    tile = FloorGrime3
+    tile = FloorGrime4
     tile = 0_Vegetation
     tile = Wall
     tile = WallTrim
@@ -23,6 +25,8 @@ layers
     tile = WallOverlay4
     tile = WallGrime
     tile = WallGrime2
+    tile = WallGrime3
+    tile = WallGrime4
     tile = WallFurniture
     tile = WallFurniture2
     tile = WallFurniture3
