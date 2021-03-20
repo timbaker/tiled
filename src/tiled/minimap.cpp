@@ -29,6 +29,7 @@
 
 #include "isometricrenderer.h"
 #include "map.h"
+#include "maplevel.h"
 #include "tilelayer.h"
 #include "tileset.h"
 #include "zlevelrenderer.h"
@@ -86,7 +87,7 @@ ShadowMap::~ShadowMap()
 void ShadowMap::layerAdded(int index, Layer *layer)
 {
     mMapComposite->map()->insertLayer(index, layer);
-    mMapComposite->layerAdded(index);
+    mMapComposite->layerAdded(layer->level(), index);
 
     if (TileLayer *tl = layer->asTileLayer()) {
         if (CompositeLayerGroup *layerGroup = mMapComposite->layerGroupForLayer(tl)) {
@@ -102,18 +103,19 @@ void ShadowMap::layerAdded(int index, Layer *layer)
     }
 }
 
-void ShadowMap::layerRemoved(int index)
+void ShadowMap::layerRemoved(int z, int index)
 {
-    mMapComposite->layerAboutToBeRemoved(index);
-    delete mMapComposite->map()->takeLayerAt(index);
+    mMapComposite->layerAboutToBeRemoved(z, index);
+    delete mMapComposite->map()->takeLayerAt(z, index);
 }
 
-void ShadowMap::layerRenamed(int index, const QString &name)
+void ShadowMap::layerRenamed(int z, int index, const QString &name)
 {
-    mMapComposite->map()->layerAt(index)->setName(name);
-    mMapComposite->layerRenamed(index);
+    Layer *layer = mMapComposite->map()->layerAt(z, index);
+    layer->setName(name);
+    mMapComposite->layerRenamed(z, index);
 
-    if (name.startsWith(QLatin1String("0_")))
+    if (layer->level() == 0 /*name.startsWith(QLatin1String("0_"))*/)
         mMapComposite->layerGroupForLevel(0)->setBmpBlendLayers(
                     mMapComposite->bmpBlender()->tileLayers());
 }
@@ -210,6 +212,7 @@ public:
     };
     LotInfo mLotInfo;
     Tiled::Layer *mLayer;
+    int mLevelIndex;
     int mLayerIndex;
     QString mName;
     struct CellEntry
@@ -370,7 +373,7 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
     QRectF oldBounds = sm.mMapComposite->boundingRect(mRenderer);
     bool redrawAll = mRedrawAll;
 
-    foreach (MapChange *cp, changes) {
+    for (MapChange *cp : changes) {
         const MapChange &c = *cp;
         switch (c.mChange) {
         case MapChange::LayerAdded:
@@ -378,21 +381,25 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
             redrawAll = true;
             break;
         case MapChange::LayerRemoved:
-            sm.layerRemoved(c.mLayerIndex);
+            sm.layerRemoved(c.mLevelIndex, c.mLayerIndex);
             redrawAll = true;
             break;
         case MapChange::LayerRenamed:
-            sm.layerRenamed(c.mLayerIndex, c.mName);
+            sm.layerRenamed(c.mLevelIndex, c.mLayerIndex, c.mName);
             redrawAll = true;
             break;
         case MapChange::RegionAltered: {
-            if (Layer *layer = sm.mMapComposite->map()->layerAt(c.mLayerIndex)) { // kinda slow
+            MapLevel *mapLevel = sm.mMapComposite->map()->levelAt(c.mLevelIndex);
+            if (mapLevel == nullptr)
+                break;
+            if (Layer *layer = mapLevel->layerAt(c.mLayerIndex)) { // kinda slow
                 if (TileLayer *tl = layer->asTileLayer()) {
-                    if (c.mCells.isEmpty())
+                    if (c.mCells.isEmpty()) {
                         tl->setCells(c.mTileLayer.x(), c.mTileLayer.y(), (TileLayer*)&c.mTileLayer, c.mRegion);
-                    else {
-                        foreach (const MapChange::CellEntry &ce, c.mCells)
+                    } else {
+                        for (const MapChange::CellEntry &ce : c.mCells) {
                             tl->setCell(ce.x, ce.y, ce.cell);
+                        }
                     }
                     if (CompositeLayerGroup *layerGroup = sm.mMapComposite->layerGroupForLayer(tl))
                         layerGroup->regionAltered(tl); // possibly set mNeedsSynch
@@ -517,7 +524,8 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
 #else
             QRect tileBounds;
 #endif
-            TileLayer *tl = sm.mMapComposite->map()->layerAt(c.mLayerIndex)->asTileLayer(); // kinda slow
+            MapLevel *mapLevel = sm.mMapComposite->map()->levelAt(c.mLevelIndex);
+            TileLayer *tl = mapLevel->layerAt(c.mLayerIndex)->asTileLayer(); // kinda slow
 #if 0
             foreach (const MapChange::CellEntry &ce, c.mCells) {
                 if (tileBounds.isEmpty())
@@ -638,7 +646,7 @@ void MiniMapRenderWorker::returnToAppThread()
 MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
     : QGraphicsItem(parent)
     , mScene(zscene)
-    , mMapImage(0)
+    , mMapImage(nullptr)
     , mMiniMapVisible(false)
     , mNeedsResume(false)
 {
@@ -776,26 +784,29 @@ void MiniMapItem::queueChange(MapChange *c)
     }
 }
 
-void MiniMapItem::layerAdded(int index)
+void MiniMapItem::layerAdded(int z, int index)
 {
     MapChange *c = new MapChange(MapChange::LayerAdded);
-    c->mLayer = mMapComposite->map()->layerAt(index)->clone();
+    c->mLayer = mMapComposite->map()->layerAt(z, index)->clone();
+    c->mLevelIndex = z;
     c->mLayerIndex = index;
     queueChange(c);
 }
 
-void MiniMapItem::layerRemoved(int index)
+void MiniMapItem::layerRemoved(int z, int index)
 {
     MapChange *c = new MapChange(MapChange::LayerRemoved);
+    c->mLevelIndex = z;
     c->mLayerIndex = index;
     queueChange(c);
 }
 
-void MiniMapItem::layerRenamed(int index)
+void MiniMapItem::layerRenamed(int z, int index)
 {
     MapChange *c = new MapChange(MapChange::LayerRenamed);
+    c->mLevelIndex = z;
     c->mLayerIndex = index;
-    c->mName = mMapComposite->map()->layerAt(index)->name();
+    c->mName = mMapComposite->map()->layerAt(z, index)->name();
     queueChange(c);
 }
 
@@ -862,13 +873,14 @@ void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
     QRegion clipped = region & layer->bounds();
     if (clipped.isEmpty()) return;
     MapChange *c = new MapChange(MapChange::RegionAltered);
-    c->mLayerIndex = mMapComposite->map()->layers().indexOf(layer);
+    c->mLevelIndex = layer->level();
+    c->mLayerIndex = mMapComposite->map()->levelAt(layer->level())->layers().indexOf(layer);
     c->mRegion = clipped;
 
     QRect br = clipped.boundingRect();
     if (layer->asTileLayer() && (br.width() * br.height() > 50)) {
         c->mTileLayer.resize(br.size(), QPoint());
-        foreach (const QRect &r, clipped.rects()) {
+        for (const QRect &r : clipped.rects()) {
             for (int y = r.y(); y <= r.bottom(); y++) {
                 for (int x = r.x(); x <= r.right(); x++) {
                     c->mTileLayer.setCell(x-br.x(), y-br.y(),
@@ -878,7 +890,7 @@ void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
         }
         c->mTileLayer.setPosition(br.topLeft());
     } else {
-        foreach (const QRect &r, clipped.rects()) {
+        for (const QRect &r : clipped.rects()) {
             for (int y = r.y(); y <= r.bottom(); y++) {
                 for (int x = r.x(); x <= r.right(); x++) {
                     c->mCells += MapChange::CellEntry(x, y, layer->asTileLayer()->cellAt(x, y));

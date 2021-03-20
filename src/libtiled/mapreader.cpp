@@ -116,6 +116,8 @@ private:
     void readProperty(Properties *properties);
 
 #ifdef ZOMBOID
+    bool levelForLayerName(const QString layerName, QString &newName, int &level);
+
     void readBmpSettings();
     QRgb rgbFromString(const QString &s, bool &ok);
     void readBmpAliases();
@@ -135,6 +137,8 @@ private:
     QString mError;
     QString mPath;
     Map *mMap;
+    int mVersionMajor;
+    int mVersionMinor;
     GidMapper mGidMapper;
     bool mReadingExternalTileset;
 
@@ -226,6 +230,29 @@ Map *MapReaderPrivate::readMap()
     Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("map"));
 
     const QXmlStreamAttributes atts = xml.attributes();
+
+    QString versionStr = atts.value(QLatin1String("version")).toString();
+    QStringList versionStrings = versionStr.split(QLatin1Char('.'));
+    if (versionStrings.size() == 2) {
+        bool ok;
+        mVersionMajor = versionStrings[0].toInt(&ok);
+        if (!ok) {
+            xml.raiseError(tr("Unsupported map version: \"%1\"").arg(versionStr));
+            return nullptr;
+        }
+        mVersionMinor = versionStrings[1].toInt(&ok);
+        if (!ok) {
+            xml.raiseError(tr("Unsupported map version: \"%1\"").arg(versionStr));
+            return nullptr;
+        }
+    } else {
+        xml.raiseError(tr("Unsupported map version: \"%1\"").arg(versionStr));
+        return nullptr;
+    }
+    if ((mVersionMajor > 1) || (mVersionMinor > 1)) {
+        xml.raiseError(tr("Unsupported map version: \"%1\"").arg(versionStr));
+    }
+
     const int mapWidth =
             atts.value(QLatin1String("width")).toString().toInt();
     const int mapHeight =
@@ -436,6 +463,15 @@ TileLayer *MapReaderPrivate::readLayer()
 
     TileLayer *tileLayer = new TileLayer(name, x, y, width, height);
     readLayerAttributes(tileLayer, atts);
+
+    if (mVersionMajor == 1 && mVersionMinor == 0) {
+        QString newName = name;
+        int level = 0;
+        if (levelForLayerName(name, newName, level)) {
+            tileLayer->setName(newName);
+            tileLayer->setLevel(level);
+        }
+    }
 
     while (xml.readNextStartElement()) {
         if (xml.name() == QLatin1String("properties"))
@@ -713,6 +749,15 @@ ObjectGroup *MapReaderPrivate::readObjectGroup()
     ObjectGroup *objectGroup = new ObjectGroup(name, x, y, width, height);
     readLayerAttributes(objectGroup, atts);
 
+    if (mVersionMajor == 1 && mVersionMinor == 0) {
+        QString newName = name;
+        int level = 0;
+        if (levelForLayerName(name, newName, level)) {
+            objectGroup->setName(newName);
+            objectGroup->setLevel(level);
+        }
+    }
+
     const QString color = atts.value(QLatin1String("color")).toString();
     if (!color.isEmpty())
         objectGroup->setColor(color);
@@ -742,6 +787,15 @@ ImageLayer *MapReaderPrivate::readImageLayer()
 
     ImageLayer *imageLayer = new ImageLayer(name, x, y, width, height);
     readLayerAttributes(imageLayer, atts);
+
+    if (mVersionMajor == 1 && mVersionMinor == 0) {
+        QString newName = name;
+        int level = 0;
+        if (levelForLayerName(name, newName, level)) {
+            imageLayer->setName(newName);
+            imageLayer->setLevel(level);
+        }
+    }
 
     while (xml.readNextStartElement()) {
         if (xml.name() == QLatin1String("image"))
@@ -931,6 +985,25 @@ void MapReaderPrivate::readProperty(Properties *properties)
 }
 
 #ifdef ZOMBOID
+bool MapReaderPrivate::levelForLayerName(const QString layerName, QString &newName, int &level)
+{
+    QString trimmed = layerName.trimmed();
+    // See if the layer name matches "0_foo" or "1_bar" etc.
+    int p = trimmed.indexOf(QLatin1Char('_'));
+    if (p <= 0) {
+        return false;
+    }
+    QString levelStr = trimmed.left(p);
+    bool conversionOK;
+    int level2 = levelStr.toInt(&conversionOK);
+    if (conversionOK && (level2 >= 0)) {
+        newName = newName.mid(p + 1);
+        level = level2;
+        return true;
+    }
+    return false;
+}
+
 void MapReaderPrivate::readBmpSettings()
 {
     Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("bmp-settings"));

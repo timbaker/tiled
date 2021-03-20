@@ -28,6 +28,7 @@
 
 #include "BuildingEditor/buildingtiles.h"
 
+#include "maplevel.h"
 #include "maprenderer.h"
 #include "tilelayer.h"
 #include "tileset.h"
@@ -96,11 +97,11 @@ void EdgeTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
     qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
     QPainterPath path;
 
-    CompositeLayerGroup *lg = mapDocument()->mapComposite()->layerGroupForLevel(mapDocument()->currentLevel());
-    if (mToolTileLayerGroup != 0) {
+    CompositeLayerGroup *lg = mapDocument()->mapComposite()->layerGroupForLevel(mapDocument()->currentLevelIndex());
+    if (mToolTileLayerGroup != nullptr) {
         mToolTileLayerGroup->clearToolTiles();
         mScene->update(mToolTilesRect);
-        mToolTileLayerGroup = 0;
+        mToolTileLayerGroup = nullptr;
         mToolTiles.erase();
     }
     QPoint topLeft;
@@ -179,7 +180,7 @@ void EdgeTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
         QSize tilesSize(mToolTiles.width(), mToolTiles.height());
         lg->setToolTiles(&mToolTiles, topLeft, QRect(topLeft, tilesSize), currentTileLayer());
         mToolTilesRect = renderer->boundingRect(QRect(topLeft.x(), topLeft.y(), mToolTiles.width(), mToolTiles.height()),
-                mapDocument()->currentLevel()).adjusted(-3, -(128-32) - 3, 3, 3); // use mMap->drawMargins()
+                mapDocument()->currentLevelIndex()).adjusted(-3, -(128-32) - 3, 3, 3); // use mMap->drawMargins()
         mToolTileLayerGroup = lg;
         mScene->update(mToolTilesRect);
     }
@@ -302,10 +303,13 @@ void EdgeTool::drawEdge(const QPointF &start, const QPointF &end, Edge edge)
     int ex = qFloor(end.x()), ey = qFloor(end.y());
     QPoint origin(qMin(sx, ex), qMin(sy, ey));
     int width, height;
-    if (edge == EdgeN || edge == EdgeS)
-        width = qAbs(ex - sx) + 1, height = 1;
-    else
-        width = 1, height = qAbs(ey - sy) + 1;
+    if (edge == EdgeN || edge == EdgeS) {
+        width = qAbs(ex - sx) + 1;
+        height = 1;
+    } else {
+        width = 1;
+        height = qAbs(ey - sy) + 1;
+    }
     TileLayer stamp(QString(), 0, 0, width, height);
     QMap<QString,QRegion> eraseRgn, noBlendRgn;
     getMapChanges(start, end, edge, stamp, eraseRgn, noBlendRgn);
@@ -320,16 +324,19 @@ void EdgeTool::drawEdge(const QPointF &start, const QPointF &end, Edge edge)
         mapDocument()->emitRegionEdited(stamp.region(), currentTileLayer());
     }
 
-    foreach (QString layerName, eraseRgn.keys()) {
-        int index = mapDocument()->map()->indexOfLayer(layerName, Layer::TileLayerType);
+    int levelIndex = currentTileLayer()->level();
+    MapLevel *mapLevel = mapDocument()->map()->levelAt(levelIndex);
+
+    for (QString layerName : eraseRgn.keys()) {
+        int index = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (index >= 0) {
-            TileLayer *tl = mapDocument()->map()->layerAt(index)->asTileLayer();
+            TileLayer *tl = mapLevel->layerAt(index)->asTileLayer();
             EraseTiles *cmd = new EraseTiles(mapDocument(), tl, eraseRgn[layerName]);
             mapDocument()->undoStack()->push(cmd);
         }
     }
 
-    foreach (QString layerName, noBlendRgn.keys()) {
+    for (QString layerName : noBlendRgn.keys()) {
         QRegion rgn = noBlendRgn[layerName];
         QRect r = rgn.boundingRect();
         MapNoBlend *noBlend = mapDocument()->map()->noBlend(layerName);
@@ -410,11 +417,11 @@ void EdgeTool::drawEdgeTile(const QPoint &origin, int x, int y, EdgeTool::Edge e
     if (!tileLayer->contains(x, y))
         return;
 
-    Tile *tile = 0;
-    Tile *currentW = tileLayer->contains(x - 1, y) ? tileLayer->cellAt(x - 1, y).tile : 0;
-    Tile *currentE = tileLayer->contains(x + 1, y) ? tileLayer->cellAt(x + 1, y).tile : 0;
-    Tile *currentN = tileLayer->contains(x, y - 1) ? tileLayer->cellAt(x, y - 1).tile : 0;
-    Tile *currentS = tileLayer->contains(x, y + 1) ? tileLayer->cellAt(x, y + 1).tile : 0;
+    Tile *tile = nullptr;
+    Tile *currentW = tileLayer->contains(x - 1, y) ? tileLayer->cellAt(x - 1, y).tile : nullptr;
+    Tile *currentE = tileLayer->contains(x + 1, y) ? tileLayer->cellAt(x + 1, y).tile : nullptr;
+    Tile *currentN = tileLayer->contains(x, y - 1) ? tileLayer->cellAt(x, y - 1).tile : nullptr;
+    Tile *currentS = tileLayer->contains(x, y + 1) ? tileLayer->cellAt(x, y + 1).tile : nullptr;
 
     QVector<Tile*> tiles = resolveEdgeTiles(mEdges);
     Tile *w = tiles[Edges::EdgeW];
@@ -486,10 +493,12 @@ void EdgeTool::drawEdgeTile(const QPoint &origin, int x, int y, EdgeTool::Edge e
     // Set NoBlend flag in all blend layers.
     QSet<Tile*> blendTiles = mapDocument()->mapComposite()->bmpBlender()->knownBlendTiles();
 
-    foreach (QString layerName, mapDocument()->mapComposite()->bmpBlender()->blendLayers()) {
-        int index = mapDocument()->map()->indexOfLayer(layerName, Layer::TileLayerType);
+    MapLevel *mapLevel = mapDocument()->map()->levelAt(0);
+
+    for (const QString &layerName : mapDocument()->mapComposite()->bmpBlender()->blendLayers()) {
+        int index = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (index >= 0) {
-            TileLayer *tl = mapDocument()->map()->layerAt(index)->asTileLayer();
+            TileLayer *tl = mapLevel->layerAt(index)->asTileLayer();
             if (blendTiles.contains(tl->cellAt(x, y).tile))
                 eraseRgn[layerName] += QRect(x, y, 1, 1);
         }

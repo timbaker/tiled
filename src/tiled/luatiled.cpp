@@ -27,6 +27,7 @@
 #include "BuildingEditor/buildingtiles.h"
 
 #include "map.h"
+#include "maplevel.h"
 #include "mapobject.h"
 #include "objectgroup.h"
 #include "tile.h"
@@ -244,13 +245,15 @@ bool LuaScript::dofile(const QString &f, QString &output)
 /////
 
 LuaLayer::LuaLayer() :
-    mClone(0),
-    mOrig(0)
+    mLevelIndex(0),
+    mClone(nullptr),
+    mOrig(nullptr)
 {
 }
 
 LuaLayer::LuaLayer(Layer *orig) :
-    mClone(0),
+    mLevelIndex(0),
+    mClone(nullptr),
     mOrig(orig),
     mName(orig->name())
 {
@@ -282,19 +285,32 @@ void LuaLayer::cloned()
 
 }
 
+void LuaLayer::setLevel(int level)
+{
+    mLevelIndex = level;
+}
+
+int LuaLayer::level() const
+{
+    return mLevelIndex;
+//    int level;
+//    MapComposite::levelForLayer(mName, &level);
+//    return level;
+}
+
 /////
 
 LuaTileLayer::LuaTileLayer(TileLayer *orig) :
     LuaLayer(orig),
-    mCloneTileLayer(0),
-    mMap(0)
+    mCloneTileLayer(nullptr),
+    mMap(nullptr)
 {
 }
 
 LuaTileLayer::LuaTileLayer(const char *name, int x, int y, int width, int height) :
     LuaLayer(),
     mCloneTileLayer(new TileLayer(QString::fromLatin1(name), x, y, width, height)),
-    mMap(0)
+    mMap(nullptr)
 {
     mName = mCloneTileLayer->name();
     mClone = mCloneTileLayer;
@@ -310,13 +326,6 @@ void LuaTileLayer::cloned()
     mCloneTileLayer = mClone->asTileLayer();
 }
 
-int LuaTileLayer::level()
-{
-    int level;
-    MapComposite::levelForLayer(mName, &level);
-    return level;
-}
-
 void LuaTileLayer::setTile(int x, int y, Tile *tile)
 {
     // Forbid changing tiles outside the current tile selection.
@@ -327,7 +336,7 @@ void LuaTileLayer::setTile(int x, int y, Tile *tile)
     initClone();
     if (!mCloneTileLayer->contains(x, y))
         return; // TODO: lua error!
-    if (tile == LuaMap::noneTile()) tile = 0;
+    if (tile == LuaMap::noneTile()) tile = nullptr;
     mCloneTileLayer->setCell(x, y, Cell(tile));
     mAltered += QRect(x, y, 1, 1); // too slow?
 }
@@ -336,40 +345,40 @@ Tile *LuaTileLayer::tileAt(int x, int y)
 {
     if (mClone) {
         if (!mCloneTileLayer->contains(x, y))
-            return 0; // TODO: lua error!
+            return nullptr; // TODO: lua error!
         return mCloneTileLayer->cellAt(x, y).tile;
     }
     Q_ASSERT(mOrig);
     if (!mOrig)
-        return 0; // this layer was created by the script
+        return nullptr; // this layer was created by the script
     if (!mOrig->asTileLayer()->contains(x, y))
-        return 0; // TODO: lua error!
+        return nullptr; // TODO: lua error!
     return mOrig->asTileLayer()->cellAt(x, y).tile;
 }
 
 void LuaTileLayer::clearTile(int x, int y)
 {
-    setTile(x, y, 0);
+    setTile(x, y, nullptr);
 }
 
 void LuaTileLayer::erase(int x, int y, int width, int height)
 {
-    fill(QRect(x, y, width, height), 0);
+    fill(QRect(x, y, width, height), nullptr);
 }
 
 void LuaTileLayer::erase(const QRect &r)
 {
-    fill(r, 0);
+    fill(r, nullptr);
 }
 
 void LuaTileLayer::erase(const LuaRegion &rgn)
 {
-    fill(rgn, 0);
+    fill(rgn, nullptr);
 }
 
 void LuaTileLayer::erase()
 {
-    fill(0);
+    fill(nullptr);
 }
 
 void LuaTileLayer::fill(int x, int y, int width, int height, Tile *tile)
@@ -379,7 +388,7 @@ void LuaTileLayer::fill(int x, int y, int width, int height, Tile *tile)
 
 void LuaTileLayer::fill(const QRect &r, Tile *tile)
 {
-    if (tile == LuaMap::noneTile()) tile = 0;
+    if (tile == LuaMap::noneTile()) tile = nullptr;
     initClone();
     QRect r2 = r & mClone->bounds();
     for (int y = r2.y(); y <= r2.bottom(); y++) {
@@ -404,7 +413,7 @@ void LuaTileLayer::fill(Tile *tile)
 
 bool LuaTileLayer::replaceTile(Tile *oldTile, Tile *newTile)
 {
-    if (newTile == LuaMap::noneTile()) newTile = 0;
+    if (newTile == LuaMap::noneTile()) newTile = nullptr;
     initClone();
     bool replaced = false;
     for (int y = 0; y < mClone->width(); y++) {
@@ -513,8 +522,11 @@ LuaMap::~LuaMap()
     // Remove all layers from the clone map.
     // Either they are the original unmodified layers or they are clones.
     // Original layers aren't to be deleted, clones delete themselves.
-    for (int i = mClone->layerCount() - 1; i >= 0; i--) {
-        mClone->takeLayerAt(i);
+    for (int z = 0; z < mClone->levelCount(); z++) {
+        MapLevel *level = mClone->levelAt(z);
+        for (int i = level->layerCount() - 1; i >= 0; i--) {
+            level->takeLayerAt(i);
+        }
     }
 
     qDeleteAll(mLayers);
@@ -1110,11 +1122,10 @@ QRect LuaMapObject::bounds()
 
 LuaObjectGroup::LuaObjectGroup(ObjectGroup *orig) :
     LuaLayer(orig),
-    mCloneObjectGroup(0),
-    mOrig(orig),
+    mCloneObjectGroup(nullptr),
     mColor(orig->color())
 {
-    foreach (MapObject *mo, orig->objects())
+    for (MapObject *mo : orig->objects())
         addObject(new LuaMapObject(mo));
 }
 

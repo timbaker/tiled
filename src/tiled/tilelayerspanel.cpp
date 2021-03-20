@@ -27,6 +27,7 @@
 
 #include "BuildingEditor/buildingtiles.h"
 
+#include "maplevel.h"
 #include "tile.h"
 #include "tileset.h"
 
@@ -218,7 +219,8 @@ void LayersPanelDelegate::setMouseOver(const QModelIndex &index)
 /////
 
 LayersPanelModel::LayersPanelModel(QObject *parent) :
-    QAbstractListModel(parent)
+    QAbstractListModel(parent),
+    mLevelIndex(-1)
 {
 }
 
@@ -358,7 +360,7 @@ Tile *LayersPanelModel::tileAt(const QModelIndex &index) const
 {
     if (Item *item = toItem(index))
         return item->mTile;
-    return 0;
+    return nullptr;
 }
 
 QString LayersPanelModel::labelAt(const QModelIndex &index) const
@@ -381,16 +383,16 @@ LayersPanelModel::Item *LayersPanelModel::toItem(const QModelIndex &index) const
 {
     if (index.isValid())
         return static_cast<Item*>(index.internalPointer());
-    return 0;
+    return nullptr;
 }
 
 LayersPanelModel::Item *LayersPanelModel::toItem(int layerIndex) const
 {
-    foreach (Item *item, mItems) {
+    for (Item *item : mItems) {
         if (item->mLayerIndex == layerIndex)
             return item;
     }
-    return 0;
+    return nullptr;
 }
 
 /////
@@ -400,7 +402,7 @@ LayersPanelView::LayersPanelView(QWidget *parent) :
     mModel(new LayersPanelModel(this)),
     mDelegate(new LayersPanelDelegate(this, this)),
     mZoomable(new Zoomable(this)),
-    mContextMenu(0),
+    mContextMenu(nullptr),
     mMaxHeaderWidth(0),
     mIgnoreMouse(false)
 {
@@ -475,6 +477,7 @@ bool LayersPanelView::viewportEvent(QEvent *event)
             mDelegate->setMouseOver(QModelIndex());
             update(index);
         }
+        break;
     }
     default:
             break;
@@ -575,9 +578,9 @@ void LayersPanelView::scaleChanged(qreal scale)
 
 TileLayersPanel::TileLayersPanel(QWidget *parent) :
     QWidget(parent),
-    mDocument(0),
+    mDocument(nullptr),
     mView(new LayersPanelView(this)),
-    mCurrentLevel(-1),
+    mCurrentLevelIndex(-1),
     mCurrentLayerIndex(-1)
 {
     mView->zoomable()->setScale(0.25);
@@ -678,28 +681,34 @@ void TileLayersPanel::setTilePosition(const QPoint &tilePos)
 
 void TileLayersPanel::setList()
 {
-    mCurrentLevel = mDocument->currentLevel();
+    mCurrentLevelIndex = mDocument->currentLevelIndex();
 
     mView->clear();
 
-    CompositeLayerGroup *lg = mDocument->mapComposite()->layerGroupForLevel(mCurrentLevel);
+    CompositeLayerGroup *lg = mDocument->mapComposite()->layerGroupForLevel(mCurrentLevelIndex);
     if (!lg) return;
+
+    MapLevel *mapLevel = mDocument->map()->levelAt(mCurrentLevelIndex);
 
     QStringList blendLayerNames = mDocument->mapComposite()->bmpBlender()->blendLayers();
 
     int index = 0;
-    foreach (TileLayer *tl, lg->layers()) {
+    for (TileLayer *tl : lg->layers()) {
         QString layerName = MapComposite::layerNameWithoutPrefix(tl);
-        Tile *tile = tl->contains(mTilePos) ? tl->cellAt(mTilePos).tile : 0;
+        Tile *tile = tl->contains(mTilePos) ? tl->cellAt(mTilePos).tile : nullptr;
         TileLayer *blendLayer = lg->bmpBlendLayers().at(index);
-        if (blendLayer && blendLayer->contains(mTilePos))
+        if (blendLayer && blendLayer->contains(mTilePos)) {
             if (!blendLayerNames.contains(tl->name()) ||
-                    !mDocument->map()->noBlend(tl->name())->get(mTilePos))
-                if (Tile *blendTile = blendLayer->cellAt(mTilePos).tile)
+                    !mDocument->map()->noBlend(tl->name())->get(mTilePos)) {
+                if (Tile *blendTile = blendLayer->cellAt(mTilePos).tile) {
                     tile = blendTile;
-        if (!tile)
+                }
+            }
+        }
+        if (!tile) {
             tile = BuildingEditor::BuildingTilesMgr::instance()->noneTiledTile();
-        int layerIndex = mDocument->map()->layers().indexOf(tl);
+        }
+        int layerIndex = mapLevel->layers().indexOf(tl);
         mView->prependLayer(layerName, tile, layerIndex);
 
         QBrush brush(tl->isVisible() ? Qt::white : Qt::lightGray);
@@ -746,15 +755,16 @@ void TileLayersPanel::activated(const QModelIndex &index)
 
 void TileLayersPanel::layerNameClicked(int layerIndex)
 {
-    Layer *layer = mDocument->map()->layerAt(layerIndex);
-    mDocument->setLayerVisible(layerIndex, !layer->isVisible());
+    Layer *layer = mDocument->map()->layerAt(mCurrentLevelIndex, layerIndex);
+    mDocument->setLayerVisible(mCurrentLevelIndex, layerIndex, !layer->isVisible());
 }
 
 void TileLayersPanel::currentChanged()
 {
+    MapLevel *mapLevel = mDocument->map()->levelAt(mCurrentLevelIndex);
     QModelIndex index = mView->currentIndex();
     int layerIndex = mView->model()->layerAt(index);
-    if (layerIndex >= 0 && layerIndex < mDocument->map()->layerCount()) {
+    if (layerIndex >= 0 && layerIndex < mapLevel->layerCount()) {
         if (layerIndex == mCurrentLayerIndex)
             return;
         mCurrentLayerIndex = layerIndex;
@@ -762,14 +772,15 @@ void TileLayersPanel::currentChanged()
     }
 }
 
-void TileLayersPanel::layerIndexChanged(int layerIndex)
+void TileLayersPanel::layerIndexChanged(int z, int layerIndex)
 {
-    if (mCurrentLayerIndex == layerIndex)
+    if (mCurrentLevelIndex == z && mCurrentLayerIndex == layerIndex)
         return;
+    mCurrentLevelIndex = z;
     mCurrentLayerIndex = layerIndex;
-    if (layerIndex >= 0 && layerIndex < mDocument->map()->layerCount()) {
-        Layer *layer = mDocument->map()->layerAt(layerIndex);
-        if ((layer->level() == mCurrentLevel) && !layer->isTileLayer()) {
+    MapLevel *mapLevel = mDocument->map()->levelAt(z);
+    if (Layer *layer = mapLevel->layerAt(layerIndex)) {
+        if ((layer->level() == mCurrentLevelIndex) && !layer->isTileLayer()) {
             mView->setCurrentIndex(QModelIndex());
             return;
         }
@@ -777,10 +788,10 @@ void TileLayersPanel::layerIndexChanged(int layerIndex)
     setList();
 }
 
-void TileLayersPanel::layerChanged(int index)
+void TileLayersPanel::layerChanged(int z, int index)
 {
-    Layer *layer = mDocument->map()->layerAt(index);
-    if (layer->asTileLayer() && (layer->level() == mDocument->currentLevel())) {
+    Layer *layer = mDocument->map()->layerAt(z, index);
+    if (layer->asTileLayer() && (layer->level() == mDocument->currentLevelIndex())) {
         QModelIndex mi = mView->model()->index(index);
         if (mi.isValid()) {
             QString name = MapComposite::layerNameWithoutPrefix(layer);
@@ -793,17 +804,19 @@ void TileLayersPanel::layerChanged(int index)
 
 void TileLayersPanel::regionAltered(const QRegion &region, Layer *layer)
 {
-    if (layer->asTileLayer() && (layer->level() == mDocument->currentLevel())
-            && region.contains(mTilePos))
+    if (layer->asTileLayer() && (layer->level() == mDocument->currentLevelIndex())
+            && region.contains(mTilePos)) {
         setList();
+    }
 }
 
 void TileLayersPanel::noBlendPainted(MapNoBlend *noBlend, const QRegion &rgn)
 {
     Q_UNUSED(noBlend)
     Q_UNUSED(rgn)
-    if (mDocument->currentLevel() == 0)
+    if (mDocument->currentLevelIndex() == 0) {
         setList();
+    }
 }
 
 void TileLayersPanel::showTileLayersPanelChanged(bool show)

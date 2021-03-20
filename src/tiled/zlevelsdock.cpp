@@ -43,7 +43,7 @@ using namespace Tiled::Internal;
 
 ZLevelsDock::ZLevelsDock(QWidget *parent) :
     QDockWidget(parent),
-    mMapDocument(0),
+    mMapDocument(nullptr),
     mView(new ZLevelsView()),
     mOpacityLabel(new QLabel),
     mOpacitySlider(new QSlider(Qt::Horizontal)),
@@ -197,16 +197,19 @@ void ZLevelsDock::setLayerOpacity(int opacity)
     if (!mMapDocument)
         return;
 
+    const int levelIndex = mMapDocument->currentLevelIndex();
+    if (levelIndex == -1)
+        return;
+
     const int layerIndex = mMapDocument->currentLayerIndex();
     if (layerIndex == -1)
         return;
 
-    const Layer *layer = mMapDocument->map()->layerAt(layerIndex);
+    const Layer *layer = mMapDocument->map()->layerAt(levelIndex, layerIndex);
 
     if ((int) (layer->opacity() * 100) != opacity) {
         LayerModel *layerModel = mMapDocument->layerModel();
-        const int row = layerModel->layerIndexToRow(layerIndex);
-        layerModel->setData(layerModel->index(row),
+        layerModel->setData(layerModel->toIndex(levelIndex, layerIndex),
                             qreal(opacity) / 100,
                             LayerModel::OpacityRole);
     }
@@ -233,11 +236,12 @@ void ZLevelsDock::setTopmostVisibleLayer(int layerIndex)
         return;
 
     int index = 0;
-    foreach (Layer *layer, mMapDocument->map()->layers()) {
+    for (Layer *layer : mMapDocument->map()->layers()) {
         if (layer->asTileLayer() ) {
             bool visible = (index + 1 <= layerIndex);
-            if (visible != layer->isVisible())
-                mMapDocument->setLayerVisible(index, visible);
+            if (visible != layer->isVisible()) {
+                mMapDocument->setLayerVisible(layer->level(), index, visible);
+            }
         }
         index++;
     }
@@ -252,24 +256,28 @@ void ZLevelsDock::updateActions()
 void ZLevelsDock::saveExpandedLevels(MapDocument *mapDoc)
 {
     mExpandedLevels[mapDoc].clear();
-    foreach (int level, mView->model()->levels()) {
-        if (mView->isExpanded(mView->model()->index(level)))
+    for (int level : mView->model()->levels()) {
+        if (mView->isExpanded(mView->model()->index(level))) {
             mExpandedLevels[mapDoc].append(level);
+        }
     }
 }
 
 void ZLevelsDock::restoreExpandedLevels(MapDocument *mapDoc)
 {
     if (mExpandedLevels.contains(mapDoc)) {
-        foreach (int level, mExpandedLevels[mapDoc])
+        for (int level : mExpandedLevels[mapDoc]) {
             mView->setExpanded(mView->model()->index(level), true);
+        }
         mExpandedLevels[mapDoc].clear();
-    } else
+    } else {
         mView->expandAll();
+    }
 
     // Also restore the selection
-    if (Layer *layer = mapDoc->currentLayer())
+    if (Layer *layer = mapDoc->currentLayer()) {
         mView->setCurrentIndex(mView->model()->index(layer));
+    }
 }
 
 void ZLevelsDock::documentAboutToClose(int index, MapDocument *mapDocument)
@@ -282,7 +290,7 @@ void ZLevelsDock::documentAboutToClose(int index, MapDocument *mapDocument)
 
 ZLevelsView::ZLevelsView(QWidget *parent)
     : QTreeView(parent)
-    , mMapDocument(0)
+    , mMapDocument(nullptr)
     , mSynching(false)
 {
     setRootIsDecorated(true);
@@ -328,8 +336,8 @@ void ZLevelsView::setMapDocument(MapDocument *mapDoc)
                 this, SLOT(editLayerName()));
     } else {
         if (model())
-            model()->setMapDocument(0);
-        setModel(mModel = 0);
+            model()->setMapDocument(nullptr);
+        setModel(mModel = nullptr);
     }
 
 }

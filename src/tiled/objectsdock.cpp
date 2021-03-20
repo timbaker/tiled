@@ -30,6 +30,7 @@
 #include "utils.h"
 
 #include "map.h"
+#include "maplevel.h"
 #include "mapobject.h"
 #include "maprenderer.h"
 #include "objectgroup.h"
@@ -298,7 +299,7 @@ void ObjectsDock::documentAboutToClose(int index, MapDocument *mapDocument)
 
 ObjectsView::ObjectsView(QWidget *parent)
     : QTreeView(parent)
-    , mMapDocument(0)
+    , mMapDocument(nullptr)
     , mSynching(false)
 {
     setRootIsDecorated(true);
@@ -369,16 +370,18 @@ void ObjectsView::selectionChanged(const QItemSelection &selected,
     int currentLayerIndex = -1;
 
     QList<MapObject*> selectedObjects;
-    foreach (const QModelIndex &index, selectedRows) {
+    for (const QModelIndex &index : selectedRows) {
         if (ObjectGroup *og = model()->toLayer(index)) {
-            int index = mMapDocument->map()->layers().indexOf(og);
+            MapLevel *mapLevel = mMapDocument->map()->levelAt(og->level());
+            int index = mapLevel->layers().indexOf(og);
             if (currentLayerIndex == -1)
                 currentLayerIndex = index;
             else if (currentLayerIndex != index)
                 currentLayerIndex = -2;
         }
-        if (MapObject *o = model()->toMapObject(index))
+        if (MapObject *o = model()->toMapObject(index)) {
             selectedObjects.append(o);
+        }
     }
 
     // Switch the current object layer if only one object layer (and/or its objects)

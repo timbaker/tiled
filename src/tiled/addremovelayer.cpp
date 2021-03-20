@@ -28,11 +28,13 @@ namespace Tiled {
 namespace Internal {
 
 AddRemoveLayer::AddRemoveLayer(MapDocument *mapDocument,
-                               int index,
+                               int levelIndex,
+                               int layerIndex,
                                Layer *layer)
     : mMapDocument(mapDocument)
     , mLayer(layer)
-    , mIndex(index)
+    , mLevelIndex(levelIndex)
+    , mLayerIndex(layerIndex)
 {
 }
 
@@ -45,11 +47,11 @@ void AddRemoveLayer::addLayer()
 {
     const int currentLayer = mMapDocument->currentLayerIndex();
 
-    mMapDocument->layerModel()->insertLayer(mIndex, mLayer);
-    mLayer = 0;
+    mMapDocument->layerModel()->insertLayer(mLayerIndex, mLayer);
+    mLayer = nullptr;
 
     // Insertion below or at the current layer increases current layer index
-    if (mIndex <= currentLayer)
+    if (mLayerIndex <= currentLayer)
         mMapDocument->setCurrentLayerIndex(currentLayer + 1);
 }
 
@@ -57,10 +59,10 @@ void AddRemoveLayer::removeLayer()
 {
     const int currentLayer = mMapDocument->currentLayerIndex();
 
-    mLayer = mMapDocument->layerModel()->takeLayerAt(mIndex);
+    mLayer = mMapDocument->layerModel()->takeLayerAt(mLevelIndex, mLayerIndex);
 
     // Removal below the current layer decreases the current layer index
-    if (mIndex < currentLayer)
+    if (mLayerIndex < currentLayer)
         mMapDocument->setCurrentLayerIndex(currentLayer - 1);
 }
 

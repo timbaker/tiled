@@ -23,13 +23,15 @@
 #include "mainwindow.h"
 #include "preferences.h"
 
+#include "maplevel.h"
+
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QSettings>
 
 using namespace Tiled::Internal;
 
-CurbToolDialog *CurbToolDialog::mInstance = 0;
+CurbToolDialog *CurbToolDialog::mInstance = nullptr;
 
 CurbToolDialog *CurbToolDialog::instance()
 {
@@ -122,15 +124,16 @@ void CurbToolDialog::writeSettings()
 
 void CurbToolDialog::currentRowChanged(int row)
 {
-    Curb *curb = (row >= 0) ? mCurbs.at(row) : 0;
+    Curb *curb = (row >= 0) ? mCurbs.at(row) : nullptr;
     CurbTool::instance().setCurb(curb);
 
     if (!curb || curb->mLayer.isEmpty()) return;
     MapDocument *doc = DocumentManager::instance()->currentDocument();
     if (!doc) return;
-    int index = doc->map()->indexOfLayer(curb->mLayer);
+    MapLevel *mapLevel = doc->map()->levelAt(0);
+    int index = mapLevel->indexOfLayer(curb->mLayer);
     if (index >= 0) {
-        Layer *layer = doc->map()->layerAt(index);
+        Layer *layer = mapLevel->layerAt(index);
         if (layer->asTileLayer())
             doc->setCurrentLayerIndex(index);
     }
@@ -178,7 +181,7 @@ void CurbToolDialog::readTxt()
     }
 
     ui->curbList->clear();
-    foreach (Curb *curb, mCurbs)
+    for (Curb *curb : mCurbs)
         ui->curbList->addItem(curb->mLabel);
 
     ui->curbList->setCurrentRow(mCurbs.size() ? 0 : -1);

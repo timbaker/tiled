@@ -67,8 +67,8 @@ signals:
     void lotUpdated(MapComposite *mc, WorldCellLot *lot);
 
 private slots:
-    void onLayerAdded(int index);
-    void onLayerAboutToBeRemoved(int index);
+    void onLayerAdded(int z, int index);
+    void onLayerAboutToBeRemoved(int z, int index);
 
     void onObjectsAdded(const QList<MapObject*> &objects);
     void onObjectsChanged(const QList<MapObject*> &objects);

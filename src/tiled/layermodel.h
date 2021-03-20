@@ -32,6 +32,7 @@ class Map;
 namespace Internal {
 
 class MapDocument;
+class LayerModelPrivate;
 
 /**
  * A model wrapping the layers of a map. Used to display the layers in a view.
@@ -53,7 +54,7 @@ public:
     /**
      * Constructor.
      */
-    LayerModel(QObject *parent = 0);
+    LayerModel(QObject *parent = nullptr);
 
     /**
      * Returns the number of rows.
@@ -83,6 +84,8 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation,
                         int role = Qt::DisplayRole) const;
 
+    int toLevelIndex(const QModelIndex &index) const;
+
     /**
      * Returns the layer index associated with a given model index.
      * \sa layerIndexToRow
@@ -93,7 +96,7 @@ public:
      * Returns the row associated with the given layer index.
      * \sa toLayerIndex
      */
-    int layerIndexToRow(int layerIndex) const;
+    int layerIndexToRow(int levelIndex, int layerIndex) const;
 
     /**
      * Returns the map document associated with this model.
@@ -115,27 +118,30 @@ public:
      * returns it. The caller becomes responsible for the lifetime of this
      * layer.
      */
-    Layer *takeLayerAt(int index);
+    Layer *takeLayerAt(int z, int index);
 
     /**
      * Renames the layer at the given index.
      */
-    void renameLayer(int index, const QString &name);
+    void renameLayer(int z, int index, const QString &name);
 
     /**
       * Show or hide all other layers except the layer at the given index.
       * If any other layer is visible then all layers will be hidden, otherwise
       * the layers will be shown.
       */
-    void toggleOtherLayers(int layerIndex);
+    void toggleOtherLayers(int z, int layerIndex);
+
+    QModelIndex toIndex(int z) const;
+    QModelIndex toIndex(int z, int layerIndex) const;
 
 signals:
-    void layerAdded(int index);
-    void layerAboutToBeRemoved(int index);
-    void layerRemoved(int index);
-    void layerAboutToBeRenamed(int index);
-    void layerRenamed(int index);
-    void layerChanged(int index);
+    void layerAdded(int z, int index);
+    void layerAboutToBeRemoved(int z, int index);
+    void layerRemoved(int z, int index);
+    void layerAboutToBeRenamed(int z, int index);
+    void layerRenamed(int z, int index);
+    void layerChanged(int z, int index);
 
 private:
     MapDocument *mMapDocument;
@@ -144,6 +150,8 @@ private:
     QIcon mTileLayerIcon;
     QIcon mObjectGroupIcon;
     QIcon mImageLayerIcon;
+
+    LayerModelPrivate *mPrivate;
 };
 
 } // namespace Internal

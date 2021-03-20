@@ -49,7 +49,7 @@ public:
     /**
      * Constructor.
      */
-    LayerDock(QWidget *parent = 0);
+    LayerDock(QWidget *parent = nullptr);
 
     /**
      * Sets the map for which the layers should be displayed.
@@ -90,7 +90,7 @@ class LayerView : public QTreeView
     Q_OBJECT
 
 public:
-    LayerView(QWidget *parent = 0);
+    LayerView(QWidget *parent = nullptr);
 
     QSize sizeHint() const;
     void setMapDocument(MapDocument *mapDocument);
@@ -101,7 +101,7 @@ protected:
 
 private slots:
     void currentRowChanged(const QModelIndex &index);
-    void currentLayerIndexChanged(int index);
+    void currentLayerIndexChanged(int layerIndex);
 
     void editLayerName();
 

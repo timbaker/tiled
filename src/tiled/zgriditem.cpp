@@ -62,13 +62,13 @@ void ZGridItem::paint(QPainter *painter,
     const MapRenderer *renderer = mMapDocument->renderer();
 #if 1
     const QRect bounds = QRect(0, 0, mMapDocument->map()->width(), mMapDocument->map()->height());
-    QRectF boundsF = mMapDocument->renderer()->boundingRect(bounds, mMapDocument->currentLevel());
+    QRectF boundsF = mMapDocument->renderer()->boundingRect(bounds, mMapDocument->currentLevelIndex());
 //  Q_ASSERT(mBoundingRect == boundsF);
     if (mBoundingRect != boundsF)
         return;
 #endif
 	QColor gridColor = Preferences::instance()->gridColor();
-    renderer->drawGrid(painter, option->exposedRect, gridColor, mMapDocument->currentLevel());
+    renderer->drawGrid(painter, option->exposedRect, gridColor, mMapDocument->currentLevelIndex());
 }
 
 void ZGridItem::updateBoundingRect()
@@ -78,7 +78,7 @@ void ZGridItem::updateBoundingRect()
     if (!mMapDocument || !mMapDocument->map() || !mMapDocument->renderer()) {
     } else {
         const QRect bounds = QRect(0, 0, mMapDocument->map()->width(), mMapDocument->map()->height());
-        boundsF = mMapDocument->renderer()->boundingRect(bounds, mMapDocument->currentLevel());
+        boundsF = mMapDocument->renderer()->boundingRect(bounds, mMapDocument->currentLevelIndex());
     }
     if (boundsF != mBoundingRect) {
         prepareGeometryChange();

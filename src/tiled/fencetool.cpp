@@ -93,7 +93,7 @@ void FenceTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
     qreal dW = m.x(), dN = m.y(), dE = 1.0 - dW, dS = 1.0 - dN;
     QPainterPath path;
 
-    CompositeLayerGroup *lg = mapDocument()->mapComposite()->layerGroupForLevel(mapDocument()->currentLevel());
+    CompositeLayerGroup *lg = mapDocument()->mapComposite()->layerGroupForLevel(mapDocument()->currentLevelIndex());
     if (mToolTileLayerGroup != 0) {
         mToolTileLayerGroup->clearToolTiles();
         mScene->update(mToolTilesRect);
@@ -167,7 +167,7 @@ void FenceTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
         QSize tilesSize(mToolTiles.width(), mToolTiles.height());
         lg->setToolTiles(&mToolTiles, topLeft, QRect(topLeft, tilesSize), currentTileLayer());
         mToolTilesRect = renderer->boundingRect(QRect(topLeft.x(), topLeft.y(), mToolTiles.width(), mToolTiles.height()),
-                mapDocument()->currentLevel()).adjusted(-3, -(128-32) - 3, 3, 3); // use mMap->drawMargins()
+                mapDocument()->currentLevelIndex()).adjusted(-3, -(128-32) - 3, 3, 3); // use mMap->drawMargins()
         mToolTileLayerGroup = lg;
         mScene->update(mToolTilesRect);
     }

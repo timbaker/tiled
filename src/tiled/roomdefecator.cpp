@@ -21,6 +21,7 @@
 #include "BuildingEditor/furnituregroups.h"
 
 #include "map.h"
+#include "maplevel.h"
 #include "tile.h"
 #include "tilelayer.h"
 #include "tileset.h"
@@ -32,27 +33,28 @@ using namespace BuildingEditor;
 RoomDefecator::RoomDefecator(Map *map, int level, const QRect &bounds) :
     mMap(map),
     mBounds(bounds),
-    mLayerFloor(0),
-    mLayerWalls(0),
-    mLayerWalls2(0)
+    mLayerFloor(nullptr),
+    mLayerWalls(nullptr),
+    mLayerWalls2(nullptr)
 {
-    int i = map->indexOfLayer(QString::fromLatin1("%1_Floor").arg(level), Layer::TileLayerType);
+    MapLevel *mapLevel = map->levelAt(level);
+    int i = mapLevel->indexOfLayer(QLatin1String("Floor"), Layer::TileLayerType);
     if (i < 0)
         return;
-    mLayerFloor = map->layerAt(i)->asTileLayer();
+    mLayerFloor = mapLevel->layerAt(i)->asTileLayer();
 
-    i = map->indexOfLayer(QString::fromLatin1("%1_Walls").arg(level), Layer::TileLayerType);
+    i = mapLevel->indexOfLayer(QLatin1String("Walls"), Layer::TileLayerType);
     if (i < 0)
         return;
-    mLayerWalls = map->layerAt(i)->asTileLayer();
+    mLayerWalls = mapLevel->layerAt(i)->asTileLayer();
 
-    i = map->indexOfLayer(QString::fromLatin1("%1_Walls2").arg(level), Layer::TileLayerType);
+    i = mapLevel->indexOfLayer(QLatin1String("Walls2"), Layer::TileLayerType);
     if (i >= 0)
-        mLayerWalls2 = map->layerAt(i)->asTileLayer();
+        mLayerWalls2 = mapLevel->layerAt(i)->asTileLayer();
 
-    i = map->indexOfLayer(QString::fromLatin1("%1_Walls_2").arg(level), Layer::TileLayerType);
+    i = mapLevel->indexOfLayer(QLatin1String("Walls_2"), Layer::TileLayerType);
     if (i >= 0)
-        mLayerWalls2 = map->layerAt(i)->asTileLayer();
+        mLayerWalls2 = mapLevel->layerAt(i)->asTileLayer();
 
 
     initTiles();

@@ -31,17 +31,19 @@ using namespace Tiled;
 using namespace Tiled::Internal;
 
 ResizeLayer::ResizeLayer(MapDocument *mapDocument,
-                         int index,
+                         int levelIndex,
+                         int layerIndex,
                          const QSize &size,
                          const QPoint &offset)
     : QUndoCommand(QCoreApplication::translate("Undo Commands",
                                                "Resize Layer"))
     , mMapDocument(mapDocument)
-    , mIndex(index)
+    , mLevelIndex(levelIndex)
+    , mLayerIndex(layerIndex)
     , mOriginalLayer(0)
 {
     // Create the resized layer (once)
-    Layer *layer = mMapDocument->map()->layerAt(mIndex);
+    Layer *layer = mMapDocument->map()->layerAt(mLevelIndex, mLayerIndex);
     mResizedLayer = layer->clone();
     mResizedLayer->resize(size, offset);
 }
@@ -71,11 +73,11 @@ Layer *ResizeLayer::swapLayer(Layer *layer)
     const int currentIndex = mMapDocument->currentLayerIndex();
 
     LayerModel *layerModel = mMapDocument->layerModel();
-    Layer *replaced = layerModel->takeLayerAt(mIndex);
-    layerModel->insertLayer(mIndex, layer);
+    Layer *replaced = layerModel->takeLayerAt(mLevelIndex, mLayerIndex);
+    layerModel->insertLayer(mLayerIndex, layer);
 
-    if (mIndex == currentIndex)
-        mMapDocument->setCurrentLayerIndex(mIndex);
+    if (mLayerIndex == currentIndex)
+        mMapDocument->setCurrentLayerIndex(mLayerIndex);
 
     return replaced;
 }

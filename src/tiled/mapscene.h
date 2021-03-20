@@ -28,6 +28,8 @@
 #include <QMap>
 #include <QSet>
 
+#include <array>
+
 namespace Tiled {
 
 class Layer;
@@ -101,8 +103,7 @@ public:
     /**
      * Returns the MapObjectItem associated with the given \a mapObject.
      */
-    MapObjectItem *itemForObject(MapObject *object) const
-    { return mObjectItems.value(object); }
+    MapObjectItem *itemForObject(MapObject *object) const;
 
     /**
      * Enables the selected tool at this map scene.
@@ -190,11 +191,11 @@ private slots:
     void tilesetChanged(Tileset *tileset);
 
 #ifdef ZOMBOID
-    virtual void layerAdded(int index);
-    virtual void layerAboutToBeRemoved(int index);
-    virtual void layerRemoved(int index);
-    virtual void layerChanged(int index);
-    virtual void layerRenamed(int index);
+    virtual void layerAdded(int z, int index);
+    virtual void layerAboutToBeRemoved(int z, int index);
+    virtual void layerRemoved(int z, int index);
+    virtual void layerChanged(int z, int index);
+    virtual void layerRenamed(int z, int index);
 #else
     void layerAdded(int index);
     void layerRemoved(int index);
@@ -224,6 +225,22 @@ private:
 
     bool eventFilter(QObject *object, QEvent *event);
 
+    typedef QMap<MapObject*, MapObjectItem*> ObjectItems;
+
+    class LevelData
+    {
+    public:
+        LevelData()
+        {
+
+        }
+        LevelData(const LevelData& other) = delete;
+        LevelData& operator=(const LevelData& other) = delete;
+
+        QVector<QGraphicsItem*> mLayerItems;
+        ObjectItems mObjectItems;
+    };
+
     MapDocument *mMapDocument;
     AbstractTool *mSelectedTool;
     AbstractTool *mActiveTool;
@@ -232,7 +249,7 @@ private:
     bool mUnderMouse;
     Qt::KeyboardModifiers mCurrentModifiers;
     QPointF mLastMousePos;
-    QVector<QGraphicsItem*> mLayerItems;
+    std::array<LevelData, 32> mLevelData;
     QGraphicsRectItem *mDarkRectangle;
 #ifdef ZOMBOID
     ZGridItem *mGridItem;
@@ -241,9 +258,6 @@ private:
     BmpSelectionItem *mBmpSelectionItem;
 #endif
 #endif
-
-    typedef QMap<MapObject*, MapObjectItem*> ObjectItems;
-    ObjectItems mObjectItems;
     QSet<MapObjectItem*> mSelectedObjectItems;
 };
 

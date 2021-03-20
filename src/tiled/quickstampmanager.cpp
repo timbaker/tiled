@@ -99,6 +99,8 @@ void QuickStampManager::saveQuickStamp(int index)
     if (!copy)
         return;
 
+    copy->setLevel(0);
+
     Map *copyMap = new Map(map->orientation(),
                            copy->width(), copy->height(),
                            map->tileWidth(), map->tileHeight());
@@ -139,7 +141,7 @@ void QuickStampManager::selectQuickStamp(int index)
 
     if (Map *stampMap = mQuickStamps.at(index)) {
         mMapDocument->unifyTilesets(stampMap);
-        emit setStampBrush(static_cast<TileLayer*>(stampMap->layerAt(0)));
+        emit setStampBrush(static_cast<TileLayer*>(stampMap->layerAt(0, 0)));
     }
 }
 

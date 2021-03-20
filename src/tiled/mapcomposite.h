@@ -207,9 +207,9 @@ public:
     Tiled::Map *map() const { return mMap; }
     MapInfo *mapInfo() const { return mMapInfo; }
 
-    void layerAdded(int index);
-    void layerAboutToBeRemoved(int index);
-    void layerRenamed(int index);
+    void layerAdded(int z, int index);
+    void layerAboutToBeRemoved(int z, int index);
+    void layerRenamed(int z, int index);
 
     int layerGroupCount() const { return mLayerGroups.size(); }
     const QMap<int,CompositeLayerGroup*>& layerGroups() const { return mLayerGroups; }
@@ -332,10 +332,10 @@ public:
     { return mSuppressLevel; }
 signals:
     void layerGroupAdded(int level);
-    void layerAddedToGroup(int index);
-    void layerAboutToBeRemovedFromGroup(int index);
-    void layerRemovedFromGroup(int index, CompositeLayerGroup *oldGroup);
-    void layerLevelChanged(int index, int oldLevel);
+    void layerAddedToGroup(int z, int index);
+    void layerAboutToBeRemovedFromGroup(int z, int index);
+    void layerRemovedFromGroup(int z, int index, CompositeLayerGroup *oldGroup);
+    void layerLevelChanged(int z, int index, int oldLevel);
 
     void needsSynch();
 
@@ -345,8 +345,8 @@ private slots:
     void mapFailedToLoad(MapInfo *mapInfo);
 
 private:
-    void addLayerToGroup(int index);
-    void removeLayerFromGroup(int index);
+    void addLayerToGroup(int z, int index);
+    void removeLayerFromGroup(int z, int index);
 
     void recreate();
 

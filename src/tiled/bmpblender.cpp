@@ -25,6 +25,7 @@
 #include "BuildingEditor/buildingtiles.h"
 
 #include "map.h"
+#include "maplevel.h"
 #include "maprenderer.h"
 #include "tilelayer.h"
 #include "tileset.h"
@@ -40,6 +41,7 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 
+static QString STR_Floor = QLatin1String("Floor");
 static QString STR_0Floor = QLatin1String("0_Floor");
 
 BmpBlender::BmpBlender(QObject *parent) :
@@ -188,9 +190,9 @@ void BmpBlender::tilesetRemoved(const QString &tilesetName)
 
 void BmpBlender::tilesToPixels(int x1, int y1, int x2, int y2)
 {
-    int index = mMap->indexOfLayer(STR_0Floor, Layer::TileLayerType);
+    int index = mMap->levelAt(0)->indexOfLayer(STR_Floor, Layer::TileLayerType);
     if (index == -1) return;
-    TileLayer *floorLayer = mMap->layerAt(index)->asTileLayer();
+    TileLayer *floorLayer = mMap->levelAt(0)->layerAt(index)->asTileLayer();
 
     x1 = qBound(0, x1, mMap->width() - 1);
     x2 = qBound(0, x2, mMap->width() - 1);
@@ -503,7 +505,7 @@ static bool adjacentToNonBlack(const QImage &image1, const QImage &image2, int x
 void BmpBlender::imagesToTileGrids(int x1, int y1, int x2, int y2)
 {
     if (mTileGrids.isEmpty()) {
-        foreach (QString layerName, mRuleLayers + mBlendLayers) {
+        for (QString layerName : mRuleLayers + mBlendLayers) {
             if (!mTileGrids.contains(layerName))
                 mTileGrids[layerName] = new SparseTileGrid(mMap->width(), mMap->height());
         }
@@ -514,8 +516,9 @@ void BmpBlender::imagesToTileGrids(int x1, int y1, int x2, int y2)
 
     // Hack - If a pixel is black, and the user-drawn map tile in 0_Floor is
     // one of the Rules.txt tiles, pretend that that pixel exists in the image.
-    int index = mMap->indexOfLayer(STR_0Floor, Layer::TileLayerType);
-    TileLayer *floorLayer = (index == -1) ? nullptr : mMap->layerAt(index)->asTileLayer();
+    MapLevel *mapLevel = mMap->levelAt(0);
+    int index = mapLevel->indexOfLayer(STR_Floor, Layer::TileLayerType);
+    TileLayer *floorLayer = (index == -1) ? nullptr : mapLevel->layerAt(index)->asTileLayer();
 
     x1 = qBound(0, x1, mMap->width() - 1);
     x2 = qBound(0, x2, mMap->width() - 1);
@@ -526,17 +529,17 @@ void BmpBlender::imagesToTileGrids(int x1, int y1, int x2, int y2)
 
     for (int y = y1; y <= y2; y++) {
         for (int x = x1; x <= x2; x++) {
-            foreach (QString layerName, mTileGrids.keys())
+            for (QString layerName : mTileGrids.keys())
                 mTileGrids[layerName]->replace(x, y, emptyCell);
             mFakeTileGrid->replace(x, y, emptyCell);
-            foreach (QString layerName, mBlendGrids.keys())
+            for (QString layerName : mBlendGrids.keys())
                 mBlendGrids[layerName].remove(x + y * mMap->width());
 
             QRgb col = mMap->rbmpMain().pixel(x, y);
             QRgb col2 = mMap->rbmpVeg().pixel(x, y);
 
             if (mRuleByColor.contains(col)) {
-                foreach (RuleWrapper *ruleW, mRuleByColor[col]) {
+                for (RuleWrapper *ruleW : mRuleByColor[col]) {
                     if (ruleW->mRule->bitmapIndex != 0)
                         continue;
                     if (!mTileGrids.contains(ruleW->mRule->targetLayer))
@@ -564,7 +567,7 @@ void BmpBlender::imagesToTileGrids(int x1, int y1, int x2, int y2)
             }
 
             if (col2 != black && mRuleByColor.contains(col2)) {
-                foreach (RuleWrapper *ruleW, mRuleByColor[col2]) {
+                for (RuleWrapper *ruleW : mRuleByColor[col2]) {
                     if (ruleW->mRule->bitmapIndex != 1)
                         continue;
                     if (ruleW->mRule->condition != col && ruleW->mRule->condition != black)
@@ -592,11 +595,13 @@ void BmpBlender::addEdgeTiles(int x1, int y1, int x2, int y2)
         return;
     SparseTileGrid *grid = mTileGrids[STR_0Floor];
 
+    MapLevel *mapLevel = mMap->levelAt(0);
+
     QMap<QString,TileLayer*> mapLayers;
-    foreach (QString layerName, mBlendExclude2Layers) {
-        int n = mMap->indexOfLayer(layerName, Layer::TileLayerType);
+    for (const QString &layerName : mBlendExclude2Layers) {
+        int n = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (n != -1)
-            mapLayers[layerName] = mMap->layerAt(n)->asTileLayer();
+            mapLayers[layerName] = mapLevel->layerAt(n)->asTileLayer();
     }
 
     QVector<Tile*> neighbors(9);
@@ -615,7 +620,7 @@ void BmpBlender::addEdgeTiles(int x1, int y1, int x2, int y2)
                 for (int dx = -1; dx <= +1; dx++)
                     neighbors[(dx + 1) + (dy + 1) * 3] = getNeighbouringTile(x + dx, y + dy);
 
-            foreach (QString layerName, mBlendLayers) {
+            for (QString layerName : mBlendLayers) {
                 BlendWrapper *blendW = getBlendRule(x, y, tile, layerName, neighbors);
                 if (blendW != nullptr) {
                     for (int i = 0; i < blendW->mBlend->exclude2.size(); i += 2) {
@@ -672,12 +677,14 @@ void BmpBlender::tileGridsToLayers(int x1, int y1, int x2, int y2)
 
     const Cell emptyCell;
 
-    foreach (QString layerName, mTileLayers.keys()) {
+    MapLevel *mapLevel = mMap->levelAt(0);
+
+    for (QString layerName : mTileLayers.keys()) {
         SparseTileGrid *grid = mTileGrids[layerName];
         TileLayer *tl = mTileLayers[layerName];
         BlendGrid &blendGrid = mBlendGrids[layerName];
-        int n = mMap->indexOfLayer(layerName, Layer::TileLayerType);
-        TileLayer *mapLayer = (n == -1) ? nullptr : mMap->layerAt(n)->asTileLayer();
+        int n = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
+        TileLayer *mapLayer = (n == -1) ? nullptr : mapLevel->layerAt(n)->asTileLayer();
         for (int y = y1; y <= y2; y++) {
             for (int x = x1; x <= x2; x++) {
                 Tile *tile = grid->at(x, y).tile;
@@ -732,22 +739,24 @@ void BmpBlender::updateWarnings()
         warnings += tr("Map has no blends.  Import some!");
 
     QMap<QString,Tileset*> tilesets;
-    foreach (Tileset *ts, mMap->tilesets())
+    for (Tileset *ts : mMap->tilesets())
         tilesets[ts->name()] = ts;
-    foreach (QString tilesetName, mTilesetNames) {
+    for (const QString &tilesetName : mTilesetNames) {
         if (!tilesets.contains(tilesetName))
             warnings += tr("Map is missing \"%1\" tileset.").arg(tilesetName);
     }
 
-    foreach (QString layerName, mTileLayers.keys()) {
-        int n = mMap->indexOfLayer(layerName, Layer::TileLayerType);
+    MapLevel *mapLevel = mMap->levelAt(0);
+
+    for (const QString &layerName : mTileLayers.keys()) {
+        int n = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (n == -1)
             warnings += tr("Map is missing \"%1\" tile layer.").arg(layerName);
     }
 
     int ruleIndex = 1;
-    foreach (RuleWrapper *ruleW, mRules) {
-        foreach (QString tileName, ruleW->mRule->tileChoices) {
+    for (RuleWrapper *ruleW : mRules) {
+        for (const QString &tileName : ruleW->mRule->tileChoices) {
             if (!tileName.isEmpty()
                     && !BuildingEditor::BuildingTilesMgr::legalTileName(tileName)
                     && !mAliasByName.contains(tileName)) {
@@ -760,9 +769,9 @@ void BmpBlender::updateWarnings()
     }
 
     int blendIndex = 1;
-    foreach (BlendWrapper *blendW, mBlendList) {
+    for (BlendWrapper *blendW : mBlendList) {
         BmpBlend *blend = blendW->mBlend;
-        foreach (QString tileName, blend->ExclusionList) {
+        for (const QString &tileName : blend->ExclusionList) {
             if (!BuildingEditor::BuildingTilesMgr::legalTileName(tileName)) {
                 if (!mAliasByName.contains(tileName))
                     warnings += tr("Blend %1 uses unknown alias '%2' for exclude.")

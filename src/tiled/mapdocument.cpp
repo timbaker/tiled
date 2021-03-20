@@ -43,6 +43,7 @@
 #include "worlded/worldedmgr.h"
 #endif
 #include "map.h"
+#include "maplevel.h"
 #include "mapobject.h"
 #include "movelayer.h"
 #include "objectgroup.h"
@@ -126,6 +127,7 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     mRenderer->setMaxLevel(mMapComposite->maxLevel());
 #endif
 
+    mCurrentLevelIndex = 0;
     mCurrentLayerIndex = (map->layerCount() == 0) ? -1 : 0;
     mLayerModel->setMapDocument(this);
 
@@ -250,7 +252,12 @@ bool MapDocument::isModified() const
 
 void MapDocument::setCurrentLayerIndex(int index)
 {
-    Q_ASSERT(index >= -1 && index < mMap->layerCount());
+    MapLevel *level = currentMapLevel();
+    if (level == nullptr) {
+        return;
+    }
+
+    Q_ASSERT(index >= -1 && index < level->layerCount());
     mCurrentLayerIndex = index;
 
     /* This function always sends the following signal, even if the index
@@ -268,10 +275,29 @@ void MapDocument::setCurrentLayerIndex(int index)
 
 Layer *MapDocument::currentLayer() const
 {
-    if (mCurrentLayerIndex == -1)
-        return 0;
+    MapLevel *mapLevel = currentMapLevel();
+    if (mapLevel == nullptr)
+        return nullptr;
 
-    return mMap->layerAt(mCurrentLayerIndex);
+    return mapLevel->layerAt(mCurrentLayerIndex);
+}
+
+MapLevel *MapDocument::currentMapLevel() const
+{
+    return map()->levelAt(mCurrentLevelIndex);
+}
+
+void MapDocument::setCurrentLevelAndLayer(int levelIndex, int layerIndex)
+{
+    if (MapLevel *mapLevel = map()->levelAt(levelIndex)) {
+        if (Layer *layer = mapLevel->layerAt(layerIndex)) {
+            mCurrentLevelIndex = levelIndex;
+            mCurrentLayerIndex = layerIndex;
+            emit currentLevelIndexChanged(levelIndex);
+            emit currentLayerIndexChanged(layerIndex);
+        }
+    }
+    Q_ASSERT(false);
 }
 
 void MapDocument::resizeMap(const QSize &size, const QPoint &offset)
@@ -284,18 +310,20 @@ void MapDocument::resizeMap(const QSize &size, const QPoint &offset)
 #ifdef ZOMBOID
     mUndoStack->push(new ResizeMap(this, size, true));
 #endif
-    for (int i = 0; i < mMap->layerCount(); ++i) {
-        if (ObjectGroup *objectGroup = mMap->layerAt(i)->asObjectGroup()) {
-            // Remove objects that will fall outside of the map
-            foreach (MapObject *o, objectGroup->objects()) {
-                if (!(newArea.contains(o->position())
-                      || newArea.intersects(o->bounds()))) {
-                    mUndoStack->push(new RemoveMapObject(this, o));
+    for (int z = 0; z < mMap->levelCount(); ++z) {
+        MapLevel *mapLevel = mMap->levelAt(z);
+        for (int i = 0; i < mapLevel->layerCount(); i++) {
+            if (ObjectGroup *objectGroup = mapLevel->layerAt(i)->asObjectGroup()) {
+                // Remove objects that will fall outside of the map
+                for (MapObject *o : objectGroup->objects()) {
+                    if (!(newArea.contains(o->position())
+                          || newArea.intersects(o->bounds()))) {
+                        mUndoStack->push(new RemoveMapObject(this, o));
+                    }
                 }
             }
+            mUndoStack->push(new ResizeLayer(this, z, i, size, offset));
         }
-
-        mUndoStack->push(new ResizeLayer(this, i, size, offset));
     }
 #ifdef ZOMBOID
     mUndoStack->push(new ResizeBmpImage(this, 0, size, offset));
@@ -328,13 +356,15 @@ void MapDocument::offsetMap(const QList<int> &layerIndexes,
     if (layerIndexes.empty())
         return;
 
-    if (layerIndexes.size() == 1) {
-        mUndoStack->push(new OffsetLayer(this, layerIndexes.first(), offset,
+    if (layerIndexes.size() == 2) {
+        mUndoStack->push(new OffsetLayer(this, layerIndexes.first(), layerIndexes.last(), offset,
                                          bounds, wrapX, wrapY));
     } else {
         mUndoStack->beginMacro(tr("Offset Map"));
-        foreach (const int layerIndex, layerIndexes) {
-            mUndoStack->push(new OffsetLayer(this, layerIndex, offset,
+        for (int i = 0; i < layerIndexes.size(); i += 2) {
+            int levelIndex = layerIndexes[i];
+            int layerIndex = layerIndexes[i + 1];
+            mUndoStack->push(new OffsetLayer(this, levelIndex, layerIndex, offset,
                                              bounds, wrapX, wrapY));
         }
 
@@ -343,8 +373,9 @@ void MapDocument::offsetMap(const QList<int> &layerIndexes,
         // is being offset.
         // Don't offset the MapRands.
         bool allBMPLayers = true;
-        foreach (QString layerName, mapComposite()->bmpBlender()->tileLayerNames()) {
-            int layerIndex = map()->indexOfLayer(layerName, Layer::TileLayerType);
+        MapLevel *mapLevel = map()->levelAt(0);
+        for (const QString &layerName : mapComposite()->bmpBlender()->tileLayerNames()) {
+            int layerIndex = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
             if (layerIndex >= 0 && !layerIndexes.contains(layerIndex)) {
                 allBMPLayers = false;
                 break;
@@ -353,8 +384,9 @@ void MapDocument::offsetMap(const QList<int> &layerIndexes,
         if (allBMPLayers) {
             mUndoStack->push(new OffsetBmpImage(this, 0, offset, bounds, wrapX, wrapY));
             mUndoStack->push(new OffsetBmpImage(this, 1, offset, bounds, wrapX, wrapY));
-            foreach (MapNoBlend *noBlend, map()->noBlends())
+            for (MapNoBlend *noBlend : map()->noBlends()) {
                 mUndoStack->push(new OffsetNoBlend(this, noBlend, offset, bounds, wrapX, wrapY));
+            }
         }
 #endif
 
@@ -368,43 +400,27 @@ void MapDocument::offsetMap(const QList<int> &layerIndexes,
  */
 void MapDocument::addLayer(Layer::Type layerType)
 {
-    Layer *layer = 0;
+    Layer *layer = nullptr;
     QString name;
 
 #if 1
     // Create the new layer in the same level as the current layer.
     // Stack it with other layers of the same type in level-order.
-    int level = currentLevel();
-    int index = mMap->layerCount();
-    Layer *topLayerOfSameTypeInSameLevel = 0;
-    Layer *bottomLayerOfSameTypeInGreaterLevel = 0;
-    Layer *topLayerOfSameTypeInLesserLevel = 0;
-    foreach (Layer *layer, mMap->layers(layerType)) {
-        if ((layer->level() > level) && !bottomLayerOfSameTypeInGreaterLevel)
-            bottomLayerOfSameTypeInGreaterLevel = layer;
-        if (layer->level() < level)
-            topLayerOfSameTypeInLesserLevel = layer;
-        if (layer->level() == level)
-            topLayerOfSameTypeInSameLevel = layer;
-    }
-    if (topLayerOfSameTypeInSameLevel)
-        index = mMap->layers().indexOf(topLayerOfSameTypeInSameLevel) + 1;
-    else if (bottomLayerOfSameTypeInGreaterLevel)
-        index = mMap->layers().indexOf(bottomLayerOfSameTypeInGreaterLevel);
-    else if (topLayerOfSameTypeInLesserLevel)
-        index = mMap->layers().indexOf(topLayerOfSameTypeInLesserLevel) + 1;
+    int level = currentLevelIndex();
+    MapLevel *mapLevel = mMap->levelAt(level);
+    int index = mapLevel->layers(layerType).size();
 
     switch (layerType) {
     case Layer::TileLayerType:
-        name = tr("%1_Tile Layer %2").arg(level).arg(mMap->tileLayerCount() + 1);
+        name = tr("Tile Layer %2").arg(mapLevel->tileLayerCount() + 1);
         layer = new TileLayer(name, 0, 0, mMap->width(), mMap->height());
         break;
     case Layer::ObjectGroupType:
-        name = tr("%1_Object Layer %2").arg(level).arg(mMap->objectGroupCount() + 1);
+        name = tr("Object Layer %2").arg(mapLevel->objectGroupCount() + 1);
         layer = new ObjectGroup(name, 0, 0, mMap->width(), mMap->height());
         break;
     case Layer::ImageLayerType:
-        name = tr("%1_Image Layer %2").arg(level).arg(mMap->imageLayerCount() + 1);
+        name = tr("Image Layer %2").arg(mapLevel->imageLayerCount() + 1);
         layer = new ImageLayer(name, 0, 0, mMap->width(), mMap->height());
         break;
     case Layer::AnyLayerType:
@@ -432,7 +448,8 @@ void MapDocument::addLayer(Layer::Type layerType)
 
     const int index = mMap->layerCount();
 #endif
-    mUndoStack->push(new AddLayer(this, index, layer));
+    layer->setLevel(level);
+    mUndoStack->push(new AddLayer(this, level, index, layer));
     setCurrentLayerIndex(index);
 
     emit editLayerNameRequested();
@@ -446,7 +463,7 @@ void MapDocument::duplicateLayer()
     if (mCurrentLayerIndex == -1)
         return;
 
-    Layer *duplicate = mMap->layerAt(mCurrentLayerIndex)->clone();
+    Layer *duplicate = mMap->levelAt(mCurrentLevelIndex)->layerAt(mCurrentLayerIndex)->clone();
 #ifdef ZOMBOID
     // Duplicate the layer into the same level by preserving the N_ prefix.
     duplicate->setName(tr("%1 copy").arg(duplicate->name()));
@@ -455,7 +472,7 @@ void MapDocument::duplicateLayer()
 #endif
 
     const int index = mCurrentLayerIndex + 1;
-    QUndoCommand *cmd = new AddLayer(this, index, duplicate);
+    QUndoCommand *cmd = new AddLayer(this, mCurrentLevelIndex, index, duplicate);
     cmd->setText(tr("Duplicate Layer"));
     mUndoStack->push(cmd);
     setCurrentLayerIndex(index);
@@ -469,11 +486,15 @@ void MapDocument::duplicateLayer()
  */
 void MapDocument::mergeLayerDown()
 {
+    MapLevel *mapLevel = currentMapLevel();
+    if (mapLevel == nullptr)
+        return;
+
     if (mCurrentLayerIndex < 1)
         return;
 
-    Layer *upperLayer = mMap->layerAt(mCurrentLayerIndex);
-    Layer *lowerLayer = mMap->layerAt(mCurrentLayerIndex - 1);
+    Layer *upperLayer = mapLevel->layerAt(mCurrentLayerIndex);
+    Layer *lowerLayer = mapLevel->layerAt(mCurrentLayerIndex - 1);
 
     if (!lowerLayer->canMergeWith(upperLayer))
         return;
@@ -481,9 +502,9 @@ void MapDocument::mergeLayerDown()
     Layer *merged = lowerLayer->mergedWith(upperLayer);
 
     mUndoStack->beginMacro(tr("Merge Layer Down"));
-    mUndoStack->push(new AddLayer(this, mCurrentLayerIndex - 1, merged));
-    mUndoStack->push(new RemoveLayer(this, mCurrentLayerIndex));
-    mUndoStack->push(new RemoveLayer(this, mCurrentLayerIndex));
+    mUndoStack->push(new AddLayer(this, merged->level(), mCurrentLayerIndex - 1, merged));
+    mUndoStack->push(new RemoveLayer(this, merged->level(), mCurrentLayerIndex));
+    mUndoStack->push(new RemoveLayer(this, merged->level(), mCurrentLayerIndex));
     mUndoStack->endMacro();
 }
 
@@ -491,35 +512,47 @@ void MapDocument::mergeLayerDown()
  * Moves the given layer up. Does nothing when no valid layer index is
  * given.
  */
-void MapDocument::moveLayerUp(int index)
+void MapDocument::moveLayerUp(int levelIndex, int layerIndex)
 {
-    if (index < 0 || index >= mMap->layerCount() - 1)
+    MapLevel *mapLevel = mMap->levelAt(levelIndex);
+    if (mapLevel == nullptr)
         return;
 
-    mUndoStack->push(new MoveLayer(this, index, MoveLayer::Up));
+    if (layerIndex < 0 || layerIndex >= mapLevel->layerCount() - 1)
+        return;
+
+    mUndoStack->push(new MoveLayer(this, levelIndex, layerIndex, MoveLayer::Up));
 }
 
 /**
  * Moves the given layer down. Does nothing when no valid layer index is
  * given.
  */
-void MapDocument::moveLayerDown(int index)
+void MapDocument::moveLayerDown(int levelIndex, int layerIndex)
 {
-    if (index < 1 || index >= mMap->layerCount())
+    MapLevel *mapLevel = mMap->levelAt(levelIndex);
+    if (mapLevel == nullptr)
         return;
 
-    mUndoStack->push(new MoveLayer(this, index, MoveLayer::Down));
+    if (layerIndex < 1 || layerIndex >= mapLevel->layerCount())
+        return;
+
+    mUndoStack->push(new MoveLayer(this, levelIndex, layerIndex, MoveLayer::Down));
 }
 
 /**
  * Removes the given layer.
  */
-void MapDocument::removeLayer(int index)
+void MapDocument::removeLayer(int levelIndex, int layerIndex)
 {
-    if (index < 0 || index >= mMap->layerCount())
+    MapLevel *mapLevel = mMap->levelAt(levelIndex);
+    if (mapLevel == nullptr)
         return;
 
-    mUndoStack->push(new RemoveLayer(this, index));
+    if (layerIndex < 0 || layerIndex >= mMap->layerCount())
+        return;
+
+    mUndoStack->push(new RemoveLayer(this, levelIndex, layerIndex));
 }
 
 /**
@@ -527,16 +560,20 @@ void MapDocument::removeLayer(int index)
   * If any other layer is visible then all layers will be hidden, otherwise
   * the layers will be shown.
   */
-void MapDocument::toggleOtherLayers(int index)
+void MapDocument::toggleOtherLayers(int levelIndex, int layerIndex)
 {
-    mLayerModel->toggleOtherLayers(index);
+    mLayerModel->toggleOtherLayers(levelIndex, layerIndex);
 }
 
 #ifdef ZOMBOID
-void MapDocument::setLayerVisible(int layerIndex, bool visible)
+void MapDocument::setLayerVisible(int levelIndex, int layerIndex, bool visible)
 {
-    int row = mMap->layerCount() - layerIndex - 1;
-    mLayerModel->setData(mLayerModel->index(row),
+    MapLevel *mapLevel = mMap->levelAt(levelIndex);
+    if (mapLevel == nullptr)
+        return;
+    if (mapLevel->layerAt(layerIndex) == nullptr)
+        return;
+    mLayerModel->setData(mLayerModel->toIndex(levelIndex, layerIndex),
                          visible ? Qt::Checked : Qt::Unchecked,
                          Qt::CheckStateRole);
 }
@@ -869,11 +906,11 @@ void MapDocument::onObjectsRemoved(const QList<MapObject*> &objects)
     emit objectsRemoved(objects);
 }
 
-void MapDocument::onLayerAdded(int index)
+void MapDocument::onLayerAdded(int z, int index)
 {
-    emit layerAdded(index);
+    emit layerAdded(z, index);
 #ifdef ZOMBOID
-    mMapComposite->layerAdded(index);
+    mMapComposite->layerAdded(z, index);
 #endif
 
     // Select the first layer that gets added to the map
@@ -881,25 +918,27 @@ void MapDocument::onLayerAdded(int index)
         setCurrentLayerIndex(0);
 }
 
-void MapDocument::onLayerAboutToBeRemoved(int index)
+void MapDocument::onLayerAboutToBeRemoved(int z, int index)
 {
+    MapLevel *mapLevel = mMap->levelAt(z);
     // Deselect any objects on this layer when necessary
-    if (ObjectGroup *og = dynamic_cast<ObjectGroup*>(mMap->layerAt(index)))
+    if (ObjectGroup *og = dynamic_cast<ObjectGroup*>(mapLevel->layerAt(index)))
         deselectObjects(og->objects());
 #ifdef ZOMBOID
-    mMapComposite->layerAboutToBeRemoved(index);
+    mMapComposite->layerAboutToBeRemoved(z, index);
 #endif
-    emit layerAboutToBeRemoved(index);
+    emit layerAboutToBeRemoved(z, index);
 }
-void MapDocument::onLayerRemoved(int index)
+
+void MapDocument::onLayerRemoved(int z, int index)
 {
+    MapLevel *mapLevel = mMap->levelAt(z);
     // Bring the current layer index to safety
-    bool currentLayerRemoved = mCurrentLayerIndex == mMap->layerCount();
+    bool currentLayerRemoved = mCurrentLayerIndex == mapLevel->layerCount();
     if (currentLayerRemoved)
         mCurrentLayerIndex = mCurrentLayerIndex - 1;
 
-
-    emit layerRemoved(index);
+    emit layerRemoved(z, index);
 
     // Emitted after the layerRemoved signal so that the MapScene has a chance
     // of synchronizing before adapting to the newly selected index
@@ -914,11 +953,11 @@ void MapDocument::setLayerGroupVisibility(CompositeLayerGroup *layerGroup, bool 
     emit layerGroupVisibilityChanged(layerGroup);
 }
 
-void MapDocument::onLayerRenamed(int index)
+void MapDocument::onLayerRenamed(int z, int index)
 {
-    mMapComposite->layerRenamed(index);
+    mMapComposite->layerRenamed(z, index);
 
-    emit layerRenamed(index);
+    emit layerRenamed(z, index);
 }
 
 void MapDocument::onMapAboutToChange(MapInfo *mapInfo)
@@ -964,11 +1003,12 @@ void MapDocument::onMapChanged(MapInfo *mapInfo)
 
 void MapDocument::bmpBlenderRegionAltered(const QRegion &region)
 {
-    foreach (QString layerName, mapComposite()->bmpBlender()->tileLayerNames()) {
-        int index = map()->indexOfLayer(layerName, Layer::TileLayerType);
+    MapLevel *mapLevel = mMap->levelAt(0);
+    for (const QString &layerName : mapComposite()->bmpBlender()->tileLayerNames()) {
+        int index = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (index == -1)
             continue;
-        TileLayer *tl = map()->layerAt(index)->asTileLayer();
+        TileLayer *tl = mapLevel->layerAt(index)->asTileLayer();
         mapComposite()->tileLayersForLevel(0)->regionAltered(tl);
         emit regionAltered(region, tl); // infinite loop with emitRegionAltered()
         break; // this should redraw the whole layergroup anyway

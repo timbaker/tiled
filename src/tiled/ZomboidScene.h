@@ -71,31 +71,31 @@ class ZomboidScene : public MapScene
 
 public:
     ZomboidScene(QObject *parent);
-    ~ZomboidScene();
+    ~ZomboidScene() override;
 
     // MapScene
-    virtual void setMapDocument(MapDocument *mapDoc);
+    virtual void setMapDocument(MapDocument *mapDoc) override;
 
     ZLotManager &lotManager() { return mLotManager; }
 
 private slots:
-    virtual void refreshScene();
+    virtual void refreshScene() override;
 
     virtual void regionAltered(const QRegion &region, Layer *layer);
 
-    virtual void mapChanged();
+    virtual void mapChanged() override;
 
-    void layerAdded(int index);
-    void layerRemoved(int index);
-    void layerChanged(int index);
+    void layerAdded(int z, int index) override;
+    void layerRemoved(int z, int index) override;
+    void layerChanged(int z, int index) override;
 
     void layerGroupAdded(int level);
     void layerGroupVisibilityChanged(CompositeLayerGroup *g);
 
-    void layerAddedToGroup(int index);
-    void layerRemovedFromGroup(int index, CompositeLayerGroup *oldGroup);
+    void layerAddedToGroup(int z, int index);
+    void layerRemovedFromGroup(int z, int index, CompositeLayerGroup *oldGroup);
 
-    void layerLevelChanged(int index, int oldLevel);
+    void layerLevelChanged(int z, int index, int oldLevel);
 
     void onLotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
     void onLotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);

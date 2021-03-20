@@ -29,6 +29,7 @@
 
 #include "tolua.h"
 
+#include "maplevel.h"
 #include "maprenderer.h"
 #include "tilelayer.h"
 
@@ -275,7 +276,7 @@ void LuaTileTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers
         mCurrentScenePos = pos;
     mouseEvent("mouseMoved", mButtons, pos, modifiers);
 
-    int level = mapDocument()->currentLevel();
+    int level = mapDocument()->currentLevelIndex();
     QPoint tilePos = mapDocument()->renderer()->pixelToTileCoordsInt(pos, level);
     if (true) {
         setStatusInfo(QString(QLatin1String("%1, %2"))
@@ -411,8 +412,8 @@ void LuaTileTool::setCursorType(LuaTileTool::CursorType type)
 
 LuaTileLayer *LuaTileTool::currentLayer() const
 {
-    int index = mapDocument()->currentLayerIndex();
-    return (mMap && mMap->layerAt(index)) ? mMap->layerAt(index)->asTileLayer() : 0;
+    int layerIndex = mapDocument()->currentLayerIndex();
+    return (mMap && mMap->layerAt(layerIndex)) ? mMap->layerAt(layerIndex)->asTileLayer() : nullptr;
 }
 
 void LuaTileTool::mouseEvent(const char *func, Qt::MouseButtons buttons,
@@ -440,7 +441,7 @@ void LuaTileTool::mouseEvent(const char *func, Qt::MouseButtons buttons,
         lua_settable(L, -3);
     }
 
-    int level = mapDocument()->currentLevel();
+    int level = mapDocument()->currentLevelIndex();
     const QPointF tilePosF = mapDocument()->renderer()->pixelToTileCoords(scenePos, level);
     lua_pushnumber(L, tilePosF.x()); // arg x
     lua_pushnumber(L, tilePosF.y()); // arg y
@@ -786,12 +787,13 @@ int LuaTileTool::angle(float x1, float y1, float x2, float y2)
 
 void LuaTileTool::clearToolTiles()
 {
-    foreach (QString layerName, mToolTileLayers.keys()) {
+    MapLevel *mapLevel = mapDocument()->map()->levelAt(0);
+    for (const QString &layerName : mToolTileLayers.keys()) {
         if (!mToolTileRegions[layerName].isEmpty()) {
             mToolTileLayers[layerName]->erase();
-            int n = mapDocument()->map()->indexOfLayer(layerName, Layer::TileLayerType);
+            int n = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
             if (n >= 0) {
-                TileLayer *tl = mapDocument()->map()->layerAt(n)->asTileLayer();
+                TileLayer *tl = mapLevel->layerAt(n)->asTileLayer();
                 mapDocument()->mapComposite()->layerGroupForLayer(tl)->clearToolTiles();
                 QRect r = mapDocument()->renderer()->boundingRect(mToolTileRegions[layerName].boundingRect(),
                                                                   tl->level()).adjusted(-3, -(128-32)*(mapDocument()->renderer()->is2x()?2:1) - 3, 3, 3);
@@ -804,7 +806,9 @@ void LuaTileTool::clearToolTiles()
 
 void LuaTileTool::setToolTile(const char *layer, int x, int y, Tile *tile)
 {
-    if (tile == LuaMap::noneTile()) tile = 0;
+    if (tile == LuaMap::noneTile()) {
+        tile = nullptr;
+    }
 
     QString layerName = QLatin1String(layer);
     Map *map = mapDocument()->map();
@@ -822,9 +826,10 @@ void LuaTileTool::setToolTile(const char *layer, int x, int y, Tile *tile)
     if (tlTool->contains(x, y)) {
         tlTool->setCell(x, y, Cell(tile));
         mToolTileRegions[layerName] += QRect(x, y, 1, 1);
-        int n = map->indexOfLayer(layerName, Layer::TileLayerType);
+        MapLevel *mapLevel = mapDocument()->map()->levelAt(0);
+        int n = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (n >= 0) {
-            TileLayer *tl = map->layerAt(n)->asTileLayer();
+            TileLayer *tl = mapLevel->layerAt(n)->asTileLayer();
             mapDocument()->mapComposite()->layerGroupForLayer(tl)->setToolTiles(
                         tlTool, QPoint(), mToolTileRegions[layerName], tl);
             QRect r = mapDocument()->renderer()->boundingRect(
@@ -845,12 +850,14 @@ void LuaTileTool::setToolTile(const char *layer, const QRegion &rgn, Tile *tile)
 
 void LuaTileTool::clearToolNoBlends()
 {
-    foreach (QString layerName, mToolNoBlends.keys()) {
+    MapLevel *mapLevel = mapDocument()->map()->levelAt(0);
+
+    for (const QString &layerName : mToolNoBlends.keys()) {
         if (!mToolNoBlendRegions[layerName].isEmpty()) {
             //mToolNoBlends[layerName]->clear();
-            int n = mapDocument()->map()->indexOfLayer(layerName, Layer::TileLayerType);
+            int n = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
             if (n >= 0) {
-                TileLayer *tl = mapDocument()->map()->layerAt(n)->asTileLayer();
+                TileLayer *tl = mapLevel->layerAt(n)->asTileLayer();
                 mapDocument()->mapComposite()->layerGroupForLayer(tl)->clearToolNoBlends();
                 QRect r = mapDocument()->renderer()->boundingRect(mToolNoBlendRegions[layerName].boundingRect(),
                                                                   tl->level()).adjusted(-3, -(128-32)*(mapDocument()->renderer()->is2x()?2:1) - 3, 3, 3);
@@ -879,9 +886,10 @@ void LuaTileTool::setToolNoBlend(const char *layer, int x, int y, bool noBlend)
     if (QRect(QPoint(), map->size()).contains(x, y)) {
         nb->set(x, y, noBlend);
         rgn += QRect(x, y, 1, 1);
-        int n = map->indexOfLayer(layerName, Layer::TileLayerType);
+        MapLevel *mapLevel = map->levelAt(0);
+        int n = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (n >= 0) {
-            TileLayer *tl = map->layerAt(n)->asTileLayer();
+            TileLayer *tl = mapLevel->layerAt(n)->asTileLayer();
             mapDocument()->mapComposite()->layerGroupForLayer(tl)->setToolNoBlend(
                         nb->copy(rgn), rgn.boundingRect().topLeft(), rgn, tl);
             QRect r = mapDocument()->renderer()->boundingRect(
@@ -941,7 +949,7 @@ bool LuaTileTool::dragged()
 QPainterPath LuaTileTool::cursorShape(const QPointF &pos, Qt::KeyboardModifiers modifiers)
 {
     const MapRenderer *renderer = mapDocument()->renderer();
-    int level = mapDocument()->currentLevel();
+    int level = mapDocument()->currentLevelIndex();
     QPointF tilePosF = renderer->pixelToTileCoords(pos, level);
     QPoint tilePos = QPoint(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
     QPointF m(tilePosF.x() - tilePos.x(), tilePosF.y() - tilePos.y());

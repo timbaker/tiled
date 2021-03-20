@@ -44,7 +44,8 @@ public:
      * shifting the tiles by \a offset.
      */
     ResizeLayer(MapDocument *mapDocument,
-                int index,
+                int levelIndex,
+                int layerIndex,
                 const QSize &size,
                 const QPoint &offset);
 
@@ -57,7 +58,8 @@ private:
     Layer *swapLayer(Layer *layer);
 
     MapDocument *mMapDocument;
-    int mIndex;
+    int mLevelIndex;
+    int mLayerIndex;
     Layer *mOriginalLayer;
     Layer *mResizedLayer;
 };

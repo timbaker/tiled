@@ -62,10 +62,6 @@ SOURCES += aboutdialog.cpp \
     addremovelayer.cpp \
     addremovemapobject.cpp \
     addremovetileset.cpp \
-    automapper.cpp \
-    automapperwrapper.cpp \
-    automappingmanager.cpp \
-    automappingutils.cpp  \
     brushitem.cpp \
     bucketfilltool.cpp \
     changemapobject.cpp \

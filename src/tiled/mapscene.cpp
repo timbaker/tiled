@@ -26,6 +26,7 @@
 #include "abstracttool.h"
 #include "map.h"
 #include "mapdocument.h"
+#include "maplevel.h"
 #include "mapobject.h"
 #include "mapobjectitem.h"
 #include "maprenderer.h"
@@ -61,9 +62,9 @@ static const qreal opacityFactor = 0.4;
 
 MapScene::MapScene(QObject *parent):
     QGraphicsScene(parent),
-    mMapDocument(0),
-    mSelectedTool(0),
-    mActiveTool(0),
+    mMapDocument(nullptr),
+    mSelectedTool(nullptr),
+    mActiveTool(nullptr),
     mGridVisible(true),
     mUnderMouse(false),
     mCurrentModifiers(Qt::NoModifier),
@@ -178,6 +179,15 @@ void MapScene::setSelectedObjectItems(const QSet<MapObjectItem *> &items)
     mMapDocument->setSelectedObjects(selectedObjects);
 }
 
+MapObjectItem *MapScene::itemForObject(MapObject *object) const
+{
+    if (object == nullptr) {
+        return nullptr;
+    }
+    const LevelData &levelData = mLevelData[object->objectGroup()->level()];
+    return levelData.mObjectItems.value(object);
+}
+
 void MapScene::setSelectedTool(AbstractTool *tool)
 {
     mSelectedTool = tool;
@@ -185,8 +195,11 @@ void MapScene::setSelectedTool(AbstractTool *tool)
 
 void MapScene::refreshScene()
 {
-    mLayerItems.clear();
-    mObjectItems.clear();
+    for (int z = 0; z < mLevelData.size(); z++) {
+        LevelData &levelData = mLevelData[z];
+        levelData.mLayerItems.clear();
+        levelData.mObjectItems.clear();
+    }
 
 #ifdef ZOMBOID
     removeItem(mGridItem);
@@ -218,15 +231,19 @@ void MapScene::refreshScene()
 #endif
 
     const Map *map = mMapDocument->map();
-    mLayerItems.resize(map->layerCount());
+    for (int z = 0; z < map->levelCount(); z++) {
+        LevelData &levelData = mLevelData[z];
+        MapLevel *mapLevel = map->levelAt(z);
+        levelData.mLayerItems.resize(mapLevel->layerCount());
 
-    int layerIndex = 0;
-    foreach (Layer *layer, map->layers()) {
-        QGraphicsItem *layerItem = createLayerItem(layer);
-        layerItem->setZValue(layerIndex);
-        addItem(layerItem);
-        mLayerItems[layerIndex] = layerItem;
-        ++layerIndex;
+        int layerIndex = 0;
+        for (Layer *layer : mapLevel->layers()) {
+            QGraphicsItem *layerItem = createLayerItem(layer);
+            layerItem->setZValue(layerIndex);
+            addItem(layerItem);
+            levelData.mLayerItems[layerIndex] = layerItem;
+            ++layerIndex;
+        }
     }
 
     TileSelectionItem *selectionItem = new TileSelectionItem(mMapDocument);
@@ -248,16 +265,18 @@ void MapScene::refreshScene()
 
 QGraphicsItem *MapScene::createLayerItem(Layer *layer)
 {
-    QGraphicsItem *layerItem = 0;
+    QGraphicsItem *layerItem = nullptr;
+
+    LevelData &levelData = mLevelData[layer->level()];
 
     if (TileLayer *tl = layer->asTileLayer()) {
         layerItem = new TileLayerItem(tl, mMapDocument->renderer());
     } else if (ObjectGroup *og = layer->asObjectGroup()) {
         ObjectGroupItem *ogItem = new ObjectGroupItem(og);
-        foreach (MapObject *object, og->objects()) {
+        for (MapObject *object : og->objects()) {
             MapObjectItem *item = new MapObjectItem(object, mMapDocument,
                                                     ogItem);
-            mObjectItems.insert(object, item);
+            levelData.mObjectItems.insert(object, item);
         }
         layerItem = ogItem;
     } else if (ImageLayer *il = layer->asImageLayer()) {
@@ -281,11 +300,14 @@ void MapScene::updateCurrentLayerHighlight()
         mDarkRectangle->setVisible(false);
 
         // Restore opacity for all layers
-        for (int i = 0; i < mLayerItems.size(); ++i) {
-            const Layer *layer = mMapDocument->map()->layerAt(i);
-            mLayerItems.at(i)->setOpacity(layer->opacity());
+        for (int z = 0; z < mLevelData.size(); z++) {
+            LevelData &levelData = mLevelData[z];
+            const QList<Layer*> layers = mMapDocument->map()->levelAt(z)->layers();
+            for (int i = 0; i < levelData.mLayerItems.size(); ++i) {
+                const Layer *layer = layers[i];
+                levelData.mLayerItems.at(i)->setOpacity(layer->opacity());
+            }
         }
-
         return;
     }
 
@@ -294,10 +316,14 @@ void MapScene::updateCurrentLayerHighlight()
     mDarkRectangle->setVisible(true);
 
     // Set layers above the current layer to half opacity
-    for (int i = 1; i < mLayerItems.size(); ++i) {
-        const Layer *layer = mMapDocument->map()->layerAt(i);
-        const qreal multiplier = (currentLayerIndex < i) ? opacityFactor : 1;
-        mLayerItems.at(i)->setOpacity(layer->opacity() * multiplier);
+    for (int z = 0; z < mLevelData.size(); z++) {
+        LevelData &levelData = mLevelData[z];
+        const QList<Layer*> layers = mMapDocument->map()->levelAt(z)->layers();
+        for (int i = 1; i < levelData.mLayerItems.size(); ++i) {
+            const Layer *layer = layers[i];
+            const qreal multiplier = (currentLayerIndex < i) ? opacityFactor : 1;
+            levelData.mLayerItems.at(i)->setOpacity(layer->opacity() * multiplier);
+        }
     }
 }
 
@@ -399,15 +425,20 @@ void MapScene::mapChanged()
     mDarkRectangle->setRect(0, 0, mapSize.width(), mapSize.height());
 #endif
 
-    foreach (QGraphicsItem *item, mLayerItems) {
-        if (TileLayerItem *tli = dynamic_cast<TileLayerItem*>(item))
-            tli->syncWithTileLayer();
-    }
+    for (int z = 0; z < mLevelData.size(); z++) {
+        LevelData &levelData = mLevelData[z];
+        for (QGraphicsItem *item : levelData.mLayerItems) {
+            if (TileLayerItem *tli = dynamic_cast<TileLayerItem*>(item)) {
+                tli->syncWithTileLayer();
+            }
+        }
 #ifdef ZOMBOID
-    // BUG: create object layer, add items, resize map much larger, try to select the objects
-    foreach (MapObjectItem *item, mObjectItems)
-        item->syncWithMapObject();
+        // BUG: create object layer, add items, resize map much larger, try to select the objects
+        for (MapObjectItem *item : levelData.mObjectItems) {
+            item->syncWithMapObject();
+        }
 #endif
+    }
 }
 
 void MapScene::tilesetChanged(Tileset *tileset)
@@ -424,12 +455,13 @@ void MapScene::tilesetChanged(Tileset *tileset)
 #endif
 }
 
-void MapScene::layerAdded(int index)
+void MapScene::layerAdded(int z, int index)
 {
-    Layer *layer = mMapDocument->map()->layerAt(index);
+    MapLevel *mapLevel = mMapDocument->map()->levelAt(z);
+    Layer *layer = mapLevel->layerAt(index);
     QGraphicsItem *layerItem = createLayerItem(layer);
     addItem(layerItem);
-    mLayerItems.insert(index, layerItem);
+    mLevelData[z].mLayerItems.insert(index, layerItem);
 
 #ifndef ZOMBOID
     int z = 0;
@@ -439,31 +471,33 @@ void MapScene::layerAdded(int index)
 }
 
 #ifdef ZOMBOID
-void MapScene::layerAboutToBeRemoved(int index)
+void MapScene::layerAboutToBeRemoved(int z, int index)
 {
-    Layer *layer = mMapDocument->map()->layerAt(index);
+    MapLevel *mapLevel = mMapDocument->map()->levelAt(z);
+    Layer *layer = mapLevel->layerAt(index);
     if (ObjectGroup *og = layer->asObjectGroup()) {
-        foreach (MapObject *o, og->objects()) {
-            mObjectItems.remove(o);
+        for (MapObject *o : og->objects()) {
+            mLevelData[z].mObjectItems.remove(o);
         }
     }
 }
 #endif
 
-void MapScene::layerRemoved(int index)
+void MapScene::layerRemoved(int z, int index)
 {
-    delete mLayerItems.at(index);
-    mLayerItems.remove(index);
+    delete mLevelData[z].mLayerItems.at(index);
+    mLevelData[z].mLayerItems.remove(index);
 }
 
 /**
  * A layer has changed. This can mean that the layer visibility or opacity has
  * changed.
  */
-void MapScene::layerChanged(int index)
+void MapScene::layerChanged(int z, int index)
 {
-    const Layer *layer = mMapDocument->map()->layerAt(index);
-    QGraphicsItem *layerItem = mLayerItems.at(index);
+    MapLevel *mapLevel = mMapDocument->map()->levelAt(z);
+    const Layer *layer = mapLevel->layerAt(index);
+    QGraphicsItem *layerItem = mLevelData[z].mLayerItems.at(index);
 
     layerItem->setVisible(layer->isVisible());
 
@@ -477,8 +511,9 @@ void MapScene::layerChanged(int index)
 }
 
 #ifdef ZOMBOID
-void MapScene::layerRenamed(int index)
+void MapScene::layerRenamed(int z, int index)
 {
+    Q_UNUSED(z)
     Q_UNUSED(index)
 }
 #endif
@@ -488,12 +523,13 @@ void MapScene::layerRenamed(int index)
  */
 void MapScene::objectsAdded(const QList<MapObject*> &objects)
 {
-    foreach (MapObject *object, objects) {
+    for (MapObject *object : objects) {
         ObjectGroup *og = object->objectGroup();
-        ObjectGroupItem *ogItem = 0;
+        ObjectGroupItem *ogItem = nullptr;
 
         // Find the object group item for the map object's object group
-        foreach (QGraphicsItem *item, mLayerItems) {
+        LevelData &levelData = mLevelData[og->level()];
+        for (QGraphicsItem *item : levelData.mLayerItems) {
             if (ObjectGroupItem *ogi = dynamic_cast<ObjectGroupItem*>(item)) {
                 if (ogi->objectGroup() == og) {
                     ogItem = ogi;
@@ -504,13 +540,13 @@ void MapScene::objectsAdded(const QList<MapObject*> &objects)
 
         Q_ASSERT(ogItem);
         MapObjectItem *item = new MapObjectItem(object, mMapDocument, ogItem);
-        mObjectItems.insert(object, item);
+        levelData.mObjectItems.insert(object, item);
 
 #ifdef ZOMBOID
         // When an item accepts hover events, it stops the active tool getting
         // mouse move events.  For example, the Stamp brush won't update its
         // position when the mouse is hovering over a MapObjectItem.
-        bool hover = dynamic_cast<AbstractObjectTool*>(mActiveTool) != 0;
+        bool hover = dynamic_cast<AbstractObjectTool*>(mActiveTool) != nullptr;
         item->setAcceptHoverEvents(hover);
         item->labelItem()->setAcceptHoverEvents(hover);
 #endif
@@ -522,13 +558,14 @@ void MapScene::objectsAdded(const QList<MapObject*> &objects)
  */
 void MapScene::objectsRemoved(const QList<MapObject*> &objects)
 {
-    foreach (MapObject *o, objects) {
-        ObjectItems::iterator i = mObjectItems.find(o);
-        Q_ASSERT(i != mObjectItems.end());
+    for (MapObject *o : objects) {
+        LevelData &levelData = mLevelData[o->objectGroup()->level()];
+        ObjectItems::iterator i = levelData.mObjectItems.find(o);
+        Q_ASSERT(i != levelData.mObjectItems.end());
 
         mSelectedObjectItems.remove(i.value());
         delete i.value();
-        mObjectItems.erase(i);
+        levelData.mObjectItems.erase(i);
     }
 }
 
@@ -558,9 +595,9 @@ void MapScene::updateSelectedObjectItems()
     }
 
     // Update the editable state of the items
-    foreach (MapObjectItem *item, mSelectedObjectItems - items)
+    for (MapObjectItem *item : mSelectedObjectItems - items)
         item->setEditable(false);
-    foreach (MapObjectItem *item, items - mSelectedObjectItems)
+    for (MapObjectItem *item : items - mSelectedObjectItems)
         item->setEditable(true);
 
     mSelectedObjectItems = items;
@@ -569,8 +606,11 @@ void MapScene::updateSelectedObjectItems()
 
 void MapScene::syncAllObjectItems()
 {
-    foreach (MapObjectItem *item, mObjectItems)
-        item->syncWithMapObject();
+    for (LevelData &levelData : mLevelData) {
+        for (MapObjectItem *item : levelData.mObjectItems) {
+            item->syncWithMapObject();
+        }
+    }
 }
 
 #ifdef ZOMBOID

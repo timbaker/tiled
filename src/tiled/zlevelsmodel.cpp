@@ -29,9 +29,9 @@ using namespace Tiled::Internal;
 
 ZLevelsModel::ZLevelsModel(QObject *parent)
     : QAbstractItemModel(parent)
-    , mMapDocument(0)
-    , mMap(0)
-    , mRootItem(0),
+    , mMapDocument(nullptr)
+    , mMap(nullptr)
+    , mRootItem(nullptr),
     mTileLayerIcon(QLatin1String(":/images/16x16/layer-tile.png")),
     mObjectGroupIcon(QLatin1String(":/images/16x16/layer-object.png")),
     mImageLayerIcon(QLatin1String(":/images/16x16/layer-image.png"))
@@ -131,6 +131,7 @@ QVariant ZLevelsModel::data(const QModelIndex &index, int role) const
         case Qt::CheckStateRole:
             if (CompositeLayerGroup *g = mMapDocument->mapComposite()->layerGroupForLevel(item->level))
                 return g->isVisible() ? Qt::Checked : Qt::Unchecked;
+            return QVariant();
         default:
             return QVariant();
         }
@@ -150,15 +151,14 @@ bool ZLevelsModel::setData(const QModelIndex &index, const QVariant &value,
         case Qt::CheckStateRole: {
             LayerModel *layerModel = mMapDocument->layerModel();
             const int layerIndex = mMap->layers().indexOf(layer);
-            const int row = layerModel->layerIndexToRow(layerIndex);
-            layerModel->setData(layerModel->index(row), value, role);
+            layerModel->setData(layerModel->toIndex(layer->level(), layerIndex), value, role);
             return true;
         }
         case Qt::EditRole: {
             const QString newName = value.toString();
             if (layer->name() != newName) {
                 const int layerIndex = mMap->layers().indexOf(layer);
-                RenameLayer *rename = new RenameLayer(mMapDocument, layerIndex, newName);
+                RenameLayer *rename = new RenameLayer(mMapDocument, layer->level(), layerIndex, newName);
                 mMapDocument->undoStack()->push(rename);
             }
             return true;
@@ -229,14 +229,14 @@ CompositeLayerGroup *ZLevelsModel::toLayerGroup(const QModelIndex &index) const
         if (item->level >= 0)
             return mMapDocument->mapComposite()->layerGroupForLevel(item->level);
     }
-    return 0;
+    return nullptr;
 }
 
 Layer *ZLevelsModel::toLayer(const QModelIndex &index) const
 {
     if (index.isValid())
         return toItem(index)->layer;
-    return 0;
+    return nullptr;
 }
 
 // FIXME: Each MapDocument has its own persistent LevelsModel, so this only does anything useful
@@ -252,10 +252,10 @@ void ZLevelsModel::setMapDocument(MapDocument *mapDocument)
     beginResetModel();
 
     mMapDocument = mapDocument;
-    mMap = 0;
+    mMap = nullptr;
 
     delete mRootItem;
-    mRootItem = 0;
+    mRootItem = nullptr;
 
     if (mMapDocument) {
         mMap = mMapDocument->map();
@@ -283,15 +283,16 @@ void ZLevelsModel::setMapDocument(MapDocument *mapDocument)
 QList<int> ZLevelsModel::levels() const
 {
     QList<int> ret;
-    foreach (Item *item, mRootItem->children)
+    for (Item *item : mRootItem->children) {
         ret += item->level;
+    }
     return ret;
 }
 
-void ZLevelsModel::layerChanged(int layerIndex)
+void ZLevelsModel::layerChanged(int z, int layerIndex)
 {
     // Handle name, visibility changes
-    Layer *layer = mMap->layerAt(layerIndex);
+    Layer *layer = mMap->layerAt(z, layerIndex);
     if (TileLayer *tl = layer->asTileLayer()) {
         if (/*Item *item =*/ toItem(tl)) {
             QModelIndex index = this->index(tl);
@@ -306,22 +307,22 @@ void ZLevelsModel::layerGroupVisibilityChanged(CompositeLayerGroup *g)
     emit dataChanged(index, index);
 }
 
-void ZLevelsModel::layerAdded(int layerIndex)
+void ZLevelsModel::layerAdded(int z, int layerIndex)
 {
-    layerLevelChanged(layerIndex, -1);
+    layerLevelChanged(z, layerIndex, -1);
 }
 
-void ZLevelsModel::layerAboutToBeRemoved(int layerIndex)
+void ZLevelsModel::layerAboutToBeRemoved(int z, int layerIndex)
 {
-    removeLayerFromLevel(layerIndex, mMap->layerAt(layerIndex)->level());
+    removeLayerFromLevel(z, layerIndex, z);
 }
 
-void ZLevelsModel::layerLevelChanged(int layerIndex, int oldLevel)
+void ZLevelsModel::layerLevelChanged(int z, int layerIndex, int oldLevel)
 {
     if (oldLevel != -1)
-        removeLayerFromLevel(layerIndex, oldLevel);
+        removeLayerFromLevel(z, layerIndex, oldLevel);
 
-    Layer *layer = mMap->layerAt(layerIndex);
+    Layer *layer = mMap->layerAt(z, layerIndex);
     if (Item *parentItem = createLevelItemIfNeeded(layer->level())) {
         int row;
         for (row = 0; row < parentItem->children.size(); row++) {
@@ -353,9 +354,9 @@ ZLevelsModel::Item *ZLevelsModel::createLevelItemIfNeeded(int level)
     return item;
 }
 
-void ZLevelsModel::removeLayerFromLevel(int layerIndex, int oldLevel)
+void ZLevelsModel::removeLayerFromLevel(int z, int layerIndex, int oldLevel)
 {
-    Layer *layer = mMap->layerAt(layerIndex);
+    Layer *layer = mMap->layerAt(z, layerIndex);
     if (Item *parentItem = toItem(oldLevel)) {
         int row = parentItem->indexOf(layer);
         Q_ASSERT(row >= 0);
@@ -379,36 +380,36 @@ ZLevelsModel::Item *ZLevelsModel::toItem(const QModelIndex &index) const
 {
     if (index.isValid())
         return static_cast<Item*>(index.internalPointer());
-    return 0;
+    return nullptr;
 }
 
 ZLevelsModel::Item *ZLevelsModel::toItem(CompositeLayerGroup *g) const
 {
     if (!mRootItem)
-        return 0;
-    foreach (Item *item, mRootItem->children)
+        return nullptr;
+    for (Item *item : mRootItem->children)
         if (item->level == g->level())
             return item;
-    return 0;
+    return nullptr;
 }
 
 ZLevelsModel::Item *ZLevelsModel::toItem(int level) const
 {
     if (!mRootItem)
-        return 0;
-    foreach (Item *item, mRootItem->children)
+        return nullptr;
+    for (Item *item : mRootItem->children)
         if (item->level == level)
             return item;
-    return 0;
+    return nullptr;
 }
 
 ZLevelsModel::Item *ZLevelsModel::toItem(Layer *layer) const
 {
     if (!mRootItem)
-        return 0;
+        return nullptr;
     Item *parent = toItem(layer->level());
-    foreach (Item *item, parent->children)
+    for (Item *item : parent->children)
         if (item->layer == layer)
             return item;
-    return 0;
+    return nullptr;
 }

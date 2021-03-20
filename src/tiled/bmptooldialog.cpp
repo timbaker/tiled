@@ -34,6 +34,7 @@
 #include "layer.h"
 #include "layermodel.h"
 #include "map.h"
+#include "maplevel.h"
 #include "tile.h"
 #include "tileset.h"
 
@@ -620,13 +621,14 @@ void BmpToolDialog::toggleOverlayLayers()
         return;
     Map *map = mDocument->map();
     int visible = -1;
-    foreach (QString layerName, mDocument->mapComposite()->bmpBlender()->blendLayers()) {
-        int index = map->indexOfLayer(layerName);
+    MapLevel *mapLevel = map->levelAt(0);
+    for (QString layerName : mDocument->mapComposite()->bmpBlender()->blendLayers()) {
+        int index = mapLevel->indexOfLayer(layerName);
         if (index != -1) {
-            Layer *layer = map->layerAt(index);
+            Layer *layer = mapLevel->layerAt(index);
             if (visible == -1)
                 visible = !layer->isVisible();
-            mDocument->setLayerVisible(index, visible);
+            mDocument->setLayerVisible(mapLevel->z(), index, visible);
         }
     }
 }
@@ -636,9 +638,10 @@ void BmpToolDialog::showBMPTiles(bool show)
     if (!mDocument)
         return;
     mDocument->mapComposite()->setShowBMPTiles(show);
-    if (mDocument->map()->layerCount())
+    if (mDocument->map()->levelAt(0)->layerCount()) {
         mDocument->emitRegionChanged(QRect(QPoint(0, 0), mDocument->map()->size()),
-                                     mDocument->map()->layerAt(0));
+                                     mDocument->map()->levelAt(0)->layerAt(0));
+    }
 }
 
 void BmpToolDialog::showMapTiles(bool show)
@@ -646,9 +649,9 @@ void BmpToolDialog::showMapTiles(bool show)
     if (!mDocument)
         return;
     mDocument->mapComposite()->setShowMapTiles(show);
-    if (mDocument->map()->layerCount())
+    if (mDocument->map()->levelAt(0)->layerCount())
         mDocument->emitRegionChanged(QRect(QPoint(0, 0), mDocument->map()->size()),
-                                     mDocument->map()->layerAt(0));
+                                     mDocument->map()->levelAt(0)->layerAt(0));
 }
 
 void BmpToolDialog::blendEdgesEverywhere(bool everywhere)

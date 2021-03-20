@@ -282,7 +282,7 @@ void MapView::mouseMoveEvent(QMouseEvent *event)
     if (!(event->modifiers() & Qt::AltModifier)) {
         MapDocument *doc = mapScene()->mapDocument();
         QPoint tilePos = doc->renderer()->pixelToTileCoordsInt(mLastMouseScenePos,
-                                                               doc->currentLevel());
+                                                               doc->currentLevelIndex());
         MainWindow::instance()->tileLayersPanel()->setTilePosition(tilePos);
     }
 #endif

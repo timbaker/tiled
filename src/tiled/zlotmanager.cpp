@@ -219,8 +219,8 @@ void ZLotManager::setMapInfo(MapObject *mapObject, MapInfo *mapInfo)
         }
         if (newInfo) {
             mMapObjectToInfo[mapObject] = newInfo;
-            int level;
-            (void) MapComposite::levelForLayer(mapObject->objectGroup(), &level);
+            int level = mapObject->objectGroup()->level();
+//            (void) MapComposite::levelForLayer(mapObject->objectGroup(), &level);
             newLot = mMapDocument->mapComposite()->addMap(newInfo,
                                                           mapObject->position().toPoint(),
                                                           level);
@@ -328,18 +328,18 @@ void ZLotManager::setMapComposite(WorldCellLot *lot, MapComposite *mapComposite)
     }
 }
 
-void ZLotManager::onLayerAdded(int index)
+void ZLotManager::onLayerAdded(int z, int index)
 {
-    Layer *layer = mapDocument()->map()->layerAt(index);
+    Layer *layer = mapDocument()->map()->layerAt(z, index);
     // Moving a layer first removes it, then adds it again
     if (ObjectGroup *og = layer->asObjectGroup()) {
         onObjectsAdded(og->objects());
     }
 }
 
-void ZLotManager::onLayerAboutToBeRemoved(int index)
+void ZLotManager::onLayerAboutToBeRemoved(int z, int index)
 {
-    Layer *layer = mapDocument()->map()->layerAt(index);
+    Layer *layer = mapDocument()->map()->layerAt(z, index);
     // Moving a layer first removes it, then adds it again
     if (ObjectGroup *og = layer->asObjectGroup()) {
         onObjectsRemoved(og->objects());

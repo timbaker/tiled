@@ -593,22 +593,21 @@ Map *MapManager::convertOrientation(Map *map, Tiled::Map::Orientation orient)
         newMap->setOrientation(orient);
         QPoint offset(3, 3);
         if (orient0 == Map::Isometric && orient1 == Map::LevelIsometric) {
-            foreach (Layer *layer, newMap->layers()) {
-                int level;
-                if (MapComposite::levelForLayer(layer, &level) && level > 0)
+            for (Layer *layer : newMap->layers()) {
+                int level = layer->level();
+                if (level > 0)
                     layer->offset(offset * level, layer->bounds(), false, false);
             }
         }
         if (orient0 == Map::LevelIsometric && orient1 == Map::Isometric) {
-            int level, maxLevel = 0;
-            foreach (Layer *layer, map->layers())
-                if (MapComposite::levelForLayer(layer, &level))
-                    maxLevel = qMax(maxLevel, level);
+            int maxLevel = 0;
+            for (Layer *layer : map->layers()) {
+                maxLevel = qMax(maxLevel, layer->level());
+            }
             newMap->setWidth(map->width() + maxLevel * 3);
             newMap->setHeight(map->height() + maxLevel * 3);
-            foreach (Layer *layer, newMap->layers()) {
-                MapComposite::levelForLayer(layer, &level);
-                layer->resize(newMap->size(), offset * (maxLevel - level));
+            for (Layer *layer : newMap->layers()) {
+                layer->resize(newMap->size(), offset * (maxLevel - layer->level()));
             }
         }
         TilesetManager *tilesetManager = TilesetManager::instance();

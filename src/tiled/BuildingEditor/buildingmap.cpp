@@ -33,6 +33,8 @@
 
 #include "isometricrenderer.h"
 #include "map.h"
+#include "mapentitylayer.h"
+#include "maplevel.h"
 #include "mapobject.h"
 #include "maprenderer.h"
 #include "objectgroup.h"
@@ -313,10 +315,14 @@ Map *BuildingMap::mergedMap() const
 {
     Map *map = mBlendMap->clone();
     TilesetManager::instance()->addReferences(map->tilesets());
-    for (int i = 0; i < map->layerCount(); i++) {
-        if (TileLayer *tl = map->layerAt(i)->asTileLayer())
-            tl->merge(tl->position(), mMap->layerAt(i)->asTileLayer());
-
+    for (int z = 0; z < map->levelCount(); z++) {
+        MapLevel *level = map->levelAt(z);
+        for (int j = 0; j < level->layerCount(); j++) {
+            if (TileLayer *tl = level->layerAt(j)->asTileLayer()) {
+                TileLayer *tl2 =  mMap->levelAt(level->z())->layerAt(j)->asTileLayer();
+                tl->merge(tl->position(), tl2);
+            }
+        }
     }
     return map;
 }
@@ -509,8 +515,7 @@ void BuildingMap::BuildingToMap()
     foreach (BuildingFloor *floor, mBuilding->floors()) {
         foreach (QString name, layerNames(floor->level())) {
             QString layerName = tr("%1_%2").arg(floor->level()).arg(name);
-            TileLayer *tl = new TileLayer(layerName,
-                                          0, 0, mapSize.width(), mapSize.height());
+            MapEntityLayer *tl = new MapEntityLayer(layerName, 0, 0, mapSize.width(), mapSize.height());
             mMap->addLayer(tl);
             mLayerToSection[layerName] = layerToSection.contains(name)
                     ? layerToSection[name] : -1;

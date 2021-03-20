@@ -46,7 +46,7 @@ public:
      * @param index       the index of the layer to move
      * @param direction   the direction in which to move the layer
      */
-    MoveLayer(MapDocument *mapDocument, int index, Direction direction);
+    MoveLayer(MapDocument *mapDocument, int levelIndex, int layerIndex, Direction direction);
 
     void undo();
     void redo();
@@ -55,7 +55,8 @@ private:
     void moveLayer();
 
     MapDocument *mMapDocument;
-    int mIndex;
+    int mLevelIndex;
+    int mLayerIndex;
     Direction mDirection;
 };
 

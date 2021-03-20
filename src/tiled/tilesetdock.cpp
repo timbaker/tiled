@@ -1239,7 +1239,7 @@ void TilesetDock::removeTileset(int index)
     if (inUse) {
         // Remove references to tiles in this tileset from the current map
         undoStack->beginMacro(remove->text());
-        foreach (Layer *layer, mMapDocument->map()->layers()) {
+        for (Layer *layer : mMapDocument->map()->layers()) {
             if (TileLayer *tileLayer = layer->asTileLayer()) {
                 const QRegion refs = tileLayer->tilesetReferences(tileset);
                 if (!refs.isEmpty()) {
@@ -1247,7 +1247,7 @@ void TilesetDock::removeTileset(int index)
                                                    tileLayer, refs));
                 }
             } else if (ObjectGroup *objectGroup = layer->asObjectGroup()) {
-                foreach (MapObject *object, objectGroup->objects()) {
+                for (MapObject *object : objectGroup->objects()) {
                     const Tile *tile = object->tile();
                     if (tile && tile->tileset() == tileset) {
                         undoStack->push(new RemoveMapObject(mMapDocument,

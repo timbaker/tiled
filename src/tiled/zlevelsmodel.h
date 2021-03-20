@@ -38,21 +38,21 @@ class ZLevelsModel : public QAbstractItemModel
     Q_OBJECT
 
 public:
-    ZLevelsModel(QObject *parent = 0);
-    ~ZLevelsModel();
+    ZLevelsModel(QObject *parent = nullptr);
+    ~ZLevelsModel() override;
 
-    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
-    QModelIndex parent(const QModelIndex &index) const;
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
+    QModelIndex parent(const QModelIndex &index) const override;
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
-    bool setData(const QModelIndex &index, const QVariant &value, int role);
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
-    Qt::ItemFlags flags(const QModelIndex &index) const;
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
 
     QModelIndex index(int level) const;
     QModelIndex index(CompositeLayerGroup *og) const;
@@ -67,24 +67,24 @@ public:
     QList<int> levels() const;
 
 private slots:
-    void layerChanged(int index);
+    void layerChanged(int z, int index);
 
     void layerGroupVisibilityChanged(CompositeLayerGroup *g);
 
-    void layerAdded(int layerIndex);
-    void layerAboutToBeRemoved(int layerIndex);
-    void layerLevelChanged(int layerIndex, int oldLevel);
+    void layerAdded(int z, int layerIndex);
+    void layerAboutToBeRemoved(int z, int layerIndex);
+    void layerLevelChanged(int z, int layerIndex, int oldLevel);
 
 private:
-    void removeLayerFromLevel(int layerIndex, int oldLevel);
+    void removeLayerFromLevel(int z, int layerIndex, int oldLevel);
 
     class Item
     {
     public:
         Item()
-            : parent(0)
+            : parent(nullptr)
             , level(-1)
-            , layer(0)
+            , layer(nullptr)
         {
 
         }
@@ -92,7 +92,7 @@ private:
         Item(Item *parent, int indexInParent, int level)
             : parent(parent)
             , level(level)
-            , layer(0)
+            , layer(nullptr)
         {
             parent->children.insert(indexInParent, this);
         }

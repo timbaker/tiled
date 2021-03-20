@@ -38,7 +38,7 @@ class MapDocument;
 class AddRemoveLayer : public QUndoCommand
 {
 public:
-    AddRemoveLayer(MapDocument *mapDocument, int index, Layer *layer);
+    AddRemoveLayer(MapDocument *mapDocument, int levelIndex, int layerIndex, Layer *layer);
 
     ~AddRemoveLayer();
 
@@ -49,7 +49,8 @@ protected:
 private:
     MapDocument *mMapDocument;
     Layer *mLayer;
-    int mIndex;
+    int mLevelIndex;
+    int mLayerIndex;
 };
 
 /**
@@ -61,8 +62,8 @@ public:
     /**
      * Creates an undo command that adds the \a layer at \a index.
      */
-    AddLayer(MapDocument *mapDocument, int index, Layer *layer)
-        : AddRemoveLayer(mapDocument, index, layer)
+    AddLayer(MapDocument *mapDocument, int levelIndex, int layerIndex, Layer *layer)
+        : AddRemoveLayer(mapDocument, levelIndex, layerIndex, layer)
     {
         setText(QCoreApplication::translate("Undo Commands", "Add Layer"));
     }
@@ -83,8 +84,8 @@ public:
     /**
      * Creates an undo command that removes the layer at \a index.
      */
-    RemoveLayer(MapDocument *mapDocument, int index)
-        : AddRemoveLayer(mapDocument, index, 0)
+    RemoveLayer(MapDocument *mapDocument, int levelIndex, int layerIndex)
+        : AddRemoveLayer(mapDocument, levelIndex, layerIndex, 0)
     {
         setText(QCoreApplication::translate("Undo Commands", "Remove Layer"));
     }

@@ -142,12 +142,17 @@ public:
     Layer *currentLayer() const;
 
 #ifdef ZOMBOID
-    int currentLevel() const
+    void setCurrentLevelIndex(int index);
+
+    int currentLevelIndex() const
     {
-        if (Layer *layer = currentLayer())
-            return layer->level();
-        return 0;
+        return mCurrentLevelIndex;
     }
+
+    MapLevel *currentMapLevel() const;
+
+    void setCurrentLevelAndLayer(int levelIndex, int layerIndex);
+
 
     /* For the visibility slider in the LayerDock. */
     void setMaxVisibleLayer(int index) { mMaxVisibleLayer = index; }
@@ -172,12 +177,12 @@ public:
     void addLayer(Layer::Type layerType);
     void duplicateLayer();
     void mergeLayerDown();
-    void moveLayerUp(int index);
-    void moveLayerDown(int index);
-    void removeLayer(int index);
-    void toggleOtherLayers(int index);
+    void moveLayerUp(int levelIndex, int layerIndex);
+    void moveLayerDown(int levelIndex, int layerIndex);
+    void removeLayer(int levelIndex, int layerIndex);
+    void toggleOtherLayers(int levelIndex, int layerIndex);
 #ifdef ZOMBOID
-    void setLayerVisible(int layerIndex, bool visible);
+    void setLayerVisible(int levelIndex, int layerIndex, bool visible);
 #endif
 
     void insertTileset(int index, Tileset *tileset);
@@ -329,11 +334,11 @@ signals:
      */
     void mapChanged();
 
-    void layerAdded(int index);
-    void layerAboutToBeRemoved(int index);
-    void layerRenamed(int index);
-    void layerRemoved(int index);
-    void layerChanged(int index);
+    void layerAdded(int z, int index);
+    void layerAboutToBeRemoved(int z, int index);
+    void layerRenamed(int z, int index);
+    void layerRemoved(int z, int index);
+    void layerChanged(int z, int index);
 
 #ifdef ZOMBOID
     void layerGroupAdded(int level);
@@ -343,7 +348,7 @@ signals:
     void layerAboutToBeRemovedFromGroup(int index);
     void layerRemovedFromGroup(int index, CompositeLayerGroup *oldGroup);
 
-    void layerLevelChanged(int index, int oldLevel);
+    void layerLevelChanged(int z, int index, int oldLevel);
 #endif
 
     /**
@@ -351,6 +356,8 @@ signals:
      * Applies to the current layer.
      */
     void editLayerNameRequested();
+
+    void currentLevelIndexChanged(int index);
 
     /**
      * Emitted when the current layer index changes.
@@ -413,11 +420,11 @@ signals:
 private slots:
     void onObjectsRemoved(const QList<MapObject*> &objects);
 
-    void onLayerAdded(int index);
-    void onLayerAboutToBeRemoved(int index);
-    void onLayerRemoved(int index);
+    void onLayerAdded(int z, int index);
+    void onLayerAboutToBeRemoved(int z, int index);
+    void onLayerRemoved(int z, int index);
 #ifdef ZOMBOID
-    void onLayerRenamed(int index);
+    void onLayerRenamed(int z, int index);
 
     void onMapAboutToChange(MapInfo *mapInfo);
     void onMapChanged(MapInfo *mapInfo);
@@ -444,6 +451,7 @@ private:
     QRegion mTileSelection;
     QList<MapObject*> mSelectedObjects;
     MapRenderer *mRenderer;
+    int mCurrentLevelIndex;
     int mCurrentLayerIndex;
     MapObjectModel *mMapObjectModel;
 #ifdef ZOMBOID

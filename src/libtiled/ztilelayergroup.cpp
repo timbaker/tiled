@@ -72,7 +72,7 @@ void ZTileLayerGroup::removeTileLayer(TileLayer *layer)
             mIndices[arrayIndex] -= 1;
             arrayIndex++;
         }
-        layer->setGroup(0);
+        layer->setGroup(nullptr);
 //        layer->setLevel(0);
     }
 }

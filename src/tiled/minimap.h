@@ -74,8 +74,8 @@ public:
     ~ShadowMap();
 
     void layerAdded(int index, Tiled::Layer *layer);
-    void layerRemoved(int index);
-    void layerRenamed(int index, const QString &name);
+    void layerRemoved(int z, int index);
+    void layerRenamed(int z, int index, const QString &name);
     void regionAltered(const QRegion &rgn, Tiled::Layer *layer);
 
     void lotAdded(quintptr id, MapInfo *mapInfo, const QPoint &pos, int level);
@@ -157,9 +157,9 @@ private:
     typedef Tiled::Tileset Tileset; // hack for signals/slots
 
 private slots:
-    void layerAdded(int index);
-    void layerRemoved(int index);
-    void layerRenamed(int index);
+    void layerAdded(int z, int index);
+    void layerRemoved(int z, int index);
+    void layerRenamed(int z, int index);
 
     void lotAdded(MapComposite *lot, Tiled::MapObject *mapObject);
     void lotRemoved(MapComposite *lot, Tiled::MapObject *mapObject);
