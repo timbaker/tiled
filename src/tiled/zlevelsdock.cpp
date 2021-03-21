@@ -236,16 +236,18 @@ void ZLevelsDock::setTopmostVisibleLayer(int layerIndex)
     if (!mMapDocument)
         return;
 
+    int totalLayers = 0;
     for (int z = 0; z < mMapDocument->map()->levelCount(); z++) {
         MapLevel *mapLevel = mMapDocument->map()->levelAt(z);
         for (int index = 0; index < mapLevel->layerCount(); index++) {
             Layer *layer  = mapLevel->layerAt(index);
             if (layer->asTileLayer()) {
-                bool visible = (index + 1 <= layerIndex);
+                bool visible = (totalLayers + 1 <= layerIndex);
                 if (visible != layer->isVisible()) {
                     mMapDocument->setLayerVisible(layer->level(), index, visible);
                 }
             }
+            totalLayers++;
         }
     }
 

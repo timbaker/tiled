@@ -28,6 +28,7 @@
 #include "map.h"
 #include "mapdocument.h"
 #include "mapdocumentactionhandler.h"
+#include "maplevel.h"
 #include "propertiesdialog.h"
 #include "objectgrouppropertiesdialog.h"
 #include "objectgroup.h"
@@ -242,14 +243,19 @@ void LayerDock::setZomboidLayer(int number)
     if (!mMapDocument)
         return;
 
-    int index = 0;
-    for (Layer *layer : mMapDocument->map()->layers()) {
-        if (layer->asTileLayer() ) {
-            bool visible = (index + 1 <= number);
-            if (visible != layer->isVisible())
-                mMapDocument->setLayerVisible(layer->level(), index, visible);
+    int totalLayers = 0;
+    for (int z = 0; z < mMapDocument->map()->levelCount(); z++) {
+        MapLevel *mapLevel = mMapDocument->map()->levelAt(z);
+        for (int index = 0; index < mapLevel->layerCount(); index++) {
+            Layer *layer  = mapLevel->layerAt(index);
+            if (layer->asTileLayer()) {
+                bool visible = (totalLayers + 1 <= number);
+                if (visible != layer->isVisible()) {
+                    mMapDocument->setLayerVisible(layer->level(), index, visible);
+                }
+            }
+            totalLayers++;
         }
-        index++;
     }
 
     mMapDocument->setMaxVisibleLayer(number);

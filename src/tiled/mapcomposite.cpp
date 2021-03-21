@@ -446,7 +446,7 @@ bool CompositeLayerGroup::isLayerEmpty(int index) const
 void CompositeLayerGroup::synch()
 {
     mMaxFloorLayer = -1;
-    if (!mVisible) {
+    if (!isVisible()) {
         mAnyVisibleLayers = false;
         mTileBounds = QRect();
         mSubMapTileBounds = QRect();
