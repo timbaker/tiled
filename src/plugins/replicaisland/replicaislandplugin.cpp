@@ -258,8 +258,9 @@ bool ReplicaIslandPlugin::write(const Tiled::Map *map, const QString &fileName)
     }
 
     // Write out each layer.
-    for (int i = 0; i < map->layerCount(); i++) {
-        TileLayer *layer = map->layerAt(i)->asTileLayer();
+    QList<Layer*> layers = map->layers();
+    for (int i = 0; i < layers.size(); i++) {
+        TileLayer *layer = layers[i]->asTileLayer();
         if (!layer) {
             mError = tr("Can't save non-tile layer!");
             return false;

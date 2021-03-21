@@ -55,7 +55,7 @@ void BmpSelectionItem::paint(QPainter *painter,
 
     MapRenderer *renderer = mMapDocument->renderer();
     renderer->drawTileSelection(painter, selection, highlight,
-                                option->exposedRect, mMapDocument->currentLevel());
+                                option->exposedRect, mMapDocument->currentLevelIndex());
 }
 
 void BmpSelectionItem::setDragOffset(const QPoint &offset)
@@ -73,11 +73,11 @@ void BmpSelectionItem::selectionChanged(const QRegion &newSelection,
 
     // Make sure changes within the bounding rect are updated
     const QRect changedArea = newSelection.xored(oldSelection).boundingRect();
-    update(mMapDocument->renderer()->boundingRect(changedArea, mMapDocument->currentLevel()));
+    update(mMapDocument->renderer()->boundingRect(changedArea, mMapDocument->currentLevelIndex()));
 }
 
 void BmpSelectionItem::updateBoundingRect()
 {
     const QRect b = mMapDocument->bmpSelection().translated(mDragOffset).boundingRect();
-    mBoundingRect = mMapDocument->renderer()->boundingRect(b, mMapDocument->currentLevel());
+    mBoundingRect = mMapDocument->renderer()->boundingRect(b, mMapDocument->currentLevelIndex());
 }

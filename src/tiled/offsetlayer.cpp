@@ -25,6 +25,7 @@
 #include "layermodel.h"
 #include "map.h"
 #include "mapdocument.h"
+#include "maplevel.h"
 
 #include <QCoreApplication>
 
@@ -32,7 +33,8 @@ using namespace Tiled;
 using namespace Tiled::Internal;
 
 OffsetLayer::OffsetLayer(MapDocument *mapDocument,
-                         int index,
+                         int levelIndex,
+                         int layerIndex,
                          const QPoint &offset,
                          const QRect &bounds,
                          bool wrapX,
@@ -40,11 +42,13 @@ OffsetLayer::OffsetLayer(MapDocument *mapDocument,
     : QUndoCommand(QCoreApplication::translate("Undo Commands",
                                                "Offset Layer"))
     , mMapDocument(mapDocument)
-    , mIndex(index)
-    , mOriginalLayer(0)
+    , mLevelIndex(levelIndex)
+    , mLayerIndex(layerIndex)
+    , mOriginalLayer(nullptr)
 {
     // Create the offset layer (once)
-    Layer *layer = mMapDocument->map()->layerAt(mIndex);
+    MapLevel *mapLevel = mMapDocument->map()->levelAt(mLevelIndex);
+    Layer *layer = mapLevel->layerAt(mLayerIndex);
     mOffsetLayer = layer->clone();
     mOffsetLayer->offset(offset, bounds, wrapX, wrapY);
 }
@@ -59,26 +63,27 @@ void OffsetLayer::undo()
 {
     Q_ASSERT(!mOffsetLayer);
     mOffsetLayer = swapLayer(mOriginalLayer);
-    mOriginalLayer = 0;
+    mOriginalLayer = nullptr;
 }
 
 void OffsetLayer::redo()
 {
     Q_ASSERT(!mOriginalLayer);
     mOriginalLayer = swapLayer(mOffsetLayer);
-    mOffsetLayer = 0;
+    mOffsetLayer = nullptr;
 }
 
 Layer *OffsetLayer::swapLayer(Layer *layer)
 {
+    const int currentLevelIndex = mMapDocument->currentLevelIndex();
     const int currentIndex = mMapDocument->currentLayerIndex();
 
     LayerModel *layerModel = mMapDocument->layerModel();
-    Layer *replaced = layerModel->takeLayerAt(mIndex);
-    layerModel->insertLayer(mIndex, layer);
+    Layer *replaced = layerModel->takeLayerAt(mLevelIndex, mLayerIndex);
+    layerModel->insertLayer(mLayerIndex, layer);
 
-    if (mIndex == currentIndex)
-        mMapDocument->setCurrentLayerIndex(mIndex);
+    if (mLevelIndex == currentLevelIndex && mLayerIndex == currentIndex)
+        mMapDocument->setCurrentLayerIndex(mLevelIndex, mLayerIndex);
 
     return replaced;
 }

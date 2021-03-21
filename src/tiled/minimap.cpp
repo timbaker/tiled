@@ -29,9 +29,13 @@
 
 #include "isometricrenderer.h"
 #include "map.h"
+#include "maplevel.h"
+#include "mapobject.h"
 #include "tilelayer.h"
 #include "tileset.h"
 #include "zlevelrenderer.h"
+
+#include "worlded/worldcell.h"
 
 #include <qmath.h>
 #include <QDebug>
@@ -86,7 +90,7 @@ ShadowMap::~ShadowMap()
 void ShadowMap::layerAdded(int index, Layer *layer)
 {
     mMapComposite->map()->insertLayer(index, layer);
-    mMapComposite->layerAdded(index);
+    mMapComposite->layerAdded(layer->level(), index);
 
     if (TileLayer *tl = layer->asTileLayer()) {
         if (CompositeLayerGroup *layerGroup = mMapComposite->layerGroupForLayer(tl)) {
@@ -102,18 +106,19 @@ void ShadowMap::layerAdded(int index, Layer *layer)
     }
 }
 
-void ShadowMap::layerRemoved(int index)
+void ShadowMap::layerRemoved(int z, int index)
 {
-    mMapComposite->layerAboutToBeRemoved(index);
-    delete mMapComposite->map()->takeLayerAt(index);
+    mMapComposite->layerAboutToBeRemoved(z, index);
+    delete mMapComposite->map()->takeLayerAt(z, index);
 }
 
-void ShadowMap::layerRenamed(int index, const QString &name)
+void ShadowMap::layerRenamed(int z, int index, const QString &name)
 {
-    mMapComposite->map()->layerAt(index)->setName(name);
-    mMapComposite->layerRenamed(index);
+    Layer *layer = mMapComposite->map()->layerAt(z, index);
+    layer->setName(name);
+    mMapComposite->layerRenamed(z, index);
 
-    if (name.startsWith(QLatin1String("0_")))
+    if (layer->level() == 0 /*name.startsWith(QLatin1String("0_"))*/)
         mMapComposite->layerGroupForLevel(0)->setBmpBlendLayers(
                     mMapComposite->bmpBlender()->tileLayers());
 }
@@ -210,6 +215,7 @@ public:
     };
     LotInfo mLotInfo;
     Tiled::Layer *mLayer;
+    int mLevelIndex;
     int mLayerIndex;
     QString mName;
     struct CellEntry
@@ -370,7 +376,7 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
     QRectF oldBounds = sm.mMapComposite->boundingRect(mRenderer);
     bool redrawAll = mRedrawAll;
 
-    foreach (MapChange *cp, changes) {
+    for (MapChange *cp : changes) {
         const MapChange &c = *cp;
         switch (c.mChange) {
         case MapChange::LayerAdded:
@@ -378,21 +384,25 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
             redrawAll = true;
             break;
         case MapChange::LayerRemoved:
-            sm.layerRemoved(c.mLayerIndex);
+            sm.layerRemoved(c.mLevelIndex, c.mLayerIndex);
             redrawAll = true;
             break;
         case MapChange::LayerRenamed:
-            sm.layerRenamed(c.mLayerIndex, c.mName);
+            sm.layerRenamed(c.mLevelIndex, c.mLayerIndex, c.mName);
             redrawAll = true;
             break;
         case MapChange::RegionAltered: {
-            if (Layer *layer = sm.mMapComposite->map()->layerAt(c.mLayerIndex)) { // kinda slow
+            MapLevel *mapLevel = sm.mMapComposite->map()->levelAt(c.mLevelIndex);
+            if (mapLevel == nullptr)
+                break;
+            if (Layer *layer = mapLevel->layerAt(c.mLayerIndex)) { // kinda slow
                 if (TileLayer *tl = layer->asTileLayer()) {
-                    if (c.mCells.isEmpty())
+                    if (c.mCells.isEmpty()) {
                         tl->setCells(c.mTileLayer.x(), c.mTileLayer.y(), (TileLayer*)&c.mTileLayer, c.mRegion);
-                    else {
-                        foreach (const MapChange::CellEntry &ce, c.mCells)
+                    } else {
+                        for (const MapChange::CellEntry &ce : c.mCells) {
                             tl->setCell(ce.x, ce.y, ce.cell);
+                        }
                     }
                     if (CompositeLayerGroup *layerGroup = sm.mMapComposite->layerGroupForLayer(tl))
                         layerGroup->regionAltered(tl); // possibly set mNeedsSynch
@@ -517,7 +527,8 @@ void MiniMapRenderWorker::processChanges(const QList<MapChange *> &changes)
 #else
             QRect tileBounds;
 #endif
-            TileLayer *tl = sm.mMapComposite->map()->layerAt(c.mLayerIndex)->asTileLayer(); // kinda slow
+            MapLevel *mapLevel = sm.mMapComposite->map()->levelAt(c.mLevelIndex);
+            TileLayer *tl = mapLevel->layerAt(c.mLayerIndex)->asTileLayer(); // kinda slow
 #if 0
             foreach (const MapChange::CellEntry &ce, c.mCells) {
                 if (tileBounds.isEmpty())
@@ -638,7 +649,7 @@ void MiniMapRenderWorker::returnToAppThread()
 MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
     : QGraphicsItem(parent)
     , mScene(zscene)
-    , mMapImage(0)
+    , mMapImage(nullptr)
     , mMiniMapVisible(false)
     , mNeedsResume(false)
 {
@@ -649,60 +660,60 @@ MiniMapItem::MiniMapItem(ZomboidScene *zscene, QGraphicsItem *parent)
     mRenderWorker = new MiniMapRenderWorker(mMapComposite->mapInfo(),
                                             mRenderThread);
     mRenderWorker->moveToThread(mRenderThread);
-    connect(mRenderWorker, SIGNAL(painted(QImage,QRectF)),
-            SLOT(painted(QImage,QRectF)));
-    connect(mRenderWorker, SIGNAL(imageResized(QSize)),
-            SLOT(imageResized(QSize)));
+    connect(mRenderWorker, &MiniMapRenderWorker::painted,
+            this, &MiniMapItem::painted);
+    connect(mRenderWorker, &MiniMapRenderWorker::imageResized,
+            this, &MiniMapItem::imageResized);
     mRenderThread->start();
 
-    connect(mScene->mapDocument(), SIGNAL(layerAdded(int)),
-            SLOT(layerAdded(int)));
-    connect(mScene->mapDocument(), SIGNAL(layerRemoved(int)),
-            SLOT(layerRemoved(int)));
-    connect(mScene->mapDocument(), SIGNAL(layerRenamed(int)),
-            SLOT(layerRenamed(int)));
-    connect(mScene->mapDocument(), SIGNAL(regionAltered(QRegion,Layer*)),
-            SLOT(regionAltered(QRegion,Layer*)));
-    connect(mScene->mapDocument(), SIGNAL(mapChanged()),
-            SLOT(mapChanged()));
+    connect(mScene->mapDocument(), &MapDocument::layerAdded,
+            this, &MiniMapItem::layerAdded);
+    connect(mScene->mapDocument(), &MapDocument::layerRemoved,
+            this, &MiniMapItem::layerRemoved);
+    connect(mScene->mapDocument(), &MapDocument::layerRenamed,
+            this, &MiniMapItem::layerRenamed);
+    connect(mScene->mapDocument(), &MapDocument::regionAltered,
+            this, &MiniMapItem::regionAltered);
+    connect(mScene->mapDocument(), &MapDocument::mapChanged,
+            this, QOverload<>::of(&MiniMapItem::mapChanged));
 
-    connect(MapManager::instance(), SIGNAL(mapAboutToChange(MapInfo*)),
-            SLOT(mapAboutToChange(MapInfo*)));
-    connect(MapManager::instance(), SIGNAL(mapChanged(MapInfo*)),
-            SLOT(mapChanged(MapInfo*)));
+    connect(MapManager::instance(), &MapManager::mapAboutToChange,
+            this, &MiniMapItem::mapAboutToChange);
+    connect(MapManager::instance(), &MapManager::mapChanged,
+            this, QOverload<MapInfo*>::of(&MiniMapItem::mapChanged));
 
-    connect(&mScene->lotManager(), SIGNAL(lotAdded(MapComposite*,Tiled::MapObject*)),
-        SLOT(lotAdded(MapComposite*,Tiled::MapObject*)));
-    connect(&mScene->lotManager(), SIGNAL(lotRemoved(MapComposite*,Tiled::MapObject*)),
-        SLOT(lotRemoved(MapComposite*,Tiled::MapObject*)));
-    connect(&mScene->lotManager(), SIGNAL(lotUpdated(MapComposite*,Tiled::MapObject*)),
-        SLOT(lotUpdated(MapComposite*,Tiled::MapObject*)));
+    connect(&mScene->lotManager(), QOverload<MapComposite*,MapObject*>::of(&ZLotManager::lotAdded),
+        this, QOverload<MapComposite*,MapObject*>::of(&MiniMapItem::lotAdded));
+    connect(&mScene->lotManager(), QOverload<MapComposite*,MapObject*>::of(&ZLotManager::lotRemoved),
+        this, QOverload<MapComposite*,MapObject*>::of(&MiniMapItem::lotRemoved));
+    connect(&mScene->lotManager(), QOverload<MapComposite*,MapObject*>::of(&ZLotManager::lotUpdated),
+        this, QOverload<MapComposite*,MapObject*>::of(&MiniMapItem::lotUpdated));
 
-    connect(&mScene->lotManager(), SIGNAL(lotAdded(MapComposite*,WorldCellLot*)),
-        SLOT(lotAdded(MapComposite*,WorldCellLot*)));
-    connect(&mScene->lotManager(), SIGNAL(lotRemoved(MapComposite*,WorldCellLot*)),
-        SLOT(lotRemoved(MapComposite*,WorldCellLot*)));
-    connect(&mScene->lotManager(), SIGNAL(lotUpdated(MapComposite*,WorldCellLot*)),
-        SLOT(lotUpdated(MapComposite*,WorldCellLot*)));
+    connect(&mScene->lotManager(), QOverload<MapComposite*,WorldCellLot*>::of(&ZLotManager::lotAdded),
+        this, QOverload<MapComposite*,WorldCellLot*>::of(&MiniMapItem::lotAdded));
+    connect(&mScene->lotManager(), QOverload<MapComposite*,WorldCellLot*>::of(&ZLotManager::lotRemoved),
+        this, QOverload<MapComposite*,WorldCellLot*>::of(&MiniMapItem::lotRemoved));
+    connect(&mScene->lotManager(), QOverload<MapComposite*,WorldCellLot*>::of(&ZLotManager::lotUpdated),
+        this, QOverload<MapComposite*,WorldCellLot*>::of(&MiniMapItem::lotUpdated));
 
-    connect(mScene->mapDocument(), SIGNAL(tilesetAdded(int,Tileset*)),
-            SLOT(tilesetAdded(int,Tileset*)));
-    connect(mScene->mapDocument(), SIGNAL(tilesetRemoved(Tileset*)),
-            SLOT(tilesetRemoved(Tileset*)));
-    connect(TilesetManager::instance(), SIGNAL(tilesetChanged(Tileset*)),
-            SLOT(tilesetChanged(Tileset*)));
+    connect(mScene->mapDocument(), &MapDocument::tilesetAdded,
+            this, &MiniMapItem::tilesetAdded);
+    connect(mScene->mapDocument(), &MapDocument::tilesetRemoved,
+            this, &MiniMapItem::tilesetRemoved);
+    connect(TilesetManager::instance(), &TilesetManager::tilesetChanged,
+            this, &MiniMapItem::tilesetChanged);
 
-    connect(mScene->mapDocument(), SIGNAL(bmpPainted(int,QRegion)),
-            SLOT(bmpPainted(int,QRegion)));
-    connect(mScene->mapDocument(), SIGNAL(bmpAliasesChanged()),
-            SLOT(bmpAliasesChanged()));
-    connect(mScene->mapDocument(), SIGNAL(bmpRulesChanged()),
-            SLOT(bmpRulesChanged()));
-    connect(mScene->mapDocument(), SIGNAL(bmpBlendsChanged()),
-            SLOT(bmpBlendsChanged()));
+    connect(mScene->mapDocument(), &MapDocument::bmpPainted,
+            this, &MiniMapItem::bmpPainted);
+    connect(mScene->mapDocument(), &MapDocument::bmpAliasesChanged,
+            this, &MiniMapItem::bmpAliasesChanged);
+    connect(mScene->mapDocument(), &MapDocument::bmpRulesChanged,
+            this, &MiniMapItem::bmpRulesChanged);
+    connect(mScene->mapDocument(), &MapDocument::bmpBlendsChanged,
+            this, &MiniMapItem::bmpBlendsChanged);
 
-    connect(mScene->mapDocument(), SIGNAL(noBlendPainted(MapNoBlend*,QRegion)),
-            SLOT(noBlendPainted(MapNoBlend*,QRegion)));
+    connect(mScene->mapDocument(), &MapDocument::noBlendPainted,
+            this, &MiniMapItem::noBlendPainted);
 
     QMap<MapObject*,MapComposite*>::const_iterator it;
     const QMap<MapObject*,MapComposite*> &map = mScene->lotManager().objectToLot();
@@ -776,26 +787,29 @@ void MiniMapItem::queueChange(MapChange *c)
     }
 }
 
-void MiniMapItem::layerAdded(int index)
+void MiniMapItem::layerAdded(int z, int index)
 {
     MapChange *c = new MapChange(MapChange::LayerAdded);
-    c->mLayer = mMapComposite->map()->layerAt(index)->clone();
+    c->mLayer = mMapComposite->map()->layerAt(z, index)->clone();
+    c->mLevelIndex = z;
     c->mLayerIndex = index;
     queueChange(c);
 }
 
-void MiniMapItem::layerRemoved(int index)
+void MiniMapItem::layerRemoved(int z, int index)
 {
     MapChange *c = new MapChange(MapChange::LayerRemoved);
+    c->mLevelIndex = z;
     c->mLayerIndex = index;
     queueChange(c);
 }
 
-void MiniMapItem::layerRenamed(int index)
+void MiniMapItem::layerRenamed(int z, int index)
 {
     MapChange *c = new MapChange(MapChange::LayerRenamed);
+    c->mLevelIndex = z;
     c->mLayerIndex = index;
-    c->mName = mMapComposite->map()->layerAt(index)->name();
+    c->mName = mMapComposite->map()->layerAt(z, index)->name();
     queueChange(c);
 }
 
@@ -862,13 +876,14 @@ void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
     QRegion clipped = region & layer->bounds();
     if (clipped.isEmpty()) return;
     MapChange *c = new MapChange(MapChange::RegionAltered);
-    c->mLayerIndex = mMapComposite->map()->layers().indexOf(layer);
+    c->mLevelIndex = layer->level();
+    c->mLayerIndex = mMapComposite->map()->levelAt(layer->level())->layers().indexOf(layer);
     c->mRegion = clipped;
 
     QRect br = clipped.boundingRect();
     if (layer->asTileLayer() && (br.width() * br.height() > 50)) {
         c->mTileLayer.resize(br.size(), QPoint());
-        foreach (const QRect &r, clipped.rects()) {
+        for (const QRect &r : clipped.rects()) {
             for (int y = r.y(); y <= r.bottom(); y++) {
                 for (int x = r.x(); x <= r.right(); x++) {
                     c->mTileLayer.setCell(x-br.x(), y-br.y(),
@@ -878,7 +893,7 @@ void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
         }
         c->mTileLayer.setPosition(br.topLeft());
     } else {
-        foreach (const QRect &r, clipped.rects()) {
+        for (const QRect &r : clipped.rects()) {
             for (int y = r.y(); y <= r.bottom(); y++) {
                 for (int x = r.x(); x <= r.right(); x++) {
                     c->mCells += MapChange::CellEntry(x, y, layer->asTileLayer()->cellAt(x, y));
@@ -894,7 +909,7 @@ void MiniMapItem::regionAltered(const QRegion &region, Layer *layer)
 // If the map is being used as a lot, stop rendering immediately.
 void MiniMapItem::mapAboutToChange(MapInfo *mapInfo)
 {
-    foreach (MapComposite *mc, mMapComposite->subMaps()) {
+    for (MapComposite *mc : mMapComposite->subMaps()) {
         if (mapInfo == mc->mapInfo()) {
             mRenderThread->interrupt(true);
             // do not resume painting until resume()
@@ -906,7 +921,7 @@ void MiniMapItem::mapAboutToChange(MapInfo *mapInfo)
 void MiniMapItem::mapChanged(MapInfo *mapInfo)
 {
     bool affected = false;
-    foreach (MapComposite *lot, mMapComposite->subMaps()) {
+    for (MapComposite *lot : mMapComposite->subMaps()) {
         // There could be several lots using the same map
         if (lot->mapInfo() == mapInfo) {
             MapChange *c = new MapChange(MapChange::MapChanged);

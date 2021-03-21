@@ -24,6 +24,7 @@
 #include "map.h"
 #include "layermodel.h"
 #include "mapdocument.h"
+#include "maplevel.h"
 #include "mapobject.h"
 #include "objectgroup.h"
 #include "renamelayer.h"
@@ -177,19 +178,19 @@ bool MapObjectModel::setData(const QModelIndex &index, const QVariant &value,
         return false;
     }
     if (ObjectGroup *objectGroup = toObjectGroup(index)) {
+        MapLevel *mapLevel = mMapDocument->map()->levelAt(objectGroup->level());
         switch (role) {
         case Qt::CheckStateRole: {
             LayerModel *layerModel = mMapDocument->layerModel();
-            const int layerIndex = mMap->layers().indexOf(objectGroup);
-            const int row = layerModel->layerIndexToRow(layerIndex);
-            layerModel->setData(layerModel->index(row), value, role);
+            const int layerIndex = mapLevel->layers().indexOf(objectGroup);
+            layerModel->setData(layerModel->toIndex(objectGroup->level(), layerIndex), value, role);
             return true;
         }
         case Qt::EditRole: {
             const QString newName = value.toString();
             if (objectGroup->name() != newName) {
-                const int layerIndex = mMap->layers().indexOf(objectGroup);
-                RenameLayer *rename = new RenameLayer(mMapDocument, layerIndex,
+                const int layerIndex = mapLevel->layers().indexOf(objectGroup);
+                RenameLayer *rename = new RenameLayer(mMapDocument, objectGroup->level(), layerIndex,
                                                       newName);
                 mMapDocument->undoStack()->push(rename);
             }
@@ -285,12 +286,12 @@ void MapObjectModel::setMapDocument(MapDocument *mapDocument)
     if (mMapDocument) {
         mMap = mMapDocument->map();
 
-        connect(mMapDocument, SIGNAL(layerAdded(int)),
-                this, SLOT(layerAdded(int)));
-        connect(mMapDocument, SIGNAL(layerChanged(int)),
-                this, SLOT(layerChanged(int)));
-        connect(mMapDocument, SIGNAL(layerAboutToBeRemoved(int)),
-                this, SLOT(layerAboutToBeRemoved(int)));
+        connect(mMapDocument, &MapDocument::layerAdded,
+                this, &MapObjectModel::layerAdded);
+        connect(mMapDocument, &MapDocument::layerChanged,
+                this, &MapObjectModel::layerChanged);
+        connect(mMapDocument, &MapDocument::layerAboutToBeRemoved,
+                this, &MapObjectModel::layerAboutToBeRemoved);
 
         foreach (ObjectGroup *og, mMap->objectGroups()) {
 #if GROUPS_IN_DISPLAY_ORDER
@@ -307,14 +308,15 @@ void MapObjectModel::setMapDocument(MapDocument *mapDocument)
     endResetModel();
 }
 
-void MapObjectModel::layerAdded(int index)
+void MapObjectModel::layerAdded(int z, int index)
 {
-    Layer *layer = mMap->layerAt(index);
+    MapLevel *mapLevel = mMap->levelAt(z);
+    Layer *layer = mapLevel->layerAt(index);
     if (ObjectGroup *og = layer->asObjectGroup()) {
         if (!mGroups.contains(og)) {
-            ObjectGroup *prev = 0;
+            ObjectGroup *prev = nullptr;
             for (index = index - 1; index >= 0; --index)
-                if ((prev = mMap->layerAt(index)->asObjectGroup()))
+                if ((prev = mapLevel->layerAt(index)->asObjectGroup()))
                     break;
 #if GROUPS_IN_DISPLAY_ORDER
             index = prev ? mObjectGroups.indexOf(prev) : mObjectGroups.count();
@@ -334,26 +336,27 @@ void MapObjectModel::layerAdded(int index)
     }
 }
 
-void MapObjectModel::layerChanged(int index)
+void MapObjectModel::layerChanged(int z, int index)
 {
-    Layer *layer = mMap->layerAt(index);
+    MapLevel *mapLevel = mMap->levelAt(z);
+    Layer *layer = mapLevel->layerAt(index);
     if (ObjectGroup *og = layer->asObjectGroup()) {
         QModelIndex index = this->index(og);
         emit dataChanged(index, index);
     }
 }
 
-void MapObjectModel::layerAboutToBeRemoved(int index)
+void MapObjectModel::layerAboutToBeRemoved(int z, int index)
 {
-    Layer *layer = mMap->layerAt(index);
+    MapLevel *mapLevel = mMap->levelAt(z);
+    Layer *layer = mapLevel->layerAt(index);
     if (ObjectGroup *og = layer->asObjectGroup()) {
         const int row = mObjectGroups.indexOf(og);
         beginRemoveRows(QModelIndex(), row, row);
         mObjectGroups.removeAt(row);
         delete mGroups.take(og);
-        foreach (MapObject *o, og->objects())
+        for (MapObject *o : og->objects())
             delete mObjects.take(o);
-
         endRemoveRows();
     }
 }
@@ -376,7 +379,7 @@ int MapObjectModel::removeObject(ObjectGroup *og, MapObject *o)
     og->removeObjectAt(row);
     delete mObjects.take(o);
     endRemoveRows();
-    emit objectsRemoved(QList<MapObject*>() << o);
+    emit objectsRemoved(og, QList<MapObject*>() << o);
     return row;
 }
 

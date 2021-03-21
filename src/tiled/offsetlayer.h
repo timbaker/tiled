@@ -45,7 +45,8 @@ public:
      * within \a bounds, and can optionally wrap on the x or y axis.
      */
     OffsetLayer(MapDocument *mapDocument,
-                int index,
+                int levelIndex,
+                int layerIndex,
                 const QPoint &offset,
                 const QRect &bounds,
                 bool xWrap,
@@ -60,7 +61,8 @@ private:
     Layer *swapLayer(Layer *layer);
 
     MapDocument *mMapDocument;
-    int mIndex;
+    int mLevelIndex;
+    int mLayerIndex;
     Layer *mOriginalLayer;
     Layer *mOffsetLayer;
 };

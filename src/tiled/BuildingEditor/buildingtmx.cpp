@@ -33,6 +33,7 @@
 #include "tmxmapwriter.h"
 
 #include "map.h"
+#include "maplevel.h"
 #include "mapobject.h"
 #include "objectgroup.h"
 #include "tilelayer.h"
@@ -122,26 +123,29 @@ bool BuildingTMX::exportTMX(Building *building, const QString &fileName)
         // to level N, otherwise it is added to every level.  Object layers are
         // added above *all* the tile layers in the map.
         int previousExistingLayer = -1;
-        foreach (LayerInfo layerInfo, mLayers) {
+        for (const LayerInfo &layerInfo : mLayers) {
             QString layerName = layerInfo.mName;
             int level;
             if (MapComposite::levelForLayer(layerName, &level)) {
                 if (level != floor->level())
                     continue;
+                layerName = MapComposite::layerNameWithoutPrefix(layerName);
             } else {
-                layerName = tr("%1_%2").arg(floor->level()).arg(layerName);
+//                layerName = tr("%1_%2").arg(floor->level()).arg(layerName);
             }
+            MapLevel *mapLevel = map->levelAt(level);
             int n;
-            if ((n = map->indexOfLayer(layerName)) >= 0) {
+            if ((n = mapLevel->indexOfLayer(layerName)) >= 0) {
                 previousExistingLayer = n;
                 continue;
             }
             if (layerInfo.mType == LayerInfo::Tile) {
                 TileLayer *tl = new TileLayer(layerName, 0, 0,
                                               map->width(), map->height());
+                tl->setLevel(level);
                 if (previousExistingLayer < 0)
                     previousExistingLayer = 0;
-                map->insertLayer(previousExistingLayer + 1, tl);
+                mapLevel->insertLayer(previousExistingLayer + 1, tl);
                 previousExistingLayer++;
             } else {
                 ObjectGroup *og = new ObjectGroup(layerName,

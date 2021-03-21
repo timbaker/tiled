@@ -111,14 +111,18 @@ public:
 
     const char *name();
 
-    virtual LuaTileLayer *asTileLayer() { return 0; }
-    virtual LuaObjectGroup *asObjectGroup() { return 0; }
+    virtual LuaTileLayer *asTileLayer() { return nullptr; }
+    virtual LuaObjectGroup *asObjectGroup() { return nullptr; }
 
     virtual const char *type() const { return "unknown"; }
 
     void initClone();
     virtual void cloned();
 
+    void setLevel(int level);
+    int level() const;
+
+    int mLevelIndex;
     Layer *mClone;
     Layer *mOrig;
     QString mName;
@@ -129,14 +133,12 @@ class LuaTileLayer : public LuaLayer
 public:
     LuaTileLayer(TileLayer *orig);
     LuaTileLayer(const char *name, int x, int y, int width, int height);
-    ~LuaTileLayer();
+    ~LuaTileLayer() override;
 
-    LuaTileLayer *asTileLayer() { return this; }
-    const char *type() const { return "tile"; }
+    LuaTileLayer *asTileLayer() override { return this; }
+    const char *type() const override { return "tile"; }
 
-    void cloned();
-
-    int level();
+    void cloned() override;
 
     void setTile(int x, int y, Tile *tile);
     Tile *tileAt(int x, int y);
@@ -182,11 +184,11 @@ class LuaObjectGroup : public LuaLayer
 public:
     LuaObjectGroup(ObjectGroup *orig);
     LuaObjectGroup(const char *name, int x, int y, int width, int height);
-    ~LuaObjectGroup();
+    ~LuaObjectGroup() override;
 
-    virtual LuaObjectGroup *asObjectGroup() { return this; }
+    virtual LuaObjectGroup *asObjectGroup() override { return this; }
 
-    void cloned();
+    void cloned() override;
 
     void setColor(LuaColor &color);
     LuaColor color();
@@ -195,7 +197,6 @@ public:
     QList<LuaMapObject*> objects();
 
     ObjectGroup *mCloneObjectGroup;
-    ObjectGroup *mOrig;
     QList<LuaMapObject*> mObjects;
     QColor mColor;
 };

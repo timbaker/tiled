@@ -32,6 +32,7 @@ class RenameLayer : public QUndoCommand
 {
 public:
     RenameLayer(MapDocument *mapDocument,
+                int levelIndex,
                 int layerIndex,
                 const QString &name);
 
@@ -42,6 +43,7 @@ private:
     void swapName();
 
     MapDocument *mMapDocument;
+    int mLevelIndex;
     int mLayerIndex;
     QString mName;
 };

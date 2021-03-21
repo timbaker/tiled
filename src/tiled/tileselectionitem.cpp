@@ -37,11 +37,11 @@ TileSelectionItem::TileSelectionItem(MapDocument *mapDocument)
 {
     setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
 
-    connect(mMapDocument, SIGNAL(tileSelectionChanged(QRegion,QRegion)),
-            this, SLOT(selectionChanged(QRegion,QRegion)));
+    connect(mMapDocument, &MapDocument::tileSelectionChanged,
+            this, &TileSelectionItem::selectionChanged);
 #ifdef ZOMBOID
-    connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
-            this, SLOT(currentLayerIndexChanged(int)));
+    connect(mMapDocument, &MapDocument::currentLayerIndexChanged,
+            this, &TileSelectionItem::currentLayerIndexChanged);
 #endif
 
     updateBoundingRect();
@@ -67,7 +67,7 @@ void TileSelectionItem::paint(QPainter *painter,
     MapRenderer *renderer = mMapDocument->renderer();
     renderer->drawTileSelection(painter, selection, highlight,
 #ifdef ZOMBOID
-        option->exposedRect, mMapDocument->currentLevel());
+        option->exposedRect, mMapDocument->currentLevelIndex());
 #else
                                 option->exposedRect);
 #endif
@@ -82,16 +82,17 @@ void TileSelectionItem::selectionChanged(const QRegion &newSelection,
     // Make sure changes within the bounding rect are updated
     const QRect changedArea = newSelection.xored(oldSelection).boundingRect();
 #ifdef ZOMBOID
-    update(mMapDocument->renderer()->boundingRect(changedArea, mMapDocument->currentLevel()));
+    update(mMapDocument->renderer()->boundingRect(changedArea, mMapDocument->currentLevelIndex()));
 #else
     update(mMapDocument->renderer()->boundingRect(changedArea));
 #endif
 }
 
 #ifdef ZOMBOID
-void TileSelectionItem::currentLayerIndexChanged(int index)
+void TileSelectionItem::currentLayerIndexChanged(int levelIndex, int layerIndex)
 {
-    Q_UNUSED(index)
+    Q_UNUSED(levelIndex)
+    Q_UNUSED(layerIndex)
     prepareGeometryChange();
     updateBoundingRect();
 }
@@ -101,7 +102,7 @@ void TileSelectionItem::updateBoundingRect()
 {
 #ifdef ZOMBOID
     const QRect b = mMapDocument->tileSelection().boundingRect().translated(mDragOffset);
-    mBoundingRect = mMapDocument->renderer()->boundingRect(b, mMapDocument->currentLevel());
+    mBoundingRect = mMapDocument->renderer()->boundingRect(b, mMapDocument->currentLevelIndex());
 #else
     const QRect b = mMapDocument->tileSelection().boundingRect();
     mBoundingRect = mMapDocument->renderer()->boundingRect(b);

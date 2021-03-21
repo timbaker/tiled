@@ -83,8 +83,8 @@ class TILEDSHARED_EXPORT ZTileLayerGroup
 public:
 
     ZTileLayerGroup(Map *map, int level);
-    ZTileLayerGroup(const ZTileLayerGroup&) = delete;
-    ZTileLayerGroup& operator=(const ZTileLayerGroup&) = delete;
+    ZTileLayerGroup(const ZTileLayerGroup& other) = delete;
+    ZTileLayerGroup &operator=(const ZTileLayerGroup& other) = delete;
     virtual ~ZTileLayerGroup() {}
 
     virtual void addTileLayer(TileLayer *layer, int index);
@@ -110,14 +110,13 @@ public:
     const QVector<TileLayer*> &layers() const { return mLayers; }
     int layerCount() const { return mLayers.count(); }
 
-    bool isVisible() const { return mVisible; }
-    void setVisible(bool visible) { mVisible = visible; }
+    bool isVisible() const;
+    void setVisible(bool visible);
 
     Map *mMap;
     QVector<TileLayer*> mLayers;
     QVector<int> mIndices;
     int mLevel;
-    bool mVisible;
 };
 
 } // namespace Tiled

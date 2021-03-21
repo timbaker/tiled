@@ -145,7 +145,7 @@ void AbstractTileTool::updateBrushVisibility()
 TileLayer *AbstractTileTool::currentTileLayer() const
 {
     if (!mapDocument())
-        return 0;
+        return nullptr;
 
     return dynamic_cast<TileLayer*>(mapDocument()->currentLayer());
 }

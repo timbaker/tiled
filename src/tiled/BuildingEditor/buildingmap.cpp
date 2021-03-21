@@ -34,6 +34,7 @@
 
 #include "isometricrenderer.h"
 #include "map.h"
+#include "maplevel.h"
 #include "mapobject.h"
 #include "maprenderer.h"
 #include "objectgroup.h"
@@ -333,10 +334,14 @@ Map *BuildingMap::mergedMap() const
 {
     Map *map = mBlendMap->clone();
     TilesetManager::instance()->addReferences(map->tilesets());
-    for (int i = 0; i < map->layerCount(); i++) {
-        if (TileLayer *tl = map->layerAt(i)->asTileLayer())
-            tl->merge(tl->position(), mMap->layerAt(i)->asTileLayer());
-
+    for (int z = 0; z < map->levelCount(); z++) {
+        MapLevel *level = map->levelAt(z);
+        for (int j = 0; j < level->layerCount(); j++) {
+            if (TileLayer *tl = level->layerAt(j)->asTileLayer()) {
+                TileLayer *tl2 =  mMap->levelAt(level->z())->layerAt(j)->asTileLayer();
+                tl->merge(tl->position(), tl2);
+            }
+        }
     }
     return map;
 }
@@ -504,8 +509,9 @@ void BuildingMap::BuildingToMap()
 
     // Add tilesets from Tilesets.txt
     mMap->addTileset(TilesetManager::instance()->missingTileset());
-    foreach (Tileset *ts, TileMetaInfoMgr::instance()->tilesets())
+    for (Tileset *ts : TileMetaInfoMgr::instance()->tilesets()) {
         mMap->addTileset(ts);
+    }
     TilesetManager::instance()->addReferences(mMap->tilesets());
 
     switch (mMap->orientation()) {
@@ -526,11 +532,11 @@ void BuildingMap::BuildingToMap()
         layerToSection.insert(QLatin1String(gLayerNames[i]), i);
 
     mLayerToSection.clear();
-    foreach (BuildingFloor *floor, mBuilding->floors()) {
-        foreach (QString name, layerNames(floor->level())) {
+    for (BuildingFloor *floor : mBuilding->floors()) {
+        for (QString name : layerNames(floor->level())) {
             QString layerName = tr("%1_%2").arg(floor->level()).arg(name);
-            TileLayer *tl = new TileLayer(layerName,
-                                          0, 0, mapSize.width(), mapSize.height());
+            TileLayer *tl = new TileLayer(layerName, 0, 0, mapSize.width(), mapSize.height());
+            tl->setLevel(floor->level());
             mMap->addLayer(tl);
             mLayerToSection[layerName] = layerToSection.contains(name)
                     ? layerToSection[name] : -1;
@@ -541,9 +547,9 @@ void BuildingMap::BuildingToMap()
     mMapComposite = new MapComposite(mapInfo);
 
     // Synch layer opacity with the floor.
-    foreach (CompositeLayerGroup *layerGroup, mMapComposite->layerGroups()) {
+    for (CompositeLayerGroup *layerGroup : mMapComposite->layerGroups()) {
         BuildingFloor *floor = mBuilding->floor(layerGroup->level());
-        foreach (TileLayer *tl, layerGroup->layers()) {
+        for (TileLayer *tl : layerGroup->layers()) {
             QString layerName = MapComposite::layerNameWithoutPrefix(tl);
             layerGroup->setLayerOpacity(tl, floor->layerOpacity(layerName));
         }
@@ -557,15 +563,15 @@ void BuildingMap::BuildingToMap()
     mMapComposite->setBlendOverMap(mBlendMapComposite);
 
     // Set the automatically-generated tiles.
-    foreach (CompositeLayerGroup *layerGroup, mBlendMapComposite->layerGroups()) {
+    for (CompositeLayerGroup *layerGroup : mBlendMapComposite->layerGroups()) {
         BuildingFloor *floor = mBuilding->floor(layerGroup->level());
         floor->LayoutToSquares();
         BuildingSquaresToTileLayers(floor, floor->bounds(1, 1), layerGroup);
     }
 
     // Set the user-drawn tiles.
-    foreach (BuildingFloor *floor, mBuilding->floors()) {
-        foreach (QString layerName, floor->grimeLayers())
+    for (BuildingFloor *floor : mBuilding->floors()) {
+        for (QString layerName : floor->grimeLayers())
             userTilesToLayer(floor, layerName, floor->bounds(1, 1));
     }
 

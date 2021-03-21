@@ -539,7 +539,7 @@ uint NewMapBinaryFile::cellToGid(const Cell *cell)
 
 bool NewMapBinaryFile::processObjectGroups(MapComposite *mapComposite)
 {
-    for (Layer *layer : mapComposite->map()->layers()) {
+    for (Layer *layer : mapComposite->map()->layers(Layer::Type::ObjectGroupType)) {
         if (ObjectGroup *og = layer->asObjectGroup()) {
             if (!processObjectGroup(og, mapComposite->levelRecursive(),
                                     mapComposite->originRecursive())) {
@@ -559,9 +559,9 @@ bool NewMapBinaryFile::processObjectGroups(MapComposite *mapComposite)
 
 bool NewMapBinaryFile::processObjectGroup(ObjectGroup *objectGroup, int levelOffset, const QPoint &offset)
 {
-    int level;
-    if (!MapComposite::levelForLayer(objectGroup, &level))
-        return true;
+    int level = objectGroup->level();
+//    if (!MapComposite::levelForLayer(objectGroup, &level))
+//        return true;
     level += levelOffset;
 
     for (const MapObject *mapObject : objectGroup->objects()) {

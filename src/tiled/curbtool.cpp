@@ -28,6 +28,7 @@
 
 #include "BuildingEditor/buildingtiles.h"
 
+#include "maplevel.h"
 #include "maprenderer.h"
 #include "tilelayer.h"
 #include "tileset.h"
@@ -93,7 +94,7 @@ void CurbTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
     toCorner(pos, tilePosF, corner);
     QPoint tilePos(qFloor(tilePosF.x()), qFloor(tilePosF.y()));
 
-    CompositeLayerGroup *lg = mapDocument()->mapComposite()->layerGroupForLevel(mapDocument()->currentLevel());
+    CompositeLayerGroup *lg = mapDocument()->mapComposite()->layerGroupForLevel(mapDocument()->currentLevelIndex());
     if (mToolTileLayerGroup != 0) {
         mToolTileLayerGroup->clearToolTiles();
         mScene->update(mToolTilesRect);
@@ -170,7 +171,7 @@ void CurbTool::mouseMoved(const QPointF &pos, Qt::KeyboardModifiers modifiers)
         QSize tilesSize(mToolTiles.width(), mToolTiles.height());
         lg->setToolTiles(&mToolTiles, topLeft, QRect(topLeft, tilesSize), currentTileLayer());
         mToolTilesRect = renderer->boundingRect(QRect(topLeft.x(), topLeft.y(), mToolTiles.width(), mToolTiles.height()),
-                mapDocument()->currentLevel()).adjusted(-3, -(128-32) - 3, 3, 3); // use mMap->drawMargins()
+                mapDocument()->currentLevelIndex()).adjusted(-3, -(128-32) - 3, 3, 3); // use mMap->drawMargins()
         mToolTileLayerGroup = lg;
         mScene->update(mToolTilesRect);
     }
@@ -320,16 +321,19 @@ void CurbTool::drawEdge(const QPointF &start, Corner cornerStart,
         mapDocument()->emitRegionEdited(stamp.region(), currentTileLayer());
     }
 
-    foreach (QString layerName, eraseRgn.keys()) {
-        int index = mapDocument()->map()->indexOfLayer(layerName, Layer::TileLayerType);
+    int levelIndex = mapDocument()->currentLevelIndex();
+    MapLevel *mapLevel = mapDocument()->map()->levelAt(levelIndex);
+
+    for (const QString &layerName : eraseRgn.keys()) {
+        int index = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (index >= 0) {
-            TileLayer *tl = mapDocument()->map()->layerAt(index)->asTileLayer();
+            TileLayer *tl = mapLevel->layerAt(index)->asTileLayer();
             EraseTiles *cmd = new EraseTiles(mapDocument(), tl, eraseRgn[layerName]);
             mapDocument()->undoStack()->push(cmd);
         }
     }
 
-    foreach (QString layerName, noBlendRgn.keys()) {
+    for (const QString &layerName : noBlendRgn.keys()) {
         QRegion rgn = noBlendRgn[layerName];
         QRect r = rgn.boundingRect();
         MapNoBlend *noBlend = mapDocument()->map()->noBlend(layerName);
@@ -352,7 +356,7 @@ void CurbTool::drawEdgeTile(const QPoint &origin, int x, int y, Edge edge, bool 
     if (!tileLayer->contains(x, y))
         return;
 
-    Tile *tile = 0;
+    Tile *tile = nullptr;
     Tile *CURRENT = tileLayer->cellAt(x, y).tile;
     Tile *currentW = tileLayer->contains(x - 1, y) ? tileLayer->cellAt(x - 1, y).tile : 0;
     Tile *currentE = tileLayer->contains(x + 1, y) ? tileLayer->cellAt(x + 1, y).tile : 0;
@@ -469,10 +473,13 @@ void CurbTool::drawEdgeTile(const QPoint &origin, int x, int y, Edge edge, bool 
 
     QSet<Tile*> blendTiles = mapDocument()->mapComposite()->bmpBlender()->knownBlendTiles();
 
-    foreach (QString layerName, mapDocument()->mapComposite()->bmpBlender()->blendLayers()) {
-        int index = mapDocument()->map()->indexOfLayer(layerName, Layer::TileLayerType);
+    int levelIndex = mapDocument()->currentLevelIndex();
+    MapLevel *mapLevel = mapDocument()->map()->levelAt(levelIndex);
+
+    for (const QString &layerName : mapDocument()->mapComposite()->bmpBlender()->blendLayers()) {
+        int index = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (index >= 0) {
-            TileLayer *tl = mapDocument()->map()->layerAt(index)->asTileLayer();
+            TileLayer *tl = mapLevel->layerAt(index)->asTileLayer();
             if (blendTiles.contains(tl->cellAt(x, y).tile))
                 eraseRgn[layerName] += QRect(x, y, 1, 1);
         }
@@ -508,10 +515,13 @@ void CurbTool::raiseLower(const QPointF &start, const QPointF &end)
         mapDocument()->emitRegionEdited(stamp.region(), currentTileLayer());
     }
 
-    foreach (QString layerName, eraseRgn.keys()) {
-        int index = mapDocument()->map()->indexOfLayer(layerName, Layer::TileLayerType);
+    int levelIndex = mapDocument()->currentLevelIndex();
+    MapLevel *mapLevel = mapDocument()->map()->levelAt(levelIndex);
+
+    for (const QString &layerName : eraseRgn.keys()) {
+        int index = mapLevel->indexOfLayer(layerName, Layer::TileLayerType);
         if (index >= 0) {
-            TileLayer *tl = mapDocument()->map()->layerAt(index)->asTileLayer();
+            TileLayer *tl = mapLevel->layerAt(index)->asTileLayer();
             EraseTiles *cmd = new EraseTiles(mapDocument(), tl, eraseRgn[layerName]);
             mapDocument()->undoStack()->push(cmd);
         }
@@ -542,10 +552,10 @@ void CurbTool::raiseLowerTile(int sx, int sy, int ex, int ey, int x, int y,
     if (!tileLayer->contains(x, y))
         return;
 
-    Tile *tile = 0;
+    Tile *tile = nullptr;
     Tile *CURRENT = tileLayer->cellAt(x, y).tile;
-    Tile *currentE = tileLayer->contains(x + 1, y) ? tileLayer->cellAt(x + 1, y).tile : 0;
-    Tile *currentS = tileLayer->contains(x, y + 1) ? tileLayer->cellAt(x, y + 1).tile : 0;
+    Tile *currentE = tileLayer->contains(x + 1, y) ? tileLayer->cellAt(x + 1, y).tile : nullptr;
+    Tile *currentS = tileLayer->contains(x, y + 1) ? tileLayer->cellAt(x, y + 1).tile : nullptr;
 
     QVector<Tile*> tiles = resolveTiles(mCurb);
     Tile *farE = tiles[Curb::FarE];

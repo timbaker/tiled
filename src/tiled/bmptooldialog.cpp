@@ -34,6 +34,7 @@
 #include "layer.h"
 #include "layermodel.h"
 #include "map.h"
+#include "maplevel.h"
 #include "tile.h"
 #include "tileset.h"
 
@@ -151,49 +152,49 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
 
     ui->tabWidget->setCurrentIndex(0);
 
-    connect(ui->tableView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
-            SLOT(currentRuleChanged(QModelIndex)));
+    connect(ui->tableView->selectionModel(), &QItemSelectionModel::currentChanged,
+            this, &BmpToolDialog::currentRuleChanged);
 
-    connect(ui->expandCollapse, SIGNAL(clicked()),
-            SLOT(expandCollapse()));
+    connect(ui->expandCollapse, &QAbstractButton::clicked,
+            this, &BmpToolDialog::expandCollapse);
     ui->tableView->zoomable()->connectToComboBox(ui->scaleCombo);
 
-    connect(ui->blendView, SIGNAL(blendHighlighted(BmpBlend*,int)),
-            SLOT(blendHighlighted(BmpBlend*,int)));
+    connect(ui->blendView, &BmpBlendView::blendHighlighted,
+            this, &BmpToolDialog::blendHighlighted);
     ui->blendView->zoomable()->connectToComboBox(ui->blendScaleCombo);
 
     ui->tilesInBlend->model()->setShowHeaders(false);
     ui->tilesInBlend->setZoomable(ui->blendView->zoomable());
-    connect(ui->tilesInBlend->zoomable(), SIGNAL(scaleChanged(qreal)),
-            SLOT(synchBlendTilesView()));
+    connect(ui->tilesInBlend->zoomable(), &Zoomable::scaleChanged,
+            this, &BmpToolDialog::synchBlendTilesView);
 
-    connect(ui->brushSize, SIGNAL(valueChanged(int)),
-            SLOT(brushSizeChanged(int)));
-    connect(ui->brushSquare, SIGNAL(clicked()),
-            SLOT(brushSquare()));
-    connect(ui->brushCircle, SIGNAL(clicked()),
-            SLOT(brushCircle()));
-    connect(ui->restrictToSelection, SIGNAL(toggled(bool)),
-            SLOT(restrictToSelection(bool)));
-    connect(ui->toggleOverlayLayers, SIGNAL(clicked()),
-            SLOT(toggleOverlayLayers()));
-    connect(ui->showBMPTiles, SIGNAL(toggled(bool)),
-            SLOT(showBMPTiles(bool)));
-    connect(ui->showMapTiles, SIGNAL(toggled(bool)),
-            SLOT(showMapTiles(bool)));
+    connect(ui->brushSize, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &BmpToolDialog::brushSizeChanged);
+    connect(ui->brushSquare, &QAbstractButton::clicked,
+            this, &BmpToolDialog::brushSquare);
+    connect(ui->brushCircle, &QAbstractButton::clicked,
+            this, &BmpToolDialog::brushCircle);
+    connect(ui->restrictToSelection, &QAbstractButton::toggled,
+            this, &BmpToolDialog::restrictToSelection);
+    connect(ui->toggleOverlayLayers, &QAbstractButton::clicked,
+            this, &BmpToolDialog::toggleOverlayLayers);
+    connect(ui->showBMPTiles, &QAbstractButton::toggled,
+            this, &BmpToolDialog::showBMPTiles);
+    connect(ui->showMapTiles, &QAbstractButton::toggled,
+            this, &BmpToolDialog::showMapTiles);
     connect(ui->blendEdgesEverywhere, &QCheckBox::toggled, this, &BmpToolDialog::blendEdgesEverywhere);
 
-    connect(ui->reloadRules, SIGNAL(clicked()), SLOT(reloadRules()));
-    connect(ui->importRules, SIGNAL(clicked()), SLOT(importRules()));
-    connect(ui->exportRules, SIGNAL(clicked()), SLOT(exportRules()));
-    connect(ui->trashRules, SIGNAL(clicked()), SLOT(trashRules()));
+    connect(ui->reloadRules, &QAbstractButton::clicked, this, &BmpToolDialog::reloadRules);
+    connect(ui->importRules, &QAbstractButton::clicked, this, &BmpToolDialog::importRules);
+    connect(ui->exportRules, &QAbstractButton::clicked, this, &BmpToolDialog::exportRules);
+    connect(ui->trashRules, &QAbstractButton::clicked, this, &BmpToolDialog::trashRules);
 
-    connect(ui->reloadBlends, SIGNAL(clicked()), SLOT(reloadBlends()));
-    connect(ui->importBlends, SIGNAL(clicked()), SLOT(importBlends()));
-    connect(ui->exportBlends, SIGNAL(clicked()), SLOT(exportBlends()));
-    connect(ui->trashBlends, SIGNAL(clicked()), SLOT(trashBlends()));
+    connect(ui->reloadBlends, &QAbstractButton::clicked, this, &BmpToolDialog::reloadBlends);
+    connect(ui->importBlends, &QAbstractButton::clicked, this, &BmpToolDialog::importBlends);
+    connect(ui->exportBlends, &QAbstractButton::clicked, this, &BmpToolDialog::exportBlends);
+    connect(ui->trashBlends, &QAbstractButton::clicked, this, &BmpToolDialog::trashBlends);
 
-    connect(ui->help, SIGNAL(clicked()), SLOT(help()));
+    connect(ui->help, &QAbstractButton::clicked, this, &BmpToolDialog::help);
 
     QSettings settings;
     settings.beginGroup(QLatin1String("BmpToolDialog"));
@@ -222,13 +223,13 @@ BmpToolDialog::BmpToolDialog(QWidget *parent) :
 
     mVisibleLaterTimer.setSingleShot(true);
     mVisibleLaterTimer.setInterval(200);
-    connect(&mVisibleLaterTimer, SIGNAL(timeout()), SLOT(setVisibleNow()));
+    connect(&mVisibleLaterTimer, &QTimer::timeout, this, &BmpToolDialog::setVisibleNow);
 
-    connect(BmpBrushTool::instance(), SIGNAL(brushChanged()),
-            SLOT(brushChanged()));
+    connect(BmpBrushTool::instance(), &BmpBrushTool::brushChanged,
+            this, &BmpToolDialog::brushChanged);
 
-    connect(DocumentManager::instance(), SIGNAL(documentAboutToClose(int,MapDocument*)),
-            SLOT(documentAboutToClose(int,MapDocument*)));
+    connect(DocumentManager::instance(), &DocumentManager::documentAboutToClose,
+            this, &BmpToolDialog::documentAboutToClose);
 }
 
 BmpToolDialog::~BmpToolDialog()
@@ -620,13 +621,14 @@ void BmpToolDialog::toggleOverlayLayers()
         return;
     Map *map = mDocument->map();
     int visible = -1;
-    foreach (QString layerName, mDocument->mapComposite()->bmpBlender()->blendLayers()) {
-        int index = map->indexOfLayer(layerName);
+    MapLevel *mapLevel = map->levelAt(0);
+    for (const QString& layerName : mDocument->mapComposite()->bmpBlender()->blendLayers()) {
+        int index = mapLevel->indexOfLayer(layerName);
         if (index != -1) {
-            Layer *layer = map->layerAt(index);
+            Layer *layer = mapLevel->layerAt(index);
             if (visible == -1)
                 visible = !layer->isVisible();
-            mDocument->setLayerVisible(index, visible);
+            mDocument->setLayerVisible(mapLevel->z(), index, visible);
         }
     }
 }
@@ -636,9 +638,10 @@ void BmpToolDialog::showBMPTiles(bool show)
     if (!mDocument)
         return;
     mDocument->mapComposite()->setShowBMPTiles(show);
-    if (mDocument->map()->layerCount())
+    if (mDocument->map()->levelAt(0)->layerCount()) {
         mDocument->emitRegionChanged(QRect(QPoint(0, 0), mDocument->map()->size()),
-                                     mDocument->map()->layerAt(0));
+                                     mDocument->map()->levelAt(0)->layerAt(0));
+    }
 }
 
 void BmpToolDialog::showMapTiles(bool show)
@@ -646,9 +649,9 @@ void BmpToolDialog::showMapTiles(bool show)
     if (!mDocument)
         return;
     mDocument->mapComposite()->setShowMapTiles(show);
-    if (mDocument->map()->layerCount())
+    if (mDocument->map()->levelAt(0)->layerCount())
         mDocument->emitRegionChanged(QRect(QPoint(0, 0), mDocument->map()->size()),
-                                     mDocument->map()->layerAt(0));
+                                     mDocument->map()->levelAt(0)->layerAt(0));
 }
 
 void BmpToolDialog::blendEdgesEverywhere(bool everywhere)

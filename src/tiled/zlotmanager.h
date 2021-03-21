@@ -32,6 +32,7 @@ namespace Tiled {
 
 class Map;
 class MapObject;
+class ObjectGroup;
 
 namespace Internal {
 class MapDocument;
@@ -67,12 +68,12 @@ signals:
     void lotUpdated(MapComposite *mc, WorldCellLot *lot);
 
 private slots:
-    void onLayerAdded(int index);
-    void onLayerAboutToBeRemoved(int index);
+    void onLayerAdded(int z, int index);
+    void onLayerAboutToBeRemoved(int z, int index);
 
     void onObjectsAdded(const QList<MapObject*> &objects);
     void onObjectsChanged(const QList<MapObject*> &objects);
-    void onObjectsRemoved(const QList<MapObject*> &objects);
+    void onObjectsRemoved(ObjectGroup *objectGroup, const QList<MapObject*> &objects);
 
     void mapLoaded(MapInfo *mapInfo);
     void mapFailedToLoad(MapInfo *mapInfo);

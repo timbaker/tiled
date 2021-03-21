@@ -107,11 +107,12 @@ ObjectGroup *AbstractObjectTool::currentObjectGroup() const
 
 MapObjectItem *AbstractObjectTool::topMostObjectItemAt(QPointF pos) const
 {
-    foreach (QGraphicsItem *item, mMapScene->items(pos)) {
-        if (MapObjectItem *objectItem = dynamic_cast<MapObjectItem*>(item))
+    for (QGraphicsItem *item : mMapScene->items(pos)) {
+        if (MapObjectItem *objectItem = dynamic_cast<MapObjectItem*>(item)) {
             return objectItem;
+        }
     }
-    return 0;
+    return nullptr;
 }
 
 /**
@@ -133,9 +134,10 @@ void AbstractObjectTool::showContextMenu(MapObjectItem *clickedObjectItem,
     const QList<MapObject*> selectedObjects = mapDocument()->selectedObjects();
 
     QList<ObjectGroup*> objectGroups;
-    foreach (Layer *layer, mapDocument()->map()->layers()) {
-        if (ObjectGroup *objectGroup = layer->asObjectGroup())
+    for (Layer *layer : mapDocument()->map()->layers(Layer::Type::ObjectGroupType)) {
+        if (ObjectGroup *objectGroup = layer->asObjectGroup()) {
             objectGroups.append(objectGroup);
+        }
     }
 
     QMenu menu;
@@ -170,7 +172,7 @@ void AbstractObjectTool::showContextMenu(MapObjectItem *clickedObjectItem,
     Utils::setThemeIcon(propertiesAction, "document-properties");
 
 #ifdef ZOMBOID
-    QAction *openAction = 0;
+    QAction *openAction = nullptr;
     if (clickedObjectItem &&
             (clickedObjectItem->mapObject()->name() == QLatin1String("lot"))) {
         QIcon tiledIcon(QLatin1String(":images/tiled-icon-16.png"));
@@ -205,7 +207,7 @@ void AbstractObjectTool::showContextMenu(MapObjectItem *clickedObjectItem,
     }
 
 #ifdef ZOMBOID
-    if (openAction != 0 && selectedAction == openAction)
+    if (openAction != nullptr && selectedAction == openAction)
         MainWindow::instance()->openFile(clickedObjectItem->mapObject()->type());
 #endif
 }

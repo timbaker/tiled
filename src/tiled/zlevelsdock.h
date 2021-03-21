@@ -39,7 +39,7 @@ class ZLevelsDock : public QDockWidget
     Q_OBJECT
 
 public:
-    ZLevelsDock(QWidget *parent = 0);
+    ZLevelsDock(QWidget *parent = nullptr);
 
     void setMapDocument(MapDocument *mapDoc);
 
@@ -76,7 +76,7 @@ class ZLevelsView : public QTreeView
     Q_OBJECT
 
 public:
-    ZLevelsView(QWidget *parent = 0);
+    ZLevelsView(QWidget *parent = nullptr);
 
     QSize sizeHint() const;
 
@@ -87,7 +87,7 @@ protected slots:
     virtual void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
 
 private slots:
-    void currentLayerIndexChanged(int index);
+    void currentLayerIndexChanged(int levelIndex, int layerIndex);
     void editLayerName();
     void onActivated(const QModelIndex &index);
 

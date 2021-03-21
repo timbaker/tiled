@@ -23,13 +23,15 @@
 #include "mainwindow.h"
 #include "preferences.h"
 
+#include "maplevel.h"
+
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QSettings>
 
 using namespace Tiled::Internal;
 
-EdgeToolDialog *EdgeToolDialog::mInstance = 0;
+EdgeToolDialog *EdgeToolDialog::mInstance = nullptr;
 
 EdgeToolDialog *EdgeToolDialog::instance()
 {
@@ -124,17 +126,18 @@ void EdgeToolDialog::writeSettings()
 
 void EdgeToolDialog::currentRowChanged(int row)
 {
-    Edges *edges = (row >= 0) ? mEdges.at(row) : 0;
+    Edges *edges = (row >= 0) ? mEdges.at(row) : nullptr;
     EdgeTool::instance().setEdges(edges);
 
     if (!edges || edges->mLayer.isEmpty()) return;
     MapDocument *doc = DocumentManager::instance()->currentDocument();
     if (!doc) return;
-    int index = doc->map()->indexOfLayer(edges->mLayer);
+    MapLevel *mapLevel = doc->map()->levelAt(0);
+    int index = mapLevel->indexOfLayer(edges->mLayer);
     if (index >= 0) {
-        Layer *layer = doc->map()->layerAt(index);
+        Layer *layer = mapLevel->layerAt(index);
         if (layer->asTileLayer())
-            doc->setCurrentLayerIndex(index);
+            doc->setCurrentLayerIndex(layer->level(), index);
     }
 }
 

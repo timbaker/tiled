@@ -24,6 +24,7 @@
 #include "layermodel.h"
 #include "map.h"
 #include "mapdocument.h"
+#include "maplevel.h"
 
 #include <QCoreApplication>
 
@@ -31,9 +32,11 @@ using namespace Tiled;
 using namespace Tiled::Internal;
 
 RenameLayer::RenameLayer(MapDocument *mapDocument,
+                         int levelIndex,
                          int layerIndex,
                          const QString &name):
     mMapDocument(mapDocument),
+    mLevelIndex(levelIndex),
     mLayerIndex(layerIndex),
     mName(name)
 {
@@ -52,8 +55,9 @@ void RenameLayer::redo()
 
 void RenameLayer::swapName()
 {
-    const Layer *layer = mMapDocument->map()->layerAt(mLayerIndex);
+    const MapLevel *mapLevel = mMapDocument->map()->levelAt(mLevelIndex);
+    const Layer *layer = mapLevel->layerAt(mLayerIndex);
     const QString previousName = layer->name();
-    mMapDocument->layerModel()->renameLayer(mLayerIndex, mName);
+    mMapDocument->layerModel()->renameLayer(mLevelIndex, mLayerIndex, mName);
     mName = previousName;
 }

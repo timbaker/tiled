@@ -22,36 +22,172 @@
 
 #include "map.h"
 #include "mapdocument.h"
+#include "maplevel.h"
 #include "layer.h"
 #include "renamelayer.h"
 #include "tilelayer.h"
 
-
 using namespace Tiled;
 using namespace Tiled::Internal;
 
+/////
+
+namespace Tiled
+{
+namespace Internal
+{
+
+class LayerModelPrivate
+{
+public:
+    class Item
+    {
+    public:
+        Item(int levelIndex)
+            : mLevelIndex(levelIndex)
+            , mLayerIndex(-1)
+            , mParent(nullptr)
+        {
+
+        }
+
+        Item(Item *parent, int layerIndex)
+            : mLevelIndex(parent->mLevelIndex)
+            , mLayerIndex(layerIndex)
+            , mParent(parent)
+        {
+        }
+
+        ~Item()
+        {
+            qDeleteAll(mChildren);
+        }
+
+        int mLevelIndex;
+        int mLayerIndex;
+        Item *mParent;
+        QVector<Item*> mChildren;
+    };
+
+    LayerModelPrivate(LayerModel &model)
+        : mModel(model)
+    {
+
+    }
+
+    ~LayerModelPrivate()
+    {
+        qDeleteAll(mItems);
+    }
+
+    void setMap(Map *map)
+    {
+        qDeleteAll(mItems);
+        mItems.clear();
+        // Levels and layers from highest to lowest.
+        for (int z = map->levelCount() - 1; z >= 0; z--) {
+            Item *item = new Item(z);
+            mItems += item;
+            MapLevel *mapLevel = map->levelAt(z);
+            for (int i = mapLevel->layerCount() - 1; i >= 0; i--) {
+                Item *item1 = new Item(item, i);
+                item->mChildren += item1;
+            }
+        }
+    }
+
+    Item *toItem(const QModelIndex &index) const
+    {
+        if (index.isValid()) {
+            return static_cast<Item*>(index.internalPointer());
+        }
+        return nullptr;
+    }
+
+    LayerModel &mModel;
+    QList<Item*> mItems;
+};
+
+}
+}
+
+/////
+
 LayerModel::LayerModel(QObject *parent):
-    QAbstractListModel(parent),
-    mMapDocument(0),
-    mMap(0),
+    QAbstractItemModel(parent),
+    mMapDocument(nullptr),
+    mMap(nullptr),
     mTileLayerIcon(QLatin1String(":/images/16x16/layer-tile.png")),
     mObjectGroupIcon(QLatin1String(":/images/16x16/layer-object.png")),
-    mImageLayerIcon(QLatin1String(":/images/16x16/layer-image.png"))
+    mImageLayerIcon(QLatin1String(":/images/16x16/layer-image.png")),
+    mPrivate(new LayerModelPrivate(*this))
 {
+}
+
+LayerModel::~LayerModel()
+{
+    delete mPrivate;
+}
+
+QModelIndex LayerModel::parent(const QModelIndex &index) const
+{
+    if (LayerModelPrivate::Item *item = mPrivate->toItem(index)) {
+        if (item->mParent != nullptr) {
+            return toIndex(item->mLevelIndex);
+        }
+    }
+    return QModelIndex();
 }
 
 int LayerModel::rowCount(const QModelIndex &parent) const
 {
-    return parent.isValid() ? 0 : (mMap ? mMap->layerCount() : 0);
+    if (mMap == nullptr) {
+        return 0;
+    }
+    if (!parent.isValid()) {
+        return mPrivate->mItems.size();
+    }
+    if (LayerModelPrivate::Item *item = mPrivate->toItem(parent)) {
+        if (item->mParent == nullptr) { // A MapLevel
+            return item->mChildren.size();
+        }
+    }
+    return 0;
+}
+
+int LayerModel::columnCount(const QModelIndex &parent) const
+{
+    Q_UNUSED(parent)
+    return 1;
 }
 
 QVariant LayerModel::data(const QModelIndex &index, int role) const
 {
-    const int layerIndex = toLayerIndex(index);
-    if (layerIndex < 0)
+    const int levelIndex = toLevelIndex(index);
+    if (levelIndex < 0)
         return QVariant();
 
-    const Layer *layer = mMap->layerAt(layerIndex);
+    const int layerIndex = toLayerIndex(index);
+    if (layerIndex < 0)
+    {
+        switch (role) {
+        case Qt::DisplayRole:
+        case Qt::EditRole:
+            return QString(tr("Level %1")).arg(levelIndex);
+        case Qt::DecorationRole:
+            return QVariant();
+        case Qt::CheckStateRole:
+            if (MapLevel *mapLevel = mMapDocument->map()->levelAt(levelIndex)) {
+                return mapLevel->isVisible() ? Qt::Checked : Qt::Unchecked;
+            }
+            return QVariant();
+        default:
+            return QVariant();
+        }
+    }
+
+    const MapLevel *mapLevel = mMap->levelAt(levelIndex);
+    const Layer *layer = mapLevel->layerAt(layerIndex);
 
     switch (role) {
     case Qt::DisplayRole:
@@ -64,8 +200,8 @@ QVariant LayerModel::data(const QModelIndex &index, int role) const
             return mObjectGroupIcon;
         else if (layer->isImageLayer())
             return mImageLayerIcon;
-        else
-            Q_ASSERT(false);
+        Q_ASSERT(false);
+        return QVariant();
     case Qt::CheckStateRole:
         return layer->isVisible() ? Qt::Checked : Qt::Unchecked;
     case OpacityRole:
@@ -78,17 +214,22 @@ QVariant LayerModel::data(const QModelIndex &index, int role) const
 bool LayerModel::setData(const QModelIndex &index, const QVariant &value,
                          int role)
 {
+    const int levelIndex = toLevelIndex(index);
+    if (levelIndex < 0)
+        return false;
+
     const int layerIndex = toLayerIndex(index);
     if (layerIndex < 0)
         return false;
 
-    Layer *layer = mMap->layerAt(layerIndex);
+    const MapLevel *mapLevel = mMap->levelAt(levelIndex);
+    Layer *layer = mapLevel->layerAt(layerIndex);
 
     if (role == Qt::CheckStateRole) {
         Qt::CheckState c = static_cast<Qt::CheckState>(value.toInt());
         layer->setVisible(c == Qt::Checked);
         emit dataChanged(index, index);
-        emit layerChanged(layerIndex);
+        emit layerChanged(levelIndex, layerIndex);
         return true;
     } else if (role == OpacityRole) {
         bool ok;
@@ -96,13 +237,13 @@ bool LayerModel::setData(const QModelIndex &index, const QVariant &value,
         if (ok) {
             if (layer->opacity() != opacity) {
                 layer->setOpacity(opacity);
-                emit layerChanged(layerIndex);
+                emit layerChanged(levelIndex, layerIndex);
             }
         }
     } else if (role == Qt::EditRole) {
         const QString newName = value.toString();
         if (layer->name() != newName) {
-            RenameLayer *rename = new RenameLayer(mMapDocument, layerIndex,
+            RenameLayer *rename = new RenameLayer(mMapDocument, levelIndex, layerIndex,
                                                   value.toString());
             mMapDocument->undoStack()->push(rename);
         }
@@ -114,7 +255,7 @@ bool LayerModel::setData(const QModelIndex &index, const QVariant &value,
 
 Qt::ItemFlags LayerModel::flags(const QModelIndex &index) const
 {
-    Qt::ItemFlags rc = QAbstractListModel::flags(index);
+    Qt::ItemFlags rc = QAbstractItemModel::flags(index);
     if (index.column() == 0)
         rc |= Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
     return rc;
@@ -131,18 +272,48 @@ QVariant LayerModel::headerData(int section, Qt::Orientation orientation,
     return QVariant();
 }
 
+QModelIndex LayerModel::index(int row, int column, const QModelIndex &parent) const
+{
+    if (!mMap)
+        return QModelIndex();
+
+    if (!parent.isValid()) {
+        if (row < mPrivate->mItems.size()) {
+            return createIndex(row, column, mPrivate->mItems[row]);
+        }
+        return QModelIndex();
+    }
+
+    if (LayerModelPrivate::Item *item = mPrivate->toItem(parent)) {
+        if (row < item->mChildren.size()) {
+            return createIndex(row, column, item->mChildren[row]);
+        }
+        return QModelIndex();
+    }
+
+    return QModelIndex();
+}
+
+int LayerModel::toLevelIndex(const QModelIndex &index) const
+{
+    if (index.isValid()) {
+        return mPrivate->toItem(index)->mLevelIndex;
+    }
+    return -1;
+}
+
 int LayerModel::toLayerIndex(const QModelIndex &index) const
 {
     if (index.isValid()) {
-        return mMap->layerCount() - index.row() - 1;
-    } else {
-        return -1;
+        return mPrivate->toItem(index)->mLayerIndex; // mMap->layerCount() - index.row() - 1;
     }
+    return -1;
 }
 
-int LayerModel::layerIndexToRow(int layerIndex) const
+int LayerModel::layerIndexToRow(int levelIndex, int layerIndex) const
 {
-    return mMap->layerCount() - layerIndex - 1;
+    MapLevel *mapLevel = mMap->levelAt(levelIndex);
+    return mapLevel->layerCount() - layerIndex - 1;
 }
 
 void LayerModel::setMapDocument(MapDocument *mapDocument)
@@ -153,62 +324,81 @@ void LayerModel::setMapDocument(MapDocument *mapDocument)
     beginResetModel();
     mMapDocument = mapDocument;
     mMap = mMapDocument->map();
+    mPrivate->setMap(mMap);
     endResetModel();
 }
 
 void LayerModel::insertLayer(int index, Layer *layer)
 {
-    const int row = layerIndexToRow(index) + 1;
-    beginInsertRows(QModelIndex(), row, row);
+    const int row = layerIndexToRow(layer->level(), index) + 1;
+    QModelIndex parent = toIndex(layer->level());
+    beginInsertRows(parent, row, row);
     mMap->insertLayer(index, layer);
+    mPrivate->setMap(mMap);
     endInsertRows();
-    emit layerAdded(index);
+    emit layerAdded(layer->level(), index);
 }
 
-Layer *LayerModel::takeLayerAt(int index)
+Layer *LayerModel::takeLayerAt(int z, int index)
 {
-    emit layerAboutToBeRemoved(index);
-    const int row = layerIndexToRow(index);
-    beginRemoveRows(QModelIndex(), row, row);
-    Layer *layer = mMap->takeLayerAt(index);
+    emit layerAboutToBeRemoved(z, index);
+    QModelIndex parent = toIndex(z);
+    const int row = layerIndexToRow(z, index);
+    beginRemoveRows(parent, row, row);
+    Layer *layer = mMap->takeLayerAt(z, index);
+    mPrivate->setMap(mMap);
     endRemoveRows();
-    emit layerRemoved(index);
+    emit layerRemoved(z, index);
     return layer;
 }
 
-void LayerModel::renameLayer(int layerIndex, const QString &name)
+void LayerModel::renameLayer(int z, int layerIndex, const QString &name)
 {
-    emit layerAboutToBeRenamed(layerIndex);
-    const QModelIndex modelIndex = index(layerIndexToRow(layerIndex), 0);
-    Layer *layer = mMap->layerAt(layerIndex);
+    emit layerAboutToBeRenamed(z, layerIndex);
+    const QModelIndex modelIndex = toIndex(z, layerIndex);
+    Layer *layer = mMap->layerAt(z, layerIndex);
     layer->setName(name);
-    emit layerRenamed(layerIndex);
+    emit layerRenamed(z, layerIndex);
     emit dataChanged(modelIndex, modelIndex);
-    emit layerChanged(layerIndex);
+    emit layerChanged(z, layerIndex);
 }
 
-void LayerModel::toggleOtherLayers(int layerIndex)
+void LayerModel::toggleOtherLayers(int z, int layerIndex)
 {
+    MapLevel *mapLevel = mMap->levelAt(z);
     bool visibility = true;
-    for (int i = 0; i < mMap->layerCount(); i++) {
+    for (int i = 0; i < mapLevel->layerCount(); i++) {
         if (i == layerIndex)
             continue;
 
-        Layer *layer = mMap->layerAt(i);
+        Layer *layer = mapLevel->layerAt(i);
         if (layer->isVisible()) {
             visibility = false;
             break;
         }
     }
 
-    for (int i = 0; i < mMap->layerCount(); i++) {
+    for (int i = 0; i < mapLevel->layerCount(); i++) {
         if (i == layerIndex)
             continue;
 
-        const QModelIndex modelIndex = index(layerIndexToRow(i), 0);
-        Layer *layer = mMap->layerAt(i);
+        const QModelIndex modelIndex = toIndex(z, i);
+        Layer *layer = mapLevel->layerAt(i);
         layer->setVisible(visibility);
         emit dataChanged(modelIndex, modelIndex);
-        emit layerChanged(i);
+        emit layerChanged(z,i);
     }
+}
+
+QModelIndex LayerModel::toIndex(int levelIndex) const
+{
+    if (levelIndex < 0 || levelIndex >= mPrivate->mItems.size())
+        return QModelIndex();
+    return index(mPrivate->mItems.size() - levelIndex - 1, 0);
+}
+
+QModelIndex LayerModel::toIndex(int levelIndex, int layerIndex) const
+{
+    QModelIndex parent = toIndex(levelIndex);
+    return index(layerIndexToRow(levelIndex, layerIndex), 0, parent);
 }

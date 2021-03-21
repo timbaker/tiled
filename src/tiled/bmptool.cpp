@@ -30,6 +30,7 @@
 #include "undocommands.h"
 
 #include "map.h"
+#include "maplevel.h"
 #include "maprenderer.h"
 
 #include <QApplication>
@@ -178,12 +179,12 @@ PaintBMP::PaintBMP(MapDocument *mapDocument, int bmpIndex,
     Map map(origMap->orientation(), origMap->width(), origMap->height(),
             origMap->tileWidth(), origMap->tileHeight());
     map.rbmpSettings()->clone(*origMap->bmpSettings());
-    foreach (Tileset *ts, origMap->tilesets())
+    for (Tileset *ts : origMap->tilesets())
         map.addTileset(ts);
-    int index = origMap->indexOfLayer(QLatin1String("0_Floor"));
+    int index = origMap->levelAt(0)->indexOfLayer(QLatin1Literal("Floor"));
     if (index != -1)
-        map.addLayer(origMap->layerAt(index)->clone());
-    foreach (QRect r, mRegion.rects()) {
+        map.addLayer(origMap->levelAt(0)->layerAt(index)->clone());
+    for (QRect r : mRegion.rects()) {
         for (int y = r.top(); y <= r.bottom(); y++) {
             for (int x = r.left(); x <= r.right(); x++) {
                 if (QRect(0, 0, source.width(), source.height()).contains(x - mX, y - mY))
@@ -203,7 +204,7 @@ PaintBMP::PaintBMP(MapDocument *mapDocument, int bmpIndex,
     // Don't remove tiles that the blender would put there.
     if (CompositeLayerGroup *lg = mMapDocument->mapComposite()->layerGroupForLevel(0)) {
         QSet<Tile*> blendTiles = blender.knownBlendTiles();
-        foreach (TileLayer *tl, lg->layers()) {
+        for (TileLayer *tl : lg->layers()) {
             QRegion eraseRgn;
             foreach (QRect r, mRegion.rects()) {
                 for (int y = r.top() - 1; y <= r.bottom() + 1; y++) {
@@ -1734,18 +1735,18 @@ void NoBlendTool::tilePositionChanged(const QPoint &tilePos)
             // Shift key affects all blend layers.
             if (qApp->keyboardModifiers() & Qt::ShiftModifier) {
                 foreach (QString layerName, doc->mapComposite()->bmpBlender()->blendLayers()) {
-                    int n = doc->map()->indexOfLayer(layerName, Layer::TileLayerType);
+                    int n = doc->map()->levelAt(0)->indexOfLayer(layerName, Layer::TileLayerType);
                     if (n >= 0) {
-                        TileLayer *tl = doc->map()->layerAt(n)->asTileLayer();
+                        TileLayer *tl = doc->map()->levelAt(0)->layerAt(n)->asTileLayer();
                         doc->mapComposite()->layerGroupForLayer(tl)->setToolNoBlend(
                                     noBlend, selectedArea().topLeft(), selectedArea(), tl);
                         mToolNoBlendLevel += tl->level();
                     }
                 }
             } else {
-                doc->mapComposite()->layerGroupForLevel(doc->currentLevel())->setToolNoBlend(
+                doc->mapComposite()->layerGroupForLevel(doc->currentLevelIndex())->setToolNoBlend(
                             noBlend, selectedArea().topLeft(), selectedArea(), currentLayer()->asTileLayer());
-                mToolNoBlendLevel += mapDocument()->currentLevel();
+                mToolNoBlendLevel += mapDocument()->currentLevelIndex();
             }
         }
     } else if (isBlendLayer())
@@ -1845,10 +1846,10 @@ void NoBlendTool::mouseReleased(QGraphicsSceneMouseEvent *event)
                                                                      bits, paintRgn);
                                 doc->undoStack()->push(cmd);
 
-                                int layerIndex = doc->map()->indexOfLayer(layerName, Layer::TileLayerType);
+                                int layerIndex = doc->map()->levelAt(0)->indexOfLayer(layerName, Layer::TileLayerType);
                                 if (layerIndex >= 0) {
                                     QRegion eraseRgn;
-                                    TileLayer *tl = doc->map()->layerAt(layerIndex)->asTileLayer();
+                                    TileLayer *tl = doc->map()->levelAt(0)->layerAt(layerIndex)->asTileLayer();
                                     foreach (QRect rgnRect, paintRgn.rects()) {
                                         for (int y = rgnRect.top(); y <= rgnRect.bottom(); y++) {
                                             for (int x = rgnRect.left(); x <= rgnRect.right(); x++) {
@@ -2068,10 +2069,10 @@ BmpToLayers::BmpToLayers(MapDocument *mapDocument, const QRegion &region, bool m
 
     // Put the blender's tiles into the map's tile layers.
     BmpBlender *blender = mMapDocument->mapComposite()->bmpBlender();
-    foreach (TileLayer *tl, blender->tileLayers()) {
-        int n = mMapDocument->map()->indexOfLayer(tl->name(), Layer::TileLayerType);
+    for (TileLayer *tl : blender->tileLayers()) {
+        int n = mMapDocument->map()->levelAt(0)->indexOfLayer(tl->name(), Layer::TileLayerType);
         if (n >= 0) {
-            TileLayer *target = mMapDocument->map()->layerAt(n)->asTileLayer();
+            TileLayer *target = mMapDocument->map()->levelAt(0)->layerAt(n)->asTileLayer();
             TileLayer *source = tl->copy(adjusted);
             QPoint topLeft = adjusted.boundingRect().topLeft();
             // Preserve user-drawn tiles where the blender didn't place a tile.

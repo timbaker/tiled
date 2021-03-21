@@ -171,7 +171,8 @@ public slots:
     void zoomOut();
     void zoomNormal();
 
-    bool newTileset(const QString &path = QString());
+    void newTileset();
+    bool newTileset(const QString &path);
     void newTilesets(const QStringList &paths);
     void addExternalTileset();
     void resizeMap();

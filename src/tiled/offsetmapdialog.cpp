@@ -23,6 +23,7 @@
 
 #include "map.h"
 #include "mapdocument.h"
+#include "maplevel.h"
 #include "tilelayer.h"
 #include "ui_offsetmapdialog.h"
 
@@ -54,15 +55,27 @@ QList<int> OffsetMapDialog::affectedLayerIndexes() const
 
     switch (layerSelection()) {
     case AllVisibleLayers:
-        for (int i = 0; i < map->layerCount(); i++)
-            if (map->layerAt(i)->isVisible())
-                layerIndexes.append(i);
+        for (int z = 0; z < map->levelCount(); z++) {
+            MapLevel *mapLevel = map->levelAt(z);
+            for (int i = 0; i < mapLevel->layerCount(); i++) {
+                if (mapLevel->layerAt(i)->isVisible()) {
+                    layerIndexes.append(z);
+                    layerIndexes.append(i);
+                }
+            }
+        }
         break;
     case AllLayers:
-        for (int i = 0; i < map->layerCount(); i++)
-            layerIndexes.append(i);
+        for (int z = 0; z < map->levelCount(); z++) {
+            MapLevel *mapLevel = map->levelAt(z);
+            for (int i = 0; i < mapLevel->layerCount(); i++) {
+                layerIndexes.append(z);
+                layerIndexes.append(i);
+            }
+        }
         break;
     case SelectedLayer:
+        layerIndexes.append(mMapDocument->currentLevelIndex());
         layerIndexes.append(mMapDocument->currentLayerIndex());
         break;
     }

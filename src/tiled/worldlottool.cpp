@@ -201,7 +201,7 @@ WorldCell *WorldLotTool::adjacentCellAt(const QPointF &scenePos)
 {
     if (mCell) {
         QPoint tilePos = mScene->mapDocument()->renderer()->pixelToTileCoordsInt(
-                    scenePos, mScene->mapDocument()->currentLevel());
+                    scenePos, mScene->mapDocument()->currentLevelIndex());
         for (int y = -1; y <= 1; y++) {
             for (int x = -1; x <= 1; x++) {
                 if (!x && !y) continue;

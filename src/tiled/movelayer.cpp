@@ -28,9 +28,10 @@
 
 using namespace Tiled::Internal;
 
-MoveLayer::MoveLayer(MapDocument *mapDocument, int index, Direction direction):
+MoveLayer::MoveLayer(MapDocument *mapDocument, int levelIndex, int layerIndex, Direction direction):
     mMapDocument(mapDocument),
-    mIndex(index),
+    mLevelIndex(levelIndex),
+    mLayerIndex(layerIndex),
     mDirection(direction)
 {
     setText((direction == Down) ?
@@ -51,22 +52,22 @@ void MoveLayer::undo()
 void MoveLayer::moveLayer()
 {
     const int currentIndex = mMapDocument->currentLayerIndex();
-    const bool selectedBefore = (mIndex == currentIndex);
-    const int prevIndex = mIndex;
+    const bool selectedBefore = (mLayerIndex == currentIndex);
+    const int prevIndex = mLayerIndex;
 
     LayerModel *layerModel = mMapDocument->layerModel();
-    Layer *layer = layerModel->takeLayerAt(mIndex);
+    Layer *layer = layerModel->takeLayerAt(mLevelIndex, mLayerIndex);
 
     // Change the direction and index to swap undo/redo
-    mIndex = (mDirection == Down) ? mIndex - 1 : mIndex + 1;
+    mLayerIndex = (mDirection == Down) ? mLayerIndex - 1 : mLayerIndex + 1;
     mDirection = (mDirection == Down) ? Up : Down;
 
-    const bool selectedAfter = (mIndex == currentIndex);
+    const bool selectedAfter = (mLayerIndex == currentIndex);
 
-    layerModel->insertLayer(mIndex, layer);
+    layerModel->insertLayer(mLayerIndex, layer);
 
     // Set the layer that is now supposed to be selected
-    mMapDocument->setCurrentLayerIndex(
-                selectedBefore ? mIndex :
+    mMapDocument->setCurrentLayerIndex(mLevelIndex,
+                selectedBefore ? mLayerIndex :
                                  (selectedAfter ? prevIndex : currentIndex));
 }

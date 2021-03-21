@@ -26,6 +26,7 @@
 #include "layer.h"
 #include "map.h"
 #include "mapdocument.h"
+#include "maplevel.h"
 #include "maprenderer.h"
 #include "utils.h"
 
@@ -171,10 +172,10 @@ void MapDocumentActionHandler::setMapDocument(MapDocument *mapDocument)
     updateActions();
 
     if (mMapDocument) {
-        connect(mapDocument, SIGNAL(currentLayerIndexChanged(int)),
-                SLOT(updateActions()));
-        connect(mapDocument, SIGNAL(tileSelectionChanged(QRegion,QRegion)),
-                SLOT(updateActions()));
+        connect(mapDocument, &MapDocument::currentLayerIndexChanged,
+                this, &MapDocumentActionHandler::updateActions);
+        connect(mapDocument, &MapDocument::tileSelectionChanged,
+                this, &MapDocumentActionHandler::updateActions);
     }
 
     emit mapDocumentChanged(mMapDocument);
@@ -296,21 +297,21 @@ static void switchToLevel(MapDocument *mMapDocument, int level) {
             // Try to switch to a layer with the same name in the new level
             QString name = MapComposite::layerNameWithoutPrefix(layer);
             if (layer->isTileLayer()) {
-                foreach (TileLayer *tl, layerGroup->layers()) {
+                for (TileLayer *tl : layerGroup->layers()) {
                     QString name2 = MapComposite::layerNameWithoutPrefix(tl);
                     if (name == name2) {
-                        int index = mMapDocument->map()->layers().indexOf(tl);
-                        mMapDocument->setCurrentLayerIndex(index);
+                        int index = mMapDocument->map()->levelAt(level)->layers().indexOf(tl);
+                        mMapDocument->setCurrentLevelAndLayer(level, index);
                         return;
                     }
                 }
             } else if (layer->isObjectGroup()) {
-                foreach (ObjectGroup *og, mMapDocument->map()->objectGroups()) {
+                for (ObjectGroup *og : mMapDocument->map()->objectGroups()) {
                     if (og->level() == level) {
                         QString name2 = MapComposite::layerNameWithoutPrefix(og);
                         if (name == name2) {
-                            int index = mMapDocument->map()->layers().indexOf(og);
-                            mMapDocument->setCurrentLayerIndex(index);
+                            int index = mMapDocument->map()->levelAt(level)->layers().indexOf(og);
+                            mMapDocument->setCurrentLevelAndLayer(level, index);
                             return;
                         }
                     }
@@ -319,9 +320,9 @@ static void switchToLevel(MapDocument *mMapDocument, int level) {
         }
     }
     int index = 0;
-    foreach (Layer *layer, mMapDocument->map()->layers()) {
+    for (Layer *layer : mMapDocument->map()->layers()) {
         if (layer->level() == level) {
-            mMapDocument->setCurrentLayerIndex(index);
+            mMapDocument->setCurrentLayerIndex(level, index);
             return;
         }
         ++index;
@@ -331,32 +332,32 @@ static void switchToLevel(MapDocument *mMapDocument, int level) {
 void MapDocumentActionHandler::selectPreviousLayer()
 {
     if (mMapDocument)
-        switchToLevel(mMapDocument, mMapDocument->currentLevel() + 1);
+        switchToLevel(mMapDocument, mMapDocument->currentLevelIndex() + 1);
 }
 
 void MapDocumentActionHandler::selectNextLayer()
 {
     if (mMapDocument)
-        switchToLevel(mMapDocument, mMapDocument->currentLevel() - 1);
+        switchToLevel(mMapDocument, mMapDocument->currentLevelIndex() - 1);
 }
 #endif // ZOMBOID
 
 void MapDocumentActionHandler::moveLayerUp()
 {
     if (mMapDocument)
-        mMapDocument->moveLayerUp(mMapDocument->currentLayerIndex());
+        mMapDocument->moveLayerUp(mMapDocument->currentLevelIndex(), mMapDocument->currentLayerIndex());
 }
 
 void MapDocumentActionHandler::moveLayerDown()
 {
     if (mMapDocument)
-        mMapDocument->moveLayerDown(mMapDocument->currentLayerIndex());
+        mMapDocument->moveLayerDown(mMapDocument->currentLevelIndex(), mMapDocument->currentLayerIndex());
 }
 
 void MapDocumentActionHandler::removeLayer()
 {
     if (mMapDocument)
-        mMapDocument->removeLayer(mMapDocument->currentLayerIndex());
+        mMapDocument->removeLayer(mMapDocument->currentLevelIndex(), mMapDocument->currentLayerIndex());
 }
 
 void MapDocumentActionHandler::renameLayer()
@@ -368,24 +369,26 @@ void MapDocumentActionHandler::renameLayer()
 void MapDocumentActionHandler::toggleOtherLayers()
 {
     if (mMapDocument)
-        mMapDocument->toggleOtherLayers(mMapDocument->currentLayerIndex());
+        mMapDocument->toggleOtherLayers(mMapDocument->currentLevelIndex(), mMapDocument->currentLayerIndex());
 }
 
 void MapDocumentActionHandler::updateActions()
 {
-    Map *map = 0;
+    Map *map = nullptr;
     int currentLayerIndex = -1;
     QRegion selection;
     bool canMergeDown = false;
 
     if (mMapDocument) {
         map = mMapDocument->map();
+        int currentLevelIndex = mMapDocument->currentLevelIndex();
         currentLayerIndex = mMapDocument->currentLayerIndex();
         selection = mMapDocument->tileSelection();
 
         if (currentLayerIndex > 0) {
-            Layer *upper = map->layerAt(currentLayerIndex);
-            Layer *lower = map->layerAt(currentLayerIndex - 1);
+            MapLevel *mapLevel = mMapDocument->map()->levelAt(currentLevelIndex);
+            Layer *upper = mapLevel->layerAt(currentLayerIndex);
+            Layer *lower = mapLevel->layerAt(currentLayerIndex - 1);
             canMergeDown = lower->canMergeWith(upper);
         }
     }

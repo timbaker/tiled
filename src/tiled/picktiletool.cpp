@@ -68,7 +68,7 @@ void PickTileTool::mousePressed(QGraphicsSceneMouseEvent *event)
     QVector<qreal> opacities;
     foreach (CompositeLayerGroup *lg, mc->layerGroups()) {
         if (!lg->isVisible()) continue;
-        if (highlightLevel && lg->level() > mapDocument()->currentLevel()) continue;
+        if (highlightLevel && lg->level() > mapDocument()->currentLevelIndex()) continue;
         QPoint tilePos = mapDocument()->renderer()->pixelToTileCoordsInt(event->scenePos(), lg->level());
         lg->prepareDrawing(mapDocument()->renderer(),
                            mapDocument()->renderer()->boundingRect(

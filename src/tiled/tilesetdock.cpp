@@ -1128,7 +1128,7 @@ void TilesetDock::updateCurrentTiles()
     int minY = first.row();
     int maxY = first.row();
 
-    foreach (const QModelIndex &index, indexes) {
+    for (const QModelIndex &index : indexes) {
         if (minX > index.column()) minX = index.column();
         if (maxX < index.column()) maxX = index.column();
         if (minY > index.row()) minY = index.row();
@@ -1141,7 +1141,7 @@ void TilesetDock::updateCurrentTiles()
                                          maxY - minY + 1);
 
     const TilesetModel *model = static_cast<const TilesetModel*>(s->model());
-    foreach (const QModelIndex &index, indexes) {
+    for (const QModelIndex &index : indexes) {
         tileLayer->setCell(index.column() - minX,
                            index.row() - minY,
                            Cell(model->tileAt(index)));
@@ -1239,7 +1239,7 @@ void TilesetDock::removeTileset(int index)
     if (inUse) {
         // Remove references to tiles in this tileset from the current map
         undoStack->beginMacro(remove->text());
-        foreach (Layer *layer, mMapDocument->map()->layers()) {
+        for (Layer *layer : mMapDocument->map()->layers()) {
             if (TileLayer *tileLayer = layer->asTileLayer()) {
                 const QRegion refs = tileLayer->tilesetReferences(tileset);
                 if (!refs.isEmpty()) {
@@ -1247,7 +1247,7 @@ void TilesetDock::removeTileset(int index)
                                                    tileLayer, refs));
                 }
             } else if (ObjectGroup *objectGroup = layer->asObjectGroup()) {
-                foreach (MapObject *object, objectGroup->objects()) {
+                for (MapObject *object : objectGroup->objects()) {
                     const Tile *tile = object->tile();
                     if (tile && tile->tileset() == tileset) {
                         undoStack->push(new RemoveMapObject(mMapDocument,
@@ -1425,12 +1425,12 @@ void TilesetDock::switchLayerForTile(Tile *tile)
         Layer *currentLayer = mMapDocument->currentLayer();
         if (TileLayer *tl = currentLayer->asTileLayer()) { // FIXME: ObjectGroup too?
             if (tl->group()) {
-                foreach (TileLayer *tl1, tl->group()->layers()) {
+                for (TileLayer *tl1 : tl->group()->layers()) {
                     QString name = MapComposite::layerNameWithoutPrefix(tl1);
                     if (name == layerName) {
                         int layerIndex = mMapDocument->map()->layers().indexOf(tl1);
-                        if (layerIndex != mMapDocument->currentLayerIndex())
-                            mMapDocument->setCurrentLayerIndex(layerIndex);
+                        if (tl1->level() != mMapDocument->currentLevelIndex() || layerIndex != mMapDocument->currentLayerIndex())
+                            mMapDocument->setCurrentLayerIndex(tl1->level(), layerIndex);
                         return;
                     }
                 }

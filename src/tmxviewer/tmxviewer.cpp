@@ -131,7 +131,7 @@ public:
 class MapItem : public QGraphicsItem
 {
 public:
-    MapItem(Map *map, MapRenderer *renderer, QGraphicsItem *parent = 0)
+    MapItem(Map *map, MapRenderer *renderer, QGraphicsItem *parent = nullptr)
         : QGraphicsItem(parent)
     {
         setFlag(QGraphicsItem::ItemHasNoContents);

@@ -227,7 +227,7 @@ int SimpleFileBlock::findValue(const QString &key) const
     return -1;
 }
 
-bool SimpleFileBlock::keyValue(const QString &name, SimpleFileKeyValue &kv)
+bool SimpleFileBlock::keyValue(const QString &name, SimpleFileKeyValue &kv) const
 {
     int i = findValue(name);
     if (i >= 0) {

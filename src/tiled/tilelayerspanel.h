@@ -40,7 +40,7 @@ class LayersPanelModel : public QAbstractListModel
 {
     Q_OBJECT
 public:
-    LayersPanelModel(QObject *parent = 0);
+    LayersPanelModel(QObject *parent = nullptr);
     ~LayersPanelModel();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
@@ -73,7 +73,7 @@ private:
     {
     public:
         Item() :
-            mTile(0),
+            mTile(nullptr),
             mLayerIndex(-1)
         {
         }
@@ -96,6 +96,7 @@ private:
     Item *toItem(const QModelIndex &index) const;
     Item *toItem(int layerIndex) const;
 
+    int mLevelIndex;
     QList<Item*> mItems;
 };
 
@@ -103,7 +104,7 @@ class LayersPanelView : public QTableView
 {
     Q_OBJECT
 public:
-    explicit LayersPanelView(QWidget *parent = 0);
+    explicit LayersPanelView(QWidget *parent = nullptr);
 
     QSize sizeHint() const;
 
@@ -152,7 +153,7 @@ class TileLayersPanel : public QWidget
 {
     Q_OBJECT
 public:
-    TileLayersPanel(QWidget *parent = 0);
+    TileLayersPanel(QWidget *parent = nullptr);
 
     void setDocument(MapDocument *doc);
 
@@ -170,8 +171,8 @@ private slots:
     void activated(const QModelIndex &index);
     void layerNameClicked(int layerIndex);
     void currentChanged();
-    void layerIndexChanged(int layerIndex);
-    void layerChanged(int index);
+    void layerIndexChanged(int z, int layerIndex);
+    void layerChanged(int z, int index);
     void regionAltered(const QRegion &region, Layer *layer);
     void noBlendPainted(MapNoBlend *noBlend, const QRegion &rgn);
     void showTileLayersPanelChanged(bool show);
@@ -179,7 +180,7 @@ private slots:
 private:
     MapDocument *mDocument;
     LayersPanelView *mView;
-    int mCurrentLevel;
+    int mCurrentLevelIndex;
     int mCurrentLayerIndex;
     QPoint mTilePos;
 };
