@@ -83,26 +83,26 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
 {
 #ifdef ZOMBOID
     mMapComposite = new MapComposite(MapManager::instance()->newFromMap(map, fileName));
-    connect(mMapComposite->bmpBlender(), SIGNAL(regionAltered(QRegion)),
-            SLOT(bmpBlenderRegionAltered(QRegion)));
-    connect(this, SIGNAL(layerAdded(int)),
-             mMapComposite->bmpBlender(), SLOT(updateWarnings()));
-    connect(this, SIGNAL(layerRenamed(int)),
-             mMapComposite->bmpBlender(), SLOT(updateWarnings()));
-    connect(this, SIGNAL(layerRemoved(int)),
-             mMapComposite->bmpBlender(), SLOT(updateWarnings()));
-    connect(MapManager::instance(), SIGNAL(mapAboutToChange(MapInfo*)),
-            SLOT(onMapAboutToChange(MapInfo*)));
-    connect(MapManager::instance(), SIGNAL(mapChanged(MapInfo*)),
-            SLOT(onMapChanged(MapInfo*)));
+    connect(mMapComposite->bmpBlender(), &BmpBlender::regionAltered,
+            this, &MapDocument::bmpBlenderRegionAltered);
+    connect(this, &MapDocument::layerAdded,
+            mMapComposite->bmpBlender(), &BmpBlender::updateWarnings);
+    connect(this, &MapDocument::layerRenamed,
+            mMapComposite->bmpBlender(), &BmpBlender::updateWarnings);
+    connect(this, &MapDocument::layerRemoved,
+            mMapComposite->bmpBlender(), &BmpBlender::updateWarnings);
+    connect(MapManager::instance(), &MapManager::mapAboutToChange,
+            this, &MapDocument::onMapAboutToChange);
+    connect(MapManager::instance(), &MapManager::mapChanged,
+            this, &MapDocument::onMapChanged);
 
     if (!mFileName.isEmpty() && Preferences::instance()->showAdjacentMaps()) {
-        connect(MapManager::instance(), SIGNAL(mapLoaded(MapInfo*)),
-                SLOT(mapLoaded(MapInfo*)));
-        connect(MapManager::instance(), SIGNAL(mapFailedToLoad(MapInfo*)),
-                SLOT(mapFailedToLoad(MapInfo*)));
-        connect(WorldEd::WorldEdMgr::instance(), SIGNAL(afterWorldChanged(QString)),
-                SLOT(initAdjacentMaps()));
+        connect(MapManager::instance(), &MapManager::mapLoaded,
+                this, &MapDocument::mapLoaded);
+        connect(MapManager::instance(), &MapManager::mapFailedToLoad,
+                this, &MapDocument::mapFailedToLoad);
+        connect(WorldEd::WorldEdMgr::instance(), &WorldEd::WorldEdMgr::afterWorldChanged,
+                this, &MapDocument::initAdjacentMaps);
         initAdjacentMaps();
     }
 #endif
@@ -132,25 +132,25 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
     mLayerModel->setMapDocument(this);
 
     // Forward signals emitted from the layer model
-    connect(mLayerModel, SIGNAL(layerAdded(int)), SLOT(onLayerAdded(int)));
-    connect(mLayerModel, SIGNAL(layerAboutToBeRemoved(int)),
-            SLOT(onLayerAboutToBeRemoved(int)));
-    connect(mLayerModel, SIGNAL(layerRemoved(int)), SLOT(onLayerRemoved(int)));
-    connect(mLayerModel, SIGNAL(layerChanged(int)), SIGNAL(layerChanged(int)));
+    connect(mLayerModel, &LayerModel::layerAdded, this, &MapDocument::onLayerAdded);
+    connect(mLayerModel, &LayerModel::layerAboutToBeRemoved,
+            this, &MapDocument::onLayerAboutToBeRemoved);
+    connect(mLayerModel, &LayerModel::layerRemoved, this, &MapDocument::onLayerRemoved);
+    connect(mLayerModel, &LayerModel::layerChanged, this, &MapDocument::layerChanged);
 #ifdef ZOMBOID
-    connect(mLayerModel, SIGNAL(layerRenamed(int)), SLOT(onLayerRenamed(int)));
+    connect(mLayerModel, &LayerModel::layerRenamed, this, &MapDocument::onLayerRenamed);
     mMaxVisibleLayer = map->layerCount();
 
-    connect(mMapComposite, SIGNAL(layerGroupAdded(int)),
-            SIGNAL(layerGroupAdded(int)));
-    connect(mMapComposite, SIGNAL(layerAddedToGroup(int)),
-            SIGNAL(layerAddedToGroup(int)));
-    connect(mMapComposite, SIGNAL(layerAboutToBeRemovedFromGroup(int)),
-            SIGNAL(layerAboutToBeRemovedFromGroup(int)));
-    connect(mMapComposite, SIGNAL(layerRemovedFromGroup(int,CompositeLayerGroup*)),
-            SIGNAL(layerRemovedFromGroup(int,CompositeLayerGroup*)));
-    connect(mMapComposite, SIGNAL(layerLevelChanged(int,int)),
-            SIGNAL(layerLevelChanged(int,int)));
+    connect(mMapComposite, &MapComposite::layerGroupAdded,
+            this, &MapDocument::layerGroupAdded);
+    connect(mMapComposite, &MapComposite::layerAddedToGroup,
+            this, &MapDocument::layerAddedToGroup);
+    connect(mMapComposite, &MapComposite::layerAboutToBeRemovedFromGroup,
+            this, &MapDocument::layerAboutToBeRemovedFromGroup);
+    connect(mMapComposite, &MapComposite::layerRemovedFromGroup,
+            this, &MapDocument::layerRemovedFromGroup);
+    connect(mMapComposite, &MapComposite::layerLevelChanged,
+            this, &MapDocument::layerLevelChanged);
 #endif
 
 #ifdef ZOMBOID
@@ -159,24 +159,24 @@ MapDocument::MapDocument(Map *map, const QString &fileName):
 
     // Forward signals emitted from the map object model
     mMapObjectModel->setMapDocument(this);
-    connect(mMapObjectModel, SIGNAL(objectsAdded(QList<MapObject*>)),
-            SIGNAL(objectsAdded(QList<MapObject*>)));
-    connect(mMapObjectModel, SIGNAL(objectsChanged(QList<MapObject*>)),
-            SIGNAL(objectsChanged(QList<MapObject*>)));
-    connect(mMapObjectModel, SIGNAL(objectsAboutToBeRemoved(QList<MapObject*>)),
-            SIGNAL(objectsAboutToBeRemoved(QList<MapObject*>)));
-    connect(mMapObjectModel, SIGNAL(objectsRemoved(QList<MapObject*>)),
-            SLOT(onObjectsRemoved(QList<MapObject*>)));
+    connect(mMapObjectModel, &MapObjectModel::objectsAdded,
+            this, &MapDocument::objectsAdded);
+    connect(mMapObjectModel, &MapObjectModel::objectsChanged,
+            this, &MapDocument::objectsChanged);
+    connect(mMapObjectModel, &MapObjectModel::objectsAboutToBeRemoved,
+            this, &MapDocument::objectsAboutToBeRemoved);
+    connect(mMapObjectModel, &MapObjectModel::objectsRemoved,
+            this, &MapDocument::onObjectsRemoved);
 
-    connect(mUndoStack, SIGNAL(cleanChanged(bool)), SIGNAL(modifiedChanged()));
+    connect(mUndoStack, &QUndoStack::cleanChanged, this, &MapDocument::modifiedChanged);
 
     // Register tileset references
     TilesetManager *tilesetManager = TilesetManager::instance();
     tilesetManager->addReferences(mMap->tilesets());
 
 #ifdef ZOMBOID
-    connect(tilesetManager, SIGNAL(tileLayerNameChanged(Tile*)),
-            SIGNAL(tileLayerNameChanged(Tile*)));
+    connect(tilesetManager, &TilesetManager::tileLayerNameChanged,
+            this, &MapDocument::tileLayerNameChanged);
 
     mMapComposite->setShowLotFloorsOnly(Preferences::instance()->showLotFloorsOnly());
 #endif
@@ -190,8 +190,8 @@ MapDocument::~MapDocument()
 
 #ifdef ZOMBOID
     // Paranoia
-    mLevelsModel->setMapDocument(0);
-    mMapObjectModel->setMapDocument(0);
+    mLevelsModel->setMapDocument(nullptr);
+    mMapObjectModel->setMapDocument(nullptr);
     delete mMapComposite;
 #endif
 
@@ -250,15 +250,20 @@ bool MapDocument::isModified() const
     return !mUndoStack->isClean();
 }
 
-void MapDocument::setCurrentLayerIndex(int index)
+void MapDocument::setCurrentLayerIndex(int levelIndex, int layerIndex)
 {
-    MapLevel *level = currentMapLevel();
+    MapLevel *level = mMap->levelAt(levelIndex);
     if (level == nullptr) {
         return;
     }
 
-    Q_ASSERT(index >= -1 && index < level->layerCount());
-    mCurrentLayerIndex = index;
+    Q_ASSERT(layerIndex >= -1 && layerIndex < level->layerCount());
+    if (layerIndex < 0 || layerIndex >= level->layerCount()) {
+        return;
+    }
+
+    mCurrentLevelIndex = levelIndex;
+    mCurrentLayerIndex = layerIndex;
 
     /* This function always sends the following signal, even if the index
      * didn't actually change. This is because the selected index in the layer
@@ -270,7 +275,7 @@ void MapDocument::setCurrentLayerIndex(int index)
      * of other items. The selected item doesn't change in that case, but our
      * layer index does.
      */
-    emit currentLayerIndexChanged(mCurrentLayerIndex);
+    emit currentLayerIndexChanged(mCurrentLevelIndex, mCurrentLayerIndex);
 }
 
 Layer *MapDocument::currentLayer() const
@@ -289,15 +294,7 @@ MapLevel *MapDocument::currentMapLevel() const
 
 void MapDocument::setCurrentLevelAndLayer(int levelIndex, int layerIndex)
 {
-    if (MapLevel *mapLevel = map()->levelAt(levelIndex)) {
-        if (Layer *layer = mapLevel->layerAt(layerIndex)) {
-            mCurrentLevelIndex = levelIndex;
-            mCurrentLayerIndex = layerIndex;
-            emit currentLevelIndexChanged(levelIndex);
-            emit currentLayerIndexChanged(layerIndex);
-        }
-    }
-    Q_ASSERT(false);
+    setCurrentLayerIndex(levelIndex, layerIndex);
 }
 
 void MapDocument::resizeMap(const QSize &size, const QPoint &offset)
@@ -450,7 +447,7 @@ void MapDocument::addLayer(Layer::Type layerType)
 #endif
     layer->setLevel(level);
     mUndoStack->push(new AddLayer(this, level, index, layer));
-    setCurrentLayerIndex(index);
+    setCurrentLayerIndex(level, index);
 
     emit editLayerNameRequested();
 }
@@ -475,7 +472,7 @@ void MapDocument::duplicateLayer()
     QUndoCommand *cmd = new AddLayer(this, mCurrentLevelIndex, index, duplicate);
     cmd->setText(tr("Duplicate Layer"));
     mUndoStack->push(cmd);
-    setCurrentLayerIndex(index);
+    setCurrentLayerIndex(duplicate->level(), index);
 }
 
 /**
@@ -900,10 +897,10 @@ void MapDocument::setBlendEdgesEverywhere(bool enabled)
  * Before forwarding the signal, the objects are removed from the list of
  * selected objects, triggering a selectedObjectsChanged signal when * appropriate.
  */
-void MapDocument::onObjectsRemoved(const QList<MapObject*> &objects)
+void MapDocument::onObjectsRemoved(ObjectGroup *objectGroup, const QList<MapObject*> &objects)
 {
     deselectObjects(objects);
-    emit objectsRemoved(objects);
+    emit objectsRemoved(objectGroup, objects);
 }
 
 void MapDocument::onLayerAdded(int z, int index)
@@ -915,7 +912,7 @@ void MapDocument::onLayerAdded(int z, int index)
 
     // Select the first layer that gets added to the map
     if (mMap->layerCount() == 1)
-        setCurrentLayerIndex(0);
+        setCurrentLayerIndex(z, 0);
 }
 
 void MapDocument::onLayerAboutToBeRemoved(int z, int index)
@@ -943,7 +940,7 @@ void MapDocument::onLayerRemoved(int z, int index)
     // Emitted after the layerRemoved signal so that the MapScene has a chance
     // of synchronizing before adapting to the newly selected index
     if (currentLayerRemoved)
-        emit currentLayerIndexChanged(mCurrentLayerIndex);
+        emit currentLayerIndexChanged(mCurrentLevelIndex, mCurrentLayerIndex);
 }
 
 #ifdef ZOMBOID

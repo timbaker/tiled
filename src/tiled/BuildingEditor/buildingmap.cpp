@@ -33,7 +33,6 @@
 
 #include "isometricrenderer.h"
 #include "map.h"
-#include "mapentitylayer.h"
 #include "maplevel.h"
 #include "mapobject.h"
 #include "maprenderer.h"
@@ -490,8 +489,9 @@ void BuildingMap::BuildingToMap()
 
     // Add tilesets from Tilesets.txt
     mMap->addTileset(TilesetManager::instance()->missingTileset());
-    foreach (Tileset *ts, TileMetaInfoMgr::instance()->tilesets())
+    for (Tileset *ts : TileMetaInfoMgr::instance()->tilesets()) {
         mMap->addTileset(ts);
+    }
     TilesetManager::instance()->addReferences(mMap->tilesets());
 
     switch (mMap->orientation()) {
@@ -512,10 +512,11 @@ void BuildingMap::BuildingToMap()
         layerToSection.insert(QLatin1String(gLayerNames[i]), i);
 
     mLayerToSection.clear();
-    foreach (BuildingFloor *floor, mBuilding->floors()) {
-        foreach (QString name, layerNames(floor->level())) {
+    for (BuildingFloor *floor : mBuilding->floors()) {
+        for (QString name : layerNames(floor->level())) {
             QString layerName = tr("%1_%2").arg(floor->level()).arg(name);
-            MapEntityLayer *tl = new MapEntityLayer(layerName, 0, 0, mapSize.width(), mapSize.height());
+            TileLayer *tl = new TileLayer(layerName, 0, 0, mapSize.width(), mapSize.height());
+            tl->setLevel(floor->level());
             mMap->addLayer(tl);
             mLayerToSection[layerName] = layerToSection.contains(name)
                     ? layerToSection[name] : -1;
@@ -526,9 +527,9 @@ void BuildingMap::BuildingToMap()
     mMapComposite = new MapComposite(mapInfo);
 
     // Synch layer opacity with the floor.
-    foreach (CompositeLayerGroup *layerGroup, mMapComposite->layerGroups()) {
+    for (CompositeLayerGroup *layerGroup : mMapComposite->layerGroups()) {
         BuildingFloor *floor = mBuilding->floor(layerGroup->level());
-        foreach (TileLayer *tl, layerGroup->layers()) {
+        for (TileLayer *tl : layerGroup->layers()) {
             QString layerName = MapComposite::layerNameWithoutPrefix(tl);
             layerGroup->setLayerOpacity(tl, floor->layerOpacity(layerName));
         }
@@ -542,15 +543,15 @@ void BuildingMap::BuildingToMap()
     mMapComposite->setBlendOverMap(mBlendMapComposite);
 
     // Set the automatically-generated tiles.
-    foreach (CompositeLayerGroup *layerGroup, mBlendMapComposite->layerGroups()) {
+    for (CompositeLayerGroup *layerGroup : mBlendMapComposite->layerGroups()) {
         BuildingFloor *floor = mBuilding->floor(layerGroup->level());
         floor->LayoutToSquares();
         BuildingSquaresToTileLayers(floor, floor->bounds(1, 1), layerGroup);
     }
 
     // Set the user-drawn tiles.
-    foreach (BuildingFloor *floor, mBuilding->floors()) {
-        foreach (QString layerName, floor->grimeLayers())
+    for (BuildingFloor *floor : mBuilding->floors()) {
+        for (QString layerName : floor->grimeLayers())
             userTilesToLayer(floor, layerName, floor->bounds(1, 1));
     }
 

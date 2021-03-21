@@ -259,20 +259,20 @@ void BucketFillTool::makeConnections()
 
     // Overlay may need to be cleared if a region changed
 #ifdef ZOMBOID
-    connect(mapDocument(), SIGNAL(regionChanged(QRegion,Layer*)),
-            this, SLOT(clearOverlay()));
+    connect(mapDocument(), &MapDocument::regionChanged,
+            this, &BucketFillTool::clearOverlay);
 #else
     connect(mapDocument(), SIGNAL(regionChanged(QRegion)),
             this, SLOT(clearOverlay()));
 #endif
     // Overlay needs to be cleared if we switch to another layer
-    connect(mapDocument(), SIGNAL(currentLayerIndexChanged(int)),
-            this, SLOT(clearOverlay()));
+    connect(mapDocument(), &MapDocument::currentLayerIndexChanged,
+            this, &BucketFillTool::clearOverlay);
 
     // Overlay needs be cleared if the selection changes, since
     // the overlay may be bound or may need to be bound to the selection
-    connect(mapDocument(), SIGNAL(tileSelectionChanged(QRegion,QRegion)),
-            this, SLOT(clearOverlay()));
+    connect(mapDocument(), &MapDocument::tileSelectionChanged,
+            this, &BucketFillTool::clearOverlay);
 }
 
 void BucketFillTool::clearConnections(MapDocument *mapDocument)
@@ -281,18 +281,18 @@ void BucketFillTool::clearConnections(MapDocument *mapDocument)
         return;
 
 #ifdef ZOMBOID
-    disconnect(mapDocument, SIGNAL(regionChanged(QRegion,Layer*)),
-               this, SLOT(clearOverlay()));
+    disconnect(mapDocument, &MapDocument::regionChanged,
+               this, &BucketFillTool::clearOverlay);
 #else
     disconnect(mapDocument, SIGNAL(regionChanged(QRegion)),
                this, SLOT(clearOverlay()));
 #endif
 
-    disconnect(mapDocument, SIGNAL(currentLayerIndexChanged(int)),
-               this, SLOT(clearOverlay()));
+    disconnect(mapDocument, &MapDocument::currentLayerIndexChanged,
+               this, &BucketFillTool::clearOverlay);
 
-    disconnect(mapDocument, SIGNAL(tileSelectionChanged(QRegion,QRegion)),
-               this, SLOT(clearOverlay()));
+    disconnect(mapDocument, &MapDocument::tileSelectionChanged,
+               this, &BucketFillTool::clearOverlay);
 }
 
 void BucketFillTool::setRandom(bool value)

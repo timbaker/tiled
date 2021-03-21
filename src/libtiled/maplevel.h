@@ -33,7 +33,7 @@ namespace Tiled
 
 class Layer;
 
-class MapLevel
+class TILEDSHARED_EXPORT MapLevel
 {
 public:
     MapLevel(int z);
@@ -89,7 +89,6 @@ public:
 
     int imageLayerCount() const
     { return layerCount(Layer::ImageLayerType); }
-
 
     bool isVisible() const
     {

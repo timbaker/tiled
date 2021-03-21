@@ -32,6 +32,7 @@ namespace Tiled {
 
 class Map;
 class MapObject;
+class ObjectGroup;
 
 namespace Internal {
 class MapDocument;
@@ -72,7 +73,7 @@ private slots:
 
     void onObjectsAdded(const QList<MapObject*> &objects);
     void onObjectsChanged(const QList<MapObject*> &objects);
-    void onObjectsRemoved(const QList<MapObject*> &objects);
+    void onObjectsRemoved(ObjectGroup *objectGroup, const QList<MapObject*> &objects);
 
     void mapLoaded(MapInfo *mapInfo);
     void mapFailedToLoad(MapInfo *mapInfo);

@@ -39,7 +39,7 @@ class LayerModelPrivate;
  * The model also allows modification of the layer stack while keeping the
  * layer views up to date.
  */
-class LayerModel : public QAbstractListModel
+class LayerModel : public QAbstractItemModel
 {
     Q_OBJECT
 
@@ -56,33 +56,40 @@ public:
      */
     LayerModel(QObject *parent = nullptr);
 
+    ~LayerModel() override;
+
+    QModelIndex parent(const QModelIndex &index) const override;
+
     /**
      * Returns the number of rows.
      */
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 
     /**
      * Returns the data stored under the given <i>role</i> for the item
      * referred to by the <i>index</i>.
      */
     QVariant data(const QModelIndex &index,
-                  int role = Qt::DisplayRole) const;
+                  int role = Qt::DisplayRole) const override;
 
     /**
      * Allows for changing the name, visibility and opacity of a layer.
      */
-    bool setData(const QModelIndex &index, const QVariant &value, int role);
+    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
 
     /**
      * Makes sure the items are checkable.
      */
-    Qt::ItemFlags flags(const QModelIndex &index) const;
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
 
     /**
      * Returns the headers for the table.
      */
     QVariant headerData(int section, Qt::Orientation orientation,
-                        int role = Qt::DisplayRole) const;
+                        int role = Qt::DisplayRole) const override;
+
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
 
     int toLevelIndex(const QModelIndex &index) const;
 
@@ -132,8 +139,8 @@ public:
       */
     void toggleOtherLayers(int z, int layerIndex);
 
-    QModelIndex toIndex(int z) const;
-    QModelIndex toIndex(int z, int layerIndex) const;
+    QModelIndex toIndex(int levelIndex) const;
+    QModelIndex toIndex(int levelIndex, int layerIndex) const;
 
 signals:
     void layerAdded(int z, int index);

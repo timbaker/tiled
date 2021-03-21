@@ -93,7 +93,7 @@ NewMapDialog::~NewMapDialog()
 MapDocument *NewMapDialog::createMap()
 {
     if (exec() != QDialog::Accepted)
-        return 0;
+        return nullptr;
 
     const int mapWidth = mUi->mapWidth->value();
     const int mapHeight = mUi->mapHeight->value();
@@ -111,7 +111,7 @@ MapDocument *NewMapDialog::createMap()
 
     // Add one filling tile layer to new maps
 #ifdef ZOMBOID
-    map->addLayer(new TileLayer(tr("0_Tile Layer 1"), 0, 0, mapWidth, mapHeight));
+    map->addLayer(new TileLayer(tr("Tile Layer 1"), 0, 0, mapWidth, mapHeight));
 #else
     map->addLayer(new TileLayer(tr("Tile Layer 1"), 0, 0, mapWidth, mapHeight));
 #endif

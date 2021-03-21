@@ -63,16 +63,16 @@ void ZLotManager::setMapDocument(MapDocument *mapDoc)
         mMapDocument = mapDoc;
 
         if (mMapDocument) {
-            connect(mapDocument(), SIGNAL(layerAdded(int)),
-                    this, SLOT(onLayerAdded(int)));
-            connect(mapDocument(), SIGNAL(layerAboutToBeRemoved(int)),
-                    this, SLOT(onLayerAboutToBeRemoved(int)));
-            connect(mapDocument(), SIGNAL(objectsAdded(QList<MapObject*>)),
-                    this, SLOT(onObjectsAdded(QList<MapObject*>)));
-            connect(mapDocument(), SIGNAL(objectsChanged(QList<MapObject*>)),
-                    this, SLOT(onObjectsChanged(QList<MapObject*>)));
-            connect(mapDocument(), SIGNAL(objectsRemoved(QList<MapObject*>)),
-                this, SLOT(onObjectsRemoved(QList<MapObject*>)));
+            connect(mapDocument(), &MapDocument::layerAdded,
+                    this, &ZLotManager::onLayerAdded);
+            connect(mapDocument(), &MapDocument::layerAboutToBeRemoved,
+                    this, &ZLotManager::onLayerAboutToBeRemoved);
+            connect(mapDocument(), &MapDocument::objectsAdded,
+                    this, &ZLotManager::onObjectsAdded);
+            connect(mapDocument(), &MapDocument::objectsChanged,
+                    this, &ZLotManager::onObjectsChanged);
+            connect(mapDocument(), &MapDocument::objectsRemoved,
+                this, &ZLotManager::onObjectsRemoved);
 
             Map *map = mapDocument()->map();
             foreach (ObjectGroup *og, map->objectGroups())
@@ -92,10 +92,10 @@ void ZLotManager::setMapDocument(MapDocument *mapDoc)
                 }
             }
 
-            connect(WorldEd::WorldEdMgr::instance(), SIGNAL(beforeWorldChanged(QString)),
-                    SLOT(beforeWorldChanged()));
-            connect(WorldEd::WorldEdMgr::instance(), SIGNAL(afterWorldChanged(QString)),
-                    SLOT(afterWorldChanged()));
+            connect(WorldEd::WorldEdMgr::instance(), &WorldEd::WorldEdMgr::beforeWorldChanged,
+                    this, &ZLotManager::beforeWorldChanged);
+            connect(WorldEd::WorldEdMgr::instance(), &WorldEd::WorldEdMgr::afterWorldChanged,
+                    this, &ZLotManager::afterWorldChanged);
 #endif
         }
     }
@@ -301,7 +301,7 @@ void ZLotManager::setMapInfo(WorldCellLot *lot, MapInfo *mapInfo)
 
 void ZLotManager::setMapComposite(WorldCellLot *lot, MapComposite *mapComposite)
 {
-    MapComposite *currLot = 0, *newLot = mapComposite;
+    MapComposite *currLot = nullptr, *newLot = mapComposite;
 
     if (mWorldCellLotToMC.contains(lot))
         currLot = mWorldCellLotToMC[lot];
@@ -342,26 +342,27 @@ void ZLotManager::onLayerAboutToBeRemoved(int z, int index)
     Layer *layer = mapDocument()->map()->layerAt(z, index);
     // Moving a layer first removes it, then adds it again
     if (ObjectGroup *og = layer->asObjectGroup()) {
-        onObjectsRemoved(og->objects());
+        onObjectsRemoved(og, og->objects());
     }
 }
 
 void ZLotManager::onObjectsAdded(const QList<MapObject*> &objects)
 {
-    foreach (MapObject *mapObj, objects)
+    for (MapObject *mapObj : objects)
         handleMapObject(mapObj);
 }
 
 void ZLotManager::onObjectsChanged(const QList<MapObject*> &objects)
 {
-    foreach (MapObject *mapObj, objects)
+    for (MapObject *mapObj : objects)
         handleMapObject(mapObj);
 }
 
 // FIXME: should forget stuff when a map document is closed
-void ZLotManager::onObjectsRemoved(const QList<MapObject*> &objects)
+void ZLotManager::onObjectsRemoved(ObjectGroup *objectGroup, const QList<MapObject*> &objects)
 {
-    foreach (MapObject *mapObject, objects) {
+    Q_UNUSED(objectGroup)
+    for (MapObject *mapObject : objects) {
         mMapObjectToInfo.remove(mapObject);
         int n = findLoading(mapObject);
         if (n != -1)
@@ -418,8 +419,8 @@ void ZLotManager::mapFailedToLoad(MapInfo *mapInfo)
 
 void ZLotManager::beforeWorldChanged()
 {
-    foreach (WorldCellLot *lot, mWorldCellLotToMI.keys())
-        setMapInfo(lot, 0);
+    for (WorldCellLot *lot : mWorldCellLotToMI.keys())
+        setMapInfo(lot, nullptr);
     mMapsLoading2.clear();
     Q_ASSERT(mWorldCellLotToMI.isEmpty());
     Q_ASSERT(mWorldCellLotToMC.isEmpty());
@@ -428,7 +429,7 @@ void ZLotManager::beforeWorldChanged()
 void ZLotManager::afterWorldChanged()
 {
     if (WorldCell *cell = WorldEd::WorldEdMgr::instance()->cellForMap(mMapDocument->fileName())) {
-        foreach (WorldCellLot *lot, cell->lots()) {
+        for (WorldCellLot *lot : cell->lots()) {
             MapInfo *mapInfo = MapManager::instance()->loadMap(lot->mapName(), QString(),
                                                                true, MapManager::PriorityLow);
             if (mapInfo) {

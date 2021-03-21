@@ -154,11 +154,11 @@ void LayerDock::setMapDocument(MapDocument *mapDocument)
     mMapDocument = mapDocument;
 
     if (mMapDocument) {
-        connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
-                this, SLOT(updateOpacitySlider()));
+        connect(mMapDocument, &MapDocument::currentLayerIndexChanged,
+                this, &LayerDock::updateOpacitySlider);
 #ifdef ZOMBOID
-        connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
-                this, SLOT(updateZomboidLayerSlider()));
+        connect(mMapDocument, &MapDocument::currentLayerIndexChanged,
+                this, &LayerDock::updateZomboidLayerSlider);
 #endif
     }
 
@@ -270,9 +270,9 @@ LayerView::LayerView(QWidget *parent):
     QTreeView(parent),
     mMapDocument(nullptr)
 {
-    setRootIsDecorated(false);
+    setRootIsDecorated(true);
     setHeaderHidden(true);
-    setItemsExpandable(false);
+    setItemsExpandable(true);
     setUniformRowHeights(true);
 }
 
@@ -286,8 +286,8 @@ void LayerView::setMapDocument(MapDocument *mapDocument)
     if (mMapDocument) {
         mMapDocument->disconnect(this);
         QItemSelectionModel *s = selectionModel();
-        disconnect(s, SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
-                   this, SLOT(currentRowChanged(QModelIndex)));
+        disconnect(s, &QItemSelectionModel::currentRowChanged,
+                   this, &LayerView::currentRowChanged);
     }
 
     mMapDocument = mapDocument;
@@ -295,16 +295,16 @@ void LayerView::setMapDocument(MapDocument *mapDocument)
     if (mMapDocument) {
         setModel(mMapDocument->layerModel());
 
-        connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
-                this, SLOT(currentLayerIndexChanged(int)));
-        connect(mMapDocument, SIGNAL(editLayerNameRequested()),
-                this, SLOT(editLayerName()));
+        connect(mMapDocument, &MapDocument::currentLayerIndexChanged,
+                this, &LayerView::currentLayerIndexChanged);
+        connect(mMapDocument, &MapDocument::editLayerNameRequested,
+                this, &LayerView::editLayerName);
 
         QItemSelectionModel *s = selectionModel();
-        connect(s, SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
-                this, SLOT(currentRowChanged(QModelIndex)));
+        connect(s, &QItemSelectionModel::currentRowChanged,
+                this, &LayerView::currentRowChanged);
 
-        currentLayerIndexChanged(mMapDocument->currentLayerIndex());
+        currentLayerIndexChanged(mMapDocument->currentLevelIndex(), mMapDocument->currentLayerIndex());
     } else {
         setModel(nullptr);
     }
@@ -312,15 +312,16 @@ void LayerView::setMapDocument(MapDocument *mapDocument)
 
 void LayerView::currentRowChanged(const QModelIndex &index)
 {
-    const int layer = mMapDocument->layerModel()->toLayerIndex(index);
-    mMapDocument->setCurrentLayerIndex(layer);
+    const LayerModel *layerModel = mMapDocument->layerModel();
+    const int levelIndex = layerModel->toLevelIndex(index);
+    const int layerIndex = layerModel->toLayerIndex(index);
+    mMapDocument->setCurrentLayerIndex(levelIndex, layerIndex);
 }
 
-void LayerView::currentLayerIndexChanged(int layerIndex)
+void LayerView::currentLayerIndexChanged(int levelIndex, int layerIndex)
 {
     if (layerIndex > -1) {
         const LayerModel *layerModel = mMapDocument->layerModel();
-        int levelIndex = mMapDocument->currentLevelIndex();
         QModelIndex index = layerModel->toIndex(levelIndex, layerIndex);
         setCurrentIndex(index);
     } else {

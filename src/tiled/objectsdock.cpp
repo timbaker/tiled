@@ -367,6 +367,7 @@ void ObjectsView::selectionChanged(const QItemSelection &selected,
         return;
 
     QModelIndexList selectedRows = selectionModel()->selectedRows();
+    int currentLevelIndex = -1;
     int currentLayerIndex = -1;
 
     QList<MapObject*> selectedObjects;
@@ -374,8 +375,10 @@ void ObjectsView::selectionChanged(const QItemSelection &selected,
         if (ObjectGroup *og = model()->toLayer(index)) {
             MapLevel *mapLevel = mMapDocument->map()->levelAt(og->level());
             int index = mapLevel->layers().indexOf(og);
-            if (currentLayerIndex == -1)
+            if (currentLayerIndex == -1) {
+                currentLevelIndex = og->level();
                 currentLayerIndex = index;
+            }
             else if (currentLayerIndex != index)
                 currentLayerIndex = -2;
         }
@@ -387,7 +390,7 @@ void ObjectsView::selectionChanged(const QItemSelection &selected,
     // Switch the current object layer if only one object layer (and/or its objects)
     // are included in the current selection.
     if (currentLayerIndex >= 0 && currentLayerIndex != mMapDocument->currentLayerIndex())
-        mMapDocument->setCurrentLayerIndex(currentLayerIndex);
+        mMapDocument->setCurrentLayerIndex(currentLevelIndex, currentLayerIndex);
 
     if (selectedObjects != mMapDocument->selectedObjects()) {
         mSynching = true;

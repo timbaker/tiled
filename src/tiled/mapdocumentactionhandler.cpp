@@ -172,10 +172,10 @@ void MapDocumentActionHandler::setMapDocument(MapDocument *mapDocument)
     updateActions();
 
     if (mMapDocument) {
-        connect(mapDocument, SIGNAL(currentLayerIndexChanged(int)),
-                SLOT(updateActions()));
-        connect(mapDocument, SIGNAL(tileSelectionChanged(QRegion,QRegion)),
-                SLOT(updateActions()));
+        connect(mapDocument, &MapDocument::currentLayerIndexChanged,
+                this, &MapDocumentActionHandler::updateActions);
+        connect(mapDocument, &MapDocument::tileSelectionChanged,
+                this, &MapDocumentActionHandler::updateActions);
     }
 
     emit mapDocumentChanged(mMapDocument);
@@ -322,7 +322,7 @@ static void switchToLevel(MapDocument *mMapDocument, int level) {
     int index = 0;
     for (Layer *layer : mMapDocument->map()->layers()) {
         if (layer->level() == level) {
-            mMapDocument->setCurrentLayerIndex(index);
+            mMapDocument->setCurrentLayerIndex(level, index);
             return;
         }
         ++index;

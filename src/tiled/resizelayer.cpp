@@ -70,14 +70,15 @@ void ResizeLayer::redo()
 
 Layer *ResizeLayer::swapLayer(Layer *layer)
 {
+    const int currentLevelIndex = mMapDocument->currentLevelIndex();
     const int currentIndex = mMapDocument->currentLayerIndex();
 
     LayerModel *layerModel = mMapDocument->layerModel();
     Layer *replaced = layerModel->takeLayerAt(mLevelIndex, mLayerIndex);
     layerModel->insertLayer(mLayerIndex, layer);
 
-    if (mLayerIndex == currentIndex)
-        mMapDocument->setCurrentLayerIndex(mLayerIndex);
+    if (mLevelIndex == currentLevelIndex && mLayerIndex == currentIndex)
+        mMapDocument->setCurrentLayerIndex(currentLevelIndex, currentIndex);
 
     return replaced;
 }

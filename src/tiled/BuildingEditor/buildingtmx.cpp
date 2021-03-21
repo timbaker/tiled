@@ -133,6 +133,7 @@ bool BuildingTMX::exportTMX(Building *building, const QString &fileName)
             if (layerInfo.mType == LayerInfo::Tile) {
                 TileLayer *tl = new TileLayer(layerName, 0, 0,
                                               map->width(), map->height());
+                tl->setLevel(level);
                 if (previousExistingLayer < 0)
                     previousExistingLayer = 0;
                 mapLevel->insertLayer(previousExistingLayer + 1, tl);

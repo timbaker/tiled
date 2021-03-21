@@ -127,7 +127,7 @@ public:
     /**
      * Sets the current layer to the given index.
      */
-    void setCurrentLayerIndex(int index);
+    void setCurrentLayerIndex(int levelIndex, int layerIndex);
 
     /**
      * Returns the index of the currently selected layer. Returns -1 if no
@@ -344,9 +344,9 @@ signals:
     void layerGroupAdded(int level);
     void layerGroupVisibilityChanged(CompositeLayerGroup *layerGroup);
 
-    void layerAddedToGroup(int index);
-    void layerAboutToBeRemovedFromGroup(int index);
-    void layerRemovedFromGroup(int index, CompositeLayerGroup *oldGroup);
+    void layerAddedToGroup(int z, int index);
+    void layerAboutToBeRemovedFromGroup(int z, int index);
+    void layerRemovedFromGroup(int z, int index, CompositeLayerGroup *oldGroup);
 
     void layerLevelChanged(int z, int index, int oldLevel);
 #endif
@@ -357,12 +357,10 @@ signals:
      */
     void editLayerNameRequested();
 
-    void currentLevelIndexChanged(int index);
-
     /**
      * Emitted when the current layer index changes.
      */
-    void currentLayerIndexChanged(int index);
+    void currentLayerIndexChanged(int levelIndex, int layerIndex);
 
     /**
      * Emitted when a certain region of the map changes. The region is given in
@@ -402,7 +400,7 @@ signals:
 
     void objectsAdded(const QList<MapObject*> &objects);
     void objectsAboutToBeRemoved(const QList<MapObject*> &objects);
-    void objectsRemoved(const QList<MapObject*> &objects);
+    void objectsRemoved(ObjectGroup *objectGroup, const QList<MapObject*> &objects);
     void objectsChanged(const QList<MapObject*> &objects);
 
 #ifdef ZOMBOID
@@ -418,7 +416,7 @@ signals:
 #endif
 
 private slots:
-    void onObjectsRemoved(const QList<MapObject*> &objects);
+    void onObjectsRemoved(ObjectGroup *objectGroup, const QList<MapObject*> &objects);
 
     void onLayerAdded(int z, int index);
     void onLayerAboutToBeRemoved(int z, int index);

@@ -101,7 +101,7 @@ signals:
     void objectsAdded(const QList<MapObject *> &objects);
     void objectsChanged(const QList<MapObject *> &objects);
     void objectsAboutToBeRemoved(const QList<MapObject *> &objects);
-    void objectsRemoved(const QList<MapObject *> &objects);
+    void objectsRemoved(ObjectGroup *objectGroup, const QList<MapObject *> &objects);
 
 private slots:
     void layerAdded(int z, int index);

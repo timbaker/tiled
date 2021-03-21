@@ -135,7 +135,7 @@ void CurbToolDialog::currentRowChanged(int row)
     if (index >= 0) {
         Layer *layer = mapLevel->layerAt(index);
         if (layer->asTileLayer())
-            doc->setCurrentLayerIndex(index);
+            doc->setCurrentLayerIndex(layer->level(), index);
     }
 }
 

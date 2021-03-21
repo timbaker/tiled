@@ -67,7 +67,7 @@ void MoveLayer::moveLayer()
     layerModel->insertLayer(mLayerIndex, layer);
 
     // Set the layer that is now supposed to be selected
-    mMapDocument->setCurrentLayerIndex(
+    mMapDocument->setCurrentLayerIndex(mLevelIndex,
                 selectedBefore ? mLayerIndex :
                                  (selectedAfter ? prevIndex : currentIndex));
 }

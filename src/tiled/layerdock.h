@@ -101,7 +101,7 @@ protected:
 
 private slots:
     void currentRowChanged(const QModelIndex &index);
-    void currentLayerIndexChanged(int layerIndex);
+    void currentLayerIndexChanged(int levelIndex, int layerIndex);
 
     void editLayerName();
 

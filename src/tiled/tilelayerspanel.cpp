@@ -615,16 +615,16 @@ void TileLayersPanel::setDocument(MapDocument *doc)
     mView->clear();
 
     if (mDocument) {
-        connect(mDocument, SIGNAL(currentLayerIndexChanged(int)),
-                SLOT(layerIndexChanged(int)));
-        connect(mDocument, SIGNAL(layerAddedToGroup(int)), SLOT(setList()));
-        connect(mDocument, SIGNAL(layerRemovedFromGroup(int,CompositeLayerGroup*)),
-                SLOT(setList()));
-        connect(mDocument, SIGNAL(layerChanged(int)), SLOT(layerChanged(int)));
-        connect(mDocument, SIGNAL(regionAltered(QRegion,Layer*)),
-                SLOT(regionAltered(QRegion,Layer*)));
-        connect(mDocument, SIGNAL(noBlendPainted(MapNoBlend*,QRegion)),
-                SLOT(noBlendPainted(MapNoBlend*,QRegion)));
+        connect(mDocument, &MapDocument::currentLayerIndexChanged,
+                this, &TileLayersPanel::layerIndexChanged);
+        connect(mDocument, &MapDocument::layerAddedToGroup, this, &TileLayersPanel::setList);
+        connect(mDocument, &MapDocument::layerRemovedFromGroup,
+                this, &TileLayersPanel::setList);
+        connect(mDocument, &MapDocument::layerChanged, this, &TileLayersPanel::layerChanged);
+        connect(mDocument, &MapDocument::regionAltered,
+                this, &TileLayersPanel::regionAltered);
+        connect(mDocument, &MapDocument::noBlendPainted,
+                this, &TileLayersPanel::noBlendPainted);
 
         mCurrentLayerIndex = mDocument->currentLayerIndex();
         setList();
@@ -761,14 +761,20 @@ void TileLayersPanel::layerNameClicked(int layerIndex)
 
 void TileLayersPanel::currentChanged()
 {
-    MapLevel *mapLevel = mDocument->map()->levelAt(mCurrentLevelIndex);
     QModelIndex index = mView->currentIndex();
+    if (!index.isValid())
+        return;
+
+    if (mDocument == nullptr)
+        return;
+
+    MapLevel *mapLevel = mDocument->map()->levelAt(mCurrentLevelIndex);
     int layerIndex = mView->model()->layerAt(index);
     if (layerIndex >= 0 && layerIndex < mapLevel->layerCount()) {
         if (layerIndex == mCurrentLayerIndex)
             return;
         mCurrentLayerIndex = layerIndex;
-        mDocument->setCurrentLayerIndex(layerIndex);
+        mDocument->setCurrentLayerIndex(mCurrentLevelIndex, layerIndex);
     }
 }
 

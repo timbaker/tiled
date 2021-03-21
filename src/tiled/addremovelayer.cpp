@@ -52,7 +52,7 @@ void AddRemoveLayer::addLayer()
 
     // Insertion below or at the current layer increases current layer index
     if (mLayerIndex <= currentLayer)
-        mMapDocument->setCurrentLayerIndex(currentLayer + 1);
+        mMapDocument->setCurrentLayerIndex(mLevelIndex, currentLayer + 1);
 }
 
 void AddRemoveLayer::removeLayer()
@@ -63,7 +63,7 @@ void AddRemoveLayer::removeLayer()
 
     // Removal below the current layer decreases the current layer index
     if (mLayerIndex < currentLayer)
-        mMapDocument->setCurrentLayerIndex(currentLayer - 1);
+        mMapDocument->setCurrentLayerIndex(mLevelIndex, currentLayer - 1);
 }
 
 } // namespace Internal

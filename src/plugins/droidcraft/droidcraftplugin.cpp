@@ -21,6 +21,7 @@
 #include "droidcraftplugin.h"
 
 #include "map.h"
+#include "maplevel.h"
 #include "tile.h"
 #include "tileset.h"
 #include "tilelayer.h"
@@ -96,12 +97,12 @@ bool DroidcraftPlugin::write(const Tiled::Map *map, const QString &fileName)
     using namespace Tiled;
 
     // Check layer count and type
-    if (map->layerCount() != 1 || !map->layerAt(0)->isTileLayer()) {
+    if (map->layerCount() != 1 || !map->levelAt(0)->layerAt(0)->isTileLayer()) {
         mError = tr("The map needs to have exactly one tile layer!");
         return false;
     }
 
-    TileLayer *mapLayer = map->layerAt(0)->asTileLayer();
+    TileLayer *mapLayer = map->levelAt(0)->layerAt(0)->asTileLayer();
 
     // Check layer size
     if (mapLayer->width() != 48 || mapLayer->height() != 48){

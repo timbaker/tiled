@@ -96,6 +96,15 @@ void Map::adjustDrawMargins(const QMargins &margins)
 #endif
 }
 
+int Map::layerCount() const
+{
+    int count = 0;
+    for (MapLevel *level : mLevels) {
+        count += level->layerCount();
+    }
+    return count;
+}
+
 int Map::layerCount(Layer::Type type) const
 {
     int count = 0;
@@ -161,6 +170,20 @@ void Map::insertLayer(int index, Layer *layer)
     levelAt(layer->level())->insertLayer(index, layer);
 }
 
+Layer *Map::takeLayerAt(int z, int index)
+{
+    if (MapLevel *mapLevel = levelAt(z)) {
+        if (Layer *layer = mapLevel->takeLayerAt(index)) {
+            layer->setMap(nullptr);
+            for (Tileset *ts : layer->usedTilesets()) {
+                removeTilesetUser(ts);
+            }
+            return layer;
+        }
+    }
+    return nullptr;
+}
+
 void Map::adoptLayer(Layer *layer)
 {
     layer->setMap(this);
@@ -181,7 +204,7 @@ void Map::removeLayer(Layer *layer)
 #endif
     layer->setMap(nullptr);
 #ifdef ZOMBOID
-    foreach (Tileset *ts, layer->usedTilesets())
+    for (Tileset *ts : layer->usedTilesets())
         removeTilesetUser(ts);
 #endif
     levelAt(layer->level())->removeLayer(layer);
@@ -487,8 +510,9 @@ void BmpSettings::setBlends(const QList<BmpBlend*> &blends)
 QList<BmpBlend *> BmpSettings::blendsCopy() const
 {
     QList<BmpBlend *> ret;
-    foreach (BmpBlend *blend, mBlends)
+    for (BmpBlend *blend : mBlends) {
         ret += new BmpBlend(blend);
+    }
     return ret;
 }
 

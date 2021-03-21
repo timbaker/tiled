@@ -27,8 +27,6 @@ SOURCES += compression.cpp \
     isometricrenderer.cpp \
     layer.cpp \
     map.cpp \
-    mapentity.cpp \
-    mapentitylayer.cpp \
     maplevel.cpp \
     mapobject.cpp \
     mapreader.cpp \
@@ -49,8 +47,6 @@ HEADERS += compression.h \
     isometricrenderer.h \
     layer.h \
     map.h \
-    mapentity.h \
-    mapentitylayer.h \
     maplevel.h \
     mapobject.h \
     mapreader.h \

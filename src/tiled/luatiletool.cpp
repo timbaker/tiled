@@ -32,6 +32,7 @@
 #include "maplevel.h"
 #include "maprenderer.h"
 #include "tilelayer.h"
+#include "tileset.h"
 
 #include <qmath.h>
 #include <QDebug>
@@ -157,33 +158,33 @@ void LuaTileTool::activate(MapScene *scene)
 
     mScene->addItem(mCursorItem);
 
-    connect(mapDocument(), SIGNAL(mapChanged()), SLOT(mapChanged()));
+    connect(mapDocument(), &MapDocument::mapChanged, this, &LuaTileTool::mapChanged);
 
-    connect(mapDocument(), SIGNAL(tilesetAdded(int,Tileset*)), SLOT(mapChanged()));
-    connect(mapDocument(), SIGNAL(tilesetRemoved(Tileset*)), SLOT(mapChanged()));
-    connect(mapDocument(), SIGNAL(tilesetNameChanged(Tileset*)), SLOT(mapChanged()));
+    connect(mapDocument(), &MapDocument::tilesetAdded, this, &LuaTileTool::mapChanged);
+    connect(mapDocument(), &MapDocument::tilesetRemoved, this, &LuaTileTool::mapChanged);
+    connect(mapDocument(), &MapDocument::tilesetNameChanged, this, &LuaTileTool::mapChanged);
 
-    connect(mapDocument(), SIGNAL(layerAdded(int)), SLOT(mapChanged()));
-    connect(mapDocument(), SIGNAL(layerRemoved(int)), SLOT(mapChanged()));
-    connect(mapDocument(), SIGNAL(layerChanged(int)), SLOT(mapChanged())); // layer renamed
-    connect(mapDocument(), SIGNAL(regionAltered(QRegion,Layer*)), SLOT(mapChanged()));
+    connect(mapDocument(), &MapDocument::layerAdded, this, &LuaTileTool::mapChanged);
+    connect(mapDocument(), &MapDocument::layerRemoved, this, &LuaTileTool::mapChanged);
+    connect(mapDocument(), &MapDocument::layerChanged, this, &LuaTileTool::mapChanged); // layer renamed
+    connect(mapDocument(), &MapDocument::regionAltered, this, &LuaTileTool::mapChanged);
 
-    connect(mapDocument(), SIGNAL(bmpAliasesChanged()), SLOT(mapChanged()));
-    connect(mapDocument(), SIGNAL(bmpBlendsChanged()), SLOT(mapChanged()));
-    connect(mapDocument(), SIGNAL(bmpRulesChanged()), SLOT(mapChanged()));
-    connect(mapDocument(), SIGNAL(bmpPainted(int,QRegion)), SLOT(mapChanged()));
+    connect(mapDocument(), &MapDocument::bmpAliasesChanged, this, &LuaTileTool::mapChanged);
+    connect(mapDocument(), &MapDocument::bmpBlendsChanged, this, &LuaTileTool::mapChanged);
+    connect(mapDocument(), &MapDocument::bmpRulesChanged, this, &LuaTileTool::mapChanged);
+    connect(mapDocument(), &MapDocument::bmpPainted, this, &LuaTileTool::mapChanged);
 
-    connect(mapDocument(), SIGNAL(noBlendPainted(MapNoBlend*,QRegion)), SLOT(mapChanged()));
+    connect(mapDocument(), &MapDocument::noBlendPainted, this, &LuaTileTool::mapChanged);
 
     if (!L && !mFileName.isEmpty()) {
-        mScene = 0;
+        mScene = nullptr;
         loadScript();
         mScene = scene;
     }
 
     if (mOptions.mOptions.size()) {
-        connect(LuaToolDialog::instancePtr(), SIGNAL(valueChanged(LuaToolOption*,QVariant)),
-                SLOT(setOption(LuaToolOption*,QVariant)));
+        connect(LuaToolDialog::instancePtr(), &LuaToolDialog::valueChanged,
+                this, &LuaTileTool::setOption);
         LuaToolDialog::instancePtr()->setWindowTitle(mDialogTitle);
         LuaToolDialog::instancePtr()->setVisibleLater(true);
     }
@@ -215,7 +216,7 @@ void LuaTileTool::activate(MapScene *scene)
 void LuaTileTool::deactivate(MapScene *scene)
 {
     LuaToolDialog::instancePtr()->disconnect(this);
-    LuaToolDialog::instancePtr()->setToolOptions(0);
+    LuaToolDialog::instancePtr()->setToolOptions(nullptr);
 //    LuaToolDialog::instancePtr()->setWindowTitle(tr("Lua Tool"));
     LuaToolDialog::instancePtr()->setVisibleLater(false);
 
@@ -247,12 +248,12 @@ void LuaTileTool::deactivate(MapScene *scene)
         lua_pop(L, 1); // function deactivate()
 
     lua_close(L);
-    L = 0;
+    L = nullptr;
 
     delete mMap;
-    mMap = 0;
+    mMap = nullptr;
 
-    mScene = 0;
+    mScene = nullptr;
 }
 
 void LuaTileTool::mouseLeft()

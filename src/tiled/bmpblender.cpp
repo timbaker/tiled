@@ -41,6 +41,11 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 
+// Version numbers for Blends.txt and Rules.txt
+#define VERSION1 1
+#define VERSION2 2
+#define VERSION_LATEST VERSION2
+
 static QString STR_Floor = QLatin1String("Floor");
 static QString STR_0Floor = QLatin1String("0_Floor");
 
@@ -320,12 +325,13 @@ void BmpBlender::fromMap()
     qDeleteAll(mAliases);
     mAliases.clear();
     mAliasByName.clear();
-    foreach (BmpAlias *alias, mMap->bmpSettings()->aliases()) {
+    for (BmpAlias *alias : mMap->bmpSettings()->aliases()) {
         AliasWrapper *aliasW = new AliasWrapper(alias);
         mAliasByName[alias->name] = aliasW;
         aliasW->mTiles = normalizeTileNames(alias->tiles);
-        foreach (QString tileName, alias->tiles)
+        for (const QString &tileName : alias->tiles) {
             tileNames += tileName;
+        }
         mAliases += aliasW;
     }
 
@@ -334,29 +340,33 @@ void BmpBlender::fromMap()
     mRuleByColor.clear();
     mRuleLayers.clear();
     mFloor0Rules.clear();
-    foreach (BmpRule *rule, mMap->bmpSettings()->rules()) {
+    for (BmpRule *rule : mMap->bmpSettings()->rules()) {
         RuleWrapper *ruleW = new RuleWrapper(rule);
         mRuleByColor[rule->color] += ruleW;
-        if (!mRuleLayers.contains(rule->targetLayer))
+        if (!mRuleLayers.contains(rule->targetLayer)) {
             mRuleLayers += rule->targetLayer;
-        foreach (QString tileName, rule->tileChoices) {
+        }
+        for (const QString &tileName : rule->tileChoices) {
             if (BuildingEditor::BuildingTilesMgr::legalTileName(tileName)) {
-                if (!mAliasByName.contains(tileName))
+                if (!mAliasByName.contains(tileName)) {
                     tileNames += tileName;
+                }
             }
         }
         QStringList tiles;
-        foreach (QString tileName, rule->tileChoices) {
-            if (tileName.isEmpty()) // "null" in Rules.txt
+        for (const QString &tileName : rule->tileChoices) {
+            if (tileName.isEmpty()) {// "null" in Rules.txt
                 tiles += tileName;
-            else if (!BuildingEditor::BuildingTilesMgr::legalTileName(tileName)) {
-                if (mAliasByName.contains(tileName))
+            } else if (!BuildingEditor::BuildingTilesMgr::legalTileName(tileName)) {
+                if (mAliasByName.contains(tileName)) {
                     tiles += mAliasByName[tileName]->mTiles;
-            } else
+                }
+            } else {
                 tiles += tileName;
+            }
         }
         ruleW->mTileNames = normalizeTileNames(tiles);
-        if (rule->targetLayer == STR_0Floor && rule->bitmapIndex == 0) {
+        if (rule->targetLayer == STR_Floor && rule->bitmapIndex == 0) {
             mFloor0Rules += ruleW;
         }
         mRules += ruleW;
@@ -367,15 +377,16 @@ void BmpBlender::fromMap()
     mBlendsByLayer.clear();
     mBlendLayers.clear();
     QSet<QString> layers;
-    foreach (BmpBlend *blend, mMap->bmpSettings()->blends()) {
+    for (BmpBlend *blend : mMap->bmpSettings()->blends()) {
         BlendWrapper *blendW = new BlendWrapper(blend);
         mBlendsByLayer[blend->targetLayer] += blendW;
         layers.insert(blend->targetLayer);
         QStringList excludes;
-        foreach (QString tileName, blend->ExclusionList) {
+        for (const QString &tileName : blend->ExclusionList) {
             if (!BuildingEditor::BuildingTilesMgr::legalTileName(tileName)) {
-                if (mAliasByName.contains(tileName))
+                if (mAliasByName.contains(tileName)) {
                     excludes += mAliasByName[tileName]->mTiles;
+                }
             } else {
                 excludes += tileName;
                 tileNames += tileName;
@@ -439,12 +450,12 @@ QList<Tile*> BmpBlender::tileNamesToTiles(const QStringList &names)
 void BmpBlender::initTiles()
 {
     QMap<QString,Tileset*> tilesets;
-    foreach (Tileset *ts, mMap->tilesets())
+    for (Tileset *ts : mMap->tilesets())
         tilesets[ts->name()] = ts;
 
     mTilesetNames.clear();
     mTileByName.clear();
-    foreach (QString tileName, mTileNames) {
+    for (QString tileName : mTileNames) {
         QString tilesetName;
         int tileID;
         if (BuildingEditor::BuildingTilesMgr::parseTileName(tileName, tilesetName, tileID)) {
@@ -456,16 +467,16 @@ void BmpBlender::initTiles()
     }
 
     mFloorTileToRule.clear();
-    foreach (RuleWrapper *ruleW, mRules) {
+    for (RuleWrapper *ruleW : mRules) {
         ruleW->mTiles = tileNamesToTiles(ruleW->mTileNames).toVector();
-        if (ruleW->mRule->targetLayer != STR_0Floor)
+        if (ruleW->mRule->targetLayer != STR_Floor)
             continue;
-        foreach (Tile *tile, ruleW->mTiles)
+        for (Tile *tile : ruleW->mTiles)
             mFloorTileToRule[tile] = ruleW;
     }
 
     mBlendExclude2Layers.clear();
-    foreach (BlendWrapper *blendW, mBlendList) {
+    for (BlendWrapper *blendW : mBlendList) {
         blendW->mMainTiles = tileNameToTiles(blendW->mBlend->mainTile).toVector();
         blendW->mBlendTiles = tileNameToTiles(blendW->mBlend->blendTile).toVector();
         blendW->mExcludeTiles = tileNamesToTiles(blendW->mBlend->ExclusionList).toVector();
@@ -482,7 +493,7 @@ void BmpBlender::initTiles()
     // It is a list of all known blend tiles.
     if (true/*mHack*/) {
         mKnownBlendTiles.clear();
-        foreach (BlendWrapper *blendW, mBlendList) {
+        for (BlendWrapper *blendW : mBlendList) {
             mKnownBlendTiles += blendW->mBlendTiles.toList().toSet();
         }
     }
@@ -591,9 +602,9 @@ void BmpBlender::addEdgeTiles(int x1, int y1, int x2, int y2)
     y1 = qBound(0, y1, mMap->height() - 1);
     y2 = qBound(0, y2, mMap->height() - 1);
 
-    if (mTileGrids.contains(STR_0Floor) == false)
+    if (mTileGrids.contains(STR_Floor) == false)
         return;
-    SparseTileGrid *grid = mTileGrids[STR_0Floor];
+    SparseTileGrid *grid = mTileGrids[STR_Floor];
 
     MapLevel *mapLevel = mMap->levelAt(0);
 
@@ -661,7 +672,7 @@ void BmpBlender::tileGridsToLayers(int x1, int y1, int x2, int y2)
 {
     bool recreated = false;
     if (mTileLayers.isEmpty()) {
-        foreach (QString layerName, mRuleLayers + mBlendLayers) {
+        for (const QString &layerName : mRuleLayers + mBlendLayers) {
             if (!mTileLayers.contains(layerName)) {
                 mTileLayers[layerName] = new TileLayer(layerName, 0, 0,
                                                        mMap->width(), mMap->height());
@@ -679,7 +690,7 @@ void BmpBlender::tileGridsToLayers(int x1, int y1, int x2, int y2)
 
     MapLevel *mapLevel = mMap->levelAt(0);
 
-    for (QString layerName : mTileLayers.keys()) {
+    for (const QString &layerName : mTileLayers.keys()) {
         SparseTileGrid *grid = mTileGrids[layerName];
         TileLayer *tl = mTileLayers[layerName];
         BlendGrid &blendGrid = mBlendGrids[layerName];
@@ -824,7 +835,7 @@ Tile *BmpBlender::getNeighbouringTile(int x, int y)
 {
     if (x < 0 || y < 0 || x >= mMap->width() || y >= mMap->height())
         return nullptr;
-    SparseTileGrid *grid = mTileGrids[STR_0Floor];
+    SparseTileGrid *grid = mTileGrids[STR_Floor];
     Tile *tile = grid->at(x, y).tile;
     if (!tile)
         tile = mFakeTileGrid->at(x, y).tile;
@@ -842,7 +853,7 @@ BmpBlender::BlendWrapper *BmpBlender::getBlendRule(int x, int y, Tile *tile,
 
 #define NEIGHBOR(X,Y) neighbors[((X) - x + 1) + ((Y) - y + 1) * 3]
 
-    foreach (BlendWrapper *blendW, mBlendsByLayer[layer]) {
+    for (BlendWrapper *blendW : mBlendsByLayer[layer]) {
         QVector<Tile*> &mainTiles = blendW->mMainTiles;
         if (mainTiles.contains(tile))
             continue;
@@ -920,10 +931,10 @@ bool BmpRulesFile::read(const QString &fileName)
         return false;
     }
 
-    foreach (SimpleFileBlock block, simpleFile.blocks) {
+    for (const SimpleFileBlock &block : simpleFile.blocks) {
         SimpleFileKeyValue kv;
         if (block.name == QLatin1String("rule")) {
-            foreach (kv, block.values) {
+            for (const SimpleFileKeyValue &kv : block.values) {
                 if (kv.name != QLatin1String("label") &&
                         kv.name != QLatin1String("bitmap") &&
                         kv.name != QLatin1String("color") &&
@@ -994,11 +1005,16 @@ missingKV:
             QString layer;
             if (block.keyValue("layer", kv)) {
                 layer = kv.value;
+                if (simpleFile.version() == VERSION1) {
+                    layer = MapComposite::layerNameWithoutPrefix(layer);
+                }
+#if 0
                 if (!MapComposite::levelForLayer(layer)) {
                     mError = tr("Line %1: Invalid rule layer '%2'")
                             .arg(kv.lineNumber).arg(kv.value);
                     return false;
                 }
+#endif
             } else
                 goto missingKV;
 
@@ -1015,6 +1031,7 @@ missingKV:
             AddRule(label, bitmapIndex, col, choices, layer, condition);
         } else if (block.name == QLatin1String("alias")) {
             QString name;
+            SimpleFileKeyValue kv;
             if (block.keyValue("name", kv)) {
                 name = kv.value;
                 if (name.isEmpty()) {
@@ -1031,7 +1048,7 @@ missingKV:
 
             QStringList tiles;
             if (block.keyValue("tiles", kv)) {
-                foreach (QString tileName, kv.values()) {
+                for (const QString &tileName : kv.values()) {
                     if (!BuildingEditor::BuildingTilesMgr::legalTileName(tileName)) {
                         mError = tr("Line %1: Invalid tile name '%2'")
                                 .arg(kv.lineNumber).arg(tileName);
@@ -1093,14 +1110,14 @@ bool BmpRulesFile::write(const QString &fileName)
                            .arg(qBlue(rule->color)));
 
         QStringList tiles;
-        foreach (QString tileName, rule->tileChoices) {
+        for (QString tileName : rule->tileChoices) {
             QString tilesetName;
             int tileID;
             if (mAliasByName.contains(tileName)) {
-            } else if (tileName.isEmpty())
+                //
+            } else if (tileName.isEmpty()) {
                 tileName = QLatin1String("null");
-            else if (BuildingEditor::BuildingTilesMgr::parseTileName(
-                         tileName, tilesetName, tileID)) {
+            } else if (BuildingEditor::BuildingTilesMgr::parseTileName(tileName, tilesetName, tileID)) {
                 tileName = BuildingEditor::BuildingTilesMgr::nameForTile2(tilesetName, tileID);
             }
             tiles += tileName;
@@ -1338,15 +1355,14 @@ bool BmpBlendsFile::read(const QString &fileName, const QList<BmpAlias*> &aliase
     dirMap[QLatin1String("se")] = BmpBlend::SE;
 
     QMap<QString,BmpAlias*> aliasToName;
-    foreach (BmpAlias *alias, aliases) {
+    for (BmpAlias *alias : aliases) {
         aliasToName[alias->name] = alias;
         mAliasNames += alias->name;
     }
 
-    foreach (SimpleFileBlock block, simpleFile.blocks) {
-        SimpleFileKeyValue kv;
+    for (SimpleFileBlock block : simpleFile.blocks) {
         if (block.name == QLatin1String("blend")) {
-            foreach (kv, block.values) {
+            for (SimpleFileKeyValue &kv : block.values) {
                 if (kv.name != QLatin1String("layer") &&
                         kv.name != QLatin1String("mainTile") &&
                         kv.name != QLatin1String("blendTile") &&
@@ -1359,6 +1375,7 @@ bool BmpBlendsFile::read(const QString &fileName, const QList<BmpAlias*> &aliase
             }
 
             QString mainTile;
+            SimpleFileKeyValue kv;
             if (block.keyValue("mainTile", kv)) {
                 mainTile = kv.value;
                 if (!aliasToName.contains(mainTile)) {
@@ -1449,7 +1466,12 @@ missingKV:
                 }
             }
 
-            BmpBlend *blend = new BmpBlend(block.value("layer"), mainTile,
+            QString layerName = block.value("layer");
+            if (simpleFile.version() == VERSION1) {
+                layerName = MapComposite::layerNameWithoutPrefix(layerName);
+            }
+
+            BmpBlend *blend = new BmpBlend(layerName, mainTile,
                                            blendTile, dir, excludes, exclude2);
             mBlends += blend;
         } else {
@@ -1465,7 +1487,7 @@ bool BmpBlendsFile::write(const QString &fileName)
 {
     SimpleFile simpleFile;
 
-    foreach (BmpBlend *blend, mBlends) {
+    for (BmpBlend *blend : mBlends) {
         SimpleFileBlock blendBlock;
         blendBlock.name = QLatin1String("blend");
         blendBlock.addValue("layer", blend->targetLayer);
@@ -1473,8 +1495,9 @@ bool BmpBlendsFile::write(const QString &fileName)
         blendBlock.addValue("blendTile", unpaddedTileName(blend->blendTile));
         blendBlock.addValue("dir", blend->dirAsString());
         QStringList exclude;
-        foreach (QString tileName, blend->ExclusionList)
+        for (const QString &tileName : blend->ExclusionList) {
             exclude += unpaddedTileName(tileName);
+        }
         blendBlock.addValue("exclude", exclude);
         QStringList exclude2;
         for (int i = 0; i < blend->exclude2.size() - 1; i += 2) {
@@ -1496,8 +1519,9 @@ bool BmpBlendsFile::write(const QString &fileName)
 QList<BmpBlend *> BmpBlendsFile::blendsCopy() const
 {
     QList<BmpBlend *> ret;
-    foreach (BmpBlend *blend, mBlends)
+    for (BmpBlend *blend : mBlends) {
         ret += new BmpBlend(blend);
+    }
     return ret;
 }
 

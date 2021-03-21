@@ -29,6 +29,7 @@ using namespace Tiled;
 
 MapLevel::MapLevel(int z)
     : mZ(z)
+    , mVisible(true)
 {
 
 }
@@ -51,6 +52,7 @@ int MapLevel::indexOfLayer(const QString &layerName, uint layertypes) const
 
 void MapLevel::insertLayer(int index, Layer *layer)
 {
+    Q_ASSERT(layer->level() == z());
     mLayers.insert(index, layer);
 }
 

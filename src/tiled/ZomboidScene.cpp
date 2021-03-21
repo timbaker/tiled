@@ -149,36 +149,36 @@ void ZomboidScene::setMapDocument(MapDocument *mapDoc)
     mLotManager.setMapDocument(mapDocument());
 
     if (mapDocument()) {
-        connect(mMapDocument, SIGNAL(regionAltered(QRegion,Layer*)),
-                SLOT(regionAltered(QRegion,Layer*)));
-        connect(mMapDocument, SIGNAL(layerGroupAdded(int)), SLOT(layerGroupAdded(int)));
-        connect(mMapDocument, SIGNAL(layerGroupVisibilityChanged(CompositeLayerGroup*)), SLOT(layerGroupVisibilityChanged(CompositeLayerGroup*)));
-        connect(mMapDocument, SIGNAL(layerAddedToGroup(int)), SLOT(layerAddedToGroup(int)));
-        connect(mMapDocument, SIGNAL(layerRemovedFromGroup(int,CompositeLayerGroup*)), SLOT(layerRemovedFromGroup(int,CompositeLayerGroup*)));
-        connect(mMapDocument, SIGNAL(layerLevelChanged(int,int)), SLOT(layerLevelChanged(int,int)));
-        connect(mMapDocument, SIGNAL(mapCompositeChanged()),
-                SLOT(mapCompositeChanged()));
+        connect(mMapDocument, &MapDocument::regionAltered,
+                this, &ZomboidScene::regionAltered);
+        connect(mMapDocument, &MapDocument::layerGroupAdded, this, &ZomboidScene::layerGroupAdded);
+        connect(mMapDocument, &MapDocument::layerGroupVisibilityChanged, this, &ZomboidScene::layerGroupVisibilityChanged);
+        connect(mMapDocument, &MapDocument::layerAddedToGroup, this, &ZomboidScene::layerAddedToGroup);
+        connect(mMapDocument, &MapDocument::layerRemovedFromGroup, this, &ZomboidScene::layerRemovedFromGroup);
+        connect(mMapDocument, &MapDocument::layerLevelChanged, this, &ZomboidScene::layerLevelChanged);
+        connect(mMapDocument, &MapDocument::mapCompositeChanged,
+                this, &ZomboidScene::mapCompositeChanged);
 
-        connect(mMapDocument, SIGNAL(objectsAdded(QList<MapObject*>)),
-                SLOT(invalidateMapBuildings()));
-        connect(mMapDocument, SIGNAL(objectsRemoved(QList<MapObject*>)),
-                SLOT(invalidateMapBuildings()));
-        connect(mMapDocument, SIGNAL(objectsChanged(QList<MapObject*>)),
-                SLOT(invalidateMapBuildings()));
+        connect(mMapDocument, &MapDocument::objectsAdded,
+                this, &ZomboidScene::invalidateMapBuildings);
+        connect(mMapDocument, &MapDocument::objectsRemoved,
+                this, &ZomboidScene::invalidateMapBuildings);
+        connect(mMapDocument, &MapDocument::objectsChanged,
+                this, &ZomboidScene::invalidateMapBuildings);
 
-        connect(mMapDocument->mapComposite()->bmpBlender(), SIGNAL(layersRecreated()),
-                SLOT(bmpBlenderLayersRecreated()));
-        connect(mMapDocument, SIGNAL(bmpPainted(int,QRegion)), SLOT(bmpPainted(int,QRegion)));
-        connect(mMapDocument, SIGNAL(bmpAliasesChanged()), SLOT(bmpXXXChanged()));
-        connect(mMapDocument, SIGNAL(bmpRulesChanged()), SLOT(bmpXXXChanged()));
-        connect(mMapDocument, SIGNAL(bmpBlendsChanged()), SLOT(bmpXXXChanged()));
+        connect(mMapDocument->mapComposite()->bmpBlender(), &BmpBlender::layersRecreated,
+                this, &ZomboidScene::bmpBlenderLayersRecreated);
+        connect(mMapDocument, &MapDocument::bmpPainted, this, &ZomboidScene::bmpPainted);
+        connect(mMapDocument, &MapDocument::bmpAliasesChanged, this, &ZomboidScene::bmpXXXChanged);
+        connect(mMapDocument, &MapDocument::bmpRulesChanged, this, &ZomboidScene::bmpXXXChanged);
+        connect(mMapDocument, &MapDocument::bmpBlendsChanged, this, &ZomboidScene::bmpXXXChanged);
 
-        connect(mMapDocument, SIGNAL(noBlendPainted(MapNoBlend*,QRegion)), SLOT(noBlendPainted(MapNoBlend*,QRegion)));
-        connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)), SLOT(synchNoBlendVisible()));
-        connect(ToolManager::instance(), SIGNAL(selectedToolChanged(AbstractTool*)), SLOT(synchNoBlendVisible()));
+        connect(mMapDocument, &MapDocument::noBlendPainted, this, &ZomboidScene::noBlendPainted);
+        connect(mMapDocument, &MapDocument::currentLayerIndexChanged, this, &ZomboidScene::synchNoBlendVisible);
+        connect(ToolManager::instance(), &ToolManager::selectedToolChanged, this, &ZomboidScene::synchNoBlendVisible);
 
-        connect(Preferences::instance(), SIGNAL(highlightRoomUnderPointerChanged(bool)),
-                SLOT(highlightRoomUnderPointerChanged(bool)));
+        connect(Preferences::instance(), &Preferences::highlightRoomUnderPointerChanged,
+                this, &ZomboidScene::highlightRoomUnderPointerChanged);
         connect(Preferences::instance(), &Preferences::showLotFloorsOnlyChanged, this, &ZomboidScene::showLotFloorsOnlyChanged);
     }
 }
@@ -194,7 +194,8 @@ void ZomboidScene::regionAltered(const QRegion &region, Layer *layer)
                 updateLayerGroupLater(tl->level(), Synch | Bounds); // recalculate CompositeLayerGroup::mDrawMargins
         } else {
             // TileLayer not part of a layer group.
-            int layerIndex = mapDocument()->map()->layers().indexOf(tl);
+            MapLevel *mapLevel = mapDocument()->map()->levelAt(layer->level());
+            int layerIndex = mapLevel->layers().indexOf(tl);
             TileLayerItem *item = dynamic_cast<TileLayerItem*>(mLevelData[tl->level()].mLayerItems[layerIndex]);
             QRectF r = item->boundingRect();
             item->syncWithTileLayer();
@@ -308,7 +309,8 @@ void ZomboidScene::updateCurrentLayerHighlight()
             CompositeLayerGroup *layerGroup = mTileLayerGroupItems[level]->layerGroup();
             if (layerGroup->layerCount()) {
                 currentLayer = layerGroup->layers().first();
-                currentLayerIndex = mMapDocument->map()->layers().indexOf(currentLayer);
+                MapLevel *mapLevel = mMapDocument->map()->levelAt(level);
+                currentLayerIndex = mapLevel->layers().indexOf(currentLayer);
             }
         }
     }
@@ -342,17 +344,17 @@ void ZomboidScene::updateCurrentLayerHighlight()
     }
 
     // Hide items above the current item
-    int index = 0;
     for (int z = 0; z < mLevelData.size(); z++) {
-        LevelData &levelData = mLevelData[z];
+        LevelData &levelData2 = mLevelData[z];
         MapLevel *mapLevel = mMapDocument->map()->levelAt(z);
-        for (QGraphicsItem *item : levelData.mLayerItems) {
+        for (int index = 0; index < levelData2.mLayerItems.size(); index++) {
+            QGraphicsItem *item = levelData2.mLayerItems[index];
             Layer *layer = mapLevel->layerAt(index);
             bool visible = layer->isVisible() && (layer->level() <= currentLayer->level());
-            if (layer->isObjectGroup() && (layer->level() != currentLayer->level()))
+            if (layer->isObjectGroup() && (layer->level() != currentLayer->level())) {
                 visible = false;
+            }
             item->setVisible(visible);
-            ++index;
         }
     }
     for (CompositeLayerGroupItem *item : mTileLayerGroupItems) {

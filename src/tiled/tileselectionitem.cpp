@@ -37,11 +37,11 @@ TileSelectionItem::TileSelectionItem(MapDocument *mapDocument)
 {
     setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
 
-    connect(mMapDocument, SIGNAL(tileSelectionChanged(QRegion,QRegion)),
-            this, SLOT(selectionChanged(QRegion,QRegion)));
+    connect(mMapDocument, &MapDocument::tileSelectionChanged,
+            this, &TileSelectionItem::selectionChanged);
 #ifdef ZOMBOID
-    connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
-            this, SLOT(currentLayerIndexChanged(int)));
+    connect(mMapDocument, &MapDocument::currentLayerIndexChanged,
+            this, &TileSelectionItem::currentLayerIndexChanged);
 #endif
 
     updateBoundingRect();
@@ -89,9 +89,10 @@ void TileSelectionItem::selectionChanged(const QRegion &newSelection,
 }
 
 #ifdef ZOMBOID
-void TileSelectionItem::currentLayerIndexChanged(int index)
+void TileSelectionItem::currentLayerIndexChanged(int levelIndex, int layerIndex)
 {
-    Q_UNUSED(index)
+    Q_UNUSED(levelIndex)
+    Q_UNUSED(layerIndex)
     prepareGeometryChange();
     updateBoundingRect();
 }

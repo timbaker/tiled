@@ -128,41 +128,41 @@ void MapScene::setMapDocument(MapDocument *mapDocument)
     refreshScene();
 
     if (mMapDocument) {
-        connect(mMapDocument, SIGNAL(mapChanged()),
-                this, SLOT(mapChanged()));
+        connect(mMapDocument, &MapDocument::mapChanged,
+                this, &MapScene::mapChanged);
 #ifdef ZOMBOID
-        connect(mMapDocument, SIGNAL(regionChanged(QRegion,Layer*)),
-                this, SLOT(regionChanged(QRegion,Layer*)));
+        connect(mMapDocument, &MapDocument::regionChanged,
+                this, &MapScene::regionChanged);
 #else
         connect(mMapDocument, SIGNAL(regionChanged(QRegion)),
                 this, SLOT(repaintRegion(QRegion)));
 #endif
-        connect(mMapDocument, SIGNAL(layerAdded(int)),
-                this, SLOT(layerAdded(int)));
+        connect(mMapDocument, &MapDocument::layerAdded,
+                this, &MapScene::layerAdded);
 #ifdef ZOMBOID
-        connect(mMapDocument, SIGNAL(layerAboutToBeRemoved(int)),
-                this, SLOT(layerAboutToBeRemoved(int)));
-        connect(mMapDocument, SIGNAL(layerRenamed(int)),
-                this, SLOT(layerRenamed(int)));
+        connect(mMapDocument, &MapDocument::layerAboutToBeRemoved,
+                this, &MapScene::layerAboutToBeRemoved);
+        connect(mMapDocument, &MapDocument::layerRenamed,
+                this, &MapScene::layerRenamed);
 #endif
-        connect(mMapDocument, SIGNAL(layerRemoved(int)),
-                this, SLOT(layerRemoved(int)));
-        connect(mMapDocument, SIGNAL(layerChanged(int)),
-                this, SLOT(layerChanged(int)));
-        connect(mMapDocument, SIGNAL(currentLayerIndexChanged(int)),
-                this, SLOT(currentLayerIndexChanged()));
-        connect(mMapDocument, SIGNAL(objectsAdded(QList<MapObject*>)),
-                this, SLOT(objectsAdded(QList<MapObject*>)));
-        connect(mMapDocument, SIGNAL(objectsRemoved(QList<MapObject*>)),
-                this, SLOT(objectsRemoved(QList<MapObject*>)));
-        connect(mMapDocument, SIGNAL(objectsChanged(QList<MapObject*>)),
-                this, SLOT(objectsChanged(QList<MapObject*>)));
-        connect(mMapDocument, SIGNAL(selectedObjectsChanged()),
-                this, SLOT(updateSelectedObjectItems()));
+        connect(mMapDocument, &MapDocument::layerRemoved,
+                this, &MapScene::layerRemoved);
+        connect(mMapDocument, &MapDocument::layerChanged,
+                this, &MapScene::layerChanged);
+        connect(mMapDocument, &MapDocument::currentLayerIndexChanged,
+                this, &MapScene::currentLayerIndexChanged);
+        connect(mMapDocument, &MapDocument::objectsAdded,
+                this, &MapScene::objectsAdded);
+        connect(mMapDocument, &MapDocument::objectsRemoved,
+                this, &MapScene::objectsRemoved);
+        connect(mMapDocument, &MapDocument::objectsChanged,
+                this, &MapScene::objectsChanged);
+        connect(mMapDocument, &MapDocument::selectedObjectsChanged,
+                this, &MapScene::updateSelectedObjectItems);
 #ifdef ZOMBOID
         // The tooltip on lot objects contains the relative path to the lot.
-        connect(mMapDocument, SIGNAL(fileNameChanged()),
-                SLOT(syncAllObjectItems()));
+        connect(mMapDocument, &MapDocument::fileNameChanged,
+                this, &MapScene::syncAllObjectItems);
 #endif
     }
 }
@@ -556,10 +556,10 @@ void MapScene::objectsAdded(const QList<MapObject*> &objects)
 /**
  * Removes the map object items related to the given objects.
  */
-void MapScene::objectsRemoved(const QList<MapObject*> &objects)
+void MapScene::objectsRemoved(ObjectGroup *objectGroup, const QList<MapObject*> &objects)
 {
     for (MapObject *o : objects) {
-        LevelData &levelData = mLevelData[o->objectGroup()->level()];
+        LevelData &levelData = mLevelData[objectGroup->level()];
         ObjectItems::iterator i = levelData.mObjectItems.find(o);
         Q_ASSERT(i != levelData.mObjectItems.end());
 

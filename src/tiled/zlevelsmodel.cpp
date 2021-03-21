@@ -21,6 +21,7 @@
 #include "layermodel.h"
 #include "mapcomposite.h"
 #include "mapdocument.h"
+#include "maplevel.h"
 #include "renamelayer.h"
 #include "tilelayer.h"
 
@@ -150,7 +151,8 @@ bool ZLevelsModel::setData(const QModelIndex &index, const QVariant &value,
         switch (role) {
         case Qt::CheckStateRole: {
             LayerModel *layerModel = mMapDocument->layerModel();
-            const int layerIndex = mMap->layers().indexOf(layer);
+            MapLevel *mapLevel = mMap->levelAt(layer->level());
+            const int layerIndex = mapLevel->layers().indexOf(layer);
             layerModel->setData(layerModel->toIndex(layer->level(), layerIndex), value, role);
             return true;
         }
@@ -260,16 +262,16 @@ void ZLevelsModel::setMapDocument(MapDocument *mapDocument)
     if (mMapDocument) {
         mMap = mMapDocument->map();
 
-        connect(mMapDocument, SIGNAL(layerChanged(int)),
-                SLOT(layerChanged(int)));
-        connect(mMapDocument, SIGNAL(layerGroupVisibilityChanged(CompositeLayerGroup*)),
-                SLOT(layerGroupVisibilityChanged(CompositeLayerGroup*)));
-        connect(mMapDocument, SIGNAL(layerLevelChanged(int,int)),
-                SLOT(layerLevelChanged(int,int)));
-        connect(mMapDocument, SIGNAL(layerAdded(int)),
-                SLOT(layerAdded(int)));
-        connect(mMapDocument, SIGNAL(layerAboutToBeRemoved(int)),
-                SLOT(layerAboutToBeRemoved(int)));
+        connect(mMapDocument, &MapDocument::layerChanged,
+                this, &ZLevelsModel::layerChanged);
+        connect(mMapDocument, &MapDocument::layerGroupVisibilityChanged,
+                this, &ZLevelsModel::layerGroupVisibilityChanged);
+        connect(mMapDocument, &MapDocument::layerLevelChanged,
+                this, &ZLevelsModel::layerLevelChanged);
+        connect(mMapDocument, &MapDocument::layerAdded,
+                this, &ZLevelsModel::layerAdded);
+        connect(mMapDocument, &MapDocument::layerAboutToBeRemoved,
+                this, &ZLevelsModel::layerAboutToBeRemoved);
 
         mRootItem = new Item();
 
